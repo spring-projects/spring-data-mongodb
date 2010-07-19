@@ -38,19 +38,18 @@ public class MongoDbFactoryBean implements FactoryBean<DB>, InitializingBean {
 	 */
 	protected final Log logger = LogFactory.getLog(getClass());
 
-	private Mongo mongo;
-	private String databaseName;
+	private MongoConnectionFactory mcf = new MongoConnectionFactory();
 	
 	public void setMongo(Mongo mongo) {
-		this.mongo = mongo;
+		this.mcf.setMongo(mongo);
 	}
 
 	public void setDatabaseName(String databaseName) {
-		this.databaseName = databaseName;
+		this.mcf.setDatabaseName(databaseName);
 	}
 
 	public DB getObject() throws Exception {
-		return mongo.getDB(databaseName);
+		return mcf.getConnection();
 	}
 
 	public Class<? extends DB> getObjectType() {
@@ -62,14 +61,7 @@ public class MongoDbFactoryBean implements FactoryBean<DB>, InitializingBean {
 	}
 
 	public void afterPropertiesSet() throws Exception {
-		if (databaseName == null) {
-			logger.warn("Property databaseName not specified. Using default name 'test'");
-			databaseName = "test";
-		}
-		if (mongo == null) {
-			logger.warn("Property mongo not specified. Using default configuration");
-			mongo = new Mongo();
-		}
+		this.mcf.afterPropertiesSet();
 	}
 
 }
