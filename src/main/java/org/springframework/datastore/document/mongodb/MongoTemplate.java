@@ -45,10 +45,10 @@ public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> {
 	
 	public MongoTemplate(Mongo mongo, String databaseName) {
 		super();
-		connectionFactory = new MongoConnectionFactory(mongo, databaseName);
+		connectionFactory = new MongoDbConnectionFactory(mongo, databaseName);
 	}
 
-	public MongoTemplate(MongoConnectionFactory mcf) {
+	public MongoTemplate(MongoDbConnectionFactory mcf) {
 		super();
 		connectionFactory = mcf;
 	}
@@ -82,6 +82,11 @@ public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> {
 			.drop();
 	}
 
+	public void saveObject(String collectionName, Object source) {
+		MongoBeanPropertyDocumentSource docSrc = new MongoBeanPropertyDocumentSource(source);
+		save(collectionName, docSrc);
+	}
+	
 	public void save(String collectionName, DocumentSource<DBObject> documentSource) {
 		DBObject dbDoc = documentSource.getDocument();		
 		WriteResult wr = null;
@@ -95,6 +100,11 @@ public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> {
 		}
 	}
 	
+	public <T> List<T> queryForCollection(String collectionName, Class<T> targetClass) {
+		DocumentMapper<DBObject, T> mapper = MongoBeanPropertyDocumentMapper.newInstance(targetClass);
+		return queryForCollection(collectionName, mapper);
+	}
+
 	public <T> List<T> queryForCollection(String collectionName, DocumentMapper<DBObject, T> mapper) {
 		List<T> results = new ArrayList<T>();
 		DBCollection collection = getDocumentStoreConnectionFactory()

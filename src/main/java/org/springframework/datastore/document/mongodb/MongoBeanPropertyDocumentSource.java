@@ -24,16 +24,18 @@ import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.bson.types.ObjectId;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeanWrapper;
+import org.springframework.beans.NotReadablePropertyException;
 import org.springframework.beans.NotWritablePropertyException;
 import org.springframework.beans.PropertyAccessorFactory;
 import org.springframework.beans.TypeMismatchException;
 import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.datastore.document.DocumentMapper;
+import org.springframework.datastore.document.DocumentSource;
 import org.springframework.util.Assert;
 
+import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
 /**
@@ -42,13 +44,16 @@ import com.mongodb.DBObject;
  * @author Thomas Risberg
  * @since 1.0
  */
-public class MongoBeanPropertyDocumentMapper<T> implements DocumentMapper<DBObject, T> {
+public class MongoBeanPropertyDocumentSource implements DocumentSource<DBObject> {
 
 	/** Logger available to subclasses */
 	protected final Log logger = LogFactory.getLog(getClass());
 
 	/** The class we are mapping to */
-	private Class<T> mappedClass;
+	private Object source;
+
+	/** The class we are mapping to */
+	private Class<?> mappedClass;
 
 	/** Map of the fields we provide mapping for */
 	private Map<String, PropertyDescriptor> mappedFields;
@@ -57,61 +62,44 @@ public class MongoBeanPropertyDocumentMapper<T> implements DocumentMapper<DBObje
 	private Set<String> mappedProperties;
 
 	
-	public MongoBeanPropertyDocumentMapper(Class<T> mappedClass) {
-		initialize(mappedClass);
+	public MongoBeanPropertyDocumentSource(Object source) {
+		initialize(source);
 	}
 
 	
-	public T mapDocument(DBObject document) {
-		Assert.state(this.mappedClass != null, "Mapped class was not specified");
-		T mappedObject = BeanUtils.instantiate(this.mappedClass);
-		BeanWrapper bw = PropertyAccessorFactory.forBeanPropertyAccess(mappedObject);
-		initBeanWrapper(bw);
-		
-		Set<String> keys = document.keySet();
-		for (String key : keys) {
-			String keyToUse = ("_id".equals(key) ? "id" : key);
-			PropertyDescriptor pd = this.mappedFields.get(keyToUse);
+	public DBObject getDocument() {
+		BeanWrapper bw = PropertyAccessorFactory.forBeanPropertyAccess(this.source);
+		DBObject dbo = new BasicDBObject();
+		for (String key : this.mappedFields.keySet()) {
+			String keyToUse = ("id".equals(key) ? "_id" : key);
+			PropertyDescriptor pd = this.mappedFields.get(key);
 			if (pd != null) {
 				try {
-					Object value = document.get(key);
-					try {
-						if (value instanceof ObjectId) {
-							bw.setPropertyValue(pd.getName(), ((ObjectId)value).toString());
-						}
-						else {
-							bw.setPropertyValue(pd.getName(), value);
-						}
+					Object value = bw.getPropertyValue(key);
+					if (value instanceof Enum) {
+						dbo.put(keyToUse, ((Enum)value).name());
 					}
-					catch (TypeMismatchException e) {
-						logger.warn("Intercepted TypeMismatchException for " + key + "' with value " + value +
-									" when setting property '" + pd.getName() + "' of type " + pd.getPropertyType() +
-									" on object: " + mappedObject);
+					else {
+						dbo.put(keyToUse, value);
 					}
 				}
-				catch (NotWritablePropertyException ex) {
+				catch (NotReadablePropertyException ex) {
 					throw new DataRetrievalFailureException(
-							"Unable to map key " + key + " to property " + pd.getName(), ex);
+							"Unable to map property " + pd.getName() + " to key " + key, ex);
 				}
 			}
 		}
-		
-		return mappedObject;
-	}
-	
-	/**
-	 * Get the class that we are mapping to.
-	 */
-	public final Class<T> getMappedClass() {
-		return this.mappedClass;
+		return dbo;
 	}
 
+	
 	/**
 	 * Initialize the mapping metadata for the given class.
 	 * @param mappedClass the mapped class.
 	 */
-	protected void initialize(Class<T> mappedClass) {
-		this.mappedClass = mappedClass;
+	protected void initialize(Object source) {
+		this.source = source;
+		this.mappedClass = source.getClass();
 		this.mappedFields = new HashMap<String, PropertyDescriptor>();
 		this.mappedProperties = new HashSet<String>();
 		PropertyDescriptor[] pds = BeanUtils.getPropertyDescriptors(mappedClass);
@@ -130,16 +118,6 @@ public class MongoBeanPropertyDocumentMapper<T> implements DocumentMapper<DBObje
 	 * @param bw the BeanWrapper to initialize
 	 */
 	protected void initBeanWrapper(BeanWrapper bw) {
-	}
-
-	/**
-	 * Static factory method to create a new MongoBeanPropertyDocumentMapper
-	 * (with the mapped class specified only once).
-	 * @param mappedClass the class that document should be mapped to
-	 */
-	public static <T> MongoBeanPropertyDocumentMapper<T> newInstance(Class<T> mappedClass) {
-		MongoBeanPropertyDocumentMapper<T> newInstance = new MongoBeanPropertyDocumentMapper<T>(mappedClass);
-		return newInstance;
 	}
 
 }

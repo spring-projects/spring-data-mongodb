@@ -48,7 +48,7 @@ import com.mongodb.Mongo;
  * @author Thomas Risberg
  * @since 1.0
  */
-public class MongoConnectionFactory implements DocumentStoreConnectionFactory<DB>, InitializingBean {
+public class MongoDbConnectionFactory implements DocumentStoreConnectionFactory<DB>, InitializingBean {
 
 	/**
 	 * Logger, available to subclasses.
@@ -58,16 +58,16 @@ public class MongoConnectionFactory implements DocumentStoreConnectionFactory<DB
 	private Mongo mongo;
 	private String databaseName;
 
-	public MongoConnectionFactory() {
+	public MongoDbConnectionFactory() {
 		super();
 	}
 	
-	public MongoConnectionFactory(String databaseName) {
+	public MongoDbConnectionFactory(String databaseName) {
 		super();
 		this.databaseName = databaseName;
 	}
 	
-	public MongoConnectionFactory(Mongo mongo, String databaseName) {
+	public MongoDbConnectionFactory(Mongo mongo, String databaseName) {
 		super();
 		this.mongo = mongo;
 		this.databaseName = databaseName;

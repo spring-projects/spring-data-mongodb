@@ -38,7 +38,7 @@ public class MongoDbFactoryBean implements FactoryBean<DB>, InitializingBean {
 	 */
 	protected final Log logger = LogFactory.getLog(getClass());
 
-	private MongoConnectionFactory mcf = new MongoConnectionFactory();
+	private MongoDbConnectionFactory mcf = new MongoDbConnectionFactory();
 	
 	public void setMongo(Mongo mongo) {
 		this.mcf.setMongo(mongo);

@@ -23,20 +23,20 @@ import org.springframework.datastore.document.AbstractDocumentStoreTemplate;
 import org.springframework.datastore.document.DocumentSource;
 import org.springframework.datastore.document.DocumentStoreConnectionFactory;
 
-	public class CouchDbTemplate extends AbstractDocumentStoreTemplate<Database> {
+	public class CouchTemplate extends AbstractDocumentStoreTemplate<Database> {
 
 	private DocumentStoreConnectionFactory<Database> connectionFactory;
 	
-	public CouchDbTemplate() {
+	public CouchTemplate() {
 		super();
 	}
 	
-	public CouchDbTemplate(String host, String databaseName) {
+	public CouchTemplate(String host, String databaseName) {
 		super();
 		connectionFactory = new CouchDbConnectionFactory(host, databaseName);
 	}
 
-	public CouchDbTemplate(CouchDbConnectionFactory mcf) {
+	public CouchTemplate(CouchDbConnectionFactory mcf) {
 		super();
 		connectionFactory = mcf;
 	}
