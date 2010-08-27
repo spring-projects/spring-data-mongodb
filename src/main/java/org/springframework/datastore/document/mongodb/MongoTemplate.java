@@ -89,12 +89,10 @@ public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> {
 	
 	public void save(String collectionName, DocumentSource<DBObject> documentSource) {
 		DBObject dbDoc = documentSource.getDocument();		
+		DB db =  getDocumentStoreConnectionFactory().getConnection();
 		WriteResult wr = null;
 		try {
-			wr = getDocumentStoreConnectionFactory()
-					.getConnection()
-					.getCollection(collectionName)
-					.save(dbDoc);
+			wr = db.getCollection(collectionName).save(dbDoc);
 		} catch (MongoException e) {
 			throw new DataRetrievalFailureException(wr.getLastError().getErrorMessage(), e);
 		}
@@ -107,9 +105,8 @@ public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> {
 
 	public <T> List<T> queryForCollection(String collectionName, DocumentMapper<DBObject, T> mapper) {
 		List<T> results = new ArrayList<T>();
-		DBCollection collection = getDocumentStoreConnectionFactory()
-			.getConnection()
-			.getCollection(collectionName);
+		DB db =  getDocumentStoreConnectionFactory().getConnection();
+		DBCollection collection = db.getCollection(collectionName);
 		for (DBObject dbo : collection.find()) {
 			results.add(mapper.mapDocument(dbo));
 		}
