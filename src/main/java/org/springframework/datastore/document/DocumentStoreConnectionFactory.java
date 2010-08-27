@@ -16,14 +16,6 @@
 
 package org.springframework.datastore.document;
 
-/**
- * Class used to map a business object to an object providing the source data for a Document.
- *
- * @author Thomas Risberg
- * @since 1.0
- */
-public interface DocumentSource<D> {
-	
-	D getDocument();
-
+public interface DocumentStoreConnectionFactory<C> {
+	C getConnection();
 }

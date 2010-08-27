@@ -30,55 +30,58 @@
  * limitations under the License.
  */
 
-package org.springframework.datastore.document.mongodb;
+package org.springframework.datastore.document.couchdb;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.jcouchdb.db.Database;
 
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.datastore.document.DocumentStoreConnectionFactory;
-import org.springframework.util.Assert;
 
-import com.mongodb.DB;
-import com.mongodb.Mongo;
 
 /**
- * Convenient factory for configuring MongoDB.
+ * Convenient factory for configuring CouchDB.
  *
  * @author Thomas Risberg
  * @since 1.0
  */
-public class MongoConnectionFactory implements DocumentStoreConnectionFactory<DB>, InitializingBean {
+public class CouchDbConnectionFactory implements DocumentStoreConnectionFactory<Database>, InitializingBean {
 
 	/**
 	 * Logger, available to subclasses.
 	 */
 	protected final Log logger = LogFactory.getLog(getClass());
 
-	private Mongo mongo;
+	private Database database;
+	private String host;
 	private String databaseName;
 
-	public MongoConnectionFactory() {
+	public CouchDbConnectionFactory() {
 		super();
 	}
 	
-	public MongoConnectionFactory(String databaseName) {
+	public CouchDbConnectionFactory(String host, String databaseName) {
 		super();
+		this.host = host;
 		this.databaseName = databaseName;
 	}
 	
-	public MongoConnectionFactory(Mongo mongo, String databaseName) {
+	public CouchDbConnectionFactory(Database database) {
 		super();
-		this.mongo = mongo;
-		this.databaseName = databaseName;
+		this.database = database;
 	}
 
-	public void setMongo(Mongo mongo) {
-		this.mongo = mongo;
+	public void setDatabase(Database database) {
+		this.database = database;
 	}
 
 	public void setDatabaseName(String databaseName) {
 		this.databaseName = databaseName;
+	}
+
+	public void setHost(String host) {
+		this.host = host;
 	}
 
 	public boolean isSingleton() {
@@ -88,20 +91,33 @@ public class MongoConnectionFactory implements DocumentStoreConnectionFactory<DB
 	public void afterPropertiesSet() throws Exception {
 		// apply defaults - convenient when used to configure for tests 
 		// in an application context
-		if (databaseName == null) {
-			logger.warn("Property databaseName not specified. Using default name 'test'");
-			databaseName = "test";
+		if (database == null) {
+			if (databaseName == null) {
+				logger.warn("Property databaseName not specified. Using default name 'test'");
+				databaseName = "test";
+			}
+			if (host == null) {
+				logger.warn("Property host not specified. Using default 'localhost'");
+				database = new Database(host, databaseName);
+			}
+			database = new Database(host, databaseName);
 		}
-		if (mongo == null) {
-			logger.warn("Property mongo not specified. Using default configuration");
-			mongo = new Mongo();
+		else {
+			logger.info("Using provided database configuration");
 		}
 	}
 
-	public DB getConnection() {
-		Assert.notNull(mongo, "Mongo must not be null");
-		Assert.hasText(databaseName, "Database name must not be empty");
-		return mongo.getDB(databaseName);
+	public Database getConnection() {
+		synchronized (this){
+			if (database == null) {
+				try {
+					afterPropertiesSet();
+				} catch (Exception e) {
+					throw new CannotGetCouchDbConnectionException("Unable to connect to CouchDB", e);
+				}
+			}
+		}
+		return database;
 	}
 
 }
