@@ -27,13 +27,9 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.NotReadablePropertyException;
-import org.springframework.beans.NotWritablePropertyException;
 import org.springframework.beans.PropertyAccessorFactory;
-import org.springframework.beans.TypeMismatchException;
 import org.springframework.dao.DataRetrievalFailureException;
-import org.springframework.datastore.document.DocumentMapper;
 import org.springframework.datastore.document.DocumentSource;
-import org.springframework.util.Assert;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
@@ -67,6 +63,7 @@ public class MongoBeanPropertyDocumentSource implements DocumentSource<DBObject>
 	}
 
 	
+	@SuppressWarnings("rawtypes")
 	public DBObject getDocument() {
 		BeanWrapper bw = PropertyAccessorFactory.forBeanPropertyAccess(this.source);
 		DBObject dbo = new BasicDBObject();

@@ -25,42 +25,29 @@ import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.datastore.document.AbstractDocumentStoreTemplate;
 import org.springframework.datastore.document.DocumentMapper;
 import org.springframework.datastore.document.DocumentSource;
-import org.springframework.datastore.document.DocumentStoreConnectionFactory;
 
 import com.mongodb.CommandResult;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
-import com.mongodb.Mongo;
 import com.mongodb.MongoException;
 import com.mongodb.WriteResult;
 
 public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> {
 
-	private DocumentStoreConnectionFactory<DB> connectionFactory;
+	private DB db;
 	
-	public MongoTemplate() {
-		super();
-	}
+//	public MongoTemplate() {
+//		super();
+//	}
 	
-	public MongoTemplate(Mongo mongo, String databaseName) {
+	public MongoTemplate(DB db) {
 		super();
-		connectionFactory = new MongoDbConnectionFactory(mongo, databaseName);
-	}
-
-	public MongoTemplate(MongoDbConnectionFactory mcf) {
-		super();
-		connectionFactory = mcf;
-	}
-
-	@Override
-	public DocumentStoreConnectionFactory<DB> getDocumentStoreConnectionFactory() {
-		return connectionFactory;
+		this.db = db;
 	}
 
 	public void execute(String command) {
-		DB db =  getDocumentStoreConnectionFactory().getConnection();
-		CommandResult cr = db.command(command);
+		CommandResult cr = getConnection().command(command);
 		String err = cr.getErrorMessage();
 		if (err != null) {
 			throw new InvalidDataAccessApiUsageException("Command execution of " + 
@@ -69,9 +56,7 @@ public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> {
 	}
 	
 	public void execute(DocumentSource<DBObject> command) {
-		CommandResult cr = getDocumentStoreConnectionFactory()
-			.getConnection()
-			.command(command.getDocument());
+		CommandResult cr = getConnection().command(command.getDocument());
 		String err = cr.getErrorMessage();
 		if (err != null) {
 			throw new InvalidDataAccessApiUsageException("Command execution of " + 
@@ -80,18 +65,15 @@ public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> {
 	}
 	
 	public void createCollection(String collectionName, DocumentSource<DBObject> documentSource) {
-		DB db =  getDocumentStoreConnectionFactory().getConnection();
 		try {
-			db.createCollection(collectionName, documentSource.getDocument());
+			getConnection().createCollection(collectionName, documentSource.getDocument());
 		} catch (MongoException e) {
 			throw new InvalidDataAccessApiUsageException("Error creating collection " + collectionName + ": " + e.getMessage(), e);
 		}
 	}
 
 	public void dropCollection(String collectionName) {
-		getDocumentStoreConnectionFactory()
-			.getConnection()
-			.getCollection(collectionName)
+		getConnection().getCollection(collectionName)
 			.drop();
 	}
 
@@ -102,10 +84,9 @@ public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> {
 	
 	public void save(String collectionName, DocumentSource<DBObject> documentSource) {
 		DBObject dbDoc = documentSource.getDocument();		
-		DB db =  getDocumentStoreConnectionFactory().getConnection();
 		WriteResult wr = null;
 		try {
-			wr = db.getCollection(collectionName).save(dbDoc);
+			wr = getConnection().getCollection(collectionName).save(dbDoc);
 		} catch (MongoException e) {
 			throw new DataRetrievalFailureException(wr.getLastError().getErrorMessage(), e);
 		}
@@ -118,12 +99,20 @@ public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> {
 
 	public <T> List<T> queryForCollection(String collectionName, DocumentMapper<DBObject, T> mapper) {
 		List<T> results = new ArrayList<T>();
-		DB db =  getDocumentStoreConnectionFactory().getConnection();
-		DBCollection collection = db.getCollection(collectionName);
+		DBCollection collection = getConnection().getCollection(collectionName);
 		for (DBObject dbo : collection.find()) {
 			results.add(mapper.mapDocument(dbo));
 		}
 		return results;
 	}
 	
+	public RuntimeException translateIfNecessary(RuntimeException ex) {
+		return MongoDbUtils.translateMongoExceptionIfPossible(ex);
+	}
+
+	@Override
+	public DB getConnection() {
+		return db;
+	}
+
 }

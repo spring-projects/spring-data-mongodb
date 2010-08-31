@@ -19,12 +19,11 @@ package org.springframework.datastore.document;
 
 public abstract class AbstractDocumentStoreTemplate<C> {
 	
-	
-	public abstract DocumentStoreConnectionFactory<C> getDocumentStoreConnectionFactory();
+	public abstract C getConnection();
 
 	public <T> T execute(DocumentStoreConnectionCallback<C, T> action) {
 		try {
-			return action.doInConnection(getDocumentStoreConnectionFactory().getConnection());
+			return action.doInConnection(getConnection());
 		}
 		catch (Exception e) {
 			throw new UncategorizedDocumentStoreException("Failure executing using datastore connection", e);

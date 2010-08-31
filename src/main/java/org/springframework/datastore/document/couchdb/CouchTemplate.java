@@ -21,11 +21,10 @@ import org.jcouchdb.db.Database;
 import org.jcouchdb.document.BaseDocument;
 import org.springframework.datastore.document.AbstractDocumentStoreTemplate;
 import org.springframework.datastore.document.DocumentSource;
-import org.springframework.datastore.document.DocumentStoreConnectionFactory;
 
 	public class CouchTemplate extends AbstractDocumentStoreTemplate<Database> {
 
-	private DocumentStoreConnectionFactory<Database> connectionFactory;
+	private Database database;
 	
 	public CouchTemplate() {
 		super();
@@ -33,22 +32,22 @@ import org.springframework.datastore.document.DocumentStoreConnectionFactory;
 	
 	public CouchTemplate(String host, String databaseName) {
 		super();
-		connectionFactory = new CouchDbConnectionFactory(host, databaseName);
+		database = new Database(host, databaseName);
 	}
 
-	public CouchTemplate(CouchDbConnectionFactory mcf) {
+	public CouchTemplate(Database database) {
 		super();
-		connectionFactory = mcf;
+		this.database = database;
 	}
 	
 	public void save(DocumentSource<BaseDocument> documentSource) {
 		BaseDocument d = documentSource.getDocument();
-		getDocumentStoreConnectionFactory().getConnection().createDocument(d);
+		getConnection().createDocument(d);
 	}
 
 	@Override
-	public DocumentStoreConnectionFactory<Database> getDocumentStoreConnectionFactory() {
-		return connectionFactory;
+	public Database getConnection() {
+		return database;
 	}
 	
 	
