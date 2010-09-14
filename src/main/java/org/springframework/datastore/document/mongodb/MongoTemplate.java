@@ -35,6 +35,7 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.MongoException;
 import com.mongodb.WriteResult;
+import com.mongodb.util.JSON;
 
 public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> {
 
@@ -118,15 +119,32 @@ public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> {
 		if (operands.length != values.length) {
 			throw new InvalidDocumentStoreApiUageException("The number of operands and values must match");
 		}
-		List<T> results = new ArrayList<T>();
 		DBObject query = new BasicDBObject();
 		DBObject condition = new BasicDBObject();
 		for (int i = 0; i < operands.length; i++) {
 			condition.put(operands[i], values[i]);
 		}
 		query.put(fieldName, condition);
-		System.out.println("--> " + query);
+		return queryForList(collectionName, query, mapper);
+	}
+
+	public <T> List<T> queryForList(String collectionName, String query, Class<T> targetClass) {
+		DocumentMapper<DBObject, T> mapper = MongoBeanPropertyDocumentMapper.newInstance(targetClass);
+		return queryForList(collectionName, query, mapper);
+	}
+
+	public <T> List<T> queryForList(String collectionName, String query, DocumentMapper<DBObject, T> mapper) {
+		return queryForList(collectionName, (DBObject)JSON.parse(query), mapper);
+	}
+
+	public <T> List<T> queryForList(String collectionName, DBObject query, Class<T> targetClass) {
+		DocumentMapper<DBObject, T> mapper = MongoBeanPropertyDocumentMapper.newInstance(targetClass);
+		return queryForList(collectionName, query, mapper);
+	}
+
+	public <T> List<T> queryForList(String collectionName, DBObject query, DocumentMapper<DBObject, T> mapper) {
 		DBCollection collection = getConnection().getCollection(collectionName);
+		List<T> results = new ArrayList<T>();
 		for (DBObject dbo : collection.find(query)) {
 			results.add(mapper.mapDocument(dbo));
 		}
