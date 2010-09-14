@@ -51,23 +51,22 @@ public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> {
 	}
 
 	public void execute(String command) {
+		execute((DBObject)JSON.parse(command));
+	}
+	
+	public void execute(DocumentSource<DBObject> command) {
+		execute(command.getDocument());
+	}
+	
+	public void execute(DBObject command) {
 		CommandResult cr = getConnection().command(command);
 		String err = cr.getErrorMessage();
 		if (err != null) {
 			throw new InvalidDataAccessApiUsageException("Command execution of " + 
-					command + " failed: " + err);
+					command.toString() + " failed: " + err);
 		}
 	}
-	
-	public void execute(DocumentSource<DBObject> command) {
-		CommandResult cr = getConnection().command(command.getDocument());
-		String err = cr.getErrorMessage();
-		if (err != null) {
-			throw new InvalidDataAccessApiUsageException("Command execution of " + 
-					command.getDocument().toString() + " failed: " + err);
-		}
-	}
-	
+
 	public void createCollection(String collectionName, DocumentSource<DBObject> documentSource) {
 		try {
 			getConnection().createCollection(collectionName, documentSource.getDocument());
