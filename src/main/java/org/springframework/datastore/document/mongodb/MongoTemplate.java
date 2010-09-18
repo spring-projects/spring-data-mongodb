@@ -25,10 +25,8 @@ import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.datastore.document.AbstractDocumentStoreTemplate;
 import org.springframework.datastore.document.DocumentMapper;
 import org.springframework.datastore.document.DocumentSource;
-import org.springframework.datastore.document.InvalidDocumentStoreApiUageException;
-import org.springframework.util.Assert;
+import org.springframework.datastore.document.mongodb.query.Query;
 
-import com.mongodb.BasicDBObject;
 import com.mongodb.CommandResult;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
@@ -109,21 +107,12 @@ public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> {
 		return results;
 	}
 	
-	public <T> List<T> queryForList(String collectionName, String fieldName, String[] operands, Object[] values, Class<T> targetClass) {
+	public <T> List<T> queryForList(String collectionName, Query query, Class<T> targetClass) {
 		DocumentMapper<DBObject, T> mapper = MongoBeanPropertyDocumentMapper.newInstance(targetClass);
-		return queryForList(collectionName, fieldName, operands, values, mapper);
+		return queryForList(collectionName, query, mapper);
 	}
 
-	public <T> List<T> queryForList(String collectionName, String fieldName, String[] operands, Object[] values, DocumentMapper<DBObject, T> mapper) {
-		if (operands.length != values.length) {
-			throw new InvalidDocumentStoreApiUageException("The number of operands and values must match");
-		}
-		DBObject query = new BasicDBObject();
-		DBObject condition = new BasicDBObject();
-		for (int i = 0; i < operands.length; i++) {
-			condition.put(operands[i], values[i]);
-		}
-		query.put(fieldName, condition);
+	public <T> List<T> queryForList(String collectionName, Query query, DocumentMapper<DBObject, T> mapper) {
 		return queryForList(collectionName, query, mapper);
 	}
 
