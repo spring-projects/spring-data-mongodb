@@ -113,7 +113,7 @@ public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> {
 	}
 
 	public <T> List<T> queryForList(String collectionName, Query query, DocumentMapper<DBObject, T> mapper) {
-		return queryForList(collectionName, query, mapper);
+		return queryForList(collectionName, query.getQueryObject(), mapper);
 	}
 
 	public <T> List<T> queryForList(String collectionName, String query, Class<T> targetClass) {
