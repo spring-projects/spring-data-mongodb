@@ -7,15 +7,17 @@ import com.mongodb.DBObject;
 
 public class QueryBuilder implements Query {
 	
-	private LinkedHashMap<String, QueryCriterion> criteria = new LinkedHashMap<String, QueryCriterion>();
+	private LinkedHashMap<String, CriteriaSpec> criteria = new LinkedHashMap<String, CriteriaSpec>();
 
-	public QueryCriterion find(String key) {
-		QueryCriterion c = new QueryCriterion(this);
+	public Criteria find(String key) {
+		Criteria c = new Criteria(this);
 		this.criteria.put(key, c);
 		return c;
 	}
 
-	public void or(Query... queries) {
+	public QueryBuilder or(Query... queries) {
+		this.criteria.put("$or", new OrCriteria(queries));
+		return this;
 	}
 
 	public FieldSpecification fields() {
@@ -41,7 +43,7 @@ public class QueryBuilder implements Query {
 	public DBObject getQueryObject() {
 		DBObject dbo = new BasicDBObject();
 		for (String k : criteria.keySet()) {
-			QueryCriterion c = criteria.get(k);
+			CriteriaSpec c = criteria.get(k);
 			DBObject cl = c.getCriteriaObject(k);
 			dbo.putAll(cl);
 		}

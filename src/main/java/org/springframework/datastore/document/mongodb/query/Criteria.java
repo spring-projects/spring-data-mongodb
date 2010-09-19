@@ -9,7 +9,7 @@ import org.springframework.datastore.document.InvalidDocumentStoreApiUageExcepti
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
-public class QueryCriterion {
+public class Criteria implements CriteriaSpec {
 	
 	private QueryBuilder qb = null;
 	
@@ -18,13 +18,18 @@ public class QueryCriterion {
 	private Object isValue = null;
 	
 	
-	public QueryCriterion(QueryBuilder qb) {
+	public Criteria(QueryBuilder qb) {
 		super();
 		this.qb = qb;
 	}
 
 
-	public QueryCriterion is(Object o) {
+	public Criteria and(String key) {
+		return qb.find(key);
+	}
+
+
+	public Criteria is(Object o) {
 		if (isValue != null) {
 			throw new InvalidDocumentStoreApiUageException("Multiple 'is' values declared.");
 		}
@@ -32,37 +37,37 @@ public class QueryCriterion {
 		return this;
 	}
 
-	public QueryCriterion lt(Object o) {
+	public Criteria lt(Object o) {
 		criteria.put("$lt", o);
 		return this;
 	}
 	
-	public QueryCriterion lte(Object o) {
+	public Criteria lte(Object o) {
 		criteria.put("$lte", o);
 		return this;
 	}
 	
-	public QueryCriterion gt(Object o) {
+	public Criteria gt(Object o) {
 		criteria.put("$gt", o);
 		return this;
 	}
 	
-	public QueryCriterion gte(Object o) {
+	public Criteria gte(Object o) {
 		criteria.put("$gte", o);
 		return this;
 	}
 	
-	public QueryCriterion in(Object... o) {
+	public Criteria in(Object... o) {
 		criteria.put("$in", o);
 		return this;
 	}
 
-	public QueryCriterion nin(Object... o) {
+	public Criteria nin(Object... o) {
 		criteria.put("$min", o);
 		return this;
 	}
 
-	public QueryCriterion mod(Number value, Number remainder) {
+	public Criteria mod(Number value, Number remainder) {
 		List<Object> l = new ArrayList<Object>();
 		l.add(value);
 		l.add(remainder);
@@ -70,30 +75,30 @@ public class QueryCriterion {
 		return this;
 	}
 
-	public QueryCriterion all(Object o) {
+	public Criteria all(Object o) {
 		criteria.put("$is", o);
 		return this;
 	}
 
-	public QueryCriterion size(Object o) {
+	public Criteria size(Object o) {
 		criteria.put("$is", o);
 		return this;
 	}
 
-	public QueryCriterion exists(boolean b) {
+	public Criteria exists(boolean b) {
 		return this;
 	}
 
-	public QueryCriterion type(int t) {
+	public Criteria type(int t) {
 		return this;
 	}
 
-	public QueryCriterion not() {
+	public Criteria not() {
 		criteria.put("$not", null);
 		return this;
 	}
 	
-	public QueryCriterion regExp(String re) {
+	public Criteria regExp(String re) {
 		return this;
 	}
 
@@ -105,6 +110,9 @@ public class QueryCriterion {
 		return qb.build(); 
 	}
 
+	/* (non-Javadoc)
+	 * @see org.springframework.datastore.document.mongodb.query.Criteria#getCriteriaObject(java.lang.String)
+	 */
 	public DBObject getCriteriaObject(String key) {
 		DBObject dbo = new BasicDBObject();
 		boolean not = false;
