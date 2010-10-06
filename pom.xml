@@ -190,7 +190,7 @@
 						<configuration>
 							<javadoc:aggregate>true</javadoc:aggregate>
 							<breakiterator>true</breakiterator>
-							<header>Spring AMQP</header>
+							<header>Spring Datastore Document</header>
 							<source>1.5</source>
 							<quiet>true</quiet>
 							<javadocDirectory>${project.basedir}/src/main/javadoc</javadocDirectory>
