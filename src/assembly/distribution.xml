@@ -18,7 +18,6 @@
 			<includes>
 				<include>readme.txt</include>
 				<include>apache-license.txt</include>
-				<include>epl-license.txt</include>
 				<include>notice.txt</include>
 				<include>changelog.txt</include>
 			</includes>

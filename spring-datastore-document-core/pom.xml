@@ -9,7 +9,7 @@
 	</parent>
 	<artifactId>spring-datastore-document-core</artifactId>
 	<packaging>jar</packaging>
-	<name>Spring Datastore Document Database Support</name>
+	<name>Spring Datastore Document Datastore Support</name>
 	<dependencies>
 
 		<!--  Spring -->

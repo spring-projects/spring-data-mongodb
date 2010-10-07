@@ -1,5 +1,5 @@
-Bundle-SymbolicName: org.springframework.datastore.document
-Bundle-Name: Spring Datastore Document
+Bundle-SymbolicName: org.springframework.datastore.mongodb
+Bundle-Name: Spring Datastore Mongo DB Support
 Bundle-Vendor: SpringSource
 Bundle-ManifestVersion: 2
 Import-Package: 
