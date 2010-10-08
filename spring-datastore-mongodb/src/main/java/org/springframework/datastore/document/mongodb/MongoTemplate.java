@@ -20,6 +20,7 @@ package org.springframework.datastore.document.mongodb;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.datastore.document.AbstractDocumentStoreTemplate;
@@ -27,6 +28,7 @@ import org.springframework.datastore.document.DocumentMapper;
 import org.springframework.datastore.document.DocumentSource;
 import org.springframework.datastore.document.mongodb.query.Query;
 
+import com.mongodb.BasicDBObject;
 import com.mongodb.CommandResult;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
@@ -35,9 +37,14 @@ import com.mongodb.MongoException;
 import com.mongodb.WriteResult;
 import com.mongodb.util.JSON;
 
-public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> {
+public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> implements InitializingBean {
 
 	private DB db;
+	
+	private String defaultCollectionName;
+	
+	//TODO expose configuration...
+	private CollectionOptions defaultCollectionOptions;
 	
 //	public MongoTemplate() {
 //		super();
@@ -47,6 +54,20 @@ public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> {
 		super();
 		this.db = db;
 	}
+	
+	
+
+	public String getDefaultCollectionName() {
+		return defaultCollectionName;
+	}
+
+	//TODO would one ever consider passing in a DBCollection object?
+
+	public void setDefaultCollectionName(String defaultCollection) {
+		this.defaultCollectionName = defaultCollection;
+	}
+
+
 
 	public void execute(String command) {
 		execute((DBObject)JSON.parse(command));
@@ -65,9 +86,25 @@ public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> {
 		}
 	}
 
-	public void createCollection(String collectionName, DocumentSource<DBObject> documentSource) {
+	public DBCollection createCollection(String collectionName) {
 		try {
-			getConnection().createCollection(collectionName, documentSource.getDocument());
+			return getConnection().createCollection(collectionName, null);
+		} catch (MongoException e) {
+			throw new InvalidDataAccessApiUsageException("Error creating collection " + collectionName + ": " + e.getMessage(), e);
+		}
+	}
+		
+	public void createCollection(String collectionName, CollectionOptions collectionOptions) {
+		try {
+			getConnection().createCollection(collectionName, convertToDbObject(collectionOptions));
+		} catch (MongoException e) {
+			throw new InvalidDataAccessApiUsageException("Error creating collection " + collectionName + ": " + e.getMessage(), e);
+		}
+	}
+
+	public boolean collectionExists(String collectionName) {
+		try {
+			return getConnection().collectionExists(collectionName);
 		} catch (MongoException e) {
 			throw new InvalidDataAccessApiUsageException("Error creating collection " + collectionName + ": " + e.getMessage(), e);
 		}
@@ -77,6 +114,20 @@ public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> {
 		getConnection().getCollection(collectionName)
 			.drop();
 	}
+	
+	public void saveObject(Object object) {
+		saveObject(getRequiredDefaultCollectionName(), object);
+	}
+
+	private String getRequiredDefaultCollectionName() {
+		String name = getDefaultCollectionName();
+		if (name == null) {
+			throw new IllegalStateException(
+					"No 'defaultCollection' or 'defaultCollectionName' specified. Check configuration of MongoTemplate.");
+		}
+		return name;
+	}
+
 
 	public void saveObject(String collectionName, Object source) {
 		MongoBeanPropertyDocumentSource docSrc = new MongoBeanPropertyDocumentSource(source);
@@ -87,7 +138,7 @@ public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> {
 		DBObject dbDoc = documentSource.getDocument();		
 		WriteResult wr = null;
 		try {
-			wr = getConnection().getCollection(collectionName).save(dbDoc);
+			wr = getConnection().getCollection(collectionName).save(dbDoc);			
 		} catch (MongoException e) {
 			throw new DataRetrievalFailureException(wr.getLastError().getErrorMessage(), e);
 		}
@@ -148,4 +199,31 @@ public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> {
 		return db;
 	}
 
+	
+	protected DBObject convertToDbObject(CollectionOptions collectionOptions) {
+		DBObject dbo = new BasicDBObject();
+		if (collectionOptions != null) {
+			if (collectionOptions.getCapped() != null) {
+				dbo.put("capped", collectionOptions.getCapped().booleanValue());			
+			}
+			if (collectionOptions.getSize() != null) {
+				dbo.put("size", collectionOptions.getSize().intValue());
+			}
+			if (collectionOptions.getMaxDocuments() != null ) {
+				dbo.put("max", collectionOptions.getMaxDocuments().intValue());
+			}
+		}
+		return dbo;
+	}
+
+
+
+	public void afterPropertiesSet() throws Exception {
+		if (this.getDefaultCollectionName() != null) {
+			if (! db.collectionExists(getDefaultCollectionName())) {
+				db.createCollection(getDefaultCollectionName(), null);
+			}
+		}
+		
+	}
 }
