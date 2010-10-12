@@ -24,8 +24,6 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.datastore.document.AbstractDocumentStoreTemplate;
-import org.springframework.datastore.document.DocumentMapper;
-import org.springframework.datastore.document.DocumentSource;
 import org.springframework.datastore.document.mongodb.query.Query;
 
 import com.mongodb.BasicDBObject;
@@ -43,12 +41,11 @@ public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> implements 
 	
 	private String defaultCollectionName;
 	
+	private MongoConverter mongoConverter;
+	
 	//TODO expose configuration...
 	private CollectionOptions defaultCollectionOptions;
 	
-//	public MongoTemplate() {
-//		super();
-//	}
 	
 	public MongoTemplate(DB db) {
 		super();
@@ -60,24 +57,16 @@ public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> implements 
 	public String getDefaultCollectionName() {
 		return defaultCollectionName;
 	}
-
-	//TODO would one ever consider passing in a DBCollection object?
-
+	
 	public void setDefaultCollectionName(String defaultCollection) {
 		this.defaultCollectionName = defaultCollection;
 	}
 
-
-
-	public void execute(String command) {
-		execute((DBObject)JSON.parse(command));
+	public void executeCommand(String jsonCommand) {
+		executeCommand((DBObject)JSON.parse(jsonCommand));
 	}
-	
-	public void execute(DocumentSource<DBObject> command) {
-		execute(command.getDocument());
-	}
-	
-	public void execute(DBObject command) {
+
+	public void executeCommand(DBObject command) {
 		CommandResult cr = getConnection().command(command);
 		String err = cr.getErrorMessage();
 		if (err != null) {
@@ -114,10 +103,7 @@ public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> implements 
 		getConnection().getCollection(collectionName)
 			.drop();
 	}
-	
-	public void saveObject(Object object) {
-		saveObject(getRequiredDefaultCollectionName(), object);
-	}
+
 
 	private String getRequiredDefaultCollectionName() {
 		String name = getDefaultCollectionName();
@@ -128,69 +114,104 @@ public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> implements 
 		return name;
 	}
 
-
-	public void saveObject(String collectionName, Object source) {
-		MongoBeanPropertyDocumentSource docSrc = new MongoBeanPropertyDocumentSource(source);
-		save(collectionName, docSrc);
+	
+	public void save(Object objectToSave) {
+		save(getRequiredDefaultCollectionName(), objectToSave);
 	}
 	
-	public void save(String collectionName, DocumentSource<DBObject> documentSource) {
-		DBObject dbDoc = documentSource.getDocument();		
-		WriteResult wr = null;
-		try {
-			wr = getConnection().getCollection(collectionName).save(dbDoc);			
-		} catch (MongoException e) {
-			throw new DataRetrievalFailureException(wr.getLastError().getErrorMessage(), e);
+	public void save(String collectionName, Object objectToSave) {
+		BasicDBObject dbDoc = new BasicDBObject();
+		this.mongoConverter.write(objectToSave, dbDoc);
+		saveDBObject(collectionName, dbDoc);
+	}
+	
+	public <T> void save(String collectionName, T objectToSave, MongoWriter<T> writer) {
+		BasicDBObject dbDoc = new BasicDBObject();
+		this.mongoConverter.write(objectToSave, dbDoc);
+		saveDBObject(collectionName, dbDoc);
+	}
+
+
+	protected void saveDBObject(String collectionName, BasicDBObject dbDoc) {
+		if (dbDoc.keySet().size() > 0 ) {
+			WriteResult wr = null;
+			try {
+				wr = getConnection().getCollection(collectionName).save(dbDoc);			
+			} catch (MongoException e) {
+				throw new DataRetrievalFailureException(wr.getLastError().getErrorMessage(), e);
+			}
 		}
 	}
+
 	
 	public <T> List<T> queryForCollection(String collectionName, Class<T> targetClass) {
-		DocumentMapper<DBObject, T> mapper = MongoBeanPropertyDocumentMapper.newInstance(targetClass);
-		return queryForCollection(collectionName, mapper);
-	}
-
-	public <T> List<T> queryForCollection(String collectionName, DocumentMapper<DBObject, T> mapper) {
+		
 		List<T> results = new ArrayList<T>();
 		DBCollection collection = getConnection().getCollection(collectionName);
 		for (DBObject dbo : collection.find()) {
-			results.add(mapper.mapDocument(dbo));
+			Object obj = mongoConverter.read(targetClass, dbo);
+			//effectively acts as a query on the collection restricting it to elements of a specific type
+			if (targetClass.isInstance(obj)) {
+				results.add(targetClass.cast(obj));
+			}
+		}
+		return results;
+	}
+
+	public <T> List<T> queryForCollection(String collectionName, Class<T> targetClass, MongoReader<T> reader) { 
+		List<T> results = new ArrayList<T>();
+		DBCollection collection = getConnection().getCollection(collectionName);
+		for (DBObject dbo : collection.find()) {
+			results.add(reader.read(targetClass, dbo));
 		}
 		return results;
 	}
 	
+	
 	public <T> List<T> queryForList(String collectionName, Query query, Class<T> targetClass) {
-		DocumentMapper<DBObject, T> mapper = MongoBeanPropertyDocumentMapper.newInstance(targetClass);
-		return queryForList(collectionName, query, mapper);
+		return queryForList(collectionName, query.getQueryObject(), targetClass);
 	}
 
-	public <T> List<T> queryForList(String collectionName, Query query, DocumentMapper<DBObject, T> mapper) {
-		return queryForList(collectionName, query.getQueryObject(), mapper);
+	public <T> List<T> queryForList(String collectionName, Query query, Class<T> targetClass, MongoReader<T> reader) {
+		return queryForList(collectionName, query.getQueryObject(), targetClass, reader);
 	}
+	
+	
+	
 
 	public <T> List<T> queryForList(String collectionName, String query, Class<T> targetClass) {
-		DocumentMapper<DBObject, T> mapper = MongoBeanPropertyDocumentMapper.newInstance(targetClass);
-		return queryForList(collectionName, query, mapper);
+		return queryForList(collectionName, (DBObject)JSON.parse(query), targetClass);
 	}
 
-	public <T> List<T> queryForList(String collectionName, String query, DocumentMapper<DBObject, T> mapper) {
-		return queryForList(collectionName, (DBObject)JSON.parse(query), mapper);
+	public <T> List<T> queryForList(String collectionName, String query, Class<T> targetClass, MongoReader<T> reader) {
+		return queryForList(collectionName, (DBObject)JSON.parse(query), targetClass, reader);
 	}
 
-	public <T> List<T> queryForList(String collectionName, DBObject query, Class<T> targetClass) {
-		DocumentMapper<DBObject, T> mapper = MongoBeanPropertyDocumentMapper.newInstance(targetClass);
-		return queryForList(collectionName, query, mapper);
-	}
-
-	public <T> List<T> queryForList(String collectionName, DBObject query, DocumentMapper<DBObject, T> mapper) {
+	
+	
+	public <T> List<T> queryForList(String collectionName, DBObject query, Class<T> targetClass) {	
 		DBCollection collection = getConnection().getCollection(collectionName);
 		List<T> results = new ArrayList<T>();
 		for (DBObject dbo : collection.find(query)) {
-			results.add(mapper.mapDocument(dbo));
+			Object obj = mongoConverter.read(targetClass,dbo);
+			//effectively acts as a query on the collection restricting it to elements of a specific type
+			if (targetClass.isInstance(obj)) {
+				results.add(targetClass.cast(obj));
+			}
 		}
 		return results;
 	}
 
-	public RuntimeException translateIfNecessary(RuntimeException ex) {
+	public <T> List<T> queryForList(String collectionName, DBObject query, Class<T> targetClass, MongoReader<T> reader) {
+		DBCollection collection = getConnection().getCollection(collectionName);
+		List<T> results = new ArrayList<T>();
+		for (DBObject dbo : collection.find(query)) {
+			results.add(reader.read(targetClass, dbo));
+		}
+		return results;
+	}
+
+	public RuntimeException convertMongoAccessException(RuntimeException ex) {
 		return MongoDbUtils.translateMongoExceptionIfPossible(ex);
 	}
 

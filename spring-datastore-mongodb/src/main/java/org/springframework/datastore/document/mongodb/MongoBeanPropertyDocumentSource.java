@@ -97,13 +97,20 @@ public class MongoBeanPropertyDocumentSource implements DocumentSource<DBObject>
 	protected void initialize(Object source) {
 		this.source = source;
 		this.mappedClass = source.getClass();
-		this.mappedFields = new HashMap<String, PropertyDescriptor>();
-		this.mappedProperties = new HashSet<String>();
-		PropertyDescriptor[] pds = BeanUtils.getPropertyDescriptors(mappedClass);
-		for (PropertyDescriptor pd : pds) {
-			if (pd.getWriteMethod() != null) {
-				this.mappedFields.put(pd.getName(), pd);
-				this.mappedProperties.add(pd.getName());
+		if (mappedClass.getClass().equals("java.util.Map")) {
+			
+		} else {
+			this.mappedFields = new HashMap<String, PropertyDescriptor>();
+			this.mappedProperties = new HashSet<String>();
+			PropertyDescriptor[] pds = BeanUtils.getPropertyDescriptors(mappedClass);
+			for (PropertyDescriptor pd : pds) {
+				if (pd.getWriteMethod() != null) {
+					this.mappedFields.put(pd.getName(), pd);
+					this.mappedProperties.add(pd.getName());
+				}
+			}
+			if (mappedProperties.size() == 0) {
+				logger.warn("No properties mapped for object [" + source + "], type = [" + mappedClass + "]");
 			}
 		}
 	}
