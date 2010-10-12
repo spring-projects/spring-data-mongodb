@@ -18,6 +18,7 @@ Import-Template:
  org.springframework.web.bind.support.*;version="[3.0.0, 4.0.0)",
  org.springframework.web.context.request.*;version="[3.0.0, 4.0.0)",
  org.springframework.web.util.*;version="[3.0.0, 4.0.0)",
+ org.springframework.validation.*;version="[3.0.0, 4.0.0)",
  org.springframework.validation.support.*;version="[3.0.0, 4.0.0)",
  org.springframework.beans.*;version="[3.0.0, 4.0.0)",
  org.springframework.core.*;version="[3.0.0, 4.0.0)",
