@@ -52,6 +52,11 @@ public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> implements 
 		this.db = db;
 	}
 	
+	public MongoTemplate(DB db, MongoConverter mongoConverter) {
+		this(db);
+		this.mongoConverter = mongoConverter;
+	}
+	
 	
 
 	public String getDefaultCollectionName() {
