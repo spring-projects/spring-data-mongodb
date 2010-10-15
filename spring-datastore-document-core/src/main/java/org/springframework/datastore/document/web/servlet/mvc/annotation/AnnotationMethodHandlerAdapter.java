@@ -29,6 +29,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -60,6 +61,11 @@ import org.springframework.core.LocalVariableTableParameterNameDiscoverer;
 import org.springframework.core.Ordered;
 import org.springframework.core.ParameterNameDiscoverer;
 import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.datastore.document.web.servlet.ActionExecutedContext;
+import org.springframework.datastore.document.web.servlet.ActionExecutingContext;
+import org.springframework.datastore.document.web.servlet.ActionInterceptor;
+import org.springframework.datastore.document.web.servlet.mvc.annotation.support.InterceptingHandlerMethodInvoker;
+import org.springframework.format.support.FormattingConversionService;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpInputMessage;
@@ -149,6 +155,9 @@ import org.springframework.web.util.WebUtils;
 public class AnnotationMethodHandlerAdapter extends WebContentGenerator
 		implements HandlerAdapter, Ordered, BeanFactoryAware {
 
+	
+	private ActionInterceptor[] actionInterceptors;
+	
 	/**
 	 * Log category to use when no mapped handler is found for a request.
 	 * @see #pageNotFoundLogger
@@ -170,7 +179,7 @@ public class AnnotationMethodHandlerAdapter extends WebContentGenerator
 
 	private WebBindingInitializer webBindingInitializer;
 
-	private SessionAttributeStore sessionAttributeStore = new DefaultSessionAttributeStore();
+	private SessionAttributeStore amhaSessionAttributeStore = new DefaultSessionAttributeStore();
 
 	private int cacheSecondsForSessionAttributeHandlers = 0;
 
@@ -196,6 +205,7 @@ public class AnnotationMethodHandlerAdapter extends WebContentGenerator
 
 	public AnnotationMethodHandlerAdapter() {
 		// no restriction of HTTP methods by default
+		// MLP
 		super(false);
 
 		// See SPR-7316
@@ -272,7 +282,7 @@ public class AnnotationMethodHandlerAdapter extends WebContentGenerator
 	 */
 	public void setSessionAttributeStore(SessionAttributeStore sessionAttributeStore) {
 		Assert.notNull(sessionAttributeStore, "SessionAttributeStore must not be null");
-		this.sessionAttributeStore = sessionAttributeStore;
+		this.amhaSessionAttributeStore = sessionAttributeStore;
 	}
 
 	/**
@@ -369,6 +379,10 @@ public class AnnotationMethodHandlerAdapter extends WebContentGenerator
 	public HttpMessageConverter<?>[] getMessageConverters() {
 		return messageConverters;
 	}
+	
+	public void setActionInterceptors(ActionInterceptor[] actionInterceptors) {
+		this.actionInterceptors = actionInterceptors;
+	}
 
 	/**
 	 * Specify the order value for this HandlerAdapter bean.
@@ -427,17 +441,17 @@ public class AnnotationMethodHandlerAdapter extends WebContentGenerator
 
 		ServletHandlerMethodResolver methodResolver = getMethodResolver(handler);
 		Method handlerMethod = methodResolver.resolveHandlerMethod(request);
-		ServletHandlerMethodInvoker methodInvoker = new ServletHandlerMethodInvoker(methodResolver);
+		ServletHandlerMethodInvoker methodInvoker = new ServletHandlerMethodInvoker(methodResolver, actionInterceptors);
 		ServletWebRequest webRequest = new ServletWebRequest(request, response);
 		ExtendedModelMap implicitModel = new BindingAwareModelMap();
 
 		
-		//return methodInvoker.doInvoke(handlerMethod, handler, )
-		Object result = methodInvoker.invokeHandlerMethod(handlerMethod, handler, webRequest, implicitModel);
-		ModelAndView mav =
-				methodInvoker.getModelAndView(handlerMethod, handler.getClass(), result, implicitModel, webRequest);
-		methodInvoker.updateModelAttributes(handler, (mav != null ? mav.getModel() : null), implicitModel, webRequest);
-		return mav;
+		return methodInvoker.interceptingInvokeHandlerMethod(handlerMethod, handler, webRequest, implicitModel);
+		//Object result = methodInvoker.invokeHandlerMethod(handlerMethod, handler, webRequest, implicitModel);
+		//ModelAndView mav =
+	//			methodInvoker.getModelAndView(handlerMethod, handler.getClass(), result, implicitModel, webRequest);
+	//	methodInvoker.updateModelAttributes(handler, (mav != null ? mav.getModel() : null), implicitModel, webRequest);
+	//	return mav;
 	}
 
 	public long getLastModified(HttpServletRequest request, Object handler) {
@@ -710,15 +724,121 @@ public class AnnotationMethodHandlerAdapter extends WebContentGenerator
 	/**
 	 * Servlet-specific subclass of {@link HandlerMethodInvoker}.
 	 */
-	private class ServletHandlerMethodInvoker extends HandlerMethodInvoker {
+	private class ServletHandlerMethodInvoker extends InterceptingHandlerMethodInvoker {
 
 		private boolean responseArgumentUsed = false;
 
-		private ServletHandlerMethodInvoker(HandlerMethodResolver resolver) {
-			super(resolver, webBindingInitializer, sessionAttributeStore, parameterNameDiscoverer,
-					customArgumentResolvers, messageConverters);
+		private ServletHandlerMethodInvoker(HandlerMethodResolver resolver, ActionInterceptor[] actionInterceptors) {
+			super(resolver, webBindingInitializer, amhaSessionAttributeStore, parameterNameDiscoverer,
+					customArgumentResolvers, messageConverters, actionInterceptors);
 		}
 		
+		public ModelAndView interceptingInvokeHandlerMethod(Method handlerMethod, Object handler,
+				NativeWebRequest webRequest, ExtendedModelMap implicitModel) throws Exception {
+
+			int interceptorIndex = -1;
+			ModelAndView mav = null;
+			ActionExecutingContext executingContext = null;
+			Method handlerMethodToInvoke = BridgeMethodResolver.findBridgedMethod(handlerMethod);
+			try {
+				boolean debug = logger.isDebugEnabled();
+				for (String attrName : this.methodResolver.getActualSessionAttributeNames()) {
+					Object attrValue = this.sessionAttributeStore.retrieveAttribute(webRequest, attrName);
+					if (attrValue != null) {
+						implicitModel.addAttribute(attrName, attrValue);
+					}
+				}
+				for (Method attributeMethod : this.methodResolver.getModelAttributeMethods()) {
+					Method attributeMethodToInvoke = BridgeMethodResolver.findBridgedMethod(attributeMethod);
+					Object[] args = resolveHandlerArguments(attributeMethodToInvoke, handler, webRequest, implicitModel);
+					if (debug) {
+						logger.debug("Invoking model attribute method: " + attributeMethodToInvoke);
+					}
+					String attrName = AnnotationUtils.findAnnotation(attributeMethod, ModelAttribute.class).value();
+					if (!"".equals(attrName) && implicitModel.containsAttribute(attrName)) {
+						continue;
+					}
+					ReflectionUtils.makeAccessible(attributeMethodToInvoke);
+					Object attrValue = attributeMethodToInvoke.invoke(handler, args);
+					if ("".equals(attrName)) {
+						Class resolvedType = GenericTypeResolver.resolveReturnType(attributeMethodToInvoke, handler.getClass());
+						attrName = Conventions.getVariableNameForReturnType(attributeMethodToInvoke, resolvedType, attrValue);
+					}
+					if (!implicitModel.containsAttribute(attrName)) {
+						implicitModel.addAttribute(attrName, attrValue);
+					}
+				}
+				Object[] args = resolveHandlerArguments(handlerMethodToInvoke, handler, webRequest, implicitModel);
+				if (debug) {
+					logger.debug("Invoking request handler method: " + handlerMethodToInvoke);
+				}
+				ReflectionUtils.makeAccessible(handlerMethodToInvoke);
+				
+				executingContext = new ActionExecutingContext((ServletWebRequest)webRequest, handler, handlerMethodToInvoke, args, implicitModel);
+				
+				// Apply preHandle methods of registered interceptors.
+				ActionInterceptor[] interceptors = getActionInterceptors();
+				if (interceptors != null) {
+					for (int i = 0; i < interceptors.length; i++) {
+						ActionInterceptor interceptor = interceptors[i];
+						if (!interceptor.preHandle(executingContext)) {
+							triggerAfterCompletion(executingContext, interceptorIndex, null, null);
+							return null; //TODO verify null is ok
+						}
+						interceptorIndex = i;
+					}
+				}
+				
+				// Actually invoke the handler
+				Object result = handlerMethodToInvoke.invoke(handler, args);
+				
+				
+				mav = getModelAndView(handlerMethod, handler.getClass(), result, implicitModel, (ServletWebRequest)webRequest);
+				updateModelAttributes(handler, (mav != null ? mav.getModel() : null), implicitModel, webRequest);
+				
+				// Trigger after-completion for successful outcome
+				triggerAfterCompletion(executingContext, interceptorIndex, mav, null);
+				
+				return mav;
+			}
+			catch (IllegalStateException ex) {
+				// Internal assertion failed (e.g. invalid signature):
+				// throw exception with full handler method context...
+				triggerAfterCompletion(executingContext, interceptorIndex, mav, ex);
+				throw new HandlerMethodInvocationException(handlerMethodToInvoke, ex);
+			}
+			catch (InvocationTargetException ex) {
+				// User-defined @ModelAttribute/@InitBinder/@RequestMapping method threw an exception...
+				triggerAfterCompletion(executingContext, interceptorIndex, mav, ex);
+				ReflectionUtils.rethrowException(ex.getTargetException());
+				return null;
+			}
+		}
+		
+		private void triggerAfterCompletion(ActionExecutingContext executingContext,
+				int interceptorIndex,
+				ModelAndView modelAndView,
+				Exception ex) throws Exception {
+
+			// Apply afterCompletion methods of registered interceptors.
+			if (executingContext.getHandler() != null) {
+				//TODO should be passed in;
+				ActionInterceptor[] interceptors = getActionInterceptors();
+				if (interceptors != null) {
+					for (int i = interceptorIndex; i >= 0; i--) {
+						ActionInterceptor interceptor = interceptors[i];
+						ActionExecutedContext actionExecutedContext = new ActionExecutedContext(executingContext, modelAndView, ex); 
+						try {
+							interceptor.afterCompletion(actionExecutedContext);
+						}
+						catch (Throwable ex2) {
+							logger.error("ActionInterceptor threw exception", ex2);
+						}
+					}
+				}
+			}
+		}
+
 
 		@Override
 		protected void raiseMissingParameterException(String paramName, Class paramType) throws Exception {
