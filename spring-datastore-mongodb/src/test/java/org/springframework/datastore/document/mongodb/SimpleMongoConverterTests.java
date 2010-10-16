@@ -63,9 +63,6 @@ public class SimpleMongoConverterTests {
 
 	private SimpleMongoConverter createConverter() {
 		SimpleMongoConverter converter = new SimpleMongoConverter();
-		ConversionContext context = new ConversionContext();
-		context.setBuilderLookup(new BuilderLookup());
-		converter.setConversionContext(context);
 		return converter;
 	}
 	
