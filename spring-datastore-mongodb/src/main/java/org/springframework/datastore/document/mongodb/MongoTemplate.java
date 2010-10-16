@@ -79,7 +79,7 @@ public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> implements 
 					command.toString() + " failed: " + err);
 		}
 	}
-
+	
 	public DBCollection createCollection(String collectionName) {
 		try {
 			return getConnection().createCollection(collectionName, null);
@@ -95,6 +95,7 @@ public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> implements 
 			throw new InvalidDataAccessApiUsageException("Error creating collection " + collectionName + ": " + e.getMessage(), e);
 		}
 	}
+		
 
 	public boolean collectionExists(String collectionName) {
 		try {
@@ -249,6 +250,9 @@ public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> implements 
 			if (! db.collectionExists(getDefaultCollectionName())) {
 				db.createCollection(getDefaultCollectionName(), null);
 			}
+		}
+		if (this.mongoConverter == null) {
+			mongoConverter = new SimpleMongoConverter();
 		}
 		
 	}

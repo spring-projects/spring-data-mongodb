@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -35,10 +36,12 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.util.Assert;
 
+import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.DBRef;
 
 public class SimpleMongoConverter implements MongoConverter {
+
 
 	/** Logger available to subclasses */
 	protected final Log logger = LogFactory.getLog(getClass());
@@ -100,47 +103,90 @@ public class SimpleMongoConverter implements MongoConverter {
 		initializeConverters();
 	}
 
-	protected void initializeConverters() {
-
-		conversionService.addConverter(new Converter<ObjectId, String>() {
-			public String convert(ObjectId id) {
-				return id.toString();
-			}
-		});
-
-	}
-
 	public SimpleMongoConverter(GenericConversionService conversionService) {
 		super();
 		this.conversionService = conversionService;
 	}
 
+	protected void initializeConverters() {
+		conversionService.addConverter(new Converter<ObjectId, String>() {
+			public String convert(ObjectId id) {
+				return id.toString();
+			}
+		});
+	}
+
+	/*
+	public ConversionContext getConversionContext() {
+		return conversionContext;
+	}
+
+	public void setConversionContext(ConversionContext conversionContext) {
+		this.conversionContext = conversionContext;
+	}
+
+	public void writeNew(Object obj, DBObject dbo) {
+		conversionContext.convertToDBObject(dbo, null, obj);
+	}*/
+
 	public void write(Object obj, DBObject dbo) {
+
 		BeanWrapper bw = PropertyAccessorFactory.forBeanPropertyAccess(obj);
+		// This will leverage the conversion service.
 		initBeanWrapper(bw);
 
 		PropertyDescriptor[] propertyDescriptors = BeanUtils
 				.getPropertyDescriptors(obj.getClass());
 		for (PropertyDescriptor pd : propertyDescriptors) {
-			if (isSimpleType(pd.getPropertyType())) {
-				Object value = bw.getPropertyValue(pd.getName());
-				String keyToUse = ("id".equals(pd.getName()) ? "_id" : pd
-						.getName());
+			// if (isSimpleType(pd.getPropertyType())) {
+			Object value = bw.getPropertyValue(pd.getName());
+			String keyToUse = ("id".equals(pd.getName()) ? "_id" : pd.getName());
 
-				if (isValidProperty(pd)) {
-					
-					//TODO validate Enums...
-					
-					// This will leverage the conversion service.
-					dbo.put(keyToUse, value);
-				} else {
-					logger.warn("Unable to map property " + pd.getName() + ".  Skipping.");
-				}				
+			if (isValidProperty(pd)) {
+				// TODO validate Enums...
+				writeValue(dbo, keyToUse, value);
+				// dbo.put(keyToUse, value);
+			} else {
+				logger.warn("Unable to map property " + pd.getName()
+						+ ".  Skipping.");
 			}
+			// }
 
 		}
 
 	}
+
+	private void writeValue(DBObject dbo, String keyToUse, Object value) {
+
+		// is not asimple type.
+		if (value != null) {
+			if (!isSimpleType(value.getClass())) {
+				writeCompoundValue(dbo, keyToUse, value);
+			} else {
+				dbo.put(keyToUse, value);
+			}
+		}
+
+	}
+
+	private void writeCompoundValue(DBObject dbo, String keyToUse, Object value) {
+		if (value instanceof Map) {
+			// Should write a collection!
+			return;
+		}
+		if (value instanceof Collection) {
+			// Should write a collection!
+			return;
+		}
+		DBObject nestedDbo = new BasicDBObject();
+		dbo.put(keyToUse, nestedDbo);
+		write(value, nestedDbo);
+	}
+
+	/*
+	public Object readNew(Class<? extends Object> clazz, DBObject dbo) {
+		return conversionContext.convertToObject(clazz, dbo);
+	}*/
 
 	public Object read(Class<? extends Object> clazz, DBObject dbo) {
 
@@ -151,30 +197,58 @@ public class SimpleMongoConverter implements MongoConverter {
 		initBeanWrapper(bw);
 
 		// Iterate over properties of the object.
+		// TODO iterate over the properties of DBObject and support nested property names with SpEL
+		// e.g. { "parameters.p1" : "1" , "count" : 5.0}
 		PropertyDescriptor[] propertyDescriptors = BeanUtils
 				.getPropertyDescriptors(clazz);
 		for (PropertyDescriptor pd : propertyDescriptors) {
-			if (isSimpleType(pd.getPropertyType())) {
-				if (dbo.containsField(pd.getName())) {
-					Object value = dbo.get(pd.getName());
-					if (value instanceof ObjectId) {
-						setObjectIdOnObject(bw, pd, (ObjectId) value);
+			
+			if (dbo.containsField(pd.getName())) {
+				Object value = dbo.get(pd.getName());
+				if (value instanceof ObjectId) {
+					setObjectIdOnObject(bw, pd, (ObjectId) value);
+				} else {
+					if (isValidProperty(pd)) {
+						// This will leverage the conversion service.
+						// bw.setPropertyValue(pd.getName(),
+						// dbo.get(pd.getName()));
+						readValue(bw, pd, dbo);
 					} else {
-						if (isValidProperty(pd)) {
-							// This will leverage the conversion service.
-							bw.setPropertyValue(pd.getName(),
-									dbo.get(pd.getName()));
-						} else {
-							logger.warn("Unable to map DBObject field "
-									+ pd.getName() + " to property "
-									+ pd.getName() + ".  Skipping.");
-						}
+						logger.warn("Unable to map DBObject field "
+								+ pd.getName() + " to property " + pd.getName()
+								+ ".  Skipping.");
 					}
 				}
 			}
 		}
 
 		return mappedObject;
+	}
+
+	private void readValue(BeanWrapper bw, PropertyDescriptor pd, DBObject dbo) {
+		Object value = dbo.get(pd.getName());
+		// is not a simple type.
+		if (!isSimpleType(value.getClass())) {
+			bw.setPropertyValue(
+					pd.getName(),
+					readCompoundValue(pd.getPropertyType(),
+							(DBObject) dbo.get(pd.getName())));
+		} else {
+			bw.setPropertyValue(pd.getName(), value);
+		}
+	}
+
+	private Object readCompoundValue(Class<?> propertyClazz, DBObject dbo) {
+		if (Map.class.isAssignableFrom(propertyClazz)) {
+			// Should read a map!
+			return null;
+		}
+		if (Collection.class.isAssignableFrom(propertyClazz)) {
+			// Should read a collection!
+			return null;
+		}
+		// single document
+		return read(propertyClazz, dbo);
 	}
 
 	protected void setObjectIdOnObject(BeanWrapper bw, PropertyDescriptor pd,
