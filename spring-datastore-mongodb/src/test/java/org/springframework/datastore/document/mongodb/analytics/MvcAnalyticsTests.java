@@ -1,6 +1,5 @@
 package org.springframework.datastore.document.mongodb.analytics;
 
-import java.net.UnknownHostException;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -10,25 +9,23 @@ import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.datastore.document.analytics.ControllerCounter;
 import org.springframework.datastore.document.analytics.MvcEvent;
 import org.springframework.datastore.document.analytics.Parameters;
 import org.springframework.datastore.document.mongodb.MongoTemplate;
-import org.springframework.datastore.document.mongodb.query.Query;
-//import org.springframework.datastore.document.mongodb.query.QueryBuilder;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
-import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.Mongo;
-import com.mongodb.MongoException;
 import com.mongodb.QueryBuilder;
 import com.mongodb.WriteResult;
 
+@Ignore
 public class MvcAnalyticsTests {
 
 	private MongoTemplate mongoTemplate;
