@@ -16,10 +16,19 @@
 package org.springframework.datastore.document.mongodb;
 
 import java.beans.PropertyDescriptor;
+import java.lang.reflect.Array;
+import java.lang.reflect.GenericArrayType;
+import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -147,6 +156,7 @@ public class SimpleMongoConverter implements MongoConverter {
 				writeValue(dbo, keyToUse, value);
 				// dbo.put(keyToUse, value);
 			} else {
+				//TODO exclude Class properties from consideration
 				logger.warn("Unable to map property " + pd.getName()
 						+ ".  Skipping.");
 			}
@@ -171,7 +181,7 @@ public class SimpleMongoConverter implements MongoConverter {
 
 	private void writeCompoundValue(DBObject dbo, String keyToUse, Object value) {
 		if (value instanceof Map) {
-			// Should write a collection!
+			writeMap(dbo, keyToUse, (Map<String, Object>)value);
 			return;
 		}
 		if (value instanceof Collection) {
@@ -179,8 +189,30 @@ public class SimpleMongoConverter implements MongoConverter {
 			return;
 		}
 		DBObject nestedDbo = new BasicDBObject();
-		dbo.put(keyToUse, nestedDbo);
 		write(value, nestedDbo);
+		dbo.put(keyToUse, nestedDbo);
+		
+	}
+
+	protected void writeMap(DBObject dbo, String keyToUse, Map<String, Object> map) {
+		//TODO support non-string based keys as long as there is a Spring Converter obj->string and (optionally) string->obj
+		DBObject dboToPopulate = null;
+		if (keyToUse != null) {
+			dboToPopulate = new BasicDBObject();
+		} else {
+			dboToPopulate = dbo;
+		}
+		if (map != null) {
+			for (Map.Entry<String, Object> entry : map.entrySet()) {
+				Object entryValue = entry.getValue();
+				if (!isSimpleType(entryValue.getClass())) {			
+					writeCompoundValue(dboToPopulate, entry.getKey(), entryValue);
+				} else {
+					dboToPopulate.put(entry.getKey(), entryValue);
+				}
+			}					
+			dbo.put(keyToUse, dboToPopulate);			
+		}
 	}
 
 	/*
@@ -190,13 +222,15 @@ public class SimpleMongoConverter implements MongoConverter {
 
 	public Object read(Class<? extends Object> clazz, DBObject dbo) {
 
+		
+		
 		Assert.state(clazz != null, "Mapped class was not specified");
 		Object mappedObject = BeanUtils.instantiate(clazz);
 		BeanWrapper bw = PropertyAccessorFactory
 				.forBeanPropertyAccess(mappedObject);
 		initBeanWrapper(bw);
 
-		// Iterate over properties of the object.
+		// Iterate over properties of the object.b
 		// TODO iterate over the properties of DBObject and support nested property names with SpEL
 		// e.g. { "parameters.p1" : "1" , "count" : 5.0}
 		PropertyDescriptor[] propertyDescriptors = BeanUtils
@@ -224,32 +258,56 @@ public class SimpleMongoConverter implements MongoConverter {
 
 		return mappedObject;
 	}
-
-	private void readValue(BeanWrapper bw, PropertyDescriptor pd, DBObject dbo) {
-		Object value = dbo.get(pd.getName());
-		// is not a simple type.
-		if (!isSimpleType(value.getClass())) {
-			bw.setPropertyValue(
-					pd.getName(),
-					readCompoundValue(pd.getPropertyType(),
-							(DBObject) dbo.get(pd.getName())));
-		} else {
-			bw.setPropertyValue(pd.getName(), value);
-		}
+	
+	protected void readValue(BeanWrapper bw, PropertyDescriptor pd, DBObject dbo) {
+		
+			Object value = dbo.get(pd.getName());
+			// is not a simple type.
+			if (!isSimpleType(value.getClass())) {							
+				bw.setPropertyValue(pd.getName(),readCompoundValue(pd, (DBObject) dbo.get(pd.getName())));
+			} else {
+				bw.setPropertyValue(pd.getName(), value);
+			}
+		
 	}
 
-	private Object readCompoundValue(Class<?> propertyClazz, DBObject dbo) {
+	private Object readCompoundValue(PropertyDescriptor pd, DBObject dbo) {
+		Class propertyClazz = pd.getPropertyType();
 		if (Map.class.isAssignableFrom(propertyClazz)) {
-			// Should read a map!
-			return null;
+			//TODO assure is assignable to BasicDBObject
+			return readMap(pd, (BasicDBObject)dbo, getGenericParameterClass(pd.getWriteMethod()).get(1) );			
 		}
 		if (Collection.class.isAssignableFrom(propertyClazz)) {
 			// Should read a collection!
 			return null;
 		}
-		// single document
 		return read(propertyClazz, dbo);
 	}
+	
+	protected Map createMap() {
+		return new HashMap();
+	}
+	
+	protected Map readMap(PropertyDescriptor pd, BasicDBObject dbo, Class valueClazz) {
+		Class propertyClazz = pd.getPropertyType();
+		Map map = createMap();
+		for (Map.Entry entry : dbo.entrySet()) {
+			Object entryValue = entry.getValue();
+			BeanWrapper bw = PropertyAccessorFactory.forBeanPropertyAccess(entryValue);
+			initBeanWrapper(bw);
+			
+			if (!isSimpleType(entryValue.getClass())) {				
+				map.put((String)entry.getKey(), read(valueClazz, (DBObject) entryValue));
+				//Can do some reflection tricks here - 
+				//throw new RuntimeException("User types not supported yet as values for Maps");
+			} else {
+				map.put((String)entry.getKey(), entryValue );
+			}
+		}
+		return map;
+	}
+
+
 
 	protected void setObjectIdOnObject(BeanWrapper bw, PropertyDescriptor pd,
 			ObjectId value) {
@@ -274,6 +332,45 @@ public class SimpleMongoConverter implements MongoConverter {
 
 	protected void initBeanWrapper(BeanWrapper bw) {
 		bw.setConversionService(conversionService);
+	}
+	
+	
+	public List<Class> getGenericParameterClass(Method setMethod) {
+		List<Class> actualGenericParameterTypes  = new ArrayList<Class>();
+		Type[] genericParameterTypes = setMethod.getGenericParameterTypes();
+
+		for(Type genericParameterType  : genericParameterTypes){		
+		    if(genericParameterType  instanceof ParameterizedType){
+		        ParameterizedType aType = (ParameterizedType) genericParameterType;
+		        Type[] parameterArgTypes = aType.getActualTypeArguments();		        
+		        for(Type parameterArgType : parameterArgTypes){
+		        	if (parameterArgType instanceof GenericArrayType)
+		            {
+		                Class arrayType = (Class) ((GenericArrayType) parameterArgType).getGenericComponentType();
+		                actualGenericParameterTypes.add(Array.newInstance(arrayType, 0).getClass());
+		            }
+		        	else {
+		        		if (parameterArgType instanceof ParameterizedType) {
+			        		ParameterizedType paramTypeArgs = (ParameterizedType) parameterArgType;
+			        		actualGenericParameterTypes.add((Class)paramTypeArgs.getRawType());
+			        	} else {
+			        		 if (parameterArgType instanceof TypeVariable) {
+			        			 throw new RuntimeException("Can not map " + ((TypeVariable) parameterArgType).getName());
+			        		 } else {
+			        			 if (parameterArgType instanceof Class) {
+			        				 actualGenericParameterTypes.add((Class) parameterArgType);
+			        			 } else  {
+			        				 throw new RuntimeException("Can not map " + parameterArgType); 
+			        			 }
+			        		 }
+			        	}
+		        	}
+		        	
+		        }
+		    }
+		}
+		return actualGenericParameterTypes;
+
 	}
 
 }

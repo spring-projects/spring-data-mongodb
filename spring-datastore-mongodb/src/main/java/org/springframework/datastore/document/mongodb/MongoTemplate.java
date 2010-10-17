@@ -52,20 +52,29 @@ public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> implements 
 		this.db = db;
 	}
 	
+	public MongoTemplate(DB db, String defaultCollectionName) {
+		super();
+		this.db = db;
+		this.defaultCollectionName = defaultCollectionName;
+	}
+	
 	public MongoTemplate(DB db, MongoConverter mongoConverter) {
 		this(db);
 		this.mongoConverter = mongoConverter;
 	}
 	
+	public MongoTemplate(DB db, String defaultCollectionName, MongoConverter mongoConverter) {
+		this(db);
+		this.mongoConverter = mongoConverter;
+		this.defaultCollectionName = defaultCollectionName;
+	}
 	
+
 
 	public String getDefaultCollectionName() {
 		return defaultCollectionName;
 	}
 	
-	public void setDefaultCollectionName(String defaultCollection) {
-		this.defaultCollectionName = defaultCollection;
-	}
 
 	public void executeCommand(String jsonCommand) {
 		executeCommand((DBObject)JSON.parse(jsonCommand));
@@ -80,6 +89,20 @@ public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> implements 
 		}
 	}
 	
+	public <T> T executeInSession(DBCallback<T> action) {
+		DB db = getConnection();
+		db.requestStart();
+		try {
+			return action.doInDB(db);
+		} catch (MongoException e) {
+			//TODO refine exception thrown to capture last error.
+			CommandResult result = db.getLastError();
+			throw new InvalidDataAccessApiUsageException("Error accessing DB " + db + ":" + e.getMessage(), e);
+		} finally {
+			db.requestDone();
+		}
+	}
+	
 	public DBCollection createCollection(String collectionName) {
 		try {
 			return getConnection().createCollection(collectionName, null);
@@ -91,6 +114,14 @@ public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> implements 
 	public void createCollection(String collectionName, CollectionOptions collectionOptions) {
 		try {
 			getConnection().createCollection(collectionName, convertToDbObject(collectionOptions));
+		} catch (MongoException e) {
+			throw new InvalidDataAccessApiUsageException("Error creating collection " + collectionName + ": " + e.getMessage(), e);
+		}
+	}
+	
+	public DBCollection getCollection(String collectionName) {
+		try {
+			return getConnection().getCollection(collectionName);
 		} catch (MongoException e) {
 			throw new InvalidDataAccessApiUsageException("Error creating collection " + collectionName + ": " + e.getMessage(), e);
 		}
@@ -194,6 +225,7 @@ public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> implements 
 	}
 
 	
+	//
 	
 	public <T> List<T> queryForList(String collectionName, DBObject query, Class<T> targetClass) {	
 		DBCollection collection = getConnection().getCollection(collectionName);

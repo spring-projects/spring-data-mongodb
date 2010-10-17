@@ -17,13 +17,28 @@ package org.springframework.datastore.document.mongodb;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class Portfolio {
 
     private String portfolioName;
     private User user;
     private List trades; 
+    private Map<String, Integer> positions;
+    private Map<String, Person>  portfolioManagers;
     
+	public Map<String, Person> getPortfolioManagers() {
+		return portfolioManagers;
+	}
+	public void setPortfolioManagers(Map<String, Person> portfolioManagers) {
+		this.portfolioManagers = portfolioManagers;
+	}
+	public Map<String, Integer> getPositions() {
+		return positions;
+	}
+	public void setPositions(Map<String, Integer> positions) {
+		this.positions = positions;
+	}
 	public Portfolio() {
 		trades = new ArrayList();
 	}
