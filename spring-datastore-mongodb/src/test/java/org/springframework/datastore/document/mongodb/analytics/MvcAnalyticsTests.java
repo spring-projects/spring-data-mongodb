@@ -14,6 +14,7 @@ import org.junit.Test;
 import org.springframework.datastore.document.analytics.ControllerCounter;
 import org.springframework.datastore.document.analytics.MvcEvent;
 import org.springframework.datastore.document.analytics.Parameters;
+import org.springframework.datastore.document.mongodb.MongoReader;
 import org.springframework.datastore.document.mongodb.MongoTemplate;
 
 import com.mongodb.BasicDBList;
@@ -25,7 +26,7 @@ import com.mongodb.Mongo;
 import com.mongodb.QueryBuilder;
 import com.mongodb.WriteResult;
 
-@Ignore
+
 public class MvcAnalyticsTests {
 
 	private MongoTemplate mongoTemplate;
@@ -36,27 +37,68 @@ public class MvcAnalyticsTests {
 		DB db = m.getDB("mvc");
 		mongoTemplate = new MongoTemplate(db, "mvc");
 		mongoTemplate.afterPropertiesSet();
-		// mongoTemplate.dropCollection("mvc");
-		// mongoTemplate.createCollection("mvc");
-		//mongoTemplate.dropCollection("counters");
-		//mongoTemplate.createCollection("counters");
+		
+		
+	}
+	
+	@Test
+	public void clean() {
+		mongoTemplate.dropCollection("mvc");
+		mongoTemplate.createCollection("mvc");
+		mongoTemplate.dropCollection("counters");
+		mongoTemplate.createCollection("counters");
 	}
 
 	@Test
-	public void loadData() {
+	public void loadMvcEventData() {
 
 		// datasize, favoriteRestId
-		createAndStoreForP1(5, 1);
-		createAndStoreForP1(6, 2);
-		createAndStoreForP1(3, 3);
-		createAndStoreForP1(8, 4);
+		createAndStoreMvcEvent(5, 1);
+		createAndStoreMvcEvent(6, 2);
+		createAndStoreMvcEvent(3, 3);
+		createAndStoreMvcEvent(8, 4);
 
 		List<MvcEvent> mvcEvents = mongoTemplate.queryForCollection("mvc",
 				MvcEvent.class);
 		Assert.assertEquals(22, mvcEvents.size());
+		
+		List<MvcEvent> mvcEvents2 = mongoTemplate.queryForCollection("mvc", MvcEvent.class, 
+				new MongoReader<MvcEvent>() {
+					public MvcEvent read(Class<? extends MvcEvent> clazz, DBObject dbo) {
+						return null;
+					}			
+				});
 
 	}
-
+	
+	@Test
+	public void loadCounterData() {		
+		for (int i = 0; i < 10; i++) {
+			storeCounterData("SignUpController", "createForm");
+			storeCounterData("SignUpController", "create");
+			storeCounterData("SignUpController", "show");
+			storeCounterData("RestaurantController", "addFavoriteRestaurant");
+		}
+		for (int i = 0; i< 5;i++) {
+			storeCounterData("RestaurantController", "list");
+			storeCounterData("SignUpController", "show");
+		}
+		
+		
+	}
+	
+	@Test
+	public void queryCounterData() {
+		DBObject query = QueryBuilder.start("name").is("SignUpController").get();
+		for (DBObject dbo : mongoTemplate.getCollection("counters").find(query)) {
+			System.out.println(dbo);
+		}
+		List<ControllerCounter> counters = mongoTemplate.queryForList("counters", "{ 'name' : 'SignUpController'} ", ControllerCounter.class);
+		for (ControllerCounter controllerCounter : counters) {
+			System.out.println(controllerCounter);
+		}
+	}
+	
 	/*
 	 * 
 	 * var start = new Date(2010,9,1); var end = new Date(2010,11,1);
@@ -66,13 +108,12 @@ public class MvcAnalyticsTests {
 	 */
 
 	@Test
-	public void listAll() {
+	public void listAllMvcEvents() {
 		List<MvcEvent> mvcEvents = mongoTemplate.queryForCollection("mvc",
 				MvcEvent.class);
 		for (MvcEvent mvcEvent : mvcEvents) {
 			System.out.println(mvcEvent.getDate());
 		}
-		// System.out.println(mvcEvents);
 	}
 
 	@Test
@@ -126,7 +167,7 @@ public class MvcAnalyticsTests {
 	}
 
 	@Test
-	public void storeCounterInfo() {
+	public void storeControllerCounterInfo() {
 
 		BasicDBObject query = new BasicDBObject("name", "controller1");
 		
@@ -156,8 +197,24 @@ public class MvcAnalyticsTests {
 		DBObject changes = new BasicDBObject("$inc", new BasicDBObject("methods.find", 1));
 		mongoTemplate.getConnection().getCollection("counters").update(query, changes, true, false);
 	}
+	
+	
+	public void storeCounterData(String controllerName, String methodName) {
+		BasicDBObject query = new BasicDBObject("name", controllerName);
+		
+		BasicDBObject changes = new BasicDBObject();
+		changes.put("$set", new BasicDBObject("name", controllerName));
+		changes.put("$inc", new BasicDBObject("count", 1));
+		
+		WriteResult r = mongoTemplate.getCollection("counters").update(query, changes, true,false);
+		System.out.println(r);
+				
+		changes = new BasicDBObject("$inc", new BasicDBObject("methods." + methodName, 1));
+		r = mongoTemplate.getConnection().getCollection("counters").update(query, changes, true, false);
+		System.out.println(r);
+	}
 
-	private void createAndStoreForP1(int dataSize, int p1) {
+	private void createAndStoreMvcEvent(int dataSize, int p1) {
 		for (int i = 0; i < dataSize; i++) {
 			MvcEvent event = generateEvent(p1);
 			mongoTemplate.save(event);
@@ -168,8 +225,8 @@ public class MvcAnalyticsTests {
 		ControllerCounter cc = new ControllerCounter();
 		cc.setName("controller2");
 		cc.setCount(0);
-		Map<String, Integer> methods = new HashMap<String, Integer>();
-		methods.put("find", 1);
+		Map<String, Double> methods = new HashMap<String, Double>();
+		methods.put("find", 1D);
 		cc.setMethods(methods);
 		return cc;
 	}

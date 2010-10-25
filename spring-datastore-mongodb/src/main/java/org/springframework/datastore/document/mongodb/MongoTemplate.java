@@ -180,6 +180,19 @@ public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> implements 
 		}
 	}
 
+	public <T> List<T> queryForCollection(Class<T> targetClass) {
+		
+		List<T> results = new ArrayList<T>();
+		DBCollection collection = getConnection().getCollection(getDefaultCollectionName());
+		for (DBObject dbo : collection.find()) {
+			Object obj = mongoConverter.read(targetClass, dbo);
+			//effectively acts as a query on the collection restricting it to elements of a specific type
+			if (targetClass.isInstance(obj)) {
+				results.add(targetClass.cast(obj));
+			}
+		}
+		return results;
+	}
 	
 	public <T> List<T> queryForCollection(String collectionName, Class<T> targetClass) {
 		

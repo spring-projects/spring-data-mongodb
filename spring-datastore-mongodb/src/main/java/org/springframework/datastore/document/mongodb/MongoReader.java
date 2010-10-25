@@ -20,5 +20,4 @@ import com.mongodb.DBObject;
 public interface MongoReader<T> {
 
 	T read(Class<? extends T> clazz, DBObject dbo);
-	//T read(DBObject dbo);
 }

@@ -13,29 +13,33 @@ public class ControllerCounter {
 		this.name = name;
 	}
 
-	public int getCount() {
+	public double getCount() {
 		return count;
 	}
 
-	public void setCount(int count) {
+	public void setCount(double count) {
 		this.count = count;
 	}
 
-	public Map<String, Integer> getMethods() {
+	public Map<String, Double> getMethods() {
 		return methods;
 	}
 	
 	
 
-	public void setMethods(Map<String, Integer> methods) {
+	public void setMethods(Map<String, Double> methods) {
 		this.methods = methods;
 	}
 
 	private String name;
 	
-	private int count;
+	private double count;
 	
-	private Map<String, Integer> methods;
+	private Map<String, Double> methods;
 	
-	
+	@Override
+	public String toString() {
+		return "ControllerCounter [name=" + name + ", count=" + count
+				+ ", methods=" + methods + "]";
+	}	
 }
