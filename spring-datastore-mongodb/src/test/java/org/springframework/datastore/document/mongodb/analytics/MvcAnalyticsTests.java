@@ -34,8 +34,7 @@ public class MvcAnalyticsTests {
 	@Before
 	public void setUp() throws Exception {
 		Mongo m = new Mongo();
-		DB db = m.getDB("mvc");
-		mongoTemplate = new MongoTemplate(db, "mvc");
+		mongoTemplate = new MongoTemplate(m, "mvc", "mvc");
 		mongoTemplate.afterPropertiesSet();
 		
 		

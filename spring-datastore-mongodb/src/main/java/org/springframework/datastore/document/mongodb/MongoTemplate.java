@@ -31,6 +31,7 @@ import com.mongodb.CommandResult;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
+import com.mongodb.Mongo;
 import com.mongodb.MongoException;
 import com.mongodb.WriteResult;
 import com.mongodb.util.JSON;
@@ -45,31 +46,38 @@ public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> implements 
 	
 	//TODO expose configuration...
 	private CollectionOptions defaultCollectionOptions;
-	
-	
-	public MongoTemplate(DB db) {
-		super();
-		this.db = db;
-	}
-	
-	public MongoTemplate(DB db, String defaultCollectionName) {
-		super();
-		this.db = db;
-		this.defaultCollectionName = defaultCollectionName;
-	}
-	
-	public MongoTemplate(DB db, MongoConverter mongoConverter) {
-		this(db);
-		this.mongoConverter = mongoConverter;
-	}
-	
-	public MongoTemplate(DB db, String defaultCollectionName, MongoConverter mongoConverter) {
-		this(db);
-		this.mongoConverter = mongoConverter;
-		this.defaultCollectionName = defaultCollectionName;
-	}
-	
 
+	private Mongo mongo;
+
+	private String databaseName;
+	
+	
+	public MongoTemplate(Mongo mongo, String databaseName) {
+		this(mongo, databaseName, null, null);
+	}
+	
+	public MongoTemplate(Mongo mongo, String databaseName, String defaultCollectionName) {
+		this(mongo, databaseName, defaultCollectionName, null);
+	}
+	
+	public MongoTemplate(Mongo mongo, String databaseName, MongoConverter mongoConverter) {
+		this(mongo, databaseName, null, mongoConverter);
+	}
+	
+	public MongoTemplate(Mongo mongo, String databaseName, String defaultCollectionName, MongoConverter mongoConverter) {
+		this.mongoConverter = mongoConverter;
+		this.defaultCollectionName = defaultCollectionName;
+		this.mongo = mongo;
+		this.databaseName = databaseName;
+	}
+	
+	public void setDefaultCollectionName(String defaultCollectionName) {
+		this.defaultCollectionName = defaultCollectionName;
+	}
+
+	public void setDatabaseName(String databaseName) {
+		this.databaseName = databaseName;
+	}
 
 	public String getDefaultCollectionName() {
 		return defaultCollectionName;
@@ -268,7 +276,7 @@ public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> implements 
 
 	@Override
 	public DB getConnection() {
-		return db;
+		return MongoDbUtils.getDB(mongo, databaseName);
 	}
 
 	
@@ -292,6 +300,7 @@ public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> implements 
 
 	public void afterPropertiesSet() throws Exception {
 		if (this.getDefaultCollectionName() != null) {
+			DB db = getConnection();
 			if (! db.collectionExists(getDefaultCollectionName())) {
 				db.createCollection(getDefaultCollectionName(), null);
 			}

@@ -24,6 +24,7 @@ import org.springframework.util.Assert;
 
 import com.mongodb.DB;
 import com.mongodb.Mongo;
+import com.mongodb.MongoOptions;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -32,9 +33,11 @@ import org.apache.commons.logging.LogFactory;
  * Convenient factory for configuring MongoDB.
  *
  * @author Thomas Risberg
+ * @author Graeme Rocher
+ * 
  * @since 1.0
  */
-public class MongoDbFactoryBean implements FactoryBean<DB>, InitializingBean, 
+public class MongoFactoryBean implements FactoryBean<Mongo>, InitializingBean, 
 		PersistenceExceptionTranslator {
 
 	/**
@@ -43,12 +46,18 @@ public class MongoDbFactoryBean implements FactoryBean<DB>, InitializingBean,
 	protected final Log logger = LogFactory.getLog(getClass());
 
 	private Mongo mongo;
+	private MongoOptions mongoOptions;
 	private String host;
 	private Integer port;
 	private String databaseName;
 	
+	
 	public void setMongo(Mongo mongo) {
 		this.mongo = mongo;
+	}
+
+	public void setMongoOptions(MongoOptions mongoOptions) {
+		this.mongoOptions = mongoOptions;
 	}
 
 	public void setDatabaseName(String databaseName) {
@@ -63,14 +72,13 @@ public class MongoDbFactoryBean implements FactoryBean<DB>, InitializingBean,
 		this.port = port;
 	}
 
-	public DB getObject() throws Exception {
+	public Mongo getObject() throws Exception {
 		Assert.notNull(mongo, "Mongo must not be null");
-		Assert.hasText(databaseName, "Database name must not be empty");
-		return mongo.getDB(databaseName);
+		return mongo;
 	}
 
-	public Class<? extends DB> getObjectType() {
-		return DB.class;
+	public Class<? extends Mongo> getObjectType() {
+		return Mongo.class;
 	}
 
 	public boolean isSingleton() {
@@ -80,17 +88,16 @@ public class MongoDbFactoryBean implements FactoryBean<DB>, InitializingBean,
 	public void afterPropertiesSet() throws Exception {
 		// apply defaults - convenient when used to configure for tests 
 		// in an application context
-		if (databaseName == null) {
-			logger.warn("Property databaseName not specified. Using default name 'test'");
-			databaseName = "test";
-		}
 		if (mongo == null) {
 			logger.warn("Property mongo not specified. Using default configuration");
 			if (host == null) {
 				mongo =  new Mongo();
 			}
 			else {
-				if (port == null) {
+				if(mongoOptions != null) {
+					mongo = new Mongo(host != null ? host : "localhost", mongoOptions);
+				}
+				else if (port == null) {
 					mongo = new Mongo(host);
 				}
 				else {
