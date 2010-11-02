@@ -58,7 +58,7 @@
 		<downloadUrl>http://www.springsource.com/download/community
 		</downloadUrl>
 		<site>
-			<id>spring-docs</id>
+			<id>static.springframework.org</id>
 			<url>scp://static.springframework.org/var/www/domains/springframework.org/static/htdocs/spring-data/datastore-document/docs/${project.version}
 			</url>
 		</site>
@@ -226,7 +226,7 @@
 				-->
 				<groupId>org.springframework.build.aws</groupId>
 				<artifactId>org.springframework.build.aws.maven</artifactId>
-				<version>3.0.0.RELEASE</version>
+				<version>2.0.0.RELEASE</version>
 			</extension>
 		</extensions>
 		<resources>
