@@ -89,8 +89,9 @@ public class MongoFactoryBean implements FactoryBean<Mongo>, InitializingBean,
 		// apply defaults - convenient when used to configure for tests 
 		// in an application context
 		if (mongo == null) {
-			logger.warn("Property mongo not specified. Using default configuration");
+			
 			if (host == null) {
+				logger.warn("Property host not specified. Using default configuration");
 				mongo =  new Mongo();
 			}
 			else {
