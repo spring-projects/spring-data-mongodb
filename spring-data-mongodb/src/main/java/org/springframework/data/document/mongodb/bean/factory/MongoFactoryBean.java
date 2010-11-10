@@ -16,6 +16,10 @@
 
 package org.springframework.data.document.mongodb.bean.factory;
 
+import java.util.List;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.dao.DataAccessException;
@@ -26,9 +30,6 @@ import org.springframework.util.Assert;
 import com.mongodb.Mongo;
 import com.mongodb.MongoOptions;
 import com.mongodb.ServerAddress;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 /**
  * Convenient factory for configuring MongoDB.
@@ -51,9 +52,14 @@ public class MongoFactoryBean implements FactoryBean<Mongo>, InitializingBean,
 	private MongoOptions mongoOptions;
 	private String host;
 	private Integer port;
+	private List<ServerAddress> replicaSetSeeds;
 	
 	public void setMongoOptions(MongoOptions mongoOptions) {
 		this.mongoOptions = mongoOptions;
+	}
+
+	public void setReplicaSetSeeds(List<ServerAddress> replicaSetSeeds) {
+		this.replicaSetSeeds = replicaSetSeeds;
 	}
 
 	public void setHost(String host) {
@@ -88,19 +94,29 @@ public class MongoFactoryBean implements FactoryBean<Mongo>, InitializingBean,
 			}
 			else {
 				if(mongoOptions != null) {
-					String mongoHost = host != null ? host : "localhost";
-					if(port != null) {
-						mongo = new Mongo(new ServerAddress(mongoHost, port), mongoOptions);
+					if(replicaSetSeeds != null) {
+						mongo = new Mongo(replicaSetSeeds, mongoOptions);						
 					}
 					else {
-						mongo = new Mongo(mongoHost, mongoOptions);
+						String mongoHost = host != null ? host : "localhost";
+						if(port != null) {
+							mongo = new Mongo(new ServerAddress(mongoHost, port), mongoOptions);
+						}
+						else {
+							mongo = new Mongo(mongoHost, mongoOptions);
+						}						
 					}					
 				}
-				else if (port == null) {
-					mongo = new Mongo(host);
-				}
 				else {
-					mongo = new Mongo(host, port);					
+					if(replicaSetSeeds != null) {
+						mongo = new Mongo(replicaSetSeeds, new MongoOptions());
+					}
+					else if (port == null) {
+						mongo = new Mongo(host);
+					}
+					else {
+						mongo = new Mongo(host, port);					
+					}
 				}
 			}
 		}
