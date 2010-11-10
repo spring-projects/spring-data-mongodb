@@ -25,6 +25,7 @@ import org.springframework.util.Assert;
 
 import com.mongodb.Mongo;
 import com.mongodb.MongoOptions;
+import com.mongodb.ServerAddress;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -51,10 +52,6 @@ public class MongoFactoryBean implements FactoryBean<Mongo>, InitializingBean,
 	private String host;
 	private Integer port;
 	
-	public void setMongo(Mongo mongo) {
-		this.mongo = mongo;
-	}
-
 	public void setMongoOptions(MongoOptions mongoOptions) {
 		this.mongoOptions = mongoOptions;
 	}
@@ -91,7 +88,13 @@ public class MongoFactoryBean implements FactoryBean<Mongo>, InitializingBean,
 			}
 			else {
 				if(mongoOptions != null) {
-					mongo = new Mongo(host != null ? host : "localhost", mongoOptions);
+					String mongoHost = host != null ? host : "localhost";
+					if(port != null) {
+						mongo = new Mongo(new ServerAddress(mongoHost, port), mongoOptions);
+					}
+					else {
+						mongo = new Mongo(mongoHost, mongoOptions);
+					}					
 				}
 				else if (port == null) {
 					mongo = new Mongo(host);
