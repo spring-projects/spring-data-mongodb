@@ -1,0 +1,32 @@
+Bundle-SymbolicName: org.springframework.data.document
+Bundle-Name: Spring Data Document
+Bundle-Vendor: SpringSource
+Bundle-ManifestVersion: 2
+Import-Package: 
+ sun.reflect;version="0";resolution:=optional
+Import-Template: 
+ javax.servlet;version="[2.4.0, 4.0.0)",
+ javax.servlet.http;version="[2.4.0, 4.0.0)",
+ org.springframework.http.*;version="[3.0.0, 4.0.0)",
+ org.springframework.http.converter.*;version="[3.0.0, 4.0.0)",
+ org.springframework.http.server*;version="[3.0.0, 4.0.0)",
+ org.springframework.ui.*;version="[3.0.0, 4.0.0)",
+ org.springframework.web.*;version="[3.0.0, 4.0.0)",
+ org.springframework.web.bind.*;version="[3.0.0, 4.0.0)",
+ org.springframework.web.bind.annotation.*;version="[3.0.0, 4.0.0)",
+ org.springframework.web.bind.annotation.support.*;version="[3.0.0, 4.0.0)",
+ org.springframework.web.bind.support.*;version="[3.0.0, 4.0.0)",
+ org.springframework.web.context.request.*;version="[3.0.0, 4.0.0)",
+ org.springframework.web.util.*;version="[3.0.0, 4.0.0)",
+ org.springframework.validation.*;version="[3.0.0, 4.0.0)",
+ org.springframework.validation.support.*;version="[3.0.0, 4.0.0)",
+ org.springframework.beans.*;version="[3.0.0, 4.0.0)",
+ org.springframework.core.*;version="[3.0.0, 4.0.0)",
+ org.springframework.dao.*;version="[3.0.0, 4.0.0)",
+ org.springframework.util.*;version="[3.0.0, 4.0.0)",
+ org.springframework.data.core.*;version="[1.0.0, 2.0.0)",
+ org.aopalliance.*;version="[1.0.0, 2.0.0)";resolution:=optional,
+ org.apache.commons.logging.*;version="[1.1.1, 2.0.0)",
+ org.w3c.dom.*;version="0"
+
+

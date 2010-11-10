@@ -3,15 +3,15 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.springframework.data</groupId>
-	<artifactId>spring-datastore-document-dist</artifactId>
-	<name>Spring Datastore Document Distribution</name>
+	<artifactId>spring-data-document-dist</artifactId>
+	<name>Spring Data Document Distribution</name>
 	<version>1.0.0.BUILD-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<modules>
-		<module>spring-datastore-document-parent</module>
-		<module>spring-datastore-document-core</module>
-		<module>spring-datastore-mongodb</module>
-		<module>spring-datastore-couchdb</module>
+		<module>spring-data-document-parent</module>
+		<module>spring-data-document-core</module>
+		<module>spring-data-mongodb</module>
+		<module>spring-data-couchdb</module>
 	</modules>
 
 	<developers>
@@ -55,8 +55,8 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<!-- dist.* properties are used by the antrun tasks below -->
-		<dist.id>spring-datastore-document</dist.id>
-		<dist.name>Spring Datastore Document</dist.name>
+		<dist.id>spring-data-document</dist.id>
+		<dist.name>Spring Data Document</dist.name>
 		<dist.key>DATADOC</dist.key>
 		<dist.version>${project.version}</dist.version>
 		<dist.releaseType>snapshot</dist.releaseType>
@@ -75,15 +75,15 @@
 			<distributionManagement>
 				<site>
 					<id>spring-site-staging</id>
-					<url>file:///${java.io.tmpdir}/spring-data/datastore-document/docs/${project.version}</url>
+					<url>file:///${java.io.tmpdir}/spring-data/data-document/docs/${project.version}</url>
 				</site>
 				<repository>
 					<id>spring-milestone-staging</id>
-					<url>file:///${java.io.tmpdir}/spring-data/datastore-document/milestone</url>
+					<url>file:///${java.io.tmpdir}/spring-data/data-document/milestone</url>
 				</repository>
 				<snapshotRepository>
 					<id>spring-snapshot-staging</id>
-					<url>file:///${java.io.tmpdir}/spring-data/datastore-document/snapshot</url>
+					<url>file:///${java.io.tmpdir}/spring-data/data-document/snapshot</url>
 				</snapshotRepository>
 			</distributionManagement>
 		</profile>
@@ -93,7 +93,7 @@
 		<downloadUrl>http://www.springsource.com/download/community</downloadUrl>
 		<site>
 			<id>static.springframework.org</id>
-			<url>scp://static.springframework.org/var/www/domains/springframework.org/static/htdocs/spring-data/datastore-document/docs/${project.version}</url>
+			<url>scp://static.springframework.org/var/www/domains/springframework.org/static/htdocs/spring-data/data-document/docs/${project.version}</url>
 		</site>
 		<repository>
 			<id>spring-milestone</id>
@@ -172,7 +172,7 @@
 							</fileset>
 						</copy>
 						<move file="${project.basedir}/target/site/reference/pdf/index.pdf"
-							tofile="${project.basedir}/target/site/reference/pdf/spring-datastore-document-reference.pdf"
+							tofile="${project.basedir}/target/site/reference/pdf/spring-data-document-reference.pdf"
 							failonerror="false" />
 					</postProcess>
 				</configuration>
@@ -190,7 +190,7 @@
 						<configuration>
 							<javadoc:aggregate>true</javadoc:aggregate>
 							<breakiterator>true</breakiterator>
-							<header>Spring Datastore Document</header>
+							<header>Spring Data Document</header>
 							<source>1.5</source>
 							<quiet>true</quiet>
 							<javadocDirectory>${project.basedir}/src/main/javadoc</javadocDirectory>
