@@ -23,4 +23,8 @@ public class CannotGetMongoDbConnectionException extends DataAccessResourceFailu
 		super(msg, cause);
 	}
 
+	public CannotGetMongoDbConnectionException(String msg) {
+		super(msg);
+	}
+
 }

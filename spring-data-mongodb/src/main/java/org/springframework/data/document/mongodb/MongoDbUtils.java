@@ -75,11 +75,32 @@ public class MongoDbUtils {
 		return null;				
 	}
 
+	/**
+	 * Obtains a {@link DB} connection for the given {@link Mongo} instance and database name
+	 * 
+	 * @param mongo The {@link Mongo} instance
+	 * @param databaseName The database name
+	 * @return The {@link DB} connection 
+	 */
 	public static DB getDB(Mongo mongo, String databaseName) {
-		return doGetDB(mongo, databaseName, true);
+		return doGetDB(mongo, databaseName,null,null, true);
 	}
 
-	public static DB doGetDB(Mongo mongo, String databaseName, boolean allowCreate) {
+	/**
+	 * 
+	 * Obtains a {@link DB} connection for the given {@link Mongo} instance and database name
+	 * 
+	 * @param mongo The {@link Mongo} instance
+	 * @param databaseName The database name
+	 * @param username The username to authenticate with
+	 * @param password The password to authenticate with
+	 * @return The {@link DB} connection 
+	 */
+	public static DB getDB(Mongo mongo, String databaseName, String username, char[] password) {
+		return doGetDB(mongo, databaseName,username,password, true);
+	}	
+
+	public static DB doGetDB(Mongo mongo, String databaseName, String username, char[] password, boolean allowCreate) {
 		Assert.notNull(mongo, "No Mongo instance specified");
 
 		DBHolder dbHolder = (DBHolder) TransactionSynchronizationManager.getResource(mongo);
@@ -103,6 +124,11 @@ public class MongoDbUtils {
 
 		logger.debug("Opening Mongo DB");
 		DB db = mongo.getDB(databaseName);
+		if(username != null && password != null) {
+			if(!db.authenticate(username, password)) {
+				throw new CannotGetMongoDbConnectionException("Failed to authenticate with Mongo using the given credentials");
+			}
+		}
 		// Use same Session for further Mongo actions within the transaction.
 		// Thread object will get removed by synchronization at transaction completion.
 		if (TransactionSynchronizationManager.isSynchronizationActive()) {

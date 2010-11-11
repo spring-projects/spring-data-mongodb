@@ -51,6 +51,10 @@ public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> implements 
 
 	private String databaseName;
 	
+	private String username;
+	
+	private char[] password;
+	
 	
 	public MongoTemplate(Mongo mongo, String databaseName) {
 		this(mongo, databaseName, null, null);
@@ -71,6 +75,25 @@ public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> implements 
 		this.databaseName = databaseName;
 	}
 	
+	
+	/**
+	 * Sets the username to use to connect to the Mongo database
+	 * 
+	 * @param username The username to use
+	 */
+	public void setUsername(String username) {
+		this.username = username;
+	}
+
+	/**
+	 * Sets the password to use to authenticate with the Mongo database
+	 * 
+	 * @param password The password to use
+	 */
+	public void setPassword(char[] password) {
+		this.password = password;
+	}
+
 	public void setDefaultCollectionName(String defaultCollectionName) {
 		this.defaultCollectionName = defaultCollectionName;
 	}
@@ -83,6 +106,12 @@ public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> implements 
 		return defaultCollectionName;
 	}
 	
+	/**
+	 * @return The default collection used by this template
+	 */
+	public DBCollection getDefaultCollection() {
+		return getConnection().getCollection(getDefaultCollectionName());
+	}
 
 	public void executeCommand(String jsonCommand) {
 		executeCommand((DBObject)JSON.parse(jsonCommand));
@@ -97,15 +126,31 @@ public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> implements 
 		}
 	}
 	
+	/**
+	 * Executes a {@link DBCallback} translating any exceptions as necessary
+	 * 
+	 * @param <T> The return type
+	 * @param action The action to execute
+	 * 
+	 * @return The return value of the {@link DBCallback}
+	 */
+	public <T> T execute(DBCallback<T> action) {
+		DB db = getConnection();
+
+		try {
+			return action.doInDB(db);
+		} catch (MongoException e) {
+			throw MongoDbUtils.translateMongoExceptionIfPossible(e);
+		} 
+	}
+	
 	public <T> T executeInSession(DBCallback<T> action) {
 		DB db = getConnection();
 		db.requestStart();
 		try {
 			return action.doInDB(db);
 		} catch (MongoException e) {
-			//TODO refine exception thrown to capture last error.
-			CommandResult result = db.getLastError();
-			throw new InvalidDataAccessApiUsageException("Error accessing DB " + db + ":" + e.getMessage(), e);
+			throw MongoDbUtils.translateMongoExceptionIfPossible(e);
 		} finally {
 			db.requestDone();
 		}
@@ -276,6 +321,9 @@ public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> implements 
 
 	@Override
 	public DB getConnection() {
+		if(username != null && password != null) {
+			return MongoDbUtils.getDB(mongo, databaseName, username, password);
+		}
 		return MongoDbUtils.getDB(mongo, databaseName);
 	}
 
