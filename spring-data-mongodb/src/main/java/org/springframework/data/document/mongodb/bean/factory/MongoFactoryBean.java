@@ -24,6 +24,7 @@ import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
+import org.springframework.data.document.mongodb.CannotGetMongoDbConnectionException;
 import org.springframework.data.document.mongodb.MongoDbUtils;
 import org.springframework.util.Assert;
 
@@ -53,6 +54,7 @@ public class MongoFactoryBean implements FactoryBean<Mongo>, InitializingBean,
 	private String host;
 	private Integer port;
 	private List<ServerAddress> replicaSetSeeds;
+	private List<ServerAddress> replicaPair;
 	
 	public void setMongoOptions(MongoOptions mongoOptions) {
 		this.mongoOptions = mongoOptions;
@@ -60,6 +62,10 @@ public class MongoFactoryBean implements FactoryBean<Mongo>, InitializingBean,
 
 	public void setReplicaSetSeeds(List<ServerAddress> replicaSetSeeds) {
 		this.replicaSetSeeds = replicaSetSeeds;
+	}
+	
+	public void setReplicaPair(List<ServerAddress> replicaPair) {
+		this.replicaPair = replicaPair;
 	}
 
 	public void setHost(String host) {
@@ -93,31 +99,26 @@ public class MongoFactoryBean implements FactoryBean<Mongo>, InitializingBean,
 				mongo =  new Mongo();
 			}
 			else {
-				if(mongoOptions != null) {
-					if(replicaSetSeeds != null) {
-						mongo = new Mongo(replicaSetSeeds, mongoOptions);						
+				ServerAddress defaultOptions = new ServerAddress();
+				if(mongoOptions == null) mongoOptions = new MongoOptions();
+				if(replicaPair != null) {
+					if(replicaPair.size() < 2) {
+						throw new CannotGetMongoDbConnectionException("A replica pair must have two server entries");							
 					}
-					else {
-						String mongoHost = host != null ? host : "localhost";
-						if(port != null) {
-							mongo = new Mongo(new ServerAddress(mongoHost, port), mongoOptions);
-						}
-						else {
-							mongo = new Mongo(mongoHost, mongoOptions);
-						}						
-					}					
+					mongo = new Mongo(replicaPair.get(0), replicaPair.get(1), mongoOptions);
+				}
+				else if(replicaSetSeeds != null) {
+					mongo = new Mongo(replicaSetSeeds, mongoOptions);
 				}
 				else {
-					if(replicaSetSeeds != null) {
-						mongo = new Mongo(replicaSetSeeds, new MongoOptions());
-					}
-					else if (port == null) {
-						mongo = new Mongo(host);
+					String mongoHost = host != null ? host : defaultOptions.getHost();
+					if(port != null) {
+						mongo = new Mongo(new ServerAddress(mongoHost, port), mongoOptions);
 					}
 					else {
-						mongo = new Mongo(host, port);					
-					}
-				}
+						mongo = new Mongo(mongoHost, mongoOptions);
+					}						
+				}	
 			}
 		}
 	}
