@@ -42,9 +42,9 @@
 		<moduleSet>
 			<!-- adds module jars to the distribution archive under the 'dist' directory -->
 			<includes>
-				<include>org.springframework.data:spring-datastore-document-core</include>
-				<include>org.springframework.data:spring-datastore-couchdb</include>
-				<include>org.springframework.data:spring-datastore-mongodb</include>
+				<include>org.springframework.data:spring-data-document-core</include>
+				<include>org.springframework.data:spring-data-couchdb</include>
+				<include>org.springframework.data:spring-data-mongodb</include>
 			</includes>
 			<binaries>
 				<outputDirectory>dist</outputDirectory>
@@ -56,9 +56,9 @@
 			<!-- adds module source jars to the distribution archive under the 'src' directory
 				 see pom.xml 'maven-source-plugin' declaration -->
 			<includes>
-				<include>org.springframework.data:spring-datastore-document-core</include>
-				<include>org.springframework.data:spring-datastore-couchdb</include>
-				<include>org.springframework.data:spring-datastore-mongodb</include>
+				<include>org.springframework.data:spring-data-document-core</include>
+				<include>org.springframework.data:spring-data-couchdb</include>
+				<include>org.springframework.data:spring-data-mongodb</include>
 			</includes>
 			<binaries>
 				<attachmentClassifier>sources</attachmentClassifier>
