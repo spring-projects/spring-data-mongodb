@@ -25,7 +25,6 @@ import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -102,7 +101,8 @@ public class SimpleMongoConverter implements MongoConverter {
 		basics.add(Pattern.class.getName());
 		basics.add(CodeWScope.class.getName());
 		basics.add(ObjectId.class.getName());
-		// TODO check on enums.. basics.add(Enum.class.getName());
+		// TODO check on enums.. 
+		basics.add(Enum.class.getName());
 		SIMPLE_TYPES = Collections.unmodifiableSet(basics);
 	}
 
@@ -138,6 +138,7 @@ public class SimpleMongoConverter implements MongoConverter {
 		conversionContext.convertToDBObject(dbo, null, obj);
 	}*/
 
+	@SuppressWarnings("rawtypes")
 	public void write(Object obj, DBObject dbo) {
 
 		BeanWrapper bw = PropertyAccessorFactory.forBeanPropertyAccess(obj);
@@ -153,7 +154,12 @@ public class SimpleMongoConverter implements MongoConverter {
 
 			if (isValidProperty(pd)) {
 				// TODO validate Enums...
-				writeValue(dbo, keyToUse, value);
+				if (value != null && Enum.class.isAssignableFrom(pd.getPropertyType())) {
+					writeValue(dbo, keyToUse, ((Enum)value).name());
+				}
+				else {
+					writeValue(dbo, keyToUse, value);
+				}
 				// dbo.put(keyToUse, value);
 			} else {
 				//TODO exclude Class properties from consideration
@@ -221,9 +227,6 @@ public class SimpleMongoConverter implements MongoConverter {
 	}*/
 
 	public Object read(Class<? extends Object> clazz, DBObject dbo) {
-
-		
-		
 		Assert.state(clazz != null, "Mapped class was not specified");
 		Object mappedObject = BeanUtils.instantiate(clazz);
 		BeanWrapper bw = PropertyAccessorFactory
@@ -237,19 +240,31 @@ public class SimpleMongoConverter implements MongoConverter {
 				.getPropertyDescriptors(clazz);
 		for (PropertyDescriptor pd : propertyDescriptors) {
 			
-			if (dbo.containsField(pd.getName())) {
-				Object value = dbo.get(pd.getName());
+			String keyToUse = ("id".equals(pd.getName()) ? "_id" : pd.getName());
+			System.out.println("??? " + pd.getName() + " " + keyToUse + " = " + dbo.get(keyToUse));
+			if (dbo.containsField(keyToUse)) {
+				Object value = dbo.get(keyToUse);
 				if (value instanceof ObjectId) {
 					setObjectIdOnObject(bw, pd, (ObjectId) value);
 				} else {
 					if (isValidProperty(pd)) {
 						// This will leverage the conversion service.
-						// bw.setPropertyValue(pd.getName(),
-						// dbo.get(pd.getName()));
-						readValue(bw, pd, dbo);
+						if (!isSimpleType(value.getClass())) {
+							if (value instanceof DBObject) {
+								bw.setPropertyValue(pd.getName(), readCompoundValue(pd, (DBObject) value));
+							}
+							else {
+								logger.warn("Unable to map compound DBObject field "
+										+ keyToUse + " to property " + pd.getName()
+										+ ".  Should have been a 'DBObject' but was " + value.getClass().getName());
+							}
+						}
+						else {
+							bw.setPropertyValue(pd.getName(), value);
+						}
 					} else {
 						logger.warn("Unable to map DBObject field "
-								+ pd.getName() + " to property " + pd.getName()
+								+ keyToUse + " to property " + pd.getName()
 								+ ".  Skipping.");
 					}
 				}
@@ -259,18 +274,6 @@ public class SimpleMongoConverter implements MongoConverter {
 		return mappedObject;
 	}
 	
-	protected void readValue(BeanWrapper bw, PropertyDescriptor pd, DBObject dbo) {
-		
-			Object value = dbo.get(pd.getName());
-			// is not a simple type.
-			if (!isSimpleType(value.getClass())) {							
-				bw.setPropertyValue(pd.getName(),readCompoundValue(pd, (DBObject) dbo.get(pd.getName())));
-			} else {
-				bw.setPropertyValue(pd.getName(), value);
-			}
-		
-	}
-
 	private Object readCompoundValue(PropertyDescriptor pd, DBObject dbo) {
 		Class propertyClazz = pd.getPropertyType();
 		if (Map.class.isAssignableFrom(propertyClazz)) {
