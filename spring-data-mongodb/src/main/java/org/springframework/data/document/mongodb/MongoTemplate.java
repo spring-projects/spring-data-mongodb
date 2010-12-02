@@ -237,16 +237,29 @@ public class MongoTemplate implements InitializingBean {
 		}
 	}
 
-	public void update(DBObject queryDoc, DBObject updateDoc) {
-		update(getRequiredDefaultCollectionName(), queryDoc, updateDoc);
+	public void updateFirst(DBObject queryDoc, DBObject updateDoc) {
+		updateFirst(getRequiredDefaultCollectionName(), queryDoc, updateDoc);
 	}
 	
-	public void update(String collectionName, DBObject queryDoc, DBObject updateDoc) {
+	public void updateFirst(String collectionName, DBObject queryDoc, DBObject updateDoc) {
 		WriteResult wr = null;
 		try {
 			wr = getDb().getCollection(collectionName).update(queryDoc, updateDoc);
 		} catch (MongoException e) {
 			throw new DataRetrievalFailureException("Error during update using " + queryDoc + ", " + updateDoc + ": " + wr.getLastError().getErrorMessage(), e);
+		}
+	}
+	
+	public void updateMulti(DBObject queryDoc, DBObject updateDoc) {
+		updateMulti(getRequiredDefaultCollectionName(), queryDoc, updateDoc);
+	}
+	
+	public void updateMulti(String collectionName, DBObject queryDoc, DBObject updateDoc) {
+		WriteResult wr = null;
+		try {
+			wr = getDb().getCollection(collectionName).updateMulti(queryDoc, updateDoc);
+		} catch (MongoException e) {
+			throw new DataRetrievalFailureException("Error during updateMulti using " + queryDoc + ", " + updateDoc + ": " + wr.getLastError().getErrorMessage(), e);
 		}
 	}
 	
