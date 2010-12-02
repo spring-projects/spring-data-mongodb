@@ -41,7 +41,7 @@ import com.mongodb.MongoException;
 import com.mongodb.WriteResult;
 import com.mongodb.util.JSON;
 
-public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> implements InitializingBean {
+public class MongoTemplate implements InitializingBean {
 
 	private String defaultCollectionName;
 	
@@ -113,7 +113,7 @@ public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> implements 
 	 * @return The default collection used by this template
 	 */
 	public DBCollection getDefaultCollection() {
-		return getConnection().getCollection(getDefaultCollectionName());
+		return getDb().getCollection(getDefaultCollectionName());
 	}
 
 	public void executeCommand(String jsonCommand) {
@@ -121,7 +121,7 @@ public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> implements 
 	}
 
 	public void executeCommand(DBObject command) {
-		CommandResult cr = getConnection().command(command);
+		CommandResult cr = getDb().command(command);
 		String err = cr.getErrorMessage();
 		if (err != null) {
 			throw new InvalidDataAccessApiUsageException("Command execution of " + 
@@ -138,7 +138,7 @@ public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> implements 
 	 * @return The return value of the {@link DBCallback}
 	 */
 	public <T> T execute(DBCallback<T> action) {
-		DB db = getConnection();
+		DB db = getDb();
 
 		try {
 			return action.doInDB(db);
@@ -148,7 +148,7 @@ public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> implements 
 	}
 	
 	public <T> T executeInSession(DBCallback<T> action) {
-		DB db = getConnection();
+		DB db = getDb();
 		db.requestStart();
 		try {
 			return action.doInDB(db);
@@ -161,7 +161,7 @@ public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> implements 
 	
 	public DBCollection createCollection(String collectionName) {
 		try {
-			return getConnection().createCollection(collectionName, null);
+			return getDb().createCollection(collectionName, null);
 		} catch (MongoException e) {
 			throw new InvalidDataAccessApiUsageException("Error creating collection " + collectionName + ": " + e.getMessage(), e);
 		}
@@ -169,7 +169,7 @@ public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> implements 
 		
 	public void createCollection(String collectionName, CollectionOptions collectionOptions) {
 		try {
-			getConnection().createCollection(collectionName, convertToDbObject(collectionOptions));
+			getDb().createCollection(collectionName, convertToDbObject(collectionOptions));
 		} catch (MongoException e) {
 			throw new InvalidDataAccessApiUsageException("Error creating collection " + collectionName + ": " + e.getMessage(), e);
 		}
@@ -177,7 +177,7 @@ public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> implements 
 	
 	public DBCollection getCollection(String collectionName) {
 		try {
-			return getConnection().getCollection(collectionName);
+			return getDb().getCollection(collectionName);
 		} catch (MongoException e) {
 			throw new InvalidDataAccessApiUsageException("Error creating collection " + collectionName + ": " + e.getMessage(), e);
 		}
@@ -186,14 +186,14 @@ public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> implements 
 
 	public boolean collectionExists(String collectionName) {
 		try {
-			return getConnection().collectionExists(collectionName);
+			return getDb().collectionExists(collectionName);
 		} catch (MongoException e) {
 			throw new InvalidDataAccessApiUsageException("Error creating collection " + collectionName + ": " + e.getMessage(), e);
 		}
 	}
 
 	public void dropCollection(String collectionName) {
-		getConnection().getCollection(collectionName)
+		getDb().getCollection(collectionName)
 			.drop();
 	}
 
@@ -228,7 +228,7 @@ public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> implements 
 		if (dbDoc.keySet().size() > 0 ) {
 			WriteResult wr = null;
 			try {
-				wr = getConnection().getCollection(collectionName).save(dbDoc);
+				wr = getDb().getCollection(collectionName).save(dbDoc);
 				return dbDoc.get("_id");
 			} catch (MongoException e) {
 				throw new DataRetrievalFailureException(wr.getLastError().getErrorMessage(), e);
@@ -242,7 +242,7 @@ public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> implements 
 	public <T> List<T> queryForCollection(Class<T> targetClass) {
 		
 		List<T> results = new ArrayList<T>();
-		DBCollection collection = getConnection().getCollection(getDefaultCollectionName());
+		DBCollection collection = getDb().getCollection(getDefaultCollectionName());
 		for (DBObject dbo : collection.find()) {
 			Object obj = mongoConverter.read(targetClass, dbo);
 			//effectively acts as a query on the collection restricting it to elements of a specific type
@@ -256,7 +256,7 @@ public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> implements 
 	public <T> List<T> queryForCollection(String collectionName, Class<T> targetClass) {
 		
 		List<T> results = new ArrayList<T>();
-		DBCollection collection = getConnection().getCollection(collectionName);
+		DBCollection collection = getDb().getCollection(collectionName);
 		for (DBObject dbo : collection.find()) {
 			Object obj = mongoConverter.read(targetClass, dbo);
 			//effectively acts as a query on the collection restricting it to elements of a specific type
@@ -269,7 +269,7 @@ public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> implements 
 
 	public <T> List<T> queryForCollection(String collectionName, Class<T> targetClass, MongoReader<T> reader) { 
 		List<T> results = new ArrayList<T>();
-		DBCollection collection = getConnection().getCollection(collectionName);
+		DBCollection collection = getDb().getCollection(collectionName);
 		for (DBObject dbo : collection.find()) {
 			results.add(reader.read(targetClass, dbo));
 		}
@@ -300,7 +300,7 @@ public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> implements 
 	//
 	
 	public <T> List<T> queryForList(String collectionName, DBObject query, Class<T> targetClass) {	
-		DBCollection collection = getConnection().getCollection(collectionName);
+		DBCollection collection = getDb().getCollection(collectionName);
 		List<T> results = new ArrayList<T>();
 		for (DBObject dbo : collection.find(query)) {
 			Object obj = mongoConverter.read(targetClass,dbo);
@@ -313,7 +313,7 @@ public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> implements 
 	}
 
 	public <T> List<T> queryForList(String collectionName, DBObject query, Class<T> targetClass, MongoReader<T> reader) {
-		DBCollection collection = getConnection().getCollection(collectionName);
+		DBCollection collection = getDb().getCollection(collectionName);
 		List<T> results = new ArrayList<T>();
 		for (DBObject dbo : collection.find(query)) {
 			results.add(reader.read(targetClass, dbo));
@@ -325,8 +325,7 @@ public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> implements 
 		return MongoDbUtils.translateMongoExceptionIfPossible(ex);
 	}
 
-	@Override
-	public DB getConnection() {
+	public DB getDb() {
 		if(username != null && password != null) {
 			return MongoDbUtils.getDB(mongo, databaseName, username, password);
 		}
@@ -373,7 +372,7 @@ public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> implements 
 
 	public void afterPropertiesSet() throws Exception {
 		if (this.getDefaultCollectionName() != null) {
-			DB db = getConnection();
+			DB db = getDb();
 			if (! db.collectionExists(getDefaultCollectionName())) {
 				db.createCollection(getDefaultCollectionName(), null);
 			}

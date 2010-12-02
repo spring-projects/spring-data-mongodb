@@ -118,7 +118,7 @@ public class MvcAnalyticsTests {
 	@Test
 	public void groupQuery() {
 		// This circumvents exception translation
-		DBCollection collection = mongoTemplate.getConnection().getCollection(
+		DBCollection collection = mongoTemplate.getDb().getCollection(
 				"mvc");
 
 		// QueryBuilder qb = new QueryBuilder();
@@ -194,7 +194,7 @@ public class MvcAnalyticsTests {
 	public void updateMethodCounter() {
 		DBObject query = new BasicDBObject("name", "controller1");
 		DBObject changes = new BasicDBObject("$inc", new BasicDBObject("methods.find", 1));
-		mongoTemplate.getConnection().getCollection("counters").update(query, changes, true, false);
+		mongoTemplate.getDb().getCollection("counters").update(query, changes, true, false);
 	}
 	
 	
@@ -209,7 +209,7 @@ public class MvcAnalyticsTests {
 		System.out.println(r);
 				
 		changes = new BasicDBObject("$inc", new BasicDBObject("methods." + methodName, 1));
-		r = mongoTemplate.getConnection().getCollection("counters").update(query, changes, true, false);
+		r = mongoTemplate.getDb().getCollection("counters").update(query, changes, true, false);
 		System.out.println(r);
 	}
 
