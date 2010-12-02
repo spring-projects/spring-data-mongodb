@@ -151,11 +151,13 @@ public class SimpleMongoConverter implements MongoConverter {
 			// if (isSimpleType(pd.getPropertyType())) {
 			Object value = bw.getPropertyValue(pd.getName());
 			String keyToUse = ("id".equals(pd.getName()) ? "_id" : pd.getName());
-
 			if (isValidProperty(pd)) {
 				// TODO validate Enums...
 				if (value != null && Enum.class.isAssignableFrom(pd.getPropertyType())) {
 					writeValue(dbo, keyToUse, ((Enum)value).name());
+				}
+				else if (value != null && "_id".equals(keyToUse) && String.class.isAssignableFrom(pd.getPropertyType())) {
+					writeValue(dbo, keyToUse, new ObjectId((String)value));
 				}
 				else {
 					writeValue(dbo, keyToUse, value);
