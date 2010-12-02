@@ -274,7 +274,17 @@ public class MongoTemplate implements InitializingBean {
 			results.add(reader.read(targetClass, dbo));
 		}
 		return results;
+	}
+	
+	// Queries that take JavaScript to express the query.
+	
+	public <T> List<T> queryForList(String query, Class<T> targetClass) {
+		return queryForList(getDefaultCollectionName(), (DBObject)JSON.parse(query), targetClass);
 	}	
+	
+	public <T> List<T> queryForList(String query, Class<T> targetClass, MongoReader<T> reader) {
+		return queryForList(getDefaultCollectionName(), (DBObject)JSON.parse(query), targetClass, reader);
+	}
 
 	public <T> List<T> queryForList(String collectionName, String query, Class<T> targetClass) {
 		return queryForList(collectionName, (DBObject)JSON.parse(query), targetClass);
@@ -285,7 +295,15 @@ public class MongoTemplate implements InitializingBean {
 	}
 
 	
-	//
+	// Queries that take DBObject to express the query
+	
+	public <T> List<T> queryForList(DBObject query, Class<T> targetClass) {
+		return queryForList(getDefaultCollectionName(), query, targetClass);
+	}
+	
+	public <T> List<T> queryForList(DBObject query, Class<T> targetClass, MongoReader<T> reader) {
+		return queryForList(getDefaultCollectionName(), query, targetClass, reader);
+	}
 	
 	public <T> List<T> queryForList(String collectionName, DBObject query, Class<T> targetClass) {	
 		DBCollection collection = getDb().getCollection(collectionName);
