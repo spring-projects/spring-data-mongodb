@@ -246,7 +246,20 @@ public class MongoTemplate implements InitializingBean {
 		try {
 			wr = getDb().getCollection(collectionName).update(queryDoc, updateDoc);
 		} catch (MongoException e) {
-			throw new DataRetrievalFailureException(wr.getLastError().getErrorMessage(), e);
+			throw new DataRetrievalFailureException("Error during update using " + queryDoc + ", " + updateDoc + ": " + wr.getLastError().getErrorMessage(), e);
+		}
+	}
+	
+	public void remove(DBObject queryDoc) {
+		remove(getRequiredDefaultCollectionName(), queryDoc);
+	}
+	
+	public void remove(String collectionName, DBObject queryDoc) {
+		WriteResult wr = null;
+		try {
+			wr = getDb().getCollection(collectionName).remove(queryDoc);
+		} catch (MongoException e) {
+			throw new DataRetrievalFailureException("Error during remove using "  + queryDoc + ": " + wr.getLastError().getErrorMessage(), e);
 		}
 	}
 	
