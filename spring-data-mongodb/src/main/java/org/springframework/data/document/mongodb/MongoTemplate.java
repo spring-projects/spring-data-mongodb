@@ -28,8 +28,6 @@ import org.springframework.beans.PropertyAccessorFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
-import org.springframework.data.document.AbstractDocumentStoreTemplate;
-import org.springframework.data.document.mongodb.query.Query;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.CommandResult;
@@ -238,6 +236,20 @@ public class MongoTemplate implements InitializingBean {
 			return null;
 		}
 	}
+
+	public void update(DBObject queryDoc, DBObject updateDoc) {
+		update(getRequiredDefaultCollectionName(), queryDoc, updateDoc);
+	}
+	
+	public void update(String collectionName, DBObject queryDoc, DBObject updateDoc) {
+		WriteResult wr = null;
+		try {
+			wr = getDb().getCollection(collectionName).update(queryDoc, updateDoc);
+		} catch (MongoException e) {
+			throw new DataRetrievalFailureException(wr.getLastError().getErrorMessage(), e);
+		}
+	}
+	
 
 	public <T> List<T> getCollection(Class<T> targetClass) {
 		
