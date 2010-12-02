@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.data.document.mongodb.bean.factory;
+package org.springframework.data.document.mongodb;
 
 import java.util.List;
 
@@ -24,8 +24,6 @@ import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
-import org.springframework.data.document.mongodb.CannotGetMongoDbConnectionException;
-import org.springframework.data.document.mongodb.MongoDbUtils;
 import org.springframework.util.Assert;
 
 import com.mongodb.Mongo;
