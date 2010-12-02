@@ -62,6 +62,14 @@
 		</extensions>
 
 		<plugins>
+		        <plugin>
+			  <artifactId>maven-compiler-plugin</artifactId>
+			  <configuration>
+			    <source>1.6</source>
+			    <target>1.6</target>
+			  </configuration>
+			</plugin>
+
 			<plugin>
 				<groupId>com.agilejava.docbkx</groupId>
 				<artifactId>docbkx-maven-plugin</artifactId>
@@ -122,9 +130,6 @@
 				</configuration>
 			</plugin>
 		</plugins>
-		<!-- the name of this project is 'spring-amqp-dist';
-			 make sure the zip file is just 'spring-amqp'. -->
-		<finalName>${dist.finalName}</finalName>
 	</build>
 
   <distributionManagement>
