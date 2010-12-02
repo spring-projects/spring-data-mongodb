@@ -57,11 +57,11 @@ public class MvcAnalyticsTests {
 		createAndStoreMvcEvent(3, 3);
 		createAndStoreMvcEvent(8, 4);
 
-		List<MvcEvent> mvcEvents = mongoTemplate.queryForCollection("mvc",
+		List<MvcEvent> mvcEvents = mongoTemplate.getCollection("mvc",
 				MvcEvent.class);
 		Assert.assertEquals(22, mvcEvents.size());
 		
-		List<MvcEvent> mvcEvents2 = mongoTemplate.queryForCollection("mvc", MvcEvent.class, 
+		List<MvcEvent> mvcEvents2 = mongoTemplate.getCollection("mvc", MvcEvent.class, 
 				new MongoReader<MvcEvent>() {
 					public MvcEvent read(Class<? extends MvcEvent> clazz, DBObject dbo) {
 						return null;
@@ -92,7 +92,7 @@ public class MvcAnalyticsTests {
 		for (DBObject dbo : mongoTemplate.getCollection("counters").find(query)) {
 			System.out.println(dbo);
 		}
-		List<ControllerCounter> counters = mongoTemplate.queryForList("counters", "{ 'name' : 'SignUpController'} ", ControllerCounter.class);
+		List<ControllerCounter> counters = mongoTemplate.queryUsingJavaScript("counters", "{ 'name' : 'SignUpController'} ", ControllerCounter.class);
 		for (ControllerCounter controllerCounter : counters) {
 			System.out.println(controllerCounter);
 		}
@@ -108,7 +108,7 @@ public class MvcAnalyticsTests {
 
 	@Test
 	public void listAllMvcEvents() {
-		List<MvcEvent> mvcEvents = mongoTemplate.queryForCollection("mvc",
+		List<MvcEvent> mvcEvents = mongoTemplate.getCollection("mvc",
 				MvcEvent.class);
 		for (MvcEvent mvcEvent : mvcEvents) {
 			System.out.println(mvcEvent.getDate());

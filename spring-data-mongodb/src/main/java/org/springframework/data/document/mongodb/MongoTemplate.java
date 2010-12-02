@@ -239,7 +239,7 @@ public class MongoTemplate implements InitializingBean {
 		}
 	}
 
-	public <T> List<T> queryForCollection(Class<T> targetClass) {
+	public <T> List<T> getCollection(Class<T> targetClass) {
 		
 		List<T> results = new ArrayList<T>();
 		DBCollection collection = getDb().getCollection(getDefaultCollectionName());
@@ -253,7 +253,7 @@ public class MongoTemplate implements InitializingBean {
 		return results;
 	}
 	
-	public <T> List<T> queryForCollection(String collectionName, Class<T> targetClass) {
+	public <T> List<T> getCollection(String collectionName, Class<T> targetClass) {
 		
 		List<T> results = new ArrayList<T>();
 		DBCollection collection = getDb().getCollection(collectionName);
@@ -267,7 +267,7 @@ public class MongoTemplate implements InitializingBean {
 		return results;
 	}
 
-	public <T> List<T> queryForCollection(String collectionName, Class<T> targetClass, MongoReader<T> reader) { 
+	public <T> List<T> getCollection(String collectionName, Class<T> targetClass, MongoReader<T> reader) { 
 		List<T> results = new ArrayList<T>();
 		DBCollection collection = getDb().getCollection(collectionName);
 		for (DBObject dbo : collection.find()) {
@@ -278,34 +278,34 @@ public class MongoTemplate implements InitializingBean {
 	
 	// Queries that take JavaScript to express the query.
 	
-	public <T> List<T> queryForList(String query, Class<T> targetClass) {
-		return queryForList(getDefaultCollectionName(), (DBObject)JSON.parse(query), targetClass);
+	public <T> List<T> queryUsingJavaScript(String query, Class<T> targetClass) {
+		return query(getDefaultCollectionName(), (DBObject)JSON.parse(query), targetClass); //
 	}	
 	
-	public <T> List<T> queryForList(String query, Class<T> targetClass, MongoReader<T> reader) {
-		return queryForList(getDefaultCollectionName(), (DBObject)JSON.parse(query), targetClass, reader);
+	public <T> List<T> queryUsingJavaScript(String query, Class<T> targetClass, MongoReader<T> reader) {
+		return query(getDefaultCollectionName(), (DBObject)JSON.parse(query), targetClass, reader);
 	}
 
-	public <T> List<T> queryForList(String collectionName, String query, Class<T> targetClass) {
-		return queryForList(collectionName, (DBObject)JSON.parse(query), targetClass);
+	public <T> List<T> queryUsingJavaScript(String collectionName, String query, Class<T> targetClass) {
+		return query(collectionName, (DBObject)JSON.parse(query), targetClass); //
 	}
 
-	public <T> List<T> queryForList(String collectionName, String query, Class<T> targetClass, MongoReader<T> reader) {
-		return queryForList(collectionName, (DBObject)JSON.parse(query), targetClass, reader);
+	public <T> List<T> queryUsingJavaScript(String collectionName, String query, Class<T> targetClass, MongoReader<T> reader) {
+		return query(collectionName, (DBObject)JSON.parse(query), targetClass, reader);
 	}
 
 	
 	// Queries that take DBObject to express the query
 	
-	public <T> List<T> queryForList(DBObject query, Class<T> targetClass) {
-		return queryForList(getDefaultCollectionName(), query, targetClass);
+	public <T> List<T> query(DBObject query, Class<T> targetClass) {
+		return query(getDefaultCollectionName(), query, targetClass); //
 	}
 	
-	public <T> List<T> queryForList(DBObject query, Class<T> targetClass, MongoReader<T> reader) {
-		return queryForList(getDefaultCollectionName(), query, targetClass, reader);
+	public <T> List<T> query(DBObject query, Class<T> targetClass, MongoReader<T> reader) {
+		return query(getDefaultCollectionName(), query, targetClass, reader);
 	}
 	
-	public <T> List<T> queryForList(String collectionName, DBObject query, Class<T> targetClass) {	
+	public <T> List<T> query(String collectionName, DBObject query, Class<T> targetClass) {	
 		DBCollection collection = getDb().getCollection(collectionName);
 		List<T> results = new ArrayList<T>();
 		for (DBObject dbo : collection.find(query)) {
@@ -318,7 +318,7 @@ public class MongoTemplate implements InitializingBean {
 		return results;
 	}
 
-	public <T> List<T> queryForList(String collectionName, DBObject query, Class<T> targetClass, MongoReader<T> reader) {
+	public <T> List<T> query(String collectionName, DBObject query, Class<T> targetClass, MongoReader<T> reader) {
 		DBCollection collection = getDb().getCollection(collectionName);
 		List<T> results = new ArrayList<T>();
 		for (DBObject dbo : collection.find(query)) {
