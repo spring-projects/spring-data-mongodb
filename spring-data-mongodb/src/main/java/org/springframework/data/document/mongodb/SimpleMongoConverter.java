@@ -157,7 +157,15 @@ public class SimpleMongoConverter implements MongoConverter {
 					writeValue(dbo, keyToUse, ((Enum)value).name());
 				}
 				else if (value != null && "_id".equals(keyToUse) && String.class.isAssignableFrom(pd.getPropertyType())) {
-					writeValue(dbo, keyToUse, new ObjectId((String)value));
+					try {
+						ObjectId _id =  new ObjectId((String)value);
+						writeValue(dbo, keyToUse, _id);
+					}
+					catch (IllegalArgumentException iae) {
+						logger.debug("Unable to convert the String " + value
+								+ " to an ObjectId");
+						writeValue(dbo, keyToUse, value);
+					}
 				}
 				else {
 					writeValue(dbo, keyToUse, value);
