@@ -256,7 +256,8 @@ public class SimpleMongoConverter implements MongoConverter {
 							else {
 								logger.warn("Unable to map compound DBObject field "
 										+ keyToUse + " to property " + pd.getName()
-										+ ".  Should have been a 'DBObject' but was " + value.getClass().getName());
+										+ ".  The field value should have been a 'DBObject.class' but was " 
+										+ value.getClass().getName());
 							}
 						}
 						else {
@@ -312,11 +313,18 @@ public class SimpleMongoConverter implements MongoConverter {
 
 
 
-	protected void setObjectIdOnObject(BeanWrapper bw, PropertyDescriptor pd,
-			ObjectId value) {
+	protected void setObjectIdOnObject(BeanWrapper bw, PropertyDescriptor pd, ObjectId value) {
 		// TODO strategy for setting the id field. suggest looking for public
 		// property 'Id' or private field id or _id;
-
+		if (String.class.isAssignableFrom(pd.getPropertyType())) {
+			bw.setPropertyValue(pd.getName(), value);
+		}
+		else {
+			logger.warn("Unable to map _id field "
+					+ " to property " + pd.getName()
+					+ ".  Should have been a 'String' property but was " 
+					+ pd.getPropertyType().getName());
+		}
 	}
 
 	protected boolean isValidProperty(PropertyDescriptor descriptor) {
