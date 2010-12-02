@@ -17,9 +17,14 @@
 package org.springframework.data.document.mongodb;
 
 
+import java.beans.PropertyDescriptor;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.bson.types.ObjectId;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.BeanWrapper;
+import org.springframework.beans.PropertyAccessorFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
@@ -208,26 +213,29 @@ public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> implements 
 	}
 	
 	public void save(String collectionName, Object objectToSave) {
-		BasicDBObject dbDoc = new BasicDBObject();
-		this.mongoConverter.write(objectToSave, dbDoc);
-		saveDBObject(collectionName, dbDoc);
+		save(collectionName, objectToSave, this.mongoConverter);
 	}
 	
 	public <T> void save(String collectionName, T objectToSave, MongoWriter<T> writer) {
 		BasicDBObject dbDoc = new BasicDBObject();
-		this.mongoConverter.write(objectToSave, dbDoc);
-		saveDBObject(collectionName, dbDoc);
+		writer.write(objectToSave, dbDoc);
+		Object _id = saveDBObject(collectionName, dbDoc);
+		populateIdIfNecessary(objectToSave, _id);
 	}
 
 
-	protected void saveDBObject(String collectionName, BasicDBObject dbDoc) {
+	protected Object saveDBObject(String collectionName, BasicDBObject dbDoc) {
 		if (dbDoc.keySet().size() > 0 ) {
 			WriteResult wr = null;
 			try {
-				wr = getConnection().getCollection(collectionName).save(dbDoc);			
+				wr = getConnection().getCollection(collectionName).save(dbDoc);
+				return dbDoc.get("_id");
 			} catch (MongoException e) {
 				throw new DataRetrievalFailureException(wr.getLastError().getErrorMessage(), e);
 			}
+		}
+		else {
+			return null;
 		}
 	}
 
@@ -342,7 +350,26 @@ public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> implements 
 		return dbo;
 	}
 
-
+	private void populateIdIfNecessary(Object savedObject, Object id) {
+		//TODO Needs proper conversion support and should be integrated with reader implementation somehow
+		BeanWrapper bw = PropertyAccessorFactory.forBeanPropertyAccess(savedObject);
+		PropertyDescriptor idPd = BeanUtils.getPropertyDescriptor(savedObject.getClass(), "id");
+		if (idPd == null) {
+			idPd = BeanUtils.getPropertyDescriptor(savedObject.getClass(), "_id");
+		}
+		if (idPd != null) {
+			Object v = bw.getPropertyValue(idPd.getName());
+			if (v == null) {
+				if (id instanceof ObjectId) {
+					bw.setPropertyValue(idPd.getName(), id.toString());
+				}
+				else if (id.getClass().isAssignableFrom(idPd.getPropertyType())) {
+					bw.setPropertyValue(idPd.getName(), id);
+				}
+			}
+		}
+		
+	}
 
 	public void afterPropertiesSet() throws Exception {
 		if (this.getDefaultCollectionName() != null) {
