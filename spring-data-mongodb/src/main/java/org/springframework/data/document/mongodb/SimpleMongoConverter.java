@@ -241,7 +241,6 @@ public class SimpleMongoConverter implements MongoConverter {
 		for (PropertyDescriptor pd : propertyDescriptors) {
 			
 			String keyToUse = ("id".equals(pd.getName()) ? "_id" : pd.getName());
-			System.out.println("??? " + pd.getName() + " " + keyToUse + " = " + dbo.get(keyToUse));
 			if (dbo.containsField(keyToUse)) {
 				Object value = dbo.get(keyToUse);
 				if (value instanceof ObjectId) {
