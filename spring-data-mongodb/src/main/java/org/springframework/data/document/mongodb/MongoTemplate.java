@@ -38,8 +38,6 @@ import com.mongodb.util.JSON;
 
 public class MongoTemplate extends AbstractDocumentStoreTemplate<DB> implements InitializingBean {
 
-	private DB db;
-	
 	private String defaultCollectionName;
 	
 	private MongoConverter mongoConverter;
