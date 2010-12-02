@@ -274,19 +274,7 @@ public class MongoTemplate implements InitializingBean {
 			results.add(reader.read(targetClass, dbo));
 		}
 		return results;
-	}
-	
-	
-	public <T> List<T> queryForList(String collectionName, Query query, Class<T> targetClass) {
-		return queryForList(collectionName, query.getQueryObject(), targetClass);
-	}
-
-	public <T> List<T> queryForList(String collectionName, Query query, Class<T> targetClass, MongoReader<T> reader) {
-		return queryForList(collectionName, query.getQueryObject(), targetClass, reader);
-	}
-	
-	
-	
+	}	
 
 	public <T> List<T> queryForList(String collectionName, String query, Class<T> targetClass) {
 		return queryForList(collectionName, (DBObject)JSON.parse(query), targetClass);
