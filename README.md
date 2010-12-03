@@ -7,14 +7,16 @@ As the name implies, the **Document** modules provides integration with document
 Getting Help
 ------------
 
-Read the main project [website](http://www.springsource.org/spring-data)) and the [User Guide](http://static.springsource.org/spring-data/datastore-keyvalue/snapshot-site/reference/html/) (A work in progress). 
-
 At this point your best bet is to look at the Look at the [JavaDocs](http://static.springsource.org/spring-data/data-document/docs/1.0.0.BUILD-SNAPSHOT/spring-data-mongodb/apidocs/) for MongoDB integration and corresponding and source code. For more detailed questions, use the [forum](http://forum.springsource.org/forumdisplay.php?f=80). If you are new to Spring as well as to Spring Data, look for information about [Spring projects](http://www.springsource.org/projects). 
+
+The [User Guide](http://static.springsource.org/spring-data/datastore-keyvalue/snapshot-site/reference/html/) (A work in progress). 
+
+
 
 Quick Start
 -----------
 
-## Redis
+## MongoDB
 
 For those in a hurry:
 
@@ -45,7 +47,7 @@ Future plans are to support optional logging and/or exception throwing based on 
 
 * To simplify the creation of Data Repositories a generic Repository interface and base class is provided.  Furthermore, Spring will automatically create a Repository implementation for you that add implementations of finder methods you specify on an interface.  For example the Repository interface is
 
-    public interface Repository<T, ID extends Serializable> {
+     public interface Repository<T, ID extends Serializable> {
 
         T save(T entity);
 
@@ -64,7 +66,7 @@ Future plans are to support optional logging and/or exception throwing based on 
         void delete(Iterable<? extends T> entities);
 
         void deleteAll();
-    }
+     }
 
 and there is a placeholder interface called MongoRepository that will in future add more Mongo specific methods.
 
