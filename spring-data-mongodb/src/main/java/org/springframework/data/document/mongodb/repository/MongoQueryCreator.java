@@ -15,6 +15,8 @@
  */
 package org.springframework.data.document.mongodb.repository;
 
+import java.util.regex.Pattern;
+
 import org.springframework.data.domain.Sort;
 import org.springframework.data.repository.query.SimpleParameterAccessor;
 import org.springframework.data.repository.query.SimpleParameterAccessor.BindableParameterIterator;
@@ -131,6 +133,9 @@ class MongoQueryCreator extends AbstractQueryCreator<DBObject, QueryBuilder> {
             return criteria.notEquals(null);
         case IS_NULL:
             return criteria.is(null);
+        case LIKE:
+            String value = parameters.next().toString();
+            return criteria.regex(toLikeRegex(value));
         case SIMPLE_PROPERTY:
             return criteria.is(parameters.next());
         case NEGATING_SIMPLE_PROPERTY:
@@ -138,5 +143,12 @@ class MongoQueryCreator extends AbstractQueryCreator<DBObject, QueryBuilder> {
         }
 
         throw new IllegalArgumentException("Unsupported keyword!");
+    }
+
+
+    private Pattern toLikeRegex(String source) {
+
+        String regex = source.replaceAll("\\*", ".*");
+        return Pattern.compile(regex);
     }
 }

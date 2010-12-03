@@ -26,4 +26,7 @@ import java.util.List;
 public interface PersonRepository extends MongoRepository<Person, Long> {
 
     List<Person> findByLastname(String lastname);
+
+
+    List<Person> findByFirstnameLike(String firstname);
 }

@@ -53,5 +53,9 @@ public class PersonRepositoryIntegrationTests {
         List<Person> result = repository.findByLastname("Gierke");
         assertThat(result.size(), is(1));
         assertThat(result, hasItem(person));
+
+        result = repository.findByFirstnameLike("Oli*");
+        assertThat(result.size(), is(1));
+        assertThat(result, hasItem(person));
     }
 }
