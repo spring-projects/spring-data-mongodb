@@ -20,10 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.data.document.mongodb.MongoTemplate;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.repository.support.IsNewAware;
 import org.springframework.data.repository.support.RepositorySupport;
 import org.springframework.util.Assert;
@@ -37,7 +33,7 @@ import com.mongodb.QueryBuilder;
  * @author Oliver Gierke
  */
 public class SimpleMongoRepository<T, ID extends Serializable> extends
-        RepositorySupport<T, ID> implements PagingAndSortingRepository<T, ID> {
+        RepositorySupport<T, ID> {
 
     private final MongoTemplate template;
     private MongoEntityInformation entityInformation;
@@ -177,34 +173,6 @@ public class SimpleMongoRepository<T, ID extends Serializable> extends
     public void deleteAll() {
 
         template.dropCollection(template.getDefaultCollectionName());
-    }
-
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.springframework.data.repository.PagingAndSortingRepository#findAll
-     * (org.springframework.data.domain.Pageable)
-     */
-    public Page<T> findAll(Pageable pageable) {
-
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.springframework.data.repository.PagingAndSortingRepository#findAll
-     * (org.springframework.data.domain.Sort)
-     */
-    public List<T> findAll(Sort sort) {
-
-        // TODO Auto-generated method stub
-        return null;
     }
 
 
