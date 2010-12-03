@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+
+	<bean id="template" class="org.springframework.data.document.mongodb.MongoTemplate">
+		<constructor-arg>
+			<bean class="com.mongodb.Mongo">
+				<constructor-arg value="localhost" />
+				<constructor-arg value="27017" />
+			</bean>
+		</constructor-arg>
+		<constructor-arg value="database" />
+		<property name="defaultCollectionName" value="springdata" />
+	</bean>
+	
+	<bean class="org.springframework.data.document.mongodb.MongoExceptionTranslator" />
+
+</beans>
