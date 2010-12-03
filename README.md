@@ -9,7 +9,7 @@ Getting Help
 
 At this point your best bet is to look at the Look at the [JavaDocs](http://static.springsource.org/spring-data/data-document/docs/1.0.0.BUILD-SNAPSHOT/spring-data-mongodb/apidocs/) for MongoDB integration and corresponding and source code. For more detailed questions, use the [forum](http://forum.springsource.org/forumdisplay.php?f=80). If you are new to Spring as well as to Spring Data, look for information about [Spring projects](http://www.springsource.org/projects). 
 
-The [User Guide](http://static.springsource.org/spring-data/datastore-keyvalue/snapshot-site/reference/html/) (A work in progress). 
+The [User Guide](http://static.springsource.org/spring-data/data-document/docs/1.0.0.BUILD-SNAPSHOT/reference/html/) (A work in progress). 
 
 
 
@@ -37,45 +37,54 @@ For those in a hurry:
         <url>http://maven.springframework.org/snapshot</url>
       </repository> 
 
+### MongoTemplate
+MongoTemplate is the central support class for Mongo database operations.  It provides
 
-* The MongoTemplate is the central support class for Mongo database operations.  It supports
-    * Basic POJO mapping support to and from BSON
-    * Connection Affinity callback
-    * Exception translation into Spring's 
+* Basic POJO mapping support to and from BSON
+* Connection Affinity callback
+* Exception translation into Spring's [technology agnostic DAO exception hierarchy](http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/html/dao.html#dao-exceptions).
 
 Future plans are to support optional logging and/or exception throwing based on WriteResult return value, common map-reduce operations, GridFS operations.  A simple API for partial document updates is also planned.
 
-* To simplify the creation of Data Repositories a generic Repository interface and base class is provided.  Furthermore, Spring will automatically create a Repository implementation for you that add implementations of finder methods you specify on an interface.  For example the Repository interface is
+### Easy Data Repository generation
 
-    
-`public interface Repository<T, ID extends Serializable> {`
+To simplify the creation of Data Repositories a generic Repository interface and default implementation is provided.  Furthermore, Spring will automatically create a Repository implementation for you that adds implementations of finder methods you specify on an interface.  
 
-        T save(T entity);
+The Repository interface is
 
-        List<T> save(Iterable<? extends T> entities);
+        public interface Repository<T, ID extends Serializable> { 
 
-        T findById(ID id);
+          T save(T entity);
 
-        boolean exists(ID id);
+          List<T> save(Iterable<? extends T> entities);
 
-        List<T> findAll();
+          T findById(ID id);
 
-        Long count();
+          boolean exists(ID id);
 
-        void delete(T entity);
+          List<T> findAll();
 
-        void delete(Iterable<? extends T> entities);
+          Long count();
 
-        void deleteAll();
-`}`
+          void delete(T entity);
 
-and there is a placeholder interface called MongoRepository that will in future add more Mongo specific methods.
+          void delete(Iterable<? extends T> entities);
+
+          void deleteAll();
+        }
+
+
+The MongoRepository extends Repository and will in future add more Mongo specific methods.
 
     public interface MongoRepository<T, ID extends Serializable> extends
         Repository<T, ID> {
     }
 
-You can use the provided implementation class SimpleMongoRepository for basic data access.  You can also extend the MongoRepository interface and supply your own finder methods that follow simple naming conventions so they can be converted into queries.  For example, given a Person class with first and last name properties
+SimpleMongoRepository is the out of the box implementation of the MongoRepository you can use for basid CRUD operations.  
+
+To go beyond basic CRUD, extend the MongoRepository interface and supply your own finder methods that follow simple naming conventions such that they can be easily converted into queries.  
+
+For example, given a Person class with first and last name properties, a PersonRepository interface that can query for Person by last name and when the first name matches a regular expression is shown below
 
     public interface PersonRepository extends MongoRepository<Person, Long> {
 
