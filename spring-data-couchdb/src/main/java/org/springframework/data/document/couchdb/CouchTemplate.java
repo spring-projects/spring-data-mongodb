@@ -20,7 +20,6 @@ package org.springframework.data.document.couchdb;
 import org.jcouchdb.db.Database;
 import org.jcouchdb.document.BaseDocument;
 import org.springframework.data.document.AbstractDocumentStoreTemplate;
-import org.springframework.data.document.DocumentSource;
 
 	public class CouchTemplate extends AbstractDocumentStoreTemplate<Database> {
 
@@ -40,9 +39,8 @@ import org.springframework.data.document.DocumentSource;
 		this.database = database;
 	}
 	
-	public void save(DocumentSource<BaseDocument> documentSource) {
-		BaseDocument d = documentSource.getDocument();
-		getConnection().createDocument(d);
+	public void save(BaseDocument document) {
+		getConnection().createDocument(document);
 	}
 
 	@Override
