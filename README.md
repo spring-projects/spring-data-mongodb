@@ -47,6 +47,7 @@ Future plans are to support optional logging and/or exception throwing based on 
 
 * To simplify the creation of Data Repositories a generic Repository interface and base class is provided.  Furthermore, Spring will automatically create a Repository implementation for you that add implementations of finder methods you specify on an interface.  For example the Repository interface is
 
+    
     public interface Repository<T, ID extends Serializable> {
 
         T save(T entity);
