@@ -33,6 +33,7 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.CommandResult;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.Mongo;
 import com.mongodb.MongoException;
@@ -142,9 +143,37 @@ public class MongoTemplate implements InitializingBean {
 			return action.doInDB(db);
 		} catch (MongoException e) {
 			throw MongoDbUtils.translateMongoExceptionIfPossible(e);
-		} 
+		}
 	}
-	
+
+	/**
+	 * Executes the given {@link CollectionCallback} on the default collection.
+	 * 
+	 * @param <T>
+	 * @param callback
+	 * @return
+	 */
+	public <T> T execute(CollectionCallback<T> callback) {
+		return execute(callback, defaultCollectionName);
+	}
+
+	/**
+	 * Executes the given {@link CollectionCallback} on the collection of the given name.
+	 * 
+	 * @param <T>
+	 * @param callback
+	 * @param collectionName
+	 * @return
+	 */
+	public <T> T execute(CollectionCallback<T> callback, String collectionName) {
+
+		try {
+			return callback.doInCollection(getCollection(collectionName));
+		} catch (MongoException e) {
+			throw MongoDbUtils.translateMongoExceptionIfPossible(e);
+		}
+	}
+
 	public <T> T executeInSession(DBCallback<T> action) {
 		DB db = getDb();
 		db.requestStart();
@@ -339,14 +368,26 @@ public class MongoTemplate implements InitializingBean {
 		return query(getDefaultCollectionName(), query, targetClass); //
 	}
 	
+	public <T> List<T> query(DBObject query, Class<T> targetClass, CursorPreparer preparer) {
+		return query(getDefaultCollectionName(), query, targetClass, preparer); //
+	}
+
 	public <T> List<T> query(DBObject query, Class<T> targetClass, MongoReader<T> reader) {
 		return query(getDefaultCollectionName(), query, targetClass, reader);
 	}
 	
 	public <T> List<T> query(String collectionName, DBObject query, Class<T> targetClass) {	
+		return query(collectionName, query, targetClass, (CursorPreparer) null);
+	}
+
+	public <T> List<T> query(String collectionName, DBObject query, Class<T> targetClass, CursorPreparer preparer) {
 		DBCollection collection = getDb().getCollection(collectionName);
 		List<T> results = new ArrayList<T>();
-		for (DBObject dbo : collection.find(query)) {
+		DBCursor cursor = collection.find(query);
+		if (preparer != null) {
+			preparer.prepare(cursor);
+		}
+		for (DBObject dbo : cursor) {
 			Object obj = mongoConverter.read(targetClass,dbo);
 			//effectively acts as a query on the collection restricting it to elements of a specific type
 			if (targetClass.isInstance(obj)) {

@@ -17,6 +17,9 @@ package org.springframework.data.document.mongodb.repository;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 
 /**
  * Sample repository managing {@link Person} entities.
@@ -25,8 +28,32 @@ import java.util.List;
  */
 public interface PersonRepository extends MongoRepository<Person, Long> {
 
+    /**
+     * Returns all {@link Person}s with the given lastname.
+     * 
+     * @param lastname
+     * @return
+     */
     List<Person> findByLastname(String lastname);
 
 
+    /**
+     * Returns all {@link Person}s with a firstname matching the given one
+     * (*-wildcard supported).
+     * 
+     * @param firstname
+     * @return
+     */
     List<Person> findByFirstnameLike(String firstname);
+
+
+    /**
+     * Returns a page of {@link Person}s with a lastname mathing the given one
+     * (*-wildcards supported).
+     * 
+     * @param lastname
+     * @param pageable
+     * @return
+     */
+    Page<Person> findByLastnameLike(String lastname, Pageable pageable);
 }

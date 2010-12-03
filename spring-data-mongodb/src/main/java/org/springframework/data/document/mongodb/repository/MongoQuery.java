@@ -15,15 +15,22 @@
  */
 package org.springframework.data.document.mongodb.repository;
 
+import static org.springframework.data.document.mongodb.repository.MongoCursorUtils.*;
+
 import java.util.List;
 
+import org.springframework.data.document.mongodb.CollectionCallback;
 import org.springframework.data.document.mongodb.MongoTemplate;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.query.QueryMethod;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.repository.query.SimpleParameterAccessor;
 import org.springframework.data.repository.query.parser.PartTree;
 import org.springframework.util.Assert;
 
+import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 
 
@@ -50,8 +57,6 @@ public class MongoQuery implements RepositoryQuery {
 
         Assert.notNull(template);
         Assert.notNull(method);
-        Assert.isTrue(!method.isPageQuery(),
-                "Pagination queries not supported!");
 
         this.method = method;
         this.template = template;
@@ -73,13 +78,106 @@ public class MongoQuery implements RepositoryQuery {
         MongoQueryCreator creator = new MongoQueryCreator(tree, accessor);
         DBObject query = creator.createQuery();
 
-        List<?> result =
-                template.query(template.getDefaultCollectionName(), query,
-                        method.getDomainClass());
-
         if (method.isCollectionQuery()) {
-            return result;
+            return new CollectionExecution().execute(query);
+        } else if (method.isPageQuery()) {
+            return new PagedExecution(creator, accessor.getPageable())
+                    .execute(query);
         } else {
+            return new SingleEntityExecution().execute(query);
+        }
+    }
+
+    private abstract class Execution {
+
+        abstract Object execute(DBObject query);
+
+
+        protected List<?> readCollection(DBObject query) {
+
+            return template.query(template.getDefaultCollectionName(), query,
+                    method.getDomainClass());
+        }
+    }
+
+    class CollectionExecution extends Execution {
+
+        @Override
+        public Object execute(DBObject query) {
+
+            return readCollection(query);
+        }
+    }
+
+    /**
+     * {@link Execution} for pagination queries.
+     * 
+     * @author Oliver Gierke
+     */
+    class PagedExecution extends Execution {
+
+        private final Pageable pageable;
+        private final MongoQueryCreator creator;
+
+
+        /**
+         * Creates a new {@link PagedExecution}.
+         * 
+         * @param pageable
+         */
+        public PagedExecution(MongoQueryCreator creator, Pageable pageable) {
+
+            Assert.notNull(creator);
+            Assert.notNull(pageable);
+            this.creator = creator;
+            this.pageable = pageable;
+        }
+
+
+        /*
+         * (non-Javadoc)
+         * 
+         * @see
+         * org.springframework.data.document.mongodb.repository.MongoQuery.Execution
+         * #execute(com.mongodb.DBObject)
+         */
+        @Override
+        @SuppressWarnings({ "rawtypes", "unchecked" })
+        Object execute(DBObject query) {
+
+            int count = getCollectionCursor(creator.createQuery()).count();
+            List<?> result =
+                    template.query(query, method.getDomainClass(),
+                            withPagination(pageable));
+
+            return new PageImpl(result, pageable, count);
+        }
+
+
+        private DBCursor getCollectionCursor(final DBObject query) {
+
+            return template.execute(new CollectionCallback<DBCursor>() {
+
+                public DBCursor doInCollection(DBCollection collection) {
+
+                    return collection.find(query);
+                }
+            });
+        }
+    }
+
+    /**
+     * {@link Execution} to return a single entity.
+     * 
+     * @author Oliver Gierke
+     */
+    class SingleEntityExecution extends Execution {
+
+        @Override
+        Object execute(DBObject query) {
+
+            List<?> result = readCollection(query);
+
             return result.isEmpty() ? null : result.get(0);
         }
     }

@@ -32,7 +32,15 @@ public class Person {
 
     public Person() {
 
+        this(null, null);
+    }
+
+
+    public Person(String firstname, String lastname) {
+
         this.id = ObjectId.get().toString();
+        this.firstname = firstname;
+        this.lastname = lastname;
     }
 
 

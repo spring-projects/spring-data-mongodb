@@ -13,20 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.document.mongodb.repository;
+package org.springframework.data.document.mongodb;
 
-import java.io.Serializable;
-
-import org.springframework.data.repository.PagingAndSortingRepository;
-import org.springframework.data.repository.Repository;
+import com.mongodb.DBCursor;
 
 
 /**
- * Mongo specific {@link Repository} interface.
+ * Simple callback interface to allow customization of a {@link DBCursor}.
  * 
  * @author Oliver Gierke
  */
-public interface MongoRepository<T, ID extends Serializable> extends
-        PagingAndSortingRepository<T, Serializable> {
+public interface CursorPreparer {
 
+    /**
+     * Prepare the given cursor (apply limits, skips and so on).
+     * 
+     * @param cursor
+     */
+    void prepare(DBCursor cursor);
 }
