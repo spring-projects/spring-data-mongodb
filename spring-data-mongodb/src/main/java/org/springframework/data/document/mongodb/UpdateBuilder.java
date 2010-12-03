@@ -15,10 +15,32 @@
  */
 package org.springframework.data.document.mongodb;
 
-import org.springframework.data.document.DocumentSource;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 
+import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
-public interface MongoDocumentSource extends DocumentSource<DBObject> {
+public class UpdateBuilder {
 	
+	private LinkedHashMap<String, Object> criteria = new LinkedHashMap<String, Object>();
+
+	public UpdateBuilder set(String key, Object value) {
+		criteria.put("$set", Collections.singletonMap(key, value));
+		return this;
+	}
+
+	public UpdateBuilder inc(String key, long inc) {
+		criteria.put("$inc", Collections.singletonMap(key, inc));
+		return this;
+	}
+
+	public DBObject build() {
+		DBObject dbo = new BasicDBObject();
+		for (String k : criteria.keySet()) {
+			dbo.put(k, criteria.get(k));
+		}
+		return dbo;
+	}
+
 }
