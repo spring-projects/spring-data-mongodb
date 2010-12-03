@@ -68,64 +68,61 @@ Future plans are to support optional logging and/or exception throwing based on 
 
 and there is a placeholder interface called MongoRepository that will in future add more Mongo specific methods.
 
-public interface MongoRepository<T, ID extends Serializable> extends
+    public interface MongoRepository<T, ID extends Serializable> extends
         Repository<T, ID> {
-
-}
+    }
 
 You can use the provided implementation class SimpleMongoRepository for basic data access.  You can also extend the MongoRepository interface and supply your own finder methods that follow simple naming conventions so they can be converted into queries.  For example, given a Person class with first and last name properties
 
-public interface PersonRepository extends MongoRepository<Person, Long> {
+    public interface PersonRepository extends MongoRepository<Person, Long> {
 
-    List<Person> findByLastname(String lastname);
+      List<Person> findByLastname(String lastname);
 
-
-    List<Person> findByFirstnameLike(String firstname);
-}
+      List<Person> findByFirstnameLike(String firstname);
+    }
 
 You can have Spring automatically generate the implemention as shown below
 
-	<bean id="template" class="org.springframework.data.document.mongodb.MongoTemplate">
-		<constructor-arg>
-			<bean class="com.mongodb.Mongo">
-				<constructor-arg value="localhost" />
-				<constructor-arg value="27017" />
-			</bean>
-		</constructor-arg>
-		<constructor-arg value="database" />
-		<property name="defaultCollectionName" value="springdata" />
-	</bean>
+        <bean id="template" class="org.springframework.data.document.mongodb.MongoTemplate">
+                <constructor-arg>
+                        <bean class="com.mongodb.Mongo">
+                                <constructor-arg value="localhost" />
+                                <constructor-arg value="27017" />
+                        </bean>
+                </constructor-arg>
+                <constructor-arg value="database" />
+                <property name="defaultCollectionName" value="springdata" />
+        </bean>
 
-	<bean class="org.springframework.data.document.mongodb.repository.MongoRepositoryFactoryBean">
-		<property name="template" ref="template" />
-		<property name="repositoryInterface" value="org.springframework.data.document.mongodb.repository.PersonRepository" />
-	</bean>
+        <bean class="org.springframework.data.document.mongodb.repository.MongoRepositoryFactoryBean">
+                <property name="template" ref="template" />
+                <property name="repositoryInterface" value="org.springframework.data.document.mongodb.repository.PersonRepository" />
+        </bean>
 
 This will register an object in the container named PersonRepository.  You can use it as shown below
 
-@Service
-public class MyService {
+     @Service
+     public class MyService {
 
-    @Autowired
-    PersonRepository repository;
+        @Autowired
+        PersonRepository repository;
 
 
-    @Test
-    public void doWork() {
+        public void doWork() {
 
-        repository.deleteAll();
+           repository.deleteAll();
 
-        Person person = new Person();
-        person.setFirstname("Oliver");
-        person.setLastname("Gierke");
-        person = repository.save(person);
+           Person person = new Person();
+           person.setFirstname("Oliver");
+           person.setLastname("Gierke");
+           person = repository.save(person);
 
-        List<Person> lastNameResults = repository.findByLastname("Gierke");
+           List<Person> lastNameResults = repository.findByLastname("Gierke");
 
-	List<Person> firstNameResults = repository.findByFirstnameLike("Oli*");
+           List<Person> firstNameResults = repository.findByFirstnameLike("Oli*");
 
+       }
     }
-}
 
 
 ## CouchDB
