@@ -39,15 +39,15 @@ For those in a hurry:
 
 
 * The MongoTemplate is the central support class for Mongo database operations.  It supports
-** Basic POJO mapping support to and from BSON
-** Connection Affinity callback
-** Exception translation into Spring's 
+    * Basic POJO mapping support to and from BSON
+    * Connection Affinity callback
+    * Exception translation into Spring's 
 
 Future plans are to support optional logging and/or exception throwing based on WriteResult return value, common map-reduce operations, GridFS operations.  A simple API for partial document updates is also planned.
 
 * To simplify the creation of Data Repositories a generic Repository interface and base class is provided.  Furthermore, Spring will automatically create a Repository implementation for you that add implementations of finder methods you specify on an interface.  For example the Repository interface is
 
-     public interface Repository<T, ID extends Serializable> {
+    public interface Repository<T, ID extends Serializable> {
 
         T save(T entity);
 
@@ -66,7 +66,7 @@ Future plans are to support optional logging and/or exception throwing based on 
         void delete(Iterable<? extends T> entities);
 
         void deleteAll();
-     }
+    }
 
 and there is a placeholder interface called MongoRepository that will in future add more Mongo specific methods.
 
