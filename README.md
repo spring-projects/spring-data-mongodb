@@ -49,21 +49,21 @@ Future plans are to support optional logging and/or exception throwing based on 
 
         T save(T entity);
 
-	List<T> save(Iterable<? extends T> entities);
+        List<T> save(Iterable<? extends T> entities);
 
-	T findById(ID id);
+        T findById(ID id);
 
-	boolean exists(ID id);
+        boolean exists(ID id);
 
-	List<T> findAll();
+        List<T> findAll();
 
-	Long count();
+        Long count();
 
-	void delete(T entity);
+        void delete(T entity);
 
-	void delete(Iterable<? extends T> entities);
+        void delete(Iterable<? extends T> entities);
 
-	void deleteAll();
+        void deleteAll();
     }
 
 and there is a placeholder interface called MongoRepository that will in future add more Mongo specific methods.
