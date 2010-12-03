@@ -25,7 +25,7 @@ For those in a hurry:
 
       <dependency>
         <groupId>org.springframework.data</groupId>
-        <artifactId>spring-data-document</artifactId>
+        <artifactId>spring-data-mongodb</artifactId>
         <version>1.0.0-BUILD-SNAPSHOT</version>
       </dependency> 
 
