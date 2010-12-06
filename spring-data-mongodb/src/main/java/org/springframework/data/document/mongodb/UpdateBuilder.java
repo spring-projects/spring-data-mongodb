@@ -30,6 +30,11 @@ public class UpdateBuilder {
 		return this;
 	}
 
+	public UpdateBuilder unset(String key) {
+		criteria.put("$unset", Collections.singletonMap(key, 1));
+		return this;
+	}
+
 	public UpdateBuilder inc(String key, long inc) {
 		criteria.put("$inc", Collections.singletonMap(key, inc));
 		return this;

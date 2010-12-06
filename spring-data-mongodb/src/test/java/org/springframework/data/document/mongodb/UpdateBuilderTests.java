@@ -43,5 +43,11 @@ public class UpdateBuilderTests {
 				ub.build().toString());
 	}
 
+	@Test
+	public void testUnset() {
+		UpdateBuilder ub = new UpdateBuilder()
+			.unset("directory");
+		Assert.assertEquals("{ \"$unset\" : { \"directory\" : 1}}", ub.build().toString());
+	}
 
 }
