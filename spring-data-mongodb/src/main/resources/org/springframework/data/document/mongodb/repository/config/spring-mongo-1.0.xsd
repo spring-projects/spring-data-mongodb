@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<xsd:schema xmlns="http://www.springframework.org/schema/data/mongo"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+	xmlns:tool="http://www.springframework.org/schema/tool"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:repository="http://www.springframework.org/schema/data/repository"
+	targetNamespace="http://www.springframework.org/schema/data/mongo"
+	elementFormDefault="qualified" attributeFormDefault="unqualified">
+
+	<xsd:import namespace="http://www.springframework.org/schema/tool" />
+	<xsd:import namespace="http://www.springframework.org/schema/context"
+		schemaLocation="http://www.springframework.org/schema/context/spring-context.xsd" />
+	<xsd:import namespace="http://www.springframework.org/schema/data/repository"
+		schemaLocation="http://www.springframework.org/schema/data/repository/spring-repository.xsd" />
+
+	<xsd:complexType name="mongo-repository">
+		<xsd:complexContent>
+			<xsd:extension base="repository:repository">
+				<xsd:attribute name="mongo-template-ref" type="mongoTemplateRef" default="mongoTemplate">
+					<xsd:annotation>
+						<xsd:documentation>
+							The reference to a MongoTemplate. Will default to 'mongoTemplate'.
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+
+	<xsd:element name="repositories">
+		<xsd:complexType>
+			<xsd:complexContent>
+				<xsd:extension base="repository:repositories">
+					<xsd:sequence>
+						<xsd:element name="repository" minOccurs="0" maxOccurs="unbounded" type="mongo-repository" />
+					</xsd:sequence>
+					<xsd:attribute name="mongo-template-ref" type="mongoTemplateRef" />
+				</xsd:extension>
+			</xsd:complexContent>
+		</xsd:complexType>
+	</xsd:element>
+
+	<xsd:simpleType name="mongoTemplateRef">
+		<xsd:annotation>
+			<xsd:appinfo>
+				<tool:annotation kind="ref">
+					<tool:assignable-to type="org.springframework.data.document.mongodb.MongoTemplate" />
+				</tool:annotation>
+			</xsd:appinfo>
+		</xsd:annotation>
+		<xsd:union memberTypes="xsd:string" />
+	</xsd:simpleType>
+
+
+</xsd:schema>

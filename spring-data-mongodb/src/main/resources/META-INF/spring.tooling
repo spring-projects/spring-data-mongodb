@@ -1,0 +1,4 @@
+# Tooling related information for the Mongo DB namespace
+http\://www.springframework.org/schema/data/mongo@name=Mongo Namespace
+http\://www.springframework.org/schema/data/mongo@prefix=mongo
+http\://www.springframework.org/schema/data/mongo@icon=org/springframework/jdbc/config/spring-jdbc.gif
