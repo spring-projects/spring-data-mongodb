@@ -23,6 +23,10 @@ import com.mongodb.DBObject;
 
 public class UpdateBuilder {
 	
+	public enum Position {
+		LAST, FIRST
+	}
+
 	private LinkedHashMap<String, Object> criteria = new LinkedHashMap<String, Object>();
 
 	public UpdateBuilder set(String key, Object value) {
@@ -37,6 +41,45 @@ public class UpdateBuilder {
 
 	public UpdateBuilder inc(String key, long inc) {
 		criteria.put("$inc", Collections.singletonMap(key, inc));
+		return this;
+	}
+
+	public UpdateBuilder push(String key, Object value) {
+		criteria.put("$push", Collections.singletonMap(key, value));
+		return this;
+	}
+
+	public UpdateBuilder pushAll(String key, Object[] values) {
+		DBObject keyValue = new BasicDBObject();
+		keyValue.put(key, values);
+		criteria.put("$pushAll", keyValue);
+		return this;
+	}
+
+	public UpdateBuilder addToSet(String key, Object value) {
+		criteria.put("$addToSet", Collections.singletonMap(key, value));
+		return this;
+	}
+
+	public UpdateBuilder pop(String key, Position pos) {
+		criteria.put("$pop", Collections.singletonMap(key, (pos == Position.FIRST ? -1 : 1)));
+		return this;
+	}
+
+	public UpdateBuilder pull(String key, Object value) {
+		criteria.put("$pull", Collections.singletonMap(key, value));
+		return this;
+	}
+
+	public UpdateBuilder pullAll(String key, Object[] values) {
+		DBObject keyValue = new BasicDBObject();
+		keyValue.put(key, values);
+		criteria.put("$pullAll", keyValue);
+		return this;
+	}
+
+	public UpdateBuilder rename(String oldName, String newName) {
+		criteria.put("$rename", Collections.singletonMap(oldName, newName));
 		return this;
 	}
 
