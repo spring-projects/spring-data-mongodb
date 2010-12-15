@@ -235,6 +235,43 @@ public class MongoTemplate implements InitializingBean {
 	}
 
 	
+	public void insert(Object objectToSave) {
+		insert(getRequiredDefaultCollectionName(), objectToSave);
+	}
+	
+	public void insert(String collectionName, Object objectToSave) {
+		insert(collectionName, objectToSave, this.mongoConverter);
+	}
+	
+	public <T> void insert(String collectionName, T objectToSave, MongoWriter<T> writer) {
+		BasicDBObject dbDoc = new BasicDBObject();
+		writer.write(objectToSave, dbDoc);
+		Object _id = insertDBObject(collectionName, dbDoc);
+		populateIdIfNecessary(objectToSave, _id);
+	}
+
+	public void insertList(List<Object> listToSave) {
+		insertList(getRequiredDefaultCollectionName(), listToSave);
+	}
+
+	public void insertList(String collectionName, List<Object> listToSave) {
+		insertList(collectionName, listToSave, this.mongoConverter);
+	}
+
+	public <T> void insertList(String collectionName, List<T> listToSave, MongoWriter<T> writer) {
+		List<DBObject> dbObjectList = new ArrayList<DBObject>();
+		for (T o : listToSave) {
+			BasicDBObject dbDoc = new BasicDBObject();
+			writer.write(o, dbDoc);
+			dbObjectList.add(dbDoc);
+		}
+		List<Object> _ids = insertDBObjectList(collectionName, dbObjectList);
+		for (int i = 0; i < listToSave.size(); i++) {
+			if (i < _ids.size())
+				populateIdIfNecessary(listToSave.get(i), _ids.get(i));
+		}
+	}
+
 	public void save(Object objectToSave) {
 		save(getRequiredDefaultCollectionName(), objectToSave);
 	}
@@ -251,7 +288,41 @@ public class MongoTemplate implements InitializingBean {
 	}
 
 
-	protected Object saveDBObject(String collectionName, BasicDBObject dbDoc) {
+	protected Object insertDBObject(String collectionName, DBObject dbDoc) {
+		if (dbDoc.keySet().size() > 0 ) {
+			WriteResult wr = null;
+			try {
+				wr = getDb().getCollection(collectionName).insert(dbDoc);
+				return dbDoc.get("_id");
+			} catch (MongoException e) {
+				throw new DataRetrievalFailureException(wr.getLastError().getErrorMessage(), e);
+			}
+		}
+		else {
+			return null;
+		}
+	}
+
+	protected List<Object> insertDBObjectList(String collectionName, List<DBObject> dbDocList) {
+		if (dbDocList.size() > 0 ) {
+			List<Object> ids = new ArrayList<Object>();
+			WriteResult wr = null;
+			try {
+				wr = getDb().getCollection(collectionName).insert(dbDocList);
+				for (DBObject dbo : dbDocList) {
+					ids.add(dbo.get("_id"));
+				}
+				return ids;
+			} catch (MongoException e) {
+				throw new DataRetrievalFailureException(wr.getLastError().getErrorMessage(), e);
+			}
+		}
+		else {
+			return null;
+		}
+	}
+
+	protected Object saveDBObject(String collectionName, DBObject dbDoc) {
 		if (dbDoc.keySet().size() > 0 ) {
 			WriteResult wr = null;
 			try {
