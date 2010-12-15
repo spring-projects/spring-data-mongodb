@@ -30,6 +30,8 @@ import java.util.Map;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.data.document.mongodb.SimpleMongoConverter;
+import org.springframework.data.document.mongodb.SomeEnumTest.NumberEnum;
+import org.springframework.data.document.mongodb.SomeEnumTest.StringEnum;
 import org.springframework.util.ReflectionUtils;
 
 import com.mongodb.BasicDBObject;
@@ -163,6 +165,25 @@ public class SimpleMongoConverterTests {
 		tb.setTradeList(Arrays.asList(new Trade[] {t1, t2}));
 		return tb;
 	}
+
+	@Test
+	public void objectWithEnumTypes() {
+		SomeEnumTest test = new SomeEnumTest();
+		test.setId("123AAA");
+		test.setName("Sven");
+		test.setStringEnum(StringEnum.ONE);
+		test.setNumberEnum(NumberEnum.FIVE);
+		SimpleMongoConverter converter = createConverter();
+		DBObject dbo = new BasicDBObject();
+		converter.write(test, dbo);
+		
+		SomeEnumTest results = (SomeEnumTest) converter.read(SomeEnumTest.class, dbo);
+		Assert.assertNotNull(results);
+		Assert.assertEquals(test.getId(), results.getId());
+		Assert.assertEquals(test.getName(), results.getName());
+		Assert.assertEquals(test.getStringEnum(), results.getStringEnum());
+		Assert.assertEquals(test.getNumberEnum(), results.getNumberEnum());
+}
 
 	@Test
 	public void testReflection() {
