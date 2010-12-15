@@ -22,6 +22,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -127,6 +128,40 @@ public class SimpleMongoConverterTests {
 		portfolio.setUser(user);
 		portfolio.setPortfolioName("High Risk Trading Account");
 		return portfolio;
+	}
+
+	@Test
+	public void objectWithArrayContainingNonPrimitiveType() {
+		TradeBatch b = createTradeBatch();
+		SimpleMongoConverter converter = createConverter();
+		DBObject dbo = new BasicDBObject();
+		converter.write(b, dbo);
+
+		TradeBatch b2 = (TradeBatch) converter.read(TradeBatch.class, dbo);
+		Assert.assertEquals(b.getBatchId(), b2.getBatchId());
+		Assert.assertNotNull(b2.getTradeList());
+		Assert.assertEquals(b.getTradeList().size(), b2.getTradeList().size());
+		Assert.assertEquals(b.getTradeList().get(1).getTicker(), b2.getTradeList().get(1).getTicker());
+		Assert.assertEquals(b.getTrades().length, b2.getTrades().length);
+		Assert.assertEquals(b.getTrades()[1].getTicker(), b2.getTrades()[1].getTicker());
+	}
+
+	private TradeBatch createTradeBatch() {
+		TradeBatch tb = new TradeBatch();
+		tb.setBatchId("123456");
+		Trade t1 = new Trade();
+		t1.setOrderType("BUY");
+		t1.setTicker("AAPL");
+		t1.setQuantity(1000);
+		t1.setPrice(320.77D);
+		Trade t2 = new Trade();
+		t2.setOrderType("SELL");
+		t2.setTicker("MSFT");
+		t2.setQuantity(100);
+		t2.setPrice(27.92D);
+		tb.setTrades(new Trade[] {t2, t1});
+		tb.setTradeList(Arrays.asList(new Trade[] {t1, t2}));
+		return tb;
 	}
 
 	@Test

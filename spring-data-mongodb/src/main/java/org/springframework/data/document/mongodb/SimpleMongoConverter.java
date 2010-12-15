@@ -172,9 +172,10 @@ public class SimpleMongoConverter implements MongoConverter {
 				}
 				// dbo.put(keyToUse, value);
 			} else {
-				//TODO exclude Class properties from consideration
-				logger.warn("Unable to map property " + pd.getName()
+				if (!"class".equals(pd.getName())) {
+					logger.warn("Unable to map property " + pd.getName()
 						+ ".  Skipping.");
+				}
 			}
 			// }
 
@@ -195,6 +196,7 @@ public class SimpleMongoConverter implements MongoConverter {
 
 	}
 
+	@SuppressWarnings("unchecked")
 	private void writeCompoundValue(DBObject dbo, String keyToUse, Object value) {
 		if (value instanceof Map) {
 			writeMap(dbo, keyToUse, (Map<String, Object>)value);
@@ -202,6 +204,12 @@ public class SimpleMongoConverter implements MongoConverter {
 		}
 		if (value instanceof Collection) {
 			// Should write a collection!
+			writeArray(dbo, keyToUse, ((Collection<Object>)value).toArray());
+			return;
+		}
+		if (value instanceof Object[]) {
+			// Should write a collection!
+			writeArray(dbo, keyToUse, (Object[])value);
 			return;
 		}
 		DBObject nestedDbo = new BasicDBObject();
@@ -228,6 +236,26 @@ public class SimpleMongoConverter implements MongoConverter {
 				}
 			}					
 			dbo.put(keyToUse, dboToPopulate);			
+		}
+	}
+
+	protected void writeArray(DBObject dbo, String keyToUse, Object[] array) {
+		//TODO 
+		Object[] dboValues;
+		if (array != null) {
+			dboValues = new Object[array.length];
+			int i = 0;
+			for (Object o : array) {
+				if (!isSimpleType(o.getClass())) {
+					DBObject dboValue = new BasicDBObject();
+					write(o, dboValue);
+					dboValues[i] = dboValue;
+				} else {
+					dboValues[i] = o;
+				}
+				i++;
+			}					
+			dbo.put(keyToUse, dboValues);			
 		}
 	}
 
@@ -261,6 +289,27 @@ public class SimpleMongoConverter implements MongoConverter {
 						if (!isSimpleType(value.getClass())) {
 							if (value instanceof DBObject) {
 								bw.setPropertyValue(pd.getName(), readCompoundValue(pd, (DBObject) value));
+							}
+							else if (value instanceof Object[]) {
+								Object[] values = new Object[((Object[])value).length];
+								int i = 0;
+								for (Object o : (Object[])value) {
+									if (o instanceof DBObject) {
+										Class type;
+										if (pd.getPropertyType().isArray()) {
+											type = pd.getPropertyType().getComponentType();
+										}
+										else {
+											type = getGenericParameterClass(pd.getWriteMethod()).get(0);
+										}
+										values[i] = read(type, (DBObject)o);
+									}
+									else {
+										values[i] = o;
+									}
+									i++;
+								}
+								bw.setPropertyValue(pd.getName(), values);
 							}
 							else {
 								logger.warn("Unable to map compound DBObject field "
@@ -337,8 +386,8 @@ public class SimpleMongoConverter implements MongoConverter {
 	}
 
 	protected boolean isValidProperty(PropertyDescriptor descriptor) {
-		return (descriptor.getReadMethod() != null && descriptor
-				.getWriteMethod() != null);
+		return (descriptor.getReadMethod() != null && 
+				descriptor.getWriteMethod() != null);
 	}
 
 	protected boolean isSimpleType(Class propertyType) {
