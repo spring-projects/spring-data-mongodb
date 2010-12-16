@@ -56,4 +56,14 @@ public interface PersonRepository extends MongoRepository<Person, Long> {
      * @return
      */
     Page<Person> findByLastnameLike(String lastname, Pageable pageable);
+
+
+    /**
+     * Returns all {@link Person}s with an age between the two given values.
+     * 
+     * @param from
+     * @param to
+     * @return
+     */
+    List<Person> findByAgeBetween(int from, int to);
 }

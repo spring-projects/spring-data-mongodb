@@ -32,11 +32,11 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
     
         repository.deleteAll();
     
-        dave = new Person("Dave", "Matthews");
-        carter = new Person("Carter", "Beauford");
-        boyd = new Person("Boyd", "Tinsley");
-        stefan = new Person("Stefan", "Lessard");
-        leroi = new Person("Leroi", "Moore");
+        dave = new Person("Dave", "Matthews", 42);
+        carter = new Person("Carter", "Beauford", 49);
+        boyd = new Person("Boyd", "Tinsley", 45);
+        stefan = new Person("Stefan", "Lessard", 34);
+        leroi = new Person("Leroi", "Moore", 41);
     
         repository.save(Arrays.asList(dave, carter, boyd, stefan, leroi));
     }
@@ -80,4 +80,12 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
         assertThat(page, hasItems(carter, stefan));
     }
 
+    
+    @Test
+    public void findsPersonInAgeRangeCorrectly() throws Exception {
+
+        List<Person> result = repository.findByAgeBetween(40, 45);
+        assertThat(result.size(), is(2));
+        assertThat(result, hasItems(dave, leroi));
+    }
 }

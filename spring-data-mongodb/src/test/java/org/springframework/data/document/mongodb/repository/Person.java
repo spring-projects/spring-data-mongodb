@@ -28,6 +28,7 @@ public class Person {
     private String id;
     private String firstname;
     private String lastname;
+    private Integer age;
 
 
     public Person() {
@@ -38,9 +39,16 @@ public class Person {
 
     public Person(String firstname, String lastname) {
 
+        this(firstname, lastname, null);
+    }
+
+
+    public Person(String firstname, String lastname, Integer age) {
+
         this.id = ObjectId.get().toString();
         this.firstname = firstname;
         this.lastname = lastname;
+        this.age = age;
     }
 
 
@@ -95,6 +103,24 @@ public class Person {
     public void setLastname(String lastname) {
 
         this.lastname = lastname;
+    }
+
+
+    /**
+     * @return the age
+     */
+    public Integer getAge() {
+
+        return age;
+    }
+
+
+    /**
+     * @param age the age to set
+     */
+    public void setAge(Integer age) {
+
+        this.age = age;
     }
 
 

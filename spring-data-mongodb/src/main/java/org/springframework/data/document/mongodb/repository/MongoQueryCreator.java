@@ -129,6 +129,8 @@ class MongoQueryCreator extends AbstractQueryCreator<DBObject, QueryBuilder> {
             return criteria.greaterThan(parameters.next());
         case LESS_THAN:
             return criteria.lessThan(parameters.next());
+        case BETWEEN:
+            return criteria.greaterThan(parameters.next()).lessThan(parameters.next());
         case IS_NOT_NULL:
             return criteria.notEquals(null);
         case IS_NULL:
