@@ -19,7 +19,7 @@ import java.io.Serializable;
 import java.lang.reflect.Method;
 
 import org.springframework.beans.factory.FactoryBean;
-import org.springframework.data.document.mongodb.MongoTemplate;
+import org.springframework.data.document.mongodb.MongoOperations;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.query.QueryLookupStrategy;
 import org.springframework.data.repository.query.QueryLookupStrategy.Key;
@@ -39,17 +39,17 @@ import org.springframework.util.Assert;
 public class MongoRepositoryFactoryBean extends
         RepositoryFactoryBeanSupport<Repository<?, ?>> {
 
-    private MongoTemplate template;
+    private MongoOperations operations;
 
 
     /**
-     * Configures the {@link MongoTemplate} to be used.
+     * Configures the {@link MongoOperations} to be used.
      * 
-     * @param template the template to set
+     * @param operations the template to set
      */
-    public void setTemplate(MongoTemplate template) {
+    public void setOperations(MongoOperations operations) {
 
-        this.template = template;
+        this.operations = operations;
     }
 
 
@@ -78,7 +78,7 @@ public class MongoRepositoryFactoryBean extends
     public void afterPropertiesSet() {
 
         super.afterPropertiesSet();
-        Assert.notNull(template, "MongoTemplate must not be null!");
+        Assert.notNull(operations, "MongoTemplate must not be null!");
     }
 
     /**
@@ -92,7 +92,7 @@ public class MongoRepositoryFactoryBean extends
         protected <T, ID extends Serializable> RepositorySupport<T, ID> getTargetRepository(
                 Class<T> domainClass) {
 
-            return new SimpleMongoRepository<T, ID>(domainClass, template);
+            return new SimpleMongoRepository<T, ID>(domainClass, operations);
         }
 
 
@@ -119,7 +119,7 @@ public class MongoRepositoryFactoryBean extends
 
             public RepositoryQuery resolveQuery(Method method) {
 
-                return new MongoQuery(new QueryMethod(method), template);
+                return new MongoQuery(new QueryMethod(method), operations);
             }
         }
     }

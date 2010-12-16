@@ -21,7 +21,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.data.document.mongodb.MongoTemplate;
+import org.springframework.data.document.mongodb.MongoOperations;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -43,20 +43,20 @@ import com.mongodb.QueryBuilder;
 public class SimpleMongoRepository<T, ID extends Serializable> extends
         RepositorySupport<T, ID> implements PagingAndSortingRepository<T, ID> {
 
-    private final MongoTemplate template;
+    private final MongoOperations operations;
     private MongoEntityInformation entityInformation;
 
 
     /**
      * @param domainClass
-     * @param template
+     * @param operations
      */
-    public SimpleMongoRepository(Class<T> domainClass, MongoTemplate template) {
+    public SimpleMongoRepository(Class<T> domainClass, MongoOperations operations) {
 
         super(domainClass);
 
-        Assert.notNull(template);
-        this.template = template;
+        Assert.notNull(operations);
+        this.operations = operations;
     }
 
 
@@ -68,7 +68,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> extends
      */
     public T save(T entity) {
 
-        template.save(entity);
+        operations.save(entity);
         return entity;
     }
 
@@ -84,7 +84,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> extends
         List<T> result = new ArrayList<T>();
 
         for (T entity : entities) {
-            template.save(entity);
+            operations.save(entity);
             result.add(entity);
         }
 
@@ -102,7 +102,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> extends
     public T findById(ID id) {
 
         List<T> result =
-                template.query(template.getDefaultCollectionName(),
+                operations.query(operations.getDefaultCollectionName(),
                         QueryBuilder.start("_id").get(), getDomainClass());
 
         return result.isEmpty() ? null : result.get(0);
@@ -129,7 +129,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> extends
      */
     public List<T> findAll() {
 
-        return template.getCollection(getDomainClass());
+        return operations.getCollection(getDomainClass());
     }
 
 
@@ -140,7 +140,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> extends
      */
     public Long count() {
 
-        return template.getCollection(template.getDefaultCollectionName())
+        return operations.getCollection(operations.getDefaultCollectionName())
                 .count();
     }
 
@@ -156,7 +156,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> extends
         QueryBuilder builder =
                 QueryBuilder.start(entityInformation.getFieldName()).is(
                         entityInformation.getId(entity));
-        template.remove(builder.get());
+        operations.remove(builder.get());
     }
 
 
@@ -181,7 +181,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> extends
      */
     public void deleteAll() {
 
-        template.dropCollection(template.getDefaultCollectionName());
+        operations.dropCollection(operations.getDefaultCollectionName());
     }
 
 
@@ -197,7 +197,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> extends
         Long count = count();
 
         List<T> list =
-                template.query(new BasicDBObject(), getDomainClass(),
+                operations.query(new BasicDBObject(), getDomainClass(),
                         withPagination(pageable));
 
         return new PageImpl<T>(list, pageable, count);
@@ -213,7 +213,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> extends
      */
     public List<T> findAll(final Sort sort) {
 
-        return template.query(new BasicDBObject(), getDomainClass(),
+        return operations.query(new BasicDBObject(), getDomainClass(),
                 withSorting(sort));
     }
 
