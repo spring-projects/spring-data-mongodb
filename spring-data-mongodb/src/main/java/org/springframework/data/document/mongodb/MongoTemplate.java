@@ -189,7 +189,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	 */
 	public DBCollection createCollection(String collectionName) {
 		try {
-			return getDb().createCollection(collectionName, null);
+			return getDb().createCollection(collectionName, new BasicDBObject());
 		} catch (MongoException e) {
 			throw new InvalidDataAccessApiUsageException("Error creating collection " + collectionName + ": " + e.getMessage(), e);
 		}
