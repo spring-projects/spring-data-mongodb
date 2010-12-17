@@ -470,6 +470,13 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	}
 
 	/* (non-Javadoc)
+	 * @see org.springframework.data.document.mongodb.MongoOperations#getCollectionNames()
+	 */
+	public List<String> getCollectionNames() {
+		return new ArrayList<String>(getDb().getCollectionNames());
+	}
+
+	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#getCollection(java.lang.String, java.lang.Class, org.springframework.data.document.mongodb.MongoReader)
 	 */
 	public <T> List<T> getCollection(String collectionName, Class<T> targetClass, MongoReader<T> reader) { 

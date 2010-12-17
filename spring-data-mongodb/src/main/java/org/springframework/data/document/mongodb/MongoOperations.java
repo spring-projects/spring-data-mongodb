@@ -54,6 +54,8 @@ public interface MongoOperations {
 	void createCollection(String collectionName,
 			CollectionOptions collectionOptions);
 
+	List<String> getCollectionNames();
+	
 	DBCollection getCollection(String collectionName);
 
 	boolean collectionExists(String collectionName);
