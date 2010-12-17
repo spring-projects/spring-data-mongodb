@@ -5,25 +5,27 @@
   <bookinfo>
     <title>Spring Datastore Document - Reference Documentation</title>
 
-    <releaseinfo>version;</releaseinfo>
+    <releaseinfo>&version;</releaseinfo>
 
     <authorgroup>
       <author>
         <firstname>Mark</firstname>
-
         <surname>Pollack</surname>
       </author>
 
       <author>
         <firstname>Thomas</firstname>
-
         <surname>Risberg</surname>
       </author>
 
       <author>
         <firstname>Oliver</firstname>
-
         <surname>Gierke</surname>
+      </author>
+      <author>
+          <firstname>Costin</firstname>
+          <surname>Leau</surname>
+          <affiliation>SpringSource</affiliation>
       </author>
     </authorgroup>
 
@@ -38,15 +40,21 @@
   <toc />
 
   <xi:include href="preface.xml" />
-  <xi:include href="mongo.xml" />
 
-  <part>
-    <title>Reference</title>
-
-    <partintro>
-      <para>This part of the reference documentation details the ...</para>
-    </partintro>
-
-    <!-- <xi:include href="amqp.xml"/> -->
+  <part id="introduction">
+    <title>Introduction</title>
+     
+    <xi:include href="introduction/introduction.xml"/>
+    <xi:include href="introduction/why-sd-doc.xml"/>
+    <xi:include href="introduction/requirements.xml"/>
+    <xi:include href="introduction/getting-started.xml"/>
   </part>
+
+  <part id="reference">
+    <title>Reference Documentation</title>
+     
+    <xi:include href="reference/introduction.xml"/>
+    <xi:include href="reference/mongodb.xml"/>
+  </part>
+
 </book>
