@@ -48,10 +48,14 @@ public class SimpleMongoRepository<T, ID extends Serializable> extends
 
 
     /**
+     * Creates a ew {@link SimpleMongoRepository} for the given domain class and
+     * {@link MongoOperations}.
+     * 
      * @param domainClass
      * @param operations
      */
-    public SimpleMongoRepository(Class<T> domainClass, MongoOperations operations) {
+    public SimpleMongoRepository(Class<T> domainClass,
+            MongoOperations operations) {
 
         super(domainClass);
 

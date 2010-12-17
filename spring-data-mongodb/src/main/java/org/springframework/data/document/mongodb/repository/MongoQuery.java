@@ -95,13 +95,25 @@ public class MongoQuery implements RepositoryQuery {
 
         protected List<?> readCollection(DBObject query) {
 
-            return operations.query(operations.getDefaultCollectionName(), query,
-                    method.getDomainClass());
+            return operations.query(operations.getDefaultCollectionName(),
+                    query, method.getDomainClass());
         }
     }
 
+    /**
+     * {@link Execution} for collection returning queries.
+     * 
+     * @author Oliver Gierke
+     */
     class CollectionExecution extends Execution {
 
+        /*
+         * (non-Javadoc)
+         * 
+         * @see
+         * org.springframework.data.document.mongodb.repository.MongoQuery.Execution
+         * #execute(com.mongodb.DBObject)
+         */
         @Override
         public Object execute(DBObject query) {
 
@@ -173,11 +185,17 @@ public class MongoQuery implements RepositoryQuery {
      */
     class SingleEntityExecution extends Execution {
 
+        /*
+         * (non-Javadoc)
+         * 
+         * @see
+         * org.springframework.data.document.mongodb.repository.MongoQuery.Execution
+         * #execute(com.mongodb.DBObject)
+         */
         @Override
         Object execute(DBObject query) {
 
             List<?> result = readCollection(query);
-
             return result.isEmpty() ? null : result.get(0);
         }
     }

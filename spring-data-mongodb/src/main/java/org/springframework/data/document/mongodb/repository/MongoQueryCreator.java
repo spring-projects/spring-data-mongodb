@@ -108,7 +108,6 @@ class MongoQueryCreator extends AbstractQueryCreator<DBObject, QueryBuilder> {
     @Override
     protected DBObject finalize(QueryBuilder criteria, Sort sort) {
 
-        // TODO: apply sorting
         return criteria.get();
     }
 

@@ -34,7 +34,11 @@ import com.mongodb.DBCursor;
  * 
  * @author Oliver Gierke
  */
-class MongoCursorUtils {
+abstract class MongoCursorUtils {
+    
+    private MongoCursorUtils() {
+        
+    }
 
     /**
      * Creates a {@link CursorPreparer} applying the given {@link Pageable} to
