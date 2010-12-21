@@ -84,6 +84,231 @@
       <para>Out of the box, <classname>MongoTemplate</classname> uses a Java-based default converter for most of its operations...</para>
       
   </section>
+
+  <section id="mongodb.repositories">
+    <title>Repositories</title>
+
+    <para>To access domain entities stored in a MongoDB you can leverage our
+    sophisticated repository support that eases implementing those quite
+    significantly. To do so, simply create an interface for your
+    repository:</para>
+
+    <example>
+      <title>Sample Person entity</title>
+
+      <programlisting language="java">public class Person {
+
+  private String firstname;
+  private String lastname;
+}</programlisting>
+    </example>
+
+    <example>
+      <title>Basic repository interface to persist Person entities</title>
+
+      <programlisting>public interface PersonRepository extends MongoRepository&lt;Person, Long&gt; {
+
+}</programlisting>
+    </example>
+
+    <para>Right now this interface simply serves typing purposes but we will
+    add additional methods to it later. In your Spring configuration simply
+    add</para>
+
+    <example>
+      <title>General mongo repository Spring configuration</title>
+
+      <programlisting language="xml">&lt;mongo:repositories base-package="com.acme.*.repositories" 
+  mongo-template-ref="myMongoTemplate" /&gt;</programlisting>
+    </example>
+
+    <para>This namespace element will cause the base packages to be scanned
+    for interfaces extending <interfacename>MongoRepository</interfacename>
+    and create Spring beans for each of them found. These Spring beans are
+    backed by a generic repository implementation that provides you a variety
+    of useful methods to work with <classname>Person</classname>
+    entities.</para>
+
+    <example>
+      <title>Generic repository interface</title>
+
+      <programlisting language="java">public interface Repository&lt;T, ID extends Serializable&gt; {
+
+  T findById(ID id);
+
+  List&lt;T&gt; findAll();
+
+  T save(T entity);
+  
+  List&lt;T&gt; findAll(Sort sort);
+
+  Page&lt;T&gt; findAll(Pageable pageable);
+
+  // further methods omitted
+}</programlisting>
+    </example>
+
+    <para>We've just listed a brief excerpt of the methods here. As you can
+    see you get access to basic CRUD operations as well as some more
+    sophisicated ones that allow programmatic sorting and pagination over the
+    entities handled by the repository. Working with the repository instance
+    is just a matter of dependency injecting it into a client. So accessing
+    the second page of <classname>Person</classname>s at a page size of 10
+    would simply look something like this:</para>
+
+    <example>
+      <title>Paging access to Person entities</title>
+
+      <programlisting>@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration
+class PersonRepositoryTests {
+
+  @Autowired PersonRepository repository;
+
+  @Test
+  public void readsFirstPageCorrectly() {
+
+    Page&lt;Person&gt; persons = repository.findAll(new PageRequest(0, 10));
+    assertThat(persons.isFirstPage(), is(true));
+  }
+}</programlisting>
+    </example>
+
+    <para>The sample creates an application context with Spring's unit test
+    support which will perform annotation based dependency injection into test
+    cases. Inside the test method we simply use the repository to query the
+    datastore. We hand the repository a <classname>PageRequest</classname>
+    instance that requests the first page of persons at a page size of
+    10.</para>
+
+    <section id="mongodb.repositories.queries">
+      <title>Query methods</title>
+
+      <para>Most of the data access operations you usually trigger on a
+      repository result a query being executed against the Mongo databases.
+      Defining such a query is just a matter of declaring a method on the
+      repository interface</para>
+
+      <example>
+        <title>PersonRepository with query methods</title>
+
+        <programlisting>public interface PersonRepository extends MongoRepository&lt;Person, Long&gt; {
+
+  List&lt;Person&gt; findByLastname(String lastname);
+
+  Page&lt;Person&gt; findByFirstname(String firstname, Pageable pageable);
+}</programlisting>
+      </example>
+
+      <para>The first method shows a query for all people with the given
+      lastname. The query will be derived parsing the method name for
+      constraints which can be concatenated with <literal>And</literal> and
+      <literal>Or</literal>. Thus the method name will result in a query
+      expression of <code>{"lastname" : lastname}</code>. The second example
+      shows how pagination is applied to a query. Just equip your method
+      signature with a <interfacename>Pageable</interfacename> parameter and
+      let the method return a <interfacename>Page</interfacename> instance and
+      we will automatically page the query accordingly.</para>
+
+      <para><table>
+          <title>Supported keywords for query methods</title>
+
+          <tgroup cols="3">
+            <colspec colwidth="1*" />
+
+            <colspec colwidth="2*" />
+
+            <colspec colwidth="2*" />
+
+            <thead>
+              <row>
+                <entry>Keyword</entry>
+
+                <entry>Sample</entry>
+
+                <entry>Logical result</entry>
+              </row>
+            </thead>
+
+            <tbody>
+              <row>
+                <entry><literal>GreaterThan</literal></entry>
+
+                <entry><methodname>findByAgeGreaterThan(int
+                age)</methodname></entry>
+
+                <entry><code>{"age" : {"$gt" : age}}</code></entry>
+              </row>
+
+              <row>
+                <entry><literal>LessThan</literal></entry>
+
+                <entry><methodname>findByAgeLessThan(int
+                age)</methodname></entry>
+
+                <entry><code>{"age" : {"$lt" : age}}</code></entry>
+              </row>
+
+              <row>
+                <entry><literal>Between</literal></entry>
+
+                <entry><methodname>findByAgeBetween(int from, int
+                to)</methodname></entry>
+
+                <entry><code>{"age" : {"$gt" : from, "$lt" :
+                to}}</code></entry>
+              </row>
+
+              <row>
+                <entry><literal>IsNotNull</literal>,
+                <literal>NotNull</literal></entry>
+
+                <entry><methodname>findByFirstnameNotNull()</methodname></entry>
+
+                <entry><code>{"age" : {"$ne" : null}}</code></entry>
+              </row>
+
+              <row>
+                <entry><literal>IsNull</literal>,
+                <literal>Null</literal></entry>
+
+                <entry><methodname>findByFirstnameNull()</methodname></entry>
+
+                <entry><code>{"age" : null}</code></entry>
+              </row>
+
+              <row>
+                <entry><literal>Like</literal></entry>
+
+                <entry><methodname>findByFirstnameLike(String
+                name)</methodname></entry>
+
+                <entry><code>{"age" : age}</code> (<varname>age</varname> as
+                regex)</entry>
+              </row>
+
+              <row>
+                <entry>(No keyword)</entry>
+
+                <entry><methodname>findByFirstname(String
+                name)</methodname></entry>
+
+                <entry><code>{"age" : name}</code></entry>
+              </row>
+
+              <row>
+                <entry><literal>Not</literal></entry>
+
+                <entry><methodname>findByFirstnameNot(String
+                name)</methodname></entry>
+
+                <entry><code>{"age" : {"$ne" : name}}</code></entry>
+              </row>
+            </tbody>
+          </tgroup>
+        </table></para>
+    </section>
+  </section>
     
     <section id="mongodb:future">
     	<title>Roadmap ahead</title>
