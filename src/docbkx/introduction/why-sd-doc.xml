@@ -14,7 +14,7 @@
     and speed. In terms of implementation, Document stores represent one of the
     most popular types of stores in the NoSQL space.</para>
 
-    <para>The Spring Data Document (or SDDOC) framework makes it easy to 
+    <para>The Spring Data Document (or DATADOC) framework makes it easy to 
     write Spring applications that use a Document store by eliminating the redundant
     tasks and boiler place code required for interacting with the store through
     Spring's excellent infrastructure support.</para>
