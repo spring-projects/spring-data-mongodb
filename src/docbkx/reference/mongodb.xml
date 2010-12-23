@@ -1,88 +1,187 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE preface PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
-                 "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
+"http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
 <chapter id="mongodb">
   <title>MongoDB support</title>
 
-  <para>One of the document stores supported by SDDOC is <ulink url="http://www.mongodb.org/">MongoDB</ulink>.
-  To quote the project home page:
-  <quote>
-	MongoDB (from "humongous") is a scalable, high-performance, open source, document-oriented database.
-  </quote>
-  
-  <para>Spring Data Document provides easy configuration and access to MongoDB from a Spring application. Offers both low-level and
-  high-level abstraction for interacting with the store, freeing the user from infrastructural concerns.</para>
-  </para>
-  
+  <para>One of the document stores supported by DATADOC is <ulink
+  url="http://www.mongodb.org/">MongoDB</ulink>. To quote the project home
+  page: <quote> MongoDB (from "humongous") is a scalable, high-performance,
+  open source, document-oriented database. </quote> <para>Spring Data Document
+  provides easy configuration and access to MongoDB from a Spring application.
+  Offers both low-level and high-level abstraction for interacting with the
+  store, freeing the user from infrastructural concerns.</para></para>
+
   <section id="mongodb:requirements">
     <title>MongoDB Requirements</title>
-    <para>SDDOC requires MongoDB 1.4 while 1.6 is recommended.
-    </para>
+
+    <para>DATADOC requires MongoDB 1.4 while 1.6 is recommended.</para>
   </section>
-  
+
   <section id="mongodb:architecture">
     <title>MongoDB Support High Level View</title>
-    
+
     <para>The MongoDB support provides several components:</para>
+
     <itemizedlist>
-      <listitem><emphasis>Configuration Factory</emphasis> - for configuring and handling communication with MongoDB via its Java driver</listitem>
-      <listitem><emphasis>Template implemenattion</emphasis> - providing a generified, user friendly template classes for interacting with MongoDB. 
-      <xref linkend="mongodb:template"/> explains the abstraction builds on top of the low-level MongoDB Java API to handle the 
-      storage and retrieval of documents plus mapping between documents and domain classes.</listitem>
-      <listitem><emphasis>Support Classes</emphasis> - that offer reusable components such as mapping support and exception translation.</listitem> 
+      <listitem>
+        <emphasis>Configuration Factory</emphasis>
+
+         - for configuring and handling communication with MongoDB via its Java driver
+      </listitem>
+
+      <listitem>
+        <emphasis>Template implemenattion</emphasis>
+
+         - providing a generified, user friendly template classes for interacting with MongoDB. 
+
+        <xref linkend="mongodb:template" />
+
+         explains the abstraction builds on top of the low-level MongoDB Java API to handle the storage and retrieval of documents plus mapping between documents and domain classes.
+      </listitem>
+
+      <listitem>
+        <emphasis>Support Classes</emphasis>
+
+         - that offer reusable components such as mapping support and exception translation.
+      </listitem>
     </itemizedlist>
+
+    <para>For most tasks, the higher-level abstractions and support services
+    are the best choice. Note that at any point, one can move between layers -
+    for example, it's very easy to get a hold of the low level connection
+    (org.mongo.DB) to communicate directly with MongoDB.</para>
+  </section>
+
+  <section id="mongodb:connectors">
+    <title>Connecting to MongoDB</title>
+
+    <para>One of the first tasks when using MongoDB and Spring is to connect
+    to the store through the IoC container. To do that</para>
+
+    <para>The easiest way to work with a
+    <interfacename>MongoFactoryBean</interfacename> is to configure a
+    <classname>MongoFactory</classname> bean. This has the added advantage of
+    also acting as an ExceptionTranslator that can be used to translate any
+    Mongo exceptions to exceptions in the
+    <classname>SpringDataAccessException</classname> hierarchy as long as your
+    data access classes are annotatded with @Repository and you are using an
+    <classname>PersistenceExceptionTranslationPostProcessor</classname> (see
+    <link linkend="???">Spring API docs</link>).</para>
+
+    <para>You have two basic choices - use Java based configuration or XML
+    based configuration. An example fo a basic Java configuratopn style
+    is:</para>
+
+    <example>
+      <title>Java based Spring configuration for MongoDB</title>
+
+      <programlisting language="java">@Configuration
+public class AppConfig {
+
+    /*
+     * Factory bean that creates the Mongo instance
+     */
+    public @Bean MongoFactoryBean mongo() {
+        MongoFactoryBean mongo = new MongoFactoryBean();
+        mongo.setHost("localhost");
+        return mongo; 
+    }
     
-    <para>For most tasks, the higher-level abstractions and support services are the best choice. Note that at any point, one can move between layers - for example, it's very
-    easy to get a hold of the low level connection (org.mongo.DB) to communicate directly with MongoDB.</para>
-    </section>
-  
-    <section id="mongodb:connectors">
-      <title>Connecting to MongoDB</title>
-      
-      <para>One of the first tasks when using MongoDB and Spring is to connect to the store through the IoC container. To do that</para>
-            
-      <para>The easiest way to work with a <interfacename>MongoFactoryBean</interfacename> is to configure ...</para>
-      
-    </section>
-    
-    <section id="mongodb:template">
-      <title>Working with Objects through <classname>MongoTemplate</classname></title>
-      
-      <para>Most users are likely to use <classname>MongoTemplate</classname> and its corresponding package <literal>org.springframework.data.document.mongodb</literal> - the
-      template is in fact the central class of the MongoDB module due to its rich feature set.
-      The template offers a high-level abstraction for MongoDB interaction.
-      </para>
-      
-      <table  id="MongoDB-template-operations-view" pgwide="1">
-        <title>Operational views</title>
-        
-        <tgroup cols="2">
-          <colspec colname="c1" colwidth="1*" align="center"/>
-          <colspec colname="c2" colwidth="1*" align="center"/>
-          <spanspec spanname="both" namest="c1" nameend="c2" colsep="0" align="center" />
-          <thead>
-            <row>
-              <entry>Interface</entry>
-              <entry>Description</entry>
-            </row>
-          </thead>
-          <tbody>
-            <row>
-              <entry><interfacename>Collection Operations</interfacename></entry>
-              <entry>MongoDB string (or value) operations</entry>
-            </row>
-            <row>
-              <entry><interfacename>Document Operations</interfacename></entry>
-              <entry>MongoDB list operations</entry>
-            </row>
-          </tbody>
-        </tgroup>
-      </table>
-      
-      <para>Once configured, the template is thread-safe and can be reused across multiple instances.</para>
-      
-      <para>Out of the box, <classname>MongoTemplate</classname> uses a Java-based default converter for most of its operations...</para>
-      
+    /*
+     * A basic MongoTemplate instance
+     */
+    public @Bean MongoTemplate mongoTemplate(Mongo mongo) {
+        MongoTemplate mongoTemplate = new MongoTemplate(mongo, "test", "HelloMongo");
+        return mongoTemplate;
+    }
+
+    /* 
+     * Use this post processor to translate any MongoExceptions thrown in @Repository annotated classes
+     */
+    public @Bean PersistenceExceptionTranslationPostProcessor persistenceExceptionTranslationPostProcessor() {
+        return new PersistenceExceptionTranslationPostProcessor();
+    }
+
+}
+</programlisting>
+    </example>
+
+    <para>The following shows the same configuration using XML:</para>
+
+    <example>
+      <title>XML based Spring configuration for MongoDB</title>
+
+      <programlisting language="xml">&lt;!-- Factory bean that creates the Mongo instance --&gt;
+&lt;bean id="mongo" class="org.springframework.data.document.mongodb.MongoFactoryBean"&gt;
+    &lt;property name="host" value="localhost"/&gt;
+&lt;/bean&gt;
+
+&lt;!-- A basic MongoTemplate instance --&gt;
+&lt;bean id="mongoTemplate" class="org.springframework.data.document.mongodb.MongoTemplate"&gt;
+    &lt;constructor-arg name="mongo" ref="mongo"/&gt;
+    &lt;constructor-arg name="databaseName" value="test"/&gt;
+    &lt;constructor-arg name="defaultCollectionName" value="HelloMongo"/&gt;
+&lt;/bean&gt;
+
+&lt;!-- Use this post processor to translate any MongoExceptions thrown in @Repository annotated classes --&gt;
+&lt;bean class="org.springframework.dao.annotation.PersistenceExceptionTranslationPostProcessor"/&gt;
+</programlisting>
+    </example>
+  </section>
+
+  <section id="mongodb:template">
+    <title>Working with Objects through
+    <classname>MongoTemplate</classname></title>
+
+    <para>Most users are likely to use <classname>MongoTemplate</classname>
+    and its corresponding package
+    <literal>org.springframework.data.document.mongodb</literal> - the
+    template is in fact the central class of the MongoDB module due to its
+    rich feature set. The template offers convenience methods and automatic
+    mapping between MongoDB JSON documents and your domain classes.</para>
+
+    <table id="MongoDB-template-operations-view" pgwide="1">
+      <title>Operational views</title>
+
+      <tgroup cols="2">
+        <colspec align="center" colname="c1" colwidth="1*" />
+
+        <colspec align="center" colname="c2" colwidth="1*" />
+
+        <spanspec align="center" colsep="0" nameend="c2" namest="c1"
+                  spanname="both" />
+
+        <thead>
+          <row>
+            <entry>Interface</entry>
+
+            <entry>Description</entry>
+          </row>
+        </thead>
+
+        <tbody>
+          <row>
+            <entry><interfacename>Collection
+            Operations</interfacename></entry>
+
+            <entry>MongoDB document operations</entry>
+          </row>
+
+          <row>
+            <entry><interfacename>Document Operations</interfacename></entry>
+
+            <entry>MongoDB collection operations</entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </table>
+
+    <para>Once configured, the template is thread-safe and can be reused
+    across multiple instances.</para>
+
+    <para>Out of the box, <classname>MongoTemplate</classname> uses a
+    Java-based default converter for most of its operations...</para>
   </section>
 
   <section id="mongodb.repositories">
@@ -118,8 +217,24 @@
     <example>
       <title>General mongo repository Spring configuration</title>
 
-      <programlisting language="xml">&lt;mongo:repositories base-package="com.acme.*.repositories" 
-  mongo-template-ref="myMongoTemplate" /&gt;</programlisting>
+      <programlisting language="xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:mongo="http://www.springframework.org/schema/data/mongo"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+        http://www.springframework.org/schema/data/mongo 
+        http://www.springframework.org/schema/data/mongo/spring-mongo-1.0.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context-3.0.xsd"&gt;
+
+    &lt;mongo:repositories base-package="com.acme.*.repositories" 
+        mongo-template-ref="myMongoTemplate" /&gt;
+
+    ...
+
+&lt;/beans&gt;</programlisting>
     </example>
 
     <para>This namespace element will cause the base packages to be scanned
@@ -309,11 +424,15 @@ class PersonRepositoryTests {
         </table></para>
     </section>
   </section>
-    
-    <section id="mongodb:future">
-    	<title>Roadmap ahead</title>
-    	
-    	<para>Spring Data MongoDB project is in its early stages. We are interested in feedback, knowing what your use cases are, what are the common patters you encounter so that the MongoDB module
-    	better serves your needs. Do contact us using the channels <link linkend="get-started:help:community">mentioned</link> above, we are interested in hearing from you!</para>
-    </section>
+
+  <section id="mongodb:future">
+    <title>Roadmap ahead</title>
+
+    <para>Spring Data MongoDB project is in its early stages. We are
+    interested in feedback, knowing what your use cases are, what are the
+    common patters you encounter so that the MongoDB module better serves your
+    needs. Do contact us using the channels <link
+    linkend="get-started:help:community">mentioned</link> above, we are
+    interested in hearing from you!</para>
+  </section>
 </chapter>
