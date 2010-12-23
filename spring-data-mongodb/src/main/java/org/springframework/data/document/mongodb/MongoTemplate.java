@@ -153,8 +153,8 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#execute(org.springframework.data.document.mongodb.CollectionCallback)
 	 */
-	public <T> T execute(CollectionCallback<T> callback) {
-		return execute(callback, defaultCollectionName);
+	public <T> T execute(CollectionCallback<T> action) {
+		return execute(action, defaultCollectionName);
 	}
 
 	/* (non-Javadoc)
@@ -609,7 +609,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 		return dbo;
 	}
 
-	private void populateIdIfNecessary(Object savedObject, Object id) {
+	protected void populateIdIfNecessary(Object savedObject, Object id) {
 		//TODO Needs proper conversion support and should be integrated with reader implementation somehow
 		BeanWrapper bw = PropertyAccessorFactory.forBeanPropertyAccess(savedObject);
 		PropertyDescriptor idPd = BeanUtils.getPropertyDescriptor(savedObject.getClass(), "id");

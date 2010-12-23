@@ -17,7 +17,21 @@ package org.springframework.data.document.mongodb;
 
 import com.mongodb.DBObject;
 
+/**
+ * A MongoWriter is responsible for converting an object of type T to the native MongoDB representation DBObject.
+ * 
+ * @author Mark Pollack
+ * @author Thomas Risberg
+ *
+ * @param <T> the type of the object to convert to a DBObject
+ */
 public interface MongoWriter<T> {
 
+	/**
+	 * Write the given object of type T to the native MongoDB object representation DBObject.
+	 * @param t The object to convert to a DBObject
+	 * @param dbo The DBObject to use for writing.
+	 */
 	void write(T t, DBObject dbo);
+	
 }

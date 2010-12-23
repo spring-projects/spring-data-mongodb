@@ -15,6 +15,12 @@
  */
 package org.springframework.data.document.mongodb;
 
+/**
+ * Provides a simple wrapper to encapsulate the variety of settings you can use when creating a collection. 
+ * 
+ * @author Thomas Risberg
+ *
+ */
 public class CollectionOptions {
 	
 	private Integer maxDocuments;
@@ -23,8 +29,13 @@ public class CollectionOptions {
 	
 	private Boolean capped;
 	
-	
-	
+	/**
+	 * Constructs a new <code>CollectionOptions</code> instance.
+	 * @param size the collection size in bytes, this data space is preallocated
+	 * @param maxDocuments the maximum number of documents in the collection.
+	 * @param capped true to created a "capped" collection (fixed size with auto-FIFO behavior
+	 * based on insertion order), false otherwise.
+	 */
 	public CollectionOptions(Integer size, Integer maxDocuments, Boolean capped) {
 		super();
 		this.maxDocuments = maxDocuments;
