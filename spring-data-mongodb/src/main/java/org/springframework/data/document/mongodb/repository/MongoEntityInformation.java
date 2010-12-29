@@ -32,7 +32,7 @@ import org.springframework.util.ReflectionUtils;
  */
 class MongoEntityInformation implements IsNewAware, IdAware {
 
-    private final List<String> FIELD_NAMES = Arrays.asList("ID", "id", "_id");
+    private static final List<String> FIELD_NAMES = Arrays.asList("ID", "id", "_id");
     private Field field;
 
 
