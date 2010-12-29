@@ -102,7 +102,7 @@ abstract class MongoCursorUtils {
                 return;
             }
 
-            int toSkip = pageable.getPageSize() * pageable.getPageNumber();
+            int toSkip = pageable.getOffset();
             int first = pageable.getPageSize();
 
             cursor.limit(first).skip(toSkip);
