@@ -90,7 +90,7 @@ public class MongoRepositoryFactoryBean extends
 
         @Override
         protected <T, ID extends Serializable> RepositorySupport<T, ID> getTargetRepository(
-                Class<T> domainClass) {
+                Class<T> domainClass, Class<?> repositoryInterface) {
 
             return new SimpleMongoRepository<T, ID>(domainClass, operations);
         }
@@ -98,7 +98,7 @@ public class MongoRepositoryFactoryBean extends
 
         @Override
         @SuppressWarnings("rawtypes")
-        protected Class<? extends RepositorySupport> getRepositoryClass() {
+        protected Class<? extends RepositorySupport> getRepositoryClass(Class<?> repositoryInterface) {
 
             return SimpleMongoRepository.class;
         }
