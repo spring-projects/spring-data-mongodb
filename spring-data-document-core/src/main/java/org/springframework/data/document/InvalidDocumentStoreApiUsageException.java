@@ -18,13 +18,13 @@ package org.springframework.data.document;
 
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 
-public class InvalidDocumentStoreApiUageException extends InvalidDataAccessApiUsageException {
+public class InvalidDocumentStoreApiUsageException extends InvalidDataAccessApiUsageException {
 
-	public InvalidDocumentStoreApiUageException(String msg) {
+	public InvalidDocumentStoreApiUsageException(String msg) {
 		super(msg);
 	}
 
-	public InvalidDocumentStoreApiUageException(String msg, Throwable cause) {
+	public InvalidDocumentStoreApiUsageException(String msg, Throwable cause) {
 		super(msg, cause);
 	}
 
