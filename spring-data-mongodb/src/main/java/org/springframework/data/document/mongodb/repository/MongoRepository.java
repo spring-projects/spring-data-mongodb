@@ -27,6 +27,6 @@ import org.springframework.data.repository.Repository;
  * @author Oliver Gierke
  */
 public interface MongoRepository<T, ID extends Serializable> extends
-        PagingAndSortingRepository<T, Serializable> {
+        PagingAndSortingRepository<T, ID> {
 
 }
