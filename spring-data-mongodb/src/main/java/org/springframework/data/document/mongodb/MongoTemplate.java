@@ -59,14 +59,8 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	private final Mongo mongo;
 	
 	private String defaultCollectionName;
-	
-	//TODO expose configuration...
-	private CollectionOptions defaultCollectionOptions;
-
 	private String databaseName;
-	
 	private String username;
-	
 	private String password;
 	
 	

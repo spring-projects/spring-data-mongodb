@@ -45,11 +45,11 @@ class MongoEntityInformation implements IsNewAware, IdAware {
 
         for (String name : FIELD_NAMES) {
 
-            Field field = ReflectionUtils.findField(domainClass, name);
+            Field candidate = ReflectionUtils.findField(domainClass, name);
 
-            if (field != null) {
-                ReflectionUtils.makeAccessible(field);
-                this.field = field;
+            if (candidate != null) {
+                ReflectionUtils.makeAccessible(candidate);
+                this.field = candidate;
                 break;
             }
         }

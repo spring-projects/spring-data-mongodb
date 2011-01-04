@@ -23,7 +23,7 @@ public class Portfolio {
 
     private String portfolioName;
     private User user;
-    private List trades; 
+    private List<Trade> trades;
     private Map<String, Integer> positions;
     private Map<String, Person>  portfolioManagers;
     
@@ -40,7 +40,7 @@ public class Portfolio {
 		this.positions = positions;
 	}
 	public Portfolio() {
-		trades = new ArrayList();
+		trades = new ArrayList<Trade>();
 	}
 	public String getPortfolioName() {
 		return portfolioName;
@@ -48,10 +48,10 @@ public class Portfolio {
 	public void setPortfolioName(String portfolioName) {
 		this.portfolioName = portfolioName;
 	}
-	public List getTrades() {
+	public List<Trade> getTrades() {
 		return trades;
 	}
-	public void setTrades(List trades) {
+	public void setTrades(List<Trade> trades) {
 		this.trades = trades;
 	}
 	public User getUser() {
@@ -60,7 +60,4 @@ public class Portfolio {
 	public void setUser(User user) {
 		this.user = user;
 	}
-    
-    
-    
 }

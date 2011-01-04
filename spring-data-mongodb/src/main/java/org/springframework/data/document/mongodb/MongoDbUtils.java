@@ -38,12 +38,20 @@ import com.mongodb.MongoException.Network;
  *
  * @author Thomas Risberg
  * @author Graeme Rocher
+ * @author Oliver Gierke
  * 
  * @since 1.0
  */
-public class MongoDbUtils {
+abstract class MongoDbUtils {
 
-	static final Log logger = LogFactory.getLog(MongoDbUtils.class);
+	private static final Log LOGGER = LogFactory.getLog(MongoDbUtils.class);
+	
+	/**
+	 * Private constructor to prevent instantiation.
+	 */
+	private MongoDbUtils() {
+		
+	}
 	
 	/**
 	 * Convert the given runtime exception to an appropriate exception from the
@@ -112,7 +120,7 @@ public class MongoDbUtils {
 				// Spring transaction management is active ->
 				db = dbHolder.getDB();
 				if (db != null && !dbHolder.isSynchronizedWithTransaction()) {
-					logger.debug("Registering Spring transaction synchronization for existing Mongo DB");
+					LOGGER.debug("Registering Spring transaction synchronization for existing Mongo DB");
 					TransactionSynchronizationManager.registerSynchronization(new MongoSynchronization(dbHolder, mongo));
 					dbHolder.setSynchronizedWithTransaction(true);
 				}
@@ -122,18 +130,19 @@ public class MongoDbUtils {
 			}
 		}
 
-		logger.debug("Opening Mongo DB");
+		LOGGER.debug("Opening Mongo DB");
 		DB db = mongo.getDB(databaseName);
-		if(username != null && password != null) {
-			if(!db.authenticate(username, password)) {
-				throw new CannotGetMongoDbConnectionException("Failed to authenticate with Mongo using the given credentials");
-			}
+		boolean creadentialsGiven = username != null && password != null;
+		
+		if(creadentialsGiven && !db.authenticate(username, password)) {
+			throw new CannotGetMongoDbConnectionException("Failed to authenticate with Mongo using the given credentials");
 		}
+		
 		// Use same Session for further Mongo actions within the transaction.
 		// Thread object will get removed by synchronization at transaction completion.
 		if (TransactionSynchronizationManager.isSynchronizationActive()) {
 			// We're within a Spring-managed transaction, possibly from JtaTransactionManager.
-			logger.debug("Registering Spring transaction synchronization for new Hibernate Session");
+			LOGGER.debug("Registering Spring transaction synchronization for new Hibernate Session");
 			DBHolder holderToUse = dbHolder;
 			if (holderToUse == null) {
 				holderToUse = new DBHolder(db);
@@ -182,12 +191,12 @@ public class MongoDbUtils {
 	 */
 	public static void closeDB(DB db) {
 		if (db != null) {
-			logger.debug("Closing Mongo DB object");
+			LOGGER.debug("Closing Mongo DB object");
 			try {
 				db.requestDone();
 			}
 			catch (Throwable ex) {
-				logger.debug("Unexpected exception on closing Mongo DB object", ex);
+				LOGGER.debug("Unexpected exception on closing Mongo DB object", ex);
 			}
 		}
 	}	

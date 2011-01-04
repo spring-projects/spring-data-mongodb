@@ -15,21 +15,17 @@
  */
 package org.springframework.data.document.mongodb;
 
-import java.lang.reflect.Array;
-import java.lang.reflect.GenericArrayType;
+import static org.hamcrest.CoreMatchers.*;
+import static org.junit.Assert.*;
+
 import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
-import org.springframework.data.document.mongodb.SimpleMongoConverter;
 import org.springframework.data.document.mongodb.SomeEnumTest.NumberEnum;
 import org.springframework.data.document.mongodb.SomeEnumTest.StringEnum;
 import org.springframework.util.ReflectionUtils;
@@ -38,66 +34,65 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
 public class SimpleMongoConverterTests {
+	
+	SimpleMongoConverter converter;
+	
+	@Before
+	public void setUp() {
+		converter = new SimpleMongoConverter();
+	}
 
 	@Test
 	public void notNestedObject() {
 		User user = new User();
 		user.setAccountName("My Account");
 		user.setUserName("Mark");
-		SimpleMongoConverter converter = createConverter();
 		DBObject dbo = new BasicDBObject();
 		converter.write(user, dbo);
-		Assert.assertEquals("My Account", dbo.get("accountName"));
-		Assert.assertEquals("Mark", dbo.get("userName"));
+		assertEquals("My Account", dbo.get("accountName"));
+		assertEquals("Mark", dbo.get("userName"));
 
 		User u = (User) converter.read(User.class, dbo);
 
-		Assert.assertEquals("My Account", u.getAccountName());
-		Assert.assertEquals("Mark", u.getUserName());
+		assertEquals("My Account", u.getAccountName());
+		assertEquals("Mark", u.getUserName());
 	}
 
 	@Test
 	public void nestedObject() {
 		Portfolio p = createPortfolioWithNoTrades();
-		SimpleMongoConverter converter = createConverter();
 		DBObject dbo = new BasicDBObject();
 		converter.write(p, dbo);
-		Assert.assertEquals("High Risk Trading Account",
-				dbo.get("portfolioName"));
-		Assert.assertTrue(dbo.containsField("user"));
+		
+		assertEquals("High Risk Trading Account", dbo.get("portfolioName"));
+		assertTrue(dbo.containsField("user"));
 
 		Portfolio cp = (Portfolio) converter.read(Portfolio.class, dbo);
-		Assert.assertEquals("High Risk Trading Account", cp.getPortfolioName());
-		Assert.assertEquals("Joe Trader", cp.getUser().getUserName());
-		Assert.assertEquals("ACCT-123", cp.getUser().getAccountName());
+		
+		assertEquals("High Risk Trading Account", cp.getPortfolioName());
+		assertEquals("Joe Trader", cp.getUser().getUserName());
+		assertEquals("ACCT-123", cp.getUser().getAccountName());
 
 	}
 
 	@Test
 	public void objectWithMap() {
 		Portfolio p = createPortfolioWithPositions();
-		SimpleMongoConverter converter = createConverter();
 		DBObject dbo = new BasicDBObject();
 		converter.write(p, dbo);
 
 		Portfolio cp = (Portfolio) converter.read(Portfolio.class, dbo);
-		Assert.assertEquals("High Risk Trading Account", cp.getPortfolioName());
+		assertEquals("High Risk Trading Account", cp.getPortfolioName());
 	}
 
 	@Test
 	public void objectWithMapContainingNonPrimitiveTypeAsValue() {
 		Portfolio p = createPortfolioWithManagers();
-		SimpleMongoConverter converter = createConverter();
 		DBObject dbo = new BasicDBObject();
 		converter.write(p, dbo);
 
 		Portfolio cp = (Portfolio) converter.read(Portfolio.class, dbo);
-		Assert.assertEquals("High Risk Trading Account", cp.getPortfolioName());
-	}
-
-	private SimpleMongoConverter createConverter() {
-		SimpleMongoConverter converter = new SimpleMongoConverter();
-		return converter;
+		assertEquals("High Risk Trading Account", cp.getPortfolioName());
 	}
 
 	protected Portfolio createPortfolioWithPositions() {
@@ -135,17 +130,16 @@ public class SimpleMongoConverterTests {
 	@Test
 	public void objectWithArrayContainingNonPrimitiveType() {
 		TradeBatch b = createTradeBatch();
-		SimpleMongoConverter converter = createConverter();
 		DBObject dbo = new BasicDBObject();
 		converter.write(b, dbo);
 
 		TradeBatch b2 = (TradeBatch) converter.read(TradeBatch.class, dbo);
-		Assert.assertEquals(b.getBatchId(), b2.getBatchId());
-		Assert.assertNotNull(b2.getTradeList());
-		Assert.assertEquals(b.getTradeList().size(), b2.getTradeList().size());
-		Assert.assertEquals(b.getTradeList().get(1).getTicker(), b2.getTradeList().get(1).getTicker());
-		Assert.assertEquals(b.getTrades().length, b2.getTrades().length);
-		Assert.assertEquals(b.getTrades()[1].getTicker(), b2.getTrades()[1].getTicker());
+		assertEquals(b.getBatchId(), b2.getBatchId());
+		assertNotNull(b2.getTradeList());
+		assertEquals(b.getTradeList().size(), b2.getTradeList().size());
+		assertEquals(b.getTradeList().get(1).getTicker(), b2.getTradeList().get(1).getTicker());
+		assertEquals(b.getTrades().length, b2.getTrades().length);
+		assertEquals(b.getTrades()[1].getTicker(), b2.getTrades()[1].getTicker());
 	}
 
 	private TradeBatch createTradeBatch() {
@@ -173,76 +167,26 @@ public class SimpleMongoConverterTests {
 		test.setName("Sven");
 		test.setStringEnum(StringEnum.ONE);
 		test.setNumberEnum(NumberEnum.FIVE);
-		SimpleMongoConverter converter = createConverter();
 		DBObject dbo = new BasicDBObject();
 		converter.write(test, dbo);
 		
 		SomeEnumTest results = (SomeEnumTest) converter.read(SomeEnumTest.class, dbo);
-		Assert.assertNotNull(results);
-		Assert.assertEquals(test.getId(), results.getId());
-		Assert.assertEquals(test.getName(), results.getName());
-		Assert.assertEquals(test.getStringEnum(), results.getStringEnum());
-		Assert.assertEquals(test.getNumberEnum(), results.getNumberEnum());
+		assertNotNull(results);
+		assertEquals(test.getId(), results.getId());
+		assertEquals(test.getName(), results.getName());
+		assertEquals(test.getStringEnum(), results.getStringEnum());
+		assertEquals(test.getNumberEnum(), results.getNumberEnum());
 }
 
 	@Test
 	public void testReflection() {
-		Portfolio p = createPortfolioWithManagers();
 		Method method = ReflectionUtils.findMethod(Portfolio.class, "setPortfolioManagers", Map.class);
-		Assert.assertNotNull(method);
-		List<Class> paramClass = getGenericParameterClass(method);
-		System.out.println(paramClass);
-		/*
-		Type t = method.getGenericReturnType();
-		if (t instanceof ParameterizedType) {
-			ParameterizedType pt = (ParameterizedType) t;
-			Type paramType = pt.getActualTypeArguments()[1];
-			if (paramType instanceof ParameterizedType) {
-				ParameterizedType paramPtype = (ParameterizedType) pt;
-				System.out.println(paramPtype.getRawType());
-			}
-		}*/
-		// Assert.assertNotNull(null);
-
+		assertNotNull(method);
+		List<Class<?>> paramClass = converter.getGenericParameterClass(method);
+		
+		assertThat(paramClass.isEmpty(), is(false));
+		assertThat(paramClass.size(), is(2));
+		assertEquals(String.class, paramClass.get(0));
+		assertEquals(Person.class, paramClass.get(1));
 	}
-
-	public List<Class> getGenericParameterClass(Method setMethod) {
-		List<Class> actualGenericParameterTypes  = new ArrayList<Class>();
-		Type[] genericParameterTypes = setMethod.getGenericParameterTypes();
-
-		for(Type genericParameterType  : genericParameterTypes){		
-		    if(genericParameterType  instanceof ParameterizedType){
-		        ParameterizedType aType = (ParameterizedType) genericParameterType;
-		        Type[] parameterArgTypes = aType.getActualTypeArguments();		        
-		        for(Type parameterArgType : parameterArgTypes){
-		        	if (parameterArgType instanceof GenericArrayType)
-		            {
-		                Class arrayType = (Class) ((GenericArrayType) parameterArgType).getGenericComponentType();
-		                actualGenericParameterTypes.add(Array.newInstance(arrayType, 0).getClass());
-		            }
-		        	else {
-		        		if (parameterArgType instanceof ParameterizedType) {
-			        		ParameterizedType paramTypeArgs = (ParameterizedType) parameterArgType;
-			        		actualGenericParameterTypes.add((Class)paramTypeArgs.getRawType());
-			        	} else {
-			        		 if (parameterArgType instanceof TypeVariable) {
-			        			 throw new RuntimeException("Can not map " + ((TypeVariable) parameterArgType).getName());
-			        		 } else {
-			        			 if (parameterArgType instanceof Class) {
-			        				 actualGenericParameterTypes.add((Class) parameterArgType);
-			        			 } else  {
-			        				 throw new RuntimeException("Can not map " + parameterArgType); 
-			        			 }
-			        		 }
-			        	}
-		        	}
-		        	
-		        }
-		    }
-		}
-		return actualGenericParameterTypes;
-
-	}
-
-
 }

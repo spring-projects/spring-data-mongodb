@@ -18,11 +18,10 @@ package org.springframework.data.document.mongodb.repository;
 import java.io.Serializable;
 
 import org.springframework.data.repository.PagingAndSortingRepository;
-import org.springframework.data.repository.Repository;
 
 
 /**
- * Mongo specific {@link Repository} interface.
+ * Mongo specific {@link org.springframework.data.repository.Repository} interface.
  * 
  * @author Oliver Gierke
  */

@@ -1,6 +1,5 @@
 package org.springframework.data.document.mongodb.repository.config;
 
-import org.springframework.data.document.mongodb.MongoTemplate;
 import org.springframework.data.document.mongodb.repository.MongoRepository;
 import org.springframework.data.document.mongodb.repository.MongoRepositoryFactoryBean;
 import org.springframework.data.repository.config.AutomaticRepositoryConfigInformation;
@@ -40,7 +39,7 @@ public class SimpleMongoRepositoryConfiguration
 
 
     /**
-     * Returns the bean name of the {@link MongoTemplate} to be referenced.
+     * Returns the bean name of the {@link org.springframework.data.document.mongodb.MongoTemplate} to be referenced.
      * 
      * @return
      */
@@ -97,7 +96,7 @@ public class SimpleMongoRepositoryConfiguration
      * 
      * @author Oliver Gierke
      */
-    public static interface MongoRepositoryConfiguration
+    public interface MongoRepositoryConfiguration
             extends
             SingleRepositoryConfigInformation<SimpleMongoRepositoryConfiguration> {
 

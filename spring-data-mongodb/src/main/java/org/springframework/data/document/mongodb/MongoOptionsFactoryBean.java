@@ -112,7 +112,7 @@ public class MongoOptionsFactoryBean implements FactoryBean<MongoOptions>, Initi
 		this.autoConnectRetry = autoConnectRetry;
 	}
 
-	public void afterPropertiesSet() throws Exception {
+	public void afterPropertiesSet() {
 		MONGO_OPTIONS.connectionsPerHost = connectionsPerHost;
 		MONGO_OPTIONS.threadsAllowedToBlockForConnectionMultiplier = threadsAllowedToBlockForConnectionMultiplier;
 		MONGO_OPTIONS.maxWaitTime = maxWaitTime;
@@ -122,7 +122,7 @@ public class MongoOptionsFactoryBean implements FactoryBean<MongoOptions>, Initi
 		
 	}
 
-	public MongoOptions getObject() throws Exception {
+	public MongoOptions getObject() {
 		return MONGO_OPTIONS;
 	}
 

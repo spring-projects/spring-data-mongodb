@@ -16,6 +16,7 @@
 package org.springframework.data.document.mongodb;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 
 import com.mongodb.BasicDBObject;
@@ -27,7 +28,7 @@ public class UpdateBuilder {
 		LAST, FIRST
 	}
 
-	private LinkedHashMap<String, Object> criteria = new LinkedHashMap<String, Object>();
+	private HashMap<String, Object> criteria = new LinkedHashMap<String, Object>();
 
 	public UpdateBuilder set(String key, Object value) {
 		criteria.put("$set", Collections.singletonMap(key, value));

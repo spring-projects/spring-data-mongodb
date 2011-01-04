@@ -2,14 +2,10 @@ package org.springframework.data.document.mongodb.analytics;
 
 import java.util.Calendar;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.data.document.analytics.ControllerCounter;
 import org.springframework.data.document.analytics.MvcEvent;
@@ -19,7 +15,6 @@ import org.springframework.data.document.mongodb.MongoTemplate;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.Mongo;
@@ -61,17 +56,17 @@ public class MvcAnalyticsTests {
 				MvcEvent.class);
 		Assert.assertEquals(22, mvcEvents.size());
 		
-		List<MvcEvent> mvcEvents2 = mongoTemplate.getCollection("mvc", MvcEvent.class, 
+		mongoTemplate.getCollection("mvc", MvcEvent.class,
 				new MongoReader<MvcEvent>() {
 					public MvcEvent read(Class<? extends MvcEvent> clazz, DBObject dbo) {
 						return null;
-					}			
+					}
 				});
 
 	}
 	
 	@Test
-	public void loadCounterData() {		
+	public void loadCounterData() {
 		for (int i = 0; i < 10; i++) {
 			storeCounterData("SignUpController", "createForm");
 			storeCounterData("SignUpController", "create");
@@ -156,12 +151,11 @@ public class MvcAnalyticsTests {
 				"function(doc, out){ out.count++; }");
 		if (result instanceof BasicDBList) {
 			BasicDBList dbList = (BasicDBList) result;
-			for (Iterator iterator = dbList.iterator(); iterator.hasNext();) {
-				DBObject dbo = (DBObject) iterator.next();
+			for (Object element : dbList) {
+				DBObject dbo = (DBObject) element;
 				System.out.println(dbo);
 			}
 		}
-		Map resultMap = result.toMap();
 		System.out.println(result);
 	}
 
@@ -218,16 +212,6 @@ public class MvcAnalyticsTests {
 			MvcEvent event = generateEvent(p1);
 			mongoTemplate.save(event);
 		}
-	}
-
-	private ControllerCounter generateCounter() {
-		ControllerCounter cc = new ControllerCounter();
-		cc.setName("controller2");
-		cc.setCount(0);
-		Map<String, Double> methods = new HashMap<String, Double>();
-		methods.put("find", 1D);
-		cc.setMethods(methods);
-		return cc;
 	}
 
 	private MvcEvent generateEvent(Integer p1) {

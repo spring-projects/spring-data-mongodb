@@ -30,6 +30,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -118,11 +119,7 @@ public class SimpleMongoConverter implements MongoConverter {
 	}
 
 	protected void initializeConverters() {
-		conversionService.addConverter(new Converter<ObjectId, String>() {
-			public String convert(ObjectId id) {
-				return id.toString();
-			}
-		});
+		conversionService.addConverter(ObjectIdToStringConverter.INSTANCE);
 	}
 
 	/*
@@ -158,8 +155,8 @@ public class SimpleMongoConverter implements MongoConverter {
 				}
 				else if (value != null && "_id".equals(keyToUse) && String.class.isAssignableFrom(pd.getPropertyType())) {
 					try {
-						ObjectId _id =  new ObjectId((String)value);
-						writeValue(dbo, keyToUse, _id);
+						ObjectId id =  new ObjectId((String)value);
+						writeValue(dbo, keyToUse, id);
 					}
 					catch (IllegalArgumentException iae) {
 						logger.debug("Unable to convert the String " + value
@@ -295,7 +292,7 @@ public class SimpleMongoConverter implements MongoConverter {
 								int i = 0;
 								for (Object o : (Object[])value) {
 									if (o instanceof DBObject) {
-										Class type;
+										Class<?> type;
 										if (pd.getPropertyType().isArray()) {
 											type = pd.getPropertyType().getComponentType();
 										}
@@ -334,7 +331,7 @@ public class SimpleMongoConverter implements MongoConverter {
 	}
 	
 	private Object readCompoundValue(PropertyDescriptor pd, DBObject dbo) {
-		Class propertyClazz = pd.getPropertyType();
+		Class<?> propertyClazz = pd.getPropertyType();
 		if (Map.class.isAssignableFrom(propertyClazz)) {
 			//TODO assure is assignable to BasicDBObject
 			return readMap(pd, (BasicDBObject)dbo, getGenericParameterClass(pd.getWriteMethod()).get(1) );			
@@ -346,24 +343,23 @@ public class SimpleMongoConverter implements MongoConverter {
 		return read(propertyClazz, dbo);
 	}
 	
-	protected Map createMap() {
-		return new HashMap();
+	protected Map<String, Object> createMap() {
+		return new HashMap<String, Object>();
 	}
 	
-	protected Map readMap(PropertyDescriptor pd, BasicDBObject dbo, Class valueClazz) {
-		Class propertyClazz = pd.getPropertyType();
-		Map map = createMap();
-		for (Map.Entry entry : dbo.entrySet()) {
+	protected Map<?, ?> readMap(PropertyDescriptor pd, BasicDBObject dbo, Class<?> valueClazz) {
+		Map<String, Object> map = createMap();
+		for (Entry<String, Object> entry : dbo.entrySet()) {
 			Object entryValue = entry.getValue();
 			BeanWrapper bw = PropertyAccessorFactory.forBeanPropertyAccess(entryValue);
 			initBeanWrapper(bw);
 			
-			if (!isSimpleType(entryValue.getClass())) {				
-				map.put((String)entry.getKey(), read(valueClazz, (DBObject) entryValue));
-				//Can do some reflection tricks here - 
+			if (!isSimpleType(entryValue.getClass())) {
+				map.put(entry.getKey(), read(valueClazz, (DBObject) entryValue));
+				//Can do some reflection tricks here -
 				//throw new RuntimeException("User types not supported yet as values for Maps");
 			} else {
-				map.put((String)entry.getKey(), entryValue );
+				map.put(entry.getKey(), entryValue );
 			}
 		}
 		return map;
@@ -390,9 +386,10 @@ public class SimpleMongoConverter implements MongoConverter {
 				descriptor.getWriteMethod() != null);
 	}
 
-	protected boolean isSimpleType(Class propertyType) {
-		if (propertyType == null)
+	protected boolean isSimpleType(Class<?> propertyType) {
+		if (propertyType == null) {
 			return false;
+		}
 		if (propertyType.isArray()) {
 			return isSimpleType(propertyType.getComponentType());
 		}
@@ -404,8 +401,14 @@ public class SimpleMongoConverter implements MongoConverter {
 	}
 	
 	
-	public List<Class> getGenericParameterClass(Method setMethod) {
-		List<Class> actualGenericParameterTypes  = new ArrayList<Class>();
+	/**
+	 * TODO - should that be factored out into a utility class?
+	 * 
+	 * @param setMethod
+	 * @return
+	 */
+	public List<Class<?>> getGenericParameterClass(Method setMethod) {
+		List<Class<?>> actualGenericParameterTypes  = new ArrayList<Class<?>>();
 		Type[] genericParameterTypes = setMethod.getGenericParameterTypes();
 
 		for(Type genericParameterType  : genericParameterTypes){		
@@ -415,19 +418,19 @@ public class SimpleMongoConverter implements MongoConverter {
 		        for(Type parameterArgType : parameterArgTypes){
 		        	if (parameterArgType instanceof GenericArrayType)
 		            {
-		                Class arrayType = (Class) ((GenericArrayType) parameterArgType).getGenericComponentType();
+		                Class<?> arrayType = (Class<?>) ((GenericArrayType) parameterArgType).getGenericComponentType();
 		                actualGenericParameterTypes.add(Array.newInstance(arrayType, 0).getClass());
 		            }
 		        	else {
 		        		if (parameterArgType instanceof ParameterizedType) {
 			        		ParameterizedType paramTypeArgs = (ParameterizedType) parameterArgType;
-			        		actualGenericParameterTypes.add((Class)paramTypeArgs.getRawType());
+			        		actualGenericParameterTypes.add((Class<?>)paramTypeArgs.getRawType());
 			        	} else {
 			        		 if (parameterArgType instanceof TypeVariable) {
-			        			 throw new RuntimeException("Can not map " + ((TypeVariable) parameterArgType).getName());
+			        			 throw new RuntimeException("Can not map " + ((TypeVariable<?>) parameterArgType).getName());
 			        		 } else {
 			        			 if (parameterArgType instanceof Class) {
-			        				 actualGenericParameterTypes.add((Class) parameterArgType);
+			        				 actualGenericParameterTypes.add((Class<?>) parameterArgType);
 			        			 } else  {
 			        				 throw new RuntimeException("Can not map " + parameterArgType); 
 			        			 }
@@ -442,4 +445,22 @@ public class SimpleMongoConverter implements MongoConverter {
 
 	}
 
+	/**
+	 * Simple singleton to convert {@link ObjectId}s to their {@link String} representation.
+	 * 
+	 * @author Oliver Gierke
+	 */
+	private static enum ObjectIdToStringConverter implements Converter<ObjectId, String> {
+
+		INSTANCE;
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
+		 */
+		public String convert(ObjectId id) {
+			return id.toString();
+		}
+	}
 }

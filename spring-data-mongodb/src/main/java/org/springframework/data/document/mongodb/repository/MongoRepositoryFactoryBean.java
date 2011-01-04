@@ -18,7 +18,6 @@ package org.springframework.data.document.mongodb.repository;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 
-import org.springframework.beans.factory.FactoryBean;
 import org.springframework.data.document.mongodb.MongoOperations;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.query.QueryLookupStrategy;
@@ -32,7 +31,7 @@ import org.springframework.util.Assert;
 
 
 /**
- * {@link FactoryBean} to create {@link MongoRepository} instances.
+ * {@link org.springframework.beans.factory.FactoryBean} to create {@link MongoRepository} instances.
  * 
  * @author Oliver Gierke
  */
