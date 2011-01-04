@@ -74,7 +74,7 @@ abstract class MongoDbUtils {
 	public static DB doGetDB(Mongo mongo, String databaseName, String username, char[] password, boolean allowCreate) {
 		Assert.notNull(mongo, "No Mongo instance specified");
 
-		DBHolder dbHolder = (DBHolder) TransactionSynchronizationManager.getResource(mongo);
+		DbHolder dbHolder = (DbHolder) TransactionSynchronizationManager.getResource(mongo);
 		if (dbHolder != null && !dbHolder.isEmpty()) {
 			// pre-bound Mongo DB 
 			DB db = null;
@@ -106,9 +106,9 @@ abstract class MongoDbUtils {
 		if (TransactionSynchronizationManager.isSynchronizationActive()) {
 			// We're within a Spring-managed transaction, possibly from JtaTransactionManager.
 			LOGGER.debug("Registering Spring transaction synchronization for new Hibernate Session");
-			DBHolder holderToUse = dbHolder;
+			DbHolder holderToUse = dbHolder;
 			if (holderToUse == null) {
-				holderToUse = new DBHolder(db);
+				holderToUse = new DbHolder(db);
 			}
 			else {
 				holderToUse.addDB(db);
@@ -142,8 +142,8 @@ abstract class MongoDbUtils {
 		if (mongo == null) {
 			return false;
 		}
-		DBHolder dbHolder =
-				(DBHolder) TransactionSynchronizationManager.getResource(mongo);
+		DbHolder dbHolder =
+				(DbHolder) TransactionSynchronizationManager.getResource(mongo);
 		return (dbHolder != null && dbHolder.containsDB(db));
 	}
 	

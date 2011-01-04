@@ -8,17 +8,17 @@ import org.springframework.util.Assert;
 
 import com.mongodb.DB;
 
-public class DBHolder extends ResourceHolderSupport {
+class DbHolder extends ResourceHolderSupport {
 	private static final Object DEFAULT_KEY = new Object();
 
 	private final Map<Object, DB> dbMap = new ConcurrentHashMap<Object, DB>();
 
 
-	public DBHolder(DB db) {
+	public DbHolder(DB db) {
 		addDB(db);
 	}
 
-	public DBHolder(Object key, DB db) {
+	public DbHolder(Object key, DB db) {
 		addDB(key, db);
 	}
 
