@@ -16,6 +16,7 @@
 package org.springframework.data.document.mongodb;
 
 import java.util.List;
+import java.util.Set;
 
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
@@ -27,7 +28,7 @@ import com.mongodb.DBObject;
  * 
  * @author Thomas Risberg
  * @author Mark Pollack
- *
+ * @author Oliver Gierke
  */
 public interface MongoOperations {
 
@@ -38,7 +39,7 @@ public interface MongoOperations {
 	String getDefaultCollectionName();
 
 	/**
-	 * The default collection used by this template
+	 * The default collection used by this template.
 	 * @return The default collection used by this template
 	 */
 	DBCollection getDefaultCollection();
@@ -117,17 +118,17 @@ public interface MongoOperations {
 	DBCollection createCollection(String collectionName);
 
 	/**
-	 * Create a collect with the provided name and options
+	 * Create a collect with the provided name and options.
 	 * @param collectionName name of the collection
 	 * @param collectionOptions options to use when creating the collection.
 	 */
 	void createCollection(String collectionName, CollectionOptions collectionOptions);
 
 	/**
-	 * A list of collection names
+	 * A set of collection names.
 	 * @return list of collection names
 	 */
-	List<String> getCollectionNames();
+	Set<String> getCollectionNames();
 	
 	/**
 	 * Get a collection by name, creating it if it doesn't exist.
@@ -216,14 +217,14 @@ public interface MongoOperations {
 	 * 
 	 * @param listToSave the list of objects to save.
 	 */
-	void insertList(List<Object> listToSave);
+	void insertList(List<? extends Object> listToSave);
 
 	/**
 	 * Insert a list of objects into the specified collection in a single batch write to the database.
 	 * @param collectionName name of the collection to store the object in 
 	 * @param listToSave the list of objects to save.
 	 */
-	void insertList(String collectionName, List<Object> listToSave);
+	void insertList(String collectionName, List<? extends Object> listToSave);
 
 	/**
 	 * Insert a list of objects into the specified collection using the provided MongoWriter instance
@@ -233,7 +234,7 @@ public interface MongoOperations {
 	 * @param listToSave the list of objects to save.
 	 * @param writer the writer to convert the object to save into a DBObject
 	 */
-	<T> void insertList(String collectionName, List<T> listToSave, MongoWriter<T> writer);
+	<T> void insertList(String collectionName, List<? extends T> listToSave, MongoWriter<T> writer);
 
 	/**
 	 * Save the object to the default collection.  This will perform an insert if the object is not already 

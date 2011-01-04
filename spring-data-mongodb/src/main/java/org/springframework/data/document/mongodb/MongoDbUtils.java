@@ -18,18 +18,11 @@ package org.springframework.data.document.mongodb;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.dao.DataAccessException;
-import org.springframework.dao.DataAccessResourceFailureException;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.data.document.UncategorizedDocumentStoreException;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.util.Assert;
 
 import com.mongodb.DB;
 import com.mongodb.Mongo;
-import com.mongodb.MongoException;
-import com.mongodb.MongoException.DuplicateKey;
-import com.mongodb.MongoException.Network;
 
 /**
  * Helper class featuring helper methods for internal MongoDb classes.
@@ -51,36 +44,6 @@ abstract class MongoDbUtils {
 	 */
 	private MongoDbUtils() {
 		
-	}
-	
-	/**
-	 * Convert the given runtime exception to an appropriate exception from the
-	 * <code>org.springframework.dao</code> hierarchy.
-	 * Return null if no translation is appropriate: any other exception may
-	 * have resulted from user code, and should not be translated.
-	 * @param ex runtime exception that occurred
-	 * @return the corresponding DataAccessException instance,
-	 * or <code>null</code> if the exception should not be translated
-	 */
-	public static DataAccessException translateMongoExceptionIfPossible(RuntimeException ex) {
-
-		// Check for well-known MongoException subclasses.
-		
-		// All other MongoExceptions
-		if(ex instanceof DuplicateKey) {
-			return new DataIntegrityViolationException(ex.getMessage(),ex);
-		}
-		if(ex instanceof Network) {
-			return new DataAccessResourceFailureException(ex.getMessage(), ex);
-		}
-		if (ex instanceof MongoException) {
-			return new UncategorizedDocumentStoreException(ex.getMessage(), ex);
-		}
-		
-		// If we get here, we have an exception that resulted from user code,
-		// rather than the persistence provider, so we return null to indicate
-		// that translation should not occur.
-		return null;				
 	}
 
 	/**

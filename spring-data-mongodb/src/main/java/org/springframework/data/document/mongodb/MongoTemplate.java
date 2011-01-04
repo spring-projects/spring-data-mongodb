@@ -16,19 +16,20 @@
 
 package org.springframework.data.document.mongodb;
 
-import static java.lang.String.*;
-
 import java.beans.PropertyDescriptor;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import org.bson.types.ObjectId;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.PropertyAccessorFactory;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.dao.DataRetrievalFailureException;
+import org.springframework.dao.DataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
+import org.springframework.jca.cci.core.ConnectionCallback;
 import org.springframework.util.Assert;
 
 import com.mongodb.BasicDBObject;
@@ -39,7 +40,6 @@ import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.Mongo;
 import com.mongodb.MongoException;
-import com.mongodb.WriteResult;
 import com.mongodb.util.JSON;
 
 /**
@@ -53,10 +53,10 @@ import com.mongodb.util.JSON;
 public class MongoTemplate implements InitializingBean, MongoOperations {
 	
 	private static final String ID = "_id";
-	private static final String COLLECTION_ERROR_TEMPLATE = "Error creating collection %s: %s";
 
 	private final MongoConverter mongoConverter;
 	private final Mongo mongo;
+	private final MongoExceptionTranslator exceptionTranslator = new MongoExceptionTranslator();
 	
 	private String defaultCollectionName;
 	private String databaseName;
@@ -98,7 +98,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	}
 
 	/**
-	 * Sets the password to use to authenticate with the Mongo database
+	 * Sets the password to use to authenticate with the Mongo database.
 	 * 
 	 * @param password The password to use
 	 */
@@ -107,10 +107,20 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 		this.password = password;
 	}
 
+	/**
+	 * Sets the name of the default collection to be used.
+	 * 
+	 * @param defaultCollectionName
+	 */
 	public void setDefaultCollectionName(String defaultCollectionName) {
 		this.defaultCollectionName = defaultCollectionName;
 	}
 
+	/**
+	 * Sets the database name to be used.
+	 * 
+	 * @param databaseName
+	 */
 	public void setDatabaseName(String databaseName) {
 		Assert.notNull(databaseName);
 		this.databaseName = databaseName;
@@ -127,7 +137,12 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	 * @see org.springframework.data.document.mongodb.MongoOperations#getDefaultCollection()
 	 */
 	public DBCollection getDefaultCollection() {
-		return getDb().getCollection(getDefaultCollectionName());
+		
+		return execute(new DBCallback<DBCollection>() {
+			public DBCollection doInDB(DB db) throws MongoException, DataAccessException {
+				return db.getCollection(getDefaultCollectionName());
+			}
+		});
 	}
 
 	/* (non-Javadoc)
@@ -140,33 +155,41 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#executeCommand(com.mongodb.DBObject)
 	 */
-	public void executeCommand(DBObject command) {
-		CommandResult cr = getDb().command(command);
-		String err = cr.getErrorMessage();
-		if (err != null) {
-			throw new InvalidDataAccessApiUsageException("Command execution of " + 
-					command.toString() + " failed: " + err);
+	public void executeCommand(final DBObject command) {
+		
+		CommandResult result = execute(new DBCallback<CommandResult>() {
+			public CommandResult doInDB(DB db) throws MongoException, DataAccessException {
+				return db.command(command);
+			}
+		});
+		
+		String error = result.getErrorMessage();
+		if (error != null) {
+			throw new InvalidDataAccessApiUsageException("Command execution of " +
+					command.toString() + " failed: " + error);
 		}
 	}
 	
 	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#execute(org.springframework.data.document.mongodb.DBCallback)
 	 */
-	public <T> T execute(DBCallback<T> action) {
-		DB db = getDb();
-
+	public <T> T execute(DbCallback<T> action) {
+		
+		Assert.notNull(action);
+		
 		try {
+			DB db = getDb();
 			return action.doInDB(db);
 		} catch (MongoException e) {
-			throw MongoDbUtils.translateMongoExceptionIfPossible(e);
+			throw potentiallyConvertRuntimeException(e);
 		}
 	}
 
 	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#execute(org.springframework.data.document.mongodb.CollectionCallback)
 	 */
-	public <T> T execute(CollectionCallback<T> action) {
-		return execute(action, defaultCollectionName);
+	public <T> T execute(CollectionCallback<T> callback) {
+		return execute(callback, defaultCollectionName);
 	}
 
 	/* (non-Javadoc)
@@ -174,79 +197,126 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	 */
 	public <T> T execute(CollectionCallback<T> callback, String collectionName) {
 
+		Assert.notNull(callback);
+		
 		try {
-			return callback.doInCollection(getCollection(collectionName));
+			DBCollection collection = getDb().getCollection(collectionName);
+			return callback.doInCollection(collection);
 		} catch (MongoException e) {
-			throw MongoDbUtils.translateMongoExceptionIfPossible(e);
+			throw potentiallyConvertRuntimeException(e);
+		}
+	}
+	
+	/**
+	 * Central callback executing method to do queries against the datastore that requires reading a collection of
+	 * objects. It will take the following steps <ol> <li>Execute the given {@link ConnectionCallback} for a
+	 * {@link DBCursor}.</li> <li>Prepare that {@link DBCursor} with the given {@link CursorPreparer} (will be skipped
+	 * if {@link CursorPreparer} is {@literal null}</li> <li>Iterate over the {@link DBCursor} and applies the given
+	 * {@link DbObjectCallback} to each of the {@link DBObject}s collecting the actual result {@link List}.</li> <ol>
+	 * 
+	 * @param <T>
+	 * @param collectionCallback the callback to retrieve the {@link DBCursor} with
+	 * @param preparer the {@link CursorPreparer} to potentially modify the {@link DBCursor} before ireating over it
+	 * @param objectCallback the {@link DbObjectCallback} to transform {@link DBObject}s into the actual domain type
+	 * @param collectionName the collection to be queried
+	 * @return
+	 */
+	private <T> List<T> executeEach(CollectionCallback<DBCursor> collectionCallback, CursorPreparer preparer,
+			DbObjectCallback<T> objectCallback, String collectionName) {
+		
+		try {
+			DBCursor cursor = collectionCallback.doInCollection(getCollection(collectionName));
+			
+			if (preparer != null) {
+				preparer.prepare(cursor);
+			}
+			
+			List<T> result = new ArrayList<T>();
+			
+			for (DBObject object : cursor) {
+				result.add(objectCallback.doWith(object));
+			}
+			
+			return result;
+		} catch (MongoException e) {
+			throw potentiallyConvertRuntimeException(e);
 		}
 	}
 
 	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#executeInSession(org.springframework.data.document.mongodb.DBCallback)
 	 */
-	public <T> T executeInSession(DBCallback<T> action) {
-		DB db = getDb();
-		db.requestStart();
-		try {
-			return action.doInDB(db);
-		} catch (MongoException e) {
-			throw MongoDbUtils.translateMongoExceptionIfPossible(e);
-		} finally {
-			db.requestDone();
-		}
+	public <T> T executeInSession(final DBCallback<T> action) {
+		
+		return execute(new DBCallback<T>() {
+			public T doInDB(DB db) throws MongoException, DataAccessException {
+				try {
+					db.requestStart();
+					return action.doInDB(db);
+				} finally {
+					db.requestDone();
+				}
+			}
+		});
 	}
 	
 	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#createCollection(java.lang.String)
 	 */
-	public DBCollection createCollection(String collectionName) {
-		try {
-			return getDb().createCollection(collectionName, new BasicDBObject());
-		} catch (MongoException e) {
-			throw new InvalidDataAccessApiUsageException(format(COLLECTION_ERROR_TEMPLATE, collectionName, e.getMessage()), e);
-		}
+	public DBCollection createCollection(final String collectionName) {
+		return execute(new DBCallback<DBCollection>() {
+			public DBCollection doInDB(DB db) throws MongoException, DataAccessException {
+				return db.createCollection(collectionName, new BasicDBObject());
+			}
+		});
 	}
 		
 	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#createCollection(java.lang.String, org.springframework.data.document.mongodb.CollectionOptions)
 	 */
-	public void createCollection(String collectionName, CollectionOptions collectionOptions) {
-		try {
-			getDb().createCollection(collectionName, convertToDbObject(collectionOptions));
-		} catch (MongoException e) {
-			throw new InvalidDataAccessApiUsageException(format(COLLECTION_ERROR_TEMPLATE, collectionName, e.getMessage()), e);
-		}
+	public void createCollection(final String collectionName, final CollectionOptions collectionOptions) {
+		execute(new DBCallback<Void>() {
+			public Void doInDB(DB db) throws MongoException, DataAccessException {
+				db.createCollection(collectionName, convertToDbObject(collectionOptions));
+				return null;
+			}
+		});
 	}
 	
 	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#getCollection(java.lang.String)
 	 */
-	public DBCollection getCollection(String collectionName) {
-		try {
-			return getDb().getCollection(collectionName);
-		} catch (MongoException e) {
-			throw new InvalidDataAccessApiUsageException(format(COLLECTION_ERROR_TEMPLATE, collectionName, e.getMessage()), e);
-		}
+	public DBCollection getCollection(final String collectionName) {
+		return execute(new DBCallback<DBCollection>() {
+			public DBCollection doInDB(DB db) throws MongoException, DataAccessException {
+				return db.getCollection(collectionName);
+			}
+		});
 	}
 		
 
 	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#collectionExists(java.lang.String)
 	 */
-	public boolean collectionExists(String collectionName) {
-		try {
-			return getDb().collectionExists(collectionName);
-		} catch (MongoException e) {
-			throw new InvalidDataAccessApiUsageException("Error creating collection " + collectionName + ": " + e.getMessage(), e);
-		}
+	public boolean collectionExists(final String collectionName) {
+		return execute(new DBCallback<Boolean>() {
+			public Boolean doInDB(DB db) throws MongoException, DataAccessException {
+				return db.collectionExists(collectionName);
+			}
+		});
 	}
 
 	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#dropCollection(java.lang.String)
 	 */
 	public void dropCollection(String collectionName) {
-		getDb().getCollection(collectionName)
-			.drop();
+		
+		execute(new CollectionCallback<Void>() {
+			public Void doInCollection(DBCollection collection) throws MongoException, DataAccessException {
+				collection.drop();
+				return null;
+			}
+		}, collectionName);
 	}
 
 
@@ -287,21 +357,24 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#insertList(java.util.List)
 	 */
-	public void insertList(List<Object> listToSave) {
+	public void insertList(List<? extends Object> listToSave) {
 		insertList(getRequiredDefaultCollectionName(), listToSave);
 	}
 
 	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#insertList(java.lang.String, java.util.List)
 	 */
-	public void insertList(String collectionName, List<Object> listToSave) {
+	public void insertList(String collectionName, List<? extends Object> listToSave) {
 		insertList(collectionName, listToSave, this.mongoConverter);
 	}
 
 	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#insertList(java.lang.String, java.util.List, org.springframework.data.document.mongodb.MongoWriter)
 	 */
-	public <T> void insertList(String collectionName, List<T> listToSave, MongoWriter<T> writer) {
+	public <T> void insertList(String collectionName, List<? extends T> listToSave, MongoWriter<T> writer) {
+		
+		Assert.notNull(writer);
+		
 		List<DBObject> dbObjectList = new ArrayList<DBObject>();
 		for (T o : listToSave) {
 			BasicDBObject dbDoc = new BasicDBObject();
@@ -341,51 +414,56 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	}
 
 
-	protected Object insertDBObject(String collectionName, DBObject dbDoc) {
-		if (dbDoc.keySet().size() > 0 ) {
-			WriteResult wr = null;
-			try {
-				wr = getDb().getCollection(collectionName).insert(dbDoc);
-				return dbDoc.get(ID);
-			} catch (MongoException e) {
-				throw new DataRetrievalFailureException(wr.getLastError().getErrorMessage(), e);
-			}
-		}
-		else {
+	protected Object insertDBObject(String collectionName, final DBObject dbDoc) {
+
+		if (dbDoc.keySet().isEmpty()) {
 			return null;
 		}
+		
+		return execute(new CollectionCallback<Object>() {
+			public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
+				collection.insert(dbDoc);
+				return dbDoc.get(ID);
+			}
+		}, collectionName);
+	}
+	
+	
+	
+
+	protected List<Object> insertDBObjectList(String collectionName, final List<DBObject> dbDocList) {
+		
+		if (dbDocList.isEmpty()) {
+			return Collections.emptyList();
+		}
+
+		execute(new CollectionCallback<Void>() {
+			public Void doInCollection(DBCollection collection) throws MongoException, DataAccessException {
+				collection.insert(dbDocList);
+				return null;
+			}
+		}, collectionName);
+
+		List<Object> ids = new ArrayList<Object>();
+		for (DBObject dbo : dbDocList) {
+			ids.add(dbo.get(ID));
+		}
+		return ids;
 	}
 
-	protected List<Object> insertDBObjectList(String collectionName, List<DBObject> dbDocList) {
-		if (!dbDocList.isEmpty()) {
-			List<Object> ids = new ArrayList<Object>();
-			WriteResult wr = null;
-			try {
-				wr = getDb().getCollection(collectionName).insert(dbDocList);
-				for (DBObject dbo : dbDocList) {
-					ids.add(dbo.get(ID));
-				}
-				return ids;
-			} catch (MongoException e) {
-				throw new DataRetrievalFailureException(wr.getLastError().getErrorMessage(), e);
-			}
-		} else {
+	protected Object saveDBObject(String collectionName, final DBObject dbDoc) {
+		
+		if (dbDoc.keySet().isEmpty()) {
 			return null;
 		}
-	}
+		
+		return execute(new CollectionCallback<Object>() {
 
-	protected Object saveDBObject(String collectionName, DBObject dbDoc) {
-		if (dbDoc.keySet().size() > 0 ) {
-			WriteResult wr = null;
-			try {
-				wr = getDb().getCollection(collectionName).save(dbDoc);
+			public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
+				collection.save(dbDoc);
 				return dbDoc.get(ID);
-			} catch (MongoException e) {
-				throw new DataRetrievalFailureException(wr.getLastError().getErrorMessage(), e);
 			}
-		} else {
-			return null;
-		}
+		}, collectionName);
 	}
 
 	/* (non-Javadoc)
@@ -398,13 +476,13 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#updateFirst(java.lang.String, com.mongodb.DBObject, com.mongodb.DBObject)
 	 */
-	public void updateFirst(String collectionName, DBObject queryDoc, DBObject updateDoc) {
-
-		try {
-			getDb().getCollection(collectionName).update(queryDoc, updateDoc);
-		} catch (MongoException e) {
-			throw new DataRetrievalFailureException("Error during update using " + queryDoc + ", " + updateDoc + "!", e);
-		}
+	public void updateFirst(String collectionName, final DBObject queryDoc, final DBObject updateDoc) {
+		execute(new CollectionCallback<Void>() {
+			public Void doInCollection(DBCollection collection) throws MongoException, DataAccessException {
+				collection.update(queryDoc, updateDoc);
+				return null;
+			}
+		}, collectionName);
 	}
 	
 	/* (non-Javadoc)
@@ -417,12 +495,13 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#updateMulti(java.lang.String, com.mongodb.DBObject, com.mongodb.DBObject)
 	 */
-	public void updateMulti(String collectionName, DBObject queryDoc, DBObject updateDoc) {
-		try {
-			getDb().getCollection(collectionName).updateMulti(queryDoc, updateDoc);
-		} catch (MongoException e) {
-			throw new DataRetrievalFailureException("Error during updateMulti using " + queryDoc + ", " + updateDoc + "!", e);
-		}
+	public void updateMulti(String collectionName, final DBObject queryDoc, final DBObject updateDoc) {
+		execute(new CollectionCallback<Void>() {
+			public Void doInCollection(DBCollection collection) throws MongoException, DataAccessException {
+				collection.updateMulti(queryDoc, updateDoc);
+				return null;
+			}
+		}, collectionName);
 	}
 	
 	/* (non-Javadoc)
@@ -435,12 +514,13 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#remove(java.lang.String, com.mongodb.DBObject)
 	 */
-	public void remove(String collectionName, DBObject queryDoc) {
-		try {
-			getDb().getCollection(collectionName).remove(queryDoc);
-		} catch (MongoException e) {
-			throw new DataRetrievalFailureException("Error during remove using "  + queryDoc + "!", e);
-		}
+	public void remove(String collectionName, final DBObject queryDoc) {
+		execute(new CollectionCallback<Void>() {
+			public Void doInCollection(DBCollection collection) throws MongoException, DataAccessException {
+				collection.remove(queryDoc);
+				return null;
+			}
+		}, collectionName);
 	}
 	
 
@@ -448,53 +528,35 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	 * @see org.springframework.data.document.mongodb.MongoOperations#getCollection(java.lang.Class)
 	 */
 	public <T> List<T> getCollection(Class<T> targetClass) {
-		
-		List<T> results = new ArrayList<T>();
-		DBCollection collection = getDb().getCollection(getDefaultCollectionName());
-		for (DBObject dbo : collection.find()) {
-			Object obj = mongoConverter.read(targetClass, dbo);
-			//effectively acts as a query on the collection restricting it to elements of a specific type
-			if (targetClass.isInstance(obj)) {
-				results.add(targetClass.cast(obj));
-			}
-		}
-		return results;
+		return executeEach(new FindCallback(null), null, new ReadDbObjectCallback<T>(mongoConverter, targetClass),
+				getDefaultCollectionName());
 	}
 	
 	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#getCollection(java.lang.String, java.lang.Class)
 	 */
 	public <T> List<T> getCollection(String collectionName, Class<T> targetClass) {
-		
-		List<T> results = new ArrayList<T>();
-		DBCollection collection = getDb().getCollection(collectionName);
-		for (DBObject dbo : collection.find()) {
-			Object obj = mongoConverter.read(targetClass, dbo);
-			//effectively acts as a query on the collection restricting it to elements of a specific type
-			if (targetClass.isInstance(obj)) {
-				results.add(targetClass.cast(obj));
-			}
-		}
-		return results;
+		return executeEach(new FindCallback(null), null, new ReadDbObjectCallback<T>(mongoConverter, targetClass),
+				collectionName);
 	}
 
 	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#getCollectionNames()
 	 */
-	public List<String> getCollectionNames() {
-		return new ArrayList<String>(getDb().getCollectionNames());
+	public Set<String> getCollectionNames() {
+		return execute(new DBCallback<Set<String>>() {
+			public Set<String> doInDB(DB db) throws MongoException, DataAccessException {
+				return db.getCollectionNames();
+			}
+		});
 	}
 
 	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#getCollection(java.lang.String, java.lang.Class, org.springframework.data.document.mongodb.MongoReader)
 	 */
-	public <T> List<T> getCollection(String collectionName, Class<T> targetClass, MongoReader<T> reader) { 
-		List<T> results = new ArrayList<T>();
-		DBCollection collection = getDb().getCollection(collectionName);
-		for (DBObject dbo : collection.find()) {
-			results.add(reader.read(targetClass, dbo));
-		}
-		return results;
+	public <T> List<T> getCollection(String collectionName, Class<T> targetClass, MongoReader<T> reader) {
+		return executeEach(new FindCallback(null), null, new ReadDbObjectCallback<T>(reader, targetClass),
+				collectionName);
 	}
 	
 	// Queries that take JavaScript to express the query.
@@ -504,7 +566,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	 */
 	public <T> List<T> queryUsingJavaScript(String query, Class<T> targetClass) {
 		return query(getDefaultCollectionName(), (DBObject)JSON.parse(query), targetClass); //
-	}	
+	}
 	
 	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#queryUsingJavaScript(java.lang.String, java.lang.Class, org.springframework.data.document.mongodb.MongoReader)
@@ -554,7 +616,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#query(java.lang.String, com.mongodb.DBObject, java.lang.Class)
 	 */
-	public <T> List<T> query(String collectionName, DBObject query, Class<T> targetClass) {	
+	public <T> List<T> query(String collectionName, DBObject query, Class<T> targetClass) {
 		return query(collectionName, query, targetClass, (CursorPreparer) null);
 	}
 
@@ -562,37 +624,18 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	 * @see org.springframework.data.document.mongodb.MongoOperations#query(java.lang.String, com.mongodb.DBObject, java.lang.Class, org.springframework.data.document.mongodb.CursorPreparer)
 	 */
 	public <T> List<T> query(String collectionName, DBObject query, Class<T> targetClass, CursorPreparer preparer) {
-		DBCollection collection = getDb().getCollection(collectionName);
-		List<T> results = new ArrayList<T>();
-		DBCursor cursor = collection.find(query);
-		if (preparer != null) {
-			preparer.prepare(cursor);
-		}
-		for (DBObject dbo : cursor) {
-			Object obj = mongoConverter.read(targetClass,dbo);
-			//effectively acts as a query on the collection restricting it to elements of a specific type
-			if (targetClass.isInstance(obj)) {
-				results.add(targetClass.cast(obj));
-			}
-		}
-		return results;
+		return executeEach(new FindCallback(query), preparer, new ReadDbObjectCallback<T>(mongoConverter, targetClass),
+				collectionName);
 	}
 
 	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#query(java.lang.String, com.mongodb.DBObject, java.lang.Class, org.springframework.data.document.mongodb.MongoReader)
 	 */
 	public <T> List<T> query(String collectionName, DBObject query, Class<T> targetClass, MongoReader<T> reader) {
-		DBCollection collection = getDb().getCollection(collectionName);
-		List<T> results = new ArrayList<T>();
-		for (DBObject dbo : collection.find(query)) {
-			results.add(reader.read(targetClass, dbo));
-		}
-		return results;
+		return executeEach(new FindCallback(query), null, new ReadDbObjectCallback<T>(reader, targetClass),
+				collectionName);
 	}
 
-	public RuntimeException convertMongoAccessException(RuntimeException ex) {
-		return MongoDbUtils.translateMongoExceptionIfPossible(ex);
-	}
 
 	public DB getDb() {
 		return MongoDbUtils.getDB(mongo, databaseName, username, password == null ? null : password.toCharArray());
@@ -603,7 +646,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 		DBObject dbo = new BasicDBObject();
 		if (collectionOptions != null) {
 			if (collectionOptions.getCapped() != null) {
-				dbo.put("capped", collectionOptions.getCapped().booleanValue());			
+				dbo.put("capped", collectionOptions.getCapped().booleanValue());
 			}
 			if (collectionOptions.getSize() != null) {
 				dbo.put("size", collectionOptions.getSize().intValue());
@@ -634,6 +677,19 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 			}
 		}
 	}
+	
+	/**
+	 * Tries to convert the given {@link RuntimeException} into a {@link DataAccessException} but returns the original
+	 * exception if the conversation failed. Thus allows safe rethrowing of the return value.
+	 * 
+	 * @param ex
+	 * @return
+	 */
+	private RuntimeException potentiallyConvertRuntimeException(RuntimeException ex) {
+
+		RuntimeException resolved = this.exceptionTranslator.translateExceptionIfPossible(ex);
+    	return resolved == null ? ex : resolved;
+	}
 
 	/*
 	 * (non-Javadoc)
@@ -641,10 +697,62 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	 */
 	public void afterPropertiesSet() {
 		if (this.getDefaultCollectionName() != null) {
-			DB db = getDb();
-			if (! db.collectionExists(getDefaultCollectionName())) {
-				db.createCollection(getDefaultCollectionName(), null);
+			if (!collectionExists(getDefaultCollectionName())) {
+				createCollection(getDefaultCollectionName(), null);
 			}
+		}
+	}
+	
+	
+	/**
+	 * Simple {@link CollectionCallback} that takes a query {@link DBObject} and executes that against the
+	 * {@link DBCollection}.
+	 * 
+	 * @author Oliver Gierke
+	 */
+	private static class FindCallback implements CollectionCallback<DBCursor> {
+		
+		private final DBObject query;
+		
+		public FindCallback(DBObject query) {
+			this.query = query;
+		}
+
+		public DBCursor doInCollection(DBCollection collection) throws MongoException, DataAccessException {
+			return collection.find(query);
+		}
+	}
+	
+	/**
+	 * Simple internal callback to allow operations on a {@link DBObject}.
+	 *
+	 * @author Oliver Gierke
+	 */
+	
+	private interface DbObjectCallback<T> {
+		
+		T doWith(DBObject object);
+	}
+	
+	/**
+	 * Simple {@link DbObjectCallback} that will transform {@link DBObject} into the given target type using the given
+	 * {@link MongoReader}.
+	 * 
+	 * @author Oliver Gierke
+	 */
+	private static class ReadDbObjectCallback<T> implements DbObjectCallback<T> {
+		
+		private final MongoReader<? super T> reader;
+		private final Class<T> type;
+		
+		public ReadDbObjectCallback(MongoReader<? super T> reader, Class<T> type) {
+			this.reader = reader;
+			this.type = type;
+		}
+		
+		@SuppressWarnings("unchecked")
+		public T doWith(DBObject object) {
+			return (T) reader.read(type, object);
 		}
 	}
 }

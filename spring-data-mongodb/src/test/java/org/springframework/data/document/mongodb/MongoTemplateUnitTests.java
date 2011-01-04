@@ -23,7 +23,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.springframework.dao.DataRetrievalFailureException;
+import org.springframework.dao.DataAccessException;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.mongodb.DB;
@@ -36,7 +36,7 @@ import com.mongodb.MongoException;
  * @author Oliver Gierke
  */
 @RunWith(MockitoJUnitRunner.class)
-public class MongoTemplateUnitTests {
+public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 
 	MongoTemplate template;
 
@@ -48,7 +48,7 @@ public class MongoTemplateUnitTests {
 
 	@Before
 	public void setUp() {
-		this.template = new MongoTemplate(mongo, "database");
+		this.template = new MongoTemplate(mongo, "database", "default");
 	}
 
 	@Test(expected = IllegalArgumentException.class)
@@ -61,7 +61,7 @@ public class MongoTemplateUnitTests {
 		new MongoTemplate(null, "database");
 	}
 
-	@Test(expected = DataRetrievalFailureException.class)
+	@Test(expected = DataAccessException.class)
 	public void removeHandlesMongoExceptionProperly() throws Exception {
 		MongoTemplate template = mockOutGetDb();
 		when(db.getCollection("collection")).thenThrow(new MongoException("Exception!"));
@@ -86,5 +86,23 @@ public class MongoTemplateUnitTests {
 		MongoTemplate template = spy(this.template);
 		stub(template.getDb()).toReturn(db);
 		return template;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.springframework.data.document.mongodb.MongoOperationsUnitTests#getOperations()
+	 */
+	@Override
+	protected MongoOperations getOperationsForExceptionHandling() {
+		MongoTemplate template = spy(this.template);
+		stub(template.getDb()).toThrow(new MongoException("Error!"));
+		return template;
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.springframework.data.document.mongodb.MongoOperationsUnitTests#getOperations()
+	 */
+	@Override
+	protected MongoOperations getOperations() {
+		return this.template;
 	}
 }
