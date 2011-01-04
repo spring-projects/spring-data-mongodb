@@ -16,6 +16,7 @@
 
 package org.springframework.data.document.mongodb;
 
+import static java.lang.String.*;
 
 import java.beans.PropertyDescriptor;
 import java.util.ArrayList;
@@ -28,6 +29,7 @@ import org.springframework.beans.PropertyAccessorFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
+import org.springframework.util.Assert;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.CommandResult;
@@ -40,22 +42,32 @@ import com.mongodb.MongoException;
 import com.mongodb.WriteResult;
 import com.mongodb.util.JSON;
 
+/**
+ * Primary implementation of {@link MongoOperations}.
+ *
+ * @author Thomas Risberg
+ * @author Graeme Rocher
+ * @author Mark Pollack
+ * @author Oliver Gierke
+ */
 public class MongoTemplate implements InitializingBean, MongoOperations {
-
-	private String defaultCollectionName;
 	
-	private MongoConverter mongoConverter;
+	private static final String ID = "_id";
+	private static final String COLLECTION_ERROR_TEMPLATE = "Error creating collection %s: %s";
+
+	private final MongoConverter mongoConverter;
+	private final Mongo mongo;
+	
+	private String defaultCollectionName;
 	
 	//TODO expose configuration...
 	private CollectionOptions defaultCollectionOptions;
-
-	private Mongo mongo;
 
 	private String databaseName;
 	
 	private String username;
 	
-	private char[] password;
+	private String password;
 	
 	
 	public MongoTemplate(Mongo mongo, String databaseName) {
@@ -71,7 +83,11 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	}
 	
 	public MongoTemplate(Mongo mongo, String databaseName, String defaultCollectionName, MongoConverter mongoConverter) {
-		this.mongoConverter = mongoConverter;
+		
+		Assert.notNull(mongo);
+		Assert.notNull(databaseName);
+		
+		this.mongoConverter = mongoConverter == null ? new SimpleMongoConverter() : mongoConverter;
 		this.defaultCollectionName = defaultCollectionName;
 		this.mongo = mongo;
 		this.databaseName = databaseName;
@@ -92,7 +108,8 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	 * 
 	 * @param password The password to use
 	 */
-	public void setPassword(char[] password) {
+	public void setPassword(String password) {
+		
 		this.password = password;
 	}
 
@@ -101,6 +118,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	}
 
 	public void setDatabaseName(String databaseName) {
+		Assert.notNull(databaseName);
 		this.databaseName = databaseName;
 	}
 
@@ -191,7 +209,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 		try {
 			return getDb().createCollection(collectionName, new BasicDBObject());
 		} catch (MongoException e) {
-			throw new InvalidDataAccessApiUsageException("Error creating collection " + collectionName + ": " + e.getMessage(), e);
+			throw new InvalidDataAccessApiUsageException(format(COLLECTION_ERROR_TEMPLATE, collectionName, e.getMessage()), e);
 		}
 	}
 		
@@ -202,7 +220,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 		try {
 			getDb().createCollection(collectionName, convertToDbObject(collectionOptions));
 		} catch (MongoException e) {
-			throw new InvalidDataAccessApiUsageException("Error creating collection " + collectionName + ": " + e.getMessage(), e);
+			throw new InvalidDataAccessApiUsageException(format(COLLECTION_ERROR_TEMPLATE, collectionName, e.getMessage()), e);
 		}
 	}
 	
@@ -213,7 +231,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 		try {
 			return getDb().getCollection(collectionName);
 		} catch (MongoException e) {
-			throw new InvalidDataAccessApiUsageException("Error creating collection " + collectionName + ": " + e.getMessage(), e);
+			throw new InvalidDataAccessApiUsageException(format(COLLECTION_ERROR_TEMPLATE, collectionName, e.getMessage()), e);
 		}
 	}
 		
@@ -268,8 +286,8 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	public <T> void insert(String collectionName, T objectToSave, MongoWriter<T> writer) {
 		BasicDBObject dbDoc = new BasicDBObject();
 		writer.write(objectToSave, dbDoc);
-		Object _id = insertDBObject(collectionName, dbDoc);
-		populateIdIfNecessary(objectToSave, _id);
+		Object id = insertDBObject(collectionName, dbDoc);
+		populateIdIfNecessary(objectToSave, id);
 	}
 
 	/* (non-Javadoc)
@@ -296,10 +314,11 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 			writer.write(o, dbDoc);
 			dbObjectList.add(dbDoc);
 		}
-		List<Object> _ids = insertDBObjectList(collectionName, dbObjectList);
+		List<Object> ids = insertDBObjectList(collectionName, dbObjectList);
 		for (int i = 0; i < listToSave.size(); i++) {
-			if (i < _ids.size())
-				populateIdIfNecessary(listToSave.get(i), _ids.get(i));
+			if (i < ids.size()) {
+				populateIdIfNecessary(listToSave.get(i), ids.get(i));
+			}
 		}
 	}
 
@@ -323,8 +342,8 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	public <T> void save(String collectionName, T objectToSave, MongoWriter<T> writer) {
 		BasicDBObject dbDoc = new BasicDBObject();
 		writer.write(objectToSave, dbDoc);
-		Object _id = saveDBObject(collectionName, dbDoc);
-		populateIdIfNecessary(objectToSave, _id);
+		Object id = saveDBObject(collectionName, dbDoc);
+		populateIdIfNecessary(objectToSave, id);
 	}
 
 
@@ -333,7 +352,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 			WriteResult wr = null;
 			try {
 				wr = getDb().getCollection(collectionName).insert(dbDoc);
-				return dbDoc.get("_id");
+				return dbDoc.get(ID);
 			} catch (MongoException e) {
 				throw new DataRetrievalFailureException(wr.getLastError().getErrorMessage(), e);
 			}
@@ -344,20 +363,19 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	}
 
 	protected List<Object> insertDBObjectList(String collectionName, List<DBObject> dbDocList) {
-		if (dbDocList.size() > 0 ) {
+		if (!dbDocList.isEmpty()) {
 			List<Object> ids = new ArrayList<Object>();
 			WriteResult wr = null;
 			try {
 				wr = getDb().getCollection(collectionName).insert(dbDocList);
 				for (DBObject dbo : dbDocList) {
-					ids.add(dbo.get("_id"));
+					ids.add(dbo.get(ID));
 				}
 				return ids;
 			} catch (MongoException e) {
 				throw new DataRetrievalFailureException(wr.getLastError().getErrorMessage(), e);
 			}
-		}
-		else {
+		} else {
 			return null;
 		}
 	}
@@ -367,12 +385,11 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 			WriteResult wr = null;
 			try {
 				wr = getDb().getCollection(collectionName).save(dbDoc);
-				return dbDoc.get("_id");
+				return dbDoc.get(ID);
 			} catch (MongoException e) {
 				throw new DataRetrievalFailureException(wr.getLastError().getErrorMessage(), e);
 			}
-		}
-		else {
+		} else {
 			return null;
 		}
 	}
@@ -388,11 +405,11 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	 * @see org.springframework.data.document.mongodb.MongoOperations#updateFirst(java.lang.String, com.mongodb.DBObject, com.mongodb.DBObject)
 	 */
 	public void updateFirst(String collectionName, DBObject queryDoc, DBObject updateDoc) {
-		WriteResult wr = null;
+
 		try {
-			wr = getDb().getCollection(collectionName).update(queryDoc, updateDoc);
+			getDb().getCollection(collectionName).update(queryDoc, updateDoc);
 		} catch (MongoException e) {
-			throw new DataRetrievalFailureException("Error during update using " + queryDoc + ", " + updateDoc + ": " + wr.getLastError().getErrorMessage(), e);
+			throw new DataRetrievalFailureException("Error during update using " + queryDoc + ", " + updateDoc + "!", e);
 		}
 	}
 	
@@ -407,11 +424,10 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	 * @see org.springframework.data.document.mongodb.MongoOperations#updateMulti(java.lang.String, com.mongodb.DBObject, com.mongodb.DBObject)
 	 */
 	public void updateMulti(String collectionName, DBObject queryDoc, DBObject updateDoc) {
-		WriteResult wr = null;
 		try {
-			wr = getDb().getCollection(collectionName).updateMulti(queryDoc, updateDoc);
+			getDb().getCollection(collectionName).updateMulti(queryDoc, updateDoc);
 		} catch (MongoException e) {
-			throw new DataRetrievalFailureException("Error during updateMulti using " + queryDoc + ", " + updateDoc + ": " + wr.getLastError().getErrorMessage(), e);
+			throw new DataRetrievalFailureException("Error during updateMulti using " + queryDoc + ", " + updateDoc + "!", e);
 		}
 	}
 	
@@ -426,11 +442,10 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	 * @see org.springframework.data.document.mongodb.MongoOperations#remove(java.lang.String, com.mongodb.DBObject)
 	 */
 	public void remove(String collectionName, DBObject queryDoc) {
-		WriteResult wr = null;
 		try {
-			wr = getDb().getCollection(collectionName).remove(queryDoc);
+			getDb().getCollection(collectionName).remove(queryDoc);
 		} catch (MongoException e) {
-			throw new DataRetrievalFailureException("Error during remove using "  + queryDoc + ": " + wr.getLastError().getErrorMessage(), e);
+			throw new DataRetrievalFailureException("Error during remove using "  + queryDoc + "!", e);
 		}
 	}
 	
@@ -586,10 +601,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	}
 
 	public DB getDb() {
-		if(username != null && password != null) {
-			return MongoDbUtils.getDB(mongo, databaseName, username, password);
-		}
-		return MongoDbUtils.getDB(mongo, databaseName);
+		return MongoDbUtils.getDB(mongo, databaseName, username, password == null ? null : password.toCharArray());
 	}
 
 	
@@ -614,7 +626,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 		BeanWrapper bw = PropertyAccessorFactory.forBeanPropertyAccess(savedObject);
 		PropertyDescriptor idPd = BeanUtils.getPropertyDescriptor(savedObject.getClass(), "id");
 		if (idPd == null) {
-			idPd = BeanUtils.getPropertyDescriptor(savedObject.getClass(), "_id");
+			idPd = BeanUtils.getPropertyDescriptor(savedObject.getClass(), ID);
 		}
 		if (idPd != null) {
 			Object v = bw.getPropertyValue(idPd.getName());
@@ -627,19 +639,18 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 				}
 			}
 		}
-		
 	}
 
-	public void afterPropertiesSet() throws Exception {
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
+	 */
+	public void afterPropertiesSet() {
 		if (this.getDefaultCollectionName() != null) {
 			DB db = getDb();
 			if (! db.collectionExists(getDefaultCollectionName())) {
 				db.createCollection(getDefaultCollectionName(), null);
 			}
 		}
-		if (this.mongoConverter == null) {
-			mongoConverter = new SimpleMongoConverter();
-		}
-		
 	}
 }
