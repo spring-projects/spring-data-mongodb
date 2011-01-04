@@ -138,7 +138,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	 */
 	public DBCollection getDefaultCollection() {
 		
-		return execute(new DBCallback<DBCollection>() {
+		return execute(new DbCallback<DBCollection>() {
 			public DBCollection doInDB(DB db) throws MongoException, DataAccessException {
 				return db.getCollection(getDefaultCollectionName());
 			}
@@ -157,7 +157,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	 */
 	public void executeCommand(final DBObject command) {
 		
-		CommandResult result = execute(new DBCallback<CommandResult>() {
+		CommandResult result = execute(new DbCallback<CommandResult>() {
 			public CommandResult doInDB(DB db) throws MongoException, DataAccessException {
 				return db.command(command);
 			}
@@ -246,9 +246,9 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#executeInSession(org.springframework.data.document.mongodb.DBCallback)
 	 */
-	public <T> T executeInSession(final DBCallback<T> action) {
+	public <T> T executeInSession(final DbCallback<T> action) {
 		
-		return execute(new DBCallback<T>() {
+		return execute(new DbCallback<T>() {
 			public T doInDB(DB db) throws MongoException, DataAccessException {
 				try {
 					db.requestStart();
@@ -264,7 +264,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	 * @see org.springframework.data.document.mongodb.MongoOperations#createCollection(java.lang.String)
 	 */
 	public DBCollection createCollection(final String collectionName) {
-		return execute(new DBCallback<DBCollection>() {
+		return execute(new DbCallback<DBCollection>() {
 			public DBCollection doInDB(DB db) throws MongoException, DataAccessException {
 				return db.createCollection(collectionName, new BasicDBObject());
 			}
@@ -275,7 +275,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	 * @see org.springframework.data.document.mongodb.MongoOperations#createCollection(java.lang.String, org.springframework.data.document.mongodb.CollectionOptions)
 	 */
 	public void createCollection(final String collectionName, final CollectionOptions collectionOptions) {
-		execute(new DBCallback<Void>() {
+		execute(new DbCallback<Void>() {
 			public Void doInDB(DB db) throws MongoException, DataAccessException {
 				db.createCollection(collectionName, convertToDbObject(collectionOptions));
 				return null;
@@ -287,7 +287,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	 * @see org.springframework.data.document.mongodb.MongoOperations#getCollection(java.lang.String)
 	 */
 	public DBCollection getCollection(final String collectionName) {
-		return execute(new DBCallback<DBCollection>() {
+		return execute(new DbCallback<DBCollection>() {
 			public DBCollection doInDB(DB db) throws MongoException, DataAccessException {
 				return db.getCollection(collectionName);
 			}
@@ -299,7 +299,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	 * @see org.springframework.data.document.mongodb.MongoOperations#collectionExists(java.lang.String)
 	 */
 	public boolean collectionExists(final String collectionName) {
-		return execute(new DBCallback<Boolean>() {
+		return execute(new DbCallback<Boolean>() {
 			public Boolean doInDB(DB db) throws MongoException, DataAccessException {
 				return db.collectionExists(collectionName);
 			}
@@ -544,7 +544,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	 * @see org.springframework.data.document.mongodb.MongoOperations#getCollectionNames()
 	 */
 	public Set<String> getCollectionNames() {
-		return execute(new DBCallback<Set<String>>() {
+		return execute(new DbCallback<Set<String>>() {
 			public Set<String> doInDB(DB db) throws MongoException, DataAccessException {
 				return db.getCollectionNames();
 			}

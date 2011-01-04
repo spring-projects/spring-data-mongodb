@@ -62,7 +62,7 @@ public interface MongoOperations {
 	void executeCommand(DBObject command);
 
 	/**
-	 * Executes a {@link DBCallback} translating any exceptions as necessary.
+	 * Executes a {@link DbCallback} translating any exceptions as necessary.
 	 * 
 	 * Allows for returning a result object, that is a domain object or a collection of domain objects.
 	 * 
@@ -71,7 +71,7 @@ public interface MongoOperations {
 	 *
 	 * @return a result object returned by the action or <tt>null</tt>
 	 */
-	<T> T execute(DBCallback<T> action);
+	<T> T execute(DbCallback<T> action);
 
 	/**
 	 * Executes the given {@link CollectionCallback} on the default collection.
@@ -98,7 +98,7 @@ public interface MongoOperations {
 	<T> T execute(CollectionCallback<T> action, String collectionName);
 
 	/**
-	 * Executes the given {@link DBCallback} within the same connection to the database so as to ensure 
+	 * Executes the given {@link DbCallback} within the same connection to the database so as to ensure 
 	 * consistency in a write heavy environment where you may read the data that you wrote.  See the 
 	 * comments on {@see <a href=http://www.mongodb.org/display/DOCS/Java+Driver+Concurrency>Java Driver Concurrency</a>}
 	 * 
@@ -108,7 +108,7 @@ public interface MongoOperations {
 	 * @param action callback that specified the MongoDB actions to perform on the DB instance
 	 * @return a result object returned by the action or <tt>null</tt>
 	 */
-	<T> T executeInSession(DBCallback<T> action);
+	<T> T executeInSession(DbCallback<T> action);
 
 	/**
 	 * Create an uncapped collection with the provided name.
