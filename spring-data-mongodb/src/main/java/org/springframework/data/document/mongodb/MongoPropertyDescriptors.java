@@ -130,10 +130,7 @@ public class MongoPropertyDescriptors implements Iterable<MongoPropertyDescripto
 		 * @return
 		 */
 		public boolean isOfIdType() {
-			boolean isString = String.class.isAssignableFrom(getPropertyType());
-			boolean isObjectId = ObjectId.class.isAssignableFrom(getPropertyType());
-			boolean isBigInteger = BigInteger.class.isAssignableFrom(getPropertyType());
-			return isString || isObjectId || isBigInteger;
+			return SUPPORTED_ID_CLASSES.contains(delegate.getPropertyType());
 		}
 
 		/**
