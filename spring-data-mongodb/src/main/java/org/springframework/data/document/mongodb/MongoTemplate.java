@@ -16,19 +16,18 @@
 
 package org.springframework.data.document.mongodb;
 
-import java.beans.PropertyDescriptor;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
 import org.bson.types.ObjectId;
-import org.springframework.beans.BeanUtils;
-import org.springframework.beans.BeanWrapper;
+import org.springframework.beans.ConfigurablePropertyAccessor;
 import org.springframework.beans.PropertyAccessorFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
+import org.springframework.data.document.mongodb.MongoPropertyDescriptors.MongoPropertyDescriptor;
 import org.springframework.jca.cci.core.ConnectionCallback;
 import org.springframework.util.Assert;
 
@@ -40,6 +39,7 @@ import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.Mongo;
 import com.mongodb.MongoException;
+import com.mongodb.QueryBuilder;
 import com.mongodb.util.JSON;
 
 /**
@@ -350,7 +350,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	public <T> void insert(String collectionName, T objectToSave, MongoWriter<T> writer) {
 		BasicDBObject dbDoc = new BasicDBObject();
 		writer.write(objectToSave, dbDoc);
-		Object id = insertDBObject(collectionName, dbDoc);
+		ObjectId id = insertDBObject(collectionName, dbDoc);
 		populateIdIfNecessary(objectToSave, id);
 	}
 
@@ -381,7 +381,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 			writer.write(o, dbDoc);
 			dbObjectList.add(dbDoc);
 		}
-		List<Object> ids = insertDBObjectList(collectionName, dbObjectList);
+		List<ObjectId> ids = insertDBObjectList(collectionName, dbObjectList);
 		for (int i = 0; i < listToSave.size(); i++) {
 			if (i < ids.size()) {
 				populateIdIfNecessary(listToSave.get(i), ids.get(i));
@@ -409,21 +409,21 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	public <T> void save(String collectionName, T objectToSave, MongoWriter<T> writer) {
 		BasicDBObject dbDoc = new BasicDBObject();
 		writer.write(objectToSave, dbDoc);
-		Object id = saveDBObject(collectionName, dbDoc);
+		ObjectId id = saveDBObject(collectionName, dbDoc);
 		populateIdIfNecessary(objectToSave, id);
 	}
 
 
-	protected Object insertDBObject(String collectionName, final DBObject dbDoc) {
+	protected ObjectId insertDBObject(String collectionName, final DBObject dbDoc) {
 
 		if (dbDoc.keySet().isEmpty()) {
 			return null;
 		}
-		
-		return execute(new CollectionCallback<Object>() {
-			public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
+
+		return execute(new CollectionCallback<ObjectId>() {
+			public ObjectId doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 				collection.insert(dbDoc);
-				return dbDoc.get(ID);
+				return (ObjectId) dbDoc.get(ID);
 			}
 		}, collectionName);
 	}
@@ -431,8 +431,8 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	
 	
 
-	protected List<Object> insertDBObjectList(String collectionName, final List<DBObject> dbDocList) {
-		
+	protected List<ObjectId> insertDBObjectList(String collectionName, final List<DBObject> dbDocList) {
+
 		if (dbDocList.isEmpty()) {
 			return Collections.emptyList();
 		}
@@ -444,24 +444,23 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 			}
 		}, collectionName);
 
-		List<Object> ids = new ArrayList<Object>();
+		List<ObjectId> ids = new ArrayList<ObjectId>();
 		for (DBObject dbo : dbDocList) {
-			ids.add(dbo.get(ID));
+			ids.add((ObjectId) dbo.get(ID));
 		}
 		return ids;
 	}
 
-	protected Object saveDBObject(String collectionName, final DBObject dbDoc) {
-		
+	protected ObjectId saveDBObject(String collectionName, final DBObject dbDoc) {
+
 		if (dbDoc.keySet().isEmpty()) {
 			return null;
 		}
-		
-		return execute(new CollectionCallback<Object>() {
 
-			public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
+		return execute(new CollectionCallback<ObjectId>() {
+			public ObjectId doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 				collection.save(dbDoc);
-				return dbDoc.get(ID);
+				return (ObjectId) dbDoc.get(ID);
 			}
 		}, collectionName);
 	}
@@ -635,6 +634,18 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 		return executeEach(new FindCallback(query), null, new ReadDbObjectCallback<T>(reader, targetClass),
 				collectionName);
 	}
+	
+	
+	/* (non-Javadoc)
+	 * @see org.springframework.data.document.mongodb.MongoOperations#find(java.lang.Class, java.lang.Object)
+	 */
+	public <T> T find(Class<T> targetClass, Object id) {
+		
+		ObjectId objectId = mongoConverter.convertObjectId(id);
+		List<T> result = query(QueryBuilder.start(MongoPropertyDescriptor.ID_KEY).is(objectId).get(), targetClass);
+		
+		return result.isEmpty() ? null : result.get(0);
+	}
 
 
 	public DB getDb() {
@@ -658,23 +669,24 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 		return dbo;
 	}
 
-	protected void populateIdIfNecessary(Object savedObject, Object id) {
-		//TODO Needs proper conversion support and should be integrated with reader implementation somehow
-		BeanWrapper bw = PropertyAccessorFactory.forBeanPropertyAccess(savedObject);
-		PropertyDescriptor idPd = BeanUtils.getPropertyDescriptor(savedObject.getClass(), "id");
-		if (idPd == null) {
-			idPd = BeanUtils.getPropertyDescriptor(savedObject.getClass(), ID);
+	/**
+	 * Populates the id property of the saved object, if it's not set already.
+	 * 
+	 * @param savedObject
+	 * @param id
+	 */
+	protected void populateIdIfNecessary(Object savedObject, ObjectId id) {
+
+		ConfigurablePropertyAccessor bw = PropertyAccessorFactory.forDirectFieldAccess(savedObject);
+		MongoPropertyDescriptor idDescriptor = new MongoPropertyDescriptors(savedObject.getClass()).getIdDescriptor();
+
+		if (idDescriptor == null) {
+			return;
 		}
-		if (idPd != null) {
-			Object v = bw.getPropertyValue(idPd.getName());
-			if (v == null) {
-				if (id instanceof ObjectId) {
-					bw.setPropertyValue(idPd.getName(), id.toString());
-				}
-				else if (id.getClass().isAssignableFrom(idPd.getPropertyType())) {
-					bw.setPropertyValue(idPd.getName(), id);
-				}
-			}
+
+		if (bw.getPropertyValue(idDescriptor.getName()) == null) {
+			Object target = this.mongoConverter.convertObjectId(id, idDescriptor.getPropertyType());
+			bw.setPropertyValue(idDescriptor.getName(), target);
 		}
 	}
 	
@@ -750,9 +762,8 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 			this.type = type;
 		}
 		
-		@SuppressWarnings("unchecked")
 		public T doWith(DBObject object) {
-			return (T) reader.read(type, object);
+			return reader.read(type, object);
 		}
 	}
 }

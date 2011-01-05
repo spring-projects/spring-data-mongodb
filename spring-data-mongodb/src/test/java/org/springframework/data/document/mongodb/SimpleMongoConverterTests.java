@@ -15,10 +15,11 @@
  */
 package org.springframework.data.document.mongodb;
 
-import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
-import java.lang.reflect.Method;
+import java.lang.reflect.Field;
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -32,14 +33,20 @@ import org.springframework.util.ReflectionUtils;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
+import com.mongodb.util.JSON;
 
 public class SimpleMongoConverterTests {
-	
+
+	static final String SIMPLE_JSON = "{ \"map\" : { \"foo\" : 3 , \"bar\" : 4}, \"number\" : 15 }";
+	static final String COMPLEX_JSON = "{ \"map\" : { \"trade\" : { \"orderType\" : \"BUY\" , \"price\" : 90.5 , \"quantity\" : 0 , \"ticker\" : \"VMW\"}}}";
+
 	SimpleMongoConverter converter;
-	
+	DBObject object;
+
 	@Before
 	public void setUp() {
 		converter = new SimpleMongoConverter();
+		object = new BasicDBObject();
 	}
 
 	@Test
@@ -47,12 +54,11 @@ public class SimpleMongoConverterTests {
 		User user = new User();
 		user.setAccountName("My Account");
 		user.setUserName("Mark");
-		DBObject dbo = new BasicDBObject();
-		converter.write(user, dbo);
-		assertEquals("My Account", dbo.get("accountName"));
-		assertEquals("Mark", dbo.get("userName"));
+		converter.write(user, object);
+		assertEquals("My Account", object.get("accountName"));
+		assertEquals("Mark", object.get("userName"));
 
-		User u = (User) converter.read(User.class, dbo);
+		User u = converter.read(User.class, object);
 
 		assertEquals("My Account", u.getAccountName());
 		assertEquals("Mark", u.getUserName());
@@ -61,14 +67,13 @@ public class SimpleMongoConverterTests {
 	@Test
 	public void nestedObject() {
 		Portfolio p = createPortfolioWithNoTrades();
-		DBObject dbo = new BasicDBObject();
-		converter.write(p, dbo);
-		
-		assertEquals("High Risk Trading Account", dbo.get("portfolioName"));
-		assertTrue(dbo.containsField("user"));
+		converter.write(p, object);
 
-		Portfolio cp = (Portfolio) converter.read(Portfolio.class, dbo);
-		
+		assertEquals("High Risk Trading Account", object.get("portfolioName"));
+		assertTrue(object.containsField("user"));
+
+		Portfolio cp = converter.read(Portfolio.class, object);
+
 		assertEquals("High Risk Trading Account", cp.getPortfolioName());
 		assertEquals("Joe Trader", cp.getUser().getUserName());
 		assertEquals("ACCT-123", cp.getUser().getAccountName());
@@ -78,20 +83,18 @@ public class SimpleMongoConverterTests {
 	@Test
 	public void objectWithMap() {
 		Portfolio p = createPortfolioWithPositions();
-		DBObject dbo = new BasicDBObject();
-		converter.write(p, dbo);
+		converter.write(p, object);
 
-		Portfolio cp = (Portfolio) converter.read(Portfolio.class, dbo);
+		Portfolio cp = converter.read(Portfolio.class, object);
 		assertEquals("High Risk Trading Account", cp.getPortfolioName());
 	}
 
 	@Test
 	public void objectWithMapContainingNonPrimitiveTypeAsValue() {
 		Portfolio p = createPortfolioWithManagers();
-		DBObject dbo = new BasicDBObject();
-		converter.write(p, dbo);
+		converter.write(p, object);
 
-		Portfolio cp = (Portfolio) converter.read(Portfolio.class, dbo);
+		Portfolio cp = converter.read(Portfolio.class, object);
 		assertEquals("High Risk Trading Account", cp.getPortfolioName());
 	}
 
@@ -130,10 +133,9 @@ public class SimpleMongoConverterTests {
 	@Test
 	public void objectWithArrayContainingNonPrimitiveType() {
 		TradeBatch b = createTradeBatch();
-		DBObject dbo = new BasicDBObject();
-		converter.write(b, dbo);
+		converter.write(b, object);
 
-		TradeBatch b2 = (TradeBatch) converter.read(TradeBatch.class, dbo);
+		TradeBatch b2 = converter.read(TradeBatch.class, object);
 		assertEquals(b.getBatchId(), b2.getBatchId());
 		assertNotNull(b2.getTradeList());
 		assertEquals(b.getTradeList().size(), b2.getTradeList().size());
@@ -155,8 +157,8 @@ public class SimpleMongoConverterTests {
 		t2.setTicker("MSFT");
 		t2.setQuantity(100);
 		t2.setPrice(27.92D);
-		tb.setTrades(new Trade[] {t2, t1});
-		tb.setTradeList(Arrays.asList(new Trade[] {t1, t2}));
+		tb.setTrades(new Trade[] { t2, t1 });
+		tb.setTradeList(Arrays.asList(new Trade[] { t1, t2 }));
 		return tb;
 	}
 
@@ -169,24 +171,180 @@ public class SimpleMongoConverterTests {
 		test.setNumberEnum(NumberEnum.FIVE);
 		DBObject dbo = new BasicDBObject();
 		converter.write(test, dbo);
-		
-		SomeEnumTest results = (SomeEnumTest) converter.read(SomeEnumTest.class, dbo);
+
+		SomeEnumTest results = converter.read(SomeEnumTest.class, dbo);
 		assertNotNull(results);
 		assertEquals(test.getId(), results.getId());
 		assertEquals(test.getName(), results.getName());
 		assertEquals(test.getStringEnum(), results.getStringEnum());
 		assertEquals(test.getNumberEnum(), results.getNumberEnum());
-}
+	}
 
 	@Test
-	public void testReflection() {
-		Method method = ReflectionUtils.findMethod(Portfolio.class, "setPortfolioManagers", Map.class);
-		assertNotNull(method);
-		List<Class<?>> paramClass = converter.getGenericParameterClass(method);
+	public void serializesClassWithFinalObjectIdCorrectly() throws Exception {
+
+		BasicDBObject object = new BasicDBObject();
+		Person person = new Person("Oliver");
+		converter.write(person, object);
+
+		assertThat(object.get("class"), is(nullValue()));
+		assertThat(object.get("_id"), is((Object) person.getId()));
+	}
+
+	@Test
+	public void discoversGenericsForType() throws Exception {
+
+		Field field = ReflectionUtils.findField(Sample.class, "map");
+		assertListOfStringAndLong(converter.getGenericParameters(field.getGenericType()));
+	}
+
+	@Test
+	public void writesSimpleMapCorrectly() throws Exception {
+
+		Map<String, Long> map = new HashMap<String, Long>();
+		map.put("foo", 1L);
+		map.put("bar", 2L);
+
+		Sample sample = new Sample();
+		sample.setMap(map);
+		sample.setNumber(15L);
+
+		converter.write(sample, object);
+
+		assertThat(object.get("number"), is((Object) 15L));
+
+		Object result = object.get("map");
+		assertTrue(result instanceof Map);
+
+		@SuppressWarnings("unchecked")
+		Map<String, Long> mapResult = (Map<String, Long>) result;
+		assertThat(mapResult.size(), is(2));
+		assertThat(mapResult.get("foo"), is(1L));
+		assertThat(mapResult.get("bar"), is(2L));
+	}
+
+	@Test
+	public void writesComplexMapCorrectly() throws Exception {
+
+		Trade trade = new Trade();
+		trade.setOrderType("BUY");
+		trade.setTicker("VMW");
+		trade.setPrice(90.50d);
+
+		Map<String, Trade> map = new HashMap<String, Trade>();
+		map.put("trade", trade);
+
+		converter.write(new Sample2(map), object);
+		DBObject tradeDbObject = new BasicDBObject();
+		converter.write(trade, tradeDbObject);
+
+		Object result = object.get("map");
+		assertTrue(result instanceof Map);
+
+		@SuppressWarnings("unchecked")
+		Map<String, DBObject> mapResult = (Map<String, DBObject>) result;
+		assertThat(mapResult.size(), is(1));
+		assertThat(mapResult.get("trade"), is(tradeDbObject));
+	}
+
+	@Test
+	public void readsMapWithSetterCorrectly() throws Exception {
+
+		DBObject input = (DBObject) JSON.parse(SIMPLE_JSON);
+		Sample result = converter.read(Sample.class, input);
+		assertThat(result.getNumber(), is(15L));
+
+		Map<String, Long> map = result.getMap();
+		assertThat(map, is(notNullValue()));
+		assertThat(map.size(), is(2));
+		assertThat(map.get("foo"), is(3L));
+		assertThat(map.get("bar"), is(4L));
+	}
+
+	@Test
+	public void readsMapWithFieldOnlyCorrectly() throws Exception {
+
+		DBObject input = (DBObject) JSON.parse(COMPLEX_JSON);
+		Sample2 result = converter.read(Sample2.class, input);
+
+		Map<String, Trade> map = result.getMap();
+
+		Trade trade = new Trade();
+		trade.setOrderType("BUY");
+		trade.setTicker("VMW");
+		trade.setPrice(90.50d);
+
+		assertThat(map.size(), is(1));
+		assertThat(map.get("trade").getTicker(), is("VMW"));
+		assertThat(map.get("trade").getOrderType(), is("BUY"));
+		assertThat(map.get("trade").getPrice(), is(90.50d));
+	}
+
+	@Test
+	public void supportsBigIntegerAsIdProperty() throws Exception {
 		
-		assertThat(paramClass.isEmpty(), is(false));
-		assertThat(paramClass.size(), is(2));
-		assertEquals(String.class, paramClass.get(0));
-		assertEquals(Person.class, paramClass.get(1));
+		Sample3 sample3 = new Sample3();
+		sample3.id = new BigInteger("4d24809660413b687f5d323e", 16);
+		converter.write(sample3, object);
+		assertThat(object.get("_id"), is(notNullValue()));
+
+		Sample3 result = converter.read(Sample3.class,
+				(DBObject) JSON.parse("{\"_id\" : {\"$oid\" : \"4d24809660413b687f5d323e\" }}"));
+		assertThat(result.getId().toString(16), is("4d24809660413b687f5d323e"));
+	}
+
+	private void assertListOfStringAndLong(List<Class<?>> types) {
+
+		assertThat(types.size(), is(2));
+		assertEquals(String.class, types.get(0));
+		assertEquals(Long.class, types.get(1));
+	}
+
+	public static class Sample {
+
+		private Map<String, Long> map;
+		private Long number;
+
+		public void setMap(Map<String, Long> map) {
+			this.map = map;
+		}
+
+		public Map<String, Long> getMap() {
+			return map;
+		}
+
+		public void setNumber(Long number) {
+			this.number = number;
+		}
+
+		public Long getNumber() {
+			return number;
+		}
+	}
+
+	public static class Sample2 {
+
+		private final Map<String, Trade> map;
+
+		protected Sample2() {
+			this.map = null;
+		}
+
+		public Sample2(Map<String, Trade> map) {
+			this.map = map;
+		}
+
+		public Map<String, Trade> getMap() {
+			return map;
+		}
+	}
+
+	private static class Sample3 {
+
+		private BigInteger id;
+
+		public BigInteger getId() {
+			return id;
+		}
 	}
 }

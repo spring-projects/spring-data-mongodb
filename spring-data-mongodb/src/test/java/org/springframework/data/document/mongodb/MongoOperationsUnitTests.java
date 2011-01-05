@@ -21,6 +21,7 @@ import static org.junit.Assert.*;
 import java.util.Arrays;
 import java.util.List;
 
+import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -57,12 +58,16 @@ public abstract class MongoOperationsUnitTests {
 		
 		converter = new MongoConverter() {
 			
-			public Object read(Class<? extends Object> clazz, DBObject dbo) {
-				return person;
-			}
-			
 			public void write(Object t, DBObject dbo) {
 				dbo.put("firstName", person.getFirstName());
+			}
+
+			public <S extends Object> S read(Class<S> clazz, DBObject dbo) {
+				return (S) person;
+			}
+			
+			public <T> T convertObjectId(ObjectId id, Class<T> targetType) {
+				return null;
 			}
 		};
 	}

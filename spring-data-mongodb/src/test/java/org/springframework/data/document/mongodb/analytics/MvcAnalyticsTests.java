@@ -58,7 +58,7 @@ public class MvcAnalyticsTests {
 		
 		mongoTemplate.getCollection("mvc", MvcEvent.class,
 				new MongoReader<MvcEvent>() {
-					public MvcEvent read(Class<? extends MvcEvent> clazz, DBObject dbo) {
+					public <S extends MvcEvent> S read(Class<S> clazz, DBObject dbo) {
 						return null;
 					}
 				});

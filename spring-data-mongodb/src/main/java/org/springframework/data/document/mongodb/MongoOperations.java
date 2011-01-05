@@ -507,4 +507,13 @@ public interface MongoOperations {
 	 */
 	<T> List<T> query(String collectionName, DBObject query, Class<T> targetClass, MongoReader<T> reader);
 
+
+	/**
+	 * Returns the object with the given id for the given target class.
+	 *
+	 * @param targetClass the type of the object to be retrieved
+	 * @param id the id of the object to be retrieved
+	 * @return the converted object
+	 */
+	<T> T find(Class<T> targetClass, Object id);
 }

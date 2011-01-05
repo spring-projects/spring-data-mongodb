@@ -36,5 +36,5 @@ public interface MongoReader<T> {
 	 * @param dbo theDBObject
 	 * @return the converted object
 	 */
-	T read(Class<? extends T> clazz, DBObject dbo);
+	<S extends T> S read(Class<S> clazz, DBObject dbo);
 }
