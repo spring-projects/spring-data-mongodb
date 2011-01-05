@@ -40,6 +40,12 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
     
         repository.save(Arrays.asList(dave, carter, boyd, stefan, leroi));
     }
+    
+    @Test
+	public void findsPersonById() throws Exception {
+		
+    	assertThat(repository.findById(dave.getId()), is(dave));
+	}
 
     @Test
     public void findsPersonsByLastname() throws Exception {

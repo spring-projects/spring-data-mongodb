@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2010 the original author or authors.
+ * Copyright 2010-2011 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -104,12 +104,8 @@ public class SimpleMongoRepository<T, ID extends Serializable> extends
      * )
      */
     public T findById(ID id) {
-
-        List<T> result =
-                operations.query(operations.getDefaultCollectionName(),
-                        QueryBuilder.start("_id").get(), getDomainClass());
-
-        return result.isEmpty() ? null : result.get(0);
+    	
+    	return operations.find(getDomainClass(), id);
     }
 
 

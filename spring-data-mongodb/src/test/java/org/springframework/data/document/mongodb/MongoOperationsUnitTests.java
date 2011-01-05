@@ -69,6 +69,10 @@ public abstract class MongoOperationsUnitTests {
 			public <T> T convertObjectId(ObjectId id, Class<T> targetType) {
 				return null;
 			}
+			
+			public ObjectId convertObjectId(Object id) {
+				return null;
+			}
 		};
 	}
 	

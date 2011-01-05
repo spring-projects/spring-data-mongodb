@@ -19,6 +19,7 @@ import java.io.Serializable;
 import java.lang.reflect.Method;
 
 import org.springframework.data.document.mongodb.MongoOperations;
+import org.springframework.data.document.mongodb.MongoPropertyDescriptors.MongoPropertyDescriptor;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.query.QueryLookupStrategy;
 import org.springframework.data.repository.query.QueryLookupStrategy.Key;
@@ -27,7 +28,9 @@ import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.repository.support.RepositoryFactoryBeanSupport;
 import org.springframework.data.repository.support.RepositoryFactorySupport;
 import org.springframework.data.repository.support.RepositorySupport;
+import org.springframework.data.repository.util.ClassUtils;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 
 /**
@@ -36,7 +39,7 @@ import org.springframework.util.Assert;
  * @author Oliver Gierke
  */
 public class MongoRepositoryFactoryBean extends
-        RepositoryFactoryBeanSupport<Repository<?, ?>> {
+        RepositoryFactoryBeanSupport<MongoRepository<?, ?>> {
 
     private MongoOperations operations;
 
@@ -62,7 +65,7 @@ public class MongoRepositoryFactoryBean extends
     @Override
     protected RepositoryFactorySupport createRepositoryFactory() {
 
-        return new MongoRepositoryFactory();
+        return new MongoRepositoryFactory(operations);
     }
 
 
@@ -85,9 +88,22 @@ public class MongoRepositoryFactoryBean extends
      * 
      * @author Oliver Gierke
      */
-    private class MongoRepositoryFactory extends RepositoryFactorySupport {
+    public static class MongoRepositoryFactory extends RepositoryFactorySupport {
+    	
+    	private final MongoOperations operations;
+    	
+    	/**
+    	 * Creates a new {@link MongoRepositoryFactory} fwith the given {@link MongoOperations}.
+    	 * 
+    	 * @param operations
+    	 */
+		public MongoRepositoryFactory(MongoOperations operations) {
+		
+			this.operations = operations;
+		}
 
-        @Override
+
+		@Override
         protected <T, ID extends Serializable> RepositorySupport<T, ID> getTargetRepository(
                 Class<T> domainClass, Class<?> repositoryInterface) {
 
@@ -120,6 +136,21 @@ public class MongoRepositoryFactoryBean extends
 
                 return new MongoQuery(new QueryMethod(method), operations);
             }
+        }
+        
+        /* (non-Javadoc)
+         * @see org.springframework.data.repository.support.RepositoryFactorySupport#validate(java.lang.Class, java.lang.Object)
+         */
+        @Override
+        protected void validate(Class<? extends Repository<?, ?>> repositoryInterface, Object customImplementation) {
+        	
+        	Class<?> idClass = ClassUtils.getIdClass(repositoryInterface);
+        	if (!MongoPropertyDescriptor.SUPPORTED_ID_CLASSES.contains(idClass)) {
+				throw new IllegalArgumentException(String.format("Unsupported id class! Only %s are supported!",
+						StringUtils.collectionToCommaDelimitedString(MongoPropertyDescriptor.SUPPORTED_ID_CLASSES)));
+        	}
+        	
+        	super.validate(repositoryInterface, customImplementation);
         }
     }
 }
