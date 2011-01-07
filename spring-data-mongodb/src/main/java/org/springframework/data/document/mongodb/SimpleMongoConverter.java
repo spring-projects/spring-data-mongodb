@@ -22,6 +22,7 @@ import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -38,6 +39,7 @@ import org.apache.commons.logging.LogFactory;
 import org.bson.types.CodeWScope;
 import org.bson.types.ObjectId;
 import org.springframework.beans.BeanUtils;
+import org.springframework.core.CollectionFactory;
 import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.Converter;
@@ -47,6 +49,7 @@ import org.springframework.data.document.mongodb.MongoPropertyDescriptors.MongoP
 import org.springframework.util.Assert;
 import org.springframework.util.comparator.CompoundComparator;
 
+import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.DBRef;
@@ -163,8 +166,8 @@ public class SimpleMongoConverter implements MongoConverter {
 		for (MongoPropertyDescriptor descriptor : beanWrapper.getDescriptors()) {
 			if (descriptor.isMappable()) {
 				Object value = beanWrapper.getValue(descriptor);
-				
-				if(value == null) {
+
+				if (value == null) {
 					continue;
 				}
 				
@@ -315,26 +318,13 @@ public class SimpleMongoConverter implements MongoConverter {
 				if (descriptor.isMappable()) {
 					Object value = source.get(keyToUse);
 					if (!isSimpleType(value.getClass())) {
-						if (value instanceof DBObject) {
+						if (value instanceof Object[]) {
+							bw.setValue(descriptor, readCollection(descriptor, Arrays.asList((Object[]) value))
+									.toArray());
+						} else if (value instanceof BasicDBList) {
+							bw.setValue(descriptor, readCollection(descriptor, (BasicDBList) value));
+						} else if (value instanceof DBObject) {
 							bw.setValue(descriptor, readCompoundValue(descriptor, (DBObject) value));
-						} else if (value instanceof Object[]) {
-							Object[] values = new Object[((Object[]) value).length];
-							int i = 0;
-							for (Object o : (Object[]) value) {
-								if (o instanceof DBObject) {
-									Class<?> type;
-									if (descriptor.getPropertyType().isArray()) {
-										type = descriptor.getPropertyType().getComponentType();
-									} else {
-										type = getGenericParameters(descriptor.getTypeToSet()).get(0);
-									}
-									values[i] = read(type, (DBObject) o);
-								} else {
-									values[i] = o;
-								}
-								i++;
-							}
-							bw.setValue(descriptor, values);
 						} else {
 							LOG.warn("Unable to map compound DBObject field " + keyToUse + " to property "
 									+ descriptor.getName()
@@ -355,7 +345,41 @@ public class SimpleMongoConverter implements MongoConverter {
 	}
 
 	/**
-	 * Reads a compund value from the given {@link DBObject} for the given property.
+	 * Reads the given collection values (that are {@link DBObject}s potentially) into a {@link Collection} of domain
+	 * objects.
+	 * 
+	 * @param descriptor
+	 * @param values
+	 * @return
+	 */
+	private Collection<Object> readCollection(MongoPropertyDescriptor descriptor, Collection<?> values) {
+
+		Class<?> targetCollectionType = descriptor.getPropertyType();
+		boolean targetIsArray = targetCollectionType.isArray();
+
+		@SuppressWarnings("unchecked")
+		Collection<Object> result = targetIsArray ? new ArrayList<Object>(values.size()) : CollectionFactory
+				.createCollection(targetCollectionType, values.size());
+
+		for (Object o : values) {
+			if (o instanceof DBObject) {
+				Class<?> type;
+				if (targetIsArray) {
+					type = targetCollectionType.getComponentType();
+				} else {
+					type = getGenericParameters(descriptor.getTypeToSet()).get(0);
+				}
+				result.add(read(type, (DBObject) o));
+			} else {
+				result.add(o);
+			}
+		}
+
+		return result;
+	}
+
+	/**
+	 * Reads a compound value from the given {@link DBObject} for the given property.
 	 * 
 	 * @param pd
 	 * @param dbo
@@ -363,10 +387,10 @@ public class SimpleMongoConverter implements MongoConverter {
 	 */
 	private Object readCompoundValue(MongoPropertyDescriptors.MongoPropertyDescriptor pd, DBObject dbo) {
 
+		Assert.isTrue(!pd.isCollection(), "Collections not supported!");
+
 		if (pd.isMap()) {
-			return readMap(pd, (BasicDBObject) dbo, getGenericParameters(pd.getTypeToSet()).get(1));
-		} else if (pd.isCollection()) {
-			throw new UnsupportedOperationException("Reading nested collections not supported yet!");
+			return readMap(pd, dbo, getGenericParameters(pd.getTypeToSet()).get(1));
 		} else {
 			return read(pd.getPropertyType(), dbo);
 		}
@@ -390,16 +414,16 @@ public class SimpleMongoConverter implements MongoConverter {
 	 * @param targetType
 	 * @return
 	 */
-	protected Map<?, ?> readMap(MongoPropertyDescriptors.MongoPropertyDescriptor pd, BasicDBObject dbo, Class<?> targetType) {
+	protected Map<?, ?> readMap(MongoPropertyDescriptors.MongoPropertyDescriptor pd, DBObject dbo, Class<?> targetType) {
 		Map<String, Object> map = createMap();
-		for (Entry<String, Object> entry : dbo.entrySet()) {
-			Object entryValue = entry.getValue();
-			if (!isSimpleType(entryValue.getClass())) {
-				map.put(entry.getKey(), read(targetType, (DBObject) entryValue));
+		for (String key : dbo.keySet()) {
+			Object value = dbo.get(key);
+			if (!isSimpleType(value.getClass())) {
+				map.put(key, read(targetType, (DBObject) value));
 				// Can do some reflection tricks here -
 				// throw new RuntimeException("User types not supported yet as values for Maps");
 			} else {
-				map.put(entry.getKey(), conversionService.convert(entryValue, targetType));
+				map.put(key, conversionService.convert(value, targetType));
 			}
 		}
 		return map;

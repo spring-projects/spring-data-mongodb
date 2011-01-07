@@ -6,7 +6,7 @@
 	<import resource="classpath:infrastructure.xml" />
 	
 	<bean class="org.springframework.data.document.mongodb.repository.MongoRepositoryFactoryBean">
-		<property name="operations" ref="mongoTemplate" />
+		<property name="template" ref="mongoTemplate" />
 		<property name="repositoryInterface" value="org.springframework.data.document.mongodb.repository.PersonRepository" />
 	</bean>
 

@@ -46,6 +46,6 @@ public class MongoRepositoryConfigDefinitionParser
             MongoRepositoryConfiguration context,
             BeanDefinitionBuilder builder, Object beanSource) {
 
-        builder.addPropertyReference("operations", context.getMongoTemplateRef());
+        builder.addPropertyReference("template", context.getMongoTemplateRef());
     }
 }

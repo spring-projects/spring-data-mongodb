@@ -1,9 +1,11 @@
 package org.springframework.data.document.mongodb.repository;
 
+import static java.util.Arrays.*;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 
 import org.junit.Before;
@@ -94,4 +96,27 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
         assertThat(result.size(), is(2));
         assertThat(result, hasItems(dave, leroi));
     }
+    
+    
+    @Test
+	public void findsPersonByShippingAddressesCorrectly() throws Exception {
+		
+    	Address address = new Address("Foo Street 1", "C0123", "Bar");
+    	dave.setShippingAddresses(new HashSet<Address>(asList(address)));
+    	
+    	repository.save(dave);
+    	assertThat(repository.findByShippingAddresses(address), is(dave));
+	}
+    
+    @Test
+	public void findsPersonByAddressCorrectly() throws Exception {
+		
+    	Address address = new Address("Foo Street 1", "C0123", "Bar");
+    	dave.setAddress(address);
+    	repository.save(dave);
+    	
+    	List<Person> result = repository.findByAddress(address);
+    	assertThat(result.size(), is(1));
+		assertThat(result, hasItem(dave));
+	}
 }

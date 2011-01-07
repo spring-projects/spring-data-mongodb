@@ -20,6 +20,10 @@ import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.data.document.mongodb.MongoConverter;
 import org.springframework.data.document.mongodb.Person;
 import org.springframework.data.repository.query.Parameters;
 import org.springframework.data.repository.query.SimpleParameterAccessor;
@@ -31,10 +35,14 @@ import org.springframework.data.repository.query.parser.PartTree;
  * 
  * @author Oliver Gierke
  */
+@RunWith(MockitoJUnitRunner.class)
 public class MongoQueryCreatorUnitTests {
 
     Method findByFirstname;
     Method findByFirstnameAndFriend;
+    
+    @Mock
+    MongoConverter converter;
 
 
     @Before
@@ -57,7 +65,7 @@ public class MongoQueryCreatorUnitTests {
         MongoQueryCreator creator =
                 new MongoQueryCreator(tree, new SimpleParameterAccessor(
                         new Parameters(findByFirstname),
-                        new Object[] { "Oliver" }));
+                        new Object[] { "Oliver" }), converter);
 
         creator.createQuery();
 
@@ -65,7 +73,7 @@ public class MongoQueryCreatorUnitTests {
                 new MongoQueryCreator(new PartTree("findByFirstnameAndFriend",
                         Person.class), new SimpleParameterAccessor(
                         new Parameters(findByFirstnameAndFriend), new Object[] {
-                                "Oliver", new Person() }));
+                                "Oliver", new Person() }), converter);
         creator.createQuery();
     }
 

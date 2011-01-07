@@ -17,6 +17,7 @@ package org.springframework.data.document.mongodb.repository;
 
 import java.util.regex.Pattern;
 
+import org.springframework.data.document.mongodb.MongoConverter;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.repository.query.SimpleParameterAccessor;
 import org.springframework.data.repository.query.SimpleParameterAccessor.BindableParameterIterator;
@@ -25,6 +26,7 @@ import org.springframework.data.repository.query.parser.Part;
 import org.springframework.data.repository.query.parser.Part.Type;
 import org.springframework.data.repository.query.parser.PartTree;
 
+import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.QueryBuilder;
 
@@ -35,6 +37,8 @@ import com.mongodb.QueryBuilder;
  * @author Oliver Gierke
  */
 class MongoQueryCreator extends AbstractQueryCreator<DBObject, QueryBuilder> {
+	
+	private final MongoConverter converter;
 
     /**
      * Creates a new {@link MongoQueryCreator} from the given {@link PartTree}
@@ -43,9 +47,10 @@ class MongoQueryCreator extends AbstractQueryCreator<DBObject, QueryBuilder> {
      * @param tree
      * @param accessor
      */
-    public MongoQueryCreator(PartTree tree, SimpleParameterAccessor accessor) {
+    public MongoQueryCreator(PartTree tree, SimpleParameterAccessor accessor, MongoConverter converter) {
 
         super(tree, accessor);
+        this.converter = converter;
     }
 
 
@@ -125,11 +130,11 @@ class MongoQueryCreator extends AbstractQueryCreator<DBObject, QueryBuilder> {
 
         switch (type) {
         case GREATER_THAN:
-            return criteria.greaterThan(parameters.next());
+            return criteria.greaterThan(getConvertedParameter(parameters));
         case LESS_THAN:
-            return criteria.lessThan(parameters.next());
+            return criteria.lessThan(getConvertedParameter(parameters));
         case BETWEEN:
-            return criteria.greaterThan(parameters.next()).lessThan(parameters.next());
+            return criteria.greaterThan(getConvertedParameter(parameters)).lessThan(getConvertedParameter(parameters));
         case IS_NOT_NULL:
             return criteria.notEquals(null);
         case IS_NULL:
@@ -138,12 +143,20 @@ class MongoQueryCreator extends AbstractQueryCreator<DBObject, QueryBuilder> {
             String value = parameters.next().toString();
             return criteria.regex(toLikeRegex(value));
         case SIMPLE_PROPERTY:
-            return criteria.is(parameters.next());
+            return criteria.is(getConvertedParameter(parameters));
         case NEGATING_SIMPLE_PROPERTY:
-            return criteria.notEquals(parameters.next());
+            return criteria.notEquals(getConvertedParameter(parameters));
         }
 
         throw new IllegalArgumentException("Unsupported keyword!");
+    }
+    
+    
+    private Object getConvertedParameter(BindableParameterIterator parameters) {
+    	
+    	DBObject result = new BasicDBObject();
+    	converter.write(new ValueHolder(parameters.next()), result);
+    	return result.get("value");
     }
 
 
@@ -151,5 +164,24 @@ class MongoQueryCreator extends AbstractQueryCreator<DBObject, QueryBuilder> {
 
         String regex = source.replaceAll("\\*", ".*");
         return Pattern.compile(regex);
+    }
+
+	/**
+	 * Simple value holder class to allow conversion and accessing the converted value in a deterministic way.
+	 * 
+	 * @author Oliver Gierke
+	 */
+    private static class ValueHolder {
+    	
+    	private Object value;
+    	
+    	public ValueHolder(Object value) {
+    		this.value = value;
+    	}
+    	
+    	@SuppressWarnings("unused")
+		public Object getValue() {
+			return value;
+		}
     }
 }

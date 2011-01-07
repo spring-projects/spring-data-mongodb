@@ -66,4 +66,22 @@ public interface PersonRepository extends MongoRepository<Person, String> {
      * @return
      */
     List<Person> findByAgeBetween(int from, int to);
+    
+    
+    /**
+     * Returns the {@link Person} with the given {@link Address} as shipping address.
+     * 
+     * @param address
+     * @return
+     */
+    Person findByShippingAddresses(Address address);
+    
+    
+    /**
+     * Returns all {@link Person}s with the given {@link Address}.
+     * 
+     * @param address
+     * @return
+     */
+    List<Person> findByAddress(Address address);
 }

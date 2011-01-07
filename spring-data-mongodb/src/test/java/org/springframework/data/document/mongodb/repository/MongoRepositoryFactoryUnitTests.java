@@ -19,7 +19,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.springframework.data.document.mongodb.MongoOperations;
+import org.springframework.data.document.mongodb.MongoTemplate;
 import org.springframework.data.document.mongodb.User;
 import org.springframework.data.document.mongodb.repository.MongoRepositoryFactoryBean.MongoRepositoryFactory;
 
@@ -32,11 +32,11 @@ import org.springframework.data.document.mongodb.repository.MongoRepositoryFacto
 public class MongoRepositoryFactoryUnitTests {
 	
 	@Mock
-	MongoOperations operations;
+	MongoTemplate template;
 
 	@Test(expected = IllegalArgumentException.class)
 	public void rejectsInvalidIdType() throws Exception {
-		MongoRepositoryFactory factory = new MongoRepositoryFactory(operations);
+		MongoRepositoryFactory factory = new MongoRepositoryFactory(template);
 		factory.getRepository(SampleRepository.class);
 	}
 	

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2010 the original author or authors.
+ * Copyright 2010-2011 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
  */
 package org.springframework.data.document.mongodb.repository;
 
+import java.util.Set;
+
 import org.bson.types.ObjectId;
 
 
@@ -29,9 +31,12 @@ public class Person {
     private String firstname;
     private String lastname;
     private Integer age;
+    
+    private Address address;
+    private Set<Address> shippingAddresses;
 
 
-    public Person() {
+	public Person() {
 
         this(null, null);
     }
@@ -122,6 +127,37 @@ public class Person {
 
         this.age = age;
     }
+    
+    
+    /**
+	 * @return the address
+	 */
+	public Address getAddress() {
+		return address;
+	}
+    
+	
+	/**
+	 * @param address the address to set
+	 */
+	public void setAddress(Address address) {
+		this.address = address;
+	}
+    
+    /**
+	 * @return the addresses
+	 */
+	public Set<Address> getShippingAddresses() {
+		return shippingAddresses;
+	}
+
+
+	/**
+	 * @param addresses the addresses to set
+	 */
+	public void setShippingAddresses(Set<Address> addresses) {
+		this.shippingAddresses = addresses;
+	}
 
 
     /*

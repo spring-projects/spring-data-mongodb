@@ -18,12 +18,16 @@ package org.springframework.data.document.mongodb;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
+import java.util.List;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import com.mongodb.QueryBuilder;
 
 /**
  * Integration test for {@link MongoTemplate}.
@@ -47,8 +51,11 @@ public class MongoTemplateTests {
 
 		Person person = new Person("Oliver");
 		template.insert(person);
+		
+		MongoConverter converter = template.getConverter();
 
-		Person reference = template.find(Person.class, person.getId());
-		assertThat(reference, is(person));
+		List<Person> result = template.query(QueryBuilder.start("_id").is(converter.convertObjectId(person.getId())).get(), Person.class);
+		assertThat(result.size(), is(1));
+		assertThat(result, hasItem(person));
 	}
 }

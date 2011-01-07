@@ -39,7 +39,6 @@ import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.Mongo;
 import com.mongodb.MongoException;
-import com.mongodb.QueryBuilder;
 import com.mongodb.util.JSON;
 
 /**
@@ -124,6 +123,15 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	public void setDatabaseName(String databaseName) {
 		Assert.notNull(databaseName);
 		this.databaseName = databaseName;
+	}
+	
+	/**
+	 * Returns the default {@link MongoConverter}.
+	 * 
+	 * @return
+	 */
+	public MongoConverter getConverter() {
+		return this.mongoConverter;
 	}
 
 	/* (non-Javadoc)
@@ -633,18 +641,6 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	public <T> List<T> query(String collectionName, DBObject query, Class<T> targetClass, MongoReader<T> reader) {
 		return executeEach(new FindCallback(query), null, new ReadDbObjectCallback<T>(reader, targetClass),
 				collectionName);
-	}
-	
-	
-	/* (non-Javadoc)
-	 * @see org.springframework.data.document.mongodb.MongoOperations#find(java.lang.Class, java.lang.Object)
-	 */
-	public <T> T find(Class<T> targetClass, Object id) {
-		
-		ObjectId objectId = mongoConverter.convertObjectId(id);
-		List<T> result = query(QueryBuilder.start(MongoPropertyDescriptor.ID_KEY).is(objectId).get(), targetClass);
-		
-		return result.isEmpty() ? null : result.get(0);
 	}
 
 

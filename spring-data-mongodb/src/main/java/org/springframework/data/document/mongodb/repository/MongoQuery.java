@@ -20,7 +20,7 @@ import static org.springframework.data.document.mongodb.repository.MongoCursorUt
 import java.util.List;
 
 import org.springframework.data.document.mongodb.CollectionCallback;
-import org.springframework.data.document.mongodb.MongoOperations;
+import org.springframework.data.document.mongodb.MongoTemplate;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.query.QueryMethod;
@@ -42,24 +42,24 @@ import com.mongodb.DBObject;
 public class MongoQuery implements RepositoryQuery {
 
     private final QueryMethod method;
-    private final MongoOperations operations;
+    private final MongoTemplate template;
     private final PartTree tree;
 
 
     /**
      * Creates a new {@link MongoQuery} from the given {@link QueryMethod} and
-     * {@link MongoOperations}.
+     * {@link MongoTemplate}.
      * 
      * @param method
-     * @param operations
+     * @param template
      */
-    public MongoQuery(QueryMethod method, MongoOperations operations) {
+    public MongoQuery(QueryMethod method, MongoTemplate template) {
 
-        Assert.notNull(operations);
+        Assert.notNull(template);
         Assert.notNull(method);
 
         this.method = method;
-        this.operations = operations;
+        this.template = template;
         this.tree = new PartTree(method.getName(), method.getDomainClass());
     }
 
@@ -75,7 +75,7 @@ public class MongoQuery implements RepositoryQuery {
 
         SimpleParameterAccessor accessor =
                 new SimpleParameterAccessor(method.getParameters(), parameters);
-        MongoQueryCreator creator = new MongoQueryCreator(tree, accessor);
+        MongoQueryCreator creator = new MongoQueryCreator(tree, accessor, template.getConverter());
         DBObject query = creator.createQuery();
 
         if (method.isCollectionQuery()) {
@@ -95,7 +95,7 @@ public class MongoQuery implements RepositoryQuery {
 
         protected List<?> readCollection(DBObject query) {
 
-            return operations.query(operations.getDefaultCollectionName(),
+            return template.query(template.getDefaultCollectionName(),
                     query, method.getDomainClass());
         }
     }
@@ -159,7 +159,7 @@ public class MongoQuery implements RepositoryQuery {
 
             int count = getCollectionCursor(creator.createQuery()).count();
             List<?> result =
-                    operations.query(query, method.getDomainClass(),
+                    template.query(query, method.getDomainClass(),
                             withPagination(pageable));
 
             return new PageImpl(result, pageable, count);
@@ -168,7 +168,7 @@ public class MongoQuery implements RepositoryQuery {
 
         private DBCursor getCollectionCursor(final DBObject query) {
 
-            return operations.execute(new CollectionCallback<DBCursor>() {
+            return template.execute(new CollectionCallback<DBCursor>() {
 
                 public DBCursor doInCollection(DBCollection collection) {
 

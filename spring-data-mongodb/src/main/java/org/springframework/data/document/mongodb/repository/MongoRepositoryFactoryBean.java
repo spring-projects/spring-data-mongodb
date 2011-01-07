@@ -18,8 +18,8 @@ package org.springframework.data.document.mongodb.repository;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 
-import org.springframework.data.document.mongodb.MongoOperations;
 import org.springframework.data.document.mongodb.MongoPropertyDescriptors.MongoPropertyDescriptor;
+import org.springframework.data.document.mongodb.MongoTemplate;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.query.QueryLookupStrategy;
 import org.springframework.data.repository.query.QueryLookupStrategy.Key;
@@ -41,17 +41,17 @@ import org.springframework.util.StringUtils;
 public class MongoRepositoryFactoryBean extends
         RepositoryFactoryBeanSupport<MongoRepository<?, ?>> {
 
-    private MongoOperations operations;
+    private MongoTemplate template;
 
 
     /**
-     * Configures the {@link MongoOperations} to be used.
+     * Configures the {@link MongoTemplate} to be used.
      * 
-     * @param operations the template to set
+     * @param template the template to set
      */
-    public void setOperations(MongoOperations operations) {
+    public void setTemplate(MongoTemplate template) {
 
-        this.operations = operations;
+        this.template = template;
     }
 
 
@@ -65,7 +65,7 @@ public class MongoRepositoryFactoryBean extends
     @Override
     protected RepositoryFactorySupport createRepositoryFactory() {
 
-        return new MongoRepositoryFactory(operations);
+        return new MongoRepositoryFactory(template);
     }
 
 
@@ -80,7 +80,7 @@ public class MongoRepositoryFactoryBean extends
     public void afterPropertiesSet() {
 
         super.afterPropertiesSet();
-        Assert.notNull(operations, "MongoTemplate must not be null!");
+        Assert.notNull(template, "MongoTemplate must not be null!");
     }
 
     /**
@@ -90,16 +90,16 @@ public class MongoRepositoryFactoryBean extends
      */
     public static class MongoRepositoryFactory extends RepositoryFactorySupport {
     	
-    	private final MongoOperations operations;
+    	private final MongoTemplate template;
     	
     	/**
-    	 * Creates a new {@link MongoRepositoryFactory} fwith the given {@link MongoOperations}.
+    	 * Creates a new {@link MongoRepositoryFactory} fwith the given {@link MongoTemplate}.
     	 * 
-    	 * @param operations
+    	 * @param template
     	 */
-		public MongoRepositoryFactory(MongoOperations operations) {
+		public MongoRepositoryFactory(MongoTemplate template) {
 		
-			this.operations = operations;
+			this.template = template;
 		}
 
 
@@ -107,7 +107,7 @@ public class MongoRepositoryFactoryBean extends
         protected <T, ID extends Serializable> RepositorySupport<T, ID> getTargetRepository(
                 Class<T> domainClass, Class<?> repositoryInterface) {
 
-            return new SimpleMongoRepository<T, ID>(domainClass, operations);
+            return new SimpleMongoRepository<T, ID>(domainClass, template);
         }
 
 
@@ -134,7 +134,7 @@ public class MongoRepositoryFactoryBean extends
 
             public RepositoryQuery resolveQuery(Method method) {
 
-                return new MongoQuery(new QueryMethod(method), operations);
+                return new MongoQuery(new QueryMethod(method), template);
             }
         }
         

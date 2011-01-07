@@ -21,7 +21,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.data.document.mongodb.MongoOperations;
+import org.springframework.data.document.mongodb.MongoConverter;
+import org.springframework.data.document.mongodb.MongoTemplate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -43,24 +44,24 @@ import com.mongodb.QueryBuilder;
 public class SimpleMongoRepository<T, ID extends Serializable> extends
         RepositorySupport<T, ID> implements PagingAndSortingRepository<T, ID> {
 
-    private final MongoOperations operations;
+    private final MongoTemplate template;
     private MongoEntityInformation entityInformation;
 
 
     /**
      * Creates a ew {@link SimpleMongoRepository} for the given domain class and
-     * {@link MongoOperations}.
+     * {@link MongoTemplate}.
      * 
      * @param domainClass
-     * @param operations
+     * @param template
      */
     public SimpleMongoRepository(Class<T> domainClass,
-            MongoOperations operations) {
+            MongoTemplate template) {
 
         super(domainClass);
 
-        Assert.notNull(operations);
-        this.operations = operations;
+        Assert.notNull(template);
+        this.template = template;
     }
 
 
@@ -72,7 +73,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> extends
      */
     public T save(T entity) {
 
-        operations.save(entity);
+        template.save(entity);
         return entity;
     }
 
@@ -88,7 +89,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> extends
         List<T> result = new ArrayList<T>();
 
         for (T entity : entities) {
-            operations.save(entity);
+            template.save(entity);
             result.add(entity);
         }
 
@@ -105,7 +106,11 @@ public class SimpleMongoRepository<T, ID extends Serializable> extends
      */
     public T findById(ID id) {
     	
-    	return operations.find(getDomainClass(), id);
+    	MongoConverter converter = template.getConverter();
+    	
+		List<T> result = template.query(QueryBuilder.start("_id").is(converter.convertObjectId(id)).get(),
+				getDomainClass());
+		return result.isEmpty() ? null : result.get(0);
     }
 
 
@@ -129,7 +134,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> extends
      */
     public List<T> findAll() {
 
-        return operations.getCollection(getDomainClass());
+        return template.getCollection(getDomainClass());
     }
 
 
@@ -140,7 +145,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> extends
      */
     public Long count() {
 
-        return operations.getCollection(operations.getDefaultCollectionName())
+        return template.getCollection(template.getDefaultCollectionName())
                 .count();
     }
 
@@ -156,7 +161,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> extends
         QueryBuilder builder =
                 QueryBuilder.start(entityInformation.getFieldName()).is(
                         entityInformation.getId(entity));
-        operations.remove(builder.get());
+        template.remove(builder.get());
     }
 
 
@@ -181,7 +186,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> extends
      */
     public void deleteAll() {
 
-        operations.dropCollection(operations.getDefaultCollectionName());
+        template.dropCollection(template.getDefaultCollectionName());
     }
 
 
@@ -197,7 +202,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> extends
         Long count = count();
 
         List<T> list =
-                operations.query(new BasicDBObject(), getDomainClass(),
+                template.query(new BasicDBObject(), getDomainClass(),
                         withPagination(pageable));
 
         return new PageImpl<T>(list, pageable, count);
@@ -213,7 +218,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> extends
      */
     public List<T> findAll(final Sort sort) {
 
-        return operations.query(new BasicDBObject(), getDomainClass(),
+        return template.query(new BasicDBObject(), getDomainClass(),
                 withSorting(sort));
     }
 
