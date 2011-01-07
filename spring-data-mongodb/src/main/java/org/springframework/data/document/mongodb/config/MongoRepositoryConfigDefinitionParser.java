@@ -1,7 +1,7 @@
-package org.springframework.data.document.mongodb.repository.config;
+package org.springframework.data.document.mongodb.config;
 
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
-import org.springframework.data.document.mongodb.repository.config.SimpleMongoRepositoryConfiguration.MongoRepositoryConfiguration;
+import org.springframework.data.document.mongodb.config.SimpleMongoRepositoryConfiguration.MongoRepositoryConfiguration;
 import org.springframework.data.repository.config.AbstractRepositoryConfigDefinitionParser;
 import org.w3c.dom.Element;
 

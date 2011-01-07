@@ -1,4 +1,4 @@
-package org.springframework.data.document.mongodb.repository.config;
+package org.springframework.data.document.mongodb.config;
 
 import org.springframework.data.document.mongodb.repository.MongoRepository;
 import org.springframework.data.document.mongodb.repository.MongoRepositoryFactoryBean;

@@ -1,4 +1,4 @@
-package org.springframework.data.document.mongodb.repository.config;
+package org.springframework.data.document.mongodb.config;
 
 import org.springframework.beans.factory.xml.NamespaceHandlerSupport;
 
@@ -20,5 +20,7 @@ public class MongoRepositoryNamespaceHandler extends NamespaceHandlerSupport {
 
         registerBeanDefinitionParser("repositories",
                 new MongoRepositoryConfigDefinitionParser());
+        
+        registerBeanDefinitionParser("mongo", new MongoParser());
     }
 }

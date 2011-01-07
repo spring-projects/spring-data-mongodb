@@ -1,2 +1,2 @@
-http\://www.springframework.org/schema/data/mongo/spring-mongo-1.0.xsd=org/springframework/data/document/mongodb/repository/config/spring-mongo-1.0.xsd
-http\://www.springframework.org/schema/data/mongo/spring-mongo.xsd=org/springframework/data/document/mongodb/repository/config/spring-mongo-1.0.xsd
+http\://www.springframework.org/schema/data/mongo/spring-mongo-1.0.xsd=org/springframework/data/document/mongodb/config/spring-mongo-1.0.xsd
+http\://www.springframework.org/schema/data/mongo/spring-mongo.xsd=org/springframework/data/document/mongodb/config/spring-mongo-1.0.xsd

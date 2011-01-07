@@ -1,1 +1,1 @@
-http\://www.springframework.org/schema/data/mongo=org.springframework.data.document.mongodb.repository.config.MongoRepositoryNamespaceHandler
+http\://www.springframework.org/schema/data/mongo=org.springframework.data.document.mongodb.config.MongoRepositoryNamespaceHandler

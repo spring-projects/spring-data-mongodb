@@ -13,6 +13,41 @@
 	<xsd:import namespace="http://www.springframework.org/schema/data/repository"
 		schemaLocation="http://www.springframework.org/schema/data/repository/spring-repository.xsd" />
 
+    <xsd:element name="mongo">
+		<xsd:annotation>
+			<xsd:documentation source="org.springframework.data.document.mongodb.MongoFactoryBean"><![CDATA[
+Defines a Mongo instance used for accessing MongoDB'.
+			]]></xsd:documentation>
+			<xsd:appinfo>
+				<tool:annotation>
+					<tool:exports type="com.mongodb.Mongo" />
+				</tool:annotation>
+			</xsd:appinfo>
+		</xsd:annotation>
+		<xsd:complexType>
+			<xsd:attribute name="id" type="xsd:ID" use="optional">
+				<xsd:annotation>
+					<xsd:documentation><![CDATA[
+The name of the mongo definition (by default "mongo").]]></xsd:documentation>
+				</xsd:annotation>
+			</xsd:attribute>
+			<xsd:attribute name="port" type="xsd:positiveInteger" use="optional">
+				<xsd:annotation>
+					<xsd:documentation><![CDATA[
+The port to connect to MongoDB server.  Default is 27017
+							]]></xsd:documentation>
+				</xsd:annotation>
+			</xsd:attribute>
+			<xsd:attribute name="host" type="xsd:string" use="optional">
+				<xsd:annotation>
+					<xsd:documentation><![CDATA[
+The host to connect to a MongoDB server.  Default is localhost
+							]]></xsd:documentation>
+				</xsd:annotation>
+			</xsd:attribute>
+		</xsd:complexType>
+	</xsd:element>
+
 	<xsd:complexType name="mongo-repository">
 		<xsd:complexContent>
 			<xsd:extension base="repository:repository">
