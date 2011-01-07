@@ -17,6 +17,8 @@ package org.springframework.data.document.mongodb.repository;
 
 import java.util.regex.Pattern;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.data.document.mongodb.MongoConverter;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.repository.query.SimpleParameterAccessor;
@@ -38,6 +40,7 @@ import com.mongodb.QueryBuilder;
  */
 class MongoQueryCreator extends AbstractQueryCreator<DBObject, QueryBuilder> {
 	
+	private static final Log LOG = LogFactory.getLog(MongoQueryCreator.class);
 	private final MongoConverter converter;
 
     /**
@@ -66,7 +69,7 @@ class MongoQueryCreator extends AbstractQueryCreator<DBObject, QueryBuilder> {
     @Override
     protected QueryBuilder create(Part part, BindableParameterIterator iterator) {
 
-        return from(part.getType(), QueryBuilder.start(part.getProperty()),
+        return from(part.getType(), QueryBuilder.start(part.getProperty().toDotPath()),
                 iterator);
     }
 
@@ -84,7 +87,7 @@ class MongoQueryCreator extends AbstractQueryCreator<DBObject, QueryBuilder> {
     protected QueryBuilder and(Part part, QueryBuilder base,
             BindableParameterIterator iterator) {
 
-        return from(part.getType(), base.and(part.getProperty()), iterator);
+        return from(part.getType(), base.and(part.getProperty().toDotPath()), iterator);
     }
 
 
@@ -113,7 +116,13 @@ class MongoQueryCreator extends AbstractQueryCreator<DBObject, QueryBuilder> {
     @Override
     protected DBObject complete(QueryBuilder criteria, Sort sort) {
 
-        return criteria.get();
+    	DBObject query = criteria.get();
+    	
+    	if (LOG.isDebugEnabled()) {
+    		LOG.debug("Created query " + query);
+    	}
+    	
+        return query;
     }
 
 

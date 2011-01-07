@@ -60,7 +60,7 @@ public class MongoQueryCreatorUnitTests {
     @Test
     public void createsQueryCorrectly() throws Exception {
 
-        PartTree tree = new PartTree("findByFirstname", Person.class);
+        PartTree tree = new PartTree("findByFirstName", Person.class);
 
         MongoQueryCreator creator =
                 new MongoQueryCreator(tree, new SimpleParameterAccessor(
@@ -70,7 +70,7 @@ public class MongoQueryCreatorUnitTests {
         creator.createQuery();
 
         creator =
-                new MongoQueryCreator(new PartTree("findByFirstnameAndFriend",
+                new MongoQueryCreator(new PartTree("findByFirstNameAndFriend",
                         Person.class), new SimpleParameterAccessor(
                         new Parameters(findByFirstnameAndFriend), new Object[] {
                                 "Oliver", new Person() }), converter);

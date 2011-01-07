@@ -119,4 +119,16 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
     	assertThat(result.size(), is(1));
 		assertThat(result, hasItem(dave));
 	}
+    
+    @Test
+	public void findsPeopleByZipCode() throws Exception {
+		
+    	Address address = new Address("Foo Street 1", "C0123", "Bar");
+    	dave.setAddress(address);
+    	repository.save(dave);
+    	
+    	List<Person> result = repository.findByAddressZipCode(address.getZipCode());
+    	assertThat(result.size(), is(1));
+		assertThat(result, hasItem(dave));
+	}
 }

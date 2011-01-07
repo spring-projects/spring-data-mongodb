@@ -84,4 +84,7 @@ public interface PersonRepository extends MongoRepository<Person, String> {
      * @return
      */
     List<Person> findByAddress(Address address);
+    
+    
+    List<Person> findByAddressZipCode(String zipCode);
 }
