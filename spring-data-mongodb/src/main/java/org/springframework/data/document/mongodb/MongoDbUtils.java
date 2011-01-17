@@ -35,7 +35,7 @@ import com.mongodb.Mongo;
  * 
  * @since 1.0
  */
-abstract class MongoDbUtils {
+public abstract class MongoDbUtils {
 
 	private static final Log LOGGER = LogFactory.getLog(MongoDbUtils.class);
 	
