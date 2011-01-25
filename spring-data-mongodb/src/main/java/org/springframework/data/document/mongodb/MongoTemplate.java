@@ -454,7 +454,14 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 
 		List<ObjectId> ids = new ArrayList<ObjectId>();
 		for (DBObject dbo : dbDocList) {
-			ids.add((ObjectId) dbo.get(ID));
+			Object id = dbo.get(ID);
+			if (id instanceof ObjectId) {
+				ids.add((ObjectId) id);
+			}
+			else {
+				// no id was generated
+				ids.add(null);
+			}
 		}
 		return ids;
 	}
@@ -672,6 +679,10 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	 * @param id
 	 */
 	protected void populateIdIfNecessary(Object savedObject, ObjectId id) {
+		
+		if (id == null) {
+			return;
+		}
 
 		ConfigurablePropertyAccessor bw = PropertyAccessorFactory.forDirectFieldAccess(savedObject);
 		MongoPropertyDescriptor idDescriptor = new MongoPropertyDescriptors(savedObject.getClass()).getIdDescriptor();
