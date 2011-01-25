@@ -75,6 +75,15 @@ public class MongoFactoryBean implements FactoryBean<Mongo>, InitializingBean, P
 		this.port = port;
 	}
 
+	public PersistenceExceptionTranslator getExceptionTranslator() {
+		return exceptionTranslator;
+	}
+
+	public void setExceptionTranslator(
+			PersistenceExceptionTranslator exceptionTranslator) {
+		this.exceptionTranslator = exceptionTranslator;
+	}
+
 	public Mongo getObject() throws Exception {
 		Assert.notNull(mongo, "Mongo must not be null");
 		return mongo;
