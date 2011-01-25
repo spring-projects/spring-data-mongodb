@@ -22,6 +22,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.dao.DataAccessException;
+import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.util.Assert;
 
 import com.mongodb.Mongo;
@@ -36,7 +38,7 @@ import com.mongodb.ServerAddress;
  * 
  * @since 1.0
  */
-public class MongoFactoryBean implements FactoryBean<Mongo>, InitializingBean {
+public class MongoFactoryBean implements FactoryBean<Mongo>, InitializingBean, PersistenceExceptionTranslator {
 
 	
 	/**
@@ -50,6 +52,8 @@ public class MongoFactoryBean implements FactoryBean<Mongo>, InitializingBean {
 	private Integer port;
 	private List<ServerAddress> replicaSetSeeds;
 	private List<ServerAddress> replicaPair;
+
+	private PersistenceExceptionTranslator exceptionTranslator = new MongoExceptionTranslator();
 	
 	public void setMongoOptions(MongoOptions mongoOptions) {
 		this.mongoOptions = mongoOptions;
@@ -116,5 +120,9 @@ public class MongoFactoryBean implements FactoryBean<Mongo>, InitializingBean {
 				}	
 			}
 		}
+	}
+
+	public DataAccessException translateExceptionIfPossible(RuntimeException ex) {
+		return exceptionTranslator.translateExceptionIfPossible(ex);
 	}
 }
