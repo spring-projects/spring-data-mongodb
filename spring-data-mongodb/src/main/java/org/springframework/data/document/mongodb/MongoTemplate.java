@@ -39,6 +39,7 @@ import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.Mongo;
 import com.mongodb.MongoException;
+import com.mongodb.WriteConcern;
 import com.mongodb.util.JSON;
 
 /**
@@ -53,6 +54,12 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	
 	private static final String ID = "_id";
 
+	/*
+	 * WriteConcern to be used for write operations if it has been specified. Otherwise
+	 * we should not use a WriteConcern defaulting to the one set for the DB or Collection.
+	 */
+	private WriteConcern writeConcern = null;
+	
 	private final MongoConverter mongoConverter;
 	private final Mongo mongo;
 	private final MongoExceptionTranslator exceptionTranslator = new MongoExceptionTranslator();
@@ -62,20 +69,70 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	private String username;
 	private String password;
 	
-	
+
+	/**
+	 * Constructor used for a basic template configuration
+	 * @param mongo
+	 * @param databaseName
+	 */
 	public MongoTemplate(Mongo mongo, String databaseName) {
-		this(mongo, databaseName, null, null);
+		this(mongo, databaseName, null, null, null);
 	}
 	
+	/**
+	 * Constructor used for a basic template configuration with a specific {@link com.mongodb.WriteConcern} 
+	 * to be used for all database write operations
+	 * @param mongo
+	 * @param databaseName
+	 * @param writeConcern
+	 */
+	public MongoTemplate(Mongo mongo, String databaseName, WriteConcern writeConcern) {
+		this(mongo, databaseName, null, null, writeConcern);
+	}
+	
+	/**
+	 * Constructor used for a basic template configuration with a default collection name
+	 * @param mongo
+	 * @param databaseName
+	 * @param defaultCollectionName
+	 */
 	public MongoTemplate(Mongo mongo, String databaseName, String defaultCollectionName) {
-		this(mongo, databaseName, defaultCollectionName, null);
+		this(mongo, databaseName, defaultCollectionName, null, null);
 	}
 	
-	public MongoTemplate(Mongo mongo, String databaseName, MongoConverter mongoConverter) {
-		this(mongo, databaseName, null, mongoConverter);
+	/**
+	 * Constructor used for a basic template configuration with a default collection name and 
+	 * with a specific {@link com.mongodb.WriteConcern} to be used for all database write operations
+	 * @param mongo
+	 * @param databaseName
+	 * @param defaultCollectionName
+	 * @param writeConcern
+	 */
+	public MongoTemplate(Mongo mongo, String databaseName, String defaultCollectionName, WriteConcern writeConcern) {
+		this(mongo, databaseName, defaultCollectionName, null, writeConcern);
 	}
 	
+	/**
+	 * Constructor used for a template configuration with a default collection name and a custom {@link MongoConverter}
+	 * @param mongo
+	 * @param databaseName
+	 * @param defaultCollectionName
+	 * @param mongoConverter
+	 */
 	public MongoTemplate(Mongo mongo, String databaseName, String defaultCollectionName, MongoConverter mongoConverter) {
+		this(mongo, databaseName, defaultCollectionName, mongoConverter, null);
+	}
+	
+	/**
+	 * Constructor used for a template configuration with a default collection name and a custom {@link MongoConverter}
+	 * and with a specific {@link com.mongodb.WriteConcern} to be used for all database write operations
+	 * @param mongo
+	 * @param databaseName
+	 * @param defaultCollectionName
+	 * @param mongoConverter
+	 * @param writeConcern
+	 */
+	public MongoTemplate(Mongo mongo, String databaseName, String defaultCollectionName, MongoConverter mongoConverter, WriteConcern writeConcern) {
 		
 		Assert.notNull(mongo);
 		Assert.notNull(databaseName);
@@ -84,6 +141,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 		this.defaultCollectionName = defaultCollectionName;
 		this.mongo = mongo;
 		this.databaseName = databaseName;
+		this.writeConcern = writeConcern;
 	}
 	
 	
@@ -151,6 +209,23 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 				return db.getCollection(getDefaultCollectionName());
 			}
 		});
+	}
+
+	// TODO:
+	public void setDatabaseWriteConcern(WriteConcern writeConcern) {
+		getDb().setWriteConcern(writeConcern);
+	}
+
+	public WriteConcern getDatabaseWriteConcern() {
+		return getDb().getWriteConcern();
+	}
+	
+	public void setCollectionWriteConcern(String collectionName, WriteConcern writeConcern) {
+		getCollection(collectionName).setWriteConcern(writeConcern);
+	}
+
+	public WriteConcern getCollectionWriteConcern(String collectionName) {
+		return getCollection(collectionName).getWriteConcern();
 	}
 
 	/* (non-Javadoc)
@@ -430,7 +505,12 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 
 		return execute(new CollectionCallback<ObjectId>() {
 			public ObjectId doInCollection(DBCollection collection) throws MongoException, DataAccessException {
-				collection.insert(dbDoc);
+				if (writeConcern == null) {
+					collection.insert(dbDoc);
+				}
+				else {
+					collection.insert(dbDoc, writeConcern);
+				}
 				return (ObjectId) dbDoc.get(ID);
 			}
 		}, collectionName);
@@ -447,7 +527,12 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 
 		execute(new CollectionCallback<Void>() {
 			public Void doInCollection(DBCollection collection) throws MongoException, DataAccessException {
-				collection.insert(dbDocList);
+				if (writeConcern == null) {
+					collection.insert(dbDocList);
+				}
+				else {
+					collection.insert(dbDocList.toArray((DBObject[]) new BasicDBObject[dbDocList.size()]), writeConcern);
+				}
 				return null;
 			}
 		}, collectionName);
@@ -474,7 +559,12 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 
 		return execute(new CollectionCallback<ObjectId>() {
 			public ObjectId doInCollection(DBCollection collection) throws MongoException, DataAccessException {
-				collection.save(dbDoc);
+				if (writeConcern == null) {
+					collection.save(dbDoc);
+				}
+				else {
+					collection.save(dbDoc, writeConcern);
+				}
 				return (ObjectId) dbDoc.get(ID);
 			}
 		}, collectionName);
@@ -493,7 +583,12 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	public void updateFirst(String collectionName, final DBObject queryDoc, final DBObject updateDoc) {
 		execute(new CollectionCallback<Void>() {
 			public Void doInCollection(DBCollection collection) throws MongoException, DataAccessException {
-				collection.update(queryDoc, updateDoc);
+				if (writeConcern == null) {
+					collection.update(queryDoc, updateDoc);
+				}
+				else {
+					collection.update(queryDoc, updateDoc, false, false, writeConcern);
+				}
 				return null;
 			}
 		}, collectionName);
@@ -512,7 +607,12 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	public void updateMulti(String collectionName, final DBObject queryDoc, final DBObject updateDoc) {
 		execute(new CollectionCallback<Void>() {
 			public Void doInCollection(DBCollection collection) throws MongoException, DataAccessException {
-				collection.updateMulti(queryDoc, updateDoc);
+				if (writeConcern == null) {
+					collection.updateMulti(queryDoc, updateDoc);
+				}
+				else {
+					collection.update(queryDoc, updateDoc, false, true, writeConcern);
+				}
 				return null;
 			}
 		}, collectionName);
@@ -531,7 +631,12 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	public void remove(String collectionName, final DBObject queryDoc) {
 		execute(new CollectionCallback<Void>() {
 			public Void doInCollection(DBCollection collection) throws MongoException, DataAccessException {
-				collection.remove(queryDoc);
+				if (writeConcern == null) {
+					collection.remove(queryDoc);
+				}
+				else {
+					collection.remove(queryDoc, writeConcern);
+				}
 				return null;
 			}
 		}, collectionName);

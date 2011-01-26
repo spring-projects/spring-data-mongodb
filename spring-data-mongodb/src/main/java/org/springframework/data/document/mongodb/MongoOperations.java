@@ -20,6 +20,7 @@ import java.util.Set;
 
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
+import com.mongodb.WriteConcern;
 
 /**
  * Interface that specifies a basic set of MongoDB operations.  Implemented by {@link MongoTemplate}.
@@ -44,6 +45,31 @@ public interface MongoOperations {
 	 */
 	DBCollection getDefaultCollection();
 
+	/**
+	 * Set the {@link com.mongodb.WriteConcern} to be used for the Database.
+	 * @param writeConcern
+	 */
+	void setDatabaseWriteConcern(WriteConcern writeConcern);
+
+	/**
+	 * Get the {@link com.mongodb.WriteConcern} currently used by the Database.
+	 * @return the WriteConcern
+	 */
+	WriteConcern getDatabaseWriteConcern();
+	
+	/**
+	 * Set the {@link com.mongodb.WriteConcern} to be used for the Collection.
+	 * @param collectionName
+	 * @param writeConcern
+	 */
+	void setCollectionWriteConcern(String collectionName, WriteConcern writeConcern);
+
+	/**
+	 * Get the {@link com.mongodb.WriteConcern} currently used by the Collection.
+	 * @param collectionName
+	 * @return the WriteConcern
+	 */
+	WriteConcern getCollectionWriteConcern(String collectionName);
 	
 	/**
 	 * Execute the a MongoDB command expressed as a JSON string.  This will call the method 
