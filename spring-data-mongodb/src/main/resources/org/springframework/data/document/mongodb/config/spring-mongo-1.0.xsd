@@ -58,6 +58,7 @@ The host to connect to a MongoDB server.  Default is localhost
 						</xsd:documentation>
 					</xsd:annotation>
 				</xsd:attribute>
+				<xsd:attributeGroup ref="repository:repository-attributes" />
 			</xsd:extension>
 		</xsd:complexContent>
 	</xsd:complexType>
@@ -70,6 +71,7 @@ The host to connect to a MongoDB server.  Default is localhost
 						<xsd:element name="repository" minOccurs="0" maxOccurs="unbounded" type="mongo-repository" />
 					</xsd:sequence>
 					<xsd:attribute name="mongo-template-ref" type="mongoTemplateRef" />
+					<xsd:attributeGroup ref="repository:repository-attributes" />
 				</xsd:extension>
 			</xsd:complexContent>
 		</xsd:complexType>
