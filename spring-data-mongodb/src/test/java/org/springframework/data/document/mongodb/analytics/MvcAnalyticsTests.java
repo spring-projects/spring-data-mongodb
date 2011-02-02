@@ -12,6 +12,7 @@ import org.springframework.data.document.analytics.MvcEvent;
 import org.springframework.data.document.analytics.Parameters;
 import org.springframework.data.document.mongodb.MongoReader;
 import org.springframework.data.document.mongodb.MongoTemplate;
+import org.springframework.data.document.mongodb.builder.BasicQuery;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
@@ -87,7 +88,7 @@ public class MvcAnalyticsTests {
 		for (DBObject dbo : mongoTemplate.getCollection("counters").find(query)) {
 			System.out.println(dbo);
 		}
-		List<ControllerCounter> counters = mongoTemplate.queryUsingJavaScript("counters", "{ 'name' : 'SignUpController'} ", ControllerCounter.class);
+		List<ControllerCounter> counters = mongoTemplate.query("counters", new BasicQuery("{ 'name' : 'SignUpController'} "), ControllerCounter.class);
 		for (ControllerCounter controllerCounter : counters) {
 			System.out.println(controllerCounter);
 		}

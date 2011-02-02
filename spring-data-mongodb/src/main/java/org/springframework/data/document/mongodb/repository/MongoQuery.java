@@ -95,7 +95,7 @@ public class MongoQuery implements RepositoryQuery {
 
         protected List<?> readCollection(DBObject query) {
 
-            return template.query(template.getDefaultCollectionName(),
+            return template.find(template.getDefaultCollectionName(),
                     query, method.getDomainClass());
         }
     }
@@ -159,7 +159,7 @@ public class MongoQuery implements RepositoryQuery {
 
             int count = getCollectionCursor(creator.createQuery()).count();
             List<?> result =
-                    template.query(query, method.getDomainClass(),
+                    template.find(query, method.getDomainClass(),
                             withPagination(pageable));
 
             return new PageImpl(result, pageable, count);

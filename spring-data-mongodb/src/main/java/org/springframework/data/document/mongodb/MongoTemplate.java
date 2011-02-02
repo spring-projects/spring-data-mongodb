@@ -28,6 +28,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.document.mongodb.MongoPropertyDescriptors.MongoPropertyDescriptor;
+import org.springframework.data.document.mongodb.builder.Query;
 import org.springframework.jca.cci.core.ConnectionCallback;
 import org.springframework.util.Assert;
 
@@ -209,23 +210,6 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 				return db.getCollection(getDefaultCollectionName());
 			}
 		});
-	}
-
-	// TODO:
-	public void setDatabaseWriteConcern(WriteConcern writeConcern) {
-		getDb().setWriteConcern(writeConcern);
-	}
-
-	public WriteConcern getDatabaseWriteConcern() {
-		return getDb().getWriteConcern();
-	}
-	
-	public void setCollectionWriteConcern(String collectionName, WriteConcern writeConcern) {
-		getCollection(collectionName).setWriteConcern(writeConcern);
-	}
-
-	public WriteConcern getCollectionWriteConcern(String collectionName) {
-		return getCollection(collectionName).getWriteConcern();
 	}
 
 	/* (non-Javadoc)
@@ -683,75 +667,119 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#queryUsingJavaScript(java.lang.String, java.lang.Class)
 	 */
-	public <T> List<T> queryUsingJavaScript(String query, Class<T> targetClass) {
-		return query(getDefaultCollectionName(), (DBObject)JSON.parse(query), targetClass); //
+	public <T> List<T> query(Query query, Class<T> targetClass) {
+		return query(getDefaultCollectionName(), query, targetClass); //
 	}
 	
 	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#queryUsingJavaScript(java.lang.String, java.lang.Class, org.springframework.data.document.mongodb.MongoReader)
 	 */
-	public <T> List<T> queryUsingJavaScript(String query, Class<T> targetClass, MongoReader<T> reader) {
-		return query(getDefaultCollectionName(), (DBObject)JSON.parse(query), targetClass, reader);
+	public <T> List<T> query(Query query, Class<T> targetClass, MongoReader<T> reader) {
+		return query(getDefaultCollectionName(), query, targetClass, reader);
 	}
 
 	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#queryUsingJavaScript(java.lang.String, java.lang.String, java.lang.Class)
 	 */
-	public <T> List<T> queryUsingJavaScript(String collectionName, String query, Class<T> targetClass) {
-		return query(collectionName, (DBObject)JSON.parse(query), targetClass); //
+	public <T> List<T> query(String collectionName, Query query, Class<T> targetClass) {
+		return find(collectionName, query.getQueryObject(), query.getFieldsObject(), targetClass); //
 	}
 
 	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#queryUsingJavaScript(java.lang.String, java.lang.String, java.lang.Class, org.springframework.data.document.mongodb.MongoReader)
 	 */
-	public <T> List<T> queryUsingJavaScript(String collectionName, String query, Class<T> targetClass, MongoReader<T> reader) {
-		return query(collectionName, (DBObject)JSON.parse(query), targetClass, reader);
+	public <T> List<T> query(String collectionName, Query query, Class<T> targetClass, MongoReader<T> reader) {
+		return find(collectionName, query.getQueryObject(), query.getFieldsObject(), targetClass, reader);
 	}
 
 	
-	// Queries that take DBObject to express the query
+	// Find methods that take DBObject to express the query
 	
 	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#query(com.mongodb.DBObject, java.lang.Class)
 	 */
-	public <T> List<T> query(DBObject query, Class<T> targetClass) {
-		return query(getDefaultCollectionName(), query, targetClass); //
+	public <T> List<T> find(DBObject query, Class<T> targetClass) {
+		return find(query, null, targetClass); //
 	}
 	
 	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#query(com.mongodb.DBObject, java.lang.Class, org.springframework.data.document.mongodb.CursorPreparer)
 	 */
-	public <T> List<T> query(DBObject query, Class<T> targetClass, CursorPreparer preparer) {
-		return query(getDefaultCollectionName(), query, targetClass, preparer); //
+	public <T> List<T> find(DBObject query, Class<T> targetClass, CursorPreparer preparer) {
+		return find(query, null, targetClass, preparer); //
 	}
 
 	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#query(com.mongodb.DBObject, java.lang.Class, org.springframework.data.document.mongodb.MongoReader)
 	 */
-	public <T> List<T> query(DBObject query, Class<T> targetClass, MongoReader<T> reader) {
-		return query(getDefaultCollectionName(), query, targetClass, reader);
+	public <T> List<T> find(DBObject query, Class<T> targetClass, MongoReader<T> reader) {
+		return find(query, null, targetClass, reader);
 	}
 	
 	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#query(java.lang.String, com.mongodb.DBObject, java.lang.Class)
 	 */
-	public <T> List<T> query(String collectionName, DBObject query, Class<T> targetClass) {
-		return query(collectionName, query, targetClass, (CursorPreparer) null);
+	public <T> List<T> find(String collectionName, DBObject query, Class<T> targetClass) {
+		return find(collectionName, query, null, targetClass);
 	}
 
 	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#query(java.lang.String, com.mongodb.DBObject, java.lang.Class, org.springframework.data.document.mongodb.CursorPreparer)
 	 */
-	public <T> List<T> query(String collectionName, DBObject query, Class<T> targetClass, CursorPreparer preparer) {
-		return executeEach(new FindCallback(query), preparer, new ReadDbObjectCallback<T>(mongoConverter, targetClass),
+	public <T> List<T> find(String collectionName, DBObject query, Class<T> targetClass, CursorPreparer preparer) {
+		return find(collectionName, query, null, targetClass, preparer);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.springframework.data.document.mongodb.MongoOperations#query(java.lang.String, com.mongodb.DBObject, java.lang.Class, org.springframework.data.document.mongodb.MongoReader)
+	 */
+	public <T> List<T> find(String collectionName, DBObject query, Class<T> targetClass, MongoReader<T> reader) {
+		return find(collectionName, query, null, targetClass, reader);
+	}
+
+	// Find methods that take DBObject to express the query and a DBObject to express the fields specification
+	
+	/* (non-Javadoc)
+	 * @see org.springframework.data.document.mongodb.MongoOperations#query(com.mongodb.DBObject, java.lang.Class)
+	 */
+	public <T> List<T> find(DBObject query, DBObject fields, Class<T> targetClass) {
+		return find(getDefaultCollectionName(), query, fields, targetClass); //
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.springframework.data.document.mongodb.MongoOperations#query(com.mongodb.DBObject, java.lang.Class, org.springframework.data.document.mongodb.CursorPreparer)
+	 */
+	public <T> List<T> find(DBObject query, DBObject fields, Class<T> targetClass, CursorPreparer preparer) {
+		return find(getDefaultCollectionName(), query, fields, targetClass, preparer); //
+	}
+
+	/* (non-Javadoc)
+	 * @see org.springframework.data.document.mongodb.MongoOperations#query(com.mongodb.DBObject, java.lang.Class, org.springframework.data.document.mongodb.MongoReader)
+	 */
+	public <T> List<T> find(DBObject query, DBObject fields, Class<T> targetClass, MongoReader<T> reader) {
+		return find(getDefaultCollectionName(), query, fields, targetClass, reader);
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.springframework.data.document.mongodb.MongoOperations#query(java.lang.String, com.mongodb.DBObject, java.lang.Class)
+	 */
+	public <T> List<T> find(String collectionName, DBObject query, DBObject fields, Class<T> targetClass) {
+		return find(collectionName, query, fields, targetClass, (CursorPreparer) null);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.springframework.data.document.mongodb.MongoOperations#query(java.lang.String, com.mongodb.DBObject, java.lang.Class, org.springframework.data.document.mongodb.CursorPreparer)
+	 */
+	public <T> List<T> find(String collectionName, DBObject query, DBObject fields, Class<T> targetClass, CursorPreparer preparer) {
+		return executeEach(new FindCallback(query, fields), preparer, new ReadDbObjectCallback<T>(mongoConverter, targetClass),
 				collectionName);
 	}
 
 	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#query(java.lang.String, com.mongodb.DBObject, java.lang.Class, org.springframework.data.document.mongodb.MongoReader)
 	 */
-	public <T> List<T> query(String collectionName, DBObject query, Class<T> targetClass, MongoReader<T> reader) {
-		return executeEach(new FindCallback(query), null, new ReadDbObjectCallback<T>(reader, targetClass),
+	public <T> List<T> find(String collectionName, DBObject query, DBObject fields, Class<T> targetClass, MongoReader<T> reader) {
+		return executeEach(new FindCallback(query, fields), null, new ReadDbObjectCallback<T>(reader, targetClass),
 				collectionName);
 	}
 
@@ -829,21 +857,34 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	
 	
 	/**
-	 * Simple {@link CollectionCallback} that takes a query {@link DBObject} and executes that against the
-	 * {@link DBCollection}.
+	 * Simple {@link CollectionCallback} that takes a query {@link DBObject} plus an optional fields specification 
+	 * {@link DBObject} and executes that against the {@link DBCollection}.
 	 * 
 	 * @author Oliver Gierke
+	 * @author Thomas Risberg
 	 */
 	private static class FindCallback implements CollectionCallback<DBCursor> {
 		
 		private final DBObject query;
+
+		private final DBObject fields;
 		
 		public FindCallback(DBObject query) {
+			this(query, null);
+		}
+
+		public FindCallback(DBObject query, DBObject fields) {
 			this.query = query;
+			this.fields = fields;
 		}
 
 		public DBCursor doInCollection(DBCollection collection) throws MongoException, DataAccessException {
-			return collection.find(query);
+			if (fields == null) {
+				return collection.find(query);
+			}
+			else {
+				return collection.find(query, fields);
+			}
 		}
 	}
 	

@@ -18,6 +18,8 @@ package org.springframework.data.document.mongodb;
 import java.util.List;
 import java.util.Set;
 
+import org.springframework.data.document.mongodb.builder.Query;
+
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.WriteConcern;
@@ -44,32 +46,6 @@ public interface MongoOperations {
 	 * @return The default collection used by this template
 	 */
 	DBCollection getDefaultCollection();
-
-	/**
-	 * Set the {@link com.mongodb.WriteConcern} to be used for the Database.
-	 * @param writeConcern
-	 */
-	void setDatabaseWriteConcern(WriteConcern writeConcern);
-
-	/**
-	 * Get the {@link com.mongodb.WriteConcern} currently used by the Database.
-	 * @return the WriteConcern
-	 */
-	WriteConcern getDatabaseWriteConcern();
-	
-	/**
-	 * Set the {@link com.mongodb.WriteConcern} to be used for the Collection.
-	 * @param collectionName
-	 * @param writeConcern
-	 */
-	void setCollectionWriteConcern(String collectionName, WriteConcern writeConcern);
-
-	/**
-	 * Get the {@link com.mongodb.WriteConcern} currently used by the Collection.
-	 * @param collectionName
-	 * @return the WriteConcern
-	 */
-	WriteConcern getCollectionWriteConcern(String collectionName);
 	
 	/**
 	 * Execute the a MongoDB command expressed as a JSON string.  This will call the method 
@@ -406,7 +382,6 @@ public interface MongoOperations {
 	 * Query for a list of objects of type T from the specified collection, mapping the DBObject using
 	 * the provided MongoReader.
 	 * 
-	 * 
 	 * @param collectionName name of the collection to retrieve the objects from 
 	 * @param targetClass the parameterized type of the returned list.
 	 * @param reader the MongoReader to convert from DBObject to an object.
@@ -415,15 +390,75 @@ public interface MongoOperations {
 	<T> List<T> getCollection(String collectionName, Class<T> targetClass,
 			MongoReader<T> reader);
 
-	<T> List<T> queryUsingJavaScript(String query, Class<T> targetClass);
+	/**
+	 * Map the results of an ad-hoc query on the default MongoDB collection to a List of the specified type.
+	 *
+	 * The object is converted from the MongoDB native representation using an instance of 
+	 * {@see MongoConverter}.  Unless configured otherwise, an
+	 * instance of SimpleMongoConverter will be used.   
+	 * 
+	 * The query is specified as a {@link Query} which can be created either using the {@link BasicQuery} or the more
+	 * feature rich {@link QuerySpec}.
+	 * 
+	 * @param query the query class that specifies the criteria used to find a record and also an optional fields specification 
+	 * @param targetClass the parameterized type of the returned list.
+	 * @return the List of converted objects
+	 */
+	<T> List<T> query(Query query, Class<T> targetClass);
 
-	<T> List<T> queryUsingJavaScript(String query, Class<T> targetClass,
+	/**
+	 * Map the results of an ad-hoc query on the default MongoDB collection to a List of the specified type.
+	 *
+	 * The object is converted from the MongoDB native representation using an instance of 
+	 * {@see MongoConverter}.  Unless configured otherwise, an
+	 * instance of SimpleMongoConverter will be used.   
+	 * 
+	 * The query is specified as a {@link Query} which can be created either using the {@link BasicQuery} or the more
+	 * feature rich {@link QuerySpec}.
+	 * 
+	 * @param query the query class that specifies the criteria used to find a record and also an optional fields specification 
+	 * @param targetClass the parameterized type of the returned list.
+	 * @param reader the MongoReader to convert from DBObject to an object.
+	 * @return the List of converted objects
+	 */
+	<T> List<T> query(Query query, Class<T> targetClass,
 			MongoReader<T> reader);
 
-	<T> List<T> queryUsingJavaScript(String collectionName, String query,
+	/**
+	 * Map the results of an ad-hoc query on the default MongoDB collection to a List of the specified type.
+	 *
+	 * The object is converted from the MongoDB native representation using an instance of 
+	 * {@see MongoConverter}.  Unless configured otherwise, an
+	 * instance of SimpleMongoConverter will be used.   
+	 * 
+	 * The query is specified as a {@link Query} which can be created either using the {@link BasicQuery} or the more
+	 * feature rich {@link QuerySpec}.
+	 * 
+	 * @param collectionName name of the collection to retrieve the objects from	 
+	 * @param query the query class that specifies the criteria used to find a record and also an optional fields specification 
+	 * @param targetClass the parameterized type of the returned list.
+	 * @return the List of converted objects
+	 */
+	<T> List<T> query(String collectionName, Query query,
 			Class<T> targetClass);
 
-	<T> List<T> queryUsingJavaScript(String collectionName, String query,
+	/**
+	 * Map the results of an ad-hoc query on the default MongoDB collection to a List of the specified type.
+	 *
+	 * The object is converted from the MongoDB native representation using an instance of 
+	 * {@see MongoConverter}.  Unless configured otherwise, an
+	 * instance of SimpleMongoConverter will be used.   
+	 * 
+	 * The query is specified as a {@link Query} which can be created either using the {@link BasicQuery} or the more
+	 * feature rich {@link QuerySpec}.
+	 * 
+	 * @param collectionName name of the collection to retrieve the objects from	 
+	 * @param query the query class that specifies the criteria used to find a record and also an optional fields specification 
+	 * @param targetClass the parameterized type of the returned list.
+	 * @param reader the MongoReader to convert from DBObject to an object.
+	 * @return the List of converted objects
+	 */
+	<T> List<T> query(String collectionName, Query query,
 			Class<T> targetClass, MongoReader<T> reader);
 
 	/**
@@ -433,8 +468,7 @@ public interface MongoOperations {
 	 * {@see MongoConverter}.  Unless configured otherwise, an
 	 * instance of SimpleMongoConverter will be used.   
 	 * 
-	 * The query document is specified as a standard DBObject.  You can use the driver's QueryBuilder to 
-	 * more easily create a query document.  
+	 * The query document is specified as a standard DBObject.
 	 * 
 	 * NOTE: A generic criteria API will be introduced in a future release.  You can see the 
 	 * <a href="https://github.com/grails/inconsequential">inconsequential</a> project for an example of how that
@@ -444,7 +478,7 @@ public interface MongoOperations {
 	 * @param targetClass the parameterized type of the returned list.
 	 * @return the List of converted objects
 	 */
-	<T> List<T> query(DBObject query, Class<T> targetClass);
+	<T> List<T> find(DBObject query, Class<T> targetClass);
 
 	/**
 	 * Map the results of an ad-hoc query on the default MongoDB collection to a List of the specified type.
@@ -453,8 +487,7 @@ public interface MongoOperations {
 	 * {@see MongoConverter}.  Unless configured otherwise, an
 	 * instance of SimpleMongoConverter will be used.   
 	 * 
-	 * The query document is specified as a standard DBObject.  You can use the driver's QueryBuilder to 
-	 * more easily create a query document.  
+	 * The query document is specified as a standard DBObject.
 	 * 
 	 * @param query the query document that specifies the criteria used to find a record
 	 * @param targetClass the parameterized type of the returned list.
@@ -462,21 +495,20 @@ public interface MongoOperations {
 	 * (apply limits, skips and so on).
 	 * @return the List of converted objects.
 	 */
-	<T> List<T> query(DBObject query, Class<T> targetClass,
+	<T> List<T> find(DBObject query, Class<T> targetClass,
 			CursorPreparer preparer);
 	
 	/**
 	 * Map the results of an ad-hoc query on the default MongoDB collection to a List using the provided MongoReader
 	 *  
-	 * The query document is specified as a standard DBObject.  You can use the driver's QueryBuilder to 
-	 * more easily create a query document.  
+	 * The query document is specified as a standard DBObject.
 	 *  	 
 	 * @param query the query document that specifies the criteria used to find a record
 	 * @param targetClass the parameterized type of the returned list.
 	 * @param reader the MongoReader to convert from DBObject to an object.
 	 * @return the List of converted objects.
 	 */
-	<T> List<T> query(DBObject query, Class<T> targetClass,
+	<T> List<T> find(DBObject query, Class<T> targetClass,
 			MongoReader<T> reader);
 
 	/**
@@ -486,8 +518,7 @@ public interface MongoOperations {
 	 * {@see MongoConverter}.  Unless configured otherwise, an
 	 * instance of SimpleMongoConverter will be used.   
 	 * 
-	 * The query document is specified as a standard DBObject.  You can use the driver's QueryBuilder to 
-	 * more easily create a query document.  
+	 * The query document is specified as a standard DBObject.
 	 * 
 	 * NOTE: A generic criteria API will be introduced in a future release.  You can see the 
 	 * <a href="https://github.com/grails/inconsequential">inconsequential</a> project for an example of how that
@@ -498,7 +529,7 @@ public interface MongoOperations {
 	 * @param targetClass the parameterized type of the returned list.
 	 * @return the List of converted objects
 	 */
-	<T> List<T> query(String collectionName, DBObject query, Class<T> targetClass);
+	<T> List<T> find(String collectionName, DBObject query, Class<T> targetClass);
 
 	/**
 	 * Map the results of an ad-hoc query on the default MongoDB collection to a List of the specified type.
@@ -507,8 +538,7 @@ public interface MongoOperations {
 	 * {@see MongoConverter}.  Unless configured otherwise, an
 	 * instance of SimpleMongoConverter will be used.   
 	 * 
-	 * The query document is specified as a standard DBObject.  You can use the driver's QueryBuilder to 
-	 * more easily create a query document.  
+	 * The query document is specified as a standard DBObject.
 	 * 
 	 * @param collectionName name of the collection to retrieve the objects from
 	 * @param query the query document that specifies the criteria used to find a record
@@ -517,13 +547,12 @@ public interface MongoOperations {
 	 * (apply limits, skips and so on).
 	 * @return the List of converted objects.
 	 */
-	<T> List<T> query(String collectionName, DBObject query, Class<T> targetClass, CursorPreparer preparer);
+	<T> List<T> find(String collectionName, DBObject query, Class<T> targetClass, CursorPreparer preparer);
 
 	/**
 	 * Map the results of an ad-hoc query on the default MongoDB collection to a List using the provided MongoReader
 	 *  
-	 * The query document is specified as a standard DBObject.  You can use the driver's QueryBuilder to 
-	 * more easily create a query document.  
+	 * The query document is specified as a standard DBObject.
 	 *  
 	 * @param collectionName name of the collection to retrieve the objects from	 
 	 * @param query the query document that specifies the criteria used to find a record
@@ -531,5 +560,111 @@ public interface MongoOperations {
 	 * @param reader the MongoReader to convert from DBObject to an object.
 	 * @return the List of converted objects.
 	 */
-	<T> List<T> query(String collectionName, DBObject query, Class<T> targetClass, MongoReader<T> reader);
+	<T> List<T> find(String collectionName, DBObject query, Class<T> targetClass, MongoReader<T> reader);
+
+	/**
+	 * Map the results of an ad-hoc query on the default MongoDB collection to a List of the specified type.
+	 *
+	 * The object is converted from the MongoDB native representation using an instance of 
+	 * {@see MongoConverter}.  Unless configured otherwise, an
+	 * instance of SimpleMongoConverter will be used.   
+	 * 
+	 * The query document is specified as a standard DBObject and so is the fields specification.
+	 * 
+	 * NOTE: A generic criteria API will be introduced in a future release.  You can see the 
+	 * <a href="https://github.com/grails/inconsequential">inconsequential</a> project for an example of how that
+	 * may look.
+	 * 
+	 * @param query the query document that specifies the criteria used to find a record 
+	 * @param targetClass the parameterized type of the returned list.
+	 * @return the List of converted objects
+	 */
+	<T> List<T> find(DBObject query, DBObject fields, Class<T> targetClass);
+
+	/**
+	 * Map the results of an ad-hoc query on the default MongoDB collection to a List of the specified type.
+	 * 
+	 * The object is converted from the MongoDB native representation using an instance of 
+	 * {@see MongoConverter}.  Unless configured otherwise, an
+	 * instance of SimpleMongoConverter will be used.   
+	 * 
+	 * The query document is specified as a standard DBObject and so is the fields specification.
+	 * 
+	 * @param query the query document that specifies the criteria used to find a record
+	 * @param fields the document that specifies the fields to be returned
+	 * @param targetClass the parameterized type of the returned list.
+	 * @param preparer allows for customization of the DBCursor used when iterating over the result set,
+	 * (apply limits, skips and so on).
+	 * @return the List of converted objects.
+	 */
+	<T> List<T> find(DBObject query, DBObject fields, Class<T> targetClass,
+			CursorPreparer preparer);
+	
+	/**
+	 * Map the results of an ad-hoc query on the default MongoDB collection to a List using the provided MongoReader
+	 *  
+	 * The query document is specified as a standard DBObject and so is the fields specification.
+	 *  	 
+	 * @param query the query document that specifies the criteria used to find a record
+	 * @param fields the document that specifies the fields to be returned
+	 * @param targetClass the parameterized type of the returned list.
+	 * @param reader the MongoReader to convert from DBObject to an object.
+	 * @return the List of converted objects.
+	 */
+	<T> List<T> find(DBObject query, DBObject fields, Class<T> targetClass,
+			MongoReader<T> reader);
+
+	/**
+	 * Map the results of an ad-hoc query on the default MongoDB collection to a List of the specified type.
+	 *
+	 * The object is converted from the MongoDB native representation using an instance of 
+	 * {@see MongoConverter}.  Unless configured otherwise, an
+	 * instance of SimpleMongoConverter will be used.   
+	 * 
+	 * The query document is specified as a standard DBObject and so is the fields specification.
+	 * 
+	 * NOTE: A generic criteria API will be introduced in a future release.  You can see the 
+	 * <a href="https://github.com/grails/inconsequential">inconsequential</a> project for an example of how that
+	 * may look.
+	 * 
+	 * @param collectionName name of the collection to retrieve the objects from
+	 * @param query the query document that specifies the criteria used to find a record 
+	 * @param fields the document that specifies the fields to be returned
+	 * @param targetClass the parameterized type of the returned list.
+	 * @return the List of converted objects
+	 */
+	<T> List<T> find(String collectionName, DBObject fields, DBObject query, Class<T> targetClass);
+
+	/**
+	 * Map the results of an ad-hoc query on the default MongoDB collection to a List of the specified type.
+	 * 
+	 * The object is converted from the MongoDB native representation using an instance of 
+	 * {@see MongoConverter}.  Unless configured otherwise, an
+	 * instance of SimpleMongoConverter will be used.   
+	 * 
+	 * The query document is specified as a standard DBObject and so is the fields specification.
+	 * 
+	 * @param collectionName name of the collection to retrieve the objects from
+	 * @param query the query document that specifies the criteria used to find a record
+	 * @param fields the document that specifies the fields to be returned
+	 * @param targetClass the parameterized type of the returned list.
+	 * @param preparer allows for customization of the DBCursor used when iterating over the result set,
+	 * (apply limits, skips and so on).
+	 * @return the List of converted objects.
+	 */
+	<T> List<T> find(String collectionName, DBObject fields, DBObject query, Class<T> targetClass, CursorPreparer preparer);
+
+	/**
+	 * Map the results of an ad-hoc query on the default MongoDB collection to a List using the provided MongoReader
+	 *  
+	 * The query document is specified as a standard DBObject and so is the fields specification.
+	 *  
+	 * @param collectionName name of the collection to retrieve the objects from	 
+	 * @param query the query document that specifies the criteria used to find a record
+	 * @param fields the document that specifies the fields to be returned
+	 * @param targetClass the parameterized type of the returned list.
+	 * @param reader the MongoReader to convert from DBObject to an object.
+	 * @return the List of converted objects.
+	 */
+	<T> List<T> find(String collectionName, DBObject fields, DBObject query, Class<T> targetClass, MongoReader<T> reader);
 }

@@ -54,7 +54,7 @@ public class MongoTemplateTests {
 		
 		MongoConverter converter = template.getConverter();
 
-		List<Person> result = template.query(QueryBuilder.start("_id").is(converter.convertObjectId(person.getId())).get(), Person.class);
+		List<Person> result = template.find(QueryBuilder.start("_id").is(converter.convertObjectId(person.getId())).get(), Person.class);
 		assertThat(result.size(), is(1));
 		assertThat(result, hasItem(person));
 	}

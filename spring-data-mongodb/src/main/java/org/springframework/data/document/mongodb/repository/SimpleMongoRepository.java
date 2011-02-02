@@ -108,7 +108,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> extends
     	
     	MongoConverter converter = template.getConverter();
     	
-		List<T> result = template.query(QueryBuilder.start("_id").is(converter.convertObjectId(id)).get(),
+		List<T> result = template.find(QueryBuilder.start("_id").is(converter.convertObjectId(id)).get(),
 				getDomainClass());
 		return result.isEmpty() ? null : result.get(0);
     }
@@ -202,7 +202,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> extends
         Long count = count();
 
         List<T> list =
-                template.query(new BasicDBObject(), getDomainClass(),
+                template.find(new BasicDBObject(), getDomainClass(),
                         withPagination(pageable));
 
         return new PageImpl<T>(list, pageable, count);
@@ -218,7 +218,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> extends
      */
     public List<T> findAll(final Sort sort) {
 
-        return template.query(new BasicDBObject(), getDomainClass(),
+        return template.find(new BasicDBObject(), getDomainClass(),
                 withSorting(sort));
     }
 
