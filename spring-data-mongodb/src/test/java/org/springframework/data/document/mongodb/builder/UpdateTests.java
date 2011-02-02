@@ -20,47 +20,48 @@ import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.springframework.data.document.mongodb.builder.SortSpec.SortOrder;
 import org.springframework.data.document.mongodb.builder.UpdateSpec;
 
 public class UpdateTests {
 
 	@Test
 	public void testSet() {
-		UpdateSpec ub = new UpdateSpec()
+		UpdateSpec u = new UpdateSpec()
 			.set("directory", "/Users/Test/Desktop");
-		Assert.assertEquals("{ \"$set\" : { \"directory\" : \"/Users/Test/Desktop\"}}", ub.build().toString());
+		Assert.assertEquals("{ \"$set\" : { \"directory\" : \"/Users/Test/Desktop\"}}", u.build().getUpdateObject().toString());
 	}
 
 	@Test
 	public void testInc() {
-		UpdateSpec ub = new UpdateSpec()
+		UpdateSpec u = new UpdateSpec()
 			.inc("size", 1);
-		Assert.assertEquals("{ \"$inc\" : { \"size\" : 1}}", ub.build().toString());
+		Assert.assertEquals("{ \"$inc\" : { \"size\" : 1}}", u.build().getUpdateObject().toString());
 	}
 
 	@Test
 	public void testIncAndSet() {
-		UpdateSpec ub = new UpdateSpec()
+		UpdateSpec u = new UpdateSpec()
 			.inc("size", 1)
 			.set("directory", "/Users/Test/Desktop");
 		Assert.assertEquals("{ \"$inc\" : { \"size\" : 1} , \"$set\" : { \"directory\" : \"/Users/Test/Desktop\"}}", 
-				ub.build().toString());
+				u.build().getUpdateObject().toString());
 	}
 
 	@Test
 	public void testUnset() {
-		UpdateSpec ub = new UpdateSpec()
+		UpdateSpec u = new UpdateSpec()
 			.unset("directory");
-		Assert.assertEquals("{ \"$unset\" : { \"directory\" : 1}}", ub.build().toString());
+		Assert.assertEquals("{ \"$unset\" : { \"directory\" : 1}}", u.build().getUpdateObject().toString());
 	}
 
 	@Test
 	public void testPush() {
 		Map<String, Object> m = new HashMap<String, Object>();
 		m.put("name", "Sven");
-		UpdateSpec ub = new UpdateSpec()
+		UpdateSpec u = new UpdateSpec()
 			.push("authors", m);
-		Assert.assertEquals("{ \"$push\" : { \"authors\" : { \"name\" : \"Sven\"}}}", ub.build().toString());
+		Assert.assertEquals("{ \"$push\" : { \"authors\" : { \"name\" : \"Sven\"}}}", u.build().getUpdateObject().toString());
 	}
 
 	@Test
@@ -69,37 +70,37 @@ public class UpdateTests {
 		m1.put("name", "Sven");
 		Map<String, Object> m2 = new HashMap<String, Object>();
 		m2.put("name", "Maria");
-		UpdateSpec ub = new UpdateSpec()
+		UpdateSpec u = new UpdateSpec()
 			.pushAll("authors", new Object[] {m1, m2});
-		Assert.assertEquals("{ \"$pushAll\" : { \"authors\" : [ { \"name\" : \"Sven\"} , { \"name\" : \"Maria\"}]}}", ub.build().toString());
+		Assert.assertEquals("{ \"$pushAll\" : { \"authors\" : [ { \"name\" : \"Sven\"} , { \"name\" : \"Maria\"}]}}", u.build().getUpdateObject().toString());
 	}
 
 	@Test
 	public void testAddToSet() {
 		Map<String, Object> m = new HashMap<String, Object>();
 		m.put("name", "Sven");
-		UpdateSpec ub = new UpdateSpec()
+		UpdateSpec u = new UpdateSpec()
 			.addToSet("authors", m);
-		Assert.assertEquals("{ \"$addToSet\" : { \"authors\" : { \"name\" : \"Sven\"}}}", ub.build().toString());
+		Assert.assertEquals("{ \"$addToSet\" : { \"authors\" : { \"name\" : \"Sven\"}}}", u.build().getUpdateObject().toString());
 	}
 
 	@Test
 	public void testPop() {
-		UpdateSpec ub = new UpdateSpec()
+		UpdateSpec u = new UpdateSpec()
 			.pop("authors", UpdateSpec.Position.FIRST);
-		Assert.assertEquals("{ \"$pop\" : { \"authors\" : -1}}", ub.build().toString());
-		ub = new UpdateSpec()
+		Assert.assertEquals("{ \"$pop\" : { \"authors\" : -1}}", u.build().getUpdateObject().toString());
+		u = new UpdateSpec()
 			.pop("authors", UpdateSpec.Position.LAST);
-		Assert.assertEquals("{ \"$pop\" : { \"authors\" : 1}}", ub.build().toString());
+		Assert.assertEquals("{ \"$pop\" : { \"authors\" : 1}}", u.build().getUpdateObject().toString());
 	}
 
 	@Test
 	public void testPull() {
 		Map<String, Object> m = new HashMap<String, Object>();
 		m.put("name", "Sven");
-		UpdateSpec ub = new UpdateSpec()
+		UpdateSpec u = new UpdateSpec()
 			.pull("authors", m);
-		Assert.assertEquals("{ \"$pull\" : { \"authors\" : { \"name\" : \"Sven\"}}}", ub.build().toString());
+		Assert.assertEquals("{ \"$pull\" : { \"authors\" : { \"name\" : \"Sven\"}}}", u.build().getUpdateObject().toString());
 	}
 
 	@Test
@@ -108,15 +109,33 @@ public class UpdateTests {
 		m1.put("name", "Sven");
 		Map<String, Object> m2 = new HashMap<String, Object>();
 		m2.put("name", "Maria");
-		UpdateSpec ub = new UpdateSpec()
+		UpdateSpec u = new UpdateSpec()
 			.pullAll("authors", new Object[] {m1, m2});
-		Assert.assertEquals("{ \"$pullAll\" : { \"authors\" : [ { \"name\" : \"Sven\"} , { \"name\" : \"Maria\"}]}}", ub.build().toString());
+		Assert.assertEquals("{ \"$pullAll\" : { \"authors\" : [ { \"name\" : \"Sven\"} , { \"name\" : \"Maria\"}]}}", u.build().getUpdateObject().toString());
 	}
 
 	@Test
 	public void testRename() {
-		UpdateSpec ub = new UpdateSpec()
+		UpdateSpec u = new UpdateSpec()
 			.rename("directory", "folder");
-		Assert.assertEquals("{ \"$rename\" : { \"directory\" : \"folder\"}}", ub.build().toString());
+		Assert.assertEquals("{ \"$rename\" : { \"directory\" : \"folder\"}}", u.build().getUpdateObject().toString());
+	}
+
+	@Test
+	public void testWithSortAscending() {
+		UpdateSpec u = new UpdateSpec();
+		u.set("name",52);
+		u.sort().on("name", SortOrder.ASCENDING);
+		Assert.assertEquals("{ \"$set\" : { \"name\" : 52}}", u.build().getUpdateObject().toString());
+		Assert.assertEquals("{ \"name\" : 1}", u.build().getSortObject().toString());
+	}
+
+	@Test
+	public void testWithSortDescending() {
+		UpdateSpec u = new UpdateSpec();
+		u.set("name",52);
+		u.sort().on("name", SortOrder.DESCENDING);
+		Assert.assertEquals("{ \"$set\" : { \"name\" : 52}}", u.build().getUpdateObject().toString());
+		Assert.assertEquals("{ \"name\" : -1}", u.build().getSortObject().toString());
 	}
 }

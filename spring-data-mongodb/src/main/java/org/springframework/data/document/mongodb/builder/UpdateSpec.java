@@ -22,13 +22,15 @@ import java.util.LinkedHashMap;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
-public class UpdateSpec {
-	
+public class UpdateSpec implements Update {
+
 	public enum Position {
 		LAST, FIRST
 	}
 
 	private HashMap<String, Object> criteria = new LinkedHashMap<String, Object>();
+	
+	private SortSpec sortSpec;
 
 	public UpdateSpec set(String key, Object value) {
 		criteria.put("$set", Collections.singletonMap(key, value));
@@ -84,12 +86,32 @@ public class UpdateSpec {
 		return this;
 	}
 
-	public DBObject build() {
+	public SortSpec sort() {
+		synchronized (this) {
+			if (this.sortSpec == null) {
+				this.sortSpec = new SortSpec();
+			}
+		}
+		return this.sortSpec;
+	}
+	
+	public Update build() {
+		return this;
+	}
+
+	public DBObject getUpdateObject() {
 		DBObject dbo = new BasicDBObject();
 		for (String k : criteria.keySet()) {
 			dbo.put(k, criteria.get(k));
 		}
 		return dbo;
+	}
+
+	public DBObject getSortObject() {
+		if (this.sortSpec == null) {
+			return null;
+		}
+		return this.sortSpec.getSortObject();
 	}
 
 }
