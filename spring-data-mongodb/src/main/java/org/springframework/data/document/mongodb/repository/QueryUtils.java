@@ -18,6 +18,7 @@ package org.springframework.data.document.mongodb.repository;
 import org.springframework.data.document.mongodb.builder.Query;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Order;
 
 import com.mongodb.DBCursor;
 
@@ -36,29 +37,29 @@ abstract class QueryUtils {
 
 
     /**
-     * Applies the given {@link Pageable} to the given {@link Query}. Will
-     * do nothing if {@link Pageable} is {@literal null}.
+     * Applies the given {@link Pageable} to the given {@link Query}. Will do
+     * nothing if {@link Pageable} is {@literal null}.
      * 
-     * @param spec
+     * @param query
      * @param pageable
      * @return
      */
-    public static Query applyPagination(Query spec, Pageable pageable) {
+    public static Query applyPagination(Query query, Pageable pageable) {
 
         if (pageable == null) {
-            return spec;
+            return query;
         }
 
-        spec.limit(pageable.getPageSize());
-        // spec.skip(pageable.getOffset());
+        query.limit(pageable.getPageSize());
+        query.slip(pageable.getOffset());
 
-        return applySorting(spec, pageable.getSort());
+        return applySorting(query, pageable.getSort());
     }
 
 
     /**
-     * Applies the given {@link Sort} to the {@link Query}. Will do nothing
-     * if {@link Sort} is {@literal null}.
+     * Applies the given {@link Sort} to the {@link Query}. Will do nothing if
+     * {@link Sort} is {@literal null}.
      * 
      * @param spec
      * @param sort
@@ -70,8 +71,15 @@ abstract class QueryUtils {
             return spec;
         }
 
-        // TODO apply sorting
-        // spec.
+        org.springframework.data.document.mongodb.builder.Sort bSort =
+                spec.sort();
+
+        for (Order order : sort) {
+            bSort.on(
+                    order.getProperty(),
+                    order.isAscending() ? org.springframework.data.document.mongodb.builder.Sort.Order.ASCENDING
+                            : org.springframework.data.document.mongodb.builder.Sort.Order.DESCENDING);
+        }
 
         return spec;
     }

@@ -21,9 +21,8 @@ import java.util.regex.Pattern;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.data.document.mongodb.MongoConverter;
-import org.springframework.data.document.mongodb.builder.CriteriaDefinition;
 import org.springframework.data.document.mongodb.builder.Criteria;
-import org.springframework.data.document.mongodb.builder.QueryDefinition;
+import org.springframework.data.document.mongodb.builder.CriteriaDefinition;
 import org.springframework.data.document.mongodb.builder.Query;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.repository.query.SimpleParameterAccessor;
@@ -42,11 +41,10 @@ import com.mongodb.DBObject;
  * 
  * @author Oliver Gierke
  */
-class MongoQueryCreator extends AbstractQueryCreator<Void, Criteria> {
+class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 
     private static final Log LOG = LogFactory.getLog(MongoQueryCreator.class);
     private final MongoConverter converter;
-    private final Query querySpec;
 
 
     /**
@@ -56,11 +54,10 @@ class MongoQueryCreator extends AbstractQueryCreator<Void, Criteria> {
      * @param tree
      * @param accessor
      */
-    public MongoQueryCreator(Query querySpec, PartTree tree,
+    public MongoQueryCreator(PartTree tree,
             SimpleParameterAccessor accessor, MongoConverter converter) {
 
         super(tree, accessor);
-        this.querySpec = querySpec;
         this.converter = converter;
     }
 
@@ -78,7 +75,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Void, Criteria> {
     protected Criteria create(Part part, BindableParameterIterator iterator) {
 
         return from(part.getType(),
-                querySpec.find(part.getProperty().toDotPath()), iterator);
+                new Query().find(part.getProperty().toDotPath()), iterator);
     }
 
 
@@ -123,7 +120,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Void, Criteria> {
      * #complete(java.lang.Object, org.springframework.data.domain.Sort)
      */
     @Override
-    protected Void complete(Criteria criteria, Sort sort) {
+    protected Query complete(Criteria criteria, Sort sort) {
 
         Query query = criteria.build();
 
@@ -131,7 +128,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Void, Criteria> {
             LOG.debug("Created query " + query);
         }
 
-        return null;
+        return query;
     }
 
 

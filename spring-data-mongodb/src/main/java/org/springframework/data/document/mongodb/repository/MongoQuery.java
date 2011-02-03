@@ -76,20 +76,18 @@ public class MongoQuery implements RepositoryQuery {
 
         SimpleParameterAccessor accessor =
                 new SimpleParameterAccessor(method.getParameters(), parameters);
-        Query spec = new Query();
 
         MongoQueryCreator creator =
-                new MongoQueryCreator(spec, tree, accessor,
-                        template.getConverter());
-        creator.createQuery();
+                new MongoQueryCreator(tree, accessor, template.getConverter());
+        Query query = creator.createQuery();
 
         if (method.isCollectionQuery()) {
-            return new CollectionExecution().execute(spec);
+            return new CollectionExecution().execute(query);
         } else if (method.isPageQuery()) {
             return new PagedExecution(creator, accessor.getPageable())
-                    .execute(spec);
+                    .execute(query);
         } else {
-            return new SingleEntityExecution().execute(spec);
+            return new SingleEntityExecution().execute(query);
         }
     }
 
@@ -161,7 +159,8 @@ public class MongoQuery implements RepositoryQuery {
         @SuppressWarnings({ "rawtypes", "unchecked" })
         Object execute(Query query) {
 
-            int count = getCollectionCursor(query.getQueryObject()).count();
+            Query countQuery = creator.createQuery();
+            int count = getCollectionCursor(countQuery.getQueryObject()).count();
 
             List<?> result =
                     template.find(applyPagination(query, pageable),
