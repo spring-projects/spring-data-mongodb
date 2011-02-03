@@ -15,11 +15,16 @@
  */
 package org.springframework.data.document.mongodb.repository;
 
+import java.util.Arrays;
 import java.util.regex.Pattern;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.data.document.mongodb.MongoConverter;
+import org.springframework.data.document.mongodb.builder.Criteria;
+import org.springframework.data.document.mongodb.builder.CriteriaSpec;
+import org.springframework.data.document.mongodb.builder.Query;
+import org.springframework.data.document.mongodb.builder.QuerySpec;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.repository.query.SimpleParameterAccessor;
 import org.springframework.data.repository.query.SimpleParameterAccessor.BindableParameterIterator;
@@ -30,7 +35,6 @@ import org.springframework.data.repository.query.parser.PartTree;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
-import com.mongodb.QueryBuilder;
 
 
 /**
@@ -38,10 +42,12 @@ import com.mongodb.QueryBuilder;
  * 
  * @author Oliver Gierke
  */
-class MongoQueryCreator extends AbstractQueryCreator<DBObject, QueryBuilder> {
-	
-	private static final Log LOG = LogFactory.getLog(MongoQueryCreator.class);
-	private final MongoConverter converter;
+class MongoQueryCreator extends AbstractQueryCreator<Void, CriteriaSpec> {
+
+    private static final Log LOG = LogFactory.getLog(MongoQueryCreator.class);
+    private final MongoConverter converter;
+    private final QuerySpec querySpec;
+
 
     /**
      * Creates a new {@link MongoQueryCreator} from the given {@link PartTree}
@@ -50,9 +56,11 @@ class MongoQueryCreator extends AbstractQueryCreator<DBObject, QueryBuilder> {
      * @param tree
      * @param accessor
      */
-    public MongoQueryCreator(PartTree tree, SimpleParameterAccessor accessor, MongoConverter converter) {
+    public MongoQueryCreator(QuerySpec querySpec, PartTree tree,
+            SimpleParameterAccessor accessor, MongoConverter converter) {
 
         super(tree, accessor);
+        this.querySpec = querySpec;
         this.converter = converter;
     }
 
@@ -67,10 +75,10 @@ class MongoQueryCreator extends AbstractQueryCreator<DBObject, QueryBuilder> {
      * .data.repository.query.SimpleParameterAccessor.BindableParameterIterator)
      */
     @Override
-    protected QueryBuilder create(Part part, BindableParameterIterator iterator) {
+    protected CriteriaSpec create(Part part, BindableParameterIterator iterator) {
 
-        return from(part.getType(), QueryBuilder.start(part.getProperty().toDotPath()),
-                iterator);
+        return from(part.getType(),
+                querySpec.find(part.getProperty().toDotPath()), iterator);
     }
 
 
@@ -84,10 +92,11 @@ class MongoQueryCreator extends AbstractQueryCreator<DBObject, QueryBuilder> {
      * .data.repository.query.SimpleParameterAccessor.BindableParameterIterator)
      */
     @Override
-    protected QueryBuilder and(Part part, QueryBuilder base,
+    protected CriteriaSpec and(Part part, CriteriaSpec base,
             BindableParameterIterator iterator) {
 
-        return from(part.getType(), base.and(part.getProperty().toDotPath()), iterator);
+        return from(part.getType(), base.and(part.getProperty().toDotPath()),
+                iterator);
     }
 
 
@@ -95,13 +104,13 @@ class MongoQueryCreator extends AbstractQueryCreator<DBObject, QueryBuilder> {
      * (non-Javadoc)
      * 
      * @see
-     * org.springframework.data.document.mongodb.repository.AbstractQueryCreator
-     * #reduceCriterias(java.lang.Object, java.lang.Object)
+     * org.springframework.data.repository.query.parser.AbstractQueryCreator
+     * #or(java.lang.Object, java.lang.Object)
      */
     @Override
-    protected QueryBuilder or(QueryBuilder base, QueryBuilder criteria) {
+    protected CriteriaSpec or(CriteriaSpec base, CriteriaSpec criteria) {
 
-        base.or(criteria.get());
+        base.or(Arrays.asList(criteria.build()));
         return base;
     }
 
@@ -110,19 +119,19 @@ class MongoQueryCreator extends AbstractQueryCreator<DBObject, QueryBuilder> {
      * (non-Javadoc)
      * 
      * @see
-     * org.springframework.data.document.mongodb.repository.AbstractQueryCreator
-     * #finalize(java.lang.Object)
+     * org.springframework.data.repository.query.parser.AbstractQueryCreator
+     * #complete(java.lang.Object, org.springframework.data.domain.Sort)
      */
     @Override
-    protected DBObject complete(QueryBuilder criteria, Sort sort) {
+    protected Void complete(CriteriaSpec criteria, Sort sort) {
 
-    	DBObject query = criteria.get();
-    	
-    	if (LOG.isDebugEnabled()) {
-    		LOG.debug("Created query " + query);
-    	}
-    	
-        return query;
+        Query query = criteria.build();
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Created query " + query);
+        }
+
+        return null;
     }
 
 
@@ -134,38 +143,39 @@ class MongoQueryCreator extends AbstractQueryCreator<DBObject, QueryBuilder> {
      * @param parameters
      * @return
      */
-    private QueryBuilder from(Type type, QueryBuilder criteria,
+    private CriteriaSpec from(Type type, CriteriaSpec criteria,
             BindableParameterIterator parameters) {
 
         switch (type) {
         case GREATER_THAN:
-            return criteria.greaterThan(getConvertedParameter(parameters));
+            return criteria.gt(getConvertedParameter(parameters));
         case LESS_THAN:
-            return criteria.lessThan(getConvertedParameter(parameters));
+            return criteria.lt(getConvertedParameter(parameters));
         case BETWEEN:
-            return criteria.greaterThan(getConvertedParameter(parameters)).lessThan(getConvertedParameter(parameters));
+            return criteria.gt(getConvertedParameter(parameters)).lt(
+                    getConvertedParameter(parameters));
         case IS_NOT_NULL:
-            return criteria.notEquals(null);
+            return criteria.not().is(null);
         case IS_NULL:
             return criteria.is(null);
         case LIKE:
             String value = parameters.next().toString();
-            return criteria.regex(toLikeRegex(value));
+            return criteria.is(toLikeRegex(value));
         case SIMPLE_PROPERTY:
             return criteria.is(getConvertedParameter(parameters));
         case NEGATING_SIMPLE_PROPERTY:
-            return criteria.notEquals(getConvertedParameter(parameters));
+            return criteria.not().is(getConvertedParameter(parameters));
         }
 
         throw new IllegalArgumentException("Unsupported keyword!");
     }
-    
-    
+
+
     private Object getConvertedParameter(BindableParameterIterator parameters) {
-    	
-    	DBObject result = new BasicDBObject();
-    	converter.write(new ValueHolder(parameters.next()), result);
-    	return result.get("value");
+
+        DBObject result = new BasicDBObject();
+        converter.write(new ValueHolder(parameters.next()), result);
+        return result.get("value");
     }
 
 
@@ -175,22 +185,27 @@ class MongoQueryCreator extends AbstractQueryCreator<DBObject, QueryBuilder> {
         return Pattern.compile(regex);
     }
 
-	/**
-	 * Simple value holder class to allow conversion and accessing the converted value in a deterministic way.
-	 * 
-	 * @author Oliver Gierke
-	 */
+    /**
+     * Simple value holder class to allow conversion and accessing the converted
+     * value in a deterministic way.
+     * 
+     * @author Oliver Gierke
+     */
     private static class ValueHolder {
-    	
-    	private Object value;
-    	
-    	public ValueHolder(Object value) {
-    		this.value = value;
-    	}
-    	
-    	@SuppressWarnings("unused")
-		public Object getValue() {
-			return value;
-		}
+
+        private Object value;
+
+
+        public ValueHolder(Object value) {
+
+            this.value = value;
+        }
+
+
+        @SuppressWarnings("unused")
+        public Object getValue() {
+
+            return value;
+        }
     }
 }

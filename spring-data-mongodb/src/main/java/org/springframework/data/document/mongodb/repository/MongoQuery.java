@@ -15,12 +15,13 @@
  */
 package org.springframework.data.document.mongodb.repository;
 
-import static org.springframework.data.document.mongodb.repository.MongoCursorUtils.*;
+import static org.springframework.data.document.mongodb.repository.QueryUtils.*;
 
 import java.util.List;
 
 import org.springframework.data.document.mongodb.CollectionCallback;
 import org.springframework.data.document.mongodb.MongoTemplate;
+import org.springframework.data.document.mongodb.builder.QuerySpec;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.query.QueryMethod;
@@ -75,28 +76,31 @@ public class MongoQuery implements RepositoryQuery {
 
         SimpleParameterAccessor accessor =
                 new SimpleParameterAccessor(method.getParameters(), parameters);
-        MongoQueryCreator creator = new MongoQueryCreator(tree, accessor, template.getConverter());
-        DBObject query = creator.createQuery();
+        QuerySpec spec = new QuerySpec();
+
+        MongoQueryCreator creator =
+                new MongoQueryCreator(spec, tree, accessor,
+                        template.getConverter());
+        creator.createQuery();
 
         if (method.isCollectionQuery()) {
-            return new CollectionExecution().execute(query);
+            return new CollectionExecution().execute(spec);
         } else if (method.isPageQuery()) {
             return new PagedExecution(creator, accessor.getPageable())
-                    .execute(query);
+                    .execute(spec);
         } else {
-            return new SingleEntityExecution().execute(query);
+            return new SingleEntityExecution().execute(spec);
         }
     }
 
     private abstract class Execution {
 
-        abstract Object execute(DBObject query);
+        abstract Object execute(QuerySpec query);
 
 
-        protected List<?> readCollection(DBObject query) {
+        protected List<?> readCollection(QuerySpec query) {
 
-            return template.find(template.getDefaultCollectionName(),
-                    query, method.getDomainClass());
+            return template.query(query.build(), method.getDomainClass());
         }
     }
 
@@ -115,7 +119,7 @@ public class MongoQuery implements RepositoryQuery {
          * #execute(com.mongodb.DBObject)
          */
         @Override
-        public Object execute(DBObject query) {
+        public Object execute(QuerySpec query) {
 
             return readCollection(query);
         }
@@ -155,12 +159,13 @@ public class MongoQuery implements RepositoryQuery {
          */
         @Override
         @SuppressWarnings({ "rawtypes", "unchecked" })
-        Object execute(DBObject query) {
+        Object execute(QuerySpec query) {
 
-            int count = getCollectionCursor(creator.createQuery()).count();
+            int count = getCollectionCursor(query.getQueryObject()).count();
+
             List<?> result =
-                    template.find(query, method.getDomainClass(),
-                            withPagination(pageable));
+                    template.query(applyPagination(query, pageable),
+                            method.getDomainClass());
 
             return new PageImpl(result, pageable, count);
         }
@@ -193,7 +198,7 @@ public class MongoQuery implements RepositoryQuery {
          * #execute(com.mongodb.DBObject)
          */
         @Override
-        Object execute(DBObject query) {
+        Object execute(QuerySpec query) {
 
             List<?> result = readCollection(query);
             return result.isEmpty() ? null : result.get(0);
