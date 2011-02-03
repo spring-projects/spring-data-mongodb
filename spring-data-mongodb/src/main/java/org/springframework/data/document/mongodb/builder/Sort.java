@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 the original author or authors.
+ * Copyright 2011 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,36 +15,10 @@
  */
 package org.springframework.data.document.mongodb.builder;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
 
-public class SortSpec implements Sort {
+public interface Sort {
 	
-	public enum SortOrder {
-		ASCENDING, DESCENDING
-	}
-	
-	private Map<String, SortOrder> criteria = new HashMap<String, SortOrder>();
-	
-	public SortSpec on(String key, SortOrder order) {
-		criteria.put(key, order);
-		return this;
-	}
-
-	public Sort build() {
-		return this;
-	}
-
-	public DBObject getSortObject() {
-		DBObject dbo = new BasicDBObject();
-		for (String k : criteria.keySet()) {
-			dbo.put(k, (criteria.get(k).equals(SortOrder.ASCENDING) ? 1 : -1));
-		}
-		return dbo;
-	}
-
+	DBObject getSortObject();
 }

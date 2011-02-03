@@ -121,21 +121,4 @@ public class UpdateTests {
 		Assert.assertEquals("{ \"$rename\" : { \"directory\" : \"folder\"}}", u.build().getUpdateObject().toString());
 	}
 
-	@Test
-	public void testWithSortAscending() {
-		UpdateSpec u = new UpdateSpec();
-		u.set("name",52);
-		u.sort().on("name", SortOrder.ASCENDING);
-		Assert.assertEquals("{ \"$set\" : { \"name\" : 52}}", u.build().getUpdateObject().toString());
-		Assert.assertEquals("{ \"name\" : 1}", u.build().getSortObject().toString());
-	}
-
-	@Test
-	public void testWithSortDescending() {
-		UpdateSpec u = new UpdateSpec();
-		u.set("name",52);
-		u.sort().on("name", SortOrder.DESCENDING);
-		Assert.assertEquals("{ \"$set\" : { \"name\" : 52}}", u.build().getUpdateObject().toString());
-		Assert.assertEquals("{ \"name\" : -1}", u.build().getSortObject().toString());
-	}
 }

@@ -30,8 +30,6 @@ public class UpdateSpec implements Update {
 
 	private HashMap<String, Object> criteria = new LinkedHashMap<String, Object>();
 	
-	private SortSpec sortSpec;
-
 	public UpdateSpec set(String key, Object value) {
 		criteria.put("$set", Collections.singletonMap(key, value));
 		return this;
@@ -86,15 +84,6 @@ public class UpdateSpec implements Update {
 		return this;
 	}
 
-	public SortSpec sort() {
-		synchronized (this) {
-			if (this.sortSpec == null) {
-				this.sortSpec = new SortSpec();
-			}
-		}
-		return this.sortSpec;
-	}
-	
 	public Update build() {
 		return this;
 	}
@@ -105,13 +94,6 @@ public class UpdateSpec implements Update {
 			dbo.put(k, criteria.get(k));
 		}
 		return dbo;
-	}
-
-	public DBObject getSortObject() {
-		if (this.sortSpec == null) {
-			return null;
-		}
-		return this.sortSpec.getSortObject();
 	}
 
 }

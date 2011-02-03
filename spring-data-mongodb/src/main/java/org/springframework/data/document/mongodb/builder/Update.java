@@ -21,6 +21,4 @@ import com.mongodb.DBObject;
 public interface Update {
 	
 	DBObject getUpdateObject();
-	
-	DBObject getSortObject();
 }

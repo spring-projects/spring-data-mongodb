@@ -22,8 +22,6 @@ public class BasicUpdate implements Update {
 
 	private DBObject updateObject = null;
 	
-	private DBObject sortObject;
-	
 	public BasicUpdate(String updateString) {
 		super();
 		this.updateObject = (DBObject) JSON.parse(updateString);
@@ -34,24 +32,8 @@ public class BasicUpdate implements Update {
 		this.updateObject = updateObject;
 	}
 
-	public BasicUpdate(String updateString, String sortString) {
-		super();
-		this.updateObject = (DBObject) JSON.parse(updateString);
-		this.sortObject = (DBObject) JSON.parse(sortString);
-	}
-	
-	public BasicUpdate(DBObject updateObject, DBObject sortObject) {
-		super();
-		this.updateObject = updateObject;
-		this.sortObject = sortObject;
-	}
-
 	public DBObject getUpdateObject() {
 		return updateObject;
-	}
-
-	public DBObject getSortObject() {
-		return this.sortObject;
 	}
 
 }
