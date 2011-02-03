@@ -56,6 +56,11 @@ public class Query implements QueryDefinition {
 		return this.fieldSpec;
 	}
 	
+	public Query slip(int skip) {
+		this.skip = skip;
+		return this;
+	}
+
 	public Query limit(int limit) {
 		this.limit = limit;
 		return this;
