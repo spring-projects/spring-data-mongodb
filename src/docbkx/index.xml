@@ -25,7 +25,6 @@
       <author>
           <firstname>Costin</firstname>
           <surname>Leau</surname>
-          <affiliation>SpringSource</affiliation>
       </author>
     </authorgroup>
 
@@ -48,13 +47,15 @@
     <xi:include href="introduction/why-sd-doc.xml"/>
     <xi:include href="introduction/requirements.xml"/>
     <xi:include href="introduction/getting-started.xml"/>
+    <xi:include href="https://github.com/SpringSource/spring-data-commons/raw/master/src/docbkx/repositories.xml" />
   </part>
 
-  <part id="reference">
-    <title>Reference Documentation</title>
+  <part id="mongodb">
+    <title>Mongo DB</title>
      
     <xi:include href="reference/introduction.xml"/>
     <xi:include href="reference/mongodb.xml"/>
+    <xi:include href="reference/mongo-repositories.xml"/>
   </part>
 
 </book>
