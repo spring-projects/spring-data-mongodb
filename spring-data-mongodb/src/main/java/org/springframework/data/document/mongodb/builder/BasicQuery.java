@@ -24,6 +24,10 @@ public class BasicQuery implements QueryDefinition {
 	
 	private DBObject fieldsObject = null;
 	
+	private DBObject sortObject = null;
+
+	private int skip;
+
 	private int limit;
 	
 	public BasicQuery(String query) {
@@ -52,6 +56,22 @@ public class BasicQuery implements QueryDefinition {
 
 	public DBObject getFieldsObject() {
 		return fieldsObject;
+	}
+
+	public DBObject getSortObject() {
+		return sortObject;
+	}
+
+	public void setSortObject(DBObject sortObject) {
+		this.sortObject = sortObject;
+	}
+
+	public int getSkip() {
+		return skip;
+	}
+
+	public void setSkip(int skip) {
+		this.skip = skip;
 	}
 
 	public int getLimit() {

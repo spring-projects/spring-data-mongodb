@@ -26,6 +26,10 @@ public class Query implements QueryDefinition {
 	
 	private Field fieldSpec;
 	
+	private Sort sort;
+
+	private int skip;
+
 	private int limit;
 	
 	public static Criteria newQuery(String key) {
@@ -57,6 +61,15 @@ public class Query implements QueryDefinition {
 		return this;
 	}
 	
+	public Sort sort() {
+		synchronized (this) {
+			if (this.sort == null) {
+				this.sort = new Sort();
+			}
+		}
+		return this.sort;
+	}
+	
 	public QueryDefinition build() {
 		return this;
 	}
@@ -78,8 +91,18 @@ public class Query implements QueryDefinition {
 		return fieldSpec.getFieldsObject();
 	}
 
+	public DBObject getSortObject() {
+		if (this.sort == null) {
+			return null;
+		}
+		return this.sort.getSortObject();
+	}
+
+	public int getSkip() {
+		return this.skip;
+	}
+
 	public int getLimit() {
 		return this.limit;
 	}
-
 }

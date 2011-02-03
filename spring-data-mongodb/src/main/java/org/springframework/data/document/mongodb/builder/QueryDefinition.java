@@ -24,5 +24,9 @@ public interface QueryDefinition {
 
 	DBObject getFieldsObject();
 	
+	DBObject getSortObject();
+
+	int getSkip();
+
 	int getLimit();
 }
