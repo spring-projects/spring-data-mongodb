@@ -25,7 +25,7 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.document.mongodb.MongoConverter;
 import org.springframework.data.document.mongodb.Person;
-import org.springframework.data.document.mongodb.builder.QuerySpec;
+import org.springframework.data.document.mongodb.builder.Query;
 import org.springframework.data.repository.query.Parameters;
 import org.springframework.data.repository.query.SimpleParameterAccessor;
 import org.springframework.data.repository.query.parser.PartTree;
@@ -64,7 +64,7 @@ public class MongoQueryCreatorUnitTests {
         PartTree tree = new PartTree("findByFirstName", Person.class);
 
         MongoQueryCreator creator =
-                new MongoQueryCreator(new QuerySpec(), tree,
+                new MongoQueryCreator(new Query(), tree,
                         new SimpleParameterAccessor(new Parameters(
                                 findByFirstname), new Object[] { "Oliver" }),
                         converter);
@@ -72,7 +72,7 @@ public class MongoQueryCreatorUnitTests {
         creator.createQuery();
 
         creator =
-                new MongoQueryCreator(new QuerySpec(), new PartTree(
+                new MongoQueryCreator(new Query(), new PartTree(
                         "findByFirstNameAndFriend", Person.class),
                         new SimpleParameterAccessor(new Parameters(
                                 findByFirstnameAndFriend), new Object[] {

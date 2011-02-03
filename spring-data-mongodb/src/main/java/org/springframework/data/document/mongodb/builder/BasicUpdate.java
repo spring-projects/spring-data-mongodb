@@ -18,7 +18,7 @@ package org.springframework.data.document.mongodb.builder;
 import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
 
-public class BasicUpdate implements Update {
+public class BasicUpdate implements UpdateDefinition {
 
 	private DBObject updateObject = null;
 	

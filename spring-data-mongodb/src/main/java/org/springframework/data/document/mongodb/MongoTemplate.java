@@ -28,7 +28,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.document.mongodb.MongoPropertyDescriptors.MongoPropertyDescriptor;
-import org.springframework.data.document.mongodb.builder.Query;
+import org.springframework.data.document.mongodb.builder.QueryDefinition;
 import org.springframework.jca.cci.core.ConnectionCallback;
 import org.springframework.util.Assert;
 
@@ -635,17 +635,11 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 				getDefaultCollectionName());
 	}
 	
-	/* (non-Javadoc)
-	 * @see org.springframework.data.document.mongodb.MongoOperations#getCollection(java.lang.String, java.lang.Class)
-	 */
 	public <T> List<T> getCollection(String collectionName, Class<T> targetClass) {
 		return executeEach(new FindCallback(null), null, new ReadDbObjectCallback<T>(mongoConverter, targetClass),
 				collectionName);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.springframework.data.document.mongodb.MongoOperations#getCollectionNames()
-	 */
 	public Set<String> getCollectionNames() {
 		return execute(new DbCallback<Set<String>>() {
 			public Set<String> doInDB(DB db) throws MongoException, DataAccessException {
@@ -654,131 +648,71 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 		});
 	}
 
-	/* (non-Javadoc)
-	 * @see org.springframework.data.document.mongodb.MongoOperations#getCollection(java.lang.String, java.lang.Class, org.springframework.data.document.mongodb.MongoReader)
-	 */
 	public <T> List<T> getCollection(String collectionName, Class<T> targetClass, MongoReader<T> reader) {
 		return executeEach(new FindCallback(null), null, new ReadDbObjectCallback<T>(reader, targetClass),
 				collectionName);
 	}
 	
-	// Queries that take JavaScript to express the query.
+	// Find methods that take a QueryDefinition to express the query.
 	
-	/* (non-Javadoc)
-	 * @see org.springframework.data.document.mongodb.MongoOperations#queryUsingJavaScript(java.lang.String, java.lang.Class)
-	 */
-	public <T> List<T> query(Query query, Class<T> targetClass) {
-		return query(getDefaultCollectionName(), query, targetClass); //
+	public <T> List<T> find(QueryDefinition query, Class<T> targetClass) {
+		return find(getDefaultCollectionName(), query, targetClass); //
 	}
 	
-	/* (non-Javadoc)
-	 * @see org.springframework.data.document.mongodb.MongoOperations#queryUsingJavaScript(java.lang.String, java.lang.Class, org.springframework.data.document.mongodb.MongoReader)
-	 */
-	public <T> List<T> query(Query query, Class<T> targetClass, MongoReader<T> reader) {
-		return query(getDefaultCollectionName(), query, targetClass, reader);
+	public <T> List<T> find(QueryDefinition query, Class<T> targetClass, MongoReader<T> reader) {
+		return find(getDefaultCollectionName(), query, targetClass, reader);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.springframework.data.document.mongodb.MongoOperations#queryUsingJavaScript(java.lang.String, java.lang.String, java.lang.Class)
-	 */
-	public <T> List<T> query(String collectionName, Query query, Class<T> targetClass) {
-		return find(collectionName, query.getQueryObject(), query.getFieldsObject(), targetClass); //
+	public <T> List<T> find(String collectionName, QueryDefinition query, Class<T> targetClass) {
+		return doFind(collectionName, query.getQueryObject(), query.getFieldsObject(), targetClass, (CursorPreparer) null);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.springframework.data.document.mongodb.MongoOperations#queryUsingJavaScript(java.lang.String, java.lang.String, java.lang.Class, org.springframework.data.document.mongodb.MongoReader)
-	 */
-	public <T> List<T> query(String collectionName, Query query, Class<T> targetClass, MongoReader<T> reader) {
-		return find(collectionName, query.getQueryObject(), query.getFieldsObject(), targetClass, reader);
+	public <T> List<T> find(String collectionName, QueryDefinition query, Class<T> targetClass, MongoReader<T> reader) {
+		return doFind(collectionName, query.getQueryObject(), query.getFieldsObject(), targetClass, reader);
 	}
 
-	
-	// Find methods that take DBObject to express the query
-	
-	/* (non-Javadoc)
-	 * @see org.springframework.data.document.mongodb.MongoOperations#query(com.mongodb.DBObject, java.lang.Class)
-	 */
-	public <T> List<T> find(DBObject query, Class<T> targetClass) {
-		return find(query, null, targetClass); //
-	}
-	
-	/* (non-Javadoc)
-	 * @see org.springframework.data.document.mongodb.MongoOperations#query(com.mongodb.DBObject, java.lang.Class, org.springframework.data.document.mongodb.CursorPreparer)
-	 */
-	public <T> List<T> find(DBObject query, Class<T> targetClass, CursorPreparer preparer) {
-		return find(query, null, targetClass, preparer); //
+	public <T> List<T> find(String collectionName, QueryDefinition query,
+			Class<T> targetClass, CursorPreparer preparer) {
+		return doFind(collectionName, query.getQueryObject(), query.getFieldsObject(), targetClass, preparer);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.springframework.data.document.mongodb.MongoOperations#query(com.mongodb.DBObject, java.lang.Class, org.springframework.data.document.mongodb.MongoReader)
+	/**
+	 * Map the results of an ad-hoc query on the default MongoDB collection to a List of the specified type.
+	 * 
+	 * The object is converted from the MongoDB native representation using an instance of 
+	 * {@see MongoConverter}.  Unless configured otherwise, an
+	 * instance of SimpleMongoConverter will be used.   
+	 * 
+	 * The query document is specified as a standard DBObject and so is the fields specification.
+	 * 
+	 * Can be overridden by subclasses.
+	 * 
+	 * @param collectionName name of the collection to retrieve the objects from
+	 * @param query the query document that specifies the criteria used to find a record
+	 * @param fields the document that specifies the fields to be returned
+	 * @param targetClass the parameterized type of the returned list.
+	 * @param preparer allows for customization of the DBCursor used when iterating over the result set,
+	 * (apply limits, skips and so on).
+	 * @return the List of converted objects.
 	 */
-	public <T> List<T> find(DBObject query, Class<T> targetClass, MongoReader<T> reader) {
-		return find(query, null, targetClass, reader);
-	}
-	
-	/* (non-Javadoc)
-	 * @see org.springframework.data.document.mongodb.MongoOperations#query(java.lang.String, com.mongodb.DBObject, java.lang.Class)
-	 */
-	public <T> List<T> find(String collectionName, DBObject query, Class<T> targetClass) {
-		return find(collectionName, query, null, targetClass);
-	}
-
-	/* (non-Javadoc)
-	 * @see org.springframework.data.document.mongodb.MongoOperations#query(java.lang.String, com.mongodb.DBObject, java.lang.Class, org.springframework.data.document.mongodb.CursorPreparer)
-	 */
-	public <T> List<T> find(String collectionName, DBObject query, Class<T> targetClass, CursorPreparer preparer) {
-		return find(collectionName, query, null, targetClass, preparer);
-	}
-
-	/* (non-Javadoc)
-	 * @see org.springframework.data.document.mongodb.MongoOperations#query(java.lang.String, com.mongodb.DBObject, java.lang.Class, org.springframework.data.document.mongodb.MongoReader)
-	 */
-	public <T> List<T> find(String collectionName, DBObject query, Class<T> targetClass, MongoReader<T> reader) {
-		return find(collectionName, query, null, targetClass, reader);
-	}
-
-	// Find methods that take DBObject to express the query and a DBObject to express the fields specification
-	
-	/* (non-Javadoc)
-	 * @see org.springframework.data.document.mongodb.MongoOperations#query(com.mongodb.DBObject, java.lang.Class)
-	 */
-	public <T> List<T> find(DBObject query, DBObject fields, Class<T> targetClass) {
-		return find(getDefaultCollectionName(), query, fields, targetClass); //
-	}
-	
-	/* (non-Javadoc)
-	 * @see org.springframework.data.document.mongodb.MongoOperations#query(com.mongodb.DBObject, java.lang.Class, org.springframework.data.document.mongodb.CursorPreparer)
-	 */
-	public <T> List<T> find(DBObject query, DBObject fields, Class<T> targetClass, CursorPreparer preparer) {
-		return find(getDefaultCollectionName(), query, fields, targetClass, preparer); //
-	}
-
-	/* (non-Javadoc)
-	 * @see org.springframework.data.document.mongodb.MongoOperations#query(com.mongodb.DBObject, java.lang.Class, org.springframework.data.document.mongodb.MongoReader)
-	 */
-	public <T> List<T> find(DBObject query, DBObject fields, Class<T> targetClass, MongoReader<T> reader) {
-		return find(getDefaultCollectionName(), query, fields, targetClass, reader);
-	}
-	
-	/* (non-Javadoc)
-	 * @see org.springframework.data.document.mongodb.MongoOperations#query(java.lang.String, com.mongodb.DBObject, java.lang.Class)
-	 */
-	public <T> List<T> find(String collectionName, DBObject query, DBObject fields, Class<T> targetClass) {
-		return find(collectionName, query, fields, targetClass, (CursorPreparer) null);
-	}
-
-	/* (non-Javadoc)
-	 * @see org.springframework.data.document.mongodb.MongoOperations#query(java.lang.String, com.mongodb.DBObject, java.lang.Class, org.springframework.data.document.mongodb.CursorPreparer)
-	 */
-	public <T> List<T> find(String collectionName, DBObject query, DBObject fields, Class<T> targetClass, CursorPreparer preparer) {
+	protected <T> List<T> doFind(String collectionName, DBObject query, DBObject fields, Class<T> targetClass, CursorPreparer preparer) {
 		return executeEach(new FindCallback(query, fields), preparer, new ReadDbObjectCallback<T>(mongoConverter, targetClass),
 				collectionName);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.springframework.data.document.mongodb.MongoOperations#query(java.lang.String, com.mongodb.DBObject, java.lang.Class, org.springframework.data.document.mongodb.MongoReader)
+	/**
+	 * Map the results of an ad-hoc query on the default MongoDB collection to a List using the provided MongoReader
+	 *  
+	 * The query document is specified as a standard DBObject and so is the fields specification.
+	 *  
+	 * @param collectionName name of the collection to retrieve the objects from	 
+	 * @param query the query document that specifies the criteria used to find a record
+	 * @param fields the document that specifies the fields to be returned
+	 * @param targetClass the parameterized type of the returned list.
+	 * @param reader the MongoReader to convert from DBObject to an object.
+	 * @return the List of converted objects.
 	 */
-	public <T> List<T> find(String collectionName, DBObject query, DBObject fields, Class<T> targetClass, MongoReader<T> reader) {
+	protected <T> List<T> doFind(String collectionName, DBObject query, DBObject fields, Class<T> targetClass, MongoReader<T> reader) {
 		return executeEach(new FindCallback(query, fields), null, new ReadDbObjectCallback<T>(reader, targetClass),
 				collectionName);
 	}
@@ -919,4 +853,5 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 			return reader.read(type, object);
 		}
 	}
+
 }

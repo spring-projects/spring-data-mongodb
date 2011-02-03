@@ -88,7 +88,7 @@ public class MvcAnalyticsTests {
 		for (DBObject dbo : mongoTemplate.getCollection("counters").find(query)) {
 			System.out.println(dbo);
 		}
-		List<ControllerCounter> counters = mongoTemplate.query("counters", new BasicQuery("{ 'name' : 'SignUpController'} "), ControllerCounter.class);
+		List<ControllerCounter> counters = mongoTemplate.find("counters", new BasicQuery("{ 'name' : 'SignUpController'} "), ControllerCounter.class);
 		for (ControllerCounter controllerCounter : counters) {
 			System.out.println(controllerCounter);
 		}

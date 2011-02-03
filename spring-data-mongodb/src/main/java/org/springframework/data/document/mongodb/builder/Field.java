@@ -22,28 +22,28 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
 
-public class FieldSpec {
+public class Field {
 	
 	private Map<String, Integer> criteria = new HashMap<String, Integer>();
 	
 	private Map<String, Object> slices = new HashMap<String, Object>();
 
-	public FieldSpec include(String key) {
+	public Field include(String key) {
 		criteria.put(key, Integer.valueOf(1));
 		return this;
 	}
 
-	public FieldSpec exclude(String key) {
+	public Field exclude(String key) {
 		criteria.put(key, Integer.valueOf(0));
 		return this;
 	}
 	
-	public FieldSpec slice(String key, int size) {
+	public Field slice(String key, int size) {
 		slices.put(key, Integer.valueOf(size));
 		return this;
 	}
 
-	public FieldSpec slice(String key, int offset, int size) {
+	public Field slice(String key, int offset, int size) {
 		slices.put(key, new Integer[] {Integer.valueOf(offset), Integer.valueOf(size)});
 		return this;
 	}

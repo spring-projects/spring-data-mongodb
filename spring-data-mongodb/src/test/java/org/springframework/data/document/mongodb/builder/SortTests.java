@@ -17,20 +17,20 @@ package org.springframework.data.document.mongodb.builder;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.springframework.data.document.mongodb.builder.SortSpec.SortOrder;
+import org.springframework.data.document.mongodb.builder.Sort.Order;
 
 public class SortTests {
 
 	@Test
 	public void testWithSortAscending() {
-		SortSpec s = new SortSpec().on("name", SortOrder.ASCENDING);
-		Assert.assertEquals("{ \"name\" : 1}", s.build().getSortObject().toString());
+		Sort s = new Sort().on("name", Order.ASCENDING);
+		Assert.assertEquals("{ \"name\" : 1}", s.getSortObject().toString());
 	}
 
 	@Test
 	public void testWithSortDescending() {
-		SortSpec s = new SortSpec().on("name", SortOrder.DESCENDING);
-		Assert.assertEquals("{ \"name\" : -1}", s.build().getSortObject().toString());
+		Sort s = new Sort().on("name", Order.DESCENDING);
+		Assert.assertEquals("{ \"name\" : -1}", s.getSortObject().toString());
 	}
 
 }

@@ -20,28 +20,28 @@ import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.springframework.data.document.mongodb.builder.SortSpec.SortOrder;
-import org.springframework.data.document.mongodb.builder.UpdateSpec;
+import org.springframework.data.document.mongodb.builder.Sort.Order;
+import org.springframework.data.document.mongodb.builder.Update;
 
 public class UpdateTests {
 
 	@Test
 	public void testSet() {
-		UpdateSpec u = new UpdateSpec()
+		Update u = new Update()
 			.set("directory", "/Users/Test/Desktop");
 		Assert.assertEquals("{ \"$set\" : { \"directory\" : \"/Users/Test/Desktop\"}}", u.build().getUpdateObject().toString());
 	}
 
 	@Test
 	public void testInc() {
-		UpdateSpec u = new UpdateSpec()
+		Update u = new Update()
 			.inc("size", 1);
 		Assert.assertEquals("{ \"$inc\" : { \"size\" : 1}}", u.build().getUpdateObject().toString());
 	}
 
 	@Test
 	public void testIncAndSet() {
-		UpdateSpec u = new UpdateSpec()
+		Update u = new Update()
 			.inc("size", 1)
 			.set("directory", "/Users/Test/Desktop");
 		Assert.assertEquals("{ \"$inc\" : { \"size\" : 1} , \"$set\" : { \"directory\" : \"/Users/Test/Desktop\"}}", 
@@ -50,7 +50,7 @@ public class UpdateTests {
 
 	@Test
 	public void testUnset() {
-		UpdateSpec u = new UpdateSpec()
+		Update u = new Update()
 			.unset("directory");
 		Assert.assertEquals("{ \"$unset\" : { \"directory\" : 1}}", u.build().getUpdateObject().toString());
 	}
@@ -59,7 +59,7 @@ public class UpdateTests {
 	public void testPush() {
 		Map<String, Object> m = new HashMap<String, Object>();
 		m.put("name", "Sven");
-		UpdateSpec u = new UpdateSpec()
+		Update u = new Update()
 			.push("authors", m);
 		Assert.assertEquals("{ \"$push\" : { \"authors\" : { \"name\" : \"Sven\"}}}", u.build().getUpdateObject().toString());
 	}
@@ -70,7 +70,7 @@ public class UpdateTests {
 		m1.put("name", "Sven");
 		Map<String, Object> m2 = new HashMap<String, Object>();
 		m2.put("name", "Maria");
-		UpdateSpec u = new UpdateSpec()
+		Update u = new Update()
 			.pushAll("authors", new Object[] {m1, m2});
 		Assert.assertEquals("{ \"$pushAll\" : { \"authors\" : [ { \"name\" : \"Sven\"} , { \"name\" : \"Maria\"}]}}", u.build().getUpdateObject().toString());
 	}
@@ -79,18 +79,18 @@ public class UpdateTests {
 	public void testAddToSet() {
 		Map<String, Object> m = new HashMap<String, Object>();
 		m.put("name", "Sven");
-		UpdateSpec u = new UpdateSpec()
+		Update u = new Update()
 			.addToSet("authors", m);
 		Assert.assertEquals("{ \"$addToSet\" : { \"authors\" : { \"name\" : \"Sven\"}}}", u.build().getUpdateObject().toString());
 	}
 
 	@Test
 	public void testPop() {
-		UpdateSpec u = new UpdateSpec()
-			.pop("authors", UpdateSpec.Position.FIRST);
+		Update u = new Update()
+			.pop("authors", Update.Position.FIRST);
 		Assert.assertEquals("{ \"$pop\" : { \"authors\" : -1}}", u.build().getUpdateObject().toString());
-		u = new UpdateSpec()
-			.pop("authors", UpdateSpec.Position.LAST);
+		u = new Update()
+			.pop("authors", Update.Position.LAST);
 		Assert.assertEquals("{ \"$pop\" : { \"authors\" : 1}}", u.build().getUpdateObject().toString());
 	}
 
@@ -98,7 +98,7 @@ public class UpdateTests {
 	public void testPull() {
 		Map<String, Object> m = new HashMap<String, Object>();
 		m.put("name", "Sven");
-		UpdateSpec u = new UpdateSpec()
+		Update u = new Update()
 			.pull("authors", m);
 		Assert.assertEquals("{ \"$pull\" : { \"authors\" : { \"name\" : \"Sven\"}}}", u.build().getUpdateObject().toString());
 	}
@@ -109,14 +109,14 @@ public class UpdateTests {
 		m1.put("name", "Sven");
 		Map<String, Object> m2 = new HashMap<String, Object>();
 		m2.put("name", "Maria");
-		UpdateSpec u = new UpdateSpec()
+		Update u = new Update()
 			.pullAll("authors", new Object[] {m1, m2});
 		Assert.assertEquals("{ \"$pullAll\" : { \"authors\" : [ { \"name\" : \"Sven\"} , { \"name\" : \"Maria\"}]}}", u.build().getUpdateObject().toString());
 	}
 
 	@Test
 	public void testRename() {
-		UpdateSpec u = new UpdateSpec()
+		Update u = new Update()
 			.rename("directory", "folder");
 		Assert.assertEquals("{ \"$rename\" : { \"directory\" : \"folder\"}}", u.build().getUpdateObject().toString());
 	}

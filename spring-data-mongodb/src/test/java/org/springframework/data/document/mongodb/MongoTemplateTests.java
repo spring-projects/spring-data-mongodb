@@ -24,6 +24,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.document.mongodb.builder.Query;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -54,7 +55,7 @@ public class MongoTemplateTests {
 		
 		MongoConverter converter = template.getConverter();
 
-		List<Person> result = template.find(QueryBuilder.start("_id").is(converter.convertObjectId(person.getId())).get(), Person.class);
+		List<Person> result = template.find(Query.newQuery("_id").is(converter.convertObjectId(person.getId())).build(), Person.class);
 		assertThat(result.size(), is(1));
 		assertThat(result, hasItem(person));
 	}

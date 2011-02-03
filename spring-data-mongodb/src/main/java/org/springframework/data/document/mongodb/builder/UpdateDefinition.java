@@ -15,36 +15,10 @@
  */
 package org.springframework.data.document.mongodb.builder;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
 
-public class SortSpec implements Sort {
+public interface UpdateDefinition {
 	
-	public enum SortOrder {
-		ASCENDING, DESCENDING
-	}
-	
-	private Map<String, SortOrder> criteria = new HashMap<String, SortOrder>();
-	
-	public SortSpec on(String key, SortOrder order) {
-		criteria.put(key, order);
-		return this;
-	}
-
-	public Sort build() {
-		return this;
-	}
-
-	public DBObject getSortObject() {
-		DBObject dbo = new BasicDBObject();
-		for (String k : criteria.keySet()) {
-			dbo.put(k, (criteria.get(k).equals(SortOrder.ASCENDING) ? 1 : -1));
-		}
-		return dbo;
-	}
-
+	DBObject getUpdateObject();
 }

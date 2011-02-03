@@ -21,10 +21,10 @@ import java.util.regex.Pattern;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.data.document.mongodb.MongoConverter;
+import org.springframework.data.document.mongodb.builder.CriteriaDefinition;
 import org.springframework.data.document.mongodb.builder.Criteria;
-import org.springframework.data.document.mongodb.builder.CriteriaSpec;
+import org.springframework.data.document.mongodb.builder.QueryDefinition;
 import org.springframework.data.document.mongodb.builder.Query;
-import org.springframework.data.document.mongodb.builder.QuerySpec;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.repository.query.SimpleParameterAccessor;
 import org.springframework.data.repository.query.SimpleParameterAccessor.BindableParameterIterator;
@@ -42,11 +42,11 @@ import com.mongodb.DBObject;
  * 
  * @author Oliver Gierke
  */
-class MongoQueryCreator extends AbstractQueryCreator<Void, CriteriaSpec> {
+class MongoQueryCreator extends AbstractQueryCreator<Void, Criteria> {
 
     private static final Log LOG = LogFactory.getLog(MongoQueryCreator.class);
     private final MongoConverter converter;
-    private final QuerySpec querySpec;
+    private final Query querySpec;
 
 
     /**
@@ -56,7 +56,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Void, CriteriaSpec> {
      * @param tree
      * @param accessor
      */
-    public MongoQueryCreator(QuerySpec querySpec, PartTree tree,
+    public MongoQueryCreator(Query querySpec, PartTree tree,
             SimpleParameterAccessor accessor, MongoConverter converter) {
 
         super(tree, accessor);
@@ -75,7 +75,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Void, CriteriaSpec> {
      * .data.repository.query.SimpleParameterAccessor.BindableParameterIterator)
      */
     @Override
-    protected CriteriaSpec create(Part part, BindableParameterIterator iterator) {
+    protected Criteria create(Part part, BindableParameterIterator iterator) {
 
         return from(part.getType(),
                 querySpec.find(part.getProperty().toDotPath()), iterator);
@@ -92,7 +92,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Void, CriteriaSpec> {
      * .data.repository.query.SimpleParameterAccessor.BindableParameterIterator)
      */
     @Override
-    protected CriteriaSpec and(Part part, CriteriaSpec base,
+    protected Criteria and(Part part, Criteria base,
             BindableParameterIterator iterator) {
 
         return from(part.getType(), base.and(part.getProperty().toDotPath()),
@@ -108,7 +108,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Void, CriteriaSpec> {
      * #or(java.lang.Object, java.lang.Object)
      */
     @Override
-    protected CriteriaSpec or(CriteriaSpec base, CriteriaSpec criteria) {
+    protected Criteria or(Criteria base, Criteria criteria) {
 
         base.or(Arrays.asList(criteria.build()));
         return base;
@@ -123,7 +123,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Void, CriteriaSpec> {
      * #complete(java.lang.Object, org.springframework.data.domain.Sort)
      */
     @Override
-    protected Void complete(CriteriaSpec criteria, Sort sort) {
+    protected Void complete(Criteria criteria, Sort sort) {
 
         Query query = criteria.build();
 
@@ -136,14 +136,14 @@ class MongoQueryCreator extends AbstractQueryCreator<Void, CriteriaSpec> {
 
 
     /**
-     * Populates the given {@link Criteria} depending on the {@link Type} given.
+     * Populates the given {@link CriteriaDefinition} depending on the {@link Type} given.
      * 
      * @param type
      * @param criteria
      * @param parameters
      * @return
      */
-    private CriteriaSpec from(Type type, CriteriaSpec criteria,
+    private Criteria from(Type type, Criteria criteria,
             BindableParameterIterator parameters) {
 
         switch (type) {

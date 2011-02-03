@@ -18,7 +18,7 @@ package org.springframework.data.document.mongodb.builder;
 import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
 
-public class BasicQuery implements Query {
+public class BasicQuery implements QueryDefinition {
 
 	private DBObject queryObject = null;
 	

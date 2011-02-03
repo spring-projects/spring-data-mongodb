@@ -15,32 +15,10 @@
  */
 package org.springframework.data.document.mongodb.builder;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
+public interface CriteriaDefinition {
 
-public class Sort {
-	
-	public enum Order {
-		ASCENDING, DESCENDING
-	}
-	
-	private Map<String, Order> criteria = new HashMap<String, Order>();
-	
-	public Sort on(String key, Order order) {
-		criteria.put(key, order);
-		return this;
-	}
-
-	public DBObject getSortObject() {
-		DBObject dbo = new BasicDBObject();
-		for (String k : criteria.keySet()) {
-			dbo.put(k, (criteria.get(k).equals(Order.ASCENDING) ? 1 : -1));
-		}
-		return dbo;
-	}
+	DBObject getCriteriaObject(String key);
 
 }

@@ -15,7 +15,7 @@
  */
 package org.springframework.data.document.mongodb.repository;
 
-import org.springframework.data.document.mongodb.builder.QuerySpec;
+import org.springframework.data.document.mongodb.builder.Query;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
@@ -36,14 +36,14 @@ abstract class QueryUtils {
 
 
     /**
-     * Applies the given {@link Pageable} to the given {@link QuerySpec}. Will
+     * Applies the given {@link Pageable} to the given {@link Query}. Will
      * do nothing if {@link Pageable} is {@literal null}.
      * 
      * @param spec
      * @param pageable
      * @return
      */
-    public static QuerySpec applyPagination(QuerySpec spec, Pageable pageable) {
+    public static Query applyPagination(Query spec, Pageable pageable) {
 
         if (pageable == null) {
             return spec;
@@ -57,14 +57,14 @@ abstract class QueryUtils {
 
 
     /**
-     * Applies the given {@link Sort} to the {@link QuerySpec}. Will do nothing
+     * Applies the given {@link Sort} to the {@link Query}. Will do nothing
      * if {@link Sort} is {@literal null}.
      * 
      * @param spec
      * @param sort
      * @return
      */
-    public static QuerySpec applySorting(QuerySpec spec, Sort sort) {
+    public static Query applySorting(Query spec, Sort sort) {
 
         if (sort == null) {
             return spec;

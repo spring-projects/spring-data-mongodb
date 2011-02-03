@@ -21,7 +21,7 @@ import java.util.List;
 
 import org.springframework.data.document.mongodb.CollectionCallback;
 import org.springframework.data.document.mongodb.MongoTemplate;
-import org.springframework.data.document.mongodb.builder.QuerySpec;
+import org.springframework.data.document.mongodb.builder.Query;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.query.QueryMethod;
@@ -76,7 +76,7 @@ public class MongoQuery implements RepositoryQuery {
 
         SimpleParameterAccessor accessor =
                 new SimpleParameterAccessor(method.getParameters(), parameters);
-        QuerySpec spec = new QuerySpec();
+        Query spec = new Query();
 
         MongoQueryCreator creator =
                 new MongoQueryCreator(spec, tree, accessor,
@@ -95,12 +95,12 @@ public class MongoQuery implements RepositoryQuery {
 
     private abstract class Execution {
 
-        abstract Object execute(QuerySpec query);
+        abstract Object execute(Query query);
 
 
-        protected List<?> readCollection(QuerySpec query) {
+        protected List<?> readCollection(Query query) {
 
-            return template.query(query.build(), method.getDomainClass());
+            return template.find(query.build(), method.getDomainClass());
         }
     }
 
@@ -119,7 +119,7 @@ public class MongoQuery implements RepositoryQuery {
          * #execute(com.mongodb.DBObject)
          */
         @Override
-        public Object execute(QuerySpec query) {
+        public Object execute(Query query) {
 
             return readCollection(query);
         }
@@ -159,12 +159,12 @@ public class MongoQuery implements RepositoryQuery {
          */
         @Override
         @SuppressWarnings({ "rawtypes", "unchecked" })
-        Object execute(QuerySpec query) {
+        Object execute(Query query) {
 
             int count = getCollectionCursor(query.getQueryObject()).count();
 
             List<?> result =
-                    template.query(applyPagination(query, pageable),
+                    template.find(applyPagination(query, pageable),
                             method.getDomainClass());
 
             return new PageImpl(result, pageable, count);
@@ -198,7 +198,7 @@ public class MongoQuery implements RepositoryQuery {
          * #execute(com.mongodb.DBObject)
          */
         @Override
-        Object execute(QuerySpec query) {
+        Object execute(Query query) {
 
             List<?> result = readCollection(query);
             return result.isEmpty() ? null : result.get(0);

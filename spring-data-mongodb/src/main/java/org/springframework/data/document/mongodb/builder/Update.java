@@ -15,10 +15,85 @@
  */
 package org.springframework.data.document.mongodb.builder;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+
+import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
+public class Update implements UpdateDefinition {
 
-public interface Update {
+	public enum Position {
+		LAST, FIRST
+	}
+
+	private HashMap<String, Object> criteria = new LinkedHashMap<String, Object>();
 	
-	DBObject getUpdateObject();
+	public Update set(String key, Object value) {
+		criteria.put("$set", Collections.singletonMap(key, value));
+		return this;
+	}
+
+	public Update unset(String key) {
+		criteria.put("$unset", Collections.singletonMap(key, 1));
+		return this;
+	}
+
+	public Update inc(String key, long inc) {
+		criteria.put("$inc", Collections.singletonMap(key, inc));
+		return this;
+	}
+
+	public Update push(String key, Object value) {
+		criteria.put("$push", Collections.singletonMap(key, value));
+		return this;
+	}
+
+	public Update pushAll(String key, Object[] values) {
+		DBObject keyValue = new BasicDBObject();
+		keyValue.put(key, values);
+		criteria.put("$pushAll", keyValue);
+		return this;
+	}
+
+	public Update addToSet(String key, Object value) {
+		criteria.put("$addToSet", Collections.singletonMap(key, value));
+		return this;
+	}
+
+	public Update pop(String key, Position pos) {
+		criteria.put("$pop", Collections.singletonMap(key, (pos == Position.FIRST ? -1 : 1)));
+		return this;
+	}
+
+	public Update pull(String key, Object value) {
+		criteria.put("$pull", Collections.singletonMap(key, value));
+		return this;
+	}
+
+	public Update pullAll(String key, Object[] values) {
+		DBObject keyValue = new BasicDBObject();
+		keyValue.put(key, values);
+		criteria.put("$pullAll", keyValue);
+		return this;
+	}
+
+	public Update rename(String oldName, String newName) {
+		criteria.put("$rename", Collections.singletonMap(oldName, newName));
+		return this;
+	}
+
+	public UpdateDefinition build() {
+		return this;
+	}
+
+	public DBObject getUpdateObject() {
+		DBObject dbo = new BasicDBObject();
+		for (String k : criteria.keySet()) {
+			dbo.put(k, criteria.get(k));
+		}
+		return dbo;
+	}
+
 }

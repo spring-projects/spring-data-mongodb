@@ -15,14 +15,71 @@
  */
 package org.springframework.data.document.mongodb.builder;
 
+import java.util.LinkedHashMap;
+
+import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
-
-public interface Query {
+public class Query implements QueryDefinition {
 	
-	DBObject getQueryObject();
-
-	DBObject getFieldsObject();
+	private LinkedHashMap<String, CriteriaDefinition> criteria = new LinkedHashMap<String, CriteriaDefinition>();
 	
-	int getLimit();
+	private Field fieldSpec;
+	
+	private int limit;
+	
+	public static Criteria newQuery(String key) {
+		return new Query().find(key);
+	}
+
+	public Criteria find(String key) {
+		Criteria c = new Criteria(this);
+		this.criteria.put(key, c);
+		return c;
+	}
+
+	public Query or(QueryDefinition... queries) {
+		this.criteria.put("$or", new OrCriteria(queries));
+		return this;
+	}
+
+	public Field fields() {
+		synchronized (this) {
+			if (fieldSpec == null) {
+				this.fieldSpec = new Field();
+			}
+		}
+		return this.fieldSpec;
+	}
+	
+	public Query limit(int limit) {
+		this.limit = limit;
+		return this;
+	}
+	
+	public QueryDefinition build() {
+		return this;
+	}
+
+	public DBObject getQueryObject() {
+		DBObject dbo = new BasicDBObject();
+		for (String k : criteria.keySet()) {
+			CriteriaDefinition c = criteria.get(k);
+			DBObject cl = c.getCriteriaObject(k);
+			dbo.putAll(cl);
+		}
+		return dbo;
+	}
+
+	public DBObject getFieldsObject() {
+		if (this.fieldSpec == null) {
+			return null;
+		}
+		return fieldSpec.getFieldsObject();
+	}
+
+	public int getLimit() {
+		return this.limit;
+	}
+
 }

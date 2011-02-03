@@ -22,7 +22,7 @@ public class QueryTests {
 
 	@Test
 	public void testSimpleQuery() {
-		QuerySpec q = new QuerySpec();
+		Query q = new Query();
 		q.find("name").is("Thomas");
 		q.find("age").lt(80);
 		String expected = "{ \"name\" : \"Thomas\" , \"age\" : { \"$lt\" : 80}}";
@@ -31,7 +31,7 @@ public class QueryTests {
 
 	@Test
 	public void testQueryWithNot() {
-		QuerySpec q = new QuerySpec();
+		Query q = new Query();
 		q.find("name").is("Thomas");
 		q.find("age").not().mod(10, 0);
 		String expected = "{ \"name\" : \"Thomas\" , \"age\" : { \"$not\" : { \"$mod\" : [ 10 , 0]}}}";
@@ -40,10 +40,10 @@ public class QueryTests {
 
 	@Test
 	public void testOrQuery() {
-		QuerySpec q = new QuerySpec();;
+		Query q = new Query();;
 		q.or(
-				new QuerySpec().find("name").is("Sven").and("age").lt(50).build(), 
-				new QuerySpec().find("age").lt(50).build(),
+				new Query().find("name").is("Sven").and("age").lt(50).build(), 
+				new Query().find("age").lt(50).build(),
 				new BasicQuery("{'name' : 'Thomas'}")
 		);
 		String expected = "{ \"$or\" : [ { \"name\" : \"Sven\" , \"age\" : { \"$lt\" : 50}} , { \"age\" : { \"$lt\" : 50}} , { \"name\" : \"Thomas\"}]}";
@@ -52,7 +52,7 @@ public class QueryTests {
 
 	@Test
 	public void testQueryWithLimit() {
-		QuerySpec q = new QuerySpec();
+		Query q = new Query();
 		q.find("name").gte("M").lte("T").and("age").not().gt(22);		
 		q.limit(50);
 		String expected = "{ \"name\" : { \"$gte\" : \"M\" , \"$lte\" : \"T\"} , \"age\" : { \"$not\" : { \"$gt\" : 22}}}";
@@ -62,7 +62,7 @@ public class QueryTests {
 
 	@Test
 	public void testQueryWithFieldsAndSlice() {
-		QuerySpec q = new QuerySpec();
+		Query q = new Query();
 		q.find("name").gte("M").lte("T").and("age").not().gt(22);		
 		q.fields().exclude("address").include("name").slice("orders", 10);
 

@@ -20,11 +20,11 @@ import org.bson.types.BasicBSONList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
-public class OrCriteriaSpec implements Criteria {
+public class OrCriteria implements CriteriaDefinition {
 	
-	Query[] queries = null;
+	QueryDefinition[] queries = null;
 	
-	public OrCriteriaSpec(Query[] queries) {
+	public OrCriteria(QueryDefinition[] queries) {
 		super();
 		this.queries = queries;
 	}
@@ -36,7 +36,7 @@ public class OrCriteriaSpec implements Criteria {
 	public DBObject getCriteriaObject(String key) {
 		DBObject dbo = new BasicDBObject();
 		BasicBSONList l = new BasicBSONList();
-		for (Query q : queries) {
+		for (QueryDefinition q : queries) {
 			l.add(q.getQueryObject());
 		}
 		dbo.put(key, l);

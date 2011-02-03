@@ -22,7 +22,7 @@ import java.util.List;
 import org.bson.types.ObjectId;
 import org.springframework.data.document.mongodb.MongoConverter;
 import org.springframework.data.document.mongodb.MongoTemplate;
-import org.springframework.data.document.mongodb.builder.QuerySpec;
+import org.springframework.data.document.mongodb.builder.Query;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -109,8 +109,8 @@ public class SimpleMongoRepository<T, ID extends Serializable> extends
         ObjectId objectId = converter.convertObjectId(id);
 
         List<T> result =
-                template.query(
-                        new QuerySpec().find("_id").is(objectId).build(),
+                template.find(
+                        new Query().find("_id").is(objectId).build(),
                         getDomainClass());
         return result.isEmpty() ? null : result.get(0);
     }
@@ -202,10 +202,10 @@ public class SimpleMongoRepository<T, ID extends Serializable> extends
     public Page<T> findAll(final Pageable pageable) {
 
         Long count = count();
-        QuerySpec spec = new QuerySpec();
+        Query spec = new Query();
 
         List<T> list =
-                template.query(QueryUtils.applyPagination(spec, pageable),
+                template.find(QueryUtils.applyPagination(spec, pageable),
                         getDomainClass());
 
         return new PageImpl<T>(list, pageable, count);
@@ -221,8 +221,8 @@ public class SimpleMongoRepository<T, ID extends Serializable> extends
      */
     public List<T> findAll(final Sort sort) {
 
-        QuerySpec query = QueryUtils.applySorting(new QuerySpec(), sort);
-        return template.query(query, getDomainClass());
+        Query query = QueryUtils.applySorting(new Query(), sort);
+        return template.find(query, getDomainClass());
     }
 
 
