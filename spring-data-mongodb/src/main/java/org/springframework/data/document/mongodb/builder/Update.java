@@ -84,9 +84,9 @@ public class Update implements UpdateDefinition {
 		return this;
 	}
 
-	public UpdateDefinition build() {
-		return this;
-	}
+//	public UpdateDefinition build() {
+//		return this;
+//	}
 
 	public DBObject getUpdateObject() {
 		DBObject dbo = new BasicDBObject();

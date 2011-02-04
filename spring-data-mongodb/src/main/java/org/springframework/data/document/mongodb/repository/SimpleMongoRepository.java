@@ -110,7 +110,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> extends
 
         List<T> result =
                 template.find(
-                        new Query().find("_id").is(objectId).build(),
+                        new Query().start("_id").is(objectId).end(),
                         getDomainClass());
         return result.isEmpty() ? null : result.get(0);
     }
@@ -160,10 +160,10 @@ public class SimpleMongoRepository<T, ID extends Serializable> extends
      */
     public void delete(T entity) {
 
-        QueryBuilder builder =
-                QueryBuilder.start(entityInformation.getFieldName()).is(
-                        entityInformation.getId(entity));
-        template.remove(builder.get());
+        Query query =
+                Query.startQueryWithCriteria(entityInformation.getFieldName()).is(
+                        entityInformation.getId(entity)).end();
+        template.remove(query);
     }
 
 

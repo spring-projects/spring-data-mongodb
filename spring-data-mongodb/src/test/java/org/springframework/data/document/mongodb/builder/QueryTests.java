@@ -23,52 +23,52 @@ public class QueryTests {
 	@Test
 	public void testSimpleQuery() {
 		Query q = new Query();
-		q.find("name").is("Thomas");
-		q.find("age").lt(80);
+		q.start("name").is("Thomas");
+		q.start("age").lt(80);
 		String expected = "{ \"name\" : \"Thomas\" , \"age\" : { \"$lt\" : 80}}";
-		Assert.assertEquals(expected, q.build().getQueryObject().toString());
+		Assert.assertEquals(expected, q.getQueryObject().toString());
 	}
 
 	@Test
 	public void testQueryWithNot() {
 		Query q = new Query();
-		q.find("name").is("Thomas");
-		q.find("age").not().mod(10, 0);
+		q.start("name").is("Thomas");
+		q.start("age").not().mod(10, 0);
 		String expected = "{ \"name\" : \"Thomas\" , \"age\" : { \"$not\" : { \"$mod\" : [ 10 , 0]}}}";
-		Assert.assertEquals(expected, q.build().getQueryObject().toString());
+		Assert.assertEquals(expected, q.getQueryObject().toString());
 	}
 
 	@Test
 	public void testOrQuery() {
 		Query q = new Query();;
 		q.or(
-				new Query().find("name").is("Sven").and("age").lt(50).build(), 
-				new Query().find("age").lt(50).build(),
+				new Query().start("name").is("Sven").and("age").lt(50).end(), 
+				new Query().start("age").lt(50).end(),
 				new BasicQuery("{'name' : 'Thomas'}")
 		);
 		String expected = "{ \"$or\" : [ { \"name\" : \"Sven\" , \"age\" : { \"$lt\" : 50}} , { \"age\" : { \"$lt\" : 50}} , { \"name\" : \"Thomas\"}]}";
-		Assert.assertEquals(expected, q.build().getQueryObject().toString());
+		Assert.assertEquals(expected, q.getQueryObject().toString());
 	}
 
 	@Test
 	public void testQueryWithLimit() {
 		Query q = new Query();
-		q.find("name").gte("M").lte("T").and("age").not().gt(22);		
+		q.start("name").gte("M").lte("T").and("age").not().gt(22);		
 		q.limit(50);
 		String expected = "{ \"name\" : { \"$gte\" : \"M\" , \"$lte\" : \"T\"} , \"age\" : { \"$not\" : { \"$gt\" : 22}}}";
-		Assert.assertEquals(expected, q.build().getQueryObject().toString());
-		Assert.assertEquals(50, q.build().getLimit());
+		Assert.assertEquals(expected, q.getQueryObject().toString());
+		Assert.assertEquals(50, q.getLimit());
 	}
 
 	@Test
 	public void testQueryWithFieldsAndSlice() {
 		Query q = new Query();
-		q.find("name").gte("M").lte("T").and("age").not().gt(22);		
+		q.start("name").gte("M").lte("T").and("age").not().gt(22);		
 		q.fields().exclude("address").include("name").slice("orders", 10);
 
 		String expected = "{ \"name\" : { \"$gte\" : \"M\" , \"$lte\" : \"T\"} , \"age\" : { \"$not\" : { \"$gt\" : 22}}}";
-		Assert.assertEquals(expected, q.build().getQueryObject().toString());
+		Assert.assertEquals(expected, q.getQueryObject().toString());
 		String expectedFields = "{ \"address\" : 0 , \"name\" : 1 , \"orders\" : { \"$slice\" : 10}}";
-		Assert.assertEquals(expectedFields, q.build().getFieldsObject().toString());
+		Assert.assertEquals(expectedFields, q.getFieldsObject().toString());
 	}
 }

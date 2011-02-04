@@ -51,7 +51,7 @@ abstract class QueryUtils {
         }
 
         query.limit(pageable.getPageSize());
-        query.slip(pageable.getOffset());
+        query.skip(pageable.getOffset());
 
         return applySorting(query, pageable.getSort());
     }
@@ -61,18 +61,18 @@ abstract class QueryUtils {
      * Applies the given {@link Sort} to the {@link Query}. Will do nothing if
      * {@link Sort} is {@literal null}.
      * 
-     * @param spec
+     * @param query
      * @param sort
      * @return
      */
-    public static Query applySorting(Query spec, Sort sort) {
+    public static Query applySorting(Query query, Sort sort) {
 
         if (sort == null) {
-            return spec;
+            return query;
         }
 
         org.springframework.data.document.mongodb.builder.Sort bSort =
-                spec.sort();
+                query.sort();
 
         for (Order order : sort) {
             bSort.on(
@@ -81,6 +81,6 @@ abstract class QueryUtils {
                             : org.springframework.data.document.mongodb.builder.Sort.Order.DESCENDING);
         }
 
-        return spec;
+        return query;
     }
 }

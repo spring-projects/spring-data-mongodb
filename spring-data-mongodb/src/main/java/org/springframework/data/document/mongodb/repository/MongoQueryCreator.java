@@ -75,7 +75,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
     protected Criteria create(Part part, BindableParameterIterator iterator) {
 
         return from(part.getType(),
-                new Query().find(part.getProperty().toDotPath()), iterator);
+                new Query().start(part.getProperty().toDotPath()), iterator);
     }
 
 
@@ -107,7 +107,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
     @Override
     protected Criteria or(Criteria base, Criteria criteria) {
 
-        base.or(Arrays.asList(criteria.build()));
+        base.or(Arrays.asList(criteria.end()));
         return base;
     }
 
@@ -122,7 +122,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
     @Override
     protected Query complete(Criteria criteria, Sort sort) {
 
-        Query query = criteria.build();
+        Query query = criteria.end();
 
         if (LOG.isDebugEnabled()) {
             LOG.debug("Created query " + query);

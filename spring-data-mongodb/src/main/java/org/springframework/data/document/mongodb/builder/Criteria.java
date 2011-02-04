@@ -40,7 +40,7 @@ public class Criteria implements CriteriaDefinition {
 
 
 	public Criteria and(String key) {
-		return qb.find(key);
+		return qb.start(key);
 	}
 
 
@@ -121,7 +121,7 @@ public class Criteria implements CriteriaDefinition {
 		criteria.put("$or", queries);		
 	}
 	
-	public Query build() {
+	public Query end() {
 		return qb; 
 	}
 

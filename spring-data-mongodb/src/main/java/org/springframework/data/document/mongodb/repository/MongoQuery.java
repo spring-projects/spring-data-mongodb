@@ -98,7 +98,7 @@ public class MongoQuery implements RepositoryQuery {
 
         protected List<?> readCollection(Query query) {
 
-            return template.find(query.build(), method.getDomainClass());
+            return template.find(query, method.getDomainClass());
         }
     }
 

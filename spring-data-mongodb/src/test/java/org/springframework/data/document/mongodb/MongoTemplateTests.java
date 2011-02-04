@@ -15,8 +15,9 @@
  */
 package org.springframework.data.document.mongodb;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
 
 import java.util.List;
 
@@ -27,8 +28,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.document.mongodb.builder.Query;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-
-import com.mongodb.QueryBuilder;
 
 /**
  * Integration test for {@link MongoTemplate}.
@@ -55,8 +54,13 @@ public class MongoTemplateTests {
 		
 		MongoConverter converter = template.getConverter();
 
-		List<Person> result = template.find(Query.newQuery("_id").is(converter.convertObjectId(person.getId())).build(), Person.class);
+		List<Person> result = template.find(Query.startQueryWithCriteria("_id").is(converter.convertObjectId(person.getId())).end(), Person.class);
 		assertThat(result.size(), is(1));
 		assertThat(result, hasItem(person));
+	}
+
+	@Test
+	public void simpleQuery() throws Exception {
+		Query.startQueryWithCriteria("name").is("Mary").and("age").lt(33).gt(22).end().skip(22).limit(20);
 	}
 }

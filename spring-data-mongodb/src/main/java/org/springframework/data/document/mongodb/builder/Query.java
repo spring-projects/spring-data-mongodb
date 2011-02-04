@@ -32,11 +32,11 @@ public class Query implements QueryDefinition {
 
 	private int limit;
 	
-	public static Criteria newQuery(String key) {
-		return new Query().find(key);
+	public static Criteria startQueryWithCriteria(String key) {
+		return new Query().start(key);
 	}
 
-	public Criteria find(String key) {
+	public Criteria start(String key) {
 		Criteria c = new Criteria(this);
 		this.criteria.put(key, c);
 		return c;
@@ -56,7 +56,7 @@ public class Query implements QueryDefinition {
 		return this.fieldSpec;
 	}
 	
-	public Query slip(int skip) {
+	public Query skip(int skip) {
 		this.skip = skip;
 		return this;
 	}
@@ -75,9 +75,9 @@ public class Query implements QueryDefinition {
 		return this.sort;
 	}
 	
-	public QueryDefinition build() {
-		return this;
-	}
+//	public QueryDefinition build() {
+//		return this;
+//	}
 
 	public DBObject getQueryObject() {
 		DBObject dbo = new BasicDBObject();

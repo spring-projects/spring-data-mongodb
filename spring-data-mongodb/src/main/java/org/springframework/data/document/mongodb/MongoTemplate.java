@@ -21,14 +21,16 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.bson.types.ObjectId;
 import org.springframework.beans.ConfigurablePropertyAccessor;
 import org.springframework.beans.PropertyAccessorFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.dao.DataAccessException;
-import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.document.mongodb.MongoPropertyDescriptors.MongoPropertyDescriptor;
 import org.springframework.data.document.mongodb.builder.QueryDefinition;
+import org.springframework.data.document.mongodb.builder.UpdateDefinition;
 import org.springframework.jca.cci.core.ConnectionCallback;
 import org.springframework.util.Assert;
 
@@ -53,6 +55,8 @@ import com.mongodb.util.JSON;
  */
 public class MongoTemplate implements InitializingBean, MongoOperations {
 	
+	private static final Log LOGGER = LogFactory.getLog(MongoTemplate.class);
+
 	private static final String ID = "_id";
 
 	/*
@@ -215,14 +219,14 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#executeCommand(java.lang.String)
 	 */
-	public void executeCommand(String jsonCommand) {
-		executeCommand((DBObject)JSON.parse(jsonCommand));
+	public CommandResult executeCommand(String jsonCommand) {
+		return executeCommand((DBObject)JSON.parse(jsonCommand));
 	}
 
 	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#executeCommand(com.mongodb.DBObject)
 	 */
-	public void executeCommand(final DBObject command) {
+	public CommandResult executeCommand(final DBObject command) {
 		
 		CommandResult result = execute(new DbCallback<CommandResult>() {
 			public CommandResult doInDB(DB db) throws MongoException, DataAccessException {
@@ -232,9 +236,13 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 		
 		String error = result.getErrorMessage();
 		if (error != null) {
-			throw new InvalidDataAccessApiUsageException("Command execution of " +
+			// TODO: allow configuration of logging level / throw
+			//	throw new InvalidDataAccessApiUsageException("Command execution of " +
+			//			command.toString() + " failed: " + error);
+			LOGGER.warn("Command execution of " +
 					command.toString() + " failed: " + error);
 		}
+		return result;
 	}
 	
 	/* (non-Javadoc)
@@ -295,7 +303,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 			DBCursor cursor = collectionCallback.doInCollection(getCollection(collectionName));
 			
 			if (preparer != null) {
-				preparer.prepare(cursor);
+				cursor = preparer.prepare(cursor);
 			}
 			
 			List<T> result = new ArrayList<T>();
@@ -387,16 +395,52 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	}
 
 
-	private String getRequiredDefaultCollectionName() {
-		String name = getDefaultCollectionName();
-		if (name == null) {
-			throw new IllegalStateException(
-					"No 'defaultCollection' or 'defaultCollectionName' specified. Check configuration of MongoTemplate.");
-		}
-		return name;
+	// Find methods that take a QueryDefinition to express the query.
+	
+	public <T> List<T> find(QueryDefinition query, Class<T> targetClass) {
+		return find(getDefaultCollectionName(), query, targetClass); //
+	}
+	
+	public <T> List<T> find(QueryDefinition query, Class<T> targetClass, MongoReader<T> reader) {
+		return find(getDefaultCollectionName(), query, targetClass, reader);
 	}
 
-	
+	public <T> List<T> find(String collectionName, final QueryDefinition query, Class<T> targetClass) {
+		CursorPreparer cursorPreparer = null;
+		if (query.getSkip() > 0 || query.getLimit() > 0 || query.getSortObject() != null) {
+			cursorPreparer = new CursorPreparer() {
+				
+				public DBCursor prepare(DBCursor cursor) {
+					DBCursor cursorToUse = cursor;
+					try {
+						if (query.getSkip() > 0) {
+							cursorToUse = cursorToUse.skip(query.getSkip());
+						}
+						if (query.getLimit() > 0) {
+							cursorToUse = cursorToUse.limit(query.getLimit());
+						}
+						if (query.getSortObject() != null) {
+							cursorToUse = cursorToUse.sort(query.getSortObject());
+						}
+					} catch (MongoException e) {
+						throw potentiallyConvertRuntimeException(e);
+					}
+					return cursorToUse;
+				}
+			};
+		}
+		return doFind(collectionName, query.getQueryObject(), query.getFieldsObject(), targetClass, cursorPreparer);
+	}
+
+	public <T> List<T> find(String collectionName, QueryDefinition query, Class<T> targetClass, MongoReader<T> reader) {
+		return doFind(collectionName, query.getQueryObject(), query.getFieldsObject(), targetClass, reader);
+	}
+
+	public <T> List<T> find(String collectionName, QueryDefinition query,
+			Class<T> targetClass, CursorPreparer preparer) {
+		return doFind(collectionName, query.getQueryObject(), query.getFieldsObject(), targetClass, preparer);
+	}
+
 	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#insert(java.lang.Object)
 	 */
@@ -557,21 +601,21 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#updateFirst(com.mongodb.DBObject, com.mongodb.DBObject)
 	 */
-	public void updateFirst(DBObject queryDoc, DBObject updateDoc) {
-		updateFirst(getRequiredDefaultCollectionName(), queryDoc, updateDoc);
+	public void updateFirst(QueryDefinition query, UpdateDefinition update) {
+		updateFirst(getRequiredDefaultCollectionName(), query, update);
 	}
 	
 	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#updateFirst(java.lang.String, com.mongodb.DBObject, com.mongodb.DBObject)
 	 */
-	public void updateFirst(String collectionName, final DBObject queryDoc, final DBObject updateDoc) {
+	public void updateFirst(String collectionName, final QueryDefinition query, final UpdateDefinition update) {
 		execute(new CollectionCallback<Void>() {
 			public Void doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 				if (writeConcern == null) {
-					collection.update(queryDoc, updateDoc);
+					collection.update(query.getQueryObject(), update.getUpdateObject());
 				}
 				else {
-					collection.update(queryDoc, updateDoc, false, false, writeConcern);
+					collection.update(query.getQueryObject(), update.getUpdateObject(), false, false, writeConcern);
 				}
 				return null;
 			}
@@ -581,21 +625,21 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#updateMulti(com.mongodb.DBObject, com.mongodb.DBObject)
 	 */
-	public void updateMulti(DBObject queryDoc, DBObject updateDoc) {
-		updateMulti(getRequiredDefaultCollectionName(), queryDoc, updateDoc);
+	public void updateMulti(QueryDefinition query, UpdateDefinition update) {
+		updateMulti(getRequiredDefaultCollectionName(), query, update);
 	}
 	
 	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#updateMulti(java.lang.String, com.mongodb.DBObject, com.mongodb.DBObject)
 	 */
-	public void updateMulti(String collectionName, final DBObject queryDoc, final DBObject updateDoc) {
+	public void updateMulti(String collectionName, final QueryDefinition query, final UpdateDefinition update) {
 		execute(new CollectionCallback<Void>() {
 			public Void doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 				if (writeConcern == null) {
-					collection.updateMulti(queryDoc, updateDoc);
+					collection.updateMulti(query.getQueryObject(), update.getUpdateObject());
 				}
 				else {
-					collection.update(queryDoc, updateDoc, false, true, writeConcern);
+					collection.update(query.getQueryObject(), update.getUpdateObject(), false, true, writeConcern);
 				}
 				return null;
 			}
@@ -605,21 +649,21 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#remove(com.mongodb.DBObject)
 	 */
-	public void remove(DBObject queryDoc) {
-		remove(getRequiredDefaultCollectionName(), queryDoc);
+	public void remove(QueryDefinition query) {
+		remove(getRequiredDefaultCollectionName(), query);
 	}
 	
 	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#remove(java.lang.String, com.mongodb.DBObject)
 	 */
-	public void remove(String collectionName, final DBObject queryDoc) {
+	public void remove(String collectionName, final QueryDefinition query) {
 		execute(new CollectionCallback<Void>() {
 			public Void doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 				if (writeConcern == null) {
-					collection.remove(queryDoc);
+					collection.remove(query.getQueryObject());
 				}
 				else {
-					collection.remove(queryDoc, writeConcern);
+					collection.remove(query.getQueryObject(), writeConcern);
 				}
 				return null;
 			}
@@ -653,29 +697,11 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 				collectionName);
 	}
 	
-	// Find methods that take a QueryDefinition to express the query.
+	public DB getDb() {
+		return MongoDbUtils.getDB(mongo, databaseName, username, password == null ? null : password.toCharArray());
+	}
+
 	
-	public <T> List<T> find(QueryDefinition query, Class<T> targetClass) {
-		return find(getDefaultCollectionName(), query, targetClass); //
-	}
-	
-	public <T> List<T> find(QueryDefinition query, Class<T> targetClass, MongoReader<T> reader) {
-		return find(getDefaultCollectionName(), query, targetClass, reader);
-	}
-
-	public <T> List<T> find(String collectionName, QueryDefinition query, Class<T> targetClass) {
-		return doFind(collectionName, query.getQueryObject(), query.getFieldsObject(), targetClass, (CursorPreparer) null);
-	}
-
-	public <T> List<T> find(String collectionName, QueryDefinition query, Class<T> targetClass, MongoReader<T> reader) {
-		return doFind(collectionName, query.getQueryObject(), query.getFieldsObject(), targetClass, reader);
-	}
-
-	public <T> List<T> find(String collectionName, QueryDefinition query,
-			Class<T> targetClass, CursorPreparer preparer) {
-		return doFind(collectionName, query.getQueryObject(), query.getFieldsObject(), targetClass, preparer);
-	}
-
 	/**
 	 * Map the results of an ad-hoc query on the default MongoDB collection to a List of the specified type.
 	 * 
@@ -717,12 +743,6 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 				collectionName);
 	}
 
-
-	public DB getDb() {
-		return MongoDbUtils.getDB(mongo, databaseName, username, password == null ? null : password.toCharArray());
-	}
-
-	
 	protected DBObject convertToDbObject(CollectionOptions collectionOptions) {
 		DBObject dbo = new BasicDBObject();
 		if (collectionOptions != null) {
@@ -763,8 +783,18 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 			bw.setPropertyValue(idDescriptor.getName(), target);
 		}
 	}
-	
-	/**
+
+
+	private String getRequiredDefaultCollectionName() {
+		String name = getDefaultCollectionName();
+		if (name == null) {
+			throw new IllegalStateException(
+					"No 'defaultCollection' or 'defaultCollectionName' specified. Check configuration of MongoTemplate.");
+		}
+		return name;
+	}
+
+		/**
 	 * Tries to convert the given {@link RuntimeException} into a {@link DataAccessException} but returns the original
 	 * exception if the conversation failed. Thus allows safe rethrowing of the return value.
 	 * 

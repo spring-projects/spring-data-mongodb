@@ -26,9 +26,9 @@ import com.mongodb.DBCursor;
 public interface CursorPreparer {
 
     /**
-     * Prepare the given cursor (apply limits, skips and so on).
+     * Prepare the given cursor (apply limits, skips and so on). Returns th eprepared cursor.
      * 
      * @param cursor
      */
-    void prepare(DBCursor cursor);
+	DBCursor prepare(DBCursor cursor);
 }
