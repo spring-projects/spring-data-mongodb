@@ -28,6 +28,7 @@ import org.springframework.beans.ConfigurablePropertyAccessor;
 import org.springframework.beans.PropertyAccessorFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.dao.DataAccessException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.document.mongodb.MongoPropertyDescriptors.MongoPropertyDescriptor;
 import org.springframework.data.document.mongodb.builder.QueryDefinition;
 import org.springframework.data.document.mongodb.builder.UpdateDefinition;
@@ -43,6 +44,7 @@ import com.mongodb.DBObject;
 import com.mongodb.Mongo;
 import com.mongodb.MongoException;
 import com.mongodb.WriteConcern;
+import com.mongodb.WriteResult;
 import com.mongodb.util.JSON;
 
 /**
@@ -65,6 +67,12 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	 */
 	private WriteConcern writeConcern = null;
 	
+	/*
+	 * WriteResultChecking to be used for write operations if it has been specified. Otherwise
+	 * we should not do any checking.
+	 */
+	private WriteResultChecking writeResultChecking = WriteResultChecking.NONE;
+	
 	private final MongoConverter mongoConverter;
 	private final Mongo mongo;
 	private final MongoExceptionTranslator exceptionTranslator = new MongoExceptionTranslator();
@@ -81,7 +89,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	 * @param databaseName
 	 */
 	public MongoTemplate(Mongo mongo, String databaseName) {
-		this(mongo, databaseName, null, null, null);
+		this(mongo, databaseName, null, null, null, null);
 	}
 	
 	/**
@@ -91,8 +99,8 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	 * @param databaseName
 	 * @param writeConcern
 	 */
-	public MongoTemplate(Mongo mongo, String databaseName, WriteConcern writeConcern) {
-		this(mongo, databaseName, null, null, writeConcern);
+	public MongoTemplate(Mongo mongo, String databaseName, WriteConcern writeConcern, WriteResultChecking writeResultChecking) {
+		this(mongo, databaseName, null, null, writeConcern, writeResultChecking);
 	}
 	
 	/**
@@ -102,7 +110,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	 * @param defaultCollectionName
 	 */
 	public MongoTemplate(Mongo mongo, String databaseName, String defaultCollectionName) {
-		this(mongo, databaseName, defaultCollectionName, null, null);
+		this(mongo, databaseName, defaultCollectionName, null, null, null);
 	}
 	
 	/**
@@ -113,8 +121,8 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	 * @param defaultCollectionName
 	 * @param writeConcern
 	 */
-	public MongoTemplate(Mongo mongo, String databaseName, String defaultCollectionName, WriteConcern writeConcern) {
-		this(mongo, databaseName, defaultCollectionName, null, writeConcern);
+	public MongoTemplate(Mongo mongo, String databaseName, String defaultCollectionName, WriteConcern writeConcern, WriteResultChecking writeResultChecking) {
+		this(mongo, databaseName, defaultCollectionName, null, writeConcern, writeResultChecking);
 	}
 	
 	/**
@@ -125,7 +133,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	 * @param mongoConverter
 	 */
 	public MongoTemplate(Mongo mongo, String databaseName, String defaultCollectionName, MongoConverter mongoConverter) {
-		this(mongo, databaseName, defaultCollectionName, mongoConverter, null);
+		this(mongo, databaseName, defaultCollectionName, mongoConverter, null, null);
 	}
 	
 	/**
@@ -136,8 +144,9 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	 * @param defaultCollectionName
 	 * @param mongoConverter
 	 * @param writeConcern
+	 * @param writeResultChecking
 	 */
-	public MongoTemplate(Mongo mongo, String databaseName, String defaultCollectionName, MongoConverter mongoConverter, WriteConcern writeConcern) {
+	public MongoTemplate(Mongo mongo, String databaseName, String defaultCollectionName, MongoConverter mongoConverter, WriteConcern writeConcern, WriteResultChecking writeResultChecking) {
 		
 		Assert.notNull(mongo);
 		Assert.notNull(databaseName);
@@ -147,6 +156,9 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 		this.mongo = mongo;
 		this.databaseName = databaseName;
 		this.writeConcern = writeConcern;
+		if (writeResultChecking != null) {
+			this.writeResultChecking = writeResultChecking;
+		}
 	}
 	
 	
@@ -601,23 +613,25 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#updateFirst(com.mongodb.DBObject, com.mongodb.DBObject)
 	 */
-	public void updateFirst(QueryDefinition query, UpdateDefinition update) {
-		updateFirst(getRequiredDefaultCollectionName(), query, update);
+	public WriteResult updateFirst(QueryDefinition query, UpdateDefinition update) {
+		return updateFirst(getRequiredDefaultCollectionName(), query, update);
 	}
 	
 	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#updateFirst(java.lang.String, com.mongodb.DBObject, com.mongodb.DBObject)
 	 */
-	public void updateFirst(String collectionName, final QueryDefinition query, final UpdateDefinition update) {
-		execute(new CollectionCallback<Void>() {
-			public Void doInCollection(DBCollection collection) throws MongoException, DataAccessException {
+	public WriteResult updateFirst(String collectionName, final QueryDefinition query, final UpdateDefinition update) {
+		return execute(new CollectionCallback<WriteResult>() {
+			public WriteResult doInCollection(DBCollection collection) throws MongoException, DataAccessException {
+				WriteResult wr;
 				if (writeConcern == null) {
-					collection.update(query.getQueryObject(), update.getUpdateObject());
+					wr = collection.update(query.getQueryObject(), update.getUpdateObject());
 				}
 				else {
-					collection.update(query.getQueryObject(), update.getUpdateObject(), false, false, writeConcern);
+					wr = collection.update(query.getQueryObject(), update.getUpdateObject(), false, false, writeConcern);
 				}
-				return null;
+				handleAnyWriteResultErrors(wr, query.getQueryObject(), "update with '" +update.getUpdateObject() + "'");
+				return wr;
 			}
 		}, collectionName);
 	}
@@ -625,23 +639,25 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#updateMulti(com.mongodb.DBObject, com.mongodb.DBObject)
 	 */
-	public void updateMulti(QueryDefinition query, UpdateDefinition update) {
-		updateMulti(getRequiredDefaultCollectionName(), query, update);
+	public WriteResult updateMulti(QueryDefinition query, UpdateDefinition update) {
+		return updateMulti(getRequiredDefaultCollectionName(), query, update);
 	}
 	
 	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#updateMulti(java.lang.String, com.mongodb.DBObject, com.mongodb.DBObject)
 	 */
-	public void updateMulti(String collectionName, final QueryDefinition query, final UpdateDefinition update) {
-		execute(new CollectionCallback<Void>() {
-			public Void doInCollection(DBCollection collection) throws MongoException, DataAccessException {
+	public WriteResult updateMulti(String collectionName, final QueryDefinition query, final UpdateDefinition update) {
+		return execute(new CollectionCallback<WriteResult>() {
+			public WriteResult doInCollection(DBCollection collection) throws MongoException, DataAccessException {
+				WriteResult wr = null;
 				if (writeConcern == null) {
-					collection.updateMulti(query.getQueryObject(), update.getUpdateObject());
+					wr = collection.updateMulti(query.getQueryObject(), update.getUpdateObject());
 				}
 				else {
-					collection.update(query.getQueryObject(), update.getUpdateObject(), false, true, writeConcern);
+					wr = collection.update(query.getQueryObject(), update.getUpdateObject(), false, true, writeConcern);
 				}
-				return null;
+				handleAnyWriteResultErrors(wr, query.getQueryObject(), "update with '" +update.getUpdateObject() + "'");
+				return wr;
 			}
 		}, collectionName);
 	}
@@ -659,12 +675,14 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	public void remove(String collectionName, final QueryDefinition query) {
 		execute(new CollectionCallback<Void>() {
 			public Void doInCollection(DBCollection collection) throws MongoException, DataAccessException {
+				WriteResult wr = null;
 				if (writeConcern == null) {
-					collection.remove(query.getQueryObject());
+					wr = collection.remove(query.getQueryObject());
 				}
 				else {
-					collection.remove(query.getQueryObject(), writeConcern);
+					wr = collection.remove(query.getQueryObject(), writeConcern);
 				}
+				handleAnyWriteResultErrors(wr, query.getQueryObject(), "remove");
 				return null;
 			}
 		}, collectionName);
@@ -794,7 +812,43 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 		return name;
 	}
 
-		/**
+	/**
+	 * Checks and handles any errors.
+	 * 
+	 * TODO: current implementation logs errors - will be configurable to log warning, errors or 
+	 * throw exception in later versions
+	 * 
+	 */
+	private void handleAnyWriteResultErrors(WriteResult wr, DBObject query, String operation) {
+		if (WriteResultChecking.NONE == this.writeResultChecking) {
+			return;
+		}
+		String error = wr.getError();
+		int n = wr.getN();
+		if (error != null) {
+			String message = "Execution of '" + operation + 
+					(query == null ? "" : "' using '" + query.toString() + "' query") + " failed: " + error;
+			if (WriteResultChecking.EXCEPTION == this.writeResultChecking) {
+				throw new DataIntegrityViolationException(message);
+			}
+			else {
+				LOGGER.error(message);
+			}
+		}
+		else if(n == 0) {
+			String message = "Execution of '" + operation + 
+				(query == null ? "" : "' using '" + query.toString() + "' query") + " did not succeed: 0 documents updated";
+			if (WriteResultChecking.EXCEPTION == this.writeResultChecking) {
+				throw new DataIntegrityViolationException(message);
+			}
+			else {
+				LOGGER.warn(message);
+			}
+		}
+		
+	}
+
+	/**
 	 * Tries to convert the given {@link RuntimeException} into a {@link DataAccessException} but returns the original
 	 * exception if the conversation failed. Thus allows safe rethrowing of the return value.
 	 * 
@@ -802,7 +856,6 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	 * @return
 	 */
 	private RuntimeException potentiallyConvertRuntimeException(RuntimeException ex) {
-
 		RuntimeException resolved = this.exceptionTranslator.translateExceptionIfPossible(ex);
     	return resolved == null ? ex : resolved;
 	}

@@ -29,6 +29,10 @@ public class Update implements UpdateDefinition {
 	}
 
 	private HashMap<String, Object> criteria = new LinkedHashMap<String, Object>();
+
+	public static Update startUpdate() {
+		return new Update();
+	}
 	
 	public Update set(String key, Object value) {
 		criteria.put("$set", Collections.singletonMap(key, value));

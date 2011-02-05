@@ -24,6 +24,7 @@ import org.springframework.data.document.mongodb.builder.UpdateDefinition;
 import com.mongodb.CommandResult;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
+import com.mongodb.WriteResult;
 
 /**
  * Interface that specifies a basic set of MongoDB operations.  Implemented by {@link MongoTemplate}.
@@ -433,7 +434,7 @@ public interface MongoOperations {
 	 * @param updateDoc the update document that contains the updated object or $ operators to manipulate the
 	 * existing object. 
 	 */
-	void updateFirst(QueryDefinition query, UpdateDefinition update);
+	WriteResult updateFirst(QueryDefinition query, UpdateDefinition update);
 
 	/**
 	 * Updates the first object that is found in the specified collection that matches the query document criteria
@@ -444,7 +445,7 @@ public interface MongoOperations {
 	 * @param updateDoc the update document that contains the updated object or $ operators to manipulate the
 	 * existing object. 
 	 */
-	void updateFirst(String collectionName, QueryDefinition query,
+	WriteResult updateFirst(String collectionName, QueryDefinition query,
 			UpdateDefinition update);
 
 	/**
@@ -455,7 +456,7 @@ public interface MongoOperations {
 	 * @param updateDoc the update document that contains the updated object or $ operators to manipulate the
 	 * existing object. 
 	 */
-	void updateMulti(QueryDefinition query, UpdateDefinition update);
+	WriteResult updateMulti(QueryDefinition query, UpdateDefinition update);
 
 	/**
 	 * Updates all objects that are found in the specified collection that matches the query document criteria
@@ -466,7 +467,7 @@ public interface MongoOperations {
 	 * @param updateDoc the update document that contains the updated object or $ operators to manipulate the
 	 * existing object. 
 	 */
-	void updateMulti(String collectionName, QueryDefinition query,
+	WriteResult updateMulti(String collectionName, QueryDefinition query,
 			UpdateDefinition update);
 
 	/**

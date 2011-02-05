@@ -22,6 +22,8 @@ public class Person {
 	private final ObjectId id;
 	
 	private String firstName;
+
+	private int age;
 	
 	private Person friend;
 	
@@ -49,6 +51,14 @@ public class Person {
 
 	public void setFirstName(String firstName) {
 		this.firstName = firstName;
+	}
+
+	public int getAge() {
+		return age;
+	}
+
+	public void setAge(int age) {
+		this.age = age;
 	}
 
 	public Person getFriend() {
