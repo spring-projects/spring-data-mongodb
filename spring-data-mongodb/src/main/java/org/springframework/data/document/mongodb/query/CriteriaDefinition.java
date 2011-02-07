@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.document.mongodb.builder;
+package org.springframework.data.document.mongodb.query;
 
 import com.mongodb.DBObject;
 
+public interface CriteriaDefinition {
 
-public interface UpdateDefinition {
-	
-	DBObject getUpdateObject();
+	DBObject getCriteriaObject(String key);
+
 }

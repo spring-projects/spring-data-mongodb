@@ -13,20 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.document.mongodb.builder;
+package org.springframework.data.document.mongodb.query;
 
 import com.mongodb.DBObject;
+import com.mongodb.util.JSON;
 
+public class BasicUpdate implements UpdateDefinition {
 
-public interface QueryDefinition {
+	private DBObject updateObject = null;
 	
-	DBObject getQueryObject();
-
-	DBObject getFieldsObject();
+	public BasicUpdate(String updateString) {
+		super();
+		this.updateObject = (DBObject) JSON.parse(updateString);
+	}
 	
-	DBObject getSortObject();
+	public BasicUpdate(DBObject updateObject) {
+		super();
+		this.updateObject = updateObject;
+	}
 
-	int getSkip();
+	public DBObject getUpdateObject() {
+		return updateObject;
+	}
 
-	int getLimit();
 }

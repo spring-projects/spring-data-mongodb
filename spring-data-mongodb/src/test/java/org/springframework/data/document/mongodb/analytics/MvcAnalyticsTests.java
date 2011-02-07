@@ -12,7 +12,7 @@ import org.springframework.data.document.analytics.MvcEvent;
 import org.springframework.data.document.analytics.Parameters;
 import org.springframework.data.document.mongodb.MongoReader;
 import org.springframework.data.document.mongodb.MongoTemplate;
-import org.springframework.data.document.mongodb.builder.BasicQuery;
+import org.springframework.data.document.mongodb.query.BasicQuery;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;

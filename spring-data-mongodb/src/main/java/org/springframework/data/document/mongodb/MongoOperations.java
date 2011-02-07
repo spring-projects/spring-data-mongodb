@@ -18,8 +18,8 @@ package org.springframework.data.document.mongodb;
 import java.util.List;
 import java.util.Set;
 
-import org.springframework.data.document.mongodb.builder.QueryDefinition;
-import org.springframework.data.document.mongodb.builder.UpdateDefinition;
+import org.springframework.data.document.mongodb.query.QueryDefinition;
+import org.springframework.data.document.mongodb.query.UpdateDefinition;
 
 import com.mongodb.CommandResult;
 import com.mongodb.DBCollection;

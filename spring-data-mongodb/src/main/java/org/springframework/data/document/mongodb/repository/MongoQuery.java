@@ -21,7 +21,7 @@ import java.util.List;
 
 import org.springframework.data.document.mongodb.CollectionCallback;
 import org.springframework.data.document.mongodb.MongoTemplate;
-import org.springframework.data.document.mongodb.builder.Query;
+import org.springframework.data.document.mongodb.query.Query;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.query.QueryMethod;

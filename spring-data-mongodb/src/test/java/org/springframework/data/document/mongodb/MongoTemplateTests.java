@@ -29,8 +29,8 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.data.document.mongodb.builder.Query;
-import org.springframework.data.document.mongodb.builder.Update;
+import org.springframework.data.document.mongodb.query.Query;
+import org.springframework.data.document.mongodb.query.Update;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 

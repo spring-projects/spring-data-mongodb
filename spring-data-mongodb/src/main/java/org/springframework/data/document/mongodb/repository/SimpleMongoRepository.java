@@ -22,7 +22,7 @@ import java.util.List;
 import org.bson.types.ObjectId;
 import org.springframework.data.document.mongodb.MongoConverter;
 import org.springframework.data.document.mongodb.MongoTemplate;
-import org.springframework.data.document.mongodb.builder.Query;
+import org.springframework.data.document.mongodb.query.Query;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;

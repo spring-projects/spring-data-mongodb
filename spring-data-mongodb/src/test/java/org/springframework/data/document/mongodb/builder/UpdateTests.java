@@ -20,8 +20,8 @@ import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.springframework.data.document.mongodb.builder.Sort.Order;
-import org.springframework.data.document.mongodb.builder.Update;
+import org.springframework.data.document.mongodb.query.Update;
+import org.springframework.data.document.mongodb.query.Sort.Order;
 
 public class UpdateTests {
 

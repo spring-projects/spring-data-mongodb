@@ -15,7 +15,7 @@
  */
 package org.springframework.data.document.mongodb.repository;
 
-import org.springframework.data.document.mongodb.builder.Query;
+import org.springframework.data.document.mongodb.query.Query;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
@@ -71,14 +71,14 @@ abstract class QueryUtils {
             return query;
         }
 
-        org.springframework.data.document.mongodb.builder.Sort bSort =
+        org.springframework.data.document.mongodb.query.Sort bSort =
                 query.sort();
 
         for (Order order : sort) {
             bSort.on(
                     order.getProperty(),
-                    order.isAscending() ? org.springframework.data.document.mongodb.builder.Sort.Order.ASCENDING
-                            : org.springframework.data.document.mongodb.builder.Sort.Order.DESCENDING);
+                    order.isAscending() ? org.springframework.data.document.mongodb.query.Sort.Order.ASCENDING
+                            : org.springframework.data.document.mongodb.query.Sort.Order.DESCENDING);
         }
 
         return query;

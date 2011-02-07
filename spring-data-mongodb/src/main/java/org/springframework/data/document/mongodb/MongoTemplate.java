@@ -30,8 +30,8 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.document.mongodb.MongoPropertyDescriptors.MongoPropertyDescriptor;
-import org.springframework.data.document.mongodb.builder.QueryDefinition;
-import org.springframework.data.document.mongodb.builder.UpdateDefinition;
+import org.springframework.data.document.mongodb.query.QueryDefinition;
+import org.springframework.data.document.mongodb.query.UpdateDefinition;
 import org.springframework.jca.cci.core.ConnectionCallback;
 import org.springframework.util.Assert;
 

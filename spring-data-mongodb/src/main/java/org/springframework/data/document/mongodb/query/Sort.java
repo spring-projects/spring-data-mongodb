@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.document.mongodb.builder;
+package org.springframework.data.document.mongodb.query;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -22,40 +22,25 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
 
-public class Field {
+public class Sort {
 	
-	private Map<String, Integer> criteria = new HashMap<String, Integer>();
-	
-	private Map<String, Object> slices = new HashMap<String, Object>();
-
-	public Field include(String key) {
-		criteria.put(key, Integer.valueOf(1));
-		return this;
-	}
-
-	public Field exclude(String key) {
-		criteria.put(key, Integer.valueOf(0));
-		return this;
+	public enum Order {
+		ASCENDING, DESCENDING
 	}
 	
-	public Field slice(String key, int size) {
-		slices.put(key, Integer.valueOf(size));
+	private Map<String, Order> criteria = new HashMap<String, Order>();
+	
+	public Sort on(String key, Order order) {
+		criteria.put(key, order);
 		return this;
 	}
 
-	public Field slice(String key, int offset, int size) {
-		slices.put(key, new Integer[] {Integer.valueOf(offset), Integer.valueOf(size)});
-		return this;
-	}
-
-	public DBObject getFieldsObject() {
+	public DBObject getSortObject() {
 		DBObject dbo = new BasicDBObject();
 		for (String k : criteria.keySet()) {
-			dbo.put(k, (criteria.get(k)));
-		}
-		for (String k : slices.keySet()) {
-			dbo.put(k, new BasicDBObject("$slice" ,(slices.get(k))));
+			dbo.put(k, (criteria.get(k).equals(Order.ASCENDING) ? 1 : -1));
 		}
 		return dbo;
 	}
+
 }

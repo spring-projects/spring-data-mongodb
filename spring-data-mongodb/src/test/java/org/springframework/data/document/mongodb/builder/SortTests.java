@@ -17,7 +17,8 @@ package org.springframework.data.document.mongodb.builder;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.springframework.data.document.mongodb.builder.Sort.Order;
+import org.springframework.data.document.mongodb.query.Sort;
+import org.springframework.data.document.mongodb.query.Sort.Order;
 
 public class SortTests {
 

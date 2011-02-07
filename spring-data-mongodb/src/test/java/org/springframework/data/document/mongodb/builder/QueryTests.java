@@ -17,6 +17,8 @@ package org.springframework.data.document.mongodb.builder;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.springframework.data.document.mongodb.query.BasicQuery;
+import org.springframework.data.document.mongodb.query.Query;
 
 public class QueryTests {
 
