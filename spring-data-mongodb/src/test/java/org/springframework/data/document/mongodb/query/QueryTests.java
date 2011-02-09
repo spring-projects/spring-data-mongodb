@@ -40,8 +40,7 @@ public class QueryTests {
 
 	@Test
 	public void testOrQuery() {
-		Query q = new Query();;
-		q.or(
+		Query q = new OrQuery(
 				new Query(where("name").is("Sven")).and(where("age").lt(50)), 
 				new Query(where("age").lt(50)),
 				new BasicQuery("{'name' : 'Thomas'}")
