@@ -22,7 +22,7 @@ import java.util.LinkedHashMap;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
-public class Update implements UpdateDefinition {
+public class Update {
 
 	public enum Position {
 		LAST, FIRST
@@ -30,10 +30,6 @@ public class Update implements UpdateDefinition {
 
 	private HashMap<String, Object> criteria = new LinkedHashMap<String, Object>();
 
-	public static Update startUpdate() {
-		return new Update();
-	}
-	
 	public Update set(String key, Object value) {
 		criteria.put("$set", Collections.singletonMap(key, value));
 		return this;
@@ -87,10 +83,6 @@ public class Update implements UpdateDefinition {
 		criteria.put("$rename", Collections.singletonMap(oldName, newName));
 		return this;
 	}
-
-//	public UpdateDefinition build() {
-//		return this;
-//	}
 
 	public DBObject getUpdateObject() {
 		DBObject dbo = new BasicDBObject();

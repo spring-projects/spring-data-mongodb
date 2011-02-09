@@ -15,10 +15,13 @@
  */
 package org.springframework.data.document.mongodb.query;
 
+import java.util.Collections;
+
+import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
 
-public class BasicUpdate implements UpdateDefinition {
+public class BasicUpdate extends Update {
 
 	private DBObject updateObject = null;
 	
@@ -32,6 +35,71 @@ public class BasicUpdate implements UpdateDefinition {
 		this.updateObject = updateObject;
 	}
 
+	@Override
+	public Update set(String key, Object value) {
+		updateObject.put("$set", Collections.singletonMap(key, value));
+		return this;
+	}
+
+	@Override
+	public Update unset(String key) {
+		updateObject.put("$unset", Collections.singletonMap(key, 1));
+		return this;
+	}
+
+	@Override
+	public Update inc(String key, long inc) {
+		updateObject.put("$inc", Collections.singletonMap(key, inc));
+		return this;
+	}
+
+	@Override
+	public Update push(String key, Object value) {
+		updateObject.put("$push", Collections.singletonMap(key, value));
+		return this;
+	}
+
+	@Override
+	public Update pushAll(String key, Object[] values) {
+		DBObject keyValue = new BasicDBObject();
+		keyValue.put(key, values);
+		updateObject.put("$pushAll", keyValue);
+		return this;
+	}
+
+	@Override
+	public Update addToSet(String key, Object value) {
+		updateObject.put("$addToSet", Collections.singletonMap(key, value));
+		return this;
+	}
+
+	@Override
+	public Update pop(String key, Position pos) {
+		updateObject.put("$pop", Collections.singletonMap(key, (pos == Position.FIRST ? -1 : 1)));
+		return this;
+	}
+
+	@Override
+	public Update pull(String key, Object value) {
+		updateObject.put("$pull", Collections.singletonMap(key, value));
+		return this;
+	}
+
+	@Override
+	public Update pullAll(String key, Object[] values) {
+		DBObject keyValue = new BasicDBObject();
+		keyValue.put(key, values);
+		updateObject.put("$pullAll", keyValue);
+		return this;
+	}
+
+	@Override
+	public Update rename(String oldName, String newName) {
+		updateObject.put("$rename", Collections.singletonMap(oldName, newName));
+		return this;
+	}
+
+	@Override
 	public DBObject getUpdateObject() {
 		return updateObject;
 	}

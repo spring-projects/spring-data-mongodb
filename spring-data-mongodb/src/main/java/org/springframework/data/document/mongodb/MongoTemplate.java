@@ -30,8 +30,8 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.document.mongodb.MongoPropertyDescriptors.MongoPropertyDescriptor;
-import org.springframework.data.document.mongodb.query.QueryDefinition;
-import org.springframework.data.document.mongodb.query.UpdateDefinition;
+import org.springframework.data.document.mongodb.query.Query;
+import org.springframework.data.document.mongodb.query.Update;
 import org.springframework.jca.cci.core.ConnectionCallback;
 import org.springframework.util.Assert;
 
@@ -407,17 +407,17 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	}
 
 
-	// Find methods that take a QueryDefinition to express the query.
+	// Find methods that take a Query to express the query.
 	
-	public <T> List<T> find(QueryDefinition query, Class<T> targetClass) {
+	public <T> List<T> find(Query query, Class<T> targetClass) {
 		return find(getDefaultCollectionName(), query, targetClass); //
 	}
 	
-	public <T> List<T> find(QueryDefinition query, Class<T> targetClass, MongoReader<T> reader) {
+	public <T> List<T> find(Query query, Class<T> targetClass, MongoReader<T> reader) {
 		return find(getDefaultCollectionName(), query, targetClass, reader);
 	}
 
-	public <T> List<T> find(String collectionName, final QueryDefinition query, Class<T> targetClass) {
+	public <T> List<T> find(String collectionName, final Query query, Class<T> targetClass) {
 		CursorPreparer cursorPreparer = null;
 		if (query.getSkip() > 0 || query.getLimit() > 0 || query.getSortObject() != null) {
 			cursorPreparer = new CursorPreparer() {
@@ -444,11 +444,11 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 		return doFind(collectionName, query.getQueryObject(), query.getFieldsObject(), targetClass, cursorPreparer);
 	}
 
-	public <T> List<T> find(String collectionName, QueryDefinition query, Class<T> targetClass, MongoReader<T> reader) {
+	public <T> List<T> find(String collectionName, Query query, Class<T> targetClass, MongoReader<T> reader) {
 		return doFind(collectionName, query.getQueryObject(), query.getFieldsObject(), targetClass, reader);
 	}
 
-	public <T> List<T> find(String collectionName, QueryDefinition query,
+	public <T> List<T> find(String collectionName, Query query,
 			Class<T> targetClass, CursorPreparer preparer) {
 		return doFind(collectionName, query.getQueryObject(), query.getFieldsObject(), targetClass, preparer);
 	}
@@ -613,14 +613,14 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#updateFirst(com.mongodb.DBObject, com.mongodb.DBObject)
 	 */
-	public WriteResult updateFirst(QueryDefinition query, UpdateDefinition update) {
+	public WriteResult updateFirst(Query query, Update update) {
 		return updateFirst(getRequiredDefaultCollectionName(), query, update);
 	}
 	
 	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#updateFirst(java.lang.String, com.mongodb.DBObject, com.mongodb.DBObject)
 	 */
-	public WriteResult updateFirst(String collectionName, final QueryDefinition query, final UpdateDefinition update) {
+	public WriteResult updateFirst(String collectionName, final Query query, final Update update) {
 		return execute(new CollectionCallback<WriteResult>() {
 			public WriteResult doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 				WriteResult wr;
@@ -639,14 +639,14 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#updateMulti(com.mongodb.DBObject, com.mongodb.DBObject)
 	 */
-	public WriteResult updateMulti(QueryDefinition query, UpdateDefinition update) {
+	public WriteResult updateMulti(Query query, Update update) {
 		return updateMulti(getRequiredDefaultCollectionName(), query, update);
 	}
 	
 	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#updateMulti(java.lang.String, com.mongodb.DBObject, com.mongodb.DBObject)
 	 */
-	public WriteResult updateMulti(String collectionName, final QueryDefinition query, final UpdateDefinition update) {
+	public WriteResult updateMulti(String collectionName, final Query query, final Update update) {
 		return execute(new CollectionCallback<WriteResult>() {
 			public WriteResult doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 				WriteResult wr = null;
@@ -665,14 +665,14 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#remove(com.mongodb.DBObject)
 	 */
-	public void remove(QueryDefinition query) {
+	public void remove(Query query) {
 		remove(getRequiredDefaultCollectionName(), query);
 	}
 	
 	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#remove(java.lang.String, com.mongodb.DBObject)
 	 */
-	public void remove(String collectionName, final QueryDefinition query) {
+	public void remove(String collectionName, final Query query) {
 		execute(new CollectionCallback<Void>() {
 			public Void doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 				WriteResult wr = null;

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.document.mongodb.builder;
+package org.springframework.data.document.mongodb.query;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -21,7 +21,6 @@ import java.util.Map;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.data.document.mongodb.query.Update;
-import org.springframework.data.document.mongodb.query.Sort.Order;
 
 public class UpdateTests {
 
@@ -121,4 +120,18 @@ public class UpdateTests {
 		Assert.assertEquals("{ \"$rename\" : { \"directory\" : \"folder\"}}", u.getUpdateObject().toString());
 	}
 
+	@Test
+	public void testBasicUpdateInc() {
+		Update u = new Update()
+			.inc("size", 1);
+		Assert.assertEquals("{ \"$inc\" : { \"size\" : 1}}", u.getUpdateObject().toString());
+	}
+
+	@Test
+	public void testBasicUpdateIncAndSet() {
+		Update u = new BasicUpdate("{ \"$inc\" : { \"size\" : 1}}")
+			.set("directory", "/Users/Test/Desktop");
+		Assert.assertEquals("{ \"$inc\" : { \"size\" : 1} , \"$set\" : { \"directory\" : \"/Users/Test/Desktop\"}}", 
+				u.getUpdateObject().toString());
+	}
 }

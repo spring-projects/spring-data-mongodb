@@ -20,7 +20,7 @@ import java.util.LinkedHashMap;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
-public class Query implements QueryDefinition {
+public class Query {
 	
 	private LinkedHashMap<String, CriteriaDefinition> criteria = new LinkedHashMap<String, CriteriaDefinition>();
 	
@@ -32,17 +32,19 @@ public class Query implements QueryDefinition {
 
 	private int limit;
 	
-	public static Criteria startQueryWithCriteria(String key) {
-		return new Query().start(key);
+	public Query() {
+	}
+	
+	public Query(Criteria criteria) {
+		and(criteria);
 	}
 
-	public Criteria start(String key) {
-		Criteria c = new Criteria(this);
-		this.criteria.put(key, c);
-		return c;
+	public Query and(Criteria criteria) {
+		this.criteria.put(criteria.getKey(), criteria);
+		return this;
 	}
 
-	public Query or(QueryDefinition... queries) {
+	protected Query or(Query... queries) {
 		this.criteria.put("$or", new OrCriteria(queries));
 		return this;
 	}
@@ -75,15 +77,11 @@ public class Query implements QueryDefinition {
 		return this.sort;
 	}
 	
-//	public QueryDefinition build() {
-//		return this;
-//	}
-
 	public DBObject getQueryObject() {
 		DBObject dbo = new BasicDBObject();
 		for (String k : criteria.keySet()) {
 			CriteriaDefinition c = criteria.get(k);
-			DBObject cl = c.getCriteriaObject(k);
+			DBObject cl = c.getCriteriaObject();
 			dbo.putAll(cl);
 		}
 		return dbo;

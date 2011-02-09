@@ -18,7 +18,7 @@ package org.springframework.data.document.mongodb.query;
 import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
 
-public class BasicQuery implements QueryDefinition {
+public class BasicQuery extends Query {
 
 	private DBObject queryObject = null;
 	
@@ -50,8 +50,14 @@ public class BasicQuery implements QueryDefinition {
 		this.fieldsObject = fieldsObject;
 	}
 
+	@Override
+	public Query and(Criteria criteria) {
+		this.queryObject.putAll(criteria.getCriteriaObject());
+		return this;
+	}
+
 	public DBObject getQueryObject() {
-		return queryObject;
+		return this.queryObject;
 	}
 
 	public DBObject getFieldsObject() {

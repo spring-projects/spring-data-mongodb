@@ -22,9 +22,9 @@ import com.mongodb.DBObject;
 
 public class OrCriteria implements CriteriaDefinition {
 	
-	QueryDefinition[] queries = null;
+	Query[] queries = null;
 	
-	public OrCriteria(QueryDefinition[] queries) {
+	public OrCriteria(Query[] queries) {
 		super();
 		this.queries = queries;
 	}
@@ -33,13 +33,13 @@ public class OrCriteria implements CriteriaDefinition {
 	/* (non-Javadoc)
 	 * @see org.springframework.datastore.document.mongodb.query.Criteria#getCriteriaObject(java.lang.String)
 	 */
-	public DBObject getCriteriaObject(String key) {
+	public DBObject getCriteriaObject() {
 		DBObject dbo = new BasicDBObject();
 		BasicBSONList l = new BasicBSONList();
-		for (QueryDefinition q : queries) {
+		for (Query q : queries) {
 			l.add(q.getQueryObject());
 		}
-		dbo.put(key, l);
+		dbo.put("$or", l);
 		return dbo;
 	}
 

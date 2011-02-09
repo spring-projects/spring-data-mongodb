@@ -15,7 +15,9 @@
  */
 package org.springframework.data.document.mongodb.repository;
 
-import java.util.Arrays;
+import static org.springframework.data.document.mongodb.query.Criteria.where;
+
+import java.util.Collections;
 import java.util.regex.Pattern;
 
 import org.apache.commons.logging.Log;
@@ -75,7 +77,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
     protected Criteria create(Part part, BindableParameterIterator iterator) {
 
         return from(part.getType(),
-                new Query().start(part.getProperty().toDotPath()), iterator);
+                where(part.getProperty().toDotPath()), iterator);
     }
 
 
@@ -92,7 +94,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
     protected Criteria and(Part part, Criteria base,
             BindableParameterIterator iterator) {
 
-        return from(part.getType(), base.and(part.getProperty().toDotPath()),
+        return from(part.getType(), where(part.getProperty().toDotPath()),
                 iterator);
     }
 
@@ -107,7 +109,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
     @Override
     protected Criteria or(Criteria base, Criteria criteria) {
 
-        base.or(Arrays.asList(criteria.end()));
+        base.or(Collections.singletonList(new Query(criteria)));
         return base;
     }
 
@@ -122,7 +124,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
     @Override
     protected Query complete(Criteria criteria, Sort sort) {
 
-        Query query = criteria.end();
+        Query query = new Query(criteria);
 
         if (LOG.isDebugEnabled()) {
             LOG.debug("Created query " + query);

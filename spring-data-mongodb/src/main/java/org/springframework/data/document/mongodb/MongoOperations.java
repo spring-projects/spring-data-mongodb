@@ -18,8 +18,8 @@ package org.springframework.data.document.mongodb;
 import java.util.List;
 import java.util.Set;
 
-import org.springframework.data.document.mongodb.query.QueryDefinition;
-import org.springframework.data.document.mongodb.query.UpdateDefinition;
+import org.springframework.data.document.mongodb.query.Query;
+import org.springframework.data.document.mongodb.query.Update;
 
 import com.mongodb.CommandResult;
 import com.mongodb.DBCollection;
@@ -212,14 +212,14 @@ public interface MongoOperations {
 	 * {@see MongoConverter}.  Unless configured otherwise, an
 	 * instance of SimpleMongoConverter will be used.   
 	 * 
-	 * The query is specified as a {@link QueryDefinition} which can be created either using the {@link BasicQuery} or the more
+	 * The query is specified as a {@link Query} which can be created either using the {@link BasicQuery} or the more
 	 * feature rich {@link Query}.
 	 * 
 	 * @param query the query class that specifies the criteria used to find a record and also an optional fields specification 
 	 * @param targetClass the parameterized type of the returned list.
 	 * @return the List of converted objects
 	 */
-	<T> List<T> find(QueryDefinition query, Class<T> targetClass);
+	<T> List<T> find(Query query, Class<T> targetClass);
 
 	/**
 	 * Map the results of an ad-hoc query on the default MongoDB collection to a List of the specified type.
@@ -228,7 +228,7 @@ public interface MongoOperations {
 	 * {@see MongoConverter}.  Unless configured otherwise, an
 	 * instance of SimpleMongoConverter will be used.   
 	 * 
-	 * The query is specified as a {@link QueryDefinition} which can be created either using the {@link BasicQuery} or the more
+	 * The query is specified as a {@link Query} which can be created either using the {@link BasicQuery} or the more
 	 * feature rich {@link Query}.
 	 * 
 	 * @param query the query class that specifies the criteria used to find a record and also an optional fields specification 
@@ -236,7 +236,7 @@ public interface MongoOperations {
 	 * @param reader the MongoReader to convert from DBObject to an object.
 	 * @return the List of converted objects
 	 */
-	<T> List<T> find(QueryDefinition query, Class<T> targetClass,
+	<T> List<T> find(Query query, Class<T> targetClass,
 			MongoReader<T> reader);
 
 	/**
@@ -246,7 +246,7 @@ public interface MongoOperations {
 	 * {@see MongoConverter}.  Unless configured otherwise, an
 	 * instance of SimpleMongoConverter will be used.   
 	 * 
-	 * The query is specified as a {@link QueryDefinition} which can be created either using the {@link BasicQuery} or the more
+	 * The query is specified as a {@link Query} which can be created either using the {@link BasicQuery} or the more
 	 * feature rich {@link Query}.
 	 * 
 	 * @param collectionName name of the collection to retrieve the objects from	 
@@ -254,7 +254,7 @@ public interface MongoOperations {
 	 * @param targetClass the parameterized type of the returned list.
 	 * @return the List of converted objects
 	 */
-	<T> List<T> find(String collectionName, QueryDefinition query,
+	<T> List<T> find(String collectionName, Query query,
 			Class<T> targetClass);
 
 	/**
@@ -264,7 +264,7 @@ public interface MongoOperations {
 	 * {@see MongoConverter}.  Unless configured otherwise, an
 	 * instance of SimpleMongoConverter will be used.   
 	 * 
-	 * The query is specified as a {@link QueryDefinition} which can be created either using the {@link BasicQuery} or the more
+	 * The query is specified as a {@link Query} which can be created either using the {@link BasicQuery} or the more
 	 * feature rich {@link Query}.
 	 * 
 	 * @param collectionName name of the collection to retrieve the objects from	 
@@ -273,7 +273,7 @@ public interface MongoOperations {
 	 * @param reader the MongoReader to convert from DBObject to an object.
 	 * @return the List of converted objects
 	 */
-	<T> List<T> find(String collectionName, QueryDefinition query,
+	<T> List<T> find(String collectionName, Query query,
 			Class<T> targetClass, MongoReader<T> reader);
 
 
@@ -284,7 +284,7 @@ public interface MongoOperations {
 	 * {@see MongoConverter}.  Unless configured otherwise, an
 	 * instance of SimpleMongoConverter will be used.   
 	 * 
-	 * The query is specified as a {@link QueryDefinition} which can be created either using the {@link BasicQuery} or the more
+	 * The query is specified as a {@link Query} which can be created either using the {@link BasicQuery} or the more
 	 * feature rich {@link Query}.
 	 * 
 	 * @param collectionName name of the collection to retrieve the objects from
@@ -294,7 +294,7 @@ public interface MongoOperations {
 	 * (apply limits, skips and so on).
 	 * @return the List of converted objects.
 	 */
-	<T> List<T> find(String collectionName, QueryDefinition query, Class<T> targetClass, CursorPreparer preparer);
+	<T> List<T> find(String collectionName, Query query, Class<T> targetClass, CursorPreparer preparer);
 
 	/**
 	 * Insert the object into the default collection.  
@@ -434,7 +434,7 @@ public interface MongoOperations {
 	 * @param updateDoc the update document that contains the updated object or $ operators to manipulate the
 	 * existing object. 
 	 */
-	WriteResult updateFirst(QueryDefinition query, UpdateDefinition update);
+	WriteResult updateFirst(Query query, Update update);
 
 	/**
 	 * Updates the first object that is found in the specified collection that matches the query document criteria
@@ -445,8 +445,8 @@ public interface MongoOperations {
 	 * @param updateDoc the update document that contains the updated object or $ operators to manipulate the
 	 * existing object. 
 	 */
-	WriteResult updateFirst(String collectionName, QueryDefinition query,
-			UpdateDefinition update);
+	WriteResult updateFirst(String collectionName, Query query,
+			Update update);
 
 	/**
 	 * Updates all objects that are found in the default collection that matches the query document criteria
@@ -456,7 +456,7 @@ public interface MongoOperations {
 	 * @param updateDoc the update document that contains the updated object or $ operators to manipulate the
 	 * existing object. 
 	 */
-	WriteResult updateMulti(QueryDefinition query, UpdateDefinition update);
+	WriteResult updateMulti(Query query, Update update);
 
 	/**
 	 * Updates all objects that are found in the specified collection that matches the query document criteria
@@ -467,20 +467,20 @@ public interface MongoOperations {
 	 * @param updateDoc the update document that contains the updated object or $ operators to manipulate the
 	 * existing object. 
 	 */
-	WriteResult updateMulti(String collectionName, QueryDefinition query,
-			UpdateDefinition update);
+	WriteResult updateMulti(String collectionName, Query query,
+			Update update);
 
 	/**
 	 * Remove all documents from the default collection that match the provide query document criteria.
 	 * @param queryDoc the query document that specifies the criteria used to remove a record 
 	 */
-	void remove(QueryDefinition query);
+	void remove(Query query);
 
 	/**
 	 * Remove all documents from the specified collection that match the provide query document criteria.
 	 * @param collectionName name of the collection where the objects will removed
 	 * @param queryDoc the query document that specifies the criteria used to remove a record 
 	 */
-	void remove(String collectionName, QueryDefinition query);
+	void remove(String collectionName, Query query);
 
 }

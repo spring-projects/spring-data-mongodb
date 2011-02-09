@@ -15,6 +15,8 @@
  */
 package org.springframework.data.document.mongodb.repository;
 
+import static org.springframework.data.document.mongodb.query.Criteria.where;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,9 +33,6 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.repository.support.IsNewAware;
 import org.springframework.data.repository.support.RepositorySupport;
 import org.springframework.util.Assert;
-
-import com.mongodb.QueryBuilder;
-
 
 /**
  * Repository base implementation for Mongo.
@@ -110,7 +109,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> extends
 
         List<T> result =
                 template.find(
-                        new Query().start("_id").is(objectId).end(),
+                        new Query(where("_id").is(objectId)),
                         getDomainClass());
         return result.isEmpty() ? null : result.get(0);
     }
@@ -161,8 +160,8 @@ public class SimpleMongoRepository<T, ID extends Serializable> extends
     public void delete(T entity) {
 
         Query query =
-                Query.startQueryWithCriteria(entityInformation.getFieldName()).is(
-                        entityInformation.getId(entity)).end();
+                new Query(where(entityInformation.getFieldName()).is(
+                        entityInformation.getId(entity)));
         template.remove(query);
     }
 

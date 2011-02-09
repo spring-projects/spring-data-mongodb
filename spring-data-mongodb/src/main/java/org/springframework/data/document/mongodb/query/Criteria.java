@@ -26,23 +26,21 @@ import com.mongodb.DBObject;
 
 public class Criteria implements CriteriaDefinition {
 	
-	private Query qb = null;
+	private String key;
 	
 	private LinkedHashMap<String, Object> criteria = new LinkedHashMap<String, Object>();
 
 	private Object isValue = null;
 	
 	
-	public Criteria(Query qb) {
-		super();
-		this.qb = qb;
+	public Criteria(String key) {
+		this.key = key;
 	}
 
 
-	public Criteria and(String key) {
-		return qb.start(key);
+	public static Criteria where(String key) {
+		return new Criteria(key);
 	}
-
 
 	public Criteria is(Object o) {
 		if (isValue != null) {
@@ -121,20 +119,20 @@ public class Criteria implements CriteriaDefinition {
 		criteria.put("$or", queries);		
 	}
 	
-	public Query end() {
-		return qb; 
+	public String getKey() {
+		return this.key; 
 	}
 
 	/* (non-Javadoc)
 	 * @see org.springframework.datastore.document.mongodb.query.Criteria#getCriteriaObject(java.lang.String)
 	 */
-	public DBObject getCriteriaObject(String key) {
+	public DBObject getCriteriaObject() {
 		DBObject dbo = new BasicDBObject();
 		boolean not = false;
-		for (String k : criteria.keySet()) {
+		for (String k : this.criteria.keySet()) {
 			if (not) {
 				DBObject notDbo = new BasicDBObject();
-				notDbo.put(k, criteria.get(k));
+				notDbo.put(k, this.criteria.get(k));
 				dbo.put("$not", notDbo);
 				not = false;
 			}
@@ -143,17 +141,17 @@ public class Criteria implements CriteriaDefinition {
 					not = true;
 				}
 				else {
-					dbo.put(k, criteria.get(k));
+					dbo.put(k, this.criteria.get(k));
 				}
 			}
 		}
 		DBObject queryCriteria = new BasicDBObject();
 		if (isValue != null) {
-			queryCriteria.put(key, isValue);
+			queryCriteria.put(this.key, this.isValue);
 			queryCriteria.putAll(dbo);
 		}
 		else {
-			queryCriteria.put(key, dbo);
+			queryCriteria.put(this.key, dbo);
 		}
 		return queryCriteria;
 	}

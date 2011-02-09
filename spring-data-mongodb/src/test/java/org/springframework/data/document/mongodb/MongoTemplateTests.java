@@ -20,6 +20,8 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.endsWith;
 import static org.junit.Assert.assertThat;
 
+import static org.springframework.data.document.mongodb.query.Criteria.where;
+
 import java.util.List;
 
 import org.junit.Before;
@@ -29,6 +31,7 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.document.mongodb.query.Criteria;
 import org.springframework.data.document.mongodb.query.Query;
 import org.springframework.data.document.mongodb.query.Update;
 import org.springframework.test.context.ContextConfiguration;
@@ -66,7 +69,7 @@ public class MongoTemplateTests {
 		
 		MongoConverter converter = template.getConverter();
 
-		List<Person> result = template.find(Query.startQueryWithCriteria("_id").is(converter.convertObjectId(person.getId())).end(), Person.class);
+		List<Person> result = template.find(new Query(Criteria.where("_id").is(converter.convertObjectId(person.getId()))), Person.class);
 		assertThat(result.size(), is(1));
 		assertThat(result, hasItem(person));
 	}
@@ -81,8 +84,8 @@ public class MongoTemplateTests {
 		person.setAge(25);
 		mongoTemplate.insert(person);
 		
-		Query q = Query.startQueryWithCriteria("BOGUS").gt(22).end();
-		Update u = Update.startUpdate().set("firstName", "Sven");
+		Query q = new Query(Criteria.where("BOGUS").gt(22));
+		Update u = new Update().set("firstName", "Sven");
 		thrown.expect(DataIntegrityViolationException.class);
 		thrown.expectMessage( endsWith("0 documents updated") );
 		mongoTemplate.updateFirst(q, u);
@@ -91,7 +94,7 @@ public class MongoTemplateTests {
 
 	@Test
 	public void simpleQuery() throws Exception {
-		Query.startQueryWithCriteria("name").is("Mary").and("age").lt(33).gt(22).end().skip(22).limit(20);
+		new Query(where("name").is("Mary")).and(where("age").lt(33).gt(22)).skip(22).limit(20);
 		// TODO: more tests
 	}
 }
