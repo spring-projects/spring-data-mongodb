@@ -19,6 +19,7 @@ import org.springframework.data.document.mongodb.query.Query;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
+import org.springframework.util.StringUtils;
 
 import com.mongodb.DBCursor;
 
@@ -82,5 +83,11 @@ abstract class QueryUtils {
         }
 
         return query;
+    }
+    
+    
+    public static String getCollectionName(Class<?> domainClass) {
+
+        return StringUtils.uncapitalize(domainClass.getSimpleName());
     }
 }

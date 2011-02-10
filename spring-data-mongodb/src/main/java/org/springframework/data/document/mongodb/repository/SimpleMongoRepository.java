@@ -15,7 +15,8 @@
  */
 package org.springframework.data.document.mongodb.repository;
 
-import static org.springframework.data.document.mongodb.query.Criteria.where;
+import static org.springframework.data.document.mongodb.query.Criteria.*;
+import static org.springframework.data.document.mongodb.repository.QueryUtils.*;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -33,6 +34,7 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.repository.support.IsNewAware;
 import org.springframework.data.repository.support.RepositorySupport;
 import org.springframework.util.Assert;
+
 
 /**
  * Repository base implementation for Mongo.
@@ -70,7 +72,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> extends
      */
     public T save(T entity) {
 
-        template.save(entity);
+        template.save(getCollectionName(getDomainClass()), entity);
         return entity;
     }
 
@@ -86,7 +88,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> extends
         List<T> result = new ArrayList<T>();
 
         for (T entity : entities) {
-            template.save(entity);
+            save(entity);
             result.add(entity);
         }
 
@@ -108,9 +110,8 @@ public class SimpleMongoRepository<T, ID extends Serializable> extends
         ObjectId objectId = converter.convertObjectId(id);
 
         List<T> result =
-                template.find(
-                        new Query(where("_id").is(objectId)),
-                        getDomainClass());
+                template.find(getCollectionName(getDomainClass()), new Query(
+                        where("_id").is(objectId)), getDomainClass());
         return result.isEmpty() ? null : result.get(0);
     }
 
@@ -135,7 +136,8 @@ public class SimpleMongoRepository<T, ID extends Serializable> extends
      */
     public List<T> findAll() {
 
-        return template.getCollection(getDomainClass());
+        return template.getCollection(getCollectionName(getDomainClass()),
+                getDomainClass());
     }
 
 
@@ -146,7 +148,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> extends
      */
     public Long count() {
 
-        return template.getCollection(template.getDefaultCollectionName())
+        return template.getCollection(getCollectionName(getDomainClass()))
                 .count();
     }
 
@@ -162,7 +164,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> extends
         Query query =
                 new Query(where(entityInformation.getFieldName()).is(
                         entityInformation.getId(entity)));
-        template.remove(query);
+        template.remove(getCollectionName(getDomainClass()), query);
     }
 
 
@@ -187,7 +189,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> extends
      */
     public void deleteAll() {
 
-        template.dropCollection(template.getDefaultCollectionName());
+        template.dropCollection(getCollectionName(getDomainClass()));
     }
 
 
@@ -204,7 +206,8 @@ public class SimpleMongoRepository<T, ID extends Serializable> extends
         Query spec = new Query();
 
         List<T> list =
-                template.find(QueryUtils.applyPagination(spec, pageable),
+                template.find(getCollectionName(getDomainClass()),
+                        QueryUtils.applyPagination(spec, pageable),
                         getDomainClass());
 
         return new PageImpl<T>(list, pageable, count);
@@ -221,7 +224,8 @@ public class SimpleMongoRepository<T, ID extends Serializable> extends
     public List<T> findAll(final Sort sort) {
 
         Query query = QueryUtils.applySorting(new Query(), sort);
-        return template.find(query, getDomainClass());
+        return template.find(getCollectionName(getDomainClass()), query,
+                getDomainClass());
     }
 
 

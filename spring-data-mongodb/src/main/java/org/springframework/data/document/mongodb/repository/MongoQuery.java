@@ -98,7 +98,9 @@ public class MongoQuery implements RepositoryQuery {
 
         protected List<?> readCollection(Query query) {
 
-            return template.find(query, method.getDomainClass());
+            String collectionName = getCollectionName(method.getDomainClass());
+            return template
+                    .find(collectionName, query, method.getDomainClass());
         }
     }
 
@@ -160,17 +162,19 @@ public class MongoQuery implements RepositoryQuery {
         Object execute(Query query) {
 
             Query countQuery = creator.createQuery();
-            int count = getCollectionCursor(countQuery.getQueryObject()).count();
+            String collectionName = getCollectionName(method.getDomainClass());
+            int count =
+                    getCollectionCursor(collectionName, countQuery.getQueryObject()).count();
 
             List<?> result =
-                    template.find(applyPagination(query, pageable),
+                    template.find(collectionName, applyPagination(query, pageable),
                             method.getDomainClass());
 
             return new PageImpl(result, pageable, count);
         }
 
 
-        private DBCursor getCollectionCursor(final DBObject query) {
+        private DBCursor getCollectionCursor(String collectionName, final DBObject query) {
 
             return template.execute(new CollectionCallback<DBCursor>() {
 
@@ -178,7 +182,7 @@ public class MongoQuery implements RepositoryQuery {
 
                     return collection.find(query);
                 }
-            });
+            }, collectionName);
         }
     }
 
