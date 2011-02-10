@@ -138,7 +138,7 @@
     <site>
       <id>static.springframework.org</id>
       <url>
-        scp://static.springframework.org/var/www/domains/springframework.org/static/htdocs/spring-data/datastore-document/snapshot-site/
+        scp://static.springframework.org/var/www/domains/springframework.org/static/htdocs/spring-data/data-document/snapshot-site/
       </url>
     </site>
     <repository>
