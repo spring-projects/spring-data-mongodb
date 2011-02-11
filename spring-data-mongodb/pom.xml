@@ -35,7 +35,7 @@
 		<dependency>
 			<groupId>org.springframework.data</groupId>
 			<artifactId>spring-data-commons-core</artifactId>
-			<version>${project.version}</version>
+			<version>1.0.0.M3</version>
 		</dependency>
 
 		<!-- Logging -->
