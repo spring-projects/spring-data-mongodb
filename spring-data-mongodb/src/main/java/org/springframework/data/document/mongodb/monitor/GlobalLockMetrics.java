@@ -22,7 +22,12 @@ import org.springframework.jmx.support.MetricType;
 import com.mongodb.DBObject;
 import com.mongodb.Mongo;
 
-@ManagedResource(description="Mongo Global Lock Metrics")
+/**
+ * JMX Metrics for Global Locks
+ * @author Mark Pollack
+ *
+ */
+@ManagedResource(description="Global Lock Metrics")
 public class GlobalLockMetrics extends AbstractMonitor {
 
 
@@ -35,7 +40,7 @@ public class GlobalLockMetrics extends AbstractMonitor {
 		return getGlobalLockData("totalTime", java.lang.Double.class);		
 	}
 	
-	@ManagedMetric(metricType = MetricType.COUNTER, displayName = "Lock time", unit="seconds")
+	@ManagedMetric(metricType = MetricType.COUNTER, displayName = "Lock time", unit="s")
 	public double getLockTime() {
 		return getGlobalLockData("lockTime", java.lang.Double.class);		
 	}
@@ -64,14 +69,12 @@ public class GlobalLockMetrics extends AbstractMonitor {
 	@SuppressWarnings("unchecked")
 	private <T> T getGlobalLockData(String key, Class<T> targetClass) {
 		DBObject globalLock = (DBObject) getServerStatus().get("globalLock");
-		Object o = globalLock.get("totalTime");
 		return (T) globalLock.get(key);
 	}
 	
 	private int getCurrentQueue(String key) {
 		DBObject globalLock = (DBObject) getServerStatus().get("globalLock");
 		DBObject currentQueue = (DBObject) globalLock.get("currentQueue");
-		Object o = currentQueue.get("total");
 		return (Integer) currentQueue.get(key);	
 	}
 }

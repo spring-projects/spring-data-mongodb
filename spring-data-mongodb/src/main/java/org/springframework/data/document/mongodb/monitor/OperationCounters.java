@@ -22,7 +22,12 @@ import org.springframework.jmx.support.MetricType;
 import com.mongodb.DBObject;
 import com.mongodb.Mongo;
 
-@ManagedResource(description="Mongo Operation Counters")
+/**
+ * JMX Metrics for Operation counters
+ * @author Mark Pollack
+ *
+ */
+@ManagedResource(description="Operation Counters")
 public class OperationCounters extends AbstractMonitor {
 
 

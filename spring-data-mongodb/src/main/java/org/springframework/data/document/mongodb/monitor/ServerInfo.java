@@ -23,16 +23,15 @@ import org.springframework.jmx.export.annotation.ManagedOperation;
 import org.springframework.jmx.export.annotation.ManagedResource;
 import org.springframework.jmx.support.MetricType;
 
-import com.mongodb.CommandResult;
 import com.mongodb.Mongo;
 
 /**
- * Expose basic server information 
+ * Expose basic server information via JMX 
  * 
  * @author Mark Pollack
  *
  */
-@ManagedResource(description="Mongo Server Information")
+@ManagedResource(description="Server Information")
 public class ServerInfo extends AbstractMonitor {
 	
 	public ServerInfo(Mongo mongo) {
