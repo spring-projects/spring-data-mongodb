@@ -15,35 +15,11 @@
  */
 package org.springframework.data.document.mongodb.query;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
-
-
-public class Sort {
-	
-	private Map<String, Order> fieldSpec = new HashMap<String, Order>();
-	
-	public Sort() {
-	}
-
-	public Sort(String key, Order order) {
-		fieldSpec.put(key, order);
-	}
-
-	public Sort on(String key, Order order) {
-		fieldSpec.put(key, order);
-		return this;
-	}
-
-	public DBObject getSortObject() {
-		DBObject dbo = new BasicDBObject();
-		for (String k : fieldSpec.keySet()) {
-			dbo.put(k, (fieldSpec.get(k).equals(Order.ASCENDING) ? 1 : -1));
-		}
-		return dbo;
-	}
-
+/**
+ * An enum that specifies the ordering for sort or index specifications
+ * 
+ * @author trisberg
+ */
+public enum Order {
+		ASCENDING, DESCENDING
 }

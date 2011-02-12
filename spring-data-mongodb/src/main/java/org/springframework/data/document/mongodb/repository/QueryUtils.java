@@ -78,8 +78,8 @@ abstract class QueryUtils {
         for (Order order : sort) {
             bSort.on(
                     order.getProperty(),
-                    order.isAscending() ? org.springframework.data.document.mongodb.query.Sort.Order.ASCENDING
-                            : org.springframework.data.document.mongodb.query.Sort.Order.DESCENDING);
+                    order.isAscending() ? org.springframework.data.document.mongodb.query.Order.ASCENDING
+                            : org.springframework.data.document.mongodb.query.Order.DESCENDING);
         }
 
         return query;

@@ -32,11 +32,16 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.document.mongodb.query.Criteria;
+import org.springframework.data.document.mongodb.query.Index;
+import org.springframework.data.document.mongodb.query.Index.Duplicates;
+import org.springframework.data.document.mongodb.query.Order;
 import org.springframework.data.document.mongodb.query.Query;
 import org.springframework.data.document.mongodb.query.Update;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import com.mongodb.DBCollection;
+import com.mongodb.DBObject;
 import com.mongodb.WriteConcern;
 
 /**
@@ -90,6 +95,38 @@ public class MongoTemplateTests {
 		thrown.expectMessage( endsWith("0 documents updated") );
 		mongoTemplate.updateFirst(q, u);
 		
+	}
+
+	@Test
+	public void testEnsureIndex() throws Exception {
+
+		Person p1 = new Person("Oliver");
+		p1.setAge(25);
+		template.insert(p1);
+		Person p2 = new Person("Sven");
+		p2.setAge(40);
+		template.insert(p2);
+		
+		template.ensureIndex(new Index().on("age", Order.DESCENDING).unique(Duplicates.DROP));
+		
+		DBCollection coll = template.getCollection(template.getDefaultCollectionName());
+		List<DBObject> indexInfo = coll.getIndexInfo();
+		
+		assertThat(indexInfo.size(), is(2));
+		String indexKey = null;
+		boolean unique = false;
+		boolean dropDupes = false;
+		for (DBObject ix : indexInfo) {
+			System.out.println(ix);
+			if ("age_-1".equals(ix.get("name"))) {
+				indexKey = ix.get("key").toString();
+				unique = (Boolean) ix.get("unique");
+				dropDupes = (Boolean) ix.get("drop_dups");
+			}
+		}
+		assertThat(indexKey, is("{ \"age\" : -1}"));
+		assertThat(unique, is(true));
+		assertThat(dropDupes, is(true));
 	}
 
 	@Test

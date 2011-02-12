@@ -18,6 +18,7 @@ package org.springframework.data.document.mongodb;
 import java.util.List;
 import java.util.Set;
 
+import org.springframework.data.document.mongodb.query.Index;
 import org.springframework.data.document.mongodb.query.Query;
 import org.springframework.data.document.mongodb.query.Update;
 
@@ -204,6 +205,23 @@ public interface MongoOperations {
 	 */
 	<T> List<T> getCollection(String collectionName, Class<T> targetClass,
 			MongoReader<T> reader);
+	
+	/**
+	 * Ensure that an index for the specified {@link Index} specification exists for the default collection. 
+	 * If not is will be created.
+	 * 
+	 * @param index
+	 */
+	void ensureIndex(Index index);
+
+	/**
+	 * Ensure that an index for the specified {@link Index} specification exists. If not is will be
+	 * created.
+	 * 
+	 * @param collectionName
+	 * @param index
+	 */
+	void ensureIndex(String collectionName, Index index);
 
 	/**
 	 * Map the results of an ad-hoc query on the default MongoDB collection to a List of the specified type.
