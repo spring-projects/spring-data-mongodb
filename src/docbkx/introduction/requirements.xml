@@ -6,6 +6,6 @@
       3.0.x and above.</para>
       <para>
       In terms of document stores, <ulink url="http://www.mongodb.org/">MongoDB</ulink> preferably version 1.6.5 
-      and <ulink url="http://couchdb.apache.org/">CouchDB</ulink> 1.0.1 or later are required.
+      or later or <ulink url="http://couchdb.apache.org/">CouchDB</ulink> 1.0.1 or later are required.
       </para>
   </chapter>

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
 "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
-<chapter id="mongo.core" xmlns:xi="http://www.w3.org/2001/XInclude">
+<chapter id="mongo.core">
   <title>Core support</title>
 
   <para>One of the document stores supported by DATADOC is <ulink
@@ -24,18 +24,27 @@
     <para>The MongoDB support provides several components:</para>
 
     <itemizedlist>
-      <listitem><emphasis>Configuration Factory</emphasis> - for configuring
-      and handling communication with MongoDB via its Java driver</listitem>
+      <listitem>
+        <emphasis>Configuration Factory</emphasis>
 
-      <listitem><emphasis>Template implemenattion</emphasis> - providing a
-      generified, user friendly template classes for interacting with MongoDB.
-      <xref linkend="mongodb:template" /> explains the abstraction builds on
-      top of the low-level MongoDB Java API to handle the storage and
-      retrieval of documents plus mapping between documents and domain
-      classes.</listitem>
+         - for configuring and handling communication with MongoDB via its Java driver
+      </listitem>
 
-      <listitem><emphasis>Support Classes</emphasis> - that offer reusable
-      components such as mapping support and exception translation.</listitem>
+      <listitem>
+        <emphasis>Template implemenattion</emphasis>
+
+         - providing a generified, user friendly template classes for interacting with MongoDB. 
+
+        <xref linkend="mongodb:template" />
+
+         explains the abstraction builds on top of the low-level MongoDB Java API to handle the storage and retrieval of documents plus mapping between documents and domain classes.
+      </listitem>
+
+      <listitem>
+        <emphasis>Support Classes</emphasis>
+
+         - that offer reusable components such as mapping support and exception translation.
+      </listitem>
     </itemizedlist>
 
     <para>For most tasks, the higher-level abstractions and support services
@@ -122,7 +131,7 @@ public class AppConfig {
   </section>
 
   <section id="mongodb:template">
-    <title>Working with Objects through
+    <title>Working with objects through
     <classname>MongoTemplate</classname></title>
 
     <para>Most users are likely to use <classname>MongoTemplate</classname>
@@ -130,61 +139,23 @@ public class AppConfig {
     <literal>org.springframework.data.document.mongodb</literal> - the
     template is in fact the central class of the MongoDB module due to its
     rich feature set. The template offers convenience methods and automatic
-    mapping between MongoDB JSON documents and your domain classes.</para>
+    mapping between MongoDB JSON documents and your domain classes. Out of the
+    box, <classname>MongoTemplate</classname> uses a Java-based default
+    converter but you can also write your own converter classes to be used for
+    reading and storing domain objects. Once configured, the template is
+    thread-safe and can be reused across multiple instances. </para>
 
-    <table id="MongoDB-template-operations-view" pgwide="1">
-      <title>Operational views</title>
-
-      <tgroup cols="2">
-        <colspec align="center" colname="c1" colwidth="1*" />
-
-        <colspec align="center" colname="c2" colwidth="1*" />
-
-        <spanspec align="center" colsep="0" nameend="c2" namest="c1"
-                  spanname="both" />
-
-        <thead>
-          <row>
-            <entry>Interface</entry>
-
-            <entry>Description</entry>
-          </row>
-        </thead>
-
-        <tbody>
-          <row>
-            <entry>
-              <interfacename>Collection Operations</interfacename>
-            </entry>
-
-            <entry>MongoDB document operations</entry>
-          </row>
-
-          <row>
-            <entry>
-              <interfacename>Document Operations</interfacename>
-            </entry>
-
-            <entry>MongoDB collection operations</entry>
-          </row>
-        </tbody>
-      </tgroup>
-    </table>
-
-    <para>Once configured, the template is thread-safe and can be reused
-    across multiple instances.</para>
-
-    <para>Out of the box, <classname>MongoTemplate</classname> uses a
-    Java-based default converter for most of its operations...</para>
+    <para>Let's look at a couple of examples for how to interect with the
+    <classname>MongoTemplate</classname>.</para>
   </section>
 
   <section id="mongodb:future">
     <title>Roadmap ahead</title>
 
-    <para>Spring Data MongoDB project is in its early stages. We are
-    interested in feedback, knowing what your use cases are, what are the
-    common patters you encounter so that the MongoDB module better serves your
-    needs. Do contact us using the channels <link
+    <para>The Spring Data Document projects MongoDB support is in its early
+    stages. We are interested in feedback, knowing what your use cases are,
+    what are the common patters you encounter so that the MongoDB module
+    better serves your needs. Do contact us using the channels <link
     linkend="get-started:help:community">mentioned</link> above, we are
     interested in hearing from you!</para>
   </section>
