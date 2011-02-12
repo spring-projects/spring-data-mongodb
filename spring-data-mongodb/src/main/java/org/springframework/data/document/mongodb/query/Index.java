@@ -22,7 +22,7 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
 
-public class Index {
+public class Index implements IndexSpecification {
 	
 	public enum Duplicates {
 		RETAIN,

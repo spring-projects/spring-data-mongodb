@@ -30,7 +30,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.document.mongodb.MongoPropertyDescriptors.MongoPropertyDescriptor;
-import org.springframework.data.document.mongodb.query.Index;
+import org.springframework.data.document.mongodb.query.IndexSpecification;
 import org.springframework.data.document.mongodb.query.Query;
 import org.springframework.data.document.mongodb.query.Update;
 import org.springframework.jca.cci.core.ConnectionCallback;
@@ -409,19 +409,19 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 
 	// Indexing methods
 
-	public void ensureIndex(Index index) {
-		ensureIndex(getDefaultCollectionName(), index);		
+	public void ensureIndex(IndexSpecification indexSpecification) {
+		ensureIndex(getDefaultCollectionName(), indexSpecification);		
 	}
 
-	public void ensureIndex(String collectionName, final Index index) {
+	public void ensureIndex(String collectionName, final IndexSpecification indexSpecification) {
 		execute(new CollectionCallback<Object>() {
 			public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
-				DBObject indexOptions = index.getIndexOptions();
+				DBObject indexOptions = indexSpecification.getIndexOptions();
 				if (indexOptions != null) {
-					collection.ensureIndex(index.getIndexObject(), indexOptions);
+					collection.ensureIndex(indexSpecification.getIndexObject(), indexOptions);
 				}
 				else {
-					collection.ensureIndex(index.getIndexObject());
+					collection.ensureIndex(indexSpecification.getIndexObject());
 				}
 				return null;
 			}

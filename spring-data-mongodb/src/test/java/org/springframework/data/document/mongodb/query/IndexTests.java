@@ -48,4 +48,12 @@ public class IndexTests {
 		Assert.assertEquals("{ \"name\" : 1}", i.getIndexObject().toString());
 		Assert.assertEquals("{ \"unique\" : true , \"drop_dups\" : true}", i.getIndexOptions().toString());
 	}
+
+	@Test
+	public void testGeospatialIndex() {
+		GeospatialIndex i = new GeospatialIndex("location").withMin(0);
+		Assert.assertEquals("{ \"location\" : \"2d\"}", i.getIndexObject().toString());
+		Assert.assertEquals("{ \"min\" : 0}", i.getIndexOptions().toString());
+	}
+
 }
