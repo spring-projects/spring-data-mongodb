@@ -25,25 +25,31 @@
 
     <itemizedlist>
       <listitem>
+         
+
         <emphasis>Configuration Factory</emphasis>
 
-         - for configuring and handling communication with MongoDB via its Java driver
+         - for configuring and handling communication with MongoDB via its Java driver 
       </listitem>
 
       <listitem>
+         
+
         <emphasis>Template implemenattion</emphasis>
 
          - providing a generified, user friendly template classes for interacting with MongoDB. 
 
         <xref linkend="mongodb:template" />
 
-         explains the abstraction builds on top of the low-level MongoDB Java API to handle the storage and retrieval of documents plus mapping between documents and domain classes.
+         explains the abstraction builds on top of the low-level MongoDB Java API to handle the storage and retrieval of documents plus mapping between documents and domain classes. 
       </listitem>
 
       <listitem>
+         
+
         <emphasis>Support Classes</emphasis>
 
-         - that offer reusable components such as mapping support and exception translation.
+         - that offer reusable components such as mapping support and exception translation. 
       </listitem>
     </itemizedlist>
 
@@ -131,7 +137,7 @@ public class AppConfig {
   </section>
 
   <section id="mongodb:template">
-    <title>Working with objects through
+    <title>Working with objects using the
     <classname>MongoTemplate</classname></title>
 
     <para>Most users are likely to use <classname>MongoTemplate</classname>
@@ -143,10 +149,41 @@ public class AppConfig {
     box, <classname>MongoTemplate</classname> uses a Java-based default
     converter but you can also write your own converter classes to be used for
     reading and storing domain objects. Once configured, the template is
-    thread-safe and can be reused across multiple instances. </para>
+    thread-safe and can be reused across multiple instances.</para>
 
-    <para>Let's look at a couple of examples for how to interect with the
+    <para>Let's look at a couple of examples for how to work with the
     <classname>MongoTemplate</classname>.</para>
+
+    <section id="mongodb:template">
+      <title>Working with collections</title>
+
+      <para>...</para>
+    </section>
+
+    <section id="mongodb:template">
+      <title>Creating an index</title>
+
+      <para>...</para>
+    </section>
+
+    <section id="mongodb:template">
+      <title>Saving and retreiving objects as documents in a
+      collection</title>
+
+      <para>...</para>
+    </section>
+
+    <section id="mongodb:template">
+      <title>Querying documents in a collection</title>
+
+      <para>...</para>
+    </section>
+
+    <section id="mongodb:template">
+      <title>Updating documents in a collection</title>
+
+      <para>...</para>
+    </section>
   </section>
 
   <section id="mongodb:future">
