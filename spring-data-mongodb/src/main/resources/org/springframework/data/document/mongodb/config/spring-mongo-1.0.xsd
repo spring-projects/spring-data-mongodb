@@ -77,11 +77,38 @@ The host to connect to a MongoDB server.  Default is localhost
 		</xsd:complexType>
 	</xsd:element>
 
+    <xsd:element name="jmx">
+		<xsd:annotation>
+			<xsd:documentation><![CDATA[
+Defines a JMX Model MBeans for monitoring a MongoDB server'.
+			]]></xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexType>
+			<xsd:attribute name="mongo-ref" type="mongoRef" use="optional">
+				<xsd:annotation>
+					<xsd:documentation><![CDATA[
+The name of the Mongo object that determines what server to monitor. (by default "mongo").]]></xsd:documentation>
+				</xsd:annotation>
+			</xsd:attribute>
+		</xsd:complexType>
+	</xsd:element>
+		
 	<xsd:simpleType name="mongoTemplateRef">
 		<xsd:annotation>
 			<xsd:appinfo>
 				<tool:annotation kind="ref">
 					<tool:assignable-to type="org.springframework.data.document.mongodb.MongoTemplate" />
+				</tool:annotation>
+			</xsd:appinfo>
+		</xsd:annotation>
+		<xsd:union memberTypes="xsd:string" />
+	</xsd:simpleType>
+	
+	<xsd:simpleType name="mongoRef">
+		<xsd:annotation>
+			<xsd:appinfo>
+				<tool:annotation kind="ref">
+					<tool:assignable-to type="org.springframework.data.document.mongodb.MongoFactoryBean" />
 				</tool:annotation>
 			</xsd:appinfo>
 		</xsd:annotation>

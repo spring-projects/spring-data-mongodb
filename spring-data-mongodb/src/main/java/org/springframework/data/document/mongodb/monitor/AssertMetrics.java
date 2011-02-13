@@ -42,7 +42,7 @@ public class AssertMetrics extends AbstractMonitor {
 	
 	@ManagedMetric(metricType = MetricType.COUNTER, displayName = "Warning")
 	public int getWarning() {
-		return getBtree("hits");		
+		return getBtree("warning");		
 	}	
 	
 	@ManagedMetric(metricType = MetricType.COUNTER, displayName = "Msg")
