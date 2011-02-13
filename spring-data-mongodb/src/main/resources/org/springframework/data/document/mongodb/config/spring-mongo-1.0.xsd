@@ -25,6 +25,22 @@ Defines a Mongo instance used for accessing MongoDB'.
 			</xsd:appinfo>
 		</xsd:annotation>
 		<xsd:complexType>
+			<xsd:sequence minOccurs="0" maxOccurs="1">
+					<xsd:element name="options" type="optionsType">
+						<xsd:annotation>
+							<xsd:documentation><![CDATA[
+The Mongo driver options
+							]]></xsd:documentation>
+							<xsd:appinfo>
+								<tool:annotation>
+									<tool:exports type="com.mongodb.MongoOptions" />
+								</tool:annotation>
+							</xsd:appinfo>
+						</xsd:annotation>
+					</xsd:element>
+			</xsd:sequence>	
+
+					
 			<xsd:attribute name="id" type="xsd:ID" use="optional">
 				<xsd:annotation>
 					<xsd:documentation><![CDATA[
@@ -44,7 +60,7 @@ The port to connect to MongoDB server.  Default is 27017
 The host to connect to a MongoDB server.  Default is localhost
 							]]></xsd:documentation>
 				</xsd:annotation>
-			</xsd:attribute>
+			</xsd:attribute>				
 		</xsd:complexType>
 	</xsd:element>
 
@@ -114,6 +130,53 @@ The name of the Mongo object that determines what server to monitor. (by default
 		</xsd:annotation>
 		<xsd:union memberTypes="xsd:string" />
 	</xsd:simpleType>
+	
+	<xsd:complexType name="optionsType">
+		<xsd:attribute name="connectionsPerHost" type="xsd:positiveInteger">
+			<xsd:annotation>
+				<xsd:documentation><![CDATA[
+The number of connections allowed per host.  Will block if run out.	 Default is 10.  System property MONGO.POOLSIZE can override	
+				]]></xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="threadsAllowedToBlockForConnectionMultiplier" type="xsd:positiveInteger">
+			<xsd:annotation>
+				<xsd:documentation><![CDATA[
+The multiplier for connectionsPerHost for # of threads that can block.  Default is 5.
+If connectionsPerHost is 10, and threadsAllowedToBlockForConnectionMultiplier is 5, 
+then 50 threads can block more than that and an exception will be thrown.			
+				]]></xsd:documentation>
+			</xsd:annotation>		
+		</xsd:attribute>
+		<xsd:attribute name="maxWaitTime" type="xsd:positiveInteger">
+			<xsd:annotation>
+				<xsd:documentation><![CDATA[
+The max wait time of a blocking thread for a connection. Default is 12000 ms (2 minutes)	
+				]]></xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="connectTimeout" type="xsd:positiveInteger">
+			<xsd:annotation>
+				<xsd:documentation><![CDATA[
+The connect timeout in milliseconds. 0 is default and infinite.	
+				]]></xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>	
+		<xsd:attribute name="socketTimeout" type="xsd:positiveInteger">
+			<xsd:annotation>
+				<xsd:documentation><![CDATA[
+The socket timeout.  0 is default and infinite.
+				]]></xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>	
+		<xsd:attribute name="autoConnectRetry" type="xsd:boolean">
+			<xsd:annotation>
+				<xsd:documentation><![CDATA[
+This controls whether or not on a connect, the system retries automatically.  Default is false. 
+				]]></xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>					
+	</xsd:complexType>
 
 
 </xsd:schema>

@@ -9,9 +9,9 @@
 		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd">
 
 
-	
+		
 	<mongo:jmx/>
-	
+
     <context:mbean-export/>
 
     <bean id="registry" class="org.springframework.remoting.rmi.RmiRegistryFactoryBean"

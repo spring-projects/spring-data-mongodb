@@ -22,7 +22,9 @@ import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.xml.AbstractSingleBeanDefinitionParser;
 import org.springframework.beans.factory.xml.ParserContext;
 import org.springframework.data.document.mongodb.MongoFactoryBean;
+import org.springframework.data.document.mongodb.MongoOptionsFactoryBean;
 import org.springframework.util.StringUtils;
+import org.springframework.util.xml.DomUtils;
 import org.w3c.dom.Element;
 
 /**
@@ -37,12 +39,40 @@ public class MongoParser extends AbstractSingleBeanDefinitionParser {
 	}
 
 	@Override
-	protected void doParse(Element element, BeanDefinitionBuilder builder) {
+	protected void doParse(Element element, ParserContext parserContext, BeanDefinitionBuilder builder) {
 		super.doParse(element, builder);
 
 		setPropertyValue(element, builder, "port", "port");
 		setPropertyValue(element, builder, "host", "host");
 		
+		parseOptions(parserContext, element, builder);
+		
+	}
+
+	/**
+	 * Parses the options sub-element. Populates the given attribute factory with the proper attributes.
+	 * 
+	 * @param element
+	 * @param attrBuilder
+	 * @return true if parsing actually occured, false otherwise
+	 */
+	private boolean parseOptions(ParserContext parserContext, Element element,
+			BeanDefinitionBuilder mongoBuilder) {
+		Element optionsElement = DomUtils.getChildElementByTagName(element, "options");	
+		if (optionsElement == null)
+			return false;
+		
+		BeanDefinitionBuilder optionsDefBuilder = BeanDefinitionBuilder.genericBeanDefinition(MongoOptionsFactoryBean.class);
+
+		setPropertyValue(optionsElement, optionsDefBuilder, "connectionsPerHost", "connectionsPerHost");
+		setPropertyValue(optionsElement, optionsDefBuilder, "threadsAllowedToBlockForConnectionMultiplier", "threadsAllowedToBlockForConnectionMultiplier");
+		setPropertyValue(optionsElement, optionsDefBuilder, "maxWaitTime", "maxWaitTime");
+		setPropertyValue(optionsElement, optionsDefBuilder, "connectTimeout", "connectTimeout");
+		setPropertyValue(optionsElement, optionsDefBuilder, "socketTimeout", "socketTimeout");
+		setPropertyValue(optionsElement, optionsDefBuilder, "autoConnectRetry", "autoConnectRetry");
+		
+		mongoBuilder.addPropertyValue("mongoOptions", optionsDefBuilder.getBeanDefinition());
+		return true;
 	}
 
 	@Override

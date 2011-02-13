@@ -15,7 +15,8 @@
   <section id="mongodb:requirements">
     <title>MongoDB Requirements</title>
 
-    <para>DATADOC requires MongoDB 1.4 while 1.6 is recommended.</para>
+    <para>DATADOC requires MongoDB 1.4 while the latest production release
+    (1.6.5 as of this writing) is recommended.</para>
   </section>
 
   <section id="mongodb:architecture">
@@ -37,16 +38,14 @@
 
         <emphasis>Template implemenattion</emphasis>
 
-         - providing a generified, user friendly template classes for interacting with MongoDB. 
+         - As with many of Spring's template classes, MongoTemplate simplifies the use of accessing the database for common use-cases and infrastructure concerns such as exception translation. Features include integrated object mapping between documents and domain classes and fluent DSLs  for query and update operations. The chapter 
 
         <xref linkend="mongodb:template" />
 
-         explains the abstraction builds on top of the low-level MongoDB Java API to handle the storage and retrieval of documents plus mapping between documents and domain classes. 
+         provides additional details.  
       </listitem>
 
       <listitem>
-         
-
         <emphasis>Support Classes</emphasis>
 
          - that offer reusable components such as mapping support and exception translation. 
@@ -62,45 +61,92 @@
   <section id="mongodb:connectors">
     <title>Connecting to MongoDB</title>
 
-    <para>One of the first tasks when using MongoDB and Spring is to connect
-    to the store through the IoC container. To do that</para>
+    <para>One of the first tasks when using MongoDB and Spring is to create a
+    <classname>com.mongodb.Mongo</classname> object using the IoC container.
+    There are two main ways to do this, either using Java based bean metadata
+    or XML based bean metadata. These are discussed in the following
+    sections.<note>
+        <para>For those not familiar with how to configure the Spring
+        container using Java based bean metadata instead of XML based metadata
+        see the high level introduction in the reference docs <ulink
+        url="http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/html/new-in-3.html#new-java-configuration"
+        userlevel="">here</ulink> as well as the detailed documentation <ulink
+        url="http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/html/beans.html#beans-java-instantiating-container">here</ulink>.</para>
+      </note></para>
 
-    <para>The easiest way to work with a
-    <interfacename>MongoFactoryBean</interfacename> is to configure a
-    <classname>MongoFactory</classname> bean. This has the added advantage of
-    also acting as an ExceptionTranslator that can be used to translate any
-    Mongo exceptions to exceptions in the
-    <classname>SpringDataAccessException</classname> hierarchy as long as your
-    data access classes are annotatded with @Repository and you are using an
-    <classname>PersistenceExceptionTranslationPostProcessor</classname> (see
-    <link linkend="???">Spring API docs</link>).</para>
+    <section>
+      <title>Using Java based based metadata</title>
 
-    <para>You have two basic choices - use Java based configuration or XML
-    based configuration. An example fo a basic Java configuratopn style
-    is:</para>
+      <para>An example of using Java based bean metadata to register an
+      instance of a <classname>com.mongodb.Mongo</classname> is shown
+      below<example>
+          <title>Registering a com.mongodb.Mongo object using Java based bean
+          metadata</title>
 
-    <example>
-      <title>Java based Spring configuration for MongoDB</title>
-
-      <programlisting language="java">@Configuration
+          <programlisting language="java">@Configuration
 public class AppConfig {
 
     /*
-     * Factory bean that creates the Mongo instance
+     * Factory bean that creates the com.mongodb.Mongo instance
+     */
+    public @Bean Mongo mongo() throws UnknownHostException, MongoException {
+        return new Mongo("localhost");
+    }   
+
+}
+</programlisting>
+        </example></para>
+
+      <para>This approach allows you to use the standard com.mongodb.Mongo API
+      that you may already be used to using but also pollutes the code with
+      the UnknownHostException checked exception.</para>
+
+      <para>However, you may also register an instance of
+      <classname>com.mongodb.Mongo</classname> instance with the container
+      using Spring's <interfacename>MongoFactoryBean</interfacename>. As
+      compared to instantiating a <classname>com.mongodb.Mongo</classname>
+      instance directly, the FactoryBean approach has the added advantage of
+      also acting as an ExceptionTranslator that can be used to translate any
+      Mongo exceptions to exceptions in the
+      <classname>SpringDataAccessException</classname>. This is part of <ulink
+      url="http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/html/dao.html">Spring's
+      DAO support features</ulink>. The exception translation feature works
+      hand in hand with Spring's <classname>@Repository</classname>
+      annotation. To enable exception translation on data access components
+      annotated with <classname>@Repository</classname> register a
+      <classname>PersistenceExceptionTranslationPostProcessor</classname>
+      (<ulink
+      url="http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/html/beans.html#beans-annotation-config">JavaDoc</ulink>)
+      with the container. <note>
+          <para>While enabling exception translation can be done using Java
+          based bean metadata it is often done declaratively in XML using
+          Spring's context namespace
+          <literal>&lt;context::annotation-config/&gt;</literal>.to enable
+          <ulink
+          url="http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/html/beans.html#beans-annotation-config">annotation
+          configuration features</ulink>.</para>
+        </note></para>
+
+      <para>An example of a Java based bean metadata that supports exception
+      translation on <classname>@Repository</classname> annotated classes is
+      shown below:</para>
+
+      <example>
+        <title>Registering a com.mongodb.Mongo object using Spring's
+        MongoFactoryBean and enabling Spring's exception translation
+        support</title>
+
+        <programlisting language="java">@Configuration
+public class AppConfig {
+
+    /*
+     * Factory bean that creates the com.mongodb.Mongo instance
      */
     public @Bean MongoFactoryBean mongo() {
         MongoFactoryBean mongo = new MongoFactoryBean();
         mongo.setHost("localhost");
         return mongo; 
-    }
-    
-    /*
-     * A basic MongoTemplate instance
-     */
-    public @Bean MongoTemplate mongoTemplate(Mongo mongo) {
-        MongoTemplate mongoTemplate = new MongoTemplate(mongo, "test", "HelloMongo");
-        return mongoTemplate;
-    }
+    }   
 
     /* 
      * Use this post processor to translate any MongoExceptions thrown in @Repository annotated classes
@@ -111,29 +157,104 @@ public class AppConfig {
 
 }
 </programlisting>
-    </example>
+      </example>
 
-    <para>The following shows the same configuration using XML:</para>
+      <para>if you prefer to use the standard MongoDB API to create a
+      com.mongodb.Mongo instance and have exception translation enabled on
+      your <classname>@Repository</classname> instances, simply inherit from
+      <classname>MongoExceptionTranslationConfig</classname> as shown below.
+      </para>
 
-    <example>
-      <title>XML based Spring configuration for MongoDB</title>
+      <example>
+        <title>Registering a com.mongodb.Mongo object and enabling Spring's
+        exception translation support</title>
 
-      <programlisting language="xml">&lt;!-- Factory bean that creates the Mongo instance --&gt;
-&lt;bean id="mongo" class="org.springframework.data.document.mongodb.MongoFactoryBean"&gt;
-    &lt;property name="host" value="localhost"/&gt;
-&lt;/bean&gt;
-
-&lt;!-- A basic MongoTemplate instance --&gt;
-&lt;bean id="mongoTemplate" class="org.springframework.data.document.mongodb.MongoTemplate"&gt;
-    &lt;constructor-arg name="mongo" ref="mongo"/&gt;
-    &lt;constructor-arg name="databaseName" value="test"/&gt;
-    &lt;constructor-arg name="defaultCollectionName" value="HelloMongo"/&gt;
-&lt;/bean&gt;
-
-&lt;!-- Use this post processor to translate any MongoExceptions thrown in @Repository annotated classes --&gt;
-&lt;bean class="org.springframework.dao.annotation.PersistenceExceptionTranslationPostProcessor"/&gt;
+        <programlisting language="java">@Configuration
+public class AppConfig extends MongoExceptionTranslationConfig {
+    
+    public @Bean Mongo mongo() throws UnknownHostException, MongoException {
+       return new Mongo("localhost");
+    }
+}
 </programlisting>
-    </example>
+      </example>
+    </section>
+
+    <section>
+      <title>Using XML based metadata</title>
+
+      <para>While you can use Spring's traditional &lt;beans/&gt; XML
+      namespace to register an instance of
+      <classname>com.mongodb.Mongo</classname> with the container, the XML can
+      be quite verbose, does not easily support the configuration of public
+      instance variables used with the driver's MongoOptions class, and
+      constructor arguments/names are not the most effective means to
+      distinguish between configuraiton of replicat sets and replica pairs. o
+      address these issues a XML namespace is available to simplify the
+      configuration of a com.mongodb.Mongo instance in XML. </para>
+
+      <para>To use the Mongo namespace elements you will need to reference the
+      Mongo schema:</para>
+
+      <example>
+        <title>XML schmea to configure MongoDB</title>
+
+        <programlisting language="xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;beans xmlns="http://www.springframework.org/schema/beans"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xmlns:context="http://www.springframework.org/schema/context"
+      xmlns:mongo="http://www.springframework.org/schema/data/mongo"
+      xsi:schemaLocation=
+"http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
+http://www.springframework.org/schema/data/mongo http://www.springframework.org/schema/data/mongo/spring-mongo-1.0.xsd
+http://www.springframework.org/schema/beans	http://www.springframework.org/schema/beans/spring-beans-3.0.xsd"&gt;
+
+&lt;beans&gt;
+  
+  &lt;!-- Default bean name is 'mongo' --&gt;
+  &lt;mongo:mongo host="localhost" port="27017"/&gt;
+  
+  &lt;!-- To translate any MongoExceptions thrown in @Repository annotated classes --&gt;
+  &lt;context:annotation-config/&gt;
+
+&lt;/beans&gt;
+</programlisting>
+      </example>
+
+      <para>A more advanced configuration with MongoOptions is shown
+      below</para>
+
+      <example>
+        <title>XML schmea to configure MongoOptinos in MongoDB</title>
+
+        <programlisting language="xml">&lt;beans&gt;
+  
+  &lt;mongo:mongo host="localhost" port="27017"&gt;
+    &lt;mongo:options connectionsPerHost="10" 
+                   threadsAllowedToBlockForConnectionMultiplier="5"
+                   maxWaitTime="12000"
+                   connectTimeout="0"
+                   socketTimeout="0"
+                   autoConnectRetry="0"/&gt;
+  &lt;/mongo:mongo/&gt;
+  
+&lt;/beans&gt;
+</programlisting>
+      </example>
+
+      <para>A configuration using replica sets is shown below:<example>
+          <title>XML schmea to configure replica sets in MongoDB</title>
+
+          <programlisting language="xml">&lt;beans&gt;
+  
+  &lt;mongo:mongo&gt;
+     &lt;! replica set TBD --&gt;
+  &lt;mongo:mongo&gt;
+  
+&lt;/beans&gt;
+</programlisting>
+        </example></para>
+    </section>
   </section>
 
   <section id="mongodb:template">
@@ -148,45 +269,182 @@ public class AppConfig {
     mapping between MongoDB JSON documents and your domain classes. Out of the
     box, <classname>MongoTemplate</classname> uses a Java-based default
     converter but you can also write your own converter classes to be used for
-    reading and storing domain objects. Once configured, the template is
-    thread-safe and can be reused across multiple instances.</para>
+    reading and storing domain objects. </para>
+
+    <note>
+      <para>Once configured, <classname>MongoTemplate</classname> is
+      thread-safe and can be reused across multiple instances.</para>
+    </note>
 
     <para>Let's look at a couple of examples for how to work with the
-    <classname>MongoTemplate</classname>.</para>
+    <classname>MongoTemplate</classname> in the context of the Spring
+    container.</para>
 
-    <section id="mongodb:template">
+    <section>
+      <title>Instantiating MongoTemplate</title>
+
+      <para>In Java based configuration using the driver's com.mongodb.Mongo
+      object </para>
+
+      <example>
+        <title>Registering a com.mongodb.Mongo object and enabling Spring's
+        exception translation support</title>
+
+        <programlisting language="java">@Configuration
+public class AppConfig extends MongoExceptionTranslationConfig {
+    
+    public @Bean Mongo mongo() throws UnknownHostException, MongoException {
+       return new Mongo("localhost");
+    }
+
+    public @Bean MongoTemplate mongoTemplate() throws UnknownHostException, MongoException {
+       return new MongoTemplate(mongo(), "test", "HelloMongo");
+    }
+}
+</programlisting>
+      </example>
+
+      <para>Alternatively using MongoFactoryBean, which avoid dealing with the
+      checked UnknownHostException</para>
+
+      <example>
+        <title>Registering a com.mongodb.Mongo object and enabling Spring's
+        exception translation support</title>
+
+        <programlisting language="java">@Configuration
+public class AppConfig  {
+
+    /*
+     * The method argument is the container managed Mongo instance created by the mongo() method
+     */
+    public @Bean MongoTemplate mongoTemplate(Mongo mongo) {
+      MongoTemplate mongoTemplate = new MongoTemplate(mongo, "test", "HelloMongo");
+      return mongoTemplate;
+    }
+    
+     /*
+      * Factory bean that creates the Mongo instance
+      */
+    public @Bean MongoFactoryBean mongo() {    	
+      MongoFactoryBean mongo = new MongoFactoryBean();
+      mongo.setHost("localhost");
+      return mongo; 
+    }
+    
+    /* 
+     * Use this post processor to translate any MongoExceptions thrown in @Repository annotated classes
+     */
+    public @Bean PersistenceExceptionTranslationPostProcessor persistenceExceptionTranslationPostProcessor() {
+      return new PersistenceExceptionTranslationPostProcessor();
+    }
+
+}
+</programlisting>
+
+        <para>There are several overloaded constructors of MongoTemplate.
+        These are</para>
+
+        <para></para>
+
+        <itemizedlist>
+          <listitem>
+            <para>MongoTemplate(Mongo mongo, String databaseName) - takes the
+            default database name to operate against</para>
+          </listitem>
+
+          <listitem>
+            <para>MongoTemplate(Mongo mongo, String databaseName, String
+            defaultCollectionName) - adds the default collection name to
+            operate against.</para>
+          </listitem>
+
+          <listitem>
+            <para>MongoTemplate(Mongo mongo, String databaseName, String
+            defaultCollectionName, MongoConverter mongoConverter) - override
+            with a provided MongoConverter. Default is
+            SimpleMongoConverter</para>
+          </listitem>
+
+          <listitem>
+            <para>MongoTemplate(Mongo mongo, String databaseName, String
+            defaultCollectionName, MongoConverter mongoConverter, WriteConcern
+            writeConcern, WriteResultChecking writeResultChecking) - Specify a
+            default WriteConcern and also WriteResultChecking policy</para>
+          </listitem>
+
+          <listitem>
+            <para>MongoTemplate(Mongo mongo, String databaseName, String
+            defaultCollectionName, WriteConcern writeConcern,
+            WriteResultChecking writeResultChecking) </para>
+          </listitem>
+
+          <listitem>
+            <para>MongoTemplate(Mongo mongo, String databaseName, WriteConcern
+            writeConcern, WriteResultChecking writeResultChecking)</para>
+          </listitem>
+        </itemizedlist>
+
+        <para>The</para>
+      </example>
+
+      <section>
+        <title>WriteResultChecking Policy</title>
+
+        <para>When in development it is very handy to either log or throw an
+        exception if the WriteResult returned from any MongoDB operation
+        contains an error. It is quite common to forget to do this during
+        development and then end up with an application that looks like it ran
+        successfully but the database was not modified according to your
+        expectations. Setting the WriteResultChecking is an enum with the
+        following values, NONE, LOG, EXCEPTION. </para>
+
+        <para></para>
+
+        <para>TBD</para>
+
+        <para></para>
+      </section>
+    </section>
+
+    <section>
+      <title>Overivew of MongoTemplate Methods</title>
+
+      <para></para>
+    </section>
+
+    <section id="mongodb-template-collections">
       <title>Working with collections</title>
 
       <para>...</para>
     </section>
 
-    <section id="mongodb:template">
+    <section id="mongodb-template-index">
       <title>Creating an index</title>
 
       <para>...</para>
     </section>
 
-    <section id="mongodb:template">
+    <section id="mongodb-template-save">
       <title>Saving and retreiving objects as documents in a
       collection</title>
 
       <para>...</para>
     </section>
 
-    <section id="mongodb:template">
+    <section id="mongodb-template-query" label="">
       <title>Querying documents in a collection</title>
 
       <para>...</para>
     </section>
 
-    <section id="mongodb:template">
+    <section id="mongodb-template-update">
       <title>Updating documents in a collection</title>
 
       <para>...</para>
     </section>
   </section>
 
-  <section id="mongodb:future">
+  <section id="mongodb-roadmap">
     <title>Roadmap ahead</title>
 
     <para>The Spring Data Document projects MongoDB support is in its early
