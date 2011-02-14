@@ -38,14 +38,16 @@
 
         <emphasis>Template implemenattion</emphasis>
 
-         - As with many of Spring's template classes, MongoTemplate simplifies the use of accessing the database for common use-cases and infrastructure concerns such as exception translation. Features include integrated object mapping between documents and domain classes and fluent DSLs  for query and update operations. The chapter 
+         - As with many of Spring's template classes, MongoTemplate simplifies the use of accessing the database for common use-cases and infrastructure concerns such as exception translation. Features include integrated object mapping between documents and domain classes and fluent DSLs for query and update operations. The chapter 
 
         <xref linkend="mongodb:template" />
 
-         provides additional details.  
+         provides additional details. 
       </listitem>
 
       <listitem>
+         
+
         <emphasis>Support Classes</emphasis>
 
          - that offer reusable components such as mapping support and exception translation. 
@@ -162,8 +164,8 @@ public class AppConfig {
       <para>if you prefer to use the standard MongoDB API to create a
       com.mongodb.Mongo instance and have exception translation enabled on
       your <classname>@Repository</classname> instances, simply inherit from
-      <classname>MongoExceptionTranslationConfig</classname> as shown below.
-      </para>
+      <classname>MongoExceptionTranslationConfig</classname> as shown
+      below.</para>
 
       <example>
         <title>Registering a com.mongodb.Mongo object and enabling Spring's
@@ -191,7 +193,7 @@ public class AppConfig extends MongoExceptionTranslationConfig {
       constructor arguments/names are not the most effective means to
       distinguish between configuraiton of replicat sets and replica pairs. o
       address these issues a XML namespace is available to simplify the
-      configuration of a com.mongodb.Mongo instance in XML. </para>
+      configuration of a com.mongodb.Mongo instance in XML.</para>
 
       <para>To use the Mongo namespace elements you will need to reference the
       Mongo schema:</para>
@@ -207,7 +209,7 @@ public class AppConfig extends MongoExceptionTranslationConfig {
       xsi:schemaLocation=
 "http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
 http://www.springframework.org/schema/data/mongo http://www.springframework.org/schema/data/mongo/spring-mongo-1.0.xsd
-http://www.springframework.org/schema/beans	http://www.springframework.org/schema/beans/spring-beans-3.0.xsd"&gt;
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd"&gt;
 
 &lt;beans&gt;
   
@@ -248,7 +250,7 @@ http://www.springframework.org/schema/beans	http://www.springframework.org/schem
           <programlisting language="xml">&lt;beans&gt;
   
   &lt;mongo:mongo&gt;
-     &lt;! replica set TBD --&gt;
+     &lt;! replica set TBD -- should be available for release 1.0.0.M2 --&gt;
   &lt;mongo:mongo&gt;
   
 &lt;/beans&gt;
@@ -269,7 +271,7 @@ http://www.springframework.org/schema/beans	http://www.springframework.org/schem
     mapping between MongoDB JSON documents and your domain classes. Out of the
     box, <classname>MongoTemplate</classname> uses a Java-based default
     converter but you can also write your own converter classes to be used for
-    reading and storing domain objects. </para>
+    reading and storing domain objects.</para>
 
     <note>
       <para>Once configured, <classname>MongoTemplate</classname> is
@@ -284,7 +286,7 @@ http://www.springframework.org/schema/beans	http://www.springframework.org/schem
       <title>Instantiating MongoTemplate</title>
 
       <para>In Java based configuration using the driver's com.mongodb.Mongo
-      object </para>
+      object</para>
 
       <example>
         <title>Registering a com.mongodb.Mongo object and enabling Spring's
@@ -344,8 +346,6 @@ public class AppConfig  {
         <para>There are several overloaded constructors of MongoTemplate.
         These are</para>
 
-        <para></para>
-
         <itemizedlist>
           <listitem>
             <para>MongoTemplate(Mongo mongo, String databaseName) - takes the
@@ -375,7 +375,7 @@ public class AppConfig  {
           <listitem>
             <para>MongoTemplate(Mongo mongo, String databaseName, String
             defaultCollectionName, WriteConcern writeConcern,
-            WriteResultChecking writeResultChecking) </para>
+            WriteResultChecking writeResultChecking)</para>
           </listitem>
 
           <listitem>
@@ -384,7 +384,7 @@ public class AppConfig  {
           </listitem>
         </itemizedlist>
 
-        <para>The</para>
+        <para></para>
       </example>
 
       <section>
@@ -396,45 +396,443 @@ public class AppConfig  {
         development and then end up with an application that looks like it ran
         successfully but the database was not modified according to your
         expectations. Setting the WriteResultChecking is an enum with the
-        following values, NONE, LOG, EXCEPTION. </para>
+        following values, NONE, LOG, EXCEPTION.</para>
 
-        <para></para>
-
-        <para>TBD</para>
-
-        <para></para>
+        <para>The default is to use a WriteResultChecking of NONE.</para>
       </section>
     </section>
 
     <section>
       <title>Overivew of MongoTemplate Methods</title>
 
-      <para></para>
+      <para>The public methods for <classname>MongoTemplate</classname> are
+      defined by the interface <interfacename>MongoOperations</interfacename>.
+      They can be grouped into the following categories:</para>
+
+      <section>
+        <title>Methods for working with a Collection</title>
+
+        <para><itemizedlist>
+            <listitem>
+              <para>Set&lt;String&gt; getCollectionNames() A set of collection
+              names.</para>
+            </listitem>
+
+            <listitem>
+              <para>boolean collectionExists(java.lang.String collectionName)
+              Check to see if a collection with a given name exists.</para>
+            </listitem>
+
+            <listitem>
+              <para>com.mongodb.DBCollection createCollection(String
+              collectionName) Create an uncapped collection with the provided
+              name.</para>
+            </listitem>
+
+            <listitem>
+              <para>com.mongodb.DBCollection createCollection(String
+              collectionName, CollectionOptions collectionOptions) Create a
+              collect with the provided name and options.</para>
+            </listitem>
+
+            <listitem>
+              <para>void dropCollection(java.lang.String collectionName) Drop
+              the collection with the given name.</para>
+            </listitem>
+
+            <listitem>
+              <para>com.mongodb.DBCollection getCollection(java.lang.String
+              collectionName) Get a collection by name, creating it if it
+              doesn't exist.</para>
+            </listitem>
+
+            <listitem>
+              <para>com.mongodb.DBCollection getDefaultCollection() The
+              default collection used by this template.</para>
+            </listitem>
+
+            <listitem>
+              <para>String getDefaultCollectionName() The default collection
+              name used by this template.</para>
+            </listitem>
+
+            <listitem>
+              <para>com.mongodb.DBCollection getDefaultCollection() The
+              default collection used by this template.</para>
+            </listitem>
+          </itemizedlist></para>
+      </section>
+
+      <section>
+        <title>Methods for executing commands</title>
+
+        <para><itemizedlist>
+            <listitem>
+              <para>com.mongodb.CommandResult
+              executeCommand(com.mongodb.DBObject command) Execute a MongoDB
+              command.</para>
+            </listitem>
+
+            <listitem>
+              <para>com.mongodb.CommandResult executeCommand(String
+              jsonCommand) Execute the a MongoDB command expressed as a JSON
+              string.</para>
+            </listitem>
+
+            <listitem>
+              <para>&lt;T&gt; T execute(CollectionCallback&lt;T&gt; action)
+              Executes the given CollectionCallback on the default
+              collection.</para>
+            </listitem>
+
+            <listitem>
+              <para>&lt;T&gt; T execute(CollectionCallback&lt;T&gt; action,
+              String collectionName) Executes the given CollectionCallback on
+              the collection of the given name.</para>
+            </listitem>
+
+            <listitem>
+              <para>&lt;T&gt; T execute(DbCallback&lt;T&gt; action) Executes a
+              DbCallback translating any exceptions as necessary.</para>
+            </listitem>
+
+            <listitem>
+              <para>&lt;T&gt; T executeInSession(DbCallback&lt;T&gt; action)
+              Executes the given DbCallback within the same connection to the
+              database so as to ensure consistency in a write heavy
+              environment where you may read the data that you wrote.</para>
+            </listitem>
+          </itemizedlist></para>
+      </section>
+
+      <section>
+        <title>Methods for creating an Index</title>
+
+        <para><itemizedlist>
+            <listitem>
+              <para>void ensureIndex(IndexSpecification indexSpecification)
+              Ensure that an index for the provided IndexSpecification exists
+              for the default collection.</para>
+            </listitem>
+
+            <listitem>
+              <para>void ensureIndex(String collectionName, IndexSpecification
+              indexSpecification) Ensure that an index for the provided
+              IndexSpecification exists.</para>
+            </listitem>
+          </itemizedlist></para>
+      </section>
+
+      <section>
+        <title>Methods for inserting documents</title>
+
+        <para><itemizedlist>
+            <listitem>
+              <para>void insert(java.lang.Object objectToSave) Insert the
+              object into the default collection.</para>
+            </listitem>
+
+            <listitem>
+              <para>void insert(java.lang.String collectionName,
+              java.lang.Object objectToSave) Insert the object into the
+              specified collection.</para>
+            </listitem>
+
+            <listitem>
+              <para>void insertList(java.util.List&lt;? extends
+              java.lang.Object&gt; listToSave) Insert a list of objects into
+              the default collection in a single batch write to the
+              database.</para>
+            </listitem>
+
+            <listitem>
+              <para>void insertList(java.lang.String collectionName,
+              java.util.List&lt;? extends java.lang.Object&gt; listToSave)
+              Insert a list of objects into the specified collection in a
+              single batch write to the database.</para>
+            </listitem>
+
+            <listitem>
+              <para>&lt;T&gt; void insert(T objectToSave, MongoWriter&lt;T&gt;
+              writer) Insert the object into the default collection.</para>
+            </listitem>
+
+            <listitem>
+              <para>&lt;T&gt; void insert(String collectionName, T
+              objectToSave, MongoWriter&lt;T&gt; writer) Insert the object
+              into the specified collection.</para>
+            </listitem>
+
+            <listitem>
+              <para>&lt;T&gt; void insertList(List&lt;? extends T&gt;
+              listToSave, MongoWriter&lt;T&gt; writer) Insert a list of
+              objects into the default collection using the provided
+              MongoWriter instance</para>
+            </listitem>
+
+            <listitem>
+              <para>&lt;T&gt; void insertList(String collectionName, List&lt;?
+              extends T&gt; listToSave, MongoWriter&lt;T&gt; writer) Insert a
+              list of objects into the specified collection using the provided
+              MongoWriter instance</para>
+            </listitem>
+          </itemizedlist></para>
+      </section>
+
+      <section>
+        <title>Methods for querying for documents</title>
+
+        <para><itemizedlist>
+            <listitem>
+              <para>&lt;T&gt; List&lt;T&gt; getCollection(Class&lt;T&gt;
+              targetClass) Query for a list of objects of type T from the
+              default collection.</para>
+            </listitem>
+
+            <listitem>
+              <para>&lt;T&gt; List&lt;T&gt; getCollection(String
+              collectionName, Class&lt;T&gt; targetClass) Query for a list of
+              objects of type T from the specified collection.</para>
+            </listitem>
+
+            <listitem>
+              <para>&lt;T&gt; List&lt;T&gt; getCollection(String
+              collectionName, Class&lt;T&gt; targetClass, MongoReader&lt;T&gt;
+              reader) Query for a list of objects of type T from the specified
+              collection, mapping the DBObject using the provided
+              MongoReader.</para>
+            </listitem>
+
+            <listitem>
+              <para>&lt;T&gt; T findOne(Query query, Class&lt;T&gt;
+              targetClass) Map the results of an ad-hoc query on the default
+              MongoDB collection to a single instance of an object of the
+              specified type.</para>
+            </listitem>
+
+            <listitem>
+              <para>&lt;T&gt; T findOne(Query query, Class&lt;T&gt;
+              targetClass, MongoReader&lt;T&gt; reader) Map the results of an
+              ad-hoc query on the default MongoDB collection to a single
+              instance of an object of the specified type.</para>
+            </listitem>
+
+            <listitem>
+              <para>&lt;T&gt; T findOne(java.lang.String collectionName, Query
+              query, Class&lt;T&gt; targetClass) Map the results of an ad-hoc
+              query on the specified collection to a single instance of an
+              object of the specified type.</para>
+            </listitem>
+
+            <listitem>
+              <para>&lt;T&gt; T findOne(java.lang.String collectionName, Query
+              query, Class&lt;T&gt; targetClass, MongoReader&lt;T&gt; reader)
+              Map the results of an ad-hoc query on the specified collection
+              to a single instance of an object of the specified type.</para>
+            </listitem>
+
+            <listitem>
+              <para>&lt;T&gt; List&lt;T&gt; find(Query query, Class&lt;T&gt;
+              targetClass) Map the results of an ad-hoc query on the default
+              MongoDB collection to a List of the specified type.</para>
+            </listitem>
+
+            <listitem>
+              <para>&lt;T&gt; List&lt;T&gt; find(Query query, Class&lt;T&gt;
+              targetClass, MongoReader&lt;T&gt; reader) Map the results of an
+              ad-hoc query on the default MongoDB collection to a List of the
+              specified type.</para>
+            </listitem>
+
+            <listitem>
+              <para>&lt;T&gt; List&lt;T&gt; find(String collectionName, Query
+              query, Class&lt;T&gt; targetClass) Map the results of an ad-hoc
+              query on the specified collection to a List of the specified
+              type.</para>
+            </listitem>
+
+            <listitem>
+              <para>&lt;T&gt; List&lt;T&gt; find(String collectionName, Query
+              query, Class&lt;T&gt; targetClass, CursorPreparer preparer) Map
+              the results of an ad-hoc query on the specified collection to a
+              List of the specified type.</para>
+            </listitem>
+
+            <listitem>
+              <para>&lt;T&gt; List&lt;T&gt; find(String collectionName, Query
+              query, Class&lt;T&gt; targetClass, MongoReader&lt;T&gt; reader)
+              Map the results of an ad-hoc query on the specified collection
+              to a List of the specified type.</para>
+            </listitem>
+          </itemizedlist></para>
+      </section>
+
+      <section>
+        <title>Methods for saving documents</title>
+
+        <para><itemizedlist>
+            <listitem>
+              <para>void save(Object objectToSave) Save the object to the
+              default collection.</para>
+            </listitem>
+
+            <listitem>
+              <para>void save(String collectionName, Object objectToSave) Save
+              the object to the specified collection.</para>
+            </listitem>
+
+            <listitem>
+              <para>&lt;T&gt; void save(T objectToSave, MongoWriter&lt;T&gt;
+              writer) Save the object into the default collection using the
+              provided writer.</para>
+            </listitem>
+
+            <listitem>
+              <para>&lt;T&gt; void save(String collectionName, T objectToSave,
+              MongoWriter&lt;T&gt; writer) Save the object into the specified
+              collection using the provided writer.</para>
+            </listitem>
+          </itemizedlist></para>
+      </section>
+
+      <section>
+        <title>Methods for removing documents</title>
+
+        <para><itemizedlist>
+            <listitem>
+              <para>void remove(Query query) Remove all documents from the
+              default collection that match the provided query document
+              criteria.</para>
+            </listitem>
+
+            <listitem>
+              <para>void remove(String collectionName, Query query) Remove all
+              documents from the specified collection that match the provided
+              query document criteria.</para>
+            </listitem>
+          </itemizedlist></para>
+      </section>
+
+      <section>
+        <title>Methods for executing updates for documents</title>
+
+        <para><itemizedlist>
+            <listitem>
+              <para> com.mongodb.WriteResult updateFirst(Query query, Update
+              update) Updates the first object that is found in the default
+              collection that matches the query document with the provided
+              updated document.</para>
+            </listitem>
+
+            <listitem>
+              <para>com.mongodb.WriteResult updateFirst(String collectionName,
+              Query query, Update update) Updates the first object that is
+              found in the specified collection that matches the query
+              document criteria with the provided updated document.</para>
+            </listitem>
+
+            <listitem>
+              <para>com.mongodb.WriteResult updateMulti(Query query, Update
+              update) Updates all objects that are found in the default
+              collection that matches the query document criteria with the
+              provided updated document.</para>
+            </listitem>
+
+            <listitem>
+              <para>com.mongodb.WriteResult updateMulti(String collectionName,
+              Query query, Update update) Updates all objects that are found
+              in the specified collection that matches the query document
+              criteria with the provided updated document.</para>
+            </listitem>
+          </itemizedlist></para>
+      </section>
     </section>
 
     <section id="mongodb-template-collections">
       <title>Working with collections</title>
 
-      <para>...</para>
+      <para>It's time to look at some code examples showing how to use the
+      <classname>MongoTemplate</classname>. First we look at creating our
+      first colection.</para>
+
+      <example>
+        <title>Working with collections using the MongoTemplate</title>
+
+        <programlisting language="java">    DBCollection collection = null;
+    if (!mongoTemplate.getCollectionNames().contains("MyNewCollection")) {
+        collection = mongoTemplate.createCollection("MyNewCollection");
+    }
+
+    mongoTemplate.dropCollection("MyNewCollection");
+</programlisting>
+      </example>
     </section>
 
     <section id="mongodb-template-index">
       <title>Creating an index</title>
 
-      <para>...</para>
+      <para>We can create an index on a collection to improve query
+      performance.</para>
+
+      <example>
+        <title>Creating an index using the MongoTemplate</title>
+
+        <programlisting language="java">    mongoTemplate.ensureIndex("MyCollection", new Index().on("name", Order.ASCENDING));
+</programlisting>
+      </example>
     </section>
 
     <section id="mongodb-template-save">
       <title>Saving and retreiving objects as documents in a
       collection</title>
 
-      <para>...</para>
+      <para>Once we have craeted the collection and maybe an index we can
+      start using the collection to store our domain objects as documents.
+      Note that we are using a static import for
+      <classname>org.springframework.data.document.mongodb.query.Criteria.where</classname>
+      to make the query more readable.</para>
+
+      <example>
+        <title>Inserting and retrieving documents using the
+        MongoTemplate</title>
+
+        <programlisting language="java">import static org.springframework.data.document.mongodb.query.Criteria.where;
+
+...
+
+    Person p = new Person("Bob", 33);
+    mongoTemplate.insert("MyCollection", p);
+    
+    Person qp = mongoTemplate.findOne("MyCollection", 
+        new Query(where("id").is(p.getId())), Person.class);
+</programlisting>
+      </example>
     </section>
 
     <section id="mongodb-template-query" label="">
       <title>Querying documents in a collection</title>
 
-      <para>...</para>
+      <para>We saw how to retrieve a single document. We can also query for a
+      collection of documents to be returned as domain objects in a list.
+      Assuming that we have a number of Person objects with name and age
+      stored as documents in a collection and that each person has an embedded
+      account document with a balance. We can now run a query using the
+      following code.</para>
+
+      <example>
+        <title>Querying for documents using the MongoTemplate</title>
+
+        <programlisting language="java">import static org.springframework.data.document.mongodb.query.Criteria.where;
+
+...
+    List&lt;Person&gt; result = mongoTemplate.find(
+        new Query(where("age").lt(50)).and(where("accounts.balance").gt(1000.00d)), 
+        Person.class);
+</programlisting>
+      </example>
+
+      <para>This query should return a list of Person objects that meet the
+      specified criteria.</para>
     </section>
 
     <section id="mongodb-template-update">
