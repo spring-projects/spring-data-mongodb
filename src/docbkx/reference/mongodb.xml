@@ -12,14 +12,14 @@
   Offers both low-level and high-level abstraction for interacting with the
   store, freeing the user from infrastructural concerns.</para></para>
 
-  <section id="mongodb:requirements">
+  <section id="mongodb-requirements">
     <title>MongoDB Requirements</title>
 
     <para>DATADOC requires MongoDB 1.4 while the latest production release
     (1.6.5 as of this writing) is recommended.</para>
   </section>
 
-  <section id="mongodb:architecture">
+  <section id="mongodb-architecture">
     <title>MongoDB Support High Level View</title>
 
     <para>The MongoDB support provides several components:</para>
@@ -36,7 +36,7 @@
       <listitem>
          
 
-        <emphasis>Template implemenattion</emphasis>
+        <emphasis>Template implementation</emphasis>
 
          - As with many of Spring's template classes, MongoTemplate simplifies the use of accessing the database for common use-cases and infrastructure concerns such as exception translation. Features include integrated object mapping between documents and domain classes and fluent DSLs for query and update operations. The chapter 
 
@@ -60,7 +60,7 @@
     (org.mongo.DB) to communicate directly with MongoDB.</para>
   </section>
 
-  <section id="mongodb:connectors">
+  <section id="mongodb-connectors">
     <title>Connecting to MongoDB</title>
 
     <para>One of the first tasks when using MongoDB and Spring is to create a
@@ -77,7 +77,7 @@
       </note></para>
 
     <section>
-      <title>Using Java based based metadata</title>
+      <title>Using Java based metadata</title>
 
       <para>An example of using Java based bean metadata to register an
       instance of a <classname>com.mongodb.Mongo</classname> is shown
@@ -193,7 +193,7 @@ public class AppConfig extends MongoExceptionTranslationConfig {
       be quite verbose, does not easily support the configuration of public
       instance variables used with the driver's MongoOptions class, and
       constructor arguments/names are not the most effective means to
-      distinguish between configuraiton of replicat sets and replica pairs. o
+      distinguish between configuration of replica sets and replica pairs. o
       address these issues a XML namespace is available to simplify the
       configuration of a com.mongodb.Mongo instance in XML.</para>
 
@@ -201,7 +201,7 @@ public class AppConfig extends MongoExceptionTranslationConfig {
       Mongo schema:</para>
 
       <example>
-        <title>XML schmea to configure MongoDB</title>
+        <title>XML schema to configure MongoDB</title>
 
         <programlisting language="xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
 &lt;beans xmlns="http://www.springframework.org/schema/beans"
@@ -232,7 +232,7 @@ public class AppConfig extends MongoExceptionTranslationConfig {
       below</para>
 
       <example>
-        <title>XML schmea to configure MongoOptinos in MongoDB</title>
+        <title>XML schema to configure MongoOptinos in MongoDB</title>
 
         <programlisting language="xml">&lt;beans&gt;
   
@@ -250,7 +250,7 @@ public class AppConfig extends MongoExceptionTranslationConfig {
       </example>
 
       <para>A configuration using replica sets is shown below:<example>
-          <title>XML schmea to configure replica sets in MongoDB</title>
+          <title>XML schema to configure replica sets in MongoDB</title>
 
           <programlisting language="xml">&lt;beans&gt;
   
@@ -264,7 +264,7 @@ public class AppConfig extends MongoExceptionTranslationConfig {
     </section>
   </section>
 
-  <section id="mongodb:template">
+  <section id="mongodb-template">
     <title>Working with objects using the
     <classname>MongoTemplate</classname></title>
 
@@ -422,7 +422,7 @@ public class AppConfig  {
     </section>
 
     <section>
-      <title>Overivew of MongoTemplate Methods</title>
+      <title>Overview of MongoTemplate Methods</title>
 
       <para>The public methods for <classname>MongoTemplate</classname> are
       defined by the interface <interfacename>MongoOperations</interfacename>.
@@ -517,7 +517,8 @@ public class AppConfig  {
               <para><literal>&lt;T&gt; T</literal> <emphasis
               role="bold">execute</emphasis><literal>(String collectionName,
               CollectionCallback&lt;T&gt; action)</literal> Executes the given
-              CollectionCallback on the collection of the given name.</para>
+              CollectionCallback on the collection of the given name.update
+              using the $addToSet update modifier</para>
             </listitem>
 
             <listitem>
@@ -680,20 +681,19 @@ public class AppConfig  {
 
             <listitem>
               <para><literal>&lt;T&gt; T</literal> <emphasis
-              role="bold">findOne</emphasis><literal>(java.lang.String
-              collectionName, Query query, Class&lt;T&gt;
-              targetClass)</literal> Map the results of an ad-hoc query on the
-              specified collection to a single instance of an object of the
-              specified type.</para>
+              role="bold">findOne</emphasis><literal>(String collectionName,
+              Query query, Class&lt;T&gt; targetClass)</literal> Map the
+              results of an ad-hoc query on the specified collection to a
+              single instance of an object of the specified type.</para>
             </listitem>
 
             <listitem>
               <para><literal>&lt;T&gt; T</literal> <emphasis
-              role="bold">findOne</emphasis><literal>(java.lang.String
-              collectionName, Query query, Class&lt;T&gt; targetClass,
-              MongoReader&lt;T&gt; reader)</literal> Map the results of an
-              ad-hoc query on the specified collection to a single instance of
-              an object of the specified type.</para>
+              role="bold">findOne</emphasis><literal>(String collectionName,
+              Query query, Class&lt;T&gt; targetClass, MongoReader&lt;T&gt;
+              reader)</literal> Map the results of an ad-hoc query on the
+              specified collection to a single instance of an object of the
+              specified type.</para>
             </listitem>
 
             <listitem>
@@ -805,7 +805,7 @@ public class AppConfig  {
 
         <para><itemizedlist>
             <listitem>
-              <para> <literal>WriteResult</literal> <emphasis
+              <para><literal>WriteResult</literal> <emphasis
               role="bold">updateFirst</emphasis><literal>(Query query, Update
               update)</literal> Updates the first object that is found in the
               default collection that matches the query document with the
@@ -904,7 +904,7 @@ public class AppConfig  {
       </example>
     </section>
 
-    <section id="mongodb-template-query" label="">
+    <section id="mongodb-template-query">
       <title>Querying documents in a collection</title>
 
       <para>We saw how to retrieve a single document. We can also query for a
@@ -920,25 +920,301 @@ public class AppConfig  {
         <programlisting language="java">import static org.springframework.data.document.mongodb.query.Criteria.where;
 
 ...
+
     List&lt;Person&gt; result = mongoTemplate.find(
         new Query(where("age").lt(50)).and(where("accounts.balance").gt(1000.00d)), 
         Person.class);
 </programlisting>
       </example>
 
+      <para>All find methods take a <classname>Query</classname> object as a
+      parameter. This object defines the criteria and options used to perform
+      the query. The criteria is specified using a
+      <classname>Criteria</classname> object that has a static factory method
+      named <classname>where</classname> used to instantiate a new
+      <classname>Criteria</classname> object. We recommend using a static
+      import for
+      <classname>org.springframework.data.document.mongodb.query.Criteria.where</classname>
+      to make the query more readable.</para>
+
       <para>This query should return a list of Person objects that meet the
-      specified criteria.</para>
+      specified criteria. The Criteria class has the following methods that
+      correspond to the operators provided in MongoDB.</para>
+
+      <para>As you can see most methods return the
+      <classname>Criteria</classname> object to provide a fluent style for the
+      API.</para>
+
+      <section>
+        <title>Methods for the Criteria class</title>
+
+        <para>
+          <itemizedlist>
+            <listitem>
+              <para><literal>Criteria</literal> <emphasis
+              role="bold">all</emphasis><literal>(Object o) </literal>creates
+              a criterion using the <literal>$all</literal> operator</para>
+            </listitem>
+
+            <listitem>
+              <para><literal>Criteria</literal> <emphasis
+              role="bold">exists</emphasis><literal>(boolean b)
+              </literal>creates a criterion using the
+              <literal>$exists</literal> operator</para>
+            </listitem>
+
+            <listitem>
+              <para><literal>Criteria</literal> <emphasis
+              role="bold">gt</emphasis><literal>(Object o) </literal>creates a
+              criterion using the <literal>$gt</literal> operator</para>
+            </listitem>
+
+            <listitem>
+              <para><literal>Criteria</literal> <emphasis
+              role="bold">gte</emphasis><literal>(Object o) </literal>creates
+              a criterion using the <literal>$gte</literal> operator</para>
+            </listitem>
+
+            <listitem>
+              <para><literal>Criteria</literal> <emphasis
+              role="bold">in</emphasis><literal>(Object... o)
+              </literal>creates a criterion using the <literal>$in</literal>
+              operator</para>
+            </listitem>
+
+            <listitem>
+              <para><literal>Criteria</literal> <emphasis
+              role="bold">is</emphasis><literal>(Object o) </literal>creates a
+              criterion using the <literal>$is</literal> operator</para>
+            </listitem>
+
+            <listitem>
+              <para><literal>Criteria</literal> <emphasis
+              role="bold">lt</emphasis><literal>(Object o) </literal>creates a
+              criterion using the <literal>$lt</literal> operator</para>
+            </listitem>
+
+            <listitem>
+              <para><literal>Criteria</literal> <emphasis
+              role="bold">lte</emphasis><literal>(Object o) </literal>creates
+              a criterion using the <literal>$lte</literal> operator</para>
+            </listitem>
+
+            <listitem>
+              <para>
+                <literal>Criteria</literal>
+
+                <emphasis role="bold">mod</emphasis>
+
+                <literal>(Number value, Number remainder)</literal>
+              </para>
+            </listitem>
+
+            <listitem>
+              <para><literal>Criteria</literal> <emphasis
+              role="bold">nin</emphasis><literal>(Object... o)
+              </literal>creates a criterion using the <literal>$nin</literal>
+              operator</para>
+            </listitem>
+
+            <listitem>
+              <para><literal>Criteria</literal> <emphasis
+              role="bold">not</emphasis><literal>() </literal>creates a
+              criterion using the <literal>$not</literal> meta operator which
+              affects the clause directly following</para>
+            </listitem>
+
+            <listitem>
+              <para><literal>Criteria</literal> <emphasis
+              role="bold">regex</emphasis><literal>(String re)
+              </literal>creates a criterion using a
+              <literal>$regex</literal></para>
+            </listitem>
+
+            <listitem>
+              <para><literal>Criteria</literal> <emphasis
+              role="bold">size</emphasis><literal>(int s) </literal>creates a
+              criterion using the <literal>$size</literal> operator</para>
+            </listitem>
+
+            <listitem>
+              <para><literal>Criteria</literal> <emphasis
+              role="bold">type</emphasis><literal>(int t) </literal>creates a
+              criterion using the <literal>$type</literal> operator</para>
+            </listitem>
+
+            <listitem>
+              <para><literal>void </literal> <emphasis
+              role="bold">or</emphasis><literal>(List&lt;Query&gt; queries)
+              </literal>creates an or query using the <literal>$or</literal>
+              operator for all of the provided queries</para>
+
+              <para />
+            </listitem>
+          </itemizedlist>
+        </para>
+      </section>
+
+      <para>The <classname>Query</classname> class has some additional methods
+      used to provide options for the query.</para>
+
+      <section>
+        <title>Methods for the Query class</title>
+
+        <para>
+          <itemizedlist>
+            <listitem>
+              <para><literal>Query</literal> <emphasis
+              role="bold">and</emphasis><literal>(Criteria criteria)</literal>
+              used to add additional criteria to the query</para>
+            </listitem>
+
+            <listitem>
+              <para><literal>Field</literal> <emphasis
+              role="bold">fields</emphasis><literal>()</literal> used to
+              define fields to be included in the query results</para>
+            </listitem>
+
+            <listitem>
+              <para><literal>Query</literal> <emphasis
+              role="bold">limit</emphasis><literal>(int limit)</literal> used
+              to limit the size of the returned results to the provided limit
+              (used for paging)</para>
+            </listitem>
+
+            <listitem>
+              <para><literal>Query</literal> <emphasis
+              role="bold">skip</emphasis><literal>(int skip)</literal> used to
+              skip the provided number of documents in the results (used for
+              paging)</para>
+            </listitem>
+
+            <listitem>
+              <para><literal>Sort</literal> <emphasis
+              role="bold">sort</emphasis><literal>()</literal> used to provide
+              sort definition for the results</para>
+
+              <para />
+            </listitem>
+          </itemizedlist>
+        </para>
+      </section>
     </section>
 
     <section id="mongodb-template-update">
       <title>Updating documents in a collection</title>
 
-      <para>...</para>
+      <para>For updates we can elect to update the first document found using
+      <literal>updateFirst</literal> or we can update all documents that were
+      found to match the query using <literal>updateMulti</literal>. Here is
+      an example of an update of all SAVINGS accounts where we are adding a
+      one time $50.00 bonus to the balance using the <literal>$inc</literal>
+      operator.</para>
+
+      <example>
+        <title>Updating documents using the MongoTemplate</title>
+
+        <programlisting language="java">import static org.springframework.data.document.mongodb.query.Criteria.where;
+
+...
+
+    WriteResult wr = mongoTemplate.updateMulti(
+        new Query(where("accounts.accountType").is(Account.Type.SAVINGS)),
+        new Update().inc("accounts.$.balance", 50.00));
+</programlisting>
+      </example>
+
+      <para>In addition to the <classname>Query</classname> discussed above we
+      provide the update definition using an <classname>Update</classname>
+      object. The <classname>Update</classname> class has methods that match
+      the update modifiers available for MongoDB.</para>
+
+      <para>As you can see most methods return the
+      <classname>Update</classname> object to provide a fluent style for the
+      API.</para>
+
+      <section>
+        <title>Methods for the Update class</title>
+
+        <para><itemizedlist>
+            <listitem>
+              <para><literal>Update</literal> <emphasis
+              role="bold">addToSet</emphasis><literal>(String key, Object
+              value)</literal> update using the <literal>$addToSet</literal>
+              update modifier</para>
+            </listitem>
+
+            <listitem>
+              <para><literal>Update</literal> <emphasis
+              role="bold">inc</emphasis><literal>(String key, Number
+              inc)</literal> update using the <literal>$inc</literal> update
+              modifier</para>
+            </listitem>
+
+            <listitem>
+              <para><literal>Update</literal> <emphasis
+              role="bold">pop</emphasis><literal>(String key, Update.Position
+              pos)</literal> update using the <literal>$pop</literal> update
+              modifier</para>
+            </listitem>
+
+            <listitem>
+              <para><literal>Update</literal> <emphasis
+              role="bold">pull</emphasis><literal>(String key, Object
+              value)</literal> update using the <literal>$pull</literal>
+              update modifier</para>
+            </listitem>
+
+            <listitem>
+              <para><literal>Update</literal> <emphasis
+              role="bold">pullAll</emphasis><literal>(String key, Object[]
+              values)</literal> update using the <literal>$pullAll</literal>
+              update modifier</para>
+            </listitem>
+
+            <listitem>
+              <para><literal>Update</literal> <emphasis
+              role="bold">push</emphasis><literal>(String key, Object
+              value)</literal> update using the <literal>$push</literal>
+              update modifier</para>
+            </listitem>
+
+            <listitem>
+              <para><literal>Update</literal> <emphasis
+              role="bold">pushAll</emphasis><literal>(String key, Object[]
+              values)</literal> update using the <literal>$pushAll</literal>
+              update modifier</para>
+            </listitem>
+
+            <listitem>
+              <para><literal>Update</literal> <emphasis
+              role="bold">rename</emphasis><literal>(String oldName, String
+              newName)</literal> update using the <literal>$rename</literal>
+              update modifier</para>
+            </listitem>
+
+            <listitem>
+              <para><literal>Update</literal> <emphasis
+              role="bold">set</emphasis><literal>(String key, Object
+              value)</literal> update using the <literal>$set</literal> update
+              modifier</para>
+            </listitem>
+
+            <listitem>
+              <para><literal>Update</literal> <emphasis
+              role="bold">unset</emphasis><literal>(String key)</literal>
+              update using the <literal>$unset</literal> update
+              modifier</para>
+            </listitem>
+          </itemizedlist></para>
+
+        <para></para>
+      </section>
     </section>
   </section>
 
   <section id="mongodb-roadmap">
-    <title>Roadmap ahead</title>
+    <title>Road map ahead</title>
 
     <para>The Spring Data Document projects MongoDB support is in its early
     stages. We are interested in feedback, knowing what your use cases are,
