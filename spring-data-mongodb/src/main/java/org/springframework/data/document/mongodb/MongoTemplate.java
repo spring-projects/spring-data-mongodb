@@ -378,23 +378,14 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	 * @see org.springframework.data.document.mongodb.MongoOperations#createCollection(java.lang.String)
 	 */
 	public DBCollection createCollection(final String collectionName) {
-		return execute(new DbCallback<DBCollection>() {
-			public DBCollection doInDB(DB db) throws MongoException, DataAccessException {
-				return db.createCollection(collectionName, new BasicDBObject());
-			}
-		});
+		return doCreateCollection(collectionName, new BasicDBObject());
 	}
 		
 	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#createCollection(java.lang.String, org.springframework.data.document.mongodb.CollectionOptions)
 	 */
-	public void createCollection(final String collectionName, final CollectionOptions collectionOptions) {
-		execute(new DbCallback<Void>() {
-			public Void doInDB(DB db) throws MongoException, DataAccessException {
-				db.createCollection(collectionName, convertToDbObject(collectionOptions));
-				return null;
-			}
-		});
+	public DBCollection createCollection(final String collectionName, final CollectionOptions collectionOptions) {
+		return doCreateCollection(collectionName, convertToDbObject(collectionOptions));
 	}
 	
 	/* (non-Javadoc)
@@ -536,6 +527,13 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	}
 	
 	/* (non-Javadoc)
+	 * @see org.springframework.data.document.mongodb.MongoOperations#insert(T, org.springframework.data.document.mongodb.MongoWriter)
+	 */
+	public <T> void insert(T objectToSave, MongoWriter<T> writer) {
+		insert(getDefaultCollectionName(), objectToSave, writer);
+	}
+
+	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#insert(java.lang.String, T, org.springframework.data.document.mongodb.MongoWriter)
 	 */
 	public <T> void insert(String collectionName, T objectToSave, MongoWriter<T> writer) {
@@ -557,6 +555,13 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	 */
 	public void insertList(String collectionName, List<? extends Object> listToSave) {
 		insertList(collectionName, listToSave, this.mongoConverter);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.springframework.data.document.mongodb.MongoOperations#insertList(java.util.List, org.springframework.data.document.mongodb.MongoWriter)
+	 */
+	public <T> void insertList(List<? extends T> listToSave, MongoWriter<T> writer) {
+		insertList(getDefaultCollectionName(), listToSave, writer);
 	}
 
 	/* (non-Javadoc)
@@ -595,6 +600,13 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	}
 	
 	/* (non-Javadoc)
+	 * @see org.springframework.data.document.mongodb.MongoOperations#save(T, org.springframework.data.document.mongodb.MongoWriter)
+	 */
+	public <T> void save(T objectToSave, MongoWriter<T> writer) {
+		save(getDefaultCollectionName(), objectToSave, writer);
+	}
+
+	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#save(java.lang.String, T, org.springframework.data.document.mongodb.MongoWriter)
 	 */
 	public <T> void save(String collectionName, T objectToSave, MongoWriter<T> writer) {
@@ -624,9 +636,6 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 		}, collectionName);
 	}
 	
-	
-	
-
 	protected List<ObjectId> insertDBObjectList(String collectionName, final List<DBObject> dbDocList) {
 
 		if (dbDocList.isEmpty()) {
@@ -785,6 +794,20 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	
 	public DB getDb() {
 		return MongoDbUtils.getDB(mongo, databaseName, username, password == null ? null : password.toCharArray());
+	}
+
+	/**
+	 * Create the specified collection using the provided options
+	 * @param collectionName
+	 * @param collectionOptions
+	 * @return the collection that was created
+	 */
+	protected DBCollection doCreateCollection(final String collectionName, final DBObject collectionOptions) {
+		return execute(new DbCallback<DBCollection>() {
+			public DBCollection doInDB(DB db) throws MongoException, DataAccessException {
+				return db.createCollection(collectionName, collectionOptions);
+			}
+		});
 	}
 
 	/**

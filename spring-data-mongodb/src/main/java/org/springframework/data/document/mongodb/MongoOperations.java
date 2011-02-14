@@ -126,8 +126,9 @@ public interface MongoOperations {
 	 * Create a collect with the provided name and options.
 	 * @param collectionName name of the collection
 	 * @param collectionOptions options to use when creating the collection.
+	 * @return the created collection
 	 */
-	void createCollection(String collectionName, CollectionOptions collectionOptions);
+	DBCollection createCollection(String collectionName, CollectionOptions collectionOptions);
 
 	/**
 	 * A set of collection names.
@@ -427,6 +428,21 @@ public interface MongoOperations {
 	void insert(String collectionName, Object objectToSave);
 
 	/**
+	 * Insert the object into the default collection.  
+	 * 
+	 * The object is converted to the MongoDB native representation using an instance of 
+	 * {@see MongoWriter} 
+	 * 
+	 * Insert is used to initially store the object into the 
+	 * database.  To update an existing object use the save method.
+	 * 
+	 * @param <T> the type of the object to insert
+	 * @param objectToSave  the object to store in the collection
+	 * @param writer the writer to convert the object to save into a DBObject
+	 */
+	<T> void insert(T objectToSave, MongoWriter<T> writer);
+
+	/**
 	 * Insert the object into the specified collection.  
 	 * 
 	 * The object is converted to the MongoDB native representation using an instance of 
@@ -455,6 +471,15 @@ public interface MongoOperations {
 	 * @param listToSave the list of objects to save.
 	 */
 	void insertList(String collectionName, List<? extends Object> listToSave);
+
+	/**
+	 * Insert a list of objects into the default collection using the provided MongoWriter instance
+	 * 
+	 * @param <T> the type of object being saved
+	 * @param listToSave the list of objects to save.
+	 * @param writer the writer to convert the object to save into a DBObject
+	 */
+	<T> void insertList(List<? extends T> listToSave, MongoWriter<T> writer);
 
 	/**
 	 * Insert a list of objects into the specified collection using the provided MongoWriter instance
@@ -506,7 +531,22 @@ public interface MongoOperations {
 	void save(String collectionName, Object objectToSave);
 
 	/**
-	 * Save the object into the specified collection. This will perform an insert if the object is not already 
+	 * Save the object into the default collection using the provided writer. 
+	 * This will perform an insert if the object is not already 
+	 * present, that is an 'upsert'.  
+	 * 
+	 * The object is converted to the MongoDB native representation using an instance of 
+	 * {@see MongoWriter}
+	 *  
+	 * @param <T> the type of the object to insert
+	 * @param objectToSave  the object to store in the collection
+	 * @param writer the writer to convert the object to save into a DBObject
+	 */
+	<T> void save(T objectToSave, MongoWriter<T> writer);
+
+	/**
+	 * Save the object into the specified collection using the provided writer. 
+	 * This will perform an insert if the object is not already 
 	 * present, that is an 'upsert'.  
 	 * 
 	 * The object is converted to the MongoDB native representation using an instance of 
@@ -564,13 +604,13 @@ public interface MongoOperations {
 			Update update);
 
 	/**
-	 * Remove all documents from the default collection that match the provide query document criteria.
+	 * Remove all documents from the default collection that match the provided query document criteria.
 	 * @param queryDoc the query document that specifies the criteria used to remove a record 
 	 */
 	void remove(Query query);
 
 	/**
-	 * Remove all documents from the specified collection that match the provide query document criteria.
+	 * Remove all documents from the specified collection that match the provided query document criteria.
 	 * @param collectionName name of the collection where the objects will removed
 	 * @param queryDoc the query document that specifies the criteria used to remove a record 
 	 */
