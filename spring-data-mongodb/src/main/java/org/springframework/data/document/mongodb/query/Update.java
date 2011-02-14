@@ -40,7 +40,7 @@ public class Update {
 		return this;
 	}
 
-	public Update inc(String key, long inc) {
+	public Update inc(String key, Number inc) {
 		criteria.put("$inc", Collections.singletonMap(key, inc));
 		return this;
 	}
@@ -100,8 +100,7 @@ public class Update {
 		return dbo;
 	}
 
-	private Object convertValueIfNecessary(Object value) {
-		System.out.println("-> " + value);
+	protected Object convertValueIfNecessary(Object value) {
 		if (value instanceof Enum) {
 			return ((Enum<?>)value).name();
 		}

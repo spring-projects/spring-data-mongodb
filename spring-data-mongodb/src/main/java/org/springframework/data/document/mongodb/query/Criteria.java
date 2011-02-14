@@ -93,16 +93,18 @@ public class Criteria implements CriteriaDefinition {
 		return this;
 	}
 
-	public Criteria size(Object o) {
-		criteria.put("$is", o);
+	public Criteria size(int s) {
+		criteria.put("$size", s);
 		return this;
 	}
 
 	public Criteria exists(boolean b) {
+		criteria.put("$exists", b);
 		return this;
 	}
 
 	public Criteria type(int t) {
+		criteria.put("$type", t);
 		return this;
 	}
 
@@ -111,7 +113,8 @@ public class Criteria implements CriteriaDefinition {
 		return this;
 	}
 	
-	public Criteria regExp(String re) {
+	public Criteria regex(String re) {
+		criteria.put("$regex", re);
 		return this;
 	}
 
