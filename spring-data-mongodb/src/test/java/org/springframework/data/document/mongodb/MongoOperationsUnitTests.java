@@ -87,7 +87,7 @@ public abstract class MongoOperationsUnitTests {
 	@Test(expected = IllegalArgumentException.class)
 	@SuppressWarnings({"unchecked", "rawtypes"})
 	public void rejectsNullForCollectionCallback2() {
-		getOperations().execute((CollectionCallback) null, "collection");
+		getOperations().execute("collection", (CollectionCallback) null);
 	}
 	
 	@Test(expected = IllegalArgumentException.class)
@@ -161,7 +161,7 @@ public abstract class MongoOperationsUnitTests {
 		new Execution() {
 			@Override
 			public void doWith(MongoOperations operations) {
-				operations.execute(collectionCallback, "collection");
+				operations.execute("collection", collectionCallback);
 			}
 		}.assertDataAccessException();
 	}

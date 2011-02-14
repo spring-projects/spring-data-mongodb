@@ -18,7 +18,7 @@ package org.springframework.data.document.mongodb;
 import java.util.List;
 import java.util.Set;
 
-import org.springframework.data.document.mongodb.query.IndexSpecification;
+import org.springframework.data.document.mongodb.query.IndexDefinition;
 import org.springframework.data.document.mongodb.query.Query;
 import org.springframework.data.document.mongodb.query.Update;
 
@@ -95,12 +95,12 @@ public interface MongoOperations {
 	 * Allows for returning a result object, that is a domain object or a collection of domain objects.
 	 * 
 	 * @param <T> return type
-	 * @param action callback object that specifies the MongoDB action  
 	 * @param collectionName the name of the collection that specifies which DBCollection instance will be passed into 
+	 * @param action callback object that specifies the MongoDB action  
 	 * the callback action.
 	 * @return a result object returned by the action or <tt>null</tt>
 	 */
-	<T> T execute(CollectionCallback<T> action, String collectionName);
+	<T> T execute(String collectionName, CollectionCallback<T> action);
 
 	/**
 	 * Executes the given {@link DbCallback} within the same connection to the database so as to ensure 
@@ -208,21 +208,21 @@ public interface MongoOperations {
 			MongoReader<T> reader);
 	
 	/**
-	 * Ensure that an index for the provided {@link IndexSpecification} exists for the default collection. 
+	 * Ensure that an index for the provided {@link IndexDefinition} exists for the default collection. 
 	 * If not it will be created.
 	 * 
 	 * @param index
 	 */
-	void ensureIndex(IndexSpecification indexSpecification);
+	void ensureIndex(IndexDefinition indexDefinition);
 
 	/**
-	 * Ensure that an index for the provided {@link IndexSpecification} exists. If not it will be
+	 * Ensure that an index for the provided {@link IndexDefinition} exists. If not it will be
 	 * created.
 	 * 
 	 * @param collectionName
 	 * @param index
 	 */
-	void ensureIndex(String collectionName, IndexSpecification indexSpecification);
+	void ensureIndex(String collectionName, IndexDefinition indexDefinition);
 
 	/**
 	 * Map the results of an ad-hoc query on the default MongoDB collection to a single instance of an object 

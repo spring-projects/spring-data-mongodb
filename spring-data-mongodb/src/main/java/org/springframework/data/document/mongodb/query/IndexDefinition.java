@@ -2,7 +2,7 @@ package org.springframework.data.document.mongodb.query;
 
 import com.mongodb.DBObject;
 
-public interface IndexSpecification {
+public interface IndexDefinition {
 
 	DBObject getIndexObject();
 	

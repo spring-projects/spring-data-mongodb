@@ -19,7 +19,7 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
 
-public class GeospatialIndex implements IndexSpecification {
+public class GeospatialIndex implements IndexDefinition {
 	
 	private String keyField;
 	

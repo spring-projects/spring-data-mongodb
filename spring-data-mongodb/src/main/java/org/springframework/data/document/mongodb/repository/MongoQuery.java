@@ -176,13 +176,13 @@ public class MongoQuery implements RepositoryQuery {
 
         private DBCursor getCollectionCursor(String collectionName, final DBObject query) {
 
-            return template.execute(new CollectionCallback<DBCursor>() {
+            return template.execute(collectionName, new CollectionCallback<DBCursor>() {
 
                 public DBCursor doInCollection(DBCollection collection) {
 
                     return collection.find(query);
                 }
-            }, collectionName);
+            });
         }
     }
 

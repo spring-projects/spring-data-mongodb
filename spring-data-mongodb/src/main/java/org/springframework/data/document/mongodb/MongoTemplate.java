@@ -33,7 +33,7 @@ import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.document.mongodb.MongoPropertyDescriptors.MongoPropertyDescriptor;
-import org.springframework.data.document.mongodb.query.IndexSpecification;
+import org.springframework.data.document.mongodb.query.IndexDefinition;
 import org.springframework.data.document.mongodb.query.Query;
 import org.springframework.data.document.mongodb.query.Update;
 import org.springframework.jca.cci.core.ConnectionCallback;
@@ -280,13 +280,13 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	 * @see org.springframework.data.document.mongodb.MongoOperations#execute(org.springframework.data.document.mongodb.CollectionCallback)
 	 */
 	public <T> T execute(CollectionCallback<T> callback) {
-		return execute(callback, defaultCollectionName);
+		return execute(getDefaultCollectionName(), callback);
 	}
 
 	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#execute(org.springframework.data.document.mongodb.CollectionCallback, java.lang.String)
 	 */
-	public <T> T execute(CollectionCallback<T> callback, String collectionName) {
+	public <T> T execute(String collectionName, CollectionCallback<T> callback) {
 
 		Assert.notNull(callback);
 		
@@ -416,33 +416,33 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	 */
 	public void dropCollection(String collectionName) {
 		
-		execute(new CollectionCallback<Void>() {
+		execute(collectionName, new CollectionCallback<Void>() {
 			public Void doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 				collection.drop();
 				return null;
 			}
-		}, collectionName);
+		});
 	}
 
 	// Indexing methods
 
-	public void ensureIndex(IndexSpecification indexSpecification) {
-		ensureIndex(getDefaultCollectionName(), indexSpecification);		
+	public void ensureIndex(IndexDefinition indexDefinition) {
+		ensureIndex(getDefaultCollectionName(), indexDefinition);		
 	}
 
-	public void ensureIndex(String collectionName, final IndexSpecification indexSpecification) {
-		execute(new CollectionCallback<Object>() {
+	public void ensureIndex(String collectionName, final IndexDefinition indexDefinition) {
+		execute(collectionName, new CollectionCallback<Object>() {
 			public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
-				DBObject indexOptions = indexSpecification.getIndexOptions();
+				DBObject indexOptions = indexDefinition.getIndexOptions();
 				if (indexOptions != null) {
-					collection.ensureIndex(indexSpecification.getIndexObject(), indexOptions);
+					collection.ensureIndex(indexDefinition.getIndexObject(), indexOptions);
 				}
 				else {
-					collection.ensureIndex(indexSpecification.getIndexObject());
+					collection.ensureIndex(indexDefinition.getIndexObject());
 				}
 				return null;
 			}
-		}, collectionName);
+		});
 	}
 
 	// Find methods that take a Query to express the query and that return a single object.	
@@ -623,7 +623,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 			return null;
 		}
 
-		return execute(new CollectionCallback<Object>() {
+		return execute(collectionName, new CollectionCallback<Object>() {
 			public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 				if (writeConcern == null) {
 					collection.insert(dbDoc);
@@ -633,7 +633,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 				}
 				return dbDoc.get(ID);
 			}
-		}, collectionName);
+		});
 	}
 	
 	protected List<ObjectId> insertDBObjectList(String collectionName, final List<DBObject> dbDocList) {
@@ -642,7 +642,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 			return Collections.emptyList();
 		}
 
-		execute(new CollectionCallback<Void>() {
+		execute(collectionName, new CollectionCallback<Void>() {
 			public Void doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 				if (writeConcern == null) {
 					collection.insert(dbDocList);
@@ -652,7 +652,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 				}
 				return null;
 			}
-		}, collectionName);
+		});
 
 		List<ObjectId> ids = new ArrayList<ObjectId>();
 		for (DBObject dbo : dbDocList) {
@@ -674,7 +674,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 			return null;
 		}
 
-		return execute(new CollectionCallback<ObjectId>() {
+		return execute(collectionName, new CollectionCallback<ObjectId>() {
 			public ObjectId doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 				if (writeConcern == null) {
 					collection.save(dbDoc);
@@ -684,7 +684,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 				}
 				return (ObjectId) dbDoc.get(ID);
 			}
-		}, collectionName);
+		});
 	}
 
 	/* (non-Javadoc)
@@ -698,7 +698,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	 * @see org.springframework.data.document.mongodb.MongoOperations#updateFirst(java.lang.String, com.mongodb.DBObject, com.mongodb.DBObject)
 	 */
 	public WriteResult updateFirst(String collectionName, final Query query, final Update update) {
-		return execute(new CollectionCallback<WriteResult>() {
+		return execute(collectionName, new CollectionCallback<WriteResult>() {
 			public WriteResult doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 				WriteResult wr;
 				if (writeConcern == null) {
@@ -710,7 +710,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 				handleAnyWriteResultErrors(wr, query.getQueryObject(), "update with '" +update.getUpdateObject() + "'");
 				return wr;
 			}
-		}, collectionName);
+		});
 	}
 	
 	/* (non-Javadoc)
@@ -724,7 +724,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	 * @see org.springframework.data.document.mongodb.MongoOperations#updateMulti(java.lang.String, com.mongodb.DBObject, com.mongodb.DBObject)
 	 */
 	public WriteResult updateMulti(String collectionName, final Query query, final Update update) {
-		return execute(new CollectionCallback<WriteResult>() {
+		return execute(collectionName, new CollectionCallback<WriteResult>() {
 			public WriteResult doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 				WriteResult wr = null;
 				if (writeConcern == null) {
@@ -736,7 +736,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 				handleAnyWriteResultErrors(wr, query.getQueryObject(), "update with '" +update.getUpdateObject() + "'");
 				return wr;
 			}
-		}, collectionName);
+		});
 	}
 	
 	/* (non-Javadoc)
@@ -750,7 +750,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	 * @see org.springframework.data.document.mongodb.MongoOperations#remove(java.lang.String, com.mongodb.DBObject)
 	 */
 	public void remove(String collectionName, final Query query) {
-		execute(new CollectionCallback<Void>() {
+		execute(collectionName, new CollectionCallback<Void>() {
 			public Void doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 				WriteResult wr = null;
 				if (writeConcern == null) {
@@ -762,7 +762,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 				handleAnyWriteResultErrors(wr, query.getQueryObject(), "remove");
 				return null;
 			}
-		}, collectionName);
+		});
 	}
 	
 
