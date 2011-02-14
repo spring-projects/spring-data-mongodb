@@ -132,7 +132,7 @@ public class Criteria implements CriteriaDefinition {
 		for (String k : this.criteria.keySet()) {
 			if (not) {
 				DBObject notDbo = new BasicDBObject();
-				notDbo.put(k, this.criteria.get(k));
+				notDbo.put(k, convertValueIfNecessary(this.criteria.get(k)));
 				dbo.put("$not", notDbo);
 				not = false;
 			}
@@ -141,19 +141,26 @@ public class Criteria implements CriteriaDefinition {
 					not = true;
 				}
 				else {
-					dbo.put(k, this.criteria.get(k));
+					dbo.put(k, convertValueIfNecessary(this.criteria.get(k)));
 				}
 			}
 		}
 		DBObject queryCriteria = new BasicDBObject();
 		if (isValue != null) {
-			queryCriteria.put(this.key, this.isValue);
+			queryCriteria.put(this.key, convertValueIfNecessary(this.isValue));
 			queryCriteria.putAll(dbo);
 		}
 		else {
 			queryCriteria.put(this.key, dbo);
 		}
 		return queryCriteria;
+	}
+	
+	private Object convertValueIfNecessary(Object value) {
+		if (value instanceof Enum) {
+			return ((Enum<?>)value).name();
+		}
+		return value;
 	}
 
 }

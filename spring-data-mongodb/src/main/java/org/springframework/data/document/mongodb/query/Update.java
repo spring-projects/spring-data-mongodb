@@ -31,7 +31,7 @@ public class Update {
 	private HashMap<String, Object> criteria = new LinkedHashMap<String, Object>();
 
 	public Update set(String key, Object value) {
-		criteria.put("$set", Collections.singletonMap(key, value));
+		criteria.put("$set", Collections.singletonMap(key, convertValueIfNecessary(value)));
 		return this;
 	}
 
@@ -46,19 +46,23 @@ public class Update {
 	}
 
 	public Update push(String key, Object value) {
-		criteria.put("$push", Collections.singletonMap(key, value));
+		criteria.put("$push", Collections.singletonMap(key, convertValueIfNecessary(value)));
 		return this;
 	}
 
 	public Update pushAll(String key, Object[] values) {
+		Object[] convertedValues = new Object[values.length];
+		for (int i = 0; i < values.length; i++) {
+			convertedValues[i] = convertValueIfNecessary(values[i]);
+		}
 		DBObject keyValue = new BasicDBObject();
-		keyValue.put(key, values);
+		keyValue.put(key, convertedValues);
 		criteria.put("$pushAll", keyValue);
 		return this;
 	}
 
 	public Update addToSet(String key, Object value) {
-		criteria.put("$addToSet", Collections.singletonMap(key, value));
+		criteria.put("$addToSet", Collections.singletonMap(key, convertValueIfNecessary(value)));
 		return this;
 	}
 
@@ -68,13 +72,17 @@ public class Update {
 	}
 
 	public Update pull(String key, Object value) {
-		criteria.put("$pull", Collections.singletonMap(key, value));
+		criteria.put("$pull", Collections.singletonMap(key, convertValueIfNecessary(value)));
 		return this;
 	}
 
 	public Update pullAll(String key, Object[] values) {
+		Object[] convertedValues = new Object[values.length];
+		for (int i = 0; i < values.length; i++) {
+			convertedValues[i] = convertValueIfNecessary(values[i]);
+		}
 		DBObject keyValue = new BasicDBObject();
-		keyValue.put(key, values);
+		keyValue.put(key, convertedValues);
 		criteria.put("$pullAll", keyValue);
 		return this;
 	}
@@ -90,6 +98,14 @@ public class Update {
 			dbo.put(k, criteria.get(k));
 		}
 		return dbo;
+	}
+
+	private Object convertValueIfNecessary(Object value) {
+		System.out.println("-> " + value);
+		if (value instanceof Enum) {
+			return ((Enum<?>)value).name();
+		}
+		return value;
 	}
 
 }
