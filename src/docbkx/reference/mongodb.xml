@@ -2,7 +2,7 @@
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
 "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
 <chapter id="mongo.core">
-  <title>Core support</title>
+  <title>MongoDB support</title>
 
   <para>One of the document stores supported by DATADOC is <ulink
   url="http://www.mongodb.org/">MongoDB</ulink>. To quote the project home

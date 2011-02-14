@@ -50,12 +50,13 @@
     <xi:include href="https://github.com/SpringSource/spring-data-commons/raw/master/src/docbkx/repositories.xml" />
   </part>
 
-  <part id="mongodb">
-    <title>Mongo DB</title>
+  <part id="reference">
+    <title>Reference Documentation</title>
      
     <xi:include href="reference/introduction.xml"/>
     <xi:include href="reference/mongodb.xml"/>
     <xi:include href="reference/mongo-repositories.xml"/>
+    <!-- <xi:include href="reference/couchdb.xml"/> -->
   </part>
 
 </book>
