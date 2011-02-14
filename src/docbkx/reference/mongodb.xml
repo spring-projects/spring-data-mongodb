@@ -151,9 +151,11 @@ public class AppConfig {
     }   
 
     /* 
-     * Use this post processor to translate any MongoExceptions thrown in @Repository annotated classes
+     * Use this post processor to translate any MongoExceptions thrown in @Repository 
+     * annotated classes
      */
-    public @Bean PersistenceExceptionTranslationPostProcessor persistenceExceptionTranslationPostProcessor() {
+    public @Bean PersistenceExceptionTranslationPostProcessor 
+            persistenceExceptionTranslationPostProcessor() {
         return new PersistenceExceptionTranslationPostProcessor();
     }
 
@@ -207,9 +209,12 @@ public class AppConfig extends MongoExceptionTranslationConfig {
       xmlns:context="http://www.springframework.org/schema/context"
       xmlns:mongo="http://www.springframework.org/schema/data/mongo"
       xsi:schemaLocation=
-"http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
-http://www.springframework.org/schema/data/mongo http://www.springframework.org/schema/data/mongo/spring-mongo-1.0.xsd
-http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd"&gt;
+  "http://www.springframework.org/schema/context 
+     http://www.springframework.org/schema/context/spring-context-3.0.xsd
+   http://www.springframework.org/schema/data/mongo
+     http://www.springframework.org/schema/data/mongo/spring-mongo-1.0.xsd
+   http://www.springframework.org/schema/beans
+     http://www.springframework.org/schema/beans/spring-beans-3.0.xsd"&gt;
 
 &lt;beans&gt;
   
@@ -334,9 +339,11 @@ public class AppConfig  {
     }
     
     /* 
-     * Use this post processor to translate any MongoExceptions thrown in @Repository annotated classes
+     * Use this post processor to translate any MongoExceptions thrown in @Repository 
+     * annotated classes
      */
-    public @Bean PersistenceExceptionTranslationPostProcessor persistenceExceptionTranslationPostProcessor() {
+    public @Bean PersistenceExceptionTranslationPostProcessor
+          persistenceExceptionTranslationPostProcessor() {
       return new PersistenceExceptionTranslationPostProcessor();
     }
 
@@ -783,10 +790,10 @@ public class AppConfig  {
     </section>
 
     <section id="mongodb-template-save">
-      <title>Saving and retreiving objects as documents in a
+      <title>Saving and retrieving objects as documents in a
       collection</title>
 
-      <para>Once we have craeted the collection and maybe an index we can
+      <para>Once we have created the collection and maybe an index we can
       start using the collection to store our domain objects as documents.
       Note that we are using a static import for
       <classname>org.springframework.data.document.mongodb.query.Criteria.where</classname>
