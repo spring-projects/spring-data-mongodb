@@ -16,6 +16,8 @@
 
 package org.springframework.data.document.mongodb;
 
+import java.beans.IntrospectionException;
+import java.beans.PropertyDescriptor;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -27,6 +29,7 @@ import org.bson.types.ObjectId;
 import org.springframework.beans.ConfigurablePropertyAccessor;
 import org.springframework.beans.PropertyAccessorFactory;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.document.mongodb.MongoPropertyDescriptors.MongoPropertyDescriptor;
@@ -296,6 +299,29 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	}
 	
 	/**
+	 * Central callback executing method to do queries against the datastore that requires reading a single object from a 
+	 * collection of objects. It will take the following steps <ol> <li>Execute the given {@link ConnectionCallback} for a
+	 * {@link DBObject}.</li> <li>Apply the given
+	 * {@link DbObjectCallback} to each of the {@link DBObject}s to obtain the result.</li> <ol>
+	 * 
+	 * @param <T>
+	 * @param collectionCallback the callback to retrieve the {@link DBObject} with
+	 * @param objectCallback the {@link DbObjectCallback} to transform {@link DBObject}s into the actual domain type
+	 * @param collectionName the collection to be queried
+	 * @return
+	 */
+	private <T> T execute(CollectionCallback<DBObject> collectionCallback,
+			DbObjectCallback<T> objectCallback, String collectionName) {
+		
+		try {
+			T result = objectCallback.doWith(collectionCallback.doInCollection(getCollection(collectionName)));
+			return result;
+		} catch (MongoException e) {
+			throw potentiallyConvertRuntimeException(e);
+		}
+	}
+
+	/**
 	 * Central callback executing method to do queries against the datastore that requires reading a collection of
 	 * objects. It will take the following steps <ol> <li>Execute the given {@link ConnectionCallback} for a
 	 * {@link DBCursor}.</li> <li>Prepare that {@link DBCursor} with the given {@link CursorPreparer} (will be skipped
@@ -428,10 +454,31 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 		}, collectionName);
 	}
 
-	// Find methods that take a Query to express the query.
+	// Find methods that take a Query to express the query and that return a single object.	
+
+	public <T> T findOne(Query query, Class<T> targetClass) {
+		return findOne(getDefaultCollectionName(), query, targetClass); 
+	}
+
+	public <T> T findOne(Query query, Class<T> targetClass,
+			MongoReader<T> reader) {
+		return findOne(getDefaultCollectionName(), query, targetClass, reader);
+	}
+
+	public <T> T findOne(String collectionName, Query query,
+			Class<T> targetClass) {
+		return findOne(collectionName, query, targetClass, null); 
+	}
+
+	public <T> T findOne(String collectionName, Query query,
+			Class<T> targetClass, MongoReader<T> reader) {
+		return doFindOne(collectionName, query.getQueryObject(), query.getFieldsObject(), targetClass, reader);
+	}
+
+	// Find methods that take a Query to express the query and that return a List of objects.
 	
 	public <T> List<T> find(Query query, Class<T> targetClass) {
-		return find(getDefaultCollectionName(), query, targetClass); //
+		return find(getDefaultCollectionName(), query, targetClass);
 	}
 	
 	public <T> List<T> find(Query query, Class<T> targetClass, MongoReader<T> reader) {
@@ -494,7 +541,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	public <T> void insert(String collectionName, T objectToSave, MongoWriter<T> writer) {
 		BasicDBObject dbDoc = new BasicDBObject();
 		writer.write(objectToSave, dbDoc);
-		ObjectId id = insertDBObject(collectionName, dbDoc);
+		Object id = insertDBObject(collectionName, dbDoc);
 		populateIdIfNecessary(objectToSave, id);
 	}
 
@@ -558,21 +605,21 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	}
 
 
-	protected ObjectId insertDBObject(String collectionName, final DBObject dbDoc) {
+	protected Object insertDBObject(String collectionName, final DBObject dbDoc) {
 
 		if (dbDoc.keySet().isEmpty()) {
 			return null;
 		}
 
-		return execute(new CollectionCallback<ObjectId>() {
-			public ObjectId doInCollection(DBCollection collection) throws MongoException, DataAccessException {
+		return execute(new CollectionCallback<Object>() {
+			public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 				if (writeConcern == null) {
 					collection.insert(dbDoc);
 				}
 				else {
 					collection.insert(dbDoc, writeConcern);
 				}
-				return (ObjectId) dbDoc.get(ID);
+				return dbDoc.get(ID);
 			}
 		}, collectionName);
 	}
@@ -740,6 +787,27 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 		return MongoDbUtils.getDB(mongo, databaseName, username, password == null ? null : password.toCharArray());
 	}
 
+	/**
+	 * Map the results of an ad-hoc query on the default MongoDB collection to an object using the provided MongoReader
+	 *  
+	 * The query document is specified as a standard DBObject and so is the fields specification.
+	 *  
+	 * @param collectionName name of the collection to retrieve the objects from	 
+	 * @param query the query document that specifies the criteria used to find a record
+	 * @param fields the document that specifies the fields to be returned
+	 * @param targetClass the parameterized type of the returned list.
+	 * @param reader the MongoReader to convert from DBObject to an object.
+	 * @return the List of converted objects.
+	 */
+	protected <T> T doFindOne(String collectionName, DBObject query, DBObject fields, Class<T> targetClass, MongoReader<T> reader) {
+		MongoReader<? super T> readerToUse = reader;
+		if (readerToUse == null) {
+			readerToUse = this.mongoConverter;
+		}
+		substituteMappedIdIfNecessary(query, targetClass, readerToUse);
+		return execute(new FindOneCallback(query, fields), new ReadDbObjectCallback<T>(readerToUse, targetClass),
+				collectionName);
+	}
 	
 	/**
 	 * Map the results of an ad-hoc query on the default MongoDB collection to a List of the specified type.
@@ -761,6 +829,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	 * @return the List of converted objects.
 	 */
 	protected <T> List<T> doFind(String collectionName, DBObject query, DBObject fields, Class<T> targetClass, CursorPreparer preparer) {
+		substituteMappedIdIfNecessary(query, targetClass, mongoConverter);
 		return executeEach(new FindCallback(query, fields), preparer, new ReadDbObjectCallback<T>(mongoConverter, targetClass),
 				collectionName);
 	}
@@ -778,6 +847,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	 * @return the List of converted objects.
 	 */
 	protected <T> List<T> doFind(String collectionName, DBObject query, DBObject fields, Class<T> targetClass, MongoReader<T> reader) {
+		substituteMappedIdIfNecessary(query, targetClass, reader);
 		return executeEach(new FindCallback(query, fields), null, new ReadDbObjectCallback<T>(reader, targetClass),
 				collectionName);
 	}
@@ -804,7 +874,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	 * @param savedObject
 	 * @param id
 	 */
-	protected void populateIdIfNecessary(Object savedObject, ObjectId id) {
+	protected void populateIdIfNecessary(Object savedObject, Object id) {
 		
 		if (id == null) {
 			return;
@@ -818,8 +888,69 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 		}
 
 		if (bw.getPropertyValue(idDescriptor.getName()) == null) {
-			Object target = this.mongoConverter.convertObjectId(id, idDescriptor.getPropertyType());
+			Object target = null;
+			if (id instanceof ObjectId) {
+				target = this.mongoConverter.convertObjectId((ObjectId)id, idDescriptor.getPropertyType());
+			}
+			else {			
+				target = id;
+			}
 			bw.setPropertyValue(idDescriptor.getName(), target);
+		}
+	}
+
+	/**
+	 * Substitutes the id key if it is found in he query. Any 'id' keys will be replaced with '_id' and the value converted
+	 * to an ObjectId if possible. This conversion should match the way that the id fields are converted during read
+	 * operations.
+	 * 
+	 * @param query
+	 * @param targetClass
+	 * @param reader
+	 */
+	protected void substituteMappedIdIfNecessary(DBObject query, Class<?> targetClass, MongoReader<?> reader) {
+		MongoConverter converter = null;
+		if (reader instanceof SimpleMongoConverter) {
+			converter = (MongoConverter) reader;
+		}
+		else {
+			return;
+		}
+		String idKey = null;
+		if (query.containsField("id")) {
+			idKey = "id";
+		}
+		if (query.containsField("_id")) {
+			idKey = "_id";
+		}
+		if (idKey == null) {
+			// no ids in this query
+			return;
+		}
+		final MongoPropertyDescriptor descriptor;
+		try {
+			descriptor = new MongoPropertyDescriptor(new PropertyDescriptor(idKey, targetClass));
+		} catch (IntrospectionException e) {
+			// no property descriptor for this key
+			return;
+		}
+		if (descriptor.isIdProperty() && descriptor.isOfIdType()) {
+			Object value = query.get(idKey);
+			ObjectId newValue = null;
+			try {
+				if (value instanceof String && ObjectId.isValid((String)value)) {
+					newValue = converter.convertObjectId(value);
+				}
+			} catch (ConversionFailedException iae) {
+				LOGGER.warn("Unable to convert the String " + value + " to an ObjectId");
+			}
+			query.removeField(idKey);
+			if (newValue != null) {
+				query.put(MongoPropertyDescriptor.ID_KEY, newValue);
+			}
+			else {
+				query.put(MongoPropertyDescriptor.ID_KEY, value);
+			}
 		}
 	}
 
@@ -893,6 +1024,34 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 		}
 	}
 	
+	
+	/**
+	 * Simple {@link CollectionCallback} that takes a query {@link DBObject} plus an optional fields specification 
+	 * {@link DBObject} and executes that against the {@link DBCollection}.
+	 * 
+	 * @author Oliver Gierke
+	 * @author Thomas Risberg
+	 */
+	private static class FindOneCallback  implements CollectionCallback<DBObject> {
+		
+		private final DBObject query;
+
+		private final DBObject fields;
+		
+		public FindOneCallback(DBObject query, DBObject fields) {
+			this.query = query;
+			this.fields = fields;
+		}
+
+		public DBObject doInCollection(DBCollection collection) throws MongoException, DataAccessException {
+			if (fields == null) {
+				return collection.findOne(query);
+			}
+			else {
+				return collection.findOne(query, fields);
+			}
+		}
+	}
 	
 	/**
 	 * Simple {@link CollectionCallback} that takes a query {@link DBObject} plus an optional fields specification 

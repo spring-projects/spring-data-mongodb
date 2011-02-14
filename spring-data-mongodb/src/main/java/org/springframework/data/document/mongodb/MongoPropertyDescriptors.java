@@ -120,7 +120,7 @@ public class MongoPropertyDescriptors implements Iterable<MongoPropertyDescripto
 		 * @return
 		 */
 		boolean isIdProperty() {
-			return ID_PROPERTY.equals(delegate.getName());
+			return ID_PROPERTY.equals(delegate.getName()) || ID_KEY.equals(delegate.getName());
 		}
 
 		/**

@@ -224,6 +224,81 @@ public interface MongoOperations {
 	void ensureIndex(String collectionName, IndexSpecification indexSpecification);
 
 	/**
+	 * Map the results of an ad-hoc query on the default MongoDB collection to a single instance of an object 
+	 * of the specified type.
+	 *
+	 * The object is converted from the MongoDB native representation using an instance of 
+	 * {@see MongoConverter}.  Unless configured otherwise, an
+	 * instance of SimpleMongoConverter will be used.   
+	 * 
+	 * The query is specified as a {@link Query} which can be created either using the {@link BasicQuery} or the more
+	 * feature rich {@link Query}.
+	 * 
+	 * @param query the query class that specifies the criteria used to find a record and also an optional fields specification 
+	 * @param targetClass the parameterized type of the returned list.
+	 * @return the converted object
+	 */
+	<T> T findOne(Query query, Class<T> targetClass);
+
+	/**
+	 * Map the results of an ad-hoc query on the default MongoDB collection to a single instance of an object 
+	 * of the specified type.
+	 *
+	 * The object is converted from the MongoDB native representation using an instance of 
+	 * {@see MongoConverter}.  Unless configured otherwise, an
+	 * instance of SimpleMongoConverter will be used.   
+	 * 
+	 * The query is specified as a {@link Query} which can be created either using the {@link BasicQuery} or the more
+	 * feature rich {@link Query}.
+	 * 
+	 * @param query the query class that specifies the criteria used to find a record and also an optional fields specification 
+	 * @param targetClass the parameterized type of the returned list.
+	 * @param reader the MongoReader to convert from DBObject to an object.
+	 * @return the converted object
+	 */
+	<T> T findOne(Query query, Class<T> targetClass,
+			MongoReader<T> reader);
+
+	/**
+	 * Map the results of an ad-hoc query on the specified collection to a single instance of an object 
+	 * of the specified type.
+	 *
+	 * The object is converted from the MongoDB native representation using an instance of 
+	 * {@see MongoConverter}.  Unless configured otherwise, an
+	 * instance of SimpleMongoConverter will be used.   
+	 * 
+	 * The query is specified as a {@link Query} which can be created either using the {@link BasicQuery} or the more
+	 * feature rich {@link Query}.
+	 * 
+	 * @param collectionName name of the collection to retrieve the objects from	 
+	 * @param query the query class that specifies the criteria used to find a record and also an optional fields specification 
+	 * @param targetClass the parameterized type of the returned list.
+	 * @return the converted object
+	 */
+	<T> T findOne(String collectionName, Query query,
+			Class<T> targetClass);
+
+	/**
+	 * Map the results of an ad-hoc query on the specified collection to a single instance of an object 
+	 * of the specified type.
+	 *
+	 * The object is converted from the MongoDB native representation using an instance of 
+	 * {@see MongoConverter}.  Unless configured otherwise, an
+	 * instance of SimpleMongoConverter will be used.   
+	 * 
+	 * The query is specified as a {@link Query} which can be created either using the {@link BasicQuery} or the more
+	 * feature rich {@link Query}.
+	 * 
+	 * @param collectionName name of the collection to retrieve the objects from	 
+	 * @param query the query class that specifies the criteria used to find a record and also an optional fields specification 
+	 * @param targetClass the parameterized type of the returned list.
+	 * @param reader the MongoReader to convert from DBObject to an object.
+	 * @return the converted object
+	 */
+	<T> T findOne(String collectionName, Query query,
+			Class<T> targetClass, MongoReader<T> reader);
+
+	/**
 	 * Map the results of an ad-hoc query on the default MongoDB collection to a List of the specified type.
 	 *
 	 * The object is converted from the MongoDB native representation using an instance of 
@@ -258,7 +333,7 @@ public interface MongoOperations {
 			MongoReader<T> reader);
 
 	/**
-	 * Map the results of an ad-hoc query on the default MongoDB collection to a List of the specified type.
+	 * Map the results of an ad-hoc query on the specified collection to a List of the specified type.
 	 *
 	 * The object is converted from the MongoDB native representation using an instance of 
 	 * {@see MongoConverter}.  Unless configured otherwise, an
@@ -276,7 +351,7 @@ public interface MongoOperations {
 			Class<T> targetClass);
 
 	/**
-	 * Map the results of an ad-hoc query on the default MongoDB collection to a List of the specified type.
+	 * Map the results of an ad-hoc query on the specified collection to a List of the specified type.
 	 *
 	 * The object is converted from the MongoDB native representation using an instance of 
 	 * {@see MongoConverter}.  Unless configured otherwise, an
@@ -296,7 +371,7 @@ public interface MongoOperations {
 
 
 	/**
-	 * Map the results of an ad-hoc query on the default MongoDB collection to a List of the specified type.
+	 * Map the results of an ad-hoc query on the specified collection to a List of the specified type.
 	 * 
 	 * The object is converted from the MongoDB native representation using an instance of 
 	 * {@see MongoConverter}.  Unless configured otherwise, an

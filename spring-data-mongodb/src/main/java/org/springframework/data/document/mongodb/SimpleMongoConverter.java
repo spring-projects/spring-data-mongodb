@@ -45,6 +45,7 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.ConversionServiceFactory;
 import org.springframework.core.convert.support.GenericConversionService;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.document.mongodb.MongoPropertyDescriptors.MongoPropertyDescriptor;
 import org.springframework.util.Assert;
 import org.springframework.util.comparator.CompoundComparator;
@@ -162,7 +163,7 @@ public class SimpleMongoConverter implements MongoConverter {
 	@SuppressWarnings("rawtypes")
 	public void write(Object obj, DBObject dbo) {
 
-		MongoBeanWrapper beanWrapper = createWraper(obj, false);
+		MongoBeanWrapper beanWrapper = createWrapper(obj, false);
 		for (MongoPropertyDescriptor descriptor : beanWrapper.getDescriptors()) {
 			if (descriptor.isMappable()) {
 				Object value = beanWrapper.getValue(descriptor);
@@ -176,13 +177,18 @@ public class SimpleMongoConverter implements MongoConverter {
 				if (descriptor.isEnum()) {
 					writeValue(dbo, keyToUse, ((Enum) value).name());
 				} else if (descriptor.isIdProperty() && descriptor.isOfIdType()) {
-
+					if (value instanceof String && ObjectId.isValid((String)value)) {
 						try {
 							writeValue(dbo, keyToUse, conversionService.convert(value, ObjectId.class));
 						} catch (ConversionFailedException iae) {
-							LOG.debug("Unable to convert the String " + value + " to an ObjectId");
+							LOG.warn("Unable to convert the String " + value + " to an ObjectId");
 							writeValue(dbo, keyToUse, value);
 						}
+					}
+					else {
+						// we can't convert this id - use as is
+						writeValue(dbo, keyToUse, value);
+					}
 				} else {
 					writeValue(dbo, keyToUse, value);
 				}
@@ -307,6 +313,10 @@ public class SimpleMongoConverter implements MongoConverter {
 	 * @see org.springframework.data.document.mongodb.MongoReader#read(java.lang.Class, com.mongodb.DBObject)
 	 */
 	public <S> S read(Class<S> clazz, DBObject source) {
+		
+		if (source == null) {
+			return null;
+		}
 
 		Assert.notNull(clazz, "Mapped class was not specified");
 		S target = BeanUtils.instantiateClass(clazz);
@@ -446,7 +456,7 @@ public class SimpleMongoConverter implements MongoConverter {
 	 * @param fieldAccess whether to use field access or property access
 	 * @return
 	 */
-	protected MongoBeanWrapper createWraper(Object target, boolean fieldAccess) {
+	protected MongoBeanWrapper createWrapper(Object target, boolean fieldAccess) {
 
 		return new MongoBeanWrapper(target, conversionService, fieldAccess);
 	}

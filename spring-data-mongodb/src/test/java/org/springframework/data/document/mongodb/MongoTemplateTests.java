@@ -17,6 +17,7 @@ package org.springframework.data.document.mongodb;
 
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.endsWith;
 import static org.junit.Assert.assertThat;
 
@@ -24,6 +25,7 @@ import static org.springframework.data.document.mongodb.query.Criteria.where;
 
 import java.util.List;
 
+import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -117,7 +119,6 @@ public class MongoTemplateTests {
 		boolean unique = false;
 		boolean dropDupes = false;
 		for (DBObject ix : indexInfo) {
-			System.out.println(ix);
 			if ("age_-1".equals(ix.get("name"))) {
 				indexKey = ix.get("key").toString();
 				unique = (Boolean) ix.get("unique");
@@ -130,8 +131,82 @@ public class MongoTemplateTests {
 	}
 
 	@Test
-	public void simpleQuery() throws Exception {
-		new Query(where("name").is("Mary")).and(where("age").lt(33).gt(22)).skip(22).limit(20);
-		// TODO: more tests
+	public void testProperHandlingOfDifferentIdTypes() throws Exception {
+		PersonWithIdPropertyOfTypeString p1 = new PersonWithIdPropertyOfTypeString();
+		p1.setFirstName("Sven_1");
+		p1.setAge(22);
+		template.insert(p1);
+		assertThat(p1.getId(), notNullValue());
+		PersonWithIdPropertyOfTypeString p1q = template.findOne(new Query(where("id").is(p1.getId())), PersonWithIdPropertyOfTypeString.class);
+		assertThat(p1q, notNullValue());
+		assertThat(p1q.getId(), is(p1.getId()));
+
+		PersonWithIdPropertyOfTypeString p2 = new PersonWithIdPropertyOfTypeString();
+		p2.setFirstName("Sven_2");
+		p2.setAge(22);
+		p2.setId("TWO");
+		template.insert(p2);
+		assertThat(p2.getId(), notNullValue());
+		PersonWithIdPropertyOfTypeString p2q = template.findOne(new Query(where("id").is(p2.getId())), PersonWithIdPropertyOfTypeString.class);
+		assertThat(p2q, notNullValue());
+		assertThat(p2q.getId(), is(p2.getId()));
+		
+		PersonWith_idPropertyOfTypeString p3 = new PersonWith_idPropertyOfTypeString();
+		p3.setFirstName("Sven_3");
+		p3.setAge(22);
+		template.insert(p3);
+		assertThat(p3.get_id(), notNullValue());
+		PersonWith_idPropertyOfTypeString p3q = template.findOne(new Query(where("_id").is(p3.get_id())), PersonWith_idPropertyOfTypeString.class);
+		assertThat(p3q, notNullValue());
+		assertThat(p3q.get_id(), is(p3.get_id()));
+
+		PersonWith_idPropertyOfTypeString p4 = new PersonWith_idPropertyOfTypeString();
+		p4.setFirstName("Sven_4");
+		p4.setAge(22);
+		p4.set_id("FOUR");
+		template.insert(p4);
+		assertThat(p4.get_id(), notNullValue());
+		PersonWith_idPropertyOfTypeString p4q = template.findOne(new Query(where("_id").is(p4.get_id())), PersonWith_idPropertyOfTypeString.class);
+		assertThat(p4q, notNullValue());
+		assertThat(p4q.get_id(), is(p4.get_id()));
+
+		PersonWithIdPropertyOfTypeObjectId p5 = new PersonWithIdPropertyOfTypeObjectId();
+		p5.setFirstName("Sven_5");
+		p5.setAge(22);
+		template.insert(p5);
+		assertThat(p5.getId(), notNullValue());
+		PersonWithIdPropertyOfTypeObjectId p5q = template.findOne(new Query(where("id").is(p5.getId())), PersonWithIdPropertyOfTypeObjectId.class);
+		assertThat(p5q, notNullValue());
+		assertThat(p5q.getId(), is(p5.getId()));
+
+		PersonWithIdPropertyOfTypeObjectId p6 = new PersonWithIdPropertyOfTypeObjectId();
+		p6.setFirstName("Sven_6");
+		p6.setAge(22);
+		p6.setId(new ObjectId());
+		template.insert(p6);
+		assertThat(p6.getId(), notNullValue());
+		PersonWithIdPropertyOfTypeObjectId p6q = template.findOne(new Query(where("id").is(p6.getId())), PersonWithIdPropertyOfTypeObjectId.class);
+		assertThat(p6q, notNullValue());
+		assertThat(p6q.getId(), is(p6.getId()));
+		
+		PersonWith_idPropertyOfTypeObjectId p7 = new PersonWith_idPropertyOfTypeObjectId();
+		p7.setFirstName("Sven_7");
+		p7.setAge(22);
+		template.insert(p7);
+		assertThat(p7.get_id(), notNullValue());
+		PersonWith_idPropertyOfTypeObjectId p7q = template.findOne(new Query(where("_id").is(p7.get_id())), PersonWith_idPropertyOfTypeObjectId.class);
+		assertThat(p7q, notNullValue());
+		assertThat(p7q.get_id(), is(p7.get_id()));
+
+		PersonWith_idPropertyOfTypeObjectId p8 = new PersonWith_idPropertyOfTypeObjectId();
+		p8.setFirstName("Sven_8");
+		p8.setAge(22);
+		p8.set_id(new ObjectId());
+		template.insert(p8);
+		assertThat(p8.get_id(), notNullValue());
+		PersonWith_idPropertyOfTypeObjectId p8q = template.findOne(new Query(where("_id").is(p8.get_id())), PersonWith_idPropertyOfTypeObjectId.class);
+		assertThat(p8q, notNullValue());
+		assertThat(p8q.get_id(), is(p8.get_id()));
 	}
+
 }
