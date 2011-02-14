@@ -15,7 +15,7 @@
  */
 package org.springframework.data.document.mongodb.repository;
 
-import static org.springframework.data.document.mongodb.query.Criteria.where;
+import static org.springframework.data.document.mongodb.query.Criteria.*;
 
 import java.util.Collections;
 import java.util.regex.Pattern;
@@ -127,7 +127,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
         Query query = new Query(criteria);
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("Created query " + query);
+            LOG.debug("Created query " + query.getQueryObject());
         }
 
         return query;
