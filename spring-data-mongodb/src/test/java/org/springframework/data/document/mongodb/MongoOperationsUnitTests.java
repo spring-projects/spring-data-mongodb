@@ -16,14 +16,11 @@
 
 package org.springframework.data.document.mongodb;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.util.Arrays;
 import java.util.List;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Test;
@@ -31,12 +28,15 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.dao.DataAccessException;
+
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
 import org.springframework.data.document.mongodb.convert.MongoConverter;
 
 /**
  * Abstract base class for unit tests to specify behaviour we expect from {@link MongoOperations}. Subclasses return
  * instances of their implementation and thus can see if it correctly implements the {@link MongoOperations} interface.
- *
+ * 
  * @author Oliver Gierke
  */
 @RunWith(MockitoJUnitRunner.class)
@@ -63,7 +63,7 @@ public abstract class MongoOperationsUnitTests {
         dbo.put("firstName", person.getFirstName());
       }
 
-      @SuppressWarnings({"unchecked"})
+      @SuppressWarnings("unchecked")
       public <S extends Object> S read(Class<S> clazz, DBObject dbo) {
         return (S) person;
       }
@@ -78,22 +78,21 @@ public abstract class MongoOperationsUnitTests {
     };
   }
 
-
   @Test(expected = IllegalArgumentException.class)
-  @SuppressWarnings({"unchecked", "rawtypes"})
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   public void rejectsNullForCollectionCallback() {
 
     getOperations().execute((CollectionCallback) null);
   }
 
   @Test(expected = IllegalArgumentException.class)
-  @SuppressWarnings({"unchecked", "rawtypes"})
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   public void rejectsNullForCollectionCallback2() {
     getOperations().execute("collection", (CollectionCallback) null);
   }
 
   @Test(expected = IllegalArgumentException.class)
-  @SuppressWarnings({"unchecked", "rawtypes"})
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   public void rejectsNullForDbCallback() {
     getOperations().execute((DbCallback) null);
   }
@@ -288,7 +287,6 @@ public abstract class MongoOperationsUnitTests {
     }.assertDataAccessException();
   }
 
-
   @Test
   public void convertsExceptionForInsertList() throws Exception {
     new Execution() {
@@ -339,16 +337,16 @@ public abstract class MongoOperationsUnitTests {
   }
 
   /**
-   * Expects an {@link MongoOperations} instance that will be used to check that invoking methods on it will only
-   * cause {@link DataAccessException}s.
-   *
+   * Expects an {@link MongoOperations} instance that will be used to check that invoking methods on it will only cause
+   * {@link DataAccessException}s.
+   * 
    * @return
    */
   protected abstract MongoOperations getOperationsForExceptionHandling();
 
   /**
    * Returns a plain {@link MongoOperations}.
-   *
+   * 
    * @return
    */
   protected abstract MongoOperations getOperations();

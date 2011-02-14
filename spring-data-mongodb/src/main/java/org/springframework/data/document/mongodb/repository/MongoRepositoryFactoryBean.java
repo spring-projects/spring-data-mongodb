@@ -40,17 +40,19 @@ import org.springframework.util.StringUtils;
 
 /**
  * {@link org.springframework.beans.factory.FactoryBean} to create {@link MongoRepository} instances.
- *
+ * 
  * @author Oliver Gierke
  */
-public class MongoRepositoryFactoryBean<T extends MongoRepository<S, ID>, S, ID extends Serializable> extends RepositoryFactoryBeanSupport<T, S, ID> {
+public class MongoRepositoryFactoryBean<T extends MongoRepository<S, ID>, S, ID extends Serializable> extends
+    RepositoryFactoryBeanSupport<T, S, ID> {
 
   private MongoTemplate template;
 
   /**
    * Configures the {@link MongoTemplate} to be used.
-   *
-   * @param template the template to set
+   * 
+   * @param template
+   *          the template to set
    */
   public void setTemplate(MongoTemplate template) {
 
@@ -58,10 +60,12 @@ public class MongoRepositoryFactoryBean<T extends MongoRepository<S, ID>, S, ID 
   }
 
   /*
-    * (non-Javadoc)
-    *
-    * @see org.springframework.data.repository.support.RepositoryFactoryBeanSupport #createRepositoryFactory()
-    */
+   * (non-Javadoc)
+   * 
+   * @see
+   * org.springframework.data.repository.support.RepositoryFactoryBeanSupport
+   * #createRepositoryFactory()
+   */
   @Override
   protected RepositoryFactorySupport createRepositoryFactory() {
 
@@ -71,10 +75,12 @@ public class MongoRepositoryFactoryBean<T extends MongoRepository<S, ID>, S, ID 
   }
 
   /*
-    * (non-Javadoc)
-    *
-    * @see org.springframework.data.repository.support.RepositoryFactoryBeanSupport #afterPropertiesSet()
-    */
+   * (non-Javadoc)
+   * 
+   * @see
+   * org.springframework.data.repository.support.RepositoryFactoryBeanSupport
+   * #afterPropertiesSet()
+   */
   @Override
   public void afterPropertiesSet() {
 
@@ -84,16 +90,19 @@ public class MongoRepositoryFactoryBean<T extends MongoRepository<S, ID>, S, ID 
 
   /**
    * Repository to create {@link MongoRepository} instances.
-   *
+   * 
    * @author Oliver Gierke
    */
   public static class MongoRepositoryFactory extends RepositoryFactorySupport {
+
+    private static final boolean QUERY_DSL_PRESENT = org.springframework.util.ClassUtils.isPresent(
+        "com.mysema.query.types.Predicate", MongoRepositoryFactory.class.getClassLoader());
 
     private final MongoTemplate template;
 
     /**
      * Creates a new {@link MongoRepositoryFactory} fwith the given {@link MongoTemplate}.
-     *
+     * 
      * @param template
      */
     public MongoRepositoryFactory(MongoTemplate template) {
@@ -101,17 +110,54 @@ public class MongoRepositoryFactoryBean<T extends MongoRepository<S, ID>, S, ID 
       this.template = template;
     }
 
-
     /*
-       * (non-Javadoc)
-       *
-       * @see org.springframework.data.repository.support.RepositoryFactorySupport#getRepositoryBaseClass()
-       */
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.springframework.data.repository.support.RepositoryFactorySupport
+     * #getRepositoryBaseClass()
+     */
     @Override
     protected Class<?> getRepositoryBaseClass(Class<?> repositoryInterface) {
-      return SimpleMongoRepository.class;
+
+      return isQueryDslRepository(repositoryInterface) ? QueryDslMongoRepository.class : SimpleMongoRepository.class;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.springframework.data.repository.support.RepositoryFactorySupport
+     * #getTargetRepository
+     * (org.springframework.data.repository.support.RepositoryMetadata)
+     */
+    @Override
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    protected Object getTargetRepository(RepositoryMetadata metadata) {
+
+      Class<?> repositoryInterface = metadata.getRepositoryInterface();
+      MongoEntityInformation<?, Serializable> entityInformation = getEntityInformation(metadata.getDomainClass());
+
+      if (isQueryDslRepository(repositoryInterface)) {
+        return new QueryDslMongoRepository(entityInformation, template);
+      } else {
+        return new SimpleMongoRepository(entityInformation, template);
+      }
+    }
+
+    private static boolean isQueryDslRepository(Class<?> repositoryInterface) {
+
+      return QUERY_DSL_PRESENT && QueryDslPredicateExecutor.class.isAssignableFrom(repositoryInterface);
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.springframework.data.repository.support.RepositoryFactorySupport
+     * #getQueryLookupStrategy
+     * (org.springframework.data.repository.query.QueryLookupStrategy.Key)
+     */
     @Override
     protected QueryLookupStrategy getQueryLookupStrategy(Key key) {
 
@@ -120,11 +166,18 @@ public class MongoRepositoryFactoryBean<T extends MongoRepository<S, ID>, S, ID 
 
     /**
      * {@link QueryLookupStrategy} to create {@link PartTreeMongoQuery} instances.
-     *
+     * 
      * @author Oliver Gierke
      */
     private class MongoQueryLookupStrategy implements QueryLookupStrategy {
 
+      /*
+       * (non-Javadoc)
+       * 
+       * @see
+       * org.springframework.data.repository.query.QueryLookupStrategy
+       * #resolveQuery(java.lang.reflect.Method, java.lang.Class)
+       */
       public RepositoryQuery resolveQuery(Method method, Class<?> domainClass) {
 
         MongoQueryMethod queryMethod = new MongoQueryMethod(method, domainClass);
@@ -138,11 +191,12 @@ public class MongoRepositoryFactoryBean<T extends MongoRepository<S, ID>, S, ID 
     }
 
     /*
-       * (non-Javadoc)
-       *
-       * @see org.springframework.data.repository.support.RepositoryFactorySupport#validate(java.lang.Class,
-       * java.lang.Object)
-       */
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.springframework.data.repository.support.RepositoryFactorySupport
+     * #validate(java.lang.Class, java.lang.Object)
+     */
     @Override
     protected void validate(RepositoryMetadata metadata, Object customImplementation) {
 
@@ -155,36 +209,24 @@ public class MongoRepositoryFactoryBean<T extends MongoRepository<S, ID>, S, ID 
       super.validate(metadata, customImplementation);
     }
 
-
-    /* (non-Javadoc)
-    * @see org.springframework.data.repository.support.RepositoryFactorySupport#getEntityInformation(java.lang.Class)
-    */
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.springframework.data.repository.support.RepositoryFactorySupport
+     * #getEntityInformation(java.lang.Class)
+     */
     @Override
-    public <T, ID extends Serializable> MongoEntityInformation<T, ID> getEntityInformation(
-        Class<T> domainClass) {
+    public <T, ID extends Serializable> MongoEntityInformation<T, ID> getEntityInformation(Class<T> domainClass) {
 
       return new MongoEntityInformation<T, ID>(domainClass);
-    }
-
-
-    /*
-    * (non-Javadoc)
-    * @see org.springframework.data.repository.support.RepositoryFactorySupport#getTargetRepository(org.springframework.data.repository.support.RepositoryMetadata)
-    */
-    @Override
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    protected Object getTargetRepository(RepositoryMetadata metadata) {
-
-      MongoEntityInformation<?, ?> info = getEntityInformation(
-          metadata.getDomainClass());
-      return new SimpleMongoRepository(info, template);
     }
   }
 
   /**
    * {@link QueryCreationListener} inspecting {@link PartTreeMongoQuery}s and creating an index for the properties it
    * refers to.
-   *
+   * 
    * @author Oliver Gierke
    */
   private static class IndexEnsuringQueryCreationListener implements QueryCreationListener<PartTreeMongoQuery> {
@@ -193,16 +235,18 @@ public class MongoRepositoryFactoryBean<T extends MongoRepository<S, ID>, S, ID 
     private final MongoOperations operations;
 
     public IndexEnsuringQueryCreationListener(MongoOperations operations) {
+
       this.operations = operations;
     }
 
     /*
-       * (non-Javadoc)
-       *
-       * @see
-       * org.springframework.data.repository.support.QueryCreationListener#onCreation(org.springframework.data.repository
-       * .query.RepositoryQuery)
-       */
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.springframework.data.repository.support.QueryCreationListener
+     * #onCreation(org.springframework.data.repository
+     * .query.RepositoryQuery)
+     */
     public void onCreation(PartTreeMongoQuery query) {
 
       PartTree tree = query.getTree();

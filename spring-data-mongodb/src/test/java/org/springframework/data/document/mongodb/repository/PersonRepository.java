@@ -27,7 +27,7 @@ import org.springframework.data.domain.Pageable;
  *
  * @author Oliver Gierke
  */
-public interface PersonRepository extends MongoRepository<Person, String> {
+public interface PersonRepository extends MongoRepository<Person, String>, QueryDslPredicateExecutor<Person> {
 
   /**
    * Returns all {@link Person}s with the given lastname.

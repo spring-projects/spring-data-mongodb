@@ -8,6 +8,7 @@ Repository
 * Adapted new metamodel API (DATADOC-47, DATACMNS-17)
 * Added support for 'In' and 'NotIn' keyword (DATADOC-46)
 * Fixed 'And' and 'Or' keywords
+* Added support for executing QueryDsl predicates (DATADOC-41)
 
 Changes in version 1.0.0.M1 MongoDB (2011-02-14)
 ------------------------------------------------

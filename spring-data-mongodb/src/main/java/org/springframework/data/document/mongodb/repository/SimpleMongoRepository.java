@@ -15,7 +15,7 @@
  */
 package org.springframework.data.document.mongodb.repository;
 
-import static org.springframework.data.document.mongodb.query.Criteria.where;
+import static org.springframework.data.document.mongodb.query.Criteria.*;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.bson.types.ObjectId;
+import org.springframework.data.document.mongodb.MongoOperations;
 import org.springframework.data.document.mongodb.MongoTemplate;
 import org.springframework.data.document.mongodb.query.Criteria;
 import org.springframework.data.document.mongodb.query.Query;
@@ -35,7 +36,7 @@ import org.springframework.util.Assert;
 
 /**
  * Repository base implementation for Mongo.
- *
+ * 
  * @author Oliver Gierke
  */
 public class SimpleMongoRepository<T, ID extends Serializable> implements PagingAndSortingRepository<T, ID> {
@@ -45,7 +46,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements Paging
 
   /**
    * Creates a ew {@link SimpleMongoRepository} for the given {@link MongoInformation} and {@link MongoTemplate}.
-   *
+   * 
    * @param metadata
    * @param template
    */
@@ -58,10 +59,11 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements Paging
   }
 
   /*
-    * (non-Javadoc)
-    *
-    * @see org.springframework.data.repository.Repository#save(java.lang.Object)
-    */
+   * (non-Javadoc)
+   * 
+   * @see
+   * org.springframework.data.repository.Repository#save(java.lang.Object)
+   */
   public T save(T entity) {
 
     template.save(entityInformation.getCollectionName(), entity);
@@ -69,10 +71,11 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements Paging
   }
 
   /*
-    * (non-Javadoc)
-    *
-    * @see org.springframework.data.repository.Repository#save(java.lang.Iterable)
-    */
+   * (non-Javadoc)
+   * 
+   * @see
+   * org.springframework.data.repository.Repository#save(java.lang.Iterable)
+   */
   public List<T> save(Iterable<? extends T> entities) {
 
     List<T> result = new ArrayList<T>();
@@ -86,10 +89,12 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements Paging
   }
 
   /*
-    * (non-Javadoc)
-    *
-    * @see org.springframework.data.repository.Repository#findById(java.io.Serializable )
-    */
+   * (non-Javadoc)
+   * 
+   * @see
+   * org.springframework.data.repository.Repository#findById(java.io.Serializable
+   * )
+   */
   public T findOne(ID id) {
 
     return template.findOne(entityInformation.getCollectionName(), getIdQuery(id), entityInformation.getJavaType());
@@ -101,46 +106,50 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements Paging
   }
 
   private Criteria getIdCriteria(Object id) {
+
     ObjectId objectId = template.getConverter().convertObjectId(id);
     return where(entityInformation.getIdAttribute()).is(objectId);
   }
 
-
   /*
-    * (non-Javadoc)
-    *
-    * @see org.springframework.data.repository.Repository#exists(java.io.Serializable )
-    */
+   * (non-Javadoc)
+   * 
+   * @see
+   * org.springframework.data.repository.Repository#exists(java.io.Serializable
+   * )
+   */
   public boolean exists(ID id) {
 
     return findOne(id) != null;
   }
 
   /*
-    * (non-Javadoc)
-    *
-    * @see org.springframework.data.repository.Repository#count()
-    */
+   * (non-Javadoc)
+   * 
+   * @see org.springframework.data.repository.Repository#count()
+   */
   public Long count() {
 
     return template.getCollection(entityInformation.getCollectionName()).count();
   }
 
   /*
-    * (non-Javadoc)
-    *
-    * @see org.springframework.data.repository.Repository#delete(java.lang.Object)
-    */
+   * (non-Javadoc)
+   * 
+   * @see
+   * org.springframework.data.repository.Repository#delete(java.lang.Object)
+   */
   public void delete(T entity) {
 
     template.remove(entityInformation.getCollectionName(), getIdQuery(entityInformation.getId(entity)));
   }
 
   /*
-    * (non-Javadoc)
-    *
-    * @see org.springframework.data.repository.Repository#delete(java.lang.Iterable)
-    */
+   * (non-Javadoc)
+   * 
+   * @see
+   * org.springframework.data.repository.Repository#delete(java.lang.Iterable)
+   */
   public void delete(Iterable<? extends T> entities) {
 
     for (T entity : entities) {
@@ -149,28 +158,32 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements Paging
   }
 
   /*
-    * (non-Javadoc)
-    *
-    * @see org.springframework.data.repository.Repository#deleteAll()
-    */
+   * (non-Javadoc)
+   * 
+   * @see org.springframework.data.repository.Repository#deleteAll()
+   */
   public void deleteAll() {
 
     template.dropCollection(entityInformation.getCollectionName());
   }
 
-  /* (non-Javadoc)
-    * @see org.springframework.data.repository.Repository#findAll()
-    */
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.springframework.data.repository.Repository#findAll()
+   */
   public List<T> findAll() {
+
     return findAll(new Query());
   }
 
   /*
-    * (non-Javadoc)
-    *
-    * @see org.springframework.data.repository.PagingAndSortingRepository#findAll
-    * (org.springframework.data.domain.Pageable)
-    */
+   * (non-Javadoc)
+   * 
+   * @see
+   * org.springframework.data.repository.PagingAndSortingRepository#findAll
+   * (org.springframework.data.domain.Pageable)
+   */
   public Page<T> findAll(final Pageable pageable) {
 
     Long count = count();
@@ -180,21 +193,24 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements Paging
   }
 
   /*
-    * (non-Javadoc)
-    *
-    * @see org.springframework.data.repository.PagingAndSortingRepository#findAll
-    * (org.springframework.data.domain.Sort)
-    */
+   * (non-Javadoc)
+   * 
+   * @see
+   * org.springframework.data.repository.PagingAndSortingRepository#findAll
+   * (org.springframework.data.domain.Sort)
+   */
   public List<T> findAll(final Sort sort) {
 
     return findAll(QueryUtils.applySorting(new Query(), sort));
   }
 
   /*
-    * (non-Javadoc)
-    *
-    * @see org.springframework.data.repository.Repository#findAll(java.lang.Iterable)
-    */
+   * (non-Javadoc)
+   * 
+   * @see
+   * org.springframework.data.repository.Repository#findAll(java.lang.Iterable
+   * )
+   */
   public List<T> findAll(Iterable<ID> ids) {
 
     Query query = null;
@@ -217,5 +233,23 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements Paging
     }
 
     return template.find(entityInformation.getCollectionName(), query, entityInformation.getJavaType());
+  }
+
+  /**
+   * Returns the underlying {@link MongoOperations} instance.
+   * 
+   * @return
+   */
+  protected MongoOperations getMongoOperations() {
+
+    return this.template;
+  }
+
+  /**
+   * @return the entityInformation
+   */
+  protected MongoEntityInformation<T, ID> getEntityInformation() {
+
+    return entityInformation;
   }
 }

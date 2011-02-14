@@ -19,12 +19,15 @@ import java.util.Set;
 
 import org.bson.types.ObjectId;
 
+import com.mysema.query.annotations.QueryEntity;
+
 
 /**
  * Sample domain class.
  *
  * @author Oliver Gierke
  */
+@QueryEntity
 public class Person {
 
   private String id;
