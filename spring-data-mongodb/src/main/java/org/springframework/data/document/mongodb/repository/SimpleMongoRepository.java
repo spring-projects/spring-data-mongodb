@@ -106,13 +106,10 @@ public class SimpleMongoRepository<T, ID extends Serializable> extends
     public T findById(ID id) {
 
         MongoConverter converter = template.getConverter();
-
         ObjectId objectId = converter.convertObjectId(id);
 
-        List<T> result =
-                template.find(getCollectionName(getDomainClass()), new Query(
-                        where("_id").is(objectId)), getDomainClass());
-        return result.isEmpty() ? null : result.get(0);
+        return template.findOne(getCollectionName(getDomainClass()), new Query(
+        		where("_id").is(objectId)), getDomainClass());
     }
 
 
