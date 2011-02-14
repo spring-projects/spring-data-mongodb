@@ -45,7 +45,6 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.ConversionServiceFactory;
 import org.springframework.core.convert.support.GenericConversionService;
-import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.document.mongodb.MongoPropertyDescriptors.MongoPropertyDescriptor;
 import org.springframework.util.Assert;
 import org.springframework.util.comparator.CompoundComparator;

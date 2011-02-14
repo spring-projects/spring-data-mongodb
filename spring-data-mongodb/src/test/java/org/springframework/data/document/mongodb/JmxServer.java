@@ -16,8 +16,6 @@
 
 package org.springframework.data.document.mongodb;
 
-import org.junit.Test;
-
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 /**
