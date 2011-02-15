@@ -17,7 +17,7 @@
 			<directory>src/main/resources</directory>
 			<includes>
 				<include>readme.txt</include>
-				<include>apache-license.txt</include>
+				<include>license.txt</include>
 				<include>notice.txt</include>
 				<include>changelog.txt</include>
 			</includes>

@@ -75,6 +75,24 @@
 		</license>
 	</licenses>
 
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<!-- dist.* properties are used by the antrun tasks below -->
+		<dist.id>spring-data-document</dist.id>
+		<dist.name>Spring Data Document</dist.name>
+		<dist.key>DATADOC</dist.key>
+		<dist.version>${project.version}</dist.version>
+		<dist.releaseType>snapshot</dist.releaseType>
+		<dist.finalName>${dist.id}-${dist.version}</dist.finalName>
+		<dist.fileName>${dist.finalName}.zip</dist.fileName>
+		<dist.filePath>target/${dist.fileName}</dist.filePath>
+		<dist.bucketName>dist.springframework.org</dist.bucketName>
+		<!-- these properties should be in ~/.m2/settings.xml
+		<dist.accessKey>s3 access key</dist.accessKey>
+		<dist.secretKey>s3 secret key</dist.secretKey>
+		-->
+	</properties>
+
 	<build>
 		<extensions>
 			<extension>
@@ -229,8 +247,8 @@
 				</dependencies>
 			</plugin>
 		</plugins>
-		<!-- the name of this project is 'spring-data-graph-dist';
-			 make sure the zip file is just 'spring-data-graph'. -->
+		<!-- the name of this project is 'spring-data-document-dist';
+			 make sure the zip file is just 'spring-data-document'. -->
 		<finalName>${dist.finalName}</finalName>
 	</build>
 
