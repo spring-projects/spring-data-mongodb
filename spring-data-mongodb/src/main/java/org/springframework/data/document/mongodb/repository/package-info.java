@@ -1,4 +1,4 @@
 /**
- * Mongo DB specific repository implementation.
+ * MongoDB specific repository implementation.
  */
 package org.springframework.data.document.mongodb.repository;

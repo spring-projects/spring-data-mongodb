@@ -952,74 +952,71 @@ public class AppConfig  {
           <itemizedlist>
             <listitem>
               <para><literal>Criteria</literal> <emphasis
-              role="bold">all</emphasis><literal>(Object o) </literal>creates
+              role="bold">all</emphasis><literal>(Object o) </literal>Creates
               a criterion using the <literal>$all</literal> operator</para>
             </listitem>
 
             <listitem>
               <para><literal>Criteria</literal> <emphasis
               role="bold">exists</emphasis><literal>(boolean b)
-              </literal>creates a criterion using the
+              </literal>Creates a criterion using the
               <literal>$exists</literal> operator</para>
             </listitem>
 
             <listitem>
               <para><literal>Criteria</literal> <emphasis
-              role="bold">gt</emphasis><literal>(Object o) </literal>creates a
+              role="bold">gt</emphasis><literal>(Object o) </literal>Creates a
               criterion using the <literal>$gt</literal> operator</para>
             </listitem>
 
             <listitem>
               <para><literal>Criteria</literal> <emphasis
-              role="bold">gte</emphasis><literal>(Object o) </literal>creates
+              role="bold">gte</emphasis><literal>(Object o) </literal>Creates
               a criterion using the <literal>$gte</literal> operator</para>
             </listitem>
 
             <listitem>
               <para><literal>Criteria</literal> <emphasis
               role="bold">in</emphasis><literal>(Object... o)
-              </literal>creates a criterion using the <literal>$in</literal>
+              </literal>Creates a criterion using the <literal>$in</literal>
               operator</para>
             </listitem>
 
             <listitem>
               <para><literal>Criteria</literal> <emphasis
-              role="bold">is</emphasis><literal>(Object o) </literal>creates a
+              role="bold">is</emphasis><literal>(Object o) </literal>Creates a
               criterion using the <literal>$is</literal> operator</para>
             </listitem>
 
             <listitem>
               <para><literal>Criteria</literal> <emphasis
-              role="bold">lt</emphasis><literal>(Object o) </literal>creates a
+              role="bold">lt</emphasis><literal>(Object o) </literal>Creates a
               criterion using the <literal>$lt</literal> operator</para>
             </listitem>
 
             <listitem>
               <para><literal>Criteria</literal> <emphasis
-              role="bold">lte</emphasis><literal>(Object o) </literal>creates
+              role="bold">lte</emphasis><literal>(Object o) </literal>Creates
               a criterion using the <literal>$lte</literal> operator</para>
             </listitem>
 
             <listitem>
-              <para>
-                <literal>Criteria</literal>
-
-                <emphasis role="bold">mod</emphasis>
-
-                <literal>(Number value, Number remainder)</literal>
-              </para>
+              <para><literal>Criteria</literal><emphasis
+              role="bold">mod</emphasis><literal>(Number value, Number
+              remainder) </literal>Creates a criterion using the
+              <literal>$mod</literal> operator</para>
             </listitem>
 
             <listitem>
               <para><literal>Criteria</literal> <emphasis
               role="bold">nin</emphasis><literal>(Object... o)
-              </literal>creates a criterion using the <literal>$nin</literal>
+              </literal>Creates a criterion using the <literal>$nin</literal>
               operator</para>
             </listitem>
 
             <listitem>
               <para><literal>Criteria</literal> <emphasis
-              role="bold">not</emphasis><literal>() </literal>creates a
+              role="bold">not</emphasis><literal>() </literal>Creates a
               criterion using the <literal>$not</literal> meta operator which
               affects the clause directly following</para>
             </listitem>
@@ -1027,26 +1024,26 @@ public class AppConfig  {
             <listitem>
               <para><literal>Criteria</literal> <emphasis
               role="bold">regex</emphasis><literal>(String re)
-              </literal>creates a criterion using a
+              </literal>Creates a criterion using a
               <literal>$regex</literal></para>
             </listitem>
 
             <listitem>
               <para><literal>Criteria</literal> <emphasis
-              role="bold">size</emphasis><literal>(int s) </literal>creates a
+              role="bold">size</emphasis><literal>(int s) </literal>Creates a
               criterion using the <literal>$size</literal> operator</para>
             </listitem>
 
             <listitem>
               <para><literal>Criteria</literal> <emphasis
-              role="bold">type</emphasis><literal>(int t) </literal>creates a
+              role="bold">type</emphasis><literal>(int t) </literal>Creates a
               criterion using the <literal>$type</literal> operator</para>
             </listitem>
 
             <listitem>
               <para><literal>void </literal> <emphasis
               role="bold">or</emphasis><literal>(List&lt;Query&gt; queries)
-              </literal>creates an or query using the <literal>$or</literal>
+              </literal>Creates an or query using the <literal>$or</literal>
               operator for all of the provided queries</para>
 
               <para />
@@ -1140,70 +1137,70 @@ public class AppConfig  {
             <listitem>
               <para><literal>Update</literal> <emphasis
               role="bold">addToSet</emphasis><literal>(String key, Object
-              value)</literal> update using the <literal>$addToSet</literal>
+              value)</literal> Update using the <literal>$addToSet</literal>
               update modifier</para>
             </listitem>
 
             <listitem>
               <para><literal>Update</literal> <emphasis
               role="bold">inc</emphasis><literal>(String key, Number
-              inc)</literal> update using the <literal>$inc</literal> update
+              inc)</literal> Update using the <literal>$inc</literal> update
               modifier</para>
             </listitem>
 
             <listitem>
               <para><literal>Update</literal> <emphasis
               role="bold">pop</emphasis><literal>(String key, Update.Position
-              pos)</literal> update using the <literal>$pop</literal> update
+              pos)</literal> Update using the <literal>$pop</literal> update
               modifier</para>
             </listitem>
 
             <listitem>
               <para><literal>Update</literal> <emphasis
               role="bold">pull</emphasis><literal>(String key, Object
-              value)</literal> update using the <literal>$pull</literal>
+              value)</literal> Update using the <literal>$pull</literal>
               update modifier</para>
             </listitem>
 
             <listitem>
               <para><literal>Update</literal> <emphasis
               role="bold">pullAll</emphasis><literal>(String key, Object[]
-              values)</literal> update using the <literal>$pullAll</literal>
+              values)</literal> Update using the <literal>$pullAll</literal>
               update modifier</para>
             </listitem>
 
             <listitem>
               <para><literal>Update</literal> <emphasis
               role="bold">push</emphasis><literal>(String key, Object
-              value)</literal> update using the <literal>$push</literal>
+              value)</literal> Update using the <literal>$push</literal>
               update modifier</para>
             </listitem>
 
             <listitem>
               <para><literal>Update</literal> <emphasis
               role="bold">pushAll</emphasis><literal>(String key, Object[]
-              values)</literal> update using the <literal>$pushAll</literal>
+              values)</literal> Update using the <literal>$pushAll</literal>
               update modifier</para>
             </listitem>
 
             <listitem>
               <para><literal>Update</literal> <emphasis
               role="bold">rename</emphasis><literal>(String oldName, String
-              newName)</literal> update using the <literal>$rename</literal>
+              newName)</literal> Update using the <literal>$rename</literal>
               update modifier</para>
             </listitem>
 
             <listitem>
               <para><literal>Update</literal> <emphasis
               role="bold">set</emphasis><literal>(String key, Object
-              value)</literal> update using the <literal>$set</literal> update
+              value)</literal> Update using the <literal>$set</literal> update
               modifier</para>
             </listitem>
 
             <listitem>
               <para><literal>Update</literal> <emphasis
               role="bold">unset</emphasis><literal>(String key)</literal>
-              update using the <literal>$unset</literal> update
+              Update using the <literal>$unset</literal> update
               modifier</para>
             </listitem>
           </itemizedlist></para>

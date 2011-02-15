@@ -38,10 +38,22 @@ public class Criteria implements CriteriaDefinition {
 	}
 
 
+	/**
+	 * Static factory method to create a Criteria using the provided key
+	 * 
+	 * @param key
+	 * @return
+	 */
 	public static Criteria where(String key) {
 		return new Criteria(key);
 	}
 
+	/**
+	 * Creates a criterion using the $is operator
+	 * 
+	 * @param o
+	 * @return
+	 */
 	public Criteria is(Object o) {
 		if (isValue != null) {
 			throw new InvalidDocumentStoreApiUsageException("Multiple 'is' values declared.");
@@ -50,36 +62,78 @@ public class Criteria implements CriteriaDefinition {
 		return this;
 	}
 
+	/**
+	 * Creates a criterion using the $lt operator
+	 * 
+	 * @param o
+	 * @return
+	 */
 	public Criteria lt(Object o) {
 		criteria.put("$lt", o);
 		return this;
 	}
 	
+	/**
+	 * Creates a criterion using the $lte operator
+	 * 
+	 * @param o
+	 * @return
+	 */
 	public Criteria lte(Object o) {
 		criteria.put("$lte", o);
 		return this;
 	}
 	
+	/**
+	 * Creates a criterion using the $gt operator
+	 * 
+	 * @param o
+	 * @return
+	 */
 	public Criteria gt(Object o) {
 		criteria.put("$gt", o);
 		return this;
 	}
 	
+	/**
+	 * Creates a criterion using the $gte operator
+	 * 
+	 * @param o
+	 * @return
+	 */
 	public Criteria gte(Object o) {
 		criteria.put("$gte", o);
 		return this;
 	}
 	
+	/**
+	 * Creates a criterion using the $in operator
+	 * @param o
+	 * @return
+	 */
 	public Criteria in(Object... o) {
 		criteria.put("$in", o);
 		return this;
 	}
 
+	/**
+	 * Creates a criterion using the $nin operator
+	 * 
+	 * @param o
+	 * @return
+	 */
 	public Criteria nin(Object... o) {
 		criteria.put("$min", o);
 		return this;
 	}
 
+	/**
+	 * Creates a criterion using the $mod operator
+	 * 
+	 * @param value
+	 * @param remainder
+	 * @return
+	 */
 	public Criteria mod(Number value, Number remainder) {
 		List<Object> l = new ArrayList<Object>();
 		l.add(value);
@@ -88,36 +142,76 @@ public class Criteria implements CriteriaDefinition {
 		return this;
 	}
 
+	/**
+	 * Creates a criterion using the $all operator
+	 * 
+	 * @param o
+	 * @return
+	 */
 	public Criteria all(Object o) {
 		criteria.put("$is", o);
 		return this;
 	}
 
+	/**
+	 * Creates a criterion using the $size operator
+	 * 
+	 * @param s
+	 * @return
+	 */
 	public Criteria size(int s) {
 		criteria.put("$size", s);
 		return this;
 	}
 
+	/**
+	 * Creates a criterion using the $exists operator
+	 * 
+	 * @param b
+	 * @return
+	 */
 	public Criteria exists(boolean b) {
 		criteria.put("$exists", b);
 		return this;
 	}
 
+	/**
+	 * Creates a criterion using the $type operator
+	 * 
+	 * @param t
+	 * @return
+	 */
 	public Criteria type(int t) {
 		criteria.put("$type", t);
 		return this;
 	}
 
+	/**
+	 * Creates a criterion using the $not meta operator which affects the clause directly following
+	 * 
+	 * @return
+	 */
 	public Criteria not() {
 		criteria.put("$not", null);
 		return this;
 	}
 	
+	/**
+	 * Creates a criterion using a $regex
+	 * 
+	 * @param re
+	 * @return
+	 */
 	public Criteria regex(String re) {
 		criteria.put("$regex", re);
 		return this;
 	}
 
+	/**
+	 * Creates an or query using the $or operator for all of the provided queries
+	 * 
+	 * @param queries
+	 */
 	public void or(List<Query> queries) {
 		criteria.put("$or", queries);		
 	}

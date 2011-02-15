@@ -43,7 +43,7 @@
 			<!-- adds module jars to the distribution archive under the 'dist' directory -->
 			<includes>
 				<include>org.springframework.data:spring-data-document-core</include>
-				<include>org.springframework.data:spring-data-couchdb</include>
+				<!-- <include>org.springframework.data:spring-data-couchdb</include> -->
 				<include>org.springframework.data:spring-data-mongodb</include>
 			</includes>
 			<binaries>
@@ -57,7 +57,7 @@
 				 see pom.xml 'maven-source-plugin' declaration -->
 			<includes>
 				<include>org.springframework.data:spring-data-document-core</include>
-				<include>org.springframework.data:spring-data-couchdb</include>
+				<!-- <include>org.springframework.data:spring-data-couchdb</include> -->
 				<include>org.springframework.data:spring-data-mongodb</include>
 			</includes>
 			<binaries>

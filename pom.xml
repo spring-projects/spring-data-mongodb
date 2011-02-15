@@ -5,13 +5,13 @@
 	<groupId>org.springframework.data</groupId>
 	<artifactId>spring-data-document-dist</artifactId>
 	<name>Spring Data Document Distribution</name>
-	<version>1.0.0.BUILD-SNAPSHOT</version>
+	<version>1.0.0.M1</version>
 	<packaging>pom</packaging>
 	<modules>
 		<module>spring-data-document-parent</module>
 		<module>spring-data-document-core</module>
 		<module>spring-data-mongodb</module>
-		<module>spring-data-couchdb</module>
+		<!-- <module>spring-data-couchdb</module> -->
 	</modules>
 
 	<developers>

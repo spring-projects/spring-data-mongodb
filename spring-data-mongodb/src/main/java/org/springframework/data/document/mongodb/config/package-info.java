@@ -1,4 +1,4 @@
 /**
- * Spring XML namespace configuration for Mongo DB specific repositories.
+ * Spring XML namespace configuration for MongoDB specific repositories.
  */
 package org.springframework.data.document.mongodb.config;

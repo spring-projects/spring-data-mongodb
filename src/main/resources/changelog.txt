@@ -1,5 +1,28 @@
-Spring Datastore Document 1.0.0 Milestone 1 (?, 2010)
+Spring Data Document Changelog
 =============================================
 
-New Features
-   * Lot's of good stuff
+Changes in version 1.0.0.M1 MongoDB (2011-02-14)
+------------------------------------------------
+
+General
+* BeanFactory for basic configuration of Mongo environment
+* Namespace for basic configuration of Mongo environment
+
+Core Data Access
+
+* Introduce MongoTemplate implementation with methods defined in MongoOperations interface
+* MongoTemplate support for insert, find, save, update, remove
+* MongoTemplate support for basic POJO serialization based on bean properties
+* Allow MongoTemplate methods to use a default collection name
+* Exception translation in MongoTemplate to Spring's DAO exception hierarchy
+* Support for update modifiers to allow for partial document updates
+* Expose WriteConcern settings on MongoTemplate used for any write operations
+* Support in MongoTemplate for enabling either logging or throwing exceptions based on value of WriteResult return value.
+
+Repository
+
+* Introducing generic repository implementation for MongoDB
+* Automatic implementation of interface query method names on repositories.
+* Namespace support for Mongo repositories
+* Allow usage of pagination and sorting with repositories
+
