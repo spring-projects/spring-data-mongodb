@@ -43,8 +43,8 @@
 			<!-- adds module jars to the distribution archive under the 'dist' directory -->
 			<includes>
 				<include>org.springframework.data:spring-data-document-core</include>
-				<!-- <include>org.springframework.data:spring-data-couchdb</include> -->
 				<include>org.springframework.data:spring-data-mongodb</include>
+				<include>org.springframework.data:spring-data-couchdb</include>
 			</includes>
 			<binaries>
 				<outputDirectory>dist</outputDirectory>
