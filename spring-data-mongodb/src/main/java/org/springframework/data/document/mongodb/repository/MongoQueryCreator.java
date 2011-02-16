@@ -42,7 +42,7 @@ import org.springframework.data.repository.query.parser.PartTree;
  */
 class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 
-    private static final Logger LOG = LoggerFactory.getLog(MongoQueryCreator.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MongoQueryCreator.class);
 
 
     /**
