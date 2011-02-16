@@ -23,7 +23,6 @@ import org.springframework.data.document.mongodb.MongoTemplate;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.query.QueryLookupStrategy;
 import org.springframework.data.repository.query.QueryLookupStrategy.Key;
-import org.springframework.data.repository.query.QueryMethod;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.repository.support.RepositoryFactoryBeanSupport;
 import org.springframework.data.repository.support.RepositoryFactorySupport;
@@ -126,15 +125,21 @@ public class MongoRepositoryFactoryBean extends
         }
 
         /**
-         * {@link QueryLookupStrategy} to create {@link MongoQuery} instances.
+         * {@link QueryLookupStrategy} to create {@link PartTreeMongoQuery} instances.
          * 
          * @author Oliver Gierke
          */
         private class MongoQueryLookupStrategy implements QueryLookupStrategy {
 
             public RepositoryQuery resolveQuery(Method method) {
-
-                return new MongoQuery(new QueryMethod(method), template);
+            	
+            	MongoQueryMethod queryMethod = new MongoQueryMethod(method);
+            	
+            	if (queryMethod.hasAnnotatedQuery()) {
+					return new StringBasedMongoQuery(queryMethod, template);
+				} else {
+					return new PartTreeMongoQuery(queryMethod, template);
+				}
             }
         }
         

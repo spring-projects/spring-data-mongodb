@@ -18,24 +18,21 @@ package org.springframework.data.document.mongodb.repository;
 import static org.springframework.data.document.mongodb.query.Criteria.*;
 
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.regex.Pattern;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.springframework.data.document.mongodb.MongoConverter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.document.mongodb.query.Criteria;
 import org.springframework.data.document.mongodb.query.CriteriaDefinition;
 import org.springframework.data.document.mongodb.query.Query;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.repository.query.SimpleParameterAccessor;
-import org.springframework.data.repository.query.SimpleParameterAccessor.BindableParameterIterator;
+import org.springframework.data.repository.query.ParameterAccessor;
+import org.springframework.data.repository.query.ParametersParameterAccessor;
 import org.springframework.data.repository.query.parser.AbstractQueryCreator;
 import org.springframework.data.repository.query.parser.Part;
 import org.springframework.data.repository.query.parser.Part.Type;
 import org.springframework.data.repository.query.parser.PartTree;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 
 
 /**
@@ -45,36 +42,28 @@ import com.mongodb.DBObject;
  */
 class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 
-    private static final Log LOG = LogFactory.getLog(MongoQueryCreator.class);
-    private final MongoConverter converter;
+    private static final Logger LOG = LoggerFactory.getLog(MongoQueryCreator.class);
 
 
     /**
      * Creates a new {@link MongoQueryCreator} from the given {@link PartTree}
-     * and {@link SimpleParameterAccessor}.
+     * and {@link ParametersParameterAccessor}.
      * 
      * @param tree
      * @param accessor
      */
-    public MongoQueryCreator(PartTree tree,
-            SimpleParameterAccessor accessor, MongoConverter converter) {
+    public MongoQueryCreator(PartTree tree, ParameterAccessor accessor) {
 
         super(tree, accessor);
-        this.converter = converter;
     }
 
 
     /*
      * (non-Javadoc)
-     * 
-     * @see
-     * org.springframework.data.document.mongodb.repository.AbstractQueryCreator
-     * #create(org.springframework.data.repository.query.parser.Part,
-     * org.springframework
-     * .data.repository.query.SimpleParameterAccessor.BindableParameterIterator)
+     * @see org.springframework.data.repository.query.parser.AbstractQueryCreator#create(org.springframework.data.repository.query.parser.Part, java.util.Iterator)
      */
     @Override
-    protected Criteria create(Part part, BindableParameterIterator iterator) {
+    protected Criteria create(Part part, Iterator<Object> iterator) {
 
         return from(part.getType(),
                 where(part.getProperty().toDotPath()), iterator);
@@ -83,16 +72,11 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 
     /*
      * (non-Javadoc)
-     * 
-     * @see
-     * org.springframework.data.document.mongodb.repository.AbstractQueryCreator
-     * #handlePart(org.springframework.data.repository.query.parser.Part,
-     * org.springframework
-     * .data.repository.query.SimpleParameterAccessor.BindableParameterIterator)
+     * @see org.springframework.data.repository.query.parser.AbstractQueryCreator#and(org.springframework.data.repository.query.parser.Part, java.lang.Object, java.util.Iterator)
      */
     @Override
     protected Criteria and(Part part, Criteria base,
-            BindableParameterIterator iterator) {
+            Iterator<Object> iterator) {
 
         return from(part.getType(), where(part.getProperty().toDotPath()),
                 iterator);
@@ -143,16 +127,16 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
      * @return
      */
     private Criteria from(Type type, Criteria criteria,
-            BindableParameterIterator parameters) {
+            Iterator<Object> parameters) {
 
         switch (type) {
         case GREATER_THAN:
-            return criteria.gt(getConvertedParameter(parameters));
+            return criteria.gt(parameters.next());
         case LESS_THAN:
-            return criteria.lt(getConvertedParameter(parameters));
+            return criteria.lt(parameters.next());
         case BETWEEN:
-            return criteria.gt(getConvertedParameter(parameters)).lt(
-                    getConvertedParameter(parameters));
+            return criteria.gt(parameters.next()).lt(
+            		parameters.next());
         case IS_NOT_NULL:
             return criteria.not().is(null);
         case IS_NULL:
@@ -161,21 +145,14 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
             String value = parameters.next().toString();
             return criteria.is(toLikeRegex(value));
         case SIMPLE_PROPERTY:
-            return criteria.is(getConvertedParameter(parameters));
+            return criteria.is(parameters.next());
         case NEGATING_SIMPLE_PROPERTY:
-            return criteria.not().is(getConvertedParameter(parameters));
+            return criteria.not().is(parameters.next());
         }
 
         throw new IllegalArgumentException("Unsupported keyword!");
     }
 
-
-    private Object getConvertedParameter(BindableParameterIterator parameters) {
-
-        DBObject result = new BasicDBObject();
-        converter.write(new ValueHolder(parameters.next()), result);
-        return result.get("value");
-    }
 
 
     private Pattern toLikeRegex(String source) {
@@ -184,27 +161,5 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
         return Pattern.compile(regex);
     }
 
-    /**
-     * Simple value holder class to allow conversion and accessing the converted
-     * value in a deterministic way.
-     * 
-     * @author Oliver Gierke
-     */
-    private static class ValueHolder {
-
-        private Object value;
-
-
-        public ValueHolder(Object value) {
-
-            this.value = value;
-        }
-
-
-        @SuppressWarnings("unused")
-        public Object getValue() {
-
-            return value;
-        }
-    }
+    
 }

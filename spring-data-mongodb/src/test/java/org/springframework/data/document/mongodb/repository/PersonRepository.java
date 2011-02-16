@@ -35,6 +35,16 @@ public interface PersonRepository extends MongoRepository<Person, String> {
      * @return
      */
     List<Person> findByLastname(String lastname);
+    
+	/**
+	 * Returns the {@link Person}s with the given firstname. Uses {@link Query} annotation to define the query to be
+	 * executed.
+	 * 
+	 * @param firstname
+	 * @return
+	 */
+    @Query("{ 'firstname' : ? }")
+    List<Person> findByThePersonsFirstname(String firstname);
 
 
     /**

@@ -122,7 +122,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> extends
      */
     public boolean exists(ID id) {
 
-        return findById(id) == null;
+        return findById(id) != null;
     }
 
 
@@ -157,10 +157,13 @@ public class SimpleMongoRepository<T, ID extends Serializable> extends
      * org.springframework.data.repository.Repository#delete(java.lang.Object)
      */
     public void delete(T entity) {
+    	
+    	Object id = entityInformation.getId(entity);
+    	ObjectId objectId = template.getConverter().convertObjectId(id);
 
         Query query =
-                new Query(where(entityInformation.getFieldName()).is(
-                        entityInformation.getId(entity)));
+                new Query(where("_id").is(
+                        objectId));
         template.remove(getCollectionName(getDomainClass()), query);
     }
 

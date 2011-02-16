@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2010 the original author or authors.
+ * Copyright 2002-2011 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,10 +24,10 @@ import org.springframework.data.document.mongodb.MongoTemplate;
 import org.springframework.data.document.mongodb.query.Query;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.repository.query.ParameterAccessor;
+import org.springframework.data.repository.query.ParametersParameterAccessor;
 import org.springframework.data.repository.query.QueryMethod;
 import org.springframework.data.repository.query.RepositoryQuery;
-import org.springframework.data.repository.query.SimpleParameterAccessor;
-import org.springframework.data.repository.query.parser.PartTree;
 import org.springframework.util.Assert;
 
 import com.mongodb.DBCollection;
@@ -36,32 +36,30 @@ import com.mongodb.DBObject;
 
 
 /**
- * {@link RepositoryQuery} implementation for Mongo.
+ * Base class for {@link RepositoryQuery} implementations for Mongo.
  * 
  * @author Oliver Gierke
  */
-public class MongoQuery implements RepositoryQuery {
+public abstract class AbstractMongoQuery implements RepositoryQuery {
 
     private final QueryMethod method;
     private final MongoTemplate template;
-    private final PartTree tree;
 
 
     /**
-     * Creates a new {@link MongoQuery} from the given {@link QueryMethod} and
+     * Creates a new {@link AbstractMongoQuery} from the given {@link QueryMethod} and
      * {@link MongoTemplate}.
      * 
      * @param method
      * @param template
      */
-    public MongoQuery(QueryMethod method, MongoTemplate template) {
+    public AbstractMongoQuery(QueryMethod method, MongoTemplate template) {
 
         Assert.notNull(template);
         Assert.notNull(method);
 
         this.method = method;
         this.template = template;
-        this.tree = new PartTree(method.getName(), method.getDomainClass());
     }
 
 
@@ -74,22 +72,27 @@ public class MongoQuery implements RepositoryQuery {
      */
     public Object execute(Object[] parameters) {
 
-        SimpleParameterAccessor accessor =
-                new SimpleParameterAccessor(method.getParameters(), parameters);
-
-        MongoQueryCreator creator =
-                new MongoQueryCreator(tree, accessor, template.getConverter());
-        Query query = creator.createQuery();
+        ParameterAccessor accessor =
+                new ParametersParameterAccessor(method.getParameters(), parameters);
+        Query query = createQuery(new ConvertingParameterAccessor(template.getConverter(), accessor));
 
         if (method.isCollectionQuery()) {
             return new CollectionExecution().execute(query);
         } else if (method.isPageQuery()) {
-            return new PagedExecution(creator, accessor.getPageable())
-                    .execute(query);
+            return new PagedExecution(accessor.getPageable()).execute(query);
         } else {
             return new SingleEntityExecution().execute(query);
         }
     }
+    
+    /**
+     * Create a {@link Query} instance using the given {@link ParameterAccessor}
+     * @param accessor
+     * @param converter
+     * @return
+     */
+    protected abstract Query createQuery(ConvertingParameterAccessor accessor);
+    	
 
     private abstract class Execution {
 
@@ -133,7 +136,6 @@ public class MongoQuery implements RepositoryQuery {
     class PagedExecution extends Execution {
 
         private final Pageable pageable;
-        private final MongoQueryCreator creator;
 
 
         /**
@@ -141,11 +143,9 @@ public class MongoQuery implements RepositoryQuery {
          * 
          * @param pageable
          */
-        public PagedExecution(MongoQueryCreator creator, Pageable pageable) {
+        public PagedExecution(Pageable pageable) {
 
-            Assert.notNull(creator);
             Assert.notNull(pageable);
-            this.creator = creator;
             this.pageable = pageable;
         }
 
@@ -161,10 +161,8 @@ public class MongoQuery implements RepositoryQuery {
         @SuppressWarnings({ "rawtypes", "unchecked" })
         Object execute(Query query) {
 
-            Query countQuery = creator.createQuery();
             String collectionName = getCollectionName(method.getDomainClass());
-            int count =
-                    getCollectionCursor(collectionName, countQuery.getQueryObject()).count();
+            int count = getCollectionCursor(collectionName, query.getQueryObject()).count();
 
             List<?> result =
                     template.find(collectionName, applyPagination(query, pageable),

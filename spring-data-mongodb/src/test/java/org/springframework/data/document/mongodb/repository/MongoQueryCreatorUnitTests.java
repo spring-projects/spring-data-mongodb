@@ -15,6 +15,8 @@
  */
 package org.springframework.data.document.mongodb.repository;
 
+import static org.springframework.data.document.mongodb.repository.StubParameterAccessor.*;
+
 import java.lang.reflect.Method;
 import java.util.List;
 
@@ -25,8 +27,6 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.document.mongodb.MongoConverter;
 import org.springframework.data.document.mongodb.Person;
-import org.springframework.data.repository.query.Parameters;
-import org.springframework.data.repository.query.SimpleParameterAccessor;
 import org.springframework.data.repository.query.parser.PartTree;
 
 
@@ -63,17 +63,13 @@ public class MongoQueryCreatorUnitTests {
         PartTree tree = new PartTree("findByFirstName", Person.class);
 
         MongoQueryCreator creator =
-                new MongoQueryCreator(tree, new SimpleParameterAccessor(
-                        new Parameters(findByFirstname),
-                        new Object[] { "Oliver" }), converter);
+                new MongoQueryCreator(tree, getAccessor(converter, "Oliver"));
 
         creator.createQuery();
 
         creator =
                 new MongoQueryCreator(new PartTree("findByFirstNameAndFriend",
-                        Person.class), new SimpleParameterAccessor(
-                        new Parameters(findByFirstnameAndFriend), new Object[] {
-                                "Oliver", new Person() }), converter);
+                        Person.class), getAccessor(converter, "Oliver", new Person()));
         creator.createQuery();
     }
 
