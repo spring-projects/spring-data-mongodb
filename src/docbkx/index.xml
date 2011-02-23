@@ -56,7 +56,7 @@
     <xi:include href="reference/introduction.xml"/>
     <xi:include href="reference/mongodb.xml"/>
     <xi:include href="reference/mongo-repositories.xml"/>
-    <!-- <xi:include href="reference/couchdb.xml"/> -->
+    <xi:include href="reference/jmx.xml"/>
   </part>
 
 </book>
