@@ -17,6 +17,7 @@ package org.springframework.data.document.mongodb.repository;
 
 import static org.springframework.data.document.mongodb.query.Criteria.*;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.regex.Pattern;
@@ -141,6 +142,10 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
             return criteria.not().is(null);
         case IS_NULL:
             return criteria.is(null);
+        case NOT_IN:
+        	return criteria.nin(nextAsArray(parameters));
+        case IN:
+        	return criteria.in(nextAsArray(parameters));
         case LIKE:
             String value = parameters.next().toString();
             return criteria.is(toLikeRegex(value));
@@ -154,6 +159,17 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
     }
 
 
+    private Object[] nextAsArray(Iterator<Object> iterator) {
+    	Object next = iterator.next();
+    	
+    	if (next instanceof Collection) {
+    		return ((Collection<?>) next).toArray();
+    	} else if (next.getClass().isArray()) {
+    		return (Object[]) next;
+    	}
+    	
+    	return new Object[] { next };
+    }
 
     private Pattern toLikeRegex(String source) {
 

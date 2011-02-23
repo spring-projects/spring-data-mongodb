@@ -123,7 +123,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @return
 	 */
 	public Criteria nin(Object... o) {
-		criteria.put("$min", o);
+		criteria.put("$nin", o);
 		return this;
 	}
 

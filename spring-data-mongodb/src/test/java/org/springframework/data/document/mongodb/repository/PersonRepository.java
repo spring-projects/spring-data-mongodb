@@ -15,6 +15,7 @@
  */
 package org.springframework.data.document.mongodb.repository;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
@@ -67,6 +68,21 @@ public interface PersonRepository extends MongoRepository<Person, String> {
      */
     Page<Person> findByLastnameLike(String lastname, Pageable pageable);
 
+	/**
+	 * Returns all {@link Person}s with a firstname contained in the given varargs.
+	 * 
+	 * @param firstnames
+	 * @return
+	 */
+	List<Person> findByFirstnameIn(String... firstnames);
+
+	/**
+	 * Returns all {@link Person}s with a firstname not contained in the given collection.
+	 * 
+	 * @param firstnames
+	 * @return
+	 */
+	List<Person> findByFirstnameNotIn(Collection<String> firstnames);
 
     /**
      * Returns all {@link Person}s with an age between the two given values.

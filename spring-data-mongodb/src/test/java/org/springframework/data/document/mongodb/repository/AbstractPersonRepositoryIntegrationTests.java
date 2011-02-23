@@ -162,4 +162,21 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result.size(), is(1));
 		assertThat(result, hasItem(dave));
 	}
+	
+	
+	@Test
+	public void findsPeopleByFirstnameInVarargs() {
+		
+		List<Person> result = repository.findByFirstnameIn("Dave", "Carter");
+		assertThat(result.size(), is(2));
+		assertThat(result, hasItems(dave, carter));
+	}
+	
+	@Test
+	public void findsPeopleByFirstnameNotInCollection() {
+		
+		List<Person> result = repository.findByFirstnameNotIn(Arrays.asList("Boyd", "Carter"));
+		assertThat(result.size(), is(3));
+		assertThat(result, hasItems(dave, leroi, stefan));
+	}
 }
