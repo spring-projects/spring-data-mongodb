@@ -61,6 +61,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> extends
 
         Assert.notNull(template);
         this.template = template;
+        createIsNewStrategy(domainClass);
     }
 
 
