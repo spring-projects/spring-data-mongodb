@@ -19,8 +19,7 @@ import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.List;
 
-import org.springframework.data.repository.support.IdAware;
-import org.springframework.data.repository.support.IsNewAware;
+import org.springframework.data.repository.support.AbstractEntityMetadata;
 import org.springframework.util.ReflectionUtils;
 
 
@@ -30,18 +29,20 @@ import org.springframework.util.ReflectionUtils;
  * 
  * @author Oliver Gierke
  */
-class MongoEntityInformation implements IsNewAware, IdAware {
+class MongoEntityMetadata<T extends Object> extends AbstractEntityMetadata<T> {
 
     private static final List<String> FIELD_NAMES = Arrays.asList("ID", "id", "_id");
     private Field field;
 
 
     /**
-     * Creates a new {@link MongoEntityInformation}.
+     * Creates a new {@link MongoEntityMetadata}.
      * 
      * @param domainClass
      */
-    public MongoEntityInformation(Class<?> domainClass) {
+    public MongoEntityMetadata(Class<T> domainClass) {
+    	
+    	super(domainClass);
 
         for (String name : FIELD_NAMES) {
 
@@ -59,19 +60,6 @@ class MongoEntityInformation implements IsNewAware, IdAware {
                     "Given domain class %s does not contain an id property!",
                     domainClass.getName()));
         }
-    }
-
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.springframework.data.repository.support.IsNewAware#isNew(java.lang
-     * .Object)
-     */
-    public boolean isNew(Object entity) {
-
-        return null == ReflectionUtils.getField(field, entity);
     }
 
 

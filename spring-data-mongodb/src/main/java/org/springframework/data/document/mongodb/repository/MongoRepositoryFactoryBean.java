@@ -20,142 +20,136 @@ import java.lang.reflect.Method;
 
 import org.springframework.data.document.mongodb.MongoPropertyDescriptors.MongoPropertyDescriptor;
 import org.springframework.data.document.mongodb.MongoTemplate;
-import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.query.QueryLookupStrategy;
 import org.springframework.data.repository.query.QueryLookupStrategy.Key;
 import org.springframework.data.repository.query.RepositoryQuery;
+import org.springframework.data.repository.support.EntityMetadata;
 import org.springframework.data.repository.support.RepositoryFactoryBeanSupport;
 import org.springframework.data.repository.support.RepositoryFactorySupport;
-import org.springframework.data.repository.support.RepositorySupport;
-import org.springframework.data.repository.util.ClassUtils;
+import org.springframework.data.repository.support.RepositoryMetadata;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
-
 
 /**
  * {@link org.springframework.beans.factory.FactoryBean} to create {@link MongoRepository} instances.
  * 
  * @author Oliver Gierke
  */
-public class MongoRepositoryFactoryBean extends
-        RepositoryFactoryBeanSupport<MongoRepository<?, ?>> {
+public class MongoRepositoryFactoryBean extends RepositoryFactoryBeanSupport<MongoRepository<?, ?>> {
 
-    private MongoTemplate template;
+	private MongoTemplate template;
 
+	/**
+	 * Configures the {@link MongoTemplate} to be used.
+	 * 
+	 * @param template the template to set
+	 */
+	public void setTemplate(MongoTemplate template) {
 
-    /**
-     * Configures the {@link MongoTemplate} to be used.
-     * 
-     * @param template the template to set
-     */
-    public void setTemplate(MongoTemplate template) {
+		this.template = template;
+	}
 
-        this.template = template;
-    }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.springframework.data.repository.support.RepositoryFactoryBeanSupport #createRepositoryFactory()
+	 */
+	@Override
+	protected RepositoryFactorySupport createRepositoryFactory() {
 
+		return new MongoRepositoryFactory(template);
+	}
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.springframework.data.repository.support.RepositoryFactoryBeanSupport
-     * #createRepositoryFactory()
-     */
-    @Override
-    protected RepositoryFactorySupport createRepositoryFactory() {
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.springframework.data.repository.support.RepositoryFactoryBeanSupport #afterPropertiesSet()
+	 */
+	@Override
+	public void afterPropertiesSet() {
 
-        return new MongoRepositoryFactory(template);
-    }
+		super.afterPropertiesSet();
+		Assert.notNull(template, "MongoTemplate must not be null!");
+	}
 
+	/**
+	 * Repository to create {@link MongoRepository} instances.
+	 * 
+	 * @author Oliver Gierke
+	 */
+	public static class MongoRepositoryFactory extends RepositoryFactorySupport {
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.springframework.data.repository.support.RepositoryFactoryBeanSupport
-     * #afterPropertiesSet()
-     */
-    @Override
-    public void afterPropertiesSet() {
+		private final MongoTemplate template;
 
-        super.afterPropertiesSet();
-        Assert.notNull(template, "MongoTemplate must not be null!");
-    }
-
-    /**
-     * Repository to create {@link MongoRepository} instances.
-     * 
-     * @author Oliver Gierke
-     */
-    public static class MongoRepositoryFactory extends RepositoryFactorySupport {
-    	
-    	private final MongoTemplate template;
-    	
-    	/**
-    	 * Creates a new {@link MongoRepositoryFactory} fwith the given {@link MongoTemplate}.
-    	 * 
-    	 * @param template
-    	 */
+		/**
+		 * Creates a new {@link MongoRepositoryFactory} fwith the given {@link MongoTemplate}.
+		 * 
+		 * @param template
+		 */
 		public MongoRepositoryFactory(MongoTemplate template) {
-		
+
 			this.template = template;
 		}
 
+		@Override
+		@SuppressWarnings("unchecked")
+		protected Object getTargetRepository(RepositoryMetadata metadata) {
+
+			EntityMetadata<Object> info = new MongoEntityMetadata<Object>((Class<Object>) metadata.getDomainClass());
+			return new SimpleMongoRepository<Object, Serializable>(info, template);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see org.springframework.data.repository.support.RepositoryFactorySupport#getRepositoryBaseClass()
+		 */
+		@Override
+		protected Class<?> getRepositoryBaseClass(Class<?> repositoryInterface) {
+			return SimpleMongoRepository.class;
+		}
 
 		@Override
-        protected <T, ID extends Serializable> RepositorySupport<T, ID> getTargetRepository(
-                Class<T> domainClass, Class<?> repositoryInterface) {
+		protected QueryLookupStrategy getQueryLookupStrategy(Key key) {
 
-            return new SimpleMongoRepository<T, ID>(domainClass, template);
-        }
+			return new MongoQueryLookupStrategy();
+		}
 
+		/**
+		 * {@link QueryLookupStrategy} to create {@link PartTreeMongoQuery} instances.
+		 * 
+		 * @author Oliver Gierke
+		 */
+		private class MongoQueryLookupStrategy implements QueryLookupStrategy {
 
-        @Override
-        @SuppressWarnings("rawtypes")
-        protected Class<? extends RepositorySupport> getRepositoryClass(Class<?> repositoryInterface) {
+			public RepositoryQuery resolveQuery(Method method) {
 
-            return SimpleMongoRepository.class;
-        }
+				MongoQueryMethod queryMethod = new MongoQueryMethod(method);
 
-
-        @Override
-        protected QueryLookupStrategy getQueryLookupStrategy(Key key) {
-
-            return new MongoQueryLookupStrategy();
-        }
-
-        /**
-         * {@link QueryLookupStrategy} to create {@link PartTreeMongoQuery} instances.
-         * 
-         * @author Oliver Gierke
-         */
-        private class MongoQueryLookupStrategy implements QueryLookupStrategy {
-
-            public RepositoryQuery resolveQuery(Method method) {
-            	
-            	MongoQueryMethod queryMethod = new MongoQueryMethod(method);
-            	
-            	if (queryMethod.hasAnnotatedQuery()) {
+				if (queryMethod.hasAnnotatedQuery()) {
 					return new StringBasedMongoQuery(queryMethod, template);
 				} else {
 					return new PartTreeMongoQuery(queryMethod, template);
 				}
-            }
-        }
-        
-        /* (non-Javadoc)
-         * @see org.springframework.data.repository.support.RepositoryFactorySupport#validate(java.lang.Class, java.lang.Object)
-         */
-        @Override
-        protected void validate(Class<? extends Repository<?, ?>> repositoryInterface, Object customImplementation) {
-        	
-        	Class<?> idClass = ClassUtils.getIdClass(repositoryInterface);
-        	if (!MongoPropertyDescriptor.SUPPORTED_ID_CLASSES.contains(idClass)) {
+			}
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see org.springframework.data.repository.support.RepositoryFactorySupport#validate(java.lang.Class,
+		 * java.lang.Object)
+		 */
+		@Override
+		protected void validate(RepositoryMetadata metadata, Object customImplementation) {
+
+			Class<?> idClass = metadata.getIdClass();
+			if (!MongoPropertyDescriptor.SUPPORTED_ID_CLASSES.contains(idClass)) {
 				throw new IllegalArgumentException(String.format("Unsupported id class! Only %s are supported!",
 						StringUtils.collectionToCommaDelimitedString(MongoPropertyDescriptor.SUPPORTED_ID_CLASSES)));
-        	}
-        	
-        	super.validate(repositoryInterface, customImplementation);
-        }
-    }
+			}
+
+			super.validate(metadata, customImplementation);
+		}
+	}
 }

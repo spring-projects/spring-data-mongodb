@@ -31,8 +31,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.repository.PagingAndSortingRepository;
-import org.springframework.data.repository.support.IsNewAware;
-import org.springframework.data.repository.support.RepositorySupport;
+import org.springframework.data.repository.support.EntityMetadata;
 import org.springframework.util.Assert;
 
 
@@ -41,11 +40,10 @@ import org.springframework.util.Assert;
  * 
  * @author Oliver Gierke
  */
-public class SimpleMongoRepository<T, ID extends Serializable> extends
-        RepositorySupport<T, ID> implements PagingAndSortingRepository<T, ID> {
+public class SimpleMongoRepository<T, ID extends Serializable> implements PagingAndSortingRepository<T, ID> {
 
     private final MongoTemplate template;
-    private MongoEntityInformation entityInformation;
+    private final EntityMetadata<T> entityInformation;
 
 
     /**
@@ -55,13 +53,16 @@ public class SimpleMongoRepository<T, ID extends Serializable> extends
      * @param domainClass
      * @param template
      */
-    public SimpleMongoRepository(Class<T> domainClass, MongoTemplate template) {
+    public SimpleMongoRepository(EntityMetadata<T> entityInformation, MongoTemplate template) {
 
-        super(domainClass);
-
+    	Assert.notNull(entityInformation);
         Assert.notNull(template);
+        this.entityInformation = entityInformation;
         this.template = template;
-        createIsNewStrategy(domainClass);
+    }
+    
+    private Class<T> getDomainClass() {
+    	return entityInformation.getJavaType();
     }
 
 
@@ -227,22 +228,5 @@ public class SimpleMongoRepository<T, ID extends Serializable> extends
         Query query = QueryUtils.applySorting(new Query(), sort);
         return template.find(getCollectionName(getDomainClass()), query,
                 getDomainClass());
-    }
-
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.data.repository.support.RepositorySupport#
-     * createIsNewStrategy(java.lang.Class)
-     */
-    @Override
-    protected IsNewAware createIsNewStrategy(Class<?> domainClass) {
-
-        if (entityInformation == null) {
-            this.entityInformation = new MongoEntityInformation(domainClass);
-        }
-
-        return entityInformation;
     }
 }

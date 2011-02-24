@@ -20,7 +20,6 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.document.mongodb.MongoTemplate;
-import org.springframework.data.document.mongodb.User;
 import org.springframework.data.document.mongodb.repository.MongoRepositoryFactoryBean.MongoRepositoryFactory;
 
 /**
@@ -40,7 +39,7 @@ public class MongoRepositoryFactoryUnitTests {
 		factory.getRepository(SampleRepository.class);
 	}
 	
-	private interface SampleRepository extends MongoRepository<User, Long> {
+	private interface SampleRepository extends MongoRepository<Person, Long> {
 		
 	}
 }
