@@ -16,6 +16,8 @@
 		<org.mockito.version>1.8.4</org.mockito.version>
 		<org.slf4j.version>1.5.10</org.slf4j.version>
 		<org.springframework.version>3.0.5.RELEASE</org.springframework.version>
+		<data.commons.version>1.0.0.BUILD-SNAPSHOT</data.commons.version>
+        <aspectj.version>1.6.11.M2</aspectj.version>
 	</properties>
 	<profiles>
 		<profile>
@@ -113,12 +115,27 @@
 			</dependency>
 			<dependency>
 				<groupId>org.springframework</groupId>
+				<artifactId>spring-orm</artifactId>
+				<version>${org.springframework.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework</groupId>
 				<artifactId>spring-test</artifactId>
 				<version>${org.springframework.version}</version>
 				<scope>test</scope>
 			</dependency>
 
 			<!--  Spring Data -->
+			<dependency>
+				<groupId>org.springframework.data</groupId>
+				<artifactId>spring-data-commons-core</artifactId>
+				<version>${data.commons.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.data</groupId>
+				<artifactId>spring-data-commons-aspects</artifactId>
+				<version>${data.commons.version}</version>
+			</dependency>
 			<dependency>
 				<groupId>org.springframework.data</groupId>
 				<artifactId>spring-data-document-core</artifactId>

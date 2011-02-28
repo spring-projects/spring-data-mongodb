@@ -35,7 +35,6 @@
 		<dependency>
 			<groupId>org.springframework.data</groupId>
 			<artifactId>spring-data-commons-core</artifactId>
-			<version>1.0.0.BUILD-SNAPSHOT</version>
 		</dependency>
 
 		<!-- Logging -->
