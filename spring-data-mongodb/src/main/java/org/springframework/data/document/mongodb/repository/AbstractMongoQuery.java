@@ -26,14 +26,12 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
-import org.springframework.data.repository.query.QueryMethod;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.util.Assert;
 
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
-
 
 /**
  * Base class for {@link RepositoryQuery} implementations for Mongo.
@@ -42,167 +40,159 @@ import com.mongodb.DBObject;
  */
 public abstract class AbstractMongoQuery implements RepositoryQuery {
 
-    private final MongoQueryMethod method;
-    private final MongoTemplate template;
+	private final MongoQueryMethod method;
+	private final MongoTemplate template;
 
+	/**
+	 * Creates a new {@link AbstractMongoQuery} from the given {@link MongoQueryMethod} and {@link MongoTemplate}.
+	 * 
+	 * @param method
+	 * @param template
+	 */
+	public AbstractMongoQuery(MongoQueryMethod method, MongoTemplate template) {
 
-    /**
-     * Creates a new {@link AbstractMongoQuery} from the given {@link QueryMethod} and
-     * {@link MongoTemplate}.
-     * 
-     * @param method
-     * @param template
-     */
-    public AbstractMongoQuery(MongoQueryMethod method, MongoTemplate template) {
+		Assert.notNull(template);
+		Assert.notNull(method);
 
-        Assert.notNull(template);
-        Assert.notNull(method);
+		this.method = method;
+		this.template = template;
+	}
+	
+	/* (non-Javadoc)
+	* @see org.springframework.data.repository.query.RepositoryQuery#getQueryMethod()
+	*/
+	public MongoQueryMethod getQueryMethod() {
+	
+	    return method;
+	}
 
-        this.method = method;
-        this.template = template;
-    }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.springframework.data.repository.query.RepositoryQuery#execute(java .lang.Object[])
+	 */
+	public Object execute(Object[] parameters) {
 
+		ParameterAccessor accessor = new ParametersParameterAccessor(method.getParameters(), parameters);
+		Query query = createQuery(new ConvertingParameterAccessor(template.getConverter(), accessor));
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.springframework.data.repository.query.RepositoryQuery#execute(java
-     * .lang.Object[])
-     */
-    public Object execute(Object[] parameters) {
+		switch (method.getType()) {
+		case COLLECTION:
+			return new CollectionExecution().execute(query);
+		case PAGING:
+			return new PagedExecution(accessor.getPageable()).execute(query);
+		default:
+			return new SingleEntityExecution().execute(query);
+		}
+	}
 
-        ParameterAccessor accessor =
-                new ParametersParameterAccessor(method.getParameters(), parameters);
-        Query query = createQuery(new ConvertingParameterAccessor(template.getConverter(), accessor));
+	/**
+	 * Create a {@link Query} instance using the given {@link ParameterAccessor}
+	 * @param accessor
+	 * @param converter
+	 * @return
+	 */
+	protected abstract Query createQuery(ConvertingParameterAccessor accessor);
 
-        if (method.isCollectionQuery()) {
-            return new CollectionExecution().execute(query);
-        } else if (method.isPageQuery()) {
-            return new PagedExecution(accessor.getPageable()).execute(query);
-        } else {
-            return new SingleEntityExecution().execute(query);
-        }
-    }
-    
-    /**
-     * Create a {@link Query} instance using the given {@link ParameterAccessor}
-     * @param accessor
-     * @param converter
-     * @return
-     */
-    protected abstract Query createQuery(ConvertingParameterAccessor accessor);
-    	
+	private abstract class Execution {
 
-    private abstract class Execution {
+		abstract Object execute(Query query);
 
-        abstract Object execute(Query query);
+		protected List<?> readCollection(Query query) {
 
+			MongoEntityInformation<?> metadata = method.getEntityMetadata();
 
-        protected List<?> readCollection(Query query) {
+			String collectionName = metadata.getCollectionName();
+			return template.find(collectionName, query, metadata.getJavaType());
+		}
+	}
 
-            String collectionName = getCollectionName(method.getDomainClass());
-            return template
-                    .find(collectionName, query, method.getReturnedDomainClass());
-        }
-    }
+	/**
+	 * {@link Execution} for collection returning queries.
+	 * 
+	 * @author Oliver Gierke
+	 */
+	class CollectionExecution extends Execution {
 
-    /**
-     * {@link Execution} for collection returning queries.
-     * 
-     * @author Oliver Gierke
-     */
-    class CollectionExecution extends Execution {
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see org.springframework.data.document.mongodb.repository.MongoQuery.Execution #execute(com.mongodb.DBObject)
+		 */
+		@Override
+		public Object execute(Query query) {
 
-        /*
-         * (non-Javadoc)
-         * 
-         * @see
-         * org.springframework.data.document.mongodb.repository.MongoQuery.Execution
-         * #execute(com.mongodb.DBObject)
-         */
-        @Override
-        public Object execute(Query query) {
+			return readCollection(query);
+		}
+	}
 
-            return readCollection(query);
-        }
-    }
+	/**
+	 * {@link Execution} for pagination queries.
+	 * 
+	 * @author Oliver Gierke
+	 */
+	class PagedExecution extends Execution {
 
-    /**
-     * {@link Execution} for pagination queries.
-     * 
-     * @author Oliver Gierke
-     */
-    class PagedExecution extends Execution {
+		private final Pageable pageable;
 
-        private final Pageable pageable;
+		/**
+		 * Creates a new {@link PagedExecution}.
+		 * 
+		 * @param pageable
+		 */
+		public PagedExecution(Pageable pageable) {
 
+			Assert.notNull(pageable);
+			this.pageable = pageable;
+		}
 
-        /**
-         * Creates a new {@link PagedExecution}.
-         * 
-         * @param pageable
-         */
-        public PagedExecution(Pageable pageable) {
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see org.springframework.data.document.mongodb.repository.MongoQuery.Execution #execute(com.mongodb.DBObject)
+		 */
+		@Override
+		@SuppressWarnings({ "rawtypes", "unchecked" })
+		Object execute(Query query) {
 
-            Assert.notNull(pageable);
-            this.pageable = pageable;
-        }
+			MongoEntityInformation<?> metadata = method.getEntityMetadata();
+			int count = getCollectionCursor(metadata.getCollectionName(), query.getQueryObject()).count();
 
+			List<?> result = template.find(metadata.getCollectionName(), applyPagination(query, pageable),
+					metadata.getJavaType());
 
-        /*
-         * (non-Javadoc)
-         * 
-         * @see
-         * org.springframework.data.document.mongodb.repository.MongoQuery.Execution
-         * #execute(com.mongodb.DBObject)
-         */
-        @Override
-        @SuppressWarnings({ "rawtypes", "unchecked" })
-        Object execute(Query query) {
+			return new PageImpl(result, pageable, count);
+		}
 
-            String collectionName = getCollectionName(method.getDomainClass());
-            int count = getCollectionCursor(collectionName, query.getQueryObject()).count();
+		private DBCursor getCollectionCursor(String collectionName, final DBObject query) {
 
-            List<?> result =
-                    template.find(collectionName, applyPagination(query, pageable),
-                            method.getReturnedDomainClass());
+			return template.execute(collectionName, new CollectionCallback<DBCursor>() {
 
-            return new PageImpl(result, pageable, count);
-        }
+				public DBCursor doInCollection(DBCollection collection) {
 
+					return collection.find(query);
+				}
+			});
+		}
+	}
 
-        private DBCursor getCollectionCursor(String collectionName, final DBObject query) {
+	/**
+	 * {@link Execution} to return a single entity.
+	 * 
+	 * @author Oliver Gierke
+	 */
+	class SingleEntityExecution extends Execution {
 
-            return template.execute(collectionName, new CollectionCallback<DBCursor>() {
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see org.springframework.data.document.mongodb.repository.MongoQuery.Execution #execute(com.mongodb.DBObject)
+		 */
+		@Override
+		Object execute(Query query) {
 
-                public DBCursor doInCollection(DBCollection collection) {
-
-                    return collection.find(query);
-                }
-            });
-        }
-    }
-
-    /**
-     * {@link Execution} to return a single entity.
-     * 
-     * @author Oliver Gierke
-     */
-    class SingleEntityExecution extends Execution {
-
-        /*
-         * (non-Javadoc)
-         * 
-         * @see
-         * org.springframework.data.document.mongodb.repository.MongoQuery.Execution
-         * #execute(com.mongodb.DBObject)
-         */
-        @Override
-        Object execute(Query query) {
-
-            List<?> result = readCollection(query);
-            return result.isEmpty() ? null : result.get(0);
-        }
-    }
+			List<?> result = readCollection(query);
+			return result.isEmpty() ? null : result.get(0);
+		}
+	}
 }

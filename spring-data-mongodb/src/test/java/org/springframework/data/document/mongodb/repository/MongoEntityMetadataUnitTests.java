@@ -22,7 +22,7 @@ import org.junit.Test;
 
 
 /**
- * Unit test for {@link MongoEntityMetadata}.
+ * Unit test for {@link MongoEntityInformation}.
  * 
  * @author Oliver Gierke
  */
@@ -31,8 +31,8 @@ public class MongoEntityMetadataUnitTests {
     @Test
     public void findsIdField() throws Exception {
 
-        MongoEntityMetadata<Person> isNewAware =
-                new MongoEntityMetadata<Person>(Person.class);
+        MongoEntityInformation<Person> isNewAware =
+                new MongoEntityInformation<Person>(Person.class);
 
         Person person = new Person();
         assertThat(isNewAware.isNew(person), is(true));
@@ -44,7 +44,7 @@ public class MongoEntityMetadataUnitTests {
     @Test(expected = IllegalArgumentException.class)
     public void rejectsClassIfNoIdField() throws Exception {
 
-        new MongoEntityMetadata<InvalidPerson>(InvalidPerson.class);
+        new MongoEntityInformation<InvalidPerson>(InvalidPerson.class);
     }
 
     class Person {

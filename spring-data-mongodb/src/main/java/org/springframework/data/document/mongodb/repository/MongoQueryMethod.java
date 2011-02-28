@@ -31,7 +31,7 @@ import org.springframework.util.StringUtils;
 class MongoQueryMethod extends QueryMethod {
 	
 	private final Method method;
-	private final Class<?> domainClass;
+	private final MongoEntityInformation<?> entityInformation;
 
 	/**
 	 * Creates a new {@link MongoQueryMethod} from the given {@link Method}.
@@ -41,27 +41,9 @@ class MongoQueryMethod extends QueryMethod {
 	public MongoQueryMethod(Method method, Class<?> domainClass) {
 		super(method);
 		this.method = method;
-		this.domainClass = domainClass;
+		this.entityInformation = new MongoEntityInformation(ClassUtils.getReturnedDomainClass(method));
 	}
-	
-	/* (non-Javadoc)
-	 * @see org.springframework.data.repository.query.QueryMethod#getDomainClass()
-	 */
-	@Override
-	public Class<?> getDomainClass() {
-		return this.domainClass;
-	}
-	
-	
-	/**
-	 * Returns the type that will be returned by the query method.
-	 * 
-	 * @return
-	 */
-	public Class<?> getReturnedDomainClass() {
-		return ClassUtils.getReturnedDomainClass(method);
-	}
-	
+
 	
 	/**
 	 * Returns whether the method has an annotated query.
@@ -95,6 +77,15 @@ class MongoQueryMethod extends QueryMethod {
 		return StringUtils.hasText(value) ? value : null;
 	}
 	
+	
+	/* (non-Javadoc)
+	 * @see org.springframework.data.repository.query.QueryMethod#getEntityMetadata()
+	 */
+	@Override
+	public MongoEntityInformation<?> getEntityMetadata() {
+		
+		return entityInformation;
+	}
 
 	/**
 	 * Returns the {@link Query} annotation that is applied to the method or {@code null} if none available.
