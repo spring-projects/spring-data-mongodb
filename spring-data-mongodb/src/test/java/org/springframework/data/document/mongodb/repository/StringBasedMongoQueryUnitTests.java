@@ -52,7 +52,7 @@ public class StringBasedMongoQueryUnitTests {
 	public void testname() throws Exception {
 
 		Method method = SampleRepository.class.getMethod("findByLastname", String.class);
-		MongoQueryMethod queryMethod = new MongoQueryMethod(method);
+		MongoQueryMethod queryMethod = new MongoQueryMethod(method, Person.class);
 		StringBasedMongoQuery mongoQuery = new StringBasedMongoQuery(queryMethod, template);
 		ConvertingParameterAccessor accesor = StubParameterAccessor.getAccessor(converter, "Matthews");
 		
@@ -64,7 +64,7 @@ public class StringBasedMongoQueryUnitTests {
 
 	private interface SampleRepository {
 
-		@Query("{ 'lastname' : ? }")
+		@Query("{ 'lastname' : ?0 }")
 		Person findByLastname(String lastname);
 	}
 }

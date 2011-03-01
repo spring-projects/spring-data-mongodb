@@ -44,7 +44,7 @@ public interface PersonRepository extends MongoRepository<Person, String> {
 	 * @param firstname
 	 * @return
 	 */
-    @Query("{ 'firstname' : ? }")
+    @Query("{ 'firstname' : ?0 }")
     List<Person> findByThePersonsFirstname(String firstname);
 
 

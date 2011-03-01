@@ -30,6 +30,8 @@ import org.springframework.data.repository.query.ParameterAccessor;
  */
 class StubParameterAccessor implements ParameterAccessor {
 
+	private final Object[] values;
+
 	/**
 	 * Creates a new {@link ConvertingParameterAccessor} backed by a {@link StubParameterAccessor} simply returning the
 	 * given parameters converted but unfiltered.
@@ -42,11 +44,7 @@ class StubParameterAccessor implements ParameterAccessor {
 
 		return new ConvertingParameterAccessor(converter, new StubParameterAccessor(parameters));
 	}
-
-	/**
-	 * 
-	 */
-	private Object[] values;
+	
 
 	public StubParameterAccessor(Object... values) {
 		this.values = values;
@@ -59,6 +57,13 @@ class StubParameterAccessor implements ParameterAccessor {
 	 */
 	public Pageable getPageable() {
 		return null;
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.springframework.data.repository.query.ParameterAccessor#getBindableParameter(int)
+	 */
+	public Object getBindableValue(int index) {
+		return values[index];
 	}
 
 	/*

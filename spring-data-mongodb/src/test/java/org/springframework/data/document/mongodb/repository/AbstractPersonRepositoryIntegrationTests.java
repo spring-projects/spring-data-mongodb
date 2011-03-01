@@ -87,7 +87,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	}
 	
 	@Test
-	public void finsPersonsByFirstname() {
+	public void findsPersonsByFirstname() {
 		
 		List<Person> result = repository.findByThePersonsFirstname("Leroi");
 		assertThat(result.size(), is(1));

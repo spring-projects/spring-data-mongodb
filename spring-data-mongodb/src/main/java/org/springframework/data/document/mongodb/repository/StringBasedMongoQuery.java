@@ -15,10 +15,10 @@
  */
 package org.springframework.data.document.mongodb.repository;
 
-import java.util.Iterator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.document.mongodb.MongoTemplate;
@@ -32,10 +32,11 @@ import org.springframework.data.document.mongodb.query.Query;
  */
 public class StringBasedMongoQuery extends AbstractMongoQuery {
 
-	private static final Pattern PLACEHOLDER = Pattern.compile("\\?");
+	private static final Pattern PLACEHOLDER = Pattern.compile("\\?(\\d+)");
 	private static final Logger LOG = LoggerFactory.getLogger(StringBasedMongoQuery.class);
-	
+
 	private final String query;
+	private final String fieldSpec;
 
 	/**
 	 * Creates a new {@link StringBasedMongoQuery}.
@@ -46,6 +47,7 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 	public StringBasedMongoQuery(MongoQueryMethod method, MongoTemplate template) {
 		super(method, template);
 		this.query = method.getAnnotatedQuery();
+		this.fieldSpec = method.getFieldSpecification();
 	}
 
 	/*
@@ -57,19 +59,45 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 	 */
 	@Override
 	protected Query createQuery(ConvertingParameterAccessor accessor) {
-		
-		Matcher matcher = PLACEHOLDER.matcher(query);
-		Iterator<Object> iterator = accessor.iterator();
+
+		String queryString = replacePlaceholders(query, accessor);
+
+		Query query = null;
+
+		if (fieldSpec != null) {
+			String fieldString = replacePlaceholders(fieldSpec, accessor);
+			query = new BasicQuery(queryString, fieldString);
+		} else {
+			query = new BasicQuery(queryString);
+		}
+
+		LOG.debug("Created query {}", query.getQueryObject());
+
+		return query;
+	}
+
+	private String replacePlaceholders(String input, ConvertingParameterAccessor accessor) {
+
+		Matcher matcher = PLACEHOLDER.matcher(input);
 		String result = null;
-		
+
 		while (matcher.find()) {
 			String group = matcher.group();
-			result = query.replace(group, String.format("\"%s\"", iterator.next()));
+			int index = Integer.parseInt(matcher.group(1));
+			result = input.replace(group, getParameterWithIndex(accessor, index));
+		}
+
+		return result;
+	}
+
+	private String getParameterWithIndex(ConvertingParameterAccessor accessor, int index) {
+		Object parameter = accessor.getBindableValue(index);
+		if (parameter instanceof String || parameter.getClass().isEnum()) {
+			return String.format("\"%s\"", parameter);
+		} else if (parameter instanceof ObjectId){
+			return String.format("{ '$oid' : '%s' }", parameter);
 		}
 		
-		Query query = new BasicQuery(result);
-		LOG.debug("Created query {}", query.getQueryObject());
-		
-		return query;
+		return parameter.toString();
 	}
 }
