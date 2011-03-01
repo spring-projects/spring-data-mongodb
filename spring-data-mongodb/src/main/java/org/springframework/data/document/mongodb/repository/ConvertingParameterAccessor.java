@@ -71,6 +71,27 @@ public class ConvertingParameterAccessor implements ParameterAccessor {
 	public Sort getSort() {
 		return delegate.getSort();
 	}
+	
+	/* (non-Javadoc)
+	 * @see org.springframework.data.repository.query.ParameterAccessor#getBindableParameter(int)
+	 */
+	public Object getBindableValue(int index) {
+		
+		return getConvertedValue(delegate.getBindableValue(index));
+	}
+	
+	/**
+	 * Converts the given value with the underlying {@link MongoWriter}.
+	 * 
+	 * @param value
+	 * @return
+	 */
+	private Object getConvertedValue(Object value) {
+		
+		DBObject result = new BasicDBObject();
+		writer.write(value.getClass().isEnum() ? new EnumValueHolder((Enum<?>) value) : new ValueHolder(value), result);
+		return result.get("value");
+	}
 
 	/**
 	 * Custom {@link Iterator} to convert items before returning them.
@@ -106,9 +127,7 @@ public class ConvertingParameterAccessor implements ParameterAccessor {
 		 */
 		public Object next() {
 
-			DBObject result = new BasicDBObject();
-			writer.write(new ValueHolder(delegate.next()), result);
-			return result.get("value");
+			return getConvertedValue(delegate.next());
 		}
 
 		/*
@@ -138,6 +157,22 @@ public class ConvertingParameterAccessor implements ParameterAccessor {
 		@SuppressWarnings("unused")
 		public Object getValue() {
 
+			return value;
+		}
+	}
+	
+	private static class EnumValueHolder {
+		
+		private Enum<?> value;
+		
+		public EnumValueHolder(Enum<?> value) {
+			this.value = value;
+		}
+		
+		/**
+		 * @return the value
+		 */
+		public Enum<?> getValue() {
 			return value;
 		}
 	}
