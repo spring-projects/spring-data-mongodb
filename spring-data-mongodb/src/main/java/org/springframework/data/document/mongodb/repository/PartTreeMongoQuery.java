@@ -36,7 +36,7 @@ public class PartTreeMongoQuery extends AbstractMongoQuery {
 	 * @param method
 	 * @param template
 	 */
-	public PartTreeMongoQuery(QueryMethod method, MongoTemplate template) {
+	public PartTreeMongoQuery(MongoQueryMethod method, MongoTemplate template) {
 
 		super(method, template);
 		this.tree = new PartTree(method.getName(), method.getDomainClass());

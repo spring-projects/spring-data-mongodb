@@ -42,7 +42,7 @@ import com.mongodb.DBObject;
  */
 public abstract class AbstractMongoQuery implements RepositoryQuery {
 
-    private final QueryMethod method;
+    private final MongoQueryMethod method;
     private final MongoTemplate template;
 
 
@@ -53,7 +53,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
      * @param method
      * @param template
      */
-    public AbstractMongoQuery(QueryMethod method, MongoTemplate template) {
+    public AbstractMongoQuery(MongoQueryMethod method, MongoTemplate template) {
 
         Assert.notNull(template);
         Assert.notNull(method);
@@ -103,7 +103,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 
             String collectionName = getCollectionName(method.getDomainClass());
             return template
-                    .find(collectionName, query, method.getDomainClass());
+                    .find(collectionName, query, method.getReturnedDomainClass());
         }
     }
 
@@ -166,7 +166,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 
             List<?> result =
                     template.find(collectionName, applyPagination(query, pageable),
-                            method.getDomainClass());
+                            method.getReturnedDomainClass());
 
             return new PageImpl(result, pageable, count);
         }

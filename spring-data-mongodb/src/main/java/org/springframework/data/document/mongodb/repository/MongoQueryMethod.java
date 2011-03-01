@@ -19,6 +19,7 @@ import java.lang.reflect.Method;
 
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.data.repository.query.QueryMethod;
+import org.springframework.data.repository.util.ClassUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -30,17 +31,43 @@ import org.springframework.util.StringUtils;
 class MongoQueryMethod extends QueryMethod {
 	
 	private final Method method;
+	private final Class<?> domainClass;
 
 	/**
 	 * Creates a new {@link MongoQueryMethod} from the given {@link Method}.
 	 * 
 	 * @param method
 	 */
-	public MongoQueryMethod(Method method) {
+	public MongoQueryMethod(Method method, Class<?> domainClass) {
 		super(method);
 		this.method = method;
+		this.domainClass = domainClass;
 	}
 	
+	/* (non-Javadoc)
+	 * @see org.springframework.data.repository.query.QueryMethod#getDomainClass()
+	 */
+	@Override
+	public Class<?> getDomainClass() {
+		return this.domainClass;
+	}
+	
+	
+	/**
+	 * Returns the type that will be returned by the query method.
+	 * 
+	 * @return
+	 */
+	public Class<?> getReturnedDomainClass() {
+		return ClassUtils.getReturnedDomainClass(method);
+	}
+	
+	
+	/**
+	 * Returns whether the method has an annotated query.
+	 * 
+	 * @return
+	 */
 	boolean hasAnnotatedQuery() {
 		return getAnnotatedQuery() != null;
 	}
