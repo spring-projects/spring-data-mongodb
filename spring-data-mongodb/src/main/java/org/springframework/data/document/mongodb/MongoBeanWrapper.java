@@ -19,6 +19,7 @@ import static org.springframework.beans.PropertyAccessorFactory.*;
 
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.ConfigurablePropertyAccessor;
+import org.springframework.beans.NotWritablePropertyException;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.data.document.mongodb.MongoPropertyDescriptors.MongoPropertyDescriptor;
 import org.springframework.util.Assert;
@@ -32,6 +33,7 @@ class MongoBeanWrapper {
 
 	private final ConfigurablePropertyAccessor accessor;
 	private final MongoPropertyDescriptors descriptors;
+	private final boolean fieldAccess;
 
 	/**
 	 * Creates a new {@link MongoBeanWrapper} for the given target object and {@link ConversionService}.
@@ -45,6 +47,7 @@ class MongoBeanWrapper {
 		Assert.notNull(target);
 		Assert.notNull(conversionService);
 
+		this.fieldAccess = fieldAccess;
 		this.accessor = fieldAccess ? forDirectFieldAccess(target) : forBeanPropertyAccess(target);
 		this.accessor.setConversionService(conversionService);
 		this.descriptors = new MongoPropertyDescriptors(target.getClass());
@@ -78,6 +81,12 @@ class MongoBeanWrapper {
 	 */
 	public void setValue(MongoPropertyDescriptors.MongoPropertyDescriptor descriptor, Object value) {
 		Assert.notNull(descriptor);
-		accessor.setPropertyValue(descriptor.getName(), value);
+		try {
+			accessor.setPropertyValue(descriptor.getName(), value);
+		} catch (NotWritablePropertyException e) {
+			if (!fieldAccess) {
+				throw e;
+			}
+		}
 	}
 }
