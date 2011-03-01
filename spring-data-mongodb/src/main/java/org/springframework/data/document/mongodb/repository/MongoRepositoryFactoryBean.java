@@ -122,9 +122,9 @@ public class MongoRepositoryFactoryBean extends RepositoryFactoryBeanSupport<Mon
 		 */
 		private class MongoQueryLookupStrategy implements QueryLookupStrategy {
 
-			public RepositoryQuery resolveQuery(Method method) {
+			public RepositoryQuery resolveQuery(Method method, Class<?> domainClass) {
 
-				MongoQueryMethod queryMethod = new MongoQueryMethod(method);
+				MongoQueryMethod queryMethod = new MongoQueryMethod(method, domainClass);
 
 				if (queryMethod.hasAnnotatedQuery()) {
 					return new StringBasedMongoQuery(queryMethod, template);
