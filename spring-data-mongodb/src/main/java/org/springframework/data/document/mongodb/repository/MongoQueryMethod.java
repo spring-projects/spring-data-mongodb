@@ -83,6 +83,18 @@ class MongoQueryMethod extends QueryMethod {
 		String query = (String) AnnotationUtils.getValue(getQueryAnnotation());
 		return StringUtils.hasText(query) ? query : null;
 	}
+	
+	/**
+	 * Returns the field specification to be used for the query.
+	 * 
+	 * @return
+	 */
+	String getFieldSpecification() {
+		
+		String value = (String) AnnotationUtils.getValue(getQueryAnnotation(), "fields");
+		return StringUtils.hasText(value) ? value : null;
+	}
+	
 
 	/**
 	 * Returns the {@link Query} annotation that is applied to the method or {@code null} if none available.
