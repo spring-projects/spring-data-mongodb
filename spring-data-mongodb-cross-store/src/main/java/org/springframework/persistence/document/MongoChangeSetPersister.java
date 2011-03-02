@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataAccessResourceFailureException;
+import org.springframework.data.document.mongodb.MongoTemplate;
 import org.springframework.persistence.support.ChangeSet;
 import org.springframework.persistence.support.ChangeSetBacked;
 import org.springframework.persistence.support.ChangeSetPersister;
@@ -17,6 +18,7 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
+import com.mongodb.Mongo;
 import com.mongodb.MongoException;
 
 //import edu.emory.mathcs.backport.java.util.Arrays;
@@ -26,11 +28,11 @@ public class MongoChangeSetPersister implements ChangeSetPersister<Object> {
 	protected final Log log = LogFactory.getLog(getClass());
 
 	@Autowired
-	private DB mongoDb;
+	private MongoTemplate mongoTemplate;
 	
 	@Autowired
 	private ConversionService conversionService;
-
+	
 	@Override
 	public void getPersistentState(Class<? extends ChangeSetBacked> entityClass, Object id, ChangeSet changeSet)
 			throws DataAccessException, NotFoundException {
@@ -38,7 +40,7 @@ public class MongoChangeSetPersister implements ChangeSetPersister<Object> {
 		DBObject q = new BasicDBObject();
 		q.put("_id", id);
 		try {
-			DBObject dbo = mongoDb.getCollection(collection).findOne(q);
+			DBObject dbo = mongoTemplate.getCollection(collection).findOne(q);
 			if (dbo == null) {
 				throw new NotFoundException();
 			}
@@ -89,17 +91,18 @@ public class MongoChangeSetPersister implements ChangeSetPersister<Object> {
 			log.info("Flush: entity make persistent; data store will assign id");
 			cs.set("_class", entityClass.getName());
 			String collection = entityClass.getName();
-			DBCollection dbc = mongoDb.getCollection(collection);
+			DBCollection dbc = mongoTemplate.getCollection(collection);
 			DBObject dbo = mapChangeSetToDbObject(cs);
 			if (dbc == null) {
-				dbc = mongoDb.createCollection(collection, dbo);
+				dbc = mongoTemplate.createCollection(collection);
 			}
 			dbc.save(dbo);
 			id = dbo.get(ID_KEY);
+			log.info("Data store assigned id: " + id);
 		} else {
 			log.info("Flush: entity already persistent with id=" + id);
 			String collection = entityClass.getName();
-			DBCollection dbc = mongoDb.getCollection(collection);
+			DBCollection dbc = mongoTemplate.getCollection(collection);
 			DBObject dbo = mapChangeSetToDbObject(cs);
 			if (dbc == null) {
 				throw new DataAccessResourceFailureException("Expected to find a collection named '" + collection +"'. It was not found, so ChangeSet can't be persisted.");

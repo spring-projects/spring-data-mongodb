@@ -2,7 +2,9 @@
 <beans xmlns="http://www.springframework.org/schema/beans"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xmlns:tx="http://www.springframework.org/schema/tx"
-	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+	xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+	xsi:schemaLocation="http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc-3.0.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
 		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.0.xsd">
 
 	<bean id="mongo" class="org.springframework.data.document.mongodb.MongoFactoryBean">
@@ -11,9 +13,9 @@
 	</bean>
 
 	<bean id="mongoTemplate" class="org.springframework.data.document.mongodb.MongoTemplate">
-		<constructor-arg ref="mongo" />
-		<constructor-arg value="database" />
-		<property name="defaultCollectionName" value="springdata" />
+		<constructor-arg name="mongo" ref="mongo" />
+		<constructor-arg name="databaseName" value="test" />
+		<constructor-arg name="defaultCollectionName" value="cross-store" />
 	</bean>
 	
 	<bean class="org.springframework.data.document.mongodb.MongoExceptionTranslator" />
@@ -23,13 +25,17 @@
 		factory-method="aspectOf">
 		<property name="changeSetConfiguration" ref="mongoChangeSetConfiguration"/>
 	</bean>
+	<bean id ="mongoChangeSetPersister" class="org.springframework.persistence.document.MongoChangeSetPersister" />
+	<bean id="mongoChangeSetSynchronizer" class="org.springframework.persistence.support.SimpleReflectiveChangeSetSynchronizer" />
+	<bean id="mongoChangeSetConfiguration" class="org.springframework.persistence.support.ChangeSetConfiguration">
+		<property name="changeSetPersister" ref="mongoChangeSetPersister"/>
+		<property name="changeSetManager" ref="mongoChangeSetSynchronizer"/>
+	</bean>
+	<!--  Needed for ChangeSet persistence -->
+	<bean id="conversionService" class="org.springframework.context.support.ConversionServiceFactoryBean" />
 
-	<bean class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close" id="dataSource">
-        <property name="driverClassName" value="${database.driverClassName}"/>
-        <property name="url" value="${database.url}"/>
-        <property name="username" value="${database.username}"/>
-        <property name="password" value="${database.password}"/>
-    </bean>
+	<jdbc:embedded-database id="dataSource" type="HSQL">
+    </jdbc:embedded-database>
  
 	 <bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager" >
         <property name="entityManagerFactory" ref="entityManagerFactory"/>
@@ -38,7 +44,15 @@
     <tx:annotation-driven mode="aspectj" transaction-manager="transactionManager"/>
     
     <bean class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean" id="entityManagerFactory">
+    	<property name="persistenceUnitName" value="test"/>
         <property name="dataSource" ref="dataSource"/>
+	    <property name="jpaVendorAdapter">
+	      <bean class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter">
+	        <property name="showSql" value="true"/>
+	        <property name="generateDdl" value="true"/>
+	        <property name="databasePlatform" value="org.hibernate.dialect.HSQLDialect"/>
+	      </bean>
+	    </property>
     </bean>
 
 </beans>
