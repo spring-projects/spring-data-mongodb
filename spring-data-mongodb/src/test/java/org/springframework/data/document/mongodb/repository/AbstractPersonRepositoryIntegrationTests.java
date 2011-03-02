@@ -179,4 +179,20 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result.size(), is(3));
 		assertThat(result, hasItems(dave, leroi, stefan));
 	}
+	
+	@Test
+	public void findsPeopleByLastnameLikeAndAgeIn() throws Exception {
+		
+		List<Person> result = repository.findByLastnameLikeAndAgeBetween("*e*", 44, 50);
+		assertThat(result.size(), is(2));
+		assertThat(result, hasItems(carter, boyd));
+	}
+	
+	@Test
+	public void findsPeopleWithAndAndOr() throws Exception {
+		
+		List<Person> result = repository.findByAgeOrLastnameLikeAndFirstnameLike(45, "*ss*", "*a*");
+		assertThat(result.size(), is(2));
+		assertThat(result, hasItems(boyd, stefan));
+	}
 }

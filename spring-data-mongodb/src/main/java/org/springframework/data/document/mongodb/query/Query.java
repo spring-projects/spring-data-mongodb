@@ -44,7 +44,7 @@ public class Query {
 		return this;
 	}
 
-	protected Query or(Query... queries) {
+	public Query or(Query... queries) {
 		this.criteria.put("$or", new OrCriteria(queries));
 		return this;
 	}

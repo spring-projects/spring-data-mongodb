@@ -113,4 +113,8 @@ public interface PersonRepository extends MongoRepository<Person, String> {
     
     
     List<Person> findByAddressZipCode(String zipCode);
+    
+    List<Person> findByLastnameLikeAndAgeBetween(String lastname, int from, int to);
+    
+    List<Person> findByAgeOrLastnameLikeAndFirstnameLike(int age, String lastname, String firstname);
 }
