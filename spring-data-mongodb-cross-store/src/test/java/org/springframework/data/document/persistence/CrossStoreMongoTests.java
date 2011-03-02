@@ -19,12 +19,11 @@ public class CrossStoreMongoTests {
 	private Mongo mongo;
 
 	@Test
-//	@Transactional
-//	@Rollback(false)
+	@Transactional
+	@Rollback(false)
 	public void testUserConstructor() {
 		int age = 33;
 		MongoPerson p = new MongoPerson("Thomas", age);
-		//Assert.assertEquals(p.getRedisValue().getString("RedisPerson.name"), p.getName());
 		Assert.assertEquals(age, p.getAge());
 		p.birthday();
 		Assert.assertEquals(1 + age, p.getAge());

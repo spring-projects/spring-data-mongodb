@@ -1,8 +1,11 @@
 package org.springframework.data.document.persistence;
 
+import javax.persistence.Entity;
+
 import org.springframework.persistence.RelatedEntity;
 import org.springframework.persistence.document.DocumentEntity;
  
+@Entity
 @DocumentEntity
 public class MongoPerson {
 	
