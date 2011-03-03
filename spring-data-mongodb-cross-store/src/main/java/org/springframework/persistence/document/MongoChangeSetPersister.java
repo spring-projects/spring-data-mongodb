@@ -36,11 +36,12 @@ public class MongoChangeSetPersister implements ChangeSetPersister<Object> {
 	@Override
 	public void getPersistentState(Class<? extends ChangeSetBacked> entityClass, Object id, ChangeSet changeSet)
 			throws DataAccessException, NotFoundException {
-		String collection = ClassUtils.getQualifiedName(entityClass);
+		String collection = ClassUtils.getShortName(entityClass).toLowerCase();
 		DBObject q = new BasicDBObject();
 		q.put("_id", id);
 		try {
 			DBObject dbo = mongoTemplate.getCollection(collection).findOne(q);
+			log.debug("Found DBObject: " + dbo);
 			if (dbo == null) {
 				throw new NotFoundException();
 			}
@@ -90,7 +91,7 @@ public class MongoChangeSetPersister implements ChangeSetPersister<Object> {
 		if (id == null) {
 			log.info("Flush: entity make persistent; data store will assign id");
 			cs.set("_class", entityClass.getName());
-			String collection = entityClass.getName();
+			String collection = entityClass.getSimpleName().toLowerCase();
 			DBCollection dbc = mongoTemplate.getCollection(collection);
 			DBObject dbo = mapChangeSetToDbObject(cs);
 			if (dbc == null) {
