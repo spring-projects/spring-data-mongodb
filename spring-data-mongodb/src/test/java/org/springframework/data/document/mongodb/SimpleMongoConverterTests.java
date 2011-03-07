@@ -29,6 +29,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.data.document.mongodb.SomeEnumTest.NumberEnum;
 import org.springframework.data.document.mongodb.SomeEnumTest.StringEnum;
+import org.springframework.data.document.mongodb.convert.SimpleMongoConverter;
 import org.springframework.util.ReflectionUtils;
 
 import com.mongodb.BasicDBObject;

@@ -13,29 +13,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.document.mongodb;
+package org.springframework.data.document.mongodb.convert;
 
 import org.bson.types.ObjectId;
+import org.springframework.data.document.mongodb.MongoReader;
+import org.springframework.data.document.mongodb.MongoWriter;
 
 
 public interface MongoConverter extends MongoWriter<Object>, MongoReader<Object> {
 
-	/**
-	 * Converts the given {@link ObjectId} to the given target type.
-	 * 
-	 * @param <T> the actual type to create
-	 * @param id the source {@link ObjectId}
-	 * @param targetType the target type to convert the {@link ObjectId} to
-	 * @return
-	 */
-	public <T> T convertObjectId(ObjectId id, Class<T> targetType);
-	
-	
-	/**
-	 * Returns the {@link ObjectId} instance for the given id.
-	 * 
-	 * @param id
-	 * @return
-	 */
-	public ObjectId convertObjectId(Object id);
+  /**
+   * Converts the given {@link ObjectId} to the given target type.
+   *
+   * @param <T>        the actual type to create
+   * @param id         the source {@link ObjectId}
+   * @param targetType the target type to convert the {@link ObjectId} to
+   * @return
+   */
+  public <T> T convertObjectId(ObjectId id, Class<T> targetType);
+
+
+  /**
+   * Returns the {@link ObjectId} instance for the given id.
+   *
+   * @param id
+   * @return
+   */
+  public ObjectId convertObjectId(Object id);
 }

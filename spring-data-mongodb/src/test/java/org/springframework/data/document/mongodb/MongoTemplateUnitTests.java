@@ -24,6 +24,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.dao.DataAccessException;
+import org.springframework.data.document.mongodb.convert.SimpleMongoConverter;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.mongodb.DB;

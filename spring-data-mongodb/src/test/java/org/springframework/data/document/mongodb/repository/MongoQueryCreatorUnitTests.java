@@ -25,7 +25,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.springframework.data.document.mongodb.MongoConverter;
+import org.springframework.data.document.mongodb.convert.MongoConverter;
 import org.springframework.data.document.mongodb.Person;
 import org.springframework.data.repository.query.parser.PartTree;
 

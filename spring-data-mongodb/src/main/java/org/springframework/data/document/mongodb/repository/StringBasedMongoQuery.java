@@ -55,7 +55,7 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 	 * 
 	 * @see
 	 * org.springframework.data.document.mongodb.repository.AbstractMongoQuery#createQuery(org.springframework.data.
-	 * repository.query.SimpleParameterAccessor, org.springframework.data.document.mongodb.MongoConverter)
+	 * repository.query.SimpleParameterAccessor, org.springframework.data.document.mongodb.support.convert.MongoConverter)
 	 */
 	@Override
 	protected Query createQuery(ConvertingParameterAccessor accessor) {

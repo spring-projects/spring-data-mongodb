@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.document.mongodb;
+package org.springframework.data.document.mongodb.convert;
 
 import static org.springframework.beans.PropertyAccessorFactory.*;
 
@@ -21,6 +21,7 @@ import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.ConfigurablePropertyAccessor;
 import org.springframework.beans.NotWritablePropertyException;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.data.document.mongodb.MongoPropertyDescriptors;
 import org.springframework.data.document.mongodb.MongoPropertyDescriptors.MongoPropertyDescriptor;
 import org.springframework.util.Assert;
 

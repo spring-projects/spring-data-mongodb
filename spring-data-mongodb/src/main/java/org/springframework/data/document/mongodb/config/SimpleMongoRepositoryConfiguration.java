@@ -29,167 +29,164 @@ import org.w3c.dom.Element;
  * {@link RepositoryConfig} implementation to create
  * {@link MongoRepositoryConfiguration} instances for both automatic and manual
  * configuration.
- * 
+ *
  * @author Oliver Gierke
  */
-public class SimpleMongoRepositoryConfiguration
-        extends
-        RepositoryConfig<SimpleMongoRepositoryConfiguration.MongoRepositoryConfiguration, SimpleMongoRepositoryConfiguration> {
+public class SimpleMongoRepositoryConfiguration extends RepositoryConfig<SimpleMongoRepositoryConfiguration.MongoRepositoryConfiguration, SimpleMongoRepositoryConfiguration> {
 
-    private static final String MONGO_TEMPLATE_REF = "mongo-template-ref";
-    private static final String DEFAULT_MONGO_TEMPLATE_REF = "mongoTemplate";
+  private static final String MONGO_TEMPLATE_REF = "mongo-template-ref";
+  private static final String DEFAULT_MONGO_TEMPLATE_REF = "mongoTemplate";
 
+
+  /**
+   * Creates a new {@link SimpleMongoRepositoryConfiguration} for the given
+   * {@link Element}.
+   *
+   * @param repositoriesElement
+   */
+  protected SimpleMongoRepositoryConfiguration(Element repositoriesElement) {
+
+    super(repositoriesElement, MongoRepositoryFactoryBean.class.getName());
+  }
+
+
+  /**
+   * Returns the bean name of the {@link org.springframework.data.document.mongodb.MongoTemplate} to be referenced.
+   *
+   * @return
+   */
+  public String getMongoTemplateRef() {
+
+    String templateRef = getSource().getAttribute(MONGO_TEMPLATE_REF);
+    return StringUtils.hasText(templateRef) ? templateRef
+        : DEFAULT_MONGO_TEMPLATE_REF;
+  }
+
+
+  /*
+  * (non-Javadoc)
+  *
+  * @see
+  * org.springframework.data.repository.config.GlobalRepositoryConfigInformation
+  * #getAutoconfigRepositoryInformation(java.lang.String)
+  */
+  public MongoRepositoryConfiguration getAutoconfigRepositoryInformation(
+      String interfaceName) {
+
+    return new AutomaticMongoRepositoryConfiguration(interfaceName, this);
+  }
+
+
+  /*
+  * (non-Javadoc)
+  *
+  * @see
+  * org.springframework.data.repository.config.GlobalRepositoryConfigInformation
+  * #getRepositoryBaseInterface()
+  */
+  public Class<?> getRepositoryBaseInterface() {
+
+    return MongoRepository.class;
+  }
+
+
+  /*
+  * (non-Javadoc)
+  *
+  * @see org.springframework.data.repository.config.RepositoryConfig#
+  * createSingleRepositoryConfigInformationFor(org.w3c.dom.Element)
+  */
+  @Override
+  protected MongoRepositoryConfiguration createSingleRepositoryConfigInformationFor(
+      Element element) {
+
+    return new ManualMongoRepositoryConfiguration(element, this);
+  }
+
+  /**
+   * Simple interface for configuration values specific to Mongo repositories.
+   *
+   * @author Oliver Gierke
+   */
+  public interface MongoRepositoryConfiguration
+      extends
+      SingleRepositoryConfigInformation<SimpleMongoRepositoryConfiguration> {
+
+    String getMongoTemplateRef();
+  }
+
+  /**
+   * Implements manual lookup of the additional attributes.
+   *
+   * @author Oliver Gierke
+   */
+  private static class ManualMongoRepositoryConfiguration
+      extends
+      ManualRepositoryConfigInformation<SimpleMongoRepositoryConfiguration>
+      implements MongoRepositoryConfiguration {
 
     /**
-     * Creates a new {@link SimpleMongoRepositoryConfiguration} for the given
-     * {@link Element}.
-     * 
-     * @param repositoriesElement
-     * @param defaultRepositoryFactoryBeanClassName
+     * Creates a new {@link ManualMongoRepositoryConfiguration} for the
+     * given {@link Element} and parent.
+     *
+     * @param element
+     * @param parent
      */
-    protected SimpleMongoRepositoryConfiguration(Element repositoriesElement) {
+    public ManualMongoRepositoryConfiguration(Element element,
+                                              SimpleMongoRepositoryConfiguration parent) {
 
-        super(repositoriesElement, MongoRepositoryFactoryBean.class.getName());
+      super(element, parent);
     }
 
 
-    /**
-     * Returns the bean name of the {@link org.springframework.data.document.mongodb.MongoTemplate} to be referenced.
-     * 
-     * @return
-     */
+    /*
+    * (non-Javadoc)
+    *
+    * @see org.springframework.data.document.mongodb.repository.config.
+    * SimpleMongoRepositoryConfiguration
+    * .MongoRepositoryConfiguration#getMongoTemplateRef()
+    */
     public String getMongoTemplateRef() {
 
-        String templateRef = getSource().getAttribute(MONGO_TEMPLATE_REF);
-        return StringUtils.hasText(templateRef) ? templateRef
-                : DEFAULT_MONGO_TEMPLATE_REF;
+      return getAttribute(MONGO_TEMPLATE_REF);
+    }
+  }
+
+  /**
+   * Implements the lookup of the additional attributes during automatic
+   * configuration.
+   *
+   * @author Oliver Gierke
+   */
+  private static class AutomaticMongoRepositoryConfiguration
+      extends
+      AutomaticRepositoryConfigInformation<SimpleMongoRepositoryConfiguration>
+      implements MongoRepositoryConfiguration {
+
+    /**
+     * Creates a new {@link AutomaticMongoRepositoryConfiguration} for the
+     * given interface and parent.
+     *
+     * @param interfaceName
+     * @param parent
+     */
+    public AutomaticMongoRepositoryConfiguration(String interfaceName,
+                                                 SimpleMongoRepositoryConfiguration parent) {
+
+      super(interfaceName, parent);
     }
 
 
     /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.springframework.data.repository.config.GlobalRepositoryConfigInformation
-     * #getAutoconfigRepositoryInformation(java.lang.String)
-     */
-    public MongoRepositoryConfiguration getAutoconfigRepositoryInformation(
-            String interfaceName) {
+    * (non-Javadoc)
+    *
+    * @see org.springframework.data.document.mongodb.repository.config.
+    * SimpleMongoRepositoryConfiguration
+    * .MongoRepositoryConfiguration#getMongoTemplateRef()
+    */
+    public String getMongoTemplateRef() {
 
-        return new AutomaticMongoRepositoryConfiguration(interfaceName, this);
+      return getParent().getMongoTemplateRef();
     }
-
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.springframework.data.repository.config.GlobalRepositoryConfigInformation
-     * #getRepositoryBaseInterface()
-     */
-    public Class<?> getRepositoryBaseInterface() {
-
-        return MongoRepository.class;
-    }
-
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.data.repository.config.RepositoryConfig#
-     * createSingleRepositoryConfigInformationFor(org.w3c.dom.Element)
-     */
-    @Override
-    protected MongoRepositoryConfiguration createSingleRepositoryConfigInformationFor(
-            Element element) {
-
-        return new ManualMongoRepositoryConfiguration(element, this);
-    }
-
-    /**
-     * Simple interface for configuration values specific to Mongo repositories.
-     * 
-     * @author Oliver Gierke
-     */
-    public interface MongoRepositoryConfiguration
-            extends
-            SingleRepositoryConfigInformation<SimpleMongoRepositoryConfiguration> {
-
-        String getMongoTemplateRef();
-    }
-
-    /**
-     * Implements manual lookup of the additional attributes.
-     * 
-     * @author Oliver Gierke
-     */
-    private static class ManualMongoRepositoryConfiguration
-            extends
-            ManualRepositoryConfigInformation<SimpleMongoRepositoryConfiguration>
-            implements MongoRepositoryConfiguration {
-
-        /**
-         * Creates a new {@link ManualMongoRepositoryConfiguration} for the
-         * given {@link Element} and parent.
-         * 
-         * @param element
-         * @param parent
-         */
-        public ManualMongoRepositoryConfiguration(Element element,
-                SimpleMongoRepositoryConfiguration parent) {
-
-            super(element, parent);
-        }
-
-
-        /*
-         * (non-Javadoc)
-         * 
-         * @see org.springframework.data.document.mongodb.repository.config.
-         * SimpleMongoRepositoryConfiguration
-         * .MongoRepositoryConfiguration#getMongoTemplateRef()
-         */
-        public String getMongoTemplateRef() {
-
-            return getAttribute(MONGO_TEMPLATE_REF);
-        }
-    }
-
-    /**
-     * Implements the lookup of the additional attributes during automatic
-     * configuration.
-     * 
-     * @author Oliver Gierke
-     */
-    private static class AutomaticMongoRepositoryConfiguration
-            extends
-            AutomaticRepositoryConfigInformation<SimpleMongoRepositoryConfiguration>
-            implements MongoRepositoryConfiguration {
-
-        /**
-         * Creates a new {@link AutomaticMongoRepositoryConfiguration} for the
-         * given interface and parent.
-         * 
-         * @param interfaceName
-         * @param parent
-         */
-        public AutomaticMongoRepositoryConfiguration(String interfaceName,
-                SimpleMongoRepositoryConfiguration parent) {
-
-            super(interfaceName, parent);
-        }
-
-
-        /*
-         * (non-Javadoc)
-         * 
-         * @see org.springframework.data.document.mongodb.repository.config.
-         * SimpleMongoRepositoryConfiguration
-         * .MongoRepositoryConfiguration#getMongoTemplateRef()
-         */
-        public String getMongoTemplateRef() {
-
-            return getParent().getMongoTemplateRef();
-        }
-    }
+  }
 }

@@ -36,6 +36,8 @@ import org.springframework.data.document.mongodb.MongoPropertyDescriptors.MongoP
 import org.springframework.data.document.mongodb.query.IndexDefinition;
 import org.springframework.data.document.mongodb.query.Query;
 import org.springframework.data.document.mongodb.query.Update;
+import org.springframework.data.document.mongodb.convert.MongoConverter;
+import org.springframework.data.document.mongodb.convert.SimpleMongoConverter;
 import org.springframework.jca.cci.core.ConnectionCallback;
 import org.springframework.util.Assert;
 
@@ -130,7 +132,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	}
 	
 	/**
-	 * Constructor used for a template configuration with a default collection name and a custom {@link MongoConverter}
+	 * Constructor used for a template configuration with a default collection name and a custom {@link org.springframework.data.document.mongodb.convert.MongoConverter}
 	 * @param mongo
 	 * @param databaseName
 	 * @param defaultCollectionName
@@ -205,7 +207,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
 	}
 	
 	/**
-	 * Returns the default {@link MongoConverter}.
+	 * Returns the default {@link org.springframework.data.document.mongodb.convert.MongoConverter}.
 	 * 
 	 * @return
 	 */

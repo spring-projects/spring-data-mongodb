@@ -39,6 +39,7 @@ import org.springframework.data.document.mongodb.query.Index.Duplicates;
 import org.springframework.data.document.mongodb.query.Order;
 import org.springframework.data.document.mongodb.query.Query;
 import org.springframework.data.document.mongodb.query.Update;
+import org.springframework.data.document.mongodb.convert.MongoConverter;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 

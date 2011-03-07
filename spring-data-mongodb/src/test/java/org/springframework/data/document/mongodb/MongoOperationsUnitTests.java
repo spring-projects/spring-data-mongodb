@@ -31,6 +31,7 @@ import org.springframework.dao.DataAccessException;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
+import org.springframework.data.document.mongodb.convert.MongoConverter;
 
 /**
  * Abstract base class for unit tests to specify behaviour we expect from {@link MongoOperations}. Subclasses return
