@@ -1,0 +1,2 @@
+http\://www.springframework.org/schema/data/couch/spring-couch-1.0.xsd=org/springframework/data/document/couchdb/config/spring-couch-1.0.xsd
+http\://www.springframework.org/schema/data/couch/spring-couch.xsd=org/springframework/data/document/couchdb/config/spring-couch-1.0.xsd

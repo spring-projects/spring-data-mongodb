@@ -47,6 +47,8 @@ public class MvcAnalyticsTests {
 	@Test
 	public void loadMvcEventData() {
 
+		mongoTemplate.dropCollection("mvc");
+		mongoTemplate.createCollection("mvc");
 		// datasize, favoriteRestId
 		createAndStoreMvcEvent(5, 1);
 		createAndStoreMvcEvent(6, 2);
