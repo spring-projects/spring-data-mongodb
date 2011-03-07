@@ -18,12 +18,20 @@ package org.springframework.data.document.mongodb.repository;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.document.mongodb.MongoOperations;
 import org.springframework.data.document.mongodb.MongoPropertyDescriptors.MongoPropertyDescriptor;
 import org.springframework.data.document.mongodb.MongoTemplate;
+import org.springframework.data.document.mongodb.query.Index;
+import org.springframework.data.document.mongodb.query.Order;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.repository.query.QueryLookupStrategy;
 import org.springframework.data.repository.query.QueryLookupStrategy.Key;
 import org.springframework.data.repository.query.RepositoryQuery;
-import org.springframework.data.repository.support.EntityMetadata;
+import org.springframework.data.repository.query.parser.Part;
+import org.springframework.data.repository.query.parser.PartTree;
+import org.springframework.data.repository.support.QueryCreationListener;
 import org.springframework.data.repository.support.RepositoryFactoryBeanSupport;
 import org.springframework.data.repository.support.RepositoryFactorySupport;
 import org.springframework.data.repository.support.RepositoryMetadata;
@@ -57,7 +65,9 @@ public class MongoRepositoryFactoryBean extends RepositoryFactoryBeanSupport<Mon
 	@Override
 	protected RepositoryFactorySupport createRepositoryFactory() {
 
-		return new MongoRepositoryFactory(template);
+		MongoRepositoryFactory factory = new MongoRepositoryFactory(template);
+		factory.addQueryCreationListener(new IndexEnsuringQueryCreationListener(template));
+		return factory;
 	}
 
 	/*
@@ -95,7 +105,8 @@ public class MongoRepositoryFactoryBean extends RepositoryFactoryBeanSupport<Mon
 		@SuppressWarnings("unchecked")
 		protected Object getTargetRepository(RepositoryMetadata metadata) {
 
-			EntityMetadata<Object> info = new MongoEntityMetadata<Object>((Class<Object>) metadata.getDomainClass());
+			MongoEntityInformation<Object> info = new MongoEntityInformation<Object>(
+					(Class<Object>) metadata.getDomainClass());
 			return new SimpleMongoRepository<Object, Serializable>(info, template);
 		}
 
@@ -150,6 +161,57 @@ public class MongoRepositoryFactoryBean extends RepositoryFactoryBeanSupport<Mon
 			}
 
 			super.validate(metadata, customImplementation);
+		}
+	}
+
+	/**
+	 * {@link QueryCreationListener} inspecting {@link PartTreeMongoQuery}s and creating an index for the properties it
+	 * refers to.
+	 * 
+	 * @author Oliver Gierke
+	 */
+	private static class IndexEnsuringQueryCreationListener implements QueryCreationListener<PartTreeMongoQuery> {
+
+		private static final Logger LOG = LoggerFactory.getLogger(IndexEnsuringQueryCreationListener.class);
+		private final MongoOperations operations;
+
+		public IndexEnsuringQueryCreationListener(MongoOperations operations) {
+			this.operations = operations;
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see
+		 * org.springframework.data.repository.support.QueryCreationListener#onCreation(org.springframework.data.repository
+		 * .query.RepositoryQuery)
+		 */
+		public void onCreation(PartTreeMongoQuery query) {
+
+			PartTree tree = query.getTree();
+			Index index = new Index();
+			index.named(query.getQueryMethod().getName());
+			Sort sort = tree.getSort();
+
+			for (Part part : tree.getParts()) {
+				String property = part.getProperty().toDotPath();
+				Order order = toOrder(sort, property);
+				index.on(property, order);
+			}
+
+			MongoEntityInformation<?> metadata = query.getQueryMethod().getEntityMetadata();
+			operations.ensureIndex(metadata.getCollectionName(), index);
+			LOG.debug(String.format("Created index %s!", index.toString()));
+		}
+		
+		private static Order toOrder(Sort sort, String property) {
+			
+			if (sort == null) {
+				return Order.DESCENDING;
+			}
+			
+			org.springframework.data.domain.Sort.Order order = sort.getOrderFor(property);
+			return order == null ? Order.DESCENDING : order.isAscending() ? Order.ASCENDING : Order.DESCENDING;
 		}
 	}
 }

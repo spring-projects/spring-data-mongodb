@@ -1,4 +1,4 @@
-package org.springframework.data.document.persistence;
+package org.springframework.persistence.document.test;
 
 import org.springframework.persistence.RelatedEntity;
 import org.springframework.persistence.document.DocumentEntity;

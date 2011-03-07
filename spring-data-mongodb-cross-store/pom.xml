@@ -189,10 +189,10 @@
 							<groupId>org.springframework</groupId>
 							<artifactId>spring-aspects</artifactId>
 						</aspectLibrary>
-						<!--aspectLibrary>
+						<aspectLibrary>
 							<groupId>org.springframework.data</groupId>
 							<artifactId>spring-data-commons-aspects</artifactId>
-						</aspectLibrary-->
+						</aspectLibrary>
 					</aspectLibraries>
 					<source>1.6</source>
 					<target>1.6</target>

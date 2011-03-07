@@ -18,7 +18,6 @@ package org.springframework.data.document.mongodb.repository;
 import static org.springframework.data.document.mongodb.query.Criteria.*;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.regex.Pattern;
 
@@ -41,7 +40,7 @@ import org.springframework.data.repository.query.parser.PartTree;
  * 
  * @author Oliver Gierke
  */
-class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
+class MongoQueryCreator extends AbstractQueryCreator<Query, Query> {
 
     private static final Logger LOG = LoggerFactory.getLogger(MongoQueryCreator.class);
 
@@ -64,10 +63,12 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
      * @see org.springframework.data.repository.query.parser.AbstractQueryCreator#create(org.springframework.data.repository.query.parser.Part, java.util.Iterator)
      */
     @Override
-    protected Criteria create(Part part, Iterator<Object> iterator) {
+    protected Query create(Part part, Iterator<Object> iterator) {
 
-        return from(part.getType(),
+    	Criteria criteria = from(part.getType(),
                 where(part.getProperty().toDotPath()), iterator);
+    	
+    	return new Query(criteria);
     }
 
 
@@ -76,11 +77,12 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
      * @see org.springframework.data.repository.query.parser.AbstractQueryCreator#and(org.springframework.data.repository.query.parser.Part, java.lang.Object, java.util.Iterator)
      */
     @Override
-    protected Criteria and(Part part, Criteria base,
+    protected Query and(Part part, Query base,
             Iterator<Object> iterator) {
 
-        return from(part.getType(), where(part.getProperty().toDotPath()),
+    	Criteria criteria = from(part.getType(), where(part.getProperty().toDotPath()),
                 iterator);
+    	return base.and(criteria);
     }
 
 
@@ -92,10 +94,9 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
      * #or(java.lang.Object, java.lang.Object)
      */
     @Override
-    protected Criteria or(Criteria base, Criteria criteria) {
-
-        base.or(Collections.singletonList(new Query(criteria)));
-        return base;
+    protected Query or(Query base, Query query) {
+    	
+        return new Query().or(base, query);
     }
 
 
@@ -107,9 +108,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
      * #complete(java.lang.Object, org.springframework.data.domain.Sort)
      */
     @Override
-    protected Query complete(Criteria criteria, Sort sort) {
-
-        Query query = new Query(criteria);
+    protected Query complete(Query query, Sort sort) {
 
         if (LOG.isDebugEnabled()) {
             LOG.debug("Created query " + query.getQueryObject());

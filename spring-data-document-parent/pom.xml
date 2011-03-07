@@ -1,92 +1,91 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <groupId>org.springframework.data</groupId>
-  <artifactId>spring-data-document-parent</artifactId>
-  <name>Spring Data Document Parent</name>
-  <url>http://www.springsource.org/spring-data/data-document</url>
-  <version>1.0.0.BUILD-SNAPSHOT</version>
-  <packaging>pom</packaging>
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <!-- versions for commonly-used dependencies -->
-    <junit.version>4.8.1</junit.version>
-    <log4j.version>1.2.15</log4j.version>
-    <org.mockito.version>1.8.4</org.mockito.version>
-    <org.slf4j.version>1.5.10</org.slf4j.version>
-    <org.springframework.version>3.0.5.RELEASE</org.springframework.version>
-    <data.commons.version>1.0.0.BUILD-SNAPSHOT</data.commons.version>
-    <aspectj.version>1.6.11.M2</aspectj.version>
-  </properties>
-  <profiles>
-    <profile>
-      <id>strict</id>
-      <properties>
-        <maven.test.failure.ignore>false</maven.test.failure.ignore>
-      </properties>
-    </profile>
-    <profile>
-      <id>fast</id>
-      <properties>
-        <maven.test.skip>true</maven.test.skip>
-        <maven.javadoc.skip>true</maven.javadoc.skip>
-      </properties>
-    </profile>
-    <profile>
-      <id>staging</id>
-      <distributionManagement>
-        <site>
-          <id>spring-site-staging</id>
-          <url>file:///${java.io.tmpdir}/spring-data/data-document/docs</url>
-        </site>
-        <repository>
-          <id>spring-milestone-staging</id>
-          <url>file:///${java.io.tmpdir}/spring-data/data-document/milestone</url>
-        </repository>
-        <snapshotRepository>
-          <id>spring-snapshot-staging</id>
-          <url>file:///${java.io.tmpdir}/spring-data/data-document/snapshot</url>
-        </snapshotRepository>
-      </distributionManagement>
-    </profile>
-    <profile>
-      <id>bootstrap</id>
-      <!-- TODO: move the repositories in here before release -->
-    </profile>
-  </profiles>
-  <distributionManagement>
-    <!-- see 'staging' profile for dry-run deployment settings -->
-    <downloadUrl>http://www.springsource.com/download/community
-    </downloadUrl>
-    <site>
-      <id>static.springframework.org</id>
-      <url>
-        scp://static.springframework.org/var/www/domains/springframework.org/static/htdocs/spring-data/data-document/docs/${project.version}
-      </url>
-    </site>
-    <repository>
-      <id>spring-milestone</id>
-      <name>Spring Milestone Repository</name>
-      <url>s3://maven.springframework.org/milestone</url>
-    </repository>
-    <snapshotRepository>
-      <id>spring-snapshot</id>
-      <name>Spring Snapshot Repository</name>
-      <url>s3://maven.springframework.org/snapshot</url>
-    </snapshotRepository>
-  </distributionManagement>
-  <dependencyManagement>
-    <!--
-        inheritable <dependency> declarations for child poms. children still
-        must explicitly declare the groupId/artifactId of these dependencies
-        in order for them to show up on the classpath, but metadata like
-        <version> and <scope> are inherited, which cuts down on verbosity.
-        see
-        http://www.sonatype.com/books/mvnref-book/reference/pom-relationships-sect-dep-manage.html
-      -->
-    <dependencies>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>org.springframework.data</groupId>
+	<artifactId>spring-data-document-parent</artifactId>
+	<name>Spring Data Document Parent</name>
+	<url>http://www.springsource.org/spring-data/data-document</url>
+	<version>1.0.0.BUILD-SNAPSHOT</version>
+	<packaging>pom</packaging>
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<!-- versions for commonly-used dependencies -->
+		<junit.version>4.8.1</junit.version>
+		<log4j.version>1.2.15</log4j.version>
+		<org.mockito.version>1.8.4</org.mockito.version>
+		<org.slf4j.version>1.5.10</org.slf4j.version>
+		<org.codehaus.jackson.version>1.6.1</org.codehaus.jackson.version>
+		<org.springframework.version>3.0.5.RELEASE</org.springframework.version>
+		<data.commons.version>1.0.0.BUILD-SNAPSHOT</data.commons.version>
+        <aspectj.version>1.6.11.M2</aspectj.version>
+	</properties>
+	<profiles>
+		<profile>
+			<id>strict</id>
+			<properties>
+				<maven.test.failure.ignore>false</maven.test.failure.ignore>
+			</properties>
+		</profile>
+		<profile>
+			<id>fast</id>
+			<properties>
+				<maven.test.skip>true</maven.test.skip>
+				<maven.javadoc.skip>true</maven.javadoc.skip>
+			</properties>
+		</profile>
+		<profile>
+			<id>staging</id>
+			<distributionManagement>
+				<site>
+					<id>spring-site-staging</id>
+					<url>file:///${java.io.tmpdir}/spring-data/data-document/docs</url>
+				</site>
+				<repository>
+					<id>spring-milestone-staging</id>
+					<url>file:///${java.io.tmpdir}/spring-data/data-document/milestone</url>
+				</repository>
+				<snapshotRepository>
+					<id>spring-snapshot-staging</id>
+					<url>file:///${java.io.tmpdir}/spring-data/data-document/snapshot</url>
+				</snapshotRepository>
+			</distributionManagement>
+		</profile>
+		<profile>
+			<id>bootstrap</id>
+			<!-- TODO: move the repositories in here before release -->
+		</profile>
+	</profiles>
+	<distributionManagement>
+		<!-- see 'staging' profile for dry-run deployment settings -->
+		<downloadUrl>http://www.springsource.com/download/community
+		</downloadUrl>
+		<site>
+			<id>static.springframework.org</id>
+			<url>scp://static.springframework.org/var/www/domains/springframework.org/static/htdocs/spring-data/data-document/docs/${project.version}
+			</url>
+		</site>
+		<repository>
+			<id>spring-milestone</id>
+			<name>Spring Milestone Repository</name>
+			<url>s3://maven.springframework.org/milestone</url>
+		</repository>
+		<snapshotRepository>
+			<id>spring-snapshot</id>
+			<name>Spring Snapshot Repository</name>
+			<url>s3://maven.springframework.org/snapshot</url>
+		</snapshotRepository>
+	</distributionManagement>
+	<dependencyManagement>
+		<!--
+			inheritable <dependency> declarations for child poms. children still
+			must explicitly declare the groupId/artifactId of these dependencies
+			in order for them to show up on the classpath, but metadata like
+			<version> and <scope> are inherited, which cuts down on verbosity.
+			see
+			http://www.sonatype.com/books/mvnref-book/reference/pom-relationships-sect-dep-manage.html
+		-->
+		<dependencies>
 
       <!--  Spring -->
       <dependency>

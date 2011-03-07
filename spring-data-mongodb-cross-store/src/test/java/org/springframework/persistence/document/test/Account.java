@@ -1,9 +1,12 @@
-package org.springframework.data.document.persistence;
+package org.springframework.persistence.document.test;
 
 import javax.persistence.Entity;
+import javax.persistence.Id;
 
 @Entity
 public class Account {
+	
+	@Id private Long id;
 
     private String name;
 
