@@ -1,161 +1,166 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<parent>
-		<groupId>org.springframework.data</groupId>
-		<artifactId>spring-data-document-parent</artifactId>
-		<version>1.0.0.BUILD-SNAPSHOT</version>
-		<relativePath>../spring-data-document-parent/pom.xml</relativePath>
-	</parent>
-	<artifactId>spring-data-couchdb</artifactId>
-	<packaging>jar</packaging>
-	<name>Spring Data CouchDB Support</name>
-	
-	
-    <licenses>
-        <license>
-            <name>The Apache Software License, Version 2.0</name>
-            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-            <distribution>repo</distribution>
-        </license>
-    </licenses>
-    
-        <developers>
-        <developer>
-            <id>tareq.abedrabbo</id>
-            <name>Tareq Abedrabbo</name>
-            <email>tareq.abedrabbo@opencredo.com</email>
-            <organization>OpenCredo</organization>
-            <organizationUrl>http://www.opencredo.org</organizationUrl>
-            <roles>
-                <role>Project Admin</role>
-                <role>Developer</role>
-            </roles>
-            <timezone>+0</timezone>
-        </developer>
-        <developer>
-            <id>tomas.lukosius</id>
-            <name>Tomas Lukosius</name>
-            <email>tomas.lukosius@opencredo.com</email>
-            <organization>OpenCredo</organization>
-            <organizationUrl>http://www.opencredo.org</organizationUrl>
-            <roles>
-                <role>Project Admin</role>
-                <role>Developer</role>
-            </roles>
-            <timezone>+0</timezone>
-        </developer>
-    </developers>
-    
-	<dependencies>
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.springframework.data</groupId>
+    <artifactId>spring-data-document-parent</artifactId>
+    <version>1.0.0.BUILD-SNAPSHOT</version>
+    <relativePath>../spring-data-document-parent/pom.xml</relativePath>
+  </parent>
+  <artifactId>spring-data-couchdb</artifactId>
+  <packaging>jar</packaging>
+  <name>Spring Data CouchDB Support</name>
 
-		<!--  Spring -->
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-beans</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-tx</artifactId>
-		</dependency>
-		
-		<dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-test</artifactId>
-            <scope>test</scope>
-        </dependency>
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
 
-		<!--  Spring Data -->
-		<dependency>
-			<groupId>org.springframework.data</groupId>
-			<artifactId>spring-data-document-core</artifactId>
-		</dependency>
+  <developers>
+    <developer>
+      <id>tareq.abedrabbo</id>
+      <name>Tareq Abedrabbo</name>
+      <email>tareq.abedrabbo@opencredo.com</email>
+      <organization>OpenCredo</organization>
+      <organizationUrl>http://www.opencredo.org</organizationUrl>
+      <roles>
+        <role>Project Admin</role>
+        <role>Developer</role>
+      </roles>
+      <timezone>+0</timezone>
+    </developer>
+    <developer>
+      <id>tomas.lukosius</id>
+      <name>Tomas Lukosius</name>
+      <email>tomas.lukosius@opencredo.com</email>
+      <organization>OpenCredo</organization>
+      <organizationUrl>http://www.opencredo.org</organizationUrl>
+      <roles>
+        <role>Project Admin</role>
+        <role>Developer</role>
+      </roles>
+      <timezone>+0</timezone>
+    </developer>
+  </developers>
 
-		<!-- Jackson JSON -->
-		<dependency>
-		  <groupId>org.codehaus.jackson</groupId>
-		  <artifactId>jackson-core-asl</artifactId>
-		  <version>1.6.1</version>
-		</dependency>
-		<dependency>
-		  <groupId>org.codehaus.jackson</groupId>
-		  <artifactId>jackson-mapper-asl</artifactId>
-		  <version>1.6.1</version>
-		</dependency>
+  <dependencies>
 
-		<!-- Logging -->
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>jcl-over-slf4j</artifactId>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-log4j12</artifactId>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
-			<groupId>log4j</groupId>
-			<artifactId>log4j</artifactId>
-			<exclusions>
-				<exclusion>
-					<groupId>javax.mail</groupId>
-					<artifactId>mail</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>javax.jms</groupId>
-					<artifactId>jms</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>com.sun.jdmk</groupId>
-					<artifactId>jmxtools</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>com.sun.jmx</groupId>
-					<artifactId>jmxri</artifactId>
-				</exclusion>
-			</exclusions>
-			<scope>runtime</scope>
-		</dependency>
-		
-		<dependency>
-			<groupId>javax.annotation</groupId>
-			<artifactId>jsr250-api</artifactId>
-			<optional>true</optional>
-		</dependency>
+    <!--  Spring -->
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-beans</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-tx</artifactId>
+    </dependency>
 
-		<dependency>
-			<groupId>org.mockito</groupId>
-			<artifactId>mockito-all</artifactId>
-			<scope>test</scope>
-		</dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-test</artifactId>
+      <scope>test</scope>
+    </dependency>
 
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<scope>test</scope>
-		</dependency>
-		
-		<dependency>
-            <groupId>org.hamcrest</groupId>
-            <artifactId>hamcrest-all</artifactId>
-            <version>1.1</version>
-            <scope>test</scope>
-        </dependency>
+    <!-- Jackson JSON -->
+    <dependency>
+      <groupId>org.codehaus.jackson</groupId>
+      <artifactId>jackson-core-asl</artifactId>
+      <version>1.6.1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.codehaus.jackson</groupId>
+      <artifactId>jackson-mapper-asl</artifactId>
+      <version>1.6.1</version>
+    </dependency>
 
-	</dependencies>
-	<!-- 
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>com.springsource.bundlor</groupId>
-				<artifactId>com.springsource.bundlor.maven</artifactId>
-			</plugin>
-		</plugins>
-	</build>
-	-->
+    <!-- Logging -->
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>jcl-over-slf4j</artifactId>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-log4j12</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>javax.mail</groupId>
+          <artifactId>mail</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>javax.jms</groupId>
+          <artifactId>jms</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.sun.jdmk</groupId>
+          <artifactId>jmxtools</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.sun.jmx</groupId>
+          <artifactId>jmxri</artifactId>
+        </exclusion>
+      </exclusions>
+      <scope>runtime</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>javax.annotation</groupId>
+      <artifactId>jsr250-api</artifactId>
+      <optional>true</optional>
+    </dependency>
+
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.hamcrest</groupId>
+      <artifactId>hamcrest-all</artifactId>
+      <version>1.1</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-all</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+    </dependency>
+
+    <!-- Couch DB -->
+    <dependency>
+      <groupId>com.google.code.jcouchdb</groupId>
+      <artifactId>jcouchdb</artifactId>
+      <version>0.11.0-1</version>
+    </dependency>
+
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>com.springsource.bundlor</groupId>
+        <artifactId>com.springsource.bundlor.maven</artifactId>
+      </plugin>
+    </plugins>
+  </build>
+
 </project>
