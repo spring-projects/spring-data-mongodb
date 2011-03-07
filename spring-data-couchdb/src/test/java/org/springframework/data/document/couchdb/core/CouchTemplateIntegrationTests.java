@@ -20,16 +20,15 @@ import java.util.UUID;
 
 import junit.framework.Assert;
 
+import org.junit.Ignore;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.springframework.data.document.couchdb.DummyDocument;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.util.Assert.*;
 
 public class CouchTemplateIntegrationTests extends AbstractCouchTemplateIntegrationTests {
 
 	
 	@Test
+	@Ignore("until CI has couch server running")
 	public void saveAndFindTest() {
 		CouchTemplate template = new CouchTemplate(CouchConstants.TEST_DATABASE_URL);
 		DummyDocument document = new DummyDocument("hello");
