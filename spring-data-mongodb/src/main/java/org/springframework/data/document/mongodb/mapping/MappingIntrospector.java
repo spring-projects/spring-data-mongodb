@@ -17,7 +17,6 @@
 package org.springframework.data.document.mongodb.mapping;
 
 import com.mongodb.DBRef;
-import com.sun.org.apache.xalan.internal.extensions.ExpressionContext;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bson.types.CodeWScope;
@@ -28,12 +27,9 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.expression.BeanFactoryResolver;
 import org.springframework.core.LocalVariableTableParameterNameDiscoverer;
 import org.springframework.data.mapping.annotation.*;
-import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.Expression;
-import org.springframework.expression.spel.standard.SpelExpression;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
-import org.springframework.util.Assert;
 
 import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
@@ -124,10 +120,11 @@ public class MappingIntrospector<T> {
           fld.setAccessible(true);
           if (!isTransientField(fld)) {
             if (fld.isAnnotationPresent(Id.class)) {
-              if (null != idField) {
-                throw new IllegalStateException("You cannot have two fields in a domain object annotated with Id! " + clazz);
+              if (null == idField) {
+                idField = fld;
+              } else {
+                log.warn("Only the first field found with the @Id annotation will be considered the ID. Ignoring " + idField);
               }
-              idField = fld;
               continue;
             } else if (null == idField && fldType.equals(ObjectId.class)) {
               // Respect fields of the MongoDB ObjectId type
