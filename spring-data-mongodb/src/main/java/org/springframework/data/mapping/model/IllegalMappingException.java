@@ -16,13 +16,17 @@ package org.springframework.data.mapping.model;
 
 /**
  * Thrown when an error occurs reading the mapping between object and datastore
- * 
+ *
  * @author Graeme Rocher
  * @since 1.0
  */
 public class IllegalMappingException extends RuntimeException {
 
-    public IllegalMappingException(String s) {
-        super(s);
-    }
+  public IllegalMappingException(String s, Throwable throwable) {
+    super(s, throwable);
+  }
+
+  public IllegalMappingException(String s) {
+    super(s);
+  }
 }

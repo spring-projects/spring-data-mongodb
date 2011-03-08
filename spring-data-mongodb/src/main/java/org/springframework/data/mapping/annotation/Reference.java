@@ -14,17 +14,20 @@
  * limitations under the License.
  */
 
-package org.springframework.data.mapping.model;
+package org.springframework.data.mapping.annotation;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * Created by IntelliJ IDEA.
- * User: jbrisbin
- * Date: 2/25/11
- * Time: 9:07 AM
- * To change this template use File | Settings | File Templates.
+ * @author Jon Brisbin <jbrisbin@vmware.com>
  */
-public class EntityInstantiationException extends RuntimeException {
-  public EntityInstantiationException(String s, Throwable throwable) {
-    super(s, throwable);
-  }
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.FIELD)
+public @interface Reference {
+
+  Class<?> targetClass() default Object.class;
+
 }

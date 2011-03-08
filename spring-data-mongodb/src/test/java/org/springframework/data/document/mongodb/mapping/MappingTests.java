@@ -16,9 +16,6 @@
 
 package org.springframework.data.document.mongodb.mapping;
 
-import com.mongodb.DBObject;
-import com.mongodb.util.JSON;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -27,20 +24,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.document.mongodb.MongoTemplate;
 import org.springframework.data.document.mongodb.convert.MongoConverter;
 import org.springframework.data.document.mongodb.query.Criteria;
-import org.springframework.data.document.mongodb.query.Index;
-import org.springframework.data.document.mongodb.query.IndexDefinition;
 import org.springframework.data.document.mongodb.query.Query;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.hamcrest.Matchers.endsWith;
 import static org.junit.Assert.assertThat;
 
 /**
@@ -60,8 +52,9 @@ public class MappingTests {
 
   @Test
   public void setUp() {
-    template.dropCollection(template.getDefaultCollectionName());
-    mappingContext.addPersistentEntity(Person.class);
+    template.dropCollection("person");
+    template.dropCollection("account");
+    //mappingContext.addPersistentEntity(Person.class);
   }
 
   @Test
@@ -77,11 +70,13 @@ public class MappingTests {
 
     Account acct = new Account();
     acct.setBalance(1000.00f);
+    template.insert("account", acct);
+
     List<Account> accounts = new ArrayList<Account>();
     accounts.add(acct);
     p.setAccounts(accounts);
 
-    template.insert(p);
+    template.insert("person", p);
   }
 
   @Test
@@ -91,5 +86,6 @@ public class MappingTests {
     List<Person> result = template.find(new Query(Criteria.where("ssn").is(123456789)), Person.class);
     assertThat(result.size(), is(1));
     assertThat(result.get(0).getAddress().getCountry(), is("USA"));
+    assertThat(result.get(0).getAccounts(), notNullValue());
   }
 }

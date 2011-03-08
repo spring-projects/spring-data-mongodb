@@ -1,5 +1,7 @@
 package org.springframework.data.mapping.model;
 
+import org.springframework.data.document.mongodb.mapping.MappingException;
+
 import java.util.List;
 import java.util.Set;
 
@@ -55,7 +57,7 @@ public interface MappingConfigurationStrategy {
    * @param classMapping The ClassMapping instance
    * @return The default identifier mapping
    */
-  IdentityMapping getDefaultIdentityMapping(ClassMapping classMapping);
+  IdentityMapping getDefaultIdentityMapping(ClassMapping classMapping) throws MappingException;
 
   /**
    * Returns a set of entities that "own" the given entity. Ownership

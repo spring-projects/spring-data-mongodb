@@ -14,13 +14,17 @@
  * limitations under the License.
  */
 
-package org.springframework.data.mapping.annotation;
+package org.springframework.data.mapping.model;
 
 /**
- * @author Jon Brisbin <jbrisbin@vmware.com>
+ * Created by IntelliJ IDEA.
+ * User: jbrisbin
+ * Date: 2/25/11
+ * Time: 9:07 AM
+ * To change this template use File | Settings | File Templates.
  */
-public @interface Aliases {
-
-  String[] value();
-
+public class MappingInstantiationException extends RuntimeException {
+  public MappingInstantiationException(String s, Throwable throwable) {
+    super(s, throwable);
+  }
 }

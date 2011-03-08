@@ -19,17 +19,27 @@ package org.springframework.data.document.mongodb.mapping;
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
  */
-public class MappingException extends Throwable {
+public class MappingException extends RuntimeException {
 
   private final Object source;
 
-  public MappingException(Throwable throwable, Object source) {
-    super(String.format("Error encountered mapping object: %s", source), throwable);
+  public MappingException(String s) {
+    super(s);
+    this.source = null;
+  }
+
+  public MappingException(String s, Object source) {
+    super(String.format("Error encountered mapping object: %s", source));
+    this.source = source;
+  }
+
+  public MappingException(String s, Throwable throwable, Object source) {
+    super(s, throwable);
     this.source = source;
   }
 
   public Object getSource() {
     return source;
   }
-  
+
 }

@@ -5,18 +5,23 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.MongoException;
 import com.mongodb.util.JSON;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.dao.DataAccessException;
+import org.springframework.data.document.mongodb.CollectionCallback;
+import org.springframework.data.document.mongodb.MongoTemplate;
 import org.springframework.data.document.mongodb.index.CompoundIndex;
 import org.springframework.data.document.mongodb.index.CompoundIndexes;
 import org.springframework.data.document.mongodb.index.IndexDirection;
 import org.springframework.data.document.mongodb.index.Indexed;
-import org.springframework.data.document.mongodb.CollectionCallback;
-import org.springframework.data.document.mongodb.MongoTemplate;
-import org.springframework.data.mapping.annotation.*;
+import org.springframework.data.mapping.annotation.IdentifiedBy;
+import org.springframework.data.mapping.annotation.OneToOne;
+import org.springframework.data.mapping.annotation.PersistenceStrategy;
+import org.springframework.data.mapping.annotation.Persistent;
 import org.springframework.data.mapping.model.*;
 import org.springframework.data.mapping.model.types.Association;
-import org.springframework.data.mapping.reflect.ClassPropertyFetcher;
 import org.springframework.expression.EvaluationContext;
+import org.springframework.expression.Expression;
 import org.springframework.expression.common.TemplateParserContext;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
@@ -36,6 +41,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author J. Brisbin <jbrisbin@vmware.com>
  */
 public class MongoMappingConfigurationStrategy implements MappingConfigurationStrategy {
+
+  protected static final Log log = LogFactory.getLog(MongoMappingConfigurationStrategy.class);
 
   protected MongoTemplate mongo;
   protected MongoMappingFactory mappingFactory;
@@ -84,16 +91,21 @@ public class MongoMappingConfigurationStrategy implements MappingConfigurationSt
   public List<PersistentProperty> getPersistentProperties(Class aClass,
                                                           MappingContext mappingContext,
                                                           ClassMapping classMapping) {
-    PersistenceDescriptor pd = getPersistenceDescriptor(aClass, mappingContext, classMapping);
+    PersistenceDescriptor pd = null;
+    try {
+      pd = getPersistenceDescriptor(aClass, mappingContext, classMapping);
+    } catch (MappingException e) {
+      log.error(e.getMessage(), e);
+    }
     return (null != pd ? pd.getProperties() : null);
   }
 
-  public PersistentProperty getIdentity(Class aClass, MappingContext mappingContext) {
+  public PersistentProperty getIdentity(Class aClass, MappingContext mappingContext) throws MappingException {
     PersistenceDescriptor idPd = getPersistenceDescriptor(aClass, mappingContext, null);
     return (null != idPd ? idPd.getIdProperty() : null);
   }
 
-  public IdentityMapping getDefaultIdentityMapping(final ClassMapping classMapping) {
+  public IdentityMapping getDefaultIdentityMapping(final ClassMapping classMapping) throws MappingException {
     final PersistentProperty<?> prop = getPersistenceDescriptor(classMapping.getEntity().getJavaClass(),
         classMapping.getEntity().getMappingContext(),
         classMapping).getIdProperty();
@@ -117,15 +129,15 @@ public class MongoMappingConfigurationStrategy implements MappingConfigurationSt
     return owners.get(aClass);
   }
 
-  protected PersistenceDescriptor getPersistenceDescriptor(Class<?> javaClass,
-                                                           MappingContext context,
-                                                           ClassMapping mapping) {
+  protected PersistenceDescriptor getPersistenceDescriptor(final Class<?> javaClass,
+                                                           final MappingContext context,
+                                                           final ClassMapping mapping) throws MappingException {
     PersistenceDescriptor descriptor = descriptors.get(javaClass);
     if (null == descriptor) {
-      ClassPropertyFetcher fetcher = ClassPropertyFetcher.forClass(javaClass);
-      PersistentEntity entity = getPersistentEntity(javaClass, context, mapping);
+      final MappingIntrospector introspector = MappingIntrospector.getInstance(javaClass);
+      final PersistentEntity entity = getPersistentEntity(javaClass, context, mapping);
 
-      String collection = javaClass.getSimpleName().toLowerCase();
+      final String collection = javaClass.getSimpleName().toLowerCase();
       for (Annotation anno : javaClass.getAnnotations()) {
         if (anno instanceof Persistent) {
 
@@ -145,34 +157,41 @@ public class MongoMappingConfigurationStrategy implements MappingConfigurationSt
         }
       }
 
-      EvaluationContext elContext = createElContext();
+      EvaluationContext elContext = new StandardEvaluationContext();
       elContext.setVariable("class", javaClass);
 
-      PersistentProperty<?> id = extractIdProperty(entity, context, elContext);
+      PropertyDescriptor idPropDesc = MappingIntrospector.getInstance(entity.getJavaClass()).getIdPropertyDescriptor();
+      PersistentProperty<?> id = mappingFactory.createIdentity(entity, context, idPropDesc);
 
-      List<PersistentProperty> properties = new LinkedList<PersistentProperty>();
-      for (PropertyDescriptor propertyDescriptor : fetcher.getPropertyDescriptors()) {
-        if (null == id || !propertyDescriptor.getName().equals(id.getName())) {
-          PersistentProperty<?> p = createPersistentProperty(entity, context, propertyDescriptor, mapping);
-          if (null != p) {
-            properties.add(p);
-            for (Annotation anno : fetcher.getDeclaredField(p.getName()).getDeclaredAnnotations()) {
-              if (anno instanceof Indexed) {
-                Indexed idx = (Indexed) anno;
-                String idxColl = collection;
-                if (!"".equals(idx.collection())) {
-                  idxColl = idx.collection();
+      final List<PersistentProperty> properties = new LinkedList<PersistentProperty>();
+      introspector.doWithProperties(new MappingIntrospector.PropertyHandler() {
+        public void doWithProperty(PropertyDescriptor descriptor, Field field, Expression spelExpr) {
+          PersistentProperty<?> p = null;
+          try {
+            p = createPersistentProperty(entity, context, descriptor, mapping);
+            if (null != p) {
+              properties.add(p);
+              for (Annotation anno : field.getDeclaredAnnotations()) {
+                if (anno instanceof Indexed) {
+                  Indexed idx = (Indexed) anno;
+                  String idxColl = collection;
+                  if (!"".equals(idx.collection())) {
+                    idxColl = idx.collection();
+                  }
+                  String name = p.getName();
+                  if (!"".equals(idx.name())) {
+                    name = idx.name();
+                  }
+                  ensureIndex(idxColl, name, null, idx.direction(), idx.unique(), idx.dropDups(), idx.sparse());
                 }
-                String name = p.getName();
-                if (!"".equals(idx.name())) {
-                  name = idx.name();
-                }
-                ensureIndex(idxColl, name, null, idx.direction(), idx.unique(), idx.dropDups(), idx.sparse());
               }
             }
+          } catch (MappingException e) {
+            throw new IllegalMappingException(e.getMessage(), e);
           }
         }
-      }
+      });
+
       descriptor = new PersistenceDescriptor(entity, id, properties);
       descriptors.put(javaClass, descriptor);
     }
@@ -191,9 +210,9 @@ public class MongoMappingConfigurationStrategy implements MappingConfigurationSt
   protected PersistentProperty<?> createPersistentProperty(PersistentEntity entity,
                                                            MappingContext mappingContext,
                                                            PropertyDescriptor descriptor,
-                                                           ClassMapping mapping) {
-    ClassPropertyFetcher fetcher = ClassPropertyFetcher.forClass(entity.getJavaClass());
-    Field f = fetcher.getDeclaredField(descriptor.getName());
+                                                           ClassMapping mapping) throws MappingException {
+    MappingIntrospector introspector = MappingIntrospector.getInstance(entity.getJavaClass());
+    Field f = introspector.getField(descriptor.getName());
 
     if (null != f) {
       // Handle associations and persistent types
@@ -211,10 +230,9 @@ public class MongoMappingConfigurationStrategy implements MappingConfigurationSt
   protected PersistentProperty<?> extractChildType(PersistentEntity entity,
                                                    MappingContext mappingContext,
                                                    PropertyDescriptor descriptor,
-                                                   ClassMapping mapping) {
-
-    ClassPropertyFetcher fetcher = ClassPropertyFetcher.forClass(entity.getJavaClass());
-    Field f = fetcher.getDeclaredField(descriptor.getName());
+                                                   ClassMapping mapping) throws MappingException {
+    MappingIntrospector introspector = MappingIntrospector.getInstance(entity.getJavaClass());
+    Field f = introspector.getField(descriptor.getName());
 
     Class<?> childClass = null;
     Association<?> assoc = null;
@@ -291,64 +309,6 @@ public class MongoMappingConfigurationStrategy implements MappingConfigurationSt
       owningEntities.add(parent);
       owners.put(javaClass, owningEntities);
     }
-  }
-
-  protected PersistentProperty<?> extractIdProperty(PersistentEntity entity,
-                                                    MappingContext mappingContext,
-                                                    EvaluationContext elContext) {
-    ClassPropertyFetcher fetcher = ClassPropertyFetcher.forClass(entity.getJavaClass());
-
-    // Let field annotation override that on the class
-    IdentifiedBy idBy = extractIdentifiedBy(fetcher.getJavaClass(), null);
-    String id = extractId(fetcher.getJavaClass(), null);
-    Assert.notNull(id);
-    if (id.indexOf("#") > -1) {
-      id = expressionParser.parseExpression(id).getValue(elContext, String.class);
-    }
-
-    PropertyDescriptor idPropDesc = null;
-    switch (idBy) {
-      case DEFAULT:
-        idPropDesc = findIdByAnnotation(fetcher);
-        if (null == idPropDesc) {
-          idPropDesc = fetcher.getPropertyDescriptor(id);
-        }
-        break;
-      case ANNOTATION:
-        idPropDesc = findIdByAnnotation(fetcher);
-        break;
-      case PROPERTY:
-        idPropDesc = fetcher.getPropertyDescriptor(id);
-        break;
-      case VALUE:
-        try {
-          idPropDesc = new ValuePropertyDescriptor("id", entity.getJavaClass(), id);
-        } catch (IntrospectionException e) {
-          throw new IllegalStateException(e.getMessage(), e);
-        }
-        break;
-    }
-    //Assert.notNull(idPropDesc, String.format("No ID property could be found on the entity %s", entity));
-
-    return (null != idPropDesc ? mappingFactory.createIdentity(entity, mappingContext, idPropDesc) : null);
-  }
-
-  protected PropertyDescriptor findIdByAnnotation(ClassPropertyFetcher fetcher) {
-    for (PropertyDescriptor descriptor : fetcher.getPropertyDescriptors()) {
-      Field f = fetcher.getDeclaredField(descriptor.getName());
-      if (null != f && null != f.getAnnotation(Id.class)) {
-        return descriptor;
-      }
-    }
-    return null;
-  }
-
-  protected EvaluationContext createElContext() {
-    StandardEvaluationContext elContext = new StandardEvaluationContext(System.getProperties());
-    for (String prop : System.getProperties().stringPropertyNames()) {
-      elContext.setVariable(prop, System.getProperty(prop));
-    }
-    return elContext;
   }
 
   protected void ensureIndex(String collection,

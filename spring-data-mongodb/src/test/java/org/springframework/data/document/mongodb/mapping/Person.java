@@ -16,15 +16,11 @@
 
 package org.springframework.data.document.mongodb.mapping;
 
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.document.mongodb.MongoTemplate;
 import org.springframework.data.document.mongodb.index.CompoundIndex;
 import org.springframework.data.document.mongodb.index.CompoundIndexes;
 import org.springframework.data.document.mongodb.index.Indexed;
 import org.springframework.data.mapping.annotation.*;
 
-import java.math.BigInteger;
 import java.util.List;
 
 /**
@@ -46,7 +42,7 @@ public class Person {
   private Integer age;
   @Transient
   private Integer accountTotal;
-  @OneToMany
+  @Reference
   private List<Account> accounts;
   private Address address;
 
@@ -58,13 +54,20 @@ public class Person {
   }
 
   @PersistenceConstructor
-  public Person(Integer ssn, String firstName, String lastName, Integer age, List<Account> accounts, Address address) {
+  public Person(Integer ssn, String firstName, String lastName, Integer age, Address address) {
     this.ssn = ssn;
     this.firstName = firstName;
     this.lastName = lastName;
     this.age = age;
-    this.accounts = accounts;
     this.address = address;
+  }
+
+  public String getId() {
+    return id;
+  }
+
+  public void setId(String id) {
+    this.id = id;
   }
 
   public Integer getSsn() {

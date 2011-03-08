@@ -138,9 +138,9 @@ public abstract class AbstractPersistentEntity<T> implements PersistentEntity<T>
     try {
       return getJavaClass().newInstance();
     } catch (InstantiationException e) {
-      throw new EntityInstantiationException("Unable to create entity of type [" + getJavaClass() + "]: " + e.getMessage(), e);
+      throw new MappingInstantiationException("Unable to create entity of type [" + getJavaClass() + "]: " + e.getMessage(), e);
     } catch (IllegalAccessException e) {
-      throw new EntityInstantiationException("Unable to create entity of type [" + getJavaClass() + "]: " + e.getMessage(), e);
+      throw new MappingInstantiationException("Unable to create entity of type [" + getJavaClass() + "]: " + e.getMessage(), e);
     }
   }
 

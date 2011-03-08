@@ -27,6 +27,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.expression.BeanFactoryResolver;
 import org.springframework.core.LocalVariableTableParameterNameDiscoverer;
 import org.springframework.data.mapping.annotation.*;
+import org.springframework.data.mapping.model.MappingInstantiationException;
 import org.springframework.expression.Expression;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
@@ -91,9 +92,16 @@ public class MappingIntrospector<T> {
   private final Map<String, Method> setters;
   private final Map<String, Method> getters;
   private Field idField = null;
+  private PropertyDescriptor idPropertyDescriptor = null;
   private List<String> ignoredProperties = new ArrayList<String>() {{
     add("class");
   }};
+  private List<Class<?>> validIdTypes = new ArrayList<Class<?>>() {{
+    add(ObjectId.class);
+    add(String.class);
+    add(BigInteger.class);
+  }};
+
   private SpelExpressionParser parser = new SpelExpressionParser();
   private Map<String, Expression> expressions = new HashMap<String, Expression>();
   private PreferredConstructor preferredConstructor = null;
@@ -104,7 +112,7 @@ public class MappingIntrospector<T> {
     try {
       this.beanInfo = Introspector.getBeanInfo(clazz);
     } catch (IntrospectionException e) {
-      throw new MappingException(e, clazz);
+      throw new MappingException(e.getMessage(), e, clazz);
     }
     Map<String, PropertyDescriptor> properties = new HashMap<String, PropertyDescriptor>();
     Map<String, Field> fields = new HashMap<String, Field>();
@@ -122,24 +130,43 @@ public class MappingIntrospector<T> {
             if (fld.isAnnotationPresent(Id.class)) {
               if (null == idField) {
                 idField = fld;
+                idPropertyDescriptor = descriptor;
               } else {
                 log.warn("Only the first field found with the @Id annotation will be considered the ID. Ignoring " + idField);
               }
               continue;
-            } else if (null == idField && fldType.equals(ObjectId.class)) {
-              // Respect fields of the MongoDB ObjectId type
-              idField = fld;
-              continue;
             } else if (null == idField
-                && (fldType.equals(String.class) || fldType.equals(BigInteger.class))
+                && validIdTypes.contains(fldType)
                 && ("id".equals(name) || "_id".equals(name))) {
-              // Strings and BigIntegers named "id"|"_id" are also valid ID fields
               idField = fld;
+              idPropertyDescriptor = descriptor;
               continue;
-            } else if (fld.isAnnotationPresent(OneToMany.class)
+            } else if (fld.isAnnotationPresent(Reference.class)
+                || fld.isAnnotationPresent(OneToMany.class)
                 || fld.isAnnotationPresent(OneToOne.class)
                 || fld.isAnnotationPresent(ManyToMany.class)) {
-              associations.add(new Association(descriptor, fld));
+              Class<?> targetClass = fld.getType();
+              if (fld.isAnnotationPresent(Reference.class)) {
+                Reference ref = fld.getAnnotation(Reference.class);
+                if (ref.targetClass() != Object.class) {
+                  targetClass = ref.targetClass();
+                }
+              }
+              if (fldType.isAssignableFrom(Collection.class) || fldType.isAssignableFrom(List.class)) {
+                Type t = fld.getGenericType();
+                if (t instanceof ParameterizedType) {
+                  ParameterizedType ptype = (ParameterizedType) t;
+                  Type[] paramTypes = ptype.getActualTypeArguments();
+                  if (paramTypes.length > 0) {
+                    if (paramTypes[0] instanceof TypeVariable) {
+                      targetClass = Object.class;
+                    } else {
+                      targetClass = (Class<?>) paramTypes[0];
+                    }
+                  }
+                }
+              }
+              associations.add(new Association(descriptor, fld, targetClass));
               continue;
             } else if (fld.isAnnotationPresent(Value.class)) {
               // @Value fields are evaluated at runtime and are the same transient fields
@@ -158,6 +185,21 @@ public class MappingIntrospector<T> {
         }
       }
     }
+
+    if (null == this.idField) {
+      // ID might be in a private field
+      for (Field f : fields.values()) {
+        Class<?> type = f.getType();
+        if (f.isAnnotationPresent(Id.class)) {
+          this.idField = f;
+          break;
+        } else if (validIdTypes.contains(type) && (f.getName().equals("id") || f.getName().equals("_id"))) {
+          this.idField = f;
+          break;
+        }
+      }
+    }
+
     this.properties = Collections.unmodifiableMap(properties);
     this.fields = Collections.unmodifiableMap(fields);
     this.associations = Collections.unmodifiableSet(associations);
@@ -168,7 +210,7 @@ public class MappingIntrospector<T> {
     for (Constructor<?> constructor : clazz.getConstructors()) {
       if (constructor.getParameterTypes().length != 0) {
         // Non-no-arg constructor
-        if (null == preferredConstructor) {
+        if (null == preferredConstructor || constructor.isAnnotationPresent(PersistenceConstructor.class)) {
           String[] paramNames = new LocalVariableTableParameterNameDiscoverer().getParameterNames(constructor);
           Type[] paramTypes = constructor.getGenericParameterTypes();
           Class<?>[] paramClassTypes = new Class[paramTypes.length];
@@ -178,7 +220,12 @@ public class MappingIntrospector<T> {
               ParameterizedType ptype = (ParameterizedType) paramTypes[i];
               Type[] types = ptype.getActualTypeArguments();
               if (types.length == 1) {
-                targetType = (Class<?>) types[0];
+                if (types[0] instanceof TypeVariable) {
+                  // Placeholder type
+                  targetType = Object.class;
+                } else {
+                  targetType = (Class<?>) types[0];
+                }
               } else {
                 targetType = (Class<?>) ptype.getRawType();
               }
@@ -188,6 +235,10 @@ public class MappingIntrospector<T> {
             paramClassTypes[i] = targetType;
           }
           preferredConstructor = new PreferredConstructor((Constructor<T>) constructor, paramNames, paramClassTypes);
+          if (constructor.isAnnotationPresent(PersistenceConstructor.class)) {
+            // We're done
+            break;
+          }
         }
       }
     }
@@ -224,11 +275,15 @@ public class MappingIntrospector<T> {
     return idField;
   }
 
-  public T createInstance() throws MappingException {
+  public PropertyDescriptor getIdPropertyDescriptor() {
+    return idPropertyDescriptor;
+  }
+
+  public T createInstance() {
     return createInstance(null);
   }
 
-  public T createInstance(ParameterValueProvider provider) throws MappingException {
+  public T createInstance(ParameterValueProvider provider) {
     try {
       if (null == preferredConstructor || null == provider) {
         return clazz.newInstance();
@@ -245,53 +300,78 @@ public class MappingIntrospector<T> {
         return preferredConstructor.constructor.newInstance(params.toArray());
       }
     } catch (InvocationTargetException e) {
-      throw new MappingException(e, clazz);
+      throw new MappingInstantiationException(e.getMessage(), e);
     } catch (InstantiationException e) {
-      throw new MappingException(e, clazz);
+      throw new MappingInstantiationException(e.getMessage(), e);
     } catch (IllegalAccessException e) {
-      throw new MappingException(e, clazz);
-    }
-  }
-
-  public Object getFieldValue(PropertyDescriptor descriptor, Object from) throws MappingException {
-    try {
-      Method getter = descriptor.getReadMethod();
-      if (null != getter) {
-        return getter.invoke(from);
-      } else {
-        Field f = fields.get(descriptor.getName());
-        return f.get(from);
-      }
-    } catch (IllegalAccessException e) {
-      throw new MappingException(e, from);
-    } catch (InvocationTargetException e) {
-      throw new MappingException(e, from);
+      throw new MappingInstantiationException(e.getMessage(), e);
     }
   }
 
   public Object getFieldValue(String name, Object from) throws MappingException {
-    PropertyDescriptor descriptor = properties.get(name);
-    if (null != descriptor) {
-      return getFieldValue(descriptor, from);
+    return getFieldValue(name, from, null);
+  }
+
+  public Object getFieldValue(String name, Object from, Object defaultObj) throws MappingException {
+    try {
+      if (properties.containsKey(name) && null != getters.get(name)) {
+        return getters.get(name).invoke(from);
+      } else {
+        if (fields.containsKey(name)) {
+          Field f = fields.get(name);
+          return f.get(from);
+        } else {
+          for (Association assoc : associations) {
+            if (assoc.getField().getName().equals(name)) {
+              return assoc.getField().get(from);
+            }
+          }
+          for (Field f : clazz.getDeclaredFields()) {
+            // Lastly, check for any private fields
+            if (f.getName().equals(name)) {
+              f.setAccessible(true);
+              return f.get(from);
+            }
+          }
+        }
+      }
+    } catch (IllegalAccessException e) {
+      throw new MappingException(e.getMessage(), e, from);
+    } catch (InvocationTargetException e) {
+      throw new MappingException(e.getMessage(), e, from);
     }
-    return null;
+    return defaultObj;
   }
 
   public void setValue(String name, Object on, Object value) throws MappingException {
     Field f = fields.get(name);
-    if (null != f) {
-      Method setter = setters.get(name);
-      try {
+    try {
+      if (null != f) {
+        Method setter = setters.get(name);
         if (null != setter) {
           setter.invoke(on, value);
         } else {
           f.set(on, value);
         }
-      } catch (IllegalAccessException e) {
-        throw new MappingException(e, value);
-      } catch (InvocationTargetException e) {
-        throw new MappingException(e, value);
+      } else {
+        for (Association assoc : associations) {
+          if (assoc.getField().getName().equals(name)) {
+            assoc.getField().set(on, value);
+            return;
+          }
+        }
+        for (Field privFld : clazz.getDeclaredFields()) {
+          if (privFld.getName().equals(name)) {
+            privFld.setAccessible(true);
+            privFld.set(on, value);
+            return;
+          }
+        }
       }
+    } catch (IllegalAccessException e) {
+      throw new MappingException(e.getMessage(), e, value);
+    } catch (InvocationTargetException e) {
+      throw new MappingException(e.getMessage(), e, value);
     }
   }
 
@@ -305,7 +385,7 @@ public class MappingIntrospector<T> {
         try {
           ((InitializingBean) obj).afterPropertiesSet();
         } catch (Exception e) {
-          throw new MappingException(e, obj);
+          throw new MappingException(e.getMessage(), e, obj);
         }
       }
     }
@@ -346,10 +426,12 @@ public class MappingIntrospector<T> {
 
     private final PropertyDescriptor descriptor;
     private final Field field;
+    private final Class<?> targetClass;
 
-    public Association(PropertyDescriptor descriptor, Field field) {
+    public Association(PropertyDescriptor descriptor, Field field, Class<?> targetClass) {
       this.descriptor = descriptor;
       this.field = field;
+      this.targetClass = targetClass;
     }
 
     public PropertyDescriptor getDescriptor() {
@@ -360,6 +442,9 @@ public class MappingIntrospector<T> {
       return field;
     }
 
+    public Class<?> getTargetClass() {
+      return targetClass;
+    }
   }
 
   private class PreferredConstructor {

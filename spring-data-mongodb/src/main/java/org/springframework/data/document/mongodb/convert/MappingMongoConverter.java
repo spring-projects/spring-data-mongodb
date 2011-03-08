@@ -19,6 +19,7 @@ package org.springframework.data.document.mongodb.convert;
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
+import com.mongodb.DBRef;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bson.types.ObjectId;
@@ -26,12 +27,14 @@ import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.expression.BeanFactoryResolver;
+import org.springframework.core.CollectionFactory;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.ConversionServiceFactory;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.document.mongodb.mapping.MappingException;
 import org.springframework.data.document.mongodb.mapping.MappingIntrospector;
 import org.springframework.data.document.mongodb.mapping.MongoMappingContext;
+import org.springframework.data.mapping.model.MappingInstantiationException;
 import org.springframework.expression.Expression;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 
@@ -44,6 +47,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+
+import static org.springframework.data.document.mongodb.mapping.MappingIntrospector.isSimpleType;
 
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
@@ -103,6 +108,10 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
   }
 
   public <S extends Object> S read(Class<S> clazz, final DBObject dbo) {
+    if (null == dbo) {
+      return null;
+    }
+
     final StandardEvaluationContext ctx = new StandardEvaluationContext();
     if (null != applicationContext) {
       ctx.setBeanResolver(new BeanFactoryResolver(applicationContext));
@@ -113,7 +122,7 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
     }
 
     try {
-      if ((clazz.isArray() || clazz.isAssignableFrom(Collection.class)) && dbo instanceof BasicDBList) {
+      if ((clazz.isArray() || (clazz.isAssignableFrom(Collection.class) || clazz.isAssignableFrom(List.class))) && dbo instanceof BasicDBList) {
         List l = new ArrayList<S>();
         BasicDBList dbList = (BasicDBList) dbo;
         for (Object o : dbList) {
@@ -136,22 +145,49 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
       final S instance = introspector.createInstance(new MappingIntrospector.ParameterValueProvider() {
         public <T> T getParameterValue(String name, Class<T> type, Expression spelExpr) {
           Object o = getValueInternal(name, type, dbo, ctx, spelExpr);
-          if (null != o && o.getClass().isAssignableFrom(type)) {
+          if (o instanceof DBRef) {
             cparamNames.add(name);
-            return (T) o;
+            return read(type, ((DBRef) o).fetch());
+          } else if (null != o && o.getClass().isAssignableFrom(type)) {
+            if (type == Object.class && dbo.containsField("_class")) {
+              try {
+                cparamNames.add(name);
+                return (T) conversionService.convert(o, Class.forName(dbo.get("_class").toString()));
+              } catch (ClassNotFoundException e) {
+                throw new MappingInstantiationException(e.getMessage(), e);
+              }
+            } else {
+              cparamNames.add(name);
+              return (T) o;
+            }
           } else {
             cparamNames.add(name);
             return conversionService.convert(o, type);
           }
         }
       });
+
+      // The id is important. Set it first.
+      if (dbo.containsField("_id")) {
+        introspector.setValue(introspector.getIdField().getName(), instance, convertObjectId((ObjectId) dbo.get("_id"), introspector.getIdField().getType()));
+      }
+
       introspector.doWithProperties(new MappingIntrospector.PropertyHandler() {
         public void doWithProperty(PropertyDescriptor descriptor, Field field, Expression spelExpr) {
           String name = descriptor.getName();
           if (!cparamNames.contains(name)) {
             Object o = getValueInternal(name, descriptor.getPropertyType(), dbo, ctx, spelExpr);
             try {
-              introspector.setValue(name, instance, o);
+              if (null != descriptor.getWriteMethod()) {
+                Class<?> requiredType = descriptor.getWriteMethod().getParameterTypes()[0];
+                if (null != o && o.getClass().isAssignableFrom(requiredType)) {
+                  introspector.setValue(name, instance, o);
+                } else {
+                  introspector.setValue(name, instance, conversionService.convert(o, requiredType));
+                }
+              } else {
+                introspector.setValue(name, instance, o);
+              }
             } catch (MappingException e) {
               log.error(e.getMessage(), e);
             }
@@ -159,8 +195,42 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
         }
       });
 
+      // Handle mapping-specific stuff
+      if (introspector.isMappable()) {
+        introspector.doWithAssociations(new MappingIntrospector.AssociationHandler() {
+          public void doWithAssociation(MappingIntrospector.Association association) {
+            String name = association.getDescriptor().getName();
+            Object targetObj = dbo.get(name);
+            if (null != targetObj) {
+              if (targetObj instanceof DBRef) {
+                targetObj = read(association.getTargetClass(), ((DBRef) targetObj).fetch());
+              } else if (targetObj instanceof BasicDBList) {
+                BasicDBList dbList = (BasicDBList) targetObj;
+                Collection<Object> targets = CollectionFactory.createCollection(association.getField().getType(), dbList.size());
+                for (Object tgtDbObj : dbList) {
+                  if (tgtDbObj instanceof DBRef) {
+                    targets.add(read(association.getTargetClass(), ((DBRef) tgtDbObj).fetch()));
+                  } else if (tgtDbObj instanceof DBObject) {
+                    targets.add(read(association.getTargetClass(), (DBObject) tgtDbObj));
+                  } else if (tgtDbObj.getClass().isAssignableFrom(association.getTargetClass())) {
+                    targets.add(tgtDbObj);
+                  } else {
+                    targets.add(conversionService.convert(tgtDbObj, association.getTargetClass()));
+                  }
+                }
+                targetObj = targets;
+              }
+              introspector.setValue(name, instance, targetObj);
+            }
+          }
+        });
+      }
+
       introspector.maybeAutowire(instance, applicationContext, autowirePersistentBeans);
 
+      if (log.isDebugEnabled()) {
+        log.debug("Handing back configured object: " + instance);
+      }
       return instance;
     } catch (MappingException e) {
       throw new RuntimeException(e);
@@ -170,6 +240,7 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
   public void write(final Object o, final DBObject dbo) {
     try {
       final MappingIntrospector<?> introspector = MappingIntrospector.getInstance(o.getClass());
+      //final PersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(o.getClass().getName());
 
       Field idFld = introspector.getIdField();
       if (null != idFld) {
@@ -185,7 +256,7 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
           try {
             Object newObj = introspector.getFieldValue(name, o);
             if (null != newObj) {
-              if (MappingIntrospector.isSimpleType(newObj.getClass())) {
+              if (isSimpleType(newObj.getClass())) {
                 dbo.put(name, newObj);
               } else {
                 if (newObj.getClass().isArray() || newObj.getClass().isAssignableFrom(Collection.class)) {
@@ -213,7 +284,29 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
       if (introspector.isMappable()) {
         introspector.doWithAssociations(new MappingIntrospector.AssociationHandler() {
           public void doWithAssociation(MappingIntrospector.Association association) {
-            log.info("HANDLE ASSOCIATION: " + association);
+            String name = association.getDescriptor().getName();
+            Object targetObj = introspector.getFieldValue(name, o);
+            if (null != targetObj) {
+              if (isSimpleType(targetObj.getClass())) {
+                dbo.put(name, targetObj);
+              } else if (targetObj instanceof Collection || targetObj instanceof List) {
+                // We're doing a ToMany
+                BasicDBList dbRefList = new BasicDBList();
+                for (Object depObj : (targetObj instanceof Collection ? (Collection) targetObj : (List) targetObj)) {
+                  DBObject depDbRef = createDBRef(depObj, depObj.getClass());
+                  if (null != depDbRef) {
+                    dbo.put(name, depDbRef);
+                  }
+                  dbRefList.add(depDbRef);
+                }
+                dbo.put(name, dbRefList);
+              } else {
+                DBObject depDbRef = createDBRef(targetObj, association.getTargetClass());
+                if (null != depDbRef) {
+                  dbo.put(name, depDbRef);
+                }
+              }
+            }
           }
         });
       }
@@ -247,7 +340,11 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
     if (null != spelExpr) {
       o = spelExpr.getValue(ctx);
     } else {
-      Object dbObj = dbo.get(name);
+      DBObject from = dbo;
+      if (dbo instanceof DBRef) {
+        from = ((DBRef) dbo).fetch();
+      }
+      Object dbObj = from.get(name);
       if (dbObj instanceof DBObject) {
         // It's a complex object, have to read it in
         o = read(type, (DBObject) dbObj);
@@ -256,6 +353,21 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
       }
     }
     return o;
+  }
+
+  protected DBObject createDBRef(Object obj, Class<?> targetClass) {
+    if (null != obj) {
+      MappingIntrospector<?> introspector = MappingIntrospector.getInstance(obj.getClass());
+      if (introspector.isMappable()) {
+        String idName = introspector.getIdField().getName();
+        Object idVal = introspector.getFieldValue(idName, obj);
+        BasicDBObject dbRefDbo = new BasicDBObject();
+        dbRefDbo.put("$ref", targetClass.getSimpleName().toLowerCase());
+        dbRefDbo.put("$id", convertObjectId(idVal));
+        return dbRefDbo;
+      }
+    }
+    return null;
   }
 
   /**
