@@ -116,14 +116,14 @@ public class SimpleMongoConverter implements MongoConverter {
 		SIMPLE_TYPES = Collections.unmodifiableSet(basics);
 	}
 
+	private final Set<String> customTypes;
 	private final GenericConversionService conversionService;
 
 	/**
 	 * Creates a {@link SimpleMongoConverter}.
 	 */
 	public SimpleMongoConverter() {
-		this.conversionService = ConversionServiceFactory.createDefaultConversionService();
-		initializeConverters();
+		this(ConversionServiceFactory.createDefaultConversionService());
 	}
 
 	/**
@@ -132,8 +132,21 @@ public class SimpleMongoConverter implements MongoConverter {
 	 * @param conversionService
 	 */
 	public SimpleMongoConverter(GenericConversionService conversionService) {
+		this(conversionService, new HashSet<String>());
+	}
+
+	/**
+	 * Creates a new {@link SimpleMongoConverter} for the given {@link ConversionService} and custom types. The custom
+	 * types will not be traversed during writing but rather serialized using the given {@link ConversionService}.
+	 * 
+	 * @param conversionService
+	 * @param customTypes
+	 */
+	public SimpleMongoConverter(GenericConversionService conversionService, Set<String> customTypes) {
+
 		Assert.notNull(conversionService);
 		this.conversionService = conversionService;
+		this.customTypes = customTypes;
 		initializeConverters();
 	}
 
@@ -142,12 +155,10 @@ public class SimpleMongoConverter implements MongoConverter {
 	 * id types if none are registered for those conversion already. {@link GenericConversionService} is configured.
 	 */
 	protected void initializeConverters() {
-		
-		if (!conversionService.canConvert(ObjectId.class, String.class)) {
-			conversionService.addConverter(ObjectIdToStringConverter.INSTANCE);
-			conversionService.addConverter(StringToObjectIdConverter.INSTANCE);
-		}
-		
+
+		conversionService.addConverter(ObjectIdToStringConverter.INSTANCE);
+		conversionService.addConverter(StringToObjectIdConverter.INSTANCE);
+
 		if (!conversionService.canConvert(ObjectId.class, BigInteger.class)) {
 			conversionService.addConverter(ObjectIdToBigIntegerConverter.INSTANCE);
 			conversionService.addConverter(BigIntegerToIdConverter.INSTANCE);
@@ -176,18 +187,19 @@ public class SimpleMongoConverter implements MongoConverter {
 				if (descriptor.isEnum()) {
 					writeValue(dbo, keyToUse, ((Enum) value).name());
 				} else if (descriptor.isIdProperty() && descriptor.isOfIdType()) {
-					if (value instanceof String && ObjectId.isValid((String)value)) {
+					if (value instanceof ObjectId || value instanceof String && ObjectId.isValid((String) value)) {
 						try {
 							writeValue(dbo, keyToUse, conversionService.convert(value, ObjectId.class));
 						} catch (ConversionFailedException iae) {
 							LOG.warn("Unable to convert the String " + value + " to an ObjectId");
 							writeValue(dbo, keyToUse, value);
 						}
-					}
-					else {
+					} else {
 						// we can't convert this id - use as is
 						writeValue(dbo, keyToUse, value);
 					}
+				} else if (customTypes.contains(descriptor.getPropertyType().getName())) {
+					writeValue(dbo, keyToUse, conversionService.convert(value, String.class));
 				} else {
 					writeValue(dbo, keyToUse, value);
 				}
@@ -438,7 +450,7 @@ public class SimpleMongoConverter implements MongoConverter {
 		return map;
 	}
 
-	protected static boolean isSimpleType(Class<?> propertyType) {
+	private static boolean isSimpleType(Class<?> propertyType) {
 		if (propertyType == null) {
 			return false;
 		}
