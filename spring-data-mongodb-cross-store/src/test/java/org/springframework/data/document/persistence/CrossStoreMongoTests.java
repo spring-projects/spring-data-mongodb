@@ -10,10 +10,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.document.mongodb.MongoTemplate;
 import org.springframework.persistence.document.test.Account;
 import org.springframework.persistence.document.test.MongoPerson;
+import org.springframework.persistence.document.test.Person;
+import org.springframework.persistence.document.test.Resume;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.mongodb.DBCollection;
@@ -42,10 +43,10 @@ public class CrossStoreMongoTests {
         this.entityManager = entityManager;
     }
 
-	private void clearData() {
-		DBCollection col = this.mongoTemplate.getCollection(colName);
+	private void clearData(String collectionName) {
+		DBCollection col = this.mongoTemplate.getCollection(collectionName);
 		if (col != null) {
-			this.mongoTemplate.dropCollection(colName);
+			this.mongoTemplate.dropCollection(collectionName);
 		}
 	}
 	
@@ -53,7 +54,7 @@ public class CrossStoreMongoTests {
 	@Transactional
 	@Rollback(false)
 	public void testUserConstructor() {
-		clearData();
+		clearData(colName);
 		int age = 33;
 		MongoPerson p = new MongoPerson("Thomas", age);
 		Assert.assertEquals(age, p.getAge());
@@ -76,8 +77,8 @@ public class CrossStoreMongoTests {
 	@Test
 	@Transactional
 	@Rollback(false)
-	public void testCreateJpaEntity() {
-		clearData();
+	public void testCreateMongoToJpaEntityRelationship() {
+		clearData(colName);
 		Account a = new Account();
 		a.setName("My Account");
 		a.setFriendlyName("My Test Acct.");
@@ -90,7 +91,7 @@ public class CrossStoreMongoTests {
 
 	@Test
 	@Transactional
-	public void testReadJpaEntity() {
+	public void testReadMongoToJpaEntityRelationship() {
 		DBCollection col = this.mongoTemplate.getCollection(colName);
 		DBCursor dbc = col.find();
 		Object _id = null;
@@ -106,6 +107,32 @@ public class CrossStoreMongoTests {
 		System.out.println(found);
 		if (found != null)
 			System.out.println(found.getAccount());
+	}
+
+	@Test
+	@Transactional
+	@Rollback(false)
+	public void testCreateJpaToMongoEntityRelationship() {
+		clearData("resume");
+		Person p = new Person("Thomas", 20);
+		Resume r = new Resume();
+		r.addEducation("Skanstulls High School, 1975");
+		r.addEducation("Univ. of Stockholm, 1980");
+		r.addJob("DiMark, DBA, 1990-2000");
+		r.addJob("VMware, Developer, 2007-");
+		p.setResume(r);
+		p.setId(1L);
+		entityManager.persist(p);
+	}
+
+	@Test
+	@Transactional
+	public void testReadJpaToMongoEntityRelationship() {
+		Person found = entityManager.find(Person.class, 1L);
+		System.out.println(found);
+//		TODO: This part isn't working yet - there is no reference to the Momgo _id stored in the db
+//		if (found != null)
+//			System.out.println(found.getResume());
 	}
 
 }
