@@ -90,7 +90,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements Paging
 	 * 
 	 * @see org.springframework.data.repository.Repository#findById(java.io.Serializable )
 	 */
-	public T findById(ID id) {
+	public T findOne(ID id) {
 		
 		return template.findOne(entityInformation.getCollectionName(), getIdQuery(id), entityInformation.getJavaType());
 	}
@@ -113,7 +113,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements Paging
 	 */
 	public boolean exists(ID id) {
 
-		return findById(id) != null;
+		return findOne(id) != null;
 	}
 
 	/*
