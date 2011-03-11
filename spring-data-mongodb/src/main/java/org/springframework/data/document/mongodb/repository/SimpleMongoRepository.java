@@ -30,7 +30,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.util.Assert;
 
 /**
@@ -38,13 +37,13 @@ import org.springframework.util.Assert;
  * 
  * @author Oliver Gierke
  */
-public class SimpleMongoRepository<T, ID extends Serializable> implements PagingAndSortingRepository<T, ID> {
+public class SimpleMongoRepository<T, ID extends Serializable> implements MongoRepository<T, ID> {
 
     private final MongoTemplate template;
     private final MongoEntityInformation<T, ID> entityInformation;
 
 	/**
-	 * Creates a ew {@link SimpleMongoRepository} for the given {@link MongoInformation} and {@link MongoTemplate}.
+	 * Creates a new {@link SimpleMongoRepository} for the given {@link MongoInformation} and {@link MongoTemplate}.
 	 * 
 	 * @param metadata
 	 * @param template
@@ -73,7 +72,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements Paging
 	 * 
 	 * @see org.springframework.data.repository.Repository#save(java.lang.Iterable)
 	 */
-	public List<T> save(Iterable<? extends T> entities) {
+	public Iterable<T> save(Iterable<? extends T> entities) {
 
 		List<T> result = new ArrayList<T>();
 
