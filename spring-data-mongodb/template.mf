@@ -7,6 +7,7 @@ Import-Package:
 Import-Template: 
  org.springframework.beans.*;version="[3.0.0, 4.0.0)",
  org.springframework.core.*;version="[3.0.0, 4.0.0)",
+ org.springframework.context.*;version="[3.0.0, 4.0.0)",
  org.springframework.dao.*;version="[3.0.0, 4.0.0)",
  org.springframework.util.*;version="[3.0.0, 4.0.0)",
  org.springframework.jmx.export.*;version="[3.0.0, 4.0.0)",

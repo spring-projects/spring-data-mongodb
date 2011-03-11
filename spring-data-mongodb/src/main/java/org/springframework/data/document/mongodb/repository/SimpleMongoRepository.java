@@ -41,7 +41,7 @@ import org.springframework.util.Assert;
 public class SimpleMongoRepository<T, ID extends Serializable> implements PagingAndSortingRepository<T, ID> {
 
     private final MongoTemplate template;
-    private final MongoEntityInformation<T> entityInformation;
+    private final MongoEntityInformation<T, ID> entityInformation;
 
 	/**
 	 * Creates a ew {@link SimpleMongoRepository} for the given {@link MongoInformation} and {@link MongoTemplate}.
@@ -49,7 +49,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements Paging
 	 * @param metadata
 	 * @param template
 	 */
-	public SimpleMongoRepository(MongoEntityInformation<T> metadata, MongoTemplate template) {
+	public SimpleMongoRepository(MongoEntityInformation<T, ID> metadata, MongoTemplate template) {
 
 		Assert.notNull(template);
 		Assert.notNull(metadata);

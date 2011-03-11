@@ -31,7 +31,7 @@ import org.springframework.util.StringUtils;
 class MongoQueryMethod extends QueryMethod {
 	
 	private final Method method;
-	private final MongoEntityInformation<?> entityInformation;
+	private final MongoEntityInformation<?, ?> entityInformation;
 
 	/**
 	 * Creates a new {@link MongoQueryMethod} from the given {@link Method}.
@@ -82,7 +82,7 @@ class MongoQueryMethod extends QueryMethod {
 	 * @see org.springframework.data.repository.query.QueryMethod#getEntityMetadata()
 	 */
 	@Override
-	public MongoEntityInformation<?> getEntityMetadata() {
+	public MongoEntityInformation<?, ?> getEntityInformation() {
 		
 		return entityInformation;
 	}

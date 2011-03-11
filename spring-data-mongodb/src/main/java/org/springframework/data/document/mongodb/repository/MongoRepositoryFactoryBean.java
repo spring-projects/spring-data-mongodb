@@ -43,7 +43,7 @@ import org.springframework.util.StringUtils;
  * 
  * @author Oliver Gierke
  */
-public class MongoRepositoryFactoryBean extends RepositoryFactoryBeanSupport<MongoRepository<?, ?>> {
+public class MongoRepositoryFactoryBean<T extends MongoRepository<S, ID>, S, ID extends Serializable> extends RepositoryFactoryBeanSupport<T, S, ID> {
 
 	private MongoTemplate template;
 
@@ -101,14 +101,7 @@ public class MongoRepositoryFactoryBean extends RepositoryFactoryBeanSupport<Mon
 			this.template = template;
 		}
 
-		@Override
-		@SuppressWarnings("unchecked")
-		protected Object getTargetRepository(RepositoryMetadata metadata) {
-
-			MongoEntityInformation<Object> info = new MongoEntityInformation<Object>(
-					(Class<Object>) metadata.getDomainClass());
-			return new SimpleMongoRepository<Object, Serializable>(info, template);
-		}
+		
 
 		/*
 		 * (non-Javadoc)
@@ -162,6 +155,31 @@ public class MongoRepositoryFactoryBean extends RepositoryFactoryBeanSupport<Mon
 
 			super.validate(metadata, customImplementation);
 		}
+		
+
+                /* (non-Javadoc)
+                 * @see org.springframework.data.repository.support.RepositoryFactorySupport#getEntityInformation(java.lang.Class)
+                 */
+                @Override
+                public <T, ID extends Serializable> MongoEntityInformation<T, ID> getEntityInformation(
+                        Class<T> domainClass) {
+        
+                    return new MongoEntityInformation<T, ID>(domainClass);
+                }
+
+
+                /*
+                 * (non-Javadoc)
+                 * @see org.springframework.data.repository.support.RepositoryFactorySupport#getTargetRepository(org.springframework.data.repository.support.RepositoryMetadata)
+                 */
+                @Override
+                @SuppressWarnings({ "unchecked", "rawtypes" })
+                protected Object getTargetRepository(RepositoryMetadata metadata) {
+
+                        MongoEntityInformation<?, ?> info = getEntityInformation(
+                                        metadata.getDomainClass());
+                        return new SimpleMongoRepository(info, template);
+                }
 	}
 
 	/**
@@ -199,7 +217,7 @@ public class MongoRepositoryFactoryBean extends RepositoryFactoryBeanSupport<Mon
 				index.on(property, order);
 			}
 
-			MongoEntityInformation<?> metadata = query.getQueryMethod().getEntityMetadata();
+			MongoEntityInformation<?, ?> metadata = query.getQueryMethod().getEntityInformation();
 			operations.ensureIndex(metadata.getCollectionName(), index);
 			LOG.debug(String.format("Created index %s!", index.toString()));
 		}
