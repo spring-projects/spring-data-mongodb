@@ -15,86 +15,85 @@
  */
 package org.springframework.data.document.mongodb.repository;
 
+import java.lang.reflect.Method;
+
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.data.repository.query.QueryMethod;
 import org.springframework.data.repository.util.ClassUtils;
 import org.springframework.util.StringUtils;
 
-import java.lang.reflect.Method;
-
 /**
+ * 
  * TODO - Extract methods for {@link #getAnnotatedQuery()} into superclass as it is currently copied from Spring Data
  * JPA
- *
  * @author Oliver Gierke
  */
 class MongoQueryMethod extends QueryMethod {
+	
+	private final Method method;
+	private final MongoEntityInformation<?, ?> entityInformation;
 
-  private final Method method;
-  private final MongoEntityInformation<?, ?> entityInformation;
+	/**
+	 * Creates a new {@link MongoQueryMethod} from the given {@link Method}.
+	 * 
+	 * @param method
+	 */
+	public MongoQueryMethod(Method method, Class<?> domainClass) {
+		super(method);
+		this.method = method;
+		this.entityInformation = new MongoEntityInformation(ClassUtils.getReturnedDomainClass(method));
+	}
 
-  /**
-   * Creates a new {@link MongoQueryMethod} from the given {@link Method}.
-   *
-   * @param method
-   */
-  @SuppressWarnings({"unchecked"})
-  public MongoQueryMethod(Method method, Class<?> domainClass) {
-    super(method);
-    this.method = method;
-    this.entityInformation = new MongoEntityInformation(ClassUtils.getReturnedDomainClass(method));
-  }
+	
+	/**
+	 * Returns whether the method has an annotated query.
+	 * 
+	 * @return
+	 */
+	boolean hasAnnotatedQuery() {
+		return getAnnotatedQuery() != null;
+	}
 
+	/**
+	 * Returns the query string declared in a {@link Query} annotation or {@literal null} if neither the annotation
+	 * found nor the attribute was specified.
+	 * 
+	 * @return
+	 */
+	String getAnnotatedQuery() {
 
-  /**
-   * Returns whether the method has an annotated query.
-   *
-   * @return
-   */
-  boolean hasAnnotatedQuery() {
-    return getAnnotatedQuery() != null;
-  }
+		String query = (String) AnnotationUtils.getValue(getQueryAnnotation());
+		return StringUtils.hasText(query) ? query : null;
+	}
+	
+	/**
+	 * Returns the field specification to be used for the query.
+	 * 
+	 * @return
+	 */
+	String getFieldSpecification() {
+		
+		String value = (String) AnnotationUtils.getValue(getQueryAnnotation(), "fields");
+		return StringUtils.hasText(value) ? value : null;
+	}
+	
+	
+	/* (non-Javadoc)
+	 * @see org.springframework.data.repository.query.QueryMethod#getEntityMetadata()
+	 */
+	@Override
+	public MongoEntityInformation<?, ?> getEntityInformation() {
+		
+		return entityInformation;
+	}
 
-  /**
-   * Returns the query string declared in a {@link Query} annotation or {@literal null} if neither the annotation
-   * found nor the attribute was specified.
-   *
-   * @return
-   */
-  String getAnnotatedQuery() {
+	/**
+	 * Returns the {@link Query} annotation that is applied to the method or {@code null} if none available.
+	 * 
+	 * @return
+	 */
+	private Query getQueryAnnotation() {
 
-    String query = (String) AnnotationUtils.getValue(getQueryAnnotation());
-    return StringUtils.hasText(query) ? query : null;
-  }
-
-  /**
-   * Returns the field specification to be used for the query.
-   *
-   * @return
-   */
-  String getFieldSpecification() {
-
-    String value = (String) AnnotationUtils.getValue(getQueryAnnotation(), "fields");
-    return StringUtils.hasText(value) ? value : null;
-  }
-
-
-  /* (non-Javadoc)
-    * @see org.springframework.data.repository.query.QueryMethod#getEntityMetadata()
-    */
-  @Override
-  public MongoEntityInformation<?, ?> getEntityInformation() {
-
-    return entityInformation;
-  }
-
-  /**
-   * Returns the {@link Query} annotation that is applied to the method or {@code null} if none available.
-   *
-   * @return
-   */
-  private Query getQueryAnnotation() {
-
-    return method.getAnnotation(Query.class);
-  }
+		return method.getAnnotation(Query.class);
+	}
 }

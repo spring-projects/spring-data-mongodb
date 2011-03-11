@@ -15,6 +15,13 @@
  */
 package org.springframework.data.document.mongodb.repository;
 
+import static org.springframework.data.document.mongodb.query.Criteria.*;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import org.bson.types.ObjectId;
 import org.springframework.data.document.mongodb.MongoTemplate;
 import org.springframework.data.document.mongodb.query.Criteria;
@@ -26,199 +33,189 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.util.Assert;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-import static org.springframework.data.document.mongodb.query.Criteria.where;
-
 /**
  * Repository base implementation for Mongo.
- *
+ * 
  * @author Oliver Gierke
  */
 public class SimpleMongoRepository<T, ID extends Serializable> implements PagingAndSortingRepository<T, ID> {
 
-  private final MongoTemplate template;
-  private final MongoEntityInformation<T, ID> entityInformation;
+    private final MongoTemplate template;
+    private final MongoEntityInformation<T, ID> entityInformation;
 
-  /**
-   * Creates a ew {@link SimpleMongoRepository} for the given {@link MongoInformation} and {@link MongoTemplate}.
-   *
-   * @param metadata
-   * @param template
-   */
-  public SimpleMongoRepository(MongoEntityInformation<T, ID> metadata, MongoTemplate template) {
+	/**
+	 * Creates a ew {@link SimpleMongoRepository} for the given {@link MongoInformation} and {@link MongoTemplate}.
+	 * 
+	 * @param metadata
+	 * @param template
+	 */
+	public SimpleMongoRepository(MongoEntityInformation<T, ID> metadata, MongoTemplate template) {
 
-    Assert.notNull(template);
-    Assert.notNull(metadata);
-    this.entityInformation = metadata;
-    this.template = template;
-  }
+		Assert.notNull(template);
+		Assert.notNull(metadata);
+		this.entityInformation = metadata;
+		this.template = template;
+	}
 
-  /*
-    * (non-Javadoc)
-    *
-    * @see org.springframework.data.repository.Repository#save(java.lang.Object)
-    */
-  public T save(T entity) {
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.springframework.data.repository.Repository#save(java.lang.Object)
+	 */
+	public T save(T entity) {
 
-    template.save(entityInformation.getCollectionName(), entity);
-    return entity;
-  }
+		template.save(entityInformation.getCollectionName(), entity);
+		return entity;
+	}
 
-  /*
-    * (non-Javadoc)
-    *
-    * @see org.springframework.data.repository.Repository#save(java.lang.Iterable)
-    */
-  public List<T> save(Iterable<? extends T> entities) {
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.springframework.data.repository.Repository#save(java.lang.Iterable)
+	 */
+	public List<T> save(Iterable<? extends T> entities) {
 
-    List<T> result = new ArrayList<T>();
+		List<T> result = new ArrayList<T>();
 
-    for (T entity : entities) {
-      save(entity);
-      result.add(entity);
-    }
+		for (T entity : entities) {
+			save(entity);
+			result.add(entity);
+		}
 
-    return result;
-  }
+		return result;
+	}
 
-  /*
-    * (non-Javadoc)
-    *
-    * @see org.springframework.data.repository.Repository#findById(java.io.Serializable )
-    */
-  public T findById(ID id) {
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.springframework.data.repository.Repository#findById(java.io.Serializable )
+	 */
+	public T findById(ID id) {
+		
+		return template.findOne(entityInformation.getCollectionName(), getIdQuery(id), entityInformation.getJavaType());
+	}
 
-    return template.findOne(entityInformation.getCollectionName(), getIdQuery(id), entityInformation.getJavaType());
-  }
+	private Query getIdQuery(Object id) {
 
-  private Query getIdQuery(Object id) {
+		return new Query(getIdCriteria(id));
+	}
+	
+	private Criteria getIdCriteria(Object id) {
+		ObjectId objectId = template.getConverter().convertObjectId(id);
+		return where(entityInformation.getIdAttribute()).is(objectId);
+	}
 
-    return new Query(getIdCriteria(id));
-  }
 
-  private Criteria getIdCriteria(Object id) {
-    ObjectId objectId = template.getConverter().convertObjectId(id);
-    return where(entityInformation.getIdAttribute()).is(objectId);
-  }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.springframework.data.repository.Repository#exists(java.io.Serializable )
+	 */
+	public boolean exists(ID id) {
 
-  public T findOne(ID id) {
-    return null;
-  }
+		return findById(id) != null;
+	}
 
-  /*
-  * (non-Javadoc)
-  *
-  * @see org.springframework.data.repository.Repository#exists(java.io.Serializable )
-  */
-  public boolean exists(ID id) {
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.springframework.data.repository.Repository#count()
+	 */
+	public Long count() {
 
-    return findById(id) != null;
-  }
+		return template.getCollection(entityInformation.getCollectionName()).count();
+	}
 
-  /*
-    * (non-Javadoc)
-    *
-    * @see org.springframework.data.repository.Repository#count()
-    */
-  public Long count() {
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.springframework.data.repository.Repository#delete(java.lang.Object)
+	 */
+	public void delete(T entity) {
 
-    return template.getCollection(entityInformation.getCollectionName()).count();
-  }
+		template.remove(entityInformation.getCollectionName(), getIdQuery(entityInformation.getId(entity)));
+	}
 
-  /*
-    * (non-Javadoc)
-    *
-    * @see org.springframework.data.repository.Repository#delete(java.lang.Object)
-    */
-  public void delete(T entity) {
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.springframework.data.repository.Repository#delete(java.lang.Iterable)
+	 */
+	public void delete(Iterable<? extends T> entities) {
 
-    template.remove(entityInformation.getCollectionName(), getIdQuery(entityInformation.getId(entity)));
-  }
+		for (T entity : entities) {
+			delete(entity);
+		}
+	}
 
-  /*
-    * (non-Javadoc)
-    *
-    * @see org.springframework.data.repository.Repository#delete(java.lang.Iterable)
-    */
-  public void delete(Iterable<? extends T> entities) {
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.springframework.data.repository.Repository#deleteAll()
+	 */
+	public void deleteAll() {
 
-    for (T entity : entities) {
-      delete(entity);
-    }
-  }
+		template.dropCollection(entityInformation.getCollectionName());
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.springframework.data.repository.Repository#findAll()
+	 */
+	public List<T> findAll() {
+		return findAll(new Query());
+	}
 
-  /*
-    * (non-Javadoc)
-    *
-    * @see org.springframework.data.repository.Repository#deleteAll()
-    */
-  public void deleteAll() {
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.springframework.data.repository.PagingAndSortingRepository#findAll
+	 * (org.springframework.data.domain.Pageable)
+	 */
+	public Page<T> findAll(final Pageable pageable) {
 
-    template.dropCollection(entityInformation.getCollectionName());
-  }
+		Long count = count();
+		List<T> list = findAll(QueryUtils.applyPagination(new Query(), pageable));
 
-  /* (non-Javadoc)
-    * @see org.springframework.data.repository.Repository#findAll()
-    */
-  public List<T> findAll() {
-    return findAll(new Query());
-  }
+		return new PageImpl<T>(list, pageable, count);
+	}
 
-  /*
-    * (non-Javadoc)
-    *
-    * @see org.springframework.data.repository.PagingAndSortingRepository#findAll
-    * (org.springframework.data.domain.Pageable)
-    */
-  public Page<T> findAll(final Pageable pageable) {
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.springframework.data.repository.PagingAndSortingRepository#findAll
+	 * (org.springframework.data.domain.Sort)
+	 */
+	public List<T> findAll(final Sort sort) {
 
-    Long count = count();
-    List<T> list = findAll(QueryUtils.applyPagination(new Query(), pageable));
+		return findAll(QueryUtils.applySorting(new Query(), sort));
+	}
 
-    return new PageImpl<T>(list, pageable, count);
-  }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.springframework.data.repository.Repository#findAll(java.lang.Iterable)
+	 */
+	public List<T> findAll(Iterable<ID> ids) {
 
-  /*
-    * (non-Javadoc)
-    *
-    * @see org.springframework.data.repository.PagingAndSortingRepository#findAll
-    * (org.springframework.data.domain.Sort)
-    */
-  public List<T> findAll(final Sort sort) {
+		Query query = null;
 
-    return findAll(QueryUtils.applySorting(new Query(), sort));
-  }
+		for (ID id : ids) {
+			if (query == null) {
+				query = getIdQuery(id);
+			} else {
+				query = new Query().or(getIdQuery(id));
+			}
+		}
 
-  /*
-    * (non-Javadoc)
-    *
-    * @see org.springframework.data.repository.Repository#findAll(java.lang.Iterable)
-    */
-  public List<T> findAll(Iterable<ID> ids) {
+		return findAll(query);
+	}
 
-    Query query = null;
+	private List<T> findAll(Query query) {
 
-    for (ID id : ids) {
-      if (query == null) {
-        query = getIdQuery(id);
-      } else {
-        query = new Query().or(getIdQuery(id));
-      }
-    }
+		if (query == null) {
+			return Collections.emptyList();
+		}
 
-    return findAll(query);
-  }
-
-  private List<T> findAll(Query query) {
-
-    if (query == null) {
-      return Collections.emptyList();
-    }
-
-    return template.find(entityInformation.getCollectionName(), query, entityInformation.getJavaType());
-  }
+		return template.find(entityInformation.getCollectionName(), query, entityInformation.getJavaType());
+	}
 }
