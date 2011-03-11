@@ -16,13 +16,13 @@
 
 package org.springframework.data.document.mongodb.mapping;
 
-import org.springframework.data.mapping.annotation.Id;
-import org.springframework.data.mapping.annotation.Persistent;
+
+import org.springframework.data.annotation.Id;
 
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
  */
-@Persistent
+@Document
 public class Account {
 
   @Id

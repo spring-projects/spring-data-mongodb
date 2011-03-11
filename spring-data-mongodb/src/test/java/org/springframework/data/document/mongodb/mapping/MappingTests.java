@@ -25,6 +25,7 @@ import org.springframework.data.document.mongodb.MongoTemplate;
 import org.springframework.data.document.mongodb.convert.MongoConverter;
 import org.springframework.data.document.mongodb.query.Criteria;
 import org.springframework.data.document.mongodb.query.Query;
+import org.springframework.data.mapping.BasicMappingContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -33,6 +34,7 @@ import java.util.List;
 
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
 /**
@@ -45,7 +47,7 @@ public class MappingTests {
   @Autowired
   MongoTemplate template;
   @Autowired
-  MongoMappingContext mappingContext;
+  BasicMappingContext mappingContext;
 
   @Rule
   public ExpectedException thrown = ExpectedException.none();
@@ -54,9 +56,9 @@ public class MappingTests {
   public void setUp() {
     template.dropCollection("person");
     template.dropCollection("account");
-    //mappingContext.addPersistentEntity(Person.class);
   }
 
+  @SuppressWarnings({"unchecked"})
   @Test
   public void testWrite() {
     Person p = new Person(123456789, "John", "Doe", 37);
@@ -77,6 +79,8 @@ public class MappingTests {
     p.setAccounts(accounts);
 
     template.insert("person", p);
+
+    assertNotNull(p.getId());
   }
 
   @Test

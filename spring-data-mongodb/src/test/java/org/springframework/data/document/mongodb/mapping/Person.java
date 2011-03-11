@@ -16,21 +16,23 @@
 
 package org.springframework.data.document.mongodb.mapping;
 
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.PersistenceConstructor;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.document.mongodb.index.CompoundIndex;
 import org.springframework.data.document.mongodb.index.CompoundIndexes;
 import org.springframework.data.document.mongodb.index.Indexed;
-import org.springframework.data.mapping.annotation.*;
 
 import java.util.List;
 
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
  */
-@Persistent
+@Document
 @CompoundIndexes({
     @CompoundIndex(name = "age_idx", def = "{'lastName': 1, 'age': -1}")
 })
-public class Person {
+public class Person<T extends Address> {
 
   @Id
   private String id;
@@ -42,9 +44,9 @@ public class Person {
   private Integer age;
   @Transient
   private Integer accountTotal;
-  @Reference
+  @DBRef
   private List<Account> accounts;
-  private Address address;
+  private T address;
 
   public Person(Integer ssn, String firstName, String lastName, Integer age) {
     this.ssn = ssn;
@@ -54,7 +56,7 @@ public class Person {
   }
 
   @PersistenceConstructor
-  public Person(Integer ssn, String firstName, String lastName, Integer age, Address address) {
+  public Person(Integer ssn, String firstName, String lastName, Integer age, T address) {
     this.ssn = ssn;
     this.firstName = firstName;
     this.lastName = lastName;
@@ -114,11 +116,11 @@ public class Person {
     this.accounts = accounts;
   }
 
-  public Address getAddress() {
+  public T getAddress() {
     return address;
   }
 
-  public void setAddress(Address address) {
+  public void setAddress(T address) {
     this.address = address;
   }
 }

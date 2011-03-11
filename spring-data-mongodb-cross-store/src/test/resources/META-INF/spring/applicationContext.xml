@@ -16,6 +16,37 @@
 		<context:exclude-filter expression="org.springframework.stereotype.Controller" type="annotation"/>
 	</context:component-scan>
 
+	<!--  Store spanning config -->
+	
+	<bean class="org.springframework.persistence.StoreSpanning"
+		factory-method="aspectOf" >
+		<property name="mappingValidator">
+			<bean class="org.springframework.persistence.support.SimpleMappingValidator" />
+		</property>
+	</bean>
+		
+	<bean id="entityOperationsLocator" class="org.springframework.persistence.ChainingEntityOperationsLocator" />
+	
+	<bean class="org.springframework.persistence.ChainingForeignStoreKeyManagerLocator" />
+	
+	<bean class="org.springframework.persistence.PresentKeyForeignStoreKeyManager" autowire="constructor" />
+	
+	<bean class="org.springframework.persistence.GeneratedFieldForeignStoreKeyManager" />
+
+	<bean class="org.springframework.persistence.document.MongoEntityOperations" >
+		<property name="order" value="5" />
+		<property name="entityInstantiator">
+			<bean class="org.springframework.persistence.support.ChangeSetConstructorEntityInstantiator" />
+		</property>
+		<property name="changeSetPersister" ref="mongoChangeSetPersister" />
+	</bean>
+
+	<bean class="org.springframework.persistence.EntityManagerJpaEntityOperations"	/>
+
+	<bean class="org.springframework.persistence.support.ChangeSetForeignStoreKeyManager">
+		<property name="fieldDelimiter" value="#"/>
+	</bean>
+
 	<!--  Mongo config -->
 	<bean id="mongo" class="org.springframework.data.document.mongodb.MongoFactoryBean">
 		<property name="host" value="localhost" />

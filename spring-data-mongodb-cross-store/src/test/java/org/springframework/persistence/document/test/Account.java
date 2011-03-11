@@ -16,6 +16,14 @@ public class Account {
 
     private String whatever;
 
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
+
 	public String getName() {
 		return name;
 	}
@@ -47,6 +55,11 @@ public class Account {
 	public void setWhatever(String whatever) {
 		this.whatever = whatever;
 	}
-    
+
+	@Override
+	public String toString() {
+		return "Account [id=" + id + ", name=" + name + ", balance=" + balance
+				+ ", friendlyName=" + friendlyName + "]";
+	}    
 
 }

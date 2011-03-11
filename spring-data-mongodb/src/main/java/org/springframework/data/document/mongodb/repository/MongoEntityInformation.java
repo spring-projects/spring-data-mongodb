@@ -15,6 +15,7 @@
  */
 package org.springframework.data.document.mongodb.repository;
 
+import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.List;
@@ -30,7 +31,7 @@ import org.springframework.util.StringUtils;
  * 
  * @author Oliver Gierke
  */
-class MongoEntityInformation<T extends Object> extends AbstractEntityInformation<T> {
+class MongoEntityInformation<T extends Object, ID extends Serializable> extends AbstractEntityInformation<T, ID> {
 
     private static final List<String> FIELD_NAMES = Arrays.asList("ID", "id", "_id");
     private Field field;
@@ -64,11 +65,22 @@ class MongoEntityInformation<T extends Object> extends AbstractEntityInformation
     }
     
     
+    /**
+     * Returns the name of the collection the entity shall be persisted to.
+     * 
+     * @return
+     */
     public String getCollectionName() {
     	
     	return StringUtils.uncapitalize(getJavaType().getSimpleName());
     }
     
+    
+    /**
+     * Returns the attribute that the id will be persisted to.
+     * 
+     * @return
+     */
     public String getIdAttribute() {
     	
     	return "_id";
@@ -82,8 +94,22 @@ class MongoEntityInformation<T extends Object> extends AbstractEntityInformation
      * org.springframework.data.repository.support.IdAware#getId(java.lang.Object
      * )
      */
-    public Object getId(Object entity) {
+    @SuppressWarnings("unchecked")
+    public ID getId(Object entity) {
 
-        return ReflectionUtils.getField(field, entity);
+        return (ID) ReflectionUtils.getField(field, entity);
+    }
+
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.springframework.data.repository.support.EntityInformation#getIdType()
+     */
+    @SuppressWarnings("unchecked")
+    public Class<ID> getIdType() {
+
+        return (Class<ID>) field.getType();
     }
 }

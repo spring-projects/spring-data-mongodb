@@ -63,7 +63,8 @@ public abstract class MongoOperationsUnitTests {
 				dbo.put("firstName", person.getFirstName());
 			}
 
-			public <S extends Object> S read(Class<S> clazz, DBObject dbo) {
+			@SuppressWarnings({"unchecked"})
+      public <S extends Object> S read(Class<S> clazz, DBObject dbo) {
 				return (S) person;
 			}
 			

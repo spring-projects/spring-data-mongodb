@@ -20,8 +20,12 @@
     <constructor-arg ref="mongoConverter"/>
   </bean>
 
-  <bean id="mappingContext" class="org.springframework.data.document.mongodb.mapping.MongoMappingContext">
-    <constructor-arg ref="mongoTemplate"/>
+  <bean id="mappingContext" class="org.springframework.data.mapping.BasicMappingContext">
+    <property name="mappingConfigurationBuilder">
+      <bean class="org.springframework.data.document.mongodb.mapping.MongoMappingConfigurationBuilder">
+        <constructor-arg ref="mongoTemplate"/>
+      </bean>
+    </property>
   </bean>
 
   <bean class="org.springframework.data.document.mongodb.MongoExceptionTranslator"/>

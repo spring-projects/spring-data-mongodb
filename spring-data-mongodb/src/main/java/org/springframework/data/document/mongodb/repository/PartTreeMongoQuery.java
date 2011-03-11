@@ -39,7 +39,7 @@ public class PartTreeMongoQuery extends AbstractMongoQuery {
 	public PartTreeMongoQuery(MongoQueryMethod method, MongoTemplate template) {
 
 		super(method, template);
-		this.tree = new PartTree(method.getName(), method.getEntityMetadata().getJavaType());
+		this.tree = new PartTree(method.getName(), method.getEntityInformation().getJavaType());
 	}
 	
 	/**

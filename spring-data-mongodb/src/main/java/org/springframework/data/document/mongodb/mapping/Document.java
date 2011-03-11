@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.data.mapping.annotation;
+package org.springframework.data.document.mongodb.mapping;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -22,16 +22,15 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * @author J. Brisbin <jbrisbin@vmware.com>
+ * @author Jon Brisbin <jbrisbin@vmware.com>
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target(value = {ElementType.TYPE, ElementType.FIELD})
-public @interface Persistent {
+@Target({
+    ElementType.TYPE,
+    ElementType.FIELD
+})
+public @interface Document {
 
-  PersistenceStrategy strategy() default PersistenceStrategy.DOCUMENT;
-
-  IdentifiedBy identifiedBy() default IdentifiedBy.DEFAULT;
-
-  String id() default "id";
-
+  String collection() default "";
+  
 }

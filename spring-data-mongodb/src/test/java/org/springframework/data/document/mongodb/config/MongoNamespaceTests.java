@@ -58,7 +58,8 @@ public class MongoNamespaceTests {
 	
 	
 	
-	public static <T> T readField(String name, Object target) throws Exception {
+	@SuppressWarnings({"unchecked"})
+  public static <T> T readField(String name, Object target) throws Exception {
 		Field field = null;
 		Class<?> clazz = target.getClass();
 		do {

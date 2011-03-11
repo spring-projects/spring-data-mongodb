@@ -27,6 +27,7 @@ import java.lang.annotation.Target;
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Indexed {
+
   boolean unique() default false;
 
   IndexDirection direction() default IndexDirection.ASCENDING;

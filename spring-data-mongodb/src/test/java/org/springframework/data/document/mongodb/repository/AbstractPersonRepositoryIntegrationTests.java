@@ -57,7 +57,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	@Test
 	public void findsPersonById() throws Exception {
 
-		assertThat(repository.findById(dave.getId()), is(dave));
+		assertThat(repository.findOne(dave.getId()), is(dave));
 	}
 
 	@Test

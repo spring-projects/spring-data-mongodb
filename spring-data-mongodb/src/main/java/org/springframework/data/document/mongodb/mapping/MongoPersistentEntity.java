@@ -16,28 +16,26 @@
 
 package org.springframework.data.document.mongodb.mapping;
 
-import org.springframework.data.mapping.model.AbstractPersistentEntity;
-import org.springframework.data.mapping.model.ClassMapping;
+import org.springframework.data.mapping.BasicPersistentEntity;
 import org.springframework.data.mapping.model.MappingContext;
 
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
  */
-public class MongoPersistentEntity extends AbstractPersistentEntity {
+public class MongoPersistentEntity<T> extends BasicPersistentEntity {
+
+  protected String collection;
 
   @SuppressWarnings({"unchecked"})
-  public MongoPersistentEntity(Class<?> javaClass, MappingContext context) {
-    super(javaClass, context);
+  public MongoPersistentEntity(MappingContext mappingContext, Class<T> type) {
+    super(mappingContext, type);
   }
 
-  @SuppressWarnings({"unchecked"})
-  public ClassMapping<MongoCollection> getMapping() {
-    return new MongoClassMapping(this, getMappingContext());
+  public String getCollection() {
+    return collection;
   }
 
-  @Override
-  public void afterPropertiesSet() throws Exception {
-    super.afterPropertiesSet();
+  public void setCollection(String collection) {
+    this.collection = collection;
   }
-
 }

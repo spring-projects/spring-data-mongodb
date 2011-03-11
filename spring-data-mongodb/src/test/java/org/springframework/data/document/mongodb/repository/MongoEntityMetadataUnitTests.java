@@ -31,8 +31,8 @@ public class MongoEntityMetadataUnitTests {
     @Test
     public void findsIdField() throws Exception {
 
-        MongoEntityInformation<Person> isNewAware =
-                new MongoEntityInformation<Person>(Person.class);
+        MongoEntityInformation<Person, Long> isNewAware =
+                new MongoEntityInformation<Person, Long>(Person.class);
 
         Person person = new Person();
         assertThat(isNewAware.isNew(person), is(true));
@@ -44,7 +44,7 @@ public class MongoEntityMetadataUnitTests {
     @Test(expected = IllegalArgumentException.class)
     public void rejectsClassIfNoIdField() throws Exception {
 
-        new MongoEntityInformation<InvalidPerson>(InvalidPerson.class);
+        new MongoEntityInformation<InvalidPerson, Long>(InvalidPerson.class);
     }
 
     class Person {

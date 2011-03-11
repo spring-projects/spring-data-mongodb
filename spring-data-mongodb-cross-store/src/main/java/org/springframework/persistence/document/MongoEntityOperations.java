@@ -4,19 +4,35 @@ import java.lang.reflect.Field;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
+import org.springframework.data.document.mongodb.MongoTemplate;
 import org.springframework.persistence.OrderedEntityOperations;
 import org.springframework.persistence.RelatedEntity;
+import org.springframework.persistence.support.ChangeSet;
 import org.springframework.persistence.support.ChangeSetBacked;
+import org.springframework.persistence.support.ChangeSetPersister.NotFoundException;
+import org.springframework.persistence.support.EntityInstantiator;
+import org.springframework.persistence.support.HashMapChangeSet;
 
 import com.mongodb.DB;
 
 public class MongoEntityOperations extends OrderedEntityOperations<Object, ChangeSetBacked> {
 	
 	@Autowired
-	private DB mongoDb;
+	private MongoTemplate mongoTemplate;
 	
-	@Autowired
+	private EntityInstantiator<ChangeSetBacked, ChangeSet> entityInstantiator;
+
 	private MongoChangeSetPersister changeSetPersister;
+
+	public void setEntityInstantiator(EntityInstantiator<ChangeSetBacked, ChangeSet> entityInstantiator) {
+		this.entityInstantiator = entityInstantiator;
+	}
+
+	@Autowired
+	public void setChangeSetPersister(MongoChangeSetPersister changeSetPersister) {
+		this.changeSetPersister = changeSetPersister;
+	}
+
 
 	@Override
 	public boolean cacheInEntity() {
@@ -24,8 +40,15 @@ public class MongoEntityOperations extends OrderedEntityOperations<Object, Chang
 	}
 
 	@Override
-	public ChangeSetBacked findEntity(Class<ChangeSetBacked> entityClass, Object pk) throws DataAccessException {
-		throw new UnsupportedOperationException(); 
+	public ChangeSetBacked findEntity(Class<ChangeSetBacked> entityClass, Object key) throws DataAccessException {
+		try {
+			ChangeSet cs = new HashMapChangeSet();
+			changeSetPersister.getPersistentState(entityClass, key, cs);
+			return entityInstantiator.createEntityFromState(cs, entityClass);
+		}
+		catch (NotFoundException ex) {
+			return null;
+		}	
 	}
 
 	@Override

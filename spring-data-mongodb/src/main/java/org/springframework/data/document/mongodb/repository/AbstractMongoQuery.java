@@ -100,7 +100,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 
 		protected List<?> readCollection(Query query) {
 
-			MongoEntityInformation<?> metadata = method.getEntityMetadata();
+			MongoEntityInformation<?, ?> metadata = method.getEntityInformation();
 
 			String collectionName = metadata.getCollectionName();
 			return template.find(collectionName, query, metadata.getJavaType());
@@ -155,7 +155,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 		@SuppressWarnings({ "rawtypes", "unchecked" })
 		Object execute(Query query) {
 
-			MongoEntityInformation<?> metadata = method.getEntityMetadata();
+			MongoEntityInformation<?, ?> metadata = method.getEntityInformation();
 			int count = getCollectionCursor(metadata.getCollectionName(), query.getQueryObject()).count();
 
 			List<?> result = template.find(metadata.getCollectionName(), applyPagination(query, pageable),

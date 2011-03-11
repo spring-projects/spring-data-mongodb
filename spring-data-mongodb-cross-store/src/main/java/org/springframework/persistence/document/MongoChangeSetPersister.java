@@ -53,10 +53,10 @@ public class MongoChangeSetPersister implements ChangeSetPersister<Object> {
 				// System.err.println("Mongo persisted property [" + propertyName + "] :: " + propertyKey + " = " + dbo.get(propertyKey));
 				if (propertyKey.startsWith("_")) {
 					// Id or class
-					changeSet.set(propertyName, dbo.get(propertyKey));
+					changeSet.set(propertyKey, dbo.get(propertyKey));
 				} else {
 					//throw new IllegalStateException("Unknown property [" + propertyName + "] found in MongoDB store");
-					changeSet.set(propertyName, dbo.get(propertyKey));
+					changeSet.set(propertyKey, dbo.get(propertyKey));
 				}
 			}
 		} catch (MongoException ex) {

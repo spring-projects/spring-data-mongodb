@@ -16,18 +16,27 @@
 
 package org.springframework.data.document.mongodb.mapping;
 
-import org.springframework.data.mapping.model.AbstractClassMapping;
-import org.springframework.data.mapping.model.MappingContext;
-import org.springframework.data.mapping.model.PersistentEntity;
+import org.springframework.data.annotation.Reference;
 
-public class MongoClassMapping extends AbstractClassMapping<MongoCollection> {
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-  public MongoClassMapping(PersistentEntity entity, MappingContext context) {
-    super(entity, context);
-  }
+/**
+ * @author Jon Brisbin <jbrisbin@vmware.com>
+ */
+@Retention(RetentionPolicy.RUNTIME)
+@Target({
+    ElementType.FIELD
+})
+@Reference
+public @interface DBRef {
 
-  @Override
-  public MongoCollection getMappedForm() {
-    return (MongoCollection) context.getMappingFactory().createMappedForm(entity);
-  }
+  String collection() default "";
+
+  String id() default "";
+
+  String db() default "";
+
 }

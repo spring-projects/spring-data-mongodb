@@ -30,6 +30,8 @@ public @interface CompoundIndex {
 
   String def();
 
+  IndexDirection direction() default IndexDirection.ASCENDING;
+
   boolean unique() default false;
 
   boolean sparse() default false;
