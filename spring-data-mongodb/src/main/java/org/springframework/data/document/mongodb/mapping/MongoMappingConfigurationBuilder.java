@@ -61,7 +61,8 @@ public class MongoMappingConfigurationBuilder extends BasicMappingConfigurationB
 
   @Override
   public PersistentProperty<?> createPersistentProperty(Field field, PropertyDescriptor descriptor) throws MappingConfigurationException {
-    PersistentProperty<?> property = super.createPersistentProperty(field, descriptor);
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    PersistentProperty<?> property = new MongoPersistentProperty(field.getName(), field.getType(), field, descriptor);
     if (field.isAnnotationPresent(Indexed.class)) {
       Indexed index = field.getAnnotation(Indexed.class);
       String collection = index.collection();
@@ -120,19 +121,6 @@ public class MongoMappingConfigurationBuilder extends BasicMappingConfigurationB
   @Override
   public Association createAssociation(PersistentProperty<?> property) {
     return super.createAssociation(property);
-  }
-
-  @Override
-  protected boolean isIdField(Field field) {
-    if (super.isIdField(field)) {
-      return true;
-    }
-    if (field.getType() == ObjectId.class || field.getType() == BigInteger.class) {
-      if ("id".equals(field.getName()) || "_id".equals(field.getName())) {
-        return true;
-      }
-    }
-    return false;
   }
 
   protected void ensureIndex(String collection,
