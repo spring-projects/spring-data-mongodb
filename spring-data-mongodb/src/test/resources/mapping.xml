@@ -8,6 +8,14 @@
     <property name="port" value="27017"/>
   </bean>
 
+  <bean id="mappingContext" class="org.springframework.data.mapping.BasicMappingContext">
+    <property name="mappingConfigurationBuilder">
+      <bean class="org.springframework.data.document.mongodb.mapping.MongoMappingConfigurationBuilder">
+        <constructor-arg ref="mongoTemplate"/>
+      </bean>
+    </property>
+  </bean>
+
   <bean id="mongoConverter" class="org.springframework.data.document.mongodb.convert.MappingMongoConverter">
     <property name="mappingContext" ref="mappingContext"/>
     <property name="autowirePersistentBeans" value="true"/>
@@ -18,14 +26,6 @@
     <constructor-arg value="database"/>
     <constructor-arg value="person"/>
     <constructor-arg ref="mongoConverter"/>
-  </bean>
-
-  <bean id="mappingContext" class="org.springframework.data.mapping.BasicMappingContext">
-    <property name="mappingConfigurationBuilder">
-      <bean class="org.springframework.data.document.mongodb.mapping.MongoMappingConfigurationBuilder">
-        <constructor-arg ref="mongoTemplate"/>
-      </bean>
-    </property>
   </bean>
 
   <bean class="org.springframework.data.document.mongodb.MongoExceptionTranslator"/>

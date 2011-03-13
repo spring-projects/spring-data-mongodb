@@ -22,7 +22,6 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.document.mongodb.MongoTemplate;
-import org.springframework.data.document.mongodb.convert.MongoConverter;
 import org.springframework.data.document.mongodb.query.Criteria;
 import org.springframework.data.document.mongodb.query.Query;
 import org.springframework.data.mapping.BasicMappingContext;
@@ -30,7 +29,9 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
@@ -58,9 +59,47 @@ public class MappingTests {
     template.dropCollection("account");
   }
 
-  @SuppressWarnings({"unchecked"})
   @Test
-  public void testWrite() {
+  public void testPersonPojo() {
+    PersonPojo p = new PersonPojo(12345, "Person", "Pojo");
+    template.insert(p);
+
+    assertNotNull(p.getId());
+  }
+
+  @Test
+  public void testPersonWithCustomIdName() {
+    PersonCustomIdName p = new PersonCustomIdName(123456, "Custom", "Id");
+    template.insert(p);
+
+    List<PersonCustomIdName> result = template.find(new Query(Criteria.where("ssn").is(123456)), PersonCustomIdName.class);
+    assertThat(result.size(), is(1));
+  }
+
+  @Test
+  public void testPersonMapProperty() {
+    PersonMapProperty p = new PersonMapProperty(1234567, "Map", "Property");
+    Map<String, AccountPojo> accounts = new HashMap<String, AccountPojo>();
+
+    AccountPojo checking = new AccountPojo("checking", 1000.0f);
+    AccountPojo savings = new AccountPojo("savings", 10000.0f);
+
+    accounts.put("checking", checking);
+    accounts.put("savings", savings);
+    p.setAccounts(accounts);
+
+    template.insert(p);
+    assertNotNull(p.getId());
+
+    List<PersonMapProperty> result = template.find(new Query(Criteria.where("ssn").is(1234567)), PersonMapProperty.class);
+    assertThat(result.size(), is(1));
+    assertThat(result.get(0).getAccounts().size(), is(2));
+    assertNotNull(result.get(0).getAccounts().get("checking"));
+  }
+
+  @Test
+  @SuppressWarnings({"unchecked"})
+  public void testWriteEntity() {
     Person p = new Person(123456789, "John", "Doe", 37);
 
     Address addr = new Address();
@@ -84,9 +123,7 @@ public class MappingTests {
   }
 
   @Test
-  public void testRead() {
-    MongoConverter converter = template.getConverter();
-
+  public void testReadEntity() {
     List<Person> result = template.find(new Query(Criteria.where("ssn").is(123456789)), Person.class);
     assertThat(result.size(), is(1));
     assertThat(result.get(0).getAddress().getCountry(), is("USA"));

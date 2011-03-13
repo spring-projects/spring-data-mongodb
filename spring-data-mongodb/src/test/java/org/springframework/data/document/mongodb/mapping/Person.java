@@ -16,9 +16,11 @@
 
 package org.springframework.data.document.mongodb.mapping;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.annotation.Transient;
+import org.springframework.data.document.mongodb.MongoTemplate;
 import org.springframework.data.document.mongodb.index.CompoundIndex;
 import org.springframework.data.document.mongodb.index.CompoundIndexes;
 import org.springframework.data.document.mongodb.index.Indexed;
@@ -47,6 +49,8 @@ public class Person<T extends Address> {
   @DBRef
   private List<Account> accounts;
   private T address;
+  @Autowired
+  private MongoTemplate mongoTemplate;
 
   public Person(Integer ssn, String firstName, String lastName, Integer age) {
     this.ssn = ssn;

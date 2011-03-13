@@ -24,6 +24,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bson.types.ObjectId;
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -40,12 +41,9 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 
 import java.lang.reflect.Array;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigInteger;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
@@ -54,7 +52,6 @@ import java.util.concurrent.ConcurrentMap;
 public class MappingMongoConverter implements MongoConverter, ApplicationContextAware {
 
   protected static final Log log = LogFactory.getLog(MappingMongoConverter.class);
-  protected static final ConcurrentMap<Class<?>, Map<String, Field>> fieldsByName = new ConcurrentHashMap<Class<?>, Map<String, Field>>();
 
   protected GenericConversionService conversionService = ConversionServiceFactory.createDefaultConversionService();
   protected SpelExpressionParser spelExpressionParser = new SpelExpressionParser();
@@ -223,6 +220,13 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
     if (null != applicationContext && autowirePersistentBeans) {
       applicationContext.getAutowireCapableBeanFactory().autowireBean(instance);
     }
+    if (instance instanceof InitializingBean) {
+      try {
+        ((InitializingBean) instance).afterPropertiesSet();
+      } catch (Exception e) {
+        throw new MappingException(e.getMessage(), e);
+      }
+    }
 
     return instance;
   }
@@ -281,7 +285,7 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
         }
         if (null != propertyObj) {
           if (prop.isComplexType()) {
-            writeObjectInternal(prop, propertyObj, dbo);
+            writePropertyInternal(prop, propertyObj, dbo);
           } else {
             dbo.put(name, propertyObj);
           }
@@ -302,7 +306,7 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
           throw new MappingException(e.getMessage(), e);
         }
         if (null != propertyObj) {
-          writeObjectInternal(inverseProp, propertyObj, dbo);
+          writePropertyInternal(inverseProp, propertyObj, dbo);
         }
       }
     });
@@ -323,7 +327,7 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
     }
   }
 
-  protected void writeObjectInternal(PersistentProperty<?> prop, Object obj, DBObject dbo) {
+  protected void writePropertyInternal(PersistentProperty<?> prop, Object obj, DBObject dbo) {
     org.springframework.data.document.mongodb.mapping.DBRef dbref = prop.getField()
         .getAnnotation(org.springframework.data.document.mongodb.mapping.DBRef.class);
     String name = prop.getName();
@@ -344,6 +348,10 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
         }
       }
       dbo.put(name, dbList);
+    } else if (null != obj && obj instanceof Map) {
+      BasicDBObject mapDbObj = new BasicDBObject();
+      writeMapInternal((Map<Object, Object>) obj, mapDbObj);
+      dbo.put(name, mapDbObj);
     } else {
       if (null != dbref) {
         DBObject dbRefObj = createDBRef(obj, dbref);
@@ -354,6 +362,26 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
         BasicDBObject propDbObj = new BasicDBObject();
         write(obj, propDbObj);
         dbo.put(name, propDbObj);
+      }
+    }
+  }
+
+  protected void writeMapInternal(Map<Object, Object> obj, DBObject dbo) {
+    Set<String> simpleTypes = MappingBeanHelper.getSimpleTypes();
+    for (Map.Entry<Object, Object> entry : obj.entrySet()) {
+      Object key = entry.getKey();
+      Object val = entry.getValue();
+      if (simpleTypes.contains(key.getClass().getName())) {
+        String simpleKey = conversionService.convert(key, String.class);
+        if (simpleTypes.contains(val.getClass().toString())) {
+          dbo.put(simpleKey, val);
+        } else {
+          DBObject newDbo = new BasicDBObject();
+          write(val, newDbo);
+          dbo.put(simpleKey, newDbo);
+        }
+      } else {
+        throw new MappingException("Cannot use a complex object as a key value.");
       }
     }
   }
@@ -404,7 +432,18 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
       Object dbObj = from.get(name);
       if (dbObj instanceof DBObject) {
         Class<?> type = prop.getType();
-        if (type.isArray() && dbObj instanceof BasicDBObject && ((DBObject) dbObj).keySet().size() == 0) {
+        if (type.isAssignableFrom(Map.class) && dbObj instanceof DBObject) {
+          Map m = new LinkedHashMap();
+          for (Map.Entry<String, Object> entry : ((Map<String, Object>) ((DBObject) dbObj).toMap()).entrySet()) {
+            if (null != entry.getValue()
+                && MappingBeanHelper.getSimpleTypes().contains(entry.getValue().getClass().getName())) {
+              m.put(entry.getKey(), entry.getValue());
+            } else if (null != entry.getValue()) {
+              m.put(entry.getKey(), entry.getValue());
+            }
+          }
+          return m;
+        } else if (type.isArray() && dbObj instanceof BasicDBObject && ((DBObject) dbObj).keySet().size() == 0) {
           // It's empty
           return Array.newInstance(type.getComponentType(), 0);
         } else if (prop.isCollection() && dbObj instanceof BasicDBList) {
