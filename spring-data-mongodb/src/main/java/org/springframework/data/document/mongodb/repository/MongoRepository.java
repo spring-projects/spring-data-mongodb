@@ -33,7 +33,6 @@ public interface MongoRepository<T, ID extends Serializable> extends PagingAndSo
 	 * 
 	 * @see org.springframework.data.repository.Repository#findAll()
 	 */
-	@Override
 	List<T> findAll();
 
 	/*
@@ -41,6 +40,5 @@ public interface MongoRepository<T, ID extends Serializable> extends PagingAndSo
 	 * 
 	 * @see org.springframework.data.repository.PagingAndSortingRepository#findAll(org.springframework.data.domain.Sort)
 	 */
-	@Override
 	List<T> findAll(Sort sort);
 }
