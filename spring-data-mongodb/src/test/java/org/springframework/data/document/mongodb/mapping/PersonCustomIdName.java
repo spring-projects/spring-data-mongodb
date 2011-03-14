@@ -22,18 +22,13 @@ import org.springframework.data.annotation.Id;
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
  */
-public class PersonCustomIdName {
+public class PersonCustomIdName extends BasePerson {
 
   @Id
   private ObjectId customId;
-  private Integer ssn;
-  private String firstName;
-  private String lastName;
 
   public PersonCustomIdName(Integer ssn, String firstName, String lastName) {
-    this.ssn = ssn;
-    this.firstName = firstName;
-    this.lastName = lastName;
+    super(ssn, firstName, lastName);
   }
 
   public ObjectId getCustomId() {
@@ -44,27 +39,4 @@ public class PersonCustomIdName {
     this.customId = customId;
   }
 
-  public Integer getSsn() {
-    return ssn;
-  }
-
-  public void setSsn(Integer ssn) {
-    this.ssn = ssn;
-  }
-
-  public String getFirstName() {
-    return firstName;
-  }
-
-  public void setFirstName(String firstName) {
-    this.firstName = firstName;
-  }
-
-  public String getLastName() {
-    return lastName;
-  }
-
-  public void setLastName(String lastName) {
-    this.lastName = lastName;
-  }
 }

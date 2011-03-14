@@ -16,9 +16,7 @@
 
 package org.springframework.data.document.mongodb.mapping;
 
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.document.mongodb.MongoTemplate;
@@ -49,9 +47,6 @@ public class MappingTests {
   MongoTemplate template;
   @Autowired
   BasicMappingContext mappingContext;
-
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
 
   @Test
   public void setUp() {
@@ -100,14 +95,12 @@ public class MappingTests {
   @Test
   @SuppressWarnings({"unchecked"})
   public void testWriteEntity() {
-    Person p = new Person(123456789, "John", "Doe", 37);
 
     Address addr = new Address();
     addr.setLines(new String[]{"1234 W. 1st Street", "Apt. 12"});
     addr.setCity("Anytown");
     addr.setPostalCode(12345);
     addr.setCountry("USA");
-    p.setAddress(addr);
 
     Account acct = new Account();
     acct.setBalance(1000.00f);
@@ -115,8 +108,9 @@ public class MappingTests {
 
     List<Account> accounts = new ArrayList<Account>();
     accounts.add(acct);
-    p.setAccounts(accounts);
 
+    Person p = new Person(123456789, "John", "Doe", 37, addr);
+    p.setAccounts(accounts);
     template.insert("person", p);
 
     assertNotNull(p.getId());

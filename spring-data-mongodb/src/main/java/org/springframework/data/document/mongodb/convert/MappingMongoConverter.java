@@ -58,7 +58,7 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
   protected MappingContext mappingContext;
   protected ApplicationContext applicationContext;
   protected boolean autowirePersistentBeans = false;
-  protected boolean useFieldAccessOnly = false;
+  protected boolean useFieldAccessOnly = true;
 
   public MappingMongoConverter() {
     initializeConverters();
@@ -367,13 +367,12 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
   }
 
   protected void writeMapInternal(Map<Object, Object> obj, DBObject dbo) {
-    Set<String> simpleTypes = MappingBeanHelper.getSimpleTypes();
     for (Map.Entry<Object, Object> entry : obj.entrySet()) {
       Object key = entry.getKey();
       Object val = entry.getValue();
-      if (simpleTypes.contains(key.getClass().getName())) {
+      if (MappingBeanHelper.isSimpleType(key.getClass())) {
         String simpleKey = conversionService.convert(key, String.class);
-        if (simpleTypes.contains(val.getClass().toString())) {
+        if (MappingBeanHelper.isSimpleType(val.getClass())) {
           dbo.put(simpleKey, val);
         } else {
           DBObject newDbo = new BasicDBObject();

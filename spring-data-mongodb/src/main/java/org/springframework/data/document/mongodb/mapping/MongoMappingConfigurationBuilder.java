@@ -36,7 +36,6 @@ import org.springframework.data.mapping.model.*;
 
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
-import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -53,15 +52,15 @@ public class MongoMappingConfigurationBuilder extends BasicMappingConfigurationB
   public MongoMappingConfigurationBuilder(MongoTemplate mongoTemplate) {
     this.mongoTemplate = mongoTemplate;
     // Augment simpleTypes with MongoDB-specific classes
-    Set<String> simpleTypes = MappingBeanHelper.getSimpleTypes();
-    simpleTypes.add(DBRef.class.getName());
-    simpleTypes.add(ObjectId.class.getName());
-    simpleTypes.add(CodeWScope.class.getName());
+    Set<Class<?>> simpleTypes = MappingBeanHelper.getSimpleTypes();
+    simpleTypes.add(com.mongodb.DBRef.class);
+    simpleTypes.add(ObjectId.class);
+    simpleTypes.add(CodeWScope.class);
   }
 
   @Override
   public PersistentProperty<?> createPersistentProperty(Field field, PropertyDescriptor descriptor) throws MappingConfigurationException {
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @SuppressWarnings({"unchecked", "rawtypes"})
     PersistentProperty<?> property = new MongoPersistentProperty(field.getName(), field.getType(), field, descriptor);
     if (field.isAnnotationPresent(Indexed.class)) {
       Indexed index = field.getAnnotation(Indexed.class);

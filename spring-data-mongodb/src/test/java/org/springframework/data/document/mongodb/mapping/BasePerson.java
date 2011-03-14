@@ -19,11 +19,14 @@ package org.springframework.data.document.mongodb.mapping;
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
  */
-public class BasePerson {
+public abstract class BasePerson {
 
-  private Integer ssn;
-  private String firstName;
-  private String lastName;
+  protected Integer ssn;
+  protected String firstName;
+  protected String lastName;
+
+  public BasePerson() {
+  }
 
   public BasePerson(Integer ssn, String firstName, String lastName) {
     this.ssn = ssn;

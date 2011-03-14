@@ -52,13 +52,6 @@ public class Person<T extends Address> {
   @Autowired
   private MongoTemplate mongoTemplate;
 
-  public Person(Integer ssn, String firstName, String lastName, Integer age) {
-    this.ssn = ssn;
-    this.firstName = firstName;
-    this.lastName = lastName;
-    this.age = age;
-  }
-
   @PersistenceConstructor
   public Person(Integer ssn, String firstName, String lastName, Integer age, T address) {
     this.ssn = ssn;
@@ -78,6 +71,10 @@ public class Person<T extends Address> {
 
   public Integer getSsn() {
     return ssn;
+  }
+
+  public void setSsn(Integer ssn) {
+    this.ssn = ssn;
   }
 
   public String getFirstName() {

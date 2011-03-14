@@ -21,17 +21,12 @@ import org.bson.types.ObjectId;
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
  */
-public class PersonPojo {
+public class PersonPojo extends BasePerson {
 
   private ObjectId id;
-  private Integer ssn;
-  private String firstName;
-  private String lastName;
 
   public PersonPojo(Integer ssn, String firstName, String lastName) {
-    this.ssn = ssn;
-    this.firstName = firstName;
-    this.lastName = lastName;
+    super(ssn, firstName, lastName);
   }
 
   public ObjectId getId() {
@@ -40,29 +35,5 @@ public class PersonPojo {
 
   public void setId(ObjectId id) {
     this.id = id;
-  }
-
-  public Integer getSsn() {
-    return ssn;
-  }
-
-  public void setSsn(Integer ssn) {
-    this.ssn = ssn;
-  }
-
-  public String getFirstName() {
-    return firstName;
-  }
-
-  public void setFirstName(String firstName) {
-    this.firstName = firstName;
-  }
-
-  public String getLastName() {
-    return lastName;
-  }
-
-  public void setLastName(String lastName) {
-    this.lastName = lastName;
   }
 }
