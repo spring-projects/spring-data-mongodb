@@ -33,6 +33,7 @@ import org.springframework.data.document.mongodb.index.Indexed;
 import org.springframework.data.mapping.BasicMappingConfigurationBuilder;
 import org.springframework.data.mapping.MappingBeanHelper;
 import org.springframework.data.mapping.model.*;
+import org.springframework.data.util.TypeInformation;
 
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
@@ -59,8 +60,8 @@ public class MongoMappingConfigurationBuilder extends BasicMappingConfigurationB
   }
 
   @Override
-  public <T> PersistentProperty<T> createPersistentProperty(Field field, PropertyDescriptor descriptor, Class<T> type) throws MappingConfigurationException {
-    PersistentProperty<T> property = new MongoPersistentProperty<T>(field.getName(), type, field, descriptor);
+  public PersistentProperty createPersistentProperty(Field field, PropertyDescriptor descriptor, TypeInformation information) throws MappingConfigurationException {
+    PersistentProperty property = new MongoPersistentProperty(field, descriptor, information);
     if (field.isAnnotationPresent(Indexed.class)) {
       Indexed index = field.getAnnotation(Indexed.class);
       String collection = index.collection();
@@ -75,10 +76,11 @@ public class MongoMappingConfigurationBuilder extends BasicMappingConfigurationB
     return property;
   }
 
-  @SuppressWarnings({"unchecked"})
   @Override
-  public <T> PersistentEntity<T> createPersistentEntity(Class<T> type, MappingContext mappingContext) throws MappingConfigurationException {
-    MongoPersistentEntity<T> entity = new MongoPersistentEntity<T>(mappingContext, type);
+  public <T> PersistentEntity<T> createPersistentEntity(TypeInformation typeInformation, MappingContext mappingContext) throws MappingConfigurationException {
+    
+    MongoPersistentEntity<T> entity = new MongoPersistentEntity<T>(mappingContext, typeInformation);
+    Class<?> type = typeInformation.getType();
 
     // Check for special collection setting
     if (type.isAnnotationPresent(Document.class)) {
@@ -117,7 +119,7 @@ public class MongoMappingConfigurationBuilder extends BasicMappingConfigurationB
   }
 
   @Override
-  public Association createAssociation(PersistentProperty<?> property) {
+  public Association createAssociation(PersistentProperty property) {
     return super.createAssociation(property);
   }
 

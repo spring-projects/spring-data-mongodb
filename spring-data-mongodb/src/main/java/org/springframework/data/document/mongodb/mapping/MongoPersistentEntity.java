@@ -18,17 +18,18 @@ package org.springframework.data.document.mongodb.mapping;
 
 import org.springframework.data.mapping.BasicPersistentEntity;
 import org.springframework.data.mapping.model.MappingContext;
+import org.springframework.data.util.TypeInformation;
 
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
  */
-public class MongoPersistentEntity<T> extends BasicPersistentEntity {
+public class MongoPersistentEntity<T> extends BasicPersistentEntity<T> {
 
   protected String collection;
 
-  @SuppressWarnings({"unchecked"})
-  public MongoPersistentEntity(MappingContext mappingContext, Class<T> type) {
-    super(mappingContext, type);
+ 
+  public MongoPersistentEntity(MappingContext mappingContext, TypeInformation typeInformation) {
+    super(mappingContext, typeInformation);
   }
 
   public String getCollection() {

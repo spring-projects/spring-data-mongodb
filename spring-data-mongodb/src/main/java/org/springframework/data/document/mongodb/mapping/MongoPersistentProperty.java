@@ -23,6 +23,7 @@ import java.util.Set;
 
 import org.bson.types.ObjectId;
 import org.springframework.data.mapping.BasicPersistentProperty;
+import org.springframework.data.util.TypeInformation;
 
 /**
  * Mongo specific
@@ -31,7 +32,7 @@ import org.springframework.data.mapping.BasicPersistentProperty;
  * 
  * @author Oliver Gierke
  */
-public class MongoPersistentProperty<T> extends BasicPersistentProperty<T> {
+public class MongoPersistentProperty extends BasicPersistentProperty {
 
   private static final Set<Class<?>> SUPPORTED_ID_TYPES = new HashSet<Class<?>>();
   private static final Set<String> SUPPORTED_ID_PROPERTY_NAMES = new HashSet<String>();
@@ -48,14 +49,13 @@ public class MongoPersistentProperty<T> extends BasicPersistentProperty<T> {
   /**
    * Creates a new {@link MongoPersistentProperty}.
    * 
-   * @param name
-   * @param type
    * @param field
    * @param propertyDescriptor
+   * @param owningTypeInformation
    */
-  public MongoPersistentProperty(String name, Class<T> type, Field field,
-      PropertyDescriptor propertyDescriptor) {
-    super(name, type, field, propertyDescriptor);
+  public MongoPersistentProperty(Field field,
+      PropertyDescriptor propertyDescriptor, TypeInformation owningTypeInformation) {
+    super(field, propertyDescriptor, owningTypeInformation);
   }
 
   /**

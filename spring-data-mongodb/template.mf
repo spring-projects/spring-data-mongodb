@@ -19,6 +19,7 @@ Import-Template:
  org.springframework.data.domain.*;version="[1.0.0, 2.0.0)",
  org.springframework.data.document.*;version="[1.0.0, 2.0.0)",
  org.springframework.data.repository.*;version="[1.0.0, 2.0.0)",
+ org.springframework.data.util.*;version="[1.0.0, 2.0.0)",
  org.springframework.expression.*;version="[3.0.0, 4.0.0)",
  org.springframework.expression.common.*;version="[3.0.0, 4.0.0)",
  org.springframework.expression.spel.standard.*;version="[3.0.0, 4.0.0)",

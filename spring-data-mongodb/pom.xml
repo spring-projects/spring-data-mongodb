@@ -41,6 +41,7 @@
     <dependency>
       <groupId>org.springframework.data</groupId>
       <artifactId>spring-data-commons-core</artifactId>
+      <version>${data.commons.version}</version>
     </dependency>
 
     <!-- Logging -->
