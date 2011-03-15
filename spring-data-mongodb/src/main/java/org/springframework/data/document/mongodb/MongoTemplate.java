@@ -36,6 +36,7 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.document.mongodb.MongoPropertyDescriptors.MongoPropertyDescriptor;
 import org.springframework.data.document.mongodb.convert.MongoConverter;
+import org.springframework.data.document.mongodb.convert.MongoConverter;
 import org.springframework.data.document.mongodb.convert.SimpleMongoConverter;
 import org.springframework.data.document.mongodb.query.IndexDefinition;
 import org.springframework.data.document.mongodb.query.Query;
@@ -69,7 +70,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
     */
   private WriteResultChecking writeResultChecking = WriteResultChecking.NONE;
 
-  private final MongoConverter mongoConverter;
+  private MongoConverter mongoConverter;
   private final Mongo mongo;
   private final MongoExceptionTranslator exceptionTranslator = new MongoExceptionTranslator();
 
@@ -1121,5 +1122,13 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
       return reader.read(type, object);
     }
   }
+
+	public void setMongoConverter(MongoConverter converter) {
+		this.mongoConverter = converter;
+	}
+	
+	public void setWriteResultChecking(WriteResultChecking resultChecking) {
+		this.writeResultChecking = resultChecking;		
+	}
 
 }
