@@ -156,6 +156,13 @@
 			<url>http://maven.springframework.org/snapshot</url>
         </repository>
 	</repositories>
+	<pluginRepositories>
+		<pluginRepository>
+			<id>spring-maven-milestones</id>
+			<name>Springframework Maven Milestone Repository</name>
+			<url>http://maven.springframework.org/milestone</url>
+	        </pluginRepository>
+	</pluginRepositories>
 	<build>
 		<plugins>
 			<plugin>
