@@ -15,7 +15,8 @@
  */
 package org.springframework.data.document.mongodb.convert;
 
-import static org.springframework.beans.PropertyAccessorFactory.*;
+import static org.springframework.beans.PropertyAccessorFactory.forBeanPropertyAccess;
+import static org.springframework.beans.PropertyAccessorFactory.forDirectFieldAccess;
 
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.ConfigurablePropertyAccessor;
@@ -27,67 +28,67 @@ import org.springframework.util.Assert;
 
 /**
  * Custom Mongo specific {@link BeanWrapper} to allow access to bean properties via {@link MongoPropertyDescriptor}s.
- * 
+ *
  * @author Oliver Gierke
  */
 class MongoBeanWrapper {
 
-	private final ConfigurablePropertyAccessor accessor;
-	private final MongoPropertyDescriptors descriptors;
-	private final boolean fieldAccess;
+  private final ConfigurablePropertyAccessor accessor;
+  private final MongoPropertyDescriptors descriptors;
+  private final boolean fieldAccess;
 
-	/**
-	 * Creates a new {@link MongoBeanWrapper} for the given target object and {@link ConversionService}.
-	 * 
-	 * @param target
-	 * @param conversionService
-	 * @param fieldAccess
-	 */
-	public MongoBeanWrapper(Object target, ConversionService conversionService, boolean fieldAccess) {
+  /**
+   * Creates a new {@link MongoBeanWrapper} for the given target object and {@link ConversionService}.
+   *
+   * @param target
+   * @param conversionService
+   * @param fieldAccess
+   */
+  public MongoBeanWrapper(Object target, ConversionService conversionService, boolean fieldAccess) {
 
-		Assert.notNull(target);
-		Assert.notNull(conversionService);
+    Assert.notNull(target);
+    Assert.notNull(conversionService);
 
-		this.fieldAccess = fieldAccess;
-		this.accessor = fieldAccess ? forDirectFieldAccess(target) : forBeanPropertyAccess(target);
-		this.accessor.setConversionService(conversionService);
-		this.descriptors = new MongoPropertyDescriptors(target.getClass());
-	}
+    this.fieldAccess = fieldAccess;
+    this.accessor = fieldAccess ? forDirectFieldAccess(target) : forBeanPropertyAccess(target);
+    this.accessor.setConversionService(conversionService);
+    this.descriptors = new MongoPropertyDescriptors(target.getClass());
+  }
 
-	/**
-	 * Returns all {@link MongoPropertyDescriptors.MongoPropertyDescriptor}s for the underlying target object.
-	 * 
-	 * @return
-	 */
-	public MongoPropertyDescriptors getDescriptors() {
-		return this.descriptors;
-	}
+  /**
+   * Returns all {@link MongoPropertyDescriptors.MongoPropertyDescriptor}s for the underlying target object.
+   *
+   * @return
+   */
+  public MongoPropertyDescriptors getDescriptors() {
+    return this.descriptors;
+  }
 
-	/**
-	 * Returns the value of the underlying object for the given property.
-	 * 
-	 * @param descriptor
-	 * @return
-	 */
-	public Object getValue(MongoPropertyDescriptors.MongoPropertyDescriptor descriptor) {
-		Assert.notNull(descriptor);
-		return accessor.getPropertyValue(descriptor.getName());
-	}
+  /**
+   * Returns the value of the underlying object for the given property.
+   *
+   * @param descriptor
+   * @return
+   */
+  public Object getValue(MongoPropertyDescriptors.MongoPropertyDescriptor descriptor) {
+    Assert.notNull(descriptor);
+    return accessor.getPropertyValue(descriptor.getName());
+  }
 
-	/**
-	 * Sets the property of the underlying object to the given value.
-	 * 
-	 * @param descriptor
-	 * @param value
-	 */
-	public void setValue(MongoPropertyDescriptors.MongoPropertyDescriptor descriptor, Object value) {
-		Assert.notNull(descriptor);
-		try {
-			accessor.setPropertyValue(descriptor.getName(), value);
-		} catch (NotWritablePropertyException e) {
-			if (!fieldAccess) {
-				throw e;
-			}
-		}
-	}
+  /**
+   * Sets the property of the underlying object to the given value.
+   *
+   * @param descriptor
+   * @param value
+   */
+  public void setValue(MongoPropertyDescriptors.MongoPropertyDescriptor descriptor, Object value) {
+    Assert.notNull(descriptor);
+    try {
+      accessor.setPropertyValue(descriptor.getName(), value);
+    } catch (NotWritablePropertyException e) {
+      if (!fieldAccess) {
+        throw e;
+      }
+    }
+  }
 }

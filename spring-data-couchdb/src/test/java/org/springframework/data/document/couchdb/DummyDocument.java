@@ -16,62 +16,62 @@
 
 package org.springframework.data.document.couchdb;
 
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-
 import java.util.Date;
+
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
 /**
  * @author Tareq Abedrabbo (tareq.abedrabbo@opencredo.com)
  * @since 13/01/2011
  */
-@JsonIgnoreProperties(ignoreUnknown=true)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class DummyDocument {
 
-    private String message;
+  private String message;
 
-    private String timestamp = new Date().toString();
+  private String timestamp = new Date().toString();
 
-    public DummyDocument() {
-    }
+  public DummyDocument() {
+  }
 
-    public DummyDocument(String message) {
-        this.message = message;
-    }
+  public DummyDocument(String message) {
+    this.message = message;
+  }
 
-    public String getMessage() {
-        return message;
-    }
+  public String getMessage() {
+    return message;
+  }
 
-    public void setMessage(String message) {
-        this.message = message;
-    }
+  public void setMessage(String message) {
+    this.message = message;
+  }
 
-    public String getTimestamp() {
-        return timestamp;
-    }
+  public String getTimestamp() {
+    return timestamp;
+  }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
 
-        DummyDocument document = (DummyDocument) o;
+    DummyDocument document = (DummyDocument) o;
 
-        if (message != null ? !message.equals(document.message) : document.message != null) return false;
+    if (message != null ? !message.equals(document.message) : document.message != null) return false;
 
-        return true;
-    }
+    return true;
+  }
 
-    @Override
-    public int hashCode() {
-        return message != null ? message.hashCode() : 0;
-    }
+  @Override
+  public int hashCode() {
+    return message != null ? message.hashCode() : 0;
+  }
 
-    @Override
-    public String toString() {
-        return "DummyDocument{" +
-                "message='" + message + '\'' +
-                ", timestamp=" + timestamp +
-                '}';
-    }
+  @Override
+  public String toString() {
+    return "DummyDocument{" +
+        "message='" + message + '\'' +
+        ", timestamp=" + timestamp +
+        '}';
+  }
 }

@@ -1,22 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
-"http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
+    "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
 <chapter id="mongo.core">
   <title>MongoDB support</title>
 
-  <para>One of the document stores supported by DATADOC is <ulink
-  url="http://www.mongodb.org/">MongoDB</ulink>. To quote the project home
-  page: <quote> MongoDB (from "humongous") is a scalable, high-performance,
-  open source, document-oriented database. </quote> <para>Spring Data Document
-  provides easy configuration and access to MongoDB from a Spring application.
-  Offers both low-level and high-level abstraction for interacting with the
-  store, freeing the user from infrastructural concerns.</para></para>
+  <para>One of the document stores supported by DATADOC is<ulink
+      url="http://www.mongodb.org/">MongoDB</ulink>. To quote the project home
+    page:
+    <quote>MongoDB (from "humongous") is a scalable, high-performance,
+      open source, document-oriented database.
+    </quote>
+    <para>Spring Data Document
+      provides easy configuration and access to MongoDB from a Spring application.
+      Offers both low-level and high-level abstraction for interacting with the
+      store, freeing the user from infrastructural concerns.
+    </para>
+  </para>
 
   <section id="mongodb-requirements">
     <title>MongoDB Requirements</title>
 
     <para>DATADOC requires MongoDB 1.4 while the latest production release
-    (1.6.5 as of this writing) is recommended.</para>
+      (1.6.5 as of this writing) is recommended.
+    </para>
   </section>
 
   <section id="mongodb-architecture">
@@ -26,161 +32,197 @@
 
     <itemizedlist>
       <listitem>
-         
+
 
         <emphasis>Configuration Factory</emphasis>
 
-         - for configuring and handling communication with MongoDB via its Java driver 
+        - for configuring and handling communication with MongoDB via its Java driver
       </listitem>
 
       <listitem>
-         
+
 
         <emphasis>Template implementation</emphasis>
 
-         - As with many of Spring's template classes, MongoTemplate simplifies the use of accessing the database for common use-cases and infrastructure concerns such as exception translation. Features include integrated object mapping between documents and domain classes and fluent DSLs for query and update operations. The chapter 
+        - As with many of Spring's template classes, MongoTemplate simplifies the use of accessing the database for
+        common use-cases and infrastructure concerns such as exception translation. Features include integrated object
+        mapping between documents and domain classes and fluent DSLs for query and update operations. The chapter
 
-        <xref linkend="mongodb:template" />
+        <xref linkend="mongodb:template"/>
 
-         provides additional details. 
+        provides additional details.
       </listitem>
 
       <listitem>
-         
+
 
         <emphasis>Support Classes</emphasis>
 
-         - that offer reusable components such as mapping support and exception translation. 
+        - that offer reusable components such as mapping support and exception translation.
       </listitem>
     </itemizedlist>
 
     <para>For most tasks, the higher-level abstractions and support services
-    are the best choice. Note that at any point, one can move between layers -
-    for example, it's very easy to get a hold of the low level connection
-    (org.mongo.DB) to communicate directly with MongoDB.</para>
+      are the best choice. Note that at any point, one can move between layers -
+      for example, it's very easy to get a hold of the low level connection
+      (org.mongo.DB) to communicate directly with MongoDB.
+    </para>
   </section>
 
   <section id="mongodb-connectors">
     <title>Connecting to MongoDB</title>
 
     <para>One of the first tasks when using MongoDB and Spring is to create a
-    <classname>com.mongodb.Mongo</classname> object using the IoC container.
-    There are two main ways to do this, either using Java based bean metadata
-    or XML based bean metadata. These are discussed in the following
-    sections.<note>
+      <classname>com.mongodb.Mongo</classname>
+      object using the IoC container.
+      There are two main ways to do this, either using Java based bean metadata
+      or XML based bean metadata. These are discussed in the following
+      sections.
+      <note>
         <para>For those not familiar with how to configure the Spring
-        container using Java based bean metadata instead of XML based metadata
-        see the high level introduction in the reference docs <ulink
-        url="http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/html/new-in-3.html#new-java-configuration"
-        userlevel="">here</ulink> as well as the detailed documentation <ulink
-        url="http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/html/beans.html#beans-java-instantiating-container">here</ulink>.</para>
-      </note></para>
+          container using Java based bean metadata instead of XML based metadata
+          see the high level introduction in the reference docs
+          <ulink
+              url="http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/html/new-in-3.html#new-java-configuration"
+              userlevel="">here
+          </ulink>
+          as well as the detailed documentation<ulink
+              url="http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/html/beans.html#beans-java-instantiating-container">
+            here</ulink>.
+        </para>
+      </note>
+    </para>
 
     <section>
       <title>Using Java based metadata</title>
 
       <para>An example of using Java based bean metadata to register an
-      instance of a <classname>com.mongodb.Mongo</classname> is shown
-      below<example>
+        instance of a
+        <classname>com.mongodb.Mongo</classname>
+        is shown
+        below
+        <example>
           <title>Registering a com.mongodb.Mongo object using Java based bean
-          metadata</title>
+            metadata
+          </title>
 
           <programlisting language="java">@Configuration
-public class AppConfig {
+            public class AppConfig {
 
-    /*
-     * Factory bean that creates the com.mongodb.Mongo instance
-     */
-    public @Bean Mongo mongo() throws UnknownHostException, MongoException {
-        return new Mongo("localhost");
-    }   
+            /*
+            * Factory bean that creates the com.mongodb.Mongo instance
+            */
+            public @Bean Mongo mongo() throws UnknownHostException, MongoException {
+            return new Mongo("localhost");
+            }
 
-}
-</programlisting>
-        </example></para>
+            }
+          </programlisting>
+        </example>
+      </para>
 
       <para>This approach allows you to use the standard com.mongodb.Mongo API
-      that you may already be used to using but also pollutes the code with
-      the UnknownHostException checked exception.</para>
+        that you may already be used to using but also pollutes the code with
+        the UnknownHostException checked exception.
+      </para>
 
       <para>However, you may also register an instance of
-      <classname>com.mongodb.Mongo</classname> instance with the container
-      using Spring's <interfacename>MongoFactoryBean</interfacename>. As
-      compared to instantiating a <classname>com.mongodb.Mongo</classname>
-      instance directly, the FactoryBean approach has the added advantage of
-      also acting as an ExceptionTranslator that can be used to translate any
-      Mongo exceptions to exceptions in the
-      <classname>SpringDataAccessException</classname>. This is part of <ulink
-      url="http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/html/dao.html">Spring's
-      DAO support features</ulink>. The exception translation feature works
-      hand in hand with Spring's <classname>@Repository</classname>
-      annotation. To enable exception translation on data access components
-      annotated with <classname>@Repository</classname> register a
-      <classname>PersistenceExceptionTranslationPostProcessor</classname>
-      (<ulink
-      url="http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/html/beans.html#beans-annotation-config">JavaDoc</ulink>)
-      with the container. <note>
+        <classname>com.mongodb.Mongo</classname>
+        instance with the container
+        using Spring's<interfacename>MongoFactoryBean</interfacename>. As
+        compared to instantiating a
+        <classname>com.mongodb.Mongo</classname>
+        instance directly, the FactoryBean approach has the added advantage of
+        also acting as an ExceptionTranslator that can be used to translate any
+        Mongo exceptions to exceptions in the
+        <classname>SpringDataAccessException</classname>. This is part of<ulink
+            url="http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/html/dao.html">Spring's
+          DAO support features</ulink>. The exception translation feature works
+        hand in hand with Spring's
+        <classname>@Repository</classname>
+        annotation. To enable exception translation on data access components
+        annotated with
+        <classname>@Repository</classname>
+        register a
+        <classname>PersistenceExceptionTranslationPostProcessor</classname>
+        (<ulink
+            url="http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/html/beans.html#beans-annotation-config">
+          JavaDoc</ulink>)
+        with the container.
+        <note>
           <para>While enabling exception translation can be done using Java
-          based bean metadata it is often done declaratively in XML using
-          Spring's context namespace
-          <literal>&lt;context::annotation-config/&gt;</literal>.to enable
-          <ulink
-          url="http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/html/beans.html#beans-annotation-config">annotation
-          configuration features</ulink>.</para>
-        </note></para>
+            based bean metadata it is often done declaratively in XML using
+            Spring's context namespace
+            <literal>&lt;context::annotation-config/&gt;</literal>.to enable
+            <ulink
+                url="http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/html/beans.html#beans-annotation-config">
+              annotation
+              configuration features</ulink>.
+          </para>
+        </note>
+      </para>
 
       <para>An example of a Java based bean metadata that supports exception
-      translation on <classname>@Repository</classname> annotated classes is
-      shown below:</para>
+        translation on
+        <classname>@Repository</classname>
+        annotated classes is
+        shown below:
+      </para>
 
       <example>
         <title>Registering a com.mongodb.Mongo object using Spring's
-        MongoFactoryBean and enabling Spring's exception translation
-        support</title>
+          MongoFactoryBean and enabling Spring's exception translation
+          support
+        </title>
 
         <programlisting language="java">@Configuration
-public class AppConfig {
+          public class AppConfig {
 
-    /*
-     * Factory bean that creates the com.mongodb.Mongo instance
-     */
-    public @Bean MongoFactoryBean mongo() {
-        MongoFactoryBean mongo = new MongoFactoryBean();
-        mongo.setHost("localhost");
-        return mongo; 
-    }   
+          /*
+          * Factory bean that creates the com.mongodb.Mongo instance
+          */
+          public @Bean MongoFactoryBean mongo() {
+          MongoFactoryBean mongo = new MongoFactoryBean();
+          mongo.setHost("localhost");
+          return mongo;
+          }
 
-    /* 
-     * Use this post processor to translate any MongoExceptions thrown in @Repository 
-     * annotated classes
-     */
-    public @Bean PersistenceExceptionTranslationPostProcessor 
-            persistenceExceptionTranslationPostProcessor() {
-        return new PersistenceExceptionTranslationPostProcessor();
-    }
+          /*
+          * Use this post processor to translate any MongoExceptions thrown in @Repository
+          * annotated classes
+          */
+          public @Bean PersistenceExceptionTranslationPostProcessor
+          persistenceExceptionTranslationPostProcessor() {
+          return new PersistenceExceptionTranslationPostProcessor();
+          }
 
-}
-</programlisting>
+          }
+        </programlisting>
       </example>
 
       <para>if you prefer to use the standard MongoDB API to create a
-      com.mongodb.Mongo instance and have exception translation enabled on
-      your <classname>@Repository</classname> instances, simply inherit from
-      <classname>MongoExceptionTranslationConfig</classname> as shown
-      below.</para>
+        com.mongodb.Mongo instance and have exception translation enabled on
+        your
+        <classname>@Repository</classname>
+        instances, simply inherit from
+        <classname>MongoExceptionTranslationConfig</classname>
+        as shown
+        below.
+      </para>
 
       <example>
         <title>Registering a com.mongodb.Mongo object and enabling Spring's
-        exception translation support</title>
+          exception translation support
+        </title>
 
         <programlisting language="java">@Configuration
-public class AppConfig extends MongoExceptionTranslationConfig {
-    
-    public @Bean Mongo mongo() throws UnknownHostException, MongoException {
-       return new Mongo("localhost");
-    }
-}
-</programlisting>
+          public class AppConfig extends MongoExceptionTranslationConfig {
+
+          public @Bean Mongo mongo() throws UnknownHostException, MongoException {
+          return new Mongo("localhost");
+          }
+          }
+        </programlisting>
       </example>
     </section>
 
@@ -188,218 +230,272 @@ public class AppConfig extends MongoExceptionTranslationConfig {
       <title>Using XML based metadata</title>
 
       <para>While you can use Spring's traditional &lt;beans/&gt; XML
-      namespace to register an instance of
-      <classname>com.mongodb.Mongo</classname> with the container, the XML can
-      be quite verbose, does not easily support the configuration of public
-      instance variables used with the driver's MongoOptions class, and
-      constructor arguments/names are not the most effective means to
-      distinguish between configuration of replica sets and replica pairs. o
-      address these issues a XML namespace is available to simplify the
-      configuration of a com.mongodb.Mongo instance in XML.</para>
+        namespace to register an instance of
+        <classname>com.mongodb.Mongo</classname>
+        with the container, the XML can
+        be quite verbose, does not easily support the configuration of public
+        instance variables used with the driver's MongoOptions class, and
+        constructor arguments/names are not the most effective means to
+        distinguish between configuration of replica sets and replica pairs. o
+        address these issues a XML namespace is available to simplify the
+        configuration of a com.mongodb.Mongo instance in XML.
+      </para>
 
       <para>To use the Mongo namespace elements you will need to reference the
-      Mongo schema:</para>
+        Mongo schema:
+      </para>
 
       <example>
         <title>XML schema to configure MongoDB</title>
 
         <programlisting language="xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
-&lt;beans xmlns="http://www.springframework.org/schema/beans"
-      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-      xmlns:context="http://www.springframework.org/schema/context"
-      xmlns:mongo="http://www.springframework.org/schema/data/mongo"
-      xsi:schemaLocation=
-  "http://www.springframework.org/schema/context 
-     http://www.springframework.org/schema/context/spring-context-3.0.xsd
-   http://www.springframework.org/schema/data/mongo
-     http://www.springframework.org/schema/data/mongo/spring-mongo-1.0.xsd
-   http://www.springframework.org/schema/beans
-     http://www.springframework.org/schema/beans/spring-beans-3.0.xsd"&gt;
+          &lt;beans xmlns="http://www.springframework.org/schema/beans"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xmlns:context="http://www.springframework.org/schema/context"
+          xmlns:mongo="http://www.springframework.org/schema/data/mongo"
+          xsi:schemaLocation=
+          "http://www.springframework.org/schema/context
+          http://www.springframework.org/schema/context/spring-context-3.0.xsd
+          http://www.springframework.org/schema/data/mongo
+          http://www.springframework.org/schema/data/mongo/spring-mongo-1.0.xsd
+          http://www.springframework.org/schema/beans
+          http://www.springframework.org/schema/beans/spring-beans-3.0.xsd"&gt;
 
-&lt;beans&gt;
-  
-  &lt;!-- Default bean name is 'mongo' --&gt;
-  &lt;mongo:mongo host="localhost" port="27017"/&gt;
-  
-  &lt;!-- To translate any MongoExceptions thrown in @Repository annotated classes --&gt;
-  &lt;context:annotation-config/&gt;
+          &lt;beans&gt;
 
-&lt;/beans&gt;
-</programlisting>
+          &lt;!-- Default bean name is 'mongo' --&gt;
+          &lt;mongo:mongo host="localhost" port="27017"/&gt;
+
+          &lt;!-- To translate any MongoExceptions thrown in @Repository annotated classes --&gt;
+          &lt;context:annotation-config/&gt;
+
+          &lt;/beans&gt;
+        </programlisting>
       </example>
 
       <para>A more advanced configuration with MongoOptions is shown
-      below</para>
+        below
+      </para>
 
       <example>
         <title>XML schema to configure MongoOptinos in MongoDB</title>
 
         <programlisting language="xml">&lt;beans&gt;
-  
-  &lt;mongo:mongo host="localhost" port="27017"&gt;
-    &lt;mongo:options connectionsPerHost="10" 
-                   threadsAllowedToBlockForConnectionMultiplier="5"
-                   maxWaitTime="12000"
-                   connectTimeout="0"
-                   socketTimeout="0"
-                   autoConnectRetry="0"/&gt;
-  &lt;/mongo:mongo/&gt;
-  
-&lt;/beans&gt;
-</programlisting>
+
+          &lt;mongo:mongo host="localhost" port="27017"&gt;
+          &lt;mongo:options connectionsPerHost="10"
+          threadsAllowedToBlockForConnectionMultiplier="5"
+          maxWaitTime="12000"
+          connectTimeout="0"
+          socketTimeout="0"
+          autoConnectRetry="0"/&gt;
+          &lt;/mongo:mongo/&gt;
+
+          &lt;/beans&gt;
+        </programlisting>
       </example>
 
-      <para>A configuration using replica sets is shown below:<example>
+      <para>A configuration using replica sets is shown below:
+        <example>
           <title>XML schema to configure replica sets in MongoDB</title>
 
           <programlisting language="xml">&lt;beans&gt;
-  
-  &lt;mongo:mongo&gt;
-     &lt;! replica set TBD -- should be available for release 1.0.0.M2 --&gt;
-  &lt;mongo:mongo&gt;
-  
-&lt;/beans&gt;
-</programlisting>
-        </example></para>
+
+            &lt;mongo:mongo&gt;
+            &lt;! replica set TBD -- should be available for release 1.0.0.M2 --&gt;
+            &lt;mongo:mongo&gt;
+
+            &lt;/beans&gt;
+          </programlisting>
+        </example>
+      </para>
     </section>
   </section>
 
   <section id="mongodb-template">
     <title>Working with objects using the
-    <classname>MongoTemplate</classname></title>
+      <classname>MongoTemplate</classname>
+    </title>
 
-    <para>Most users are likely to use <classname>MongoTemplate</classname>
-    and its corresponding package
-    <literal>org.springframework.data.document.mongodb</literal> - the
-    template is in fact the central class of the MongoDB module due to its
-    rich feature set. The template offers convenience methods and automatic
-    mapping between MongoDB JSON documents and your domain classes. Out of the
-    box, <classname>MongoTemplate</classname> uses a Java-based default
-    converter but you can also write your own converter classes to be used for
-    reading and storing domain objects.</para>
+    <para>Most users are likely to use
+      <classname>MongoTemplate</classname>
+      and its corresponding package
+      <literal>org.springframework.data.document.mongodb</literal>
+      - the
+      template is in fact the central class of the MongoDB module due to its
+      rich feature set. The template offers convenience methods and automatic
+      mapping between MongoDB JSON documents and your domain classes. Out of the
+      box,
+      <classname>MongoTemplate</classname>
+      uses a Java-based default
+      converter but you can also write your own converter classes to be used for
+      reading and storing domain objects.
+    </para>
 
     <note>
-      <para>Once configured, <classname>MongoTemplate</classname> is
-      thread-safe and can be reused across multiple instances.</para>
+      <para>Once configured,
+        <classname>MongoTemplate</classname>
+        is
+        thread-safe and can be reused across multiple instances.
+      </para>
     </note>
 
     <para>Let's look at a couple of examples for how to work with the
-    <classname>MongoTemplate</classname> in the context of the Spring
-    container.</para>
+      <classname>MongoTemplate</classname>
+      in the context of the Spring
+      container.
+    </para>
 
     <section>
       <title>Instantiating MongoTemplate</title>
 
       <para>In Java based configuration using the driver's com.mongodb.Mongo
-      object</para>
+        object
+      </para>
 
       <example>
         <title>Registering a com.mongodb.Mongo object and enabling Spring's
-        exception translation support</title>
+          exception translation support
+        </title>
 
         <programlisting language="java">@Configuration
-public class AppConfig extends MongoExceptionTranslationConfig {
-    
-    public @Bean Mongo mongo() throws UnknownHostException, MongoException {
-       return new Mongo("localhost");
-    }
+          public class AppConfig extends MongoExceptionTranslationConfig {
 
-    public @Bean MongoTemplate mongoTemplate() throws UnknownHostException, MongoException {
-       return new MongoTemplate(mongo(), "test", "HelloMongo");
-    }
-}
-</programlisting>
+          public @Bean Mongo mongo() throws UnknownHostException, MongoException {
+          return new Mongo("localhost");
+          }
+
+          public @Bean MongoTemplate mongoTemplate() throws UnknownHostException, MongoException {
+          return new MongoTemplate(mongo(), "test", "HelloMongo");
+          }
+          }
+        </programlisting>
       </example>
 
       <para>Alternatively using MongoFactoryBean, which avoid dealing with the
-      checked UnknownHostException</para>
+        checked UnknownHostException
+      </para>
 
       <example>
         <title>Registering a com.mongodb.Mongo object and enabling Spring's
-        exception translation support</title>
+          exception translation support
+        </title>
 
         <programlisting language="java">@Configuration
-public class AppConfig  {
+          public class AppConfig {
 
-    /*
-     * The method argument is the container managed Mongo instance created by the mongo() method
-     */
-    public @Bean MongoTemplate mongoTemplate(Mongo mongo) {
-      MongoTemplate mongoTemplate = new MongoTemplate(mongo, "test", "HelloMongo");
-      return mongoTemplate;
-    }
-    
-     /*
-      * Factory bean that creates the Mongo instance
-      */
-    public @Bean MongoFactoryBean mongo() {    	
-      MongoFactoryBean mongo = new MongoFactoryBean();
-      mongo.setHost("localhost");
-      return mongo; 
-    }
-    
-    /* 
-     * Use this post processor to translate any MongoExceptions thrown in @Repository 
-     * annotated classes
-     */
-    public @Bean PersistenceExceptionTranslationPostProcessor
+          /*
+          * The method argument is the container managed Mongo instance created by the mongo() method
+          */
+          public @Bean MongoTemplate mongoTemplate(Mongo mongo) {
+          MongoTemplate mongoTemplate = new MongoTemplate(mongo, "test", "HelloMongo");
+          return mongoTemplate;
+          }
+
+          /*
+          * Factory bean that creates the Mongo instance
+          */
+          public @Bean MongoFactoryBean mongo() {
+          MongoFactoryBean mongo = new MongoFactoryBean();
+          mongo.setHost("localhost");
+          return mongo;
+          }
+
+          /*
+          * Use this post processor to translate any MongoExceptions thrown in @Repository
+          * annotated classes
+          */
+          public @Bean PersistenceExceptionTranslationPostProcessor
           persistenceExceptionTranslationPostProcessor() {
-      return new PersistenceExceptionTranslationPostProcessor();
-    }
+          return new PersistenceExceptionTranslationPostProcessor();
+          }
 
-}
-</programlisting>
+          }
+        </programlisting>
 
         <para>There are several overloaded constructors of MongoTemplate.
-        These are</para>
+          These are
+        </para>
 
         <itemizedlist>
           <listitem>
-            <para><emphasis
-            role="bold">MongoTemplate</emphasis><literal>(Mongo mongo, String
-            databaseName)</literal> - takes the default database name to
-            operate against</para>
+            <para>
+              <emphasis
+                  role="bold">MongoTemplate
+              </emphasis>
+              <literal>(Mongo mongo, String
+                databaseName)
+              </literal>
+              - takes the default database name to
+              operate against
+            </para>
           </listitem>
 
           <listitem>
-            <para><emphasis
-            role="bold">MongoTemplate</emphasis><literal>(Mongo mongo, String
-            databaseName, String defaultCollectionName)</literal> - adds the
-            default collection name to operate against.</para>
+            <para>
+              <emphasis
+                  role="bold">MongoTemplate
+              </emphasis>
+              <literal>(Mongo mongo, String
+                databaseName, String defaultCollectionName)
+              </literal>
+              - adds the
+              default collection name to operate against.
+            </para>
           </listitem>
 
           <listitem>
-            <para><emphasis
-            role="bold">MongoTemplate</emphasis><literal>(Mongo mongo, String
-            databaseName, String defaultCollectionName, MongoConverter
-            mongoConverter)</literal> - override with a provided
-            MongoConverter. Default is SimpleMongoConverter</para>
+            <para>
+              <emphasis
+                  role="bold">MongoTemplate
+              </emphasis>
+              <literal>(Mongo mongo, String
+                databaseName, String defaultCollectionName, MongoConverter
+                mongoConverter)
+              </literal>
+              - override with a provided
+              MongoConverter. Default is SimpleMongoConverter
+            </para>
           </listitem>
 
           <listitem>
-            <para><emphasis
-            role="bold">MongoTemplate</emphasis><literal>(Mongo mongo, String
-            databaseName, String defaultCollectionName, MongoConverter
-            mongoConverter, WriteConcern writeConcern, WriteResultChecking
-            writeResultChecking)</literal> - Specify a default WriteConcern
-            and also WriteResultChecking policy</para>
+            <para>
+              <emphasis
+                  role="bold">MongoTemplate
+              </emphasis>
+              <literal>(Mongo mongo, String
+                databaseName, String defaultCollectionName, MongoConverter
+                mongoConverter, WriteConcern writeConcern, WriteResultChecking
+                writeResultChecking)
+              </literal>
+              - Specify a default WriteConcern
+              and also WriteResultChecking policy
+            </para>
           </listitem>
 
           <listitem>
-            <para><emphasis
-            role="bold">MongoTemplate</emphasis><literal>(Mongo mongo, String
-            databaseName, String defaultCollectionName, WriteConcern
-            writeConcern, WriteResultChecking writeResultChecking)</literal>-
-            Specify a default WriteConcern and also WriteResultChecking
-            policy</para>
+            <para>
+              <emphasis
+                  role="bold">MongoTemplate
+              </emphasis>
+              <literal>(Mongo mongo, String
+                databaseName, String defaultCollectionName, WriteConcern
+                writeConcern, WriteResultChecking writeResultChecking)</literal>-
+              Specify a default WriteConcern and also WriteResultChecking
+              policy
+            </para>
           </listitem>
 
           <listitem>
-            <para><emphasis
-            role="bold">MongoTemplate</emphasis><literal>(Mongo mongo, String
-            databaseName, WriteConcern writeConcern, WriteResultChecking
-            writeResultChecking)</literal>- Specify a default WriteConcern and
-            also WriteResultChecking policy</para>
+            <para>
+              <emphasis
+                  role="bold">MongoTemplate
+              </emphasis>
+              <literal>(Mongo mongo, String
+                databaseName, WriteConcern writeConcern, WriteResultChecking
+                writeResultChecking)</literal>- Specify a default WriteConcern and
+              also WriteResultChecking policy
+            </para>
           </listitem>
         </itemizedlist>
 
@@ -410,12 +506,13 @@ public class AppConfig  {
         <title>WriteResultChecking Policy</title>
 
         <para>When in development it is very handy to either log or throw an
-        exception if the WriteResult returned from any MongoDB operation
-        contains an error. It is quite common to forget to do this during
-        development and then end up with an application that looks like it ran
-        successfully but the database was not modified according to your
-        expectations. Setting the WriteResultChecking is an enum with the
-        following values, NONE, LOG, EXCEPTION.</para>
+          exception if the WriteResult returned from any MongoDB operation
+          contains an error. It is quite common to forget to do this during
+          development and then end up with an application that looks like it ran
+          successfully but the database was not modified according to your
+          expectations. Setting the WriteResultChecking is an enum with the
+          following values, NONE, LOG, EXCEPTION.
+        </para>
 
         <para>The default is to use a WriteResultChecking of NONE.</para>
       </section>
@@ -424,67 +521,122 @@ public class AppConfig  {
     <section>
       <title>Overview of MongoTemplate Methods</title>
 
-      <para>The public methods for <classname>MongoTemplate</classname> are
-      defined by the interface <interfacename>MongoOperations</interfacename>.
-      They can be grouped into the following categories:</para>
+      <para>The public methods for
+        <classname>MongoTemplate</classname>
+        are
+        defined by the interface<interfacename>MongoOperations</interfacename>.
+        They can be grouped into the following categories:
+      </para>
 
       <section>
         <title>Methods for working with a Collection</title>
 
-        <para><itemizedlist>
+        <para>
+          <itemizedlist>
             <listitem>
-              <para><literal>Set&lt;String&gt;</literal> <emphasis
-              role="bold">getCollectionNames</emphasis><literal>()</literal> A
-              set of collection names.</para>
+              <para>
+                <literal>Set&lt;String&gt;</literal>
+                <emphasis
+                    role="bold">getCollectionNames
+                </emphasis>
+                <literal>()</literal>
+                A
+                set of collection names.
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>boolean</literal> <emphasis
-              role="bold">collectionExists</emphasis><literal>(String
-              collectionName)</literal> Check to see if a collection with a
-              given name exists.</para>
+              <para>
+                <literal>boolean</literal>
+                <emphasis
+                    role="bold">collectionExists
+                </emphasis>
+                <literal>(String
+                  collectionName)
+                </literal>
+                Check to see if a collection with a
+                given name exists.
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>DBCollection</literal> <emphasis
-              role="bold">createCollection</emphasis><literal>(String
-              collectionName)</literal> Create an uncapped collection with the
-              provided name.</para>
+              <para>
+                <literal>DBCollection</literal>
+                <emphasis
+                    role="bold">createCollection
+                </emphasis>
+                <literal>(String
+                  collectionName)
+                </literal>
+                Create an uncapped collection with the
+                provided name.
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>DBCollection</literal> <emphasis
-              role="bold">createCollection</emphasis><literal>(String
-              collectionName, CollectionOptions collectionOptions)</literal>
-              Create a collect with the provided name and options.</para>
+              <para>
+                <literal>DBCollection</literal>
+                <emphasis
+                    role="bold">createCollection
+                </emphasis>
+                <literal>(String
+                  collectionName, CollectionOptions collectionOptions)
+                </literal>
+                Create a collect with the provided name and options.
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>void</literal> <emphasis
-              role="bold">dropCollection</emphasis><literal>(String
-              collectionName)</literal> Drop the collection with the given
-              name.</para>
+              <para>
+                <literal>void</literal>
+                <emphasis
+                    role="bold">dropCollection
+                </emphasis>
+                <literal>(String
+                  collectionName)
+                </literal>
+                Drop the collection with the given
+                name.
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>DBCollection</literal> <emphasis
-              role="bold">getCollection</emphasis><literal>(String
-              collectionName)</literal> Get a collection by name, creating it
-              if it doesn't exist.</para>
+              <para>
+                <literal>DBCollection</literal>
+                <emphasis
+                    role="bold">getCollection
+                </emphasis>
+                <literal>(String
+                  collectionName)
+                </literal>
+                Get a collection by name, creating it
+                if it doesn't exist.
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>DBCollection</literal> <emphasis
-              role="bold">getDefaultCollection</emphasis><literal>()</literal>
-              The default collection used by this template.</para>
+              <para>
+                <literal>DBCollection</literal>
+                <emphasis
+                    role="bold">getDefaultCollection
+                </emphasis>
+                <literal>()</literal>
+                The default collection used by this template.
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>String</literal> <emphasis
-              role="bold">getDefaultCollectionName</emphasis><literal>()</literal>
-              The default collection name used by this template.</para>
+              <para>
+                <literal>String</literal>
+                <emphasis
+                    role="bold">getDefaultCollectionName
+                </emphasis>
+                <literal>()</literal>
+                The default collection name used by this template.
+              </para>
             </listitem>
-          </itemizedlist></para>
+          </itemizedlist>
+        </para>
 
         <para></para>
       </section>
@@ -492,51 +644,95 @@ public class AppConfig  {
       <section>
         <title>Methods for executing commands</title>
 
-        <para><itemizedlist>
+        <para>
+          <itemizedlist>
             <listitem>
-              <para><literal>CommandResult</literal> <emphasis
-              role="bold">executeCommand</emphasis><literal>(DBObject
-              command)</literal> Execute a MongoDB command.</para>
+              <para>
+                <literal>CommandResult</literal>
+                <emphasis
+                    role="bold">executeCommand
+                </emphasis>
+                <literal>(DBObject
+                  command)
+                </literal>
+                Execute a MongoDB command.
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>CommandResult</literal> <emphasis
-              role="bold">executeCommand</emphasis><literal>(String
-              jsonCommand)</literal> Execute the a MongoDB command expressed
-              as a JSON string.</para>
+              <para>
+                <literal>CommandResult</literal>
+                <emphasis
+                    role="bold">executeCommand
+                </emphasis>
+                <literal>(String
+                  jsonCommand)
+                </literal>
+                Execute the a MongoDB command expressed
+                as a JSON string.
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>&lt;T&gt; T</literal> <emphasis
-              role="bold">execute</emphasis><literal>(CollectionCallback&lt;T&gt;
-              action)</literal> Executes the given CollectionCallback on the
-              default collection.</para>
+              <para>
+                <literal>&lt;T&gt; T</literal>
+                <emphasis
+                    role="bold">execute
+                </emphasis>
+                <literal>(CollectionCallback&lt;T&gt;
+                  action)
+                </literal>
+                Executes the given CollectionCallback on the
+                default collection.
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>&lt;T&gt; T</literal> <emphasis
-              role="bold">execute</emphasis><literal>(String collectionName,
-              CollectionCallback&lt;T&gt; action)</literal> Executes the given
-              CollectionCallback on the collection of the given name.update
-              using the $addToSet update modifier</para>
+              <para>
+                <literal>&lt;T&gt; T</literal>
+                <emphasis
+                    role="bold">execute
+                </emphasis>
+                <literal>(String collectionName,
+                  CollectionCallback&lt;T&gt; action)
+                </literal>
+                Executes the given
+                CollectionCallback on the collection of the given name.update
+                using the $addToSet update modifier
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>&lt;T&gt; T</literal> <emphasis
-              role="bold">execute</emphasis><literal>(DbCallback&lt;T&gt;
-              action)</literal> Executes a DbCallback translating any
-              exceptions as necessary.</para>
+              <para>
+                <literal>&lt;T&gt; T</literal>
+                <emphasis
+                    role="bold">execute
+                </emphasis>
+                <literal>(DbCallback&lt;T&gt;
+                  action)
+                </literal>
+                Executes a DbCallback translating any
+                exceptions as necessary.
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>&lt;T&gt; T</literal> <emphasis
-              role="bold">executeInSession</emphasis><literal>(DbCallback&lt;T&gt;
-              action)</literal> Executes the given DbCallback within the same
-              connection to the database so as to ensure consistency in a
-              write heavy environment where you may read the data that you
-              wrote.</para>
+              <para>
+                <literal>&lt;T&gt; T</literal>
+                <emphasis
+                    role="bold">executeInSession
+                </emphasis>
+                <literal>(DbCallback&lt;T&gt;
+                  action)
+                </literal>
+                Executes the given DbCallback within the same
+                connection to the database so as to ensure consistency in a
+                write heavy environment where you may read the data that you
+                wrote.
+              </para>
             </listitem>
-          </itemizedlist></para>
+          </itemizedlist>
+        </para>
 
         <para></para>
       </section>
@@ -544,22 +740,37 @@ public class AppConfig  {
       <section>
         <title>Methods for creating an Index</title>
 
-        <para><itemizedlist>
+        <para>
+          <itemizedlist>
             <listitem>
-              <para><literal>void</literal> <emphasis
-              role="bold">ensureIndex</emphasis><literal>(IndexDefinition
-              indexDefintion)</literal> Ensure that an index for the provided
-              IndexDefinition exists for the default collection.</para>
+              <para>
+                <literal>void</literal>
+                <emphasis
+                    role="bold">ensureIndex
+                </emphasis>
+                <literal>(IndexDefinition
+                  indexDefintion)
+                </literal>
+                Ensure that an index for the provided
+                IndexDefinition exists for the default collection.
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>void</literal> <emphasis
-              role="bold">ensureIndex</emphasis><literal>(String
-              collectionName, IndexDefinition indexSpecification)</literal>
-              Ensure that an index for the provided IndexDefinition
-              exists.</para>
+              <para>
+                <literal>void</literal>
+                <emphasis
+                    role="bold">ensureIndex
+                </emphasis>
+                <literal>(String
+                  collectionName, IndexDefinition indexSpecification)
+                </literal>
+                Ensure that an index for the provided IndexDefinition
+                exists.
+              </para>
             </listitem>
-          </itemizedlist></para>
+          </itemizedlist>
+        </para>
 
         <para></para>
       </section>
@@ -567,69 +778,127 @@ public class AppConfig  {
       <section>
         <title>Methods for inserting documents</title>
 
-        <para><itemizedlist>
+        <para>
+          <itemizedlist>
             <listitem>
-              <para><literal>void</literal> <emphasis
-              role="bold">insert</emphasis><literal>(Object
-              objectToSave)</literal> Insert the object into the default
-              collection.</para>
+              <para>
+                <literal>void</literal>
+                <emphasis
+                    role="bold">insert
+                </emphasis>
+                <literal>(Object
+                  objectToSave)
+                </literal>
+                Insert the object into the default
+                collection.
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>void</literal> <emphasis
-              role="bold">insert</emphasis><literal>(String collectionName,
-              Object objectToSave)</literal> Insert the object into the
-              specified collection.</para>
+              <para>
+                <literal>void</literal>
+                <emphasis
+                    role="bold">insert
+                </emphasis>
+                <literal>(String collectionName,
+                  Object objectToSave)
+                </literal>
+                Insert the object into the
+                specified collection.
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>void</literal> <emphasis
-              role="bold">insertList</emphasis><literal>(List&lt;? extends
-              Object&gt; listToSave)</literal> Insert a list of objects into
-              the default collection in a single batch write to the
-              database.</para>
+              <para>
+                <literal>void</literal>
+                <emphasis
+                    role="bold">insertList
+                </emphasis>
+                <literal>(List&lt;? extends
+                  Object&gt; listToSave)
+                </literal>
+                Insert a list of objects into
+                the default collection in a single batch write to the
+                database.
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>void</literal> <emphasis
-              role="bold">insertList</emphasis><literal>(String
-              collectionName, List&lt;? extends Object&gt;
-              listToSave)</literal> Insert a list of objects into the
-              specified collection in a single batch write to the
-              database.</para>
+              <para>
+                <literal>void</literal>
+                <emphasis
+                    role="bold">insertList
+                </emphasis>
+                <literal>(String
+                  collectionName, List&lt;? extends Object&gt;
+                  listToSave)
+                </literal>
+                Insert a list of objects into the
+                specified collection in a single batch write to the
+                database.
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>&lt;T&gt; void</literal> <emphasis
-              role="bold">insert</emphasis><literal>(T objectToSave,
-              MongoWriter&lt;T&gt; writer)</literal> Insert the object into
-              the default collection.</para>
+              <para>
+                <literal>&lt;T&gt; void</literal>
+                <emphasis
+                    role="bold">insert
+                </emphasis>
+                <literal>(T objectToSave,
+                  MongoWriter&lt;T&gt; writer)
+                </literal>
+                Insert the object into
+                the default collection.
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>&lt;T&gt; void</literal> <emphasis
-              role="bold">insert</emphasis><literal>(String collectionName, T
-              objectToSave, MongoWriter&lt;T&gt; writer)</literal> Insert the
-              object into the specified collection.</para>
+              <para>
+                <literal>&lt;T&gt; void</literal>
+                <emphasis
+                    role="bold">insert
+                </emphasis>
+                <literal>(String collectionName, T
+                  objectToSave, MongoWriter&lt;T&gt; writer)
+                </literal>
+                Insert the
+                object into the specified collection.
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>&lt;T&gt; void</literal> <emphasis
-              role="bold">insertList</emphasis><literal>(List&lt;? extends
-              T&gt; listToSave, MongoWriter&lt;T&gt; writer)</literal> Insert
-              a list of objects into the default collection using the provided
-              MongoWriter instance</para>
+              <para>
+                <literal>&lt;T&gt; void</literal>
+                <emphasis
+                    role="bold">insertList
+                </emphasis>
+                <literal>(List&lt;? extends
+                  T&gt; listToSave, MongoWriter&lt;T&gt; writer)
+                </literal>
+                Insert
+                a list of objects into the default collection using the provided
+                MongoWriter instance
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>&lt;T&gt; void</literal> <emphasis
-              role="bold">insertList</emphasis><literal>(String
-              collectionName, List&lt;? extends T&gt; listToSave,
-              MongoWriter&lt;T&gt; writer)</literal> Insert a list of objects
-              into the specified collection using the provided MongoWriter
-              instance</para>
+              <para>
+                <literal>&lt;T&gt; void</literal>
+                <emphasis
+                    role="bold">insertList
+                </emphasis>
+                <literal>(String
+                  collectionName, List&lt;? extends T&gt; listToSave,
+                  MongoWriter&lt;T&gt; writer)
+                </literal>
+                Insert a list of objects
+                into the specified collection using the provided MongoWriter
+                instance
+              </para>
             </listitem>
-          </itemizedlist></para>
+          </itemizedlist>
+        </para>
 
         <para></para>
       </section>
@@ -637,105 +906,191 @@ public class AppConfig  {
       <section>
         <title>Methods for querying for documents</title>
 
-        <para><itemizedlist>
+        <para>
+          <itemizedlist>
             <listitem>
-              <para><literal>&lt;T&gt; List&lt;T&gt;</literal> <emphasis
-              role="bold">getCollection</emphasis><literal>(Class&lt;T&gt;
-              targetClass)</literal> Query for a list of objects of type T
-              from the default collection.</para>
+              <para>
+                <literal>&lt;T&gt; List&lt;T&gt;</literal>
+                <emphasis
+                    role="bold">getCollection
+                </emphasis>
+                <literal>(Class&lt;T&gt;
+                  targetClass)
+                </literal>
+                Query for a list of objects of type T
+                from the default collection.
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>&lt;T&gt; List&lt;T&gt;</literal> <emphasis
-              role="bold">getCollection</emphasis><literal>(String
-              collectionName, Class&lt;T&gt; targetClass)</literal> Query for
-              a list of objects of type T from the specified
-              collection.</para>
+              <para>
+                <literal>&lt;T&gt; List&lt;T&gt;</literal>
+                <emphasis
+                    role="bold">getCollection
+                </emphasis>
+                <literal>(String
+                  collectionName, Class&lt;T&gt; targetClass)
+                </literal>
+                Query for
+                a list of objects of type T from the specified
+                collection.
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>&lt;T&gt; List&lt;T&gt;</literal> <emphasis
-              role="bold">getCollection</emphasis><literal>(String
-              collectionName, Class&lt;T&gt; targetClass, MongoReader&lt;T&gt;
-              reader)</literal> Query for a list of objects of type T from the
-              specified collection, mapping the DBObject using the provided
-              MongoReader.</para>
+              <para>
+                <literal>&lt;T&gt; List&lt;T&gt;</literal>
+                <emphasis
+                    role="bold">getCollection
+                </emphasis>
+                <literal>(String
+                  collectionName, Class&lt;T&gt; targetClass, MongoReader&lt;T&gt;
+                  reader)
+                </literal>
+                Query for a list of objects of type T from the
+                specified collection, mapping the DBObject using the provided
+                MongoReader.
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>&lt;T&gt; T</literal> <emphasis
-              role="bold">findOne</emphasis><literal>(Query query,
-              Class&lt;T&gt; targetClass)</literal> Map the results of an
-              ad-hoc query on the default MongoDB collection to a single
-              instance of an object of the specified type.</para>
+              <para>
+                <literal>&lt;T&gt; T</literal>
+                <emphasis
+                    role="bold">findOne
+                </emphasis>
+                <literal>(Query query,
+                  Class&lt;T&gt; targetClass)
+                </literal>
+                Map the results of an
+                ad-hoc query on the default MongoDB collection to a single
+                instance of an object of the specified type.
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>&lt;T&gt; T</literal> <emphasis
-              role="bold">findOne</emphasis><literal>(Query query,
-              Class&lt;T&gt; targetClass, MongoReader&lt;T&gt;
-              reader)</literal> Map the results of an ad-hoc query on the
-              default MongoDB collection to a single instance of an object of
-              the specified type.</para>
+              <para>
+                <literal>&lt;T&gt; T</literal>
+                <emphasis
+                    role="bold">findOne
+                </emphasis>
+                <literal>(Query query,
+                  Class&lt;T&gt; targetClass, MongoReader&lt;T&gt;
+                  reader)
+                </literal>
+                Map the results of an ad-hoc query on the
+                default MongoDB collection to a single instance of an object of
+                the specified type.
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>&lt;T&gt; T</literal> <emphasis
-              role="bold">findOne</emphasis><literal>(String collectionName,
-              Query query, Class&lt;T&gt; targetClass)</literal> Map the
-              results of an ad-hoc query on the specified collection to a
-              single instance of an object of the specified type.</para>
+              <para>
+                <literal>&lt;T&gt; T</literal>
+                <emphasis
+                    role="bold">findOne
+                </emphasis>
+                <literal>(String collectionName,
+                  Query query, Class&lt;T&gt; targetClass)
+                </literal>
+                Map the
+                results of an ad-hoc query on the specified collection to a
+                single instance of an object of the specified type.
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>&lt;T&gt; T</literal> <emphasis
-              role="bold">findOne</emphasis><literal>(String collectionName,
-              Query query, Class&lt;T&gt; targetClass, MongoReader&lt;T&gt;
-              reader)</literal> Map the results of an ad-hoc query on the
-              specified collection to a single instance of an object of the
-              specified type.</para>
+              <para>
+                <literal>&lt;T&gt; T</literal>
+                <emphasis
+                    role="bold">findOne
+                </emphasis>
+                <literal>(String collectionName,
+                  Query query, Class&lt;T&gt; targetClass, MongoReader&lt;T&gt;
+                  reader)
+                </literal>
+                Map the results of an ad-hoc query on the
+                specified collection to a single instance of an object of the
+                specified type.
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>&lt;T&gt; List&lt;T&gt;</literal> <emphasis
-              role="bold">find</emphasis><literal>(Query query, Class&lt;T&gt;
-              targetClass)</literal> Map the results of an ad-hoc query on the
-              default MongoDB collection to a List of the specified
-              type.</para>
+              <para>
+                <literal>&lt;T&gt; List&lt;T&gt;</literal>
+                <emphasis
+                    role="bold">find
+                </emphasis>
+                <literal>(Query query, Class&lt;T&gt;
+                  targetClass)
+                </literal>
+                Map the results of an ad-hoc query on the
+                default MongoDB collection to a List of the specified
+                type.
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>&lt;T&gt; List&lt;T&gt;</literal> <emphasis
-              role="bold">find</emphasis><literal>(Query query, Class&lt;T&gt;
-              targetClass, MongoReader&lt;T&gt; reader)</literal> Map the
-              results of an ad-hoc query on the default MongoDB collection to
-              a List of the specified type.</para>
+              <para>
+                <literal>&lt;T&gt; List&lt;T&gt;</literal>
+                <emphasis
+                    role="bold">find
+                </emphasis>
+                <literal>(Query query, Class&lt;T&gt;
+                  targetClass, MongoReader&lt;T&gt; reader)
+                </literal>
+                Map the
+                results of an ad-hoc query on the default MongoDB collection to
+                a List of the specified type.
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>&lt;T&gt; List&lt;T&gt;</literal> <emphasis
-              role="bold">find</emphasis><literal>(String collectionName,
-              Query query, Class&lt;T&gt; targetClass)</literal> Map the
-              results of an ad-hoc query on the specified collection to a List
-              of the specified type.</para>
+              <para>
+                <literal>&lt;T&gt; List&lt;T&gt;</literal>
+                <emphasis
+                    role="bold">find
+                </emphasis>
+                <literal>(String collectionName,
+                  Query query, Class&lt;T&gt; targetClass)
+                </literal>
+                Map the
+                results of an ad-hoc query on the specified collection to a List
+                of the specified type.
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>&lt;T&gt; List&lt;T&gt;</literal> <emphasis
-              role="bold">find</emphasis><literal>(String collectionName,
-              Query query, Class&lt;T&gt; targetClass, CursorPreparer
-              preparer)</literal> Map the results of an ad-hoc query on the
-              specified collection to a List of the specified type.</para>
+              <para>
+                <literal>&lt;T&gt; List&lt;T&gt;</literal>
+                <emphasis
+                    role="bold">find
+                </emphasis>
+                <literal>(String collectionName,
+                  Query query, Class&lt;T&gt; targetClass, CursorPreparer
+                  preparer)
+                </literal>
+                Map the results of an ad-hoc query on the
+                specified collection to a List of the specified type.
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>&lt;T&gt; List&lt;T&gt;</literal> <emphasis
-              role="bold">find</emphasis><literal>(String collectionName,
-              Query query, Class&lt;T&gt; targetClass, MongoReader&lt;T&gt;
-              reader)</literal> Map the results of an ad-hoc query on the
-              specified collection to a List of the specified type.</para>
+              <para>
+                <literal>&lt;T&gt; List&lt;T&gt;</literal>
+                <emphasis
+                    role="bold">find
+                </emphasis>
+                <literal>(String collectionName,
+                  Query query, Class&lt;T&gt; targetClass, MongoReader&lt;T&gt;
+                  reader)
+                </literal>
+                Map the results of an ad-hoc query on the
+                specified collection to a List of the specified type.
+              </para>
             </listitem>
-          </itemizedlist></para>
+          </itemizedlist>
+        </para>
 
         <para></para>
       </section>
@@ -743,36 +1098,66 @@ public class AppConfig  {
       <section>
         <title>Methods for saving documents</title>
 
-        <para><itemizedlist>
+        <para>
+          <itemizedlist>
             <listitem>
-              <para><literal>void</literal> <emphasis
-              role="bold">save</emphasis><literal>(Object
-              objectToSave)</literal> Save the object to the default
-              collection.</para>
+              <para>
+                <literal>void</literal>
+                <emphasis
+                    role="bold">save
+                </emphasis>
+                <literal>(Object
+                  objectToSave)
+                </literal>
+                Save the object to the default
+                collection.
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>void</literal> <emphasis
-              role="bold">save</emphasis><literal>(String collectionName,
-              Object objectToSave)</literal> Save the object to the specified
-              collection.</para>
+              <para>
+                <literal>void</literal>
+                <emphasis
+                    role="bold">save
+                </emphasis>
+                <literal>(String collectionName,
+                  Object objectToSave)
+                </literal>
+                Save the object to the specified
+                collection.
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>&lt;T&gt; void</literal> <emphasis
-              role="bold">save</emphasis><literal>(T objectToSave,
-              MongoWriter&lt;T&gt; writer)</literal> Save the object into the
-              default collection using the provided writer.</para>
+              <para>
+                <literal>&lt;T&gt; void</literal>
+                <emphasis
+                    role="bold">save
+                </emphasis>
+                <literal>(T objectToSave,
+                  MongoWriter&lt;T&gt; writer)
+                </literal>
+                Save the object into the
+                default collection using the provided writer.
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>&lt;T&gt; void</literal> <emphasis
-              role="bold">save</emphasis><literal>(String collectionName, T
-              objectToSave, MongoWriter&lt;T&gt; writer)</literal> Save the
-              object into the specified collection using the provided
-              writer.</para>
+              <para>
+                <literal>&lt;T&gt; void</literal>
+                <emphasis
+                    role="bold">save
+                </emphasis>
+                <literal>(String collectionName, T
+                  objectToSave, MongoWriter&lt;T&gt; writer)
+                </literal>
+                Save the
+                object into the specified collection using the provided
+                writer.
+              </para>
             </listitem>
-          </itemizedlist></para>
+          </itemizedlist>
+        </para>
 
         <para></para>
       </section>
@@ -780,22 +1165,36 @@ public class AppConfig  {
       <section>
         <title>Methods for removing documents</title>
 
-        <para><itemizedlist>
+        <para>
+          <itemizedlist>
             <listitem>
-              <para><literal>void</literal> <emphasis
-              role="bold">remove</emphasis><literal>(Query query)</literal>
-              Remove all documents from the default collection that match the
-              provided query document criteria.</para>
+              <para>
+                <literal>void</literal>
+                <emphasis
+                    role="bold">remove
+                </emphasis>
+                <literal>(Query query)</literal>
+                Remove all documents from the default collection that match the
+                provided query document criteria.
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>void</literal> <emphasis
-              role="bold">remove</emphasis><literal>(String collectionName,
-              Query query)</literal> Remove all documents from the specified
-              collection that match the provided query document
-              criteria.</para>
+              <para>
+                <literal>void</literal>
+                <emphasis
+                    role="bold">remove
+                </emphasis>
+                <literal>(String collectionName,
+                  Query query)
+                </literal>
+                Remove all documents from the specified
+                collection that match the provided query document
+                criteria.
+              </para>
             </listitem>
-          </itemizedlist></para>
+          </itemizedlist>
+        </para>
 
         <para></para>
       </section>
@@ -803,41 +1202,71 @@ public class AppConfig  {
       <section>
         <title>Methods for executing updates for documents</title>
 
-        <para><itemizedlist>
+        <para>
+          <itemizedlist>
             <listitem>
-              <para><literal>WriteResult</literal> <emphasis
-              role="bold">updateFirst</emphasis><literal>(Query query, Update
-              update)</literal> Updates the first object that is found in the
-              default collection that matches the query document with the
-              provided updated document.</para>
+              <para>
+                <literal>WriteResult</literal>
+                <emphasis
+                    role="bold">updateFirst
+                </emphasis>
+                <literal>(Query query, Update
+                  update)
+                </literal>
+                Updates the first object that is found in the
+                default collection that matches the query document with the
+                provided updated document.
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>WriteResult</literal> <emphasis
-              role="bold">updateFirst</emphasis><literal>(String
-              collectionName, Query query, Update update)</literal> Updates
-              the first object that is found in the specified collection that
-              matches the query document criteria with the provided updated
-              document.</para>
+              <para>
+                <literal>WriteResult</literal>
+                <emphasis
+                    role="bold">updateFirst
+                </emphasis>
+                <literal>(String
+                  collectionName, Query query, Update update)
+                </literal>
+                Updates
+                the first object that is found in the specified collection that
+                matches the query document criteria with the provided updated
+                document.
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>WriteResult</literal> <emphasis
-              role="bold">updateMulti</emphasis><literal>(Query query, Update
-              update)</literal> Updates all objects that are found in the
-              default collection that matches the query document criteria with
-              the provided updated document.</para>
+              <para>
+                <literal>WriteResult</literal>
+                <emphasis
+                    role="bold">updateMulti
+                </emphasis>
+                <literal>(Query query, Update
+                  update)
+                </literal>
+                Updates all objects that are found in the
+                default collection that matches the query document criteria with
+                the provided updated document.
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>WriteResult</literal> <emphasis
-              role="bold">updateMulti</emphasis><literal>(String
-              collectionName, Query query, Update update)</literal> Updates
-              all objects that are found in the specified collection that
-              matches the query document criteria with the provided updated
-              document.</para>
+              <para>
+                <literal>WriteResult</literal>
+                <emphasis
+                    role="bold">updateMulti
+                </emphasis>
+                <literal>(String
+                  collectionName, Query query, Update update)
+                </literal>
+                Updates
+                all objects that are found in the specified collection that
+                matches the query document criteria with the provided updated
+                document.
+              </para>
             </listitem>
-          </itemizedlist></para>
+          </itemizedlist>
+        </para>
 
         <para></para>
       </section>
@@ -847,19 +1276,20 @@ public class AppConfig  {
       <title>Working with collections</title>
 
       <para>It's time to look at some code examples showing how to use the
-      <classname>MongoTemplate</classname>. First we look at creating our
-      first collection.</para>
+        <classname>MongoTemplate</classname>. First we look at creating our
+        first collection.
+      </para>
 
       <example>
         <title>Working with collections using the MongoTemplate</title>
 
-        <programlisting language="java">    DBCollection collection = null;
-    if (!mongoTemplate.getCollectionNames().contains("MyNewCollection")) {
-        collection = mongoTemplate.createCollection("MyNewCollection");
-    }
+        <programlisting language="java">DBCollection collection = null;
+          if (!mongoTemplate.getCollectionNames().contains("MyNewCollection")) {
+          collection = mongoTemplate.createCollection("MyNewCollection");
+          }
 
-    mongoTemplate.dropCollection("MyNewCollection");
-</programlisting>
+          mongoTemplate.dropCollection("MyNewCollection");
+        </programlisting>
       </example>
     </section>
 
@@ -867,40 +1297,45 @@ public class AppConfig  {
       <title>Creating an index</title>
 
       <para>We can create an index on a collection to improve query
-      performance.</para>
+        performance.
+      </para>
 
       <example>
         <title>Creating an index using the MongoTemplate</title>
 
-        <programlisting language="java">    mongoTemplate.ensureIndex("MyCollection", new Index().on("name", Order.ASCENDING));
-</programlisting>
+        <programlisting language="java">mongoTemplate.ensureIndex("MyCollection", new Index().on("name",
+          Order.ASCENDING));
+        </programlisting>
       </example>
     </section>
 
     <section id="mongodb-template-save">
       <title>Saving and retrieving objects as documents in a
-      collection</title>
+        collection
+      </title>
 
       <para>Once we have created the collection and maybe an index we can
-      start using the collection to store our domain objects as documents.
-      Note that we are using a static import for
-      <classname>org.springframework.data.document.mongodb.query.Criteria.where</classname>
-      to make the query more readable.</para>
+        start using the collection to store our domain objects as documents.
+        Note that we are using a static import for
+        <classname>org.springframework.data.document.mongodb.query.Criteria.where</classname>
+        to make the query more readable.
+      </para>
 
       <example>
         <title>Inserting and retrieving documents using the
-        MongoTemplate</title>
+          MongoTemplate
+        </title>
 
         <programlisting language="java">import static org.springframework.data.document.mongodb.query.Criteria.where;
 
-...
+          ...
 
-    Person p = new Person("Bob", 33);
-    mongoTemplate.insert("MyCollection", p);
-    
-    Person qp = mongoTemplate.findOne("MyCollection", 
-        new Query(where("id").is(p.getId())), Person.class);
-</programlisting>
+          Person p = new Person("Bob", 33);
+          mongoTemplate.insert("MyCollection", p);
+
+          Person qp = mongoTemplate.findOne("MyCollection",
+          new Query(where("id").is(p.getId())), Person.class);
+        </programlisting>
       </example>
     </section>
 
@@ -908,42 +1343,53 @@ public class AppConfig  {
       <title>Querying documents in a collection</title>
 
       <para>We saw how to retrieve a single document. We can also query for a
-      collection of documents to be returned as domain objects in a list.
-      Assuming that we have a number of Person objects with name and age
-      stored as documents in a collection and that each person has an embedded
-      account document with a balance. We can now run a query using the
-      following code.</para>
+        collection of documents to be returned as domain objects in a list.
+        Assuming that we have a number of Person objects with name and age
+        stored as documents in a collection and that each person has an embedded
+        account document with a balance. We can now run a query using the
+        following code.
+      </para>
 
       <example>
         <title>Querying for documents using the MongoTemplate</title>
 
         <programlisting language="java">import static org.springframework.data.document.mongodb.query.Criteria.where;
 
-...
+          ...
 
-    List&lt;Person&gt; result = mongoTemplate.find(
-        new Query(where("age").lt(50)).and(where("accounts.balance").gt(1000.00d)), 
-        Person.class);
-</programlisting>
+          List&lt;Person&gt; result = mongoTemplate.find(
+          new Query(where("age").lt(50)).and(where("accounts.balance").gt(1000.00d)),
+          Person.class);
+        </programlisting>
       </example>
 
-      <para>All find methods take a <classname>Query</classname> object as a
-      parameter. This object defines the criteria and options used to perform
-      the query. The criteria is specified using a
-      <classname>Criteria</classname> object that has a static factory method
-      named <classname>where</classname> used to instantiate a new
-      <classname>Criteria</classname> object. We recommend using a static
-      import for
-      <classname>org.springframework.data.document.mongodb.query.Criteria.where</classname>
-      to make the query more readable.</para>
+      <para>All find methods take a
+        <classname>Query</classname>
+        object as a
+        parameter. This object defines the criteria and options used to perform
+        the query. The criteria is specified using a
+        <classname>Criteria</classname>
+        object that has a static factory method
+        named
+        <classname>where</classname>
+        used to instantiate a new
+        <classname>Criteria</classname>
+        object. We recommend using a static
+        import for
+        <classname>org.springframework.data.document.mongodb.query.Criteria.where</classname>
+        to make the query more readable.
+      </para>
 
       <para>This query should return a list of Person objects that meet the
-      specified criteria. The Criteria class has the following methods that
-      correspond to the operators provided in MongoDB.</para>
+        specified criteria. The Criteria class has the following methods that
+        correspond to the operators provided in MongoDB.
+      </para>
 
       <para>As you can see most methods return the
-      <classname>Criteria</classname> object to provide a fluent style for the
-      API.</para>
+        <classname>Criteria</classname>
+        object to provide a fluent style for the
+        API.
+      </para>
 
       <section>
         <title>Methods for the Criteria class</title>
@@ -951,109 +1397,210 @@ public class AppConfig  {
         <para>
           <itemizedlist>
             <listitem>
-              <para><literal>Criteria</literal> <emphasis
-              role="bold">all</emphasis><literal>(Object o) </literal>Creates
-              a criterion using the <literal>$all</literal> operator</para>
+              <para>
+                <literal>Criteria</literal>
+                <emphasis
+                    role="bold">all
+                </emphasis>
+                <literal>(Object o)</literal>Creates
+                a criterion using the
+                <literal>$all</literal>
+                operator
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>Criteria</literal> <emphasis
-              role="bold">exists</emphasis><literal>(boolean b)
-              </literal>Creates a criterion using the
-              <literal>$exists</literal> operator</para>
+              <para>
+                <literal>Criteria</literal>
+                <emphasis
+                    role="bold">exists
+                </emphasis>
+                <literal>(boolean b)
+                </literal>Creates a criterion using the
+                <literal>$exists</literal>
+                operator
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>Criteria</literal> <emphasis
-              role="bold">gt</emphasis><literal>(Object o) </literal>Creates a
-              criterion using the <literal>$gt</literal> operator</para>
+              <para>
+                <literal>Criteria</literal>
+                <emphasis
+                    role="bold">gt
+                </emphasis>
+                <literal>(Object o)</literal>Creates a
+                criterion using the
+                <literal>$gt</literal>
+                operator
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>Criteria</literal> <emphasis
-              role="bold">gte</emphasis><literal>(Object o) </literal>Creates
-              a criterion using the <literal>$gte</literal> operator</para>
+              <para>
+                <literal>Criteria</literal>
+                <emphasis
+                    role="bold">gte
+                </emphasis>
+                <literal>(Object o)</literal>Creates
+                a criterion using the
+                <literal>$gte</literal>
+                operator
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>Criteria</literal> <emphasis
-              role="bold">in</emphasis><literal>(Object... o)
-              </literal>Creates a criterion using the <literal>$in</literal>
-              operator</para>
+              <para>
+                <literal>Criteria</literal>
+                <emphasis
+                    role="bold">in
+                </emphasis>
+                <literal>(Object... o)
+                </literal>Creates a criterion using the
+                <literal>$in</literal>
+                operator
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>Criteria</literal> <emphasis
-              role="bold">is</emphasis><literal>(Object o) </literal>Creates a
-              criterion using the <literal>$is</literal> operator</para>
+              <para>
+                <literal>Criteria</literal>
+                <emphasis
+                    role="bold">is
+                </emphasis>
+                <literal>(Object o)</literal>Creates a
+                criterion using the
+                <literal>$is</literal>
+                operator
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>Criteria</literal> <emphasis
-              role="bold">lt</emphasis><literal>(Object o) </literal>Creates a
-              criterion using the <literal>$lt</literal> operator</para>
+              <para>
+                <literal>Criteria</literal>
+                <emphasis
+                    role="bold">lt
+                </emphasis>
+                <literal>(Object o)</literal>Creates a
+                criterion using the
+                <literal>$lt</literal>
+                operator
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>Criteria</literal> <emphasis
-              role="bold">lte</emphasis><literal>(Object o) </literal>Creates
-              a criterion using the <literal>$lte</literal> operator</para>
+              <para>
+                <literal>Criteria</literal>
+                <emphasis
+                    role="bold">lte
+                </emphasis>
+                <literal>(Object o)</literal>Creates
+                a criterion using the
+                <literal>$lte</literal>
+                operator
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>Criteria</literal><emphasis
-              role="bold">mod</emphasis><literal>(Number value, Number
-              remainder) </literal>Creates a criterion using the
-              <literal>$mod</literal> operator</para>
+              <para>
+                <literal>Criteria</literal>
+                <emphasis
+                    role="bold">mod
+                </emphasis>
+                <literal>(Number value, Number
+                  remainder)</literal>Creates a criterion using the
+                <literal>$mod</literal>
+                operator
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>Criteria</literal> <emphasis
-              role="bold">nin</emphasis><literal>(Object... o)
-              </literal>Creates a criterion using the <literal>$nin</literal>
-              operator</para>
+              <para>
+                <literal>Criteria</literal>
+                <emphasis
+                    role="bold">nin
+                </emphasis>
+                <literal>(Object... o)
+                </literal>Creates a criterion using the
+                <literal>$nin</literal>
+                operator
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>Criteria</literal> <emphasis
-              role="bold">not</emphasis><literal>() </literal>Creates a
-              criterion using the <literal>$not</literal> meta operator which
-              affects the clause directly following</para>
+              <para>
+                <literal>Criteria</literal>
+                <emphasis
+                    role="bold">not
+                </emphasis>
+                <literal>()</literal>Creates a
+                criterion using the
+                <literal>$not</literal>
+                meta operator which
+                affects the clause directly following
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>Criteria</literal> <emphasis
-              role="bold">regex</emphasis><literal>(String re)
-              </literal>Creates a criterion using a
-              <literal>$regex</literal></para>
+              <para>
+                <literal>Criteria</literal>
+                <emphasis
+                    role="bold">regex
+                </emphasis>
+                <literal>(String re)
+                </literal>Creates a criterion using a
+                <literal>$regex</literal>
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>Criteria</literal> <emphasis
-              role="bold">size</emphasis><literal>(int s) </literal>Creates a
-              criterion using the <literal>$size</literal> operator</para>
+              <para>
+                <literal>Criteria</literal>
+                <emphasis
+                    role="bold">size
+                </emphasis>
+                <literal>(int s)</literal>Creates a
+                criterion using the
+                <literal>$size</literal>
+                operator
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>Criteria</literal> <emphasis
-              role="bold">type</emphasis><literal>(int t) </literal>Creates a
-              criterion using the <literal>$type</literal> operator</para>
+              <para>
+                <literal>Criteria</literal>
+                <emphasis
+                    role="bold">type
+                </emphasis>
+                <literal>(int t)</literal>Creates a
+                criterion using the
+                <literal>$type</literal>
+                operator
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>void </literal> <emphasis
-              role="bold">or</emphasis><literal>(List&lt;Query&gt; queries)
-              </literal>Creates an or query using the <literal>$or</literal>
-              operator for all of the provided queries</para>
+              <para>
+                <literal>void</literal>
+                <emphasis
+                    role="bold">or
+                </emphasis>
+                <literal>(List&lt;Query&gt; queries)
+                </literal>Creates an or query using the
+                <literal>$or</literal>
+                operator for all of the provided queries
+              </para>
 
-              <para />
+              <para/>
             </listitem>
           </itemizedlist>
         </para>
       </section>
 
-      <para>The <classname>Query</classname> class has some additional methods
-      used to provide options for the query.</para>
+      <para>The
+        <classname>Query</classname>
+        class has some additional methods
+        used to provide options for the query.
+      </para>
 
       <section>
         <title>Methods for the Query class</title>
@@ -1061,37 +1608,66 @@ public class AppConfig  {
         <para>
           <itemizedlist>
             <listitem>
-              <para><literal>Query</literal> <emphasis
-              role="bold">and</emphasis><literal>(Criteria criteria)</literal>
-              used to add additional criteria to the query</para>
+              <para>
+                <literal>Query</literal>
+                <emphasis
+                    role="bold">and
+                </emphasis>
+                <literal>(Criteria criteria)</literal>
+                used to add additional criteria to the query
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>Field</literal> <emphasis
-              role="bold">fields</emphasis><literal>()</literal> used to
-              define fields to be included in the query results</para>
+              <para>
+                <literal>Field</literal>
+                <emphasis
+                    role="bold">fields
+                </emphasis>
+                <literal>()</literal>
+                used to
+                define fields to be included in the query results
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>Query</literal> <emphasis
-              role="bold">limit</emphasis><literal>(int limit)</literal> used
-              to limit the size of the returned results to the provided limit
-              (used for paging)</para>
+              <para>
+                <literal>Query</literal>
+                <emphasis
+                    role="bold">limit
+                </emphasis>
+                <literal>(int limit)</literal>
+                used
+                to limit the size of the returned results to the provided limit
+                (used for paging)
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>Query</literal> <emphasis
-              role="bold">skip</emphasis><literal>(int skip)</literal> used to
-              skip the provided number of documents in the results (used for
-              paging)</para>
+              <para>
+                <literal>Query</literal>
+                <emphasis
+                    role="bold">skip
+                </emphasis>
+                <literal>(int skip)</literal>
+                used to
+                skip the provided number of documents in the results (used for
+                paging)
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>Sort</literal> <emphasis
-              role="bold">sort</emphasis><literal>()</literal> used to provide
-              sort definition for the results</para>
+              <para>
+                <literal>Sort</literal>
+                <emphasis
+                    role="bold">sort
+                </emphasis>
+                <literal>()</literal>
+                used to provide
+                sort definition for the results
+              </para>
 
-              <para />
+              <para/>
             </listitem>
           </itemizedlist>
         </para>
@@ -1102,108 +1678,203 @@ public class AppConfig  {
       <title>Updating documents in a collection</title>
 
       <para>For updates we can elect to update the first document found using
-      <literal>updateFirst</literal> or we can update all documents that were
-      found to match the query using <literal>updateMulti</literal>. Here is
-      an example of an update of all SAVINGS accounts where we are adding a
-      one time $50.00 bonus to the balance using the <literal>$inc</literal>
-      operator.</para>
+        <literal>updateFirst</literal>
+        or we can update all documents that were
+        found to match the query using<literal>updateMulti</literal>. Here is
+        an example of an update of all SAVINGS accounts where we are adding a
+        one time $50.00 bonus to the balance using the
+        <literal>$inc</literal>
+        operator.
+      </para>
 
       <example>
         <title>Updating documents using the MongoTemplate</title>
 
         <programlisting language="java">import static org.springframework.data.document.mongodb.query.Criteria.where;
 
-...
+          ...
 
-    WriteResult wr = mongoTemplate.updateMulti(
-        new Query(where("accounts.accountType").is(Account.Type.SAVINGS)),
-        new Update().inc("accounts.$.balance", 50.00));
-</programlisting>
+          WriteResult wr = mongoTemplate.updateMulti(
+          new Query(where("accounts.accountType").is(Account.Type.SAVINGS)),
+          new Update().inc("accounts.$.balance", 50.00));
+        </programlisting>
       </example>
 
-      <para>In addition to the <classname>Query</classname> discussed above we
-      provide the update definition using an <classname>Update</classname>
-      object. The <classname>Update</classname> class has methods that match
-      the update modifiers available for MongoDB.</para>
+      <para>In addition to the
+        <classname>Query</classname>
+        discussed above we
+        provide the update definition using an
+        <classname>Update</classname>
+        object. The
+        <classname>Update</classname>
+        class has methods that match
+        the update modifiers available for MongoDB.
+      </para>
 
       <para>As you can see most methods return the
-      <classname>Update</classname> object to provide a fluent style for the
-      API.</para>
+        <classname>Update</classname>
+        object to provide a fluent style for the
+        API.
+      </para>
 
       <section>
         <title>Methods for the Update class</title>
 
-        <para><itemizedlist>
+        <para>
+          <itemizedlist>
             <listitem>
-              <para><literal>Update</literal> <emphasis
-              role="bold">addToSet</emphasis><literal>(String key, Object
-              value)</literal> Update using the <literal>$addToSet</literal>
-              update modifier</para>
+              <para>
+                <literal>Update</literal>
+                <emphasis
+                    role="bold">addToSet
+                </emphasis>
+                <literal>(String key, Object
+                  value)
+                </literal>
+                Update using the
+                <literal>$addToSet</literal>
+                update modifier
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>Update</literal> <emphasis
-              role="bold">inc</emphasis><literal>(String key, Number
-              inc)</literal> Update using the <literal>$inc</literal> update
-              modifier</para>
+              <para>
+                <literal>Update</literal>
+                <emphasis
+                    role="bold">inc
+                </emphasis>
+                <literal>(String key, Number
+                  inc)
+                </literal>
+                Update using the
+                <literal>$inc</literal>
+                update
+                modifier
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>Update</literal> <emphasis
-              role="bold">pop</emphasis><literal>(String key, Update.Position
-              pos)</literal> Update using the <literal>$pop</literal> update
-              modifier</para>
+              <para>
+                <literal>Update</literal>
+                <emphasis
+                    role="bold">pop
+                </emphasis>
+                <literal>(String key, Update.Position
+                  pos)
+                </literal>
+                Update using the
+                <literal>$pop</literal>
+                update
+                modifier
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>Update</literal> <emphasis
-              role="bold">pull</emphasis><literal>(String key, Object
-              value)</literal> Update using the <literal>$pull</literal>
-              update modifier</para>
+              <para>
+                <literal>Update</literal>
+                <emphasis
+                    role="bold">pull
+                </emphasis>
+                <literal>(String key, Object
+                  value)
+                </literal>
+                Update using the
+                <literal>$pull</literal>
+                update modifier
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>Update</literal> <emphasis
-              role="bold">pullAll</emphasis><literal>(String key, Object[]
-              values)</literal> Update using the <literal>$pullAll</literal>
-              update modifier</para>
+              <para>
+                <literal>Update</literal>
+                <emphasis
+                    role="bold">pullAll
+                </emphasis>
+                <literal>(String key, Object[]
+                  values)
+                </literal>
+                Update using the
+                <literal>$pullAll</literal>
+                update modifier
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>Update</literal> <emphasis
-              role="bold">push</emphasis><literal>(String key, Object
-              value)</literal> Update using the <literal>$push</literal>
-              update modifier</para>
+              <para>
+                <literal>Update</literal>
+                <emphasis
+                    role="bold">push
+                </emphasis>
+                <literal>(String key, Object
+                  value)
+                </literal>
+                Update using the
+                <literal>$push</literal>
+                update modifier
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>Update</literal> <emphasis
-              role="bold">pushAll</emphasis><literal>(String key, Object[]
-              values)</literal> Update using the <literal>$pushAll</literal>
-              update modifier</para>
+              <para>
+                <literal>Update</literal>
+                <emphasis
+                    role="bold">pushAll
+                </emphasis>
+                <literal>(String key, Object[]
+                  values)
+                </literal>
+                Update using the
+                <literal>$pushAll</literal>
+                update modifier
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>Update</literal> <emphasis
-              role="bold">rename</emphasis><literal>(String oldName, String
-              newName)</literal> Update using the <literal>$rename</literal>
-              update modifier</para>
+              <para>
+                <literal>Update</literal>
+                <emphasis
+                    role="bold">rename
+                </emphasis>
+                <literal>(String oldName, String
+                  newName)
+                </literal>
+                Update using the
+                <literal>$rename</literal>
+                update modifier
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>Update</literal> <emphasis
-              role="bold">set</emphasis><literal>(String key, Object
-              value)</literal> Update using the <literal>$set</literal> update
-              modifier</para>
+              <para>
+                <literal>Update</literal>
+                <emphasis
+                    role="bold">set
+                </emphasis>
+                <literal>(String key, Object
+                  value)
+                </literal>
+                Update using the
+                <literal>$set</literal>
+                update
+                modifier
+              </para>
             </listitem>
 
             <listitem>
-              <para><literal>Update</literal> <emphasis
-              role="bold">unset</emphasis><literal>(String key)</literal>
-              Update using the <literal>$unset</literal> update
-              modifier</para>
+              <para>
+                <literal>Update</literal>
+                <emphasis
+                    role="bold">unset
+                </emphasis>
+                <literal>(String key)</literal>
+                Update using the
+                <literal>$unset</literal>
+                update
+                modifier
+              </para>
             </listitem>
-          </itemizedlist></para>
+          </itemizedlist>
+        </para>
 
         <para></para>
       </section>
@@ -1214,10 +1885,14 @@ public class AppConfig  {
     <title>Road map ahead</title>
 
     <para>The Spring Data Document projects MongoDB support is in its early
-    stages. We are interested in feedback, knowing what your use cases are,
-    what are the common patters you encounter so that the MongoDB module
-    better serves your needs. Do contact us using the channels <link
-    linkend="get-started:help:community">mentioned</link> above, we are
-    interested in hearing from you!</para>
+      stages. We are interested in feedback, knowing what your use cases are,
+      what are the common patters you encounter so that the MongoDB module
+      better serves your needs. Do contact us using the channels
+      <link
+          linkend="get-started:help:community">mentioned
+      </link>
+      above, we are
+      interested in hearing from you!
+    </para>
   </section>
 </chapter>

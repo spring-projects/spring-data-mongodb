@@ -4,73 +4,74 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 
 import org.springframework.persistence.RelatedEntity;
- 
+
 @Entity
 public class Person {
-	
-	@Id Long id;
-	
-	private String name;
-	
-	private int age;
-	
-	private java.util.Date birthDate;
 
-//	@Document // need to decide what the annotation here should be
-	@RelatedEntity
-	public Resume resume;
+  @Id
+  Long id;
 
-	public Person() {
-	}
+  private String name;
 
-	public Person(String name, int age) {
-		this.name = name;
-		this.age = age;
-		this.birthDate = new java.util.Date();
-	}
+  private int age;
 
-	public void birthday() {
-		++age;
-	}
+  private java.util.Date birthDate;
 
-	public Long getId() {
-		return id;
-	}
+  //	@Document // need to decide what the annotation here should be
+  @RelatedEntity
+  public Resume resume;
 
-	public void setId(Long id) {
-		this.id = id;
-	}
+  public Person() {
+  }
 
-	public String getName() {
-		return name;
-	}
+  public Person(String name, int age) {
+    this.name = name;
+    this.age = age;
+    this.birthDate = new java.util.Date();
+  }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+  public void birthday() {
+    ++age;
+  }
 
-	public int getAge() {
-		return age;
-	}
+  public Long getId() {
+    return id;
+  }
 
-	public void setAge(int age) {
-		this.age = age;
-	}
+  public void setId(Long id) {
+    this.id = id;
+  }
 
-	public java.util.Date getBirthDate() {
-		return birthDate;
-	}
+  public String getName() {
+    return name;
+  }
 
-	public void setBirthDate(java.util.Date birthDate) {
-		this.birthDate = birthDate;
-	}
+  public void setName(String name) {
+    this.name = name;
+  }
 
-	public Resume getResume() {
-		return resume;
-	}
+  public int getAge() {
+    return age;
+  }
 
-	public void setResume(Resume resume) {
-		this.resume = resume;
-	}
+  public void setAge(int age) {
+    this.age = age;
+  }
+
+  public java.util.Date getBirthDate() {
+    return birthDate;
+  }
+
+  public void setBirthDate(java.util.Date birthDate) {
+    this.birthDate = birthDate;
+  }
+
+  public Resume getResume() {
+    return resume;
+  }
+
+  public void setResume(Resume resume) {
+    this.resume = resume;
+  }
 
 }

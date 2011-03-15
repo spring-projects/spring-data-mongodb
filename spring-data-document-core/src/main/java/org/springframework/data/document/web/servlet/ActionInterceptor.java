@@ -17,9 +17,9 @@ package org.springframework.data.document.web.servlet;
 
 public interface ActionInterceptor {
 
-	boolean preHandle(ActionExecutingContext actionExecutingContext);
-	
-	void postHandle(ActionExecutedContext actionExecutedContext);
-	
-	void afterCompletion(ActionExecutedContext actionExecutedContext);
+  boolean preHandle(ActionExecutingContext actionExecutingContext);
+
+  void postHandle(ActionExecutedContext actionExecutedContext);
+
+  void afterCompletion(ActionExecutedContext actionExecutedContext);
 }

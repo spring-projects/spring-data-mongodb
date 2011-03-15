@@ -17,19 +17,18 @@ package org.springframework.data.document.couchdb;
 
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.HttpServerErrorException;
 
-public class CouchUsageException extends InvalidDataAccessApiUsageException
- {
-	 
-	/**
-	 * Create a new CouchUsageException,
-	 * wrapping an arbitrary HttpServerErrorException.
-	 * @param cause the HttpServerErrorException thrown
-	 */
-	public CouchUsageException(HttpClientErrorException cause) {
-		super(cause != null ? cause.getMessage() : null, cause);
-	}
+public class CouchUsageException extends InvalidDataAccessApiUsageException {
+
+  /**
+   * Create a new CouchUsageException,
+   * wrapping an arbitrary HttpServerErrorException.
+   *
+   * @param cause the HttpServerErrorException thrown
+   */
+  public CouchUsageException(HttpClientErrorException cause) {
+    super(cause != null ? cause.getMessage() : null, cause);
+  }
 
 }
 

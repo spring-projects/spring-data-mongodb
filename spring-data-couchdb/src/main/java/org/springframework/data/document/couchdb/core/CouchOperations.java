@@ -20,44 +20,44 @@ import java.net.URI;
 
 public interface CouchOperations {
 
-    /**
-     * Reads a document from the database and maps it a Java object.
-     * </p>
-     * This method is intended to work when a default database
-     * is set on the CouchDbDocumentOperations instance.
-     *
-     * @param id           the id of the CouchDB document to read
-     * @param targetClass  the target type to map to
-     * @return the mapped object
-     */
-    <T> T findOne(String id, Class<T> targetClass);
-    
-    /**
-     * Reads a document from the database and maps it a Java object.
-     *
-     * @param uri          the full URI of the document to read
-     * @param targetClass the target type to map to
-     * @return the mapped object
-     */
-    <T> T findOne(URI uri, Class<T> targetClass);
-    
-    
-    /**
-     * Maps a Java object to JSON and writes it to the database
-     * </p>
-     * This method is intended to work when a default database
-     * is set on the CouchDbDocumentOperations instance.
-     *
-     * @param id       the id of the document to write
-     * @param document the object to write
-     */
-    void save(String id, Object document);
-    
-    /**
-     * Maps a Java object to JSON and writes it to the database
-     *
-     * @param uri      the full URI of the document to write
-     * @param document the object to write
-     */
-    void save(URI uri, Object document);
+  /**
+   * Reads a document from the database and maps it a Java object.
+   * </p>
+   * This method is intended to work when a default database
+   * is set on the CouchDbDocumentOperations instance.
+   *
+   * @param id          the id of the CouchDB document to read
+   * @param targetClass the target type to map to
+   * @return the mapped object
+   */
+  <T> T findOne(String id, Class<T> targetClass);
+
+  /**
+   * Reads a document from the database and maps it a Java object.
+   *
+   * @param uri         the full URI of the document to read
+   * @param targetClass the target type to map to
+   * @return the mapped object
+   */
+  <T> T findOne(URI uri, Class<T> targetClass);
+
+
+  /**
+   * Maps a Java object to JSON and writes it to the database
+   * </p>
+   * This method is intended to work when a default database
+   * is set on the CouchDbDocumentOperations instance.
+   *
+   * @param id       the id of the document to write
+   * @param document the object to write
+   */
+  void save(String id, Object document);
+
+  /**
+   * Maps a Java object to JSON and writes it to the database
+   *
+   * @param uri      the full URI of the document to write
+   * @param document the object to write
+   */
+  void save(URI uri, Object document);
 }

@@ -36,5 +36,5 @@ public class PersonSimpleList extends BasePerson {
   public void setNicknames(List<String> nicknames) {
     this.nicknames = nicknames;
   }
-  
+
 }

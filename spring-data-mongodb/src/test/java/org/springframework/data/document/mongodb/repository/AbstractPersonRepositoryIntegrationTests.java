@@ -1,8 +1,8 @@
 package org.springframework.data.document.mongodb.repository;
 
-import static java.util.Arrays.*;
+import static java.util.Arrays.asList;
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -20,179 +20,179 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 /**
  * Base class for tests for {@link PersonRepository}.
- * 
+ *
  * @author Oliver Gierke
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 public abstract class AbstractPersonRepositoryIntegrationTests {
 
-	@Autowired
-	protected PersonRepository repository;
-	Person dave, carter, boyd, stefan, leroi;
+  @Autowired
+  protected PersonRepository repository;
+  Person dave, carter, boyd, stefan, leroi;
 
-	@Before
-	public void setUp() {
+  @Before
+  public void setUp() {
 
-		repository.deleteAll();
+    repository.deleteAll();
 
-		dave = new Person("Dave", "Matthews", 42);
-		carter = new Person("Carter", "Beauford", 49);
-		boyd = new Person("Boyd", "Tinsley", 45);
-		stefan = new Person("Stefan", "Lessard", 34);
-		leroi = new Person("Leroi", "Moore", 41);
+    dave = new Person("Dave", "Matthews", 42);
+    carter = new Person("Carter", "Beauford", 49);
+    boyd = new Person("Boyd", "Tinsley", 45);
+    stefan = new Person("Stefan", "Lessard", 34);
+    leroi = new Person("Leroi", "Moore", 41);
 
-		repository.save(Arrays.asList(dave, carter, boyd, stefan, leroi));
-	}
+    repository.save(Arrays.asList(dave, carter, boyd, stefan, leroi));
+  }
 
-	@Test
-	public void existsWorksCorrectly() {
-		assertThat(repository.exists(dave.getId()), is(true));
-		assertThat(repository.exists(carter.getId()), is(true));
-		assertThat(repository.exists(boyd.getId()), is(true));
-		assertThat(repository.exists(stefan.getId()), is(true));
-		assertThat(repository.exists(leroi.getId()), is(true));
-		assertThat(repository.exists(new ObjectId().toString()), is(false));
-	}
+  @Test
+  public void existsWorksCorrectly() {
+    assertThat(repository.exists(dave.getId()), is(true));
+    assertThat(repository.exists(carter.getId()), is(true));
+    assertThat(repository.exists(boyd.getId()), is(true));
+    assertThat(repository.exists(stefan.getId()), is(true));
+    assertThat(repository.exists(leroi.getId()), is(true));
+    assertThat(repository.exists(new ObjectId().toString()), is(false));
+  }
 
-	@Test
-	public void findsPersonById() throws Exception {
+  @Test
+  public void findsPersonById() throws Exception {
 
-		assertThat(repository.findOne(dave.getId()), is(dave));
-	}
+    assertThat(repository.findOne(dave.getId()), is(dave));
+  }
 
-	@Test
-	public void findsAllMusicians() throws Exception {
-		List<Person> result = repository.findAll();
-		assertThat(result, hasItems(dave, carter, boyd, stefan, leroi));
-		assertThat(result.size(), is(5));
-	}
-	
-	@Test
-	public void deletesPersonCorrectly() throws Exception {
-		
-		repository.delete(dave);
-		
-		List<Person> result = repository.findAll();
-		
-		assertThat(result.size(), is(4));
-		assertThat(result, not(hasItem(dave)));
-	}
+  @Test
+  public void findsAllMusicians() throws Exception {
+    List<Person> result = repository.findAll();
+    assertThat(result, hasItems(dave, carter, boyd, stefan, leroi));
+    assertThat(result.size(), is(5));
+  }
 
-	@Test
-	public void findsPersonsByLastname() throws Exception {
+  @Test
+  public void deletesPersonCorrectly() throws Exception {
 
-		List<Person> result = repository.findByLastname("Beauford");
-		assertThat(result.size(), is(1));
-		assertThat(result, hasItem(carter));
-	}
-	
-	@Test
-	public void findsPersonsByFirstname() {
-		
-		List<Person> result = repository.findByThePersonsFirstname("Leroi");
-		assertThat(result.size(), is(1));
-		assertThat(result, hasItem(leroi));
-	}
+    repository.delete(dave);
 
-	@Test
-	public void findsPersonsByFirstnameLike() throws Exception {
+    List<Person> result = repository.findAll();
 
-		List<Person> result = repository.findByFirstnameLike("Bo*");
-		assertThat(result.size(), is(1));
-		assertThat(result, hasItem(boyd));
-	}
+    assertThat(result.size(), is(4));
+    assertThat(result, not(hasItem(dave)));
+  }
 
-	@Test
-	public void findsPagedPersons() throws Exception {
+  @Test
+  public void findsPersonsByLastname() throws Exception {
 
-		Page<Person> result = repository.findAll(new PageRequest(1, 2, Direction.ASC, "lastname"));
-		assertThat(result.isFirstPage(), is(false));
-		assertThat(result.isLastPage(), is(false));
-		assertThat(result, hasItems(dave, leroi));
-	}
+    List<Person> result = repository.findByLastname("Beauford");
+    assertThat(result.size(), is(1));
+    assertThat(result, hasItem(carter));
+  }
 
-	@Test
-	public void executesPagedFinderCorrectly() throws Exception {
+  @Test
+  public void findsPersonsByFirstname() {
 
-		Page<Person> page = repository.findByLastnameLike("*a*", new PageRequest(0, 2, Direction.ASC, "lastname"));
-		assertThat(page.isFirstPage(), is(true));
-		assertThat(page.isLastPage(), is(false));
-		assertThat(page.getNumberOfElements(), is(2));
-		assertThat(page, hasItems(carter, stefan));
-	}
+    List<Person> result = repository.findByThePersonsFirstname("Leroi");
+    assertThat(result.size(), is(1));
+    assertThat(result, hasItem(leroi));
+  }
 
-	@Test
-	public void findsPersonInAgeRangeCorrectly() throws Exception {
+  @Test
+  public void findsPersonsByFirstnameLike() throws Exception {
 
-		List<Person> result = repository.findByAgeBetween(40, 45);
-		assertThat(result.size(), is(2));
-		assertThat(result, hasItems(dave, leroi));
-	}
+    List<Person> result = repository.findByFirstnameLike("Bo*");
+    assertThat(result.size(), is(1));
+    assertThat(result, hasItem(boyd));
+  }
 
-	@Test
-	public void findsPersonByShippingAddressesCorrectly() throws Exception {
+  @Test
+  public void findsPagedPersons() throws Exception {
 
-		Address address = new Address("Foo Street 1", "C0123", "Bar");
-		dave.setShippingAddresses(new HashSet<Address>(asList(address)));
+    Page<Person> result = repository.findAll(new PageRequest(1, 2, Direction.ASC, "lastname"));
+    assertThat(result.isFirstPage(), is(false));
+    assertThat(result.isLastPage(), is(false));
+    assertThat(result, hasItems(dave, leroi));
+  }
 
-		repository.save(dave);
-		assertThat(repository.findByShippingAddresses(address), is(dave));
-	}
+  @Test
+  public void executesPagedFinderCorrectly() throws Exception {
 
-	@Test
-	public void findsPersonByAddressCorrectly() throws Exception {
+    Page<Person> page = repository.findByLastnameLike("*a*", new PageRequest(0, 2, Direction.ASC, "lastname"));
+    assertThat(page.isFirstPage(), is(true));
+    assertThat(page.isLastPage(), is(false));
+    assertThat(page.getNumberOfElements(), is(2));
+    assertThat(page, hasItems(carter, stefan));
+  }
 
-		Address address = new Address("Foo Street 1", "C0123", "Bar");
-		dave.setAddress(address);
-		repository.save(dave);
+  @Test
+  public void findsPersonInAgeRangeCorrectly() throws Exception {
 
-		List<Person> result = repository.findByAddress(address);
-		assertThat(result.size(), is(1));
-		assertThat(result, hasItem(dave));
-	}
+    List<Person> result = repository.findByAgeBetween(40, 45);
+    assertThat(result.size(), is(2));
+    assertThat(result, hasItems(dave, leroi));
+  }
 
-	@Test
-	public void findsPeopleByZipCode() throws Exception {
+  @Test
+  public void findsPersonByShippingAddressesCorrectly() throws Exception {
 
-		Address address = new Address("Foo Street 1", "C0123", "Bar");
-		dave.setAddress(address);
-		repository.save(dave);
+    Address address = new Address("Foo Street 1", "C0123", "Bar");
+    dave.setShippingAddresses(new HashSet<Address>(asList(address)));
 
-		List<Person> result = repository.findByAddressZipCode(address.getZipCode());
-		assertThat(result.size(), is(1));
-		assertThat(result, hasItem(dave));
-	}
-	
-	
-	@Test
-	public void findsPeopleByFirstnameInVarargs() {
-		
-		List<Person> result = repository.findByFirstnameIn("Dave", "Carter");
-		assertThat(result.size(), is(2));
-		assertThat(result, hasItems(dave, carter));
-	}
-	
-	@Test
-	public void findsPeopleByFirstnameNotInCollection() {
-		
-		List<Person> result = repository.findByFirstnameNotIn(Arrays.asList("Boyd", "Carter"));
-		assertThat(result.size(), is(3));
-		assertThat(result, hasItems(dave, leroi, stefan));
-	}
-	
-	@Test
-	public void findsPeopleByLastnameLikeAndAgeIn() throws Exception {
-		
-		List<Person> result = repository.findByLastnameLikeAndAgeBetween("*e*", 44, 50);
-		assertThat(result.size(), is(2));
-		assertThat(result, hasItems(carter, boyd));
-	}
-	
-	@Test
-	public void findsPeopleWithAndAndOr() throws Exception {
-		
-		List<Person> result = repository.findByAgeOrLastnameLikeAndFirstnameLike(45, "*ss*", "*a*");
-		assertThat(result.size(), is(2));
-		assertThat(result, hasItems(boyd, stefan));
-	}
+    repository.save(dave);
+    assertThat(repository.findByShippingAddresses(address), is(dave));
+  }
+
+  @Test
+  public void findsPersonByAddressCorrectly() throws Exception {
+
+    Address address = new Address("Foo Street 1", "C0123", "Bar");
+    dave.setAddress(address);
+    repository.save(dave);
+
+    List<Person> result = repository.findByAddress(address);
+    assertThat(result.size(), is(1));
+    assertThat(result, hasItem(dave));
+  }
+
+  @Test
+  public void findsPeopleByZipCode() throws Exception {
+
+    Address address = new Address("Foo Street 1", "C0123", "Bar");
+    dave.setAddress(address);
+    repository.save(dave);
+
+    List<Person> result = repository.findByAddressZipCode(address.getZipCode());
+    assertThat(result.size(), is(1));
+    assertThat(result, hasItem(dave));
+  }
+
+
+  @Test
+  public void findsPeopleByFirstnameInVarargs() {
+
+    List<Person> result = repository.findByFirstnameIn("Dave", "Carter");
+    assertThat(result.size(), is(2));
+    assertThat(result, hasItems(dave, carter));
+  }
+
+  @Test
+  public void findsPeopleByFirstnameNotInCollection() {
+
+    List<Person> result = repository.findByFirstnameNotIn(Arrays.asList("Boyd", "Carter"));
+    assertThat(result.size(), is(3));
+    assertThat(result, hasItems(dave, leroi, stefan));
+  }
+
+  @Test
+  public void findsPeopleByLastnameLikeAndAgeIn() throws Exception {
+
+    List<Person> result = repository.findByLastnameLikeAndAgeBetween("*e*", 44, 50);
+    assertThat(result.size(), is(2));
+    assertThat(result, hasItems(carter, boyd));
+  }
+
+  @Test
+  public void findsPeopleWithAndAndOr() throws Exception {
+
+    List<Person> result = repository.findByAgeOrLastnameLikeAndFirstnameLike(45, "*ss*", "*a*");
+    assertThat(result.size(), is(2));
+    assertThat(result, hasItems(boyd, stefan));
+  }
 }

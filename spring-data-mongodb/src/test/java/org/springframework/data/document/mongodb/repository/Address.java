@@ -16,69 +16,68 @@
 package org.springframework.data.document.mongodb.repository;
 
 /**
- * 
  * @author Oliver Gierke
  */
 public class Address {
 
-	private String street;
-	private String zipCode;
-	private String city;
+  private String street;
+  private String zipCode;
+  private String city;
 
-	protected Address() {
-		
-	}
-	
-	/**
-	 * @param string
-	 * @param string2
-	 * @param string3
-	 */
-	public Address(String street, String zipcode, String city) {
-		this.street = street;
-		this.zipCode = zipcode;
-		this.city = city;
-	}
+  protected Address() {
 
-	/**
-	 * @return the street
-	 */
-	public String getStreet() {
-		return street;
-	}
+  }
 
-	/**
-	 * @param street the street to set
-	 */
-	public void setStreet(String street) {
-		this.street = street;
-	}
+  /**
+   * @param string
+   * @param string2
+   * @param string3
+   */
+  public Address(String street, String zipcode, String city) {
+    this.street = street;
+    this.zipCode = zipcode;
+    this.city = city;
+  }
 
-	/**
-	 * @return the zipCode
-	 */
-	public String getZipCode() {
-		return zipCode;
-	}
+  /**
+   * @return the street
+   */
+  public String getStreet() {
+    return street;
+  }
 
-	/**
-	 * @param zipCode the zipCode to set
-	 */
-	public void setZipCode(String zipCode) {
-		this.zipCode = zipCode;
-	}
+  /**
+   * @param street the street to set
+   */
+  public void setStreet(String street) {
+    this.street = street;
+  }
 
-	/**
-	 * @return the city
-	 */
-	public String getCity() {
-		return city;
-	}
+  /**
+   * @return the zipCode
+   */
+  public String getZipCode() {
+    return zipCode;
+  }
 
-	/**
-	 * @param city the city to set
-	 */
-	public void setCity(String city) {
-		this.city = city;
-	}
+  /**
+   * @param zipCode the zipCode to set
+   */
+  public void setZipCode(String zipCode) {
+    this.zipCode = zipCode;
+  }
+
+  /**
+   * @return the city
+   */
+  public String getCity() {
+    return city;
+  }
+
+  /**
+   * @param city the city to set
+   */
+  public void setCity(String city) {
+    this.city = city;
+  }
 }

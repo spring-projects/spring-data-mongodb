@@ -20,17 +20,17 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 /**
  * Server application than can be run as an app or unit test.
- * 
+ *
  * @author Mark Pollack
  */
 public class JmxServer {
 
-	public static void main(String[] args) {
-		new JmxServer().run();
-	}
+  public static void main(String[] args) {
+    new JmxServer().run();
+  }
 
-	public void run() {
-		new ClassPathXmlApplicationContext(new String[]  {"infrastructure.xml", "server-jmx.xml"} );
-	}
+  public void run() {
+    new ClassPathXmlApplicationContext(new String[]{"infrastructure.xml", "server-jmx.xml"});
+  }
 
 }

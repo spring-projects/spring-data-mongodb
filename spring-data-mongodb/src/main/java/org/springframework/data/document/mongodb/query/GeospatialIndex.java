@@ -20,58 +20,58 @@ import com.mongodb.DBObject;
 
 
 public class GeospatialIndex implements IndexDefinition {
-	
-	private String keyField;
-	
-	private String name;
-	
-	private Integer min = null;
 
-	private Integer max = null;
+  private String keyField;
 
-	public GeospatialIndex() {
-	}
+  private String name;
 
-	public GeospatialIndex(String key) {
-		keyField = key;
-	}
+  private Integer min = null;
 
-	public GeospatialIndex named(String name) {
-		this.name = name;
-		return this;
-	}
+  private Integer max = null;
 
-	public GeospatialIndex withMin(int min) {
-		this.min = Integer.valueOf(min);
-		return this;
-	}
+  public GeospatialIndex() {
+  }
 
-	public GeospatialIndex withMax(int max) {
-		this.max = Integer.valueOf(max);
-		return this;
-	}
+  public GeospatialIndex(String key) {
+    keyField = key;
+  }
 
-	public DBObject getIndexObject() {
-		DBObject dbo = new BasicDBObject();
-		dbo.put(keyField, "2d");
-		return dbo;
-	}
-	
-	public DBObject getIndexOptions() {
-		if (name == null && min == null && max == null) {
-			return null;
-		}
-		DBObject dbo = new BasicDBObject();
-		if (name != null) {
-			dbo.put("name", name);
-		}
-		if (min != null) {
-			dbo.put("min", min);
-		}
-		if (max != null) {
-			dbo.put("max", max);
-		}
-		return dbo;
-	}
+  public GeospatialIndex named(String name) {
+    this.name = name;
+    return this;
+  }
+
+  public GeospatialIndex withMin(int min) {
+    this.min = Integer.valueOf(min);
+    return this;
+  }
+
+  public GeospatialIndex withMax(int max) {
+    this.max = Integer.valueOf(max);
+    return this;
+  }
+
+  public DBObject getIndexObject() {
+    DBObject dbo = new BasicDBObject();
+    dbo.put(keyField, "2d");
+    return dbo;
+  }
+
+  public DBObject getIndexOptions() {
+    if (name == null && min == null && max == null) {
+      return null;
+    }
+    DBObject dbo = new BasicDBObject();
+    if (name != null) {
+      dbo.put("name", name);
+    }
+    if (min != null) {
+      dbo.put("min", min);
+    }
+    if (max != null) {
+      dbo.put("max", max);
+    }
+    return dbo;
+  }
 
 }

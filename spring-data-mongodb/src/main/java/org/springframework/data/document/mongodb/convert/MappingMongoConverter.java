@@ -16,6 +16,11 @@
 
 package org.springframework.data.document.mongodb.convert;
 
+import java.lang.reflect.Array;
+import java.lang.reflect.InvocationTargetException;
+import java.math.BigInteger;
+import java.util.*;
+
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
@@ -40,15 +45,9 @@ import org.springframework.expression.Expression;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 
-import java.lang.reflect.Array;
-import java.lang.reflect.InvocationTargetException;
-import java.math.BigInteger;
-import java.util.*;
-
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
  */
-@SuppressWarnings({"unchecked"})
 public class MappingMongoConverter implements MongoConverter, ApplicationContextAware {
 
   private static final String CUSTOM_TYPE_KEY = "_class";
@@ -112,6 +111,7 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
     return conversionService.convert(id, ObjectId.class);
   }
 
+  @SuppressWarnings({"unchecked"})
   public <S extends Object> S read(Class<S> clazz, final DBObject dbo) {
     if (null == dbo) {
       return null;
@@ -143,17 +143,17 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
     if (persistentEntity == null) {
       persistentEntity = mappingContext.addPersistentEntity(clazz);
     }
-    
+
     return read(persistentEntity, dbo);
   }
-  
+
   private <S extends Object> S read(PersistentEntity<S> entity, final DBObject dbo) {
-      
+
     final StandardEvaluationContext spelCtx = new StandardEvaluationContext();
     if (null != applicationContext) {
       spelCtx.setBeanResolver(new BeanFactoryResolver(applicationContext));
     }
-    String[] keySet = dbo.keySet().toArray(new String[] {});
+    String[] keySet = dbo.keySet().toArray(new String[]{});
     for (String key : keySet) {
       spelCtx.setVariable(key, dbo.get(key));
     }
@@ -208,7 +208,7 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
             throw new MappingException(e.getMessage(), e);
           }
         }
-        
+
         if (ctorParamNames.contains(prop.getName())) {
           return;
         }
@@ -261,13 +261,13 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
     PersistentEntity<?> entity = mappingContext.getPersistentEntity(obj.getClass());
     write(obj, dbo, entity);
   }
-    
+
   protected void write(final Object obj, final DBObject dbo, PersistentEntity<?> entity) {
-    
+
     if (obj == null) {
       return;
     }
-    
+
     if (null == entity) {
       // Must not have explictly added this entity yet
       entity = mappingContext.addPersistentEntity(obj.getClass());
@@ -358,6 +358,7 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
     }
   }
 
+  @SuppressWarnings({"unchecked"})
   protected void writePropertyInternal(PersistentProperty prop, Object obj, DBObject dbo) {
     org.springframework.data.document.mongodb.mapping.DBRef dbref = prop.getField()
         .getAnnotation(org.springframework.data.document.mongodb.mapping.DBRef.class);
@@ -457,6 +458,7 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
     return dbo;
   }
 
+  @SuppressWarnings({"unchecked"})
   protected Object getValueInternal(PersistentProperty prop, DBObject dbo, StandardEvaluationContext ctx, Value spelExpr) {
     String name = prop.getName();
     Object o;
@@ -471,11 +473,11 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
       Object dbObj = from.get(name);
       if (dbObj instanceof DBObject) {
         if (prop.isMap() && dbObj instanceof DBObject) {
-          
+
           // We have to find a potentially stored class to be used first.
           Class<?> toType = findTypeToBeUsed((DBObject) dbObj);
           Map<String, Object> m = new LinkedHashMap<String, Object>();
-          
+
           for (Map.Entry<String, Object> entry : ((Map<String, Object>) ((DBObject) dbObj).toMap()).entrySet()) {
             if (entry.getKey().equals(CUSTOM_TYPE_KEY)) {
               continue;
@@ -505,7 +507,7 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
           }
           return Arrays.asList(items);
         }
-        
+
         // It's a complex object, have to read it in
         if (dbo.containsField("_class")) {
           try {
@@ -524,16 +526,16 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
     }
     return o;
   }
-  
+
   /**
    * Returns the type to be used to convert the DBObject given to.
-   * 
+   *
    * @param dbObject
    * @return
    */
   private Class<?> findTypeToBeUsed(DBObject dbObject) {
     Object classToBeUsed = dbObject.get(CUSTOM_TYPE_KEY);
-    
+
     try {
       return Class.forName(classToBeUsed.toString());
     } catch (ClassNotFoundException e) {

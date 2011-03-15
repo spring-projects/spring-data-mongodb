@@ -22,55 +22,48 @@ import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.xml.BeanDefinitionParser;
 import org.springframework.beans.factory.xml.ParserContext;
 import org.springframework.data.document.mongodb.MongoAdmin;
-import org.springframework.data.document.mongodb.monitor.AssertMetrics;
-import org.springframework.data.document.mongodb.monitor.BackgroundFlushingMetrics;
-import org.springframework.data.document.mongodb.monitor.BtreeIndexCounters;
-import org.springframework.data.document.mongodb.monitor.ConnectionMetrics;
-import org.springframework.data.document.mongodb.monitor.GlobalLockMetrics;
-import org.springframework.data.document.mongodb.monitor.MemoryMetrics;
-import org.springframework.data.document.mongodb.monitor.OperationCounters;
-import org.springframework.data.document.mongodb.monitor.ServerInfo;
+import org.springframework.data.document.mongodb.monitor.*;
 import org.springframework.util.StringUtils;
 import org.w3c.dom.Element;
 
 public class MongoJmxParser implements BeanDefinitionParser {
 
-	public BeanDefinition parse(Element element, ParserContext parserContext) {
-		String name = element.getAttribute("mongo-ref");
-		if (!StringUtils.hasText(name)) {
-			name = "mongo";
-		}
-		registerJmxComponents(name, element, parserContext);
-		return null;
-	}
+  public BeanDefinition parse(Element element, ParserContext parserContext) {
+    String name = element.getAttribute("mongo-ref");
+    if (!StringUtils.hasText(name)) {
+      name = "mongo";
+    }
+    registerJmxComponents(name, element, parserContext);
+    return null;
+  }
 
-	protected void registerJmxComponents(String mongoRefName, Element element, ParserContext parserContext) {
-		Object eleSource = parserContext.extractSource(element);
+  protected void registerJmxComponents(String mongoRefName, Element element, ParserContext parserContext) {
+    Object eleSource = parserContext.extractSource(element);
 
-		CompositeComponentDefinition compositeDef = new CompositeComponentDefinition(element.getTagName(), eleSource);
-		
-		createBeanDefEntry(AssertMetrics.class, compositeDef, mongoRefName, eleSource, parserContext);
-		createBeanDefEntry(BackgroundFlushingMetrics.class, compositeDef, mongoRefName, eleSource, parserContext);
-		createBeanDefEntry(BtreeIndexCounters.class, compositeDef, mongoRefName, eleSource, parserContext);
-		createBeanDefEntry(ConnectionMetrics.class, compositeDef, mongoRefName, eleSource, parserContext);
-		createBeanDefEntry(GlobalLockMetrics.class, compositeDef, mongoRefName, eleSource, parserContext);
-		createBeanDefEntry(MemoryMetrics.class, compositeDef, mongoRefName, eleSource, parserContext);
-		createBeanDefEntry(OperationCounters.class, compositeDef, mongoRefName, eleSource, parserContext);
-		createBeanDefEntry(ServerInfo.class, compositeDef, mongoRefName, eleSource, parserContext);
-		createBeanDefEntry(MongoAdmin.class, compositeDef, mongoRefName, eleSource, parserContext);
-	
-	
-		parserContext.registerComponent(compositeDef);
-		
-	}
+    CompositeComponentDefinition compositeDef = new CompositeComponentDefinition(element.getTagName(), eleSource);
 
-	protected void createBeanDefEntry(Class clazz, CompositeComponentDefinition compositeDef, String mongoRefName, Object eleSource, ParserContext parserContext) {
-		BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(clazz);
-		builder.getRawBeanDefinition().setSource(eleSource);
-		builder.addConstructorArgReference(mongoRefName);
-		BeanDefinition assertDef = builder.getBeanDefinition();		
-		String assertName = parserContext.getReaderContext().registerWithGeneratedName(assertDef);
-		compositeDef.addNestedComponent(new BeanComponentDefinition(assertDef, assertName));	
-	}
-	
+    createBeanDefEntry(AssertMetrics.class, compositeDef, mongoRefName, eleSource, parserContext);
+    createBeanDefEntry(BackgroundFlushingMetrics.class, compositeDef, mongoRefName, eleSource, parserContext);
+    createBeanDefEntry(BtreeIndexCounters.class, compositeDef, mongoRefName, eleSource, parserContext);
+    createBeanDefEntry(ConnectionMetrics.class, compositeDef, mongoRefName, eleSource, parserContext);
+    createBeanDefEntry(GlobalLockMetrics.class, compositeDef, mongoRefName, eleSource, parserContext);
+    createBeanDefEntry(MemoryMetrics.class, compositeDef, mongoRefName, eleSource, parserContext);
+    createBeanDefEntry(OperationCounters.class, compositeDef, mongoRefName, eleSource, parserContext);
+    createBeanDefEntry(ServerInfo.class, compositeDef, mongoRefName, eleSource, parserContext);
+    createBeanDefEntry(MongoAdmin.class, compositeDef, mongoRefName, eleSource, parserContext);
+
+
+    parserContext.registerComponent(compositeDef);
+
+  }
+
+  protected void createBeanDefEntry(Class clazz, CompositeComponentDefinition compositeDef, String mongoRefName, Object eleSource, ParserContext parserContext) {
+    BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(clazz);
+    builder.getRawBeanDefinition().setSource(eleSource);
+    builder.addConstructorArgReference(mongoRefName);
+    BeanDefinition assertDef = builder.getBeanDefinition();
+    String assertName = parserContext.getReaderContext().registerWithGeneratedName(assertDef);
+    compositeDef.addNestedComponent(new BeanComponentDefinition(assertDef, assertName));
+  }
+
 }

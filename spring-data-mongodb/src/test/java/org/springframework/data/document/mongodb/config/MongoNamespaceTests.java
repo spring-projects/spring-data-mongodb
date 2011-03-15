@@ -16,9 +16,7 @@
 
 package org.springframework.data.document.mongodb.config;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.lang.reflect.Field;
 
@@ -34,47 +32,45 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 @ContextConfiguration
 public class MongoNamespaceTests {
 
-	@Autowired
-	private ApplicationContext ctx;
-	
-	
+  @Autowired
+  private ApplicationContext ctx;
 
-	public void testMongoSingleton() throws Exception {
-		assertTrue(ctx.containsBean("mongo"));
-		MongoFactoryBean mfb = (MongoFactoryBean) ctx.getBean("&mongo");
-		assertNull(readField("host", mfb));
-		assertNull(readField("port", mfb));
-	}
-	
-	@Test
-	public void testMongoSingletonWithAttributes() throws Exception {
-		assertTrue(ctx.containsBean("defaultMongo"));
-		MongoFactoryBean mfb = (MongoFactoryBean) ctx.getBean("&defaultMongo");
-		String host = readField("host", mfb);
-		Integer port = readField("port", mfb);
-		assertEquals("localhost", host);
-		assertEquals(new Integer(27017), port);
-	}
-	
-	
-	
-	@SuppressWarnings({"unchecked"})
+
+  public void testMongoSingleton() throws Exception {
+    assertTrue(ctx.containsBean("mongo"));
+    MongoFactoryBean mfb = (MongoFactoryBean) ctx.getBean("&mongo");
+    assertNull(readField("host", mfb));
+    assertNull(readField("port", mfb));
+  }
+
+  @Test
+  public void testMongoSingletonWithAttributes() throws Exception {
+    assertTrue(ctx.containsBean("defaultMongo"));
+    MongoFactoryBean mfb = (MongoFactoryBean) ctx.getBean("&defaultMongo");
+    String host = readField("host", mfb);
+    Integer port = readField("port", mfb);
+    assertEquals("localhost", host);
+    assertEquals(new Integer(27017), port);
+  }
+
+
+  @SuppressWarnings({"unchecked"})
   public static <T> T readField(String name, Object target) throws Exception {
-		Field field = null;
-		Class<?> clazz = target.getClass();
-		do {
-			try {
-				field = clazz.getDeclaredField(name);
-			} catch (Exception ex) {
-			}
+    Field field = null;
+    Class<?> clazz = target.getClass();
+    do {
+      try {
+        field = clazz.getDeclaredField(name);
+      } catch (Exception ex) {
+      }
 
-			clazz = clazz.getSuperclass();
-		} while (field == null && !clazz.equals(Object.class));
+      clazz = clazz.getSuperclass();
+    } while (field == null && !clazz.equals(Object.class));
 
-		if (field == null)
-			throw new IllegalArgumentException("Cannot find field '" + name + "' in the class hierarchy of "
-					+ target.getClass());
-		field.setAccessible(true);
-		return (T) field.get(target);
-	}
+    if (field == null)
+      throw new IllegalArgumentException("Cannot find field '" + name + "' in the class hierarchy of "
+          + target.getClass());
+    field.setAccessible(true);
+    return (T) field.get(target);
+  }
 }

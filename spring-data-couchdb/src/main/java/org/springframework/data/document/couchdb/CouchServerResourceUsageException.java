@@ -19,15 +19,16 @@ import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.web.client.HttpServerErrorException;
 
 public class CouchServerResourceUsageException extends InvalidDataAccessResourceUsageException {
-	 
-	/**
-	 * Create a new CouchServerResourceUsageException,
-	 * wrapping an arbitrary HttpServerErrorException.
-	 * @param cause the HttpServerErrorException thrown
-	 */
-	public CouchServerResourceUsageException(HttpServerErrorException cause) {
-		super(cause != null ? cause.getMessage() : null, cause);
-	}
+
+  /**
+   * Create a new CouchServerResourceUsageException,
+   * wrapping an arbitrary HttpServerErrorException.
+   *
+   * @param cause the HttpServerErrorException thrown
+   */
+  public CouchServerResourceUsageException(HttpServerErrorException cause) {
+    super(cause != null ? cause.getMessage() : null, cause);
+  }
 
 }
 

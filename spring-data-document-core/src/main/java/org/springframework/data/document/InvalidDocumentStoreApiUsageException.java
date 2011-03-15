@@ -20,12 +20,12 @@ import org.springframework.dao.InvalidDataAccessApiUsageException;
 
 public class InvalidDocumentStoreApiUsageException extends InvalidDataAccessApiUsageException {
 
-	public InvalidDocumentStoreApiUsageException(String msg) {
-		super(msg);
-	}
+  public InvalidDocumentStoreApiUsageException(String msg) {
+    super(msg);
+  }
 
-	public InvalidDocumentStoreApiUsageException(String msg, Throwable cause) {
-		super(msg, cause);
-	}
+  public InvalidDocumentStoreApiUsageException(String msg, Throwable cause) {
+    super(msg, cause);
+  }
 
 }

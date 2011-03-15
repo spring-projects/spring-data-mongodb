@@ -22,40 +22,37 @@ import org.springframework.web.servlet.ModelAndView;
 public class ActionExecutedContext extends ActionExecutingContext {
 
 
-	private ModelAndView modelAndView;
-	
-	private Exception exception;
-	
-	public ActionExecutedContext(ActionExecutingContext actionExecutingContext, ModelAndView modelAndView, Exception exception) {
-		super(actionExecutingContext.getServletWebRequest(), actionExecutingContext.getHandler(),
-				actionExecutingContext.getHandlerMethod(), actionExecutingContext.getHandlerParameters(), 
-				actionExecutingContext.getImplicitModel());
-		this.modelAndView = modelAndView;
-		this.exception = exception;
-	}
+  private ModelAndView modelAndView;
 
-	@Override
-	public String toString() {
-		return "ActionExecutedContext [handler=" + getHandler()
-				+ ", servletWebRequest=" + getServletWebRequest()
-				+ ", implicitModel=" + getImplicitModel() + ", handlerMethod="
-				+ getHandlerMethod() + ", handlerParameters="
-				+ Arrays.toString(getHandlerParameters()) + ",modelAndView=" + modelAndView
-				+ ", exception=" + exception + "]";
-	}
-	
+  private Exception exception;
 
+  public ActionExecutedContext(ActionExecutingContext actionExecutingContext, ModelAndView modelAndView, Exception exception) {
+    super(actionExecutingContext.getServletWebRequest(), actionExecutingContext.getHandler(),
+        actionExecutingContext.getHandlerMethod(), actionExecutingContext.getHandlerParameters(),
+        actionExecutingContext.getImplicitModel());
+    this.modelAndView = modelAndView;
+    this.exception = exception;
+  }
 
-	public ModelAndView getModelAndView() {
-		return modelAndView;
-	}
+  @Override
+  public String toString() {
+    return "ActionExecutedContext [handler=" + getHandler()
+        + ", servletWebRequest=" + getServletWebRequest()
+        + ", implicitModel=" + getImplicitModel() + ", handlerMethod="
+        + getHandlerMethod() + ", handlerParameters="
+        + Arrays.toString(getHandlerParameters()) + ",modelAndView=" + modelAndView
+        + ", exception=" + exception + "]";
+  }
 
 
-	public Exception getException() {
-		return exception;
-	}
+  public ModelAndView getModelAndView() {
+    return modelAndView;
+  }
 
 
-	
-	
+  public Exception getException() {
+    return exception;
+  }
+
+
 }

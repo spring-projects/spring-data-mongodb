@@ -17,7 +17,6 @@ package org.springframework.data.document.web.servlet;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -26,67 +25,65 @@ import org.springframework.web.context.request.ServletWebRequest;
 
 public class ActionExecutingContext {
 
-	
-	private Object handler;
-	
-	private ServletWebRequest servletWebRequest;
-	
-	private ExtendedModelMap implicitModel;
-	
-	private Method handlerMethod;
-	
-	private Object[] handlerParameters;
-	
 
-	public ActionExecutingContext(ServletWebRequest servletWebRequest,
-			Object handler, Method handlerMethod, Object[] handlerParameters,
-			ExtendedModelMap implicitModel) {
-		super();
-		this.servletWebRequest = servletWebRequest;
-		this.handler = handler;
-		this.handlerMethod = handlerMethod;
-		this.handlerParameters = handlerParameters;
-		this.implicitModel = implicitModel;
-	}
+  private Object handler;
 
-	public HttpServletRequest getHttpServletRequest() {
-		return servletWebRequest.getRequest();
-	}
+  private ServletWebRequest servletWebRequest;
 
-	public HttpServletResponse getHttpServletResponse() {
-		return servletWebRequest.getResponse();
-	}
+  private ExtendedModelMap implicitModel;
 
-	public Object getHandler() {
-		return handler;
-	}
+  private Method handlerMethod;
 
-	public ServletWebRequest getServletWebRequest() {
-		return servletWebRequest;
-	}
+  private Object[] handlerParameters;
 
-	public ExtendedModelMap getImplicitModel() {
-		return implicitModel;
-	}
 
-	public Method getHandlerMethod() {
-		return handlerMethod;
-	}
+  public ActionExecutingContext(ServletWebRequest servletWebRequest,
+                                Object handler, Method handlerMethod, Object[] handlerParameters,
+                                ExtendedModelMap implicitModel) {
+    super();
+    this.servletWebRequest = servletWebRequest;
+    this.handler = handler;
+    this.handlerMethod = handlerMethod;
+    this.handlerParameters = handlerParameters;
+    this.implicitModel = implicitModel;
+  }
 
-	public Object[] getHandlerParameters() {
-		return handlerParameters;
-	}
-	
-	@Override
-	public String toString() {
-		return "ActionExecutingContext [handler=" + handler
-				+ ", servletWebRequest=" + servletWebRequest
-				+ ", implicitModel=" + implicitModel + ", handlerMethod="
-				+ handlerMethod + ", handlerParameters="
-				+ Arrays.toString(handlerParameters) + "]";
-	}
-	
+  public HttpServletRequest getHttpServletRequest() {
+    return servletWebRequest.getRequest();
+  }
 
-	
-	
+  public HttpServletResponse getHttpServletResponse() {
+    return servletWebRequest.getResponse();
+  }
+
+  public Object getHandler() {
+    return handler;
+  }
+
+  public ServletWebRequest getServletWebRequest() {
+    return servletWebRequest;
+  }
+
+  public ExtendedModelMap getImplicitModel() {
+    return implicitModel;
+  }
+
+  public Method getHandlerMethod() {
+    return handlerMethod;
+  }
+
+  public Object[] getHandlerParameters() {
+    return handlerParameters;
+  }
+
+  @Override
+  public String toString() {
+    return "ActionExecutingContext [handler=" + handler
+        + ", servletWebRequest=" + servletWebRequest
+        + ", implicitModel=" + implicitModel + ", handlerMethod="
+        + handlerMethod + ", handlerParameters="
+        + Arrays.toString(handlerParameters) + "]";
+  }
+
+
 }

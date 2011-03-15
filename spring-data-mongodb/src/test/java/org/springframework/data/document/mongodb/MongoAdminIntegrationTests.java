@@ -15,6 +15,9 @@
  */
 package org.springframework.data.document.mongodb;
 
+import com.mongodb.CommandResult;
+import com.mongodb.DB;
+import com.mongodb.Mongo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.Before;
@@ -24,41 +27,36 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.mongodb.CommandResult;
-import com.mongodb.DB;
-import com.mongodb.Mongo;
-
 
 /**
- * 
  * This test class assumes that you are already running the MongoDB server.
- * 
+ *
  * @author Mark Pollack
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:infrastructure.xml")
 public class MongoAdminIntegrationTests {
 
-	private static Log logger = LogFactory.getLog(MongoAdminIntegrationTests.class);
+  private static Log logger = LogFactory.getLog(MongoAdminIntegrationTests.class);
 
-	private MongoAdminOperations mongoAdmin;
-	
-	private DB testAdminDb;
-	
-	@Autowired
-	Mongo mongo;
+  private MongoAdminOperations mongoAdmin;
 
-	@Before
-	public void setUp() {
-		mongo.getDB("testAdminDb").dropDatabase();
-		testAdminDb = mongo.getDB("testAdminDb");
-		
-	}
-	
-	@Test
-	public void serverStats() {
-		//CommandResult result = testAdminDb.getStats();
-		CommandResult result = mongo.getDB("admin").command("serverStatus");
-		logger.info("stats = " + result);
-	}
+  private DB testAdminDb;
+
+  @Autowired
+  Mongo mongo;
+
+  @Before
+  public void setUp() {
+    mongo.getDB("testAdminDb").dropDatabase();
+    testAdminDb = mongo.getDB("testAdminDb");
+
+  }
+
+  @Test
+  public void serverStats() {
+    //CommandResult result = testAdminDb.getStats();
+    CommandResult result = mongo.getDB("admin").command("serverStatus");
+    logger.info("stats = " + result);
+  }
 }

@@ -16,6 +16,12 @@
 
 package org.springframework.data.document.mongodb.mapping;
 
+import java.beans.PropertyDescriptor;
+import java.lang.reflect.Field;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
@@ -34,12 +40,6 @@ import org.springframework.data.mapping.BasicMappingConfigurationBuilder;
 import org.springframework.data.mapping.MappingBeanHelper;
 import org.springframework.data.mapping.model.*;
 import org.springframework.data.util.TypeInformation;
-
-import java.beans.PropertyDescriptor;
-import java.lang.reflect.Field;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
@@ -78,7 +78,7 @@ public class MongoMappingConfigurationBuilder extends BasicMappingConfigurationB
 
   @Override
   public <T> PersistentEntity<T> createPersistentEntity(TypeInformation typeInformation, MappingContext mappingContext) throws MappingConfigurationException {
-    
+
     MongoPersistentEntity<T> entity = new MongoPersistentEntity<T>(mappingContext, typeInformation);
     Class<?> type = typeInformation.getType();
 

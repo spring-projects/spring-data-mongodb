@@ -15,6 +15,16 @@
  */
 package org.springframework.data.document.mongodb;
 
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
+
+import java.lang.reflect.Field;
+import java.math.BigInteger;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
@@ -24,16 +34,6 @@ import org.springframework.data.document.mongodb.SomeEnumTest.NumberEnum;
 import org.springframework.data.document.mongodb.SomeEnumTest.StringEnum;
 import org.springframework.data.document.mongodb.convert.SimpleMongoConverter;
 import org.springframework.util.ReflectionUtils;
-
-import java.lang.reflect.Field;
-import java.math.BigInteger;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
 
 public class SimpleMongoConverterTests {
 

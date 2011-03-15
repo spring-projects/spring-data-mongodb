@@ -15,9 +15,12 @@
  */
 package org.springframework.data.document.mongodb;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.*;
 
+import com.mongodb.DB;
+import com.mongodb.Mongo;
+import com.mongodb.MongoException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -27,83 +30,79 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.data.document.mongodb.convert.SimpleMongoConverter;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import com.mongodb.DB;
-import com.mongodb.Mongo;
-import com.mongodb.MongoException;
-
 /**
  * Unit tests for {@link MongoTemplate}.
- * 
+ *
  * @author Oliver Gierke
  */
 @RunWith(MockitoJUnitRunner.class)
 public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 
-	MongoTemplate template;
+  MongoTemplate template;
 
-	@Mock
-	Mongo mongo;
+  @Mock
+  Mongo mongo;
 
-	@Mock
-	DB db;
+  @Mock
+  DB db;
 
-	@Before
-	public void setUp() {
-		this.template = new MongoTemplate(mongo, "database", "default");
-	}
+  @Before
+  public void setUp() {
+    this.template = new MongoTemplate(mongo, "database", "default");
+  }
 
-	@Test(expected = IllegalArgumentException.class)
-	public void rejectsNullDatabaseName() throws Exception {
-		new MongoTemplate(mongo, null);
-	}
+  @Test(expected = IllegalArgumentException.class)
+  public void rejectsNullDatabaseName() throws Exception {
+    new MongoTemplate(mongo, null);
+  }
 
-	@Test(expected = IllegalArgumentException.class)
-	public void rejectsNullMongo() throws Exception {
-		new MongoTemplate(null, "database");
-	}
+  @Test(expected = IllegalArgumentException.class)
+  public void rejectsNullMongo() throws Exception {
+    new MongoTemplate(null, "database");
+  }
 
-	@Test(expected = DataAccessException.class)
-	public void removeHandlesMongoExceptionProperly() throws Exception {
-		MongoTemplate template = mockOutGetDb();
-		when(db.getCollection("collection")).thenThrow(new MongoException("Exception!"));
+  @Test(expected = DataAccessException.class)
+  public void removeHandlesMongoExceptionProperly() throws Exception {
+    MongoTemplate template = mockOutGetDb();
+    when(db.getCollection("collection")).thenThrow(new MongoException("Exception!"));
 
-		template.remove("collection", null);
-	}
+    template.remove("collection", null);
+  }
 
-	@Test
-	public void defaultsConverterToSimpleMongoConverter() throws Exception {
-		MongoTemplate template = new MongoTemplate(mongo, "database");
-		assertTrue(ReflectionTestUtils.getField(template, "mongoConverter") instanceof SimpleMongoConverter);
-	}
+  @Test
+  public void defaultsConverterToSimpleMongoConverter() throws Exception {
+    MongoTemplate template = new MongoTemplate(mongo, "database");
+    assertTrue(ReflectionTestUtils.getField(template, "mongoConverter") instanceof SimpleMongoConverter);
+  }
 
-	/**
-	 * Mocks out the {@link MongoTemplate#getDb()} method to return the {@link DB} mock instead of executing the actual
-	 * behaviour.
-	 * 
-	 * @return
-	 */
-	private MongoTemplate mockOutGetDb() {
+  /**
+   * Mocks out the {@link MongoTemplate#getDb()} method to return the {@link DB} mock instead of executing the actual
+   * behaviour.
+   *
+   * @return
+   */
+  private MongoTemplate mockOutGetDb() {
 
-		MongoTemplate template = spy(this.template);
-		stub(template.getDb()).toReturn(db);
-		return template;
-	}
+    MongoTemplate template = spy(this.template);
+    stub(template.getDb()).toReturn(db);
+    return template;
+  }
 
-	/* (non-Javadoc)
-	 * @see org.springframework.data.document.mongodb.MongoOperationsUnitTests#getOperations()
-	 */
-	@Override
-	protected MongoOperations getOperationsForExceptionHandling() {
-		MongoTemplate template = spy(this.template);
-		stub(template.getDb()).toThrow(new MongoException("Error!"));
-		return template;
-	}
-	
-	/* (non-Javadoc)
-	 * @see org.springframework.data.document.mongodb.MongoOperationsUnitTests#getOperations()
-	 */
-	@Override
-	protected MongoOperations getOperations() {
-		return this.template;
-	}
+  /* (non-Javadoc)
+    * @see org.springframework.data.document.mongodb.MongoOperationsUnitTests#getOperations()
+    */
+  @Override
+  protected MongoOperations getOperationsForExceptionHandling() {
+    MongoTemplate template = spy(this.template);
+    stub(template.getDb()).toThrow(new MongoException("Error!"));
+    return template;
+  }
+
+  /* (non-Javadoc)
+    * @see org.springframework.data.document.mongodb.MongoOperationsUnitTests#getOperations()
+    */
+  @Override
+  protected MongoOperations getOperations() {
+    return this.template;
+  }
 }

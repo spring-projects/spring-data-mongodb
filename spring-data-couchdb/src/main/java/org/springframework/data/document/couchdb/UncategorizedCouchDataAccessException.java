@@ -20,14 +20,15 @@ import org.springframework.web.client.RestClientException;
 
 public class UncategorizedCouchDataAccessException extends UncategorizedDataAccessException {
 
-	/**
-	 * Create a new HibernateSystemException,
-	 * wrapping an arbitrary HibernateException.
-	 * @param cause the HibernateException thrown
-	 */
-	public UncategorizedCouchDataAccessException(RestClientException cause) {
-		super(cause != null ? cause.getMessage() : null, cause);
-	}
+  /**
+   * Create a new HibernateSystemException,
+   * wrapping an arbitrary HibernateException.
+   *
+   * @param cause the HibernateException thrown
+   */
+  public UncategorizedCouchDataAccessException(RestClientException cause) {
+    super(cause != null ? cause.getMessage() : null, cause);
+  }
 
 }
 

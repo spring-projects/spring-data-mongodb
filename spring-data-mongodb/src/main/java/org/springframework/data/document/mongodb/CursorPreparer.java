@@ -20,15 +20,15 @@ import com.mongodb.DBCursor;
 
 /**
  * Simple callback interface to allow customization of a {@link DBCursor}.
- * 
+ *
  * @author Oliver Gierke
  */
 public interface CursorPreparer {
 
-    /**
-     * Prepare the given cursor (apply limits, skips and so on). Returns th eprepared cursor.
-     * 
-     * @param cursor
-     */
-	DBCursor prepare(DBCursor cursor);
+  /**
+   * Prepare the given cursor (apply limits, skips and so on). Returns th eprepared cursor.
+   *
+   * @param cursor
+   */
+  DBCursor prepare(DBCursor cursor);
 }

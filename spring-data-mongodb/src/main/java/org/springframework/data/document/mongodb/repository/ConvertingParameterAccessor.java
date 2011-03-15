@@ -17,163 +17,162 @@ package org.springframework.data.document.mongodb.repository;
 
 import java.util.Iterator;
 
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
 import org.springframework.data.document.mongodb.MongoWriter;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.repository.query.ParameterAccessor;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
-
 /**
  * Custom {@link ParameterAccessor} that uses a {@link MongoWriter} to serialize parameters into Mongo format.
- * 
+ *
  * @author Oliver Gierke
  */
 public class ConvertingParameterAccessor implements ParameterAccessor {
 
-	private final MongoWriter<Object> writer;
-	private final ParameterAccessor delegate;
+  private final MongoWriter<Object> writer;
+  private final ParameterAccessor delegate;
 
-	/**
-	 * Creates a new {@link ConvertingParameterAccessor} with the given {@link MongoWriter} and delegate.
-	 * 
-	 * @param writer
-	 */
-	public ConvertingParameterAccessor(MongoWriter<Object> writer, ParameterAccessor delegate) {
-		this.writer = writer;
-		this.delegate = delegate;
-	}
+  /**
+   * Creates a new {@link ConvertingParameterAccessor} with the given {@link MongoWriter} and delegate.
+   *
+   * @param writer
+   */
+  public ConvertingParameterAccessor(MongoWriter<Object> writer, ParameterAccessor delegate) {
+    this.writer = writer;
+    this.delegate = delegate;
+  }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see java.lang.Iterable#iterator()
-	 */
-	public Iterator<Object> iterator() {
-		return new ConvertingIterator(delegate.iterator());
-	}
+  /*
+    * (non-Javadoc)
+    *
+    * @see java.lang.Iterable#iterator()
+    */
+  public Iterator<Object> iterator() {
+    return new ConvertingIterator(delegate.iterator());
+  }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.springframework.data.repository.query.ParameterAccessor#getPageable()
-	 */
-	public Pageable getPageable() {
-		return delegate.getPageable();
-	}
+  /*
+    * (non-Javadoc)
+    *
+    * @see org.springframework.data.repository.query.ParameterAccessor#getPageable()
+    */
+  public Pageable getPageable() {
+    return delegate.getPageable();
+  }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.springframework.data.repository.query.ParameterAccessor#getSort()
-	 */
-	public Sort getSort() {
-		return delegate.getSort();
-	}
-	
-	/* (non-Javadoc)
-	 * @see org.springframework.data.repository.query.ParameterAccessor#getBindableParameter(int)
-	 */
-	public Object getBindableValue(int index) {
-		
-		return getConvertedValue(delegate.getBindableValue(index));
-	}
-	
-	/**
-	 * Converts the given value with the underlying {@link MongoWriter}.
-	 * 
-	 * @param value
-	 * @return
-	 */
-	private Object getConvertedValue(Object value) {
-		
-		DBObject result = new BasicDBObject();
-		writer.write(value.getClass().isEnum() ? new EnumValueHolder((Enum<?>) value) : new ValueHolder(value), result);
-		return result.get("value");
-	}
+  /*
+    * (non-Javadoc)
+    *
+    * @see org.springframework.data.repository.query.ParameterAccessor#getSort()
+    */
+  public Sort getSort() {
+    return delegate.getSort();
+  }
 
-	/**
-	 * Custom {@link Iterator} to convert items before returning them.
-	 *
-	 * @author Oliver Gierke
-	 */
-	private class ConvertingIterator implements Iterator<Object> {
+  /* (non-Javadoc)
+    * @see org.springframework.data.repository.query.ParameterAccessor#getBindableParameter(int)
+    */
+  public Object getBindableValue(int index) {
 
-		private final Iterator<Object> delegate;
+    return getConvertedValue(delegate.getBindableValue(index));
+  }
 
-		/**
-		 * Creates a new {@link ConvertingIterator} for the given delegate.
-		 * 
-		 * @param delegate
-		 */
-		public ConvertingIterator(Iterator<Object> delegate) {
-			this.delegate = delegate;
-		}
+  /**
+   * Converts the given value with the underlying {@link MongoWriter}.
+   *
+   * @param value
+   * @return
+   */
+  private Object getConvertedValue(Object value) {
 
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see java.util.Iterator#hasNext()
-		 */
-		public boolean hasNext() {
-			return delegate.hasNext();
-		}
+    DBObject result = new BasicDBObject();
+    writer.write(value.getClass().isEnum() ? new EnumValueHolder((Enum<?>) value) : new ValueHolder(value), result);
+    return result.get("value");
+  }
 
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see java.util.Iterator#next()
-		 */
-		public Object next() {
+  /**
+   * Custom {@link Iterator} to convert items before returning them.
+   *
+   * @author Oliver Gierke
+   */
+  private class ConvertingIterator implements Iterator<Object> {
 
-			return getConvertedValue(delegate.next());
-		}
+    private final Iterator<Object> delegate;
 
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see java.util.Iterator#remove()
-		 */
-		public void remove() {
-			delegate.remove();
-		}
-	}
+    /**
+     * Creates a new {@link ConvertingIterator} for the given delegate.
+     *
+     * @param delegate
+     */
+    public ConvertingIterator(Iterator<Object> delegate) {
+      this.delegate = delegate;
+    }
 
-	/**
-	 * Simple value holder class to allow conversion and accessing the converted value in a deterministic way.
-	 * 
-	 * @author Oliver Gierke
-	 */
-	private static class ValueHolder {
+    /*
+       * (non-Javadoc)
+       *
+       * @see java.util.Iterator#hasNext()
+       */
+    public boolean hasNext() {
+      return delegate.hasNext();
+    }
 
-		private Object value;
+    /*
+       * (non-Javadoc)
+       *
+       * @see java.util.Iterator#next()
+       */
+    public Object next() {
 
-		public ValueHolder(Object value) {
+      return getConvertedValue(delegate.next());
+    }
 
-			this.value = value;
-		}
+    /*
+       * (non-Javadoc)
+       *
+       * @see java.util.Iterator#remove()
+       */
+    public void remove() {
+      delegate.remove();
+    }
+  }
 
-		@SuppressWarnings("unused")
-		public Object getValue() {
+  /**
+   * Simple value holder class to allow conversion and accessing the converted value in a deterministic way.
+   *
+   * @author Oliver Gierke
+   */
+  private static class ValueHolder {
 
-			return value;
-		}
-	}
-	
-	private static class EnumValueHolder {
-		
-		private Enum<?> value;
-		
-		public EnumValueHolder(Enum<?> value) {
-			this.value = value;
-		}
-		
-		/**
-		 * @return the value
-		 */
-		public Enum<?> getValue() {
-			return value;
-		}
-	}
+    private Object value;
+
+    public ValueHolder(Object value) {
+
+      this.value = value;
+    }
+
+    @SuppressWarnings("unused")
+    public Object getValue() {
+
+      return value;
+    }
+  }
+
+  private static class EnumValueHolder {
+
+    private Enum<?> value;
+
+    public EnumValueHolder(Enum<?> value) {
+      this.value = value;
+    }
+
+    /**
+     * @return the value
+     */
+    public Enum<?> getValue() {
+      return value;
+    }
+  }
 }

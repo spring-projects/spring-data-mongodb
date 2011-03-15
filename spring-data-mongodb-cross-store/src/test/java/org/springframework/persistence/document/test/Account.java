@@ -5,61 +5,62 @@ import javax.persistence.Id;
 
 @Entity
 public class Account {
-	
-	@Id private Long id;
 
-    private String name;
+  @Id
+  private Long id;
 
-    private float balance;
+  private String name;
 
-    private String friendlyName;
+  private float balance;
 
-    private String whatever;
+  private String friendlyName;
 
-	public Long getId() {
-		return id;
-	}
+  private String whatever;
 
-	public void setId(Long id) {
-		this.id = id;
-	}
+  public Long getId() {
+    return id;
+  }
 
-	public String getName() {
-		return name;
-	}
+  public void setId(Long id) {
+    this.id = id;
+  }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+  public String getName() {
+    return name;
+  }
 
-	public float getBalance() {
-		return balance;
-	}
+  public void setName(String name) {
+    this.name = name;
+  }
 
-	public void setBalance(float balance) {
-		this.balance = balance;
-	}
+  public float getBalance() {
+    return balance;
+  }
 
-	public String getFriendlyName() {
-		return friendlyName;
-	}
+  public void setBalance(float balance) {
+    this.balance = balance;
+  }
 
-	public void setFriendlyName(String friendlyName) {
-		this.friendlyName = friendlyName;
-	}
+  public String getFriendlyName() {
+    return friendlyName;
+  }
 
-	public String getWhatever() {
-		return whatever;
-	}
+  public void setFriendlyName(String friendlyName) {
+    this.friendlyName = friendlyName;
+  }
 
-	public void setWhatever(String whatever) {
-		this.whatever = whatever;
-	}
+  public String getWhatever() {
+    return whatever;
+  }
 
-	@Override
-	public String toString() {
-		return "Account [id=" + id + ", name=" + name + ", balance=" + balance
-				+ ", friendlyName=" + friendlyName + "]";
-	}    
+  public void setWhatever(String whatever) {
+    this.whatever = whatever;
+  }
+
+  @Override
+  public String toString() {
+    return "Account [id=" + id + ", name=" + name + ", balance=" + balance
+        + ", friendlyName=" + friendlyName + "]";
+  }
 
 }

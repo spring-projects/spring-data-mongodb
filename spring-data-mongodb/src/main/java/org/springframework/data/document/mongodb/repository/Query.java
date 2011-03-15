@@ -15,16 +15,12 @@
  */
 package org.springframework.data.document.mongodb.repository;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.lang.annotation.*;
 
 
 /**
  * Annotation to declare finder queries directly on repository methods.
- * 
+ *
  * @author Oliver Gierke
  */
 @Retention(RetentionPolicy.RUNTIME)
@@ -32,7 +28,7 @@ import java.lang.annotation.Target;
 @Documented
 public @interface Query {
 
-    String value() default "";
-    
-    String fields() default "";
+  String value() default "";
+
+  String fields() default "";
 }

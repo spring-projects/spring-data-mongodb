@@ -15,12 +15,11 @@
  */
 package org.springframework.data.document.mongodb;
 
-import org.springframework.dao.DataAccessException;
-
 import com.mongodb.DB;
 import com.mongodb.MongoException;
+import org.springframework.dao.DataAccessException;
 
 public interface DbCallback<T> {
 
-	T doInDB(DB db) throws MongoException, DataAccessException;
+  T doInDB(DB db) throws MongoException, DataAccessException;
 }

@@ -30,57 +30,57 @@ import org.springframework.data.repository.query.ParameterAccessor;
  */
 class StubParameterAccessor implements ParameterAccessor {
 
-	private final Object[] values;
+  private final Object[] values;
 
-	/**
-	 * Creates a new {@link ConvertingParameterAccessor} backed by a {@link StubParameterAccessor} simply returning the
-	 * given parameters converted but unfiltered.
-	 * 
-	 * @param converter
-	 * @param parameters
-	 * @return
-	 */
-	public static ConvertingParameterAccessor getAccessor(MongoWriter<Object> converter, Object... parameters) {
+  /**
+   * Creates a new {@link ConvertingParameterAccessor} backed by a {@link StubParameterAccessor} simply returning the
+   * given parameters converted but unfiltered.
+   *
+   * @param converter
+   * @param parameters
+   * @return
+   */
+  public static ConvertingParameterAccessor getAccessor(MongoWriter<Object> converter, Object... parameters) {
 
-		return new ConvertingParameterAccessor(converter, new StubParameterAccessor(parameters));
-	}
-	
+    return new ConvertingParameterAccessor(converter, new StubParameterAccessor(parameters));
+  }
 
-	public StubParameterAccessor(Object... values) {
-		this.values = values;
-	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.springframework.data.repository.query.ParameterAccessor#getPageable()
-	 */
-	public Pageable getPageable() {
-		return null;
-	}
-	
-	/* (non-Javadoc)
-	 * @see org.springframework.data.repository.query.ParameterAccessor#getBindableParameter(int)
-	 */
-	public Object getBindableValue(int index) {
-		return values[index];
-	}
+  public StubParameterAccessor(Object... values) {
+    this.values = values;
+  }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.springframework.data.repository.query.ParameterAccessor#getSort()
-	 */
-	public Sort getSort() {
-		return null;
-	}
+  /*
+    * (non-Javadoc)
+    *
+    * @see org.springframework.data.repository.query.ParameterAccessor#getPageable()
+    */
+  public Pageable getPageable() {
+    return null;
+  }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see java.lang.Iterable#iterator()
-	 */
-	public Iterator<Object> iterator() {
-		return Arrays.asList(values).iterator();
-	}
+  /* (non-Javadoc)
+    * @see org.springframework.data.repository.query.ParameterAccessor#getBindableParameter(int)
+    */
+  public Object getBindableValue(int index) {
+    return values[index];
+  }
+
+  /*
+    * (non-Javadoc)
+    *
+    * @see org.springframework.data.repository.query.ParameterAccessor#getSort()
+    */
+  public Sort getSort() {
+    return null;
+  }
+
+  /*
+    * (non-Javadoc)
+    *
+    * @see java.lang.Iterable#iterator()
+    */
+  public Iterator<Object> iterator() {
+    return Arrays.asList(values).iterator();
+  }
 }

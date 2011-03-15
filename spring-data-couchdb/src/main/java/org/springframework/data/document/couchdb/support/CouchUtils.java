@@ -17,11 +17,10 @@
 package org.springframework.data.document.couchdb.support;
 
 import org.springframework.dao.DataAccessException;
-import org.springframework.data.document.UncategorizedDocumentStoreException;
 
 /**
  * Helper class featuring helper methods for internal CouchDB classes.
- *
+ * <p/>
  * <p>Mainly intended for internal use within the framework.
  *
  * @author Thomas Risberg
@@ -30,49 +29,53 @@ import org.springframework.data.document.UncategorizedDocumentStoreException;
  */
 public abstract class CouchUtils {
 
-	/**
-	 * Convert the given runtime exception to an appropriate exception from the
-	 * <code>org.springframework.dao</code> hierarchy.
-	 * Return null if no translation is appropriate: any other exception may
-	 * have resulted from user code, and should not be translated.
-	 * @param ex runtime exception that occurred
-	 * @return the corresponding DataAccessException instance,
-	 * or <code>null</code> if the exception should not be translated
-	 */
-	public static DataAccessException translateCouchExceptionIfPossible(RuntimeException ex) {
+  /**
+   * Convert the given runtime exception to an appropriate exception from the
+   * <code>org.springframework.dao</code> hierarchy.
+   * Return null if no translation is appropriate: any other exception may
+   * have resulted from user code, and should not be translated.
+   *
+   * @param ex runtime exception that occurred
+   * @return the corresponding DataAccessException instance,
+   *         or <code>null</code> if the exception should not be translated
+   */
+  public static DataAccessException translateCouchExceptionIfPossible(RuntimeException ex) {
 
-		return null;				
-	}
-	
-    /**
-     * Adds an id variable to a URL
-     * @param url the URL to modify
-     * @return the modified URL
-     */
-    public static String addId(String url) {
-        return ensureTrailingSlash(url) + "{id}";
+    return null;
+  }
+
+  /**
+   * Adds an id variable to a URL
+   *
+   * @param url the URL to modify
+   * @return the modified URL
+   */
+  public static String addId(String url) {
+    return ensureTrailingSlash(url) + "{id}";
+  }
+
+
+  /**
+   * Adds a 'changes since' variable to a URL
+   *
+   * @param url
+   * @return
+   */
+  public static String addChangesSince(String url) {
+    return ensureTrailingSlash(url) + "_changes?since={seq}";
+  }
+
+  /**
+   * Ensures that a URL ends with a slash.
+   *
+   * @param url the URL to modify
+   * @return the modified URL
+   */
+  public static String ensureTrailingSlash(String url) {
+    if (!url.endsWith("/")) {
+      url += "/";
     }
-
-
-    /**
-     * Adds a 'changes since' variable to a URL
-     * @param url
-     * @return
-     */
-    public static String addChangesSince(String url) {
-        return ensureTrailingSlash(url) + "_changes?since={seq}";
-    }
-
-    /**
-     * Ensures that a URL ends with a slash.
-     * @param url the URL to modify
-     * @return the modified URL
-     */
-    public static String ensureTrailingSlash(String url) {
-        if (!url.endsWith("/")) {
-            url += "/";
-        }
-        return url;
-    }
+    return url;
+  }
 
 }

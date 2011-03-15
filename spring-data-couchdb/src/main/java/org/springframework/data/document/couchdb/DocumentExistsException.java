@@ -18,17 +18,17 @@ package org.springframework.data.document.couchdb;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.web.client.HttpStatusCodeException;
 
-public class DocumentExistsException extends DataIntegrityViolationException
- {
-	 
-	/**
-	 * Create a new DocumentExistsException,
-	 * wrapping an arbitrary HttpServerErrorException.
-	 * @param cause the HttpServerErrorException thrown
-	 */
-	public DocumentExistsException(String documentId, HttpStatusCodeException cause) {
-		super(cause != null ? cause.getMessage() : null, cause);
-	}
+public class DocumentExistsException extends DataIntegrityViolationException {
+
+  /**
+   * Create a new DocumentExistsException,
+   * wrapping an arbitrary HttpServerErrorException.
+   *
+   * @param cause the HttpServerErrorException thrown
+   */
+  public DocumentExistsException(String documentId, HttpStatusCodeException cause) {
+    super(cause != null ? cause.getMessage() : null, cause);
+  }
 
 }
 

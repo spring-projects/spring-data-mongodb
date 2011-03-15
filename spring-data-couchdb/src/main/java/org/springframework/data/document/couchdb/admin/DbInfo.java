@@ -21,57 +21,52 @@ import java.util.Map;
 
 public class DbInfo {
 
-	private Map dbInfoMap;
-	
-	public DbInfo(Map dbInfoMap) {
-		super();
-		this.dbInfoMap = dbInfoMap;
-	}
+  private Map dbInfoMap;
 
-	public boolean isCompactRunning() {
-		return (Boolean) this.dbInfoMap.get("compact_running");
-	}
+  public DbInfo(Map dbInfoMap) {
+    super();
+    this.dbInfoMap = dbInfoMap;
+  }
 
-	public String getDbName() {
-		return (String) this.dbInfoMap.get("db_name");
-	}
+  public boolean isCompactRunning() {
+    return (Boolean) this.dbInfoMap.get("compact_running");
+  }
 
-	public long getDiskFormatVersion() {
-		return (Long) this.dbInfoMap.get("disk_format_version");
-	}
+  public String getDbName() {
+    return (String) this.dbInfoMap.get("db_name");
+  }
 
-	public long getDiskSize() {
-		return (Long) this.dbInfoMap.get("disk_size");
-	}
+  public long getDiskFormatVersion() {
+    return (Long) this.dbInfoMap.get("disk_format_version");
+  }
 
-	public long getDocCount() {
-		return (Long) this.dbInfoMap.get("doc_count");
-	}
+  public long getDiskSize() {
+    return (Long) this.dbInfoMap.get("disk_size");
+  }
 
-	public long getDocDeleteCount() {
-		return (Long) this.dbInfoMap.get("doc_del_count");
-	}
+  public long getDocCount() {
+    return (Long) this.dbInfoMap.get("doc_count");
+  }
 
-	public long getInstanceStartTime() {
-		return (Long) this.dbInfoMap.get("instance_start_time");
-	}
+  public long getDocDeleteCount() {
+    return (Long) this.dbInfoMap.get("doc_del_count");
+  }
 
-	public long getPurgeSequence() {
-		return (Long) this.dbInfoMap.get("purge_seq");
-	}
+  public long getInstanceStartTime() {
+    return (Long) this.dbInfoMap.get("instance_start_time");
+  }
 
-	public long getUpdateSequence() {
-		return (Long) this.dbInfoMap.get("update_seq");
-	}
+  public long getPurgeSequence() {
+    return (Long) this.dbInfoMap.get("purge_seq");
+  }
 
-	public Map getDbInfoMap() {
-		return Collections.unmodifiableMap(dbInfoMap);
-	}
+  public long getUpdateSequence() {
+    return (Long) this.dbInfoMap.get("update_seq");
+  }
+
+  public Map getDbInfoMap() {
+    return Collections.unmodifiableMap(dbInfoMap);
+  }
 
 
-	
-	
-	
-	
-	
 }

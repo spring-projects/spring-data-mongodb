@@ -23,72 +23,72 @@ import com.mongodb.DBObject;
 
 
 public class Index implements IndexDefinition {
-	
-	public enum Duplicates {
-		RETAIN,
-		DROP
-	}
-	
-	private Map<String, Order> fieldSpec = new HashMap<String, Order>();
-	
-	private String name;
-	
-	private boolean unique = false;
 
-	private boolean dropDuplicates = false;
+  public enum Duplicates {
+    RETAIN,
+    DROP
+  }
 
-	public Index() {
-	}
+  private Map<String, Order> fieldSpec = new HashMap<String, Order>();
 
-	public Index(String key, Order order) {
-		fieldSpec.put(key, order);
-	}
+  private String name;
 
-	public Index on(String key, Order order) {
-		fieldSpec.put(key, order);
-		return this;
-	}
-	
-	public Index named(String name) {
-		this.name = name;
-		return this;
-	}
+  private boolean unique = false;
 
-	public Index unique() {
-		this.unique = true;
-		return this;
-	}
+  private boolean dropDuplicates = false;
 
-	public Index unique(Duplicates duplicates) {
-		if (duplicates == Duplicates.DROP) {
-			this.dropDuplicates = true;
-		}
-		return unique();
-	}
+  public Index() {
+  }
 
-	public DBObject getIndexObject() {
-		DBObject dbo = new BasicDBObject();
-		for (String k : fieldSpec.keySet()) {
-			dbo.put(k, (fieldSpec.get(k).equals(Order.ASCENDING) ? 1 : -1));
-		}
-		return dbo;
-	}
-	
-	public DBObject getIndexOptions() {
-		if (name == null && !unique) {
-			return null;
-		}
-		DBObject dbo = new BasicDBObject();
-		if (name != null) {
-			dbo.put("name", name);
-		}
-		if (unique) {
-			dbo.put("unique", true);
-		}
-		if (dropDuplicates) {
-			dbo.put("drop_dups", true);
-		}
-		return dbo;
-	}
+  public Index(String key, Order order) {
+    fieldSpec.put(key, order);
+  }
+
+  public Index on(String key, Order order) {
+    fieldSpec.put(key, order);
+    return this;
+  }
+
+  public Index named(String name) {
+    this.name = name;
+    return this;
+  }
+
+  public Index unique() {
+    this.unique = true;
+    return this;
+  }
+
+  public Index unique(Duplicates duplicates) {
+    if (duplicates == Duplicates.DROP) {
+      this.dropDuplicates = true;
+    }
+    return unique();
+  }
+
+  public DBObject getIndexObject() {
+    DBObject dbo = new BasicDBObject();
+    for (String k : fieldSpec.keySet()) {
+      dbo.put(k, (fieldSpec.get(k).equals(Order.ASCENDING) ? 1 : -1));
+    }
+    return dbo;
+  }
+
+  public DBObject getIndexOptions() {
+    if (name == null && !unique) {
+      return null;
+    }
+    DBObject dbo = new BasicDBObject();
+    if (name != null) {
+      dbo.put("name", name);
+    }
+    if (unique) {
+      dbo.put("unique", true);
+    }
+    if (dropDuplicates) {
+      dbo.put("drop_dups", true);
+    }
+    return dbo;
+  }
 
 }

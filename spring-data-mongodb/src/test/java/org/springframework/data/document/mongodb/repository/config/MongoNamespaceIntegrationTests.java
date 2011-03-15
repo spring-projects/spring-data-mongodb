@@ -7,11 +7,11 @@ import org.springframework.test.context.ContextConfiguration;
 /**
  * Test class using the namespace configuration to set up the repository
  * instance.
- * 
+ *
  * @author Oliver Gierke
  */
 @ContextConfiguration
 public class MongoNamespaceIntegrationTests extends
-        AbstractPersonRepositoryIntegrationTests {
+    AbstractPersonRepositoryIntegrationTests {
 
 }

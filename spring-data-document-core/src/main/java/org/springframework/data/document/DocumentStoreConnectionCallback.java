@@ -18,5 +18,5 @@ package org.springframework.data.document;
 
 public interface DocumentStoreConnectionCallback<C, T> {
 
-	T doInConnection(C con) throws Exception;
+  T doInConnection(C con) throws Exception;
 }

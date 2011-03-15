@@ -17,11 +17,11 @@ package org.springframework.data.document.couchdb.core;
 
 public abstract class CouchConstants {
 
-	public static final String COUCHDB_URL = "http://127.0.0.1:5984/";
-	public static final String TEST_DATABASE_URL = COUCHDB_URL + "si_couchdb_test/";
+  public static final String COUCHDB_URL = "http://127.0.0.1:5984/";
+  public static final String TEST_DATABASE_URL = COUCHDB_URL + "si_couchdb_test/";
 
-	public CouchConstants() {
-		// TODO Auto-generated constructor stub
-	}
+  public CouchConstants() {
+    // TODO Auto-generated constructor stub
+  }
 
 }

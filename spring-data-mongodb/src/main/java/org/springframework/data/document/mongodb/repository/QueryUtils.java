@@ -15,72 +15,71 @@
  */
 package org.springframework.data.document.mongodb.repository;
 
+import com.mongodb.DBCursor;
 import org.springframework.data.document.mongodb.query.Query;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
 
-import com.mongodb.DBCursor;
-
 
 /**
  * Collection of utility methods to apply sorting and pagination to a
  * {@link DBCursor}.
- * 
+ *
  * @author Oliver Gierke
  */
 abstract class QueryUtils {
 
-    private QueryUtils() {
+  private QueryUtils() {
 
+  }
+
+
+  /**
+   * Applies the given {@link Pageable} to the given {@link Query}. Will do
+   * nothing if {@link Pageable} is {@literal null}.
+   *
+   * @param query
+   * @param pageable
+   * @return
+   */
+  public static Query applyPagination(Query query, Pageable pageable) {
+
+    if (pageable == null) {
+      return query;
     }
 
+    query.limit(pageable.getPageSize());
+    query.skip(pageable.getOffset());
 
-    /**
-     * Applies the given {@link Pageable} to the given {@link Query}. Will do
-     * nothing if {@link Pageable} is {@literal null}.
-     * 
-     * @param query
-     * @param pageable
-     * @return
-     */
-    public static Query applyPagination(Query query, Pageable pageable) {
+    return applySorting(query, pageable.getSort());
+  }
 
-        if (pageable == null) {
-            return query;
-        }
 
-        query.limit(pageable.getPageSize());
-        query.skip(pageable.getOffset());
+  /**
+   * Applies the given {@link Sort} to the {@link Query}. Will do nothing if
+   * {@link Sort} is {@literal null}.
+   *
+   * @param query
+   * @param sort
+   * @return
+   */
+  public static Query applySorting(Query query, Sort sort) {
 
-        return applySorting(query, pageable.getSort());
+    if (sort == null) {
+      return query;
     }
 
+    org.springframework.data.document.mongodb.query.Sort bSort =
+        query.sort();
 
-    /**
-     * Applies the given {@link Sort} to the {@link Query}. Will do nothing if
-     * {@link Sort} is {@literal null}.
-     * 
-     * @param query
-     * @param sort
-     * @return
-     */
-    public static Query applySorting(Query query, Sort sort) {
-
-        if (sort == null) {
-            return query;
-        }
-
-        org.springframework.data.document.mongodb.query.Sort bSort =
-                query.sort();
-
-        for (Order order : sort) {
-            bSort.on(
-                    order.getProperty(),
-                    order.isAscending() ? org.springframework.data.document.mongodb.query.Order.ASCENDING
-                            : org.springframework.data.document.mongodb.query.Order.DESCENDING);
-        }
-
-        return query;
+    for (Order order : sort) {
+      bSort.on(
+          order.getProperty(),
+          order.isAscending() ? org.springframework.data.document.mongodb.query.Order.ASCENDING
+              : org.springframework.data.document.mongodb.query.Order.DESCENDING);
     }
+
+    return query;
+  }
 }

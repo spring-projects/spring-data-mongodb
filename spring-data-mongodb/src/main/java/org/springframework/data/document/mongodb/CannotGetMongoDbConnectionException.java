@@ -19,13 +19,13 @@ import org.springframework.dao.DataAccessResourceFailureException;
 
 public class CannotGetMongoDbConnectionException extends DataAccessResourceFailureException {
 
-	private static final long serialVersionUID = 1172099106475265589L;
+  private static final long serialVersionUID = 1172099106475265589L;
 
-	public CannotGetMongoDbConnectionException(String msg, Throwable cause) {
-		super(msg, cause);
-	}
+  public CannotGetMongoDbConnectionException(String msg, Throwable cause) {
+    super(msg, cause);
+  }
 
-	public CannotGetMongoDbConnectionException(String msg) {
-		super(msg);
-	}
+  public CannotGetMongoDbConnectionException(String msg) {
+    super(msg);
+  }
 }

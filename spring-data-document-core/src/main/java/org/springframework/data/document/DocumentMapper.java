@@ -23,7 +23,7 @@ package org.springframework.data.document;
  * @since 1.0
  */
 public interface DocumentMapper<D, T> {
-	
-	T mapDocument(D document);
+
+  T mapDocument(D document);
 
 }

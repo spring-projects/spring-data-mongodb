@@ -17,9 +17,9 @@ package org.springframework.data.document.mongodb.query;
 
 /**
  * An enum that specifies the ordering for sort or index specifications
- * 
+ *
  * @author trisberg
  */
 public enum Order {
-		ASCENDING, DESCENDING
+  ASCENDING, DESCENDING
 }

@@ -15,6 +15,12 @@
  */
 package org.springframework.data.document.mongodb.convert;
 
+import java.lang.reflect.*;
+import java.math.BigInteger;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.regex.Pattern;
+
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
@@ -33,12 +39,6 @@ import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.document.mongodb.MongoPropertyDescriptors.MongoPropertyDescriptor;
 import org.springframework.util.Assert;
 import org.springframework.util.comparator.CompoundComparator;
-
-import java.lang.reflect.*;
-import java.math.BigInteger;
-import java.util.*;
-import java.util.Map.Entry;
-import java.util.regex.Pattern;
 
 /**
  * Basic {@link MongoConverter} implementation to convert between domain classes and {@link DBObject}s.

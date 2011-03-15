@@ -21,23 +21,23 @@ import org.springframework.beans.factory.xml.NamespaceHandlerSupport;
 /**
  * {@link org.springframework.beans.factory.xml.NamespaceHandler} for Couch DB
  * based repositories.
- * 
+ *
  * @author Oliver Gierke
  */
 public class CouchNamespaceHandler extends NamespaceHandlerSupport {
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.beans.factory.xml.NamespaceHandler#init()
-     */
-    public void init() {
+  /*
+  * (non-Javadoc)
+  *
+  * @see org.springframework.beans.factory.xml.NamespaceHandler#init()
+  */
+  public void init() {
 
-    	/*
-        registerBeanDefinitionParser("repositories",
-                new MongoRepositoryConfigDefinitionParser());
-        */
-        
-        registerBeanDefinitionParser("jmx", new CouchJmxParser());
-    }
+    /*
+    registerBeanDefinitionParser("repositories",
+            new MongoRepositoryConfigDefinitionParser());
+    */
+
+    registerBeanDefinitionParser("jmx", new CouchJmxParser());
+  }
 }

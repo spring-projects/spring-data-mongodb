@@ -15,45 +15,45 @@
  */
 package org.springframework.data.document.mongodb.repository;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 
 import org.junit.Test;
 
 
 /**
  * Unit test for {@link MongoEntityInformation}.
- * 
+ *
  * @author Oliver Gierke
  */
 public class MongoEntityMetadataUnitTests {
 
-    @Test
-    public void findsIdField() throws Exception {
+  @Test
+  public void findsIdField() throws Exception {
 
-        MongoEntityInformation<Person, Long> isNewAware =
-                new MongoEntityInformation<Person, Long>(Person.class);
+    MongoEntityInformation<Person, Long> isNewAware =
+        new MongoEntityInformation<Person, Long>(Person.class);
 
-        Person person = new Person();
-        assertThat(isNewAware.isNew(person), is(true));
-        person.id = 1L;
-        assertThat(isNewAware.isNew(person), is(false));
-    }
+    Person person = new Person();
+    assertThat(isNewAware.isNew(person), is(true));
+    person.id = 1L;
+    assertThat(isNewAware.isNew(person), is(false));
+  }
 
 
-    @Test(expected = IllegalArgumentException.class)
-    public void rejectsClassIfNoIdField() throws Exception {
+  @Test(expected = IllegalArgumentException.class)
+  public void rejectsClassIfNoIdField() throws Exception {
 
-        new MongoEntityInformation<InvalidPerson, Long>(InvalidPerson.class);
-    }
+    new MongoEntityInformation<InvalidPerson, Long>(InvalidPerson.class);
+  }
 
-    class Person {
+  class Person {
 
-        Long id;
-    }
+    Long id;
+  }
 
-    class InvalidPerson {
+  class InvalidPerson {
 
-        Long foo;
-    }
+    Long foo;
+  }
 }

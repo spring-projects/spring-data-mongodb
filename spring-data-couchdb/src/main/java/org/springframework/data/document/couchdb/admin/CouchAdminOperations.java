@@ -19,16 +19,16 @@ import java.util.List;
 
 public interface CouchAdminOperations {
 
-	
-	// functionality for /_special - replication, logs, UUIDs
-	
-	List<String> listDatabases();
-	
-	void createDatabase(String name);
-	
-	void deleteDatabase(String name);
-	
-	DbInfo getDatabaseInfo(String name);
-	
-	
+
+  // functionality for /_special - replication, logs, UUIDs
+
+  List<String> listDatabases();
+
+  void createDatabase(String name);
+
+  void deleteDatabase(String name);
+
+  DbInfo getDatabaseInfo(String name);
+
+
 }

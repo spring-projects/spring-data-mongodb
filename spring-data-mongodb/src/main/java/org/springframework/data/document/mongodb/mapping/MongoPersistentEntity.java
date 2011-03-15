@@ -27,7 +27,7 @@ public class MongoPersistentEntity<T> extends BasicPersistentEntity<T> {
 
   protected String collection;
 
- 
+
   public MongoPersistentEntity(MappingContext mappingContext, TypeInformation typeInformation) {
     super(mappingContext, typeInformation);
   }

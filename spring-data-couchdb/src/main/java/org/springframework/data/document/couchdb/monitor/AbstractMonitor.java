@@ -15,32 +15,27 @@
  */
 package org.springframework.data.document.couchdb.monitor;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.web.client.RestTemplate;
 
 /**
  * Base class to encapsulate common configuration settings when connecting to a CouchDB database
- * 
- * @author Mark Pollack
  *
+ * @author Mark Pollack
  */
 public abstract class AbstractMonitor {
 
-	
-	protected RestTemplate restTemplate;
-	protected String databaseUrl;
-		
-	/**
-	 * Gets the databaseUrl used to connect to CouchDB
-	 * @return
-	 */
-	public String getDatabaseUrl() {
-		return this.databaseUrl;
-	}
-	
 
+  protected RestTemplate restTemplate;
+  protected String databaseUrl;
 
-		
+  /**
+   * Gets the databaseUrl used to connect to CouchDB
+   *
+   * @return
+   */
+  public String getDatabaseUrl() {
+    return this.databaseUrl;
+  }
+
 
 }

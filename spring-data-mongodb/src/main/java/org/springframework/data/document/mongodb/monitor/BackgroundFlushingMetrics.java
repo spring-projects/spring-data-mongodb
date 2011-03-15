@@ -17,64 +17,62 @@ package org.springframework.data.document.mongodb.monitor;
 
 import java.util.Date;
 
+import com.mongodb.DBObject;
+import com.mongodb.Mongo;
 import org.springframework.jmx.export.annotation.ManagedMetric;
 import org.springframework.jmx.export.annotation.ManagedResource;
 import org.springframework.jmx.support.MetricType;
 
-import com.mongodb.DBObject;
-import com.mongodb.Mongo;
-
 /**
  * JMX Metrics for Background Flushing
- * 
- * @author Mark Pollack
  *
+ * @author Mark Pollack
  */
-@ManagedResource(description="Background Flushing Metrics")
+@ManagedResource(description = "Background Flushing Metrics")
 public class BackgroundFlushingMetrics extends AbstractMonitor {
 
 
-	public BackgroundFlushingMetrics(Mongo mongo) {
-		this.mongo = mongo;
-	}
-	
-	@ManagedMetric(metricType = MetricType.COUNTER, displayName = "Flushes")
-	public int getFlushes() {
-		return getFlushingData("flushes", java.lang.Integer.class);		
-	}
-		
-	@ManagedMetric(metricType = MetricType.COUNTER, displayName = "Total ms", unit="ms")
-	public int getTotalMs() {
-		return getFlushingData("total_ms", java.lang.Integer.class);		
-	}
-	
-	@ManagedMetric(metricType = MetricType.GAUGE, displayName = "Average ms", unit="ms")
-	public double getAverageMs() {
-		return getFlushingData("average_ms", java.lang.Double.class);		
-	}
-	
-	@ManagedMetric(metricType = MetricType.GAUGE, displayName = "Last Ms", unit="ms")
-	public int getLastMs() {
-		return getFlushingData("last_ms", java.lang.Integer.class);		
-	}
-	
-	
-	@ManagedMetric(metricType = MetricType.GAUGE, displayName = "Last finished")
-	public Date getLastFinished() {
-		return getLast();		
-	}
-			
-	@SuppressWarnings("unchecked")
-	private <T> T getFlushingData(String key, Class<T> targetClass) {
-		DBObject mem = (DBObject) getServerStatus().get("backgroundFlushing");
-		return (T) mem.get(key);
-	}
-	
-	private Date getLast() {
-		DBObject bgFlush = (DBObject) getServerStatus().get("backgroundFlushing");
-		Date lastFinished = (Date)bgFlush.get("last_finished");
-		return lastFinished;
-	}
-	
+  public BackgroundFlushingMetrics(Mongo mongo) {
+    this.mongo = mongo;
+  }
+
+  @ManagedMetric(metricType = MetricType.COUNTER, displayName = "Flushes")
+  public int getFlushes() {
+    return getFlushingData("flushes", java.lang.Integer.class);
+  }
+
+  @ManagedMetric(metricType = MetricType.COUNTER, displayName = "Total ms", unit = "ms")
+  public int getTotalMs() {
+    return getFlushingData("total_ms", java.lang.Integer.class);
+  }
+
+  @ManagedMetric(metricType = MetricType.GAUGE, displayName = "Average ms", unit = "ms")
+  public double getAverageMs() {
+    return getFlushingData("average_ms", java.lang.Double.class);
+  }
+
+  @ManagedMetric(metricType = MetricType.GAUGE, displayName = "Last Ms", unit = "ms")
+  public int getLastMs() {
+    return getFlushingData("last_ms", java.lang.Integer.class);
+  }
+
+
+  @ManagedMetric(metricType = MetricType.GAUGE, displayName = "Last finished")
+  public Date getLastFinished() {
+    return getLast();
+  }
+
+  @SuppressWarnings("unchecked")
+  private <T> T getFlushingData(String key, Class<T> targetClass) {
+    DBObject mem = (DBObject) getServerStatus().get("backgroundFlushing");
+    return (T) mem.get(key);
+  }
+
+  private Date getLast() {
+    DBObject bgFlush = (DBObject) getServerStatus().get("backgroundFlushing");
+    Date lastFinished = (Date) bgFlush.get("last_finished");
+    return lastFinished;
+  }
+
 
 }

@@ -29,7 +29,7 @@ import org.springframework.data.util.TypeInformation;
  * Mongo specific
  * {@link org.springframework.data.mapping.model.PersistentProperty}
  * implementation.
- * 
+ *
  * @author Oliver Gierke
  */
 public class MongoPersistentProperty extends BasicPersistentProperty {
@@ -48,19 +48,19 @@ public class MongoPersistentProperty extends BasicPersistentProperty {
 
   /**
    * Creates a new {@link MongoPersistentProperty}.
-   * 
+   *
    * @param field
    * @param propertyDescriptor
    * @param owningTypeInformation
    */
   public MongoPersistentProperty(Field field,
-      PropertyDescriptor propertyDescriptor, TypeInformation owningTypeInformation) {
+                                 PropertyDescriptor propertyDescriptor, TypeInformation owningTypeInformation) {
     super(field, propertyDescriptor, owningTypeInformation);
   }
 
   /**
    * Also considers fields as id that are of supported id type and name.
-   * 
+   *
    * @see #SUPPORTED_ID_PROPERTY_NAMES
    * @see #SUPPORTED_ID_TYPES
    */

@@ -15,15 +15,15 @@
  */
 package org.springframework.data.document.mongodb;
 
-import org.bson.types.ObjectId;
-import org.springframework.beans.BeanUtils;
-import org.springframework.util.Assert;
-
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.math.BigInteger;
 import java.util.*;
+
+import org.bson.types.ObjectId;
+import org.springframework.beans.BeanUtils;
+import org.springframework.util.Assert;
 
 /**
  * An iterable of {@link MongoPropertyDescriptor}s that allows dedicated access to the {@link MongoPropertyDescriptor}

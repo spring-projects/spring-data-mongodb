@@ -15,9 +15,9 @@
  */
 package org.springframework.data.document.mongodb.repository;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Method;
 
@@ -26,45 +26,45 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.springframework.data.document.mongodb.convert.MongoConverter;
 import org.springframework.data.document.mongodb.MongoTemplate;
+import org.springframework.data.document.mongodb.convert.MongoConverter;
 import org.springframework.data.document.mongodb.convert.SimpleMongoConverter;
 import org.springframework.data.document.mongodb.query.BasicQuery;
 
 /**
  * Unit tests for {@link StringBasedMongoQuery}.
- * 
+ *
  * @author Oliver Gierke
  */
 @RunWith(MockitoJUnitRunner.class)
 public class StringBasedMongoQueryUnitTests {
 
-	@Mock
-	MongoTemplate template;
-	MongoConverter converter = new SimpleMongoConverter();
+  @Mock
+  MongoTemplate template;
+  MongoConverter converter = new SimpleMongoConverter();
 
-	@Before
-	public void setUp() {
-		when(template.getConverter()).thenReturn(converter);
-	}
+  @Before
+  public void setUp() {
+    when(template.getConverter()).thenReturn(converter);
+  }
 
-	@Test
-	public void testname() throws Exception {
+  @Test
+  public void testname() throws Exception {
 
-		Method method = SampleRepository.class.getMethod("findByLastname", String.class);
-		MongoQueryMethod queryMethod = new MongoQueryMethod(method, Person.class);
-		StringBasedMongoQuery mongoQuery = new StringBasedMongoQuery(queryMethod, template);
-		ConvertingParameterAccessor accesor = StubParameterAccessor.getAccessor(converter, "Matthews");
-		
-		org.springframework.data.document.mongodb.query.Query query = mongoQuery.createQuery(accesor);
-		org.springframework.data.document.mongodb.query.Query reference = new BasicQuery("{'lastname' : 'Matthews'}");
-		
-		assertThat(query.getQueryObject(), is(reference.getQueryObject()));
-	}
+    Method method = SampleRepository.class.getMethod("findByLastname", String.class);
+    MongoQueryMethod queryMethod = new MongoQueryMethod(method, Person.class);
+    StringBasedMongoQuery mongoQuery = new StringBasedMongoQuery(queryMethod, template);
+    ConvertingParameterAccessor accesor = StubParameterAccessor.getAccessor(converter, "Matthews");
 
-	private interface SampleRepository {
+    org.springframework.data.document.mongodb.query.Query query = mongoQuery.createQuery(accesor);
+    org.springframework.data.document.mongodb.query.Query reference = new BasicQuery("{'lastname' : 'Matthews'}");
 
-		@Query("{ 'lastname' : ?0 }")
-		Person findByLastname(String lastname);
-	}
+    assertThat(query.getQueryObject(), is(reference.getQueryObject()));
+  }
+
+  private interface SampleRepository {
+
+    @Query("{ 'lastname' : ?0 }")
+    Person findByLastname(String lastname);
+  }
 }

@@ -47,7 +47,7 @@ public class MongoMappingConverterParser extends AbstractSingleBeanDefinitionPar
   @Override
   protected void doParse(Element element, ParserContext parserContext, BeanDefinitionBuilder builder) {
     super.doParse(element, parserContext, builder);
-    
+
   }
 
 }

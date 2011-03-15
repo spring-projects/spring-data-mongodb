@@ -15,32 +15,31 @@
  */
 package org.springframework.data.document.mongodb.query;
 
-import org.bson.types.BasicBSONList;
-
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
+import org.bson.types.BasicBSONList;
 
 public class OrCriteria implements CriteriaDefinition {
-	
-	Query[] queries = null;
-	
-	public OrCriteria(Query[] queries) {
-		super();
-		this.queries = queries;
-	}
+
+  Query[] queries = null;
+
+  public OrCriteria(Query[] queries) {
+    super();
+    this.queries = queries;
+  }
 
 
-	/* (non-Javadoc)
-	 * @see org.springframework.datastore.document.mongodb.query.Criteria#getCriteriaObject(java.lang.String)
-	 */
-	public DBObject getCriteriaObject() {
-		DBObject dbo = new BasicDBObject();
-		BasicBSONList l = new BasicBSONList();
-		for (Query q : queries) {
-			l.add(q.getQueryObject());
-		}
-		dbo.put("$or", l);
-		return dbo;
-	}
+  /* (non-Javadoc)
+    * @see org.springframework.datastore.document.mongodb.query.Criteria#getCriteriaObject(java.lang.String)
+    */
+  public DBObject getCriteriaObject() {
+    DBObject dbo = new BasicDBObject();
+    BasicBSONList l = new BasicBSONList();
+    for (Query q : queries) {
+      l.add(q.getQueryObject());
+    }
+    dbo.put("$or", l);
+    return dbo;
+  }
 
 }

@@ -15,52 +15,50 @@
  */
 package org.springframework.data.document.mongodb;
 
+import com.mongodb.MongoException;
+import com.mongodb.MongoException.DuplicateKey;
+import com.mongodb.MongoException.Network;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.document.UncategorizedDocumentStoreException;
 
-import com.mongodb.MongoException;
-import com.mongodb.MongoException.DuplicateKey;
-import com.mongodb.MongoException.Network;
-
 /**
  * Simple {@link PersistenceExceptionTranslator} for Mongo. Convert the given runtime exception to an appropriate
  * exception from the {@code org.springframework.dao} hierarchy. Return {@literal null} if no translation is
  * appropriate: any other exception may have resulted from user code, and should not be translated.
+ *
  * @param ex runtime exception that occurred
- * @return the corresponding DataAccessException instance, or {@literal null} if the exception should not be translated
- * 
- * 
  * @author Oliver Gierke
+ * @return the corresponding DataAccessException instance, or {@literal null} if the exception should not be translated
  */
 public class MongoExceptionTranslator implements PersistenceExceptionTranslator {
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.springframework.dao.support.PersistenceExceptionTranslator#
-	 * translateExceptionIfPossible(java.lang.RuntimeException)
-	 */
-	public DataAccessException translateExceptionIfPossible(RuntimeException ex) {
+  /*
+    * (non-Javadoc)
+    *
+    * @see org.springframework.dao.support.PersistenceExceptionTranslator#
+    * translateExceptionIfPossible(java.lang.RuntimeException)
+    */
+  public DataAccessException translateExceptionIfPossible(RuntimeException ex) {
 
-		// Check for well-known MongoException subclasses.
+    // Check for well-known MongoException subclasses.
 
-		// All other MongoExceptions
-		if (ex instanceof DuplicateKey) {
-			return new DataIntegrityViolationException(ex.getMessage(), ex);
-		}
-		if (ex instanceof Network) {
-			return new DataAccessResourceFailureException(ex.getMessage(), ex);
-		}
-		if (ex instanceof MongoException) {
-			return new UncategorizedDocumentStoreException(ex.getMessage(), ex);
-		}
+    // All other MongoExceptions
+    if (ex instanceof DuplicateKey) {
+      return new DataIntegrityViolationException(ex.getMessage(), ex);
+    }
+    if (ex instanceof Network) {
+      return new DataAccessResourceFailureException(ex.getMessage(), ex);
+    }
+    if (ex instanceof MongoException) {
+      return new UncategorizedDocumentStoreException(ex.getMessage(), ex);
+    }
 
-		// If we get here, we have an exception that resulted from user code,
-		// rather than the persistence provider, so we return null to indicate
-		// that translation should not occur.
-		return null;
-	}
+    // If we get here, we have an exception that resulted from user code,
+    // rather than the persistence provider, so we return null to indicate
+    // that translation should not occur.
+    return null;
+  }
 }

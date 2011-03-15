@@ -20,13 +20,11 @@ import org.junit.Test;
 
 /**
  * Unit tests for CouchTemplate with mocks
- * 
- *
  */
 public class CouchTemplateTests {
 
-	@Test
-	public void foo() {
-		
-	}
+  @Test
+  public void foo() {
+
+  }
 }

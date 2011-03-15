@@ -1,98 +1,99 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xmlns:tx="http://www.springframework.org/schema/tx"
-	xmlns:jdbc="http://www.springframework.org/schema/jdbc"
-	xmlns:context="http://www.springframework.org/schema/context"
-	xsi:schemaLocation="http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc-3.0.xsd
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc-3.0.xsd
 		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
 		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
 		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.0.xsd">
 
-	<context:spring-configured/>
+  <context:spring-configured/>
 
-	<context:component-scan base-package="org.springframework.persistence.test">
-		<context:exclude-filter expression=".*_Roo_.*" type="regex"/>
-		<context:exclude-filter expression="org.springframework.stereotype.Controller" type="annotation"/>
-	</context:component-scan>
+  <context:component-scan base-package="org.springframework.persistence.test">
+    <context:exclude-filter expression=".*_Roo_.*" type="regex"/>
+    <context:exclude-filter expression="org.springframework.stereotype.Controller" type="annotation"/>
+  </context:component-scan>
 
-	<!--  Store spanning config -->
-	
-	<bean class="org.springframework.persistence.StoreSpanning"
-		factory-method="aspectOf" >
-		<property name="mappingValidator">
-			<bean class="org.springframework.persistence.support.SimpleMappingValidator" />
-		</property>
-	</bean>
-		
-	<bean id="entityOperationsLocator" class="org.springframework.persistence.ChainingEntityOperationsLocator" />
-	
-	<bean class="org.springframework.persistence.ChainingForeignStoreKeyManagerLocator" />
-	
-	<bean class="org.springframework.persistence.PresentKeyForeignStoreKeyManager" autowire="constructor" />
-	
-	<bean class="org.springframework.persistence.GeneratedFieldForeignStoreKeyManager" />
+  <!--  Store spanning config -->
 
-	<bean class="org.springframework.persistence.document.MongoEntityOperations" >
-		<property name="order" value="5" />
-		<property name="entityInstantiator">
-			<bean class="org.springframework.persistence.support.ChangeSetConstructorEntityInstantiator" />
-		</property>
-		<property name="changeSetPersister" ref="mongoChangeSetPersister" />
-	</bean>
+  <bean class="org.springframework.persistence.StoreSpanning"
+        factory-method="aspectOf">
+    <property name="mappingValidator">
+      <bean class="org.springframework.persistence.support.SimpleMappingValidator"/>
+    </property>
+  </bean>
 
-	<bean class="org.springframework.persistence.EntityManagerJpaEntityOperations"	/>
+  <bean id="entityOperationsLocator" class="org.springframework.persistence.ChainingEntityOperationsLocator"/>
 
-	<bean class="org.springframework.persistence.support.ChangeSetForeignStoreKeyManager">
-		<property name="fieldDelimiter" value="#"/>
-	</bean>
+  <bean class="org.springframework.persistence.ChainingForeignStoreKeyManagerLocator"/>
 
-	<!--  Mongo config -->
-	<bean id="mongo" class="org.springframework.data.document.mongodb.MongoFactoryBean">
-		<property name="host" value="localhost" />
-		<property name="port" value="27017" />
-	</bean>
+  <bean class="org.springframework.persistence.PresentKeyForeignStoreKeyManager" autowire="constructor"/>
 
-	<bean id="mongoTemplate" class="org.springframework.data.document.mongodb.MongoTemplate">
-		<constructor-arg name="mongo" ref="mongo" />
-		<constructor-arg name="databaseName" value="test" />
-	</bean>
-	
-	<bean class="org.springframework.data.document.mongodb.MongoExceptionTranslator" />
+  <bean class="org.springframework.persistence.GeneratedFieldForeignStoreKeyManager"/>
 
-	<!--  Mongo aspect config -->
-	<bean class="org.springframework.persistence.document.MongoDocumentBacking" 
-		factory-method="aspectOf">
-		<property name="changeSetConfiguration" ref="mongoChangeSetConfiguration"/>
-	</bean>
-	<bean id ="mongoChangeSetPersister" class="org.springframework.persistence.document.MongoChangeSetPersister" />
-	<bean id="mongoChangeSetSynchronizer" class="org.springframework.persistence.support.SimpleReflectiveChangeSetSynchronizer" />
-	<bean id="mongoChangeSetConfiguration" class="org.springframework.persistence.support.ChangeSetConfiguration">
-		<property name="changeSetPersister" ref="mongoChangeSetPersister"/>
-		<property name="changeSetManager" ref="mongoChangeSetSynchronizer"/>
-	</bean>
-	<!--  Needed for ChangeSet persistence -->
-	<bean id="conversionService" class="org.springframework.context.support.ConversionServiceFactoryBean" />
+  <bean class="org.springframework.persistence.document.MongoEntityOperations">
+    <property name="order" value="5"/>
+    <property name="entityInstantiator">
+      <bean class="org.springframework.persistence.support.ChangeSetConstructorEntityInstantiator"/>
+    </property>
+    <property name="changeSetPersister" ref="mongoChangeSetPersister"/>
+  </bean>
 
-	<jdbc:embedded-database id="dataSource" type="HSQL">
-    </jdbc:embedded-database>
- 
-	 <bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager" >
-        <property name="entityManagerFactory" ref="entityManagerFactory"/>
-	 </bean>
+  <bean class="org.springframework.persistence.EntityManagerJpaEntityOperations"/>
 
-    <tx:annotation-driven mode="aspectj" transaction-manager="transactionManager"/>
-    
-    <bean class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean" id="entityManagerFactory">
-    	<property name="persistenceUnitName" value="test"/>
-        <property name="dataSource" ref="dataSource"/>
-	    <property name="jpaVendorAdapter">
-	      <bean class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter">
-	        <property name="showSql" value="true"/>
-	        <property name="generateDdl" value="true"/>
-	        <property name="databasePlatform" value="org.hibernate.dialect.HSQLDialect"/>
-	      </bean>
-	    </property>
-    </bean>
+  <bean class="org.springframework.persistence.support.ChangeSetForeignStoreKeyManager">
+    <property name="fieldDelimiter" value="#"/>
+  </bean>
+
+  <!--  Mongo config -->
+  <bean id="mongo" class="org.springframework.data.document.mongodb.MongoFactoryBean">
+    <property name="host" value="localhost"/>
+    <property name="port" value="27017"/>
+  </bean>
+
+  <bean id="mongoTemplate" class="org.springframework.data.document.mongodb.MongoTemplate">
+    <constructor-arg name="mongo" ref="mongo"/>
+    <constructor-arg name="databaseName" value="test"/>
+  </bean>
+
+  <bean class="org.springframework.data.document.mongodb.MongoExceptionTranslator"/>
+
+  <!--  Mongo aspect config -->
+  <bean class="org.springframework.persistence.document.MongoDocumentBacking"
+        factory-method="aspectOf">
+    <property name="changeSetConfiguration" ref="mongoChangeSetConfiguration"/>
+  </bean>
+  <bean id="mongoChangeSetPersister" class="org.springframework.persistence.document.MongoChangeSetPersister"/>
+  <bean id="mongoChangeSetSynchronizer"
+        class="org.springframework.persistence.support.SimpleReflectiveChangeSetSynchronizer"/>
+  <bean id="mongoChangeSetConfiguration" class="org.springframework.persistence.support.ChangeSetConfiguration">
+    <property name="changeSetPersister" ref="mongoChangeSetPersister"/>
+    <property name="changeSetManager" ref="mongoChangeSetSynchronizer"/>
+  </bean>
+  <!--  Needed for ChangeSet persistence -->
+  <bean id="conversionService" class="org.springframework.context.support.ConversionServiceFactoryBean"/>
+
+  <jdbc:embedded-database id="dataSource" type="HSQL">
+  </jdbc:embedded-database>
+
+  <bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+    <property name="entityManagerFactory" ref="entityManagerFactory"/>
+  </bean>
+
+  <tx:annotation-driven mode="aspectj" transaction-manager="transactionManager"/>
+
+  <bean class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean" id="entityManagerFactory">
+    <property name="persistenceUnitName" value="test"/>
+    <property name="dataSource" ref="dataSource"/>
+    <property name="jpaVendorAdapter">
+      <bean class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter">
+        <property name="showSql" value="true"/>
+        <property name="generateDdl" value="true"/>
+        <property name="databasePlatform" value="org.hibernate.dialect.HSQLDialect"/>
+      </bean>
+    </property>
+  </bean>
 
 </beans>

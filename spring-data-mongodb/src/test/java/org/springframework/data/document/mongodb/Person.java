@@ -19,86 +19,86 @@ import org.bson.types.ObjectId;
 
 public class Person {
 
-	private final ObjectId id;
-	
-	private String firstName;
+  private final ObjectId id;
 
-	private int age;
-	
-	private Person friend;
-	
-	public Person() {
-		this.id = new ObjectId();
-	}
-	
-	public Person(ObjectId id, String firstname) {
-		this.id = id;
-		this.firstName = firstname;
-	}
-	
-	public Person(String firstname) {
-		this();
-		this.firstName = firstname;
-	}
+  private String firstName;
 
-	public ObjectId getId() {
-		return id;
-	}
-	
-	public String getFirstName() {
-		return firstName;
-	}
+  private int age;
 
-	public void setFirstName(String firstName) {
-		this.firstName = firstName;
-	}
+  private Person friend;
 
-	public int getAge() {
-		return age;
-	}
+  public Person() {
+    this.id = new ObjectId();
+  }
 
-	public void setAge(int age) {
-		this.age = age;
-	}
+  public Person(ObjectId id, String firstname) {
+    this.id = id;
+    this.firstName = firstname;
+  }
 
-	public Person getFriend() {
-		return friend;
-	}
+  public Person(String firstname) {
+    this();
+    this.firstName = firstname;
+  }
 
-	public void setFriend(Person friend) {
-		this.friend = friend;
-	}
-	
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
-	@Override
-	public boolean equals(Object obj) {
-		if (obj == this) {
-			return true;
-		}
+  public ObjectId getId() {
+    return id;
+  }
 
-		if (obj == null) {
-			return false;
-		}
+  public String getFirstName() {
+    return firstName;
+  }
 
-		if (!(getClass().equals(obj.getClass()))) {
-			return false;
-		}
+  public void setFirstName(String firstName) {
+    this.firstName = firstName;
+  }
 
-		Person that = (Person) obj;
+  public int getAge() {
+    return age;
+  }
 
-		return this.id == null ? false : this.id.equals(that.id);
-	}
-	
-	
-	/* (non-Javadoc)
-	 * @see java.lang.Object#hashCode()
-	 */
-	@Override
-	public int hashCode() {
-		return id.hashCode();
-	}
+  public void setAge(int age) {
+    this.age = age;
+  }
+
+  public Person getFriend() {
+    return friend;
+  }
+
+  public void setFriend(Person friend) {
+    this.friend = friend;
+  }
+
+  /*
+    * (non-Javadoc)
+    *
+    * @see java.lang.Object#equals(java.lang.Object)
+    */
+  @Override
+  public boolean equals(Object obj) {
+    if (obj == this) {
+      return true;
+    }
+
+    if (obj == null) {
+      return false;
+    }
+
+    if (!(getClass().equals(obj.getClass()))) {
+      return false;
+    }
+
+    Person that = (Person) obj;
+
+    return this.id == null ? false : this.id.equals(that.id);
+  }
+
+
+  /* (non-Javadoc)
+    * @see java.lang.Object#hashCode()
+    */
+  @Override
+  public int hashCode() {
+    return id.hashCode();
+  }
 }

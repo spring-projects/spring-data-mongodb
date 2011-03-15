@@ -18,21 +18,18 @@ package org.springframework.data.document.couchdb;
 import org.springframework.dao.DataRetrievalFailureException;
 
 public class DocumentRetrievalFailureException extends
-		DataRetrievalFailureException {
+    DataRetrievalFailureException {
 
-	private String documentPath; 
-	
-	public DocumentRetrievalFailureException(String documentPath) {
-		super("Could not find document at path = " + documentPath);		
-		this.documentPath = documentPath;
-	}
-	
-	public String getDocumentPath() {
-		return documentPath;
-	}
-	
+  private String documentPath;
 
-	
-	
+  public DocumentRetrievalFailureException(String documentPath) {
+    super("Could not find document at path = " + documentPath);
+    this.documentPath = documentPath;
+  }
+
+  public String getDocumentPath() {
+    return documentPath;
+  }
+
 
 }

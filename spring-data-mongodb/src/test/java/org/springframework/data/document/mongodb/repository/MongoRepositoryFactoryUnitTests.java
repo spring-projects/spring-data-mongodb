@@ -24,22 +24,22 @@ import org.springframework.data.document.mongodb.repository.MongoRepositoryFacto
 
 /**
  * Unit test for {@link MongoRepositoryFactory}.
- * 
+ *
  * @author Oliver Gierke
  */
 @RunWith(MockitoJUnitRunner.class)
 public class MongoRepositoryFactoryUnitTests {
-	
-	@Mock
-	MongoTemplate template;
 
-	@Test(expected = IllegalArgumentException.class)
-	public void rejectsInvalidIdType() throws Exception {
-		MongoRepositoryFactory factory = new MongoRepositoryFactory(template);
-		factory.getRepository(SampleRepository.class);
-	}
-	
-	private interface SampleRepository extends MongoRepository<Person, Long> {
-		
-	}
+  @Mock
+  MongoTemplate template;
+
+  @Test(expected = IllegalArgumentException.class)
+  public void rejectsInvalidIdType() throws Exception {
+    MongoRepositoryFactory factory = new MongoRepositoryFactory(template);
+    factory.getRepository(SampleRepository.class);
+  }
+
+  private interface SampleRepository extends MongoRepository<Person, Long> {
+
+  }
 }

@@ -1,64 +1,64 @@
 package org.springframework.data.document.mongodb;
 
 public class SomeEnumTest {
-	
-	public enum StringEnum {
-		ONE, TWO, FIVE;
-	}
 
-	public enum NumberEnum {
-		ONE (1), TWO (2), FIVE(5);
+  public enum StringEnum {
+    ONE, TWO, FIVE;
+  }
 
-		private int value;
+  public enum NumberEnum {
+    ONE(1), TWO(2), FIVE(5);
 
-		public int value() {
-			return value;
-		}
+    private int value;
 
-		NumberEnum(int value) {
-			this.value = value;
-		}
+    public int value() {
+      return value;
+    }
 
-	}
-		
-	private StringEnum stringEnum;
-	
-	private NumberEnum numberEnum;
-	
-	private String id;
-	
-	private String name;
+    NumberEnum(int value) {
+      this.value = value;
+    }
 
-	public StringEnum getStringEnum() {
-		return stringEnum;
-	}
+  }
 
-	public void setStringEnum(StringEnum stringEnum) {
-		this.stringEnum = stringEnum;
-	}
+  private StringEnum stringEnum;
 
-	public NumberEnum getNumberEnum() {
-		return numberEnum;
-	}
+  private NumberEnum numberEnum;
 
-	public void setNumberEnum(NumberEnum numberEnum) {
-		this.numberEnum = numberEnum;
-	}
+  private String id;
 
-	public String getId() {
-		return id;
-	}
+  private String name;
 
-	public void setId(String id) {
-		this.id = id;
-	}
+  public StringEnum getStringEnum() {
+    return stringEnum;
+  }
 
-	public String getName() {
-		return name;
-	}
+  public void setStringEnum(StringEnum stringEnum) {
+    this.stringEnum = stringEnum;
+  }
 
-	public void setName(String name) {
-		this.name = name;
-	}
-	
+  public NumberEnum getNumberEnum() {
+    return numberEnum;
+  }
+
+  public void setNumberEnum(NumberEnum numberEnum) {
+    this.numberEnum = numberEnum;
+  }
+
+  public String getId() {
+    return id;
+  }
+
+  public void setId(String id) {
+    this.id = id;
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
+  }
+
 }

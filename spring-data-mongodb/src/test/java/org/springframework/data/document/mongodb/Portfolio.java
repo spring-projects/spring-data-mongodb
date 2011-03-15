@@ -21,43 +21,53 @@ import java.util.Map;
 
 public class Portfolio {
 
-    private String portfolioName;
-    private User user;
-    private List<Trade> trades;
-    private Map<String, Integer> positions;
-    private Map<String, Person>  portfolioManagers;
-    
-	public Map<String, Person> getPortfolioManagers() {
-		return portfolioManagers;
-	}
-	public void setPortfolioManagers(Map<String, Person> portfolioManagers) {
-		this.portfolioManagers = portfolioManagers;
-	}
-	public Map<String, Integer> getPositions() {
-		return positions;
-	}
-	public void setPositions(Map<String, Integer> positions) {
-		this.positions = positions;
-	}
-	public Portfolio() {
-		trades = new ArrayList<Trade>();
-	}
-	public String getPortfolioName() {
-		return portfolioName;
-	}
-	public void setPortfolioName(String portfolioName) {
-		this.portfolioName = portfolioName;
-	}
-	public List<Trade> getTrades() {
-		return trades;
-	}
-	public void setTrades(List<Trade> trades) {
-		this.trades = trades;
-	}
-	public User getUser() {
-		return user;
-	}
-	public void setUser(User user) {
-		this.user = user;
-	}
+  private String portfolioName;
+  private User user;
+  private List<Trade> trades;
+  private Map<String, Integer> positions;
+  private Map<String, Person> portfolioManagers;
+
+  public Map<String, Person> getPortfolioManagers() {
+    return portfolioManagers;
+  }
+
+  public void setPortfolioManagers(Map<String, Person> portfolioManagers) {
+    this.portfolioManagers = portfolioManagers;
+  }
+
+  public Map<String, Integer> getPositions() {
+    return positions;
+  }
+
+  public void setPositions(Map<String, Integer> positions) {
+    this.positions = positions;
+  }
+
+  public Portfolio() {
+    trades = new ArrayList<Trade>();
+  }
+
+  public String getPortfolioName() {
+    return portfolioName;
+  }
+
+  public void setPortfolioName(String portfolioName) {
+    this.portfolioName = portfolioName;
+  }
+
+  public List<Trade> getTrades() {
+    return trades;
+  }
+
+  public void setTrades(List<Trade> trades) {
+    this.trades = trades;
+  }
+
+  public User getUser() {
+    return user;
+  }
+
+  public void setUser(User user) {
+    this.user = user;
+  }
 }

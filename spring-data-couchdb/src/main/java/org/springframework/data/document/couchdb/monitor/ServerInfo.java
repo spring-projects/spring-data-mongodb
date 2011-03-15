@@ -24,40 +24,39 @@ import org.springframework.jmx.export.annotation.ManagedResource;
 import org.springframework.web.client.RestTemplate;
 
 /**
- * Expose basic server information via JMX 
- * 
- * @author Mark Pollack
+ * Expose basic server information via JMX
  *
+ * @author Mark Pollack
  */
-@ManagedResource(description="Server Information")
+@ManagedResource(description = "Server Information")
 public class ServerInfo extends AbstractMonitor {
-	
-	
-	public ServerInfo(String databaseUrl) {
-		this.databaseUrl = databaseUrl;
-		this.restTemplate = new RestTemplate();
-	}
-	
-
-	@ManagedOperation(description="Server host name")
-	public String getHostName() throws UnknownHostException {
-		return InetAddress.getLocalHost().getHostName();
-	}
 
 
-	@ManagedOperation(description="CouchDB Server Version")
-	public String getVersion() {
-		return (String) getRoot().get("version");		
-	}
-	
-	@ManagedOperation(description="Message of the day")
-	public String getMotd() {
-		return (String) getRoot().get("greeting");		
-	}
-	
-	public Map getRoot() {
-		Map map = restTemplate.getForObject(getDatabaseUrl(),Map.class);
-		return map;
-	}
+  public ServerInfo(String databaseUrl) {
+    this.databaseUrl = databaseUrl;
+    this.restTemplate = new RestTemplate();
+  }
+
+
+  @ManagedOperation(description = "Server host name")
+  public String getHostName() throws UnknownHostException {
+    return InetAddress.getLocalHost().getHostName();
+  }
+
+
+  @ManagedOperation(description = "CouchDB Server Version")
+  public String getVersion() {
+    return (String) getRoot().get("version");
+  }
+
+  @ManagedOperation(description = "Message of the day")
+  public String getMotd() {
+    return (String) getRoot().get("greeting");
+  }
+
+  public Map getRoot() {
+    Map map = restTemplate.getForObject(getDatabaseUrl(), Map.class);
+    return map;
+  }
 
 }

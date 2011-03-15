@@ -19,6 +19,6 @@ import com.mongodb.DBObject;
 
 public interface CriteriaDefinition {
 
-	DBObject getCriteriaObject();
+  DBObject getCriteriaObject();
 
 }

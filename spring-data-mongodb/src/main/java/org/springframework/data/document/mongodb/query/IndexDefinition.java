@@ -4,8 +4,8 @@ import com.mongodb.DBObject;
 
 public interface IndexDefinition {
 
-	DBObject getIndexObject();
-	
-	DBObject getIndexOptions();
+  DBObject getIndexObject();
+
+  DBObject getIndexOptions();
 
 }

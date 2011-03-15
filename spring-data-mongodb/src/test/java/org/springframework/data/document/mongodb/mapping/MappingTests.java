@@ -16,6 +16,15 @@
 
 package org.springframework.data.document.mongodb.mapping;
 
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.Assert.*;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import org.junit.Test;
@@ -28,16 +37,6 @@ import org.springframework.data.document.mongodb.query.Query;
 import org.springframework.data.mapping.BasicMappingContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertEquals;
 
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
@@ -109,7 +108,7 @@ public class MappingTests {
     assertNotNull(p.getId());
 
     List<PersonMapProperty> result = template.find(new Query(Criteria.where("ssn").is(1234567)), PersonMapProperty.class);
-    //assertThat(result.size(), is(1));
+    assertThat(result.size(), is(1));
     assertThat(result.get(0).getAccounts().size(), is(2));
     assertThat(result.get(0).getAccounts().get("checking").getBalance(), is(1000.0f));
   }

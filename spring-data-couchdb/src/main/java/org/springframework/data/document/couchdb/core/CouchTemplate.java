@@ -26,128 +26,118 @@ import org.springframework.data.document.couchdb.CouchUsageException;
 import org.springframework.data.document.couchdb.DocumentRetrievalFailureException;
 import org.springframework.data.document.couchdb.UncategorizedCouchDataAccessException;
 import org.springframework.data.document.couchdb.support.CouchUtils;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.util.Assert;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.HttpServerErrorException;
-import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestOperations;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.*;
 
 
 public class CouchTemplate implements CouchOperations {
 
-    protected final Log logger = LogFactory.getLog(this.getClass());
+  protected final Log logger = LogFactory.getLog(this.getClass());
 
-    private String defaultDocumentUrl;
-    
-    private RestOperations restOperations = new RestTemplate();
-    
-    /**
-     * Constructs an instance of CouchDbDocumentTemplate with a default database
-     * @param defaultDatabaseUrl the default database to connect to
-     */
-    public CouchTemplate(String defaultDatabaseUrl) {
-        Assert.hasText(defaultDatabaseUrl, "defaultDatabaseUrl must not be empty");
-        defaultDocumentUrl = CouchUtils.addId(defaultDatabaseUrl);
+  private String defaultDocumentUrl;
+
+  private RestOperations restOperations = new RestTemplate();
+
+  /**
+   * Constructs an instance of CouchDbDocumentTemplate with a default database
+   *
+   * @param defaultDatabaseUrl the default database to connect to
+   */
+  public CouchTemplate(String defaultDatabaseUrl) {
+    Assert.hasText(defaultDatabaseUrl, "defaultDatabaseUrl must not be empty");
+    defaultDocumentUrl = CouchUtils.addId(defaultDatabaseUrl);
+  }
+
+  /**
+   * Constructs an instance of CouchDbDocumentTemplate with a default database
+   *
+   * @param defaultDatabaseUrl the default database to connect to
+   */
+  public CouchTemplate(String defaultDatabaseUrl, RestOperations restOperations) {
+    this(defaultDatabaseUrl);
+    Assert.notNull(restOperations, "restOperations must not be null");
+    this.restOperations = restOperations;
+  }
+
+
+  public <T> T findOne(String id, Class<T> targetClass) {
+    Assert.state(defaultDocumentUrl != null, "defaultDatabaseUrl must be set to use this method");
+    try {
+      return restOperations.getForObject(defaultDocumentUrl, targetClass, id);
+      //TODO check this exception translation and centralize.
+    } catch (HttpClientErrorException clientError) {
+      if (clientError.getStatusCode() == HttpStatus.NOT_FOUND) {
+        throw new DocumentRetrievalFailureException(defaultDocumentUrl + "/" + id);
+      }
+      throw new CouchUsageException(clientError);
+    } catch (HttpServerErrorException serverError) {
+      throw new CouchServerResourceUsageException(serverError);
+    } catch (RestClientException otherError) {
+      throw new UncategorizedCouchDataAccessException(otherError);
     }
-    
-    /**
-     * Constructs an instance of CouchDbDocumentTemplate with a default database
-     * @param defaultDatabaseUrl the default database to connect to
-     */
-    public CouchTemplate(String defaultDatabaseUrl, RestOperations restOperations) {
-    	this(defaultDatabaseUrl);
-        Assert.notNull(restOperations, "restOperations must not be null");
-        this.restOperations = restOperations;
+  }
+
+  public <T> T findOne(URI uri, Class<T> targetClass) {
+    Assert.state(uri != null, "uri must be set to use this method");
+    try {
+      return restOperations.getForObject(uri, targetClass);
+      //TODO check this exception translation and centralize.
+    } catch (HttpClientErrorException clientError) {
+      if (clientError.getStatusCode() == HttpStatus.NOT_FOUND) {
+        throw new DocumentRetrievalFailureException(uri.getPath());
+      }
+      throw new CouchUsageException(clientError);
+    } catch (HttpServerErrorException serverError) {
+      throw new CouchServerResourceUsageException(serverError);
+    } catch (RestClientException otherError) {
+      throw new UncategorizedCouchDataAccessException(otherError);
     }
-    
-    
-    
-    
-    
-	public <T> T findOne(String id, Class<T> targetClass) {
-		Assert.state(defaultDocumentUrl != null, "defaultDatabaseUrl must be set to use this method");
-        try {
-            return restOperations.getForObject(defaultDocumentUrl, targetClass, id);
-            //TODO check this exception translation and centralize.
-        } catch (HttpClientErrorException clientError) {
-        	if (clientError.getStatusCode() == HttpStatus.NOT_FOUND) {
-        		throw new DocumentRetrievalFailureException(defaultDocumentUrl + "/" + id);
-        	} 
-        	throw new CouchUsageException(clientError);
-        } catch (HttpServerErrorException serverError) {
-        	throw new CouchServerResourceUsageException(serverError); 
-        } catch (RestClientException otherError) {
-        	throw new UncategorizedCouchDataAccessException(otherError);
-        }
-	}
+  }
 
-	public <T> T findOne(URI uri, Class<T> targetClass) {
-		Assert.state(uri != null, "uri must be set to use this method");
-        try {
-            return restOperations.getForObject(uri, targetClass);
-            //TODO check this exception translation and centralize.
-        } catch (HttpClientErrorException clientError) {
-        	if (clientError.getStatusCode() == HttpStatus.NOT_FOUND) {
-        		throw new DocumentRetrievalFailureException(uri.getPath());
-        	}   
-        	throw new CouchUsageException(clientError);
-        } catch (HttpServerErrorException serverError) {
-        	throw new CouchServerResourceUsageException(serverError); 
-        } catch (RestClientException otherError) {
-        	throw new UncategorizedCouchDataAccessException(otherError);
-        }
-	}
-
-	public void save(String id, Object document) {		
-		Assert.notNull(document, "document must not be null for save");
-		HttpEntity<?> httpEntity = createHttpEntity(document);
-		try {		
-			ResponseEntity<Map> response = restOperations.exchange(defaultDocumentUrl, HttpMethod.PUT, httpEntity, Map.class, id);	
-			//TODO update the document revision id on the object from the returned value
-			//TODO better exception translation
-        } catch (RestClientException e) {
-            throw new UncategorizedCouchDataAccessException(e);
-        }
-				
-	}
-
-	public void save(URI uri, Object document) {
-		Assert.notNull(document, "document must not be null for save");
-		Assert.notNull(uri, "URI must not be null for save");
-		HttpEntity<?> httpEntity = createHttpEntity(document);
-		try {		
-			ResponseEntity<Map> response = restOperations.exchange(uri, HttpMethod.PUT, httpEntity, Map.class);	
-			//TODO update the document revision id on the object from the returned value
-			//TODO better exception translation
-        } catch (RestClientException e) {
-            throw new UncategorizedCouchDataAccessException(e);
-        }
-			
-		
-	}
-
-    private HttpEntity<?> createHttpEntity(Object document) {
-
-        if (document instanceof HttpEntity) {
-            HttpEntity httpEntity = (HttpEntity) document;
-            Assert.isTrue(httpEntity.getHeaders().getContentType().equals(MediaType.APPLICATION_JSON),
-                    "HttpEntity payload with non application/json content type found.");
-            return httpEntity;
-        }
-
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<Object> httpEntity = new HttpEntity<Object>(document, httpHeaders);
-
-        return httpEntity;
+  public void save(String id, Object document) {
+    Assert.notNull(document, "document must not be null for save");
+    HttpEntity<?> httpEntity = createHttpEntity(document);
+    try {
+      ResponseEntity<Map> response = restOperations.exchange(defaultDocumentUrl, HttpMethod.PUT, httpEntity, Map.class, id);
+      //TODO update the document revision id on the object from the returned value
+      //TODO better exception translation
+    } catch (RestClientException e) {
+      throw new UncategorizedCouchDataAccessException(e);
     }
-	
-	
+
+  }
+
+  public void save(URI uri, Object document) {
+    Assert.notNull(document, "document must not be null for save");
+    Assert.notNull(uri, "URI must not be null for save");
+    HttpEntity<?> httpEntity = createHttpEntity(document);
+    try {
+      ResponseEntity<Map> response = restOperations.exchange(uri, HttpMethod.PUT, httpEntity, Map.class);
+      //TODO update the document revision id on the object from the returned value
+      //TODO better exception translation
+    } catch (RestClientException e) {
+      throw new UncategorizedCouchDataAccessException(e);
+    }
+
+
+  }
+
+  private HttpEntity<?> createHttpEntity(Object document) {
+
+    if (document instanceof HttpEntity) {
+      HttpEntity httpEntity = (HttpEntity) document;
+      Assert.isTrue(httpEntity.getHeaders().getContentType().equals(MediaType.APPLICATION_JSON),
+          "HttpEntity payload with non application/json content type found.");
+      return httpEntity;
+    }
+
+    HttpHeaders httpHeaders = new HttpHeaders();
+    httpHeaders.setContentType(MediaType.APPLICATION_JSON);
+    HttpEntity<Object> httpEntity = new HttpEntity<Object>(document, httpHeaders);
+
+    return httpEntity;
+  }
+
+
 }

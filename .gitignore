@@ -1,6 +1,7 @@
 .DS_Store
 *.iml
 *.ipr
+*.iws
 target
 .springBeans
 .ant-targets-build.xml

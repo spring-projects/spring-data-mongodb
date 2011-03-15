@@ -15,58 +15,57 @@
  */
 package org.springframework.data.document.mongodb.monitor;
 
+import com.mongodb.DBObject;
+import com.mongodb.Mongo;
 import org.springframework.jmx.export.annotation.ManagedMetric;
 import org.springframework.jmx.export.annotation.ManagedResource;
 import org.springframework.jmx.support.MetricType;
 
-import com.mongodb.DBObject;
-import com.mongodb.Mongo;
-
 /**
  * JMX Metrics for Operation counters
- * @author Mark Pollack
  *
+ * @author Mark Pollack
  */
-@ManagedResource(description="Operation Counters")
+@ManagedResource(description = "Operation Counters")
 public class OperationCounters extends AbstractMonitor {
 
 
-	public OperationCounters(Mongo mongo) {
-		this.mongo = mongo;
-	}
-		
-	@ManagedMetric(metricType = MetricType.COUNTER, displayName = "Insert operation count")
-	public int getInsertCount() {
-		return getOpCounter("insert");		
-	}
-	
-	@ManagedMetric(metricType = MetricType.COUNTER, displayName = "Query operation count")
-	public int getQueryCount() {
-		return getOpCounter("query");	
-	}
-	
-	@ManagedMetric(metricType = MetricType.COUNTER, displayName = "Update operation count")
-	public int getUpdateCount() {
-		return getOpCounter("update");	
-	}
-	
-	@ManagedMetric(metricType = MetricType.COUNTER, displayName = "Delete operation count")
-	public int getDeleteCount() {
-		return getOpCounter("delete");	
-	}
-	
-	@ManagedMetric(metricType = MetricType.COUNTER, displayName = "GetMore operation count")
-	public int getGetMoreCount() {
-		return getOpCounter("getmore");	
-	}
-	
-	@ManagedMetric(metricType = MetricType.COUNTER, displayName = "Command operation count")
-	public int getCommandCount() {
-		return getOpCounter("command");	
-	}
-	
-	private int getOpCounter(String key) {
-		DBObject opCounters = (DBObject) getServerStatus().get("opcounters");
-		return (Integer) opCounters.get(key);
-	}
+  public OperationCounters(Mongo mongo) {
+    this.mongo = mongo;
+  }
+
+  @ManagedMetric(metricType = MetricType.COUNTER, displayName = "Insert operation count")
+  public int getInsertCount() {
+    return getOpCounter("insert");
+  }
+
+  @ManagedMetric(metricType = MetricType.COUNTER, displayName = "Query operation count")
+  public int getQueryCount() {
+    return getOpCounter("query");
+  }
+
+  @ManagedMetric(metricType = MetricType.COUNTER, displayName = "Update operation count")
+  public int getUpdateCount() {
+    return getOpCounter("update");
+  }
+
+  @ManagedMetric(metricType = MetricType.COUNTER, displayName = "Delete operation count")
+  public int getDeleteCount() {
+    return getOpCounter("delete");
+  }
+
+  @ManagedMetric(metricType = MetricType.COUNTER, displayName = "GetMore operation count")
+  public int getGetMoreCount() {
+    return getOpCounter("getmore");
+  }
+
+  @ManagedMetric(metricType = MetricType.COUNTER, displayName = "Command operation count")
+  public int getCommandCount() {
+    return getOpCounter("command");
+  }
+
+  private int getOpCounter(String key) {
+    DBObject opCounters = (DBObject) getServerStatus().get("opcounters");
+    return (Integer) opCounters.get(key);
+  }
 }

@@ -18,22 +18,21 @@ package org.springframework.data.document.couchdb.admin;
 import java.util.List;
 
 import junit.framework.Assert;
-
 import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.data.document.couchdb.core.CouchConstants;
 
 public class CouchAdminIntegrationTests {
 
-	@Test
-	@Ignore("until CI has couch server running")
-	public void dbLifecycle() {
-		
-		CouchAdmin admin = new CouchAdmin(CouchConstants.COUCHDB_URL);
-		admin.deleteDatabase("foo");
-		List<String> dbs = admin.listDatabases();
-		admin.createDatabase("foo");
-		List<String> newDbs = admin.listDatabases();
-		Assert.assertEquals(dbs.size()+1, newDbs.size());
-	}
+  @Test
+  @Ignore("until CI has couch server running")
+  public void dbLifecycle() {
+
+    CouchAdmin admin = new CouchAdmin(CouchConstants.COUCHDB_URL);
+    admin.deleteDatabase("foo");
+    List<String> dbs = admin.listDatabases();
+    admin.createDatabase("foo");
+    List<String> newDbs = admin.listDatabases();
+    Assert.assertEquals(dbs.size() + 1, newDbs.size());
+  }
 }

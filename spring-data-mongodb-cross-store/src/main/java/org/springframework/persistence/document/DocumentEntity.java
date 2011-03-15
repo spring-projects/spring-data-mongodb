@@ -8,7 +8,7 @@ import java.lang.annotation.Target;
 /**
  * Annotation to denote an object that should be transparently persisted
  * using MongoDB
- * 
+ *
  * @author Thomas Risberg
  */
 

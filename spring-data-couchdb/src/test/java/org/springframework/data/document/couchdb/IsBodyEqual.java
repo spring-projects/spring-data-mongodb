@@ -24,28 +24,29 @@ import org.springframework.http.HttpEntity;
 
 /**
  * Matches the content of the body of an HttpEntity.
+ *
  * @author Tareq Abedrabbo
  * @since 31/01/2011
  */
 public class IsBodyEqual extends TypeSafeMatcher<HttpEntity> {
 
-    private Object object;
+  private Object object;
 
-    public IsBodyEqual(Object object) {
-        this.object = object;
-    }
+  public IsBodyEqual(Object object) {
+    this.object = object;
+  }
 
-    @Override
-    public boolean matchesSafely(HttpEntity httpEntity) {
-        return httpEntity.getBody().equals(object);
-    }
+  @Override
+  public boolean matchesSafely(HttpEntity httpEntity) {
+    return httpEntity.getBody().equals(object);
+  }
 
-    public void describeTo(Description description) {
-        description.appendText("body equals ").appendValue(object);
-    }
+  public void describeTo(Description description) {
+    description.appendText("body equals ").appendValue(object);
+  }
 
-    @Factory
-    public static Matcher<HttpEntity> bodyEqual(Object object) {
-        return new IsBodyEqual(object);
-    }
+  @Factory
+  public static Matcher<HttpEntity> bodyEqual(Object object) {
+    return new IsBodyEqual(object);
+  }
 }

@@ -16,9 +16,9 @@
 
 package org.springframework.data.document.mongodb.mapping;
 
-import org.bson.types.ObjectId;
-
 import java.util.Map;
+
+import org.bson.types.ObjectId;
 
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>

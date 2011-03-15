@@ -26,39 +26,39 @@ import org.springframework.web.client.RestTemplate;
 
 public class CouchAdmin implements CouchAdminOperations {
 
-	private String databaseUrl;
-	private RestOperations restOperations = new RestTemplate();
-	
-	public CouchAdmin(String databaseUrl) {
-		
-		if (!databaseUrl.trim().endsWith("/")) {
-			this.databaseUrl = databaseUrl.trim() + "/";
-		} else {
-			this.databaseUrl = databaseUrl.trim();
-		}
-	}
-	
-	public List<String> listDatabases() {
-		String dbs = restOperations.getForObject(databaseUrl + "_all_dbs", String.class);
-		return Arrays.asList(StringUtils.commaDelimitedListToStringArray(dbs));
-	}
+  private String databaseUrl;
+  private RestOperations restOperations = new RestTemplate();
 
-	public void createDatabase(String dbName) {
-		org.springframework.util.Assert.hasText(dbName);
-		restOperations.put(databaseUrl + dbName, null);
+  public CouchAdmin(String databaseUrl) {
 
-	}
+    if (!databaseUrl.trim().endsWith("/")) {
+      this.databaseUrl = databaseUrl.trim() + "/";
+    } else {
+      this.databaseUrl = databaseUrl.trim();
+    }
+  }
 
-	public void deleteDatabase(String dbName) {
-		org.springframework.util.Assert.hasText(dbName);
-		restOperations.delete(CouchUtils.ensureTrailingSlash(databaseUrl + dbName));
+  public List<String> listDatabases() {
+    String dbs = restOperations.getForObject(databaseUrl + "_all_dbs", String.class);
+    return Arrays.asList(StringUtils.commaDelimitedListToStringArray(dbs));
+  }
 
-	}
+  public void createDatabase(String dbName) {
+    org.springframework.util.Assert.hasText(dbName);
+    restOperations.put(databaseUrl + dbName, null);
 
-	public DbInfo getDatabaseInfo(String dbName) {
-		String url = CouchUtils.ensureTrailingSlash(databaseUrl + dbName);
-		Map dbInfoMap = (Map) restOperations.getForObject(url, Map.class);
-		return new DbInfo(dbInfoMap);
-	}
+  }
+
+  public void deleteDatabase(String dbName) {
+    org.springframework.util.Assert.hasText(dbName);
+    restOperations.delete(CouchUtils.ensureTrailingSlash(databaseUrl + dbName));
+
+  }
+
+  public DbInfo getDatabaseInfo(String dbName) {
+    String url = CouchUtils.ensureTrailingSlash(databaseUrl + dbName);
+    Map dbInfoMap = (Map) restOperations.getForObject(url, Map.class);
+    return new DbInfo(dbInfoMap);
+  }
 
 }

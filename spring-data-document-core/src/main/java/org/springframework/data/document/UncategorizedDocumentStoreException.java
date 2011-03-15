@@ -20,8 +20,8 @@ import org.springframework.dao.UncategorizedDataAccessException;
 
 public class UncategorizedDocumentStoreException extends UncategorizedDataAccessException {
 
-	public UncategorizedDocumentStoreException(String msg, Throwable cause) {
-		super(msg, cause);
-	}
+  public UncategorizedDocumentStoreException(String msg, Throwable cause) {
+    super(msg, cause);
+  }
 
 }

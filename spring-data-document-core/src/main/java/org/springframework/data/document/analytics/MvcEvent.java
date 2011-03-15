@@ -4,81 +4,80 @@ import java.util.Date;
 
 public class MvcEvent {
 
-	private String controller;
-	
-	private String action;
-	
-	private Parameters parameters;
-	
-	private Date date;
-	
-	private String requestUri;
-	
-	private String requestAddress;
-	
-	private String remoteUser;
-	
-	private String view;
+  private String controller;
 
-	public String getController() {
-		return controller;
-	}
+  private String action;
 
-	public void setController(String controller) {
-		this.controller = controller;
-	}
+  private Parameters parameters;
 
-	public String getAction() {
-		return action;
-	}
+  private Date date;
 
-	public void setAction(String action) {
-		this.action = action;
-	}
+  private String requestUri;
 
-	public Parameters getParameters() {
-		return parameters;
-	}
+  private String requestAddress;
 
-	public void setParameters(Parameters parameters) {
-		this.parameters = parameters;
-	}
+  private String remoteUser;
 
-	public Date getDate() {
-		return date;
-	}
+  private String view;
 
-	public void setDate(Date date) {
-		this.date = date;
-	}
+  public String getController() {
+    return controller;
+  }
 
-	public String getRequestUri() {
-		return requestUri;
-	}
+  public void setController(String controller) {
+    this.controller = controller;
+  }
 
-	public void setRequestUri(String requestUri) {
-		this.requestUri = requestUri;
-	}
+  public String getAction() {
+    return action;
+  }
 
-	public String getRequestAddress() {
-		return requestAddress;
-	}
+  public void setAction(String action) {
+    this.action = action;
+  }
 
-	public void setRequestAddress(String requestAddress) {
-		this.requestAddress = requestAddress;
-	}
+  public Parameters getParameters() {
+    return parameters;
+  }
 
-	public String getRemoteUser() {
-		return remoteUser;
-	}
+  public void setParameters(Parameters parameters) {
+    this.parameters = parameters;
+  }
 
-	public void setRemoteUser(String remoteUser) {
-		this.remoteUser = remoteUser;
-	}
-	
-	//TODO
-	//Map sessionAttributes
-	
-	
-	
+  public Date getDate() {
+    return date;
+  }
+
+  public void setDate(Date date) {
+    this.date = date;
+  }
+
+  public String getRequestUri() {
+    return requestUri;
+  }
+
+  public void setRequestUri(String requestUri) {
+    this.requestUri = requestUri;
+  }
+
+  public String getRequestAddress() {
+    return requestAddress;
+  }
+
+  public void setRequestAddress(String requestAddress) {
+    this.requestAddress = requestAddress;
+  }
+
+  public String getRemoteUser() {
+    return remoteUser;
+  }
+
+  public void setRemoteUser(String remoteUser) {
+    this.remoteUser = remoteUser;
+  }
+
+  //TODO
+  //Map sessionAttributes
+
+
 }

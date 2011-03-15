@@ -15,7 +15,7 @@
  */
 package org.springframework.data.document.mongodb.repository;
 
-import static org.springframework.data.document.mongodb.repository.StubParameterAccessor.*;
+import static org.springframework.data.document.mongodb.repository.StubParameterAccessor.getAccessor;
 
 import java.lang.reflect.Method;
 import java.util.List;
@@ -25,59 +25,59 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.springframework.data.document.mongodb.convert.MongoConverter;
 import org.springframework.data.document.mongodb.Person;
+import org.springframework.data.document.mongodb.convert.MongoConverter;
 import org.springframework.data.repository.query.parser.PartTree;
 
 
 /**
  * Unit test for {@link MongoQueryCreator}.
- * 
+ *
  * @author Oliver Gierke
  */
 @RunWith(MockitoJUnitRunner.class)
 public class MongoQueryCreatorUnitTests {
 
-    Method findByFirstname;
-    Method findByFirstnameAndFriend;
+  Method findByFirstname;
+  Method findByFirstnameAndFriend;
 
-    @Mock
-    MongoConverter converter;
-
-
-    @Before
-    public void setUp() throws SecurityException, NoSuchMethodException {
-
-        findByFirstname =
-                Sample.class.getMethod("findByFirstname", String.class);
-        findByFirstnameAndFriend =
-                Sample.class.getMethod("findByFirstnameAndFriend",
-                        String.class, Person.class);
-
-    }
+  @Mock
+  MongoConverter converter;
 
 
-    @Test
-    public void createsQueryCorrectly() throws Exception {
+  @Before
+  public void setUp() throws SecurityException, NoSuchMethodException {
 
-        PartTree tree = new PartTree("findByFirstName", Person.class);
+    findByFirstname =
+        Sample.class.getMethod("findByFirstname", String.class);
+    findByFirstnameAndFriend =
+        Sample.class.getMethod("findByFirstnameAndFriend",
+            String.class, Person.class);
 
-        MongoQueryCreator creator =
-                new MongoQueryCreator(tree, getAccessor(converter, "Oliver"));
-
-        creator.createQuery();
-
-        creator =
-                new MongoQueryCreator(new PartTree("findByFirstNameAndFriend",
-                        Person.class), getAccessor(converter, "Oliver", new Person()));
-        creator.createQuery();
-    }
-
-    interface Sample {
-
-        List<Person> findByFirstname(String firstname);
+  }
 
 
-        List<Person> findByFirstnameAndFriend(String firstname, Person friend);
-    }
+  @Test
+  public void createsQueryCorrectly() throws Exception {
+
+    PartTree tree = new PartTree("findByFirstName", Person.class);
+
+    MongoQueryCreator creator =
+        new MongoQueryCreator(tree, getAccessor(converter, "Oliver"));
+
+    creator.createQuery();
+
+    creator =
+        new MongoQueryCreator(new PartTree("findByFirstNameAndFriend",
+            Person.class), getAccessor(converter, "Oliver", new Person()));
+    creator.createQuery();
+  }
+
+  interface Sample {
+
+    List<Person> findByFirstname(String firstname);
+
+
+    List<Person> findByFirstnameAndFriend(String firstname, Person friend);
+  }
 }

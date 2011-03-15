@@ -1,33 +1,33 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <xsd:schema xmlns="http://www.springframework.org/schema/data/couch"
-	xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
-	xmlns:tool="http://www.springframework.org/schema/tool"
-	xmlns:context="http://www.springframework.org/schema/context"
-	xmlns:repository="http://www.springframework.org/schema/data/repository"
-	targetNamespace="http://www.springframework.org/schema/data/couch"
-	elementFormDefault="qualified" attributeFormDefault="unqualified">
+            xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns:tool="http://www.springframework.org/schema/tool"
+            xmlns:context="http://www.springframework.org/schema/context"
+            xmlns:repository="http://www.springframework.org/schema/data/repository"
+            targetNamespace="http://www.springframework.org/schema/data/couch"
+            elementFormDefault="qualified" attributeFormDefault="unqualified">
 
-	<xsd:import namespace="http://www.springframework.org/schema/tool" />
-	<xsd:import namespace="http://www.springframework.org/schema/context"
-		schemaLocation="http://www.springframework.org/schema/context/spring-context.xsd" />
-	<xsd:import namespace="http://www.springframework.org/schema/data/repository"
-		schemaLocation="http://www.springframework.org/schema/data/repository/spring-repository.xsd" />
+  <xsd:import namespace="http://www.springframework.org/schema/tool"/>
+  <xsd:import namespace="http://www.springframework.org/schema/context"
+              schemaLocation="http://www.springframework.org/schema/context/spring-context.xsd"/>
+  <xsd:import namespace="http://www.springframework.org/schema/data/repository"
+              schemaLocation="http://www.springframework.org/schema/data/repository/spring-repository.xsd"/>
 
 
-    <xsd:element name="jmx">
-		<xsd:annotation>
-			<xsd:documentation><![CDATA[
+  <xsd:element name="jmx">
+    <xsd:annotation>
+      <xsd:documentation><![CDATA[
 Defines a JMX Model MBeans for monitoring a CouchDB server'.
 			]]></xsd:documentation>
-		</xsd:annotation>
-		<xsd:complexType>
-			<xsd:attribute name="database-url" type="xsd:string" use="optional">
-				<xsd:annotation>
-					<xsd:documentation><![CDATA[
+    </xsd:annotation>
+    <xsd:complexType>
+      <xsd:attribute name="database-url" type="xsd:string" use="optional">
+        <xsd:annotation>
+          <xsd:documentation><![CDATA[
 The database URL of the CouchDB]]></xsd:documentation>
-				</xsd:annotation>
-			</xsd:attribute>
-		</xsd:complexType>
-	</xsd:element>
-		
+        </xsd:annotation>
+      </xsd:attribute>
+    </xsd:complexType>
+  </xsd:element>
+
 </xsd:schema>
