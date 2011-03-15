@@ -132,6 +132,7 @@
         <groupId>javax.validation</groupId>
         <artifactId>validation-api</artifactId>
         <version>1.0.0.GA</version>
+        <scope>test</scope>
     </dependency>
     <dependency>
         <groupId>org.hibernate</groupId>
