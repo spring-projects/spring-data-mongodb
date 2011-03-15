@@ -64,6 +64,12 @@
       <scope>test</scope>
     </dependency>
 
+	<!--  Spring Data -->
+    <dependency>
+        <groupId>org.springframework.data</groupId>
+        <artifactId>spring-data-document-core</artifactId>
+    </dependency>
+
     <!-- Jackson JSON -->
     <dependency>
       <groupId>org.codehaus.jackson</groupId>
