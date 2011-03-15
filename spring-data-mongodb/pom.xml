@@ -11,6 +11,11 @@
   <artifactId>spring-data-mongodb</artifactId>
   <packaging>jar</packaging>
   <name>Spring Data MongoDB Support</name>
+  
+  <properties>
+  	<mongo.version>2.3</mongo.version>
+  </properties>
+  
   <dependencies>
 
     <!--  Spring -->
@@ -42,6 +47,13 @@
       <groupId>org.springframework.data</groupId>
       <artifactId>spring-data-commons-core</artifactId>
       <version>${data.commons.version}</version>
+    </dependency>
+    
+    <!-- MongoDB --> 	
+    <dependency> 	
+      <groupId>org.mongodb</groupId>	
+      <artifactId>mongo-java-driver</artifactId>
+      <version>${mongo.version}</version>
     </dependency>
 
 		<!-- Logging -->
