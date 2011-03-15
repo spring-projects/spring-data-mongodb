@@ -38,6 +38,7 @@ class MongoQueryMethod extends QueryMethod {
    * 
    * @param method
    */
+  @SuppressWarnings({ "rawtypes", "unchecked" })
   public MongoQueryMethod(Method method, Class<?> domainClass) {
     super(method);
     this.method = method;

@@ -111,7 +111,7 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
     return conversionService.convert(id, ObjectId.class);
   }
 
-  @SuppressWarnings({"unchecked"})
+  @SuppressWarnings({"unchecked", "rawtypes"})
   public <S extends Object> S read(Class<S> clazz, final DBObject dbo) {
     if (null == dbo) {
       return null;

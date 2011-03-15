@@ -171,6 +171,7 @@ public class ConvertingParameterAccessor implements ParameterAccessor {
     /**
      * @return the value
      */
+    @SuppressWarnings("unused")
     public Enum<?> getValue() {
       return value;
     }
