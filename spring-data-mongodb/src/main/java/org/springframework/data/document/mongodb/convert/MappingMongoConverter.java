@@ -174,7 +174,7 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
     }, spelCtx);
 
     // Set the ID
-    PersistentProperty<?> idProperty = entity.getIdProperty();
+    final PersistentProperty<?> idProperty = entity.getIdProperty();
     if (dbo.containsField("_id") || null != idProperty) {
       Object idObj = dbo.get("_id");
       try {
@@ -189,15 +189,24 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
     // Set properties not already set in the constructor
     entity.doWithProperties(new PropertyHandler() {
       public void doWithPersistentProperty(PersistentProperty<?> prop) {
-        if (!ctorParamNames.contains(prop.getName())) {
-          Object obj = getValueInternal(prop, dbo, spelCtx, prop.getValueAnnotation());
-          try {
-            MappingBeanHelper.setProperty(instance, prop, obj, useFieldAccessOnly);
-          } catch (IllegalAccessException e) {
-            throw new MappingException(e.getMessage(), e);
-          } catch (InvocationTargetException e) {
-            throw new MappingException(e.getMessage(), e);
-          }
+        String name = prop.getName();
+        if (null != idProperty && name.equals(idProperty.getName())) {
+          return;
+        }
+        if (prop.isAssociation()) {
+          return;
+        }
+        if (ctorParamNames.contains(prop.getName())) {
+          return;
+        }
+
+        Object obj = getValueInternal(prop, dbo, spelCtx, prop.getValueAnnotation());
+        try {
+          MappingBeanHelper.setProperty(instance, prop, obj, useFieldAccessOnly);
+        } catch (IllegalAccessException e) {
+          throw new MappingException(e.getMessage(), e);
+        } catch (InvocationTargetException e) {
+          throw new MappingException(e.getMessage(), e);
         }
       }
     });
@@ -343,6 +352,7 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
           }
         } else {
           BasicDBObject propDbObj = new BasicDBObject();
+          //dbo.put("_class", prop.getType().getName());
           write(propObjItem, propDbObj);
           dbList.add(propDbObj);
         }
@@ -376,6 +386,15 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
           dbo.put(simpleKey, val);
         } else {
           DBObject newDbo = new BasicDBObject();
+          Class<?> componentType = val.getClass();
+          if (componentType.isArray()
+              || componentType.isAssignableFrom(Collection.class)
+              || componentType.isAssignableFrom(List.class)) {
+            Class<?> ctype = val.getClass().getComponentType();
+            dbo.put("_class", (null != ctype ? ctype.getName() : componentType.getName()));
+          } else {
+            dbo.put("_class", componentType.getName());
+          }
           write(val, newDbo);
           dbo.put(simpleKey, newDbo);
         }
@@ -434,10 +453,16 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
         if (type.isAssignableFrom(Map.class) && dbObj instanceof DBObject) {
           Map m = new LinkedHashMap();
           for (Map.Entry<String, Object> entry : ((Map<String, Object>) ((DBObject) dbObj).toMap()).entrySet()) {
-            if (null != entry.getValue()
-                && MappingBeanHelper.getSimpleTypes().contains(entry.getValue().getClass().getName())) {
-              m.put(entry.getKey(), entry.getValue());
-            } else if (null != entry.getValue()) {
+            Class<?> toType = null;
+            if (entry.getKey().equals("_class")) {
+              try {
+                toType = Class.forName(entry.getValue().toString());
+              } catch (ClassNotFoundException e) {
+                throw new MappingException(e.getMessage(), e);
+              }
+            } else if (null != entry.getValue() && entry.getValue() instanceof DBObject) {
+              m.put(entry.getKey(), read((null != toType ? toType : type), (DBObject) entry.getValue()));
+            } else {
               m.put(entry.getKey(), entry.getValue());
             }
           }
@@ -461,7 +486,17 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
           return Arrays.asList(items);
         }
         // It's a complex object, have to read it in
-        o = read(type, (DBObject) dbObj);
+        if (dbo.containsField("_class")) {
+          try {
+            Class<?> clazz = Class.forName(dbo.get("_class").toString());
+            dbo.removeField("_class");
+            o = read(clazz, (DBObject) dbObj);
+          } catch (ClassNotFoundException e) {
+            throw new MappingException(e.getMessage(), e);
+          }
+        } else {
+          o = read(type, (DBObject) dbObj);
+        }
       } else {
         o = dbObj;
       }
@@ -518,6 +553,24 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
 
     public ObjectId convert(BigInteger source) {
       return new ObjectId(source.toString(16));
+    }
+  }
+
+  protected class PersistentPropertyWrapper<T> {
+    private final PersistentProperty<T> property;
+    private final DBObject target;
+
+    public PersistentPropertyWrapper(PersistentProperty<T> property, DBObject target) {
+      this.property = property;
+      this.target = target;
+    }
+
+    public PersistentProperty<T> getProperty() {
+      return property;
+    }
+
+    public DBObject getTarget() {
+      return target;
     }
   }
 

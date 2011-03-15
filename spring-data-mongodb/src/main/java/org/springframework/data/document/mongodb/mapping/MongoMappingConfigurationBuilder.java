@@ -59,9 +59,8 @@ public class MongoMappingConfigurationBuilder extends BasicMappingConfigurationB
   }
 
   @Override
-  public PersistentProperty<?> createPersistentProperty(Field field, PropertyDescriptor descriptor) throws MappingConfigurationException {
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    PersistentProperty<?> property = new MongoPersistentProperty(field.getName(), field.getType(), field, descriptor);
+  public <T> PersistentProperty<T> createPersistentProperty(Field field, PropertyDescriptor descriptor, Class<T> type) throws MappingConfigurationException {
+    PersistentProperty<T> property = new MongoPersistentProperty<T>(field.getName(), type, field, descriptor);
     if (field.isAnnotationPresent(Indexed.class)) {
       Indexed index = field.getAnnotation(Indexed.class);
       String collection = index.collection();

@@ -16,25 +16,25 @@
 
 package org.springframework.data.document.mongodb.mapping;
 
-import org.bson.types.ObjectId;
+import java.util.List;
 
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
  */
-public class PersonPojo extends BasePerson {
+public class PersonSimpleList extends BasePerson {
 
-  private ObjectId id;
+  private List<String> nicknames;
 
-  public PersonPojo(Integer ssn, String firstName, String lastName) {
+  public PersonSimpleList(Integer ssn, String firstName, String lastName) {
     super(ssn, firstName, lastName);
   }
 
-  public ObjectId getId() {
-    return id;
+  public List<String> getNicknames() {
+    return nicknames;
   }
 
-  public void setId(ObjectId id) {
-    this.id = id;
+  public void setNicknames(List<String> nicknames) {
+    this.nicknames = nicknames;
   }
-
+  
 }

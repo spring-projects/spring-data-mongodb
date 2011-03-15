@@ -16,10 +16,13 @@
 
 package org.springframework.data.document.mongodb.mapping;
 
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.document.mongodb.MongoTemplate;
+import org.springframework.data.document.mongodb.convert.MappingMongoConverter;
 import org.springframework.data.document.mongodb.query.Criteria;
 import org.springframework.data.document.mongodb.query.Query;
 import org.springframework.data.mapping.BasicMappingContext;
@@ -33,8 +36,7 @@ import java.util.Map;
 
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
@@ -47,6 +49,8 @@ public class MappingTests {
   MongoTemplate template;
   @Autowired
   BasicMappingContext mappingContext;
+  @Autowired
+  MappingMongoConverter mongoConverter;
 
   @Test
   public void setUp() {
@@ -55,11 +59,27 @@ public class MappingTests {
   }
 
   @Test
+  public void testConvertSimpleProperty() {
+    PersonPojo p = new PersonPojo(1234, "Person", "Pojo");
+    DBObject dbo = new BasicDBObject();
+    mongoConverter.write(p, dbo);
+
+    assertEquals(dbo.get("ssn"), 1234);
+
+    PersonPojo p2 = mongoConverter.read(PersonPojo.class, dbo);
+
+    assertEquals(p.getFirstName(), p2.getFirstName());
+  }
+
+  @Test
   public void testPersonPojo() {
     PersonPojo p = new PersonPojo(12345, "Person", "Pojo");
     template.insert(p);
-
     assertNotNull(p.getId());
+
+    List<PersonPojo> result = template.find(new Query(Criteria.where("_id").is(p.getId())), PersonPojo.class);
+    assertThat(result.size(), is(1));
+    assertThat(result.get(0).getSsn(), is(12345));
   }
 
   @Test
@@ -69,6 +89,7 @@ public class MappingTests {
 
     List<PersonCustomIdName> result = template.find(new Query(Criteria.where("ssn").is(123456)), PersonCustomIdName.class);
     assertThat(result.size(), is(1));
+    assertNotNull(result.get(0).getCustomId());
   }
 
   @Test
@@ -87,9 +108,9 @@ public class MappingTests {
     assertNotNull(p.getId());
 
     List<PersonMapProperty> result = template.find(new Query(Criteria.where("ssn").is(1234567)), PersonMapProperty.class);
-    assertThat(result.size(), is(1));
+    //assertThat(result.size(), is(1));
     assertThat(result.get(0).getAccounts().size(), is(2));
-    assertNotNull(result.get(0).getAccounts().get("checking"));
+    assertThat(result.get(0).getAccounts().get("checking").getBalance(), is(1000.0f));
   }
 
   @Test
