@@ -5,4 +5,7 @@
 target
 .springBeans
 .ant-targets-build.xml
+.settings/
+.project
+.classpath
 src/ant/.ant-targets-upload-dist.xml
