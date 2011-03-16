@@ -32,8 +32,12 @@ import org.bson.types.ObjectId;
 import org.springframework.beans.BeanUtils;
 import org.springframework.core.CollectionFactory;
 import org.springframework.core.convert.ConversionFailedException;
-import org.springframework.core.convert.ConversionService;
+import org.springframework.core.convert.TypeDescriptor;
+import org.springframework.core.convert.converter.ConditionalGenericConverter;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.core.convert.converter.ConverterFactory;
+import org.springframework.core.convert.converter.GenericConverter;
+import org.springframework.core.convert.converter.GenericConverter.ConvertiblePair;
 import org.springframework.core.convert.support.ConversionServiceFactory;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.document.mongodb.MongoPropertyDescriptors.MongoPropertyDescriptor;
@@ -42,7 +46,7 @@ import org.springframework.util.comparator.CompoundComparator;
 
 /**
  * Basic {@link MongoConverter} implementation to convert between domain classes and {@link DBObject}s.
- *
+ * 
  * @author Mark Pollack
  * @author Thomas Risberg
  * @author Oliver Gierke
@@ -108,18 +112,8 @@ public class SimpleMongoConverter implements MongoConverter {
    * Creates a {@link SimpleMongoConverter}.
    */
   public SimpleMongoConverter() {
-    this.conversionService = ConversionServiceFactory.createDefaultConversionService();
-    initializeConverters();
-  }
-
-  /**
-   * Creates a new {@link SimpleMongoConverter} for the given {@link ConversionService}.
-   *
-   * @param conversionService
-   */
-  public SimpleMongoConverter(GenericConversionService conversionService) {
-    Assert.notNull(conversionService);
-    this.conversionService = conversionService;
+    this.conversionService = new SimpleToStringSuppressingGenericConversionService();
+    ConversionServiceFactory.addDefaultConverters(conversionService);
     initializeConverters();
   }
 
@@ -129,14 +123,33 @@ public class SimpleMongoConverter implements MongoConverter {
    */
   protected void initializeConverters() {
 
-    if (!conversionService.canConvert(ObjectId.class, String.class)) {
-      conversionService.addConverter(ObjectIdToStringConverter.INSTANCE);
-      conversionService.addConverter(StringToObjectIdConverter.INSTANCE);
-    }
+    
+    conversionService.addConverter(ObjectIdToStringConverter.INSTANCE);
+    conversionService.addConverter(StringToObjectIdConverter.INSTANCE);
+    conversionService.addConverter(ObjectIdToBigIntegerConverter.INSTANCE);
+    conversionService.addConverter(BigIntegerToIdConverter.INSTANCE);
+    
+  }
 
-    if (!conversionService.canConvert(ObjectId.class, BigInteger.class)) {
-      conversionService.addConverter(ObjectIdToBigIntegerConverter.INSTANCE);
-      conversionService.addConverter(BigIntegerToIdConverter.INSTANCE);
+  /**
+   * Sets custom {@link Converter} or {@link ConverterFactory} instances to be used.
+   * 
+   * @param converters
+   */
+  public void setConverters(Set<?> converters) {
+    for (Object converter : converters) {
+      boolean added = false;
+      if (converter instanceof Converter) {
+        this.conversionService.addConverter((Converter<?, ?>) converter);
+        added = true;
+      }
+      if (converter instanceof ConverterFactory) {
+        this.conversionService.addConverterFactory((ConverterFactory<?, ?>) converter);
+        added = true;
+      }
+      if (!added) {
+        throw new IllegalArgumentException("Given set contains element that is neither Converter nor ConverterFactory!");
+      }
     }
   }
 
@@ -178,7 +191,7 @@ public class SimpleMongoConverter implements MongoConverter {
         }
       } else {
         if (!"class".equals(descriptor.getName())) {
-          LOG.warn("Unable to map property " + descriptor.getName() + ".  Skipping.");
+          LOG.debug("Skipping property " + descriptor.getName() + " as it's not a mappable one.");
         }
       }
     }
@@ -186,7 +199,7 @@ public class SimpleMongoConverter implements MongoConverter {
 
   /**
    * Writes the given value to the given {@link DBObject}. Will skip {@literal null} values.
-   *
+   * 
    * @param dbo
    * @param keyToUse
    * @param value
@@ -223,6 +236,12 @@ public class SimpleMongoConverter implements MongoConverter {
       writeArray(dbo, keyToUse, (Object[]) value);
       return;
     }
+    
+    if (conversionService.canConvert(value.getClass(), String.class)) {
+      dbo.put(keyToUse, conversionService.convert(value, String.class));
+      return;
+    }
+    
     DBObject nestedDbo = new BasicDBObject();
     write(value, nestedDbo);
     dbo.put(keyToUse, nestedDbo);
@@ -231,7 +250,7 @@ public class SimpleMongoConverter implements MongoConverter {
 
   /**
    * Writes the given {@link Map} to the given {@link DBObject}.
-   *
+   * 
    * @param dbo
    * @param mapKey
    * @param map
@@ -491,10 +510,34 @@ public class SimpleMongoConverter implements MongoConverter {
   public ObjectId convertObjectId(Object id) {
     return conversionService.convert(id, ObjectId.class);
   }
+  
+  private static class SimpleToStringSuppressingGenericConversionService extends GenericConversionService {
+    
+    private static final Set<ConvertiblePair> REFERENCE = Collections.singleton(new ConvertiblePair(Object.class, String.class));
+    
+    /* (non-Javadoc)
+     * @see org.springframework.core.convert.support.GenericConversionService#getConverter(org.springframework.core.convert.TypeDescriptor, org.springframework.core.convert.TypeDescriptor)
+     */
+    @Override
+    protected GenericConverter getConverter(TypeDescriptor sourceType, TypeDescriptor targetType) {
+     
+      GenericConverter converter = super.getConverter(sourceType, targetType);
+      
+      if (converter instanceof ConditionalGenericConverter) {
+        
+        Set<ConvertiblePair> convertibleTypes = ((ConditionalGenericConverter) converter).getConvertibleTypes();
+        if (REFERENCE.equals(convertibleTypes)) {
+          return null;
+        }
+      }
+      
+      return converter;
+    }
+  }
 
   /**
    * Simple singleton to convert {@link ObjectId}s to their {@link String} representation.
-   *
+   * 
    * @author Oliver Gierke
    */
   public static enum ObjectIdToStringConverter implements Converter<ObjectId, String> {
