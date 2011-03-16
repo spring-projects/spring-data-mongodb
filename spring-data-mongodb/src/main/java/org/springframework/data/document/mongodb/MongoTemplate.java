@@ -942,7 +942,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
     }
     final MongoPropertyDescriptor descriptor;
     try {
-      descriptor = new MongoPropertyDescriptor(new PropertyDescriptor(idKey, targetClass));
+      descriptor = new MongoPropertyDescriptor(new PropertyDescriptor(idKey, targetClass), targetClass);
     } catch (IntrospectionException e) {
       // no property descriptor for this key
       return;

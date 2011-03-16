@@ -24,6 +24,7 @@ import java.util.*;
 import org.bson.types.ObjectId;
 import org.springframework.beans.BeanUtils;
 import org.springframework.util.Assert;
+import org.springframework.util.ReflectionUtils;
 
 /**
  * An iterable of {@link MongoPropertyDescriptor}s that allows dedicated access to the {@link MongoPropertyDescriptor}
@@ -48,7 +49,7 @@ public class MongoPropertyDescriptors implements Iterable<MongoPropertyDescripto
     MongoPropertyDescriptors.MongoPropertyDescriptor idDesciptor = null;
 
     for (PropertyDescriptor candidates : BeanUtils.getPropertyDescriptors(type)) {
-      MongoPropertyDescriptor descriptor = new MongoPropertyDescriptors.MongoPropertyDescriptor(candidates);
+      MongoPropertyDescriptor descriptor = new MongoPropertyDescriptors.MongoPropertyDescriptor(candidates, type);
       descriptors.add(descriptor);
       if (descriptor.isIdProperty()) {
         idDesciptor = descriptor;
@@ -98,15 +99,18 @@ public class MongoPropertyDescriptors implements Iterable<MongoPropertyDescripto
     static final String ID_KEY = "_id";
 
     private final PropertyDescriptor delegate;
+    private final Class<?> owningType;
 
     /**
      * Creates a new {@link MongoPropertyDescriptor} for the given {@link PropertyDescriptor}.
      *
      * @param descriptor
+     * @param owningType
      */
-    public MongoPropertyDescriptor(PropertyDescriptor descriptor) {
+    public MongoPropertyDescriptor(PropertyDescriptor descriptor, Class<?> owningType) {
       Assert.notNull(descriptor);
       this.delegate = descriptor;
+      this.owningType = owningType;
     }
 
     /**
@@ -154,7 +158,12 @@ public class MongoPropertyDescriptors implements Iterable<MongoPropertyDescripto
      * @return
      */
     public boolean isMappable() {
-      return !delegate.getName().equals("class") && delegate.getReadMethod() != null;
+      
+      boolean isNotClassAttribute = !delegate.getName().equals("class");
+      boolean hasGetter = delegate.getReadMethod() != null;
+      boolean hasField = ReflectionUtils.findField(owningType, delegate.getName()) != null;
+      
+      return isNotClassAttribute && hasGetter && hasField;
     }
 
     /**
