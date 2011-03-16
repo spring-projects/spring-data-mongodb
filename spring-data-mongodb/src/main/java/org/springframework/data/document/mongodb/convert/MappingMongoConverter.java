@@ -19,12 +19,19 @@ package org.springframework.data.document.mongodb.convert;
 import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigInteger;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
+import com.mongodb.DB;
 import com.mongodb.DBObject;
 import com.mongodb.DBRef;
+import com.mongodb.Mongo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bson.types.ObjectId;
@@ -40,7 +47,12 @@ import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.mapping.AssociationHandler;
 import org.springframework.data.mapping.MappingBeanHelper;
 import org.springframework.data.mapping.PropertyHandler;
-import org.springframework.data.mapping.model.*;
+import org.springframework.data.mapping.model.Association;
+import org.springframework.data.mapping.model.MappingContext;
+import org.springframework.data.mapping.model.MappingException;
+import org.springframework.data.mapping.model.PersistentEntity;
+import org.springframework.data.mapping.model.PersistentProperty;
+import org.springframework.data.mapping.model.PreferredConstructor;
 import org.springframework.expression.Expression;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
@@ -59,6 +71,8 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
   protected ApplicationContext applicationContext;
   protected boolean autowirePersistentBeans = false;
   protected boolean useFieldAccessOnly = true;
+  protected Mongo mongo;
+  protected String defaultDatabase;
 
   public MappingMongoConverter() {
     initializeConverters();
@@ -85,6 +99,22 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
 
   public void setMappingContext(MappingContext mappingContext) {
     this.mappingContext = mappingContext;
+  }
+
+  public Mongo getMongo() {
+    return mongo;
+  }
+
+  public void setMongo(Mongo mongo) {
+    this.mongo = mongo;
+  }
+
+  public String getDefaultDatabase() {
+    return defaultDatabase;
+  }
+
+  public void setDefaultDatabase(String defaultDatabase) {
+    this.defaultDatabase = defaultDatabase;
   }
 
   public boolean isAutowirePersistentBeans() {
@@ -369,10 +399,8 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
       Collection<?> coll = (type.isArray() ? Arrays.asList((Object[]) obj) : (Collection<?>) obj);
       for (Object propObjItem : coll) {
         if (null != dbref) {
-          DBObject dbRefObj = createDBRef(propObjItem, dbref);
-          if (null != dbRefObj) {
-            dbList.add(dbRefObj);
-          }
+          DBRef dbRef = createDBRef(propObjItem, dbref);
+          dbList.add(dbRef);
         } else {
           BasicDBObject propDbObj = new BasicDBObject();
           write(propObjItem, propDbObj, mappingContext.getPersistentEntity(prop.getTypeInformation()));
@@ -386,10 +414,8 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
       dbo.put(name, mapDbObj);
     } else {
       if (null != dbref) {
-        DBObject dbRefObj = createDBRef(obj, dbref);
-        if (null != dbRefObj) {
-          dbo.put(name, dbRefObj);
-        }
+        DBRef dbRef = createDBRef(obj, dbref);
+        dbo.put(name, dbRef);
       } else {
         BasicDBObject propDbObj = new BasicDBObject();
         write(obj, propDbObj, mappingContext.getPersistentEntity(prop.getTypeInformation()));
@@ -426,36 +452,37 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
     }
   }
 
-  protected DBObject createDBRef(Object target, org.springframework.data.document.mongodb.mapping.DBRef dbref) {
+  protected DBRef createDBRef(Object target, org.springframework.data.document.mongodb.mapping.DBRef dbref) {
     PersistentEntity<?> targetEntity = mappingContext.getPersistentEntity(target.getClass());
     if (null == targetEntity || null == targetEntity.getIdProperty()) {
       return null;
     }
 
-    DBObject dbo = new BasicDBObject();
     PersistentProperty idProperty = targetEntity.getIdProperty();
     ObjectId id = null;
     try {
       id = MappingBeanHelper.getProperty(target, idProperty, ObjectId.class, useFieldAccessOnly);
+      if (null == id) {
+        throw new MappingException("Cannot create a reference to an object with a NULL id.");
+      }
     } catch (IllegalAccessException e) {
       throw new MappingException(e.getMessage(), e);
     } catch (InvocationTargetException e) {
       throw new MappingException(e.getMessage(), e);
     }
-    dbo.put("$id", id);
 
     String collection = dbref.collection();
     if ("".equals(collection)) {
       collection = targetEntity.getType().getSimpleName().toLowerCase();
     }
-    dbo.put("$ref", collection);
 
-    String db = dbref.db();
-    if (!"".equals(db)) {
-      dbo.put("$db", db);
+    String dbname = dbref.db();
+    if ("".equals(dbname)) {
+      dbname = defaultDatabase;
     }
 
-    return dbo;
+    DB db = mongo.getDB(dbname);
+    return new DBRef(db, collection, id);
   }
 
   @SuppressWarnings({"unchecked"})
@@ -510,13 +537,9 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
 
         // It's a complex object, have to read it in
         if (dbo.containsField("_class")) {
-          try {
-            Class<?> clazz = Class.forName(dbo.get("_class").toString());
-            dbo.removeField("_class");
-            o = read(clazz, (DBObject) dbObj);
-          } catch (ClassNotFoundException e) {
-            throw new MappingException(e.getMessage(), e);
-          }
+          Class<?> toType = findTypeToBeUsed((DBObject) dbObj);
+          dbo.removeField("_class");
+          o = read(toType, (DBObject) dbObj);
         } else {
           o = read(mappingContext.getPersistentEntity(prop.getTypeInformation()), (DBObject) dbObj);
         }

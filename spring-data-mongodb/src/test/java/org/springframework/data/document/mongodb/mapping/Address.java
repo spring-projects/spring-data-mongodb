@@ -16,12 +16,10 @@
 
 package org.springframework.data.document.mongodb.mapping;
 
-import java.io.Serializable;
-
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
  */
-public class Address implements Serializable {
+public class Address {
 
   private String[] lines;
   private String city;

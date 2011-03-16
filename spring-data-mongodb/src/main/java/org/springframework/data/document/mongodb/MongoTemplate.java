@@ -23,7 +23,16 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import com.mongodb.*;
+import com.mongodb.BasicDBObject;
+import com.mongodb.CommandResult;
+import com.mongodb.DB;
+import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
+import com.mongodb.DBObject;
+import com.mongodb.Mongo;
+import com.mongodb.MongoException;
+import com.mongodb.WriteConcern;
+import com.mongodb.WriteResult;
 import com.mongodb.util.JSON;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -35,7 +44,7 @@ import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.document.mongodb.MongoPropertyDescriptors.MongoPropertyDescriptor;
-import org.springframework.data.document.mongodb.convert.MongoConverter;
+import org.springframework.data.document.mongodb.convert.MappingMongoConverter;
 import org.springframework.data.document.mongodb.convert.MongoConverter;
 import org.springframework.data.document.mongodb.convert.SimpleMongoConverter;
 import org.springframework.data.document.mongodb.query.IndexDefinition;
@@ -1030,6 +1039,10 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
         createCollection(getDefaultCollectionName(), null);
       }
     }
+    if (null != mongoConverter && mongoConverter instanceof MappingMongoConverter) {
+      ((MappingMongoConverter) mongoConverter).setMongo(mongo);
+      ((MappingMongoConverter) mongoConverter).setDefaultDatabase(databaseName);
+    }
   }
 
 
@@ -1123,12 +1136,12 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
     }
   }
 
-	public void setMongoConverter(MongoConverter converter) {
-		this.mongoConverter = converter;
-	}
-	
-	public void setWriteResultChecking(WriteResultChecking resultChecking) {
-		this.writeResultChecking = resultChecking;		
-	}
+  public void setMongoConverter(MongoConverter converter) {
+    this.mongoConverter = converter;
+  }
+
+  public void setWriteResultChecking(WriteResultChecking resultChecking) {
+    this.writeResultChecking = resultChecking;
+  }
 
 }

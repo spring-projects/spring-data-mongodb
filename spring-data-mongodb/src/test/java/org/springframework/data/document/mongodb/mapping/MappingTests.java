@@ -134,6 +134,13 @@ public class MappingTests {
     p.setAccounts(accounts);
     template.insert("person", p);
 
+    Account newAcct = new Account();
+    newAcct.setBalance(10000.00f);
+    template.insert("account", newAcct);
+
+    accounts.add(newAcct);
+    template.save("person", p);
+
     assertNotNull(p.getId());
   }
 
