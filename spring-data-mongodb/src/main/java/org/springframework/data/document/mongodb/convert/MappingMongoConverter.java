@@ -271,17 +271,7 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
     // Set properties not already set in the constructor
     entity.doWithProperties(new PropertyHandler() {
       public void doWithPersistentProperty(PersistentProperty prop) {
-        if (!ctorParamNames.contains(prop.getName())) {
-          Object obj = getValueInternal(prop, dbo, spelCtx, prop.getValueAnnotation());
-          try {
-            MappingBeanHelper.setProperty(instance, prop, obj, useFieldAccessOnly);
-          } catch (IllegalAccessException e) {
-            throw new MappingException(e.getMessage(), e);
-          } catch (InvocationTargetException e) {
-            throw new MappingException(e.getMessage(), e);
-          }
-        }
-
+        
         if (ctorParamNames.contains(prop.getName())) {
           return;
         }
@@ -381,7 +371,7 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
           throw new MappingException(e.getMessage(), e);
         }
         if (null != propertyObj) {
-          if (prop.isComplexType()) {
+          if (!MappingBeanHelper.isSimpleType(propertyObj.getClass())) {
             writePropertyInternal(prop, propertyObj, dbo);
           } else {
             dbo.put(name, propertyObj);
