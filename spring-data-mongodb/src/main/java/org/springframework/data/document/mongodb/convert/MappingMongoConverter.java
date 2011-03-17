@@ -64,13 +64,14 @@ import org.springframework.expression.spel.support.StandardEvaluationContext;
 /**
  * {@link MongoConverter} that uses a {@link MappingContext} to do sophisticated mapping of domain objects to
  * {@link DBObject}.
- * 
+ *
  * @author Jon Brisbin <jbrisbin@vmware.com>
  * @author Oliver Gierke
  */
 public class MappingMongoConverter implements MongoConverter, ApplicationContextAware {
 
   private static final String CUSTOM_TYPE_KEY = "_class";
+  @SuppressWarnings({"unchecked"})
   private static final List<Class<?>> MONGO_TYPES = Arrays.asList(Number.class, Date.class, String.class, DBObject.class);
   protected static final Log log = LogFactory.getLog(MappingMongoConverter.class);
 
@@ -107,7 +108,7 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
   /**
    * Inspects the given {@link Converter} for the types it can convert and registers the pair for custom type conversion
    * in case the target type is a Mongo basic type.
-   * 
+   *
    * @param converter
    */
   private void registerConverter(Converter<?, ?> converter) {
@@ -352,13 +353,6 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
     entity.doWithProperties(new PropertyHandler() {
       public void doWithPersistentProperty(PersistentProperty prop) {
         String name = prop.getName();
-        if (null != idProperty && name.equals(idProperty.getName())) {
-          return;
-        }
-        if (prop.isAssociation()) {
-          return;
-        }
-
         Class<?> type = prop.getType();
         Object propertyObj = null;
         try {
@@ -406,9 +400,9 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
    * configured {@link ConversionService} to {@link MappingBeanHelper}.
    */
   protected void initializeConverters() {
-    
+
     this.conversionService.removeConvertible(Object.class, String.class);
-    
+
     if (!conversionService.canConvert(ObjectId.class, String.class)) {
       conversionService.addConverter(ObjectIdToStringConverter.INSTANCE);
       conversionService.addConverter(StringToObjectIdConverter.INSTANCE);
@@ -417,7 +411,7 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
       conversionService.addConverter(ObjectIdToBigIntegerConverter.INSTANCE);
       conversionService.addConverter(BigIntegerToIdConverter.INSTANCE);
     }
-    
+
     MappingBeanHelper.setConversionService(conversionService);
   }
 
@@ -425,11 +419,10 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
   protected void writePropertyInternal(PersistentProperty prop, Object obj, DBObject dbo) {
     org.springframework.data.document.mongodb.mapping.DBRef dbref = prop.getField()
         .getAnnotation(org.springframework.data.document.mongodb.mapping.DBRef.class);
-    
+
     String name = prop.getName();
-    
+    Class<?> type = prop.getType();
     if (prop.isCollection()) {
-      Class<?> type = prop.getType();
       BasicDBList dbList = new BasicDBList();
       Collection<?> coll = (type.isArray() ? Arrays.asList((Object[]) obj) : (Collection<?>) obj);
       for (Object propObjItem : coll) {
@@ -472,7 +465,7 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
     BasicDBObject propDbObj = new BasicDBObject();
     write(obj, propDbObj, mappingContext.getPersistentEntity(prop.getTypeInformation()));
     dbo.put(name, propDbObj);
-   
+
   }
 
   protected void writeMapInternal(Map<Object, Object> obj, DBObject dbo) {

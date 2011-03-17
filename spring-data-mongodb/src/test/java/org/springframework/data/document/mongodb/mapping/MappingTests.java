@@ -16,8 +16,7 @@
 
 package org.springframework.data.document.mongodb.mapping;
 
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
 import java.util.ArrayList;
@@ -30,6 +29,7 @@ import com.mongodb.DBObject;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.data.document.mongodb.MongoTemplate;
 import org.springframework.data.document.mongodb.convert.MappingMongoConverter;
 import org.springframework.data.document.mongodb.query.Criteria;
@@ -46,11 +46,15 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 public class MappingTests {
 
   @Autowired
+  ApplicationContext applicationContext;
+  @Autowired
   MongoTemplate template;
   @Autowired
   BasicMappingContext mappingContext;
   @Autowired
   MappingMongoConverter mongoConverter;
+  @Autowired
+  InsertEventListener insertEventListener;
 
   @Test
   public void setUp() {
@@ -145,10 +149,16 @@ public class MappingTests {
   }
 
   @Test
+  public void testEventHandling() {
+    assertThat(insertEventListener.getCount(), greaterThan(0));
+  }
+
+  @Test
   public void testReadEntity() {
     List<Person> result = template.find(new Query(Criteria.where("ssn").is(123456789)), Person.class);
     assertThat(result.size(), is(1));
     assertThat(result.get(0).getAddress().getCountry(), is("USA"));
     assertThat(result.get(0).getAccounts(), notNullValue());
   }
+
 }
