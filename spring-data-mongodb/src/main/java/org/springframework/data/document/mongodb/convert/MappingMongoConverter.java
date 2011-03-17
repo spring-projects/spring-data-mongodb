@@ -22,6 +22,8 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,6 +43,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.expression.BeanFactoryResolver;
+import org.springframework.core.GenericTypeResolver;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.ConversionServiceFactory;
 import org.springframework.core.convert.support.GenericConversionService;
@@ -58,14 +62,21 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 
 /**
+ * {@link MongoConverter} that uses a {@link MappingContext} to do sophisticated mapping of domain objects to
+ * {@link DBObject}.
+ *
  * @author Jon Brisbin <jbrisbin@vmware.com>
+ * @author Oliver Gierke
  */
 public class MappingMongoConverter implements MongoConverter, ApplicationContextAware {
 
   private static final String CUSTOM_TYPE_KEY = "_class";
+  @SuppressWarnings({"unchecked"})
+  private static final List<Class<?>> MONGO_TYPES = Arrays.asList(Number.class, Date.class, String.class, DBObject.class);
   protected static final Log log = LogFactory.getLog(MappingMongoConverter.class);
 
-  protected GenericConversionService conversionService = ConversionServiceFactory.createDefaultConversionService();
+  protected final GenericConversionService conversionService = ConversionServiceFactory.createDefaultConversionService();
+  protected final Map<Class<?>, Class<?>> customTypeMapping = new HashMap<Class<?>, Class<?>>();
   protected SpelExpressionParser spelExpressionParser = new SpelExpressionParser();
   protected MappingContext mappingContext;
   protected ApplicationContext applicationContext;
@@ -87,10 +98,24 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
     this.mappingContext = mappingContext;
     if (null != converters) {
       for (Converter<?, ?> c : converters) {
+        registerConverter(c);
         conversionService.addConverter(c);
       }
     }
     initializeConverters();
+  }
+
+  /**
+   * Inspects the given {@link Converter} for the types it can convert and registers the pair for custom type conversion
+   * in case the target type is a Mongo basic type.
+   *
+   * @param converter
+   */
+  private void registerConverter(Converter<?, ?> converter) {
+    Class<?>[] arguments = GenericTypeResolver.resolveTypeArguments(converter.getClass(), Converter.class);
+    if (MONGO_TYPES.contains(arguments[1])) {
+      customTypeMapping.put(arguments[0], arguments[1]);
+    }
   }
 
   public MappingContext getMappingContext() {
@@ -328,13 +353,6 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
     entity.doWithProperties(new PropertyHandler() {
       public void doWithPersistentProperty(PersistentProperty prop) {
         String name = prop.getName();
-        if (null != idProperty && name.equals(idProperty.getName())) {
-          return;
-        }
-        if (prop.isAssociation()) {
-          return;
-        }
-
         Class<?> type = prop.getType();
         Object propertyObj = null;
         try {
@@ -377,7 +395,14 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
     this.applicationContext = applicationContext;
   }
 
+  /**
+   * Registers converters for {@link ObjectId} handling, removes plain {@link #toString()} converter and promotes the
+   * configured {@link ConversionService} to {@link MappingBeanHelper}.
+   */
   protected void initializeConverters() {
+
+    this.conversionService.removeConvertible(Object.class, String.class);
+
     if (!conversionService.canConvert(ObjectId.class, String.class)) {
       conversionService.addConverter(ObjectIdToStringConverter.INSTANCE);
       conversionService.addConverter(StringToObjectIdConverter.INSTANCE);
@@ -386,15 +411,18 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
       conversionService.addConverter(ObjectIdToBigIntegerConverter.INSTANCE);
       conversionService.addConverter(BigIntegerToIdConverter.INSTANCE);
     }
+
+    MappingBeanHelper.setConversionService(conversionService);
   }
 
   @SuppressWarnings({"unchecked"})
   protected void writePropertyInternal(PersistentProperty prop, Object obj, DBObject dbo) {
     org.springframework.data.document.mongodb.mapping.DBRef dbref = prop.getField()
         .getAnnotation(org.springframework.data.document.mongodb.mapping.DBRef.class);
+
     String name = prop.getName();
+    Class<?> type = prop.getType();
     if (prop.isCollection()) {
-      Class<?> type = prop.getType();
       BasicDBList dbList = new BasicDBList();
       Collection<?> coll = (type.isArray() ? Arrays.asList((Object[]) obj) : (Collection<?>) obj);
       for (Object propObjItem : coll) {
@@ -408,20 +436,36 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
         }
       }
       dbo.put(name, dbList);
-    } else if (null != obj && obj instanceof Map) {
+      return;
+    }
+
+    if (null != obj && obj instanceof Map) {
       BasicDBObject mapDbObj = new BasicDBObject();
       writeMapInternal((Map<Object, Object>) obj, mapDbObj);
       dbo.put(name, mapDbObj);
-    } else {
-      if (null != dbref) {
-        DBRef dbRef = createDBRef(obj, dbref);
-        dbo.put(name, dbRef);
-      } else {
-        BasicDBObject propDbObj = new BasicDBObject();
-        write(obj, propDbObj, mappingContext.getPersistentEntity(prop.getTypeInformation()));
-        dbo.put(name, propDbObj);
+      return;
+    }
+
+    if (null != dbref) {
+      DBRef dbRefObj = createDBRef(obj, dbref);
+      if (null != dbRefObj) {
+        dbo.put(name, dbRefObj);
+        return;
       }
     }
+
+    // Lookup potential custom target type
+    Class<?> basicTargetType = customTypeMapping.get(obj.getClass());
+
+    if (basicTargetType != null) {
+      dbo.put(name, conversionService.convert(obj, basicTargetType));
+      return;
+    }
+
+    BasicDBObject propDbObj = new BasicDBObject();
+    write(obj, propDbObj, mappingContext.getPersistentEntity(prop.getTypeInformation()));
+    dbo.put(name, propDbObj);
+
   }
 
   protected void writeMapInternal(Map<Object, Object> obj, DBObject dbo) {
@@ -510,7 +554,7 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
               continue;
             }
             if (null != entry.getValue() && entry.getValue() instanceof DBObject) {
-              m.put(entry.getKey(), read((null != toType ? toType : prop.getTypeInformation().getMapValueType()), (DBObject) entry.getValue()));
+              m.put(entry.getKey(), read((null != toType ? toType : prop.getMapValueType()), (DBObject) entry.getValue()));
             } else {
               m.put(entry.getKey(), entry.getValue());
             }
@@ -518,7 +562,7 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
           return m;
         } else if (prop.isArray() && dbObj instanceof BasicDBObject && ((DBObject) dbObj).keySet().size() == 0) {
           // It's empty
-          return Array.newInstance(prop.getType().getComponentType(), 0);
+          return Array.newInstance(prop.getComponentType(), 0);
         } else if (prop.isCollection() && dbObj instanceof BasicDBList) {
           BasicDBList dbObjList = (BasicDBList) dbObj;
           Object[] items = (Object[]) Array.newInstance(prop.getComponentType(), dbObjList.size());

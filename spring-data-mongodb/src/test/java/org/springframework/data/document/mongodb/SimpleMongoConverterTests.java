@@ -21,15 +21,22 @@ import static org.junit.Assert.*;
 import java.lang.reflect.Field;
 import java.math.BigInteger;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
+
+import org.hamcrest.CoreMatchers;
+import org.joda.time.LocalDate;
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.document.mongodb.SomeEnumTest.NumberEnum;
 import org.springframework.data.document.mongodb.SomeEnumTest.StringEnum;
 import org.springframework.data.document.mongodb.convert.SimpleMongoConverter;
@@ -292,10 +299,50 @@ public class SimpleMongoConverterTests {
         (DBObject) JSON.parse("{\"_id\" : {\"$oid\" : \"4d24809660413b687f5d323e\" }}"));
     assertThat(result.getId().toString(16), is("4d24809660413b687f5d323e"));
   }
+  
+  @Test
+  public void convertsAddressCorrectly() {
+    
+    Address address = new Address();
+    address.city = "New York";
+    address.street = "Broadway";
+    
+    DBObject dbObject = new BasicDBObject();
+    
+    converter.write(address, dbObject);
+    
+    assertThat(dbObject.get("city").toString(), is("New York"));
+    assertThat(dbObject.get("street").toString(), is("Broadway"));
+    
+    Address result = converter.read(Address.class, dbObject);
+    assertThat(result.city, is("New York"));
+    assertThat(result.street, is("Broadway"));
+  }
+  
+  @Test
+  public void convertsJodaTimeTypesCorrectly() {
+    
+    Set<Converter<?, ?>> converters = new HashSet<Converter<?,?>>();
+    converters.add(new LocalDateToDateConverter());
+    converters.add(new DateToLocalDateConverter());
+    
+    converter.setConverters(converters);
+    
+    AnotherPerson person = new AnotherPerson();
+    person.birthDate = new LocalDate();
+    
+    DBObject dbObject = new BasicDBObject();
+    converter.write(person, dbObject);
+    
+    assertTrue(dbObject.get("birthDate") instanceof Date);
+    
+    AnotherPerson result = converter.read(AnotherPerson.class, dbObject);
+    assertThat(result.getBirthDate(), is(notNullValue()));
+  }
 
   private void assertListOfStringAndLong(List<Class<?>> types) {
 
-    assertThat(types.size(), is(2));
+    assertThat(types.size(), CoreMatchers.is(2));
     assertEquals(String.class, types.get(0));
     assertEquals(Long.class, types.get(1));
   }
@@ -345,6 +392,41 @@ public class SimpleMongoConverterTests {
 
     public BigInteger getId() {
       return id;
+    }
+  }
+
+  public static class Address {
+    String street;
+    String city;
+    
+    public String getStreet() {
+      return street;
+    }
+    
+    public String getCity() {
+      return city;
+    }
+  }
+  
+  public static class AnotherPerson {
+    LocalDate birthDate;
+    
+    public LocalDate getBirthDate() {
+      return birthDate;
+    }
+  }
+  
+  private class LocalDateToDateConverter implements Converter<LocalDate, Date> {
+
+    public Date convert(LocalDate source) {
+      return source.toDateMidnight().toDate();
+    }
+  }
+  
+  private class DateToLocalDateConverter implements Converter<Date, LocalDate> {
+
+    public LocalDate convert(Date source) {
+      return new LocalDate(source.getTime());
     }
   }
 }

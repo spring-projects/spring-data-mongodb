@@ -30,4 +30,5 @@
 
   <bean class="org.springframework.data.document.mongodb.MongoExceptionTranslator"/>
 
+  <bean id="insertEventListener" class="org.springframework.data.document.mongodb.mapping.InsertEventListener"/>
 </beans>

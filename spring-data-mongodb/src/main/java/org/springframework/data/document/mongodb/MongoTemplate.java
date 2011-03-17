@@ -22,6 +22,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.CommandResult;
@@ -37,9 +40,13 @@ import com.mongodb.util.JSON;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bson.types.ObjectId;
+import org.springframework.beans.BeansException;
 import org.springframework.beans.ConfigurablePropertyAccessor;
 import org.springframework.beans.PropertyAccessorFactory;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.ApplicationEvent;
 import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -47,6 +54,9 @@ import org.springframework.data.document.mongodb.MongoPropertyDescriptors.MongoP
 import org.springframework.data.document.mongodb.convert.MappingMongoConverter;
 import org.springframework.data.document.mongodb.convert.MongoConverter;
 import org.springframework.data.document.mongodb.convert.SimpleMongoConverter;
+import org.springframework.data.document.mongodb.event.CollectionCreatedEvent;
+import org.springframework.data.document.mongodb.event.InsertEvent;
+import org.springframework.data.document.mongodb.event.SaveEvent;
 import org.springframework.data.document.mongodb.query.IndexDefinition;
 import org.springframework.data.document.mongodb.query.Query;
 import org.springframework.data.document.mongodb.query.Update;
@@ -61,7 +71,7 @@ import org.springframework.util.Assert;
  * @author Mark Pollack
  * @author Oliver Gierke
  */
-public class MongoTemplate implements InitializingBean, MongoOperations {
+public class MongoTemplate implements InitializingBean, MongoOperations, ApplicationContextAware {
 
   private static final Log LOGGER = LogFactory.getLog(MongoTemplate.class);
 
@@ -87,7 +97,9 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
   private String databaseName;
   private String username;
   private String password;
-
+  private ApplicationContext applicationContext;
+  private ExecutorService eventPublishers = Executors.newCachedThreadPool();
+  private LinkedBlockingQueue<ApplicationEvent> eventQueue = new LinkedBlockingQueue<ApplicationEvent>();
 
   /**
    * Constructor used for a basic template configuration
@@ -173,6 +185,9 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
     }
   }
 
+  public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+    this.applicationContext = applicationContext;
+  }
 
   /**
    * Sets the username to use to connect to the Mongo database
@@ -548,6 +563,9 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
     writer.write(objectToSave, dbDoc);
     Object id = insertDBObject(collectionName, dbDoc);
     populateIdIfNecessary(objectToSave, id);
+    if (null != applicationContext) {
+      eventQueue.add(new InsertEvent(collectionName, dbDoc));
+    }
   }
 
   /* (non-Javadoc)
@@ -621,6 +639,9 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
     writer.write(objectToSave, dbDoc);
     ObjectId id = saveDBObject(collectionName, dbDoc);
     populateIdIfNecessary(objectToSave, id);
+    if (null != applicationContext) {
+      eventQueue.add(new SaveEvent(collectionName, dbDoc));
+    }
   }
 
 
@@ -806,7 +827,11 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
   protected DBCollection doCreateCollection(final String collectionName, final DBObject collectionOptions) {
     return execute(new DbCallback<DBCollection>() {
       public DBCollection doInDB(DB db) throws MongoException, DataAccessException {
-        return db.createCollection(collectionName, collectionOptions);
+        DBCollection coll = db.createCollection(collectionName, collectionOptions);
+        if (null != applicationContext) {
+          eventQueue.add(new CollectionCreatedEvent(collectionName, collectionOptions));
+        }
+        return coll;
       }
     });
   }
@@ -1042,6 +1067,21 @@ public class MongoTemplate implements InitializingBean, MongoOperations {
     if (null != mongoConverter && mongoConverter instanceof MappingMongoConverter) {
       ((MappingMongoConverter) mongoConverter).setMongo(mongo);
       ((MappingMongoConverter) mongoConverter).setDefaultDatabase(databaseName);
+    }
+    if (null != applicationContext) {
+      eventPublishers.submit(new Runnable() {
+        public void run() {
+          while (true) {
+            ApplicationEvent event = null;
+            try {
+              event = eventQueue.take();
+              applicationContext.publishEvent(event);
+            } catch (InterruptedException e) {
+              throw new RuntimeException(e.getMessage(), e);
+            }
+          }
+        }
+      });
     }
   }
 

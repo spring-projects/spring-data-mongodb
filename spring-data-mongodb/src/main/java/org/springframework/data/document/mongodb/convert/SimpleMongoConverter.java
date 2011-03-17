@@ -32,12 +32,9 @@ import org.bson.types.ObjectId;
 import org.springframework.beans.BeanUtils;
 import org.springframework.core.CollectionFactory;
 import org.springframework.core.convert.ConversionFailedException;
-import org.springframework.core.convert.TypeDescriptor;
-import org.springframework.core.convert.converter.ConditionalGenericConverter;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.converter.ConverterFactory;
-import org.springframework.core.convert.converter.GenericConverter;
-import org.springframework.core.convert.converter.GenericConverter.ConvertiblePair;
 import org.springframework.core.convert.support.ConversionServiceFactory;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.document.mongodb.MongoPropertyDescriptors.MongoPropertyDescriptor;
@@ -54,6 +51,7 @@ import org.springframework.util.comparator.CompoundComparator;
 public class SimpleMongoConverter implements MongoConverter {
 
   private static final Log LOG = LogFactory.getLog(SimpleMongoConverter.class);
+  private static final List<Class<?>> MONGO_TYPES = Arrays.asList(Number.class, Date.class, String.class, DBObject.class);
   private static final Set<String> SIMPLE_TYPES;
 
   static {
@@ -112,8 +110,8 @@ public class SimpleMongoConverter implements MongoConverter {
    * Creates a {@link SimpleMongoConverter}.
    */
   public SimpleMongoConverter() {
-    this.conversionService = new SimpleToStringSuppressingGenericConversionService();
-    ConversionServiceFactory.addDefaultConverters(conversionService);
+    this.conversionService = ConversionServiceFactory.createDefaultConversionService();
+    this.conversionService.removeConvertible(Object.class, String.class);
     initializeConverters();
   }
 
@@ -123,12 +121,10 @@ public class SimpleMongoConverter implements MongoConverter {
    */
   protected void initializeConverters() {
 
-    
     conversionService.addConverter(ObjectIdToStringConverter.INSTANCE);
     conversionService.addConverter(StringToObjectIdConverter.INSTANCE);
     conversionService.addConverter(ObjectIdToBigIntegerConverter.INSTANCE);
     conversionService.addConverter(BigIntegerToIdConverter.INSTANCE);
-    
   }
 
   /**
@@ -237,15 +233,32 @@ public class SimpleMongoConverter implements MongoConverter {
       return;
     }
     
-    if (conversionService.canConvert(value.getClass(), String.class)) {
-      dbo.put(keyToUse, conversionService.convert(value, String.class));
+    Class<?> customTargetType = getCustomTargetType(value);
+    if (customTargetType != null) {
+      dbo.put(keyToUse, conversionService.convert(value, customTargetType));
       return;
     }
     
     DBObject nestedDbo = new BasicDBObject();
     write(value, nestedDbo);
     dbo.put(keyToUse, nestedDbo);
-
+  }
+  
+  /**
+   * Returns whether the {@link ConversionService} has a custom {@link Converter} registered that can convert the given
+   * object into one of the types supported by MongoDB.
+   * 
+   * @param obj
+   * @return
+   */
+  private Class<?> getCustomTargetType(Object obj) {
+    
+    for (Class<?> mongoType : MONGO_TYPES) {
+      if (conversionService.canConvert(obj.getClass(), mongoType)) {
+        return mongoType;
+      }
+    }
+    return null;
   }
 
   /**
@@ -509,30 +522,6 @@ public class SimpleMongoConverter implements MongoConverter {
     */
   public ObjectId convertObjectId(Object id) {
     return conversionService.convert(id, ObjectId.class);
-  }
-  
-  private static class SimpleToStringSuppressingGenericConversionService extends GenericConversionService {
-    
-    private static final Set<ConvertiblePair> REFERENCE = Collections.singleton(new ConvertiblePair(Object.class, String.class));
-    
-    /* (non-Javadoc)
-     * @see org.springframework.core.convert.support.GenericConversionService#getConverter(org.springframework.core.convert.TypeDescriptor, org.springframework.core.convert.TypeDescriptor)
-     */
-    @Override
-    protected GenericConverter getConverter(TypeDescriptor sourceType, TypeDescriptor targetType) {
-     
-      GenericConverter converter = super.getConverter(sourceType, targetType);
-      
-      if (converter instanceof ConditionalGenericConverter) {
-        
-        Set<ConvertiblePair> convertibleTypes = ((ConditionalGenericConverter) converter).getConvertibleTypes();
-        if (REFERENCE.equals(convertibleTypes)) {
-          return null;
-        }
-      }
-      
-      return converter;
-    }
   }
 
   /**
