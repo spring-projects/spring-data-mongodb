@@ -15,9 +15,9 @@
  */
 package org.springframework.data.document.mongodb.repository;
 
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
-import static org.mockito.Mockito.when;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 import java.lang.reflect.Method;
 
@@ -30,6 +30,7 @@ import org.springframework.data.document.mongodb.MongoTemplate;
 import org.springframework.data.document.mongodb.convert.MongoConverter;
 import org.springframework.data.document.mongodb.convert.SimpleMongoConverter;
 import org.springframework.data.document.mongodb.query.BasicQuery;
+import org.springframework.data.document.mongodb.repository.MongoRepositoryFactoryBean.EntityInformationCreator;
 
 /**
  * Unit tests for {@link StringBasedMongoQuery}.
@@ -52,7 +53,7 @@ public class StringBasedMongoQueryUnitTests {
   public void testname() throws Exception {
 
     Method method = SampleRepository.class.getMethod("findByLastname", String.class);
-    MongoQueryMethod queryMethod = new MongoQueryMethod(method, Person.class);
+    MongoQueryMethod queryMethod = new MongoQueryMethod(method, new EntityInformationCreator(null));
     StringBasedMongoQuery mongoQuery = new StringBasedMongoQuery(queryMethod, template);
     ConvertingParameterAccessor accesor = StubParameterAccessor.getAccessor(converter, "Matthews");
 

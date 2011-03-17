@@ -12,8 +12,9 @@
     <constructor-arg ref="mongo"/>
     <constructor-arg value="database"/>
     <property name="defaultCollectionName" value="springdata"/>
+	<property name="mongoConverter" ref="mongoConverter" />
   </bean>
-
-  <bean class="org.springframework.data.document.mongodb.MongoExceptionTranslator"/>
+  
+  <bean id="mongoConverter" class="org.springframework.data.document.mongodb.convert.SimpleMongoConverter" />
 
 </beans>

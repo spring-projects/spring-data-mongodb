@@ -15,12 +15,19 @@
  */
 package org.springframework.data.document.mongodb.repository;
 
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
+
+import java.io.Serializable;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.document.mongodb.MongoTemplate;
+import org.springframework.data.document.mongodb.mapping.MongoPersistentEntity;
 import org.springframework.data.document.mongodb.repository.MongoRepositoryFactoryBean.MongoRepositoryFactory;
+import org.springframework.data.mapping.model.MappingContext;
 
 /**
  * Unit test for {@link MongoRepositoryFactory}.
@@ -33,10 +40,27 @@ public class MongoRepositoryFactoryUnitTests {
   @Mock
   MongoTemplate template;
 
+  @Mock
+  MappingContext mappingContext;
+  @Mock
+  MongoPersistentEntity<Person> entity;
+  
+  
   @Test(expected = IllegalArgumentException.class)
   public void rejectsInvalidIdType() throws Exception {
-    MongoRepositoryFactory factory = new MongoRepositoryFactory(template);
+    MongoRepositoryFactory factory = new MongoRepositoryFactory(template, null);
     factory.getRepository(SampleRepository.class);
+  }
+  
+  @Test
+  public void usesMappingMongoEntityInformationIfMappingContextSet() {
+    
+    when(mappingContext.getPersistentEntity(Person.class)).thenReturn(entity);
+    when(entity.getType()).thenReturn(Person.class);
+    
+    MongoRepositoryFactory factory = new MongoRepositoryFactory(template, mappingContext);
+    MongoEntityInformation<Person,Serializable> entityInformation = factory.getEntityInformation(Person.class);
+    assertTrue(entityInformation instanceof MappingMongoEntityInformation);
   }
 
   private interface SampleRepository extends MongoRepository<Person, Long> {

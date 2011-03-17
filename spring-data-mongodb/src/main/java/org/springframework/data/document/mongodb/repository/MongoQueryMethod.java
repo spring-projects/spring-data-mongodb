@@ -18,6 +18,7 @@ package org.springframework.data.document.mongodb.repository;
 import java.lang.reflect.Method;
 
 import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.data.document.mongodb.repository.MongoRepositoryFactoryBean.EntityInformationCreator;
 import org.springframework.data.repository.query.QueryMethod;
 import org.springframework.data.repository.util.ClassUtils;
 import org.springframework.util.StringUtils;
@@ -39,10 +40,10 @@ class MongoQueryMethod extends QueryMethod {
    * @param method
    */
   @SuppressWarnings({ "rawtypes", "unchecked" })
-  public MongoQueryMethod(Method method, Class<?> domainClass) {
+  public MongoQueryMethod(Method method, EntityInformationCreator entityInformationCreator) {
     super(method);
     this.method = method;
-    this.entityInformation = new MongoEntityInformation(ClassUtils.getReturnedDomainClass(method));
+    this.entityInformation = entityInformationCreator.getEntityInformation(ClassUtils.getReturnedDomainClass(method));
   }
 
   /**

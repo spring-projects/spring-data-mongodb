@@ -45,7 +45,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements Paging
   private final MongoEntityInformation<T, ID> entityInformation;
 
   /**
-   * Creates a ew {@link SimpleMongoRepository} for the given {@link MongoInformation} and {@link MongoTemplate}.
+   * Creates a ew {@link SimpleMongoRepository} for the given {@link MongoEntityInformation} and {@link MongoTemplate}.
    * 
    * @param metadata
    * @param template

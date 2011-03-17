@@ -1,11 +1,11 @@
 /*
- * Copyright (c) 2011 by the original author(s).
+ * Copyright 2011 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,100 +16,27 @@
 package org.springframework.data.document.mongodb.repository;
 
 import java.io.Serializable;
-import java.lang.reflect.Field;
-import java.util.Arrays;
-import java.util.List;
 
-import org.springframework.data.repository.support.AbstractEntityInformation;
-import org.springframework.util.ReflectionUtils;
-import org.springframework.util.StringUtils;
-
+import org.springframework.data.repository.support.EntityInformation;
 
 /**
- * Expects the domain class to contain a field with a name out of the following
- * {@value #FIELD_NAMES}.
+ * Mongo specific {@link EntityInformation}.
  *
  * @author Oliver Gierke
  */
-class MongoEntityInformation<T extends Object, ID extends Serializable> extends AbstractEntityInformation<T, ID> {
-
-  private static final List<String> FIELD_NAMES = Arrays.asList("ID", "id", "_id");
-  private Field field;
-
-
-  /**
-   * Creates a new {@link MongoEntityInformation}.
-   *
-   * @param domainClass
-   */
-  public MongoEntityInformation(Class<T> domainClass) {
-
-    super(domainClass);
-
-    for (String name : FIELD_NAMES) {
-
-      Field candidate = ReflectionUtils.findField(domainClass, name);
-
-      if (candidate != null) {
-        ReflectionUtils.makeAccessible(candidate);
-        this.field = candidate;
-        break;
-      }
-    }
-
-    if (this.field == null) {
-      throw new IllegalArgumentException(String.format(
-          "Given domain class %s does not contain an id property!",
-          domainClass.getName()));
-    }
-  }
-
+interface MongoEntityInformation<T, ID extends Serializable> extends EntityInformation<T, ID> {
 
   /**
    * Returns the name of the collection the entity shall be persisted to.
    *
    * @return
    */
-  public String getCollectionName() {
-
-    return StringUtils.uncapitalize(getJavaType().getSimpleName());
-  }
-
+  String getCollectionName();
 
   /**
    * Returns the attribute that the id will be persisted to.
    *
    * @return
    */
-  public String getIdAttribute() {
-
-    return "_id";
-  }
-
-
-  /*
-  * (non-Javadoc)
-  *
-  * @see
-  * org.springframework.data.repository.support.IdAware#getId(java.lang.Object
-  * )
-  */
-  @SuppressWarnings("unchecked")
-  public ID getId(Object entity) {
-
-    return (ID) ReflectionUtils.getField(field, entity);
-  }
-
-
-  /*
-  * (non-Javadoc)
-  *
-  * @see
-  * org.springframework.data.repository.support.EntityInformation#getIdType()
-  */
-  @SuppressWarnings("unchecked")
-  public Class<ID> getIdType() {
-
-    return (Class<ID>) field.getType();
-  }
+  String getIdAttribute();
 }

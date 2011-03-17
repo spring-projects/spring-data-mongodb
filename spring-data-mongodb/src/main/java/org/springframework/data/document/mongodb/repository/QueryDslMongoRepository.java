@@ -76,7 +76,7 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends
 
 
     /**
-     * Creates a new {@link QueryDslMongoRepository} for the given domain class,
+     * Creates a new {@link QueryDslMongoRepository} for the given {@link MongoEntityInformation},
      * {@link MongoTemplate} and {@link EntityPathResolver}.
      * 
      * @param entityInformation

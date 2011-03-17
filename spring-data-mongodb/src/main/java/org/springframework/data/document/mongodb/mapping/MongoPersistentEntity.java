@@ -18,24 +18,42 @@ package org.springframework.data.document.mongodb.mapping;
 
 import org.springframework.data.mapping.BasicPersistentEntity;
 import org.springframework.data.mapping.model.MappingContext;
+import org.springframework.data.mapping.model.PersistentEntity;
 import org.springframework.data.util.TypeInformation;
 
 /**
+ * Mongo specific {@link PersistentEntity} implementation that adds Mongo specific meta-data such as the collection name
+ * and the like.
+ * 
  * @author Jon Brisbin <jbrisbin@vmware.com>
+ * @author Oliver Gierke
  */
 public class MongoPersistentEntity<T> extends BasicPersistentEntity<T> {
 
   protected String collection;
 
-
+  /**
+   * Creates a new {@link MongoPersistentEntity} with the given {@link MappingContext} and {@link TypeInformation}. Will
+   * default the collection name to the entities simple type name.
+   * 
+   * @param mappingContext
+   * @param typeInformation
+   */
   public MongoPersistentEntity(MappingContext mappingContext, TypeInformation typeInformation) {
     super(mappingContext, typeInformation);
+    this.collection = typeInformation.getType().getSimpleName();
   }
 
+  /**
+   * Returns the collection the entity should be stored in.
+   * 
+   * @return
+   */
   public String getCollection() {
     return collection;
   }
 
+  
   public void setCollection(String collection) {
     this.collection = collection;
   }

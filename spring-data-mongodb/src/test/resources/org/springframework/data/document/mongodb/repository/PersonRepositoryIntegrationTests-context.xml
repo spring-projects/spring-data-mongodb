@@ -7,7 +7,20 @@
 
   <bean class="org.springframework.data.document.mongodb.repository.MongoRepositoryFactoryBean">
     <property name="template" ref="mongoTemplate"/>
+    <property name="mappingContext" ref="mappingContext" />
     <property name="repositoryInterface" value="org.springframework.data.document.mongodb.repository.PersonRepository"/>
+  </bean>
+  
+  <bean id="mappingContext" class="org.springframework.data.mapping.BasicMappingContext">
+  	<property name="mappingConfigurationBuilder">
+  	  <bean class="org.springframework.data.document.mongodb.mapping.MongoMappingConfigurationBuilder">
+  	  	<constructor-arg ref="mongoTemplate" />
+  	  </bean>
+  	</property>
+  </bean>
+  
+  <bean id="mongoConverter" class="org.springframework.data.document.mongodb.convert.MappingMongoConverter">
+  	<constructor-arg ref="mappingContext" />
   </bean>
 
 </beans>

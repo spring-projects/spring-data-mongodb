@@ -23,9 +23,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.document.mongodb.MongoOperations;
 import org.springframework.data.document.mongodb.MongoPropertyDescriptors.MongoPropertyDescriptor;
 import org.springframework.data.document.mongodb.MongoTemplate;
+import org.springframework.data.document.mongodb.mapping.MongoPersistentEntity;
 import org.springframework.data.document.mongodb.query.Index;
 import org.springframework.data.document.mongodb.query.Order;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.mapping.model.MappingContext;
+import org.springframework.data.mapping.model.PersistentEntity;
 import org.springframework.data.repository.query.QueryLookupStrategy;
 import org.springframework.data.repository.query.QueryLookupStrategy.Key;
 import org.springframework.data.repository.query.RepositoryQuery;
@@ -47,6 +50,7 @@ public class MongoRepositoryFactoryBean<T extends MongoRepository<S, ID>, S, ID 
     RepositoryFactoryBeanSupport<T, S, ID> {
 
   private MongoTemplate template;
+  private MappingContext mappingContext;
 
   /**
    * Configures the {@link MongoTemplate} to be used.
@@ -57,6 +61,15 @@ public class MongoRepositoryFactoryBean<T extends MongoRepository<S, ID>, S, ID 
   public void setTemplate(MongoTemplate template) {
 
     this.template = template;
+  }
+  
+  /**
+   * Sets the {@link MappingContext} used with the underlying {@link MongoTemplate}.
+   * 
+   * @param mappingContext the mappingContext to set
+   */
+  public void setMappingContext(MappingContext mappingContext) {
+    this.mappingContext = mappingContext;
   }
 
   /*
@@ -69,7 +82,7 @@ public class MongoRepositoryFactoryBean<T extends MongoRepository<S, ID>, S, ID 
   @Override
   protected RepositoryFactorySupport createRepositoryFactory() {
 
-    MongoRepositoryFactory factory = new MongoRepositoryFactory(template);
+    MongoRepositoryFactory factory = new MongoRepositoryFactory(template, mappingContext);
     factory.addQueryCreationListener(new IndexEnsuringQueryCreationListener(template));
     return factory;
   }
@@ -99,15 +112,19 @@ public class MongoRepositoryFactoryBean<T extends MongoRepository<S, ID>, S, ID 
         "com.mysema.query.types.Predicate", MongoRepositoryFactory.class.getClassLoader());
 
     private final MongoTemplate template;
+    private final EntityInformationCreator entityInformationCreator;
 
     /**
-     * Creates a new {@link MongoRepositoryFactory} fwith the given {@link MongoTemplate}.
+     * Creates a new {@link MongoRepositoryFactory} with the given {@link MongoTemplate} and {@link MappingContext}.
      * 
-     * @param template
+     * @param template must not be {@literal null}
+     * @param mappingContext
      */
-    public MongoRepositoryFactory(MongoTemplate template) {
+    public MongoRepositoryFactory(MongoTemplate template, MappingContext mappingContext) {
 
+      Assert.notNull(template);
       this.template = template;
+      this.entityInformationCreator = new EntityInformationCreator(mappingContext);
     }
 
     /*
@@ -180,7 +197,7 @@ public class MongoRepositoryFactoryBean<T extends MongoRepository<S, ID>, S, ID 
        */
       public RepositoryQuery resolveQuery(Method method, Class<?> domainClass) {
 
-        MongoQueryMethod queryMethod = new MongoQueryMethod(method, domainClass);
+        MongoQueryMethod queryMethod = new MongoQueryMethod(method, entityInformationCreator);
 
         if (queryMethod.hasAnnotatedQuery()) {
           return new StringBasedMongoQuery(queryMethod, template);
@@ -219,7 +236,33 @@ public class MongoRepositoryFactoryBean<T extends MongoRepository<S, ID>, S, ID 
     @Override
     public <T, ID extends Serializable> MongoEntityInformation<T, ID> getEntityInformation(Class<T> domainClass) {
 
-      return new MongoEntityInformation<T, ID>(domainClass);
+      return entityInformationCreator.getEntityInformation(domainClass);
+    }
+  }
+  
+  /**
+   * Simple wrapper to to create {@link MongoEntityInformation} instances based on a {@link MappingContext}.
+   *
+   * @author Oliver Gierke
+   */
+  static class EntityInformationCreator {
+    
+    private final MappingContext mappingContext;
+    
+    public EntityInformationCreator(MappingContext mappingContext) {
+      this.mappingContext = mappingContext;
+    }
+
+    public <T, ID extends Serializable> MongoEntityInformation<T, ID> getEntityInformation(Class<T> domainClass) {
+      if (null == mappingContext) {
+        return new SimpleMongoEntityInformation<T, ID>(domainClass);
+      }
+      
+      PersistentEntity<T> persistentEntity = mappingContext.getPersistentEntity(domainClass);
+      if (persistentEntity == null) {
+        persistentEntity = mappingContext.addPersistentEntity(domainClass);
+      }
+      return new MappingMongoEntityInformation<T, ID>((MongoPersistentEntity<T>) persistentEntity);
     }
   }
 
