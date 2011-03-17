@@ -22,6 +22,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,7 +60,11 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 
 /**
+ * {@link MongoConverter} that uses a {@link MappingContext} to do sophisticated mapping of domain objects to
+ * {@link DBObject}.
+ * 
  * @author Jon Brisbin <jbrisbin@vmware.com>
+ * @author Oliver Gierke
  */
 public class MappingMongoConverter implements MongoConverter, ApplicationContextAware {
 
@@ -432,7 +437,7 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
     }
 
     if (null != dbref) {
-      DBObject dbRefObj = createDBRef(obj, dbref);
+      DBRef dbRefObj = createDBRef(obj, dbref);
       if (null != dbRefObj) {
         dbo.put(name, dbRefObj);
         return;
