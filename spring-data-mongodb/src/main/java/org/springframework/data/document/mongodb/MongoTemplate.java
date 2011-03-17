@@ -22,10 +22,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.CommandResult;
@@ -100,7 +99,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
   private String password;
   private ApplicationContext applicationContext;
   private ExecutorService eventPublishers = Executors.newCachedThreadPool();
-  private BlockingDeque<ApplicationEvent> eventQueue = new LinkedBlockingDeque<ApplicationEvent>();
+  private LinkedBlockingQueue<ApplicationEvent> eventQueue = new LinkedBlockingQueue<ApplicationEvent>();
 
   /**
    * Constructor used for a basic template configuration
