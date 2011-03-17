@@ -1,34 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:mongo="http://www.springframework.org/schema/data/mongo"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+       http://www.springframework.org/schema/data/mongo http://www.springframework.org/schema/data/mongo/spring-mongo-1.0.xsd">
 
-  <bean id="mongo" class="org.springframework.data.document.mongodb.MongoFactoryBean">
-    <property name="host" value="localhost"/>
-    <property name="port" value="27017"/>
-  </bean>
-
-  <bean id="mappingContext" class="org.springframework.data.mapping.BasicMappingContext">
-    <property name="mappingConfigurationBuilder">
-      <bean class="org.springframework.data.document.mongodb.mapping.MongoMappingConfigurationBuilder">
-        <constructor-arg ref="mongoTemplate"/>
-      </bean>
-    </property>
-  </bean>
-
-  <bean id="mongoConverter" class="org.springframework.data.document.mongodb.convert.MappingMongoConverter">
-    <property name="mappingContext" ref="mappingContext"/>
-    <property name="autowirePersistentBeans" value="true"/>
-  </bean>
+  <mongo:mongo host="localhost" port="27017"/>
+  <mongo:mapping-converter base-package="org.springframework.data.document.mongodb.mapping"
+                           autowire="true"/>
 
   <bean id="mongoTemplate" class="org.springframework.data.document.mongodb.MongoTemplate">
     <constructor-arg ref="mongo"/>
     <constructor-arg value="database"/>
     <constructor-arg value="person"/>
-    <constructor-arg ref="mongoConverter"/>
+    <constructor-arg ref="mappingConverter"/>
   </bean>
 
   <bean class="org.springframework.data.document.mongodb.MongoExceptionTranslator"/>
 
   <bean id="insertEventListener" class="org.springframework.data.document.mongodb.mapping.InsertEventListener"/>
+
 </beans>

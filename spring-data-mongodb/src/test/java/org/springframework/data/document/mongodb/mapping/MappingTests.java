@@ -34,7 +34,6 @@ import org.springframework.data.document.mongodb.MongoTemplate;
 import org.springframework.data.document.mongodb.convert.MappingMongoConverter;
 import org.springframework.data.document.mongodb.query.Criteria;
 import org.springframework.data.document.mongodb.query.Query;
-import org.springframework.data.mapping.BasicMappingContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -50,9 +49,7 @@ public class MappingTests {
   @Autowired
   MongoTemplate template;
   @Autowired
-  BasicMappingContext mappingContext;
-  @Autowired
-  MappingMongoConverter mongoConverter;
+  MappingMongoConverter mappingConverter;
   @Autowired
   InsertEventListener insertEventListener;
 
@@ -66,11 +63,11 @@ public class MappingTests {
   public void testConvertSimpleProperty() {
     PersonPojo p = new PersonPojo(1234, "Person", "Pojo");
     DBObject dbo = new BasicDBObject();
-    mongoConverter.write(p, dbo);
+    mappingConverter.write(p, dbo);
 
     assertEquals(dbo.get("ssn"), 1234);
 
-    PersonPojo p2 = mongoConverter.read(PersonPojo.class, dbo);
+    PersonPojo p2 = mappingConverter.read(PersonPojo.class, dbo);
 
     assertEquals(p.getFirstName(), p2.getFirstName());
   }

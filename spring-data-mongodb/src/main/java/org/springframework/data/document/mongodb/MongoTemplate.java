@@ -57,6 +57,7 @@ import org.springframework.data.document.mongodb.convert.SimpleMongoConverter;
 import org.springframework.data.document.mongodb.event.CollectionCreatedEvent;
 import org.springframework.data.document.mongodb.event.InsertEvent;
 import org.springframework.data.document.mongodb.event.SaveEvent;
+import org.springframework.data.document.mongodb.mapping.MongoMappingConfigurationBuilder;
 import org.springframework.data.document.mongodb.query.IndexDefinition;
 import org.springframework.data.document.mongodb.query.Query;
 import org.springframework.data.document.mongodb.query.Update;
@@ -175,7 +176,6 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
     Assert.notNull(mongo);
     Assert.notNull(databaseName);
 
-    this.mongoConverter = mongoConverter == null ? new SimpleMongoConverter() : mongoConverter;
     this.defaultCollectionName = defaultCollectionName;
     this.mongo = mongo;
     this.databaseName = databaseName;
@@ -183,6 +183,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
     if (writeResultChecking != null) {
       this.writeResultChecking = writeResultChecking;
     }
+    setMongoConverter(mongoConverter == null ? new SimpleMongoConverter() : mongoConverter);
   }
 
   public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
@@ -234,6 +235,10 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
    */
   public MongoConverter getConverter() {
     return this.mongoConverter;
+  }
+
+  public void setConverter(MongoConverter converter) {
+    this.mongoConverter = converter;
   }
 
   /* (non-Javadoc)
@@ -1054,19 +1059,22 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
     return resolved == null ? ex : resolved;
   }
 
+  private void initializeMappingMongoConverter(MappingMongoConverter converter) {
+    converter.setMongo(mongo);
+    converter.setDefaultDatabase(databaseName);
+    ((MongoMappingConfigurationBuilder) converter.getMappingContext().getMappingConfigurationBuilder())
+        .setMongoTemplate(this);
+  }
+
   /*
-    * (non-Javadoc)
-    * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
-    */
+  * (non-Javadoc)
+  * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
+  */
   public void afterPropertiesSet() {
     if (this.getDefaultCollectionName() != null) {
       if (!collectionExists(getDefaultCollectionName())) {
         createCollection(getDefaultCollectionName(), null);
       }
-    }
-    if (null != mongoConverter && mongoConverter instanceof MappingMongoConverter) {
-      ((MappingMongoConverter) mongoConverter).setMongo(mongo);
-      ((MappingMongoConverter) mongoConverter).setDefaultDatabase(databaseName);
     }
     if (null != applicationContext) {
       eventPublishers.submit(new Runnable() {
@@ -1178,6 +1186,9 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 
   public void setMongoConverter(MongoConverter converter) {
     this.mongoConverter = converter;
+    if (null != converter && converter instanceof MappingMongoConverter) {
+      initializeMappingMongoConverter((MappingMongoConverter) mongoConverter);
+    }
   }
 
   public void setWriteResultChecking(WriteResultChecking resultChecking) {

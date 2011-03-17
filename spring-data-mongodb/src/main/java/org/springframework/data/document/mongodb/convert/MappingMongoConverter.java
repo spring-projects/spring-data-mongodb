@@ -24,9 +24,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
@@ -48,7 +50,9 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.ConversionServiceFactory;
 import org.springframework.core.convert.support.GenericConversionService;
+import org.springframework.data.document.mongodb.mapping.MongoMappingConfigurationBuilder;
 import org.springframework.data.mapping.AssociationHandler;
+import org.springframework.data.mapping.BasicMappingContext;
 import org.springframework.data.mapping.MappingBeanHelper;
 import org.springframework.data.mapping.PropertyHandler;
 import org.springframework.data.mapping.model.Association;
@@ -68,7 +72,7 @@ import org.springframework.expression.spel.support.StandardEvaluationContext;
  * @author Jon Brisbin <jbrisbin@vmware.com>
  * @author Oliver Gierke
  */
-public class MappingMongoConverter implements MongoConverter, ApplicationContextAware {
+public class MappingMongoConverter implements MongoConverter, ApplicationContextAware, InitializingBean {
 
   private static final String CUSTOM_TYPE_KEY = "_class";
   @SuppressWarnings({"unchecked"})
@@ -78,12 +82,13 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
   protected final GenericConversionService conversionService = ConversionServiceFactory.createDefaultConversionService();
   protected final Map<Class<?>, Class<?>> customTypeMapping = new HashMap<Class<?>, Class<?>>();
   protected SpelExpressionParser spelExpressionParser = new SpelExpressionParser();
-  protected MappingContext mappingContext;
+  protected MappingContext mappingContext = new BasicMappingContext(new MongoMappingConfigurationBuilder());
   protected ApplicationContext applicationContext;
   protected boolean autowirePersistentBeans = false;
   protected boolean useFieldAccessOnly = true;
   protected Mongo mongo;
   protected String defaultDatabase;
+  protected Set<Class<?>> initialEntitySet = new HashSet<Class<?>>();
 
   public MappingMongoConverter() {
     initializeConverters();
@@ -124,6 +129,11 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
 
   public void setMappingContext(MappingContext mappingContext) {
     this.mappingContext = mappingContext;
+    if (initialEntitySet.size() > 0 && null == mappingContext.getPersistentEntity(initialEntitySet.iterator().next())) {
+      for (Class<?> entity : initialEntitySet) {
+        mappingContext.addPersistentEntity(entity);
+      }
+    }
   }
 
   public Mongo getMongo() {
@@ -156,6 +166,14 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
 
   public void setUseFieldAccessOnly(boolean useFieldAccessOnly) {
     this.useFieldAccessOnly = useFieldAccessOnly;
+  }
+
+  public Set<Class<?>> getInitialEntitySet() {
+    return initialEntitySet;
+  }
+
+  public void setInitialEntitySet(Set<Class<?>> initialEntitySet) {
+    this.initialEntitySet = initialEntitySet;
   }
 
   public <T> T convertObjectId(ObjectId id, Class<T> targetType) {
@@ -600,13 +618,19 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
    * @param dbObject
    * @return
    */
-  private Class<?> findTypeToBeUsed(DBObject dbObject) {
+  protected Class<?> findTypeToBeUsed(DBObject dbObject) {
     Object classToBeUsed = dbObject.get(CUSTOM_TYPE_KEY);
 
     try {
       return Class.forName(classToBeUsed.toString());
     } catch (ClassNotFoundException e) {
       throw new MappingException(e.getMessage(), e);
+    }
+  }
+
+  public void afterPropertiesSet() throws Exception {
+    for (Class<?> entity : initialEntitySet) {
+      //mappingContext.addPersistentEntity(entity);
     }
   }
 

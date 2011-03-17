@@ -93,6 +93,43 @@ The host to connect to a MongoDB server.  Default is localhost
     </xsd:complexType>
   </xsd:element>
 
+  <xsd:element name="mapping-converter">
+    <xsd:annotation>
+      <xsd:documentation><![CDATA[
+Defines a MongoConverter for getting rich mapping functionality.
+			]]></xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexType>
+      <xsd:attribute name="id" type="xsd:ID" use="optional">
+        <xsd:annotation>
+          <xsd:documentation><![CDATA[
+The name of the MappingMongoConverter instance (by default "mappingConverter").]]></xsd:documentation>
+        </xsd:annotation>
+      </xsd:attribute>
+      <xsd:attribute name="base-package" type="xsd:string" use="optional">
+        <xsd:annotation>
+          <xsd:documentation><![CDATA[
+The base package in which to scan for entities annotated with @Document
+							]]></xsd:documentation>
+        </xsd:annotation>
+      </xsd:attribute>
+      <xsd:attribute name="autowire" type="xsd:boolean">
+        <xsd:annotation>
+          <xsd:documentation><![CDATA[
+This controls whether or not to run entities through the BeanFactory's autowiring mechanism for using @Autowired and @Value on properties. Default is true.
+          ]]></xsd:documentation>
+        </xsd:annotation>
+      </xsd:attribute>
+      <xsd:attribute name="mongo-ref" type="mongoRef" use="optional">
+        <xsd:annotation>
+          <xsd:documentation>
+            The reference to a Mongo. Will default to 'mongo'.
+          </xsd:documentation>
+        </xsd:annotation>
+      </xsd:attribute>
+    </xsd:complexType>
+  </xsd:element>
+
   <xsd:element name="jmx">
     <xsd:annotation>
       <xsd:documentation><![CDATA[

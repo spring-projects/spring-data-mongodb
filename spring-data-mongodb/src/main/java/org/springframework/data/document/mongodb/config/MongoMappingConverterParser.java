@@ -16,12 +16,21 @@
 
 package org.springframework.data.document.mongodb.config;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.springframework.beans.factory.BeanDefinitionStoreException;
+import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.xml.AbstractSingleBeanDefinitionParser;
 import org.springframework.beans.factory.xml.ParserContext;
-import org.springframework.util.StringUtils;
+import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
+import org.springframework.core.type.filter.AnnotationTypeFilter;
+import org.springframework.data.annotation.Persistent;
+import org.springframework.data.document.mongodb.convert.MappingMongoConverter;
+import org.springframework.data.document.mongodb.mapping.Document;
+import org.springframework.data.mapping.model.MappingException;
 import org.w3c.dom.Element;
 
 /**
@@ -37,17 +46,48 @@ public class MongoMappingConverterParser extends AbstractSingleBeanDefinitionPar
 
   @Override
   protected String resolveId(Element element, AbstractBeanDefinition definition, ParserContext parserContext) throws BeanDefinitionStoreException {
-    String id = super.resolveId(element, definition, parserContext);
-    if (!StringUtils.hasText(id)) {
-      return "mongoMappingConverter";
-    }
-    return id;
+    return "mappingConverter";
+  }
+
+  @Override
+  protected Class getBeanClass(Element element) {
+    return MappingMongoConverter.class;
   }
 
   @Override
   protected void doParse(Element element, ParserContext parserContext, BeanDefinitionBuilder builder) {
-    super.doParse(element, parserContext, builder);
+    String autowire = element.getAttribute("autowire");
+    if (null != autowire || !"".equals(autowire)) {
+      builder.addPropertyValue("autowirePersistentBeans", Boolean.parseBoolean(autowire));
+    }
 
+    // Need a reference to a MongoTemplate
+    String mongoRef = element.getAttribute("mongo-ref");
+    if (null == mongoRef || "".equals(mongoRef)) {
+      mongoRef = "mongo";
+    }
+    builder.addPropertyReference("mongo", mongoRef);
+
+    // Scan for @Document entities
+    String basePackage = element.getAttribute(BASE_PACKAGE);
+    if (null != basePackage) {
+      ClassPathScanningCandidateComponentProvider scanner = new ClassPathScanningCandidateComponentProvider(false);
+      scanner.addIncludeFilter(new AnnotationTypeFilter(Document.class));
+      scanner.addIncludeFilter(new AnnotationTypeFilter(Persistent.class));
+      Set<BeanDefinition> entities = scanner.findCandidateComponents(basePackage);
+      if (null != entities) {
+        Set<Class<?>> initialEntitySet = new HashSet<Class<?>>(entities.size());
+        for (BeanDefinition def : entities) {
+          String clazzName = def.getBeanClassName();
+          try {
+            initialEntitySet.add(Class.forName(clazzName));
+          } catch (ClassNotFoundException e) {
+            throw new MappingException(e.getMessage(), e);
+          }
+        }
+        builder.addPropertyValue("initialEntitySet", initialEntitySet);
+      }
+    }
   }
 
 }

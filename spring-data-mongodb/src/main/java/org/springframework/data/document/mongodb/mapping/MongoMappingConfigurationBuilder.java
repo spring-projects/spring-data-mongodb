@@ -38,7 +38,11 @@ import org.springframework.data.document.mongodb.index.IndexDirection;
 import org.springframework.data.document.mongodb.index.Indexed;
 import org.springframework.data.mapping.BasicMappingConfigurationBuilder;
 import org.springframework.data.mapping.MappingBeanHelper;
-import org.springframework.data.mapping.model.*;
+import org.springframework.data.mapping.model.Association;
+import org.springframework.data.mapping.model.MappingConfigurationException;
+import org.springframework.data.mapping.model.MappingContext;
+import org.springframework.data.mapping.model.PersistentEntity;
+import org.springframework.data.mapping.model.PersistentProperty;
 import org.springframework.data.util.TypeInformation;
 
 /**
@@ -50,13 +54,28 @@ public class MongoMappingConfigurationBuilder extends BasicMappingConfigurationB
   protected Map<String, Indexed> fieldIndexes = new HashMap<String, Indexed>();
   protected MongoTemplate mongoTemplate;
 
+  public MongoMappingConfigurationBuilder() {
+  }
+
   public MongoMappingConfigurationBuilder(MongoTemplate mongoTemplate) {
     this.mongoTemplate = mongoTemplate;
+    augmentSimpleTypes();
+  }
+
+  protected void augmentSimpleTypes() {
     // Augment simpleTypes with MongoDB-specific classes
     Set<Class<?>> simpleTypes = MappingBeanHelper.getSimpleTypes();
     simpleTypes.add(com.mongodb.DBRef.class);
     simpleTypes.add(ObjectId.class);
     simpleTypes.add(CodeWScope.class);
+  }
+
+  public MongoTemplate getMongoTemplate() {
+    return mongoTemplate;
+  }
+
+  public void setMongoTemplate(MongoTemplate mongoTemplate) {
+    this.mongoTemplate = mongoTemplate;
   }
 
   @Override
@@ -130,26 +149,30 @@ public class MongoMappingConfigurationBuilder extends BasicMappingConfigurationB
                              final boolean unique,
                              final boolean dropDups,
                              final boolean sparse) {
-    mongoTemplate.execute(collection, new CollectionCallback<Object>() {
-      public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
-        DBObject defObj;
-        if (null != def) {
-          defObj = (DBObject) JSON.parse(def);
-        } else {
-          defObj = new BasicDBObject();
-          defObj.put(name, (direction == IndexDirection.ASCENDING ? 1 : -1));
+    if (null != mongoTemplate) {
+      mongoTemplate.execute(collection, new CollectionCallback<Object>() {
+        public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
+          DBObject defObj;
+          if (null != def) {
+            defObj = (DBObject) JSON.parse(def);
+          } else {
+            defObj = new BasicDBObject();
+            defObj.put(name, (direction == IndexDirection.ASCENDING ? 1 : -1));
+          }
+          DBObject opts = new BasicDBObject();
+          if (!"".equals(name)) {
+            opts.put("name", name);
+          }
+          opts.put("dropDups", dropDups);
+          opts.put("sparse", sparse);
+          opts.put("unique", unique);
+          collection.ensureIndex(defObj, opts);
+          return null;
         }
-        DBObject opts = new BasicDBObject();
-        if (!"".equals(name)) {
-          opts.put("name", name);
-        }
-        opts.put("dropDups", dropDups);
-        opts.put("sparse", sparse);
-        opts.put("unique", unique);
-        collection.ensureIndex(defObj, opts);
-        return null;
-      }
-    });
+      });
+    } else {
+      log.error("MongoTemplate was NULL! Not creating index: " + def + " on collection: " + collection);
+    }
   }
 
 }
