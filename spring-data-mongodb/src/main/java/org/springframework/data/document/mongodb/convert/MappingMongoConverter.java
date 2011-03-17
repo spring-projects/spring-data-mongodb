@@ -41,6 +41,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.expression.BeanFactoryResolver;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.ConversionServiceFactory;
 import org.springframework.core.convert.support.GenericConversionService;
@@ -63,6 +64,7 @@ import org.springframework.expression.spel.support.StandardEvaluationContext;
 public class MappingMongoConverter implements MongoConverter, ApplicationContextAware {
 
   private static final String CUSTOM_TYPE_KEY = "_class";
+  private static final List<Class<?>> MONGO_TYPES = Arrays.asList(Number.class, Date.class, String.class, DBObject.class);
   protected static final Log log = LogFactory.getLog(MappingMongoConverter.class);
 
   protected GenericConversionService conversionService = ConversionServiceFactory.createDefaultConversionService();
@@ -377,7 +379,14 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
     this.applicationContext = applicationContext;
   }
 
+  /**
+   * Registers converters for {@link ObjectId} handling, removes plain {@link #toString()} converter and promotes the
+   * configured {@link ConversionService} to {@link MappingBeanHelper}.
+   */
   protected void initializeConverters() {
+    
+    this.conversionService.removeConvertible(Object.class, String.class);
+    
     if (!conversionService.canConvert(ObjectId.class, String.class)) {
       conversionService.addConverter(ObjectIdToStringConverter.INSTANCE);
       conversionService.addConverter(StringToObjectIdConverter.INSTANCE);
@@ -386,13 +395,17 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
       conversionService.addConverter(ObjectIdToBigIntegerConverter.INSTANCE);
       conversionService.addConverter(BigIntegerToIdConverter.INSTANCE);
     }
+    
+    MappingBeanHelper.setConversionService(conversionService);
   }
 
   @SuppressWarnings({"unchecked"})
   protected void writePropertyInternal(PersistentProperty prop, Object obj, DBObject dbo) {
     org.springframework.data.document.mongodb.mapping.DBRef dbref = prop.getField()
         .getAnnotation(org.springframework.data.document.mongodb.mapping.DBRef.class);
+    
     String name = prop.getName();
+    
     if (prop.isCollection()) {
       Class<?> type = prop.getType();
       BasicDBList dbList = new BasicDBList();
@@ -408,20 +421,52 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
         }
       }
       dbo.put(name, dbList);
-    } else if (null != obj && obj instanceof Map) {
+      return;
+    }
+
+    if (null != obj && obj instanceof Map) {
       BasicDBObject mapDbObj = new BasicDBObject();
       writeMapInternal((Map<Object, Object>) obj, mapDbObj);
       dbo.put(name, mapDbObj);
-    } else {
-      if (null != dbref) {
-        DBRef dbRef = createDBRef(obj, dbref);
-        dbo.put(name, dbRef);
-      } else {
-        BasicDBObject propDbObj = new BasicDBObject();
-        write(obj, propDbObj, mappingContext.getPersistentEntity(prop.getTypeInformation()));
-        dbo.put(name, propDbObj);
+      return;
+    }
+
+    if (null != dbref) {
+      DBObject dbRefObj = createDBRef(obj, dbref);
+      if (null != dbRefObj) {
+        dbo.put(name, dbRefObj);
+        return;
       }
     }
+
+    Class<?> basicTargetType = getCustomTargetType(obj);
+
+    if (basicTargetType != null) {
+      dbo.put(name, conversionService.convert(obj, basicTargetType));
+      return;
+    }
+
+    BasicDBObject propDbObj = new BasicDBObject();
+    write(obj, propDbObj, mappingContext.getPersistentEntity(prop.getTypeInformation()));
+    dbo.put(name, propDbObj);
+   
+  }
+
+  /**
+   * Returns whether the {@link ConversionService} has a custom {@link Converter} registered that can convert the given
+   * object into one of the types supported by MongoDB.
+   * 
+   * @param obj
+   * @return
+   */
+  private Class<?> getCustomTargetType(Object obj) {
+    
+    for (Class<?> mongoType : MONGO_TYPES) {
+      if (conversionService.canConvert(obj.getClass(), mongoType)) {
+        return mongoType;
+      }
+    }
+    return null;
   }
 
   protected void writeMapInternal(Map<Object, Object> obj, DBObject dbo) {
@@ -510,7 +555,7 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
               continue;
             }
             if (null != entry.getValue() && entry.getValue() instanceof DBObject) {
-              m.put(entry.getKey(), read((null != toType ? toType : prop.getTypeInformation().getMapValueType()), (DBObject) entry.getValue()));
+              m.put(entry.getKey(), read((null != toType ? toType : prop.getMapValueType()), (DBObject) entry.getValue()));
             } else {
               m.put(entry.getKey(), entry.getValue());
             }
@@ -518,7 +563,7 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
           return m;
         } else if (prop.isArray() && dbObj instanceof BasicDBObject && ((DBObject) dbObj).keySet().size() == 0) {
           // It's empty
-          return Array.newInstance(prop.getType().getComponentType(), 0);
+          return Array.newInstance(prop.getComponentType(), 0);
         } else if (prop.isCollection() && dbObj instanceof BasicDBList) {
           BasicDBList dbObjList = (BasicDBList) dbObj;
           Object[] items = (Object[]) Array.newInstance(prop.getComponentType(), dbObjList.size());
