@@ -25,24 +25,32 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.context.ApplicationContext;
 import org.springframework.data.document.mongodb.convert.MappingMongoConverter;
 import org.springframework.data.document.mongodb.convert.MongoConverter;
 import org.springframework.data.mapping.BasicMappingContext;
-import org.springframework.data.mapping.model.MappingContext;
 
 /**
  * Unit tests for testing the mapping works with generic types.
  *
  * @author Oliver Gierke
  */
+@RunWith(MockitoJUnitRunner.class)
 public class GenericMappingTests {
 
-  MappingContext context;
+  BasicMappingContext context;
   MongoConverter converter;
+  
+  @Mock
+  ApplicationContext applicationContext;
 
   @Before
   public void setUp() {
     context = new BasicMappingContext(new MongoMappingConfigurationBuilder(null));
+    context.setApplicationContext(applicationContext);
     context.addPersistentEntity(StringWrapper.class);
     converter = new MappingMongoConverter(context);
   }
