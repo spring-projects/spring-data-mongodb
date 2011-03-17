@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,6 +43,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.expression.BeanFactoryResolver;
+import org.springframework.core.GenericTypeResolver;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.ConversionServiceFactory;
@@ -72,7 +74,8 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
   private static final List<Class<?>> MONGO_TYPES = Arrays.asList(Number.class, Date.class, String.class, DBObject.class);
   protected static final Log log = LogFactory.getLog(MappingMongoConverter.class);
 
-  protected GenericConversionService conversionService = ConversionServiceFactory.createDefaultConversionService();
+  protected final GenericConversionService conversionService = ConversionServiceFactory.createDefaultConversionService();
+  protected final Map<Class<?>, Class<?>> customTypeMapping = new HashMap<Class<?>, Class<?>>();
   protected SpelExpressionParser spelExpressionParser = new SpelExpressionParser();
   protected MappingContext mappingContext;
   protected ApplicationContext applicationContext;
@@ -94,10 +97,24 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
     this.mappingContext = mappingContext;
     if (null != converters) {
       for (Converter<?, ?> c : converters) {
+        registerConverter(c);
         conversionService.addConverter(c);
       }
     }
     initializeConverters();
+  }
+
+  /**
+   * Inspects the given {@link Converter} for the types it can convert and registers the pair for custom type conversion
+   * in case the target type is a Mongo basic type.
+   * 
+   * @param converter
+   */
+  private void registerConverter(Converter<?, ?> converter) {
+    Class<?>[] arguments = GenericTypeResolver.resolveTypeArguments(converter.getClass(), Converter.class);
+    if (MONGO_TYPES.contains(arguments[1])) {
+      customTypeMapping.put(arguments[0], arguments[1]);
+    }
   }
 
   public MappingContext getMappingContext() {
@@ -444,7 +461,8 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
       }
     }
 
-    Class<?> basicTargetType = getCustomTargetType(obj);
+    // Lookup potential custom target type
+    Class<?> basicTargetType = customTypeMapping.get(obj.getClass());
 
     if (basicTargetType != null) {
       dbo.put(name, conversionService.convert(obj, basicTargetType));
@@ -455,23 +473,6 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
     write(obj, propDbObj, mappingContext.getPersistentEntity(prop.getTypeInformation()));
     dbo.put(name, propDbObj);
    
-  }
-
-  /**
-   * Returns whether the {@link ConversionService} has a custom {@link Converter} registered that can convert the given
-   * object into one of the types supported by MongoDB.
-   * 
-   * @param obj
-   * @return
-   */
-  private Class<?> getCustomTargetType(Object obj) {
-    
-    for (Class<?> mongoType : MONGO_TYPES) {
-      if (conversionService.canConvert(obj.getClass(), mongoType)) {
-        return mongoType;
-      }
-    }
-    return null;
   }
 
   protected void writeMapInternal(Map<Object, Object> obj, DBObject dbo) {
