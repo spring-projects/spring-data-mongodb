@@ -57,7 +57,6 @@ import org.springframework.data.document.mongodb.convert.SimpleMongoConverter;
 import org.springframework.data.document.mongodb.event.CollectionCreatedEvent;
 import org.springframework.data.document.mongodb.event.InsertEvent;
 import org.springframework.data.document.mongodb.event.SaveEvent;
-import org.springframework.data.document.mongodb.mapping.MongoMappingConfigurationBuilder;
 import org.springframework.data.document.mongodb.query.IndexDefinition;
 import org.springframework.data.document.mongodb.query.Query;
 import org.springframework.data.document.mongodb.query.Update;
@@ -1062,8 +1061,6 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
   private void initializeMappingMongoConverter(MappingMongoConverter converter) {
     converter.setMongo(mongo);
     converter.setDefaultDatabase(databaseName);
-    ((MongoMappingConfigurationBuilder) converter.getMappingContext().getMappingConfigurationBuilder())
-        .setMongoTemplate(this);
   }
 
   /*

@@ -50,9 +50,7 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.ConversionServiceFactory;
 import org.springframework.core.convert.support.GenericConversionService;
-import org.springframework.data.document.mongodb.mapping.MongoMappingConfigurationBuilder;
 import org.springframework.data.mapping.AssociationHandler;
-import org.springframework.data.mapping.BasicMappingContext;
 import org.springframework.data.mapping.MappingBeanHelper;
 import org.springframework.data.mapping.PropertyHandler;
 import org.springframework.data.mapping.model.Association;
@@ -82,7 +80,7 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
   protected final GenericConversionService conversionService = ConversionServiceFactory.createDefaultConversionService();
   protected final Map<Class<?>, Class<?>> customTypeMapping = new HashMap<Class<?>, Class<?>>();
   protected SpelExpressionParser spelExpressionParser = new SpelExpressionParser();
-  protected MappingContext mappingContext = new BasicMappingContext(new MongoMappingConfigurationBuilder());
+  protected MappingContext mappingContext;
   protected ApplicationContext applicationContext;
   protected boolean autowirePersistentBeans = false;
   protected boolean useFieldAccessOnly = true;
@@ -271,7 +269,6 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
     // Set properties not already set in the constructor
     entity.doWithProperties(new PropertyHandler() {
       public void doWithPersistentProperty(PersistentProperty prop) {
-        
         if (ctorParamNames.contains(prop.getName())) {
           return;
         }
@@ -620,7 +617,7 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
 
   public void afterPropertiesSet() throws Exception {
     for (Class<?> entity : initialEntitySet) {
-      //mappingContext.addPersistentEntity(entity);
+      mappingContext.addPersistentEntity(entity);
     }
   }
 

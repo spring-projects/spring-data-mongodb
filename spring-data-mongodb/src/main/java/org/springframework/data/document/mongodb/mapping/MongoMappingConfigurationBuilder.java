@@ -18,27 +18,12 @@ package org.springframework.data.document.mongodb.mapping;
 
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
-import com.mongodb.MongoException;
-import com.mongodb.util.JSON;
 import org.bson.types.CodeWScope;
 import org.bson.types.ObjectId;
-import org.springframework.dao.DataAccessException;
-import org.springframework.data.document.mongodb.CollectionCallback;
-import org.springframework.data.document.mongodb.MongoTemplate;
-import org.springframework.data.document.mongodb.index.CompoundIndex;
-import org.springframework.data.document.mongodb.index.CompoundIndexes;
-import org.springframework.data.document.mongodb.index.IndexDirection;
-import org.springframework.data.document.mongodb.index.Indexed;
 import org.springframework.data.mapping.BasicMappingConfigurationBuilder;
 import org.springframework.data.mapping.MappingBeanHelper;
-import org.springframework.data.mapping.model.Association;
 import org.springframework.data.mapping.model.MappingConfigurationException;
 import org.springframework.data.mapping.model.MappingContext;
 import org.springframework.data.mapping.model.PersistentEntity;
@@ -50,15 +35,7 @@ import org.springframework.data.util.TypeInformation;
  */
 public class MongoMappingConfigurationBuilder extends BasicMappingConfigurationBuilder {
 
-  protected Map<String, CompoundIndex> compoundIndexes = new HashMap<String, CompoundIndex>();
-  protected Map<String, Indexed> fieldIndexes = new HashMap<String, Indexed>();
-  protected MongoTemplate mongoTemplate;
-
   public MongoMappingConfigurationBuilder() {
-  }
-
-  public MongoMappingConfigurationBuilder(MongoTemplate mongoTemplate) {
-    this.mongoTemplate = mongoTemplate;
     augmentSimpleTypes();
   }
 
@@ -70,63 +47,17 @@ public class MongoMappingConfigurationBuilder extends BasicMappingConfigurationB
     simpleTypes.add(CodeWScope.class);
   }
 
-  public MongoTemplate getMongoTemplate() {
-    return mongoTemplate;
-  }
-
-  public void setMongoTemplate(MongoTemplate mongoTemplate) {
-    this.mongoTemplate = mongoTemplate;
+  @Override
+  public PersistentProperty createPersistentProperty(Field field,
+                                                     PropertyDescriptor descriptor,
+                                                     TypeInformation information) throws MappingConfigurationException {
+    return new MongoPersistentProperty(field, descriptor, information);
   }
 
   @Override
-  public PersistentProperty createPersistentProperty(Field field, PropertyDescriptor descriptor, TypeInformation information) throws MappingConfigurationException {
-    PersistentProperty property = new MongoPersistentProperty(field, descriptor, information);
-    if (field.isAnnotationPresent(Indexed.class)) {
-      Indexed index = field.getAnnotation(Indexed.class);
-      String collection = index.collection();
-      if ("".equals(collection)) {
-        collection = field.getName();
-      }
-      if (!fieldIndexes.containsKey(collection)) {
-        ensureIndex(collection, index.name(), null, index.direction(), index.unique(), index.dropDups(), index.sparse());
-        fieldIndexes.put(collection, index);
-      }
-    }
-    return property;
-  }
-
-  @Override
-  public <T> PersistentEntity<T> createPersistentEntity(TypeInformation typeInformation, MappingContext mappingContext) throws MappingConfigurationException {
-
-    MongoPersistentEntity<T> entity = new MongoPersistentEntity<T>(mappingContext, typeInformation);
-    Class<?> type = typeInformation.getType();
-
-    // Check for special collection setting
-    if (type.isAnnotationPresent(Document.class)) {
-      Document doc = type.getAnnotation(Document.class);
-      String collection = doc.collection();
-      if ("".equals(collection)) {
-        collection = type.getSimpleName().toLowerCase();
-      }
-      entity.setCollection(collection);
-    }
-
-    // Make sure indexes get created
-    if (type.isAnnotationPresent(CompoundIndexes.class)) {
-      CompoundIndexes indexes = type.getAnnotation(CompoundIndexes.class);
-      for (CompoundIndex index : indexes.value()) {
-        String indexColl = index.collection();
-        if ("".equals(indexColl)) {
-          indexColl = type.getSimpleName().toLowerCase();
-        }
-        if (!compoundIndexes.containsKey(indexColl)) {
-          ensureIndex(indexColl, index.name(), index.def(), index.direction(), index.unique(), index.dropDups(), index.sparse());
-          compoundIndexes.put(indexColl, index);
-        }
-      }
-    }
-
-    return entity;
+  public <T> PersistentEntity<T> createPersistentEntity(TypeInformation typeInformation,
+                                                        MappingContext mappingContext) throws MappingConfigurationException {
+    return new MongoPersistentEntity<T>(mappingContext, typeInformation);
   }
 
   @Override
@@ -135,44 +66,6 @@ public class MongoMappingConfigurationBuilder extends BasicMappingConfigurationB
       return true;
     }
     return super.isAssociation(field, descriptor);
-  }
-
-  @Override
-  public Association createAssociation(PersistentProperty property) {
-    return super.createAssociation(property);
-  }
-
-  protected void ensureIndex(String collection,
-                             final String name,
-                             final String def,
-                             final IndexDirection direction,
-                             final boolean unique,
-                             final boolean dropDups,
-                             final boolean sparse) {
-    if (null != mongoTemplate) {
-      mongoTemplate.execute(collection, new CollectionCallback<Object>() {
-        public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
-          DBObject defObj;
-          if (null != def) {
-            defObj = (DBObject) JSON.parse(def);
-          } else {
-            defObj = new BasicDBObject();
-            defObj.put(name, (direction == IndexDirection.ASCENDING ? 1 : -1));
-          }
-          DBObject opts = new BasicDBObject();
-          if (!"".equals(name)) {
-            opts.put("name", name);
-          }
-          opts.put("dropDups", dropDups);
-          opts.put("sparse", sparse);
-          opts.put("unique", unique);
-          collection.ensureIndex(defObj, opts);
-          return null;
-        }
-      });
-    } else {
-      log.error("MongoTemplate was NULL! Not creating index: " + def + " on collection: " + collection);
-    }
   }
 
 }

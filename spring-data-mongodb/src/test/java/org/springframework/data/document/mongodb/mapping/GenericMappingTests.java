@@ -16,10 +16,8 @@
 
 package org.springframework.data.document.mongodb.mapping;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.CoreMatchers.*;
+import static org.junit.Assert.*;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
@@ -43,13 +41,13 @@ public class GenericMappingTests {
 
   BasicMappingContext context;
   MongoConverter converter;
-  
+
   @Mock
   ApplicationContext applicationContext;
 
   @Before
   public void setUp() {
-    context = new BasicMappingContext(new MongoMappingConfigurationBuilder(null));
+    context = new BasicMappingContext(new MongoMappingConfigurationBuilder());
     context.setApplicationContext(applicationContext);
     context.addPersistentEntity(StringWrapper.class);
     converter = new MappingMongoConverter(context);
