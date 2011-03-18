@@ -46,6 +46,7 @@ public class MappingMongoEntityInformation<T, ID extends Serializable> extends A
   /* (non-Javadoc)
    * @see org.springframework.data.repository.support.EntityInformation#getId(java.lang.Object)
    */
+  @SuppressWarnings("unchecked")
   public ID getId(T entity) {
 
     PersistentProperty idProperty = entityMetadata.getIdProperty();
@@ -60,6 +61,7 @@ public class MappingMongoEntityInformation<T, ID extends Serializable> extends A
   /* (non-Javadoc)
    * @see org.springframework.data.repository.support.EntityInformation#getIdType()
    */
+  @SuppressWarnings("unchecked")
   public Class<ID> getIdType() {
     return (Class<ID>) entityMetadata.getIdProperty().getType();
   }

@@ -39,7 +39,6 @@ class MongoQueryMethod extends QueryMethod {
    * 
    * @param method
    */
-  @SuppressWarnings({ "rawtypes", "unchecked" })
   public MongoQueryMethod(Method method, EntityInformationCreator entityInformationCreator) {
     super(method);
     this.method = method;
