@@ -13,9 +13,7 @@
   
   <bean id="mappingContext" class="org.springframework.data.mapping.BasicMappingContext">
   	<property name="mappingConfigurationBuilder">
-  	  <bean class="org.springframework.data.document.mongodb.mapping.MongoMappingConfigurationBuilder">
-  	  	<constructor-arg ref="mongoTemplate" />
-  	  </bean>
+  	  <bean class="org.springframework.data.document.mongodb.mapping.MongoMappingConfigurationBuilder" />
   	</property>
   </bean>
   
