@@ -434,6 +434,8 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
         if (null != dbref) {
           DBRef dbRef = createDBRef(propObjItem, dbref);
           dbList.add(dbRef);
+        } else if (MappingBeanHelper.isSimpleType(type.getComponentType())) {
+          dbList.add(propObjItem);
         } else {
           BasicDBObject propDbObj = new BasicDBObject();
           write(propObjItem, propDbObj, mappingContext.getPersistentEntity(prop.getTypeInformation()));

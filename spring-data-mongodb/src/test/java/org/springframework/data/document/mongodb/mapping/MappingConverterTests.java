@@ -16,24 +16,8 @@
 
 package org.springframework.data.document.mongodb.mapping;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-
-import org.springframework.data.annotation.Persistent;
-
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
  */
-@Persistent
-@Retention(RetentionPolicy.RUNTIME)
-@Target({
-    ElementType.TYPE,
-    ElementType.FIELD
-})
-public @interface Document {
-
-  String collection() default "";
-
+public class MappingConverterTests {
 }
