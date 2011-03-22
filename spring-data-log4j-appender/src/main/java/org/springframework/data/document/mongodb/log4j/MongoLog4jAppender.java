@@ -37,6 +37,7 @@ public class MongoLog4jAppender extends AppenderSkeleton {
 
   public static final String LEVEL = "level";
   public static final String NAME = "name";
+  public static final String APP_ID = "applicationId";
   public static final String TIMESTAMP = "timestamp";
   public static final String PROPERTIES = "properties";
   public static final String TRACEBACK = "traceback";
@@ -46,6 +47,9 @@ public class MongoLog4jAppender extends AppenderSkeleton {
   protected int port = 27017;
   protected String database = "logs";
   protected String collection = null;
+  protected String applicationId = System.getProperty("APPLICATION_ID", null);
+  protected WriteConcern warnOrHigherWriteConcern = WriteConcern.SAFE;
+  protected WriteConcern infoOrLowerWriteConcern = WriteConcern.NORMAL;
   protected Mongo mongo;
   protected DB db;
 
@@ -88,6 +92,30 @@ public class MongoLog4jAppender extends AppenderSkeleton {
     this.collection = collection;
   }
 
+  public String getApplicationId() {
+    return applicationId;
+  }
+
+  public void setApplicationId(String applicationId) {
+    this.applicationId = applicationId;
+  }
+
+  public void setWarnOrHigherWriteConcern(String wc) {
+    this.warnOrHigherWriteConcern = WriteConcern.valueOf(wc);
+  }
+
+  public String getWarnOrHigherWriteConcern() {
+    return warnOrHigherWriteConcern.toString();
+  }
+
+  public String getInfoOrLowerWriteConcern() {
+    return infoOrLowerWriteConcern.toString();
+  }
+
+  public void setInfoOrLowerWriteConcern(String wc) {
+    this.infoOrLowerWriteConcern = WriteConcern.valueOf(wc);
+  }
+
   protected void connectToMongo() throws UnknownHostException {
     this.mongo = new Mongo(host, port);
     this.db = mongo.getDB(database);
@@ -103,8 +131,9 @@ public class MongoLog4jAppender extends AppenderSkeleton {
         throw new RuntimeException(e.getMessage(), e);
       }
     }
-    
+
     BasicDBObject dbo = new BasicDBObject();
+    dbo.put(APP_ID, applicationId);
     dbo.put(NAME, event.getLogger().getName());
     dbo.put(LEVEL, event.getLevel().toString());
     dbo.put(TIMESTAMP, String.format("%s", event.getTimeStamp()));
@@ -145,9 +174,11 @@ public class MongoLog4jAppender extends AppenderSkeleton {
           event.getLogger().getName());
     }
 
-    WriteConcern wc = WriteConcern.NORMAL;
+    WriteConcern wc;
     if (event.getLevel().isGreaterOrEqual(Level.WARN)) {
-      wc = WriteConcern.SAFE;
+      wc = warnOrHigherWriteConcern;
+    } else {
+      wc = infoOrLowerWriteConcern;
     }
     db.getCollection(collection).insert(dbo, wc);
   }
