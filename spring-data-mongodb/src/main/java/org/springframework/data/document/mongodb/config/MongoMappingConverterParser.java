@@ -16,27 +16,18 @@
 
 package org.springframework.data.document.mongodb.config;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import org.springframework.beans.factory.BeanDefinitionStoreException;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
-import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.RuntimeBeanReference;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.xml.AbstractBeanDefinitionParser;
 import org.springframework.beans.factory.xml.ParserContext;
-import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
-import org.springframework.core.type.filter.AnnotationTypeFilter;
-import org.springframework.data.annotation.Persistent;
 import org.springframework.data.document.mongodb.convert.MappingMongoConverter;
-import org.springframework.data.document.mongodb.mapping.Document;
+import org.springframework.data.document.mongodb.mapping.MappingConfigurationHelper;
 import org.springframework.data.document.mongodb.mapping.MongoMappingConfigurationBuilder;
 import org.springframework.data.document.mongodb.mapping.MongoMappingContext;
-import org.springframework.data.document.mongodb.mapping.event.MappingConfigurationListener;
-import org.springframework.data.document.mongodb.mapping.index.IndexCreationHelper;
 import org.w3c.dom.Element;
 
 /**
@@ -50,7 +41,7 @@ public class MongoMappingConverterParser extends AbstractBeanDefinitionParser {
 
   private static final String CONFIGURATION_BUILDER = "mappingConfigurationBuilder";
   private static final String MAPPING_CONTEXT = "mappingContext";
-  private static final String INDEX_CREATION_HELPER = "indexCreationHelper";
+  private static final String MAPPING_CONFIGURATION_HELPER = "mappingConfigurationHelper";
   private static final String CONFIGURATION_LISTENER = "mappingConfigurationListener";
   private static final String TEMPLATE = "mongoTemplate";
   private static final String BASE_PACKAGE = "base-package";
@@ -75,7 +66,6 @@ public class MongoMappingConverterParser extends AbstractBeanDefinitionParser {
     if (null == ctxRef || "".equals(ctxRef)) {
       BeanDefinitionBuilder mappingContextBuilder = BeanDefinitionBuilder.genericBeanDefinition(MongoMappingContext.class);
       mappingContextBuilder.addPropertyReference("mappingConfigurationBuilder", builderRef);
-      mappingContextBuilder.addPropertyValue("indexCreationHelper", new RuntimeBeanReference(INDEX_CREATION_HELPER));
       registry.registerBeanDefinition(MAPPING_CONTEXT, mappingContextBuilder.getBeanDefinition());
       ctxRef = MAPPING_CONTEXT;
     }
@@ -96,36 +86,17 @@ public class MongoMappingConverterParser extends AbstractBeanDefinitionParser {
     converterBuilder.addPropertyReference("mongo", mongoRef);
 
     try {
-      registry.getBeanDefinition(INDEX_CREATION_HELPER);
+      registry.getBeanDefinition(MAPPING_CONFIGURATION_HELPER);
     } catch (NoSuchBeanDefinitionException ignored) {
       String templateRef = element.getAttribute("mongo-template-ref");
       if (null == templateRef || "".equals(templateRef)) {
         templateRef = TEMPLATE;
       }
-      BeanDefinitionBuilder indexListenerBuilder = BeanDefinitionBuilder.genericBeanDefinition(IndexCreationHelper.class);
-      indexListenerBuilder.addPropertyValue("mongoTemplate", new RuntimeBeanReference(templateRef));
-      registry.registerBeanDefinition(INDEX_CREATION_HELPER, indexListenerBuilder.getBeanDefinition());
+      BeanDefinitionBuilder mappingConfigHelperBuilder = BeanDefinitionBuilder.genericBeanDefinition(MappingConfigurationHelper.class);
+      mappingConfigHelperBuilder.addConstructorArgValue(new RuntimeBeanReference(ctxRef));
+      mappingConfigHelperBuilder.addConstructorArgValue(new RuntimeBeanReference(templateRef));
+      registry.registerBeanDefinition(MAPPING_CONFIGURATION_HELPER, mappingConfigHelperBuilder.getBeanDefinition());
     }
-
-    BeanDefinitionBuilder listenerBuilder = BeanDefinitionBuilder.genericBeanDefinition(MappingConfigurationListener.class);
-    listenerBuilder.addPropertyReference("mappingContext", ctxRef);
-
-    // Scan for @Document entities
-    String basePackage = element.getAttribute(BASE_PACKAGE);
-    if (null != basePackage) {
-      ClassPathScanningCandidateComponentProvider scanner = new ClassPathScanningCandidateComponentProvider(false);
-      scanner.addIncludeFilter(new AnnotationTypeFilter(Document.class));
-      scanner.addIncludeFilter(new AnnotationTypeFilter(Persistent.class));
-      Set<BeanDefinition> entities = scanner.findCandidateComponents(basePackage);
-      if (null != entities) {
-        Set<String> initialEntitySet = new HashSet<String>(entities.size());
-        for (BeanDefinition def : entities) {
-          initialEntitySet.add(def.getBeanClassName());
-        }
-        listenerBuilder.addPropertyValue("initialEntitySet", initialEntitySet);
-      }
-    }
-    registry.registerBeanDefinition(CONFIGURATION_LISTENER, listenerBuilder.getBeanDefinition());
 
     return converterBuilder.getBeanDefinition();
   }

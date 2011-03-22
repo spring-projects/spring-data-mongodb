@@ -16,36 +16,28 @@
 
 package org.springframework.data.document.mongodb.mapping;
 
-import org.springframework.data.document.mongodb.mapping.index.IndexCreationHelper;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.springframework.data.mapping.BasicMappingContext;
-import org.springframework.data.mapping.model.PersistentEntity;
-import org.springframework.data.util.TypeInformation;
 
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
  */
 public class MongoMappingContext extends BasicMappingContext {
 
-  protected IndexCreationHelper indexCreationHelper;
+  protected Set<String> initialEntitySet = new HashSet<String>();
 
   public MongoMappingContext() {
     builder = new MongoMappingConfigurationBuilder();
   }
 
-  public IndexCreationHelper getIndexCreationHelper() {
-    return indexCreationHelper;
+  public Set<String> getInitialEntitySet() {
+    return initialEntitySet;
   }
 
-  public void setIndexCreationHelper(IndexCreationHelper indexCreationHelper) {
-    this.indexCreationHelper = indexCreationHelper;
+  public void setInitialEntitySet(Set<String> initialEntitySet) {
+    this.initialEntitySet = initialEntitySet;
   }
 
-  @Override
-  public <T> PersistentEntity<T> addPersistentEntity(TypeInformation typeInformation) {
-    PersistentEntity<T> entity = super.addPersistentEntity(typeInformation);
-    if (entity instanceof MongoPersistentEntity && null != indexCreationHelper) {
-      indexCreationHelper.checkForIndexes((MongoPersistentEntity<?>) entity);
-    }
-    return entity;
-  }
 }
