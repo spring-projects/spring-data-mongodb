@@ -24,11 +24,9 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
@@ -86,7 +84,6 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
   protected boolean useFieldAccessOnly = true;
   protected Mongo mongo;
   protected String defaultDatabase;
-  protected Set<Class<?>> initialEntitySet = new HashSet<Class<?>>();
 
   public MappingMongoConverter() {
     initializeConverters();
@@ -127,11 +124,6 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
 
   public void setMappingContext(MappingContext mappingContext) {
     this.mappingContext = mappingContext;
-    if (initialEntitySet.size() > 0 && null == mappingContext.getPersistentEntity(initialEntitySet.iterator().next())) {
-      for (Class<?> entity : initialEntitySet) {
-        mappingContext.addPersistentEntity(entity);
-      }
-    }
   }
 
   public Mongo getMongo() {
@@ -164,14 +156,6 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
 
   public void setUseFieldAccessOnly(boolean useFieldAccessOnly) {
     this.useFieldAccessOnly = useFieldAccessOnly;
-  }
-
-  public Set<Class<?>> getInitialEntitySet() {
-    return initialEntitySet;
-  }
-
-  public void setInitialEntitySet(Set<Class<?>> initialEntitySet) {
-    this.initialEntitySet = initialEntitySet;
   }
 
   public <T> T convertObjectId(ObjectId id, Class<T> targetType) {
@@ -618,9 +602,6 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
   }
 
   public void afterPropertiesSet() throws Exception {
-    for (Class<?> entity : initialEntitySet) {
-      mappingContext.addPersistentEntity(entity);
-    }
   }
 
   /**
