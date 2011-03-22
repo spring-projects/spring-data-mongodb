@@ -16,28 +16,39 @@
 
 package org.springframework.data.document.mongodb.mapping;
 
-import java.util.HashSet;
-import java.util.Set;
-
+import java.beans.PropertyDescriptor;
+import java.lang.reflect.Field;
+import java.util.Collection;
 import org.springframework.data.mapping.BasicMappingContext;
+import org.springframework.data.mapping.model.MappingConfigurationException;
+import org.springframework.data.mapping.model.MappingContext;
+import org.springframework.data.mapping.model.PersistentEntity;
+import org.springframework.data.mapping.model.PersistentProperty;
+import org.springframework.data.util.TypeInformation;
 
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
+ * @author Oliver Gierke
  */
 public class MongoMappingContext extends BasicMappingContext {
 
-  protected Set<String> initialEntitySet = new HashSet<String>();
-
-  public MongoMappingContext() {
-    builder = new MongoMappingConfigurationBuilder();
+  /* (non-Javadoc)
+   * @see org.springframework.data.mapping.BasicMappingContext#getPersistentEntities()
+   */
+  @Override
+  public Collection<MongoPersistentEntity<?>> getPersistentEntities() {
+    return (Collection<MongoPersistentEntity<?>>) super.getPersistentEntities();
   }
 
-  public Set<String> getInitialEntitySet() {
-    return initialEntitySet;
+  @Override
+  public PersistentProperty createPersistentProperty(Field field, PropertyDescriptor descriptor,
+      TypeInformation information) throws MappingConfigurationException {
+    return new MongoPersistentProperty(field, descriptor, information);
   }
 
-  public void setInitialEntitySet(Set<String> initialEntitySet) {
-    this.initialEntitySet = initialEntitySet;
+  @Override
+  public <T> PersistentEntity<T> createPersistentEntity(TypeInformation typeInformation, MappingContext mappingContext)
+      throws MappingConfigurationException {
+    return new MongoPersistentEntity<T>(mappingContext, typeInformation);
   }
-
 }

@@ -16,26 +16,32 @@
 
 package org.springframework.data.document.mongodb.config;
 
+import java.util.Set;
+
 import org.springframework.beans.factory.BeanDefinitionStoreException;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
+import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.RuntimeBeanReference;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
+import org.springframework.beans.factory.support.ManagedSet;
 import org.springframework.beans.factory.xml.AbstractBeanDefinitionParser;
 import org.springframework.beans.factory.xml.ParserContext;
+import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
+import org.springframework.core.type.filter.AnnotationTypeFilter;
+import org.springframework.data.annotation.Persistent;
 import org.springframework.data.document.mongodb.convert.MappingMongoConverter;
-import org.springframework.data.document.mongodb.mapping.MappingConfigurationHelper;
+import org.springframework.data.document.mongodb.mapping.Document;
+import org.springframework.data.document.mongodb.mapping.MongoPersistentEntityIndexCreator;
 import org.springframework.data.document.mongodb.mapping.MongoMappingConfigurationBuilder;
 import org.springframework.data.document.mongodb.mapping.MongoMappingContext;
+import org.springframework.util.StringUtils;
 import org.w3c.dom.Element;
 
 /**
- * Created by IntelliJ IDEA.
- * User: jbrisbin
- * Date: 2/28/11
- * Time: 9:26 AM
- * To change this template use File | Settings | File Templates.
+ * @author Jon Brisbin <jbrisbin@vmware.com>
+ * @author Oliver Gierke
  */
 public class MongoMappingConverterParser extends AbstractBeanDefinitionParser {
 
@@ -65,6 +71,12 @@ public class MongoMappingConverterParser extends AbstractBeanDefinitionParser {
     String ctxRef = element.getAttribute("mapping-context-ref");
     if (null == ctxRef || "".equals(ctxRef)) {
       BeanDefinitionBuilder mappingContextBuilder = BeanDefinitionBuilder.genericBeanDefinition(MongoMappingContext.class);
+      
+      Set<String> classesToAdd = getInititalEntityClasses(element, mappingContextBuilder);
+      if (classesToAdd != null) {
+        mappingContextBuilder.addPropertyValue("initialEntitySet", classesToAdd);
+      }
+      
       mappingContextBuilder.addPropertyReference("mappingConfigurationBuilder", builderRef);
       registry.registerBeanDefinition(MAPPING_CONTEXT, mappingContextBuilder.getBeanDefinition());
       ctxRef = MAPPING_CONTEXT;
@@ -92,7 +104,7 @@ public class MongoMappingConverterParser extends AbstractBeanDefinitionParser {
       if (null == templateRef || "".equals(templateRef)) {
         templateRef = TEMPLATE;
       }
-      BeanDefinitionBuilder mappingConfigHelperBuilder = BeanDefinitionBuilder.genericBeanDefinition(MappingConfigurationHelper.class);
+      BeanDefinitionBuilder mappingConfigHelperBuilder = BeanDefinitionBuilder.genericBeanDefinition(MongoPersistentEntityIndexCreator.class);
       mappingConfigHelperBuilder.addConstructorArgValue(new RuntimeBeanReference(ctxRef));
       mappingConfigHelperBuilder.addConstructorArgValue(new RuntimeBeanReference(templateRef));
       registry.registerBeanDefinition(MAPPING_CONFIGURATION_HELPER, mappingConfigHelperBuilder.getBeanDefinition());
@@ -100,5 +112,25 @@ public class MongoMappingConverterParser extends AbstractBeanDefinitionParser {
 
     return converterBuilder.getBeanDefinition();
   }
-
+  
+  
+  public Set<String> getInititalEntityClasses(Element element, BeanDefinitionBuilder builder) {
+    
+    String basePackage = element.getAttribute(BASE_PACKAGE);
+    
+    if (!StringUtils.hasText(basePackage)) {
+      return null;
+    }
+    
+    ClassPathScanningCandidateComponentProvider componentProvider = new ClassPathScanningCandidateComponentProvider(false);
+    componentProvider.addIncludeFilter(new AnnotationTypeFilter(Document.class));
+    componentProvider.addIncludeFilter(new AnnotationTypeFilter(Persistent.class));
+    
+    Set<String> classes = new ManagedSet<String>();
+    for (BeanDefinition candidate : componentProvider.findCandidateComponents(basePackage)) {
+      classes.add(candidate.getBeanClassName());
+    }
+    
+    return classes;
+  }
 }
