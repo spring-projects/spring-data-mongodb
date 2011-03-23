@@ -30,6 +30,7 @@ import com.mongodb.MongoException;
 import com.mongodb.util.JSON;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationListener;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.document.mongodb.CollectionCallback;
 import org.springframework.data.document.mongodb.MongoTemplate;
@@ -38,6 +39,7 @@ import org.springframework.data.document.mongodb.index.CompoundIndexes;
 import org.springframework.data.document.mongodb.index.IndexDirection;
 import org.springframework.data.document.mongodb.index.Indexed;
 import org.springframework.data.mapping.PropertyHandler;
+import org.springframework.data.mapping.event.MappingContextEvent;
 import org.springframework.data.mapping.model.PersistentProperty;
 import org.springframework.util.Assert;
 
@@ -48,7 +50,7 @@ import org.springframework.util.Assert;
  * @author Jon Brisbin <jbrisbin@vmware.com>
  * @author Oliver Gierke
  */
-public class MongoPersistentEntityIndexCreator {
+public class MongoPersistentEntityIndexCreator implements ApplicationListener<MappingContextEvent>{
 
   private static final Logger log = LoggerFactory.getLogger(MongoPersistentEntityIndexCreator.class);
 
@@ -67,6 +69,13 @@ public class MongoPersistentEntityIndexCreator {
     for (MongoPersistentEntity<?> entity : mappingContext.getPersistentEntities()) {
       checkForIndexes(entity);
     }
+  }
+  
+  /* (non-Javadoc)
+   * @see org.springframework.context.ApplicationListener#onApplicationEvent(org.springframework.context.ApplicationEvent)
+   */
+  public void onApplicationEvent(MappingContextEvent event) {
+    checkForIndexes((MongoPersistentEntity<?>) event.getPersistentEntity());
   }
 
   protected void checkForIndexes(MongoPersistentEntity<?> entity) {
