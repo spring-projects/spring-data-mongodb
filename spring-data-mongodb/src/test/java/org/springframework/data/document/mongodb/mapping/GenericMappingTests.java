@@ -24,9 +24,7 @@ import com.mongodb.DBObject;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.springframework.context.ApplicationContext;
 import org.springframework.data.document.mongodb.convert.MappingMongoConverter;
 import org.springframework.data.document.mongodb.convert.MongoConverter;
 import org.springframework.data.mapping.BasicMappingContext;
@@ -42,13 +40,9 @@ public class GenericMappingTests {
   BasicMappingContext context;
   MongoConverter converter;
 
-  @Mock
-  ApplicationContext applicationContext;
-
   @Before
   public void setUp() {
-    context = new BasicMappingContext(new MongoMappingConfigurationBuilder());
-    context.setApplicationContext(applicationContext);
+    context = new BasicMappingContext();
     context.addPersistentEntity(StringWrapper.class);
     converter = new MappingMongoConverter(context);
   }

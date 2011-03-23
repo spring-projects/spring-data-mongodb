@@ -11,11 +11,7 @@
     <property name="repositoryInterface" value="org.springframework.data.document.mongodb.repository.PersonRepository"/>
   </bean>
   
-  <bean id="mappingContext" class="org.springframework.data.mapping.BasicMappingContext">
-  	<property name="mappingConfigurationBuilder">
-  	  <bean class="org.springframework.data.document.mongodb.mapping.MongoMappingConfigurationBuilder" />
-  	</property>
-  </bean>
+  <bean id="mappingContext" class="org.springframework.data.document.mongodb.mapping.MongoMappingContext" />
   
   <bean id="mongoConverter" class="org.springframework.data.document.mongodb.convert.MappingMongoConverter">
   	<constructor-arg ref="mappingContext" />

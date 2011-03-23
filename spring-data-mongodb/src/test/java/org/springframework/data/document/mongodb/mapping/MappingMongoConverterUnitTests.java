@@ -26,9 +26,7 @@ import org.joda.time.LocalDate;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.springframework.context.ApplicationContext;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.document.mongodb.convert.MappingMongoConverter;
 import org.springframework.data.mapping.BasicMappingContext;
@@ -46,13 +44,9 @@ public class MappingMongoConverterUnitTests {
   MappingMongoConverter converter;
   BasicMappingContext mappingContext;
   
-  @Mock
-  ApplicationContext applicationContext;
-  
   @Before
   public void setUp() {
     mappingContext = new BasicMappingContext();
-    mappingContext.setApplicationContext(applicationContext);
     converter = new MappingMongoConverter(mappingContext);
   }
   
