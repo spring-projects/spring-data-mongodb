@@ -33,7 +33,6 @@ import org.springframework.data.util.TypeInformation;
 
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
- * @author Oliver Gierke
  */
 public class MongoMappingContext extends BasicMappingContext {
   
@@ -77,4 +76,5 @@ public class MongoMappingContext extends BasicMappingContext {
       throws MappingConfigurationException {
     return new MongoPersistentEntity<T>(mappingContext, typeInformation);
   }
+
 }
