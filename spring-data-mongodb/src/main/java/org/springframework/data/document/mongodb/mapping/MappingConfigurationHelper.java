@@ -30,10 +30,6 @@ import com.mongodb.MongoException;
 import com.mongodb.util.JSON;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ApplicationListener;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.document.mongodb.CollectionCallback;
@@ -44,67 +40,42 @@ import org.springframework.data.document.mongodb.index.IndexDirection;
 import org.springframework.data.document.mongodb.index.Indexed;
 import org.springframework.data.mapping.PropertyHandler;
 import org.springframework.data.mapping.event.MappingContextEvent;
-import org.springframework.data.mapping.model.MappingException;
-import org.springframework.data.mapping.model.PersistentEntity;
 import org.springframework.data.mapping.model.PersistentProperty;
+import org.springframework.util.Assert;
 
 /**
+ * Component that inspects {@link MongoPersistentEntity} instances contained in the given {@link MongoMappingContext}
+ * for indexing metadata and ensures the indexes to be available.
+ * 
  * @author Jon Brisbin <jbrisbin@vmware.com>
+ * @author Oliver Gierke
  */
-public class MappingConfigurationHelper implements ApplicationListener<MappingContextEvent>, ApplicationContextAware, InitializingBean {
+public class MongoPersistentEntityIndexCreator implements ApplicationListener<MappingContextEvent>{
 
-  private static final Logger log = LoggerFactory.getLogger(MappingConfigurationHelper.class);
+  private static final Logger log = LoggerFactory.getLogger(MongoPersistentEntityIndexCreator.class);
 
   private Map<String, CompoundIndex> compoundIndexes = new HashMap<String, CompoundIndex>();
   private Map<String, Indexed> fieldIndexes = new HashMap<String, Indexed>();
   private Set<Class<?>> classesSeen = Collections.newSetFromMap(new ConcurrentHashMap<Class<?>, Boolean>());
-  private ApplicationContext applicationContext;
-  private MongoMappingContext mappingContext;
-  private MongoTemplate mongoTemplate;
+ 
+  private final MongoTemplate mongoTemplate;
 
-  public MappingConfigurationHelper(MongoMappingContext mappingContext, MongoTemplate mongoTemplate) {
-    this.mappingContext = mappingContext;
+  public MongoPersistentEntityIndexCreator(MongoMappingContext mappingContext, MongoTemplate mongoTemplate) {
+    
+    Assert.notNull(mongoTemplate);
+    Assert.notNull(mappingContext);
     this.mongoTemplate = mongoTemplate;
+    
+    for (MongoPersistentEntity<?> entity : mappingContext.getPersistentEntities()) {
+      checkForIndexes(entity);
+    }
   }
-
-  public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-    this.applicationContext = applicationContext;
-  }
-
+  
+  /* (non-Javadoc)
+   * @see org.springframework.context.ApplicationListener#onApplicationEvent(org.springframework.context.ApplicationEvent)
+   */
   public void onApplicationEvent(MappingContextEvent event) {
-    PersistentEntity<?> entity = event.getPersistentEntity();
-    if (entity instanceof MongoPersistentEntity) {
-      checkForIndexes((MongoPersistentEntity<?>) entity);
-    }
-  }
-
-  public void afterPropertiesSet() throws Exception {
-    for (String className : mappingContext.getInitialEntitySet()) {
-      try {
-        Class<?> clazz = Class.forName(className);
-        if (null == mappingContext.getPersistentEntity(clazz)) {
-          mappingContext.addPersistentEntity(clazz);
-        }
-      } catch (ClassNotFoundException e) {
-        throw new MappingException(e.getMessage(), e);
-      }
-    }
-  }
-
-  public MongoMappingContext getMappingContext() {
-    return mappingContext;
-  }
-
-  public void setMappingContext(MongoMappingContext mappingContext) {
-    this.mappingContext = mappingContext;
-  }
-
-  public MongoTemplate getMongoTemplate() {
-    return mongoTemplate;
-  }
-
-  public void setMongoTemplate(MongoTemplate mongoTemplate) {
-    this.mongoTemplate = mongoTemplate;
+    checkForIndexes((MongoPersistentEntity<?>) event.getPersistentEntity());
   }
 
   protected void checkForIndexes(MongoPersistentEntity<?> entity) {
