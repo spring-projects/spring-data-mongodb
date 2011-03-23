@@ -49,4 +49,4 @@ To set WriteConcern levels for WARN or higher messages, set warnOrHigherWriteCon
 * REPLICAS_SAFE
 * SAFE
 
-(http://api.mongodb.org/java/2.5-pre-/com/mongodb/WriteConcern.html#field_detail)[http://api.mongodb.org/java/2.5-pre-/com/mongodb/WriteConcern.html#field_detail]
+[http://api.mongodb.org/java/2.5-pre-/com/mongodb/WriteConcern.html#field_detail](http://api.mongodb.org/java/2.5-pre-/com/mongodb/WriteConcern.html#field_detail)
