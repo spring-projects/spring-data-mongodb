@@ -78,35 +78,7 @@
         <groupId>com.springsource.bundlor</groupId>
         <artifactId>com.springsource.bundlor.maven</artifactId>
       </plugin>
-
-      <plugin>
-        <groupId>com.mysema.maven</groupId>
-        <artifactId>maven-apt-plugin</artifactId>
-        <version>1.0</version>
-        <executions>
-          <execution>
-            <phase>generate-test-sources</phase>
-            <goals>
-              <goal>test-process</goal>
-            </goals>
-            <configuration>
-              <outputDirectory>target/generated-sources/test-annotations</outputDirectory>
-              <processor>org.springframework.data.document.mongodb.repository.MongoAnnotationProcessor</processor>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
     </plugins>
   </build>
 
-  <repositories>
-    <repository>
-      <id>querydsl</id>
-      <name>Mysema QueryDsl</name>
-      <url>http://source.mysema.com/maven2/releases</url>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-    </repository>
-  </repositories>
 </project>

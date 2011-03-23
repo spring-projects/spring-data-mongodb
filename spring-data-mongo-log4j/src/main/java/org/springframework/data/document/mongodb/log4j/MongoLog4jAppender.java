@@ -136,7 +136,9 @@ public class MongoLog4jAppender extends AppenderSkeleton {
     dbo.put(APP_ID, applicationId);
     dbo.put(NAME, event.getLogger().getName());
     dbo.put(LEVEL, event.getLevel().toString());
-    dbo.put(TIMESTAMP, String.format("%s", event.getTimeStamp()));
+    Calendar tstamp = Calendar.getInstance();
+    tstamp.setTimeInMillis(event.getTimeStamp());
+    dbo.put(TIMESTAMP, tstamp.getTime());
 
     // Copy properties into document
     Map<Object, Object> props = event.getProperties();
