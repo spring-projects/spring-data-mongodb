@@ -127,13 +127,6 @@ This controls whether or not to run entities through the BeanFactory's autowirin
           </xsd:documentation>
         </xsd:annotation>
       </xsd:attribute>
-      <xsd:attribute name="mapping-config-builder-ref" type="mappingConfigBuilderRef" use="optional">
-        <xsd:annotation>
-          <xsd:documentation source="org.springframework.data.mapping.model.MappingConfigurationBuilder">
-            The reference to a MappingConfigurationBuilder. Will default to 'mappingConfigBuilder'.
-          </xsd:documentation>
-        </xsd:annotation>
-      </xsd:attribute>
       <xsd:attribute name="mapping-context-ref" type="mappingContextRef" use="optional">
         <xsd:annotation>
           <xsd:documentation source="org.springframework.data.mapping.model.MappingContext">
@@ -166,17 +159,6 @@ The name of the Mongo object that determines what server to monitor. (by default
       </xsd:attribute>
     </xsd:complexType>
   </xsd:element>
-
-  <xsd:simpleType name="mappingConfigBuilderRef">
-    <xsd:annotation>
-      <xsd:appinfo>
-        <tool:annotation kind="ref">
-          <tool:assignable-to type="org.springframework.data.mapping.model.MappingConfigurationBuilder"/>
-        </tool:annotation>
-      </xsd:appinfo>
-    </xsd:annotation>
-    <xsd:union memberTypes="xsd:string"/>
-  </xsd:simpleType>
 
   <xsd:simpleType name="mappingContextRef">
     <xsd:annotation>

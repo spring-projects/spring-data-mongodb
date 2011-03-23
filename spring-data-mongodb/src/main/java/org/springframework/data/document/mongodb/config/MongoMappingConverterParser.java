@@ -34,7 +34,6 @@ import org.springframework.data.annotation.Persistent;
 import org.springframework.data.document.mongodb.convert.MappingMongoConverter;
 import org.springframework.data.document.mongodb.mapping.Document;
 import org.springframework.data.document.mongodb.mapping.MongoPersistentEntityIndexCreator;
-import org.springframework.data.document.mongodb.mapping.MongoMappingConfigurationBuilder;
 import org.springframework.data.document.mongodb.mapping.MongoMappingContext;
 import org.springframework.util.StringUtils;
 import org.w3c.dom.Element;
@@ -45,10 +44,8 @@ import org.w3c.dom.Element;
  */
 public class MongoMappingConverterParser extends AbstractBeanDefinitionParser {
 
-  private static final String CONFIGURATION_BUILDER = "mappingConfigurationBuilder";
   private static final String MAPPING_CONTEXT = "mappingContext";
   private static final String MAPPING_CONFIGURATION_HELPER = "mappingConfigurationHelper";
-  private static final String CONFIGURATION_LISTENER = "mappingConfigurationListener";
   private static final String TEMPLATE = "mongoTemplate";
   private static final String BASE_PACKAGE = "base-package";
 
@@ -61,15 +58,8 @@ public class MongoMappingConverterParser extends AbstractBeanDefinitionParser {
   protected AbstractBeanDefinition parseInternal(Element element, ParserContext parserContext) {
     BeanDefinitionRegistry registry = parserContext.getRegistry();
 
-    String builderRef = element.getAttribute("mapping-config-builder-ref");
-    if (null == builderRef || "".equals(builderRef)) {
-      BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(MongoMappingConfigurationBuilder.class);
-      registry.registerBeanDefinition(CONFIGURATION_BUILDER, builder.getBeanDefinition());
-      builderRef = CONFIGURATION_BUILDER;
-    }
-
     String ctxRef = element.getAttribute("mapping-context-ref");
-    if (null == ctxRef || "".equals(ctxRef)) {
+    if (!StringUtils.hasText(ctxRef)) {
       BeanDefinitionBuilder mappingContextBuilder = BeanDefinitionBuilder.genericBeanDefinition(MongoMappingContext.class);
       
       Set<String> classesToAdd = getInititalEntityClasses(element, mappingContextBuilder);
@@ -77,7 +67,6 @@ public class MongoMappingConverterParser extends AbstractBeanDefinitionParser {
         mappingContextBuilder.addPropertyValue("initialEntitySet", classesToAdd);
       }
       
-      mappingContextBuilder.addPropertyReference("mappingConfigurationBuilder", builderRef);
       registry.registerBeanDefinition(MAPPING_CONTEXT, mappingContextBuilder.getBeanDefinition());
       ctxRef = MAPPING_CONTEXT;
     }
@@ -86,27 +75,21 @@ public class MongoMappingConverterParser extends AbstractBeanDefinitionParser {
     converterBuilder.addPropertyReference("mappingContext", ctxRef);
 
     String autowire = element.getAttribute("autowire");
-    if (null != autowire || !"".equals(autowire)) {
+    if (StringUtils.hasText(autowire)) {
       converterBuilder.addPropertyValue("autowirePersistentBeans", Boolean.parseBoolean(autowire));
     }
 
-    // Need a reference to a MongoTemplate
+    // Need a reference to a Mongo instance
     String mongoRef = element.getAttribute("mongo-ref");
-    if (null == mongoRef || "".equals(mongoRef)) {
-      mongoRef = "mongo";
-    }
-    converterBuilder.addPropertyReference("mongo", mongoRef);
+    converterBuilder.addPropertyReference("mongo", StringUtils.hasText(mongoRef) ? mongoRef : "mongo");
 
     try {
       registry.getBeanDefinition(MAPPING_CONFIGURATION_HELPER);
     } catch (NoSuchBeanDefinitionException ignored) {
       String templateRef = element.getAttribute("mongo-template-ref");
-      if (null == templateRef || "".equals(templateRef)) {
-        templateRef = TEMPLATE;
-      }
       BeanDefinitionBuilder mappingConfigHelperBuilder = BeanDefinitionBuilder.genericBeanDefinition(MongoPersistentEntityIndexCreator.class);
       mappingConfigHelperBuilder.addConstructorArgValue(new RuntimeBeanReference(ctxRef));
-      mappingConfigHelperBuilder.addConstructorArgValue(new RuntimeBeanReference(templateRef));
+      mappingConfigHelperBuilder.addConstructorArgValue(new RuntimeBeanReference(StringUtils.hasText(templateRef) ? templateRef : TEMPLATE));
       registry.registerBeanDefinition(MAPPING_CONFIGURATION_HELPER, mappingConfigHelperBuilder.getBeanDefinition());
     }
 
