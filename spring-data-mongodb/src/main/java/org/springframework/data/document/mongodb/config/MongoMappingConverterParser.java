@@ -39,14 +39,15 @@ import org.w3c.dom.Element;
  */
 public class MongoMappingConverterParser extends AbstractBeanDefinitionParser {
 
-  private static final String MAPPING_CONTEXT = "mappingContext";
+  static final String MAPPING_CONTEXT = "mappingContext";
   private static final String MAPPING_CONFIGURATION_HELPER = "mappingConfigurationHelper";
   private static final String TEMPLATE = "mongoTemplate";
   private static final String BASE_PACKAGE = "base-package";
 
   @Override
   protected String resolveId(Element element, AbstractBeanDefinition definition, ParserContext parserContext) throws BeanDefinitionStoreException {
-    return "mappingConverter";
+    String id = super.resolveId(element, definition, parserContext);
+    return StringUtils.hasText(id) ? id : "mappingConverter";
   }
 
   @Override

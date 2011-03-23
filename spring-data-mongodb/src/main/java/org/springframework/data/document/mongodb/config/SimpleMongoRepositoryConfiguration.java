@@ -36,6 +36,8 @@ public class SimpleMongoRepositoryConfiguration extends RepositoryConfig<SimpleM
 
   private static final String MONGO_TEMPLATE_REF = "mongo-template-ref";
   private static final String DEFAULT_MONGO_TEMPLATE_REF = "mongoTemplate";
+  
+  private static final String MAPPING_CONTEXT_REF = "mongo-mapping-context-ref";
 
 
   /**
@@ -60,6 +62,12 @@ public class SimpleMongoRepositoryConfiguration extends RepositoryConfig<SimpleM
     String templateRef = getSource().getAttribute(MONGO_TEMPLATE_REF);
     return StringUtils.hasText(templateRef) ? templateRef
         : DEFAULT_MONGO_TEMPLATE_REF;
+  }
+  
+  public String getMappingContextRef() {
+    
+    String attribute = getSource().getAttribute(MAPPING_CONTEXT_REF);
+    return StringUtils.hasText(attribute) ? attribute : null;
   }
 
 
@@ -113,6 +121,8 @@ public class SimpleMongoRepositoryConfiguration extends RepositoryConfig<SimpleM
       SingleRepositoryConfigInformation<SimpleMongoRepositoryConfiguration> {
 
     String getMongoTemplateRef();
+    
+    String getMappingContextRef();
   }
 
   /**
@@ -149,6 +159,13 @@ public class SimpleMongoRepositoryConfiguration extends RepositoryConfig<SimpleM
     public String getMongoTemplateRef() {
 
       return getAttribute(MONGO_TEMPLATE_REF);
+    }
+    
+    /* (non-Javadoc)
+     * @see org.springframework.data.document.mongodb.config.SimpleMongoRepositoryConfiguration.MongoRepositoryConfiguration#getMappingContextRef()
+     */
+    public String getMappingContextRef() {
+      return getAttribute(MAPPING_CONTEXT_REF);
     }
   }
 
@@ -187,6 +204,13 @@ public class SimpleMongoRepositoryConfiguration extends RepositoryConfig<SimpleM
     public String getMongoTemplateRef() {
 
       return getParent().getMongoTemplateRef();
+    }
+    
+    /* (non-Javadoc)
+     * @see org.springframework.data.document.mongodb.config.SimpleMongoRepositoryConfiguration.MongoRepositoryConfiguration#getMappingContextRef()
+     */
+    public String getMappingContextRef() {
+      return getParent().getMappingContextRef();
     }
   }
 }
