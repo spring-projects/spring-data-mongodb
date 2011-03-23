@@ -24,7 +24,8 @@ import org.springframework.data.mapping.model.PersistentEntity;
  * @author Jon Brisbin <jbrisbin@vmware.com>
  */
 public class MongoMappingEvent<T> extends ApplicationEvent {
-
+  
+  private static final long serialVersionUID = 1L;
   private final EventType type;
   private final PersistentEntity<T> entity;
 
@@ -43,6 +44,7 @@ public class MongoMappingEvent<T> extends ApplicationEvent {
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public T getSource() {
     return (T) super.getSource();
   }

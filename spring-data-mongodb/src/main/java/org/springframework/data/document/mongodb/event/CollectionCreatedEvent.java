@@ -24,6 +24,7 @@ import org.springframework.context.ApplicationEvent;
  */
 public class CollectionCreatedEvent extends ApplicationEvent {
 
+  private static final long serialVersionUID = -7258679124450904006L;
   private final DBObject options;
 
   public CollectionCreatedEvent(String collection, DBObject options) {

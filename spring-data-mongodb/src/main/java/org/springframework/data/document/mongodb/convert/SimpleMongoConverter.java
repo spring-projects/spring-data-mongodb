@@ -51,6 +51,7 @@ import org.springframework.util.comparator.CompoundComparator;
 public class SimpleMongoConverter implements MongoConverter {
 
   private static final Log LOG = LogFactory.getLog(SimpleMongoConverter.class);
+  @SuppressWarnings("unchecked")
   private static final List<Class<?>> MONGO_TYPES = Arrays.asList(Number.class, Date.class, String.class, DBObject.class);
   private static final Set<String> SIMPLE_TYPES;
 

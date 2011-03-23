@@ -24,6 +24,7 @@ import org.springframework.context.ApplicationEvent;
  */
 public class SaveEvent extends ApplicationEvent {
 
+  private static final long serialVersionUID = -5583681211168904206L;
   private final String collection;
 
   public SaveEvent(String collection, DBObject source) {

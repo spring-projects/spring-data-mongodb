@@ -24,6 +24,7 @@ import org.springframework.context.ApplicationEvent;
  */
 public class InsertEvent extends ApplicationEvent {
 
+  private static final long serialVersionUID = 8713413423411L;
   private final String collection;
 
   public InsertEvent(String collection, DBObject dbo) {

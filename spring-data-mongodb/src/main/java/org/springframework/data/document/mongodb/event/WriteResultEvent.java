@@ -24,6 +24,8 @@ import org.springframework.context.ApplicationEvent;
  */
 public class WriteResultEvent extends ApplicationEvent {
 
+  private static final long serialVersionUID = 4460770341573211038L;
+
   public WriteResultEvent(WriteResult result) {
     super(result);
   }
@@ -31,5 +33,4 @@ public class WriteResultEvent extends ApplicationEvent {
   public WriteResult getWriteResult() {
     return (WriteResult) source;
   }
-
 }

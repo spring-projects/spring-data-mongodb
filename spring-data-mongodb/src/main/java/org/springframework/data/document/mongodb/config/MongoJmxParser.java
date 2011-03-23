@@ -57,7 +57,7 @@ public class MongoJmxParser implements BeanDefinitionParser {
 
   }
 
-  protected void createBeanDefEntry(Class clazz, CompositeComponentDefinition compositeDef, String mongoRefName, Object eleSource, ParserContext parserContext) {
+  protected void createBeanDefEntry(Class<?> clazz, CompositeComponentDefinition compositeDef, String mongoRefName, Object eleSource, ParserContext parserContext) {
     BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(clazz);
     builder.getRawBeanDefinition().setSource(eleSource);
     builder.addConstructorArgReference(mongoRefName);
