@@ -10,6 +10,7 @@
   <modules>
     <module>spring-data-document-parent</module>
     <module>spring-data-document-core</module>
+    <module>spring-data-mongo-log4j</module>
     <module>spring-data-mongodb</module>
     <module>spring-data-mongodb-cross-store</module>
     <module>spring-data-couchdb</module>
@@ -50,6 +51,17 @@
         <role>Developer</role>
       </roles>
       <timezone>+1</timezone>
+    </developer>
+    <developer>
+      <id>jbrisbin</id>
+      <name>Jon Brisbin</name>
+      <email>jbrisbin at vmware.com</email>
+      <organization>SpringSource</organization>
+      <organizationUrl>http://www.springsource.com</organizationUrl>
+      <roles>
+        <role>Developer</role>
+      </roles>
+      <timezone>-6</timezone>
     </developer>
   </developers>
 
