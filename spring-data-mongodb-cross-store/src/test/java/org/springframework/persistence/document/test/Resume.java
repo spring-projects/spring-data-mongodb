@@ -1,8 +1,6 @@
 package org.springframework.persistence.document.test;
 
-import org.springframework.persistence.document.DocumentEntity;
-
-@DocumentEntity
+//@DocumentEntity
 public class Resume {
 
   private String education = "";

@@ -12,40 +12,8 @@
   <context:spring-configured/>
 
   <context:component-scan base-package="org.springframework.persistence.test">
-    <context:exclude-filter expression=".*_Roo_.*" type="regex"/>
     <context:exclude-filter expression="org.springframework.stereotype.Controller" type="annotation"/>
   </context:component-scan>
-
-  <!--  Store spanning config -->
-
-  <bean class="org.springframework.persistence.StoreSpanning"
-        factory-method="aspectOf">
-    <property name="mappingValidator">
-      <bean class="org.springframework.persistence.support.SimpleMappingValidator"/>
-    </property>
-  </bean>
-
-  <bean id="entityOperationsLocator" class="org.springframework.persistence.ChainingEntityOperationsLocator"/>
-
-  <bean class="org.springframework.persistence.ChainingForeignStoreKeyManagerLocator"/>
-
-  <bean class="org.springframework.persistence.PresentKeyForeignStoreKeyManager" autowire="constructor"/>
-
-  <bean class="org.springframework.persistence.GeneratedFieldForeignStoreKeyManager"/>
-
-  <bean class="org.springframework.persistence.document.MongoEntityOperations">
-    <property name="order" value="5"/>
-    <property name="entityInstantiator">
-      <bean class="org.springframework.persistence.support.ChangeSetConstructorEntityInstantiator"/>
-    </property>
-    <property name="changeSetPersister" ref="mongoChangeSetPersister"/>
-  </bean>
-
-  <bean class="org.springframework.persistence.EntityManagerJpaEntityOperations"/>
-
-  <bean class="org.springframework.persistence.support.ChangeSetForeignStoreKeyManager">
-    <property name="fieldDelimiter" value="#"/>
-  </bean>
 
   <!--  Mongo config -->
   <bean id="mongo" class="org.springframework.data.document.mongodb.MongoFactoryBean">
@@ -61,19 +29,14 @@
   <bean class="org.springframework.data.document.mongodb.MongoExceptionTranslator"/>
 
   <!--  Mongo aspect config -->
-  <bean class="org.springframework.persistence.document.MongoDocumentBacking"
+  <bean class="org.springframework.data.persistence.document.mongo.MongoDocumentBacking"
         factory-method="aspectOf">
-    <property name="changeSetConfiguration" ref="mongoChangeSetConfiguration"/>
-  </bean>
-  <bean id="mongoChangeSetPersister" class="org.springframework.persistence.document.MongoChangeSetPersister"/>
-  <bean id="mongoChangeSetSynchronizer"
-        class="org.springframework.persistence.support.SimpleReflectiveChangeSetSynchronizer"/>
-  <bean id="mongoChangeSetConfiguration" class="org.springframework.persistence.support.ChangeSetConfiguration">
     <property name="changeSetPersister" ref="mongoChangeSetPersister"/>
-    <property name="changeSetManager" ref="mongoChangeSetSynchronizer"/>
   </bean>
-  <!--  Needed for ChangeSet persistence -->
-  <bean id="conversionService" class="org.springframework.context.support.ConversionServiceFactoryBean"/>
+  <bean id="mongoChangeSetPersister" 
+      class="org.springframework.data.persistence.document.mongo.MongoChangeSetPersister">
+    <property name="mongoTemplate" ref="mongoTemplate"/>
+  </bean>
 
   <jdbc:embedded-database id="dataSource" type="HSQL">
   </jdbc:embedded-database>

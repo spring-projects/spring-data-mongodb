@@ -3,7 +3,7 @@ package org.springframework.persistence.document.test;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
-import org.springframework.persistence.RelatedEntity;
+import org.springframework.data.document.mongodb.mapping.Document;
 
 @Entity
 public class Person {
@@ -17,8 +17,7 @@ public class Person {
 
   private java.util.Date birthDate;
 
-  //	@Document // need to decide what the annotation here should be
-  @RelatedEntity
+  @Document
   public Resume resume;
 
   public Person() {
