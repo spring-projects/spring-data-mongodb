@@ -16,6 +16,4 @@
     <constructor-arg ref="mappingConverter"/>
   </bean>
 
-  <bean class="org.springframework.data.document.mongodb.MongoExceptionTranslator"/>
-
 </beans>

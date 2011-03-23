@@ -74,6 +74,13 @@ The host to connect to a MongoDB server.  Default is localhost
             </xsd:documentation>
           </xsd:annotation>
         </xsd:attribute>
+        <xsd:attribute name="mongo-mapping-context-ref" type="mappingContextRef" default="mappingContext">
+          <xsd:annotation>
+            <xsd:documentation>
+              The reference to a MappingContext. Will pick up a bean named 'mappingContext' by default if available.
+            </xsd:documentation>
+          </xsd:annotation>
+        </xsd:attribute>
         <xsd:attributeGroup ref="repository:repository-attributes"/>
       </xsd:extension>
     </xsd:complexContent>
