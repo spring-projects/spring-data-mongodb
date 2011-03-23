@@ -34,7 +34,7 @@ An example log entry might look like:
       "applicationId" : "my.application",
       "name" : "org.springframework.data.document.mongodb.log4j.AppenderTest",
       "level" : "DEBUG",
-      "timestamp" : "1300837402444",
+      "timestamp" : ISODate("2011-03-23T16:53:46.778Z"),
       "properties" : {
         "property" : "one"
       },
