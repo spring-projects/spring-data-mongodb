@@ -569,11 +569,12 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
           }
           return Arrays.asList(items);
         }
+        
+        Class<?> toType = findTypeToBeUsed((DBObject) dbObj);
 
         // It's a complex object, have to read it in
-        if (dbo.containsField("_class")) {
-          Class<?> toType = findTypeToBeUsed((DBObject) dbObj);
-          dbo.removeField("_class");
+        if (toType != null) {
+          dbo.removeField(CUSTOM_TYPE_KEY);
           o = read(toType, (DBObject) dbObj);
         } else {
           o = read(mappingContext.getPersistentEntity(prop.getTypeInformation()), (DBObject) dbObj);
@@ -593,7 +594,11 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
    */
   protected Class<?> findTypeToBeUsed(DBObject dbObject) {
     Object classToBeUsed = dbObject.get(CUSTOM_TYPE_KEY);
-
+    
+    if (classToBeUsed == null) {
+      return null;
+    }
+    
     try {
       return Class.forName(classToBeUsed.toString());
     } catch (ClassNotFoundException e) {
