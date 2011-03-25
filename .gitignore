@@ -9,3 +9,4 @@ target
 .project
 .classpath
 src/ant/.ant-targets-upload-dist.xml
+atlassian-ide-plugin.xml

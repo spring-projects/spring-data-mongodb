@@ -24,14 +24,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.document.mongodb.MongoTemplate;
-import org.springframework.data.document.mongodb.convert.MappingMongoConverter;
 import org.springframework.data.document.mongodb.query.Criteria;
 import org.springframework.data.document.mongodb.query.Query;
 import org.springframework.test.context.ContextConfiguration;
@@ -49,26 +46,7 @@ public class MappingTests {
   @Autowired
   MongoTemplate template;
   @Autowired
-  MappingMongoConverter mappingConverter;
-
-  @Test
-  public void setUp() {
-    template.dropCollection("person");
-    template.dropCollection("account");
-  }
-
-  @Test
-  public void testConvertSimpleProperty() {
-    PersonPojo p = new PersonPojo(1234, "Person", "Pojo");
-    DBObject dbo = new BasicDBObject();
-    mappingConverter.write(p, dbo);
-
-    assertEquals(dbo.get("ssn"), 1234);
-
-    PersonPojo p2 = mappingConverter.read(PersonPojo.class, dbo);
-
-    assertEquals(p.getFirstName(), p2.getFirstName());
-  }
+  MongoMappingContext mappingContext;
 
   @Test
   public void testPersonPojo() {
@@ -76,7 +54,7 @@ public class MappingTests {
     template.insert(p);
     assertNotNull(p.getId());
 
-    List<PersonPojo> result = template.find(new Query(Criteria.where("_id").is(p.getId())), PersonPojo.class);
+    List<PersonPojo> result = template.find(new Query(Criteria.where("ssn").is(12345)), PersonPojo.class);
     assertThat(result.size(), is(1));
     assertThat(result.get(0).getSsn(), is(12345));
   }
@@ -141,14 +119,29 @@ public class MappingTests {
     template.save("person", p);
 
     assertNotNull(p.getId());
-  }
 
-  @Test
-  public void testReadEntity() {
     List<Person> result = template.find(new Query(Criteria.where("ssn").is(123456789)), Person.class);
     assertThat(result.size(), is(1));
     assertThat(result.get(0).getAddress().getCountry(), is("USA"));
     assertThat(result.get(0).getAccounts(), notNullValue());
+  }
+
+  @Test
+  public void testUniqueIndex() {
+    Address addr = new Address();
+    addr.setLines(new String[]{"1234 W. 1st Street", "Apt. 12"});
+    addr.setCity("Anytown");
+    addr.setPostalCode(12345);
+    addr.setCountry("USA");
+
+    Person p1 = new Person(1234567890, "John", "Doe", 37, addr);
+    Person p2 = new Person(1234567890, "John", "Doe", 37, addr);
+
+    template.insert("person", p1);
+    template.insert("person", p2);
+
+    List<Person> result = template.find(new Query(Criteria.where("ssn").is(1234567890)), Person.class);
+    assertThat(result.size(), is(1));
   }
 
 }

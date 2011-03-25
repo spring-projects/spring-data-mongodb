@@ -18,8 +18,6 @@ package org.springframework.data.document.mongodb.mapping;
 
 import java.lang.reflect.Field;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -46,40 +44,38 @@ import org.springframework.util.Assert;
 /**
  * Component that inspects {@link MongoPersistentEntity} instances contained in the given {@link MongoMappingContext}
  * for indexing metadata and ensures the indexes to be available.
- * 
+ *
  * @author Jon Brisbin <jbrisbin@vmware.com>
  * @author Oliver Gierke
  */
-public class MongoPersistentEntityIndexCreator implements ApplicationListener<MappingContextEvent>{
+public class MongoPersistentEntityIndexCreator implements ApplicationListener<MappingContextEvent> {
 
   private static final Logger log = LoggerFactory.getLogger(MongoPersistentEntityIndexCreator.class);
 
-  private Map<String, CompoundIndex> compoundIndexes = new HashMap<String, CompoundIndex>();
-  private Map<String, Indexed> fieldIndexes = new HashMap<String, Indexed>();
   private Set<Class<?>> classesSeen = Collections.newSetFromMap(new ConcurrentHashMap<Class<?>, Boolean>());
- 
+
   private final MongoTemplate mongoTemplate;
 
   public MongoPersistentEntityIndexCreator(MongoMappingContext mappingContext, MongoTemplate mongoTemplate) {
-    
+
     Assert.notNull(mongoTemplate);
     Assert.notNull(mappingContext);
     this.mongoTemplate = mongoTemplate;
-    
+
     for (MongoPersistentEntity<?> entity : mappingContext.getPersistentEntities()) {
       checkForIndexes(entity);
     }
   }
-  
+
   /* (non-Javadoc)
-   * @see org.springframework.context.ApplicationListener#onApplicationEvent(org.springframework.context.ApplicationEvent)
-   */
+  * @see org.springframework.context.ApplicationListener#onApplicationEvent(org.springframework.context.ApplicationEvent)
+  */
   public void onApplicationEvent(MappingContextEvent event) {
     checkForIndexes((MongoPersistentEntity<?>) event.getPersistentEntity());
   }
 
   protected void checkForIndexes(MongoPersistentEntity<?> entity) {
-    Class<?> type = entity.getType();
+    final Class<?> type = entity.getType();
     if (!classesSeen.contains(type)) {
       if (log.isDebugEnabled()) {
         log.debug("Analyzing class " + type + " for index information.");
@@ -102,12 +98,9 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
           if ("".equals(indexColl)) {
             indexColl = type.getSimpleName().toLowerCase();
           }
-          if (!compoundIndexes.containsKey(indexColl)) {
-            ensureIndex(indexColl, index.name(), index.def(), index.direction(), index.unique(), index.dropDups(), index.sparse());
-            if (log.isDebugEnabled()) {
-              log.debug("Created compound index " + index);
-            }
-            compoundIndexes.put(indexColl, index);
+          ensureIndex(indexColl, index.name(), index.def(), index.direction(), index.unique(), index.dropDups(), index.sparse());
+          if (log.isDebugEnabled()) {
+            log.debug("Created compound index " + index);
           }
         }
       }
@@ -117,16 +110,17 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
           Field field = persistentProperty.getField();
           if (field.isAnnotationPresent(Indexed.class)) {
             Indexed index = field.getAnnotation(Indexed.class);
+            String name = index.name();
+            if ("".equals(name)) {
+              name = field.getName();
+            }
             String collection = index.collection();
             if ("".equals(collection)) {
-              collection = field.getName();
+              collection = type.getSimpleName().toLowerCase();
             }
-            if (!fieldIndexes.containsKey(collection)) {
-              ensureIndex(collection, index.name(), null, index.direction(), index.unique(), index.dropDups(), index.sparse());
-              if (log.isDebugEnabled()) {
-                log.debug("Created property index " + index);
-              }
-              fieldIndexes.put(collection, index);
+            ensureIndex(collection, name, null, index.direction(), index.unique(), index.dropDups(), index.sparse());
+            if (log.isDebugEnabled()) {
+              log.debug("Created property index " + index);
             }
           }
         }
@@ -134,6 +128,7 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 
       classesSeen.add(type);
     }
+
 
   }
 
@@ -154,9 +149,7 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
           defObj.put(name, (direction == IndexDirection.ASCENDING ? 1 : -1));
         }
         DBObject opts = new BasicDBObject();
-        if (!"".equals(name)) {
-          opts.put("name", name);
-        }
+        //opts.put("name", name + "_idx");
         opts.put("dropDups", dropDups);
         opts.put("sparse", sparse);
         opts.put("unique", unique);

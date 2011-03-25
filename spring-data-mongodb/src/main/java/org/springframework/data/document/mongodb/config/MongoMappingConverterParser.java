@@ -45,7 +45,7 @@ import org.w3c.dom.Element;
 public class MongoMappingConverterParser extends AbstractBeanDefinitionParser {
 
   static final String MAPPING_CONTEXT = "mappingContext";
-  private static final String MAPPING_CONFIGURATION_HELPER = "mappingConfigurationHelper";
+  private static final String INDEX_HELPER = "indexCreationHelper";
   private static final String TEMPLATE = "mongoTemplate";
   private static final String BASE_PACKAGE = "base-package";
 
@@ -85,13 +85,13 @@ public class MongoMappingConverterParser extends AbstractBeanDefinitionParser {
     converterBuilder.addPropertyReference("mongo", StringUtils.hasText(mongoRef) ? mongoRef : "mongo");
 
     try {
-      registry.getBeanDefinition(MAPPING_CONFIGURATION_HELPER);
+      registry.getBeanDefinition(INDEX_HELPER);
     } catch (NoSuchBeanDefinitionException ignored) {
       String templateRef = element.getAttribute("mongo-template-ref");
-      BeanDefinitionBuilder mappingConfigHelperBuilder = BeanDefinitionBuilder.genericBeanDefinition(MongoPersistentEntityIndexCreator.class);
-      mappingConfigHelperBuilder.addConstructorArgValue(new RuntimeBeanReference(ctxRef));
-      mappingConfigHelperBuilder.addConstructorArgValue(new RuntimeBeanReference(StringUtils.hasText(templateRef) ? templateRef : TEMPLATE));
-      registry.registerBeanDefinition(MAPPING_CONFIGURATION_HELPER, mappingConfigHelperBuilder.getBeanDefinition());
+      BeanDefinitionBuilder indexHelperBuilder = BeanDefinitionBuilder.genericBeanDefinition(MongoPersistentEntityIndexCreator.class);
+      indexHelperBuilder.addConstructorArgValue(new RuntimeBeanReference(ctxRef));
+      indexHelperBuilder.addConstructorArgValue(new RuntimeBeanReference(StringUtils.hasText(templateRef) ? templateRef : TEMPLATE));
+      registry.registerBeanDefinition(INDEX_HELPER, indexHelperBuilder.getBeanDefinition());
     }
 
     return converterBuilder.getBeanDefinition();

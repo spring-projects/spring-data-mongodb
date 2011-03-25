@@ -35,7 +35,7 @@ import org.springframework.data.util.TypeInformation;
  * @author Jon Brisbin <jbrisbin@vmware.com>
  */
 public class MongoMappingContext extends BasicMappingContext {
-  
+
   public MongoMappingContext() {
     augmentSimpleTypes();
   }
@@ -67,7 +67,7 @@ public class MongoMappingContext extends BasicMappingContext {
 
   @Override
   public BasicPersistentProperty createPersistentProperty(Field field, PropertyDescriptor descriptor,
-      TypeInformation information) throws MappingConfigurationException {
+                                                          TypeInformation information) throws MappingConfigurationException {
     return new MongoPersistentProperty(field, descriptor, information);
   }
 
