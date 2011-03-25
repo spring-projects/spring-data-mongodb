@@ -18,8 +18,7 @@ package org.springframework.data.document.mongodb.repository;
 import java.util.Set;
 
 import org.bson.types.ObjectId;
-
-import com.mysema.query.annotations.QueryEntity;
+import org.springframework.data.document.mongodb.mapping.Document;
 
 
 /**
@@ -27,7 +26,7 @@ import com.mysema.query.annotations.QueryEntity;
  *
  * @author Oliver Gierke
  */
-@QueryEntity
+@Document
 public class Person {
 
   private String id;
