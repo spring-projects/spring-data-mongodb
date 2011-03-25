@@ -90,5 +90,9 @@ public class Index implements IndexDefinition {
     }
     return dbo;
   }
-
+  
+  @Override
+  public String toString() {
+    return String.format("Index: %s - Options: %s", getIndexObject(), getIndexOptions());
+  }
 }
