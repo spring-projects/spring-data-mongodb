@@ -6,7 +6,6 @@ import com.mongodb.DBObject;
 import com.mongodb.MongoException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.document.mongodb.CollectionCallback;
@@ -43,27 +42,32 @@ public class MongoChangeSetPersister implements ChangeSetPersister<Object> {
     final DBObject dbk = new BasicDBObject();
     dbk.put(ENTITY_ID, id);
     dbk.put(ENTITY_CLASS, entityClass.getName());
+    if (log.isDebugEnabled()) {
+      log.debug("Loading MongoDB data for " + dbk);
+    }
     mongoTemplate.execute(collName, new CollectionCallback<Object>() {
       @Override
       public Object doInCollection(DBCollection collection)
           throws MongoException, DataAccessException {
         for (DBObject dbo : collection.find(dbk)) {
           String key = (String) dbo.get(ENTITY_FIELD_NAME);
-          String className = (String) dbo.get(ENTITY_FIELD_CLASS);
-          if (className == null) {
-            throw new DataIntegrityViolationException(
-                "Unble to convert property " + key
-                    + ": Invalid metadata, " + ENTITY_FIELD_CLASS + " not available");
+          if (log.isDebugEnabled()) {
+            log.debug("Processing key: " + key);
           }
-          Class<?> clazz = null;
-          try {
-            clazz = Class.forName(className);
-          } catch (ClassNotFoundException e) {
-            throw new DataIntegrityViolationException(
-                "Unble to convert property " + key + " of type " + className, e);
+          if (!changeSet.getValues().containsKey(key)) {
+            String className = (String) dbo.get(ENTITY_FIELD_CLASS);
+            if (className == null) {
+              throw new DataIntegrityViolationException(
+                  "Unble to convert property " + key
+                      + ": Invalid metadata, " + ENTITY_FIELD_CLASS + " not available");
+            }
+            Class<?> clazz = ClassUtils.resolveClassName(className, ClassUtils.getDefaultClassLoader());
+            Object value = mongoTemplate.getConverter().read(clazz, dbo);
+            if (log.isDebugEnabled()) {
+              log.debug("Adding to ChangeSet: " + key);
+            }
+            changeSet.set(key, value);
           }
-          Object value = mongoTemplate.getConverter().read(clazz, dbo);
-          changeSet.set(key, value);
         }
         return null;
       }
