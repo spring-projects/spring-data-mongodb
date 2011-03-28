@@ -1,5 +1,7 @@
 package org.springframework.data.persistence.document.mongo;
 
+import javax.persistence.EntityManagerFactory;
+
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
@@ -7,6 +9,7 @@ import com.mongodb.MongoException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.dao.DataAccessException;
+import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.document.mongodb.CollectionCallback;
 import org.springframework.data.document.mongodb.MongoTemplate;
@@ -29,14 +32,27 @@ public class MongoChangeSetPersister implements ChangeSetPersister<Object> {
 
   private MongoTemplate mongoTemplate;
 
+  private EntityManagerFactory entityManagerFactory;
+
   public void setMongoTemplate(MongoTemplate mongoTemplate) {
     this.mongoTemplate = mongoTemplate;
   }
 
+  public void setEntityManagerFactory(EntityManagerFactory entityManagerFactory) {
+    this.entityManagerFactory = entityManagerFactory;
+  }
+
+
   @Override
   public void getPersistentState(Class<? extends ChangeSetBacked> entityClass,
-      Object id, final ChangeSet changeSet) throws DataAccessException,
-      NotFoundException {
+      Object id, final ChangeSet changeSet) 
+      throws DataAccessException, NotFoundException {
+    
+    if (id == null) {
+      log.debug("Unable to load MongoDB data for null id");
+      return;
+    }
+    
     String collName = getCollectionNameForEntity(entityClass);
 
     final DBObject dbk = new BasicDBObject();
@@ -75,26 +91,20 @@ public class MongoChangeSetPersister implements ChangeSetPersister<Object> {
   }
 
   @Override
-  public Object getPersistentId(Class<? extends ChangeSetBacked> entityClass,
-      ChangeSet cs) throws DataAccessException {
-    log.debug("getPersistentId called on " + entityClass);
-    if (cs == null) {
-      return null;
+  public Object getPersistentId(ChangeSetBacked entity, ChangeSet cs) throws DataAccessException {
+    log.debug("getPersistentId called on " + entity);
+    if (entityManagerFactory == null) {
+      throw new DataAccessResourceFailureException("EntityManagerFactory cannot be null");
     }
-    if (cs.getValues().get(ChangeSetPersister.ID_KEY) == null) {
-      // Not yet persistent
-      return null;
-    }
-    Object o = cs.getValues().get(ChangeSetPersister.ID_KEY);
+    Object o = entityManagerFactory.getPersistenceUnitUtil().getIdentifier(entity);
     return o;
   }
 
   @Override
-  public Object persistState(Class<? extends ChangeSetBacked> entityClass,
-      ChangeSet cs) throws DataAccessException {
+  public Object persistState(ChangeSetBacked entity, ChangeSet cs) throws DataAccessException {
     log.debug("Flush: changeset: " + cs.getValues().keySet());
 
-    String collName = getCollectionNameForEntity(entityClass);
+    String collName = getCollectionNameForEntity(entity.getClass());
     DBCollection dbc = mongoTemplate.getCollection(collName);
     if (dbc == null) {
       dbc = mongoTemplate.createCollection(collName);
@@ -103,8 +113,8 @@ public class MongoChangeSetPersister implements ChangeSetPersister<Object> {
       if (key != null && !key.startsWith("_") && !key.equals(ChangeSetPersister.ID_KEY)) {
         Object value = cs.getValues().get(key);
         final DBObject dbQuery = new BasicDBObject();
-        dbQuery.put(ENTITY_ID, cs.getValues().get(ChangeSetPersister.ID_KEY));
-        dbQuery.put(ENTITY_CLASS, entityClass.getName());
+        dbQuery.put(ENTITY_ID, getPersistentId(entity, cs));
+        dbQuery.put(ENTITY_CLASS, entity.getClass().getName());
         dbQuery.put(ENTITY_FIELD_NAME, key);
         dbQuery.put(ENTITY_FIELD_CLASS, value.getClass().getName());
         DBObject dbId = mongoTemplate.execute(collName,
@@ -134,8 +144,7 @@ public class MongoChangeSetPersister implements ChangeSetPersister<Object> {
     return 0L;
   }
 
-  private String getCollectionNameForEntity(
-      Class<? extends ChangeSetBacked> entityClass) {
+  private String getCollectionNameForEntity(Class<? extends ChangeSetBacked> entityClass) {
     return ClassUtils.getQualifiedName(entityClass);
   }
 

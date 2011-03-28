@@ -26,7 +26,7 @@ public class DocumentBackedTransactionSynchronization implements TransactionSync
 	@Override
 	public void afterCommit() {
 		log.debug("After Commit called for " + entity);
-		changeSetPersister.persistState(entity.getClass(), entity.getChangeSet());
+		changeSetPersister.persistState(entity, entity.getChangeSet());
 		changeSetTxStatus = 0;
 	}
 

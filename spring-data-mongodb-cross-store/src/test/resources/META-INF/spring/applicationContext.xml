@@ -36,6 +36,7 @@
   <bean id="mongoChangeSetPersister" 
       class="org.springframework.data.persistence.document.mongo.MongoChangeSetPersister">
     <property name="mongoTemplate" ref="mongoTemplate"/>
+    <property name="entityManagerFactory" ref="entityManagerFactory"/>
   </bean>
 
   <jdbc:embedded-database id="dataSource" type="HSQL">
