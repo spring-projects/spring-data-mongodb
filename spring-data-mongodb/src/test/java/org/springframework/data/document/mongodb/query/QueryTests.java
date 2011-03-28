@@ -30,6 +30,13 @@ public class QueryTests {
   }
 
   @Test
+  public void testSimpleQueryWithChainedCriteria() {
+    Query q = new Query(where("name").is("Thomas").and("age").lt(80));
+    String expected = "{ \"name\" : \"Thomas\" , \"age\" : { \"$lt\" : 80}}";
+    Assert.assertEquals(expected, q.getQueryObject().toString());
+  }
+
+  @Test
   public void testQueryWithNot() {
     Query q = new Query(where("name").is("Thomas")).and(where("age").not().mod(10, 0));
     String expected = "{ \"name\" : \"Thomas\" , \"age\" : { \"$not\" : { \"$mod\" : [ 10 , 0]}}}";
@@ -74,4 +81,10 @@ public class QueryTests {
     Assert.assertEquals(expected, q.getQueryObject().toString());
   }
 
+  @Test
+  public void testQueryWithElemMatch() {
+    Query q = new Query(where("openingHours").elemMatch(where("dayOfWeek").is("Monday").and("open").lte("1800")));
+    String expected = "{ \"openingHours\" : { \"$elemMatch\" : { \"dayOfWeek\" : \"Monday\" , \"open\" : { \"$lte\" : \"1800\"}}}}";
+    Assert.assertEquals(expected, q.getQueryObject().toString());
+  }
 }

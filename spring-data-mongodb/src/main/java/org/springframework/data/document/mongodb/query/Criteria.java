@@ -26,6 +26,8 @@ import org.springframework.data.document.InvalidDocumentStoreApiUsageException;
 public class Criteria implements CriteriaDefinition {
 
   private String key;
+  
+  private List<Criteria> criteriaChain;
 
   private LinkedHashMap<String, Object> criteria = new LinkedHashMap<String, Object>();
 
@@ -33,9 +35,16 @@ public class Criteria implements CriteriaDefinition {
 
 
   public Criteria(String key) {
+    this.criteriaChain = new ArrayList<Criteria>();
+    this.criteriaChain.add(this);
     this.key = key;
   }
 
+  protected Criteria(List<Criteria> criteriaChain, String key) {
+    this.criteriaChain = criteriaChain;
+    this.criteriaChain.add(this);
+    this.key = key;
+  }
 
   /**
    * Static factory method to create a Criteria using the provided key
@@ -45,6 +54,16 @@ public class Criteria implements CriteriaDefinition {
    */
   public static Criteria where(String key) {
     return new Criteria(key);
+  }
+
+  /**
+   * Static factory method to create a Criteria using the provided key
+   *
+   * @param key
+   * @return
+   */
+  public Criteria and(String key) {
+    return new Criteria(this.criteriaChain, key);
   }
 
   /**
@@ -208,6 +227,16 @@ public class Criteria implements CriteriaDefinition {
   }
 
   /**
+   * Creates a criterion using the $elemMatch operator
+   *
+   * @param t
+   * @return
+   */
+  public Criteria elemMatch(Criteria c) {
+    criteria.put("$elemMatch", c.getCriteriaObject());
+    return this;
+  }
+  /**
    * Creates an or query using the $or operator for all of the provided queries
    *
    * @param queries
@@ -224,6 +253,19 @@ public class Criteria implements CriteriaDefinition {
     * @see org.springframework.datastore.document.mongodb.query.Criteria#getCriteriaObject(java.lang.String)
     */
   public DBObject getCriteriaObject() {
+    if (this.criteriaChain.size() == 1) {
+      return criteriaChain.get(0).getSingleCriteriaObject();
+    }
+    else {
+      DBObject criteriaObject = new BasicDBObject();
+      for (Criteria c : this.criteriaChain) {
+        criteriaObject.putAll(c.getSingleCriteriaObject());
+      }
+      return criteriaObject;
+    }    
+  }
+  
+  protected DBObject getSingleCriteriaObject() {
     DBObject dbo = new BasicDBObject();
     boolean not = false;
     for (String k : this.criteria.keySet()) {
