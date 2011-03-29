@@ -24,7 +24,7 @@ import org.springframework.data.repository.support.EntityInformation;
  *
  * @author Oliver Gierke
  */
-interface MongoEntityInformation<T, ID extends Serializable> extends EntityInformation<T, ID> {
+public interface MongoEntityInformation<T, ID extends Serializable> extends EntityInformation<T, ID> {
 
   /**
    * Returns the name of the collection the entity shall be persisted to.
