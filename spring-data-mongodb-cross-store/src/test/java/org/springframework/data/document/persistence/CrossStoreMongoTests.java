@@ -64,11 +64,6 @@ public class CrossStoreMongoTests {
   public void testReadJpaToMongoEntityRelationship() {
     Person found = entityManager.find(Person.class, 1L);
     Assert.assertNotNull(found);
-
-    // TODO: This part isn't quite working yet - need to intercept the id
-    // population from JPA EM
-    found.setId(found.getId());
-
     Assert.assertEquals(Long.valueOf(1), found.getId());
     Assert.assertNotNull(found);
     Assert.assertEquals(Long.valueOf(1), found.getId());
@@ -84,11 +79,6 @@ public class CrossStoreMongoTests {
   public void testUpdatedJpaToMongoEntityRelationship() {
     Person found = entityManager.find(Person.class, 1L);
     Assert.assertNotNull(found);
-
-    // TODO: This part isn't quite working yet - need to intercept the id
-    // population from JPA EM
-    found.setId(found.getId());
-
     Assert.assertEquals(Long.valueOf(1), found.getId());
     Assert.assertNotNull(found);
     Assert.assertEquals(Long.valueOf(1), found.getId());

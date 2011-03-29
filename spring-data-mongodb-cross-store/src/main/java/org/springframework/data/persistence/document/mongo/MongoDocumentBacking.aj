@@ -76,11 +76,11 @@ public aspect MongoDocumentBacking {
         args(newVal) &&
         !set(* DocumentBacked.*);
 
-  protected pointcut entityIdSet(DocumentBacked entity, Object newVal) :
-        set(@Id * DocumentBacked+.*) &&
-        this(entity) &&
-        args(newVal) &&
-        !set(* DocumentBacked.*);
+//  protected pointcut entityIdSet(DocumentBacked entity, Object newVal) :
+//        set(@Id * DocumentBacked+.*) &&
+//        this(entity) &&
+//        args(newVal) &&
+//        !set(* DocumentBacked.*);
 
   before(DocumentBacked entity) : arbitraryUserConstructorOfChangeSetBackedObject(entity) {
     LOGGER
@@ -118,12 +118,12 @@ public aspect MongoDocumentBacking {
 
   // Flush the entity state to the persistent store
   public void DocumentBacked.flush() {
-    itdChangeSetPersister.persistState(this.getClass(), this.changeSet);
+    Object id = itdChangeSetPersister.getPersistentId(this, this.changeSet);
+    itdChangeSetPersister.persistState(this, this.changeSet);
   }
 
   public Object DocumentBacked.get_persistent_id() {
-    return itdChangeSetPersister.getPersistentId(this.getClass(),
-        this.changeSet);
+    return itdChangeSetPersister.getPersistentId(this, this.changeSet);
   }
 
   /**
@@ -160,17 +160,17 @@ public aspect MongoDocumentBacking {
     return proceed(entity, newVal);
   }
 
-  /**
-   * delegates field writes to the state accessors instance
-   */
-  Object around(DocumentBacked entity, Object newVal) : entityIdSet(entity, newVal) {
-    Field f = field(thisJoinPoint);
-    String propName = f.getName();
-    LOGGER.trace("SET @Id -> ChangeSet @Id property [" + propName
-        + "] with value=[" + newVal + "]");
-    entity.getChangeSet().set("_id", newVal);
-    return proceed(entity, newVal);
-  }
+//  /**
+//   * delegates field writes to the state accessors instance
+//   */
+//  Object around(DocumentBacked entity, Object newVal) : entityIdSet(entity, newVal) {
+//    Field f = field(thisJoinPoint);
+//    String propName = f.getName();
+//    LOGGER.trace("SET @Id -> ChangeSet @Id property [" + propName
+//        + "] with value=[" + newVal + "]");
+//    entity.getChangeSet().set("_id", newVal);
+//    return proceed(entity, newVal);
+//  }
 
   Field field(JoinPoint joinPoint) {
     FieldSignature fieldSignature = (FieldSignature) joinPoint.getSignature();
