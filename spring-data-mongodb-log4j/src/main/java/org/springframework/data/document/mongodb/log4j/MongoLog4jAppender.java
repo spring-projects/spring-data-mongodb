@@ -162,14 +162,15 @@ public class MongoLog4jAppender extends AppenderSkeleton {
     dbo.put(MESSAGE, event.getRenderedMessage());
 
     // Insert the document
+    String coll;
     if (null == collection) {
       // Use the category name
-      collection = event.getLogger().getName();
+      coll = event.getLogger().getName();
     } else {
       Calendar now = Calendar.getInstance();
-      collection = String.format(collection,
+      coll = String.format(collection,
           now.get(Calendar.YEAR),
-          now.get(Calendar.MONTH),
+          now.get(Calendar.MONTH + 1),
           now.get(Calendar.DAY_OF_MONTH),
           now.get(Calendar.HOUR_OF_DAY),
           event.getLevel().toString(),
@@ -182,7 +183,7 @@ public class MongoLog4jAppender extends AppenderSkeleton {
     } else {
       wc = infoOrLowerWriteConcern;
     }
-    db.getCollection(collection).insert(dbo, wc);
+    db.getCollection(coll).insert(dbo, wc);
   }
 
   public void close() {
