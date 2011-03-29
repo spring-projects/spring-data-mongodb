@@ -14,30 +14,16 @@
  * limitations under the License.
  */
 
-package org.springframework.data.document.mongodb.mapping;
-
-import java.util.concurrent.atomic.AtomicInteger;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.context.ApplicationListener;
-import org.springframework.data.document.mongodb.event.InsertEvent;
+package org.springframework.data.document.mongodb.mapping.event;
 
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
  */
-public class InsertEventListener implements ApplicationListener<InsertEvent> {
+public class AfterLoadEvent<DBObject> extends MongoMappingEvent<DBObject> {
 
-  private Logger log = LoggerFactory.getLogger(getClass());
-  private AtomicInteger counter = new AtomicInteger(0);
+  private static final long serialVersionUID = 1L;
 
-  public void onApplicationEvent(InsertEvent event) {
-    log.info("Got INSERT event: " + event);
-    counter.incrementAndGet();
+  public AfterLoadEvent(DBObject dbo) {
+    super(dbo, null);
   }
-
-  public int getCount() {
-    return counter.get();
-  }
-  
 }

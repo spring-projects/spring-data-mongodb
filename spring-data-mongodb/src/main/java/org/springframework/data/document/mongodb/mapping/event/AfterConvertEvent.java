@@ -14,30 +14,19 @@
  * limitations under the License.
  */
 
-package org.springframework.data.document.mongodb.event;
+package org.springframework.data.document.mongodb.mapping.event;
 
 import com.mongodb.DBObject;
-import org.springframework.context.ApplicationEvent;
 
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
  */
-public class InsertEvent extends ApplicationEvent {
+public class AfterConvertEvent<E> extends MongoMappingEvent<E> {
 
-  private static final long serialVersionUID = 8713413423411L;
-  private final String collection;
+  private static final long serialVersionUID = 1L;
 
-  public InsertEvent(String collection, DBObject dbo) {
-    super(dbo);
-    this.collection = collection;
-  }
-
-  public String getCollection() {
-    return collection;
-  }
-
-  public DBObject getDBObject() {
-    return (DBObject) source;
+  public AfterConvertEvent(DBObject dbo, E source) {
+    super(source, dbo);
   }
 
 }

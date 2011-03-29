@@ -14,14 +14,17 @@
  * limitations under the License.
  */
 
-package org.springframework.data.document.mongodb.event;
+package org.springframework.data.document.mongodb.mapping.event;
 
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
  */
-public enum EventType {
-  COLLECTION_CREATED,
-  DOCUMENT_INSERTED,
-  DOCUMENT_UPDATED,
-  DOCUMENT_DELETED
+public class BeforeConvertEvent<T> extends MongoMappingEvent<T> {
+
+  private static final long serialVersionUID = 1L;
+
+  public BeforeConvertEvent(T source) {
+    super(source, null);
+  }
 }
+

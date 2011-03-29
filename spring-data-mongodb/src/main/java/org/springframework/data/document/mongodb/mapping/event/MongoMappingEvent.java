@@ -16,35 +16,28 @@
 
 package org.springframework.data.document.mongodb.mapping.event;
 
+import com.mongodb.DBObject;
 import org.springframework.context.ApplicationEvent;
-import org.springframework.data.document.mongodb.event.EventType;
-import org.springframework.data.mapping.model.PersistentEntity;
 
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
  */
 public class MongoMappingEvent<T> extends ApplicationEvent {
-  
+
   private static final long serialVersionUID = 1L;
-  private final EventType type;
-  private final PersistentEntity<T> entity;
+  private final DBObject dbo;
 
-  public MongoMappingEvent(EventType type, PersistentEntity<T> entity, T target) {
-    super(target);
-    this.type = type;
-    this.entity = entity;
+  public MongoMappingEvent(T source, DBObject dbo) {
+    super(source);
+    this.dbo = dbo;
   }
 
-  public EventType getType() {
-    return type;
+  public DBObject getDBObject() {
+    return dbo;
   }
 
-  public PersistentEntity<T> getEntity() {
-    return entity;
-  }
-
+  @SuppressWarnings({"unchecked"})
   @Override
-  @SuppressWarnings("unchecked")
   public T getSource() {
     return (T) super.getSource();
   }

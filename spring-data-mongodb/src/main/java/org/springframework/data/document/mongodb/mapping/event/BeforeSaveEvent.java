@@ -14,30 +14,19 @@
  * limitations under the License.
  */
 
-package org.springframework.data.document.mongodb.event;
+package org.springframework.data.document.mongodb.mapping.event;
 
 import com.mongodb.DBObject;
-import org.springframework.context.ApplicationEvent;
 
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
  */
-public class SaveEvent extends ApplicationEvent {
+public class BeforeSaveEvent<E> extends MongoMappingEvent<E> {
 
-  private static final long serialVersionUID = -5583681211168904206L;
-  private final String collection;
+  private static final long serialVersionUID = 1L;
 
-  public SaveEvent(String collection, DBObject source) {
-    super(source);
-    this.collection = collection;
-  }
-
-  public DBObject getDBObject() {
-    return (DBObject) source;
-  }
-
-  public String getCollection() {
-    return collection;
+  public BeforeSaveEvent(E source, DBObject dbo) {
+    super(source, dbo);
   }
 
 }

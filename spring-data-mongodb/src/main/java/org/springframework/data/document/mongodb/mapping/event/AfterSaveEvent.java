@@ -14,23 +14,20 @@
  * limitations under the License.
  */
 
-package org.springframework.data.document.mongodb.event;
+package org.springframework.data.document.mongodb.mapping.event;
 
-import com.mongodb.WriteResult;
-import org.springframework.context.ApplicationEvent;
+import com.mongodb.DBObject;
+import org.springframework.data.mapping.model.PersistentEntity;
 
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
  */
-public class WriteResultEvent extends ApplicationEvent {
+public class AfterSaveEvent<E> extends MongoMappingEvent<E> {
 
-  private static final long serialVersionUID = 4460770341573211038L;
+  private static final long serialVersionUID = 1L;
 
-  public WriteResultEvent(WriteResult result) {
-    super(result);
+  public AfterSaveEvent(E source, DBObject dbo) {
+    super(source, dbo);
   }
 
-  public WriteResult getWriteResult() {
-    return (WriteResult) source;
-  }
 }

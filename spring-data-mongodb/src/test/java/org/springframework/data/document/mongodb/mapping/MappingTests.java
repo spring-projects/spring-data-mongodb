@@ -24,29 +24,29 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.data.document.mongodb.MongoTemplate;
 import org.springframework.data.document.mongodb.query.Criteria;
 import org.springframework.data.document.mongodb.query.Query;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
  */
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration("classpath:mapping.xml")
 public class MappingTests {
 
-  @Autowired
   ApplicationContext applicationContext;
-  @Autowired
   MongoTemplate template;
-  @Autowired
   MongoMappingContext mappingContext;
+
+  @Before
+  public void setUp() {
+    applicationContext = new ClassPathXmlApplicationContext("/mapping.xml");
+    template = applicationContext.getBean(MongoTemplate.class);
+    mappingContext = applicationContext.getBean(MongoMappingContext.class);
+  }
 
   @Test
   public void testPersonPojo() {
@@ -142,6 +142,11 @@ public class MappingTests {
 
     List<Person> result = template.find(new Query(Criteria.where("ssn").is(1234567890)), Person.class);
     assertThat(result.size(), is(1));
+  }
+
+  @Test
+  public void testEvents(){
+
   }
 
 }
