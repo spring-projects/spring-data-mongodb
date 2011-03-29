@@ -10,9 +10,9 @@
   <modules>
     <module>spring-data-document-parent</module>
     <module>spring-data-document-core</module>
-    <module>spring-data-mongo-log4j</module>
     <module>spring-data-mongodb</module>
     <module>spring-data-mongodb-cross-store</module>
+    <module>spring-data-mongodb-log4j</module>
     <module>spring-data-couchdb</module>
   </modules>
 
