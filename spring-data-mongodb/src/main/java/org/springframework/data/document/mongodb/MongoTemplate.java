@@ -641,7 +641,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
   public <T> void save(String collectionName, T objectToSave, MongoWriter<T> writer) {
     BasicDBObject dbDoc = new BasicDBObject();
     writer.write(objectToSave, dbDoc);
-    ObjectId id = saveDBObject(collectionName, dbDoc);
+    Object id = saveDBObject(collectionName, dbDoc);
     populateIdIfNecessary(objectToSave, id);
     if (null != applicationContext) {
       eventQueue.add(new SaveEvent(collectionName, dbDoc));
@@ -697,20 +697,20 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
     return ids;
   }
 
-  protected ObjectId saveDBObject(String collectionName, final DBObject dbDoc) {
+  protected Object saveDBObject(String collectionName, final DBObject dbDoc) {
 
     if (dbDoc.keySet().isEmpty()) {
       return null;
     }
 
-    return execute(collectionName, new CollectionCallback<ObjectId>() {
-      public ObjectId doInCollection(DBCollection collection) throws MongoException, DataAccessException {
+    return execute(collectionName, new CollectionCallback<Object>() {
+      public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
         if (writeConcern == null) {
           collection.save(dbDoc);
         } else {
           collection.save(dbDoc, writeConcern);
         }
-        return (ObjectId) dbDoc.get(ID);
+        return dbDoc.get(ID);
       }
     });
   }

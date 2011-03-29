@@ -127,7 +127,10 @@ public class MongoTemplateTests {
     PersonWithIdPropertyOfTypeString p1 = new PersonWithIdPropertyOfTypeString();
     p1.setFirstName("Sven_1");
     p1.setAge(22);
+    // insert
     template.insert(p1);
+    // also try save
+    template.save(p1);
     assertThat(p1.getId(), notNullValue());
     PersonWithIdPropertyOfTypeString p1q = template.findOne(new Query(where("id").is(p1.getId())), PersonWithIdPropertyOfTypeString.class);
     assertThat(p1q, notNullValue());
@@ -137,7 +140,10 @@ public class MongoTemplateTests {
     p2.setFirstName("Sven_2");
     p2.setAge(22);
     p2.setId("TWO");
+    // insert
     template.insert(p2);
+    // also try save
+    template.save(p2);
     assertThat(p2.getId(), notNullValue());
     PersonWithIdPropertyOfTypeString p2q = template.findOne(new Query(where("id").is(p2.getId())), PersonWithIdPropertyOfTypeString.class);
     assertThat(p2q, notNullValue());
@@ -146,7 +152,10 @@ public class MongoTemplateTests {
     PersonWith_idPropertyOfTypeString p3 = new PersonWith_idPropertyOfTypeString();
     p3.setFirstName("Sven_3");
     p3.setAge(22);
+    // insert
     template.insert(p3);
+    // also try save
+    template.save(p3);
     assertThat(p3.get_id(), notNullValue());
     PersonWith_idPropertyOfTypeString p3q = template.findOne(new Query(where("_id").is(p3.get_id())), PersonWith_idPropertyOfTypeString.class);
     assertThat(p3q, notNullValue());
@@ -155,8 +164,11 @@ public class MongoTemplateTests {
     PersonWith_idPropertyOfTypeString p4 = new PersonWith_idPropertyOfTypeString();
     p4.setFirstName("Sven_4");
     p4.setAge(22);
-    p4.set_id("FOUR");
+    p4.set_id("FOUR");    
+    // insert
     template.insert(p4);
+    // also try save
+    template.save(p4);
     assertThat(p4.get_id(), notNullValue());
     PersonWith_idPropertyOfTypeString p4q = template.findOne(new Query(where("_id").is(p4.get_id())), PersonWith_idPropertyOfTypeString.class);
     assertThat(p4q, notNullValue());
@@ -165,7 +177,10 @@ public class MongoTemplateTests {
     PersonWithIdPropertyOfTypeObjectId p5 = new PersonWithIdPropertyOfTypeObjectId();
     p5.setFirstName("Sven_5");
     p5.setAge(22);
+    // insert
     template.insert(p5);
+    // also try save
+    template.save(p5);
     assertThat(p5.getId(), notNullValue());
     PersonWithIdPropertyOfTypeObjectId p5q = template.findOne(new Query(where("id").is(p5.getId())), PersonWithIdPropertyOfTypeObjectId.class);
     assertThat(p5q, notNullValue());
@@ -175,8 +190,11 @@ public class MongoTemplateTests {
     p6.setFirstName("Sven_6");
     p6.setAge(22);
     p6.setId(new ObjectId());
+    // insert
     template.insert(p6);
-    assertThat(p6.getId(), notNullValue());
+    // also try save
+    template.save(p6);
+   assertThat(p6.getId(), notNullValue());
     PersonWithIdPropertyOfTypeObjectId p6q = template.findOne(new Query(where("id").is(p6.getId())), PersonWithIdPropertyOfTypeObjectId.class);
     assertThat(p6q, notNullValue());
     assertThat(p6q.getId(), is(p6.getId()));
@@ -184,8 +202,11 @@ public class MongoTemplateTests {
     PersonWith_idPropertyOfTypeObjectId p7 = new PersonWith_idPropertyOfTypeObjectId();
     p7.setFirstName("Sven_7");
     p7.setAge(22);
+    // insert
     template.insert(p7);
-    assertThat(p7.get_id(), notNullValue());
+    // also try save
+    template.save(p7);
+   assertThat(p7.get_id(), notNullValue());
     PersonWith_idPropertyOfTypeObjectId p7q = template.findOne(new Query(where("_id").is(p7.get_id())), PersonWith_idPropertyOfTypeObjectId.class);
     assertThat(p7q, notNullValue());
     assertThat(p7q.get_id(), is(p7.get_id()));
@@ -194,7 +215,10 @@ public class MongoTemplateTests {
     p8.setFirstName("Sven_8");
     p8.setAge(22);
     p8.set_id(new ObjectId());
+    // insert
     template.insert(p8);
+    // also try save
+    template.save(p8);
     assertThat(p8.get_id(), notNullValue());
     PersonWith_idPropertyOfTypeObjectId p8q = template.findOne(new Query(where("_id").is(p8.get_id())), PersonWith_idPropertyOfTypeObjectId.class);
     assertThat(p8q, notNullValue());
