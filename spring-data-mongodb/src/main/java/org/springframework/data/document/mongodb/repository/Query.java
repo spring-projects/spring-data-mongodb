@@ -17,10 +17,10 @@ package org.springframework.data.document.mongodb.repository;
 
 import java.lang.annotation.*;
 
-
 /**
- * Annotation to declare finder queries directly on repository methods.
- *
+ * Annotation to declare finder queries directly on repository methods. Both attributes allow using a placeholder
+ * notation of {@code ?0}, {@code ?1} and so on.
+ * 
  * @author Oliver Gierke
  */
 @Retention(RetentionPolicy.RUNTIME)
@@ -28,7 +28,19 @@ import java.lang.annotation.*;
 @Documented
 public @interface Query {
 
+  /**
+   * Takes a MongoDB JSON string to define the actual query to be executed. This one will take precendece over the
+   * method name then.
+   * 
+   * @return
+   */
   String value() default "";
 
+  /**
+   * Defines the fields that should be returned for the given query. Note that only these fields will make it into the
+   * domain object returned.
+   * 
+   * @return
+   */
   String fields() default "";
 }
