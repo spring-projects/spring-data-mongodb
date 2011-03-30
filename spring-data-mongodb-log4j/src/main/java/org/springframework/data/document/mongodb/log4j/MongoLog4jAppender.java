@@ -28,6 +28,8 @@ import com.mongodb.Mongo;
 import com.mongodb.WriteConcern;
 import org.apache.log4j.AppenderSkeleton;
 import org.apache.log4j.Level;
+import org.apache.log4j.MDC;
+import org.apache.log4j.PatternLayout;
 import org.apache.log4j.spi.LoggingEvent;
 
 /**
@@ -42,11 +44,16 @@ public class MongoLog4jAppender extends AppenderSkeleton {
   public static final String PROPERTIES = "properties";
   public static final String TRACEBACK = "traceback";
   public static final String MESSAGE = "message";
+  public static final String YEAR = "year";
+  public static final String MONTH = "month";
+  public static final String DAY = "day";
+  public static final String HOUR = "hour";
 
   protected String host = "localhost";
   protected int port = 27017;
   protected String database = "logs";
-  protected String collection = null;
+  protected String collectionPattern = "%c";
+  protected PatternLayout collectionLayout = new PatternLayout(collectionPattern);
   protected String applicationId = System.getProperty("APPLICATION_ID", null);
   protected WriteConcern warnOrHigherWriteConcern = WriteConcern.SAFE;
   protected WriteConcern infoOrLowerWriteConcern = WriteConcern.NORMAL;
@@ -84,12 +91,13 @@ public class MongoLog4jAppender extends AppenderSkeleton {
     this.database = database;
   }
 
-  public String getCollection() {
-    return collection;
+  public String getCollectionPattern() {
+    return collectionPattern;
   }
 
-  public void setCollection(String collection) {
-    this.collection = collection;
+  public void setCollectionPattern(String collectionPattern) {
+    this.collectionPattern = collectionPattern;
+    this.collectionLayout = new PatternLayout(collectionPattern);
   }
 
   public String getApplicationId() {
@@ -133,7 +141,10 @@ public class MongoLog4jAppender extends AppenderSkeleton {
     }
 
     BasicDBObject dbo = new BasicDBObject();
-    dbo.put(APP_ID, applicationId);
+    if (null != applicationId) {
+      dbo.put(APP_ID, applicationId);
+      MDC.put(APP_ID, applicationId);
+    }
     dbo.put(NAME, event.getLogger().getName());
     dbo.put(LEVEL, event.getLevel().toString());
     Calendar tstamp = Calendar.getInstance();
@@ -162,19 +173,20 @@ public class MongoLog4jAppender extends AppenderSkeleton {
     dbo.put(MESSAGE, event.getRenderedMessage());
 
     // Insert the document
-    String coll;
-    if (null == collection) {
-      // Use the category name
-      coll = event.getLogger().getName();
-    } else {
-      Calendar now = Calendar.getInstance();
-      coll = String.format(collection,
-          now.get(Calendar.YEAR),
-          now.get(Calendar.MONTH + 1),
-          now.get(Calendar.DAY_OF_MONTH),
-          now.get(Calendar.HOUR_OF_DAY),
-          event.getLevel().toString(),
-          event.getLogger().getName());
+    Calendar now = Calendar.getInstance();
+    MDC.put(YEAR, now.get(Calendar.YEAR));
+    MDC.put(MONTH, String.format("%1$02d", now.get(Calendar.MONTH) + 1));
+    MDC.put(DAY, String.format("%1$02d", now.get(Calendar.DAY_OF_MONTH)));
+    MDC.put(HOUR, String.format("%1$02d", now.get(Calendar.HOUR_OF_DAY)));
+
+    String coll = collectionLayout.format(event);
+
+    MDC.remove(YEAR);
+    MDC.remove(MONTH);
+    MDC.remove(DAY);
+    MDC.remove(HOUR);
+    if (null != applicationId) {
+      MDC.remove(APP_ID);
     }
 
     WriteConcern wc;

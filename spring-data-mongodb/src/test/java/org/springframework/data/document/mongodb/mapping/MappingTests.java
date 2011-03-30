@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.context.ApplicationContext;
@@ -39,13 +40,17 @@ public class MappingTests {
 
   ApplicationContext applicationContext;
   MongoTemplate template;
-  MongoMappingContext mappingContext;
 
   @Before
-  public void setUp() {
+  public void setUp() throws InterruptedException {
     applicationContext = new ClassPathXmlApplicationContext("/mapping.xml");
     template = applicationContext.getBean(MongoTemplate.class);
-    mappingContext = applicationContext.getBean(MongoMappingContext.class);
+  }
+
+  @After
+  public void tearDown() {
+    template.dropCollection("person");
+    template.dropCollection("account");
   }
 
   @Test
@@ -69,7 +74,7 @@ public class MappingTests {
     assertNotNull(result.get(0).getCustomId());
   }
 
-  @Test
+  @Test 
   public void testPersonMapProperty() {
     PersonMapProperty p = new PersonMapProperty(1234567, "Map", "Property");
     Map<String, AccountPojo> accounts = new HashMap<String, AccountPojo>();
@@ -126,6 +131,7 @@ public class MappingTests {
     assertThat(result.get(0).getAccounts(), notNullValue());
   }
 
+  @SuppressWarnings({"unchecked"})
   @Test
   public void testUniqueIndex() {
     Address addr = new Address();
@@ -145,7 +151,7 @@ public class MappingTests {
   }
 
   @Test
-  public void testEvents(){
+  public void testEvents() {
 
   }
 

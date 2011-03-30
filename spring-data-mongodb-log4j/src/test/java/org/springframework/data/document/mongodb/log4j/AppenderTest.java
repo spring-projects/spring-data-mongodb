@@ -20,6 +20,7 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
 import java.net.UnknownHostException;
+import java.util.Calendar;
 
 import com.mongodb.DB;
 import com.mongodb.DBCursor;
@@ -38,13 +39,16 @@ public class AppenderTest {
   private Logger log = Logger.getLogger(NAME);
   private Mongo mongo;
   private DB db;
+  private String collection;
 
   @Before
   public void setup() {
     try {
       mongo = new Mongo("localhost", 27017);
       db = mongo.getDB("logs");
-      db.getCollection(NAME).drop();
+      Calendar now = Calendar.getInstance();
+      collection = String.valueOf(now.get(Calendar.YEAR)) + String.format("%1$02d", now.get(Calendar.MONTH) + 1);
+      db.getCollection(collection).drop();
     } catch (UnknownHostException e) {
       throw new RuntimeException(e.getMessage(), e);
     }
@@ -57,7 +61,7 @@ public class AppenderTest {
     log.warn("WARN message");
     log.error("ERROR message");
 
-    DBCursor msgs = db.getCollection(NAME).find();
+    DBCursor msgs = db.getCollection(collection).find();
     assertThat(msgs.count(), is(4));
 
   }
