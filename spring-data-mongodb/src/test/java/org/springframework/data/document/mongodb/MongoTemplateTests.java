@@ -225,4 +225,21 @@ public class MongoTemplateTests {
     assertThat(p8q.get_id(), is(p8.get_id()));
   }
 
+  @Test
+  public void testFindAndRemove() throws Exception {
+
+    Message m1 = new Message("Hello Spring");
+    template.insert(m1);
+    Message m2 = new Message("Hello Mongo");
+    template.insert(m2);
+
+    Query q = new Query(Criteria.where("text").regex("^Hello.*"));
+    Message found1 = template.findAndRemove(q, Message.class);
+    Message found2 = template.findAndRemove(q, Message.class);
+//    Message notFound = template.findAndRemove(q, Message.class);
+    DBObject notFound = template.getCollection("").findAndRemove(q.getQueryObject());
+    assertThat(found1, notNullValue());
+    assertThat(found2, notNullValue());
+    assertThat(notFound, nullValue());
+  }
 }

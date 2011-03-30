@@ -548,6 +548,28 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
     return doFind(collectionName, query.getQueryObject(), query.getFieldsObject(), targetClass, preparer);
   }
 
+  // Find methods that take a Query to express the query and that return a single object that is 
+  // also removed from the collection in the database.
+
+  public <T> T findAndRemove(Query query, Class<T> targetClass) {
+    return findAndRemove(getDefaultCollectionName(), query, targetClass);
+  }
+
+  public <T> T findAndRemove(Query query, Class<T> targetClass,
+                       MongoReader<T> reader) {
+    return findAndRemove(getDefaultCollectionName(), query, targetClass, reader);
+  }
+
+  public <T> T findAndRemove(String collectionName, Query query,
+                       Class<T> targetClass) {
+    return findAndRemove(collectionName, query, targetClass, null);
+  }
+
+  public <T> T findAndRemove(String collectionName, Query query,
+                       Class<T> targetClass, MongoReader<T> reader) {
+    return doFindAndRemove(collectionName, query.getQueryObject(), query.getFieldsObject(), query.getSortObject(), targetClass, reader);
+  }
+
   /* (non-Javadoc)
     * @see org.springframework.data.document.mongodb.MongoOperations#insert(java.lang.Object)
     */
@@ -948,6 +970,28 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
   }
 
   /**
+   * Map the results of an ad-hoc query on the default MongoDB collection to an object using the provided MongoReader
+   * The first document that matches the query is returned and also removed from the collection in the database.
+   * <p/>
+   * The query document is specified as a standard DBObject and so is the fields specification.
+   *
+   * @param collectionName name of the collection to retrieve the objects from
+   * @param query          the query document that specifies the criteria used to find a record
+   * @param targetClass    the parameterized type of the returned list.
+   * @param reader         the MongoReader to convert from DBObject to an object.
+   * @return the List of converted objects.
+   */
+  protected <T> T doFindAndRemove(String collectionName, DBObject query, DBObject fields, DBObject sort, Class<T> targetClass, MongoReader<T> reader) {
+    MongoReader<? super T> readerToUse = reader;
+    if (readerToUse == null) {
+      readerToUse = this.mongoConverter;
+    }
+    substituteMappedIdIfNecessary(query, targetClass, readerToUse);
+    return execute(new FindAndRemoveCallback(query, fields, sort), new ReadDbObjectCallback<T>(readerToUse, targetClass),
+        collectionName);
+  }
+
+  /**
    * Populates the id property of the saved object, if it's not set already.
    *
    * @param savedObject
@@ -1172,6 +1216,31 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
       } else {
         return collection.find(query, fields);
       }
+    }
+  }
+
+  /**
+   * Simple {@link CollectionCallback} that takes a query {@link DBObject} plus an optional fields specification
+   * {@link DBObject} and executes that against the {@link DBCollection}.
+   *
+   * @author Thomas Risberg
+   */
+  private static class FindAndRemoveCallback implements CollectionCallback<DBObject> {
+
+    private final DBObject query;
+
+    private final DBObject fields;
+
+    private final DBObject sort;
+
+    public FindAndRemoveCallback(DBObject query, DBObject fields, DBObject sort) {
+      this.query = query;
+      this.fields = fields;
+      this.sort = sort;
+    }
+
+    public DBObject doInCollection(DBCollection collection) throws MongoException, DataAccessException {
+        return collection.findAndModify(query, fields, sort, true, null, false, false);
     }
   }
 
