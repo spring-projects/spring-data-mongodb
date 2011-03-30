@@ -11,21 +11,21 @@ To use it, configure a host, port, (optionally) applicationId, and database prop
     log4j.appender.stdout.host = localhost
     log4j.appender.stdout.port = 27017
     log4j.appender.stdout.database = logs
+    log4j.appender.stdout.collectionPattern = %c
     log4j.appender.stdout.applicationId = my.application
     log4j.appender.stdout.warnOrHigherWriteConcern = FSYNC_SAFE
 
 It will even support properties in your MDC (so long as they're Strings or support .toString()).
 
 The collection name is configurable as well. If you don't specify anything, it will use the Category name.
-If you want to specify a collection name, you can give it a String.format() string which will be passed the
-following parameters:
+If you want to specify a collection name, you can give it a Log4J pattern layout format string which will have
+the following additional MDC variables in the context when the collection name is rendered:
 
-1. Calendar.YEAR
-2. Calendar.MONTH
-3. Calendar.DAY_OF_MONTH
-4. Calendar.HOUR_OF_DAY
-5. event.getLevel().toString()
-6. event.getLogger().getName()
+    "year" = Calendar.YEAR
+    "month" = Calendar.MONTH + 1
+    "day" = Calendar.DAY_OF_MONTH
+    "hour" = Calendar.HOUR_OF_DAY
+    "applicationId" = configured applicationId
 
 An example log entry might look like:
 
