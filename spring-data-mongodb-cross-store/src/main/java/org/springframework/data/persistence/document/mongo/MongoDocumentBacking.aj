@@ -44,11 +44,8 @@ public aspect MongoDocumentBacking {
   // ITD to introduce N state to Annotated objects
   declare parents : (@Entity *) implements DocumentBacked;
 
-//  declare @type: DocumentBacked+: @Configurable;
-
+  // The annotated fields that will be persisted in MongoDB rather than with JPA
   declare @field: @Document * (@Entity+ *).*:@Transient;
-  declare @field: ChangeSet (DocumentBacked+).*:@Transient;
-  declare @field: ChangeSetPersister (DocumentBacked+).*:@Transient;
 
   // -------------------------------------------------------------------------
   // Advise user-defined constructors of ChangeSetBacked objects to create a new
@@ -86,27 +83,44 @@ public aspect MongoDocumentBacking {
     LOGGER
         .debug("User-defined constructor called on DocumentBacked object of class "
             + entity.getClass());
+    // Populate all ITD fields
+    entity.setChangeSet(new HashMapChangeSet());
     entity.itdChangeSetPersister = changeSetPersister;
-    // Populate all properties
-    ChangeSet changeSet = new HashMapChangeSet();
-    // changeSetManager.populateChangeSet(changeSet, entity);
-    entity.setChangeSet(changeSet);
-    if (!TransactionSynchronizationManager.isSynchronizationActive()) {
-      throw new InvalidDataAccessResourceUsageException(
-          "No transaction synchronization is active");
+    entity.itdTransactionSynchronization = 
+        new DocumentBackedTransactionSynchronization(changeSetPersister, entity);
+    registerTransactionSynchronization(entity);
+  }
+
+  private static void registerTransactionSynchronization(DocumentBacked entity) {
+    if (TransactionSynchronizationManager.isSynchronizationActive()) {
+      if (!TransactionSynchronizationManager.getSynchronizations().contains(entity.itdTransactionSynchronization)) {
+        if (LOGGER.isDebugEnabled()) {
+          LOGGER.debug("Adding transaction synchronization for " + entity.getClass());
+        }
+        TransactionSynchronizationManager.registerSynchronization(entity.itdTransactionSynchronization);
+      }
+      else {
+        if (LOGGER.isDebugEnabled()) {
+          LOGGER.debug("Transaction synchronization already active for " + entity.getClass());
+        }
+      }
     }
-    TransactionSynchronizationManager
-        .registerSynchronization(new DocumentBackedTransactionSynchronization(
-            changeSetPersister, entity));
+    else {
+      if (LOGGER.isDebugEnabled()) {
+        LOGGER.debug("Transaction syncronization is not active for " + entity.getClass());
+      }
+    }
   }
 
   // -------------------------------------------------------------------------
   // ChangeSet-related mixins
   // -------------------------------------------------------------------------
   // Introduced field
-  private ChangeSet DocumentBacked.changeSet;
+  @Transient private ChangeSet DocumentBacked.changeSet;
 
-  private ChangeSetPersister<?> DocumentBacked.itdChangeSetPersister;
+  @Transient private ChangeSetPersister<?> DocumentBacked.itdChangeSetPersister;
+
+  @Transient private DocumentBackedTransactionSynchronization DocumentBacked.itdTransactionSynchronization;
 
   public void DocumentBacked.setChangeSet(ChangeSet cs) {
     this.changeSet = cs;
@@ -126,6 +140,32 @@ public aspect MongoDocumentBacking {
     return itdChangeSetPersister.getPersistentId(this, this.changeSet);
   }
 
+  // lifecycle methods
+  @javax.persistence.PrePersist public void DocumentBacked.prePersist() {
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug("JPA lifecycle called PrePersist: " + this.getClass().getName() + " :: " + this.get_persistent_id());
+    }
+    registerTransactionSynchronization(this);
+  }
+  @javax.persistence.PreUpdate public void DocumentBacked.preUpdate() {
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug("JPA lifecycle called PreUpdate: " + this.getClass().getName() + " :: " + this.get_persistent_id());
+    }
+    registerTransactionSynchronization(this);
+  }
+  @javax.persistence.PreRemove public void DocumentBacked.preRemove() {
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug("JPA lifecycle called PreRemove: " + this.getClass().getName() + " :: " + this.get_persistent_id());
+    }
+    registerTransactionSynchronization(this);
+  }
+  @javax.persistence.PostLoad public void DocumentBacked.postLoad() {
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug("JPA lifecycle called PostLoad: " + this.getClass().getName() + " :: " + this.get_persistent_id());
+    }
+    registerTransactionSynchronization(this);
+  }
+  
   /**
    * delegates field reads to the state accessors instance
    */
@@ -159,18 +199,6 @@ public aspect MongoDocumentBacking {
     entity.getChangeSet().set(propName, newVal);
     return proceed(entity, newVal);
   }
-
-//  /**
-//   * delegates field writes to the state accessors instance
-//   */
-//  Object around(DocumentBacked entity, Object newVal) : entityIdSet(entity, newVal) {
-//    Field f = field(thisJoinPoint);
-//    String propName = f.getName();
-//    LOGGER.trace("SET @Id -> ChangeSet @Id property [" + propName
-//        + "] with value=[" + newVal + "]");
-//    entity.getChangeSet().set("_id", newVal);
-//    return proceed(entity, newVal);
-//  }
 
   Field field(JoinPoint joinPoint) {
     FieldSignature fieldSignature = (FieldSignature) joinPoint.getSignature();

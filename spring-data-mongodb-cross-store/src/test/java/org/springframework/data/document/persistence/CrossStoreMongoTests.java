@@ -13,7 +13,11 @@ import org.springframework.persistence.document.test.Resume;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionCallback;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import com.mongodb.DBCollection;
 import com.mongodb.Mongo;
@@ -30,6 +34,9 @@ public class CrossStoreMongoTests {
 
   private EntityManager entityManager;
 
+  @Autowired
+  private PlatformTransactionManager transactionManager;
+  
   @PersistenceContext
   public void setEntityManager(EntityManager entityManager) {
     this.entityManager = entityManager;
@@ -71,6 +78,7 @@ public class CrossStoreMongoTests {
     Assert.assertEquals("DiMark, DBA, 1990-2000" + "; "
         + "VMware, Developer, 2007-", found.getResume().getJobs());
     found.getResume().addJob("SpringDeveloper.com, Consultant, 2005-2006");
+    found.setAge(44);
   }
 
   @Test
@@ -86,5 +94,23 @@ public class CrossStoreMongoTests {
     Assert.assertEquals("DiMark, DBA, 1990-2000" + "; "
         + "VMware, Developer, 2007-" + "; "
         + "SpringDeveloper.com, Consultant, 2005-2006", found.getResume().getJobs());
+  }
+  
+  @Test
+  public void testMergeJpaEntityWithMongoDocument() {
+    TransactionTemplate txTemplate = new TransactionTemplate(transactionManager);
+    final Person found = entityManager.find(Person.class, 1L);
+    found.setAge(77);
+    found.getResume().addJob("TargetRx, Developer, 2000-2005");
+    txTemplate.execute(new TransactionCallback<Object>() {
+      public Object doInTransaction(TransactionStatus status) {
+        entityManager.merge(found);
+        return null;
+      }
+    });
+    final Person updated = entityManager.find(Person.class, 1L);
+    // assert that the new values are in respective DBs
+    // TODO: during merge we lose the changeset since JPA creates a new persistent instance - 
+    // we need to move the existing changeset over somehow
   }
 }

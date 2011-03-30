@@ -24,11 +24,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.After;
+import com.mongodb.Mongo;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.springframework.data.document.mongodb.MongoDbUtils;
 import org.springframework.data.document.mongodb.MongoTemplate;
 import org.springframework.data.document.mongodb.query.Criteria;
 import org.springframework.data.document.mongodb.query.Query;
@@ -38,28 +41,32 @@ import org.springframework.data.document.mongodb.query.Query;
  */
 public class MappingTests {
 
+  private static final Logger LOGGER = LoggerFactory.getLogger(MongoDbUtils.class);
+
   ApplicationContext applicationContext;
   MongoTemplate template;
+  MongoMappingContext mappingContext;
 
   @Before
-  public void setUp() throws InterruptedException {
+  public void setUp() throws Exception {
+    Mongo mongo = new Mongo();
+    mongo.getDB("database").getCollection("person").drop();
     applicationContext = new ClassPathXmlApplicationContext("/mapping.xml");
     template = applicationContext.getBean(MongoTemplate.class);
-  }
-
-  @After
-  public void tearDown() {
-    template.dropCollection("person");
-    template.dropCollection("account");
+    mappingContext = applicationContext.getBean(MongoMappingContext.class);
   }
 
   @Test
-  public void testPersonPojo() {
+  public void testPersonPojo() throws Exception {
+    LOGGER.info("about to create new personpojo");
     PersonPojo p = new PersonPojo(12345, "Person", "Pojo");
+    LOGGER.info("about to insert");
     template.insert(p);
+    LOGGER.info("done inserting");
     assertNotNull(p.getId());
 
-    List<PersonPojo> result = template.find(new Query(Criteria.where("ssn").is(12345)), PersonPojo.class);
+    List<PersonPojo> result = template.find(
+        new Query(Criteria.where("ssn").is(12345)), PersonPojo.class);
     assertThat(result.size(), is(1));
     assertThat(result.get(0).getSsn(), is(12345));
   }
@@ -69,12 +76,13 @@ public class MappingTests {
     PersonCustomIdName p = new PersonCustomIdName(123456, "Custom", "Id");
     template.insert(p);
 
-    List<PersonCustomIdName> result = template.find(new Query(Criteria.where("ssn").is(123456)), PersonCustomIdName.class);
+    List<PersonCustomIdName> result = template.find(
+        new Query(Criteria.where("ssn").is(123456)), PersonCustomIdName.class);
     assertThat(result.size(), is(1));
     assertNotNull(result.get(0).getCustomId());
   }
 
-  @Test 
+  @Test
   public void testPersonMapProperty() {
     PersonMapProperty p = new PersonMapProperty(1234567, "Map", "Property");
     Map<String, AccountPojo> accounts = new HashMap<String, AccountPojo>();
@@ -89,10 +97,12 @@ public class MappingTests {
     template.insert(p);
     assertNotNull(p.getId());
 
-    List<PersonMapProperty> result = template.find(new Query(Criteria.where("ssn").is(1234567)), PersonMapProperty.class);
+    List<PersonMapProperty> result = template.find(
+        new Query(Criteria.where("ssn").is(1234567)), PersonMapProperty.class);
     assertThat(result.size(), is(1));
     assertThat(result.get(0).getAccounts().size(), is(2));
-    assertThat(result.get(0).getAccounts().get("checking").getBalance(), is(1000.0f));
+    assertThat(result.get(0).getAccounts().get("checking").getBalance(),
+        is(1000.0f));
   }
 
   @Test
@@ -125,7 +135,8 @@ public class MappingTests {
 
     assertNotNull(p.getId());
 
-    List<Person> result = template.find(new Query(Criteria.where("ssn").is(123456789)), Person.class);
+    List<Person> result = template.find(
+        new Query(Criteria.where("ssn").is(123456789)), Person.class);
     assertThat(result.size(), is(1));
     assertThat(result.get(0).getAddress().getCountry(), is("USA"));
     assertThat(result.get(0).getAccounts(), notNullValue());
@@ -146,13 +157,9 @@ public class MappingTests {
     template.insert("person", p1);
     template.insert("person", p2);
 
-    List<Person> result = template.find(new Query(Criteria.where("ssn").is(1234567890)), Person.class);
+    List<Person> result = template.find(
+        new Query(Criteria.where("ssn").is(1234567890)), Person.class);
     assertThat(result.size(), is(1));
-  }
-
-  @Test
-  public void testEvents() {
-
   }
 
 }
