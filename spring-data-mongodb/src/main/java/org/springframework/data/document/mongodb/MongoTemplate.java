@@ -1203,14 +1203,12 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
     }
 
     public T doWith(DBObject object) {
-      maybeEmitEvent(new AfterLoadEvent<DBObject>(object));
+      if (null != object) {
+        maybeEmitEvent(new AfterLoadEvent<DBObject>(object));
+      }
       T source = reader.read(type, object);
       if (null != source) {
         maybeEmitEvent(new AfterConvertEvent<T>(object, source));
-      } else {
-        if (LOGGER.isDebugEnabled()) {
-          LOGGER.debug("Source object was <NULL>, so couldn't fire AfterConvertEvent<" + type.getName() + ">");
-        }
       }
       return source;
     }
