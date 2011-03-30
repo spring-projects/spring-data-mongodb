@@ -30,13 +30,6 @@ public class QueryTests {
   }
 
   @Test
-  public void testSimpleQueryWithChainedCriteria() {
-    Query q = new Query(where("name").is("Thomas").and("age").lt(80));
-    String expected = "{ \"name\" : \"Thomas\" , \"age\" : { \"$lt\" : 80}}";
-    Assert.assertEquals(expected, q.getQueryObject().toString());
-  }
-
-  @Test
   public void testQueryWithNot() {
     Query q = new Query(where("name").is("Thomas")).and(where("age").not().mod(10, 0));
     String expected = "{ \"name\" : \"Thomas\" , \"age\" : { \"$not\" : { \"$mod\" : [ 10 , 0]}}}";
@@ -79,6 +72,22 @@ public class QueryTests {
     Query q = new BasicQuery("{ \"name\" : \"Thomas\"}").and(where("age").lt(80));
     String expected = "{ \"name\" : \"Thomas\" , \"age\" : { \"$lt\" : 80}}";
     Assert.assertEquals(expected, q.getQueryObject().toString());
+  }
+
+  @Test
+  public void testSimpleQueryWithChainedCriteria() {
+    Query q = new Query(where("name").is("Thomas").and("age").lt(80));
+    String expected = "{ \"name\" : \"Thomas\" , \"age\" : { \"$lt\" : 80}}";
+    Assert.assertEquals(expected, q.getQueryObject().toString());
+  }
+
+  @Test
+  public void testComplexQueryWithMultipleChainedCriteria() {
+    Query q1 = new Query(where("name").regex("^T.*").and("age").gt(20).lt(80).and("city").in("Stockholm", "London", "New York"));
+    Query q2 = new Query(where("name").regex("^T.*").and("age").gt(20).lt(80)).and(where("city").in("Stockholm", "London", "New York"));
+    Assert.assertEquals(q1.getQueryObject().toString(), q2.getQueryObject().toString());
+    Query q3 = new Query(where("name").regex("^T.*")).and(where("age").gt(20).lt(80)).and(where("city").in("Stockholm", "London", "New York"));
+    Assert.assertEquals(q1.getQueryObject().toString(), q3.getQueryObject().toString());
   }
 
   @Test
