@@ -49,7 +49,7 @@ public class MongoAdmin implements MongoAdminOperations {
     */
   @ManagedOperation
   public void dropDatabase(String databaseName) {
-    mongo.getDB(databaseName).dropDatabase();
+    getDB(databaseName).dropDatabase();
   }
 
   /* (non-Javadoc)
@@ -57,7 +57,7 @@ public class MongoAdmin implements MongoAdminOperations {
     */
   @ManagedOperation
   public void createDatabase(String databaseName) {
-    mongo.getDB(databaseName);
+    getDB(databaseName);
   }
 
   /* (non-Javadoc)
@@ -65,7 +65,7 @@ public class MongoAdmin implements MongoAdminOperations {
     */
   @ManagedOperation
   public String getDatabaseStats(String databaseName) {
-    return mongo.getDB("testAdminDb").getStats().toString();
+    return getDB(databaseName).getStats().toString();
   }
 
   /**
@@ -88,7 +88,7 @@ public class MongoAdmin implements MongoAdminOperations {
   }
 
 
-  public DB getDb(String databaseName) {
+  DB getDB(String databaseName) {
     return MongoDbUtils.getDB(mongo, databaseName, username, password == null ? null : password.toCharArray());
   }
 }

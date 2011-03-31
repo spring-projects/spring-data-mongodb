@@ -18,9 +18,12 @@ package org.springframework.data.document.mongodb;
 import com.mongodb.MongoException;
 import com.mongodb.MongoException.DuplicateKey;
 import com.mongodb.MongoException.Network;
+import com.mongodb.MongoInternalException;
+
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.document.UncategorizedDocumentStoreException;
 
@@ -54,6 +57,9 @@ public class MongoExceptionTranslator implements PersistenceExceptionTranslator 
     }
     if (ex instanceof MongoException) {
       return new UncategorizedDocumentStoreException(ex.getMessage(), ex);
+    }
+    if (ex instanceof MongoInternalException) {
+      return new InvalidDataAccessResourceUsageException(ex.getMessage(), ex);
     }
 
     // If we get here, we have an exception that resulted from user code,

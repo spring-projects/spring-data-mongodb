@@ -92,9 +92,9 @@ public abstract class MongoDbUtils {
 
     LOGGER.debug("Opening Mongo DB");
     DB db = mongo.getDB(databaseName);
-    boolean creadentialsGiven = username != null && password != null;
+    boolean credentialsGiven = username != null && password != null;
 
-    if (creadentialsGiven && !db.authenticate(username, password)) {
+    if (credentialsGiven && !db.authenticate(username, password)) {
       throw new CannotGetMongoDbConnectionException("Failed to authenticate with Mongo using the given credentials");
     }
 

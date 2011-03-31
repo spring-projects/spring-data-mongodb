@@ -17,11 +17,13 @@ package org.springframework.data.document.mongodb.query;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import org.springframework.data.document.InvalidDocumentStoreApiUsageException;
+import org.springframework.data.document.mongodb.geo.Circle;
 
 public class Criteria implements CriteriaDefinition {
 
@@ -225,6 +227,21 @@ public class Criteria implements CriteriaDefinition {
     criteria.put("$regex", re);
     return this;
   }
+  
+  
+  /**
+   * Creates a geospatial criterion using a $ 
+   * @param circle
+   * @return
+   */
+  public Criteria within(Circle circle) {
+    LinkedList list = new LinkedList();
+    list.addLast(circle.getCenter());
+    list.add(circle.getRadius());
+    //BasicDBObject dbo = new BasicDBObject("$within", new BasicDBObject("$center", list));
+    criteria.put("$within", new BasicDBObject("$center", list));
+    return this;
+  }  
 
   /**
    * Creates a criterion using the $elemMatch operator
@@ -244,6 +261,8 @@ public class Criteria implements CriteriaDefinition {
   public void or(List<Query> queries) {
     criteria.put("$or", queries);
   }
+  
+
 
   public String getKey() {
     return this.key;

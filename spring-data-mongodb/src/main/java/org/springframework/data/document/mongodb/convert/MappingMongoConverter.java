@@ -239,7 +239,7 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
 
     // Set the ID
     PersistentProperty idProperty = entity.getIdProperty();
-    if (dbo.containsField("_id") || null != idProperty) {
+    if (dbo.containsField("_id") && null != idProperty) {
       Object idObj = dbo.get("_id");
       try {
         MappingBeanHelper.setProperty(instance, idProperty, idObj, useFieldAccessOnly);
