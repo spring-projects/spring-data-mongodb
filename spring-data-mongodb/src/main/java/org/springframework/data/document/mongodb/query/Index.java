@@ -18,6 +18,8 @@ package org.springframework.data.document.mongodb.query;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.springframework.data.document.mongodb.index.IndexDefinition;
+
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
@@ -36,6 +38,8 @@ public class Index implements IndexDefinition {
   private boolean unique = false;
 
   private boolean dropDuplicates = false;
+  
+  private boolean sparse = false;
 
   public Index() {
   }
@@ -58,6 +62,11 @@ public class Index implements IndexDefinition {
     this.unique = true;
     return this;
   }
+  
+  public Index sparse() {
+    this.sparse = true;
+    return this;
+  }
 
   public Index unique(Duplicates duplicates) {
     if (duplicates == Duplicates.DROP) {
@@ -66,7 +75,7 @@ public class Index implements IndexDefinition {
     return unique();
   }
 
-  public DBObject getIndexObject() {
+  public DBObject getIndexKeys() {
     DBObject dbo = new BasicDBObject();
     for (String k : fieldSpec.keySet()) {
       dbo.put(k, (fieldSpec.get(k).equals(Order.ASCENDING) ? 1 : -1));
@@ -86,13 +95,16 @@ public class Index implements IndexDefinition {
       dbo.put("unique", true);
     }
     if (dropDuplicates) {
-      dbo.put("drop_dups", true);
+      dbo.put("dropDups", true);
+    }
+    if (sparse) {
+      dbo.put("sparse", true);
     }
     return dbo;
   }
   
   @Override
   public String toString() {
-    return String.format("Index: %s - Options: %s", getIndexObject(), getIndexOptions());
+    return String.format("Index: %s - Options: %s", getIndexKeys(), getIndexOptions());
   }
 }

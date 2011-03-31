@@ -114,7 +114,7 @@ public class MongoTemplateTests {
       if ("age_-1".equals(ix.get("name"))) {
         indexKey = ix.get("key").toString();
         unique = (Boolean) ix.get("unique");
-        dropDupes = (Boolean) ix.get("drop_dups");
+        dropDupes = (Boolean) ix.get("dropDups");
       }
     }
     assertThat(indexKey, is("{ \"age\" : -1}"));

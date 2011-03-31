@@ -24,20 +24,20 @@ public class IndexTests {
   @Test
   public void testWithAscendingIndex() {
     Index i = new Index().on("name", Order.ASCENDING);
-    Assert.assertEquals("{ \"name\" : 1}", i.getIndexObject().toString());
+    Assert.assertEquals("{ \"name\" : 1}", i.getIndexKeys().toString());
   }
 
   @Test
   public void testWithDescendingIndex() {
     Index i = new Index().on("name", Order.DESCENDING);
-    Assert.assertEquals("{ \"name\" : -1}", i.getIndexObject().toString());
+    Assert.assertEquals("{ \"name\" : -1}", i.getIndexKeys().toString());
   }
 
   @Test
   public void testNamedMultiFieldUniqueIndex() {
     Index i = new Index().on("name", Order.ASCENDING).on("age", Order.DESCENDING);
     i.named("test").unique();
-    Assert.assertEquals("{ \"age\" : -1 , \"name\" : 1}", i.getIndexObject().toString());
+    Assert.assertEquals("{ \"age\" : -1 , \"name\" : 1}", i.getIndexKeys().toString());
     Assert.assertEquals("{ \"name\" : \"test\" , \"unique\" : true}", i.getIndexOptions().toString());
   }
 
@@ -45,14 +45,22 @@ public class IndexTests {
   public void testWithDropDuplicates() {
     Index i = new Index().on("name", Order.ASCENDING);
     i.unique(Duplicates.DROP);
-    Assert.assertEquals("{ \"name\" : 1}", i.getIndexObject().toString());
-    Assert.assertEquals("{ \"unique\" : true , \"drop_dups\" : true}", i.getIndexOptions().toString());
+    Assert.assertEquals("{ \"name\" : 1}", i.getIndexKeys().toString());
+    Assert.assertEquals("{ \"unique\" : true , \"dropDups\" : true}", i.getIndexOptions().toString());
+  }
+  
+  @Test
+  public void testWithSparse() {
+    Index i = new Index().on("name", Order.ASCENDING);
+    i.sparse().unique();
+    Assert.assertEquals("{ \"name\" : 1}", i.getIndexKeys().toString());
+    Assert.assertEquals("{ \"unique\" : true , \"sparse\" : true}", i.getIndexOptions().toString());
   }
 
   @Test
   public void testGeospatialIndex() {
     GeospatialIndex i = new GeospatialIndex("location").withMin(0);
-    Assert.assertEquals("{ \"location\" : \"2d\"}", i.getIndexObject().toString());
+    Assert.assertEquals("{ \"location\" : \"2d\"}", i.getIndexKeys().toString());
     Assert.assertEquals("{ \"min\" : 0}", i.getIndexOptions().toString());
   }
 

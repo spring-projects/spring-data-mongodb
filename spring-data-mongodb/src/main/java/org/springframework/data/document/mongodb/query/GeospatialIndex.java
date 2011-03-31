@@ -15,6 +15,8 @@
  */
 package org.springframework.data.document.mongodb.query;
 
+import org.springframework.data.document.mongodb.index.IndexDefinition;
+
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
@@ -51,7 +53,7 @@ public class GeospatialIndex implements IndexDefinition {
     return this;
   }
 
-  public DBObject getIndexObject() {
+  public DBObject getIndexKeys() {
     DBObject dbo = new BasicDBObject();
     dbo.put(keyField, "2d");
     return dbo;

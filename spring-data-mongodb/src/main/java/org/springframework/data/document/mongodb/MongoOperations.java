@@ -22,7 +22,8 @@ import com.mongodb.CommandResult;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.WriteResult;
-import org.springframework.data.document.mongodb.query.IndexDefinition;
+
+import org.springframework.data.document.mongodb.index.IndexDefinition;
 import org.springframework.data.document.mongodb.query.Query;
 import org.springframework.data.document.mongodb.query.Update;
 

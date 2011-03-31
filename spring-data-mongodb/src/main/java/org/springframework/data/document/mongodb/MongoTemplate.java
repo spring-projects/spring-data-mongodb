@@ -56,13 +56,13 @@ import org.springframework.data.document.mongodb.MongoPropertyDescriptors.MongoP
 import org.springframework.data.document.mongodb.convert.MappingMongoConverter;
 import org.springframework.data.document.mongodb.convert.MongoConverter;
 import org.springframework.data.document.mongodb.convert.SimpleMongoConverter;
+import org.springframework.data.document.mongodb.index.IndexDefinition;
 import org.springframework.data.document.mongodb.mapping.event.AfterConvertEvent;
 import org.springframework.data.document.mongodb.mapping.event.AfterLoadEvent;
 import org.springframework.data.document.mongodb.mapping.event.AfterSaveEvent;
 import org.springframework.data.document.mongodb.mapping.event.BeforeConvertEvent;
 import org.springframework.data.document.mongodb.mapping.event.BeforeSaveEvent;
 import org.springframework.data.document.mongodb.mapping.event.MongoMappingEvent;
-import org.springframework.data.document.mongodb.query.IndexDefinition;
 import org.springframework.data.document.mongodb.query.Query;
 import org.springframework.data.document.mongodb.query.Update;
 import org.springframework.jca.cci.core.ConnectionCallback;
@@ -472,9 +472,9 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
       public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
         DBObject indexOptions = indexDefinition.getIndexOptions();
         if (indexOptions != null) {
-          collection.ensureIndex(indexDefinition.getIndexObject(), indexOptions);
+          collection.ensureIndex(indexDefinition.getIndexKeys(), indexOptions);
         } else {
-          collection.ensureIndex(indexDefinition.getIndexObject());
+          collection.ensureIndex(indexDefinition.getIndexKeys());
         }
         return null;
       }

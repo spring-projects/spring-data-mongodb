@@ -16,13 +16,15 @@
 
 package org.springframework.data.document.mongodb.index;
 
+import com.mongodb.DBObject;
+
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
  */
-public interface IndexDefinition<T> {
+public interface IndexDefinition {
 
-  T getIndexDefinition();
+  DBObject getIndexKeys();
 
-  T getIndexOptions();
+  DBObject getIndexOptions();
 
 }
