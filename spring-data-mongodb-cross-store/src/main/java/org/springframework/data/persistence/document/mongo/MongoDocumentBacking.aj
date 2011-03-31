@@ -1,17 +1,17 @@
 package org.springframework.data.persistence.document.mongo;
 
 import java.lang.reflect.Field;
+import java.util.Map;
 
+import javax.persistence.EntityManager;
 import javax.persistence.Transient;
 import javax.persistence.Entity;
-import javax.persistence.Id;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.reflect.FieldSignature;
 
-import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.data.document.mongodb.mapping.Document;
 
 import org.springframework.data.persistence.document.DocumentBacked;
@@ -73,11 +73,37 @@ public aspect MongoDocumentBacking {
         args(newVal) &&
         !set(* DocumentBacked.*);
 
-//  protected pointcut entityIdSet(DocumentBacked entity, Object newVal) :
-//        set(@Id * DocumentBacked+.*) &&
-//        this(entity) &&
-//        args(newVal) &&
-//        !set(* DocumentBacked.*);
+  // intercept EntityManager.merge calls
+  public pointcut entityManagerMerge(EntityManager em, Object entity) : 
+    call(* EntityManager.merge(Object)) &&
+    target(em) &&
+    args(entity);
+  
+  // intercept EntityManager.remove calls
+  public pointcut entityManagerRemove(EntityManager em, Object entity) : 
+    call(* EntityManager.remove(Object)) &&
+    target(em) &&
+    args(entity);
+
+  // move changeSet from detached entity to the newly merged persistent object
+  Object around(EntityManager em, Object entity) : entityManagerMerge(em, entity) {
+    Object mergedEntity = proceed(em, entity);
+    if (entity instanceof DocumentBacked && mergedEntity instanceof DocumentBacked) {
+      ((DocumentBacked)mergedEntity).changeSet = ((DocumentBacked)entity).getChangeSet();
+    }
+    return mergedEntity;
+  }
+
+  // clear changeSet from removed entity
+  Object around(EntityManager em, Object entity) : entityManagerRemove(em, entity) {
+    if (entity instanceof DocumentBacked) {
+      Map<String,Object> cs = ((DocumentBacked)entity).getChangeSet().getValues();
+      for (String key : cs.keySet()) {
+        cs.put(key, null);
+      }
+    }
+    return proceed(em, entity);
+  }
 
   before(DocumentBacked entity) : arbitraryUserConstructorOfChangeSetBackedObject(entity) {
     LOGGER
@@ -88,26 +114,26 @@ public aspect MongoDocumentBacking {
     entity.itdChangeSetPersister = changeSetPersister;
     entity.itdTransactionSynchronization = 
         new DocumentBackedTransactionSynchronization(changeSetPersister, entity);
-    registerTransactionSynchronization(entity);
+    //registerTransactionSynchronization(entity);
   }
 
   private static void registerTransactionSynchronization(DocumentBacked entity) {
     if (TransactionSynchronizationManager.isSynchronizationActive()) {
       if (!TransactionSynchronizationManager.getSynchronizations().contains(entity.itdTransactionSynchronization)) {
         if (LOGGER.isDebugEnabled()) {
-          LOGGER.debug("Adding transaction synchronization for " + entity.getClass());
+          LOGGER.debug("Adding transaction synchronization for " + entity);
         }
         TransactionSynchronizationManager.registerSynchronization(entity.itdTransactionSynchronization);
       }
       else {
         if (LOGGER.isDebugEnabled()) {
-          LOGGER.debug("Transaction synchronization already active for " + entity.getClass());
+          LOGGER.debug("Transaction synchronization already active for " + entity);
         }
       }
     }
     else {
       if (LOGGER.isDebugEnabled()) {
-        LOGGER.debug("Transaction syncronization is not active for " + entity.getClass());
+        LOGGER.debug("Transaction synchronization is not active for " + entity);
       }
     }
   }
@@ -141,27 +167,33 @@ public aspect MongoDocumentBacking {
   }
 
   // lifecycle methods
-  @javax.persistence.PrePersist public void DocumentBacked.prePersist() {
+  @javax.persistence.PostPersist public void DocumentBacked.itdPostPersist() {
     if (LOGGER.isDebugEnabled()) {
-      LOGGER.debug("JPA lifecycle called PrePersist: " + this.getClass().getName() + " :: " + this.get_persistent_id());
+      LOGGER.debug("JPA lifecycle event PrePersist: " + this.getClass().getName());
     }
     registerTransactionSynchronization(this);
   }
-  @javax.persistence.PreUpdate public void DocumentBacked.preUpdate() {
+  @javax.persistence.PreUpdate public void DocumentBacked.itdPreUpdate() {
     if (LOGGER.isDebugEnabled()) {
-      LOGGER.debug("JPA lifecycle called PreUpdate: " + this.getClass().getName() + " :: " + this.get_persistent_id());
+      LOGGER.debug("JPA lifecycle event PreUpdate: " + this.getClass().getName() + " :: " + this);
     }
     registerTransactionSynchronization(this);
   }
-  @javax.persistence.PreRemove public void DocumentBacked.preRemove() {
+  @javax.persistence.PostUpdate public void DocumentBacked.itdPostUpdate() {
     if (LOGGER.isDebugEnabled()) {
-      LOGGER.debug("JPA lifecycle called PreRemove: " + this.getClass().getName() + " :: " + this.get_persistent_id());
+      LOGGER.debug("JPA lifecycle event PostUpdate: " + this.getClass().getName() + " :: " + this);
     }
     registerTransactionSynchronization(this);
   }
-  @javax.persistence.PostLoad public void DocumentBacked.postLoad() {
+  @javax.persistence.PostRemove public void DocumentBacked.itdPostRemove() {
     if (LOGGER.isDebugEnabled()) {
-      LOGGER.debug("JPA lifecycle called PostLoad: " + this.getClass().getName() + " :: " + this.get_persistent_id());
+      LOGGER.debug("JPA lifecycle event PostRemove: " + this.getClass().getName() + " :: " + this);
+    }
+    registerTransactionSynchronization(this);
+  }
+  @javax.persistence.PostLoad public void DocumentBacked.itdPostLoad() {
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug("JPA lifecycle event PostLoad: " + this.getClass().getName() + " :: " + this);
     }
     registerTransactionSynchronization(this);
   }

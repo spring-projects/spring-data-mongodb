@@ -1,4 +1,4 @@
-package org.springframework.persistence.document.test;
+package org.springframework.data.document.persistence.test;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;

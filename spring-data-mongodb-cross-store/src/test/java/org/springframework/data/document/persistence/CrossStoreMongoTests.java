@@ -8,8 +8,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.document.mongodb.MongoTemplate;
-import org.springframework.persistence.document.test.Person;
-import org.springframework.persistence.document.test.Resume;
+import org.springframework.data.document.persistence.test.Person;
+import org.springframework.data.document.persistence.test.Resume;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -99,18 +99,53 @@ public class CrossStoreMongoTests {
   @Test
   public void testMergeJpaEntityWithMongoDocument() {
     TransactionTemplate txTemplate = new TransactionTemplate(transactionManager);
-    final Person found = entityManager.find(Person.class, 1L);
-    found.setAge(77);
-    found.getResume().addJob("TargetRx, Developer, 2000-2005");
-    txTemplate.execute(new TransactionCallback<Object>() {
-      public Object doInTransaction(TransactionStatus status) {
-        entityManager.merge(found);
+    final Person detached = entityManager.find(Person.class, 1L);
+    detached.getResume().addJob("TargetRx, Developer, 2000-2005");
+    Person merged = txTemplate.execute(new TransactionCallback<Person>() {
+      public Person doInTransaction(TransactionStatus status) {
+        return entityManager.merge(detached);
+      }
+    });
+    Assert.assertTrue(detached.getResume().getJobs().contains("TargetRx, Developer, 2000-2005"));
+    Assert.assertTrue(merged.getResume().getJobs().contains("TargetRx, Developer, 2000-2005"));
+    final Person updated = entityManager.find(Person.class, 1L);
+    Assert.assertTrue(updated.getResume().getJobs().contains("TargetRx, Developer, 2000-2005"));
+  }
+
+  @Test
+  public void testRemoveJpaEntityWithMongoDocument() {
+    TransactionTemplate txTemplate = new TransactionTemplate(transactionManager);
+    txTemplate.execute(new TransactionCallback<Person>() {
+      public Person doInTransaction(TransactionStatus status) {
+        Person p2 = new Person("Thomas", 20);
+        Resume r2 = new Resume();
+        r2.addEducation("Skanstulls High School, 1975");
+        r2.addJob("DiMark, DBA, 1990-2000");
+        p2.setResume(r2);
+        p2.setId(2L);
+        entityManager.persist(p2);
+        Person p3 = new Person("Thomas", 20);
+        Resume r3 = new Resume();
+        r3.addEducation("Univ. of Stockholm, 1980");
+        r3.addJob("VMware, Developer, 2007-");
+        p3.setResume(r3);
+        p3.setId(3L);
+        entityManager.persist(p3);
         return null;
       }
     });
-    final Person updated = entityManager.find(Person.class, 1L);
-    // assert that the new values are in respective DBs
-    // TODO: during merge we lose the changeset since JPA creates a new persistent instance - 
-    // we need to move the existing changeset over somehow
+    txTemplate.execute(new TransactionCallback<Person>() {
+      public Person doInTransaction(TransactionStatus status) {
+        final Person found2 = entityManager.find(Person.class, 2L);
+        final Person found3 = entityManager.find(Person.class, 3L);
+        entityManager.remove(found2);
+        return null;
+      }
+    });
+    final Person found2 = entityManager.find(Person.class, 2L);
+    final Person found3 = entityManager.find(Person.class, 3L);
+//    TODO: assert that any documents for Person 2 are gone
+//    System.out.println(found2);
+//    System.out.println(found3);
   }
 }

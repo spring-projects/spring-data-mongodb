@@ -102,6 +102,11 @@ public class MongoChangeSetPersister implements ChangeSetPersister<Object> {
 
   @Override
   public Object persistState(ChangeSetBacked entity, ChangeSet cs) throws DataAccessException {
+    if (cs == null) {
+      log.debug("Flush: changeset was null, nothing to flush.");
+      return 0L;
+    }
+        
     log.debug("Flush: changeset: " + cs.getValues().keySet());
 
     String collName = getCollectionNameForEntity(entity.getClass());
