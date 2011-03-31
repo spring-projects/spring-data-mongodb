@@ -4,11 +4,15 @@ Spring Data Document Changelog
 Changes in version 1.0.0.M2 MongoDB
 ------------------------------------------------
 
+Core Data Access
+* Added findAndRemove methods to MongoTemplate/MongoOperations
+
 Repository
 * Adapted new metamodel API (DATADOC-47, DATACMNS-17)
 * Added support for 'In' and 'NotIn' keyword (DATADOC-46)
 * Fixed 'And' and 'Or' keywords
 * Added support for executing QueryDsl predicates (DATADOC-41)
+
 
 Changes in version 1.0.0.M1 MongoDB (2011-02-14)
 ------------------------------------------------
@@ -18,7 +22,6 @@ General
 * Namespace for basic configuration of Mongo environment
 
 Core Data Access
-
 * Introduce MongoTemplate implementation with methods defined in MongoOperations interface
 * MongoTemplate support for insert, find, save, update, remove
 * MongoTemplate support for basic POJO serialization based on bean properties
@@ -29,7 +32,6 @@ Core Data Access
 * Support in MongoTemplate for enabling either logging or throwing exceptions based on value of WriteResult return value.
 
 Repository
-
 * Introducing generic repository implementation for MongoDB
 * Automatic implementation of interface query method names on repositories.
 * Namespace support for Mongo repositories
