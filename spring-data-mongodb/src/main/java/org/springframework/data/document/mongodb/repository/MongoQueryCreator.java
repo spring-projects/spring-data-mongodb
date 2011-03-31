@@ -82,7 +82,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Query> {
 
     Criteria criteria = from(part.getType(), where(part.getProperty().toDotPath()),
         iterator);
-    return base.and(criteria);
+    return base.addCriteria(criteria);
   }
 
 

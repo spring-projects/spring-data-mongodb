@@ -961,7 +961,7 @@
           ...
 
           List&lt;Person&gt; result = mongoTemplate.find(
-          new Query(where("age").lt(50)).and(where("accounts.balance").gt(1000.00d)),
+          new Query(where("age").lt(50).and("accounts.balance").gt(1000.00d)),
           Person.class);
         </programlisting>
       </example>
@@ -1076,10 +1076,12 @@
             </listitem>
 
             <listitem>
-              <para><literal>void</literal> <emphasis role="bold">or
-              </emphasis> <literal>(List&lt;Query&gt; queries)
-              </literal>Creates an or query using the <literal>$or</literal>
-              operator for all of the provided queries</para>
+              <para><literal>Criteria</literal> <emphasis role="bold">and
+              </emphasis> <literal>(String key) </literal>Adds a chained
+              <classname>Criteria</classname> with the specified
+              <literal>key</literal> to the current
+              <classname>Criteria</classname> and retuns the newly created
+              one</para>
 
               <para />
             </listitem>
@@ -1096,9 +1098,17 @@
         <para>
           <itemizedlist>
             <listitem>
-              <para><literal>Query</literal> <emphasis role="bold">and
+              <para><literal>Query</literal> <emphasis role="bold">addCriteria
               </emphasis> <literal>(Criteria criteria)</literal> used to add
               additional criteria to the query</para>
+            </listitem>
+
+            <listitem>
+              <para><literal>void</literal> <emphasis
+              role="bold">or</emphasis> <literal>(List&lt;Query&gt;
+              queries)</literal> Creates an or query using the
+              <literal>$or</literal> operator for all of the provided
+              queries</para>
             </listitem>
 
             <listitem>

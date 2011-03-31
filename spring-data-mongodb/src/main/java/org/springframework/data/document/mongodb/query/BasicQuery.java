@@ -51,7 +51,7 @@ public class BasicQuery extends Query {
   }
 
   @Override
-  public Query and(Criteria criteria) {
+  public Query addCriteria(Criteria criteria) {
     this.queryObject.putAll(criteria.getCriteriaObject());
     return this;
   }

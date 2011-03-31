@@ -36,10 +36,10 @@ public class Query {
   }
 
   public Query(Criteria criteria) {
-    and(criteria);
+    addCriteria(criteria);
   }
 
-  public Query and(Criteria criteria) {
+  public Query addCriteria(Criteria criteria) {
     this.criteria.put(criteria.getKey(), criteria);
     return this;
   }
