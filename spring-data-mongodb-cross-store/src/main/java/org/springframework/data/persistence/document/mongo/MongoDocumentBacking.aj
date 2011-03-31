@@ -12,11 +12,13 @@ import org.apache.commons.logging.LogFactory;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.reflect.FieldSignature;
 
+import org.springframework.dao.DataAccessException;
 import org.springframework.data.document.mongodb.mapping.Document;
 
 import org.springframework.data.persistence.document.DocumentBacked;
 import org.springframework.data.persistence.document.DocumentBackedTransactionSynchronization;
 import org.springframework.data.persistence.ChangeSet;
+import org.springframework.data.persistence.ChangeSetBacked;
 import org.springframework.data.persistence.ChangeSetPersister;
 import org.springframework.data.persistence.ChangeSetPersister.NotFoundException;
 import org.springframework.data.persistence.HashMapChangeSet;
@@ -97,10 +99,22 @@ public aspect MongoDocumentBacking {
   // clear changeSet from removed entity
   Object around(EntityManager em, Object entity) : entityManagerRemove(em, entity) {
     if (entity instanceof DocumentBacked) {
-      Map<String,Object> cs = ((DocumentBacked)entity).getChangeSet().getValues();
-      for (String key : cs.keySet()) {
-        cs.put(key, null);
+      ChangeSet nulledCs = new HashMapChangeSet();
+      DocumentBacked documentEntity = (DocumentBacked) entity;
+      @SuppressWarnings("unchecked")
+      ChangeSetPersister<Object> changeSetPersister = (ChangeSetPersister<Object>)documentEntity.itdChangeSetPersister;
+      try {
+        changeSetPersister.getPersistentState(
+            documentEntity.getClass(),
+            documentEntity.get_persistent_id(), 
+            documentEntity.getChangeSet());
+      } 
+      catch (DataAccessException e) {} 
+      catch (NotFoundException e) {}
+      for (String key : ((DocumentBacked)entity).getChangeSet().getValues().keySet()) {
+        nulledCs.set(key, null);
       }
+      ((DocumentBacked)entity).setChangeSet(nulledCs);
     }
     return proceed(em, entity);
   }

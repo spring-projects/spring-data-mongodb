@@ -107,7 +107,9 @@ public class MongoChangeSetPersister implements ChangeSetPersister<Object> {
       return 0L;
     }
         
-    log.debug("Flush: changeset: " + cs.getValues().keySet());
+    if (log.isDebugEnabled()) {
+      log.debug("Flush: changeset: " + cs.getValues());
+    }
 
     String collName = getCollectionNameForEntity(entity.getClass());
     DBCollection dbc = mongoTemplate.getCollection(collName);
@@ -121,7 +123,6 @@ public class MongoChangeSetPersister implements ChangeSetPersister<Object> {
         dbQuery.put(ENTITY_ID, getPersistentId(entity, cs));
         dbQuery.put(ENTITY_CLASS, entity.getClass().getName());
         dbQuery.put(ENTITY_FIELD_NAME, key);
-        dbQuery.put(ENTITY_FIELD_CLASS, value.getClass().getName());
         DBObject dbId = mongoTemplate.execute(collName,
             new CollectionCallback<DBObject>() {
               @Override
@@ -130,20 +131,39 @@ public class MongoChangeSetPersister implements ChangeSetPersister<Object> {
                 return collection.findOne(dbQuery);
               }
             });
-        final DBObject dbDoc = new BasicDBObject();
-        mongoTemplate.getConverter().write(value, dbDoc);
-        dbDoc.putAll(dbQuery);
-        if (dbId != null) {
-          dbDoc.put("_id", dbId.get("_id"));
-        }
-        mongoTemplate.execute(collName, new CollectionCallback<Object>() {
-          @Override
-          public Object doInCollection(DBCollection collection)
-              throws MongoException, DataAccessException {
-            collection.save(dbDoc);
-            return null;
+        if (value == null) {
+          if (log.isDebugEnabled()) {
+            log.debug("Flush: removing: " + dbQuery);
           }
-        });
+          mongoTemplate.execute(collName, new CollectionCallback<Object>() {
+            @Override
+            public Object doInCollection(DBCollection collection)
+                throws MongoException, DataAccessException {
+              collection.remove(dbQuery);
+              return null;
+            }
+          });
+        }
+        else {
+          final DBObject dbDoc = new BasicDBObject();
+          dbDoc.putAll(dbQuery);
+          if (log.isDebugEnabled()) {
+            log.debug("Flush: saving: " + dbQuery);
+          }
+          mongoTemplate.getConverter().write(value, dbDoc);
+          dbDoc.put(ENTITY_FIELD_CLASS, value.getClass().getName());
+          if (dbId != null) {
+            dbDoc.put("_id", dbId.get("_id"));
+          }
+          mongoTemplate.execute(collName, new CollectionCallback<Object>() {
+            @Override
+            public Object doInCollection(DBCollection collection)
+                throws MongoException, DataAccessException {
+              collection.save(dbDoc);
+              return null;
+            }
+          });
+        }
       }
     }
     return 0L;

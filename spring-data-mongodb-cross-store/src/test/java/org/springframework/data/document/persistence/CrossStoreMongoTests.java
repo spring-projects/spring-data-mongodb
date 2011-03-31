@@ -20,14 +20,11 @@ import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import com.mongodb.DBCollection;
-import com.mongodb.Mongo;
+import com.mongodb.DBObject;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = "classpath:/META-INF/spring/applicationContext.xml")
 public class CrossStoreMongoTests {
-
-  @Autowired
-  private Mongo mongo;
 
   @Autowired
   private MongoTemplate mongoTemplate;
@@ -137,15 +134,18 @@ public class CrossStoreMongoTests {
     txTemplate.execute(new TransactionCallback<Person>() {
       public Person doInTransaction(TransactionStatus status) {
         final Person found2 = entityManager.find(Person.class, 2L);
-        final Person found3 = entityManager.find(Person.class, 3L);
         entityManager.remove(found2);
         return null;
       }
     });
-    final Person found2 = entityManager.find(Person.class, 2L);
-    final Person found3 = entityManager.find(Person.class, 3L);
-//    TODO: assert that any documents for Person 2 are gone
-//    System.out.println(found2);
-//    System.out.println(found3);
+    boolean weFound3 = false;
+    for (DBObject dbo : this.mongoTemplate.getCollection(Person.class.getName()).find()) {
+      Assert.assertTrue(!dbo.get("_entity_id").equals(2L));
+      if (dbo.get("_entity_id").equals(3L)) {
+        weFound3 = true;
+      }
+    }
+    Assert.assertTrue(weFound3);
   }
+  
 }
