@@ -162,4 +162,17 @@ public class MappingTests {
     assertThat(result.size(), is(1));
   }
 
+  @Test
+  public void testPrimitives() {
+    Location loc = new Location(
+        new double[]{1.0, 2.0},
+        new int[]{1, 2, 3, 4},
+        new float[]{1.0f, 2.0f}
+    );
+    template.insert("locations", loc);
+
+    List<Location> result = template.find("locations", new Query(Criteria.where("_id").is(loc.getId())), Location.class);
+    assertThat(result.size(), is(1));
+  }
+
 }

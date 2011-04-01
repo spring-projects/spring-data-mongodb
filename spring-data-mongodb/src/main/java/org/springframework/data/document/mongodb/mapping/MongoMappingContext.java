@@ -46,6 +46,7 @@ public class MongoMappingContext extends BasicMappingContext {
     simpleTypes.add(com.mongodb.DBRef.class);
     simpleTypes.add(ObjectId.class);
     simpleTypes.add(CodeWScope.class);
+    simpleTypes.add(Character.class);
   }
 
   @Override

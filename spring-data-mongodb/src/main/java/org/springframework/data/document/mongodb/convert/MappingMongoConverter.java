@@ -413,7 +413,12 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
     Class<?> type = prop.getType();
     if (prop.isCollection()) {
       BasicDBList dbList = new BasicDBList();
-      Collection<?> coll = (type.isArray() ? Arrays.asList((Object[]) obj) : (Collection<?>) obj);
+      Collection<?> coll;
+      if (type.isArray()) {
+        coll = Arrays.asList((Object[]) obj);
+      } else {
+        coll = (Collection<?>) obj;
+      }
       for (Object propObjItem : coll) {
         if (null != dbref) {
           DBRef dbRef = createDBRef(propObjItem, dbref);
@@ -569,7 +574,7 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
           }
           return Arrays.asList(items);
         }
-        
+
         Class<?> toType = findTypeToBeUsed((DBObject) dbObj);
 
         // It's a complex object, have to read it in
@@ -594,11 +599,11 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
    */
   protected Class<?> findTypeToBeUsed(DBObject dbObject) {
     Object classToBeUsed = dbObject.get(CUSTOM_TYPE_KEY);
-    
+
     if (classToBeUsed == null) {
       return null;
     }
-    
+
     try {
       return Class.forName(classToBeUsed.toString());
     } catch (ClassNotFoundException e) {
