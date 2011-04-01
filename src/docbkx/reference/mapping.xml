@@ -128,8 +128,6 @@ public class Person {
       </para>
 
       <example>
-        <title>Child object referred to using a DBRef</title>
-
         <programlisting language="java"><![CDATA[
 @Document
 public class Account {
@@ -171,7 +169,45 @@ public class Person {
       <title>Handling Mapping Framework Events</title>
 
       <para>Built into the MongoDB mapping framework are several <classname>org.springframework.context.ApplicationEvent</classname>
-        events that your application can respond to
+        events that your application can respond to by registering special beans in the <code>ApplicationContext</code>.
+      </para>
+
+      <para>To intercept an object before it goes through the conversion process (which turns your domain object
+        into a <classname>com.mongodb.DBObject</classname>), you'd register a subclass of <classname>org.springframework.data.document.mongodb.mapping.event.AbstractMappingEventListener</classname>
+        that overrides the <code>onBeforeConvert</code> method. When the event is dispatched, your listener will be
+        called and passed the domain object before it goes into the converter.
+      </para>
+
+      <example>
+        <programlisting language="java"><![CDATA[
+public class BeforeConvertListener<Person> extends AbstractMappingEventListener {
+  @Override
+  public void onBeforeConvert(Person p) {
+    ... does some auditing manipulation, set timestamps, whatever ...
+  }
+}
+        ]]></programlisting>
+      </example>
+
+      <para>To intercept an object before it goes into the database, you'd register a subclass of
+        <classname>org.springframework.data.document.mongodb.mapping.event.AbstractMappingEventListener</classname>
+        that overrides the <code>onBeforeSave</code> method. When the event is dispatched, your listener will be
+        called and passed the domain object and the converted <classname>com.mongodb.DBObject</classname>.
+      </para>
+
+      <example>
+        <programlisting language="java"><![CDATA[
+public class BeforeSaveListener<Person> extends AbstractMappingEventListener {
+  @Override
+  public void onBeforeSave(Person p, DBObject dbo) {
+    ... change values, delete them, whatever ...
+  }
+}
+        ]]></programlisting>
+      </example>
+
+      <para>Simply declaring these beans in your Spring ApplicationContext will cause them to be invoked whenever the
+        event is dispatched.
       </para>
     </section>
   </section>
