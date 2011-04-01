@@ -8,7 +8,7 @@
     <version>1.0.0.BUILD-SNAPSHOT</version>
     <relativePath>../spring-data-document-parent/pom.xml</relativePath>
   </parent>
-  <artifactId>spring-data-mongo-log4j</artifactId>
+  <artifactId>spring-data-mongodb-log4j</artifactId>
   <packaging>jar</packaging>
   <name>Spring Data MongoDB Log4J Appender</name>
 
