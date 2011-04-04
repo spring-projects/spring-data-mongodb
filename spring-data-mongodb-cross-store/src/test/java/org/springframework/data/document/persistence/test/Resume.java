@@ -2,7 +2,6 @@ package org.springframework.data.document.persistence.test;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.data.persistence.document.mongo.MongoDocumentBacking;
 
 //@DocumentEntity
 public class Resume {

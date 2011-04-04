@@ -24,7 +24,7 @@ import org.springframework.data.util.TypeInformation;
 /**
  * Mongo specific {@link PersistentEntity} implementation that adds Mongo specific meta-data such as the collection name
  * and the like.
- * 
+ *
  * @author Jon Brisbin <jbrisbin@vmware.com>
  * @author Oliver Gierke
  */
@@ -35,25 +35,31 @@ public class MongoPersistentEntity<T> extends BasicPersistentEntity<T> {
   /**
    * Creates a new {@link MongoPersistentEntity} with the given {@link MappingContext} and {@link TypeInformation}. Will
    * default the collection name to the entities simple type name.
-   * 
+   *
    * @param mappingContext
    * @param typeInformation
    */
   public MongoPersistentEntity(MappingContext mappingContext, TypeInformation typeInformation) {
     super(mappingContext, typeInformation);
-    this.collection = typeInformation.getType().getSimpleName();
+    this.collection = typeInformation.getType().getSimpleName().toLowerCase();
+    if (typeInformation.getType().isAnnotationPresent(Document.class)) {
+      Document d = typeInformation.getType().getAnnotation(Document.class);
+      if (!"".equals(d.collection())) {
+        this.collection = d.collection();
+      }
+    }
   }
 
   /**
    * Returns the collection the entity should be stored in.
-   * 
+   *
    * @return
    */
   public String getCollection() {
     return collection;
   }
 
-  
+
   public void setCollection(String collection) {
     this.collection = collection;
   }

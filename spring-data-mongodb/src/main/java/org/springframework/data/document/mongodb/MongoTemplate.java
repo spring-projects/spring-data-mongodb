@@ -57,6 +57,8 @@ import org.springframework.data.document.mongodb.convert.MappingMongoConverter;
 import org.springframework.data.document.mongodb.convert.MongoConverter;
 import org.springframework.data.document.mongodb.convert.SimpleMongoConverter;
 import org.springframework.data.document.mongodb.index.IndexDefinition;
+import org.springframework.data.document.mongodb.mapping.Document;
+import org.springframework.data.document.mongodb.mapping.MongoPersistentEntity;
 import org.springframework.data.document.mongodb.mapping.event.AfterConvertEvent;
 import org.springframework.data.document.mongodb.mapping.event.AfterLoadEvent;
 import org.springframework.data.document.mongodb.mapping.event.AfterSaveEvent;
@@ -65,6 +67,7 @@ import org.springframework.data.document.mongodb.mapping.event.BeforeSaveEvent;
 import org.springframework.data.document.mongodb.mapping.event.MongoMappingEvent;
 import org.springframework.data.document.mongodb.query.Query;
 import org.springframework.data.document.mongodb.query.Update;
+import org.springframework.data.mapping.model.MappingContext;
 import org.springframework.jca.cci.core.ConnectionCallback;
 import org.springframework.util.Assert;
 
@@ -505,11 +508,19 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
   // Find methods that take a Query to express the query and that return a List of objects.
 
   public <T> List<T> find(Query query, Class<T> targetClass) {
-    return find(getDefaultCollectionName(), query, targetClass);
+    String collName = getEntityCollection(targetClass);
+    if (null == collName) {
+      collName = getRequiredDefaultCollectionName();
+    }
+    return find(collName, query, targetClass);
   }
 
   public <T> List<T> find(Query query, Class<T> targetClass, MongoReader<T> reader) {
-    return find(getDefaultCollectionName(), query, targetClass, reader);
+    String collName = getEntityCollection(targetClass);
+    if (null == collName) {
+      collName = getRequiredDefaultCollectionName();
+    }
+    return find(collName, query, targetClass, reader);
   }
 
   public <T> List<T> find(String collectionName, final Query query, Class<T> targetClass) {
@@ -556,17 +567,17 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
   }
 
   public <T> T findAndRemove(Query query, Class<T> targetClass,
-                       MongoReader<T> reader) {
+                             MongoReader<T> reader) {
     return findAndRemove(getDefaultCollectionName(), query, targetClass, reader);
   }
 
   public <T> T findAndRemove(String collectionName, Query query,
-                       Class<T> targetClass) {
+                             Class<T> targetClass) {
     return findAndRemove(collectionName, query, targetClass, null);
   }
 
   public <T> T findAndRemove(String collectionName, Query query,
-                       Class<T> targetClass, MongoReader<T> reader) {
+                             Class<T> targetClass, MongoReader<T> reader) {
     return doFindAndRemove(collectionName, query.getQueryObject(), query.getFieldsObject(), query.getSortObject(), targetClass, reader);
   }
 
@@ -574,7 +585,11 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
     * @see org.springframework.data.document.mongodb.MongoOperations#insert(java.lang.Object)
     */
   public void insert(Object objectToSave) {
-    insert(getRequiredDefaultCollectionName(), objectToSave);
+    String collName = getEntityCollection(objectToSave);
+    if (null == collName) {
+      collName = getRequiredDefaultCollectionName();
+    }
+    insert(collName, objectToSave);
   }
 
   /* (non-Javadoc)
@@ -588,7 +603,11 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
     * @see org.springframework.data.document.mongodb.MongoOperations#insert(T, org.springframework.data.document.mongodb.MongoWriter)
     */
   public <T> void insert(T objectToSave, MongoWriter<T> writer) {
-    insert(getDefaultCollectionName(), objectToSave, writer);
+    String collName = getEntityCollection(objectToSave);
+    if (null == collName) {
+      collName = getDefaultCollectionName();
+    }
+    insert(collName, objectToSave, writer);
   }
 
   /* (non-Javadoc)
@@ -1084,6 +1103,36 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
     return name;
   }
 
+  private String getEntityCollection(Object obj) {
+    if (null != obj) {
+      return getEntityCollection(obj.getClass());
+    }
+
+    return null;
+  }
+
+  private String getEntityCollection(Class<?> clazz) {
+    if (mongoConverter instanceof MappingMongoConverter) {
+      MappingContext ctx = ((MappingMongoConverter) mongoConverter).getMappingContext();
+      MongoPersistentEntity entity = (MongoPersistentEntity) ctx.getPersistentEntity(clazz);
+      if (null != entity) {
+        return entity.getCollection();
+      }
+    }
+    // Entity hasn't yet been added, try and figure it out anyway
+    if (clazz.isAnnotationPresent(Document.class)) {
+      Document doc = clazz.getAnnotation(Document.class);
+      if (!"".equals(doc.collection())) {
+        return doc.collection();
+      }
+
+      // Default to simple name
+      return clazz.getSimpleName().toLowerCase();
+    }
+
+    return null;
+  }
+
   /**
    * Checks and handles any errors.
    * <p/>
@@ -1240,7 +1289,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
     }
 
     public DBObject doInCollection(DBCollection collection) throws MongoException, DataAccessException {
-        return collection.findAndModify(query, fields, sort, true, null, false, false);
+      return collection.findAndModify(query, fields, sort, true, null, false, false);
     }
   }
 

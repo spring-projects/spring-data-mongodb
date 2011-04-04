@@ -24,11 +24,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.mongodb.DB;
 import com.mongodb.Mongo;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.junit.Before;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.data.document.mongodb.MongoDbUtils;
@@ -41,7 +42,8 @@ import org.springframework.data.document.mongodb.query.Query;
  */
 public class MappingTests {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(MongoDbUtils.class);
+  private static final Log LOGGER = LogFactory.getLog(MongoDbUtils.class);
+  private final String[] collectionsToDrop = new String[]{"person", "personmapproperty", "personpojo", "personcustomidname", "account"};
 
   ApplicationContext applicationContext;
   MongoTemplate template;
@@ -50,7 +52,10 @@ public class MappingTests {
   @Before
   public void setUp() throws Exception {
     Mongo mongo = new Mongo();
-    mongo.getDB("database").getCollection("person").drop();
+    DB db = mongo.getDB("database");
+    for (String coll : collectionsToDrop) {
+      db.getCollection(coll).drop();
+    }
     applicationContext = new ClassPathXmlApplicationContext("/mapping.xml");
     template = applicationContext.getBean(MongoTemplate.class);
     mappingContext = applicationContext.getBean(MongoMappingContext.class);
@@ -58,6 +63,9 @@ public class MappingTests {
 
   @Test
   public void testPersonPojo() throws Exception {
+    // POJOs aren't auto-detected, have to add manually
+    mappingContext.addPersistentEntity(PersonPojo.class);
+
     LOGGER.info("about to create new personpojo");
     PersonPojo p = new PersonPojo(12345, "Person", "Pojo");
     LOGGER.info("about to insert");
@@ -73,6 +81,9 @@ public class MappingTests {
 
   @Test
   public void testPersonWithCustomIdName() {
+    // POJOs aren't auto-detected, have to add manually
+    mappingContext.addPersistentEntity(PersonCustomIdName.class);
+
     PersonCustomIdName p = new PersonCustomIdName(123456, "Custom", "Id");
     template.insert(p);
 
@@ -163,15 +174,15 @@ public class MappingTests {
   }
 
   @Test
-  public void testPrimitives() {
+  public void testPrimitivesAndCustomCollectionName() {
     Location loc = new Location(
         new double[]{1.0, 2.0},
         new int[]{1, 2, 3, 4},
         new float[]{1.0f, 2.0f}
     );
-    template.insert("locations", loc);
+    template.insert(loc);
 
-    List<Location> result = template.find("locations", new Query(Criteria.where("_id").is(loc.getId())), Location.class);
+    List<Location> result = template.find("places", new Query(Criteria.where("_id").is(loc.getId())), Location.class);
     assertThat(result.size(), is(1));
   }
 

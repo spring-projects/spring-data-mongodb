@@ -21,7 +21,7 @@ import org.bson.types.ObjectId;
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
  */
-@Document
+@Document(collection = "places")
 public class Location {
 
   private ObjectId id;

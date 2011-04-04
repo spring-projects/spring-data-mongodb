@@ -26,8 +26,8 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.MongoException;
 import com.mongodb.util.JSON;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.context.ApplicationListener;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.document.mongodb.CollectionCallback;
@@ -50,7 +50,7 @@ import org.springframework.util.Assert;
  */
 public class MongoPersistentEntityIndexCreator implements ApplicationListener<MappingContextEvent> {
 
-  private static final Logger log = LoggerFactory.getLogger(MongoPersistentEntityIndexCreator.class);
+  private static final Log log = LogFactory.getLog(MongoPersistentEntityIndexCreator.class);
 
   private Set<Class<?>> classesSeen = Collections.newSetFromMap(new ConcurrentHashMap<Class<?>, Boolean>());
 

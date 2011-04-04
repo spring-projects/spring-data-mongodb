@@ -17,8 +17,8 @@
 package org.springframework.data.document.mongodb.mapping.event;
 
 import com.mongodb.DBObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
 
@@ -27,7 +27,7 @@ import org.springframework.context.ApplicationListener;
  */
 public abstract class AbstractMappingEventListener<T extends ApplicationEvent, E> implements ApplicationListener<T> {
 
-  protected final Logger log = LoggerFactory.getLogger(getClass());
+  protected final Log log = LogFactory.getLog(getClass());
 
   @SuppressWarnings({"unchecked"})
   public void onApplicationEvent(T appEvent) {

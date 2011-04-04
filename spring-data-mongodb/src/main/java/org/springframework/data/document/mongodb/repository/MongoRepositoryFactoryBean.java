@@ -18,8 +18,8 @@ package org.springframework.data.document.mongodb.repository;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.data.document.mongodb.MongoOperations;
 import org.springframework.data.document.mongodb.MongoPropertyDescriptors.MongoPropertyDescriptor;
 import org.springframework.data.document.mongodb.MongoTemplate;
@@ -43,7 +43,7 @@ import org.springframework.util.StringUtils;
 
 /**
  * {@link org.springframework.beans.factory.FactoryBean} to create {@link MongoRepository} instances.
- * 
+ *
  * @author Oliver Gierke
  */
 public class MongoRepositoryFactoryBean<T extends MongoRepository<S, ID>, S, ID extends Serializable> extends
@@ -54,18 +54,17 @@ public class MongoRepositoryFactoryBean<T extends MongoRepository<S, ID>, S, ID 
 
   /**
    * Configures the {@link MongoTemplate} to be used.
-   * 
-   * @param template
-   *          the template to set
+   *
+   * @param template the template to set
    */
   public void setTemplate(MongoTemplate template) {
 
     this.template = template;
   }
-  
+
   /**
    * Sets the {@link MappingContext} used with the underlying {@link MongoTemplate}.
-   * 
+   *
    * @param mappingContext the mappingContext to set
    */
   public void setMappingContext(MappingContext mappingContext) {
@@ -103,7 +102,7 @@ public class MongoRepositoryFactoryBean<T extends MongoRepository<S, ID>, S, ID 
 
   /**
    * Repository to create {@link MongoRepository} instances.
-   * 
+   *
    * @author Oliver Gierke
    */
   public static class MongoRepositoryFactory extends RepositoryFactorySupport {
@@ -116,8 +115,8 @@ public class MongoRepositoryFactoryBean<T extends MongoRepository<S, ID>, S, ID 
 
     /**
      * Creates a new {@link MongoRepositoryFactory} with the given {@link MongoTemplate} and {@link MappingContext}.
-     * 
-     * @param template must not be {@literal null}
+     *
+     * @param template       must not be {@literal null}
      * @param mappingContext
      */
     public MongoRepositoryFactory(MongoTemplate template, MappingContext mappingContext) {
@@ -149,7 +148,7 @@ public class MongoRepositoryFactoryBean<T extends MongoRepository<S, ID>, S, ID 
      * (org.springframework.data.repository.support.RepositoryMetadata)
      */
     @Override
-    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @SuppressWarnings({"rawtypes", "unchecked"})
     protected Object getTargetRepository(RepositoryMetadata metadata) {
 
       Class<?> repositoryInterface = metadata.getRepositoryInterface();
@@ -183,7 +182,7 @@ public class MongoRepositoryFactoryBean<T extends MongoRepository<S, ID>, S, ID 
 
     /**
      * {@link QueryLookupStrategy} to create {@link PartTreeMongoQuery} instances.
-     * 
+     *
      * @author Oliver Gierke
      */
     private class MongoQueryLookupStrategy implements QueryLookupStrategy {
@@ -239,16 +238,16 @@ public class MongoRepositoryFactoryBean<T extends MongoRepository<S, ID>, S, ID 
       return entityInformationCreator.getEntityInformation(domainClass);
     }
   }
-  
+
   /**
    * Simple wrapper to to create {@link MongoEntityInformation} instances based on a {@link MappingContext}.
    *
    * @author Oliver Gierke
    */
   static class EntityInformationCreator {
-    
+
     private final MappingContext mappingContext;
-    
+
     public EntityInformationCreator(MappingContext mappingContext) {
       this.mappingContext = mappingContext;
     }
@@ -257,7 +256,7 @@ public class MongoRepositoryFactoryBean<T extends MongoRepository<S, ID>, S, ID 
       if (null == mappingContext) {
         return new SimpleMongoEntityInformation<T, ID>(domainClass);
       }
-      
+
       PersistentEntity<T> persistentEntity = mappingContext.getPersistentEntity(domainClass);
       if (persistentEntity == null) {
         persistentEntity = mappingContext.addPersistentEntity(domainClass);
@@ -269,12 +268,12 @@ public class MongoRepositoryFactoryBean<T extends MongoRepository<S, ID>, S, ID 
   /**
    * {@link QueryCreationListener} inspecting {@link PartTreeMongoQuery}s and creating an index for the properties it
    * refers to.
-   * 
+   *
    * @author Oliver Gierke
    */
   private static class IndexEnsuringQueryCreationListener implements QueryCreationListener<PartTreeMongoQuery> {
 
-    private static final Logger LOG = LoggerFactory.getLogger(IndexEnsuringQueryCreationListener.class);
+    private static final Log LOG = LogFactory.getLog(IndexEnsuringQueryCreationListener.class);
     private final MongoOperations operations;
 
     public IndexEnsuringQueryCreationListener(MongoOperations operations) {

@@ -21,8 +21,8 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.regex.Pattern;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.data.document.mongodb.query.Criteria;
 import org.springframework.data.document.mongodb.query.CriteriaDefinition;
 import org.springframework.data.document.mongodb.query.Query;
@@ -42,7 +42,7 @@ import org.springframework.data.repository.query.parser.PartTree;
  */
 class MongoQueryCreator extends AbstractQueryCreator<Query, Query> {
 
-  private static final Logger LOG = LoggerFactory.getLogger(MongoQueryCreator.class);
+  private static final Log LOG = LogFactory.getLog(MongoQueryCreator.class);
 
 
   /**

@@ -17,8 +17,8 @@
 package org.springframework.data.document.mongodb.mapping;
 
 import com.mongodb.DBObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.data.document.mongodb.mapping.event.AbstractMappingEventListener;
 
 /**
@@ -26,7 +26,7 @@ import org.springframework.data.document.mongodb.mapping.event.AbstractMappingEv
  */
 public class MappingEventsListener<MongoMappingEvent> extends AbstractMappingEventListener {
 
-  private Logger log = LoggerFactory.getLogger(getClass());
+  private Log log = LogFactory.getLog(getClass());
 
   @Override
   public void onBeforeConvert(Object source) {
