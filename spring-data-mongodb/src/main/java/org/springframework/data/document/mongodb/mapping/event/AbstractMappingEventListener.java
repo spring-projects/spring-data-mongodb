@@ -17,6 +17,8 @@
 package org.springframework.data.document.mongodb.mapping.event;
 
 import com.mongodb.DBObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
 
@@ -25,37 +27,59 @@ import org.springframework.context.ApplicationListener;
  */
 public abstract class AbstractMappingEventListener<T extends ApplicationEvent, E> implements ApplicationListener<T> {
 
+  protected final Logger log = LoggerFactory.getLogger(getClass());
+
   @SuppressWarnings({"unchecked"})
   public void onApplicationEvent(T appEvent) {
     if (appEvent instanceof MongoMappingEvent) {
-      MongoMappingEvent<E> event = (MongoMappingEvent<E>) appEvent;
-      if (event instanceof BeforeConvertEvent) {
-        onBeforeConvert(event.getSource());
-      } else if (event instanceof BeforeSaveEvent) {
-        onBeforeSave(event.getSource(), event.getDBObject());
-      } else if (event instanceof AfterSaveEvent) {
-        onAfterSave(event.getSource(), event.getDBObject());
-      } else if (event instanceof AfterLoadEvent) {
-        onAfterLoad((DBObject) event.getSource());
-      } else if (event instanceof AfterConvertEvent) {
-        onAfterConvert(event.getDBObject(), event.getSource());
+      try {
+        MongoMappingEvent<E> event = (MongoMappingEvent<E>) appEvent;
+        if (event instanceof BeforeConvertEvent) {
+          onBeforeConvert(event.getSource());
+        } else if (event instanceof BeforeSaveEvent) {
+          onBeforeSave(event.getSource(), event.getDBObject());
+        } else if (event instanceof AfterSaveEvent) {
+          onAfterSave(event.getSource(), event.getDBObject());
+        } else if (event instanceof AfterLoadEvent) {
+          onAfterLoad((DBObject) event.getSource());
+        } else if (event instanceof AfterConvertEvent) {
+          onAfterConvert(event.getDBObject(), event.getSource());
+        }
+      } catch (ClassCastException e) {
+        // Not a mapping event for this entity, apparently.
+        // Just ignore it for now.
       }
     }
   }
 
   public void onBeforeConvert(E source) {
+    if (log.isDebugEnabled()) {
+      log.debug("onBeforeConvert(" + source + ")");
+    }
   }
 
   public void onBeforeSave(E source, DBObject dbo) {
+    if (log.isDebugEnabled()) {
+      log.debug("onBeforeSave(" + source + ", " + dbo + ")");
+    }
   }
 
   public void onAfterSave(E source, DBObject dbo) {
+    if (log.isDebugEnabled()) {
+      log.debug("onAfterSave(" + source + ", " + dbo + ")");
+    }
   }
 
   public void onAfterLoad(DBObject dbo) {
+    if (log.isDebugEnabled()) {
+      log.debug("onAfterLoad(" + dbo + ")");
+    }
   }
 
   public void onAfterConvert(DBObject dbo, E source) {
+    if (log.isDebugEnabled()) {
+      log.debug("onAfterConvert(" + dbo + "," + source + ")");
+    }
   }
 
 }
