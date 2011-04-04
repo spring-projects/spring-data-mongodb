@@ -180,7 +180,7 @@ public class Person {
 
       <example>
         <programlisting language="java"><![CDATA[
-public class BeforeConvertListener<Person> extends AbstractMappingEventListener {
+public class BeforeConvertListener<BeforeConvertEvent, Person> extends AbstractMappingEventListener {
   @Override
   public void onBeforeConvert(Person p) {
     ... does some auditing manipulation, set timestamps, whatever ...
@@ -197,7 +197,7 @@ public class BeforeConvertListener<Person> extends AbstractMappingEventListener 
 
       <example>
         <programlisting language="java"><![CDATA[
-public class BeforeSaveListener<Person> extends AbstractMappingEventListener {
+public class BeforeSaveListener<BeforeSaveEvent, Person> extends AbstractMappingEventListener {
   @Override
   public void onBeforeSave(Person p, DBObject dbo) {
     ... change values, delete them, whatever ...
