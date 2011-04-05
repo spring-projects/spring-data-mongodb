@@ -19,10 +19,10 @@ package org.springframework.data.document.mongodb;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
 
-import java.util.LinkedList;
 import java.util.List;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,13 +34,13 @@ import org.springframework.data.document.mongodb.query.Query;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.MongoException;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:geospatial.xml")
+@Ignore
 public class GeoSpatialTests {
 
   @Autowired
@@ -74,7 +74,7 @@ public class GeoSpatialTests {
   public void withinCircle() {
     
     Circle circle = new Circle(-73.99171, 40.738868, 0.01);
-    List<Venue> venues = template.find(new Query(Criteria.where("location").within(circle)), Venue.class);    
+    List<Venue> venues = template.find(new Query(Criteria.where("location").within(circle)), Venue.class);
     assertThat(venues.size(), equalTo(8));
   }
 
