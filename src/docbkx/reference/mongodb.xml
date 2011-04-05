@@ -4,60 +4,87 @@
 <chapter id="mongo.core">
   <title>MongoDB support</title>
 
-  <para>One of the document stores supported by DATADOC is<ulink
-  url="http://www.mongodb.org/">MongoDB</ulink>. To quote the project home
-  page: <quote>MongoDB (from "humongous") is a scalable, high-performance,
-  open source, document-oriented database. </quote> <para>Spring Data Document
-  provides easy configuration and access to MongoDB from a Spring application.
-  Offers both low-level and high-level abstraction for interacting with the
-  store, freeing the user from infrastructural concerns. </para></para>
+  <para>The MongoDB support contains a wide range of features which are
+  summarized below. </para>
+
+  <itemizedlist>
+    <listitem>
+      <para>Spring configuration support using Java based @Configuration
+      classes or an XML namespace for a Mongo driver instance and replica
+      sets</para>
+    </listitem>
+
+    <listitem>
+      <para>MongoTemplate helper class that increases productivity performing
+      common Mongo operations. Includes integrated object mapping between
+      documents and POJOs.</para>
+    </listitem>
+
+    <listitem>
+      <para>Exception translation into Spring's portable Data Access Exception
+      hierarchy</para>
+    </listitem>
+
+    <listitem>
+      <para>Feature Rich Object Mapping integrated with Spring's Conversion
+      Service</para>
+    </listitem>
+
+    <listitem>
+      <para>Annotation based mapping metadata but extensible to support other
+      metadata formats</para>
+    </listitem>
+
+    <listitem>
+      <para>Persistence and mapping lifecycle events</para>
+    </listitem>
+
+    <listitem>
+      <para>Low-level mapping using MongoReader/MongoWriter
+      abstractions</para>
+    </listitem>
+
+    <listitem>
+      <para>Java based Query, Criteria, and Update DSLs</para>
+    </listitem>
+
+    <listitem>
+      <para>Automatic implementatin of Repository interfaces including support
+      for custom finder methods.</para>
+    </listitem>
+
+    <listitem>
+      <para>QueryDSL integration to support type-safe queries.</para>
+    </listitem>
+
+    <listitem>
+      <para>Cross-store persistance - support for JPA Entities with fields
+      transparently persisted/retrieved using MongoDB</para>
+    </listitem>
+
+    <listitem>
+      <para>Log4j log appender</para>
+    </listitem>
+
+    <listitem>
+      <para>GeoSpatial integration</para>
+    </listitem>
+  </itemizedlist>
+
+  <para>For most tasks you will find yourself using MongoTemplate or the
+  Repository support that both leverage the rich mapping functionality.
+  MongoTemplate is the place to look for accessing functionality such as
+  incrementing counters or ad-hoc CRUD operations. MongoTemplate also provides
+  callback methods so that it is easy for you to get a hold of the low level
+  API artifacts such as <literal>org.mongo.DB</literal> to communicate
+  directly with MongoDB.</para>
 
   <section id="mongodb-requirements">
-    <title>MongoDB Requirements</title>
+    <title>Getting Started</title>
 
-    <para>DATADOC requires MongoDB 1.4 while the latest production release
-    (1.6.5 as of this writing) is recommended.</para>
-  </section>
-
-  <section id="mongodb-architecture">
-    <title>MongoDB Support High Level View</title>
-
-    <para>The MongoDB support provides several components:</para>
-
-    <itemizedlist>
-      <listitem>
-         
-
-        <emphasis>Configuration Factory</emphasis>
-
-         - for configuring and handling communication with MongoDB via its Java driver 
-      </listitem>
-
-      <listitem>
-         
-
-        <emphasis>Template implementation</emphasis>
-
-         - As with many of Spring's template classes, MongoTemplate simplifies the use of accessing the database for common use-cases and infrastructure concerns such as exception translation. Features include integrated object mapping between documents and domain classes and fluent DSLs for query and update operations. The chapter 
-
-        <xref linkend="mongodb:template" />
-
-         provides additional details. 
-      </listitem>
-
-      <listitem>
-         
-
-        <emphasis>Support Classes</emphasis>
-
-         - that offer reusable components such as mapping support and exception translation. 
-      </listitem>
-    </itemizedlist>
-
-    <para>For most tasks, the higher-level abstractions and support services
-    are the best choice. Note that at any point, one can move between layers -
-    for example, it's very easy to get a hold of the low level connection
-    (org.mongo.DB) to communicate directly with MongoDB.</para>
+    <para>Spring MongoDB support requires MongoDB 1.4 or higher and Java SE 5
+    or higher. The latest production release (1.8.x as of this writing) is
+    recommended. </para>
   </section>
 
   <section id="mongodb-connectors">
@@ -87,48 +114,35 @@
           metadata</title>
 
           <programlisting language="java">@Configuration
-            public class AppConfig {
+public class AppConfig {
 
-            /*
-            * Factory bean that creates the com.mongodb.Mongo instance
-            */
-            public @Bean Mongo mongo() throws UnknownHostException, MongoException {
-            return new Mongo("localhost");
-            }
+  /*
+   * Factory bean that creates the com.mongodb.Mongo instance
+   */
+   public @Bean Mongo mongo() throws UnknownHostException, MongoException {
+       return new Mongo("localhost");
+   }
 
-            }
+}
           </programlisting>
         </example></para>
 
-      <para>This approach allows you to use the standard com.mongodb.Mongo API
-      that you may already be used to using but also pollutes the code with
-      the UnknownHostException checked exception.</para>
+      <para>This approach allows you to use the standard
+      <classname>com.mongodb.Mongo</classname> API that you may already be
+      used to using but also pollutes the code with the UnknownHostException
+      checked exception.</para>
 
-      <para>However, you may also register an instance of
+      <para>You may also register an instance of
       <classname>com.mongodb.Mongo</classname> instance with the container
-      using Spring's<interfacename>MongoFactoryBean</interfacename>. As
+      using Spring's<interfacename> MongoFactoryBean</interfacename>. As
       compared to instantiating a <classname>com.mongodb.Mongo</classname>
       instance directly, the FactoryBean approach has the added advantage of
-      also acting as an ExceptionTranslator that can be used to translate any
-      Mongo exceptions to exceptions in the
-      <classname>SpringDataAccessException</classname>. This is part of<ulink
+      also providing the container with an ExceptionTranslator that can
+      translate Mongo exceptions to exceptions in Spring's portable
+      <classname>DataAccessException</classname> hierarchy. This hierarchy is
+      described in <ulink
       url="http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/html/dao.html">Spring's
-      DAO support features</ulink>. The exception translation feature works
-      hand in hand with Spring's <classname>@Repository</classname>
-      annotation. To enable exception translation on data access components
-      annotated with <classname>@Repository</classname> register a
-      <classname>PersistenceExceptionTranslationPostProcessor</classname>
-      (<ulink
-      url="http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/html/beans.html#beans-annotation-config">
-      JavaDoc</ulink>) with the container. <note>
-          <para>While enabling exception translation can be done using Java
-          based bean metadata it is often done declaratively in XML using
-          Spring's context namespace
-          <literal>&lt;context::annotation-config/&gt;</literal>.to enable
-          <ulink
-          url="http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/html/beans.html#beans-annotation-config">
-          annotation configuration features</ulink>.</para>
-        </note></para>
+      DAO support features</ulink>. An example is shown below</para>
 
       <para>An example of a Java based bean metadata that supports exception
       translation on <classname>@Repository</classname> annotated classes is
@@ -140,48 +154,18 @@
         support</title>
 
         <programlisting language="java">@Configuration
-          public class AppConfig {
+public class AppConfig {
 
-          /*
-          * Factory bean that creates the com.mongodb.Mongo instance
-          */
-          public @Bean MongoFactoryBean mongo() {
+    /*
+     * Factory bean that creates the com.mongodb.Mongo instance
+     */
+     public @Bean MongoFactoryBean mongo() {
           MongoFactoryBean mongo = new MongoFactoryBean();
           mongo.setHost("localhost");
           return mongo;
-          }
-
-          /*
-          * Use this post processor to translate any MongoExceptions thrown in @Repository
-          * annotated classes
-          */
-          public @Bean PersistenceExceptionTranslationPostProcessor
-          persistenceExceptionTranslationPostProcessor() {
-          return new PersistenceExceptionTranslationPostProcessor();
-          }
-
-          }
-        </programlisting>
-      </example>
-
-      <para>if you prefer to use the standard MongoDB API to create a
-      com.mongodb.Mongo instance and have exception translation enabled on
-      your <classname>@Repository</classname> instances, simply inherit from
-      <classname>MongoExceptionTranslationConfig</classname> as shown
-      below.</para>
-
-      <example>
-        <title>Registering a com.mongodb.Mongo object and enabling Spring's
-        exception translation support</title>
-
-        <programlisting language="java">@Configuration
-          public class AppConfig extends MongoExceptionTranslationConfig {
-
-          public @Bean Mongo mongo() throws UnknownHostException, MongoException {
-          return new Mongo("localhost");
-          }
-          }
-        </programlisting>
+     }
+}
+</programlisting>
       </example>
     </section>
 
@@ -205,7 +189,7 @@
         <title>XML schema to configure MongoDB</title>
 
         <programlisting language="xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
-          &lt;beans xmlns="http://www.springframework.org/schema/beans"
+&lt;beans xmlns="http://www.springframework.org/schema/beans"
           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
           xmlns:context="http://www.springframework.org/schema/context"
           xmlns:mongo="http://www.springframework.org/schema/data/mongo"
@@ -217,15 +201,13 @@
           http://www.springframework.org/schema/beans
           http://www.springframework.org/schema/beans/spring-beans-3.0.xsd"&gt;
 
-          &lt;beans&gt;
+    &lt;!-- Default bean name is 'mongo' --&gt;
+    &lt;mongo:mongo host="localhost" port="27017"/&gt;
 
-          &lt;!-- Default bean name is 'mongo' --&gt;
-          &lt;mongo:mongo host="localhost" port="27017"/&gt;
+    &lt;!-- To translate any MongoExceptions thrown in @Repository annotated classes --&gt;
+    &lt;context:annotation-config/&gt;
 
-          &lt;!-- To translate any MongoExceptions thrown in @Repository annotated classes --&gt;
-          &lt;context:annotation-config/&gt;
-
-          &lt;/beans&gt;
+&lt;/beans&gt;
         </programlisting>
       </example>
 
@@ -237,16 +219,16 @@
 
         <programlisting language="xml">&lt;beans&gt;
 
-          &lt;mongo:mongo host="localhost" port="27017"&gt;
-          &lt;mongo:options connectionsPerHost="10"
-          threadsAllowedToBlockForConnectionMultiplier="5"
-          maxWaitTime="12000"
-          connectTimeout="0"
-          socketTimeout="0"
-          autoConnectRetry="0"/&gt;
-          &lt;/mongo:mongo/&gt;
+  &lt;mongo:mongo host="localhost" port="27017"&gt;
+    &lt;mongo:options connectionsPerHost="10"
+                   threadsAllowedToBlockForConnectionMultiplier="5"
+                   maxWaitTime="12000"
+                   connectTimeout="0"
+                   socketTimeout="0"
+                   autoConnectRetry="0"/&gt;
+  &lt;/mongo:mongo/&gt;
 
-          &lt;/beans&gt;
+&lt;/beans&gt;
         </programlisting>
       </example>
 
@@ -255,11 +237,11 @@
 
           <programlisting language="xml">&lt;beans&gt;
 
-            &lt;mongo:mongo&gt;
-            &lt;! replica set TBD -- should be available for release 1.0.0.M2 --&gt;
-            &lt;mongo:mongo&gt;
+    &lt;mongo:mongo&gt;
+    &lt;! replica set TBD -- should be available for release 1.0.0.M2 --&gt;
+    &lt;mongo:mongo&gt;
 
-            &lt;/beans&gt;
+&lt;/beans&gt;
           </programlisting>
         </example></para>
     </section>
@@ -299,21 +281,21 @@
         exception translation support</title>
 
         <programlisting language="java">@Configuration
-          public class AppConfig extends MongoExceptionTranslationConfig {
+public class AppConfig {
 
-          public @Bean Mongo mongo() throws UnknownHostException, MongoException {
-          return new Mongo("localhost");
-          }
+    public @Bean Mongo mongo() throws UnknownHostException, MongoException {
+        return new Mongo("localhost");
+    }
 
-          public @Bean MongoTemplate mongoTemplate() throws UnknownHostException, MongoException {
-          return new MongoTemplate(mongo(), "test", "HelloMongo");
-          }
-          }
+    public @Bean MongoTemplate mongoTemplate() throws UnknownHostException, MongoException {
+        return new MongoTemplate(mongo(), "test", "HelloMongo");
+    }
+}
         </programlisting>
       </example>
 
-      <para>Alternatively using MongoFactoryBean, which avoid dealing with the
-      checked UnknownHostException</para>
+      <para>Alternatively using <classname>MongoFactoryBean</classname>, which
+      avoid dealing with the checked UnknownHostException</para>
 
       <example>
         <title>Registering a com.mongodb.Mongo object and enabling Spring's
