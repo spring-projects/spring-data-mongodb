@@ -31,6 +31,7 @@ import org.springframework.data.document.mongodb.convert.MongoConverter;
 import org.springframework.data.document.mongodb.convert.SimpleMongoConverter;
 import org.springframework.data.document.mongodb.query.BasicQuery;
 import org.springframework.data.document.mongodb.repository.MongoRepositoryFactoryBean.EntityInformationCreator;
+import org.springframework.data.repository.support.RepositoryMetadata;
 
 /**
  * Unit tests for {@link StringBasedMongoQuery}.
@@ -42,6 +43,8 @@ public class StringBasedMongoQueryUnitTests {
 
   @Mock
   MongoTemplate template;
+  @Mock
+  RepositoryMetadata metadata;
   MongoConverter converter = new SimpleMongoConverter();
 
   @Before
@@ -53,7 +56,7 @@ public class StringBasedMongoQueryUnitTests {
   public void testname() throws Exception {
 
     Method method = SampleRepository.class.getMethod("findByLastname", String.class);
-    MongoQueryMethod queryMethod = new MongoQueryMethod(method, new EntityInformationCreator(null));
+    MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, new EntityInformationCreator(null));
     StringBasedMongoQuery mongoQuery = new StringBasedMongoQuery(queryMethod, template);
     ConvertingParameterAccessor accesor = StubParameterAccessor.getAccessor(converter, "Matthews");
 

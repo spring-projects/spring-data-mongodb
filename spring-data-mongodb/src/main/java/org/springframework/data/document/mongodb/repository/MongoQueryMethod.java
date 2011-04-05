@@ -20,6 +20,7 @@ import java.lang.reflect.Method;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.data.document.mongodb.repository.MongoRepositoryFactoryBean.EntityInformationCreator;
 import org.springframework.data.repository.query.QueryMethod;
+import org.springframework.data.repository.support.RepositoryMetadata;
 import org.springframework.data.repository.util.ClassUtils;
 import org.springframework.util.StringUtils;
 
@@ -39,8 +40,8 @@ class MongoQueryMethod extends QueryMethod {
    * 
    * @param method
    */
-  public MongoQueryMethod(Method method, EntityInformationCreator entityInformationCreator) {
-    super(method);
+  public MongoQueryMethod(Method method, RepositoryMetadata metadata, EntityInformationCreator entityInformationCreator) {
+    super(method, metadata);
     this.method = method;
     this.entityInformation = entityInformationCreator.getEntityInformation(ClassUtils.getReturnedDomainClass(method));
   }

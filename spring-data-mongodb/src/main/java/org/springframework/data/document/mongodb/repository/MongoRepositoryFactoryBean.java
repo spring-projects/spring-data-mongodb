@@ -195,9 +195,9 @@ public class MongoRepositoryFactoryBean<T extends MongoRepository<S, ID>, S, ID 
        * org.springframework.data.repository.query.QueryLookupStrategy
        * #resolveQuery(java.lang.reflect.Method, java.lang.Class)
        */
-      public RepositoryQuery resolveQuery(Method method, Class<?> domainClass) {
+      public RepositoryQuery resolveQuery(Method method, RepositoryMetadata metadata) {
 
-        MongoQueryMethod queryMethod = new MongoQueryMethod(method, entityInformationCreator);
+        MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, entityInformationCreator);
 
         if (queryMethod.hasAnnotatedQuery()) {
           return new StringBasedMongoQuery(queryMethod, template);
