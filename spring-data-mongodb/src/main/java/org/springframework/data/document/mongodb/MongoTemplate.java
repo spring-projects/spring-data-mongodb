@@ -398,7 +398,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
       }
 
       return result;
-    } catch (MongoException e) {
+    } catch (RuntimeException e) {
       throw potentiallyConvertRuntimeException(e);
     }
   }

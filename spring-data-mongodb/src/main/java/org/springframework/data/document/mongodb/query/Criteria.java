@@ -24,6 +24,7 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import org.springframework.data.document.InvalidDocumentStoreApiUsageException;
 import org.springframework.data.document.mongodb.geo.Circle;
+import org.springframework.data.document.mongodb.geo.Point;
 
 public class Criteria implements CriteriaDefinition {
 
@@ -230,18 +231,37 @@ public class Criteria implements CriteriaDefinition {
   
   
   /**
-   * Creates a geospatial criterion using a $ 
+   * Creates a geospatial criterion using a $within operation
    * @param circle
    * @return
    */
   public Criteria within(Circle circle) {
     LinkedList list = new LinkedList();
     list.addLast(circle.getCenter());
-    list.add(circle.getRadius());
-    //BasicDBObject dbo = new BasicDBObject("$within", new BasicDBObject("$center", list));
+    list.add(circle.getRadius());   
     criteria.put("$within", new BasicDBObject("$center", list));
     return this;
   }  
+  
+  /**
+   * Creates a geospatial criterion using a $near operation
+   * @param point
+   * @return
+   */
+  public Criteria near(Point point) {
+    criteria.put("$near", new double[]{point.getLatitude(), point.getLongitude()});
+    return this;
+  }
+  
+  /**
+   * Creates a geospatical criterion using a $maxDistance operation, for use with $near
+   * @param maxDistance
+   * @return
+   */
+  public Criteria maxDistance(double maxDistance) {
+    criteria.put("$maxDistance", maxDistance);
+    return this;
+  }
 
   /**
    * Creates a criterion using the $elemMatch operator

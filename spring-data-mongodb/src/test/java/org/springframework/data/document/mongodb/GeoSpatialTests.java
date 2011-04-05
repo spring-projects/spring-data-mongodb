@@ -26,35 +26,51 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.document.mongodb.geo.Circle;
+import org.springframework.data.document.mongodb.geo.Point;
 import org.springframework.data.document.mongodb.query.Criteria;
 import org.springframework.data.document.mongodb.query.GeospatialIndex;
 import org.springframework.data.document.mongodb.query.Query;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
+import com.mongodb.Mongo;
 import com.mongodb.MongoException;
-
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration("classpath:geospatial.xml")
-@Ignore
+/**
+ * Modified from https://github.com/deftlabs/mongo-java-geospatial-example
+ * @author Mark Pollack
+ *
+ */
+//@RunWith(SpringJUnit4ClassRunner.class)
+//@ContextConfiguration("classpath:geospatial.xml")
 public class GeoSpatialTests {
 
-  @Autowired
+  private final String[] collectionsToDrop = new String[]{"newyork"};
+
+  ApplicationContext applicationContext;
   MongoTemplate template;
 
   @Before
-  public void setUp() {
-    template.dropCollection(template.getDefaultCollectionName());
+  public void setUp() throws Exception {
+    Mongo mongo = new Mongo();
+    DB db = mongo.getDB("geospatial");
+    for (String coll : collectionsToDrop) {
+      db.getCollection(coll).drop();
+    }
+    applicationContext = new ClassPathXmlApplicationContext("/geospatial.xml");
+    template = applicationContext.getBean(MongoTemplate.class);
+    //template.dropCollection(template.getDefaultCollectionName());
     template.ensureIndex(new GeospatialIndex("location"));
     addVenues();
   }
 
   private void addVenues() {
-    // Data taken from https://github.com/deftlabs/mongo-java-geospatial-example
     template.insert(new Venue("Penn Station", -73.99408, 40.75057));
     template.insert(new Venue("10gen Office", -73.99171, 40.738868));
     template.insert(new Venue("Flatiron Building", -73.988135, 40.741404));
@@ -75,6 +91,13 @@ public class GeoSpatialTests {
     
     Circle circle = new Circle(-73.99171, 40.738868, 0.01);
     List<Venue> venues = template.find(new Query(Criteria.where("location").within(circle)), Venue.class);
+    assertThat(venues.size(), equalTo(8));
+  }
+  
+  @Test
+  public void nearPoint() {
+    Point point = new Point(-73.99171, 40.738868);
+    List<Venue> venues = template.find(new Query(Criteria.where("location").near(point).maxDistance(0.01)), Venue.class);
     assertThat(venues.size(), equalTo(8));
   }
 
