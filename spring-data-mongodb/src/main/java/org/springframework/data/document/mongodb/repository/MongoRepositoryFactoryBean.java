@@ -134,9 +134,10 @@ public class MongoRepositoryFactoryBean<T extends MongoRepository<S, ID>, S, ID 
      * #getRepositoryBaseClass()
      */
     @Override
-    protected Class<?> getRepositoryBaseClass(Class<?> repositoryInterface) {
+    protected Class<?> getRepositoryBaseClass(RepositoryMetadata metadata) {
 
-      return isQueryDslRepository(repositoryInterface) ? QueryDslMongoRepository.class : SimpleMongoRepository.class;
+      return isQueryDslRepository(metadata.getRepositoryInterface()) ? QueryDslMongoRepository.class
+          : SimpleMongoRepository.class;
     }
 
     /*
@@ -208,21 +209,16 @@ public class MongoRepositoryFactoryBean<T extends MongoRepository<S, ID>, S, ID 
 
     /*
      * (non-Javadoc)
-     * 
-     * @see
-     * org.springframework.data.repository.support.RepositoryFactorySupport
-     * #validate(java.lang.Class, java.lang.Object)
+     * @see org.springframework.data.repository.support.RepositoryFactorySupport#validate(org.springframework.data.repository.support.RepositoryMetadata)
      */
     @Override
-    protected void validate(RepositoryMetadata metadata, Object customImplementation) {
+    protected void validate(RepositoryMetadata metadata) {
 
       Class<?> idClass = metadata.getIdClass();
       if (!MongoPropertyDescriptor.SUPPORTED_ID_CLASSES.contains(idClass)) {
         throw new IllegalArgumentException(String.format("Unsupported id class! Only %s are supported!",
             StringUtils.collectionToCommaDelimitedString(MongoPropertyDescriptor.SUPPORTED_ID_CLASSES)));
       }
-
-      super.validate(metadata, customImplementation);
     }
 
     /*
