@@ -1,20 +1,79 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
-    "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
-
+"http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
 <partintro>
-  <para>
-    <para>This document is the reference guide for Spring Data - Document Support.
-      It explains Document module concepts and semantics and the syntax for various
-      stores namespaces.
-    </para>
+  <para><para>This document is the reference guide for Spring Data - Document
+  Support. It explains Document module concepts and semantics and the syntax
+  for various stores namespaces. </para><para>This section provides some basic
+  introduction to Spring and Document database. The rest of the document
+  refers only to Spring Data Document features and assumes the user is
+  familiar with document databases such as MongoDB and CouchDB as well as
+  Spring concepts. </para><section id="get-started:first-steps:spring">
+      <title>Knowing Spring</title>
 
-    <para>For an introduction to document stores or Spring, or Spring Data examples, please refer to
-      <xref linkend="get-started"/>
-      - this documentation refers only to Spring Data Document Support and
-      assumes the user is familiar with the document stores and Spring concepts.
-    </para>
+      <para>Spring Data uses heavily Spring framework's <ulink
+      url="http://static.springframework.org/spring/docs/3.0.x/reference/spring-core.html">core
+      </ulink> functionality, such as the <ulink
+      url="http://static.springframework.org/spring/docs/3.0.x/reference/beans.html">IoC
+      </ulink> container, <ulink
+      url="http://static.springframework.org/spring/docs/3.0.x/reference/resources.html">resource
+      </ulink> abstract or <ulink
+      url="http://static.springframework.org/spring/docs/3.0.x/reference/aop.html">AOP
+      </ulink> infrastructure. While it is not important to know the Spring
+      APIs, understanding the concepts behind them is. At a minimum, the idea
+      behind IoC should be familiar. These being said, the more knowledge one
+      has about the Spring, the faster she will pick up Spring Data Document.
+      Besides the very comprehensive (and sometimes disarming) documentation
+      that explains in detail the Spring Framework, there are a lot of
+      articles, blog entries and books on the matter - take a look at the
+      Spring framework <ulink
+      url="http://www.springsource.org/documentation">home page </ulink> for
+      more information.</para>
+    </section><section id="get-started:first-steps:nosql">
+      <title>Knowing NoSQL and Document databases</title>
 
-  </para>
+      <para>NoSQL stores have taken the storage world by storm. It is a vast
+      domain with a plethora of solutions, terms and patterns (to make things
+      worth even the term itself has multiple <ulink
+      url="http://www.google.com/search?q=nosoql+acronym">meanings</ulink>).
+      While some of the principles are common, it is crucial that the user is
+      familiar to some degree with the stores supported by DATADOC. The best
+      way to get acquainted to this solutions is to read their documentation
+      and follow their examples - it usually doesn't take more then 5-10
+      minutes to go through them and if you are coming from an RDMBS-only
+      background many times these exercises can be an eye opener.</para>
 
+      <para>The jumping off ground for learning about MongoDB is <ulink
+      url="http://www.mongodb.org/">www.mongodb.org</ulink>. Here is a list of
+      other useful resources.</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>The <ulink url="http://www.mongodb.org/#">online shell</ulink>
+          provides a convenient way to interact with a MongoDB instance in
+          combination with the online <ulink type=""
+          url="http://www.mongodb.org/display/DOCS/Tutorial">tutorial.</ulink></para>
+        </listitem>
+
+        <listitem>
+          <para>MongoDB <ulink
+          url="http://www.mongodb.org/display/DOCS/Java+Language+Center">Java
+          Language Center</ulink></para>
+        </listitem>
+
+        <listitem>
+          <para>Several <ulink
+          url="http://www.mongodb.org/display/DOCS/Books">books</ulink>
+          available for purchase</para>
+        </listitem>
+
+        <listitem>
+          <para>Karl Seguin's online book: "<ulink
+          url="http://openmymind.net/mongodb.pdf">The Little MongoDB
+          Book</ulink>"</para>
+        </listitem>
+      </itemizedlist>
+
+      <para />
+    </section></para>
 </partintro>
