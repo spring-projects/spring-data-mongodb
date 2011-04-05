@@ -27,7 +27,7 @@
   <mongo:mongo host="localhost" port="27017"/>
 
   <!-- by default look for a Mongo object named 'mongo' -->
-  <mongo:mapping-converter base-package="com.mycompany.domain" autowire="true"/>
+  <mongo:mapping-converter base-package="com.mycompany.domain"/>
 
 </beans]]>
       </programlisting>
@@ -36,9 +36,7 @@
     <para>This sets up the right objects in the ApplicationContext to perform the full gamut
       of mapping operations. The <code>base-package</code> property tells it where to scan for
       classes annotated with the <classname>@org.springframework.data.document.mongodb.mapping.Document</classname>
-      annotation and the <code>autowire</code> property tells it whether to pass mapped domain objects through the
-      Spring ApplicationContext's autowiring mechanism, allowing you to use
-      <classname>@org.springframework.beans.factory.annotation.Autowired</classname> inside your domain objects.
+      annotation.
     </para>
 
   </section>
