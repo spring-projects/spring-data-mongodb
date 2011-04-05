@@ -57,7 +57,6 @@ import org.springframework.data.document.mongodb.convert.MappingMongoConverter;
 import org.springframework.data.document.mongodb.convert.MongoConverter;
 import org.springframework.data.document.mongodb.convert.SimpleMongoConverter;
 import org.springframework.data.document.mongodb.index.IndexDefinition;
-import org.springframework.data.document.mongodb.mapping.Document;
 import org.springframework.data.document.mongodb.mapping.MongoPersistentEntity;
 import org.springframework.data.document.mongodb.mapping.event.AfterConvertEvent;
 import org.springframework.data.document.mongodb.mapping.event.AfterLoadEvent;
@@ -67,7 +66,9 @@ import org.springframework.data.document.mongodb.mapping.event.BeforeSaveEvent;
 import org.springframework.data.document.mongodb.mapping.event.MongoMappingEvent;
 import org.springframework.data.document.mongodb.query.Query;
 import org.springframework.data.document.mongodb.query.Update;
+import org.springframework.data.mapping.context.MappingContextAware;
 import org.springframework.data.mapping.model.MappingContext;
+import org.springframework.data.mapping.model.PersistentEntity;
 import org.springframework.jca.cci.core.ConnectionCallback;
 import org.springframework.util.Assert;
 
@@ -79,7 +80,7 @@ import org.springframework.util.Assert;
  * @author Mark Pollack
  * @author Oliver Gierke
  */
-public class MongoTemplate implements InitializingBean, MongoOperations, ApplicationContextAware, ApplicationEventPublisherAware {
+public class MongoTemplate implements InitializingBean, MongoOperations, ApplicationContextAware, ApplicationEventPublisherAware, MappingContextAware {
 
   private static final Log LOGGER = LogFactory.getLog(MongoTemplate.class);
 
@@ -98,6 +99,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
   private WriteResultChecking writeResultChecking = WriteResultChecking.NONE;
 
   private MongoConverter mongoConverter;
+  private MappingContext mappingContext;
   private final Mongo mongo;
   private final MongoExceptionTranslator exceptionTranslator = new MongoExceptionTranslator();
 
@@ -200,6 +202,10 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 
   public void setApplicationEventPublisher(ApplicationEventPublisher applicationEventPublisher) {
     this.eventPublisher = applicationEventPublisher;
+  }
+
+  public void setMappingContext(MappingContext mappingContext) {
+    this.mappingContext = mappingContext;
   }
 
   /**
@@ -508,19 +514,11 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
   // Find methods that take a Query to express the query and that return a List of objects.
 
   public <T> List<T> find(Query query, Class<T> targetClass) {
-    String collName = getEntityCollection(targetClass);
-    if (null == collName) {
-      collName = getRequiredDefaultCollectionName();
-    }
-    return find(collName, query, targetClass);
+    return find(getEntityCollection(targetClass), query, targetClass);
   }
 
   public <T> List<T> find(Query query, Class<T> targetClass, MongoReader<T> reader) {
-    String collName = getEntityCollection(targetClass);
-    if (null == collName) {
-      collName = getRequiredDefaultCollectionName();
-    }
-    return find(collName, query, targetClass, reader);
+    return find(getEntityCollection(targetClass), query, targetClass, reader);
   }
 
   public <T> List<T> find(String collectionName, final Query query, Class<T> targetClass) {
@@ -585,11 +583,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
     * @see org.springframework.data.document.mongodb.MongoOperations#insert(java.lang.Object)
     */
   public void insert(Object objectToSave) {
-    String collName = getEntityCollection(objectToSave);
-    if (null == collName) {
-      collName = getRequiredDefaultCollectionName();
-    }
-    insert(collName, objectToSave);
+    insert(getEntityCollection(objectToSave), objectToSave);
   }
 
   /* (non-Javadoc)
@@ -603,11 +597,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
     * @see org.springframework.data.document.mongodb.MongoOperations#insert(T, org.springframework.data.document.mongodb.MongoWriter)
     */
   public <T> void insert(T objectToSave, MongoWriter<T> writer) {
-    String collName = getEntityCollection(objectToSave);
-    if (null == collName) {
-      collName = getDefaultCollectionName();
-    }
-    insert(collName, objectToSave, writer);
+    insert(getEntityCollection(objectToSave), objectToSave, writer);
   }
 
   /* (non-Javadoc)
@@ -1103,7 +1093,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
     return name;
   }
 
-  private String getEntityCollection(Object obj) {
+  private <T> String getEntityCollection(T obj) {
     if (null != obj) {
       return getEntityCollection(obj.getClass());
     }
@@ -1111,26 +1101,15 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
     return null;
   }
 
-  private String getEntityCollection(Class<?> clazz) {
-    if (mongoConverter instanceof MappingMongoConverter) {
-      MappingContext ctx = ((MappingMongoConverter) mongoConverter).getMappingContext();
-      MongoPersistentEntity entity = (MongoPersistentEntity) ctx.getPersistentEntity(clazz);
-      if (null != entity) {
-        return entity.getCollection();
+  private <T> String getEntityCollection(Class<T> clazz) {
+    if (null != mappingContext) {
+      PersistentEntity<T> entity = mappingContext.getPersistentEntity(clazz);
+      if (null != entity && entity instanceof MongoPersistentEntity) {
+        return ((MongoPersistentEntity) entity).getCollection();
       }
     }
-    // Entity hasn't yet been added, try and figure it out anyway
-    if (clazz.isAnnotationPresent(Document.class)) {
-      Document doc = clazz.getAnnotation(Document.class);
-      if (!"".equals(doc.collection())) {
-        return doc.collection();
-      }
-
-      // Default to simple name
-      return clazz.getSimpleName().toLowerCase();
-    }
-
-    return null;
+    // Otherwise, return the default for this template.
+    return getRequiredDefaultCollectionName();
   }
 
   /**

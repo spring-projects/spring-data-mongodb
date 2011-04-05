@@ -56,6 +56,9 @@ public class MongoPersistentEntity<T> extends BasicPersistentEntity<T> {
    * @return
    */
   public String getCollection() {
+    if (null == collection) {
+      this.collection = type.getSimpleName().toLowerCase();
+    }
     return collection;
   }
 

@@ -33,8 +33,9 @@ import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.data.annotation.Persistent;
 import org.springframework.data.document.mongodb.convert.MappingMongoConverter;
 import org.springframework.data.document.mongodb.mapping.Document;
-import org.springframework.data.document.mongodb.mapping.MongoPersistentEntityIndexCreator;
 import org.springframework.data.document.mongodb.mapping.MongoMappingContext;
+import org.springframework.data.document.mongodb.mapping.MongoPersistentEntityIndexCreator;
+import org.springframework.data.mapping.context.MappingContextAwareBeanPostProcessor;
 import org.springframework.util.StringUtils;
 import org.w3c.dom.Element;
 
@@ -44,77 +45,83 @@ import org.w3c.dom.Element;
  */
 public class MongoMappingConverterParser extends AbstractBeanDefinitionParser {
 
-  static final String MAPPING_CONTEXT = "mappingContext";
-  private static final String INDEX_HELPER = "indexCreationHelper";
-  private static final String TEMPLATE = "mongoTemplate";
-  private static final String BASE_PACKAGE = "base-package";
+	static final String MAPPING_CONTEXT = "mappingContext";
 
-  @Override
-  protected String resolveId(Element element, AbstractBeanDefinition definition, ParserContext parserContext) throws BeanDefinitionStoreException {
-    String id = super.resolveId(element, definition, parserContext);
-    return StringUtils.hasText(id) ? id : "mappingConverter";
-  }
+	private static final String INDEX_HELPER = "indexCreationHelper";
+	private static final String TEMPLATE = "mongoTemplate";
+	private static final String POST_PROCESSOR = "mappingContextAwareBeanPostProcessor";
 
-  @Override
-  protected AbstractBeanDefinition parseInternal(Element element, ParserContext parserContext) {
-    BeanDefinitionRegistry registry = parserContext.getRegistry();
+	private static final String BASE_PACKAGE = "base-package";
 
-    String ctxRef = element.getAttribute("mapping-context-ref");
-    if (!StringUtils.hasText(ctxRef)) {
-      BeanDefinitionBuilder mappingContextBuilder = BeanDefinitionBuilder.genericBeanDefinition(MongoMappingContext.class);
-      
-      Set<String> classesToAdd = getInititalEntityClasses(element, mappingContextBuilder);
-      if (classesToAdd != null) {
-        mappingContextBuilder.addPropertyValue("initialEntitySet", classesToAdd);
-      }
-      
-      registry.registerBeanDefinition(MAPPING_CONTEXT, mappingContextBuilder.getBeanDefinition());
-      ctxRef = MAPPING_CONTEXT;
-    }
+	@Override
+	protected String resolveId(Element element, AbstractBeanDefinition definition, ParserContext parserContext) throws BeanDefinitionStoreException {
+		String id = super.resolveId(element, definition, parserContext);
+		return StringUtils.hasText(id) ? id : "mappingConverter";
+	}
 
-    BeanDefinitionBuilder converterBuilder = BeanDefinitionBuilder.genericBeanDefinition(MappingMongoConverter.class);
-    converterBuilder.addPropertyReference("mappingContext", ctxRef);
+	@Override
+	protected AbstractBeanDefinition parseInternal(Element element, ParserContext parserContext) {
+		BeanDefinitionRegistry registry = parserContext.getRegistry();
 
-    String autowire = element.getAttribute("autowire");
-    if (StringUtils.hasText(autowire)) {
-      converterBuilder.addPropertyValue("autowirePersistentBeans", Boolean.parseBoolean(autowire));
-    }
+		String ctxRef = element.getAttribute("mapping-context-ref");
+		if (!StringUtils.hasText(ctxRef)) {
+			BeanDefinitionBuilder mappingContextBuilder = BeanDefinitionBuilder.genericBeanDefinition(MongoMappingContext.class);
 
-    // Need a reference to a Mongo instance
-    String mongoRef = element.getAttribute("mongo-ref");
-    converterBuilder.addPropertyReference("mongo", StringUtils.hasText(mongoRef) ? mongoRef : "mongo");
+			Set<String> classesToAdd = getInititalEntityClasses(element, mappingContextBuilder);
+			if (classesToAdd != null) {
+				mappingContextBuilder.addPropertyValue("initialEntitySet", classesToAdd);
+			}
 
-    try {
-      registry.getBeanDefinition(INDEX_HELPER);
-    } catch (NoSuchBeanDefinitionException ignored) {
-      String templateRef = element.getAttribute("mongo-template-ref");
-      BeanDefinitionBuilder indexHelperBuilder = BeanDefinitionBuilder.genericBeanDefinition(MongoPersistentEntityIndexCreator.class);
-      indexHelperBuilder.addConstructorArgValue(new RuntimeBeanReference(ctxRef));
-      indexHelperBuilder.addConstructorArgValue(new RuntimeBeanReference(StringUtils.hasText(templateRef) ? templateRef : TEMPLATE));
-      registry.registerBeanDefinition(INDEX_HELPER, indexHelperBuilder.getBeanDefinition());
-    }
+			registry.registerBeanDefinition(MAPPING_CONTEXT, mappingContextBuilder.getBeanDefinition());
+			ctxRef = MAPPING_CONTEXT;
+		}
 
-    return converterBuilder.getBeanDefinition();
-  }
-  
-  
-  public Set<String> getInititalEntityClasses(Element element, BeanDefinitionBuilder builder) {
-    
-    String basePackage = element.getAttribute(BASE_PACKAGE);
-    
-    if (!StringUtils.hasText(basePackage)) {
-      return null;
-    }
-    
-    ClassPathScanningCandidateComponentProvider componentProvider = new ClassPathScanningCandidateComponentProvider(false);
-    componentProvider.addIncludeFilter(new AnnotationTypeFilter(Document.class));
-    componentProvider.addIncludeFilter(new AnnotationTypeFilter(Persistent.class));
-    
-    Set<String> classes = new ManagedSet<String>();
-    for (BeanDefinition candidate : componentProvider.findCandidateComponents(basePackage)) {
-      classes.add(candidate.getBeanClassName());
-    }
-    
-    return classes;
-  }
+		try {
+			registry.getBeanDefinition(POST_PROCESSOR);
+		} catch (NoSuchBeanDefinitionException ignored) {
+			BeanDefinitionBuilder postProcBuilder = BeanDefinitionBuilder.genericBeanDefinition(MappingContextAwareBeanPostProcessor.class);
+			postProcBuilder.addPropertyValue("mappingContextBeanName", ctxRef);
+			registry.registerBeanDefinition(POST_PROCESSOR, postProcBuilder.getBeanDefinition());
+		}
+
+		BeanDefinitionBuilder converterBuilder = BeanDefinitionBuilder.genericBeanDefinition(MappingMongoConverter.class);
+		converterBuilder.addPropertyReference("mappingContext", ctxRef);
+
+		// Need a reference to a Mongo instance
+		String mongoRef = element.getAttribute("mongo-ref");
+		converterBuilder.addPropertyReference("mongo", StringUtils.hasText(mongoRef) ? mongoRef : "mongo");
+
+		try {
+			registry.getBeanDefinition(INDEX_HELPER);
+		} catch (NoSuchBeanDefinitionException ignored) {
+			String templateRef = element.getAttribute("mongo-template-ref");
+			BeanDefinitionBuilder indexHelperBuilder = BeanDefinitionBuilder.genericBeanDefinition(MongoPersistentEntityIndexCreator.class);
+			indexHelperBuilder.addConstructorArgValue(new RuntimeBeanReference(ctxRef));
+			indexHelperBuilder.addConstructorArgValue(new RuntimeBeanReference(StringUtils.hasText(templateRef) ? templateRef : TEMPLATE));
+			registry.registerBeanDefinition(INDEX_HELPER, indexHelperBuilder.getBeanDefinition());
+		}
+
+		return converterBuilder.getBeanDefinition();
+	}
+
+
+	public Set<String> getInititalEntityClasses(Element element, BeanDefinitionBuilder builder) {
+
+		String basePackage = element.getAttribute(BASE_PACKAGE);
+
+		if (!StringUtils.hasText(basePackage)) {
+			return null;
+		}
+
+		ClassPathScanningCandidateComponentProvider componentProvider = new ClassPathScanningCandidateComponentProvider(false);
+		componentProvider.addIncludeFilter(new AnnotationTypeFilter(Document.class));
+		componentProvider.addIncludeFilter(new AnnotationTypeFilter(Persistent.class));
+
+		Set<String> classes = new ManagedSet<String>();
+		for (BeanDefinition candidate : componentProvider.findCandidateComponents(basePackage)) {
+			classes.add(candidate.getBeanClassName());
+		}
+
+		return classes;
+	}
 }
