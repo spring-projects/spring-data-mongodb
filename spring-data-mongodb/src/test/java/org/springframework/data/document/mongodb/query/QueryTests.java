@@ -104,4 +104,12 @@ public class QueryTests {
     String expected = "{ \"openingHours\" : { \"$elemMatch\" : { \"dayOfWeek\" : \"Monday\" , \"open\" : { \"$lte\" : \"1800\"}}}}";
     Assert.assertEquals(expected, q.getQueryObject().toString());
   }
+
+  @Test
+  public void testQueryWithIn() {
+    Query q = new Query(where("state").in("NY", "NJ", "PA"));
+    System.out.println(q.getQueryObject().toString());
+    String expected = "{ \"state\" : { \"$in\" : [ \"NY\" , \"NJ\" , \"PA\"]}}";
+    Assert.assertEquals(expected, q.getQueryObject().toString());
+  }
 }
