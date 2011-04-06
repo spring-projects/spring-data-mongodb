@@ -16,7 +16,6 @@
 
 package org.springframework.data.document.mongodb.mapping;
 
-import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 
 /**
@@ -24,19 +23,21 @@ import org.springframework.data.annotation.Id;
  */
 public class PersonCustomIdName extends BasePerson {
 
-  @Id
-  private ObjectId customId;
+	@Id
+	private String lastName;
 
-  public PersonCustomIdName(Integer ssn, String firstName, String lastName) {
-    super(ssn, firstName, lastName);
-  }
+	public PersonCustomIdName(Integer ssn, String firstName) {
+		this.ssn = ssn;
+		this.firstName = firstName;
+	}
 
-  public ObjectId getCustomId() {
-    return customId;
-  }
+	@Override
+	public String getLastName() {
+		return this.lastName;
+	}
 
-  public void setCustomId(ObjectId customId) {
-    this.customId = customId;
-  }
-
+	@Override
+	public void setLastName(String lastName) {
+		this.lastName = lastName;
+	}
 }

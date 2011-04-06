@@ -36,154 +36,159 @@ import org.springframework.data.document.mongodb.MongoDbUtils;
 import org.springframework.data.document.mongodb.MongoTemplate;
 import org.springframework.data.document.mongodb.query.Criteria;
 import org.springframework.data.document.mongodb.query.Query;
+import org.springframework.data.mapping.model.MappingException;
 
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
  */
 public class MappingTests {
 
-  private static final Log LOGGER = LogFactory.getLog(MongoDbUtils.class);
-  private final String[] collectionsToDrop = new String[]{"person", "personmapproperty", "personpojo", "personcustomidname", "account"};
+	private static final Log LOGGER = LogFactory.getLog(MongoDbUtils.class);
+	private final String[] collectionsToDrop = new String[]{"person", "personmapproperty", "personpojo", "personcustomidname", "account"};
 
-  ApplicationContext applicationContext;
-  MongoTemplate template;
-  MongoMappingContext mappingContext;
+	ApplicationContext applicationContext;
+	MongoTemplate template;
+	MongoMappingContext mappingContext;
 
-  @Before
-  public void setUp() throws Exception {
-    Mongo mongo = new Mongo();
-    DB db = mongo.getDB("database");
-    for (String coll : collectionsToDrop) {
-      db.getCollection(coll).drop();
-    }
-    applicationContext = new ClassPathXmlApplicationContext("/mapping.xml");
-    template = applicationContext.getBean(MongoTemplate.class);
-    mappingContext = applicationContext.getBean(MongoMappingContext.class);
-  }
+	@Before
+	public void setUp() throws Exception {
+		Mongo mongo = new Mongo();
+		DB db = mongo.getDB("database");
+		for (String coll : collectionsToDrop) {
+			db.getCollection(coll).drop();
+		}
+		applicationContext = new ClassPathXmlApplicationContext("/mapping.xml");
+		template = applicationContext.getBean(MongoTemplate.class);
+		mappingContext = applicationContext.getBean(MongoMappingContext.class);
+	}
 
-  @Test
-  public void testPersonPojo() throws Exception {
-    // POJOs aren't auto-detected, have to add manually
-    mappingContext.addPersistentEntity(PersonPojo.class);
+	@Test
+	public void testPersonPojo() throws Exception {
+		// POJOs aren't auto-detected, have to add manually
+		mappingContext.addPersistentEntity(PersonPojo.class);
 
-    LOGGER.info("about to create new personpojo");
-    PersonPojo p = new PersonPojo(12345, "Person", "Pojo");
-    LOGGER.info("about to insert");
-    template.insert(p);
-    LOGGER.info("done inserting");
-    assertNotNull(p.getId());
+		LOGGER.info("about to create new personpojo");
+		PersonPojo p = new PersonPojo(12345, "Person", "Pojo");
+		LOGGER.info("about to insert");
+		template.insert(p);
+		LOGGER.info("done inserting");
+		assertNotNull(p.getId());
 
-    List<PersonPojo> result = template.find(
-        new Query(Criteria.where("ssn").is(12345)), PersonPojo.class);
-    assertThat(result.size(), is(1));
-    assertThat(result.get(0).getSsn(), is(12345));
-  }
+		List<PersonPojo> result = template.find(new Query(Criteria.where("ssn").is(12345)), PersonPojo.class);
+		assertThat(result.size(), is(1));
+		assertThat(result.get(0).getSsn(), is(12345));
+	}
 
-  @Test
-  public void testPersonWithCustomIdName() {
-    // POJOs aren't auto-detected, have to add manually
-    mappingContext.addPersistentEntity(PersonCustomIdName.class);
+	@Test
+	public void testPersonWithCustomIdName() {
+		// POJOs aren't auto-detected, have to add manually
+		mappingContext.addPersistentEntity(PersonCustomIdName.class);
 
-    PersonCustomIdName p = new PersonCustomIdName(123456, "Custom", "Id");
-    template.insert(p);
+		PersonCustomIdName p = new PersonCustomIdName(123456, "Custom Id");
+		template.insert(p);
 
-    List<PersonCustomIdName> result = template.find(
-        new Query(Criteria.where("ssn").is(123456)), PersonCustomIdName.class);
-    assertThat(result.size(), is(1));
-    assertNotNull(result.get(0).getCustomId());
-  }
+		List<PersonCustomIdName> result = template.find(new Query(Criteria.where("ssn").is(123456)), PersonCustomIdName.class);
+		assertThat(result.size(), is(1));
+		assertNotNull(result.get(0).getLastName());
+	}
 
-  @Test
-  public void testPersonMapProperty() {
-    PersonMapProperty p = new PersonMapProperty(1234567, "Map", "Property");
-    Map<String, AccountPojo> accounts = new HashMap<String, AccountPojo>();
+	@Test(expected = MappingException.class)
+	public void testPersonWithInvalidCustomIdName() {
+		// POJOs aren't auto-detected, have to add manually
+		mappingContext.addPersistentEntity(PersonInvalidId.class);
 
-    AccountPojo checking = new AccountPojo("checking", 1000.0f);
-    AccountPojo savings = new AccountPojo("savings", 10000.0f);
+		PersonInvalidId p = new PersonInvalidId();
+		template.insert(p);
+	}
 
-    accounts.put("checking", checking);
-    accounts.put("savings", savings);
-    p.setAccounts(accounts);
+	@Test
+	public void testPersonMapProperty() {
+		PersonMapProperty p = new PersonMapProperty(1234567, "Map", "Property");
+		Map<String, AccountPojo> accounts = new HashMap<String, AccountPojo>();
 
-    template.insert(p);
-    assertNotNull(p.getId());
+		AccountPojo checking = new AccountPojo("checking", 1000.0f);
+		AccountPojo savings = new AccountPojo("savings", 10000.0f);
 
-    List<PersonMapProperty> result = template.find(
-        new Query(Criteria.where("ssn").is(1234567)), PersonMapProperty.class);
-    assertThat(result.size(), is(1));
-    assertThat(result.get(0).getAccounts().size(), is(2));
-    assertThat(result.get(0).getAccounts().get("checking").getBalance(),
-        is(1000.0f));
-  }
+		accounts.put("checking", checking);
+		accounts.put("savings", savings);
+		p.setAccounts(accounts);
 
-  @Test
-  @SuppressWarnings({"unchecked"})
-  public void testWriteEntity() {
+		template.insert(p);
+		assertNotNull(p.getId());
 
-    Address addr = new Address();
-    addr.setLines(new String[]{"1234 W. 1st Street", "Apt. 12"});
-    addr.setCity("Anytown");
-    addr.setPostalCode(12345);
-    addr.setCountry("USA");
+		List<PersonMapProperty> result = template.find(new Query(Criteria.where("ssn").is(1234567)), PersonMapProperty.class);
+		assertThat(result.size(), is(1));
+		assertThat(result.get(0).getAccounts().size(), is(2));
+		assertThat(result.get(0).getAccounts().get("checking").getBalance(),
+				is(1000.0f));
+	}
 
-    Account acct = new Account();
-    acct.setBalance(1000.00f);
-    template.insert("account", acct);
+	@Test
+	@SuppressWarnings({"unchecked"})
+	public void testWriteEntity() {
 
-    List<Account> accounts = new ArrayList<Account>();
-    accounts.add(acct);
+		Address addr = new Address();
+		addr.setLines(new String[]{"1234 W. 1st Street", "Apt. 12"});
+		addr.setCity("Anytown");
+		addr.setPostalCode(12345);
+		addr.setCountry("USA");
 
-    Person p = new Person(123456789, "John", "Doe", 37, addr);
-    p.setAccounts(accounts);
-    template.insert("person", p);
+		Account acct = new Account();
+		acct.setBalance(1000.00f);
+		template.insert("account", acct);
 
-    Account newAcct = new Account();
-    newAcct.setBalance(10000.00f);
-    template.insert("account", newAcct);
+		List<Account> accounts = new ArrayList<Account>();
+		accounts.add(acct);
 
-    accounts.add(newAcct);
-    template.save("person", p);
+		Person p = new Person(123456789, "John", "Doe", 37, addr);
+		p.setAccounts(accounts);
+		template.insert("person", p);
 
-    assertNotNull(p.getId());
+		Account newAcct = new Account();
+		newAcct.setBalance(10000.00f);
+		template.insert("account", newAcct);
 
-    List<Person> result = template.find(
-        new Query(Criteria.where("ssn").is(123456789)), Person.class);
-    assertThat(result.size(), is(1));
-    assertThat(result.get(0).getAddress().getCountry(), is("USA"));
-    assertThat(result.get(0).getAccounts(), notNullValue());
-  }
+		accounts.add(newAcct);
+		template.save("person", p);
 
-  @SuppressWarnings({"unchecked"})
-  @Test
-  public void testUniqueIndex() {
-    Address addr = new Address();
-    addr.setLines(new String[]{"1234 W. 1st Street", "Apt. 12"});
-    addr.setCity("Anytown");
-    addr.setPostalCode(12345);
-    addr.setCountry("USA");
+		assertNotNull(p.getId());
 
-    Person p1 = new Person(1234567890, "John", "Doe", 37, addr);
-    Person p2 = new Person(1234567890, "John", "Doe", 37, addr);
+		List<Person> result = template.find(new Query(Criteria.where("ssn").is(123456789)), Person.class);
+		assertThat(result.size(), is(1));
+		assertThat(result.get(0).getAddress().getCountry(), is("USA"));
+		assertThat(result.get(0).getAccounts(), notNullValue());
+	}
 
-    template.insert("person", p1);
-    template.insert("person", p2);
+	@SuppressWarnings({"unchecked"})
+	@Test
+	public void testUniqueIndex() {
+		Address addr = new Address();
+		addr.setLines(new String[]{"1234 W. 1st Street", "Apt. 12"});
+		addr.setCity("Anytown");
+		addr.setPostalCode(12345);
+		addr.setCountry("USA");
 
-    List<Person> result = template.find(
-        new Query(Criteria.where("ssn").is(1234567890)), Person.class);
-    assertThat(result.size(), is(1));
-  }
+		Person p1 = new Person(1234567890, "John", "Doe", 37, addr);
+		Person p2 = new Person(1234567890, "John", "Doe", 37, addr);
 
-  @Test
-  public void testPrimitivesAndCustomCollectionName() {
-    Location loc = new Location(
-        new double[]{1.0, 2.0},
-        new int[]{1, 2, 3, 4},
-        new float[]{1.0f, 2.0f}
-    );
-    template.insert(loc);
+		template.insert("person", p1);
+		template.insert("person", p2);
 
-    List<Location> result = template.find("places", new Query(Criteria.where("_id").is(loc.getId())), Location.class);
-    assertThat(result.size(), is(1));
-  }
+		List<Person> result = template.find(new Query(Criteria.where("ssn").is(1234567890)), Person.class);
+		assertThat(result.size(), is(1));
+	}
+
+	@Test
+	public void testPrimitivesAndCustomCollectionName() {
+		Location loc = new Location(
+				new double[]{1.0, 2.0},
+				new int[]{1, 2, 3, 4},
+				new float[]{1.0f, 2.0f}
+		);
+		template.insert(loc);
+
+		List<Location> result = template.find("places", new Query(Criteria.where("_id").is(loc.getId())), Location.class);
+		assertThat(result.size(), is(1));
+	}
 
 }

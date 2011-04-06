@@ -73,6 +73,7 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
 	private static final String CUSTOM_TYPE_KEY = "_class";
 	@SuppressWarnings({"unchecked"})
 	private static final List<Class<?>> MONGO_TYPES = Arrays.asList(Number.class, Date.class, String.class, DBObject.class);
+	private static final List<Class<?>> VALID_ID_TYPES = Arrays.asList(new Class<?>[]{ObjectId.class, String.class, BigInteger.class, byte[].class});
 	protected static final Log log = LogFactory.getLog(MappingMongoConverter.class);
 
 	protected final GenericConversionService conversionService = ConversionServiceFactory.createDefaultConversionService();
@@ -306,7 +307,7 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
 		if (!dbo.containsField("_id") && null != idProperty) {
 			Object idObj = null;
 			try {
-				idObj = MappingBeanHelper.getProperty(obj, idProperty, ObjectId.class, useFieldAccessOnly);
+				idObj = MappingBeanHelper.getProperty(obj, idProperty, Object.class, useFieldAccessOnly);
 			} catch (IllegalAccessException e) {
 				throw new MappingException(e.getMessage(), e);
 			} catch (InvocationTargetException e) {
@@ -315,6 +316,10 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
 
 			if (null != idObj) {
 				dbo.put("_id", idObj);
+			} else {
+				if (!VALID_ID_TYPES.contains(idProperty.getType())) {
+					throw new MappingException("Invalid data type " + idProperty.getType().getName() + " for Id property. Should be one of " + VALID_ID_TYPES);
+				}
 			}
 		}
 
