@@ -31,8 +31,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.dao.DataAccessException;
+import org.springframework.data.document.mongodb.geo.Box;
 import org.springframework.data.document.mongodb.geo.Circle;
 import org.springframework.data.document.mongodb.geo.Point;
+import org.springframework.data.document.mongodb.monitor.ServerInfo;
 import org.springframework.data.document.mongodb.query.Criteria;
 import org.springframework.data.document.mongodb.query.GeospatialIndex;
 import org.springframework.data.document.mongodb.query.Query;
@@ -57,10 +59,12 @@ public class GeoSpatialTests {
 
   ApplicationContext applicationContext;
   MongoTemplate template;
+  ServerInfo serverInfo;
 
   @Before
   public void setUp() throws Exception {
     Mongo mongo = new Mongo();
+    serverInfo = new ServerInfo(mongo);
     DB db = mongo.getDB("geospatial");
     for (String coll : collectionsToDrop) {
       db.getCollection(coll).drop();
@@ -90,12 +94,35 @@ public class GeoSpatialTests {
     template.insert(new Venue("Maplewood, NJ", -74.2713, 40.73137));
   }
 
+  /*
+  public void geoNear() {
+    GeoNearResult<Venue> geoNearResult = template.geoNear(new Query(Criteria.where("type").is("Office")), Venue.class, 
+                     GeoNearCriteria.near(2,3).num(10).maxDistance(10).distanceMultiplier(10).spherical(true));
+  }*/
+
   @Test
-  public void withinCircle() {
+  public void withinCenter() {
     
     Circle circle = new Circle(-73.99171, 40.738868, 0.01);
-    List<Venue> venues = template.find(new Query(Criteria.where("location").within(circle)), Venue.class);
+    List<Venue> venues = template.find(new Query(Criteria.where("location").withinCenter(circle)), Venue.class);
     assertThat(venues.size(), equalTo(7));
+  }
+  
+  @Test
+  @Ignore("run only on v 1.7.0 server or greater")
+  public void withinCenterSphere() {       
+    Circle circle = new Circle(-73.99171, 40.738868, 0.003712240453784);
+    List<Venue> venues = template.find(new Query(Criteria.where("location").withinCenterSphere(circle)), Venue.class);
+    assertThat(venues.size(), equalTo(11));
+  }
+  
+  
+  @Test
+  public void withinBox() {
+    Box box = new Box(new Point(-73.99756, 40.73083), new Point(-73.988135, 40.741404));
+    //Box box = newBox.lowerLeft(x,y).upperRight(x,y);
+    List<Venue> venues = template.find(new Query(Criteria.where("location").withinBox(box)), Venue.class);
+    assertThat(venues.size(), equalTo(4));
   }
   
   @Test
@@ -104,6 +131,16 @@ public class GeoSpatialTests {
     List<Venue> venues = template.find(new Query(Criteria.where("location").near(point).maxDistance(0.01)), Venue.class);
     assertThat(venues.size(), equalTo(7));
   }
+  
+  @Test
+  @Ignore("run only on v 1.7.0 server or greater")
+  public void nearSphere() {
+    Point point = new Point(-73.99171, 40.738868);
+    List<Venue> venues = template.find(new Query(Criteria.where("location").nearSphere(point).maxDistance(0.003712240453784)), Venue.class);
+    assertThat(venues.size(), equalTo(11));
+  }
+  
+
 
   @Test
   public void searchAllData() {

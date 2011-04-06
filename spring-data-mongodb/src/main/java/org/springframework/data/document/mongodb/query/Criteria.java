@@ -23,6 +23,7 @@ import java.util.List;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import org.springframework.data.document.InvalidDocumentStoreApiUsageException;
+import org.springframework.data.document.mongodb.geo.Box;
 import org.springframework.data.document.mongodb.geo.Circle;
 import org.springframework.data.document.mongodb.geo.Point;
 
@@ -231,15 +232,41 @@ public class Criteria implements CriteriaDefinition {
   
   
   /**
-   * Creates a geospatial criterion using a $within operation
+   * Creates a geospatial criterion using a $within $center operation
    * @param circle
    * @return
    */
-  public Criteria within(Circle circle) {
+  public Criteria withinCenter(Circle circle) {
     LinkedList list = new LinkedList();
     list.addLast(circle.getCenter());
     list.add(circle.getRadius());   
     criteria.put("$within", new BasicDBObject("$center", list));
+    return this;
+  }  
+  
+  /**
+   * Creates a geospatial criterion using a $within $center operation.  This is only available for Mongo 1.7 and higher. 
+   * @param circle
+   * @return
+   */
+  public Criteria withinCenterSphere(Circle circle) {
+    LinkedList list = new LinkedList();
+    list.addLast(circle.getCenter());
+    list.add(circle.getRadius());   
+    criteria.put("$within", new BasicDBObject("$centerSphere", list));
+    return this;
+  } 
+  
+  /**
+   * Creates a geospatial criterion using a $within $box operation
+   * @param circle
+   * @return
+   */
+  public Criteria withinBox(Box box) {
+    LinkedList<double[]> list = new LinkedList<double[]>();    
+    list.addLast(new double[]{ box.getLowerLeft().getX(), box.getLowerLeft().getY()} );
+    list.addLast(new double[]{ box.getUpperRight().getX(), box.getUpperRight().getY()} );         
+    criteria.put("$within", new BasicDBObject("$box", list));
     return this;
   }  
   
@@ -249,7 +276,17 @@ public class Criteria implements CriteriaDefinition {
    * @return
    */
   public Criteria near(Point point) {
-    criteria.put("$near", new double[]{point.getLatitude(), point.getLongitude()});
+    criteria.put("$near", new double[]{point.getX(), point.getY()});
+    return this;
+  }
+  
+  /**
+   * Creates a geospatial criterion using a $nearSphere operation.  This is only available for Mongo 1.7 and higher.
+   * @param point
+   * @return
+   */
+  public Criteria nearSphere(Point point) {
+    criteria.put("$nearSphere", new double[]{point.getX(), point.getY()});
     return this;
   }
   

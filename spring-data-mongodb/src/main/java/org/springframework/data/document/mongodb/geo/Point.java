@@ -22,38 +22,36 @@ package org.springframework.data.document.mongodb.geo;
  */
 public class Point {
 
-  private double latitude;
+  private double x;
   
-  private double longitude;
+  private double y;
 
-  public Point(double latitude, double longitude) {
-    this.latitude = latitude;
-    this.longitude = longitude;
+  public Point(double x, double y) {
+    this.x = x;
+    this.y = y;
   }
   
   public Point(Point point) {
-    this.latitude = point.latitude;
-    this.longitude = point.longitude;
+    this.x = point.x;
+    this.y = point.y;
   }
 
-  public double getLatitude() {
-    return latitude;
+  public double getX() {
+    return x;
   }
 
-  public double getLongitude() {
-    return longitude;
+  public double getY() {
+    return y;
   }
   
-  
-
   @Override
   public int hashCode() {
     final int prime = 31;
     int result = 1;
     long temp;
-    temp = Double.doubleToLongBits(latitude);
+    temp = Double.doubleToLongBits(x);
     result = prime * result + (int) (temp ^ (temp >>> 32));
-    temp = Double.doubleToLongBits(longitude);
+    temp = Double.doubleToLongBits(y);
     result = prime * result + (int) (temp ^ (temp >>> 32));
     return result;
   }
@@ -67,18 +65,18 @@ public class Point {
     if (getClass() != obj.getClass())
       return false;
     Point other = (Point) obj;
-    if (Double.doubleToLongBits(latitude) != Double
-        .doubleToLongBits(other.latitude))
+    if (Double.doubleToLongBits(x) != Double
+        .doubleToLongBits(other.x))
       return false;
-    if (Double.doubleToLongBits(longitude) != Double
-        .doubleToLongBits(other.longitude))
+    if (Double.doubleToLongBits(y) != Double
+        .doubleToLongBits(other.y))
       return false;
     return true;
   }
 
   @Override
   public String toString() {
-    return "Point [latitude=" + latitude + ", longitude=" + longitude + "]";
+    return "Point [latitude=" + x + ", longitude=" + y + "]";
   }
   
   
