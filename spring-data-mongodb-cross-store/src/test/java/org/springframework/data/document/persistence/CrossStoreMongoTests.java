@@ -8,6 +8,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.document.mongodb.MongoTemplate;
+import org.springframework.data.document.persistence.test.Address;
 import org.springframework.data.document.persistence.test.Person;
 import org.springframework.data.document.persistence.test.Resume;
 import org.springframework.test.annotation.Rollback;
@@ -52,6 +53,8 @@ public class CrossStoreMongoTests {
   public void testCreateJpaToMongoEntityRelationship() {
     clearData(Person.class.getName());
     Person p = new Person("Thomas", 20);
+    Address a = new Address(12, "MAin St.", "Boston", "MA", "02101");
+    p.setAddress(a);
     Resume r = new Resume();
     r.addEducation("Skanstulls High School, 1975");
     r.addEducation("Univ. of Stockholm, 1980");

@@ -18,7 +18,10 @@ public class Person {
   private java.util.Date birthDate;
 
   @RelatedDocument
-  public Resume resume;
+  private Address address;
+
+  @RelatedDocument
+  private Resume resume;
 
   public Person() {
   }
@@ -71,6 +74,14 @@ public class Person {
 
   public void setResume(Resume resume) {
     this.resume = resume;
+  }
+
+  public Address getAddress() {
+	return address;
+  }
+
+  public void setAddress(Address address) {
+	this.address = address;
   }
 
 }

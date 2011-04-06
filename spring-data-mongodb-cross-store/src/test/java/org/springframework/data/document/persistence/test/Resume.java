@@ -2,16 +2,26 @@ package org.springframework.data.document.persistence.test;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.bson.types.ObjectId;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.document.mongodb.mapping.Document;
 
-//@DocumentEntity
+@Document
 public class Resume {
 
   private static final Log LOGGER = LogFactory.getLog(Resume.class);
+
+  @Id
+  private ObjectId id;
 
   private String education = "";
 
   private String jobs = "";
 
+  public String getId() {
+	  return id.toString();
+  }
+  
   public String getEducation() {
     return education;
   }
