@@ -85,7 +85,7 @@ public class GeoSpatialTests {
     template.insert(new Venue("Shake Shack", -73.98820, 40.74164));
     template.insert(new Venue("Penn Station", -73.99408, 40.75057));
     template.insert(new Venue("Empire State Building", -73.98602, 40.74894));
-    template.insert(new Venue("Washington Square Park", -73.99756, 40.73083));
+    //template.insert(new Venue("Washington Square Park", -73.99756, 40.73083));
     template.insert(new Venue("Ulaanbaatar, Mongolia", 106.9154, 47.9245));
     template.insert(new Venue("Maplewood, NJ", -74.2713, 40.73137));
   }
@@ -95,14 +95,14 @@ public class GeoSpatialTests {
     
     Circle circle = new Circle(-73.99171, 40.738868, 0.01);
     List<Venue> venues = template.find(new Query(Criteria.where("location").within(circle)), Venue.class);
-    assertThat(venues.size(), equalTo(8));
+    assertThat(venues.size(), equalTo(7));
   }
   
   @Test
   public void nearPoint() {
     Point point = new Point(-73.99171, 40.738868);
     List<Venue> venues = template.find(new Query(Criteria.where("location").near(point).maxDistance(0.01)), Venue.class);
-    assertThat(venues.size(), equalTo(8));
+    assertThat(venues.size(), equalTo(7));
   }
 
   @Test
@@ -112,7 +112,7 @@ public class GeoSpatialTests {
         new Query(Criteria.where("name").is("Penn Station")), Venue.class);
     assertThat(foundVenue, notNullValue());
     List<Venue> venues = template.getCollection(Venue.class);
-    assertThat(venues.size(), equalTo(13));
+    assertThat(venues.size(), equalTo(12));
   }
   
   public void indexCreated() {
