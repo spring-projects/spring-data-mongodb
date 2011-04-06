@@ -99,21 +99,20 @@ public class MappingTests {
 		// POJOs aren't auto-detected, have to add manually
 		mappingContext.addPersistentEntity(PersonCustomIdName.class);
 
-		PersonCustomIdName p = new PersonCustomIdName(123456, "Custom Id", "LastName");
+		PersonCustomIdName p = new PersonCustomIdName(123456, "Custom Id", null);
 		template.insert(p);
 
 		List<PersonCustomIdName> result = template.find(new Query(Criteria.where("ssn").is(123456)), PersonCustomIdName.class);
 		assertThat(result.size(), is(1));
 		assertNotNull(result.get(0).getLastName());
 
-		PersonCustomIdName p2 = new PersonCustomIdName(654321, "Custom Id");
-		p2.setLastName("Smith");
+		PersonCustomIdName p2 = new PersonCustomIdName(654321, "Custom Id", "LastName");
 		template.insert(p2);
 
 		List<PersonCustomIdName> result2 = template.find(new Query(Criteria.where("ssn").is(654321)), PersonCustomIdName.class);
 		assertThat(result2.size(), is(1));
 		assertNotNull(result2.get(0).getLastName());
-		assertThat(result2.get(0).getLastName(), is("Smith"));
+		assertThat(result2.get(0).getLastName(), is("LastName"));
 
 	}
 
