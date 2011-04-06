@@ -26,6 +26,12 @@ public class PersonCustomIdName extends BasePerson {
 	@Id
 	private String lastName;
 
+
+	public PersonCustomIdName(Integer ssn, String firstName) {
+		this.ssn = ssn;
+		this.firstName = firstName;
+	}
+
 	public PersonCustomIdName(Integer ssn, String firstName, String lastName) {
 		this.ssn = ssn;
 		this.firstName = firstName;
