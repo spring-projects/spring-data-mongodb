@@ -13,7 +13,7 @@ import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.reflect.FieldSignature;
 
 import org.springframework.dao.DataAccessException;
-import org.springframework.data.document.mongodb.mapping.Document;
+import org.springframework.data.document.annotation.RelatedDocument;
 
 import org.springframework.data.persistence.document.DocumentBacked;
 import org.springframework.data.persistence.document.DocumentBackedTransactionSynchronization;
@@ -47,7 +47,7 @@ public aspect MongoDocumentBacking {
   declare parents : (@Entity *) implements DocumentBacked;
 
   // The annotated fields that will be persisted in MongoDB rather than with JPA
-  declare @field: @Document * (@Entity+ *).*:@Transient;
+  declare @field: @RelatedDocument * (@Entity+ *).*:@Transient;
 
   // -------------------------------------------------------------------------
   // Advise user-defined constructors of ChangeSetBacked objects to create a new
@@ -65,12 +65,12 @@ public aspect MongoDocumentBacking {
 		args(cs);
 
   protected pointcut entityFieldGet(DocumentBacked entity) :
-        get(@Document * DocumentBacked+.*) &&
+        get(@RelatedDocument * DocumentBacked+.*) &&
         this(entity) &&
         !get(* DocumentBacked.*);
 
   protected pointcut entityFieldSet(DocumentBacked entity, Object newVal) :
-        set(@Document * DocumentBacked+.*) &&
+        set(@RelatedDocument * DocumentBacked+.*) &&
         this(entity) &&
         args(newVal) &&
         !set(* DocumentBacked.*);

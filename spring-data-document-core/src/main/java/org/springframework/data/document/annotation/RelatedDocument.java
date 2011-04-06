@@ -14,24 +14,21 @@
  * limitations under the License.
  */
 
-package org.springframework.data.document.mongodb.mapping;
+package org.springframework.data.document.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import org.springframework.data.annotation.Persistent;
-
 /**
- * @author Jon Brisbin <jbrisbin@vmware.com>
+ * @author Thomas Risberg
  */
-@Persistent
 @Retention(RetentionPolicy.RUNTIME)
 @Target({
-    ElementType.TYPE
+    ElementType.FIELD
 })
-public @interface Document {
+public @interface RelatedDocument {
 
   String collection() default "";
 

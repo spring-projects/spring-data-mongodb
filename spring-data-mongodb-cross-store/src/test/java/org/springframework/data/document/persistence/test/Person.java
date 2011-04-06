@@ -3,7 +3,7 @@ package org.springframework.data.document.persistence.test;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
-import org.springframework.data.document.mongodb.mapping.Document;
+import org.springframework.data.document.annotation.RelatedDocument;
 
 @Entity
 public class Person {
@@ -17,7 +17,7 @@ public class Person {
 
   private java.util.Date birthDate;
 
-  @Document
+  @RelatedDocument
   public Resume resume;
 
   public Person() {
