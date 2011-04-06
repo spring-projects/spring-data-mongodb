@@ -23,6 +23,7 @@ import java.util.List;
 
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
+import com.mongodb.Mongo;
 import com.mongodb.WriteConcern;
 import org.bson.types.ObjectId;
 import org.junit.Before;
@@ -32,7 +33,9 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.document.mongodb.convert.MappingMongoConverter;
 import org.springframework.data.document.mongodb.convert.MongoConverter;
+import org.springframework.data.document.mongodb.mapping.MongoMappingContext;
 import org.springframework.data.document.mongodb.query.*;
 import org.springframework.data.document.mongodb.query.Index.Duplicates;
 import org.springframework.test.context.ContextConfiguration;
@@ -50,11 +53,25 @@ public class MongoTemplateTests {
 
   @Autowired
   MongoTemplate template;
+  
+  MongoTemplate mappingTemplate;
 
   @Rule
   public ExpectedException thrown = ExpectedException.none();
 
-  @Before
+  @Autowired
+  public void setMongo(Mongo mongo) {
+	  MappingMongoConverter converter = new MappingMongoConverter();
+	  MongoMappingContext mappingContext = new MongoMappingContext();
+	  mappingContext.addPersistentEntity(PersonWith_idPropertyOfTypeObjectId.class);
+	  mappingContext.addPersistentEntity(PersonWith_idPropertyOfTypeString.class);
+	  mappingContext.addPersistentEntity(PersonWithIdPropertyOfTypeObjectId.class);
+	  mappingContext.addPersistentEntity(PersonWithIdPropertyOfTypeString.class);
+	  converter.setMappingContext(mappingContext);
+	  this.mappingTemplate = new MongoTemplate(mongo, "database", "springdata", converter);
+  }
+
+@Before
   public void setUp() {
     template.dropCollection(template.getDefaultCollectionName());
   }
@@ -123,16 +140,25 @@ public class MongoTemplateTests {
   }
 
   @Test
-  public void testProperHandlingOfDifferentIdTypes() throws Exception {
+  public void testProperHandlingOfDifferentIdTypesWithSimpleMongoConverter() throws Exception {
+	  testProperHandlingOfDifferentIdTypes(this.template);
+  }
+
+  @Test
+  public void testProperHandlingOfDifferentIdTypesWithMappingMongoConverter() throws Exception {
+	  testProperHandlingOfDifferentIdTypes(this.mappingTemplate);
+  }
+
+  public void testProperHandlingOfDifferentIdTypes(MongoTemplate mongoTemplate) throws Exception {
     PersonWithIdPropertyOfTypeString p1 = new PersonWithIdPropertyOfTypeString();
     p1.setFirstName("Sven_1");
     p1.setAge(22);
     // insert
-    template.insert(p1);
+    mongoTemplate.insert(p1);
     // also try save
-    template.save(p1);
+    mongoTemplate.save(p1);
     assertThat(p1.getId(), notNullValue());
-    PersonWithIdPropertyOfTypeString p1q = template.findOne(new Query(where("id").is(p1.getId())), PersonWithIdPropertyOfTypeString.class);
+    PersonWithIdPropertyOfTypeString p1q = mongoTemplate.findOne(new Query(where("id").is(p1.getId())), PersonWithIdPropertyOfTypeString.class);
     assertThat(p1q, notNullValue());
     assertThat(p1q.getId(), is(p1.getId()));
 
@@ -141,11 +167,11 @@ public class MongoTemplateTests {
     p2.setAge(22);
     p2.setId("TWO");
     // insert
-    template.insert(p2);
+    mongoTemplate.insert(p2);
     // also try save
-    template.save(p2);
+    mongoTemplate.save(p2);
     assertThat(p2.getId(), notNullValue());
-    PersonWithIdPropertyOfTypeString p2q = template.findOne(new Query(where("id").is(p2.getId())), PersonWithIdPropertyOfTypeString.class);
+    PersonWithIdPropertyOfTypeString p2q = mongoTemplate.findOne(new Query(where("id").is(p2.getId())), PersonWithIdPropertyOfTypeString.class);
     assertThat(p2q, notNullValue());
     assertThat(p2q.getId(), is(p2.getId()));
 
@@ -153,11 +179,11 @@ public class MongoTemplateTests {
     p3.setFirstName("Sven_3");
     p3.setAge(22);
     // insert
-    template.insert(p3);
+    mongoTemplate.insert(p3);
     // also try save
-    template.save(p3);
+    mongoTemplate.save(p3);
     assertThat(p3.get_id(), notNullValue());
-    PersonWith_idPropertyOfTypeString p3q = template.findOne(new Query(where("_id").is(p3.get_id())), PersonWith_idPropertyOfTypeString.class);
+    PersonWith_idPropertyOfTypeString p3q = mongoTemplate.findOne(new Query(where("_id").is(p3.get_id())), PersonWith_idPropertyOfTypeString.class);
     assertThat(p3q, notNullValue());
     assertThat(p3q.get_id(), is(p3.get_id()));
 
@@ -166,11 +192,11 @@ public class MongoTemplateTests {
     p4.setAge(22);
     p4.set_id("FOUR");    
     // insert
-    template.insert(p4);
+    mongoTemplate.insert(p4);
     // also try save
-    template.save(p4);
+    mongoTemplate.save(p4);
     assertThat(p4.get_id(), notNullValue());
-    PersonWith_idPropertyOfTypeString p4q = template.findOne(new Query(where("_id").is(p4.get_id())), PersonWith_idPropertyOfTypeString.class);
+    PersonWith_idPropertyOfTypeString p4q = mongoTemplate.findOne(new Query(where("_id").is(p4.get_id())), PersonWith_idPropertyOfTypeString.class);
     assertThat(p4q, notNullValue());
     assertThat(p4q.get_id(), is(p4.get_id()));
 
@@ -178,11 +204,11 @@ public class MongoTemplateTests {
     p5.setFirstName("Sven_5");
     p5.setAge(22);
     // insert
-    template.insert(p5);
+    mongoTemplate.insert(p5);
     // also try save
-    template.save(p5);
+    mongoTemplate.save(p5);
     assertThat(p5.getId(), notNullValue());
-    PersonWithIdPropertyOfTypeObjectId p5q = template.findOne(new Query(where("id").is(p5.getId())), PersonWithIdPropertyOfTypeObjectId.class);
+    PersonWithIdPropertyOfTypeObjectId p5q = mongoTemplate.findOne(new Query(where("id").is(p5.getId())), PersonWithIdPropertyOfTypeObjectId.class);
     assertThat(p5q, notNullValue());
     assertThat(p5q.getId(), is(p5.getId()));
 
@@ -191,11 +217,11 @@ public class MongoTemplateTests {
     p6.setAge(22);
     p6.setId(new ObjectId());
     // insert
-    template.insert(p6);
+    mongoTemplate.insert(p6);
     // also try save
-    template.save(p6);
+    mongoTemplate.save(p6);
    assertThat(p6.getId(), notNullValue());
-    PersonWithIdPropertyOfTypeObjectId p6q = template.findOne(new Query(where("id").is(p6.getId())), PersonWithIdPropertyOfTypeObjectId.class);
+    PersonWithIdPropertyOfTypeObjectId p6q = mongoTemplate.findOne(new Query(where("id").is(p6.getId())), PersonWithIdPropertyOfTypeObjectId.class);
     assertThat(p6q, notNullValue());
     assertThat(p6q.getId(), is(p6.getId()));
 
@@ -203,11 +229,11 @@ public class MongoTemplateTests {
     p7.setFirstName("Sven_7");
     p7.setAge(22);
     // insert
-    template.insert(p7);
+    mongoTemplate.insert(p7);
     // also try save
-    template.save(p7);
+    mongoTemplate.save(p7);
    assertThat(p7.get_id(), notNullValue());
-    PersonWith_idPropertyOfTypeObjectId p7q = template.findOne(new Query(where("_id").is(p7.get_id())), PersonWith_idPropertyOfTypeObjectId.class);
+    PersonWith_idPropertyOfTypeObjectId p7q = mongoTemplate.findOne(new Query(where("_id").is(p7.get_id())), PersonWith_idPropertyOfTypeObjectId.class);
     assertThat(p7q, notNullValue());
     assertThat(p7q.get_id(), is(p7.get_id()));
 
@@ -216,11 +242,11 @@ public class MongoTemplateTests {
     p8.setAge(22);
     p8.set_id(new ObjectId());
     // insert
-    template.insert(p8);
+    mongoTemplate.insert(p8);
     // also try save
-    template.save(p8);
+    mongoTemplate.save(p8);
     assertThat(p8.get_id(), notNullValue());
-    PersonWith_idPropertyOfTypeObjectId p8q = template.findOne(new Query(where("_id").is(p8.get_id())), PersonWith_idPropertyOfTypeObjectId.class);
+    PersonWith_idPropertyOfTypeObjectId p8q = mongoTemplate.findOne(new Query(where("_id").is(p8.get_id())), PersonWith_idPropertyOfTypeObjectId.class);
     assertThat(p8q, notNullValue());
     assertThat(p8q.get_id(), is(p8.get_id()));
   }

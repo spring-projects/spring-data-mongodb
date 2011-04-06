@@ -924,6 +924,9 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 	 * @return the List of converted objects.
 	 */
 	protected <T> T doFindOne(String collectionName, DBObject query, DBObject fields, Class<T> targetClass, MongoReader<T> reader) {
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("findOne using query: " + query.toString());
+		}
 		MongoReader<? super T> readerToUse = reader;
 		if (readerToUse == null) {
 			readerToUse = this.mongoConverter;
@@ -1074,7 +1077,11 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 		MongoConverter converter = null;
 		if (reader instanceof SimpleMongoConverter) {
 			converter = (MongoConverter) reader;
-		} else {
+		}
+		else if (reader instanceof MappingMongoConverter) {
+			converter = (MappingMongoConverter) reader;
+		}
+		else {
 			return;
 		}
 		String idKey = null;
