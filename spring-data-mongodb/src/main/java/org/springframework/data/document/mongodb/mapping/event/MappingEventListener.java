@@ -14,17 +14,16 @@
  * limitations under the License.
  */
 
-package org.springframework.data.document.mongodb.mapping;
+package org.springframework.data.document.mongodb.mapping.event;
 
 import com.mongodb.DBObject;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.data.document.mongodb.mapping.event.AbstractMappingEventListener;
 
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
  */
-public class MappingEventsListener<MongoMappingEvent> extends AbstractMappingEventListener {
+public class MappingEventListener<MongoMappingEvent> extends AbstractMappingEventListener {
 
   private Log log = LogFactory.getLog(getClass());
 

@@ -29,6 +29,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.document.mongodb.geo.Box;
@@ -69,7 +70,7 @@ public class GeoSpatialTests {
     for (String coll : collectionsToDrop) {
       db.getCollection(coll).drop();
     }
-    applicationContext = new ClassPathXmlApplicationContext("/geospatial.xml");
+    applicationContext = new AnnotationConfigApplicationContext(GeoSpatialAppConfig.class);
     template = applicationContext.getBean(MongoTemplate.class);
     template.setWriteConcern(WriteConcern.FSYNC_SAFE);
     template.ensureIndex(new GeospatialIndex("location"));
