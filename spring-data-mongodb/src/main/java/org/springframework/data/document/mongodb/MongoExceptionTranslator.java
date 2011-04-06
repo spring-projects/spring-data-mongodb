@@ -23,6 +23,8 @@ import com.mongodb.MongoInternalException;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.DuplicateKeyException;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.document.UncategorizedDocumentStoreException;
@@ -56,6 +58,14 @@ public class MongoExceptionTranslator implements PersistenceExceptionTranslator 
       return new DataAccessResourceFailureException(ex.getMessage(), ex);
     }
     if (ex instanceof MongoException) {
+      int code = ((MongoException)ex).getCode();
+      if (code == 11000 || code == 11001) {
+        throw new DuplicateKeyException(ex.getMessage(), ex);
+      } else if (code == 12000 || code == 13440) {
+        throw new DataAccessResourceFailureException(ex.getMessage(), ex);
+      } else if (code == 10003 || code == 12001 || code == 12010 || code == 12011 || code == 12012 ) {
+        throw new InvalidDataAccessApiUsageException(ex.getMessage(), ex);
+      } 
       return new UncategorizedDocumentStoreException(ex.getMessage(), ex);
     }
     if (ex instanceof MongoInternalException) {
