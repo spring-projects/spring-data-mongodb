@@ -30,94 +30,94 @@ import org.springframework.data.document.mongodb.index.Indexed;
  */
 @Document
 @CompoundIndexes({
-    @CompoundIndex(name = "age_idx", def = "{'lastName': 1, 'age': -1}")
+		@CompoundIndex(name = "age_idx", def = "{'lastName': 1, 'age': -1}")
 })
 public class Person<T extends Address> {
 
-  @Id
-  private String id;
-  @Indexed(unique = true)
-  private Integer ssn;
-  private String firstName;
-  @Indexed
-  private String lastName;
-  private Integer age;
-  @Transient
-  private Integer accountTotal;
-  @DBRef
-  private List<Account> accounts;
-  private T address;
+	@Id
+	private String id;
+	@Indexed(unique = true)
+	private Integer ssn;
+	private String firstName;
+	@Indexed
+	private String lastName;
+	private Integer age;
+	@Transient
+	private Integer accountTotal;
+	@DBRef
+	private List<Account> accounts;
+	private T address;
 
-  @PersistenceConstructor
-  public Person(Integer ssn, String firstName, String lastName, Integer age, T address) {
-    this.ssn = ssn;
-    this.firstName = firstName;
-    this.lastName = lastName;
-    this.age = age;
-    this.address = address;
-  }
+	@PersistenceConstructor
+	public Person(Integer ssn, String firstName, String lastName, Integer age, T address) {
+		this.ssn = ssn;
+		this.firstName = firstName;
+		this.lastName = lastName;
+		this.age = age;
+		this.address = address;
+	}
 
-  public String getId() {
-    return id;
-  }
+	public String getId() {
+		return id;
+	}
 
-  public void setId(String id) {
-    this.id = id;
-  }
+	public void setId(String id) {
+		this.id = id;
+	}
 
-  public Integer getSsn() {
-    return ssn;
-  }
+	public Integer getSsn() {
+		return ssn;
+	}
 
-  public void setSsn(Integer ssn) {
-    this.ssn = ssn;
-  }
+	public void setSsn(Integer ssn) {
+		this.ssn = ssn;
+	}
 
-  public String getFirstName() {
-    return firstName;
-  }
+	public String getFirstName() {
+		return firstName;
+	}
 
-  public void setFirstName(String firstName) {
-    this.firstName = firstName;
-  }
+	public void setFirstName(String firstName) {
+		this.firstName = firstName;
+	}
 
-  public String getLastName() {
-    return lastName;
-  }
+	public String getLastName() {
+		return lastName;
+	}
 
-  public void setLastName(String lastName) {
-    this.lastName = lastName;
-  }
+	public void setLastName(String lastName) {
+		this.lastName = lastName;
+	}
 
-  public Integer getAge() {
-    return age;
-  }
+	public Integer getAge() {
+		return age;
+	}
 
-  public void setAge(Integer age) {
-    this.age = age;
-  }
+	public void setAge(Integer age) {
+		this.age = age;
+	}
 
-  public Integer getAccountTotal() {
-    return accountTotal;
-  }
+	public Integer getAccountTotal() {
+		return accountTotal;
+	}
 
-  public void setAccountTotal(Integer accountTotal) {
-    this.accountTotal = accountTotal;
-  }
+	public void setAccountTotal(Integer accountTotal) {
+		this.accountTotal = accountTotal;
+	}
 
-  public List<Account> getAccounts() {
-    return accounts;
-  }
+	public List<Account> getAccounts() {
+		return accounts;
+	}
 
-  public void setAccounts(List<Account> accounts) {
-    this.accounts = accounts;
-  }
+	public void setAccounts(List<Account> accounts) {
+		this.accounts = accounts;
+	}
 
-  public T getAddress() {
-    return address;
-  }
+	public T getAddress() {
+		return address;
+	}
 
-  public void setAddress(T address) {
-    this.address = address;
-  }
+	public void setAddress(T address) {
+		this.address = address;
+	}
 }

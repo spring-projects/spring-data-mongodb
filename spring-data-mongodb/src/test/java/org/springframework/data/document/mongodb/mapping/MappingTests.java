@@ -184,10 +184,10 @@ public class MappingTests {
 		addr.setCountry("USA");
 
 		Person p1 = new Person(1234567890, "John", "Doe", 37, addr);
-		Person p2 = new Person(1234567890, "John", "Doe", 37, addr);
+		Person p2 = new Person(1234567890, "Jane", "Doe", 38, addr);
 
-		template.insert("person", p1);
-		template.insert("person", p2);
+		template.insert(p2);
+		template.insert(p1);
 
 		List<Person> result = template.find(new Query(Criteria.where("ssn").is(1234567890)), Person.class);
 		assertThat(result.size(), is(1));

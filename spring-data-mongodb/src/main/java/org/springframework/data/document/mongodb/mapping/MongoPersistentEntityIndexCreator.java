@@ -50,113 +50,121 @@ import org.springframework.util.Assert;
  */
 public class MongoPersistentEntityIndexCreator implements ApplicationListener<MappingContextEvent> {
 
-  private static final Log log = LogFactory.getLog(MongoPersistentEntityIndexCreator.class);
+	private static final Log log = LogFactory.getLog(MongoPersistentEntityIndexCreator.class);
 
-  private Set<Class<?>> classesSeen = Collections.newSetFromMap(new ConcurrentHashMap<Class<?>, Boolean>());
+	private Set<Class<?>> classesSeen = Collections.newSetFromMap(new ConcurrentHashMap<Class<?>, Boolean>());
 
-  private final MongoTemplate mongoTemplate;
+	private final MongoTemplate mongoTemplate;
 
-  public MongoPersistentEntityIndexCreator(MongoMappingContext mappingContext, MongoTemplate mongoTemplate) {
+	public MongoPersistentEntityIndexCreator(MongoMappingContext mappingContext, MongoTemplate mongoTemplate) {
 
-    Assert.notNull(mongoTemplate);
-    Assert.notNull(mappingContext);
-    this.mongoTemplate = mongoTemplate;
+		Assert.notNull(mongoTemplate);
+		Assert.notNull(mappingContext);
+		this.mongoTemplate = mongoTemplate;
 
-    for (MongoPersistentEntity<?> entity : mappingContext.getPersistentEntities()) {
-      checkForIndexes(entity);
-    }
-  }
+		for (MongoPersistentEntity<?> entity : mappingContext.getPersistentEntities()) {
+			checkForIndexes(entity);
+		}
+	}
 
-  /* (non-Javadoc)
-  * @see org.springframework.context.ApplicationListener#onApplicationEvent(org.springframework.context.ApplicationEvent)
-  */
-  public void onApplicationEvent(MappingContextEvent event) {
-    checkForIndexes((MongoPersistentEntity<?>) event.getPersistentEntity());
-  }
+	/* (non-Javadoc)
+		* @see org.springframework.context.ApplicationListener#onApplicationEvent(org.springframework.context.ApplicationEvent)
+		*/
+	public void onApplicationEvent(MappingContextEvent event) {
+		checkForIndexes((MongoPersistentEntity<?>) event.getPersistentEntity());
+	}
 
-  protected void checkForIndexes(MongoPersistentEntity<?> entity) {
-    final Class<?> type = entity.getType();
-    if (!classesSeen.contains(type)) {
-      if (log.isDebugEnabled()) {
-        log.debug("Analyzing class " + type + " for index information.");
-      }
-      // Check for special collection setting
-      if (type.isAnnotationPresent(Document.class)) {
-        Document doc = type.getAnnotation(Document.class);
-        String collection = doc.collection();
-        if ("".equals(collection)) {
-          collection = type.getSimpleName().toLowerCase();
-        }
-        entity.setCollection(collection);
-      }
+	protected void checkForIndexes(final MongoPersistentEntity<?> entity) {
+		final Class<?> type = entity.getType();
+		if (!classesSeen.contains(type)) {
+			if (log.isDebugEnabled()) {
+				log.debug("Analyzing class " + type + " for index information.");
+			}
+			// Check for special collection setting
+			if (type.isAnnotationPresent(Document.class)) {
+				Document doc = type.getAnnotation(Document.class);
+				String collection = doc.collection();
+				if ("".equals(collection)) {
+					collection = type.getSimpleName().toLowerCase();
+				}
+				entity.setCollection(collection);
+			}
 
-      // Make sure indexes get created
-      if (type.isAnnotationPresent(CompoundIndexes.class)) {
-        CompoundIndexes indexes = type.getAnnotation(CompoundIndexes.class);
-        for (CompoundIndex index : indexes.value()) {
-          String indexColl = index.collection();
-          if ("".equals(indexColl)) {
-            indexColl = type.getSimpleName().toLowerCase();
-          }
-          ensureIndex(indexColl, index.name(), index.def(), index.direction(), index.unique(), index.dropDups(), index.sparse());
-          if (log.isDebugEnabled()) {
-            log.debug("Created compound index " + index);
-          }
-        }
-      }
+			// Make sure indexes get created
+			if (type.isAnnotationPresent(CompoundIndexes.class)) {
+				CompoundIndexes indexes = type.getAnnotation(CompoundIndexes.class);
+				for (CompoundIndex index : indexes.value()) {
+					String indexColl = index.collection();
+					if ("".equals(indexColl)) {
+						indexColl = entity.getCollection();
+					}
+					ensureIndex(indexColl, index.name(), index.def(), index.direction(), index.unique(), index.dropDups(), index.sparse());
+					if (log.isDebugEnabled()) {
+						log.debug("Created compound index " + index);
+					}
+				}
+			}
 
-      entity.doWithProperties(new PropertyHandler() {
-        public void doWithPersistentProperty(PersistentProperty persistentProperty) {
-          Field field = persistentProperty.getField();
-          if (field.isAnnotationPresent(Indexed.class)) {
-            Indexed index = field.getAnnotation(Indexed.class);
-            String name = index.name();
-            if ("".equals(name)) {
-              name = field.getName();
-            }
-            String collection = index.collection();
-            if ("".equals(collection)) {
-              collection = type.getSimpleName().toLowerCase();
-            }
-            ensureIndex(collection, name, null, index.direction(), index.unique(), index.dropDups(), index.sparse());
-            if (log.isDebugEnabled()) {
-              log.debug("Created property index " + index);
-            }
-          }
-        }
-      });
+			entity.doWithProperties(new PropertyHandler() {
+				public void doWithPersistentProperty(PersistentProperty persistentProperty) {
+					Field field = persistentProperty.getField();
+					if (field.isAnnotationPresent(Indexed.class)) {
+						Indexed index = field.getAnnotation(Indexed.class);
+						String name = index.name();
+						if ("".equals(name)) {
+							name = field.getName();
+						} else {
+							if (!name.equals(field.getName()) && index.unique() && !index.sparse()) {
+								// Names don't match, and sparse is not true. This situation will generate an error on the server.
+								if (log.isWarnEnabled()) {
+									log.warn("The index name " + name + " doesn't match this property name: " + field.getName()
+											+ ". Setting sparse=true on this index will prevent errors when inserting documents.");
+								}
+							}
+						}
+						String collection = index.collection();
+						if ("".equals(collection)) {
+							collection = entity.getCollection();
+						}
+						ensureIndex(collection, name, null, index.direction(), index.unique(), index.dropDups(), index.sparse());
+						if (log.isDebugEnabled()) {
+							log.debug("Created property index " + index);
+						}
+					}
+				}
+			});
 
-      classesSeen.add(type);
-    }
+			classesSeen.add(type);
+		}
 
 
-  }
+	}
 
-  protected void ensureIndex(String collection,
-                             final String name,
-                             final String def,
-                             final IndexDirection direction,
-                             final boolean unique,
-                             final boolean dropDups,
-                             final boolean sparse) {
-    mongoTemplate.execute(collection, new CollectionCallback<Object>() {
-      public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
-        DBObject defObj;
-        if (null != def) {
-          defObj = (DBObject) JSON.parse(def);
-        } else {
-          defObj = new BasicDBObject();
-          defObj.put(name, (direction == IndexDirection.ASCENDING ? 1 : -1));
-        }
-        DBObject opts = new BasicDBObject();
-        //opts.put("name", name + "_idx");
-        opts.put("dropDups", dropDups);
-        opts.put("sparse", sparse);
-        opts.put("unique", unique);
-        collection.ensureIndex(defObj, opts);
-        return null;
-      }
-    });
-  }
+	protected void ensureIndex(String collection,
+														 final String name,
+														 final String def,
+														 final IndexDirection direction,
+														 final boolean unique,
+														 final boolean dropDups,
+														 final boolean sparse) {
+		mongoTemplate.execute(collection, new CollectionCallback<Object>() {
+			public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
+				DBObject defObj;
+				if (null != def) {
+					defObj = (DBObject) JSON.parse(def);
+				} else {
+					defObj = new BasicDBObject();
+					defObj.put(name, (direction == IndexDirection.ASCENDING ? 1 : -1));
+				}
+				DBObject opts = new BasicDBObject();
+				//opts.put("name", name + "_idx");
+				opts.put("dropDups", dropDups);
+				opts.put("sparse", sparse);
+				opts.put("unique", unique);
+				collection.ensureIndex(defObj, opts);
+				return null;
+			}
+		});
+	}
 
 }
