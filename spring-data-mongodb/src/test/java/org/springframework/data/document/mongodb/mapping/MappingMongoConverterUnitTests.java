@@ -76,7 +76,9 @@ public class MappingMongoConverterUnitTests {
     customSimpleTypes.add(LocalDate.class);
     mappingContext.setCustomSimpleTypes(customSimpleTypes);
     
-    converter = new MappingMongoConverter(mappingContext, converters);
+    converter = new MappingMongoConverter(mappingContext);
+    converter.addConverters(converters);
+    converter.afterPropertiesSet();
     
     Person person = new Person();
     person.birthDate = new LocalDate();

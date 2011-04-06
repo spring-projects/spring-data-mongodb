@@ -129,11 +129,12 @@ public class SimpleMongoConverter implements MongoConverter {
   }
 
   /**
-   * Sets custom {@link Converter} or {@link ConverterFactory} instances to be used.
+   * Add custom {@link Converter} or {@link ConverterFactory} instances to be used that will take presidence over
+   * using object traversal to convert and object to/from DBObject
    * 
    * @param converters
    */
-  public void setConverters(Set<?> converters) {
+  public void addConverters(Set<?> converters) {
     for (Object converter : converters) {
       boolean added = false;
       if (converter instanceof Converter) {

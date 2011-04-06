@@ -326,7 +326,7 @@ public class SimpleMongoConverterTests {
     converters.add(new LocalDateToDateConverter());
     converters.add(new DateToLocalDateConverter());
     
-    converter.setConverters(converters);
+    converter.addConverters(converters);
     
     AnotherPerson person = new AnotherPerson();
     person.birthDate = new LocalDate();

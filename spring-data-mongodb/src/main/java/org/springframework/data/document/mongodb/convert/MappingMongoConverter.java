@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
@@ -46,6 +47,7 @@ import org.springframework.context.expression.BeanFactoryResolver;
 import org.springframework.core.GenericTypeResolver;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.core.convert.converter.ConverterFactory;
 import org.springframework.core.convert.support.ConversionServiceFactory;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.mapping.AssociationHandler;
@@ -86,24 +88,27 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
 	protected String defaultDatabase;
 
 	public MappingMongoConverter() {
-		initializeConverters();
+		
 	}
 
 	public MappingMongoConverter(MappingContext mappingContext) {
 		this.mappingContext = mappingContext;
-		initializeConverters();
 	}
-
-	public MappingMongoConverter(MappingContext mappingContext, List<Converter<?, ?>> converters) {
-		this.mappingContext = mappingContext;
-		if (null != converters) {
-			for (Converter<?, ?> c : converters) {
-				registerConverter(c);
-				conversionService.addConverter(c);
-			}
-		}
-		initializeConverters();
-	}
+	
+  /**
+   * Add custom {@link Converter} or {@link ConverterFactory} instances to be used that will take presidence over
+   * metadata driven conversion between of objects to/from DBObject
+   * 
+   * @param converters
+   */
+  public void addConverters(List<Converter<?, ?>> converters) {
+    if (null != converters) {
+      for (Converter<?, ?> c : converters) {
+        registerConverter(c);
+        conversionService.addConverter(c);
+      }
+    }
+  }
 
 	/**
 	 * Inspects the given {@link Converter} for the types it can convert and registers the pair for custom type conversion
@@ -596,7 +601,8 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
 		}
 	}
 
-	public void afterPropertiesSet() throws Exception {
+	public void afterPropertiesSet() {
+	   initializeConverters();
 	}
 
 	/**
