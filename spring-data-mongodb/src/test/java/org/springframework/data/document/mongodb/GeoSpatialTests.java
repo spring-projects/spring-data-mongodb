@@ -21,6 +21,8 @@ import static org.junit.Assert.assertThat;
 
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -42,15 +44,15 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.Mongo;
 import com.mongodb.MongoException;
+import com.mongodb.WriteConcern;
 /**
  * Modified from https://github.com/deftlabs/mongo-java-geospatial-example
  * @author Mark Pollack
  *
  */
-//@RunWith(SpringJUnit4ClassRunner.class)
-//@ContextConfiguration("classpath:geospatial.xml")
 public class GeoSpatialTests {
 
+  private static final Log LOGGER = LogFactory.getLog(GeoSpatialTests.class);
   private final String[] collectionsToDrop = new String[]{"newyork"};
 
   ApplicationContext applicationContext;
@@ -65,12 +67,14 @@ public class GeoSpatialTests {
     }
     applicationContext = new ClassPathXmlApplicationContext("/geospatial.xml");
     template = applicationContext.getBean(MongoTemplate.class);
-    //template.dropCollection(template.getDefaultCollectionName());
+    template.setWriteConcern(WriteConcern.FSYNC_SAFE);
     template.ensureIndex(new GeospatialIndex("location"));
+    indexCreated();
     addVenues();
   }
 
   private void addVenues() {
+    
     template.insert(new Venue("Penn Station", -73.99408, 40.75057));
     template.insert(new Venue("10gen Office", -73.99171, 40.738868));
     template.insert(new Venue("Flatiron Building", -73.988135, 40.741404));
@@ -102,15 +106,18 @@ public class GeoSpatialTests {
   }
 
   @Test
-  public void indexCreated() {
+  public void searchAllData() {
     assertThat(template, notNullValue());
     Venue foundVenue = template.findOne(
         new Query(Criteria.where("name").is("Penn Station")), Venue.class);
     assertThat(foundVenue, notNullValue());
     List<Venue> venues = template.getCollection(Venue.class);
     assertThat(venues.size(), equalTo(13));
-
+  }
+  
+  public void indexCreated() {
     List<DBObject> indexInfo = getIndexInfo();
+    LOGGER.debug(indexInfo);
     assertThat(indexInfo.size(), equalTo(2));
     assertThat(indexInfo.get(1).get("name").toString(), equalTo("location_2d"));
     assertThat(indexInfo.get(1).get("ns").toString(),

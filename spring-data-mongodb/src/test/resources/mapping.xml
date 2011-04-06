@@ -6,8 +6,7 @@
        http://www.springframework.org/schema/data/mongo http://www.springframework.org/schema/data/mongo/spring-mongo-1.0.xsd">
 
   <mongo:mongo host="localhost" port="27017"/>
-  <mongo:mapping-converter base-package="org.springframework.data.document.mongodb.mapping"
-                           autowire="true"/>
+  <mongo:mapping-converter base-package="org.springframework.data.document.mongodb.mapping"/>
 
   <bean id="mongoTemplate" class="org.springframework.data.document.mongodb.MongoTemplate">
     <constructor-arg ref="mongo"/>

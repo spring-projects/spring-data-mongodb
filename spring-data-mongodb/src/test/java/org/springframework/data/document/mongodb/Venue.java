@@ -17,12 +17,14 @@ package org.springframework.data.document.mongodb;
 
 import java.util.Arrays;
 
+import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.document.mongodb.mapping.Document;
 
-@Document
+@Document(collection="newyork")
 public class Venue {
     
+  @Id
   private String id;
   private String name;
   private Double[] location;
@@ -46,6 +48,14 @@ public class Venue {
 
   public Double[] getLocation() {
     return location;
+  }
+  
+  public String getId() {
+    return id;
+  }
+
+  public void setId(String id) {
+    this.id = id;
   }
 
   @Override

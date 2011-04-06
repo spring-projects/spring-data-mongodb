@@ -668,7 +668,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
     * @see org.springframework.data.document.mongodb.MongoOperations#save(java.lang.Object)
     */
   public void save(Object objectToSave) {
-    save(getRequiredDefaultCollectionName(), objectToSave);
+    save(getEntityCollection(objectToSave), objectToSave);
   }
 
   /* (non-Javadoc)
@@ -1104,6 +1104,10 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
   private <T> String getEntityCollection(Class<T> clazz) {
     if (null != mappingContext) {
       PersistentEntity<T> entity = mappingContext.getPersistentEntity(clazz);
+      if (entity == null) {
+        mappingContext.addPersistentEntity(clazz);
+        entity = mappingContext.getPersistentEntity(clazz);
+      }
       if (null != entity && entity instanceof MongoPersistentEntity) {
         return ((MongoPersistentEntity) entity).getCollection();
       }
@@ -1320,6 +1324,10 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 
   public void setWriteResultChecking(WriteResultChecking resultChecking) {
     this.writeResultChecking = resultChecking;
+  }
+  
+  public void setWriteConcern(WriteConcern writeConcern) {
+    this.writeConcern = writeConcern;
   }
 
 }

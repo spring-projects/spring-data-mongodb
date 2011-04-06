@@ -120,13 +120,6 @@ The base package in which to scan for entities annotated with @Document
 							]]></xsd:documentation>
         </xsd:annotation>
       </xsd:attribute>
-      <xsd:attribute name="autowire" type="xsd:boolean">
-        <xsd:annotation>
-          <xsd:documentation><![CDATA[
-This controls whether or not to run entities through the BeanFactory's autowiring mechanism for using @Autowired and @Value on properties. Default is true.
-          ]]></xsd:documentation>
-        </xsd:annotation>
-      </xsd:attribute>
       <xsd:attribute name="mongo-ref" type="mongoRef" use="optional">
         <xsd:annotation>
           <xsd:documentation>

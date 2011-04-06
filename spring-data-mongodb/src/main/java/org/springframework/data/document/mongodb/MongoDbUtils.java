@@ -90,7 +90,7 @@ public abstract class MongoDbUtils {
       }
     }
 
-    LOGGER.debug("Opening Mongo DB");
+    LOGGER.trace("Getting Mongo Database name=["+databaseName+"]");
     DB db = mongo.getDB(databaseName);
     boolean credentialsGiven = username != null && password != null;
 
