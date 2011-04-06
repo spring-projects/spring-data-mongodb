@@ -18,9 +18,12 @@ package org.springframework.data.document.mongodb;
 
 import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.mongodb.BasicDBObject;
@@ -59,9 +62,12 @@ import org.springframework.data.document.mongodb.mapping.event.BeforeSaveEvent;
 import org.springframework.data.document.mongodb.mapping.event.MongoMappingEvent;
 import org.springframework.data.document.mongodb.query.Query;
 import org.springframework.data.document.mongodb.query.Update;
+import org.springframework.data.mapping.MappingBeanHelper;
 import org.springframework.data.mapping.context.MappingContextAware;
 import org.springframework.data.mapping.model.MappingContext;
+import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mapping.model.PersistentEntity;
+import org.springframework.data.mapping.model.PersistentProperty;
 import org.springframework.jca.cci.core.ConnectionCallback;
 import org.springframework.util.Assert;
 
@@ -606,7 +612,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 			* @see org.springframework.data.document.mongodb.MongoOperations#insertList(java.util.List)
 			*/
 	public void insertList(List<? extends Object> listToSave) {
-		insertList(getRequiredDefaultCollectionName(), listToSave);
+		insertList(listToSave, mongoConverter);
 	}
 
 	/* (non-Javadoc)
@@ -620,6 +626,28 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 			* @see org.springframework.data.document.mongodb.MongoOperations#insertList(java.util.List, org.springframework.data.document.mongodb.MongoWriter)
 			*/
 	public <T> void insertList(List<? extends T> listToSave, MongoWriter<T> writer) {
+		if (null != mappingContext) {
+			Map<String, List<Object>> objs = new HashMap<String, List<Object>>();
+			for (Object o : listToSave) {
+				PersistentEntity<?> entity = mappingContext.getPersistentEntity(o.getClass());
+				if (null != entity && entity instanceof MongoPersistentEntity) {
+					String coll = ((MongoPersistentEntity) entity).getCollection();
+					List<Object> objList = objs.get(coll);
+					if (null == objList) {
+						objList = new ArrayList<Object>();
+						objs.put(coll, objList);
+					}
+					objList.add(o);
+				} else {
+					continue;
+				}
+			}
+			for (Map.Entry<String, List<Object>> entry : objs.entrySet()) {
+				insertList(entry.getKey(), entry.getValue());
+			}
+			return;
+		}
+
 		insertList(getDefaultCollectionName(), listToSave, writer);
 	}
 
@@ -996,6 +1024,23 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 
 		if (id == null) {
 			return;
+		}
+
+		if (null != mappingContext) {
+			PersistentEntity<?> entity = mappingContext.getPersistentEntity(savedObject.getClass());
+			if (null != entity) {
+				PersistentProperty idProp = entity.getIdProperty();
+				if (null != idProp) {
+					try {
+						MappingBeanHelper.setProperty(savedObject, idProp, id);
+						return;
+					} catch (IllegalAccessException e) {
+						throw new MappingException(e.getMessage(), e);
+					} catch (InvocationTargetException e) {
+						throw new MappingException(e.getMessage(), e);
+					}
+				}
+			}
 		}
 
 		ConfigurablePropertyAccessor bw = PropertyAccessorFactory.forDirectFieldAccess(savedObject);

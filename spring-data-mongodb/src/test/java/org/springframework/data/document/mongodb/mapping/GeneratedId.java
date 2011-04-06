@@ -16,29 +16,24 @@
 
 package org.springframework.data.document.mongodb.mapping;
 
+import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
  */
-public class PersonCustomIdName extends BasePerson {
+@Document
+public class GeneratedId {
 
 	@Id
-	private String lastName;
+	private ObjectId id;
+	private String name;
 
-	public PersonCustomIdName(Integer ssn, String firstName, String lastName) {
-		this.ssn = ssn;
-		this.firstName = firstName;
-		this.lastName = lastName;
+	public GeneratedId(String name) {
+		this.name = name;
 	}
 
-	@Override
-	public String getLastName() {
-		return this.lastName;
-	}
-
-	@Override
-	public void setLastName(String lastName) {
-		this.lastName = lastName;
+	public ObjectId getId() {
+		return id;
 	}
 }

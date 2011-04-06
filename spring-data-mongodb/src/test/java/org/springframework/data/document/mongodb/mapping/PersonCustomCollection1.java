@@ -16,29 +16,14 @@
 
 package org.springframework.data.document.mongodb.mapping;
 
-import org.springframework.data.annotation.Id;
-
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
  */
-public class PersonCustomIdName extends BasePerson {
+@Document(collection = "person1")
+public class PersonCustomCollection1 extends BasePerson{
 
-	@Id
-	private String lastName;
-
-	public PersonCustomIdName(Integer ssn, String firstName, String lastName) {
-		this.ssn = ssn;
-		this.firstName = firstName;
-		this.lastName = lastName;
+	public PersonCustomCollection1(Integer ssn, String firstName, String lastName) {
+		super(ssn, firstName, lastName);
 	}
-
-	@Override
-	public String getLastName() {
-		return this.lastName;
-	}
-
-	@Override
-	public void setLastName(String lastName) {
-		this.lastName = lastName;
-	}
+	
 }

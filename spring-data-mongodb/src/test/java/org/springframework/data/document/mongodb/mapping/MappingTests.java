@@ -36,7 +36,6 @@ import org.springframework.data.document.mongodb.MongoDbUtils;
 import org.springframework.data.document.mongodb.MongoTemplate;
 import org.springframework.data.document.mongodb.query.Criteria;
 import org.springframework.data.document.mongodb.query.Query;
-import org.springframework.data.mapping.model.MappingException;
 
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
@@ -44,7 +43,15 @@ import org.springframework.data.mapping.model.MappingException;
 public class MappingTests {
 
 	private static final Log LOGGER = LogFactory.getLog(MongoDbUtils.class);
-	private final String[] collectionsToDrop = new String[]{"person", "personmapproperty", "personpojo", "personcustomidname", "account"};
+	private final String[] collectionsToDrop = new String[]{
+			"person",
+			"personmapproperty",
+			"personpojo",
+			"personcustomidname",
+			"person1",
+			"person2",
+			"account"
+	};
 
 	ApplicationContext applicationContext;
 	MongoTemplate template;
@@ -60,6 +67,14 @@ public class MappingTests {
 		applicationContext = new ClassPathXmlApplicationContext("/mapping.xml");
 		template = applicationContext.getBean(MongoTemplate.class);
 		mappingContext = applicationContext.getBean(MongoMappingContext.class);
+	}
+
+	@Test
+	public void testGeneratedId() {
+		GeneratedId genId = new GeneratedId("test");
+		template.insert(genId);
+
+		assertNotNull(genId.getId());
 	}
 
 	@Test
@@ -84,12 +99,12 @@ public class MappingTests {
 		// POJOs aren't auto-detected, have to add manually
 		mappingContext.addPersistentEntity(PersonCustomIdName.class);
 
-		PersonCustomIdName p = new PersonCustomIdName(123456, "Custom Id");
+		PersonCustomIdName p = new PersonCustomIdName(123456, "Custom Id", "LastName");
 		template.insert(p);
 
 		List<PersonCustomIdName> result = template.find(new Query(Criteria.where("ssn").is(123456)), PersonCustomIdName.class);
 		assertThat(result.size(), is(1));
-		assertNotNull(result.get(0).getLastName());
+		assertThat(result.get(0).getLastName(), is("LastName"));
 	}
 
 	@Test
@@ -167,6 +182,23 @@ public class MappingTests {
 
 		List<Person> result = template.find(new Query(Criteria.where("ssn").is(1234567890)), Person.class);
 		assertThat(result.size(), is(1));
+	}
+
+	@Test
+	public void testCustomCollectionInList() {
+		List<BasePerson> persons = new ArrayList<BasePerson>();
+		persons.add(new PersonCustomCollection1(55555, "Person", "One"));
+		persons.add(new PersonCustomCollection2(66666, "Person", "Two"));
+		template.insertList(persons);
+
+		List<PersonCustomCollection1> p1Results = template.find("person1",
+				new Query(Criteria.where("ssn").is(55555)),
+				PersonCustomCollection1.class);
+		List<PersonCustomCollection2> p2Results = template.find("person2",
+				new Query(Criteria.where("ssn").is(66666)),
+				PersonCustomCollection2.class);
+		assertThat(p1Results.size(), is(1));
+		assertThat(p2Results.size(), is(1));
 	}
 
 	@Test
