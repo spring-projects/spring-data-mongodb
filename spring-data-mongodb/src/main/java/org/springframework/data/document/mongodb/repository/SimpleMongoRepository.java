@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.bson.types.ObjectId;
 import org.springframework.data.document.mongodb.MongoOperations;
 import org.springframework.data.document.mongodb.MongoTemplate;
 import org.springframework.data.document.mongodb.query.Criteria;
@@ -101,14 +100,11 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements Paging
   }
 
   private Query getIdQuery(Object id) {
-
     return new Query(getIdCriteria(id));
   }
 
   private Criteria getIdCriteria(Object id) {
-
-    ObjectId objectId = template.getConverter().convertObjectId(id);
-    return where(entityInformation.getIdAttribute()).is(objectId);
+    return where(entityInformation.getIdAttribute()).is(id);
   }
 
   /*
