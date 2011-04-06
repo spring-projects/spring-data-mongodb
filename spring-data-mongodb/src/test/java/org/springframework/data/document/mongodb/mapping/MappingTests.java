@@ -92,15 +92,6 @@ public class MappingTests {
 		assertNotNull(result.get(0).getLastName());
 	}
 
-	@Test(expected = MappingException.class)
-	public void testPersonWithInvalidCustomIdName() {
-		// POJOs aren't auto-detected, have to add manually
-		mappingContext.addPersistentEntity(PersonInvalidId.class);
-
-		PersonInvalidId p = new PersonInvalidId();
-		template.insert(p);
-	}
-
 	@Test
 	public void testPersonMapProperty() {
 		PersonMapProperty p = new PersonMapProperty(1234567, "Map", "Property");
