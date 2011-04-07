@@ -1,17 +1,53 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
-    "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
+"http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
 <chapter id="mongo.cross.store">
   <title>Cross Store support</title>
 
-  <para>Cross Store support introduction.
-  </para>
+  <para>Sometimes you need to store data in multiple data stores and these
+  data stores can be of different types. One might be relational while the
+  other a document store. For this use case we have created a separate module
+  in the MongoDB support that handles what we call cross-store support. The
+  current implemenatation is based on JPA as the driver for the relational
+  database and we allow select fields in the Entities to be stored in a Mongo
+  database. In addition to allowing you to store your data in two stores we
+  also coordinate persistence operations for the non-transactional MongoDB
+  store with the transaction life-cycle for the relational database.</para>
 
   <section id="mongodb:croos-store-configuration">
     <title>Cross Store Configuration</title>
 
-    <para>Cross Store...
-    </para>
+    <para>Assuming that you have a working JPA application and would like to
+    add some cross-store persistence for MongoDB. What do you have to add to
+    your configuration?</para>
 
+    <para>First of all you need to add a dependency on the
+    <filename>spring-data-mongodb-cross-store</filename> module. Using Maven
+    this is done by adding a dependency to your pom:</para>
+
+    <example>
+      <title>Example Maven pom.xml</title>
+
+      <programlisting language="xml">&lt;project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"&gt;
+  &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+
+...
+
+    &lt;!-- Spring Data --&gt;
+    &lt;dependency&gt;
+      &lt;groupId&gt;org.springframework.data&lt;/groupId&gt;
+      &lt;artifactId&gt;spring-data-mongodb-cross-store&lt;/artifactId&gt;
+      &lt;version&gt;${spring.data.mongo.version}&lt;/version&gt;
+    &lt;/dependency&gt;
+
+
+...
+
+&lt;/project&gt;
+</programlisting>
+    </example>
+
+    <para></para>
   </section>
 </chapter>
