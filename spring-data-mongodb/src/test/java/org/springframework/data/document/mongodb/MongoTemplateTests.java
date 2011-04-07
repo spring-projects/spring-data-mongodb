@@ -268,4 +268,35 @@ public class MongoTemplateTests {
     assertThat(found2, notNullValue());
     assertThat(notFound, nullValue());
   }
+
+  @Test
+  public void testUsingAnInQuery() throws Exception {
+
+    PersonWithIdPropertyOfTypeObjectId p1 = new PersonWithIdPropertyOfTypeObjectId();
+    p1.setFirstName("Sven");
+    p1.setAge(11);
+    template.insert(p1);
+    PersonWithIdPropertyOfTypeObjectId p2 = new PersonWithIdPropertyOfTypeObjectId();
+    p2.setFirstName("Mary");
+    p2.setAge(21);
+    template.insert(p2);
+    PersonWithIdPropertyOfTypeObjectId p3 = new PersonWithIdPropertyOfTypeObjectId();
+    p3.setFirstName("Ann");
+    p3.setAge(31);
+    template.insert(p3);
+    PersonWithIdPropertyOfTypeObjectId p4 = new PersonWithIdPropertyOfTypeObjectId();
+    p4.setFirstName("John");
+    p4.setAge(41);
+    template.insert(p4);
+
+    Query q1 = new Query(Criteria.where("age").in(11, 21, 41));
+    List<PersonWithIdPropertyOfTypeObjectId> results1 = template.find(q1, PersonWithIdPropertyOfTypeObjectId.class);
+    Query q2 = new Query(Criteria.where("firstName").in("Ann", "Mary"));
+    List<PersonWithIdPropertyOfTypeObjectId> results2 = template.find(q2, PersonWithIdPropertyOfTypeObjectId.class);
+    Query q3 = new Query(Criteria.where("id").in(p3.getId()));
+    List<PersonWithIdPropertyOfTypeObjectId> results3 = template.find(q3, PersonWithIdPropertyOfTypeObjectId.class);
+    assertThat(results1.size(), is(3));
+    assertThat(results2.size(), is(2));
+    assertThat(results3.size(), is(1));
+  }
 }

@@ -924,14 +924,14 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 	 * @return the List of converted objects.
 	 */
 	protected <T> T doFindOne(String collectionName, DBObject query, DBObject fields, Class<T> targetClass, MongoReader<T> reader) {
-		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("findOne using query: " + query.toString());
-		}
 		MongoReader<? super T> readerToUse = reader;
 		if (readerToUse == null) {
 			readerToUse = this.mongoConverter;
 		}
 		substituteMappedIdIfNecessary(query, targetClass, readerToUse);
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("findOne using query: " + query.toString());
+		}
 		return execute(new FindOneCallback(query, fields), new ReadDbObjectCallback<T>(readerToUse, targetClass),
 				collectionName);
 	}
@@ -957,6 +957,9 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 	 */
 	protected <T> List<T> doFind(String collectionName, DBObject query, DBObject fields, Class<T> targetClass, CursorPreparer preparer) {
 		substituteMappedIdIfNecessary(query, targetClass, mongoConverter);
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("find using query: " + query.toString());
+		}
 		return executeEach(new FindCallback(query, fields), preparer, new ReadDbObjectCallback<T>(mongoConverter, targetClass),
 				collectionName);
 	}
@@ -975,6 +978,9 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 	 */
 	protected <T> List<T> doFind(String collectionName, DBObject query, DBObject fields, Class<T> targetClass, MongoReader<T> reader) {
 		substituteMappedIdIfNecessary(query, targetClass, reader);
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("find using query: " + query.toString());
+		}
 		return executeEach(new FindCallback(query, fields), null, new ReadDbObjectCallback<T>(reader, targetClass),
 				collectionName);
 	}
@@ -1013,6 +1019,9 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 			readerToUse = this.mongoConverter;
 		}
 		substituteMappedIdIfNecessary(query, targetClass, readerToUse);
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("findAndRemove using query: " + query.toString());
+		}
 		return execute(new FindAndRemoveCallback(query, fields, sort), new ReadDbObjectCallback<T>(readerToUse, targetClass),
 				collectionName);
 	}
