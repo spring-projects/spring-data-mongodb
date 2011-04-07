@@ -127,7 +127,8 @@
       <plugin>
         <groupId>com.agilejava.docbkx</groupId>
         <artifactId>docbkx-maven-plugin</artifactId>
-        <version>2.0.8</version>
+	<!-- yes it really needs to be this (2.0.7) otherwise pdf generation from a clean build doesn't work -->
+        <version>2.0.7</version>
         <executions>
           <execution>
             <goals>
@@ -177,12 +178,18 @@
                 <include name="**/*.jpg"/>
               </fileset>
             </copy>
+            <copy todir="${project.basedir}/target/site/reference/html">
+              <fileset dir="${project.basedir}/src/docbkx/resources/images">
+                <include name="*.png"/>
+              </fileset>
+            </copy>
             <move file="${project.basedir}/target/site/reference/pdf/index.pdf"
                   tofile="${project.basedir}/target/site/reference/pdf/spring-data-document-reference.pdf"
                   failonerror="false"/>
           </postProcess>
         </configuration>
       </plugin>
+
       <plugin>
         <artifactId>maven-javadoc-plugin</artifactId>
         <version>2.5</version>

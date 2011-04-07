@@ -1,27 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
-    "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
+"http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
 <chapter id="mongo.jmx">
   <title>JMX support</title>
 
   <para>The JMX support for MongoDB exposes the results of executing the
-    'serverStatus' command on the admin database for a single MongoDB server
-    instance. It also exposes an administrative MBean, MongoAdmin which will let
-    you perform administrative operations such as drop or create a database. The
-    JMX features build upon the JMX feature set available in the Spring
-    Framework. See
-    <ulink
-        url="http://static.springsource.org/spring/docs/3.0.x/reference/jmx.html">here
-    </ulink>
-    for more details.
-  </para>
+  'serverStatus' command on the admin database for a single MongoDB server
+  instance. It also exposes an administrative MBean, MongoAdmin which will let
+  you perform administrative operations such as drop or create a database. The
+  JMX features build upon the JMX feature set available in the Spring
+  Framework. See <ulink
+  url="http://static.springsource.org/spring/docs/3.0.x/reference/jmx.html">here
+  </ulink> for more details.</para>
 
   <section id="mongodb:jmx-configuration">
     <title>MongoDB JMX Configuration</title>
 
     <para>Spring's Mongo namespace enables you to easily enable JMX
-      functionality
-    </para>
+    functionality</para>
 
     <example>
       <title>XML schmea to configure MongoDB</title>
@@ -108,7 +104,7 @@
 
     <mediaobject>
       <imageobject>
-        <imagedata fileref="..\resources\images\jconsole.png"/>
+        <imagedata fileref="jconsole.png" />
       </imageobject>
     </mediaobject>
   </section>
