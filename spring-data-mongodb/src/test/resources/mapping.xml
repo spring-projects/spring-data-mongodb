@@ -10,8 +10,8 @@
 
   <bean id="mongoTemplate" class="org.springframework.data.document.mongodb.MongoTemplate">
     <constructor-arg ref="mongo"/>
-    <constructor-arg value="database"/>
-    <constructor-arg value="person"/>
+    <constructor-arg name="databaseName" value="database"/>
+    <constructor-arg name="defaultCollectionName" value="person"/>
     <constructor-arg ref="mappingConverter"/>
   </bean>
 
