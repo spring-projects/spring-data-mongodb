@@ -1,63 +1,75 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN" "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
+"http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
 <chapter id="mongo.mapping">
   <title>Mapping support</title>
 
-  <para>The object mapping support for MongoDB
-  </para>
+  <para>The object mapping support for MongoDB</para>
 
   <section id="mongodb:mapping-configuration">
     <title>MongoDB Mapping Configuration</title>
 
-    <para>Spring's Mongo namespace enables you to easily enable mapping functionality</para>
+    <para>Spring's Mongo namespace enables you to easily enable mapping
+    functionality</para>
 
     <example>
       <title>XML schema to configure MongoDB mapping support</title>
 
-      <programlisting language="xml"><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
-<beans xmlns="http://www.springframework.org/schema/beans"
+      <programlisting language="xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:context="http://www.springframework.org/schema/context"
        xmlns:mongo="http://www.springframework.org/schema/data/mongo"
        xsi:schemaLocation="http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
            http://www.springframework.org/schema/data/mongo http://www.springframework.org/schema/data/mongo/spring-mongo-1.0.xsd
-           http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+           http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd"&gt;
 
-  <!-- Default bean name is 'mongo' -->
-  <mongo:mongo host="localhost" port="27017"/>
+  &lt;!-- Default bean name is 'mongo' --&gt;
+  &lt;mongo:mongo host="localhost" port="27017"/&gt;
 
-  <!-- by default look for a Mongo object named 'mongo' -->
-  <mongo:mapping-converter base-package="com.mycompany.domain"/>
+  &lt;!-- by default look for a Mongo object named 'mongo' - default name used for the converter is 'mappingConverter' --&gt;
+  &lt;mongo:mapping-converter base-package="com.mycompany.domain"/&gt;
 
-</beans]]>
+  &lt;!-- set the mapping converter to be used by the MongoTemplate --&gt;
+  &lt;bean id="mongoTemplate" class="org.springframework.data.document.mongodb.MongoTemplate"&gt;
+    &lt;constructor-arg name="mongo" ref="mongo" /&gt;
+    &lt;constructor-arg name="databaseName" value="test" /&gt;
+    &lt;constructor-arg name="defaultCollectionName" value="myCollection" /&gt;
+    &lt;constructor-arg name="mongoConverter" ref="mappingConverter"/&gt;
+  &lt;/bean&gt;
+
+
+&lt;/beans
       </programlisting>
     </example>
 
-    <para>This sets up the right objects in the ApplicationContext to perform the full gamut
-      of mapping operations. The <code>base-package</code> property tells it where to scan for
-      classes annotated with the <classname>@org.springframework.data.document.mongodb.mapping.Document</classname>
-      annotation.
-    </para>
-
+    <para>This sets up the right objects in the ApplicationContext to perform
+    the full gamut of mapping operations. The <code>base-package</code>
+    property tells it where to scan for classes annotated with the
+    <classname>@org.springframework.data.document.mongodb.mapping.Document</classname>
+    annotation.</para>
   </section>
 
   <section id="mongodb:mapping-usage">
     <title>Mapping Framework Usage</title>
 
-    <para>To take full advantage of the object mapping functionality inside the Spring Data/MongoDB support,
-      you should annotate your mapped objects with the <classname>@org.springframework.data.document.mongodb.mapping.Document</classname>
-      annotation. Although it is not necessary for the mapping framework to have this annotation (your POJOs
-      will be mapped correctly, even without any annotations), it allows the classpath scanner to find and
-      pre-process your domain objects to extract the necessary metadata. If you don't use this annotation,
-      your application will take a slight performance hit the first time you store a domain object because the
-      mapping framework needs to build up its internal metadata model so it knows about the properties of your
-      domain object and how to persist them.
-    </para>
+    <para>To take full advantage of the object mapping functionality inside
+    the Spring Data/MongoDB support, you should annotate your mapped objects
+    with the
+    <classname>@org.springframework.data.document.mongodb.mapping.Document</classname>
+    annotation. Although it is not necessary for the mapping framework to have
+    this annotation (your POJOs will be mapped correctly, even without any
+    annotations), it allows the classpath scanner to find and pre-process your
+    domain objects to extract the necessary metadata. If you don't use this
+    annotation, your application will take a slight performance hit the first
+    time you store a domain object because the mapping framework needs to
+    build up its internal metadata model so it knows about the properties of
+    your domain object and how to persist them.</para>
 
     <example>
       <title>Example domain object</title>
 
-      <programlisting language="java"><![CDATA[package com.mycompany.domain;
+      <programlisting language="java">package com.mycompany.domain;
 
 @Document
 public class Person {
@@ -70,27 +82,28 @@ public class Person {
   @Indexed
   private String lastName;
 
-}]]>
+}
       </programlisting>
     </example>
 
     <important>
-      <para>The <classname>@Id</classname> annotation tells the mapper which property you want to use for the
-        MongoDB <code>_id</code> property and the <classname>@Indexed</classname> annotation tells the mapping
-        framework to call <code>ensureIndex</code> on that property of your document, making searches faster.
-      </para>
+      <para>The <classname>@Id</classname> annotation tells the mapper which
+      property you want to use for the MongoDB <code>_id</code> property and
+      the <classname>@Indexed</classname> annotation tells the mapping
+      framework to call <code>ensureIndex</code> on that property of your
+      document, making searches faster.</para>
     </important>
 
     <section id="mongodb:mapping-usage:indexes">
       <title>Compound Indexes</title>
 
-      <para>Compound indexes are also supported. They are defined at the class level, rather than on indidvidual
-        properties. Here's an example that creates a compound index of <code>lastName</code> in ascending order
-        and <code>age</code> in descending order:
-
-        <example>
+      <para>Compound indexes are also supported. They are defined at the class
+      level, rather than on indidvidual properties. Here's an example that
+      creates a compound index of <code>lastName</code> in ascending order and
+      <code>age</code> in descending order: <example>
           <title>Example Compound Index Usage</title>
-          <programlisting language="java"><![CDATA[package com.mycompany.domain;
+
+          <programlisting language="java">package com.mycompany.domain;
 
 @Document
 @CompoundIndexes({
@@ -104,27 +117,27 @@ public class Person {
   private String firstName;
   private String lastName;
 
-}]]>
+}
           </programlisting>
-        </example>
-      </para>
+        </example></para>
     </section>
 
     <section id="mongodb:mapping-usage:references">
       <title>Using DBRefs</title>
 
-      <para>The mapping framework doesn't have to store child objects embedded within the document. You can also
-        store them separately and use a DBRef to refer to that document. When the object is loaded from MongoDB,
-        those references will be eagerly resolved and you will get back a mapped object that looks the same as if
-        it had been stored embedded within your master document.
-      </para>
+      <para>The mapping framework doesn't have to store child objects embedded
+      within the document. You can also store them separately and use a DBRef
+      to refer to that document. When the object is loaded from MongoDB, those
+      references will be eagerly resolved and you will get back a mapped
+      object that looks the same as if it had been stored embedded within your
+      master document.</para>
 
-      <para>Here's an example of using a DBRef to refer to a specific document that exists independently of the
-        object in which it is referenced (both classes are shown in-line for brevity's sake):
-      </para>
+      <para>Here's an example of using a DBRef to refer to a specific document
+      that exists independently of the object in which it is referenced (both
+      classes are shown in-line for brevity's sake):</para>
 
       <example>
-        <programlisting language="java"><![CDATA[
+        <programlisting language="java">
 @Document
 public class Account {
 
@@ -142,69 +155,74 @@ public class Person {
   @Indexed
   private Integer ssn;
   @DBRef
-  private List<Account> accounts;
+  private List&lt;Account&gt; accounts;
 
-}]]>
+}
         </programlisting>
       </example>
 
-      <para>There's no need to use something like <code>@OneToMany</code> because the mapping framework sees that
-        you're wanting a one-to-many relationship because there is a List of objects. When the object is stored
-        in MongoDB, there will be a list of DBRefs rather than the <code>Account</code> objects themselves.
-
-        <important>
-          <para>The mapping framework does not handle cascading saves. If you change an <code>Account</code> object that is
-            referenced by a <code>Person</code> object, you must save the Account object separately. Calling <code>save</code>
-            on the <code>Person</code> object will not automatically save the <code>Account</code> objects in the
-            property <code>accounts</code>.</para>
-        </important>
-      </para>
+      <para>There's no need to use something like <code>@OneToMany</code>
+      because the mapping framework sees that you're wanting a one-to-many
+      relationship because there is a List of objects. When the object is
+      stored in MongoDB, there will be a list of DBRefs rather than the
+      <code>Account</code> objects themselves. <important>
+          <para>The mapping framework does not handle cascading saves. If you
+          change an <code>Account</code> object that is referenced by a
+          <code>Person</code> object, you must save the Account object
+          separately. Calling <code>save</code> on the <code>Person</code>
+          object will not automatically save the <code>Account</code> objects
+          in the property <code>accounts</code>.</para>
+        </important></para>
     </section>
 
     <section id="mongodb:mapping-usage:events">
       <title>Handling Mapping Framework Events</title>
 
-      <para>Built into the MongoDB mapping framework are several <classname>org.springframework.context.ApplicationEvent</classname>
-        events that your application can respond to by registering special beans in the <code>ApplicationContext</code>.
-      </para>
+      <para>Built into the MongoDB mapping framework are several
+      <classname>org.springframework.context.ApplicationEvent</classname>
+      events that your application can respond to by registering special beans
+      in the <code>ApplicationContext</code>.</para>
 
-      <para>To intercept an object before it goes through the conversion process (which turns your domain object
-        into a <classname>com.mongodb.DBObject</classname>), you'd register a subclass of <classname>org.springframework.data.document.mongodb.mapping.event.AbstractMappingEventListener</classname>
-        that overrides the <code>onBeforeConvert</code> method. When the event is dispatched, your listener will be
-        called and passed the domain object before it goes into the converter.
-      </para>
+      <para>To intercept an object before it goes through the conversion
+      process (which turns your domain object into a
+      <classname>com.mongodb.DBObject</classname>), you'd register a subclass
+      of
+      <classname>org.springframework.data.document.mongodb.mapping.event.AbstractMappingEventListener</classname>
+      that overrides the <code>onBeforeConvert</code> method. When the event
+      is dispatched, your listener will be called and passed the domain object
+      before it goes into the converter.</para>
 
       <example>
-        <programlisting language="java"><![CDATA[
-public class BeforeConvertListener<BeforeConvertEvent, Person> extends AbstractMappingEventListener {
+        <programlisting language="java">
+public class BeforeConvertListener&lt;BeforeConvertEvent, Person&gt; extends AbstractMappingEventListener {
   @Override
   public void onBeforeConvert(Person p) {
     ... does some auditing manipulation, set timestamps, whatever ...
   }
 }
-        ]]></programlisting>
+        </programlisting>
       </example>
 
-      <para>To intercept an object before it goes into the database, you'd register a subclass of
-        <classname>org.springframework.data.document.mongodb.mapping.event.AbstractMappingEventListener</classname>
-        that overrides the <code>onBeforeSave</code> method. When the event is dispatched, your listener will be
-        called and passed the domain object and the converted <classname>com.mongodb.DBObject</classname>.
-      </para>
+      <para>To intercept an object before it goes into the database, you'd
+      register a subclass of
+      <classname>org.springframework.data.document.mongodb.mapping.event.AbstractMappingEventListener</classname>
+      that overrides the <code>onBeforeSave</code> method. When the event is
+      dispatched, your listener will be called and passed the domain object
+      and the converted <classname>com.mongodb.DBObject</classname>.</para>
 
       <example>
-        <programlisting language="java"><![CDATA[
-public class BeforeSaveListener<BeforeSaveEvent, Person> extends AbstractMappingEventListener {
+        <programlisting language="java">
+public class BeforeSaveListener&lt;BeforeSaveEvent, Person&gt; extends AbstractMappingEventListener {
   @Override
   public void onBeforeSave(Person p, DBObject dbo) {
     ... change values, delete them, whatever ...
   }
 }
-        ]]></programlisting>
+        </programlisting>
       </example>
 
-      <para>Simply declaring these beans in your Spring ApplicationContext will cause them to be invoked whenever the
-        event is dispatched.
-      </para>
+      <para>Simply declaring these beans in your Spring ApplicationContext
+      will cause them to be invoked whenever the event is dispatched.</para>
     </section>
   </section>
 </chapter>
