@@ -48,6 +48,7 @@ import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.document.mongodb.MongoPropertyDescriptors.MongoPropertyDescriptor;
 import org.springframework.data.document.mongodb.convert.MappingMongoConverter;
 import org.springframework.data.document.mongodb.convert.MongoConverter;
@@ -843,6 +844,9 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 			* @see org.springframework.data.document.mongodb.MongoOperations#remove(java.lang.String, com.mongodb.DBObject)
 			*/
 	public void remove(String collectionName, final Query query) {
+		if (query == null) {
+			throw new InvalidDataAccessApiUsageException("Query passed in to remove can't be null");
+		}
 		final DBObject queryObject = query.getQueryObject();
 		substituteMappedIdIfNecessary(queryObject);
 		if (LOGGER.isDebugEnabled()) {
