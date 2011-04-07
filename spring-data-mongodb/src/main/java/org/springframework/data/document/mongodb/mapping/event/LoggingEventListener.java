@@ -23,7 +23,7 @@ import org.apache.commons.logging.LogFactory;
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
  */
-public class MappingEventListener<MongoMappingEvent> extends AbstractMappingEventListener {
+public class LoggingEventListener<MongoMappingEvent> extends AbstractMappingEventListener {
 
   private Log log = LogFactory.getLog(getClass());
 

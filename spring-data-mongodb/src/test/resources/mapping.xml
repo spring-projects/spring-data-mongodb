@@ -15,6 +15,6 @@
     <constructor-arg ref="mappingConverter"/>
   </bean>
 
-  <bean class="org.springframework.data.document.mongodb.mapping.event.MappingEventListener"/>
+  <bean class="org.springframework.data.document.mongodb.mapping.event.LoggingEventListener"/>
 
 </beans>

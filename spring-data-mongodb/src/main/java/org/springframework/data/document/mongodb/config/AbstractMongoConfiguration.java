@@ -29,7 +29,7 @@ import org.springframework.data.document.mongodb.convert.MappingMongoConverter;
 import org.springframework.data.document.mongodb.mapping.Document;
 import org.springframework.data.document.mongodb.mapping.MongoMappingContext;
 import org.springframework.data.document.mongodb.mapping.MongoPersistentEntityIndexCreator;
-import org.springframework.data.document.mongodb.mapping.event.MappingEventListener;
+import org.springframework.data.document.mongodb.mapping.event.LoggingEventListener;
 import org.springframework.data.document.mongodb.mapping.event.MongoMappingEvent;
 import org.springframework.data.mapping.context.MappingContextAwareBeanPostProcessor;
 import org.springframework.util.ClassUtils;
@@ -50,11 +50,7 @@ public abstract class AbstractMongoConfiguration {
   public String getMappingBasePackage() { 
     return "";
   }
-  
-  @Bean
-  public MappingEventListener<MongoMappingEvent> mappingEventsListener() {
-    return new MappingEventListener<MongoMappingEvent>();
-  }
+ 
   
   @Bean
   public MongoMappingContext mongoMappingContext() throws ClassNotFoundException, LinkageError {

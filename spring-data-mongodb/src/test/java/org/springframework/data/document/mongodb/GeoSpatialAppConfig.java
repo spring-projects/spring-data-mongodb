@@ -18,6 +18,8 @@ package org.springframework.data.document.mongodb;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.document.mongodb.config.AbstractMongoConfiguration;
+import org.springframework.data.document.mongodb.mapping.event.LoggingEventListener;
+import org.springframework.data.document.mongodb.mapping.event.MongoMappingEvent;
 
 import com.mongodb.Mongo;
 
@@ -32,6 +34,11 @@ public class GeoSpatialAppConfig extends AbstractMongoConfiguration {
   @Bean
   public MongoTemplate mongoTemplate() throws Exception {
     return new MongoTemplate(mongo(), "geospatial", "newyork", mappingMongoConverter());
+  }
+  
+  @Bean
+  public LoggingEventListener<MongoMappingEvent> mappingEventsListener() {
+    return new LoggingEventListener<MongoMappingEvent>();
   }
   
 
