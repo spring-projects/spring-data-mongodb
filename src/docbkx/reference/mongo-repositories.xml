@@ -268,11 +268,11 @@ public class PersonRepositoryTests {
     <section>
       <title>Mongo JSON based query methods and field restriction </title>
 
-      <para>The annotation
-      org.springframework.data.document.mongodb.repository.Query can be
-      applied to finder methods on your repository which allows you to specify
-      a Mongo JSON string to define the actual query to be executed instead of
-      infering the query from the method name. For example</para>
+      <para>By adding the annotation
+      <classname>org.springframework.data.document.mongodb.repository.Query</classname>
+      repository finder methods you can specify a Mongo JSON query string to
+      use instead of having the query derived from the method name. For
+      example</para>
 
       <programlisting>public interface PersonRepository extends MongoRepository&lt;Person, String&gt;
 
@@ -281,10 +281,10 @@ public class PersonRepositoryTests {
 
 }</programlisting>
 
-      <para>The placeholder ?0 lets you substitue the value from the method
-      arguments into the JSON query definition.</para>
+      <para>The placeholder ?0 lets you substitute the value from the method
+      arguments into the JSON query string.</para>
 
-      <para>You can also use the filter property to define the set of
+      <para>You can also use the filter property to restrict the set of
       properties that will be mapped into the Java object. For example,
       </para>
 
