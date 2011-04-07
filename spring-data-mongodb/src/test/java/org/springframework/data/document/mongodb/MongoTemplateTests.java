@@ -61,13 +61,16 @@ public class MongoTemplateTests {
 
   @Autowired
   public void setMongo(Mongo mongo) {
-	  MappingMongoConverter converter = new MappingMongoConverter();
+	  
 	  MongoMappingContext mappingContext = new MongoMappingContext();
 	  mappingContext.addPersistentEntity(PersonWith_idPropertyOfTypeObjectId.class);
 	  mappingContext.addPersistentEntity(PersonWith_idPropertyOfTypeString.class);
 	  mappingContext.addPersistentEntity(PersonWithIdPropertyOfTypeObjectId.class);
 	  mappingContext.addPersistentEntity(PersonWithIdPropertyOfTypeString.class);
-	  converter.setMappingContext(mappingContext);
+	  
+	  MappingMongoConverter converter = new MappingMongoConverter(mappingContext);
+	  converter.afterPropertiesSet();
+	  
 	  this.mappingTemplate = new MongoTemplate(mongo, "database", "springdata", converter);
   }
 
@@ -190,7 +193,7 @@ public class MongoTemplateTests {
     PersonWith_idPropertyOfTypeString p4 = new PersonWith_idPropertyOfTypeString();
     p4.setFirstName("Sven_4");
     p4.setAge(22);
-    p4.set_id("FOUR");    
+    p4.set_id("FOUR");
     // insert
     mongoTemplate.insert(p4);
     // also try save

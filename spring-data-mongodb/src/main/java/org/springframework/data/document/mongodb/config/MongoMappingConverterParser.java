@@ -85,7 +85,7 @@ public class MongoMappingConverterParser extends AbstractBeanDefinitionParser {
 		}
 
 		BeanDefinitionBuilder converterBuilder = BeanDefinitionBuilder.genericBeanDefinition(MappingMongoConverter.class);
-		converterBuilder.addPropertyReference("mappingContext", ctxRef);
+		converterBuilder.addConstructorArgReference(ctxRef);
 
 		// Need a reference to a Mongo instance
 		String mongoRef = element.getAttribute("mongo-ref");

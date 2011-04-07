@@ -27,8 +27,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
@@ -80,19 +78,21 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
 
 	protected final GenericConversionService conversionService = ConversionServiceFactory.createDefaultConversionService();
 	protected final Map<Class<?>, Class<?>> customTypeMapping = new HashMap<Class<?>, Class<?>>();
+	protected final MappingContext mappingContext;
 	protected SpelExpressionParser spelExpressionParser = new SpelExpressionParser();
-	protected MappingContext mappingContext;
 	protected ApplicationContext applicationContext;
 	protected boolean useFieldAccessOnly = true;
 	protected Mongo mongo;
 	protected String defaultDatabase;
 
-	public MappingMongoConverter() {
-		
-	}
-
+	/**
+	 * Creates a new {@link MappingMongoConverter} with the given {@link MappingContext}.
+	 * 
+	 * @param mappingContext
+	 */
 	public MappingMongoConverter(MappingContext mappingContext) {
 		this.mappingContext = mappingContext;
+		this.conversionService.removeConvertible(Object.class, String.class);
 	}
 	
   /**
@@ -101,7 +101,7 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
    * 
    * @param converters
    */
-  public void addConverters(List<Converter<?, ?>> converters) {
+  public void setConverters(List<Converter<?, ?>> converters) {
     if (null != converters) {
       for (Converter<?, ?> c : converters) {
         registerConverter(c);
@@ -125,10 +125,6 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
 
 	public MappingContext getMappingContext() {
 		return mappingContext;
-	}
-
-	public void setMappingContext(MappingContext mappingContext) {
-		this.mappingContext = mappingContext;
 	}
 
 	public Mongo getMongo() {
@@ -378,18 +374,20 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
 	 * Registers converters for {@link ObjectId} handling, removes plain {@link #toString()} converter and promotes the
 	 * configured {@link ConversionService} to {@link MappingBeanHelper}.
 	 */
-	protected void initializeConverters() {
-
-		this.conversionService.removeConvertible(Object.class, String.class);
+	private void initializeConverters() {
 
 		if (!conversionService.canConvert(ObjectId.class, String.class)) {
-			conversionService.addConverter(ObjectIdToStringConverter.INSTANCE);
-			conversionService.addConverter(StringToObjectIdConverter.INSTANCE);
-		}
-		if (!conversionService.canConvert(ObjectId.class, BigInteger.class)) {
-			conversionService.addConverter(ObjectIdToBigIntegerConverter.INSTANCE);
-			conversionService.addConverter(BigIntegerToIdConverter.INSTANCE);
-		}
+      conversionService.addConverter(ObjectIdToStringConverter.INSTANCE);
+    }
+    if (!conversionService.canConvert(String.class, ObjectId.class)) {
+      conversionService.addConverter(StringToObjectIdConverter.INSTANCE);
+    }
+    if (!conversionService.canConvert(ObjectId.class, BigInteger.class)) {
+      conversionService.addConverter(ObjectIdToBigIntegerConverter.INSTANCE);
+    }
+    if (!conversionService.canConvert(BigInteger.class, ObjectId.class)) {
+      conversionService.addConverter(BigIntegerToObjectIdConverter.INSTANCE);
+    }
 
 		MappingBeanHelper.setConversionService(conversionService);
 	}
@@ -649,7 +647,7 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
 	 *
 	 * @author Oliver Gierke
 	 */
-	public static enum BigIntegerToIdConverter implements Converter<BigInteger, ObjectId> {
+	public static enum BigIntegerToObjectIdConverter implements Converter<BigInteger, ObjectId> {
 		INSTANCE;
 
 		public ObjectId convert(BigInteger source) {

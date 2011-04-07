@@ -53,6 +53,7 @@ public class SimpleMongoConverterTests {
   @Before
   public void setUp() {
     converter = new SimpleMongoConverter();
+    converter.afterPropertiesSet();
     object = new BasicDBObject();
   }
 
@@ -326,7 +327,7 @@ public class SimpleMongoConverterTests {
     converters.add(new LocalDateToDateConverter());
     converters.add(new DateToLocalDateConverter());
     
-    converter.addConverters(converters);
+    converter.setConverters(converters);
     
     AnotherPerson person = new AnotherPerson();
     person.birthDate = new LocalDate();

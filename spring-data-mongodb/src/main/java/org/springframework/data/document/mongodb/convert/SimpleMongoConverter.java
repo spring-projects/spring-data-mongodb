@@ -30,6 +30,7 @@ import org.apache.commons.logging.LogFactory;
 import org.bson.types.CodeWScope;
 import org.bson.types.ObjectId;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.CollectionFactory;
 import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.core.convert.ConversionService;
@@ -48,7 +49,7 @@ import org.springframework.util.comparator.CompoundComparator;
  * @author Thomas Risberg
  * @author Oliver Gierke
  */
-public class SimpleMongoConverter implements MongoConverter {
+public class SimpleMongoConverter implements MongoConverter, InitializingBean {
 
   private static final Log LOG = LogFactory.getLog(SimpleMongoConverter.class);
   @SuppressWarnings("unchecked")
@@ -113,19 +114,26 @@ public class SimpleMongoConverter implements MongoConverter {
   public SimpleMongoConverter() {
     this.conversionService = ConversionServiceFactory.createDefaultConversionService();
     this.conversionService.removeConvertible(Object.class, String.class);
-    initializeConverters();
   }
 
   /**
    * Initializes additional converters that handle {@link ObjectId} conversion. Will register converters for supported
    * id types if none are registered for those conversion already. {@link GenericConversionService} is configured.
    */
-  protected void initializeConverters() {
+  private void initializeConverters() {
 
-    conversionService.addConverter(ObjectIdToStringConverter.INSTANCE);
-    conversionService.addConverter(StringToObjectIdConverter.INSTANCE);
-    conversionService.addConverter(ObjectIdToBigIntegerConverter.INSTANCE);
-    conversionService.addConverter(BigIntegerToIdConverter.INSTANCE);
+    if (!conversionService.canConvert(ObjectId.class, String.class)) {
+      conversionService.addConverter(ObjectIdToStringConverter.INSTANCE);
+    }
+    if (!conversionService.canConvert(String.class, ObjectId.class)) {
+      conversionService.addConverter(StringToObjectIdConverter.INSTANCE);
+    }
+    if (!conversionService.canConvert(ObjectId.class, BigInteger.class)) {
+      conversionService.addConverter(ObjectIdToBigIntegerConverter.INSTANCE);
+    }
+    if (!conversionService.canConvert(BigInteger.class, ObjectId.class)) {
+      conversionService.addConverter(BigIntegerToObjectIdConverter.INSTANCE);
+    }
   }
 
   /**
@@ -134,7 +142,7 @@ public class SimpleMongoConverter implements MongoConverter {
    * 
    * @param converters
    */
-  public void addConverters(Set<?> converters) {
+  public void setConverters(Set<?> converters) {
     for (Object converter : converters) {
       boolean added = false;
       if (converter instanceof Converter) {
@@ -525,6 +533,13 @@ public class SimpleMongoConverter implements MongoConverter {
   public ObjectId convertObjectId(Object id) {
     return conversionService.convert(id, ObjectId.class);
   }
+  
+  /* (non-Javadoc)
+   * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
+   */
+  public void afterPropertiesSet() {
+    initializeConverters();
+  }
 
   /**
    * Simple singleton to convert {@link ObjectId}s to their {@link String} representation.
@@ -570,7 +585,7 @@ public class SimpleMongoConverter implements MongoConverter {
    *
    * @author Oliver Gierke
    */
-  public static enum BigIntegerToIdConverter implements Converter<BigInteger, ObjectId> {
+  public static enum BigIntegerToObjectIdConverter implements Converter<BigInteger, ObjectId> {
     INSTANCE;
 
     public ObjectId convert(BigInteger source) {

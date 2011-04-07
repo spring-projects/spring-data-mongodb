@@ -72,8 +72,7 @@ public abstract class AbstractMongoConfiguration {
   
   @Bean
   public MappingMongoConverter mappingMongoConverter() throws Exception {
-    MappingMongoConverter converter = new MappingMongoConverter();
-    converter.setMappingContext(mongoMappingContext());
+    MappingMongoConverter converter = new MappingMongoConverter(mongoMappingContext());
     converter.setMongo(mongo());
     return converter;
   }
