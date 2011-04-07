@@ -304,9 +304,9 @@ public class PersonRepositoryTests {
 
       <para>Mongo repository support integrates with the <ulink
       url="http://www.querydsl.com/">QueryDSL</ulink> project which provides a
-      meant to perform type-safe queries (no strings) in Java. To quote from
-      the project description, "Instead of writing queries as inline strings
-      or externalizing them into XML files they are constructed via a fluent
+      means to perform type-safe queries in Java. To quote from the project
+      description, "Instead of writing queries as inline strings or
+      externalizing them into XML files they are constructed via a fluent
       API." It provides the following features</para>
 
       <itemizedlist>
@@ -334,22 +334,32 @@ public class PersonRepositoryTests {
         </listitem>
       </itemizedlist>
 
-      <para>This will enable you to write queries as shown below</para>
+      <para>Please refer to the QueryDSL documentation which describes how to
+      bootstrap your environment for APT based code generation <ulink
+      url="http://source.mysema.com/static/querydsl/2.1.2/reference/html/ch02.html#d0e112">using
+      Maven</ulink> or <ulink
+      url="http://source.mysema.com/static/querydsl/2.1.2/reference/html/ch02.html#d0e131">using
+      Ant</ulink>.</para>
+
+      <para>Using QueryDSL you will be able to write queries as shown
+      below</para>
 
       <programlisting>QPerson person = new QPerson("person");
 List&lt;Person&gt; result = repository.findAll(person.address.zipCode.eq("C0123"));
 
-
 Page&lt;Person&gt; page = repository.findAll(person.lastname.contains("a"), 
                                        new PageRequest(0, 2, Direction.ASC, "lastname"));</programlisting>
 
-      <para>QPerson is a class that is generated (via the Java annotation post
-      processing tool) which is a Predicate that allows you to write type safe
+      <para><classname>QPerson</classname> is a class that is generated (via
+      the Java annotation post processing tool) which is a
+      <classname>Predicate</classname> that allows you to write type safe
       queries. Notice that there are no strings in the query other than the
       value "C0123".</para>
 
-      <para>The use of the generated Predicate class is made available via the
-      interface QueryDslPredicateExecutor which is shown below</para>
+      <para>You can use the generated <classname>Predicate</classname> class
+      via the interface
+      <interfacename>QueryDslPredicateExecutor</interfacename> which is shown
+      below</para>
 
       <programlisting>public interface QueryDslPredicateExecutor&lt;T&gt; {
 
@@ -366,13 +376,17 @@ Page&lt;Person&gt; page = repository.findAll(person.lastname.contains("a"),
 </programlisting>
 
       <para>To use this in your repository implementation, simply inherit from
-      it as well. This is shown below</para>
+      it in additiion to other repository interfaces. This is shown
+      below</para>
 
       <programlisting>public interface PersonRepository extends MongoRepository&lt;Person, String&gt;, QueryDslPredicateExecutor&lt;Person&gt; {
 
    // additional finder methods go here
 
 }</programlisting>
+
+      <para>We think you will find this an extremely powerful tool for writing
+      MongoDB queries.</para>
     </section>
   </section>
 </chapter>
