@@ -843,15 +843,20 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 			* @see org.springframework.data.document.mongodb.MongoOperations#remove(java.lang.String, com.mongodb.DBObject)
 			*/
 	public void remove(String collectionName, final Query query) {
+		final DBObject queryObject = query.getQueryObject();
+		substituteMappedIdIfNecessary(queryObject);
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("remove using query: " + queryObject);
+		}
 		execute(collectionName, new CollectionCallback<Void>() {
 			public Void doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 				WriteResult wr = null;
 				if (writeConcern == null) {
-					wr = collection.remove(query.getQueryObject());
+					wr = collection.remove(queryObject);
 				} else {
-					wr = collection.remove(query.getQueryObject(), writeConcern);
+					wr = collection.remove(queryObject, writeConcern);
 				}
-				handleAnyWriteResultErrors(wr, query.getQueryObject(), "remove");
+				handleAnyWriteResultErrors(wr, queryObject, "remove");
 				return null;
 			}
 		});
@@ -930,7 +935,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 		}
 		substituteMappedIdIfNecessary(query, targetClass, readerToUse);
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("findOne using query: " + query.toString());
+			LOGGER.debug("findOne using query: " + query + " fields: " + fields + " for class: " + targetClass);
 		}
 		return execute(new FindOneCallback(query, fields), new ReadDbObjectCallback<T>(readerToUse, targetClass),
 				collectionName);
@@ -958,7 +963,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 	protected <T> List<T> doFind(String collectionName, DBObject query, DBObject fields, Class<T> targetClass, CursorPreparer preparer) {
 		substituteMappedIdIfNecessary(query, targetClass, mongoConverter);
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("find using query: " + query.toString());
+			LOGGER.debug("find using query: " + query + " fields: " + fields + " for class: " + targetClass);
 		}
 		return executeEach(new FindCallback(query, fields), preparer, new ReadDbObjectCallback<T>(mongoConverter, targetClass),
 				collectionName);
@@ -979,7 +984,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 	protected <T> List<T> doFind(String collectionName, DBObject query, DBObject fields, Class<T> targetClass, MongoReader<T> reader) {
 		substituteMappedIdIfNecessary(query, targetClass, reader);
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("find using query: " + query.toString());
+			LOGGER.debug("find using query: " + query + " fields: " + fields + " for class: " + targetClass);
 		}
 		return executeEach(new FindCallback(query, fields), null, new ReadDbObjectCallback<T>(reader, targetClass),
 				collectionName);
@@ -1020,7 +1025,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 		}
 		substituteMappedIdIfNecessary(query, targetClass, readerToUse);
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("findAndRemove using query: " + query.toString());
+			LOGGER.debug("findAndRemove using query: " + query + " fields: " + fields + " sort: " + sort + " for class: " + targetClass);
 		}
 		return execute(new FindAndRemoveCallback(query, fields, sort), new ReadDbObjectCallback<T>(readerToUse, targetClass),
 				collectionName);
@@ -1130,6 +1135,31 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 		}
 	}
 
+	/**
+	 * Substitutes the id key if it is found in he query. Any 'id' keys will be replaced with '_id'. No conversion
+	 * of the value to an ObjectId is possible since we don't have access to a targetClass or a converter. This 
+	 * means the value has to be of the correct form.
+	 *
+	 * @param query
+	 */
+	protected void substituteMappedIdIfNecessary(DBObject query) {
+		String idKey = null;
+		if (query.containsField("id")) {
+			idKey = "id";
+		}
+		if (query.containsField("_id")) {
+			idKey = "_id";
+		}
+		if (idKey == null) {
+			// no ids in this query
+			return;
+		}
+		if (!idKey.equals(MongoPropertyDescriptor.ID_KEY)) {
+			Object value = query.get(idKey);
+			query.removeField(idKey);
+			query.put(MongoPropertyDescriptor.ID_KEY, value);
+		}
+	}
 
 	private String getRequiredDefaultCollectionName() {
 		String name = getDefaultCollectionName();

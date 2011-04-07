@@ -302,4 +302,33 @@ public class MongoTemplateTests {
     assertThat(results2.size(), is(2));
     assertThat(results3.size(), is(1));
   }
+
+  @Test
+  public void testRemovingDocument() throws Exception {
+
+	PersonWithIdPropertyOfTypeObjectId p1 = new PersonWithIdPropertyOfTypeObjectId();
+	p1.setFirstName("Sven_to_be_removed");
+	p1.setAge(51);
+	template.insert(p1);
+
+    Query q1 = new Query(Criteria.where("id").is(p1.getId()));
+    PersonWithIdPropertyOfTypeObjectId found1 = template.findOne(q1, PersonWithIdPropertyOfTypeObjectId.class);
+    assertThat(found1, notNullValue());
+    Query _q = new Query(Criteria.where("_id").is(p1.getId()));
+    template.remove(_q);
+    PersonWithIdPropertyOfTypeObjectId notFound1 = template.findOne(q1, PersonWithIdPropertyOfTypeObjectId.class);
+    assertThat(notFound1, nullValue());
+
+    PersonWithIdPropertyOfTypeObjectId p2 = new PersonWithIdPropertyOfTypeObjectId();
+	p2.setFirstName("Bubba_to_be_removed");
+	p2.setAge(51);
+	template.insert(p2);
+
+    Query q2 = new Query(Criteria.where("id").is(p2.getId()));
+    PersonWithIdPropertyOfTypeObjectId found2 = template.findOne(q2, PersonWithIdPropertyOfTypeObjectId.class);
+    assertThat(found2, notNullValue());
+    template.remove(q2);
+    PersonWithIdPropertyOfTypeObjectId notFound2 = template.findOne(q2, PersonWithIdPropertyOfTypeObjectId.class);
+    assertThat(notFound2, nullValue());
+  }
 }
