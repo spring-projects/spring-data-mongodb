@@ -113,7 +113,8 @@
           <title>Registering a com.mongodb.Mongo object using Java based bean
           metadata</title>
 
-          <programlisting language="java">@Configuration
+          <programlisting language="java"><![CDATA[
+@Configuration
 public class AppConfig {
 
   /*
@@ -122,9 +123,8 @@ public class AppConfig {
    public @Bean Mongo mongo() throws UnknownHostException, MongoException {
        return new Mongo("localhost");
    }
-
 }
-          </programlisting>
+]]></programlisting>
         </example></para>
 
       <para>This approach allows you to use the standard
