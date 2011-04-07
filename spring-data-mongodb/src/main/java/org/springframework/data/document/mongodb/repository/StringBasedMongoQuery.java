@@ -81,7 +81,7 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
   private String replacePlaceholders(String input, ConvertingParameterAccessor accessor) {
 
     Matcher matcher = PLACEHOLDER.matcher(input);
-    String result = null;
+    String result = input;
 
     while (matcher.find()) {
       String group = matcher.group();

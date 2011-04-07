@@ -84,6 +84,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
     List<Person> result = repository.findByThePersonsFirstname("Leroi");
     assertThat(result.size(), is(1));
     assertThat(result, hasItem(leroi));
+    assertThat(result.get(0).getAge(),is(nullValue()));
   }
 
   @Test

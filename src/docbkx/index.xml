@@ -62,6 +62,8 @@
     <xi:include href="reference/mongodb.xml"/>
     <xi:include href="reference/mongo-repositories.xml"/>
     <xi:include href="reference/mapping.xml"/>
+    <xi:include href="reference/cross-store.xml"/>
+    <xi:include href="reference/logging.xml"/>
     <xi:include href="reference/jmx.xml"/>
   </part>
 

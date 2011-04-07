@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
+    "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
+<chapter id="mongo.cross.store">
+  <title>Cross Store support</title>
+
+  <para>Cross Store support introduction.
+  </para>
+
+  <section id="mongodb:croos-store-configuration">
+    <title>Cross Store Configuration</title>
+
+    <para>Cross Store...
+    </para>
+
+  </section>
+</chapter>
