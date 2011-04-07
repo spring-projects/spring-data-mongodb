@@ -32,6 +32,17 @@ public class Query {
 
   private int limit;
 
+
+  /**
+   * Static factory method to create a Query using the provided criteria
+   *
+   * @param key
+   * @return
+   */
+  public static Query query(Criteria critera) {
+    return new Query(critera);
+  }
+  
   public Query() {
   }
 

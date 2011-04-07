@@ -31,6 +31,16 @@ public class Update {
   private HashMap<String, Object> criteria = new LinkedHashMap<String, Object>();
 
   /**
+   * Static factory method to create an Update using the provided key
+   *
+   * @param key
+   * @return
+   */
+  public static Update update(String key, Object value) {
+    return new Update().set(key, value);
+  }
+  
+  /**
    * Update using the $set update modifier
    *
    * @param key
@@ -41,7 +51,7 @@ public class Update {
     criteria.put("$set", Collections.singletonMap(key, convertValueIfNecessary(value)));
     return this;
   }
-
+ 
   /**
    * Update using the $unset update modifier
    *
