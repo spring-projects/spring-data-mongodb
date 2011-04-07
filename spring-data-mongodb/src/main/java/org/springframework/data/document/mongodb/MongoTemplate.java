@@ -120,18 +120,6 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 	}
 
 	/**
-	 * Constructor used for a basic template configuration with a specific {@link com.mongodb.WriteConcern}
-	 * to be used for all database write operations
-	 *
-	 * @param mongo
-	 * @param databaseName
-	 * @param writeConcern
-	 */
-	public MongoTemplate(Mongo mongo, String databaseName, WriteConcern writeConcern, WriteResultChecking writeResultChecking) {
-		this(mongo, databaseName, null, null, writeConcern, writeResultChecking);
-	}
-
-	/**
 	 * Constructor used for a basic template configuration with a default collection name
 	 *
 	 * @param mongo
@@ -140,19 +128,6 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 	 */
 	public MongoTemplate(Mongo mongo, String databaseName, String defaultCollectionName) {
 		this(mongo, databaseName, defaultCollectionName, null, null, null);
-	}
-
-	/**
-	 * Constructor used for a basic template configuration with a default collection name and
-	 * with a specific {@link com.mongodb.WriteConcern} to be used for all database write operations
-	 *
-	 * @param mongo
-	 * @param databaseName
-	 * @param defaultCollectionName
-	 * @param writeConcern
-	 */
-	public MongoTemplate(Mongo mongo, String databaseName, String defaultCollectionName, WriteConcern writeConcern, WriteResultChecking writeResultChecking) {
-		this(mongo, databaseName, defaultCollectionName, null, writeConcern, writeResultChecking);
 	}
 
 	/**
@@ -178,7 +153,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 	 * @param writeConcern
 	 * @param writeResultChecking
 	 */
-	public MongoTemplate(Mongo mongo, String databaseName, String defaultCollectionName, MongoConverter mongoConverter, WriteConcern writeConcern, WriteResultChecking writeResultChecking) {
+	MongoTemplate(Mongo mongo, String databaseName, String defaultCollectionName, MongoConverter mongoConverter, WriteConcern writeConcern, WriteResultChecking writeResultChecking) {
 
 		Assert.notNull(mongo);
 		Assert.notNull(databaseName);
@@ -246,10 +221,6 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 	 */
 	public MongoConverter getConverter() {
 		return this.mongoConverter;
-	}
-
-	public void setConverter(MongoConverter converter) {
-		this.mongoConverter = converter;
 	}
 
 	/* (non-Javadoc)
