@@ -30,11 +30,11 @@ import org.w3c.dom.Element;
  *
  * @author Oliver Gierke
  */
-public class MongoRepositoryConfigDefinitionParser
+public class MongoRepositoryConfigParser
     extends
     AbstractRepositoryConfigDefinitionParser<SimpleMongoRepositoryConfiguration, MongoRepositoryConfiguration> {
   
-  private static final String MAPPING_CONTEXT_DEFAULT = MongoMappingConverterParser.MAPPING_CONTEXT;
+  private static final String MAPPING_CONTEXT_DEFAULT = MappingMongoConverterParser.MAPPING_CONTEXT;
   
   /*
   * (non-Javadoc)

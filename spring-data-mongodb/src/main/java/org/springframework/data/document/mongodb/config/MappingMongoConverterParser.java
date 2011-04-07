@@ -43,7 +43,7 @@ import org.w3c.dom.Element;
  * @author Jon Brisbin <jbrisbin@vmware.com>
  * @author Oliver Gierke
  */
-public class MongoMappingConverterParser extends AbstractBeanDefinitionParser {
+public class MappingMongoConverterParser extends AbstractBeanDefinitionParser {
 
 	static final String MAPPING_CONTEXT = "mappingContext";
 

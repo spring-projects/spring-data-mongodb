@@ -33,8 +33,8 @@ public class MongoRepositoryNamespaceHandler extends NamespaceHandlerSupport {
   */
   public void init() {
 
-    registerBeanDefinitionParser("repositories", new MongoRepositoryConfigDefinitionParser());
-    registerBeanDefinitionParser("mapping-converter", new MongoMappingConverterParser());
+    registerBeanDefinitionParser("repositories", new MongoRepositoryConfigParser());
+    registerBeanDefinitionParser("mapping-converter", new MappingMongoConverterParser());
     registerBeanDefinitionParser("mongo", new MongoParser());
     registerBeanDefinitionParser("jmx", new MongoJmxParser());
   }
