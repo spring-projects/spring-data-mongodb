@@ -113,18 +113,16 @@
           <title>Registering a com.mongodb.Mongo object using Java based bean
           metadata</title>
 
-          <programlisting language="java"><![CDATA[
-@Configuration
+          <programlisting language="java">@Configuration
 public class AppConfig {
 
   /*
-   * Factory bean that creates the com.mongodb.Mongo instance
+   * Use the standard Mongo driver API to create a com.mongodb.Mongo instance.
    */
    public @Bean Mongo mongo() throws UnknownHostException, MongoException {
        return new Mongo("localhost");
    }
-}
-]]></programlisting>
+}      </programlisting>
         </example></para>
 
       <para>This approach allows you to use the standard
@@ -238,7 +236,7 @@ public class AppConfig {
           <programlisting language="xml">&lt;beans&gt;
 
     &lt;mongo:mongo&gt;
-    &lt;! replica set TBD -- should be available for release 1.0.0.M2 --&gt;
+      &lt;! replica set TBD -- should be available for release 1.0.0.RC1 --&gt;
     &lt;mongo:mongo&gt;
 
 &lt;/beans&gt;
@@ -250,38 +248,59 @@ public class AppConfig {
   <section>
     <title>Introduction to MongoTemplate</title>
 
-    <para></para>
-
-    <para>Most users are likely to use <classname>MongoTemplate</classname>
-    and its corresponding package
-    <literal>org.springframework.data.document.mongodb</literal> - the
-    template is in fact the central class of the MongoDB module due to its
-    rich feature set. The template offers convenience methods and automatic
-    mapping between MongoDB JSON documents and your domain classes. Out of the
-    box, <classname>MongoTemplate</classname> uses a Java-based default
-    converter but you can also write your own converter classes to be used for
-    reading and storing domain objects.</para>
+    <para>The class <classname>MongoTemplate</classname>, located in the
+    package <literal>org.springframework.data.document.mongodb</literal>, is
+    the central class of the Spring's MongoDB support providng a rich feature
+    set. The template offers convenience operations to create, update, delete
+    and query for MongoDB document and provide a mapping between your domain
+    objects and MongoDB documents.</para>
 
     <note>
       <para>Once configured, <classname>MongoTemplate</classname> is
       thread-safe and can be reused across multiple instances.</para>
     </note>
 
-    <para>Let's look at a couple of examples for how to work with the
+    <para>The mapping between Mongo documents and domain classes is done by
+    delegating to an implementation of the interface
+    <interfacename>MongoConverter</interfacename>. Spring provides two
+    implementations, <classname>SimpleMappingConverter</classname> and
+    <classname>MongoMappingConverter</classname>, but you can also write your
+    own converter. Please refer to the section on MongoCoverters for more
+    detailed information.</para>
+
+    <para>The default converter implementation used by
+    <classname>MongoTemplate</classname> is
+    <classname>SimpleMappingConverter</classname>, which as the name implies,
+    is simple. <classname>SimpleMapingConverter</classname> does not use any
+    additional mapping metadata to converter a domain object to a MongoDB
+    document. As such, it does not support functionality such as DBRefs or
+    creating indexes using annotations on domain classes. For a detailed
+    description of the MongoMappingConverter read the section on <link
+    linkend="mongo.mapping">Mapping Support</link>.</para>
+
+    <para>Another central feature of MongoTemplate is exception translation of
+    exceptions thrown in the Mongo Java driver into Spring's portable Data
+    Access Exception hierarchy. Refer to the section on <link
+    linkend="mongo.exception">exception translation</link> for more
+    information.</para>
+
+    <para>While there are many convenience methods on MongoTemplate to help
+    you easily perform common tasks if you should need to access the Mongo
+    driver API directly to access functionality not explicitly exposed by the
+    MongoTemplate you can use one of several Execute callback methods. These
+    will give you a reference to a Mongo Collection or DB object. Please see
+    the section <ulink url="mongo.executioncallback">Execution
+    Callbacks</ulink> for more information.</para>
+
+    <para>Now let's look at a examples of how to work with the
     <classname>MongoTemplate</classname> in the context of the Spring
     container.</para>
-
-    <para>Exception Translation</para>
-
-    <para>Mongo Converters</para>
-
-    <para>Execute callbacks</para>
 
     <section>
       <title>Instantiating MongoTemplate</title>
 
-      <para>In Java based configuration using the driver's com.mongodb.Mongo
-      object</para>
+      <para>You can use Java to create and register an instance of
+      MongoTemplate as shown below.</para>
 
       <example>
         <title>Registering a com.mongodb.Mongo object and enabling Spring's
@@ -290,109 +309,63 @@ public class AppConfig {
         <programlisting language="java">@Configuration
 public class AppConfig {
 
-    public @Bean Mongo mongo() throws UnknownHostException, MongoException {
+    public @Bean Mongo mongo() throws Exception {
         return new Mongo("localhost");
     }
 
-    public @Bean MongoTemplate mongoTemplate() throws UnknownHostException, MongoException {
-        return new MongoTemplate(mongo(), "test", "HelloMongo");
+    public @Bean MongoTemplate mongoTemplate() throws Exception {
+        return new MongoTemplate(mongo(), "mydatabase", "mycollection");
     }
 }
         </programlisting>
       </example>
 
-      <para>Alternatively using <classname>MongoFactoryBean</classname>, which
-      avoid dealing with the checked UnknownHostException</para>
+      <para>There are several overloaded constructors of MongoTemplate. These
+      are</para>
 
-      <example>
-        <title>Registering a com.mongodb.Mongo object and enabling Spring's
-        exception translation support</title>
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">MongoTemplate </emphasis>
+          <literal>(Mongo mongo, String databaseName) </literal> - takes the
+          default database name to operate against</para>
+        </listitem>
 
-        <programlisting language="java">@Configuration
-          public class AppConfig {
+        <listitem>
+          <para><emphasis role="bold">MongoTemplate </emphasis>
+          <literal>(Mongo mongo, String databaseName, String
+          defaultCollectionName) </literal> - adds the default collection name
+          to operate against.</para>
+        </listitem>
 
-          /*
-          * The method argument is the container managed Mongo instance created by the mongo() method
-          */
-          public @Bean MongoTemplate mongoTemplate(Mongo mongo) {
-          MongoTemplate mongoTemplate = new MongoTemplate(mongo, "test", "HelloMongo");
-          return mongoTemplate;
-          }
+        <listitem>
+          <para><emphasis role="bold">MongoTemplate </emphasis>
+          <literal>(Mongo mongo, String databaseName, String
+          defaultCollectionName, MongoConverter mongoConverter) </literal> -
+          override with a provided MongoConverter. Default is
+          SimpleMongoConverter</para>
+        </listitem>
+      </itemizedlist>
 
-          /*
-          * Factory bean that creates the Mongo instance
-          */
-          public @Bean MongoFactoryBean mongo() {
-          MongoFactoryBean mongo = new MongoFactoryBean();
-          mongo.setHost("localhost");
-          return mongo;
-          }
+      <para>You can also configure a MongoTemplate using Spring's XML
+      &lt;beans/&gt; schema.</para>
 
-          /*
-          * Use this post processor to translate any MongoExceptions thrown in @Repository
-          * annotated classes
-          */
-          public @Bean PersistenceExceptionTranslationPostProcessor
-          persistenceExceptionTranslationPostProcessor() {
-          return new PersistenceExceptionTranslationPostProcessor();
-          }
+      <programlisting>  &lt;mongo:mongo host="localhost" port="27017"/&gt;
+  
+  &lt;bean id="mongoTemplate" class="org.springframework.data.document.mongodb.MongoTemplate"&gt;
+    &lt;constructor-arg ref="mongo"/&gt;
+    &lt;constructor-arg name="databaseName" value="geospatial"/&gt;
+    &lt;constructor-arg name="defaultCollectionName" value="newyork"/&gt;
+  &lt;/bean&gt;</programlisting>
 
-          }
-        </programlisting>
+      <para>Other properties that you might like to set when creating a
+      MongTemplate are WriteResultCheckingPolicy and the default
+      WriteConcern.</para>
 
-        <para>There are several overloaded constructors of MongoTemplate.
-        These are</para>
-
-        <itemizedlist>
-          <listitem>
-            <para><emphasis role="bold">MongoTemplate </emphasis>
-            <literal>(Mongo mongo, String databaseName) </literal> - takes the
-            default database name to operate against</para>
-          </listitem>
-
-          <listitem>
-            <para><emphasis role="bold">MongoTemplate </emphasis>
-            <literal>(Mongo mongo, String databaseName, String
-            defaultCollectionName) </literal> - adds the default collection
-            name to operate against.</para>
-          </listitem>
-
-          <listitem>
-            <para><emphasis role="bold">MongoTemplate </emphasis>
-            <literal>(Mongo mongo, String databaseName, String
-            defaultCollectionName, MongoConverter mongoConverter) </literal> -
-            override with a provided MongoConverter. Default is
-            SimpleMongoConverter</para>
-          </listitem>
-
-          <listitem>
-            <para><emphasis role="bold">MongoTemplate </emphasis>
-            <literal>(Mongo mongo, String databaseName, String
-            defaultCollectionName, MongoConverter mongoConverter, WriteConcern
-            writeConcern, WriteResultChecking writeResultChecking) </literal>
-            - Specify a default WriteConcern and also WriteResultChecking
-            policy</para>
-          </listitem>
-
-          <listitem>
-            <para><emphasis role="bold">MongoTemplate </emphasis>
-            <literal>(Mongo mongo, String databaseName, String
-            defaultCollectionName, WriteConcern writeConcern,
-            WriteResultChecking writeResultChecking)</literal>- Specify a
-            default WriteConcern and also WriteResultChecking policy</para>
-          </listitem>
-
-          <listitem>
-            <para><emphasis role="bold">MongoTemplate </emphasis>
-            <literal>(Mongo mongo, String databaseName, WriteConcern
-            writeConcern, WriteResultChecking writeResultChecking)</literal>-
-            Specify a default WriteConcern and also WriteResultChecking
-            policy</para>
-          </listitem>
-        </itemizedlist>
-
-        <para></para>
-      </example>
+      <note>
+        <para>The preferred way to reference the operations on
+        <classname>MongoTemplate</classname> instance is via its interface
+        <interfacename>MongoOperations</interfacename>.</para>
+      </note>
 
       <section>
         <title>WriteResultChecking Policy</title>
@@ -407,15 +380,55 @@ public class AppConfig {
 
         <para>The default is to use a WriteResultChecking of NONE.</para>
       </section>
+
+      <section>
+        <title>WriteConcern</title>
+
+        <para>You can set the WriteConcern property that the MongoTemplate
+        will use for write operations if it has not yet been specifid with the
+        driver. If not set, it will default to the one set in the MongoDB
+        driver's DB or Collection setting.</para>
+
+        <note>
+          <para>Setting the WriteConcern to different values when saving an
+          object will be provided in a future release. This will most likely
+          be handled using mapping metadata provided either in the form of
+          annotations on the domain object or by an external fluent
+          DSL.</para>
+        </note>
+      </section>
     </section>
   </section>
 
   <section>
     <title>Saving, Updating, and Deleting Documents</title>
 
-    <para>Insert, savfe, remove, findAndRemove</para>
+    <para>MongoTemplate provides a simple way for you to save, update, and
+    delete your domain objects and map those objects to documents stored in
+    MongoDB. Given a simple class such as Person</para>
 
-    <para></para>
+    <programlisting>public class Person {
+
+  private String id;
+  private String firstName;
+  private int age;
+
+  // getters and setter omitted
+
+}</programlisting>
+
+    <para>You can save, update and delete the object as shown below</para>
+
+    <programlisting>public class PersonExample { 
+
+  @Inject
+  
+Person p = new Person();
+p.setFirstName("Sven");
+p.setAge(22);
+
+
+mongo</programlisting>
 
     <section>
       <title>Methods for saving documents</title>
@@ -1251,5 +1264,100 @@ public class AppConfig {
     <title>Lifecycle Events</title>
 
     <para>The lifecycle events are....</para>
+  </section>
+
+  <section label="mongo.exception">
+    <title>Exception Translation</title>
+
+    <para>The Spring framework provides exception translation for a wide
+    variety of database and mapping technologies. This has traditionally been
+    for JDBC and JPA. The Spring support for Mongo extends this feature to the
+    MongoDB Database by providing an implementation of the
+    <classname>org.springframework.dao.support.PersistenceExceptionTranslator</classname>
+    interface.</para>
+
+    <para>The motivation behind mapping to Spring's <ulink
+    url="http://static.springsource.org/spring/docs/3.0.x/reference/dao.html#dao-exceptions">consistent
+    data access exception hierarchy</ulink> is that you are then able to write
+    portable and descriptive exception handling code without resorting to
+    coding against <ulink
+    url="http://www.mongodb.org/display/DOCS/Error+Codes">MongoDB error
+    codes</ulink>. All of Spring's data access exceptions are inherited from
+    the root <classname>DataAccessException</classname> class so you can be
+    sure that you will be able to catch all database related exception within
+    a single try-catch block. Note, that not all exceptions thrown by the
+    MongoDB driver inherit from the MongoException class. The inner exception
+    and message are preserved so no information is lost. </para>
+
+    <para>Some of the mappings performed by the MongoExceptionTranslator are:
+    com.mongodb.Network to DataAccessResourceFailureException and
+    MongoException error codes 1003, 12001, 12010, 12011, 12012 to
+    InvalidDataAccessApiUsageException. Look into the implementation for more
+    details on the mapping.</para>
+  </section>
+
+  <section id="mongo.executioncallback">
+    <title>Execution Callback</title>
+
+    <para>One common design feature of all Spring template classes is that all
+    functionality is routed into one of the templates execute callback
+    methods. This helps ensure that exceptions and any resource management
+    that maybe required are performed consistency. While this was of much
+    greater need in the case of JDBC and JMS than with MongoDB, it still
+    offers a single spot for exception translation and logging to occur. As
+    such, using thexe execute callback is the preferred way to access the
+    Mongo driver's DB and Collection objects to perform uncommon operations
+    that were not exposed as methods on
+    <classname>MongoTemplate</classname>.</para>
+
+    <para>Here is a list of execute callback methods.</para>
+
+    <para><itemizedlist>
+        <listitem>
+          <para><literal>&lt;T&gt; T</literal> <emphasis role="bold">execute
+          </emphasis> <literal>(CollectionCallback&lt;T&gt; action) </literal>
+          Executes the given CollectionCallback on the default
+          collection.</para>
+        </listitem>
+
+        <listitem>
+          <para><literal>&lt;T&gt; T</literal> <emphasis role="bold">execute
+          </emphasis> <literal>(String collectionName,
+          CollectionCallback&lt;T&gt; action) </literal> Executes the given
+          CollectionCallback on the collection of the given name.update using
+          the $addToSet update modifier</para>
+        </listitem>
+
+        <listitem>
+          <para><literal>&lt;T&gt; T</literal> <emphasis role="bold">execute
+          </emphasis> <literal>(DbCallback&lt;T&gt; action) </literal>
+          Executes a DbCallback translating any exceptions as
+          necessary.</para>
+        </listitem>
+
+        <listitem>
+          <para><literal>&lt;T&gt; T</literal> <emphasis
+          role="bold">executeInSession </emphasis>
+          <literal>(DbCallback&lt;T&gt; action) </literal> Executes the given
+          DbCallback within the same connection to the database so as to
+          ensure consistency in a write heavy environment where you may read
+          the data that you wrote.</para>
+        </listitem>
+      </itemizedlist></para>
+
+    <para>Here is an example that uses the CollectionCallback to return
+    information about an index.</para>
+
+    <programlisting language="java">		boolean hasIndex = template.execute("geolocation", new CollectionCallback&lt;Boolean&gt;() {
+			public Boolean doInCollection(DBCollection collection) throws MongoException, DataAccessException {
+				List&lt;DBObject&gt; indexes = collection.getIndexInfo();
+				for (DBObject dbo : indexes) {
+					if ("location_2d".equals(dbo.get("name"))) {
+						return true;
+					}
+				}
+				return false;
+			}
+		});</programlisting>
   </section>
 </chapter>

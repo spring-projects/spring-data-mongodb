@@ -4,7 +4,15 @@
 <chapter id="mongo.mapping">
   <title>Mapping support</title>
 
-  <para>The object mapping support for MongoDB</para>
+  <para>Rich maping support is provided by the
+  <classname>MongoMappingConverter</classname>.
+  <classname>MongoMappingConverter</classname> has a rich metadata model that
+  provides a full feature set of functionality to map domain objects into
+  MongoDB documents. The mapping metadata model is populated using annotations
+  on your domain objects but is not limited to using annotations as the only
+  source of metadata information. In this section we will describe the
+  features of the MongoMappingConverter and how to specify annotation based
+  mapping metadata.</para>
 
   <section id="mongodb:mapping-configuration">
     <title>MongoDB Mapping Configuration</title>
