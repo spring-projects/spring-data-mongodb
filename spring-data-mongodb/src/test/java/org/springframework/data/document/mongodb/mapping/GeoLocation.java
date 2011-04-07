@@ -23,12 +23,12 @@ import org.springframework.data.document.mongodb.index.GeoSpatialIndexed;
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
  */
-@Document
+@Document(collection="geolocation")
 public class GeoLocation {
 
 	@Id
 	private ObjectId id;
-	@GeoSpatialIndexed
+	@GeoSpatialIndexed(collection="geolocation")
 	private double[] location;
 
 	public GeoLocation(double[] location) {

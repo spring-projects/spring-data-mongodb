@@ -28,10 +28,16 @@ import com.mongodb.MongoException;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.document.mongodb.CollectionCallback;
 import org.springframework.data.document.mongodb.MongoTemplate;
+import org.springframework.data.document.mongodb.config.AbstractMongoConfiguration;
+import org.springframework.data.document.mongodb.mapping.event.LoggingEventListener;
+import org.springframework.data.document.mongodb.mapping.event.MongoMappingEvent;
 
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
@@ -39,7 +45,7 @@ import org.springframework.data.document.mongodb.MongoTemplate;
 public class GeoIndexedTests {
 
 	private final String[] collectionsToDrop = new String[]{
-			"geolocation"
+			GeoIndexedAppConfig.GEO_COLLECTION
 	};
 
 	ApplicationContext applicationContext;
@@ -49,11 +55,11 @@ public class GeoIndexedTests {
 	@Before
 	public void setUp() throws Exception {
 		Mongo mongo = new Mongo();
-		DB db = mongo.getDB("database");
+		DB db = mongo.getDB(GeoIndexedAppConfig.GEO_DB);
 		for (String coll : collectionsToDrop) {
 			db.getCollection(coll).drop();
 		}
-		applicationContext = new ClassPathXmlApplicationContext("/mapping.xml");
+		applicationContext = new AnnotationConfigApplicationContext(GeoIndexedAppConfig.class);
 		template = applicationContext.getBean(MongoTemplate.class);
 		mappingContext = applicationContext.getBean(MongoMappingContext.class);
 	}
@@ -77,5 +83,5 @@ public class GeoIndexedTests {
 
 		assertTrue(hasIndex);
 	}
-
+	
 }
