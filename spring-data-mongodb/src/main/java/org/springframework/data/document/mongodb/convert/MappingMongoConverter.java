@@ -16,6 +16,8 @@
 
 package org.springframework.data.document.mongodb.convert;
 
+import static org.springframework.data.document.mongodb.convert.ObjectIdConverters.*;
+
 import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigInteger;
@@ -601,58 +603,6 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
 
 	public void afterPropertiesSet() {
 	   initializeConverters();
-	}
-
-	/**
-	 * Simple singleton to convert {@link ObjectId}s to their {@link String} representation.
-	 *
-	 * @author Oliver Gierke
-	 */
-	public static enum ObjectIdToStringConverter implements Converter<ObjectId, String> {
-		INSTANCE;
-
-		public String convert(ObjectId id) {
-			return id.toString();
-		}
-	}
-
-	/**
-	 * Simple singleton to convert {@link String}s to their {@link ObjectId} representation.
-	 *
-	 * @author Oliver Gierke
-	 */
-	public static enum StringToObjectIdConverter implements Converter<String, ObjectId> {
-		INSTANCE;
-
-		public ObjectId convert(String source) {
-			return new ObjectId(source);
-		}
-	}
-
-	/**
-	 * Simple singleton to convert {@link ObjectId}s to their {@link java.math.BigInteger} representation.
-	 *
-	 * @author Oliver Gierke
-	 */
-	public static enum ObjectIdToBigIntegerConverter implements Converter<ObjectId, BigInteger> {
-		INSTANCE;
-
-		public BigInteger convert(ObjectId source) {
-			return new BigInteger(source.toString(), 16);
-		}
-	}
-
-	/**
-	 * Simple singleton to convert {@link BigInteger}s to their {@link ObjectId} representation.
-	 *
-	 * @author Oliver Gierke
-	 */
-	public static enum BigIntegerToObjectIdConverter implements Converter<BigInteger, ObjectId> {
-		INSTANCE;
-
-		public ObjectId convert(BigInteger source) {
-			return new ObjectId(source.toString(16));
-		}
 	}
 
 	protected class PersistentPropertyWrapper {
