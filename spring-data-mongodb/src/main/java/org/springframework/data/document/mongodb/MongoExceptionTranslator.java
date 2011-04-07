@@ -16,6 +16,7 @@
 package org.springframework.data.document.mongodb;
 
 import com.mongodb.MongoException;
+import com.mongodb.MongoException.CursorNotFound;
 import com.mongodb.MongoException.DuplicateKey;
 import com.mongodb.MongoException.Network;
 import com.mongodb.MongoInternalException;
@@ -52,9 +53,12 @@ public class MongoExceptionTranslator implements PersistenceExceptionTranslator 
 
     // All other MongoExceptions
     if (ex instanceof DuplicateKey) {
-      return new DataIntegrityViolationException(ex.getMessage(), ex);
+      return new DuplicateKeyException(ex.getMessage(), ex);
     }
     if (ex instanceof Network) {
+      return new DataAccessResourceFailureException(ex.getMessage(), ex);
+    }
+    if (ex instanceof CursorNotFound) {
       return new DataAccessResourceFailureException(ex.getMessage(), ex);
     }
     if (ex instanceof MongoException) {

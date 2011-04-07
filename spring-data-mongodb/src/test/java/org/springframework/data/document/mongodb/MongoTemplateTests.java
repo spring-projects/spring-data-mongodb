@@ -96,8 +96,8 @@ public class MongoTemplateTests {
   @Test
   public void updateFailure() throws Exception {
 
-    MongoTemplate mongoTemplate = new MongoTemplate(template.getDb().getMongo(), "test", "people",
-        new WriteConcern(), WriteResultChecking.EXCEPTION);
+    MongoTemplate mongoTemplate = new MongoTemplate(template.getDb().getMongo(), "test", "people");
+    mongoTemplate.setWriteResultChecking(WriteResultChecking.EXCEPTION);       
 
     Person person = new Person("Oliver2");
     person.setAge(25);
