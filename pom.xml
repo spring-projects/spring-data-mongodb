@@ -188,8 +188,8 @@
         <configuration>
           <javadoc:aggregate>true</javadoc:aggregate>
           <breakiterator>true</breakiterator>
-          <header>Spring Data Graph</header>
-          <source>1.6</source>
+          <header>Spring Data Document</header>
+          <source>1.5</source>
           <quiet>true</quiet>
           <javadocDirectory>${project.basedir}/src/main/javadoc</javadocDirectory>
           <overview>${project.basedir}/src/main/javadoc/overview.html</overview>
@@ -198,7 +198,7 @@
           <docfilessubdirs>true</docfilessubdirs>
           <links>
             <link>http://static.springframework.org/spring/docs/3.0.x/javadoc-api</link>
-            <link>http://java.sun.com/javase/6/docs/api</link>
+            <link>http://java.sun.com/javase/5/docs/api</link>
             <link>http://api.mongodb.org/java/2.3</link>
           </links>
         </configuration>
