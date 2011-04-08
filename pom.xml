@@ -117,14 +117,6 @@
 
     <plugins>
       <plugin>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <configuration>
-          <source>1.6</source>
-          <target>1.6</target>
-        </configuration>
-      </plugin>
-
-      <plugin>
         <groupId>com.agilejava.docbkx</groupId>
         <artifactId>docbkx-maven-plugin</artifactId>
 	<!-- yes it really needs to be this (2.0.7) otherwise pdf generation from a clean build doesn't work -->
