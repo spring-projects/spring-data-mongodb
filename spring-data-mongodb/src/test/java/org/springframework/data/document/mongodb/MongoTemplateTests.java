@@ -331,4 +331,35 @@ public class MongoTemplateTests {
     PersonWithIdPropertyOfTypeObjectId notFound2 = template.findOne(q2, PersonWithIdPropertyOfTypeObjectId.class);
     assertThat(notFound2, nullValue());
   }
+
+  @Test
+  public void testAddingToListWithSimpleConverter() throws Exception {
+	  testAddingToList(this.template);
+  }
+
+  //@Test
+  public void testAddingToListWithMappingConverter() throws Exception {
+	  testAddingToList(this.mappingTemplate);
+  }
+
+  private void testAddingToList(MongoTemplate template) {
+      PersonWithAList p = new PersonWithAList();
+	  p.setFirstName("Sven");
+	  p.setAge(22);	  
+	  template.insert(p);
+
+	  Query q1 = new Query(Criteria.where("id").is(p.getId()));
+	  PersonWithAList p2 = template.findOne(q1, PersonWithAList.class);
+	  assertThat(p2, notNullValue());
+	  assertThat(p2.getWishList().size(), is(0));
+	  
+	  p2.addToWishList("please work!");
+	  
+	  template.save(p2);
+
+	  PersonWithAList p3 = template.findOne(q1, PersonWithAList.class);
+	  assertThat(p3, notNullValue());
+	  assertThat(p3.getWishList().size(), is(1));
+  }
+  
 }
