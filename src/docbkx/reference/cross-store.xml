@@ -191,11 +191,12 @@
     persisted in MongoDB should be annotated using the
     <classname>@RelatedDocument</classname> annotation. Well, that is really
     all you need to do. The cross-store aspects take care of the rest. This
-    include marking the field with @Transient so it won't be persisted using
-    JPA, keeping track of any changes and flushing them on succesfull
-    transaction completion, loading teh document for MongoDB when the values
-    is used in your application. Here is an example of a simple Entity that
-    has a field annotated with @RelatedEntity.</para>
+    includes marking the field with @Transient so it won't be persisted using
+    JPA, keeping track of any changes made to the field value and writing them
+    to the database on succesfull transaction completion, loading teh document
+    from MongoDB the first time the value is used in your application. Here is
+    an example of a simple Entity that has a field annotated with
+    @RelatedEntity.</para>
 
     <example>
       <title>Example of Entity with @RelatedDocument</title>
@@ -226,6 +227,14 @@ public class Customer {
   
   private Map&lt;String, String&gt; questionsAndAnswers;
 
+  public SurveyInfo() {
+    this.questionsAndAnswers = new HashMap&lt;String, String&gt;();
+  }
+
+  public SurveyInfo(Map&lt;String, String&gt; questionsAndAnswers) {
+    this.questionsAndAnswers = questionsAndAnswers;
+  }
+
   public Map&lt;String, String&gt; getQuestionsAndAnswers() {
     return questionsAndAnswers;
   }
@@ -233,14 +242,51 @@ public class Customer {
   public void setQuestionsAndAnswers(Map&lt;String, String&gt; questionsAndAnswers) {
     this.questionsAndAnswers = questionsAndAnswers;
   }
-}        </programlisting>
+
+  public SurveyInfo addQuestionAndAnswer(String question, String answer) {
+    this.questionsAndAnswers.put(question, answer);
+    return this;
+  }
+}    </programlisting>
     </example>
 
-    <para>Once t...</para>
+    <para>Once the SurveyInfo has been set on the Customer object above the
+    MongoTemplate that was configured above is used to save the SurveyInfo
+    along with some metadata about the JPA Entity is stored in a MongoDB
+    collection named after the fully qualified name of the JPA Entity class.
+    The following code:</para>
 
-    <para></para>
+    <example>
+      <title>Example of code using the JPA Entity configured for cross-store
+      persistence</title>
 
-    <para></para>
+      <programlisting language="java">    Customer customer = new Customer();
+    customer.setFirstName("Sven");
+    customer.setLastName("Olafsen");
+    SurveyInfo surveyInfo = new SurveyInfo()
+      .addQuestionAndAnswer("age", "22")
+      .addQuestionAndAnswer("married", "Yes")
+      .addQuestionAndAnswer("citizenship", "Norwegian");
+    customer.setSurveyInfo(surveyInfo);
+    customerRepository.save(customer);
+</programlisting>
+    </example>
+
+    <para>Executing the code above results in the following JSON document
+    stored in MongoDB.</para>
+
+    <example>
+      <title>Example of JSON document stored in MongoDB</title>
+
+      <programlisting language="javascript">{ "_id" : ObjectId( "4d9e8b6e3c55287f87d4b79e" ),
+  "_entity_id" : 1,
+  "_entity_class" : "org.springframework.data.mongodb.examples.custsvc.domain.Customer",
+  "_entity_field_name" : "surveyInfo",
+  "questionsAndAnswers" : { "married" : "Yes",
+    "age" : "22",
+    "citizenship" : "Norwegian" },
+  "_entity_field_class" : "org.springframework.data.mongodb.examples.custsvc.domain.SurveyInfo" }</programlisting>
+    </example>
 
     <para></para>
   </section>
