@@ -27,10 +27,10 @@ public class Venue {
   @Id
   private String id;
   private String name;
-  private Double[] location;
+  private double[] location;
   
   @PersistenceConstructor
-  Venue(String name, Double[] location) {
+  Venue(String name, double[] location) {
     super();
     this.name = name;
     this.location = location;    
@@ -39,23 +39,15 @@ public class Venue {
   public Venue(String name, double x, double y) {
     super();
     this.name = name;
-    this.location = new Double[] { x, y };    
+    this.location = new double[] { x, y };    
   }
 
   public String getName() {
     return name;
   }
 
-  public Double[] getLocation() {
+  public double[] getLocation() {
     return location;
-  }
-  
-  public String getId() {
-    return id;
-  }
-
-  public void setId(String id) {
-    this.id = id;
   }
 
   @Override

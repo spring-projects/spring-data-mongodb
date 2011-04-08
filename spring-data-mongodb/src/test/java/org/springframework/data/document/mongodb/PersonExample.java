@@ -76,5 +76,14 @@ public class PersonExample {
     
   }
   
+  public void doWork2() {
+    mongoOps.dropCollection("personexample");
+    
+    PersonWithIdPropertyOfTypeString p = new PersonWithIdPropertyOfTypeString();
+    p.setFirstName("Sven");
+    p.setAge(22);
+     
+  }
+  
   
 }

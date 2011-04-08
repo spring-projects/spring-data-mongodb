@@ -707,8 +707,8 @@ public interface MongoOperations {
   void remove(Query query);
   
   /**
-   * Remove all documents from the default collection that matchthe provided query document critera.  The
-   * Class parameter is use to help convert the Id of the object if it is present in the query.
+   * Remove all documents from the default collection that match the provided query document criteria.  The
+   * Class parameter is used to help convert the Id of the object if it is present in the query.
    * @param <T>
    * @param query
    * @param targetClass
@@ -722,5 +722,14 @@ public interface MongoOperations {
    * @param queryDoc       the query document that specifies the criteria used to remove a record
    */
   void remove(String collectionName, Query query);
+  
+  /**
+   * Remove all documents from the specified collection that match the provided query document criteria.
+   * The Class parameter is used to help convert the Id of the object if it is present in the query.
+   * @param collectionName
+   * @param query
+   * @param targetClass
+   */
+  <T> void remove(String collectionName, Query query, Class<T> targetClass);
 
 }
