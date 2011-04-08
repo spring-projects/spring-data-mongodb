@@ -25,13 +25,18 @@ import java.util.List;
 import java.util.Map;
 
 import com.mongodb.DB;
+import com.mongodb.DBCollection;
+import com.mongodb.DBObject;
 import com.mongodb.Mongo;
+import com.mongodb.MongoException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.springframework.dao.DataAccessException;
+import org.springframework.data.document.mongodb.CollectionCallback;
 import org.springframework.data.document.mongodb.MongoDbUtils;
 import org.springframework.data.document.mongodb.MongoTemplate;
 import org.springframework.data.document.mongodb.query.Criteria;
@@ -44,6 +49,7 @@ public class MappingTests {
 
 	private static final Log LOGGER = LogFactory.getLog(MongoDbUtils.class);
 	private final String[] collectionsToDrop = new String[]{
+			"foobar",
 			"person",
 			"personmapproperty",
 			"personpojo",
@@ -221,6 +227,39 @@ public class MappingTests {
 
 		List<Location> result = template.find("places", new Query(Criteria.where("_id").is(loc.getId())), Location.class);
 		assertThat(result.size(), is(1));
+	}
+
+	@Test
+	public void testIndexesCreatedInRightCollection() {
+		CustomCollectionWithIndex ccwi = new CustomCollectionWithIndex("test");
+		template.insert(ccwi);
+
+		assertTrue(template.execute("foobar", new CollectionCallback<Boolean>() {
+			public Boolean doInCollection(DBCollection collection) throws MongoException, DataAccessException {
+				List<DBObject> indexes = collection.getIndexInfo();
+				for (DBObject dbo : indexes) {
+					if ("name_1".equals(dbo.get("name"))) {
+						return true;
+					}
+				}
+				return false;
+			}
+		}));
+
+		DetectedCollectionWithIndex dcwi = new DetectedCollectionWithIndex("test");
+		template.insert(dcwi);
+
+		assertTrue(template.execute(DetectedCollectionWithIndex.class.getSimpleName().toLowerCase(), new CollectionCallback<Boolean>() {
+			public Boolean doInCollection(DBCollection collection) throws MongoException, DataAccessException {
+				List<DBObject> indexes = collection.getIndexInfo();
+				for (DBObject dbo : indexes) {
+					if ("name_1".equals(dbo.get("name"))) {
+						return true;
+					}
+				}
+				return false;
+			}
+		}));
 	}
 
 }

@@ -34,7 +34,7 @@ public @interface Indexed {
 
   boolean sparse() default false;
 
-  boolean dropDups() default true;
+  boolean dropDups() default false;
 
   String name() default "";
 
