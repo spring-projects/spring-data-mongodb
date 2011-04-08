@@ -177,7 +177,7 @@
 
     <para></para>
 
-    <para> </para>
+    <para></para>
   </section>
 
   <section id="mongodb_cross-store-application">
@@ -278,7 +278,7 @@ public class Customer {
     <example>
       <title>Example of JSON document stored in MongoDB</title>
 
-      <programlisting language="javascript">{ "_id" : ObjectId( "4d9e8b6e3c55287f87d4b79e" ),
+      <programlisting language="java">{ "_id" : ObjectId( "4d9e8b6e3c55287f87d4b79e" ),
   "_entity_id" : 1,
   "_entity_class" : "org.springframework.data.mongodb.examples.custsvc.domain.Customer",
   "_entity_field_name" : "surveyInfo",
