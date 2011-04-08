@@ -105,17 +105,18 @@
 		    &lt;artifactId&gt;cglib&lt;/artifactId&gt;
 		    &lt;version&gt;2.2&lt;/version&gt;
 		&lt;/dependency&gt;
-		&lt;dependency&gt;
-			&lt;groupId&gt;log4j&lt;/groupId&gt;
-			&lt;artifactId&gt;log4j&lt;/artifactId&gt;
-			&lt;scope&gt;test&lt;/scope&gt;
-		&lt;/dependency&gt;</programlisting>
+</programlisting>
 
     <para>The cglib dependency is there as we will use Spring's Java
     configuration style. Also change the version of Spring in the pom.xml to
     be </para>
 
     <programlisting lang="xml">&lt;spring.framework.version&gt;3.0.5.RELEASE&lt;/spring.framework.version&gt;</programlisting>
+
+    <para>You may also want to set the logging level to DEBUG to see some
+    additional information, edit the log4j.properties file and add</para>
+
+    <programlisting>log4j.category.org.springframework.data.document.mongodb=DEBUG</programlisting>
 
     <para>Next, in the org.spring.mongodb package in the sr/ctest/java
     directory create a class as shown below.</para>
@@ -145,7 +146,7 @@ public class MongoConfig extends AbstractMongoConfiguration {
 
     <para>Then create a simple Person class to persist</para>
 
-    <programlisting>package org.spring.mongodb;
+    <programlisting language="java">package org.spring.mongodb;
 
 public class Person {
 
@@ -175,7 +176,42 @@ public class Person {
 
     <para>And a main application to run</para>
 
-    <programlisting></programlisting>
+    <programlisting language="java">package org.spring.mongodb;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.data.document.mongodb.MongoOperations;
+import org.springframework.data.document.mongodb.query.Criteria;
+import org.springframework.data.document.mongodb.query.Query;
+
+public class MongoApp {
+
+  private static final Log log = LogFactory.getLog(MongoApp.class);
+
+  public static void main(String[] args) {
+    ApplicationContext ctx = new AnnotationConfigApplicationContext(MongoConfig.class);
+    MongoOperations mongoOps = ctx.getBean(MongoOperations.class);
+    
+    mongoOps.insert(new Person("1234", "Joe"));
+
+    log.info(mongoOps.findOne(new Query(Criteria.where("name").is("Joe")), Person.class));
+  }
+
+}</programlisting>
+
+    <para>This will produce the following output</para>
+
+    <programlisting>MongoPersistentEntityIndexCreator] - &lt;Analyzing class class org.spring.mongodb.Person for index information.&gt;
+LoggingEventListener] - &lt;onBeforeConvert: Person [id=1234, name=Joe]&gt;
+LoggingEventListener] - &lt;onBeforeSave: Person [id=1234, name=Joe], { "_id" : "1234" , "name" : "Joe"}&gt;
+MongoTemplate] - &lt;insert DBObject: { "_id" : "1234" , "name" : "Joe"}&gt;
+LoggingEventListener] - &lt;onAfterSave: Person [id=1234, name=Joe], { "_id" : "1234" , "name" : "Joe"}&gt;
+MongoTemplate] - &lt;findOne using query: { "name" : "Joe"} in db.collection: database.person&gt;
+LoggingEventListener] - &lt;onAfterLoad: { "_id" : "1234" , "name" : "Joe"}&gt;
+LoggingEventListener] - &lt;onAfterConvert: { "_id" : "1234" , "name" : "Joe"}, Person [id=1234, name=Joe]&gt;
+MongoApp] - &lt;Person [id=1234, name=Joe]&gt;</programlisting>
   </section>
 
   <section id="mongodb-connectors">

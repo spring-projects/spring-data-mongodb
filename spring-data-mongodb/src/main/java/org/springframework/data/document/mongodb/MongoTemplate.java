@@ -468,12 +468,12 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 	// Find methods that take a Query to express the query and that return a single object.
 
 	public <T> T findOne(Query query, Class<T> targetClass) {
-		return findOne(getDefaultCollectionName(), query, targetClass);
+		return findOne(getEntityCollection(targetClass), query, targetClass);
 	}
 
 	public <T> T findOne(Query query, Class<T> targetClass,
 											 MongoReader<T> reader) {
-		return findOne(getDefaultCollectionName(), query, targetClass, reader);
+		return findOne(getEntityCollection(targetClass), query, targetClass, reader);
 	}
 
 	public <T> T findOne(String collectionName, Query query,
@@ -536,12 +536,12 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 	// also removed from the collection in the database.
 
 	public <T> T findAndRemove(Query query, Class<T> targetClass) {
-		return findAndRemove(getDefaultCollectionName(), query, targetClass);
+		return findAndRemove(getEntityCollection(targetClass), query, targetClass);
 	}
 
 	public <T> T findAndRemove(Query query, Class<T> targetClass,
 														 MongoReader<T> reader) {
-		return findAndRemove(getDefaultCollectionName(), query, targetClass, reader);
+		return findAndRemove(getEntityCollection(targetClass), query, targetClass, reader);
 	}
 
 	public <T> T findAndRemove(String collectionName, Query query,
