@@ -43,7 +43,6 @@ public class MongoChangeSetPersister implements ChangeSetPersister<Object> {
   }
 
 
-  @Override
   public void getPersistentState(Class<? extends ChangeSetBacked> entityClass,
       Object id, final ChangeSet changeSet) 
       throws DataAccessException, NotFoundException {
@@ -62,7 +61,6 @@ public class MongoChangeSetPersister implements ChangeSetPersister<Object> {
       log.debug("Loading MongoDB data for " + dbk);
     }
     mongoTemplate.execute(collName, new CollectionCallback<Object>() {
-      @Override
       public Object doInCollection(DBCollection collection)
           throws MongoException, DataAccessException {
         for (DBObject dbo : collection.find(dbk)) {
@@ -90,7 +88,6 @@ public class MongoChangeSetPersister implements ChangeSetPersister<Object> {
     });
   }
 
-  @Override
   public Object getPersistentId(ChangeSetBacked entity, ChangeSet cs) throws DataAccessException {
     log.debug("getPersistentId called on " + entity);
     if (entityManagerFactory == null) {
@@ -100,7 +97,6 @@ public class MongoChangeSetPersister implements ChangeSetPersister<Object> {
     return o;
   }
 
-  @Override
   public Object persistState(ChangeSetBacked entity, ChangeSet cs) throws DataAccessException {
     if (cs == null) {
       log.debug("Flush: changeset was null, nothing to flush.");
@@ -125,7 +121,6 @@ public class MongoChangeSetPersister implements ChangeSetPersister<Object> {
         dbQuery.put(ENTITY_FIELD_NAME, key);
         DBObject dbId = mongoTemplate.execute(collName,
             new CollectionCallback<DBObject>() {
-              @Override
               public DBObject doInCollection(DBCollection collection)
                   throws MongoException, DataAccessException {
                 return collection.findOne(dbQuery);
@@ -136,7 +131,6 @@ public class MongoChangeSetPersister implements ChangeSetPersister<Object> {
             log.debug("Flush: removing: " + dbQuery);
           }
           mongoTemplate.execute(collName, new CollectionCallback<Object>() {
-            @Override
             public Object doInCollection(DBCollection collection)
                 throws MongoException, DataAccessException {
               collection.remove(dbQuery);
@@ -156,7 +150,6 @@ public class MongoChangeSetPersister implements ChangeSetPersister<Object> {
             dbDoc.put("_id", dbId.get("_id"));
           }
           mongoTemplate.execute(collName, new CollectionCallback<Object>() {
-            @Override
             public Object doInCollection(DBCollection collection)
                 throws MongoException, DataAccessException {
               collection.save(dbDoc);
