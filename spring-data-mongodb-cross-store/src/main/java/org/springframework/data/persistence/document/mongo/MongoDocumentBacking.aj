@@ -82,10 +82,10 @@ public aspect MongoDocumentBacking {
     args(entity);
   
   // intercept EntityManager.remove calls
-  public pointcut entityManagerRemove(EntityManager em, Object entity) : 
-    call(* EntityManager.remove(Object)) &&
-    target(em) &&
-    args(entity);
+//  public pointcut entityManagerRemove(EntityManager em, Object entity) : 
+//    call(* EntityManager.remove(Object)) &&
+//    target(em) &&
+//    args(entity);
 
   // move changeSet from detached entity to the newly merged persistent object
   Object around(EntityManager em, Object entity) : entityManagerMerge(em, entity) {
@@ -97,26 +97,31 @@ public aspect MongoDocumentBacking {
   }
 
   // clear changeSet from removed entity
-  Object around(EntityManager em, Object entity) : entityManagerRemove(em, entity) {
-    if (entity instanceof DocumentBacked) {
-      ChangeSet nulledCs = new HashMapChangeSet();
-      DocumentBacked documentEntity = (DocumentBacked) entity;
-      @SuppressWarnings("unchecked")
-      ChangeSetPersister<Object> changeSetPersister = (ChangeSetPersister<Object>)documentEntity.itdChangeSetPersister;
-      try {
+//  Object around(EntityManager em, Object entity) : entityManagerRemove(em, entity) {
+//    if (entity instanceof DocumentBacked) {
+//      removeChangeSetValues((DocumentBacked)entity);
+//    }
+//    return proceed(em, entity);
+//  }
+
+  private static void removeChangeSetValues(DocumentBacked entity) {
+    LOGGER.debug("Removing all change-set values for " + entity);	
+	ChangeSet nulledCs = new HashMapChangeSet();
+	DocumentBacked documentEntity = (DocumentBacked) entity;
+	@SuppressWarnings("unchecked")
+	ChangeSetPersister<Object> changeSetPersister = (ChangeSetPersister<Object>)documentEntity.itdChangeSetPersister;
+	try {
         changeSetPersister.getPersistentState(
             documentEntity.getClass(),
             documentEntity.get_persistent_id(), 
             documentEntity.getChangeSet());
-      } 
-      catch (DataAccessException e) {} 
-      catch (NotFoundException e) {}
-      for (String key : ((DocumentBacked)entity).getChangeSet().getValues().keySet()) {
+	} 
+	catch (DataAccessException e) {} 
+	catch (NotFoundException e) {}
+	for (String key :entity.getChangeSet().getValues().keySet()) {
         nulledCs.set(key, null);
-      }
-      ((DocumentBacked)entity).setChangeSet(nulledCs);
-    }
-    return proceed(em, entity);
+	}
+	entity.setChangeSet(nulledCs);
   }
 
   before(DocumentBacked entity) : arbitraryUserConstructorOfChangeSetBackedObject(entity) {
@@ -204,6 +209,7 @@ public aspect MongoDocumentBacking {
       LOGGER.debug("JPA lifecycle event PostRemove: " + this.getClass().getName() + " :: " + this);
     }
     registerTransactionSynchronization(this);
+    removeChangeSetValues(this);
   }
   @javax.persistence.PostLoad public void DocumentBacked.itdPostLoad() {
     if (LOGGER.isDebugEnabled()) {
