@@ -23,6 +23,7 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.WriteResult;
 
+import org.bson.types.ObjectId;
 import org.springframework.data.document.mongodb.index.IndexDefinition;
 import org.springframework.data.document.mongodb.query.Query;
 import org.springframework.data.document.mongodb.query.Update;
@@ -691,12 +692,29 @@ public interface MongoOperations {
                           Update update);
 
   /**
+   * Remove the given object from the collection by Id
+   * @param object
+   */
+  void remove(Object object);
+  
+ 
+  
+  /**
    * Remove all documents from the default collection that match the provided query document criteria.
    *
    * @param queryDoc the query document that specifies the criteria used to remove a record
    */
   void remove(Query query);
-
+  
+  /**
+   * Remove all documents from the default collection that matchthe provided query document critera.  The
+   * Class parameter is use to help convert the Id of the object if it is present in the query.
+   * @param <T>
+   * @param query
+   * @param targetClass
+   */
+  <T> void remove(Query query, Class<T> targetClass);
+  
   /**
    * Remove all documents from the specified collection that match the provided query document criteria.
    *

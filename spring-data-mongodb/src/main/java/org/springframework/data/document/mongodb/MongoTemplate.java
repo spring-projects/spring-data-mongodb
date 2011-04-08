@@ -16,6 +16,9 @@
 
 package org.springframework.data.document.mongodb;
 
+import static org.springframework.data.document.mongodb.query.Criteria.whereId;
+import static org.springframework.data.document.mongodb.query.Query.query;
+
 import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
@@ -165,7 +168,14 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 		if (writeResultChecking != null) {
 			this.writeResultChecking = writeResultChecking;
 		}
-		setMongoConverter(mongoConverter == null ? new SimpleMongoConverter() : mongoConverter);
+		if (mongoConverter == null) {
+		  SimpleMongoConverter smc = new SimpleMongoConverter();
+		  smc.afterPropertiesSet();
+		  setMongoConverter(smc);
+		} else {
+		  setMongoConverter(mongoConverter); 
+		}
+		//setMongoConverter(mongoConverter == null ? new SimpleMongoConverter() : mongoConverter);
 	}
 
 	public void setApplicationEventPublisher(ApplicationEventPublisher applicationEventPublisher) {
@@ -808,33 +818,50 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 			* @see org.springframework.data.document.mongodb.MongoOperations#remove(com.mongodb.DBObject)
 			*/
 	public void remove(Query query) {
-		remove(getRequiredDefaultCollectionName(), query);
+		remove(query, null);
+	}
+	
+	public void remove(Object object) {
+	  Object idValue = this.getIdValue(object);
+	  remove(new Query(whereId().is(idValue)), object.getClass());
+	}
+	
+	public <T> void remove(Query query, Class<T> targetClass) {
+	   remove(getEntityCollection(targetClass), query, targetClass);
 	}
 
+	public <T> void remove(String collectionName, final Query query, Class<T> targetClass) { 
+	   if (query == null) {
+	      throw new InvalidDataAccessApiUsageException("Query passed in to remove can't be null");
+	    }
+	    final DBObject queryObject = query.getQueryObject();
+	    if (targetClass == null) {
+	      substituteMappedIdIfNecessary(queryObject);
+	    } else {
+	      substituteMappedIdIfNecessary(queryObject, targetClass, this.mongoConverter);
+	    }
+	    if (LOGGER.isDebugEnabled()) {
+	      LOGGER.debug("remove using query: " + queryObject);
+	    }
+	    execute(collectionName, new CollectionCallback<Void>() {
+	      public Void doInCollection(DBCollection collection) throws MongoException, DataAccessException {
+	        WriteResult wr = null;
+	        if (writeConcern == null) {
+	          wr = collection.remove(queryObject);
+	        } else {
+	          wr = collection.remove(queryObject, writeConcern);
+	        }
+	        handleAnyWriteResultErrors(wr, queryObject, "remove");
+	        return null;
+	      }
+	    });
+	}
+	
 	/* (non-Javadoc)
 			* @see org.springframework.data.document.mongodb.MongoOperations#remove(java.lang.String, com.mongodb.DBObject)
 			*/
 	public void remove(String collectionName, final Query query) {
-		if (query == null) {
-			throw new InvalidDataAccessApiUsageException("Query passed in to remove can't be null");
-		}
-		final DBObject queryObject = query.getQueryObject();
-		substituteMappedIdIfNecessary(queryObject);
-		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("remove using query: " + queryObject);
-		}
-		execute(collectionName, new CollectionCallback<Void>() {
-			public Void doInCollection(DBCollection collection) throws MongoException, DataAccessException {
-				WriteResult wr = null;
-				if (writeConcern == null) {
-					wr = collection.remove(queryObject);
-				} else {
-					wr = collection.remove(queryObject, writeConcern);
-				}
-				handleAnyWriteResultErrors(wr, queryObject, "remove");
-				return null;
-			}
-		});
+	  remove(collectionName, query, null);
 	}
 
 
@@ -909,9 +936,6 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 			readerToUse = this.mongoConverter;
 		}
 		substituteMappedIdIfNecessary(query, targetClass, readerToUse);
-		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("findOne using query: " + query + " fields: " + fields + " for class: " + targetClass);
-		}
 		return execute(new FindOneCallback(query, fields), new ReadDbObjectCallback<T>(readerToUse, targetClass),
 				collectionName);
 	}
@@ -1006,6 +1030,32 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 				collectionName);
 	}
 
+	protected Object getIdValue(Object object) {
+	  if (null != mappingContext) {
+	    PersistentEntity<?> entity = mappingContext.getPersistentEntity(object.getClass());
+	    if (null != entity) {
+        PersistentProperty idProp = entity.getIdProperty();
+        if (null != idProp) {
+          try {
+            return MappingBeanHelper.getProperty(object, idProp, Object.class, true);            
+          } catch (IllegalAccessException e) {
+            throw new MappingException(e.getMessage(), e);
+          } catch (InvocationTargetException e) {
+            throw new MappingException(e.getMessage(), e);
+          }
+        }
+      }	    
+	  }
+	  
+	  ConfigurablePropertyAccessor bw = PropertyAccessorFactory.forDirectFieldAccess(object);
+	  MongoPropertyDescriptor idDescriptor = new MongoPropertyDescriptors(object.getClass()).getIdDescriptor();
+
+	  if (idDescriptor == null) {
+	    return null;
+	  }
+	  return bw.getPropertyValue(idDescriptor.getName());
+  
+	}
 	/**
 	 * Populates the id property of the saved object, if it's not set already.
 	 *
@@ -1249,8 +1299,14 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 
 		public DBObject doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 			if (fields == null) {
+			   if (LOGGER.isDebugEnabled()) {
+			      LOGGER.debug("findOne using query: " + query + " in db.collection: " + collection.getFullName());
+			    }
 				return collection.findOne(query);
 			} else {
+			   if (LOGGER.isDebugEnabled()) {
+			      LOGGER.debug("findOne using query: " + query + " fields: " + fields + " in db.collection: " + collection.getFullName());
+			    }
 				return collection.findOne(query, fields);
 			}
 		}

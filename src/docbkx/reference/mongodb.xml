@@ -419,16 +419,54 @@ public class AppConfig {
 
     <para>You can save, update and delete the object as shown below</para>
 
-    <programlisting>public class PersonExample { 
+    <programlisting language="java">public class PersonExample { 
 
-  @Inject
+  private static final Log log = LogFactory.getLog(PersonExample.class);
   
-Person p = new Person();
-p.setFirstName("Sven");
-p.setAge(22);
+  @Autowired
+  private MongoOperations mongoOps;
+  
+  public void doWork() {
+   
+    Person p = new Person();
+    p.setFirstName("Sven");
+    p.setAge(22);
+    
+    // Save   
+    mongoOps.save(p);
+    log.debug("Saved: " + p);
+    
+    // Find
+    p = mongoOps.findOne(query(whereId().is(p.getId())), Person.class);    
+    log.debug("Found: " + p);
+    
+    // Update age to 24 for Sven
+    mongoOps.updateFirst(query(where("firstName").is("Sven")), update("age", 24));    
+    p = mongoOps.findOne(query(whereId().is(p.getId())), Person.class);    
+    log.debug("Updated: " + p);
+    
+    // Delete    
+    mongoOps.remove(p);
 
+    // Check that deletion worked
+    List&lt;Person&gt; people =  mongoOps.getCollection(Person.class);
+    log.debug("Number of people = : " + people.size());
 
-mongo</programlisting>
+}</programlisting>
+
+    <para>This would produce the following log output (including some debug
+    message from MongoTemplate itself)</para>
+
+    <programlisting>Saved: PersonWithIdPropertyOfTypeString [id=4d9e82ac94fa72c65a9e7d5f, firstName=Sven, age=22]
+findOne using query: { "_id" : { "$oid" : "4d9e82ac94fa72c65a9e7d5f"}} in db.collection: database.personexample
+Found: PersonWithIdPropertyOfTypeString [id=4d9e82ac94fa72c65a9e7d5f, firstName=Sven, age=22]
+findOne using query: { "_id" : { "$oid" : "4d9e82ac94fa72c65a9e7d5f"}} in db.collection: database.personexample
+Updated: PersonWithIdPropertyOfTypeString [id=4d9e82ac94fa72c65a9e7d5f, firstName=Sven, age=24]
+remove using query: { "_id" : { "$oid" : "4d9e82ac94fa72c65a9e7d5f"}}
+Number of people = : 0</programlisting>
+
+    <para>There was implicit conversion using SimpleMongoConverter between a
+    String and ObjectId as stored in the database.</para>
 
     <section>
       <title>Methods for saving documents</title>
@@ -444,14 +482,14 @@ mongo</programlisting>
         MongoTemplate</title>
 
         <programlisting language="java">import static org.springframework.data.document.mongodb.query.Criteria.where;
+import static org.springframework.data.document.mongodb.query.Criteria.query;
 
           ...
 
           Person p = new Person("Bob", 33);
           mongoTemplate.insert("MyCollection", p);
 
-          Person qp = mongoTemplate.findOne("MyCollection",
-          new Query(where("id").is(p.getId())), Person.class);
+          Person qp = mongoTemplate.findOne("MyCollection", query(where("id").is(p.getId())), Person.class);
         </programlisting>
       </example>
 
