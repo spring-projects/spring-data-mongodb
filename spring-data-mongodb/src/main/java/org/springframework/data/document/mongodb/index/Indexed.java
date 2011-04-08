@@ -22,6 +22,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
+ * Mark a field  to be indexed using MongoDB's indexing feature.
  * @author Jon Brisbin <jbrisbin@vmware.com>
  */
 @Target(ElementType.FIELD)

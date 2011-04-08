@@ -48,6 +48,11 @@ public class Person<T extends Address> {
 	private List<Account> accounts;
 	private T address;
 
+	
+	public Person(Integer ssn) {
+	  this.ssn = ssn;
+	}
+	
 	@PersistenceConstructor
 	public Person(Integer ssn, String firstName, String lastName, Integer age, T address) {
 		this.ssn = ssn;
@@ -59,10 +64,6 @@ public class Person<T extends Address> {
 
 	public String getId() {
 		return id;
-	}
-
-	public void setId(String id) {
-		this.id = id;
 	}
 
 	public Integer getSsn() {

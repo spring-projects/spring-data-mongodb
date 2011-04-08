@@ -17,8 +17,54 @@
   <section id="mongodb:mapping-configuration">
     <title>MongoDB Mapping Configuration</title>
 
+    <para>You can configure the MongoMappingConverter as well as Mongo and
+    MongoTemplate eithe using Java or XML based metadata.</para>
+
+    <para>Here is an example using Spring's Java based configuration </para>
+
+    <example>
+      <title>@Configuration class to configure MongoDB mapping support</title>
+
+      <programlisting language="xml">
+@Configuration
+public class GeoSpatialAppConfig extends AbstractMongoConfiguration {
+
+  @Bean
+  public Mongo mongo() throws Exception {
+    return new Mongo("localhost");
+  }
+  
+  @Bean
+  public MongoTemplate mongoTemplate() throws Exception {
+    return new MongoTemplate(mongo(), "geospatial", "newyork", mappingMongoConverter());
+  }
+ 
+  // specify which package to scan for @Document objects.
+  public String getMappingBasePackage() {
+    return "org.springframework.data.document.mongodb";
+  }
+
+  // optional
+  @Bean
+  public LoggingEventListener&lt;MongoMappingEvent&gt; mappingEventsListener() {
+    return new LoggingEventListener&lt;MongoMappingEvent&gt;();
+  }
+
+
+}</programlisting>
+    </example>
+
+    <para><classname>AbstractMongoConfiguration</classname> requires you to
+    implement methods that define a <classname>Mongo</classname> as well as a
+    <classname>MongoTemplate</classname> object to the container.
+    <classname>AbstractMongoConfiguration</classname> also has a method you
+    can override named '<methodname>getMappingBasePackage</methodname>' which
+    tells the configuration where to scan for classes annotated with the
+    <classname>@org.springframework.data.document.mongodb.mapping.Document</classname>
+    annotation.</para>
+
     <para>Spring's Mongo namespace enables you to easily enable mapping
-    functionality</para>
+    functionality in XML</para>
 
     <example>
       <title>XML schema to configure MongoDB mapping support</title>
@@ -102,6 +148,141 @@ public class Person {
       document, making searches faster.</para>
     </important>
 
+    <section>
+      <title>Mapping annotation overview</title>
+
+      <para>The MappingMongoConverter relies on metadata to drive the mapping
+      of objects to documents. An overview of the annotations is provided
+      below</para>
+
+      <itemizedlist>
+        <listitem>
+          <para><literal>@Id </literal>- applied at the field level to mark
+          the field used for identiy purpose.</para>
+        </listitem>
+
+        <listitem>
+          <para><literal>@Document</literal> - applied at the class level to
+          indicate this class is a candidate for mapping to the database. You
+          can specify the name of the collection where the database will be
+          stored.</para>
+        </listitem>
+
+        <listitem>
+          <para><literal>@DBRef</literal> - applied at the field to indicate
+          it is to be stored using a com.mongodb.DBRef.</para>
+        </listitem>
+
+        <listitem>
+          <para><literal>@Indexed</literal> - applied at the field level to
+          describe how to index the field.</para>
+        </listitem>
+
+        <listitem>
+          <para><literal>@CompoundIndex</literal> - applied at the type level
+          to declare Compound Indexes</para>
+        </listitem>
+
+        <listitem>
+          <para><literal>@GeoSpatialIndexed</literal> - applied at the field
+          level to describe how to geoindex the field.</para>
+        </listitem>
+
+        <listitem>
+          <para><literal>@Transient</literal> - by default all private fields
+          are mapped to the document, this annotation excludes the field where
+          it is applied from being stored in the database</para>
+        </listitem>
+
+        <listitem>
+          <para><literal>@PersistenceConstructor</literal> - marks a given
+          constructor - even a package protected one - to use when
+          instantiating the object from the database. Constructor arguments
+          are mapped by name to the key values in the retrieved
+          DBObject.</para>
+        </listitem>
+
+        <listitem>
+          <para><literal>@Value</literal> - this annotation is part of the
+          Spring Framework . Within the mapping framework it can be applied to
+          constructor arguments. This lets you use a Spring Expression
+          Language statement to transform a key's value retrieved in the
+          database before it is used to construct a domain object. </para>
+        </listitem>
+      </itemizedlist>
+
+      <para>The mapping metadata infrastructure is defined in a seperate
+      spring-data-commons project that is technology agnostic. Specific
+      subclasses are using in the Mongo support to support annotation based
+      metadata. Other strategies are also possible to put in place if there is
+      demand.</para>
+
+      <para>Here is an example of a more complex mapping.</para>
+
+      <programlisting>@Document
+@CompoundIndexes({
+		@CompoundIndex(name = "age_idx", def = "{'lastName': 1, 'age': -1}")
+})
+public class Person&lt;T extends Address&gt; {
+
+	@Id
+	private String id;
+	@Indexed(unique = true)
+	private Integer ssn;
+	private String firstName;
+	@Indexed
+	private String lastName;
+	private Integer age;
+	@Transient
+	private Integer accountTotal;
+	@DBRef
+	private List&lt;Account&gt; accounts;
+	private T address;
+
+	
+	public Person(Integer ssn) {
+	  this.ssn = ssn;
+	}
+	
+	@PersistenceConstructor
+	public Person(Integer ssn, String firstName, String lastName, Integer age, T address) {
+		this.ssn = ssn;
+		this.firstName = firstName;
+		this.lastName = lastName;
+		this.age = age;
+		this.address = address;
+	}
+
+	public String getId() {
+		return id;
+	}
+
+ // no setter for Id.  (getter is only exposed for some unit testing)
+
+	public Integer getSsn() {
+		return ssn;
+	}
+
+
+// other getters/setters ommitted
+
+}</programlisting>
+
+      <para> </para>
+    </section>
+
+    <section>
+      <title>Id fields</title>
+
+      <para>The @Id annotation is applied to fields. MongoDB lets you store
+      any type as the _id field in the database, including long and string. It
+      is of course common to use ObjectId for this purpose. If the value on
+      the @Id field is not null, it is stored into the database as-is. If it
+      is null, then the converter will assume you want to store an ObjectId in
+      the database. For this to work the field type should be either ObjectId,
+      String, or BigInteger.</para>
+    </section>
+
     <section id="mongodb:mapping-usage:indexes">
       <title>Compound Indexes</title>
 
@@ -184,50 +365,12 @@ public class Person {
     </section>
 
     <section id="mongodb:mapping-usage:events">
-      <title>Handling Mapping Framework Events</title>
+      <title>Mapping Framework Events</title>
 
-      <para>Built into the MongoDB mapping framework are several
-      <classname>org.springframework.context.ApplicationEvent</classname>
-      events that your application can respond to by registering special beans
-      in the <code>ApplicationContext</code>.</para>
-
-      <para>To intercept an object before it goes through the conversion
-      process (which turns your domain object into a
-      <classname>com.mongodb.DBObject</classname>), you'd register a subclass
-      of
-      <classname>org.springframework.data.document.mongodb.mapping.event.AbstractMappingEventListener</classname>
-      that overrides the <code>onBeforeConvert</code> method. When the event
-      is dispatched, your listener will be called and passed the domain object
-      before it goes into the converter.</para>
-
-      <example>
-        <programlisting language="java">
-public class BeforeConvertListener&lt;BeforeConvertEvent, Person&gt; extends AbstractMappingEventListener {
-  @Override
-  public void onBeforeConvert(Person p) {
-    ... does some auditing manipulation, set timestamps, whatever ...
-  }
-}
-        </programlisting>
-      </example>
-
-      <para>To intercept an object before it goes into the database, you'd
-      register a subclass of
-      <classname>org.springframework.data.document.mongodb.mapping.event.AbstractMappingEventListener</classname>
-      that overrides the <code>onBeforeSave</code> method. When the event is
-      dispatched, your listener will be called and passed the domain object
-      and the converted <classname>com.mongodb.DBObject</classname>.</para>
-
-      <example>
-        <programlisting language="java">
-public class BeforeSaveListener&lt;BeforeSaveEvent, Person&gt; extends AbstractMappingEventListener {
-  @Override
-  public void onBeforeSave(Person p, DBObject dbo) {
-    ... change values, delete them, whatever ...
-  }
-}
-        </programlisting>
-      </example>
+      <para>Events are fired throughout the lifecycle of the mapping process.
+      This is described in the <link
+      linkend="mongodb.mapping-usage.events">Lifecycle Events</link>
+      section.</para>
 
       <para>Simply declaring these beans in your Spring ApplicationContext
       will cause them to be invoked whenever the event is dispatched.</para>

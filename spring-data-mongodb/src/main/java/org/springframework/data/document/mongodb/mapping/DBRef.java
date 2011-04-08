@@ -24,6 +24,7 @@ import java.lang.annotation.Target;
 import org.springframework.data.annotation.Reference;
 
 /**
+ * An annotation that indicates the annotated field is to be stored using a com.mongodb.DBRef 
  * @author Jon Brisbin <jbrisbin@vmware.com>
  */
 @Retention(RetentionPolicy.RUNTIME)

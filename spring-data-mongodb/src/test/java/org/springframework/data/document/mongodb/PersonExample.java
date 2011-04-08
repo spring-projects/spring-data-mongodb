@@ -59,9 +59,10 @@ public class PersonExample {
     
   //  mongoOps.updateFirst(new Query(where("firstName").is("Sven")), update("age", 24));
     
-    mongoOps.updateFirst(query(where("firstName").is("Sven")), update("age", 24));    
+       
     p = mongoOps.findOne(query(whereId().is(p.getId())), PersonWithIdPropertyOfTypeString.class);    
     log.debug("Updated: " + p);
+    
     
     
     //mongoOps.remove( query(whereId().is(p.getId())), p.getClass());

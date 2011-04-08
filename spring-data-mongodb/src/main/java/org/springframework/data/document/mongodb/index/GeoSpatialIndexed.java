@@ -22,7 +22,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Mark a class property to be indexed using MongoDB's geospatial indexing feature.
+ * Mark a field to be indexed using MongoDB's geospatial indexing feature.
  *
  * @author Jon Brisbin <jbrisbin@vmware.com>
  */

@@ -24,6 +24,7 @@ import java.lang.annotation.Target;
 import org.springframework.data.annotation.Persistent;
 
 /**
+ * Identifies a domain object to be persisted to MongoDB.
  * @author Jon Brisbin <jbrisbin@vmware.com>
  */
 @Persistent
