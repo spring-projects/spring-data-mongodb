@@ -17,7 +17,6 @@
 package org.springframework.data.document.mongodb;
 
 import static org.springframework.data.document.mongodb.query.Criteria.whereId;
-import static org.springframework.data.document.mongodb.query.Query.query;
 
 import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;
@@ -614,7 +613,8 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 			for (Object o : listToSave) {
 				PersistentEntity<?> entity = mappingContext.getPersistentEntity(o.getClass());
 				if (null != entity && entity instanceof MongoPersistentEntity) {
-					String coll = ((MongoPersistentEntity) entity).getCollection();
+					@SuppressWarnings("unchecked")
+					String coll = ((MongoPersistentEntity<T>) entity).getCollection();
 					List<Object> objList = objs.get(coll);
 					if (null == objList) {
 						objList = new ArrayList<Object>();
@@ -715,7 +715,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 			}
 		}
 	    if (LOGGER.isDebugEnabled()) {
-		    LOGGER.debug("insert DBObject: " + dbDoc);
+		    LOGGER.debug("insert DBObject containing fields: " + dbDoc.keySet());
 		}
 		return execute(collectionName, new CollectionCallback<Object>() {
 			public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
@@ -745,6 +745,9 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 					}
 				}
 			}
+		}
+	    if (LOGGER.isDebugEnabled()) {
+		    LOGGER.debug("insert list of DBObjects containing " + dbDocList.size() + " items");
 		}
 		execute(collectionName, new CollectionCallback<Void>() {
 			public Void doInCollection(DBCollection collection) throws MongoException, DataAccessException {
@@ -786,7 +789,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 			}
 		}
 	    if (LOGGER.isDebugEnabled()) {
-		    LOGGER.debug("save DBObject: " + dbDoc);
+		    LOGGER.debug("save DBObject containing fields: " + dbDoc.keySet());
 		}
 		return execute(collectionName, new CollectionCallback<Object>() {
 			public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
@@ -1285,7 +1288,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 				entity = mappingContext.addPersistentEntity(clazz);
 			}
 			if (null != entity && entity instanceof MongoPersistentEntity) {
-				return ((MongoPersistentEntity) entity).getCollection();
+				return ((MongoPersistentEntity<T>) entity).getCollection();
 			}
 		}
 		// Otherwise, return the default for this template.
