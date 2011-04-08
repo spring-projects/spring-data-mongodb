@@ -27,8 +27,10 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
@@ -89,28 +91,28 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
 
 	/**
 	 * Creates a new {@link MappingMongoConverter} with the given {@link MappingContext}.
-	 * 
+	 *
 	 * @param mappingContext
 	 */
 	public MappingMongoConverter(MappingContext mappingContext) {
 		this.mappingContext = mappingContext;
 		this.conversionService.removeConvertible(Object.class, String.class);
 	}
-	
-  /**
-   * Add custom {@link Converter} or {@link ConverterFactory} instances to be used that will take presidence over
-   * metadata driven conversion between of objects to/from DBObject
-   * 
-   * @param converters
-   */
-  public void setConverters(List<Converter<?, ?>> converters) {
-    if (null != converters) {
-      for (Converter<?, ?> c : converters) {
-        registerConverter(c);
-        conversionService.addConverter(c);
-      }
-    }
-  }
+
+	/**
+	 * Add custom {@link Converter} or {@link ConverterFactory} instances to be used that will take presidence over
+	 * metadata driven conversion between of objects to/from DBObject
+	 *
+	 * @param converters
+	 */
+	public void setConverters(List<Converter<?, ?>> converters) {
+		if (null != converters) {
+			for (Converter<?, ?> c : converters) {
+				registerConverter(c);
+				conversionService.addConverter(c);
+			}
+		}
+	}
 
 	/**
 	 * Inspects the given {@link Converter} for the types it can convert and registers the pair for custom type conversion
@@ -379,17 +381,17 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
 	private void initializeConverters() {
 
 		if (!conversionService.canConvert(ObjectId.class, String.class)) {
-      conversionService.addConverter(ObjectIdToStringConverter.INSTANCE);
-    }
-    if (!conversionService.canConvert(String.class, ObjectId.class)) {
-      conversionService.addConverter(StringToObjectIdConverter.INSTANCE);
-    }
-    if (!conversionService.canConvert(ObjectId.class, BigInteger.class)) {
-      conversionService.addConverter(ObjectIdToBigIntegerConverter.INSTANCE);
-    }
-    if (!conversionService.canConvert(BigInteger.class, ObjectId.class)) {
-      conversionService.addConverter(BigIntegerToObjectIdConverter.INSTANCE);
-    }
+			conversionService.addConverter(ObjectIdToStringConverter.INSTANCE);
+		}
+		if (!conversionService.canConvert(String.class, ObjectId.class)) {
+			conversionService.addConverter(StringToObjectIdConverter.INSTANCE);
+		}
+		if (!conversionService.canConvert(ObjectId.class, BigInteger.class)) {
+			conversionService.addConverter(ObjectIdToBigIntegerConverter.INSTANCE);
+		}
+		if (!conversionService.canConvert(BigInteger.class, ObjectId.class)) {
+			conversionService.addConverter(BigIntegerToObjectIdConverter.INSTANCE);
+		}
 
 		MappingBeanHelper.setConversionService(conversionService);
 	}
@@ -405,7 +407,10 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
 			BasicDBList dbList = new BasicDBList();
 			Collection<?> coll;
 			if (type.isArray()) {
-				coll = Arrays.asList((Object[]) obj);
+				coll = new ArrayList<Object>();
+				for (Object o : (Object[]) obj) {
+					((List) coll).add(o);
+				}
 			} else {
 				coll = (Collection<?>) obj;
 			}
@@ -562,7 +567,11 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
 							items[i] = dbObjItem;
 						}
 					}
-					return Arrays.asList(items);
+					List<Object> itemsToReturn = new LinkedList<Object>();
+					for (Object obj : items) {
+						itemsToReturn.add(obj);
+					}
+					return itemsToReturn;
 				}
 
 				Class<?> toType = findTypeToBeUsed((DBObject) dbObj);
@@ -602,7 +611,7 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
 	}
 
 	public void afterPropertiesSet() {
-	   initializeConverters();
+		initializeConverters();
 	}
 
 	protected class PersistentPropertyWrapper {

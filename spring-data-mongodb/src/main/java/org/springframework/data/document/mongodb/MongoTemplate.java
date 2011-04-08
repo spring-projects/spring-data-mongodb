@@ -23,6 +23,7 @@ import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -704,6 +705,18 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 			return null;
 		}
 
+		//TODO: Need to move this to more central place
+		if (dbDoc.containsField("_id")) {
+			if (dbDoc.get("_id") instanceof String) {
+				ObjectId oid = convertIdValue(this.mongoConverter, dbDoc.get("_id"));
+				if (oid != null) {
+					dbDoc.put("_id", oid);
+				}
+			}
+		}
+	    if (LOGGER.isDebugEnabled()) {
+		    LOGGER.debug("insert DBObject: " + dbDoc);
+		}
 		return execute(collectionName, new CollectionCallback<Object>() {
 			public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 				if (writeConcern == null) {
@@ -722,6 +735,17 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 			return Collections.emptyList();
 		}
 
+		//TODO: Need to move this to more central place
+		for (DBObject dbDoc : dbDocList) {
+			if (dbDoc.containsField("_id")) {
+				if (dbDoc.get("_id") instanceof String) {
+					ObjectId oid = convertIdValue(this.mongoConverter, dbDoc.get("_id"));
+					if (oid != null) {
+						dbDoc.put("_id", oid);
+					}
+				}
+			}
+		}
 		execute(collectionName, new CollectionCallback<Void>() {
 			public Void doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 				if (writeConcern == null) {
@@ -752,6 +776,18 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 			return null;
 		}
 
+		//TODO: Need to move this to more central place
+		if (dbDoc.containsField("_id")) {
+			if (dbDoc.get("_id") instanceof String) {
+				ObjectId oid = convertIdValue(this.mongoConverter, dbDoc.get("_id"));
+				if (oid != null) {
+					dbDoc.put("_id", oid);
+				}
+			}
+		}
+	    if (LOGGER.isDebugEnabled()) {
+		    LOGGER.debug("save DBObject: " + dbDoc);
+		}
 		return execute(collectionName, new CollectionCallback<Object>() {
 			public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 				if (writeConcern == null) {
@@ -1134,30 +1170,69 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 			// no ids in this query
 			return;
 		}
-		final MongoPropertyDescriptor descriptor;
+		MongoPropertyDescriptor descriptor;
 		try {
-			descriptor = new MongoPropertyDescriptor(new PropertyDescriptor(idKey, targetClass), targetClass);
+			MongoPropertyDescriptor mpd = new MongoPropertyDescriptor(new PropertyDescriptor(idKey, targetClass), targetClass);
+			descriptor = mpd;
 		} catch (IntrospectionException e) {
-			// no property descriptor for this key
-			return;
+			// no property descriptor for this key - try the other
+			try {
+				String theOtherIdKey = "id".equals(idKey) ? "_id" : "id";
+				MongoPropertyDescriptor mpd2 = new MongoPropertyDescriptor(new PropertyDescriptor(theOtherIdKey, targetClass), targetClass);
+				descriptor = mpd2;
+			} catch (IntrospectionException e2) {
+				// no property descriptor for this key either - bail
+				return;
+			}
 		}
 		if (descriptor.isIdProperty() && descriptor.isOfIdType()) {
 			Object value = query.get(idKey);
-			ObjectId newValue = null;
-			try {
-				if (value instanceof String && ObjectId.isValid((String) value)) {
-					newValue = converter.convertObjectId(value);
+			if (value instanceof DBObject) {
+				DBObject dbo = (DBObject) value;
+				if (dbo.containsField("$in")) {
+					List<Object> ids = new ArrayList<Object>();
+					int count = 0;
+					for (Object o : (Object[])dbo.get("$in")) {
+						count++;
+						ObjectId newValue = convertIdValue(converter, o);
+						if (newValue != null) {
+							ids.add(newValue);
+						}
+					}
+					if (ids.size() > 0 && ids.size() != count) {
+						throw new InvalidDataAccessApiUsageException("Inconsistent set of id values provided " + 
+								Arrays.asList((Object[])dbo.get("$in")));
+					}
+					if (ids.size() > 0) {
+						dbo.removeField("$in");
+						dbo.put("$in", ids.toArray());
+					}
 				}
-			} catch (ConversionFailedException iae) {
-				LOGGER.warn("Unable to convert the String " + value + " to an ObjectId");
-			}
-			query.removeField(idKey);
-			if (newValue != null) {
-				query.put(MongoPropertyDescriptor.ID_KEY, newValue);
-			} else {
+				query.removeField(idKey);
 				query.put(MongoPropertyDescriptor.ID_KEY, value);
 			}
+			else {
+				ObjectId newValue = convertIdValue(converter, value);
+				query.removeField(idKey);
+				if (newValue != null) {
+					query.put(MongoPropertyDescriptor.ID_KEY, newValue);
+				} else {
+					query.put(MongoPropertyDescriptor.ID_KEY, value);
+				}
+			}
 		}
+	}
+
+	private ObjectId convertIdValue(MongoConverter converter, Object value) {
+		ObjectId newValue = null;
+		try {
+			if (value instanceof String && ObjectId.isValid((String) value)) {
+				newValue = converter.convertObjectId(value);
+			}
+		} catch (ConversionFailedException iae) {
+			LOGGER.warn("Unable to convert the String " + value + " to an ObjectId");
+		}
+		return newValue;
 	}
 
 	/**

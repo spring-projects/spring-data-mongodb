@@ -14,30 +14,31 @@
  * limitations under the License.
  */
 
-package org.springframework.data.document.mongodb.index;
+package org.springframework.data.document.mongodb.mapping;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.document.mongodb.index.Indexed;
 
 /**
- * Mark a field  to be indexed using MongoDB's indexing feature.
  * @author Jon Brisbin <jbrisbin@vmware.com>
  */
-@Target(ElementType.FIELD)
-@Retention(RetentionPolicy.RUNTIME)
-public @interface Indexed {
+@Document(collection = "foobar")
+public class CustomCollectionWithIndex {
 
-  boolean unique() default false;
+	@Id
+	private String id;
+	@Indexed
+	private String name;
 
-  IndexDirection direction() default IndexDirection.ASCENDING;
+	public CustomCollectionWithIndex(String name) {
+		this.name = name;
+	}
 
-  boolean sparse() default false;
+	public String getName() {
+		return name;
+	}
 
-  boolean dropDups() default false;
-
-  String name() default "";
-
-  String collection() default "";
+	public void setName(String name) {
+		this.name = name;
+	}
 }

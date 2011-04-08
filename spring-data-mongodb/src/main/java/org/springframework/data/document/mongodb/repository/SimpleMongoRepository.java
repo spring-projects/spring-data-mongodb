@@ -137,7 +137,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements Paging
    */
   public void delete(T entity) {
 
-    template.remove(entityInformation.getCollectionName(), getIdQuery(entityInformation.getId(entity)));
+    template.remove(entityInformation.getCollectionName(), getIdQuery(entityInformation.getId(entity)), entity.getClass());
   }
 
   /*

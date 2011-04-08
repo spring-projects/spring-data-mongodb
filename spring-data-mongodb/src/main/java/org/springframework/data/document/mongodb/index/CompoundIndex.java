@@ -29,18 +29,18 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface CompoundIndex {
 
-  String def();
+	String def();
 
-  IndexDirection direction() default IndexDirection.ASCENDING;
+	IndexDirection direction() default IndexDirection.ASCENDING;
 
-  boolean unique() default false;
+	boolean unique() default false;
 
-  boolean sparse() default false;
+	boolean sparse() default false;
 
-  boolean dropDups() default true;
+	boolean dropDups() default false;
 
-  String name() default "";
+	String name() default "";
 
-  String collection() default "";
+	String collection() default "";
 
 }
