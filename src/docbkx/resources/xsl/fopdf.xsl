@@ -56,9 +56,9 @@
                                     <xsl:value-of select="firstname"/>
                                     <xsl:text> </xsl:text>
                                     <xsl:value-of select="surname"/>
-                                    <xsl:text> (</xsl:text>
+                                    <!-- <xsl:text> (</xsl:text>
                                     <xsl:value-of select="affiliation"/>
-                                    <xsl:text>)</xsl:text>
+                                    <xsl:text>)</xsl:text> -->
                                 </xsl:for-each>
                             </fo:block>
                             <fo:block font-family="Helvetica" font-size="12pt" padding="10mm">
