@@ -252,7 +252,7 @@ public class AppConfig {
   /*
    * Use the standard Mongo driver API to create a com.mongodb.Mongo instance.
    */
-   public @Bean Mongo mongo() throws UnknownHostException, MongoException {
+   public @Bean Mongo mongo() throws Exception {
        return new Mongo("localhost");
    }
 }      </programlisting>
@@ -297,6 +297,11 @@ public class AppConfig {
      }
 }
 </programlisting>
+
+        <para>To access the com.mongodb.Mongo object created by the
+        <classname>MongoFactoryBean</classname> in other @Configuration or
+        your own classes, use a "<literal>private @Autowired Mongo
+        mongo;</literal>" field.</para>
       </example>
     </section>
 
@@ -363,17 +368,34 @@ public class AppConfig {
         </programlisting>
       </example>
 
-      <para>A configuration using replica sets is shown below: <example>
-          <title>XML schema to configure replica sets in MongoDB</title>
+      <para>A configuration using replica sets within the XML schema is not
+      yet available. If you would like to configure ReplicaSets use Spring's
+      Java based bean metadata shown below: <example>
+          <title>Configuring a com.mongodb.Mongo object with Replica Sets
+          using Java based bean metadata</title>
 
-          <programlisting language="xml">&lt;beans&gt;
+          <programlisting language="java">@Configuration
+public class AppConfig {
 
-    &lt;mongo:mongo&gt;
-      &lt;! replica set TBD -- should be available for release 1.0.0.RC1 --&gt;
-    &lt;mongo:mongo&gt;
-
-&lt;/beans&gt;
-          </programlisting>
+  /*
+   * Use the standard Mongo driver API to create a com.mongodb.Mongo instance that supports replica sets
+   */
+  @Bean
+  public Mongo mongo() throws Exception {
+    
+    List&lt;ServerAddress&gt; serverAddresses = new ArrayList&lt;ServerAddress&gt;();    
+    serverAddresses.add( new ServerAddress( "127.0.0.1", 27017 ) ); 
+    serverAddresses.add( new ServerAddress( "127.0.0.1", 27018 ) );
+    
+    MongoOptions options = new MongoOptions();
+    options.autoConnectRetry = true; 
+    
+    Mongo mongo  = new Mongo( serverAddresses, options );
+    mongo.slaveOk();
+    
+    return mongo;
+  }
+}      </programlisting>
         </example></para>
     </section>
   </section>
@@ -567,9 +589,9 @@ public class AppConfig {
   <section>
     <title>Saving, Updating, and Removing Documents</title>
 
-    <para>MongoTemplate provides a simple way for you to save, update, and
-    delete your domain objects and map those objects to documents stored in
-    MongoDB.</para>
+    <para><classname>MongoTemplate</classname> provides a simple way for you
+    to save, update, and delete your domain objects and map those objects to
+    documents stored in MongoDB.</para>
 
     <para>Given a simple class such as Person</para>
 
@@ -583,7 +605,12 @@ public class AppConfig {
 
 }</programlisting>
 
-    <para>You can save, update and delete the object as shown below</para>
+    <para>You can save, update and delete the object as shown below.</para>
+
+    <note>
+      <para><interfacename>MongoOperations</interfacename> is the interface
+      that <classname>MongoTemplate</classname> implements.</para>
+    </note>
 
     <programlisting language="java">public class PersonExample { 
 
@@ -621,7 +648,7 @@ public class AppConfig {
 }</programlisting>
 
     <para>This would produce the following log output (including some debug
-    message from MongoTemplate itself)</para>
+    message from <classname>MongoTemplate</classname> itself)</para>
 
     <programlisting>Saved: PersonWithIdPropertyOfTypeString [id=4d9e82ac94fa72c65a9e7d5f, firstName=Sven, age=22]
 findOne using query: { "_id" : { "$oid" : "4d9e82ac94fa72c65a9e7d5f"}} in db.collection: database.personexample
@@ -631,7 +658,7 @@ Updated: PersonWithIdPropertyOfTypeString [id=4d9e82ac94fa72c65a9e7d5f, firstNam
 remove using query: { "_id" : { "$oid" : "4d9e82ac94fa72c65a9e7d5f"}}
 Number of people = : 0</programlisting>
 
-    <para>There was implicit conversion using SimpleMongoConverter between a
+    <para>There was implicit conversion using the MongoConverter between a
     String and ObjectId as stored in the database and recognizing a convention
     of the property "Id" name.</para>
 
@@ -752,6 +779,34 @@ import static org.springframework.data.document.mongodb.query.Criteria.query;
             writer.</para>
           </listitem>
         </itemizedlist></para>
+
+      <para>Unless and explicit MongoWriter is passed into the save or insert
+      method, the the template's MongoConverter will be used. </para>
+
+      <section>
+        <title>Saving using MongoWriter</title>
+
+        <para>The MongoWriter interface allows you to have lower level control
+        over the mapping of an object into a DBObject. The MongoWriter
+        interface is </para>
+
+        <programlisting>/**
+ * A MongoWriter is responsible for converting an object of type T to the native MongoDB representation DBObject.
+ *
+ * @param &lt;T&gt; the type of the object to convert to a DBObject
+ */
+public interface MongoWriter&lt;T&gt; {
+
+  /**
+   * Write the given object of type T to the native MongoDB object representation DBObject.
+   *
+   * @param t   The object to convert to a DBObject
+   * @param dbo The DBObject to use for writing.
+   */
+  void write(T t, DBObject dbo);
+
+}</programlisting>
+      </section>
 
       <section>
         <title>Inserting Lists of objects in batch</title>
@@ -1391,7 +1446,39 @@ import static org.springframework.data.document.mongodb.query.Query.query;
           </listitem>
         </itemizedlist></para>
 
-      <para></para>
+      <para>The MongoReader can be used </para>
+
+      <section>
+        <title>Reading using MongoWriter</title>
+
+        <para>The MongoReader interface allows you to have lower level control
+        over the mapping of an DBObject into a Java object. This is similar to
+        the role of RowMapper in JdbcTemplate. The MongoReader interface
+        is</para>
+
+        <programlisting>/**
+ * A MongoWriter is responsible for converting a native MongoDB DBObject to an object of type T.
+ *
+ * @param &lt;T&gt; the type of the object to convert from a DBObject
+ */
+public interface MongoReader&lt;T&gt; {
+
+  /**
+   * Ready from the native MongoDB DBObject representation to an instance of the class T. The given type has to be the
+   * starting point for marshalling the {@link DBObject} into it. So in case there's no real valid data inside
+   * {@link DBObject} for the given type, just return an empty instance of the given type.
+   *
+   * @param clazz the type of the return value
+   * @param dbo   theDBObject
+   * @return the converted object
+   */
+  &lt;S extends T&gt; S read(Class&lt;S&gt; clazz, DBObject dbo);
+}</programlisting>
+
+        <para></para>
+
+        <para></para>
+      </section>
     </section>
 
     <section id="mongo.geospatial" lang="">

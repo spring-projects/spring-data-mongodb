@@ -74,9 +74,18 @@ public abstract class AbstractMongoConfiguration {
   public MappingMongoConverter mappingMongoConverter() throws Exception {
     MappingMongoConverter converter = new MappingMongoConverter(mongoMappingContext());
     converter.setMongo(mongo());
+    afterMappingMongoConverterCreation(converter);
     return converter;
   }
   
+  /**
+   * Hook that allows post-processing after the MappingMongoConverter has been
+   * successfully created. 
+   * @param converter
+   */
+  protected void afterMappingMongoConverterCreation(MappingMongoConverter converter) {
+  }
+
   @Bean
   public MappingContextAwareBeanPostProcessor mappingContextAwareBeanPostProcessor() {
     MappingContextAwareBeanPostProcessor bpp = new MappingContextAwareBeanPostProcessor();

@@ -20,7 +20,7 @@
     <para>You can configure the MongoMappingConverter as well as Mongo and
     MongoTemplate eithe using Java or XML based metadata.</para>
 
-    <para>Here is an example using Spring's Java based configuration </para>
+    <para>Here is an example using Spring's Java based configuration</para>
 
     <example>
       <title>@Configuration class to configure MongoDB mapping support</title>
@@ -207,7 +207,7 @@ public class Person {
           Spring Framework . Within the mapping framework it can be applied to
           constructor arguments. This lets you use a Spring Expression
           Language statement to transform a key's value retrieved in the
-          database before it is used to construct a domain object. </para>
+          database before it is used to construct a domain object.</para>
         </listitem>
       </itemizedlist>
 
@@ -268,7 +268,7 @@ public class Person&lt;T extends Address&gt; {
 
 }</programlisting>
 
-      <para> </para>
+      <para></para>
     </section>
 
     <section>
@@ -374,6 +374,37 @@ public class Person {
 
       <para>Simply declaring these beans in your Spring ApplicationContext
       will cause them to be invoked whenever the event is dispatched.</para>
+    </section>
+
+    <section>
+      <title>Overriding Mapping with explicit Converters</title>
+
+      <para>When storing and querying your objects it is convenient to have a
+      <interfacename>MongoConverter</interfacename> instance handle the
+      mapping of all Java types to DBObjects. However, sometimes you may want
+      the <interfacename>MongoConverter</interfacename>'s do most of the work
+      but allow you to selectivly handle the conversion for a particular type.
+      To do this, register one or more one or more
+      <classname>org.springframework.core.convert.converter.Converter</classname>
+      instances with the MongoConverter.</para>
+
+      <note>
+        <para>Spring 3.0 introduced a core.convert package that provides a
+        general type conversion system. This is described in detail in the
+        Spring reference documentation section entitled <ulink
+        url="http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/html/validation.html#core-convert">Spring
+        3 Type Conversion</ulink>.</para>
+      </note>
+
+      <para>The <methodname>setConverters</methodname> method on
+      <classname>SimpleMongoConverter</classname> and
+      <classname>MappingMongoConverter</classname> should be used for this
+      purpose. The method
+      <methodname>afterMappingMongoConverterCreation</methodname> in
+      <classname>AbstractMongoConfiguration</classname> can be overriden to
+      configure a MappingMongoConverter.</para>
+
+      <para></para>
     </section>
   </section>
 </chapter>
