@@ -77,7 +77,9 @@
   incrementing counters or ad-hoc CRUD operations. MongoTemplate also provides
   callback methods so that it is easy for you to get a hold of the low level
   API artifacts such as <literal>org.mongo.DB</literal> to communicate
-  directly with MongoDB.</para>
+  directly with MongoDB. The goal with naming conventions on various API
+  artifacts is to copy those in the base MongoDB Java driver so you can easily
+  map your existing knowledge onto the Spring APIs.</para>
 
   <section id="mongodb-requirements">
     <title>Getting Started</title>
@@ -218,6 +220,15 @@ MongoTemplate] - &lt;findOne using query: { "name" : "Joe"} in db.collection: da
 LoggingEventListener] - &lt;onAfterLoad: { "_id" : "1234" , "name" : "Joe"}&gt;
 LoggingEventListener] - &lt;onAfterConvert: { "_id" : "1234" , "name" : "Joe"}, Person [id=1234, name=Joe]&gt;
 MongoApp] - &lt;Person [id=1234, name=Joe]&gt;</programlisting>
+  </section>
+
+  <section>
+    <title>Examples Repository</title>
+
+    <para>There is an <ulink
+    url="https://github.com/SpringSource/spring-data-document-examples">github
+    repository with several examples</ulink> that you can download and play
+    around with to get a feel for how the library works. </para>
   </section>
 
   <section id="mongodb-connectors">
@@ -460,13 +471,14 @@ public class AppConfig {
     linkend="mongo.exception">exception translation</link> for more
     information.</para>
 
-    <para>While there are many convenience methods on MongoTemplate to help
-    you easily perform common tasks if you should need to access the Mongo
-    driver API directly to access functionality not explicitly exposed by the
-    MongoTemplate you can use one of several Execute callback methods. These
-    will give you a reference to a Mongo Collection or DB object. Please see
-    the section <ulink url="mongo.executioncallback">Execution
-    Callbacks</ulink> for more information.</para>
+    <para>While there are many convenience methods on
+    <classname>MongoTemplate</classname> to help you easily perform common
+    tasks if you should need to access the Mongo driver API directly to access
+    functionality not explicitly exposed by the MongoTemplate you can use one
+    of several Execute callback methods. These will give you a reference to a
+    Mongo Collection or DB object. Please see the section <ulink
+    url="mongo.executioncallback">Execution Callbacks</ulink> for more
+    information.</para>
 
     <para>Now let's look at a examples of how to work with the
     <classname>MongoTemplate</classname> in the context of the Spring

@@ -38,13 +38,16 @@
   <section id="get-started:up-to-date">
     <title>Following Development</title>
 
-    <para>For information on the Spring Data source code repository, nightly
-    builds and snapshot artifacts please see the Spring Data home<ulink
-    url="http://www.springsource.org/spring-data">page</ulink>.</para>
+    <para>For information on the Spring Data Mongo source code repository,
+    nightly builds and snapshot artifacts please see the <ulink
+    url="http://www.springsource.org/spring-data/mongodb">Spring Data Mongo
+    homepage</ulink>.</para>
 
     <para>You can help make Spring Data best serve the needs of the Spring
     community by interacting with developers through the Spring Community
-    <ulink url="http://forum.springsource.org">forums</ulink>.</para>
+    <ulink url="http://forum.springsource.org">forums</ulink>. To follow
+    developer activity look for the mailing list information on the Spring
+    Data Mongo homepage.</para>
 
     <para>If you encounter a bug or want to suggest an improvement, please
     create a ticket on the Spring Data issue <ulink
