@@ -64,7 +64,6 @@ public class PersonExample {
     log.debug("Updated: " + p);
     
     
-    
     //mongoOps.remove( query(whereId().is(p.getId())), p.getClass());
     
     mongoOps.remove(p);

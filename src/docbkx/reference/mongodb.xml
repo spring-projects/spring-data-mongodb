@@ -88,6 +88,12 @@
     to create a Spring based project in <ulink
     url="http://www.springsource.com/developer/sts">STS</ulink>.</para>
 
+    <para>First you need to set up a running Mongodb server. Refer to the
+    <ulink url="http://www.mongodb.org/display/DOCS/Quickstart">Mongodb Quick
+    Start guide</ulink> for an explanation on how to startup a Mongo instance.
+    Once installed starting Mongo is typically a matter of executing the
+    following command: <literal>MONGO_HOME/bin/mongod</literal></para>
+
     <para>To create a Spring project in STS go to File -&gt; New -&gt; Spring
     Template Project -&gt; Simple Spring Utility Project --&gt; press Yes when
     prompted. Then enter a project and a package name such as
@@ -109,7 +115,7 @@
 
     <para>The cglib dependency is there as we will use Spring's Java
     configuration style. Also change the version of Spring in the pom.xml to
-    be </para>
+    be</para>
 
     <programlisting lang="xml">&lt;spring.framework.version&gt;3.0.5.RELEASE&lt;/spring.framework.version&gt;</programlisting>
 
@@ -1165,7 +1171,7 @@ import static org.springframework.data.document.mongodb.query.Query.query;
           role="bold">withinCenterSphere </emphasis> <literal>(Circle circle)
           </literal>Creates a geospatial criterion using <literal>$within
           $center</literal> operators. This is only available for Mongo 1.7
-          and higher. </para>
+          and higher.</para>
         </listitem>
 
         <listitem>
@@ -1185,14 +1191,12 @@ import static org.springframework.data.document.mongodb.query.Query.query;
           <para><literal>Criteria</literal> <emphasis role="bold">nearSphere
           </emphasis> <literal>(Point point) </literal>Creates a geospatial
           criterion using <literal>$nearSphere$center</literal> operations.
-          This is only available for Mongo 1.7 and higher. </para>
+          This is only available for Mongo 1.7 and higher.</para>
         </listitem>
       </itemizedlist>
 
-      <para> The <classname>Query</classname> class has some additional
-      methods used to provide options for the query.</para>
-
-      
+      <para>The <classname>Query</classname> class has some additional methods
+      used to provide options for the query.</para>
 
       <section>
         <title>Methods for the Query class</title>

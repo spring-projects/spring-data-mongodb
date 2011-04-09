@@ -39,7 +39,22 @@ The Mongo driver options
           </xsd:annotation>
         </xsd:element>
       </xsd:sequence>
-
+      <!-- 
+      <xsd:sequence minOccurs="0" maxOccurs="1">
+        <xsd:element name="replica-set" type="replicaSetType">
+          <xsd:annotation>
+            <xsd:documentation><![CDATA[
+The Mongo Replica set database addresses
+							]]></xsd:documentation>
+            <xsd:appinfo>
+              <tool:annotation>
+                <tool:exports type="com.mongodb.MongoOptions"/>
+              </tool:annotation>
+            </xsd:appinfo>
+          </xsd:annotation>
+        </xsd:element>
+      </xsd:sequence>
+      -->
 
       <xsd:attribute name="id" type="xsd:ID" use="optional">
         <xsd:annotation>
@@ -192,7 +207,8 @@ The name of the Mongo object that determines what server to monitor. (by default
     </xsd:annotation>
     <xsd:union memberTypes="xsd:string"/>
   </xsd:simpleType>
-
+ 
+  
   <xsd:complexType name="optionsType">
     <xsd:attribute name="connectionsPerHost" type="xsd:positiveInteger">
       <xsd:annotation>
