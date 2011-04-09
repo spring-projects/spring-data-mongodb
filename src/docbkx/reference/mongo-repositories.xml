@@ -111,7 +111,7 @@
     <example>
       <title>Paging access to Person entities</title>
 
-      <programlisting>@RunWith(SpringJUnit4ClassRunner.class)
+      <programlisting language="java">@RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration
 public class PersonRepositoryTests {
 
@@ -145,7 +145,7 @@ public class PersonRepositoryTests {
     <example>
       <title>PersonRepository with query methods</title>
 
-      <programlisting>public interface PersonRepository extends MongoRepository&lt;Person, String&gt; {
+      <programlisting language="java">public interface PersonRepository extends MongoRepository&lt;Person, String&gt; {
 
     List&lt;Person&gt; findByLastname(String lastname);
 
@@ -266,7 +266,7 @@ public class PersonRepositoryTests {
       </table></para>
 
     <section>
-      <title>Mongo JSON based query methods and field restriction </title>
+      <title>Mongo JSON based query methods and field restriction</title>
 
       <para>By adding the annotation
       <classname>org.springframework.data.document.mongodb.repository.Query</classname>
@@ -274,7 +274,7 @@ public class PersonRepositoryTests {
       use instead of having the query derived from the method name. For
       example</para>
 
-      <programlisting>public interface PersonRepository extends MongoRepository&lt;Person, String&gt;
+      <programlisting language="java">public interface PersonRepository extends MongoRepository&lt;Person, String&gt;
 
   @Query("{ 'firstname' : ?0 }")
   List&lt;Person&gt; findByThePersonsFirstname(String firstname);
@@ -285,10 +285,9 @@ public class PersonRepositoryTests {
       arguments into the JSON query string.</para>
 
       <para>You can also use the filter property to restrict the set of
-      properties that will be mapped into the Java object. For example,
-      </para>
+      properties that will be mapped into the Java object. For example,</para>
 
-      <programlisting>public interface PersonRepository extends MongoRepository&lt;Person, String&gt;
+      <programlisting language="java">public interface PersonRepository extends MongoRepository&lt;Person, String&gt;
 
   @Query(value="{ 'firstname' : ?0 }", fields="firstname,lastname")
   List&lt;Person&gt; findByThePersonsFirstname(String firstname);
@@ -330,7 +329,7 @@ public class PersonRepositoryTests {
         </listitem>
 
         <listitem>
-          <para>Incremental query definition is easier </para>
+          <para>Incremental query definition is easier</para>
         </listitem>
       </itemizedlist>
 
@@ -344,7 +343,7 @@ public class PersonRepositoryTests {
       <para>Using QueryDSL you will be able to write queries as shown
       below</para>
 
-      <programlisting>QPerson person = new QPerson("person");
+      <programlisting language="java">QPerson person = new QPerson("person");
 List&lt;Person&gt; result = repository.findAll(person.address.zipCode.eq("C0123"));
 
 Page&lt;Person&gt; page = repository.findAll(person.lastname.contains("a"), 
@@ -361,7 +360,7 @@ Page&lt;Person&gt; page = repository.findAll(person.lastname.contains("a"),
       <interfacename>QueryDslPredicateExecutor</interfacename> which is shown
       below</para>
 
-      <programlisting>public interface QueryDslPredicateExecutor&lt;T&gt; {
+      <programlisting language="java">public interface QueryDslPredicateExecutor&lt;T&gt; {
 
   T findOne(Predicate predicate);
 
@@ -379,7 +378,7 @@ Page&lt;Person&gt; page = repository.findAll(person.lastname.contains("a"),
       it in additiion to other repository interfaces. This is shown
       below</para>
 
-      <programlisting>public interface PersonRepository extends MongoRepository&lt;Person, String&gt;, QueryDslPredicateExecutor&lt;Person&gt; {
+      <programlisting lang="" language="java">public interface PersonRepository extends MongoRepository&lt;Person, String&gt;, QueryDslPredicateExecutor&lt;Person&gt; {
 
    // additional finder methods go here
 

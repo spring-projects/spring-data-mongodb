@@ -34,30 +34,28 @@
         http://www.springframework.org/schema/data/mongo/spring-mongo-1.0.xsd
         http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd"&gt;
 
-        &lt;beans&gt;
+&lt;beans&gt;
 
-        &lt;!-- Default bean name is 'mongo' --&gt;
-        &lt;mongo:mongo host="localhost" port="27017"/&gt;
+    &lt;!-- Default bean name is 'mongo' --&gt;
+    &lt;mongo:mongo host="localhost" port="27017"/&gt;
 
-        &lt;!-- by default look for a Mongo object named 'mongo' --&gt;
-        &lt;mongo:jmx/&gt;
+    &lt;!-- by default look for a Mongo object named 'mongo' --&gt;
+    &lt;mongo:jmx/&gt;
 
-        &lt;context:mbean-export/&gt;
+    &lt;context:mbean-export/&gt;
 
-        &lt;!-- To translate any MongoExceptions thrown in @Repository annotated classes --&gt;
-        &lt;context:annotation-config/&gt;
+    &lt;!-- To translate any MongoExceptions thrown in @Repository annotated classes --&gt;
+    &lt;context:annotation-config/&gt;
 
-        &lt;bean id="registry" class="org.springframework.remoting.rmi.RmiRegistryFactoryBean"
-        p:port="1099" /&gt;
+    &lt;bean id="registry" class="org.springframework.remoting.rmi.RmiRegistryFactoryBean" p:port="1099" /&gt;
 
-        &lt;!-- Expose JMX over RMI --&gt;
-        &lt;bean id="serverConnector" class="org.springframework.jmx.support.ConnectorServerFactoryBean"
+    &lt;!-- Expose JMX over RMI --&gt;
+    &lt;bean id="serverConnector" class="org.springframework.jmx.support.ConnectorServerFactoryBean"
         depends-on="registry"
         p:objectName="connector:name=rmi"
         p:serviceUrl="service:jmx:rmi://localhost/jndi/rmi://localhost:1099/myconnector" /&gt;
 
-        &lt;/beans&gt;
-      </programlisting>
+&lt;/beans&gt;      </programlisting>
     </example>
 
     <para>This will expose several MBeans</para>

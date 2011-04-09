@@ -25,8 +25,7 @@
     <example>
       <title>@Configuration class to configure MongoDB mapping support</title>
 
-      <programlisting language="xml">
-@Configuration
+      <programlisting language="java">@Configuration
 public class GeoSpatialAppConfig extends AbstractMongoConfiguration {
 
   @Bean
@@ -49,8 +48,6 @@ public class GeoSpatialAppConfig extends AbstractMongoConfiguration {
   public LoggingEventListener&lt;MongoMappingEvent&gt; mappingEventsListener() {
     return new LoggingEventListener&lt;MongoMappingEvent&gt;();
   }
-
-
 }</programlisting>
     </example>
 
@@ -219,7 +216,7 @@ public class Person {
 
       <para>Here is an example of a more complex mapping.</para>
 
-      <programlisting>@Document
+      <programlisting language="java">@Document
 @CompoundIndexes({
 		@CompoundIndex(name = "age_idx", def = "{'lastName': 1, 'age': -1}")
 })

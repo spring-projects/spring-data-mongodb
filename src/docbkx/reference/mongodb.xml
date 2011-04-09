@@ -117,7 +117,7 @@
     configuration style. Also change the version of Spring in the pom.xml to
     be</para>
 
-    <programlisting lang="xml">&lt;spring.framework.version&gt;3.0.5.RELEASE&lt;/spring.framework.version&gt;</programlisting>
+    <programlisting lang="" language="xml">&lt;spring.framework.version&gt;3.0.5.RELEASE&lt;/spring.framework.version&gt;</programlisting>
 
     <para>You may also want to set the logging level to DEBUG to see some
     additional information, edit the log4j.properties file and add</para>
@@ -127,7 +127,7 @@
     <para>Next, in the org.spring.mongodb package in the sr/ctest/java
     directory create a class as shown below.</para>
 
-    <programlisting lang="java">package org.spring.mongodb;
+    <programlisting lang="" language="java">package org.spring.mongodb;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.document.mongodb.MongoTemplate;
@@ -525,7 +525,7 @@ public class AppConfig {
       <para>You can also configure a MongoTemplate using Spring's XML
       &lt;beans/&gt; schema.</para>
 
-      <programlisting>  &lt;mongo:mongo host="localhost" port="27017"/&gt;
+      <programlisting language="java">  &lt;mongo:mongo host="localhost" port="27017"/&gt;
   
   &lt;bean id="mongoTemplate" class="org.springframework.data.document.mongodb.MongoTemplate"&gt;
     &lt;constructor-arg ref="mongo"/&gt;
@@ -595,7 +595,7 @@ public class AppConfig {
 
     <para>Given a simple class such as Person</para>
 
-    <programlisting>public class Person {
+    <programlisting language="java">public class Person {
 
   private String id;
   private String firstName;
@@ -790,7 +790,7 @@ import static org.springframework.data.document.mongodb.query.Criteria.query;
         over the mapping of an object into a DBObject. The MongoWriter
         interface is </para>
 
-        <programlisting>/**
+        <programlisting language="java">/**
  * A MongoWriter is responsible for converting an object of type T to the native MongoDB representation DBObject.
  *
  * @param &lt;T&gt; the type of the object to convert to a DBObject
@@ -873,8 +873,8 @@ import static org.springframework.data.document.mongodb.query.Update
 
           ...
 
-          WriteResult wr = mongoTemplate.updateMulti(query(where("accounts.accountType").is(Account.Type.SAVINGS)),
-                                                     update.inc("accounts.$.balance", 50.00));
+  WriteResult wr = mongoTemplate.updateMulti(query(where("accounts.accountType").is(Account.Type.SAVINGS)),
+                                             update.inc("accounts.$.balance", 50.00));
         </programlisting>
       </example>
 
@@ -1456,7 +1456,7 @@ import static org.springframework.data.document.mongodb.query.Query.query;
         the role of RowMapper in JdbcTemplate. The MongoReader interface
         is</para>
 
-        <programlisting>/**
+        <programlisting language="java">/**
  * A MongoWriter is responsible for converting a native MongoDB DBObject to an object of type T.
  *
  * @param &lt;T&gt; the type of the object to convert from a DBObject
@@ -1535,30 +1535,30 @@ public class Venue {
       <para>To find locations within a circle, the following query can be
       used.</para>
 
-      <programlisting lang="java">Circle circle = new Circle(-73.99171, 40.738868, 0.01);
+      <programlisting lang="" language="java">Circle circle = new Circle(-73.99171, 40.738868, 0.01);
 List&lt;Venue&gt; venues = template.find(new Query(Criteria.where("location").withinCenter(circle)), Venue.class);</programlisting>
 
       <para>To find venues within a circle using Spherical coordinates the
       following query can be used</para>
 
-      <programlisting lang="java">Circle circle = new Circle(-73.99171, 40.738868, 0.003712240453784);
+      <programlisting lang="" language="java">Circle circle = new Circle(-73.99171, 40.738868, 0.003712240453784);
 List&lt;Venue&gt; venues = template.find(new Query(Criteria.where("location").withinCenterSphere(circle)), Venue.class);</programlisting>
 
       <para>To find venues within a Box the following query can be used</para>
 
-      <programlisting>Box box = new Box(new Point(-73.99756, 40.73083), new Point(-73.988135, 40.741404));  //lower-left then upper-right
+      <programlisting language="java">Box box = new Box(new Point(-73.99756, 40.73083), new Point(-73.988135, 40.741404));  //lower-left then upper-right
 List&lt;Venue&gt; venues = template.find(new Query(Criteria.where("location").withinBox(box)), Venue.class);</programlisting>
 
       <para>To find venues near a Point, the following query can be
       used</para>
 
-      <programlisting>Point point = new Point(-73.99171, 40.738868);
+      <programlisting language="java">Point point = new Point(-73.99171, 40.738868);
 List&lt;Venue&gt; venues = template.find(new Query(Criteria.where("location").near(point).maxDistance(0.01)), Venue.class);</programlisting>
 
       <para>To find venues near a Point using Spherical coordines the
       following query can be used</para>
 
-      <programlisting>Point point = new Point(-73.99171, 40.738868);
+      <programlisting language="java">Point point = new Point(-73.99171, 40.738868);
 List&lt;Venue&gt; venues = template.find(new Query(Criteria.where("location").nearSphere(point).maxDistance(0.003712240453784)), Venue.class);
 </programlisting>
 
@@ -1584,9 +1584,7 @@ List&lt;Venue&gt; venues = template.find(new Query(Criteria.where("location").ne
       <example>
         <title>Creating an index using the MongoTemplate</title>
 
-        <programlisting language="java">mongoTemplate.ensureIndex("MyCollection", new Index().on("name",
-          Order.ASCENDING));
-        </programlisting>
+        <programlisting language="java">mongoTemplate.ensureIndex("MyCollection", new Index().on("name",Order.ASCENDING));        </programlisting>
       </example>
 
       <para><itemizedlist>
@@ -1611,7 +1609,7 @@ List&lt;Venue&gt; venues = template.find(new Query(Criteria.where("location").ne
       the Venue class defined in a previous section, you would declare a
       geospatial query as shown below</para>
 
-      <programlisting>mongoTemplate.ensureIndex(new GeospatialIndex("location"));</programlisting>
+      <programlisting language="java">mongoTemplate.ensureIndex(new GeospatialIndex("location"));</programlisting>
     </section>
 
     <section>
@@ -1625,12 +1623,11 @@ List&lt;Venue&gt; venues = template.find(new Query(Criteria.where("location").ne
         <title>Working with collections using the MongoTemplate</title>
 
         <programlisting language="java">DBCollection collection = null;
-          if (!mongoTemplate.getCollectionNames().contains("MyNewCollection")) {
-          collection = mongoTemplate.createCollection("MyNewCollection");
-          }
+if (!mongoTemplate.getCollectionNames().contains("MyNewCollection")) {
+    collection = mongoTemplate.createCollection("MyNewCollection");
+}
 
-          mongoTemplate.dropCollection("MyNewCollection");
-        </programlisting>
+mongoTemplate.dropCollection("MyNewCollection");        </programlisting>
       </example>
 
       <para><itemizedlist>
