@@ -4,15 +4,41 @@ Spring Data Document Changelog
 Changes in version 1.0.0.M2 MongoDB
 ------------------------------------------------
 
+General
+* Spring configuration support using Java based @Configuration classes
+
 Core Data Access
-* Added findAndRemove methods to MongoTemplate/MongoOperations
+* Persistence and mapping lifecycle events
+* GeoSpatial integration
+* [DATADOC-76] - Add support for findAndRemove to MongoTemplate/MongoOperations
+* [DATADOC-5] - Provide detailed mapping of Mongo errors onto Spring DAO exception
+* [DATADOC-51] - Fixed issue with exceptions thrown when authenticating multiple times for sam eDB instance
+
+Querying
+* [DATADOC-72] - Add support for Mongo's $elemMatch and chained Criteria
+* [DATADOC-77] - Rename "and" method in Query to "addCritera"
+* [DATADOC-67] - Criteria API to support keywords for geo search
+
+Mapping
+* Feature Rich Object Mapping integrated with Spring's Conversion Service
+* Annotation based mapping metadata but extensible to support other metadata formats
+* [DATADOC-60] - Add namespace support to setup a MappingMongoConverter
+* [DATADOC-33] - Introduce annotation to demarcate id field in a domain object
 
 Repository
-* Adapted new metamodel API (DATADOC-47, DATACMNS-17)
-* Added support for 'In' and 'NotIn' keyword (DATADOC-46)
-* Fixed 'And' and 'Or' keywords
-* Added support for executing QueryDsl predicates (DATADOC-41)
+* [DATADOC-47, DATACMNS-17] - Adapted new metamodel API 
+* [DATADOC-46] - Added support for 'In' and 'NotIn' keyword
+* [DATADOC-49] - Fixed 'And' and 'Or' keywords
+* [DATADOC-41] - Added support for executing QueryDsl predicates 
+* [DATADOC-69] - Let repository namespace pickup the default mapping context bean and allow configuration
+* [DATADOC-24] - Allow use of @Query annotation to define queries
+* [DATADOC-34] - Create indexes for columns that are mentioned in query methods
 
+Cross-Store
+* [DATADOC-48] - Cross-store persistance - support for JPA Entities with fields transparently persisted/retrieved using MongoDB
+
+Logging
+* [DATADOC-66] - Log4j log appender
 
 Changes in version 1.0.0.M1 MongoDB (2011-02-14)
 ------------------------------------------------
