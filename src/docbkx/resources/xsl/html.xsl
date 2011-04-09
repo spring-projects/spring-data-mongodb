@@ -76,7 +76,7 @@
         </xsl:if>
         <span class="{name(.)}">
             <xsl:call-template name="person.name"/> 
-            (<xsl:value-of select="affiliation"/>)
+            <!-- (<xsl:value-of select="affiliation"/>) -->
             <xsl:apply-templates mode="titlepage.mode" select="./contrib"/>
         </span>
     </xsl:template>
