@@ -6,7 +6,7 @@
   <artifactId>spring-data-document-parent</artifactId>
   <name>Spring Data Document Parent</name>
   <url>http://www.springsource.org/spring-data/data-document</url>
-  <version>1.0.0.BUILD-SNAPSHOT</version>
+  <version>1.0.0.M2</version>
   <packaging>pom</packaging>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
