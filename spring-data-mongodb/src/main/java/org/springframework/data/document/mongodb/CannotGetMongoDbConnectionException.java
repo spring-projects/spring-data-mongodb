@@ -19,13 +19,39 @@ import org.springframework.dao.DataAccessResourceFailureException;
 
 public class CannotGetMongoDbConnectionException extends DataAccessResourceFailureException {
 
+  private String username;
+  
+  private char[] password;
+  
+  private String database;
+  
   private static final long serialVersionUID = 1172099106475265589L;
 
   public CannotGetMongoDbConnectionException(String msg, Throwable cause) {
     super(msg, cause);
   }
-
+  
   public CannotGetMongoDbConnectionException(String msg) {
     super(msg);
   }
+
+  public CannotGetMongoDbConnectionException(String msg, String database, String username, char[] password2) {
+    super(msg);
+    this.username = username;
+    this.password = password2;
+    this.database = database;
+  }
+
+  public String getUsername() {
+    return username;
+  }
+
+  public char[] getPassword() {
+    return password;
+  }
+
+  public String getDatabase() {
+    return database;
+  }
+ 
 }

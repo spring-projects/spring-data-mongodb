@@ -16,6 +16,7 @@
 
 package org.springframework.data.document.mongodb;
 
+import com.mongodb.CommandResult;
 import com.mongodb.DB;
 import com.mongodb.Mongo;
 import org.apache.commons.logging.Log;
@@ -92,10 +93,14 @@ public abstract class MongoDbUtils {
 
     LOGGER.trace("Getting Mongo Database name=["+databaseName+"]");
     DB db = mongo.getDB(databaseName);
+    
     boolean credentialsGiven = username != null && password != null;
-
-    if (credentialsGiven && !db.authenticate(username, password)) {
-      throw new CannotGetMongoDbConnectionException("Failed to authenticate with Mongo using the given credentials");
+    if (credentialsGiven && !db.isAuthenticated()) {
+      //Note, can only authenticate once against the same com.mongodb.DB object.
+      if (!db.authenticate(username, password)) {            
+        throw new CannotGetMongoDbConnectionException("Failed to authenticate to database [" + databaseName + 
+            "], username = [" + username + "], password = [" + new String(password) + "]", databaseName, username, password );
+      }
     }
 
     // Use same Session for further Mongo actions within the transaction.
