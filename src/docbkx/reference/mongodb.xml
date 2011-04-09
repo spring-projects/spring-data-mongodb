@@ -103,16 +103,16 @@
 
     <para>Then add the following to pom.xml dependencies section.</para>
 
-    <programlisting lang="xml">		&lt;dependency&gt;
-			&lt;groupId&gt;org.springframework.data&lt;/groupId&gt;
-			&lt;artifactId&gt;spring-data-mongodb&lt;/artifactId&gt;
-			&lt;version&gt;1.0.0.BUILD-SNAPSHOT&lt;/version&gt;
-		&lt;/dependency&gt;
-		&lt;dependency&gt;
-		    &lt;groupId&gt;cglib&lt;/groupId&gt;
-		    &lt;artifactId&gt;cglib&lt;/artifactId&gt;
-		    &lt;version&gt;2.2&lt;/version&gt;
-		&lt;/dependency&gt;
+    <programlisting lang="xml">  &lt;dependency&gt;
+    &lt;groupId&gt;org.springframework.data&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-data-mongodb&lt;/artifactId&gt;
+    &lt;version&gt;1.0.0.BUILD-SNAPSHOT&lt;/version&gt;
+  &lt;/dependency&gt;
+  &lt;dependency&gt;
+    &lt;groupId&gt;cglib&lt;/groupId&gt;
+    &lt;artifactId&gt;cglib&lt;/artifactId&gt;
+    &lt;version&gt;2.2&lt;/version&gt;
+  &lt;/dependency&gt;
 </programlisting>
 
     <para>The cglib dependency is there as we will use Spring's Java
@@ -228,7 +228,7 @@ MongoApp] - &lt;Person [id=1234, name=Joe]&gt;</programlisting>
     <para>There is an <ulink
     url="https://github.com/SpringSource/spring-data-document-examples">github
     repository with several examples</ulink> that you can download and play
-    around with to get a feel for how the library works. </para>
+    around with to get a feel for how the library works.</para>
   </section>
 
   <section id="mongodb-connectors">
@@ -722,12 +722,12 @@ Number of people = : 0</programlisting>
         <programlisting language="java">import static org.springframework.data.document.mongodb.query.Criteria.where;
 import static org.springframework.data.document.mongodb.query.Criteria.query;
 
-          ...
+    ...
 
-          Person p = new Person("Bob", 33);
-          mongoTemplate.insert("MyCollection", p);
+    Person p = new Person("Bob", 33);
+    mongoTemplate.insert("MyCollection", p);
 
-          Person qp = mongoTemplate.findOne("MyCollection", query(where("age").is(33)), Person.class);
+    Person qp = mongoTemplate.findOne("MyCollection", query(where("age").is(33)), Person.class);
         </programlisting>
       </example>
 
@@ -793,17 +793,18 @@ import static org.springframework.data.document.mongodb.query.Criteria.query;
         </itemizedlist></para>
 
       <para>Unless and explicit MongoWriter is passed into the save or insert
-      method, the the template's MongoConverter will be used. </para>
+      method, the the template's MongoConverter will be used.</para>
 
       <section>
         <title>Saving using MongoWriter</title>
 
         <para>The MongoWriter interface allows you to have lower level control
         over the mapping of an object into a DBObject. The MongoWriter
-        interface is </para>
+        interface is</para>
 
         <programlisting language="java">/**
- * A MongoWriter is responsible for converting an object of type T to the native MongoDB representation DBObject.
+ * A MongoWriter is responsible for converting an object of type T to the native MongoDB
+ * representation DBObject.
  *
  * @param &lt;T&gt; the type of the object to convert to a DBObject
  */
@@ -885,8 +886,9 @@ import static org.springframework.data.document.mongodb.query.Update
 
           ...
 
-  WriteResult wr = mongoTemplate.updateMulti(query(where("accounts.accountType").is(Account.Type.SAVINGS)),
-                                             update.inc("accounts.$.balance", 50.00));
+  WriteResult wr = mongoTemplate.updateMulti(
+      query(where("accounts.accountType").is(Account.Type.SAVINGS)),
+      update.inc("accounts.$.balance", 50.00));
         </programlisting>
       </example>
 
@@ -1093,9 +1095,10 @@ import static org.springframework.data.document.mongodb.query.Update
         <programlisting language="java">import static org.springframework.data.document.mongodb.query.Criteria.where;
 import static org.springframework.data.document.mongodb.query.Query.query;
 
-     ...
+    ...
 
-     List&lt;Person&gt; result = mongoTemplate.find(query(where("age").lt(50).and("accounts.balance").gt(1000.00d)),Person.class);
+    List&lt;Person&gt; result = mongoTemplate.find(
+        query(where("age").lt(50).and("accounts.balance").gt(1000.00d)),Person.class);
         </programlisting>
       </example>
 
@@ -1127,6 +1130,13 @@ import static org.springframework.data.document.mongodb.query.Query.query;
               <para><literal>Criteria</literal> <emphasis role="bold">all
               </emphasis> <literal>(Object o)</literal>Creates a criterion
               using the <literal>$all</literal> operator</para>
+            </listitem>
+
+            <listitem>
+              <para><literal>Criteria</literal> <emphasis
+              role="bold">elemMatch </emphasis> <literal>(Criteria c)
+              </literal>Creates a criterion using the
+              <literal>$elemMatch</literal> operator</para>
             </listitem>
 
             <listitem>
@@ -1458,7 +1468,7 @@ import static org.springframework.data.document.mongodb.query.Query.query;
           </listitem>
         </itemizedlist></para>
 
-      <para>The MongoReader can be used </para>
+      <para>The MongoReader can be used</para>
 
       <section>
         <title>Reading using MongoWriter</title>
@@ -1476,9 +1486,10 @@ import static org.springframework.data.document.mongodb.query.Query.query;
 public interface MongoReader&lt;T&gt; {
 
   /**
-   * Ready from the native MongoDB DBObject representation to an instance of the class T. The given type has to be the
-   * starting point for marshalling the {@link DBObject} into it. So in case there's no real valid data inside
-   * {@link DBObject} for the given type, just return an empty instance of the given type.
+   * Ready from the native MongoDB DBObject representation to an instance of the class T. 
+   * The given type has to be the starting point for marshalling the {@link DBObject} 
+   * into it. So in case there's no real valid data inside {@link DBObject} for the 
+   * given type, just return an empty instance of the given type.
    *
    * @param clazz the type of the return value
    * @param dbo   theDBObject
@@ -1548,30 +1559,38 @@ public class Venue {
       used.</para>
 
       <programlisting lang="" language="java">Circle circle = new Circle(-73.99171, 40.738868, 0.01);
-List&lt;Venue&gt; venues = template.find(new Query(Criteria.where("location").withinCenter(circle)), Venue.class);</programlisting>
+List&lt;Venue&gt; venues = 
+    template.find(new Query(Criteria.where("location").withinCenter(circle)), Venue.class);</programlisting>
 
       <para>To find venues within a circle using Spherical coordinates the
       following query can be used</para>
 
       <programlisting lang="" language="java">Circle circle = new Circle(-73.99171, 40.738868, 0.003712240453784);
-List&lt;Venue&gt; venues = template.find(new Query(Criteria.where("location").withinCenterSphere(circle)), Venue.class);</programlisting>
+List&lt;Venue&gt; venues = 
+    template.find(new Query(Criteria.where("location").withinCenterSphere(circle)), Venue.class);</programlisting>
 
       <para>To find venues within a Box the following query can be used</para>
 
-      <programlisting language="java">Box box = new Box(new Point(-73.99756, 40.73083), new Point(-73.988135, 40.741404));  //lower-left then upper-right
-List&lt;Venue&gt; venues = template.find(new Query(Criteria.where("location").withinBox(box)), Venue.class);</programlisting>
+      <programlisting language="java">//lower-left then upper-right
+Box box = new Box(new Point(-73.99756, 40.73083), new Point(-73.988135, 40.741404));  
+List&lt;Venue&gt; venues = 
+    template.find(new Query(Criteria.where("location").withinBox(box)), Venue.class);</programlisting>
 
       <para>To find venues near a Point, the following query can be
       used</para>
 
       <programlisting language="java">Point point = new Point(-73.99171, 40.738868);
-List&lt;Venue&gt; venues = template.find(new Query(Criteria.where("location").near(point).maxDistance(0.01)), Venue.class);</programlisting>
+List&lt;Venue&gt; venues = 
+    template.find(new Query(Criteria.where("location").near(point).maxDistance(0.01)), Venue.class);</programlisting>
 
       <para>To find venues near a Point using Spherical coordines the
       following query can be used</para>
 
       <programlisting language="java">Point point = new Point(-73.99171, 40.738868);
-List&lt;Venue&gt; venues = template.find(new Query(Criteria.where("location").nearSphere(point).maxDistance(0.003712240453784)), Venue.class);
+List&lt;Venue&gt; venues = 
+    template.find(new Query(
+        Criteria.where("location").nearSphere(point).maxDistance(0.003712240453784)), 
+        Venue.class);
 </programlisting>
 
       <note>
@@ -1901,16 +1920,16 @@ public class BeforeSaveListener&lt;BeforeSaveEvent, Person&gt; extends AbstractM
     <para>Here is an example that uses the CollectionCallback to return
     information about an index.</para>
 
-    <programlisting language="java">		boolean hasIndex = template.execute("geolocation", new CollectionCallback&lt;Boolean&gt;() {
-			public Boolean doInCollection(DBCollection collection) throws MongoException, DataAccessException {
-				List&lt;DBObject&gt; indexes = collection.getIndexInfo();
-				for (DBObject dbo : indexes) {
-					if ("location_2d".equals(dbo.get("name"))) {
-						return true;
-					}
-				}
-				return false;
-			}
-		});</programlisting>
+    <programlisting language="java">    boolean hasIndex = template.execute("geolocation", new CollectionCallback&lt;Boolean&gt;() {
+      public Boolean doInCollection(DBCollection collection) throws MongoException, DataAccessException {
+        List&lt;DBObject&gt; indexes = collection.getIndexInfo();
+        for (DBObject dbo : indexes) {
+          if ("location_2d".equals(dbo.get("name"))) {
+            return true;
+          }
+        }
+        return false;
+      }
+    });</programlisting>
   </section>
 </chapter>
