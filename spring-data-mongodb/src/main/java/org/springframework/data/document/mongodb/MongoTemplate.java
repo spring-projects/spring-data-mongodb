@@ -289,9 +289,9 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 		Assert.notNull(action);
 
 		try {
-			DB db = getDb();
+			DB db = this.getDb();
 			return action.doInDB(db);
-		} catch (MongoException e) {
+		} catch (RuntimeException e) {
 			throw potentiallyConvertRuntimeException(e);
 		}
 	}
@@ -313,7 +313,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 		try {
 			DBCollection collection = getDb().getCollection(collectionName);
 			return callback.doInCollection(collection);
-		} catch (MongoException e) {
+		} catch (RuntimeException e) {
 			throw potentiallyConvertRuntimeException(e);
 		}
 	}
@@ -336,7 +336,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 		try {
 			T result = objectCallback.doWith(collectionCallback.doInCollection(getCollection(collectionName)));
 			return result;
-		} catch (MongoException e) {
+		} catch (RuntimeException e) {
 			throw potentiallyConvertRuntimeException(e);
 		}
 	}
@@ -512,7 +512,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 						if (query.getSortObject() != null) {
 							cursorToUse = cursorToUse.sort(query.getSortObject());
 						}
-					} catch (MongoException e) {
+					} catch (RuntimeException e) {
 						throw potentiallyConvertRuntimeException(e);
 					}
 					return cursorToUse;
