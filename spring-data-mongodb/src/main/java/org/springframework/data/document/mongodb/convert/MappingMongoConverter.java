@@ -299,8 +299,8 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
 		}
 
 		if (null == entity) {
-			// Must not have explictly added this entity yet
-			entity = mappingContext.addPersistentEntity(obj.getClass());
+			// Must not have explictly added this entity yet		
+		    entity = mappingContext.addPersistentEntity(obj.getClass());		  
 			if (null == entity) {
 				// We can't map this entity for some reason
 				throw new MappingException("Unable to map entity " + obj);
@@ -327,7 +327,7 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
 				}
 			}
 		}
-
+    
 		// Write the properties
 		entity.doWithProperties(new PropertyHandler() {
 			public void doWithPersistentProperty(PersistentProperty prop) {
@@ -419,6 +419,8 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
 					DBRef dbRef = createDBRef(propObjItem, dbref);
 					dbList.add(dbRef);
 				} else if (type.isArray() && MappingBeanHelper.isSimpleType(type.getComponentType())) {
+				  dbList.add(propObjItem);
+				} else if (MappingBeanHelper.isSimpleType(propObjItem.getClass())) {				  
 					dbList.add(propObjItem);
 				} else {
 					BasicDBObject propDbObj = new BasicDBObject();

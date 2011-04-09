@@ -337,13 +337,13 @@ public class MongoTemplateTests {
 	  testAddingToList(this.template);
   }
 
-  //@Test
+  @Test
   public void testAddingToListWithMappingConverter() throws Exception {
 	  testAddingToList(this.mappingTemplate);
   }
 
   private void testAddingToList(MongoTemplate template) {
-      PersonWithAList p = new PersonWithAList();
+    PersonWithAList p = new PersonWithAList();
 	  p.setFirstName("Sven");
 	  p.setAge(22);	  
 	  template.insert(p);
