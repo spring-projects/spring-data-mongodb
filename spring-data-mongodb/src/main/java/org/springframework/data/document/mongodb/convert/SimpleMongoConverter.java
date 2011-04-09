@@ -102,7 +102,6 @@ public class SimpleMongoConverter implements MongoConverter, InitializingBean {
     basics.add(Pattern.class.getName());
     basics.add(CodeWScope.class.getName());
     basics.add(ObjectId.class.getName());
-    // TODO check on enums..
     basics.add(Enum.class.getName());
     SIMPLE_TYPES = Collections.unmodifiableSet(basics);
   }
@@ -178,7 +177,6 @@ public class SimpleMongoConverter implements MongoConverter, InitializingBean {
         }
 
         String keyToUse = descriptor.getKeyToMap();
-        // TODO validate Enums...
         if (descriptor.isEnum()) {
           writeValue(dbo, keyToUse, ((Enum) value).name());
         } else if (descriptor.isIdProperty() && descriptor.isOfIdType()) {
@@ -315,7 +313,6 @@ public class SimpleMongoConverter implements MongoConverter, InitializingBean {
    * @param array
    */
   protected void writeArray(DBObject dbo, String keyToUse, Object[] array) {
-    // TODO
     Object[] dboValues;
     if (array != null) {
       dboValues = new Object[array.length];
