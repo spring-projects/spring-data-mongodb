@@ -13,7 +13,7 @@
     <module>spring-data-mongodb</module>
     <module>spring-data-mongodb-cross-store</module>
     <module>spring-data-mongodb-log4j</module>
-    <!-- <module>spring-data-couchdb</module> -->
+    <module>spring-data-couchdb</module>
   </modules>
 
   <developers>
