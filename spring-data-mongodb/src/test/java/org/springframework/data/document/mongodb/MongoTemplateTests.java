@@ -343,7 +343,7 @@ public class MongoTemplateTests {
   }
 
   private void testAddingToList(MongoTemplate template) {
-    PersonWithAList p = new PersonWithAList();
+      PersonWithAList p = new PersonWithAList();
 	  p.setFirstName("Sven");
 	  p.setAge(22);	  
 	  template.insert(p);
@@ -360,6 +360,19 @@ public class MongoTemplateTests {
 	  PersonWithAList p3 = template.findOne(q1, PersonWithAList.class);
 	  assertThat(p3, notNullValue());
 	  assertThat(p3.getWishList().size(), is(1));
+
+      Friend f = new Friend();
+	  p.setFirstName("Erik");
+	  p.setAge(21);
+	  
+	  p3.addFriend(f);
+	  template.save(p3);
+
+	  PersonWithAList p4 = template.findOne(q1, PersonWithAList.class);
+	  assertThat(p4, notNullValue());
+	  assertThat(p4.getWishList().size(), is(1));
+	  assertThat(p4.getFriends().size(), is(1));
+	  
   }
   
 }
