@@ -1,7 +1,13 @@
 Spring Data Document Changelog
 =============================================
 
-Changes in version 1.0.0.M2 MongoDB
+Changes in version 1.0.0.RC1 MongoDB 
+-------------------------------------------------
+
+General
+* 
+
+Changes in version 1.0.0.M2 MongoDB (2011-04-09)
 ------------------------------------------------
 
 General
