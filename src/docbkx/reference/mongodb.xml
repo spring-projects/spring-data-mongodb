@@ -103,16 +103,23 @@
 
     <para>Then add the following to pom.xml dependencies section.</para>
 
-    <programlisting lang="xml">  &lt;dependency&gt;
+    <programlisting lang="" language="xml">&lt;dependencies&gt;
+
+  &lt;!-- other dependency elements omitted --&gt;
+
+  &lt;dependency&gt;
     &lt;groupId&gt;org.springframework.data&lt;/groupId&gt;
     &lt;artifactId&gt;spring-data-mongodb&lt;/artifactId&gt;
-    &lt;version&gt;1.0.0.BUILD-SNAPSHOT&lt;/version&gt;
+    &lt;version&gt;1.0.0.M2&lt;/version&gt;
   &lt;/dependency&gt;
+
   &lt;dependency&gt;
     &lt;groupId&gt;cglib&lt;/groupId&gt;
     &lt;artifactId&gt;cglib&lt;/artifactId&gt;
     &lt;version&gt;2.2&lt;/version&gt;
   &lt;/dependency&gt;
+
+&lt;/dependencies&gt;
 </programlisting>
 
     <para>The cglib dependency is there as we will use Spring's Java
@@ -121,13 +128,30 @@
 
     <programlisting lang="" language="xml">&lt;spring.framework.version&gt;3.0.5.RELEASE&lt;/spring.framework.version&gt;</programlisting>
 
+    <para>You will also need to add the location of the Spring Milestone
+    repository for maven to your pom.xml which is at the same level of your
+    &lt;dependencies/&gt; element</para>
+
+    <programlisting language="xml">&lt;repositories&gt;
+  &lt;repository&gt;
+    &lt;id&gt;spring-milestone&lt;/id&gt;
+    &lt;name&gt;Spring Maven MILESTONE Repository&lt;/name&gt;
+    &lt;url&gt;http://maven.springframework.org/milestone&lt;/url&gt;
+  &lt;/repository&gt;
+&lt;/repositories&gt;</programlisting>
+
+    <para>The repository is also <ulink
+    url="http://shrub.appspot.com/maven.springframework.org/milestone/org/springframework/data/">browseable
+    here</ulink>. </para>
+
     <para>You may also want to set the logging level to DEBUG to see some
     additional information, edit the log4j.properties file and add</para>
 
     <programlisting>log4j.category.org.springframework.data.document.mongodb=DEBUG</programlisting>
 
-    <para>Next, in the org.spring.mongodb package in the sr/ctest/java
-    directory create a class as shown below.</para>
+    <para>Next, in the org.spring.mongodb package in the
+    <literal>src/test/java</literal> directory create a class as shown
+    below.</para>
 
     <programlisting lang="" language="java">package org.spring.mongodb;
 
@@ -886,9 +910,8 @@ import static org.springframework.data.document.mongodb.query.Update
 
           ...
 
-  WriteResult wr = mongoTemplate.updateMulti(
-      query(where("accounts.accountType").is(Account.Type.SAVINGS)),
-      update.inc("accounts.$.balance", 50.00));
+  WriteResult wr = mongoTemplate.updateMulti(query(where("accounts.accountType").is(Account.Type.SAVINGS)),
+                                             update.inc("accounts.$.balance", 50.00));
         </programlisting>
       </example>
 
@@ -1097,8 +1120,7 @@ import static org.springframework.data.document.mongodb.query.Query.query;
 
     ...
 
-    List&lt;Person&gt; result = mongoTemplate.find(
-        query(where("age").lt(50).and("accounts.balance").gt(1000.00d)),Person.class);
+     List&lt;Person&gt; result = mongoTemplate.find(query(where("age").lt(50).and("accounts.balance").gt(1000.00d)),Person.class);
         </programlisting>
       </example>
 
