@@ -37,37 +37,28 @@ import com.mysema.query.annotations.QueryTransient;
 import com.mysema.query.apt.DefaultConfiguration;
 import com.mysema.query.apt.Processor;
 
-
 /**
- * Annotation processor to create Querydsl query types for QueryDsl annoated
- * classes
+ * Annotation processor to create Querydsl query types for QueryDsl annoated classes
  * 
  * @author Oliver Gierke
  */
-@SupportedAnnotationTypes({ "com.mysema.query.annotations.*" })
+@SupportedAnnotationTypes({ "com.mysema.query.annotations.*", "org.springframework.data.document.mongodb.mapping.*" })
 @SupportedSourceVersion(SourceVersion.RELEASE_6)
 public class MongoAnnotationProcessor extends AbstractProcessor {
 
-    private Class<? extends Annotation> entities, entity, embedded, skip;
+  private Class<? extends Annotation> entities, entity, embedded, skip;
 
+  @Override
+  public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
 
-    @Override
-    public boolean process(Set<? extends TypeElement> annotations,
-            RoundEnvironment roundEnv) {
+    processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, "Running " + getClass().getSimpleName());
 
-        processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE,
-                "Running " + getClass().getSimpleName());
+    DefaultConfiguration configuration = new DefaultConfiguration(roundEnv, processingEnv.getOptions(),
+        Collections.<String> emptySet(), QueryEntities.class, Document.class, QuerySupertype.class,
+        QueryEmbeddable.class, QueryEmbedded.class, QueryTransient.class);
 
-        DefaultConfiguration configuration =
-                new DefaultConfiguration(roundEnv, processingEnv.getOptions(),
-                        Collections.<String> emptySet(), QueryEntities.class,
-                        Document.class, QuerySupertype.class,
-                        QueryEmbeddable.class, QueryEmbedded.class,
-                        QueryTransient.class);
-
-        Processor processor =
-                new Processor(processingEnv, roundEnv, configuration);
-        processor.process();
-        return true;
-    }
+    Processor processor = new Processor(processingEnv, roundEnv, configuration);
+    processor.process();
+    return true;
+  }
 }
