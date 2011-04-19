@@ -25,31 +25,34 @@ import org.apache.commons.logging.LogFactory;
  */
 public class LoggingEventListener<MongoMappingEvent> extends AbstractMappingEventListener {
 
-  private Log log = LogFactory.getLog(getClass());
+	private Log log = LogFactory.getLog(getClass());
 
-  @Override
-  public void onBeforeConvert(Object source) {
-    log.info("onBeforeConvert: " + source);
-  }
+	@Override
+	public void onBeforeConvert(Object source) {
+		log.info("onBeforeConvert: " + source);
+	}
 
-  @Override
-  public void onBeforeSave(Object source, DBObject dbo) {
-    log.info("onBeforeSave: " + source + ", " + dbo);
-  }
+	@Override
+	public void onBeforeSave(Object source, DBObject dbo) {
+		try {
+			log.info("onBeforeSave: " + source + ", " + dbo);
+		} catch (Throwable ignored) {
+		}
+	}
 
-  @Override
-  public void onAfterSave(Object source, DBObject dbo) {
-    log.info("onAfterSave: " + source + ", " + dbo);
-  }
+	@Override
+	public void onAfterSave(Object source, DBObject dbo) {
+		log.info("onAfterSave: " + source + ", " + dbo);
+	}
 
-  @Override
-  public void onAfterLoad(DBObject dbo) {
-    log.info("onAfterLoad: " + dbo);
-  }
+	@Override
+	public void onAfterLoad(DBObject dbo) {
+		log.info("onAfterLoad: " + dbo);
+	}
 
-  @Override
-  public void onAfterConvert(DBObject dbo, Object source) {
-    log.info("onAfterConvert: " + dbo + ", " + source);
-  }
+	@Override
+	public void onAfterConvert(DBObject dbo, Object source) {
+		log.info("onAfterConvert: " + dbo + ", " + source);
+	}
 
 }

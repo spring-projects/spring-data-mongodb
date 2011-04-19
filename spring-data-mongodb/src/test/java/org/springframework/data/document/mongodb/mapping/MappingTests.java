@@ -54,6 +54,8 @@ public class MappingTests {
 			"personmapproperty",
 			"personpojo",
 			"personcustomidname",
+			"personmultidimarrays",
+			"personmulticollection",
 			"person1",
 			"person2",
 			"account"
@@ -260,6 +262,41 @@ public class MappingTests {
 				return false;
 			}
 		}));
+	}
+
+	@Test
+	public void testMultiDimensionalArrayProperties() {
+		String[][] grid = new String[][]{
+				new String[]{"1", "2", "3", "4"},
+				new String[]{"5", "6", "7", "8"},
+				new String[]{"9", "10", "11", "12"}
+		};
+		PersonMultiDimArrays p = new PersonMultiDimArrays(123, "Multi", "Dimensional", grid);
+
+		template.insert(p);
+		List<PersonMultiDimArrays> result = template.find(new Query(Criteria.where("ssn").is(123)), PersonMultiDimArrays.class);
+		assertThat(result.size(), is(1));
+
+		assertThat(result.get(0).getGrid().length, is(3));
+	}
+
+	@Test
+	public void testMultiDimensionalCollectionProperties() {
+		List<List<String>> grid = new ArrayList<List<String>>();
+		ArrayList<String> inner = new ArrayList<String>();
+		inner.add("1");
+		inner.add("2");
+		inner.add("3");
+		inner.add("4");
+		grid.add(inner);
+
+		PersonMultiCollection p = new PersonMultiCollection(321, "Multi Dim", "Collections", grid);
+		template.insert(p);
+
+		List<PersonMultiCollection> result = template.find(new Query(Criteria.where("ssn").is(321)), PersonMultiCollection.class);
+		assertThat(result.size(), is(1));
+
+		assertThat(result.get(0).getGrid().size(), is(1));
 	}
 
 }

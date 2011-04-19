@@ -61,6 +61,7 @@ import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mapping.model.PersistentEntity;
 import org.springframework.data.mapping.model.PersistentProperty;
 import org.springframework.data.mapping.model.PreferredConstructor;
+import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.expression.Expression;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
@@ -205,9 +206,11 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
 		if (null != applicationContext) {
 			spelCtx.setBeanResolver(new BeanFactoryResolver(applicationContext));
 		}
-		String[] keySet = dbo.keySet().toArray(new String[]{});
-		for (String key : keySet) {
-			spelCtx.setVariable(key, dbo.get(key));
+		if (!(dbo instanceof BasicDBList)) {
+			String[] keySet = dbo.keySet().toArray(new String[]{});
+			for (String key : keySet) {
+				spelCtx.setVariable(key, dbo.get(key));
+			}
 		}
 
 		final List<String> ctorParamNames = new ArrayList<String>();
@@ -215,18 +218,21 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
 			public Object getParameterValue(PreferredConstructor.Parameter parameter) {
 				String name = parameter.getName();
 				Class<?> type = parameter.getType();
+				ClassTypeInformation typeInfo = new ClassTypeInformation(type);
 				Object obj = dbo.get(name);
+
+				ctorParamNames.add(name);
 				if (obj instanceof DBRef) {
-					ctorParamNames.add(name);
 					return read(type, ((DBRef) obj).fetch());
+				} else if (obj instanceof BasicDBList) {
+					BasicDBList objAsDbList = (BasicDBList) obj;
+					List<?> l = unwrapList(objAsDbList, type);
+					return conversionService.convert(l, parameter.getRawType());
 				} else if (obj instanceof DBObject) {
-					ctorParamNames.add(name);
 					return read(type, ((DBObject) obj));
 				} else if (null != obj && obj.getClass().isAssignableFrom(type)) {
-					ctorParamNames.add(name);
 					return obj;
 				} else if (null != obj) {
-					ctorParamNames.add(name);
 					return conversionService.convert(obj, type);
 				}
 
@@ -300,7 +306,7 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
 
 		if (null == entity) {
 			// Must not have explictly added this entity yet		
-		    entity = mappingContext.addPersistentEntity(obj.getClass());		  
+			entity = mappingContext.addPersistentEntity(obj.getClass());
 			if (null == entity) {
 				// We can't map this entity for some reason
 				throw new MappingException("Unable to map entity " + obj);
@@ -310,7 +316,7 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
 		// Write the ID
 		final PersistentProperty idProperty = entity.getIdProperty();
 		if (!dbo.containsField("_id") && null != idProperty) {
-			Object idObj = null;
+			Object idObj;
 			try {
 				idObj = MappingBeanHelper.getProperty(obj, idProperty, Object.class, useFieldAccessOnly);
 			} catch (IllegalAccessException e) {
@@ -327,13 +333,13 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
 				}
 			}
 		}
-    
+
 		// Write the properties
 		entity.doWithProperties(new PropertyHandler() {
 			public void doWithPersistentProperty(PersistentProperty prop) {
 				String name = prop.getName();
 				Class<?> type = prop.getType();
-				Object propertyObj = null;
+				Object propertyObj;
 				try {
 					propertyObj = MappingBeanHelper.getProperty(obj, prop, type, useFieldAccessOnly);
 				} catch (IllegalAccessException e) {
@@ -355,7 +361,7 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
 			public void doWithAssociation(Association association) {
 				PersistentProperty inverseProp = association.getInverse();
 				Class<?> type = inverseProp.getType();
-				Object propertyObj = null;
+				Object propertyObj;
 				try {
 					propertyObj = MappingBeanHelper.getProperty(obj, inverseProp, type, useFieldAccessOnly);
 				} catch (IllegalAccessException e) {
@@ -419,8 +425,25 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
 					DBRef dbRef = createDBRef(propObjItem, dbref);
 					dbList.add(dbRef);
 				} else if (type.isArray() && MappingBeanHelper.isSimpleType(type.getComponentType())) {
-				  dbList.add(propObjItem);
-				} else if (MappingBeanHelper.isSimpleType(propObjItem.getClass())) {				  
+					dbList.add(propObjItem);
+				} else if (propObjItem instanceof List) {
+					List<?> propObjColl = (List<?>) propObjItem;
+					ClassTypeInformation typeInfo = new ClassTypeInformation(propObjItem.getClass());
+					while (typeInfo.isCollectionLike()) {
+						typeInfo = new ClassTypeInformation(typeInfo.getComponentType().getType());
+					}
+					if (MappingBeanHelper.isSimpleType(typeInfo.getType())) {
+						dbList.add(propObjColl);
+					} else {
+						BasicDBList propNestedDbList = new BasicDBList();
+						for (Object propNestedObjItem : propObjColl) {
+							BasicDBObject propDbObj = new BasicDBObject();
+							write(propNestedObjItem, propDbObj);
+							propNestedDbList.add(propDbObj);
+						}
+						dbList.add(propNestedDbList);
+					}
+				} else if (MappingBeanHelper.isSimpleType(propObjItem.getClass())) {
 					dbList.add(propObjItem);
 				} else {
 					BasicDBObject propDbObj = new BasicDBObject();
@@ -558,15 +581,15 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
 					return Array.newInstance(prop.getComponentType(), 0);
 				} else if (prop.isCollection() && dbObj instanceof BasicDBList) {
 					BasicDBList dbObjList = (BasicDBList) dbObj;
-					Object[] items = (Object[]) Array.newInstance(prop.getComponentType(), dbObjList.size());
+					List<Object> items = new LinkedList<Object>();
 					for (int i = 0; i < dbObjList.size(); i++) {
 						Object dbObjItem = dbObjList.get(i);
 						if (dbObjItem instanceof DBRef) {
-							items[i] = read(prop.getComponentType(), ((DBRef) dbObjItem).fetch());
+							items.add(read(prop.getComponentType(), ((DBRef) dbObjItem).fetch()));
 						} else if (dbObjItem instanceof DBObject) {
-							items[i] = read(prop.getComponentType(), (DBObject) dbObjItem);
+							items.add(read(prop.getComponentType(), (DBObject) dbObjItem));
 						} else {
-							items[i] = dbObjItem;
+							items.add(dbObjItem);
 						}
 					}
 					List<Object> itemsToReturn = new LinkedList<Object>();
@@ -612,25 +635,23 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
 		}
 	}
 
+	protected <T> List<?> unwrapList(BasicDBList dbList, Class<T> targetType) {
+		List<Object> rootList = new LinkedList<Object>();
+		for (int i = 0; i < dbList.size(); i++) {
+			Object obj = dbList.get(i);
+			if (obj instanceof BasicDBList) {
+				rootList.add(unwrapList((BasicDBList) obj, targetType));
+			} else if (obj instanceof DBObject) {
+				rootList.add(read(targetType, (DBObject) obj));
+			} else {
+				rootList.add(obj);
+			}
+		}
+		return rootList;
+	}
+
 	public void afterPropertiesSet() {
 		initializeConverters();
 	}
 
-	protected class PersistentPropertyWrapper {
-		private final PersistentProperty property;
-		private final DBObject target;
-
-		public PersistentPropertyWrapper(PersistentProperty property, DBObject target) {
-			this.property = property;
-			this.target = target;
-		}
-
-		public PersistentProperty getProperty() {
-			return property;
-		}
-
-		public DBObject getTarget() {
-			return target;
-		}
-	}
 }
