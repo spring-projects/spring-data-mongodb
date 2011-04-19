@@ -56,6 +56,7 @@ public class MappingTests {
 			"personcustomidname",
 			"personmultidimarrays",
 			"personmulticollection",
+			"personwithdbref",
 			"person1",
 			"person2",
 			"account"
@@ -297,6 +298,18 @@ public class MappingTests {
 		assertThat(result.size(), is(1));
 
 		assertThat(result.get(0).getGrid().size(), is(1));
+	}
+
+	@Test
+	public void testDbRef() {
+		GeoLocation geo = new GeoLocation(new double[]{37.0625, -95.677068});
+		template.insert(geo);
+
+		PersonWithDbRef p = new PersonWithDbRef(4321, "With", "DBRef", geo);
+		template.insert(p);
+
+		List<PersonWithDbRef> result = template.find(new Query(Criteria.where("ssn").is(4321)), PersonWithDbRef.class);
+		assertThat(result.size(), is(1));
 	}
 
 }

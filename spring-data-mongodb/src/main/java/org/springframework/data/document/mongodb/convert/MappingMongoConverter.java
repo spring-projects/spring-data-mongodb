@@ -553,10 +553,10 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
 			o = x.getValue(ctx);
 		} else {
 			DBObject from = dbo;
-			if (dbo instanceof DBRef) {
-				from = ((DBRef) dbo).fetch();
+			Object dbObj = dbo.get(name);
+			if (dbObj instanceof DBRef) {
+				dbObj = ((DBRef) dbObj).fetch();
 			}
-			Object dbObj = from.get(name);
 			if (dbObj instanceof DBObject) {
 				if (prop.isMap() && dbObj instanceof DBObject) {
 
