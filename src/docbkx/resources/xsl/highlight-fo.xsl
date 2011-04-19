@@ -30,7 +30,7 @@
 	</xsl:template>
 
 	<xsl:template match='xslthl:attribute'>
-	  <fo:inline olor="#7F007F"><xsl:apply-templates/></fo:inline>
+	  <fo:inline color="#7F007F"><xsl:apply-templates/></fo:inline>
 	</xsl:template>
 	
 	<xsl:template match='xslthl:value'>
