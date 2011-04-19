@@ -218,7 +218,6 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
 			public Object getParameterValue(PreferredConstructor.Parameter parameter) {
 				String name = parameter.getName();
 				Class<?> type = parameter.getType();
-				ClassTypeInformation typeInfo = new ClassTypeInformation(type);
 				Object obj = dbo.get(name);
 
 				ctorParamNames.add(name);
