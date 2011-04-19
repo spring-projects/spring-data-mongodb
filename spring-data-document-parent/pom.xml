@@ -17,7 +17,7 @@
     <org.slf4j.version>1.5.10</org.slf4j.version>
     <org.codehaus.jackson.version>1.6.1</org.codehaus.jackson.version>
     <org.springframework.version>3.0.5.RELEASE</org.springframework.version>
-    <data.commons.version>1.0.0.RC1</data.commons.version>
+    <data.commons.version>1.1.0.BUILD-SNAPSHOT</data.commons.version>
     <aspectj.version>1.6.11.RELEASE</aspectj.version>
   </properties>
   <profiles>
