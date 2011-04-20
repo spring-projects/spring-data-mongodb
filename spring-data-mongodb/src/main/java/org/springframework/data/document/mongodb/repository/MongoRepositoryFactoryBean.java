@@ -15,6 +15,8 @@
  */
 package org.springframework.data.document.mongodb.repository;
 
+import static org.springframework.data.querydsl.QueryDslUtils.*;
+
 import java.io.Serializable;
 import java.lang.reflect.Method;
 
@@ -106,9 +108,6 @@ public class MongoRepositoryFactoryBean<T extends MongoRepository<S, ID>, S, ID 
    * @author Oliver Gierke
    */
   public static class MongoRepositoryFactory extends RepositoryFactorySupport {
-
-    private static final boolean QUERY_DSL_PRESENT = org.springframework.util.ClassUtils.isPresent(
-        "com.mysema.query.types.Predicate", MongoRepositoryFactory.class.getClassLoader());
 
     private final MongoTemplate template;
     private final EntityInformationCreator entityInformationCreator;
