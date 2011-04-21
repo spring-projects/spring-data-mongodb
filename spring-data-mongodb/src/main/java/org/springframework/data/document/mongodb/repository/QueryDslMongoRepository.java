@@ -159,7 +159,7 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends
      * org.springframework.data.document.mongodb.repository.QueryDslExecutor
      * #count(com.mysema.query.types.Predicate)
      */
-    public Long count(Predicate predicate) {
+    public long count(Predicate predicate) {
 
         return createQueryFor(predicate).count();
     }

@@ -124,7 +124,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements Paging
    * 
    * @see org.springframework.data.repository.Repository#count()
    */
-  public Long count() {
+  public long count() {
 
     return template.getCollection(entityInformation.getCollectionName()).count();
   }
