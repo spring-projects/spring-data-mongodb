@@ -158,14 +158,6 @@
       <name>JBoss Public Repository</name>
       <url>http://repository.jboss.org/nexus/content/groups/public-jboss</url>
     </repository>
-    <repository>
-      <id>spring-maven-snapshot</id>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-      <name>Springframework Maven SNAPSHOT Repository</name>
-      <url>http://maven.springframework.org/snapshot</url>
-    </repository>
   </repositories>
   <pluginRepositories>
     <pluginRepository>
