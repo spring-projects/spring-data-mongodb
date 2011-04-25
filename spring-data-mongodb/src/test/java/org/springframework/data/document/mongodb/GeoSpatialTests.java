@@ -19,6 +19,7 @@ package org.springframework.data.document.mongodb;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
@@ -39,6 +40,8 @@ import org.springframework.data.document.mongodb.monitor.ServerInfo;
 import org.springframework.data.document.mongodb.query.Criteria;
 import org.springframework.data.document.mongodb.query.GeospatialIndex;
 import org.springframework.data.document.mongodb.query.Query;
+import org.springframework.expression.ExpressionParser;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -61,6 +64,8 @@ public class GeoSpatialTests {
   ApplicationContext applicationContext;
   MongoTemplate template;
   ServerInfo serverInfo;
+  
+  ExpressionParser parser;
 
   @Before
   public void setUp() throws Exception {
@@ -76,6 +81,7 @@ public class GeoSpatialTests {
     template.ensureIndex(new GeospatialIndex("location"));
     indexCreated();
     addVenues();
+    parser = new SpelExpressionParser();
   }
 
   private void addVenues() {
@@ -149,8 +155,12 @@ public class GeoSpatialTests {
     Venue foundVenue = template.findOne(
         new Query(Criteria.where("name").is("Penn Station")), Venue.class);
     assertThat(foundVenue, notNullValue());
-    List<Venue> venues = template.getCollection(Venue.class);
+    List<Venue> venues = template.getCollection(Venue.class);    
     assertThat(venues.size(), equalTo(12));
+    Collection names = (Collection)parser.parseExpression("![name]").getValue(venues);
+    assertThat(names.size(), equalTo(12));
+    org.springframework.util.Assert.notEmpty(names);
+    
   }
   
   public void indexCreated() {

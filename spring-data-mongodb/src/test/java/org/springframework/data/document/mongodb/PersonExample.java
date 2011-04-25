@@ -15,6 +15,7 @@
  */
 package org.springframework.data.document.mongodb;
 
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
@@ -49,6 +50,15 @@ public class PersonExample {
     p.setAge(22);
        
     mongoOps.save(p);
+    
+    
+    PersonWithIdPropertyOfTypeString p2 = new PersonWithIdPropertyOfTypeString();
+    p2.setFirstName("Jon");
+    p2.setAge(23);
+       
+    mongoOps.save(p2);
+    
+    
     log.debug("Saved: " + p);
     
     p = mongoOps.findOne(query(whereId().is(p.getId())), PersonWithIdPropertyOfTypeString.class);
@@ -63,6 +73,14 @@ public class PersonExample {
     p = mongoOps.findOne(query(whereId().is(p.getId())), PersonWithIdPropertyOfTypeString.class);    
     log.debug("Updated: " + p);
     
+    
+    List<PersonWithIdPropertyOfTypeString> folks = mongoOps.getCollection(PersonWithIdPropertyOfTypeString.class);
+    log.debug("Querying for all people...");
+    for (Iterator iterator = folks.iterator(); iterator.hasNext();) {
+      PersonWithIdPropertyOfTypeString personWithIdPropertyOfTypeString = (PersonWithIdPropertyOfTypeString) iterator
+          .next();
+      log.debug(personWithIdPropertyOfTypeString);
+    }
     
     //mongoOps.remove( query(whereId().is(p.getId())), p.getClass());
     
