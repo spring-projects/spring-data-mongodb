@@ -289,13 +289,14 @@ public class PersonRepositoryTests {
 
       <programlisting language="java">public interface PersonRepository extends MongoRepository&lt;Person, String&gt;
 
-  @Query(value="{ 'firstname' : ?0 }", fields="firstname,lastname")
+  @Query(value="{ 'firstname' : ?0 }", fields="{ 'firstname': 1, 'lastname': 1}")
   List&lt;Person&gt; findByThePersonsFirstname(String firstname);
 
 }</programlisting>
 
       <para>This will return only the firstname, lastname and Id properties of
-      the Person objects, for example age will be null.</para>
+      the Person objects. The age property, a java.lang.Integer, will not be
+      set and its value will therefore be null.</para>
     </section>
 
     <section>
