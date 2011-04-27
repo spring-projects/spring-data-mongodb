@@ -701,9 +701,10 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 
 	protected Object insertDBObject(String collectionName, final DBObject dbDoc) {
 
-		if (dbDoc.keySet().isEmpty()) {
-			return null;
-		}
+		// DATADOC-95: This will prevent null objects from being saved.
+		//if (dbDoc.keySet().isEmpty()) {
+			//return null;
+		//}
 
 		//TODO: Need to move this to more central place
 		if (dbDoc.containsField("_id")) {

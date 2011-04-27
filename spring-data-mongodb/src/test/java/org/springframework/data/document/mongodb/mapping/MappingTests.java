@@ -57,6 +57,7 @@ public class MappingTests {
 			"personmultidimarrays",
 			"personmulticollection",
 			"personwithdbref",
+			"personnullproperties",
 			"person1",
 			"person2",
 			"account"
@@ -302,7 +303,8 @@ public class MappingTests {
 
 	@Test
 	public void testDbRef() {
-		GeoLocation geo = new GeoLocation(new double[]{37.0625, -95.677068});
+		double[] pos = new double[]{37.0625, -95.677068};
+		GeoLocation geo = new GeoLocation(pos);
 		template.insert(geo);
 
 		PersonWithDbRef p = new PersonWithDbRef(4321, "With", "DBRef", geo);
@@ -310,6 +312,15 @@ public class MappingTests {
 
 		List<PersonWithDbRef> result = template.find(new Query(Criteria.where("ssn").is(4321)), PersonWithDbRef.class);
 		assertThat(result.size(), is(1));
+		assertThat(result.get(0).getHome().getLocation(), is(pos));
+	}
+
+	@Test
+	public void testPersonWithNullProperties() {
+		PersonNullProperties p = new PersonNullProperties();
+		template.insert(p);
+
+		assertNotNull(p.getId());
 	}
 
 }
