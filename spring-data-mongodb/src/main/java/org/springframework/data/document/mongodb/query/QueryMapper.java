@@ -60,7 +60,6 @@ public class QueryMapper<T> {
 			Object value = query.get(key);
 			if (key.equals(idKey)) {
 				if (value instanceof DBObject) {
-					DBObject valueDbObj = (DBObject) value;
 					if ("$in".equals(key)) {
 						List<Object> ids = new ArrayList<Object>();
 						for (Object id : (Object[]) ((DBObject) value).get("$in")) {
@@ -73,12 +72,6 @@ public class QueryMapper<T> {
 						}
 						newDbo.put("$in", ids.toArray(new ObjectId[ids.size()]));
 					}
-					if (null != reader) {
-						try {
-							value = reader.read(entity.getIdProperty().getType(), valueDbObj);
-						} catch (ConversionFailedException ignored) {
-						}
-					}
 				} else if (null != reader) {
 					try {
 						value = ((MongoConverter) reader).convertObjectId(value);
@@ -87,7 +80,7 @@ public class QueryMapper<T> {
 				}
 				newKey = "_id";
 			} else {
-				// TODO: Implement other forms of key conversion (like @Alias and whatnot)
+				// TODO: Implement other forms of conversion (like @Alias and whatnot)
 			}
 			newDbo.put(newKey, value);
 		}
