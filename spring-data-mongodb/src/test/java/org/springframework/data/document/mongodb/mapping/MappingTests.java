@@ -112,14 +112,14 @@ public class MappingTests {
 		PersonCustomIdName p = new PersonCustomIdName(123456, "Custom Id", null);
 		template.insert(p);
 
-		List<PersonCustomIdName> result = template.find(new Query(Criteria.where("ssn").is(123456)), PersonCustomIdName.class);
+		List<PersonCustomIdName> result = template.find(new Query(Criteria.where("lastName").is(p.getLastName())), PersonCustomIdName.class);
 		assertThat(result.size(), is(1));
-		assertNotNull(result.get(0).getLastName());
+		assertThat(result.get(0).getFirstName(), is("Custom Id"));
 
 		PersonCustomIdName p2 = new PersonCustomIdName(654321, "Custom Id", "LastName");
 		template.insert(p2);
 
-		List<PersonCustomIdName> result2 = template.find(new Query(Criteria.where("ssn").is(654321)), PersonCustomIdName.class);
+		List<PersonCustomIdName> result2 = template.find(new Query(Criteria.where("lastName").is("LastName")), PersonCustomIdName.class);
 		assertThat(result2.size(), is(1));
 		assertNotNull(result2.get(0).getLastName());
 		assertThat(result2.get(0).getLastName(), is("LastName"));
