@@ -18,11 +18,8 @@ package org.springframework.data.document.mongodb;
 
 import static org.springframework.data.document.mongodb.query.Criteria.*;
 
-import java.beans.IntrospectionException;
-import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -1164,87 +1161,6 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 		}
 	}
 
-	/**
-	 * Substitutes the id key if it is found in he query. Any 'id' keys will be replaced with '_id' and the value converted
-	 * to an ObjectId if possible. This conversion should match the way that the id fields are converted during read
-	 * operations.
-	 *
-	 * @param query
-	 * @param targetClass
-	 * @param reader
-	 */
-	protected void substituteMappedIdIfNecessar(DBObject query, Class<?> targetClass, MongoReader<?> reader) {
-		MongoConverter converter = null;
-		if (reader instanceof SimpleMongoConverter) {
-			converter = (MongoConverter) reader;
-		} else if (reader instanceof MappingMongoConverter) {
-			converter = (MappingMongoConverter) reader;
-		} else {
-			return;
-		}
-		String idKey = null;
-		if (query.containsField("id")) {
-			idKey = "id";
-		}
-		if (query.containsField("_id")) {
-			idKey = "_id";
-		}
-		if (idKey == null) {
-			// no ids in this query
-			return;
-		}
-		MongoPropertyDescriptor descriptor;
-		try {
-			MongoPropertyDescriptor mpd = new MongoPropertyDescriptor(new PropertyDescriptor(idKey, targetClass), targetClass);
-			descriptor = mpd;
-		} catch (IntrospectionException e) {
-			// no property descriptor for this key - try the other
-			try {
-				String theOtherIdKey = "id".equals(idKey) ? "_id" : "id";
-				MongoPropertyDescriptor mpd2 = new MongoPropertyDescriptor(new PropertyDescriptor(theOtherIdKey, targetClass), targetClass);
-				descriptor = mpd2;
-			} catch (IntrospectionException e2) {
-				// no property descriptor for this key either - bail
-				return;
-			}
-		}
-		if (descriptor.isIdProperty() && descriptor.isOfIdType()) {
-			Object value = query.get(idKey);
-			if (value instanceof DBObject) {
-				DBObject dbo = (DBObject) value;
-				if (dbo.containsField("$in")) {
-					List<Object> ids = new ArrayList<Object>();
-					int count = 0;
-					for (Object o : (Object[]) dbo.get("$in")) {
-						count++;
-						ObjectId newValue = convertIdValue(converter, o);
-						if (newValue != null) {
-							ids.add(newValue);
-						}
-					}
-					if (ids.size() > 0 && ids.size() != count) {
-						throw new InvalidDataAccessApiUsageException("Inconsistent set of id values provided " +
-								Arrays.asList((Object[]) dbo.get("$in")));
-					}
-					if (ids.size() > 0) {
-						dbo.removeField("$in");
-						dbo.put("$in", ids.toArray());
-					}
-				}
-				query.removeField(idKey);
-				query.put(MongoPropertyDescriptor.ID_KEY, value);
-			} else {
-				ObjectId newValue = convertIdValue(converter, value);
-				query.removeField(idKey);
-				if (newValue != null) {
-					query.put(MongoPropertyDescriptor.ID_KEY, newValue);
-				} else {
-					query.put(MongoPropertyDescriptor.ID_KEY, value);
-				}
-			}
-		}
-	}
-
 	private ObjectId convertIdValue(MongoConverter converter, Object value) {
 		ObjectId newValue = null;
 		try {
@@ -1255,43 +1171,6 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 			LOGGER.warn("Unable to convert the String " + value + " to an ObjectId");
 		}
 		return newValue;
-	}
-
-	/**
-	 * Substitutes the id key if it is found in he query. Any 'id' keys will be replaced with '_id'. No conversion
-	 * of the value to an ObjectId is possible since we don't have access to a targetClass or a converter. This
-	 * means the value has to be of the correct form.
-	 *
-	 * @param query
-	 */
-	protected void substituteMappedIdIfNecessar(PersistentEntity entity, DBObject query) {
-		String idKey = null;
-		if (null != entity) {
-			idKey = entity.getIdProperty().getName();
-			if (query.containsField(idKey)) {
-				Object o = query.get(idKey);
-				query.removeField(idKey);
-				query.put(MongoPropertyDescriptor.ID_KEY, o);
-			} else {
-				return;
-			}
-		} else {
-			if (query.containsField("id")) {
-				idKey = "id";
-			}
-			if (query.containsField("_id")) {
-				idKey = "_id";
-			}
-			if (idKey == null) {
-				// no ids in this query
-				return;
-			}
-			if (!idKey.equals(MongoPropertyDescriptor.ID_KEY)) {
-				Object value = query.get(idKey);
-				query.removeField(idKey);
-				query.put(MongoPropertyDescriptor.ID_KEY, value);
-			}
-		}
 	}
 
 	private String getRequiredDefaultCollectionName() {
