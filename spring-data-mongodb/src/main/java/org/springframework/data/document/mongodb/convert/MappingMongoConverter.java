@@ -25,11 +25,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
@@ -50,6 +51,7 @@ import org.springframework.core.GenericTypeResolver;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.converter.ConverterFactory;
+import org.springframework.core.convert.converter.GenericConverter.ConvertiblePair;
 import org.springframework.core.convert.support.ConversionServiceFactory;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.mapping.AssociationHandler;
@@ -82,7 +84,7 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
 	protected static final Log log = LogFactory.getLog(MappingMongoConverter.class);
 
 	protected final GenericConversionService conversionService = ConversionServiceFactory.createDefaultConversionService();
-	protected final Map<Class<?>, Class<?>> customTypeMapping = new HashMap<Class<?>, Class<?>>();
+	protected final Set<ConvertiblePair> customTypeMapping = new HashSet<ConvertiblePair>();
 	protected final MappingContext mappingContext;
 	protected SpelExpressionParser spelExpressionParser = new SpelExpressionParser();
 	protected ApplicationContext applicationContext;
@@ -110,7 +112,7 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
 		if (null != converters) {
 			for (Converter<?, ?> c : converters) {
 				registerConverter(c);
-				conversionService.addConverter(c);
+				
 			}
 		}
 	}
@@ -123,9 +125,25 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
 	 */
 	private void registerConverter(Converter<?, ?> converter) {
 		Class<?>[] arguments = GenericTypeResolver.resolveTypeArguments(converter.getClass(), Converter.class);
-		if (MONGO_TYPES.contains(arguments[1])) {
-			customTypeMapping.put(arguments[0], arguments[1]);
+		if (MONGO_TYPES.contains(arguments[1]) || MONGO_TYPES.contains(arguments[0])) {
+			customTypeMapping.add(new ConvertiblePair(arguments[0], arguments[1]));
 		}
+		conversionService.addConverter(converter);
+	}
+	
+	private Class<?> getCustomTarget(Class<?> source, Class<?> expectedTargetType) {
+	  for (ConvertiblePair typePair : customTypeMapping) {
+	    if (typePair.getSourceType().isAssignableFrom(source)) {
+	      
+	      Class<?> targetType = typePair.getTargetType();
+	      
+	      if (targetType.equals(expectedTargetType) || expectedTargetType == null) {
+	        return targetType;
+	      }
+	    }
+	  }
+	  
+	  return null;
 	}
 
 	public MappingContext getMappingContext() {
@@ -168,6 +186,12 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
 	public <S extends Object> S read(Class<S> clazz, final DBObject dbo) {
 		if (null == dbo) {
 			return null;
+		}
+		
+		Class<?> customTarget = getCustomTarget(clazz, DBObject.class);
+		
+		if (customTarget != null) {
+		  return conversionService.convert(dbo, clazz);
 		}
 
 		if ((clazz.isArray()
@@ -292,6 +316,14 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
 		if (null == obj) {
 			return;
 		}
+		
+		Class<?> customTarget = getCustomTarget(obj.getClass(), DBObject.class);
+		
+		if (customTarget != null) {
+		  DBObject result = conversionService.convert(obj, DBObject.class);
+		  dbo.putAll(result);
+		  return;
+		}
 
 		PersistentEntity<?> entity = mappingContext.getPersistentEntity(obj.getClass());
 		write(obj, dbo, entity);
@@ -304,7 +336,7 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
 		}
 
 		if (null == entity) {
-			// Must not have explictly added this entity yet		
+			// Must not have explictly added this entity yet
 			entity = mappingContext.addPersistentEntity(obj.getClass());
 			if (null == entity) {
 				// We can't map this entity for some reason
@@ -470,7 +502,7 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
 		}
 
 		// Lookup potential custom target type
-		Class<?> basicTargetType = customTypeMapping.get(obj.getClass());
+		Class<?> basicTargetType = getCustomTarget(obj.getClass(), null);
 
 		if (basicTargetType != null) {
 			dbo.put(name, conversionService.convert(obj, basicTargetType));
@@ -480,7 +512,6 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
 		BasicDBObject propDbObj = new BasicDBObject();
 		write(obj, propDbObj, mappingContext.getPersistentEntity(prop.getTypeInformation()));
 		dbo.put(name, propDbObj);
-
 	}
 
 	protected void writeMapInternal(Map<Object, Object> obj, DBObject dbo) {
@@ -546,14 +577,27 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
 
 	@SuppressWarnings({"unchecked"})
 	protected Object getValueInternal(PersistentProperty prop, DBObject dbo, StandardEvaluationContext ctx, Value spelExpr) {
-		String name = prop.getName();
+		
+	  String name = prop.getName();
+	  Class<?> propertyType = prop.getType();
+		
 		Object o;
 		if (null != spelExpr) {
 			Expression x = spelExpressionParser.parseExpression(spelExpr.value());
 			o = x.getValue(ctx);
 		} else {
-			DBObject from = dbo;
 			Object dbObj = dbo.get(name);
+			
+			if (dbObj == null) {
+			  return null;
+			}
+			
+			Class<?> customTarget = getCustomTarget(dbObj.getClass(), propertyType);
+			
+			if (customTarget != null) {
+			  return conversionService.convert(dbObj, propertyType);
+			}
+			
 			if (dbObj instanceof DBRef) {
 				dbObj = ((DBRef) dbObj).fetch();
 			}
