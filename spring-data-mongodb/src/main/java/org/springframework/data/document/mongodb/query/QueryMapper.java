@@ -46,7 +46,7 @@ public class QueryMapper<T> {
 
 	public DBObject getMappedObject() {
 		String idKey = null;
-		if (null != entity) {
+		if (null != entity && null != entity.getIdProperty()) {
 			idKey = entity.getIdProperty().getName();
 		} else if (query.containsField("id")) {
 			idKey = "id";
