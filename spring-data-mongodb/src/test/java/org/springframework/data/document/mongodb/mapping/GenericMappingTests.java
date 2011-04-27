@@ -19,6 +19,7 @@ package org.springframework.data.document.mongodb.mapping;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
+import java.util.Collections;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import org.junit.Before;
@@ -27,7 +28,6 @@ import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.document.mongodb.convert.MappingMongoConverter;
 import org.springframework.data.document.mongodb.convert.MongoConverter;
-import org.springframework.data.mapping.BasicMappingContext;
 
 /**
  * Unit tests for testing the mapping works with generic types.
@@ -37,13 +37,15 @@ import org.springframework.data.mapping.BasicMappingContext;
 @RunWith(MockitoJUnitRunner.class)
 public class GenericMappingTests {
 
-  BasicMappingContext context;
+  MongoMappingContext context;
   MongoConverter converter;
 
   @Before
-  public void setUp() {
-    context = new BasicMappingContext();
-    context.addPersistentEntity(StringWrapper.class);
+  public void setUp() throws Exception {
+    context = new MongoMappingContext();
+    context.setInitialEntitySet(Collections.singleton(StringWrapper.class));
+    context.afterPropertiesSet();
+    
     converter = new MappingMongoConverter(context);
   }
 
@@ -53,8 +55,6 @@ public class GenericMappingTests {
     StringWrapper wrapper = new StringWrapper();
     wrapper.container = new Container<String>();
     wrapper.container.content = "Foo!";
-
-    context.addPersistentEntity(StringWrapper.class);
 
     DBObject dbObject = new BasicDBObject();
     converter.write(wrapper, dbObject);

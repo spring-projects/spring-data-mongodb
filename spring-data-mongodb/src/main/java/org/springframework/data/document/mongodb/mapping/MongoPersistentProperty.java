@@ -22,8 +22,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.bson.types.ObjectId;
-import org.springframework.data.mapping.BasicPersistentProperty;
-import org.springframework.data.util.TypeInformation;
+import org.springframework.data.mapping.AnnotationBasedPersistentProperty;
 
 /**
  * Mongo specific
@@ -32,7 +31,7 @@ import org.springframework.data.util.TypeInformation;
  *
  * @author Oliver Gierke
  */
-public class MongoPersistentProperty extends BasicPersistentProperty {
+public class MongoPersistentProperty extends AnnotationBasedPersistentProperty {
 
   private static final Set<Class<?>> SUPPORTED_ID_TYPES = new HashSet<Class<?>>();
   private static final Set<String> SUPPORTED_ID_PROPERTY_NAMES = new HashSet<String>();
@@ -54,8 +53,16 @@ public class MongoPersistentProperty extends BasicPersistentProperty {
    * @param owningTypeInformation
    */
   public MongoPersistentProperty(Field field,
-                                 PropertyDescriptor propertyDescriptor, TypeInformation owningTypeInformation) {
-    super(field, propertyDescriptor, owningTypeInformation);
+                                 PropertyDescriptor propertyDescriptor, MongoPersistentEntity<?> owner) {
+    super(field, propertyDescriptor, owner);
+  }
+ 
+  /* (non-Javadoc)
+   * @see org.springframework.data.mapping.FooBasicPersistentProperty#isAssociation()
+   */
+  @Override
+  public boolean isAssociation() {
+    return field.isAnnotationPresent(DBRef.class) || super.isAssociation();
   }
 
   /**

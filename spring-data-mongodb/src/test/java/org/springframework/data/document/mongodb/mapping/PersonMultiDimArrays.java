@@ -16,11 +16,16 @@
 
 package org.springframework.data.document.mongodb.mapping;
 
+import org.springframework.data.annotation.Id;
+
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
  */
+@Document
 public class PersonMultiDimArrays extends BasePerson {
 
+  @Id
+  private String id;
 	private String[][] grid;
 
 	public PersonMultiDimArrays(Integer ssn, String firstName, String lastName, String[][] grid) {

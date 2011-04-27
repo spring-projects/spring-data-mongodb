@@ -29,8 +29,6 @@ import org.springframework.data.document.mongodb.convert.MappingMongoConverter;
 import org.springframework.data.document.mongodb.mapping.Document;
 import org.springframework.data.document.mongodb.mapping.MongoMappingContext;
 import org.springframework.data.document.mongodb.mapping.MongoPersistentEntityIndexCreator;
-import org.springframework.data.document.mongodb.mapping.event.LoggingEventListener;
-import org.springframework.data.document.mongodb.mapping.event.MongoMappingEvent;
 import org.springframework.data.mapping.context.MappingContextAwareBeanPostProcessor;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
@@ -47,7 +45,7 @@ public abstract class AbstractMongoConfiguration {
   @Bean
   public abstract MongoTemplate mongoTemplate() throws Exception;
   
-  public String getMappingBasePackage() { 
+  public String getMappingBasePackage() {
     return "";
   }
  
@@ -64,7 +62,7 @@ public abstract class AbstractMongoConfiguration {
       Set<Class<?>> initialEntitySet = new HashSet<Class<?>>();
       for (BeanDefinition candidate : componentProvider.findCandidateComponents(basePackage)) {
         initialEntitySet.add(ClassUtils.forName(candidate.getBeanClassName(), mappingContext.getClass().getClassLoader()));
-      }      
+      }
       mappingContext.setInitialEntitySet(initialEntitySet);
     }
     return mappingContext;
@@ -80,7 +78,7 @@ public abstract class AbstractMongoConfiguration {
   
   /**
    * Hook that allows post-processing after the MappingMongoConverter has been
-   * successfully created. 
+   * successfully created.
    * @param converter
    */
   protected void afterMappingMongoConverterCreation(MappingMongoConverter converter) {
@@ -94,7 +92,7 @@ public abstract class AbstractMongoConfiguration {
   }
   
   @Bean MongoPersistentEntityIndexCreator mongoPersistentEntityIndexCreator() throws Exception {
-    MongoPersistentEntityIndexCreator indexCreator = new MongoPersistentEntityIndexCreator(mongoMappingContext(), mongoTemplate() );    
+    MongoPersistentEntityIndexCreator indexCreator = new MongoPersistentEntityIndexCreator(mongoMappingContext(), mongoTemplate() );
     return indexCreator;
   }
 }

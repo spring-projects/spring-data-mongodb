@@ -15,6 +15,7 @@
  */
 package org.springframework.data.document.mongodb.repository;
 
+import static org.mockito.Mockito.*;
 import static org.springframework.data.document.mongodb.repository.StubParameterAccessor.getAccessor;
 
 import java.lang.reflect.Method;
@@ -24,10 +25,15 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.stubbing.Answer;
 import org.springframework.data.document.mongodb.Person;
 import org.springframework.data.document.mongodb.convert.MongoConverter;
 import org.springframework.data.repository.query.parser.PartTree;
+
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
 
 
 /**
@@ -53,6 +59,14 @@ public class MongoQueryCreatorUnitTests {
     findByFirstnameAndFriend =
         Sample.class.getMethod("findByFirstnameAndFriend",
             String.class, Person.class);
+    
+    doAnswer(new Answer<Void>() {
+      public Void answer(InvocationOnMock invocation) throws Throwable {
+        DBObject dbObject = (DBObject) invocation.getArguments()[1];
+        dbObject.put("value", new BasicDBObject("value", "value"));
+        return null;
+      }
+    }).when(converter).write(any(), any(DBObject.class));
 
   }
 

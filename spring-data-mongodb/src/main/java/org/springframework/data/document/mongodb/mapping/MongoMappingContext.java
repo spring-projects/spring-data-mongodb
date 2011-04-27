@@ -18,23 +18,18 @@ package org.springframework.data.document.mongodb.mapping;
 
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
-import java.util.Collection;
 import java.util.Set;
 
 import org.bson.types.CodeWScope;
 import org.bson.types.ObjectId;
-import org.springframework.data.mapping.BasicMappingContext;
-import org.springframework.data.mapping.BasicPersistentEntity;
-import org.springframework.data.mapping.BasicPersistentProperty;
+import org.springframework.data.mapping.AbstractMappingContext;
 import org.springframework.data.mapping.MappingBeanHelper;
-import org.springframework.data.mapping.model.MappingConfigurationException;
-import org.springframework.data.mapping.model.MappingContext;
 import org.springframework.data.util.TypeInformation;
 
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
  */
-public class MongoMappingContext extends BasicMappingContext {
+public class MongoMappingContext extends AbstractMappingContext<BasicMongoPersistentEntity<?>, MongoPersistentProperty> {
 
   public MongoMappingContext() {
     augmentSimpleTypes();
@@ -50,32 +45,16 @@ public class MongoMappingContext extends BasicMappingContext {
   }
 
   @Override
-  public boolean isAssociation(Field field, PropertyDescriptor descriptor) throws MappingConfigurationException {
-    if (field.isAnnotationPresent(DBRef.class)) {
-      return true;
-    }
-    return super.isAssociation(field, descriptor);
+  public MongoPersistentProperty createPersistentProperty(Field field, PropertyDescriptor descriptor, BasicMongoPersistentEntity<?> owner) {
+    return new MongoPersistentProperty(field, descriptor, owner);
   }
-
+  
   /* (non-Javadoc)
-   * @see org.springframework.data.mapping.BasicMappingContext#getPersistentEntities()
+   * @see org.springframework.data.mapping.BasicMappingContext#createPersistentEntity(org.springframework.data.util.TypeInformation, org.springframework.data.mapping.model.MappingContext)
    */
   @Override
-  @SuppressWarnings("unchecked")
-  public Collection<MongoPersistentEntity<?>> getPersistentEntities() {
-    return (Collection<MongoPersistentEntity<?>>) super.getPersistentEntities();
+  @SuppressWarnings("rawtypes")
+  protected BasicMongoPersistentEntity<?> createPersistentEntity(TypeInformation typeInformation) {
+    return new BasicMongoPersistentEntity(typeInformation);
   }
-
-  @Override
-  public BasicPersistentProperty createPersistentProperty(Field field, PropertyDescriptor descriptor,
-                                                          TypeInformation information) throws MappingConfigurationException {
-    return new MongoPersistentProperty(field, descriptor, information);
-  }
-
-  @Override
-  public <T> BasicPersistentEntity<T> createPersistentEntity(TypeInformation typeInformation, MappingContext mappingContext)
-      throws MappingConfigurationException {
-    return new MongoPersistentEntity<T>(mappingContext, typeInformation);
-  }
-
 }

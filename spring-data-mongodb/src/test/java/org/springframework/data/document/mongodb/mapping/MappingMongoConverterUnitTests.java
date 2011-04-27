@@ -29,7 +29,6 @@ import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.document.mongodb.convert.MappingMongoConverter;
-import org.springframework.data.mapping.BasicMappingContext;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
@@ -42,11 +41,11 @@ import com.mongodb.DBObject;
 public class MappingMongoConverterUnitTests {
 
   MappingMongoConverter converter;
-  BasicMappingContext mappingContext;
+  MongoMappingContext mappingContext;
   
   @Before
   public void setUp() {
-    mappingContext = new BasicMappingContext();
+    mappingContext = new MongoMappingContext();
     converter = new MappingMongoConverter(mappingContext);
   }
   

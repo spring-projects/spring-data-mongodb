@@ -16,12 +16,17 @@
 
 package org.springframework.data.document.mongodb.mapping;
 
+import org.springframework.data.annotation.Id;
+
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
  */
 @Document(collection = "person2")
 public class PersonCustomCollection2 extends BasePerson {
 
+  @Id
+  private String id;
+  
 	public PersonCustomCollection2(Integer ssn, String firstName, String lastName) {
 		super(ssn, firstName, lastName);
 	}

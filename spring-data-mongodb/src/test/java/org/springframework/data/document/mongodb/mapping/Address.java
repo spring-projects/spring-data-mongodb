@@ -21,6 +21,7 @@ package org.springframework.data.document.mongodb.mapping;
  */
 public class Address {
 
+  private String id;
   private String[] lines;
   private String city;
   private String provinceOrState;

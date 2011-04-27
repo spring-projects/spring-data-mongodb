@@ -11,8 +11,8 @@
   <bean id="mongoTemplate" class="org.springframework.data.document.mongodb.MongoTemplate">
     <constructor-arg ref="mongo"/>
     <constructor-arg value="database"/>
-    <property name="defaultCollectionName" value="springdata"/>
-	<property name="mongoConverter" ref="mongoConverter" />
+    <constructor-arg value="springdata"/>
+	<constructor-arg ref="mongoConverter" />
   </bean>
   
   <bean id="mongoConverter" class="org.springframework.data.document.mongodb.convert.SimpleMongoConverter" />

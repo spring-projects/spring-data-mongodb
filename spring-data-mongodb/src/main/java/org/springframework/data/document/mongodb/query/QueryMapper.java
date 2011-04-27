@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.data.document.mongodb.query;
 
 import java.util.ArrayList;
@@ -23,30 +22,41 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import org.bson.types.ObjectId;
 import org.springframework.core.convert.ConversionFailedException;
-import org.springframework.data.document.mongodb.MongoReader;
 import org.springframework.data.document.mongodb.convert.MongoConverter;
 import org.springframework.data.mapping.model.PersistentEntity;
+import org.springframework.util.Assert;
 
 /**
  * A helper class to encapsulate any modifications of a Query object before it gets submitted to the database.
  *
  * @author Jon Brisbin <jbrisbin@vmware.com>
+ * @author Oliver Gierke
  */
-public class QueryMapper<T> {
+public class QueryMapper {
 
-	final private DBObject query;
-	final private PersistentEntity<T> entity;
-	final private MongoReader<Object> reader;
+	private final MongoConverter converter;
 
-	public QueryMapper(DBObject query, PersistentEntity<T> entity, MongoReader<?> reader) {
-		this.query = query;
-		this.entity = entity;
-		this.reader = (MongoReader<Object>) reader;
+	/**
+	 * Creates a new {@link QueryMapper} with the given {@link MongoConverter}.
+	 * 
+	 * @param converter
+	 */
+	public QueryMapper(MongoConverter converter) {
+	  Assert.notNull(converter);
+		this.converter = converter;
 	}
 
-	public DBObject getMappedObject() {
+  /**
+   * Replaces the property keys used in the given {@link DBObject} with the appropriate keys by using the
+   * {@link PersistentEntity} metadata.
+   * 
+   * @param query
+   * @param entity
+   * @return
+   */
+	public DBObject getMappedObject(DBObject query, PersistentEntity<?> entity) {
 		String idKey = null;
-		if (null != entity && null != entity.getIdProperty()) {
+		if (null != entity && entity.getIdProperty() != null) {
 			idKey = entity.getIdProperty().getName();
 		} else if (query.containsField("id")) {
 			idKey = "id";
@@ -63,8 +73,8 @@ public class QueryMapper<T> {
 					if ("$in".equals(key)) {
 						List<Object> ids = new ArrayList<Object>();
 						for (Object id : (Object[]) ((DBObject) value).get("$in")) {
-							if (null != reader && !(id instanceof ObjectId)) {
-								ObjectId oid = ((MongoConverter) reader).convertObjectId(id);
+							if (null != converter && !(id instanceof ObjectId)) {
+								ObjectId oid = converter.convertObjectId(id);
 								ids.add(oid);
 							} else {
 								ids.add(id);
@@ -72,9 +82,9 @@ public class QueryMapper<T> {
 						}
 						newDbo.put("$in", ids.toArray(new ObjectId[ids.size()]));
 					}
-				} else if (null != reader) {
+				} else if (null != converter) {
 					try {
-						value = ((MongoConverter) reader).convertObjectId(value);
+						value = converter.convertObjectId(value);
 					} catch (ConversionFailedException ignored) {
 					}
 				}

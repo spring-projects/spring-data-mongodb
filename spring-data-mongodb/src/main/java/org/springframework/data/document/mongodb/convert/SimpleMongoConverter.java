@@ -40,6 +40,9 @@ import org.springframework.core.convert.converter.ConverterFactory;
 import org.springframework.core.convert.support.ConversionServiceFactory;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.document.mongodb.MongoPropertyDescriptors.MongoPropertyDescriptor;
+import org.springframework.data.document.mongodb.mapping.MongoPersistentEntity;
+import org.springframework.data.document.mongodb.mapping.SimpleMongoMappingContext;
+import org.springframework.data.mapping.model.MappingContext;
 import org.springframework.util.Assert;
 import org.springframework.util.comparator.CompoundComparator;
 
@@ -107,6 +110,7 @@ public class SimpleMongoConverter implements MongoConverter, InitializingBean {
   }
 
   private final GenericConversionService conversionService;
+  private final MappingContext<? extends MongoPersistentEntity<?>> mappingContext;
 
   /**
    * Creates a {@link SimpleMongoConverter}.
@@ -114,6 +118,14 @@ public class SimpleMongoConverter implements MongoConverter, InitializingBean {
   public SimpleMongoConverter() {
     this.conversionService = ConversionServiceFactory.createDefaultConversionService();
     this.conversionService.removeConvertible(Object.class, String.class);
+    this.mappingContext = new SimpleMongoMappingContext();
+  }
+  
+  /* (non-Javadoc)
+   * @see org.springframework.data.document.mongodb.convert.MongoConverter#getMappingContext()
+   */
+  public MappingContext<? extends MongoPersistentEntity<?>> getMappingContext() {
+    return mappingContext;
   }
 
   /**

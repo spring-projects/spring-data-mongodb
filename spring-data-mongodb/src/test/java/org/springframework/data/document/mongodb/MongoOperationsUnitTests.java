@@ -32,6 +32,8 @@ import org.springframework.dao.DataAccessException;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import org.springframework.data.document.mongodb.convert.MongoConverter;
+import org.springframework.data.mapping.model.MappingContext;
+import org.springframework.data.mapping.model.PersistentEntity;
 
 /**
  * Abstract base class for unit tests to specify behaviour we expect from {@link MongoOperations}. Subclasses return
@@ -73,6 +75,10 @@ public abstract class MongoOperationsUnitTests {
       }
 
       public ObjectId convertObjectId(Object id) {
+        return null;
+      }
+      
+      public MappingContext<PersistentEntity<?>> getMappingContext() {
         return null;
       }
     };

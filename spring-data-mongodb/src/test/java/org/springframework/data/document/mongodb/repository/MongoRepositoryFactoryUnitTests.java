@@ -41,9 +41,11 @@ public class MongoRepositoryFactoryUnitTests {
   MongoTemplate template;
 
   @Mock
-  MappingContext mappingContext;
+  MappingContext<MongoPersistentEntity<?>> mappingContext;
+  
   @Mock
-  MongoPersistentEntity<Person> entity;
+  @SuppressWarnings("rawtypes")
+  MongoPersistentEntity entity;
   
   
   @Test(expected = IllegalArgumentException.class)
@@ -53,6 +55,7 @@ public class MongoRepositoryFactoryUnitTests {
   }
   
   @Test
+  @SuppressWarnings("unchecked")
   public void usesMappingMongoEntityInformationIfMappingContextSet() {
     
     when(mappingContext.getPersistentEntity(Person.class)).thenReturn(entity);

@@ -43,7 +43,6 @@ import org.apache.commons.logging.LogFactory;
 import org.bson.types.ObjectId;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.expression.BeanFactoryResolver;
@@ -54,6 +53,7 @@ import org.springframework.core.convert.converter.ConverterFactory;
 import org.springframework.core.convert.converter.GenericConverter.ConvertiblePair;
 import org.springframework.core.convert.support.ConversionServiceFactory;
 import org.springframework.core.convert.support.GenericConversionService;
+import org.springframework.data.document.mongodb.mapping.BasicMongoPersistentEntity;
 import org.springframework.data.mapping.AssociationHandler;
 import org.springframework.data.mapping.MappingBeanHelper;
 import org.springframework.data.mapping.PropertyHandler;
@@ -85,7 +85,7 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
 
 	protected final GenericConversionService conversionService = ConversionServiceFactory.createDefaultConversionService();
 	protected final Set<ConvertiblePair> customTypeMapping = new HashSet<ConvertiblePair>();
-	protected final MappingContext mappingContext;
+	protected final MappingContext<BasicMongoPersistentEntity<?>> mappingContext;
 	protected SpelExpressionParser spelExpressionParser = new SpelExpressionParser();
 	protected ApplicationContext applicationContext;
 	protected boolean useFieldAccessOnly = true;
@@ -97,7 +97,7 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
 	 *
 	 * @param mappingContext
 	 */
-	public MappingMongoConverter(MappingContext mappingContext) {
+	public MappingMongoConverter(MappingContext<BasicMongoPersistentEntity<?>> mappingContext) {
 		this.mappingContext = mappingContext;
 		this.conversionService.removeConvertible(Object.class, String.class);
 	}
@@ -146,20 +146,12 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
 	  return null;
 	}
 
-	public MappingContext getMappingContext() {
+	public MappingContext<BasicMongoPersistentEntity<?>> getMappingContext() {
 		return mappingContext;
-	}
-
-	public Mongo getMongo() {
-		return mongo;
 	}
 
 	public void setMongo(Mongo mongo) {
 		this.mongo = mongo;
-	}
-
-	public String getDefaultDatabase() {
-		return defaultDatabase;
 	}
 
 	public void setDefaultDatabase(String defaultDatabase) {
@@ -216,9 +208,9 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
 		}
 
 		// Retrieve persistent entity info
-		PersistentEntity<S> persistentEntity = mappingContext.getPersistentEntity(clazz);
+		PersistentEntity<S> persistentEntity = (PersistentEntity<S>) mappingContext.getPersistentEntity(clazz);
 		if (persistentEntity == null) {
-			persistentEntity = mappingContext.addPersistentEntity(clazz);
+			throw new MappingException("No mapping metadata found for " + clazz.getName());
 		}
 
 		return read(persistentEntity, dbo);
@@ -283,7 +275,7 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
 					return;
 				}
 
-				Object obj = getValueInternal(prop, dbo, spelCtx, prop.getValueAnnotation());
+				Object obj = getValueInternal(prop, dbo, spelCtx, prop.getSpelExpression());
 				try {
 					MappingBeanHelper.setProperty(instance, prop, obj, useFieldAccessOnly);
 				} catch (IllegalAccessException e) {
@@ -298,7 +290,7 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
 		entity.doWithAssociations(new AssociationHandler() {
 			public void doWithAssociation(Association association) {
 				PersistentProperty inverseProp = association.getInverse();
-				Object obj = getValueInternal(inverseProp, dbo, spelCtx, inverseProp.getValueAnnotation());
+				Object obj = getValueInternal(inverseProp, dbo, spelCtx, inverseProp.getSpelExpression());
 				try {
 					MappingBeanHelper.setProperty(instance, inverseProp, obj);
 				} catch (IllegalAccessException e) {
@@ -336,12 +328,7 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
 		}
 
 		if (null == entity) {
-			// Must not have explictly added this entity yet
-			entity = mappingContext.addPersistentEntity(obj.getClass());
-			if (null == entity) {
-				// We can't map this entity for some reason
-				throw new MappingException("Unable to map entity " + obj);
-			}
+			throw new MappingException("No mapping metadata found for entity of type " + obj.getClass().getName());
 		}
 
 		// Write the ID
@@ -455,7 +442,7 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
 				if (null != dbref) {
 					DBRef dbRef = createDBRef(propObjItem, dbref);
 					dbList.add(dbRef);
-				} else if (type.isArray() && MappingBeanHelper.isSimpleType(type.getComponentType())) {
+				} else if (type.isArray() && MappingBeanHelper.isSimpleType(prop.getComponentType())) {
 					dbList.add(propObjItem);
 				} else if (propObjItem instanceof List) {
 					List<?> propObjColl = (List<?>) propObjItem;
@@ -478,7 +465,7 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
 					dbList.add(propObjItem);
 				} else {
 					BasicDBObject propDbObj = new BasicDBObject();
-					write(propObjItem, propDbObj, mappingContext.getPersistentEntity(prop.getTypeInformation()));
+					write(propObjItem, propDbObj, mappingContext.getPersistentEntity(prop.getComponentType()));
 					dbList.add(propDbObj);
 				}
 			}
@@ -576,14 +563,14 @@ public class MappingMongoConverter implements MongoConverter, ApplicationContext
 	}
 
 	@SuppressWarnings({"unchecked"})
-	protected Object getValueInternal(PersistentProperty prop, DBObject dbo, StandardEvaluationContext ctx, Value spelExpr) {
+	protected Object getValueInternal(PersistentProperty prop, DBObject dbo, StandardEvaluationContext ctx, String spelExpr) {
 		
 	  String name = prop.getName();
 	  Class<?> propertyType = prop.getType();
 		
 		Object o;
 		if (null != spelExpr) {
-			Expression x = spelExpressionParser.parseExpression(spelExpr.value());
+			Expression x = spelExpressionParser.parseExpression(spelExpr);
 			o = x.getValue(ctx);
 		} else {
 			Object dbObj = dbo.get(name);

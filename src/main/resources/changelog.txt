@@ -5,7 +5,7 @@ Changes in version 1.0.0.RC1 MongoDB
 -------------------------------------------------
 
 General
-* 
+* Introducted MappingContext implementatio for SimpleMongoConverter (DATADOC-109)
 
 Changes in version 1.0.0.M2 MongoDB (2011-04-09)
 ------------------------------------------------

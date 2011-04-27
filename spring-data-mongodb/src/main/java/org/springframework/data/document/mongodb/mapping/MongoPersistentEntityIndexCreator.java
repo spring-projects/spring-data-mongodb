@@ -43,7 +43,7 @@ import org.springframework.data.mapping.model.PersistentProperty;
 import org.springframework.util.Assert;
 
 /**
- * Component that inspects {@link MongoPersistentEntity} instances contained in the given {@link MongoMappingContext}
+ * Component that inspects {@link BasicMongoPersistentEntity} instances contained in the given {@link MongoMappingContext}
  * for indexing metadata and ensures the indexes to be available.
  *
  * @author Jon Brisbin <jbrisbin@vmware.com>
@@ -80,15 +80,6 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 		if (!classesSeen.contains(type)) {
 			if (log.isDebugEnabled()) {
 				log.debug("Analyzing class " + type + " for index information.");
-			}
-			// Check for special collection setting
-			if (type.isAnnotationPresent(Document.class)) {
-				Document doc = type.getAnnotation(Document.class);
-				String collection = doc.collection();
-				if ("".equals(collection)) {
-					collection = type.getSimpleName().toLowerCase();
-				}
-				entity.setCollection(collection);
 			}
 
 			// Make sure indexes get created

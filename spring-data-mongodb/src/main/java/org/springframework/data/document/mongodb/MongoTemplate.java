@@ -18,8 +18,11 @@ package org.springframework.data.document.mongodb;
 
 import static org.springframework.data.document.mongodb.query.Criteria.*;
 
+import java.beans.IntrospectionException;
+import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -40,8 +43,6 @@ import com.mongodb.util.JSON;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bson.types.ObjectId;
-import org.springframework.beans.ConfigurablePropertyAccessor;
-import org.springframework.beans.PropertyAccessorFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
@@ -65,7 +66,6 @@ import org.springframework.data.document.mongodb.query.Query;
 import org.springframework.data.document.mongodb.query.QueryMapper;
 import org.springframework.data.document.mongodb.query.Update;
 import org.springframework.data.mapping.MappingBeanHelper;
-import org.springframework.data.mapping.context.MappingContextAware;
 import org.springframework.data.mapping.model.MappingContext;
 import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mapping.model.PersistentEntity;
@@ -81,7 +81,7 @@ import org.springframework.util.Assert;
  * @author Mark Pollack
  * @author Oliver Gierke
  */
-public class MongoTemplate implements InitializingBean, MongoOperations, ApplicationEventPublisherAware, MappingContextAware {
+public class MongoTemplate implements InitializingBean, MongoOperations, ApplicationEventPublisherAware {
 
 	private static final Log LOGGER = LogFactory.getLog(MongoTemplate.class);
 
@@ -99,10 +99,11 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 			*/
 	private WriteResultChecking writeResultChecking = WriteResultChecking.NONE;
 
-	private MongoConverter mongoConverter;
-	private MappingContext mappingContext;
+	private final MongoConverter mongoConverter;
+	private final MappingContext<MongoPersistentEntity<?>> mappingContext;
 	private final Mongo mongo;
 	private final MongoExceptionTranslator exceptionTranslator = new MongoExceptionTranslator();
+	private final QueryMapper mapper;
 
 	private String defaultCollectionName;
 	private String databaseName;
@@ -163,25 +164,29 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 		this.mongo = mongo;
 		this.databaseName = databaseName;
 		this.writeConcern = writeConcern;
+		this.mongoConverter = mongoConverter == null ? getDefaultMongoConverter() : mongoConverter;
+		
+		if (this.mongoConverter instanceof MappingMongoConverter) {
+		  initializeMappingMongoConverter((MappingMongoConverter) this.mongoConverter);
+		}
+		
+		this.mappingContext = this.mongoConverter.getMappingContext();
+		this.mapper = new QueryMapper(this.mongoConverter);
+		
 		if (writeResultChecking != null) {
 			this.writeResultChecking = writeResultChecking;
 		}
-		if (mongoConverter == null) {
-			SimpleMongoConverter smc = new SimpleMongoConverter();
-			smc.afterPropertiesSet();
-			setMongoConverter(smc);
-		} else {
-			setMongoConverter(mongoConverter);
-		}
-		//setMongoConverter(mongoConverter == null ? new SimpleMongoConverter() : mongoConverter);
+	}
+	
+	private final MongoConverter getDefaultMongoConverter() {
+	  
+	  SimpleMongoConverter converter = new SimpleMongoConverter();
+	  converter.afterPropertiesSet();
+	  return converter;
 	}
 
 	public void setApplicationEventPublisher(ApplicationEventPublisher applicationEventPublisher) {
 		this.eventPublisher = applicationEventPublisher;
-	}
-
-	public void setMappingContext(MappingContext mappingContext) {
-		this.mappingContext = mappingContext;
 	}
 
 	/**
@@ -606,30 +611,25 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 			* @see org.springframework.data.document.mongodb.MongoOperations#insertList(java.util.List, org.springframework.data.document.mongodb.MongoWriter)
 			*/
 	public <T> void insertList(List<? extends T> listToSave, MongoWriter<T> writer) {
-		if (null != mappingContext) {
-			Map<String, List<Object>> objs = new HashMap<String, List<Object>>();
-			for (Object o : listToSave) {
-				PersistentEntity<?> entity = mappingContext.getPersistentEntity(o.getClass());
-				if (null != entity && entity instanceof MongoPersistentEntity) {
-					@SuppressWarnings("unchecked")
-					String coll = ((MongoPersistentEntity<T>) entity).getCollection();
-					List<Object> objList = objs.get(coll);
-					if (null == objList) {
-						objList = new ArrayList<Object>();
-						objs.put(coll, objList);
-					}
-					objList.add(o);
-				} else {
-					continue;
-				}
+		Map<String, List<Object>> objs = new HashMap<String, List<Object>>();
+		
+		for (Object o : listToSave) {
+		  
+			MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(o.getClass());
+			String collection = entity == null ? getDefaultCollectionName() : entity.getCollection();
+			
+			List<Object> objList = objs.get(collection);
+			if (null == objList) {
+				objList = new ArrayList<Object>();
+				objs.put(collection, objList);
 			}
-			for (Map.Entry<String, List<Object>> entry : objs.entrySet()) {
-				insertList(entry.getKey(), entry.getValue());
-			}
-			return;
+			objList.add(o);
+			
 		}
-
-		insertList(getDefaultCollectionName(), listToSave, writer);
+		
+		for (Map.Entry<String, List<Object>> entry : objs.entrySet()) {
+			insertList(entry.getKey(), entry.getValue());
+		}
 	}
 
 	/* (non-Javadoc)
@@ -865,7 +865,12 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 	}
 
 	public <T> void remove(Query query, Class<T> targetClass) {
+	  Assert.notNull(query);
 		remove(getEntityCollection(targetClass), query, targetClass);
+	}
+	
+	private PersistentEntity<?> getPersistentEntity(Class<?> type) {
+	  return type == null ? null : mappingContext.getPersistentEntity(type);
 	}
 
 	public <T> void remove(String collectionName, final Query query, Class<T> targetClass) {
@@ -873,14 +878,13 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 			throw new InvalidDataAccessApiUsageException("Query passed in to remove can't be null");
 		}
 		final DBObject queryObject = query.getQueryObject();
-		PersistentEntity<T> entity = getPersistentEntity(targetClass);
-		final QueryMapper<T> queryMapper = new QueryMapper<T>(queryObject, entity, mongoConverter);
+		final PersistentEntity<?> entity = getPersistentEntity(targetClass);
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug("remove using query: " + queryObject);
 		}
 		execute(collectionName, new CollectionCallback<Void>() {
 			public Void doInCollection(DBCollection collection) throws MongoException, DataAccessException {
-				DBObject dboq = queryMapper.getMappedObject();
+				DBObject dboq = mapper.getMappedObject(queryObject, entity);
 				WriteResult wr = null;
 				if (writeConcern == null) {
 					wr = collection.remove(dboq);
@@ -931,14 +935,6 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 		return MongoDbUtils.getDB(mongo, databaseName, username, password == null ? null : password.toCharArray());
 	}
 
-	protected <T> PersistentEntity<T> getPersistentEntity(Class<T> targetClass) {
-		if (null != targetClass && null != mappingContext) {
-			return mappingContext.getPersistentEntity(targetClass);
-		} else {
-			return null;
-		}
-	}
-
 	protected <T> void maybeEmitEvent(MongoMappingEvent<T> event) {
 		if (null != eventPublisher) {
 			eventPublisher.publishEvent(event);
@@ -979,9 +975,10 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 		if (readerToUse == null) {
 			readerToUse = this.mongoConverter;
 		}
-		PersistentEntity<T> entity = getPersistentEntity(targetClass);
-		QueryMapper<T> queryMapper = new QueryMapper<T>(query, entity, readerToUse);
-		return execute(new FindOneCallback(queryMapper.getMappedObject(), fields),
+		PersistentEntity<?> entity = mappingContext.getPersistentEntity(targetClass);
+		DBObject mappedQuery = mapper.getMappedObject(query, entity);
+		
+		return execute(new FindOneCallback(mappedQuery, fields),
 				new ReadDbObjectCallback<T>(readerToUse, targetClass),
 				collectionName);
 	}
@@ -1006,12 +1003,11 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 	 * @return the List of converted objects.
 	 */
 	protected <T> List<T> doFind(String collectionName, DBObject query, DBObject fields, Class<T> targetClass, CursorPreparer preparer) {
-		PersistentEntity<T> entity = getPersistentEntity(targetClass);
-		QueryMapper<T> queryMapper = new QueryMapper<T>(query, entity, mongoConverter);
+		PersistentEntity<?> entity = mappingContext.getPersistentEntity(targetClass);
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug("find using query: " + query + " fields: " + fields + " for class: " + targetClass);
 		}
-		return executeEach(new FindCallback(queryMapper.getMappedObject(), fields),
+		return executeEach(new FindCallback(mapper.getMappedObject(query, entity), fields),
 				preparer,
 				new ReadDbObjectCallback<T>(mongoConverter, targetClass),
 				collectionName);
@@ -1030,12 +1026,11 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 	 * @return the List of converted objects.
 	 */
 	protected <T> List<T> doFind(String collectionName, DBObject query, DBObject fields, Class<T> targetClass, MongoReader<T> reader) {
-		PersistentEntity<T> entity = getPersistentEntity(targetClass);
-		QueryMapper<T> queryMapper = new QueryMapper<T>(query, entity, reader);
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug("find using query: " + query + " fields: " + fields + " for class: " + targetClass);
 		}
-		return executeEach(new FindCallback(queryMapper.getMappedObject(), fields),
+		PersistentEntity<?> entity = mappingContext.getPersistentEntity(targetClass);
+		return executeEach(new FindCallback(mapper.getMappedObject(query, entity), fields),
 				null,
 				new ReadDbObjectCallback<T>(reader, targetClass),
 				collectionName);
@@ -1074,44 +1069,31 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 		if (readerToUse == null) {
 			readerToUse = this.mongoConverter;
 		}
-		PersistentEntity<T> entity = null;
-		if (null != mappingContext) {
-			entity = mappingContext.getPersistentEntity(targetClass);
-		}
-		QueryMapper<T> queryMapper = new QueryMapper<T>(query, entity, readerToUse);
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug("findAndRemove using query: " + query + " fields: " + fields + " sort: " + sort + " for class: " + targetClass);
 		}
-		return execute(new FindAndRemoveCallback(queryMapper.getMappedObject(), fields, sort),
+		PersistentEntity<?> entity = mappingContext.getPersistentEntity(targetClass);
+		return execute(new FindAndRemoveCallback(mapper.getMappedObject(query, entity), fields, sort),
 				new ReadDbObjectCallback<T>(readerToUse, targetClass),
 				collectionName);
 	}
 
 	protected Object getIdValue(Object object) {
-		if (null != mappingContext) {
-			PersistentEntity<?> entity = mappingContext.getPersistentEntity(object.getClass());
-			if (null != entity) {
-				PersistentProperty idProp = entity.getIdProperty();
-				if (null != idProp) {
-					try {
-						return MappingBeanHelper.getProperty(object, idProp, Object.class, true);
-					} catch (IllegalAccessException e) {
-						throw new MappingException(e.getMessage(), e);
-					} catch (InvocationTargetException e) {
-						throw new MappingException(e.getMessage(), e);
-					}
-				}
-			}
+		
+		PersistentEntity<?> entity = mappingContext.getPersistentEntity(object.getClass());
+		PersistentProperty idProp = entity.getIdProperty();
+		
+		if (idProp == null) {
+		  throw new MappingException("No id property found for object of type " + entity.getType().getName());
 		}
-
-		ConfigurablePropertyAccessor bw = PropertyAccessorFactory.forDirectFieldAccess(object);
-		MongoPropertyDescriptor idDescriptor = new MongoPropertyDescriptors(object.getClass()).getIdDescriptor();
-
-		if (idDescriptor == null) {
-			return null;
+		
+		try {
+			return MappingBeanHelper.getProperty(object, idProp, Object.class, true);
+		} catch (IllegalAccessException e) {
+			throw new MappingException(e.getMessage(), e);
+		} catch (InvocationTargetException e) {
+			throw new MappingException(e.getMessage(), e);
 		}
-		return bw.getPropertyValue(idDescriptor.getName());
-
 	}
 
 	/**
@@ -1126,38 +1108,107 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 			return;
 		}
 
-		if (null != mappingContext) {
-			PersistentEntity<?> entity = mappingContext.getPersistentEntity(savedObject.getClass());
-			if (null != entity) {
-				PersistentProperty idProp = entity.getIdProperty();
-				if (null != idProp) {
-					try {
-						MappingBeanHelper.setProperty(savedObject, idProp, id);
-						return;
-					} catch (IllegalAccessException e) {
-						throw new MappingException(e.getMessage(), e);
-					} catch (InvocationTargetException e) {
-						throw new MappingException(e.getMessage(), e);
-					}
-				}
-			}
+		PersistentProperty idProp = getIdPropertyFor(savedObject.getClass());
+
+		if (idProp == null) {
+		  return;
 		}
+		
+		try {
+			MappingBeanHelper.setProperty(savedObject, idProp, id);
+			return;
+		} catch (IllegalAccessException e) {
+			throw new MappingException(e.getMessage(), e);
+		} catch (InvocationTargetException e) {
+			throw new MappingException(e.getMessage(), e);
+		}
+	}
 
-		ConfigurablePropertyAccessor bw = PropertyAccessorFactory.forDirectFieldAccess(savedObject);
-		MongoPropertyDescriptor idDescriptor = new MongoPropertyDescriptors(savedObject.getClass()).getIdDescriptor();
+  private PersistentProperty getIdPropertyFor(Class<?> type) {
+    return mappingContext.getPersistentEntity(type).getIdProperty();
+  }
 
-		if (idDescriptor == null) {
+	/**
+	 * Substitutes the id key if it is found in he query. Any 'id' keys will be replaced with '_id' and the value converted
+	 * to an ObjectId if possible. This conversion should match the way that the id fields are converted during read
+	 * operations.
+	 *
+	 * @param query
+	 * @param targetClass
+	 * @param reader
+	 */
+	protected void substituteMappedIdIfNecessary(DBObject query, Class<?> targetClass, MongoReader<?> reader) {
+		MongoConverter converter = null;
+		if (reader instanceof SimpleMongoConverter) {
+			converter = (MongoConverter) reader;
+		}
+		else if (reader instanceof MappingMongoConverter) {
+			converter = (MappingMongoConverter) reader;
+		}
+		else {
 			return;
 		}
-
-		if (bw.getPropertyValue(idDescriptor.getName()) == null) {
-			Object target = null;
-			if (id instanceof ObjectId) {
-				target = this.mongoConverter.convertObjectId((ObjectId) id, idDescriptor.getPropertyType());
-			} else {
-				target = id;
+		String idKey = null;
+		if (query.containsField("id")) {
+			idKey = "id";
+		}
+		if (query.containsField("_id")) {
+			idKey = "_id";
+		}
+		if (idKey == null) {
+			// no ids in this query
+			return;
+		}
+		MongoPropertyDescriptor descriptor;
+		try {
+			MongoPropertyDescriptor mpd = new MongoPropertyDescriptor(new PropertyDescriptor(idKey, targetClass), targetClass);
+			descriptor = mpd;
+		} catch (IntrospectionException e) {
+			// no property descriptor for this key - try the other
+			try {
+				String theOtherIdKey = "id".equals(idKey) ? "_id" : "id";
+				MongoPropertyDescriptor mpd2 = new MongoPropertyDescriptor(new PropertyDescriptor(theOtherIdKey, targetClass), targetClass);
+				descriptor = mpd2;
+			} catch (IntrospectionException e2) {
+				// no property descriptor for this key either - bail
+				return;
 			}
-			bw.setPropertyValue(idDescriptor.getName(), target);
+		}
+		if (descriptor.isIdProperty() && descriptor.isOfIdType()) {
+			Object value = query.get(idKey);
+			if (value instanceof DBObject) {
+				DBObject dbo = (DBObject) value;
+				if (dbo.containsField("$in")) {
+					List<Object> ids = new ArrayList<Object>();
+					int count = 0;
+					for (Object o : (Object[])dbo.get("$in")) {
+						count++;
+						ObjectId newValue = convertIdValue(converter, o);
+						if (newValue != null) {
+							ids.add(newValue);
+						}
+					}
+					if (ids.size() > 0 && ids.size() != count) {
+						throw new InvalidDataAccessApiUsageException("Inconsistent set of id values provided " +
+								Arrays.asList((Object[])dbo.get("$in")));
+					}
+					if (ids.size() > 0) {
+						dbo.removeField("$in");
+						dbo.put("$in", ids.toArray());
+					}
+				}
+				query.removeField(idKey);
+				query.put(MongoPropertyDescriptor.ID_KEY, value);
+			}
+			else {
+				ObjectId newValue = convertIdValue(converter, value);
+				query.removeField(idKey);
+				if (newValue != null) {
+					query.put(MongoPropertyDescriptor.ID_KEY, newValue);
+				} else {
+					query.put(MongoPropertyDescriptor.ID_KEY, value);
+				}
+			}
 		}
 	}
 
@@ -1190,18 +1241,14 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 		return null;
 	}
 
-	private <T> String getEntityCollection(Class<T> clazz) {
-		if (null != mappingContext) {
-			PersistentEntity<T> entity = mappingContext.getPersistentEntity(clazz);
-			if (entity == null) {
-				entity = mappingContext.addPersistentEntity(clazz);
-			}
-			if (null != entity && entity instanceof MongoPersistentEntity) {
-				return ((MongoPersistentEntity<T>) entity).getCollection();
-			}
-		}
-		// Otherwise, return the default for this template.
-		return getRequiredDefaultCollectionName();
+	private String getEntityCollection(Class<?> clazz) {
+	  
+	  if (clazz == null) {
+	    return getDefaultCollectionName();
+	  }
+		
+		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(clazz);
+		return entity.getCollection();
 	}
 
 	/**
@@ -1391,13 +1438,6 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 				maybeEmitEvent(new AfterConvertEvent<T>(object, source));
 			}
 			return source;
-		}
-	}
-
-	public void setMongoConverter(MongoConverter converter) {
-		this.mongoConverter = converter;
-		if (null != converter && converter instanceof MappingMongoConverter) {
-			initializeMappingMongoConverter((MappingMongoConverter) mongoConverter);
 		}
 	}
 

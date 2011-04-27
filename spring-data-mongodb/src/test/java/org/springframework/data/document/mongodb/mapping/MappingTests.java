@@ -89,8 +89,6 @@ public class MappingTests {
 
 	@Test
 	public void testPersonPojo() throws Exception {
-		// POJOs aren't auto-detected, have to add manually
-		mappingContext.addPersistentEntity(PersonPojo.class);
 
 		LOGGER.info("about to create new personpojo");
 		PersonPojo p = new PersonPojo(12345, "Person", "Pojo");
@@ -106,8 +104,6 @@ public class MappingTests {
 
 	@Test
 	public void testPersonWithCustomIdName() {
-		// POJOs aren't auto-detected, have to add manually
-		mappingContext.addPersistentEntity(PersonCustomIdName.class);
 
 		PersonCustomIdName p = new PersonCustomIdName(123456, "Custom Id", null);
 		template.insert(p);
@@ -123,7 +119,6 @@ public class MappingTests {
 		assertThat(result2.size(), is(1));
 		assertNotNull(result2.get(0).getLastName());
 		assertThat(result2.get(0).getLastName(), is("LastName"));
-
 	}
 
 	@Test

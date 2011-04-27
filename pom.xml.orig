@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.springframework.data</groupId>
+  <artifactId>spring-data-document-dist</artifactId>
+  <name>Spring Data Document Distribution</name>
+  <version>1.0.0.BUILD-SNAPSHOT</version>
+  <packaging>pom</packaging>
+  <modules>
+    <module>spring-data-document-parent</module>
+    <module>spring-data-document-core</module>
+    <module>spring-data-mongodb</module>
+<<<<<<< Updated upstream
+    <module>spring-data-mongodb-cross-store</module>
+    <module>spring-data-mongodb-log4j</module>
+=======
+    <!--<module>spring-data-mongodb-cross-store</module>-->
+>>>>>>> Stashed changes
+    <module>spring-data-couchdb</module>
+  </modules>
+
+  <developers>
+    <developer>
+      <id>trisberg</id>
+      <name>Thomas Risberg</name>
+      <email>trisberg at vmware.com</email>
+      <organization>SpringSource</organization>
+      <organizationUrl>http://www.SpringSource.com</organizationUrl>
+      <roles>
+        <role>Project Admin</role>
+        <role>Developer</role>
+      </roles>
+      <timezone>-5</timezone>
+    </developer>
+    <developer>
+      <id>mpollack</id>
+      <name>Mark Pollack</name>
+      <email>mpollack at vmware.com</email>
+      <organization>SpringSource</organization>
+      <organizationUrl>http://www.SpringSource.com</organizationUrl>
+      <roles>
+        <role>Project Admin</role>
+        <role>Developer</role>
+      </roles>
+      <timezone>-5</timezone>
+    </developer>
+    <developer>
+      <id>ogierke</id>
+      <name>Oliver Gierke</name>
+      <email>ogierke at vmware.com</email>
+      <organization>SpringSource</organization>
+      <organizationUrl>http://www.springsource.com</organizationUrl>
+      <roles>
+        <role>Developer</role>
+      </roles>
+      <timezone>+1</timezone>
+    </developer>
+    <developer>
+      <id>jbrisbin</id>
+      <name>Jon Brisbin</name>
+      <email>jbrisbin at vmware.com</email>
+      <organization>SpringSource</organization>
+      <organizationUrl>http://www.springsource.com</organizationUrl>
+      <roles>
+        <role>Developer</role>
+      </roles>
+      <timezone>-6</timezone>
+    </developer>
+  </developers>
+
+  <licenses>
+    <license>
+      <name>Apache License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0</url>
+      <comments>
+        Copyright 2010 the original author or authors.
+
+        Licensed under the Apache License, Version 2.0 (the "License");
+        you may not use this file except in compliance with the License.
+        You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+        Unless required by applicable law or agreed to in writing, software
+        distributed under the License is distributed on an "AS IS" BASIS,
+        WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+        implied.
+        See the License for the specific language governing permissions and
+        limitations under the License.
+      </comments>
+    </license>
+  </licenses>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <!-- dist.* properties are used by the antrun tasks below -->
+    <dist.id>spring-data-document</dist.id>
+    <dist.name>Spring Data</dist.name>
+    <dist.key>DATADOC</dist.key>
+    <dist.version>${project.version}</dist.version>
+    <dist.releaseType>snapshot</dist.releaseType>
+    <dist.finalName>${dist.id}-${dist.version}</dist.finalName>
+    <dist.fileName>${dist.finalName}.zip</dist.fileName>
+    <dist.filePath>target/${dist.fileName}</dist.filePath>
+    <dist.bucketName>dist.springframework.org</dist.bucketName>
+    <!-- these properties should be in ~/.m2/settings.xml
+      <dist.accessKey>s3 access key</dist.accessKey>
+      <dist.secretKey>s3 secret key</dist.secretKey>
+      -->
+  </properties>
+
+  <build>
+    <extensions>
+      <extension>
+        <groupId>org.springframework.build.aws</groupId>
+        <artifactId>org.springframework.build.aws.maven</artifactId>
+        <version>3.1.0.RELEASE</version>
+      </extension>
+    </extensions>
+
+    <plugins>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>1.6</source>
+          <target>1.6</target>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>com.agilejava.docbkx</groupId>
+        <artifactId>docbkx-maven-plugin</artifactId>
+        <version>2.0.7</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>generate-html</goal>
+              <goal>generate-pdf</goal>
+            </goals>
+            <phase>pre-site</phase>
+          </execution>
+        </executions>
+        <dependencies>
+          <dependency>
+            <groupId>org.docbook</groupId>
+            <artifactId>docbook-xml</artifactId>
+            <version>4.4</version>
+            <scope>runtime</scope>
+          </dependency>
+        </dependencies>
+        <configuration>
+          <includes>index.xml</includes>
+          <xincludeSupported>true</xincludeSupported>
+          <foCustomization>${project.basedir}/src/docbkx/resources/xsl/fopdf.xsl</foCustomization>
+          <htmlStylesheet>css/html.css</htmlStylesheet>
+          <chunkedOutput>false</chunkedOutput>
+          <htmlCustomization>${project.basedir}/src/docbkx/resources/xsl/html.xsl</htmlCustomization>
+          <useExtensions>1</useExtensions>
+          <highlightSource>1</highlightSource>
+          <highlightDefaultLanguage></highlightDefaultLanguage>
+          <!-- callouts -->
+          <entities>
+            <entity>
+              <name>version</name>
+              <value>${pom.version}</value>
+            </entity>
+          </entities>
+          <postProcess>
+            <copy todir="${project.basedir}/target/site/reference">
+              <fileset dir="${project.basedir}/target/docbkx">
+                <include name="**/*.html"/>
+                <include name="**/*.pdf"/>
+              </fileset>
+            </copy>
+            <copy todir="${project.basedir}/target/site/reference/html">
+              <fileset dir="${project.basedir}/src/docbkx/resources">
+                <include name="**/*.css"/>
+                <include name="**/*.png"/>
+                <include name="**/*.gif"/>
+                <include name="**/*.jpg"/>
+              </fileset>
+            </copy>
+            <move file="${project.basedir}/target/site/reference/pdf/index.pdf"
+                  tofile="${project.basedir}/target/site/reference/pdf/spring-data-document-reference.pdf"
+                  failonerror="false"/>
+          </postProcess>
+        </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>2.5</version>
+        <configuration>
+          <javadoc:aggregate>true</javadoc:aggregate>
+          <breakiterator>true</breakiterator>
+          <header>Spring Data Graph</header>
+          <source>1.6</source>
+          <quiet>true</quiet>
+          <javadocDirectory>${project.basedir}/src/main/javadoc</javadocDirectory>
+          <overview>${project.basedir}/src/main/javadoc/overview.html</overview>
+          <stylesheetfile>${project.basedir}/src/main/javadoc/spring-javadoc.css</stylesheetfile>
+          <!-- copies doc-files subdirectory which contains image resources -->
+          <docfilessubdirs>true</docfilessubdirs>
+          <links>
+            <link>http://static.springframework.org/spring/docs/3.0.x/javadoc-api</link>
+            <link>http://java.sun.com/javase/6/docs/api</link>
+            <link>http://api.mongodb.org/java/2.3</link>
+          </links>
+        </configuration>
+      </plugin>
+      <plugin><!--
+				run `mvn package assembly:assembly` to trigger assembly creation.
+				see http://www.sonatype.com/books/mvnref-book/reference/assemblies-set-dist-assemblies.html -->
+        <artifactId>maven-assembly-plugin</artifactId>
+        <version>2.2-beta-5</version>
+        <inherited>false</inherited>
+        <executions>
+          <execution>
+            <id>distribution</id>
+            <goals>
+              <goal>single</goal>
+            </goals>
+            <phase>package</phase>
+            <configuration>
+              <descriptors>
+                <descriptor>${project.basedir}/src/assembly/distribution.xml</descriptor>
+              </descriptors>
+              <appendAssemblyId>false</appendAssemblyId>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>1.4</version>
+        <executions>
+          <execution>
+            <id>upload-dist</id>
+            <phase>deploy</phase>
+            <configuration>
+              <tasks>
+                <ant antfile="${basedir}/src/ant/upload-dist.xml">
+                  <target name="upload-dist"/>
+                </ant>
+              </tasks>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+        </executions>
+        <dependencies>
+          <dependency>
+            <groupId>org.springframework.build</groupId>
+            <artifactId>org.springframework.build.aws.ant</artifactId>
+            <version>3.0.5.RELEASE</version>
+          </dependency>
+          <dependency>
+            <groupId>net.java.dev.jets3t</groupId>
+            <artifactId>jets3t</artifactId>
+            <version>0.7.2</version>
+          </dependency>
+        </dependencies>
+      </plugin>
+    </plugins>
+    <!-- the name of this project is 'spring-data-document-dist';
+         make sure the zip file is just 'spring-data-document'. -->
+    <finalName>${dist.finalName}</finalName>
+  </build>
+
+  <distributionManagement>
+    <!-- see 'staging' profile for dry-run deployment settings -->
+    <downloadUrl>http://www.springsource.com/spring-data</downloadUrl>
+    <site>
+      <id>static.springframework.org</id>
+      <url>
+        scp://static.springframework.org/var/www/domains/springframework.org/static/htdocs/spring-data/data-document/snapshot-site/
+      </url>
+    </site>
+    <repository>
+      <id>spring-milestone</id>
+      <name>Spring Milestone Repository</name>
+      <url>s3://maven.springframework.org/milestone</url>
+    </repository>
+    <snapshotRepository>
+      <id>spring-snapshot</id>
+      <name>Spring Snapshot Repository</name>
+      <url>s3://maven.springframework.org/snapshot</url>
+    </snapshotRepository>
+  </distributionManagement>
+
+</project>

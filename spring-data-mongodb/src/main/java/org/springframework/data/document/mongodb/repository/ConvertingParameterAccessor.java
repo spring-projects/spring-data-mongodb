@@ -15,7 +15,9 @@
  */
 package org.springframework.data.document.mongodb.repository;
 
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
@@ -89,7 +91,7 @@ public class ConvertingParameterAccessor implements ParameterAccessor {
 
     DBObject result = new BasicDBObject();
     writer.write(value.getClass().isEnum() ? new EnumValueHolder((Enum<?>) value) : new ValueHolder(value), result);
-    return result.get("value");
+    return ((DBObject) result.get("value")).get("value");
   }
 
   /**
@@ -146,15 +148,15 @@ public class ConvertingParameterAccessor implements ParameterAccessor {
    */
   private static class ValueHolder {
 
-    private Object value;
+    private Map<String, Object> value = new HashMap<String, Object>();
 
     public ValueHolder(Object value) {
 
-      this.value = value;
+      this.value.put("value", value);
     }
 
     @SuppressWarnings("unused")
-    public Object getValue() {
+    public Map<String, Object> getValue() {
 
       return value;
     }

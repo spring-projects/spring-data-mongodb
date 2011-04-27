@@ -16,13 +16,14 @@
 package org.springframework.data.document.mongodb.repository;
 
 import java.io.Serializable;
+import org.springframework.data.document.mongodb.mapping.BasicMongoPersistentEntity;
 import org.springframework.data.document.mongodb.mapping.MongoPersistentEntity;
 import org.springframework.data.mapping.MappingBeanHelper;
 import org.springframework.data.mapping.model.PersistentProperty;
 import org.springframework.data.repository.support.AbstractEntityInformation;
 
 /**
- * {@link MongoEntityInformation} implementation using a {@link MongoPersistentEntity} instance to lookup the necessary
+ * {@link MongoEntityInformation} implementation using a {@link BasicMongoPersistentEntity} instance to lookup the necessary
  * information.
  * 
  * @author Oliver Gierke
@@ -77,6 +78,6 @@ public class MappingMongoEntityInformation<T, ID extends Serializable> extends A
    * @see org.springframework.data.document.mongodb.repository.MongoEntityInformation#getIdAttribute()
    */
   public String getIdAttribute() {
-    return "_id";
+    return entityMetadata.getIdProperty().getName();
   }
 }

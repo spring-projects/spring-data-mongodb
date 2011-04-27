@@ -206,7 +206,7 @@ public class MvcAnalyticsTests {
   private void createAndStoreMvcEvent(int dataSize, int p1) {
     for (int i = 0; i < dataSize; i++) {
       MvcEvent event = generateEvent(p1);
-      mongoTemplate.save(event);
+      mongoTemplate.save("mvc", event);
     }
   }
 

@@ -45,6 +45,9 @@ public class StringBasedMongoQueryUnitTests {
   MongoTemplate template;
   @Mock
   RepositoryMetadata metadata;
+  @Mock
+  EntityInformationCreator creator;
+  
   MongoConverter converter = new SimpleMongoConverter();
 
   @Before
@@ -56,7 +59,7 @@ public class StringBasedMongoQueryUnitTests {
   public void testname() throws Exception {
 
     Method method = SampleRepository.class.getMethod("findByLastname", String.class);
-    MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, new EntityInformationCreator(null));
+    MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, creator);
     StringBasedMongoQuery mongoQuery = new StringBasedMongoQuery(queryMethod, template);
     ConvertingParameterAccessor accesor = StubParameterAccessor.getAccessor(converter, "Matthews");
 

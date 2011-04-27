@@ -19,12 +19,13 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
 import static org.springframework.data.document.mongodb.query.Criteria.where;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.Mongo;
-import com.mongodb.WriteConcern;
 import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Rule;
@@ -60,13 +61,14 @@ public class MongoTemplateTests {
   public ExpectedException thrown = ExpectedException.none();
 
   @Autowired
-  public void setMongo(Mongo mongo) {
+  @SuppressWarnings("unchecked")
+  public void setMongo(Mongo mongo) throws Exception {
 	  
 	  MongoMappingContext mappingContext = new MongoMappingContext();
-	  mappingContext.addPersistentEntity(PersonWith_idPropertyOfTypeObjectId.class);
-	  mappingContext.addPersistentEntity(PersonWith_idPropertyOfTypeString.class);
-	  mappingContext.addPersistentEntity(PersonWithIdPropertyOfTypeObjectId.class);
-	  mappingContext.addPersistentEntity(PersonWithIdPropertyOfTypeString.class);
+    mappingContext.setInitialEntitySet(new HashSet<Class<?>>(Arrays.asList(PersonWith_idPropertyOfTypeObjectId.class,
+        PersonWith_idPropertyOfTypeString.class, PersonWithIdPropertyOfTypeObjectId.class,
+        PersonWithIdPropertyOfTypeString.class)));
+    mappingContext.afterPropertiesSet();
 	  
 	  MappingMongoConverter converter = new MappingMongoConverter(mappingContext);
 	  converter.afterPropertiesSet();
@@ -97,7 +99,7 @@ public class MongoTemplateTests {
   public void updateFailure() throws Exception {
 
     MongoTemplate mongoTemplate = new MongoTemplate(template.getDb().getMongo(), "test", "people");
-    mongoTemplate.setWriteResultChecking(WriteResultChecking.EXCEPTION);       
+    mongoTemplate.setWriteResultChecking(WriteResultChecking.EXCEPTION);
 
     Person person = new Person("Oliver2");
     person.setAge(25);
@@ -274,6 +276,8 @@ public class MongoTemplateTests {
 
   @Test
   public void testUsingAnInQuery() throws Exception {
+    
+    template.remove(new Query(), PersonWithIdPropertyOfTypeObjectId.class);
 
     PersonWithIdPropertyOfTypeObjectId p1 = new PersonWithIdPropertyOfTypeObjectId();
     p1.setFirstName("Sven");
@@ -315,7 +319,7 @@ public class MongoTemplateTests {
     PersonWithIdPropertyOfTypeObjectId found1 = template.findOne(q1, PersonWithIdPropertyOfTypeObjectId.class);
     assertThat(found1, notNullValue());
     Query _q = new Query(Criteria.where("_id").is(p1.getId()));
-    template.remove(_q);
+    template.remove(_q, PersonWithIdPropertyOfTypeObjectId.class);
     PersonWithIdPropertyOfTypeObjectId notFound1 = template.findOne(q1, PersonWithIdPropertyOfTypeObjectId.class);
     assertThat(notFound1, nullValue());
 
@@ -327,7 +331,7 @@ public class MongoTemplateTests {
     Query q2 = new Query(Criteria.where("id").is(p2.getId()));
     PersonWithIdPropertyOfTypeObjectId found2 = template.findOne(q2, PersonWithIdPropertyOfTypeObjectId.class);
     assertThat(found2, notNullValue());
-    template.remove(q2);
+    template.remove(q2, PersonWithIdPropertyOfTypeObjectId.class);
     PersonWithIdPropertyOfTypeObjectId notFound2 = template.findOne(q2, PersonWithIdPropertyOfTypeObjectId.class);
     assertThat(notFound2, nullValue());
   }
@@ -345,7 +349,7 @@ public class MongoTemplateTests {
   private void testAddingToList(MongoTemplate template) {
       PersonWithAList p = new PersonWithAList();
 	  p.setFirstName("Sven");
-	  p.setAge(22);	  
+	  p.setAge(22);
 	  template.insert(p);
 
 	  Query q1 = new Query(Criteria.where("id").is(p.getId()));
