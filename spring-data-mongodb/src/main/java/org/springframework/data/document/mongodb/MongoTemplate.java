@@ -16,7 +16,7 @@
 
 package org.springframework.data.document.mongodb;
 
-import static org.springframework.data.document.mongodb.query.Criteria.whereId;
+import static org.springframework.data.document.mongodb.query.Criteria.*;
 
 import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;
@@ -65,6 +65,7 @@ import org.springframework.data.document.mongodb.mapping.event.BeforeConvertEven
 import org.springframework.data.document.mongodb.mapping.event.BeforeSaveEvent;
 import org.springframework.data.document.mongodb.mapping.event.MongoMappingEvent;
 import org.springframework.data.document.mongodb.query.Query;
+import org.springframework.data.document.mongodb.query.QueryMapper;
 import org.springframework.data.document.mongodb.query.Update;
 import org.springframework.data.mapping.MappingBeanHelper;
 import org.springframework.data.mapping.context.MappingContextAware;
@@ -169,11 +170,11 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 			this.writeResultChecking = writeResultChecking;
 		}
 		if (mongoConverter == null) {
-		  SimpleMongoConverter smc = new SimpleMongoConverter();
-		  smc.afterPropertiesSet();
-		  setMongoConverter(smc);
+			SimpleMongoConverter smc = new SimpleMongoConverter();
+			smc.afterPropertiesSet();
+			setMongoConverter(smc);
 		} else {
-		  setMongoConverter(mongoConverter); 
+			setMongoConverter(mongoConverter);
 		}
 		//setMongoConverter(mongoConverter == null ? new SimpleMongoConverter() : mongoConverter);
 	}
@@ -703,7 +704,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 
 		// DATADOC-95: This will prevent null objects from being saved.
 		//if (dbDoc.keySet().isEmpty()) {
-			//return null;
+		//return null;
 		//}
 
 		//TODO: Need to move this to more central place
@@ -715,8 +716,8 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 				}
 			}
 		}
-	    if (LOGGER.isDebugEnabled()) {
-		    LOGGER.debug("insert DBObject containing fields: " + dbDoc.keySet());
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("insert DBObject containing fields: " + dbDoc.keySet());
 		}
 		return execute(collectionName, new CollectionCallback<Object>() {
 			public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
@@ -747,8 +748,8 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 				}
 			}
 		}
-	    if (LOGGER.isDebugEnabled()) {
-		    LOGGER.debug("insert list of DBObjects containing " + dbDocList.size() + " items");
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("insert list of DBObjects containing " + dbDocList.size() + " items");
 		}
 		execute(collectionName, new CollectionCallback<Void>() {
 			public Void doInCollection(DBCollection collection) throws MongoException, DataAccessException {
@@ -789,8 +790,8 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 				}
 			}
 		}
-	    if (LOGGER.isDebugEnabled()) {
-		    LOGGER.debug("save DBObject containing fields: " + dbDoc.keySet());
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("save DBObject containing fields: " + dbDoc.keySet());
 		}
 		return execute(collectionName, new CollectionCallback<Object>() {
 			public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
@@ -860,48 +861,46 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 	public void remove(Query query) {
 		remove(query, null);
 	}
-	
+
 	public void remove(Object object) {
-	  Object idValue = this.getIdValue(object);
-	  remove(new Query(whereId().is(idValue)), object.getClass());
-	}
-	
-	public <T> void remove(Query query, Class<T> targetClass) {
-	   remove(getEntityCollection(targetClass), query, targetClass);
+		Object idValue = this.getIdValue(object);
+		remove(new Query(whereId().is(idValue)), object.getClass());
 	}
 
-	public <T> void remove(String collectionName, final Query query, Class<T> targetClass) { 
-	   if (query == null) {
-	      throw new InvalidDataAccessApiUsageException("Query passed in to remove can't be null");
-	    }
-	    final DBObject queryObject = query.getQueryObject();
-	    if (targetClass == null) {
-	      substituteMappedIdIfNecessary(queryObject);
-	    } else {
-	      substituteMappedIdIfNecessary(queryObject, targetClass, this.mongoConverter);
-	    }
-	    if (LOGGER.isDebugEnabled()) {
-	      LOGGER.debug("remove using query: " + queryObject);
-	    }
-	    execute(collectionName, new CollectionCallback<Void>() {
-	      public Void doInCollection(DBCollection collection) throws MongoException, DataAccessException {
-	        WriteResult wr = null;
-	        if (writeConcern == null) {
-	          wr = collection.remove(queryObject);
-	        } else {
-	          wr = collection.remove(queryObject, writeConcern);
-	        }
-	        handleAnyWriteResultErrors(wr, queryObject, "remove");
-	        return null;
-	      }
-	    });
+	public <T> void remove(Query query, Class<T> targetClass) {
+		remove(getEntityCollection(targetClass), query, targetClass);
 	}
-	
+
+	public <T> void remove(String collectionName, final Query query, Class<T> targetClass) {
+		if (query == null) {
+			throw new InvalidDataAccessApiUsageException("Query passed in to remove can't be null");
+		}
+		final DBObject queryObject = query.getQueryObject();
+		PersistentEntity<T> entity = getPersistentEntity(targetClass);
+		final QueryMapper<T> queryMapper = new QueryMapper<T>(queryObject, entity, mongoConverter);
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("remove using query: " + queryObject);
+		}
+		execute(collectionName, new CollectionCallback<Void>() {
+			public Void doInCollection(DBCollection collection) throws MongoException, DataAccessException {
+				DBObject dboq = queryMapper.getMappedObject();
+				WriteResult wr = null;
+				if (writeConcern == null) {
+					wr = collection.remove(dboq);
+				} else {
+					wr = collection.remove(dboq, writeConcern);
+				}
+				handleAnyWriteResultErrors(wr, dboq, "remove");
+				return null;
+			}
+		});
+	}
+
 	/* (non-Javadoc)
-			* @see org.springframework.data.document.mongodb.MongoOperations#remove(java.lang.String, com.mongodb.DBObject)
-			*/
+		* @see org.springframework.data.document.mongodb.MongoOperations#remove(java.lang.String, com.mongodb.DBObject)
+		*/
 	public void remove(String collectionName, final Query query) {
-	  remove(collectionName, query, null);
+		remove(collectionName, query, null);
 	}
 
 
@@ -933,6 +932,14 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 
 	public DB getDb() {
 		return MongoDbUtils.getDB(mongo, databaseName, username, password == null ? null : password.toCharArray());
+	}
+
+	protected <T> PersistentEntity<T> getPersistentEntity(Class<T> targetClass) {
+		if (null != targetClass && null != mappingContext) {
+			return mappingContext.getPersistentEntity(targetClass);
+		} else {
+			return null;
+		}
 	}
 
 	protected <T> void maybeEmitEvent(MongoMappingEvent<T> event) {
@@ -975,8 +982,10 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 		if (readerToUse == null) {
 			readerToUse = this.mongoConverter;
 		}
-		substituteMappedIdIfNecessary(query, targetClass, readerToUse);
-		return execute(new FindOneCallback(query, fields), new ReadDbObjectCallback<T>(readerToUse, targetClass),
+		PersistentEntity<T> entity = getPersistentEntity(targetClass);
+		QueryMapper<T> queryMapper = new QueryMapper<T>(query, entity, readerToUse);
+		return execute(new FindOneCallback(queryMapper.getMappedObject(), fields),
+				new ReadDbObjectCallback<T>(readerToUse, targetClass),
 				collectionName);
 	}
 
@@ -1000,11 +1009,14 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 	 * @return the List of converted objects.
 	 */
 	protected <T> List<T> doFind(String collectionName, DBObject query, DBObject fields, Class<T> targetClass, CursorPreparer preparer) {
-		substituteMappedIdIfNecessary(query, targetClass, mongoConverter);
+		PersistentEntity<T> entity = getPersistentEntity(targetClass);
+		QueryMapper<T> queryMapper = new QueryMapper<T>(query, entity, mongoConverter);
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug("find using query: " + query + " fields: " + fields + " for class: " + targetClass);
 		}
-		return executeEach(new FindCallback(query, fields), preparer, new ReadDbObjectCallback<T>(mongoConverter, targetClass),
+		return executeEach(new FindCallback(queryMapper.getMappedObject(), fields),
+				preparer,
+				new ReadDbObjectCallback<T>(mongoConverter, targetClass),
 				collectionName);
 	}
 
@@ -1021,11 +1033,14 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 	 * @return the List of converted objects.
 	 */
 	protected <T> List<T> doFind(String collectionName, DBObject query, DBObject fields, Class<T> targetClass, MongoReader<T> reader) {
-		substituteMappedIdIfNecessary(query, targetClass, reader);
+		PersistentEntity<T> entity = getPersistentEntity(targetClass);
+		QueryMapper<T> queryMapper = new QueryMapper<T>(query, entity, reader);
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug("find using query: " + query + " fields: " + fields + " for class: " + targetClass);
 		}
-		return executeEach(new FindCallback(query, fields), null, new ReadDbObjectCallback<T>(reader, targetClass),
+		return executeEach(new FindCallback(queryMapper.getMappedObject(), fields),
+				null,
+				new ReadDbObjectCallback<T>(reader, targetClass),
 				collectionName);
 	}
 
@@ -1062,40 +1077,46 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 		if (readerToUse == null) {
 			readerToUse = this.mongoConverter;
 		}
-		substituteMappedIdIfNecessary(query, targetClass, readerToUse);
+		PersistentEntity<T> entity = null;
+		if (null != mappingContext) {
+			entity = mappingContext.getPersistentEntity(targetClass);
+		}
+		QueryMapper<T> queryMapper = new QueryMapper<T>(query, entity, readerToUse);
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug("findAndRemove using query: " + query + " fields: " + fields + " sort: " + sort + " for class: " + targetClass);
 		}
-		return execute(new FindAndRemoveCallback(query, fields, sort), new ReadDbObjectCallback<T>(readerToUse, targetClass),
+		return execute(new FindAndRemoveCallback(queryMapper.getMappedObject(), fields, sort),
+				new ReadDbObjectCallback<T>(readerToUse, targetClass),
 				collectionName);
 	}
 
 	protected Object getIdValue(Object object) {
-	  if (null != mappingContext) {
-	    PersistentEntity<?> entity = mappingContext.getPersistentEntity(object.getClass());
-	    if (null != entity) {
-        PersistentProperty idProp = entity.getIdProperty();
-        if (null != idProp) {
-          try {
-            return MappingBeanHelper.getProperty(object, idProp, Object.class, true);            
-          } catch (IllegalAccessException e) {
-            throw new MappingException(e.getMessage(), e);
-          } catch (InvocationTargetException e) {
-            throw new MappingException(e.getMessage(), e);
-          }
-        }
-      }	    
-	  }
-	  
-	  ConfigurablePropertyAccessor bw = PropertyAccessorFactory.forDirectFieldAccess(object);
-	  MongoPropertyDescriptor idDescriptor = new MongoPropertyDescriptors(object.getClass()).getIdDescriptor();
+		if (null != mappingContext) {
+			PersistentEntity<?> entity = mappingContext.getPersistentEntity(object.getClass());
+			if (null != entity) {
+				PersistentProperty idProp = entity.getIdProperty();
+				if (null != idProp) {
+					try {
+						return MappingBeanHelper.getProperty(object, idProp, Object.class, true);
+					} catch (IllegalAccessException e) {
+						throw new MappingException(e.getMessage(), e);
+					} catch (InvocationTargetException e) {
+						throw new MappingException(e.getMessage(), e);
+					}
+				}
+			}
+		}
 
-	  if (idDescriptor == null) {
-	    return null;
-	  }
-	  return bw.getPropertyValue(idDescriptor.getName());
-  
+		ConfigurablePropertyAccessor bw = PropertyAccessorFactory.forDirectFieldAccess(object);
+		MongoPropertyDescriptor idDescriptor = new MongoPropertyDescriptors(object.getClass()).getIdDescriptor();
+
+		if (idDescriptor == null) {
+			return null;
+		}
+		return bw.getPropertyValue(idDescriptor.getName());
+
 	}
+
 	/**
 	 * Populates the id property of the saved object, if it's not set already.
 	 *
@@ -1152,15 +1173,13 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 	 * @param targetClass
 	 * @param reader
 	 */
-	protected void substituteMappedIdIfNecessary(DBObject query, Class<?> targetClass, MongoReader<?> reader) {
+	protected void substituteMappedIdIfNecessar(DBObject query, Class<?> targetClass, MongoReader<?> reader) {
 		MongoConverter converter = null;
 		if (reader instanceof SimpleMongoConverter) {
 			converter = (MongoConverter) reader;
-		}
-		else if (reader instanceof MappingMongoConverter) {
+		} else if (reader instanceof MappingMongoConverter) {
 			converter = (MappingMongoConverter) reader;
-		}
-		else {
+		} else {
 			return;
 		}
 		String idKey = null;
@@ -1196,7 +1215,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 				if (dbo.containsField("$in")) {
 					List<Object> ids = new ArrayList<Object>();
 					int count = 0;
-					for (Object o : (Object[])dbo.get("$in")) {
+					for (Object o : (Object[]) dbo.get("$in")) {
 						count++;
 						ObjectId newValue = convertIdValue(converter, o);
 						if (newValue != null) {
@@ -1204,8 +1223,8 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 						}
 					}
 					if (ids.size() > 0 && ids.size() != count) {
-						throw new InvalidDataAccessApiUsageException("Inconsistent set of id values provided " + 
-								Arrays.asList((Object[])dbo.get("$in")));
+						throw new InvalidDataAccessApiUsageException("Inconsistent set of id values provided " +
+								Arrays.asList((Object[]) dbo.get("$in")));
 					}
 					if (ids.size() > 0) {
 						dbo.removeField("$in");
@@ -1214,8 +1233,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 				}
 				query.removeField(idKey);
 				query.put(MongoPropertyDescriptor.ID_KEY, value);
-			}
-			else {
+			} else {
 				ObjectId newValue = convertIdValue(converter, value);
 				query.removeField(idKey);
 				if (newValue != null) {
@@ -1241,27 +1259,38 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 
 	/**
 	 * Substitutes the id key if it is found in he query. Any 'id' keys will be replaced with '_id'. No conversion
-	 * of the value to an ObjectId is possible since we don't have access to a targetClass or a converter. This 
+	 * of the value to an ObjectId is possible since we don't have access to a targetClass or a converter. This
 	 * means the value has to be of the correct form.
 	 *
 	 * @param query
 	 */
-	protected void substituteMappedIdIfNecessary(DBObject query) {
+	protected void substituteMappedIdIfNecessar(PersistentEntity entity, DBObject query) {
 		String idKey = null;
-		if (query.containsField("id")) {
-			idKey = "id";
-		}
-		if (query.containsField("_id")) {
-			idKey = "_id";
-		}
-		if (idKey == null) {
-			// no ids in this query
-			return;
-		}
-		if (!idKey.equals(MongoPropertyDescriptor.ID_KEY)) {
-			Object value = query.get(idKey);
-			query.removeField(idKey);
-			query.put(MongoPropertyDescriptor.ID_KEY, value);
+		if (null != entity) {
+			idKey = entity.getIdProperty().getName();
+			if (query.containsField(idKey)) {
+				Object o = query.get(idKey);
+				query.removeField(idKey);
+				query.put(MongoPropertyDescriptor.ID_KEY, o);
+			} else {
+				return;
+			}
+		} else {
+			if (query.containsField("id")) {
+				idKey = "id";
+			}
+			if (query.containsField("_id")) {
+				idKey = "_id";
+			}
+			if (idKey == null) {
+				// no ids in this query
+				return;
+			}
+			if (!idKey.equals(MongoPropertyDescriptor.ID_KEY)) {
+				Object value = query.get(idKey);
+				query.removeField(idKey);
+				query.put(MongoPropertyDescriptor.ID_KEY, value);
+			}
 		}
 	}
 
@@ -1378,14 +1407,14 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 
 		public DBObject doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 			if (fields == null) {
-			   if (LOGGER.isDebugEnabled()) {
-			      LOGGER.debug("findOne using query: " + query + " in db.collection: " + collection.getFullName());
-			    }
+				if (LOGGER.isDebugEnabled()) {
+					LOGGER.debug("findOne using query: " + query + " in db.collection: " + collection.getFullName());
+				}
 				return collection.findOne(query);
 			} else {
-			   if (LOGGER.isDebugEnabled()) {
-			      LOGGER.debug("findOne using query: " + query + " fields: " + fields + " in db.collection: " + collection.getFullName());
-			    }
+				if (LOGGER.isDebugEnabled()) {
+					LOGGER.debug("findOne using query: " + query + " fields: " + fields + " in db.collection: " + collection.getFullName());
+				}
 				return collection.findOne(query, fields);
 			}
 		}
