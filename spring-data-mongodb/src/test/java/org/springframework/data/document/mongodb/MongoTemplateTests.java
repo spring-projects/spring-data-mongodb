@@ -308,6 +308,38 @@ public class MongoTemplateTests {
   }
 
   @Test
+  public void testUsingAnOrQuery() throws Exception {
+    
+    template.remove(new Query(), PersonWithIdPropertyOfTypeObjectId.class);
+
+    PersonWithIdPropertyOfTypeObjectId p1 = new PersonWithIdPropertyOfTypeObjectId();
+    p1.setFirstName("Sven");
+    p1.setAge(11);
+    template.insert(p1);
+    PersonWithIdPropertyOfTypeObjectId p2 = new PersonWithIdPropertyOfTypeObjectId();
+    p2.setFirstName("Mary");
+    p2.setAge(21);
+    template.insert(p2);
+    PersonWithIdPropertyOfTypeObjectId p3 = new PersonWithIdPropertyOfTypeObjectId();
+    p3.setFirstName("Ann");
+    p3.setAge(31);
+    template.insert(p3);
+    PersonWithIdPropertyOfTypeObjectId p4 = new PersonWithIdPropertyOfTypeObjectId();
+    p4.setFirstName("John");
+    p4.setAge(41);
+    template.insert(p4);
+
+    Query q1 = new Query(Criteria.where("age").in(11, 21));
+    Query q2 = new Query(Criteria.where("age").is(31));
+    Query orQuery = new Query().or(q1, q2);
+    List<PersonWithIdPropertyOfTypeObjectId> results = template.find(orQuery, PersonWithIdPropertyOfTypeObjectId.class);
+    assertThat(results.size(), is(3));
+    for (PersonWithIdPropertyOfTypeObjectId p : results) {
+        assertThat(p.getAge(), isOneOf(11, 21, 31));
+    }
+  }
+
+  @Test
   public void testRemovingDocument() throws Exception {
 
 	PersonWithIdPropertyOfTypeObjectId p1 = new PersonWithIdPropertyOfTypeObjectId();
