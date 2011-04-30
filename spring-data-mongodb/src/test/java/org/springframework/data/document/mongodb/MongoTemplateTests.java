@@ -15,7 +15,12 @@
  */
 package org.springframework.data.document.mongodb;
 
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.endsWith;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.isOneOf;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
 import static org.springframework.data.document.mongodb.query.Criteria.where;
 
@@ -23,9 +28,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
-import com.mongodb.Mongo;
 import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Rule;
@@ -37,10 +39,19 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.document.mongodb.convert.MappingMongoConverter;
 import org.springframework.data.document.mongodb.convert.MongoConverter;
 import org.springframework.data.document.mongodb.mapping.MongoMappingContext;
-import org.springframework.data.document.mongodb.query.*;
+import org.springframework.data.document.mongodb.query.Criteria;
+import org.springframework.data.document.mongodb.query.Index;
 import org.springframework.data.document.mongodb.query.Index.Duplicates;
+import org.springframework.data.document.mongodb.query.Order;
+import org.springframework.data.document.mongodb.query.Query;
+import org.springframework.data.document.mongodb.query.Update;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import com.mongodb.DBCollection;
+import com.mongodb.DBObject;
+import com.mongodb.Mongo;
+import com.mongodb.WriteResult;
 
 /**
  * Integration test for {@link MongoTemplate}.
@@ -336,6 +347,38 @@ public class MongoTemplateTests {
     assertThat(results.size(), is(3));
     for (PersonWithIdPropertyOfTypeObjectId p : results) {
         assertThat(p.getAge(), isOneOf(11, 21, 31));
+    }
+  }
+
+  @Test
+  public void testUsingUpdateWithMultipleSet() throws Exception {
+
+    template.remove(new Query(), PersonWithIdPropertyOfTypeObjectId.class);
+
+    PersonWithIdPropertyOfTypeObjectId p1 = new PersonWithIdPropertyOfTypeObjectId();
+    p1.setFirstName("Sven");
+    p1.setAge(11);
+    template.insert("springdata", p1);
+    PersonWithIdPropertyOfTypeObjectId p2 = new PersonWithIdPropertyOfTypeObjectId();
+    p2.setFirstName("Mary");
+    p2.setAge(21);
+    template.insert("springdata", p2);
+
+    Update u = new Update().set("firstName", "Bob").set("age", 10);
+    
+    WriteResult wr = template.updateMulti("springdata", new Query(), u);
+        
+    assertThat(wr.getN(), is(2));
+    
+    Query q1 = new Query(Criteria.where("age").in(11, 21));
+    List<PersonWithIdPropertyOfTypeObjectId> r1 = template.find("springdata", q1, PersonWithIdPropertyOfTypeObjectId.class);
+    assertThat(r1.size(), is(0));
+    Query q2 = new Query(Criteria.where("age").is(10));
+    List<PersonWithIdPropertyOfTypeObjectId> r2 = template.find("springdata", q2, PersonWithIdPropertyOfTypeObjectId.class);
+    assertThat(r2.size(), is(2));
+    for (PersonWithIdPropertyOfTypeObjectId p : r2) {
+        assertThat(p.getAge(), is(10));
+        assertThat(p.getFirstName(), is("Bob"));
     }
   }
 

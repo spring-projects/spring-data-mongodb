@@ -15,175 +15,197 @@
  */
 package org.springframework.data.document.mongodb.query;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
 public class Update {
 
-  public enum Position {
-    LAST, FIRST
-  }
+	public enum Position {
+		LAST, FIRST
+	}
 
-  private HashMap<String, Object> criteria = new LinkedHashMap<String, Object>();
+	private HashMap<String, Object> modifierOps = new LinkedHashMap<String, Object>();
 
-  /**
-   * Static factory method to create an Update using the provided key
-   *
-   * @param key
-   * @return
-   */
-  public static Update update(String key, Object value) {
-    return new Update().set(key, value);
-  }
-  
-  /**
-   * Update using the $set update modifier
-   *
-   * @param key
-   * @param value
-   * @return
-   */
-  public Update set(String key, Object value) {
-    criteria.put("$set", Collections.singletonMap(key, convertValueIfNecessary(value)));
-    return this;
-  }
- 
-  /**
-   * Update using the $unset update modifier
-   *
-   * @param key
-   * @return
-   */
-  public Update unset(String key) {
-    criteria.put("$unset", Collections.singletonMap(key, 1));
-    return this;
-  }
+	/**
+	 * Static factory method to create an Update using the provided key
+	 * 
+	 * @param key
+	 * @return
+	 */
+	public static Update update(String key, Object value) {
+		return new Update().set(key, value);
+	}
 
-  /**
-   * Update using the $inc update modifier
-   *
-   * @param key
-   * @param inc
-   * @return
-   */
-  public Update inc(String key, Number inc) {
-    criteria.put("$inc", Collections.singletonMap(key, inc));
-    return this;
-  }
+	/**
+	 * Update using the $set update modifier
+	 * 
+	 * @param key
+	 * @param value
+	 * @return
+	 */
+	public Update set(String key, Object value) {
+		addMultiFieldOperation("$set", key, convertValueIfNecessary(value));
+		return this;
+	}
 
-  /**
-   * Update using the $push update modifier
-   *
-   * @param key
-   * @param value
-   * @return
-   */
-  public Update push(String key, Object value) {
-    criteria.put("$push", Collections.singletonMap(key, convertValueIfNecessary(value)));
-    return this;
-  }
+	/**
+	 * Update using the $unset update modifier
+	 * 
+	 * @param key
+	 * @return
+	 */
+	public Update unset(String key) {
+		addMultiFieldOperation("$unset", key, 1);
+		return this;
+	}
 
-  /**
-   * Update using the $pushAll update modifier
-   *
-   * @param key
-   * @param values
-   * @return
-   */
-  public Update pushAll(String key, Object[] values) {
-    Object[] convertedValues = new Object[values.length];
-    for (int i = 0; i < values.length; i++) {
-      convertedValues[i] = convertValueIfNecessary(values[i]);
-    }
-    DBObject keyValue = new BasicDBObject();
-    keyValue.put(key, convertedValues);
-    criteria.put("$pushAll", keyValue);
-    return this;
-  }
+	/**
+	 * Update using the $inc update modifier
+	 * 
+	 * @param key
+	 * @param inc
+	 * @return
+	 */
+	public Update inc(String key, Number inc) {
+		addMultiFieldOperation("$inc", key, inc);
+		return this;
+	}
 
-  /**
-   * Update using the $addToSet update modifier
-   *
-   * @param key
-   * @param value
-   * @return
-   */
-  public Update addToSet(String key, Object value) {
-    criteria.put("$addToSet", Collections.singletonMap(key, convertValueIfNecessary(value)));
-    return this;
-  }
+	/**
+	 * Update using the $push update modifier
+	 * 
+	 * @param key
+	 * @param value
+	 * @return
+	 */
+	public Update push(String key, Object value) {
+		addMultiFieldOperation("$push", key, convertValueIfNecessary(value));
+		return this;
+	}
 
-  /**
-   * Update using the $pop update modifier
-   *
-   * @param key
-   * @param pos
-   * @return
-   */
-  public Update pop(String key, Position pos) {
-    criteria.put("$pop", Collections.singletonMap(key, (pos == Position.FIRST ? -1 : 1)));
-    return this;
-  }
+	/**
+	 * Update using the $pushAll update modifier
+	 * 
+	 * @param key
+	 * @param values
+	 * @return
+	 */
+	public Update pushAll(String key, Object[] values) {
+		Object[] convertedValues = new Object[values.length];
+		for (int i = 0; i < values.length; i++) {
+			convertedValues[i] = convertValueIfNecessary(values[i]);
+		}
+		DBObject keyValue = new BasicDBObject();
+		keyValue.put(key, convertedValues);
+		modifierOps.put("$pushAll", keyValue);
+		return this;
+	}
 
-  /**
-   * Update using the $pull update modifier
-   *
-   * @param key
-   * @param value
-   * @return
-   */
-  public Update pull(String key, Object value) {
-    criteria.put("$pull", Collections.singletonMap(key, convertValueIfNecessary(value)));
-    return this;
-  }
+	/**
+	 * Update using the $addToSet update modifier
+	 * 
+	 * @param key
+	 * @param value
+	 * @return
+	 */
+	public Update addToSet(String key, Object value) {
+		addMultiFieldOperation("$addToSet", key, convertValueIfNecessary(value));
+		return this;
+	}
 
-  /**
-   * Update using the $pullAll update modifier
-   *
-   * @param key
-   * @param values
-   * @return
-   */
-  public Update pullAll(String key, Object[] values) {
-    Object[] convertedValues = new Object[values.length];
-    for (int i = 0; i < values.length; i++) {
-      convertedValues[i] = convertValueIfNecessary(values[i]);
-    }
-    DBObject keyValue = new BasicDBObject();
-    keyValue.put(key, convertedValues);
-    criteria.put("$pullAll", keyValue);
-    return this;
-  }
+	/**
+	 * Update using the $pop update modifier
+	 * 
+	 * @param key
+	 * @param pos
+	 * @return
+	 */
+	public Update pop(String key, Position pos) {
+		addMultiFieldOperation("$pop", key, 
+						(pos == Position.FIRST ? -1 : 1));
+		return this;
+	}
 
-  /**
-   * Update using the $rename update modifier
-   *
-   * @param oldName
-   * @param newName
-   * @return
-   */
-  public Update rename(String oldName, String newName) {
-    criteria.put("$rename", Collections.singletonMap(oldName, newName));
-    return this;
-  }
+	/**
+	 * Update using the $pull update modifier
+	 * 
+	 * @param key
+	 * @param value
+	 * @return
+	 */
+	public Update pull(String key, Object value) {
+		addMultiFieldOperation("$pull", key, convertValueIfNecessary(value));
+		return this;
+	}
 
-  public DBObject getUpdateObject() {
-    DBObject dbo = new BasicDBObject();
-    for (String k : criteria.keySet()) {
-      dbo.put(k, criteria.get(k));
-    }
-    return dbo;
-  }
+	/**
+	 * Update using the $pullAll update modifier
+	 * 
+	 * @param key
+	 * @param values
+	 * @return
+	 */
+	public Update pullAll(String key, Object[] values) {
+		Object[] convertedValues = new Object[values.length];
+		for (int i = 0; i < values.length; i++) {
+			convertedValues[i] = convertValueIfNecessary(values[i]);
+		}
+		DBObject keyValue = new BasicDBObject();
+		keyValue.put(key, convertedValues);
+		modifierOps.put("$pullAll", keyValue);
+		return this;
+	}
 
-  protected Object convertValueIfNecessary(Object value) {
-    if (value instanceof Enum) {
-      return ((Enum<?>) value).name();
-    }
-    return value;
-  }
+	/**
+	 * Update using the $rename update modifier
+	 * 
+	 * @param oldName
+	 * @param newName
+	 * @return
+	 */
+	public Update rename(String oldName, String newName) {
+		addMultiFieldOperation("$rename", oldName, newName);
+		return this;
+	}
+
+	public DBObject getUpdateObject() {
+		DBObject dbo = new BasicDBObject();
+		for (String k : modifierOps.keySet()) {
+			dbo.put(k, modifierOps.get(k));
+		}
+		return dbo;
+	}
+
+	@SuppressWarnings("unchecked")
+	protected void addMultiFieldOperation(String operator, String key,
+			Object value) {
+		Object existingValue = this.modifierOps.get(operator);
+		LinkedHashMap<String, Object> keyValueMap;
+		if (existingValue == null) {
+			keyValueMap = new LinkedHashMap<String, Object>();
+			this.modifierOps.put(operator, keyValueMap);
+		} else {
+			if (existingValue instanceof LinkedHashMap) {
+				keyValueMap = (LinkedHashMap<String, Object>) existingValue;
+			}
+			else {
+				throw new InvalidDataAccessApiUsageException("Modifier Operations should be a LinkedHashMap but was " + 
+						existingValue.getClass());
+			}
+		}
+		keyValueMap.put(key, value);
+	}
+
+	protected Object convertValueIfNecessary(Object value) {
+		if (value instanceof Enum) {
+			return ((Enum<?>) value).name();
+		}
+		return value;
+	}
 
 }
