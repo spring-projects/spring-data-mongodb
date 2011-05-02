@@ -16,12 +16,16 @@
 package org.springframework.data.document.mongodb.query;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.Map;
 
-import org.springframework.dao.InvalidDataAccessApiUsageException;
-
+import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
+import org.springframework.data.document.mongodb.convert.MongoConverter;
+import org.springframework.data.mapping.MappingBeanHelper;
 
 public class Update {
 
@@ -33,7 +37,7 @@ public class Update {
 
 	/**
 	 * Static factory method to create an Update using the provided key
-	 * 
+	 *
 	 * @param key
 	 * @return
 	 */
@@ -43,7 +47,7 @@ public class Update {
 
 	/**
 	 * Update using the $set update modifier
-	 * 
+	 *
 	 * @param key
 	 * @param value
 	 * @return
@@ -55,7 +59,7 @@ public class Update {
 
 	/**
 	 * Update using the $unset update modifier
-	 * 
+	 *
 	 * @param key
 	 * @return
 	 */
@@ -66,7 +70,7 @@ public class Update {
 
 	/**
 	 * Update using the $inc update modifier
-	 * 
+	 *
 	 * @param key
 	 * @param inc
 	 * @return
@@ -78,7 +82,7 @@ public class Update {
 
 	/**
 	 * Update using the $push update modifier
-	 * 
+	 *
 	 * @param key
 	 * @param value
 	 * @return
@@ -90,7 +94,7 @@ public class Update {
 
 	/**
 	 * Update using the $pushAll update modifier
-	 * 
+	 *
 	 * @param key
 	 * @param values
 	 * @return
@@ -108,7 +112,7 @@ public class Update {
 
 	/**
 	 * Update using the $addToSet update modifier
-	 * 
+	 *
 	 * @param key
 	 * @param value
 	 * @return
@@ -120,20 +124,20 @@ public class Update {
 
 	/**
 	 * Update using the $pop update modifier
-	 * 
+	 *
 	 * @param key
 	 * @param pos
 	 * @return
 	 */
 	public Update pop(String key, Position pos) {
-		addMultiFieldOperation("$pop", key, 
-						(pos == Position.FIRST ? -1 : 1));
+		addMultiFieldOperation("$pop", key,
+				(pos == Position.FIRST ? -1 : 1));
 		return this;
 	}
 
 	/**
 	 * Update using the $pull update modifier
-	 * 
+	 *
 	 * @param key
 	 * @param value
 	 * @return
@@ -145,7 +149,7 @@ public class Update {
 
 	/**
 	 * Update using the $pullAll update modifier
-	 * 
+	 *
 	 * @param key
 	 * @param values
 	 * @return
@@ -163,7 +167,7 @@ public class Update {
 
 	/**
 	 * Update using the $rename update modifier
-	 * 
+	 *
 	 * @param oldName
 	 * @param newName
 	 * @return
@@ -173,17 +177,26 @@ public class Update {
 		return this;
 	}
 
-	public DBObject getUpdateObject() {
+	public DBObject getUpdateObject(MongoConverter converter) {
 		DBObject dbo = new BasicDBObject();
 		for (String k : modifierOps.keySet()) {
-			dbo.put(k, modifierOps.get(k));
+			Object o = modifierOps.get(k);
+			if (null != converter) {
+				dbo.put(k, maybeConvertObject(o, converter));
+			} else {
+				dbo.put(k, o);
+			}
 		}
 		return dbo;
 	}
 
+	public DBObject getUpdateObject() {
+		return getUpdateObject(null);
+	}
+
 	@SuppressWarnings("unchecked")
 	protected void addMultiFieldOperation(String operator, String key,
-			Object value) {
+																				Object value) {
 		Object existingValue = this.modifierOps.get(operator);
 		LinkedHashMap<String, Object> keyValueMap;
 		if (existingValue == null) {
@@ -192,9 +205,8 @@ public class Update {
 		} else {
 			if (existingValue instanceof LinkedHashMap) {
 				keyValueMap = (LinkedHashMap<String, Object>) existingValue;
-			}
-			else {
-				throw new InvalidDataAccessApiUsageException("Modifier Operations should be a LinkedHashMap but was " + 
+			} else {
+				throw new InvalidDataAccessApiUsageException("Modifier Operations should be a LinkedHashMap but was " +
 						existingValue.getClass());
 			}
 		}
@@ -206,6 +218,49 @@ public class Update {
 			return ((Enum<?>) value).name();
 		}
 		return value;
+	}
+
+	@SuppressWarnings({"unchecked"})
+	protected Object maybeConvertObject(Object obj, MongoConverter converter) {
+		if (null != obj && MappingBeanHelper.isSimpleType(obj.getClass())) {
+			// Doesn't need conversion
+			return obj;
+		}
+
+		if (obj instanceof Map) {
+			Map<Object, Object> m = new HashMap<Object, Object>();
+			for (Map.Entry<Object, Object> entry : ((Map<Object, Object>) obj).entrySet()) {
+				m.put(entry.getKey(), maybeConvertObject(entry.getValue(), converter));
+			}
+			return m;
+		}
+
+		if (obj instanceof BasicDBList) {
+			return maybeConvertList((BasicDBList) obj, converter);
+		}
+
+		if (obj instanceof DBObject) {
+			DBObject newValueDbo = new BasicDBObject();
+			for (String vk : ((DBObject) obj).keySet()) {
+				Object o = ((DBObject) obj).get(vk);
+				newValueDbo.put(vk, maybeConvertObject(o, converter));
+			}
+			return newValueDbo;
+		}
+
+		DBObject newDbo = new BasicDBObject();
+		converter.write(obj, newDbo);
+		return newDbo;
+	}
+
+	protected BasicDBList maybeConvertList(BasicDBList dbl, MongoConverter converter) {
+		BasicDBList newDbl = new BasicDBList();
+		Iterator iter = dbl.iterator();
+		while (iter.hasNext()) {
+			Object o = iter.next();
+			newDbl.add(maybeConvertObject(o, converter));
+		}
+		return newDbl;
 	}
 
 }

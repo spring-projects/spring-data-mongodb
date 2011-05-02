@@ -18,6 +18,9 @@ package org.springframework.data.document.mongodb.mapping;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
+import static org.springframework.data.document.mongodb.query.Criteria.*;
+import static org.springframework.data.document.mongodb.query.Query.*;
+import static org.springframework.data.document.mongodb.query.Update.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -316,6 +319,25 @@ public class MappingTests {
 		template.insert(p);
 
 		assertNotNull(p.getId());
+	}
+
+	@SuppressWarnings({"unchecked"})
+	@Test
+	public void testQueryUpdate() {
+		Address addr = new Address();
+		addr.setLines(new String[]{"1234 W. 1st Street", "Apt. 12"});
+		addr.setCity("Anytown");
+		addr.setPostalCode(12345);
+		addr.setCountry("USA");
+
+		Person p = new Person(1111, "Query", "Update", 37, addr);
+		template.insert(p);
+
+		addr.setCity("New Town");
+		template.updateFirst(query(where("ssn").is(1111)), update("address", addr));
+
+		Person p2 = template.findOne(query(where("ssn").is(1111)), Person.class);
+		assertThat(p2.getAddress().getCity(), is("New Town"));
 	}
 
 }

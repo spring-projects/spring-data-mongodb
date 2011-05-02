@@ -30,6 +30,7 @@ Import-Template:
  org.springframework.expression.spel.support.*;version="[3.0.0, 4.0.0)",
  org.springframework.validation.*;version="[3.0.0, 4.0.0)",
  org.springframework.data.core.*;version="[1.0.0, 2.0.0)",
+ org.springframework.context.support.*;version="[1.0.0, 2.0.0)",
  org.aopalliance.*;version="[1.0.0, 2.0.0)";resolution:=optional,
  org.apache.commons.logging.*;version="[1.1.1, 2.0.0)",
  org.w3c.dom.*;version="0",

@@ -20,6 +20,7 @@ import java.util.Collections;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
+import org.springframework.data.document.mongodb.convert.MongoConverter;
 
 public class BasicUpdate extends Update {
 

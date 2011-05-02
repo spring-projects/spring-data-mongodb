@@ -22,101 +22,96 @@ import com.mongodb.DBObject;
 
 public class Query {
 
-  private LinkedHashMap<String, CriteriaDefinition> criteria = new LinkedHashMap<String, CriteriaDefinition>();
+	private LinkedHashMap<String, CriteriaDefinition> criteria = new LinkedHashMap<String, CriteriaDefinition>();
+	private Field fieldSpec;
+	private Sort sort;
+	private int skip;
+	private int limit;
 
-  private Field fieldSpec;
+	/**
+	 * Static factory method to create a Query using the provided criteria
+	 *
+	 * @param critera
+	 * @return
+	 */
+	public static Query query(Criteria critera) {
+		return new Query(critera);
+	}
 
-  private Sort sort;
+	public Query() {
+	}
 
-  private int skip;
+	public Query(Criteria criteria) {
+		addCriteria(criteria);
+	}
 
-  private int limit;
+	public Query addCriteria(Criteria criteria) {
+		this.criteria.put(criteria.getKey(), criteria);
+		return this;
+	}
 
+	public Query or(Query... queries) {
+		this.criteria.put("$or", new OrCriteria(queries));
+		return this;
+	}
 
-  /**
-   * Static factory method to create a Query using the provided criteria
-   *
-   * @param key
-   * @return
-   */
-  public static Query query(Criteria critera) {
-    return new Query(critera);
-  }
-  
-  public Query() {
-  }
+	public Field fields() {
+		synchronized (this) {
+			if (fieldSpec == null) {
+				this.fieldSpec = new Field();
+			}
+		}
+		return this.fieldSpec;
+	}
 
-  public Query(Criteria criteria) {
-    addCriteria(criteria);
-  }
+	public Query skip(int skip) {
+		this.skip = skip;
+		return this;
+	}
 
-  public Query addCriteria(Criteria criteria) {
-    this.criteria.put(criteria.getKey(), criteria);
-    return this;
-  }
+	public Query limit(int limit) {
+		this.limit = limit;
+		return this;
+	}
 
-  public Query or(Query... queries) {
-    this.criteria.put("$or", new OrCriteria(queries));
-    return this;
-  }
+	public Sort sort() {
+		synchronized (this) {
+			if (this.sort == null) {
+				this.sort = new Sort();
+			}
+		}
+		return this.sort;
+	}
 
-  public Field fields() {
-    synchronized (this) {
-      if (fieldSpec == null) {
-        this.fieldSpec = new Field();
-      }
-    }
-    return this.fieldSpec;
-  }
+	public DBObject getQueryObject() {
+		DBObject dbo = new BasicDBObject();
+		for (String k : criteria.keySet()) {
+			CriteriaDefinition c = criteria.get(k);
+			DBObject cl = c.getCriteriaObject();
+			dbo.putAll(cl);
+		}
+		return dbo;
+	}
 
-  public Query skip(int skip) {
-    this.skip = skip;
-    return this;
-  }
+	public DBObject getFieldsObject() {
+		if (this.fieldSpec == null) {
+			return null;
+		}
+		return fieldSpec.getFieldsObject();
+	}
 
-  public Query limit(int limit) {
-    this.limit = limit;
-    return this;
-  }
+	public DBObject getSortObject() {
+		if (this.sort == null) {
+			return null;
+		}
+		return this.sort.getSortObject();
+	}
 
-  public Sort sort() {
-    synchronized (this) {
-      if (this.sort == null) {
-        this.sort = new Sort();
-      }
-    }
-    return this.sort;
-  }
+	public int getSkip() {
+		return this.skip;
+	}
 
-  public DBObject getQueryObject() {
-    DBObject dbo = new BasicDBObject();
-    for (String k : criteria.keySet()) {
-      CriteriaDefinition c = criteria.get(k);
-      DBObject cl = c.getCriteriaObject();
-      dbo.putAll(cl);
-    }
-    return dbo;
-  }
-
-  public DBObject getFieldsObject() {
-    if (this.fieldSpec == null) {
-      return null;
-    }
-    return fieldSpec.getFieldsObject();
-  }
-
-  public DBObject getSortObject() {
-    if (this.sort == null) {
-      return null;
-    }
-    return this.sort.getSortObject();
-  }
-
-  public int getSkip() {
-    return this.skip;
-  }
-
-  public int getLimit() {
-    return this.limit;
-  }
+	public int getLimit() {
+		return this.limit;
+	}
 }

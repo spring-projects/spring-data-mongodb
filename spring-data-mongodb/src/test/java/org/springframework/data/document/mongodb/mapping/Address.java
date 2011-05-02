@@ -19,7 +19,7 @@ package org.springframework.data.document.mongodb.mapping;
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
  */
-public class Address {
+public class Address implements Comparable<Address> {
 
   private String id;
   private String[] lines;
@@ -67,4 +67,8 @@ public class Address {
   public void setCountry(String country) {
     this.country = country;
   }
+
+	public int compareTo(Address address) {
+		return 0;
+	}
 }

@@ -25,10 +25,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.CommandResult;
 import com.mongodb.DB;
@@ -155,6 +157,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 	 * @param writeConcern
 	 * @param writeResultChecking
 	 */
+	@SuppressWarnings({"unchecked"})
 	MongoTemplate(Mongo mongo, String databaseName, String defaultCollectionName, MongoConverter mongoConverter, WriteConcern writeConcern, WriteResultChecking writeResultChecking) {
 
 		Assert.notNull(mongo);
@@ -165,24 +168,24 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 		this.databaseName = databaseName;
 		this.writeConcern = writeConcern;
 		this.mongoConverter = mongoConverter == null ? getDefaultMongoConverter() : mongoConverter;
-		
+
 		if (this.mongoConverter instanceof MappingMongoConverter) {
-		  initializeMappingMongoConverter((MappingMongoConverter) this.mongoConverter);
+			initializeMappingMongoConverter((MappingMongoConverter) this.mongoConverter);
 		}
-		
+
 		this.mappingContext = this.mongoConverter.getMappingContext();
 		this.mapper = new QueryMapper(this.mongoConverter);
-		
+
 		if (writeResultChecking != null) {
 			this.writeResultChecking = writeResultChecking;
 		}
 	}
-	
+
 	private final MongoConverter getDefaultMongoConverter() {
-	  
-	  SimpleMongoConverter converter = new SimpleMongoConverter();
-	  converter.afterPropertiesSet();
-	  return converter;
+
+		SimpleMongoConverter converter = new SimpleMongoConverter();
+		converter.afterPropertiesSet();
+		return converter;
 	}
 
 	public void setApplicationEventPublisher(ApplicationEventPublisher applicationEventPublisher) {
@@ -612,21 +615,21 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 			*/
 	public <T> void insertList(List<? extends T> listToSave, MongoWriter<T> writer) {
 		Map<String, List<Object>> objs = new HashMap<String, List<Object>>();
-		
+
 		for (Object o : listToSave) {
-		  
+
 			MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(o.getClass());
 			String collection = entity == null ? getDefaultCollectionName() : entity.getCollection();
-			
+
 			List<Object> objList = objs.get(collection);
 			if (null == objList) {
 				objList = new ArrayList<Object>();
 				objs.put(collection, objList);
 			}
 			objList.add(o);
-			
+
 		}
-		
+
 		for (Map.Entry<String, List<Object>> entry : objs.entrySet()) {
 			insertList(entry.getKey(), entry.getValue());
 		}
@@ -814,17 +817,19 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 			*/
 	public WriteResult updateFirst(String collectionName, final Query query, final Update update) {
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("calling update using query: " + query.getQueryObject() + " and update: " + update.getUpdateObject() + " in collecion: " + collectionName);
+			LOGGER.debug("calling update using query: " + query.getQueryObject() + " and update: " + update.getUpdateObject(mongoConverter) + " in collecion: " + collectionName);
 		}
 		return execute(collectionName, new CollectionCallback<WriteResult>() {
 			public WriteResult doInCollection(DBCollection collection) throws MongoException, DataAccessException {
+				DBObject updateObj = update.getUpdateObject(mongoConverter);
+
 				WriteResult wr;
 				if (writeConcern == null) {
-					wr = collection.update(query.getQueryObject(), update.getUpdateObject());
+					wr = collection.update(query.getQueryObject(), updateObj);
 				} else {
-					wr = collection.update(query.getQueryObject(), update.getUpdateObject(), false, false, writeConcern);
+					wr = collection.update(query.getQueryObject(), updateObj, false, false, writeConcern);
 				}
-				handleAnyWriteResultErrors(wr, query.getQueryObject(), "update with '" + update.getUpdateObject() + "'");
+				handleAnyWriteResultErrors(wr, query.getQueryObject(), "update with '" + updateObj + "'");
 				return wr;
 			}
 		});
@@ -842,17 +847,18 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 			*/
 	public WriteResult updateMulti(String collectionName, final Query query, final Update update) {
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("calling updateMulti using query: " + query.getQueryObject() + " and update: " + update.getUpdateObject() + " in collecion: " + collectionName);
+			LOGGER.debug("calling updateMulti using query: " + query.getQueryObject() + " and update: " + update.getUpdateObject(mongoConverter) + " in collecion: " + collectionName);
 		}
 		return execute(collectionName, new CollectionCallback<WriteResult>() {
 			public WriteResult doInCollection(DBCollection collection) throws MongoException, DataAccessException {
-				WriteResult wr = null;
+				DBObject updateObj = update.getUpdateObject(mongoConverter);
+				WriteResult wr;
 				if (writeConcern == null) {
-					wr = collection.updateMulti(query.getQueryObject(), update.getUpdateObject());
+					wr = collection.updateMulti(query.getQueryObject(), updateObj);
 				} else {
-					wr = collection.update(query.getQueryObject(), update.getUpdateObject(), false, true, writeConcern);
+					wr = collection.update(query.getQueryObject(), updateObj, false, true, writeConcern);
 				}
-				handleAnyWriteResultErrors(wr, query.getQueryObject(), "update with '" + update.getUpdateObject() + "'");
+				handleAnyWriteResultErrors(wr, query.getQueryObject(), "update with '" + updateObj + "'");
 				return wr;
 			}
 		});
@@ -871,12 +877,12 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 	}
 
 	public <T> void remove(Query query, Class<T> targetClass) {
-	  Assert.notNull(query);
+		Assert.notNull(query);
 		remove(getEntityCollection(targetClass), query, targetClass);
 	}
-	
+
 	private PersistentEntity<?> getPersistentEntity(Class<?> type) {
-	  return type == null ? null : mappingContext.getPersistentEntity(type);
+		return type == null ? null : mappingContext.getPersistentEntity(type);
 	}
 
 	public <T> void remove(String collectionName, final Query query, Class<T> targetClass) {
@@ -983,7 +989,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 		}
 		PersistentEntity<?> entity = mappingContext.getPersistentEntity(targetClass);
 		DBObject mappedQuery = mapper.getMappedObject(query, entity);
-		
+
 		return execute(new FindOneCallback(mappedQuery, fields),
 				new ReadDbObjectCallback<T>(readerToUse, targetClass),
 				collectionName);
@@ -1085,14 +1091,14 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 	}
 
 	protected Object getIdValue(Object object) {
-		
+
 		PersistentEntity<?> entity = mappingContext.getPersistentEntity(object.getClass());
 		PersistentProperty idProp = entity.getIdProperty();
-		
+
 		if (idProp == null) {
-		  throw new MappingException("No id property found for object of type " + entity.getType().getName());
+			throw new MappingException("No id property found for object of type " + entity.getType().getName());
 		}
-		
+
 		try {
 			return MappingBeanHelper.getProperty(object, idProp, Object.class, true);
 		} catch (IllegalAccessException e) {
@@ -1117,9 +1123,9 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 		PersistentProperty idProp = getIdPropertyFor(savedObject.getClass());
 
 		if (idProp == null) {
-		  return;
+			return;
 		}
-		
+
 		try {
 			MappingBeanHelper.setProperty(savedObject, idProp, id);
 			return;
@@ -1130,9 +1136,9 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 		}
 	}
 
-  private PersistentProperty getIdPropertyFor(Class<?> type) {
-    return mappingContext.getPersistentEntity(type).getIdProperty();
-  }
+	private PersistentProperty getIdPropertyFor(Class<?> type) {
+		return mappingContext.getPersistentEntity(type).getIdProperty();
+	}
 
 	/**
 	 * Substitutes the id key if it is found in he query. Any 'id' keys will be replaced with '_id' and the value converted
@@ -1147,11 +1153,9 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 		MongoConverter converter = null;
 		if (reader instanceof SimpleMongoConverter) {
 			converter = (MongoConverter) reader;
-		}
-		else if (reader instanceof MappingMongoConverter) {
+		} else if (reader instanceof MappingMongoConverter) {
 			converter = (MappingMongoConverter) reader;
-		}
-		else {
+		} else {
 			return;
 		}
 		String idKey = null;
@@ -1187,7 +1191,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 				if (dbo.containsField("$in")) {
 					List<Object> ids = new ArrayList<Object>();
 					int count = 0;
-					for (Object o : (Object[])dbo.get("$in")) {
+					for (Object o : (Object[]) dbo.get("$in")) {
 						count++;
 						ObjectId newValue = convertIdValue(converter, o);
 						if (newValue != null) {
@@ -1196,7 +1200,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 					}
 					if (ids.size() > 0 && ids.size() != count) {
 						throw new InvalidDataAccessApiUsageException("Inconsistent set of id values provided " +
-								Arrays.asList((Object[])dbo.get("$in")));
+								Arrays.asList((Object[]) dbo.get("$in")));
 					}
 					if (ids.size() > 0) {
 						dbo.removeField("$in");
@@ -1205,8 +1209,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 				}
 				query.removeField(idKey);
 				query.put(MongoPropertyDescriptor.ID_KEY, value);
-			}
-			else {
+			} else {
 				ObjectId newValue = convertIdValue(converter, value);
 				query.removeField(idKey);
 				if (newValue != null) {
@@ -1248,11 +1251,11 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 	}
 
 	private String getEntityCollection(Class<?> clazz) {
-	  
-	  if (clazz == null) {
-	    return getDefaultCollectionName();
-	  }
-		
+
+		if (clazz == null) {
+			return getDefaultCollectionName();
+		}
+
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(clazz);
 		return entity.getCollection();
 	}
