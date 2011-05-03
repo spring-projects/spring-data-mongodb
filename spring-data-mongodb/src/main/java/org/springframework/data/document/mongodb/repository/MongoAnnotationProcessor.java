@@ -56,6 +56,7 @@ public class MongoAnnotationProcessor extends AbstractProcessor {
     DefaultConfiguration configuration = new DefaultConfiguration(roundEnv, processingEnv.getOptions(),
         Collections.<String> emptySet(), QueryEntities.class, Document.class, QuerySupertype.class,
         QueryEmbeddable.class, QueryEmbedded.class, QueryTransient.class);
+    configuration.setUnknownAsEmbedded(true);
 
     Processor processor = new Processor(processingEnv, roundEnv, configuration);
     processor.process();

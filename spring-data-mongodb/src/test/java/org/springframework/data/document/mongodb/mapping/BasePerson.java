@@ -16,9 +16,16 @@
 
 package org.springframework.data.document.mongodb.mapping;
 
+import com.mysema.query.annotations.QuerySupertype;
+
 /**
+ * {@link QuerySupertype} is necessary for Querydsl 2.2.0-beta4 to compile the query classes directly. Can be removed as
+ * soon as {@link https://bugs.launchpad.net/querydsl/+bug/776219} is fixed.
+ * 
+ * @see https://bugs.launchpad.net/querydsl/+bug/776219
  * @author Jon Brisbin <jbrisbin@vmware.com>
  */
+@QuerySupertype
 public abstract class BasePerson {
 
   protected Integer ssn;
