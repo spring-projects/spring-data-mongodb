@@ -55,6 +55,11 @@ public class Query {
 		return this;
 	}
 
+	public Query nor(Query... queries) {
+		this.criteria.put("$nor", new NorCriteria(queries));
+		return this;
+	}
+
 	public Field fields() {
 		synchronized (this) {
 			if (fieldSpec == null) {

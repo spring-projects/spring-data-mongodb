@@ -28,6 +28,13 @@ public class CriteriaTests {
   }
 
   @Test
+  public void testNotEqualCriteria() {
+    Criteria c = new Criteria("name").ne("Bubba");
+    Assert.assertEquals("{ \"name\" : { \"$ne\" : \"Bubba\"}}", c.getCriteriaObject().toString());
+  }
+
+
+  @Test
   public void testChainedCriteria() {
     Criteria c = new Criteria("name").is("Bubba").and("age").lt(21);
     Assert.assertEquals("{ \"name\" : \"Bubba\" , \"age\" : { \"$lt\" : 21}}", c.getCriteriaObject().toString());
