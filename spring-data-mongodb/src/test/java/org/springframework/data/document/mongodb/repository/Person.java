@@ -18,6 +18,9 @@ package org.springframework.data.document.mongodb.repository;
 import java.util.Set;
 
 import org.bson.types.ObjectId;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.document.mongodb.geo.Point;
+import org.springframework.data.document.mongodb.index.GeoSpatialIndexed;
 import org.springframework.data.document.mongodb.mapping.Document;
 
 
@@ -29,10 +32,14 @@ import org.springframework.data.document.mongodb.mapping.Document;
 @Document
 public class Person {
 
+  @Id
   private String id;
   private String firstname;
   private String lastname;
   private Integer age;
+  
+  @GeoSpatialIndexed
+  private Point location;
 
   private Address address;
   private Set<Address> shippingAddresses;
@@ -52,7 +59,7 @@ public class Person {
 
   public Person(String firstname, String lastname, Integer age) {
 
-    this.id = ObjectId.get().toString();
+    this.id = new ObjectId().toString();
     this.firstname = firstname;
     this.lastname = lastname;
     this.age = age;
@@ -130,6 +137,20 @@ public class Person {
     this.age = age;
   }
 
+  
+  /**
+   * @return the location
+   */
+  public Point getLocation() {
+    return location;
+  }
+  
+  /**
+   * @param location the location to set
+   */
+  public void setLocation(Point location) {
+    this.location = location;
+  }
 
   /**
    * @return the address

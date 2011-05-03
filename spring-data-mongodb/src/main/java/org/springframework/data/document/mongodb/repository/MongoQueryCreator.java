@@ -23,9 +23,13 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.data.document.mongodb.geo.Box;
+import org.springframework.data.document.mongodb.geo.Circle;
+import org.springframework.data.document.mongodb.geo.Point;
 import org.springframework.data.document.mongodb.query.Criteria;
 import org.springframework.data.document.mongodb.query.CriteriaDefinition;
 import org.springframework.data.document.mongodb.query.Query;
+import org.springframework.data.document.mongodb.repository.ConvertingParameterAccessor.PotentiallyConvertingIterator;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
@@ -66,7 +70,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Query> {
   protected Query create(Part part, Iterator<Object> iterator) {
 
     Criteria criteria = from(part.getType(),
-        where(part.getProperty().toDotPath()), iterator);
+        where(part.getProperty().toDotPath()), (PotentiallyConvertingIterator) iterator);
 
     return new Query(criteria);
   }
@@ -81,7 +85,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Query> {
                       Iterator<Object> iterator) {
 
     Criteria criteria = from(part.getType(), where(part.getProperty().toDotPath()),
-        iterator);
+        (PotentiallyConvertingIterator) iterator);
     return base.addCriteria(criteria);
   }
 
@@ -126,17 +130,15 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Query> {
    * @param parameters
    * @return
    */
-  private Criteria from(Type type, Criteria criteria,
-                        Iterator<Object> parameters) {
+  private Criteria from(Type type, Criteria criteria, PotentiallyConvertingIterator parameters) {
 
     switch (type) {
       case GREATER_THAN:
-        return criteria.gt(parameters.next());
+        return criteria.gt(parameters.nextConverted());
       case LESS_THAN:
-        return criteria.lt(parameters.next());
+        return criteria.lt(parameters.nextConverted());
       case BETWEEN:
-        return criteria.gt(parameters.next()).lt(
-            parameters.next());
+        return criteria.gt(parameters.nextConverted()).lt(parameters.nextConverted());
       case IS_NOT_NULL:
         return criteria.not().is(null);
       case IS_NULL:
@@ -148,18 +150,49 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Query> {
       case LIKE:
         String value = parameters.next().toString();
         return criteria.is(toLikeRegex(value));
+      case NEAR:
+        return criteria.near(nextAs(parameters, Point.class));
+      case WITHIN:
+        
+        Object parameter = parameters.next();
+        if (parameter instanceof Box) {
+          return criteria.withinBox((Box) parameter);
+        } else if (parameter instanceof Circle) {
+          return criteria.withinCenter((Circle) parameter);
+        }
+        throw new IllegalArgumentException("Parameter has to be either Box or Circle!");
       case SIMPLE_PROPERTY:
-        return criteria.is(parameters.next());
+        return criteria.is(parameters.nextConverted());
       case NEGATING_SIMPLE_PROPERTY:
-        return criteria.not().is(parameters.next());
+        return criteria.not().is(parameters.nextConverted());
     }
 
     throw new IllegalArgumentException("Unsupported keyword!");
   }
 
+  /**
+   * Returns the next element from the given {@link Iterator} expecting it to be of a certain type.
+   * 
+   * @param <T>
+   * @param iterator
+   * @param type
+   * @throws IllegalArgumentException
+   *           in case the next element in the iterator is not of the given type.
+   * @return
+   */
+  @SuppressWarnings("unchecked")
+  private <T> T nextAs(Iterator<Object> iterator, Class<T> type) {
+    Object parameter = iterator.next();
+    if (parameter.getClass().isAssignableFrom(type)) {
+      return (T) parameter;
+    }
 
-  private Object[] nextAsArray(Iterator<Object> iterator) {
-    Object next = iterator.next();
+    throw new IllegalArgumentException(String.format("Expected parameter type of %s but got %s!", type,
+        parameter.getClass()));
+  }
+
+  private Object[] nextAsArray(PotentiallyConvertingIterator iterator) {
+    Object next = iterator.nextConverted();
 
     if (next instanceof Collection) {
       return ((Collection<?>) next).toArray();
@@ -175,6 +208,4 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Query> {
     String regex = source.replaceAll("\\*", ".*");
     return Pattern.compile(regex);
   }
-
-
 }

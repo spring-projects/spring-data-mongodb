@@ -33,6 +33,8 @@ import org.springframework.data.repository.query.ParameterAccessor;
  */
 public class ConvertingParameterAccessor implements ParameterAccessor {
 
+//  private static final Set<Class<?>> TYPES_NOT_TO_CONVERT = new HashSet<Class<?>>(Arrays.asList(Circle.class, Box.class))
+  
   private final MongoWriter<Object> writer;
   private final ParameterAccessor delegate;
 
@@ -88,7 +90,7 @@ public class ConvertingParameterAccessor implements ParameterAccessor {
    * @return
    */
   private Object getConvertedValue(Object value) {
-
+    
     DBObject result = new BasicDBObject();
     writer.write(value.getClass().isEnum() ? new EnumValueHolder((Enum<?>) value) : new ValueHolder(value), result);
     return ((DBObject) result.get("value")).get("value");
@@ -99,7 +101,7 @@ public class ConvertingParameterAccessor implements ParameterAccessor {
    *
    * @author Oliver Gierke
    */
-  private class ConvertingIterator implements Iterator<Object> {
+  private class ConvertingIterator implements PotentiallyConvertingIterator {
 
     private final Iterator<Object> delegate;
 
@@ -128,7 +130,15 @@ public class ConvertingParameterAccessor implements ParameterAccessor {
        */
     public Object next() {
 
-      return getConvertedValue(delegate.next());
+      return delegate.next();
+    }
+    
+    /* (non-Javadoc)
+     * @see org.springframework.data.document.mongodb.repository.ConvertingParameterAccessor.PotentiallConvertingIterator#nextConverted()
+     */
+    public Object nextConverted() {
+      
+      return getConvertedValue(next());
     }
 
     /*
@@ -177,5 +187,20 @@ public class ConvertingParameterAccessor implements ParameterAccessor {
     public Enum<?> getValue() {
       return value;
     }
+  }
+  
+  /**
+   * Custom {@link Iterator} that adds a method to access elements in a converted manner.
+   *
+   * @author Oliver Gierke
+   */
+  public interface PotentiallyConvertingIterator extends Iterator<Object> {
+    
+    /**
+     * Returns the next element which has already been converted.
+     * 
+     * @return
+     */
+    Object nextConverted();
   }
 }

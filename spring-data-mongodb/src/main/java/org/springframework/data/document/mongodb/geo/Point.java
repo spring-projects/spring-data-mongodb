@@ -15,23 +15,28 @@
  */
 package org.springframework.data.document.mongodb.geo;
 
+import org.springframework.data.annotation.PersistenceConstructor;
+import org.springframework.util.Assert;
+
 /**
- * Represents a geospatial point value
+ * Represents a geospatial point value.
+ * 
  * @author Mark Pollack
- *
+ * @author Oliver Gierke
  */
 public class Point {
 
-  private double x;
+  private final double x;
+  private final double y;
   
-  private double y;
-
+  @PersistenceConstructor
   public Point(double x, double y) {
     this.x = x;
     this.y = y;
   }
   
   public Point(Point point) {
+    Assert.notNull(point);
     this.x = point.x;
     this.y = point.y;
   }
@@ -42,6 +47,10 @@ public class Point {
 
   public double getY() {
     return y;
+  }
+ 
+  public double[] asArray() {
+    return new double[] {x, y};
   }
   
   @Override
@@ -58,28 +67,29 @@ public class Point {
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj)
+    if (this == obj) {
       return true;
-    if (obj == null)
+    }
+    if (obj == null) {
       return false;
-    if (getClass() != obj.getClass())
+    }
+    if (getClass() != obj.getClass()) {
       return false;
+    }
     Point other = (Point) obj;
     if (Double.doubleToLongBits(x) != Double
-        .doubleToLongBits(other.x))
+        .doubleToLongBits(other.x)) {
       return false;
+    }
     if (Double.doubleToLongBits(y) != Double
-        .doubleToLongBits(other.y))
+        .doubleToLongBits(other.y)) {
       return false;
+    }
     return true;
   }
 
   @Override
   public String toString() {
-    return "Point [latitude=" + x + ", longitude=" + y + "]";
+    return String.format("Point [latitude=%d, longitude=%d]", x, y);
   }
-  
-  
-  
-  
 }

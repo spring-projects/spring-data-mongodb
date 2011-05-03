@@ -33,6 +33,9 @@ import org.springframework.data.document.mongodb.query.BasicQuery;
 import org.springframework.data.document.mongodb.repository.MongoRepositoryFactoryBean.EntityInformationCreator;
 import org.springframework.data.repository.support.RepositoryMetadata;
 
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
+
 /**
  * Unit tests for {@link StringBasedMongoQuery}.
  *
@@ -56,7 +59,7 @@ public class StringBasedMongoQueryUnitTests {
   }
 
   @Test
-  public void testname() throws Exception {
+  public void bindsSimplePropertyCorrectly() throws Exception {
 
     Method method = SampleRepository.class.getMethod("findByLastname", String.class);
     MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, creator);
@@ -68,10 +71,32 @@ public class StringBasedMongoQueryUnitTests {
 
     assertThat(query.getQueryObject(), is(reference.getQueryObject()));
   }
+  
+  @Test
+  public void bindsComplexPropertyCorrectly() throws Exception {
+
+    Method method = SampleRepository.class.getMethod("findByAddress", Address.class);
+    MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, creator);
+    StringBasedMongoQuery mongoQuery = new StringBasedMongoQuery(queryMethod, template);
+    
+    Address address = new Address("Foo", "0123", "Bar");
+    ConvertingParameterAccessor accesor = StubParameterAccessor.getAccessor(converter, address);
+    
+    DBObject dbObject = new BasicDBObject();
+    converter.write(address, dbObject);
+    
+    org.springframework.data.document.mongodb.query.Query query = mongoQuery.createQuery(accesor);
+    org.springframework.data.document.mongodb.query.Query reference = new BasicQuery(new BasicDBObject("address", dbObject));
+
+    assertThat(query.getQueryObject(), is(reference.getQueryObject()));
+  }
 
   private interface SampleRepository {
 
     @Query("{ 'lastname' : ?0 }")
     Person findByLastname(String lastname);
+    
+    @Query("{ 'address' : ?0 }")
+    Person findByAddress(Address address);
   }
 }

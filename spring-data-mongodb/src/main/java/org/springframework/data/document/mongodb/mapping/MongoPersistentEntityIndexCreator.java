@@ -37,10 +37,12 @@ import org.springframework.data.document.mongodb.index.CompoundIndexes;
 import org.springframework.data.document.mongodb.index.GeoSpatialIndexed;
 import org.springframework.data.document.mongodb.index.IndexDirection;
 import org.springframework.data.document.mongodb.index.Indexed;
+import org.springframework.data.document.mongodb.query.GeospatialIndex;
 import org.springframework.data.mapping.PropertyHandler;
 import org.springframework.data.mapping.event.MappingContextEvent;
 import org.springframework.data.mapping.model.PersistentProperty;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 /**
  * Component that inspects {@link BasicMongoPersistentEntity} instances contained in the given {@link MongoMappingContext}
@@ -62,7 +64,7 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 		Assert.notNull(mongoTemplate);
 		Assert.notNull(mappingContext);
 		this.mongoTemplate = mongoTemplate;
-
+ 
 		for (MongoPersistentEntity<?> entity : mappingContext.getPersistentEntities()) {
 			checkForIndexes(entity);
 		}
@@ -114,29 +116,27 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 								}
 							}
 						}
-						String collection = index.collection();
-						if ("".equals(collection)) {
-							collection = entity.getCollection();
-						}
+						String collection = StringUtils.hasText(index.collection()) ? index.collection() : entity.getCollection();
 						ensureIndex(collection, name, null, index.direction(), index.unique(), index.dropDups(), index.sparse());
 						if (log.isDebugEnabled()) {
 							log.debug("Created property index " + index);
 						}
-					} else if (field.isAnnotationPresent(GeoSpatialIndexed.class)) {
-						GeoSpatialIndexed index = field.getAnnotation(GeoSpatialIndexed.class);
-						String name = index.name();
-						if ("".equals(name)) {
-							name = field.getName();
-						}
-						String collection = index.collection();
-						if ("".equals(collection)) {
-							collection = entity.getCollection();
-						}
-						ensureGeoIndex(collection, name, index.min(), index.max(), index.bits());
-						if (log.isDebugEnabled()) {
-							log.debug("Created geo index " + index);
-						}
-					}
+          } else if (field.isAnnotationPresent(GeoSpatialIndexed.class)) {
+
+            GeoSpatialIndexed index = field.getAnnotation(GeoSpatialIndexed.class);
+
+            GeospatialIndex indexObject = new GeospatialIndex(StringUtils.hasText(index.name()) ? index.name() : field
+                .getName());
+            indexObject.withMin(index.min()).withMax(index.max());
+
+            String collection = StringUtils.hasText(index.collection()) ? index.collection() : entity.getCollection();
+            mongoTemplate.ensureIndex(collection, indexObject);
+
+            if (log.isDebugEnabled()) {
+              log.debug(String.format("Created %s for entity %s in collection %s! ", indexObject, entity.getType(),
+                  collection));
+            }
+          }
 				}
 			});
 
@@ -172,32 +172,4 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 			}
 		});
 	}
-
-	protected void ensureGeoIndex(String collection,
-																final String name,
-																final int min,
-																final int max,
-																final int bits) {
-		mongoTemplate.execute(collection, new CollectionCallback<Object>() {
-			public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
-				DBObject defObj = new BasicDBObject();
-				defObj.put(name, "2d");
-
-				DBObject opts = new BasicDBObject();
-				// Min
-				if (min != 0) {
-					opts.put("min", min);
-				}
-				// Max
-				if (max != 0) {
-					opts.put("max", max);
-				}
-				// Bits
-				opts.put("bits", bits);
-				collection.ensureIndex(defObj, opts);
-				return null;
-			}
-		});
-	}
-
 }

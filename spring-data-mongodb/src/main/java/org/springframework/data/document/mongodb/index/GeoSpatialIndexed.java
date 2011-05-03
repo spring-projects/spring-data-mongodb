@@ -49,14 +49,14 @@ public @interface GeoSpatialIndexed {
 	 *
 	 * @return
 	 */
-	int min() default 0;
+	int min() default -180;
 
 	/**
 	 * Maximum value for indexed values.
 	 *
 	 * @return
 	 */
-	int max() default 0;
+	int max() default 180;
 
 	/**
 	 * Bits of precision for boundary calculations.

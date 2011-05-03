@@ -3,18 +3,32 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
 
-  <import resource="classpath:infrastructure.xml"/>
+  <bean id="mongoTemplate" class="org.springframework.data.document.mongodb.MongoTemplate">
+    <constructor-arg>
+      <bean id="mongo" class="org.springframework.data.document.mongodb.MongoFactoryBean">
+	    <property name="host" value="localhost"/>
+	    <property name="port" value="27017"/>
+	  </bean>
+    </constructor-arg>
+    <constructor-arg value="repositories" />
+	<constructor-arg>
+	  <bean id="mongoConverter" class="org.springframework.data.document.mongodb.convert.MappingMongoConverter">
+	  	<constructor-arg ref="mappingContext" />
+	  </bean>
+	</constructor-arg>
+  </bean>
+  
+  <bean id="mappingContext" class="org.springframework.data.document.mongodb.mapping.MongoMappingContext" />
 
+  <bean class="org.springframework.data.document.mongodb.mapping.MongoPersistentEntityIndexCreator">
+  	<constructor-arg ref="mappingContext" />
+  	<constructor-arg ref="mongoTemplate" />
+  </bean>
+  
   <bean class="org.springframework.data.document.mongodb.repository.MongoRepositoryFactoryBean">
     <property name="template" ref="mongoTemplate"/>
     <property name="mappingContext" ref="mappingContext" />
     <property name="repositoryInterface" value="org.springframework.data.document.mongodb.repository.PersonRepository"/>
-  </bean>
-  
-  <bean id="mappingContext" class="org.springframework.data.document.mongodb.mapping.MongoMappingContext" />
-  
-  <bean id="mongoConverter" class="org.springframework.data.document.mongodb.convert.MappingMongoConverter">
-  	<constructor-arg ref="mappingContext" />
   </bean>
 
 </beans>

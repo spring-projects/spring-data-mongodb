@@ -30,9 +30,8 @@ public class GeospatialIndex implements IndexDefinition {
   private Integer min = null;
 
   private Integer max = null;
-
-  public GeospatialIndex() {
-  }
+  
+  private Integer bits = null;
 
   public GeospatialIndex(String key) {
     keyField = key;
@@ -53,6 +52,11 @@ public class GeospatialIndex implements IndexDefinition {
     return this;
   }
 
+  public GeospatialIndex withBits(int bits) {
+    this.bits = Integer.valueOf(bits);
+    return this;
+  }
+  
   public DBObject getIndexKeys() {
     DBObject dbo = new BasicDBObject();
     dbo.put(keyField, "2d");
@@ -73,7 +77,17 @@ public class GeospatialIndex implements IndexDefinition {
     if (max != null) {
       dbo.put("max", max);
     }
+    if (bits != null) {
+      dbo.put("bits", bits);
+    }
     return dbo;
   }
 
+  /* (non-Javadoc)
+   * @see java.lang.Object#toString()
+   */
+  @Override
+  public String toString() {
+    return String.format("Geo index: %s - Options: %s", getIndexKeys(), getIndexOptions());
+  }
 }

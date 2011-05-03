@@ -19,6 +19,9 @@ import static org.springframework.data.querydsl.QueryDslUtils.*;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -34,6 +37,7 @@ import org.springframework.data.repository.query.QueryLookupStrategy;
 import org.springframework.data.repository.query.QueryLookupStrategy.Key;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.repository.query.parser.Part;
+import org.springframework.data.repository.query.parser.Part.Type;
 import org.springframework.data.repository.query.parser.PartTree;
 import org.springframework.data.repository.support.QueryCreationListener;
 import org.springframework.data.repository.support.RepositoryFactoryBeanSupport;
@@ -264,6 +268,7 @@ public class MongoRepositoryFactoryBean<T extends MongoRepository<S, ID>, S, ID 
    */
   private static class IndexEnsuringQueryCreationListener implements QueryCreationListener<PartTreeMongoQuery> {
 
+    private static final Set<Type> GEOSPATIAL_TYPES = new HashSet<Part.Type>(Arrays.asList(Type.NEAR, Type.WITHIN));
     private static final Log LOG = LogFactory.getLog(IndexEnsuringQueryCreationListener.class);
     private final MongoOperations operations;
 
@@ -288,6 +293,9 @@ public class MongoRepositoryFactoryBean<T extends MongoRepository<S, ID>, S, ID 
       Sort sort = tree.getSort();
 
       for (Part part : tree.getParts()) {
+        if (GEOSPATIAL_TYPES.contains(part.getType())) {
+          return;
+        }
         String property = part.getProperty().toDotPath();
         Order order = toOrder(sort, property);
         index.on(property, order);
@@ -295,7 +303,7 @@ public class MongoRepositoryFactoryBean<T extends MongoRepository<S, ID>, S, ID 
 
       MongoEntityInformation<?, ?> metadata = query.getQueryMethod().getEntityInformation();
       operations.ensureIndex(metadata.getCollectionName(), index);
-      LOG.debug(String.format("Created index %s!", index.toString()));
+      LOG.debug(String.format("Created %s!", index));
     }
 
     private static Order toOrder(Sort sort, String property) {

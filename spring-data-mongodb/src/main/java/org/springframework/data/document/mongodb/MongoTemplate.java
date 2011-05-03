@@ -683,7 +683,7 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 			}
 		}
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("insert DBObject containing fields: " + dbDoc.keySet() + " in collecion: " + collectionName);
+			LOGGER.debug("insert DBObject containing fields: " + dbDoc.keySet() + " in collection: " + collectionName);
 		}
 		return execute(collectionName, new CollectionCallback<Object>() {
 			public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
@@ -783,7 +783,7 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 	 */
 	public WriteResult updateFirst(String collectionName, final Query query, final Update update) {
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("calling update using query: " + query.getQueryObject() + " and update: " + update.getUpdateObject(mongoConverter) + " in collecion: " + collectionName);
+			LOGGER.debug("calling update using query: " + query.getQueryObject() + " and update: " + update.getUpdateObject(mongoConverter) + " in collection: " + collectionName);
 		}
 		return execute(collectionName, new CollectionCallback<WriteResult>() {
 			public WriteResult doInCollection(DBCollection collection) throws MongoException, DataAccessException {
@@ -813,7 +813,7 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 	 */
 	public WriteResult updateMulti(String collectionName, final Query query, final Update update) {
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("calling updateMulti using query: " + query.getQueryObject() + " and update: " + update.getUpdateObject(mongoConverter) + " in collecion: " + collectionName);
+			LOGGER.debug("calling updateMulti using query: " + query.getQueryObject() + " and update: " + update.getUpdateObject(mongoConverter) + " in collection: " + collectionName);
 		}
 		return execute(collectionName, new CollectionCallback<WriteResult>() {
 			public WriteResult doInCollection(DBCollection collection) throws MongoException, DataAccessException {
@@ -858,7 +858,7 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 		final DBObject queryObject = query.getQueryObject();
 		final PersistentEntity<?> entity = getPersistentEntity(targetClass);
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("remove using query: " + queryObject + " in collecion: " + collectionName);
+			LOGGER.debug("remove using query: " + queryObject + " in collection: " + collectionName);
 		}
 		execute(collectionName, new CollectionCallback<Void>() {
 			public Void doInCollection(DBCollection collection) throws MongoException, DataAccessException {
@@ -983,7 +983,7 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 	protected <T> List<T> doFind(String collectionName, DBObject query, DBObject fields, Class<T> targetClass, CursorPreparer preparer) {
 		PersistentEntity<?> entity = mappingContext.getPersistentEntity(targetClass);
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("find using query: " + query + " fields: " + fields + " for class: " + targetClass + " in collecion: " + collectionName);
+			LOGGER.debug("find using query: " + query + " fields: " + fields + " for class: " + targetClass + " in collection: " + collectionName);
 		}
 		return executeEach(new FindCallback(mapper.getMappedObject(query, entity), fields),
 				preparer,
@@ -1005,7 +1005,7 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 	 */
 	protected <T> List<T> doFind(String collectionName, DBObject query, DBObject fields, Class<T> targetClass, MongoReader<T> reader) {
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("find using query: " + query + " fields: " + fields + " for class: " + targetClass + " in collecion: " + collectionName);
+			LOGGER.debug("find using query: " + query + " fields: " + fields + " for class: " + targetClass + " in collection: " + collectionName);
 		}
 		PersistentEntity<?> entity = mappingContext.getPersistentEntity(targetClass);
 		return executeEach(new FindCallback(mapper.getMappedObject(query, entity), fields),
@@ -1048,7 +1048,7 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 			readerToUse = this.mongoConverter;
 		}
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("findAndRemove using query: " + query + " fields: " + fields + " sort: " + sort + " for class: " + targetClass + " in collecion: " + collectionName);
+			LOGGER.debug("findAndRemove using query: " + query + " fields: " + fields + " sort: " + sort + " for class: " + targetClass + " in collection: " + collectionName);
 		}
 		PersistentEntity<?> entity = mappingContext.getPersistentEntity(targetClass);
 		return execute(new FindAndRemoveCallback(mapper.getMappedObject(query, entity), fields, sort),

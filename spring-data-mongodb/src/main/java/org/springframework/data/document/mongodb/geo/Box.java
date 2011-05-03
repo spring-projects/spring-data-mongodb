@@ -15,83 +15,67 @@
  */
 package org.springframework.data.document.mongodb.geo;
 
+import org.springframework.util.Assert;
+
 /**
  * Represents a geospatial box value
+ * 
  * @author Mark Pollack
- *
+ * @author Oliver Gierke
  */
 public class Box {
 
-  
-    private double xmin;
-    
-    private double ymin;
-    
-    private double xmax;
-    
-    private double ymax;
-           
-    public Box(Point lowerLeft, Point upperRight) {
-      xmin = lowerLeft.getX();
-      ymin = lowerLeft.getY();
-      xmax = upperRight.getX();
-      ymax = upperRight.getY();
-    }
-    
-    public Box(double[] lowerLeft, double[] upperRight) {
-      xmin = lowerLeft[0];
-      ymin = lowerLeft[1];
-      xmax = upperRight[0];
-      ymax = upperRight[1];
-    }
-    
-    public Point getLowerLeft() {
-      return new Point(xmin, ymin);
-    }
-    
-    public Point getUpperRight() {
-      return new Point(xmax, ymax);
-    }
-    @Override
-    public String toString() {
-      return "Box [xmin=" + xmin + ", ymin=" + ymin + ", xmax=" + xmax
-          + ", ymax=" + ymax + "]";
-    }
+  private final Point first;
+  private final Point second;
 
-    @Override
-    public int hashCode() {
-      final int prime = 31;
-      int result = 1;
-      long temp;
-      temp = Double.doubleToLongBits(xmax);
-      result = prime * result + (int) (temp ^ (temp >>> 32));
-      temp = Double.doubleToLongBits(xmin);
-      result = prime * result + (int) (temp ^ (temp >>> 32));
-      temp = Double.doubleToLongBits(ymax);
-      result = prime * result + (int) (temp ^ (temp >>> 32));
-      temp = Double.doubleToLongBits(ymin);
-      result = prime * result + (int) (temp ^ (temp >>> 32));
-      return result;
-    }
+  public Box(Point lowerLeft, Point upperRight) {
+    Assert.notNull(lowerLeft);
+    Assert.notNull(upperRight);
+    this.first = lowerLeft;
+    this.second = upperRight;
+  }
 
-    @Override
-    public boolean equals(Object obj) {
-      if (this == obj)
-        return true;
-      if (obj == null)
-        return false;
-      if (getClass() != obj.getClass())
-        return false;
-      Box other = (Box) obj;
-      if (Double.doubleToLongBits(xmax) != Double.doubleToLongBits(other.xmax))
-        return false;
-      if (Double.doubleToLongBits(xmin) != Double.doubleToLongBits(other.xmin))
-        return false;
-      if (Double.doubleToLongBits(ymax) != Double.doubleToLongBits(other.ymax))
-        return false;
-      if (Double.doubleToLongBits(ymin) != Double.doubleToLongBits(other.ymin))
-        return false;
+  public Box(double[] lowerLeft, double[] upperRight) {
+    Assert.isTrue(lowerLeft.length == 2, "Point array has to have 2 elements!");
+    Assert.isTrue(upperRight.length == 2, "Point array has to have 2 elements!");
+    this.first = new Point(lowerLeft[0], lowerLeft[1]);
+    this.second = new Point(upperRight[0], upperRight[1]);
+  }
+
+  public Point getLowerLeft() {
+    return first;
+  }
+
+  public Point getUpperRight() {
+    return second;
+  }
+
+  @Override
+  public String toString() {
+    return String.format("Box [%s, %s]", first, second);
+  }
+
+  @Override
+  public int hashCode() {
+
+    int result = 31;
+    result += 17 * first.hashCode();
+    result += 17 * second.hashCode();
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
       return true;
     }
-
+    if (obj == null) {
+      return false;
+    }
+    if (getClass() != obj.getClass()) {
+      return false;
+    }
+    Box that = (Box) obj;
+    return this.first.equals(that.first) && this.second.equals(that.second);
+  }
 }

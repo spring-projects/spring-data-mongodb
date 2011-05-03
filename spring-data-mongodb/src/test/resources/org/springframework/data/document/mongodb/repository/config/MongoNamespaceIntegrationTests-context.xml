@@ -11,7 +11,7 @@
   
   <bean id="mongoTemplate" class="org.springframework.data.document.mongodb.MongoTemplate">
     <constructor-arg ref="mongo" />
-    <constructor-arg value="database" />
+    <constructor-arg value="repositories" />
     <constructor-arg>
       <mongo:mapping-converter />
     </constructor-arg>

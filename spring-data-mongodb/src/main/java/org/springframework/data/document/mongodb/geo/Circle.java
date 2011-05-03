@@ -15,24 +15,30 @@
  */
 package org.springframework.data.document.mongodb.geo;
 
-import java.util.Arrays;
+import org.springframework.util.Assert;
 
 /**
  * Represents a geospatial circle value
  * @author Mark Pollack
- *
+ * @author Oliver Gierke
  */
 public class Circle {
 
-  private double[] center;
+  private Point center;
   private double radius;
   
-  public Circle(double centerX, double centerY, double radius) {
-    this.center = new double[] { centerX, centerY };
+  public Circle(Point center, double radius) {
+    Assert.notNull(center);
+    Assert.isTrue(radius >= 0, "Radius must not be negative!");
+    this.center = center;
     this.radius = radius;
   }
+  
+  public Circle(double centerX, double centerY, double radius) {
+    this(new Point(centerX, centerY), radius);
+  }
 
-  public double[] getCenter() {
+  public Point getCenter() {
     return center;
   }
 
@@ -42,9 +48,6 @@ public class Circle {
 
   @Override
   public String toString() {
-    return "Circle [center=" + Arrays.toString(center) + ", radius=" + radius
-        + "]";
+    return String.format("Circle [center=%s, radius=%d]", center, radius);
   }
-  
-  
 }

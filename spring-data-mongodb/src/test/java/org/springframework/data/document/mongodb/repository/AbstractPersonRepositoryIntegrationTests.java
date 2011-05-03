@@ -9,9 +9,13 @@ import java.util.HashSet;
 import java.util.List;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.document.mongodb.geo.Box;
+import org.springframework.data.document.mongodb.geo.Circle;
+import org.springframework.data.document.mongodb.geo.Point;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort.Direction;
@@ -172,6 +176,42 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
     repository.save(dave);
 
     List<Person> result = repository.findAll(person.address.zipCode.eq("C0123"));
+    assertThat(result.size(), is(1));
+    assertThat(result, hasItem(dave));
+  }
+  
+  @Test
+  public void findsPeopleByLocationNear() {
+    Point point = new Point(-73.99171, 40.738868);
+    dave.setLocation(point);
+    repository.save(dave);
+    
+    List<Person> result = repository.findByLocationNear(point);
+    assertThat(result.size(), is(1));
+    assertThat(result, hasItem(dave));
+  }
+  
+  @Test
+  public void findsPeopleByLocationWithinCircle() {
+    Point point = new Point(-73.99171, 40.738868);
+    dave.setLocation(point);
+    repository.save(dave);
+    
+    List<Person> result = repository.findByLocationWithin(new Circle(-78.99171, 45.738868, 170));
+    assertThat(result.size(), is(1));
+    assertThat(result, hasItem(dave));
+  }
+  
+  @Test
+  @Ignore
+  public void findsPeopleByLocationWithinBox() {
+    Point point = new Point(-73.99171, 40.738868);
+    dave.setLocation(point);
+    repository.save(dave);
+    
+    Box box = new Box(new Point(-78.99171, 35.738868), new Point(-68.99171, 45.738868));
+    
+    List<Person> result = repository.findByLocationWithin(box);
     assertThat(result.size(), is(1));
     assertThat(result, hasItem(dave));
   }

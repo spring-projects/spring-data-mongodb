@@ -18,6 +18,9 @@ package org.springframework.data.document.mongodb.repository;
 import java.util.Collection;
 import java.util.List;
 
+import org.springframework.data.document.mongodb.geo.Box;
+import org.springframework.data.document.mongodb.geo.Circle;
+import org.springframework.data.document.mongodb.geo.Point;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -117,4 +120,10 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
   List<Person> findByLastnameLikeAndAgeBetween(String lastname, int from, int to);
 
   List<Person> findByAgeOrLastnameLikeAndFirstnameLike(int age, String lastname, String firstname);
+  
+  List<Person> findByLocationNear(Point point);
+  
+  List<Person> findByLocationWithin(Circle circle);
+  
+  List<Person> findByLocationWithin(Box box);
 }
