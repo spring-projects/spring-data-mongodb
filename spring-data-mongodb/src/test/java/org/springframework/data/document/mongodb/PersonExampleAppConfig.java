@@ -30,7 +30,7 @@ public class PersonExampleAppConfig {
 
   @Bean
   public MongoTemplate mongoTemplate() throws Exception {
-    return new MongoTemplate(mongo(), "database", "personexample");
+    return new MongoTemplate(mongo(), "database");
   }
   
   @Bean

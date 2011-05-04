@@ -28,7 +28,6 @@
   <bean id="mongoTemplate" class="org.springframework.data.document.mongodb.MongoTemplate">
     <constructor-arg name="mongo" ref="mongo"/>
     <constructor-arg name="databaseName" value="test"/>
-    <constructor-arg name="defaultCollectionName" value="cross-store"/>
     <constructor-arg name="mongoConverter" ref="mappingConverter"/>
   </bean>
 

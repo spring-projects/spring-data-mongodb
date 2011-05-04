@@ -17,7 +17,7 @@ public class GeoIndexedAppConfig extends AbstractMongoConfiguration {
   
   @Bean
   public MongoTemplate mongoTemplate() throws Exception {
-    return new MongoTemplate(mongo(), "geodb", "geolocation", mappingMongoConverter());
+    return new MongoTemplate(mongo(), "geodb", mappingMongoConverter());
   }
       
 

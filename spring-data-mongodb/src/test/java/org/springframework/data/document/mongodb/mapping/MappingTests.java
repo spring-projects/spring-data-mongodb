@@ -334,7 +334,7 @@ public class MappingTests {
 		template.insert(p);
 
 		addr.setCity("New Town");
-		template.updateFirst(query(where("ssn").is(1111)), update("address", addr));
+		template.updateFirst(Person.class, query(where("ssn").is(1111)), update("address", addr));
 
 		Person p2 = template.findOne(query(where("ssn").is(1111)), Person.class);
 		assertThat(p2.getAddress().getCity(), is("New Town"));

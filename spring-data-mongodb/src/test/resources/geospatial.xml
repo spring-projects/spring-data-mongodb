@@ -12,7 +12,6 @@
   <bean id="mongoTemplate" class="org.springframework.data.document.mongodb.MongoTemplate">
     <constructor-arg ref="mongo"/>
     <constructor-arg name="databaseName" value="geospatial"/>
-    <constructor-arg name="defaultCollectionName" value="newyork"/>
     <constructor-arg ref="mappingConverter"/>
   </bean>
 

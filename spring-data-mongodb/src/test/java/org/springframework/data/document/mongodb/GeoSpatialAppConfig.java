@@ -33,7 +33,7 @@ public class GeoSpatialAppConfig extends AbstractMongoConfiguration {
   
   @Bean
   public MongoTemplate mongoTemplate() throws Exception {
-    return new MongoTemplate(mongo(), "geospatial", "newyork", mappingMongoConverter());
+    return new MongoTemplate(mongo(), "geospatial", mappingMongoConverter());
   }
   
   @Bean

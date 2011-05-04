@@ -23,10 +23,7 @@ public class MvcAnalyticsTests {
   @Before
   public void setUp() throws Exception {
     Mongo m = new Mongo();
-    mongoTemplate = new MongoTemplate(m, "mvc", "mvc");
-    mongoTemplate.afterPropertiesSet();
-
-
+    mongoTemplate = new MongoTemplate(m, "mvc");
   }
 
   @Test

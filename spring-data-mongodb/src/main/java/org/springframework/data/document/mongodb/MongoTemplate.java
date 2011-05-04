@@ -25,12 +25,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.CommandResult;
 import com.mongodb.DB;
@@ -45,7 +43,6 @@ import com.mongodb.util.JSON;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bson.types.ObjectId;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.core.convert.ConversionFailedException;
@@ -83,22 +80,22 @@ import org.springframework.util.Assert;
  * @author Mark Pollack
  * @author Oliver Gierke
  */
-public class MongoTemplate implements InitializingBean, MongoOperations, ApplicationEventPublisherAware {
+public class MongoTemplate implements MongoOperations, ApplicationEventPublisherAware {
 
 	private static final Log LOGGER = LogFactory.getLog(MongoTemplate.class);
 
 	private static final String ID = "_id";
 
 	/*
-			* WriteConcern to be used for write operations if it has been specified. Otherwise
-			* we should not use a WriteConcern defaulting to the one set for the DB or Collection.
-			*/
+	 * WriteConcern to be used for write operations if it has been specified. Otherwise
+	 * we should not use a WriteConcern defaulting to the one set for the DB or Collection.
+	 */
 	private WriteConcern writeConcern = null;
 
 	/*
-			* WriteResultChecking to be used for write operations if it has been specified. Otherwise
-			* we should not do any checking.
-			*/
+	 * WriteResultChecking to be used for write operations if it has been specified. Otherwise
+	 * we should not do any checking.
+	 */
 	private WriteResultChecking writeResultChecking = WriteResultChecking.NONE;
 
 	private final MongoConverter mongoConverter;
@@ -107,7 +104,6 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 	private final MongoExceptionTranslator exceptionTranslator = new MongoExceptionTranslator();
 	private final QueryMapper mapper;
 
-	private String defaultCollectionName;
 	private String databaseName;
 	private String username;
 	private String password;
@@ -120,34 +116,22 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 	 * @param databaseName
 	 */
 	public MongoTemplate(Mongo mongo, String databaseName) {
-		this(mongo, databaseName, null, null, null, null);
+		this(mongo, databaseName, null, null, null);
 	}
 
 	/**
-	 * Constructor used for a basic template configuration with a default collection name
+	 * Constructor used for a template configuration with a custom {@link org.springframework.data.document.mongodb.convert.MongoConverter}
 	 *
 	 * @param mongo
 	 * @param databaseName
-	 * @param defaultCollectionName
-	 */
-	public MongoTemplate(Mongo mongo, String databaseName, String defaultCollectionName) {
-		this(mongo, databaseName, defaultCollectionName, null, null, null);
-	}
-
-	/**
-	 * Constructor used for a template configuration with a default collection name and a custom {@link org.springframework.data.document.mongodb.convert.MongoConverter}
-	 *
-	 * @param mongo
-	 * @param databaseName
-	 * @param defaultCollectionName
 	 * @param mongoConverter
 	 */
-	public MongoTemplate(Mongo mongo, String databaseName, String defaultCollectionName, MongoConverter mongoConverter) {
-		this(mongo, databaseName, defaultCollectionName, mongoConverter, null, null);
+	public MongoTemplate(Mongo mongo, String databaseName, MongoConverter mongoConverter) {
+		this(mongo, databaseName, mongoConverter, null, null);
 	}
 
 	/**
-	 * Constructor used for a template configuration with a default collection name and a custom {@link MongoConverter}
+	 * Constructor used for a template configuration with a custom {@link MongoConverter}
 	 * and with a specific {@link com.mongodb.WriteConcern} to be used for all database write operations
 	 *
 	 * @param mongo
@@ -158,12 +142,11 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 	 * @param writeResultChecking
 	 */
 	@SuppressWarnings({"unchecked"})
-	MongoTemplate(Mongo mongo, String databaseName, String defaultCollectionName, MongoConverter mongoConverter, WriteConcern writeConcern, WriteResultChecking writeResultChecking) {
+	MongoTemplate(Mongo mongo, String databaseName, MongoConverter mongoConverter, WriteConcern writeConcern, WriteResultChecking writeResultChecking) {
 
 		Assert.notNull(mongo);
 		Assert.notNull(databaseName);
 
-		this.defaultCollectionName = defaultCollectionName;
 		this.mongo = mongo;
 		this.databaseName = databaseName;
 		this.writeConcern = writeConcern;
@@ -212,15 +195,6 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 	}
 
 	/**
-	 * Sets the name of the default collection to be used.
-	 *
-	 * @param defaultCollectionName
-	 */
-	public void setDefaultCollectionName(String defaultCollectionName) {
-		this.defaultCollectionName = defaultCollectionName;
-	}
-
-	/**
 	 * Sets the database name to be used.
 	 *
 	 * @param databaseName
@@ -240,34 +214,22 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 	}
 
 	/* (non-Javadoc)
-			* @see org.springframework.data.document.mongodb.MongoOperations#getDefaultCollectionName()
-			*/
-	public String getDefaultCollectionName() {
-		return defaultCollectionName;
+	 * @see org.springframework.data.document.mongodb.MongoOperations#getDefaultCollectionName()
+	 */
+	public String getCollectionName(Class<?> clazz) {
+		return this.determineCollectionName(clazz);
 	}
 
 	/* (non-Javadoc)
-			* @see org.springframework.data.document.mongodb.MongoOperations#getDefaultCollection()
-			*/
-	public DBCollection getDefaultCollection() {
-
-		return execute(new DbCallback<DBCollection>() {
-			public DBCollection doInDB(DB db) throws MongoException, DataAccessException {
-				return db.getCollection(getDefaultCollectionName());
-			}
-		});
-	}
-
-	/* (non-Javadoc)
-			* @see org.springframework.data.document.mongodb.MongoOperations#executeCommand(java.lang.String)
-			*/
+	 * @see org.springframework.data.document.mongodb.MongoOperations#executeCommand(java.lang.String)
+	 */
 	public CommandResult executeCommand(String jsonCommand) {
 		return executeCommand((DBObject) JSON.parse(jsonCommand));
 	}
 
 	/* (non-Javadoc)
-			* @see org.springframework.data.document.mongodb.MongoOperations#executeCommand(com.mongodb.DBObject)
-			*/
+	 * @see org.springframework.data.document.mongodb.MongoOperations#executeCommand(com.mongodb.DBObject)
+	 */
 	public CommandResult executeCommand(final DBObject command) {
 
 		CommandResult result = execute(new DbCallback<CommandResult>() {
@@ -288,8 +250,8 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 	}
 
 	/* (non-Javadoc)
-			* @see org.springframework.data.document.mongodb.MongoOperations#execute(org.springframework.data.document.mongodb.DBCallback)
-			*/
+	 * @see org.springframework.data.document.mongodb.MongoOperations#execute(org.springframework.data.document.mongodb.DBCallback)
+	 */
 	public <T> T execute(DbCallback<T> action) {
 
 		Assert.notNull(action);
@@ -303,15 +265,15 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 	}
 
 	/* (non-Javadoc)
-			* @see org.springframework.data.document.mongodb.MongoOperations#execute(org.springframework.data.document.mongodb.CollectionCallback)
-			*/
-	public <T> T execute(CollectionCallback<T> callback) {
-		return execute(getDefaultCollectionName(), callback);
+	 * @see org.springframework.data.document.mongodb.MongoOperations#execute(org.springframework.data.document.mongodb.CollectionCallback)
+	 */
+	public <T> T execute(Class<?> entityClass, CollectionCallback<T> callback) {
+		return execute(determineCollectionName(entityClass), callback);
 	}
 
 	/* (non-Javadoc)
-			* @see org.springframework.data.document.mongodb.MongoOperations#execute(org.springframework.data.document.mongodb.CollectionCallback, java.lang.String)
-			*/
+	 * @see org.springframework.data.document.mongodb.MongoOperations#execute(org.springframework.data.document.mongodb.CollectionCallback, java.lang.String)
+	 */
 	public <T> T execute(String collectionName, CollectionCallback<T> callback) {
 
 		Assert.notNull(callback);
@@ -384,8 +346,8 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 	}
 
 	/* (non-Javadoc)
-			* @see org.springframework.data.document.mongodb.MongoOperations#executeInSession(org.springframework.data.document.mongodb.DBCallback)
-			*/
+	 * @see org.springframework.data.document.mongodb.MongoOperations#executeInSession(org.springframework.data.document.mongodb.DBCallback)
+	 */
 	public <T> T executeInSession(final DbCallback<T> action) {
 
 		return execute(new DbCallback<T>() {
@@ -401,22 +363,22 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 	}
 
 	/* (non-Javadoc)
-			* @see org.springframework.data.document.mongodb.MongoOperations#createCollection(java.lang.String)
-			*/
+	 * @see org.springframework.data.document.mongodb.MongoOperations#createCollection(java.lang.String)
+	 */
 	public DBCollection createCollection(final String collectionName) {
 		return doCreateCollection(collectionName, new BasicDBObject());
 	}
 
 	/* (non-Javadoc)
-			* @see org.springframework.data.document.mongodb.MongoOperations#createCollection(java.lang.String, org.springframework.data.document.mongodb.CollectionOptions)
-			*/
+	 * @see org.springframework.data.document.mongodb.MongoOperations#createCollection(java.lang.String, org.springframework.data.document.mongodb.CollectionOptions)
+	 */
 	public DBCollection createCollection(final String collectionName, final CollectionOptions collectionOptions) {
 		return doCreateCollection(collectionName, convertToDbObject(collectionOptions));
 	}
 
 	/* (non-Javadoc)
-			* @see org.springframework.data.document.mongodb.MongoOperations#getCollection(java.lang.String)
-			*/
+	 * @see org.springframework.data.document.mongodb.MongoOperations#getCollection(java.lang.String)
+	 */
 	public DBCollection getCollection(final String collectionName) {
 		return execute(new DbCallback<DBCollection>() {
 			public DBCollection doInDB(DB db) throws MongoException, DataAccessException {
@@ -427,8 +389,8 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 
 
 	/* (non-Javadoc)
-			* @see org.springframework.data.document.mongodb.MongoOperations#collectionExists(java.lang.String)
-			*/
+	 * @see org.springframework.data.document.mongodb.MongoOperations#collectionExists(java.lang.String)
+	 */
 	public boolean collectionExists(final String collectionName) {
 		return execute(new DbCallback<Boolean>() {
 			public Boolean doInDB(DB db) throws MongoException, DataAccessException {
@@ -438,8 +400,8 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 	}
 
 	/* (non-Javadoc)
-			* @see org.springframework.data.document.mongodb.MongoOperations#dropCollection(java.lang.String)
-			*/
+	 * @see org.springframework.data.document.mongodb.MongoOperations#dropCollection(java.lang.String)
+	 */
 	public void dropCollection(String collectionName) {
 
 		execute(collectionName, new CollectionCallback<Void>() {
@@ -452,8 +414,8 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 
 	// Indexing methods
 
-	public void ensureIndex(IndexDefinition indexDefinition) {
-		ensureIndex(getDefaultCollectionName(), indexDefinition);
+	public void ensureIndex(Class<?> entityClass, IndexDefinition indexDefinition) {
+		ensureIndex(determineCollectionName(entityClass), indexDefinition);
 	}
 
 	public void ensureIndex(String collectionName, final IndexDefinition indexDefinition) {
@@ -473,12 +435,12 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 	// Find methods that take a Query to express the query and that return a single object.
 
 	public <T> T findOne(Query query, Class<T> targetClass) {
-		return findOne(getEntityCollection(targetClass), query, targetClass);
+		return findOne(determineCollectionName(targetClass), query, targetClass);
 	}
 
 	public <T> T findOne(Query query, Class<T> targetClass,
 											 MongoReader<T> reader) {
-		return findOne(getEntityCollection(targetClass), query, targetClass, reader);
+		return findOne(determineCollectionName(targetClass), query, targetClass, reader);
 	}
 
 	public <T> T findOne(String collectionName, Query query,
@@ -494,11 +456,11 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 	// Find methods that take a Query to express the query and that return a List of objects.
 
 	public <T> List<T> find(Query query, Class<T> targetClass) {
-		return find(getEntityCollection(targetClass), query, targetClass);
+		return find(determineCollectionName(targetClass), query, targetClass);
 	}
 
 	public <T> List<T> find(Query query, Class<T> targetClass, MongoReader<T> reader) {
-		return find(getEntityCollection(targetClass), query, targetClass, reader);
+		return find(determineCollectionName(targetClass), query, targetClass, reader);
 	}
 
 	public <T> List<T> find(String collectionName, final Query query, Class<T> targetClass) {
@@ -541,12 +503,12 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 	// also removed from the collection in the database.
 
 	public <T> T findAndRemove(Query query, Class<T> targetClass) {
-		return findAndRemove(getEntityCollection(targetClass), query, targetClass);
+		return findAndRemove(determineCollectionName(targetClass), query, targetClass);
 	}
 
 	public <T> T findAndRemove(Query query, Class<T> targetClass,
 														 MongoReader<T> reader) {
-		return findAndRemove(getEntityCollection(targetClass), query, targetClass, reader);
+		return findAndRemove(determineCollectionName(targetClass), query, targetClass, reader);
 	}
 
 	public <T> T findAndRemove(String collectionName, Query query,
@@ -560,29 +522,29 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 	}
 
 	/* (non-Javadoc)
-			* @see org.springframework.data.document.mongodb.MongoOperations#insert(java.lang.Object)
-			*/
+	 * @see org.springframework.data.document.mongodb.MongoOperations#insert(java.lang.Object)
+	 */
 	public void insert(Object objectToSave) {
-		insert(getEntityCollection(objectToSave), objectToSave);
+		insert(determineEntityCollectionName(objectToSave), objectToSave);
 	}
 
 	/* (non-Javadoc)
-			* @see org.springframework.data.document.mongodb.MongoOperations#insert(java.lang.String, java.lang.Object)
-			*/
+	 * @see org.springframework.data.document.mongodb.MongoOperations#insert(java.lang.String, java.lang.Object)
+	 */
 	public void insert(String collectionName, Object objectToSave) {
 		insert(collectionName, objectToSave, this.mongoConverter);
 	}
 
 	/* (non-Javadoc)
-			* @see org.springframework.data.document.mongodb.MongoOperations#insert(T, org.springframework.data.document.mongodb.MongoWriter)
-			*/
+	 * @see org.springframework.data.document.mongodb.MongoOperations#insert(T, org.springframework.data.document.mongodb.MongoWriter)
+	 */
 	public <T> void insert(T objectToSave, MongoWriter<T> writer) {
-		insert(getEntityCollection(objectToSave), objectToSave, writer);
+		insert(determineEntityCollectionName(objectToSave), objectToSave, writer);
 	}
 
 	/* (non-Javadoc)
-			* @see org.springframework.data.document.mongodb.MongoOperations#insert(java.lang.String, T, org.springframework.data.document.mongodb.MongoWriter)
-			*/
+	 * @see org.springframework.data.document.mongodb.MongoOperations#insert(java.lang.String, T, org.springframework.data.document.mongodb.MongoWriter)
+	 */
 	public <T> void insert(String collectionName, T objectToSave, MongoWriter<T> writer) {
 		BasicDBObject dbDoc = new BasicDBObject();
 
@@ -597,29 +559,33 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 	}
 
 	/* (non-Javadoc)
-			* @see org.springframework.data.document.mongodb.MongoOperations#insertList(java.util.List)
-			*/
+	 * @see org.springframework.data.document.mongodb.MongoOperations#insertList(java.util.List)
+	 */
 	public void insertList(List<? extends Object> listToSave) {
 		insertList(listToSave, mongoConverter);
 	}
 
 	/* (non-Javadoc)
-			* @see org.springframework.data.document.mongodb.MongoOperations#insertList(java.lang.String, java.util.List)
-			*/
+	 * @see org.springframework.data.document.mongodb.MongoOperations#insertList(java.lang.String, java.util.List)
+	 */
 	public void insertList(String collectionName, List<? extends Object> listToSave) {
 		insertList(collectionName, listToSave, this.mongoConverter);
 	}
 
 	/* (non-Javadoc)
-			* @see org.springframework.data.document.mongodb.MongoOperations#insertList(java.util.List, org.springframework.data.document.mongodb.MongoWriter)
-			*/
+	 * @see org.springframework.data.document.mongodb.MongoOperations#insertList(java.util.List, org.springframework.data.document.mongodb.MongoWriter)
+	 */
 	public <T> void insertList(List<? extends T> listToSave, MongoWriter<T> writer) {
 		Map<String, List<Object>> objs = new HashMap<String, List<Object>>();
 
 		for (Object o : listToSave) {
 
 			MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(o.getClass());
-			String collection = entity == null ? getDefaultCollectionName() : entity.getCollection();
+			if (entity == null) {
+				throw new InvalidDataAccessApiUsageException("No Persitent Entity information found for the class " + 
+						o.getClass().getName());
+			}
+			String collection = entity.getCollection();
 
 			List<Object> objList = objs.get(collection);
 			if (null == objList) {
@@ -636,8 +602,8 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 	}
 
 	/* (non-Javadoc)
-			* @see org.springframework.data.document.mongodb.MongoOperations#insertList(java.lang.String, java.util.List, org.springframework.data.document.mongodb.MongoWriter)
-			*/
+	 * @see org.springframework.data.document.mongodb.MongoOperations#insertList(java.lang.String, java.util.List, org.springframework.data.document.mongodb.MongoWriter)
+	 */
 	public <T> void insertList(String collectionName, List<? extends T> listToSave, MongoWriter<T> writer) {
 
 		Assert.notNull(writer);
@@ -663,29 +629,29 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 	}
 
 	/* (non-Javadoc)
-			* @see org.springframework.data.document.mongodb.MongoOperations#save(java.lang.Object)
-			*/
+	 * @see org.springframework.data.document.mongodb.MongoOperations#save(java.lang.Object)
+	 */
 	public void save(Object objectToSave) {
-		save(getEntityCollection(objectToSave), objectToSave);
+		save(determineEntityCollectionName(objectToSave), objectToSave);
 	}
 
 	/* (non-Javadoc)
-			* @see org.springframework.data.document.mongodb.MongoOperations#save(java.lang.String, java.lang.Object)
-			*/
+	 * @see org.springframework.data.document.mongodb.MongoOperations#save(java.lang.String, java.lang.Object)
+	 */
 	public void save(String collectionName, Object objectToSave) {
 		save(collectionName, objectToSave, this.mongoConverter);
 	}
 
 	/* (non-Javadoc)
-			* @see org.springframework.data.document.mongodb.MongoOperations#save(T, org.springframework.data.document.mongodb.MongoWriter)
-			*/
+	 * @see org.springframework.data.document.mongodb.MongoOperations#save(T, org.springframework.data.document.mongodb.MongoWriter)
+	 */
 	public <T> void save(T objectToSave, MongoWriter<T> writer) {
-		save(getEntityCollection(objectToSave), objectToSave, writer);
+		save(determineEntityCollectionName(objectToSave), objectToSave, writer);
 	}
 
 	/* (non-Javadoc)
-			* @see org.springframework.data.document.mongodb.MongoOperations#save(java.lang.String, T, org.springframework.data.document.mongodb.MongoWriter)
-			*/
+	 * @see org.springframework.data.document.mongodb.MongoOperations#save(java.lang.String, T, org.springframework.data.document.mongodb.MongoWriter)
+	 */
 	public <T> void save(String collectionName, T objectToSave, MongoWriter<T> writer) {
 		BasicDBObject dbDoc = new BasicDBObject();
 
@@ -806,15 +772,15 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 	}
 
 	/* (non-Javadoc)
-			* @see org.springframework.data.document.mongodb.MongoOperations#updateFirst(com.mongodb.DBObject, com.mongodb.DBObject)
-			*/
-	public WriteResult updateFirst(Query query, Update update) {
-		return updateFirst(getRequiredDefaultCollectionName(), query, update);
+	 * @see org.springframework.data.document.mongodb.MongoOperations#updateFirst(com.mongodb.DBObject, com.mongodb.DBObject)
+	 */
+	public WriteResult updateFirst(Class<?> entityClass, Query query, Update update) {
+		return updateFirst(determineCollectionName(entityClass), query, update);
 	}
 
 	/* (non-Javadoc)
-			* @see org.springframework.data.document.mongodb.MongoOperations#updateFirst(java.lang.String, com.mongodb.DBObject, com.mongodb.DBObject)
-			*/
+	 * @see org.springframework.data.document.mongodb.MongoOperations#updateFirst(java.lang.String, com.mongodb.DBObject, com.mongodb.DBObject)
+	 */
 	public WriteResult updateFirst(String collectionName, final Query query, final Update update) {
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug("calling update using query: " + query.getQueryObject() + " and update: " + update.getUpdateObject(mongoConverter) + " in collecion: " + collectionName);
@@ -836,15 +802,15 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 	}
 
 	/* (non-Javadoc)
-			* @see org.springframework.data.document.mongodb.MongoOperations#updateMulti(com.mongodb.DBObject, com.mongodb.DBObject)
-			*/
-	public WriteResult updateMulti(Query query, Update update) {
-		return updateMulti(getRequiredDefaultCollectionName(), query, update);
+	 * @see org.springframework.data.document.mongodb.MongoOperations#updateMulti(com.mongodb.DBObject, com.mongodb.DBObject)
+	 */
+	public WriteResult updateMulti(Class<?> entityClass, Query query, Update update) {
+		return updateMulti(determineCollectionName(entityClass), query, update);
 	}
 
 	/* (non-Javadoc)
-			* @see org.springframework.data.document.mongodb.MongoOperations#updateMulti(java.lang.String, com.mongodb.DBObject, com.mongodb.DBObject)
-			*/
+	 * @see org.springframework.data.document.mongodb.MongoOperations#updateMulti(java.lang.String, com.mongodb.DBObject, com.mongodb.DBObject)
+	 */
 	public WriteResult updateMulti(String collectionName, final Query query, final Update update) {
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug("calling updateMulti using query: " + query.getQueryObject() + " and update: " + update.getUpdateObject(mongoConverter) + " in collecion: " + collectionName);
@@ -865,8 +831,8 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 	}
 
 	/* (non-Javadoc)
-			* @see org.springframework.data.document.mongodb.MongoOperations#remove(com.mongodb.DBObject)
-			*/
+	 * @see org.springframework.data.document.mongodb.MongoOperations#remove(com.mongodb.DBObject)
+	 */
 	public void remove(Query query) {
 		remove(query, null);
 	}
@@ -878,7 +844,7 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 
 	public <T> void remove(Query query, Class<T> targetClass) {
 		Assert.notNull(query);
-		remove(getEntityCollection(targetClass), query, targetClass);
+		remove(determineCollectionName(targetClass), query, targetClass);
 	}
 
 	private PersistentEntity<?> getPersistentEntity(Class<?> type) {
@@ -918,11 +884,11 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 
 
 	/* (non-Javadoc)
-			* @see org.springframework.data.document.mongodb.MongoOperations#getCollection(java.lang.Class)
-			*/
+	 * @see org.springframework.data.document.mongodb.MongoOperations#getCollection(java.lang.Class)
+	 */
 	public <T> List<T> getCollection(Class<T> targetClass) {
 		return executeEach(new FindCallback(null), null, new ReadDbObjectCallback<T>(mongoConverter, targetClass),
-				getDefaultCollectionName());
+				determineCollectionName(targetClass));
 	}
 
 	public <T> List<T> getCollection(String collectionName, Class<T> targetClass) {
@@ -1233,30 +1199,24 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 		return newValue;
 	}
 
-	private String getRequiredDefaultCollectionName() {
-		String name = getDefaultCollectionName();
-		if (name == null) {
-			throw new IllegalStateException(
-					"No 'defaultCollection' or 'defaultCollectionName' specified. Check configuration of MongoTemplate.");
-		}
-		return name;
-	}
-
-	private <T> String getEntityCollection(T obj) {
+	private <T> String determineEntityCollectionName(T obj) {
 		if (null != obj) {
-			return getEntityCollection(obj.getClass());
+			return determineCollectionName(obj.getClass());
 		}
 
 		return null;
 	}
 
-	private String getEntityCollection(Class<?> clazz) {
+	private String determineCollectionName(Class<?> clazz) {
 
 		if (clazz == null) {
-			return getDefaultCollectionName();
+			throw new InvalidDataAccessApiUsageException("No class parameter provided, entity collection can't be determined for " + clazz);
 		}
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(clazz);
+		if (entity == null) {
+			throw new InvalidDataAccessApiUsageException("No Persitent Entity information found for the class " + clazz.getName());
+		}
 		return entity.getCollection();
 	}
 
@@ -1307,18 +1267,6 @@ public class MongoTemplate implements InitializingBean, MongoOperations, Applica
 	private void initializeMappingMongoConverter(MappingMongoConverter converter) {
 		converter.setMongo(mongo);
 		converter.setDefaultDatabase(databaseName);
-	}
-
-	/*
-		* (non-Javadoc)
-		* @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
-		*/
-	public void afterPropertiesSet() {
-		if (this.getDefaultCollectionName() != null) {
-			if (!collectionExists(getDefaultCollectionName())) {
-				createCollection(getDefaultCollectionName(), null);
-			}
-		}
 	}
 
 

@@ -78,7 +78,7 @@ public class GeoSpatialTests {
     applicationContext = new AnnotationConfigApplicationContext(GeoSpatialAppConfig.class);
     template = applicationContext.getBean(MongoTemplate.class);
     template.setWriteConcern(WriteConcern.FSYNC_SAFE);
-    template.ensureIndex(new GeospatialIndex("location"));
+    template.ensureIndex(Venue.class, new GeospatialIndex("location"));
     indexCreated();
     addVenues();
     parser = new SpelExpressionParser();
@@ -164,7 +164,7 @@ public class GeoSpatialTests {
   }
   
   public void indexCreated() {
-    List<DBObject> indexInfo = getIndexInfo();
+    List<DBObject> indexInfo = getIndexInfo(Venue.class);
     LOGGER.debug(indexInfo);
     assertThat(indexInfo.size(), equalTo(2));
     assertThat(indexInfo.get(1).get("name").toString(), equalTo("location_2d"));
@@ -173,8 +173,8 @@ public class GeoSpatialTests {
   }
 
   // TODO move to MongoAdmin
-  public List<DBObject> getIndexInfo() {
-    return template.execute(new CollectionCallback<List<DBObject>>() {
+  public List<DBObject> getIndexInfo(Class clazz) {
+    return template.execute(clazz, new CollectionCallback<List<DBObject>>() {
 
       public List<DBObject> doInCollection(DBCollection collection)
           throws MongoException, DataAccessException {

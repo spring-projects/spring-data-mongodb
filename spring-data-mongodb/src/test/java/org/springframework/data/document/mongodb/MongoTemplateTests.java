@@ -84,12 +84,16 @@ public class MongoTemplateTests {
 	  MappingMongoConverter converter = new MappingMongoConverter(mappingContext);
 	  converter.afterPropertiesSet();
 	  
-	  this.mappingTemplate = new MongoTemplate(mongo, "database", "springdata", converter);
+	  this.mappingTemplate = new MongoTemplate(mongo, "database", converter);
   }
 
 @Before
   public void setUp() {
-    template.dropCollection(template.getDefaultCollectionName());
+	template.dropCollection(template.getCollectionName(Person.class));
+	template.dropCollection(template.getCollectionName(PersonWith_idPropertyOfTypeObjectId.class));
+    template.dropCollection(template.getCollectionName(PersonWith_idPropertyOfTypeString.class));
+    template.dropCollection(template.getCollectionName(PersonWithIdPropertyOfTypeObjectId.class));
+    template.dropCollection(template.getCollectionName(PersonWithIdPropertyOfTypeString.class));
   }
 
   @Test
@@ -109,7 +113,7 @@ public class MongoTemplateTests {
   @Test
   public void updateFailure() throws Exception {
 
-    MongoTemplate mongoTemplate = new MongoTemplate(template.getDb().getMongo(), "test", "people");
+    MongoTemplate mongoTemplate = new MongoTemplate(template.getDb().getMongo(), "test");
     mongoTemplate.setWriteResultChecking(WriteResultChecking.EXCEPTION);
 
     Person person = new Person("Oliver2");
@@ -120,7 +124,7 @@ public class MongoTemplateTests {
     Update u = new Update().set("firstName", "Sven");
     thrown.expect(DataIntegrityViolationException.class);
     thrown.expectMessage(endsWith("0 documents updated"));
-    mongoTemplate.updateFirst(q, u);
+    mongoTemplate.updateFirst(Person.class, q, u);
 
   }
 
@@ -134,9 +138,9 @@ public class MongoTemplateTests {
     p2.setAge(40);
     template.insert(p2);
 
-    template.ensureIndex(new Index().on("age", Order.DESCENDING).unique(Duplicates.DROP));
+    template.ensureIndex(Person.class, new Index().on("age", Order.DESCENDING).unique(Duplicates.DROP));
 
-    DBCollection coll = template.getCollection(template.getDefaultCollectionName());
+    DBCollection coll = template.getCollection(template.getCollectionName(Person.class));
     List<DBObject> indexInfo = coll.getIndexInfo();
 
     assertThat(indexInfo.size(), is(2));
@@ -358,23 +362,23 @@ public class MongoTemplateTests {
     PersonWithIdPropertyOfTypeObjectId p1 = new PersonWithIdPropertyOfTypeObjectId();
     p1.setFirstName("Sven");
     p1.setAge(11);
-    template.insert("springdata", p1);
+    template.insert(p1);
     PersonWithIdPropertyOfTypeObjectId p2 = new PersonWithIdPropertyOfTypeObjectId();
     p2.setFirstName("Mary");
     p2.setAge(21);
-    template.insert("springdata", p2);
+    template.insert(p2);
 
     Update u = new Update().set("firstName", "Bob").set("age", 10);
     
-    WriteResult wr = template.updateMulti("springdata", new Query(), u);
+    WriteResult wr = template.updateMulti(PersonWithIdPropertyOfTypeObjectId.class, new Query(), u);
         
     assertThat(wr.getN(), is(2));
     
     Query q1 = new Query(Criteria.where("age").in(11, 21));
-    List<PersonWithIdPropertyOfTypeObjectId> r1 = template.find("springdata", q1, PersonWithIdPropertyOfTypeObjectId.class);
+    List<PersonWithIdPropertyOfTypeObjectId> r1 = template.find(q1, PersonWithIdPropertyOfTypeObjectId.class);
     assertThat(r1.size(), is(0));
     Query q2 = new Query(Criteria.where("age").is(10));
-    List<PersonWithIdPropertyOfTypeObjectId> r2 = template.find("springdata", q2, PersonWithIdPropertyOfTypeObjectId.class);
+    List<PersonWithIdPropertyOfTypeObjectId> r2 = template.find(q2, PersonWithIdPropertyOfTypeObjectId.class);
     assertThat(r2.size(), is(2));
     for (PersonWithIdPropertyOfTypeObjectId p : r2) {
         assertThat(p.getAge(), is(10));

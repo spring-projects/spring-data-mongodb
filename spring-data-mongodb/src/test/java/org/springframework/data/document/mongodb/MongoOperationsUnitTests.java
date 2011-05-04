@@ -88,7 +88,7 @@ public abstract class MongoOperationsUnitTests {
   @SuppressWarnings({ "unchecked", "rawtypes" })
   public void rejectsNullForCollectionCallback() {
 
-    getOperations().execute((CollectionCallback) null);
+    getOperations().execute("test", (CollectionCallback) null);
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -148,7 +148,7 @@ public abstract class MongoOperationsUnitTests {
     new Execution() {
       @Override
       public void doWith(MongoOperations operations) {
-        operations.execute(collectionCallback);
+        operations.execute("test", collectionCallback);
       }
     }.assertDataAccessException();
   }
@@ -249,16 +249,6 @@ public abstract class MongoOperationsUnitTests {
       @Override
       public void doWith(MongoOperations operations) {
         operations.getCollectionNames();
-      }
-    }.assertDataAccessException();
-  }
-
-  @Test
-  public void convertsExceptionForGetDefaultCollection() {
-    new Execution() {
-      @Override
-      public void doWith(MongoOperations operations) {
-        operations.getDefaultCollection();
       }
     }.assertDataAccessException();
   }

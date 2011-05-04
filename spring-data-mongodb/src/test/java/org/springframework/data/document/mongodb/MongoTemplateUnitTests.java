@@ -48,7 +48,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 
   @Before
   public void setUp() {
-    this.template = new MongoTemplate(mongo, "database", "default");
+    this.template = new MongoTemplate(mongo, "database");
   }
 
   @Test(expected = IllegalArgumentException.class)

@@ -23,7 +23,6 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.WriteResult;
 
-import org.bson.types.ObjectId;
 import org.springframework.data.document.mongodb.index.IndexDefinition;
 import org.springframework.data.document.mongodb.query.Query;
 import org.springframework.data.document.mongodb.query.Update;
@@ -40,18 +39,11 @@ import org.springframework.data.document.mongodb.query.Update;
 public interface MongoOperations {
 
   /**
-   * The default collection name used by this template.
+   * The collection name used for the specified class by this template.
    *
    * @return
    */
-  String getDefaultCollectionName();
-
-  /**
-   * The default collection used by this template.
-   *
-   * @return The default collection used by this template
-   */
-  DBCollection getDefaultCollection();
+  String getCollectionName(Class<?> clazz);
 
   /**
    * Execute the a MongoDB command expressed as a JSON string.  This will call the method
@@ -83,15 +75,16 @@ public interface MongoOperations {
   <T> T execute(DbCallback<T> action);
 
   /**
-   * Executes the given {@link CollectionCallback} on the default collection.
+   * Executes the given {@link CollectionCallback} on the entity collection of the specified class.
    * <p/>
    * Allows for returning a result object, that is a domain object or a collection of domain objects.
    *
+   * @param entityClass class that determines the collection to use
    * @param <T>    return type
    * @param action callback object that specifies the MongoDB action
    * @return a result object returned by the action or <tt>null</tt>
    */
-  <T> T execute(CollectionCallback<T> action);
+  <T> T execute(Class<?> entityClass, CollectionCallback<T> action);
 
   /**
    * Executes the given {@link CollectionCallback} on the collection of the given name.
@@ -219,9 +212,10 @@ public interface MongoOperations {
    * Ensure that an index for the provided {@link IndexDefinition} exists for the default collection.
    * If not it will be created.
    *
-   * @param index
+   * @param entityClass class that determines the collection to use
+   * @param indexDefinition
    */
-  void ensureIndex(IndexDefinition indexDefinition);
+  void ensureIndex(Class<?> entityClass, IndexDefinition indexDefinition);
 
   /**
    * Ensure that an index for the provided {@link IndexDefinition} exists. If not it will be
@@ -651,11 +645,12 @@ public interface MongoOperations {
    * Updates the first object that is found in the default collection that matches the query document
    * with the provided updated document.
    *
+   * @param entityClass class that determines the collection to use
    * @param queryDoc  the query document that specifies the criteria used to select a record to be updated
    * @param updateDoc the update document that contains the updated object or $ operators to manipulate the
    *                  existing object.
    */
-  WriteResult updateFirst(Query query, Update update);
+  WriteResult updateFirst(Class<?> entityClass, Query query, Update update);
 
   /**
    * Updates the first object that is found in the specified collection that matches the query document criteria
@@ -673,11 +668,12 @@ public interface MongoOperations {
    * Updates all objects that are found in the default collection that matches the query document criteria
    * with the provided updated document.
    *
+   * @param entityClass class that determines the collection to use
    * @param queryDoc  the query document that specifies the criteria used to select a record to be updated
    * @param updateDoc the update document that contains the updated object or $ operators to manipulate the
    *                  existing object.
    */
-  WriteResult updateMulti(Query query, Update update);
+  WriteResult updateMulti(Class<?> entityClass, Query query, Update update);
 
   /**
    * Updates all objects that are found in the specified collection that matches the query document criteria
