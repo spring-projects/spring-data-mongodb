@@ -136,7 +136,6 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 	 *
 	 * @param mongo
 	 * @param databaseName
-	 * @param defaultCollectionName
 	 * @param mongoConverter
 	 * @param writeConcern
 	 * @param writeResultChecking
@@ -541,7 +540,7 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 
 			MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(o.getClass());
 			if (entity == null) {
-				throw new InvalidDataAccessApiUsageException("No Persitent Entity information found for the class " + 
+				throw new InvalidDataAccessApiUsageException("No Persitent Entity information found for the class " +
 						o.getClass().getName());
 			}
 			String collection = entity.getCollection();
@@ -721,59 +720,79 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 	 * @see org.springframework.data.document.mongodb.MongoOperations#updateFirst(com.mongodb.DBObject, com.mongodb.DBObject)
 	 */
 	public WriteResult updateFirst(Class<?> entityClass, Query query, Update update) {
-		return updateFirst(determineCollectionName(entityClass), query, update);
+		return doUpdate(determineCollectionName(entityClass), query, update, entityClass, false, false);
 	}
 
 	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#updateFirst(java.lang.String, com.mongodb.DBObject, com.mongodb.DBObject)
 	 */
-	public WriteResult updateFirst(String collectionName, final Query query, final Update update) {
-		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("calling update using query: " + query.getQueryObject() + " and update: " + update.getUpdateObject(mongoConverter) + " in collection: " + collectionName);
-		}
-		return execute(collectionName, new CollectionCallback<WriteResult>() {
-			public WriteResult doInCollection(DBCollection collection) throws MongoException, DataAccessException {
-				DBObject updateObj = update.getUpdateObject(mongoConverter);
-
-				WriteResult wr;
-				if (writeConcern == null) {
-					wr = collection.update(query.getQueryObject(), updateObj);
-				} else {
-					wr = collection.update(query.getQueryObject(), updateObj, false, false, writeConcern);
-				}
-				handleAnyWriteResultErrors(wr, query.getQueryObject(), "update with '" + updateObj + "'");
-				return wr;
-			}
-		});
+	public WriteResult updateFirst(final String collectionName, final Query query, final Update update) {
+		return doUpdate(collectionName, query, update, null, false, false);
 	}
 
 	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#updateMulti(com.mongodb.DBObject, com.mongodb.DBObject)
 	 */
 	public WriteResult updateMulti(Class<?> entityClass, Query query, Update update) {
-		return updateMulti(determineCollectionName(entityClass), query, update);
+		return doUpdate(determineCollectionName(entityClass), query, update, entityClass, false, true);
 	}
 
 	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#updateMulti(java.lang.String, com.mongodb.DBObject, com.mongodb.DBObject)
 	 */
 	public WriteResult updateMulti(String collectionName, final Query query, final Update update) {
-		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("calling updateMulti using query: " + query.getQueryObject() + " and update: " + update.getUpdateObject(mongoConverter) + " in collection: " + collectionName);
-		}
+		return doUpdate(collectionName, query, update, null, false, true);
+	}
+
+	private WriteResult doUpdate(final String collectionName,
+															 final Query query,
+															 final Update update,
+															 final Class<?> entityClass,
+															 final boolean upsert,
+															 final boolean multi) {
+
 		return execute(collectionName, new CollectionCallback<WriteResult>() {
 			public WriteResult doInCollection(DBCollection collection) throws MongoException, DataAccessException {
-				DBObject updateObj = update.getUpdateObject(mongoConverter);
+				DBObject queryObj = query.getQueryObject();
+				DBObject updateObj = update.getUpdateObject();
+
+				String idProperty = "id";
+				if (null != entityClass) {
+					idProperty = getPersistentEntity(entityClass).getIdProperty().getName();
+				}
+				for (String key : queryObj.keySet()) {
+					if (idProperty.equals(key)) {
+						// This is an ID field
+						queryObj.put(ID, mongoConverter.maybeConvertObject(queryObj.get(key)));
+						queryObj.removeField(key);
+					} else {
+						queryObj.put(key, mongoConverter.maybeConvertObject(queryObj.get(key)));
+					}
+				}
+
+				for (String key : updateObj.keySet()) {
+					updateObj.put(key, mongoConverter.maybeConvertObject(updateObj.get(key)));
+				}
+
+				if (LOGGER.isDebugEnabled()) {
+					LOGGER.debug("calling update using query: " + queryObj + " and update: " + updateObj + " in collection: " + collectionName);
+				}
+
 				WriteResult wr;
 				if (writeConcern == null) {
-					wr = collection.updateMulti(query.getQueryObject(), updateObj);
+					if (multi) {
+						wr = collection.updateMulti(queryObj, updateObj);
+					} else {
+						wr = collection.update(queryObj, updateObj);
+					}
 				} else {
-					wr = collection.update(query.getQueryObject(), updateObj, false, true, writeConcern);
+					wr = collection.update(queryObj, updateObj, upsert, multi, writeConcern);
 				}
-				handleAnyWriteResultErrors(wr, query.getQueryObject(), "update with '" + updateObj + "'");
+				handleAnyWriteResultErrors(wr, queryObj, "update with '" + updateObj + "'");
 				return wr;
 			}
 		});
+
 	}
 
 	/* (non-Javadoc)

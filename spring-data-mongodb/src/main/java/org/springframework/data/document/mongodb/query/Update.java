@@ -16,16 +16,11 @@
 package org.springframework.data.document.mongodb.query;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.Map;
 
-import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
-import org.springframework.data.document.mongodb.convert.MongoConverter;
-import org.springframework.data.mapping.MappingBeanHelper;
 
 public class Update {
 
@@ -53,7 +48,7 @@ public class Update {
 	 * @return
 	 */
 	public Update set(String key, Object value) {
-		addMultiFieldOperation("$set", key, convertValueIfNecessary(value));
+		addMultiFieldOperation("$set", key, value);
 		return this;
 	}
 
@@ -88,7 +83,7 @@ public class Update {
 	 * @return
 	 */
 	public Update push(String key, Object value) {
-		addMultiFieldOperation("$push", key, convertValueIfNecessary(value));
+		addMultiFieldOperation("$push", key, value);
 		return this;
 	}
 
@@ -102,7 +97,7 @@ public class Update {
 	public Update pushAll(String key, Object[] values) {
 		Object[] convertedValues = new Object[values.length];
 		for (int i = 0; i < values.length; i++) {
-			convertedValues[i] = convertValueIfNecessary(values[i]);
+			convertedValues[i] = values[i];
 		}
 		DBObject keyValue = new BasicDBObject();
 		keyValue.put(key, convertedValues);
@@ -118,7 +113,7 @@ public class Update {
 	 * @return
 	 */
 	public Update addToSet(String key, Object value) {
-		addMultiFieldOperation("$addToSet", key, convertValueIfNecessary(value));
+		addMultiFieldOperation("$addToSet", key, value);
 		return this;
 	}
 
@@ -143,7 +138,7 @@ public class Update {
 	 * @return
 	 */
 	public Update pull(String key, Object value) {
-		addMultiFieldOperation("$pull", key, convertValueIfNecessary(value));
+		addMultiFieldOperation("$pull", key, value);
 		return this;
 	}
 
@@ -157,7 +152,7 @@ public class Update {
 	public Update pullAll(String key, Object[] values) {
 		Object[] convertedValues = new Object[values.length];
 		for (int i = 0; i < values.length; i++) {
-			convertedValues[i] = convertValueIfNecessary(values[i]);
+			convertedValues[i] = values[i];
 		}
 		DBObject keyValue = new BasicDBObject();
 		keyValue.put(key, convertedValues);
@@ -177,21 +172,12 @@ public class Update {
 		return this;
 	}
 
-	public DBObject getUpdateObject(MongoConverter converter) {
+	public DBObject getUpdateObject() {
 		DBObject dbo = new BasicDBObject();
 		for (String k : modifierOps.keySet()) {
-			Object o = modifierOps.get(k);
-			if (null != converter) {
-				dbo.put(k, maybeConvertObject(o, converter));
-			} else {
-				dbo.put(k, o);
-			}
+			dbo.put(k, modifierOps.get(k));
 		}
 		return dbo;
-	}
-
-	public DBObject getUpdateObject() {
-		return getUpdateObject(null);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -211,56 +197,6 @@ public class Update {
 			}
 		}
 		keyValueMap.put(key, value);
-	}
-
-	protected Object convertValueIfNecessary(Object value) {
-		if (value instanceof Enum) {
-			return ((Enum<?>) value).name();
-		}
-		return value;
-	}
-
-	@SuppressWarnings({"unchecked"})
-	protected Object maybeConvertObject(Object obj, MongoConverter converter) {
-		if (null != obj && MappingBeanHelper.isSimpleType(obj.getClass())) {
-			// Doesn't need conversion
-			return obj;
-		}
-
-		if (obj instanceof Map) {
-			Map<Object, Object> m = new HashMap<Object, Object>();
-			for (Map.Entry<Object, Object> entry : ((Map<Object, Object>) obj).entrySet()) {
-				m.put(entry.getKey(), maybeConvertObject(entry.getValue(), converter));
-			}
-			return m;
-		}
-
-		if (obj instanceof BasicDBList) {
-			return maybeConvertList((BasicDBList) obj, converter);
-		}
-
-		if (obj instanceof DBObject) {
-			DBObject newValueDbo = new BasicDBObject();
-			for (String vk : ((DBObject) obj).keySet()) {
-				Object o = ((DBObject) obj).get(vk);
-				newValueDbo.put(vk, maybeConvertObject(o, converter));
-			}
-			return newValueDbo;
-		}
-
-		DBObject newDbo = new BasicDBObject();
-		converter.write(obj, newDbo);
-		return newDbo;
-	}
-
-	protected BasicDBList maybeConvertList(BasicDBList dbl, MongoConverter converter) {
-		BasicDBList newDbl = new BasicDBList();
-		Iterator iter = dbl.iterator();
-		while (iter.hasNext()) {
-			Object o = iter.next();
-			newDbl.add(maybeConvertObject(o, converter));
-		}
-		return newDbl;
 	}
 
 }

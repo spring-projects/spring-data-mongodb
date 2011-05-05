@@ -15,6 +15,7 @@
  */
 package org.springframework.data.document.mongodb.convert;
 
+import com.mongodb.BasicDBList;
 import org.bson.types.ObjectId;
 import org.springframework.data.document.mongodb.MongoReader;
 import org.springframework.data.document.mongodb.MongoWriter;
@@ -43,4 +44,10 @@ public interface MongoConverter extends MongoWriter<Object>, MongoReader<Object>
   public ObjectId convertObjectId(Object id);
   
   MappingContext getMappingContext();
+
+	Object maybeConvertObject(Object obj);
+
+	Object[] maybeConvertArray(Object[] src);
+
+	BasicDBList maybeConvertList(BasicDBList dbl);
 }
