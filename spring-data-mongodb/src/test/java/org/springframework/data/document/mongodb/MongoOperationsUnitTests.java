@@ -274,16 +274,6 @@ public abstract class MongoOperationsUnitTests {
   }
 
   @Test
-  public void convertsExceptionForInsert3() {
-    new Execution() {
-      @Override
-      public void doWith(MongoOperations operations) {
-        operations.insert("collection", person, converter);
-      }
-    }.assertDataAccessException();
-  }
-
-  @Test
   public void convertsExceptionForInsertList() throws Exception {
     new Execution() {
       @Override
@@ -299,16 +289,6 @@ public abstract class MongoOperationsUnitTests {
       @Override
       public void doWith(MongoOperations operations) {
         operations.insertList("collection", persons);
-      }
-    }.assertDataAccessException();
-  }
-
-  @Test
-  public void convertsExceptionForGetInsertList3() throws Exception {
-    new Execution() {
-      @Override
-      public void doWith(MongoOperations operations) {
-        operations.insertList("collection", persons, converter);
       }
     }.assertDataAccessException();
   }

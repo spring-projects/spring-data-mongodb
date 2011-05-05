@@ -504,20 +504,10 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 	 * @see org.springframework.data.document.mongodb.MongoOperations#insert(java.lang.String, java.lang.Object)
 	 */
 	public void insert(String collectionName, Object objectToSave) {
-		insert(collectionName, objectToSave, this.mongoConverter);
+		doInsert(collectionName, objectToSave, this.mongoConverter);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.springframework.data.document.mongodb.MongoOperations#insert(T, org.springframework.data.document.mongodb.MongoWriter)
-	 */
-	public <T> void insert(T objectToSave, MongoWriter<T> writer) {
-		insert(determineEntityCollectionName(objectToSave), objectToSave, writer);
-	}
-
-	/* (non-Javadoc)
-	 * @see org.springframework.data.document.mongodb.MongoOperations#insert(java.lang.String, T, org.springframework.data.document.mongodb.MongoWriter)
-	 */
-	public <T> void insert(String collectionName, T objectToSave, MongoWriter<T> writer) {
+	protected <T> void doInsert(String collectionName, T objectToSave, MongoWriter<T> writer) {
 		BasicDBObject dbDoc = new BasicDBObject();
 
 		maybeEmitEvent(new BeforeConvertEvent<T>(objectToSave));
@@ -534,20 +524,17 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 	 * @see org.springframework.data.document.mongodb.MongoOperations#insertList(java.util.List)
 	 */
 	public void insertList(List<? extends Object> listToSave) {
-		insertList(listToSave, mongoConverter);
+		doInsertList(listToSave, mongoConverter);
 	}
 
 	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#insertList(java.lang.String, java.util.List)
 	 */
 	public void insertList(String collectionName, List<? extends Object> listToSave) {
-		insertList(collectionName, listToSave, this.mongoConverter);
+		doInsertList(collectionName, listToSave, this.mongoConverter);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.springframework.data.document.mongodb.MongoOperations#insertList(java.util.List, org.springframework.data.document.mongodb.MongoWriter)
-	 */
-	public <T> void insertList(List<? extends T> listToSave, MongoWriter<T> writer) {
+	protected <T> void doInsertList(List<? extends T> listToSave, MongoWriter<T> writer) {
 		Map<String, List<Object>> objs = new HashMap<String, List<Object>>();
 
 		for (Object o : listToSave) {
@@ -573,10 +560,7 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.springframework.data.document.mongodb.MongoOperations#insertList(java.lang.String, java.util.List, org.springframework.data.document.mongodb.MongoWriter)
-	 */
-	public <T> void insertList(String collectionName, List<? extends T> listToSave, MongoWriter<T> writer) {
+	protected <T> void doInsertList(String collectionName, List<? extends T> listToSave, MongoWriter<T> writer) {
 
 		Assert.notNull(writer);
 
@@ -611,20 +595,10 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 	 * @see org.springframework.data.document.mongodb.MongoOperations#save(java.lang.String, java.lang.Object)
 	 */
 	public void save(String collectionName, Object objectToSave) {
-		save(collectionName, objectToSave, this.mongoConverter);
+		doSave(collectionName, objectToSave, this.mongoConverter);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.springframework.data.document.mongodb.MongoOperations#save(T, org.springframework.data.document.mongodb.MongoWriter)
-	 */
-	public <T> void save(T objectToSave, MongoWriter<T> writer) {
-		save(determineEntityCollectionName(objectToSave), objectToSave, writer);
-	}
-
-	/* (non-Javadoc)
-	 * @see org.springframework.data.document.mongodb.MongoOperations#save(java.lang.String, T, org.springframework.data.document.mongodb.MongoWriter)
-	 */
-	public <T> void save(String collectionName, T objectToSave, MongoWriter<T> writer) {
+	protected <T> void doSave(String collectionName, T objectToSave, MongoWriter<T> writer) {
 		BasicDBObject dbDoc = new BasicDBObject();
 
 		maybeEmitEvent(new BeforeConvertEvent<T>(objectToSave));

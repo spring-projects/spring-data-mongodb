@@ -379,37 +379,6 @@ public interface MongoOperations {
   void insert(String collectionName, Object objectToSave);
 
   /**
-   * Insert the object into the default collection.
-   * <p/>
-   * The object is converted to the MongoDB native representation using an instance of
-   * {@see MongoWriter}
-   * <p/>
-   * Insert is used to initially store the object into the
-   * database.  To update an existing object use the save method.
-   *
-   * @param <T>          the type of the object to insert
-   * @param objectToSave the object to store in the collection
-   * @param writer       the writer to convert the object to save into a DBObject
-   */
-  <T> void insert(T objectToSave, MongoWriter<T> writer);
-
-  /**
-   * Insert the object into the specified collection.
-   * <p/>
-   * The object is converted to the MongoDB native representation using an instance of
-   * {@see MongoWriter}
-   * <p/>
-   * Insert is used to initially store the object into the
-   * database.  To update an existing object use the save method.
-   *
-   * @param <T>            the type of the object to insert
-   * @param collectionName name of the collection to store the object in
-   * @param objectToSave   the object to store in the collection
-   * @param writer         the writer to convert the object to save into a DBObject
-   */
-  <T> void insert(String collectionName, T objectToSave, MongoWriter<T> writer);
-
-  /**
    * Insert a list of objects into the default collection in a single batch write to the database.
    *
    * @param listToSave the list of objects to save.
@@ -423,25 +392,6 @@ public interface MongoOperations {
    * @param listToSave     the list of objects to save.
    */
   void insertList(String collectionName, List<? extends Object> listToSave);
-
-  /**
-   * Insert a list of objects into the default collection using the provided MongoWriter instance
-   *
-   * @param <T>        the type of object being saved
-   * @param listToSave the list of objects to save.
-   * @param writer     the writer to convert the object to save into a DBObject
-   */
-  <T> void insertList(List<? extends T> listToSave, MongoWriter<T> writer);
-
-  /**
-   * Insert a list of objects into the specified collection using the provided MongoWriter instance
-   *
-   * @param <T>            the type of object being saved
-   * @param collectionName name of the collection to store the object in
-   * @param listToSave     the list of objects to save.
-   * @param writer         the writer to convert the object to save into a DBObject
-   */
-  <T> void insertList(String collectionName, List<? extends T> listToSave, MongoWriter<T> writer);
 
   /**
    * Save the object to the default collection.  This will perform an insert if the object is not already
@@ -481,35 +431,6 @@ public interface MongoOperations {
    * @param objectToSave   the object to store in the collection
    */
   void save(String collectionName, Object objectToSave);
-
-  /**
-   * Save the object into the default collection using the provided writer.
-   * This will perform an insert if the object is not already
-   * present, that is an 'upsert'.
-   * <p/>
-   * The object is converted to the MongoDB native representation using an instance of
-   * {@see MongoWriter}
-   *
-   * @param <T>          the type of the object to insert
-   * @param objectToSave the object to store in the collection
-   * @param writer       the writer to convert the object to save into a DBObject
-   */
-  <T> void save(T objectToSave, MongoWriter<T> writer);
-
-  /**
-   * Save the object into the specified collection using the provided writer.
-   * This will perform an insert if the object is not already
-   * present, that is an 'upsert'.
-   * <p/>
-   * The object is converted to the MongoDB native representation using an instance of
-   * {@see MongoWriter}
-   *
-   * @param <T>            the type of the object to insert
-   * @param collectionName name of the collection to store the object in
-   * @param objectToSave   the object to store in the collection
-   * @param writer         the writer to convert the object to save into a DBObject
-   */
-  <T> void save(String collectionName, T objectToSave, MongoWriter<T> writer);
 
   /**
    * Updates the first object that is found in the default collection that matches the query document
