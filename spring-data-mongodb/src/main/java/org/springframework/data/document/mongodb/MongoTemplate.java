@@ -534,9 +534,9 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 	}
 
 	protected <T> void doInsertList(List<? extends T> listToSave, MongoWriter<T> writer) {
-		Map<String, List<Object>> objs = new HashMap<String, List<Object>>();
+		Map<String, List<T>> objs = new HashMap<String, List<T>>();
 
-		for (Object o : listToSave) {
+		for (T o : listToSave) {
 
 			MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(o.getClass());
 			if (entity == null) {
@@ -545,17 +545,17 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 			}
 			String collection = entity.getCollection();
 
-			List<Object> objList = objs.get(collection);
+			List<T> objList = objs.get(collection);
 			if (null == objList) {
-				objList = new ArrayList<Object>();
+				objList = new ArrayList<T>();
 				objs.put(collection, objList);
 			}
 			objList.add(o);
 
 		}
 
-		for (Map.Entry<String, List<Object>> entry : objs.entrySet()) {
-			insertList(entry.getKey(), entry.getValue());
+		for (Map.Entry<String, List<T>> entry : objs.entrySet()) {
+			doInsertList(entry.getKey(), entry.getValue(), this.mongoConverter);
 		}
 	}
 
@@ -744,7 +744,7 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 		return doUpdate(collectionName, query, update, null, false, true);
 	}
 
-	private WriteResult doUpdate(final String collectionName,
+	protected WriteResult doUpdate(final String collectionName,
 															 final Query query,
 															 final Update update,
 															 final Class<?> entityClass,
@@ -810,10 +810,6 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 	public <T> void remove(Query query, Class<T> targetClass) {
 		Assert.notNull(query);
 		remove(determineCollectionName(targetClass), query, targetClass);
-	}
-
-	private PersistentEntity<?> getPersistentEntity(Class<?> type) {
-		return type == null ? null : mappingContext.getPersistentEntity(type);
 	}
 
 	public <T> void remove(String collectionName, final Query query, Class<T> targetClass) {
@@ -1056,10 +1052,6 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 		}
 	}
 
-	private PersistentProperty getIdPropertyFor(Class<?> type) {
-		return mappingContext.getPersistentEntity(type).getIdProperty();
-	}
-
 	/**
 	 * Substitutes the id key if it is found in he query. Any 'id' keys will be replaced with '_id' and the value converted
 	 * to an ObjectId if possible. This conversion should match the way that the id fields are converted during read
@@ -1139,6 +1131,14 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 				}
 			}
 		}
+	}
+
+	private PersistentEntity<?> getPersistentEntity(Class<?> type) {
+		return type == null ? null : mappingContext.getPersistentEntity(type);
+	}
+
+	private PersistentProperty getIdPropertyFor(Class<?> type) {
+		return mappingContext.getPersistentEntity(type).getIdProperty();
 	}
 
 	private ObjectId convertIdValue(MongoConverter converter, Object value) {
