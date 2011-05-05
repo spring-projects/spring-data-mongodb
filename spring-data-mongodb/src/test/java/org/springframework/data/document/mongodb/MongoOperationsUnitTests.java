@@ -238,7 +238,7 @@ public abstract class MongoOperationsUnitTests {
     new Execution() {
       @Override
       public void doWith(MongoOperations operations) {
-        operations.getCollection("collection", Object.class, converter);
+        operations.getCollection("collection", Object.class);
       }
     }.assertDataAccessException();
   }

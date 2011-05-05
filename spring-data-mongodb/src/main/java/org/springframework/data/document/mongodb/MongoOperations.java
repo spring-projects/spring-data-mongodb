@@ -197,18 +197,6 @@ public interface MongoOperations {
   <T> List<T> getCollection(String collectionName, Class<T> targetClass);
 
   /**
-   * Query for a list of objects of type T from the specified collection, mapping the DBObject using
-   * the provided MongoReader.
-   *
-   * @param collectionName name of the collection to retrieve the objects from
-   * @param targetClass    the parameterized type of the returned list.
-   * @param reader         the MongoReader to convert from DBObject to an object.
-   * @return the converted collection
-   */
-  <T> List<T> getCollection(String collectionName, Class<T> targetClass,
-                            MongoReader<T> reader);
-
-  /**
    * Ensure that an index for the provided {@link IndexDefinition} exists for the default collection.
    * If not it will be created.
    *
@@ -244,25 +232,6 @@ public interface MongoOperations {
   <T> T findOne(Query query, Class<T> targetClass);
 
   /**
-   * Map the results of an ad-hoc query on the default MongoDB collection to a single instance of an object
-   * of the specified type.
-   * <p/>
-   * The object is converted from the MongoDB native representation using an instance of
-   * {@see MongoConverter}.  Unless configured otherwise, an
-   * instance of SimpleMongoConverter will be used.
-   * <p/>
-   * The query is specified as a {@link Query} which can be created either using the {@link BasicQuery} or the more
-   * feature rich {@link Query}.
-   *
-   * @param query       the query class that specifies the criteria used to find a record and also an optional fields specification
-   * @param targetClass the parameterized type of the returned list.
-   * @param reader      the MongoReader to convert from DBObject to an object.
-   * @return the converted object
-   */
-  <T> T findOne(Query query, Class<T> targetClass,
-                MongoReader<T> reader);
-
-  /**
    * Map the results of an ad-hoc query on the specified collection to a single instance of an object
    * of the specified type.
    * <p/>
@@ -282,26 +251,6 @@ public interface MongoOperations {
                 Class<T> targetClass);
 
   /**
-   * Map the results of an ad-hoc query on the specified collection to a single instance of an object
-   * of the specified type.
-   * <p/>
-   * The object is converted from the MongoDB native representation using an instance of
-   * {@see MongoConverter}.  Unless configured otherwise, an
-   * instance of SimpleMongoConverter will be used.
-   * <p/>
-   * The query is specified as a {@link Query} which can be created either using the {@link BasicQuery} or the more
-   * feature rich {@link Query}.
-   *
-   * @param collectionName name of the collection to retrieve the objects from
-   * @param query          the query class that specifies the criteria used to find a record and also an optional fields specification
-   * @param targetClass    the parameterized type of the returned list.
-   * @param reader         the MongoReader to convert from DBObject to an object.
-   * @return the converted object
-   */
-  <T> T findOne(String collectionName, Query query,
-                Class<T> targetClass, MongoReader<T> reader);
-
-  /**
    * Map the results of an ad-hoc query on the default MongoDB collection to a List of the specified type.
    * <p/>
    * The object is converted from the MongoDB native representation using an instance of
@@ -316,24 +265,6 @@ public interface MongoOperations {
    * @return the List of converted objects
    */
   <T> List<T> find(Query query, Class<T> targetClass);
-
-  /**
-   * Map the results of an ad-hoc query on the default MongoDB collection to a List of the specified type.
-   * <p/>
-   * The object is converted from the MongoDB native representation using an instance of
-   * {@see MongoConverter}.  Unless configured otherwise, an
-   * instance of SimpleMongoConverter will be used.
-   * <p/>
-   * The query is specified as a {@link Query} which can be created either using the {@link BasicQuery} or the more
-   * feature rich {@link Query}.
-   *
-   * @param query       the query class that specifies the criteria used to find a record and also an optional fields specification
-   * @param targetClass the parameterized type of the returned list.
-   * @param reader      the MongoReader to convert from DBObject to an object.
-   * @return the List of converted objects
-   */
-  <T> List<T> find(Query query, Class<T> targetClass,
-                   MongoReader<T> reader);
 
   /**
    * Map the results of an ad-hoc query on the specified collection to a List of the specified type.
@@ -352,26 +283,6 @@ public interface MongoOperations {
    */
   <T> List<T> find(String collectionName, Query query,
                    Class<T> targetClass);
-
-  /**
-   * Map the results of an ad-hoc query on the specified collection to a List of the specified type.
-   * <p/>
-   * The object is converted from the MongoDB native representation using an instance of
-   * {@see MongoConverter}.  Unless configured otherwise, an
-   * instance of SimpleMongoConverter will be used.
-   * <p/>
-   * The query is specified as a {@link Query} which can be created either using the {@link BasicQuery} or the more
-   * feature rich {@link Query}.
-   *
-   * @param collectionName name of the collection to retrieve the objects from
-   * @param query          the query class that specifies the criteria used to find a record and also an optional fields specification
-   * @param targetClass    the parameterized type of the returned list.
-   * @param reader         the MongoReader to convert from DBObject to an object.
-   * @return the List of converted objects
-   */
-  <T> List<T> find(String collectionName, Query query,
-                   Class<T> targetClass, MongoReader<T> reader);
-
 
   /**
    * Map the results of an ad-hoc query on the specified collection to a List of the specified type.
@@ -411,26 +322,6 @@ public interface MongoOperations {
   <T> T findAndRemove(Query query, Class<T> targetClass);
 
   /**
-   * Map the results of an ad-hoc query on the default MongoDB collection to a single instance of an object
-   * of the specified type. The first document that matches the query is returned and also removed from the
-   * collection in the database.
-   * <p/>
-   * The object is converted from the MongoDB native representation using an instance of
-   * {@see MongoConverter}.  Unless configured otherwise, an
-   * instance of SimpleMongoConverter will be used.
-   * <p/>
-   * The query is specified as a {@link Query} which can be created either using the {@link BasicQuery} or the more
-   * feature rich {@link Query}.
-   *
-   * @param query       the query class that specifies the criteria used to find a record and also an optional fields specification
-   * @param targetClass the parameterized type of the returned list.
-   * @param reader      the MongoReader to convert from DBObject to an object.
-   * @return the converted object
-   */
-  <T> T findAndRemove(Query query, Class<T> targetClass,
-                MongoReader<T> reader);
-
-  /**
    * Map the results of an ad-hoc query on the specified collection to a single instance of an object
    * of the specified type. The first document that matches the query is returned and also removed from the
    * collection in the database.
@@ -449,27 +340,6 @@ public interface MongoOperations {
    */
   <T> T findAndRemove(String collectionName, Query query,
                 Class<T> targetClass);
-
-  /**
-   * Map the results of an ad-hoc query on the specified collection to a single instance of an object
-   * of the specified type. The first document that matches the query is returned and also removed from the
-   * collection in the database.
-   * <p/>
-   * The object is converted from the MongoDB native representation using an instance of
-   * {@see MongoConverter}.  Unless configured otherwise, an
-   * instance of SimpleMongoConverter will be used.
-   * <p/>
-   * The query is specified as a {@link Query} which can be created either using the {@link BasicQuery} or the more
-   * feature rich {@link Query}.
-   *
-   * @param collectionName name of the collection to retrieve the objects from
-   * @param query          the query class that specifies the criteria used to find a record and also an optional fields specification
-   * @param targetClass    the parameterized type of the returned list.
-   * @param reader         the MongoReader to convert from DBObject to an object.
-   * @return the converted object
-   */
-  <T> T findAndRemove(String collectionName, Query query,
-                Class<T> targetClass, MongoReader<T> reader);
 
   /**
    * Insert the object into the default collection.

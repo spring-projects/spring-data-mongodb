@@ -5,6 +5,8 @@ import java.util.Date;
 import java.util.List;
 
 import com.mongodb.*;
+
+import org.bson.types.ObjectId;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -13,17 +15,45 @@ import org.springframework.data.document.analytics.MvcEvent;
 import org.springframework.data.document.analytics.Parameters;
 import org.springframework.data.document.mongodb.MongoReader;
 import org.springframework.data.document.mongodb.MongoTemplate;
+import org.springframework.data.document.mongodb.convert.MongoConverter;
+import org.springframework.data.document.mongodb.mapping.MongoPersistentEntity;
 import org.springframework.data.document.mongodb.query.BasicQuery;
+import org.springframework.data.mapping.model.MappingContext;
 
 
 public class MvcAnalyticsTests {
 
   private MongoTemplate mongoTemplate;
+  private MongoTemplate mongoDummyTemplate;
 
   @Before
   public void setUp() throws Exception {
     Mongo m = new Mongo();
     mongoTemplate = new MongoTemplate(m, "mvc");
+    mongoDummyTemplate = new MongoTemplate(
+    		m, 
+    		"mvc",
+    		new MongoConverter() {
+				public void write(Object t, DBObject dbo) {
+				}
+		
+				public <S> S read(Class<S> clazz, DBObject dbo) {
+					return null;
+				}
+		
+				public <T> T convertObjectId(ObjectId id, Class<T> targetType) {
+					return null;
+				}
+		
+				public ObjectId convertObjectId(Object id) {
+					return null;
+				}
+		
+				public MappingContext<? extends MongoPersistentEntity<?>> getMappingContext() {
+					return null;
+				}
+		    	
+		    });
   }
 
   @Test
@@ -49,12 +79,7 @@ public class MvcAnalyticsTests {
         MvcEvent.class);
     Assert.assertEquals(22, mvcEvents.size());
 
-    mongoTemplate.getCollection("mvc", MvcEvent.class,
-        new MongoReader<MvcEvent>() {
-          public <S extends MvcEvent> S read(Class<S> clazz, DBObject dbo) {
-            return null;
-          }
-        });
+    mongoDummyTemplate.getCollection("mvc", MvcEvent.class);
 
   }
 

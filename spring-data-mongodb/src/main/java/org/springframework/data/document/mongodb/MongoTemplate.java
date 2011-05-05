@@ -438,29 +438,15 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 		return findOne(determineCollectionName(targetClass), query, targetClass);
 	}
 
-	public <T> T findOne(Query query, Class<T> targetClass,
-											 MongoReader<T> reader) {
-		return findOne(determineCollectionName(targetClass), query, targetClass, reader);
-	}
-
 	public <T> T findOne(String collectionName, Query query,
 											 Class<T> targetClass) {
-		return findOne(collectionName, query, targetClass, null);
-	}
-
-	public <T> T findOne(String collectionName, Query query,
-											 Class<T> targetClass, MongoReader<T> reader) {
-		return doFindOne(collectionName, query.getQueryObject(), query.getFieldsObject(), targetClass, reader);
+		return doFindOne(collectionName, query.getQueryObject(), query.getFieldsObject(), targetClass);
 	}
 
 	// Find methods that take a Query to express the query and that return a List of objects.
 
 	public <T> List<T> find(Query query, Class<T> targetClass) {
 		return find(determineCollectionName(targetClass), query, targetClass);
-	}
-
-	public <T> List<T> find(Query query, Class<T> targetClass, MongoReader<T> reader) {
-		return find(determineCollectionName(targetClass), query, targetClass, reader);
 	}
 
 	public <T> List<T> find(String collectionName, final Query query, Class<T> targetClass) {
@@ -490,10 +476,6 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 		return doFind(collectionName, query.getQueryObject(), query.getFieldsObject(), targetClass, cursorPreparer);
 	}
 
-	public <T> List<T> find(String collectionName, Query query, Class<T> targetClass, MongoReader<T> reader) {
-		return doFind(collectionName, query.getQueryObject(), query.getFieldsObject(), targetClass, reader);
-	}
-
 	public <T> List<T> find(String collectionName, Query query,
 													Class<T> targetClass, CursorPreparer preparer) {
 		return doFind(collectionName, query.getQueryObject(), query.getFieldsObject(), targetClass, preparer);
@@ -506,19 +488,9 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 		return findAndRemove(determineCollectionName(targetClass), query, targetClass);
 	}
 
-	public <T> T findAndRemove(Query query, Class<T> targetClass,
-														 MongoReader<T> reader) {
-		return findAndRemove(determineCollectionName(targetClass), query, targetClass, reader);
-	}
-
 	public <T> T findAndRemove(String collectionName, Query query,
 														 Class<T> targetClass) {
-		return findAndRemove(collectionName, query, targetClass, null);
-	}
-
-	public <T> T findAndRemove(String collectionName, Query query,
-														 Class<T> targetClass, MongoReader<T> reader) {
-		return doFindAndRemove(collectionName, query.getQueryObject(), query.getFieldsObject(), query.getSortObject(), targetClass, reader);
+		return doFindAndRemove(collectionName, query.getQueryObject(), query.getFieldsObject(), query.getSortObject(), targetClass);
 	}
 
 	/* (non-Javadoc)
@@ -904,11 +876,6 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 		});
 	}
 
-	public <T> List<T> getCollection(String collectionName, Class<T> targetClass, MongoReader<T> reader) {
-		return executeEach(new FindCallback(null), null, new ReadDbObjectCallback<T>(reader, targetClass),
-				collectionName);
-	}
-
 	public DB getDb() {
 		return MongoDbUtils.getDB(mongo, databaseName, username, password == null ? null : password.toCharArray());
 	}
@@ -937,7 +904,7 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 	}
 
 	/**
-	 * Map the results of an ad-hoc query on the default MongoDB collection to an object using the provided MongoReader
+	 * Map the results of an ad-hoc query on the default MongoDB collection to an object using the template's converter
 	 * <p/>
 	 * The query document is specified as a standard DBObject and so is the fields specification.
 	 *
@@ -945,14 +912,10 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 	 * @param query					the query document that specifies the criteria used to find a record
 	 * @param fields				 the document that specifies the fields to be returned
 	 * @param targetClass		the parameterized type of the returned list.
-	 * @param reader				 the MongoReader to convert from DBObject to an object.
 	 * @return the List of converted objects.
 	 */
-	protected <T> T doFindOne(String collectionName, DBObject query, DBObject fields, Class<T> targetClass, MongoReader<T> reader) {
-		MongoReader<? super T> readerToUse = reader;
-		if (readerToUse == null) {
-			readerToUse = this.mongoConverter;
-		}
+	protected <T> T doFindOne(String collectionName, DBObject query, DBObject fields, Class<T> targetClass) {
+		MongoReader<? super T> readerToUse = this.mongoConverter;
 		PersistentEntity<?> entity = mappingContext.getPersistentEntity(targetClass);
 		DBObject mappedQuery = mapper.getMappedObject(query, entity);
 
@@ -992,7 +955,7 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 	}
 
 	/**
-	 * Map the results of an ad-hoc query on the default MongoDB collection to a List using the provided MongoReader
+	 * Map the results of an ad-hoc query on the default MongoDB collection to a List using the template's converter.
 	 * <p/>
 	 * The query document is specified as a standard DBObject and so is the fields specification.
 	 *
@@ -1003,14 +966,15 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 	 * @param reader				 the MongoReader to convert from DBObject to an object.
 	 * @return the List of converted objects.
 	 */
-	protected <T> List<T> doFind(String collectionName, DBObject query, DBObject fields, Class<T> targetClass, MongoReader<T> reader) {
+	protected <T> List<T> doFind(String collectionName, DBObject query, DBObject fields, Class<T> targetClass) {
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug("find using query: " + query + " fields: " + fields + " for class: " + targetClass + " in collection: " + collectionName);
 		}
+		MongoReader<? super T> readerToUse = this.mongoConverter;
 		PersistentEntity<?> entity = mappingContext.getPersistentEntity(targetClass);
 		return executeEach(new FindCallback(mapper.getMappedObject(query, entity), fields),
 				null,
-				new ReadDbObjectCallback<T>(reader, targetClass),
+				new ReadDbObjectCallback<T>(readerToUse, targetClass),
 				collectionName);
 	}
 
@@ -1031,7 +995,7 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 	}
 
 	/**
-	 * Map the results of an ad-hoc query on the default MongoDB collection to an object using the provided MongoReader
+	 * Map the results of an ad-hoc query on the default MongoDB collection to an object using the template's converter.
 	 * The first document that matches the query is returned and also removed from the collection in the database.
 	 * <p/>
 	 * The query document is specified as a standard DBObject and so is the fields specification.
@@ -1042,11 +1006,8 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 	 * @param reader				 the MongoReader to convert from DBObject to an object.
 	 * @return the List of converted objects.
 	 */
-	protected <T> T doFindAndRemove(String collectionName, DBObject query, DBObject fields, DBObject sort, Class<T> targetClass, MongoReader<T> reader) {
-		MongoReader<? super T> readerToUse = reader;
-		if (readerToUse == null) {
-			readerToUse = this.mongoConverter;
-		}
+	protected <T> T doFindAndRemove(String collectionName, DBObject query, DBObject fields, DBObject sort, Class<T> targetClass) {
+		MongoReader<? super T> readerToUse = this.mongoConverter;
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug("findAndRemove using query: " + query + " fields: " + fields + " sort: " + sort + " for class: " + targetClass + " in collection: " + collectionName);
 		}
