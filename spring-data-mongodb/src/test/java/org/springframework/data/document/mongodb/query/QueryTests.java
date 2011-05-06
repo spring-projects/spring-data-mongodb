@@ -19,6 +19,7 @@ import static org.springframework.data.document.mongodb.query.Criteria.where;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.springframework.data.document.InvalidDocumentStoreApiUsageException;
 
 public class QueryTests {
 
@@ -35,6 +36,14 @@ public class QueryTests {
 				.mod(10, 0));
 		String expected = "{ \"name\" : \"Thomas\" , \"age\" : { \"$not\" : { \"$mod\" : [ 10 , 0]}}}";
 		Assert.assertEquals(expected, q.getQueryObject().toString());
+	}
+
+	@Test
+	public void testInvalidQueryWithNotIs() {
+		try {
+			new Query(where("name").not().is("Thomas"));
+			Assert.fail("This should have caused an InvalidDocumentStoreApiUsageException");
+		} catch (InvalidDocumentStoreApiUsageException e) {}
 	}
 
 	@Test

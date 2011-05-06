@@ -169,7 +169,7 @@ public class MongoTemplateTests {
 	  testProperHandlingOfDifferentIdTypes(this.mappingTemplate);
   }
 
-  public void testProperHandlingOfDifferentIdTypes(MongoTemplate mongoTemplate) throws Exception {
+  private void testProperHandlingOfDifferentIdTypes(MongoTemplate mongoTemplate) throws Exception {
     PersonWithIdPropertyOfTypeString p1 = new PersonWithIdPropertyOfTypeString();
     p1.setFirstName("Sven_1");
     p1.setAge(22);

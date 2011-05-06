@@ -75,14 +75,17 @@ public class Criteria implements CriteriaDefinition {
 	}
 
 	/**
-	 * Creates a criterion using the $is operator
+	 * Creates a criterion using equality
 	 *
 	 * @param o
 	 * @return
 	 */
 	public Criteria is(Object o) {
 		if (isValue != null) {
-			throw new InvalidDocumentStoreApiUsageException("Multiple 'is' values declared.");
+			throw new InvalidDocumentStoreApiUsageException("Multiple 'is' values declared. You need to use 'and' with multiple criteria");
+		}
+		if ( this.criteria.size() > 0 && "$not".equals(this.criteria.keySet().toArray()[this.criteria.size() - 1])) {
+			throw new InvalidDocumentStoreApiUsageException("Invalid query: 'not' can't be used with 'is' - use 'ne' instead.");
 		}
 		this.isValue = o;
 		return this;
@@ -186,8 +189,8 @@ public class Criteria implements CriteriaDefinition {
 	 * @param o
 	 * @return
 	 */
-	public Criteria all(Object o) {
-		criteria.put("$is", o);
+	public Criteria all(Object... o) {
+		criteria.put("$all", o);
 		return this;
 	}
 
