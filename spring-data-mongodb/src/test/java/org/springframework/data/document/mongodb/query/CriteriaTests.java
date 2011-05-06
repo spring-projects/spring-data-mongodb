@@ -15,28 +15,38 @@
  */
 package org.springframework.data.document.mongodb.query;
 
-import org.junit.Assert;
+import static org.junit.Assert.*;
+import static org.hamcrest.CoreMatchers.*;
 import org.junit.Test;
-import org.springframework.data.document.mongodb.query.Index.Duplicates;
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
 
 public class CriteriaTests {
 
   @Test
   public void testSimpleCriteria() {
     Criteria c = new Criteria("name").is("Bubba");
-    Assert.assertEquals("{ \"name\" : \"Bubba\"}", c.getCriteriaObject().toString());
+    assertEquals("{ \"name\" : \"Bubba\"}", c.getCriteriaObject().toString());
   }
 
   @Test
   public void testNotEqualCriteria() {
     Criteria c = new Criteria("name").ne("Bubba");
-    Assert.assertEquals("{ \"name\" : { \"$ne\" : \"Bubba\"}}", c.getCriteriaObject().toString());
+    assertEquals("{ \"name\" : { \"$ne\" : \"Bubba\"}}", c.getCriteriaObject().toString());
   }
-
+  
+  @Test
+  public void buildsIsNullCriteriaCorrectly() {
+    
+    DBObject reference = new BasicDBObject("name", null);
+    
+    Criteria criteria = new Criteria("name").is(null);
+    assertThat(criteria.getCriteriaObject(), is(reference));
+  }
 
   @Test
   public void testChainedCriteria() {
     Criteria c = new Criteria("name").is("Bubba").and("age").lt(21);
-    Assert.assertEquals("{ \"name\" : \"Bubba\" , \"age\" : { \"$lt\" : 21}}", c.getCriteriaObject().toString());
+    assertEquals("{ \"name\" : \"Bubba\" , \"age\" : { \"$lt\" : 21}}", c.getCriteriaObject().toString());
   }
 }

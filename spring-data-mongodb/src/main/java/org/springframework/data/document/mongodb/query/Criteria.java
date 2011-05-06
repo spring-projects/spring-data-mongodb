@@ -29,6 +29,11 @@ import org.springframework.data.document.mongodb.geo.Point;
 import org.springframework.util.Assert;
 
 public class Criteria implements CriteriaDefinition {
+  
+  /**
+   * Custom "not-null" object as we have to be able to work with {@literal null} values as well.
+   */
+  private static final Object NOT_SET = new Object();
 
   private String key;
 
@@ -36,7 +41,7 @@ public class Criteria implements CriteriaDefinition {
 
   private LinkedHashMap<String, Object> criteria = new LinkedHashMap<String, Object>();
 
-  private Object isValue = null;
+  private Object isValue = NOT_SET;
 
   public Criteria(String key) {
     this.criteriaChain = new ArrayList<Criteria>();
@@ -81,7 +86,7 @@ public class Criteria implements CriteriaDefinition {
    * @return
    */
   public Criteria is(Object o) {
-    if (isValue != null) {
+    if (isValue != NOT_SET) {
       throw new InvalidDocumentStoreApiUsageException(
           "Multiple 'is' values declared. You need to use 'and' with multiple criteria");
     }
@@ -394,7 +399,7 @@ public class Criteria implements CriteriaDefinition {
       }
     }
     DBObject queryCriteria = new BasicDBObject();
-    if (isValue != null) {
+    if (isValue != NOT_SET) {
       queryCriteria.put(this.key, this.isValue);
       queryCriteria.putAll(dbo);
     } else {

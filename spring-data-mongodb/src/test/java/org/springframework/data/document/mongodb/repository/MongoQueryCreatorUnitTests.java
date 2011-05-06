@@ -15,21 +15,24 @@
  */
 package org.springframework.data.document.mongodb.repository;
 
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
+import static org.hamcrest.CoreMatchers.*;
 import static org.springframework.data.document.mongodb.repository.StubParameterAccessor.getAccessor;
 
 import java.lang.reflect.Method;
-import java.util.List;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
 import org.springframework.data.document.mongodb.Person;
 import org.springframework.data.document.mongodb.convert.MongoConverter;
+import org.springframework.data.document.mongodb.query.Criteria;
+import org.springframework.data.document.mongodb.query.Query;
 import org.springframework.data.repository.query.parser.PartTree;
 
 import com.mongodb.BasicDBObject;
@@ -44,8 +47,7 @@ import com.mongodb.DBObject;
 @RunWith(MockitoJUnitRunner.class)
 public class MongoQueryCreatorUnitTests {
 
-  Method findByFirstname;
-  Method findByFirstnameAndFriend;
+  Method findByFirstname, findByFirstnameAndFriend, findByFirstnameNotNull;
 
   @Mock
   MongoConverter converter;
@@ -53,12 +55,6 @@ public class MongoQueryCreatorUnitTests {
 
   @Before
   public void setUp() throws SecurityException, NoSuchMethodException {
-
-    findByFirstname =
-        Sample.class.getMethod("findByFirstname", String.class);
-    findByFirstnameAndFriend =
-        Sample.class.getMethod("findByFirstnameAndFriend",
-            String.class, Person.class);
     
     doAnswer(new Answer<Void>() {
       public Void answer(InvocationOnMock invocation) throws Throwable {
@@ -66,7 +62,7 @@ public class MongoQueryCreatorUnitTests {
         dbObject.put("value", new BasicDBObject("value", "value"));
         return null;
       }
-    }).when(converter).write(any(), any(DBObject.class));
+    }).when(converter).write(any(), Mockito.any(DBObject.class));
 
   }
 
@@ -86,12 +82,22 @@ public class MongoQueryCreatorUnitTests {
             Person.class), getAccessor(converter, "Oliver", new Person()));
     creator.createQuery();
   }
-
-  interface Sample {
-
-    List<Person> findByFirstname(String firstname);
-
-
-    List<Person> findByFirstnameAndFriend(String firstname, Person friend);
+  
+  @Test
+  public void createsNotNullQueryCorrectly() {
+    
+    PartTree tree = new PartTree("findByFirstNameNotNull", Person.class);
+    Query query = new MongoQueryCreator(tree, getAccessor(converter)).createQuery();
+    
+    assertThat(query.getQueryObject(), is(new Query(Criteria.where("firstName").ne(null)).getQueryObject()));
+  }
+  
+  @Test
+  public void createsIsNullQueryCorrectly() {
+    
+    PartTree tree = new PartTree("findByFirstNameIsNull", Person.class);
+    Query query = new MongoQueryCreator(tree, getAccessor(converter)).createQuery();
+    
+    assertThat(query.getQueryObject(), is(new Query(Criteria.where("firstName").is(null)).getQueryObject()));
   }
 }

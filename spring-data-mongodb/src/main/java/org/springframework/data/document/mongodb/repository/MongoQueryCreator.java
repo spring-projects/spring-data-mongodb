@@ -140,7 +140,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Query> {
       case BETWEEN:
         return criteria.gt(parameters.nextConverted()).lt(parameters.nextConverted());
       case IS_NOT_NULL:
-        return criteria.not().is(null);
+        return criteria.ne(null);
       case IS_NULL:
         return criteria.is(null);
       case NOT_IN:
