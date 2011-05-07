@@ -20,8 +20,12 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+
 import org.joda.time.LocalDate;
 import org.junit.Before;
 import org.junit.Test;
@@ -90,7 +94,20 @@ public class MappingMongoConverterUnitTests {
     Person result = converter.read(Person.class, dbObject);
     assertThat(result.birthDate, is(notNullValue()));
   }
-  
+
+  /**
+   * @see DATADOC-130
+   */
+  @Test
+  public void convertsMapTypeCorrectly() {
+    
+    Map<Locale, String> map = Collections.singletonMap(Locale.US, "Foo");
+    
+    BasicDBObject dbObject = new BasicDBObject();
+    converter.write(map, dbObject);
+    
+    assertThat(dbObject.get(Locale.US.toString()).toString(), is("Foo"));
+  }
   
   public static class Address {
     String street;

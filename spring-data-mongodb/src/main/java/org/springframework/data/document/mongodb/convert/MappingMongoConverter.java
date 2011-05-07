@@ -306,7 +306,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		return instance;
 	}
 
-	public void write(final Object obj, final DBObject dbo) {
+	@SuppressWarnings("unchecked")
+  public void write(final Object obj, final DBObject dbo) {
 		if (null == obj) {
 			return;
 		}
@@ -317,6 +318,11 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			DBObject result = conversionService.convert(obj, DBObject.class);
 			dbo.putAll(result);
 			return;
+		}
+		
+		if (Map.class.isAssignableFrom(obj.getClass())) {
+		  writeMapInternal((Map<Object, Object>) obj, dbo);
+		  return;
 		}
 
 		PersistentEntity<?> entity = mappingContext.getPersistentEntity(obj.getClass());
@@ -508,7 +514,9 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			Object key = entry.getKey();
 			Object val = entry.getValue();
 			if (isSimpleType(key.getClass())) {
-				String simpleKey = conversionService.convert(key, String.class);
+        // Don't use conversion service here as removal of ObjectToString converter results in some primitive types not
+        // being convertable
+				String simpleKey = key.toString();
 				if (isSimpleType(val.getClass())) {
 					dbo.put(simpleKey, val);
 				} else {
