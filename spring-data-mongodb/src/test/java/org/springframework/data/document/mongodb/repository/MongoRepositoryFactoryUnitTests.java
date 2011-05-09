@@ -26,6 +26,7 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.document.mongodb.MongoTemplate;
 import org.springframework.data.document.mongodb.mapping.MongoPersistentEntity;
+import org.springframework.data.document.mongodb.mapping.MongoPersistentProperty;
 import org.springframework.data.document.mongodb.repository.MongoRepositoryFactoryBean.MongoRepositoryFactory;
 import org.springframework.data.mapping.model.MappingContext;
 
@@ -41,7 +42,7 @@ public class MongoRepositoryFactoryUnitTests {
   MongoTemplate template;
 
   @Mock
-  MappingContext<MongoPersistentEntity<?>> mappingContext;
+  MappingContext<MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
   
   @Mock
   @SuppressWarnings("rawtypes")

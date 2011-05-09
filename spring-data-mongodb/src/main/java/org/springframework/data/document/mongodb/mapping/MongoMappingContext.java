@@ -30,7 +30,6 @@ import org.springframework.data.util.TypeInformation;
  * @author Jon Brisbin <jbrisbin@vmware.com>
  */
 public class MongoMappingContext extends AbstractMappingContext<BasicMongoPersistentEntity<?>, MongoPersistentProperty> {
-
   public MongoMappingContext() {
     augmentSimpleTypes();
   }
@@ -46,15 +45,14 @@ public class MongoMappingContext extends AbstractMappingContext<BasicMongoPersis
 
   @Override
   public MongoPersistentProperty createPersistentProperty(Field field, PropertyDescriptor descriptor, BasicMongoPersistentEntity<?> owner) {
-    return new MongoPersistentProperty(field, descriptor, owner);
+    return new BasicMongoPersistentProperty(field, descriptor, owner);
   }
   
   /* (non-Javadoc)
    * @see org.springframework.data.mapping.BasicMappingContext#createPersistentEntity(org.springframework.data.util.TypeInformation, org.springframework.data.mapping.model.MappingContext)
    */
   @Override
-  @SuppressWarnings("rawtypes")
-  protected BasicMongoPersistentEntity<?> createPersistentEntity(TypeInformation typeInformation) {
-    return new BasicMongoPersistentEntity(typeInformation);
+  protected <T> BasicMongoPersistentEntity<T> createPersistentEntity(TypeInformation<T> typeInformation) {
+    return new BasicMongoPersistentEntity<T>(typeInformation);
   }
 }

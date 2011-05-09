@@ -55,6 +55,7 @@ import org.springframework.data.document.mongodb.convert.MongoConverter;
 import org.springframework.data.document.mongodb.convert.SimpleMongoConverter;
 import org.springframework.data.document.mongodb.index.IndexDefinition;
 import org.springframework.data.document.mongodb.mapping.MongoPersistentEntity;
+import org.springframework.data.document.mongodb.mapping.MongoPersistentProperty;
 import org.springframework.data.document.mongodb.mapping.event.AfterConvertEvent;
 import org.springframework.data.document.mongodb.mapping.event.AfterLoadEvent;
 import org.springframework.data.document.mongodb.mapping.event.AfterSaveEvent;
@@ -67,8 +68,6 @@ import org.springframework.data.document.mongodb.query.Update;
 import org.springframework.data.mapping.MappingBeanHelper;
 import org.springframework.data.mapping.model.MappingContext;
 import org.springframework.data.mapping.model.MappingException;
-import org.springframework.data.mapping.model.PersistentEntity;
-import org.springframework.data.mapping.model.PersistentProperty;
 import org.springframework.jca.cci.core.ConnectionCallback;
 import org.springframework.util.Assert;
 
@@ -99,7 +98,7 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 	private WriteResultChecking writeResultChecking = WriteResultChecking.NONE;
 
 	private final MongoConverter mongoConverter;
-	private final MappingContext<MongoPersistentEntity<?>> mappingContext;
+	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 	private final Mongo mongo;
 	private final MongoExceptionTranslator exceptionTranslator = new MongoExceptionTranslator();
 	private final QueryMapper mapper;
@@ -140,7 +139,6 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 	 * @param writeConcern
 	 * @param writeResultChecking
 	 */
-	@SuppressWarnings({"unchecked"})
 	MongoTemplate(Mongo mongo, String databaseName, MongoConverter mongoConverter, WriteConcern writeConcern, WriteResultChecking writeResultChecking) {
 
 		Assert.notNull(mongo);
@@ -817,7 +815,7 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 			throw new InvalidDataAccessApiUsageException("Query passed in to remove can't be null");
 		}
 		final DBObject queryObject = query.getQueryObject();
-		final PersistentEntity<?> entity = getPersistentEntity(targetClass);
+		final MongoPersistentEntity<?> entity = getPersistentEntity(targetClass);
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug("remove using query: " + queryObject + " in collection: " + collectionName);
 		}
@@ -905,7 +903,7 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 	 */
 	protected <T> T doFindOne(String collectionName, DBObject query, DBObject fields, Class<T> targetClass) {
 		MongoReader<? super T> readerToUse = this.mongoConverter;
-		PersistentEntity<?> entity = mappingContext.getPersistentEntity(targetClass);
+		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(targetClass);
 		DBObject mappedQuery = mapper.getMappedObject(query, entity);
 
 		return execute(new FindOneCallback(mappedQuery, fields),
@@ -933,7 +931,7 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 	 * @return the List of converted objects.
 	 */
 	protected <T> List<T> doFind(String collectionName, DBObject query, DBObject fields, Class<T> targetClass, CursorPreparer preparer) {
-		PersistentEntity<?> entity = mappingContext.getPersistentEntity(targetClass);
+		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(targetClass);
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug("find using query: " + query + " fields: " + fields + " for class: " + targetClass + " in collection: " + collectionName);
 		}
@@ -960,7 +958,7 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 			LOGGER.debug("find using query: " + query + " fields: " + fields + " for class: " + targetClass + " in collection: " + collectionName);
 		}
 		MongoReader<? super T> readerToUse = this.mongoConverter;
-		PersistentEntity<?> entity = mappingContext.getPersistentEntity(targetClass);
+		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(targetClass);
 		return executeEach(new FindCallback(mapper.getMappedObject(query, entity), fields),
 				null,
 				new ReadDbObjectCallback<T>(readerToUse, targetClass),
@@ -1000,7 +998,7 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug("findAndRemove using query: " + query + " fields: " + fields + " sort: " + sort + " for class: " + targetClass + " in collection: " + collectionName);
 		}
-		PersistentEntity<?> entity = mappingContext.getPersistentEntity(targetClass);
+		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(targetClass);
 		return execute(new FindAndRemoveCallback(mapper.getMappedObject(query, entity), fields, sort),
 				new ReadDbObjectCallback<T>(readerToUse, targetClass),
 				collectionName);
@@ -1008,8 +1006,8 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 
 	protected Object getIdValue(Object object) {
 
-		PersistentEntity<?> entity = mappingContext.getPersistentEntity(object.getClass());
-		PersistentProperty idProp = entity.getIdProperty();
+		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(object.getClass());
+		MongoPersistentProperty idProp = entity.getIdProperty();
 
 		if (idProp == null) {
 			throw new MappingException("No id property found for object of type " + entity.getType().getName());
@@ -1036,7 +1034,7 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 			return;
 		}
 
-		PersistentProperty idProp = getIdPropertyFor(savedObject.getClass());
+		MongoPersistentProperty idProp = getIdPropertyFor(savedObject.getClass());
 
 		if (idProp == null) {
 			return;
@@ -1133,11 +1131,11 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 		}
 	}
 
-	private PersistentEntity<?> getPersistentEntity(Class<?> type) {
+	private MongoPersistentEntity<?> getPersistentEntity(Class<?> type) {
 		return type == null ? null : mappingContext.getPersistentEntity(type);
 	}
 
-	private PersistentProperty getIdPropertyFor(Class<?> type) {
+	private MongoPersistentProperty getIdPropertyFor(Class<?> type) {
 		return mappingContext.getPersistentEntity(type).getIdProperty();
 	}
 

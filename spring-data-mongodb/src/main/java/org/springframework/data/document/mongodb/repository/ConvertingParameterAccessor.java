@@ -32,8 +32,6 @@ import org.springframework.data.repository.query.ParameterAccessor;
  * @author Oliver Gierke
  */
 public class ConvertingParameterAccessor implements ParameterAccessor {
-
-//  private static final Set<Class<?>> TYPES_NOT_TO_CONVERT = new HashSet<Class<?>>(Arrays.asList(Circle.class, Box.class))
   
   private final MongoWriter<Object> writer;
   private final ParameterAccessor delegate;
@@ -92,7 +90,7 @@ public class ConvertingParameterAccessor implements ParameterAccessor {
   private Object getConvertedValue(Object value) {
     
     DBObject result = new BasicDBObject();
-    writer.write(value.getClass().isEnum() ? new EnumValueHolder((Enum<?>) value) : new ValueHolder(value), result);
+    writer.write(new ValueHolder(value), result);
     return ((DBObject) result.get("value")).get("value");
   }
 
@@ -172,23 +170,6 @@ public class ConvertingParameterAccessor implements ParameterAccessor {
     }
   }
 
-  private static class EnumValueHolder {
-
-    private Enum<?> value;
-
-    public EnumValueHolder(Enum<?> value) {
-      this.value = value;
-    }
-
-    /**
-     * @return the value
-     */
-    @SuppressWarnings("unused")
-    public Enum<?> getValue() {
-      return value;
-    }
-  }
-  
   /**
    * Custom {@link Iterator} that adds a method to access elements in a converted manner.
    *

@@ -15,14 +15,7 @@
  */
 package org.springframework.data.document.mongodb.mapping;
 
-import java.beans.PropertyDescriptor;
-import java.lang.reflect.Field;
-import java.math.BigInteger;
-import java.util.HashSet;
-import java.util.Set;
-
-import org.bson.types.ObjectId;
-import org.springframework.data.mapping.AnnotationBasedPersistentProperty;
+import org.springframework.data.mapping.model.PersistentProperty;
 
 /**
  * Mongo specific
@@ -31,53 +24,6 @@ import org.springframework.data.mapping.AnnotationBasedPersistentProperty;
  *
  * @author Oliver Gierke
  */
-public class MongoPersistentProperty extends AnnotationBasedPersistentProperty {
-
-  private static final Set<Class<?>> SUPPORTED_ID_TYPES = new HashSet<Class<?>>();
-  private static final Set<String> SUPPORTED_ID_PROPERTY_NAMES = new HashSet<String>();
-
-  static {
-    SUPPORTED_ID_TYPES.add(ObjectId.class);
-    SUPPORTED_ID_TYPES.add(String.class);
-    SUPPORTED_ID_TYPES.add(BigInteger.class);
-
-    SUPPORTED_ID_PROPERTY_NAMES.add("id");
-    SUPPORTED_ID_PROPERTY_NAMES.add("_id");
-  }
-
-  /**
-   * Creates a new {@link MongoPersistentProperty}.
-   *
-   * @param field
-   * @param propertyDescriptor
-   * @param owningTypeInformation
-   */
-  public MongoPersistentProperty(Field field,
-                                 PropertyDescriptor propertyDescriptor, MongoPersistentEntity<?> owner) {
-    super(field, propertyDescriptor, owner);
-  }
- 
-  /* (non-Javadoc)
-   * @see org.springframework.data.mapping.FooBasicPersistentProperty#isAssociation()
-   */
-  @Override
-  public boolean isAssociation() {
-    return field.isAnnotationPresent(DBRef.class) || super.isAssociation();
-  }
-
-  /**
-   * Also considers fields as id that are of supported id type and name.
-   *
-   * @see #SUPPORTED_ID_PROPERTY_NAMES
-   * @see #SUPPORTED_ID_TYPES
-   */
-  @Override
-  public boolean isIdProperty() {
-    if (super.isIdProperty()) {
-      return true;
-    }
-
-    return SUPPORTED_ID_TYPES.contains(field.getType())
-        && SUPPORTED_ID_PROPERTY_NAMES.contains(field.getName());
-  }
+public interface MongoPersistentProperty extends PersistentProperty<MongoPersistentProperty> {
+  String getKey();
 }

@@ -17,6 +17,7 @@
 package org.springframework.data.document.mongodb.mapping;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.PersistenceConstructor;
 
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
@@ -32,6 +33,7 @@ public class PersonCustomIdName extends BasePerson {
 		this.firstName = firstName;
 	}
 
+	@PersistenceConstructor
 	public PersonCustomIdName(Integer ssn, String firstName, String lastName) {
 		this.ssn = ssn;
 		this.firstName = firstName;

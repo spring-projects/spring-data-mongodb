@@ -20,6 +20,8 @@ import static org.mockito.Mockito.*;
 import java.util.Arrays;
 import java.util.HashSet;
 
+import org.hamcrest.CoreMatchers;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -27,6 +29,7 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.document.mongodb.mapping.MongoMappingContext;
 import org.springframework.data.document.mongodb.mapping.MongoMappingContext;
 import org.springframework.data.document.mongodb.mapping.MongoPersistentEntity;
 
@@ -100,6 +103,14 @@ public class CustomConvertersUnitTests {
     
     converter.read(Bar.class, new BasicDBObject());
     verify(dbObjectToBarConverter).convert(any(DBObject.class));
+  }
+  
+  @Test
+  public void foo() {
+    DBObject dbObject = new BasicDBObject();
+    dbObject.put("foo", null);
+    
+    Assert.assertThat(dbObject.containsField("foo"), CoreMatchers.is(true));
   }
 
   public static class Foo {

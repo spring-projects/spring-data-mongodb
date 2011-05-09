@@ -23,6 +23,7 @@ import com.mongodb.DBObject;
 import org.bson.types.ObjectId;
 import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.data.document.mongodb.convert.MongoConverter;
+import org.springframework.data.document.mongodb.mapping.MongoPersistentEntity;
 import org.springframework.data.mapping.model.PersistentEntity;
 import org.springframework.util.Assert;
 
@@ -54,7 +55,7 @@ public class QueryMapper {
    * @param entity
    * @return
    */
-	public DBObject getMappedObject(DBObject query, PersistentEntity<?> entity) {
+	public DBObject getMappedObject(DBObject query, MongoPersistentEntity<?> entity) {
 		String idKey = null;
 		if (null != entity && entity.getIdProperty() != null) {
 			idKey = entity.getIdProperty().getName();

@@ -30,7 +30,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -57,6 +56,7 @@ import org.springframework.core.convert.support.ConversionServiceFactory;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.document.mongodb.MongoPropertyDescriptors.MongoPropertyDescriptor;
 import org.springframework.data.document.mongodb.mapping.MongoPersistentEntity;
+import org.springframework.data.document.mongodb.mapping.MongoPersistentProperty;
 import org.springframework.data.document.mongodb.mapping.SimpleMongoMappingContext;
 import org.springframework.data.mapping.model.MappingContext;
 import org.springframework.util.Assert;
@@ -126,7 +126,7 @@ public class SimpleMongoConverter extends AbstractMongoConverter implements Init
 	}
 
 	private final GenericConversionService conversionService;
-	private final MappingContext<? extends MongoPersistentEntity<?>> mappingContext;
+	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 
 	/**
 	 * Creates a {@link SimpleMongoConverter}.
@@ -140,7 +140,7 @@ public class SimpleMongoConverter extends AbstractMongoConverter implements Init
 	/* (non-Javadoc)
 		 * @see org.springframework.data.document.mongodb.convert.MongoConverter#getMappingContext()
 		 */
-	public MappingContext<? extends MongoPersistentEntity<?>> getMappingContext() {
+	public MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> getMappingContext() {
 		return mappingContext;
 	}
 

@@ -32,8 +32,9 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.document.mongodb.convert.AbstractMongoConverter;
 import org.springframework.data.document.mongodb.convert.MongoConverter;
+import org.springframework.data.document.mongodb.mapping.MongoPersistentEntity;
+import org.springframework.data.document.mongodb.mapping.MongoPersistentProperty;
 import org.springframework.data.mapping.model.MappingContext;
-import org.springframework.data.mapping.model.PersistentEntity;
 
 /**
  * Abstract base class for unit tests to specify behaviour we expect from {@link MongoOperations}. Subclasses return
@@ -78,7 +79,7 @@ public abstract class MongoOperationsUnitTests {
 				return null;
 			}
 
-			public MappingContext<PersistentEntity<?>> getMappingContext() {
+			public MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> getMappingContext() {
 				return null;
 			}
 		};

@@ -6,7 +6,7 @@ import org.springframework.data.mapping.model.PersistentEntity;
  *
  * @author Oliver Gierke
  */
-public interface MongoPersistentEntity<T> extends PersistentEntity<T> {
+public interface MongoPersistentEntity<T> extends PersistentEntity<T, MongoPersistentProperty> {
 
   String getCollection();
 }

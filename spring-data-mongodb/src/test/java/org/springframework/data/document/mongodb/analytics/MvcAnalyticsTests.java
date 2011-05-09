@@ -21,6 +21,7 @@ import org.springframework.data.document.analytics.Parameters;
 import org.springframework.data.document.mongodb.MongoTemplate;
 import org.springframework.data.document.mongodb.convert.AbstractMongoConverter;
 import org.springframework.data.document.mongodb.mapping.MongoPersistentEntity;
+import org.springframework.data.document.mongodb.mapping.MongoPersistentProperty;
 import org.springframework.data.document.mongodb.query.BasicQuery;
 import org.springframework.data.mapping.model.MappingContext;
 
@@ -53,7 +54,7 @@ public class MvcAnalyticsTests {
 						return null;
 					}
 
-					public MappingContext<? extends MongoPersistentEntity<?>> getMappingContext() {
+					public MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> getMappingContext() {
 						return null;
 					}
 

@@ -30,7 +30,7 @@ import org.springframework.util.StringUtils;
  * @author Jon Brisbin <jbrisbin@vmware.com>
  * @author Oliver Gierke
  */
-public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T> implements MongoPersistentEntity<T> {
+public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, MongoPersistentProperty> implements MongoPersistentEntity<T> {
 
   private final String collection;
   private final boolean isRootEntity;
@@ -41,7 +41,7 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T> impl
    *
    * @param typeInformation
    */
-  public BasicMongoPersistentEntity(TypeInformation typeInformation) {
+  public BasicMongoPersistentEntity(TypeInformation<T> typeInformation) {
     
     super(typeInformation);
     
@@ -73,7 +73,7 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T> impl
   @Override
   public void verify() {
     if (isRootEntity && idProperty == null) {
-      throw new MappingException(String.format("Root entity %s has to have an id property!", type.getName()));
+      throw new MappingException(String.format("Root entity %s has to have an id property!", getType().getName()));
     }
   }
 }

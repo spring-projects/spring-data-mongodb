@@ -19,6 +19,8 @@ import com.mongodb.BasicDBList;
 import org.bson.types.ObjectId;
 import org.springframework.data.document.mongodb.MongoReader;
 import org.springframework.data.document.mongodb.MongoWriter;
+import org.springframework.data.document.mongodb.mapping.MongoPersistentEntity;
+import org.springframework.data.document.mongodb.mapping.MongoPersistentProperty;
 import org.springframework.data.mapping.model.MappingContext;
 
 
@@ -43,7 +45,7 @@ public interface MongoConverter extends MongoWriter<Object>, MongoReader<Object>
    */
   public ObjectId convertObjectId(Object id);
   
-  MappingContext getMappingContext();
+  MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> getMappingContext();
 
 	Object maybeConvertObject(Object obj);
 

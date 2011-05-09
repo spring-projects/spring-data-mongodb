@@ -26,9 +26,8 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.document.mongodb.convert.MongoConverter;
-import org.springframework.data.mapping.model.PersistentEntity;
-import org.springframework.data.mapping.model.PersistentProperty;
-
+import org.springframework.data.document.mongodb.mapping.MongoPersistentEntity;
+import org.springframework.data.document.mongodb.mapping.MongoPersistentProperty;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
@@ -45,9 +44,9 @@ public class QueryMapperUnitTests {
   @Mock
   MongoConverter converter;
   @Mock
-  PersistentEntity<?> entity;
+  MongoPersistentEntity<?> entity;
   @Mock
-  PersistentProperty property;
+  MongoPersistentProperty property;
 
   @Before
   public void setUp() {

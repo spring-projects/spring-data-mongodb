@@ -29,6 +29,7 @@ import org.springframework.data.document.mongodb.MongoOperations;
 import org.springframework.data.document.mongodb.MongoPropertyDescriptors.MongoPropertyDescriptor;
 import org.springframework.data.document.mongodb.MongoTemplate;
 import org.springframework.data.document.mongodb.mapping.MongoPersistentEntity;
+import org.springframework.data.document.mongodb.mapping.MongoPersistentProperty;
 import org.springframework.data.document.mongodb.query.Index;
 import org.springframework.data.document.mongodb.query.Order;
 import org.springframework.data.domain.Sort;
@@ -55,7 +56,7 @@ public class MongoRepositoryFactoryBean<T extends MongoRepository<S, ID>, S, ID 
     RepositoryFactoryBeanSupport<T, S, ID> {
 
   private MongoTemplate template;
-  private MappingContext<MongoPersistentEntity<?>> mappingContext;
+  private MappingContext<MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 
   /**
    * Configures the {@link MongoTemplate} to be used.
@@ -72,7 +73,7 @@ public class MongoRepositoryFactoryBean<T extends MongoRepository<S, ID>, S, ID 
    *
    * @param mappingContext the mappingContext to set
    */
-  public void setMappingContext(MappingContext<MongoPersistentEntity<?>> mappingContext) {
+  public void setMappingContext(MappingContext<MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
     this.mappingContext = mappingContext;
   }
 
@@ -122,7 +123,7 @@ public class MongoRepositoryFactoryBean<T extends MongoRepository<S, ID>, S, ID 
      * @param template       must not be {@literal null}
      * @param mappingContext
      */
-    public MongoRepositoryFactory(MongoTemplate template, MappingContext<MongoPersistentEntity<?>> mappingContext) {
+    public MongoRepositoryFactory(MongoTemplate template, MappingContext<MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
 
       Assert.notNull(template);
       Assert.notNull(mappingContext);
@@ -246,9 +247,9 @@ public class MongoRepositoryFactoryBean<T extends MongoRepository<S, ID>, S, ID 
    */
   static class EntityInformationCreator {
 
-    private final MappingContext<MongoPersistentEntity<?>> mappingContext;
+    private final MappingContext<MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 
-    public EntityInformationCreator(MappingContext<MongoPersistentEntity<?>> mappingContext) {
+    public EntityInformationCreator(MappingContext<MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
       Assert.notNull(mappingContext);
       this.mappingContext = mappingContext;
     }
