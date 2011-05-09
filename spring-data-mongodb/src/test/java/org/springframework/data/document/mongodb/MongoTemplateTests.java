@@ -24,11 +24,13 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
 import static org.springframework.data.document.mongodb.query.Criteria.where;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 
 import org.bson.types.ObjectId;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -36,6 +38,7 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.document.InvalidDocumentStoreApiUsageException;
 import org.springframework.data.document.mongodb.convert.MappingMongoConverter;
 import org.springframework.data.document.mongodb.convert.MongoConverter;
 import org.springframework.data.document.mongodb.mapping.MongoMappingContext;
@@ -320,6 +323,47 @@ public class MongoTemplateTests {
     assertThat(results1.size(), is(3));
     assertThat(results2.size(), is(2));
     assertThat(results3.size(), is(1));
+  }
+
+  @Test
+  public void testUsingInQueryWithList() throws Exception {
+    
+    template.remove(new Query(), PersonWithIdPropertyOfTypeObjectId.class);
+
+    PersonWithIdPropertyOfTypeObjectId p1 = new PersonWithIdPropertyOfTypeObjectId();
+    p1.setFirstName("Sven");
+    p1.setAge(11);
+    template.insert(p1);
+    PersonWithIdPropertyOfTypeObjectId p2 = new PersonWithIdPropertyOfTypeObjectId();
+    p2.setFirstName("Mary");
+    p2.setAge(21);
+    template.insert(p2);
+    PersonWithIdPropertyOfTypeObjectId p3 = new PersonWithIdPropertyOfTypeObjectId();
+    p3.setFirstName("Ann");
+    p3.setAge(31);
+    template.insert(p3);
+    PersonWithIdPropertyOfTypeObjectId p4 = new PersonWithIdPropertyOfTypeObjectId();
+    p4.setFirstName("John");
+    p4.setAge(41);
+    template.insert(p4);
+
+    List<Integer> l1 = new ArrayList<Integer>();
+    l1.add(11);
+    l1.add(21);
+    l1.add(41);
+    Query q1 = new Query(Criteria.where("age").in(l1));
+    List<PersonWithIdPropertyOfTypeObjectId> results1 = template.find(q1, PersonWithIdPropertyOfTypeObjectId.class);
+    Query q2 = new Query(Criteria.where("age").in(l1.toArray()));
+    List<PersonWithIdPropertyOfTypeObjectId> results2 = template.find(q2, PersonWithIdPropertyOfTypeObjectId.class);
+    assertThat(results1.size(), is(3));
+    assertThat(results2.size(), is(3));
+	try {
+	    List<Integer> l2 = new ArrayList<Integer>();
+	    l2.add(31);
+	    Query q3 = new Query(Criteria.where("age").in(l1, l2));
+		template.find(q3, PersonWithIdPropertyOfTypeObjectId.class);
+		Assert.fail("Should have trown an InvalidDocumentStoreApiUsageException");
+	} catch (InvalidDocumentStoreApiUsageException e) {}
   }
 
   @Test

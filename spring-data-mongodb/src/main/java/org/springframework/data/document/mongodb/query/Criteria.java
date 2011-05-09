@@ -16,6 +16,7 @@
 package org.springframework.data.document.mongodb.query;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -156,11 +157,26 @@ public class Criteria implements CriteriaDefinition {
   /**
    * Creates a criterion using the $in operator
    * 
-   * @param o
+   * @param o the values to match against 
    * @return
    */
   public Criteria in(Object... o) {
+	if (o.length > 1 && o[1] instanceof Collection) {
+	  throw new InvalidDocumentStoreApiUsageException("You can only pass in one argument of type " + o[1].getClass().getName());
+	}
     criteria.put("$in", o);
+    return this;
+  }
+
+  /**
+   * Creates a criterion using the $in operator
+   * 
+   * @param c the collection containing the values to match against 
+   * @return
+   */
+  public Criteria in(Collection<?> c) {
+	  System.out.println(c.getClass());
+    criteria.put("$in", c.toArray());
     return this;
   }
 
