@@ -82,24 +82,28 @@ The host to connect to a MongoDB server.  Default is localhost
   <xsd:complexType name="mongo-repository">
     <xsd:complexContent>
       <xsd:extension base="repository:repository">
-        <xsd:attribute name="mongo-template-ref" type="mongoTemplateRef" default="mongoTemplate">
-          <xsd:annotation>
-            <xsd:documentation>
-              The reference to a MongoTemplate. Will default to 'mongoTemplate'.
-            </xsd:documentation>
-          </xsd:annotation>
-        </xsd:attribute>
-        <xsd:attribute name="mongo-mapping-context-ref" type="mappingContextRef" default="mappingContext">
-          <xsd:annotation>
-            <xsd:documentation>
-              The reference to a MappingContext. Will pick up a bean named 'mappingContext' by default if available.
-            </xsd:documentation>
-          </xsd:annotation>
-        </xsd:attribute>
+        <xsd:attributeGroup ref="mongo-repository-attributes" />
         <xsd:attributeGroup ref="repository:repository-attributes"/>
       </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>
+  
+  <xsd:attributeGroup name="mongo-repository-attributes">
+  	<xsd:attribute name="mongo-template-ref" type="mongoTemplateRef" default="mongoTemplate">
+      <xsd:annotation>
+        <xsd:documentation>
+          The reference to a MongoTemplate. Will default to 'mongoTemplate'.
+        </xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+    <xsd:attribute name="mongo-mapping-context-ref" type="mappingContextRef" default="mappingContext">
+      <xsd:annotation>
+        <xsd:documentation>
+          The reference to a MappingContext. Will pick up a bean named 'mappingContext' by default if available.
+        </xsd:documentation>
+      </xsd:annotation>
+    </xsd:attribute>
+  </xsd:attributeGroup>
 
   <xsd:element name="repositories">
     <xsd:complexType>
@@ -108,7 +112,7 @@ The host to connect to a MongoDB server.  Default is localhost
           <xsd:sequence>
             <xsd:element name="repository" minOccurs="0" maxOccurs="unbounded" type="mongo-repository"/>
           </xsd:sequence>
-          <xsd:attribute name="mongo-template-ref" type="mongoTemplateRef"/>
+          <xsd:attributeGroup ref="mongo-repository-attributes" />
           <xsd:attributeGroup ref="repository:repository-attributes"/>
         </xsd:extension>
       </xsd:complexContent>
