@@ -18,8 +18,8 @@ package org.springframework.data.document.mongodb.repository;
 import java.io.Serializable;
 import org.springframework.data.document.mongodb.mapping.BasicMongoPersistentEntity;
 import org.springframework.data.document.mongodb.mapping.MongoPersistentEntity;
+import org.springframework.data.document.mongodb.mapping.MongoPersistentProperty;
 import org.springframework.data.mapping.MappingBeanHelper;
-import org.springframework.data.mapping.model.PersistentProperty;
 import org.springframework.data.repository.support.AbstractEntityInformation;
 
 /**
@@ -50,7 +50,7 @@ public class MappingMongoEntityInformation<T, ID extends Serializable> extends A
   @SuppressWarnings("unchecked")
   public ID getId(T entity) {
 
-    PersistentProperty idProperty = entityMetadata.getIdProperty();
+    MongoPersistentProperty idProperty = entityMetadata.getIdProperty();
 
     try {
       return (ID) MappingBeanHelper.getProperty(entity, idProperty, idProperty.getType(), false);
