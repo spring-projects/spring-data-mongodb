@@ -109,12 +109,60 @@ public class MappingMongoConverterUnitTests {
     assertThat(dbObject.get(Locale.US.toString()).toString(), is("Foo"));
   }
   
+  /**
+   * @see DATADOC-128
+   */
+  @Test
+  public void usesDocumentsStoredTypeIfSubtypeOfRequest() {
+    
+    DBObject dbObject = new BasicDBObject();
+    dbObject.put("birthDate", new LocalDate());
+    dbObject.put(MappingMongoConverter.CUSTOM_TYPE_KEY, Person.class.getName());
+     
+    assertThat(converter.read(Contact.class, dbObject), is(Person.class));
+  }
+  
+  /**
+   * @see DATADOC-128
+   */
+  @Test
+  public void ignoresDocumentsStoredTypeIfCompletelyDifferentTypeRequested() {
+    
+    DBObject dbObject = new BasicDBObject();
+    dbObject.put("birthDate", new LocalDate());
+    dbObject.put(MappingMongoConverter.CUSTOM_TYPE_KEY, Person.class.getName());
+    
+    assertThat(converter.read(BirthDateContainer.class, dbObject), is(BirthDateContainer.class));
+  }
+  
+  @Test
+  public void writesTypeDiscriminatorIntoRootObject() {
+    
+    Person person = new Person();
+    person.birthDate = new LocalDate();
+    
+    DBObject result = new BasicDBObject();
+    converter.write(person, result);
+    
+    assertThat(result.containsField(MappingMongoConverter.CUSTOM_TYPE_KEY), is(true));
+    assertThat(result.get(MappingMongoConverter.CUSTOM_TYPE_KEY).toString(), is(Person.class.getName()));
+  }
+  
+  
   public static class Address {
     String street;
     String city;
   }
+ 
+  interface Contact {
+    
+  }
   
-  public static class Person {
+  public static class Person implements Contact {
+    LocalDate birthDate;
+  }
+  
+  public static class BirthDateContainer {
     LocalDate birthDate;
   }
   

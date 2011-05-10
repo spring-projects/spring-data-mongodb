@@ -78,7 +78,7 @@ import org.springframework.expression.spel.support.StandardEvaluationContext;
  */
 public class MappingMongoConverter extends AbstractMongoConverter implements ApplicationContextAware, InitializingBean {
 
-	private static final String CUSTOM_TYPE_KEY = "_class";
+	public static final String CUSTOM_TYPE_KEY = "_class";
 	@SuppressWarnings({"unchecked"})
 	private static final List<Class<?>> MONGO_TYPES = Arrays.asList(Number.class, Date.class, String.class, DBObject.class);
 	private static final List<Class<?>> VALID_ID_TYPES = Arrays.asList(new Class<?>[]{ObjectId.class, String.class, BigInteger.class, byte[].class});
@@ -113,7 +113,6 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		if (null != converters) {
 			for (Converter<?, ?> c : converters) {
 				registerConverter(c);
-
 			}
 		}
 	}
@@ -185,22 +184,23 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	  if (null == dbo) {
       return null;
     }
-
-	  Class<S> rawType = type.getType();
+	  
+	  TypeInformation<? extends S> typeToUse = getMoreConcreteTargetType(dbo, type);
+	  Class<? extends S> rawType = typeToUse.getType();
     Class<?> customTarget = getCustomTarget(rawType, DBObject.class);
 
     if (customTarget != null) {
       return conversionService.convert(dbo, rawType);
     }
 
-    if (type.isCollectionLike() && dbo instanceof BasicDBList) {
+    if (typeToUse.isCollectionLike() && dbo instanceof BasicDBList) {
       List<Object> l = new ArrayList<Object>();
       BasicDBList dbList = (BasicDBList) dbo;
       for (Object o : dbList) {
         if (o instanceof DBObject) {
           
-          Object newObj = read(type.getComponentType(), (DBObject) o);
-          Class<?> rawComponentType = type.getComponentType().getType();
+          Object newObj = read(typeToUse.getComponentType(), (DBObject) o);
+          Class<?> rawComponentType = typeToUse.getComponentType().getType();
           
           if (newObj.getClass().isAssignableFrom(rawComponentType)) {
             l.add(newObj);
@@ -215,7 +215,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
     }
 
     // Retrieve persistent entity info
-    MongoPersistentEntity<S> persistentEntity = (MongoPersistentEntity<S>) mappingContext.getPersistentEntity(type);
+    MongoPersistentEntity<S> persistentEntity = (MongoPersistentEntity<S>) mappingContext.getPersistentEntity(typeToUse);
     if (persistentEntity == null) {
       throw new MappingException("No mapping metadata found for " + rawType.getName());
     }
@@ -306,30 +306,58 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		return instance;
 	}
 
-	@SuppressWarnings("unchecked")
+  /**
+   * Root entry method into write conversion. Adds a type discriminator to the {@link DBObject}. Shouldn't be called for
+   * nested conversions.
+   * 
+   * @see org.springframework.data.document.mongodb.MongoWriter#write(java.lang.Object, com.mongodb.DBObject)
+   */
   public void write(final Object obj, final DBObject dbo) {
+	  
 		if (null == obj) {
 			return;
 		}
 
-		Class<?> customTarget = getCustomTarget(obj.getClass(), DBObject.class);
-
-		if (customTarget != null) {
-			DBObject result = conversionService.convert(obj, DBObject.class);
-			dbo.putAll(result);
-			return;
-		}
+		boolean handledByCustomConverter = getCustomTarget(obj.getClass(), DBObject.class) != null;
 		
-		if (Map.class.isAssignableFrom(obj.getClass())) {
-		  writeMapInternal((Map<Object, Object>) obj, dbo);
-		  return;
+		if (!handledByCustomConverter) {
+		  dbo.put(CUSTOM_TYPE_KEY, obj.getClass().getName());
 		}
 
-		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(obj.getClass());
-		write(obj, dbo, entity);
+		writeInternal(obj, dbo);
 	}
+	
+  /**
+   * Internal write conversion method which should be used for nested invocations.
+   * 
+   * @param obj
+   * @param dbo
+   */
+	@SuppressWarnings("unchecked")
+  protected void writeInternal(final Object obj, final DBObject dbo) {
+	  
+    if (null == obj) {
+      return;
+    }
 
-	protected void write(final Object obj, final DBObject dbo, MongoPersistentEntity<?> entity) {
+    Class<?> customTarget = getCustomTarget(obj.getClass(), DBObject.class);
+
+    if (customTarget != null) {
+      DBObject result = conversionService.convert(obj, DBObject.class);
+      dbo.putAll(result);
+      return;
+    }
+    
+    if (Map.class.isAssignableFrom(obj.getClass())) {
+      writeMapInternal((Map<Object, Object>) obj, dbo);
+      return;
+    }
+
+    MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(obj.getClass());
+    writeInternal(obj, dbo, entity);
+  }
+
+	protected void writeInternal(final Object obj, final DBObject dbo, MongoPersistentEntity<?> entity) {
 
 		if (obj == null) {
 			return;
@@ -464,7 +492,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 						BasicDBList propNestedDbList = new BasicDBList();
 						for (Object propNestedObjItem : propObjColl) {
 							BasicDBObject propDbObj = new BasicDBObject();
-							write(propNestedObjItem, propDbObj);
+							writeInternal(propNestedObjItem, propDbObj);
 							propNestedDbList.add(propDbObj);
 						}
 						dbList.add(propNestedDbList);
@@ -473,7 +501,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 					dbList.add(propObjItem);
 				} else {
 					BasicDBObject propDbObj = new BasicDBObject();
-					write(propObjItem, propDbObj, mappingContext.getPersistentEntity(prop.getComponentType()));
+					writeInternal(propObjItem, propDbObj, mappingContext.getPersistentEntity(prop.getComponentType()));
 					dbList.add(propDbObj);
 				}
 			}
@@ -505,7 +533,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		BasicDBObject propDbObj = new BasicDBObject();
-		write(obj, propDbObj, mappingContext.getPersistentEntity(prop.getTypeInformation()));
+		writeInternal(obj, propDbObj, mappingContext.getPersistentEntity(prop.getTypeInformation()));
 		dbo.put(name, propDbObj);
 	}
 
@@ -530,7 +558,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 					} else {
 						dbo.put("_class", componentType.getName());
 					}
-					write(val, newDbo);
+					writeInternal(val, newDbo);
 					dbo.put(simpleKey, newDbo);
 				}
 			} else {
@@ -672,6 +700,23 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		} catch (ClassNotFoundException e) {
 			throw new MappingException(e.getMessage(), e);
 		}
+	}
+
+  /**
+   * Inspects the a custom class definition stored inside the given {@link DBObject} and returns that in case it's a
+   * subtype of the given basic one.
+   * 
+   * @param dbObject
+   * @param basicType
+   * @return
+   */
+	@SuppressWarnings("unchecked")
+  private <S> TypeInformation<? extends S> getMoreConcreteTargetType(DBObject dbObject, TypeInformation<S> basicType) {
+    Class<?> documentsTargetType = findTypeToBeUsed(dbObject);
+    Class<S> rawType = basicType.getType();
+    boolean isMoreConcreteCustomType = documentsTargetType != null && rawType.isAssignableFrom(documentsTargetType);
+    return isMoreConcreteCustomType ? (TypeInformation<? extends S>) ClassTypeInformation.from(documentsTargetType)
+        : basicType;
 	}
 
 	protected <T> List<?> unwrapList(BasicDBList dbList, TypeInformation<T> targetType) {

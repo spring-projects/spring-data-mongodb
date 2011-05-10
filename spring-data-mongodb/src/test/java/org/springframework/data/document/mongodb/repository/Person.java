@@ -17,8 +17,6 @@ package org.springframework.data.document.mongodb.repository;
 
 import java.util.Set;
 
-import org.bson.types.ObjectId;
-import org.springframework.data.annotation.Id;
 import org.springframework.data.document.mongodb.geo.Point;
 import org.springframework.data.document.mongodb.index.GeoSpatialIndexed;
 import org.springframework.data.document.mongodb.mapping.Document;
@@ -30,10 +28,8 @@ import org.springframework.data.document.mongodb.mapping.Document;
  * @author Oliver Gierke
  */
 @Document
-public class Person {
+public class Person extends Contact {
 
-  @Id
-  private String id;
   private String firstname;
   private String lastname;
   private Integer age;
@@ -59,30 +55,11 @@ public class Person {
 
   public Person(String firstname, String lastname, Integer age) {
 
-    this.id = new ObjectId().toString();
+    super();
     this.firstname = firstname;
     this.lastname = lastname;
     this.age = age;
   }
-
-
-  /**
-   * @param id the id to set
-   */
-  public void setId(String id) {
-
-    this.id = id;
-  }
-
-
-  /**
-   * @return the id
-   */
-  public String getId() {
-
-    return id;
-  }
-
 
   /**
    * @return the firstname
@@ -182,6 +159,13 @@ public class Person {
     this.shippingAddresses = addresses;
   }
 
+  
+  /* (non-Javadoc)
+   * @see org.springframework.data.document.mongodb.repository.Contact#getName()
+   */
+  public String getName() {
+    return String.format("%s %s", firstname, lastname);
+  }
 
   /*
   * (non-Javadoc)
@@ -201,7 +185,7 @@ public class Person {
 
     Person that = (Person) obj;
 
-    return this.id.equals(that.id);
+    return this.getId().equals(that.getId());
   }
 
 
@@ -213,7 +197,7 @@ public class Person {
   @Override
   public int hashCode() {
 
-    return id.hashCode();
+    return getId().hashCode();
   }
 
   /* (non-Javadoc)
