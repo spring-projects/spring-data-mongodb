@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:mongo="http://www.springframework.org/schema/data/mongo"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+       http://www.springframework.org/schema/data/mongo http://www.springframework.org/schema/data/mongo/spring-mongo-1.0.xsd">
+
+  <mongo:mongo host="localhost" port="27017"/>
+
+  <bean id="mappingConverter1" class="org.springframework.data.document.mongodb.convert.MappingMongoConverter">
+    <constructor-arg ref="mappingContext" />
+    <property name="converters">
+      <list>
+        <bean class="org.springframework.data.document.mongodb.PersonReadConverter"/>
+        <bean class="org.springframework.data.document.mongodb.PersonWriteConverter"/>
+      </list>
+    </property>
+  </bean>
+
+  <bean id="mappingContext" class="org.springframework.data.document.mongodb.mapping.MongoMappingContext"/>
+
+  <bean id="mongoTemplate1" class="org.springframework.data.document.mongodb.MongoTemplate">
+    <constructor-arg ref="mongo"/>
+    <constructor-arg name="databaseName" value="database"/>
+    <constructor-arg ref="mappingConverter1"/>
+  </bean>
+
+  <mongo:mapping-converter id="mappingConverter2" base-package="org.springframework.data.document.mongodb.mapping"
+      mongo-template-ref="mongoTemplate2">
+      <mongo:custom-converters>
+        <mongo:converter>
+          <bean class="org.springframework.data.document.mongodb.PersonReadConverter"/>
+        </mongo:converter>
+        <mongo:converter>
+          <bean class="org.springframework.data.document.mongodb.PersonWriteConverter"/>
+        </mongo:converter>
+      </mongo:custom-converters>
+  </mongo:mapping-converter>      
+
+  <bean id="mongoTemplate2" class="org.springframework.data.document.mongodb.MongoTemplate">
+    <constructor-arg ref="mongo"/>
+    <constructor-arg name="databaseName" value="database"/>
+    <constructor-arg ref="mappingConverter2"/>
+  </bean>
+
+
+</beans>

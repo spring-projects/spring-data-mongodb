@@ -1,12 +1,18 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <xsd:schema xmlns="http://www.springframework.org/schema/data/mongo"
             xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+            xmlns:beans="http://www.springframework.org/schema/beans"
             xmlns:tool="http://www.springframework.org/schema/tool"
             xmlns:context="http://www.springframework.org/schema/context"
             xmlns:repository="http://www.springframework.org/schema/data/repository"
             targetNamespace="http://www.springframework.org/schema/data/mongo"
-            elementFormDefault="qualified" attributeFormDefault="unqualified">
+            elementFormDefault="qualified" attributeFormDefault="unqualified"
+            xsi:schemaLocation="http://www.springframework.org/schema/beans 
+            http://www.springframework.org/schema/beans/spring-beans-2.5.xsd">
+            
 
+  <xsd:import namespace="http://www.springframework.org/schema/beans" />
   <xsd:import namespace="http://www.springframework.org/schema/tool"/>
   <xsd:import namespace="http://www.springframework.org/schema/context"
               schemaLocation="http://www.springframework.org/schema/context/spring-context.xsd"/>
@@ -126,6 +132,22 @@ Defines a MongoConverter for getting rich mapping functionality.
 			]]></xsd:documentation>
     </xsd:annotation>
     <xsd:complexType>
+      <xsd:sequence>
+          <xsd:element name="custom-converters" minOccurs="0">
+            <xsd:annotation>
+              <xsd:documentation><![CDATA[
+        Top-level element that contains one or more custom converters to be used for mapping
+        domain objects to and from Mongo's DBObject
+              ]]>
+              </xsd:documentation>
+            </xsd:annotation>
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="converter" type="customConverterType" minOccurs="0" maxOccurs="unbounded" />
+              </xsd:sequence>
+            </xsd:complexType>
+          </xsd:element>
+      </xsd:sequence>
       <xsd:attribute name="id" type="xsd:ID" use="optional">
         <xsd:annotation>
           <xsd:documentation><![CDATA[
@@ -260,5 +282,30 @@ This controls whether or not on a connect, the system retries automatically.  De
     </xsd:attribute>
   </xsd:complexType>
 
+  <xsd:group name="beanElementGroup">
+    <xsd:choice>
+      <xsd:element ref="beans:bean" />
+      <xsd:element ref="beans:ref" />
+    </xsd:choice>
+  </xsd:group>
+
+  <xsd:complexType name="customConverterType">
+    <xsd:annotation>
+      <xsd:documentation><![CDATA[
+  Element defining a custom converterr.
+      ]]></xsd:documentation>
+    </xsd:annotation>
+    <xsd:group ref="beanElementGroup" minOccurs="0" maxOccurs="1" />
+    <xsd:attribute name="ref" type="xsd:string">
+      <xsd:annotation>
+        <xsd:documentation>
+          A reference to a custom converter.
+        </xsd:documentation>
+        <xsd:appinfo>
+          <tool:annotation kind="ref" />
+        </xsd:appinfo>
+      </xsd:annotation>
+    </xsd:attribute>
+  </xsd:complexType>
 
 </xsd:schema>

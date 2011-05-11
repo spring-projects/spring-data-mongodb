@@ -16,15 +16,21 @@
 
 package org.springframework.data.document.mongodb.config;
 
+import java.util.List;
 import java.util.Set;
 
+import org.springframework.beans.MutablePropertyValues;
 import org.springframework.beans.factory.BeanDefinitionStoreException;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.beans.factory.config.BeanDefinitionHolder;
 import org.springframework.beans.factory.config.RuntimeBeanReference;
+import org.springframework.beans.factory.parsing.CompositeComponentDefinition;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
+import org.springframework.beans.factory.support.ManagedList;
+import org.springframework.beans.factory.support.ManagedMap;
 import org.springframework.beans.factory.support.ManagedSet;
 import org.springframework.beans.factory.xml.AbstractBeanDefinitionParser;
 import org.springframework.beans.factory.xml.ParserContext;
@@ -37,6 +43,7 @@ import org.springframework.data.document.mongodb.mapping.MongoMappingContext;
 import org.springframework.data.document.mongodb.mapping.MongoPersistentEntityIndexCreator;
 import org.springframework.data.mapping.context.MappingContextAwareBeanPostProcessor;
 import org.springframework.util.StringUtils;
+import org.springframework.util.xml.DomUtils;
 import org.w3c.dom.Element;
 
 /**
@@ -101,6 +108,19 @@ public class MappingMongoConverterParser extends AbstractBeanDefinitionParser {
 			registry.registerBeanDefinition(INDEX_HELPER, indexHelperBuilder.getBeanDefinition());
 		}
 
+		List<Element> customConvertersElements = DomUtils.getChildElementsByTagName(element, "custom-converters");
+		if (customConvertersElements.size() == 1) {
+			Element customerConvertersElement = customConvertersElements.get(0);
+			ManagedList converterBeans = new ManagedList();
+			List<Element> listenerElements = DomUtils.getChildElementsByTagName(customerConvertersElement, "converter");
+			if (listenerElements != null) {
+				for (Element listenerElement : listenerElements) {
+					converterBeans.add(parseConverter(listenerElement, parserContext));
+				}
+			}
+			converterBuilder.addPropertyValue("converters", converterBeans);
+		}
+
 		return converterBuilder.getBeanDefinition();
 	}
 
@@ -123,5 +143,25 @@ public class MappingMongoConverterParser extends AbstractBeanDefinitionParser {
 		}
 
 		return classes;
+	}
+
+	public BeanDefinition parseConverter(Element element, ParserContext parserContext) {
+		
+		String converterRef= element.getAttribute("ref");
+		if (StringUtils.hasText(converterRef)) {
+			//TODO: need to make this work for beans not in the registry yet
+			BeanDefinition converterBean = parserContext.getRegistry().getBeanDefinition(converterRef);
+			return converterBean;
+		}
+		Element beanElement = DomUtils.getChildElementByTagName(element, "bean");
+		if (beanElement != null) {
+			BeanDefinitionHolder beanDef = parserContext.getDelegate().parseBeanDefinitionElement(beanElement);
+			beanDef = parserContext.getDelegate().decorateBeanDefinitionIfRequired(beanElement, beanDef);
+			return beanDef.getBeanDefinition();
+		}
+
+		parserContext.getReaderContext().error(
+				"Element <converter> must specify either 'ref' or contain a bean definition for the converter", element);
+		return null;
 	}
 }

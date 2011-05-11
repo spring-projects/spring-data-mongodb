@@ -12,5 +12,21 @@
 
   <mongo:mongo id="defaultMongo" host="localhost" port="27017"/>
 
+  <bean id="readConverter" class="org.springframework.data.document.mongodb.PersonReadConverter"/>
+
+  <mongo:mapping-converter>
+    <mongo:custom-converters>
+      <mongo:converter ref="readConverter"/>
+      <mongo:converter>
+        <bean class="org.springframework.data.document.mongodb.PersonWriteConverter"/>
+      </mongo:converter>
+    </mongo:custom-converters>
+  </mongo:mapping-converter>
+    
+  <bean id="mongoTemplate" class="org.springframework.data.document.mongodb.MongoTemplate">
+    <constructor-arg name="mongo" ref="mongo"/>
+    <constructor-arg name="databaseName" value="database"/>
+    <constructor-arg name="mongoConverter" ref="mappingConverter"/>
+  </bean>
 
 </beans>
