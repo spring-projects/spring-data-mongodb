@@ -73,6 +73,17 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
     assertThat(result.size(), is(4));
     assertThat(result, not(hasItem(dave)));
   }
+  
+  @Test
+  public void deletesPersonByIdCorrectly() {
+  	
+  	repository.delete(dave.getId());
+
+    List<Person> result = repository.findAll();
+
+    assertThat(result.size(), is(4));
+    assertThat(result, not(hasItem(dave)));
+  }
 
   @Test
   public void findsPersonsByLastname() throws Exception {

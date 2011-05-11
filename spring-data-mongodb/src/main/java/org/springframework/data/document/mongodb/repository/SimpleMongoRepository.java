@@ -131,6 +131,14 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements Paging
 
   /*
    * (non-Javadoc)
+   * @see org.springframework.data.repository.Repository#delete(java.io.Serializable)
+   */
+  public void delete(ID id) {
+  	delete(findOne(id));
+  }
+  
+  /*
+   * (non-Javadoc)
    * 
    * @see
    * org.springframework.data.repository.Repository#delete(java.lang.Object)
