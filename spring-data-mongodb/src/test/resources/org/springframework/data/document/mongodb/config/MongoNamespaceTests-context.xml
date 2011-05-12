@@ -12,8 +12,6 @@
 
   <mongo:mongo id="defaultMongo" host="localhost" port="27017"/>
 
-  <bean id="readConverter" class="org.springframework.data.document.mongodb.PersonReadConverter"/>
-
   <mongo:mapping-converter>
     <mongo:custom-converters>
       <mongo:converter ref="readConverter"/>
@@ -23,6 +21,8 @@
     </mongo:custom-converters>
   </mongo:mapping-converter>
     
+  <bean id="readConverter" class="org.springframework.data.document.mongodb.PersonReadConverter"/>
+
   <bean id="mongoTemplate" class="org.springframework.data.document.mongodb.MongoTemplate">
     <constructor-arg name="mongo" ref="mongo"/>
     <constructor-arg name="databaseName" value="database"/>

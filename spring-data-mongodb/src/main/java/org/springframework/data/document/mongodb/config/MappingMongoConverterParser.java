@@ -19,11 +19,13 @@ package org.springframework.data.document.mongodb.config;
 import java.util.List;
 import java.util.Set;
 
+import org.springframework.beans.BeanMetadataElement;
 import org.springframework.beans.MutablePropertyValues;
 import org.springframework.beans.factory.BeanDefinitionStoreException;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinitionHolder;
+import org.springframework.beans.factory.config.RuntimeBeanNameReference;
 import org.springframework.beans.factory.config.RuntimeBeanReference;
 import org.springframework.beans.factory.parsing.CompositeComponentDefinition;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
@@ -145,23 +147,21 @@ public class MappingMongoConverterParser extends AbstractBeanDefinitionParser {
 		return classes;
 	}
 
-	public BeanDefinition parseConverter(Element element, ParserContext parserContext) {
+	public BeanMetadataElement parseConverter(Element element, ParserContext parserContext) {
 		
 		String converterRef= element.getAttribute("ref");
 		if (StringUtils.hasText(converterRef)) {
-			//TODO: need to make this work for beans not in the registry yet
-			BeanDefinition converterBean = parserContext.getRegistry().getBeanDefinition(converterRef);
-			return converterBean;
+			return new RuntimeBeanReference(converterRef);
 		}
 		Element beanElement = DomUtils.getChildElementByTagName(element, "bean");
 		if (beanElement != null) {
 			BeanDefinitionHolder beanDef = parserContext.getDelegate().parseBeanDefinitionElement(beanElement);
 			beanDef = parserContext.getDelegate().decorateBeanDefinitionIfRequired(beanElement, beanDef);
-			return beanDef.getBeanDefinition();
+			return beanDef;
 		}
 
 		parserContext.getReaderContext().error(
-				"Element <converter> must specify either 'ref' or contain a bean definition for the converter", element);
+				"Element <converter> must specify 'ref' or contain a bean definition for the converter", element);
 		return null;
 	}
 }
