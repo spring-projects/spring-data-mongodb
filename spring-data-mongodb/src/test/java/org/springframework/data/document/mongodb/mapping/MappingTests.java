@@ -122,6 +122,12 @@ public class MappingTests {
 		assertThat(result2.size(), is(1));
 		assertNotNull(result2.get(0).getLastName());
 		assertThat(result2.get(0).getLastName(), is("LastName"));
+
+		// Test "in" query
+		List<PersonCustomIdName> result3 = template.find(new Query(Criteria.where("lastName").in("LastName")), PersonCustomIdName.class);
+		assertThat(result3.size(), is(1));
+		assertNotNull(result3.get(0).getLastName());
+		assertThat(result3.get(0).getLastName(), is("LastName"));
 	}
 
 	@Test
@@ -338,6 +344,22 @@ public class MappingTests {
 
 		Person p2 = template.findOne(query(where("ssn").is(1111)), Person.class);
 		assertThat(p2.getAddress().getCity(), is("New Town"));
+	}
+
+	@Test
+	public void testOrQuery() {
+		PersonPojo p1 = new PersonPojo(1, "first", "");
+		template.save(p1);
+		PersonPojo p2 = new PersonPojo(2, "second", "");
+		template.save(p2);
+
+		Query one = query(where("ssn").is(1));
+		Query two = query(where("ssn").is(2));
+		List<PersonPojo> results = template.find(new Query().or(one, two), PersonPojo.class);
+
+		assertNotNull(results);
+		assertThat(results.size(), is(2));
+		assertThat(results.get(1).getSsn(), is(2));
 	}
 
 }

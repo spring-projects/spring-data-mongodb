@@ -16,10 +16,12 @@
 package org.springframework.data.document.mongodb.query;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
+import org.bson.types.BasicBSONList;
 import org.bson.types.ObjectId;
 import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.data.document.mongodb.convert.MongoConverter;
@@ -39,22 +41,22 @@ public class QueryMapper {
 
 	/**
 	 * Creates a new {@link QueryMapper} with the given {@link MongoConverter}.
-	 * 
+	 *
 	 * @param converter
 	 */
 	public QueryMapper(MongoConverter converter) {
-	  Assert.notNull(converter);
+		Assert.notNull(converter);
 		this.converter = converter;
 	}
 
-  /**
-   * Replaces the property keys used in the given {@link DBObject} with the appropriate keys by using the
-   * {@link PersistentEntity} metadata.
-   * 
-   * @param query
-   * @param entity
-   * @return
-   */
+	/**
+	 * Replaces the property keys used in the given {@link DBObject} with the appropriate keys by using the
+	 * {@link PersistentEntity} metadata.
+	 *
+	 * @param query
+	 * @param entity
+	 * @return
+	 */
 	public DBObject getMappedObject(DBObject query, MongoPersistentEntity<?> entity) {
 		String idKey = null;
 		if (null != entity && entity.getIdProperty() != null) {
@@ -71,17 +73,25 @@ public class QueryMapper {
 			Object value = query.get(key);
 			if (key.equals(idKey)) {
 				if (value instanceof DBObject) {
-					if ("$in".equals(key)) {
+					DBObject valueDbo = (DBObject) value;
+					if (valueDbo.containsField("$in") || valueDbo.containsField("$nin")) {
+						String inKey = valueDbo.containsField("$in") ? "$in" : "$nin";
 						List<Object> ids = new ArrayList<Object>();
-						for (Object id : (Object[]) ((DBObject) value).get("$in")) {
+						for (Object id : (Object[]) valueDbo.get(inKey)) {
 							if (null != converter && !(id instanceof ObjectId)) {
-								ObjectId oid = converter.convertObjectId(id);
-								ids.add(oid);
+								try {
+									ObjectId oid = converter.convertObjectId(id);
+									ids.add(oid);
+								} catch (ConversionFailedException ignored) {
+									ids.add(id);
+								}
 							} else {
 								ids.add(id);
 							}
 						}
-						newDbo.put("$in", ids.toArray(new ObjectId[ids.size()]));
+						valueDbo.put(inKey, ids.toArray(new Object[ids.size()]));
+					} else {
+						value = getMappedObject((DBObject) value, entity);
 					}
 				} else if (null != converter) {
 					try {
@@ -90,6 +100,15 @@ public class QueryMapper {
 					}
 				}
 				newKey = "_id";
+			} else if (key.startsWith("$") && key.endsWith("or")) {
+				// $or/$nor
+				BasicBSONList conditions = (BasicBSONList) value;
+				BasicBSONList newConditions = new BasicBSONList();
+				Iterator iter = conditions.iterator();
+				while (iter.hasNext()) {
+					newConditions.add(getMappedObject((DBObject) iter.next(), entity));
+				}
+				value = newConditions;
 			} else {
 				// TODO: Implement other forms of conversion (like @Alias and whatnot)
 			}
