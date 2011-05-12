@@ -28,11 +28,8 @@ import org.springframework.data.document.mongodb.MongoTemplate;
 import org.springframework.data.document.mongodb.convert.MappingMongoConverter;
 import org.springframework.data.document.mongodb.mapping.Document;
 import org.springframework.data.document.mongodb.mapping.MongoMappingContext;
-import org.springframework.data.document.mongodb.mapping.MongoPersistentEntity;
 import org.springframework.data.document.mongodb.mapping.MongoPersistentEntityIndexCreator;
-import org.springframework.data.document.mongodb.mapping.MongoPersistentProperty;
 import org.springframework.data.mapping.context.MappingContextAwareBeanPostProcessor;
-import org.springframework.data.mapping.model.MappingContext;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
 

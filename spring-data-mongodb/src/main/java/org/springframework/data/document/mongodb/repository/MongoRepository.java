@@ -28,6 +28,13 @@ import org.springframework.data.repository.PagingAndSortingRepository;
  */
 public interface MongoRepository<T, ID extends Serializable> extends PagingAndSortingRepository<T, ID> {
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.springframework.data.repository.Repository#save(java.lang.Iterable)
+	 */
+	List<T> save(Iterable<? extends T> entites);
+	
   /*
     * (non-Javadoc)
     *

@@ -34,6 +34,7 @@ import org.springframework.data.document.mongodb.query.Index;
 import org.springframework.data.document.mongodb.query.Order;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mapping.model.MappingContext;
+import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.query.QueryLookupStrategy;
 import org.springframework.data.repository.query.QueryLookupStrategy.Key;
 import org.springframework.data.repository.query.RepositoryQuery;
@@ -52,7 +53,7 @@ import org.springframework.util.StringUtils;
  *
  * @author Oliver Gierke
  */
-public class MongoRepositoryFactoryBean<T extends MongoRepository<S, ID>, S, ID extends Serializable> extends
+public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID extends Serializable> extends
     RepositoryFactoryBeanSupport<T, S, ID> {
 
   private MongoTemplate template;

@@ -15,7 +15,6 @@
  */
 package org.springframework.data.document.mongodb.config;
 
-import org.springframework.data.document.mongodb.repository.MongoRepository;
 import org.springframework.data.document.mongodb.repository.MongoRepositoryFactoryBean;
 import org.springframework.data.repository.config.AutomaticRepositoryConfigInformation;
 import org.springframework.data.repository.config.ManualRepositoryConfigInformation;
@@ -82,19 +81,6 @@ public class SimpleMongoRepositoryConfiguration extends RepositoryConfig<SimpleM
       String interfaceName) {
 
     return new AutomaticMongoRepositoryConfiguration(interfaceName, this);
-  }
-
-
-  /*
-  * (non-Javadoc)
-  *
-  * @see
-  * org.springframework.data.repository.config.GlobalRepositoryConfigInformation
-  * #getRepositoryBaseInterface()
-  */
-  public Class<?> getRepositoryBaseInterface() {
-
-    return MongoRepository.class;
   }
 
 
