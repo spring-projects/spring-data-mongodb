@@ -68,7 +68,7 @@ The Mongo Replica set database addresses
 The name of the mongo definition (by default "mongo").]]></xsd:documentation>
         </xsd:annotation>
       </xsd:attribute>
-      <xsd:attribute name="port" type="xsd:positiveInteger" use="optional">
+      <xsd:attribute name="port" type="xsd:string" use="optional">
         <xsd:annotation>
           <xsd:documentation><![CDATA[
 The port to connect to MongoDB server.  Default is 27017
@@ -236,7 +236,7 @@ The name of the Mongo object that determines what server to monitor. (by default
  
   
   <xsd:complexType name="optionsType">
-    <xsd:attribute name="connectionsPerHost" type="xsd:positiveInteger">
+    <xsd:attribute name="connectionsPerHost" type="xsd:string">
       <xsd:annotation>
         <xsd:documentation><![CDATA[
 The number of connections allowed per host.  Will block if run out.	 Default is 10.  System property MONGO.POOLSIZE can override	
@@ -252,28 +252,28 @@ then 50 threads can block more than that and an exception will be thrown.
 				]]></xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
-    <xsd:attribute name="maxWaitTime" type="xsd:positiveInteger">
+    <xsd:attribute name="maxWaitTime" type="xsd:string">
       <xsd:annotation>
         <xsd:documentation><![CDATA[
 The max wait time of a blocking thread for a connection. Default is 12000 ms (2 minutes)	
 				]]></xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
-    <xsd:attribute name="connectTimeout" type="xsd:positiveInteger">
+    <xsd:attribute name="connectTimeout" type="xsd:string">
       <xsd:annotation>
         <xsd:documentation><![CDATA[
 The connect timeout in milliseconds. 0 is default and infinite.	
 				]]></xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
-    <xsd:attribute name="socketTimeout" type="xsd:positiveInteger">
+    <xsd:attribute name="socketTimeout" type="xsd:string">
       <xsd:annotation>
         <xsd:documentation><![CDATA[
 The socket timeout.  0 is default and infinite.
 				]]></xsd:documentation>
       </xsd:annotation>
     </xsd:attribute>
-    <xsd:attribute name="autoConnectRetry" type="xsd:boolean">
+    <xsd:attribute name="autoConnectRetry" type="xsd:string">
       <xsd:annotation>
         <xsd:documentation><![CDATA[
 This controls whether or not on a connect, the system retries automatically.  Default is false. 

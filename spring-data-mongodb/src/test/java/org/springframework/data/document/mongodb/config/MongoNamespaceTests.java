@@ -28,6 +28,9 @@ import org.springframework.data.document.mongodb.MongoFactoryBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import com.mongodb.Mongo;
+import com.mongodb.MongoOptions;
+
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration
 public class MongoNamespaceTests {
@@ -35,9 +38,10 @@ public class MongoNamespaceTests {
 	@Autowired
 	private ApplicationContext ctx;
 
+	@Test
 	public void testMongoSingleton() throws Exception {
-		assertTrue(ctx.containsBean("mongo"));
-		MongoFactoryBean mfb = (MongoFactoryBean) ctx.getBean("&mongo");
+		assertTrue(ctx.containsBean("noAttrMongo"));
+		MongoFactoryBean mfb = (MongoFactoryBean) ctx.getBean("&noAttrMongo");
 		assertNull(readField("host", mfb));
 		assertNull(readField("port", mfb));
 	}
@@ -50,6 +54,22 @@ public class MongoNamespaceTests {
 		Integer port = readField("port", mfb);
 		assertEquals("localhost", host);
 		assertEquals(new Integer(27017), port);
+	}
+
+	@Test
+	public void testMongoSingletonWithPropertyPlaceHolders() throws Exception {
+		assertTrue(ctx.containsBean("mongo"));
+		MongoFactoryBean mfb = (MongoFactoryBean) ctx.getBean("&mongo");
+		String host = readField("host", mfb);
+		Integer port = readField("port", mfb);
+		assertEquals("127.0.0.1", host);
+		assertEquals(new Integer(27017), port);
+		Mongo mongo = mfb.getObject();
+		MongoOptions mongoOpts = mongo.getMongoOptions(); 
+		assertEquals(8, mongoOpts.connectionsPerHost);
+		assertEquals(1000, mongoOpts.connectTimeout);
+		assertEquals(1500, mongoOpts.maxWaitTime);
+		assertEquals(false, mongoOpts.autoConnectRetry);
 	}
 
 	@SuppressWarnings({ "unchecked" })
