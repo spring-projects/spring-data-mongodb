@@ -28,67 +28,68 @@ import org.springframework.util.xml.DomUtils;
 import org.w3c.dom.Element;
 
 /**
- * Parser for &lt;mongo;gt; definitions.  If no name
- *
+ * Parser for &lt;mongo;gt; definitions. If no name
+ * 
  * @author Mark Pollack
  */
 public class MongoParser extends AbstractSingleBeanDefinitionParser {
 
-  protected Class<?> getBeanClass(Element element) {
-    return MongoFactoryBean.class;
-  }
+	protected Class<?> getBeanClass(Element element) {
+		return MongoFactoryBean.class;
+	}
 
-  @Override
-  protected void doParse(Element element, ParserContext parserContext, BeanDefinitionBuilder builder) {
-    super.doParse(element, builder);
+	@Override
+	protected void doParse(Element element, ParserContext parserContext, BeanDefinitionBuilder builder) {
+		super.doParse(element, builder);
 
-    setPropertyValue(element, builder, "port", "port");
-    setPropertyValue(element, builder, "host", "host");
+		setPropertyValue(element, builder, "port", "port");
+		setPropertyValue(element, builder, "host", "host");
 
-    parseOptions(parserContext, element, builder);
+		parseOptions(parserContext, element, builder);
 
-  }
+	}
 
-  /**
-   * Parses the options sub-element. Populates the given attribute factory with the proper attributes.
-   *
-   * @param element
-   * @param attrBuilder
-   * @return true if parsing actually occured, false otherwise
-   */
-  private boolean parseOptions(ParserContext parserContext, Element element,
-                               BeanDefinitionBuilder mongoBuilder) {
-    Element optionsElement = DomUtils.getChildElementByTagName(element, "options");
-    if (optionsElement == null)
-      return false;
+	/**
+	 * Parses the options sub-element. Populates the given attribute factory with the proper attributes.
+	 * 
+	 * @param element
+	 * @param attrBuilder
+	 * @return true if parsing actually occured, false otherwise
+	 */
+	private boolean parseOptions(ParserContext parserContext, Element element, BeanDefinitionBuilder mongoBuilder) {
+		Element optionsElement = DomUtils.getChildElementByTagName(element, "options");
+		if (optionsElement == null)
+			return false;
 
-    BeanDefinitionBuilder optionsDefBuilder = BeanDefinitionBuilder.genericBeanDefinition(MongoOptionsFactoryBean.class);
+		BeanDefinitionBuilder optionsDefBuilder = BeanDefinitionBuilder
+				.genericBeanDefinition(MongoOptionsFactoryBean.class);
 
-    setPropertyValue(optionsElement, optionsDefBuilder, "connectionsPerHost", "connectionsPerHost");
-    setPropertyValue(optionsElement, optionsDefBuilder, "threadsAllowedToBlockForConnectionMultiplier", "threadsAllowedToBlockForConnectionMultiplier");
-    setPropertyValue(optionsElement, optionsDefBuilder, "maxWaitTime", "maxWaitTime");
-    setPropertyValue(optionsElement, optionsDefBuilder, "connectTimeout", "connectTimeout");
-    setPropertyValue(optionsElement, optionsDefBuilder, "socketTimeout", "socketTimeout");
-    setPropertyValue(optionsElement, optionsDefBuilder, "autoConnectRetry", "autoConnectRetry");
+		setPropertyValue(optionsElement, optionsDefBuilder, "connectionsPerHost", "connectionsPerHost");
+		setPropertyValue(optionsElement, optionsDefBuilder, "threadsAllowedToBlockForConnectionMultiplier",
+				"threadsAllowedToBlockForConnectionMultiplier");
+		setPropertyValue(optionsElement, optionsDefBuilder, "maxWaitTime", "maxWaitTime");
+		setPropertyValue(optionsElement, optionsDefBuilder, "connectTimeout", "connectTimeout");
+		setPropertyValue(optionsElement, optionsDefBuilder, "socketTimeout", "socketTimeout");
+		setPropertyValue(optionsElement, optionsDefBuilder, "autoConnectRetry", "autoConnectRetry");
 
-    mongoBuilder.addPropertyValue("mongoOptions", optionsDefBuilder.getBeanDefinition());
-    return true;
-  }
+		mongoBuilder.addPropertyValue("mongoOptions", optionsDefBuilder.getBeanDefinition());
+		return true;
+	}
 
-  @Override
-  protected String resolveId(Element element, AbstractBeanDefinition definition, ParserContext parserContext)
-      throws BeanDefinitionStoreException {
-    String name = super.resolveId(element, definition, parserContext);
-    if (!StringUtils.hasText(name)) {
-      name = "mongo";
-    }
-    return name;
-  }
+	@Override
+	protected String resolveId(Element element, AbstractBeanDefinition definition, ParserContext parserContext)
+			throws BeanDefinitionStoreException {
+		String name = super.resolveId(element, definition, parserContext);
+		if (!StringUtils.hasText(name)) {
+			name = "mongo";
+		}
+		return name;
+	}
 
-  private void setPropertyValue(Element element, BeanDefinitionBuilder builder, String attrName, String propertyName) {
-    String attr = element.getAttribute(attrName);
-    if (StringUtils.hasText(attr)) {
-      builder.addPropertyValue(propertyName, attr);
-    }
-  }
+	private void setPropertyValue(Element element, BeanDefinitionBuilder builder, String attrName, String propertyName) {
+		String attr = element.getAttribute(attrName);
+		if (StringUtils.hasText(attr)) {
+			builder.addPropertyValue(propertyName, attr);
+		}
+	}
 }

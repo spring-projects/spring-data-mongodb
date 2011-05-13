@@ -20,74 +20,73 @@ import org.springframework.data.document.mongodb.index.IndexDefinition;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
-
 public class GeospatialIndex implements IndexDefinition {
 
-  private String keyField;
+	private String keyField;
 
-  private String name;
+	private String name;
 
-  private Integer min = null;
+	private Integer min = null;
 
-  private Integer max = null;
-  
-  private Integer bits = null;
+	private Integer max = null;
 
-  public GeospatialIndex(String key) {
-    keyField = key;
-  }
+	private Integer bits = null;
 
-  public GeospatialIndex named(String name) {
-    this.name = name;
-    return this;
-  }
+	public GeospatialIndex(String key) {
+		keyField = key;
+	}
 
-  public GeospatialIndex withMin(int min) {
-    this.min = Integer.valueOf(min);
-    return this;
-  }
+	public GeospatialIndex named(String name) {
+		this.name = name;
+		return this;
+	}
 
-  public GeospatialIndex withMax(int max) {
-    this.max = Integer.valueOf(max);
-    return this;
-  }
+	public GeospatialIndex withMin(int min) {
+		this.min = Integer.valueOf(min);
+		return this;
+	}
 
-  public GeospatialIndex withBits(int bits) {
-    this.bits = Integer.valueOf(bits);
-    return this;
-  }
-  
-  public DBObject getIndexKeys() {
-    DBObject dbo = new BasicDBObject();
-    dbo.put(keyField, "2d");
-    return dbo;
-  }
+	public GeospatialIndex withMax(int max) {
+		this.max = Integer.valueOf(max);
+		return this;
+	}
 
-  public DBObject getIndexOptions() {
-    if (name == null && min == null && max == null) {
-      return null;
-    }
-    DBObject dbo = new BasicDBObject();
-    if (name != null) {
-      dbo.put("name", name);
-    }
-    if (min != null) {
-      dbo.put("min", min);
-    }
-    if (max != null) {
-      dbo.put("max", max);
-    }
-    if (bits != null) {
-      dbo.put("bits", bits);
-    }
-    return dbo;
-  }
+	public GeospatialIndex withBits(int bits) {
+		this.bits = Integer.valueOf(bits);
+		return this;
+	}
 
-  /* (non-Javadoc)
-   * @see java.lang.Object#toString()
-   */
-  @Override
-  public String toString() {
-    return String.format("Geo index: %s - Options: %s", getIndexKeys(), getIndexOptions());
-  }
+	public DBObject getIndexKeys() {
+		DBObject dbo = new BasicDBObject();
+		dbo.put(keyField, "2d");
+		return dbo;
+	}
+
+	public DBObject getIndexOptions() {
+		if (name == null && min == null && max == null) {
+			return null;
+		}
+		DBObject dbo = new BasicDBObject();
+		if (name != null) {
+			dbo.put("name", name);
+		}
+		if (min != null) {
+			dbo.put("min", min);
+		}
+		if (max != null) {
+			dbo.put("max", max);
+		}
+		if (bits != null) {
+			dbo.put("bits", bits);
+		}
+		return dbo;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return String.format("Geo index: %s - Options: %s", getIndexKeys(), getIndexOptions());
+	}
 }

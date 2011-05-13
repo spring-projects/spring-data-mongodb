@@ -23,31 +23,31 @@ import org.springframework.jmx.support.MetricType;
 
 /**
  * JMX Metrics for Connections
- *
+ * 
  * @author Mark Pollack
  */
 @ManagedResource(description = "Connection metrics")
 public class ConnectionMetrics extends AbstractMonitor {
 
-  public ConnectionMetrics(Mongo mongo) {
-    this.mongo = mongo;
-  }
+	public ConnectionMetrics(Mongo mongo) {
+		this.mongo = mongo;
+	}
 
-  @ManagedMetric(metricType = MetricType.GAUGE, displayName = "Current Connections")
-  public int getCurrent() {
-    return getConnectionData("current", java.lang.Integer.class);
-  }
+	@ManagedMetric(metricType = MetricType.GAUGE, displayName = "Current Connections")
+	public int getCurrent() {
+		return getConnectionData("current", java.lang.Integer.class);
+	}
 
-  @ManagedMetric(metricType = MetricType.GAUGE, displayName = "Available Connections")
-  public int getAvailable() {
-    return getConnectionData("available", java.lang.Integer.class);
-  }
+	@ManagedMetric(metricType = MetricType.GAUGE, displayName = "Available Connections")
+	public int getAvailable() {
+		return getConnectionData("available", java.lang.Integer.class);
+	}
 
-  @SuppressWarnings("unchecked")
-  private <T> T getConnectionData(String key, Class<T> targetClass) {
-    DBObject mem = (DBObject) getServerStatus().get("connections");
-    //Class c = mem.get(key).getClass();
-    return (T) mem.get(key);
-  }
+	@SuppressWarnings("unchecked")
+	private <T> T getConnectionData(String key, Class<T> targetClass) {
+		DBObject mem = (DBObject) getServerStatus().get("connections");
+		// Class c = mem.get(key).getClass();
+		return (T) mem.get(key);
+	}
 
 }

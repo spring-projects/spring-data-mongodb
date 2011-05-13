@@ -23,18 +23,18 @@ import java.util.List;
  */
 public class PersonSimpleList extends BasePerson {
 
-  private List<String> nicknames;
+	private List<String> nicknames;
 
-  public PersonSimpleList(Integer ssn, String firstName, String lastName) {
-    super(ssn, firstName, lastName);
-  }
+	public PersonSimpleList(Integer ssn, String firstName, String lastName) {
+		super(ssn, firstName, lastName);
+	}
 
-  public List<String> getNicknames() {
-    return nicknames;
-  }
+	public List<String> getNicknames() {
+		return nicknames;
+	}
 
-  public void setNicknames(List<String> nicknames) {
-    this.nicknames = nicknames;
-  }
+	public void setNicknames(List<String> nicknames) {
+		this.nicknames = nicknames;
+	}
 
 }

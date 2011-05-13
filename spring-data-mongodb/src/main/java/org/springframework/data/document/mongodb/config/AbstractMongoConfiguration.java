@@ -38,61 +38,63 @@ import com.mongodb.Mongo;
 @Configuration
 public abstract class AbstractMongoConfiguration {
 
+	@Bean
+	public abstract Mongo mongo() throws Exception;
 
-  @Bean
-  public abstract Mongo mongo() throws Exception;
-  
-  @Bean
-  public abstract MongoTemplate mongoTemplate() throws Exception;
-  
-  public String getMappingBasePackage() {
-    return "";
-  }
- 
-  
-  @Bean
-  public MongoMappingContext mongoMappingContext() throws ClassNotFoundException, LinkageError {
-    MongoMappingContext mappingContext = new MongoMappingContext();
-    String basePackage = getMappingBasePackage();
-    if (StringUtils.hasText(basePackage)) {
-      ClassPathScanningCandidateComponentProvider componentProvider = new ClassPathScanningCandidateComponentProvider(false);
-      componentProvider.addIncludeFilter(new AnnotationTypeFilter(Document.class));
-      componentProvider.addIncludeFilter(new AnnotationTypeFilter(Persistent.class));
-      
-      Set<Class<?>> initialEntitySet = new HashSet<Class<?>>();
-      for (BeanDefinition candidate : componentProvider.findCandidateComponents(basePackage)) {
-        initialEntitySet.add(ClassUtils.forName(candidate.getBeanClassName(), mappingContext.getClass().getClassLoader()));
-      }
-      mappingContext.setInitialEntitySet(initialEntitySet);
-    }
-    return mappingContext;
-  }
-  
-  @Bean
-  public MappingMongoConverter mappingMongoConverter() throws Exception {
-    MappingMongoConverter converter = new MappingMongoConverter(mongoMappingContext());
-    converter.setMongo(mongo());
-    afterMappingMongoConverterCreation(converter);
-    return converter;
-  }
-  
-  /**
-   * Hook that allows post-processing after the MappingMongoConverter has been
-   * successfully created.
-   * @param converter
-   */
-  protected void afterMappingMongoConverterCreation(MappingMongoConverter converter) {
-  }
+	@Bean
+	public abstract MongoTemplate mongoTemplate() throws Exception;
 
-  @Bean
-  public MappingContextAwareBeanPostProcessor mappingContextAwareBeanPostProcessor() {
-    MappingContextAwareBeanPostProcessor bpp = new MappingContextAwareBeanPostProcessor();
-    bpp.setMappingContextBeanName("mongoMappingContext");
-    return bpp;
-  }
-  
-  @Bean MongoPersistentEntityIndexCreator mongoPersistentEntityIndexCreator() throws Exception {
-    MongoPersistentEntityIndexCreator indexCreator = new MongoPersistentEntityIndexCreator(mongoMappingContext(), mongoTemplate() );
-    return indexCreator;
-  }
+	public String getMappingBasePackage() {
+		return "";
+	}
+
+	@Bean
+	public MongoMappingContext mongoMappingContext() throws ClassNotFoundException, LinkageError {
+		MongoMappingContext mappingContext = new MongoMappingContext();
+		String basePackage = getMappingBasePackage();
+		if (StringUtils.hasText(basePackage)) {
+			ClassPathScanningCandidateComponentProvider componentProvider = new ClassPathScanningCandidateComponentProvider(
+					false);
+			componentProvider.addIncludeFilter(new AnnotationTypeFilter(Document.class));
+			componentProvider.addIncludeFilter(new AnnotationTypeFilter(Persistent.class));
+
+			Set<Class<?>> initialEntitySet = new HashSet<Class<?>>();
+			for (BeanDefinition candidate : componentProvider.findCandidateComponents(basePackage)) {
+				initialEntitySet.add(ClassUtils.forName(candidate.getBeanClassName(), mappingContext.getClass()
+						.getClassLoader()));
+			}
+			mappingContext.setInitialEntitySet(initialEntitySet);
+		}
+		return mappingContext;
+	}
+
+	@Bean
+	public MappingMongoConverter mappingMongoConverter() throws Exception {
+		MappingMongoConverter converter = new MappingMongoConverter(mongoMappingContext());
+		converter.setMongo(mongo());
+		afterMappingMongoConverterCreation(converter);
+		return converter;
+	}
+
+	/**
+	 * Hook that allows post-processing after the MappingMongoConverter has been successfully created.
+	 * 
+	 * @param converter
+	 */
+	protected void afterMappingMongoConverterCreation(MappingMongoConverter converter) {
+	}
+
+	@Bean
+	public MappingContextAwareBeanPostProcessor mappingContextAwareBeanPostProcessor() {
+		MappingContextAwareBeanPostProcessor bpp = new MappingContextAwareBeanPostProcessor();
+		bpp.setMappingContextBeanName("mongoMappingContext");
+		return bpp;
+	}
+
+	@Bean
+	MongoPersistentEntityIndexCreator mongoPersistentEntityIndexCreator() throws Exception {
+		MongoPersistentEntityIndexCreator indexCreator = new MongoPersistentEntityIndexCreator(mongoMappingContext(),
+				mongoTemplate());
+		return indexCreator;
+	}
 }

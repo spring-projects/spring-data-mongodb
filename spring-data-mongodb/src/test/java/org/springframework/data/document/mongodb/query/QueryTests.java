@@ -32,8 +32,7 @@ public class QueryTests {
 
 	@Test
 	public void testQueryWithNot() {
-		Query q = new Query(where("name").is("Thomas").and("age").not()
-				.mod(10, 0));
+		Query q = new Query(where("name").is("Thomas").and("age").not().mod(10, 0));
 		String expected = "{ \"name\" : \"Thomas\" , \"age\" : { \"$not\" : { \"$mod\" : [ 10 , 0]}}}";
 		Assert.assertEquals(expected, q.getQueryObject().toString());
 	}
@@ -43,30 +42,29 @@ public class QueryTests {
 		try {
 			new Query(where("name").not().is("Thomas"));
 			Assert.fail("This should have caused an InvalidDocumentStoreApiUsageException");
-		} catch (InvalidDocumentStoreApiUsageException e) {}
+		} catch (InvalidDocumentStoreApiUsageException e) {
+		}
 	}
 
 	@Test
 	public void testOrQuery() {
-		Query q = new OrQuery(new Query(where("name").is("Sven").and("age")
-				.lt(50)), new Query(where("age").lt(50)), new BasicQuery(
-				"{'name' : 'Thomas'}"));
+		Query q = new OrQuery(new Query(where("name").is("Sven").and("age").lt(50)), new Query(where("age").lt(50)),
+				new BasicQuery("{'name' : 'Thomas'}"));
 		String expected = "{ \"$or\" : [ { \"name\" : \"Sven\" , \"age\" : { \"$lt\" : 50}} , { \"age\" : { \"$lt\" : 50}} , { \"name\" : \"Thomas\"}]}";
 		Assert.assertEquals(expected, q.getQueryObject().toString());
 	}
 
 	@Test
 	public void testNorQuery() {
-		Query q = new NorQuery(new Query(where("name").is("Sven")), new Query(
-				where("age").lt(50)), new BasicQuery("{'name' : 'Thomas'}"));
+		Query q = new NorQuery(new Query(where("name").is("Sven")), new Query(where("age").lt(50)), new BasicQuery(
+				"{'name' : 'Thomas'}"));
 		String expected = "{ \"$nor\" : [ { \"name\" : \"Sven\"} , { \"age\" : { \"$lt\" : 50}} , { \"name\" : \"Thomas\"}]}";
 		Assert.assertEquals(expected, q.getQueryObject().toString());
 	}
 
 	@Test
 	public void testQueryWithLimit() {
-		Query q = new Query(where("name").gte("M").lte("T").and("age").not()
-				.gt(22));
+		Query q = new Query(where("name").gte("M").lte("T").and("age").not().gt(22));
 		q.limit(50);
 		String expected = "{ \"name\" : { \"$gte\" : \"M\" , \"$lte\" : \"T\"} , \"age\" : { \"$not\" : { \"$gt\" : 22}}}";
 		Assert.assertEquals(expected, q.getQueryObject().toString());
@@ -75,8 +73,7 @@ public class QueryTests {
 
 	@Test
 	public void testQueryWithFieldsAndSlice() {
-		Query q = new Query(where("name").gte("M").lte("T").and("age").not()
-				.gt(22));
+		Query q = new Query(where("name").gte("M").lte("T").and("age").not().gt(22));
 		q.fields().exclude("address").include("name").slice("orders", 10);
 
 		String expected = "{ \"name\" : { \"$gte\" : \"M\" , \"$lte\" : \"T\"} , \"age\" : { \"$not\" : { \"$gt\" : 22}}}";
@@ -87,8 +84,7 @@ public class QueryTests {
 
 	@Test
 	public void testBasicQuery() {
-		Query q = new BasicQuery("{ \"name\" : \"Thomas\"}").addCriteria(where(
-				"age").lt(80));
+		Query q = new BasicQuery("{ \"name\" : \"Thomas\"}").addCriteria(where("age").lt(80));
 		String expected = "{ \"name\" : \"Thomas\" , \"age\" : { \"$lt\" : 80}}";
 		Assert.assertEquals(expected, q.getQueryObject().toString());
 	}
@@ -102,8 +98,8 @@ public class QueryTests {
 
 	@Test
 	public void testComplexQueryWithMultipleChainedCriteria() {
-		Query q = new Query(where("name").regex("^T.*").and("age").gt(20)
-				.lt(80).and("city").in("Stockholm", "London", "New York"));
+		Query q = new Query(where("name").regex("^T.*").and("age").gt(20).lt(80).and("city")
+				.in("Stockholm", "London", "New York"));
 		String expected = "{ \"name\" : { \"$regex\" : \"^T.*\"} , \"age\" : { \"$gt\" : 20 , \"$lt\" : 80} , "
 				+ "\"city\" : { \"$in\" : [ \"Stockholm\" , \"London\" , \"New York\"]}}";
 		Assert.assertEquals(expected, q.getQueryObject().toString());
@@ -111,24 +107,19 @@ public class QueryTests {
 
 	@Test
 	public void testAddCriteriaWithComplexQueryWithMultipleChainedCriteria() {
-		Query q1 = new Query(where("name").regex("^T.*").and("age").gt(20)
-				.lt(80).and("city").in("Stockholm", "London", "New York"));
-		Query q2 = new Query(where("name").regex("^T.*").and("age").gt(20)
-				.lt(80)).addCriteria(where("city").in("Stockholm", "London",
-				"New York"));
-		Assert.assertEquals(q1.getQueryObject().toString(), q2.getQueryObject()
-				.toString());
-		Query q3 = new Query(where("name").regex("^T.*")).addCriteria(
-				where("age").gt(20).lt(80)).addCriteria(
+		Query q1 = new Query(where("name").regex("^T.*").and("age").gt(20).lt(80).and("city")
+				.in("Stockholm", "London", "New York"));
+		Query q2 = new Query(where("name").regex("^T.*").and("age").gt(20).lt(80)).addCriteria(where("city").in(
+				"Stockholm", "London", "New York"));
+		Assert.assertEquals(q1.getQueryObject().toString(), q2.getQueryObject().toString());
+		Query q3 = new Query(where("name").regex("^T.*")).addCriteria(where("age").gt(20).lt(80)).addCriteria(
 				where("city").in("Stockholm", "London", "New York"));
-		Assert.assertEquals(q1.getQueryObject().toString(), q3.getQueryObject()
-				.toString());
+		Assert.assertEquals(q1.getQueryObject().toString(), q3.getQueryObject().toString());
 	}
 
 	@Test
 	public void testQueryWithElemMatch() {
-		Query q = new Query(where("openingHours").elemMatch(
-				where("dayOfWeek").is("Monday").and("open").lte("1800")));
+		Query q = new Query(where("openingHours").elemMatch(where("dayOfWeek").is("Monday").and("open").lte("1800")));
 		String expected = "{ \"openingHours\" : { \"$elemMatch\" : { \"dayOfWeek\" : \"Monday\" , \"open\" : { \"$lte\" : \"1800\"}}}}";
 		Assert.assertEquals(expected, q.getQueryObject().toString());
 	}

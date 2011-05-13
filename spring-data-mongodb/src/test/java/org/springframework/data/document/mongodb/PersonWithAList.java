@@ -80,8 +80,7 @@ public class PersonWithAList {
 
 	@Override
 	public String toString() {
-		return "PersonWithAList [id=" + id + ", firstName=" + firstName
-				+ ", age=" + age + ", wishList=" + wishList + "]";
+		return "PersonWithAList [id=" + id + ", firstName=" + firstName + ", age=" + age + ", wishList=" + wishList + "]";
 	}
 
 }

@@ -21,10 +21,9 @@ package org.springframework.data.document.mongodb.mapping.event;
  */
 public class BeforeConvertEvent<T> extends MongoMappingEvent<T> {
 
-  private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-  public BeforeConvertEvent(T source) {
-    super(source, null);
-  }
+	public BeforeConvertEvent(T source) {
+		super(source, null);
+	}
 }
-

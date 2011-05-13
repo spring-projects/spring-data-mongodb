@@ -25,57 +25,57 @@ import org.springframework.util.Assert;
  */
 public class Box {
 
-  private final Point first;
-  private final Point second;
+	private final Point first;
+	private final Point second;
 
-  public Box(Point lowerLeft, Point upperRight) {
-    Assert.notNull(lowerLeft);
-    Assert.notNull(upperRight);
-    this.first = lowerLeft;
-    this.second = upperRight;
-  }
+	public Box(Point lowerLeft, Point upperRight) {
+		Assert.notNull(lowerLeft);
+		Assert.notNull(upperRight);
+		this.first = lowerLeft;
+		this.second = upperRight;
+	}
 
-  public Box(double[] lowerLeft, double[] upperRight) {
-    Assert.isTrue(lowerLeft.length == 2, "Point array has to have 2 elements!");
-    Assert.isTrue(upperRight.length == 2, "Point array has to have 2 elements!");
-    this.first = new Point(lowerLeft[0], lowerLeft[1]);
-    this.second = new Point(upperRight[0], upperRight[1]);
-  }
+	public Box(double[] lowerLeft, double[] upperRight) {
+		Assert.isTrue(lowerLeft.length == 2, "Point array has to have 2 elements!");
+		Assert.isTrue(upperRight.length == 2, "Point array has to have 2 elements!");
+		this.first = new Point(lowerLeft[0], lowerLeft[1]);
+		this.second = new Point(upperRight[0], upperRight[1]);
+	}
 
-  public Point getLowerLeft() {
-    return first;
-  }
+	public Point getLowerLeft() {
+		return first;
+	}
 
-  public Point getUpperRight() {
-    return second;
-  }
+	public Point getUpperRight() {
+		return second;
+	}
 
-  @Override
-  public String toString() {
-    return String.format("Box [%s, %s]", first, second);
-  }
+	@Override
+	public String toString() {
+		return String.format("Box [%s, %s]", first, second);
+	}
 
-  @Override
-  public int hashCode() {
+	@Override
+	public int hashCode() {
 
-    int result = 31;
-    result += 17 * first.hashCode();
-    result += 17 * second.hashCode();
-    return result;
-  }
+		int result = 31;
+		result += 17 * first.hashCode();
+		result += 17 * second.hashCode();
+		return result;
+	}
 
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    }
-    if (obj == null) {
-      return false;
-    }
-    if (getClass() != obj.getClass()) {
-      return false;
-    }
-    Box that = (Box) obj;
-    return this.first.equals(that.first) && this.second.equals(that.second);
-  }
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (obj == null) {
+			return false;
+		}
+		if (getClass() != obj.getClass()) {
+			return false;
+		}
+		Box that = (Box) obj;
+		return this.first.equals(that.first) && this.second.equals(that.second);
+	}
 }

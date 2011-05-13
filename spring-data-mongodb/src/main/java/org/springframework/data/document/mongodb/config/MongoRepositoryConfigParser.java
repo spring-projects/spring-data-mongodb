@@ -23,73 +23,68 @@ import org.springframework.data.mapping.model.MappingContext;
 import org.springframework.data.repository.config.AbstractRepositoryConfigDefinitionParser;
 import org.w3c.dom.Element;
 
-
 /**
- * {@link org.springframework.beans.factory.xml.BeanDefinitionParser} to create
- * Mongo DB repositories from classpath scanning or manual definition.
- *
+ * {@link org.springframework.beans.factory.xml.BeanDefinitionParser} to create Mongo DB repositories from classpath
+ * scanning or manual definition.
+ * 
  * @author Oliver Gierke
  */
-public class MongoRepositoryConfigParser
-    extends
-    AbstractRepositoryConfigDefinitionParser<SimpleMongoRepositoryConfiguration, MongoRepositoryConfiguration> {
-  
-  private static final String MAPPING_CONTEXT_DEFAULT = MappingMongoConverterParser.MAPPING_CONTEXT;
-  
-  /*
-  * (non-Javadoc)
-  *
-  * @see org.springframework.data.repository.config.
-  * AbstractRepositoryConfigDefinitionParser
-  * #getGlobalRepositoryConfigInformation(org.w3c.dom.Element)
-  */
-  @Override
-  protected SimpleMongoRepositoryConfiguration getGlobalRepositoryConfigInformation(
-      Element element) {
+public class MongoRepositoryConfigParser extends
+		AbstractRepositoryConfigDefinitionParser<SimpleMongoRepositoryConfiguration, MongoRepositoryConfiguration> {
 
-    return new SimpleMongoRepositoryConfiguration(element);
-  }
+	private static final String MAPPING_CONTEXT_DEFAULT = MappingMongoConverterParser.MAPPING_CONTEXT;
 
+	/*
+	* (non-Javadoc)
+	*
+	* @see org.springframework.data.repository.config.
+	* AbstractRepositoryConfigDefinitionParser
+	* #getGlobalRepositoryConfigInformation(org.w3c.dom.Element)
+	*/
+	@Override
+	protected SimpleMongoRepositoryConfiguration getGlobalRepositoryConfigInformation(Element element) {
 
-  /*
-   * (non-Javadoc)
-   * @see org.springframework.data.repository.config.AbstractRepositoryConfigDefinitionParser#postProcessBeanDefinition(org.springframework.data.repository.config.SingleRepositoryConfigInformation, org.springframework.beans.factory.support.BeanDefinitionBuilder, org.springframework.beans.factory.support.BeanDefinitionRegistry, java.lang.Object)
-   */
-  @Override
-  protected void postProcessBeanDefinition(
-      MongoRepositoryConfiguration context,
-      BeanDefinitionBuilder builder, BeanDefinitionRegistry registry, Object beanSource) {
+		return new SimpleMongoRepositoryConfiguration(element);
+	}
 
-    builder.addPropertyReference("template", context.getMongoTemplateRef());
-    
-    String mappingContextRef = getMappingContextReference(context, registry);
-    if (mappingContextRef != null) {
-      builder.addPropertyReference("mappingContext", mappingContextRef);
-    }
-  }
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.config.AbstractRepositoryConfigDefinitionParser#postProcessBeanDefinition(org.springframework.data.repository.config.SingleRepositoryConfigInformation, org.springframework.beans.factory.support.BeanDefinitionBuilder, org.springframework.beans.factory.support.BeanDefinitionRegistry, java.lang.Object)
+	 */
+	@Override
+	protected void postProcessBeanDefinition(MongoRepositoryConfiguration context, BeanDefinitionBuilder builder,
+			BeanDefinitionRegistry registry, Object beanSource) {
 
-  /**
-   * Returns the bean name of a {@link MappingContext} to be wired. Will inspect the namespace attribute first and if no
-   * config is found in that place it will try to lookup the default one. Will return {@literal null} if neither one is
-   * available.
-   * 
-   * @param config
-   * @param registry
-   * @return
-   */
-  private String getMappingContextReference(MongoRepositoryConfiguration config, BeanDefinitionRegistry registry) {
-    
-    String contextRef = config.getMappingContextRef();
-    
-    if (contextRef != null) {
-      return contextRef;
-    }
-    
-    try {
-      registry.getBeanDefinition(MAPPING_CONTEXT_DEFAULT);
-      return MAPPING_CONTEXT_DEFAULT;
-    } catch(NoSuchBeanDefinitionException e) {
-      return null;
-    }
-  }
+		builder.addPropertyReference("template", context.getMongoTemplateRef());
+
+		String mappingContextRef = getMappingContextReference(context, registry);
+		if (mappingContextRef != null) {
+			builder.addPropertyReference("mappingContext", mappingContextRef);
+		}
+	}
+
+	/**
+	 * Returns the bean name of a {@link MappingContext} to be wired. Will inspect the namespace attribute first and if no
+	 * config is found in that place it will try to lookup the default one. Will return {@literal null} if neither one is
+	 * available.
+	 * 
+	 * @param config
+	 * @param registry
+	 * @return
+	 */
+	private String getMappingContextReference(MongoRepositoryConfiguration config, BeanDefinitionRegistry registry) {
+
+		String contextRef = config.getMappingContextRef();
+
+		if (contextRef != null) {
+			return contextRef;
+		}
+
+		try {
+			registry.getBeanDefinition(MAPPING_CONTEXT_DEFAULT);
+			return MAPPING_CONTEXT_DEFAULT;
+		} catch (NoSuchBeanDefinitionException e) {
+			return null;
+		}
+	}
 }

@@ -21,31 +21,31 @@ package org.springframework.data.document.mongodb.index;
  */
 public abstract class IndexPredicate {
 
-  private String name;
-  private IndexDirection direction = IndexDirection.ASCENDING;
-  private boolean unique = false;
+	private String name;
+	private IndexDirection direction = IndexDirection.ASCENDING;
+	private boolean unique = false;
 
-  public String getName() {
-    return name;
-  }
+	public String getName() {
+		return name;
+	}
 
-  public void setName(String name) {
-    this.name = name;
-  }
+	public void setName(String name) {
+		this.name = name;
+	}
 
-  public IndexDirection getDirection() {
-    return direction;
-  }
+	public IndexDirection getDirection() {
+		return direction;
+	}
 
-  public void setDirection(IndexDirection direction) {
-    this.direction = direction;
-  }
+	public void setDirection(IndexDirection direction) {
+		this.direction = direction;
+	}
 
-  public boolean isUnique() {
-    return unique;
-  }
+	public boolean isUnique() {
+		return unique;
+	}
 
-  public void setUnique(boolean unique) {
-    this.unique = unique;
-  }
+	public void setUnique(boolean unique) {
+		this.unique = unique;
+	}
 }

@@ -23,29 +23,30 @@ import org.springframework.data.document.mongodb.mapping.MongoPersistentEntity;
 import org.springframework.data.document.mongodb.mapping.MongoPersistentProperty;
 import org.springframework.data.mapping.model.MappingContext;
 
-
 public interface MongoConverter extends MongoWriter<Object>, MongoReader<Object> {
 
-  /**
-   * Converts the given {@link ObjectId} to the given target type.
-   *
-   * @param <T>        the actual type to create
-   * @param id         the source {@link ObjectId}
-   * @param targetType the target type to convert the {@link ObjectId} to
-   * @return
-   */
-  public <T> T convertObjectId(ObjectId id, Class<T> targetType);
+	/**
+	 * Converts the given {@link ObjectId} to the given target type.
+	 * 
+	 * @param <T>
+	 *          the actual type to create
+	 * @param id
+	 *          the source {@link ObjectId}
+	 * @param targetType
+	 *          the target type to convert the {@link ObjectId} to
+	 * @return
+	 */
+	public <T> T convertObjectId(ObjectId id, Class<T> targetType);
 
+	/**
+	 * Returns the {@link ObjectId} instance for the given id.
+	 * 
+	 * @param id
+	 * @return
+	 */
+	public ObjectId convertObjectId(Object id);
 
-  /**
-   * Returns the {@link ObjectId} instance for the given id.
-   *
-   * @param id
-   * @return
-   */
-  public ObjectId convertObjectId(Object id);
-  
-  MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> getMappingContext();
+	MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> getMappingContext();
 
 	Object maybeConvertObject(Object obj);
 

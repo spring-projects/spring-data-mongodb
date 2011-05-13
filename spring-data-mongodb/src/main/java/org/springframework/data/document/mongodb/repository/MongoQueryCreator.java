@@ -38,174 +38,165 @@ import org.springframework.data.repository.query.parser.Part;
 import org.springframework.data.repository.query.parser.Part.Type;
 import org.springframework.data.repository.query.parser.PartTree;
 
-
 /**
  * Custom query creator to create Mongo criterias.
- *
+ * 
  * @author Oliver Gierke
  */
 class MongoQueryCreator extends AbstractQueryCreator<Query, Query> {
 
-  private static final Log LOG = LogFactory.getLog(MongoQueryCreator.class);
+	private static final Log LOG = LogFactory.getLog(MongoQueryCreator.class);
 
+	/**
+	 * Creates a new {@link MongoQueryCreator} from the given {@link PartTree} and {@link ParametersParameterAccessor}.
+	 * 
+	 * @param tree
+	 * @param accessor
+	 */
+	public MongoQueryCreator(PartTree tree, ParameterAccessor accessor) {
 
-  /**
-   * Creates a new {@link MongoQueryCreator} from the given {@link PartTree}
-   * and {@link ParametersParameterAccessor}.
-   *
-   * @param tree
-   * @param accessor
-   */
-  public MongoQueryCreator(PartTree tree, ParameterAccessor accessor) {
+		super(tree, accessor);
+	}
 
-    super(tree, accessor);
-  }
+	/*
+	* (non-Javadoc)
+	* @see org.springframework.data.repository.query.parser.AbstractQueryCreator#create(org.springframework.data.repository.query.parser.Part, java.util.Iterator)
+	*/
+	@Override
+	protected Query create(Part part, Iterator<Object> iterator) {
 
+		Criteria criteria = from(part.getType(), where(part.getProperty().toDotPath()),
+				(PotentiallyConvertingIterator) iterator);
 
-  /*
-  * (non-Javadoc)
-  * @see org.springframework.data.repository.query.parser.AbstractQueryCreator#create(org.springframework.data.repository.query.parser.Part, java.util.Iterator)
-  */
-  @Override
-  protected Query create(Part part, Iterator<Object> iterator) {
+		return new Query(criteria);
+	}
 
-    Criteria criteria = from(part.getType(),
-        where(part.getProperty().toDotPath()), (PotentiallyConvertingIterator) iterator);
+	/*
+	* (non-Javadoc)
+	* @see org.springframework.data.repository.query.parser.AbstractQueryCreator#and(org.springframework.data.repository.query.parser.Part, java.lang.Object, java.util.Iterator)
+	*/
+	@Override
+	protected Query and(Part part, Query base, Iterator<Object> iterator) {
 
-    return new Query(criteria);
-  }
+		Criteria criteria = from(part.getType(), where(part.getProperty().toDotPath()),
+				(PotentiallyConvertingIterator) iterator);
+		return base.addCriteria(criteria);
+	}
 
+	/*
+	* (non-Javadoc)
+	*
+	* @see
+	* org.springframework.data.repository.query.parser.AbstractQueryCreator
+	* #or(java.lang.Object, java.lang.Object)
+	*/
+	@Override
+	protected Query or(Query base, Query query) {
 
-  /*
-  * (non-Javadoc)
-  * @see org.springframework.data.repository.query.parser.AbstractQueryCreator#and(org.springframework.data.repository.query.parser.Part, java.lang.Object, java.util.Iterator)
-  */
-  @Override
-  protected Query and(Part part, Query base,
-                      Iterator<Object> iterator) {
+		return new Query().or(base, query);
+	}
 
-    Criteria criteria = from(part.getType(), where(part.getProperty().toDotPath()),
-        (PotentiallyConvertingIterator) iterator);
-    return base.addCriteria(criteria);
-  }
+	/*
+	* (non-Javadoc)
+	*
+	* @see
+	* org.springframework.data.repository.query.parser.AbstractQueryCreator
+	* #complete(java.lang.Object, org.springframework.data.domain.Sort)
+	*/
+	@Override
+	protected Query complete(Query query, Sort sort) {
 
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("Created query " + query.getQueryObject());
+		}
 
-  /*
-  * (non-Javadoc)
-  *
-  * @see
-  * org.springframework.data.repository.query.parser.AbstractQueryCreator
-  * #or(java.lang.Object, java.lang.Object)
-  */
-  @Override
-  protected Query or(Query base, Query query) {
+		return query;
+	}
 
-    return new Query().or(base, query);
-  }
+	/**
+	 * Populates the given {@link CriteriaDefinition} depending on the {@link Type} given.
+	 * 
+	 * @param type
+	 * @param criteria
+	 * @param parameters
+	 * @return
+	 */
+	private Criteria from(Type type, Criteria criteria, PotentiallyConvertingIterator parameters) {
 
+		switch (type) {
+		case GREATER_THAN:
+			return criteria.gt(parameters.nextConverted());
+		case LESS_THAN:
+			return criteria.lt(parameters.nextConverted());
+		case BETWEEN:
+			return criteria.gt(parameters.nextConverted()).lt(parameters.nextConverted());
+		case IS_NOT_NULL:
+			return criteria.ne(null);
+		case IS_NULL:
+			return criteria.is(null);
+		case NOT_IN:
+			return criteria.nin(nextAsArray(parameters));
+		case IN:
+			return criteria.in(nextAsArray(parameters));
+		case LIKE:
+			String value = parameters.next().toString();
+			return criteria.is(toLikeRegex(value));
+		case NEAR:
+			return criteria.near(nextAs(parameters, Point.class));
+		case WITHIN:
 
-  /*
-  * (non-Javadoc)
-  *
-  * @see
-  * org.springframework.data.repository.query.parser.AbstractQueryCreator
-  * #complete(java.lang.Object, org.springframework.data.domain.Sort)
-  */
-  @Override
-  protected Query complete(Query query, Sort sort) {
+			Object parameter = parameters.next();
+			if (parameter instanceof Box) {
+				return criteria.withinBox((Box) parameter);
+			} else if (parameter instanceof Circle) {
+				return criteria.withinCenter((Circle) parameter);
+			}
+			throw new IllegalArgumentException("Parameter has to be either Box or Circle!");
+		case SIMPLE_PROPERTY:
+			return criteria.is(parameters.nextConverted());
+		case NEGATING_SIMPLE_PROPERTY:
+			return criteria.not().is(parameters.nextConverted());
+		}
 
-    if (LOG.isDebugEnabled()) {
-      LOG.debug("Created query " + query.getQueryObject());
-    }
+		throw new IllegalArgumentException("Unsupported keyword!");
+	}
 
-    return query;
-  }
+	/**
+	 * Returns the next element from the given {@link Iterator} expecting it to be of a certain type.
+	 * 
+	 * @param <T>
+	 * @param iterator
+	 * @param type
+	 * @throws IllegalArgumentException
+	 *           in case the next element in the iterator is not of the given type.
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	private <T> T nextAs(Iterator<Object> iterator, Class<T> type) {
+		Object parameter = iterator.next();
+		if (parameter.getClass().isAssignableFrom(type)) {
+			return (T) parameter;
+		}
 
+		throw new IllegalArgumentException(String.format("Expected parameter type of %s but got %s!", type,
+				parameter.getClass()));
+	}
 
-  /**
-   * Populates the given {@link CriteriaDefinition} depending on the {@link Type} given.
-   *
-   * @param type
-   * @param criteria
-   * @param parameters
-   * @return
-   */
-  private Criteria from(Type type, Criteria criteria, PotentiallyConvertingIterator parameters) {
+	private Object[] nextAsArray(PotentiallyConvertingIterator iterator) {
+		Object next = iterator.nextConverted();
 
-    switch (type) {
-      case GREATER_THAN:
-        return criteria.gt(parameters.nextConverted());
-      case LESS_THAN:
-        return criteria.lt(parameters.nextConverted());
-      case BETWEEN:
-        return criteria.gt(parameters.nextConverted()).lt(parameters.nextConverted());
-      case IS_NOT_NULL:
-        return criteria.ne(null);
-      case IS_NULL:
-        return criteria.is(null);
-      case NOT_IN:
-        return criteria.nin(nextAsArray(parameters));
-      case IN:
-        return criteria.in(nextAsArray(parameters));
-      case LIKE:
-        String value = parameters.next().toString();
-        return criteria.is(toLikeRegex(value));
-      case NEAR:
-        return criteria.near(nextAs(parameters, Point.class));
-      case WITHIN:
-        
-        Object parameter = parameters.next();
-        if (parameter instanceof Box) {
-          return criteria.withinBox((Box) parameter);
-        } else if (parameter instanceof Circle) {
-          return criteria.withinCenter((Circle) parameter);
-        }
-        throw new IllegalArgumentException("Parameter has to be either Box or Circle!");
-      case SIMPLE_PROPERTY:
-        return criteria.is(parameters.nextConverted());
-      case NEGATING_SIMPLE_PROPERTY:
-        return criteria.not().is(parameters.nextConverted());
-    }
+		if (next instanceof Collection) {
+			return ((Collection<?>) next).toArray();
+		} else if (next.getClass().isArray()) {
+			return (Object[]) next;
+		}
 
-    throw new IllegalArgumentException("Unsupported keyword!");
-  }
+		return new Object[] { next };
+	}
 
-  /**
-   * Returns the next element from the given {@link Iterator} expecting it to be of a certain type.
-   * 
-   * @param <T>
-   * @param iterator
-   * @param type
-   * @throws IllegalArgumentException
-   *           in case the next element in the iterator is not of the given type.
-   * @return
-   */
-  @SuppressWarnings("unchecked")
-  private <T> T nextAs(Iterator<Object> iterator, Class<T> type) {
-    Object parameter = iterator.next();
-    if (parameter.getClass().isAssignableFrom(type)) {
-      return (T) parameter;
-    }
+	private Pattern toLikeRegex(String source) {
 
-    throw new IllegalArgumentException(String.format("Expected parameter type of %s but got %s!", type,
-        parameter.getClass()));
-  }
-
-  private Object[] nextAsArray(PotentiallyConvertingIterator iterator) {
-    Object next = iterator.nextConverted();
-
-    if (next instanceof Collection) {
-      return ((Collection<?>) next).toArray();
-    } else if (next.getClass().isArray()) {
-      return (Object[]) next;
-    }
-
-    return new Object[]{next};
-  }
-
-  private Pattern toLikeRegex(String source) {
-
-    String regex = source.replaceAll("\\*", ".*");
-    return Pattern.compile(regex);
-  }
+		String regex = source.replaceAll("\\*", ".*");
+		return Pattern.compile(regex);
+	}
 }

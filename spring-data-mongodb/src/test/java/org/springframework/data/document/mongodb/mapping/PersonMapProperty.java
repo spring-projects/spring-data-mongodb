@@ -26,27 +26,27 @@ import org.bson.types.ObjectId;
 @Document
 public class PersonMapProperty extends BasePerson {
 
-  private ObjectId id;
-  private Map<String, AccountPojo> accounts;
+	private ObjectId id;
+	private Map<String, AccountPojo> accounts;
 
-  public PersonMapProperty(Integer ssn, String firstName, String lastName) {
-    super(ssn, firstName, lastName);
-  }
+	public PersonMapProperty(Integer ssn, String firstName, String lastName) {
+		super(ssn, firstName, lastName);
+	}
 
-  public ObjectId getId() {
-    return id;
-  }
+	public ObjectId getId() {
+		return id;
+	}
 
-  public void setId(ObjectId id) {
-    this.id = id;
-  }
+	public void setId(ObjectId id) {
+		this.id = id;
+	}
 
-  public Map<String, AccountPojo> getAccounts() {
-    return accounts;
-  }
+	public Map<String, AccountPojo> getAccounts() {
+		return accounts;
+	}
 
-  public void setAccounts(Map<String, AccountPojo> accounts) {
-    this.accounts = accounts;
-  }
+	public void setAccounts(Map<String, AccountPojo> accounts) {
+		this.accounts = accounts;
+	}
 
 }

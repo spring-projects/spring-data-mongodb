@@ -23,10 +23,10 @@ import com.mongodb.DBObject;
  */
 public class BeforeSaveEvent<E> extends MongoMappingEvent<E> {
 
-  private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-  public BeforeSaveEvent(E source, DBObject dbo) {
-    super(source, dbo);
-  }
+	public BeforeSaveEvent(E source, DBObject dbo) {
+		super(source, dbo);
+	}
 
 }

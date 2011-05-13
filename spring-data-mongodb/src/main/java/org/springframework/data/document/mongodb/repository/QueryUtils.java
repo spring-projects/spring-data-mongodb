@@ -21,65 +21,58 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
 
-
 /**
- * Collection of utility methods to apply sorting and pagination to a
- * {@link DBCursor}.
- *
+ * Collection of utility methods to apply sorting and pagination to a {@link DBCursor}.
+ * 
  * @author Oliver Gierke
  */
 abstract class QueryUtils {
 
-  private QueryUtils() {
+	private QueryUtils() {
 
-  }
+	}
 
+	/**
+	 * Applies the given {@link Pageable} to the given {@link Query}. Will do nothing if {@link Pageable} is
+	 * {@literal null}.
+	 * 
+	 * @param query
+	 * @param pageable
+	 * @return
+	 */
+	public static Query applyPagination(Query query, Pageable pageable) {
 
-  /**
-   * Applies the given {@link Pageable} to the given {@link Query}. Will do
-   * nothing if {@link Pageable} is {@literal null}.
-   *
-   * @param query
-   * @param pageable
-   * @return
-   */
-  public static Query applyPagination(Query query, Pageable pageable) {
+		if (pageable == null) {
+			return query;
+		}
 
-    if (pageable == null) {
-      return query;
-    }
+		query.limit(pageable.getPageSize());
+		query.skip(pageable.getOffset());
 
-    query.limit(pageable.getPageSize());
-    query.skip(pageable.getOffset());
+		return applySorting(query, pageable.getSort());
+	}
 
-    return applySorting(query, pageable.getSort());
-  }
+	/**
+	 * Applies the given {@link Sort} to the {@link Query}. Will do nothing if {@link Sort} is {@literal null}.
+	 * 
+	 * @param query
+	 * @param sort
+	 * @return
+	 */
+	public static Query applySorting(Query query, Sort sort) {
 
+		if (sort == null) {
+			return query;
+		}
 
-  /**
-   * Applies the given {@link Sort} to the {@link Query}. Will do nothing if
-   * {@link Sort} is {@literal null}.
-   *
-   * @param query
-   * @param sort
-   * @return
-   */
-  public static Query applySorting(Query query, Sort sort) {
+		org.springframework.data.document.mongodb.query.Sort bSort = query.sort();
 
-    if (sort == null) {
-      return query;
-    }
+		for (Order order : sort) {
+			bSort.on(order.getProperty(),
+					order.isAscending() ? org.springframework.data.document.mongodb.query.Order.ASCENDING
+							: org.springframework.data.document.mongodb.query.Order.DESCENDING);
+		}
 
-    org.springframework.data.document.mongodb.query.Sort bSort =
-        query.sort();
-
-    for (Order order : sort) {
-      bSort.on(
-          order.getProperty(),
-          order.isAscending() ? org.springframework.data.document.mongodb.query.Order.ASCENDING
-              : org.springframework.data.document.mongodb.query.Order.DESCENDING);
-    }
-
-    return query;
-  }
+		return query;
+	}
 }

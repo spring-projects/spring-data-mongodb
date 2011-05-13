@@ -8,21 +8,21 @@ import com.mongodb.Mongo;
 
 public class GeoIndexedAppConfig extends AbstractMongoConfiguration {
 
-  public static String GEO_DB = "geodb";
-  public static String GEO_COLLECTION = "geolocation";
-  @Bean
-  public Mongo mongo() throws Exception {
-    return new Mongo("localhost");
-  }
-  
-  @Bean
-  public MongoTemplate mongoTemplate() throws Exception {
-    return new MongoTemplate(mongo(), "geodb", mappingMongoConverter());
-  }
-      
+	public static String GEO_DB = "geodb";
+	public static String GEO_COLLECTION = "geolocation";
 
-  public String getMappingBasePackage() {
-    return "org.springframework.data.document.mongodb.mapping";
-  }
+	@Bean
+	public Mongo mongo() throws Exception {
+		return new Mongo("localhost");
+	}
+
+	@Bean
+	public MongoTemplate mongoTemplate() throws Exception {
+		return new MongoTemplate(mongo(), "geodb", mappingMongoConverter());
+	}
+
+	public String getMappingBasePackage() {
+		return "org.springframework.data.document.mongodb.mapping";
+	}
 
 }

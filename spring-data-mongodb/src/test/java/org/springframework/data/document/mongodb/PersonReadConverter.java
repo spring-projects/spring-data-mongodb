@@ -9,7 +9,7 @@ import com.mongodb.DBObject;
 public class PersonReadConverter implements Converter<DBObject, Person> {
 
 	public Person convert(DBObject source) {
-		Person p = new Person((ObjectId)source.get("_id"), (String)source.get("name"));
+		Person p = new Person((ObjectId) source.get("_id"), (String) source.get("name"));
 		p.setAge((Integer) source.get("age"));
 		return p;
 	}

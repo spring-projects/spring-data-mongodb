@@ -23,61 +23,61 @@ import org.springframework.data.mapping.MappingBeanHelper;
 import org.springframework.data.repository.support.AbstractEntityInformation;
 
 /**
- * {@link MongoEntityInformation} implementation using a {@link BasicMongoPersistentEntity} instance to lookup the necessary
- * information.
+ * {@link MongoEntityInformation} implementation using a {@link BasicMongoPersistentEntity} instance to lookup the
+ * necessary information.
  * 
  * @author Oliver Gierke
  */
 public class MappingMongoEntityInformation<T, ID extends Serializable> extends AbstractEntityInformation<T, ID>
-    implements MongoEntityInformation<T, ID> {
+		implements MongoEntityInformation<T, ID> {
 
-  private final MongoPersistentEntity<T> entityMetadata;
+	private final MongoPersistentEntity<T> entityMetadata;
 
-  /**
-   * Creates a new {@link MappingMongoEntityInformation} for the given {@link MongoPersistentEntity}.
-   * 
-   * @param domainClass
-   * @param entity
-   */
-  public MappingMongoEntityInformation(MongoPersistentEntity<T> entity) {
-    super(entity.getType());
-    this.entityMetadata = entity;
-  }
+	/**
+	 * Creates a new {@link MappingMongoEntityInformation} for the given {@link MongoPersistentEntity}.
+	 * 
+	 * @param domainClass
+	 * @param entity
+	 */
+	public MappingMongoEntityInformation(MongoPersistentEntity<T> entity) {
+		super(entity.getType());
+		this.entityMetadata = entity;
+	}
 
-  /* (non-Javadoc)
-   * @see org.springframework.data.repository.support.EntityInformation#getId(java.lang.Object)
-   */
-  @SuppressWarnings("unchecked")
-  public ID getId(T entity) {
+	/* (non-Javadoc)
+	 * @see org.springframework.data.repository.support.EntityInformation#getId(java.lang.Object)
+	 */
+	@SuppressWarnings("unchecked")
+	public ID getId(T entity) {
 
-    MongoPersistentProperty idProperty = entityMetadata.getIdProperty();
+		MongoPersistentProperty idProperty = entityMetadata.getIdProperty();
 
-    try {
-      return (ID) MappingBeanHelper.getProperty(entity, idProperty, idProperty.getType(), false);
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
-  }
+		try {
+			return (ID) MappingBeanHelper.getProperty(entity, idProperty, idProperty.getType(), false);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
 
-  /* (non-Javadoc)
-   * @see org.springframework.data.repository.support.EntityInformation#getIdType()
-   */
-  @SuppressWarnings("unchecked")
-  public Class<ID> getIdType() {
-    return (Class<ID>) entityMetadata.getIdProperty().getType();
-  }
+	/* (non-Javadoc)
+	 * @see org.springframework.data.repository.support.EntityInformation#getIdType()
+	 */
+	@SuppressWarnings("unchecked")
+	public Class<ID> getIdType() {
+		return (Class<ID>) entityMetadata.getIdProperty().getType();
+	}
 
-  /* (non-Javadoc)
-   * @see org.springframework.data.document.mongodb.repository.MongoEntityInformation#getCollectionName()
-   */
-  public String getCollectionName() {
-    return entityMetadata.getCollection();
-  }
+	/* (non-Javadoc)
+	 * @see org.springframework.data.document.mongodb.repository.MongoEntityInformation#getCollectionName()
+	 */
+	public String getCollectionName() {
+		return entityMetadata.getCollection();
+	}
 
-  /* (non-Javadoc)
-   * @see org.springframework.data.document.mongodb.repository.MongoEntityInformation#getIdAttribute()
-   */
-  public String getIdAttribute() {
-    return entityMetadata.getIdProperty().getName();
-  }
+	/* (non-Javadoc)
+	 * @see org.springframework.data.document.mongodb.repository.MongoEntityInformation#getIdAttribute()
+	 */
+	public String getIdAttribute() {
+		return entityMetadata.getIdProperty().getName();
+	}
 }

@@ -23,8 +23,8 @@ import com.mongodb.DBObject;
  */
 public interface IndexDefinition {
 
-  DBObject getIndexKeys();
+	DBObject getIndexKeys();
 
-  DBObject getIndexOptions();
+	DBObject getIndexOptions();
 
 }

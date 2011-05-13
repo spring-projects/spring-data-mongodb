@@ -23,19 +23,18 @@ import com.mongodb.Mongo;
 @Configuration
 public class PersonExampleAppConfig {
 
-  @Bean
-  public Mongo mongo() throws Exception {
-    return new Mongo("localhost");
-  }
+	@Bean
+	public Mongo mongo() throws Exception {
+		return new Mongo("localhost");
+	}
 
-  @Bean
-  public MongoTemplate mongoTemplate() throws Exception {
-    return new MongoTemplate(mongo(), "database");
-  }
-  
-  @Bean
-  public PersonExample personExample() 
-  {
-    return new PersonExample();
-  }
+	@Bean
+	public MongoTemplate mongoTemplate() throws Exception {
+		return new MongoTemplate(mongo(), "database");
+	}
+
+	@Bean
+	public PersonExample personExample() {
+		return new PersonExample();
+	}
 }

@@ -58,7 +58,7 @@ import com.mongodb.WriteResult;
 
 /**
  * Integration test for {@link MongoTemplate}.
- *
+ * 
  * @author Oliver Gierke
  * @author Thomas Risberg
  */
@@ -66,440 +66,450 @@ import com.mongodb.WriteResult;
 @ContextConfiguration("classpath:infrastructure.xml")
 public class MongoTemplateTests {
 
-  @Autowired
-  MongoTemplate template;
-  
-  MongoTemplate mappingTemplate;
+	@Autowired
+	MongoTemplate template;
 
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
+	MongoTemplate mappingTemplate;
 
-  @Autowired
-  @SuppressWarnings("unchecked")
-  public void setMongo(Mongo mongo) throws Exception {
-	  
-	  MongoMappingContext mappingContext = new MongoMappingContext();
-    mappingContext.setInitialEntitySet(new HashSet<Class<?>>(Arrays.asList(PersonWith_idPropertyOfTypeObjectId.class,
-        PersonWith_idPropertyOfTypeString.class, PersonWithIdPropertyOfTypeObjectId.class,
-        PersonWithIdPropertyOfTypeString.class)));
-    mappingContext.afterPropertiesSet();
-	  
-	  MappingMongoConverter converter = new MappingMongoConverter(mappingContext);
-	  converter.afterPropertiesSet();
-	  
-	  this.mappingTemplate = new MongoTemplate(mongo, "database", converter);
-  }
+	@Rule
+	public ExpectedException thrown = ExpectedException.none();
 
-@Before
-  public void setUp() {
-	template.dropCollection(template.getCollectionName(Person.class));
-	template.dropCollection(template.getCollectionName(PersonWith_idPropertyOfTypeObjectId.class));
-    template.dropCollection(template.getCollectionName(PersonWith_idPropertyOfTypeString.class));
-    template.dropCollection(template.getCollectionName(PersonWithIdPropertyOfTypeObjectId.class));
-    template.dropCollection(template.getCollectionName(PersonWithIdPropertyOfTypeString.class));
-  }
+	@Autowired
+	@SuppressWarnings("unchecked")
+	public void setMongo(Mongo mongo) throws Exception {
 
-  @Test
-  public void insertsSimpleEntityCorrectly() throws Exception {
+		MongoMappingContext mappingContext = new MongoMappingContext();
+		mappingContext.setInitialEntitySet(new HashSet<Class<?>>(Arrays.asList(PersonWith_idPropertyOfTypeObjectId.class,
+				PersonWith_idPropertyOfTypeString.class, PersonWithIdPropertyOfTypeObjectId.class,
+				PersonWithIdPropertyOfTypeString.class)));
+		mappingContext.afterPropertiesSet();
 
-    Person person = new Person("Oliver");
-    person.setAge(25);
-    template.insert(person);
+		MappingMongoConverter converter = new MappingMongoConverter(mappingContext);
+		converter.afterPropertiesSet();
 
-    MongoConverter converter = template.getConverter();
+		this.mappingTemplate = new MongoTemplate(mongo, "database", converter);
+	}
 
-    List<Person> result = template.find(new Query(Criteria.where("_id").is(converter.convertObjectId(person.getId()))), Person.class);
-    assertThat(result.size(), is(1));
-    assertThat(result, hasItem(person));
-  }
+	@Before
+	public void setUp() {
+		template.dropCollection(template.getCollectionName(Person.class));
+		template.dropCollection(template.getCollectionName(PersonWith_idPropertyOfTypeObjectId.class));
+		template.dropCollection(template.getCollectionName(PersonWith_idPropertyOfTypeString.class));
+		template.dropCollection(template.getCollectionName(PersonWithIdPropertyOfTypeObjectId.class));
+		template.dropCollection(template.getCollectionName(PersonWithIdPropertyOfTypeString.class));
+	}
 
-  @Test
-  public void updateFailure() throws Exception {
+	@Test
+	public void insertsSimpleEntityCorrectly() throws Exception {
 
-    MongoTemplate mongoTemplate = new MongoTemplate(template.getDb().getMongo(), "test");
-    mongoTemplate.setWriteResultChecking(WriteResultChecking.EXCEPTION);
+		Person person = new Person("Oliver");
+		person.setAge(25);
+		template.insert(person);
 
-    Person person = new Person("Oliver2");
-    person.setAge(25);
-    mongoTemplate.insert(person);
+		MongoConverter converter = template.getConverter();
 
-    Query q = new Query(Criteria.where("BOGUS").gt(22));
-    Update u = new Update().set("firstName", "Sven");
-    thrown.expect(DataIntegrityViolationException.class);
-    thrown.expectMessage(endsWith("0 documents updated"));
-    mongoTemplate.updateFirst(Person.class, q, u);
+		List<Person> result = template.find(new Query(Criteria.where("_id").is(converter.convertObjectId(person.getId()))),
+				Person.class);
+		assertThat(result.size(), is(1));
+		assertThat(result, hasItem(person));
+	}
 
-  }
+	@Test
+	public void updateFailure() throws Exception {
 
-  @Test
-  public void testEnsureIndex() throws Exception {
+		MongoTemplate mongoTemplate = new MongoTemplate(template.getDb().getMongo(), "test");
+		mongoTemplate.setWriteResultChecking(WriteResultChecking.EXCEPTION);
 
-    Person p1 = new Person("Oliver");
-    p1.setAge(25);
-    template.insert(p1);
-    Person p2 = new Person("Sven");
-    p2.setAge(40);
-    template.insert(p2);
+		Person person = new Person("Oliver2");
+		person.setAge(25);
+		mongoTemplate.insert(person);
 
-    template.ensureIndex(Person.class, new Index().on("age", Order.DESCENDING).unique(Duplicates.DROP));
+		Query q = new Query(Criteria.where("BOGUS").gt(22));
+		Update u = new Update().set("firstName", "Sven");
+		thrown.expect(DataIntegrityViolationException.class);
+		thrown.expectMessage(endsWith("0 documents updated"));
+		mongoTemplate.updateFirst(Person.class, q, u);
 
-    DBCollection coll = template.getCollection(template.getCollectionName(Person.class));
-    List<DBObject> indexInfo = coll.getIndexInfo();
+	}
 
-    assertThat(indexInfo.size(), is(2));
-    String indexKey = null;
-    boolean unique = false;
-    boolean dropDupes = false;
-    for (DBObject ix : indexInfo) {
-      if ("age_-1".equals(ix.get("name"))) {
-        indexKey = ix.get("key").toString();
-        unique = (Boolean) ix.get("unique");
-        dropDupes = (Boolean) ix.get("dropDups");
-      }
-    }
-    assertThat(indexKey, is("{ \"age\" : -1}"));
-    assertThat(unique, is(true));
-    assertThat(dropDupes, is(true));
-  }
+	@Test
+	public void testEnsureIndex() throws Exception {
 
-  @Test
-  public void testProperHandlingOfDifferentIdTypesWithSimpleMongoConverter() throws Exception {
-	  testProperHandlingOfDifferentIdTypes(this.template);
-  }
+		Person p1 = new Person("Oliver");
+		p1.setAge(25);
+		template.insert(p1);
+		Person p2 = new Person("Sven");
+		p2.setAge(40);
+		template.insert(p2);
 
-  @Test
-  public void testProperHandlingOfDifferentIdTypesWithMappingMongoConverter() throws Exception {
-	  testProperHandlingOfDifferentIdTypes(this.mappingTemplate);
-  }
+		template.ensureIndex(Person.class, new Index().on("age", Order.DESCENDING).unique(Duplicates.DROP));
 
-  private void testProperHandlingOfDifferentIdTypes(MongoTemplate mongoTemplate) throws Exception {
-    PersonWithIdPropertyOfTypeString p1 = new PersonWithIdPropertyOfTypeString();
-    p1.setFirstName("Sven_1");
-    p1.setAge(22);
-    // insert
-    mongoTemplate.insert(p1);
-    // also try save
-    mongoTemplate.save(p1);
-    assertThat(p1.getId(), notNullValue());
-    PersonWithIdPropertyOfTypeString p1q = mongoTemplate.findOne(new Query(where("id").is(p1.getId())), PersonWithIdPropertyOfTypeString.class);
-    assertThat(p1q, notNullValue());
-    assertThat(p1q.getId(), is(p1.getId()));
+		DBCollection coll = template.getCollection(template.getCollectionName(Person.class));
+		List<DBObject> indexInfo = coll.getIndexInfo();
 
-    PersonWithIdPropertyOfTypeString p2 = new PersonWithIdPropertyOfTypeString();
-    p2.setFirstName("Sven_2");
-    p2.setAge(22);
-    p2.setId("TWO");
-    // insert
-    mongoTemplate.insert(p2);
-    // also try save
-    mongoTemplate.save(p2);
-    assertThat(p2.getId(), notNullValue());
-    PersonWithIdPropertyOfTypeString p2q = mongoTemplate.findOne(new Query(where("id").is(p2.getId())), PersonWithIdPropertyOfTypeString.class);
-    assertThat(p2q, notNullValue());
-    assertThat(p2q.getId(), is(p2.getId()));
+		assertThat(indexInfo.size(), is(2));
+		String indexKey = null;
+		boolean unique = false;
+		boolean dropDupes = false;
+		for (DBObject ix : indexInfo) {
+			if ("age_-1".equals(ix.get("name"))) {
+				indexKey = ix.get("key").toString();
+				unique = (Boolean) ix.get("unique");
+				dropDupes = (Boolean) ix.get("dropDups");
+			}
+		}
+		assertThat(indexKey, is("{ \"age\" : -1}"));
+		assertThat(unique, is(true));
+		assertThat(dropDupes, is(true));
+	}
 
-    PersonWith_idPropertyOfTypeString p3 = new PersonWith_idPropertyOfTypeString();
-    p3.setFirstName("Sven_3");
-    p3.setAge(22);
-    // insert
-    mongoTemplate.insert(p3);
-    // also try save
-    mongoTemplate.save(p3);
-    assertThat(p3.get_id(), notNullValue());
-    PersonWith_idPropertyOfTypeString p3q = mongoTemplate.findOne(new Query(where("_id").is(p3.get_id())), PersonWith_idPropertyOfTypeString.class);
-    assertThat(p3q, notNullValue());
-    assertThat(p3q.get_id(), is(p3.get_id()));
+	@Test
+	public void testProperHandlingOfDifferentIdTypesWithSimpleMongoConverter() throws Exception {
+		testProperHandlingOfDifferentIdTypes(this.template);
+	}
 
-    PersonWith_idPropertyOfTypeString p4 = new PersonWith_idPropertyOfTypeString();
-    p4.setFirstName("Sven_4");
-    p4.setAge(22);
-    p4.set_id("FOUR");
-    // insert
-    mongoTemplate.insert(p4);
-    // also try save
-    mongoTemplate.save(p4);
-    assertThat(p4.get_id(), notNullValue());
-    PersonWith_idPropertyOfTypeString p4q = mongoTemplate.findOne(new Query(where("_id").is(p4.get_id())), PersonWith_idPropertyOfTypeString.class);
-    assertThat(p4q, notNullValue());
-    assertThat(p4q.get_id(), is(p4.get_id()));
+	@Test
+	public void testProperHandlingOfDifferentIdTypesWithMappingMongoConverter() throws Exception {
+		testProperHandlingOfDifferentIdTypes(this.mappingTemplate);
+	}
 
-    PersonWithIdPropertyOfTypeObjectId p5 = new PersonWithIdPropertyOfTypeObjectId();
-    p5.setFirstName("Sven_5");
-    p5.setAge(22);
-    // insert
-    mongoTemplate.insert(p5);
-    // also try save
-    mongoTemplate.save(p5);
-    assertThat(p5.getId(), notNullValue());
-    PersonWithIdPropertyOfTypeObjectId p5q = mongoTemplate.findOne(new Query(where("id").is(p5.getId())), PersonWithIdPropertyOfTypeObjectId.class);
-    assertThat(p5q, notNullValue());
-    assertThat(p5q.getId(), is(p5.getId()));
+	private void testProperHandlingOfDifferentIdTypes(MongoTemplate mongoTemplate) throws Exception {
+		PersonWithIdPropertyOfTypeString p1 = new PersonWithIdPropertyOfTypeString();
+		p1.setFirstName("Sven_1");
+		p1.setAge(22);
+		// insert
+		mongoTemplate.insert(p1);
+		// also try save
+		mongoTemplate.save(p1);
+		assertThat(p1.getId(), notNullValue());
+		PersonWithIdPropertyOfTypeString p1q = mongoTemplate.findOne(new Query(where("id").is(p1.getId())),
+				PersonWithIdPropertyOfTypeString.class);
+		assertThat(p1q, notNullValue());
+		assertThat(p1q.getId(), is(p1.getId()));
 
-    PersonWithIdPropertyOfTypeObjectId p6 = new PersonWithIdPropertyOfTypeObjectId();
-    p6.setFirstName("Sven_6");
-    p6.setAge(22);
-    p6.setId(new ObjectId());
-    // insert
-    mongoTemplate.insert(p6);
-    // also try save
-    mongoTemplate.save(p6);
-   assertThat(p6.getId(), notNullValue());
-    PersonWithIdPropertyOfTypeObjectId p6q = mongoTemplate.findOne(new Query(where("id").is(p6.getId())), PersonWithIdPropertyOfTypeObjectId.class);
-    assertThat(p6q, notNullValue());
-    assertThat(p6q.getId(), is(p6.getId()));
+		PersonWithIdPropertyOfTypeString p2 = new PersonWithIdPropertyOfTypeString();
+		p2.setFirstName("Sven_2");
+		p2.setAge(22);
+		p2.setId("TWO");
+		// insert
+		mongoTemplate.insert(p2);
+		// also try save
+		mongoTemplate.save(p2);
+		assertThat(p2.getId(), notNullValue());
+		PersonWithIdPropertyOfTypeString p2q = mongoTemplate.findOne(new Query(where("id").is(p2.getId())),
+				PersonWithIdPropertyOfTypeString.class);
+		assertThat(p2q, notNullValue());
+		assertThat(p2q.getId(), is(p2.getId()));
 
-    PersonWith_idPropertyOfTypeObjectId p7 = new PersonWith_idPropertyOfTypeObjectId();
-    p7.setFirstName("Sven_7");
-    p7.setAge(22);
-    // insert
-    mongoTemplate.insert(p7);
-    // also try save
-    mongoTemplate.save(p7);
-   assertThat(p7.get_id(), notNullValue());
-    PersonWith_idPropertyOfTypeObjectId p7q = mongoTemplate.findOne(new Query(where("_id").is(p7.get_id())), PersonWith_idPropertyOfTypeObjectId.class);
-    assertThat(p7q, notNullValue());
-    assertThat(p7q.get_id(), is(p7.get_id()));
+		PersonWith_idPropertyOfTypeString p3 = new PersonWith_idPropertyOfTypeString();
+		p3.setFirstName("Sven_3");
+		p3.setAge(22);
+		// insert
+		mongoTemplate.insert(p3);
+		// also try save
+		mongoTemplate.save(p3);
+		assertThat(p3.get_id(), notNullValue());
+		PersonWith_idPropertyOfTypeString p3q = mongoTemplate.findOne(new Query(where("_id").is(p3.get_id())),
+				PersonWith_idPropertyOfTypeString.class);
+		assertThat(p3q, notNullValue());
+		assertThat(p3q.get_id(), is(p3.get_id()));
 
-    PersonWith_idPropertyOfTypeObjectId p8 = new PersonWith_idPropertyOfTypeObjectId();
-    p8.setFirstName("Sven_8");
-    p8.setAge(22);
-    p8.set_id(new ObjectId());
-    // insert
-    mongoTemplate.insert(p8);
-    // also try save
-    mongoTemplate.save(p8);
-    assertThat(p8.get_id(), notNullValue());
-    PersonWith_idPropertyOfTypeObjectId p8q = mongoTemplate.findOne(new Query(where("_id").is(p8.get_id())), PersonWith_idPropertyOfTypeObjectId.class);
-    assertThat(p8q, notNullValue());
-    assertThat(p8q.get_id(), is(p8.get_id()));
-  }
+		PersonWith_idPropertyOfTypeString p4 = new PersonWith_idPropertyOfTypeString();
+		p4.setFirstName("Sven_4");
+		p4.setAge(22);
+		p4.set_id("FOUR");
+		// insert
+		mongoTemplate.insert(p4);
+		// also try save
+		mongoTemplate.save(p4);
+		assertThat(p4.get_id(), notNullValue());
+		PersonWith_idPropertyOfTypeString p4q = mongoTemplate.findOne(new Query(where("_id").is(p4.get_id())),
+				PersonWith_idPropertyOfTypeString.class);
+		assertThat(p4q, notNullValue());
+		assertThat(p4q.get_id(), is(p4.get_id()));
 
-  @Test
-  public void testFindAndRemove() throws Exception {
+		PersonWithIdPropertyOfTypeObjectId p5 = new PersonWithIdPropertyOfTypeObjectId();
+		p5.setFirstName("Sven_5");
+		p5.setAge(22);
+		// insert
+		mongoTemplate.insert(p5);
+		// also try save
+		mongoTemplate.save(p5);
+		assertThat(p5.getId(), notNullValue());
+		PersonWithIdPropertyOfTypeObjectId p5q = mongoTemplate.findOne(new Query(where("id").is(p5.getId())),
+				PersonWithIdPropertyOfTypeObjectId.class);
+		assertThat(p5q, notNullValue());
+		assertThat(p5q.getId(), is(p5.getId()));
 
-    Message m1 = new Message("Hello Spring");
-    template.insert(m1);
-    Message m2 = new Message("Hello Mongo");
-    template.insert(m2);
+		PersonWithIdPropertyOfTypeObjectId p6 = new PersonWithIdPropertyOfTypeObjectId();
+		p6.setFirstName("Sven_6");
+		p6.setAge(22);
+		p6.setId(new ObjectId());
+		// insert
+		mongoTemplate.insert(p6);
+		// also try save
+		mongoTemplate.save(p6);
+		assertThat(p6.getId(), notNullValue());
+		PersonWithIdPropertyOfTypeObjectId p6q = mongoTemplate.findOne(new Query(where("id").is(p6.getId())),
+				PersonWithIdPropertyOfTypeObjectId.class);
+		assertThat(p6q, notNullValue());
+		assertThat(p6q.getId(), is(p6.getId()));
 
-    Query q = new Query(Criteria.where("text").regex("^Hello.*"));
-    Message found1 = template.findAndRemove(q, Message.class);
-    Message found2 = template.findAndRemove(q, Message.class);
-//    Message notFound = template.findAndRemove(q, Message.class);
-    DBObject notFound = template.getCollection("").findAndRemove(q.getQueryObject());
-    assertThat(found1, notNullValue());
-    assertThat(found2, notNullValue());
-    assertThat(notFound, nullValue());
-  }
+		PersonWith_idPropertyOfTypeObjectId p7 = new PersonWith_idPropertyOfTypeObjectId();
+		p7.setFirstName("Sven_7");
+		p7.setAge(22);
+		// insert
+		mongoTemplate.insert(p7);
+		// also try save
+		mongoTemplate.save(p7);
+		assertThat(p7.get_id(), notNullValue());
+		PersonWith_idPropertyOfTypeObjectId p7q = mongoTemplate.findOne(new Query(where("_id").is(p7.get_id())),
+				PersonWith_idPropertyOfTypeObjectId.class);
+		assertThat(p7q, notNullValue());
+		assertThat(p7q.get_id(), is(p7.get_id()));
 
-  @Test
-  public void testUsingAnInQuery() throws Exception {
-    
-    template.remove(new Query(), PersonWithIdPropertyOfTypeObjectId.class);
+		PersonWith_idPropertyOfTypeObjectId p8 = new PersonWith_idPropertyOfTypeObjectId();
+		p8.setFirstName("Sven_8");
+		p8.setAge(22);
+		p8.set_id(new ObjectId());
+		// insert
+		mongoTemplate.insert(p8);
+		// also try save
+		mongoTemplate.save(p8);
+		assertThat(p8.get_id(), notNullValue());
+		PersonWith_idPropertyOfTypeObjectId p8q = mongoTemplate.findOne(new Query(where("_id").is(p8.get_id())),
+				PersonWith_idPropertyOfTypeObjectId.class);
+		assertThat(p8q, notNullValue());
+		assertThat(p8q.get_id(), is(p8.get_id()));
+	}
 
-    PersonWithIdPropertyOfTypeObjectId p1 = new PersonWithIdPropertyOfTypeObjectId();
-    p1.setFirstName("Sven");
-    p1.setAge(11);
-    template.insert(p1);
-    PersonWithIdPropertyOfTypeObjectId p2 = new PersonWithIdPropertyOfTypeObjectId();
-    p2.setFirstName("Mary");
-    p2.setAge(21);
-    template.insert(p2);
-    PersonWithIdPropertyOfTypeObjectId p3 = new PersonWithIdPropertyOfTypeObjectId();
-    p3.setFirstName("Ann");
-    p3.setAge(31);
-    template.insert(p3);
-    PersonWithIdPropertyOfTypeObjectId p4 = new PersonWithIdPropertyOfTypeObjectId();
-    p4.setFirstName("John");
-    p4.setAge(41);
-    template.insert(p4);
+	@Test
+	public void testFindAndRemove() throws Exception {
 
-    Query q1 = new Query(Criteria.where("age").in(11, 21, 41));
-    List<PersonWithIdPropertyOfTypeObjectId> results1 = template.find(q1, PersonWithIdPropertyOfTypeObjectId.class);
-    Query q2 = new Query(Criteria.where("firstName").in("Ann", "Mary"));
-    List<PersonWithIdPropertyOfTypeObjectId> results2 = template.find(q2, PersonWithIdPropertyOfTypeObjectId.class);
-    Query q3 = new Query(Criteria.where("id").in(p3.getId()));
-    List<PersonWithIdPropertyOfTypeObjectId> results3 = template.find(q3, PersonWithIdPropertyOfTypeObjectId.class);
-    assertThat(results1.size(), is(3));
-    assertThat(results2.size(), is(2));
-    assertThat(results3.size(), is(1));
-  }
+		Message m1 = new Message("Hello Spring");
+		template.insert(m1);
+		Message m2 = new Message("Hello Mongo");
+		template.insert(m2);
 
-  @Test
-  public void testUsingInQueryWithList() throws Exception {
-    
-    template.remove(new Query(), PersonWithIdPropertyOfTypeObjectId.class);
+		Query q = new Query(Criteria.where("text").regex("^Hello.*"));
+		Message found1 = template.findAndRemove(q, Message.class);
+		Message found2 = template.findAndRemove(q, Message.class);
+		// Message notFound = template.findAndRemove(q, Message.class);
+		DBObject notFound = template.getCollection("").findAndRemove(q.getQueryObject());
+		assertThat(found1, notNullValue());
+		assertThat(found2, notNullValue());
+		assertThat(notFound, nullValue());
+	}
 
-    PersonWithIdPropertyOfTypeObjectId p1 = new PersonWithIdPropertyOfTypeObjectId();
-    p1.setFirstName("Sven");
-    p1.setAge(11);
-    template.insert(p1);
-    PersonWithIdPropertyOfTypeObjectId p2 = new PersonWithIdPropertyOfTypeObjectId();
-    p2.setFirstName("Mary");
-    p2.setAge(21);
-    template.insert(p2);
-    PersonWithIdPropertyOfTypeObjectId p3 = new PersonWithIdPropertyOfTypeObjectId();
-    p3.setFirstName("Ann");
-    p3.setAge(31);
-    template.insert(p3);
-    PersonWithIdPropertyOfTypeObjectId p4 = new PersonWithIdPropertyOfTypeObjectId();
-    p4.setFirstName("John");
-    p4.setAge(41);
-    template.insert(p4);
+	@Test
+	public void testUsingAnInQuery() throws Exception {
 
-    List<Integer> l1 = new ArrayList<Integer>();
-    l1.add(11);
-    l1.add(21);
-    l1.add(41);
-    Query q1 = new Query(Criteria.where("age").in(l1));
-    List<PersonWithIdPropertyOfTypeObjectId> results1 = template.find(q1, PersonWithIdPropertyOfTypeObjectId.class);
-    Query q2 = new Query(Criteria.where("age").in(l1.toArray()));
-    List<PersonWithIdPropertyOfTypeObjectId> results2 = template.find(q2, PersonWithIdPropertyOfTypeObjectId.class);
-    assertThat(results1.size(), is(3));
-    assertThat(results2.size(), is(3));
-	try {
-	    List<Integer> l2 = new ArrayList<Integer>();
-	    l2.add(31);
-	    Query q3 = new Query(Criteria.where("age").in(l1, l2));
-		template.find(q3, PersonWithIdPropertyOfTypeObjectId.class);
-		Assert.fail("Should have trown an InvalidDocumentStoreApiUsageException");
-	} catch (InvalidDocumentStoreApiUsageException e) {}
-  }
+		template.remove(new Query(), PersonWithIdPropertyOfTypeObjectId.class);
 
-  @Test
-  public void testUsingAnOrQuery() throws Exception {
-    
-    template.remove(new Query(), PersonWithIdPropertyOfTypeObjectId.class);
+		PersonWithIdPropertyOfTypeObjectId p1 = new PersonWithIdPropertyOfTypeObjectId();
+		p1.setFirstName("Sven");
+		p1.setAge(11);
+		template.insert(p1);
+		PersonWithIdPropertyOfTypeObjectId p2 = new PersonWithIdPropertyOfTypeObjectId();
+		p2.setFirstName("Mary");
+		p2.setAge(21);
+		template.insert(p2);
+		PersonWithIdPropertyOfTypeObjectId p3 = new PersonWithIdPropertyOfTypeObjectId();
+		p3.setFirstName("Ann");
+		p3.setAge(31);
+		template.insert(p3);
+		PersonWithIdPropertyOfTypeObjectId p4 = new PersonWithIdPropertyOfTypeObjectId();
+		p4.setFirstName("John");
+		p4.setAge(41);
+		template.insert(p4);
 
-    PersonWithIdPropertyOfTypeObjectId p1 = new PersonWithIdPropertyOfTypeObjectId();
-    p1.setFirstName("Sven");
-    p1.setAge(11);
-    template.insert(p1);
-    PersonWithIdPropertyOfTypeObjectId p2 = new PersonWithIdPropertyOfTypeObjectId();
-    p2.setFirstName("Mary");
-    p2.setAge(21);
-    template.insert(p2);
-    PersonWithIdPropertyOfTypeObjectId p3 = new PersonWithIdPropertyOfTypeObjectId();
-    p3.setFirstName("Ann");
-    p3.setAge(31);
-    template.insert(p3);
-    PersonWithIdPropertyOfTypeObjectId p4 = new PersonWithIdPropertyOfTypeObjectId();
-    p4.setFirstName("John");
-    p4.setAge(41);
-    template.insert(p4);
+		Query q1 = new Query(Criteria.where("age").in(11, 21, 41));
+		List<PersonWithIdPropertyOfTypeObjectId> results1 = template.find(q1, PersonWithIdPropertyOfTypeObjectId.class);
+		Query q2 = new Query(Criteria.where("firstName").in("Ann", "Mary"));
+		List<PersonWithIdPropertyOfTypeObjectId> results2 = template.find(q2, PersonWithIdPropertyOfTypeObjectId.class);
+		Query q3 = new Query(Criteria.where("id").in(p3.getId()));
+		List<PersonWithIdPropertyOfTypeObjectId> results3 = template.find(q3, PersonWithIdPropertyOfTypeObjectId.class);
+		assertThat(results1.size(), is(3));
+		assertThat(results2.size(), is(2));
+		assertThat(results3.size(), is(1));
+	}
 
-    Query q1 = new Query(Criteria.where("age").in(11, 21));
-    Query q2 = new Query(Criteria.where("age").is(31));
-    Query orQuery = new Query().or(q1, q2);
-    List<PersonWithIdPropertyOfTypeObjectId> results = template.find(orQuery, PersonWithIdPropertyOfTypeObjectId.class);
-    assertThat(results.size(), is(3));
-    for (PersonWithIdPropertyOfTypeObjectId p : results) {
-        assertThat(p.getAge(), isOneOf(11, 21, 31));
-    }
-  }
+	@Test
+	public void testUsingInQueryWithList() throws Exception {
 
-  @Test
-  public void testUsingUpdateWithMultipleSet() throws Exception {
+		template.remove(new Query(), PersonWithIdPropertyOfTypeObjectId.class);
 
-    template.remove(new Query(), PersonWithIdPropertyOfTypeObjectId.class);
+		PersonWithIdPropertyOfTypeObjectId p1 = new PersonWithIdPropertyOfTypeObjectId();
+		p1.setFirstName("Sven");
+		p1.setAge(11);
+		template.insert(p1);
+		PersonWithIdPropertyOfTypeObjectId p2 = new PersonWithIdPropertyOfTypeObjectId();
+		p2.setFirstName("Mary");
+		p2.setAge(21);
+		template.insert(p2);
+		PersonWithIdPropertyOfTypeObjectId p3 = new PersonWithIdPropertyOfTypeObjectId();
+		p3.setFirstName("Ann");
+		p3.setAge(31);
+		template.insert(p3);
+		PersonWithIdPropertyOfTypeObjectId p4 = new PersonWithIdPropertyOfTypeObjectId();
+		p4.setFirstName("John");
+		p4.setAge(41);
+		template.insert(p4);
 
-    PersonWithIdPropertyOfTypeObjectId p1 = new PersonWithIdPropertyOfTypeObjectId();
-    p1.setFirstName("Sven");
-    p1.setAge(11);
-    template.insert(p1);
-    PersonWithIdPropertyOfTypeObjectId p2 = new PersonWithIdPropertyOfTypeObjectId();
-    p2.setFirstName("Mary");
-    p2.setAge(21);
-    template.insert(p2);
+		List<Integer> l1 = new ArrayList<Integer>();
+		l1.add(11);
+		l1.add(21);
+		l1.add(41);
+		Query q1 = new Query(Criteria.where("age").in(l1));
+		List<PersonWithIdPropertyOfTypeObjectId> results1 = template.find(q1, PersonWithIdPropertyOfTypeObjectId.class);
+		Query q2 = new Query(Criteria.where("age").in(l1.toArray()));
+		List<PersonWithIdPropertyOfTypeObjectId> results2 = template.find(q2, PersonWithIdPropertyOfTypeObjectId.class);
+		assertThat(results1.size(), is(3));
+		assertThat(results2.size(), is(3));
+		try {
+			List<Integer> l2 = new ArrayList<Integer>();
+			l2.add(31);
+			Query q3 = new Query(Criteria.where("age").in(l1, l2));
+			template.find(q3, PersonWithIdPropertyOfTypeObjectId.class);
+			Assert.fail("Should have trown an InvalidDocumentStoreApiUsageException");
+		} catch (InvalidDocumentStoreApiUsageException e) {
+		}
+	}
 
-    Update u = new Update().set("firstName", "Bob").set("age", 10);
-    
-    WriteResult wr = template.updateMulti(PersonWithIdPropertyOfTypeObjectId.class, new Query(), u);
-        
-    assertThat(wr.getN(), is(2));
-    
-    Query q1 = new Query(Criteria.where("age").in(11, 21));
-    List<PersonWithIdPropertyOfTypeObjectId> r1 = template.find(q1, PersonWithIdPropertyOfTypeObjectId.class);
-    assertThat(r1.size(), is(0));
-    Query q2 = new Query(Criteria.where("age").is(10));
-    List<PersonWithIdPropertyOfTypeObjectId> r2 = template.find(q2, PersonWithIdPropertyOfTypeObjectId.class);
-    assertThat(r2.size(), is(2));
-    for (PersonWithIdPropertyOfTypeObjectId p : r2) {
-        assertThat(p.getAge(), is(10));
-        assertThat(p.getFirstName(), is("Bob"));
-    }
-  }
+	@Test
+	public void testUsingAnOrQuery() throws Exception {
 
-  @Test
-  public void testRemovingDocument() throws Exception {
+		template.remove(new Query(), PersonWithIdPropertyOfTypeObjectId.class);
 
-	PersonWithIdPropertyOfTypeObjectId p1 = new PersonWithIdPropertyOfTypeObjectId();
-	p1.setFirstName("Sven_to_be_removed");
-	p1.setAge(51);
-	template.insert(p1);
+		PersonWithIdPropertyOfTypeObjectId p1 = new PersonWithIdPropertyOfTypeObjectId();
+		p1.setFirstName("Sven");
+		p1.setAge(11);
+		template.insert(p1);
+		PersonWithIdPropertyOfTypeObjectId p2 = new PersonWithIdPropertyOfTypeObjectId();
+		p2.setFirstName("Mary");
+		p2.setAge(21);
+		template.insert(p2);
+		PersonWithIdPropertyOfTypeObjectId p3 = new PersonWithIdPropertyOfTypeObjectId();
+		p3.setFirstName("Ann");
+		p3.setAge(31);
+		template.insert(p3);
+		PersonWithIdPropertyOfTypeObjectId p4 = new PersonWithIdPropertyOfTypeObjectId();
+		p4.setFirstName("John");
+		p4.setAge(41);
+		template.insert(p4);
 
-    Query q1 = new Query(Criteria.where("id").is(p1.getId()));
-    PersonWithIdPropertyOfTypeObjectId found1 = template.findOne(q1, PersonWithIdPropertyOfTypeObjectId.class);
-    assertThat(found1, notNullValue());
-    Query _q = new Query(Criteria.where("_id").is(p1.getId()));
-    template.remove(_q, PersonWithIdPropertyOfTypeObjectId.class);
-    PersonWithIdPropertyOfTypeObjectId notFound1 = template.findOne(q1, PersonWithIdPropertyOfTypeObjectId.class);
-    assertThat(notFound1, nullValue());
+		Query q1 = new Query(Criteria.where("age").in(11, 21));
+		Query q2 = new Query(Criteria.where("age").is(31));
+		Query orQuery = new Query().or(q1, q2);
+		List<PersonWithIdPropertyOfTypeObjectId> results = template.find(orQuery, PersonWithIdPropertyOfTypeObjectId.class);
+		assertThat(results.size(), is(3));
+		for (PersonWithIdPropertyOfTypeObjectId p : results) {
+			assertThat(p.getAge(), isOneOf(11, 21, 31));
+		}
+	}
 
-    PersonWithIdPropertyOfTypeObjectId p2 = new PersonWithIdPropertyOfTypeObjectId();
-	p2.setFirstName("Bubba_to_be_removed");
-	p2.setAge(51);
-	template.insert(p2);
+	@Test
+	public void testUsingUpdateWithMultipleSet() throws Exception {
 
-    Query q2 = new Query(Criteria.where("id").is(p2.getId()));
-    PersonWithIdPropertyOfTypeObjectId found2 = template.findOne(q2, PersonWithIdPropertyOfTypeObjectId.class);
-    assertThat(found2, notNullValue());
-    template.remove(q2, PersonWithIdPropertyOfTypeObjectId.class);
-    PersonWithIdPropertyOfTypeObjectId notFound2 = template.findOne(q2, PersonWithIdPropertyOfTypeObjectId.class);
-    assertThat(notFound2, nullValue());
-  }
+		template.remove(new Query(), PersonWithIdPropertyOfTypeObjectId.class);
 
-  @Test
-  public void testAddingToListWithSimpleConverter() throws Exception {
-	  testAddingToList(this.template);
-  }
+		PersonWithIdPropertyOfTypeObjectId p1 = new PersonWithIdPropertyOfTypeObjectId();
+		p1.setFirstName("Sven");
+		p1.setAge(11);
+		template.insert(p1);
+		PersonWithIdPropertyOfTypeObjectId p2 = new PersonWithIdPropertyOfTypeObjectId();
+		p2.setFirstName("Mary");
+		p2.setAge(21);
+		template.insert(p2);
 
-  @Test
-  public void testAddingToListWithMappingConverter() throws Exception {
-	  testAddingToList(this.mappingTemplate);
-  }
+		Update u = new Update().set("firstName", "Bob").set("age", 10);
 
-  private void testAddingToList(MongoTemplate template) {
-      PersonWithAList p = new PersonWithAList();
-	  p.setFirstName("Sven");
-	  p.setAge(22);
-	  template.insert(p);
+		WriteResult wr = template.updateMulti(PersonWithIdPropertyOfTypeObjectId.class, new Query(), u);
 
-	  Query q1 = new Query(Criteria.where("id").is(p.getId()));
-	  PersonWithAList p2 = template.findOne(q1, PersonWithAList.class);
-	  assertThat(p2, notNullValue());
-	  assertThat(p2.getWishList().size(), is(0));
-	  
-	  p2.addToWishList("please work!");
-	  
-	  template.save(p2);
+		assertThat(wr.getN(), is(2));
 
-	  PersonWithAList p3 = template.findOne(q1, PersonWithAList.class);
-	  assertThat(p3, notNullValue());
-	  assertThat(p3.getWishList().size(), is(1));
+		Query q1 = new Query(Criteria.where("age").in(11, 21));
+		List<PersonWithIdPropertyOfTypeObjectId> r1 = template.find(q1, PersonWithIdPropertyOfTypeObjectId.class);
+		assertThat(r1.size(), is(0));
+		Query q2 = new Query(Criteria.where("age").is(10));
+		List<PersonWithIdPropertyOfTypeObjectId> r2 = template.find(q2, PersonWithIdPropertyOfTypeObjectId.class);
+		assertThat(r2.size(), is(2));
+		for (PersonWithIdPropertyOfTypeObjectId p : r2) {
+			assertThat(p.getAge(), is(10));
+			assertThat(p.getFirstName(), is("Bob"));
+		}
+	}
 
-      Friend f = new Friend();
-	  p.setFirstName("Erik");
-	  p.setAge(21);
-	  
-	  p3.addFriend(f);
-	  template.save(p3);
+	@Test
+	public void testRemovingDocument() throws Exception {
 
-	  PersonWithAList p4 = template.findOne(q1, PersonWithAList.class);
-	  assertThat(p4, notNullValue());
-	  assertThat(p4.getWishList().size(), is(1));
-	  assertThat(p4.getFriends().size(), is(1));
-	  
-  }
-  
+		PersonWithIdPropertyOfTypeObjectId p1 = new PersonWithIdPropertyOfTypeObjectId();
+		p1.setFirstName("Sven_to_be_removed");
+		p1.setAge(51);
+		template.insert(p1);
+
+		Query q1 = new Query(Criteria.where("id").is(p1.getId()));
+		PersonWithIdPropertyOfTypeObjectId found1 = template.findOne(q1, PersonWithIdPropertyOfTypeObjectId.class);
+		assertThat(found1, notNullValue());
+		Query _q = new Query(Criteria.where("_id").is(p1.getId()));
+		template.remove(_q, PersonWithIdPropertyOfTypeObjectId.class);
+		PersonWithIdPropertyOfTypeObjectId notFound1 = template.findOne(q1, PersonWithIdPropertyOfTypeObjectId.class);
+		assertThat(notFound1, nullValue());
+
+		PersonWithIdPropertyOfTypeObjectId p2 = new PersonWithIdPropertyOfTypeObjectId();
+		p2.setFirstName("Bubba_to_be_removed");
+		p2.setAge(51);
+		template.insert(p2);
+
+		Query q2 = new Query(Criteria.where("id").is(p2.getId()));
+		PersonWithIdPropertyOfTypeObjectId found2 = template.findOne(q2, PersonWithIdPropertyOfTypeObjectId.class);
+		assertThat(found2, notNullValue());
+		template.remove(q2, PersonWithIdPropertyOfTypeObjectId.class);
+		PersonWithIdPropertyOfTypeObjectId notFound2 = template.findOne(q2, PersonWithIdPropertyOfTypeObjectId.class);
+		assertThat(notFound2, nullValue());
+	}
+
+	@Test
+	public void testAddingToListWithSimpleConverter() throws Exception {
+		testAddingToList(this.template);
+	}
+
+	@Test
+	public void testAddingToListWithMappingConverter() throws Exception {
+		testAddingToList(this.mappingTemplate);
+	}
+
+	private void testAddingToList(MongoTemplate template) {
+		PersonWithAList p = new PersonWithAList();
+		p.setFirstName("Sven");
+		p.setAge(22);
+		template.insert(p);
+
+		Query q1 = new Query(Criteria.where("id").is(p.getId()));
+		PersonWithAList p2 = template.findOne(q1, PersonWithAList.class);
+		assertThat(p2, notNullValue());
+		assertThat(p2.getWishList().size(), is(0));
+
+		p2.addToWishList("please work!");
+
+		template.save(p2);
+
+		PersonWithAList p3 = template.findOne(q1, PersonWithAList.class);
+		assertThat(p3, notNullValue());
+		assertThat(p3.getWishList().size(), is(1));
+
+		Friend f = new Friend();
+		p.setFirstName("Erik");
+		p.setAge(21);
+
+		p3.addFriend(f);
+		template.save(p3);
+
+		PersonWithAList p4 = template.findOne(q1, PersonWithAList.class);
+		assertThat(p4, notNullValue());
+		assertThat(p4.getWishList().size(), is(1));
+		assertThat(p4.getFriends().size(), is(1));
+
+	}
+
 }

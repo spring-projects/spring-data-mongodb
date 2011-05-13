@@ -19,34 +19,34 @@ import org.bson.types.ObjectId;
 
 public class PersonWith_idPropertyOfTypeObjectId {
 
-  private ObjectId _id;
+	private ObjectId _id;
 
-  private String firstName;
+	private String firstName;
 
-  private int age;
+	private int age;
 
-  public ObjectId get_id() {
-    return _id;
-  }
+	public ObjectId get_id() {
+		return _id;
+	}
 
-  public void set_id(ObjectId _id) {
-    this._id = _id;
-  }
+	public void set_id(ObjectId _id) {
+		this._id = _id;
+	}
 
-  public String getFirstName() {
-    return firstName;
-  }
+	public String getFirstName() {
+		return firstName;
+	}
 
-  public void setFirstName(String firstName) {
-    this.firstName = firstName;
-  }
+	public void setFirstName(String firstName) {
+		this.firstName = firstName;
+	}
 
-  public int getAge() {
-    return age;
-  }
+	public int getAge() {
+		return age;
+	}
 
-  public void setAge(int age) {
-    this.age = age;
-  }
+	public void setAge(int age) {
+		this.age = age;
+	}
 
 }

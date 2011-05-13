@@ -24,21 +24,21 @@ import org.springframework.context.ApplicationEvent;
  */
 public class MongoMappingEvent<T> extends ApplicationEvent {
 
-  private static final long serialVersionUID = 1L;
-  private final DBObject dbo;
+	private static final long serialVersionUID = 1L;
+	private final DBObject dbo;
 
-  public MongoMappingEvent(T source, DBObject dbo) {
-    super(source);
-    this.dbo = dbo;
-  }
+	public MongoMappingEvent(T source, DBObject dbo) {
+		super(source);
+		this.dbo = dbo;
+	}
 
-  public DBObject getDBObject() {
-    return dbo;
-  }
+	public DBObject getDBObject() {
+		return dbo;
+	}
 
-  @SuppressWarnings({"unchecked"})
-  @Override
-  public T getSource() {
-    return (T) super.getSource();
-  }
+	@SuppressWarnings({ "unchecked" })
+	@Override
+	public T getSource() {
+		return (T) super.getSource();
+	}
 }

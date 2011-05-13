@@ -51,137 +51,134 @@ import com.mongodb.DBObject;
 import com.mongodb.Mongo;
 import com.mongodb.MongoException;
 import com.mongodb.WriteConcern;
+
 /**
  * Modified from https://github.com/deftlabs/mongo-java-geospatial-example
+ * 
  * @author Mark Pollack
- *
+ * 
  */
 public class GeoSpatialTests {
 
-  private static final Log LOGGER = LogFactory.getLog(GeoSpatialTests.class);
-  private final String[] collectionsToDrop = new String[]{"newyork"};
+	private static final Log LOGGER = LogFactory.getLog(GeoSpatialTests.class);
+	private final String[] collectionsToDrop = new String[] { "newyork" };
 
-  ApplicationContext applicationContext;
-  MongoTemplate template;
-  ServerInfo serverInfo;
-  
-  ExpressionParser parser;
+	ApplicationContext applicationContext;
+	MongoTemplate template;
+	ServerInfo serverInfo;
 
-  @Before
-  public void setUp() throws Exception {
-    Mongo mongo = new Mongo();
-    serverInfo = new ServerInfo(mongo);
-    DB db = mongo.getDB("geospatial");
-    for (String coll : collectionsToDrop) {
-      db.getCollection(coll).drop();
-    }
-    applicationContext = new AnnotationConfigApplicationContext(GeoSpatialAppConfig.class);
-    template = applicationContext.getBean(MongoTemplate.class);
-    template.setWriteConcern(WriteConcern.FSYNC_SAFE);
-    template.ensureIndex(Venue.class, new GeospatialIndex("location"));
-    indexCreated();
-    addVenues();
-    parser = new SpelExpressionParser();
-  }
+	ExpressionParser parser;
 
-  private void addVenues() {
-    
-    template.insert(new Venue("Penn Station", -73.99408, 40.75057));
-    template.insert(new Venue("10gen Office", -73.99171, 40.738868));
-    template.insert(new Venue("Flatiron Building", -73.988135, 40.741404));
-    template.insert(new Venue("Players Club", -73.997812, 40.739128));
-    template.insert(new Venue("City Bakery ", -73.992491, 40.738673));
-    template.insert(new Venue("Splash Bar", -73.992491, 40.738673));
-    template.insert(new Venue("Momofuku Milk Bar", -73.985839, 40.731698));
-    template.insert(new Venue("Shake Shack", -73.98820, 40.74164));
-    template.insert(new Venue("Penn Station", -73.99408, 40.75057));
-    template.insert(new Venue("Empire State Building", -73.98602, 40.74894));
-    //template.insert(new Venue("Washington Square Park", -73.99756, 40.73083));
-    template.insert(new Venue("Ulaanbaatar, Mongolia", 106.9154, 47.9245));
-    template.insert(new Venue("Maplewood, NJ", -74.2713, 40.73137));
-  }
+	@Before
+	public void setUp() throws Exception {
+		Mongo mongo = new Mongo();
+		serverInfo = new ServerInfo(mongo);
+		DB db = mongo.getDB("geospatial");
+		for (String coll : collectionsToDrop) {
+			db.getCollection(coll).drop();
+		}
+		applicationContext = new AnnotationConfigApplicationContext(GeoSpatialAppConfig.class);
+		template = applicationContext.getBean(MongoTemplate.class);
+		template.setWriteConcern(WriteConcern.FSYNC_SAFE);
+		template.ensureIndex(Venue.class, new GeospatialIndex("location"));
+		indexCreated();
+		addVenues();
+		parser = new SpelExpressionParser();
+	}
 
-  /*
-  public void geoNear() {
-    GeoNearResult<Venue> geoNearResult = template.geoNear(new Query(Criteria.where("type").is("Office")), Venue.class, 
-                     GeoNearCriteria.near(2,3).num(10).maxDistance(10).distanceMultiplier(10).spherical(true));
-  }*/
+	private void addVenues() {
 
-  @Test
-  public void withinCenter() {
-    
-    Circle circle = new Circle(-73.99171, 40.738868, 0.01);
-    List<Venue> venues = template.find(new Query(Criteria.where("location").withinCenter(circle)), Venue.class);
-    assertThat(venues.size(), equalTo(7));
-  }
-  
-  @Test
-  @Ignore("run only on v 1.7.0 server or greater")
-  public void withinCenterSphere() {       
-    Circle circle = new Circle(-73.99171, 40.738868, 0.003712240453784);
-    List<Venue> venues = template.find(new Query(Criteria.where("location").withinCenterSphere(circle)), Venue.class);
-    assertThat(venues.size(), equalTo(11));
-  }
-  
-  
-  @Test
-  public void withinBox() {
-    Box box = new Box(new Point(-73.99756, 40.73083), new Point(-73.988135, 40.741404));
-    //Box box = newBox.lowerLeft(x,y).upperRight(x,y);
-    List<Venue> venues = template.find(new Query(Criteria.where("location").withinBox(box)), Venue.class);
-    assertThat(venues.size(), equalTo(4));
-  }
-  
-  @Test
-  public void nearPoint() {
-    Point point = new Point(-73.99171, 40.738868);
-    List<Venue> venues = template.find(new Query(Criteria.where("location").near(point).maxDistance(0.01)), Venue.class);
-    assertThat(venues.size(), equalTo(7));
-  }
-  
-  @Test
-  @Ignore("run only on v 1.7.0 server or greater")
-  public void nearSphere() {
-    Point point = new Point(-73.99171, 40.738868);
-    List<Venue> venues = template.find(new Query(Criteria.where("location").nearSphere(point).maxDistance(0.003712240453784)), Venue.class);
-    assertThat(venues.size(), equalTo(11));
-  }
-  
+		template.insert(new Venue("Penn Station", -73.99408, 40.75057));
+		template.insert(new Venue("10gen Office", -73.99171, 40.738868));
+		template.insert(new Venue("Flatiron Building", -73.988135, 40.741404));
+		template.insert(new Venue("Players Club", -73.997812, 40.739128));
+		template.insert(new Venue("City Bakery ", -73.992491, 40.738673));
+		template.insert(new Venue("Splash Bar", -73.992491, 40.738673));
+		template.insert(new Venue("Momofuku Milk Bar", -73.985839, 40.731698));
+		template.insert(new Venue("Shake Shack", -73.98820, 40.74164));
+		template.insert(new Venue("Penn Station", -73.99408, 40.75057));
+		template.insert(new Venue("Empire State Building", -73.98602, 40.74894));
+		// template.insert(new Venue("Washington Square Park", -73.99756, 40.73083));
+		template.insert(new Venue("Ulaanbaatar, Mongolia", 106.9154, 47.9245));
+		template.insert(new Venue("Maplewood, NJ", -74.2713, 40.73137));
+	}
 
+	/*
+	public void geoNear() {
+	  GeoNearResult<Venue> geoNearResult = template.geoNear(new Query(Criteria.where("type").is("Office")), Venue.class, 
+	                   GeoNearCriteria.near(2,3).num(10).maxDistance(10).distanceMultiplier(10).spherical(true));
+	}*/
 
-  @Test
-  public void searchAllData() {
-    assertThat(template, notNullValue());
-    Venue foundVenue = template.findOne(
-        new Query(Criteria.where("name").is("Penn Station")), Venue.class);
-    assertThat(foundVenue, notNullValue());
-    List<Venue> venues = template.getCollection(Venue.class);    
-    assertThat(venues.size(), equalTo(12));
-    Collection names = (Collection)parser.parseExpression("![name]").getValue(venues);
-    assertThat(names.size(), equalTo(12));
-    org.springframework.util.Assert.notEmpty(names);
-    
-  }
-  
-  public void indexCreated() {
-    List<DBObject> indexInfo = getIndexInfo(Venue.class);
-    LOGGER.debug(indexInfo);
-    assertThat(indexInfo.size(), equalTo(2));
-    assertThat(indexInfo.get(1).get("name").toString(), equalTo("location_2d"));
-    assertThat(indexInfo.get(1).get("ns").toString(),
-        equalTo("geospatial.newyork"));
-  }
+	@Test
+	public void withinCenter() {
 
-  // TODO move to MongoAdmin
-  public List<DBObject> getIndexInfo(Class clazz) {
-    return template.execute(clazz, new CollectionCallback<List<DBObject>>() {
+		Circle circle = new Circle(-73.99171, 40.738868, 0.01);
+		List<Venue> venues = template.find(new Query(Criteria.where("location").withinCenter(circle)), Venue.class);
+		assertThat(venues.size(), equalTo(7));
+	}
 
-      public List<DBObject> doInCollection(DBCollection collection)
-          throws MongoException, DataAccessException {
-        return collection.getIndexInfo();
-      }
-    });
-  }
-  
+	@Test
+	@Ignore("run only on v 1.7.0 server or greater")
+	public void withinCenterSphere() {
+		Circle circle = new Circle(-73.99171, 40.738868, 0.003712240453784);
+		List<Venue> venues = template.find(new Query(Criteria.where("location").withinCenterSphere(circle)), Venue.class);
+		assertThat(venues.size(), equalTo(11));
+	}
+
+	@Test
+	public void withinBox() {
+		Box box = new Box(new Point(-73.99756, 40.73083), new Point(-73.988135, 40.741404));
+		// Box box = newBox.lowerLeft(x,y).upperRight(x,y);
+		List<Venue> venues = template.find(new Query(Criteria.where("location").withinBox(box)), Venue.class);
+		assertThat(venues.size(), equalTo(4));
+	}
+
+	@Test
+	public void nearPoint() {
+		Point point = new Point(-73.99171, 40.738868);
+		List<Venue> venues = template
+				.find(new Query(Criteria.where("location").near(point).maxDistance(0.01)), Venue.class);
+		assertThat(venues.size(), equalTo(7));
+	}
+
+	@Test
+	@Ignore("run only on v 1.7.0 server or greater")
+	public void nearSphere() {
+		Point point = new Point(-73.99171, 40.738868);
+		List<Venue> venues = template.find(
+				new Query(Criteria.where("location").nearSphere(point).maxDistance(0.003712240453784)), Venue.class);
+		assertThat(venues.size(), equalTo(11));
+	}
+
+	@Test
+	public void searchAllData() {
+		assertThat(template, notNullValue());
+		Venue foundVenue = template.findOne(new Query(Criteria.where("name").is("Penn Station")), Venue.class);
+		assertThat(foundVenue, notNullValue());
+		List<Venue> venues = template.getCollection(Venue.class);
+		assertThat(venues.size(), equalTo(12));
+		Collection names = (Collection) parser.parseExpression("![name]").getValue(venues);
+		assertThat(names.size(), equalTo(12));
+		org.springframework.util.Assert.notEmpty(names);
+
+	}
+
+	public void indexCreated() {
+		List<DBObject> indexInfo = getIndexInfo(Venue.class);
+		LOGGER.debug(indexInfo);
+		assertThat(indexInfo.size(), equalTo(2));
+		assertThat(indexInfo.get(1).get("name").toString(), equalTo("location_2d"));
+		assertThat(indexInfo.get(1).get("ns").toString(), equalTo("geospatial.newyork"));
+	}
+
+	// TODO move to MongoAdmin
+	public List<DBObject> getIndexInfo(Class clazz) {
+		return template.execute(clazz, new CollectionCallback<List<DBObject>>() {
+
+			public List<DBObject> doInCollection(DBCollection collection) throws MongoException, DataAccessException {
+				return collection.getIndexInfo();
+			}
+		});
+	}
 
 }

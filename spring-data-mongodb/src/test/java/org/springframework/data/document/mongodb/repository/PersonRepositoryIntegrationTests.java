@@ -17,13 +17,11 @@ package org.springframework.data.document.mongodb.repository;
 
 import org.springframework.test.context.ContextConfiguration;
 
-
 /**
  * Integration test for {@link PersonRepository}.
- *
+ * 
  * @author Oliver Gierke
  */
 @ContextConfiguration
-public class PersonRepositoryIntegrationTests extends
-    AbstractPersonRepositoryIntegrationTests {
+public class PersonRepositoryIntegrationTests extends AbstractPersonRepositoryIntegrationTests {
 }

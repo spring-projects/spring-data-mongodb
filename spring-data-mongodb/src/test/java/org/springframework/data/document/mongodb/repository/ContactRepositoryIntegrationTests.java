@@ -31,16 +31,16 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("config/MongoNamespaceIntegrationTests-context.xml")
 public class ContactRepositoryIntegrationTests {
-  
-  @Autowired
-  ContactRepository repository;
 
-  @Test
-  public void readsAndWritesContactCorrectly() {
-    
-    Person person = new Person("Oliver", "Gierke");
-    Contact result = repository.save(person);
-    
-    assertTrue(repository.findOne(result.getId()) instanceof Person);
-  }
+	@Autowired
+	ContactRepository repository;
+
+	@Test
+	public void readsAndWritesContactCorrectly() {
+
+		Person person = new Person("Oliver", "Gierke");
+		Contact result = repository.save(person);
+
+		assertTrue(repository.findOne(result.getId()) instanceof Person);
+	}
 }

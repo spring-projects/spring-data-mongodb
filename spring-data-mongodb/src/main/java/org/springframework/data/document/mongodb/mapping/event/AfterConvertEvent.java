@@ -23,10 +23,10 @@ import com.mongodb.DBObject;
  */
 public class AfterConvertEvent<E> extends MongoMappingEvent<E> {
 
-  private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-  public AfterConvertEvent(DBObject dbo, E source) {
-    super(source, dbo);
-  }
+	public AfterConvertEvent(DBObject dbo, E source) {
+		super(source, dbo);
+	}
 
 }

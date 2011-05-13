@@ -10,24 +10,21 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.document.mongodb.repository.AbstractPersonRepositoryIntegrationTests;
 import org.springframework.test.context.ContextConfiguration;
 
-
 /**
- * Test class using the namespace configuration to set up the repository
- * instance.
- *
+ * Test class using the namespace configuration to set up the repository instance.
+ * 
  * @author Oliver Gierke
  */
 @ContextConfiguration
-public class MongoNamespaceIntegrationTests extends
-    AbstractPersonRepositoryIntegrationTests {
+public class MongoNamespaceIntegrationTests extends AbstractPersonRepositoryIntegrationTests {
 
-  
-  @Test
-  public void assertDefaultMappingContextIsWired() {
-    
-    XmlBeanFactory factory = new XmlBeanFactory(new ClassPathResource("MongoNamespaceIntegrationTests-context.xml", getClass()));
-    BeanDefinition definition = factory.getBeanDefinition("personRepository");
-    assertThat(definition, is(notNullValue()));
-    assertThat(definition.getPropertyValues().getPropertyValue("mappingContext"), is(notNullValue()));
-  }
+	@Test
+	public void assertDefaultMappingContextIsWired() {
+
+		XmlBeanFactory factory = new XmlBeanFactory(new ClassPathResource("MongoNamespaceIntegrationTests-context.xml",
+				getClass()));
+		BeanDefinition definition = factory.getBeanDefinition("personRepository");
+		assertThat(definition, is(notNullValue()));
+		assertThat(definition.getPropertyValues().getPropertyValue("mappingContext"), is(notNullValue()));
+	}
 }

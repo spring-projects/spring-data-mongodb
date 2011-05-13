@@ -28,19 +28,19 @@ import java.lang.annotation.*;
 @Documented
 public @interface Query {
 
-  /**
-   * Takes a MongoDB JSON string to define the actual query to be executed. This one will take precendece over the
-   * method name then.
-   * 
-   * @return
-   */
-  String value() default "";
+	/**
+	 * Takes a MongoDB JSON string to define the actual query to be executed. This one will take precendece over the
+	 * method name then.
+	 * 
+	 * @return
+	 */
+	String value() default "";
 
-  /**
-   * Defines the fields that should be returned for the given query. Note that only these fields will make it into the
-   * domain object returned.
-   * 
-   * @return
-   */
-  String fields() default "";
+	/**
+	 * Defines the fields that should be returned for the given query. Note that only these fields will make it into the
+	 * domain object returned.
+	 * 
+	 * @return
+	 */
+	String fields() default "";
 }

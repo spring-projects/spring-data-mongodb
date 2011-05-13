@@ -21,190 +21,182 @@ import org.springframework.data.document.mongodb.geo.Point;
 import org.springframework.data.document.mongodb.index.GeoSpatialIndexed;
 import org.springframework.data.document.mongodb.mapping.Document;
 
-
 /**
  * Sample domain class.
- *
+ * 
  * @author Oliver Gierke
  */
 @Document
 public class Person extends Contact {
 
-  private String firstname;
-  private String lastname;
-  private Integer age;
-  
-  @GeoSpatialIndexed
-  private Point location;
+	private String firstname;
+	private String lastname;
+	private Integer age;
 
-  private Address address;
-  private Set<Address> shippingAddresses;
+	@GeoSpatialIndexed
+	private Point location;
 
+	private Address address;
+	private Set<Address> shippingAddresses;
 
-  public Person() {
+	public Person() {
 
-    this(null, null);
-  }
+		this(null, null);
+	}
 
+	public Person(String firstname, String lastname) {
 
-  public Person(String firstname, String lastname) {
+		this(firstname, lastname, null);
+	}
 
-    this(firstname, lastname, null);
-  }
+	public Person(String firstname, String lastname, Integer age) {
 
+		super();
+		this.firstname = firstname;
+		this.lastname = lastname;
+		this.age = age;
+	}
 
-  public Person(String firstname, String lastname, Integer age) {
+	/**
+	 * @return the firstname
+	 */
+	public String getFirstname() {
 
-    super();
-    this.firstname = firstname;
-    this.lastname = lastname;
-    this.age = age;
-  }
+		return firstname;
+	}
 
-  /**
-   * @return the firstname
-   */
-  public String getFirstname() {
+	/**
+	 * @param firstname
+	 *          the firstname to set
+	 */
+	public void setFirstname(String firstname) {
 
-    return firstname;
-  }
+		this.firstname = firstname;
+	}
 
+	/**
+	 * @return the lastname
+	 */
+	public String getLastname() {
 
-  /**
-   * @param firstname the firstname to set
-   */
-  public void setFirstname(String firstname) {
+		return lastname;
+	}
 
-    this.firstname = firstname;
-  }
+	/**
+	 * @param lastname
+	 *          the lastname to set
+	 */
+	public void setLastname(String lastname) {
 
+		this.lastname = lastname;
+	}
 
-  /**
-   * @return the lastname
-   */
-  public String getLastname() {
+	/**
+	 * @return the age
+	 */
+	public Integer getAge() {
 
-    return lastname;
-  }
+		return age;
+	}
 
+	/**
+	 * @param age
+	 *          the age to set
+	 */
+	public void setAge(Integer age) {
 
-  /**
-   * @param lastname the lastname to set
-   */
-  public void setLastname(String lastname) {
+		this.age = age;
+	}
 
-    this.lastname = lastname;
-  }
+	/**
+	 * @return the location
+	 */
+	public Point getLocation() {
+		return location;
+	}
 
+	/**
+	 * @param location
+	 *          the location to set
+	 */
+	public void setLocation(Point location) {
+		this.location = location;
+	}
 
-  /**
-   * @return the age
-   */
-  public Integer getAge() {
+	/**
+	 * @return the address
+	 */
+	public Address getAddress() {
+		return address;
+	}
 
-    return age;
-  }
+	/**
+	 * @param address
+	 *          the address to set
+	 */
+	public void setAddress(Address address) {
+		this.address = address;
+	}
 
+	/**
+	 * @return the addresses
+	 */
+	public Set<Address> getShippingAddresses() {
+		return shippingAddresses;
+	}
 
-  /**
-   * @param age the age to set
-   */
-  public void setAge(Integer age) {
+	/**
+	 * @param addresses
+	 *          the addresses to set
+	 */
+	public void setShippingAddresses(Set<Address> addresses) {
+		this.shippingAddresses = addresses;
+	}
 
-    this.age = age;
-  }
+	/* (non-Javadoc)
+	 * @see org.springframework.data.document.mongodb.repository.Contact#getName()
+	 */
+	public String getName() {
+		return String.format("%s %s", firstname, lastname);
+	}
 
-  
-  /**
-   * @return the location
-   */
-  public Point getLocation() {
-    return location;
-  }
-  
-  /**
-   * @param location the location to set
-   */
-  public void setLocation(Point location) {
-    this.location = location;
-  }
+	/*
+	* (non-Javadoc)
+	*
+	* @see java.lang.Object#equals(java.lang.Object)
+	*/
+	@Override
+	public boolean equals(Object obj) {
 
-  /**
-   * @return the address
-   */
-  public Address getAddress() {
-    return address;
-  }
+		if (this == obj) {
+			return true;
+		}
 
+		if (obj == null || !getClass().equals(obj.getClass())) {
+			return false;
+		}
 
-  /**
-   * @param address the address to set
-   */
-  public void setAddress(Address address) {
-    this.address = address;
-  }
+		Person that = (Person) obj;
 
-  /**
-   * @return the addresses
-   */
-  public Set<Address> getShippingAddresses() {
-    return shippingAddresses;
-  }
+		return this.getId().equals(that.getId());
+	}
 
+	/*
+	* (non-Javadoc)
+	*
+	* @see java.lang.Object#hashCode()
+	*/
+	@Override
+	public int hashCode() {
 
-  /**
-   * @param addresses the addresses to set
-   */
-  public void setShippingAddresses(Set<Address> addresses) {
-    this.shippingAddresses = addresses;
-  }
+		return getId().hashCode();
+	}
 
-  
-  /* (non-Javadoc)
-   * @see org.springframework.data.document.mongodb.repository.Contact#getName()
-   */
-  public String getName() {
-    return String.format("%s %s", firstname, lastname);
-  }
-
-  /*
-  * (non-Javadoc)
-  *
-  * @see java.lang.Object#equals(java.lang.Object)
-  */
-  @Override
-  public boolean equals(Object obj) {
-
-    if (this == obj) {
-      return true;
-    }
-
-    if (obj == null || !getClass().equals(obj.getClass())) {
-      return false;
-    }
-
-    Person that = (Person) obj;
-
-    return this.getId().equals(that.getId());
-  }
-
-
-  /*
-  * (non-Javadoc)
-  *
-  * @see java.lang.Object#hashCode()
-  */
-  @Override
-  public int hashCode() {
-
-    return getId().hashCode();
-  }
-
-  /* (non-Javadoc)
-  * @see java.lang.Object#toString()
-  */
-  @Override
-  public String toString() {
-    return String.format("%s %s", firstname, lastname);
-  }
+	/* (non-Javadoc)
+	* @see java.lang.Object#toString()
+	*/
+	@Override
+	public String toString() {
+		return String.format("%s %s", firstname, lastname);
+	}
 }

@@ -21,29 +21,28 @@ import java.util.Map;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
-
 public class Sort {
 
-  private Map<String, Order> fieldSpec = new HashMap<String, Order>();
+	private Map<String, Order> fieldSpec = new HashMap<String, Order>();
 
-  public Sort() {
-  }
+	public Sort() {
+	}
 
-  public Sort(String key, Order order) {
-    fieldSpec.put(key, order);
-  }
+	public Sort(String key, Order order) {
+		fieldSpec.put(key, order);
+	}
 
-  public Sort on(String key, Order order) {
-    fieldSpec.put(key, order);
-    return this;
-  }
+	public Sort on(String key, Order order) {
+		fieldSpec.put(key, order);
+		return this;
+	}
 
-  public DBObject getSortObject() {
-    DBObject dbo = new BasicDBObject();
-    for (String k : fieldSpec.keySet()) {
-      dbo.put(k, (fieldSpec.get(k).equals(Order.ASCENDING) ? 1 : -1));
-    }
-    return dbo;
-  }
+	public DBObject getSortObject() {
+		DBObject dbo = new BasicDBObject();
+		for (String k : fieldSpec.keySet()) {
+			dbo.put(k, (fieldSpec.get(k).equals(Order.ASCENDING) ? 1 : -1));
+		}
+		return dbo;
+	}
 
 }

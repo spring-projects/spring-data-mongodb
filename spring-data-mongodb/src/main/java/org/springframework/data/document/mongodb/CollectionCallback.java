@@ -21,6 +21,6 @@ import org.springframework.dao.DataAccessException;
 
 public interface CollectionCallback<T> {
 
-  T doInCollection(DBCollection collection) throws MongoException, DataAccessException;
+	T doInCollection(DBCollection collection) throws MongoException, DataAccessException;
 
 }

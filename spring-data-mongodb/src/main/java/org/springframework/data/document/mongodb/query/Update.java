@@ -32,7 +32,7 @@ public class Update {
 
 	/**
 	 * Static factory method to create an Update using the provided key
-	 *
+	 * 
 	 * @param key
 	 * @return
 	 */
@@ -42,7 +42,7 @@ public class Update {
 
 	/**
 	 * Update using the $set update modifier
-	 *
+	 * 
 	 * @param key
 	 * @param value
 	 * @return
@@ -54,7 +54,7 @@ public class Update {
 
 	/**
 	 * Update using the $unset update modifier
-	 *
+	 * 
 	 * @param key
 	 * @return
 	 */
@@ -65,7 +65,7 @@ public class Update {
 
 	/**
 	 * Update using the $inc update modifier
-	 *
+	 * 
 	 * @param key
 	 * @param inc
 	 * @return
@@ -77,7 +77,7 @@ public class Update {
 
 	/**
 	 * Update using the $push update modifier
-	 *
+	 * 
 	 * @param key
 	 * @param value
 	 * @return
@@ -89,7 +89,7 @@ public class Update {
 
 	/**
 	 * Update using the $pushAll update modifier
-	 *
+	 * 
 	 * @param key
 	 * @param values
 	 * @return
@@ -107,7 +107,7 @@ public class Update {
 
 	/**
 	 * Update using the $addToSet update modifier
-	 *
+	 * 
 	 * @param key
 	 * @param value
 	 * @return
@@ -119,20 +119,19 @@ public class Update {
 
 	/**
 	 * Update using the $pop update modifier
-	 *
+	 * 
 	 * @param key
 	 * @param pos
 	 * @return
 	 */
 	public Update pop(String key, Position pos) {
-		addMultiFieldOperation("$pop", key,
-				(pos == Position.FIRST ? -1 : 1));
+		addMultiFieldOperation("$pop", key, (pos == Position.FIRST ? -1 : 1));
 		return this;
 	}
 
 	/**
 	 * Update using the $pull update modifier
-	 *
+	 * 
 	 * @param key
 	 * @param value
 	 * @return
@@ -144,7 +143,7 @@ public class Update {
 
 	/**
 	 * Update using the $pullAll update modifier
-	 *
+	 * 
 	 * @param key
 	 * @param values
 	 * @return
@@ -162,7 +161,7 @@ public class Update {
 
 	/**
 	 * Update using the $rename update modifier
-	 *
+	 * 
 	 * @param oldName
 	 * @param newName
 	 * @return
@@ -181,8 +180,7 @@ public class Update {
 	}
 
 	@SuppressWarnings("unchecked")
-	protected void addMultiFieldOperation(String operator, String key,
-																				Object value) {
+	protected void addMultiFieldOperation(String operator, String key, Object value) {
 		Object existingValue = this.modifierOps.get(operator);
 		LinkedHashMap<String, Object> keyValueMap;
 		if (existingValue == null) {
@@ -192,8 +190,8 @@ public class Update {
 			if (existingValue instanceof LinkedHashMap) {
 				keyValueMap = (LinkedHashMap<String, Object>) existingValue;
 			} else {
-				throw new InvalidDataAccessApiUsageException("Modifier Operations should be a LinkedHashMap but was " +
-						existingValue.getClass());
+				throw new InvalidDataAccessApiUsageException("Modifier Operations should be a LinkedHashMap but was "
+						+ existingValue.getClass());
 			}
 		}
 		keyValueMap.put(key, value);

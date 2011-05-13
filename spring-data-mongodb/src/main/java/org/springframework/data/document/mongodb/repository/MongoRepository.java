@@ -23,7 +23,7 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 
 /**
  * Mongo specific {@link org.springframework.data.repository.Repository} interface.
- *
+ * 
  * @author Oliver Gierke
  */
 public interface MongoRepository<T, ID extends Serializable> extends PagingAndSortingRepository<T, ID> {
@@ -34,18 +34,18 @@ public interface MongoRepository<T, ID extends Serializable> extends PagingAndSo
 	 * @see org.springframework.data.repository.Repository#save(java.lang.Iterable)
 	 */
 	List<T> save(Iterable<? extends T> entites);
-	
-  /*
-    * (non-Javadoc)
-    *
-    * @see org.springframework.data.repository.Repository#findAll()
-    */
-  List<T> findAll();
 
-  /*
-    * (non-Javadoc)
-    *
-    * @see org.springframework.data.repository.PagingAndSortingRepository#findAll(org.springframework.data.domain.Sort)
-    */
-  List<T> findAll(Sort sort);
+	/*
+	  * (non-Javadoc)
+	  *
+	  * @see org.springframework.data.repository.Repository#findAll()
+	  */
+	List<T> findAll();
+
+	/*
+	  * (non-Javadoc)
+	  *
+	  * @see org.springframework.data.repository.PagingAndSortingRepository#findAll(org.springframework.data.domain.Sort)
+	  */
+	List<T> findAll(Sort sort);
 }

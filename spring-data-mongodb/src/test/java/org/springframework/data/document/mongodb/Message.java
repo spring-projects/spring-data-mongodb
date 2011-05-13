@@ -21,55 +21,54 @@ import org.bson.types.ObjectId;
 
 public class Message {
 
-  private ObjectId id;
+	private ObjectId id;
 
-  private String text;
+	private String text;
 
-  private Date timestamp;
+	private Date timestamp;
 
-  public Message() {
-  }
-  
-  public Message(String text) {
-    super();
-    this.text = text;
-    this.timestamp = new Date();
-  }
+	public Message() {
+	}
 
-  public Message(String text, Date timestamp) {
-    super();
-    this.text = text;
-    this.timestamp = timestamp;
-  }
+	public Message(String text) {
+		super();
+		this.text = text;
+		this.timestamp = new Date();
+	}
 
-  public ObjectId getId() {
-    return id;
-  }
+	public Message(String text, Date timestamp) {
+		super();
+		this.text = text;
+		this.timestamp = timestamp;
+	}
 
-  public void setId(ObjectId id) {
-    this.id = id;
-  }
+	public ObjectId getId() {
+		return id;
+	}
 
-  public String getText() {
-    return text;
-  }
+	public void setId(ObjectId id) {
+		this.id = id;
+	}
 
-  public void setText(String text) {
-    this.text = text;
-  }
+	public String getText() {
+		return text;
+	}
 
-  public Date getTimestamp() {
-    return timestamp;
-  }
+	public void setText(String text) {
+		this.text = text;
+	}
 
-  public void setTimestamp(Date timestamp) {
-    this.timestamp = timestamp;
-  }
+	public Date getTimestamp() {
+		return timestamp;
+	}
 
-  @Override
-  public String toString() {
-    return "Message [id=" + id + ", text=" + text + ", timestamp=" + timestamp
-        + "]";
-  }
+	public void setTimestamp(Date timestamp) {
+		this.timestamp = timestamp;
+	}
+
+	@Override
+	public String toString() {
+		return "Message [id=" + id + ", text=" + text + ", timestamp=" + timestamp + "]";
+	}
 
 }

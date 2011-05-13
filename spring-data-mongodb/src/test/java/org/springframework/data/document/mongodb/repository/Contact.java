@@ -26,15 +26,15 @@ import org.springframework.data.document.mongodb.mapping.Document;
  */
 @Document
 abstract class Contact {
-  
-  @Id
-  protected final String id;
-  
-  public Contact() {
-    this.id = new ObjectId().toString();
-  }
 
-  public String getId() {
-    return id;
-  }
+	@Id
+	protected final String id;
+
+	public Contact() {
+		this.id = new ObjectId().toString();
+	}
+
+	public String getId() {
+		return id;
+	}
 }

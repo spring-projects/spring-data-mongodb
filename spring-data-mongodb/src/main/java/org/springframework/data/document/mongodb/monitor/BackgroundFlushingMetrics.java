@@ -25,54 +25,51 @@ import org.springframework.jmx.support.MetricType;
 
 /**
  * JMX Metrics for Background Flushing
- *
+ * 
  * @author Mark Pollack
  */
 @ManagedResource(description = "Background Flushing Metrics")
 public class BackgroundFlushingMetrics extends AbstractMonitor {
 
+	public BackgroundFlushingMetrics(Mongo mongo) {
+		this.mongo = mongo;
+	}
 
-  public BackgroundFlushingMetrics(Mongo mongo) {
-    this.mongo = mongo;
-  }
+	@ManagedMetric(metricType = MetricType.COUNTER, displayName = "Flushes")
+	public int getFlushes() {
+		return getFlushingData("flushes", java.lang.Integer.class);
+	}
 
-  @ManagedMetric(metricType = MetricType.COUNTER, displayName = "Flushes")
-  public int getFlushes() {
-    return getFlushingData("flushes", java.lang.Integer.class);
-  }
+	@ManagedMetric(metricType = MetricType.COUNTER, displayName = "Total ms", unit = "ms")
+	public int getTotalMs() {
+		return getFlushingData("total_ms", java.lang.Integer.class);
+	}
 
-  @ManagedMetric(metricType = MetricType.COUNTER, displayName = "Total ms", unit = "ms")
-  public int getTotalMs() {
-    return getFlushingData("total_ms", java.lang.Integer.class);
-  }
+	@ManagedMetric(metricType = MetricType.GAUGE, displayName = "Average ms", unit = "ms")
+	public double getAverageMs() {
+		return getFlushingData("average_ms", java.lang.Double.class);
+	}
 
-  @ManagedMetric(metricType = MetricType.GAUGE, displayName = "Average ms", unit = "ms")
-  public double getAverageMs() {
-    return getFlushingData("average_ms", java.lang.Double.class);
-  }
+	@ManagedMetric(metricType = MetricType.GAUGE, displayName = "Last Ms", unit = "ms")
+	public int getLastMs() {
+		return getFlushingData("last_ms", java.lang.Integer.class);
+	}
 
-  @ManagedMetric(metricType = MetricType.GAUGE, displayName = "Last Ms", unit = "ms")
-  public int getLastMs() {
-    return getFlushingData("last_ms", java.lang.Integer.class);
-  }
+	@ManagedMetric(metricType = MetricType.GAUGE, displayName = "Last finished")
+	public Date getLastFinished() {
+		return getLast();
+	}
 
+	@SuppressWarnings("unchecked")
+	private <T> T getFlushingData(String key, Class<T> targetClass) {
+		DBObject mem = (DBObject) getServerStatus().get("backgroundFlushing");
+		return (T) mem.get(key);
+	}
 
-  @ManagedMetric(metricType = MetricType.GAUGE, displayName = "Last finished")
-  public Date getLastFinished() {
-    return getLast();
-  }
-
-  @SuppressWarnings("unchecked")
-  private <T> T getFlushingData(String key, Class<T> targetClass) {
-    DBObject mem = (DBObject) getServerStatus().get("backgroundFlushing");
-    return (T) mem.get(key);
-  }
-
-  private Date getLast() {
-    DBObject bgFlush = (DBObject) getServerStatus().get("backgroundFlushing");
-    Date lastFinished = (Date) bgFlush.get("last_finished");
-    return lastFinished;
-  }
-
+	private Date getLast() {
+		DBObject bgFlush = (DBObject) getServerStatus().get("backgroundFlushing");
+		Date lastFinished = (Date) bgFlush.get("last_finished");
+		return lastFinished;
+	}
 
 }

@@ -24,29 +24,28 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
-
 /**
  * This test class assumes that you are already running the MongoDB server.
- *
+ * 
  * @author Mark Pollack
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration
 public class MongoMonitorIntegrationTests {
 
-  @Autowired
-  Mongo mongo;
+	@Autowired
+	Mongo mongo;
 
-  @Test
-  public void serverInfo() {
-    ServerInfo serverInfo = new ServerInfo(mongo);
-    String version = serverInfo.getVersion();
-    Assert.isTrue(StringUtils.hasText("1."));
-  }
+	@Test
+	public void serverInfo() {
+		ServerInfo serverInfo = new ServerInfo(mongo);
+		String version = serverInfo.getVersion();
+		Assert.isTrue(StringUtils.hasText("1."));
+	}
 
-  @Test
-  public void operationCounters() {
-    OperationCounters operationCounters = new OperationCounters(mongo);
-    operationCounters.getInsertCount();
-  }
+	@Test
+	public void operationCounters() {
+		OperationCounters operationCounters = new OperationCounters(mongo);
+		operationCounters.getInsertCount();
+	}
 }

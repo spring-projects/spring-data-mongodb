@@ -45,91 +45,91 @@ import com.mongodb.DBObject;
 @RunWith(MockitoJUnitRunner.class)
 public class CustomConvertersUnitTests {
 
-  MappingMongoConverter converter;
-  
-  @Mock
-  BarToDBObjectConverter barToDBObjectConverter;
-  @Mock
-  DBObjectToBarConverter dbObjectToBarConverter;
-  
-  MongoMappingContext context;
-  MongoPersistentEntity<Foo> fooEntity;
-  MongoPersistentEntity<Bar> barEntity;
+	MappingMongoConverter converter;
 
-  @Before
-  @SuppressWarnings("unchecked")
-  public void setUp() throws Exception {
-    
-    context = new MongoMappingContext();
-    context.setInitialEntitySet(new HashSet<Class<?>>(Arrays.asList(Foo.class, Bar.class)));
-    context.afterPropertiesSet();
-    
-    when(barToDBObjectConverter.convert(any(Bar.class))).thenReturn(new BasicDBObject());
-    when(dbObjectToBarConverter.convert(any(DBObject.class))).thenReturn(new Bar());
-    
-    converter = new MappingMongoConverter(context);
-    converter.setConverters(Arrays.asList(barToDBObjectConverter, dbObjectToBarConverter));
-  }
+	@Mock
+	BarToDBObjectConverter barToDBObjectConverter;
+	@Mock
+	DBObjectToBarConverter dbObjectToBarConverter;
 
-  @Test
-  public void nestedToDBObjectConverterGetsInvoked() {
-    
-    Foo foo = new Foo();
-    foo.bar = new Bar();
-    
-    converter.write(foo, new BasicDBObject());
-    verify(barToDBObjectConverter).convert(any(Bar.class));
-  }
-  
-  @Test
-  public void nestedFromDBObjectConverterGetsInvoked() {
-    
-    BasicDBObject dbObject = new BasicDBObject();
-    dbObject.put("bar", new BasicDBObject());
-    
-    converter.read(Foo.class, dbObject);
-    verify(dbObjectToBarConverter).convert(any(DBObject.class));
-  }
-  
-  @Test
-  public void toDBObjectConverterGetsInvoked() {
-    
-    converter.write(new Bar(), new BasicDBObject());
-    verify(barToDBObjectConverter).convert(any(Bar.class));
-  }
-  
-  @Test
-  public void fromDBObjectConverterGetsInvoked() {
-    
-    converter.read(Bar.class, new BasicDBObject());
-    verify(dbObjectToBarConverter).convert(any(DBObject.class));
-  }
-  
-  @Test
-  public void foo() {
-    DBObject dbObject = new BasicDBObject();
-    dbObject.put("foo", null);
-    
-    Assert.assertThat(dbObject.containsField("foo"), CoreMatchers.is(true));
-  }
+	MongoMappingContext context;
+	MongoPersistentEntity<Foo> fooEntity;
+	MongoPersistentEntity<Bar> barEntity;
 
-  public static class Foo {
-    @Id
-    public String id;
-    public Bar bar;
-  }
-  
-  public static class Bar {
-    @Id
-    public String id;
-    public String foo;
-  }
-  
-  private interface BarToDBObjectConverter extends Converter<Bar, DBObject> {
+	@Before
+	@SuppressWarnings("unchecked")
+	public void setUp() throws Exception {
 
-  }
+		context = new MongoMappingContext();
+		context.setInitialEntitySet(new HashSet<Class<?>>(Arrays.asList(Foo.class, Bar.class)));
+		context.afterPropertiesSet();
 
-  private interface DBObjectToBarConverter extends Converter<DBObject, Bar> {
+		when(barToDBObjectConverter.convert(any(Bar.class))).thenReturn(new BasicDBObject());
+		when(dbObjectToBarConverter.convert(any(DBObject.class))).thenReturn(new Bar());
 
-  }
+		converter = new MappingMongoConverter(context);
+		converter.setConverters(Arrays.asList(barToDBObjectConverter, dbObjectToBarConverter));
+	}
+
+	@Test
+	public void nestedToDBObjectConverterGetsInvoked() {
+
+		Foo foo = new Foo();
+		foo.bar = new Bar();
+
+		converter.write(foo, new BasicDBObject());
+		verify(barToDBObjectConverter).convert(any(Bar.class));
+	}
+
+	@Test
+	public void nestedFromDBObjectConverterGetsInvoked() {
+
+		BasicDBObject dbObject = new BasicDBObject();
+		dbObject.put("bar", new BasicDBObject());
+
+		converter.read(Foo.class, dbObject);
+		verify(dbObjectToBarConverter).convert(any(DBObject.class));
+	}
+
+	@Test
+	public void toDBObjectConverterGetsInvoked() {
+
+		converter.write(new Bar(), new BasicDBObject());
+		verify(barToDBObjectConverter).convert(any(Bar.class));
+	}
+
+	@Test
+	public void fromDBObjectConverterGetsInvoked() {
+
+		converter.read(Bar.class, new BasicDBObject());
+		verify(dbObjectToBarConverter).convert(any(DBObject.class));
+	}
+
+	@Test
+	public void foo() {
+		DBObject dbObject = new BasicDBObject();
+		dbObject.put("foo", null);
+
+		Assert.assertThat(dbObject.containsField("foo"), CoreMatchers.is(true));
+	}
+
+	public static class Foo {
+		@Id
+		public String id;
+		public Bar bar;
+	}
+
+	public static class Bar {
+		@Id
+		public String id;
+		public String foo;
+	}
+
+	private interface BarToDBObjectConverter extends Converter<Bar, DBObject> {
+
+	}
+
+	private interface DBObjectToBarConverter extends Converter<DBObject, Bar> {
+
+	}
 }

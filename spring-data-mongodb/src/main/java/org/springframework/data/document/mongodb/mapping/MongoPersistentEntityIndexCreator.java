@@ -45,9 +45,9 @@ import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 /**
- * Component that inspects {@link BasicMongoPersistentEntity} instances contained in the given {@link MongoMappingContext}
- * for indexing metadata and ensures the indexes to be available.
- *
+ * Component that inspects {@link BasicMongoPersistentEntity} instances contained in the given
+ * {@link MongoMappingContext} for indexing metadata and ensures the indexes to be available.
+ * 
  * @author Jon Brisbin <jbrisbin@vmware.com>
  * @author Oliver Gierke
  */
@@ -64,7 +64,7 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 		Assert.notNull(mongoTemplate);
 		Assert.notNull(mappingContext);
 		this.mongoTemplate = mongoTemplate;
- 
+
 		for (MongoPersistentEntity<?> entity : mappingContext.getPersistentEntities()) {
 			checkForIndexes(entity);
 		}
@@ -92,7 +92,8 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 					if ("".equals(indexColl)) {
 						indexColl = entity.getCollection();
 					}
-					ensureIndex(indexColl, index.name(), index.def(), index.direction(), index.unique(), index.dropDups(), index.sparse());
+					ensureIndex(indexColl, index.name(), index.def(), index.direction(), index.unique(), index.dropDups(),
+							index.sparse());
 					if (log.isDebugEnabled()) {
 						log.debug("Created compound index " + index);
 					}
@@ -121,38 +122,32 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 						if (log.isDebugEnabled()) {
 							log.debug("Created property index " + index);
 						}
-          } else if (field.isAnnotationPresent(GeoSpatialIndexed.class)) {
+					} else if (field.isAnnotationPresent(GeoSpatialIndexed.class)) {
 
-            GeoSpatialIndexed index = field.getAnnotation(GeoSpatialIndexed.class);
+						GeoSpatialIndexed index = field.getAnnotation(GeoSpatialIndexed.class);
 
-            GeospatialIndex indexObject = new GeospatialIndex(StringUtils.hasText(index.name()) ? index.name() : field
-                .getName());
-            indexObject.withMin(index.min()).withMax(index.max());
+						GeospatialIndex indexObject = new GeospatialIndex(StringUtils.hasText(index.name()) ? index.name() : field
+								.getName());
+						indexObject.withMin(index.min()).withMax(index.max());
 
-            String collection = StringUtils.hasText(index.collection()) ? index.collection() : entity.getCollection();
-            mongoTemplate.ensureIndex(collection, indexObject);
+						String collection = StringUtils.hasText(index.collection()) ? index.collection() : entity.getCollection();
+						mongoTemplate.ensureIndex(collection, indexObject);
 
-            if (log.isDebugEnabled()) {
-              log.debug(String.format("Created %s for entity %s in collection %s! ", indexObject, entity.getType(),
-                  collection));
-            }
-          }
+						if (log.isDebugEnabled()) {
+							log.debug(String.format("Created %s for entity %s in collection %s! ", indexObject, entity.getType(),
+									collection));
+						}
+					}
 				}
 			});
 
 			classesSeen.add(type);
 		}
 
-
 	}
 
-	protected void ensureIndex(String collection,
-														 final String name,
-														 final String def,
-														 final IndexDirection direction,
-														 final boolean unique,
-														 final boolean dropDups,
-														 final boolean sparse) {
+	protected void ensureIndex(String collection, final String name, final String def, final IndexDirection direction,
+			final boolean unique, final boolean dropDups, final boolean sparse) {
 		mongoTemplate.execute(collection, new CollectionCallback<Object>() {
 			public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 				DBObject defObj;
@@ -163,7 +158,7 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 					defObj.put(name, (direction == IndexDirection.ASCENDING ? 1 : -1));
 				}
 				DBObject opts = new BasicDBObject();
-				//opts.put("name", name + "_idx");
+				// opts.put("name", name + "_idx");
 				opts.put("dropDups", dropDups);
 				opts.put("sparse", sparse);
 				opts.put("unique", unique);

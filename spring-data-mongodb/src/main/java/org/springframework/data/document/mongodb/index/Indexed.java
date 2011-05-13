@@ -22,22 +22,23 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Mark a field  to be indexed using MongoDB's indexing feature.
+ * Mark a field to be indexed using MongoDB's indexing feature.
+ * 
  * @author Jon Brisbin <jbrisbin@vmware.com>
  */
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Indexed {
 
-  boolean unique() default false;
+	boolean unique() default false;
 
-  IndexDirection direction() default IndexDirection.ASCENDING;
+	IndexDirection direction() default IndexDirection.ASCENDING;
 
-  boolean sparse() default false;
+	boolean sparse() default false;
 
-  boolean dropDups() default false;
+	boolean dropDups() default false;
 
-  String name() default "";
+	String name() default "";
 
-  String collection() default "";
+	String collection() default "";
 }

@@ -16,7 +16,6 @@
 
 package org.springframework.data.document.mongodb.mapping;
 
-
 import org.springframework.data.annotation.Id;
 
 /**
@@ -25,23 +24,23 @@ import org.springframework.data.annotation.Id;
 @Document
 public class Account {
 
-  @Id
-  private String id;
-  private Float balance;
+	@Id
+	private String id;
+	private Float balance;
 
-  public String getId() {
-    return id;
-  }
+	public String getId() {
+		return id;
+	}
 
-  public void setId(String id) {
-    this.id = id;
-  }
+	public void setId(String id) {
+		this.id = id;
+	}
 
-  public Float getBalance() {
-    return balance;
-  }
+	public Float getBalance() {
+		return balance;
+	}
 
-  public void setBalance(Float balance) {
-    this.balance = balance;
-  }
+	public void setBalance(Float balance) {
+		this.balance = balance;
+	}
 }

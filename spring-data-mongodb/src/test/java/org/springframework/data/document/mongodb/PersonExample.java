@@ -32,76 +32,72 @@ import static org.springframework.data.document.mongodb.query.Update.update;
 
 public class PersonExample {
 
-  private static final Log log = LogFactory.getLog(PersonExample.class);
-  @Autowired
-  private MongoOperations mongoOps;
-  
-  public static void main(String[] args) {
-    ApplicationContext applicationContext = new AnnotationConfigApplicationContext(PersonExampleAppConfig.class);
-    PersonExample example = applicationContext.getBean(PersonExample.class);
-    example.doWork();
-  }
-  
-  public void doWork() {
-    mongoOps.dropCollection("personexample");
-    
-    PersonWithIdPropertyOfTypeString p = new PersonWithIdPropertyOfTypeString();
-    p.setFirstName("Sven");
-    p.setAge(22);
-       
-    mongoOps.save(p);
-    
-    
-    PersonWithIdPropertyOfTypeString p2 = new PersonWithIdPropertyOfTypeString();
-    p2.setFirstName("Jon");
-    p2.setAge(23);
-       
-    mongoOps.save(p2);
-    
-    
-    log.debug("Saved: " + p);
-    
-    p = mongoOps.findOne(query(whereId().is(p.getId())), PersonWithIdPropertyOfTypeString.class);
-    
-    log.debug("Found: " + p);
-    
-   // mongoOps.updateFirst(new Query(where("firstName").is("Sven")), new Update().set("age", 24));
-    
-  //  mongoOps.updateFirst(new Query(where("firstName").is("Sven")), update("age", 24));
-    
-       
-    p = mongoOps.findOne(query(whereId().is(p.getId())), PersonWithIdPropertyOfTypeString.class);    
-    log.debug("Updated: " + p);
-    
-    
-    List<PersonWithIdPropertyOfTypeString> folks = mongoOps.getCollection(PersonWithIdPropertyOfTypeString.class);
-    log.debug("Querying for all people...");
-    for (Iterator iterator = folks.iterator(); iterator.hasNext();) {
-      PersonWithIdPropertyOfTypeString personWithIdPropertyOfTypeString = (PersonWithIdPropertyOfTypeString) iterator
-          .next();
-      log.debug(personWithIdPropertyOfTypeString);
-    }
-    
-    //mongoOps.remove( query(whereId().is(p.getId())), p.getClass());
-    
-    mongoOps.remove(p);
-    
-    List<PersonWithIdPropertyOfTypeString> people =  mongoOps.getCollection(PersonWithIdPropertyOfTypeString.class);
-    
-    //PersonWithIdPropertyOfTypeString p2 = mongoOps.findOne(query(whereId().is(p.getId())), PersonWithIdPropertyOfTypeString.class);
-    
-    log.debug("Number of people = : " + people.size());
-    
-  }
-  
-  public void doWork2() {
-    mongoOps.dropCollection("personexample");
-    
-    PersonWithIdPropertyOfTypeString p = new PersonWithIdPropertyOfTypeString();
-    p.setFirstName("Sven");
-    p.setAge(22);
-     
-  }
-  
-  
+	private static final Log log = LogFactory.getLog(PersonExample.class);
+	@Autowired
+	private MongoOperations mongoOps;
+
+	public static void main(String[] args) {
+		ApplicationContext applicationContext = new AnnotationConfigApplicationContext(PersonExampleAppConfig.class);
+		PersonExample example = applicationContext.getBean(PersonExample.class);
+		example.doWork();
+	}
+
+	public void doWork() {
+		mongoOps.dropCollection("personexample");
+
+		PersonWithIdPropertyOfTypeString p = new PersonWithIdPropertyOfTypeString();
+		p.setFirstName("Sven");
+		p.setAge(22);
+
+		mongoOps.save(p);
+
+		PersonWithIdPropertyOfTypeString p2 = new PersonWithIdPropertyOfTypeString();
+		p2.setFirstName("Jon");
+		p2.setAge(23);
+
+		mongoOps.save(p2);
+
+		log.debug("Saved: " + p);
+
+		p = mongoOps.findOne(query(whereId().is(p.getId())), PersonWithIdPropertyOfTypeString.class);
+
+		log.debug("Found: " + p);
+
+		// mongoOps.updateFirst(new Query(where("firstName").is("Sven")), new Update().set("age", 24));
+
+		// mongoOps.updateFirst(new Query(where("firstName").is("Sven")), update("age", 24));
+
+		p = mongoOps.findOne(query(whereId().is(p.getId())), PersonWithIdPropertyOfTypeString.class);
+		log.debug("Updated: " + p);
+
+		List<PersonWithIdPropertyOfTypeString> folks = mongoOps.getCollection(PersonWithIdPropertyOfTypeString.class);
+		log.debug("Querying for all people...");
+		for (Iterator iterator = folks.iterator(); iterator.hasNext();) {
+			PersonWithIdPropertyOfTypeString personWithIdPropertyOfTypeString = (PersonWithIdPropertyOfTypeString) iterator
+					.next();
+			log.debug(personWithIdPropertyOfTypeString);
+		}
+
+		// mongoOps.remove( query(whereId().is(p.getId())), p.getClass());
+
+		mongoOps.remove(p);
+
+		List<PersonWithIdPropertyOfTypeString> people = mongoOps.getCollection(PersonWithIdPropertyOfTypeString.class);
+
+		// PersonWithIdPropertyOfTypeString p2 = mongoOps.findOne(query(whereId().is(p.getId())),
+		// PersonWithIdPropertyOfTypeString.class);
+
+		log.debug("Number of people = : " + people.size());
+
+	}
+
+	public void doWork2() {
+		mongoOps.dropCollection("personexample");
+
+		PersonWithIdPropertyOfTypeString p = new PersonWithIdPropertyOfTypeString();
+		p.setFirstName("Sven");
+		p.setAge(22);
+
+	}
+
 }

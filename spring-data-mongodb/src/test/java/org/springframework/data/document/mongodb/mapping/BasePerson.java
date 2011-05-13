@@ -28,40 +28,40 @@ import com.mysema.query.annotations.QuerySupertype;
 @QuerySupertype
 public abstract class BasePerson {
 
-  protected Integer ssn;
-  protected String firstName;
-  protected String lastName;
+	protected Integer ssn;
+	protected String firstName;
+	protected String lastName;
 
-  public BasePerson() {
-  }
+	public BasePerson() {
+	}
 
-  public BasePerson(Integer ssn, String firstName, String lastName) {
-    this.ssn = ssn;
-    this.firstName = firstName;
-    this.lastName = lastName;
-  }
+	public BasePerson(Integer ssn, String firstName, String lastName) {
+		this.ssn = ssn;
+		this.firstName = firstName;
+		this.lastName = lastName;
+	}
 
-  public Integer getSsn() {
-    return ssn;
-  }
+	public Integer getSsn() {
+		return ssn;
+	}
 
-  public void setSsn(Integer ssn) {
-    this.ssn = ssn;
-  }
+	public void setSsn(Integer ssn) {
+		this.ssn = ssn;
+	}
 
-  public String getFirstName() {
-    return firstName;
-  }
+	public String getFirstName() {
+		return firstName;
+	}
 
-  public void setFirstName(String firstName) {
-    this.firstName = firstName;
-  }
+	public void setFirstName(String firstName) {
+		this.firstName = firstName;
+	}
 
-  public String getLastName() {
-    return lastName;
-  }
+	public String getLastName() {
+		return lastName;
+	}
 
-  public void setLastName(String lastName) {
-    this.lastName = lastName;
-  }
+	public void setLastName(String lastName) {
+		this.lastName = lastName;
+	}
 }

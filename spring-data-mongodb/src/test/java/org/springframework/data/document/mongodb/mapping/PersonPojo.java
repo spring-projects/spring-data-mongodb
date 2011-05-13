@@ -23,18 +23,18 @@ import org.bson.types.ObjectId;
  */
 public class PersonPojo extends BasePerson {
 
-  private ObjectId id;
+	private ObjectId id;
 
-  public PersonPojo(Integer ssn, String firstName, String lastName) {
-    super(ssn, firstName, lastName);
-  }
+	public PersonPojo(Integer ssn, String firstName, String lastName) {
+		super(ssn, firstName, lastName);
+	}
 
-  public ObjectId getId() {
-    return id;
-  }
+	public ObjectId getId() {
+		return id;
+	}
 
-  public void setId(ObjectId id) {
-    this.id = id;
-  }
+	public void setId(ObjectId id) {
+		this.id = id;
+	}
 
 }

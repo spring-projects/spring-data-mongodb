@@ -21,9 +21,9 @@ package org.springframework.data.document.mongodb.mapping.event;
  */
 public class AfterLoadEvent<DBObject> extends MongoMappingEvent<DBObject> {
 
-  private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-  public AfterLoadEvent(DBObject dbo) {
-    super(dbo, null);
-  }
+	public AfterLoadEvent(DBObject dbo) {
+		super(dbo, null);
+	}
 }

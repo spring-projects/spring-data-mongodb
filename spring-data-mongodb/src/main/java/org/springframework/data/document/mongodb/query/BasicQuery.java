@@ -20,72 +20,72 @@ import com.mongodb.util.JSON;
 
 public class BasicQuery extends Query {
 
-  private DBObject queryObject = null;
+	private DBObject queryObject = null;
 
-  private DBObject fieldsObject = null;
+	private DBObject fieldsObject = null;
 
-  private DBObject sortObject = null;
+	private DBObject sortObject = null;
 
-  private int skip;
+	private int skip;
 
-  private int limit;
+	private int limit;
 
-  public BasicQuery(String query) {
-    super();
-    this.queryObject = (DBObject) JSON.parse(query);
-  }
+	public BasicQuery(String query) {
+		super();
+		this.queryObject = (DBObject) JSON.parse(query);
+	}
 
-  public BasicQuery(DBObject queryObject) {
-    super();
-    this.queryObject = queryObject;
-  }
+	public BasicQuery(DBObject queryObject) {
+		super();
+		this.queryObject = queryObject;
+	}
 
-  public BasicQuery(String query, String fields) {
-    this.queryObject = (DBObject) JSON.parse(query);
-    this.fieldsObject = (DBObject) JSON.parse(fields);
-  }
+	public BasicQuery(String query, String fields) {
+		this.queryObject = (DBObject) JSON.parse(query);
+		this.fieldsObject = (DBObject) JSON.parse(fields);
+	}
 
-  public BasicQuery(DBObject queryObject, DBObject fieldsObject) {
-    this.queryObject = queryObject;
-    this.fieldsObject = fieldsObject;
-  }
+	public BasicQuery(DBObject queryObject, DBObject fieldsObject) {
+		this.queryObject = queryObject;
+		this.fieldsObject = fieldsObject;
+	}
 
-  @Override
-  public Query addCriteria(Criteria criteria) {
-    this.queryObject.putAll(criteria.getCriteriaObject());
-    return this;
-  }
+	@Override
+	public Query addCriteria(Criteria criteria) {
+		this.queryObject.putAll(criteria.getCriteriaObject());
+		return this;
+	}
 
-  public DBObject getQueryObject() {
-    return this.queryObject;
-  }
+	public DBObject getQueryObject() {
+		return this.queryObject;
+	}
 
-  public DBObject getFieldsObject() {
-    return fieldsObject;
-  }
+	public DBObject getFieldsObject() {
+		return fieldsObject;
+	}
 
-  public DBObject getSortObject() {
-    return sortObject;
-  }
+	public DBObject getSortObject() {
+		return sortObject;
+	}
 
-  public void setSortObject(DBObject sortObject) {
-    this.sortObject = sortObject;
-  }
+	public void setSortObject(DBObject sortObject) {
+		this.sortObject = sortObject;
+	}
 
-  public int getSkip() {
-    return skip;
-  }
+	public int getSkip() {
+		return skip;
+	}
 
-  public void setSkip(int skip) {
-    this.skip = skip;
-  }
+	public void setSkip(int skip) {
+		this.skip = skip;
+	}
 
-  public int getLimit() {
-    return this.limit;
-  }
+	public int getLimit() {
+		return this.limit;
+	}
 
-  public void setLimit(int limit) {
-    this.limit = limit;
-  }
+	public void setLimit(int limit) {
+		this.limit = limit;
+	}
 
 }

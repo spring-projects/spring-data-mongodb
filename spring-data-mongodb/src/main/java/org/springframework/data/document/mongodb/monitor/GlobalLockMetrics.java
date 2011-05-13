@@ -23,57 +23,55 @@ import org.springframework.jmx.support.MetricType;
 
 /**
  * JMX Metrics for Global Locks
- *
+ * 
  * @author Mark Pollack
  */
 @ManagedResource(description = "Global Lock Metrics")
 public class GlobalLockMetrics extends AbstractMonitor {
 
+	public GlobalLockMetrics(Mongo mongo) {
+		this.mongo = mongo;
+	}
 
-  public GlobalLockMetrics(Mongo mongo) {
-    this.mongo = mongo;
-  }
+	@ManagedMetric(metricType = MetricType.COUNTER, displayName = "Total time")
+	public double getTotalTime() {
+		return getGlobalLockData("totalTime", java.lang.Double.class);
+	}
 
-  @ManagedMetric(metricType = MetricType.COUNTER, displayName = "Total time")
-  public double getTotalTime() {
-    return getGlobalLockData("totalTime", java.lang.Double.class);
-  }
+	@ManagedMetric(metricType = MetricType.COUNTER, displayName = "Lock time", unit = "s")
+	public double getLockTime() {
+		return getGlobalLockData("lockTime", java.lang.Double.class);
+	}
 
-  @ManagedMetric(metricType = MetricType.COUNTER, displayName = "Lock time", unit = "s")
-  public double getLockTime() {
-    return getGlobalLockData("lockTime", java.lang.Double.class);
-  }
+	@ManagedMetric(metricType = MetricType.GAUGE, displayName = "Lock time")
+	public double getLockTimeRatio() {
+		return getGlobalLockData("ratio", java.lang.Double.class);
+	}
 
-  @ManagedMetric(metricType = MetricType.GAUGE, displayName = "Lock time")
-  public double getLockTimeRatio() {
-    return getGlobalLockData("ratio", java.lang.Double.class);
-  }
+	@ManagedMetric(metricType = MetricType.GAUGE, displayName = "Current Queue")
+	public int getCurrentQueueTotal() {
+		return getCurrentQueue("total");
+	}
 
+	@ManagedMetric(metricType = MetricType.GAUGE, displayName = "Reader Queue")
+	public int getCurrentQueueReaders() {
+		return getCurrentQueue("readers");
+	}
 
-  @ManagedMetric(metricType = MetricType.GAUGE, displayName = "Current Queue")
-  public int getCurrentQueueTotal() {
-    return getCurrentQueue("total");
-  }
+	@ManagedMetric(metricType = MetricType.GAUGE, displayName = "Writer Queue")
+	public int getCurrentQueueWriters() {
+		return getCurrentQueue("writers");
+	}
 
-  @ManagedMetric(metricType = MetricType.GAUGE, displayName = "Reader Queue")
-  public int getCurrentQueueReaders() {
-    return getCurrentQueue("readers");
-  }
+	@SuppressWarnings("unchecked")
+	private <T> T getGlobalLockData(String key, Class<T> targetClass) {
+		DBObject globalLock = (DBObject) getServerStatus().get("globalLock");
+		return (T) globalLock.get(key);
+	}
 
-  @ManagedMetric(metricType = MetricType.GAUGE, displayName = "Writer Queue")
-  public int getCurrentQueueWriters() {
-    return getCurrentQueue("writers");
-  }
-
-  @SuppressWarnings("unchecked")
-  private <T> T getGlobalLockData(String key, Class<T> targetClass) {
-    DBObject globalLock = (DBObject) getServerStatus().get("globalLock");
-    return (T) globalLock.get(key);
-  }
-
-  private int getCurrentQueue(String key) {
-    DBObject globalLock = (DBObject) getServerStatus().get("globalLock");
-    DBObject currentQueue = (DBObject) globalLock.get("currentQueue");
-    return (Integer) currentQueue.get(key);
-  }
+	private int getCurrentQueue(String key) {
+		DBObject globalLock = (DBObject) getServerStatus().get("globalLock");
+		DBObject currentQueue = (DBObject) globalLock.get("currentQueue");
+		return (Integer) currentQueue.get(key);
+	}
 }

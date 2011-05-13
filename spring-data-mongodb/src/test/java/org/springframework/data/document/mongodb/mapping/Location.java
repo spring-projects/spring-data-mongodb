@@ -24,42 +24,42 @@ import org.bson.types.ObjectId;
 @Document(collection = "places")
 public class Location {
 
-  private ObjectId id;
-  private double[] latlong;
-  private int[] numbers;
-  private float[] amounts;
+	private ObjectId id;
+	private double[] latlong;
+	private int[] numbers;
+	private float[] amounts;
 
-  public Location(double[] latlong, int[] numbers, float[] amounts) {
-    this.latlong = latlong;
-    this.numbers = numbers;
-    this.amounts = amounts;
-  }
+	public Location(double[] latlong, int[] numbers, float[] amounts) {
+		this.latlong = latlong;
+		this.numbers = numbers;
+		this.amounts = amounts;
+	}
 
-  public ObjectId getId() {
-    return id;
-  }
+	public ObjectId getId() {
+		return id;
+	}
 
-  public double[] getLatlong() {
-    return latlong;
-  }
+	public double[] getLatlong() {
+		return latlong;
+	}
 
-  public void setLatlong(double[] latlong) {
-    this.latlong = latlong;
-  }
+	public void setLatlong(double[] latlong) {
+		this.latlong = latlong;
+	}
 
-  public int[] getNumbers() {
-    return numbers;
-  }
+	public int[] getNumbers() {
+		return numbers;
+	}
 
-  public void setNumbers(int[] numbers) {
-    this.numbers = numbers;
-  }
+	public void setNumbers(int[] numbers) {
+		this.numbers = numbers;
+	}
 
-  public float[] getAmounts() {
-    return amounts;
-  }
+	public float[] getAmounts() {
+		return amounts;
+	}
 
-  public void setAmounts(float[] amounts) {
-    this.amounts = amounts;
-  }
+	public void setAmounts(float[] amounts) {
+		this.amounts = amounts;
+	}
 }

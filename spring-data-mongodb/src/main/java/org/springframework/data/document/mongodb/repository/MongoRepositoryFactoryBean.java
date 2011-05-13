@@ -50,272 +50,277 @@ import org.springframework.util.StringUtils;
 
 /**
  * {@link org.springframework.beans.factory.FactoryBean} to create {@link MongoRepository} instances.
- *
+ * 
  * @author Oliver Gierke
  */
 public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID extends Serializable> extends
-    RepositoryFactoryBeanSupport<T, S, ID> {
+		RepositoryFactoryBeanSupport<T, S, ID> {
 
-  private MongoTemplate template;
-  private MappingContext<MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
+	private MongoTemplate template;
+	private MappingContext<MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 
-  /**
-   * Configures the {@link MongoTemplate} to be used.
-   *
-   * @param template the template to set
-   */
-  public void setTemplate(MongoTemplate template) {
+	/**
+	 * Configures the {@link MongoTemplate} to be used.
+	 * 
+	 * @param template
+	 *          the template to set
+	 */
+	public void setTemplate(MongoTemplate template) {
 
-    this.template = template;
-  }
+		this.template = template;
+	}
 
-  /**
-   * Sets the {@link MappingContext} used with the underlying {@link MongoTemplate}.
-   *
-   * @param mappingContext the mappingContext to set
-   */
-  public void setMappingContext(MappingContext<MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
-    this.mappingContext = mappingContext;
-  }
+	/**
+	 * Sets the {@link MappingContext} used with the underlying {@link MongoTemplate}.
+	 * 
+	 * @param mappingContext
+	 *          the mappingContext to set
+	 */
+	public void setMappingContext(MappingContext<MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
+		this.mappingContext = mappingContext;
+	}
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see
-   * org.springframework.data.repository.support.RepositoryFactoryBeanSupport
-   * #createRepositoryFactory()
-   */
-  @Override
-  protected RepositoryFactorySupport createRepositoryFactory() {
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.springframework.data.repository.support.RepositoryFactoryBeanSupport
+	 * #createRepositoryFactory()
+	 */
+	@Override
+	protected RepositoryFactorySupport createRepositoryFactory() {
 
-    MongoRepositoryFactory factory = new MongoRepositoryFactory(template, mappingContext);
-    factory.addQueryCreationListener(new IndexEnsuringQueryCreationListener(template));
-    return factory;
-  }
+		MongoRepositoryFactory factory = new MongoRepositoryFactory(template, mappingContext);
+		factory.addQueryCreationListener(new IndexEnsuringQueryCreationListener(template));
+		return factory;
+	}
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see
-   * org.springframework.data.repository.support.RepositoryFactoryBeanSupport
-   * #afterPropertiesSet()
-   */
-  @Override
-  public void afterPropertiesSet() {
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.springframework.data.repository.support.RepositoryFactoryBeanSupport
+	 * #afterPropertiesSet()
+	 */
+	@Override
+	public void afterPropertiesSet() {
 
-    super.afterPropertiesSet();
-    Assert.notNull(template, "MongoTemplate must not be null!");
-    Assert.notNull(mappingContext, "MappingContext must not be null!");
-  }
+		super.afterPropertiesSet();
+		Assert.notNull(template, "MongoTemplate must not be null!");
+		Assert.notNull(mappingContext, "MappingContext must not be null!");
+	}
 
-  /**
-   * Repository to create {@link MongoRepository} instances.
-   *
-   * @author Oliver Gierke
-   */
-  public static class MongoRepositoryFactory extends RepositoryFactorySupport {
+	/**
+	 * Repository to create {@link MongoRepository} instances.
+	 * 
+	 * @author Oliver Gierke
+	 */
+	public static class MongoRepositoryFactory extends RepositoryFactorySupport {
 
-    private final MongoTemplate template;
-    private final EntityInformationCreator entityInformationCreator;
+		private final MongoTemplate template;
+		private final EntityInformationCreator entityInformationCreator;
 
-    /**
-     * Creates a new {@link MongoRepositoryFactory} with the given {@link MongoTemplate} and {@link MappingContext}.
-     *
-     * @param template       must not be {@literal null}
-     * @param mappingContext
-     */
-    public MongoRepositoryFactory(MongoTemplate template, MappingContext<MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
+		/**
+		 * Creates a new {@link MongoRepositoryFactory} with the given {@link MongoTemplate} and {@link MappingContext}.
+		 * 
+		 * @param template
+		 *          must not be {@literal null}
+		 * @param mappingContext
+		 */
+		public MongoRepositoryFactory(MongoTemplate template,
+				MappingContext<MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
 
-      Assert.notNull(template);
-      Assert.notNull(mappingContext);
-      this.template = template;
-      this.entityInformationCreator = new EntityInformationCreator(mappingContext);
-    }
+			Assert.notNull(template);
+			Assert.notNull(mappingContext);
+			this.template = template;
+			this.entityInformationCreator = new EntityInformationCreator(mappingContext);
+		}
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.springframework.data.repository.support.RepositoryFactorySupport
-     * #getRepositoryBaseClass()
-     */
-    @Override
-    protected Class<?> getRepositoryBaseClass(RepositoryMetadata metadata) {
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see
+		 * org.springframework.data.repository.support.RepositoryFactorySupport
+		 * #getRepositoryBaseClass()
+		 */
+		@Override
+		protected Class<?> getRepositoryBaseClass(RepositoryMetadata metadata) {
 
-      return isQueryDslRepository(metadata.getRepositoryInterface()) ? QueryDslMongoRepository.class
-          : SimpleMongoRepository.class;
-    }
+			return isQueryDslRepository(metadata.getRepositoryInterface()) ? QueryDslMongoRepository.class
+					: SimpleMongoRepository.class;
+		}
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.springframework.data.repository.support.RepositoryFactorySupport
-     * #getTargetRepository
-     * (org.springframework.data.repository.support.RepositoryMetadata)
-     */
-    @Override
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    protected Object getTargetRepository(RepositoryMetadata metadata) {
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see
+		 * org.springframework.data.repository.support.RepositoryFactorySupport
+		 * #getTargetRepository
+		 * (org.springframework.data.repository.support.RepositoryMetadata)
+		 */
+		@Override
+		@SuppressWarnings({ "rawtypes", "unchecked" })
+		protected Object getTargetRepository(RepositoryMetadata metadata) {
 
-      Class<?> repositoryInterface = metadata.getRepositoryInterface();
-      MongoEntityInformation<?, Serializable> entityInformation = getEntityInformation(metadata.getDomainClass());
+			Class<?> repositoryInterface = metadata.getRepositoryInterface();
+			MongoEntityInformation<?, Serializable> entityInformation = getEntityInformation(metadata.getDomainClass());
 
-      if (isQueryDslRepository(repositoryInterface)) {
-        return new QueryDslMongoRepository(entityInformation, template);
-      } else {
-        return new SimpleMongoRepository(entityInformation, template);
-      }
-    }
+			if (isQueryDslRepository(repositoryInterface)) {
+				return new QueryDslMongoRepository(entityInformation, template);
+			} else {
+				return new SimpleMongoRepository(entityInformation, template);
+			}
+		}
 
-    private static boolean isQueryDslRepository(Class<?> repositoryInterface) {
+		private static boolean isQueryDslRepository(Class<?> repositoryInterface) {
 
-      return QUERY_DSL_PRESENT && QueryDslPredicateExecutor.class.isAssignableFrom(repositoryInterface);
-    }
+			return QUERY_DSL_PRESENT && QueryDslPredicateExecutor.class.isAssignableFrom(repositoryInterface);
+		}
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.springframework.data.repository.support.RepositoryFactorySupport
-     * #getQueryLookupStrategy
-     * (org.springframework.data.repository.query.QueryLookupStrategy.Key)
-     */
-    @Override
-    protected QueryLookupStrategy getQueryLookupStrategy(Key key) {
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see
+		 * org.springframework.data.repository.support.RepositoryFactorySupport
+		 * #getQueryLookupStrategy
+		 * (org.springframework.data.repository.query.QueryLookupStrategy.Key)
+		 */
+		@Override
+		protected QueryLookupStrategy getQueryLookupStrategy(Key key) {
 
-      return new MongoQueryLookupStrategy();
-    }
+			return new MongoQueryLookupStrategy();
+		}
 
-    /**
-     * {@link QueryLookupStrategy} to create {@link PartTreeMongoQuery} instances.
-     *
-     * @author Oliver Gierke
-     */
-    private class MongoQueryLookupStrategy implements QueryLookupStrategy {
+		/**
+		 * {@link QueryLookupStrategy} to create {@link PartTreeMongoQuery} instances.
+		 * 
+		 * @author Oliver Gierke
+		 */
+		private class MongoQueryLookupStrategy implements QueryLookupStrategy {
 
-      /*
-       * (non-Javadoc)
-       * 
-       * @see
-       * org.springframework.data.repository.query.QueryLookupStrategy
-       * #resolveQuery(java.lang.reflect.Method, java.lang.Class)
-       */
-      public RepositoryQuery resolveQuery(Method method, RepositoryMetadata metadata) {
+			/*
+			 * (non-Javadoc)
+			 * 
+			 * @see
+			 * org.springframework.data.repository.query.QueryLookupStrategy
+			 * #resolveQuery(java.lang.reflect.Method, java.lang.Class)
+			 */
+			public RepositoryQuery resolveQuery(Method method, RepositoryMetadata metadata) {
 
-        MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, entityInformationCreator);
+				MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, entityInformationCreator);
 
-        if (queryMethod.hasAnnotatedQuery()) {
-          return new StringBasedMongoQuery(queryMethod, template);
-        } else {
-          return new PartTreeMongoQuery(queryMethod, template);
-        }
-      }
-    }
+				if (queryMethod.hasAnnotatedQuery()) {
+					return new StringBasedMongoQuery(queryMethod, template);
+				} else {
+					return new PartTreeMongoQuery(queryMethod, template);
+				}
+			}
+		}
 
-    /*
-     * (non-Javadoc)
-     * @see org.springframework.data.repository.support.RepositoryFactorySupport#validate(org.springframework.data.repository.support.RepositoryMetadata)
-     */
-    @Override
-    protected void validate(RepositoryMetadata metadata) {
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.repository.support.RepositoryFactorySupport#validate(org.springframework.data.repository.support.RepositoryMetadata)
+		 */
+		@Override
+		protected void validate(RepositoryMetadata metadata) {
 
-      Class<?> idClass = metadata.getIdClass();
-      if (!MongoPropertyDescriptor.SUPPORTED_ID_CLASSES.contains(idClass)) {
-        throw new IllegalArgumentException(String.format("Unsupported id class! Only %s are supported!",
-            StringUtils.collectionToCommaDelimitedString(MongoPropertyDescriptor.SUPPORTED_ID_CLASSES)));
-      }
-    }
+			Class<?> idClass = metadata.getIdClass();
+			if (!MongoPropertyDescriptor.SUPPORTED_ID_CLASSES.contains(idClass)) {
+				throw new IllegalArgumentException(String.format("Unsupported id class! Only %s are supported!",
+						StringUtils.collectionToCommaDelimitedString(MongoPropertyDescriptor.SUPPORTED_ID_CLASSES)));
+			}
+		}
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.springframework.data.repository.support.RepositoryFactorySupport
-     * #getEntityInformation(java.lang.Class)
-     */
-    @Override
-    public <T, ID extends Serializable> MongoEntityInformation<T, ID> getEntityInformation(Class<T> domainClass) {
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see
+		 * org.springframework.data.repository.support.RepositoryFactorySupport
+		 * #getEntityInformation(java.lang.Class)
+		 */
+		@Override
+		public <T, ID extends Serializable> MongoEntityInformation<T, ID> getEntityInformation(Class<T> domainClass) {
 
-      return entityInformationCreator.getEntityInformation(domainClass);
-    }
-  }
+			return entityInformationCreator.getEntityInformation(domainClass);
+		}
+	}
 
-  /**
-   * Simple wrapper to to create {@link MongoEntityInformation} instances based on a {@link MappingContext}.
-   *
-   * @author Oliver Gierke
-   */
-  static class EntityInformationCreator {
+	/**
+	 * Simple wrapper to to create {@link MongoEntityInformation} instances based on a {@link MappingContext}.
+	 * 
+	 * @author Oliver Gierke
+	 */
+	static class EntityInformationCreator {
 
-    private final MappingContext<MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
+		private final MappingContext<MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 
-    public EntityInformationCreator(MappingContext<MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
-      Assert.notNull(mappingContext);
-      this.mappingContext = mappingContext;
-    }
+		public EntityInformationCreator(MappingContext<MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
+			Assert.notNull(mappingContext);
+			this.mappingContext = mappingContext;
+		}
 
-    @SuppressWarnings("unchecked")
-    public <T, ID extends Serializable> MongoEntityInformation<T, ID> getEntityInformation(Class<T> domainClass) {
-      MongoPersistentEntity<T> persistentEntity = (MongoPersistentEntity<T>) mappingContext.getPersistentEntity(domainClass);
-      return new MappingMongoEntityInformation<T, ID>(persistentEntity);
-    }
-  }
+		@SuppressWarnings("unchecked")
+		public <T, ID extends Serializable> MongoEntityInformation<T, ID> getEntityInformation(Class<T> domainClass) {
+			MongoPersistentEntity<T> persistentEntity = (MongoPersistentEntity<T>) mappingContext
+					.getPersistentEntity(domainClass);
+			return new MappingMongoEntityInformation<T, ID>(persistentEntity);
+		}
+	}
 
-  /**
-   * {@link QueryCreationListener} inspecting {@link PartTreeMongoQuery}s and creating an index for the properties it
-   * refers to.
-   *
-   * @author Oliver Gierke
-   */
-  private static class IndexEnsuringQueryCreationListener implements QueryCreationListener<PartTreeMongoQuery> {
+	/**
+	 * {@link QueryCreationListener} inspecting {@link PartTreeMongoQuery}s and creating an index for the properties it
+	 * refers to.
+	 * 
+	 * @author Oliver Gierke
+	 */
+	private static class IndexEnsuringQueryCreationListener implements QueryCreationListener<PartTreeMongoQuery> {
 
-    private static final Set<Type> GEOSPATIAL_TYPES = new HashSet<Part.Type>(Arrays.asList(Type.NEAR, Type.WITHIN));
-    private static final Log LOG = LogFactory.getLog(IndexEnsuringQueryCreationListener.class);
-    private final MongoOperations operations;
+		private static final Set<Type> GEOSPATIAL_TYPES = new HashSet<Part.Type>(Arrays.asList(Type.NEAR, Type.WITHIN));
+		private static final Log LOG = LogFactory.getLog(IndexEnsuringQueryCreationListener.class);
+		private final MongoOperations operations;
 
-    public IndexEnsuringQueryCreationListener(MongoOperations operations) {
+		public IndexEnsuringQueryCreationListener(MongoOperations operations) {
 
-      this.operations = operations;
-    }
+			this.operations = operations;
+		}
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.springframework.data.repository.support.QueryCreationListener
-     * #onCreation(org.springframework.data.repository
-     * .query.RepositoryQuery)
-     */
-    public void onCreation(PartTreeMongoQuery query) {
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see
+		 * org.springframework.data.repository.support.QueryCreationListener
+		 * #onCreation(org.springframework.data.repository
+		 * .query.RepositoryQuery)
+		 */
+		public void onCreation(PartTreeMongoQuery query) {
 
-      PartTree tree = query.getTree();
-      Index index = new Index();
-      index.named(query.getQueryMethod().getName());
-      Sort sort = tree.getSort();
+			PartTree tree = query.getTree();
+			Index index = new Index();
+			index.named(query.getQueryMethod().getName());
+			Sort sort = tree.getSort();
 
-      for (Part part : tree.getParts()) {
-        if (GEOSPATIAL_TYPES.contains(part.getType())) {
-          return;
-        }
-        String property = part.getProperty().toDotPath();
-        Order order = toOrder(sort, property);
-        index.on(property, order);
-      }
+			for (Part part : tree.getParts()) {
+				if (GEOSPATIAL_TYPES.contains(part.getType())) {
+					return;
+				}
+				String property = part.getProperty().toDotPath();
+				Order order = toOrder(sort, property);
+				index.on(property, order);
+			}
 
-      MongoEntityInformation<?, ?> metadata = query.getQueryMethod().getEntityInformation();
-      operations.ensureIndex(metadata.getCollectionName(), index);
-      LOG.debug(String.format("Created %s!", index));
-    }
+			MongoEntityInformation<?, ?> metadata = query.getQueryMethod().getEntityInformation();
+			operations.ensureIndex(metadata.getCollectionName(), index);
+			LOG.debug(String.format("Created %s!", index));
+		}
 
-    private static Order toOrder(Sort sort, String property) {
+		private static Order toOrder(Sort sort, String property) {
 
-      if (sort == null) {
-        return Order.DESCENDING;
-      }
+			if (sort == null) {
+				return Order.DESCENDING;
+			}
 
-      org.springframework.data.domain.Sort.Order order = sort.getOrderFor(property);
-      return order == null ? Order.DESCENDING : order.isAscending() ? Order.ASCENDING : Order.DESCENDING;
-    }
-  }
+			org.springframework.data.domain.Sort.Order order = sort.getOrderFor(property);
+			return order == null ? Order.DESCENDING : order.isAscending() ? Order.ASCENDING : Order.DESCENDING;
+		}
+	}
 }

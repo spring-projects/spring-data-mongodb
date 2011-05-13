@@ -23,45 +23,45 @@ import org.springframework.jmx.support.MetricType;
 
 /**
  * JMX Metrics for assertions
- *
+ * 
  * @author Mark Pollack
  */
 @ManagedResource(description = "Assertion Metrics")
 public class AssertMetrics extends AbstractMonitor {
 
-  public AssertMetrics(Mongo mongo) {
-    this.mongo = mongo;
-  }
+	public AssertMetrics(Mongo mongo) {
+		this.mongo = mongo;
+	}
 
-  @ManagedMetric(metricType = MetricType.COUNTER, displayName = "Regular")
-  public int getRegular() {
-    return getBtree("regular");
-  }
+	@ManagedMetric(metricType = MetricType.COUNTER, displayName = "Regular")
+	public int getRegular() {
+		return getBtree("regular");
+	}
 
-  @ManagedMetric(metricType = MetricType.COUNTER, displayName = "Warning")
-  public int getWarning() {
-    return getBtree("warning");
-  }
+	@ManagedMetric(metricType = MetricType.COUNTER, displayName = "Warning")
+	public int getWarning() {
+		return getBtree("warning");
+	}
 
-  @ManagedMetric(metricType = MetricType.COUNTER, displayName = "Msg")
-  public int getMsg() {
-    return getBtree("msg");
-  }
+	@ManagedMetric(metricType = MetricType.COUNTER, displayName = "Msg")
+	public int getMsg() {
+		return getBtree("msg");
+	}
 
-  @ManagedMetric(metricType = MetricType.COUNTER, displayName = "User")
-  public int getUser() {
-    return getBtree("user");
-  }
+	@ManagedMetric(metricType = MetricType.COUNTER, displayName = "User")
+	public int getUser() {
+		return getBtree("user");
+	}
 
-  @ManagedMetric(metricType = MetricType.GAUGE, displayName = "Rollovers")
-  public int getRollovers() {
-    return getBtree("rollovers");
-  }
+	@ManagedMetric(metricType = MetricType.GAUGE, displayName = "Rollovers")
+	public int getRollovers() {
+		return getBtree("rollovers");
+	}
 
-  private int getBtree(String key) {
-    DBObject asserts = (DBObject) getServerStatus().get("asserts");
-    //Class c = btree.get(key).getClass();
-    return (Integer) asserts.get(key);
-  }
+	private int getBtree(String key) {
+		DBObject asserts = (DBObject) getServerStatus().get("asserts");
+		// Class c = btree.get(key).getClass();
+		return (Integer) asserts.get(key);
+	}
 
 }

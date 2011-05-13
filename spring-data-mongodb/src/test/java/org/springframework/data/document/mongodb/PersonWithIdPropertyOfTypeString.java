@@ -15,43 +15,41 @@
  */
 package org.springframework.data.document.mongodb;
 
-
 public class PersonWithIdPropertyOfTypeString {
 
-  private String id;
+	private String id;
 
-  private String firstName;
+	private String firstName;
 
-  private int age;
+	private int age;
 
-  public String getId() {
-    return id;
-  }
+	public String getId() {
+		return id;
+	}
 
-  public void setId(String id) {
-    this.id = id;
-  }
+	public void setId(String id) {
+		this.id = id;
+	}
 
-  public String getFirstName() {
-    return firstName;
-  }
+	public String getFirstName() {
+		return firstName;
+	}
 
-  public void setFirstName(String firstName) {
-    this.firstName = firstName;
-  }
+	public void setFirstName(String firstName) {
+		this.firstName = firstName;
+	}
 
-  public int getAge() {
-    return age;
-  }
+	public int getAge() {
+		return age;
+	}
 
-  public void setAge(int age) {
-    this.age = age;
-  }
-  
-  @Override
-  public String toString() {
-    return "PersonWithIdPropertyOfTypeString [id=" + id + ", firstName="
-        + firstName + ", age=" + age + "]";
-  }
+	public void setAge(int age) {
+		this.age = age;
+	}
+
+	@Override
+	public String toString() {
+		return "PersonWithIdPropertyOfTypeString [id=" + id + ", firstName=" + firstName + ", age=" + age + "]";
+	}
 
 }

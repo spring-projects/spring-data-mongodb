@@ -21,52 +21,52 @@ package org.springframework.data.document.mongodb.mapping;
  */
 public class Address implements Comparable<Address> {
 
-  private String id;
-  private String[] lines;
-  private String city;
-  private String provinceOrState;
-  private Integer postalCode;
-  private String country;
+	private String id;
+	private String[] lines;
+	private String city;
+	private String provinceOrState;
+	private Integer postalCode;
+	private String country;
 
-  public String[] getLines() {
-    return lines;
-  }
+	public String[] getLines() {
+		return lines;
+	}
 
-  public void setLines(String[] lines) {
-    this.lines = lines;
-  }
+	public void setLines(String[] lines) {
+		this.lines = lines;
+	}
 
-  public String getCity() {
-    return city;
-  }
+	public String getCity() {
+		return city;
+	}
 
-  public void setCity(String city) {
-    this.city = city;
-  }
+	public void setCity(String city) {
+		this.city = city;
+	}
 
-  public String getProvinceOrState() {
-    return provinceOrState;
-  }
+	public String getProvinceOrState() {
+		return provinceOrState;
+	}
 
-  public void setProvinceOrState(String provinceOrState) {
-    this.provinceOrState = provinceOrState;
-  }
+	public void setProvinceOrState(String provinceOrState) {
+		this.provinceOrState = provinceOrState;
+	}
 
-  public Integer getPostalCode() {
-    return postalCode;
-  }
+	public Integer getPostalCode() {
+		return postalCode;
+	}
 
-  public void setPostalCode(Integer postalCode) {
-    this.postalCode = postalCode;
-  }
+	public void setPostalCode(Integer postalCode) {
+		this.postalCode = postalCode;
+	}
 
-  public String getCountry() {
-    return country;
-  }
+	public String getCountry() {
+		return country;
+	}
 
-  public void setCountry(String country) {
-    this.country = country;
-  }
+	public void setCountry(String country) {
+		this.country = country;
+	}
 
 	public int compareTo(Address address) {
 		return 0;

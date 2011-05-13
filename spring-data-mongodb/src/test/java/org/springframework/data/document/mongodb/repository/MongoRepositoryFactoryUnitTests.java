@@ -32,42 +32,41 @@ import org.springframework.data.mapping.model.MappingContext;
 
 /**
  * Unit test for {@link MongoRepositoryFactory}.
- *
+ * 
  * @author Oliver Gierke
  */
 @RunWith(MockitoJUnitRunner.class)
 public class MongoRepositoryFactoryUnitTests {
 
-  @Mock
-  MongoTemplate template;
+	@Mock
+	MongoTemplate template;
 
-  @Mock
-  MappingContext<MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
-  
-  @Mock
-  @SuppressWarnings("rawtypes")
-  MongoPersistentEntity entity;
-  
-  
-  @Test(expected = IllegalArgumentException.class)
-  public void rejectsInvalidIdType() throws Exception {
-    MongoRepositoryFactory factory = new MongoRepositoryFactory(template, null);
-    factory.getRepository(SampleRepository.class);
-  }
-  
-  @Test
-  @SuppressWarnings("unchecked")
-  public void usesMappingMongoEntityInformationIfMappingContextSet() {
-    
-    when(mappingContext.getPersistentEntity(Person.class)).thenReturn(entity);
-    when(entity.getType()).thenReturn(Person.class);
-    
-    MongoRepositoryFactory factory = new MongoRepositoryFactory(template, mappingContext);
-    MongoEntityInformation<Person,Serializable> entityInformation = factory.getEntityInformation(Person.class);
-    assertTrue(entityInformation instanceof MappingMongoEntityInformation);
-  }
+	@Mock
+	MappingContext<MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 
-  private interface SampleRepository extends MongoRepository<Person, Long> {
+	@Mock
+	@SuppressWarnings("rawtypes")
+	MongoPersistentEntity entity;
 
-  }
+	@Test(expected = IllegalArgumentException.class)
+	public void rejectsInvalidIdType() throws Exception {
+		MongoRepositoryFactory factory = new MongoRepositoryFactory(template, null);
+		factory.getRepository(SampleRepository.class);
+	}
+
+	@Test
+	@SuppressWarnings("unchecked")
+	public void usesMappingMongoEntityInformationIfMappingContextSet() {
+
+		when(mappingContext.getPersistentEntity(Person.class)).thenReturn(entity);
+		when(entity.getType()).thenReturn(Person.class);
+
+		MongoRepositoryFactory factory = new MongoRepositoryFactory(template, mappingContext);
+		MongoEntityInformation<Person, Serializable> entityInformation = factory.getEntityInformation(Person.class);
+		assertTrue(entityInformation instanceof MappingMongoEntityInformation);
+	}
+
+	private interface SampleRepository extends MongoRepository<Person, Long> {
+
+	}
 }

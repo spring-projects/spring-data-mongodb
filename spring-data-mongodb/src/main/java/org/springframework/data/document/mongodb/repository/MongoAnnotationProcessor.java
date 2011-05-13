@@ -46,20 +46,20 @@ import com.mysema.query.apt.Processor;
 @SupportedSourceVersion(SourceVersion.RELEASE_6)
 public class MongoAnnotationProcessor extends AbstractProcessor {
 
-  private Class<? extends Annotation> entities, entity, embedded, skip;
+	private Class<? extends Annotation> entities, entity, embedded, skip;
 
-  @Override
-  public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+	@Override
+	public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
 
-    processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, "Running " + getClass().getSimpleName());
+		processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, "Running " + getClass().getSimpleName());
 
-    DefaultConfiguration configuration = new DefaultConfiguration(roundEnv, processingEnv.getOptions(),
-        Collections.<String> emptySet(), QueryEntities.class, Document.class, QuerySupertype.class,
-        QueryEmbeddable.class, QueryEmbedded.class, QueryTransient.class);
-    configuration.setUnknownAsEmbedded(true);
+		DefaultConfiguration configuration = new DefaultConfiguration(roundEnv, processingEnv.getOptions(),
+				Collections.<String> emptySet(), QueryEntities.class, Document.class, QuerySupertype.class,
+				QueryEmbeddable.class, QueryEmbedded.class, QueryTransient.class);
+		configuration.setUnknownAsEmbedded(true);
 
-    Processor processor = new Processor(processingEnv, roundEnv, configuration);
-    processor.process();
-    return true;
-  }
+		Processor processor = new Processor(processingEnv, roundEnv, configuration);
+		processor.process();
+		return true;
+	}
 }

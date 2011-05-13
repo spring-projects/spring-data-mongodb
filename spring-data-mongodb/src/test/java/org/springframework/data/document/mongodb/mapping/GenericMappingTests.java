@@ -31,63 +31,63 @@ import org.springframework.data.document.mongodb.convert.MongoConverter;
 
 /**
  * Unit tests for testing the mapping works with generic types.
- *
+ * 
  * @author Oliver Gierke
  */
 @RunWith(MockitoJUnitRunner.class)
 public class GenericMappingTests {
 
-  MongoMappingContext context;
-  MongoConverter converter;
+	MongoMappingContext context;
+	MongoConverter converter;
 
-  @Before
-  public void setUp() throws Exception {
-    context = new MongoMappingContext();
-    context.setInitialEntitySet(Collections.singleton(StringWrapper.class));
-    context.afterPropertiesSet();
-    
-    converter = new MappingMongoConverter(context);
-  }
+	@Before
+	public void setUp() throws Exception {
+		context = new MongoMappingContext();
+		context.setInitialEntitySet(Collections.singleton(StringWrapper.class));
+		context.afterPropertiesSet();
 
-  @Test
-  public void writesGenericTypeCorrectly() {
+		converter = new MappingMongoConverter(context);
+	}
 
-    StringWrapper wrapper = new StringWrapper();
-    wrapper.container = new Container<String>();
-    wrapper.container.content = "Foo!";
+	@Test
+	public void writesGenericTypeCorrectly() {
 
-    DBObject dbObject = new BasicDBObject();
-    converter.write(wrapper, dbObject);
+		StringWrapper wrapper = new StringWrapper();
+		wrapper.container = new Container<String>();
+		wrapper.container.content = "Foo!";
 
-    Object container = dbObject.get("container");
-    assertThat(container, is(notNullValue()));
-    assertTrue(container instanceof DBObject);
+		DBObject dbObject = new BasicDBObject();
+		converter.write(wrapper, dbObject);
 
-    Object content = ((DBObject) container).get("content");
-    assertTrue(content instanceof String);
-    assertThat((String) content, is("Foo!"));
-  }
+		Object container = dbObject.get("container");
+		assertThat(container, is(notNullValue()));
+		assertTrue(container instanceof DBObject);
 
-  @Test
-  public void readsGenericTypeCorrectly() {
+		Object content = ((DBObject) container).get("content");
+		assertTrue(content instanceof String);
+		assertThat((String) content, is("Foo!"));
+	}
 
-    DBObject content = new BasicDBObject("content", "Foo!");
-    BasicDBObject container = new BasicDBObject("container", content);
+	@Test
+	public void readsGenericTypeCorrectly() {
 
-    StringWrapper result = converter.read(StringWrapper.class, container);
-    assertThat(result.container, is(notNullValue()));
-    assertThat(result.container.content, is("Foo!"));
-  }
+		DBObject content = new BasicDBObject("content", "Foo!");
+		BasicDBObject container = new BasicDBObject("container", content);
 
-  public class StringWrapper extends Wrapper<String> {
+		StringWrapper result = converter.read(StringWrapper.class, container);
+		assertThat(result.container, is(notNullValue()));
+		assertThat(result.container.content, is("Foo!"));
+	}
 
-  }
+	public class StringWrapper extends Wrapper<String> {
 
-  public class Wrapper<S> {
-    Container<S> container;
-  }
+	}
 
-  public class Container<T> {
-    T content;
-  }
+	public class Wrapper<S> {
+		Container<S> container;
+	}
+
+	public class Container<T> {
+		T content;
+	}
 }

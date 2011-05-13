@@ -15,37 +15,36 @@
  */
 package org.springframework.data.document.mongodb;
 
-
 public class PersonWith_idPropertyOfTypeString {
 
-  private String _id;
+	private String _id;
 
-  private String firstName;
+	private String firstName;
 
-  private int age;
+	private int age;
 
-  public String get_id() {
-    return _id;
-  }
+	public String get_id() {
+		return _id;
+	}
 
-  public void set_id(String _id) {
-    this._id = _id;
-  }
+	public void set_id(String _id) {
+		this._id = _id;
+	}
 
-  public String getFirstName() {
-    return firstName;
-  }
+	public String getFirstName() {
+		return firstName;
+	}
 
-  public void setFirstName(String firstName) {
-    this.firstName = firstName;
-  }
+	public void setFirstName(String firstName) {
+		this.firstName = firstName;
+	}
 
-  public int getAge() {
-    return age;
-  }
+	public int getAge() {
+		return age;
+	}
 
-  public void setAge(int age) {
-    this.age = age;
-  }
+	public void setAge(int age) {
+		this.age = age;
+	}
 
 }

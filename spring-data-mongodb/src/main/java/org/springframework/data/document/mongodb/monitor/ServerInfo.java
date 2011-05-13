@@ -26,41 +26,39 @@ import org.springframework.jmx.support.MetricType;
 
 /**
  * Expose basic server information via JMX
- *
+ * 
  * @author Mark Pollack
  */
 @ManagedResource(description = "Server Information")
 public class ServerInfo extends AbstractMonitor {
 
-  public ServerInfo(Mongo mongo) {
-    this.mongo = mongo;
-  }
+	public ServerInfo(Mongo mongo) {
+		this.mongo = mongo;
+	}
 
+	@ManagedOperation(description = "Server host name")
+	public String getHostName() throws UnknownHostException {
+		return InetAddress.getLocalHost().getHostName();
+	}
 
-  @ManagedOperation(description = "Server host name")
-  public String getHostName() throws UnknownHostException {
-    return InetAddress.getLocalHost().getHostName();
-  }
+	@ManagedMetric(displayName = "Uptime Estimate")
+	public double getUptimeEstimate() {
+		return (Double) getServerStatus().get("uptimeEstimate");
+	}
 
-  @ManagedMetric(displayName = "Uptime Estimate")
-  public double getUptimeEstimate() {
-    return (Double) getServerStatus().get("uptimeEstimate");
-  }
+	@ManagedOperation(description = "MongoDB Server Version")
+	public String getVersion() {
+		return (String) getServerStatus().get("version");
+	}
 
-  @ManagedOperation(description = "MongoDB Server Version")
-  public String getVersion() {
-    return (String) getServerStatus().get("version");
-  }
+	@ManagedOperation(description = "Local Time")
+	public String getLocalTime() {
+		return (String) getServerStatus().get("localTime");
+	}
 
-  @ManagedOperation(description = "Local Time")
-  public String getLocalTime() {
-    return (String) getServerStatus().get("localTime");
-  }
-
-
-  @ManagedMetric(metricType = MetricType.COUNTER, displayName = "Server uptime in seconds", unit = "seconds")
-  public double getUptime() {
-    return (Double) getServerStatus().get("uptime");
-  }
+	@ManagedMetric(metricType = MetricType.COUNTER, displayName = "Server uptime in seconds", unit = "seconds")
+	public double getUptime() {
+		return (Double) getServerStatus().get("uptime");
+	}
 
 }

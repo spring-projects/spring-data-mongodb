@@ -23,88 +23,86 @@ import org.springframework.data.document.mongodb.index.IndexDefinition;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
-
 public class Index implements IndexDefinition {
 
-  public enum Duplicates {
-    RETAIN,
-    DROP
-  }
+	public enum Duplicates {
+		RETAIN, DROP
+	}
 
-  private Map<String, Order> fieldSpec = new HashMap<String, Order>();
+	private Map<String, Order> fieldSpec = new HashMap<String, Order>();
 
-  private String name;
+	private String name;
 
-  private boolean unique = false;
+	private boolean unique = false;
 
-  private boolean dropDuplicates = false;
-  
-  private boolean sparse = false;
+	private boolean dropDuplicates = false;
 
-  public Index() {
-  }
+	private boolean sparse = false;
 
-  public Index(String key, Order order) {
-    fieldSpec.put(key, order);
-  }
+	public Index() {
+	}
 
-  public Index on(String key, Order order) {
-    fieldSpec.put(key, order);
-    return this;
-  }
+	public Index(String key, Order order) {
+		fieldSpec.put(key, order);
+	}
 
-  public Index named(String name) {
-    this.name = name;
-    return this;
-  }
+	public Index on(String key, Order order) {
+		fieldSpec.put(key, order);
+		return this;
+	}
 
-  public Index unique() {
-    this.unique = true;
-    return this;
-  }
-  
-  public Index sparse() {
-    this.sparse = true;
-    return this;
-  }
+	public Index named(String name) {
+		this.name = name;
+		return this;
+	}
 
-  public Index unique(Duplicates duplicates) {
-    if (duplicates == Duplicates.DROP) {
-      this.dropDuplicates = true;
-    }
-    return unique();
-  }
+	public Index unique() {
+		this.unique = true;
+		return this;
+	}
 
-  public DBObject getIndexKeys() {
-    DBObject dbo = new BasicDBObject();
-    for (String k : fieldSpec.keySet()) {
-      dbo.put(k, (fieldSpec.get(k).equals(Order.ASCENDING) ? 1 : -1));
-    }
-    return dbo;
-  }
+	public Index sparse() {
+		this.sparse = true;
+		return this;
+	}
 
-  public DBObject getIndexOptions() {
-    if (name == null && !unique) {
-      return null;
-    }
-    DBObject dbo = new BasicDBObject();
-    if (name != null) {
-      dbo.put("name", name);
-    }
-    if (unique) {
-      dbo.put("unique", true);
-    }
-    if (dropDuplicates) {
-      dbo.put("dropDups", true);
-    }
-    if (sparse) {
-      dbo.put("sparse", true);
-    }
-    return dbo;
-  }
-  
-  @Override
-  public String toString() {
-    return String.format("Index: %s - Options: %s", getIndexKeys(), getIndexOptions());
-  }
+	public Index unique(Duplicates duplicates) {
+		if (duplicates == Duplicates.DROP) {
+			this.dropDuplicates = true;
+		}
+		return unique();
+	}
+
+	public DBObject getIndexKeys() {
+		DBObject dbo = new BasicDBObject();
+		for (String k : fieldSpec.keySet()) {
+			dbo.put(k, (fieldSpec.get(k).equals(Order.ASCENDING) ? 1 : -1));
+		}
+		return dbo;
+	}
+
+	public DBObject getIndexOptions() {
+		if (name == null && !unique) {
+			return null;
+		}
+		DBObject dbo = new BasicDBObject();
+		if (name != null) {
+			dbo.put("name", name);
+		}
+		if (unique) {
+			dbo.put("unique", true);
+		}
+		if (dropDuplicates) {
+			dbo.put("dropDups", true);
+		}
+		if (sparse) {
+			dbo.put("sparse", true);
+		}
+		return dbo;
+	}
+
+	@Override
+	public String toString() {
+		return String.format("Index: %s - Options: %s", getIndexKeys(), getIndexOptions());
+	}
 }

@@ -23,7 +23,7 @@ import java.lang.annotation.Target;
 
 /**
  * Mark a field to be indexed using MongoDB's geospatial indexing feature.
- *
+ * 
  * @author Jon Brisbin <jbrisbin@vmware.com>
  */
 @Target(ElementType.FIELD)
@@ -32,35 +32,35 @@ public @interface GeoSpatialIndexed {
 
 	/**
 	 * Name of the property in the document that contains the [x, y] or radial coordinates to index.
-	 *
+	 * 
 	 * @return
 	 */
 	String name() default "";
 
 	/**
 	 * Name of the collection in which to create the index.
-	 *
+	 * 
 	 * @return
 	 */
 	String collection() default "";
 
 	/**
 	 * Minimum value for indexed values.
-	 *
+	 * 
 	 * @return
 	 */
 	int min() default -180;
 
 	/**
 	 * Maximum value for indexed values.
-	 *
+	 * 
 	 * @return
 	 */
 	int max() default 180;
 
 	/**
 	 * Bits of precision for boundary calculations.
-	 *
+	 * 
 	 * @return
 	 */
 	int bits() default 26;

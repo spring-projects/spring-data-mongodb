@@ -25,15 +25,14 @@ import org.springframework.data.annotation.Persistent;
 
 /**
  * Identifies a domain object to be persisted to MongoDB.
+ * 
  * @author Jon Brisbin <jbrisbin@vmware.com>
  */
 @Persistent
 @Retention(RetentionPolicy.RUNTIME)
-@Target({
-    ElementType.TYPE
-})
+@Target({ ElementType.TYPE })
 public @interface Document {
 
-  String collection() default "";
+	String collection() default "";
 
 }

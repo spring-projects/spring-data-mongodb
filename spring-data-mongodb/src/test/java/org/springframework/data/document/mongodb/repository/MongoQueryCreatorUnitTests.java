@@ -38,66 +38,61 @@ import org.springframework.data.repository.query.parser.PartTree;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
-
 /**
  * Unit test for {@link MongoQueryCreator}.
- *
+ * 
  * @author Oliver Gierke
  */
 @RunWith(MockitoJUnitRunner.class)
 public class MongoQueryCreatorUnitTests {
 
-  Method findByFirstname, findByFirstnameAndFriend, findByFirstnameNotNull;
+	Method findByFirstname, findByFirstnameAndFriend, findByFirstnameNotNull;
 
-  @Mock
-  MongoConverter converter;
+	@Mock
+	MongoConverter converter;
 
+	@Before
+	public void setUp() throws SecurityException, NoSuchMethodException {
 
-  @Before
-  public void setUp() throws SecurityException, NoSuchMethodException {
-    
-    doAnswer(new Answer<Void>() {
-      public Void answer(InvocationOnMock invocation) throws Throwable {
-        DBObject dbObject = (DBObject) invocation.getArguments()[1];
-        dbObject.put("value", new BasicDBObject("value", "value"));
-        return null;
-      }
-    }).when(converter).write(any(), Mockito.any(DBObject.class));
+		doAnswer(new Answer<Void>() {
+			public Void answer(InvocationOnMock invocation) throws Throwable {
+				DBObject dbObject = (DBObject) invocation.getArguments()[1];
+				dbObject.put("value", new BasicDBObject("value", "value"));
+				return null;
+			}
+		}).when(converter).write(any(), Mockito.any(DBObject.class));
 
-  }
+	}
 
+	@Test
+	public void createsQueryCorrectly() throws Exception {
 
-  @Test
-  public void createsQueryCorrectly() throws Exception {
+		PartTree tree = new PartTree("findByFirstName", Person.class);
 
-    PartTree tree = new PartTree("findByFirstName", Person.class);
+		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "Oliver"));
 
-    MongoQueryCreator creator =
-        new MongoQueryCreator(tree, getAccessor(converter, "Oliver"));
+		creator.createQuery();
 
-    creator.createQuery();
+		creator = new MongoQueryCreator(new PartTree("findByFirstNameAndFriend", Person.class), getAccessor(converter,
+				"Oliver", new Person()));
+		creator.createQuery();
+	}
 
-    creator =
-        new MongoQueryCreator(new PartTree("findByFirstNameAndFriend",
-            Person.class), getAccessor(converter, "Oliver", new Person()));
-    creator.createQuery();
-  }
-  
-  @Test
-  public void createsNotNullQueryCorrectly() {
-    
-    PartTree tree = new PartTree("findByFirstNameNotNull", Person.class);
-    Query query = new MongoQueryCreator(tree, getAccessor(converter)).createQuery();
-    
-    assertThat(query.getQueryObject(), is(new Query(Criteria.where("firstName").ne(null)).getQueryObject()));
-  }
-  
-  @Test
-  public void createsIsNullQueryCorrectly() {
-    
-    PartTree tree = new PartTree("findByFirstNameIsNull", Person.class);
-    Query query = new MongoQueryCreator(tree, getAccessor(converter)).createQuery();
-    
-    assertThat(query.getQueryObject(), is(new Query(Criteria.where("firstName").is(null)).getQueryObject()));
-  }
+	@Test
+	public void createsNotNullQueryCorrectly() {
+
+		PartTree tree = new PartTree("findByFirstNameNotNull", Person.class);
+		Query query = new MongoQueryCreator(tree, getAccessor(converter)).createQuery();
+
+		assertThat(query.getQueryObject(), is(new Query(Criteria.where("firstName").ne(null)).getQueryObject()));
+	}
+
+	@Test
+	public void createsIsNullQueryCorrectly() {
+
+		PartTree tree = new PartTree("findByFirstNameIsNull", Person.class);
+		Query query = new MongoQueryCreator(tree, getAccessor(converter)).createQuery();
+
+		assertThat(query.getQueryObject(), is(new Query(Criteria.where("firstName").is(null)).getQueryObject()));
+	}
 }

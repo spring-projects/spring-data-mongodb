@@ -24,10 +24,10 @@ import java.lang.annotation.Target;
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
  */
-@Target({ElementType.TYPE})
+@Target({ ElementType.TYPE })
 @Retention(RetentionPolicy.RUNTIME)
 public @interface CompoundIndexes {
 
-  CompoundIndex[] value();
+	CompoundIndex[] value();
 
 }

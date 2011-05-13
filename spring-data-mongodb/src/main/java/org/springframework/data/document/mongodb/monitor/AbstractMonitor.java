@@ -25,47 +25,48 @@ import org.springframework.data.document.mongodb.MongoDbUtils;
 
 /**
  * Base class to encapsulate common configuration settings when connecting to a database
- *
+ * 
  * @author Mark Pollack
  */
 public abstract class AbstractMonitor {
 
-  private final Log logger = LogFactory.getLog(getClass());
+	private final Log logger = LogFactory.getLog(getClass());
 
-  protected Mongo mongo;
-  private String username;
-  private String password;
+	protected Mongo mongo;
+	private String username;
+	private String password;
 
+	/**
+	 * Sets the username to use to connect to the Mongo database
+	 * 
+	 * @param username
+	 *          The username to use
+	 */
+	public void setUsername(String username) {
+		this.username = username;
+	}
 
-  /**
-   * Sets the username to use to connect to the Mongo database
-   *
-   * @param username The username to use
-   */
-  public void setUsername(String username) {
-    this.username = username;
-  }
+	/**
+	 * Sets the password to use to authenticate with the Mongo database.
+	 * 
+	 * @param password
+	 *          The password to use
+	 */
+	public void setPassword(String password) {
 
-  /**
-   * Sets the password to use to authenticate with the Mongo database.
-   *
-   * @param password The password to use
-   */
-  public void setPassword(String password) {
+		this.password = password;
+	}
 
-    this.password = password;
-  }
+	public CommandResult getServerStatus() {
+		CommandResult result = getDb("admin").command("serverStatus");
+		if (!result.ok()) {
+			logger.error("Could not query for server status.  Command Result = " + result);
+			throw new MongoException("could not query for server status.  Command Result = " + result);
+		}
+		return result;
+	}
 
-  public CommandResult getServerStatus() {
-    CommandResult result = getDb("admin").command("serverStatus");
-    if (!result.ok()) {
-      logger.error("Could not query for server status.  Command Result = " + result);
-      throw new MongoException("could not query for server status.  Command Result = " + result);
-    }
-    return result;
-  }
-
-  public DB getDb(String databaseName) {
-    return MongoDbUtils.getDB(mongo, databaseName, username, password == null ? null : password.toCharArray());
-  }
+	public DB getDb(String databaseName) {
+		return MongoDbUtils.getDB(mongo, databaseName, username, password == null ? null : password.toCharArray());
+	}
 }

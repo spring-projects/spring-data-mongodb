@@ -21,27 +21,27 @@ package org.springframework.data.document.mongodb.mapping;
  */
 public class AccountPojo {
 
-  private String type;
-  private Float balance;
+	private String type;
+	private Float balance;
 
-  public AccountPojo(String type, Float balance) {
-    this.type = type;
-    this.balance = balance;
-  }
+	public AccountPojo(String type, Float balance) {
+		this.type = type;
+		this.balance = balance;
+	}
 
-  public String getType() {
-    return type;
-  }
+	public String getType() {
+		return type;
+	}
 
-  public void setType(String type) {
-    this.type = type;
-  }
+	public void setType(String type) {
+		this.type = type;
+	}
 
-  public Float getBalance() {
-    return balance;
-  }
+	public Float getBalance() {
+		return balance;
+	}
 
-  public void setBalance(Float balance) {
-    this.balance = balance;
-  }
+	public void setBalance(Float balance) {
+		this.balance = balance;
+	}
 }

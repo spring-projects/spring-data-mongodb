@@ -24,20 +24,19 @@ import java.lang.annotation.Target;
 import org.springframework.data.annotation.Reference;
 
 /**
- * An annotation that indicates the annotated field is to be stored using a com.mongodb.DBRef 
+ * An annotation that indicates the annotated field is to be stored using a com.mongodb.DBRef
+ * 
  * @author Jon Brisbin <jbrisbin@vmware.com>
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target({
-    ElementType.FIELD
-})
+@Target({ ElementType.FIELD })
 @Reference
 public @interface DBRef {
 
-  String collection() default "";
+	String collection() default "";
 
-  String id() default "";
+	String id() default "";
 
-  String db() default "";
+	String db() default "";
 
 }

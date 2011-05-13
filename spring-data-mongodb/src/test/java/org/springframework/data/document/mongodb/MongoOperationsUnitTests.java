@@ -39,7 +39,7 @@ import org.springframework.data.mapping.model.MappingContext;
 /**
  * Abstract base class for unit tests to specify behaviour we expect from {@link MongoOperations}. Subclasses return
  * instances of their implementation and thus can see if it correctly implements the {@link MongoOperations} interface.
- *
+ * 
  * @author Oliver Gierke
  */
 @RunWith(MockitoJUnitRunner.class)
@@ -86,20 +86,20 @@ public abstract class MongoOperationsUnitTests {
 	}
 
 	@Test(expected = IllegalArgumentException.class)
-	@SuppressWarnings({"unchecked", "rawtypes"})
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public void rejectsNullForCollectionCallback() {
 
 		getOperations().execute("test", (CollectionCallback) null);
 	}
 
 	@Test(expected = IllegalArgumentException.class)
-	@SuppressWarnings({"unchecked", "rawtypes"})
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public void rejectsNullForCollectionCallback2() {
 		getOperations().execute("collection", (CollectionCallback) null);
 	}
 
 	@Test(expected = IllegalArgumentException.class)
-	@SuppressWarnings({"unchecked", "rawtypes"})
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public void rejectsNullForDbCallback() {
 		getOperations().execute((DbCallback) null);
 	}
@@ -316,14 +316,14 @@ public abstract class MongoOperationsUnitTests {
 	/**
 	 * Expects an {@link MongoOperations} instance that will be used to check that invoking methods on it will only cause
 	 * {@link DataAccessException}s.
-	 *
+	 * 
 	 * @return
 	 */
 	protected abstract MongoOperations getOperationsForExceptionHandling();
 
 	/**
 	 * Returns a plain {@link MongoOperations}.
-	 *
+	 * 
 	 * @return
 	 */
 	protected abstract MongoOperations getOperations();

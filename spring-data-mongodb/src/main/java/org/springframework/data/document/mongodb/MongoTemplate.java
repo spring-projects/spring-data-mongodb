@@ -73,7 +73,7 @@ import org.springframework.util.Assert;
 
 /**
  * Primary implementation of {@link MongoOperations}.
- *
+ * 
  * @author Thomas Risberg
  * @author Graeme Rocher
  * @author Mark Pollack
@@ -110,7 +110,7 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 
 	/**
 	 * Constructor used for a basic template configuration
-	 *
+	 * 
 	 * @param mongo
 	 * @param databaseName
 	 */
@@ -119,8 +119,9 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 	}
 
 	/**
-	 * Constructor used for a template configuration with a custom {@link org.springframework.data.document.mongodb.convert.MongoConverter}
-	 *
+	 * Constructor used for a template configuration with a custom
+	 * {@link org.springframework.data.document.mongodb.convert.MongoConverter}
+	 * 
 	 * @param mongo
 	 * @param databaseName
 	 * @param mongoConverter
@@ -130,16 +131,17 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 	}
 
 	/**
-	 * Constructor used for a template configuration with a custom {@link MongoConverter}
-	 * and with a specific {@link com.mongodb.WriteConcern} to be used for all database write operations
-	 *
+	 * Constructor used for a template configuration with a custom {@link MongoConverter} and with a specific
+	 * {@link com.mongodb.WriteConcern} to be used for all database write operations
+	 * 
 	 * @param mongo
 	 * @param databaseName
 	 * @param mongoConverter
 	 * @param writeConcern
 	 * @param writeResultChecking
 	 */
-	MongoTemplate(Mongo mongo, String databaseName, MongoConverter mongoConverter, WriteConcern writeConcern, WriteResultChecking writeResultChecking) {
+	MongoTemplate(Mongo mongo, String databaseName, MongoConverter mongoConverter, WriteConcern writeConcern,
+			WriteResultChecking writeResultChecking) {
 
 		Assert.notNull(mongo);
 		Assert.notNull(databaseName);
@@ -174,8 +176,9 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 
 	/**
 	 * Sets the username to use to connect to the Mongo database
-	 *
-	 * @param username The username to use
+	 * 
+	 * @param username
+	 *          The username to use
 	 */
 	public void setUsername(String username) {
 		this.username = username;
@@ -183,8 +186,9 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 
 	/**
 	 * Sets the password to use to authenticate with the Mongo database.
-	 *
-	 * @param password The password to use
+	 * 
+	 * @param password
+	 *          The password to use
 	 */
 	public void setPassword(String password) {
 
@@ -193,7 +197,7 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 
 	/**
 	 * Sets the database name to be used.
-	 *
+	 * 
 	 * @param databaseName
 	 */
 	public void setDatabaseName(String databaseName) {
@@ -203,7 +207,7 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 
 	/**
 	 * Returns the default {@link org.springframework.data.document.mongodb.convert.MongoConverter}.
-	 *
+	 * 
 	 * @return
 	 */
 	public MongoConverter getConverter() {
@@ -238,10 +242,9 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 		String error = result.getErrorMessage();
 		if (error != null) {
 			// TODO: allow configuration of logging level / throw
-			//	throw new InvalidDataAccessApiUsageException("Command execution of " +
-			//			command.toString() + " failed: " + error);
-			LOGGER.warn("Command execution of " +
-					command.toString() + " failed: " + error);
+			// throw new InvalidDataAccessApiUsageException("Command execution of " +
+			// command.toString() + " failed: " + error);
+			LOGGER.warn("Command execution of " + command.toString() + " failed: " + error);
 		}
 		return result;
 	}
@@ -285,18 +288,23 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 
 	/**
 	 * Central callback executing method to do queries against the datastore that requires reading a single object from a
-	 * collection of objects. It will take the following steps <ol> <li>Execute the given {@link ConnectionCallback} for a
-	 * {@link DBObject}.</li> <li>Apply the given
-	 * {@link DbObjectCallback} to each of the {@link DBObject}s to obtain the result.</li> <ol>
-	 *
+	 * collection of objects. It will take the following steps
+	 * <ol>
+	 * <li>Execute the given {@link ConnectionCallback} for a {@link DBObject}.</li>
+	 * <li>Apply the given {@link DbObjectCallback} to each of the {@link DBObject}s to obtain the result.</li>
+	 * <ol>
+	 * 
 	 * @param <T>
-	 * @param collectionCallback the callback to retrieve the {@link DBObject} with
-	 * @param objectCallback		 the {@link DbObjectCallback} to transform {@link DBObject}s into the actual domain type
-	 * @param collectionName		 the collection to be queried
+	 * @param collectionCallback
+	 *          the callback to retrieve the {@link DBObject} with
+	 * @param objectCallback
+	 *          the {@link DbObjectCallback} to transform {@link DBObject}s into the actual domain type
+	 * @param collectionName
+	 *          the collection to be queried
 	 * @return
 	 */
-	private <T> T execute(CollectionCallback<DBObject> collectionCallback,
-												DbObjectCallback<T> objectCallback, String collectionName) {
+	private <T> T execute(CollectionCallback<DBObject> collectionCallback, DbObjectCallback<T> objectCallback,
+			String collectionName) {
 
 		try {
 			T result = objectCallback.doWith(collectionCallback.doInCollection(getCollection(collectionName)));
@@ -308,20 +316,28 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 
 	/**
 	 * Central callback executing method to do queries against the datastore that requires reading a collection of
-	 * objects. It will take the following steps <ol> <li>Execute the given {@link ConnectionCallback} for a
-	 * {@link DBCursor}.</li> <li>Prepare that {@link DBCursor} with the given {@link CursorPreparer} (will be skipped
-	 * if {@link CursorPreparer} is {@literal null}</li> <li>Iterate over the {@link DBCursor} and applies the given
-	 * {@link DbObjectCallback} to each of the {@link DBObject}s collecting the actual result {@link List}.</li> <ol>
-	 *
+	 * objects. It will take the following steps
+	 * <ol>
+	 * <li>Execute the given {@link ConnectionCallback} for a {@link DBCursor}.</li>
+	 * <li>Prepare that {@link DBCursor} with the given {@link CursorPreparer} (will be skipped if {@link CursorPreparer}
+	 * is {@literal null}</li>
+	 * <li>Iterate over the {@link DBCursor} and applies the given {@link DbObjectCallback} to each of the
+	 * {@link DBObject}s collecting the actual result {@link List}.</li>
+	 * <ol>
+	 * 
 	 * @param <T>
-	 * @param collectionCallback the callback to retrieve the {@link DBCursor} with
-	 * @param preparer					 the {@link CursorPreparer} to potentially modify the {@link DBCursor} before ireating over it
-	 * @param objectCallback		 the {@link DbObjectCallback} to transform {@link DBObject}s into the actual domain type
-	 * @param collectionName		 the collection to be queried
+	 * @param collectionCallback
+	 *          the callback to retrieve the {@link DBCursor} with
+	 * @param preparer
+	 *          the {@link CursorPreparer} to potentially modify the {@link DBCursor} before ireating over it
+	 * @param objectCallback
+	 *          the {@link DbObjectCallback} to transform {@link DBObject}s into the actual domain type
+	 * @param collectionName
+	 *          the collection to be queried
 	 * @return
 	 */
 	private <T> List<T> executeEach(CollectionCallback<DBCursor> collectionCallback, CursorPreparer preparer,
-																	DbObjectCallback<T> objectCallback, String collectionName) {
+			DbObjectCallback<T> objectCallback, String collectionName) {
 
 		try {
 			DBCursor cursor = collectionCallback.doInCollection(getCollection(collectionName));
@@ -384,7 +400,6 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 		});
 	}
 
-
 	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#collectionExists(java.lang.String)
 	 */
@@ -435,8 +450,7 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 		return findOne(determineCollectionName(targetClass), query, targetClass);
 	}
 
-	public <T> T findOne(String collectionName, Query query,
-											 Class<T> targetClass) {
+	public <T> T findOne(String collectionName, Query query, Class<T> targetClass) {
 		return doFindOne(collectionName, query.getQueryObject(), query.getFieldsObject(), targetClass);
 	}
 
@@ -473,8 +487,7 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 		return doFind(collectionName, query.getQueryObject(), query.getFieldsObject(), targetClass, cursorPreparer);
 	}
 
-	public <T> List<T> find(String collectionName, Query query,
-													Class<T> targetClass, CursorPreparer preparer) {
+	public <T> List<T> find(String collectionName, Query query, Class<T> targetClass, CursorPreparer preparer) {
 		return doFind(collectionName, query.getQueryObject(), query.getFieldsObject(), targetClass, preparer);
 	}
 
@@ -485,9 +498,9 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 		return findAndRemove(determineCollectionName(targetClass), query, targetClass);
 	}
 
-	public <T> T findAndRemove(String collectionName, Query query,
-														 Class<T> targetClass) {
-		return doFindAndRemove(collectionName, query.getQueryObject(), query.getFieldsObject(), query.getSortObject(), targetClass);
+	public <T> T findAndRemove(String collectionName, Query query, Class<T> targetClass) {
+		return doFindAndRemove(collectionName, query.getQueryObject(), query.getFieldsObject(), query.getSortObject(),
+				targetClass);
 	}
 
 	/* (non-Javadoc)
@@ -538,8 +551,8 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 
 			MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(o.getClass());
 			if (entity == null) {
-				throw new InvalidDataAccessApiUsageException("No Persitent Entity information found for the class " +
-						o.getClass().getName());
+				throw new InvalidDataAccessApiUsageException("No Persitent Entity information found for the class "
+						+ o.getClass().getName());
 			}
 			String collection = entity.getCollection();
 
@@ -608,15 +621,14 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 		maybeEmitEvent(new AfterSaveEvent<T>(objectToSave, dbDoc));
 	}
 
-
 	protected Object insertDBObject(String collectionName, final DBObject dbDoc) {
 
 		// DATADOC-95: This will prevent null objects from being saved.
-		//if (dbDoc.keySet().isEmpty()) {
-		//return null;
-		//}
+		// if (dbDoc.keySet().isEmpty()) {
+		// return null;
+		// }
 
-		//TODO: Need to move this to more central place
+		// TODO: Need to move this to more central place
 		if (dbDoc.containsField("_id")) {
 			if (dbDoc.get("_id") instanceof String) {
 				ObjectId oid = convertIdValue(this.mongoConverter, dbDoc.get("_id"));
@@ -646,7 +658,7 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 			return Collections.emptyList();
 		}
 
-		//TODO: Need to move this to more central place
+		// TODO: Need to move this to more central place
 		for (DBObject dbDoc : dbDocList) {
 			if (dbDoc.containsField("_id")) {
 				if (dbDoc.get("_id") instanceof String) {
@@ -690,7 +702,7 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 			return null;
 		}
 
-		//TODO: Need to move this to more central place
+		// TODO: Need to move this to more central place
 		if (dbDoc.containsField("_id")) {
 			if (dbDoc.get("_id") instanceof String) {
 				ObjectId oid = convertIdValue(this.mongoConverter, dbDoc.get("_id"));
@@ -742,12 +754,8 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 		return doUpdate(collectionName, query, update, null, false, true);
 	}
 
-	protected WriteResult doUpdate(final String collectionName,
-															 final Query query,
-															 final Update update,
-															 final Class<?> entityClass,
-															 final boolean upsert,
-															 final boolean multi) {
+	protected WriteResult doUpdate(final String collectionName, final Query query, final Update update,
+			final Class<?> entityClass, final boolean upsert, final boolean multi) {
 
 		return execute(collectionName, new CollectionCallback<WriteResult>() {
 			public WriteResult doInCollection(DBCollection collection) throws MongoException, DataAccessException {
@@ -773,7 +781,8 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 				}
 
 				if (LOGGER.isDebugEnabled()) {
-					LOGGER.debug("calling update using query: " + queryObj + " and update: " + updateObj + " in collection: " + collectionName);
+					LOGGER.debug("calling update using query: " + queryObj + " and update: " + updateObj + " in collection: "
+							+ collectionName);
 				}
 
 				WriteResult wr;
@@ -841,7 +850,6 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 		remove(collectionName, query, null);
 	}
 
-
 	/* (non-Javadoc)
 	 * @see org.springframework.data.document.mongodb.MongoOperations#getCollection(java.lang.Class)
 	 */
@@ -875,7 +883,7 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 
 	/**
 	 * Create the specified collection using the provided options
-	 *
+	 * 
 	 * @param collectionName
 	 * @param collectionOptions
 	 * @return the collection that was created
@@ -894,11 +902,15 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 	 * Map the results of an ad-hoc query on the default MongoDB collection to an object using the template's converter
 	 * <p/>
 	 * The query document is specified as a standard DBObject and so is the fields specification.
-	 *
-	 * @param collectionName name of the collection to retrieve the objects from
-	 * @param query					the query document that specifies the criteria used to find a record
-	 * @param fields				 the document that specifies the fields to be returned
-	 * @param targetClass		the parameterized type of the returned list.
+	 * 
+	 * @param collectionName
+	 *          name of the collection to retrieve the objects from
+	 * @param query
+	 *          the query document that specifies the criteria used to find a record
+	 * @param fields
+	 *          the document that specifies the fields to be returned
+	 * @param targetClass
+	 *          the parameterized type of the returned list.
 	 * @return the List of converted objects.
 	 */
 	protected <T> T doFindOne(String collectionName, DBObject query, DBObject fields, Class<T> targetClass) {
@@ -906,63 +918,70 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(targetClass);
 		DBObject mappedQuery = mapper.getMappedObject(query, entity);
 
-		return execute(new FindOneCallback(mappedQuery, fields),
-				new ReadDbObjectCallback<T>(readerToUse, targetClass),
+		return execute(new FindOneCallback(mappedQuery, fields), new ReadDbObjectCallback<T>(readerToUse, targetClass),
 				collectionName);
 	}
 
 	/**
 	 * Map the results of an ad-hoc query on the default MongoDB collection to a List of the specified type.
 	 * <p/>
-	 * The object is converted from the MongoDB native representation using an instance of
-	 * {@see MongoConverter}.	 Unless configured otherwise, an
-	 * instance of SimpleMongoConverter will be used.
+	 * The object is converted from the MongoDB native representation using an instance of {@see MongoConverter}. Unless
+	 * configured otherwise, an instance of SimpleMongoConverter will be used.
 	 * <p/>
 	 * The query document is specified as a standard DBObject and so is the fields specification.
 	 * <p/>
 	 * Can be overridden by subclasses.
-	 *
-	 * @param collectionName name of the collection to retrieve the objects from
-	 * @param query					the query document that specifies the criteria used to find a record
-	 * @param fields				 the document that specifies the fields to be returned
-	 * @param targetClass		the parameterized type of the returned list.
-	 * @param preparer			 allows for customization of the DBCursor used when iterating over the result set,
-	 *                       (apply limits, skips and so on).
+	 * 
+	 * @param collectionName
+	 *          name of the collection to retrieve the objects from
+	 * @param query
+	 *          the query document that specifies the criteria used to find a record
+	 * @param fields
+	 *          the document that specifies the fields to be returned
+	 * @param targetClass
+	 *          the parameterized type of the returned list.
+	 * @param preparer
+	 *          allows for customization of the DBCursor used when iterating over the result set, (apply limits, skips and
+	 *          so on).
 	 * @return the List of converted objects.
 	 */
-	protected <T> List<T> doFind(String collectionName, DBObject query, DBObject fields, Class<T> targetClass, CursorPreparer preparer) {
+	protected <T> List<T> doFind(String collectionName, DBObject query, DBObject fields, Class<T> targetClass,
+			CursorPreparer preparer) {
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(targetClass);
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("find using query: " + query + " fields: " + fields + " for class: " + targetClass + " in collection: " + collectionName);
+			LOGGER.debug("find using query: " + query + " fields: " + fields + " for class: " + targetClass
+					+ " in collection: " + collectionName);
 		}
-		return executeEach(new FindCallback(mapper.getMappedObject(query, entity), fields),
-				preparer,
-				new ReadDbObjectCallback<T>(mongoConverter, targetClass),
-				collectionName);
+		return executeEach(new FindCallback(mapper.getMappedObject(query, entity), fields), preparer,
+				new ReadDbObjectCallback<T>(mongoConverter, targetClass), collectionName);
 	}
 
 	/**
 	 * Map the results of an ad-hoc query on the default MongoDB collection to a List using the template's converter.
 	 * <p/>
 	 * The query document is specified as a standard DBObject and so is the fields specification.
-	 *
-	 * @param collectionName name of the collection to retrieve the objects from
-	 * @param query					the query document that specifies the criteria used to find a record
-	 * @param fields				 the document that specifies the fields to be returned
-	 * @param targetClass		the parameterized type of the returned list.
-	 * @param reader				 the MongoReader to convert from DBObject to an object.
+	 * 
+	 * @param collectionName
+	 *          name of the collection to retrieve the objects from
+	 * @param query
+	 *          the query document that specifies the criteria used to find a record
+	 * @param fields
+	 *          the document that specifies the fields to be returned
+	 * @param targetClass
+	 *          the parameterized type of the returned list.
+	 * @param reader
+	 *          the MongoReader to convert from DBObject to an object.
 	 * @return the List of converted objects.
 	 */
 	protected <T> List<T> doFind(String collectionName, DBObject query, DBObject fields, Class<T> targetClass) {
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("find using query: " + query + " fields: " + fields + " for class: " + targetClass + " in collection: " + collectionName);
+			LOGGER.debug("find using query: " + query + " fields: " + fields + " for class: " + targetClass
+					+ " in collection: " + collectionName);
 		}
 		MongoReader<? super T> readerToUse = this.mongoConverter;
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(targetClass);
-		return executeEach(new FindCallback(mapper.getMappedObject(query, entity), fields),
-				null,
-				new ReadDbObjectCallback<T>(readerToUse, targetClass),
-				collectionName);
+		return executeEach(new FindCallback(mapper.getMappedObject(query, entity), fields), null,
+				new ReadDbObjectCallback<T>(readerToUse, targetClass), collectionName);
 	}
 
 	protected DBObject convertToDbObject(CollectionOptions collectionOptions) {
@@ -986,22 +1005,27 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 	 * The first document that matches the query is returned and also removed from the collection in the database.
 	 * <p/>
 	 * The query document is specified as a standard DBObject and so is the fields specification.
-	 *
-	 * @param collectionName name of the collection to retrieve the objects from
-	 * @param query					the query document that specifies the criteria used to find a record
-	 * @param targetClass		the parameterized type of the returned list.
-	 * @param reader				 the MongoReader to convert from DBObject to an object.
+	 * 
+	 * @param collectionName
+	 *          name of the collection to retrieve the objects from
+	 * @param query
+	 *          the query document that specifies the criteria used to find a record
+	 * @param targetClass
+	 *          the parameterized type of the returned list.
+	 * @param reader
+	 *          the MongoReader to convert from DBObject to an object.
 	 * @return the List of converted objects.
 	 */
-	protected <T> T doFindAndRemove(String collectionName, DBObject query, DBObject fields, DBObject sort, Class<T> targetClass) {
+	protected <T> T doFindAndRemove(String collectionName, DBObject query, DBObject fields, DBObject sort,
+			Class<T> targetClass) {
 		MongoReader<? super T> readerToUse = this.mongoConverter;
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("findAndRemove using query: " + query + " fields: " + fields + " sort: " + sort + " for class: " + targetClass + " in collection: " + collectionName);
+			LOGGER.debug("findAndRemove using query: " + query + " fields: " + fields + " sort: " + sort + " for class: "
+					+ targetClass + " in collection: " + collectionName);
 		}
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(targetClass);
 		return execute(new FindAndRemoveCallback(mapper.getMappedObject(query, entity), fields, sort),
-				new ReadDbObjectCallback<T>(readerToUse, targetClass),
-				collectionName);
+				new ReadDbObjectCallback<T>(readerToUse, targetClass), collectionName);
 	}
 
 	protected Object getIdValue(Object object) {
@@ -1024,7 +1048,7 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 
 	/**
 	 * Populates the id property of the saved object, if it's not set already.
-	 *
+	 * 
 	 * @param savedObject
 	 * @param id
 	 */
@@ -1051,10 +1075,10 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 	}
 
 	/**
-	 * Substitutes the id key if it is found in he query. Any 'id' keys will be replaced with '_id' and the value converted
-	 * to an ObjectId if possible. This conversion should match the way that the id fields are converted during read
-	 * operations.
-	 *
+	 * Substitutes the id key if it is found in he query. Any 'id' keys will be replaced with '_id' and the value
+	 * converted to an ObjectId if possible. This conversion should match the way that the id fields are converted during
+	 * read operations.
+	 * 
 	 * @param query
 	 * @param targetClass
 	 * @param reader
@@ -1087,7 +1111,8 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 			// no property descriptor for this key - try the other
 			try {
 				String theOtherIdKey = "id".equals(idKey) ? "_id" : "id";
-				MongoPropertyDescriptor mpd2 = new MongoPropertyDescriptor(new PropertyDescriptor(theOtherIdKey, targetClass), targetClass);
+				MongoPropertyDescriptor mpd2 = new MongoPropertyDescriptor(new PropertyDescriptor(theOtherIdKey, targetClass),
+						targetClass);
 				descriptor = mpd2;
 			} catch (IntrospectionException e2) {
 				// no property descriptor for this key either - bail
@@ -1109,8 +1134,8 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 						}
 					}
 					if (ids.size() > 0 && ids.size() != count) {
-						throw new InvalidDataAccessApiUsageException("Inconsistent set of id values provided " +
-								Arrays.asList((Object[]) dbo.get("$in")));
+						throw new InvalidDataAccessApiUsageException("Inconsistent set of id values provided "
+								+ Arrays.asList((Object[]) dbo.get("$in")));
 					}
 					if (ids.size() > 0) {
 						dbo.removeField("$in");
@@ -1162,12 +1187,14 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 	private String determineCollectionName(Class<?> clazz) {
 
 		if (clazz == null) {
-			throw new InvalidDataAccessApiUsageException("No class parameter provided, entity collection can't be determined for " + clazz);
+			throw new InvalidDataAccessApiUsageException(
+					"No class parameter provided, entity collection can't be determined for " + clazz);
 		}
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(clazz);
 		if (entity == null) {
-			throw new InvalidDataAccessApiUsageException("No Persitent Entity information found for the class " + clazz.getName());
+			throw new InvalidDataAccessApiUsageException("No Persitent Entity information found for the class "
+					+ clazz.getName());
 		}
 		return entity.getCollection();
 	}
@@ -1175,8 +1202,8 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 	/**
 	 * Checks and handles any errors.
 	 * <p/>
-	 * TODO: current implementation logs errors - will be configurable to log warning, errors or
-	 * throw exception in later versions
+	 * TODO: current implementation logs errors - will be configurable to log warning, errors or throw exception in later
+	 * versions
 	 */
 	private void handleAnyWriteResultErrors(WriteResult wr, DBObject query, String operation) {
 		if (WriteResultChecking.NONE == this.writeResultChecking) {
@@ -1185,16 +1212,16 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 		String error = wr.getError();
 		int n = wr.getN();
 		if (error != null) {
-			String message = "Execution of '" + operation +
-					(query == null ? "" : "' using '" + query.toString() + "' query") + " failed: " + error;
+			String message = "Execution of '" + operation + (query == null ? "" : "' using '" + query.toString() + "' query")
+					+ " failed: " + error;
 			if (WriteResultChecking.EXCEPTION == this.writeResultChecking) {
 				throw new DataIntegrityViolationException(message);
 			} else {
 				LOGGER.error(message);
 			}
 		} else if (n == 0) {
-			String message = "Execution of '" + operation +
-					(query == null ? "" : "' using '" + query.toString() + "' query") + " did not succeed: 0 documents updated";
+			String message = "Execution of '" + operation + (query == null ? "" : "' using '" + query.toString() + "' query")
+					+ " did not succeed: 0 documents updated";
 			if (WriteResultChecking.EXCEPTION == this.writeResultChecking) {
 				throw new DataIntegrityViolationException(message);
 			} else {
@@ -1207,7 +1234,7 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 	/**
 	 * Tries to convert the given {@link RuntimeException} into a {@link DataAccessException} but returns the original
 	 * exception if the conversation failed. Thus allows safe rethrowing of the return value.
-	 *
+	 * 
 	 * @param ex
 	 * @return
 	 */
@@ -1221,11 +1248,10 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 		converter.setDefaultDatabase(databaseName);
 	}
 
-
 	/**
 	 * Simple {@link CollectionCallback} that takes a query {@link DBObject} plus an optional fields specification
 	 * {@link DBObject} and executes that against the {@link DBCollection}.
-	 *
+	 * 
 	 * @author Oliver Gierke
 	 * @author Thomas Risberg
 	 */
@@ -1248,7 +1274,8 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 				return collection.findOne(query);
 			} else {
 				if (LOGGER.isDebugEnabled()) {
-					LOGGER.debug("findOne using query: " + query + " fields: " + fields + " in db.collection: " + collection.getFullName());
+					LOGGER.debug("findOne using query: " + query + " fields: " + fields + " in db.collection: "
+							+ collection.getFullName());
 				}
 				return collection.findOne(query, fields);
 			}
@@ -1258,7 +1285,7 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 	/**
 	 * Simple {@link CollectionCallback} that takes a query {@link DBObject} plus an optional fields specification
 	 * {@link DBObject} and executes that against the {@link DBCollection}.
-	 *
+	 * 
 	 * @author Oliver Gierke
 	 * @author Thomas Risberg
 	 */
@@ -1289,7 +1316,7 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 	/**
 	 * Simple {@link CollectionCallback} that takes a query {@link DBObject} plus an optional fields specification
 	 * {@link DBObject} and executes that against the {@link DBCollection}.
-	 *
+	 * 
 	 * @author Thomas Risberg
 	 */
 	private static class FindAndRemoveCallback implements CollectionCallback<DBObject> {
@@ -1313,7 +1340,7 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 
 	/**
 	 * Simple internal callback to allow operations on a {@link DBObject}.
-	 *
+	 * 
 	 * @author Oliver Gierke
 	 */
 
@@ -1325,7 +1352,7 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 	/**
 	 * Simple {@link DbObjectCallback} that will transform {@link DBObject} into the given target type using the given
 	 * {@link MongoReader}.
-	 *
+	 * 
 	 * @author Oliver Gierke
 	 */
 	private class ReadDbObjectCallback<T> implements DbObjectCallback<T> {

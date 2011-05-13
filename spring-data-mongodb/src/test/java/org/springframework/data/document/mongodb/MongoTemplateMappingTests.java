@@ -41,7 +41,7 @@ import com.mongodb.MongoException;
 
 /**
  * Integration test for {@link MongoTemplate}.
- *
+ * 
  * @author Oliver Gierke
  * @author Thomas Risberg
  */
@@ -49,59 +49,58 @@ import com.mongodb.MongoException;
 @ContextConfiguration("classpath:template-mapping.xml")
 public class MongoTemplateMappingTests {
 
-  @Autowired
-  @Qualifier("mongoTemplate1")
-  MongoTemplate template1;
-  
-  @Autowired
-  @Qualifier("mongoTemplate2")
-  MongoTemplate template2;
+	@Autowired
+	@Qualifier("mongoTemplate1")
+	MongoTemplate template1;
 
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
+	@Autowired
+	@Qualifier("mongoTemplate2")
+	MongoTemplate template2;
 
-@Before
-  public void setUp() {
-	template1.dropCollection(template1.getCollectionName(Person.class));
-  }
+	@Rule
+	public ExpectedException thrown = ExpectedException.none();
 
-  @Test
-  public void insertsEntityCorrectly1() throws Exception {
+	@Before
+	public void setUp() {
+		template1.dropCollection(template1.getCollectionName(Person.class));
+	}
 
-	    addAndRetrievePerson(template1);
-	    checkPersonPersisted(template1);
+	@Test
+	public void insertsEntityCorrectly1() throws Exception {
 
-  }
-  
-  @Test
-  public void insertsEntityCorrectly2() throws Exception {
+		addAndRetrievePerson(template1);
+		checkPersonPersisted(template1);
 
-    addAndRetrievePerson(template2);
-    checkPersonPersisted(template2);
-    
-  }
+	}
 
-  private void addAndRetrievePerson(MongoTemplate template) {
+	@Test
+	public void insertsEntityCorrectly2() throws Exception {
+
+		addAndRetrievePerson(template2);
+		checkPersonPersisted(template2);
+
+	}
+
+	private void addAndRetrievePerson(MongoTemplate template) {
 		Person person = new Person("Oliver");
-	    person.setAge(25);
-	    template.insert(person);
+		person.setAge(25);
+		template.insert(person);
 
-	    List<Person> result = template.find(new Query(Criteria.where("_id").is(person.getId())), Person.class);
-	    assertThat(result.size(), is(1));
-	    assertThat(result, hasItem(person));
-	    assertThat(result.get(0).getFirstName(), is("Oliver"));
-	    assertThat(result.get(0).getAge(), is(25));
-  }
-  
-  private void checkPersonPersisted(MongoTemplate template) {
-	    template.execute(Person.class, new CollectionCallback<Object>() {
-				public Object doInCollection(DBCollection collection)
-						throws MongoException, DataAccessException {
-					DBObject dbo = collection.findOne();
-					assertThat((String)dbo.get("name"), is("Oliver"));
-					return null;
-				}
-		    });
-  }
+		List<Person> result = template.find(new Query(Criteria.where("_id").is(person.getId())), Person.class);
+		assertThat(result.size(), is(1));
+		assertThat(result, hasItem(person));
+		assertThat(result.get(0).getFirstName(), is("Oliver"));
+		assertThat(result.get(0).getAge(), is(25));
+	}
+
+	private void checkPersonPersisted(MongoTemplate template) {
+		template.execute(Person.class, new CollectionCallback<Object>() {
+			public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
+				DBObject dbo = collection.findOne();
+				assertThat((String) dbo.get("name"), is("Oliver"));
+				return null;
+			}
+		});
+	}
 
 }

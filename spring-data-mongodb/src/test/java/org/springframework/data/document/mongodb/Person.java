@@ -19,86 +19,85 @@ import org.bson.types.ObjectId;
 
 public class Person {
 
-  private final ObjectId id;
+	private final ObjectId id;
 
-  private String firstName;
+	private String firstName;
 
-  private int age;
+	private int age;
 
-  private Person friend;
+	private Person friend;
 
-  public Person() {
-    this.id = new ObjectId();
-  }
+	public Person() {
+		this.id = new ObjectId();
+	}
 
-  public Person(ObjectId id, String firstname) {
-    this.id = id;
-    this.firstName = firstname;
-  }
+	public Person(ObjectId id, String firstname) {
+		this.id = id;
+		this.firstName = firstname;
+	}
 
-  public Person(String firstname) {
-    this();
-    this.firstName = firstname;
-  }
+	public Person(String firstname) {
+		this();
+		this.firstName = firstname;
+	}
 
-  public ObjectId getId() {
-    return id;
-  }
+	public ObjectId getId() {
+		return id;
+	}
 
-  public String getFirstName() {
-    return firstName;
-  }
+	public String getFirstName() {
+		return firstName;
+	}
 
-  public void setFirstName(String firstName) {
-    this.firstName = firstName;
-  }
+	public void setFirstName(String firstName) {
+		this.firstName = firstName;
+	}
 
-  public int getAge() {
-    return age;
-  }
+	public int getAge() {
+		return age;
+	}
 
-  public void setAge(int age) {
-    this.age = age;
-  }
+	public void setAge(int age) {
+		this.age = age;
+	}
 
-  public Person getFriend() {
-    return friend;
-  }
+	public Person getFriend() {
+		return friend;
+	}
 
-  public void setFriend(Person friend) {
-    this.friend = friend;
-  }
+	public void setFriend(Person friend) {
+		this.friend = friend;
+	}
 
-  /*
-    * (non-Javadoc)
-    *
-    * @see java.lang.Object#equals(java.lang.Object)
-    */
-  @Override
-  public boolean equals(Object obj) {
-    if (obj == this) {
-      return true;
-    }
+	/*
+	  * (non-Javadoc)
+	  *
+	  * @see java.lang.Object#equals(java.lang.Object)
+	  */
+	@Override
+	public boolean equals(Object obj) {
+		if (obj == this) {
+			return true;
+		}
 
-    if (obj == null) {
-      return false;
-    }
+		if (obj == null) {
+			return false;
+		}
 
-    if (!(getClass().equals(obj.getClass()))) {
-      return false;
-    }
+		if (!(getClass().equals(obj.getClass()))) {
+			return false;
+		}
 
-    Person that = (Person) obj;
+		Person that = (Person) obj;
 
-    return this.id == null ? false : this.id.equals(that.id);
-  }
+		return this.id == null ? false : this.id.equals(that.id);
+	}
 
-
-  /* (non-Javadoc)
-    * @see java.lang.Object#hashCode()
-    */
-  @Override
-  public int hashCode() {
-    return id.hashCode();
-  }
+	/* (non-Javadoc)
+	  * @see java.lang.Object#hashCode()
+	  */
+	@Override
+	public int hashCode() {
+		return id.hashCode();
+	}
 }

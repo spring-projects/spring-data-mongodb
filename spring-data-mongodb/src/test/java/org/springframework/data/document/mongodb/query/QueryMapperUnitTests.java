@@ -38,40 +38,40 @@ import com.mongodb.DBObject;
  */
 @RunWith(MockitoJUnitRunner.class)
 public class QueryMapperUnitTests {
-  
-  QueryMapper mapper;
-  
-  @Mock
-  MongoConverter converter;
-  @Mock
-  MongoPersistentEntity<?> entity;
-  @Mock
-  MongoPersistentProperty property;
 
-  @Before
-  public void setUp() {
-    when(entity.getIdProperty()).thenReturn(property);
-    when(converter.convertObjectId(any())).thenReturn(new ObjectId());
-    mapper = new QueryMapper(converter);
-  }
-  
-  @Test
-  public void translatesIdPropertyIntoIdKey() {
-    
-    DBObject query = new BasicDBObject("foo", "value");
-    
-    when(property.getName()).thenReturn("foo");
-    
-    DBObject result = mapper.getMappedObject(query, entity);
-    assertThat(result.get("_id"), is(notNullValue()));
-    assertThat(result.get("foo"), is(nullValue()));
-  }
-  
-  @Test
-  public void convertsStringIntoObjectId() {
-    
-    DBObject query = new BasicDBObject("_id", new ObjectId().toString());
-    DBObject result = mapper.getMappedObject(query, null);
-    assertThat(result.get("_id"), is(ObjectId.class));
-  }
+	QueryMapper mapper;
+
+	@Mock
+	MongoConverter converter;
+	@Mock
+	MongoPersistentEntity<?> entity;
+	@Mock
+	MongoPersistentProperty property;
+
+	@Before
+	public void setUp() {
+		when(entity.getIdProperty()).thenReturn(property);
+		when(converter.convertObjectId(any())).thenReturn(new ObjectId());
+		mapper = new QueryMapper(converter);
+	}
+
+	@Test
+	public void translatesIdPropertyIntoIdKey() {
+
+		DBObject query = new BasicDBObject("foo", "value");
+
+		when(property.getName()).thenReturn("foo");
+
+		DBObject result = mapper.getMappedObject(query, entity);
+		assertThat(result.get("_id"), is(notNullValue()));
+		assertThat(result.get("foo"), is(nullValue()));
+	}
+
+	@Test
+	public void convertsStringIntoObjectId() {
+
+		DBObject query = new BasicDBObject("_id", new ObjectId().toString());
+		DBObject result = mapper.getMappedObject(query, null);
+		assertThat(result.get("_id"), is(ObjectId.class));
+	}
 }

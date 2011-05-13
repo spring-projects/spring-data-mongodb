@@ -44,9 +44,7 @@ import org.springframework.data.document.mongodb.mapping.event.MongoMappingEvent
  */
 public class GeoIndexedTests {
 
-	private final String[] collectionsToDrop = new String[]{
-			GeoIndexedAppConfig.GEO_COLLECTION
-	};
+	private final String[] collectionsToDrop = new String[] { GeoIndexedAppConfig.GEO_COLLECTION };
 
 	ApplicationContext applicationContext;
 	MongoTemplate template;
@@ -66,7 +64,7 @@ public class GeoIndexedTests {
 
 	@Test
 	public void testGeoLocation() {
-		GeoLocation geo = new GeoLocation(new double[]{40.714346, -74.005966});
+		GeoLocation geo = new GeoLocation(new double[] { 40.714346, -74.005966 });
 		template.insert(geo);
 
 		boolean hasIndex = template.execute("geolocation", new CollectionCallback<Boolean>() {
@@ -83,5 +81,5 @@ public class GeoIndexedTests {
 
 		assertTrue(hasIndex);
 	}
-	
+
 }

@@ -40,220 +40,221 @@ import org.springframework.util.Assert;
  */
 public class SimpleMongoRepository<T, ID extends Serializable> implements PagingAndSortingRepository<T, ID> {
 
-  private final MongoTemplate template;
-  private final MongoEntityInformation<T, ID> entityInformation;
+	private final MongoTemplate template;
+	private final MongoEntityInformation<T, ID> entityInformation;
 
-  /**
-   * Creates a ew {@link SimpleMongoRepository} for the given {@link MongoEntityInformation} and {@link MongoTemplate}.
-   * 
-   * @param metadata
-   * @param template
-   */
-  public SimpleMongoRepository(MongoEntityInformation<T, ID> metadata, MongoTemplate template) {
+	/**
+	 * Creates a ew {@link SimpleMongoRepository} for the given {@link MongoEntityInformation} and {@link MongoTemplate}.
+	 * 
+	 * @param metadata
+	 * @param template
+	 */
+	public SimpleMongoRepository(MongoEntityInformation<T, ID> metadata, MongoTemplate template) {
 
-    Assert.notNull(template);
-    Assert.notNull(metadata);
-    this.entityInformation = metadata;
-    this.template = template;
-  }
+		Assert.notNull(template);
+		Assert.notNull(metadata);
+		this.entityInformation = metadata;
+		this.template = template;
+	}
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see
-   * org.springframework.data.repository.Repository#save(java.lang.Object)
-   */
-  public T save(T entity) {
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.springframework.data.repository.Repository#save(java.lang.Object)
+	 */
+	public T save(T entity) {
 
-    template.save(entityInformation.getCollectionName(), entity);
-    return entity;
-  }
+		template.save(entityInformation.getCollectionName(), entity);
+		return entity;
+	}
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see
-   * org.springframework.data.repository.Repository#save(java.lang.Iterable)
-   */
-  public List<T> save(Iterable<? extends T> entities) {
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.springframework.data.repository.Repository#save(java.lang.Iterable)
+	 */
+	public List<T> save(Iterable<? extends T> entities) {
 
-    List<T> result = new ArrayList<T>();
+		List<T> result = new ArrayList<T>();
 
-    for (T entity : entities) {
-      save(entity);
-      result.add(entity);
-    }
+		for (T entity : entities) {
+			save(entity);
+			result.add(entity);
+		}
 
-    return result;
-  }
+		return result;
+	}
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see
-   * org.springframework.data.repository.Repository#findById(java.io.Serializable
-   * )
-   */
-  public T findOne(ID id) {
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.springframework.data.repository.Repository#findById(java.io.Serializable
+	 * )
+	 */
+	public T findOne(ID id) {
 
-    return template.findOne(entityInformation.getCollectionName(), getIdQuery(id), entityInformation.getJavaType());
-  }
+		return template.findOne(entityInformation.getCollectionName(), getIdQuery(id), entityInformation.getJavaType());
+	}
 
-  private Query getIdQuery(Object id) {
-    return new Query(getIdCriteria(id));
-  }
+	private Query getIdQuery(Object id) {
+		return new Query(getIdCriteria(id));
+	}
 
-  private Criteria getIdCriteria(Object id) {
-    return where(entityInformation.getIdAttribute()).is(id);
-  }
+	private Criteria getIdCriteria(Object id) {
+		return where(entityInformation.getIdAttribute()).is(id);
+	}
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see
-   * org.springframework.data.repository.Repository#exists(java.io.Serializable
-   * )
-   */
-  public boolean exists(ID id) {
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.springframework.data.repository.Repository#exists(java.io.Serializable
+	 * )
+	 */
+	public boolean exists(ID id) {
 
-    return findOne(id) != null;
-  }
+		return findOne(id) != null;
+	}
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see org.springframework.data.repository.Repository#count()
-   */
-  public long count() {
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.springframework.data.repository.Repository#count()
+	 */
+	public long count() {
 
-    return template.getCollection(entityInformation.getCollectionName()).count();
-  }
+		return template.getCollection(entityInformation.getCollectionName()).count();
+	}
 
-  /*
-   * (non-Javadoc)
-   * @see org.springframework.data.repository.Repository#delete(java.io.Serializable)
-   */
-  public void delete(ID id) {
-  	delete(findOne(id));
-  }
-  
-  /*
-   * (non-Javadoc)
-   * 
-   * @see
-   * org.springframework.data.repository.Repository#delete(java.lang.Object)
-   */
-  public void delete(T entity) {
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.Repository#delete(java.io.Serializable)
+	 */
+	public void delete(ID id) {
+		delete(findOne(id));
+	}
 
-    template.remove(entityInformation.getCollectionName(), getIdQuery(entityInformation.getId(entity)), entity.getClass());
-  }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.springframework.data.repository.Repository#delete(java.lang.Object)
+	 */
+	public void delete(T entity) {
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see
-   * org.springframework.data.repository.Repository#delete(java.lang.Iterable)
-   */
-  public void delete(Iterable<? extends T> entities) {
+		template.remove(entityInformation.getCollectionName(), getIdQuery(entityInformation.getId(entity)),
+				entity.getClass());
+	}
 
-    for (T entity : entities) {
-      delete(entity);
-    }
-  }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.springframework.data.repository.Repository#delete(java.lang.Iterable)
+	 */
+	public void delete(Iterable<? extends T> entities) {
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see org.springframework.data.repository.Repository#deleteAll()
-   */
-  public void deleteAll() {
+		for (T entity : entities) {
+			delete(entity);
+		}
+	}
 
-    template.remove(entityInformation.getCollectionName(), new Query());
-  }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.springframework.data.repository.Repository#deleteAll()
+	 */
+	public void deleteAll() {
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see org.springframework.data.repository.Repository#findAll()
-   */
-  public List<T> findAll() {
+		template.remove(entityInformation.getCollectionName(), new Query());
+	}
 
-    return findAll(new Query());
-  }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.springframework.data.repository.Repository#findAll()
+	 */
+	public List<T> findAll() {
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see
-   * org.springframework.data.repository.PagingAndSortingRepository#findAll
-   * (org.springframework.data.domain.Pageable)
-   */
-  public Page<T> findAll(final Pageable pageable) {
+		return findAll(new Query());
+	}
 
-    Long count = count();
-    List<T> list = findAll(QueryUtils.applyPagination(new Query(), pageable));
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.springframework.data.repository.PagingAndSortingRepository#findAll
+	 * (org.springframework.data.domain.Pageable)
+	 */
+	public Page<T> findAll(final Pageable pageable) {
 
-    return new PageImpl<T>(list, pageable, count);
-  }
+		Long count = count();
+		List<T> list = findAll(QueryUtils.applyPagination(new Query(), pageable));
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see
-   * org.springframework.data.repository.PagingAndSortingRepository#findAll
-   * (org.springframework.data.domain.Sort)
-   */
-  public List<T> findAll(final Sort sort) {
+		return new PageImpl<T>(list, pageable, count);
+	}
 
-    return findAll(QueryUtils.applySorting(new Query(), sort));
-  }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.springframework.data.repository.PagingAndSortingRepository#findAll
+	 * (org.springframework.data.domain.Sort)
+	 */
+	public List<T> findAll(final Sort sort) {
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see
-   * org.springframework.data.repository.Repository#findAll(java.lang.Iterable
-   * )
-   */
-  public List<T> findAll(Iterable<ID> ids) {
+		return findAll(QueryUtils.applySorting(new Query(), sort));
+	}
 
-    Query query = null;
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.springframework.data.repository.Repository#findAll(java.lang.Iterable
+	 * )
+	 */
+	public List<T> findAll(Iterable<ID> ids) {
 
-    for (ID id : ids) {
-      if (query == null) {
-        query = getIdQuery(id);
-      } else {
-        query = new Query().or(getIdQuery(id));
-      }
-    }
+		Query query = null;
 
-    return findAll(query);
-  }
+		for (ID id : ids) {
+			if (query == null) {
+				query = getIdQuery(id);
+			} else {
+				query = new Query().or(getIdQuery(id));
+			}
+		}
 
-  private List<T> findAll(Query query) {
+		return findAll(query);
+	}
 
-    if (query == null) {
-      return Collections.emptyList();
-    }
+	private List<T> findAll(Query query) {
 
-    return template.find(entityInformation.getCollectionName(), query, entityInformation.getJavaType());
-  }
+		if (query == null) {
+			return Collections.emptyList();
+		}
 
-  /**
-   * Returns the underlying {@link MongoOperations} instance.
-   * 
-   * @return
-   */
-  protected MongoOperations getMongoOperations() {
+		return template.find(entityInformation.getCollectionName(), query, entityInformation.getJavaType());
+	}
 
-    return this.template;
-  }
+	/**
+	 * Returns the underlying {@link MongoOperations} instance.
+	 * 
+	 * @return
+	 */
+	protected MongoOperations getMongoOperations() {
 
-  /**
-   * @return the entityInformation
-   */
-  protected MongoEntityInformation<T, ID> getEntityInformation() {
+		return this.template;
+	}
 
-    return entityInformation;
-  }
+	/**
+	 * @return the entityInformation
+	 */
+	protected MongoEntityInformation<T, ID> getEntityInformation() {
+
+		return entityInformation;
+	}
 }

@@ -19,35 +19,36 @@ import org.springframework.util.Assert;
 
 /**
  * Represents a geospatial circle value
+ * 
  * @author Mark Pollack
  * @author Oliver Gierke
  */
 public class Circle {
 
-  private Point center;
-  private double radius;
-  
-  public Circle(Point center, double radius) {
-    Assert.notNull(center);
-    Assert.isTrue(radius >= 0, "Radius must not be negative!");
-    this.center = center;
-    this.radius = radius;
-  }
-  
-  public Circle(double centerX, double centerY, double radius) {
-    this(new Point(centerX, centerY), radius);
-  }
+	private Point center;
+	private double radius;
 
-  public Point getCenter() {
-    return center;
-  }
+	public Circle(Point center, double radius) {
+		Assert.notNull(center);
+		Assert.isTrue(radius >= 0, "Radius must not be negative!");
+		this.center = center;
+		this.radius = radius;
+	}
 
-  public double getRadius() {
-    return radius;
-  }
+	public Circle(double centerX, double centerY, double radius) {
+		this(new Point(centerX, centerY), radius);
+	}
 
-  @Override
-  public String toString() {
-    return String.format("Circle [center=%s, radius=%d]", center, radius);
-  }
+	public Point getCenter() {
+		return center;
+	}
+
+	public double getRadius() {
+		return radius;
+	}
+
+	@Override
+	public String toString() {
+		return String.format("Circle [center=%s, radius=%d]", center, radius);
+	}
 }

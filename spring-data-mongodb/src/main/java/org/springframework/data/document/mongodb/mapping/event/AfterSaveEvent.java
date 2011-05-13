@@ -24,10 +24,10 @@ import org.springframework.data.mapping.model.PersistentEntity;
  */
 public class AfterSaveEvent<E> extends MongoMappingEvent<E> {
 
-  private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-  public AfterSaveEvent(E source, DBObject dbo) {
-    super(source, dbo);
-  }
+	public AfterSaveEvent(E source, DBObject dbo) {
+		super(source, dbo);
+	}
 
 }

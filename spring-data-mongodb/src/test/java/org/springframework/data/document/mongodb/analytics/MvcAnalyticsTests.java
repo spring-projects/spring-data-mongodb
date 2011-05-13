@@ -25,7 +25,6 @@ import org.springframework.data.document.mongodb.mapping.MongoPersistentProperty
 import org.springframework.data.document.mongodb.query.BasicQuery;
 import org.springframework.data.mapping.model.MappingContext;
 
-
 public class MvcAnalyticsTests {
 
 	private MongoTemplate mongoTemplate;
@@ -35,30 +34,27 @@ public class MvcAnalyticsTests {
 	public void setUp() throws Exception {
 		Mongo m = new Mongo();
 		mongoTemplate = new MongoTemplate(m, "mvc");
-		mongoDummyTemplate = new MongoTemplate(
-				m,
-				"mvc",
-				new AbstractMongoConverter() {
-					public void write(Object t, DBObject dbo) {
-					}
+		mongoDummyTemplate = new MongoTemplate(m, "mvc", new AbstractMongoConverter() {
+			public void write(Object t, DBObject dbo) {
+			}
 
-					public <S> S read(Class<S> clazz, DBObject dbo) {
-						return null;
-					}
+			public <S> S read(Class<S> clazz, DBObject dbo) {
+				return null;
+			}
 
-					public <T> T convertObjectId(ObjectId id, Class<T> targetType) {
-						return null;
-					}
+			public <T> T convertObjectId(ObjectId id, Class<T> targetType) {
+				return null;
+			}
 
-					public ObjectId convertObjectId(Object id) {
-						return null;
-					}
+			public ObjectId convertObjectId(Object id) {
+				return null;
+			}
 
-					public MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> getMappingContext() {
-						return null;
-					}
+			public MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> getMappingContext() {
+				return null;
+			}
 
-				});
+		});
 	}
 
 	@Test
@@ -80,8 +76,7 @@ public class MvcAnalyticsTests {
 		createAndStoreMvcEvent(3, 3);
 		createAndStoreMvcEvent(8, 4);
 
-		List<MvcEvent> mvcEvents = mongoTemplate.getCollection("mvc",
-				MvcEvent.class);
+		List<MvcEvent> mvcEvents = mongoTemplate.getCollection("mvc", MvcEvent.class);
 		Assert.assertEquals(22, mvcEvents.size());
 
 		mongoDummyTemplate.getCollection("mvc", MvcEvent.class);
@@ -101,7 +96,6 @@ public class MvcAnalyticsTests {
 			storeCounterData("SignUpController", "show");
 		}
 
-
 	}
 
 	@Test
@@ -110,7 +104,8 @@ public class MvcAnalyticsTests {
 		for (DBObject dbo : mongoTemplate.getCollection("counters").find(query)) {
 			System.out.println(dbo);
 		}
-		List<ControllerCounter> counters = mongoTemplate.find("counters", new BasicQuery("{ 'name' : 'SignUpController'} "), ControllerCounter.class);
+		List<ControllerCounter> counters = mongoTemplate.find("counters",
+				new BasicQuery("{ 'name' : 'SignUpController'} "), ControllerCounter.class);
 		for (ControllerCounter controllerCounter : counters) {
 			System.out.println(controllerCounter);
 		}
@@ -126,8 +121,7 @@ public class MvcAnalyticsTests {
 
 	@Test
 	public void listAllMvcEvents() {
-		List<MvcEvent> mvcEvents = mongoTemplate.getCollection("mvc",
-				MvcEvent.class);
+		List<MvcEvent> mvcEvents = mongoTemplate.getCollection("mvc", MvcEvent.class);
 		for (MvcEvent mvcEvent : mvcEvents) {
 			System.out.println(mvcEvent.getDate());
 		}
@@ -136,8 +130,7 @@ public class MvcAnalyticsTests {
 	@Test
 	public void groupQuery() {
 		// This circumvents exception translation
-		DBCollection collection = mongoTemplate.getDb().getCollection(
-				"mvc");
+		DBCollection collection = mongoTemplate.getDb().getCollection("mvc");
 
 		// QueryBuilder qb = new QueryBuilder();
 		// qb.start("date").greaterThan(object)
@@ -157,10 +150,8 @@ public class MvcAnalyticsTests {
 					 * ).is("addFavoriteRestaurant").build(); DBObject cond2 =
 					 * q.getQueryObject();
 					 */
-		DBObject cond = QueryBuilder.start("date")
-				.greaterThanEquals(startDate.getTime())
-				.lessThan(endDate.getTime()).and("action")
-				.is("addFavoriteRestaurant").get();
+		DBObject cond = QueryBuilder.start("date").greaterThanEquals(startDate.getTime()).lessThan(endDate.getTime())
+				.and("action").is("addFavoriteRestaurant").get();
 		DBObject key = new BasicDBObject("parameters.p1", true);
 		/*
 					 * DBObject dateQ = new BasicDBObject(); dateQ.put("$gte",
@@ -170,8 +161,7 @@ public class MvcAnalyticsTests {
 					 */
 
 		DBObject intitial = new BasicDBObject("count", 0);
-		DBObject result = collection.group(key, cond, intitial,
-				"function(doc, out){ out.count++; }");
+		DBObject result = collection.group(key, cond, intitial, "function(doc, out){ out.count++; }");
 		if (result instanceof BasicDBList) {
 			BasicDBList dbList = (BasicDBList) result;
 			for (Object element : dbList) {
@@ -191,15 +181,16 @@ public class MvcAnalyticsTests {
 		changes.put("$set", new BasicDBObject("name", "controller1"));
 		changes.put("$inc", new BasicDBObject("count", 1));
 
-		//mongoTemplate.upsertAndModify(dbo("key","value"), inc("count",1));
-		//dbo(set("name","controller"), inc("count", 1));
+		// mongoTemplate.upsertAndModify(dbo("key","value"), inc("count",1));
+		// dbo(set("name","controller"), inc("count", 1));
 
-		///mongoTemplate.update(collection("counters")
+		// /mongoTemplate.update(collection("counters")
 
 		WriteResult r = mongoTemplate.getCollection("counters").update(query, changes, true, false);
-		//{ "err" : "Modifiers and non-modifiers cannot be mixed" , "code" : 10154 , "n" : 0 , "ok" : 1.0}
-		//{ "err" :  null  , "updatedExisting" : false , "upserted" : { "$oid" : "4cba814a5a4900000000495d"} , "n" : 1 , "ok" : 1.0}
-		//{ "err" :  null  , "updatedExisting" : true , "n" : 1 , "ok" : 1.0}
+		// { "err" : "Modifiers and non-modifiers cannot be mixed" , "code" : 10154 , "n" : 0 , "ok" : 1.0}
+		// { "err" : null , "updatedExisting" : false , "upserted" : { "$oid" : "4cba814a5a4900000000495d"} , "n" : 1 , "ok"
+		// : 1.0}
+		// { "err" : null , "updatedExisting" : true , "n" : 1 , "ok" : 1.0}
 		System.out.println(r);
 
 		// changes = new BasicDBObject("methods", new BasicDBObject("find", 1));
@@ -213,7 +204,6 @@ public class MvcAnalyticsTests {
 		DBObject changes = new BasicDBObject("$inc", new BasicDBObject("methods.find", 1));
 		mongoTemplate.getDb().getCollection("counters").update(query, changes, true, false);
 	}
-
 
 	public void storeCounterData(String controllerName, String methodName) {
 		BasicDBObject query = new BasicDBObject("name", controllerName);

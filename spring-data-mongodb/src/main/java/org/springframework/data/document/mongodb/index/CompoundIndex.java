@@ -23,9 +23,10 @@ import java.lang.annotation.Target;
 
 /**
  * Mark a class to use compound indexes.
+ * 
  * @author Jon Brisbin <jbrisbin@vmware.com>
  */
-@Target({ElementType.TYPE})
+@Target({ ElementType.TYPE })
 @Retention(RetentionPolicy.RUNTIME)
 public @interface CompoundIndex {
 

@@ -24,106 +24,98 @@ import org.springframework.data.document.mongodb.geo.Point;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-
 /**
  * Sample repository managing {@link Person} entities.
- *
+ * 
  * @author Oliver Gierke
  */
 public interface PersonRepository extends MongoRepository<Person, String>, QueryDslPredicateExecutor<Person> {
 
-  /**
-   * Returns all {@link Person}s with the given lastname.
-   *
-   * @param lastname
-   * @return
-   */
-  List<Person> findByLastname(String lastname);
+	/**
+	 * Returns all {@link Person}s with the given lastname.
+	 * 
+	 * @param lastname
+	 * @return
+	 */
+	List<Person> findByLastname(String lastname);
 
-  /**
-   * Returns the {@link Person}s with the given firstname. Uses {@link Query} annotation to define the query to be
-   * executed.
-   *
-   * @param firstname
-   * @return
-   */
-  @Query(value="{ 'firstname' : ?0 }", fields="{ 'firstname': 1, 'lastname': 1}")
-  List<Person> findByThePersonsFirstname(String firstname);
+	/**
+	 * Returns the {@link Person}s with the given firstname. Uses {@link Query} annotation to define the query to be
+	 * executed.
+	 * 
+	 * @param firstname
+	 * @return
+	 */
+	@Query(value = "{ 'firstname' : ?0 }", fields = "{ 'firstname': 1, 'lastname': 1}")
+	List<Person> findByThePersonsFirstname(String firstname);
 
+	/**
+	 * Returns all {@link Person}s with a firstname matching the given one (*-wildcard supported).
+	 * 
+	 * @param firstname
+	 * @return
+	 */
+	List<Person> findByFirstnameLike(String firstname);
 
-  /**
-   * Returns all {@link Person}s with a firstname matching the given one
-   * (*-wildcard supported).
-   *
-   * @param firstname
-   * @return
-   */
-  List<Person> findByFirstnameLike(String firstname);
+	/**
+	 * Returns a page of {@link Person}s with a lastname mathing the given one (*-wildcards supported).
+	 * 
+	 * @param lastname
+	 * @param pageable
+	 * @return
+	 */
+	Page<Person> findByLastnameLike(String lastname, Pageable pageable);
 
+	/**
+	 * Returns all {@link Person}s with a firstname contained in the given varargs.
+	 * 
+	 * @param firstnames
+	 * @return
+	 */
+	List<Person> findByFirstnameIn(String... firstnames);
 
-  /**
-   * Returns a page of {@link Person}s with a lastname mathing the given one
-   * (*-wildcards supported).
-   *
-   * @param lastname
-   * @param pageable
-   * @return
-   */
-  Page<Person> findByLastnameLike(String lastname, Pageable pageable);
+	/**
+	 * Returns all {@link Person}s with a firstname not contained in the given collection.
+	 * 
+	 * @param firstnames
+	 * @return
+	 */
+	List<Person> findByFirstnameNotIn(Collection<String> firstnames);
 
-  /**
-   * Returns all {@link Person}s with a firstname contained in the given varargs.
-   *
-   * @param firstnames
-   * @return
-   */
-  List<Person> findByFirstnameIn(String... firstnames);
+	/**
+	 * Returns all {@link Person}s with an age between the two given values.
+	 * 
+	 * @param from
+	 * @param to
+	 * @return
+	 */
+	List<Person> findByAgeBetween(int from, int to);
 
-  /**
-   * Returns all {@link Person}s with a firstname not contained in the given collection.
-   *
-   * @param firstnames
-   * @return
-   */
-  List<Person> findByFirstnameNotIn(Collection<String> firstnames);
+	/**
+	 * Returns the {@link Person} with the given {@link Address} as shipping address.
+	 * 
+	 * @param address
+	 * @return
+	 */
+	Person findByShippingAddresses(Address address);
 
-  /**
-   * Returns all {@link Person}s with an age between the two given values.
-   *
-   * @param from
-   * @param to
-   * @return
-   */
-  List<Person> findByAgeBetween(int from, int to);
+	/**
+	 * Returns all {@link Person}s with the given {@link Address}.
+	 * 
+	 * @param address
+	 * @return
+	 */
+	List<Person> findByAddress(Address address);
 
+	List<Person> findByAddressZipCode(String zipCode);
 
-  /**
-   * Returns the {@link Person} with the given {@link Address} as shipping address.
-   *
-   * @param address
-   * @return
-   */
-  Person findByShippingAddresses(Address address);
+	List<Person> findByLastnameLikeAndAgeBetween(String lastname, int from, int to);
 
+	List<Person> findByAgeOrLastnameLikeAndFirstnameLike(int age, String lastname, String firstname);
 
-  /**
-   * Returns all {@link Person}s with the given {@link Address}.
-   *
-   * @param address
-   * @return
-   */
-  List<Person> findByAddress(Address address);
+	List<Person> findByLocationNear(Point point);
 
+	List<Person> findByLocationWithin(Circle circle);
 
-  List<Person> findByAddressZipCode(String zipCode);
-
-  List<Person> findByLastnameLikeAndAgeBetween(String lastname, int from, int to);
-
-  List<Person> findByAgeOrLastnameLikeAndFirstnameLike(int age, String lastname, String firstname);
-  
-  List<Person> findByLocationNear(Point point);
-  
-  List<Person> findByLocationWithin(Circle circle);
-  
-  List<Person> findByLocationWithin(Box box);
+	List<Person> findByLocationWithin(Box box);
 }

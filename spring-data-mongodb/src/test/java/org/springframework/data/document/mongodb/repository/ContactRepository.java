@@ -17,7 +17,7 @@ package org.springframework.data.document.mongodb.repository;
 
 /**
  * Simple repository interface managing {@link Contact}s.
- *
+ * 
  * @author Oliver Gierke
  */
 public interface ContactRepository extends MongoRepository<Contact, String> {

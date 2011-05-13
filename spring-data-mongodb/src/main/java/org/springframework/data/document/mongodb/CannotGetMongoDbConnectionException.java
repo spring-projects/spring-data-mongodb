@@ -19,39 +19,39 @@ import org.springframework.dao.DataAccessResourceFailureException;
 
 public class CannotGetMongoDbConnectionException extends DataAccessResourceFailureException {
 
-  private String username;
-  
-  private char[] password;
-  
-  private String database;
-  
-  private static final long serialVersionUID = 1172099106475265589L;
+	private String username;
 
-  public CannotGetMongoDbConnectionException(String msg, Throwable cause) {
-    super(msg, cause);
-  }
-  
-  public CannotGetMongoDbConnectionException(String msg) {
-    super(msg);
-  }
+	private char[] password;
 
-  public CannotGetMongoDbConnectionException(String msg, String database, String username, char[] password2) {
-    super(msg);
-    this.username = username;
-    this.password = password2;
-    this.database = database;
-  }
+	private String database;
 
-  public String getUsername() {
-    return username;
-  }
+	private static final long serialVersionUID = 1172099106475265589L;
 
-  public char[] getPassword() {
-    return password;
-  }
+	public CannotGetMongoDbConnectionException(String msg, Throwable cause) {
+		super(msg, cause);
+	}
 
-  public String getDatabase() {
-    return database;
-  }
- 
+	public CannotGetMongoDbConnectionException(String msg) {
+		super(msg);
+	}
+
+	public CannotGetMongoDbConnectionException(String msg, String database, String username, char[] password2) {
+		super(msg);
+		this.username = username;
+		this.password = password2;
+		this.database = database;
+	}
+
+	public String getUsername() {
+		return username;
+	}
+
+	public char[] getPassword() {
+		return password;
+	}
+
+	public String getDatabase() {
+		return database;
+	}
+
 }

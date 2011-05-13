@@ -64,7 +64,7 @@ import org.springframework.util.comparator.CompoundComparator;
 
 /**
  * Basic {@link MongoConverter} implementation to convert between domain classes and {@link DBObject}s.
- *
+ * 
  * @author Mark Pollack
  * @author Thomas Risberg
  * @author Oliver Gierke
@@ -73,7 +73,8 @@ public class SimpleMongoConverter extends AbstractMongoConverter implements Init
 
 	private static final Log LOG = LogFactory.getLog(SimpleMongoConverter.class);
 	@SuppressWarnings("unchecked")
-	private static final List<Class<?>> MONGO_TYPES = Arrays.asList(Number.class, Date.class, String.class, DBObject.class);
+	private static final List<Class<?>> MONGO_TYPES = Arrays.asList(Number.class, Date.class, String.class,
+			DBObject.class);
 	private static final Set<String> SIMPLE_TYPES;
 
 	static {
@@ -165,9 +166,9 @@ public class SimpleMongoConverter extends AbstractMongoConverter implements Init
 	}
 
 	/**
-	 * Add custom {@link Converter} or {@link ConverterFactory} instances to be used that will take presidence over
-	 * using object traversal to convert and object to/from DBObject
-	 *
+	 * Add custom {@link Converter} or {@link ConverterFactory} instances to be used that will take presidence over using
+	 * object traversal to convert and object to/from DBObject
+	 * 
 	 * @param converters
 	 */
 	public void setConverters(Set<?> converters) {
@@ -232,7 +233,7 @@ public class SimpleMongoConverter extends AbstractMongoConverter implements Init
 
 	/**
 	 * Writes the given value to the given {@link DBObject}. Will skip {@literal null} values.
-	 *
+	 * 
 	 * @param dbo
 	 * @param keyToUse
 	 * @param value
@@ -248,7 +249,7 @@ public class SimpleMongoConverter extends AbstractMongoConverter implements Init
 
 	/**
 	 * Writes the given {@link CompoundComparator} value to the given {@link DBObject}.
-	 *
+	 * 
 	 * @param dbo
 	 * @param keyToUse
 	 * @param value
@@ -284,7 +285,7 @@ public class SimpleMongoConverter extends AbstractMongoConverter implements Init
 	/**
 	 * Returns whether the {@link ConversionService} has a custom {@link Converter} registered that can convert the given
 	 * object into one of the types supported by MongoDB.
-	 *
+	 * 
 	 * @param obj
 	 * @return
 	 */
@@ -300,7 +301,7 @@ public class SimpleMongoConverter extends AbstractMongoConverter implements Init
 
 	/**
 	 * Writes the given {@link Map} to the given {@link DBObject}.
-	 *
+	 * 
 	 * @param dbo
 	 * @param mapKey
 	 * @param map
@@ -335,7 +336,7 @@ public class SimpleMongoConverter extends AbstractMongoConverter implements Init
 
 	/**
 	 * Writes the given array to the given {@link DBObject}.
-	 *
+	 * 
 	 * @param dbo
 	 * @param keyToUse
 	 * @param array
@@ -381,24 +382,20 @@ public class SimpleMongoConverter extends AbstractMongoConverter implements Init
 					Object value = source.get(keyToUse);
 					if (!isSimpleType(value.getClass())) {
 						if (value instanceof Object[]) {
-							bw.setValue(descriptor, readCollection(descriptor, Arrays.asList((Object[]) value))
-									.toArray());
+							bw.setValue(descriptor, readCollection(descriptor, Arrays.asList((Object[]) value)).toArray());
 						} else if (value instanceof BasicDBList) {
 							bw.setValue(descriptor, readCollection(descriptor, (BasicDBList) value));
 						} else if (value instanceof DBObject) {
 							bw.setValue(descriptor, readCompoundValue(descriptor, (DBObject) value));
 						} else {
-							LOG.warn("Unable to map compound DBObject field " + keyToUse + " to property "
-									+ descriptor.getName()
-									+ ".  The field value should have been a 'DBObject.class' but was "
-									+ value.getClass().getName());
+							LOG.warn("Unable to map compound DBObject field " + keyToUse + " to property " + descriptor.getName()
+									+ ".  The field value should have been a 'DBObject.class' but was " + value.getClass().getName());
 						}
 					} else {
 						bw.setValue(descriptor, value);
 					}
 				} else {
-					LOG.warn("Unable to map DBObject field " + keyToUse + " to property " + descriptor.getName()
-							+ ".  Skipping.");
+					LOG.warn("Unable to map DBObject field " + keyToUse + " to property " + descriptor.getName() + ".  Skipping.");
 				}
 			}
 		}
@@ -409,7 +406,7 @@ public class SimpleMongoConverter extends AbstractMongoConverter implements Init
 	/**
 	 * Reads the given collection values (that are {@link DBObject}s potentially) into a {@link Collection} of domain
 	 * objects.
-	 *
+	 * 
 	 * @param descriptor
 	 * @param values
 	 * @return
@@ -442,7 +439,7 @@ public class SimpleMongoConverter extends AbstractMongoConverter implements Init
 
 	/**
 	 * Reads a compound value from the given {@link DBObject} for the given property.
-	 *
+	 * 
 	 * @param pd
 	 * @param dbo
 	 * @return
@@ -461,7 +458,7 @@ public class SimpleMongoConverter extends AbstractMongoConverter implements Init
 	/**
 	 * Create a {@link Map} instance. Will return a {@link HashMap} by default. Subclasses might want to override this
 	 * method to use a custom {@link Map} implementation.
-	 *
+	 * 
 	 * @return
 	 */
 	protected Map<String, Object> createMap() {
@@ -470,7 +467,7 @@ public class SimpleMongoConverter extends AbstractMongoConverter implements Init
 
 	/**
 	 * Reads every key/value pair from the {@link DBObject} into a {@link Map} instance.
-	 *
+	 * 
 	 * @param pd
 	 * @param dbo
 	 * @param targetType
@@ -503,9 +500,11 @@ public class SimpleMongoConverter extends AbstractMongoConverter implements Init
 
 	/**
 	 * Callback to allow customizing creation of a {@link MongoBeanWrapper}.
-	 *
-	 * @param target			the target object to wrap
-	 * @param fieldAccess whether to use field access or property access
+	 * 
+	 * @param target
+	 *          the target object to wrap
+	 * @param fieldAccess
+	 *          whether to use field access or property access
 	 * @return
 	 */
 	protected MongoBeanWrapper createWrapper(Object target, boolean fieldAccess) {

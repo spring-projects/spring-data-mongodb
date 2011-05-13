@@ -23,43 +23,43 @@ import org.springframework.data.repository.query.parser.PartTree;
 
 /**
  * {@link RepositoryQuery} implementation for Mongo.
- *
+ * 
  * @author Oliver Gierke
  */
 public class PartTreeMongoQuery extends AbstractMongoQuery {
 
-  private final PartTree tree;
+	private final PartTree tree;
 
-  /**
-   * Creates a new {@link PartTreeMongoQuery} from the given {@link QueryMethod} and {@link MongoTemplate}.
-   *
-   * @param method
-   * @param template
-   */
-  public PartTreeMongoQuery(MongoQueryMethod method, MongoTemplate template) {
+	/**
+	 * Creates a new {@link PartTreeMongoQuery} from the given {@link QueryMethod} and {@link MongoTemplate}.
+	 * 
+	 * @param method
+	 * @param template
+	 */
+	public PartTreeMongoQuery(MongoQueryMethod method, MongoTemplate template) {
 
-    super(method, template);
-    this.tree = new PartTree(method.getName(), method.getEntityInformation().getJavaType());
-  }
+		super(method, template);
+		this.tree = new PartTree(method.getName(), method.getEntityInformation().getJavaType());
+	}
 
-  /**
-   * @return the tree
-   */
-  public PartTree getTree() {
-    return tree;
-  }
+	/**
+	 * @return the tree
+	 */
+	public PartTree getTree() {
+		return tree;
+	}
 
-  /*
-    * (non-Javadoc)
-    *
-    * @see
-    * org.springframework.data.document.mongodb.repository.AbstractMongoQuery#createQuery(org.springframework.data.
-    * document.mongodb.repository.ConvertingParameterAccessor)
-    */
-  @Override
-  protected Query createQuery(ConvertingParameterAccessor accessor) {
+	/*
+	  * (non-Javadoc)
+	  *
+	  * @see
+	  * org.springframework.data.document.mongodb.repository.AbstractMongoQuery#createQuery(org.springframework.data.
+	  * document.mongodb.repository.ConvertingParameterAccessor)
+	  */
+	@Override
+	protected Query createQuery(ConvertingParameterAccessor accessor) {
 
-    MongoQueryCreator creator = new MongoQueryCreator(tree, accessor);
-    return creator.createQuery();
-  }
+		MongoQueryCreator creator = new MongoQueryCreator(tree, accessor);
+		return creator.createQuery();
+	}
 }

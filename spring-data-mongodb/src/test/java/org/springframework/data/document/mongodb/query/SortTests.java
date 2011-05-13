@@ -20,16 +20,16 @@ import org.junit.Test;
 
 public class SortTests {
 
-  @Test
-  public void testWithSortAscending() {
-    Sort s = new Sort().on("name", Order.ASCENDING);
-    Assert.assertEquals("{ \"name\" : 1}", s.getSortObject().toString());
-  }
+	@Test
+	public void testWithSortAscending() {
+		Sort s = new Sort().on("name", Order.ASCENDING);
+		Assert.assertEquals("{ \"name\" : 1}", s.getSortObject().toString());
+	}
 
-  @Test
-  public void testWithSortDescending() {
-    Sort s = new Sort().on("name", Order.DESCENDING);
-    Assert.assertEquals("{ \"name\" : -1}", s.getSortObject().toString());
-  }
+	@Test
+	public void testWithSortDescending() {
+		Sort s = new Sort().on("name", Order.DESCENDING);
+		Assert.assertEquals("{ \"name\" : -1}", s.getSortObject().toString());
+	}
 
 }

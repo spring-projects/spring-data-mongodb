@@ -31,7 +31,7 @@ import org.springframework.util.Assert;
 
 /**
  * A helper class to encapsulate any modifications of a Query object before it gets submitted to the database.
- *
+ * 
  * @author Jon Brisbin <jbrisbin@vmware.com>
  * @author Oliver Gierke
  */
@@ -41,7 +41,7 @@ public class QueryMapper {
 
 	/**
 	 * Creates a new {@link QueryMapper} with the given {@link MongoConverter}.
-	 *
+	 * 
 	 * @param converter
 	 */
 	public QueryMapper(MongoConverter converter) {
@@ -52,7 +52,7 @@ public class QueryMapper {
 	/**
 	 * Replaces the property keys used in the given {@link DBObject} with the appropriate keys by using the
 	 * {@link PersistentEntity} metadata.
-	 *
+	 * 
 	 * @param query
 	 * @param entity
 	 * @return

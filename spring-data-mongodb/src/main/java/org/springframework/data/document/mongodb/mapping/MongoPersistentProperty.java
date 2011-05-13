@@ -18,12 +18,10 @@ package org.springframework.data.document.mongodb.mapping;
 import org.springframework.data.mapping.model.PersistentProperty;
 
 /**
- * Mongo specific
- * {@link org.springframework.data.mapping.model.PersistentProperty}
- * implementation.
- *
+ * Mongo specific {@link org.springframework.data.mapping.model.PersistentProperty} implementation.
+ * 
  * @author Oliver Gierke
  */
 public interface MongoPersistentProperty extends PersistentProperty<MongoPersistentProperty> {
-  String getKey();
+	String getKey();
 }

@@ -26,25 +26,23 @@ import com.mongodb.Mongo;
 @Configuration
 public class GeoSpatialAppConfig extends AbstractMongoConfiguration {
 
-  @Bean
-  public Mongo mongo() throws Exception {
-    return new Mongo("localhost");
-  }
-  
-  @Bean
-  public MongoTemplate mongoTemplate() throws Exception {
-    return new MongoTemplate(mongo(), "geospatial", mappingMongoConverter());
-  }
-  
-  @Bean
-  public LoggingEventListener<MongoMappingEvent> mappingEventsListener() {
-    return new LoggingEventListener<MongoMappingEvent>();
-  }
-  
+	@Bean
+	public Mongo mongo() throws Exception {
+		return new Mongo("localhost");
+	}
 
-  public String getMappingBasePackage() {
-    return "org.springframework.data.document.mongodb";
-  }
+	@Bean
+	public MongoTemplate mongoTemplate() throws Exception {
+		return new MongoTemplate(mongo(), "geospatial", mappingMongoConverter());
+	}
 
+	@Bean
+	public LoggingEventListener<MongoMappingEvent> mappingEventsListener() {
+		return new LoggingEventListener<MongoMappingEvent>();
+	}
+
+	public String getMappingBasePackage() {
+		return "org.springframework.data.document.mongodb";
+	}
 
 }

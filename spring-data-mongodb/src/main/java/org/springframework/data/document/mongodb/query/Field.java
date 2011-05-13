@@ -21,41 +21,40 @@ import java.util.Map;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
-
 public class Field {
 
-  private Map<String, Integer> criteria = new HashMap<String, Integer>();
+	private Map<String, Integer> criteria = new HashMap<String, Integer>();
 
-  private Map<String, Object> slices = new HashMap<String, Object>();
+	private Map<String, Object> slices = new HashMap<String, Object>();
 
-  public Field include(String key) {
-    criteria.put(key, Integer.valueOf(1));
-    return this;
-  }
+	public Field include(String key) {
+		criteria.put(key, Integer.valueOf(1));
+		return this;
+	}
 
-  public Field exclude(String key) {
-    criteria.put(key, Integer.valueOf(0));
-    return this;
-  }
+	public Field exclude(String key) {
+		criteria.put(key, Integer.valueOf(0));
+		return this;
+	}
 
-  public Field slice(String key, int size) {
-    slices.put(key, Integer.valueOf(size));
-    return this;
-  }
+	public Field slice(String key, int size) {
+		slices.put(key, Integer.valueOf(size));
+		return this;
+	}
 
-  public Field slice(String key, int offset, int size) {
-    slices.put(key, new Integer[]{Integer.valueOf(offset), Integer.valueOf(size)});
-    return this;
-  }
+	public Field slice(String key, int offset, int size) {
+		slices.put(key, new Integer[] { Integer.valueOf(offset), Integer.valueOf(size) });
+		return this;
+	}
 
-  public DBObject getFieldsObject() {
-    DBObject dbo = new BasicDBObject();
-    for (String k : criteria.keySet()) {
-      dbo.put(k, (criteria.get(k)));
-    }
-    for (String k : slices.keySet()) {
-      dbo.put(k, new BasicDBObject("$slice", (slices.get(k))));
-    }
-    return dbo;
-  }
+	public DBObject getFieldsObject() {
+		DBObject dbo = new BasicDBObject();
+		for (String k : criteria.keySet()) {
+			dbo.put(k, (criteria.get(k)));
+		}
+		for (String k : slices.keySet()) {
+			dbo.put(k, new BasicDBObject("$slice", (slices.get(k))));
+		}
+		return dbo;
+	}
 }

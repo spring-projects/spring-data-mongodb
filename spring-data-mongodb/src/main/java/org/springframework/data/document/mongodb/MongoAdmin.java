@@ -24,71 +24,72 @@ import org.springframework.jmx.export.annotation.ManagedResource;
 
 /**
  * Mongo server administration exposed via JMX annotations
- *
+ * 
  * @author Mark Pollack
  */
 
 @ManagedResource(description = "Mongo Admin Operations")
 public class MongoAdmin implements MongoAdminOperations {
 
-  /**
-   * Logger available to subclasses
-   */
-  protected final Log logger = LogFactory.getLog(getClass());
+	/**
+	 * Logger available to subclasses
+	 */
+	protected final Log logger = LogFactory.getLog(getClass());
 
-  private Mongo mongo;
-  private String username;
-  private String password;
+	private Mongo mongo;
+	private String username;
+	private String password;
 
-  public MongoAdmin(Mongo mongo) {
-    this.mongo = mongo;
-  }
+	public MongoAdmin(Mongo mongo) {
+		this.mongo = mongo;
+	}
 
-  /* (non-Javadoc)
-    * @see org.springframework.data.document.mongodb.MongoAdminOperations#dropDatabase(java.lang.String)
-    */
-  @ManagedOperation
-  public void dropDatabase(String databaseName) {
-    getDB(databaseName).dropDatabase();
-  }
+	/* (non-Javadoc)
+	  * @see org.springframework.data.document.mongodb.MongoAdminOperations#dropDatabase(java.lang.String)
+	  */
+	@ManagedOperation
+	public void dropDatabase(String databaseName) {
+		getDB(databaseName).dropDatabase();
+	}
 
-  /* (non-Javadoc)
-    * @see org.springframework.data.document.mongodb.MongoAdminOperations#createDatabase(java.lang.String)
-    */
-  @ManagedOperation
-  public void createDatabase(String databaseName) {
-    getDB(databaseName);
-  }
+	/* (non-Javadoc)
+	  * @see org.springframework.data.document.mongodb.MongoAdminOperations#createDatabase(java.lang.String)
+	  */
+	@ManagedOperation
+	public void createDatabase(String databaseName) {
+		getDB(databaseName);
+	}
 
-  /* (non-Javadoc)
-    * @see org.springframework.data.document.mongodb.MongoAdminOperations#getDatabaseStats(java.lang.String)
-    */
-  @ManagedOperation
-  public String getDatabaseStats(String databaseName) {
-    return getDB(databaseName).getStats().toString();
-  }
+	/* (non-Javadoc)
+	  * @see org.springframework.data.document.mongodb.MongoAdminOperations#getDatabaseStats(java.lang.String)
+	  */
+	@ManagedOperation
+	public String getDatabaseStats(String databaseName) {
+		return getDB(databaseName).getStats().toString();
+	}
 
-  /**
-   * Sets the username to use to connect to the Mongo database
-   *
-   * @param username The username to use
-   */
-  public void setUsername(String username) {
-    this.username = username;
-  }
+	/**
+	 * Sets the username to use to connect to the Mongo database
+	 * 
+	 * @param username
+	 *          The username to use
+	 */
+	public void setUsername(String username) {
+		this.username = username;
+	}
 
-  /**
-   * Sets the password to use to authenticate with the Mongo database.
-   *
-   * @param password The password to use
-   */
-  public void setPassword(String password) {
+	/**
+	 * Sets the password to use to authenticate with the Mongo database.
+	 * 
+	 * @param password
+	 *          The password to use
+	 */
+	public void setPassword(String password) {
 
-    this.password = password;
-  }
+		this.password = password;
+	}
 
-
-  DB getDB(String databaseName) {
-    return MongoDbUtils.getDB(mongo, databaseName, username, password == null ? null : password.toCharArray());
-  }
+	DB getDB(String databaseName) {
+		return MongoDbUtils.getDB(mongo, databaseName, username, password == null ? null : password.toCharArray());
+	}
 }

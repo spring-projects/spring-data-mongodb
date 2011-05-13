@@ -29,9 +29,7 @@ import org.springframework.data.document.mongodb.index.Indexed;
  * @author Jon Brisbin <jbrisbin@vmware.com>
  */
 @Document
-@CompoundIndexes({
-		@CompoundIndex(name = "age_idx", def = "{'lastName': 1, 'age': -1}")
-})
+@CompoundIndexes({ @CompoundIndex(name = "age_idx", def = "{'lastName': 1, 'age': -1}") })
 public class Person<T extends Address> {
 
 	@Id
@@ -48,11 +46,10 @@ public class Person<T extends Address> {
 	private List<Account> accounts;
 	private T address;
 
-	
 	public Person(Integer ssn) {
-	  this.ssn = ssn;
+		this.ssn = ssn;
 	}
-	
+
 	@PersistenceConstructor
 	public Person(Integer ssn, String firstName, String lastName, Integer age, T address) {
 		this.ssn = ssn;

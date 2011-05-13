@@ -30,7 +30,7 @@ public class Query {
 
 	/**
 	 * Static factory method to create a Query using the provided criteria
-	 *
+	 * 
 	 * @param critera
 	 * @return
 	 */

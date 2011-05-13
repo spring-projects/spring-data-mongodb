@@ -31,30 +31,31 @@ import org.springframework.data.util.TypeInformation;
  * @author Jon Brisbin <jbrisbin@vmware.com>
  */
 public class MongoMappingContext extends AbstractMappingContext<BasicMongoPersistentEntity<?>, MongoPersistentProperty> {
-  public MongoMappingContext() {
-    augmentSimpleTypes();
-  }
+	public MongoMappingContext() {
+		augmentSimpleTypes();
+	}
 
-  protected void augmentSimpleTypes() {
-    // Augment simpleTypes with MongoDB-specific classes
-    Set<Class<?>> simpleTypes = MappingBeanHelper.getSimpleTypes();
-    simpleTypes.add(com.mongodb.DBRef.class);
-    simpleTypes.add(ObjectId.class);
-    simpleTypes.add(CodeWScope.class);
-    simpleTypes.add(Character.class);
-    simpleTypes.add(BigInteger.class);
-  }
+	protected void augmentSimpleTypes() {
+		// Augment simpleTypes with MongoDB-specific classes
+		Set<Class<?>> simpleTypes = MappingBeanHelper.getSimpleTypes();
+		simpleTypes.add(com.mongodb.DBRef.class);
+		simpleTypes.add(ObjectId.class);
+		simpleTypes.add(CodeWScope.class);
+		simpleTypes.add(Character.class);
+		simpleTypes.add(BigInteger.class);
+	}
 
-  @Override
-  public MongoPersistentProperty createPersistentProperty(Field field, PropertyDescriptor descriptor, BasicMongoPersistentEntity<?> owner) {
-    return new BasicMongoPersistentProperty(field, descriptor, owner);
-  }
-  
-  /* (non-Javadoc)
-   * @see org.springframework.data.mapping.BasicMappingContext#createPersistentEntity(org.springframework.data.util.TypeInformation, org.springframework.data.mapping.model.MappingContext)
-   */
-  @Override
-  protected <T> BasicMongoPersistentEntity<T> createPersistentEntity(TypeInformation<T> typeInformation) {
-    return new BasicMongoPersistentEntity<T>(typeInformation);
-  }
+	@Override
+	public MongoPersistentProperty createPersistentProperty(Field field, PropertyDescriptor descriptor,
+			BasicMongoPersistentEntity<?> owner) {
+		return new BasicMongoPersistentProperty(field, descriptor, owner);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.springframework.data.mapping.BasicMappingContext#createPersistentEntity(org.springframework.data.util.TypeInformation, org.springframework.data.mapping.model.MappingContext)
+	 */
+	@Override
+	protected <T> BasicMongoPersistentEntity<T> createPersistentEntity(TypeInformation<T> typeInformation) {
+		return new BasicMongoPersistentEntity<T>(typeInformation);
+	}
 }

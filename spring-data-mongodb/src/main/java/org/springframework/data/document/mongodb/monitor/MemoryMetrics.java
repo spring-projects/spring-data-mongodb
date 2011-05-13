@@ -23,50 +23,46 @@ import org.springframework.jmx.support.MetricType;
 
 /**
  * JMX Metrics for Memory
- *
+ * 
  * @author Mark Pollack
  */
 @ManagedResource(description = "Memory Metrics")
 public class MemoryMetrics extends AbstractMonitor {
 
+	public MemoryMetrics(Mongo mongo) {
+		this.mongo = mongo;
+	}
 
-  public MemoryMetrics(Mongo mongo) {
-    this.mongo = mongo;
-  }
+	@ManagedMetric(metricType = MetricType.COUNTER, displayName = "Memory address size")
+	public int getBits() {
+		return getMemData("bits", java.lang.Integer.class);
+	}
 
-  @ManagedMetric(metricType = MetricType.COUNTER, displayName = "Memory address size")
-  public int getBits() {
-    return getMemData("bits", java.lang.Integer.class);
-  }
+	@ManagedMetric(metricType = MetricType.GAUGE, displayName = "Resident in Physical Memory", unit = "MB")
+	public int getResidentSpace() {
+		return getMemData("resident", java.lang.Integer.class);
+	}
 
-  @ManagedMetric(metricType = MetricType.GAUGE, displayName = "Resident in Physical Memory", unit = "MB")
-  public int getResidentSpace() {
-    return getMemData("resident", java.lang.Integer.class);
-  }
+	@ManagedMetric(metricType = MetricType.GAUGE, displayName = "Virtual Address Space", unit = "MB")
+	public int getVirtualAddressSpace() {
+		return getMemData("virtual", java.lang.Integer.class);
+	}
 
-  @ManagedMetric(metricType = MetricType.GAUGE, displayName = "Virtual Address Space", unit = "MB")
-  public int getVirtualAddressSpace() {
-    return getMemData("virtual", java.lang.Integer.class);
-  }
+	@ManagedMetric(metricType = MetricType.GAUGE, displayName = "Is memory info supported on this platform")
+	public boolean getMemoryInfoSupported() {
+		return getMemData("supported", java.lang.Boolean.class);
+	}
 
-  @ManagedMetric(metricType = MetricType.GAUGE, displayName = "Is memory info supported on this platform")
-  public boolean getMemoryInfoSupported() {
-    return getMemData("supported", java.lang.Boolean.class);
-  }
+	@ManagedMetric(metricType = MetricType.GAUGE, displayName = "Memory Mapped Space", unit = "MB")
+	public int getMemoryMappedSpace() {
+		return getMemData("mapped", java.lang.Integer.class);
+	}
 
-
-  @ManagedMetric(metricType = MetricType.GAUGE, displayName = "Memory Mapped Space", unit = "MB")
-  public int getMemoryMappedSpace() {
-    return getMemData("mapped", java.lang.Integer.class);
-  }
-
-
-  @SuppressWarnings("unchecked")
-  private <T> T getMemData(String key, Class<T> targetClass) {
-    DBObject mem = (DBObject) getServerStatus().get("mem");
-    //Class c = mem.get(key).getClass();
-    return (T) mem.get(key);
-  }
-
+	@SuppressWarnings("unchecked")
+	private <T> T getMemData(String key, Class<T> targetClass) {
+		DBObject mem = (DBObject) getServerStatus().get("mem");
+		// Class c = mem.get(key).getClass();
+		return (T) mem.get(key);
+	}
 
 }
