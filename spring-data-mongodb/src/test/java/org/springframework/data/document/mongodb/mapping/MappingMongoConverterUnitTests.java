@@ -99,7 +99,7 @@ public class MappingMongoConverterUnitTests {
    * @see DATADOC-130
    */
   @Test
-  public void convertsMapTypeCorrectly() {
+  public void writesMapTypeCorrectly() {
     
     Map<Locale, String> map = Collections.singletonMap(Locale.US, "Foo");
     
@@ -107,6 +107,19 @@ public class MappingMongoConverterUnitTests {
     converter.write(map, dbObject);
     
     assertThat(dbObject.get(Locale.US.toString()).toString(), is("Foo"));
+  }
+  
+  /**
+   * @see DATADOC-130
+   */
+  @Test
+  public void readsMapWithCustomKeyTypeCorrectly() {
+  	
+  	DBObject mapObject = new BasicDBObject(Locale.US.toString(), "Value");
+  	DBObject dbObject = new BasicDBObject("map", mapObject);
+  	
+  	ClassWithMapProperty result = converter.read(ClassWithMapProperty.class, dbObject);
+  	assertThat(result.map.get(Locale.US), is("Value"));
   }
   
   /**
@@ -160,6 +173,10 @@ public class MappingMongoConverterUnitTests {
   
   public static class Person implements Contact {
     LocalDate birthDate;
+  }
+  
+  static class ClassWithMapProperty {
+  	Map<Locale, String> map;
   }
   
   public static class BirthDateContainer {

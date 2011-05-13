@@ -630,16 +630,20 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 					// We have to find a potentially stored class to be used first.
 					Class<?> toType = findTypeToBeUsed((DBObject) dbObj);
-					Map<String, Object> m = new LinkedHashMap<String, Object>();
+					Map<Object, Object> m = new LinkedHashMap<Object, Object>();
 
 					for (Map.Entry<String, Object> entry : ((Map<String, Object>) ((DBObject) dbObj).toMap()).entrySet()) {
 						if (entry.getKey().equals(CUSTOM_TYPE_KEY)) {
 							continue;
 						}
+						
+						Class<?> keyType = prop.getComponentType();
+						Object key = conversionService.convert(entry.getKey(), keyType);
+						
 						if (null != entry.getValue() && entry.getValue() instanceof DBObject) {
-							m.put(entry.getKey(), read((null != toType ? toType : prop.getMapValueType()), (DBObject) entry.getValue()));
+							m.put(key, read((null != toType ? toType : prop.getMapValueType()), (DBObject) entry.getValue()));
 						} else {
-							m.put(entry.getKey(), entry.getValue());
+							m.put(key, entry.getValue());
 						}
 					}
 					return m;
