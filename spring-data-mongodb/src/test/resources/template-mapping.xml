@@ -5,6 +5,8 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
        http://www.springframework.org/schema/data/mongo http://www.springframework.org/schema/data/mongo/spring-mongo-1.0.xsd">
 
+  <bean class="org.springframework.data.document.mongodb.TestMongoConfiguration"/>
+  
   <mongo:mongo host="localhost" port="27017"/>
 
   <bean id="mappingConverter1" class="org.springframework.data.document.mongodb.convert.MappingMongoConverter">

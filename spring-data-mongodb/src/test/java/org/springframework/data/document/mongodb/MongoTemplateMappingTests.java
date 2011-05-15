@@ -50,6 +50,10 @@ import com.mongodb.MongoException;
 public class MongoTemplateMappingTests {
 
 	@Autowired
+	@Qualifier("mongoTemplate")
+	MongoTemplate template0;
+
+	@Autowired
 	@Qualifier("mongoTemplate1")
 	MongoTemplate template1;
 
@@ -63,6 +67,14 @@ public class MongoTemplateMappingTests {
 	@Before
 	public void setUp() {
 		template1.dropCollection(template1.getCollectionName(Person.class));
+	}
+
+	@Test
+	public void insertsEntityCorrectly0() throws Exception {
+
+		addAndRetrievePerson(template0);
+		checkPersonPersisted(template0);
+
 	}
 
 	@Test
