@@ -95,13 +95,10 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 
 	private final MongoConverter mongoConverter;
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
-	private final Mongo mongo;
+	private final MongoDbFactory mongoDbFactory;
 	private final MongoExceptionTranslator exceptionTranslator = new MongoExceptionTranslator();
 	private final QueryMapper mapper;
 
-	private String databaseName;
-	private String username;
-	private String password;
 	private ApplicationEventPublisher eventPublisher;
 
 	/**
@@ -111,7 +108,7 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 	 * @param databaseName
 	 */
 	public MongoTemplate(Mongo mongo, String databaseName) {
-		this(mongo, databaseName, null, null, null);
+		this(mongo, databaseName, null);
 	}
 
 	/**
@@ -123,7 +120,26 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 	 * @param mongoConverter
 	 */
 	public MongoTemplate(Mongo mongo, String databaseName, MongoConverter mongoConverter) {
-		this(mongo, databaseName, mongoConverter, null, null);
+		this(new MongoDbFactoryBean(mongo, databaseName), mongoConverter, null, null);
+	}
+
+	/**
+	 * Constructor used for a basic template configuration
+	 * 
+	 * @param mongoDbFactory
+	 */
+	public MongoTemplate(MongoDbFactory mongoDbFactory) {
+		this(mongoDbFactory, null);
+	}
+
+	/**
+	 * Constructor used for a basic template configuration
+	 * 
+	 * @param mongoDbFactory
+	 * @param mongoConverter
+	 */
+	public MongoTemplate(MongoDbFactory mongoDbFactory, MongoConverter mongoConverter) {
+		this(mongoDbFactory, null, null, null);
 	}
 
 	/**
@@ -136,14 +152,12 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 	 * @param writeConcern
 	 * @param writeResultChecking
 	 */
-	MongoTemplate(Mongo mongo, String databaseName, MongoConverter mongoConverter, WriteConcern writeConcern,
+	MongoTemplate(MongoDbFactory mongoDbFactory, MongoConverter mongoConverter, WriteConcern writeConcern,
 			WriteResultChecking writeResultChecking) {
 
-		Assert.notNull(mongo);
-		Assert.notNull(databaseName);
+		Assert.notNull(mongoDbFactory);
 
-		this.mongo = mongo;
-		this.databaseName = databaseName;
+		this.mongoDbFactory = mongoDbFactory;
 		this.writeConcern = writeConcern;
 		this.mongoConverter = mongoConverter == null ? getDefaultMongoConverter() : mongoConverter;
 
@@ -168,37 +182,6 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 
 	public void setApplicationEventPublisher(ApplicationEventPublisher applicationEventPublisher) {
 		this.eventPublisher = applicationEventPublisher;
-	}
-
-	/**
-	 * Sets the username to use to connect to the Mongo database
-	 * 
-	 * @param username
-	 *          The username to use
-	 */
-	public void setUsername(String username) {
-		this.username = username;
-	}
-
-	/**
-	 * Sets the password to use to authenticate with the Mongo database.
-	 * 
-	 * @param password
-	 *          The password to use
-	 */
-	public void setPassword(String password) {
-
-		this.password = password;
-	}
-
-	/**
-	 * Sets the database name to be used.
-	 * 
-	 * @param databaseName
-	 */
-	public void setDatabaseName(String databaseName) {
-		Assert.notNull(databaseName);
-		this.databaseName = databaseName;
 	}
 
 	/**
@@ -868,7 +851,7 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 	}
 
 	public DB getDb() {
-		return MongoDbUtils.getDB(mongo, databaseName, username, password == null ? null : password.toCharArray());
+		return mongoDbFactory.getDb();
 	}
 
 	protected <T> void maybeEmitEvent(MongoMappingEvent<T> event) {
@@ -1158,8 +1141,9 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 	}
 
 	private void initializeMappingMongoConverter(MappingMongoConverter converter) {
-		converter.setMongo(mongo);
-		converter.setDefaultDatabase(databaseName);
+		DB db = this.mongoDbFactory.getDb();
+		converter.setMongo(db.getMongo());
+		converter.setDefaultDatabase(db.getName());
 	}
 
 	/**

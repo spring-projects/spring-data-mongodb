@@ -21,6 +21,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.dao.DataAccessException;
+import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.util.Assert;
 
 import com.mongodb.DB;
@@ -32,7 +33,7 @@ import com.mongodb.Mongo;
  * @author Thomas Risberg
  * @since 1.0
  */
-public class MongoDbFactoryBean implements FactoryBean<DB>, InitializingBean {
+public class MongoDbFactoryBean implements MongoDbFactory, FactoryBean<DB>, InitializingBean {
 	//ToDo: add	PersistenceExceptionTranslator ???
 
 	/**
@@ -46,7 +47,29 @@ public class MongoDbFactoryBean implements FactoryBean<DB>, InitializingBean {
 	private String databaseName;
 	private String username;
 	private String password;
+
 	
+	public MongoDbFactoryBean() {
+	}
+
+	public MongoDbFactoryBean(Mongo mongo, String databaseName) throws DataAccessException {
+		Assert.notNull(mongo, "Mongo must not be null");
+		Assert.hasText(databaseName, "Database name must not be empty");
+		this.mongo = mongo;
+		this.databaseName = databaseName;
+		try {
+			afterPropertiesSet();
+		} catch (Exception e) {
+			if (e instanceof RuntimeException) {
+				throw (RuntimeException)e;
+			}
+			else {
+				throw new DataAccessResourceFailureException("Error while initializing DB Factory", e);
+			}
+		}
+	}
+
+
 	public void setMongo(Mongo mongo) {
 		this.mongo = mongo;
 	}
@@ -93,10 +116,10 @@ public class MongoDbFactoryBean implements FactoryBean<DB>, InitializingBean {
 		// apply defaults - convenient when used to configure for tests 
 		// in an application context
 		//ToDo: do we need a default or should we require database name?
-		if (databaseName == null) {
-			logger.warn("Property databaseName not specified. Using default name 'test'");
-			databaseName = "test";
-		}
+//		if (databaseName == null) {
+//			logger.warn("Property databaseName not specified. Using default name 'test'");
+//			databaseName = "test";
+//		}
 		if (mongo == null) {
 			logger.warn("Property mongo not specified. Using default configuration");
 			if (host == null) {
