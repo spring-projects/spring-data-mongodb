@@ -120,7 +120,7 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 	 * @param mongoConverter
 	 */
 	public MongoTemplate(Mongo mongo, String databaseName, MongoConverter mongoConverter) {
-		this(new MongoDbFactoryBean(mongo, databaseName), mongoConverter, null, null);
+		this(new MongoDbFactoryBean(mongo, databaseName), mongoConverter);
 	}
 
 	/**
@@ -139,26 +139,10 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 	 * @param mongoConverter
 	 */
 	public MongoTemplate(MongoDbFactory mongoDbFactory, MongoConverter mongoConverter) {
-		this(mongoDbFactory, null, null, null);
-	}
-
-	/**
-	 * Constructor used for a template configuration with a custom {@link MongoConverter} and with a specific
-	 * {@link com.mongodb.WriteConcern} to be used for all database write operations
-	 * 
-	 * @param mongo
-	 * @param databaseName
-	 * @param mongoConverter
-	 * @param writeConcern
-	 * @param writeResultChecking
-	 */
-	MongoTemplate(MongoDbFactory mongoDbFactory, MongoConverter mongoConverter, WriteConcern writeConcern,
-			WriteResultChecking writeResultChecking) {
 
 		Assert.notNull(mongoDbFactory);
 
 		this.mongoDbFactory = mongoDbFactory;
-		this.writeConcern = writeConcern;
 		this.mongoConverter = mongoConverter == null ? getDefaultMongoConverter() : mongoConverter;
 
 		if (this.mongoConverter instanceof MappingMongoConverter) {
@@ -168,9 +152,6 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 		this.mappingContext = this.mongoConverter.getMappingContext();
 		this.mapper = new QueryMapper(this.mongoConverter);
 
-		if (writeResultChecking != null) {
-			this.writeResultChecking = writeResultChecking;
-		}
 	}
 
 	private final MongoConverter getDefaultMongoConverter() {
