@@ -100,6 +100,14 @@ public class MongoDbFactoryBean implements MongoDbFactory, FactoryBean<DB>, Init
 		return MongoDbUtils.getDB(mongo, databaseName, username, password == null ? null : password.toCharArray());
 	}
 
+	public Mongo getMongo() {
+		return this.mongo;
+	}
+
+	public String getDatabaseName() {
+		return this.databaseName;
+	}
+
 	public DB getObject() throws Exception {
 		return getDb();
 	}

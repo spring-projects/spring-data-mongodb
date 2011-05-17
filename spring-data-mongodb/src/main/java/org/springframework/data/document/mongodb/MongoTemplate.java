@@ -1122,9 +1122,8 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 	}
 
 	private void initializeMappingMongoConverter(MappingMongoConverter converter) {
-		DB db = this.mongoDbFactory.getDb();
-		converter.setMongo(db.getMongo());
-		converter.setDefaultDatabase(db.getName());
+		converter.setMongo(this.mongoDbFactory.getMongo());
+		converter.setDefaultDatabase(this.mongoDbFactory.getDatabaseName());
 	}
 
 	/**
