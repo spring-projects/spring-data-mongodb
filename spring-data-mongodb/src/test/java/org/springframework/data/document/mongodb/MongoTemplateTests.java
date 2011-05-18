@@ -37,6 +37,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.document.InvalidDocumentStoreApiUsageException;
 import org.springframework.data.document.mongodb.convert.MappingMongoConverter;
@@ -54,6 +55,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.Mongo;
+import com.mongodb.MongoException;
 import com.mongodb.WriteResult;
 
 /**
@@ -510,6 +512,28 @@ public class MongoTemplateTests {
 		assertThat(p4.getWishList().size(), is(1));
 		assertThat(p4.getFriends().size(), is(1));
 
+	}
+
+	@Test
+	public void testUsingSlaveOk() throws Exception {
+		this.template.execute("slaveOkTest", new CollectionCallback<Object>() {
+			public Object doInCollection(DBCollection collection)
+					throws MongoException, DataAccessException {
+				assertThat(collection.getOptions(), is(0));
+				assertThat(collection.getDB().getOptions(), is(0));
+				return null;
+			}
+		});
+		MongoTemplate slaveTemplate = new MongoTemplate(this.template.getDbFactory());
+		slaveTemplate.setSlaveOk(true);
+		slaveTemplate.execute("slaveOkTest", new CollectionCallback<Object>() {
+			public Object doInCollection(DBCollection collection)
+					throws MongoException, DataAccessException {
+				assertThat(collection.getOptions(), is(4));
+				assertThat(collection.getDB().getOptions(), is(0));
+				return null;
+			}
+		});
 	}
 
 }

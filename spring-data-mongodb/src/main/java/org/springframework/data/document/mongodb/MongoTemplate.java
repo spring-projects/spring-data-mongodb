@@ -93,6 +93,11 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 	 */
 	private WriteResultChecking writeResultChecking = WriteResultChecking.NONE;
 
+	/*
+	 * Flag used to indicate use of slaveOk() for any operations on collections.
+	 */
+	private boolean slaveOk = false;
+
 	private final MongoConverter mongoConverter;
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 	private final MongoDbFactory mongoDbFactory;
@@ -248,80 +253,8 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 		Assert.notNull(callback);
 
 		try {
-			DBCollection collection = getDb().getCollection(collectionName);
+			DBCollection collection = getAndPrepareCollection(getDb(), collectionName);
 			return callback.doInCollection(collection);
-		} catch (RuntimeException e) {
-			throw potentiallyConvertRuntimeException(e);
-		}
-	}
-
-	/**
-	 * Central callback executing method to do queries against the datastore that requires reading a single object from a
-	 * collection of objects. It will take the following steps
-	 * <ol>
-	 * <li>Execute the given {@link ConnectionCallback} for a {@link DBObject}.</li>
-	 * <li>Apply the given {@link DbObjectCallback} to each of the {@link DBObject}s to obtain the result.</li>
-	 * <ol>
-	 * 
-	 * @param <T>
-	 * @param collectionCallback
-	 *          the callback to retrieve the {@link DBObject} with
-	 * @param objectCallback
-	 *          the {@link DbObjectCallback} to transform {@link DBObject}s into the actual domain type
-	 * @param collectionName
-	 *          the collection to be queried
-	 * @return
-	 */
-	private <T> T execute(CollectionCallback<DBObject> collectionCallback, DbObjectCallback<T> objectCallback,
-			String collectionName) {
-
-		try {
-			T result = objectCallback.doWith(collectionCallback.doInCollection(getCollection(collectionName)));
-			return result;
-		} catch (RuntimeException e) {
-			throw potentiallyConvertRuntimeException(e);
-		}
-	}
-
-	/**
-	 * Central callback executing method to do queries against the datastore that requires reading a collection of
-	 * objects. It will take the following steps
-	 * <ol>
-	 * <li>Execute the given {@link ConnectionCallback} for a {@link DBCursor}.</li>
-	 * <li>Prepare that {@link DBCursor} with the given {@link CursorPreparer} (will be skipped if {@link CursorPreparer}
-	 * is {@literal null}</li>
-	 * <li>Iterate over the {@link DBCursor} and applies the given {@link DbObjectCallback} to each of the
-	 * {@link DBObject}s collecting the actual result {@link List}.</li>
-	 * <ol>
-	 * 
-	 * @param <T>
-	 * @param collectionCallback
-	 *          the callback to retrieve the {@link DBCursor} with
-	 * @param preparer
-	 *          the {@link CursorPreparer} to potentially modify the {@link DBCursor} before ireating over it
-	 * @param objectCallback
-	 *          the {@link DbObjectCallback} to transform {@link DBObject}s into the actual domain type
-	 * @param collectionName
-	 *          the collection to be queried
-	 * @return
-	 */
-	private <T> List<T> executeEach(CollectionCallback<DBCursor> collectionCallback, CursorPreparer preparer,
-			DbObjectCallback<T> objectCallback, String collectionName) {
-
-		try {
-			DBCursor cursor = collectionCallback.doInCollection(getCollection(collectionName));
-
-			if (preparer != null) {
-				cursor = preparer.prepare(cursor);
-			}
-
-			List<T> result = new ArrayList<T>();
-
-			for (DBObject object : cursor) {
-				result.add(objectCallback.doWith(object));
-			}
-
-			return result;
 		} catch (RuntimeException e) {
 			throw potentiallyConvertRuntimeException(e);
 		}
@@ -484,6 +417,18 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 	 */
 	public void insert(String collectionName, Object objectToSave) {
 		doInsert(collectionName, objectToSave, this.mongoConverter);
+	}
+	
+	/**
+	 * Prepare the collection before any processing is done using it. This allows a convenient way to apply 
+	 * settings like slaveOk() etc. Can be overridden in sub-classes.
+	 * 
+	 * @param collection
+	 */
+	protected void prepareCollection(DBCollection collection) {
+		if(this.slaveOk) {
+			collection.slaveOk();
+		}
 	}
 
 	protected <T> void doInsert(String collectionName, T objectToSave, MongoWriter<T> writer) {
@@ -823,12 +768,12 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 	 * @see org.springframework.data.document.mongodb.MongoOperations#getCollection(java.lang.Class)
 	 */
 	public <T> List<T> getCollection(Class<T> targetClass) {
-		return executeEach(new FindCallback(null), null, new ReadDbObjectCallback<T>(mongoConverter, targetClass),
+		return executeFindMultiInternal(new FindCallback(null), null, new ReadDbObjectCallback<T>(mongoConverter, targetClass),
 				determineCollectionName(targetClass));
 	}
 
 	public <T> List<T> getCollection(String collectionName, Class<T> targetClass) {
-		return executeEach(new FindCallback(null), null, new ReadDbObjectCallback<T>(mongoConverter, targetClass),
+		return executeFindMultiInternal(new FindCallback(null), null, new ReadDbObjectCallback<T>(mongoConverter, targetClass),
 				collectionName);
 	}
 
@@ -887,7 +832,7 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(targetClass);
 		DBObject mappedQuery = mapper.getMappedObject(query, entity);
 
-		return execute(new FindOneCallback(mappedQuery, fields), new ReadDbObjectCallback<T>(readerToUse, targetClass),
+		return executeFindOneInternal(new FindOneCallback(mappedQuery, fields), new ReadDbObjectCallback<T>(readerToUse, targetClass),
 				collectionName);
 	}
 
@@ -921,7 +866,7 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 			LOGGER.debug("find using query: " + query + " fields: " + fields + " for class: " + targetClass
 					+ " in collection: " + collectionName);
 		}
-		return executeEach(new FindCallback(mapper.getMappedObject(query, entity), fields), preparer,
+		return executeFindMultiInternal(new FindCallback(mapper.getMappedObject(query, entity), fields), preparer,
 				new ReadDbObjectCallback<T>(mongoConverter, targetClass), collectionName);
 	}
 
@@ -949,7 +894,7 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 		}
 		MongoReader<? super T> readerToUse = this.mongoConverter;
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(targetClass);
-		return executeEach(new FindCallback(mapper.getMappedObject(query, entity), fields), null,
+		return executeFindMultiInternal(new FindCallback(mapper.getMappedObject(query, entity), fields), null,
 				new ReadDbObjectCallback<T>(readerToUse, targetClass), collectionName);
 	}
 
@@ -993,7 +938,7 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 					+ targetClass + " in collection: " + collectionName);
 		}
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(targetClass);
-		return execute(new FindAndRemoveCallback(mapper.getMappedObject(query, entity), fields, sort),
+		return executeFindOneInternal(new FindAndRemoveCallback(mapper.getMappedObject(query, entity), fields, sort),
 				new ReadDbObjectCallback<T>(readerToUse, targetClass), collectionName);
 	}
 
@@ -1040,6 +985,88 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 			throw new MappingException(e.getMessage(), e);
 		} catch (InvocationTargetException e) {
 			throw new MappingException(e.getMessage(), e);
+		}
+	}
+
+	private DBCollection getAndPrepareCollection(DB db, String collectionName) {
+		try {
+			DBCollection collection = db.getCollection(collectionName);
+			prepareCollection(collection);
+			return collection;
+		} catch (RuntimeException e) {
+			throw potentiallyConvertRuntimeException(e);
+		}
+	}
+
+	/**
+	 * Internal method using callbacks to do queries against the datastore that requires reading a single object from a
+	 * collection of objects. It will take the following steps
+	 * <ol>
+	 * <li>Execute the given {@link ConnectionCallback} for a {@link DBObject}.</li>
+	 * <li>Apply the given {@link DbObjectCallback} to each of the {@link DBObject}s to obtain the result.</li>
+	 * <ol>
+	 * 
+	 * @param <T>
+	 * @param collectionCallback
+	 *          the callback to retrieve the {@link DBObject} with
+	 * @param objectCallback
+	 *          the {@link DbObjectCallback} to transform {@link DBObject}s into the actual domain type
+	 * @param collectionName
+	 *          the collection to be queried
+	 * @return
+	 */
+	private <T> T executeFindOneInternal(CollectionCallback<DBObject> collectionCallback, DbObjectCallback<T> objectCallback,
+			String collectionName) {
+
+		try {
+			T result = objectCallback.doWith(collectionCallback.doInCollection(getAndPrepareCollection(getDb(), collectionName)));
+			return result;
+		} catch (RuntimeException e) {
+			throw potentiallyConvertRuntimeException(e);
+		}
+	}
+
+	/**
+	 * Internal method using callback to do queries against the datastore that requires reading a collection of
+	 * objects. It will take the following steps
+	 * <ol>
+	 * <li>Execute the given {@link ConnectionCallback} for a {@link DBCursor}.</li>
+	 * <li>Prepare that {@link DBCursor} with the given {@link CursorPreparer} (will be skipped if {@link CursorPreparer}
+	 * is {@literal null}</li>
+	 * <li>Iterate over the {@link DBCursor} and applies the given {@link DbObjectCallback} to each of the
+	 * {@link DBObject}s collecting the actual result {@link List}.</li>
+	 * <ol>
+	 * 
+	 * @param <T>
+	 * @param collectionCallback
+	 *          the callback to retrieve the {@link DBCursor} with
+	 * @param preparer
+	 *          the {@link CursorPreparer} to potentially modify the {@link DBCursor} before ireating over it
+	 * @param objectCallback
+	 *          the {@link DbObjectCallback} to transform {@link DBObject}s into the actual domain type
+	 * @param collectionName
+	 *          the collection to be queried
+	 * @return
+	 */
+	private <T> List<T> executeFindMultiInternal(CollectionCallback<DBCursor> collectionCallback, CursorPreparer preparer,
+			DbObjectCallback<T> objectCallback, String collectionName) {
+
+		try {
+			DBCursor cursor = collectionCallback.doInCollection(getAndPrepareCollection(getDb(), collectionName));
+
+			if (preparer != null) {
+				cursor = preparer.prepare(cursor);
+			}
+
+			List<T> result = new ArrayList<T>();
+
+			for (DBObject object : cursor) {
+				result.add(objectCallback.doWith(object));
+			}
+
+			return result;
+		} catch (RuntimeException e) {
+			throw potentiallyConvertRuntimeException(e);
 		}
 	}
 
@@ -1270,6 +1297,10 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 
 	public void setWriteConcern(WriteConcern writeConcern) {
 		this.writeConcern = writeConcern;
+	}
+
+	public void setSlaveOk(boolean slaveOk) {
+		this.slaveOk = slaveOk;
 	}
 
 }
