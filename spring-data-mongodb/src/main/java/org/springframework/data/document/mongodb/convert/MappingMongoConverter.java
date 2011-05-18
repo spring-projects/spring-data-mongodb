@@ -113,7 +113,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * 
 	 * @param converters
 	 */
-	public void setConverters(List<Converter<?, ?>> converters) {
+	public void setCustomConverters(List<Converter<?, ?>> converters) {
 		if (null != converters) {
 			for (Converter<?, ?> c : converters) {
 				registerConverter(c);

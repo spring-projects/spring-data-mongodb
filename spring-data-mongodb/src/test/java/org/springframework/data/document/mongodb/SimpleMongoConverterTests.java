@@ -15,22 +15,22 @@
  */
 package org.springframework.data.document.mongodb;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import java.lang.reflect.Field;
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
-import com.mongodb.util.JSON;
 
 import org.hamcrest.CoreMatchers;
 import org.joda.time.LocalDate;
@@ -41,6 +41,10 @@ import org.springframework.data.document.mongodb.SomeEnumTest.NumberEnum;
 import org.springframework.data.document.mongodb.SomeEnumTest.StringEnum;
 import org.springframework.data.document.mongodb.convert.SimpleMongoConverter;
 import org.springframework.util.ReflectionUtils;
+
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
+import com.mongodb.util.JSON;
 
 public class SimpleMongoConverterTests {
 
@@ -323,11 +327,11 @@ public class SimpleMongoConverterTests {
 	@Test
 	public void convertsJodaTimeTypesCorrectly() {
 
-		Set<Converter<?, ?>> converters = new HashSet<Converter<?, ?>>();
+		List<Converter<?, ?>> converters = new ArrayList<Converter<?, ?>>();
 		converters.add(new LocalDateToDateConverter());
 		converters.add(new DateToLocalDateConverter());
 
-		converter.setConverters(converters);
+		converter.setCustomConverters(converters);
 
 		AnotherPerson person = new AnotherPerson();
 		person.birthDate = new LocalDate();

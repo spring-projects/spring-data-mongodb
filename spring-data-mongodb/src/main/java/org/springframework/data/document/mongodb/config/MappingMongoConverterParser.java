@@ -125,7 +125,7 @@ public class MappingMongoConverterParser extends AbstractBeanDefinitionParser {
 					converterBeans.add(parseConverter(listenerElement, parserContext));
 				}
 			}
-			converterBuilder.addPropertyValue("converters", converterBeans);
+			converterBuilder.addPropertyValue("customConverters", converterBeans);
 		}
 
 		return converterBuilder.getBeanDefinition();

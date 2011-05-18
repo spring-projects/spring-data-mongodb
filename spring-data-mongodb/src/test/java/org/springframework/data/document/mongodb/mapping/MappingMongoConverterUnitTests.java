@@ -80,7 +80,7 @@ public class MappingMongoConverterUnitTests {
 		mappingContext.setCustomSimpleTypes(customSimpleTypes);
 
 		converter = new MappingMongoConverter(mappingContext);
-		converter.setConverters(converters);
+		converter.setCustomConverters(converters);
 		converter.afterPropertiesSet();
 
 		Person person = new Person();

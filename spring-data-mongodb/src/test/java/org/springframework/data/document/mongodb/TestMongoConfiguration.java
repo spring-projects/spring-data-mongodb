@@ -34,7 +34,7 @@ public class TestMongoConfiguration extends AbstractMongoConfiguration {
 		List<Converter<?, ?>> converterList = new ArrayList<Converter<?, ?>>();
 		converterList.add(new org.springframework.data.document.mongodb.PersonReadConverter());
 		converterList.add(new org.springframework.data.document.mongodb.PersonWriteConverter());
-		converter.setConverters(converterList);
+		converter.setCustomConverters(converterList);
 	}
 	
 	

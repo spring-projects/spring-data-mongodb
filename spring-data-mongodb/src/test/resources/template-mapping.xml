@@ -16,7 +16,7 @@
   
   <bean id="mappingConverter1" class="org.springframework.data.document.mongodb.convert.MappingMongoConverter">
     <constructor-arg ref="mappingContext" />
-    <property name="converters">
+    <property name="customConverters">
       <list>
         <bean class="org.springframework.data.document.mongodb.PersonReadConverter"/>
         <bean class="org.springframework.data.document.mongodb.PersonWriteConverter"/>
