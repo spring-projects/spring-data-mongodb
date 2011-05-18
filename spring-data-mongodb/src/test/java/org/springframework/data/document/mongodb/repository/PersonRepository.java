@@ -21,6 +21,7 @@ import java.util.List;
 import org.springframework.data.document.mongodb.geo.Box;
 import org.springframework.data.document.mongodb.geo.Circle;
 import org.springframework.data.document.mongodb.geo.Point;
+import org.springframework.data.document.mongodb.repository.Person.Sex;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -118,4 +119,6 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	List<Person> findByLocationWithin(Circle circle);
 
 	List<Person> findByLocationWithin(Box box);
+	
+	List<Person> findBySex(Sex sex);
 }

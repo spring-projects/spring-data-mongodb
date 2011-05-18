@@ -397,11 +397,9 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		// Write the properties
 		entity.doWithProperties(new PropertyHandler<MongoPersistentProperty>() {
 			public void doWithPersistentProperty(MongoPersistentProperty prop) {
-				String name = prop.getName();
-				Class<?> type = prop.getType();
 				Object propertyObj;
 				try {
-					propertyObj = getProperty(obj, prop, type, useFieldAccessOnly);
+					propertyObj = getProperty(obj, prop, prop.getType(), useFieldAccessOnly);
 				} catch (IllegalAccessException e) {
 					throw new MappingException(e.getMessage(), e);
 				} catch (InvocationTargetException e) {
@@ -411,7 +409,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 					if (!isSimpleType(propertyObj.getClass())) {
 						writePropertyInternal(prop, propertyObj, dbo);
 					} else {
-						dbo.put(name, propertyObj);
+						writeSimpleInternal(prop.getKey(), propertyObj, dbo);
 					}
 				}
 			}
@@ -467,7 +465,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		org.springframework.data.document.mongodb.mapping.DBRef dbref = prop.getField().getAnnotation(
 				org.springframework.data.document.mongodb.mapping.DBRef.class);
 
-		String name = prop.getName();
+		String name = prop.getKey();
 		Class<?> type = prop.getType();
 		if (prop.isCollection()) {
 			BasicDBList dbList = new BasicDBList();
@@ -552,7 +550,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				// being convertable
 				String simpleKey = key.toString();
 				if (isSimpleType(val.getClass())) {
-					dbo.put(simpleKey, val);
+					writeSimpleInternal(simpleKey, val, dbo);
 				} else {
 					DBObject newDbo = new BasicDBObject();
 					Class<?> componentType = val.getClass();
@@ -570,6 +568,19 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				throw new MappingException("Cannot use a complex object as a key value.");
 			}
 		}
+	}
+	
+	/**
+	 * Writes the given simple value to the given {@link DBObject}. Will store enum names for enum values.
+	 * 
+	 * @param key
+	 * @param value
+	 * @param dbObject
+	 */
+	private void writeSimpleInternal(String key, Object value, DBObject dbObject) {
+		
+		Object valueToSet = value.getClass().isEnum() ? ((Enum<?>) value).name() : value;
+		dbObject.put(key, valueToSet);
 	}
 
 	protected DBRef createDBRef(Object target, org.springframework.data.document.mongodb.mapping.DBRef dbref) {

@@ -89,7 +89,7 @@ public class MappingMongoConverterUnitTests {
 		DBObject dbObject = new BasicDBObject();
 		converter.write(person, dbObject);
 
-		assertTrue(dbObject.get("birthDate") instanceof Date);
+		assertThat(dbObject.get("birthDate"), is(Date.class));
 
 		Person result = converter.read(Person.class, dbObject);
 		assertThat(result.birthDate, is(notNullValue()));
@@ -161,6 +161,43 @@ public class MappingMongoConverterUnitTests {
 		assertThat(result.get(MappingMongoConverter.CUSTOM_TYPE_KEY).toString(), is(Person.class.getName()));
 	}
 
+	/**
+	 * @see DATADOC-136
+	 */
+	@Test
+	public void writesEnumsCorrectly() {
+		
+		ClassWithEnumProperty value = new ClassWithEnumProperty();
+		value.sampleEnum = SampleEnum.FIRST;
+		
+		DBObject result = new BasicDBObject();
+		converter.write(value, result);
+		
+		assertThat(result.get("sampleEnum"), is(String.class));
+		assertThat(result.get("sampleEnum").toString(), is("FIRST"));
+	}
+	
+	/**
+	 * @see DATADOC-136
+	 */
+	@Test
+	public void readsEnumsCorrectly() {
+		DBObject dbObject = new BasicDBObject("sampleEnum", "FIRST");
+		ClassWithEnumProperty result = converter.read(ClassWithEnumProperty.class, dbObject);
+		
+		assertThat(result.sampleEnum, is(SampleEnum.FIRST));
+	}
+	
+	
+	class ClassWithEnumProperty {
+		
+		SampleEnum sampleEnum;
+	}
+	
+	enum SampleEnum {
+		FIRST, SECOND;
+	}
+	
 	public static class Address {
 		String street;
 		String city;

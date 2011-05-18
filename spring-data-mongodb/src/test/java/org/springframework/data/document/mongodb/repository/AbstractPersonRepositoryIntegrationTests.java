@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.document.mongodb.geo.Box;
 import org.springframework.data.document.mongodb.geo.Circle;
 import org.springframework.data.document.mongodb.geo.Point;
+import org.springframework.data.document.mongodb.repository.Person.Sex;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort.Direction;
@@ -31,8 +32,10 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 
 	@Autowired
 	protected PersonRepository repository;
-	Person dave, carter, boyd, stefan, leroi;
+	Person dave, carter, boyd, stefan, leroi, alicia;
 	QPerson person;
+	
+	List<Person> all;
 
 	@Before
 	public void setUp() {
@@ -44,10 +47,12 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		boyd = new Person("Boyd", "Tinsley", 45);
 		stefan = new Person("Stefan", "Lessard", 34);
 		leroi = new Person("Leroi", "Moore", 41);
+		
+		alicia = new Person("Alicia", "Keys", 30, Sex.FEMALE);
 
 		person = new QPerson("person");
 
-		repository.save(Arrays.asList(dave, carter, boyd, stefan, leroi));
+		all = repository.save(Arrays.asList(dave, carter, boyd, stefan, leroi, alicia));
 	}
 
 	@Test
@@ -59,8 +64,8 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	@Test
 	public void findsAllMusicians() throws Exception {
 		List<Person> result = repository.findAll();
-		assertThat(result, hasItems(dave, carter, boyd, stefan, leroi));
-		assertThat(result.size(), is(5));
+		assertThat(result.size(), is(all.size()));
+		assertThat(result.containsAll(all), is(true));
 	}
 
 	@Test
@@ -70,7 +75,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 
 		List<Person> result = repository.findAll();
 
-		assertThat(result.size(), is(4));
+		assertThat(result.size(), is(all.size() - 1));
 		assertThat(result, not(hasItem(dave)));
 	}
 
@@ -81,7 +86,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 
 		List<Person> result = repository.findAll();
 
-		assertThat(result.size(), is(4));
+		assertThat(result.size(), is(all.size() - 1));
 		assertThat(result, not(hasItem(dave)));
 	}
 
@@ -116,7 +121,8 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		Page<Person> result = repository.findAll(new PageRequest(1, 2, Direction.ASC, "lastname"));
 		assertThat(result.isFirstPage(), is(false));
 		assertThat(result.isLastPage(), is(false));
-		assertThat(result, hasItems(dave, leroi));
+		assertThat(result, hasItems(dave, stefan));
+		System.out.println(result);
 	}
 
 	@Test
@@ -236,5 +242,16 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(page.isLastPage(), is(false));
 		assertThat(page.getNumberOfElements(), is(2));
 		assertThat(page, hasItems(carter, stefan));
+	}
+
+	/**
+	 * @see DATADOC-136
+	 */
+	@Test
+	public void findsPeopleBySexCorrectly() {
+		
+		List<Person> females = repository.findBySex(Sex.FEMALE);
+		assertThat(females.size(), is(1));
+		assertThat(females.get(0), is(alicia));
 	}
 }

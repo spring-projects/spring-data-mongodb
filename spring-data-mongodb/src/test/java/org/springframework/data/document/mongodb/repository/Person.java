@@ -29,9 +29,14 @@ import org.springframework.data.document.mongodb.mapping.Document;
 @Document
 public class Person extends Contact {
 
+	public enum Sex {
+		MALE, FEMALE;
+	}
+	
 	private String firstname;
 	private String lastname;
 	private Integer age;
+	private Sex sex;
 
 	@GeoSpatialIndexed
 	private Point location;
@@ -51,10 +56,16 @@ public class Person extends Contact {
 
 	public Person(String firstname, String lastname, Integer age) {
 
+		this(firstname, lastname, age, Sex.MALE);
+	}
+	
+	public Person(String firstname, String lastname, Integer age, Sex sex) {
+		
 		super();
 		this.firstname = firstname;
 		this.lastname = lastname;
 		this.age = age;
+		this.sex = sex;
 	}
 
 	/**
