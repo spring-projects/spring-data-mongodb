@@ -22,6 +22,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.springframework.dao.DataAccessException;
+import org.springframework.data.document.mongodb.CollectionCallback;
 import org.springframework.data.document.mongodb.MongoOperations;
 import org.springframework.data.document.mongodb.MongoTemplate;
 import org.springframework.data.document.mongodb.query.Criteria;
@@ -32,6 +34,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.util.Assert;
+
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBCollection;
+import com.mongodb.MongoException;
 
 /**
  * Repository base implementation for Mongo.
@@ -95,8 +101,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements Paging
 	 * )
 	 */
 	public T findOne(ID id) {
-
-		return template.findOne(entityInformation.getCollectionName(), getIdQuery(id), entityInformation.getJavaType());
+		return template.findById(id, entityInformation.getJavaType());
 	}
 
 	private Query getIdQuery(Object id) {
@@ -114,9 +119,14 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements Paging
 	 * org.springframework.data.repository.Repository#exists(java.io.Serializable
 	 * )
 	 */
-	public boolean exists(ID id) {
+	public boolean exists(final ID id) {
+		
+		return template.execute(entityInformation.getCollectionName(), new CollectionCallback<Boolean>() {
 
-		return findOne(id) != null;
+			public Boolean doInCollection(DBCollection collection) throws MongoException, DataAccessException {
+				return collection.count(new BasicDBObject("_id", id)) > 0;
+			}
+		});
 	}
 
 	/*
@@ -134,7 +144,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements Paging
 	 * @see org.springframework.data.repository.Repository#delete(java.io.Serializable)
 	 */
 	public void delete(ID id) {
-		delete(findOne(id));
+		template.remove(entityInformation.getCollectionName(), getIdQuery(id), entityInformation.getJavaType());
 	}
 
 	/*
@@ -144,9 +154,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements Paging
 	 * org.springframework.data.repository.Repository#delete(java.lang.Object)
 	 */
 	public void delete(T entity) {
-
-		template.remove(entityInformation.getCollectionName(), getIdQuery(entityInformation.getId(entity)),
-				entity.getClass());
+		delete(entityInformation.getId(entity));
 	}
 
 	/*

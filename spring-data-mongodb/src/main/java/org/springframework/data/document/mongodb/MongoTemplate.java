@@ -392,6 +392,18 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 	public <T> List<T> find(String collectionName, Query query, Class<T> targetClass, CursorPreparer preparer) {
 		return doFind(collectionName, query.getQueryObject(), query.getFieldsObject(), targetClass, preparer);
 	}
+	
+	public <T> T findById(Object id, Class<T> targetClass) {
+		MongoPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(targetClass);
+		return findById(persistentEntity.getCollection(), id, targetClass);
+	}
+	
+	public <T> T findById(String collectionName, Object id, Class<T> targetClass) {
+		MongoPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(targetClass);
+		MongoPersistentProperty idProperty = persistentEntity.getIdProperty();
+		String idKey = idProperty == null ? ID : idProperty.getName();
+		return doFindOne(collectionName, new BasicDBObject(idKey, id), null, targetClass);
+	}
 
 	// Find methods that take a Query to express the query and that return a single object that is
 	// also removed from the collection in the database.
@@ -724,8 +736,7 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 	}
 
 	public void remove(Object object) {
-		Object idValue = this.getIdValue(object);
-		remove(new Query(whereId().is(idValue)), object.getClass());
+		remove(new Query(where(getIdPropertyName(object)).is(getIdValue(object))), object.getClass());
 	}
 
 	public <T> void remove(Query query, Class<T> targetClass) {
@@ -958,6 +969,12 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 		} catch (InvocationTargetException e) {
 			throw new MappingException(e.getMessage(), e);
 		}
+	}
+	
+	protected String getIdPropertyName(Object object) {
+		MongoPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(object.getClass());
+		MongoPersistentProperty idProperty = persistentEntity.getIdProperty();
+		return idProperty == null ? ID : idProperty.getName();
 	}
 
 	/**

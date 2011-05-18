@@ -15,11 +15,8 @@
  */
 package org.springframework.data.document.mongodb;
 
-import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
-
-import java.util.List;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -29,9 +26,6 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.DataAccessException;
-import org.springframework.data.document.mongodb.convert.MongoConverter;
-import org.springframework.data.document.mongodb.query.Criteria;
-import org.springframework.data.document.mongodb.query.Query;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -98,11 +92,9 @@ public class MongoTemplateMappingTests {
 		person.setAge(25);
 		template.insert(person);
 
-		List<Person> result = template.find(new Query(Criteria.where("_id").is(person.getId())), Person.class);
-		assertThat(result.size(), is(1));
-		assertThat(result, hasItem(person));
-		assertThat(result.get(0).getFirstName(), is("Oliver"));
-		assertThat(result.get(0).getAge(), is(25));
+		Person result = template.findById(person.getId(), Person.class);
+		assertThat(result.getFirstName(), is("Oliver"));
+		assertThat(result.getAge(), is(25));
 	}
 
 	private void checkPersonPersisted(MongoTemplate template) {
@@ -114,5 +106,4 @@ public class MongoTemplateMappingTests {
 			}
 		});
 	}
-
 }

@@ -66,10 +66,6 @@ public class Criteria implements CriteriaDefinition {
 		return new Criteria(key);
 	}
 
-	public static Criteria whereId() {
-		return new Criteria("id");
-	}
-
 	/**
 	 * Static factory method to create a Criteria using the provided key
 	 * 

@@ -15,7 +15,6 @@
  */
 package org.springframework.data.document.mongodb;
 
-import java.util.Iterator;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
@@ -23,12 +22,6 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-
-import static org.springframework.data.document.mongodb.query.Criteria.*;
-import org.springframework.data.document.mongodb.query.Query;
-import static org.springframework.data.document.mongodb.query.Query.query;
-import org.springframework.data.document.mongodb.query.Update;
-import static org.springframework.data.document.mongodb.query.Update.update;
 
 public class PersonExample {
 
@@ -59,7 +52,7 @@ public class PersonExample {
 
 		log.debug("Saved: " + p);
 
-		p = mongoOps.findOne(query(whereId().is(p.getId())), PersonWithIdPropertyOfTypeString.class);
+		p = mongoOps.findById(p.getId(), PersonWithIdPropertyOfTypeString.class);
 
 		log.debug("Found: " + p);
 
@@ -67,15 +60,13 @@ public class PersonExample {
 
 		// mongoOps.updateFirst(new Query(where("firstName").is("Sven")), update("age", 24));
 
-		p = mongoOps.findOne(query(whereId().is(p.getId())), PersonWithIdPropertyOfTypeString.class);
+		p = mongoOps.findById(p.getId(), PersonWithIdPropertyOfTypeString.class);
 		log.debug("Updated: " + p);
 
 		List<PersonWithIdPropertyOfTypeString> folks = mongoOps.getCollection(PersonWithIdPropertyOfTypeString.class);
 		log.debug("Querying for all people...");
-		for (Iterator iterator = folks.iterator(); iterator.hasNext();) {
-			PersonWithIdPropertyOfTypeString personWithIdPropertyOfTypeString = (PersonWithIdPropertyOfTypeString) iterator
-					.next();
-			log.debug(personWithIdPropertyOfTypeString);
+		for (PersonWithIdPropertyOfTypeString element : folks) {
+			log.debug(element);
 		}
 
 		// mongoOps.remove( query(whereId().is(p.getId())), p.getClass());

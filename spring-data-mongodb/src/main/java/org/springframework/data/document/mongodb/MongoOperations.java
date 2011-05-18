@@ -333,6 +333,28 @@ public interface MongoOperations {
 	<T> List<T> find(String collectionName, Query query, Class<T> targetClass, CursorPreparer preparer);
 
 	/**
+	 * Returns a document with the given id mapped onto the given class. The collection the query is ran against will be
+	 * derived from the given target class as well.
+	 * 
+	 * @param <T>
+	 * @param id the id of the document to return.
+	 * @param targetClass the type the document shall be converted into.
+	 * @return the document with the given id mapped onto the given target class.
+	 */
+	<T> T findById(Object id, Class<T> targetClass);
+	
+	/**
+	 * Returns the document with the given id from the given collection mapped onto the given target class.
+	 * 
+	 * @param <T>
+	 * @param collectionName the collection to query for the document
+	 * @param id the id of the document to return
+	 * @param targetClass the type to convert the document to
+	 * @return
+	 */
+	<T> T findById(String collectionName, Object id, Class<T> targetClass);
+	
+	/**
 	 * Map the results of an ad-hoc query on the default MongoDB collection to a single instance of an object of the
 	 * specified type. The first document that matches the query is returned and also removed from the collection in the
 	 * database.
