@@ -5,12 +5,16 @@
 
   <bean id="mongoTemplate" class="org.springframework.data.document.mongodb.MongoTemplate">
     <constructor-arg>
-      <bean id="mongo" class="org.springframework.data.document.mongodb.MongoFactoryBean">
-	    <property name="host" value="localhost"/>
-	    <property name="port" value="27017"/>
+      <bean id="mongoDbFactory" class="org.springframework.data.document.mongodb.MongoDbFactoryBean">
+        <constructor-arg name="mongo">
+          <bean id="mongo" class="org.springframework.data.document.mongodb.MongoFactoryBean">
+            <property name="host" value="localhost"/>
+            <property name="port" value="27017"/>
+          </bean>
+	  	</constructor-arg>
+	  	<constructor-arg name="databaseName" value="repositories"/>
 	  </bean>
     </constructor-arg>
-    <constructor-arg value="repositories" />
 	<constructor-arg>
 	  <bean id="mongoConverter" class="org.springframework.data.document.mongodb.convert.MappingMongoConverter">
 	  	<constructor-arg ref="mappingContext" />

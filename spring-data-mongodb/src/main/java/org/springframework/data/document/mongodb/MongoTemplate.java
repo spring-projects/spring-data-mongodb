@@ -108,7 +108,7 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 	 * @param databaseName
 	 */
 	public MongoTemplate(Mongo mongo, String databaseName) {
-		this(mongo, databaseName, null);
+		this(new MongoDbFactoryBean(mongo, databaseName));
 	}
 
 	/**
@@ -172,6 +172,15 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 	 */
 	public MongoConverter getConverter() {
 		return this.mongoConverter;
+	}
+
+	/**
+	 * Returns the {@link org.springframework.data.document.mongodb.MongoDbFactory}.
+	 * 
+	 * @return
+	 */
+	public MongoDbFactory getDbFactory() {
+		return this.mongoDbFactory;
 	}
 
 	/* (non-Javadoc)

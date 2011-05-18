@@ -33,7 +33,7 @@ import com.mongodb.Mongo;
  * @author Thomas Risberg
  * @since 1.0
  */
-public class MongoDbFactoryBean implements MongoDbFactory, FactoryBean<DB>, InitializingBean {
+public class MongoDbFactoryBean implements MongoDbFactory, FactoryBean<MongoDbFactory>, InitializingBean {
 	//ToDo: add	PersistenceExceptionTranslator ???
 
 	/**
@@ -108,12 +108,12 @@ public class MongoDbFactoryBean implements MongoDbFactory, FactoryBean<DB>, Init
 		return this.databaseName;
 	}
 
-	public DB getObject() throws Exception {
-		return getDb();
+	public MongoDbFactory getObject() throws Exception {
+		return this;
 	}
 
-	public Class<? extends DB> getObjectType() {
-		return DB.class;
+	public Class<? extends MongoDbFactory> getObjectType() {
+		return MongoDbFactory.class;
 	}
 
 	public boolean isSingleton() {

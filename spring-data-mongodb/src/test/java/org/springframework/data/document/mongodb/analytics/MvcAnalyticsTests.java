@@ -34,7 +34,7 @@ public class MvcAnalyticsTests {
 	public void setUp() throws Exception {
 		Mongo m = new Mongo();
 		mongoTemplate = new MongoTemplate(m, "mvc");
-		mongoDummyTemplate = new MongoTemplate(m, "mvc", new AbstractMongoConverter() {
+		mongoDummyTemplate = new MongoTemplate(mongoTemplate.getDbFactory(), new AbstractMongoConverter() {
 			public void write(Object t, DBObject dbo) {
 			}
 

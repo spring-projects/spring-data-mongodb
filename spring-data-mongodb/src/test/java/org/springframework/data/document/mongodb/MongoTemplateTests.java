@@ -87,7 +87,7 @@ public class MongoTemplateTests {
 		MappingMongoConverter converter = new MappingMongoConverter(mappingContext);
 		converter.afterPropertiesSet();
 
-		this.mappingTemplate = new MongoTemplate(mongo, "database", converter);
+		this.mappingTemplate = new MongoTemplate(template.getDbFactory(), converter);
 	}
 
 	@Before

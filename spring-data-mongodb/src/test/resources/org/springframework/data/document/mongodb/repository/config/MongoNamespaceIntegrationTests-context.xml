@@ -8,11 +8,15 @@
 		http://www.springframework.org/schema/data/repository http://www.springframework.org/schema/data/repository/spring-repository-1.0.xsd">
   
   <mongo:mongo id="mongo" />
+
+  <bean id="mongoDbFactory" class="org.springframework.data.document.mongodb.MongoDbFactoryBean">
+  	<constructor-arg name="mongo" ref="mongo"/>
+  	<constructor-arg name="databaseName" value="repositories"/>
+  </bean>
   
   <bean id="mongoTemplate" class="org.springframework.data.document.mongodb.MongoTemplate">
-    <constructor-arg ref="mongo" />
-    <constructor-arg value="repositories" />
-    <constructor-arg>
+    <constructor-arg name="mongoDbFactory" ref="mongoDbFactory" />
+    <constructor-arg name="mongoConverter">
       <mongo:mapping-converter />
     </constructor-arg>
   </bean>

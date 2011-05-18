@@ -8,10 +8,14 @@
     <property name="port" value="27017"/>
   </bean>
 
+  <bean id="mongoDbFactory" class="org.springframework.data.document.mongodb.MongoDbFactoryBean">
+  	<constructor-arg name="mongo" ref="mongo"/>
+  	<constructor-arg name="databaseName" value="database"/>
+  </bean>
+  
   <bean id="mongoTemplate" class="org.springframework.data.document.mongodb.MongoTemplate">
-    <constructor-arg ref="mongo"/>
-    <constructor-arg value="database"/>
-	<constructor-arg ref="mongoConverter" />
+    <constructor-arg name="mongoDbFactory" ref="mongoDbFactory"/>
+	<constructor-arg name="mongoConverter" ref="mongoConverter" />
   </bean>
   
   <bean id="mongoConverter" class="org.springframework.data.document.mongodb.convert.SimpleMongoConverter" />

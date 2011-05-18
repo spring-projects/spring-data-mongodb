@@ -25,9 +25,13 @@
     <property name="port" value="27017"/>
   </bean>
 
+  <bean id="mongoDbFactory" class="org.springframework.data.document.mongodb.MongoDbFactoryBean">
+  	<constructor-arg name="mongo" ref="mongo"/>
+  	<constructor-arg name="databaseName" value="test"/>
+  </bean>
+
   <bean id="mongoTemplate" class="org.springframework.data.document.mongodb.MongoTemplate">
-    <constructor-arg name="mongo" ref="mongo"/>
-    <constructor-arg name="databaseName" value="test"/>
+    <constructor-arg name="mongoDbFactory" ref="mongoDbFactory"/>
     <constructor-arg name="mongoConverter" ref="mappingConverter"/>
   </bean>
 
