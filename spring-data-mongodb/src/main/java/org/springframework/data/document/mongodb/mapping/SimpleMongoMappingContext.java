@@ -20,6 +20,7 @@ import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.List;
 
+import org.springframework.data.document.mongodb.MongoCollectionUtils;
 import org.springframework.data.mapping.AbstractMappingContext;
 import org.springframework.data.mapping.BasicPersistentEntity;
 import org.springframework.data.mapping.AbstractPersistentProperty;
@@ -103,7 +104,7 @@ public class SimpleMongoMappingContext extends
 		 * @see org.springframework.data.document.mongodb.mapping.MongoPersistentEntity#getCollection()
 		 */
 		public String getCollection() {
-			return getType().getSimpleName();
+			return MongoCollectionUtils.getPreferredCollectionName(getType());
 		}
 	}
 }

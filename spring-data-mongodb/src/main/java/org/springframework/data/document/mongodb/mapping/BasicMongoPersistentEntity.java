@@ -16,6 +16,7 @@
 
 package org.springframework.data.document.mongodb.mapping;
 
+import org.springframework.data.document.mongodb.MongoCollectionUtils;
 import org.springframework.data.mapping.BasicPersistentEntity;
 import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mapping.model.PersistentEntity;
@@ -46,7 +47,7 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 		super(typeInformation);
 
 		Class<?> rawType = typeInformation.getType();
-		String fallback = rawType.getSimpleName().toLowerCase();
+		String fallback = MongoCollectionUtils.getPreferredCollectionName(rawType);
 
 		if (rawType.isAnnotationPresent(Document.class)) {
 			Document d = rawType.getAnnotation(Document.class);

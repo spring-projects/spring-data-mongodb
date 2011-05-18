@@ -40,8 +40,10 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.document.mongodb.CollectionCallback;
+import org.springframework.data.document.mongodb.MongoCollectionUtils;
 import org.springframework.data.document.mongodb.MongoDbUtils;
 import org.springframework.data.document.mongodb.MongoTemplate;
+import org.springframework.data.document.mongodb.convert.CustomConvertersUnitTests.Foo;
 import org.springframework.data.document.mongodb.query.Criteria;
 import org.springframework.data.document.mongodb.query.Query;
 
@@ -51,9 +53,17 @@ import org.springframework.data.document.mongodb.query.Query;
 public class MappingTests {
 
 	private static final Log LOGGER = LogFactory.getLog(MongoDbUtils.class);
-	private final String[] collectionsToDrop = new String[] { "foobar", "person", "personmapproperty", "personpojo",
-			"personcustomidname", "personmultidimarrays", "personmulticollection", "personwithdbref", "personnullproperties",
-			"person1", "person2", "account" };
+	private final String[] collectionsToDrop = new String[] { 
+			MongoCollectionUtils.getPreferredCollectionName(Person.class),
+			MongoCollectionUtils.getPreferredCollectionName(PersonMapProperty.class),
+			MongoCollectionUtils.getPreferredCollectionName(PersonPojo.class),
+			MongoCollectionUtils.getPreferredCollectionName(PersonCustomIdName.class),
+			MongoCollectionUtils.getPreferredCollectionName(PersonMultiDimArrays.class),
+			MongoCollectionUtils.getPreferredCollectionName(PersonMultiCollection.class),
+			MongoCollectionUtils.getPreferredCollectionName(PersonWithDbRef.class),
+			MongoCollectionUtils.getPreferredCollectionName(PersonNullProperties.class),
+			MongoCollectionUtils.getPreferredCollectionName(Account.class),
+			"foobar", "geolocation", "person1", "person2", "account" };
 
 	ApplicationContext applicationContext;
 	MongoTemplate template;
@@ -163,14 +173,14 @@ public class MappingTests {
 
 		Person p = new Person(123456789, "John", "Doe", 37, addr);
 		p.setAccounts(accounts);
-		template.insert("person", p);
+		template.insert("Person", p);
 
 		Account newAcct = new Account();
 		newAcct.setBalance(10000.00f);
 		template.insert("account", newAcct);
 
 		accounts.add(newAcct);
-		template.save("person", p);
+		template.save("Person", p);
 
 		assertNotNull(p.getId());
 
@@ -243,7 +253,7 @@ public class MappingTests {
 		DetectedCollectionWithIndex dcwi = new DetectedCollectionWithIndex("test");
 		template.insert(dcwi);
 
-		assertTrue(template.execute(DetectedCollectionWithIndex.class.getSimpleName().toLowerCase(),
+		assertTrue(template.execute(MongoCollectionUtils.getPreferredCollectionName(DetectedCollectionWithIndex.class),
 				new CollectionCallback<Boolean>() {
 					public Boolean doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 						List<DBObject> indexes = collection.getIndexInfo();

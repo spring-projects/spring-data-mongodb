@@ -16,7 +16,6 @@
 
 package org.springframework.data.document.mongodb;
 
-import com.mongodb.CommandResult;
 import com.mongodb.DB;
 import com.mongodb.Mongo;
 import org.apache.commons.logging.Log;

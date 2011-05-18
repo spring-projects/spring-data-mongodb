@@ -604,7 +604,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		String collection = dbref.collection();
 		if ("".equals(collection)) {
-			collection = targetEntity.getType().getSimpleName().toLowerCase();
+			collection = targetEntity.getCollection();
 		}
 
 		String dbname = dbref.db();
