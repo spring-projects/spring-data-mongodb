@@ -68,7 +68,12 @@ import org.springframework.util.comparator.CompoundComparator;
  * @author Mark Pollack
  * @author Thomas Risberg
  * @author Oliver Gierke
+ * 
+ * @deprecated since Spring 1.0 M3 in favor of {@link org.springframework.data.document.mongodb.convert.MappingMongoConverter} 
+ * The MappingMongoConverter provides all the functionality of the SimpleMongoConverter and will replace it as the default 
+ * converter used. The SimpleMongoCOnverter will be removed at some point before the GA release. 
  */
+@Deprecated
 public class SimpleMongoConverter extends AbstractMongoConverter implements InitializingBean {
 
 	private static final Log LOG = LogFactory.getLog(SimpleMongoConverter.class);
