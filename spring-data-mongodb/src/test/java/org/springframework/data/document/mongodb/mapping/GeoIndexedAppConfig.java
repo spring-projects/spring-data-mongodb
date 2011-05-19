@@ -1,10 +1,11 @@
 package org.springframework.data.document.mongodb.mapping;
 
+import com.mongodb.Mongo;
 import org.springframework.context.annotation.Bean;
+import org.springframework.data.document.mongodb.MongoDbFactory;
+import org.springframework.data.document.mongodb.MongoDbFactoryBean;
 import org.springframework.data.document.mongodb.MongoTemplate;
 import org.springframework.data.document.mongodb.config.AbstractMongoConfiguration;
-
-import com.mongodb.Mongo;
 
 public class GeoIndexedAppConfig extends AbstractMongoConfiguration {
 
@@ -17,8 +18,13 @@ public class GeoIndexedAppConfig extends AbstractMongoConfiguration {
 	}
 
 	@Bean
+	public MongoDbFactory mongoDbFactory() throws Exception {
+		return new MongoDbFactoryBean(mongo(), GEO_DB);
+	}
+
+	@Bean
 	public MongoTemplate mongoTemplate() throws Exception {
-		return new MongoTemplate(mongo(), "geodb", mappingMongoConverter());
+		return new MongoTemplate(mongoDbFactory(), mappingMongoConverter());
 	}
 
 	public String getMappingBasePackage() {

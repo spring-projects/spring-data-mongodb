@@ -1,28 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
-       xmlns:mongo="http://www.springframework.org/schema/data/mongo"
-       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xmlns:repository="http://www.springframework.org/schema/data/repository"
-       xsi:schemaLocation="http://www.springframework.org/schema/data/mongo http://www.springframework.org/schema/data/mongo/spring-mongo-1.0.xsd
-		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
-		http://www.springframework.org/schema/data/repository http://www.springframework.org/schema/data/repository/spring-repository-1.0.xsd">
-  
-  <mongo:mongo id="mongo" />
+			 xmlns:mongo="http://www.springframework.org/schema/data/mongo"
+			 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+			 xmlns:repository="http://www.springframework.org/schema/data/repository"
+			 xsi:schemaLocation="http://www.springframework.org/schema/data/mongo http://www.springframework.org/schema/data/mongo/spring-mongo-1.0.xsd
+			 http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+			 http://www.springframework.org/schema/data/repository http://www.springframework.org/schema/data/repository/spring-repository-1.0.xsd">
 
-  <bean id="mongoDbFactory" class="org.springframework.data.document.mongodb.MongoDbFactoryBean">
-  	<constructor-arg name="mongo" ref="mongo"/>
-  	<constructor-arg name="databaseName" value="repositories"/>
-  </bean>
-  
-  <bean id="mongoTemplate" class="org.springframework.data.document.mongodb.MongoTemplate">
-    <constructor-arg name="mongoDbFactory" ref="mongoDbFactory" />
-    <constructor-arg name="mongoConverter">
-      <mongo:mapping-converter />
-    </constructor-arg>
-  </bean>
+	<mongo:db-factory db="repositories"/>
 
-  <mongo:repositories base-package="org.springframework.data.**.repository">
-    <repository:exclude-filter type="regex" expression=".*MongoRepository"/>
-  </mongo:repositories>
+	<bean id="mongoTemplate" class="org.springframework.data.document.mongodb.MongoTemplate">
+		<constructor-arg name="mongoDbFactory" ref="mongoDbFactory"/>
+		<constructor-arg name="mongoConverter">
+			<mongo:mapping-converter/>
+		</constructor-arg>
+	</bean>
+
+	<mongo:repositories base-package="org.springframework.data.**.repository">
+		<repository:exclude-filter type="regex" expression=".*MongoRepository"/>
+	</mongo:repositories>
 
 </beans>

@@ -22,16 +22,12 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.mongodb.BasicDBObject;
-import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
-import com.mongodb.MongoException;
 import com.mongodb.util.JSON;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.context.ApplicationListener;
-import org.springframework.dao.DataAccessException;
-import org.springframework.data.document.mongodb.CollectionCallback;
-import org.springframework.data.document.mongodb.MongoTemplate;
+import org.springframework.data.document.mongodb.MongoDbFactory;
 import org.springframework.data.document.mongodb.index.CompoundIndex;
 import org.springframework.data.document.mongodb.index.CompoundIndexes;
 import org.springframework.data.document.mongodb.index.GeoSpatialIndexed;
@@ -47,7 +43,7 @@ import org.springframework.util.StringUtils;
 /**
  * Component that inspects {@link BasicMongoPersistentEntity} instances contained in the given
  * {@link MongoMappingContext} for indexing metadata and ensures the indexes to be available.
- * 
+ *
  * @author Jon Brisbin <jbrisbin@vmware.com>
  * @author Oliver Gierke
  */
@@ -57,13 +53,13 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 
 	private Set<Class<?>> classesSeen = Collections.newSetFromMap(new ConcurrentHashMap<Class<?>, Boolean>());
 
-	private final MongoTemplate mongoTemplate;
+	private final MongoDbFactory mongoDbFactory;
 
-	public MongoPersistentEntityIndexCreator(MongoMappingContext mappingContext, MongoTemplate mongoTemplate) {
+	public MongoPersistentEntityIndexCreator(MongoMappingContext mappingContext, MongoDbFactory mongoDbFactory) {
 
-		Assert.notNull(mongoTemplate);
+		Assert.notNull(mongoDbFactory);
 		Assert.notNull(mappingContext);
-		this.mongoTemplate = mongoTemplate;
+		this.mongoDbFactory = mongoDbFactory;
 
 		for (MongoPersistentEntity<?> entity : mappingContext.getPersistentEntities()) {
 			checkForIndexes(entity);
@@ -131,7 +127,7 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 						indexObject.withMin(index.min()).withMax(index.max());
 
 						String collection = StringUtils.hasText(index.collection()) ? index.collection() : entity.getCollection();
-						mongoTemplate.ensureIndex(collection, indexObject);
+						mongoDbFactory.getDb().getCollection(collection).ensureIndex(indexObject.getIndexKeys(), indexObject.getIndexOptions());
 
 						if (log.isDebugEnabled()) {
 							log.debug(String.format("Created %s for entity %s in collection %s! ", indexObject, entity.getType(),
@@ -147,24 +143,20 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 	}
 
 	protected void ensureIndex(String collection, final String name, final String def, final IndexDirection direction,
-			final boolean unique, final boolean dropDups, final boolean sparse) {
-		mongoTemplate.execute(collection, new CollectionCallback<Object>() {
-			public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
-				DBObject defObj;
-				if (null != def) {
-					defObj = (DBObject) JSON.parse(def);
-				} else {
-					defObj = new BasicDBObject();
-					defObj.put(name, (direction == IndexDirection.ASCENDING ? 1 : -1));
-				}
-				DBObject opts = new BasicDBObject();
-				// opts.put("name", name + "_idx");
-				opts.put("dropDups", dropDups);
-				opts.put("sparse", sparse);
-				opts.put("unique", unique);
-				collection.ensureIndex(defObj, opts);
-				return null;
-			}
-		});
+														 final boolean unique, final boolean dropDups, final boolean sparse) {
+		DBObject defObj;
+		if (null != def) {
+			defObj = (DBObject) JSON.parse(def);
+		} else {
+			defObj = new BasicDBObject();
+			defObj.put(name, (direction == IndexDirection.ASCENDING ? 1 : -1));
+		}
+		DBObject opts = new BasicDBObject();
+		// opts.put("name", name + "_idx");
+		opts.put("dropDups", dropDups);
+		opts.put("sparse", sparse);
+		opts.put("unique", unique);
+		mongoDbFactory.getDb().getCollection(collection).ensureIndex(defObj, opts);
 	}
+
 }

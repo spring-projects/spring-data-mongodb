@@ -14,29 +14,17 @@
  * limitations under the License.
  */
 
-package org.springframework.data.document.mongodb.mapping;
-
-import java.util.Collections;
-import java.util.Map;
-
-import org.junit.Test;
+package org.springframework.data.document.mongodb.config;
 
 /**
- * Unit tests for {@link MongoMappingContext}.
- *
- * @author Oliver Gierke
+ * @author Jon Brisbin <jbrisbin@vmware.com>
  */
-public class MongoMappingContextUnitTests {
+public abstract class BeanNames {
 
-	@Test
-	public void addsSelfReferencingPersistentEntityCorrectly() throws Exception {
-		MongoMappingContext context = new MongoMappingContext();
-		context.setInitialEntitySet(Collections.singleton(SampleClass.class));
-		context.afterPropertiesSet();
-	}
+	static final String MAPPING_CONTEXT = "mappingContext";
+	static final String INDEX_HELPER = "indexCreationHelper";
+	static final String MONGO = "mongo";
+	static final String DB_FACTORY = "mongoDbFactory";
+	static final String POST_PROCESSOR = "mappingContextAwareBeanPostProcessor";
 
-	public class SampleClass {
-
-		Map<String, SampleClass> children;
-	}
 }

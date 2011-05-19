@@ -32,7 +32,7 @@ import org.w3c.dom.Element;
 public class MongoRepositoryConfigParser extends
 		AbstractRepositoryConfigDefinitionParser<SimpleMongoRepositoryConfiguration, MongoRepositoryConfiguration> {
 
-	private static final String MAPPING_CONTEXT_DEFAULT = MappingMongoConverterParser.MAPPING_CONTEXT;
+	private static final String MAPPING_CONTEXT_DEFAULT = BeanNames.MAPPING_CONTEXT;
 
 	/*
 	* (non-Javadoc)

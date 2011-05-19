@@ -1,38 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
-       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+			 xmlns:mongo="http://www.springframework.org/schema/data/mongo"
+			 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+			 xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+       http://www.springframework.org/schema/data/mongo http://www.springframework.org/schema/data/mongo/spring-mongo-1.0.xsd">
 
-  <bean id="mongoTemplate" class="org.springframework.data.document.mongodb.MongoTemplate">
-    <constructor-arg>
-      <bean id="mongoDbFactory" class="org.springframework.data.document.mongodb.MongoDbFactoryBean">
-        <constructor-arg name="mongo">
-          <bean id="mongo" class="org.springframework.data.document.mongodb.MongoFactoryBean">
-            <property name="host" value="localhost"/>
-            <property name="port" value="27017"/>
-          </bean>
-	  	</constructor-arg>
-	  	<constructor-arg name="databaseName" value="repositories"/>
-	  </bean>
-    </constructor-arg>
-	<constructor-arg>
-	  <bean id="mongoConverter" class="org.springframework.data.document.mongodb.convert.MappingMongoConverter">
-	  	<constructor-arg ref="mappingContext" />
-	  </bean>
-	</constructor-arg>
-  </bean>
-  
-  <bean id="mappingContext" class="org.springframework.data.document.mongodb.mapping.MongoMappingContext" />
+	<mongo:db-factory db="repositories"/>
+	<mongo:mapping-converter base-package="org.springframework.data.document.mongodb.repository"/>
 
-  <bean class="org.springframework.data.document.mongodb.mapping.MongoPersistentEntityIndexCreator">
-  	<constructor-arg ref="mappingContext" />
-  	<constructor-arg ref="mongoTemplate" />
-  </bean>
-  
-  <bean class="org.springframework.data.document.mongodb.repository.MongoRepositoryFactoryBean">
-    <property name="template" ref="mongoTemplate"/>
-    <property name="mappingContext" ref="mappingContext" />
-    <property name="repositoryInterface" value="org.springframework.data.document.mongodb.repository.PersonRepository"/>
-  </bean>
+	<bean id="mongoTemplate" class="org.springframework.data.document.mongodb.MongoTemplate">
+		<constructor-arg ref="mongoDbFactory"/>
+		<constructor-arg ref="mappingConverter"/>
+	</bean>
+
+	<bean class="org.springframework.data.document.mongodb.repository.MongoRepositoryFactoryBean">
+		<property name="template" ref="mongoTemplate"/>
+		<property name="mappingContext" ref="mappingContext"/>
+		<property name="repositoryInterface" value="org.springframework.data.document.mongodb.repository.PersonRepository"/>
+	</bean>
 
 </beans>

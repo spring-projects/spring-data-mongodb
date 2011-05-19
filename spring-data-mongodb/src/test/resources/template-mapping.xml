@@ -7,7 +7,7 @@
 
   <bean class="org.springframework.data.document.mongodb.TestMongoConfiguration"/>
   
-  <mongo:mongo host="localhost" port="27017"/>
+  <mongo:db-factory/>
 
   <bean id="mongoDbFactory" class="org.springframework.data.document.mongodb.MongoDbFactoryBean">
   	<constructor-arg name="mongo" ref="mongo"/>

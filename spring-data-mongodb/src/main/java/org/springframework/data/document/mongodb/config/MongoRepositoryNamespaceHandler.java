@@ -19,7 +19,7 @@ import org.springframework.beans.factory.xml.NamespaceHandlerSupport;
 
 /**
  * {@link org.springframework.beans.factory.xml.NamespaceHandler} for Mongo DB based repositories.
- * 
+ *
  * @author Oliver Gierke
  */
 public class MongoRepositoryNamespaceHandler extends NamespaceHandlerSupport {
@@ -34,6 +34,7 @@ public class MongoRepositoryNamespaceHandler extends NamespaceHandlerSupport {
 		registerBeanDefinitionParser("repositories", new MongoRepositoryConfigParser());
 		registerBeanDefinitionParser("mapping-converter", new MappingMongoConverterParser());
 		registerBeanDefinitionParser("mongo", new MongoParser());
+		registerBeanDefinitionParser("db-factory", new MongoDbFactoryParser());
 		registerBeanDefinitionParser("jmx", new MongoJmxParser());
 	}
 }

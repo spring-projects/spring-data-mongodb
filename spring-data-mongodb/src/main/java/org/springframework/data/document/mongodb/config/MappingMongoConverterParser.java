@@ -16,23 +16,21 @@
 
 package org.springframework.data.document.mongodb.config;
 
+import static org.springframework.data.document.mongodb.config.BeanNames.*;
+
 import java.util.List;
 import java.util.Set;
 
 import org.springframework.beans.BeanMetadataElement;
-import org.springframework.beans.MutablePropertyValues;
 import org.springframework.beans.factory.BeanDefinitionStoreException;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinitionHolder;
-import org.springframework.beans.factory.config.RuntimeBeanNameReference;
 import org.springframework.beans.factory.config.RuntimeBeanReference;
-import org.springframework.beans.factory.parsing.CompositeComponentDefinition;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.ManagedList;
-import org.springframework.beans.factory.support.ManagedMap;
 import org.springframework.beans.factory.support.ManagedSet;
 import org.springframework.beans.factory.xml.AbstractBeanDefinitionParser;
 import org.springframework.beans.factory.xml.ParserContext;
@@ -53,12 +51,6 @@ import org.w3c.dom.Element;
  * @author Oliver Gierke
  */
 public class MappingMongoConverterParser extends AbstractBeanDefinitionParser {
-
-	static final String MAPPING_CONTEXT = "mappingContext";
-
-	private static final String INDEX_HELPER = "indexCreationHelper";
-	private static final String TEMPLATE = "mongoTemplate";
-	private static final String POST_PROCESSOR = "mappingContextAwareBeanPostProcessor";
 
 	private static final String BASE_PACKAGE = "base-package";
 
@@ -101,17 +93,21 @@ public class MappingMongoConverterParser extends AbstractBeanDefinitionParser {
 
 		// Need a reference to a Mongo instance
 		String mongoRef = element.getAttribute("mongo-ref");
-		converterBuilder.addPropertyReference("mongo", StringUtils.hasText(mongoRef) ? mongoRef : "mongo");
+		if (!StringUtils.hasText(mongoRef)) {
+			mongoRef = MONGO;
+		}
+		converterBuilder.addPropertyReference("mongo", mongoRef);
 
 		try {
 			registry.getBeanDefinition(INDEX_HELPER);
 		} catch (NoSuchBeanDefinitionException ignored) {
-			String templateRef = element.getAttribute("mongo-template-ref");
-			BeanDefinitionBuilder indexHelperBuilder = BeanDefinitionBuilder
-					.genericBeanDefinition(MongoPersistentEntityIndexCreator.class);
+			String dbFactoryRef = element.getAttribute("db-factory-ref");
+			if (!StringUtils.hasText(dbFactoryRef)) {
+				dbFactoryRef = DB_FACTORY;
+			}
+			BeanDefinitionBuilder indexHelperBuilder = BeanDefinitionBuilder.genericBeanDefinition(MongoPersistentEntityIndexCreator.class);
 			indexHelperBuilder.addConstructorArgValue(new RuntimeBeanReference(ctxRef));
-			indexHelperBuilder.addConstructorArgValue(new RuntimeBeanReference(StringUtils.hasText(templateRef) ? templateRef
-					: TEMPLATE));
+			indexHelperBuilder.addConstructorArgValue(new RuntimeBeanReference(dbFactoryRef));
 			registry.registerBeanDefinition(INDEX_HELPER, indexHelperBuilder.getBeanDefinition());
 		}
 

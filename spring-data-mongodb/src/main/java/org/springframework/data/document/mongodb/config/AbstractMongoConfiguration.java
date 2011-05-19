@@ -18,12 +18,15 @@ package org.springframework.data.document.mongodb.config;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.mongodb.Mongo;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.data.annotation.Persistent;
+import org.springframework.data.document.mongodb.MongoDbFactory;
+import org.springframework.data.document.mongodb.MongoDbFactoryBean;
 import org.springframework.data.document.mongodb.MongoTemplate;
 import org.springframework.data.document.mongodb.convert.MappingMongoConverter;
 import org.springframework.data.document.mongodb.mapping.Document;
@@ -32,8 +35,6 @@ import org.springframework.data.document.mongodb.mapping.MongoPersistentEntityIn
 import org.springframework.data.mapping.context.MappingContextAwareBeanPostProcessor;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
-
-import com.mongodb.Mongo;
 
 @Configuration
 public abstract class AbstractMongoConfiguration {
@@ -44,6 +45,15 @@ public abstract class AbstractMongoConfiguration {
 	@Bean
 	public abstract MongoTemplate mongoTemplate() throws Exception;
 
+	public String defaultDatabaseName() {
+		return "db";
+	}
+
+	@Bean
+	public MongoDbFactory mongoDbFactory() throws Exception {
+		return new MongoDbFactoryBean(mongo(), defaultDatabaseName());
+	}
+
 	public String getMappingBasePackage() {
 		return "";
 	}
@@ -53,15 +63,13 @@ public abstract class AbstractMongoConfiguration {
 		MongoMappingContext mappingContext = new MongoMappingContext();
 		String basePackage = getMappingBasePackage();
 		if (StringUtils.hasText(basePackage)) {
-			ClassPathScanningCandidateComponentProvider componentProvider = new ClassPathScanningCandidateComponentProvider(
-					false);
+			ClassPathScanningCandidateComponentProvider componentProvider = new ClassPathScanningCandidateComponentProvider(false);
 			componentProvider.addIncludeFilter(new AnnotationTypeFilter(Document.class));
 			componentProvider.addIncludeFilter(new AnnotationTypeFilter(Persistent.class));
 
 			Set<Class<?>> initialEntitySet = new HashSet<Class<?>>();
 			for (BeanDefinition candidate : componentProvider.findCandidateComponents(basePackage)) {
-				initialEntitySet.add(ClassUtils.forName(candidate.getBeanClassName(), mappingContext.getClass()
-						.getClassLoader()));
+				initialEntitySet.add(ClassUtils.forName(candidate.getBeanClassName(), mappingContext.getClass().getClassLoader()));
 			}
 			mappingContext.setInitialEntitySet(initialEntitySet);
 		}
@@ -78,7 +86,7 @@ public abstract class AbstractMongoConfiguration {
 
 	/**
 	 * Hook that allows post-processing after the MappingMongoConverter has been successfully created.
-	 * 
+	 *
 	 * @param converter
 	 */
 	protected void afterMappingMongoConverterCreation(MappingMongoConverter converter) {
@@ -91,10 +99,8 @@ public abstract class AbstractMongoConfiguration {
 		return bpp;
 	}
 
-	@Bean
-	MongoPersistentEntityIndexCreator mongoPersistentEntityIndexCreator() throws Exception {
-		MongoPersistentEntityIndexCreator indexCreator = new MongoPersistentEntityIndexCreator(mongoMappingContext(),
-				mongoTemplate());
+	@Bean MongoPersistentEntityIndexCreator mongoPersistentEntityIndexCreator() throws Exception {
+		MongoPersistentEntityIndexCreator indexCreator = new MongoPersistentEntityIndexCreator(mongoMappingContext(), mongoDbFactory());
 		return indexCreator;
 	}
 }

@@ -29,7 +29,7 @@ import org.w3c.dom.Element;
 
 /**
  * Parser for &lt;mongo;gt; definitions. If no name
- * 
+ *
  * @author Mark Pollack
  */
 public class MongoParser extends AbstractSingleBeanDefinitionParser {
@@ -51,12 +51,12 @@ public class MongoParser extends AbstractSingleBeanDefinitionParser {
 
 	/**
 	 * Parses the options sub-element. Populates the given attribute factory with the proper attributes.
-	 * 
+	 *
 	 * @param element
 	 * @param attrBuilder
 	 * @return true if parsing actually occured, false otherwise
 	 */
-	private boolean parseOptions(ParserContext parserContext, Element element, BeanDefinitionBuilder mongoBuilder) {
+	boolean parseOptions(ParserContext parserContext, Element element, BeanDefinitionBuilder mongoBuilder) {
 		Element optionsElement = DomUtils.getChildElementByTagName(element, "options");
 		if (optionsElement == null)
 			return false;
