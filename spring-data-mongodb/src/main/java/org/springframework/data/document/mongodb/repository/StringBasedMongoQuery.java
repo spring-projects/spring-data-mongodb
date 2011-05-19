@@ -72,7 +72,7 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug(String.format("Created query {}", query.getQueryObject()));
+			LOG.debug(String.format("Created query %s", query.getQueryObject()));
 		}
 
 		return query;
@@ -86,7 +86,7 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 		while (matcher.find()) {
 			String group = matcher.group();
 			int index = Integer.parseInt(matcher.group(1));
-			result = input.replace(group, getParameterWithIndex(accessor, index));
+			result = result.replace(group, getParameterWithIndex(accessor, index));
 		}
 
 		return result;
