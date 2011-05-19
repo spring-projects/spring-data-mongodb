@@ -297,7 +297,7 @@
         <configuration>
           <source>1.5</source>
           <target>1.5</target>
-          <compilerArgument>-Xlint:all</compilerArgument>
+          <compilerArgument>-Xlint:-path</compilerArgument>
           <showWarnings>true</showWarnings>
           <showDeprecation>false</showDeprecation>
         </configuration>
