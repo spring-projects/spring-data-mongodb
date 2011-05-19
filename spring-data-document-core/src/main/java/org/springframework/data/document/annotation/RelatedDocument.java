@@ -29,7 +29,4 @@ import java.lang.annotation.Target;
     ElementType.FIELD
 })
 public @interface RelatedDocument {
-
-  String collection() default "";
-
 }
