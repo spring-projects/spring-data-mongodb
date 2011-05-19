@@ -27,7 +27,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.dao.DataAccessException;
-import org.springframework.data.document.mongodb.convert.SimpleMongoConverter;
+import org.springframework.data.document.mongodb.convert.MappingMongoConverter;
 import org.springframework.test.util.ReflectionTestUtils;
 
 /**
@@ -70,9 +70,9 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test
-	public void defaultsConverterToSimpleMongoConverter() throws Exception {
+	public void defaultsConverterToMappingMongoConverter() throws Exception {
 		MongoTemplate template = new MongoTemplate(mongo, "database");
-		assertTrue(ReflectionTestUtils.getField(template, "mongoConverter") instanceof SimpleMongoConverter);
+		assertTrue(ReflectionTestUtils.getField(template, "mongoConverter") instanceof MappingMongoConverter);
 	}
 
 	/**
