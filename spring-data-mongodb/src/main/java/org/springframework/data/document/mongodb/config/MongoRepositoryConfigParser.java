@@ -15,11 +15,9 @@
  */
 package org.springframework.data.document.mongodb.config;
 
-import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.data.document.mongodb.config.SimpleMongoRepositoryConfiguration.MongoRepositoryConfiguration;
-import org.springframework.data.mapping.model.MappingContext;
 import org.springframework.data.repository.config.AbstractRepositoryConfigDefinitionParser;
 import org.w3c.dom.Element;
 
@@ -32,15 +30,10 @@ import org.w3c.dom.Element;
 public class MongoRepositoryConfigParser extends
 		AbstractRepositoryConfigDefinitionParser<SimpleMongoRepositoryConfiguration, MongoRepositoryConfiguration> {
 
-	private static final String MAPPING_CONTEXT_DEFAULT = BeanNames.MAPPING_CONTEXT;
-
 	/*
-	* (non-Javadoc)
-	*
-	* @see org.springframework.data.repository.config.
-	* AbstractRepositoryConfigDefinitionParser
-	* #getGlobalRepositoryConfigInformation(org.w3c.dom.Element)
-	*/
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.config.AbstractRepositoryConfigDefinitionParser#getGlobalRepositoryConfigInformation(org.w3c.dom.Element)
+	 */
 	@Override
 	protected SimpleMongoRepositoryConfiguration getGlobalRepositoryConfigInformation(Element element) {
 
@@ -56,35 +49,5 @@ public class MongoRepositoryConfigParser extends
 			BeanDefinitionRegistry registry, Object beanSource) {
 
 		builder.addPropertyReference("template", context.getMongoTemplateRef());
-
-		String mappingContextRef = getMappingContextReference(context, registry);
-		if (mappingContextRef != null) {
-			builder.addPropertyReference("mappingContext", mappingContextRef);
-		}
-	}
-
-	/**
-	 * Returns the bean name of a {@link MappingContext} to be wired. Will inspect the namespace attribute first and if no
-	 * config is found in that place it will try to lookup the default one. Will return {@literal null} if neither one is
-	 * available.
-	 * 
-	 * @param config
-	 * @param registry
-	 * @return
-	 */
-	private String getMappingContextReference(MongoRepositoryConfiguration config, BeanDefinitionRegistry registry) {
-
-		String contextRef = config.getMappingContextRef();
-
-		if (contextRef != null) {
-			return contextRef;
-		}
-
-		try {
-			registry.getBeanDefinition(MAPPING_CONTEXT_DEFAULT);
-			return MAPPING_CONTEXT_DEFAULT;
-		} catch (NoSuchBeanDefinitionException e) {
-			return null;
-		}
 	}
 }

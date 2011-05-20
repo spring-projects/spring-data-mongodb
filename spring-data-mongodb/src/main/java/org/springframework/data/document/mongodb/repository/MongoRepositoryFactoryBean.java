@@ -57,7 +57,6 @@ public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID exten
 		RepositoryFactoryBeanSupport<T, S, ID> {
 
 	private MongoTemplate template;
-	private MappingContext<MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 
 	/**
 	 * Configures the {@link MongoTemplate} to be used.
@@ -70,16 +69,6 @@ public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID exten
 		this.template = template;
 	}
 
-	/**
-	 * Sets the {@link MappingContext} used with the underlying {@link MongoTemplate}.
-	 * 
-	 * @param mappingContext
-	 *          the mappingContext to set
-	 */
-	public void setMappingContext(MappingContext<MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
-		this.mappingContext = mappingContext;
-	}
-
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -90,7 +79,7 @@ public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID exten
 	@Override
 	protected RepositoryFactorySupport createRepositoryFactory() {
 
-		MongoRepositoryFactory factory = new MongoRepositoryFactory(template, mappingContext);
+		MongoRepositoryFactory factory = new MongoRepositoryFactory(template);
 		factory.addQueryCreationListener(new IndexEnsuringQueryCreationListener(template));
 		return factory;
 	}
@@ -107,7 +96,6 @@ public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID exten
 
 		super.afterPropertiesSet();
 		Assert.notNull(template, "MongoTemplate must not be null!");
-		Assert.notNull(mappingContext, "MappingContext must not be null!");
 	}
 
 	/**
@@ -127,13 +115,12 @@ public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID exten
 		 *          must not be {@literal null}
 		 * @param mappingContext
 		 */
-		public MongoRepositoryFactory(MongoTemplate template,
-				MappingContext<MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
+		public MongoRepositoryFactory(MongoTemplate template) {
 
 			Assert.notNull(template);
-			Assert.notNull(mappingContext);
 			this.template = template;
-			this.entityInformationCreator = new EntityInformationCreator(mappingContext);
+			this.entityInformationCreator = new EntityInformationCreator(template.getConverter()
+					.getMappingContext());
 		}
 
 		/*
@@ -252,9 +239,9 @@ public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID exten
 	 */
 	static class EntityInformationCreator {
 
-		private final MappingContext<MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
+		private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 
-		public EntityInformationCreator(MappingContext<MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
+		public EntityInformationCreator(MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
 			Assert.notNull(mappingContext);
 			this.mappingContext = mappingContext;
 		}

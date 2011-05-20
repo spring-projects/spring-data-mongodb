@@ -20,11 +20,13 @@ import static org.mockito.Mockito.*;
 
 import java.io.Serializable;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.document.mongodb.MongoTemplate;
+import org.springframework.data.document.mongodb.convert.MongoConverter;
 import org.springframework.data.document.mongodb.mapping.MongoPersistentEntity;
 import org.springframework.data.document.mongodb.mapping.MongoPersistentProperty;
 import org.springframework.data.document.mongodb.repository.MongoRepositoryFactoryBean.MongoRepositoryFactory;
@@ -40,6 +42,9 @@ public class MongoRepositoryFactoryUnitTests {
 
 	@Mock
 	MongoTemplate template;
+	
+	@Mock
+	MongoConverter converter;
 
 	@Mock
 	MappingContext<MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
@@ -47,10 +52,16 @@ public class MongoRepositoryFactoryUnitTests {
 	@Mock
 	@SuppressWarnings("rawtypes")
 	MongoPersistentEntity entity;
+	
+	@Before
+	public void setUp() {
+		when(template.getConverter()).thenReturn(converter);
+		when(converter.getMappingContext()).thenReturn((MappingContext) mappingContext);
+	}
 
 	@Test(expected = IllegalArgumentException.class)
 	public void rejectsInvalidIdType() throws Exception {
-		MongoRepositoryFactory factory = new MongoRepositoryFactory(template, null);
+		MongoRepositoryFactory factory = new MongoRepositoryFactory(template);
 		factory.getRepository(SampleRepository.class);
 	}
 
@@ -61,7 +72,7 @@ public class MongoRepositoryFactoryUnitTests {
 		when(mappingContext.getPersistentEntity(Person.class)).thenReturn(entity);
 		when(entity.getType()).thenReturn(Person.class);
 
-		MongoRepositoryFactory factory = new MongoRepositoryFactory(template, mappingContext);
+		MongoRepositoryFactory factory = new MongoRepositoryFactory(template);
 		MongoEntityInformation<Person, Serializable> entityInformation = factory.getEntityInformation(Person.class);
 		assertTrue(entityInformation instanceof MappingMongoEntityInformation);
 	}

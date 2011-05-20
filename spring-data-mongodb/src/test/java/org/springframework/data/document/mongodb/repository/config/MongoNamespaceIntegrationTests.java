@@ -25,6 +25,5 @@ public class MongoNamespaceIntegrationTests extends AbstractPersonRepositoryInte
 				getClass()));
 		BeanDefinition definition = factory.getBeanDefinition("personRepository");
 		assertThat(definition, is(notNullValue()));
-		assertThat(definition.getPropertyValues().getPropertyValue("mappingContext"), is(notNullValue()));
 	}
 }

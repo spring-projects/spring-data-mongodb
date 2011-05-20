@@ -116,13 +116,6 @@ The password to use when connecting to a MongoDB server.
 				</xsd:documentation>
 			</xsd:annotation>
 		</xsd:attribute>
-		<xsd:attribute name="mongo-mapping-context-ref" type="mappingContextRef" default="mappingContext">
-			<xsd:annotation>
-				<xsd:documentation>
-					The reference to a MappingContext. Will pick up a bean named 'mappingContext' by default if available.
-				</xsd:documentation>
-			</xsd:annotation>
-		</xsd:attribute>
 	</xsd:attributeGroup>
 
 	<xsd:element name="repositories">
