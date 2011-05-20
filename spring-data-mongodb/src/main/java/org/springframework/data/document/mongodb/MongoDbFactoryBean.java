@@ -22,6 +22,7 @@ import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataAccessResourceFailureException;
+import org.springframework.data.authentication.UserCredentials;
 import org.springframework.util.Assert;
 
 import com.mongodb.DB;
@@ -50,6 +51,12 @@ public class MongoDbFactoryBean implements MongoDbFactory, FactoryBean<MongoDbFa
 
 	
 	public MongoDbFactoryBean() {
+	}
+
+	public MongoDbFactoryBean(Mongo mongo, String databaseName, UserCredentials userCredentials) throws DataAccessException {
+		this(mongo, databaseName);
+		this.username = userCredentials.getUsername();
+		this.password = userCredentials.getPassword();
 	}
 
 	public MongoDbFactoryBean(Mongo mongo, String databaseName) throws DataAccessException {

@@ -50,6 +50,7 @@ import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
+import org.springframework.data.authentication.UserCredentials;
 import org.springframework.data.document.mongodb.convert.MappingMongoConverter;
 import org.springframework.data.document.mongodb.convert.MongoConverter;
 import org.springframework.data.document.mongodb.index.IndexDefinition;
@@ -125,15 +126,15 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	}
 
 	/**
-	 * Constructor used for a template configuration with a custom
-	 * {@link org.springframework.data.document.mongodb.convert.MongoConverter}
+	 * Constructor used for a template configuration with user credentials in the form of
+	 * {@link org.springframework.data.authentication.UserCredentials}
 	 *
 	 * @param mongo
 	 * @param databaseName
-	 * @param mongoConverter
+	 * @param userCredentials
 	 */
-	public MongoTemplate(Mongo mongo, String databaseName, MongoConverter mongoConverter) {
-		this(new MongoDbFactoryBean(mongo, databaseName), mongoConverter, null, null);
+	public MongoTemplate(Mongo mongo, String databaseName, UserCredentials userCredentials) {
+		this(new MongoDbFactoryBean(mongo, databaseName, userCredentials));
 	}
 
 	/**
