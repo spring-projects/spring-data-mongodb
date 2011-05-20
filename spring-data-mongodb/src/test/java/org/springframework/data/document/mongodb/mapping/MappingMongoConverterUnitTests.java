@@ -190,6 +190,33 @@ public class MappingMongoConverterUnitTests {
 		assertThat(result.sampleEnum, is(SampleEnum.FIRST));
 	}
 	
+	/**
+	 * @see DATADOC-144
+	 */
+	@Test
+	public void considersFieldNameWhenWriting() {
+		
+		Person person = new Person();
+		person.firstname ="Oliver";
+		
+		DBObject result = new BasicDBObject();
+		converter.write(person, result);
+		
+		assertThat(result.containsField("foo"), is(true));
+		assertThat(result.containsField("firstname"), is(false));
+	}
+	
+	/**
+	 * @see DATADOC-144
+	 */
+	@Test
+	public void considersFieldNameWhenReading() {
+		
+		DBObject dbObject = new BasicDBObject("foo", "Oliver");
+		Person result = converter.read(Person.class, dbObject);
+		
+		assertThat(result.firstname, is("Oliver"));
+	}
 	
 	class ClassWithEnumProperty {
 		
@@ -211,6 +238,9 @@ public class MappingMongoConverterUnitTests {
 
 	public static class Person implements Contact {
 		LocalDate birthDate;
+		
+		@FieldName("foo")
+		String firstname;
 	}
 
 	static class ClassWithMapProperty {

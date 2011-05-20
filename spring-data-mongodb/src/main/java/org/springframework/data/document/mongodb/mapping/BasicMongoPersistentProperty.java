@@ -21,6 +21,8 @@ import java.math.BigInteger;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.bson.types.ObjectId;
 import org.springframework.data.mapping.AnnotationBasedPersistentProperty;
 import org.springframework.data.mapping.model.Association;
@@ -34,6 +36,8 @@ import com.mongodb.DBObject;
  */
 public class BasicMongoPersistentProperty extends AnnotationBasedPersistentProperty<MongoPersistentProperty> implements
 		MongoPersistentProperty {
+	
+	private static final Log LOG = LogFactory.getLog(BasicMongoPersistentProperty.class);
 
 	private static final Set<Class<?>> SUPPORTED_ID_TYPES = new HashSet<Class<?>>();
 	private static final Set<String> SUPPORTED_ID_PROPERTY_NAMES = new HashSet<String>();
@@ -56,6 +60,10 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 	 */
 	public BasicMongoPersistentProperty(Field field, PropertyDescriptor propertyDescriptor, MongoPersistentEntity<?> owner) {
 		super(field, propertyDescriptor, owner);
+		
+		if (isIdProperty() && field.isAnnotationPresent(FieldName.class)) {
+			LOG.warn(String.format("Invalid usage of %s on id property. Field name will not be considered!", FieldName.class));
+		}
 	}
 
 	/* (non-Javadoc)
@@ -87,7 +95,13 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 	 * @return
 	 */
 	public String getKey() {
-		return isIdProperty() ? "_id" : getName();
+		
+		if (isIdProperty()) {
+			return "_id";
+		}
+		
+		FieldName annotation = getField().getAnnotation(FieldName.class);
+		return annotation != null ? annotation.value() : getName();
 	}
 
 	/* (non-Javadoc)
