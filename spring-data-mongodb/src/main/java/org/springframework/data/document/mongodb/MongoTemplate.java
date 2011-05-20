@@ -111,7 +111,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	private MongoExceptionTranslator exceptionTranslator = new MongoExceptionTranslator();
 	private QueryMapper mapper;
 
-	private ApplicationContext applicationContext;
 	private ApplicationEventPublisher eventPublisher;
 	private MongoPersistentEntityIndexCreator indexCreator;
 
@@ -207,7 +206,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	}
 
 	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-		this.applicationContext = applicationContext;
 		String[] beans = applicationContext.getBeanNamesForType(MongoPersistentEntityIndexCreator.class);
 		if ((null == beans || beans.length == 0) && applicationContext instanceof ConfigurableApplicationContext) {
 			((ConfigurableApplicationContext) applicationContext).addApplicationListener(indexCreator);
@@ -495,6 +493,17 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		}
 	}
 
+	/**
+	 * Prepare the WriteConcern before any processing is done using it. This allows a convenient way to apply
+	 * custom settings in sub-classes.
+	 *
+	 * @param writeConcern any WriteConcern already configured or null
+	 * @return The prepared WriteConcern or null
+	 */
+	protected WriteConcern prepareWriteConcern(WriteConcern writeConcern) {
+		return writeConcern;
+	}
+
 	protected <T> void doInsert(String collectionName, T objectToSave, MongoWriter<T> writer) {
 		BasicDBObject dbDoc = new BasicDBObject();
 
@@ -620,10 +629,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		}
 		return execute(collectionName, new CollectionCallback<Object>() {
 			public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
-				if (writeConcern == null) {
+				WriteConcern writeConcernToUse = prepareWriteConcern(writeConcern);
+				if (writeConcernToUse == null) {
 					collection.insert(dbDoc);
 				} else {
-					collection.insert(dbDoc, writeConcern);
+					collection.insert(dbDoc, writeConcernToUse);
 				}
 				return dbDoc.get(ID);
 			}
@@ -652,10 +662,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		}
 		execute(collectionName, new CollectionCallback<Void>() {
 			public Void doInCollection(DBCollection collection) throws MongoException, DataAccessException {
-				if (writeConcern == null) {
+				WriteConcern writeConcernToUse = prepareWriteConcern(writeConcern);
+				if (writeConcernToUse == null) {
 					collection.insert(dbDocList);
 				} else {
-					collection.insert(dbDocList.toArray((DBObject[]) new BasicDBObject[dbDocList.size()]), writeConcern);
+					collection.insert(dbDocList.toArray((DBObject[]) new BasicDBObject[dbDocList.size()]), writeConcernToUse);
 				}
 				return null;
 			}
@@ -694,10 +705,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		}
 		return execute(collectionName, new CollectionCallback<Object>() {
 			public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
-				if (writeConcern == null) {
+				WriteConcern writeConcernToUse = prepareWriteConcern(writeConcern);
+				if (writeConcernToUse == null) {
 					collection.save(dbDoc);
 				} else {
-					collection.save(dbDoc, writeConcern);
+					collection.save(dbDoc, writeConcernToUse);
 				}
 				return dbDoc.get(ID);
 			}
@@ -764,14 +776,15 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				}
 
 				WriteResult wr;
-				if (writeConcern == null) {
+				WriteConcern writeConcernToUse = prepareWriteConcern(writeConcern);
+				if (writeConcernToUse == null) {
 					if (multi) {
 						wr = collection.updateMulti(queryObj, updateObj);
 					} else {
 						wr = collection.update(queryObj, updateObj);
 					}
 				} else {
-					wr = collection.update(queryObj, updateObj, upsert, multi, writeConcern);
+					wr = collection.update(queryObj, updateObj, upsert, multi, writeConcernToUse);
 				}
 				handleAnyWriteResultErrors(wr, queryObj, "update with '" + updateObj + "'");
 				return wr;
@@ -809,10 +822,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			public Void doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 				DBObject dboq = mapper.getMappedObject(queryObject, entity);
 				WriteResult wr = null;
-				if (writeConcern == null) {
+				WriteConcern writeConcernToUse = prepareWriteConcern(writeConcern);
+				if (writeConcernToUse == null) {
 					wr = collection.remove(dboq);
 				} else {
-					wr = collection.remove(dboq, writeConcern);
+					wr = collection.remove(dboq, writeConcernToUse);
 				}
 				handleAnyWriteResultErrors(wr, dboq, "remove");
 				return null;
