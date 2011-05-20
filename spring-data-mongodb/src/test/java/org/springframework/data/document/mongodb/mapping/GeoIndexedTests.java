@@ -18,6 +18,7 @@ package org.springframework.data.document.mongodb.mapping;
 
 import static org.junit.Assert.*;
 
+import java.net.UnknownHostException;
 import java.util.List;
 
 import com.mongodb.DB;
@@ -25,6 +26,8 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.Mongo;
 import com.mongodb.MongoException;
+
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.context.ApplicationContext;
@@ -44,7 +47,7 @@ import org.springframework.data.document.mongodb.mapping.event.MongoMappingEvent
  */
 public class GeoIndexedTests {
 
-	private final String[] collectionsToDrop = new String[] { GeoIndexedAppConfig.GEO_COLLECTION };
+	private final String[] collectionsToDrop = new String[] { GeoIndexedAppConfig.GEO_COLLECTION, "Person"};
 
 	ApplicationContext applicationContext;
 	MongoTemplate template;
@@ -52,14 +55,23 @@ public class GeoIndexedTests {
 
 	@Before
 	public void setUp() throws Exception {
+		cleanDb();
+		applicationContext = new AnnotationConfigApplicationContext(GeoIndexedAppConfig.class);
+		template = applicationContext.getBean(MongoTemplate.class);
+		mappingContext = applicationContext.getBean(MongoMappingContext.class);
+	}
+
+	@After
+	public void cleanUp() throws Exception {
+		cleanDb();
+	}
+
+	private void cleanDb() throws UnknownHostException {
 		Mongo mongo = new Mongo();
 		DB db = mongo.getDB(GeoIndexedAppConfig.GEO_DB);
 		for (String coll : collectionsToDrop) {
 			db.getCollection(coll).drop();
 		}
-		applicationContext = new AnnotationConfigApplicationContext(GeoIndexedAppConfig.class);
-		template = applicationContext.getBean(MongoTemplate.class);
-		mappingContext = applicationContext.getBean(MongoMappingContext.class);
 	}
 
 	@Test

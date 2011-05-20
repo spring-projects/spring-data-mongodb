@@ -9,7 +9,7 @@
   
   <bean id="mongoDbFactory" class="org.springframework.data.document.mongodb.MongoDbFactoryBean">
   	<constructor-arg name="mongo" ref="mongo"/>
-  	<constructor-arg name="databaseName" value="geospatial"/>
+  	<constructor-arg name="databaseName" value="database"/>
   </bean>
   
   <mongo:mapping-converter base-package="org.springframework.data.document.mongodb"/>

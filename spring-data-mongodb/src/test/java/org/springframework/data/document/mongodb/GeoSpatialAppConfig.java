@@ -27,7 +27,7 @@ public class GeoSpatialAppConfig extends AbstractMongoConfiguration {
 
 	@Override
 	public String defaultDatabaseName() {
-		return "geospatial";
+		return "database";
 	}
 
 	@Bean

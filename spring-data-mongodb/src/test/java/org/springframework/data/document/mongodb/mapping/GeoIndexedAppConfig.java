@@ -7,7 +7,7 @@ import org.springframework.data.document.mongodb.config.AbstractMongoConfigurati
 
 public class GeoIndexedAppConfig extends AbstractMongoConfiguration {
 
-	public static String GEO_DB = "geodb";
+	public static String GEO_DB = "database";
 	public static String GEO_COLLECTION = "geolocation";
 
 	@Override

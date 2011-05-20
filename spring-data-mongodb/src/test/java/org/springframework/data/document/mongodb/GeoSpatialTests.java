@@ -19,19 +19,18 @@ package org.springframework.data.document.mongodb;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
 
+import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.document.mongodb.geo.Box;
 import org.springframework.data.document.mongodb.geo.Circle;
@@ -42,8 +41,6 @@ import org.springframework.data.document.mongodb.query.GeospatialIndex;
 import org.springframework.data.document.mongodb.query.Query;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
@@ -61,7 +58,7 @@ import com.mongodb.WriteConcern;
 public class GeoSpatialTests {
 
 	private static final Log LOGGER = LogFactory.getLog(GeoSpatialTests.class);
-	private final String[] collectionsToDrop = new String[] { "newyork" };
+	private final String[] collectionsToDrop = new String[] { "newyork", "Person" };
 
 	ApplicationContext applicationContext;
 	MongoTemplate template;
@@ -71,12 +68,7 @@ public class GeoSpatialTests {
 
 	@Before
 	public void setUp() throws Exception {
-		Mongo mongo = new Mongo();
-		serverInfo = new ServerInfo(mongo);
-		DB db = mongo.getDB("geospatial");
-		for (String coll : collectionsToDrop) {
-			db.getCollection(coll).drop();
-		}
+		cleanDb();
 		applicationContext = new AnnotationConfigApplicationContext(GeoSpatialAppConfig.class);
 		template = applicationContext.getBean(MongoTemplate.class);
 		template.setWriteConcern(WriteConcern.FSYNC_SAFE);
@@ -84,6 +76,20 @@ public class GeoSpatialTests {
 		indexCreated();
 		addVenues();
 		parser = new SpelExpressionParser();
+	}
+
+	@After
+	public void cleanUp() throws Exception {
+		cleanDb();
+	}
+
+	private void cleanDb() throws UnknownHostException {
+		Mongo mongo = new Mongo();
+		serverInfo = new ServerInfo(mongo);
+		DB db = mongo.getDB("database");
+		for (String coll : collectionsToDrop) {
+			db.getCollection(coll).drop();
+		}
 	}
 
 	private void addVenues() {
@@ -168,7 +174,7 @@ public class GeoSpatialTests {
 		LOGGER.debug(indexInfo);
 		assertThat(indexInfo.size(), equalTo(2));
 		assertThat(indexInfo.get(1).get("name").toString(), equalTo("location_2d"));
-		assertThat(indexInfo.get(1).get("ns").toString(), equalTo("geospatial.newyork"));
+		assertThat(indexInfo.get(1).get("ns").toString(), equalTo("database.newyork"));
 	}
 
 	// TODO move to MongoAdmin

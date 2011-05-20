@@ -113,7 +113,7 @@ public class MongoTemplateTests {
 	@Test
 	public void updateFailure() throws Exception {
 
-		MongoTemplate mongoTemplate = new MongoTemplate(template.getDb().getMongo(), "test");
+		MongoTemplate mongoTemplate = new MongoTemplate(template.getDbFactory());
 		mongoTemplate.setWriteResultChecking(WriteResultChecking.EXCEPTION);
 
 		Person person = new Person("Oliver2");
