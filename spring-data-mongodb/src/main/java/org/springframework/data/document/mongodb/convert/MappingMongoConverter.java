@@ -38,7 +38,6 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBObject;
 import com.mongodb.DBRef;
-import com.mongodb.Mongo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bson.types.ObjectId;
@@ -54,6 +53,7 @@ import org.springframework.core.convert.converter.ConverterFactory;
 import org.springframework.core.convert.converter.GenericConverter.ConvertiblePair;
 import org.springframework.core.convert.support.ConversionServiceFactory;
 import org.springframework.core.convert.support.GenericConversionService;
+import org.springframework.data.document.mongodb.MongoDbFactory;
 import org.springframework.data.document.mongodb.mapping.MongoPersistentEntity;
 import org.springframework.data.document.mongodb.mapping.MongoPersistentProperty;
 import org.springframework.data.mapping.AssociationHandler;
@@ -68,22 +68,23 @@ import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.Expression;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
+import org.springframework.util.StringUtils;
 
 /**
  * {@link MongoConverter} that uses a {@link MappingContext} to do sophisticated mapping of domain objects to
  * {@link DBObject}.
- * 
+ *
  * @author Jon Brisbin <jbrisbin@vmware.com>
  * @author Oliver Gierke
  */
 public class MappingMongoConverter extends AbstractMongoConverter implements ApplicationContextAware, InitializingBean {
 
 	public static final String CUSTOM_TYPE_KEY = "_class";
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings({"unchecked"})
 	private static final List<Class<?>> MONGO_TYPES = Arrays.asList(Number.class, Date.class, String.class,
 			DBObject.class);
-	private static final List<Class<?>> VALID_ID_TYPES = Arrays.asList(new Class<?>[] { ObjectId.class, String.class,
-			BigInteger.class, byte[].class });
+	private static final List<Class<?>> VALID_ID_TYPES = Arrays.asList(new Class<?>[]{ObjectId.class, String.class,
+			BigInteger.class, byte[].class});
 	protected static final Log log = LogFactory.getLog(MappingMongoConverter.class);
 
 	protected final GenericConversionService conversionService = ConversionServiceFactory
@@ -93,12 +94,16 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	protected SpelExpressionParser spelExpressionParser = new SpelExpressionParser();
 	protected ApplicationContext applicationContext;
 	protected boolean useFieldAccessOnly = true;
-	protected Mongo mongo;
-	protected String defaultDatabase;
+	protected MongoDbFactory mongoDbFactory;
+
+	public MappingMongoConverter(MongoDbFactory mongoDbFactory, MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
+		this.mongoDbFactory = mongoDbFactory;
+		this.mappingContext = mappingContext;
+	}
 
 	/**
 	 * Creates a new {@link MappingMongoConverter} with the given {@link MappingContext}.
-	 * 
+	 *
 	 * @param mappingContext
 	 */
 	public MappingMongoConverter(
@@ -110,7 +115,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	/**
 	 * Add custom {@link Converter} or {@link ConverterFactory} instances to be used that will take presidence over
 	 * metadata driven conversion between of objects to/from DBObject
-	 * 
+	 *
 	 * @param converters
 	 */
 	public void setCustomConverters(Set<?> converters) {
@@ -124,7 +129,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	/**
 	 * Inspects the given {@link Converter} for the types it can convert and registers the pair for custom type conversion
 	 * in case the target type is a Mongo basic type.
-	 * 
+	 *
 	 * @param converter
 	 */
 	private void registerConverter(Object converter) {
@@ -165,12 +170,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		return mappingContext;
 	}
 
-	public void setMongo(Mongo mongo) {
-		this.mongo = mongo;
-	}
-
-	public void setDefaultDatabase(String defaultDatabase) {
-		this.defaultDatabase = defaultDatabase;
+	public void setMongoDbFactory(MongoDbFactory mongoDbFactory) {
+		this.mongoDbFactory = mongoDbFactory;
 	}
 
 	public boolean isUseFieldAccessOnly() {
@@ -246,7 +247,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			spelCtx.setBeanResolver(new BeanFactoryResolver(applicationContext));
 		}
 		if (!(dbo instanceof BasicDBList)) {
-			String[] keySet = dbo.keySet().toArray(new String[] {});
+			String[] keySet = dbo.keySet().toArray(new String[]{});
 			for (String key : keySet) {
 				spelCtx.setVariable(key, dbo.get(key));
 			}
@@ -255,32 +256,32 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		final List<String> ctorParamNames = new ArrayList<String>();
 		final MongoPersistentProperty idProperty = entity.getIdProperty();
 		final S instance = constructInstance(entity, new PreferredConstructor.ParameterValueProvider() {
-			@SuppressWarnings("unchecked")
-			public <T> T getParameterValue(PreferredConstructor.Parameter<T> parameter) {
-				String name = parameter.getName();
-				TypeInformation<T> type = parameter.getType();
-				Class<T> rawType = parameter.getRawType();
-				String key = idProperty == null ? name : idProperty.getName().equals(name) ? idProperty.getKey() : name;
-				Object obj = dbo.get(key);
+					@SuppressWarnings("unchecked")
+					public <T> T getParameterValue(PreferredConstructor.Parameter<T> parameter) {
+						String name = parameter.getName();
+						TypeInformation<T> type = parameter.getType();
+						Class<T> rawType = parameter.getRawType();
+						String key = idProperty == null ? name : idProperty.getName().equals(name) ? idProperty.getKey() : name;
+						Object obj = dbo.get(key);
 
-				ctorParamNames.add(name);
-				if (obj instanceof DBRef) {
-					return read(type, ((DBRef) obj).fetch());
-				} else if (obj instanceof BasicDBList) {
-					BasicDBList objAsDbList = (BasicDBList) obj;
-					List<?> l = unwrapList(objAsDbList, type);
-					return conversionService.convert(l, rawType);
-				} else if (obj instanceof DBObject) {
-					return read(type, ((DBObject) obj));
-				} else if (null != obj && obj.getClass().isAssignableFrom(rawType)) {
-					return (T) obj;
-				} else if (null != obj) {
-					return conversionService.convert(obj, rawType);
-				}
+						ctorParamNames.add(name);
+						if (obj instanceof DBRef) {
+							return read(type, ((DBRef) obj).fetch());
+						} else if (obj instanceof BasicDBList) {
+							BasicDBList objAsDbList = (BasicDBList) obj;
+							List<?> l = unwrapList(objAsDbList, type);
+							return conversionService.convert(l, rawType);
+						} else if (obj instanceof DBObject) {
+							return read(type, ((DBObject) obj));
+						} else if (null != obj && obj.getClass().isAssignableFrom(rawType)) {
+							return (T) obj;
+						} else if (null != obj) {
+							return conversionService.convert(obj, rawType);
+						}
 
-				return null;
-			}
-		}, spelCtx);
+						return null;
+					}
+				}, spelCtx);
 
 		// Set properties not already set in the constructor
 		entity.doWithProperties(new PropertyHandler<MongoPersistentProperty>() {
@@ -325,7 +326,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	/**
 	 * Root entry method into write conversion. Adds a type discriminator to the {@link DBObject}. Shouldn't be called for
 	 * nested conversions.
-	 * 
+	 *
 	 * @see org.springframework.data.document.mongodb.MongoWriter#write(java.lang.Object, com.mongodb.DBObject)
 	 */
 	public void write(final Object obj, final DBObject dbo) {
@@ -345,7 +346,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	/**
 	 * Internal write conversion method which should be used for nested invocations.
-	 * 
+	 *
 	 * @param obj
 	 * @param dbo
 	 */
@@ -471,7 +472,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		setConversionService(conversionService);
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings({"unchecked"})
 	protected void writePropertyInternal(MongoPersistentProperty prop, Object obj, DBObject dbo) {
 		org.springframework.data.document.mongodb.mapping.DBRef dbref = prop.getField().getAnnotation(
 				org.springframework.data.document.mongodb.mapping.DBRef.class);
@@ -580,16 +581,16 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			}
 		}
 	}
-	
+
 	/**
 	 * Writes the given simple value to the given {@link DBObject}. Will store enum names for enum values.
-	 * 
+	 *
 	 * @param key
 	 * @param value
 	 * @param dbObject
 	 */
 	private void writeSimpleInternal(String key, Object value, DBObject dbObject) {
-		
+
 		Object valueToSet = value.getClass().isEnum() ? ((Enum<?>) value).name() : value;
 		dbObject.put(key, valueToSet);
 	}
@@ -619,17 +620,13 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		String dbname = dbref.db();
-		if ("".equals(dbname)) {
-			dbname = defaultDatabase;
-		}
-
-		DB db = mongo.getDB(dbname);
+		DB db = StringUtils.hasText(dbname) ? mongoDbFactory.getMongo().getDB(dbname) : mongoDbFactory.getDb();
 		return new DBRef(db, collection, id);
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings({"unchecked"})
 	protected Object getValueInternal(MongoPersistentProperty prop, DBObject dbo, StandardEvaluationContext ctx,
-			String spelExpr) {
+																		String spelExpr) {
 
 		Object o;
 		if (null != spelExpr) {
@@ -716,7 +713,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	/**
 	 * Returns the type to be used to convert the DBObject given to.
-	 * 
+	 *
 	 * @param dbObject
 	 * @return
 	 */
@@ -737,7 +734,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	/**
 	 * Inspects the a custom class definition stored inside the given {@link DBObject} and returns that in case it's a
 	 * subtype of the given basic one.
-	 * 
+	 *
 	 * @param dbObject
 	 * @param basicType
 	 * @return

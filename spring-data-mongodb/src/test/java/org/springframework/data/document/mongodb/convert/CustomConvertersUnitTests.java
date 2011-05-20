@@ -20,6 +20,8 @@ import static org.mockito.Mockito.*;
 import java.util.Arrays;
 import java.util.HashSet;
 
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
 import org.hamcrest.CoreMatchers;
 import org.junit.Assert;
 import org.junit.Before;
@@ -30,17 +32,13 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.document.mongodb.mapping.MongoMappingContext;
-import org.springframework.data.document.mongodb.mapping.MongoMappingContext;
 import org.springframework.data.document.mongodb.mapping.MongoPersistentEntity;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 
 /**
  * Test case to verify correct usage of custom {@link Converter} implementations to be used.
- * 
- * @see DATADOC-101
+ *
  * @author Oliver Gierke
+ * @see DATADOC-101
  */
 @RunWith(MockitoJUnitRunner.class)
 public class CustomConvertersUnitTests {

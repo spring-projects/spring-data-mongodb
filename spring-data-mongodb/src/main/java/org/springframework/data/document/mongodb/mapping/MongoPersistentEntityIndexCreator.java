@@ -142,8 +142,13 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 
 	}
 
-	protected void ensureIndex(String collection, final String name, final String def, final IndexDirection direction,
-														 final boolean unique, final boolean dropDups, final boolean sparse) {
+	protected void ensureIndex(String collection,
+														 final String name,
+														 final String def,
+														 final IndexDirection direction,
+														 final boolean unique,
+														 final boolean dropDups,
+														 final boolean sparse) {
 		DBObject defObj;
 		if (null != def) {
 			defObj = (DBObject) JSON.parse(def);

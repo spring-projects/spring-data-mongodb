@@ -40,8 +40,12 @@ import com.mongodb.util.JSON;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bson.types.ObjectId;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -51,6 +55,7 @@ import org.springframework.data.document.mongodb.convert.MongoConverter;
 import org.springframework.data.document.mongodb.index.IndexDefinition;
 import org.springframework.data.document.mongodb.mapping.MongoMappingContext;
 import org.springframework.data.document.mongodb.mapping.MongoPersistentEntity;
+import org.springframework.data.document.mongodb.mapping.MongoPersistentEntityIndexCreator;
 import org.springframework.data.document.mongodb.mapping.MongoPersistentProperty;
 import org.springframework.data.document.mongodb.mapping.event.AfterConvertEvent;
 import org.springframework.data.document.mongodb.mapping.event.AfterLoadEvent;
@@ -76,7 +81,7 @@ import org.springframework.util.Assert;
  * @author Mark Pollack
  * @author Oliver Gierke
  */
-public class MongoTemplate implements MongoOperations, ApplicationEventPublisherAware {
+public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 	private static final Log LOGGER = LogFactory.getLog(MongoTemplate.class);
 
@@ -99,13 +104,15 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 	 */
 	private boolean slaveOk = false;
 
-	private final MongoConverter mongoConverter;
-	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
-	private final MongoDbFactory mongoDbFactory;
-	private final MongoExceptionTranslator exceptionTranslator = new MongoExceptionTranslator();
-	private final QueryMapper mapper;
+	private MongoConverter mongoConverter;
+	private MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
+	private MongoDbFactory mongoDbFactory;
+	private MongoExceptionTranslator exceptionTranslator = new MongoExceptionTranslator();
+	private QueryMapper mapper;
 
+	private ApplicationContext applicationContext;
 	private ApplicationEventPublisher eventPublisher;
+	private MongoPersistentEntityIndexCreator indexCreator;
 
 	/**
 	 * Constructor used for a basic template configuration
@@ -114,7 +121,7 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 	 * @param databaseName
 	 */
 	public MongoTemplate(Mongo mongo, String databaseName) {
-		this(new MongoDbFactoryBean(mongo, databaseName));
+		this(new MongoDbFactoryBean(mongo, databaseName), null, null, null);
 	}
 
 	/**
@@ -126,7 +133,7 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 	 * @param mongoConverter
 	 */
 	public MongoTemplate(Mongo mongo, String databaseName, MongoConverter mongoConverter) {
-		this(new MongoDbFactoryBean(mongo, databaseName), mongoConverter);
+		this(new MongoDbFactoryBean(mongo, databaseName), mongoConverter, null, null);
 	}
 
 	/**
@@ -135,7 +142,7 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 	 * @param mongoDbFactory
 	 */
 	public MongoTemplate(MongoDbFactory mongoDbFactory) {
-		this(mongoDbFactory, null);
+		this(mongoDbFactory, null, null, null);
 	}
 
 	/**
@@ -162,37 +169,52 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 								WriteConcern writeConcern,
 								WriteResultChecking writeResultChecking) {
 		Assert.notNull(mongoDbFactory);
-
+		// Always need a MongoDbFactory for obtaining instances of DB
 		this.mongoDbFactory = mongoDbFactory;
-		this.mongoConverter = mongoConverter == null ? getDefaultMongoConverter() : mongoConverter;
-		this.writeConcern = writeConcern;
-
-		if (this.mongoConverter instanceof MappingMongoConverter) {
-			initializeMappingMongoConverter((MappingMongoConverter) this.mongoConverter);
+		// Conversion of DBObject to POJO handled either custom or by default (MappingMongoConverter)
+		if (null == mongoConverter) {
+			this.mongoConverter = getDefaultMongoConverter();
+		} else {
+			this.mongoConverter = mongoConverter;
 		}
-
-		this.mappingContext = this.mongoConverter.getMappingContext();
-		this.mapper = new QueryMapper(this.mongoConverter);
-
+		// We always have a mapping context in the converter, whether it's a simple one or not
+		mappingContext = this.mongoConverter.getMappingContext();
+		// We create indexes based on mapping events
+		if (null != mappingContext && mappingContext instanceof MongoMappingContext) {
+			indexCreator = new MongoPersistentEntityIndexCreator((MongoMappingContext) mappingContext, mongoDbFactory);
+			eventPublisher = new MongoMappingEventPublisher(indexCreator);
+			if (mappingContext instanceof ApplicationEventPublisherAware) {
+				((ApplicationEventPublisherAware) mappingContext).setApplicationEventPublisher(eventPublisher);
+			}
+		}
+		// WriteConcern
+		this.writeConcern = writeConcern;
+		// For converting ID names and values throughout Query objects
+		mapper = new QueryMapper(this.mongoConverter);
+		// Track WriteResults?
 		if (writeResultChecking != null) {
 			this.writeResultChecking = writeResultChecking;
-		}
-
-		if (this.mappingContext instanceof MongoMappingContext) {
-			this.eventPublisher = new MongoMappingEventPublisher((MongoMappingContext) mappingContext, mongoDbFactory);
 		}
 
 	}
 
 	private final MongoConverter getDefaultMongoConverter() {
 		//ToDo: maybe add some additional configurations to this very basic one
-		MappingMongoConverter converter = new MappingMongoConverter(new MongoMappingContext());
+		MappingMongoConverter converter = new MappingMongoConverter(mongoDbFactory, new MongoMappingContext());
 		converter.afterPropertiesSet();
 		return converter;
 	}
 
-	public void setApplicationEventPublisher(ApplicationEventPublisher applicationEventPublisher) {
-		this.eventPublisher = applicationEventPublisher;
+	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+		this.applicationContext = applicationContext;
+		String[] beans = applicationContext.getBeanNamesForType(MongoPersistentEntityIndexCreator.class);
+		if ((null == beans || beans.length == 0) && applicationContext instanceof ConfigurableApplicationContext) {
+			((ConfigurableApplicationContext) applicationContext).addApplicationListener(indexCreator);
+		}
+		eventPublisher = applicationContext;
+		if (mappingContext instanceof ApplicationEventPublisherAware) {
+			((ApplicationEventPublisherAware) mappingContext).setApplicationEventPublisher(eventPublisher);
+		}
 	}
 
 	/**
@@ -213,9 +235,13 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 		return this.mongoDbFactory;
 	}
 
+	public MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> getMappingContext() {
+		return mappingContext;
+	}
+
 	/* (non-Javadoc)
-	 * @see org.springframework.data.document.mongodb.MongoOperations#getDefaultCollectionName()
-	 */
+		 * @see org.springframework.data.document.mongodb.MongoOperations#getDefaultCollectionName()
+		 */
 	public String getCollectionName(Class<?> clazz) {
 		return this.determineCollectionName(clazz);
 	}
@@ -417,12 +443,12 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 	public <T> List<T> find(String collectionName, Query query, Class<T> targetClass, CursorPreparer preparer) {
 		return doFind(collectionName, query.getQueryObject(), query.getFieldsObject(), targetClass, preparer);
 	}
-	
+
 	public <T> T findById(Object id, Class<T> targetClass) {
 		MongoPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(targetClass);
 		return findById(persistentEntity.getCollection(), id, targetClass);
 	}
-	
+
 	public <T> T findById(String collectionName, Object id, Class<T> targetClass) {
 		MongoPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(targetClass);
 		MongoPersistentProperty idProperty = persistentEntity.getIdProperty();
@@ -455,15 +481,15 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 	public void insert(String collectionName, Object objectToSave) {
 		doInsert(collectionName, objectToSave, this.mongoConverter);
 	}
-	
+
 	/**
-	 * Prepare the collection before any processing is done using it. This allows a convenient way to apply 
+	 * Prepare the collection before any processing is done using it. This allows a convenient way to apply
 	 * settings like slaveOk() etc. Can be overridden in sub-classes.
-	 * 
+	 *
 	 * @param collection
 	 */
 	protected void prepareCollection(DBCollection collection) {
-		if(this.slaveOk) {
+		if (this.slaveOk) {
 			collection.slaveOk();
 		}
 	}
@@ -975,7 +1001,7 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 			throw new MappingException(e.getMessage(), e);
 		}
 	}
-	
+
 	protected String getIdPropertyName(Object object) {
 		MongoPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(object.getClass());
 		MongoPersistentProperty idProperty = persistentEntity.getIdProperty();
@@ -1027,18 +1053,15 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 	 * <li>Execute the given {@link ConnectionCallback} for a {@link DBObject}.</li>
 	 * <li>Apply the given {@link DbObjectCallback} to each of the {@link DBObject}s to obtain the result.</li>
 	 * <ol>
-	 * 
+	 *
 	 * @param <T>
-	 * @param collectionCallback
-	 *          the callback to retrieve the {@link DBObject} with
-	 * @param objectCallback
-	 *          the {@link DbObjectCallback} to transform {@link DBObject}s into the actual domain type
-	 * @param collectionName
-	 *          the collection to be queried
+	 * @param collectionCallback the callback to retrieve the {@link DBObject} with
+	 * @param objectCallback		 the {@link DbObjectCallback} to transform {@link DBObject}s into the actual domain type
+	 * @param collectionName		 the collection to be queried
 	 * @return
 	 */
 	private <T> T executeFindOneInternal(CollectionCallback<DBObject> collectionCallback, DbObjectCallback<T> objectCallback,
-			String collectionName) {
+																			 String collectionName) {
 
 		try {
 			T result = objectCallback.doWith(collectionCallback.doInCollection(getAndPrepareCollection(getDb(), collectionName)));
@@ -1058,20 +1081,16 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 	 * <li>Iterate over the {@link DBCursor} and applies the given {@link DbObjectCallback} to each of the
 	 * {@link DBObject}s collecting the actual result {@link List}.</li>
 	 * <ol>
-	 * 
+	 *
 	 * @param <T>
-	 * @param collectionCallback
-	 *          the callback to retrieve the {@link DBCursor} with
-	 * @param preparer
-	 *          the {@link CursorPreparer} to potentially modify the {@link DBCursor} before ireating over it
-	 * @param objectCallback
-	 *          the {@link DbObjectCallback} to transform {@link DBObject}s into the actual domain type
-	 * @param collectionName
-	 *          the collection to be queried
+	 * @param collectionCallback the callback to retrieve the {@link DBCursor} with
+	 * @param preparer					 the {@link CursorPreparer} to potentially modify the {@link DBCursor} before ireating over it
+	 * @param objectCallback		 the {@link DbObjectCallback} to transform {@link DBObject}s into the actual domain type
+	 * @param collectionName		 the collection to be queried
 	 * @return
 	 */
 	private <T> List<T> executeFindMultiInternal(CollectionCallback<DBCursor> collectionCallback, CursorPreparer preparer,
-			DbObjectCallback<T> objectCallback, String collectionName) {
+																							 DbObjectCallback<T> objectCallback, String collectionName) {
 
 		try {
 			DBCursor cursor = collectionCallback.doInCollection(getAndPrepareCollection(getDb(), collectionName));
@@ -1177,11 +1196,6 @@ public class MongoTemplate implements MongoOperations, ApplicationEventPublisher
 	private RuntimeException potentiallyConvertRuntimeException(RuntimeException ex) {
 		RuntimeException resolved = this.exceptionTranslator.translateExceptionIfPossible(ex);
 		return resolved == null ? ex : resolved;
-	}
-
-	private void initializeMappingMongoConverter(MappingMongoConverter converter) {
-		converter.setMongo(this.mongoDbFactory.getMongo());
-		converter.setDefaultDatabase(this.mongoDbFactory.getDatabaseName());
 	}
 
 	/**

@@ -18,8 +18,6 @@ package org.springframework.data.document.mongodb.mapping.event;
 
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.data.document.mongodb.MongoDbFactory;
-import org.springframework.data.document.mongodb.mapping.MongoMappingContext;
 import org.springframework.data.document.mongodb.mapping.MongoPersistentEntityIndexCreator;
 import org.springframework.data.mapping.event.MappingContextEvent;
 
@@ -30,8 +28,8 @@ public class MongoMappingEventPublisher implements ApplicationEventPublisher {
 
 	private MongoPersistentEntityIndexCreator indexCreator;
 
-	public MongoMappingEventPublisher(MongoMappingContext mappingContext, MongoDbFactory mongoDbFactory) {
-		indexCreator = new MongoPersistentEntityIndexCreator(mappingContext, mongoDbFactory);
+	public MongoMappingEventPublisher(MongoPersistentEntityIndexCreator indexCreator) {
+		this.indexCreator = indexCreator;
 	}
 
 	public void publishEvent(ApplicationEvent event) {

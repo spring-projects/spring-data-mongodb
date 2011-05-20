@@ -31,7 +31,6 @@ import org.springframework.data.document.mongodb.MongoTemplate;
 import org.springframework.data.document.mongodb.convert.MappingMongoConverter;
 import org.springframework.data.document.mongodb.mapping.Document;
 import org.springframework.data.document.mongodb.mapping.MongoMappingContext;
-import org.springframework.data.document.mongodb.mapping.MongoPersistentEntityIndexCreator;
 import org.springframework.data.mapping.context.MappingContextAwareBeanPostProcessor;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
@@ -39,29 +38,27 @@ import org.springframework.util.StringUtils;
 @Configuration
 public abstract class AbstractMongoConfiguration {
 
+	public abstract String defaultDatabaseName();
+
 	@Bean
 	public abstract Mongo mongo() throws Exception;
 
 	@Bean
 	public abstract MongoTemplate mongoTemplate() throws Exception;
 
-	public String defaultDatabaseName() {
-		return "db";
-	}
-
 	@Bean
 	public MongoDbFactory mongoDbFactory() throws Exception {
 		return new MongoDbFactoryBean(mongo(), defaultDatabaseName());
 	}
 
-	public String getMappingBasePackage() {
+	public String mappingBasePackage() {
 		return "";
 	}
 
 	@Bean
 	public MongoMappingContext mongoMappingContext() throws ClassNotFoundException, LinkageError {
 		MongoMappingContext mappingContext = new MongoMappingContext();
-		String basePackage = getMappingBasePackage();
+		String basePackage = mappingBasePackage();
 		if (StringUtils.hasText(basePackage)) {
 			ClassPathScanningCandidateComponentProvider componentProvider = new ClassPathScanningCandidateComponentProvider(false);
 			componentProvider.addIncludeFilter(new AnnotationTypeFilter(Document.class));
@@ -78,8 +75,7 @@ public abstract class AbstractMongoConfiguration {
 
 	@Bean
 	public MappingMongoConverter mappingMongoConverter() throws Exception {
-		MappingMongoConverter converter = new MappingMongoConverter(mongoMappingContext());
-		converter.setMongo(mongo());
+		MappingMongoConverter converter = new MappingMongoConverter(mongoDbFactory(), mongoMappingContext());
 		afterMappingMongoConverterCreation(converter);
 		return converter;
 	}
@@ -99,8 +95,4 @@ public abstract class AbstractMongoConfiguration {
 		return bpp;
 	}
 
-	@Bean MongoPersistentEntityIndexCreator mongoPersistentEntityIndexCreator() throws Exception {
-		MongoPersistentEntityIndexCreator indexCreator = new MongoPersistentEntityIndexCreator(mongoMappingContext(), mongoDbFactory());
-		return indexCreator;
-	}
 }

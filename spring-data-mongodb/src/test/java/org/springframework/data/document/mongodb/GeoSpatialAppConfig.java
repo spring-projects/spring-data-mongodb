@@ -15,16 +15,20 @@
  */
 package org.springframework.data.document.mongodb;
 
+import com.mongodb.Mongo;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.document.mongodb.config.AbstractMongoConfiguration;
 import org.springframework.data.document.mongodb.mapping.event.LoggingEventListener;
 import org.springframework.data.document.mongodb.mapping.event.MongoMappingEvent;
 
-import com.mongodb.Mongo;
-
 @Configuration
 public class GeoSpatialAppConfig extends AbstractMongoConfiguration {
+
+	@Override
+	public String defaultDatabaseName() {
+		return "geospatial";
+	}
 
 	@Bean
 	public Mongo mongo() throws Exception {
@@ -33,7 +37,7 @@ public class GeoSpatialAppConfig extends AbstractMongoConfiguration {
 
 	@Bean
 	public MongoTemplate mongoTemplate() throws Exception {
-		return new MongoTemplate(mongo(), "geospatial", mappingMongoConverter());
+		return new MongoTemplate(mongoDbFactory());
 	}
 
 	@Bean
@@ -41,7 +45,8 @@ public class GeoSpatialAppConfig extends AbstractMongoConfiguration {
 		return new LoggingEventListener<MongoMappingEvent>();
 	}
 
-	public String getMappingBasePackage() {
+	@Override
+	public String mappingBasePackage() {
 		return "org.springframework.data.document.mongodb";
 	}
 

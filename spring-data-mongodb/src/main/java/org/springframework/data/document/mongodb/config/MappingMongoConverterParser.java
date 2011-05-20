@@ -92,16 +92,15 @@ public class MappingMongoConverterParser extends AbstractBeanDefinitionParser {
 		converterBuilder.addConstructorArgReference(ctxRef);
 
 		// Need a reference to a Mongo instance
-		String mongoRef = element.getAttribute("mongo-ref");
-		if (!StringUtils.hasText(mongoRef)) {
-			mongoRef = MONGO;
+		String dbFactoryRef = element.getAttribute("db-factory-ref");
+		if (!StringUtils.hasText(dbFactoryRef)) {
+			dbFactoryRef = DB_FACTORY;
 		}
-		converterBuilder.addPropertyReference("mongo", mongoRef);
+		converterBuilder.addPropertyReference("mongoDbFactory", dbFactoryRef);
 
 		try {
 			registry.getBeanDefinition(INDEX_HELPER);
 		} catch (NoSuchBeanDefinitionException ignored) {
-			String dbFactoryRef = element.getAttribute("db-factory-ref");
 			if (!StringUtils.hasText(dbFactoryRef)) {
 				dbFactoryRef = DB_FACTORY;
 			}

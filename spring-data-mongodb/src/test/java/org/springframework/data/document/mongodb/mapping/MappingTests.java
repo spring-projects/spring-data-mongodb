@@ -78,7 +78,7 @@ public class MappingTests {
 		}
 		applicationContext = new ClassPathXmlApplicationContext("/mapping.xml");
 		template = applicationContext.getBean(MongoTemplate.class);
-		mappingContext = applicationContext.getBean(MongoMappingContext.class);
+		mappingContext = (MongoMappingContext) template.getMappingContext();
 	}
 
 	@Test
