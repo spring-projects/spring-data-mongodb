@@ -10,7 +10,7 @@
 	<context:property-placeholder
 			location="classpath:/org/springframework/data/document/mongodb/config/mongo.properties"/>
 
-	<mongo:db-factory db="database">
+	<mongo:db-factory dbname="database">
 		<mongo:mongo host="${mongo.host}" port="${mongo.port}">
 			<mongo:options
 					connectionsPerHost="${mongo.connectionsPerHost}"

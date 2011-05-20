@@ -7,7 +7,7 @@
 
   <bean class="org.springframework.data.document.mongodb.TestMongoConfiguration"/>
   
-  <mongo:db-factory db="database"/>
+  <mongo:db-factory dbname="database"/>
 
   <bean id="mappingConverter1" class="org.springframework.data.document.mongodb.convert.MappingMongoConverter">
     <constructor-arg ref="mappingContext" />

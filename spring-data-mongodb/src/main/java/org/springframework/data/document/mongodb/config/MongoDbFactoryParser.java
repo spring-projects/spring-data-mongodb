@@ -73,11 +73,11 @@ public class MongoDbFactoryParser extends AbstractBeanDefinitionParser {
 		}
 
 		// Database name
-		String db = element.getAttribute("db");
-		if (!StringUtils.hasText(db)) {
-			db = "db";
+		String dbname = element.getAttribute("dbname");
+		if (!StringUtils.hasText(dbname)) {
+			dbname = "db";
 		}
-		dbFactoryBuilder.addPropertyValue("databaseName", db);
+		dbFactoryBuilder.addPropertyValue("databaseName", dbname);
 
 		// Create or reference a MongoFactory instance.
 		// Also respect embedded "mongo:mongo" definitions.

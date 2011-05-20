@@ -61,7 +61,7 @@ The name of the mongo definition (by default "mongoDbFactory").]]></xsd:document
 					</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
-			<xsd:attribute name="db" type="xsd:string" use="optional">
+			<xsd:attribute name="dbname" type="xsd:string" use="optional">
 				<xsd:annotation>
 					<xsd:documentation><![CDATA[
 The name of the database to connect to. Default is 'db'.
