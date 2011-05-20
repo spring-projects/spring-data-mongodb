@@ -1,7 +1,9 @@
 package org.springframework.data.document.mongodb;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.convert.converter.Converter;
@@ -31,7 +33,7 @@ public class TestMongoConfiguration extends AbstractMongoConfiguration {
 	protected void afterMappingMongoConverterCreation(
 			MappingMongoConverter converter) {
 		super.afterMappingMongoConverterCreation(converter);
-		List<Converter<?, ?>> converterList = new ArrayList<Converter<?, ?>>();
+		Set<Converter<?, ?>> converterList = new HashSet<Converter<?, ?>>();
 		converterList.add(new org.springframework.data.document.mongodb.PersonReadConverter());
 		converterList.add(new org.springframework.data.document.mongodb.PersonWriteConverter());
 		converter.setCustomConverters(converterList);

@@ -113,9 +113,9 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * 
 	 * @param converters
 	 */
-	public void setCustomConverters(List<Converter<?, ?>> converters) {
+	public void setCustomConverters(Set<?> converters) {
 		if (null != converters) {
-			for (Converter<?, ?> c : converters) {
+			for (Object c : converters) {
 				registerConverter(c);
 			}
 		}
@@ -127,12 +127,23 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * 
 	 * @param converter
 	 */
-	private void registerConverter(Converter<?, ?> converter) {
+	private void registerConverter(Object converter) {
 		Class<?>[] arguments = GenericTypeResolver.resolveTypeArguments(converter.getClass(), Converter.class);
 		if (MONGO_TYPES.contains(arguments[1]) || MONGO_TYPES.contains(arguments[0])) {
 			customTypeMapping.add(new ConvertiblePair(arguments[0], arguments[1]));
 		}
-		conversionService.addConverter(converter);
+		boolean added = false;
+		if (converter instanceof Converter) {
+			this.conversionService.addConverter((Converter<?, ?>) converter);
+			added = true;
+		}
+		if (converter instanceof ConverterFactory) {
+			this.conversionService.addConverterFactory((ConverterFactory<?, ?>) converter);
+			added = true;
+		}
+		if (!added) {
+			throw new IllegalArgumentException("Given set contains element that is neither Converter nor ConverterFactory!");
+		}
 	}
 
 	private Class<?> getCustomTarget(Class<?> source, Class<?> expectedTargetType) {

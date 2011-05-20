@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
@@ -100,4 +101,6 @@ public abstract class AbstractMongoConverter implements MongoConverter {
 		return newDbl;
 	}
 
+	public abstract void setCustomConverters(Set<?> converters);
+	
 }

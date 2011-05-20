@@ -176,7 +176,7 @@ public class SimpleMongoConverter extends AbstractMongoConverter implements Init
 	 * 
 	 * @param converters
 	 */
-	public void setCustomConverters(List<Converter<?, ?>> converters) {
+	public void setCustomConverters(Set<?> converters) {
 		for (Object converter : converters) {
 			boolean added = false;
 			if (converter instanceof Converter) {

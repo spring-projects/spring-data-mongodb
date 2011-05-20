@@ -22,9 +22,11 @@ import static org.junit.Assert.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 import org.joda.time.LocalDate;
 import org.junit.Before;
@@ -71,7 +73,7 @@ public class MappingMongoConverterUnitTests {
 	@Test
 	public void convertsJodaTimeTypesCorrectly() {
 
-		List<Converter<?, ?>> converters = new ArrayList<Converter<?, ?>>();
+		Set<Converter<?, ?>> converters = new HashSet<Converter<?, ?>>();
 		converters.add(new LocalDateToDateConverter());
 		converters.add(new DateToLocalDateConverter());
 

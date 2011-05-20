@@ -68,7 +68,7 @@ public class CustomConvertersUnitTests {
 		when(dbObjectToBarConverter.convert(any(DBObject.class))).thenReturn(new Bar());
 
 		converter = new MappingMongoConverter(context);
-		converter.setCustomConverters(Arrays.asList(barToDBObjectConverter, dbObjectToBarConverter));
+		converter.setCustomConverters(new HashSet<Object>(Arrays.asList(barToDBObjectConverter, dbObjectToBarConverter)));
 	}
 
 	@Test

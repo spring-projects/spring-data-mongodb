@@ -29,8 +29,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.hamcrest.CoreMatchers;
 import org.joda.time.LocalDate;
@@ -327,7 +329,7 @@ public class SimpleMongoConverterTests {
 	@Test
 	public void convertsJodaTimeTypesCorrectly() {
 
-		List<Converter<?, ?>> converters = new ArrayList<Converter<?, ?>>();
+		Set<Converter<?, ?>> converters = new HashSet<Converter<?, ?>>();
 		converters.add(new LocalDateToDateConverter());
 		converters.add(new DateToLocalDateConverter());
 
