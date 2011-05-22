@@ -23,5 +23,27 @@ import org.springframework.data.mapping.model.PersistentProperty;
  * @author Oliver Gierke
  */
 public interface MongoPersistentProperty extends PersistentProperty<MongoPersistentProperty> {
-	String getKey();
+	
+	/**
+	 * Returns the name of the field a property is persisted to.
+	 * 
+	 * @return
+	 */
+	String getFieldName();
+
+	/**
+	 * Returns whether the propert is a {@link com.mongodb.DBRef}. If this returns {@literal true} you can expect
+	 * {@link #getDBRef()} to return an non-{@literal null} value.
+	 * 
+	 * @return
+	 */
+	boolean isDbReference();
+	
+	/**
+	 * Returns the {@link DBRef} if the property is a reference.
+	 * 
+	 * @see #isDbReference()
+	 * @return
+	 */
+	DBRef getDBRef();
 }

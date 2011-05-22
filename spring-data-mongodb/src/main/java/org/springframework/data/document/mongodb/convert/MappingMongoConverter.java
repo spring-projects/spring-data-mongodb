@@ -68,6 +68,7 @@ import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.Expression;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -118,6 +119,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 *
 	 * @param converters
 	 */
+	@Override
 	public void setCustomConverters(Set<?> converters) {
 		if (null != converters) {
 			for (Object c : converters) {
@@ -261,7 +263,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 						String name = parameter.getName();
 						TypeInformation<T> type = parameter.getType();
 						Class<T> rawType = parameter.getRawType();
-						String key = idProperty == null ? name : idProperty.getName().equals(name) ? idProperty.getKey() : name;
+						String key = idProperty == null ? name : idProperty.getName().equals(name) ? idProperty.getFieldName() : name;
 						Object obj = dbo.get(key);
 
 						ctorParamNames.add(name);
@@ -288,7 +290,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			public void doWithPersistentProperty(MongoPersistentProperty prop) {
 
 				boolean isConstructorProperty = ctorParamNames.contains(prop.getName());
-				boolean hasValueForProperty = dbo.containsField(prop.getKey());
+				boolean hasValueForProperty = dbo.containsField(prop.getFieldName());
 
 				if (!hasValueForProperty || isConstructorProperty) {
 					return;
@@ -366,7 +368,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		if (Map.class.isAssignableFrom(obj.getClass())) {
-			writeMapInternal((Map<Object, Object>) obj, dbo);
+			writeMapInternal((Map<Object, Object>) obj, dbo, null);
 			return;
 		}
 
@@ -421,7 +423,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 					if (!isSimpleType(propertyObj.getClass())) {
 						writePropertyInternal(prop, propertyObj, dbo);
 					} else {
-						writeSimpleInternal(prop.getKey(), propertyObj, dbo);
+						writeSimpleInternal(prop.getFieldName(), propertyObj, dbo);
 					}
 				}
 			}
@@ -474,66 +476,28 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	@SuppressWarnings({"unchecked"})
 	protected void writePropertyInternal(MongoPersistentProperty prop, Object obj, DBObject dbo) {
-		org.springframework.data.document.mongodb.mapping.DBRef dbref = prop.getField().getAnnotation(
-				org.springframework.data.document.mongodb.mapping.DBRef.class);
-
-		String name = prop.getKey();
-		Class<?> type = prop.getType();
-		if (prop.isCollection()) {
-			BasicDBList dbList = new BasicDBList();
-			Collection<?> coll;
-			if (type.isArray()) {
-				coll = new ArrayList<Object>();
-				for (Object o : (Object[]) obj) {
-					((List<Object>) coll).add(o);
-				}
-			} else {
-				coll = (Collection<?>) obj;
-			}
-			for (Object propObjItem : coll) {
-				if (null != dbref) {
-					DBRef dbRef = createDBRef(propObjItem, dbref);
-					dbList.add(dbRef);
-				} else if (type.isArray() && isSimpleType(prop.getComponentType())) {
-					dbList.add(propObjItem);
-				} else if (propObjItem instanceof List) {
-					List<?> propObjColl = (List<?>) propObjItem;
-					TypeInformation<?> typeInfo = ClassTypeInformation.from(propObjItem.getClass());
-					while (typeInfo.isCollectionLike()) {
-						typeInfo = typeInfo.getComponentType();
-					}
-					if (isSimpleType(typeInfo.getType())) {
-						dbList.add(propObjColl);
-					} else {
-						BasicDBList propNestedDbList = new BasicDBList();
-						for (Object propNestedObjItem : propObjColl) {
-							BasicDBObject propDbObj = new BasicDBObject();
-							writeInternal(propNestedObjItem, propDbObj);
-							propNestedDbList.add(propDbObj);
-						}
-						dbList.add(propNestedDbList);
-					}
-				} else if (isSimpleType(propObjItem.getClass())) {
-					dbList.add(propObjItem);
-				} else {
-					BasicDBObject propDbObj = new BasicDBObject();
-					writeInternal(propObjItem, propDbObj, mappingContext.getPersistentEntity(prop.getComponentType()));
-					dbList.add(propDbObj);
-				}
-			}
-			dbo.put(name, dbList);
+		
+		if (obj == null) {
 			return;
 		}
 
-		if (null != obj && obj instanceof Map) {
+		String name = prop.getFieldName();
+		
+		if (prop.isCollection()) {
+			DBObject collectionInternal = writeCollectionInternal(prop, obj);
+			dbo.put(name, collectionInternal);
+			return;
+		}
+
+		if (prop.isMap()) {
 			BasicDBObject mapDbObj = new BasicDBObject();
-			writeMapInternal((Map<Object, Object>) obj, mapDbObj);
+			writeMapInternal((Map<Object, Object>) obj, mapDbObj, prop.getTypeInformation());
 			dbo.put(name, mapDbObj);
 			return;
 		}
 
-		if (null != dbref) {
-			DBRef dbRefObj = createDBRef(obj, dbref);
+		if (prop.isDbReference()) {
+			DBRef dbRefObj = createDBRef(obj, prop.getDBRef());
 			if (null != dbRefObj) {
 				dbo.put(name, dbRefObj);
 				return;
@@ -549,11 +513,62 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		BasicDBObject propDbObj = new BasicDBObject();
+		addCustomTypeKeyIfNecessary(prop.getTypeInformation(), obj, propDbObj);
 		writeInternal(obj, propDbObj, mappingContext.getPersistentEntity(prop.getTypeInformation()));
 		dbo.put(name, propDbObj);
 	}
+	
+	@SuppressWarnings("unchecked")
+	protected DBObject writeCollectionInternal(MongoPersistentProperty property, Object obj) {
+		
+		BasicDBList dbList = new BasicDBList();
+		Class<?> type = property.getType();
+		Collection<Object> coll = type.isArray() ? CollectionUtils.arrayToList(obj) : (Collection<Object>) obj;
+		TypeInformation<?> componentType = property.getTypeInformation().getComponentType();
+		
+		for (Object element : coll) {
+			
+			if (element == null) {
+				continue;
+			}
+			
+			TypeInformation<?> valueType = ClassTypeInformation.from(element.getClass());
+			
+			if (property.isDbReference()) {
+				DBRef dbRef = createDBRef(element, property.getDBRef());
+				dbList.add(dbRef);
+			} else if (type.isArray() && isSimpleType(property.getComponentType())) {
+				dbList.add(element);
+			} else if (element instanceof List) {
+				List<?> propObjColl = (List<?>) element;
+				while (valueType.isCollectionLike()) {
+					valueType = valueType.getComponentType();
+				}
+				if (isSimpleType(valueType.getType())) {
+					dbList.add(propObjColl);
+				} else {
+					BasicDBList propNestedDbList = new BasicDBList();
+					for (Object propNestedObjItem : propObjColl) {
+						BasicDBObject propDbObj = new BasicDBObject();
+						writeInternal(propNestedObjItem, propDbObj);
+						propNestedDbList.add(propDbObj);
+					}
+					dbList.add(propNestedDbList);
+				}
+			} else if (isSimpleType(element.getClass())) {
+				dbList.add(element);
+			} else {
+				BasicDBObject propDbObj = new BasicDBObject();
+				writeInternal(element, propDbObj, mappingContext.getPersistentEntity(valueType));
+				addCustomTypeKeyIfNecessary(componentType, element, propDbObj);
+				dbList.add(propDbObj);
+			}
+		}
+		
+		return dbList;
+	}
 
-	protected void writeMapInternal(Map<Object, Object> obj, DBObject dbo) {
+	protected void writeMapInternal(Map<Object, Object> obj, DBObject dbo, TypeInformation<?> propertyType) {
 		for (Map.Entry<Object, Object> entry : obj.entrySet()) {
 			Object key = entry.getKey();
 			Object val = entry.getValue();
@@ -565,20 +580,53 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 					writeSimpleInternal(simpleKey, val, dbo);
 				} else {
 					DBObject newDbo = new BasicDBObject();
-					Class<?> componentType = val.getClass();
-					if (componentType.isArray() || componentType.isAssignableFrom(Collection.class)
-							|| componentType.isAssignableFrom(List.class)) {
-						Class<?> ctype = val.getClass().getComponentType();
-						dbo.put("_class", (null != ctype ? ctype.getName() : componentType.getName()));
-					} else {
-						dbo.put("_class", componentType.getName());
-					}
 					writeInternal(val, newDbo);
+					addCustomTypeKeyIfNecessary(propertyType, val, newDbo);
 					dbo.put(simpleKey, newDbo);
 				}
 			} else {
 				throw new MappingException("Cannot use a complex object as a key value.");
 			}
+		}
+	}
+
+	/**
+	 * Adds custom type information to the given {@link DBObject} if necessary. That is if the value is not the same as
+	 * the one given. This is usually the case if you store a subtype of the actual declared type of the property.
+	 * 
+	 * @param type
+	 * @param value
+	 * @param dbObject
+	 */
+	public void addCustomTypeKeyIfNecessary(TypeInformation<?> type, Object value, DBObject dbObject) {
+		
+		if (type == null) {
+			return;
+		}
+		
+		Class<?> reference = getValueType(type).getType();
+		
+		boolean notTheSameClass = !value.getClass().equals(reference);
+		if (notTheSameClass) {
+			dbObject.put(CUSTOM_TYPE_KEY, value.getClass().getName());
+		}
+	}
+
+	/**
+	 * Returns the type type information of the actual value to be stored. That is, for maps it will return the map value
+	 * type, for collections it will return the component type as well as the given type if it is a non-collection or
+	 * non-map one.
+	 * 
+	 * @param type
+	 * @return
+	 */
+	public TypeInformation<?> getValueType(TypeInformation<?> type) {
+		if (type.isMap()) {
+			return type.getMapValueType();
+		} else if (type.isCollectionLike()) {
+			return type.getComponentType();
+		} else {
+			return type;
 		}
 	}
 
@@ -634,7 +682,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			o = x.getValue(ctx);
 		} else {
 
-			Object dbObj = dbo.get(prop.getKey());
+			Object dbObj = dbo.get(prop.getFieldName());
 
 			if (dbObj == null) {
 				return null;

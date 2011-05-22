@@ -43,7 +43,7 @@ public class BasicMongoPersistentPropertyUnitTests {
 	public void usesAnnotatedFieldName() {
 		
 		Field field = ReflectionUtils.findField(Person.class, "firstname");
-		assertThat(getPropertyFor(field).getKey(), is("foo"));
+		assertThat(getPropertyFor(field).getFieldName(), is("foo"));
 	}
 	
 	@Test
@@ -51,14 +51,14 @@ public class BasicMongoPersistentPropertyUnitTests {
 		Field field = ReflectionUtils.findField(Person.class, "id");
 		MongoPersistentProperty property = getPropertyFor(field);
 		assertThat(property.isIdProperty(), is(true));
-		assertThat(property.getKey(), is("_id"));
+		assertThat(property.getFieldName(), is("_id"));
 	}
 	
 	@Test
 	public void returnsPropertyNameForUnannotatedProperties() {
 		
 		Field field = ReflectionUtils.findField(Person.class, "lastname");
-		assertThat(getPropertyFor(field).getKey(), is("lastname"));
+		assertThat(getPropertyFor(field).getFieldName(), is("lastname"));
 	}
 	
 	private MongoPersistentProperty getPropertyFor(Field field) {

@@ -94,7 +94,7 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 	 * 
 	 * @return
 	 */
-	public String getKey() {
+	public String getFieldName() {
 		
 		if (isIdProperty()) {
 			return "_id";
@@ -110,5 +110,19 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 	@Override
 	protected Association<MongoPersistentProperty> createAssociation() {
 		return new Association<MongoPersistentProperty>(this, null);
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.springframework.data.document.mongodb.mapping.MongoPersistentProperty#isDbReference()
+	 */
+	public boolean isDbReference() {
+		return getField().isAnnotationPresent(DBRef.class);
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.springframework.data.document.mongodb.mapping.MongoPersistentProperty#getDBRef()
+	 */
+	public DBRef getDBRef() {
+		return getField().getAnnotation(DBRef.class);
 	}
 }

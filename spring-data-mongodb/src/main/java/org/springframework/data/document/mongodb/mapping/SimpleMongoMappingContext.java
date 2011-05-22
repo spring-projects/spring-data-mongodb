@@ -77,7 +77,7 @@ public class SimpleMongoMappingContext extends
 		/* (non-Javadoc)
 		 * @see org.springframework.data.document.mongodb.mapping.MongoPersistentProperty#getKey()
 		 */
-		public String getKey() {
+		public String getFieldName() {
 			return isIdProperty() ? "_id" : getName();
 		}
 
@@ -87,6 +87,20 @@ public class SimpleMongoMappingContext extends
 		@Override
 		protected Association<MongoPersistentProperty> createAssociation() {
 			return new Association<MongoPersistentProperty>(this, null);
+		}
+		
+		/* (non-Javadoc)
+		 * @see org.springframework.data.document.mongodb.mapping.MongoPersistentProperty#isDbReference()
+		 */
+		public boolean isDbReference() {
+			return false;
+		}
+		
+		/* (non-Javadoc)
+		 * @see org.springframework.data.document.mongodb.mapping.MongoPersistentProperty#getDBRef()
+		 */
+		public DBRef getDBRef() {
+			return null;
 		}
 	}
 

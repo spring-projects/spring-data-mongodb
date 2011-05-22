@@ -20,6 +20,7 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
@@ -35,6 +36,8 @@ import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.document.mongodb.convert.MappingMongoConverter;
+
+import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
@@ -218,6 +221,51 @@ public class MappingMongoConverterUnitTests {
 		assertThat(result.firstname, is("Oliver"));
 	}
 	
+	/**
+	 * @see DATADOC-145
+	 */
+	@Test
+	public void writesCollectionWithInterfaceCorrectly() {
+		Person person = new Person();
+		person.birthDate = new LocalDate();
+		person.firstname = "Oliver";
+		
+		CollectionWrapper wrapper = new CollectionWrapper();
+		wrapper.contacts = Arrays.asList((Contact) person);
+		
+		BasicDBObject dbObject = new BasicDBObject();
+		converter.write(wrapper, dbObject);
+		
+		Object result = dbObject.get("contacts");
+		assertThat(result, is(BasicDBList.class));
+		BasicDBList contacts = (BasicDBList) result;
+		DBObject personDbObject = (DBObject) contacts.get(0);
+		assertThat(personDbObject.get("foo").toString(), is("Oliver"));
+		assertThat((String) personDbObject.get(MappingMongoConverter.CUSTOM_TYPE_KEY), is(Person.class.getName()));
+	}
+	
+	/**
+	 * @see DATADOC-145
+	 */
+	@Test
+	public void readsCollectionWithInterfaceCorrectly() {
+		
+		BasicDBObject person = new BasicDBObject(MappingMongoConverter.CUSTOM_TYPE_KEY, Person.class.getName());
+		person.put("foo", "Oliver");
+		
+		BasicDBList contacts = new BasicDBList();
+		contacts.add(person);
+		
+		CollectionWrapper result = converter.read(CollectionWrapper.class, new BasicDBObject("contacts", contacts));
+		assertThat(result.contacts, is(notNullValue()));
+		assertThat(result.contacts.size(), is(1));
+		Contact contact = result.contacts.get(0);
+		assertThat(contact, is(Person.class));
+		assertThat(((Person) contact).firstname, is("Oliver"));
+		
+	}
+	
+	
 	class ClassWithEnumProperty {
 		
 		SampleEnum sampleEnum;
@@ -249,6 +297,10 @@ public class MappingMongoConverterUnitTests {
 
 	public static class BirthDateContainer {
 		LocalDate birthDate;
+	}
+	
+	class CollectionWrapper {
+		List<Contact> contacts;
 	}
 
 	private class LocalDateToDateConverter implements Converter<LocalDate, Date> {

@@ -19,9 +19,11 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import org.springframework.data.document.mongodb.MongoWriter;
+import org.springframework.data.document.mongodb.convert.MappingMongoConverter;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.repository.query.ParameterAccessor;
@@ -91,7 +93,37 @@ public class ConvertingParameterAccessor implements ParameterAccessor {
 
 		DBObject result = new BasicDBObject();
 		writer.write(new ValueHolder(value), result);
-		return ((DBObject) result.get("value")).get("value");
+		Object resultValue = ((DBObject) result.get("value")).get("value");
+		return removeTypeInfoRecursively(resultValue);
+	}
+	
+	/**
+	 * Removes the type information from the conversion result.
+	 * 
+	 * @param object
+	 * @return
+	 */
+	private Object removeTypeInfoRecursively(Object object) {
+		
+		if (!(object instanceof DBObject)) {
+			return object;
+		}
+		
+		DBObject dbObject = (DBObject) object;
+		
+		dbObject.removeField(MappingMongoConverter.CUSTOM_TYPE_KEY);
+		for (String key : dbObject.keySet()) {
+			Object value = dbObject.get(key);
+			if (value instanceof BasicDBList) {
+				for (Object element : (BasicDBList) value) {
+					removeTypeInfoRecursively(element);
+				}
+			} else {
+				removeTypeInfoRecursively(value);
+			}
+		}
+		
+		return dbObject;
 	}
 
 	/**
