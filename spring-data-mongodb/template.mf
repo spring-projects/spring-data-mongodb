@@ -4,6 +4,8 @@ Bundle-Vendor: SpringSource
 Bundle-ManifestVersion: 2
 Import-Package: 
  sun.reflect;version="0";resolution:=optional
+Export-Template:
+ org.springframework.data.document.mongodb.*;version="${project.version}"
 Import-Template: 
  org.springframework.beans.*;version="[3.0.0, 4.0.0)",
  org.springframework.core.*;version="[3.0.0, 4.0.0)",
