@@ -54,6 +54,7 @@ public class MongoRepositoryFactoryUnitTests {
 	MongoPersistentEntity entity;
 	
 	@Before
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public void setUp() {
 		when(template.getConverter()).thenReturn(converter);
 		when(converter.getMappingContext()).thenReturn((MappingContext) mappingContext);

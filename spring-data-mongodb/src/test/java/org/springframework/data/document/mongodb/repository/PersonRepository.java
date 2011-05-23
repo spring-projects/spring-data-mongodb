@@ -24,6 +24,7 @@ import org.springframework.data.document.mongodb.geo.Point;
 import org.springframework.data.document.mongodb.repository.Person.Sex;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.querydsl.QueryDslPredicateExecutor;
 
 /**
  * Sample repository managing {@link Person} entities.

@@ -180,9 +180,9 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	@Test
 	public void findsPeopleByQueryDslLastnameSpec() throws Exception {
 
-		List<Person> result = repository.findAll(person.lastname.eq("Matthews"));
-		assertThat(result.size(), is(1));
+		Iterable<Person> result = repository.findAll(person.lastname.eq("Matthews"));
 		assertThat(result, hasItem(dave));
+		assertThat(result, not(hasItems(carter, boyd, stefan, leroi, alicia)));
 	}
 
 	@Test
@@ -192,9 +192,9 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		dave.setAddress(address);
 		repository.save(dave);
 
-		List<Person> result = repository.findAll(person.address.zipCode.eq("C0123"));
-		assertThat(result.size(), is(1));
+		Iterable<Person> result = repository.findAll(person.address.zipCode.eq("C0123"));
 		assertThat(result, hasItem(dave));
+		assertThat(result, not(hasItems(carter, boyd, stefan, leroi, alicia)));
 	}
 
 	@Test

@@ -28,6 +28,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.querydsl.EntityPathResolver;
+import org.springframework.data.querydsl.QueryDslPredicateExecutor;
 import org.springframework.data.querydsl.SimpleEntityPathResolver;
 import org.springframework.data.repository.support.EntityMetadata;
 

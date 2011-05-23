@@ -34,6 +34,7 @@ import org.springframework.data.document.mongodb.query.Index;
 import org.springframework.data.document.mongodb.query.Order;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mapping.model.MappingContext;
+import org.springframework.data.querydsl.QueryDslPredicateExecutor;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.query.QueryLookupStrategy;
 import org.springframework.data.repository.query.QueryLookupStrategy.Key;

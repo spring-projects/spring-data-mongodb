@@ -27,8 +27,9 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.document.mongodb.MongoTemplate;
+import org.springframework.data.document.mongodb.convert.MappingMongoConverter;
 import org.springframework.data.document.mongodb.convert.MongoConverter;
-import org.springframework.data.document.mongodb.convert.SimpleMongoConverter;
+import org.springframework.data.document.mongodb.mapping.MongoMappingContext;
 import org.springframework.data.document.mongodb.query.BasicQuery;
 import org.springframework.data.document.mongodb.repository.MongoRepositoryFactoryBean.EntityInformationCreator;
 import org.springframework.data.repository.support.RepositoryMetadata;
@@ -51,7 +52,7 @@ public class StringBasedMongoQueryUnitTests {
 	@Mock
 	EntityInformationCreator creator;
 
-	MongoConverter converter = new SimpleMongoConverter();
+	MongoConverter converter = new MappingMongoConverter(new MongoMappingContext());
 
 	@Before
 	public void setUp() {
@@ -84,10 +85,11 @@ public class StringBasedMongoQueryUnitTests {
 
 		DBObject dbObject = new BasicDBObject();
 		converter.write(address, dbObject);
+		dbObject.removeField(MappingMongoConverter.CUSTOM_TYPE_KEY);
 
 		org.springframework.data.document.mongodb.query.Query query = mongoQuery.createQuery(accesor);
-		org.springframework.data.document.mongodb.query.Query reference = new BasicQuery(new BasicDBObject("address",
-				dbObject));
+		BasicDBObject queryObject = new BasicDBObject("address", dbObject);
+		org.springframework.data.document.mongodb.query.Query reference = new BasicQuery(queryObject);
 
 		assertThat(query.getQueryObject(), is(reference.getQueryObject()));
 	}
@@ -104,6 +106,7 @@ public class StringBasedMongoQueryUnitTests {
 		
 		DBObject addressDbObject = new BasicDBObject();
 		converter.write(address, addressDbObject);
+		addressDbObject.removeField(MappingMongoConverter.CUSTOM_TYPE_KEY);
 		
 		DBObject reference = new BasicDBObject("address", addressDbObject);
 		reference.put("lastname", "Matthews");
