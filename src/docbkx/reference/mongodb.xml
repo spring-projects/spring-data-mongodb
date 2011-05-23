@@ -244,6 +244,69 @@ MongoTemplate] - &lt;findOne using query: { "name" : "Joe"} in db.collection: da
 LoggingEventListener] - &lt;onAfterLoad: { "_id" : "1234" , "name" : "Joe"}&gt;
 LoggingEventListener] - &lt;onAfterConvert: { "_id" : "1234" , "name" : "Joe"}, Person [id=1234, name=Joe]&gt;
 MongoApp] - &lt;Person [id=1234, name=Joe]&gt;</programlisting>
+
+    <note>
+      <para>If you are not using Maven then you would need to include the
+      following jars on the classpath for a basic Spring MongoDB
+      application:</para>
+
+      <para><itemizedlist>
+          <listitem>
+            <para>spring-data-commons-core-1.1.0.M1.jar</para>
+          </listitem>
+
+          <listitem>
+            <para>spring-data-document-core-1.0.0.M3.jar</para>
+          </listitem>
+
+          <listitem>
+            <para>spring-data-mongodb-1.0.0.M3.jar</para>
+          </listitem>
+        </itemizedlist>In addition to the above listed Spring Data jars you
+      need to provide the following dependencies: <itemizedlist>
+          <listitem>
+            <para>com.springsource.org.aopalliance-1.0.0.jar</para>
+          </listitem>
+
+          <listitem>
+            <para>commons-logging-1.1.1.jar</para>
+          </listitem>
+
+          <listitem>
+            <para>mongo-java-driver-2.5.3.jar</para>
+          </listitem>
+
+          <listitem>
+            <para>spring-aop-3.0.5.RELEASE.jar</para>
+          </listitem>
+
+          <listitem>
+            <para>spring-asm-3.0.5.RELEASE.jar</para>
+          </listitem>
+
+          <listitem>
+            <para>spring-beans-3.0.5.RELEASE.jar</para>
+          </listitem>
+
+          <listitem>
+            <para>spring-context-3.0.5.RELEASE.jar</para>
+          </listitem>
+
+          <listitem>
+            <para>spring-core-3.0.5.RELEASE.jar</para>
+          </listitem>
+
+          <listitem>
+            <para>spring-expression-3.0.5.RELEASE.jar</para>
+          </listitem>
+
+          <listitem>
+            <para>spring-tx-3.0.5.RELEASE.jar</para>
+          </listitem>
+        </itemizedlist></para>
+
+      <para> </para>
+    </note>
   </section>
 
   <section>
@@ -714,7 +777,7 @@ Number of people = : 0</programlisting>
       you don't provide one the driver will assign a ObjectId with a generated
       value. When using the <classname>MongoMappingConverter</classname> there
       are certain rules that govern how properties from the Java class is
-      mapped to this '_id' field. </para>
+      mapped to this '_id' field.</para>
 
       <para>The following outlines what property will be mapped to the '_id'
       field:</para>
