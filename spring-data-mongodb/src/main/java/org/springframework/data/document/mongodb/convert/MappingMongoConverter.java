@@ -760,10 +760,13 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	}
 
 	/**
-	 * Returns the type to be used to convert the DBObject given to.
-	 *
+	 * Returns the type to be used to convert the DBObject given to. Will return {@literal null} if there's not type hint
+	 * found in the {@link DBObject} or the type hint found can't be converted into a {@link Class} as the type might not
+	 * be available.
+	 * 
 	 * @param dbObject
-	 * @return
+	 * @return the type to be used for converting the given {@link DBObject} into or {@literal null} if there's no type
+	 *         found.
 	 */
 	protected Class<?> findTypeToBeUsed(DBObject dbObject) {
 		Object classToBeUsed = dbObject.get(CUSTOM_TYPE_KEY);
@@ -775,7 +778,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		try {
 			return Class.forName(classToBeUsed.toString());
 		} catch (ClassNotFoundException e) {
-			throw new MappingException(e.getMessage(), e);
+			return null;
 		}
 	}
 
