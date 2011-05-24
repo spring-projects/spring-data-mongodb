@@ -122,7 +122,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * @param databaseName
 	 */
 	public MongoTemplate(Mongo mongo, String databaseName) {
-		this(new MongoDbFactoryBean(mongo, databaseName), null, null, null);
+		this(new SimpleMongoDbFactory(mongo, databaseName), null, null, null);
 	}
 
 	/**
@@ -134,7 +134,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * @param userCredentials
 	 */
 	public MongoTemplate(Mongo mongo, String databaseName, UserCredentials userCredentials) {
-		this(new MongoDbFactoryBean(mongo, databaseName, userCredentials));
+		this(new SimpleMongoDbFactory(mongo, databaseName, userCredentials));
 	}
 
 	/**

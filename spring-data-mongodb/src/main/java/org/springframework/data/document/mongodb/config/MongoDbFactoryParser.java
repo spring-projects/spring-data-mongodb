@@ -25,8 +25,9 @@ import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.xml.AbstractBeanDefinitionParser;
 import org.springframework.beans.factory.xml.ParserContext;
-import org.springframework.data.document.mongodb.MongoDbFactoryBean;
+import org.springframework.data.authentication.UserCredentials;
 import org.springframework.data.document.mongodb.MongoFactoryBean;
+import org.springframework.data.document.mongodb.SimpleMongoDbFactory;
 import org.springframework.util.StringUtils;
 import org.springframework.util.xml.DomUtils;
 import org.w3c.dom.Element;
@@ -47,62 +48,66 @@ public class MongoDbFactoryParser extends AbstractBeanDefinitionParser {
 
 	@Override
 	protected AbstractBeanDefinition parseInternal(Element element, ParserContext parserContext) {
-		BeanDefinitionRegistry registry = parserContext.getRegistry();
-		BeanDefinitionBuilder dbFactoryBuilder = BeanDefinitionBuilder.genericBeanDefinition(MongoDbFactoryBean.class);
-
-		// Host/Port used in this and the mongoFactory
-		String host = element.getAttribute("host");
-		if (!StringUtils.hasText(host)) {
-			host = "localhost";
-		}
-		dbFactoryBuilder.addPropertyValue("host", host);
-		String port = element.getAttribute("port");
-		if (!StringUtils.hasText(port)) {
-			port = "27017";
-		}
-		dbFactoryBuilder.addPropertyValue("port", port);
-
-		// Username/Password not always used (but is in CloudFoundry
-		String username = element.getAttribute("username");
-		if (StringUtils.hasText(username)) {
-			dbFactoryBuilder.addPropertyValue("username", username);
-		}
-		String password = element.getAttribute("password");
-		if (StringUtils.hasText(password)) {
-			dbFactoryBuilder.addPropertyValue("password", password);
-		}
-
-		// Database name
-		String dbname = element.getAttribute("dbname");
-		if (!StringUtils.hasText(dbname)) {
-			dbname = "db";
-		}
-		dbFactoryBuilder.addPropertyValue("databaseName", dbname);
-
-		// Create or reference a MongoFactory instance.
-		// Also respect embedded "mongo:mongo" definitions.
-		String mongoRef = element.getAttribute("mongo-ref");
-		if (!StringUtils.hasText(mongoRef)) {
-			BeanDefinitionBuilder mongoBuilder = BeanDefinitionBuilder.genericBeanDefinition(MongoFactoryBean.class);
-			Element mongoEl = DomUtils.getChildElementByTagName(element, "mongo");
-			if (null != mongoEl) {
-				String overrideHost = mongoEl.getAttribute("host");
-				mongoBuilder.addPropertyValue("host", (StringUtils.hasText(overrideHost) ? overrideHost : host));
-				String overridePort = mongoEl.getAttribute("port");
-				mongoBuilder.addPropertyValue("port", (StringUtils.hasText(overridePort) ? overridePort : port));
-				ParsingUtils.parseMongoOptions(parserContext, mongoEl, mongoBuilder);
-				ParsingUtils.parseReplicaSet(parserContext, mongoEl, mongoBuilder);
-			}
-			else {
-				mongoBuilder.addPropertyValue("host", host);
-				mongoBuilder.addPropertyValue("port", port);
-			}
-			registry.registerBeanDefinition(MONGO, mongoBuilder.getBeanDefinition());
-			mongoRef = MONGO;
-		}
-		dbFactoryBuilder.addPropertyValue("mongo", new RuntimeBeanReference(mongoRef));
-
-		return dbFactoryBuilder.getRawBeanDefinition();
+	  BeanDefinitionRegistry registry = parserContext.getRegistry();
+    BeanDefinitionBuilder dbFactoryBuilder = BeanDefinitionBuilder.genericBeanDefinition(SimpleMongoDbFactory.class);
+          
+    // UserCredentials
+    BeanDefinitionBuilder userCredentialsBuilder = BeanDefinitionBuilder.genericBeanDefinition(UserCredentials.class);   
+    String username = element.getAttribute("username");
+    if (StringUtils.hasText(username)) {
+      userCredentialsBuilder.addConstructorArgValue(username);
+    } else {
+      userCredentialsBuilder.addConstructorArgValue(null);
+    }
+    String password = element.getAttribute("password");
+    if (StringUtils.hasText(password)) {
+      userCredentialsBuilder.addConstructorArgValue(password);
+    } else {
+      userCredentialsBuilder.addConstructorArgValue(null);
+    }
+    
+    // host and port    
+    String host = element.getAttribute("host");
+    if (!StringUtils.hasText(host)) {
+      host = "localhost";
+    }
+    String port = element.getAttribute("port");
+    if (!StringUtils.hasText(port)) {
+      port = "27017";
+    }
+    
+    // Database name
+    String dbname = element.getAttribute("dbname");
+    if (!StringUtils.hasText(dbname)) {
+      dbname = "db";
+    }
+    
+ 
+    String mongoRef = element.getAttribute("mongo-ref");
+    if (!StringUtils.hasText(mongoRef)) {
+      BeanDefinitionBuilder mongoBuilder = BeanDefinitionBuilder.genericBeanDefinition(MongoFactoryBean.class);
+      Element mongoEl = DomUtils.getChildElementByTagName(element, "mongo");
+      if (null != mongoEl) {
+        String overrideHost = mongoEl.getAttribute("host");        
+        mongoBuilder.addPropertyValue("host", (StringUtils.hasText(overrideHost) ? overrideHost : host));
+        String overridePort = mongoEl.getAttribute("port");
+        mongoBuilder.addPropertyValue("port", (StringUtils.hasText(overridePort) ? overridePort : port));
+        ParsingUtils.parseMongoOptions(parserContext, mongoEl, mongoBuilder);
+        ParsingUtils.parseReplicaSet(parserContext, mongoEl, mongoBuilder);
+      }
+      else {
+        mongoBuilder.addPropertyValue("host", host);
+        mongoBuilder.addPropertyValue("port", port);
+      }
+      registry.registerBeanDefinition(MONGO, mongoBuilder.getBeanDefinition());
+      mongoRef = MONGO;
+    }
+    
+    dbFactoryBuilder.addConstructorArgValue(new RuntimeBeanReference(mongoRef));
+    dbFactoryBuilder.addConstructorArgValue(dbname);
+    dbFactoryBuilder.addConstructorArgValue(userCredentialsBuilder.getBeanDefinition());
+    
+    return dbFactoryBuilder.getRawBeanDefinition();
 	}
-
+	
 }

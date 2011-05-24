@@ -26,8 +26,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.data.annotation.Persistent;
 import org.springframework.data.document.mongodb.MongoDbFactory;
-import org.springframework.data.document.mongodb.MongoDbFactoryBean;
 import org.springframework.data.document.mongodb.MongoTemplate;
+import org.springframework.data.document.mongodb.SimpleMongoDbFactory;
 import org.springframework.data.document.mongodb.convert.MappingMongoConverter;
 import org.springframework.data.document.mongodb.mapping.Document;
 import org.springframework.data.document.mongodb.mapping.MongoMappingContext;
@@ -48,7 +48,7 @@ public abstract class AbstractMongoConfiguration {
 
 	@Bean
 	public MongoDbFactory mongoDbFactory() throws Exception {
-		return new MongoDbFactoryBean(mongo(), defaultDatabaseName());
+		return new SimpleMongoDbFactory(mongo(), defaultDatabaseName());
 	}
 
 	public String mappingBasePackage() {

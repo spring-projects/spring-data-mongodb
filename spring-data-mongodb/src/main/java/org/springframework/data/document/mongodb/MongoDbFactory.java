@@ -11,6 +11,4 @@ public interface MongoDbFactory {
 	
 	Mongo getMongo();
 	
-	String getDatabaseName();
-	
 }
