@@ -26,6 +26,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.data.document.mongodb.MongoDbFactory;
 import org.springframework.data.document.mongodb.MongoTemplate;
 import org.springframework.data.document.mongodb.convert.MappingMongoConverter;
 import org.springframework.data.document.mongodb.convert.MongoConverter;
@@ -51,11 +52,14 @@ public class StringBasedMongoQueryUnitTests {
 	RepositoryMetadata metadata;
 	@Mock
 	EntityInformationCreator creator;
+	@Mock
+	MongoDbFactory factory;
 
-	MongoConverter converter = new MappingMongoConverter(new MongoMappingContext());
+	MongoConverter converter;
 
 	@Before
 	public void setUp() {
+		converter = new MappingMongoConverter(factory, new MongoMappingContext());
 		when(template.getConverter()).thenReturn(converter);
 	}
 

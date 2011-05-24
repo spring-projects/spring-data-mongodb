@@ -88,15 +88,17 @@ public class MappingMongoConverterParser extends AbstractBeanDefinitionParser {
 			registry.registerBeanDefinition(POST_PROCESSOR, postProcBuilder.getBeanDefinition());
 		}
 
-		BeanDefinitionBuilder converterBuilder = BeanDefinitionBuilder.genericBeanDefinition(MappingMongoConverter.class);
-		converterBuilder.addConstructorArgReference(ctxRef);
-
 		// Need a reference to a Mongo instance
 		String dbFactoryRef = element.getAttribute("db-factory-ref");
 		if (!StringUtils.hasText(dbFactoryRef)) {
 			dbFactoryRef = DB_FACTORY;
 		}
-		converterBuilder.addPropertyReference("mongoDbFactory", dbFactoryRef);
+		
+		
+		BeanDefinitionBuilder converterBuilder = BeanDefinitionBuilder.genericBeanDefinition(MappingMongoConverter.class);
+		converterBuilder.addConstructorArgReference(dbFactoryRef);
+		converterBuilder.addConstructorArgReference(ctxRef);
+
 
 		try {
 			registry.getBeanDefinition(INDEX_HELPER);
@@ -113,7 +115,7 @@ public class MappingMongoConverterParser extends AbstractBeanDefinitionParser {
 		List<Element> customConvertersElements = DomUtils.getChildElementsByTagName(element, "custom-converters");
 		if (customConvertersElements.size() == 1) {
 			Element customerConvertersElement = customConvertersElements.get(0);
-			ManagedList converterBeans = new ManagedList();
+			ManagedList<BeanMetadataElement> converterBeans = new ManagedList<BeanMetadataElement>();
 			List<Element> listenerElements = DomUtils.getChildElementsByTagName(customerConvertersElement, "converter");
 			if (listenerElements != null) {
 				for (Element listenerElement : listenerElements) {

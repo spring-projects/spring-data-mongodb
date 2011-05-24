@@ -79,7 +79,7 @@ public class MongoTemplateTests {
 				PersonWithIdPropertyOfTypeString.class)));
 		mappingContext.afterPropertiesSet();
 
-		MappingMongoConverter converter = new MappingMongoConverter(mappingContext);
+		MappingMongoConverter converter = new MappingMongoConverter(template.getDbFactory(), mappingContext);
 		converter.afterPropertiesSet();
 
 		this.mappingTemplate = new MongoTemplate(template.getDbFactory(), converter);

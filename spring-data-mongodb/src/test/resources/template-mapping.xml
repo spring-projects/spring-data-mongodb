@@ -10,6 +10,7 @@
   <mongo:db-factory dbname="database"/>
 
   <bean id="mappingConverter1" class="org.springframework.data.document.mongodb.convert.MappingMongoConverter">
+  	<constructor-arg ref="mongoDbFactory" />
     <constructor-arg ref="mappingContext" />
     <property name="customConverters">
       <list>

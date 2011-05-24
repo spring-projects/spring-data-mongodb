@@ -94,18 +94,9 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	public MappingMongoConverter(MongoDbFactory mongoDbFactory, MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
 		super(ConversionServiceFactory.createDefaultConversionService());
 		Assert.notNull(mappingContext);
+		Assert.notNull(mongoDbFactory);
 		this.mongoDbFactory = mongoDbFactory;
 		this.mappingContext = mappingContext;
-	}
-
-	/**
-	 * Creates a new {@link MappingMongoConverter} with the given {@link MappingContext}.
-	 *
-	 * @param mappingContext
-	 */
-	public MappingMongoConverter(
-			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
-		this(null, mappingContext);
 	}
 
 	public MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> getMappingContext() {

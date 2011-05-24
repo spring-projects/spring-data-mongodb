@@ -33,8 +33,10 @@ import org.joda.time.LocalDate;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.document.mongodb.MongoDbFactory;
 import org.springframework.data.document.mongodb.convert.MappingMongoConverter;
 
 import com.mongodb.BasicDBList;
@@ -51,11 +53,13 @@ public class MappingMongoConverterUnitTests {
 
 	MappingMongoConverter converter;
 	MongoMappingContext mappingContext;
+	@Mock
+	MongoDbFactory factory;
 
 	@Before
 	public void setUp() {
 		mappingContext = new MongoMappingContext();
-		converter = new MappingMongoConverter(mappingContext);
+		converter = new MappingMongoConverter(factory, mappingContext);
 	}
 
 	@Test
@@ -84,7 +88,7 @@ public class MappingMongoConverterUnitTests {
 		customSimpleTypes.add(LocalDate.class);
 		mappingContext.setCustomSimpleTypes(customSimpleTypes);
 
-		converter = new MappingMongoConverter(mappingContext);
+		converter = new MappingMongoConverter(factory, mappingContext);
 		converter.setCustomConverters(converters);
 		converter.afterPropertiesSet();
 

@@ -25,7 +25,9 @@ import com.mongodb.DBObject;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.data.document.mongodb.MongoDbFactory;
 import org.springframework.data.document.mongodb.convert.MappingMongoConverter;
 import org.springframework.data.document.mongodb.convert.MongoConverter;
 
@@ -39,6 +41,9 @@ public class GenericMappingTests {
 
 	MongoMappingContext context;
 	MongoConverter converter;
+	
+	@Mock
+	MongoDbFactory factory;
 
 	@Before
 	public void setUp() throws Exception {
@@ -46,7 +51,7 @@ public class GenericMappingTests {
 		context.setInitialEntitySet(Collections.singleton(StringWrapper.class));
 		context.afterPropertiesSet();
 
-		converter = new MappingMongoConverter(context);
+		converter = new MappingMongoConverter(factory, context);
 	}
 
 	@Test

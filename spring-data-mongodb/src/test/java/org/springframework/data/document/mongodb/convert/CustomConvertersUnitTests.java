@@ -31,6 +31,7 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.document.mongodb.MongoDbFactory;
 import org.springframework.data.document.mongodb.mapping.MongoMappingContext;
 import org.springframework.data.document.mongodb.mapping.MongoPersistentEntity;
 
@@ -49,6 +50,8 @@ public class CustomConvertersUnitTests {
 	BarToDBObjectConverter barToDBObjectConverter;
 	@Mock
 	DBObjectToBarConverter dbObjectToBarConverter;
+	@Mock
+	MongoDbFactory mongoDbFactory;
 
 	MongoMappingContext context;
 	MongoPersistentEntity<Foo> fooEntity;
@@ -65,7 +68,7 @@ public class CustomConvertersUnitTests {
 		when(barToDBObjectConverter.convert(any(Bar.class))).thenReturn(new BasicDBObject());
 		when(dbObjectToBarConverter.convert(any(DBObject.class))).thenReturn(new Bar());
 
-		converter = new MappingMongoConverter(context);
+		converter = new MappingMongoConverter(mongoDbFactory, context);
 		converter.setCustomConverters(new HashSet<Object>(Arrays.asList(barToDBObjectConverter, dbObjectToBarConverter)));
 	}
 
