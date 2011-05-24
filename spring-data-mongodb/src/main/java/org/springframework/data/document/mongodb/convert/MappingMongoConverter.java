@@ -596,7 +596,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		String dbname = dbref.db();
-		DB db = StringUtils.hasText(dbname) ? mongoDbFactory.getMongo().getDB(dbname) : mongoDbFactory.getDb();
+		DB db = StringUtils.hasText(dbname) ? mongoDbFactory.getDb(dbname) : mongoDbFactory.getDb();
 		return new DBRef(db, collection, id);
 	}
 

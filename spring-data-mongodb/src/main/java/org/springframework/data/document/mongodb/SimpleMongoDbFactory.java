@@ -50,6 +50,14 @@ public class SimpleMongoDbFactory implements MongoDbFactory {
     Assert.hasText(databaseName, "Database name must not be empty");
     return MongoDbUtils.getDB(mongo, databaseName, username, password == null ? null : password.toCharArray());
   }
+  
+  public DB getDb(String dbName) throws DataAccessException {
+    Assert.notNull(mongo, "Mongo must not be null");
+    Assert.hasText(dbName, "Database name must not be empty");
+    return MongoDbUtils.getDB(mongo, dbName, username, password == null ? null : password.toCharArray());
+  }
+  
+  
 
   public Mongo getMongo() {
     return this.mongo;

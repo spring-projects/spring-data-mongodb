@@ -9,6 +9,6 @@ public interface MongoDbFactory {
 
 	DB getDb() throws DataAccessException;
 	
-	Mongo getMongo();
+	DB getDb(String dbName) throws DataAccessException;
 	
 }
