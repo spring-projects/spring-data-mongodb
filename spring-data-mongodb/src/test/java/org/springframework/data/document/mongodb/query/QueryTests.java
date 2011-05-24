@@ -19,7 +19,7 @@ import static org.springframework.data.document.mongodb.query.Criteria.where;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.springframework.data.document.InvalidDocumentStoreApiUsageException;
+import org.springframework.data.document.mongodb.InvalidMongoDbApiUsageException;
 
 public class QueryTests {
 
@@ -42,7 +42,7 @@ public class QueryTests {
 		try {
 			new Query(where("name").not().is("Thomas"));
 			Assert.fail("This should have caused an InvalidDocumentStoreApiUsageException");
-		} catch (InvalidDocumentStoreApiUsageException e) {
+		} catch (InvalidMongoDbApiUsageException e) {
 		}
 	}
 

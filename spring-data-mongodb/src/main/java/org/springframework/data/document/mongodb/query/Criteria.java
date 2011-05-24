@@ -23,7 +23,8 @@ import java.util.List;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
-import org.springframework.data.document.InvalidDocumentStoreApiUsageException;
+
+import org.springframework.data.document.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.data.document.mongodb.geo.Box;
 import org.springframework.data.document.mongodb.geo.Circle;
 import org.springframework.data.document.mongodb.geo.Point;
@@ -84,11 +85,11 @@ public class Criteria implements CriteriaDefinition {
 	 */
 	public Criteria is(Object o) {
 		if (isValue != NOT_SET) {
-			throw new InvalidDocumentStoreApiUsageException(
+			throw new InvalidMongoDbApiUsageException(
 					"Multiple 'is' values declared. You need to use 'and' with multiple criteria");
 		}
 		if (this.criteria.size() > 0 && "$not".equals(this.criteria.keySet().toArray()[this.criteria.size() - 1])) {
-			throw new InvalidDocumentStoreApiUsageException(
+			throw new InvalidMongoDbApiUsageException(
 					"Invalid query: 'not' can't be used with 'is' - use 'ne' instead.");
 		}
 		this.isValue = o;
@@ -159,7 +160,7 @@ public class Criteria implements CriteriaDefinition {
 	 */
 	public Criteria in(Object... o) {
 		if (o.length > 1 && o[1] instanceof Collection) {
-			throw new InvalidDocumentStoreApiUsageException("You can only pass in one argument of type "
+			throw new InvalidMongoDbApiUsageException("You can only pass in one argument of type "
 					+ o[1].getClass().getName());
 		}
 		criteria.put("$in", o);

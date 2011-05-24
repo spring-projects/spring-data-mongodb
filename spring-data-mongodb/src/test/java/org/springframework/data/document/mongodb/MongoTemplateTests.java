@@ -39,7 +39,6 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.data.document.InvalidDocumentStoreApiUsageException;
 import org.springframework.data.document.mongodb.convert.MappingMongoConverter;
 import org.springframework.data.document.mongodb.convert.MongoConverter;
 import org.springframework.data.document.mongodb.mapping.MongoMappingContext;
@@ -368,7 +367,7 @@ public class MongoTemplateTests {
 			Query q3 = new Query(Criteria.where("age").in(l1, l2));
 			template.find(q3, PersonWithIdPropertyOfTypeObjectId.class);
 			Assert.fail("Should have trown an InvalidDocumentStoreApiUsageException");
-		} catch (InvalidDocumentStoreApiUsageException e) {
+		} catch (InvalidMongoDbApiUsageException e) {
 		}
 	}
 

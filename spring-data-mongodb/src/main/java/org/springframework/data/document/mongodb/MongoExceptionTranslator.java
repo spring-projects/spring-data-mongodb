@@ -28,7 +28,6 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
-import org.springframework.data.document.UncategorizedDocumentStoreException;
 
 /**
  * Simple {@link PersistenceExceptionTranslator} for Mongo. Convert the given runtime exception to an appropriate
@@ -71,7 +70,7 @@ public class MongoExceptionTranslator implements PersistenceExceptionTranslator 
 			} else if (code == 10003 || code == 12001 || code == 12010 || code == 12011 || code == 12012) {
 				throw new InvalidDataAccessApiUsageException(ex.getMessage(), ex);
 			}
-			return new UncategorizedDocumentStoreException(ex.getMessage(), ex);
+			return new UncategorizedMongoDbException(ex.getMessage(), ex);
 		}
 		if (ex instanceof MongoInternalException) {
 			return new InvalidDataAccessResourceUsageException(ex.getMessage(), ex);
