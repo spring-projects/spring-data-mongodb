@@ -269,6 +269,21 @@ public class MappingMongoConverterUnitTests {
 		
 	}
 	
+	@Test
+	public void convertsLocalesOutOfTheBox() {
+		LocaleWrapper wrapper = new LocaleWrapper();
+		wrapper.locale = Locale.US;
+		
+		DBObject dbObject = new BasicDBObject();
+		converter.write(wrapper, dbObject);
+		
+		Object localeField = dbObject.get("locale");
+		assertThat(localeField, is(String.class));
+		assertThat((String) localeField, is("en_US"));
+		
+		LocaleWrapper read = converter.read(LocaleWrapper.class, dbObject);
+		assertThat(read.locale, is(Locale.US));
+	}
 	
 	class ClassWithEnumProperty {
 		
@@ -307,6 +322,10 @@ public class MappingMongoConverterUnitTests {
 		List<Contact> contacts;
 	}
 
+	class LocaleWrapper {
+		Locale locale;
+	}
+	
 	private class LocalDateToDateConverter implements Converter<LocalDate, Date> {
 
 		public Date convert(LocalDate source) {

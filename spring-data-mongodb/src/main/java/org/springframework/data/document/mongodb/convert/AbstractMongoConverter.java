@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -33,8 +34,10 @@ import org.bson.types.ObjectId;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.GenericTypeResolver;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.converter.ConverterFactory;
+import org.springframework.core.convert.converter.GenericConverter;
 import org.springframework.core.convert.converter.GenericConverter.ConvertiblePair;
 import org.springframework.core.convert.support.ConversionServiceFactory;
 import org.springframework.core.convert.support.GenericConversionService;
@@ -64,6 +67,7 @@ public abstract class AbstractMongoConverter implements MongoConverter, Initiali
 		this.conversionService = conversionService == null ? ConversionServiceFactory.createDefaultConversionService()
 				: conversionService;
 		this.conversionService.removeConvertible(Object.class, String.class);
+		registerConverter(CustomToStringConverter.INSTANCE);
 	}
 
 	/**
@@ -107,19 +111,33 @@ public abstract class AbstractMongoConverter implements MongoConverter, Initiali
 	 * @param converter
 	 */
 	private void registerConverter(Object converter) {
-		Class<?>[] arguments = GenericTypeResolver.resolveTypeArguments(converter.getClass(), Converter.class);
-		if (MONGO_TYPES.contains(arguments[1]) || MONGO_TYPES.contains(arguments[0])) {
-			customTypeMapping.add(new ConvertiblePair(arguments[0], arguments[1]));
+		
+		if (converter instanceof GenericConverter) {
+			customTypeMapping.addAll(((GenericConverter) converter).getConvertibleTypes());
+		} else {
+			Class<?>[] arguments = GenericTypeResolver.resolveTypeArguments(converter.getClass(), Converter.class);
+			if (MONGO_TYPES.contains(arguments[1]) || MONGO_TYPES.contains(arguments[0])) {
+				customTypeMapping.add(new ConvertiblePair(arguments[0], arguments[1]));
+			}
 		}
+		
 		boolean added = false;
+		
 		if (converter instanceof Converter) {
 			this.conversionService.addConverter((Converter<?, ?>) converter);
 			added = true;
 		}
+		
 		if (converter instanceof ConverterFactory) {
 			this.conversionService.addConverterFactory((ConverterFactory<?, ?>) converter);
 			added = true;
 		}
+		
+		if (converter instanceof GenericConverter) {
+			this.conversionService.addConverter((GenericConverter) converter);
+			added = true;
+		}
+		
 		if (!added) {
 			throw new IllegalArgumentException("Given set contains element that is neither Converter nor ConverterFactory!");
 		}
@@ -221,5 +239,20 @@ public abstract class AbstractMongoConverter implements MongoConverter, Initiali
 			newDbl.add(maybeConvertObject(o));
 		}
 		return newDbl;
+	}
+
+	
+	private enum CustomToStringConverter implements GenericConverter  {
+		INSTANCE;
+
+		public Set<ConvertiblePair> getConvertibleTypes() {
+			ConvertiblePair localeToString = new ConvertiblePair(Locale.class, String.class);
+			ConvertiblePair booleanToString = new ConvertiblePair(Character.class, String.class);
+			return new HashSet<ConvertiblePair>(Arrays.asList(localeToString, booleanToString));
+		}
+
+		public Object convert(Object source, TypeDescriptor sourceType, TypeDescriptor targetType) {
+			return source.toString();
+		}
 	}
 }

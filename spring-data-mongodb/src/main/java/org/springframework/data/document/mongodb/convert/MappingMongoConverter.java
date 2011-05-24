@@ -559,7 +559,14 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 */
 	private void writeSimpleInternal(String key, Object value, DBObject dbObject) {
 
-		Object valueToSet = value.getClass().isEnum() ? ((Enum<?>) value).name() : value;
+		Class<?> customTarget = getCustomTarget(value.getClass(), null);
+		
+		Object valueToSet = null;
+		if (customTarget != null) {
+			valueToSet = conversionService.convert(value, customTarget);
+		} else {
+			valueToSet = value.getClass().isEnum() ? ((Enum<?>) value).name() : value;
+		}
 		dbObject.put(key, valueToSet);
 	}
 
