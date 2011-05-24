@@ -1,4 +1,4 @@
-package org.springframework.data.persistence.document.mongo;
+package org.springframework.data.persistence.document.mongodb;
 
 import javax.persistence.EntityManagerFactory;
 

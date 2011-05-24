@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.data.document.annotation;
+package org.springframework.data.persistence.document;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

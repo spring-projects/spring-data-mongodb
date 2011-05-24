@@ -144,11 +144,6 @@
       </dependency>
       <dependency>
         <groupId>org.springframework.data</groupId>
-        <artifactId>spring-data-document-core</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.springframework.data</groupId>
         <artifactId>spring-data-couchdb</artifactId>
         <version>${project.version}</version>
       </dependency>

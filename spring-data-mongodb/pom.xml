@@ -37,11 +37,6 @@
 		<!--  Spring Data -->
 		<dependency>
 			<groupId>org.springframework.data</groupId>
-			<artifactId>spring-data-document-core</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.data</groupId>
 			<artifactId>spring-data-commons-core</artifactId>
 			<version>${data.commons.version}</version>
 		</dependency>

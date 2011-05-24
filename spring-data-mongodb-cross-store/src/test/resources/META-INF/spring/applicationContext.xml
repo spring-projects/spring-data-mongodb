@@ -38,12 +38,12 @@
   <bean class="org.springframework.data.document.mongodb.MongoExceptionTranslator"/>
 
   <!--  Mongo aspect config -->
-  <bean class="org.springframework.data.persistence.document.mongo.MongoDocumentBacking"
+  <bean class="org.springframework.data.persistence.document.mongodb.MongoDocumentBacking"
         factory-method="aspectOf">
     <property name="changeSetPersister" ref="mongoChangeSetPersister"/>
   </bean>
   <bean id="mongoChangeSetPersister" 
-      class="org.springframework.data.persistence.document.mongo.MongoChangeSetPersister">
+      class="org.springframework.data.persistence.document.mongodb.MongoChangeSetPersister">
     <property name="mongoTemplate" ref="mongoTemplate"/>
     <property name="entityManagerFactory" ref="entityManagerFactory"/>
   </bean>

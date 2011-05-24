@@ -237,10 +237,6 @@ DEBUG [document.mongodb.MongoTemplate]: Dropped collection [database.person]</pr
           </listitem>
 
           <listitem>
-            <para>spring-data-document-core-1.0.0.M3.jar</para>
-          </listitem>
-
-          <listitem>
             <para>spring-data-mongodb-1.0.0.M3.jar</para>
           </listitem>
         </itemizedlist>In addition to the above listed Spring Data jars you

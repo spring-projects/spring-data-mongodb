@@ -1,7 +1,6 @@
-package org.springframework.data.persistence.document.mongo;
+package org.springframework.data.persistence.document.mongodb;
 
 import java.lang.reflect.Field;
-import java.util.Map;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Transient;
@@ -13,12 +12,11 @@ import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.reflect.FieldSignature;
 
 import org.springframework.dao.DataAccessException;
-import org.springframework.data.document.annotation.RelatedDocument;
+import org.springframework.data.persistence.document.RelatedDocument;
 
 import org.springframework.data.persistence.document.DocumentBacked;
 import org.springframework.data.persistence.document.DocumentBackedTransactionSynchronization;
 import org.springframework.data.persistence.ChangeSet;
-import org.springframework.data.persistence.ChangeSetBacked;
 import org.springframework.data.persistence.ChangeSetPersister;
 import org.springframework.data.persistence.ChangeSetPersister.NotFoundException;
 import org.springframework.data.persistence.HashMapChangeSet;
