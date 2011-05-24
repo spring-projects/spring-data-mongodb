@@ -40,11 +40,6 @@
     </listitem>
 
     <listitem>
-      <para>Low-level mapping using MongoReader/MongoWriter
-      abstractions</para>
-    </listitem>
-
-    <listitem>
       <para>Java based Query, Criteria, and Update DSLs</para>
     </listitem>
 
@@ -71,15 +66,16 @@
     </listitem>
   </itemizedlist>
 
-  <para>For most tasks you will find yourself using MongoTemplate or the
-  Repository support that both leverage the rich mapping functionality.
-  MongoTemplate is the place to look for accessing functionality such as
-  incrementing counters or ad-hoc CRUD operations. MongoTemplate also provides
-  callback methods so that it is easy for you to get a hold of the low level
-  API artifacts such as <literal>org.mongo.DB</literal> to communicate
-  directly with MongoDB. The goal with naming conventions on various API
-  artifacts is to copy those in the base MongoDB Java driver so you can easily
-  map your existing knowledge onto the Spring APIs.</para>
+  <para>For most tasks you will find yourself using
+  <classname>MongoTemplate</classname> or the Repository support that both
+  leverage the rich mapping functionality. MongoTemplate is the place to look
+  for accessing functionality such as incrementing counters or ad-hoc CRUD
+  operations. MongoTemplate also provides callback methods so that it is easy
+  for you to get a hold of the low level API artifacts such as
+  <literal>org.mongo.DB</literal> to communicate directly with MongoDB. The
+  goal with naming conventions on various API artifacts is to copy those in
+  the base MongoDB Java driver so you can easily map your existing knowledge
+  onto the Spring APIs.</para>
 
   <section id="mongodb-requirements">
     <title>Getting Started</title>
@@ -110,21 +106,13 @@
   &lt;dependency&gt;
     &lt;groupId&gt;org.springframework.data&lt;/groupId&gt;
     &lt;artifactId&gt;spring-data-mongodb&lt;/artifactId&gt;
-    &lt;version&gt;1.0.0.M2&lt;/version&gt;
-  &lt;/dependency&gt;
-
-  &lt;dependency&gt;
-    &lt;groupId&gt;cglib&lt;/groupId&gt;
-    &lt;artifactId&gt;cglib&lt;/artifactId&gt;
-    &lt;version&gt;2.2&lt;/version&gt;
+    &lt;version&gt;1.0.0.M3&lt;/version&gt;
   &lt;/dependency&gt;
 
 &lt;/dependencies&gt;
 </programlisting>
 
-    <para>The cglib dependency is there as we will use Spring's Java
-    configuration style. Also change the version of Spring in the pom.xml to
-    be</para>
+    <para>Also change the version of Spring in the pom.xml to be</para>
 
     <programlisting lang="" language="xml">&lt;spring.framework.version&gt;3.0.5.RELEASE&lt;/spring.framework.version&gt;</programlisting>
 
@@ -145,64 +133,57 @@
     here</ulink>.</para>
 
     <para>You may also want to set the logging level to DEBUG to see some
-    additional information, edit the log4j.properties file and add</para>
+    additional information, edit the log4j.properties file to have</para>
 
-    <programlisting>log4j.category.org.springframework.data.document.mongodb=DEBUG</programlisting>
+    <programlisting>log4j.category.org.springframework.data.document.mongodb=DEBUG
+log4j.appender.stdout.layout.ConversionPattern=%-5p [%c{3}]: %m%n</programlisting>
 
-    <para>Next, in the org.spring.mongodb package in the
-    <literal>src/test/java</literal> directory create a class as shown
-    below.</para>
-
-    <programlisting lang="" language="java">package org.spring.mongodb;
-
-import org.springframework.context.annotation.Configuration;
-import org.springframework.data.document.mongodb.MongoTemplate;
-import org.springframework.data.document.mongodb.config.AbstractMongoConfiguration;
-
-import com.mongodb.Mongo;
-
-@Configuration
-public class MongoConfig extends AbstractMongoConfiguration {
-
-  @Override
-  public Mongo mongo() throws Exception {
-    return new Mongo("localhost");
-  }
-
-  @Override
-  public MongoTemplate mongoTemplate() throws Exception {
-    return new MongoTemplate(mongo() , "database", "mongoexample");
-  }
-
-}</programlisting>
-
-    <para>Then create a simple Person class to persist</para>
+    <para>Create a simple Person class to persist</para>
 
     <programlisting language="java">package org.spring.mongodb;
 
 public class Person {
 
   private String id;
-  
-  private String name;
+  private String firstName;
+  private String lastName;
+  private int age;
 
-  public Person(String id, String name) {
-    this.id = id;
-    this.name = name;
+  public Person(String firstName, String lastName, int age) {
+    this.firstName = firstName;
+    this.lastName = lastName;
+    this.age = age;
   }
-  
-  public String getId() {
-    return id;
+  public String getFirstName() {
+    return firstName;
   }
 
-  public String getName() {
-    return name;
+  public void setFirstName(String firstName) {
+    this.firstName = firstName;
+  }
+
+  public String getLastName() {
+    return lastName;
+  }
+
+  public void setLastName(String lastName) {
+    this.lastName = lastName;
+  }
+
+  public int getAge() {
+    return age;
+  }
+
+  public void setAge(int age) {
+    this.age = age;
   }
 
   @Override
   public String toString() {
-    return "Person [id=" + id + ", name=" + name + "]";
+    return "Person [id=" + id + ", firstName=" + firstName + ", lastName="
+        + lastName + ", age=" + age + "]";
   }
+
   
 }</programlisting>
 
@@ -210,40 +191,40 @@ public class Person {
 
     <programlisting language="java">package org.spring.mongodb;
 
+import static org.springframework.data.document.mongodb.query.Criteria.where;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.data.document.mongodb.MongoOperations;
-import org.springframework.data.document.mongodb.query.Criteria;
+import org.springframework.data.document.mongodb.MongoTemplate;
 import org.springframework.data.document.mongodb.query.Query;
+
+import org.spring.mongodb.Person;
 
 public class MongoApp {
 
   private static final Log log = LogFactory.getLog(MongoApp.class);
 
   public static void main(String[] args) {
-    ApplicationContext ctx = new AnnotationConfigApplicationContext(MongoConfig.class);
-    MongoOperations mongoOps = ctx.getBean(MongoOperations.class);
-    
-    mongoOps.insert(new Person("1234", "Joe"));
 
-    log.info(mongoOps.findOne(new Query(Criteria.where("name").is("Joe")), Person.class));
+    MongoOperations mongoOps = new MongoTemplate(new Mongo(), "database");
+   
+    mongoOps.insert(new Person("Joe", "Swanson", 34));
+
+    log.info( mongoOps.findOne(new Query(where("firstName").is("Joe")), Person.class) );
+
+    mongoOps.dropCollection("person");
   }
 
 }</programlisting>
 
     <para>This will produce the following output</para>
 
-    <programlisting>MongoPersistentEntityIndexCreator] - &lt;Analyzing class class org.spring.mongodb.Person for index information.&gt;
-LoggingEventListener] - &lt;onBeforeConvert: Person [id=1234, name=Joe]&gt;
-LoggingEventListener] - &lt;onBeforeSave: Person [id=1234, name=Joe], { "_id" : "1234" , "name" : "Joe"}&gt;
-MongoTemplate] - &lt;insert DBObject: { "_id" : "1234" , "name" : "Joe"}&gt;
-LoggingEventListener] - &lt;onAfterSave: Person [id=1234, name=Joe], { "_id" : "1234" , "name" : "Joe"}&gt;
-MongoTemplate] - &lt;findOne using query: { "name" : "Joe"} in db.collection: database.person&gt;
-LoggingEventListener] - &lt;onAfterLoad: { "_id" : "1234" , "name" : "Joe"}&gt;
-LoggingEventListener] - &lt;onAfterConvert: { "_id" : "1234" , "name" : "Joe"}, Person [id=1234, name=Joe]&gt;
-MongoApp] - &lt;Person [id=1234, name=Joe]&gt;</programlisting>
+    <programlisting>DEBUG [mongodb.mapping.MongoPersistentEntityIndexCreator]: Analyzing class class org.mongo.demo2.domain.Person for index information.
+DEBUG [document.mongodb.MongoTemplate]: insert DBObject containing fields: [_class, lastName, age, firstName] in collection: Person
+DEBUG [document.mongodb.MongoTemplate]: findOne using query: { "firstName" : "Joe"} in db.collection: database.Person
+INFO  [spring.mongodb.MongoApp]: Person [id=4ddb2f629e60ab6a21da5fdb, firstName=Joe, lastName=Swanson, age=34]
+DEBUG [document.mongodb.MongoTemplate]: Dropped collection [database.person]</programlisting>
 
     <note>
       <para>If you are not using Maven then you would need to include the
@@ -299,13 +280,7 @@ MongoApp] - &lt;Person [id=1234, name=Joe]&gt;</programlisting>
           <listitem>
             <para>spring-expression-3.0.5.RELEASE.jar</para>
           </listitem>
-
-          <listitem>
-            <para>spring-tx-3.0.5.RELEASE.jar</para>
-          </listitem>
         </itemizedlist></para>
-
-      <para> </para>
     </note>
   </section>
 
@@ -319,7 +294,7 @@ MongoApp] - &lt;Person [id=1234, name=Joe]&gt;</programlisting>
   </section>
 
   <section id="mongodb-connectors">
-    <title>Connecting to MongoDB</title>
+    <title>Connecting to MongoDB </title>
 
     <para>One of the first tasks when using MongoDB and Spring is to create a
     <classname>com.mongodb.Mongo</classname> object using the IoC container.

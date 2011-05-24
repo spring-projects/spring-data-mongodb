@@ -5,10 +5,10 @@
   <title>Additional Help Resources</title>
 
   <para>Learning a new framework is not always straight forward. In this
-  section, we (the Spring Data team) tried to provide, what we think is, an
-  easy to follow guide for starting with Spring Data Document module. However,
-  if you encounter issues or you are just looking for an advice, feel free to
-  use one of the links below:</para>
+  section, we try to provide what we think is an easy to follow guide for
+  starting with Spring Data Document module. However, if you encounter issues
+  or you are just looking for an advice, feel free to use one of the links
+  below:</para>
 
   <section id="get-started:help">
     <title>Support</title>

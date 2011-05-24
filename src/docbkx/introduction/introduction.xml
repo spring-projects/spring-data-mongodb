@@ -11,22 +11,27 @@
   Spring concepts. </para><section id="get-started:first-steps:spring">
       <title>Knowing Spring</title>
 
-      <para>Spring Data uses heavily Spring framework's <ulink
+      <para>Spring Data uses Spring framework's <ulink
       url="http://static.springframework.org/spring/docs/3.0.x/reference/spring-core.html">core
       </ulink> functionality, such as the <ulink
       url="http://static.springframework.org/spring/docs/3.0.x/reference/beans.html">IoC
-      </ulink> container, <ulink
-      url="http://static.springframework.org/spring/docs/3.0.x/reference/resources.html">resource
-      </ulink> abstract or <ulink
-      url="http://static.springframework.org/spring/docs/3.0.x/reference/aop.html">AOP
-      </ulink> infrastructure. While it is not important to know the Spring
-      APIs, understanding the concepts behind them is. At a minimum, the idea
-      behind IoC should be familiar. These being said, the more knowledge one
-      has about the Spring, the faster she will pick up Spring Data Document.
-      Besides the very comprehensive (and sometimes disarming) documentation
-      that explains in detail the Spring Framework, there are a lot of
-      articles, blog entries and books on the matter - take a look at the
-      Spring framework <ulink
+      </ulink> container and Data Access abstractions such as the portable
+      exception hierarchy. While it is not important to know the Spring APIs,
+      understanding the concepts behind them is. At a minimum, the idea behind
+      IoC should be familiar for whatever IoC container you choose to use.
+      </para>
+
+      <para>The core functionality of the MongoDB and CouchDB support can be
+      used directly, with no references to the Spring Container, much like
+      JdbcTemplate can be used 'standalone' without any other services of the
+      Spring container. To leverage all the features of Spring Data document,
+      such as it's repository support, then you will need to configure the
+      container using Spring.</para>
+
+      <para>To learn more about Spring, you can refer to the comprehensive
+      (and sometimes disarming) documentation that explains in detail the
+      Spring Framework. There are a lot of articles, blog entries and books on
+      the matter - take a look at the Spring framework <ulink
       url="http://www.springsource.org/documentation">home page </ulink> for
       more information.</para>
     </section><section id="get-started:first-steps:nosql">
