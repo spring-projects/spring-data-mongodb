@@ -140,7 +140,7 @@ log4j.appender.stdout.layout.ConversionPattern=%d{ABSOLUTE} %5p %40.40c:%4L - %m
 
     <para>Create a simple Person class to persist</para>
 
-    <programlisting language="java">package org.spring.example;
+    <programlisting language="java">package org.spring.mongodb.example;
 
 public class Person {
 
@@ -172,7 +172,7 @@ public class Person {
 
     <para>And a main application to run</para>
 
-    <programlisting language="java">package org.spring.example;
+    <programlisting language="java">package org.spring.mongodb.example;
 
 import static org.springframework.data.document.mongodb.query.Criteria.where;
 
@@ -205,61 +205,96 @@ public class MongoApp {
     <programlisting>10:01:32,062 DEBUG apping.MongoPersistentEntityIndexCreator:  80 - Analyzing class class org.spring.example.Person for index information.
 10:01:32,265 DEBUG work.data.document.mongodb.MongoTemplate: 631 - insert DBObject containing fields: [_class, age, name] in collection: Person
 10:01:32,765 DEBUG work.data.document.mongodb.MongoTemplate:1243 - findOne using query: { "name" : "Joe"} in db.collection: database.Person
-10:01:32,953  INFO              org.spring.example.MongoApp:  25 - Person [id=4ddbba3c0be56b7e1b210166, name=Joe, age=34]
+10:01:32,953  INFO      org.spring.mongodb.example.MongoApp:  25 - Person [id=4ddbba3c0be56b7e1b210166, name=Joe, age=34]
 10:01:32,984 DEBUG work.data.document.mongodb.MongoTemplate: 375 - Dropped collection [database.person]</programlisting>
 
-    <para>The quick brown fox.</para>
+    <para>Even in this simple example, there are few things to take notice
+    of</para>
 
-    <section>
+    <itemizedlist>
+      <listitem>
+        <para>You can instantiate the central helper class of Spring Mongo,
+        <link linkend="mongo-template">MongoTemplate</link>, using the
+        standard <classname>com.mongodb.Mongo</classname> object and the name
+        of the database to use.</para>
+      </listitem>
+
+      <listitem>
+        <para>The mapper works against standard POJO objects without the need
+        for any additional metadata (though you can optionally provide that
+        information. See <link linkend="mongo.mapping">here</link>.).</para>
+      </listitem>
+
+      <listitem>
+        <para>Conventions are used for handling the id field, converting it to
+        be a ObjectId when stored in the database.</para>
+      </listitem>
+
+      <listitem>
+        <para>Mapping conventions can use field access. Notice the Person
+        class has only getters.</para>
+      </listitem>
+
+      <listitem>
+        <para>If the constructor argument names match the field names of the
+        stored document, they will be used to instantiate the object</para>
+      </listitem>
+    </itemizedlist>
+
+    <section id="mongodb-required-jars">
+       
+
       <title>Required Jars</title>
 
-          </listitem>
-              <listitem>
-                <para>spring-data-document-core-1.0.0.M3.jar</para>
-              </listitem>
+       The following jars are required to use Sping Mongo 
 
-              <listitem>
-                <para>spring-data-mongodb-1.0.0.M3.jar</para>
-              </listitem>
-            </itemizedlist>In addition to the above listed Spring Data jars
-          you need to provide the following dependencies: <itemizedlist>
-              <listitem>
-                <para>com.springsource.org.aopalliance-1.0.0.jar</para>
-              </listitem>
+      <itemizedlist>
+        <listitem>
+          <para>spring-data-mongodb-1.0.0.M3.jar</para>
+        </listitem>
+      </itemizedlist>
 
-              <listitem>
-                <para>commons-logging-1.1.1.jar</para>
-              </listitem>
+       In addition to the above listed Spring Data jars you need to provide the following dependencies: 
 
-              <listitem>
-                <para>mongo-java-driver-2.5.3.jar</para>
-              </listitem>
+      <itemizedlist>
+        <listitem>
+          <para>com.springsource.org.aopalliance-1.0.0.jar</para>
+        </listitem>
 
-              <listitem>
-                <para>spring-aop-3.0.5.RELEASE.jar</para>
-              </listitem>
+        <listitem>
+          <para>commons-logging-1.1.1.jar</para>
+        </listitem>
 
-              <listitem>
-                <para>spring-asm-3.0.5.RELEASE.jar</para>
-              </listitem>
+        <listitem>
+          <para>mongo-java-driver-2.5.3.jar</para>
+        </listitem>
 
-              <listitem>
-                <para>spring-beans-3.0.5.RELEASE.jar</para>
-              </listitem>
+        <listitem>
+          <para>spring-aop-3.0.5.RELEASE.jar</para>
+        </listitem>
 
-              <listitem>
-                <para>spring-context-3I.0.5.RELEASE.jar</para>
-              </listitem>
+        <listitem>
+          <para>spring-asm-3.0.5.RELEASE.jar</para>
+        </listitem>
 
-              <listitem>
-                <para>spring-core-3.0.5.RELEASE.jar</para>
-              </listitem>
+        <listitem>
+          <para>spring-beans-3.0.5.RELEASE.jar</para>
+        </listitem>
 
-              <listitem>
-                <para>spring-expression-3.0.5.RELEASE.jar</para>
-              </listitem>
-            </itemizedlist></para>
-        </note></para>
+        <listitem>
+          <para>spring-context-3I.0.5.RELEASE.jar</para>
+        </listitem>
+
+        <listitem>
+          <para>spring-core-3.0.5.RELEASE.jar</para>
+        </listitem>
+
+        <listitem>
+          <para>spring-expression-3.0.5.RELEASE.jar</para>
+        </listitem>
+      </itemizedlist>
+
+       
     </section>
   </section>
 
@@ -273,7 +308,7 @@ public class MongoApp {
   </section>
 
   <section id="mongodb-connectors">
-    <title>Connecting to MongoDB </title>
+    <title>Connecting to MongoDB with Spring</title>
 
     <para>One of the first tasks when using MongoDB and Spring is to create a
     <classname>com.mongodb.Mongo</classname> object using the IoC container.
@@ -290,7 +325,7 @@ public class MongoApp {
       </note></para>
 
     <section>
-      <title>Using Java based metadata</title>
+      <title>Registering a Mongo instance using Java based metadata</title>
 
       <para>An example of using Java based bean metadata to register an
       instance of a <classname>com.mongodb.Mongo</classname> is shown below
@@ -304,7 +339,7 @@ public class AppConfig {
   /*
    * Use the standard Mongo driver API to create a com.mongodb.Mongo instance.
    */
-   public @Bean Mongo mongo() throws Exception {
+   public @Bean Mongo mongo() throws UnknownHostException {
        return new Mongo("localhost");
    }
 }      </programlisting>
@@ -313,19 +348,24 @@ public class AppConfig {
       <para>This approach allows you to use the standard
       <classname>com.mongodb.Mongo</classname> API that you may already be
       used to using but also pollutes the code with the UnknownHostException
-      checked exception.</para>
+      checked exception. The use of the checked exception is not desirable as
+      Java based bean metadata uses methods as a means to set object
+      dependencies, making the calling code cluttered.</para>
 
-      <para>You may also register an instance of
+      <para>An alternative is to register an instance of
       <classname>com.mongodb.Mongo</classname> instance with the container
       using Spring's<interfacename> MongoFactoryBean</interfacename>. As
       compared to instantiating a <classname>com.mongodb.Mongo</classname>
-      instance directly, the FactoryBean approach has the added advantage of
-      also providing the container with an ExceptionTranslator that can
-      translate Mongo exceptions to exceptions in Spring's portable
-      <classname>DataAccessException</classname> hierarchy. This hierarchy is
-      described in <ulink
+      instance directly, the FactoryBean approach does not throw a checked
+      exception and has the added advantage of also providing the container
+      with an ExceptionTranslator implementation that translates Mongo
+      exceptions to exceptions in Spring's portable
+      <classname>DataAccessException</classname> hierarchy for data access
+      classes annoated with the <literal>@Repository</literal> annotation.
+      This hierarchy and use of <literal>@Repository</literal> is described in
+      <ulink
       url="http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/html/dao.html">Spring's
-      DAO support features</ulink>. An example is shown below</para>
+      DAO support features</ulink>.</para>
 
       <para>An example of a Java based bean metadata that supports exception
       translation on <classname>@Repository</classname> annotated classes is
@@ -350,25 +390,23 @@ public class AppConfig {
 }
 </programlisting>
 
-        <para>To access the com.mongodb.Mongo object created by the
-        <classname>MongoFactoryBean</classname> in other @Configuration or
-        your own classes, use a "<literal>private @Autowired Mongo
-        mongo;</literal>" field.</para>
+        <para>To access the <classname>com.mongodb.Mongo</classname> object
+        created by the <classname>MongoFactoryBean</classname> in other
+        <literal>@Configuration</literal> or your own classes, use a
+        "<literal>private @Autowired Mongo mongo;</literal>" field.</para>
       </example>
     </section>
 
     <section>
-      <title>Using XML based metadata</title>
+      <title>Registering a Mongo instance using XML based metadata</title>
 
-      <para>While you can use Spring's traditional &lt;beans/&gt; XML
-      namespace to register an instance of
-      <classname>com.mongodb.Mongo</classname> with the container, the XML can
-      be quite verbose, does not easily support the configuration of public
-      instance variables used with the driver's MongoOptions class, and
-      constructor arguments/names are not the most effective means to
-      distinguish between configuration of replica sets and replica pairs. o
-      address these issues a XML namespace is available to simplify the
-      configuration of a com.mongodb.Mongo instance in XML.</para>
+      <para>While you can use Spring's traditional
+      <literal>&lt;beans/&gt;</literal> XML namespace to register an instance
+      of <classname>com.mongodb.Mongo</classname> with the container, the XML
+      can be quite verbose as it is general purpose. XML namespaces are a
+      better alternative to configuring commonly used objects such as the
+      Mongo instance. The mongo namespace alows you to create a Mongo instance
+      server location, replica-sets, and options.</para>
 
       <para>To use the Mongo namespace elements you will need to reference the
       Mongo schema:</para>
@@ -384,75 +422,63 @@ public class AppConfig {
           xsi:schemaLocation=
           "http://www.springframework.org/schema/context
           http://www.springframework.org/schema/context/spring-context-3.0.xsd
-          http://www.springframework.org/schema/data/mongo
-          http://www.springframework.org/schema/data/mongo/spring-mongo-1.0.xsd
+          <emphasis role="bold">http://www.springframework.org/schema/data/mongo
+          http://www.springframework.org/schema/data/mongo/spring-mongo-1.0.xsd</emphasis>
           http://www.springframework.org/schema/beans
           http://www.springframework.org/schema/beans/spring-beans-3.0.xsd"&gt;
 
     &lt;!-- Default bean name is 'mongo' --&gt;
-    &lt;mongo:mongo host="localhost" port="27017"/&gt;
-
-    &lt;!-- To translate any MongoExceptions thrown in @Repository annotated classes --&gt;
-    &lt;context:annotation-config/&gt;
+    <emphasis role="bold">&lt;mongo:mongo host="localhost" port="27017"/&gt;</emphasis>
 
 &lt;/beans&gt;
         </programlisting>
       </example>
 
-      <para>A more advanced configuration with MongoOptions is shown
-      below</para>
+      <para>A more advanced configuration with MongoOptions is shown below
+      (note these are not recommended values)</para>
 
       <example>
-        <title>XML schema to configure MongoOptinos in MongoDB</title>
+        <title>XML schema to configure a com.mongodb.Mongo object with
+        MongoOptions</title>
 
         <programlisting language="xml">&lt;beans&gt;
 
   &lt;mongo:mongo host="localhost" port="27017"&gt;
-    &lt;mongo:options connectionsPerHost="10"
-                   threadsAllowedToBlockForConnectionMultiplier="5"
-                   maxWaitTime="12000"
-                   connectTimeout="0"
-                   socketTimeout="0"
-                   autoConnectRetry="0"/&gt;
+    &lt;mongo:options connections-per-host="8"
+                   threads-allowed-to-block-for-connection-multiplier="4"
+                   connect-timeout="1000"
+                   max-wait-time="1500}"
+                   auto-connect-retry="true"
+                   socket-keep-alive="true"
+                   socket-timeout="1500"
+                   slave-ok="true"
+                   write-number="1"
+                   write-timeout="0"
+                   write-fsync="true"/&gt;
   &lt;/mongo:mongo/&gt;
 
 &lt;/beans&gt;
         </programlisting>
       </example>
 
-      <para>A configuration using replica sets within the XML schema is not
-      yet available. If you would like to configure ReplicaSets use Spring's
-      Java based bean metadata shown below: <example>
-          <title>Configuring a com.mongodb.Mongo object with Replica Sets
-          using Java based bean metadata</title>
+      <para>A configuration using replica sets is shown below. <example>
+          <title>XML schema to configure com.mongodb.Mongo object with Replica
+          Sets</title>
 
-          <programlisting language="java">@Configuration
-public class AppConfig {
-
-  /*
-   * Use the standard Mongo driver API to create a com.mongodb.Mongo instance that supports replica sets
-   */
-  @Bean
-  public Mongo mongo() throws Exception {
-    
-    List&lt;ServerAddress&gt; serverAddresses = new ArrayList&lt;ServerAddress&gt;();    
-    serverAddresses.add( new ServerAddress( "127.0.0.1", 27017 ) ); 
-    serverAddresses.add( new ServerAddress( "127.0.0.1", 27018 ) );
-    
-    MongoOptions options = new MongoOptions();
-    options.autoConnectRetry = true; 
-    
-    Mongo mongo  = new Mongo( serverAddresses, options );
-    mongo.slaveOk();
-    
-    return mongo;
-  }
-}      </programlisting>
+          <programlisting language="xml">&lt;mongo:mongo id="replicaSetMongo" replica-set="127.0.0.1:27017,localhost:27018"/&gt;	   </programlisting>
         </example></para>
+    </section>
+
+    <section>
+      <title>Registering a MongoDbFactory instance using Java based
+      metadata</title>
+
+      <para>As an alternative to configuring a com.mongodb.Mongo instance and
+      later providing the database name, the MongoDbFactory </para>
     </section>
   </section>
 
-  <section>
+  <section id="mongo-template">
     <title>Introduction to MongoTemplate</title>
 
     <para>The class <classname>MongoTemplate</classname>, located in the

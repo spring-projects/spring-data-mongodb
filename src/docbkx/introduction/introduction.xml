@@ -12,21 +12,29 @@
       <title>Knowing Spring</title>
 
       <para>Spring Data uses Spring framework's <ulink
-      url="http://static.springframework.org/spring/docs/3.0.x/reference/spring-core.html">core
-      </ulink> functionality, such as the <ulink
-      url="http://static.springframework.org/spring/docs/3.0.x/reference/beans.html">IoC
-      </ulink> container and Data Access abstractions such as the portable
-      exception hierarchy. While it is not important to know the Spring APIs,
-      understanding the concepts behind them is. At a minimum, the idea behind
-      IoC should be familiar for whatever IoC container you choose to use.
-      </para>
+      url="http://static.springframework.org/spring/docs/3.0.x/reference/spring-core.html">core</ulink>
+      functionality, such as the <ulink
+      url="http://static.springframework.org/spring/docs/3.0.x/reference/beans.html">IoC</ulink>
+      container, <ulink
+      url="http://static.springsource.org/spring/docs/3.0.x/reference/validation.html#core-convert">type
+      conversion system</ulink>, <ulink
+      url="http://static.springsource.org/spring/docs/3.0.x/reference/expressions.html">expression
+      language</ulink>, <ulink
+      url="http://static.springsource.org/spring/docs/3.0.x/reference/jmx.html">JMX
+      integration</ulink>, and portable <ulink
+      url="http://static.springsource.org/spring/docs/3.0.x/reference/dao.html#dao-exceptions">DAO
+      exception hierarchy</ulink>. While it is not important to know the
+      Spring APIs, understanding the concepts behind them is. At a minimum,
+      the idea behind IoC should be familiar for whatever IoC container you
+      choose to use.</para>
 
       <para>The core functionality of the MongoDB and CouchDB support can be
-      used directly, with no references to the Spring Container, much like
-      JdbcTemplate can be used 'standalone' without any other services of the
-      Spring container. To leverage all the features of Spring Data document,
-      such as it's repository support, then you will need to configure the
-      container using Spring.</para>
+      used directly, with no need to invoke the IoC services of the Spring
+      Container. This is much like <classname>JdbcTemplate</classname> which
+      can be used 'standalone' without any other services of the Spring
+      container. To leverage all the features of Spring Data document, such as
+      the repository support, you will need to configure some parts of the
+      library using Spring.</para>
 
       <para>To learn more about Spring, you can refer to the comprehensive
       (and sometimes disarming) documentation that explains in detail the
