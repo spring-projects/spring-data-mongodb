@@ -15,14 +15,11 @@
  */
 package org.springframework.data.document.mongodb.convert;
 
-import static org.springframework.data.document.mongodb.convert.ObjectIdConverters.*;
-
 import java.lang.reflect.Array;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -51,9 +48,7 @@ import org.springframework.core.CollectionFactory;
 import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.Converter;
-import org.springframework.core.convert.converter.ConverterFactory;
 import org.springframework.core.convert.support.ConversionServiceFactory;
-import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.document.mongodb.MongoPropertyDescriptors.MongoPropertyDescriptor;
 import org.springframework.data.document.mongodb.mapping.MongoPersistentEntity;
 import org.springframework.data.document.mongodb.mapping.MongoPersistentProperty;
@@ -69,9 +64,9 @@ import org.springframework.util.comparator.CompoundComparator;
  * @author Thomas Risberg
  * @author Oliver Gierke
  * 
- * @deprecated since Spring 1.0 M3 in favor of {@link org.springframework.data.document.mongodb.convert.MappingMongoConverter} 
- * The MappingMongoConverter provides all the functionality of the SimpleMongoConverter and will replace it as the default 
- * converter used. The SimpleMongoCOnverter will be removed at some point before the GA release. 
+ * @deprecated since Spring 1.0 M3 in favor of {@link org.springframework.data.document.mongodb.convert.MappingMongoConverter}
+ * The MappingMongoConverter provides all the functionality of the SimpleMongoConverter and will replace it as the default
+ * converter used. The SimpleMongoCOnverter will be removed at some point before the GA release.
  */
 @Deprecated
 public class SimpleMongoConverter extends AbstractMongoConverter implements InitializingBean {
@@ -131,15 +126,13 @@ public class SimpleMongoConverter extends AbstractMongoConverter implements Init
 		SIMPLE_TYPES = Collections.unmodifiableSet(basics);
 	}
 
-	private final GenericConversionService conversionService;
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 
 	/**
 	 * Creates a {@link SimpleMongoConverter}.
 	 */
 	public SimpleMongoConverter() {
-		this.conversionService = ConversionServiceFactory.createDefaultConversionService();
-		this.conversionService.removeConvertible(Object.class, String.class);
+		super(ConversionServiceFactory.createDefaultConversionService());
 		this.mappingContext = new SimpleMongoMappingContext();
 	}
 
@@ -148,49 +141,6 @@ public class SimpleMongoConverter extends AbstractMongoConverter implements Init
 		 */
 	public MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> getMappingContext() {
 		return mappingContext;
-	}
-
-	/**
-	 * Initializes additional converters that handle {@link ObjectId} conversion. Will register converters for supported
-	 * id types if none are registered for those conversion already. {@link GenericConversionService} is configured.
-	 */
-	private void initializeConverters() {
-
-		if (!conversionService.canConvert(ObjectId.class, String.class)) {
-			conversionService.addConverter(ObjectIdToStringConverter.INSTANCE);
-		}
-		if (!conversionService.canConvert(String.class, ObjectId.class)) {
-			conversionService.addConverter(StringToObjectIdConverter.INSTANCE);
-		}
-		if (!conversionService.canConvert(ObjectId.class, BigInteger.class)) {
-			conversionService.addConverter(ObjectIdToBigIntegerConverter.INSTANCE);
-		}
-		if (!conversionService.canConvert(BigInteger.class, ObjectId.class)) {
-			conversionService.addConverter(BigIntegerToObjectIdConverter.INSTANCE);
-		}
-	}
-
-	/**
-	 * Add custom {@link Converter} or {@link ConverterFactory} instances to be used that will take presidence over using
-	 * object traversal to convert and object to/from DBObject
-	 * 
-	 * @param converters
-	 */
-	public void setCustomConverters(Set<?> converters) {
-		for (Object converter : converters) {
-			boolean added = false;
-			if (converter instanceof Converter) {
-				this.conversionService.addConverter((Converter<?, ?>) converter);
-				added = true;
-			}
-			if (converter instanceof ConverterFactory) {
-				this.conversionService.addConverterFactory((ConverterFactory<?, ?>) converter);
-				added = true;
-			}
-			if (!added) {
-				throw new IllegalArgumentException("Given set contains element that is neither Converter nor ConverterFactory!");
-			}
-		}
 	}
 
 	/*
@@ -562,12 +512,5 @@ public class SimpleMongoConverter extends AbstractMongoConverter implements Init
 			*/
 	public ObjectId convertObjectId(Object id) {
 		return conversionService.convert(id, ObjectId.class);
-	}
-
-	/* (non-Javadoc)
-		 * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
-		 */
-	public void afterPropertiesSet() {
-		initializeConverters();
 	}
 }

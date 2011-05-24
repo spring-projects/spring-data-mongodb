@@ -16,7 +16,6 @@
 
 package org.springframework.data.document.mongodb.convert;
 
-import static org.springframework.data.document.mongodb.convert.ObjectIdConverters.*;
 import static org.springframework.data.mapping.MappingBeanHelper.*;
 
 import java.lang.reflect.Array;
@@ -25,51 +24,45 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Date;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.bson.types.ObjectId;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.expression.BeanFactoryResolver;
+import org.springframework.core.convert.support.ConversionServiceFactory;
+import org.springframework.data.document.mongodb.MongoDbFactory;
+import org.springframework.data.document.mongodb.mapping.MongoPersistentEntity;
+import org.springframework.data.document.mongodb.mapping.MongoPersistentProperty;
+import org.springframework.data.mapping.AssociationHandler;
+import org.springframework.data.mapping.BeanWrapper;
+import org.springframework.data.mapping.PropertyHandler;
+import org.springframework.data.mapping.model.Association;
+import org.springframework.data.mapping.model.MappingContext;
+import org.springframework.data.mapping.model.MappingException;
+import org.springframework.data.mapping.model.ParameterValueProvider;
+import org.springframework.data.mapping.model.PreferredConstructor;
+import org.springframework.data.mapping.model.SpELAwareParameterValueProvider;
+import org.springframework.data.util.ClassTypeInformation;
+import org.springframework.data.util.TypeInformation;
+import org.springframework.expression.Expression;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.expression.spel.support.StandardEvaluationContext;
+import org.springframework.util.Assert;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBObject;
 import com.mongodb.DBRef;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.bson.types.ObjectId;
-import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
-import org.springframework.context.expression.BeanFactoryResolver;
-import org.springframework.core.GenericTypeResolver;
-import org.springframework.core.convert.ConversionService;
-import org.springframework.core.convert.converter.Converter;
-import org.springframework.core.convert.converter.ConverterFactory;
-import org.springframework.core.convert.converter.GenericConverter.ConvertiblePair;
-import org.springframework.core.convert.support.ConversionServiceFactory;
-import org.springframework.core.convert.support.GenericConversionService;
-import org.springframework.data.document.mongodb.MongoDbFactory;
-import org.springframework.data.document.mongodb.mapping.MongoPersistentEntity;
-import org.springframework.data.document.mongodb.mapping.MongoPersistentProperty;
-import org.springframework.data.mapping.AssociationHandler;
-import org.springframework.data.mapping.MappingBeanHelper;
-import org.springframework.data.mapping.PropertyHandler;
-import org.springframework.data.mapping.model.Association;
-import org.springframework.data.mapping.model.MappingContext;
-import org.springframework.data.mapping.model.MappingException;
-import org.springframework.data.mapping.model.PreferredConstructor;
-import org.springframework.data.util.ClassTypeInformation;
-import org.springframework.data.util.TypeInformation;
-import org.springframework.expression.Expression;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
-import org.springframework.expression.spel.support.StandardEvaluationContext;
-import org.springframework.util.CollectionUtils;
-import org.springframework.util.StringUtils;
 
 /**
  * {@link MongoConverter} that uses a {@link MappingContext} to do sophisticated mapping of domain objects to
@@ -78,26 +71,29 @@ import org.springframework.util.StringUtils;
  * @author Jon Brisbin <jbrisbin@vmware.com>
  * @author Oliver Gierke
  */
-public class MappingMongoConverter extends AbstractMongoConverter implements ApplicationContextAware, InitializingBean {
+public class MappingMongoConverter extends AbstractMongoConverter implements ApplicationContextAware {
 
 	public static final String CUSTOM_TYPE_KEY = "_class";
-	@SuppressWarnings({"unchecked"})
-	private static final List<Class<?>> MONGO_TYPES = Arrays.asList(Number.class, Date.class, String.class,
-			DBObject.class);
+	
 	private static final List<Class<?>> VALID_ID_TYPES = Arrays.asList(new Class<?>[]{ObjectId.class, String.class,
 			BigInteger.class, byte[].class});
 	protected static final Log log = LogFactory.getLog(MappingMongoConverter.class);
-
-	protected final GenericConversionService conversionService = ConversionServiceFactory
-			.createDefaultConversionService();
-	protected final Set<ConvertiblePair> customTypeMapping = new HashSet<ConvertiblePair>();
+	
 	protected final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
-	protected SpelExpressionParser spelExpressionParser = new SpelExpressionParser();
+	protected final SpelExpressionParser spelExpressionParser = new SpelExpressionParser();
 	protected ApplicationContext applicationContext;
 	protected boolean useFieldAccessOnly = true;
 	protected MongoDbFactory mongoDbFactory;
 
+	/**
+	 * Creates a new {@link MappingMongoConverter} given the new {@link MongoDbFactory} and {@link MappingContext}.
+	 * 
+	 * @param mongoDbFactory
+	 * @param mappingContext
+	 */
 	public MappingMongoConverter(MongoDbFactory mongoDbFactory, MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
+		super(ConversionServiceFactory.createDefaultConversionService());
+		Assert.notNull(mappingContext);
 		this.mongoDbFactory = mongoDbFactory;
 		this.mappingContext = mappingContext;
 	}
@@ -109,63 +105,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 */
 	public MappingMongoConverter(
 			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
-		this.mappingContext = mappingContext;
-		this.conversionService.removeConvertible(Object.class, String.class);
-	}
-
-	/**
-	 * Add custom {@link Converter} or {@link ConverterFactory} instances to be used that will take presidence over
-	 * metadata driven conversion between of objects to/from DBObject
-	 *
-	 * @param converters
-	 */
-	@Override
-	public void setCustomConverters(Set<?> converters) {
-		if (null != converters) {
-			for (Object c : converters) {
-				registerConverter(c);
-			}
-		}
-	}
-
-	/**
-	 * Inspects the given {@link Converter} for the types it can convert and registers the pair for custom type conversion
-	 * in case the target type is a Mongo basic type.
-	 *
-	 * @param converter
-	 */
-	private void registerConverter(Object converter) {
-		Class<?>[] arguments = GenericTypeResolver.resolveTypeArguments(converter.getClass(), Converter.class);
-		if (MONGO_TYPES.contains(arguments[1]) || MONGO_TYPES.contains(arguments[0])) {
-			customTypeMapping.add(new ConvertiblePair(arguments[0], arguments[1]));
-		}
-		boolean added = false;
-		if (converter instanceof Converter) {
-			this.conversionService.addConverter((Converter<?, ?>) converter);
-			added = true;
-		}
-		if (converter instanceof ConverterFactory) {
-			this.conversionService.addConverterFactory((ConverterFactory<?, ?>) converter);
-			added = true;
-		}
-		if (!added) {
-			throw new IllegalArgumentException("Given set contains element that is neither Converter nor ConverterFactory!");
-		}
-	}
-
-	private Class<?> getCustomTarget(Class<?> source, Class<?> expectedTargetType) {
-		for (ConvertiblePair typePair : customTypeMapping) {
-			if (typePair.getSourceType().isAssignableFrom(source)) {
-
-				Class<?> targetType = typePair.getTargetType();
-
-				if (targetType.equals(expectedTargetType) || expectedTargetType == null) {
-					return targetType;
-				}
-			}
-		}
-
-		return null;
+		this(null, mappingContext);
 	}
 
 	public MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> getMappingContext() {
@@ -257,9 +197,16 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		final List<String> ctorParamNames = new ArrayList<String>();
 		final MongoPersistentProperty idProperty = entity.getIdProperty();
-		final S instance = constructInstance(entity, new PreferredConstructor.ParameterValueProvider() {
+		
+		ParameterValueProvider provider = new SpELAwareParameterValueProvider(spelExpressionParser, spelCtx) {
+					@Override
 					@SuppressWarnings("unchecked")
 					public <T> T getParameterValue(PreferredConstructor.Parameter<T> parameter) {
+						
+						if (parameter.getKey() != null) {
+							return super.getParameterValue(parameter);
+						}
+						
 						String name = parameter.getName();
 						TypeInformation<T> type = parameter.getType();
 						Class<T> rawType = parameter.getRawType();
@@ -283,7 +230,9 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 						return null;
 					}
-				}, spelCtx);
+				};
+		
+		final BeanWrapper<MongoPersistentEntity<S>, S> wrapper = BeanWrapper.create(entity, provider, conversionService);
 
 		// Set properties not already set in the constructor
 		entity.doWithProperties(new PropertyHandler<MongoPersistentProperty>() {
@@ -298,7 +247,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 				Object obj = getValueInternal(prop, dbo, spelCtx, prop.getSpelExpression());
 				try {
-					setProperty(instance, prop, obj, useFieldAccessOnly);
+					wrapper.setProperty(prop, obj, useFieldAccessOnly);
 				} catch (IllegalAccessException e) {
 					throw new MappingException(e.getMessage(), e);
 				} catch (InvocationTargetException e) {
@@ -313,7 +262,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				MongoPersistentProperty inverseProp = association.getInverse();
 				Object obj = getValueInternal(inverseProp, dbo, spelCtx, inverseProp.getSpelExpression());
 				try {
-					setProperty(instance, inverseProp, obj);
+					wrapper.setProperty(inverseProp, obj);
 				} catch (IllegalAccessException e) {
 					throw new MappingException(e.getMessage(), e);
 				} catch (InvocationTargetException e) {
@@ -322,7 +271,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			}
 		});
 
-		return instance;
+		return wrapper.getBean();
 	}
 
 	/**
@@ -376,7 +325,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		writeInternal(obj, dbo, entity);
 	}
 
-	protected void writeInternal(final Object obj, final DBObject dbo, MongoPersistentEntity<?> entity) {
+	protected void writeInternal(Object obj, final DBObject dbo, MongoPersistentEntity<?> entity) {
 
 		if (obj == null) {
 			return;
@@ -385,13 +334,15 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		if (null == entity) {
 			throw new MappingException("No mapping metadata found for entity of type " + obj.getClass().getName());
 		}
+		
+		final BeanWrapper<MongoPersistentEntity<Object>, Object> wrapper = BeanWrapper.create(obj, conversionService);
 
 		// Write the ID
 		final MongoPersistentProperty idProperty = entity.getIdProperty();
 		if (!dbo.containsField("_id") && null != idProperty) {
 			Object idObj;
 			try {
-				idObj = getProperty(obj, idProperty, Object.class, useFieldAccessOnly);
+				idObj = wrapper.getProperty(idProperty, Object.class, useFieldAccessOnly);
 			} catch (IllegalAccessException e) {
 				throw new MappingException(e.getMessage(), e);
 			} catch (InvocationTargetException e) {
@@ -413,7 +364,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			public void doWithPersistentProperty(MongoPersistentProperty prop) {
 				Object propertyObj;
 				try {
-					propertyObj = getProperty(obj, prop, prop.getType(), useFieldAccessOnly);
+					propertyObj = wrapper.getProperty(prop, prop.getType(), useFieldAccessOnly);
 				} catch (IllegalAccessException e) {
 					throw new MappingException(e.getMessage(), e);
 				} catch (InvocationTargetException e) {
@@ -435,7 +386,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				Class<?> type = inverseProp.getType();
 				Object propertyObj;
 				try {
-					propertyObj = getProperty(obj, inverseProp, type, useFieldAccessOnly);
+					propertyObj = wrapper.getProperty(inverseProp, type, useFieldAccessOnly);
 				} catch (IllegalAccessException e) {
 					throw new MappingException(e.getMessage(), e);
 				} catch (InvocationTargetException e) {
@@ -450,28 +401,6 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
 		this.applicationContext = applicationContext;
-	}
-
-	/**
-	 * Registers converters for {@link ObjectId} handling, removes plain {@link #toString()} converter and promotes the
-	 * configured {@link ConversionService} to {@link MappingBeanHelper}.
-	 */
-	private void initializeConverters() {
-
-		if (!conversionService.canConvert(ObjectId.class, String.class)) {
-			conversionService.addConverter(ObjectIdToStringConverter.INSTANCE);
-		}
-		if (!conversionService.canConvert(String.class, ObjectId.class)) {
-			conversionService.addConverter(StringToObjectIdConverter.INSTANCE);
-		}
-		if (!conversionService.canConvert(ObjectId.class, BigInteger.class)) {
-			conversionService.addConverter(ObjectIdToBigIntegerConverter.INSTANCE);
-		}
-		if (!conversionService.canConvert(BigInteger.class, ObjectId.class)) {
-			conversionService.addConverter(BigIntegerToObjectIdConverter.INSTANCE);
-		}
-
-		setConversionService(conversionService);
 	}
 
 	@SuppressWarnings({"unchecked"})
@@ -651,8 +580,9 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		MongoPersistentProperty idProperty = targetEntity.getIdProperty();
 		ObjectId id = null;
+		BeanWrapper<MongoPersistentEntity<Object>, Object> wrapper = BeanWrapper.create(target, conversionService);
 		try {
-			id = getProperty(target, idProperty, ObjectId.class, useFieldAccessOnly);
+			id = wrapper.getProperty(idProperty, ObjectId.class, useFieldAccessOnly);
 			if (null == id) {
 				throw new MappingException("Cannot create a reference to an object with a NULL id.");
 			}
@@ -813,9 +743,4 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 		return rootList;
 	}
-
-	public void afterPropertiesSet() {
-		initializeConverters();
-	}
-
 }

@@ -17,6 +17,7 @@ package org.springframework.data.document.mongodb.convert;
 
 import com.mongodb.BasicDBList;
 import org.bson.types.ObjectId;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.data.document.mongodb.MongoReader;
 import org.springframework.data.document.mongodb.MongoWriter;
 import org.springframework.data.document.mongodb.mapping.MongoPersistentEntity;
@@ -53,4 +54,6 @@ public interface MongoConverter extends MongoWriter<Object>, MongoReader<Object>
 	Object[] maybeConvertArray(Object[] src);
 
 	BasicDBList maybeConvertList(BasicDBList dbl);
+	
+	ConversionService getConversionService();
 }

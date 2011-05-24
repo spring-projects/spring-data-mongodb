@@ -19,7 +19,7 @@ import java.io.Serializable;
 import org.springframework.data.document.mongodb.mapping.BasicMongoPersistentEntity;
 import org.springframework.data.document.mongodb.mapping.MongoPersistentEntity;
 import org.springframework.data.document.mongodb.mapping.MongoPersistentProperty;
-import org.springframework.data.mapping.MappingBeanHelper;
+import org.springframework.data.mapping.BeanWrapper;
 import org.springframework.data.repository.support.AbstractEntityInformation;
 
 /**
@@ -53,7 +53,7 @@ public class MappingMongoEntityInformation<T, ID extends Serializable> extends A
 		MongoPersistentProperty idProperty = entityMetadata.getIdProperty();
 
 		try {
-			return (ID) MappingBeanHelper.getProperty(entity, idProperty, idProperty.getType(), false);
+			return (ID) BeanWrapper.create(entity, null).getProperty(idProperty);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}

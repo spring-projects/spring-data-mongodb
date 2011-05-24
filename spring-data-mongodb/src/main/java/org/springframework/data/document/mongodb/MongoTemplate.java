@@ -47,6 +47,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.convert.ConversionFailedException;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
@@ -68,7 +69,7 @@ import org.springframework.data.document.mongodb.mapping.event.MongoMappingEvent
 import org.springframework.data.document.mongodb.query.Query;
 import org.springframework.data.document.mongodb.query.QueryMapper;
 import org.springframework.data.document.mongodb.query.Update;
-import org.springframework.data.mapping.MappingBeanHelper;
+import org.springframework.data.mapping.BeanWrapper;
 import org.springframework.data.mapping.model.MappingContext;
 import org.springframework.data.mapping.model.MappingException;
 import org.springframework.jca.cci.core.ConnectionCallback;
@@ -1013,9 +1014,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		if (idProp == null) {
 			throw new MappingException("No id property found for object of type " + entity.getType().getName());
 		}
+		
+		ConversionService service = mongoConverter.getConversionService();
 
 		try {
-			return MappingBeanHelper.getProperty(object, idProp, Object.class, true);
+			return BeanWrapper.create(object, service).getProperty(idProp, Object.class, true);
 		} catch (IllegalAccessException e) {
 			throw new MappingException(e.getMessage(), e);
 		} catch (InvocationTargetException e) {
@@ -1048,7 +1051,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		}
 
 		try {
-			MappingBeanHelper.setProperty(savedObject, idProp, id);
+			BeanWrapper.create(savedObject, mongoConverter.getConversionService()).setProperty(idProp, id);
 			return;
 		} catch (IllegalAccessException e) {
 			throw new MappingException(e.getMessage(), e);

@@ -61,7 +61,7 @@ public abstract class MongoOperationsUnitTests {
 		person = new Person("Oliver");
 		persons = Arrays.asList(person);
 
-		converter = new AbstractMongoConverter() {
+		converter = new AbstractMongoConverter(null) {
 
 			public void write(Object t, DBObject dbo) {
 				dbo.put("firstName", person.getFirstName());
