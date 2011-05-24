@@ -22,6 +22,7 @@ import org.springframework.beans.factory.BeanDefinitionStoreException;
 import org.springframework.beans.factory.config.RuntimeBeanReference;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
+import org.springframework.beans.factory.support.BeanDefinitionReaderUtils;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.xml.AbstractBeanDefinitionParser;
 import org.springframework.beans.factory.xml.ParserContext;
@@ -84,6 +85,7 @@ public class MongoDbFactoryParser extends AbstractBeanDefinitionParser {
     
  
     String mongoRef = element.getAttribute("mongo-ref");
+    String mongoId = null;
     if (!StringUtils.hasText(mongoRef)) {
       BeanDefinitionBuilder mongoBuilder = BeanDefinitionBuilder.genericBeanDefinition(MongoFactoryBean.class);
       Element mongoEl = DomUtils.getChildElementByTagName(element, "mongo");
@@ -94,11 +96,24 @@ public class MongoDbFactoryParser extends AbstractBeanDefinitionParser {
         mongoBuilder.addPropertyValue("port", (StringUtils.hasText(overridePort) ? overridePort : port));
         ParsingUtils.parseMongoOptions(parserContext, mongoEl, mongoBuilder);
         ParsingUtils.parseReplicaSet(parserContext, mongoEl, mongoBuilder);
+        String innerId = mongoEl.getAttribute("id");
+        if (StringUtils.hasText(innerId)) {
+          mongoId = innerId;
+        }
       }
       else {
         mongoBuilder.addPropertyValue("host", host);
         mongoBuilder.addPropertyValue("port", port);
       }
+      
+      /* MLP - WIP
+      if (mongoId == null) {
+        mongoRef = BeanDefinitionReaderUtils.registerWithGeneratedName(mongoBuilder.getBeanDefinition(), parserContext.getRegistry());
+      } else {      
+        registry.registerBeanDefinition(MONGO, mongoBuilder.getBeanDefinition());
+        mongoRef = MONGO;
+      }
+      */
       registry.registerBeanDefinition(MONGO, mongoBuilder.getBeanDefinition());
       mongoRef = MONGO;
     }

@@ -473,8 +473,58 @@ public class AppConfig {
       <title>Registering a MongoDbFactory instance using Java based
       metadata</title>
 
-      <para>As an alternative to configuring a com.mongodb.Mongo instance and
-      later providing the database name, the MongoDbFactory </para>
+      <para>As an alternative to configuring a
+      <classname>com.mongodb.Mongo</classname> instance and later providing
+      the database name and optionally the username and password, is to use
+      <classname>SimpleMongoDbFactory</classname>, which implements the
+      <interfacename>MongoDbFactory</interfacename> inteface shown below. A
+      reference to <interfacename>MongoDbFactory</interfacename> can be passed
+      to constructors of <classname>MongoTemplate</classname> to simplify its
+      creation.</para>
+
+      <programlisting language="java">public interface MongoDbFactory {
+
+  DB getDb() throws DataAccessException;
+
+  DB getDb(String dbName) throws DataAccessException;
+
+}</programlisting>
+
+      <para>The most simple usage is shown below</para>
+
+      <programlisting>@Configuration
+public class MongoConfiguration {
+  
+  public @Bean MongoDbFactory mongoDbFactory() throws Exception {
+    return new SimpleMongoDbFactory(new Mongo(), "database");
+  }
+
+}</programlisting>
+
+      <para>To define the username and password create an instance of
+      org.springframework.data.authentication.UserCredentials and pass it into
+      the constructor as shown below</para>
+
+      <programlisting>@Configuration
+public class MongoConfiguration {
+  
+  public @Bean MongoDbFactory mongoDbFactory() throws Exception {
+    UserCredentials userCredentials = new UserCredentials("joe", "secret");
+    return new SimpleMongoDbFactory(new Mongo(), "database", userCredentials);
+  }
+}
+</programlisting>
+    </section>
+
+    <section>
+      <title>Registering a Mongo instance using XML based metadata</title>
+
+      <para>The mongo namespace lets you create a MongoDbFactory instance
+      which is a convenient way to group together the a mongo instance, a
+      database name and an optional username and password. A simple usage is
+      shown below</para>
+
+      <programlisting language="xml">  &lt;mongo:db-factory dbname="database" &gt;</programlisting>
     </section>
   </section>
 
