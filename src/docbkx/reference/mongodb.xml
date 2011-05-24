@@ -136,60 +136,43 @@
     additional information, edit the log4j.properties file to have</para>
 
     <programlisting>log4j.category.org.springframework.data.document.mongodb=DEBUG
-log4j.appender.stdout.layout.ConversionPattern=%-5p [%c{3}]: %m%n</programlisting>
+log4j.appender.stdout.layout.ConversionPattern=%d{ABSOLUTE} %5p %40.40c:%4L - %m%n</programlisting>
 
     <para>Create a simple Person class to persist</para>
 
-    <programlisting language="java">package org.spring.mongodb;
+    <programlisting language="java">package org.spring.example;
 
 public class Person {
 
   private String id;
-  private String firstName;
-  private String lastName;
+  private String name;
   private int age;
-
-  public Person(String firstName, String lastName, int age) {
-    this.firstName = firstName;
-    this.lastName = lastName;
+   
+  public Person(String name, int age) {
+    this.name = name;
     this.age = age;
   }
-  public String getFirstName() {
-    return firstName;
+  
+  public String getId() {
+    return id;
   }
-
-  public void setFirstName(String firstName) {
-    this.firstName = firstName;
+  public String getName() {
+    return name;
   }
-
-  public String getLastName() {
-    return lastName;
-  }
-
-  public void setLastName(String lastName) {
-    this.lastName = lastName;
-  }
-
   public int getAge() {
     return age;
   }
-
-  public void setAge(int age) {
-    this.age = age;
-  }
-
+  
   @Override
   public String toString() {
-    return "Person [id=" + id + ", firstName=" + firstName + ", lastName="
-        + lastName + ", age=" + age + "]";
+    return "Person [id=" + id + ", name=" + name + ", age=" + age + "]";
   }
-
   
 }</programlisting>
 
     <para>And a main application to run</para>
 
-    <programlisting language="java">package org.spring.mongodb;
+    <programlisting language="java">package org.spring.example;
 
 import static org.springframework.data.document.mongodb.query.Criteria.where;
 
@@ -199,85 +182,85 @@ import org.springframework.data.document.mongodb.MongoOperations;
 import org.springframework.data.document.mongodb.MongoTemplate;
 import org.springframework.data.document.mongodb.query.Query;
 
-import org.spring.mongodb.Person;
+import com.mongodb.Mongo;
 
 public class MongoApp {
 
   private static final Log log = LogFactory.getLog(MongoApp.class);
 
-  public static void main(String[] args) {
+  public static void main(String[] args) throws Exception {
 
     MongoOperations mongoOps = new MongoTemplate(new Mongo(), "database");
-   
-    mongoOps.insert(new Person("Joe", "Swanson", 34));
 
-    log.info( mongoOps.findOne(new Query(where("firstName").is("Joe")), Person.class) );
+    mongoOps.insert(new Person("Joe", 34));
+
+    log.info(mongoOps.findOne(new Query(where("name").is("Joe")), Person.class));
 
     mongoOps.dropCollection("person");
   }
-
 }</programlisting>
 
     <para>This will produce the following output</para>
 
-    <programlisting>DEBUG [mongodb.mapping.MongoPersistentEntityIndexCreator]: Analyzing class class org.mongo.demo2.domain.Person for index information.
-DEBUG [document.mongodb.MongoTemplate]: insert DBObject containing fields: [_class, lastName, age, firstName] in collection: Person
-DEBUG [document.mongodb.MongoTemplate]: findOne using query: { "firstName" : "Joe"} in db.collection: database.Person
-INFO  [spring.mongodb.MongoApp]: Person [id=4ddb2f629e60ab6a21da5fdb, firstName=Joe, lastName=Swanson, age=34]
-DEBUG [document.mongodb.MongoTemplate]: Dropped collection [database.person]</programlisting>
+    <programlisting>10:01:32,062 DEBUG apping.MongoPersistentEntityIndexCreator:  80 - Analyzing class class org.spring.example.Person for index information.
+10:01:32,265 DEBUG work.data.document.mongodb.MongoTemplate: 631 - insert DBObject containing fields: [_class, age, name] in collection: Person
+10:01:32,765 DEBUG work.data.document.mongodb.MongoTemplate:1243 - findOne using query: { "name" : "Joe"} in db.collection: database.Person
+10:01:32,953  INFO              org.spring.example.MongoApp:  25 - Person [id=4ddbba3c0be56b7e1b210166, name=Joe, age=34]
+10:01:32,984 DEBUG work.data.document.mongodb.MongoTemplate: 375 - Dropped collection [database.person]</programlisting>
 
-    <note>
-      <para>If you are not using Maven then you would need to include the
-      following jars on the classpath for a basic Spring MongoDB
-      application:</para>
+    <para>The quick brown fox.</para>
 
-      <para><itemizedlist>
-          <listitem>
-            <para>spring-data-commons-core-1.1.0.M1.jar</para>
-          </listitem>
+    <section>
+      <title>Required Jars</title>
 
-          <listitem>
-            <para>spring-data-mongodb-1.0.0.M3.jar</para>
           </listitem>
-        </itemizedlist>In addition to the above listed Spring Data jars you
-      need to provide the following dependencies: <itemizedlist>
-          <listitem>
-            <para>com.springsource.org.aopalliance-1.0.0.jar</para>
-          </listitem>
+              <listitem>
+                <para>spring-data-document-core-1.0.0.M3.jar</para>
+              </listitem>
 
-          <listitem>
-            <para>commons-logging-1.1.1.jar</para>
-          </listitem>
+              <listitem>
+                <para>spring-data-mongodb-1.0.0.M3.jar</para>
+              </listitem>
+            </itemizedlist>In addition to the above listed Spring Data jars
+          you need to provide the following dependencies: <itemizedlist>
+              <listitem>
+                <para>com.springsource.org.aopalliance-1.0.0.jar</para>
+              </listitem>
 
-          <listitem>
-            <para>mongo-java-driver-2.5.3.jar</para>
-          </listitem>
+              <listitem>
+                <para>commons-logging-1.1.1.jar</para>
+              </listitem>
 
-          <listitem>
-            <para>spring-aop-3.0.5.RELEASE.jar</para>
-          </listitem>
+              <listitem>
+                <para>mongo-java-driver-2.5.3.jar</para>
+              </listitem>
 
-          <listitem>
-            <para>spring-asm-3.0.5.RELEASE.jar</para>
-          </listitem>
+              <listitem>
+                <para>spring-aop-3.0.5.RELEASE.jar</para>
+              </listitem>
 
-          <listitem>
-            <para>spring-beans-3.0.5.RELEASE.jar</para>
-          </listitem>
+              <listitem>
+                <para>spring-asm-3.0.5.RELEASE.jar</para>
+              </listitem>
 
-          <listitem>
-            <para>spring-context-3.0.5.RELEASE.jar</para>
-          </listitem>
+              <listitem>
+                <para>spring-beans-3.0.5.RELEASE.jar</para>
+              </listitem>
 
-          <listitem>
-            <para>spring-core-3.0.5.RELEASE.jar</para>
-          </listitem>
+              <listitem>
+                <para>spring-context-3I.0.5.RELEASE.jar</para>
+              </listitem>
 
-          <listitem>
-            <para>spring-expression-3.0.5.RELEASE.jar</para>
-          </listitem>
-        </itemizedlist></para>
-    </note>
+              <listitem>
+                <para>spring-core-3.0.5.RELEASE.jar</para>
+              </listitem>
+
+              <listitem>
+                <para>spring-expression-3.0.5.RELEASE.jar</para>
+              </listitem>
+            </itemizedlist></para>
+        </note></para>
+    </section>
   </section>
 
   <section>
