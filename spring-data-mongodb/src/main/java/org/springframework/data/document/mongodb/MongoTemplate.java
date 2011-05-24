@@ -371,6 +371,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		execute(collectionName, new CollectionCallback<Void>() {
 			public Void doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 				collection.drop();
+				if (LOGGER.isDebugEnabled()) {
+				  LOGGER.debug("Dropped collection ["+ collection.getFullName() + "]");
+				}
 				return null;
 			}
 		});
@@ -884,6 +887,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			public DBCollection doInDB(DB db) throws MongoException, DataAccessException {
 				DBCollection coll = db.createCollection(collectionName, collectionOptions);
 				// TODO: Emit a collection created event
+				if (LOGGER.isDebugEnabled()) {
+				  LOGGER.debug("Created collection [" + coll.getFullName() + "]");
+				}
 				return coll;
 			}
 		});
