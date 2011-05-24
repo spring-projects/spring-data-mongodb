@@ -90,7 +90,8 @@ public class MongoDbFactoryParser extends AbstractBeanDefinitionParser {
 				mongoBuilder.addPropertyValue("host", (StringUtils.hasText(overrideHost) ? overrideHost : host));
 				String overridePort = mongoEl.getAttribute("port");
 				mongoBuilder.addPropertyValue("port", (StringUtils.hasText(overridePort) ? overridePort : port));
-				new MongoParser().parseOptions(parserContext, mongoEl, mongoBuilder);
+				ParsingUtils.parseMongoOptions(parserContext, mongoEl, mongoBuilder);
+				ParsingUtils.parseReplicaSet(parserContext, mongoEl, mongoBuilder);
 			}
 			else {
 				mongoBuilder.addPropertyValue("host", host);

@@ -283,7 +283,7 @@ The host to connect to a MongoDB server.  Default is localhost
 The comma delimited list of host:port entries to use for replica set/pairs.
 							]]></xsd:documentation>
 			</xsd:annotation>
-		</xsd:attribute>
+		</xsd:attribute>				
 	</xsd:complexType>
 
 	<xsd:complexType name="optionsType">

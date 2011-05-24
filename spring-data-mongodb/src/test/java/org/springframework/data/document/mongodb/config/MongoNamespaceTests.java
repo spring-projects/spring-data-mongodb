@@ -18,8 +18,6 @@ package org.springframework.data.document.mongodb.config;
 
 import static org.junit.Assert.*;
 
-import java.lang.reflect.Field;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +31,7 @@ import com.mongodb.MongoOptions;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration
-public class MongoNamespaceTests {
+public class MongoNamespaceTests extends NamespaceTestSupport {
 
 	@Autowired
 	private ApplicationContext ctx;
@@ -81,23 +79,5 @@ public class MongoNamespaceTests {
 		
 	}
 
-	@SuppressWarnings({ "unchecked" })
-	public static <T> T readField(String name, Object target) throws Exception {
-		Field field = null;
-		Class<?> clazz = target.getClass();
-		do {
-			try {
-				field = clazz.getDeclaredField(name);
-			} catch (Exception ex) {
-			}
 
-			clazz = clazz.getSuperclass();
-		} while (field == null && !clazz.equals(Object.class));
-
-		if (field == null)
-			throw new IllegalArgumentException("Cannot find field '" + name + "' in the class hierarchy of "
-					+ target.getClass());
-		field.setAccessible(true);
-		return (T) field.get(target);
-	}
 }
