@@ -16,13 +16,15 @@
 package org.springframework.data.document.mongodb;
 
 import com.mongodb.MongoOptions;
+
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
 
 /**
- * A factory bean for consruction a MongoOptions instance
+ * A factory bean for construction of a MongoOptions instance
  * 
  * @author Graeme Rocher
+ * @Author Mark Pollack
  */
 public class MongoOptionsFactoryBean implements FactoryBean<MongoOptions>, InitializingBean {
 
@@ -53,11 +55,49 @@ public class MongoOptionsFactoryBean implements FactoryBean<MongoOptions>, Initi
 	 * socket timeout. 0 is default and infinite
 	 */
 	private int socketTimeout = MONGO_OPTIONS.socketTimeout;
+	
+
+  /**
+   * This controls whether or not to have socket keep alive
+   * turned on (SO_KEEPALIVE).
+   *
+   * defaults to false
+   */
+  public boolean socketKeepAlive = MONGO_OPTIONS.socketKeepAlive;
 
 	/**
 	 * this controls whether or not on a connect, the system retries automatically
 	 */
 	private boolean autoConnectRetry = MONGO_OPTIONS.autoConnectRetry;
+
+  /**
+   * This specifies the number of servers to wait for on the write operation, and exception raising behavior.
+   *
+   * Defaults to 0.
+   */
+	private int writeNumber;
+	
+  /**
+   * This controls timeout for write operations in milliseconds. 
+   *
+   *  Defaults to 0 (indefinite).  Greater than zero is number of milliseconds to wait.
+   */
+	private int writeTimeout;
+	
+  /**
+   * This controls whether or not to fsync.
+   *
+   * Defaults to false.
+   */
+	private boolean writeFsync;
+	
+	/**
+   * Specifies if the driver is allowed to read from secondaries
+   * or slaves.
+   *
+   * Defaults to false
+	 */
+	private boolean slaveOk = MONGO_OPTIONS.slaveOk;
 
 	/**
 	 * number of connections allowed per host will block if run out
@@ -95,12 +135,60 @@ public class MongoOptionsFactoryBean implements FactoryBean<MongoOptions>, Initi
 	public void setSocketTimeout(int socketTimeout) {
 		this.socketTimeout = socketTimeout;
 	}
+	
+	/**
+	 * This controls whether or not to have socket keep alive
+	 * @param socketKeepAlive
+	 */
+  public void setSocketKeepAlive(boolean socketKeepAlive) {
+    this.socketKeepAlive = socketKeepAlive;
+  }
+  
+  /**
+   * This specifies the number of servers to wait for on the write operation, and exception raising behavior.
+   * The 'w' option to the getlasterror command.  Defaults to 0.
+   * <ul>
+   *  <li>-1 = don't even report network errors </li>
+   *  <li> 0 = default, don't call getLastError by default </li>
+   *  <li> 1 = basic, call getLastError, but don't wait for slaves</li>
+   *  <li> 2+= wait for slaves </li>
+   * </ul>   
+   * @param writeNumber the number of servers to wait for on the write operation, and exception raising behavior.
+   */
+	public void setWriteNumber(int writeNumber) {
+    this.writeNumber = writeNumber;
+  }
 
 	/**
+	 * This controls timeout for write operations in milliseconds.  The 'wtimeout' option to the getlasterror command.
+   *
+	 * @param writeTimeout Defaults to 0 (indefinite).  Greater than zero is number of milliseconds to wait. 
+	 */
+  public void setWriteTimeout(int writeTimeout) {
+    this.writeTimeout = writeTimeout;
+  }
+
+  /**
+   * This controls whether or not to fsync.  The 'fsync' option to the getlasterror command. Defaults to false. 
+   * @param writeFsync to fsync on write (true), otherwise false.
+   */
+  public void setWriteFsync(boolean writeFsync) {
+    this.writeFsync = writeFsync;
+  }
+
+  /**
 	 * this controls whether or not on a connect, the system retries automatically
 	 */
 	public void setAutoConnectRetry(boolean autoConnectRetry) {
 		this.autoConnectRetry = autoConnectRetry;
+	}
+		
+	/**
+	 * Specifies if the driver is allowed to read from secondaries or slaves.  Defaults to false.
+	 * @param slaveOk true if the driver should read from secondaries or slaves.
+	 */
+	public void setSlaveOk(boolean slaveOk) {
+	  this.slaveOk = slaveOk;
 	}
 
 	public void afterPropertiesSet() {
@@ -109,8 +197,12 @@ public class MongoOptionsFactoryBean implements FactoryBean<MongoOptions>, Initi
 		MONGO_OPTIONS.maxWaitTime = maxWaitTime;
 		MONGO_OPTIONS.connectTimeout = connectTimeout;
 		MONGO_OPTIONS.socketTimeout = socketTimeout;
-		MONGO_OPTIONS.autoConnectRetry = autoConnectRetry;
-
+		MONGO_OPTIONS.socketKeepAlive = socketKeepAlive;
+		MONGO_OPTIONS.autoConnectRetry = autoConnectRetry;		
+		MONGO_OPTIONS.slaveOk = slaveOk;		
+		MONGO_OPTIONS.w = writeNumber;
+		MONGO_OPTIONS.wtimeout = writeTimeout;
+		MONGO_OPTIONS.fsync = writeFsync;
 	}
 
 	public MongoOptions getObject() {

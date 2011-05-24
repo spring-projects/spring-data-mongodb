@@ -297,14 +297,14 @@ The host to connect to a MongoDB server.  Default is localhost
 	</xsd:complexType>
 
 	<xsd:complexType name="optionsType">
-		<xsd:attribute name="connectionsPerHost" type="xsd:string">
+		<xsd:attribute name="connections-per-host" type="xsd:string">
 			<xsd:annotation>
 				<xsd:documentation><![CDATA[
 The number of connections allowed per host.  Will block if run out.	 Default is 10.  System property MONGO.POOLSIZE can override	
 				]]></xsd:documentation>
 			</xsd:annotation>
 		</xsd:attribute>
-		<xsd:attribute name="threadsAllowedToBlockForConnectionMultiplier" type="xsd:positiveInteger">
+		<xsd:attribute name="threads-allowed-to-block-for-connection-multiplier" type="xsd:string">
 			<xsd:annotation>
 				<xsd:documentation><![CDATA[
 The multiplier for connectionsPerHost for # of threads that can block.  Default is 5.
@@ -313,34 +313,69 @@ then 50 threads can block more than that and an exception will be thrown.
 				]]></xsd:documentation>
 			</xsd:annotation>
 		</xsd:attribute>
-		<xsd:attribute name="maxWaitTime" type="xsd:string">
+		<xsd:attribute name="max-wait-time" type="xsd:string">
 			<xsd:annotation>
 				<xsd:documentation><![CDATA[
 The max wait time of a blocking thread for a connection. Default is 12000 ms (2 minutes)	
 				]]></xsd:documentation>
 			</xsd:annotation>
 		</xsd:attribute>
-		<xsd:attribute name="connectTimeout" type="xsd:string">
+		<xsd:attribute name="connect-timeout" type="xsd:string">
 			<xsd:annotation>
 				<xsd:documentation><![CDATA[
 The connect timeout in milliseconds. 0 is default and infinite.	
 				]]></xsd:documentation>
 			</xsd:annotation>
 		</xsd:attribute>
-		<xsd:attribute name="socketTimeout" type="xsd:string">
+		<xsd:attribute name="socket-timeout" type="xsd:string">
 			<xsd:annotation>
 				<xsd:documentation><![CDATA[
 The socket timeout.  0 is default and infinite.
 				]]></xsd:documentation>
 			</xsd:annotation>
 		</xsd:attribute>
-		<xsd:attribute name="autoConnectRetry" type="xsd:string">
+		<xsd:attribute name="socket-keep-alive" type="xsd:string">
+			<xsd:annotation>
+				<xsd:documentation><![CDATA[
+The keep alive flag, controls whether or not to have socket keep alive timeout.  Defaults to false.
+				]]></xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>		
+		<xsd:attribute name="auto-connect-retry" type="xsd:string">
 			<xsd:annotation>
 				<xsd:documentation><![CDATA[
 This controls whether or not on a connect, the system retries automatically.  Default is false. 
 				]]></xsd:documentation>
 			</xsd:annotation>
 		</xsd:attribute>
+		<xsd:attribute name="write-number" type="xsd:string">
+			<xsd:annotation>
+				<xsd:documentation><![CDATA[
+This specifies the number of servers to wait for on the write operation, and exception raising behavior.  The 'w' option to the getlasterror command.  Defaults to 0.
+				]]></xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="write-timeout" type="xsd:string">
+			<xsd:annotation>
+				<xsd:documentation><![CDATA[
+This controls timeout for write operations in milliseconds.  The 'wtimeout' option to the getlasterror command.  Defaults to 0 (indefinite).  Greater than zero is number of milliseconds to wait.
+				]]></xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="write-fsync" type="xsd:string">
+			<xsd:annotation>
+				<xsd:documentation><![CDATA[
+This controls whether or not to fsync.  The 'fsync' option to the getlasterror command. Defaults to false.
+				]]></xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>						
+		<xsd:attribute name="slave-ok" type="xsd:string">
+			<xsd:annotation>
+				<xsd:documentation><![CDATA[
+This controls if the driver is allowed to read from secondaries or slaves.  Defaults to false.
+				]]></xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>				
 	</xsd:complexType>
 
 	<xsd:group name="beanElementGroup">

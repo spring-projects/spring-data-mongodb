@@ -64,13 +64,20 @@ public class MongoParser extends AbstractSingleBeanDefinitionParser {
 		BeanDefinitionBuilder optionsDefBuilder = BeanDefinitionBuilder
 				.genericBeanDefinition(MongoOptionsFactoryBean.class);
 
-		setPropertyValue(optionsElement, optionsDefBuilder, "connectionsPerHost", "connectionsPerHost");
-		setPropertyValue(optionsElement, optionsDefBuilder, "threadsAllowedToBlockForConnectionMultiplier",
+		setPropertyValue(optionsElement, optionsDefBuilder, "connections-per-host", "connectionsPerHost");
+		setPropertyValue(optionsElement, optionsDefBuilder, "threads-allowed-to-block-for-connection-multiplier",
 				"threadsAllowedToBlockForConnectionMultiplier");
-		setPropertyValue(optionsElement, optionsDefBuilder, "maxWaitTime", "maxWaitTime");
-		setPropertyValue(optionsElement, optionsDefBuilder, "connectTimeout", "connectTimeout");
-		setPropertyValue(optionsElement, optionsDefBuilder, "socketTimeout", "socketTimeout");
-		setPropertyValue(optionsElement, optionsDefBuilder, "autoConnectRetry", "autoConnectRetry");
+		setPropertyValue(optionsElement, optionsDefBuilder, "max-wait-time", "maxWaitTime");
+		setPropertyValue(optionsElement, optionsDefBuilder, "connect-timeout", "connectTimeout");
+		setPropertyValue(optionsElement, optionsDefBuilder, "socket-timeout", "socketTimeout");
+		setPropertyValue(optionsElement, optionsDefBuilder, "socket-keep-alive", "socketKeepAlive");		
+		setPropertyValue(optionsElement, optionsDefBuilder, "auto-connect-retry", "autoConnectRetry");
+    setPropertyValue(optionsElement, optionsDefBuilder, "write-number", "writeNumber");		
+		setPropertyValue(optionsElement, optionsDefBuilder, "write-timeout", "writeTimeout");
+		setPropertyValue(optionsElement, optionsDefBuilder, "write-fsync", "writeFsync");
+		setPropertyValue(optionsElement, optionsDefBuilder, "slave-ok", "slaveOk");		
+		
+		
 
 		mongoBuilder.addPropertyValue("mongoOptions", optionsDefBuilder.getBeanDefinition());
 		return true;
@@ -92,4 +99,5 @@ public class MongoParser extends AbstractSingleBeanDefinitionParser {
 			builder.addPropertyValue(propertyName, attr);
 		}
 	}
+	
 }
