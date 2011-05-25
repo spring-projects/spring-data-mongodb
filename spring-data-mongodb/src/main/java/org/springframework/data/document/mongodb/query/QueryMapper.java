@@ -96,7 +96,7 @@ public class QueryMapper {
 				} else if (null != converter) {
 					try {
 						value = converter.convertObjectId(value);
-					} catch (ConversionFailedException ignored) {
+					} catch (Exception ignored) {
 					}
 				}
 				newKey = "_id";

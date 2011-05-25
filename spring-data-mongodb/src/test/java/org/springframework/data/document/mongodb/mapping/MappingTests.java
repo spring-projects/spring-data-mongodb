@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
@@ -38,14 +39,17 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.springframework.core.convert.converter.Converter;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.document.mongodb.CollectionCallback;
 import org.springframework.data.document.mongodb.MongoCollectionUtils;
 import org.springframework.data.document.mongodb.MongoDbUtils;
 import org.springframework.data.document.mongodb.MongoTemplate;
 import org.springframework.data.document.mongodb.convert.CustomConvertersUnitTests.Foo;
+import org.springframework.data.document.mongodb.convert.MappingMongoConverter;
 import org.springframework.data.document.mongodb.query.Criteria;
 import org.springframework.data.document.mongodb.query.Query;
+import sun.tools.tree.NewArrayExpression;
 
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
@@ -356,6 +360,18 @@ public class MappingTests {
 		assertNotNull(results);
 		assertThat(results.size(), is(2));
 		assertThat(results.get(1).getSsn(), is(2));
+	}
+
+	@Test
+	public void testPrimitivesAsIds() {
+		PrimitiveId p = new PrimitiveId(1);
+		p.setText("test text");
+
+		template.save(p);
+
+		PrimitiveId p2 = template.findOne(query(where("id").is(1)), PrimitiveId.class);
+		assertNotNull(p2);
+		
 	}
 
 }
