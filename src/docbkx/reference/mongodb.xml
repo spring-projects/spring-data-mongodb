@@ -638,9 +638,10 @@ public class MongoConfiguration {
     <para>The class <classname>MongoTemplate</classname>, located in the
     package <literal>org.springframework.data.document.mongodb</literal>, is
     the central class of the Spring's MongoDB support providng a rich feature
-    set. The template offers convenience operations to create, update, delete
-    and query for MongoDB document and provide a mapping between your domain
-    objects and MongoDB documents.</para>
+    set to interact with the database. The template offers convenience
+    operations to create, update, delete and query for MongoDB documents and
+    provides a mapping between your domain objects and MongoDB
+    documents.</para>
 
     <note>
       <para>Once configured, <classname>MongoTemplate</classname> is
@@ -659,16 +660,18 @@ public class MongoConfiguration {
     interface <interfacename>MongoOperations</interfacename>. In as much as
     possible, the methods on <interfacename>MongoOperations</interfacename>
     are named after methods available on the MongoDB driver
-    <classname>Collection</classname> object. For example, you will find
-    methods such as "find", "findAndModify", "findOne", "insert", "remove",
-    "save", "update" and "updateMulti". The design goal was to make it as easy
-    as possible to transition between the use of the base MongoDB driver and
-    <interfacename>MongoOperations</interfacename>. The difference in betwee
-    the two is that MongOperations can be passed domain objects instead of
-    <classname>DBObject</classname> and there are fluent APIs for
-    <classname>Query</classname>, <classname>Criteria</classname>, and
-    <classname>Update</classname> operations instead of
-    <classname>DBObject</classname>..</para>
+    <classname>Collection</classname> object as as to make the API familiar to
+    existing MongoDB developers who are used to the driver API. For example,
+    you will find methods such as "find", "findAndModify", "findOne",
+    "insert", "remove", "save", "update" and "updateMulti". The design goal
+    was to make it as easy as possible to transition between the use of the
+    base MongoDB driver and <interfacename>MongoOperations</interfacename>. A
+    major difference in between the two APIs is that MongOperations can be
+    passed domain objects instead of <classname>DBObject</classname> and there
+    are fluent APIs for <classname>Query</classname>,
+    <classname>Criteria</classname>, and <classname>Update</classname>
+    operations instead of populating a <classname>DBObject</classname> to
+    specify the parameters for those operatiosn.</para>
 
     <note>
       <para>The preferred way to reference the operations on
@@ -677,14 +680,17 @@ public class MongoConfiguration {
     </note>
 
     <para>The default converter implementation used by
-    <classname>MongoTemplate</classname> is
-    <classname>SimpleMappingConverter</classname>, which as the name implies,
-    is simple. <classname>SimpleMapingConverter</classname> does not use any
-    additional mapping metadata to converter a domain object to a MongoDB
-    document. As such, it does not support functionality such as DBRefs or
-    creating indexes using annotations on domain classes. For a detailed
-    description of the MongoMappingConverter read the section on <link
-    linkend="mongo.mapping">Mapping Support</link>.</para>
+    <classname>MongoTemplate</classname> is MongoMappingConverter. While the
+    <classname>MongoMappingConverter</classname> can make use of additional
+    metadata to specify the mapping of objects to documents it is also capable
+    of converting objects that contain no additonal metadata by using some
+    conventions for the mapping of IDs and collection names. These conventions
+    as well as the use of mapping annotations is explained in the <link
+    linkend="mongo.mapping">Mapping chapter</link>.<note>
+        <para>In the M2 release <classname>SimpleMappingConverter</classname>,
+        was the default and this class is now deprecated as its functionality
+        has been subsumed by the MongoMappingConverter.</para>
+      </note></para>
 
     <para>Another central feature of MongoTemplate is exception translation of
     exceptions thrown in the Mongo Java driver into Spring's portable Data
@@ -696,9 +702,11 @@ public class MongoConfiguration {
     <classname>MongoTemplate</classname> to help you easily perform common
     tasks if you should need to access the Mongo driver API directly to access
     functionality not explicitly exposed by the MongoTemplate you can use one
-    of several Execute callback methods. These will give you a reference to a
-    Mongo Collection or DB object. Please see the section <ulink
-    url="mongo.executioncallback">Execution Callbacks</ulink> for more
+    of several Execute callback methods to access underlying driver APIs. The
+    execute callbacks will give you a reference to either a
+    <classname>com.mongodb.Collection</classname> or a
+    <classname>com.mongodb.DB</classname> object. Please see the section
+    <ulink url="mongo.executioncallback">Execution Callbacks</ulink> for more
     information.</para>
 
     <para>Now let's look at a examples of how to work with the
@@ -723,7 +731,7 @@ public class AppConfig {
     }
 
     public @Bean MongoTemplate mongoTemplate() throws Exception {
-        return new MongoTemplate(mongo(), "mydatabase", "mycollection");
+        return new MongoTemplate(mongo(), "mydatabase");
     }
 }
         </programlisting>
@@ -735,23 +743,30 @@ public class AppConfig {
       <itemizedlist>
         <listitem>
           <para><emphasis role="bold">MongoTemplate </emphasis>
-          <literal>(Mongo mongo, String databaseName) </literal> - takes the
-          default database name to operate against</para>
+          <literal>(Mongo mongo, String databaseName)</literal> - takes the
+          com.mongodb.Mongo object and the default database name to operate
+          against.</para>
         </listitem>
 
         <listitem>
           <para><emphasis role="bold">MongoTemplate </emphasis>
-          <literal>(Mongo mongo, String databaseName, String
-          defaultCollectionName) </literal> - adds the default collection name
-          to operate against.</para>
+          <literal>(Mongo mongo, String databaseName, UserCredentials
+          userCredentials) </literal> - adds the username and password for
+          authenticating with the database.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">MongoTemplate</emphasis>
+          <literal>(MongoDbFactory mongoDbFactory)</literal> - takes a
+          MongoDbFactory object that encapsulated the com.mongodb.Mongo
+          object, database name, and username and password.</para>
         </listitem>
 
         <listitem>
           <para><emphasis role="bold">MongoTemplate </emphasis>
-          <literal>(Mongo mongo, String databaseName, String
-          defaultCollectionName, MongoConverter mongoConverter) </literal> -
-          override with a provided MongoConverter. Default is
-          SimpleMongoConverter</para>
+          <literal>(MongoDbFactory mongoDbFactory, MongoConverter
+          mongoConverter) </literal> - adds a MongoConverter to use for
+          mapping.</para>
         </listitem>
       </itemizedlist>
 
@@ -763,12 +778,13 @@ public class AppConfig {
   &lt;bean id="mongoTemplate" class="org.springframework.data.document.mongodb.MongoTemplate"&gt;
     &lt;constructor-arg ref="mongo"/&gt;
     &lt;constructor-arg name="databaseName" value="geospatial"/&gt;
-    &lt;constructor-arg name="defaultCollectionName" value="newyork"/&gt;
   &lt;/bean&gt;</programlisting>
 
-      <para>Other properties that you might like to set when creating a
-      MongTemplate are WriteResultCheckingPolicy and the default
-      WriteConcern.</para>
+      <para>Other optional properties that you might like to set when creating
+      a <classname>MongoTemplate</classname> are the default
+      <classname>WriteResultCheckingPolicy</classname>,
+      <classname>WriteConcern</classname>, and <classname>SlaveOk</classname>
+      write option.</para>
 
       <note>
         <para>The preferred way to reference the operations on
@@ -780,42 +796,36 @@ public class AppConfig {
         <title>WriteResultChecking Policy</title>
 
         <para>When in development it is very handy to either log or throw an
-        exception if the WriteResult returned from any MongoDB operation
-        contains an error. It is quite common to forget to do this during
-        development and then end up with an application that looks like it ran
-        successfully but the database was not modified according to your
-        expectations. Setting the WriteResultChecking is an enum with the
-        following values, NONE, LOG, EXCEPTION.</para>
-
-        <para>The default is to use a WriteResultChecking of NONE.</para>
+        exception if the <classname>com.mongodb.WriteResult</classname>
+        returned from any MongoDB operation contains an error. It is quite
+        common to forget to do this during development and then end up with an
+        application that looks like it runs successfully but in fact the
+        database was not modified according to your expectations. Set
+        MongoTemplate's <property>WriteResultChecking</property> property to
+        an enum with the following values, LOG, EXCEPTION, or NONE to either
+        log the error, throw and exception or do nothing. The default is to
+        use a <literal>WriteResultChecking</literal> value of NONE.</para>
       </section>
 
       <section>
         <title>WriteConcern</title>
 
-        <para>You can set the WriteConcern property that the MongoTemplate
-        will use for write operations if it has not yet been specifid with the
-        driver. If not set, it will default to the one set in the MongoDB
-        driver's DB or Collection setting.</para>
+        <para>You can set the <classname>com.mongodb.WriteConcern</classname>
+        property that the <classname>MongoTemplate</classname> will use for
+        write operations if it has not yet been specified via the driver at a
+        higher level such as com.mongodb.Mongo. If MongoTemplate's
+        <classname>WriteConcern</classname> property is not set it will
+        default to the one set in the MongoDB driver's DB or Collection
+        setting.</para>
 
         <note>
-          <para>Setting the WriteConcern to different values when saving an
-          object will be provided in a future release. This will most likely
-          be handled using mapping metadata provided either in the form of
-          annotations on the domain object or by an external fluent
-          DSL.</para>
+          <para>Setting the <classname>WriteConcern</classname> to different
+          values when saving an object will be provided in a future release.
+          This will most likely be handled using mapping metadata provided
+          either in the form of annotations on the domain object or by an
+          external fluent DSL.</para>
         </note>
       </section>
-    </section>
-
-    <section>
-      <title>Configuring the MongoConverter</title>
-
-      <para>The SimpleMongoConverter is used by default but if you want to use
-      the more feature rich MappingMongoConverter there are a few steps.
-      Please refer to the <link
-      linkend="mongodb.mapping-configuration">mapping section</link> for more
-      information.</para>
     </section>
   </section>
 
@@ -831,12 +841,31 @@ public class AppConfig {
     <programlisting language="java">public class Person {
 
   private String id;
-  private String firstName;
+  private String name;
   private int age;
-
-  // getters and setter omitted
-
-}</programlisting>
+   
+  public Person(String name, int age) {
+    this.name = name;
+    this.age = age;
+  }
+  
+  public String getId() {
+    return id;
+  }
+  public String getName() {
+    return name;
+  }
+  public int getAge() {
+    return age;
+  }
+  
+  @Override
+  public String toString() {
+    return "Person [id=" + id + ", name=" + name + ", age=" + age + "]";
+  }
+  
+}
+</programlisting>
 
     <para>You can save, update and delete the object as shown below.</para>
 
@@ -845,51 +874,72 @@ public class AppConfig {
       that <classname>MongoTemplate</classname> implements.</para>
     </note>
 
-    <programlisting language="java">public class PersonExample { 
+    <programlisting language="java">package org.spring.example;
 
-  private static final Log log = LogFactory.getLog(PersonExample.class);
-  
-  @Autowired
-  private MongoOperations mongoOps;
-  
-  public void doWork() {
-   
-    Person p = new Person();
-    p.setFirstName("Sven");
-    p.setAge(22);
+import static org.springframework.data.document.mongodb.query.Criteria.where;
+import static org.springframework.data.document.mongodb.query.Update.update;
+import static org.springframework.data.document.mongodb.query.Query.query;
+
+import java.util.List;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.data.document.mongodb.MongoOperations;
+import org.springframework.data.document.mongodb.MongoTemplate;
+import org.springframework.data.document.mongodb.SimpleMongoDbFactory;
+
+import com.mongodb.Mongo;
+
+public class MongoApp {
+
+  private static final Log log = LogFactory.getLog(MongoApp.class);
+
+  public static void main(String[] args) throws Exception {
+
+    MongoOperations mongoOps = new MongoTemplate(new SimpleMongoDbFactory(new Mongo(), "database"));
+
+    Person p = new Person("Joe", 34);
     
-    // Save   
-    mongoOps.save(p);
-    log.debug("Saved: " + p);
+    // Insert is used to initially store the object into the database.
+    mongoOps.insert(p);
+    log.info("Insert: " + p);
     
     // Find
-    p = mongoOps.findOne(query(whereId().is(p.getId())), Person.class);    
-    log.debug("Found: " + p);
+    p = mongoOps.findById(p.getId(), Person.class);    
+    log.info("Found: " + p);
     
-    // Update age to 24 for Sven
-    mongoOps.updateFirst(query(where("firstName").is("Sven")), update("age", 24));    
-    p = mongoOps.findOne(query(whereId().is(p.getId())), Person.class);    
-    log.debug("Updated: " + p);
+    // Update
+    mongoOps.updateFirst(Person.class, query(where("name").is("Joe")), update("age", 35));    
+    p = mongoOps.findOne(query(where("name").is("Joe")), Person.class);
+    log.info("Updated: " + p);
     
-    // Delete    
+    // Delete
     mongoOps.remove(p);
-
+    
     // Check that deletion worked
     List&lt;Person&gt; people =  mongoOps.getCollection(Person.class);
-    log.debug("Number of people = : " + people.size());
+    log.info("Number of people = : " + people.size());
 
-}</programlisting>
+    
+    mongoOps.dropCollection("person");
+  }
+}
+</programlisting>
 
-    <para>This would produce the following log output (including some debug
-    message from <classname>MongoTemplate</classname> itself)</para>
+    <para>This would produce the following log output (including debug
+    messages from <classname>MongoTemplate</classname> itself)</para>
 
-    <programlisting>Saved: PersonWithIdPropertyOfTypeString [id=4d9e82ac94fa72c65a9e7d5f, firstName=Sven, age=22]
-findOne using query: { "_id" : { "$oid" : "4d9e82ac94fa72c65a9e7d5f"}} in db.collection: database.personexample
-Found: PersonWithIdPropertyOfTypeString [id=4d9e82ac94fa72c65a9e7d5f, firstName=Sven, age=22]
-findOne using query: { "_id" : { "$oid" : "4d9e82ac94fa72c65a9e7d5f"}} in db.collection: database.personexample
-Updated: PersonWithIdPropertyOfTypeString [id=4d9e82ac94fa72c65a9e7d5f, firstName=Sven, age=24]
-remove using query: { "_id" : { "$oid" : "4d9e82ac94fa72c65a9e7d5f"}}
-Number of people = : 0</programlisting>
+    <programlisting>DEBUG apping.MongoPersistentEntityIndexCreator:  80 - Analyzing class class org.spring.example.Person for index information.
+DEBUG work.data.document.mongodb.MongoTemplate: 632 - insert DBObject containing fields: [_class, age, name] in collection: Person
+INFO               org.spring.example.MongoApp:  30 - Insert: Person [id=4ddc6e784ce5b1eba3ceaf5c, name=Joe, age=34]
+DEBUG work.data.document.mongodb.MongoTemplate:1246 - findOne using query: { "_id" : { "$oid" : "4ddc6e784ce5b1eba3ceaf5c"}} in db.collection: database.Person
+INFO               org.spring.example.MongoApp:  34 - Found: Person [id=4ddc6e784ce5b1eba3ceaf5c, name=Joe, age=34]
+DEBUG work.data.document.mongodb.MongoTemplate: 778 - calling update using query: { "name" : "Joe"} and update: { "$set" : { "age" : 35}} in collection: Person
+DEBUG work.data.document.mongodb.MongoTemplate:1246 - findOne using query: { "name" : "Joe"} in db.collection: database.Person
+INFO               org.spring.example.MongoApp:  39 - Updated: Person [id=4ddc6e784ce5b1eba3ceaf5c, name=Joe, age=35]
+DEBUG work.data.document.mongodb.MongoTemplate: 823 - remove using query: { "id" : "4ddc6e784ce5b1eba3ceaf5c"} in collection: Person
+INFO               org.spring.example.MongoApp:  46 - Number of people = : 0
+DEBUG work.data.document.mongodb.MongoTemplate: 376 - Dropped collection [database.person]</programlisting>
 
     <para>There was implicit conversion using the MongoConverter between a
     String and ObjectId as stored in the database and recognizing a convention
@@ -914,7 +964,7 @@ Number of people = : 0</programlisting>
       mapped to this '_id' field.</para>
 
       <para>The following outlines what property will be mapped to the '_id'
-      field:</para>
+      document field:</para>
 
       <para><itemizedlist>
           <listitem>
@@ -925,31 +975,39 @@ Number of people = : 0</programlisting>
           </listitem>
 
           <listitem>
-            <para>A property or field named <classname>id</classname> will be
-            mapped to the '_id' field.</para>
-          </listitem>
-
-          <listitem>
-            <para>A property or field declared as a String in the Java class
-            will be converted to and stored as an ObjectId if possible
-            (conversions and rules would be handled by the Mongo Java driver).
-            If it cannot be converted to an ObjectId, then the value will be
-            stored as a string in the database.</para>
-          </listitem>
-
-          <listitem>
-            <para>A property or field declared as anything but a String in the
-            Java class will be stored as the type it is declared as, which
-            means it must be one of the basic types supported by the Mongo
-            Java driver.</para>
+            <para>A property or field without an annotation but named
+            <classname>id</classname> will be mapped to the '_id'
+            field.</para>
           </listitem>
         </itemizedlist></para>
+
+      <para>The following outlines what type conversion, if any, will be done
+      on the property mapped to the _id document field when using the
+      <classname>MappingMongoConverter</classname>, the default for
+      <classname>MongoTemplate</classname>.</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>An id property or field declared as a String in the Java class
+          will be converted to and stored as an ObjectId if possible using a
+          Spring Converter&lt;String, ObjectId&gt;. Valid conversion rules are
+          delegated to the Mongo Java driver. If it cannot be converted to an
+          ObjectId, then the value will be stored as a string in the
+          database.</para>
+        </listitem>
+
+        <listitem>
+          <para>An id property or field declared as BigInteger in the Java
+          class will be converted to and stored as an ObjectId using a Spring
+          Converter&lt;BigInteger, ObjectId&gt;.</para>
+        </listitem>
+      </itemizedlist>
 
       <para>If no field or property specified above is present in the Java
       class then an implicit '_id' file will be generated by the driver but
       not mapped to a property or field of the Java class.</para>
 
-      <para>When querying and updating the <classname>JdbcTemplate</classname>
+      <para>When querying and updating <classname>MongoTemplate</classname>
       will use the converter to handle conversions of the
       <classname>Query</classname> and <classname>Update</classname> objects
       that correspond to the above rules for saving documents so field names
@@ -960,12 +1018,12 @@ Number of people = : 0</programlisting>
     <section>
       <title>Methods for saving and inserting documents</title>
 
-      <para>There are several convenient methods on MongoTemplate for saving
-      and inserting your objects. In addition to using a
-      <interfacename>MongoCoverter</interfacename> to converter your domain
-      object to the database, you can also use an implementation of the
-      <interfacename>MongoWriter</interfacename> interface to have very fine
-      grained control over the conversion process.</para>
+      <para>There are several convenient methods on
+      <classname>MongoTemplate</classname> for saving and inserting your
+      objects. To have more fine grained control over the conversion process
+      you can register Spring converters with the MappingMongoConverter, for
+      example Converter&lt;Person, DBObject&gt; and Converter&lt;DBObject,
+      Person&gt;.</para>
 
       <note>
         <para>The difference between insert and save operations is that a save
@@ -973,11 +1031,11 @@ Number of people = : 0</programlisting>
         present.</para>
       </note>
 
-      <para>The simple case of using the save operation is to pass in as an
-      argument only the object to save. In this case the default collection
-      assigned to the template will be used unless the converter overrides
-      this default through the use of more specific mapping metadata. You may
-      also call the save operation with a specific collection name.</para>
+      <para>The simple case of using the save operation is to save a POJO. In
+      this case the collection name will be determined by name (not fully
+      qualfied) of the class. You may also call the save operation with a
+      specific collection name. The collection to store the object can be
+      overriden using mapping metadata. </para>
 
       <para>When inserting or saving, if the Id property is not set, the
       assumption is that its value will be autogenerated by the database. As
@@ -1019,20 +1077,6 @@ import static org.springframework.data.document.mongodb.query.Criteria.query;
             </emphasis> <literal>(String collectionName, Object objectToSave)
             </literal> Save the object to the specified collection.</para>
           </listitem>
-
-          <listitem>
-            <para><literal>&lt;T&gt; void</literal> <emphasis role="bold">save
-            </emphasis> <literal>(T objectToSave, MongoWriter&lt;T&gt; writer)
-            </literal> Save the object into the default collection using the
-            provided writer.</para>
-          </listitem>
-
-          <listitem>
-            <para><literal>&lt;T&gt; void</literal> <emphasis role="bold">save
-            </emphasis> <literal>(String collectionName, T objectToSave,
-            MongoWriter&lt;T&gt; writer) </literal> Save the object into the
-            specified collection using the provided writer.</para>
-          </listitem>
         </itemizedlist></para>
 
       <para>A similar set of insert operations is listed below</para>
@@ -1049,51 +1093,7 @@ import static org.springframework.data.document.mongodb.query.Criteria.query;
             </emphasis> <literal>(String collectionName, Object objectToSave)
             </literal> Insert the object to the specified collection.</para>
           </listitem>
-
-          <listitem>
-            <para><literal>&lt;T&gt; void</literal> <emphasis
-            role="bold">insert </emphasis> <literal>(T objectToSave,
-            MongoWriter&lt;T&gt; writer) </literal> Insert the object into the
-            default collection using the provided writer.</para>
-          </listitem>
-
-          <listitem>
-            <para><literal>&lt;T&gt; void</literal> <emphasis
-            role="bold">insert </emphasis> <literal>(String collectionName, T
-            objectToSave, MongoWriter&lt;T&gt; writer) </literal> Insert the
-            object into the specified collection using the provided
-            writer.</para>
-          </listitem>
         </itemizedlist></para>
-
-      <para>Unless and explicit MongoWriter is passed into the save or insert
-      method, the the template's MongoConverter will be used.</para>
-
-      <section>
-        <title>Saving using MongoWriter</title>
-
-        <para>The MongoWriter interface allows you to have lower level control
-        over the mapping of an object into a DBObject. The MongoWriter
-        interface is</para>
-
-        <programlisting language="java">/**
- * A MongoWriter is responsible for converting an object of type T to the native MongoDB
- * representation DBObject.
- *
- * @param &lt;T&gt; the type of the object to convert to a DBObject
- */
-public interface MongoWriter&lt;T&gt; {
-
-  /**
-   * Write the given object of type T to the native MongoDB object representation DBObject.
-   *
-   * @param t   The object to convert to a DBObject
-   * @param dbo The DBObject to use for writing.
-   */
-  void write(T t, DBObject dbo);
-
-}</programlisting>
-      </section>
 
       <section>
         <title>Inserting Lists of objects in batch</title>
@@ -1119,23 +1119,6 @@ public interface MongoWriter&lt;T&gt; {
               objects into the specified collection in a single batch write to
               the database.</para>
             </listitem>
-
-            <listitem>
-              <para><literal>&lt;T&gt; void</literal> <emphasis
-              role="bold">insertList</emphasis><literal> (List&lt;? extends
-              T&gt; listToSave, MongoWriter&lt;T&gt; writer)</literal>
-              <literal></literal> Insert the object into the default
-              collection using the provided writer.</para>
-            </listitem>
-
-            <listitem>
-              <para><literal>&lt;T&gt; void</literal> <emphasis
-              role="bold">insertList</emphasis><literal>(String
-              collectionName, List&lt;? extends T&gt; listToSave,
-              MongoWriter&lt;T&gt; writer)</literal> Insert a list of objects
-              into the specified collection using the provided MongoWriter
-              instance</para>
-            </listitem>
           </itemizedlist></para>
       </section>
     </section>
@@ -1155,13 +1138,13 @@ public interface MongoWriter&lt;T&gt; {
         <title>Updating documents using the MongoTemplate</title>
 
         <programlisting language="java">import static org.springframework.data.document.mongodb.query.Criteria.where;
-import static org.springframework.data.document.mongodb.query.Query.query;
-import static org.springframework.data.document.mongodb.query.Update
+import static org.springframework.data.document.mongodb.query.Query;
+import static org.springframework.data.document.mongodb.query.Update;
 
           ...
 
-  WriteResult wr = mongoTemplate.updateMulti(query(where("accounts.accountType").is(Account.Type.SAVINGS)),
-                                             update.inc("accounts.$.balance", 50.00));
+  WriteResult wr = mongoTemplate.updateMulti(Account.class, new Query(where("accounts.accountType").is(Account.Type.SAVINGS)),
+                                                            new Update().inc("accounts.$.balance", 50.00));
         </programlisting>
       </example>
 
@@ -1180,10 +1163,11 @@ import static org.springframework.data.document.mongodb.query.Update
         <para><itemizedlist>
             <listitem>
               <para><literal>WriteResult</literal> <emphasis
-              role="bold">updateFirst </emphasis> <literal>(Query query,
-              Update update) </literal> Updates the first object that is found
-              in the default collection that matches the query document with
-              the provided updated document.</para>
+              role="bold">updateFirst </emphasis> <literal>(Class class, Query
+              query, Update update) </literal> Updates the first object that
+              is found in the collection corresponding to the class that
+              matches the query document with the provided updated
+              document.</para>
             </listitem>
 
             <listitem>
@@ -1197,10 +1181,11 @@ import static org.springframework.data.document.mongodb.query.Update
 
             <listitem>
               <para><literal>WriteResult</literal> <emphasis
-              role="bold">updateMulti </emphasis> <literal>(Query query,
-              Update update) </literal> Updates all objects that are found in
-              the default collection that matches the query document criteria
-              with the provided updated document.</para>
+              role="bold">updateMulti </emphasis> <literal>(Class class, Query
+              query, Update update) </literal> Updates all objects that are
+              found in the collection corresponding to the class that matches
+              the query document criteria with the provided updated
+              document.</para>
             </listitem>
 
             <listitem>
@@ -1218,6 +1203,14 @@ import static org.springframework.data.document.mongodb.query.Update
 
       <section>
         <title>Methods for the Update class</title>
+
+        <para>The Update class can be used with a little 'syntax sugar' as its
+        methods are meant to be chained together and you can kickstart the
+        creation of a new Update instance via the static method
+        <literal>public static Update update(String key, Object
+        value)</literal> and using static imports.</para>
+
+        <para>Here is a listing of methods on the Update class</para>
 
         <para><itemizedlist>
             <listitem>
@@ -1285,8 +1278,6 @@ import static org.springframework.data.document.mongodb.query.Update
               <literal>$unset</literal> update modifier</para>
             </listitem>
           </itemizedlist></para>
-
-        <para></para>
       </section>
     </section>
 
@@ -1330,7 +1321,7 @@ import static org.springframework.data.document.mongodb.query.Update
             role="bold">remove</emphasis> <literal>(String collectionName,
             Query query, Class&lt;T&gt; targetClass)</literal>Same behavior as
             remove(Query, Class) but the Class parameter is used to help
-            convert the Id of the object if it is present in the uqery</para>
+            convert the Id of the object if it is present in the query</para>
           </listitem>
         </itemizedlist></para>
 
@@ -1341,13 +1332,16 @@ import static org.springframework.data.document.mongodb.query.Update
   <section id="mongo.query">
     <title>Querying Documents</title>
 
-    <para>You can express you queries using the Query and Criteria classes
-    which have method names that mirror the native MongoDB operator names such
-    as lt, lte, is, and others. The Query and Criteria classes follow a fluent
-    API style so that you can easily chain together multiple method criteria
-    and queries while having easy to understand code. Static imports in Java
-    are used to help remove the need to see the 'new' keyword for creating
-    Query and Criteria instances so as to improve readability.</para>
+    <para>You can express your queries using the <classname>Query</classname>
+    and <classname>Criteria</classname> classes which have method names that
+    mirror the native MongoDB operator names such as <literal>lt</literal>,
+    <literal>lte</literal>, <literal>is</literal>, and others. The
+    <classname>Query</classname> and <classname>Criteria</classname> classes
+    follow a fluent API style so that you can easily chain together multiple
+    method criteria and queries while having easy to understand code. Static
+    imports in Java are used to help remove the need to see the 'new' keyword
+    for creating Query and Criteria instances so as to improve
+    readability.</para>
 
     <para>GeoSpatial queries are also supported and are described more in the
     section <link linkend="mongo.geospatial">GeoSpatial Queries</link>.</para>
@@ -1355,12 +1349,13 @@ import static org.springframework.data.document.mongodb.query.Update
     <section id="mongodb-template-query">
       <title>Querying documents in a collection</title>
 
-      <para>We saw how to retrieve a single document. We can also query for a
-      collection of documents to be returned as domain objects in a list.
-      Assuming that we have a number of Person objects with name and age
-      stored as documents in a collection and that each person has an embedded
-      account document with a balance. We can now run a query using the
-      following code.</para>
+      <para>We saw how to retrieve a single document using the findOne and
+      findById methods on MongoTemplate in previous sections which return a
+      single domain object. We can also query for a collection of documents to
+      be returned as a list of domain objects. Assuming that we have a number
+      of Person objects with name and age stored as documents in a collection
+      and that each person has an embedded account document with a balance. We
+      can now run a query using the following code.</para>
 
       <example>
         <title>Querying for documents using the MongoTemplate</title>
@@ -1405,6 +1400,15 @@ import static org.springframework.data.document.mongodb.query.Query.query;
             </listitem>
 
             <listitem>
+              <para><literal>Criteria</literal> <emphasis role="bold">and
+              </emphasis> <literal>(String key) </literal>Adds a chained
+              <classname>Criteria</classname> with the specified
+              <literal>key</literal> to the current
+              <classname>Criteria</classname> and retuns the newly created
+              one</para>
+            </listitem>
+
+            <listitem>
               <para><literal>Criteria</literal> <emphasis
               role="bold">elemMatch </emphasis> <literal>(Criteria c)
               </literal>Creates a criterion using the
@@ -1432,7 +1436,15 @@ import static org.springframework.data.document.mongodb.query.Query.query;
             <listitem>
               <para><literal>Criteria</literal> <emphasis role="bold">in
               </emphasis> <literal>(Object... o) </literal>Creates a criterion
-              using the <literal>$in</literal> operator</para>
+              using the <literal>$in</literal> operator for a varargs
+              argument.</para>
+            </listitem>
+
+            <listitem>
+              <para><literal>Criteria</literal> <emphasis role="bold">in
+              </emphasis> <literal>(Collection&lt;?&gt; collection)
+              </literal>Creates a criterion using the <literal>$in</literal>
+              operator using a collection</para>
             </listitem>
 
             <listitem>
@@ -1461,6 +1473,12 @@ import static org.springframework.data.document.mongodb.query.Query.query;
             </listitem>
 
             <listitem>
+              <para><literal>Criteria</literal> <emphasis role="bold">ne
+              </emphasis> <literal>(Object o)</literal>Creates a criterion
+              using the <literal>$ne</literal> operator</para>
+            </listitem>
+
+            <listitem>
               <para><literal>Criteria</literal> <emphasis role="bold">nin
               </emphasis> <literal>(Object... o) </literal>Creates a criterion
               using the <literal>$nin</literal> operator</para>
@@ -1471,6 +1489,14 @@ import static org.springframework.data.document.mongodb.query.Query.query;
               </emphasis> <literal>()</literal>Creates a criterion using the
               <literal>$not</literal> meta operator which affects the clause
               directly following</para>
+            </listitem>
+
+            <listitem>
+              <para><literal>Criteria</literal> <emphasis role="bold">or
+              </emphasis> <literal>(List&lt;Query&gt;
+              queries)</literal>Creates an or query using the
+              <literal>$or</literal> operator for all of the provided
+              queries</para>
             </listitem>
 
             <listitem>
@@ -1489,15 +1515,6 @@ import static org.springframework.data.document.mongodb.query.Query.query;
               <para><literal>Criteria</literal> <emphasis role="bold">type
               </emphasis> <literal>(int t)</literal>Creates a criterion using
               the <literal>$type</literal> operator</para>
-            </listitem>
-
-            <listitem>
-              <para><literal>Criteria</literal> <emphasis role="bold">and
-              </emphasis> <literal>(String key) </literal>Adds a chained
-              <classname>Criteria</classname> with the specified
-              <literal>key</literal> to the current
-              <classname>Criteria</classname> and retuns the newly created
-              one</para>
             </listitem>
           </itemizedlist>
         </para>
@@ -1541,6 +1558,13 @@ import static org.springframework.data.document.mongodb.query.Query.query;
           </emphasis> <literal>(Point point) </literal>Creates a geospatial
           criterion using <literal>$nearSphere$center</literal> operations.
           This is only available for Mongo 1.7 and higher.</para>
+        </listitem>
+
+        <listitem>
+          <para><literal>Criteria</literal> <emphasis role="bold">maxDistance
+          </emphasis> <literal>(double maxDistance) </literal>Creates a
+          geospatial criterion using the <literal>$maxDistance</literal>
+          operation, for use with $near.</para>
         </listitem>
       </itemizedlist>
 
@@ -1590,8 +1614,6 @@ import static org.springframework.data.document.mongodb.query.Query.query;
               <para><literal>Sort</literal> <emphasis role="bold">sort
               </emphasis> <literal>()</literal> used to provide sort
               definition for the results</para>
-
-              <para />
             </listitem>
           </itemizedlist>
         </para>
@@ -1617,28 +1639,11 @@ import static org.springframework.data.document.mongodb.query.Query.query;
           </listitem>
 
           <listitem>
-            <para><literal>&lt;T&gt; List&lt;T&gt;</literal> <emphasis
-            role="bold">getCollection </emphasis> <literal>(String
-            collectionName, Class&lt;T&gt; targetClass, MongoReader&lt;T&gt;
-            reader) </literal> Query for a list of objects of type T from the
-            specified collection, mapping the DBObject using the provided
-            MongoReader.</para>
-          </listitem>
-
-          <listitem>
             <para><literal>&lt;T&gt; T</literal> <emphasis role="bold">findOne
             </emphasis> <literal>(Query query, Class&lt;T&gt; targetClass)
             </literal> Map the results of an ad-hoc query on the default
             MongoDB collection to a single instance of an object of the
             specified type.</para>
-          </listitem>
-
-          <listitem>
-            <para><literal>&lt;T&gt; T</literal> <emphasis role="bold">findOne
-            </emphasis> <literal>(Query query, Class&lt;T&gt; targetClass,
-            MongoReader&lt;T&gt; reader) </literal> Map the results of an
-            ad-hoc query on the default MongoDB collection to a single
-            instance of an object of the specified type.</para>
           </listitem>
 
           <listitem>
@@ -1650,12 +1655,17 @@ import static org.springframework.data.document.mongodb.query.Query.query;
           </listitem>
 
           <listitem>
-            <para><literal>&lt;T&gt; T</literal> <emphasis role="bold">findOne
-            </emphasis> <literal>(String collectionName, Query query,
-            Class&lt;T&gt; targetClass, MongoReader&lt;T&gt; reader)
-            </literal> Map the results of an ad-hoc query on the specified
-            collection to a single instance of an object of the specified
-            type.</para>
+            <para><literal>&lt;T&gt; T</literal> <emphasis
+            role="bold">findById </emphasis> <literal>(Object id,
+            Class&lt;T&gt; targetClass) </literal> Return an object of the
+            given id and target class.</para>
+          </listitem>
+
+          <listitem>
+            <para><literal>&lt;T&gt; T</literal> <emphasis
+            role="bold">findById </emphasis> <literal>(String collectionName,
+            Object id,Class&lt;T&gt; targetClass) </literal> Return an object
+            in the collection for a given id and target class.</para>
           </listitem>
 
           <listitem>
@@ -1663,14 +1673,6 @@ import static org.springframework.data.document.mongodb.query.Query.query;
             role="bold">find </emphasis> <literal>(Query query, Class&lt;T&gt;
             targetClass) </literal> Map the results of an ad-hoc query on the
             default MongoDB collection to a List of the specified type.</para>
-          </listitem>
-
-          <listitem>
-            <para><literal>&lt;T&gt; List&lt;T&gt;</literal> <emphasis
-            role="bold">find </emphasis> <literal>(Query query, Class&lt;T&gt;
-            targetClass, MongoReader&lt;T&gt; reader) </literal> Map the
-            results of an ad-hoc query on the default MongoDB collection to a
-            List of the specified type.</para>
           </listitem>
 
           <listitem>
@@ -1687,14 +1689,6 @@ import static org.springframework.data.document.mongodb.query.Query.query;
             Query query, Class&lt;T&gt; targetClass, CursorPreparer preparer)
             </literal> Map the results of an ad-hoc query on the specified
             collection to a List of the specified type.</para>
-          </listitem>
-
-          <listitem>
-            <para><literal>&lt;T&gt; List&lt;T&gt;</literal> <emphasis
-            role="bold">find </emphasis> <literal>(String collectionName,
-            Query query, Class&lt;T&gt; targetClass, MongoReader&lt;T&gt;
-            reader) </literal> Map the results of an ad-hoc query on the
-            specified collection to a List of the specified type.</para>
           </listitem>
 
           <listitem>
@@ -1727,53 +1721,7 @@ import static org.springframework.data.document.mongodb.query.Query.query;
             type. The first document that matches the query is returned and
             also removed from the collection in the database.</para>
           </listitem>
-
-          <listitem>
-            <para><literal>&lt;T&gt; T</literal> <emphasis
-            role="bold">findAndRemove </emphasis> <literal>(String
-            collectionName, Query query, Class&lt;T&gt; targetClass,
-            MongoReader&lt;T&gt; reader) </literal> Map the results of an
-            ad-hoc query on the specified collection to a single instance of
-            an object of the specified type. The first document that matches
-            the query is returned and also removed from the collection in the
-            database.</para>
-          </listitem>
         </itemizedlist></para>
-
-      <para>The MongoReader can be used</para>
-
-      <section>
-        <title>Reading using MongoWriter</title>
-
-        <para>The MongoReader interface allows you to have lower level control
-        over the mapping of an DBObject into a Java object. This is similar to
-        the role of RowMapper in JdbcTemplate. The MongoReader interface
-        is</para>
-
-        <programlisting language="java">/**
- * A MongoWriter is responsible for converting a native MongoDB DBObject to an object of type T.
- *
- * @param &lt;T&gt; the type of the object to convert from a DBObject
- */
-public interface MongoReader&lt;T&gt; {
-
-  /**
-   * Ready from the native MongoDB DBObject representation to an instance of the class T. 
-   * The given type has to be the starting point for marshalling the {@link DBObject} 
-   * into it. So in case there's no real valid data inside {@link DBObject} for the 
-   * given type, just return an empty instance of the given type.
-   *
-   * @param clazz the type of the return value
-   * @param dbo   theDBObject
-   * @return the converted object
-   */
-  &lt;S extends T&gt; S read(Class&lt;S&gt; clazz, DBObject dbo);
-}</programlisting>
-
-        <para></para>
-
-        <para></para>
-      </section>
     </section>
 
     <section id="mongo.geospatial" lang="">
@@ -1869,6 +1817,99 @@ List&lt;Venue&gt; venues =
         <para>Support for the GeoNear command will be provided in the RC
         release.</para>
       </note>
+    </section>
+  </section>
+
+  <section>
+    <title>Overriding default mapping with custom converters</title>
+
+    <para>In order to have more fine grained control over the mapping process
+    you can register Spring converters with the
+    <classname>MongoConverter</classname> implementations such as the
+    <classname>MappingMongoConverter</classname>. </para>
+
+    <para>The <classname>MappingMongoConverter</classname> checks to see if
+    there are any Spring converters that can handle a specific class before
+    attempting to map the object itself. To 'hijack' the normal mapping
+    strategies of the MappingMongoConverter, perhaps for increased performance
+    or other custom mapping needs, you first need to create an implementation
+    of the Spring <interfacename>Converter</interfacename> interface and then
+    register it with the MappingConverter.</para>
+
+    <note>
+      <para>For more information on the Spring type conversion service see the
+      reference docs <ulink
+      url="http://static.springsource.org/spring/docs/3.0.x/reference/validation.html#core-convert">here</ulink>.</para>
+    </note>
+
+    <section>
+      <title>Saving using a registered Spring Converter</title>
+
+      <para>An example implementation of the
+      <interfacename>Converter</interfacename> that converts from a Person
+      object to a <classname>com.mongodb.DBObject</classname> is shown
+      below</para>
+
+      <programlisting language="xsd">import org.springframework.core.convert.converter.Converter;
+
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
+
+public class PersonWriteConverter implements Converter&lt;Person, DBObject&gt; {
+
+  public DBObject convert(Person source) {
+    DBObject dbo = new BasicDBObject();
+    dbo.put("_id", source.getId());
+    dbo.put("name", source.getFirstName());
+    dbo.put("age", source.getAge());
+    return dbo;
+  }
+
+}</programlisting>
+    </section>
+
+    <section>
+      <title>Reading using a Spring Converter</title>
+
+      <para>An example implemention of a Converter that converts from a
+      DBObject ot a Person object is shownn below</para>
+
+      <programlisting language="java">public class PersonReadConverter implements Converter&lt;DBObject, Person&gt; {
+
+  public Person convert(DBObject source) {
+    Person p = new Person((ObjectId) source.get("_id"), (String) source.get("name"));
+    p.setAge((Integer) source.get("age"));
+    return p;
+  }
+
+}</programlisting>
+    </section>
+
+    <section>
+      <title>Registering Spring Converters with the MongoConverter</title>
+
+      <para>The mongo XSD namespace provides a convenience way to register
+      Spring Converters as shown below as well as configuring it into a
+      MongoTemplate.</para>
+
+      <programlisting language="java">&lt;mongo:db-factory dbname="database"/&gt;
+
+&lt;mongo:mapping-converter&gt;
+  &lt;mongo:custom-converters&gt;
+    &lt;mongo:converter ref="readConverter"/&gt;
+    &lt;mongo:converter&gt;
+      &lt;bean class="org.springframework.data.document.mongodb.PersonWriteConverter"/&gt;
+    &lt;/mongo:converter&gt;
+  &lt;/mongo:custom-converters&gt;
+&lt;/mongo:mapping-converter&gt;
+
+&lt;bean id="readConverter" class="org.springframework.data.document.mongodb.PersonReadConverter"/&gt;
+
+&lt;bean id="mongoTemplate" class="org.springframework.data.document.mongodb.MongoTemplate"&gt;
+  &lt;constructor-arg name="mongoDbFactory" ref="mongoDbFactory"/&gt;
+  &lt;constructor-arg name="mongoConverter" ref="mappingConverter"/&gt;
+&lt;/bean&gt;
+</programlisting>
     </section>
   </section>
 
@@ -1973,22 +2014,7 @@ mongoTemplate.dropCollection("MyNewCollection");        </programlisting>
             collectionName) </literal> Get a collection by name, creating it
             if it doesn't exist.</para>
           </listitem>
-
-          <listitem>
-            <para><literal>DBCollection</literal> <emphasis
-            role="bold">getDefaultCollection </emphasis> <literal>()</literal>
-            The default collection used by this template.</para>
-          </listitem>
-
-          <listitem>
-            <para><literal>String</literal> <emphasis
-            role="bold">getDefaultCollectionName </emphasis>
-            <literal>()</literal> The default collection name used by this
-            template.</para>
-          </listitem>
         </itemizedlist></para>
-
-      <para></para>
     </section>
   </section>
 
@@ -2017,8 +2043,6 @@ mongoTemplate.dropCollection("MyNewCollection");        </programlisting>
             a JSON string.</para>
           </listitem>
         </itemizedlist></para>
-
-      <para></para>
     </section>
   </section>
 
@@ -2159,17 +2183,17 @@ public class BeforeSaveListener&lt;BeforeSaveEvent, Person&gt; extends AbstractM
     <para><itemizedlist>
         <listitem>
           <para><literal>&lt;T&gt; T</literal> <emphasis role="bold">execute
-          </emphasis> <literal>(CollectionCallback&lt;T&gt; action) </literal>
-          Executes the given CollectionCallback on the default
-          collection.</para>
+          </emphasis> <literal>(Class&lt;?&gt; entityClass,
+          CollectionCallback&lt;T&gt; action) </literal> Executes the given
+          CollectionCallback for the entitye collection of the specified
+          class.</para>
         </listitem>
 
         <listitem>
           <para><literal>&lt;T&gt; T</literal> <emphasis role="bold">execute
           </emphasis> <literal>(String collectionName,
           CollectionCallback&lt;T&gt; action) </literal> Executes the given
-          CollectionCallback on the collection of the given name.update using
-          the $addToSet update modifier</para>
+          CollectionCallback on the collection of the given name.</para>
         </listitem>
 
         <listitem>
@@ -2177,6 +2201,13 @@ public class BeforeSaveListener&lt;BeforeSaveEvent, Person&gt; extends AbstractM
           </emphasis> <literal>(DbCallback&lt;T&gt; action) </literal>
           Executes a DbCallback translating any exceptions as
           necessary.</para>
+        </listitem>
+
+        <listitem>
+          <para><literal>&lt;T&gt; T</literal> <emphasis role="bold">execute
+          </emphasis> <literal>(String collectionName, DbCallback&lt;T&gt;
+          action) </literal> Executes a DbCallback on the collection of the
+          given name translating any exceptions as necessary.</para>
         </listitem>
 
         <listitem>
@@ -2193,7 +2224,7 @@ public class BeforeSaveListener&lt;BeforeSaveEvent, Person&gt; extends AbstractM
     information about an index.</para>
 
     <programlisting language="java">    boolean hasIndex = template.execute("geolocation", new CollectionCallback&lt;Boolean&gt;() {
-      public Boolean doInCollection(DBCollection collection) throws MongoException, DataAccessException {
+      public Boolean doInCollection(Venue.class, DBCollection collection) throws MongoException, DataAccessException {
         List&lt;DBObject&gt; indexes = collection.getIndexInfo();
         for (DBObject dbo : indexes) {
           if ("location_2d".equals(dbo.get("name"))) {

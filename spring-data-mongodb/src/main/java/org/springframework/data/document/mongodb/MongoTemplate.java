@@ -819,14 +819,14 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		}
 		final DBObject queryObject = query.getQueryObject();
 		final MongoPersistentEntity<?> entity = getPersistentEntity(targetClass);
-		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("remove using query: " + queryObject + " in collection: " + collectionName);
-		}
 		execute(collectionName, new CollectionCallback<Void>() {
 			public Void doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 				DBObject dboq = mapper.getMappedObject(queryObject, entity);
 				WriteResult wr = null;
 				WriteConcern writeConcernToUse = prepareWriteConcern(writeConcern);
+		    if (LOGGER.isDebugEnabled()) {
+		      LOGGER.debug("remove using query: " + queryObject + " in collection: " + collection.getName());
+		    }
 				if (writeConcernToUse == null) {
 					wr = collection.remove(dboq);
 				} else {
