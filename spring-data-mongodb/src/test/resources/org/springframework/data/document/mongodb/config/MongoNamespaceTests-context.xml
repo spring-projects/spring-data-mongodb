@@ -10,8 +10,7 @@
 	<context:property-placeholder
 			location="classpath:/org/springframework/data/document/mongodb/config/mongo.properties"/>
 
-	<mongo:db-factory dbname="database" >
-		<mongo:mongo host="${mongo.host}" port="${mongo.port}">
+	<mongo:mongo host="${mongo.host}" port="${mongo.port}">
 			<mongo:options
 					connections-per-host="${mongo.connectionsPerHost}"
 					threads-allowed-to-block-for-connection-multiplier="${mongo.threadsAllowedToBlockForConnectionMultiplier}"
@@ -24,8 +23,18 @@
 					write-number="1"
 					write-timeout="0"
 					write-fsync="true"/>
-		</mongo:mongo>
-	</mongo:db-factory>
+	</mongo:mongo>
+	
+	<mongo:db-factory dbname="database" mongo-ref="mongo"/>
+
+
+	
+	<mongo:db-factory id="secondMongoDbFactory"
+					  host="localhost"
+					  port="27017"
+					  dbname="database"
+					  username="joe"
+					  password="secret"/>
 
 	<mongo:mongo id="defaultMongo" host="localhost" port="27017"/>
 
@@ -45,6 +54,10 @@
 	<bean id="mongoTemplate" class="org.springframework.data.document.mongodb.MongoTemplate">
 		<constructor-arg name="mongoDbFactory" ref="mongoDbFactory"/>
 		<constructor-arg name="mongoConverter" ref="mappingConverter"/>
+	</bean>
+	
+	<bean id="anotherMongoTemplate" class="org.springframework.data.document.mongodb.MongoTemplate">
+		<constructor-arg name="mongoDbFactory" ref="mongoDbFactory"/>
 	</bean>
 
 </beans>

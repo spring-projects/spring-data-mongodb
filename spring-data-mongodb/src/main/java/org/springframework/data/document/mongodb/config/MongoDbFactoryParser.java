@@ -23,14 +23,12 @@ import org.springframework.beans.factory.config.RuntimeBeanReference;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionReaderUtils;
-import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.xml.AbstractBeanDefinitionParser;
 import org.springframework.beans.factory.xml.ParserContext;
 import org.springframework.data.authentication.UserCredentials;
 import org.springframework.data.document.mongodb.MongoFactoryBean;
 import org.springframework.data.document.mongodb.SimpleMongoDbFactory;
 import org.springframework.util.StringUtils;
-import org.springframework.util.xml.DomUtils;
 import org.w3c.dom.Element;
 
 /**
@@ -49,7 +47,6 @@ public class MongoDbFactoryParser extends AbstractBeanDefinitionParser {
 
 	@Override
 	protected AbstractBeanDefinition parseInternal(Element element, ParserContext parserContext) {
-	  BeanDefinitionRegistry registry = parserContext.getRegistry();
     BeanDefinitionBuilder dbFactoryBuilder = BeanDefinitionBuilder.genericBeanDefinition(SimpleMongoDbFactory.class);
           
     // UserCredentials
@@ -83,46 +80,22 @@ public class MongoDbFactoryParser extends AbstractBeanDefinitionParser {
       dbname = "db";
     }
     
- 
+    // com.mongodb.Mongo object
     String mongoRef = element.getAttribute("mongo-ref");
-    String mongoId = null;
-    if (!StringUtils.hasText(mongoRef)) {
-      BeanDefinitionBuilder mongoBuilder = BeanDefinitionBuilder.genericBeanDefinition(MongoFactoryBean.class);
-      Element mongoEl = DomUtils.getChildElementByTagName(element, "mongo");
-      if (null != mongoEl) {
-        String overrideHost = mongoEl.getAttribute("host");        
-        mongoBuilder.addPropertyValue("host", (StringUtils.hasText(overrideHost) ? overrideHost : host));
-        String overridePort = mongoEl.getAttribute("port");
-        mongoBuilder.addPropertyValue("port", (StringUtils.hasText(overridePort) ? overridePort : port));
-        ParsingUtils.parseMongoOptions(parserContext, mongoEl, mongoBuilder);
-        ParsingUtils.parseReplicaSet(parserContext, mongoEl, mongoBuilder);
-        String innerId = mongoEl.getAttribute("id");
-        if (StringUtils.hasText(innerId)) {
-          mongoId = innerId;
-        }
-      }
-      else {
-        mongoBuilder.addPropertyValue("host", host);
-        mongoBuilder.addPropertyValue("port", port);
-      }
-      
-      /* MLP - WIP
-      if (mongoId == null) {
-        mongoRef = BeanDefinitionReaderUtils.registerWithGeneratedName(mongoBuilder.getBeanDefinition(), parserContext.getRegistry());
-      } else {      
-        registry.registerBeanDefinition(MONGO, mongoBuilder.getBeanDefinition());
-        mongoRef = MONGO;
-      }
-      */
-      registry.registerBeanDefinition(MONGO, mongoBuilder.getBeanDefinition());
-      mongoRef = MONGO;
-    }
     
+    if (!StringUtils.hasText(mongoRef)) {
+      //Create implicit com.mongodb.Mongo object and register under generated name
+      BeanDefinitionBuilder mongoBuilder = BeanDefinitionBuilder.genericBeanDefinition(MongoFactoryBean.class);
+      mongoBuilder.addPropertyValue("host", host);
+      mongoBuilder.addPropertyValue("port", port);
+      mongoRef = BeanDefinitionReaderUtils.registerWithGeneratedName(mongoBuilder.getBeanDefinition(), parserContext.getRegistry());      
+    }
     dbFactoryBuilder.addConstructorArgValue(new RuntimeBeanReference(mongoRef));
     dbFactoryBuilder.addConstructorArgValue(dbname);
     dbFactoryBuilder.addConstructorArgValue(userCredentialsBuilder.getBeanDefinition());
     
     return dbFactoryBuilder.getRawBeanDefinition();
-	}
-	
+
+  }
+   
 }

@@ -39,6 +39,7 @@ Defines a MongoDbFactory for connecting to a specific database
 			]]></xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType>
+			<!-- 
 			<xsd:sequence minOccurs="0" maxOccurs="1">
 				<xsd:element name="mongo" type="mongoType">
 					<xsd:annotation>
@@ -48,6 +49,7 @@ Defines a Mongo instance used for accessing MongoDB'.
 					</xsd:annotation>
 				</xsd:element>
 			</xsd:sequence>
+			-->
 			<xsd:attribute name="id" type="xsd:ID" use="optional">
 				<xsd:annotation>
 					<xsd:documentation><![CDATA[

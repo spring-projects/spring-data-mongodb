@@ -77,7 +77,7 @@
   the base MongoDB Java driver so you can easily map your existing knowledge
   onto the Spring APIs.</para>
 
-  <section id="mongodb-requirements">
+  <section id="mongodb-getting-started">
     <title>Getting Started</title>
 
     <para>Spring MongoDB support requires MongoDB 1.4 or higher and Java SE 5
@@ -470,17 +470,16 @@ public class AppConfig {
     </section>
 
     <section>
-      <title>Registering a MongoDbFactory instance using Java based
-      metadata</title>
+      <title>The MongoDbFactory interface</title>
 
-      <para>As an alternative to configuring a
-      <classname>com.mongodb.Mongo</classname> instance and later providing
-      the database name and optionally the username and password, is to use
-      <classname>SimpleMongoDbFactory</classname>, which implements the
-      <interfacename>MongoDbFactory</interfacename> inteface shown below. A
-      reference to <interfacename>MongoDbFactory</interfacename> can be passed
-      to constructors of <classname>MongoTemplate</classname> to simplify its
-      creation.</para>
+      <para>While com.mongodb.Mongo is the entry point to the MongoDB driver
+      API, connecting to a specific MongoDB database instance requires
+      additional information such as the database name and an optional
+      username and password. With that information you can obtain a
+      com.mongodb.DB object and access all the functionality of a specific
+      MongoDB database instance. Spring provides the
+      <classname>org.springframework.data.document.mongodb.MongoDbFactory</classname>
+      interface shown below to bootstrap connectivity to the database.</para>
 
       <programlisting language="java">public interface MongoDbFactory {
 
@@ -490,9 +489,55 @@ public class AppConfig {
 
 }</programlisting>
 
-      <para>The most simple usage is shown below</para>
+      <para>The following sections show how you can use the contiainer with
+      either Java or the XML based metadata to configure an instance of the
+      <classname>MongoDbFactory</classname> interface. In turn, you can use
+      the <classname>MongoDbFactory</classname> instance to configure
+      MongoTemplate.</para>
 
-      <programlisting>@Configuration
+      <para>The class
+      <classname>org.springframework.data.document.mongodb.SimpleMongoDbFactory</classname>
+      provides implements the MongoDbFactory interface and is created with a
+      standard <classname>com.mongodb.Mongo</classname> instance, the database
+      name and an optional
+      <classname>org.springframework.data.authentication.UserCredentials</classname>
+      constructor argument.</para>
+
+      <para>Instead of using the IoC container to create an instance of
+      MongoTemplate, you can just use them in standard Java code as shown
+      below.</para>
+
+      <programlisting language="java">public class MongoApp {
+
+  private static final Log log = LogFactory.getLog(MongoApp.class);
+
+  public static void main(String[] args) throws Exception {
+
+    MongoOperations mongoOps = new MongoTemplate(<emphasis role="bold">new SimpleMongoDbFactory(new Mongo(), "database")</emphasis>);
+
+    mongoOps.insert(new Person("Joe", 34));
+
+    log.info(mongoOps.findOne(new Query(where("name").is("Joe")), Person.class));
+
+    mongoOps.dropCollection("person");
+  }
+}</programlisting>
+
+      <para>The code in bold highlights the use of SimpleMongoDbFactory and is
+      the only difference between the listing shown in the <link lang=""
+      linkend="mongodb-getting-started" os="">getting started
+      section</link>.</para>
+    </section>
+
+    <section>
+      <title>Registering a MongoDbFactory instance using Java based
+      metadata</title>
+
+      <para>To register a MongoDbFactory instance with the container, you
+      write code much like what was highlighted in the previous code listing.
+      A simple example is shown below</para>
+
+      <programlisting language="java">@Configuration
 public class MongoConfiguration {
   
   public @Bean MongoDbFactory mongoDbFactory() throws Exception {
@@ -502,29 +547,88 @@ public class MongoConfiguration {
 }</programlisting>
 
       <para>To define the username and password create an instance of
-      org.springframework.data.authentication.UserCredentials and pass it into
-      the constructor as shown below</para>
+      <classname>org.springframework.data.authentication.UserCredentials</classname>
+      and pass it into the constructor as shown below. This listing also shows
+      using <classname>MongoDbFactory</classname> register an instance of
+      MongoTemplate with the container.</para>
 
-      <programlisting>@Configuration
+      <programlisting language="java">@Configuration
 public class MongoConfiguration {
   
   public @Bean MongoDbFactory mongoDbFactory() throws Exception {
     UserCredentials userCredentials = new UserCredentials("joe", "secret");
     return new SimpleMongoDbFactory(new Mongo(), "database", userCredentials);
   }
+
+  public @Bean MongoTemplate mongoTemplate() throws Exception {
+    return new MongoTemplate(mongoDbFactory());
+  }
 }
 </programlisting>
+
+      <para></para>
     </section>
 
     <section>
-      <title>Registering a Mongo instance using XML based metadata</title>
+      <title>Registering a MongoDbFactory instance using XML based
+      metadata</title>
 
-      <para>The mongo namespace lets you create a MongoDbFactory instance
-      which is a convenient way to group together the a mongo instance, a
-      database name and an optional username and password. A simple usage is
-      shown below</para>
+      <para>The mongo namespace provides a convient way to create a
+      <classname>SimpleMongoDbFactory</classname> as compared to using
+      the<literal>&lt;beans/&gt;</literal> namespace. Simple usage is shown
+      below</para>
 
-      <programlisting language="xml">  &lt;mongo:db-factory dbname="database" &gt;</programlisting>
+      <programlisting language="xml">&lt;mongo:db-factory dbname="database"&gt;</programlisting>
+
+      <para>In the above example a <classname>com.mongodb.Mongo</classname>
+      instance is created using the default host and port number. The
+      <classname>SimpleMongoDbFactory</classname> registered with the
+      container is identified by the id 'mongoDbFactory' unless a value for
+      the id attribute is specified.</para>
+
+      <para>You can also provide the host and port for the underlying
+      com.mongodb.Mongo instance as shown below, in addition to username and
+      password for the database.</para>
+
+      <programlisting language="xml">&lt;mongo:db-factory id="anotherMongoDbFactory"
+                  host="localhost"
+                  port="27017"
+                  dbname="database"
+                  username="joe"
+                  password="secret"/&gt;</programlisting>
+
+      <para>If you need to configure additional options on the
+      <classname>com.mongodb.Mongo</classname> instance that is used to create
+      a <classname>SimpleMongoDbFactory</classname> you can refer to an
+      existing bean using the <literal>mongo-ref</literal> attribute as shown
+      below. To show another common usage pattern, this listing show the use
+      of a property placeholder to parameterise the configuration and creating
+      <classname>MongoTemplate</classname>.</para>
+
+      <programlisting language="xml">&lt;context:property-placeholder location="classpath:/com/myapp/mongodb/config/mongo.properties"/&gt;
+
+&lt;mongo:mongo host="${mongo.host}" port="${mongo.port}"&gt;
+  &lt;mongo:options
+     connections-per-host="${mongo.connectionsPerHost}"
+     threads-allowed-to-block-for-connection-multiplier="${mongo.threadsAllowedToBlockForConnectionMultiplier}"
+     connect-timeout="${mongo.connectTimeout}"
+     max-wait-time="${mongo.maxWaitTime}"
+     auto-connect-retry="${mongo.autoConnectRetry}"
+     socket-keep-alive="${mongo.socketKeepAlive}"
+     socket-timeout="${mongo.socketTimeout}"
+     slave-ok="${mongo.slaveOk}"
+     write-number="1"
+     write-timeout="0"
+     write-fsync="true"/&gt;
+&lt;/mongo:mongo&gt;
+
+&lt;mongo:db-factory dbname="database" mongo-ref="mongo"/&gt;
+
+&lt;bean id="anotherMongoTemplate" class="org.springframework.data.document.mongodb.MongoTemplate"&gt;
+  &lt;constructor-arg name="mongoDbFactory" ref="mongoDbFactory"/&gt;
+&lt;/bean&gt;</programlisting>
+
+      <para> </para>
     </section>
   </section>
 

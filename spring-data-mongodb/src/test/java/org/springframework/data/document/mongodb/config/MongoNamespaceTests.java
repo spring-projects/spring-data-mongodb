@@ -22,6 +22,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.data.document.mongodb.MongoDbFactory;
 import org.springframework.data.document.mongodb.MongoFactoryBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -54,6 +55,17 @@ public class MongoNamespaceTests extends NamespaceTestSupport {
 		assertEquals(new Integer(27017), port);
 	}
 
+	@Test
+	public void testSecondMongoDbFactory() throws Exception {
+	  assertTrue(ctx.containsBean("secondMongoDbFactory"));
+	  MongoDbFactory dbf = (MongoDbFactory) ctx.getBean("secondMongoDbFactory");
+	  Mongo mongo = readField("mongo", dbf);
+	  assertEquals("localhost", mongo.getAddress().getHost());
+    assertEquals(27017, mongo.getAddress().getPort());
+    assertEquals("joe", readField("username", dbf));
+    assertEquals("secret", readField("password", dbf));
+    assertEquals("database", readField("databaseName", dbf));
+	}
 	@Test
 	public void testMongoSingletonWithPropertyPlaceHolders() throws Exception {
 		assertTrue(ctx.containsBean("mongo"));
