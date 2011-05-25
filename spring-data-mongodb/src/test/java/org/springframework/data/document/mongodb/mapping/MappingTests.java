@@ -49,7 +49,6 @@ import org.springframework.data.document.mongodb.convert.CustomConvertersUnitTes
 import org.springframework.data.document.mongodb.convert.MappingMongoConverter;
 import org.springframework.data.document.mongodb.query.Criteria;
 import org.springframework.data.document.mongodb.query.Query;
-import sun.tools.tree.NewArrayExpression;
 
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
