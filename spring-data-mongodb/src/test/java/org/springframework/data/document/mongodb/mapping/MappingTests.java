@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
@@ -39,14 +38,11 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
-import org.springframework.core.convert.converter.Converter;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.document.mongodb.CollectionCallback;
 import org.springframework.data.document.mongodb.MongoCollectionUtils;
 import org.springframework.data.document.mongodb.MongoDbUtils;
 import org.springframework.data.document.mongodb.MongoTemplate;
-import org.springframework.data.document.mongodb.convert.CustomConvertersUnitTests.Foo;
-import org.springframework.data.document.mongodb.convert.MappingMongoConverter;
 import org.springframework.data.document.mongodb.query.Criteria;
 import org.springframework.data.document.mongodb.query.Query;
 
@@ -56,7 +52,7 @@ import org.springframework.data.document.mongodb.query.Query;
 public class MappingTests {
 
 	private static final Log LOGGER = LogFactory.getLog(MongoDbUtils.class);
-	private final String[] collectionsToDrop = new String[] { 
+	private final String[] collectionsToDrop = new String[]{
 			MongoCollectionUtils.getPreferredCollectionName(Person.class),
 			MongoCollectionUtils.getPreferredCollectionName(PersonMapProperty.class),
 			MongoCollectionUtils.getPreferredCollectionName(PersonPojo.class),
@@ -66,7 +62,8 @@ public class MappingTests {
 			MongoCollectionUtils.getPreferredCollectionName(PersonWithDbRef.class),
 			MongoCollectionUtils.getPreferredCollectionName(PersonNullProperties.class),
 			MongoCollectionUtils.getPreferredCollectionName(Account.class),
-			"foobar", "geolocation", "person1", "person2", "account" };
+			MongoCollectionUtils.getPreferredCollectionName(PrimitiveId.class),
+			"foobar", "geolocation", "person1", "person2", "account"};
 
 	ApplicationContext applicationContext;
 	MongoTemplate template;
@@ -158,11 +155,11 @@ public class MappingTests {
 	}
 
 	@Test
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings({"unchecked"})
 	public void testWriteEntity() {
 
 		Address addr = new Address();
-		addr.setLines(new String[] { "1234 W. 1st Street", "Apt. 12" });
+		addr.setLines(new String[]{"1234 W. 1st Street", "Apt. 12"});
 		addr.setCity("Anytown");
 		addr.setPostalCode(12345);
 		addr.setCountry("USA");
@@ -193,11 +190,11 @@ public class MappingTests {
 		assertThat(result.get(0).getAccounts(), notNullValue());
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings({"unchecked"})
 	@Test
 	public void testUniqueIndex() {
 		Address addr = new Address();
-		addr.setLines(new String[] { "1234 W. 1st Street", "Apt. 12" });
+		addr.setLines(new String[]{"1234 W. 1st Street", "Apt. 12"});
 		addr.setCity("Anytown");
 		addr.setPostalCode(12345);
 		addr.setCountry("USA");
@@ -229,7 +226,7 @@ public class MappingTests {
 
 	@Test
 	public void testPrimitivesAndCustomCollectionName() {
-		Location loc = new Location(new double[] { 1.0, 2.0 }, new int[] { 1, 2, 3, 4 }, new float[] { 1.0f, 2.0f });
+		Location loc = new Location(new double[]{1.0, 2.0}, new int[]{1, 2, 3, 4}, new float[]{1.0f, 2.0f});
 		template.insert(loc);
 
 		List<Location> result = template.find("places", new Query(Criteria.where("_id").is(loc.getId())), Location.class);
@@ -272,8 +269,8 @@ public class MappingTests {
 
 	@Test
 	public void testMultiDimensionalArrayProperties() {
-		String[][] grid = new String[][] { new String[] { "1", "2", "3", "4" }, new String[] { "5", "6", "7", "8" },
-				new String[] { "9", "10", "11", "12" } };
+		String[][] grid = new String[][]{new String[]{"1", "2", "3", "4"}, new String[]{"5", "6", "7", "8"},
+				new String[]{"9", "10", "11", "12"}};
 		PersonMultiDimArrays p = new PersonMultiDimArrays(123, "Multi", "Dimensional", grid);
 
 		template.insert(p);
@@ -306,7 +303,7 @@ public class MappingTests {
 
 	@Test
 	public void testDbRef() {
-		double[] pos = new double[] { 37.0625, -95.677068 };
+		double[] pos = new double[]{37.0625, -95.677068};
 		GeoLocation geo = new GeoLocation(pos);
 		template.insert(geo);
 
@@ -326,11 +323,11 @@ public class MappingTests {
 		assertNotNull(p.getId());
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings({"unchecked"})
 	@Test
 	public void testQueryUpdate() {
 		Address addr = new Address();
-		addr.setLines(new String[] { "1234 W. 1st Street", "Apt. 12" });
+		addr.setLines(new String[]{"1234 W. 1st Street", "Apt. 12"});
 		addr.setCity("Anytown");
 		addr.setPostalCode(12345);
 		addr.setCountry("USA");
@@ -370,7 +367,7 @@ public class MappingTests {
 
 		PrimitiveId p2 = template.findOne(query(where("id").is(1)), PrimitiveId.class);
 		assertNotNull(p2);
-		
+
 	}
 
 }
