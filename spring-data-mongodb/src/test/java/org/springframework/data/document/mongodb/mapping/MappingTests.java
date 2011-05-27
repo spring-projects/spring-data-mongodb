@@ -66,12 +66,13 @@ public class MappingTests {
 			"foobar", "geolocation", "person1", "person2", "account"};
 
 	ApplicationContext applicationContext;
+	Mongo mongo;
 	MongoTemplate template;
 	MongoMappingContext mappingContext;
 
 	@Before
 	public void setUp() throws Exception {
-		Mongo mongo = new Mongo();
+		mongo = new Mongo();
 		DB db = mongo.getDB("database");
 		for (String coll : collectionsToDrop) {
 			db.getCollection(coll).drop();
@@ -367,7 +368,16 @@ public class MappingTests {
 
 		PrimitiveId p2 = template.findOne(query(where("id").is(1)), PrimitiveId.class);
 		assertNotNull(p2);
+	}
 
+	@Test
+	public void testNoMappingAnnotations() {
+		PersonPojoIntId p = new PersonPojoIntId(1, "Text");
+		template.save(p);
+		template.updateFirst(PersonPojoIntId.class, query(where("id").is(1)), update("text", "New Text"));
+
+		PersonPojoIntId p2 = template.findOne(query(where("id").is(1)), PersonPojoIntId.class);
+		assertEquals("New Text", p2.getText());
 	}
 
 }
