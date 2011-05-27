@@ -25,6 +25,7 @@ import org.springframework.context.annotation.ClassPathScanningCandidateComponen
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.data.annotation.Persistent;
+import org.springframework.data.authentication.UserCredentials;
 import org.springframework.data.document.mongodb.MongoDbFactory;
 import org.springframework.data.document.mongodb.MongoTemplate;
 import org.springframework.data.document.mongodb.SimpleMongoDbFactory;
@@ -38,27 +39,37 @@ import org.springframework.util.StringUtils;
 @Configuration
 public abstract class AbstractMongoConfiguration {
 
-	public abstract String defaultDatabaseName();
+	public abstract String getDatabaseName();
 
 	@Bean
 	public abstract Mongo mongo() throws Exception;
 
 	@Bean
-	public abstract MongoTemplate mongoTemplate() throws Exception;
-
-	@Bean
-	public MongoDbFactory mongoDbFactory() throws Exception {
-		return new SimpleMongoDbFactory(mongo(), defaultDatabaseName());
+	public MongoTemplate mongoTemplate() throws Exception {
+	  return new MongoTemplate(mongoDbFactory(), mappingMongoConverter());
 	}
 
-	public String mappingBasePackage() {
+	@Bean
+	public MongoDbFactory mongoDbFactory() throws Exception {	 
+	  if (getUserCredentials() == null) {
+	    return new SimpleMongoDbFactory(mongo(), getDatabaseName());
+	  } else {
+	    return new SimpleMongoDbFactory(mongo(), getDatabaseName(), getUserCredentials());
+	  }
+	}
+
+	public String getMappingBasePackage() {
 		return "";
+	}
+	
+	public UserCredentials getUserCredentials() {
+	  return null;
 	}
 
 	@Bean
 	public MongoMappingContext mongoMappingContext() throws ClassNotFoundException, LinkageError {
 		MongoMappingContext mappingContext = new MongoMappingContext();
-		String basePackage = mappingBasePackage();
+		String basePackage = getMappingBasePackage();
 		if (StringUtils.hasText(basePackage)) {
 			ClassPathScanningCandidateComponentProvider componentProvider = new ClassPathScanningCandidateComponentProvider(false);
 			componentProvider.addIncludeFilter(new AnnotationTypeFilter(Document.class));

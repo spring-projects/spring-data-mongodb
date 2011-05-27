@@ -4,6 +4,8 @@ import com.mongodb.Mongo;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.document.mongodb.MongoTemplate;
 import org.springframework.data.document.mongodb.config.AbstractMongoConfiguration;
+import org.springframework.data.document.mongodb.mapping.event.LoggingEventListener;
+import org.springframework.data.document.mongodb.mapping.event.MongoMappingEvent;
 
 public class GeoIndexedAppConfig extends AbstractMongoConfiguration {
 
@@ -11,7 +13,7 @@ public class GeoIndexedAppConfig extends AbstractMongoConfiguration {
 	public static String GEO_COLLECTION = "geolocation";
 
 	@Override
-	public String defaultDatabaseName() {
+	public String getDatabaseName() {
 		return GEO_DB;
 	}
 
@@ -20,13 +22,13 @@ public class GeoIndexedAppConfig extends AbstractMongoConfiguration {
 		return new Mongo("localhost");
 	}
 
-	@Bean
-	public MongoTemplate mongoTemplate() throws Exception {
-		return new MongoTemplate(mongoDbFactory());
-	}
-
 	public String getMappingBasePackage() {
 		return "org.springframework.data.document.mongodb.mapping";
 	}
+	
+  @Bean
+  public LoggingEventListener<MongoMappingEvent> mappingEventsListener() {
+    return new LoggingEventListener<MongoMappingEvent>();
+  }
 
 }

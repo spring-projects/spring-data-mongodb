@@ -12,7 +12,7 @@ import org.springframework.data.document.mongodb.convert.MappingMongoConverter;
 public class TestMongoConfiguration extends AbstractMongoConfiguration {
 
 	@Override
-	public String defaultDatabaseName() {
+	public String getDatabaseName() {
 		return "database";
 	}
 
@@ -21,13 +21,8 @@ public class TestMongoConfiguration extends AbstractMongoConfiguration {
 		return new Mongo("localhost", 27017);
 	}
 
-	@Bean
-	public MongoTemplate mongoTemplate() throws Exception {
-		return new MongoTemplate(mongoDbFactory());
-	}
-
 	@Override
-	public String mappingBasePackage() {
+	public String getMappingBasePackage() {
 		return "org.springframework.data.document.mongodb.mapping";
 	}
 

@@ -26,7 +26,7 @@ import org.springframework.data.document.mongodb.mapping.event.MongoMappingEvent
 public class GeoSpatialAppConfig extends AbstractMongoConfiguration {
 
 	@Override
-	public String defaultDatabaseName() {
+	public String getDatabaseName() {
 		return "database";
 	}
 
@@ -36,17 +36,12 @@ public class GeoSpatialAppConfig extends AbstractMongoConfiguration {
 	}
 
 	@Bean
-	public MongoTemplate mongoTemplate() throws Exception {
-		return new MongoTemplate(mongoDbFactory());
-	}
-
-	@Bean
 	public LoggingEventListener<MongoMappingEvent> mappingEventsListener() {
 		return new LoggingEventListener<MongoMappingEvent>();
 	}
 
 	@Override
-	public String mappingBasePackage() {
+	public String getMappingBasePackage() {
 		return "org.springframework.data.document.mongodb";
 	}
 
