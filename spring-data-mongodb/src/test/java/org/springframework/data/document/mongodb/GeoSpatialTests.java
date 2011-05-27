@@ -124,7 +124,6 @@ public class GeoSpatialTests {
 	}
 
 	@Test
-	@Ignore("run only on v 1.7.0 server or greater")
 	public void withinCenterSphere() {
 		Circle circle = new Circle(-73.99171, 40.738868, 0.003712240453784);
 		List<Venue> venues = template.find(new Query(Criteria.where("location").withinCenterSphere(circle)), Venue.class);
@@ -148,7 +147,6 @@ public class GeoSpatialTests {
 	}
 
 	@Test
-	@Ignore("run only on v 1.7.0 server or greater")
 	public void nearSphere() {
 		Point point = new Point(-73.99171, 40.738868);
 		List<Venue> venues = template.find(
