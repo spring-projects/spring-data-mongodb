@@ -7,12 +7,125 @@
   <para>Rich maping support is provided by the
   <classname>MongoMappingConverter</classname>.
   <classname>MongoMappingConverter</classname> has a rich metadata model that
-  provides a full feature set of functionality to map domain objects into
-  MongoDB documents. The mapping metadata model is populated using annotations
-  on your domain objects but is not limited to using annotations as the only
-  source of metadata information. In this section we will describe the
-  features of the MongoMappingConverter and how to specify annotation based
+  provides a full feature set of functionality to map domain objects to
+  MongoDB documents.The mapping metadata model is populated using annotations
+  on your domain objects. However, the infrastructure is not limited to using
+  annotations as the only source of metadata information. The
+  <classname>MongoMappingConverter</classname> also allows you to map objects
+  to documents without providing any additional metadata, by following a set
+  of conventions.</para>
+
+  <para>In this section we will describe the features of the
+  MongoMappingConverter. How to use conventions for mapping objects to
+  documents and how to override those conventions with annotation based
   mapping metadata.</para>
+
+  <note>
+    <para><classname>SimpleMongoConverter</classname> has been deprecated in
+    Spring Data MongoDB M3 as all of its functionality has been subsumed into
+    MappingMongoConverter.</para>
+  </note>
+
+  <section>
+    <title>Convetion based Mapping</title>
+
+    <para>MongoMappingConverter has a few conventions for mapping objects to
+    documents when no additional mapping metadata is provided. The conventions
+    are:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>The short Java class name is mapped to the collection name in
+        the following manner. The class
+        '<classname>com.bigbank.SavingsAccount</classname>' maps to
+        '<literal>savingsAccount</literal>' collection name.</para>
+      </listitem>
+
+      <listitem>
+        <para>All nested objects are stored as nested objects in the document
+        and *not* as DBRefs</para>
+      </listitem>
+
+      <listitem>
+        <para>The converter will use any Spring Converters registered with it
+        to override the default mapping of object properties to document
+        field/values.</para>
+      </listitem>
+
+      <listitem>
+        <para>Public JavaBean properties </para>
+      </listitem>
+
+      <listitem>
+        <para>You can have a single non-zero argument constructor whose
+        constructor argument names match top level field names of document,
+        that constructor will be used. Otherewise the zero arg constructor
+        will be used. if there is more than one non-zero argument constructor
+        an exception will be thrown.</para>
+      </listitem>
+    </itemizedlist>
+
+    <section>
+      <title>How the '_id' field is handled in the mapping layer</title>
+
+      <para>Mongo requires that you have an '_id' field for all documents. If
+      you don't provide one the driver will assign a ObjectId with a generated
+      value. When using the <classname>MongoMappingConverter</classname> there
+      are certain rules that govern how properties from the Java class is
+      mapped to this '_id' field.</para>
+
+      <para>The following outlines what property will be mapped to the '_id'
+      document field:</para>
+
+      <para><itemizedlist>
+          <listitem>
+            <para>A property or field annotated with
+            <classname>@Id</classname>
+            (<classname>org.springframework.data.annotation.Id</classname>)
+            will be mapped to the '_id' field.</para>
+          </listitem>
+
+          <listitem>
+            <para>A property or field without an annotation but named
+            <classname>id</classname> will be mapped to the '_id'
+            field.</para>
+          </listitem>
+        </itemizedlist></para>
+
+      <para>The following outlines what type conversion, if any, will be done
+      on the property mapped to the _id document field when using the
+      <classname>MappingMongoConverter</classname>, the default for
+      <classname>MongoTemplate</classname>.</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>An id property or field declared as a String in the Java class
+          will be converted to and stored as an ObjectId if possible using a
+          Spring Converter&lt;String, ObjectId&gt;. Valid conversion rules are
+          delegated to the Mongo Java driver. If it cannot be converted to an
+          ObjectId, then the value will be stored as a string in the
+          database.</para>
+        </listitem>
+
+        <listitem>
+          <para>An id property or field declared as BigInteger in the Java
+          class will be converted to and stored as an ObjectId using a Spring
+          Converter&lt;BigInteger, ObjectId&gt;.</para>
+        </listitem>
+      </itemizedlist>
+
+      <para>If no field or property specified above is present in the Java
+      class then an implicit '_id' file will be generated by the driver but
+      not mapped to a property or field of the Java class.</para>
+
+      <para>When querying and updating <classname>MongoTemplate</classname>
+      will use the converter to handle conversions of the
+      <classname>Query</classname> and <classname>Update</classname> objects
+      that correspond to the above rules for saving documents so field names
+      and types used in your queries will be able to match what is in your
+      domain classes.</para>
+    </section>
+  </section>
 
   <section id="mongodb:mapping-configuration">
     <title>MongoDB Mapping Configuration</title>
