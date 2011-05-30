@@ -27,7 +27,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -161,7 +160,7 @@ public class GeoSpatialTests {
 		assertThat(foundVenue, notNullValue());
 		List<Venue> venues = template.getCollection(Venue.class);
 		assertThat(venues.size(), equalTo(12));
-		Collection names = (Collection) parser.parseExpression("![name]").getValue(venues);
+		Collection<?> names = (Collection<?>) parser.parseExpression("![name]").getValue(venues);
 		assertThat(names.size(), equalTo(12));
 		org.springframework.util.Assert.notEmpty(names);
 
@@ -176,7 +175,7 @@ public class GeoSpatialTests {
 	}
 
 	// TODO move to MongoAdmin
-	public List<DBObject> getIndexInfo(Class clazz) {
+	public List<DBObject> getIndexInfo(Class<?> clazz) {
 		return template.execute(clazz, new CollectionCallback<List<DBObject>>() {
 
 			public List<DBObject> doInCollection(DBCollection collection) throws MongoException, DataAccessException {
@@ -184,5 +183,4 @@ public class GeoSpatialTests {
 			}
 		});
 	}
-
 }
