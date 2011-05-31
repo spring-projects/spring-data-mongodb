@@ -1905,7 +1905,7 @@ List&lt;Venue&gt; venues =
       object to a <classname>com.mongodb.DBObject</classname> is shown
       below</para>
 
-      <programlisting language="xsd">import org.springframework.core.convert.converter.Converter;
+      <programlisting language="java">import org.springframework.core.convert.converter.Converter;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
