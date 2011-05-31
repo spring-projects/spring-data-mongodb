@@ -15,6 +15,7 @@
  */
 package org.springframework.data.document.mongodb.geo;
 
+import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.util.Assert;
 
 /**
@@ -28,6 +29,7 @@ public class Circle {
 	private Point center;
 	private double radius;
 
+	@PersistenceConstructor
 	public Circle(Point center, double radius) {
 		Assert.notNull(center);
 		Assert.isTrue(radius >= 0, "Radius must not be negative!");
