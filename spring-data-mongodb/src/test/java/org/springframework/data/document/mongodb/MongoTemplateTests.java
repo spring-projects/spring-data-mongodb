@@ -123,7 +123,7 @@ public class MongoTemplateTests {
 		Update u = new Update().set("firstName", "Sven");
 		thrown.expect(DataIntegrityViolationException.class);
 		thrown.expectMessage(endsWith("0 documents updated"));
-		mongoTemplate.updateFirst(Person.class, q, u);
+		mongoTemplate.updateFirst(q, u, Person.class);
 
 	}
 
@@ -419,7 +419,7 @@ public class MongoTemplateTests {
 
 		Update u = new Update().set("firstName", "Bob").set("age", 10);
 
-		WriteResult wr = template.updateMulti(PersonWithIdPropertyOfTypeObjectId.class, new Query(), u);
+		WriteResult wr = template.updateMulti(new Query(), u, PersonWithIdPropertyOfTypeObjectId.class);
 
 		assertThat(wr.getN(), is(2));
 

@@ -343,7 +343,7 @@ public class MappingTests {
 		template.insert(p);
 
 		addr.setCity("New Town");
-		template.updateFirst(Person.class, query(where("ssn").is(1111)), update("address", addr));
+		template.updateFirst(query(where("ssn").is(1111)), update("address", addr), Person.class);
 
 		Person p2 = template.findOne(query(where("ssn").is(1111)), Person.class);
 		assertThat(p2.getAddress().getCity(), is("New Town"));
@@ -380,7 +380,7 @@ public class MappingTests {
 	public void testNoMappingAnnotationsUsingIntAsId() {
 		PersonPojoIntId p = new PersonPojoIntId(1, "Text");
 		template.insert(p);
-		template.updateFirst(PersonPojoIntId.class, query(where("id").is(1)), update("text", "New Text"));
+		template.updateFirst(query(where("id").is(1)), update("text", "New Text"), PersonPojoIntId.class);
 
 		PersonPojoIntId p2 = template.findOne(query(where("id").is(1)), PersonPojoIntId.class);
 		assertEquals("New Text", p2.getText());
@@ -397,8 +397,8 @@ public class MappingTests {
   public void testNoMappingAnnotationsUsingLongAsId() {
     PersonPojoLongId p = new PersonPojoLongId(1, "Text");
     template.insert(p);
-    template.updateFirst(PersonPojoLongId.class, query(where("id").is(1)),
-        update("text", "New Text"));
+    template.updateFirst(query(where("id").is(1)), update("text", "New Text"),
+        PersonPojoLongId.class);
 
     PersonPojoLongId p2 = template.findOne(query(where("id").is(1)),
         PersonPojoLongId.class);
@@ -419,8 +419,8 @@ public class MappingTests {
     //Assign the String Id in code
     PersonPojoStringId p = new PersonPojoStringId("1", "Text");
     template.insert(p);
-    template.updateFirst(PersonPojoLongId.class, query(where("id").is("1")),
-        update("text", "New Text"));
+    template.updateFirst(query(where("id").is("1")), update("text", "New Text"),
+        PersonPojoLongId.class);
 
     PersonPojoStringId p2 = template.findOne(query(where("id").is("1")),
         PersonPojoStringId.class);

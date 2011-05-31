@@ -190,11 +190,11 @@ public interface MongoOperations {
 	 * If your collection does not contain a homogeneous collection of types, this operation will not be an efficient way
 	 * to map objects since the test for class type is done in the client and not on the server.
 	 * 
-	 * @param targetClass
+	 * @param entityClass
 	 *          the parameterized type of the returned list
 	 * @return the converted collection
 	 */
-	<T> List<T> getCollection(Class<T> targetClass);
+	<T> List<T> getCollection(Class<T> entityClass);
 
 	/**
 	 * Query for a list of objects of type T from the specified collection.
@@ -207,11 +207,11 @@ public interface MongoOperations {
 	 * 
 	 * @param collectionName
 	 *          name of the collection to retrieve the objects from
-	 * @param targetClass
+	 * @param entityClass
 	 *          the parameterized type of the returned list.
 	 * @return the converted collection
 	 */
-	<T> List<T> getCollection(String collectionName, Class<T> targetClass);
+	<T> List<T> getCollection(String collectionName, Class<T> entityClass);
 
 	/**
 	 * Ensure that an index for the provided {@link IndexDefinition} exists for the default collection. If not it will be
@@ -244,11 +244,11 @@ public interface MongoOperations {
 	 * @param query
 	 *          the query class that specifies the criteria used to find a record and also an optional fields
 	 *          specification
-	 * @param targetClass
+	 * @param entityClass
 	 *          the parameterized type of the returned list.
 	 * @return the converted object
 	 */
-	<T> T findOne(Query query, Class<T> targetClass);
+	<T> T findOne(Query query, Class<T> entityClass);
 
 	/**
 	 * Map the results of an ad-hoc query on the specified collection to a single instance of an object of the specified
@@ -265,11 +265,11 @@ public interface MongoOperations {
 	 * @param query
 	 *          the query class that specifies the criteria used to find a record and also an optional fields
 	 *          specification
-	 * @param targetClass
+	 * @param entityClass
 	 *          the parameterized type of the returned list.
 	 * @return the converted object
 	 */
-	<T> T findOne(String collectionName, Query query, Class<T> targetClass);
+	<T> T findOne(String collectionName, Query query, Class<T> entityClass);
 
 	/**
 	 * Map the results of an ad-hoc query on the default MongoDB collection to a List of the specified type.
@@ -283,11 +283,11 @@ public interface MongoOperations {
 	 * @param query
 	 *          the query class that specifies the criteria used to find a record and also an optional fields
 	 *          specification
-	 * @param targetClass
+	 * @param entityClass
 	 *          the parameterized type of the returned list.
 	 * @return the List of converted objects
 	 */
-	<T> List<T> find(Query query, Class<T> targetClass);
+	<T> List<T> find(Query query, Class<T> entityClass);
 
 	/**
 	 * Map the results of an ad-hoc query on the specified collection to a List of the specified type.
@@ -303,11 +303,11 @@ public interface MongoOperations {
 	 * @param query
 	 *          the query class that specifies the criteria used to find a record and also an optional fields
 	 *          specification
-	 * @param targetClass
+	 * @param entityClass
 	 *          the parameterized type of the returned list.
 	 * @return the List of converted objects
 	 */
-	<T> List<T> find(String collectionName, Query query, Class<T> targetClass);
+	<T> List<T> find(String collectionName, Query query, Class<T> entityClass);
 
 	/**
 	 * Map the results of an ad-hoc query on the specified collection to a List of the specified type.
@@ -323,14 +323,14 @@ public interface MongoOperations {
 	 * @param query
 	 *          the query class that specifies the criteria used to find a record and also an optional fields
 	 *          specification
-	 * @param targetClass
+	 * @param entityClass
 	 *          the parameterized type of the returned list.
 	 * @param preparer
 	 *          allows for customization of the DBCursor used when iterating over the result set, (apply limits, skips and
 	 *          so on).
 	 * @return the List of converted objects.
 	 */
-	<T> List<T> find(String collectionName, Query query, Class<T> targetClass, CursorPreparer preparer);
+	<T> List<T> find(String collectionName, Query query, Class<T> entityClass, CursorPreparer preparer);
 
 	/**
 	 * Returns a document with the given id mapped onto the given class. The collection the query is ran against will be
@@ -338,10 +338,10 @@ public interface MongoOperations {
 	 * 
 	 * @param <T>
 	 * @param id the id of the document to return.
-	 * @param targetClass the type the document shall be converted into.
+	 * @param entityClass the type the document shall be converted into.
 	 * @return the document with the given id mapped onto the given target class.
 	 */
-	<T> T findById(Object id, Class<T> targetClass);
+	<T> T findById(Object id, Class<T> entityClass);
 	
 	/**
 	 * Returns the document with the given id from the given collection mapped onto the given target class.
@@ -349,10 +349,10 @@ public interface MongoOperations {
 	 * @param <T>
 	 * @param collectionName the collection to query for the document
 	 * @param id the id of the document to return
-	 * @param targetClass the type to convert the document to
+	 * @param entityClass the type to convert the document to
 	 * @return
 	 */
-	<T> T findById(String collectionName, Object id, Class<T> targetClass);
+	<T> T findById(String collectionName, Object id, Class<T> entityClass);
 	
 	/**
 	 * Map the results of an ad-hoc query on the default MongoDB collection to a single instance of an object of the
@@ -368,11 +368,11 @@ public interface MongoOperations {
 	 * @param query
 	 *          the query class that specifies the criteria used to find a record and also an optional fields
 	 *          specification
-	 * @param targetClass
+	 * @param entityClass
 	 *          the parameterized type of the returned list.
 	 * @return the converted object
 	 */
-	<T> T findAndRemove(Query query, Class<T> targetClass);
+	<T> T findAndRemove(Query query, Class<T> entityClass);
 
 	/**
 	 * Map the results of an ad-hoc query on the specified collection to a single instance of an object of the specified
@@ -389,11 +389,11 @@ public interface MongoOperations {
 	 * @param query
 	 *          the query class that specifies the criteria used to find a record and also an optional fields
 	 *          specification
-	 * @param targetClass
+	 * @param entityClass
 	 *          the parameterized type of the returned list.
 	 * @return the converted object
 	 */
-	<T> T findAndRemove(String collectionName, Query query, Class<T> targetClass);
+	<T> T findAndRemove(String collectionName, Query query, Class<T> entityClass);
 
 	/**
 	 * Insert the object into the default collection.
@@ -489,7 +489,6 @@ public interface MongoOperations {
 	/**
 	 * Updates the first object that is found in the default collection that matches the query document with the provided
 	 * updated document.
-	 * 
 	 * @param entityClass
 	 *          class that determines the collection to use
 	 * @param queryDoc
@@ -497,7 +496,7 @@ public interface MongoOperations {
 	 * @param updateDoc
 	 *          the update document that contains the updated object or $ operators to manipulate the existing object.
 	 */
-	WriteResult updateFirst(Class<?> entityClass, Query query, Update update);
+	WriteResult updateFirst(Query query, Update update, Class<?> entityClass);
 
 	/**
 	 * Updates the first object that is found in the specified collection that matches the query document criteria with
@@ -515,7 +514,6 @@ public interface MongoOperations {
 	/**
 	 * Updates all objects that are found in the default collection that matches the query document criteria with the
 	 * provided updated document.
-	 * 
 	 * @param entityClass
 	 *          class that determines the collection to use
 	 * @param queryDoc
@@ -523,7 +521,7 @@ public interface MongoOperations {
 	 * @param updateDoc
 	 *          the update document that contains the updated object or $ operators to manipulate the existing object.
 	 */
-	WriteResult updateMulti(Class<?> entityClass, Query query, Update update);
+	WriteResult updateMulti(Query query, Update update, Class<?> entityClass);
 
 	/**
 	 * Updates all objects that are found in the specified collection that matches the query document criteria with the
@@ -559,9 +557,9 @@ public interface MongoOperations {
 	 * 
 	 * @param <T>
 	 * @param query
-	 * @param targetClass
+	 * @param entityClass
 	 */
-	<T> void remove(Query query, Class<T> targetClass);
+	<T> void remove(Query query, Class<T> entityClass);
 
 	/**
 	 * Remove all documents from the specified collection that match the provided query document criteria.
@@ -579,8 +577,8 @@ public interface MongoOperations {
 	 * 
 	 * @param collectionName
 	 * @param query
-	 * @param targetClass
+	 * @param entityClass
 	 */
-	<T> void remove(String collectionName, Query query, Class<T> targetClass);
+	<T> void remove(String collectionName, Query query, Class<T> entityClass);
 
 }
