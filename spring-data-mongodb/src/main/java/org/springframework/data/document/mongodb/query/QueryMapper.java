@@ -23,7 +23,7 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import org.bson.types.BasicBSONList;
 import org.bson.types.ObjectId;
-import org.springframework.core.convert.ConversionFailedException;
+import org.springframework.core.convert.ConversionException;
 import org.springframework.data.document.mongodb.convert.MongoConverter;
 import org.springframework.data.document.mongodb.mapping.MongoPersistentEntity;
 import org.springframework.data.mapping.model.PersistentEntity;
@@ -31,7 +31,7 @@ import org.springframework.util.Assert;
 
 /**
  * A helper class to encapsulate any modifications of a Query object before it gets submitted to the database.
- * 
+ *
  * @author Jon Brisbin <jbrisbin@vmware.com>
  * @author Oliver Gierke
  */
@@ -41,7 +41,7 @@ public class QueryMapper {
 
 	/**
 	 * Creates a new {@link QueryMapper} with the given {@link MongoConverter}.
-	 * 
+	 *
 	 * @param converter
 	 */
 	public QueryMapper(MongoConverter converter) {
@@ -52,7 +52,7 @@ public class QueryMapper {
 	/**
 	 * Replaces the property keys used in the given {@link DBObject} with the appropriate keys by using the
 	 * {@link PersistentEntity} metadata.
-	 * 
+	 *
 	 * @param query
 	 * @param entity
 	 * @return
@@ -82,7 +82,7 @@ public class QueryMapper {
 								try {
 									ObjectId oid = converter.convertObjectId(id);
 									ids.add(oid);
-								} catch (ConversionFailedException ignored) {
+								} catch (ConversionException ignored) {
 									ids.add(id);
 								}
 							} else {
@@ -96,7 +96,7 @@ public class QueryMapper {
 				} else if (null != converter) {
 					try {
 						value = converter.convertObjectId(value);
-					} catch (Exception ignored) {
+					} catch (ConversionException ignored) {
 					}
 				}
 				newKey = "_id";

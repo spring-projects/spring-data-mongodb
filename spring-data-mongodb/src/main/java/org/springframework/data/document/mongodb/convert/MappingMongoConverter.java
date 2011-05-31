@@ -29,6 +29,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import com.mongodb.BasicDBList;
+import com.mongodb.BasicDBObject;
+import com.mongodb.DB;
+import com.mongodb.DBObject;
+import com.mongodb.DBRef;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bson.types.ObjectId;
@@ -36,6 +41,7 @@ import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.expression.BeanFactoryResolver;
+import org.springframework.core.convert.ConversionException;
 import org.springframework.core.convert.support.ConversionServiceFactory;
 import org.springframework.data.document.mongodb.MongoDbFactory;
 import org.springframework.data.document.mongodb.mapping.MongoPersistentEntity;
@@ -58,12 +64,6 @@ import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-import com.mongodb.BasicDBList;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
-import com.mongodb.DBObject;
-import com.mongodb.DBRef;
-
 /**
  * {@link MongoConverter} that uses a {@link MappingContext} to do sophisticated mapping of domain objects to
  * {@link DBObject}.
@@ -74,11 +74,11 @@ import com.mongodb.DBRef;
 public class MappingMongoConverter extends AbstractMongoConverter implements ApplicationContextAware {
 
 	public static final String CUSTOM_TYPE_KEY = "_class";
-	
+
 	private static final List<Class<?>> VALID_ID_TYPES = Arrays.asList(new Class<?>[]{ObjectId.class, String.class,
 			BigInteger.class, byte[].class});
 	protected static final Log log = LogFactory.getLog(MappingMongoConverter.class);
-	
+
 	protected final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 	protected final SpelExpressionParser spelExpressionParser = new SpelExpressionParser();
 	protected ApplicationContext applicationContext;
@@ -87,7 +87,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	/**
 	 * Creates a new {@link MappingMongoConverter} given the new {@link MongoDbFactory} and {@link MappingContext}.
-	 * 
+	 *
 	 * @param mongoDbFactory
 	 * @param mappingContext
 	 */
@@ -188,41 +188,41 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		final List<String> ctorParamNames = new ArrayList<String>();
 		final MongoPersistentProperty idProperty = entity.getIdProperty();
-		
+
 		ParameterValueProvider provider = new SpELAwareParameterValueProvider(spelExpressionParser, spelCtx) {
-					@Override
-					@SuppressWarnings("unchecked")
-					public <T> T getParameterValue(PreferredConstructor.Parameter<T> parameter) {
-						
-						if (parameter.getKey() != null) {
-							return super.getParameterValue(parameter);
-						}
-						
-						String name = parameter.getName();
-						TypeInformation<T> type = parameter.getType();
-						Class<T> rawType = parameter.getRawType();
-						String key = idProperty == null ? name : idProperty.getName().equals(name) ? idProperty.getFieldName() : name;
-						Object obj = dbo.get(key);
+			@Override
+			@SuppressWarnings("unchecked")
+			public <T> T getParameterValue(PreferredConstructor.Parameter<T> parameter) {
 
-						ctorParamNames.add(name);
-						if (obj instanceof DBRef) {
-							return read(type, ((DBRef) obj).fetch());
-						} else if (obj instanceof BasicDBList) {
-							BasicDBList objAsDbList = (BasicDBList) obj;
-							List<?> l = unwrapList(objAsDbList, type);
-							return conversionService.convert(l, rawType);
-						} else if (obj instanceof DBObject) {
-							return read(type, ((DBObject) obj));
-						} else if (null != obj && obj.getClass().isAssignableFrom(rawType)) {
-							return (T) obj;
-						} else if (null != obj) {
-							return conversionService.convert(obj, rawType);
-						}
+				if (parameter.getKey() != null) {
+					return super.getParameterValue(parameter);
+				}
 
-						return null;
-					}
-				};
-		
+				String name = parameter.getName();
+				TypeInformation<T> type = parameter.getType();
+				Class<T> rawType = parameter.getRawType();
+				String key = idProperty == null ? name : idProperty.getName().equals(name) ? idProperty.getFieldName() : name;
+				Object obj = dbo.get(key);
+
+				ctorParamNames.add(name);
+				if (obj instanceof DBRef) {
+					return read(type, ((DBRef) obj).fetch());
+				} else if (obj instanceof BasicDBList) {
+					BasicDBList objAsDbList = (BasicDBList) obj;
+					List<?> l = unwrapList(objAsDbList, type);
+					return conversionService.convert(l, rawType);
+				} else if (obj instanceof DBObject) {
+					return read(type, ((DBObject) obj));
+				} else if (null != obj && obj.getClass().isAssignableFrom(rawType)) {
+					return (T) obj;
+				} else if (null != obj) {
+					return conversionService.convert(obj, rawType);
+				}
+
+				return null;
+			}
+		};
+
 		final BeanWrapper<MongoPersistentEntity<S>, S> wrapper = BeanWrapper.create(entity, provider, conversionService);
 
 		// Set properties not already set in the constructor
@@ -325,19 +325,26 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		if (null == entity) {
 			throw new MappingException("No mapping metadata found for entity of type " + obj.getClass().getName());
 		}
-		
+
 		final BeanWrapper<MongoPersistentEntity<Object>, Object> wrapper = BeanWrapper.create(obj, conversionService);
 
 		// Write the ID
 		final MongoPersistentProperty idProperty = entity.getIdProperty();
 		if (!dbo.containsField("_id") && null != idProperty) {
-			Object idObj;
-			try {
-				idObj = wrapper.getProperty(idProperty, Object.class, useFieldAccessOnly);
-			} catch (IllegalAccessException e) {
-				throw new MappingException(e.getMessage(), e);
-			} catch (InvocationTargetException e) {
-				throw new MappingException(e.getMessage(), e);
+			Object idObj = null;
+			Class<?>[] targetClasses = new Class<?>[]{ObjectId.class, Object.class};
+			for (int i = 0; i < targetClasses.length; i++) {
+				try {
+					idObj = wrapper.getProperty(idProperty, targetClasses[i], useFieldAccessOnly);
+					if (null != idObj) {
+						break;
+					}
+				} catch (ConversionException ignored) {
+				} catch (IllegalAccessException e) {
+					throw new MappingException(e.getMessage(), e);
+				} catch (InvocationTargetException e) {
+					throw new MappingException(e.getMessage(), e);
+				}
 			}
 
 			if (null != idObj) {
@@ -396,13 +403,13 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	@SuppressWarnings({"unchecked"})
 	protected void writePropertyInternal(MongoPersistentProperty prop, Object obj, DBObject dbo) {
-		
+
 		if (obj == null) {
 			return;
 		}
 
 		String name = prop.getFieldName();
-		
+
 		if (prop.isCollection()) {
 			DBObject collectionInternal = writeCollectionInternal(prop, obj);
 			dbo.put(name, collectionInternal);
@@ -437,23 +444,23 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		writeInternal(obj, propDbObj, mappingContext.getPersistentEntity(prop.getTypeInformation()));
 		dbo.put(name, propDbObj);
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	protected DBObject writeCollectionInternal(MongoPersistentProperty property, Object obj) {
-		
+
 		BasicDBList dbList = new BasicDBList();
 		Class<?> type = property.getType();
 		Collection<Object> coll = type.isArray() ? CollectionUtils.arrayToList(obj) : (Collection<Object>) obj;
 		TypeInformation<?> componentType = property.getTypeInformation().getComponentType();
-		
+
 		for (Object element : coll) {
-			
+
 			if (element == null) {
 				continue;
 			}
-			
+
 			TypeInformation<?> valueType = ClassTypeInformation.from(element.getClass());
-			
+
 			if (property.isDbReference()) {
 				DBRef dbRef = createDBRef(element, property.getDBRef());
 				dbList.add(dbRef);
@@ -484,7 +491,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				dbList.add(propDbObj);
 			}
 		}
-		
+
 		return dbList;
 	}
 
@@ -513,19 +520,19 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	/**
 	 * Adds custom type information to the given {@link DBObject} if necessary. That is if the value is not the same as
 	 * the one given. This is usually the case if you store a subtype of the actual declared type of the property.
-	 * 
+	 *
 	 * @param type
 	 * @param value
 	 * @param dbObject
 	 */
 	public void addCustomTypeKeyIfNecessary(TypeInformation<?> type, Object value, DBObject dbObject) {
-		
+
 		if (type == null) {
 			return;
 		}
-		
+
 		Class<?> reference = getValueType(type).getType();
-		
+
 		boolean notTheSameClass = !value.getClass().equals(reference);
 		if (notTheSameClass) {
 			dbObject.put(CUSTOM_TYPE_KEY, value.getClass().getName());
@@ -536,7 +543,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * Returns the type type information of the actual value to be stored. That is, for maps it will return the map value
 	 * type, for collections it will return the component type as well as the given type if it is a non-collection or
 	 * non-map one.
-	 * 
+	 *
 	 * @param type
 	 * @return
 	 */
@@ -560,7 +567,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	private void writeSimpleInternal(String key, Object value, DBObject dbObject) {
 
 		Class<?> customTarget = getCustomTarget(value.getClass(), null);
-		
+
 		Object valueToSet = null;
 		if (customTarget != null) {
 			valueToSet = conversionService.convert(value, customTarget);
@@ -691,7 +698,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * Returns the type to be used to convert the DBObject given to. Will return {@literal null} if there's not type hint
 	 * found in the {@link DBObject} or the type hint found can't be converted into a {@link Class} as the type might not
 	 * be available.
-	 * 
+	 *
 	 * @param dbObject
 	 * @return the type to be used for converting the given {@link DBObject} into or {@literal null} if there's no type
 	 *         found.

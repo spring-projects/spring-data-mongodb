@@ -21,20 +21,20 @@ import org.springframework.data.document.mongodb.mapping.Document;
 
 /**
  * Sample contactt domain class.
- * 
+ *
  * @author Oliver Gierke
  */
 @Document
 abstract class Contact {
 
 	@Id
-	protected final String id;
+	protected final ObjectId id;
 
 	public Contact() {
-		this.id = new ObjectId().toString();
+		this.id = new ObjectId();
 	}
 
-	public String getId() {
+	public ObjectId getId() {
 		return id;
 	}
 }

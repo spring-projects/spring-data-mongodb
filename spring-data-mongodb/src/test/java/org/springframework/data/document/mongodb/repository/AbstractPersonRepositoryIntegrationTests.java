@@ -58,7 +58,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	@Test
 	public void findsPersonById() throws Exception {
 
-		assertThat(repository.findOne(dave.getId()), is(dave));
+		assertThat(repository.findOne(dave.getId().toString()), is(dave));
 	}
 
 	@Test
@@ -82,7 +82,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	@Test
 	public void deletesPersonByIdCorrectly() {
 
-		repository.delete(dave.getId());
+		repository.delete(dave.getId().toString());
 
 		List<Person> result = repository.findAll();
 

@@ -20,8 +20,10 @@ import static org.springframework.data.document.mongodb.query.Criteria.*;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -88,6 +90,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	private static final Log LOGGER = LogFactory.getLog(MongoTemplate.class);
 
 	private static final String ID = "_id";
+	private static final List<String> ITERABLE_CLASSES = new ArrayList<String>() {{
+		add(List.class.getName());
+		add(Collection.class.getName());
+		add(Iterator.class.getName());
+	}};
 
 	/*
 	 * WriteConcern to be used for write operations if it has been specified. Otherwise
@@ -373,7 +380,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			public Void doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 				collection.drop();
 				if (LOGGER.isDebugEnabled()) {
-				  LOGGER.debug("Dropped collection ["+ collection.getFullName() + "]");
+					LOGGER.debug("Dropped collection [" + collection.getFullName() + "]");
 				}
 				return null;
 			}
@@ -475,6 +482,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * @see org.springframework.data.document.mongodb.MongoOperations#insert(java.lang.Object)
 	 */
 	public void insert(Object objectToSave) {
+		ensureNotIterable(objectToSave);
 		insert(determineEntityCollectionName(objectToSave), objectToSave);
 	}
 
@@ -482,7 +490,17 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * @see org.springframework.data.document.mongodb.MongoOperations#insert(java.lang.String, java.lang.Object)
 	 */
 	public void insert(String collectionName, Object objectToSave) {
+		ensureNotIterable(objectToSave);
 		doInsert(collectionName, objectToSave, this.mongoConverter);
+	}
+
+	protected void ensureNotIterable(Object o) {
+		if (null != o) {
+			if (o.getClass().isArray() ||
+					ITERABLE_CLASSES.contains(o.getClass().getName())) {
+				throw new IllegalArgumentException("Cannot use a collection here.");
+			}
+		}
 	}
 
 	/**
@@ -613,21 +631,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	}
 
 	protected Object insertDBObject(String collectionName, final DBObject dbDoc) {
-
-		// DATADOC-95: This will prevent null objects from being saved.
-		// if (dbDoc.keySet().isEmpty()) {
-		// return null;
-		// }
-
-		// TODO: Need to move this to more central place
-		if (dbDoc.containsField("_id")) {
-			if (dbDoc.get("_id") instanceof String) {
-				ObjectId oid = convertIdValue(this.mongoConverter, dbDoc.get("_id"));
-				if (oid != null) {
-					dbDoc.put("_id", oid);
-				}
-			}
-		}
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug("insert DBObject containing fields: " + dbDoc.keySet() + " in collection: " + collectionName);
 		}
@@ -645,22 +648,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	}
 
 	protected List<ObjectId> insertDBObjectList(String collectionName, final List<DBObject> dbDocList) {
-
 		if (dbDocList.isEmpty()) {
 			return Collections.emptyList();
 		}
 
-		// TODO: Need to move this to more central place
-		for (DBObject dbDoc : dbDocList) {
-			if (dbDoc.containsField("_id")) {
-				if (dbDoc.get("_id") instanceof String) {
-					ObjectId oid = convertIdValue(this.mongoConverter, dbDoc.get("_id"));
-					if (oid != null) {
-						dbDoc.put("_id", oid);
-					}
-				}
-			}
-		}
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug("insert list of DBObjects containing " + dbDocList.size() + " items");
 		}
@@ -690,20 +681,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	}
 
 	protected Object saveDBObject(String collectionName, final DBObject dbDoc) {
-
-		if (dbDoc.keySet().isEmpty()) {
-			return null;
-		}
-
-		// TODO: Need to move this to more central place
-		if (dbDoc.containsField("_id")) {
-			if (dbDoc.get("_id") instanceof String) {
-				ObjectId oid = convertIdValue(this.mongoConverter, dbDoc.get("_id"));
-				if (oid != null) {
-					dbDoc.put("_id", oid);
-				}
-			}
-		}
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug("save DBObject containing fields: " + dbDoc.keySet());
 		}
@@ -824,9 +801,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				DBObject dboq = mapper.getMappedObject(queryObject, entity);
 				WriteResult wr = null;
 				WriteConcern writeConcernToUse = prepareWriteConcern(writeConcern);
-		    if (LOGGER.isDebugEnabled()) {
-		      LOGGER.debug("remove using query: " + queryObject + " in collection: " + collection.getName());
-		    }
+				if (LOGGER.isDebugEnabled()) {
+					LOGGER.debug("remove using query: " + queryObject + " in collection: " + collection.getName());
+				}
 				if (writeConcernToUse == null) {
 					wr = collection.remove(dboq);
 				} else {
@@ -889,7 +866,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				DBCollection coll = db.createCollection(collectionName, collectionOptions);
 				// TODO: Emit a collection created event
 				if (LOGGER.isDebugEnabled()) {
-				  LOGGER.debug("Created collection [" + coll.getFullName() + "]");
+					LOGGER.debug("Created collection [" + coll.getFullName() + "]");
 				}
 				return coll;
 			}
@@ -1014,7 +991,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		if (idProp == null) {
 			throw new MappingException("No id property found for object of type " + entity.getType().getName());
 		}
-		
+
 		ConversionService service = mongoConverter.getConversionService();
 
 		try {

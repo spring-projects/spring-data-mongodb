@@ -20,9 +20,9 @@ package org.springframework.data.document.mongodb;
 /**
  * Helper class featuring helper methods for working with MongoDb collections.
  * <p/>
- * <p>
+ * <p/>
  * Mainly intended for internal use within the framework.
- * 
+ *
  * @author Thomas Risberg
  * @since 1.0
  */
@@ -37,13 +37,14 @@ public abstract class MongoCollectionUtils {
 
 	/**
 	 * Obtains the collection name to use for the provided class
-	 * 
-	 * @param entityClass
-	 *         The class to determine the preferred collection name for
+	 *
+	 * @param entityClass The class to determine the preferred collection name for
 	 * @return The preferred collection name
 	 */
 	public static String getPreferredCollectionName(Class<?> entityClass) {
-		return entityClass.getSimpleName();
+		String name = entityClass.getSimpleName();
+		char firstChar = name.charAt(0);
+		return (String.valueOf(firstChar).toLowerCase() + name.substring(1));
 	}
 
 }

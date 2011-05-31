@@ -465,16 +465,7 @@ public class MongoTemplateTests {
 	}
 
 	@Test
-	public void testAddingToListWithSimpleConverter() throws Exception {
-		testAddingToList(this.template);
-	}
-
-	@Test
-	public void testAddingToListWithMappingConverter() throws Exception {
-		testAddingToList(this.mappingTemplate);
-	}
-
-	private void testAddingToList(MongoTemplate template) {
+	public void testAddingToList() {
 		PersonWithAList p = new PersonWithAList();
 		p.setFirstName("Sven");
 		p.setAge(22);

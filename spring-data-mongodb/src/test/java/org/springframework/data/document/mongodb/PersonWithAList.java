@@ -18,9 +18,11 @@ package org.springframework.data.document.mongodb;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.bson.types.ObjectId;
+
 public class PersonWithAList {
 
-	private String id;
+	private ObjectId id;
 
 	private String firstName;
 
@@ -30,11 +32,11 @@ public class PersonWithAList {
 
 	private List<Friend> friends = new ArrayList<Friend>();
 
-	public String getId() {
+	public ObjectId getId() {
 		return id;
 	}
 
-	public void setId(String id) {
+	public void setId(ObjectId id) {
 		this.id = id;
 	}
 

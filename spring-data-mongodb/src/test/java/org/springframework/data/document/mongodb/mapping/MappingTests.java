@@ -174,14 +174,14 @@ public class MappingTests {
 
 		Person p = new Person(123456789, "John", "Doe", 37, addr);
 		p.setAccounts(accounts);
-		template.insert("Person", p);
+		template.insert("person", p);
 
 		Account newAcct = new Account();
 		newAcct.setBalance(10000.00f);
 		template.insert("account", newAcct);
 
 		accounts.add(newAcct);
-		template.save("Person", p);
+		template.save("person", p);
 
 		assertNotNull(p.getId());
 
@@ -203,8 +203,10 @@ public class MappingTests {
 		Person p1 = new Person(1234567890, "John", "Doe", 37, addr);
 		Person p2 = new Person(1234567890, "Jane", "Doe", 38, addr);
 
-		template.insert(p2);
-		template.insert(p1);
+		List<Person> persons = new ArrayList<Person>();
+		persons.add(p1);
+		persons.add(p2);
+		template.insertList(MongoCollectionUtils.getPreferredCollectionName(Person.class), persons);
 
 		List<Person> result = template.find(new Query(Criteria.where("ssn").is(1234567890)), Person.class);
 		assertThat(result.size(), is(1));
@@ -379,5 +381,16 @@ public class MappingTests {
 		PersonPojoIntId p2 = template.findOne(query(where("id").is(1)), PersonPojoIntId.class);
 		assertEquals("New Text", p2.getText());
 	}
+
+//	@Test
+//	public void testThroughput() {
+//		long start = System.currentTimeMillis();
+//		for (int i = 0; i < 10000; i++) {
+//			PersonPojo p = new PersonPojo(i, "throughput test", "");
+//			template.insert(p);
+//		}
+//		double elapsed = System.currentTimeMillis() - start;
+//		System.out.println("time: " + (elapsed / 1000) + "s");
+//	}
 
 }
