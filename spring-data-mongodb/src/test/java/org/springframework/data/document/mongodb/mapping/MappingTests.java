@@ -45,6 +45,7 @@ import org.springframework.data.document.mongodb.MongoCollectionUtils;
 import org.springframework.data.document.mongodb.MongoDbUtils;
 import org.springframework.data.document.mongodb.MongoTemplate;
 import org.springframework.data.document.mongodb.query.Criteria;
+import org.springframework.data.document.mongodb.query.Order;
 import org.springframework.data.document.mongodb.query.Query;
 
 /**
@@ -59,7 +60,7 @@ public class MappingTests {
 			MongoCollectionUtils.getPreferredCollectionName(PersonWithObjectId.class),
 			MongoCollectionUtils.getPreferredCollectionName(PersonPojoIntId.class),
 			MongoCollectionUtils.getPreferredCollectionName(PersonPojoLongId.class),
-      //MongoCollectionUtils.getPreferredCollectionName(PersonPojoStringId.class),			
+      MongoCollectionUtils.getPreferredCollectionName(PersonPojoStringId.class),			
 			MongoCollectionUtils.getPreferredCollectionName(PersonCustomIdName.class),
 			MongoCollectionUtils.getPreferredCollectionName(PersonMultiDimArrays.class),
 			MongoCollectionUtils.getPreferredCollectionName(PersonMultiCollection.class),
@@ -414,13 +415,12 @@ public class MappingTests {
   }
   
   @Test
-  @Ignore("DATADOC-155 - To be investigated")
   public void testNoMappingAnnotationsUsingStringAsId() {
     //Assign the String Id in code
     PersonPojoStringId p = new PersonPojoStringId("1", "Text");
     template.insert(p);
     template.updateFirst(query(where("id").is("1")), update("text", "New Text"),
-        PersonPojoLongId.class);
+        PersonPojoStringId.class);
 
     PersonPojoStringId p2 = template.findOne(query(where("id").is("1")),
         PersonPojoStringId.class);
@@ -433,6 +433,17 @@ public class MappingTests {
         PersonPojoStringId.class);
     assertEquals("Different Text", p3.getText());
 
+    
+    PersonPojoStringId p4 = new PersonPojoStringId("2", "Text-2");
+    template.insert(p4);
+    
+    Query q = query(where("id").in("1","2"));
+    q.sort().on("id", Order.ASCENDING);
+    List<PersonPojoStringId> people = template.find(q, PersonPojoStringId.class);
+    assertEquals(2, people.size());
+    
+    
+    
   }
 
 //	@Test
