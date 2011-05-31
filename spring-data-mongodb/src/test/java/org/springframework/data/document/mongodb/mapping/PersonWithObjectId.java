@@ -16,28 +16,25 @@
 
 package org.springframework.data.document.mongodb.mapping;
 
+import org.bson.types.ObjectId;
+
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
  */
-public class PersonPojoIntId {
+public class PersonWithObjectId extends BasePerson {
 
-	private int id;
-	private String text;
+	private ObjectId id;
 
-	public PersonPojoIntId(int id, String text) {
-		this.id = id;
-		this.text = text;
+	public PersonWithObjectId(Integer ssn, String firstName, String lastName) {
+		super(ssn, firstName, lastName);
 	}
 
-	public int getId() {
+	public ObjectId getId() {
 		return id;
 	}
 
-	public String getText() {
-		return text;
+	public void setId(ObjectId id) {
+		this.id = id;
 	}
 
-	public void setText(String text) {
-		this.text = text;
-	}
 }

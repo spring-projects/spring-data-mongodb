@@ -35,6 +35,7 @@ import com.mongodb.MongoException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
@@ -55,7 +56,10 @@ public class MappingTests {
 	private final String[] collectionsToDrop = new String[]{
 			MongoCollectionUtils.getPreferredCollectionName(Person.class),
 			MongoCollectionUtils.getPreferredCollectionName(PersonMapProperty.class),
-			MongoCollectionUtils.getPreferredCollectionName(PersonPojo.class),
+			MongoCollectionUtils.getPreferredCollectionName(PersonWithObjectId.class),
+			MongoCollectionUtils.getPreferredCollectionName(PersonPojoIntId.class),
+			MongoCollectionUtils.getPreferredCollectionName(PersonPojoLongId.class),
+      //MongoCollectionUtils.getPreferredCollectionName(PersonPojoStringId.class),			
 			MongoCollectionUtils.getPreferredCollectionName(PersonCustomIdName.class),
 			MongoCollectionUtils.getPreferredCollectionName(PersonMultiDimArrays.class),
 			MongoCollectionUtils.getPreferredCollectionName(PersonMultiCollection.class),
@@ -94,13 +98,13 @@ public class MappingTests {
 	public void testPersonPojo() throws Exception {
 
 		LOGGER.info("about to create new personpojo");
-		PersonPojo p = new PersonPojo(12345, "Person", "Pojo");
+		PersonWithObjectId p = new PersonWithObjectId(12345, "Person", "Pojo");
 		LOGGER.info("about to insert");
 		template.insert(p);
 		LOGGER.info("done inserting");
 		assertNotNull(p.getId());
 
-		List<PersonPojo> result = template.find(new Query(Criteria.where("ssn").is(12345)), PersonPojo.class);
+		List<PersonWithObjectId> result = template.find(new Query(Criteria.where("ssn").is(12345)), PersonWithObjectId.class);
 		assertThat(result.size(), is(1));
 		assertThat(result.get(0).getSsn(), is(12345));
 	}
@@ -347,14 +351,14 @@ public class MappingTests {
 
 	@Test
 	public void testOrQuery() {
-		PersonPojo p1 = new PersonPojo(1, "first", "");
+		PersonWithObjectId p1 = new PersonWithObjectId(1, "first", "");
 		template.save(p1);
-		PersonPojo p2 = new PersonPojo(2, "second", "");
+		PersonWithObjectId p2 = new PersonWithObjectId(2, "second", "");
 		template.save(p2);
 
 		Query one = query(where("ssn").is(1));
 		Query two = query(where("ssn").is(2));
-		List<PersonPojo> results = template.find(new Query().or(one, two), PersonPojo.class);
+		List<PersonWithObjectId> results = template.find(new Query().or(one, two), PersonWithObjectId.class);
 
 		assertNotNull(results);
 		assertThat(results.size(), is(2));
@@ -373,14 +377,63 @@ public class MappingTests {
 	}
 
 	@Test
-	public void testNoMappingAnnotations() {
+	public void testNoMappingAnnotationsUsingIntAsId() {
 		PersonPojoIntId p = new PersonPojoIntId(1, "Text");
-		template.save(p);
+		template.insert(p);
 		template.updateFirst(PersonPojoIntId.class, query(where("id").is(1)), update("text", "New Text"));
 
 		PersonPojoIntId p2 = template.findOne(query(where("id").is(1)), PersonPojoIntId.class);
 		assertEquals("New Text", p2.getText());
+		
+		p.setText("Different Text");
+		template.save(p);
+		
+		PersonPojoIntId p3 = template.findOne(query(where("id").is(1)), PersonPojoIntId.class);
+    assertEquals("Different Text", p3.getText());
+			
 	}
+	
+  @Test
+  public void testNoMappingAnnotationsUsingLongAsId() {
+    PersonPojoLongId p = new PersonPojoLongId(1, "Text");
+    template.insert(p);
+    template.updateFirst(PersonPojoLongId.class, query(where("id").is(1)),
+        update("text", "New Text"));
+
+    PersonPojoLongId p2 = template.findOne(query(where("id").is(1)),
+        PersonPojoLongId.class);
+    assertEquals("New Text", p2.getText());
+
+    p.setText("Different Text");
+    template.save(p);
+
+    PersonPojoLongId p3 = template.findOne(query(where("id").is(1)),
+        PersonPojoLongId.class);
+    assertEquals("Different Text", p3.getText());
+
+  }
+  
+  @Test
+  @Ignore("DATADOC-155 - To be investigated")
+  public void testNoMappingAnnotationsUsingStringAsId() {
+    //Assign the String Id in code
+    PersonPojoStringId p = new PersonPojoStringId("1", "Text");
+    template.insert(p);
+    template.updateFirst(PersonPojoLongId.class, query(where("id").is("1")),
+        update("text", "New Text"));
+
+    PersonPojoStringId p2 = template.findOne(query(where("id").is("1")),
+        PersonPojoStringId.class);
+    assertEquals("New Text", p2.getText());
+
+    p.setText("Different Text");
+    template.save(p);
+
+    PersonPojoStringId p3 = template.findOne(query(where("id").is("1")),
+        PersonPojoStringId.class);
+    assertEquals("Different Text", p3.getText());
+
+  }
 
 //	@Test
 //	public void testThroughput() {

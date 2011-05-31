@@ -19,17 +19,17 @@ package org.springframework.data.document.mongodb.mapping;
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
  */
-public class PersonPojoIntId {
+public class PersonPojoLongId {
 
-	private int id;
+	private long id;
 	private String text;
 
-	public PersonPojoIntId(int id, String text) {
+	public PersonPojoLongId(long id, String text) {
 		this.id = id;
 		this.text = text;
 	}
 
-	public int getId() {
+	public long getId() {
 		return id;
 	}
 
