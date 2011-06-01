@@ -576,6 +576,36 @@ public class MongoTemplateTests {
 	}
 
 	@Test
+	public void testUsingRegexQueryWithOptions() throws Exception {
+
+		template.remove(new Query(), PersonWithIdPropertyOfTypeObjectId.class);
+
+		PersonWithIdPropertyOfTypeObjectId p1 = new PersonWithIdPropertyOfTypeObjectId();
+		p1.setFirstName("Sven");
+		p1.setAge(11);
+		template.insert(p1);
+		PersonWithIdPropertyOfTypeObjectId p2 = new PersonWithIdPropertyOfTypeObjectId();
+		p2.setFirstName("Mary");
+		p2.setAge(21);
+		template.insert(p2);
+		PersonWithIdPropertyOfTypeObjectId p3 = new PersonWithIdPropertyOfTypeObjectId();
+		p3.setFirstName("Ann");
+		p3.setAge(31);
+		template.insert(p3);
+		PersonWithIdPropertyOfTypeObjectId p4 = new PersonWithIdPropertyOfTypeObjectId();
+		p4.setFirstName("samantha");
+		p4.setAge(41);
+		template.insert(p4);
+
+		Query q1 = new Query(Criteria.where("firstName").regex("S.*"));
+		List<PersonWithIdPropertyOfTypeObjectId> results1 = template.find(q1, PersonWithIdPropertyOfTypeObjectId.class);
+		Query q2 = new Query(Criteria.where("firstName").regex("S.*", "i"));
+		List<PersonWithIdPropertyOfTypeObjectId> results2 = template.find(q2, PersonWithIdPropertyOfTypeObjectId.class);
+		assertThat(results1.size(), is(1));
+		assertThat(results2.size(), is(2));
+	}
+
+	@Test
 	public void testUsingAnOrQuery() throws Exception {
 
 		template.remove(new Query(), PersonWithIdPropertyOfTypeObjectId.class);

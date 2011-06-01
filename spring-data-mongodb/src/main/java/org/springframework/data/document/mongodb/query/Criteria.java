@@ -29,6 +29,7 @@ import org.springframework.data.document.mongodb.geo.Box;
 import org.springframework.data.document.mongodb.geo.Circle;
 import org.springframework.data.document.mongodb.geo.Point;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 public class Criteria implements CriteriaDefinition {
 
@@ -268,6 +269,21 @@ public class Criteria implements CriteriaDefinition {
 	 */
 	public Criteria regex(String re) {
 		criteria.put("$regex", re);
+		return this;
+	}
+
+	/**
+	 * Creates a criterion using a $regex and $options
+	 * 
+	 * @param re
+	 * @param options
+	 * @return
+	 */
+	public Criteria regex(String re, String options) {
+		criteria.put("$regex", re);
+		if (StringUtils.hasText(options)) {
+			criteria.put("$options", options);
+		}
 		return this;
 	}
 

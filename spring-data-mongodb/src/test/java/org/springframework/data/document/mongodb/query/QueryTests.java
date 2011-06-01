@@ -130,4 +130,18 @@ public class QueryTests {
 		String expected = "{ \"state\" : { \"$in\" : [ \"NY\" , \"NJ\" , \"PA\"]}}";
 		Assert.assertEquals(expected, q.getQueryObject().toString());
 	}
+
+	@Test
+	public void testQueryWithRegex() {
+		Query q = new Query(where("name").regex("b.*"));
+		String expected = "{ \"name\" : { \"$regex\" : \"b.*\"}}";
+		Assert.assertEquals(expected, q.getQueryObject().toString());
+	}
+
+	@Test
+	public void testQueryWithRegexandOption() {
+		Query q = new Query(where("name").regex("b.*", "i"));
+		String expected = "{ \"name\" : { \"$regex\" : \"b.*\" , \"$options\" : \"i\"}}";
+		Assert.assertEquals(expected, q.getQueryObject().toString());
+	}
 }
