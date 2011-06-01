@@ -360,6 +360,9 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		// Write the properties
 		entity.doWithProperties(new PropertyHandler<MongoPersistentProperty>() {
 			public void doWithPersistentProperty(MongoPersistentProperty prop) {
+				if (prop.equals(idProperty)) {
+					return;
+				}
 				Object propertyObj;
 				try {
 					propertyObj = wrapper.getProperty(prop, prop.getType(), useFieldAccessOnly);

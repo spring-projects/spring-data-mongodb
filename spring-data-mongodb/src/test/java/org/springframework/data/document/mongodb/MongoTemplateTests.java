@@ -41,6 +41,7 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.document.mongodb.convert.MappingMongoConverter;
 import org.springframework.data.document.mongodb.convert.MongoConverter;
+import org.springframework.data.document.mongodb.convert.SimpleMongoConverter;
 import org.springframework.data.document.mongodb.mapping.MongoMappingContext;
 import org.springframework.data.document.mongodb.query.Criteria;
 import org.springframework.data.document.mongodb.query.Index;
@@ -66,6 +67,8 @@ public class MongoTemplateTests {
 
 	MongoTemplate mappingTemplate;
 
+	MongoTemplate simpleTemplate;
+
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();
 
@@ -76,13 +79,18 @@ public class MongoTemplateTests {
 		MongoMappingContext mappingContext = new MongoMappingContext();
 		mappingContext.setInitialEntitySet(new HashSet<Class<?>>(Arrays.asList(PersonWith_idPropertyOfTypeObjectId.class,
 				PersonWith_idPropertyOfTypeString.class, PersonWithIdPropertyOfTypeObjectId.class,
-				PersonWithIdPropertyOfTypeString.class)));
+				PersonWithIdPropertyOfTypeString.class, PersonWithIdPropertyOfTypeInteger.class, 
+				PersonWithIdPropertyOfPrimitiveInt.class, PersonWithIdPropertyOfTypeLong.class, 
+				PersonWithIdPropertyOfPrimitiveLong.class)));
 		mappingContext.afterPropertiesSet();
 
-		MappingMongoConverter converter = new MappingMongoConverter(template.getDbFactory(), mappingContext);
-		converter.afterPropertiesSet();
-
-		this.mappingTemplate = new MongoTemplate(template.getDbFactory(), converter);
+		MappingMongoConverter mappingConverter = new MappingMongoConverter(template.getDbFactory(), mappingContext);
+		mappingConverter.afterPropertiesSet();
+		this.mappingTemplate = new MongoTemplate(template.getDbFactory(), mappingConverter);
+		
+		SimpleMongoConverter simpleConverter = new SimpleMongoConverter();
+		simpleConverter.afterPropertiesSet();
+		this.simpleTemplate = new MongoTemplate(template.getDbFactory(), simpleConverter);
 	}
 
 	@Before
@@ -92,6 +100,10 @@ public class MongoTemplateTests {
 		template.dropCollection(template.getCollectionName(PersonWith_idPropertyOfTypeString.class));
 		template.dropCollection(template.getCollectionName(PersonWithIdPropertyOfTypeObjectId.class));
 		template.dropCollection(template.getCollectionName(PersonWithIdPropertyOfTypeString.class));
+		template.dropCollection(template.getCollectionName(PersonWithIdPropertyOfTypeInteger.class));
+		template.dropCollection(template.getCollectionName(PersonWithIdPropertyOfPrimitiveInt.class));
+		template.dropCollection(template.getCollectionName(PersonWithIdPropertyOfTypeLong.class));
+		template.dropCollection(template.getCollectionName(PersonWithIdPropertyOfPrimitiveLong.class));
 	}
 
 	@Test
@@ -160,7 +172,7 @@ public class MongoTemplateTests {
 
 	@Test
 	public void testProperHandlingOfDifferentIdTypesWithSimpleMongoConverter() throws Exception {
-		testProperHandlingOfDifferentIdTypes(this.template);
+		testProperHandlingOfDifferentIdTypes(this.simpleTemplate);
 	}
 
 	@Test
@@ -169,6 +181,8 @@ public class MongoTemplateTests {
 	}
 
 	private void testProperHandlingOfDifferentIdTypes(MongoTemplate mongoTemplate) throws Exception {
+		
+		// String id - generated
 		PersonWithIdPropertyOfTypeString p1 = new PersonWithIdPropertyOfTypeString();
 		p1.setFirstName("Sven_1");
 		p1.setAge(22);
@@ -181,7 +195,9 @@ public class MongoTemplateTests {
 				PersonWithIdPropertyOfTypeString.class);
 		assertThat(p1q, notNullValue());
 		assertThat(p1q.getId(), is(p1.getId()));
+		checkCollectionContent(PersonWithIdPropertyOfTypeString.class, 1);
 
+		// String id - provided
 		PersonWithIdPropertyOfTypeString p2 = new PersonWithIdPropertyOfTypeString();
 		p2.setFirstName("Sven_2");
 		p2.setAge(22);
@@ -195,7 +211,9 @@ public class MongoTemplateTests {
 				PersonWithIdPropertyOfTypeString.class);
 		assertThat(p2q, notNullValue());
 		assertThat(p2q.getId(), is(p2.getId()));
+		checkCollectionContent(PersonWithIdPropertyOfTypeString.class, 2);
 
+		// String _id - generated
 		PersonWith_idPropertyOfTypeString p3 = new PersonWith_idPropertyOfTypeString();
 		p3.setFirstName("Sven_3");
 		p3.setAge(22);
@@ -208,7 +226,9 @@ public class MongoTemplateTests {
 				PersonWith_idPropertyOfTypeString.class);
 		assertThat(p3q, notNullValue());
 		assertThat(p3q.get_id(), is(p3.get_id()));
+		checkCollectionContent(PersonWith_idPropertyOfTypeString.class, 1);
 
+		// String _id - provided
 		PersonWith_idPropertyOfTypeString p4 = new PersonWith_idPropertyOfTypeString();
 		p4.setFirstName("Sven_4");
 		p4.setAge(22);
@@ -222,7 +242,9 @@ public class MongoTemplateTests {
 				PersonWith_idPropertyOfTypeString.class);
 		assertThat(p4q, notNullValue());
 		assertThat(p4q.get_id(), is(p4.get_id()));
+		checkCollectionContent(PersonWith_idPropertyOfTypeString.class, 2);
 
+		// ObjectId id - generated
 		PersonWithIdPropertyOfTypeObjectId p5 = new PersonWithIdPropertyOfTypeObjectId();
 		p5.setFirstName("Sven_5");
 		p5.setAge(22);
@@ -235,7 +257,9 @@ public class MongoTemplateTests {
 				PersonWithIdPropertyOfTypeObjectId.class);
 		assertThat(p5q, notNullValue());
 		assertThat(p5q.getId(), is(p5.getId()));
+		checkCollectionContent(PersonWithIdPropertyOfTypeObjectId.class, 1);
 
+		// ObjectId id - provided
 		PersonWithIdPropertyOfTypeObjectId p6 = new PersonWithIdPropertyOfTypeObjectId();
 		p6.setFirstName("Sven_6");
 		p6.setAge(22);
@@ -249,7 +273,9 @@ public class MongoTemplateTests {
 				PersonWithIdPropertyOfTypeObjectId.class);
 		assertThat(p6q, notNullValue());
 		assertThat(p6q.getId(), is(p6.getId()));
+		checkCollectionContent(PersonWithIdPropertyOfTypeObjectId.class, 2);
 
+		// ObjectId _id - generated
 		PersonWith_idPropertyOfTypeObjectId p7 = new PersonWith_idPropertyOfTypeObjectId();
 		p7.setFirstName("Sven_7");
 		p7.setAge(22);
@@ -262,7 +288,9 @@ public class MongoTemplateTests {
 				PersonWith_idPropertyOfTypeObjectId.class);
 		assertThat(p7q, notNullValue());
 		assertThat(p7q.get_id(), is(p7.get_id()));
+		checkCollectionContent(PersonWith_idPropertyOfTypeObjectId.class, 1);
 
+		// ObjectId _id - provided
 		PersonWith_idPropertyOfTypeObjectId p8 = new PersonWith_idPropertyOfTypeObjectId();
 		p8.setFirstName("Sven_8");
 		p8.setAge(22);
@@ -276,8 +304,78 @@ public class MongoTemplateTests {
 				PersonWith_idPropertyOfTypeObjectId.class);
 		assertThat(p8q, notNullValue());
 		assertThat(p8q.get_id(), is(p8.get_id()));
+		checkCollectionContent(PersonWith_idPropertyOfTypeObjectId.class, 2);
+
+		// Integer id - provided
+		PersonWithIdPropertyOfTypeInteger p9 = new PersonWithIdPropertyOfTypeInteger();
+		p9.setFirstName("Sven_9");
+		p9.setAge(22);
+		p9.setId(Integer.valueOf(12345));
+		// insert
+		mongoTemplate.insert(p9);
+		// also try save
+		mongoTemplate.save(p9);
+		assertThat(p9.getId(), notNullValue());
+		PersonWithIdPropertyOfTypeInteger p9q = mongoTemplate.findOne(new Query(where("id").in(p9.getId())),
+				PersonWithIdPropertyOfTypeInteger.class);
+		assertThat(p9q, notNullValue());
+		assertThat(p9q.getId(), is(p9.getId()));
+		checkCollectionContent(PersonWithIdPropertyOfTypeInteger.class, 1);
+
+		// int id - provided
+		PersonWithIdPropertyOfPrimitiveInt p10 = new PersonWithIdPropertyOfPrimitiveInt();
+		p10.setFirstName("Sven_10");
+		p10.setAge(22);
+		p10.setId(12345);
+		// insert
+		mongoTemplate.insert(p10);
+		// also try save
+		mongoTemplate.save(p10);
+		assertThat(p10.getId(), notNullValue());
+		PersonWithIdPropertyOfPrimitiveInt p10q = mongoTemplate.findOne(new Query(where("id").in(p10.getId())),
+				PersonWithIdPropertyOfPrimitiveInt.class);
+		assertThat(p10q, notNullValue());
+		assertThat(p10q.getId(), is(p10.getId()));
+		checkCollectionContent(PersonWithIdPropertyOfPrimitiveInt.class, 1);
+
+		// Long id - provided
+		PersonWithIdPropertyOfTypeLong p11 = new PersonWithIdPropertyOfTypeLong();
+		p11.setFirstName("Sven_9");
+		p11.setAge(22);
+		p11.setId(Long.valueOf(12345L));
+		// insert
+		mongoTemplate.insert(p11);
+		// also try save
+		mongoTemplate.save(p11);
+		assertThat(p11.getId(), notNullValue());
+		PersonWithIdPropertyOfTypeLong p11q = mongoTemplate.findOne(new Query(where("id").in(p11.getId())),
+				PersonWithIdPropertyOfTypeLong.class);
+		assertThat(p11q, notNullValue());
+		assertThat(p11q.getId(), is(p11.getId()));
+		checkCollectionContent(PersonWithIdPropertyOfTypeLong.class, 1);
+
+		// long id - provided
+		PersonWithIdPropertyOfPrimitiveLong p12 = new PersonWithIdPropertyOfPrimitiveLong();
+		p12.setFirstName("Sven_10");
+		p12.setAge(22);
+		p12.setId(12345L);
+		// insert
+		mongoTemplate.insert(p12);
+		// also try save
+		mongoTemplate.save(p12);
+		assertThat(p12.getId(), notNullValue());
+		PersonWithIdPropertyOfPrimitiveLong p12q = mongoTemplate.findOne(new Query(where("id").in(p12.getId())),
+				PersonWithIdPropertyOfPrimitiveLong.class);
+		assertThat(p12q, notNullValue());
+		assertThat(p12q.getId(), is(p12.getId()));
+		checkCollectionContent(PersonWithIdPropertyOfPrimitiveLong.class, 1);
 	}
 
+	private void checkCollectionContent(Class<?> entityClass, int count) {
+		System.out.println(entityClass + " " + count);
+		assertThat(template.getCollection(entityClass).size(), is(count));
+	}
+	
 	@Test
 	public void testFindAndRemove() throws Exception {
 
