@@ -394,7 +394,7 @@ public class MongoTemplateTests {
 	}
 
 	@Test
-	public void testUsingAnInQuery() throws Exception {
+	public void testUsingAnInQueryWithObjectId() throws Exception {
 
 		template.remove(new Query(), PersonWithIdPropertyOfTypeObjectId.class);
 
@@ -424,6 +424,113 @@ public class MongoTemplateTests {
 		assertThat(results1.size(), is(3));
 		assertThat(results2.size(), is(2));
 		assertThat(results3.size(), is(1));
+	}
+
+	@Test
+	public void testUsingAnInQueryWithStringId() throws Exception {
+
+		template.remove(new Query(), PersonWithIdPropertyOfTypeString.class);
+
+		PersonWithIdPropertyOfTypeString p1 = new PersonWithIdPropertyOfTypeString();
+		p1.setFirstName("Sven");
+		p1.setAge(11);
+		template.insert(p1);
+		PersonWithIdPropertyOfTypeString p2 = new PersonWithIdPropertyOfTypeString();
+		p2.setFirstName("Mary");
+		p2.setAge(21);
+		template.insert(p2);
+		PersonWithIdPropertyOfTypeString p3 = new PersonWithIdPropertyOfTypeString();
+		p3.setFirstName("Ann");
+		p3.setAge(31);
+		template.insert(p3);
+		PersonWithIdPropertyOfTypeString p4 = new PersonWithIdPropertyOfTypeString();
+		p4.setFirstName("John");
+		p4.setAge(41);
+		template.insert(p4);
+
+		Query q1 = new Query(Criteria.where("age").in(11, 21, 41));
+		List<PersonWithIdPropertyOfTypeString> results1 = template.find(q1, PersonWithIdPropertyOfTypeString.class);
+		Query q2 = new Query(Criteria.where("firstName").in("Ann", "Mary"));
+		List<PersonWithIdPropertyOfTypeString> results2 = template.find(q2, PersonWithIdPropertyOfTypeString.class);
+		Query q3 = new Query(Criteria.where("id").in(p3.getId(), p4.getId()));
+		List<PersonWithIdPropertyOfTypeString> results3 = template.find(q3, PersonWithIdPropertyOfTypeString.class);
+		assertThat(results1.size(), is(3));
+		assertThat(results2.size(), is(2));
+		assertThat(results3.size(), is(2));
+	}
+
+	@Test
+	public void testUsingAnInQueryWithLongId() throws Exception {
+
+		template.remove(new Query(), PersonWithIdPropertyOfTypeLong.class);
+
+		PersonWithIdPropertyOfTypeLong p1 = new PersonWithIdPropertyOfTypeLong();
+		p1.setFirstName("Sven");
+		p1.setAge(11);
+		p1.setId(1001L);
+		template.insert(p1);
+		PersonWithIdPropertyOfTypeLong p2 = new PersonWithIdPropertyOfTypeLong();
+		p2.setFirstName("Mary");
+		p2.setAge(21);
+		p2.setId(1002L);
+		template.insert(p2);
+		PersonWithIdPropertyOfTypeLong p3 = new PersonWithIdPropertyOfTypeLong();
+		p3.setFirstName("Ann");
+		p3.setAge(31);
+		p3.setId(1003L);
+		template.insert(p3);
+		PersonWithIdPropertyOfTypeLong p4 = new PersonWithIdPropertyOfTypeLong();
+		p4.setFirstName("John");
+		p4.setAge(41);
+		p4.setId(1004L);
+		template.insert(p4);
+
+		Query q1 = new Query(Criteria.where("age").in(11, 21, 41));
+		List<PersonWithIdPropertyOfTypeLong> results1 = template.find(q1, PersonWithIdPropertyOfTypeLong.class);
+		Query q2 = new Query(Criteria.where("firstName").in("Ann", "Mary"));
+		List<PersonWithIdPropertyOfTypeLong> results2 = template.find(q2, PersonWithIdPropertyOfTypeLong.class);
+		Query q3 = new Query(Criteria.where("id").in(1001L, 1004L));
+		List<PersonWithIdPropertyOfTypeLong> results3 = template.find(q3, PersonWithIdPropertyOfTypeLong.class);
+		assertThat(results1.size(), is(3));
+		assertThat(results2.size(), is(2));
+		assertThat(results3.size(), is(2));
+	}
+
+	@Test
+	public void testUsingAnInQueryWithPrimitiveIntId() throws Exception {
+
+		template.remove(new Query(), PersonWithIdPropertyOfPrimitiveInt.class);
+
+		PersonWithIdPropertyOfPrimitiveInt p1 = new PersonWithIdPropertyOfPrimitiveInt();
+		p1.setFirstName("Sven");
+		p1.setAge(11);
+		p1.setId(1001);
+		template.insert(p1);
+		PersonWithIdPropertyOfPrimitiveInt p2 = new PersonWithIdPropertyOfPrimitiveInt();
+		p2.setFirstName("Mary");
+		p2.setAge(21);
+		p2.setId(1002);
+		template.insert(p2);
+		PersonWithIdPropertyOfPrimitiveInt p3 = new PersonWithIdPropertyOfPrimitiveInt();
+		p3.setFirstName("Ann");
+		p3.setAge(31);
+		p3.setId(1003);
+		template.insert(p3);
+		PersonWithIdPropertyOfPrimitiveInt p4 = new PersonWithIdPropertyOfPrimitiveInt();
+		p4.setFirstName("John");
+		p4.setAge(41);
+		p4.setId(1004);
+		template.insert(p4);
+
+		Query q1 = new Query(Criteria.where("age").in(11, 21, 41));
+		List<PersonWithIdPropertyOfPrimitiveInt> results1 = template.find(q1, PersonWithIdPropertyOfPrimitiveInt.class);
+		Query q2 = new Query(Criteria.where("firstName").in("Ann", "Mary"));
+		List<PersonWithIdPropertyOfPrimitiveInt> results2 = template.find(q2, PersonWithIdPropertyOfPrimitiveInt.class);
+		Query q3 = new Query(Criteria.where("id").in(1001, 1003));
+		List<PersonWithIdPropertyOfPrimitiveInt> results3 = template.find(q3, PersonWithIdPropertyOfPrimitiveInt.class);
+		assertThat(results1.size(), is(3));
+		assertThat(results2.size(), is(2));
+		assertThat(results3.size(), is(2));
 	}
 
 	@Test
