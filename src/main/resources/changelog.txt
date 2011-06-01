@@ -5,7 +5,75 @@ Changes in version 1.0.0.RC1 MongoDB
 -------------------------------------------------
 
 General
-* Introducted MappingContext implementatio for SimpleMongoConverter (DATADOC-109)
+
+Changes in version 1.0.0.M3 MongoDB (2011-06-01)
+------------------------------------------------
+
+General
+* [DATADOC-92] - Exception translation to catch RuntimeException instead of MongoException
+* [DATADOC-111] - Ensure all MongoTemplate methods execute within the context of a callback method.
+* [DATADOC-120] - Remove MongoReaderWriter
+
+Core Data Access
+* [DATADOC-80] - Rename addConverters to setCustomConverters in MappingMongoConverter and SimpleMongoConverter
+* [DATADOC-89] - Support setting slaveOk in MongoTemplate per query
+* [DATADOC-108] - Add findById method to MongoTemplate.
+* [DATADOC-112] - Storing a DBRef uses the wrong collection name
+* [DATADOC-116] - Nesting DBRefs doesn't work > 1 layers
+* [DATADOC-117] - Remove the default collection name on the MongoTemplate
+* [DATADOC-118] - Remove MongoTemplate methods that take a Reader/Writer parameter
+* [DATADOC-121] - Deprecate SimpleMongoConverter
+* [DATADOC-124] - Add method to MappingContext to get the collection name used for a specific type
+* [DATADOC-127] - @Document(collection="SOME_COLLECTION_NAME") doesn't take effect
+* [DATADOC-141] - Provide a prepareCollection protected method in MongoTemplate to allow customization of behavior such as slaveOk or writeConcern via a subclass
+* [DATADOC-142] - Change constructors in MongoTemplate that take Mongo object
+* [DATADOC-143] - MappingMongoConverter should be MongoTemplate's default converter
+* [DATADOC-149] - Remove setter for MongoDbFactory from MappingMongoConverter
+* [DATADOC-157] - MongoTemplate updateFirst/updateMulti methods to take java.lang.Class parameter as last in method param list to be consistent with other usage
+* [DATADOC-158] - Change default conventions of java.lang.Class to collection name in MappingMongoConverter to be first letter lower case camel casing.
+
+Configuration
+* [DATADOC-42] - Provide option for configuring replica sets using the Mongo namespace
+* [DATADOC-88] - Create MongoDbFactory to consolidate DB, Server location, and user credentials into one location
+* [DATADOC-119] - Modify XML schema and @Configuration base class to make it easy to register custom Spring converters with the mapper.
+* [DATADOC-133] - Support Property Placeholder as MongoDB Port Number in Application Context Configuration
+* [DATADOC-135] - <mongo:options /> should use - instead of camel case to be consistent with other attribute names
+* [DATADOC-138] - Expose all properties of the MongoOptions class in Mongo namespace
+
+Querying / Updating
+* [DATADOC-43] - Query creator should support Near and Within keyword
+* [DATADOC-96] - Query#or(Query) does not work
+* [DATADOC-102] - Update does not let you $set across multiple fields
+* [DATADOC-106] - Add additional mongo operators to Criteria class
+* [DATADOC-107] - Criteria "in" operator should correctly handle passing in a collection instead of an array.
+* [DATADOC-113] - NotNull/IsNotNull not implemented in MongoQueryCreator
+* [DATADOC-146] - Advanced Regexp Queries
+
+Mapping
+* [DATADOC-95] - Can not save an object that has not had any of its properties set 
+* [DATADOC-97] - ID replacement not working correctly when using updateFirst/updateMulti
+* [DATADOC-98] - Collection<Collection> or Object[][] doesn't save correctly
+* [DATADOC-109] - Add MappingContext to MongoConverter interface
+* [DATADOC-110] - Improve implementation of substituteMappedIdIfNecessary
+* [DATADOC-101] - Explicit Converters only registered one way.
+* [DATADOC-114] - UpdateFirst/Multi operations on MongoTemplate not properly using converter to store objects.
+* [DATADOC-122] - Use same default collection name for MappingMongoConverter and SimpleMongoConverter
+* [DATADOC-123] - Use the same id/_id mapping for MappingMongoConverter and SimpleMongoConverter
+* [DATADOC-128] - Support inheritance with Document mappings
+* [DATADOC-130] - Problem with Converters (java.util.Locale)
+* [DATADOC-144] - Add an @Key annotation to allow defining the key a property is stored under
+* [DATADOC-145] - MappingMongoConverter does not convert objects for collections of interfaces
+* [DATADOC-155] - Need to support plain POJOs with non-ObjectId-compatible ID properties
+* [DATADOC-156] - MongoOperations.find(query(where("id").in(ids)) fails where ids aren't ObjectIds
+* [DATADOC-159] - Saving the same Entity multiple times creates multiple entries in the database
+
+Repository
+* [DATADOC-115] - Upgrade to QueryDsl 2.2.0-beta4
+* [DATADOC-137] - Parameter values in MongoDB JSON Query are not being replaced properly
+
+Documentation
+* [DATADOC-99] - Reference documentation shows invalid field spec for @Query usage with repositories
+
 
 Changes in version 1.0.0.M2 MongoDB (2011-04-09)
 ------------------------------------------------
