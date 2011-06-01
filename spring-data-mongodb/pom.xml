@@ -80,20 +80,6 @@
 			<optional>true</optional>
 		</dependency>
 
-		<dependency>
-			<groupId>javax.annotation</groupId>
-			<artifactId>jsr250-api</artifactId>
-			<optional>true</optional>
-		</dependency>
-
-		<!--
-				<dependency>
-					<groupId>javax.persistence</groupId>
-					<artifactId>persistence-api</artifactId>
-					<version>1.0</version>
-				</dependency>
-				-->
-
 		<!-- Test dependencies -->
 		<dependency>
 			<groupId>org.mockito</groupId>

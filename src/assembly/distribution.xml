@@ -57,7 +57,6 @@
       <!-- adds module source jars to the distribution archive under the 'src' directory
             see pom.xml 'maven-source-plugin' declaration -->
       <includes>
-        <include>org.springframework.data:spring-data-document-core</include>
         <include>org.springframework.data:spring-data-mongodb</include>
         <include>org.springframework.data:spring-data-mongodb-cross-store</include>
         <include>org.springframework.data:spring-data-mongodb-log4j</include>
