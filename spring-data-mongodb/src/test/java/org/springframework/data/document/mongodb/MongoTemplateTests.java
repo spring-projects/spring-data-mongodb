@@ -195,7 +195,7 @@ public class MongoTemplateTests {
 				PersonWithIdPropertyOfTypeString.class);
 		assertThat(p1q, notNullValue());
 		assertThat(p1q.getId(), is(p1.getId()));
-		checkCollectionContent(PersonWithIdPropertyOfTypeString.class, 1);
+		checkCollectionContents(PersonWithIdPropertyOfTypeString.class, 1);
 
 		// String id - provided
 		PersonWithIdPropertyOfTypeString p2 = new PersonWithIdPropertyOfTypeString();
@@ -211,7 +211,7 @@ public class MongoTemplateTests {
 				PersonWithIdPropertyOfTypeString.class);
 		assertThat(p2q, notNullValue());
 		assertThat(p2q.getId(), is(p2.getId()));
-		checkCollectionContent(PersonWithIdPropertyOfTypeString.class, 2);
+		checkCollectionContents(PersonWithIdPropertyOfTypeString.class, 2);
 
 		// String _id - generated
 		PersonWith_idPropertyOfTypeString p3 = new PersonWith_idPropertyOfTypeString();
@@ -226,7 +226,7 @@ public class MongoTemplateTests {
 				PersonWith_idPropertyOfTypeString.class);
 		assertThat(p3q, notNullValue());
 		assertThat(p3q.get_id(), is(p3.get_id()));
-		checkCollectionContent(PersonWith_idPropertyOfTypeString.class, 1);
+		checkCollectionContents(PersonWith_idPropertyOfTypeString.class, 1);
 
 		// String _id - provided
 		PersonWith_idPropertyOfTypeString p4 = new PersonWith_idPropertyOfTypeString();
@@ -242,7 +242,7 @@ public class MongoTemplateTests {
 				PersonWith_idPropertyOfTypeString.class);
 		assertThat(p4q, notNullValue());
 		assertThat(p4q.get_id(), is(p4.get_id()));
-		checkCollectionContent(PersonWith_idPropertyOfTypeString.class, 2);
+		checkCollectionContents(PersonWith_idPropertyOfTypeString.class, 2);
 
 		// ObjectId id - generated
 		PersonWithIdPropertyOfTypeObjectId p5 = new PersonWithIdPropertyOfTypeObjectId();
@@ -257,7 +257,7 @@ public class MongoTemplateTests {
 				PersonWithIdPropertyOfTypeObjectId.class);
 		assertThat(p5q, notNullValue());
 		assertThat(p5q.getId(), is(p5.getId()));
-		checkCollectionContent(PersonWithIdPropertyOfTypeObjectId.class, 1);
+		checkCollectionContents(PersonWithIdPropertyOfTypeObjectId.class, 1);
 
 		// ObjectId id - provided
 		PersonWithIdPropertyOfTypeObjectId p6 = new PersonWithIdPropertyOfTypeObjectId();
@@ -273,7 +273,7 @@ public class MongoTemplateTests {
 				PersonWithIdPropertyOfTypeObjectId.class);
 		assertThat(p6q, notNullValue());
 		assertThat(p6q.getId(), is(p6.getId()));
-		checkCollectionContent(PersonWithIdPropertyOfTypeObjectId.class, 2);
+		checkCollectionContents(PersonWithIdPropertyOfTypeObjectId.class, 2);
 
 		// ObjectId _id - generated
 		PersonWith_idPropertyOfTypeObjectId p7 = new PersonWith_idPropertyOfTypeObjectId();
@@ -288,7 +288,7 @@ public class MongoTemplateTests {
 				PersonWith_idPropertyOfTypeObjectId.class);
 		assertThat(p7q, notNullValue());
 		assertThat(p7q.get_id(), is(p7.get_id()));
-		checkCollectionContent(PersonWith_idPropertyOfTypeObjectId.class, 1);
+		checkCollectionContents(PersonWith_idPropertyOfTypeObjectId.class, 1);
 
 		// ObjectId _id - provided
 		PersonWith_idPropertyOfTypeObjectId p8 = new PersonWith_idPropertyOfTypeObjectId();
@@ -304,7 +304,7 @@ public class MongoTemplateTests {
 				PersonWith_idPropertyOfTypeObjectId.class);
 		assertThat(p8q, notNullValue());
 		assertThat(p8q.get_id(), is(p8.get_id()));
-		checkCollectionContent(PersonWith_idPropertyOfTypeObjectId.class, 2);
+		checkCollectionContents(PersonWith_idPropertyOfTypeObjectId.class, 2);
 
 		// Integer id - provided
 		PersonWithIdPropertyOfTypeInteger p9 = new PersonWithIdPropertyOfTypeInteger();
@@ -320,7 +320,7 @@ public class MongoTemplateTests {
 				PersonWithIdPropertyOfTypeInteger.class);
 		assertThat(p9q, notNullValue());
 		assertThat(p9q.getId(), is(p9.getId()));
-		checkCollectionContent(PersonWithIdPropertyOfTypeInteger.class, 1);
+		checkCollectionContents(PersonWithIdPropertyOfTypeInteger.class, 1);
 
 		// int id - provided
 		PersonWithIdPropertyOfPrimitiveInt p10 = new PersonWithIdPropertyOfPrimitiveInt();
@@ -336,7 +336,7 @@ public class MongoTemplateTests {
 				PersonWithIdPropertyOfPrimitiveInt.class);
 		assertThat(p10q, notNullValue());
 		assertThat(p10q.getId(), is(p10.getId()));
-		checkCollectionContent(PersonWithIdPropertyOfPrimitiveInt.class, 1);
+		checkCollectionContents(PersonWithIdPropertyOfPrimitiveInt.class, 1);
 
 		// Long id - provided
 		PersonWithIdPropertyOfTypeLong p11 = new PersonWithIdPropertyOfTypeLong();
@@ -352,7 +352,7 @@ public class MongoTemplateTests {
 				PersonWithIdPropertyOfTypeLong.class);
 		assertThat(p11q, notNullValue());
 		assertThat(p11q.getId(), is(p11.getId()));
-		checkCollectionContent(PersonWithIdPropertyOfTypeLong.class, 1);
+		checkCollectionContents(PersonWithIdPropertyOfTypeLong.class, 1);
 
 		// long id - provided
 		PersonWithIdPropertyOfPrimitiveLong p12 = new PersonWithIdPropertyOfPrimitiveLong();
@@ -368,11 +368,10 @@ public class MongoTemplateTests {
 				PersonWithIdPropertyOfPrimitiveLong.class);
 		assertThat(p12q, notNullValue());
 		assertThat(p12q.getId(), is(p12.getId()));
-		checkCollectionContent(PersonWithIdPropertyOfPrimitiveLong.class, 1);
+		checkCollectionContents(PersonWithIdPropertyOfPrimitiveLong.class, 1);
 	}
 
-	private void checkCollectionContent(Class<?> entityClass, int count) {
-		System.out.println(entityClass + " " + count);
+	private void checkCollectionContents(Class<?> entityClass, int count) {
 		assertThat(template.getCollection(entityClass).size(), is(count));
 	}
 	
