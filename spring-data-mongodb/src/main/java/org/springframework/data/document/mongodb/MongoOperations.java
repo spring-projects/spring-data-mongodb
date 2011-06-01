@@ -489,12 +489,12 @@ public interface MongoOperations {
 	/**
 	 * Updates the first object that is found in the default collection that matches the query document with the provided
 	 * updated document.
-	 * @param entityClass
-	 *          class that determines the collection to use
 	 * @param queryDoc
 	 *          the query document that specifies the criteria used to select a record to be updated
 	 * @param updateDoc
 	 *          the update document that contains the updated object or $ operators to manipulate the existing object.
+	 * @param entityClass
+	 *          class that determines the collection to use
 	 */
 	WriteResult updateFirst(Query query, Update update, Class<?> entityClass);
 
@@ -514,12 +514,12 @@ public interface MongoOperations {
 	/**
 	 * Updates all objects that are found in the default collection that matches the query document criteria with the
 	 * provided updated document.
-	 * @param entityClass
-	 *          class that determines the collection to use
 	 * @param queryDoc
 	 *          the query document that specifies the criteria used to select a record to be updated
 	 * @param updateDoc
 	 *          the update document that contains the updated object or $ operators to manipulate the existing object.
+	 * @param entityClass
+	 *          class that determines the collection to use
 	 */
 	WriteResult updateMulti(Query query, Update update, Class<?> entityClass);
 
