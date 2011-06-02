@@ -230,6 +230,8 @@ public class GeoSpatialAppConfig extends AbstractMongoConfiguration {
   &lt;!-- Default bean name is 'mongo' --&gt;
   &lt;mongo:mongo host="localhost" port="27017"/&gt;
 
+  &lt;mongo:db-factory dbname="database" mongo-ref="mongo"/&gt;
+
   &lt;!-- by default look for a Mongo object named 'mongo' - default name used for the converter is 'mappingConverter' --&gt;
   &lt;mongo:mapping-converter base-package="com.bigbank.domain"&gt;
     &lt;mongo:custom-converters&gt;
@@ -244,9 +246,7 @@ public class GeoSpatialAppConfig extends AbstractMongoConfiguration {
 
   &lt;!-- set the mapping converter to be used by the MongoTemplate --&gt;
   &lt;bean id="mongoTemplate" class="org.springframework.data.document.mongodb.MongoTemplate"&gt;
-    &lt;constructor-arg name="mongo" ref="mongo" /&gt;
-    &lt;constructor-arg name="databaseName" value="test" /&gt;
-    &lt;constructor-arg name="defaultCollectionName" value="myCollection" /&gt;
+    &lt;constructor-arg name="mongoDbFactory" ref="mongoDbFactory"/&gt;
     &lt;constructor-arg name="mongoConverter" ref="mappingConverter"/&gt;
   &lt;/bean&gt;
 
@@ -382,52 +382,51 @@ public class Person {
 
       <programlisting language="java">@Document
 @CompoundIndexes({
-		@CompoundIndex(name = "age_idx", def = "{'lastName': 1, 'age': -1}")
+    @CompoundIndex(name = "age_idx", def = "{'lastName': 1, 'age': -1}")
 })
 public class Person&lt;T extends Address&gt; {
 
-	@Id
-	private String id;
-	@Indexed(unique = true)
-	private Integer ssn;
-	private String firstName;
-	@Indexed
-	private String lastName;
-	private Integer age;
-	@Transient
-	private Integer accountTotal;
-	@DBRef
-	private List&lt;Account&gt; accounts;
-	private T address;
+  @Id
+  private String id;
+  @Indexed(unique = true)
+  private Integer ssn;
+  private String firstName;
+  @Indexed
+  private String lastName;
+  private Integer age;
+  @Transient
+  private Integer accountTotal;
+  @DBRef
+  private List&lt;Account&gt; accounts;
+  private T address;
 
-	
-	public Person(Integer ssn) {
-	  this.ssn = ssn;
-	}
-	
-	@PersistenceConstructor
-	public Person(Integer ssn, String firstName, String lastName, Integer age, T address) {
-		this.ssn = ssn;
-		this.firstName = firstName;
-		this.lastName = lastName;
-		this.age = age;
-		this.address = address;
-	}
+  
+  public Person(Integer ssn) {
+    this.ssn = ssn;
+  }
+  
+  @PersistenceConstructor
+  public Person(Integer ssn, String firstName, String lastName, Integer age, T address) {
+    this.ssn = ssn;
+    this.firstName = firstName;
+    this.lastName = lastName;
+    this.age = age;
+    this.address = address;
+  }
 
-	public String getId() {
-		return id;
-	}
+  public String getId() {
+    return id;
+  }
 
  // no setter for Id.  (getter is only exposed for some unit testing)
 
-	public Integer getSsn() {
-		return ssn;
-	}
+  public Integer getSsn() {
+    return ssn;
+  }
 
 
 // other getters/setters ommitted
-
-}</programlisting>
+</programlisting>
 
       <para></para>
     </section>
@@ -436,7 +435,7 @@ public class Person&lt;T extends Address&gt; {
       <title>Compound Indexes</title>
 
       <para>Compound indexes are also supported. They are defined at the class
-      level, rather than on indidvidual properties. </para>
+      level, rather than on indidvidual properties.</para>
 
       <note>
         <para>Compound indexes are very important to improve the performance
@@ -540,7 +539,7 @@ public class Person {
       mapping of all Java types to DBObjects. However, sometimes you may want
       the <interfacename>MongoConverter</interfacename>'s do most of the work
       but allow you to selectivly handle the conversion for a particular type
-      or to optimize performance. </para>
+      or to optimize performance.</para>
 
       <para>To selectivly handle the conversion yourself, register one or more
       one or more
@@ -563,18 +562,18 @@ public class Person {
       <classname>AbstractMongoConfiguration</classname> can be overriden to
       configure a MappingMongoConverter. The examples <link
       linkend="???">here</link> at the begining of this chapter show how to
-      perform the configuration using Java and XML. </para>
+      perform the configuration using Java and XML.</para>
 
       <para>Below is an example of a Spring Converter implementation that
       converts from a DBObject to a Person POJO.</para>
 
       <programlisting language="java">public class PersonReadConverter implements Converter&lt;DBObject, Person&gt; {
 
-	public Person convert(DBObject source) {
-		Person p = new Person((ObjectId) source.get("_id"), (String) source.get("name"));
-		p.setAge((Integer) source.get("age"));
-		return p;
-	}
+  public Person convert(DBObject source) {
+    Person p = new Person((ObjectId) source.get("_id"), (String) source.get("name"));
+    p.setAge((Integer) source.get("age"));
+    return p;
+  }
 
 }</programlisting>
 
@@ -583,13 +582,13 @@ public class Person {
 
       <programlisting language="java">public class PersonWriteConverter implements Converter&lt;Person, DBObject&gt; {
 
-	public DBObject convert(Person source) {
-		DBObject dbo = new BasicDBObject();
-		dbo.put("_id", source.getId());
-		dbo.put("name", source.getFirstName());
-		dbo.put("age", source.getAge());
-		return dbo;
-	}
+  public DBObject convert(Person source) {
+    DBObject dbo = new BasicDBObject();
+    dbo.put("_id", source.getId());
+    dbo.put("name", source.getFirstName());
+    dbo.put("age", source.getAge());
+    return dbo;
+  }
 
 }</programlisting>
 
