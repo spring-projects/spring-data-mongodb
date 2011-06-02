@@ -24,10 +24,10 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
@@ -41,6 +41,7 @@ import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.expression.BeanFactoryResolver;
+import org.springframework.core.CollectionFactory;
 import org.springframework.core.convert.ConversionException;
 import org.springframework.core.convert.support.ConversionServiceFactory;
 import org.springframework.data.document.mongodb.MongoDbFactory;
@@ -333,9 +334,9 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		if (!dbo.containsField("_id") && null != idProperty) {
 			Object idObj = null;
 			Class<?>[] targetClasses = new Class<?>[]{ObjectId.class, Object.class};
-			for (int i = 0; i < targetClasses.length; i++) {
+			for (Class<?> targetClasse : targetClasses) {
 				try {
-					idObj = wrapper.getProperty(idProperty, targetClasses[i], useFieldAccessOnly);
+					idObj = wrapper.getProperty(idProperty, targetClasse, useFieldAccessOnly);
 					if (null != idObj) {
 						break;
 					}
@@ -610,9 +611,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		return new DBRef(db, collection, id);
 	}
 
-	@SuppressWarnings({"unchecked"})
-	protected Object getValueInternal(MongoPersistentProperty prop, DBObject dbo, StandardEvaluationContext ctx,
-																		String spelExpr) {
+
+	protected Object getValueInternal(MongoPersistentProperty prop, DBObject dbo, StandardEvaluationContext ctx, String spelExpr) {
 
 		Object o;
 		if (null != spelExpr) {
@@ -637,27 +637,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				dbObj = ((DBRef) dbObj).fetch();
 			}
 			if (dbObj instanceof DBObject) {
-				if (prop.isMap() && dbObj instanceof DBObject) {
-
-					// We have to find a potentially stored class to be used first.
-					Class<?> toType = findTypeToBeUsed((DBObject) dbObj);
-					Map<Object, Object> m = new LinkedHashMap<Object, Object>();
-
-					for (Map.Entry<String, Object> entry : ((Map<String, Object>) ((DBObject) dbObj).toMap()).entrySet()) {
-						if (entry.getKey().equals(CUSTOM_TYPE_KEY)) {
-							continue;
-						}
-
-						Class<?> keyType = prop.getComponentType();
-						Object key = conversionService.convert(entry.getKey(), keyType);
-
-						if (null != entry.getValue() && entry.getValue() instanceof DBObject) {
-							m.put(key, read((null != toType ? toType : prop.getMapValueType()), (DBObject) entry.getValue()));
-						} else {
-							m.put(key, entry.getValue());
-						}
-					}
-					return m;
+				if (prop.isMap()) {
+					return readMap(prop.getTypeInformation(), (DBObject) dbObj);
 				} else if (prop.isArray() && dbObj instanceof BasicDBObject && ((DBObject) dbObj).keySet().size() == 0) {
 					// It's empty
 					return Array.newInstance(prop.getComponentType(), 0);
@@ -695,6 +676,51 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			}
 		}
 		return o;
+	}
+
+	/**
+	 * Reads the given {@link DBObject} into a {@link Map}. will recursively resolve nested {@link Map}s as well.
+	 * 
+	 * @param type the {@link Map} {@link TypeInformation} to be used to unmarshall this {@link DBObject}.
+	 * @param dbObject
+	 * 
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	private Map<Object, Object> readMap(TypeInformation<?> type, DBObject dbObject) {
+		
+		Assert.notNull(type);
+		Assert.isTrue(type.isMap());
+		Assert.notNull(dbObject);
+		
+		Class<?> customMapType = findTypeToBeUsed(dbObject);
+		Class<?> mapType = customMapType == null ? Map.class : customMapType;
+		
+		Map<Object, Object> map = CollectionFactory.createMap(mapType, dbObject.keySet().size());
+		Map<String, Object> sourceMap = dbObject.toMap();
+		
+		for (Entry<String, Object> entry : sourceMap.entrySet()) {
+			if (entry.getKey().equals(CUSTOM_TYPE_KEY)) {
+				continue;
+			}
+
+			Class<?> keyType = type.getComponentType().getType();
+			Object key = conversionService.convert(entry.getKey(), keyType);
+
+			if (null != entry.getValue() && entry.getValue() instanceof DBObject) {
+				
+				DBObject valueSource = (DBObject) entry.getValue();
+				TypeInformation<?> valueType = type.getMapValueType();
+				
+				Object value = valueType.isMap() ? readMap(valueType, valueSource) : read(valueType, valueSource);
+				
+				map.put(key, value);
+			} else {
+				map.put(key, entry.getValue());
+			}
+		}
+		
+		return map;
 	}
 
 	/**

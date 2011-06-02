@@ -23,7 +23,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -285,6 +287,33 @@ public class MappingMongoConverterUnitTests {
 		assertThat(read.locale, is(Locale.US));
 	}
 	
+	/**
+	 * @see DATADOC-161
+	 */
+	@Test
+	public void readsNestedMapsCorrectly() {
+
+      Map<String, String> secondLevel = new HashMap<String, String>();
+      secondLevel.put("key1", "value1");
+      secondLevel.put("key2", "value2");
+
+      Map<String, Map<String, String>> firstLevel = new HashMap<String, Map<String, String>>();
+      firstLevel.put("level1", secondLevel);
+      firstLevel.put("level2", secondLevel);
+     
+      ClassWithNestedMaps maps = new ClassWithNestedMaps();
+      maps.nestedMaps = new LinkedHashMap<String, Map<String, Map<String, String>>>();
+      maps.nestedMaps.put("afield", firstLevel);
+      
+      DBObject dbObject = new BasicDBObject();
+      converter.write(maps, dbObject);
+      
+      ClassWithNestedMaps result = converter.read(ClassWithNestedMaps.class, dbObject);
+      Map<String, Map<String, Map<String, String>>> nestedMap = result.nestedMaps;
+			assertThat(nestedMap, is(notNullValue()));
+			assertThat(nestedMap.get("afield"), is(firstLevel));
+	}
+	
 	class ClassWithEnumProperty {
 		
 		SampleEnum sampleEnum;
@@ -314,6 +343,10 @@ public class MappingMongoConverterUnitTests {
 		Map<Locale, String> map;
 	}
 
+	class ClassWithNestedMaps {
+    Map<String, Map<String, Map<String, String>>> nestedMaps;
+	}
+	
 	public static class BirthDateContainer {
 		LocalDate birthDate;
 	}
