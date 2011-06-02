@@ -62,6 +62,7 @@ Mapping
 * [DATADOC-155] - Need to support plain POJOs with non-ObjectId-compatible ID properties
 * [DATADOC-156] - MongoOperations.find(query(where("id").in(ids)) fails where ids aren't ObjectIds
 * [DATADOC-159] - Saving the same Entity multiple times creates multiple entries in the database
+* [DATADOC-161] - MappingMongoConverter now supports nested Maps
 
 Repository
 * [DATADOC-115] - Upgrade to QueryDsl 2.2.0-beta4
