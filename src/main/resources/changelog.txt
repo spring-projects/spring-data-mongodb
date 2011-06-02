@@ -1,18 +1,14 @@
 Spring Data Document Changelog
 =============================================
 
-Changes in version 1.0.0.RC1 MongoDB 
--------------------------------------------------
-
-General
-
-Changes in version 1.0.0.M3 MongoDB (2011-06-01)
+Changes in version 1.0.0.M3 MongoDB (2011-06-02)
 ------------------------------------------------
 
 General
 * [DATADOC-92] - Exception translation to catch RuntimeException instead of MongoException
 * [DATADOC-111] - Ensure all MongoTemplate methods execute within the context of a callback method.
 * [DATADOC-120] - Remove MongoReaderWriter
+* [DATADOC-160] - Review MongoOperations and make the parameter ordering more consistent across methods
 
 Core Data Access
 * [DATADOC-80] - Rename addConverters to setCustomConverters in MappingMongoConverter and SimpleMongoConverter
