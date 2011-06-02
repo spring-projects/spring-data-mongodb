@@ -246,11 +246,15 @@ public class MongoApp {
 
       <title>Required Jars</title>
 
-       The following jars are required to use Sping Mongo 
+       The following jars are required to use Spring Data Mongo 
 
       <itemizedlist>
         <listitem>
           <para>spring-data-mongodb-1.0.0.M3.jar</para>
+        </listitem>
+
+        <listitem>
+          <para>spring-data-commons-1.1.0.M1.jar</para>
         </listitem>
       </itemizedlist>
 
@@ -258,7 +262,7 @@ public class MongoApp {
 
       <itemizedlist>
         <listitem>
-          <para>com.springsource.org.aopalliance-1.0.0.jar</para>
+          <para>aopalliance-1.0.0.jar</para>
         </listitem>
 
         <listitem>
@@ -329,20 +333,18 @@ public class MongoApp {
         </listitem>
 
         <listitem>
+          <para>Reordered parameters in some
+          <classname>MongoTemplate</classname> methods to make signatures more
+          consistent across the board.</para>
+        </listitem>
+
+        <listitem>
           <para>Removed <classname>MongoTemplate</classname> methods that use
           <interfacename>MongoReader</interfacename> and
           <interfacename>MongoWriter</interfacename>. As an alternative
           register a Spring converter with the MappingMongoConverter. See
           <link linkend="mapping-explicit-converters">here</link> for
           details.</para>
-        </listitem>
-
-        <listitem>
-          <para><classname>MongoTemplate's</classname> update method
-          arguements from <literal>(Query, Update)</literal>
-          to<literal>(Class&lt;?&gt;, Query, Update)</literal>was updateFirst
-          takes a <classname>java.lang.Class</classname> argument as the first
-          argument.</para>
         </listitem>
 
         <listitem>
@@ -964,7 +966,7 @@ public class MongoApp {
     log.info("Found: " + p);
     
     // Update
-    mongoOps.updateFirst(Person.class, query(where("name").is("Joe")), update("age", 35));    
+    mongoOps.updateFirst(query(where("name").is("Joe")), update("age", 35), Person.class);    
     p = mongoOps.findOne(query(where("name").is("Joe")), Person.class);
     log.info("Updated: " + p);
     
@@ -972,11 +974,11 @@ public class MongoApp {
     mongoOps.remove(p);
     
     // Check that deletion worked
-    List&lt;Person&gt; people =  mongoOps.getCollection(Person.class);
+    List&lt;Person&gt; people =  mongoOps.findAll(Person.class);
     log.info("Number of people = : " + people.size());
 
     
-    mongoOps.dropCollection("person");
+    mongoOps.dropCollection(Person.class);
   }
 }
 </programlisting>
@@ -985,14 +987,14 @@ public class MongoApp {
     messages from <classname>MongoTemplate</classname> itself)</para>
 
     <programlisting>DEBUG apping.MongoPersistentEntityIndexCreator:  80 - Analyzing class class org.spring.example.Person for index information.
-DEBUG work.data.document.mongodb.MongoTemplate: 632 - insert DBObject containing fields: [_class, age, name] in collection: Person
+DEBUG work.data.document.mongodb.MongoTemplate: 632 - insert DBObject containing fields: [_class, age, name] in collection: person
 INFO               org.spring.example.MongoApp:  30 - Insert: Person [id=4ddc6e784ce5b1eba3ceaf5c, name=Joe, age=34]
-DEBUG work.data.document.mongodb.MongoTemplate:1246 - findOne using query: { "_id" : { "$oid" : "4ddc6e784ce5b1eba3ceaf5c"}} in db.collection: database.Person
+DEBUG work.data.document.mongodb.MongoTemplate:1246 - findOne using query: { "_id" : { "$oid" : "4ddc6e784ce5b1eba3ceaf5c"}} in db.collection: database.person
 INFO               org.spring.example.MongoApp:  34 - Found: Person [id=4ddc6e784ce5b1eba3ceaf5c, name=Joe, age=34]
-DEBUG work.data.document.mongodb.MongoTemplate: 778 - calling update using query: { "name" : "Joe"} and update: { "$set" : { "age" : 35}} in collection: Person
-DEBUG work.data.document.mongodb.MongoTemplate:1246 - findOne using query: { "name" : "Joe"} in db.collection: database.Person
+DEBUG work.data.document.mongodb.MongoTemplate: 778 - calling update using query: { "name" : "Joe"} and update: { "$set" : { "age" : 35}} in collection: person
+DEBUG work.data.document.mongodb.MongoTemplate:1246 - findOne using query: { "name" : "Joe"} in db.collection: database.person
 INFO               org.spring.example.MongoApp:  39 - Updated: Person [id=4ddc6e784ce5b1eba3ceaf5c, name=Joe, age=35]
-DEBUG work.data.document.mongodb.MongoTemplate: 823 - remove using query: { "id" : "4ddc6e784ce5b1eba3ceaf5c"} in collection: Person
+DEBUG work.data.document.mongodb.MongoTemplate: 823 - remove using query: { "id" : "4ddc6e784ce5b1eba3ceaf5c"} in collection: person
 INFO               org.spring.example.MongoApp:  46 - Number of people = : 0
 DEBUG work.data.document.mongodb.MongoTemplate: 376 - Dropped collection [database.person]</programlisting>
 
@@ -1112,13 +1114,14 @@ import static org.springframework.data.document.mongodb.query.Criteria.query;
     ...
 
     Person p = new Person("Bob", 33);
-    mongoTemplate.insert("MyCollection", p);
+    mongoTemplate.insert(p);
 
-    Person qp = mongoTemplate.findOne("MyCollection", query(where("age").is(33)), Person.class);
+    Person qp = mongoTemplate.findOne(query(where("age").is(33)), Person.class);
         </programlisting>
       </example>
 
-      <para>The four save operations available to you are listed below.</para>
+      <para>The insert/save operations available to you are listed
+      below.</para>
 
       <para><itemizedlist>
           <listitem>
@@ -1129,7 +1132,7 @@ import static org.springframework.data.document.mongodb.query.Criteria.query;
 
           <listitem>
             <para><literal>void</literal> <emphasis role="bold">save
-            </emphasis> <literal>(String collectionName, Object objectToSave)
+            </emphasis> <literal>(Object objectToSave, String collectionName)
             </literal> Save the object to the specified collection.</para>
           </listitem>
         </itemizedlist></para>
@@ -1145,13 +1148,26 @@ import static org.springframework.data.document.mongodb.query.Criteria.query;
 
           <listitem>
             <para><literal>void</literal> <emphasis role="bold">insert
-            </emphasis> <literal>(String collectionName, Object objectToSave)
+            </emphasis> <literal>(Object objectToSave, String collectionName)
             </literal> Insert the object to the specified collection.</para>
           </listitem>
         </itemizedlist></para>
 
       <section>
-        <title>Inserting Lists of objects in batch</title>
+        <title>Which collection will my documents be saved into?</title>
+
+        <para>There are two ways to manage the collection name that is used
+        for operating on the documents. The default collection name that is
+        used is the class name changed to start with a lower-case letter. So a
+        <classname>com.test.Person</classname> class would be stored in the
+        "person" collection. You can customize this by providing a different
+        collection name using the @Document annotation. You can also override
+        the collection name by providing your own collection name as the last
+        parameter for the selected MongoTemplate method calls. </para>
+      </section>
+
+      <section>
+        <title>Inserting or saving individual objects</title>
 
         <para>The MongoDB driver supports inserting a collection of documents
         in one operation. The methods in the MongoOperations interface that
@@ -1159,20 +1175,39 @@ import static org.springframework.data.document.mongodb.query.Criteria.query;
 
         <para><itemizedlist>
             <listitem>
-              <para><literal>void</literal> <emphasis
-              role="bold">insertList</emphasis><literal> (List&lt;? extends
-              Object&gt; listToSave)</literal><literal> </literal> Insert a
-              list of objects into the default collection in a single batch
-              write to the database.</para>
+              <para><emphasis role="bold">insert</emphasis><literal>
+              </literal> Insert an object. If there is an existing document
+              with the same id then an error is generated.</para>
             </listitem>
 
             <listitem>
-              <para><literal>void</literal> <emphasis
-              role="bold">insertList</emphasis> <literal>(String
-              collectionName, List&lt;? extends Object&gt;
-              listToSave)</literal><literal> </literal>Insert a list of
-              objects into the specified collection in a single batch write to
-              the database.</para>
+              <para><emphasis role="bold">insertAll</emphasis> Takes a
+              <literal>Collection </literal>of objects as the first parameter.
+              This method ispects each object and inserts it to the
+              appropriate collection based on the rules specified
+              above.</para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis role="bold">save</emphasis> Save the object
+              ovewriting any object that might exist with the same id.</para>
+            </listitem>
+          </itemizedlist></para>
+      </section>
+
+      <section>
+        <title>Inserting several objects in a batch</title>
+
+        <para>The MongoDB driver supports inserting a collection of documents
+        in one operation. The methods in the MongoOperations interface that
+        support this functionality are listed below</para>
+
+        <para><itemizedlist>
+            <listitem>
+              <para><emphasis role="bold">insert</emphasis><literal> methods
+              that take a Collection</literal><literal> as the first
+              argument.</literal>This inserts a list of objects in a single
+              batch write to the database.</para>
             </listitem>
           </itemizedlist></para>
       </section>
@@ -1198,8 +1233,9 @@ import static org.springframework.data.document.mongodb.query.Update;
 
           ...
 
-  WriteResult wr = mongoTemplate.updateMulti(Account.class, new Query(where("accounts.accountType").is(Account.Type.SAVINGS)),
-                                                            new Update().inc("accounts.$.balance", 50.00));
+  WriteResult wr = mongoTemplate.updateMulti(new Query(where("accounts.accountType").is(Account.Type.SAVINGS)),
+                                                            new Update().inc("accounts.$.balance", 50.00),
+                                                            Account.class);
         </programlisting>
       </example>
 
@@ -1217,39 +1253,15 @@ import static org.springframework.data.document.mongodb.query.Update;
 
         <para><itemizedlist>
             <listitem>
-              <para><literal>WriteResult</literal> <emphasis
-              role="bold">updateFirst </emphasis> <literal>(Class class, Query
-              query, Update update) </literal> Updates the first object that
-              is found in the collection corresponding to the class that
-              matches the query document with the provided updated
-              document.</para>
+              <para><emphasis role="bold">updateFirst </emphasis> Updates the
+              first document that matches the query document criteria with the
+              provided updated document.</para>
             </listitem>
 
             <listitem>
-              <para><literal>WriteResult</literal> <emphasis
-              role="bold">updateFirst </emphasis> <literal>(String
-              collectionName, Query query, Update update) </literal> Updates
-              the first object that is found in the specified collection that
-              matches the query document criteria with the provided updated
-              document.</para>
-            </listitem>
-
-            <listitem>
-              <para><literal>WriteResult</literal> <emphasis
-              role="bold">updateMulti </emphasis> <literal>(Class class, Query
-              query, Update update) </literal> Updates all objects that are
-              found in the collection corresponding to the class that matches
-              the query document criteria with the provided updated
-              document.</para>
-            </listitem>
-
-            <listitem>
-              <para><literal>WriteResult</literal> <emphasis
-              role="bold">updateMulti </emphasis> <literal>(String
-              collectionName, Query query, Update update) </literal> Updates
-              all objects that are found in the specified collection that
-              matches the query document criteria with the provided updated
-              document.</para>
+              <para><emphasis role="bold">updateMulti </emphasis> Updates all
+              objects that match the query document criteria with the provided
+              updated document.</para>
             </listitem>
           </itemizedlist></para>
 
@@ -1344,39 +1356,11 @@ import static org.springframework.data.document.mongodb.query.Update;
 
       <para><itemizedlist>
           <listitem>
-            <para><literal>void</literal> <emphasis
-            role="bold">remove</emphasis> <literal>(Object object)</literal>
-            Remove the given object from the collection by Id</para>
-          </listitem>
-
-          <listitem>
-            <para><literal>void</literal> <emphasis
-            role="bold">remove</emphasis> <literal>(Query query)</literal>
-            Remove all documents from the default collection that match the
-            provided query document criteria.</para>
-          </listitem>
-
-          <listitem>
-            <para><literal>void</literal> <emphasis role="bold">remove
-            </emphasis> <literal>(String collectionName, Query query)
-            </literal> Remove all documents from the specified collection that
-            match the provided query document criteria.</para>
-          </listitem>
-
-          <listitem>
-            <para><literal>&lt;T&gt; void </literal><emphasis
-            role="bold">remove</emphasis> <literal>(Query query,
-            Class&lt;T&gt; targetClass)</literal> Same behavior as the
-            remove(Query) method but the Class parameter is used to help
-            convert the Id of the object if it is present in the query.</para>
-          </listitem>
-
-          <listitem>
-            <para><literal>&lt;T&gt; void </literal><emphasis
-            role="bold">remove</emphasis> <literal>(String collectionName,
-            Query query, Class&lt;T&gt; targetClass)</literal>Same behavior as
-            remove(Query, Class) but the Class parameter is used to help
-            convert the Id of the object if it is present in the query</para>
+            <para><emphasis role="bold">remove</emphasis> Remove the given
+            document based on one of the following: a specific object
+            instance, a query document criteria combined with a class or a
+            query document criteria combined with a specific collection
+            name.</para>
           </listitem>
         </itemizedlist></para>
 
@@ -1420,7 +1404,7 @@ import static org.springframework.data.document.mongodb.query.Query.query;
 
     ...
 
-     List&lt;Person&gt; result = mongoTemplate.find(query(where("age").lt(50).and("accounts.balance").gt(1000.00d)),Person.class);
+     List&lt;Person&gt; result = mongoTemplate.find(query(where("age").lt(50).and("accounts.balance").gt(1000.00d)), Person.class);
         </programlisting>
       </example>
 
@@ -1583,7 +1567,7 @@ import static org.springframework.data.document.mongodb.query.Query.query;
       <itemizedlist>
         <listitem>
           <para><literal>Criteria</literal> <emphasis role="bold">withinCenter
-          </emphasis> <literal>(Circle circle)</literal>Creates a geospatial
+          </emphasis> <literal>(Circle circle)</literal> Creates a geospatial
           criterion using <literal>$within $center</literal> operators</para>
         </listitem>
 
@@ -1597,14 +1581,14 @@ import static org.springframework.data.document.mongodb.query.Query.query;
 
         <listitem>
           <para><literal>Criteria</literal> <emphasis role="bold">withinBox
-          </emphasis> <literal>(Box box)</literal>Creates a geospatial
+          </emphasis> <literal>(Box box)</literal> Creates a geospatial
           criterion using a <literal>$within $box</literal> operation
           <literal /></para>
         </listitem>
 
         <listitem>
           <para><literal>Criteria</literal> <emphasis role="bold">near
-          </emphasis> <literal>(Point point)</literal>Creates a geospatial
+          </emphasis> <literal>(Point point)</literal> Creates a geospatial
           criterion using a <literal>$near </literal>operation</para>
         </listitem>
 
@@ -1678,103 +1662,40 @@ import static org.springframework.data.document.mongodb.query.Query.query;
     <section>
       <title>Methods for querying for documents</title>
 
+      <para>The query methods need to specify the target type T that will be
+      returned and they are also overloaded with an explicit collection name
+      for queries that should operate on a collection other than the one
+      indicated by the return type.</para>
+
       <para><itemizedlist>
           <listitem>
-            <para><literal>&lt;T&gt; List&lt;T&gt;</literal> <emphasis
-            role="bold">getCollection </emphasis> <literal>(Class&lt;T&gt;
-            targetClass) </literal> Query for a list of objects of type T from
-            the default collection.</para>
+            <para><emphasis role="bold">findAll </emphasis> Query for a list
+            of objects of type T from the collection.</para>
           </listitem>
 
           <listitem>
-            <para><literal>&lt;T&gt; List&lt;T&gt;</literal> <emphasis
-            role="bold">getCollection </emphasis> <literal>(String
-            collectionName, Class&lt;T&gt; targetClass) </literal> Query for a
-            list of objects of type T from the specified collection.</para>
+            <para><emphasis role="bold">findOne</emphasis> Map the results of
+            an ad-hoc query on the collection to a single instance of an
+            object of the specified type.</para>
           </listitem>
 
           <listitem>
-            <para><literal>&lt;T&gt; T</literal> <emphasis role="bold">findOne
-            </emphasis> <literal>(Query query, Class&lt;T&gt; targetClass)
-            </literal> Map the results of an ad-hoc query on the default
-            MongoDB collection to a single instance of an object of the
-            specified type.</para>
+            <para><emphasis role="bold">findById</emphasis> Return an object
+            of the given id and target class.</para>
           </listitem>
 
           <listitem>
-            <para><literal>&lt;T&gt; T</literal> <emphasis role="bold">findOne
-            </emphasis> <literal>(String collectionName, Query query,
-            Class&lt;T&gt; targetClass) </literal> Map the results of an
-            ad-hoc query on the specified collection to a single instance of
-            an object of the specified type.</para>
+            <para><emphasis role="bold">find</emphasis> Map the results of an
+            ad-hoc query on the collection to a List of the specified
+            type.</para>
           </listitem>
 
           <listitem>
-            <para><literal>&lt;T&gt; T</literal> <emphasis
-            role="bold">findById </emphasis> <literal>(Object id,
-            Class&lt;T&gt; targetClass) </literal> Return an object of the
-            given id and target class.</para>
-          </listitem>
-
-          <listitem>
-            <para><literal>&lt;T&gt; T</literal> <emphasis
-            role="bold">findById </emphasis> <literal>(String collectionName,
-            Object id,Class&lt;T&gt; targetClass) </literal> Return an object
-            in the collection for a given id and target class.</para>
-          </listitem>
-
-          <listitem>
-            <para><literal>&lt;T&gt; List&lt;T&gt;</literal> <emphasis
-            role="bold">find </emphasis> <literal>(Query query, Class&lt;T&gt;
-            targetClass) </literal> Map the results of an ad-hoc query on the
-            default MongoDB collection to a List of the specified type.</para>
-          </listitem>
-
-          <listitem>
-            <para><literal>&lt;T&gt; List&lt;T&gt;</literal> <emphasis
-            role="bold">find </emphasis> <literal>(String collectionName,
-            Query query, Class&lt;T&gt; targetClass) </literal> Map the
-            results of an ad-hoc query on the specified collection to a List
-            of the specified type.</para>
-          </listitem>
-
-          <listitem>
-            <para><literal>&lt;T&gt; List&lt;T&gt;</literal> <emphasis
-            role="bold">find </emphasis> <literal>(String collectionName,
-            Query query, Class&lt;T&gt; targetClass, CursorPreparer preparer)
-            </literal> Map the results of an ad-hoc query on the specified
-            collection to a List of the specified type.</para>
-          </listitem>
-
-          <listitem>
-            <para><literal>&lt;T&gt; T</literal> <emphasis
-            role="bold">findAndRemove </emphasis> <literal>(Query query,
-            Class&lt;T&gt; targetClass) </literal> Map the results of an
-            ad-hoc query on the default MongoDB collection to a single
-            instance of an object of the specified type. The first document
-            that matches the query is returned and also removed from the
-            collection in the database.</para>
-          </listitem>
-
-          <listitem>
-            <para><literal>&lt;T&gt; T</literal> <emphasis
-            role="bold">findAndRemove </emphasis> <literal>(Query query,
-            Class&lt;T&gt; targetClass, MongoReader&lt;T&gt; reader)
-            </literal> Map the results of an ad-hoc query on the default
-            MongoDB collection to a single instance of an object of the
-            specified type. The first document that matches the query is
-            returned and also removed from the collection in the
-            database.</para>
-          </listitem>
-
-          <listitem>
-            <para><literal>&lt;T&gt; T</literal> <emphasis
-            role="bold">findAndRemove </emphasis> <literal>(String
-            collectionName, Query query, Class&lt;T&gt; targetClass)
-            </literal> Map the results of an ad-hoc query on the specified
-            collection to a single instance of an object of the specified
-            type. The first document that matches the query is returned and
-            also removed from the collection in the database.</para>
+            <para><emphasis role="bold">findAndRemove</emphasis> Map the
+            results of an ad-hoc query on the collection to a single instance
+            of an object of the specified type. The first document that
+            matches the query is returned and also removed from the collection
+            in the database.</para>
           </listitem>
         </itemizedlist></para>
     </section>
@@ -1983,22 +1904,14 @@ public class PersonWriteConverter implements Converter&lt;Person, DBObject&gt; {
       <example>
         <title>Creating an index using the MongoTemplate</title>
 
-        <programlisting language="java">mongoTemplate.ensureIndex("MyCollection", new Index().on("name",Order.ASCENDING));        </programlisting>
+        <programlisting language="java">mongoTemplate.ensureIndex(new Index().on("name",Order.ASCENDING), Person.class);        </programlisting>
       </example>
 
       <para><itemizedlist>
           <listitem>
-            <para><literal>void</literal> <emphasis role="bold">ensureIndex
-            </emphasis> <literal>(IndexDefinition indexDefintion) </literal>
-            Ensure that an index for the provided IndexDefinition exists for
-            the default collection.</para>
-          </listitem>
-
-          <listitem>
-            <para><literal>void</literal> <emphasis role="bold">ensureIndex
-            </emphasis> <literal>(String collectionName, IndexDefinition
-            indexSpecification) </literal> Ensure that an index for the
-            provided IndexDefinition exists.</para>
+            <para><emphasis role="bold">ensureIndex </emphasis>Ensure that an
+            index for the provided IndexDefinition exists for the
+            collection.</para>
           </listitem>
         </itemizedlist></para>
 
@@ -2008,7 +1921,7 @@ public class PersonWriteConverter implements Converter&lt;Person, DBObject&gt; {
       the Venue class defined in a previous section, you would declare a
       geospatial query as shown below</para>
 
-      <programlisting language="java">mongoTemplate.ensureIndex(new GeospatialIndex("location"));</programlisting>
+      <programlisting language="java">mongoTemplate.ensureIndex(new GeospatialIndex("location"), Venue.class);</programlisting>
     </section>
 
     <section>
@@ -2031,43 +1944,28 @@ mongoTemplate.dropCollection("MyNewCollection");        </programlisting>
 
       <para><itemizedlist>
           <listitem>
-            <para><literal>Set&lt;String&gt;</literal> <emphasis
-            role="bold">getCollectionNames </emphasis> <literal>()</literal> A
-            set of collection names.</para>
+            <para><emphasis role="bold">getCollectionNames</emphasis> Returns
+            a set of collection names.</para>
           </listitem>
 
           <listitem>
-            <para><literal>boolean</literal> <emphasis
-            role="bold">collectionExists </emphasis> <literal>(String
-            collectionName) </literal> Check to see if a collection with a
-            given name exists.</para>
+            <para><emphasis role="bold">collectionExists</emphasis> Check to
+            see if a collection with a given name exists.</para>
           </listitem>
 
           <listitem>
-            <para><literal>DBCollection</literal> <emphasis
-            role="bold">createCollection </emphasis> <literal>(String
-            collectionName) </literal> Create an uncapped collection with the
-            provided name.</para>
+            <para><emphasis role="bold">createCollection</emphasis> Create an
+            uncapped collection</para>
           </listitem>
 
           <listitem>
-            <para><literal>DBCollection</literal> <emphasis
-            role="bold">createCollection </emphasis> <literal>(String
-            collectionName, CollectionOptions collectionOptions) </literal>
-            Create a collect with the provided name and options.</para>
+            <para><emphasis role="bold">dropCollection</emphasis> Drop the
+            collection</para>
           </listitem>
 
           <listitem>
-            <para><literal>void</literal> <emphasis role="bold">dropCollection
-            </emphasis> <literal>(String collectionName) </literal> Drop the
-            collection with the given name.</para>
-          </listitem>
-
-          <listitem>
-            <para><literal>DBCollection</literal> <emphasis
-            role="bold">getCollection </emphasis> <literal>(String
-            collectionName) </literal> Get a collection by name, creating it
-            if it doesn't exist.</para>
+            <para><emphasis role="bold">getCollection</emphasis> Get a
+            collection by name, creating it if it doesn't exist.</para>
           </listitem>
         </itemizedlist></para>
     </section>
@@ -2076,10 +1974,10 @@ mongoTemplate.dropCollection("MyNewCollection");        </programlisting>
   <section>
     <title>Executing Commands</title>
 
-    <para>You can also get at the Mongo driver's collection.command( ) method
-    using the executeCommand methods on MongoTemplate. These will also perform
-    exception translation into Spring's Data Access Exception
-    hierarchy.</para>
+    <para>You can also get at the Mongo driver's <classname>DB.command(
+    )</classname> method using the executeCommand methods on MongoTemplate.
+    These will also perform exception translation into Spring's Data Access
+    Exception hierarchy.</para>
 
     <section>
       <title>Methods for executing commands</title>
@@ -2240,7 +2138,7 @@ public class BeforeSaveListener&lt;BeforeSaveEvent, Person&gt; extends AbstractM
           <para><literal>&lt;T&gt; T</literal> <emphasis role="bold">execute
           </emphasis> <literal>(Class&lt;?&gt; entityClass,
           CollectionCallback&lt;T&gt; action) </literal> Executes the given
-          CollectionCallback for the entitye collection of the specified
+          CollectionCallback for the entity collection of the specified
           class.</para>
         </listitem>
 
