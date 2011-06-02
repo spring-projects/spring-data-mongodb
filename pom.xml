@@ -5,14 +5,14 @@
   <groupId>org.springframework.data</groupId>
   <artifactId>spring-data-document-dist</artifactId>
   <name>Spring Data Document Distribution</name>
-  <version>1.0.0.BUILD-SNAPSHOT</version>
+  <version>1.0.0.M3</version>
   <packaging>pom</packaging>
   <modules>
     <module>spring-data-document-parent</module>
     <module>spring-data-mongodb</module>
     <module>spring-data-mongodb-cross-store</module>
     <module>spring-data-mongodb-log4j</module>
-    <module>spring-data-couchdb</module>
+    <!-- <module>spring-data-couchdb</module> -->
   </modules>
 
   <developers>
@@ -91,8 +91,8 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <!-- dist.* properties are used by the antrun tasks below -->
     <dist.id>spring-data-document</dist.id>
-    <dist.name>Spring Data</dist.name>
-    <dist.key>DATADOC</dist.key>
+    <dist.name>Spring Data Mongo</dist.name>
+    <dist.key>SDMONGO</dist.key>
     <dist.version>${project.version}</dist.version>
     <dist.releaseType>snapshot</dist.releaseType>
     <dist.finalName>${dist.id}-${dist.version}</dist.finalName>
