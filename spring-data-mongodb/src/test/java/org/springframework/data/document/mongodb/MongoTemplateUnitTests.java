@@ -66,7 +66,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		MongoTemplate template = mockOutGetDb();
 		when(db.getCollection("collection")).thenThrow(new MongoException("Exception!"));
 
-		template.remove("collection", null);
+		template.remove(null, "collection");
 	}
 
 	@Test

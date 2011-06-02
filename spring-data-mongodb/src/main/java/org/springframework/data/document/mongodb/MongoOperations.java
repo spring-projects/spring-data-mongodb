@@ -15,6 +15,7 @@
  */
 package org.springframework.data.document.mongodb;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -43,7 +44,7 @@ public interface MongoOperations {
 	 * 
 	 * @return
 	 */
-	String getCollectionName(Class<?> clazz);
+	String getCollectionName(Class<?> entityClass);
 
 	/**
 	 * Execute the a MongoDB command expressed as a JSON string. This will call the method JSON.parse that is part of the
@@ -123,6 +124,26 @@ public interface MongoOperations {
 	<T> T executeInSession(DbCallback<T> action);
 
 	/**
+	 * Create an uncapped collection with a name based on the provided entity class.
+	 * 
+	 * @param entityClass
+	 *          class that determines the collection to create
+	 * @return the created collection
+	 */
+	<T> DBCollection createCollection(Class<T> entityClass);
+
+	/**
+	 * Create a collect with a name based on the provided entity class using the options.
+	 * 
+	 * @param entityClass
+	 *          class that determines the collection to create
+	 * @param collectionOptions
+	 *          options to use when creating the collection.
+	 * @return the created collection
+	 */
+	<T> DBCollection createCollection(Class<T> entityClass, CollectionOptions collectionOptions);
+
+	/**
 	 * Create an uncapped collection with the provided name.
 	 * 
 	 * @param collectionName
@@ -161,6 +182,17 @@ public interface MongoOperations {
 	DBCollection getCollection(String collectionName);
 
 	/**
+	 * Check to see if a collection with a name indicated by the entity class exists.
+	 * <p/>
+	 * Translate any exceptions as necessary.
+	 * 
+	 * @param entityClass
+	 *            class that determines the name of the collection
+	 * @return true if a collection with the given name is found, false otherwise.
+	 */
+	<T> boolean collectionExists(Class<T> entityClass);
+
+	/**
 	 * Check to see if a collection with a given name exists.
 	 * <p/>
 	 * Translate any exceptions as necessary.
@@ -170,6 +202,16 @@ public interface MongoOperations {
 	 * @return true if a collection with the given name is found, false otherwise.
 	 */
 	boolean collectionExists(String collectionName);
+
+	/**
+	 * Drop the collection with the name indicated by the entity class.
+	 * <p/>
+	 * Translate any exceptions as necessary.
+	 * 
+	 * @param entityClass
+	 *            class that determines the collection to drop/delete.
+	 */
+	<T> void dropCollection(Class<T> entityClass);
 
 	/**
 	 * Drop the collection with the given name.
@@ -182,7 +224,7 @@ public interface MongoOperations {
 	void dropCollection(String collectionName);
 
 	/**
-	 * Query for a list of objects of type T from the default collection.
+	 * Query for a list of objects of type T from the collection used by the entity class.
 	 * <p/>
 	 * The object is converted from the MongoDB native representation using an instance of {@see MongoConverter}. Unless
 	 * configured otherwise, an instance of SimpleMongoConverter will be used.
@@ -194,7 +236,7 @@ public interface MongoOperations {
 	 *          the parameterized type of the returned list
 	 * @return the converted collection
 	 */
-	<T> List<T> getCollection(Class<T> entityClass);
+	<T> List<T> findAll(Class<T> entityClass);
 
 	/**
 	 * Query for a list of objects of type T from the specified collection.
@@ -205,35 +247,35 @@ public interface MongoOperations {
 	 * If your collection does not contain a homogeneous collection of types, this operation will not be an efficient way
 	 * to map objects since the test for class type is done in the client and not on the server.
 	 * 
-	 * @param collectionName
-	 *          name of the collection to retrieve the objects from
 	 * @param entityClass
 	 *          the parameterized type of the returned list.
+	 * @param collectionName
+	 *          name of the collection to retrieve the objects from
 	 * @return the converted collection
 	 */
-	<T> List<T> getCollection(String collectionName, Class<T> entityClass);
+	<T> List<T> findAll(Class<T> entityClass, String collectionName);
 
 	/**
-	 * Ensure that an index for the provided {@link IndexDefinition} exists for the default collection. If not it will be
-	 * created.
+	 * Ensure that an index for the provided {@link IndexDefinition} exists for the collection indicated by the entity class. 
+	 * If not it will be created.
 	 * 
+	 * @param indexDefinition
 	 * @param entityClass
 	 *          class that determines the collection to use
-	 * @param indexDefinition
 	 */
-	void ensureIndex(Class<?> entityClass, IndexDefinition indexDefinition);
+	void ensureIndex(IndexDefinition indexDefinition, Class<?> entityClass);
 
 	/**
 	 * Ensure that an index for the provided {@link IndexDefinition} exists. If not it will be created.
 	 * 
-	 * @param collectionName
 	 * @param index
+	 * @param collectionName
 	 */
-	void ensureIndex(String collectionName, IndexDefinition indexDefinition);
+	void ensureIndex(IndexDefinition indexDefinition, String collectionName);
 
 	/**
-	 * Map the results of an ad-hoc query on the default MongoDB collection to a single instance of an object of the
-	 * specified type.
+	 * Map the results of an ad-hoc query on the collection for the entity class to a single instance of an object 
+	 * of the specified type.
 	 * <p/>
 	 * The object is converted from the MongoDB native representation using an instance of {@see MongoConverter}. Unless
 	 * configured otherwise, an instance of SimpleMongoConverter will be used.
@@ -259,20 +301,20 @@ public interface MongoOperations {
 	 * <p/>
 	 * The query is specified as a {@link Query} which can be created either using the {@link BasicQuery} or the more
 	 * feature rich {@link Query}.
-	 * 
-	 * @param collectionName
-	 *          name of the collection to retrieve the objects from
 	 * @param query
 	 *          the query class that specifies the criteria used to find a record and also an optional fields
 	 *          specification
 	 * @param entityClass
 	 *          the parameterized type of the returned list.
+	 * @param collectionName
+	 *          name of the collection to retrieve the objects from
+	 * 
 	 * @return the converted object
 	 */
-	<T> T findOne(String collectionName, Query query, Class<T> entityClass);
+	<T> T findOne(Query query, Class<T> entityClass, String collectionName);
 
 	/**
-	 * Map the results of an ad-hoc query on the default MongoDB collection to a List of the specified type.
+	 * Map the results of an ad-hoc query on the collection for the entity class to a List of the specified type.
 	 * <p/>
 	 * The object is converted from the MongoDB native representation using an instance of {@see MongoConverter}. Unless
 	 * configured otherwise, an instance of SimpleMongoConverter will be used.
@@ -297,17 +339,17 @@ public interface MongoOperations {
 	 * <p/>
 	 * The query is specified as a {@link Query} which can be created either using the {@link BasicQuery} or the more
 	 * feature rich {@link Query}.
-	 * 
-	 * @param collectionName
-	 *          name of the collection to retrieve the objects from
 	 * @param query
 	 *          the query class that specifies the criteria used to find a record and also an optional fields
 	 *          specification
 	 * @param entityClass
 	 *          the parameterized type of the returned list.
+	 * @param collectionName
+	 *          name of the collection to retrieve the objects from
+	 * 
 	 * @return the List of converted objects
 	 */
-	<T> List<T> find(String collectionName, Query query, Class<T> entityClass);
+	<T> List<T> find(Query query, Class<T> entityClass, String collectionName);
 
 	/**
 	 * Map the results of an ad-hoc query on the specified collection to a List of the specified type.
@@ -317,9 +359,6 @@ public interface MongoOperations {
 	 * <p/>
 	 * The query is specified as a {@link Query} which can be created either using the {@link BasicQuery} or the more
 	 * feature rich {@link Query}.
-	 * 
-	 * @param collectionName
-	 *          name of the collection to retrieve the objects from
 	 * @param query
 	 *          the query class that specifies the criteria used to find a record and also an optional fields
 	 *          specification
@@ -328,9 +367,12 @@ public interface MongoOperations {
 	 * @param preparer
 	 *          allows for customization of the DBCursor used when iterating over the result set, (apply limits, skips and
 	 *          so on).
+	 * @param collectionName
+	 *          name of the collection to retrieve the objects from
+	 * 
 	 * @return the List of converted objects.
 	 */
-	<T> List<T> find(String collectionName, Query query, Class<T> entityClass, CursorPreparer preparer);
+	<T> List<T> find(Query query, Class<T> entityClass, CursorPreparer preparer, String collectionName);
 
 	/**
 	 * Returns a document with the given id mapped onto the given class. The collection the query is ran against will be
@@ -345,31 +387,30 @@ public interface MongoOperations {
 	
 	/**
 	 * Returns the document with the given id from the given collection mapped onto the given target class.
-	 * 
-	 * @param <T>
-	 * @param collectionName the collection to query for the document
 	 * @param id the id of the document to return
 	 * @param entityClass the type to convert the document to
+	 * @param collectionName the collection to query for the document
+	 * 
+	 * @param <T>
 	 * @return
 	 */
-	<T> T findById(String collectionName, Object id, Class<T> entityClass);
-	
+	<T> T findById(Object id, Class<T> entityClass, String collectionName);
+
 	/**
-	 * Map the results of an ad-hoc query on the default MongoDB collection to a single instance of an object of the
-	 * specified type. The first document that matches the query is returned and also removed from the collection in the
-	 * database.
+	 * Map the results of an ad-hoc query on the collection for the entity type to a single instance of an 
+	 * object of the specified type. The first document that matches the query is returned and also removed from
+	 * the collection in the database.
 	 * <p/>
-	 * The object is converted from the MongoDB native representation using an instance of {@see MongoConverter}. Unless
-	 * configured otherwise, an instance of SimpleMongoConverter will be used.
+	 * The object is converted from the MongoDB native representation using an instance of {@see MongoConverter}. 
 	 * <p/>
-	 * The query is specified as a {@link Query} which can be created either using the {@link BasicQuery} or the more
+	 * The query is specified as a {@link Query} which can be created either using the {@link BasicQuery} or the more 
 	 * feature rich {@link Query}.
 	 * 
 	 * @param query
-	 *          the query class that specifies the criteria used to find a record and also an optional fields
-	 *          specification
+	 *            the query class that specifies the criteria used to find a
+	 *            record and also an optional fields specification
 	 * @param entityClass
-	 *          the parameterized type of the returned list.
+	 *            the parameterized type of the returned list.
 	 * @return the converted object
 	 */
 	<T> T findAndRemove(Query query, Class<T> entityClass);
@@ -383,23 +424,22 @@ public interface MongoOperations {
 	 * <p/>
 	 * The query is specified as a {@link Query} which can be created either using the {@link BasicQuery} or the more
 	 * feature rich {@link Query}.
-	 * 
-	 * @param collectionName
-	 *          name of the collection to retrieve the objects from
 	 * @param query
 	 *          the query class that specifies the criteria used to find a record and also an optional fields
 	 *          specification
 	 * @param entityClass
 	 *          the parameterized type of the returned list.
+	 * @param collectionName
+	 *          name of the collection to retrieve the objects from
+	 * 
 	 * @return the converted object
 	 */
-	<T> T findAndRemove(String collectionName, Query query, Class<T> entityClass);
+	<T> T findAndRemove(Query query, Class<T> entityClass, String collectionName);
 
 	/**
-	 * Insert the object into the default collection.
+	 * Insert the object into the collection for the entity type of the object to save.
 	 * <p/>
-	 * The object is converted to the MongoDB native representation using an instance of {@see MongoConverter}. Unless
-	 * configured otherwise, an instance of SimpleMongoConverter will be used.
+	 * The object is converted to the MongoDB native representation using an instance of {@see MongoConverter}.
 	 * <p/>
 	 * If you object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
 	 * String then MongoDB ObjectId will be used to populate that string. Otherwise, the conversion from ObjectId to your
@@ -422,35 +462,44 @@ public interface MongoOperations {
 	 * configured otherwise, an instance of SimpleMongoConverter will be used.
 	 * <p/>
 	 * Insert is used to initially store the object into the database. To update an existing object use the save method.
-	 * 
-	 * @param collectionName
-	 *          name of the collection to store the object in
 	 * @param objectToSave
 	 *          the object to store in the collection
+	 * @param collectionName
+	 *          name of the collection to store the object in
 	 */
-	void insert(String collectionName, Object objectToSave);
+	void insert(Object objectToSave, String collectionName);
 
 	/**
-	 * Insert a list of objects into the default collection in a single batch write to the database.
+	 * Insert a Collection of objects into a collection in a single batch write to the database.
 	 * 
-	 * @param listToSave
+	 * @param batchToSave
 	 *          the list of objects to save.
+	 * @param entityClass
+	 *          class that determines the collection to use
 	 */
-	void insertList(List<? extends Object> listToSave);
+	void insert(Collection<? extends Object> batchToSave, Class<?> entityClass);
 
 	/**
 	 * Insert a list of objects into the specified collection in a single batch write to the database.
-	 * 
+	 * @param batchToSave
+	 *          the list of objects to save.
 	 * @param collectionName
 	 *          name of the collection to store the object in
-	 * @param listToSave
-	 *          the list of objects to save.
 	 */
-	void insertList(String collectionName, List<? extends Object> listToSave);
+	void insert(Collection<? extends Object> batchToSave, String collectionName);
 
 	/**
-	 * Save the object to the default collection. This will perform an insert if the object is not already present, that
-	 * is an 'upsert'.
+	 * Insert a mixed Collection of objects into a database collection determining the 
+	 * collection name to use based on the class.
+	 * 
+	 * @param collectionToSave
+	 *          the list of objects to save.
+	 */
+	void insertAll(Collection<? extends Object> objectsToSave);
+
+	/**
+	 * Save the object to the collection for the entity type of the object to save. This will perform an 
+	 * insert if the object is not already present, that is an 'upsert'.
 	 * <p/>
 	 * The object is converted to the MongoDB native representation using an instance of {@see MongoConverter}. Unless
 	 * configured otherwise, an instance of SimpleMongoConverter will be used.
@@ -478,20 +527,19 @@ public interface MongoOperations {
 	 * property type will be handled by Spring's BeanWrapper class that leverages Spring 3.0's new Type Cobnversion API.
 	 * See <a href="http://static.springsource.org/spring/docs/3.0.x/reference/validation.html#core-convert">Spring 3 Type
 	 * Conversion"</a> for more details.
-	 * 
-	 * @param collectionName
-	 *          name of the collection to store the object in
 	 * @param objectToSave
 	 *          the object to store in the collection
+	 * @param collectionName
+	 *          name of the collection to store the object in
 	 */
-	void save(String collectionName, Object objectToSave);
+	void save(Object objectToSave, String collectionName);
 
 	/**
-	 * Updates the first object that is found in the default collection that matches the query document with the provided
-	 * updated document.
-	 * @param queryDoc
+	 * Updates the first object that is found in the collection of the entity class that matches the query document with 
+	 * the provided update document.
+	 * @param query
 	 *          the query document that specifies the criteria used to select a record to be updated
-	 * @param updateDoc
+	 * @param update
 	 *          the update document that contains the updated object or $ operators to manipulate the existing object.
 	 * @param entityClass
 	 *          class that determines the collection to use
@@ -501,22 +549,21 @@ public interface MongoOperations {
 	/**
 	 * Updates the first object that is found in the specified collection that matches the query document criteria with
 	 * the provided updated document.
-	 * 
+	 * @param query
+	 *          the query document that specifies the criteria used to select a record to be updated
+	 * @param update
+	 *          the update document that contains the updated object or $ operators to manipulate the existing object.
 	 * @param collectionName
 	 *          name of the collection to update the object in
-	 * @param queryDoc
-	 *          the query document that specifies the criteria used to select a record to be updated
-	 * @param updateDoc
-	 *          the update document that contains the updated object or $ operators to manipulate the existing object.
 	 */
-	WriteResult updateFirst(String collectionName, Query query, Update update);
+	WriteResult updateFirst(Query query, Update update, String collectionName);
 
 	/**
-	 * Updates all objects that are found in the default collection that matches the query document criteria with the
-	 * provided updated document.
-	 * @param queryDoc
+	 * Updates all objects that are found in the collection for the entity class that matches the query document criteria 
+	 * with the provided updated document.
+	 * @param query
 	 *          the query document that specifies the criteria used to select a record to be updated
-	 * @param updateDoc
+	 * @param update
 	 *          the update document that contains the updated object or $ operators to manipulate the existing object.
 	 * @param entityClass
 	 *          class that determines the collection to use
@@ -526,15 +573,14 @@ public interface MongoOperations {
 	/**
 	 * Updates all objects that are found in the specified collection that matches the query document criteria with the
 	 * provided updated document.
-	 * 
+	 * @param query
+	 *          the query document that specifies the criteria used to select a record to be updated
+	 * @param update
+	 *          the update document that contains the updated object or $ operators to manipulate the existing object.
 	 * @param collectionName
 	 *          name of the collection to update the object in
-	 * @param queryDoc
-	 *          the query document that specifies the criteria used to select a record to be updated
-	 * @param updateDoc
-	 *          the update document that contains the updated object or $ operators to manipulate the existing object.
 	 */
-	WriteResult updateMulti(String collectionName, Query query, Update update);
+	WriteResult updateMulti(Query query, Update update, String collectionName);
 
 	/**
 	 * Remove the given object from the collection by Id
@@ -544,16 +590,10 @@ public interface MongoOperations {
 	void remove(Object object);
 
 	/**
-	 * Remove all documents from the default collection that match the provided query document criteria.
-	 * 
-	 * @param queryDoc
-	 *          the query document that specifies the criteria used to remove a record
-	 */
-	void remove(Query query);
-
-	/**
-	 * Remove all documents from the default collection that match the provided query document criteria. The Class
-	 * parameter is used to help convert the Id of the object if it is present in the query.
+	 * Remove all documents that match the provided query document criteria from
+	 * the the collection used to store the entityClass. The Class parameter is
+	 * also used to help convert the Id of the object if it is present in the
+	 * query.
 	 * 
 	 * @param <T>
 	 * @param query
@@ -563,22 +603,12 @@ public interface MongoOperations {
 
 	/**
 	 * Remove all documents from the specified collection that match the provided query document criteria.
-	 * 
+	 * There is no conversion/mapping done for any criteria using the id field.
+	 * @param query
+	 *          the query document that specifies the criteria used to remove a record
 	 * @param collectionName
 	 *          name of the collection where the objects will removed
-	 * @param queryDoc
-	 *          the query document that specifies the criteria used to remove a record
 	 */
-	void remove(String collectionName, Query query);
-
-	/**
-	 * Remove all documents from the specified collection that match the provided query document criteria. The Class
-	 * parameter is used to help convert the Id of the object if it is present in the query.
-	 * 
-	 * @param collectionName
-	 * @param query
-	 * @param entityClass
-	 */
-	<T> void remove(String collectionName, Query query, Class<T> entityClass);
+	void remove(Query query, String collectionName);
 
 }

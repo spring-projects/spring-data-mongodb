@@ -214,7 +214,7 @@ public abstract class MongoOperationsUnitTests {
 		new Execution() {
 			@Override
 			public void doWith(MongoOperations operations) {
-				operations.getCollection(Object.class);
+				operations.findAll(Object.class);
 			}
 		}.assertDataAccessException();
 	}
@@ -234,7 +234,7 @@ public abstract class MongoOperationsUnitTests {
 		new Execution() {
 			@Override
 			public void doWith(MongoOperations operations) {
-				operations.getCollection("collection", Object.class);
+				operations.findAll(Object.class, "collection");
 			}
 		}.assertDataAccessException();
 	}
@@ -244,7 +244,7 @@ public abstract class MongoOperationsUnitTests {
 		new Execution() {
 			@Override
 			public void doWith(MongoOperations operations) {
-				operations.getCollection("collection", Object.class);
+				operations.findAll(Object.class, "collection");
 			}
 		}.assertDataAccessException();
 	}
@@ -274,7 +274,7 @@ public abstract class MongoOperationsUnitTests {
 		new Execution() {
 			@Override
 			public void doWith(MongoOperations operations) {
-				operations.insert("collection", person);
+				operations.insert(person, "collection");
 			}
 		}.assertDataAccessException();
 	}
@@ -284,7 +284,7 @@ public abstract class MongoOperationsUnitTests {
 		new Execution() {
 			@Override
 			public void doWith(MongoOperations operations) {
-				operations.insertList(persons);
+				operations.insertAll(persons);
 			}
 		}.assertDataAccessException();
 	}
@@ -294,7 +294,7 @@ public abstract class MongoOperationsUnitTests {
 		new Execution() {
 			@Override
 			public void doWith(MongoOperations operations) {
-				operations.insertList("collection", persons);
+				operations.insert(persons, "collection");
 			}
 		}.assertDataAccessException();
 	}

@@ -149,7 +149,7 @@ public class MongoTemplateTests {
 		p2.setAge(40);
 		template.insert(p2);
 
-		template.ensureIndex(Person.class, new Index().on("age", Order.DESCENDING).unique(Duplicates.DROP));
+		template.ensureIndex(new Index().on("age", Order.DESCENDING).unique(Duplicates.DROP), Person.class);
 
 		DBCollection coll = template.getCollection(template.getCollectionName(Person.class));
 		List<DBObject> indexInfo = coll.getIndexInfo();
@@ -372,7 +372,7 @@ public class MongoTemplateTests {
 	}
 
 	private void checkCollectionContents(Class<?> entityClass, int count) {
-		assertThat(template.getCollection(entityClass).size(), is(count));
+		assertThat(template.findAll(entityClass).size(), is(count));
 	}
 	
 	@Test

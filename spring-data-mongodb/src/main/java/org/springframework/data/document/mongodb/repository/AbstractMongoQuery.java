@@ -103,7 +103,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 			MongoEntityInformation<?, ?> metadata = method.getEntityInformation();
 
 			String collectionName = metadata.getCollectionName();
-			return template.find(collectionName, query, metadata.getJavaType());
+			return template.find(query, metadata.getJavaType(), collectionName);
 		}
 	}
 
@@ -158,8 +158,8 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 			MongoEntityInformation<?, ?> metadata = method.getEntityInformation();
 			int count = getCollectionCursor(metadata.getCollectionName(), query.getQueryObject()).count();
 
-			List<?> result = template.find(metadata.getCollectionName(), applyPagination(query, pageable),
-					metadata.getJavaType());
+			List<?> result = template.find(applyPagination(query, pageable), metadata.getJavaType(),
+					metadata.getCollectionName());
 
 			return new PageImpl(result, pageable, count);
 		}

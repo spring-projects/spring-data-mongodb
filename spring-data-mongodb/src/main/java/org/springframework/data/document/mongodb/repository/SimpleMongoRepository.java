@@ -71,7 +71,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements Paging
 	 */
 	public T save(T entity) {
 
-		template.save(entityInformation.getCollectionName(), entity);
+		template.save(entity, entityInformation.getCollectionName());
 		return entity;
 	}
 
@@ -144,7 +144,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements Paging
 	 * @see org.springframework.data.repository.Repository#delete(java.io.Serializable)
 	 */
 	public void delete(ID id) {
-		template.remove(entityInformation.getCollectionName(), getIdQuery(id), entityInformation.getJavaType());
+		template.remove(getIdQuery(id), entityInformation.getJavaType());
 	}
 
 	/*
@@ -177,7 +177,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements Paging
 	 */
 	public void deleteAll() {
 
-		template.remove(entityInformation.getCollectionName(), new Query());
+		template.remove(new Query(), entityInformation.getCollectionName());
 	}
 
 	/*
@@ -245,7 +245,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements Paging
 			return Collections.emptyList();
 		}
 
-		return template.find(entityInformation.getCollectionName(), query, entityInformation.getJavaType());
+		return template.find(query, entityInformation.getJavaType(), entityInformation.getCollectionName());
 	}
 
 	/**

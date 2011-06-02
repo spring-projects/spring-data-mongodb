@@ -175,21 +175,21 @@ public class MappingTests {
 
 		Account acct = new Account();
 		acct.setBalance(1000.00f);
-		template.insert("account", acct);
+		template.insert(acct, "account");
 
 		List<Account> accounts = new ArrayList<Account>();
 		accounts.add(acct);
 
 		Person p = new Person(123456789, "John", "Doe", 37, addr);
 		p.setAccounts(accounts);
-		template.insert("person", p);
+		template.insert(p, "person");
 
 		Account newAcct = new Account();
 		newAcct.setBalance(10000.00f);
-		template.insert("account", newAcct);
+		template.insert(newAcct, "account");
 
 		accounts.add(newAcct);
-		template.save("person", p);
+		template.save(p, "person");
 
 		assertNotNull(p.getId());
 
@@ -214,7 +214,7 @@ public class MappingTests {
 		List<Person> persons = new ArrayList<Person>();
 		persons.add(p1);
 		persons.add(p2);
-		template.insertList(MongoCollectionUtils.getPreferredCollectionName(Person.class), persons);
+		template.insert(persons, MongoCollectionUtils.getPreferredCollectionName(Person.class));
 
 		List<Person> result = template.find(new Query(Criteria.where("ssn").is(1234567890)), Person.class);
 		assertThat(result.size(), is(1));
@@ -225,12 +225,12 @@ public class MappingTests {
 		List<BasePerson> persons = new ArrayList<BasePerson>();
 		persons.add(new PersonCustomCollection1(55555, "Person", "One"));
 		persons.add(new PersonCustomCollection2(66666, "Person", "Two"));
-		template.insertList(persons);
+		template.insertAll(persons);
 
-		List<PersonCustomCollection1> p1Results = template.find("person1", new Query(Criteria.where("ssn").is(55555)),
-				PersonCustomCollection1.class);
-		List<PersonCustomCollection2> p2Results = template.find("person2", new Query(Criteria.where("ssn").is(66666)),
-				PersonCustomCollection2.class);
+		List<PersonCustomCollection1> p1Results = template.find(new Query(Criteria.where("ssn").is(55555)), PersonCustomCollection1.class,
+				"person1");
+		List<PersonCustomCollection2> p2Results = template.find(new Query(Criteria.where("ssn").is(66666)), PersonCustomCollection2.class,
+				"person2");
 		assertThat(p1Results.size(), is(1));
 		assertThat(p2Results.size(), is(1));
 	}
@@ -240,7 +240,7 @@ public class MappingTests {
 		Location loc = new Location(new double[]{1.0, 2.0}, new int[]{1, 2, 3, 4}, new float[]{1.0f, 2.0f});
 		template.insert(loc);
 
-		List<Location> result = template.find("places", new Query(Criteria.where("_id").is(loc.getId())), Location.class);
+		List<Location> result = template.find(new Query(Criteria.where("_id").is(loc.getId())), Location.class, "places");
 		assertThat(result.size(), is(1));
 	}
 

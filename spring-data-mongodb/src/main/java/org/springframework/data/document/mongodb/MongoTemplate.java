@@ -48,7 +48,6 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -90,6 +89,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	private static final Log LOGGER = LogFactory.getLog(MongoTemplate.class);
 
 	private static final String ID = "_id";
+	@SuppressWarnings("serial")
 	private static final List<String> ITERABLE_CLASSES = new ArrayList<String>() {
 		{
 			add(List.class.getName());
@@ -272,8 +272,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * @see org.springframework.data.document.mongodb.MongoOperations#
 	 * getDefaultCollectionName()
 	 */
-	public String getCollectionName(Class<?> clazz) {
-		return this.determineCollectionName(clazz);
+	public String getCollectionName(Class<?> entityClass) {
+		return this.determineCollectionName(entityClass);
 	}
 
 	/*
@@ -392,6 +392,30 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * 
 	 * @see
 	 * org.springframework.data.document.mongodb.MongoOperations#createCollection
+	 * (java.lang.Class)
+	 */
+	public <T> DBCollection createCollection(Class<T> entityClass) {
+		return createCollection(determineCollectionName(entityClass));
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.springframework.data.document.mongodb.MongoOperations#createCollection
+	 * (java.lang.Class,
+	 * org.springframework.data.document.mongodb.CollectionOptions)
+	 */
+	public <T> DBCollection createCollection(Class<T> entityClass,
+			CollectionOptions collectionOptions) {
+		return createCollection(determineCollectionName(entityClass), collectionOptions);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.springframework.data.document.mongodb.MongoOperations#createCollection
 	 * (java.lang.String)
 	 */
 	public DBCollection createCollection(final String collectionName) {
@@ -433,6 +457,17 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * 
 	 * @see
 	 * org.springframework.data.document.mongodb.MongoOperations#collectionExists
+	 * (java.lang.Class)
+	 */
+	public <T> boolean collectionExists(Class<T> entityClass) {
+		return collectionExists(determineCollectionName(entityClass));
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.springframework.data.document.mongodb.MongoOperations#collectionExists
 	 * (java.lang.String)
 	 */
 	public boolean collectionExists(final String collectionName) {
@@ -442,6 +477,19 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				return db.collectionExists(collectionName);
 			}
 		});
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.springframework.data.document.mongodb.MongoOperations#dropCollection
+	 * (java.lang.Class)
+	 */
+	public <T> void dropCollection(Class<T> entityClass) {
+		
+		dropCollection(determineCollectionName(entityClass));
+		
 	}
 
 	/*
@@ -468,13 +516,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 	// Indexing methods
 
-	public void ensureIndex(Class<?> entityClass,
-			IndexDefinition indexDefinition) {
-		ensureIndex(determineCollectionName(entityClass), indexDefinition);
+	public void ensureIndex(IndexDefinition indexDefinition, Class<?> entityClass) {
+		ensureIndex(indexDefinition, determineCollectionName(entityClass));
 	}
 
-	public void ensureIndex(String collectionName,
-			final IndexDefinition indexDefinition) {
+	public void ensureIndex(final IndexDefinition indexDefinition, String collectionName) {
 		execute(collectionName, new CollectionCallback<Object>() {
 			public Object doInCollection(DBCollection collection)
 					throws MongoException, DataAccessException {
@@ -494,11 +540,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	// single object.
 
 	public <T> T findOne(Query query, Class<T> entityClass) {
-		return findOne(determineCollectionName(entityClass), query, entityClass);
+		return findOne(query, entityClass, determineCollectionName(entityClass));
 	}
 
-	public <T> T findOne(String collectionName, Query query,
-			Class<T> entityClass) {
+	public <T> T findOne(Query query, Class<T> entityClass,
+			String collectionName) {
 		return doFindOne(collectionName, query.getQueryObject(),
 				query.getFieldsObject(), entityClass);
 	}
@@ -508,11 +554,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	// of objects.
 
 	public <T> List<T> find(Query query, Class<T> entityClass) {
-		return find(determineCollectionName(entityClass), query, entityClass);
+		return find(query, entityClass, determineCollectionName(entityClass));
 	}
 
-	public <T> List<T> find(String collectionName, final Query query,
-			Class<T> entityClass) {
+	public <T> List<T> find(final Query query, Class<T> entityClass,
+			String collectionName) {
 		CursorPreparer cursorPreparer = null;
 		if (query.getSkip() > 0 || query.getLimit() > 0
 				|| query.getSortObject() != null) {
@@ -542,8 +588,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				query.getFieldsObject(), entityClass, cursorPreparer);
 	}
 
-	public <T> List<T> find(String collectionName, Query query,
-			Class<T> entityClass, CursorPreparer preparer) {
+	public <T> List<T> find(Query query, Class<T> entityClass,
+			CursorPreparer preparer, String collectionName) {
 		return doFind(collectionName, query.getQueryObject(),
 				query.getFieldsObject(), entityClass, preparer);
 	}
@@ -551,10 +597,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	public <T> T findById(Object id, Class<T> entityClass) {
 		MongoPersistentEntity<?> persistentEntity = mappingContext
 				.getPersistentEntity(entityClass);
-		return findById(persistentEntity.getCollection(), id, entityClass);
+		return findById(id, entityClass, persistentEntity.getCollection());
 	}
 
-	public <T> T findById(String collectionName, Object id, Class<T> entityClass) {
+	public <T> T findById(Object id, Class<T> entityClass, String collectionName) {
 		MongoPersistentEntity<?> persistentEntity = mappingContext
 				.getPersistentEntity(entityClass);
 		MongoPersistentProperty idProperty = persistentEntity.getIdProperty();
@@ -568,12 +614,12 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	// also removed from the collection in the database.
 
 	public <T> T findAndRemove(Query query, Class<T> entityClass) {
-		return findAndRemove(determineCollectionName(entityClass), query,
-				entityClass);
+		return findAndRemove(query, entityClass,
+				determineCollectionName(entityClass));
 	}
 
-	public <T> T findAndRemove(String collectionName, Query query,
-			Class<T> entityClass) {
+	public <T> T findAndRemove(Query query, Class<T> entityClass,
+			String collectionName) {
 		return doFindAndRemove(collectionName, query.getQueryObject(),
 				query.getFieldsObject(), query.getSortObject(), entityClass);
 	}
@@ -587,7 +633,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 */
 	public void insert(Object objectToSave) {
 		ensureNotIterable(objectToSave);
-		insert(determineEntityCollectionName(objectToSave), objectToSave);
+		insert(objectToSave, determineEntityCollectionName(objectToSave));
 	}
 
 	/*
@@ -597,7 +643,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * org.springframework.data.document.mongodb.MongoOperations#insert(java
 	 * .lang .String, java.lang.Object)
 	 */
-	public void insert(String collectionName, Object objectToSave) {
+	public void insert(Object objectToSave, String collectionName) {
 		ensureNotIterable(objectToSave);
 		doInsert(collectionName, objectToSave, this.mongoConverter);
 	}
@@ -658,8 +704,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * org.springframework.data.document.mongodb.MongoOperations#insertList(java
 	 * .util.List)
 	 */
-	public void insertList(List<? extends Object> listToSave) {
-		doInsertList(listToSave, mongoConverter);
+	public void insert(Collection<? extends Object> batchToSave, Class<?> entityClass) {
+		doInsertBatch(determineCollectionName(entityClass), batchToSave, this.mongoConverter);
 	}
 
 	/*
@@ -669,12 +715,23 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * org.springframework.data.document.mongodb.MongoOperations#insertList(java
 	 * .lang.String, java.util.List)
 	 */
-	public void insertList(String collectionName,
-			List<? extends Object> listToSave) {
-		doInsertList(collectionName, listToSave, this.mongoConverter);
+	public void insert(Collection<? extends Object> batchToSave,
+			String collectionName) {
+		doInsertBatch(collectionName, batchToSave, this.mongoConverter);
 	}
 
-	protected <T> void doInsertList(List<? extends T> listToSave,
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.springframework.data.document.mongodb.MongoOperations#insertAll(java
+	 * .util.Collection)
+	 */
+	public void insertAll(Collection<? extends Object> objectsToSave) {
+		doInsertAll(objectsToSave, this.mongoConverter);
+	}
+
+	protected <T> void doInsertAll(Collection<? extends T> listToSave,
 			MongoWriter<T> writer) {
 		Map<String, List<T>> objs = new HashMap<String, List<T>>();
 
@@ -699,17 +756,17 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		}
 
 		for (Map.Entry<String, List<T>> entry : objs.entrySet()) {
-			doInsertList(entry.getKey(), entry.getValue(), this.mongoConverter);
+			doInsertBatch(entry.getKey(), entry.getValue(), this.mongoConverter);
 		}
 	}
 
-	protected <T> void doInsertList(String collectionName,
-			List<? extends T> listToSave, MongoWriter<T> writer) {
+	protected <T> void doInsertBatch(String collectionName,
+			Collection<? extends T> batchToSave, MongoWriter<T> writer) {
 
 		Assert.notNull(writer);
 
 		List<DBObject> dbObjectList = new ArrayList<DBObject>();
-		for (T o : listToSave) {
+		for (T o : batchToSave) {
 			BasicDBObject dbDoc = new BasicDBObject();
 
 			maybeEmitEvent(new BeforeConvertEvent<T>(o));
@@ -719,12 +776,13 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			dbObjectList.add(dbDoc);
 		}
 		List<ObjectId> ids = insertDBObjectList(collectionName, dbObjectList);
-		for (int i = 0; i < listToSave.size(); i++) {
+		int i = 0;
+		for (T obj : batchToSave) {
 			if (i < ids.size()) {
-				T obj = listToSave.get(i);
 				populateIdIfNecessary(obj, ids.get(i));
 				maybeEmitEvent(new AfterSaveEvent<T>(obj, dbObjectList.get(i)));
 			}
+			i++;
 		}
 	}
 
@@ -736,7 +794,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * .Object)
 	 */
 	public void save(Object objectToSave) {
-		save(determineEntityCollectionName(objectToSave), objectToSave);
+		save(objectToSave, determineEntityCollectionName(objectToSave));
 	}
 
 	/*
@@ -746,7 +804,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * org.springframework.data.document.mongodb.MongoOperations#save(java.lang
 	 * .String, java.lang.Object)
 	 */
-	public void save(String collectionName, Object objectToSave) {
+	public void save(Object objectToSave, String collectionName) {
 		doSave(collectionName, objectToSave, this.mongoConverter);
 	}
 
@@ -859,8 +917,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * org.springframework.data.document.mongodb.MongoOperations#updateFirst
 	 * (java .lang.String, com.mongodb.DBObject, com.mongodb.DBObject)
 	 */
-	public WriteResult updateFirst(final String collectionName,
-			final Query query, final Update update) {
+	public WriteResult updateFirst(final Query query,
+			final Update update, final String collectionName) {
 		return doUpdate(collectionName, query, update, null, false, false);
 	}
 
@@ -884,8 +942,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * org.springframework.data.document.mongodb.MongoOperations#updateMulti
 	 * (java .lang.String, com.mongodb.DBObject, com.mongodb.DBObject)
 	 */
-	public WriteResult updateMulti(String collectionName, final Query query,
-			final Update update) {
+	public WriteResult updateMulti(final Query query, final Update update,
+			String collectionName) {
 		return doUpdate(collectionName, query, update, null, false, true);
 	}
 
@@ -947,17 +1005,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.springframework.data.document.mongodb.MongoOperations#remove(com.
-	 * mongodb .DBObject)
-	 */
-	public void remove(Query query) {
-		remove(query, null);
-	}
-
 	public void remove(Object object) {
 		remove(new Query(where(getIdPropertyName(object))
 				.is(getIdValue(object))), object.getClass());
@@ -965,10 +1012,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 	public <T> void remove(Query query, Class<T> entityClass) {
 		Assert.notNull(query);
-		remove(determineCollectionName(entityClass), query, entityClass);
+		doRemove(determineCollectionName(entityClass), query, entityClass);
 	}
 
-	public <T> void remove(String collectionName, final Query query,
+	protected <T> void doRemove(String collectionName, final Query query,
 			Class<T> entityClass) {
 		if (query == null) {
 			throw new InvalidDataAccessApiUsageException(
@@ -1004,8 +1051,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * org.springframework.data.document.mongodb.MongoOperations#remove(java
 	 * .lang .String, com.mongodb.DBObject)
 	 */
-	public void remove(String collectionName, final Query query) {
-		remove(collectionName, query, null);
+	public void remove(final Query query, String collectionName) {
+		doRemove(collectionName, query, null);
 	}
 
 	/*
@@ -1015,13 +1062,13 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * org.springframework.data.document.mongodb.MongoOperations#getCollection
 	 * (java.lang.Class)
 	 */
-	public <T> List<T> getCollection(Class<T> entityClass) {
+	public <T> List<T> findAll(Class<T> entityClass) {
 		return executeFindMultiInternal(new FindCallback(null), null,
 				new ReadDbObjectCallback<T>(mongoConverter, entityClass),
 				determineCollectionName(entityClass));
 	}
 
-	public <T> List<T> getCollection(String collectionName, Class<T> entityClass) {
+	public <T> List<T> findAll(Class<T> entityClass, String collectionName) {
 		return executeFindMultiInternal(new FindCallback(null), null,
 				new ReadDbObjectCallback<T>(mongoConverter, entityClass),
 				collectionName);
@@ -1393,19 +1440,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		return mappingContext.getPersistentEntity(type).getIdProperty();
 	}
 
-	private ObjectId convertIdValue(MongoConverter converter, Object value) {
-		ObjectId newValue = null;
-		try {
-			if (value instanceof String && ObjectId.isValid((String) value)) {
-				newValue = converter.convertObjectId(value);
-			}
-		} catch (ConversionFailedException iae) {
-			LOGGER.warn("Unable to convert the String " + value
-					+ " to an ObjectId");
-		}
-		return newValue;
-	}
-
 	private <T> String determineEntityCollectionName(T obj) {
 		if (null != obj) {
 			return determineCollectionName(obj.getClass());
@@ -1414,20 +1448,20 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		return null;
 	}
 
-	private String determineCollectionName(Class<?> clazz) {
+	private String determineCollectionName(Class<?> entityClass) {
 
-		if (clazz == null) {
+		if (entityClass == null) {
 			throw new InvalidDataAccessApiUsageException(
 					"No class parameter provided, entity collection can't be determined for "
-							+ clazz);
+							+ entityClass);
 		}
 
 		MongoPersistentEntity<?> entity = mappingContext
-				.getPersistentEntity(clazz);
+				.getPersistentEntity(entityClass);
 		if (entity == null) {
 			throw new InvalidDataAccessApiUsageException(
 					"No Persitent Entity information found for the class "
-							+ clazz.getName());
+							+ entityClass.getName());
 		}
 		return entity.getCollection();
 	}

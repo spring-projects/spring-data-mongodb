@@ -63,7 +63,7 @@ public class PersonExample {
 		p = mongoOps.findById(p.getId(), PersonWithIdPropertyOfTypeString.class);
 		log.debug("Updated: " + p);
 
-		List<PersonWithIdPropertyOfTypeString> folks = mongoOps.getCollection(PersonWithIdPropertyOfTypeString.class);
+		List<PersonWithIdPropertyOfTypeString> folks = mongoOps.findAll(PersonWithIdPropertyOfTypeString.class);
 		log.debug("Querying for all people...");
 		for (PersonWithIdPropertyOfTypeString element : folks) {
 			log.debug(element);
@@ -73,7 +73,7 @@ public class PersonExample {
 
 		mongoOps.remove(p);
 
-		List<PersonWithIdPropertyOfTypeString> people = mongoOps.getCollection(PersonWithIdPropertyOfTypeString.class);
+		List<PersonWithIdPropertyOfTypeString> people = mongoOps.findAll(PersonWithIdPropertyOfTypeString.class);
 
 		// PersonWithIdPropertyOfTypeString p2 = mongoOps.findOne(query(whereId().is(p.getId())),
 		// PersonWithIdPropertyOfTypeString.class);

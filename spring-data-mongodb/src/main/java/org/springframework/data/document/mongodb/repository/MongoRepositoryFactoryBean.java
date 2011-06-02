@@ -297,7 +297,7 @@ public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID exten
 			}
 
 			MongoEntityInformation<?, ?> metadata = query.getQueryMethod().getEntityInformation();
-			operations.ensureIndex(metadata.getCollectionName(), index);
+			operations.ensureIndex(index, metadata.getCollectionName());
 			LOG.debug(String.format("Created %s!", index));
 		}
 

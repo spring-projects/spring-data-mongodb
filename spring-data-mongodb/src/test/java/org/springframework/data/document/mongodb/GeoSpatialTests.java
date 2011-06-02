@@ -71,7 +71,7 @@ public class GeoSpatialTests {
 		applicationContext = new AnnotationConfigApplicationContext(GeoSpatialAppConfig.class);
 		template = applicationContext.getBean(MongoTemplate.class);
 		template.setWriteConcern(WriteConcern.FSYNC_SAFE);
-		template.ensureIndex(Venue.class, new GeospatialIndex("location"));
+		template.ensureIndex(new GeospatialIndex("location"), Venue.class);
 		indexCreated();
 		addVenues();
 		parser = new SpelExpressionParser();
@@ -158,7 +158,7 @@ public class GeoSpatialTests {
 		assertThat(template, notNullValue());
 		Venue foundVenue = template.findOne(new Query(Criteria.where("name").is("Penn Station")), Venue.class);
 		assertThat(foundVenue, notNullValue());
-		List<Venue> venues = template.getCollection(Venue.class);
+		List<Venue> venues = template.findAll(Venue.class);
 		assertThat(venues.size(), equalTo(12));
 		Collection<?> names = (Collection<?>) parser.parseExpression("![name]").getValue(venues);
 		assertThat(names.size(), equalTo(12));
