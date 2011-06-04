@@ -18,7 +18,6 @@ package org.springframework.data.document.mongodb.mapping;
 
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
-import java.math.BigInteger;
 import java.util.Set;
 
 import org.bson.types.CodeWScope;
@@ -29,6 +28,7 @@ import org.springframework.data.util.TypeInformation;
 
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
+ * @author Oliver Gierke ogierke@vmware.com
  */
 public class MongoMappingContext extends AbstractMappingContext<BasicMongoPersistentEntity<?>, MongoPersistentProperty> {
 	public MongoMappingContext() {
@@ -42,7 +42,6 @@ public class MongoMappingContext extends AbstractMappingContext<BasicMongoPersis
 		simpleTypes.add(ObjectId.class);
 		simpleTypes.add(CodeWScope.class);
 		simpleTypes.add(Character.class);
-		simpleTypes.add(BigInteger.class);
 	}
 
 	@Override
