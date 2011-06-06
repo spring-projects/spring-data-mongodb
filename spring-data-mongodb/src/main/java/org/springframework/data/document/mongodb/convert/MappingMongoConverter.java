@@ -24,6 +24,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -415,7 +416,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		String name = prop.getFieldName();
 
 		if (prop.isCollection()) {
-			DBObject collectionInternal = writeCollectionInternal(prop, obj);
+			DBObject collectionInternal = writeCollectionInternal(prop, asCollection(obj));
 			dbo.put(name, collectionInternal);
 			return;
 		}
@@ -449,48 +450,79 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		dbo.put(name, propDbObj);
 	}
 
-	@SuppressWarnings("unchecked")
-	protected DBObject writeCollectionInternal(MongoPersistentProperty property, Object obj) {
+	/**
+	 * Returns given object as {@link Collection}. Will return the {@link Collection} as is if the source is a
+	 * {@link Collection} already, will convert an array into a {@link Collection} or simply create a single element
+	 * collection for everything else.
+	 * 
+	 * @param source
+	 * @return
+	 */
+	private static Collection<?> asCollection(Object source) {
+		
+		if (source instanceof Collection) {
+			return (Collection<?>) source;
+		}
+		
+		return source.getClass().isArray() ? CollectionUtils.arrayToList(source) : Collections.singleton(source);
+	}
+
+
+	/**
+	 * Writes the given {@link Collection} using the given {@link MongoPersistentProperty} information.
+	 * 
+	 * @param property
+	 * @param collection
+	 * @return
+	 */
+	protected DBObject writeCollectionInternal(MongoPersistentProperty property, Collection<?> collection) {
+		
+		if (!property.isDbReference()) {
+			return createCollectionDBObject(property.getTypeInformation(), collection);
+		}
 
 		BasicDBList dbList = new BasicDBList();
-		Class<?> type = property.getType();
-		Collection<Object> coll = type.isArray() ? CollectionUtils.arrayToList(obj) : (Collection<Object>) obj;
-		TypeInformation<?> componentType = property.getTypeInformation().getComponentType();
-
-		for (Object element : coll) {
+		
+		for (Object element : collection) {
 
 			if (element == null) {
 				continue;
 			}
 
-			TypeInformation<?> valueType = ClassTypeInformation.from(element.getClass());
+			DBRef dbRef = createDBRef(element, property.getDBRef());
+			dbList.add(dbRef);
+		}
+		
+		return dbList;
+	}
+	
+	/**
+	 * Creates a new {@link BasicDBList} from the given {@link Collection}.
+	 * 
+	 * @param type
+	 * @param source
+	 * @return
+	 */
+	private BasicDBList createCollectionDBObject(TypeInformation<?> type, Collection<?> source) {
+		
+		BasicDBList dbList = new BasicDBList();
+		TypeInformation<?> componentType = type.getComponentType();
+		
+		for (Object element : source) {
 
-			if (property.isDbReference()) {
-				DBRef dbRef = createDBRef(element, property.getDBRef());
-				dbList.add(dbRef);
-			} else if (type.isArray() && isSimpleType(property.getComponentType())) {
+			if (element == null) {
+				continue;
+			}
+			
+			Class<?> elementType = element.getClass();
+
+			if (isSimpleType(elementType)) {
 				dbList.add(element);
-			} else if (element instanceof List) {
-				List<?> propObjColl = (List<?>) element;
-				while (valueType.isCollectionLike()) {
-					valueType = valueType.getComponentType();
-				}
-				if (isSimpleType(valueType.getType())) {
-					dbList.add(propObjColl);
-				} else {
-					BasicDBList propNestedDbList = new BasicDBList();
-					for (Object propNestedObjItem : propObjColl) {
-						BasicDBObject propDbObj = new BasicDBObject();
-						writeInternal(propNestedObjItem, propDbObj);
-						propNestedDbList.add(propDbObj);
-					}
-					dbList.add(propNestedDbList);
-				}
-			} else if (isSimpleType(element.getClass())) {
-				dbList.add(element);
+			} else if (element instanceof Collection || elementType.isArray()) {
+				dbList.add(createCollectionDBObject(componentType, asCollection(element)));
 			} else {
 				BasicDBObject propDbObj = new BasicDBObject();
-				writeInternal(element, propDbObj, mappingContext.getPersistentEntity(valueType));
+				writeInternal(element, propDbObj, mappingContext.getPersistentEntity(ClassTypeInformation.from(element.getClass())));
 				addCustomTypeKeyIfNecessary(componentType, element, propDbObj);
 				dbList.add(propDbObj);
 			}

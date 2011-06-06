@@ -19,6 +19,7 @@ package org.springframework.data.document.mongodb.mapping;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -314,6 +315,50 @@ public class MappingMongoConverterUnitTests {
 			assertThat(nestedMap.get("afield"), is(firstLevel));
 	}
 	
+	/**
+	 * @see DATACMNS-42
+	 */
+	@Test
+	public void writesClassWithBigDecimal() {
+		
+		BigDecimalContainer container = new BigDecimalContainer();
+		container.value = BigDecimal.valueOf(2.5d);
+		
+		DBObject dbObject = new BasicDBObject();
+		converter.write(container, dbObject);
+		
+		assertThat(dbObject.get("value"), is((Object) container.value));
+	}
+	
+	/**
+	 * @see DATACMNS-42
+	 */
+	@Test
+	public void readsClassWithBigDecimal() {
+		
+		DBObject dbObject = new BasicDBObject("value", 2.5d);
+		BigDecimalContainer result = converter.read(BigDecimalContainer.class, dbObject);
+		
+		assertThat(result.value, is(BigDecimal.valueOf(2.5d)));
+	}
+	
+	@Test
+	public void writesNestedCollectionsCorrectly() {
+		
+		CollectionWrapper wrapper = new CollectionWrapper();
+		wrapper.strings = Arrays.asList(Arrays.asList("Foo"));
+		
+		DBObject dbObject = new BasicDBObject();
+		converter.write(wrapper, dbObject);
+		
+		Object outerStrings = dbObject.get("strings");
+		assertThat(outerStrings, is(instanceOf(BasicDBList.class)));
+		
+		BasicDBList typedOuterString = (BasicDBList) outerStrings;
+		assertThat(typedOuterString.size(), is(1));
+		
+	}
+	
 	class ClassWithEnumProperty {
 		
 		SampleEnum sampleEnum;
@@ -323,7 +368,7 @@ public class MappingMongoConverterUnitTests {
 		FIRST, SECOND;
 	}
 	
-	public static class Address {
+	class Address {
 		String street;
 		String city;
 	}
@@ -332,14 +377,14 @@ public class MappingMongoConverterUnitTests {
 
 	}
 
-	public static class Person implements Contact {
+	class Person implements Contact {
 		LocalDate birthDate;
 		
 		@FieldName("foo")
 		String firstname;
 	}
 
-	static class ClassWithMapProperty {
+	class ClassWithMapProperty {
 		Map<Locale, String> map;
 	}
 
@@ -347,12 +392,17 @@ public class MappingMongoConverterUnitTests {
     Map<String, Map<String, Map<String, String>>> nestedMaps;
 	}
 	
-	public static class BirthDateContainer {
+	class BirthDateContainer {
 		LocalDate birthDate;
+	}
+	
+	class BigDecimalContainer {
+		BigDecimal value;
 	}
 	
 	class CollectionWrapper {
 		List<Contact> contacts;
+		List<List<String>> strings;
 	}
 
 	class LocaleWrapper {
