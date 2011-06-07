@@ -1,6 +1,12 @@
 Spring Data Document Changelog
 =============================================
 
+Changes in version 1.0.0.RC1 MongoDB (2011-??-??)
+-------------------------------------------------
+
+Mapping
+* [DATADOC-167] - @Documentation annotation is now inherited into subclasses
+
 Changes in version 1.0.0.M3 MongoDB (2011-06-02)
 ------------------------------------------------
 

@@ -13,28 +13,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.data.document.mongodb.mapping;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Inherited;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import static org.hamcrest.CoreMatchers.*;
+import static org.junit.Assert.*;
 
-import org.springframework.data.annotation.Persistent;
+import org.junit.Test;
+import org.springframework.data.util.ClassTypeInformation;
 
 /**
- * Identifies a domain object to be persisted to MongoDB.
- * 
- * @author Jon Brisbin <jbrisbin@vmware.com>
- * @author Oliver Gierke ogierke@vmware.com
+ * Unit tests for {@link BasicMongoPersistentEntity}.
+ *
+ * @author Oliver Gierke
  */
-@Persistent
-@Inherited
-@Retention(RetentionPolicy.RUNTIME)
-@Target({ ElementType.TYPE })
-public @interface Document {
+public class BasicMongoPersistentEntityUnitTests {
 
-	String collection() default "";
+	@Test
+	public void subclassInheritsAtDocumentAnnotation() {
+		
+		BasicMongoPersistentEntity<Person> entity = new BasicMongoPersistentEntity<Person>(
+				ClassTypeInformation.from(Person.class));
+		assertThat(entity.getCollection(), is("contacts"));
+	}
+	
+	@Document(collection = "contacts")
+	class Contact {
+		
+	}
+	
+	class Person extends Contact {
+		
+	}
 }
