@@ -24,6 +24,7 @@ import org.springframework.data.document.mongodb.MongoCollectionUtils;
 import org.springframework.data.mapping.AbstractMappingContext;
 import org.springframework.data.mapping.BasicPersistentEntity;
 import org.springframework.data.mapping.AbstractPersistentProperty;
+import org.springframework.data.mapping.SimpleTypeHolder;
 import org.springframework.data.mapping.model.Association;
 import org.springframework.data.util.TypeInformation;
 
@@ -47,8 +48,8 @@ public class SimpleMongoMappingContext extends
 	 */
 	@Override
 	protected SimplePersistentProperty createPersistentProperty(Field field, PropertyDescriptor descriptor,
-			SimpleMongoPersistentEntity<?> owner) {
-		return new SimplePersistentProperty(field, descriptor, owner);
+			SimpleMongoPersistentEntity<?> owner, SimpleTypeHolder simpleTypeHolder) {
+		return new SimplePersistentProperty(field, descriptor, owner, simpleTypeHolder);
 	}
 
 	static class SimplePersistentProperty extends AbstractPersistentProperty<MongoPersistentProperty> implements
@@ -63,8 +64,8 @@ public class SimpleMongoMappingContext extends
 		 * @param propertyDescriptor
 		 * @param information
 		 */
-		public SimplePersistentProperty(Field field, PropertyDescriptor propertyDescriptor, MongoPersistentEntity<?> owner) {
-			super(field, propertyDescriptor, owner);
+		public SimplePersistentProperty(Field field, PropertyDescriptor propertyDescriptor, MongoPersistentEntity<?> owner, SimpleTypeHolder simpleTypeHolder) {
+			super(field, propertyDescriptor, owner, simpleTypeHolder);
 		}
 
 		/* (non-Javadoc)

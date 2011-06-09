@@ -25,13 +25,10 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
-
 import org.joda.time.LocalDate;
 import org.junit.Before;
 import org.junit.Test;
@@ -40,6 +37,7 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.document.mongodb.MongoDbFactory;
+import org.springframework.data.document.mongodb.convert.CustomConversions;
 import org.springframework.data.document.mongodb.convert.MappingMongoConverter;
 
 import com.mongodb.BasicDBList;
@@ -61,8 +59,12 @@ public class MappingMongoConverterUnitTests {
 
 	@Before
 	public void setUp() {
+		
 		mappingContext = new MongoMappingContext();
+		mappingContext.afterPropertiesSet();
+		
 		converter = new MappingMongoConverter(factory, mappingContext);
+		converter.afterPropertiesSet();
 	}
 
 	@Test
@@ -83,16 +85,15 @@ public class MappingMongoConverterUnitTests {
 	@Test
 	public void convertsJodaTimeTypesCorrectly() {
 
-		Set<Converter<?, ?>> converters = new HashSet<Converter<?, ?>>();
+		List<Converter<?, ?>> converters = new ArrayList<Converter<?, ?>>();
 		converters.add(new LocalDateToDateConverter());
 		converters.add(new DateToLocalDateConverter());
-
-		List<Class<?>> customSimpleTypes = new ArrayList<Class<?>>();
-		customSimpleTypes.add(LocalDate.class);
-		mappingContext.setCustomSimpleTypes(customSimpleTypes);
+		
+		CustomConversions conversions = new CustomConversions(converters);
+		mappingContext.setSimpleTypeHolder(conversions.getSimpleTypeHolder());
 
 		converter = new MappingMongoConverter(factory, mappingContext);
-		converter.setCustomConverters(converters);
+		converter.setCustomConversions(conversions);
 		converter.afterPropertiesSet();
 
 		Person person = new Person();
@@ -343,6 +344,7 @@ public class MappingMongoConverterUnitTests {
 	}
 	
 	@Test
+	@SuppressWarnings("unchecked")
 	public void writesNestedCollectionsCorrectly() {
 		
 		CollectionWrapper wrapper = new CollectionWrapper();

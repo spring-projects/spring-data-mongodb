@@ -12,15 +12,23 @@
   <bean id="mappingConverter1" class="org.springframework.data.document.mongodb.convert.MappingMongoConverter">
   	<constructor-arg ref="mongoDbFactory" />
     <constructor-arg ref="mappingContext" />
-    <property name="customConverters">
-      <list>
-        <bean class="org.springframework.data.document.mongodb.PersonReadConverter"/>
-        <bean class="org.springframework.data.document.mongodb.PersonWriteConverter"/>
-      </list>
-    </property>
+    <property name="customConversions" ref="conversions" />
   </bean>
 
-  <bean id="mappingContext" class="org.springframework.data.document.mongodb.mapping.MongoMappingContext"/>
+  <bean id="mappingContext" class="org.springframework.data.document.mongodb.mapping.MongoMappingContext">
+  	<property name="simpleTypeHolder">
+  		<bean factory-bean="conversions" factory-method="getSimpleTypeHolder" />
+  	</property>
+  </bean>
+  
+	<bean id="conversions" class="org.springframework.data.document.mongodb.convert.CustomConversions">
+		<constructor-arg>
+			<list>
+				<bean class="org.springframework.data.document.mongodb.PersonReadConverter" />
+				<bean class="org.springframework.data.document.mongodb.PersonWriteConverter" />
+			</list>
+		</constructor-arg>
+	</bean>
 
   <bean id="mongoTemplate1" class="org.springframework.data.document.mongodb.MongoTemplate">
     <constructor-arg name="mongoDbFactory" ref="mongoDbFactory"/>

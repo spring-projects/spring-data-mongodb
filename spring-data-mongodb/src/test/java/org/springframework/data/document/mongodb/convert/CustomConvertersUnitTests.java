@@ -61,15 +61,19 @@ public class CustomConvertersUnitTests {
 	@SuppressWarnings("unchecked")
 	public void setUp() throws Exception {
 
-		context = new MongoMappingContext();
-		context.setInitialEntitySet(new HashSet<Class<?>>(Arrays.asList(Foo.class, Bar.class)));
-		context.afterPropertiesSet();
-
 		when(barToDBObjectConverter.convert(any(Bar.class))).thenReturn(new BasicDBObject());
 		when(dbObjectToBarConverter.convert(any(DBObject.class))).thenReturn(new Bar());
+		
+		CustomConversions conversions = new CustomConversions(Arrays.asList(barToDBObjectConverter, dbObjectToBarConverter));
+		
+		context = new MongoMappingContext();
+		context.setInitialEntitySet(new HashSet<Class<?>>(Arrays.asList(Foo.class, Bar.class)));
+		context.setSimpleTypeHolder(conversions.getSimpleTypeHolder());
+		context.afterPropertiesSet();
 
 		converter = new MappingMongoConverter(mongoDbFactory, context);
-		converter.setCustomConverters(new HashSet<Object>(Arrays.asList(barToDBObjectConverter, dbObjectToBarConverter)));
+		converter.setCustomConversions(conversions);
+		converter.afterPropertiesSet();
 	}
 
 	@Test

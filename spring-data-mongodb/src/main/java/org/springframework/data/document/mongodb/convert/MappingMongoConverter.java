@@ -16,8 +16,6 @@
 
 package org.springframework.data.document.mongodb.convert;
 
-import static org.springframework.data.mapping.MappingBeanHelper.*;
-
 import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigInteger;
@@ -138,9 +136,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		TypeInformation<? extends S> typeToUse = getMoreConcreteTargetType(dbo, type);
 		Class<? extends S> rawType = typeToUse.getType();
-		Class<?> customTarget = getCustomTarget(rawType, DBObject.class);
 
-		if (customTarget != null) {
+		if (conversions.hasCustomReadTarget(DBObject.class, rawType)) {
 			return conversionService.convert(dbo, rawType);
 		}
 
@@ -279,7 +276,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			return;
 		}
 
-		boolean handledByCustomConverter = getCustomTarget(obj.getClass(), DBObject.class) != null;
+		boolean handledByCustomConverter = conversions.getCustomWriteTarget(obj.getClass(), DBObject.class) != null;
 
 		if (!handledByCustomConverter) {
 			dbo.put(CUSTOM_TYPE_KEY, obj.getClass().getName());
@@ -301,7 +298,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			return;
 		}
 
-		Class<?> customTarget = getCustomTarget(obj.getClass(), DBObject.class);
+		Class<?> customTarget = conversions.getCustomWriteTarget(obj.getClass(), DBObject.class);
 
 		if (customTarget != null) {
 			DBObject result = conversionService.convert(obj, DBObject.class);
@@ -374,7 +371,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 					throw new MappingException(e.getMessage(), e);
 				}
 				if (null != propertyObj) {
-					if (!isSimpleType(propertyObj.getClass())) {
+					if (!conversions.isSimpleType(propertyObj.getClass())) {
 						writePropertyInternal(prop, propertyObj, dbo);
 					} else {
 						writeSimpleInternal(prop.getFieldName(), propertyObj, dbo);
@@ -437,7 +434,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		// Lookup potential custom target type
-		Class<?> basicTargetType = getCustomTarget(obj.getClass(), null);
+		Class<?> basicTargetType = conversions.getCustomWriteTarget(obj.getClass(), null);
 
 		if (basicTargetType != null) {
 			dbo.put(name, conversionService.convert(obj, basicTargetType));
@@ -516,7 +513,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			
 			Class<?> elementType = element.getClass();
 
-			if (isSimpleType(elementType)) {
+			if (conversions.isSimpleType(elementType)) {
 				dbList.add(element);
 			} else if (element instanceof Collection || elementType.isArray()) {
 				dbList.add(createCollectionDBObject(componentType, asCollection(element)));
@@ -535,11 +532,11 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		for (Map.Entry<Object, Object> entry : obj.entrySet()) {
 			Object key = entry.getKey();
 			Object val = entry.getValue();
-			if (isSimpleType(key.getClass())) {
+			if (conversions.isSimpleType(key.getClass())) {
 				// Don't use conversion service here as removal of ObjectToString converter results in some primitive types not
 				// being convertable
 				String simpleKey = key.toString();
-				if (isSimpleType(val.getClass())) {
+				if (conversions.isSimpleType(val.getClass())) {
 					writeSimpleInternal(simpleKey, val, dbo);
 				} else {
 					DBObject newDbo = new BasicDBObject();
@@ -602,7 +599,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 */
 	private void writeSimpleInternal(String key, Object value, DBObject dbObject) {
 
-		Class<?> customTarget = getCustomTarget(value.getClass(), null);
+		Class<?> customTarget = conversions.getCustomWriteTarget(value.getClass(), null);
 
 		Object valueToSet = null;
 		if (customTarget != null) {
@@ -652,30 +649,29 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			o = x.getValue(ctx);
 		} else {
 
-			Object dbObj = dbo.get(prop.getFieldName());
+			Object sourceValue = dbo.get(prop.getFieldName());
 
-			if (dbObj == null) {
+			if (sourceValue == null) {
 				return null;
 			}
 
 			Class<?> propertyType = prop.getType();
-			Class<?> customTarget = getCustomTarget(dbObj.getClass(), propertyType);
 
-			if (customTarget != null) {
-				return conversionService.convert(dbObj, propertyType);
+			if (conversions.hasCustomReadTarget(sourceValue.getClass(), propertyType)) {
+				return conversionService.convert(sourceValue, propertyType);
 			}
 
-			if (dbObj instanceof DBRef) {
-				dbObj = ((DBRef) dbObj).fetch();
+			if (sourceValue instanceof DBRef) {
+				sourceValue = ((DBRef) sourceValue).fetch();
 			}
-			if (dbObj instanceof DBObject) {
+			if (sourceValue instanceof DBObject) {
 				if (prop.isMap()) {
-					return readMap(prop.getTypeInformation(), (DBObject) dbObj);
-				} else if (prop.isArray() && dbObj instanceof BasicDBObject && ((DBObject) dbObj).keySet().size() == 0) {
+					return readMap(prop.getTypeInformation(), (DBObject) sourceValue);
+				} else if (prop.isArray() && sourceValue instanceof BasicDBObject && ((DBObject) sourceValue).keySet().size() == 0) {
 					// It's empty
 					return Array.newInstance(prop.getComponentType(), 0);
-				} else if (prop.isCollection() && dbObj instanceof BasicDBList) {
-					BasicDBList dbObjList = (BasicDBList) dbObj;
+				} else if (prop.isCollection() && sourceValue instanceof BasicDBList) {
+					BasicDBList dbObjList = (BasicDBList) sourceValue;
 					List<Object> items = new LinkedList<Object>();
 					for (int i = 0; i < dbObjList.size(); i++) {
 						Object dbObjItem = dbObjList.get(i);
@@ -694,17 +690,17 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 					return itemsToReturn;
 				}
 
-				Class<?> toType = findTypeToBeUsed((DBObject) dbObj);
+				Class<?> toType = findTypeToBeUsed((DBObject) sourceValue);
 
 				// It's a complex object, have to read it in
 				if (toType != null) {
 					dbo.removeField(CUSTOM_TYPE_KEY);
-					o = read(toType, (DBObject) dbObj);
+					o = read(toType, (DBObject) sourceValue);
 				} else {
-					o = read(mappingContext.getPersistentEntity(prop.getTypeInformation()), (DBObject) dbObj);
+					o = read(mappingContext.getPersistentEntity(prop.getTypeInformation()), (DBObject) sourceValue);
 				}
 			} else {
-				o = dbObj;
+				o = sourceValue;
 			}
 		}
 		return o;

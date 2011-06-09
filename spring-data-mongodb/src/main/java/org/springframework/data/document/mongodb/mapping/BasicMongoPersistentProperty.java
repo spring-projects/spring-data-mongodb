@@ -26,6 +26,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bson.types.ObjectId;
 import org.springframework.data.mapping.AnnotationBasedPersistentProperty;
+import org.springframework.data.mapping.SimpleTypeHolder;
 import org.springframework.data.mapping.model.Association;
 
 /**
@@ -56,9 +57,11 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 	 * @param field
 	 * @param propertyDescriptor
 	 * @param owner
+	 * @param simpleTypeHolder
 	 */
-	public BasicMongoPersistentProperty(Field field, PropertyDescriptor propertyDescriptor, MongoPersistentEntity<?> owner) {
-		super(field, propertyDescriptor, owner);
+	public BasicMongoPersistentProperty(Field field, PropertyDescriptor propertyDescriptor,
+			MongoPersistentEntity<?> owner, SimpleTypeHolder simpleTypeHolder) {
+		super(field, propertyDescriptor, owner, simpleTypeHolder);
 
 		if (isIdProperty() && field.isAnnotationPresent(FieldName.class)) {
 			LOG.warn(String.format("Invalid usage of %s on id property. Field name will not be considered!", FieldName.class));

@@ -29,11 +29,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-
 import org.hamcrest.CoreMatchers;
 import org.joda.time.LocalDate;
 import org.junit.Before;
@@ -41,6 +38,7 @@ import org.junit.Test;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.document.mongodb.SomeEnumTest.NumberEnum;
 import org.springframework.data.document.mongodb.SomeEnumTest.StringEnum;
+import org.springframework.data.document.mongodb.convert.CustomConversions;
 import org.springframework.data.document.mongodb.convert.SimpleMongoConverter;
 import org.springframework.util.ReflectionUtils;
 
@@ -48,6 +46,7 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
 
+@SuppressWarnings("deprecation")
 public class SimpleMongoConverterTests {
 
 	static final String SIMPLE_JSON = "{ \"map\" : { \"foo\" : 3 , \"bar\" : 4}, \"number\" : 15 }";
@@ -329,11 +328,12 @@ public class SimpleMongoConverterTests {
 	@Test
 	public void convertsJodaTimeTypesCorrectly() {
 
-		Set<Converter<?, ?>> converters = new HashSet<Converter<?, ?>>();
+		List<Converter<?, ?>> converters = new ArrayList<Converter<?, ?>>();
 		converters.add(new LocalDateToDateConverter());
 		converters.add(new DateToLocalDateConverter());
 
-		converter.setCustomConverters(converters);
+		converter.setCustomConversions(new CustomConversions(converters));
+		converter.afterPropertiesSet();
 
 		AnotherPerson person = new AnotherPerson();
 		person.birthDate = new LocalDate();

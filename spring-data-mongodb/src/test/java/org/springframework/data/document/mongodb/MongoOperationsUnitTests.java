@@ -20,8 +20,6 @@ import static org.junit.Assert.*;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
-
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import org.bson.types.ObjectId;
@@ -82,10 +80,6 @@ public abstract class MongoOperationsUnitTests {
 
 			public MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> getMappingContext() {
 				return null;
-			}
-
-			@Override
-			public void setCustomConverters(Set<?> converters) {
 			}
 		};
 	}

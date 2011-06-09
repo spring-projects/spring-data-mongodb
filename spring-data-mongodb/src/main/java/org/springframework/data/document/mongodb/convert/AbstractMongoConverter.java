@@ -16,72 +16,55 @@
 
 package org.springframework.data.document.mongodb.convert;
 
-import static org.springframework.data.mapping.MappingBeanHelper.isSimpleType;
-
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
-
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.core.GenericTypeResolver;
 import org.springframework.core.convert.ConversionService;
-import org.springframework.core.convert.TypeDescriptor;
-import org.springframework.core.convert.converter.Converter;
-import org.springframework.core.convert.converter.ConverterFactory;
-import org.springframework.core.convert.converter.GenericConverter;
-import org.springframework.core.convert.converter.GenericConverter.ConvertiblePair;
 import org.springframework.core.convert.support.ConversionServiceFactory;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.document.mongodb.convert.ObjectIdConverters.BigIntegerToObjectIdConverter;
 import org.springframework.data.document.mongodb.convert.ObjectIdConverters.ObjectIdToBigIntegerConverter;
 import org.springframework.data.document.mongodb.convert.ObjectIdConverters.ObjectIdToStringConverter;
 import org.springframework.data.document.mongodb.convert.ObjectIdConverters.StringToObjectIdConverter;
-import org.springframework.data.mapping.MappingBeanHelper;
-
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
 /**
+ * Base class for {@link MongoConverter} implementations. Sets up a {@link GenericConversionService} and populates basic
+ * converters. Allows registering {@link CustomConversions}.
+ * 
  * @author Jon Brisbin <jbrisbin@vmware.com>
+ * @author Oliver Gierke ogierke@vmware.com
  */
 public abstract class AbstractMongoConverter implements MongoConverter, InitializingBean {
 
-	@SuppressWarnings({ "unchecked" })
-	private static final List<Class<?>> MONGO_TYPES = Arrays.asList(Number.class, Date.class, String.class,
-			DBObject.class);
-
 	protected final GenericConversionService conversionService;
-	private final Set<ConvertiblePair> customTypeMapping = new HashSet<ConvertiblePair>();
+	protected CustomConversions conversions = new CustomConversions();
 
+	/**
+	 * Creates a new {@link AbstractMongoConverter} using the given {@link GenericConversionService}.
+	 * 
+	 * @param conversionService
+	 */
 	public AbstractMongoConverter(GenericConversionService conversionService) {
 		this.conversionService = conversionService == null ? ConversionServiceFactory.createDefaultConversionService()
 				: conversionService;
 		this.conversionService.removeConvertible(Object.class, String.class);
-		registerConverter(CustomToStringConverter.INSTANCE);
 	}
 
 	/**
-	 * Add custom {@link Converter} or {@link ConverterFactory} instances to be used that will take presidence over
-	 * metadata driven conversion between of objects to/from DBObject
+	 * Registers the given custom conversions with the converter.
 	 * 
-	 * @param converters
+	 * @param conversions
 	 */
-	public void setCustomConverters(Set<?> converters) {
-		if (null != converters) {
-			for (Object c : converters) {
-				registerConverter(c);
-			}
-		}
+	public void setCustomConversions(CustomConversions conversions) {
+		this.conversions = conversions;
 	}
 
 	/**
@@ -102,61 +85,10 @@ public abstract class AbstractMongoConverter implements MongoConverter, Initiali
 		if (!conversionService.canConvert(BigInteger.class, ObjectId.class)) {
 			conversionService.addConverter(BigIntegerToObjectIdConverter.INSTANCE);
 		}
+		
+		conversions.registerConvertersIn(conversionService);
 	}
 
-	/**
-	 * Inspects the given {@link Converter} for the types it can convert and registers the pair for custom type conversion
-	 * in case the target type is a Mongo basic type.
-	 * 
-	 * @param converter
-	 */
-	private void registerConverter(Object converter) {
-		
-		if (converter instanceof GenericConverter) {
-			customTypeMapping.addAll(((GenericConverter) converter).getConvertibleTypes());
-		} else {
-			Class<?>[] arguments = GenericTypeResolver.resolveTypeArguments(converter.getClass(), Converter.class);
-			if (MONGO_TYPES.contains(arguments[1]) || MONGO_TYPES.contains(arguments[0])) {
-				customTypeMapping.add(new ConvertiblePair(arguments[0], arguments[1]));
-			}
-		}
-		
-		boolean added = false;
-		
-		if (converter instanceof Converter) {
-			this.conversionService.addConverter((Converter<?, ?>) converter);
-			added = true;
-		}
-		
-		if (converter instanceof ConverterFactory) {
-			this.conversionService.addConverterFactory((ConverterFactory<?, ?>) converter);
-			added = true;
-		}
-		
-		if (converter instanceof GenericConverter) {
-			this.conversionService.addConverter((GenericConverter) converter);
-			added = true;
-		}
-		
-		if (!added) {
-			throw new IllegalArgumentException("Given set contains element that is neither Converter nor ConverterFactory!");
-		}
-	}
-
-	protected Class<?> getCustomTarget(Class<?> source, Class<?> expectedTargetType) {
-		for (ConvertiblePair typePair : customTypeMapping) {
-			if (typePair.getSourceType().isAssignableFrom(source)) {
-
-				Class<?> targetType = typePair.getTargetType();
-
-				if (targetType.equals(expectedTargetType) || expectedTargetType == null) {
-					return targetType;
-				}
-			}
-		}
-
-		return null;
-	}
 
 	/*
 	 * (non-Javadoc)
@@ -179,7 +111,7 @@ public abstract class AbstractMongoConverter implements MongoConverter, Initiali
 			return ((Enum<?>) obj).name();
 		}
 
-		if (null != obj && isSimpleType(obj.getClass())) {
+		if (null != obj && conversions.isSimpleType(obj.getClass())) {
 			// Doesn't need conversion
 			return obj;
 		}
@@ -239,20 +171,5 @@ public abstract class AbstractMongoConverter implements MongoConverter, Initiali
 			newDbl.add(maybeConvertObject(o));
 		}
 		return newDbl;
-	}
-
-	
-	private enum CustomToStringConverter implements GenericConverter  {
-		INSTANCE;
-
-		public Set<ConvertiblePair> getConvertibleTypes() {
-			ConvertiblePair localeToString = new ConvertiblePair(Locale.class, String.class);
-			ConvertiblePair booleanToString = new ConvertiblePair(Character.class, String.class);
-			return new HashSet<ConvertiblePair>(Arrays.asList(localeToString, booleanToString));
-		}
-
-		public Object convert(Object source, TypeDescriptor sourceType, TypeDescriptor targetType) {
-			return source.toString();
-		}
 	}
 }
