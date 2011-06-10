@@ -88,6 +88,6 @@ public class Point {
 
 	@Override
 	public String toString() {
-		return String.format("Point [latitude=%d, longitude=%d]", x, y);
+		return String.format("Point [latitude=%f, longitude=%f]", x, y);
 	}
 }
