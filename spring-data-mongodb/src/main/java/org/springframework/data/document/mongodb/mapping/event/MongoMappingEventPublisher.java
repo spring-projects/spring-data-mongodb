@@ -18,7 +18,9 @@ package org.springframework.data.document.mongodb.mapping.event;
 
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.document.mongodb.mapping.MongoPersistentEntity;
 import org.springframework.data.document.mongodb.mapping.MongoPersistentEntityIndexCreator;
+import org.springframework.data.document.mongodb.mapping.MongoPersistentProperty;
 import org.springframework.data.mapping.event.MappingContextEvent;
 
 /**
@@ -32,10 +34,11 @@ public class MongoMappingEventPublisher implements ApplicationEventPublisher {
 		this.indexCreator = indexCreator;
 	}
 
+	@SuppressWarnings("unchecked")
 	public void publishEvent(ApplicationEvent event) {
 		if (event instanceof MappingContextEvent) {
-			indexCreator.onApplicationEvent((MappingContextEvent<?, ?>) event);
+			indexCreator
+					.onApplicationEvent((MappingContextEvent<MongoPersistentEntity<MongoPersistentProperty>, MongoPersistentProperty>) event);
 		}
 	}
-
 }

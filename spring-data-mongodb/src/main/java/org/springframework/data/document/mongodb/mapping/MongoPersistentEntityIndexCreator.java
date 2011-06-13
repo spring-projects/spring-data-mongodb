@@ -36,7 +36,6 @@ import org.springframework.data.document.mongodb.index.Indexed;
 import org.springframework.data.document.mongodb.query.GeospatialIndex;
 import org.springframework.data.mapping.PropertyHandler;
 import org.springframework.data.mapping.event.MappingContextEvent;
-import org.springframework.data.mapping.model.PersistentProperty;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -47,14 +46,19 @@ import org.springframework.util.StringUtils;
  * @author Jon Brisbin <jbrisbin@vmware.com>
  * @author Oliver Gierke
  */
-public class MongoPersistentEntityIndexCreator implements ApplicationListener<MappingContextEvent> {
+public class MongoPersistentEntityIndexCreator implements ApplicationListener<MappingContextEvent<MongoPersistentEntity<MongoPersistentProperty>, MongoPersistentProperty>> {
 
 	private static final Log log = LogFactory.getLog(MongoPersistentEntityIndexCreator.class);
 
-	private Set<Class<?>> classesSeen = Collections.newSetFromMap(new ConcurrentHashMap<Class<?>, Boolean>());
-
+	private final Set<Class<?>> classesSeen = Collections.newSetFromMap(new ConcurrentHashMap<Class<?>, Boolean>());
 	private final MongoDbFactory mongoDbFactory;
 
+	/**
+	 * Creats a new {@link MongoPersistentEntityIndexCreator} for the given {@link MongoMappingContext} and {@link MongoDbFactory}.
+	 * 
+	 * @param mappingContext must not be {@@iteral null}
+	 * @param mongoDbFactory must not be {@@iteral null}
+	 */
 	public MongoPersistentEntityIndexCreator(MongoMappingContext mappingContext, MongoDbFactory mongoDbFactory) {
 
 		Assert.notNull(mongoDbFactory);
@@ -66,11 +70,12 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 		}
 	}
 
-	/* (non-Javadoc)
-		* @see org.springframework.context.ApplicationListener#onApplicationEvent(org.springframework.context.ApplicationEvent)
-		*/
-	public void onApplicationEvent(MappingContextEvent event) {
-		checkForIndexes((MongoPersistentEntity<?>) event.getPersistentEntity());
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.context.ApplicationListener#onApplicationEvent(org.springframework.context.ApplicationEvent)
+	 */
+	public void onApplicationEvent(MappingContextEvent<MongoPersistentEntity<MongoPersistentProperty>, MongoPersistentProperty> event) {
+		checkForIndexes(event.getPersistentEntity());
 	}
 
 	protected void checkForIndexes(final MongoPersistentEntity<?> entity) {
@@ -96,13 +101,13 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 				}
 			}
 
-			entity.doWithProperties(new PropertyHandler() {
-				public void doWithPersistentProperty(PersistentProperty persistentProperty) {
+			entity.doWithProperties(new PropertyHandler<MongoPersistentProperty>() {
+				public void doWithPersistentProperty(MongoPersistentProperty persistentProperty) {
 					Field field = persistentProperty.getField();
 					if (field.isAnnotationPresent(Indexed.class)) {
 						Indexed index = field.getAnnotation(Indexed.class);
 						String name = index.name();
-						if ("".equals(name)) {
+						if (!StringUtils.hasText(name)) {
 							name = field.getName();
 						} else {
 							if (!name.equals(field.getName()) && index.unique() && !index.sparse()) {
@@ -122,9 +127,9 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 
 						GeoSpatialIndexed index = field.getAnnotation(GeoSpatialIndexed.class);
 
-						GeospatialIndex indexObject = new GeospatialIndex(StringUtils.hasText(index.name()) ? index.name() : field
-								.getName());
+						GeospatialIndex indexObject = new GeospatialIndex(persistentProperty.getFieldName());
 						indexObject.withMin(index.min()).withMax(index.max());
+						indexObject.named(StringUtils.hasText(index.name()) ? index.name() : field.getName());
 
 						String collection = StringUtils.hasText(index.collection()) ? index.collection() : entity.getCollection();
 						mongoDbFactory.getDb().getCollection(collection).ensureIndex(indexObject.getIndexKeys(), indexObject.getIndexOptions());
@@ -139,7 +144,6 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 
 			classesSeen.add(type);
 		}
-
 	}
 
 	protected void ensureIndex(String collection,
