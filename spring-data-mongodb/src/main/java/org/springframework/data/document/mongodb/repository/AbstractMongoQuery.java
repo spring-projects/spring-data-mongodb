@@ -184,15 +184,14 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	class SingleEntityExecution extends Execution {
 
 		/*
-		   * (non-Javadoc)
-		   *
-		   * @see org.springframework.data.document.mongodb.repository.MongoQuery.Execution #execute(com.mongodb.DBObject)
-		   */
+		 * (non-Javadoc)
+		 * @see org.springframework.data.document.mongodb.repository.AbstractMongoQuery.Execution#execute(org.springframework.data.document.mongodb.query.Query)
+		 */
 		@Override
 		Object execute(Query query) {
-
-			List<?> result = readCollection(query);
-			return result.isEmpty() ? null : result.get(0);
+			
+			MongoEntityInformation<?, ?> entityInformation = method.getEntityInformation();
+			return template.findOne(query, entityInformation.getJavaType());
 		}
 	}
 }
