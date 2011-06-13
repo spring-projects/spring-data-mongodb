@@ -16,24 +16,33 @@
 package org.springframework.data.document.mongodb.query;
 
 import org.springframework.data.document.mongodb.index.IndexDefinition;
+import org.springframework.util.Assert;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
+/**
+ * Value object to capture data to create a geo index.
+ *
+ * @author Jon Brisbin
+ * @author Oliver Gierke
+ */
 public class GeospatialIndex implements IndexDefinition {
 
-	private String keyField;
-
+	private final String field;
 	private String name;
-
 	private Integer min = null;
-
 	private Integer max = null;
-
 	private Integer bits = null;
 
-	public GeospatialIndex(String key) {
-		keyField = key;
+	/**
+	 * Creates a new {@link GeospatialIndex} for the given field.
+	 * 
+	 * @param field must not be empty or {@literal null}.
+	 */
+	public GeospatialIndex(String field) {
+		Assert.hasText(field);
+		this.field = field;
 	}
 
 	public GeospatialIndex named(String name) {
@@ -58,7 +67,7 @@ public class GeospatialIndex implements IndexDefinition {
 
 	public DBObject getIndexKeys() {
 		DBObject dbo = new BasicDBObject();
-		dbo.put(keyField, "2d");
+		dbo.put(field, "2d");
 		return dbo;
 	}
 
@@ -82,7 +91,8 @@ public class GeospatialIndex implements IndexDefinition {
 		return dbo;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
 	 * @see java.lang.Object#toString()
 	 */
 	@Override

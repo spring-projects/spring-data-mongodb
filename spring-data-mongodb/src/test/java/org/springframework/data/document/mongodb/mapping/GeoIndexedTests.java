@@ -21,26 +21,20 @@ import static org.junit.Assert.*;
 import java.net.UnknownHostException;
 import java.util.List;
 
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
-import com.mongodb.Mongo;
-import com.mongodb.MongoException;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.document.mongodb.CollectionCallback;
 import org.springframework.data.document.mongodb.MongoTemplate;
-import org.springframework.data.document.mongodb.config.AbstractMongoConfiguration;
-import org.springframework.data.document.mongodb.mapping.event.LoggingEventListener;
-import org.springframework.data.document.mongodb.mapping.event.MongoMappingEvent;
+
+import com.mongodb.DB;
+import com.mongodb.DBCollection;
+import com.mongodb.DBObject;
+import com.mongodb.Mongo;
+import com.mongodb.MongoException;
 
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
@@ -83,7 +77,7 @@ public class GeoIndexedTests {
 			public Boolean doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 				List<DBObject> indexes = collection.getIndexInfo();
 				for (DBObject dbo : indexes) {
-					if ("location_2d".equals(dbo.get("name"))) {
+					if ("location".equals(dbo.get("name"))) {
 						return true;
 					}
 				}

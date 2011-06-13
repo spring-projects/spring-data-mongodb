@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -81,48 +80,74 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	protected final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 	protected final SpelExpressionParser spelExpressionParser = new SpelExpressionParser();
+	protected final MongoDbFactory mongoDbFactory;
 	protected ApplicationContext applicationContext;
 	protected boolean useFieldAccessOnly = true;
-	protected MongoDbFactory mongoDbFactory;
 
 	/**
 	 * Creates a new {@link MappingMongoConverter} given the new {@link MongoDbFactory} and {@link MappingContext}.
 	 *
-	 * @param mongoDbFactory
-	 * @param mappingContext
+	 * @param mongoDbFactory must not be {@literal null}.
+	 * @param mappingContext must not be {@literal null}.
 	 */
 	public MappingMongoConverter(MongoDbFactory mongoDbFactory, MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
+		
 		super(ConversionServiceFactory.createDefaultConversionService());
-		Assert.notNull(mappingContext);
+		
 		Assert.notNull(mongoDbFactory);
+		Assert.notNull(mappingContext);
+		
 		this.mongoDbFactory = mongoDbFactory;
 		this.mappingContext = mappingContext;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.document.mongodb.convert.MongoConverter#getMappingContext()
+	 */
 	public MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> getMappingContext() {
 		return mappingContext;
 	}
 
-	public void setMongoDbFactory(MongoDbFactory mongoDbFactory) {
-		this.mongoDbFactory = mongoDbFactory;
-	}
-
-	public boolean isUseFieldAccessOnly() {
-		return useFieldAccessOnly;
-	}
-
+	/**
+	 * Configures whether to use field access only for entity mapping. Setting this to true will force the
+	 * {@link MongoConverter} to not go through getters or setters even if they are present for getting and setting
+	 * property values.
+	 * 
+	 * @param useFieldAccessOnly
+	 */
 	public void setUseFieldAccessOnly(boolean useFieldAccessOnly) {
 		this.useFieldAccessOnly = useFieldAccessOnly;
 	}
+	
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.context.ApplicationContextAware#setApplicationContext(org.springframework.context.ApplicationContext)
+	 */
+	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+		this.applicationContext = applicationContext;
+	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.document.mongodb.convert.MongoConverter#convertObjectId(org.bson.types.ObjectId, java.lang.Class)
+	 */
 	public <T> T convertObjectId(ObjectId id, Class<T> targetType) {
 		return conversionService.convert(id, targetType);
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.document.mongodb.convert.MongoConverter#convertObjectId(java.lang.Object)
+	 */
 	public ObjectId convertObjectId(Object id) {
 		return conversionService.convert(id, ObjectId.class);
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.document.mongodb.MongoReader#read(java.lang.Class, com.mongodb.DBObject)
+	 */
 	public <S extends Object> S read(Class<S> clazz, final DBObject dbo) {
 		return read(ClassTypeInformation.from(clazz), dbo);
 	}
@@ -399,10 +424,6 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		});
 	}
 
-	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-		this.applicationContext = applicationContext;
-	}
-
 	@SuppressWarnings({"unchecked"})
 	protected void writePropertyInternal(MongoPersistentProperty prop, Object obj, DBObject dbo) {
 
@@ -672,7 +693,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 					return Array.newInstance(prop.getComponentType(), 0);
 				} else if (prop.isCollection() && sourceValue instanceof BasicDBList) {
 					BasicDBList dbObjList = (BasicDBList) sourceValue;
-					List<Object> items = new LinkedList<Object>();
+					List<Object> items = new ArrayList<Object>();
 					for (int i = 0; i < dbObjList.size(); i++) {
 						Object dbObjItem = dbObjList.get(i);
 						if (dbObjItem instanceof DBRef) {
@@ -683,7 +704,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 							items.add(dbObjItem);
 						}
 					}
-					List<Object> itemsToReturn = new LinkedList<Object>();
+					List<Object> itemsToReturn = new ArrayList<Object>();
 					for (Object obj : items) {
 						itemsToReturn.add(obj);
 					}
@@ -792,7 +813,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	}
 
 	protected <T> List<?> unwrapList(BasicDBList dbList, TypeInformation<T> targetType) {
-		List<Object> rootList = new LinkedList<Object>();
+		List<Object> rootList = new ArrayList<Object>();
 		for (int i = 0; i < dbList.size(); i++) {
 			Object obj = dbList.get(i);
 			if (obj instanceof BasicDBList) {
