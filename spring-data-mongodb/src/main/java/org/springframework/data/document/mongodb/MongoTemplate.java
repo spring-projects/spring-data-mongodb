@@ -70,8 +70,8 @@ import org.springframework.data.document.mongodb.mapping.event.MongoMappingEvent
 import org.springframework.data.document.mongodb.query.Query;
 import org.springframework.data.document.mongodb.query.QueryMapper;
 import org.springframework.data.document.mongodb.query.Update;
-import org.springframework.data.mapping.BeanWrapper;
-import org.springframework.data.mapping.model.MappingContext;
+import org.springframework.data.mapping.context.MappingContext;
+import org.springframework.data.mapping.model.BeanWrapper;
 import org.springframework.data.mapping.model.MappingException;
 import org.springframework.jca.cci.core.ConnectionCallback;
 import org.springframework.util.Assert;

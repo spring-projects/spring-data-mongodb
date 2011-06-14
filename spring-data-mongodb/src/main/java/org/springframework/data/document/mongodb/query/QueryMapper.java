@@ -26,7 +26,7 @@ import org.bson.types.ObjectId;
 import org.springframework.core.convert.ConversionException;
 import org.springframework.data.document.mongodb.convert.MongoConverter;
 import org.springframework.data.document.mongodb.mapping.MongoPersistentEntity;
-import org.springframework.data.mapping.model.PersistentEntity;
+import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.util.Assert;
 
 /**

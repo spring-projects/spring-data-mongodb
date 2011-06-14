@@ -25,12 +25,12 @@ import com.mongodb.DBObject;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bson.types.ObjectId;
-import org.springframework.data.mapping.AnnotationBasedPersistentProperty;
-import org.springframework.data.mapping.SimpleTypeHolder;
-import org.springframework.data.mapping.model.Association;
+import org.springframework.data.mapping.Association;
+import org.springframework.data.mapping.model.AnnotationBasedPersistentProperty;
+import org.springframework.data.mapping.model.SimpleTypeHolder;
 
 /**
- * Mongo specific {@link org.springframework.data.mapping.model.PersistentProperty} implementation.
+ * Mongo specific {@link org.springframework.data.mapping.PersistentProperty} implementation.
  *
  * @author Oliver Gierke
  */

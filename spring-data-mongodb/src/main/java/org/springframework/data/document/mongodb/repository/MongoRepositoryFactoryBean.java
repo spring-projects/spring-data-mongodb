@@ -33,19 +33,19 @@ import org.springframework.data.document.mongodb.mapping.MongoPersistentProperty
 import org.springframework.data.document.mongodb.query.Index;
 import org.springframework.data.document.mongodb.query.Order;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.mapping.model.MappingContext;
+import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.querydsl.QueryDslPredicateExecutor;
 import org.springframework.data.repository.Repository;
+import org.springframework.data.repository.core.RepositoryMetadata;
+import org.springframework.data.repository.core.support.QueryCreationListener;
+import org.springframework.data.repository.core.support.RepositoryFactoryBeanSupport;
+import org.springframework.data.repository.core.support.RepositoryFactorySupport;
 import org.springframework.data.repository.query.QueryLookupStrategy;
-import org.springframework.data.repository.query.QueryLookupStrategy.Key;
 import org.springframework.data.repository.query.RepositoryQuery;
+import org.springframework.data.repository.query.QueryLookupStrategy.Key;
 import org.springframework.data.repository.query.parser.Part;
 import org.springframework.data.repository.query.parser.Part.Type;
 import org.springframework.data.repository.query.parser.PartTree;
-import org.springframework.data.repository.support.QueryCreationListener;
-import org.springframework.data.repository.support.RepositoryFactoryBeanSupport;
-import org.springframework.data.repository.support.RepositoryFactorySupport;
-import org.springframework.data.repository.support.RepositoryMetadata;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 

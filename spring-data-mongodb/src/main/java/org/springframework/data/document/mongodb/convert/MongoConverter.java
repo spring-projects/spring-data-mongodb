@@ -22,7 +22,7 @@ import org.springframework.data.document.mongodb.MongoReader;
 import org.springframework.data.document.mongodb.MongoWriter;
 import org.springframework.data.document.mongodb.mapping.MongoPersistentEntity;
 import org.springframework.data.document.mongodb.mapping.MongoPersistentProperty;
-import org.springframework.data.mapping.model.MappingContext;
+import org.springframework.data.mapping.context.MappingContext;
 
 public interface MongoConverter extends MongoWriter<Object>, MongoReader<Object> {
 

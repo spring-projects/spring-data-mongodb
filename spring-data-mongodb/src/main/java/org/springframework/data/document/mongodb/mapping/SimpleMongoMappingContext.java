@@ -21,11 +21,11 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.springframework.data.document.mongodb.MongoCollectionUtils;
-import org.springframework.data.mapping.AbstractMappingContext;
-import org.springframework.data.mapping.BasicPersistentEntity;
-import org.springframework.data.mapping.AbstractPersistentProperty;
-import org.springframework.data.mapping.SimpleTypeHolder;
-import org.springframework.data.mapping.model.Association;
+import org.springframework.data.mapping.Association;
+import org.springframework.data.mapping.context.AbstractMappingContext;
+import org.springframework.data.mapping.model.AbstractPersistentProperty;
+import org.springframework.data.mapping.model.BasicPersistentEntity;
+import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.util.TypeInformation;
 
 /**

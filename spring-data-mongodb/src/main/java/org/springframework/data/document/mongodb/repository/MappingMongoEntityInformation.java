@@ -19,8 +19,8 @@ import java.io.Serializable;
 import org.springframework.data.document.mongodb.mapping.BasicMongoPersistentEntity;
 import org.springframework.data.document.mongodb.mapping.MongoPersistentEntity;
 import org.springframework.data.document.mongodb.mapping.MongoPersistentProperty;
-import org.springframework.data.mapping.BeanWrapper;
-import org.springframework.data.repository.support.AbstractEntityInformation;
+import org.springframework.data.mapping.model.BeanWrapper;
+import org.springframework.data.repository.core.support.AbstractEntityInformation;
 
 /**
  * {@link MongoEntityInformation} implementation using a {@link BasicMongoPersistentEntity} instance to lookup the

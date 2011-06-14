@@ -15,10 +15,10 @@
  */
 package org.springframework.data.document.mongodb.mapping;
 
-import org.springframework.data.mapping.model.PersistentProperty;
+import org.springframework.data.mapping.PersistentProperty;
 
 /**
- * Mongo specific {@link org.springframework.data.mapping.model.PersistentProperty} implementation.
+ * Mongo specific {@link org.springframework.data.mapping.PersistentProperty} implementation.
  * 
  * @author Oliver Gierke
  */

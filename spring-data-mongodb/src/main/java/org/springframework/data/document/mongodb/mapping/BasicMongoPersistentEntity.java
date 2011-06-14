@@ -17,9 +17,9 @@
 package org.springframework.data.document.mongodb.mapping;
 
 import org.springframework.data.document.mongodb.MongoCollectionUtils;
-import org.springframework.data.mapping.BasicPersistentEntity;
+import org.springframework.data.mapping.PersistentEntity;
+import org.springframework.data.mapping.model.BasicPersistentEntity;
 import org.springframework.data.mapping.model.MappingException;
-import org.springframework.data.mapping.model.PersistentEntity;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.StringUtils;
 

@@ -23,8 +23,8 @@ import java.util.Set;
 
 import org.bson.types.CodeWScope;
 import org.bson.types.ObjectId;
-import org.springframework.data.mapping.AbstractMappingContext;
-import org.springframework.data.mapping.SimpleTypeHolder;
+import org.springframework.data.mapping.context.AbstractMappingContext;
+import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.util.TypeInformation;
 
 /**

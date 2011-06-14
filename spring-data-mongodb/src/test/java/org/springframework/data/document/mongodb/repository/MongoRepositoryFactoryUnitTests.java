@@ -30,7 +30,7 @@ import org.springframework.data.document.mongodb.convert.MongoConverter;
 import org.springframework.data.document.mongodb.mapping.MongoPersistentEntity;
 import org.springframework.data.document.mongodb.mapping.MongoPersistentProperty;
 import org.springframework.data.document.mongodb.repository.MongoRepositoryFactoryBean.MongoRepositoryFactory;
-import org.springframework.data.mapping.model.MappingContext;
+import org.springframework.data.mapping.context.MappingContext;
 
 /**
  * Unit test for {@link MongoRepositoryFactory}.

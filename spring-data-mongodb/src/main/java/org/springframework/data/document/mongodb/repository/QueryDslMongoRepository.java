@@ -30,7 +30,7 @@ import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.querydsl.EntityPathResolver;
 import org.springframework.data.querydsl.QueryDslPredicateExecutor;
 import org.springframework.data.querydsl.SimpleEntityPathResolver;
-import org.springframework.data.repository.support.EntityMetadata;
+import org.springframework.data.repository.core.EntityMetadata;
 
 import com.mongodb.DBObject;
 import com.mysema.query.mongodb.MongodbQuery;

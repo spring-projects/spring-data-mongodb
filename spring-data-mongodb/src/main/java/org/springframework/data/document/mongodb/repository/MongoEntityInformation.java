@@ -17,7 +17,7 @@ package org.springframework.data.document.mongodb.repository;
 
 import java.io.Serializable;
 
-import org.springframework.data.repository.support.EntityInformation;
+import org.springframework.data.repository.core.EntityInformation;
 
 /**
  * Mongo specific {@link EntityInformation}.

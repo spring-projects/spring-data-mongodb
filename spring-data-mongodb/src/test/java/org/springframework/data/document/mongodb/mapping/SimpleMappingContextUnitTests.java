@@ -5,22 +5,22 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 import org.springframework.data.document.mongodb.mapping.SimpleMongoMappingContext.SimpleMongoPersistentEntity;
-import org.springframework.data.mapping.model.PersistentProperty;
 
 /**
+ * Unit tests for {@link SimpleMongoMappingContext}.
  * 
  * @author Oliver Gierke
  */
 public class SimpleMappingContextUnitTests {
 
 	@Test
-	public void testname() {
+	public void returnsIdPropertyCorrectly() {
+		
 		SimpleMongoMappingContext context = new SimpleMongoMappingContext();
 		SimpleMongoPersistentEntity<?> entity = context.getPersistentEntity(Person.class);
-
-		assertThat(entity.getPersistentProperties().isEmpty(), is(false));
-
-		PersistentProperty idProperty = entity.getIdProperty();
+		
+		MongoPersistentProperty idProperty = entity.getIdProperty();
+		assertThat(idProperty, is(notNullValue()));
 		assertThat(idProperty.getName(), is("id"));
 	}
 

@@ -33,7 +33,7 @@ import org.springframework.data.document.mongodb.convert.MongoConverter;
 import org.springframework.data.document.mongodb.mapping.MongoMappingContext;
 import org.springframework.data.document.mongodb.query.BasicQuery;
 import org.springframework.data.document.mongodb.repository.MongoRepositoryFactoryBean.EntityInformationCreator;
-import org.springframework.data.repository.support.RepositoryMetadata;
+import org.springframework.data.repository.core.RepositoryMetadata;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
