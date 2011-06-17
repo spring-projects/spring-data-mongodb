@@ -585,29 +585,11 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			return;
 		}
 
-		Class<?> reference = getValueType(type).getType();
+		Class<?> reference = type.getActualType().getType();
 
 		boolean notTheSameClass = !value.getClass().equals(reference);
 		if (notTheSameClass) {
 			dbObject.put(CUSTOM_TYPE_KEY, value.getClass().getName());
-		}
-	}
-
-	/**
-	 * Returns the type type information of the actual value to be stored. That is, for maps it will return the map value
-	 * type, for collections it will return the component type as well as the given type if it is a non-collection or
-	 * non-map one.
-	 *
-	 * @param type
-	 * @return
-	 */
-	public TypeInformation<?> getValueType(TypeInformation<?> type) {
-		if (type.isMap()) {
-			return type.getMapValueType();
-		} else if (type.isCollectionLike()) {
-			return type.getComponentType();
-		} else {
-			return type;
 		}
 	}
 
