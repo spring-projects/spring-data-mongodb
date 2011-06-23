@@ -36,6 +36,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.querydsl.QueryDslPredicateExecutor;
 import org.springframework.data.repository.Repository;
+import org.springframework.data.repository.core.NamedQueries;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.core.support.QueryCreationListener;
 import org.springframework.data.repository.core.support.RepositoryFactoryBeanSupport;
@@ -193,11 +194,15 @@ public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID exten
 			 * org.springframework.data.repository.query.QueryLookupStrategy
 			 * #resolveQuery(java.lang.reflect.Method, java.lang.Class)
 			 */
-			public RepositoryQuery resolveQuery(Method method, RepositoryMetadata metadata) {
+			public RepositoryQuery resolveQuery(Method method, RepositoryMetadata metadata, NamedQueries namedQueries) {
 
 				MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, entityInformationCreator);
-
-				if (queryMethod.hasAnnotatedQuery()) {
+				String namedQueryName = queryMethod.getNamedQueryName();
+				
+				if (namedQueries.hasQuery(namedQueryName)) {
+					String namedQuery = namedQueries.getQuery(namedQueryName);
+					return new StringBasedMongoQuery(namedQuery, queryMethod, template);
+				} else if (queryMethod.hasAnnotatedQuery()) {
 					return new StringBasedMongoQuery(queryMethod, template);
 				} else {
 					return new PartTreeMongoQuery(queryMethod, template);

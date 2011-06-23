@@ -44,10 +44,14 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 	 * @param method
 	 * @param template
 	 */
-	public StringBasedMongoQuery(MongoQueryMethod method, MongoTemplate template) {
+	public StringBasedMongoQuery(String query, MongoQueryMethod method, MongoTemplate template) {
 		super(method, template);
-		this.query = method.getAnnotatedQuery();
+		this.query = query;
 		this.fieldSpec = method.getFieldSpecification();
+	}
+	
+	public StringBasedMongoQuery(MongoQueryMethod method, MongoTemplate template) {
+		this(method.getAnnotatedQuery(), method, template);
 	}
 
 	/*

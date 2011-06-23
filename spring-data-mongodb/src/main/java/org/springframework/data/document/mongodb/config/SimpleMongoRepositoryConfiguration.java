@@ -70,6 +70,14 @@ public class SimpleMongoRepositoryConfiguration
 	}
 
 	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.config.RepositoryConfig#getNamedQueriesLocation()
+	 */
+	public String getNamedQueriesLocation() {
+		return "classpath*:META-INF/mongo-named-queries.properties";
+	}
+	
+	/*
 	* (non-Javadoc)
 	*
 	* @see org.springframework.data.repository.config.RepositoryConfig#

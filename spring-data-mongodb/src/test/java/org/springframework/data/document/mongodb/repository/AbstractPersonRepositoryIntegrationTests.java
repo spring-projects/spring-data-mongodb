@@ -254,4 +254,11 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(females.size(), is(1));
 		assertThat(females.get(0), is(alicia));
 	}
+
+	@Test
+	public void findsPeopleByNamedQuery() {
+		List<Person> result = repository.findByNamedQuery("Dave");
+		assertThat(result.size(), is(1));
+		assertThat(result, hasItem(dave));
+	}
 }

@@ -122,4 +122,6 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	List<Person> findByLocationWithin(Box box);
 	
 	List<Person> findBySex(Sex sex);
+	
+	List<Person> findByNamedQuery(String firstname);
 }
