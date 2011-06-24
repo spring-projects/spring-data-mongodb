@@ -176,7 +176,6 @@ public class Criteria implements CriteriaDefinition {
 	 * @return
 	 */
 	public Criteria in(Collection<?> c) {
-		System.out.println(c.getClass());
 		criteria.put("$in", c.toArray());
 		return this;
 	}
