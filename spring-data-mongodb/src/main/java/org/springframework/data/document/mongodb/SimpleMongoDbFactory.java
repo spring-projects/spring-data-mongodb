@@ -2,6 +2,7 @@ package org.springframework.data.document.mongodb;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.authentication.UserCredentials;
 import org.springframework.util.Assert;
@@ -9,7 +10,7 @@ import org.springframework.util.Assert;
 import com.mongodb.DB;
 import com.mongodb.Mongo;
 
-public class SimpleMongoDbFactory implements MongoDbFactory {
+public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 
   /**
    * Logger, available to subclasses.
@@ -55,6 +56,13 @@ public class SimpleMongoDbFactory implements MongoDbFactory {
     Assert.notNull(mongo, "Mongo must not be null");
     Assert.hasText(dbName, "Database name must not be empty");
     return MongoDbUtils.getDB(mongo, dbName, username, password == null ? null : password.toCharArray());
+  }
+
+  /**
+   * Clean up the Mongo instance.
+   */
+  public void destroy() throws Exception {
+	mongo.close();
   }
 
 }
