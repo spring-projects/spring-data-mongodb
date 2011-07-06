@@ -15,7 +15,7 @@
  */
 package org.springframework.data.document.mongodb.query;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import com.mongodb.BasicDBObject;
@@ -23,7 +23,7 @@ import com.mongodb.DBObject;
 
 public class Sort {
 
-	private Map<String, Order> fieldSpec = new HashMap<String, Order>();
+	private Map<String, Order> fieldSpec = new LinkedHashMap<String, Order>();
 
 	public Sort() {
 	}
@@ -44,5 +44,4 @@ public class Sort {
 		}
 		return dbo;
 	}
-
 }

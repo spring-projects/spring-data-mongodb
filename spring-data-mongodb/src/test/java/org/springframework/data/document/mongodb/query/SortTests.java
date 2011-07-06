@@ -15,21 +15,32 @@
  */
 package org.springframework.data.document.mongodb.query;
 
-import org.junit.Assert;
+import static org.springframework.data.document.mongodb.query.Order.*;
+import static org.hamcrest.CoreMatchers.*;
+import static org.junit.Assert.*;
+
 import org.junit.Test;
 
 public class SortTests {
 
 	@Test
 	public void testWithSortAscending() {
-		Sort s = new Sort().on("name", Order.ASCENDING);
-		Assert.assertEquals("{ \"name\" : 1}", s.getSortObject().toString());
+		Sort s = new Sort().on("name", ASCENDING);
+		assertEquals("{ \"name\" : 1}", s.getSortObject().toString());
 	}
 
 	@Test
 	public void testWithSortDescending() {
-		Sort s = new Sort().on("name", Order.DESCENDING);
-		Assert.assertEquals("{ \"name\" : -1}", s.getSortObject().toString());
+		Sort s = new Sort().on("name", DESCENDING);
+		assertEquals("{ \"name\" : -1}", s.getSortObject().toString());
 	}
-
+	
+	/**
+	 * @see DATADOC-177
+	 */
+	@Test
+	public void preservesOrderKeysOnMultipleSorts() {
+		Sort sort = new Sort("foo", DESCENDING).on("bar", DESCENDING);
+		assertThat(sort.getSortObject().toString(), is("{ \"foo\" : -1 , \"bar\" : -1}"));
+	}
 }
