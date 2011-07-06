@@ -81,6 +81,14 @@ public class SimpleMongoMappingContext extends
 		public String getFieldName() {
 			return isIdProperty() ? "_id" : getName();
 		}
+		
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.document.mongodb.mapping.MongoPersistentProperty#getFieldOrder()
+		 */
+		public int getFieldOrder() {
+			return Integer.MAX_VALUE;
+		}
 
 		/* (non-Javadoc)
 		 * @see org.springframework.data.mapping.AbstractPersistentProperty#createAssociation()

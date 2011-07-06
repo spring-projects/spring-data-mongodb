@@ -16,6 +16,8 @@
 
 package org.springframework.data.document.mongodb.mapping;
 
+import java.util.Comparator;
+
 import org.springframework.data.document.mongodb.MongoCollectionUtils;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.model.BasicPersistentEntity;
@@ -44,7 +46,7 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 	 */
 	public BasicMongoPersistentEntity(TypeInformation<T> typeInformation) {
 
-		super(typeInformation);
+		super(typeInformation, MongoPersistentPropertyComparator.INSTANCE);
 
 		Class<?> rawType = typeInformation.getType();
 		String fallback = MongoCollectionUtils.getPreferredCollectionName(rawType);
@@ -73,8 +75,35 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 	 */
 	@Override
 	public void verify() {
-		if (isRootEntity && idProperty == null) {
+		if (isRootEntity && getIdProperty() == null) {
 			throw new MappingException(String.format("Root entity %s has to have an id property!", getType().getName()));
+		}
+	}
+	
+	/**
+	 * {@link Comparator} implementation inspecting the {@link MongoPersistentProperty}'s order.
+	 *
+	 * @author Oliver Gierke
+	 */
+	static enum MongoPersistentPropertyComparator implements Comparator<MongoPersistentProperty> {
+		
+		INSTANCE;
+
+		/*
+		 * (non-Javadoc)
+		 * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
+		 */
+		public int compare(MongoPersistentProperty o1, MongoPersistentProperty o2) {
+			
+			if (o1.getFieldOrder() == Integer.MAX_VALUE) {
+				return 1;
+			}
+			
+			if (o2.getFieldOrder() == Integer.MAX_VALUE) {
+				return -1;
+			}
+			
+			return o1.getFieldOrder() - o2.getFieldOrder();
 		}
 	}
 }

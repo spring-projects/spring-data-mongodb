@@ -21,17 +21,19 @@ import java.math.BigInteger;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.mongodb.DBObject;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bson.types.ObjectId;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.model.AnnotationBasedPersistentProperty;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
+import org.springframework.util.StringUtils;
+
+import com.mongodb.DBObject;
 
 /**
  * Mongo specific {@link org.springframework.data.mapping.PersistentProperty} implementation.
- *
+ * 
  * @author Oliver Gierke
  */
 public class BasicMongoPersistentProperty extends AnnotationBasedPersistentProperty<MongoPersistentProperty> implements
@@ -39,6 +41,7 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 
 	private static final Log LOG = LogFactory.getLog(BasicMongoPersistentProperty.class);
 
+	private static final String ID_FIELD_NAME = "_id";
 	private static final Set<Class<?>> SUPPORTED_ID_TYPES = new HashSet<Class<?>>();
 	private static final Set<String> SUPPORTED_ID_PROPERTY_NAMES = new HashSet<String>();
 
@@ -53,7 +56,7 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 
 	/**
 	 * Creates a new {@link BasicMongoPersistentProperty}.
-	 *
+	 * 
 	 * @param field
 	 * @param propertyDescriptor
 	 * @param owner
@@ -63,8 +66,8 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 			MongoPersistentEntity<?> owner, SimpleTypeHolder simpleTypeHolder) {
 		super(field, propertyDescriptor, owner, simpleTypeHolder);
 
-		if (isIdProperty() && field.isAnnotationPresent(FieldName.class)) {
-			LOG.warn(String.format("Invalid usage of %s on id property. Field name will not be considered!", FieldName.class));
+		if (isIdProperty() && getFieldName() != ID_FIELD_NAME) {
+			LOG.warn("Customizing field name for id property not allowed! Custom name will not be considered!");
 		}
 	}
 
@@ -78,7 +81,7 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 
 	/**
 	 * Also considers fields as id that are of supported id type and name.
-	 *
+	 * 
 	 * @see #SUPPORTED_ID_PROPERTY_NAMES
 	 * @see #SUPPORTED_ID_TYPES
 	 */
@@ -90,22 +93,31 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 
 		// We need to support a wider range of ID types than just the ones that can be converted to an ObjectId
 		return SUPPORTED_ID_PROPERTY_NAMES.contains(field.getName());
-		//return SUPPORTED_ID_TYPES.contains(field.getType()) && SUPPORTED_ID_PROPERTY_NAMES.contains(field.getName());
 	}
 
 	/**
 	 * Returns the key to be used to store the value of the property inside a Mongo {@link DBObject}.
-	 *
+	 * 
 	 * @return
 	 */
 	public String getFieldName() {
 
 		if (isIdProperty()) {
-			return "_id";
+			return ID_FIELD_NAME;
 		}
 
-		FieldName annotation = getField().getAnnotation(FieldName.class);
-		return annotation != null ? annotation.value() : getName();
+		org.springframework.data.document.mongodb.mapping.Field annotation = getField().getAnnotation(
+				org.springframework.data.document.mongodb.mapping.Field.class);
+		return annotation != null && StringUtils.hasText(annotation.value()) ? annotation.value() : field.getName();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.springframework.data.document.mongodb.mapping.MongoPersistentProperty#getFieldOrder()
+	 */
+	public int getFieldOrder() {
+		org.springframework.data.document.mongodb.mapping.Field annotation = getField().getAnnotation(
+				org.springframework.data.document.mongodb.mapping.Field.class);
+		return annotation != null ? annotation.order() : Integer.MAX_VALUE;
 	}
 
 	/* (non-Javadoc)

@@ -15,6 +15,7 @@
  */
 package org.springframework.data.document.mongodb.geo;
 
+import org.springframework.data.document.mongodb.mapping.Field;
 import org.springframework.util.Assert;
 
 /**
@@ -25,7 +26,9 @@ import org.springframework.util.Assert;
  */
 public class Box {
 
+	@Field(order = 10)
 	private final Point first;
+	@Field(order = 20)
 	private final Point second;
 
 	public Box(Point lowerLeft, Point upperRight) {

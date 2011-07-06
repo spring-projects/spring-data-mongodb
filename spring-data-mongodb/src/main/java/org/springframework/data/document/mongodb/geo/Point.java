@@ -16,6 +16,7 @@
 package org.springframework.data.document.mongodb.geo;
 
 import org.springframework.data.annotation.PersistenceConstructor;
+import org.springframework.data.document.mongodb.mapping.Field;
 import org.springframework.util.Assert;
 
 /**
@@ -26,7 +27,9 @@ import org.springframework.util.Assert;
  */
 public class Point {
 
+	@Field(order = 10)
 	private final double x;
+	@Field(order = 20)
 	private final double y;
 
 	@PersistenceConstructor

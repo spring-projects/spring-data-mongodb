@@ -382,7 +382,7 @@ public class MappingMongoConverterUnitTests {
 	class Person implements Contact {
 		LocalDate birthDate;
 		
-		@FieldName("foo")
+		@Field("foo")
 		String firstname;
 	}
 

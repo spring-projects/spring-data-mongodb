@@ -30,6 +30,13 @@ public interface MongoPersistentProperty extends PersistentProperty<MongoPersist
 	 * @return
 	 */
 	String getFieldName();
+	
+	/**
+	 * Returns the order of the field if defined. Will return -1 if undefined.
+	 * 
+	 * @return
+	 */
+	int getFieldOrder();
 
 	/**
 	 * Returns whether the propert is a {@link com.mongodb.DBRef}. If this returns {@literal true} you can expect

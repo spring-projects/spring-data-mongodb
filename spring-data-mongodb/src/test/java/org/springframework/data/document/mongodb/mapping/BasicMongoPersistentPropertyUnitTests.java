@@ -62,6 +62,11 @@ public class BasicMongoPersistentPropertyUnitTests {
 		assertThat(getPropertyFor(field).getFieldName(), is("lastname"));
 	}
 	
+	@Test
+	public void preventsNegativeOrder() {
+		getPropertyFor(ReflectionUtils.findField(Person.class, "ssn"));
+	}
+	
 	private MongoPersistentProperty getPropertyFor(Field field) {
 		return new BasicMongoPersistentProperty(field, null, entity, new SimpleTypeHolder());
 	}
@@ -71,8 +76,11 @@ public class BasicMongoPersistentPropertyUnitTests {
 		@Id
 		String id;
 		
-		@FieldName("foo")
+		@org.springframework.data.document.mongodb.mapping.Field("foo")
 		String firstname;
 		String lastname;
+		
+		@org.springframework.data.document.mongodb.mapping.Field(order = -20)
+		String ssn;
 	}
 }
