@@ -22,8 +22,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.springframework.dao.DataAccessException;
-import org.springframework.data.document.mongodb.CollectionCallback;
 import org.springframework.data.document.mongodb.MongoOperations;
 import org.springframework.data.document.mongodb.MongoTemplate;
 import org.springframework.data.document.mongodb.query.Criteria;
@@ -34,10 +32,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.util.Assert;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBCollection;
-import com.mongodb.MongoException;
 
 /**
  * Repository base implementation for Mongo.
@@ -121,12 +115,8 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements Paging
 	 */
 	public boolean exists(final ID id) {
 		
-		return template.execute(entityInformation.getCollectionName(), new CollectionCallback<Boolean>() {
-
-			public Boolean doInCollection(DBCollection collection) throws MongoException, DataAccessException {
-				return collection.count(new BasicDBObject("_id", id)) > 0;
-			}
-		});
+		return template.findOne(new Query(Criteria.where("_id").is(id)), Object.class,
+				entityInformation.getCollectionName()) != null;
 	}
 
 	/*

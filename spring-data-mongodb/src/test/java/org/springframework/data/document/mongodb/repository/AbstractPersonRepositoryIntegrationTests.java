@@ -259,4 +259,12 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result.size(), is(1));
 		assertThat(result, hasItem(dave));
 	}
+
+	/**
+	 * @see DATADOC-190
+	 */
+	@Test
+	public void existsWorksCorrectly() {
+		assertThat(repository.exists(dave.getId()), is(true));
+	}
 }
