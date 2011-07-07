@@ -15,7 +15,7 @@
  */
 package org.springframework.data.document.mongodb.query;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.springframework.data.document.mongodb.index.IndexDefinition;
@@ -29,7 +29,7 @@ public class Index implements IndexDefinition {
 		RETAIN, DROP
 	}
 
-	private Map<String, Order> fieldSpec = new HashMap<String, Order>();
+	private final Map<String, Order> fieldSpec = new LinkedHashMap<String, Order>();
 
 	private String name;
 
