@@ -49,7 +49,20 @@ public class RepositoryIndexCreationIntegrationTests {
 	
 	@After
 	public void tearDown() {
-		operations.dropCollection(Person.class);
+		operations.execute(Person.class, new CollectionCallback<Void>() {
+
+			public Void doInCollection(DBCollection collection) throws MongoException, DataAccessException {
+				
+				for (DBObject index : collection.getIndexInfo()) {
+					String indexName = index.get("name").toString();
+					if (indexName.startsWith("find")) {
+						collection.dropIndex(indexName);
+					}
+				}
+				
+				return null;
+			}
+		});
 	}
 	
 	@Test
