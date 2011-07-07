@@ -15,22 +15,23 @@
  */
 package org.springframework.data.document.mongodb.convert;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 
 import org.bson.types.ObjectId;
 import org.springframework.core.convert.converter.Converter;
 
 /**
- * Wrapper class to contain useful {@link ObjectId}-to-something-and-back converters.
+ * Wrapper class to contain useful converters for the usage with Mongo.
  * 
  * @author Oliver Gierke
  */
-abstract class ObjectIdConverters {
+abstract class MongoConverters {
 
 	/**
 	 * Private constructor to prevent instantiation.
 	 */
-	private ObjectIdConverters() {
+	private MongoConverters() {
 
 	}
 
@@ -83,6 +84,23 @@ abstract class ObjectIdConverters {
 
 		public ObjectId convert(BigInteger source) {
 			return new ObjectId(source.toString(16));
+		}
+	}
+
+
+	public static enum BigDecimalToStringConverter implements Converter<BigDecimal, String> {
+		INSTANCE;
+
+		public String convert(BigDecimal source) {
+			return source.toString();
+		}
+	}
+	
+	public static enum StringToBigDecimalConverter implements Converter<String, BigDecimal> {
+		INSTANCE;
+		
+		public BigDecimal convert(String source) {
+			return new BigDecimal(source);
 		}
 	}
 }

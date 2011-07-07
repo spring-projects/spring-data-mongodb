@@ -16,6 +16,7 @@
 
 package org.springframework.data.document.mongodb.convert;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,10 +28,12 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.support.ConversionServiceFactory;
 import org.springframework.core.convert.support.GenericConversionService;
-import org.springframework.data.document.mongodb.convert.ObjectIdConverters.BigIntegerToObjectIdConverter;
-import org.springframework.data.document.mongodb.convert.ObjectIdConverters.ObjectIdToBigIntegerConverter;
-import org.springframework.data.document.mongodb.convert.ObjectIdConverters.ObjectIdToStringConverter;
-import org.springframework.data.document.mongodb.convert.ObjectIdConverters.StringToObjectIdConverter;
+import org.springframework.data.document.mongodb.convert.MongoConverters.BigDecimalToStringConverter;
+import org.springframework.data.document.mongodb.convert.MongoConverters.BigIntegerToObjectIdConverter;
+import org.springframework.data.document.mongodb.convert.MongoConverters.ObjectIdToBigIntegerConverter;
+import org.springframework.data.document.mongodb.convert.MongoConverters.ObjectIdToStringConverter;
+import org.springframework.data.document.mongodb.convert.MongoConverters.StringToBigDecimalConverter;
+import org.springframework.data.document.mongodb.convert.MongoConverters.StringToObjectIdConverter;
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;

@@ -30,6 +30,8 @@ import org.springframework.core.convert.converter.ConverterFactory;
 import org.springframework.core.convert.converter.GenericConverter;
 import org.springframework.core.convert.converter.GenericConverter.ConvertiblePair;
 import org.springframework.core.convert.support.GenericConversionService;
+import org.springframework.data.document.mongodb.convert.MongoConverters.BigDecimalToStringConverter;
+import org.springframework.data.document.mongodb.convert.MongoConverters.StringToBigDecimalConverter;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.util.Assert;
 
@@ -76,15 +78,15 @@ public class CustomConversions {
 		this.writingPairs = new HashSet<ConvertiblePair>();
 		this.customSimpleTypes = new HashSet<Class<?>>();
 		
-		registerConversion(CustomToStringConverter.INSTANCE);
-		
-		for (Object c : converters) {
-			registerConversion(c);
-		}
-		
 		this.converters = new ArrayList<Object>();
 		this.converters.add(CustomToStringConverter.INSTANCE);
+		this.converters.add(BigDecimalToStringConverter.INSTANCE);
+		this.converters.add(StringToBigDecimalConverter.INSTANCE);
 		this.converters.addAll(converters);
+		
+		for (Object c : this.converters) {
+			registerConversion(c);
+		}
 		
 		this.simpleTypeHolder = new SimpleTypeHolder(customSimpleTypes, true);
 	}

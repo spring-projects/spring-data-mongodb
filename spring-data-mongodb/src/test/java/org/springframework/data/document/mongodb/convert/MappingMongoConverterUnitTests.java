@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.data.document.mongodb.mapping;
+package org.springframework.data.document.mongodb.convert;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
@@ -39,6 +39,8 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.document.mongodb.MongoDbFactory;
 import org.springframework.data.document.mongodb.convert.CustomConversions;
 import org.springframework.data.document.mongodb.convert.MappingMongoConverter;
+import org.springframework.data.document.mongodb.mapping.Field;
+import org.springframework.data.document.mongodb.mapping.MongoMappingContext;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
@@ -317,7 +319,7 @@ public class MappingMongoConverterUnitTests {
 	}
 	
 	/**
-	 * @see DATACMNS-42
+	 * @see DATACMNS-42, DATADOC-171
 	 */
 	@Test
 	public void writesClassWithBigDecimal() {
@@ -328,16 +330,17 @@ public class MappingMongoConverterUnitTests {
 		DBObject dbObject = new BasicDBObject();
 		converter.write(container, dbObject);
 		
-		assertThat(dbObject.get("value"), is((Object) container.value));
+		assertThat(dbObject.get("value"), is(instanceOf(String.class)));
+		assertThat((String) dbObject.get("value"), is("2.5"));
 	}
 	
 	/**
-	 * @see DATACMNS-42
+	 * @see DATACMNS-42, DATADOC-171
 	 */
 	@Test
 	public void readsClassWithBigDecimal() {
 		
-		DBObject dbObject = new BasicDBObject("value", 2.5d);
+		DBObject dbObject = new BasicDBObject("value", "2.5");
 		BigDecimalContainer result = converter.read(BigDecimalContainer.class, dbObject);
 		
 		assertThat(result.value, is(BigDecimal.valueOf(2.5d)));
@@ -358,7 +361,6 @@ public class MappingMongoConverterUnitTests {
 		
 		BasicDBList typedOuterString = (BasicDBList) outerStrings;
 		assertThat(typedOuterString.size(), is(1));
-		
 	}
 	
 	class ClassWithEnumProperty {
