@@ -118,6 +118,14 @@ The password to use when connecting to a MongoDB server.
 				</xsd:documentation>
 			</xsd:annotation>
 		</xsd:attribute>
+		<xsd:attribute name="create-query-indexes" type="xsd:boolean" default="false">
+			<xsd:annotation>
+				<xsd:documentation>
+					Enables creation of indexes for queries that get derived from the method name
+					and thus reference domain class properties. Defaults to false.
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
 	</xsd:attributeGroup>
 
 	<xsd:element name="repositories">

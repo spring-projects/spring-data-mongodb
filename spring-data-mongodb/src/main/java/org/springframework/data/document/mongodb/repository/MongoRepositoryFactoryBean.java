@@ -59,6 +59,7 @@ public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID exten
 		RepositoryFactoryBeanSupport<T, S, ID> {
 
 	private MongoTemplate template;
+	private boolean createIndexesForQueryMethods = false;
 
 	/**
 	 * Configures the {@link MongoTemplate} to be used.
@@ -69,6 +70,15 @@ public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID exten
 	public void setTemplate(MongoTemplate template) {
 
 		this.template = template;
+	}
+	
+	/**
+	 * Configures whether to automatically create indexes for the properties referenced in a query method.
+	 * 
+	 * @param createIndexesForQueryMethods the createIndexesForQueryMethods to set
+	 */
+	public void setCreateIndexesForQueryMethods(boolean createIndexesForQueryMethods) {
+		this.createIndexesForQueryMethods = createIndexesForQueryMethods;
 	}
 
 	/*
@@ -82,7 +92,11 @@ public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID exten
 	protected final RepositoryFactorySupport createRepositoryFactory() {
 
 		RepositoryFactorySupport factory = getFactoryInstance(template);
-		factory.addQueryCreationListener(new IndexEnsuringQueryCreationListener(template));
+		
+		if (createIndexesForQueryMethods) {
+			factory.addQueryCreationListener(new IndexEnsuringQueryCreationListener(template));
+		}
+
 		return factory;
 	}
 	
@@ -276,7 +290,7 @@ public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID exten
 	 * 
 	 * @author Oliver Gierke
 	 */
-	private static class IndexEnsuringQueryCreationListener implements QueryCreationListener<PartTreeMongoQuery> {
+	static class IndexEnsuringQueryCreationListener implements QueryCreationListener<PartTreeMongoQuery> {
 
 		private static final Set<Type> GEOSPATIAL_TYPES = new HashSet<Part.Type>(Arrays.asList(Type.NEAR, Type.WITHIN));
 		private static final Log LOG = LogFactory.getLog(IndexEnsuringQueryCreationListener.class);

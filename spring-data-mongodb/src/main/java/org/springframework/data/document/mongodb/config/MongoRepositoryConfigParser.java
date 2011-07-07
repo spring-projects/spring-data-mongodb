@@ -49,5 +49,6 @@ public class MongoRepositoryConfigParser extends
 			BeanDefinitionRegistry registry, Object beanSource) {
 
 		builder.addPropertyReference("template", context.getMongoTemplateRef());
+		builder.addPropertyValue("createIndexesForQueryMethods", context.getCreateQueryIndexes());
 	}
 }

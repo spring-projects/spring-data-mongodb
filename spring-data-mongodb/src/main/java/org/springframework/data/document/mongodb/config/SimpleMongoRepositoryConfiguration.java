@@ -34,6 +34,7 @@ public class SimpleMongoRepositoryConfiguration
 		RepositoryConfig<SimpleMongoRepositoryConfiguration.MongoRepositoryConfiguration, SimpleMongoRepositoryConfiguration> {
 
 	private static final String MONGO_TEMPLATE_REF = "mongo-template-ref";
+	private static final String CREATE_QUERY_INDEXES = "create-query-indexes";
 	private static final String DEFAULT_MONGO_TEMPLATE_REF = "mongoTemplate";
 
 	/**
@@ -55,6 +56,17 @@ public class SimpleMongoRepositoryConfiguration
 
 		String templateRef = getSource().getAttribute(MONGO_TEMPLATE_REF);
 		return StringUtils.hasText(templateRef) ? templateRef : DEFAULT_MONGO_TEMPLATE_REF;
+	}
+
+	/**
+	 * Returns whether to create indexes for query methods.
+	 * 
+	 * @return
+	 */
+	public boolean getCreateQueryIndexes() {
+
+		String createQueryIndexes = getSource().getAttribute(CREATE_QUERY_INDEXES);
+		return StringUtils.hasText(createQueryIndexes) ? Boolean.parseBoolean(createQueryIndexes) : false;
 	}
 
 	/*
@@ -98,6 +110,8 @@ public class SimpleMongoRepositoryConfiguration
 			SingleRepositoryConfigInformation<SimpleMongoRepositoryConfiguration> {
 
 		String getMongoTemplateRef();
+		
+		boolean getCreateQueryIndexes();
 	}
 
 	/**
@@ -130,6 +144,15 @@ public class SimpleMongoRepositoryConfiguration
 
 			return getAttribute(MONGO_TEMPLATE_REF);
 		}
+		
+		/* (non-Javadoc)
+		 * @see org.springframework.data.document.mongodb.config.SimpleMongoRepositoryConfiguration.MongoRepositoryConfiguration#getCreateQueryIndexes()
+		 */
+		public boolean getCreateQueryIndexes() {
+			
+			String attribute = getAttribute(CREATE_QUERY_INDEXES);
+			return attribute == null ? false : Boolean.parseBoolean(attribute);
+		}
 	}
 
 	/**
@@ -161,6 +184,13 @@ public class SimpleMongoRepositoryConfiguration
 		public String getMongoTemplateRef() {
 
 			return getParent().getMongoTemplateRef();
+		}
+		
+		/* (non-Javadoc)
+		 * @see org.springframework.data.document.mongodb.config.SimpleMongoRepositoryConfiguration.MongoRepositoryConfiguration#getCreateQueryIndexes()
+		 */
+		public boolean getCreateQueryIndexes() {
+			return getParent().getCreateQueryIndexes();
 		}
 	}
 }
