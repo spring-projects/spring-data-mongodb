@@ -19,6 +19,7 @@ import java.io.Serializable;
 import java.util.List;
 
 import org.springframework.data.domain.Sort;
+import org.springframework.data.repository.NoRepositoryBean;
 import org.springframework.data.repository.PagingAndSortingRepository;
 
 /**
@@ -26,6 +27,7 @@ import org.springframework.data.repository.PagingAndSortingRepository;
  * 
  * @author Oliver Gierke
  */
+@NoRepositoryBean
 public interface MongoRepository<T, ID extends Serializable> extends PagingAndSortingRepository<T, ID> {
 
 	/*
