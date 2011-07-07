@@ -79,11 +79,21 @@ public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID exten
 	 * #createRepositoryFactory()
 	 */
 	@Override
-	protected RepositoryFactorySupport createRepositoryFactory() {
+	protected final RepositoryFactorySupport createRepositoryFactory() {
 
-		MongoRepositoryFactory factory = new MongoRepositoryFactory(template);
+		RepositoryFactorySupport factory = getFactoryInstance(template);
 		factory.addQueryCreationListener(new IndexEnsuringQueryCreationListener(template));
 		return factory;
+	}
+	
+	/**
+	 * Creates and initializes a {@link RepositoryFactorySupport} instance.
+	 * 
+	 * @param template
+	 * @return
+	 */
+	protected RepositoryFactorySupport getFactoryInstance(MongoTemplate template) {
+		return new MongoRepositoryFactory(template);
 	}
 
 	/*
