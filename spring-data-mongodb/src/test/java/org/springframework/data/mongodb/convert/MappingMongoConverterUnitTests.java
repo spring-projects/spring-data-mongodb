@@ -29,6 +29,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
+
 import org.joda.time.LocalDate;
 import org.junit.Before;
 import org.junit.Test;
@@ -363,6 +365,20 @@ public class MappingMongoConverterUnitTests {
 		assertThat(typedOuterString.size(), is(1));
 	}
 	
+	/**
+	 * @see DATADOC-192
+	 */
+	@Test
+	public void readsEmptySetsCorrectly() {
+		
+		Person person = new Person();
+		person.addresses = Collections.emptySet();
+		
+		DBObject dbObject = new BasicDBObject();
+		converter.write(person, dbObject);
+		converter.read(Person.class, dbObject);
+	}
+	
 	class ClassWithEnumProperty {
 		
 		SampleEnum sampleEnum;
@@ -386,6 +402,8 @@ public class MappingMongoConverterUnitTests {
 		
 		@Field("foo")
 		String firstname;
+		
+		Set<Address> addresses;
 	}
 
 	class ClassWithMapProperty {

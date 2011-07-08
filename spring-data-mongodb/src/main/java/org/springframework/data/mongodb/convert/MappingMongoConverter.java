@@ -644,6 +644,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	}
 
 
+	@SuppressWarnings("unchecked")
 	protected Object getValueInternal(MongoPersistentProperty prop, DBObject dbo, StandardEvaluationContext ctx, String spelExpr) {
 
 		Object o;
@@ -674,8 +675,10 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 					// It's empty
 					return Array.newInstance(prop.getComponentType(), 0);
 				} else if (prop.isCollection() && sourceValue instanceof BasicDBList) {
+					
 					BasicDBList dbObjList = (BasicDBList) sourceValue;
-					List<Object> items = new ArrayList<Object>();
+					Collection<Object> items = CollectionFactory.createCollection(propertyType, dbObjList.size());
+					
 					for (int i = 0; i < dbObjList.size(); i++) {
 						Object dbObjItem = dbObjList.get(i);
 						if (dbObjItem instanceof DBRef) {
@@ -686,11 +689,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 							items.add(dbObjItem);
 						}
 					}
-					List<Object> itemsToReturn = new ArrayList<Object>();
-					for (Object obj : items) {
-						itemsToReturn.add(obj);
-					}
-					return itemsToReturn;
+					
+					return items;
 				}
 
 				Class<?> toType = findTypeToBeUsed((DBObject) sourceValue);
