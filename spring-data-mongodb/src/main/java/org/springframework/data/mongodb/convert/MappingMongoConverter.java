@@ -677,7 +677,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				} else if (prop.isCollection() && sourceValue instanceof BasicDBList) {
 					
 					BasicDBList dbObjList = (BasicDBList) sourceValue;
-					Collection<Object> items = CollectionFactory.createCollection(propertyType, dbObjList.size());
+					Collection<Object> items = prop.isArray() ? new ArrayList<Object>() : CollectionFactory.createCollection(propertyType, dbObjList.size());
 					
 					for (int i = 0; i < dbObjList.size(); i++) {
 						Object dbObjItem = dbObjList.get(i);
