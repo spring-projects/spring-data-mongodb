@@ -19,6 +19,7 @@ import java.util.Set;
 
 import org.springframework.data.document.mongodb.geo.Point;
 import org.springframework.data.document.mongodb.index.GeoSpatialIndexed;
+import org.springframework.data.document.mongodb.index.Indexed;
 import org.springframework.data.document.mongodb.mapping.Document;
 
 /**
@@ -35,6 +36,8 @@ public class Person extends Contact {
 	
 	private String firstname;
 	private String lastname;
+	@Indexed(unique = true, dropDups = true)
+	private String email;
 	private Integer age;
 	private Sex sex;
 
@@ -66,6 +69,7 @@ public class Person extends Contact {
 		this.lastname = lastname;
 		this.age = age;
 		this.sex = sex;
+		this.email = (firstname == null ? "noone" : firstname.toLowerCase()) + "@dmband.com";
 	}
 
 	/**
@@ -102,6 +106,20 @@ public class Person extends Contact {
 		this.lastname = lastname;
 	}
 
+	/**
+	 * @return the email
+	 */
+	public String getEmail() {
+		return email;
+	}
+	
+	/**
+	 * @param email the email to set
+	 */
+	public void setEmail(String email) {
+		this.email = email;
+	}
+	
 	/**
 	 * @return the age
 	 */

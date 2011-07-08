@@ -12,6 +12,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.document.mongodb.geo.Box;
 import org.springframework.data.document.mongodb.geo.Circle;
 import org.springframework.data.document.mongodb.geo.Point;
@@ -266,5 +267,16 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	@Test
 	public void existsWorksCorrectly() {
 		assertThat(repository.exists(dave.getId()), is(true));
+	}
+
+	@Test(expected = DuplicateKeyException.class)
+	public void rejectsDuplicateEmailAddressOnSave() {
+		
+		assertThat(dave.getEmail(), is("dave@dmband.com"));
+		
+		Person daveSyer = new Person("Dave", "Syer");
+		assertThat(daveSyer.getEmail(), is("dave@dmband.com"));
+		
+		repository.save(daveSyer);
 	}
 }
