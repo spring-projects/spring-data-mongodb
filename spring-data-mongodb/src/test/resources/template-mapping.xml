@@ -5,49 +5,49 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
        http://www.springframework.org/schema/data/mongo http://www.springframework.org/schema/data/mongo/spring-mongo-1.0.xsd">
 
-  <bean class="org.springframework.data.document.mongodb.TestMongoConfiguration"/>
+  <bean class="org.springframework.data.mongodb.TestMongoConfiguration"/>
   
   <mongo:db-factory dbname="database"/>
 
-  <bean id="mappingConverter1" class="org.springframework.data.document.mongodb.convert.MappingMongoConverter">
+  <bean id="mappingConverter1" class="org.springframework.data.mongodb.convert.MappingMongoConverter">
   	<constructor-arg ref="mongoDbFactory" />
     <constructor-arg ref="mappingContext" />
     <property name="customConversions" ref="conversions" />
   </bean>
 
-  <bean id="mappingContext" class="org.springframework.data.document.mongodb.mapping.MongoMappingContext">
+  <bean id="mappingContext" class="org.springframework.data.mongodb.mapping.MongoMappingContext">
   	<property name="simpleTypeHolder">
   		<bean factory-bean="conversions" factory-method="getSimpleTypeHolder" />
   	</property>
   </bean>
   
-	<bean id="conversions" class="org.springframework.data.document.mongodb.convert.CustomConversions">
+	<bean id="conversions" class="org.springframework.data.mongodb.convert.CustomConversions">
 		<constructor-arg>
 			<list>
-				<bean class="org.springframework.data.document.mongodb.PersonReadConverter" />
-				<bean class="org.springframework.data.document.mongodb.PersonWriteConverter" />
+				<bean class="org.springframework.data.mongodb.PersonReadConverter" />
+				<bean class="org.springframework.data.mongodb.PersonWriteConverter" />
 			</list>
 		</constructor-arg>
 	</bean>
 
-  <bean id="mongoTemplate1" class="org.springframework.data.document.mongodb.MongoTemplate">
+  <bean id="mongoTemplate1" class="org.springframework.data.mongodb.MongoTemplate">
     <constructor-arg name="mongoDbFactory" ref="mongoDbFactory"/>
     <constructor-arg name="mongoConverter" ref="mappingConverter1"/>
   </bean>
 
-  <mongo:mapping-converter id="mappingConverter2" base-package="org.springframework.data.document.mongodb.mapping"
+  <mongo:mapping-converter id="mappingConverter2" base-package="org.springframework.data.mongodb.mapping"
       mongo-template-ref="mongoTemplate2">
       <mongo:custom-converters>
         <mongo:converter>
-          <bean class="org.springframework.data.document.mongodb.PersonReadConverter"/>
+          <bean class="org.springframework.data.mongodb.PersonReadConverter"/>
         </mongo:converter>
         <mongo:converter>
-          <bean class="org.springframework.data.document.mongodb.PersonWriteConverter"/>
+          <bean class="org.springframework.data.mongodb.PersonWriteConverter"/>
         </mongo:converter>
       </mongo:custom-converters>
   </mongo:mapping-converter>      
 
-  <bean id="mongoTemplate2" class="org.springframework.data.document.mongodb.MongoTemplate">
+  <bean id="mongoTemplate2" class="org.springframework.data.mongodb.MongoTemplate">
     <constructor-arg name="mongoDbFactory" ref="mongoDbFactory"/>
     <constructor-arg name="mongoConverter" ref="mappingConverter2"/>
   </bean>

@@ -21,7 +21,7 @@
 
 	<xsd:element name="mongo" type="mongoType">
 		<xsd:annotation>
-			<xsd:documentation source="org.springframework.data.document.mongodb.MongoFactoryBean"><![CDATA[
+			<xsd:documentation source="org.springframework.data.mongodb.MongoFactoryBean"><![CDATA[
 Defines a Mongo instance used for accessing MongoDB'.
 			]]></xsd:documentation>
 			<xsd:appinfo>
@@ -194,7 +194,7 @@ The base package in which to scan for entities annotated with @Document
 			</xsd:attribute>
 			<xsd:attribute name="mongo-template-ref" type="mongoTemplateRef" use="optional">
 				<xsd:annotation>
-					<xsd:documentation source="org.springframework.data.document.mongodb.MongoTemplate">
+					<xsd:documentation source="org.springframework.data.mongodb.MongoTemplate">
 						The reference to a MongoTemplate. Will default to 'mongoTemplate'.
 					</xsd:documentation>
 				</xsd:annotation>
@@ -233,7 +233,7 @@ The name of the Mongo object that determines what server to monitor. (by default
 		<xsd:annotation>
 			<xsd:appinfo>
 				<tool:annotation kind="ref">
-					<tool:assignable-to type="org.springframework.data.document.mongodb.MongoTemplate"/>
+					<tool:assignable-to type="org.springframework.data.mongodb.MongoTemplate"/>
 				</tool:annotation>
 			</xsd:appinfo>
 		</xsd:annotation>
@@ -244,7 +244,7 @@ The name of the Mongo object that determines what server to monitor. (by default
 		<xsd:annotation>
 			<xsd:appinfo>
 				<tool:annotation kind="ref">
-					<tool:assignable-to type="org.springframework.data.document.mongodb.MongoFactoryBean"/>
+					<tool:assignable-to type="org.springframework.data.mongodb.MongoFactoryBean"/>
 				</tool:annotation>
 			</xsd:appinfo>
 		</xsd:annotation>

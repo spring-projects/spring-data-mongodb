@@ -7,18 +7,18 @@
 
   <mongo:mongo host="localhost" port="27017"/>
   
-  <bean id="mongoDbFactory" class="org.springframework.data.document.mongodb.SimpleMongoDbFactory">
+  <bean id="mongoDbFactory" class="org.springframework.data.mongodb.SimpleMongoDbFactory">
   	<constructor-arg name="mongo" ref="mongo"/>
   	<constructor-arg name="databaseName" value="database"/>
   </bean>
   
-  <mongo:mapping-converter base-package="org.springframework.data.document.mongodb"/>
+  <mongo:mapping-converter base-package="org.springframework.data.mongodb"/>
   
-  <bean id="mongoTemplate" class="org.springframework.data.document.mongodb.MongoTemplate">
+  <bean id="mongoTemplate" class="org.springframework.data.mongodb.MongoTemplate">
     <constructor-arg name="mongoDbFactory" ref="mongoDbFactory"/>
     <constructor-arg name="mongoConverter" ref="mappingConverter"/>
   </bean>
 
-  <bean class="org.springframework.data.document.mongodb.mapping.event.MappingEventListener"/>
+  <bean class="org.springframework.data.mongodb.mapping.event.MappingEventListener"/>
 
 </beans>

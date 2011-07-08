@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:mongo="http://www.springframework.org/schema/data/mongo"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xsi:schemaLocation="http://www.springframework.org/schema/data/mongo http://www.springframework.org/schema/data/mongo/spring-mongo-1.0.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.0.xsd">
+
+	<mongo:db-factory dbname="repositories" />
+	
+	<bean id="mongoTemplate" class="org.springframework.data.mongodb.MongoTemplate">
+		<constructor-arg ref="mongoDbFactory" />
+		<property name="writeConcern">
+			<util:constant static-field="com.mongodb.WriteConcern.SAFE" />
+		</property>
+	</bean>
+
+	<bean class="org.springframework.data.mongodb.repository.MongoRepositoryFactoryBean">
+		<property name="template" ref="mongoTemplate"/>
+		<property name="repositoryInterface" value="org.springframework.data.mongodb.repository.PersonRepository"/>
+		<property name="namedQueries">
+			<bean class="org.springframework.data.repository.core.support.PropertiesBasedNamedQueries">
+				<constructor-arg>
+					<util:properties location="META-INF/mongo-named-queries.properties" />
+				</constructor-arg>
+			</bean>
+		</property>
+	</bean>
+
+</beans>

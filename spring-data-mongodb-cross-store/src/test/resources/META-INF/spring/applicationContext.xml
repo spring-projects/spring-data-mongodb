@@ -20,22 +20,22 @@
   <mongo:mapping-converter/>
   
   <!--  Mongo config -->
-  <bean id="mongo" class="org.springframework.data.document.mongodb.MongoFactoryBean">
+  <bean id="mongo" class="org.springframework.data.mongodb.MongoFactoryBean">
     <property name="host" value="localhost"/>
     <property name="port" value="27017"/>
   </bean>
 
-  <bean id="mongoDbFactory" class="org.springframework.data.document.mongodb.SimpleMongoDbFactory">
+  <bean id="mongoDbFactory" class="org.springframework.data.mongodb.SimpleMongoDbFactory">
   	<constructor-arg name="mongo" ref="mongo"/>
   	<constructor-arg name="databaseName" value="database"/>
   </bean>
 
-  <bean id="mongoTemplate" class="org.springframework.data.document.mongodb.MongoTemplate">
+  <bean id="mongoTemplate" class="org.springframework.data.mongodb.MongoTemplate">
     <constructor-arg name="mongoDbFactory" ref="mongoDbFactory"/>
     <constructor-arg name="mongoConverter" ref="mappingConverter"/>
   </bean>
 
-  <bean class="org.springframework.data.document.mongodb.MongoExceptionTranslator"/>
+  <bean class="org.springframework.data.mongodb.MongoExceptionTranslator"/>
 
   <!--  Mongo aspect config -->
   <bean class="org.springframework.data.persistence.document.mongodb.MongoDocumentBacking"
