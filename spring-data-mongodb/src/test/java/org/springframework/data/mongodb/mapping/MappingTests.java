@@ -37,7 +37,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bson.types.ObjectId;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
@@ -46,8 +45,6 @@ import org.springframework.data.mongodb.CollectionCallback;
 import org.springframework.data.mongodb.MongoCollectionUtils;
 import org.springframework.data.mongodb.MongoDbUtils;
 import org.springframework.data.mongodb.MongoTemplate;
-import org.springframework.data.mongodb.convert.SimpleMongoConverter;
-import org.springframework.data.mongodb.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.query.Criteria;
 import org.springframework.data.mongodb.query.Order;
 import org.springframework.data.mongodb.query.Query;
@@ -64,7 +61,7 @@ public class MappingTests {
 			MongoCollectionUtils.getPreferredCollectionName(PersonWithObjectId.class),
 			MongoCollectionUtils.getPreferredCollectionName(PersonPojoIntId.class),
 			MongoCollectionUtils.getPreferredCollectionName(PersonPojoLongId.class),
-      MongoCollectionUtils.getPreferredCollectionName(PersonPojoStringId.class),			
+			MongoCollectionUtils.getPreferredCollectionName(PersonPojoStringId.class),
 			MongoCollectionUtils.getPreferredCollectionName(PersonCustomIdName.class),
 			MongoCollectionUtils.getPreferredCollectionName(PersonMultiDimArrays.class),
 			MongoCollectionUtils.getPreferredCollectionName(PersonMultiCollection.class),
@@ -389,77 +386,92 @@ public class MappingTests {
 
 		PersonPojoIntId p2 = template.findOne(query(where("id").is(1)), PersonPojoIntId.class);
 		assertEquals("New Text", p2.getText());
-		
+
 		p.setText("Different Text");
 		template.save(p);
-		
+
 		PersonPojoIntId p3 = template.findOne(query(where("id").is(1)), PersonPojoIntId.class);
-    assertEquals("Different Text", p3.getText());
-			
+		assertEquals("Different Text", p3.getText());
+
 	}
-	
-  @Test
-  public void testNoMappingAnnotationsUsingLongAsId() {
-    PersonPojoLongId p = new PersonPojoLongId(1, "Text");
-    template.insert(p);
-    template.updateFirst(query(where("id").is(1)), update("text", "New Text"),
-        PersonPojoLongId.class);
 
-    PersonPojoLongId p2 = template.findOne(query(where("id").is(1)),
-        PersonPojoLongId.class);
-    assertEquals("New Text", p2.getText());
+	@Test
+	public void testNoMappingAnnotationsUsingLongAsId() {
+		PersonPojoLongId p = new PersonPojoLongId(1, "Text");
+		template.insert(p);
+		template.updateFirst(query(where("id").is(1)), update("text", "New Text"),
+				PersonPojoLongId.class);
 
-    p.setText("Different Text");
-    template.save(p);
+		PersonPojoLongId p2 = template.findOne(query(where("id").is(1)),
+				PersonPojoLongId.class);
+		assertEquals("New Text", p2.getText());
 
-    PersonPojoLongId p3 = template.findOne(query(where("id").is(1)),
-        PersonPojoLongId.class);
-    assertEquals("Different Text", p3.getText());
+		p.setText("Different Text");
+		template.save(p);
 
-  }
-  
-  @Test
-  public void testNoMappingAnnotationsUsingStringAsId() {
-    //Assign the String Id in code
-    PersonPojoStringId p = new PersonPojoStringId("1", "Text");
-    template.insert(p);
-    template.updateFirst(query(where("id").is("1")), update("text", "New Text"),
-        PersonPojoStringId.class);
+		PersonPojoLongId p3 = template.findOne(query(where("id").is(1)),
+				PersonPojoLongId.class);
+		assertEquals("Different Text", p3.getText());
 
-    PersonPojoStringId p2 = template.findOne(query(where("id").is("1")),
-        PersonPojoStringId.class);
-    assertEquals("New Text", p2.getText());
+	}
 
-    p.setText("Different Text");
-    template.save(p);
+	@Test
+	public void testNoMappingAnnotationsUsingStringAsId() {
+		//Assign the String Id in code
+		PersonPojoStringId p = new PersonPojoStringId("1", "Text");
+		template.insert(p);
+		template.updateFirst(query(where("id").is("1")), update("text", "New Text"),
+				PersonPojoStringId.class);
 
-    PersonPojoStringId p3 = template.findOne(query(where("id").is("1")),
-        PersonPojoStringId.class);
-    assertEquals("Different Text", p3.getText());
+		PersonPojoStringId p2 = template.findOne(query(where("id").is("1")),
+				PersonPojoStringId.class);
+		assertEquals("New Text", p2.getText());
 
-    
-    PersonPojoStringId p4 = new PersonPojoStringId("2", "Text-2");
-    template.insert(p4);
-    
-    Query q = query(where("id").in("1","2"));
-    q.sort().on("id", Order.ASCENDING);
-    List<PersonPojoStringId> people = template.find(q, PersonPojoStringId.class);
-    assertEquals(2, people.size());
-    
-  }
-  
-  @Test
-  //TODO: this needs fixing! 
-  public void testStringToObjectIdConversion() {
-	    PersonPojoStringId p1 = new PersonPojoStringId("1234567890", "Text-1");
-	    DBObject dbo1 = new BasicDBObject();
-	    this.template.getConverter().write(p1, dbo1);
-	    assertThat(dbo1.get("_id"), is(String.class));	  
-	    PersonPojoStringId p2 = new PersonPojoStringId(new ObjectId().toString(), "Text-1");
-	    DBObject dbo2 = new BasicDBObject();
-	    this.template.getConverter().write(p2, dbo2);
-	    assertThat(dbo2.get("_id"), is(ObjectId.class));	  
-  }
+		p.setText("Different Text");
+		template.save(p);
+
+		PersonPojoStringId p3 = template.findOne(query(where("id").is("1")),
+				PersonPojoStringId.class);
+		assertEquals("Different Text", p3.getText());
+
+
+		PersonPojoStringId p4 = new PersonPojoStringId("2", "Text-2");
+		template.insert(p4);
+
+		Query q = query(where("id").in("1", "2"));
+		q.sort().on("id", Order.ASCENDING);
+		List<PersonPojoStringId> people = template.find(q, PersonPojoStringId.class);
+		assertEquals(2, people.size());
+
+	}
+
+	@Test
+	//TODO: this needs fixing!
+	public void testStringToObjectIdConversion() {
+		PersonPojoStringId p1 = new PersonPojoStringId("1234567890", "Text-1");
+		DBObject dbo1 = new BasicDBObject();
+		this.template.getConverter().write(p1, dbo1);
+		assertThat(dbo1.get("_id"), is(String.class));
+		PersonPojoStringId p2 = new PersonPojoStringId(new ObjectId().toString(), "Text-1");
+		DBObject dbo2 = new BasicDBObject();
+		this.template.getConverter().write(p2, dbo2);
+		assertThat(dbo2.get("_id"), is(ObjectId.class));
+	}
+
+	@Test
+	public void testPersonWithLongDBRef() {
+		PersonPojoLongId personPojoLongId = new PersonPojoLongId(12L, "PersonWithLongDBRef");
+		template.insert(personPojoLongId);
+
+		PersonWithLongDBRef personWithLongDBRef = new PersonWithLongDBRef(21, "PersonWith", "LongDBRef", personPojoLongId);
+		template.insert(personWithLongDBRef);
+
+		Query q = query(where("ssn").is(21));
+		PersonWithLongDBRef p2 = template.findOne(q, PersonWithLongDBRef.class);
+		assertNotNull(p2);
+		assertNotNull(p2.getPersonPojoLongId());
+		assertEquals(12L, p2.getPersonPojoLongId().getId());
+	}
 
 //	@Test
 //	public void testThroughput() {
