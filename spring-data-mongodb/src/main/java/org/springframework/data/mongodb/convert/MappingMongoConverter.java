@@ -91,12 +91,12 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * @param mappingContext must not be {@literal null}.
 	 */
 	public MappingMongoConverter(MongoDbFactory mongoDbFactory, MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
-		
+
 		super(ConversionServiceFactory.createDefaultConversionService());
-		
+
 		Assert.notNull(mongoDbFactory);
 		Assert.notNull(mappingContext);
-		
+
 		this.mongoDbFactory = mongoDbFactory;
 		this.mappingContext = mappingContext;
 	}
@@ -113,17 +113,17 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * Configures whether to use field access only for entity mapping. Setting this to true will force the
 	 * {@link MongoConverter} to not go through getters or setters even if they are present for getting and setting
 	 * property values.
-	 * 
+	 *
 	 * @param useFieldAccessOnly
 	 */
 	public void setUseFieldAccessOnly(boolean useFieldAccessOnly) {
 		this.useFieldAccessOnly = useFieldAccessOnly;
 	}
-	
+
 	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.context.ApplicationContextAware#setApplicationContext(org.springframework.context.ApplicationContext)
-	 */
+		 * (non-Javadoc)
+		 * @see org.springframework.context.ApplicationContextAware#setApplicationContext(org.springframework.context.ApplicationContext)
+		 */
 	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
 		this.applicationContext = applicationContext;
 	}
@@ -472,35 +472,35 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * Returns given object as {@link Collection}. Will return the {@link Collection} as is if the source is a
 	 * {@link Collection} already, will convert an array into a {@link Collection} or simply create a single element
 	 * collection for everything else.
-	 * 
+	 *
 	 * @param source
 	 * @return
 	 */
 	private static Collection<?> asCollection(Object source) {
-		
+
 		if (source instanceof Collection) {
 			return (Collection<?>) source;
 		}
-		
+
 		return source.getClass().isArray() ? CollectionUtils.arrayToList(source) : Collections.singleton(source);
 	}
 
 
 	/**
 	 * Writes the given {@link Collection} using the given {@link MongoPersistentProperty} information.
-	 * 
+	 *
 	 * @param property
 	 * @param collection
 	 * @return
 	 */
 	protected DBObject writeCollectionInternal(MongoPersistentProperty property, Collection<?> collection) {
-		
+
 		if (!property.isDbReference()) {
 			return createCollectionDBObject(property.getTypeInformation(), collection);
 		}
 
 		BasicDBList dbList = new BasicDBList();
-		
+
 		for (Object element : collection) {
 
 			if (element == null) {
@@ -510,28 +510,28 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			DBRef dbRef = createDBRef(element, property.getDBRef());
 			dbList.add(dbRef);
 		}
-		
+
 		return dbList;
 	}
-	
+
 	/**
 	 * Creates a new {@link BasicDBList} from the given {@link Collection}.
-	 * 
+	 *
 	 * @param type
 	 * @param source
 	 * @return
 	 */
 	private BasicDBList createCollectionDBObject(TypeInformation<?> type, Collection<?> source) {
-		
+
 		BasicDBList dbList = new BasicDBList();
 		TypeInformation<?> componentType = type.getComponentType();
-		
+
 		for (Object element : source) {
 
 			if (element == null) {
 				continue;
 			}
-			
+
 			Class<?> elementType = element.getClass();
 
 			if (conversions.isSimpleType(elementType)) {
@@ -620,10 +620,10 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		MongoPersistentProperty idProperty = targetEntity.getIdProperty();
-		ObjectId id = null;
+		Object id = null;
 		BeanWrapper<MongoPersistentEntity<Object>, Object> wrapper = BeanWrapper.create(target, conversionService);
 		try {
-			id = wrapper.getProperty(idProperty, ObjectId.class, useFieldAccessOnly);
+			id = wrapper.getProperty(idProperty, Object.class, useFieldAccessOnly);
 			if (null == id) {
 				throw new MappingException("Cannot create a reference to an object with a NULL id.");
 			}
@@ -675,10 +675,10 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 					// It's empty
 					return Array.newInstance(prop.getComponentType(), 0);
 				} else if (prop.isCollection() && sourceValue instanceof BasicDBList) {
-					
+
 					BasicDBList dbObjList = (BasicDBList) sourceValue;
 					Collection<Object> items = prop.isArray() ? new ArrayList<Object>() : CollectionFactory.createCollection(propertyType, dbObjList.size());
-					
+
 					for (int i = 0; i < dbObjList.size(); i++) {
 						Object dbObjItem = dbObjList.get(i);
 						if (dbObjItem instanceof DBRef) {
@@ -689,7 +689,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 							items.add(dbObjItem);
 						}
 					}
-					
+
 					return items;
 				}
 
@@ -711,25 +711,24 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	/**
 	 * Reads the given {@link DBObject} into a {@link Map}. will recursively resolve nested {@link Map}s as well.
-	 * 
-	 * @param type the {@link Map} {@link TypeInformation} to be used to unmarshall this {@link DBObject}.
+	 *
+	 * @param type		 the {@link Map} {@link TypeInformation} to be used to unmarshall this {@link DBObject}.
 	 * @param dbObject
-	 * 
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
 	private Map<Object, Object> readMap(TypeInformation<?> type, DBObject dbObject) {
-		
+
 		Assert.notNull(type);
 		Assert.isTrue(type.isMap());
 		Assert.notNull(dbObject);
-		
+
 		Class<?> customMapType = findTypeToBeUsed(dbObject);
 		Class<?> mapType = customMapType == null ? Map.class : customMapType;
-		
+
 		Map<Object, Object> map = CollectionFactory.createMap(mapType, dbObject.keySet().size());
 		Map<String, Object> sourceMap = dbObject.toMap();
-		
+
 		for (Entry<String, Object> entry : sourceMap.entrySet()) {
 			if (entry.getKey().equals(CUSTOM_TYPE_KEY)) {
 				continue;
@@ -739,18 +738,18 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			Object key = conversionService.convert(entry.getKey(), keyType);
 
 			if (null != entry.getValue() && entry.getValue() instanceof DBObject) {
-				
+
 				DBObject valueSource = (DBObject) entry.getValue();
 				TypeInformation<?> valueType = type.getMapValueType();
-				
+
 				Object value = valueType.isMap() ? readMap(valueType, valueSource) : read(valueType, valueSource);
-				
+
 				map.put(key, value);
 			} else {
 				map.put(key, entry.getValue());
 			}
 		}
-		
+
 		return map;
 	}
 
