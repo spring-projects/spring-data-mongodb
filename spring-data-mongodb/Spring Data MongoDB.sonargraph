@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<context version="7.0.1.1111">
+<context version="7.0.3.1152">
     <scope name="spring-data-mongodb" type="Project">
         <element name="Filter" type="TypeFilterReferenceOverridden">
-            <element name="org.springframework.data.mongodb.core.**" type="IncludeTypePattern"/>
+            <element name="org.springframework.data.mongodb.**" type="IncludeTypePattern"/>
         </element>
         <architecture>
             <element name="Config" type="Layer">
@@ -27,10 +27,7 @@
             </element>
             <element name="Core" type="Layer">
                 <element name="Assignment" type="TypeFilter">
-                    <element name="org.springframework.data.mongodb.core.**" type="IncludeTypePattern"/>
-                    <element name="**.repository.**" type="ExcludeTypePattern"/>
-                    <element name="**.config.**" type="ExcludeTypePattern"/>
-                    <element name="**.monitor.**" type="ExcludeTypePattern"/>
+                    <element name="**.core.**" type="IncludeTypePattern"/>
                 </element>
                 <element name="Mapping" type="Subsystem">
                     <element name="Assignment" type="TypeFilter">
