@@ -44,19 +44,19 @@
 		<mongo:custom-converters>
 			<mongo:converter ref="readConverter"/>
 			<mongo:converter>
-				<bean class="org.springframework.data.mongodb.PersonWriteConverter"/>
+				<bean class="org.springframework.data.mongodb.core.PersonWriteConverter"/>
 			</mongo:converter>
 		</mongo:custom-converters>
 	</mongo:mapping-converter>
 
-	<bean id="readConverter" class="org.springframework.data.mongodb.PersonReadConverter"/>
+	<bean id="readConverter" class="org.springframework.data.mongodb.core.PersonReadConverter"/>
 
-	<bean id="mongoTemplate" class="org.springframework.data.mongodb.MongoTemplate">
+	<bean id="mongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate">
 		<constructor-arg name="mongoDbFactory" ref="mongoDbFactory"/>
 		<constructor-arg name="mongoConverter" ref="mappingConverter"/>
 	</bean>
 	
-	<bean id="anotherMongoTemplate" class="org.springframework.data.mongodb.MongoTemplate">
+	<bean id="anotherMongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate">
 		<constructor-arg name="mongoDbFactory" ref="mongoDbFactory"/>
 	</bean>
 

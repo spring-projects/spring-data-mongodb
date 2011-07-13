@@ -20,7 +20,7 @@ import java.util.Iterator;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.mongodb.MongoWriter;
+import org.springframework.data.mongodb.core.convert.MongoWriter;
 import org.springframework.data.mongodb.repository.ConvertingParameterAccessor;
 import org.springframework.data.repository.query.ParameterAccessor;
 

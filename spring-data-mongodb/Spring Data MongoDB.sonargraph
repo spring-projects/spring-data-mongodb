@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<context version="7.0.1.1111">
+    <scope name="spring-data-mongodb" type="Project">
+        <element name="Filter" type="TypeFilterReferenceOverridden">
+            <element name="org.springframework.data.mongodb.core.**" type="IncludeTypePattern"/>
+        </element>
+        <architecture>
+            <element name="Config" type="Layer">
+                <element name="Assignment" type="TypeFilter">
+                    <element name="**.config.**" type="IncludeTypePattern"/>
+                </element>
+                <dependency type="AllowedDependency" toName="Project|spring-data-mongodb::Layer|Core"/>
+                <dependency type="AllowedDependency" toName="Project|spring-data-mongodb::Layer|Monitoring"/>
+                <dependency type="AllowedDependency" toName="Project|spring-data-mongodb::Layer|Repositories"/>
+            </element>
+            <element name="Repositories" type="Layer">
+                <element name="Assignment" type="TypeFilter">
+                    <element name="**.repository.**" type="IncludeTypePattern"/>
+                </element>
+                <dependency type="AllowedDependency" toName="Project|spring-data-mongodb::Layer|Core"/>
+            </element>
+            <element name="Monitoring" type="Layer">
+                <element name="Assignment" type="TypeFilter">
+                    <element name="**.monitor.**" type="IncludeTypePattern"/>
+                </element>
+                <dependency type="AllowedDependency" toName="Project|spring-data-mongodb::Layer|Core"/>
+            </element>
+            <element name="Core" type="Layer">
+                <element name="Assignment" type="TypeFilter">
+                    <element name="org.springframework.data.mongodb.core.**" type="IncludeTypePattern"/>
+                    <element name="**.repository.**" type="ExcludeTypePattern"/>
+                    <element name="**.config.**" type="ExcludeTypePattern"/>
+                    <element name="**.monitor.**" type="ExcludeTypePattern"/>
+                </element>
+                <element name="Mapping" type="Subsystem">
+                    <element name="Assignment" type="TypeFilter">
+                        <element name="**.mapping.**" type="IncludeTypePattern"/>
+                    </element>
+                </element>
+                <element name="Geospatial" type="Subsystem">
+                    <element name="Assignment" type="TypeFilter">
+                        <element name="**.geo.**" type="IncludeTypePattern"/>
+                    </element>
+                    <dependency type="AllowedDependency" toName="Project|spring-data-mongodb::Layer|Core::Subsystem|Mapping"/>
+                </element>
+                <element name="Query" type="Subsystem">
+                    <element name="Assignment" type="TypeFilter">
+                        <element name="**.query.**" type="IncludeTypePattern"/>
+                    </element>
+                    <dependency type="AllowedDependency" toName="Project|spring-data-mongodb::Layer|Core::Subsystem|Geospatial"/>
+                </element>
+                <element name="Index" type="Subsystem">
+                    <element name="Assignment" type="TypeFilter">
+                        <element name="**.index.**" type="IncludeTypePattern"/>
+                    </element>
+                    <dependency type="AllowedDependency" toName="Project|spring-data-mongodb::Layer|Core::Subsystem|Mapping"/>
+                    <dependency type="AllowedDependency" toName="Project|spring-data-mongodb::Layer|Core::Subsystem|Query"/>
+                </element>
+                <element name="Core" type="Subsystem">
+                    <element name="Assignment" type="TypeFilter">
+                        <element name="**.core.**" type="WeakTypePattern"/>
+                    </element>
+                    <dependency type="AllowedDependency" toName="Project|spring-data-mongodb::Layer|Core::Subsystem|Index"/>
+                    <dependency type="AllowedDependency" toName="Project|spring-data-mongodb::Layer|Core::Subsystem|Mapping"/>
+                    <dependency type="AllowedDependency" toName="Project|spring-data-mongodb::Layer|Core::Subsystem|Query"/>
+                </element>
+            </element>
+        </architecture>
+        <workspace>
+            <element name="src/main/java" type="JavaRootDirectory">
+                <reference name="Project|spring-data-mongodb::BuildUnit|spring-data-mongodb"/>
+            </element>
+            <element name="target/classes" type="JavaRootDirectory">
+                <reference name="Project|spring-data-mongodb::BuildUnit|spring-data-mongodb"/>
+            </element>
+        </workspace>
+        <physical>
+            <element name="spring-data-mongodb" type="BuildUnit"/>
+        </physical>
+    </scope>
+    <scope name="External" type="External">
+        <element name="Filter" type="TypeFilter">
+            <element name="**" type="IncludeTypePattern"/>
+            <element name="java.**" type="ExcludeTypePattern"/>
+            <element name="javax.**" type="ExcludeTypePattern"/>
+        </element>
+        <architecture>
+            <element name="Spring" type="Subsystem">
+                <element name="Assignment" type="TypeFilter">
+                    <element name="org.springframework.**" type="IncludeTypePattern"/>
+                    <element name="org.springframework.data.**" type="ExcludeTypePattern"/>
+                </element>
+            </element>
+            <element name="Spring Data Core" type="Subsystem">
+                <element name="Assignment" type="TypeFilter">
+                    <element name="org.springframework.data.**" type="IncludeTypePattern"/>
+                </element>
+            </element>
+            <element name="Mongo Java Driver" type="Subsystem">
+                <element name="Assignment" type="TypeFilter">
+                    <element name="com.mongodb.**" type="IncludeTypePattern"/>
+                    <element name="org.bson.**" type="IncludeTypePattern"/>
+                </element>
+            </element>
+            <element name="Querydsl" type="Subsystem">
+                <element name="Assignment" type="TypeFilter">
+                    <element name="com.mysema.query.**" type="IncludeTypePattern"/>
+                </element>
+            </element>
+        </architecture>
+    </scope>
+    <scope name="Global" type="Global">
+        <element name="Configuration" type="Configuration"/>
+        <element name="Filter" type="TypeFilter">
+            <element name="**" type="IncludeTypePattern"/>
+        </element>
+    </scope>
+</context>

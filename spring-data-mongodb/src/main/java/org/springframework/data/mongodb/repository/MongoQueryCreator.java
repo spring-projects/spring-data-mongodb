@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.repository;
 
-import static org.springframework.data.mongodb.query.Criteria.*;
+import static org.springframework.data.mongodb.core.query.Criteria.*;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -24,12 +24,12 @@ import java.util.regex.Pattern;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.mongodb.geo.Box;
-import org.springframework.data.mongodb.geo.Circle;
-import org.springframework.data.mongodb.geo.Point;
-import org.springframework.data.mongodb.query.Criteria;
-import org.springframework.data.mongodb.query.CriteriaDefinition;
-import org.springframework.data.mongodb.query.Query;
+import org.springframework.data.mongodb.core.geo.Box;
+import org.springframework.data.mongodb.core.geo.Circle;
+import org.springframework.data.mongodb.core.geo.Point;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.CriteriaDefinition;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.ConvertingParameterAccessor.PotentiallyConvertingIterator;
 import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.repository.query.ParametersParameterAccessor;

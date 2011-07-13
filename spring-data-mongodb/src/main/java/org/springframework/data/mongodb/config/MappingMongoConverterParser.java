@@ -39,11 +39,11 @@ import org.springframework.context.annotation.ClassPathScanningCandidateComponen
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.data.annotation.Persistent;
 import org.springframework.data.mapping.context.MappingContextAwareBeanPostProcessor;
-import org.springframework.data.mongodb.convert.CustomConversions;
-import org.springframework.data.mongodb.convert.MappingMongoConverter;
-import org.springframework.data.mongodb.mapping.Document;
-import org.springframework.data.mongodb.mapping.MongoMappingContext;
-import org.springframework.data.mongodb.mapping.MongoPersistentEntityIndexCreator;
+import org.springframework.data.mongodb.core.convert.CustomConversions;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexCreator;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.util.StringUtils;
 import org.springframework.util.xml.DomUtils;
 import org.w3c.dom.Element;

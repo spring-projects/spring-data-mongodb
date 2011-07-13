@@ -19,7 +19,7 @@ package org.springframework.data.mongodb.config;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.ManagedList;
 import org.springframework.beans.factory.xml.ParserContext;
-import org.springframework.data.mongodb.MongoOptionsFactoryBean;
+import org.springframework.data.mongodb.core.MongoOptionsFactoryBean;
 import org.springframework.util.StringUtils;
 import org.springframework.util.xml.DomUtils;
 import org.w3c.dom.Element;

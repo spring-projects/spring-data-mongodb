@@ -17,9 +17,9 @@ package org.springframework.data.mongodb.repository;
 
 import java.io.Serializable;
 import org.springframework.data.mapping.model.BeanWrapper;
-import org.springframework.data.mongodb.mapping.BasicMongoPersistentEntity;
-import org.springframework.data.mongodb.mapping.MongoPersistentEntity;
-import org.springframework.data.mongodb.mapping.MongoPersistentProperty;
+import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentEntity;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.repository.core.support.AbstractEntityInformation;
 
 /**

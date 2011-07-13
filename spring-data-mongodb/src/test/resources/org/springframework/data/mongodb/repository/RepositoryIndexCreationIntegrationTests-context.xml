@@ -10,7 +10,7 @@
 	<mongo:db-factory dbname="repositories"/>	
 	<mongo:mapping-converter base-package="org.springframework.data.mongodb.repository"/>
 
-	<bean id="mongoTemplate" class="org.springframework.data.mongodb.MongoTemplate">
+	<bean id="mongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate">
 		<constructor-arg ref="mongoDbFactory"/>
 		<constructor-arg ref="mappingConverter"/>
 	</bean>

@@ -19,7 +19,7 @@ import com.mongodb.DBCursor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
-import org.springframework.data.mongodb.query.Query;
+import org.springframework.data.mongodb.core.query.Query;
 
 /**
  * Collection of utility methods to apply sorting and pagination to a {@link DBCursor}.
@@ -65,12 +65,12 @@ abstract class QueryUtils {
 			return query;
 		}
 
-		org.springframework.data.mongodb.query.Sort bSort = query.sort();
+		org.springframework.data.mongodb.core.query.Sort bSort = query.sort();
 
 		for (Order order : sort) {
 			bSort.on(order.getProperty(),
-					order.isAscending() ? org.springframework.data.mongodb.query.Order.ASCENDING
-							: org.springframework.data.mongodb.query.Order.DESCENDING);
+					order.isAscending() ? org.springframework.data.mongodb.core.query.Order.ASCENDING
+							: org.springframework.data.mongodb.core.query.Order.DESCENDING);
 		}
 
 		return query;

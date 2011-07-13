@@ -27,11 +27,11 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.mongodb.MongoDbFactory;
-import org.springframework.data.mongodb.MongoTemplate;
-import org.springframework.data.mongodb.convert.MappingMongoConverter;
-import org.springframework.data.mongodb.convert.MongoConverter;
-import org.springframework.data.mongodb.mapping.MongoMappingContext;
-import org.springframework.data.mongodb.query.BasicQuery;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.repository.ConvertingParameterAccessor;
 import org.springframework.data.mongodb.repository.MongoQueryMethod;
 import org.springframework.data.mongodb.repository.Query;
@@ -75,8 +75,8 @@ public class StringBasedMongoQueryUnitTests {
 		StringBasedMongoQuery mongoQuery = new StringBasedMongoQuery(queryMethod, template);
 		ConvertingParameterAccessor accesor = StubParameterAccessor.getAccessor(converter, "Matthews");
 
-		org.springframework.data.mongodb.query.Query query = mongoQuery.createQuery(accesor);
-		org.springframework.data.mongodb.query.Query reference = new BasicQuery("{'lastname' : 'Matthews'}");
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor);
+		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery("{'lastname' : 'Matthews'}");
 
 		assertThat(query.getQueryObject(), is(reference.getQueryObject()));
 	}
@@ -95,9 +95,9 @@ public class StringBasedMongoQueryUnitTests {
 		converter.write(address, dbObject);
 		dbObject.removeField(MappingMongoConverter.CUSTOM_TYPE_KEY);
 
-		org.springframework.data.mongodb.query.Query query = mongoQuery.createQuery(accesor);
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor);
 		BasicDBObject queryObject = new BasicDBObject("address", dbObject);
-		org.springframework.data.mongodb.query.Query reference = new BasicQuery(queryObject);
+		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery(queryObject);
 
 		assertThat(query.getQueryObject(), is(reference.getQueryObject()));
 	}
@@ -119,7 +119,7 @@ public class StringBasedMongoQueryUnitTests {
 		DBObject reference = new BasicDBObject("address", addressDbObject);
 		reference.put("lastname", "Matthews");
 
-		org.springframework.data.mongodb.query.Query query = mongoQuery.createQuery(accesor);
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor);
 		assertThat(query.getQueryObject(), is(reference));
 	}
 	

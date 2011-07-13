@@ -14,13 +14,13 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.mongodb.repository.QPerson;
+import org.springframework.data.mongodb.repository.Person.Sex;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort.Direction;
-import org.springframework.data.mongodb.geo.Box;
-import org.springframework.data.mongodb.geo.Circle;
-import org.springframework.data.mongodb.geo.Point;
-import org.springframework.data.mongodb.repository.Person.Sex;
+import org.springframework.data.mongodb.core.geo.Box;
+import org.springframework.data.mongodb.core.geo.Circle;
+import org.springframework.data.mongodb.core.geo.Point;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 /**

@@ -15,8 +15,8 @@
  */
 package org.springframework.data.mongodb.repository;
 
-import org.springframework.data.mongodb.MongoTemplate;
-import org.springframework.data.mongodb.query.Query;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.repository.query.QueryMethod;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.repository.query.parser.PartTree;

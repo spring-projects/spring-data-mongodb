@@ -48,7 +48,7 @@ public class SimpleMongoRepositoryConfiguration
 	}
 
 	/**
-	 * Returns the bean name of the {@link org.springframework.data.mongodb.MongoTemplate} to be referenced.
+	 * Returns the bean name of the {@link org.springframework.data.mongodb.core.core.MongoTemplate} to be referenced.
 	 * 
 	 * @return
 	 */

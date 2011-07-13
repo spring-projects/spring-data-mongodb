@@ -24,8 +24,8 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.mongodb.MongoWriter;
-import org.springframework.data.mongodb.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.MongoWriter;
 import org.springframework.data.repository.query.ParameterAccessor;
 
 /**

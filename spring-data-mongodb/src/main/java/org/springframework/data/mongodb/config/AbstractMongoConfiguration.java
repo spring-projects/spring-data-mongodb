@@ -28,11 +28,11 @@ import org.springframework.data.annotation.Persistent;
 import org.springframework.data.authentication.UserCredentials;
 import org.springframework.data.mapping.context.MappingContextAwareBeanPostProcessor;
 import org.springframework.data.mongodb.MongoDbFactory;
-import org.springframework.data.mongodb.MongoTemplate;
-import org.springframework.data.mongodb.SimpleMongoDbFactory;
-import org.springframework.data.mongodb.convert.MappingMongoConverter;
-import org.springframework.data.mongodb.mapping.Document;
-import org.springframework.data.mongodb.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
 

@@ -29,10 +29,10 @@ import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
-import org.springframework.data.mongodb.Person;
-import org.springframework.data.mongodb.convert.MongoConverter;
-import org.springframework.data.mongodb.query.Criteria;
-import org.springframework.data.mongodb.query.Query;
+import org.springframework.data.mongodb.core.Person;
+import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.MongoQueryCreator;
 import org.springframework.data.repository.query.parser.PartTree;
 

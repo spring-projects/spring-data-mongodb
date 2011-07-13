@@ -1,5 +1,5 @@
 Bundle-SymbolicName: org.springframework.data.mongodb
-Bundle-Name: Spring Data Mongo DB Support
+Bundle-Name: Spring Data MongoDB Support
 Bundle-Vendor: SpringSource
 Bundle-ManifestVersion: 2
 Import-Package: 

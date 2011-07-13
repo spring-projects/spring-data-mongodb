@@ -24,9 +24,9 @@ import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.mongodb.CollectionCallback;
-import org.springframework.data.mongodb.MongoTemplate;
-import org.springframework.data.mongodb.query.Query;
+import org.springframework.data.mongodb.core.CollectionCallback;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
 import org.springframework.data.repository.query.RepositoryQuery;
@@ -185,7 +185,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 
 		/*
 		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.repository.AbstractMongoQuery.Execution#execute(org.springframework.data.mongodb.query.Query)
+		 * @see org.springframework.data.mongodb.repository.AbstractMongoQuery.Execution#execute(org.springframework.data.mongodb.core.core.query.Query)
 		 */
 		@Override
 		Object execute(Query query) {

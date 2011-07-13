@@ -21,9 +21,9 @@ import java.util.regex.Pattern;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bson.types.ObjectId;
-import org.springframework.data.mongodb.MongoTemplate;
-import org.springframework.data.mongodb.query.BasicQuery;
-import org.springframework.data.mongodb.query.Query;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.BasicQuery;
+import org.springframework.data.mongodb.core.query.Query;
 
 /**
  * Query to use a plain JSON String to create the {@link Query} to actually execute.
@@ -59,7 +59,7 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 	  *
 	  * @see
 	  * org.springframework.data.mongodb.repository.AbstractMongoQuery#createQuery(org.springframework.data.
-	  * repository.query.SimpleParameterAccessor, org.springframework.data.mongodb.support.convert.MongoConverter)
+	  * repository.query.SimpleParameterAccessor, org.springframework.data.mongodb.core.core.support.convert.MongoConverter)
 	  */
 	@Override
 	protected Query createQuery(ConvertingParameterAccessor accessor) {

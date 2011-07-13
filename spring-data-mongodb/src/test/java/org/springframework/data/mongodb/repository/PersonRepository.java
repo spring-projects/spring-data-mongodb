@@ -20,9 +20,9 @@ import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.mongodb.geo.Box;
-import org.springframework.data.mongodb.geo.Circle;
-import org.springframework.data.mongodb.geo.Point;
+import org.springframework.data.mongodb.core.geo.Box;
+import org.springframework.data.mongodb.core.geo.Circle;
+import org.springframework.data.mongodb.core.geo.Point;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.mongodb.repository.Person.Sex;

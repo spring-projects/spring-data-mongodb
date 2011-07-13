@@ -27,7 +27,7 @@ import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
 
-import org.springframework.data.mongodb.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import com.mysema.query.annotations.QueryEmbeddable;
 import com.mysema.query.annotations.QueryEmbedded;
@@ -42,7 +42,7 @@ import com.mysema.query.apt.Processor;
  * 
  * @author Oliver Gierke
  */
-@SupportedAnnotationTypes({ "com.mysema.query.annotations.*", "org.springframework.data.mongodb.mapping.*" })
+@SupportedAnnotationTypes({ "com.mysema.query.annotations.*", "org.springframework.data.mongodb.core.core.mapping.*" })
 @SupportedSourceVersion(SourceVersion.RELEASE_6)
 public class MongoAnnotationProcessor extends AbstractProcessor {
 

@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.document.persistence.test.Address;
 import org.springframework.data.document.persistence.test.Person;
 import org.springframework.data.document.persistence.test.Resume;
-import org.springframework.data.mongodb.MongoTemplate;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;

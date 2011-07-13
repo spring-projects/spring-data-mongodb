@@ -21,7 +21,7 @@ import com.mongodb.Mongo;
 import com.mongodb.MongoException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.data.mongodb.MongoDbUtils;
+import org.springframework.data.mongodb.core.MongoDbUtils;
 
 /**
  * Base class to encapsulate common configuration settings when connecting to a database

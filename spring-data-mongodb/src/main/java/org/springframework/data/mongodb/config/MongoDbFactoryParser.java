@@ -26,8 +26,8 @@ import org.springframework.beans.factory.support.BeanDefinitionReaderUtils;
 import org.springframework.beans.factory.xml.AbstractBeanDefinitionParser;
 import org.springframework.beans.factory.xml.ParserContext;
 import org.springframework.data.authentication.UserCredentials;
-import org.springframework.data.mongodb.MongoFactoryBean;
-import org.springframework.data.mongodb.SimpleMongoDbFactory;
+import org.springframework.data.mongodb.core.MongoFactoryBean;
+import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 import org.springframework.util.StringUtils;
 import org.w3c.dom.Element;
 
