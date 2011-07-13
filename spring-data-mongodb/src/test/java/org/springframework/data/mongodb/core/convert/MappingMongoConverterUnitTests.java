@@ -31,6 +31,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import org.bson.types.ObjectId;
 import org.joda.time.LocalDate;
 import org.junit.Before;
 import org.junit.Test;
@@ -43,6 +44,7 @@ import org.springframework.data.mongodb.core.convert.CustomConversions;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.mapping.PersonPojoStringId;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
@@ -378,6 +380,22 @@ public class MappingMongoConverterUnitTests {
 		converter.write(person, dbObject);
 		converter.read(Person.class, dbObject);
 	}
+	
+	@Test
+	public void convertsObjectIdStringsToObjectIdCorrectly() {
+		PersonPojoStringId p1 = new PersonPojoStringId("1234567890", "Text-1");
+		DBObject dbo1 = new BasicDBObject();
+		
+		converter.write(p1, dbo1);
+		assertThat(dbo1.get("_id"), is(String.class));
+		
+		PersonPojoStringId p2 = new PersonPojoStringId(new ObjectId().toString(), "Text-1");
+		DBObject dbo2 = new BasicDBObject();
+		
+		converter.write(p2, dbo2);
+		assertThat(dbo2.get("_id"), is(ObjectId.class));
+	}
+	
 	
 	class ClassWithEnumProperty {
 		

@@ -27,7 +27,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
@@ -35,7 +34,6 @@ import com.mongodb.Mongo;
 import com.mongodb.MongoException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.context.ApplicationContext;
@@ -45,7 +43,6 @@ import org.springframework.data.mongodb.MongoCollectionUtils;
 import org.springframework.data.mongodb.core.CollectionCallback;
 import org.springframework.data.mongodb.core.MongoDbUtils;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.convert.SimpleMongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Order;
@@ -164,7 +161,7 @@ public class MappingTests {
 	}
 
 	@Test
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings({"unchecked", "rawtypes"})
 	public void testWriteEntity() {
 
 		Address addr = new Address();
@@ -199,8 +196,8 @@ public class MappingTests {
 		assertThat(result.get(0).getAccounts(), notNullValue());
 	}
 
-	@SuppressWarnings({"unchecked"})
 	@Test
+	@SuppressWarnings({"unchecked", "rawtypes"})
 	public void testUniqueIndex() {
 		Address addr = new Address();
 		addr.setLines(new String[]{"1234 W. 1st Street", "Apt. 12"});
@@ -334,8 +331,8 @@ public class MappingTests {
 		assertNotNull(p.getId());
 	}
 
-	@SuppressWarnings({"unchecked"})
 	@Test
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public void testQueryUpdate() {
 		Address addr = new Address();
 		addr.setLines(new String[]{"1234 W. 1st Street", "Apt. 12"});
@@ -445,19 +442,6 @@ public class MappingTests {
 		List<PersonPojoStringId> people = template.find(q, PersonPojoStringId.class);
 		assertEquals(2, people.size());
 
-	}
-
-	@Test
-	//TODO: this needs fixing!
-	public void testStringToObjectIdConversion() {
-		PersonPojoStringId p1 = new PersonPojoStringId("1234567890", "Text-1");
-		DBObject dbo1 = new BasicDBObject();
-		this.template.getConverter().write(p1, dbo1);
-		assertThat(dbo1.get("_id"), is(String.class));
-		PersonPojoStringId p2 = new PersonPojoStringId(new ObjectId().toString(), "Text-1");
-		DBObject dbo2 = new BasicDBObject();
-		this.template.getConverter().write(p2, dbo2);
-		assertThat(dbo2.get("_id"), is(ObjectId.class));
 	}
 
 	@Test
