@@ -2,8 +2,11 @@
 *.iml
 *.ipr
 *.iws
+*.orig
 target
 .springBeans
+.sonar4clipse
+*.sonar4clipseExternals
 .ant-targets-build.xml
 .settings/
 .project
