@@ -83,8 +83,8 @@ public class MongoTemplateTests {
 		MongoMappingContext mappingContext = new MongoMappingContext();
 		mappingContext.setInitialEntitySet(new HashSet<Class<?>>(Arrays.asList(PersonWith_idPropertyOfTypeObjectId.class,
 				PersonWith_idPropertyOfTypeString.class, PersonWithIdPropertyOfTypeObjectId.class,
-				PersonWithIdPropertyOfTypeString.class, PersonWithIdPropertyOfTypeInteger.class, 
-				PersonWithIdPropertyOfPrimitiveInt.class, PersonWithIdPropertyOfTypeLong.class, 
+				PersonWithIdPropertyOfTypeString.class, PersonWithIdPropertyOfTypeInteger.class,
+				PersonWithIdPropertyOfPrimitiveInt.class, PersonWithIdPropertyOfTypeLong.class,
 				PersonWithIdPropertyOfPrimitiveLong.class)));
 		mappingContext.afterPropertiesSet();
 
@@ -758,4 +758,11 @@ public class MongoTemplateTests {
 		});
 	}
 
+	/**
+	 * @see DATADOC-166
+	 */
+	@Test
+	public void removingNullIsANoOp() {
+		template.remove(null);
+	}
 }

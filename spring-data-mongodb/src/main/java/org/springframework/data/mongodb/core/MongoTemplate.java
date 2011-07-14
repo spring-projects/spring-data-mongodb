@@ -1004,10 +1004,18 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				return wr;
 			}
 		});
-
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.MongoOperations#remove(java.lang.Object)
+	 */
 	public void remove(Object object) {
+		
+		if (object == null) {
+			return;
+		}
+		
 		remove(new Query(where(getIdPropertyName(object))
 				.is(getIdValue(object))), object.getClass());
 	}
@@ -1301,9 +1309,12 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	}
 
 	protected String getIdPropertyName(Object object) {
+		Assert.notNull(object);
+		
 		MongoPersistentEntity<?> persistentEntity = mappingContext
 				.getPersistentEntity(object.getClass());
 		MongoPersistentProperty idProperty = persistentEntity.getIdProperty();
+		
 		return idProperty == null ? ID : idProperty.getName();
 	}
 
