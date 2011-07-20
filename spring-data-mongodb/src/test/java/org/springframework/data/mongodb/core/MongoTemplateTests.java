@@ -40,6 +40,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
+import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.CollectionCallback;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.WriteResultChecking;
@@ -68,10 +69,9 @@ public class MongoTemplateTests {
 
 	@Autowired
 	MongoTemplate template;
-
-	MongoTemplate mappingTemplate;
-
-	MongoTemplate simpleTemplate;
+	@Autowired
+	MongoDbFactory factory;
+	MongoTemplate mappingTemplate, simpleTemplate;
 
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();
@@ -88,13 +88,13 @@ public class MongoTemplateTests {
 				PersonWithIdPropertyOfPrimitiveLong.class)));
 		mappingContext.afterPropertiesSet();
 
-		MappingMongoConverter mappingConverter = new MappingMongoConverter(template.getDbFactory(), mappingContext);
+		MappingMongoConverter mappingConverter = new MappingMongoConverter(factory, mappingContext);
 		mappingConverter.afterPropertiesSet();
-		this.mappingTemplate = new MongoTemplate(template.getDbFactory(), mappingConverter);
+		this.mappingTemplate = new MongoTemplate(factory, mappingConverter);
 		
 		SimpleMongoConverter simpleConverter = new SimpleMongoConverter();
 		simpleConverter.afterPropertiesSet();
-		this.simpleTemplate = new MongoTemplate(template.getDbFactory(), simpleConverter);
+		this.simpleTemplate = new MongoTemplate(factory, simpleConverter);
 	}
 
 	@Before
@@ -128,7 +128,7 @@ public class MongoTemplateTests {
 	@Test
 	public void updateFailure() throws Exception {
 
-		MongoTemplate mongoTemplate = new MongoTemplate(template.getDbFactory());
+		MongoTemplate mongoTemplate = new MongoTemplate(factory);
 		mongoTemplate.setWriteResultChecking(WriteResultChecking.EXCEPTION);
 
 		Person person = new Person("Oliver2");
@@ -746,7 +746,7 @@ public class MongoTemplateTests {
 				return null;
 			}
 		});
-		MongoTemplate slaveTemplate = new MongoTemplate(this.template.getDbFactory());
+		MongoTemplate slaveTemplate = new MongoTemplate(factory);
 		slaveTemplate.setSlaveOk(true);
 		slaveTemplate.execute("slaveOkTest", new CollectionCallback<Object>() {
 			public Object doInCollection(DBCollection collection)

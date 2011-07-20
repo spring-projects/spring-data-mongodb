@@ -24,6 +24,7 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.WriteResult;
 
+import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.index.IndexDefinition;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
@@ -256,7 +257,7 @@ public interface MongoOperations {
 	<T> List<T> findAll(Class<T> entityClass, String collectionName);
 
 	/**
-	 * Ensure that an index for the provided {@link IndexDefinition} exists for the collection indicated by the entity class. 
+	 * Ensure that an index for the provided {@link IndexDefinition} exists for the collection indicated by the entity class.
 	 * If not it will be created.
 	 * 
 	 * @param indexDefinition
@@ -274,7 +275,7 @@ public interface MongoOperations {
 	void ensureIndex(IndexDefinition indexDefinition, String collectionName);
 
 	/**
-	 * Map the results of an ad-hoc query on the collection for the entity class to a single instance of an object 
+	 * Map the results of an ad-hoc query on the collection for the entity class to a single instance of an object
 	 * of the specified type.
 	 * <p/>
 	 * The object is converted from the MongoDB native representation using an instance of {@see MongoConverter}. Unless
@@ -397,13 +398,13 @@ public interface MongoOperations {
 	<T> T findById(Object id, Class<T> entityClass, String collectionName);
 
 	/**
-	 * Map the results of an ad-hoc query on the collection for the entity type to a single instance of an 
+	 * Map the results of an ad-hoc query on the collection for the entity type to a single instance of an
 	 * object of the specified type. The first document that matches the query is returned and also removed from
 	 * the collection in the database.
 	 * <p/>
-	 * The object is converted from the MongoDB native representation using an instance of {@see MongoConverter}. 
+	 * The object is converted from the MongoDB native representation using an instance of {@see MongoConverter}.
 	 * <p/>
-	 * The query is specified as a {@link Query} which can be created either using the {@link BasicQuery} or the more 
+	 * The query is specified as a {@link Query} which can be created either using the {@link BasicQuery} or the more
 	 * feature rich {@link Query}.
 	 * 
 	 * @param query
@@ -489,7 +490,7 @@ public interface MongoOperations {
 	void insert(Collection<? extends Object> batchToSave, String collectionName);
 
 	/**
-	 * Insert a mixed Collection of objects into a database collection determining the 
+	 * Insert a mixed Collection of objects into a database collection determining the
 	 * collection name to use based on the class.
 	 * 
 	 * @param collectionToSave
@@ -498,7 +499,7 @@ public interface MongoOperations {
 	void insertAll(Collection<? extends Object> objectsToSave);
 
 	/**
-	 * Save the object to the collection for the entity type of the object to save. This will perform an 
+	 * Save the object to the collection for the entity type of the object to save. This will perform an
 	 * insert if the object is not already present, that is an 'upsert'.
 	 * <p/>
 	 * The object is converted to the MongoDB native representation using an instance of {@see MongoConverter}. Unless
@@ -535,7 +536,7 @@ public interface MongoOperations {
 	void save(Object objectToSave, String collectionName);
 
 	/**
-	 * Updates the first object that is found in the collection of the entity class that matches the query document with 
+	 * Updates the first object that is found in the collection of the entity class that matches the query document with
 	 * the provided update document.
 	 * @param query
 	 *          the query document that specifies the criteria used to select a record to be updated
@@ -559,7 +560,7 @@ public interface MongoOperations {
 	WriteResult updateFirst(Query query, Update update, String collectionName);
 
 	/**
-	 * Updates all objects that are found in the collection for the entity class that matches the query document criteria 
+	 * Updates all objects that are found in the collection for the entity class that matches the query document criteria
 	 * with the provided updated document.
 	 * @param query
 	 *          the query document that specifies the criteria used to select a record to be updated
@@ -611,4 +612,10 @@ public interface MongoOperations {
 	 */
 	void remove(Query query, String collectionName);
 
+	/**
+	 * Returns the underlying {@link MongoConverter}.
+	 * 
+	 * @return
+	 */
+	MongoConverter getConverter();
 }

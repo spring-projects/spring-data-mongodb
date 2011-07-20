@@ -23,7 +23,6 @@ import com.mongodb.MongoInternalException;
 
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataAccessResourceFailureException;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.dao.InvalidDataAccessResourceUsageException;
@@ -35,10 +34,7 @@ import org.springframework.data.mongodb.UncategorizedMongoDbException;
  * exception from the {@code org.springframework.dao} hierarchy. Return {@literal null} if no translation is
  * appropriate: any other exception may have resulted from user code, and should not be translated.
  * 
- * @param ex
- *          runtime exception that occurred
  * @author Oliver Gierke
- * @return the corresponding DataAccessException instance, or {@literal null} if the exception should not be translated
  */
 public class MongoExceptionTranslator implements PersistenceExceptionTranslator {
 

@@ -104,7 +104,7 @@ public class QueryMapper {
 				// $or/$nor
 				BasicBSONList conditions = (BasicBSONList) value;
 				BasicBSONList newConditions = new BasicBSONList();
-				Iterator iter = conditions.iterator();
+				Iterator<Object> iter = conditions.iterator();
 				while (iter.hasNext()) {
 					newConditions.add(getMappedObject((DBObject) iter.next(), entity));
 				}

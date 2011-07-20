@@ -47,6 +47,7 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Order;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.test.util.ReflectionTestUtils;
 
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
@@ -84,7 +85,7 @@ public class MappingTests {
 		}
 		applicationContext = new ClassPathXmlApplicationContext("/mapping.xml");
 		template = applicationContext.getBean(MongoTemplate.class);
-		mappingContext = (MongoMappingContext) template.getMappingContext();
+		mappingContext = (MongoMappingContext) ReflectionTestUtils.getField(template, "mappingContext");
 	}
 
 	@Test
