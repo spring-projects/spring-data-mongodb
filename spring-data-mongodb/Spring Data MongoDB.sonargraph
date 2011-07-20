@@ -57,6 +57,7 @@
                     <element name="Assignment" type="TypeFilter">
                         <element name="**.core.**" type="WeakTypePattern"/>
                     </element>
+                    <dependency type="AllowedDependency" toName="Project|spring-data-mongodb::Layer|Core::Subsystem|Geospatial"/>
                     <dependency type="AllowedDependency" toName="Project|spring-data-mongodb::Layer|Core::Subsystem|Index"/>
                     <dependency type="AllowedDependency" toName="Project|spring-data-mongodb::Layer|Core::Subsystem|Mapping"/>
                     <dependency type="AllowedDependency" toName="Project|spring-data-mongodb::Layer|Core::Subsystem|Query"/>
