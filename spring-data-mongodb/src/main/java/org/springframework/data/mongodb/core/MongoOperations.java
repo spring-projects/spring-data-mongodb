@@ -25,7 +25,10 @@ import com.mongodb.DBObject;
 import com.mongodb.WriteResult;
 
 import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.core.geo.GeoResult;
+import org.springframework.data.mongodb.core.geo.GeoResults;
 import org.springframework.data.mongodb.core.index.IndexDefinition;
+import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
@@ -255,6 +258,26 @@ public interface MongoOperations {
 	 * @return the converted collection
 	 */
 	<T> List<T> findAll(Class<T> entityClass, String collectionName);
+	
+	/**
+	 * Returns {@link GeoResult} for all entities matching the given {@link NearQuery}. Will consider entity mapping
+	 * information to determine the collection the query is ran against.
+	 * 
+	 * @param near must not be {@literal null}.
+	 * @param entityClass must not be {@literal null}.
+	 * @return
+	 */
+	<T> GeoResults<T> geoNear(NearQuery near, Class<T> entityClass);
+	
+	/**
+	 * Returns {@link GeoResult} for all entities matching the given {@link NearQuery}.
+	 * 
+	 * @param near must not be {@literal null}.
+	 * @param entityClass must not be {@literal null}.
+	 * @param collectionName the collection to trigger the query against. If no collection name is given the entity class will be inspected.
+	 * @return
+	 */
+	<T> GeoResults<T> geoNear(NearQuery near, Class<T> entityClass, String collectionName);
 
 	/**
 	 * Ensure that an index for the provided {@link IndexDefinition} exists for the collection indicated by the entity class.

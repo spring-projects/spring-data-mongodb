@@ -17,7 +17,7 @@
 package org.springframework.data.mongodb.core.geo;
 
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 
 import java.net.UnknownHostException;
 import java.util.Collection;
@@ -34,11 +34,9 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.data.mongodb.core.CollectionCallback;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.Venue;
-import org.springframework.data.mongodb.core.geo.Box;
-import org.springframework.data.mongodb.core.geo.Circle;
-import org.springframework.data.mongodb.core.geo.Point;
 import org.springframework.data.mongodb.core.index.GeospatialIndex;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.monitor.ServerInfo;
 import org.springframework.expression.ExpressionParser;
@@ -111,11 +109,13 @@ public class GeoSpatialTests {
 		template.insert(new Venue("Maplewood, NJ", -74.2713, 40.73137));
 	}
 
-	/*
+	@Test
 	public void geoNear() {
-	  GeoNearResult<Venue> geoNearResult = template.geoNear(new Query(Criteria.where("type").is("Office")), Venue.class, 
-	                   GeoNearCriteria.near(2,3).num(10).maxDistance(10).distanceMultiplier(10).spherical(true));
-	}*/
+	  NearQuery geoNear = NearQuery.near(-73,40, Metrics.KILOMETERS).num(10).maxDistance(150);
+		GeoResults<Venue> geoNearResult = template.geoNear(geoNear, Venue.class);
+		
+		assertThat(geoNearResult.getContent().size(), is(not(0)));
+	}
 
 	@Test
 	public void withinCenter() {

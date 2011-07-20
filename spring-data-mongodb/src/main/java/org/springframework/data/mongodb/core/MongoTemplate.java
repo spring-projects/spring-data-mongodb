@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.CommandResult;
 import com.mongodb.DB;
@@ -60,6 +61,10 @@ import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoReader;
 import org.springframework.data.mongodb.core.convert.MongoWriter;
+import org.springframework.data.mongodb.core.geo.Distance;
+import org.springframework.data.mongodb.core.geo.GeoResult;
+import org.springframework.data.mongodb.core.geo.GeoResults;
+import org.springframework.data.mongodb.core.geo.Metric;
 import org.springframework.data.mongodb.core.index.IndexDefinition;
 import org.springframework.data.mongodb.core.index.MongoMappingEventPublisher;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexCreator;
@@ -72,10 +77,12 @@ import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeConvertEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeSaveEvent;
 import org.springframework.data.mongodb.core.mapping.event.MongoMappingEvent;
+import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.jca.cci.core.ConnectionCallback;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 /**
  * Primary implementation of {@link MongoOperations}.
@@ -430,6 +437,30 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		return doFindOne(collectionName, new BasicDBObject(idKey, id), null, entityClass);
 	}
 
+	public <T> GeoResults<T> geoNear(NearQuery near, Class<T> entityClass) {
+		return geoNear(near, entityClass, determineCollectionName(entityClass));
+	}
+	
+	public <T> GeoResults<T> geoNear(NearQuery near, Class<T> entityClass, String collectionName) {
+		
+		String collection = StringUtils.hasText(collectionName) ? collectionName : determineCollectionName(entityClass);
+		BasicDBObject command = new BasicDBObject("geoNear", collection);
+		command.putAll(near.toDBObject());
+		
+		CommandResult commandResult = executeCommand(command);
+		BasicDBList results = (BasicDBList) commandResult.get("results");
+		DbObjectCallback<GeoResult<T>> callback = new GeoNearResultDbObjectCallback<T>(new ReadDbObjectCallback<T>(mongoConverter, entityClass), near.getMetric());
+		List<GeoResult<T>> result = new ArrayList<GeoResult<T>>(results.size());
+		
+		for (Object element : results) {
+			result.add(callback.doWith((DBObject) element));
+		}
+		
+		double averageDistance = (Double) ((DBObject) commandResult.get("stats")).get("avgDistance");
+		return new GeoResults<T>(result, new Distance(averageDistance, near.getMetric()));
+	}
+	
+	
 	// Find methods that take a Query to express the query and that return a single object that is also removed from the
 	// collection in the database.
 
@@ -843,7 +874,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				entityClass));
 	}
 
-	protected <T> List<T> doFind(String collectionName, DBObject query, DBObject fields, Class<T> entityClass,
+	protected <S, T> List<T> doFind(String collectionName, DBObject query, DBObject fields, Class<S> entityClass,
 			CursorPreparer preparer, DbObjectCallback<T> objectCallback) {
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
 		if (LOGGER.isDebugEnabled()) {
@@ -1258,7 +1289,37 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		}
 	}
 
+	/**
+	 * {@link DbObjectCallback} that assumes a {@link GeoResult} to be created, delegates actual content unmarshalling to
+	 * a delegate and creates a {@link GeoResult} from the result.
+	 * 
+	 * @author Oliver Gierke
+	 */
+	static class GeoNearResultDbObjectCallback<T> implements DbObjectCallback<GeoResult<T>> {
 
+		private final DbObjectCallback<T> delegate;
+		private final Metric metric;
 
+		/**
+		 * Creates a new {@link GeoNearResultDbObjectCallback} using the given {@link DbObjectCallback} delegate for
+		 * {@link GeoResult} content unmarshalling.
+		 * 
+		 * @param delegate
+		 */
+		public GeoNearResultDbObjectCallback(DbObjectCallback<T> delegate, Metric metric) {
+			Assert.notNull(delegate);
+			this.delegate = delegate;
+			this.metric = metric;
+		}
 
+		public GeoResult<T> doWith(DBObject object) {
+
+			double distance = ((Double) object.get("dis")).doubleValue();
+			DBObject content = (DBObject) object.get("obj");
+
+			T doWith = delegate.doWith(content);
+
+			return new GeoResult<T>(doWith, new Distance(distance, metric));
+		}
+	}
 }
