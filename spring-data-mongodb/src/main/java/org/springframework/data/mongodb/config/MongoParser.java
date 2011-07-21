@@ -19,16 +19,11 @@ package org.springframework.data.mongodb.config;
 import org.springframework.beans.factory.BeanDefinitionStoreException;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
-import org.springframework.beans.factory.support.ManagedList;
 import org.springframework.beans.factory.xml.AbstractSingleBeanDefinitionParser;
 import org.springframework.beans.factory.xml.ParserContext;
 import org.springframework.data.mongodb.core.MongoFactoryBean;
-import org.springframework.data.mongodb.core.MongoOptionsFactoryBean;
 import org.springframework.util.StringUtils;
-import org.springframework.util.xml.DomUtils;
 import org.w3c.dom.Element;
-
-import com.mongodb.ServerAddress;
 
 /**
  * Parser for &lt;mongo;gt; definitions. If no name
@@ -37,6 +32,7 @@ import com.mongodb.ServerAddress;
  */
 public class MongoParser extends AbstractSingleBeanDefinitionParser {
 
+	@Override
 	protected Class<?> getBeanClass(Element element) {
 		return MongoFactoryBean.class;
 	}
@@ -53,10 +49,6 @@ public class MongoParser extends AbstractSingleBeanDefinitionParser {
 
 	}
 
-
-
-
-
 	@Override
 	protected String resolveId(Element element, AbstractBeanDefinition definition, ParserContext parserContext)
 			throws BeanDefinitionStoreException {
@@ -66,6 +58,4 @@ public class MongoParser extends AbstractSingleBeanDefinitionParser {
 		}
 		return name;
 	}
-
-
 }

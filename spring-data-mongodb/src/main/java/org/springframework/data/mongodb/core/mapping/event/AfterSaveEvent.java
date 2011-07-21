@@ -18,8 +18,6 @@ package org.springframework.data.mongodb.core.mapping.event;
 
 import com.mongodb.DBObject;
 
-import org.springframework.data.mapping.PersistentEntity;
-
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
  */

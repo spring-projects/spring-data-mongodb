@@ -30,12 +30,14 @@ public class GeoSpatialAppConfig extends AbstractMongoConfiguration {
 		return "database";
 	}
 
+	@Override
 	@Bean
 	public Mongo mongo() throws Exception {
 		return new Mongo("localhost");
 	}
 
 	@Bean
+	@SuppressWarnings("rawtypes")
 	public LoggingEventListener<MongoMappingEvent> mappingEventsListener() {
 		return new LoggingEventListener<MongoMappingEvent>();
 	}

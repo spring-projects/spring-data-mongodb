@@ -41,7 +41,7 @@ public class MongoMonitorIntegrationTests {
 	@Test
 	public void serverInfo() {
 		ServerInfo serverInfo = new ServerInfo(mongo);
-		String version = serverInfo.getVersion();
+		serverInfo.getVersion();
 		Assert.isTrue(StringUtils.hasText("1."));
 	}
 

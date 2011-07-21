@@ -39,6 +39,7 @@ public class Person extends Contact {
 	@Indexed(unique = true, dropDups = true)
 	private String email;
 	private Integer age;
+	@SuppressWarnings("unused")
 	private Sex sex;
 
 	@GeoSpatialIndexed

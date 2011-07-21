@@ -28,6 +28,7 @@ public class GeneratedId {
 
 	@Id
 	private ObjectId id;
+	@SuppressWarnings("unused")
 	private String name;
 
 	public GeneratedId(String name) {

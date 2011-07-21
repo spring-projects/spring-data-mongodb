@@ -15,8 +15,6 @@
  */
 package org.springframework.data.mongodb.core;
 
-import java.util.ArrayList;
-import java.util.List;
 
 public class Friend {
 

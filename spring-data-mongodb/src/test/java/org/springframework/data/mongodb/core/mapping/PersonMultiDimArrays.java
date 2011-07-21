@@ -26,6 +26,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class PersonMultiDimArrays extends BasePerson {
 
 	@Id
+	@SuppressWarnings("unused")
 	private String id;
 	private String[][] grid;
 

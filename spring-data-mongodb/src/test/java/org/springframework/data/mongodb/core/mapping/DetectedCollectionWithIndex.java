@@ -27,6 +27,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class DetectedCollectionWithIndex {
 
 	@Id
+	@SuppressWarnings("unused")
 	private String id;
 	@Indexed
 	private String name;

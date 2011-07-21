@@ -26,6 +26,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class PersonCustomCollection2 extends BasePerson {
 
 	@Id
+	@SuppressWarnings("unused")
 	private String id;
 
 	public PersonCustomCollection2(Integer ssn, String firstName, String lastName) {

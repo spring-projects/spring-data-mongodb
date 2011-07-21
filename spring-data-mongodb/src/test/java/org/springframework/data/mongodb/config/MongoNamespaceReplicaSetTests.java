@@ -18,7 +18,6 @@ package org.springframework.data.mongodb.config;
 
 import static org.junit.Assert.*;
 
-import java.lang.reflect.Field;
 import java.util.List;
 
 import org.junit.Test;
@@ -29,8 +28,6 @@ import org.springframework.data.mongodb.core.MongoFactoryBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.mongodb.Mongo;
-import com.mongodb.MongoOptions;
 import com.mongodb.ServerAddress;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -40,15 +37,13 @@ public class MongoNamespaceReplicaSetTests extends NamespaceTestSupport {
 	@Autowired
 	private ApplicationContext ctx;
 
-
 	@Test
 	public void testMongoWithReplicaSets() throws Exception {
 		assertTrue(ctx.containsBean("replicaSetMongo"));
 		MongoFactoryBean mfb = (MongoFactoryBean) ctx.getBean("&replicaSetMongo");
-		String host = readField("host", mfb);
-		Integer port = readField("port", mfb);
+		
 		List<ServerAddress> replicaSetSeeds = readField("replicaSetSeeds", mfb);
-		assertNotNull(replicaSetSeeds);		
+		assertNotNull(replicaSetSeeds);
 		
 		assertEquals("127.0.0.1", replicaSetSeeds.get(0).getHost());
 		assertEquals(27017, replicaSetSeeds.get(0).getPort());
@@ -56,11 +51,6 @@ public class MongoNamespaceReplicaSetTests extends NamespaceTestSupport {
     assertEquals("localhost", replicaSetSeeds.get(1).getHost());
     assertEquals(27018, replicaSetSeeds.get(1).getPort());
     
-    Mongo mongo = mfb.getObject();
-    
-    //TODO test infrastructure to have replica sets
-    //assertEquals(2, mongo.getAllAddress().size());
-		
+    // TODO test infrastructure to have replica sets
 	}
-
 }

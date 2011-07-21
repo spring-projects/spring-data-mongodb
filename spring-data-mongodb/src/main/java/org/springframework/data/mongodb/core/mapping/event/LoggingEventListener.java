@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.data.mongodb.core.mapping.event;
 
 import com.mongodb.DBObject;
@@ -23,6 +22,7 @@ import org.apache.commons.logging.LogFactory;
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
  */
+@SuppressWarnings({ "hiding", "rawtypes" })
 public class LoggingEventListener<MongoMappingEvent> extends AbstractMappingEventListener {
 
 	private Log log = LogFactory.getLog(getClass());
