@@ -66,7 +66,7 @@ import org.springframework.util.StringUtils;
 /**
  * {@link MongoConverter} that uses a {@link MappingContext} to do sophisticated mapping of domain objects to
  * {@link DBObject}.
- *
+ * 
  * @author Jon Brisbin <jbrisbin@vmware.com>
  * @author Oliver Gierke
  */
@@ -74,8 +74,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	public static final String CUSTOM_TYPE_KEY = "_class";
 
-	private static final List<Class<?>> VALID_ID_TYPES = Arrays.asList(new Class<?>[]{ObjectId.class, String.class,
-			BigInteger.class, byte[].class});
+	private static final List<Class<?>> VALID_ID_TYPES = Arrays.asList(new Class<?>[] { ObjectId.class, String.class,
+			BigInteger.class, byte[].class });
 	protected static final Log log = LogFactory.getLog(MappingMongoConverter.class);
 
 	protected final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
@@ -86,11 +86,12 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	/**
 	 * Creates a new {@link MappingMongoConverter} given the new {@link MongoDbFactory} and {@link MappingContext}.
-	 *
+	 * 
 	 * @param mongoDbFactory must not be {@literal null}.
 	 * @param mappingContext must not be {@literal null}.
 	 */
-	public MappingMongoConverter(MongoDbFactory mongoDbFactory, MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
+	public MappingMongoConverter(MongoDbFactory mongoDbFactory,
+			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
 
 		super(ConversionServiceFactory.createDefaultConversionService());
 
@@ -113,7 +114,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * Configures whether to use field access only for entity mapping. Setting this to true will force the
 	 * {@link MongoConverter} to not go through getters or setters even if they are present for getting and setting
 	 * property values.
-	 *
+	 * 
 	 * @param useFieldAccessOnly
 	 */
 	public void setUseFieldAccessOnly(boolean useFieldAccessOnly) {
@@ -204,7 +205,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			spelCtx.setBeanResolver(new BeanFactoryResolver(applicationContext));
 		}
 		if (!(dbo instanceof BasicDBList)) {
-			String[] keySet = dbo.keySet().toArray(new String[]{});
+			String[] keySet = dbo.keySet().toArray(new String[] {});
 			for (String key : keySet) {
 				spelCtx.setVariable(key, dbo.get(key));
 			}
@@ -292,7 +293,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	/**
 	 * Root entry method into write conversion. Adds a type discriminator to the {@link DBObject}. Shouldn't be called for
 	 * nested conversions.
-	 *
+	 * 
 	 * @see org.springframework.data.mongodb.core.core.convert.MongoWriter#write(java.lang.Object, com.mongodb.DBObject)
 	 */
 	public void write(final Object obj, final DBObject dbo) {
@@ -312,7 +313,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	/**
 	 * Internal write conversion method which should be used for nested invocations.
-	 *
+	 * 
 	 * @param obj
 	 * @param dbo
 	 */
@@ -356,7 +357,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		final MongoPersistentProperty idProperty = entity.getIdProperty();
 		if (!dbo.containsField("_id") && null != idProperty) {
 			Object idObj = null;
-			Class<?>[] targetClasses = new Class<?>[]{ObjectId.class, Object.class};
+			Class<?>[] targetClasses = new Class<?>[] { ObjectId.class, Object.class };
 			for (Class<?> targetClasse : targetClasses) {
 				try {
 					idObj = wrapper.getProperty(idProperty, targetClasse, useFieldAccessOnly);
@@ -424,7 +425,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		});
 	}
 
-	@SuppressWarnings({"unchecked"})
+	@SuppressWarnings({ "unchecked" })
 	protected void writePropertyInternal(MongoPersistentProperty prop, Object obj, DBObject dbo) {
 
 		if (obj == null) {
@@ -472,7 +473,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * Returns given object as {@link Collection}. Will return the {@link Collection} as is if the source is a
 	 * {@link Collection} already, will convert an array into a {@link Collection} or simply create a single element
 	 * collection for everything else.
-	 *
+	 * 
 	 * @param source
 	 * @return
 	 */
@@ -485,10 +486,9 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		return source.getClass().isArray() ? CollectionUtils.arrayToList(source) : Collections.singleton(source);
 	}
 
-
 	/**
 	 * Writes the given {@link Collection} using the given {@link MongoPersistentProperty} information.
-	 *
+	 * 
 	 * @param property
 	 * @param collection
 	 * @return
@@ -516,7 +516,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	/**
 	 * Creates a new {@link BasicDBList} from the given {@link Collection}.
-	 *
+	 * 
 	 * @param type
 	 * @param source
 	 * @return
@@ -540,7 +540,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				dbList.add(createCollectionDBObject(componentType, asCollection(element)));
 			} else {
 				BasicDBObject propDbObj = new BasicDBObject();
-				writeInternal(element, propDbObj, mappingContext.getPersistentEntity(ClassTypeInformation.from(element.getClass())));
+				writeInternal(element, propDbObj,
+						mappingContext.getPersistentEntity(ClassTypeInformation.from(element.getClass())));
 				addCustomTypeKeyIfNecessary(componentType, element, propDbObj);
 				dbList.add(propDbObj);
 			}
@@ -574,7 +575,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	/**
 	 * Adds custom type information to the given {@link DBObject} if necessary. That is if the value is not the same as
 	 * the one given. This is usually the case if you store a subtype of the actual declared type of the property.
-	 *
+	 * 
 	 * @param type
 	 * @param value
 	 * @param dbObject
@@ -595,7 +596,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	/**
 	 * Writes the given simple value to the given {@link DBObject}. Will store enum names for enum values.
-	 *
+	 * 
 	 * @param key
 	 * @param value
 	 * @param dbObject
@@ -682,9 +683,9 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		return new DBRef(db, collection, id);
 	}
 
-
 	@SuppressWarnings("unchecked")
-	protected Object getValueInternal(MongoPersistentProperty prop, DBObject dbo, StandardEvaluationContext ctx, String spelExpr) {
+	protected Object getValueInternal(MongoPersistentProperty prop, DBObject dbo, StandardEvaluationContext ctx,
+			String spelExpr) {
 
 		Object o;
 		if (null != spelExpr) {
@@ -710,13 +711,15 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			if (sourceValue instanceof DBObject) {
 				if (prop.isMap()) {
 					return readMap(prop.getTypeInformation(), (DBObject) sourceValue);
-				} else if (prop.isArray() && sourceValue instanceof BasicDBObject && ((DBObject) sourceValue).keySet().size() == 0) {
+				} else if (prop.isArray() && sourceValue instanceof BasicDBObject
+						&& ((DBObject) sourceValue).keySet().size() == 0) {
 					// It's empty
 					return Array.newInstance(prop.getComponentType(), 0);
 				} else if (prop.isCollection() && sourceValue instanceof BasicDBList) {
 
 					BasicDBList dbObjList = (BasicDBList) sourceValue;
-					Collection<Object> items = prop.isArray() ? new ArrayList<Object>() : CollectionFactory.createCollection(propertyType, dbObjList.size());
+					Collection<Object> items = prop.isArray() ? new ArrayList<Object>() : CollectionFactory.createCollection(
+							propertyType, dbObjList.size());
 
 					for (int i = 0; i < dbObjList.size(); i++) {
 						Object dbObjItem = dbObjList.get(i);
@@ -750,8 +753,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	/**
 	 * Reads the given {@link DBObject} into a {@link Map}. will recursively resolve nested {@link Map}s as well.
-	 *
-	 * @param type		 the {@link Map} {@link TypeInformation} to be used to unmarshall this {@link DBObject}.
+	 * 
+	 * @param type the {@link Map} {@link TypeInformation} to be used to unmarshall this {@link DBObject}.
 	 * @param dbObject
 	 * @return
 	 */
@@ -796,7 +799,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * Returns the type to be used to convert the DBObject given to. Will return {@literal null} if there's not type hint
 	 * found in the {@link DBObject} or the type hint found can't be converted into a {@link Class} as the type might not
 	 * be available.
-	 *
+	 * 
 	 * @param dbObject
 	 * @return the type to be used for converting the given {@link DBObject} into or {@literal null} if there's no type
 	 *         found.
@@ -818,7 +821,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	/**
 	 * Inspects the a custom class definition stored inside the given {@link DBObject} and returns that in case it's a
 	 * subtype of the given basic one.
-	 *
+	 * 
 	 * @param dbObject
 	 * @param basicType
 	 * @return
