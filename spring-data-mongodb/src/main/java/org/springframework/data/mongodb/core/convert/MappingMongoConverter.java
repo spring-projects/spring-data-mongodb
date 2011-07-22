@@ -535,7 +535,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			Class<?> elementType = element.getClass();
 
 			if (conversions.isSimpleType(elementType)) {
-				dbList.add(element);
+				dbList.add(getPotentiallyConvertedSimpleWrite(element));
 			} else if (element instanceof Collection || elementType.isArray()) {
 				dbList.add(createCollectionDBObject(componentType, asCollection(element)));
 			} else {
@@ -601,16 +601,55 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * @param dbObject
 	 */
 	private void writeSimpleInternal(String key, Object value, DBObject dbObject) {
+		dbObject.put(key, getPotentiallyConvertedSimpleWrite(value));
+	}
 
+	/**
+	 * Checks whether we have a custom conversion registered for the given value into an arbitrary simple Mongo type.
+	 * Returns the converted value if so. If not, we perform special enum handling or simply return the value as is.
+	 * 
+	 * @param value
+	 * @return
+	 */
+	private Object getPotentiallyConvertedSimpleWrite(Object value) {
+		
+		if (value == null) {
+			return null;
+		}
+		
 		Class<?> customTarget = conversions.getCustomWriteTarget(value.getClass(), null);
 
-		Object valueToSet = null;
 		if (customTarget != null) {
-			valueToSet = conversionService.convert(value, customTarget);
+			return conversionService.convert(value, customTarget);
 		} else {
-			valueToSet = value.getClass().isEnum() ? ((Enum<?>) value).name() : value;
+			return value.getClass().isEnum() ? ((Enum<?>) value).name() : value;
 		}
-		dbObject.put(key, valueToSet);
+	}
+	
+	/**
+	 * Checks whether we have a custom conversion for the given simple object. Converts the given value if so, applies
+	 * {@link Enum} handling or returns the value as is.
+	 * 
+	 * @param value
+	 * @param target must not be {@literal null}.
+	 * @return
+	 */
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	private Object getPotentiallyConvertedSimpleRead(Object value, Class<?> target) {
+		
+		if (value == null) {
+			return null;
+		}
+		
+		if (conversions.hasCustomReadTarget(value.getClass(), target)) {
+			return conversionService.convert(value, target);
+		}
+		
+		if (target.isEnum()) {
+			return Enum.valueOf((Class<Enum>) target, value.toString());
+		}
+		
+		return value;
 	}
 
 	protected DBRef createDBRef(Object target, org.springframework.data.mongodb.core.mapping.DBRef dbref) {
@@ -686,7 +725,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 						} else if (dbObjItem instanceof DBObject) {
 							items.add(read(prop.getComponentType(), (DBObject) dbObjItem));
 						} else {
-							items.add(dbObjItem);
+							items.add(getPotentiallyConvertedSimpleRead(dbObjItem, prop.getComponentType()));
 						}
 					}
 

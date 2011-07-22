@@ -197,6 +197,25 @@ public class MappingMongoConverterUnitTests {
 	}
 	
 	/**
+	 * @see DATADOC-209
+	 */
+	@Test
+	public void writesEnumCollectionCorrectly() {
+		
+		ClassWithEnumProperty value = new ClassWithEnumProperty();
+		value.enums = Arrays.asList(SampleEnum.FIRST);
+		
+		DBObject result = new BasicDBObject();
+		converter.write(value, result);
+		
+		assertThat(result.get("enums"), is(BasicDBList.class));
+		
+		BasicDBList enums = (BasicDBList) result.get("enums");
+		assertThat(enums.size(), is(1));
+		assertThat((String) enums.get(0), is("FIRST"));
+	}
+	
+	/**
 	 * @see DATADOC-136
 	 */
 	@Test
@@ -205,6 +224,23 @@ public class MappingMongoConverterUnitTests {
 		ClassWithEnumProperty result = converter.read(ClassWithEnumProperty.class, dbObject);
 		
 		assertThat(result.sampleEnum, is(SampleEnum.FIRST));
+	}
+	
+	/**
+	 * @see DATADOC-209
+	 */
+	@Test
+	public void readsEnumCollectionsCorrectly() {
+		
+		BasicDBList enums = new BasicDBList();
+		enums.add("FIRST");
+		DBObject dbObject = new BasicDBObject("enums", enums);
+		
+		ClassWithEnumProperty result = converter.read(ClassWithEnumProperty.class, dbObject);
+		
+		assertThat(result.enums, is(List.class));
+		assertThat(result.enums.size(), is(1));
+		assertThat(result.enums, hasItem(SampleEnum.FIRST));
 	}
 	
 	/**
@@ -415,6 +451,7 @@ public class MappingMongoConverterUnitTests {
 	class ClassWithEnumProperty {
 		
 		SampleEnum sampleEnum;
+		List<SampleEnum> enums;
 	}
 	
 	enum SampleEnum {
