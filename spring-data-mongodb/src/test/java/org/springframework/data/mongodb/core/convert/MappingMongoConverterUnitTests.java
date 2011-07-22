@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-
+import java.util.SortedMap;
 import org.bson.types.ObjectId;
 import org.joda.time.LocalDate;
 import org.junit.Before;
@@ -396,6 +396,21 @@ public class MappingMongoConverterUnitTests {
 		assertThat(dbo2.get("_id"), is(ObjectId.class));
 	}
 	
+	/**
+	 * @see DATADOC-207
+	 */
+	@Test
+	public void convertsCustomEmptyMapCorrectly() {
+			
+		DBObject map = new BasicDBObject();
+		DBObject wrapper = new BasicDBObject("map", map);
+		
+		ClassWithSortedMap result = converter.read(ClassWithSortedMap.class, wrapper);
+		
+		assertThat(result, is(ClassWithSortedMap.class));
+		assertThat(result.map, is(SortedMap.class));
+	}
+	
 	
 	class ClassWithEnumProperty {
 		
@@ -424,6 +439,10 @@ public class MappingMongoConverterUnitTests {
 		Set<Address> addresses;
 	}
 
+	class ClassWithSortedMap {
+		SortedMap<String, String> map;
+	}
+	
 	class ClassWithMapProperty {
 		Map<Locale, String> map;
 	}

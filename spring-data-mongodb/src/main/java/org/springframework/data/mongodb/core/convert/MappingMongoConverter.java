@@ -724,7 +724,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		Assert.notNull(dbObject);
 
 		Class<?> customMapType = findTypeToBeUsed(dbObject);
-		Class<?> mapType = customMapType == null ? Map.class : customMapType;
+		Class<?> mapType = customMapType == null ? type.getType() : customMapType;
 
 		Map<Object, Object> map = CollectionFactory.createMap(mapType, dbObject.keySet().size());
 		Map<String, Object> sourceMap = dbObject.toMap();
