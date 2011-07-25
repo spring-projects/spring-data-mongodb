@@ -446,6 +446,14 @@ public class MappingMongoConverterUnitTests {
 		assertThat(result, is(ClassWithSortedMap.class));
 		assertThat(result.map, is(SortedMap.class));
 	}
+
+	/**
+	 * @see DATADOC-211
+	 */
+	@Test
+	public void maybeConvertHandlesNullValuesCorrectly() {
+		assertThat(converter.maybeConvertObject(null), is(nullValue()));
+	}
 	
 	
 	class ClassWithEnumProperty {

@@ -109,6 +109,11 @@ public abstract class AbstractMongoConverter implements MongoConverter, Initiali
 
 	@SuppressWarnings("unchecked")
 	public Object maybeConvertObject(Object obj) {
+		
+		if (obj == null) {
+			return null;
+		}
+		
 		if (obj instanceof Enum<?>) {
 			return ((Enum<?>) obj).name();
 		}
