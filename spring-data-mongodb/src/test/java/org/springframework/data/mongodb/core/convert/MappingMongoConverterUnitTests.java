@@ -465,6 +465,35 @@ public class MappingMongoConverterUnitTests {
 		assertThat(converter.maybeConvertObject(null), is(nullValue()));
 	}
 	
+	@Test
+	public void writesGenericTypeCorrectly() {
+		
+		GenericType<Address> type = new GenericType<Address>();
+		type.content = new Address();
+		type.content.city = "London";
+		
+		BasicDBObject result = new BasicDBObject();
+		converter.write(type, result);
+		
+		DBObject content = (DBObject) result.get("content");
+		assertThat(content.get("_class"), is(notNullValue()));
+		assertThat(content.get("city"), is(notNullValue()));
+	}
+	
+	@Test
+	public void readsGenericTypeCorrectly() {
+		
+		DBObject address = new BasicDBObject("_class", Address.class.getName());
+		address.put("city", "London");
+		
+		GenericType<?> result = converter.read(GenericType.class, new BasicDBObject("content", address));
+		assertThat(result.content, is(instanceOf(Address.class)));
+		
+	}
+	
+	class GenericType<T> {
+		T content;
+	}
 	
 	class ClassWithEnumProperty {
 		

@@ -440,9 +440,11 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			return;
 		}
 
+		TypeInformation<?> type = prop.getTypeInformation();
+		
 		if (prop.isMap()) {
 			BasicDBObject mapDbObj = new BasicDBObject();
-			writeMapInternal((Map<Object, Object>) obj, mapDbObj, prop.getTypeInformation());
+			writeMapInternal((Map<Object, Object>) obj, mapDbObj, type);
 			dbo.put(name, mapDbObj);
 			return;
 		}
@@ -464,9 +466,17 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		BasicDBObject propDbObj = new BasicDBObject();
-		addCustomTypeKeyIfNecessary(prop.getTypeInformation(), obj, propDbObj);
-		writeInternal(obj, propDbObj, mappingContext.getPersistentEntity(prop.getTypeInformation()));
+		addCustomTypeKeyIfNecessary(type, obj, propDbObj);
+		
+		MongoPersistentEntity<?> entity = isSubtype(prop.getType(), obj.getClass()) ? mappingContext
+				.getPersistentEntity(obj.getClass()) : mappingContext.getPersistentEntity(type);
+		
+		writeInternal(obj, propDbObj, entity);
 		dbo.put(name, propDbObj);
+	}
+	
+	private boolean isSubtype(Class<?> left, Class<?> right) {
+		return left.isAssignableFrom(right) && !left.equals(right);
 	}
 
 	/**
