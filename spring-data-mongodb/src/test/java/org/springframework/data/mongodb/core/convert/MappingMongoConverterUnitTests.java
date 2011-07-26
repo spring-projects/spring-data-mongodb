@@ -31,6 +31,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
+
 import org.bson.types.ObjectId;
 import org.joda.time.LocalDate;
 import org.junit.Before;
@@ -366,12 +367,14 @@ public class MappingMongoConverterUnitTests {
 		
 		BigDecimalContainer container = new BigDecimalContainer();
 		container.value = BigDecimal.valueOf(2.5d);
+		container.map = Collections.singletonMap("foo", container.value);
 		
 		DBObject dbObject = new BasicDBObject();
 		converter.write(container, dbObject);
 		
 		assertThat(dbObject.get("value"), is(instanceOf(String.class)));
 		assertThat((String) dbObject.get("value"), is("2.5"));
+		assertThat(((DBObject) dbObject.get("map")).get("foo"), is(instanceOf(String.class)));
 	}
 	
 	/**
@@ -381,9 +384,16 @@ public class MappingMongoConverterUnitTests {
 	public void readsClassWithBigDecimal() {
 		
 		DBObject dbObject = new BasicDBObject("value", "2.5");
+		dbObject.put("map", new BasicDBObject("foo", "2.5"));
+		
+		BasicDBList list = new BasicDBList();
+		list.add("2.5");
+		dbObject.put("collection", list);
 		BigDecimalContainer result = converter.read(BigDecimalContainer.class, dbObject);
 		
 		assertThat(result.value, is(BigDecimal.valueOf(2.5d)));
+		assertThat(result.map.get("foo"), is(BigDecimal.valueOf(2.5d)));
+		assertThat(result.collection.get(0), is(BigDecimal.valueOf(2.5d)));
 	}
 	
 	@Test
@@ -502,6 +512,8 @@ public class MappingMongoConverterUnitTests {
 	
 	class BigDecimalContainer {
 		BigDecimal value;
+		Map<String, BigDecimal> map;
+		List<BigDecimal> collection;
 	}
 	
 	class CollectionWrapper {

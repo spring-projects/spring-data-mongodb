@@ -788,7 +788,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 				map.put(key, value);
 			} else {
-				map.put(key, entry.getValue());
+				map.put(key, getPotentiallyConvertedSimpleRead(entry.getValue(), type.getMapValueType().getType()));
 			}
 		}
 
