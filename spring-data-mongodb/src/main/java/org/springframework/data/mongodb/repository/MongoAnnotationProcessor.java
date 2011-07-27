@@ -42,7 +42,7 @@ import com.mysema.query.apt.Processor;
  * 
  * @author Oliver Gierke
  */
-@SupportedAnnotationTypes({ "com.mysema.query.annotations.*", "org.springframework.data.mongodb.core.core.mapping.*" })
+@SupportedAnnotationTypes({ "com.mysema.query.annotations.*", "org.springframework.data.mongodb.core.mapping.*" })
 @SupportedSourceVersion(SourceVersion.RELEASE_6)
 public class MongoAnnotationProcessor extends AbstractProcessor {
 
