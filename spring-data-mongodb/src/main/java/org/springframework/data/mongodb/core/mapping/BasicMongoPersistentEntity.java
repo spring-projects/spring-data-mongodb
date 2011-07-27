@@ -20,7 +20,6 @@ import java.util.Comparator;
 
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.model.BasicPersistentEntity;
-import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mongodb.MongoCollectionUtils;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.StringUtils;
@@ -36,7 +35,6 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 		MongoPersistentEntity<T> {
 
 	private final String collection;
-	private final boolean isRootEntity;
 
 	/**
 	 * Creates a new {@link BasicMongoPersistentEntity} with the given {@link TypeInformation}. Will default the
@@ -54,10 +52,8 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 		if (rawType.isAnnotationPresent(Document.class)) {
 			Document d = rawType.getAnnotation(Document.class);
 			this.collection = StringUtils.hasText(d.collection()) ? d.collection() : fallback;
-			this.isRootEntity = true;
 		} else {
 			this.collection = fallback;
-			this.isRootEntity = false;
 		}
 	}
 
@@ -68,16 +64,6 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 	 */
 	public String getCollection() {
 		return collection;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.springframework.data.mapping.BasicPersistentEntity#verify()
-	 */
-	@Override
-	public void verify() {
-		if (isRootEntity && getIdProperty() == null) {
-			throw new MappingException(String.format("Root entity %s has to have an id property!", getType().getName()));
-		}
 	}
 	
 	/**
