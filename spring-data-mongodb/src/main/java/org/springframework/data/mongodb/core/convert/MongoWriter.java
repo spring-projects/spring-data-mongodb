@@ -20,10 +20,10 @@ import com.mongodb.DBObject;
 /**
  * A MongoWriter is responsible for converting an object of type T to the native MongoDB representation DBObject.
  * 
- * @param <T>
- *          the type of the object to convert to a DBObject
+ * @param <T> the type of the object to convert to a DBObject
  * @author Mark Pollack
  * @author Thomas Risberg
+ * @author Oliver Gierke
  */
 public interface MongoWriter<T> {
 
@@ -36,5 +36,13 @@ public interface MongoWriter<T> {
 	 *          The DBObject to use for writing.
 	 */
 	void write(T t, DBObject dbo);
-
+	
+	/**
+	 * Converts the given object into one Mongo will be able to store natively. If the given object can already be stored
+	 * as is, no conversion will happen.
+	 * 
+	 * @param obj
+	 * @return
+	 */
+	Object convertToMongoType(Object obj);
 }

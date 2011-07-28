@@ -24,8 +24,8 @@ import com.mongodb.DBObject;
 import org.bson.types.BasicBSONList;
 import org.bson.types.ObjectId;
 import org.springframework.core.convert.ConversionException;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.data.mapping.PersistentEntity;
-import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.util.Assert;
 
@@ -37,16 +37,16 @@ import org.springframework.util.Assert;
  */
 public class QueryMapper {
 
-	private final MongoConverter converter;
+	private final ConversionService conversionService;
 
 	/**
-	 * Creates a new {@link QueryMapper} with the given {@link MongoConverter}.
+	 * Creates a new {@link QueryMapper} with the given {@link ConversionService}.
 	 *
-	 * @param converter
+	 * @param conversionService must not be {@literal null}.
 	 */
-	public QueryMapper(MongoConverter converter) {
-		Assert.notNull(converter);
-		this.converter = converter;
+	public QueryMapper(ConversionService conversionService) {
+		Assert.notNull(conversionService);
+		this.conversionService = conversionService;
 	}
 
 	/**
@@ -78,9 +78,9 @@ public class QueryMapper {
 						String inKey = valueDbo.containsField("$in") ? "$in" : "$nin";
 						List<Object> ids = new ArrayList<Object>();
 						for (Object id : (Object[]) valueDbo.get(inKey)) {
-							if (null != converter && !(id instanceof ObjectId)) {
+							if (!(id instanceof ObjectId)) {
 								try {
-									ObjectId oid = converter.convertObjectId(id);
+									ObjectId oid = conversionService.convert(id, ObjectId.class);
 									ids.add(oid);
 								} catch (ConversionException ignored) {
 									ids.add(id);
@@ -93,9 +93,9 @@ public class QueryMapper {
 					} else {
 						value = getMappedObject((DBObject) value, entity);
 					}
-				} else if (null != converter) {
+				} else {
 					try {
-						value = converter.convertObjectId(value);
+						value = conversionService.convert(value, ObjectId.class);
 					} catch (ConversionException ignored) {
 					}
 				}

@@ -168,7 +168,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 		this.mongoDbFactory = mongoDbFactory;
 		this.mongoConverter = mongoConverter == null ? getDefaultMongoConverter(mongoDbFactory) : mongoConverter;
-		this.mapper = new QueryMapper(this.mongoConverter);
+		this.mapper = new QueryMapper(this.mongoConverter.getConversionService());
 
 		// We always have a mapping context in the converter, whether it's a simple one or not
 		mappingContext = this.mongoConverter.getMappingContext();
@@ -686,15 +686,15 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				for (String key : queryObj.keySet()) {
 					if (idProperty.equals(key)) {
 						// This is an ID field
-						queryObj.put(ID, mongoConverter.maybeConvertObject(queryObj.get(key)));
+						queryObj.put(ID, mongoConverter.convertToMongoType(queryObj.get(key)));
 						queryObj.removeField(key);
 					} else {
-						queryObj.put(key, mongoConverter.maybeConvertObject(queryObj.get(key)));
+						queryObj.put(key, mongoConverter.convertToMongoType(queryObj.get(key)));
 					}
 				}
 
 				for (String key : updateObj.keySet()) {
-					updateObj.put(key, mongoConverter.maybeConvertObject(updateObj.get(key)));
+					updateObj.put(key, mongoConverter.convertToMongoType(updateObj.get(key)));
 				}
 
 				if (LOGGER.isDebugEnabled()) {

@@ -15,18 +15,16 @@
  */
 package org.springframework.data.mongodb.repository;
 
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
 
-import com.mongodb.BasicDBList;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoWriter;
 import org.springframework.data.repository.query.ParameterAccessor;
+
+import com.mongodb.BasicDBList;
+import com.mongodb.DBObject;
 
 /**
  * Custom {@link ParameterAccessor} that uses a {@link MongoWriter} to serialize parameters into Mongo format.
@@ -90,11 +88,8 @@ public class ConvertingParameterAccessor implements ParameterAccessor {
 	 * @return
 	 */
 	private Object getConvertedValue(Object value) {
-
-		DBObject result = new BasicDBObject();
-		writer.write(new ValueHolder(value), result);
-		Object resultValue = ((DBObject) result.get("value")).get("value");
-		return removeTypeInfoRecursively(resultValue);
+		
+		return removeTypeInfoRecursively(writer.convertToMongoType(value));
 	}
 	
 	/**
@@ -178,27 +173,6 @@ public class ConvertingParameterAccessor implements ParameterAccessor {
 		   */
 		public void remove() {
 			delegate.remove();
-		}
-	}
-
-	/**
-	 * Simple value holder class to allow conversion and accessing the converted value in a deterministic way.
-	 * 
-	 * @author Oliver Gierke
-	 */
-	private static class ValueHolder {
-
-		private Map<String, Object> value = new HashMap<String, Object>();
-
-		public ValueHolder(Object value) {
-
-			this.value.put("value", value);
-		}
-
-		@SuppressWarnings("unused")
-		public Map<String, Object> getValue() {
-
-			return value;
 		}
 	}
 

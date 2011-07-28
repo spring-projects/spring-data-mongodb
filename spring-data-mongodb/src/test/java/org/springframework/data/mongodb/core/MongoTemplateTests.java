@@ -24,11 +24,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
-import com.mongodb.Mongo;
-import com.mongodb.MongoException;
-import com.mongodb.WriteResult;
 import org.bson.types.ObjectId;
 import org.junit.Assert;
 import org.junit.Before;
@@ -41,12 +36,7 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.data.mongodb.MongoDbFactory;
-import org.springframework.data.mongodb.core.CollectionCallback;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.WriteResultChecking;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
-import org.springframework.data.mongodb.core.convert.MongoConverter;
-import org.springframework.data.mongodb.core.convert.SimpleMongoConverter;
 import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.index.Index.Duplicates;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
@@ -57,13 +47,18 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import com.mongodb.DBCollection;
+import com.mongodb.DBObject;
+import com.mongodb.Mongo;
+import com.mongodb.MongoException;
+import com.mongodb.WriteResult;
+
 /**
  * Integration test for {@link MongoTemplate}.
  *
  * @author Oliver Gierke
  * @author Thomas Risberg
  */
-@SuppressWarnings("deprecation")
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:infrastructure.xml")
 public class MongoTemplateTests {
@@ -72,7 +67,7 @@ public class MongoTemplateTests {
 	MongoTemplate template;
 	@Autowired
 	MongoDbFactory factory;
-	MongoTemplate mappingTemplate, simpleTemplate;
+	MongoTemplate mappingTemplate;
 
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();
@@ -92,10 +87,6 @@ public class MongoTemplateTests {
 		MappingMongoConverter mappingConverter = new MappingMongoConverter(factory, mappingContext);
 		mappingConverter.afterPropertiesSet();
 		this.mappingTemplate = new MongoTemplate(factory, mappingConverter);
-		
-		SimpleMongoConverter simpleConverter = new SimpleMongoConverter();
-		simpleConverter.afterPropertiesSet();
-		this.simpleTemplate = new MongoTemplate(factory, simpleConverter);
 	}
 
 	@Before
@@ -118,9 +109,7 @@ public class MongoTemplateTests {
 		person.setAge(25);
 		template.insert(person);
 
-		MongoConverter converter = template.getConverter();
-
-		List<Person> result = template.find(new Query(Criteria.where("_id").is(converter.convertObjectId(person.getId()))),
+		List<Person> result = template.find(new Query(Criteria.where("_id").is(person.getId())),
 				Person.class);
 		assertThat(result.size(), is(1));
 		assertThat(result, hasItem(person));
@@ -173,11 +162,6 @@ public class MongoTemplateTests {
 		assertThat(indexKey, is("{ \"age\" : -1}"));
 		assertThat(unique, is(true));
 		assertThat(dropDupes, is(true));
-	}
-
-	@Test
-	public void testProperHandlingOfDifferentIdTypesWithSimpleMongoConverter() throws Exception {
-		testProperHandlingOfDifferentIdTypes(this.simpleTemplate);
 	}
 
 	@Test

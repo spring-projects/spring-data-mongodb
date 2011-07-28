@@ -74,15 +74,16 @@ public abstract class MongoOperationsUnitTests {
 				return (S) person;
 			}
 
-			public <T> T convertObjectId(ObjectId id, Class<T> targetType) {
-				return null;
-			}
-
 			public ObjectId convertObjectId(Object id) {
 				return null;
 			}
 
 			public MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> getMappingContext() {
+				return null;
+			}
+			
+
+			public Object convertToMongoType(Object obj) {
 				return null;
 			}
 		};

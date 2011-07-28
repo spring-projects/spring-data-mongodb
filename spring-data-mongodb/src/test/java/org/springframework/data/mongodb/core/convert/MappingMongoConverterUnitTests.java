@@ -464,7 +464,7 @@ public class MappingMongoConverterUnitTests {
 	 */
 	@Test
 	public void maybeConvertHandlesNullValuesCorrectly() {
-		assertThat(converter.maybeConvertObject(null), is(nullValue()));
+		assertThat(converter.convertToMongoType(null), is(nullValue()));
 	}
 	
 	@Test
@@ -520,6 +520,12 @@ public class MappingMongoConverterUnitTests {
 		converter.write(foo, result);
 		
 		assertThat(result.get("_id"), is(instanceOf(String.class)));
+	}
+	
+	public void convertsObjectsIfNecessary() {
+		
+		ObjectId id = new ObjectId();
+		assertThat(converter.convertToMongoType(id), is((Object) id));
 	}
 	
 	class GenericType<T> {

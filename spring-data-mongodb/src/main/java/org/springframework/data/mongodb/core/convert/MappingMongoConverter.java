@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -127,22 +129,6 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 */
 	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
 		this.applicationContext = applicationContext;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.core.convert.MongoConverter#convertObjectId(org.bson.types.ObjectId, java.lang.Class)
-	 */
-	public <T> T convertObjectId(ObjectId id, Class<T> targetType) {
-		return conversionService.convert(id, targetType);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.core.convert.MongoConverter#convertObjectId(java.lang.Object)
-	 */
-	public ObjectId convertObjectId(Object id) {
-		return conversionService.convert(id, ObjectId.class);
 	}
 
 	/*
@@ -858,5 +844,79 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			}
 		}
 		return rootList;
+	}
+
+	@SuppressWarnings("unchecked")
+	public Object convertToMongoType(Object obj) {
+		
+		if (obj == null) {
+			return null;
+		}
+		
+		Class<?> target = conversions.getCustomWriteTarget(getClass());
+		if (target != null) {
+			return conversionService.convert(obj, target);
+		}
+
+		if (null != obj && conversions.isSimpleType(obj.getClass())) {
+			// Doesn't need conversion
+			return getPotentiallyConvertedSimpleWrite(obj);
+		}
+
+		if (obj instanceof BasicDBList) {
+			return maybeConvertList((BasicDBList) obj);
+		}
+
+		if (obj instanceof DBObject) {
+			DBObject newValueDbo = new BasicDBObject();
+			for (String vk : ((DBObject) obj).keySet()) {
+				Object o = ((DBObject) obj).get(vk);
+				newValueDbo.put(vk, convertToMongoType(o));
+			}
+			return newValueDbo;
+		}
+
+		if (obj instanceof Map) {
+			Map<Object, Object> m = new HashMap<Object, Object>();
+			for (Map.Entry<Object, Object> entry : ((Map<Object, Object>) obj).entrySet()) {
+				m.put(entry.getKey(), convertToMongoType(entry.getValue()));
+			}
+			return m;
+		}
+
+		if (obj instanceof List) {
+			List<?> l = (List<?>) obj;
+			List<Object> newList = new ArrayList<Object>();
+			for (Object o : l) {
+				newList.add(convertToMongoType(o));
+			}
+			return newList;
+		}
+
+		if (obj.getClass().isArray()) {
+			return maybeConvertArray((Object[]) obj);
+		}
+
+		DBObject newDbo = new BasicDBObject();
+		this.write(obj, newDbo);
+		return newDbo;
+	}
+
+	public Object[] maybeConvertArray(Object[] src) {
+		Object[] newArr = new Object[src.length];
+		for (int i = 0; i < src.length; i++) {
+			newArr[i] = convertToMongoType(src[i]);
+		}
+		return newArr;
+	}
+
+	public BasicDBList maybeConvertList(BasicDBList dbl) {
+		BasicDBList newDbl = new BasicDBList();
+		Iterator<?> iter = dbl.iterator();
+		while (iter.hasNext()) {
+			Object o = iter.next();
+			newDbl.add(convertToMongoType(o));
+		}
+		return newDbl;
 	}
 }

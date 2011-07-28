@@ -17,12 +17,6 @@
 package org.springframework.data.mongodb.core.convert;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.convert.ConversionService;
@@ -34,10 +28,6 @@ import org.springframework.data.mongodb.core.convert.MongoConverters.ObjectIdToB
 import org.springframework.data.mongodb.core.convert.MongoConverters.ObjectIdToStringConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.StringToBigIntegerConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.StringToObjectIdConverter;
-
-import com.mongodb.BasicDBList;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 
 /**
  * Base class for {@link MongoConverter} implementations. Sets up a {@link GenericConversionService} and populates basic
@@ -113,78 +103,5 @@ public abstract class AbstractMongoConverter implements MongoConverter, Initiali
 	 */
 	public void afterPropertiesSet() {
 		initializeConverters();
-	}
-
-	@SuppressWarnings("unchecked")
-	public Object maybeConvertObject(Object obj) {
-		
-		if (obj == null) {
-			return null;
-		}
-		
-		if (obj instanceof Enum<?>) {
-			return ((Enum<?>) obj).name();
-		}
-
-		if (null != obj && conversions.isSimpleType(obj.getClass())) {
-			// Doesn't need conversion
-			return obj;
-		}
-
-		if (obj instanceof BasicDBList) {
-			return maybeConvertList((BasicDBList) obj);
-		}
-
-		if (obj instanceof DBObject) {
-			DBObject newValueDbo = new BasicDBObject();
-			for (String vk : ((DBObject) obj).keySet()) {
-				Object o = ((DBObject) obj).get(vk);
-				newValueDbo.put(vk, maybeConvertObject(o));
-			}
-			return newValueDbo;
-		}
-
-		if (obj instanceof Map) {
-			Map<Object, Object> m = new HashMap<Object, Object>();
-			for (Map.Entry<Object, Object> entry : ((Map<Object, Object>) obj).entrySet()) {
-				m.put(entry.getKey(), maybeConvertObject(entry.getValue()));
-			}
-			return m;
-		}
-
-		if (obj instanceof List) {
-			List<?> l = (List<?>) obj;
-			List<Object> newList = new ArrayList<Object>();
-			for (Object o : l) {
-				newList.add(maybeConvertObject(o));
-			}
-			return newList;
-		}
-
-		if (obj.getClass().isArray()) {
-			return maybeConvertArray((Object[]) obj);
-		}
-
-		DBObject newDbo = new BasicDBObject();
-		this.write(obj, newDbo);
-		return newDbo;
-	}
-
-	public Object[] maybeConvertArray(Object[] src) {
-		Object[] newArr = new Object[src.length];
-		for (int i = 0; i < src.length; i++) {
-			newArr[i] = maybeConvertObject(src[i]);
-		}
-		return newArr;
-	}
-
-	public BasicDBList maybeConvertList(BasicDBList dbl) {
-		BasicDBList newDbl = new BasicDBList();
-		Iterator<?> iter = dbl.iterator();
-		while (iter.hasNext()) {
-			Object o = iter.next();
-			newDbl.add(maybeConvertObject(o));
-		}
-		return newDbl;
 	}
 }

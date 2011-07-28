@@ -15,43 +15,29 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import com.mongodb.BasicDBList;
-import org.bson.types.ObjectId;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 
+/**
+ * Central Mongo specific converter interface which combines {@link MongoWriter} and {@link MongoReader}.
+ *
+ * @author Oliver Gierke
+ */
 public interface MongoConverter extends MongoWriter<Object>, MongoReader<Object> {
 
 	/**
-	 * Converts the given {@link ObjectId} to the given target type.
+	 * Returns the underlying {@link MappingContext} used by the converter.
 	 * 
-	 * @param <T>
-	 *          the actual type to create
-	 * @param id
-	 *          the source {@link ObjectId}
-	 * @param targetType
-	 *          the target type to convert the {@link ObjectId} to
-	 * @return
+	 * @return never {@literal null}
 	 */
-	public <T> T convertObjectId(ObjectId id, Class<T> targetType);
-
-	/**
-	 * Returns the {@link ObjectId} instance for the given id.
-	 * 
-	 * @param id
-	 * @return
-	 */
-	public ObjectId convertObjectId(Object id);
-
 	MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> getMappingContext();
-
-	Object maybeConvertObject(Object obj);
-
-	Object[] maybeConvertArray(Object[] src);
-
-	BasicDBList maybeConvertList(BasicDBList dbl);
 	
+	/**
+	 * Returns the underlying {@link ConversionService} used by the converter.
+	 * 
+	 * @return never {@literal null}.
+	 */
 	ConversionService getConversionService();
 }

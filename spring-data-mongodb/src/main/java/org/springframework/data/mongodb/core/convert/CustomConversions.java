@@ -41,56 +41,57 @@ import com.mongodb.DBObject;
  * Value object to capture custom conversion. That is essentially a {@link List} of converters and some additional logic
  * around them. The converters are pretty much builds up two sets of types which Mongo basic types {@see #MONGO_TYPES}
  * can be converted into and from. These types will be considered simple ones (which means they neither need deeper
- * inspection nor nested conversion. Thus the {@link CustomConversions} also act as factory for {@link SimpleTypeHolder}.
+ * inspection nor nested conversion. Thus the {@link CustomConversions} also act as factory for {@link SimpleTypeHolder}
+ * .
  * 
  * @author Oliver Gierke
  */
 public class CustomConversions {
-	
+
 	@SuppressWarnings({ "unchecked" })
 	private static final List<Class<?>> MONGO_TYPES = Arrays.asList(Number.class, Date.class, String.class,
 			DBObject.class);
-	
+
 	private final Set<ConvertiblePair> readingPairs;
 	private final Set<ConvertiblePair> writingPairs;
 	private final Set<Class<?>> customSimpleTypes;
 	private final SimpleTypeHolder simpleTypeHolder;
-	
+
 	private final List<Object> converters;
-	
+
 	/**
 	 * Creates an empty {@link CustomConversions} object.
 	 */
 	CustomConversions() {
 		this(new ArrayList<Object>());
 	}
-	
+
 	/**
 	 * Creates a new {@link CustomConversions} instance registering the given converters.
 	 * 
 	 * @param converters
 	 */
 	public CustomConversions(List<?> converters) {
-		
+
 		Assert.notNull(converters);
-		
+
 		this.readingPairs = new HashSet<ConvertiblePair>();
 		this.writingPairs = new HashSet<ConvertiblePair>();
 		this.customSimpleTypes = new HashSet<Class<?>>();
-		
+
 		this.converters = new ArrayList<Object>();
 		this.converters.add(CustomToStringConverter.INSTANCE);
 		this.converters.add(BigDecimalToStringConverter.INSTANCE);
 		this.converters.add(StringToBigDecimalConverter.INSTANCE);
 		this.converters.addAll(converters);
-		
+
 		for (Object c : this.converters) {
 			registerConversion(c);
 		}
-		
+
 		this.simpleTypeHolder = new SimpleTypeHolder(customSimpleTypes, true);
 	}
-	
+
 	/**
 	 * Returns the underlying {@link SimpleTypeHolder}.
 	 * 
@@ -99,7 +100,7 @@ public class CustomConversions {
 	public SimpleTypeHolder getSimpleTypeHolder() {
 		return simpleTypeHolder;
 	}
-	
+
 	/**
 	 * Returns whether the given type is considered to be simple.
 	 * 
@@ -109,33 +110,33 @@ public class CustomConversions {
 	public boolean isSimpleType(Class<?> type) {
 		return simpleTypeHolder.isSimpleType(type);
 	}
-	
+
 	/**
 	 * Populates the given {@link GenericConversionService} with the convertes registered.
 	 * 
 	 * @param conversionService
 	 */
 	public void registerConvertersIn(GenericConversionService conversionService) {
-		
+
 		for (Object converter : converters) {
-			
+
 			boolean added = false;
-			
+
 			if (converter instanceof Converter) {
 				conversionService.addConverter((Converter<?, ?>) converter);
 				added = true;
 			}
-			
+
 			if (converter instanceof ConverterFactory) {
 				conversionService.addConverterFactory((ConverterFactory<?, ?>) converter);
 				added = true;
 			}
-			
+
 			if (converter instanceof GenericConverter) {
 				conversionService.addConverter((GenericConverter) converter);
 				added = true;
 			}
-			
+
 			if (!added) {
 				throw new IllegalArgumentException("Given set contains element that is neither Converter nor ConverterFactory!");
 			}
@@ -149,13 +150,13 @@ public class CustomConversions {
 	 * @param converter
 	 */
 	private void registerConversion(Object converter) {
-		
+
 		if (converter instanceof GenericConverter) {
 			GenericConverter genericConverter = (GenericConverter) converter;
 			for (ConvertiblePair pair : genericConverter.getConvertibleTypes()) {
 				register(pair);
 			}
-		} else if (converter instanceof Converter){
+		} else if (converter instanceof Converter) {
 			Class<?>[] arguments = GenericTypeResolver.resolveTypeArguments(converter.getClass(), Converter.class);
 			register(new ConvertiblePair(arguments[0], arguments[1]));
 		} else {
@@ -170,12 +171,12 @@ public class CustomConversions {
 	 * @param pair
 	 */
 	private void register(ConvertiblePair pair) {
-		
+
 		if (isMongoBasicType(pair.getSourceType())) {
 			readingPairs.add(pair);
 			customSimpleTypes.add(pair.getTargetType());
 		}
-		
+
 		if (isMongoBasicType(pair.getTargetType())) {
 			writingPairs.add(pair);
 			customSimpleTypes.add(pair.getSourceType());
@@ -183,9 +184,20 @@ public class CustomConversions {
 	}
 
 	/**
+	 * Returns the target type to convert to in case we have a custom conversion registered to convert the given source
+	 * type into a Mongo native one.
+	 * 
+	 * @param source must not be {@literal null}
+	 * @return
+	 */
+	public Class<?> getCustomWriteTarget(Class<?> source) {
+		return getCustomWriteTarget(source, null);
+	}
+
+	/**
 	 * Returns the target type we can write an onject of the given source type to. The returned type might be a subclass
 	 * oth the given expected type though. If {@code expexctedTargetType} is {@literal null} we will simply return the
-	 * first target type matching or {@literal null} if noe conversion can be found.
+	 * first target type matching or {@literal null} if no conversion can be found.
 	 * 
 	 * @param source must not be {@literal null}
 	 * @param expectedTargetType
@@ -195,7 +207,30 @@ public class CustomConversions {
 		Assert.notNull(source);
 		return getCustomTarget(source, expectedTargetType, writingPairs);
 	}
-	
+
+	/**
+	 * Returns whether we have a custom conversion registered to write into a Mongo native type. The returned type might
+	 * be a subclass oth the given expected type though.
+	 * 
+	 * @param source must not be {@literal null}
+	 * @return
+	 */
+	public boolean hasCustomWriteTarget(Class<?> source) {
+		return hasCustomWriteTarget(source, null);
+	}
+
+	/**
+	 * Returns whether we have a custom conversion registered to write an object of the given source type into an object
+	 * of the given Mongo native target type.
+	 * 
+	 * @param source must not be {@literal null}.
+	 * @param expectedTargetType
+	 * @return
+	 */
+	public boolean hasCustomWriteTarget(Class<?> source, Class<?> expectedTargetType) {
+		return getCustomWriteTarget(source, expectedTargetType) != null;
+	}
+
 	/**
 	 * Returns whether we have a custom conversion registered to read the given source into the given target type.
 	 * 
@@ -219,10 +254,10 @@ public class CustomConversions {
 	 * @return
 	 */
 	private static Class<?> getCustomTarget(Class<?> source, Class<?> expectedTargetType, Iterable<ConvertiblePair> pairs) {
-		
+
 		Assert.notNull(source);
 		Assert.notNull(pairs);
-		
+
 		for (ConvertiblePair typePair : pairs) {
 			if (typePair.getSourceType().isAssignableFrom(source)) {
 				Class<?> targetType = typePair.getTargetType();
@@ -234,7 +269,7 @@ public class CustomConversions {
 
 		return null;
 	}
-	
+
 	/**
 	 * Returns whether the given type is a type that Mongo can handle basically.
 	 * 
@@ -244,9 +279,8 @@ public class CustomConversions {
 	private static boolean isMongoBasicType(Class<?> type) {
 		return MONGO_TYPES.contains(type);
 	}
-	
-	
-	private enum CustomToStringConverter implements GenericConverter  {
+
+	private enum CustomToStringConverter implements GenericConverter {
 		INSTANCE;
 
 		public Set<ConvertiblePair> getConvertibleTypes() {
