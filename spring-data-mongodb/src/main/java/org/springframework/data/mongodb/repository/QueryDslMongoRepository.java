@@ -24,14 +24,14 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
-import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.querydsl.EntityPathResolver;
 import org.springframework.data.querydsl.QueryDslPredicateExecutor;
 import org.springframework.data.querydsl.SimpleEntityPathResolver;
 import org.springframework.data.repository.core.EntityMetadata;
+import org.springframework.util.Assert;
 
+import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mysema.query.mongodb.MongodbQuery;
 import com.mysema.query.mongodb.MongodbSerializer;
@@ -42,16 +42,13 @@ import com.mysema.query.types.Predicate;
 import com.mysema.query.types.path.PathBuilder;
 
 /**
- * Special QueryDsl based repository implementation that allows execution {@link Predicate}s in various forms. TODO:
- * Extract {@link EntityPathResolver} into Spring Data Commons TODO: Refactor Spring Data JPA to use this common
- * infrastructure
+ * Special QueryDsl based repository implementation that allows execution {@link Predicate}s in various forms.
  * 
  * @author Oliver Gierke
  */
 public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleMongoRepository<T, ID> implements
 		QueryDslPredicateExecutor<T> {
 
-	private final MongoConverterTransformer transformer;
 	private final MongodbSerializer serializer;
 	private final PathBuilder<T> builder;
 
@@ -79,11 +76,10 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 			EntityPathResolver resolver) {
 
 		super(entityInformation, template);
-		this.transformer = new MongoConverterTransformer(template.getConverter());
-		this.serializer = new MongodbSerializer();
-
+		Assert.notNull(resolver);
 		EntityPath<T> path = resolver.createPath(entityInformation.getJavaType());
 		this.builder = new PathBuilder<T>(path.getType(), path.getMetadata());
+		this.serializer = new MongodbSerializer();
 	}
 
 	/*
@@ -158,8 +154,14 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 	 * @return
 	 */
 	private MongodbQuery<T> createQueryFor(Predicate predicate) {
-
-		MongodbQuery<T> query = new MongoTemplateQuery(getMongoOperations());
+		
+		DBCollection collection = getMongoOperations().getCollection(getEntityInformation().getCollectionName());
+		MongodbQuery<T> query = new MongodbQuery<T>(collection, new Transformer<DBObject, T>() {
+			public T transform(DBObject input) {
+				Class<T> type = getEntityInformation().getJavaType();
+				return getMongoOperations().getConverter().read(type, input);
+			}
+		}, serializer);
 		return query.where(predicate);
 	}
 
@@ -213,49 +215,5 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 
 		return new OrderSpecifier(order.isAscending() ? com.mysema.query.types.Order.ASC
 				: com.mysema.query.types.Order.DESC, property);
-	}
-
-	/**
-	 * Special {@link MongodbQuery} implementation to use our {@link MongoOperations} for actually accessing Mongo.
-	 * 
-	 * @author Oliver Gierke
-	 */
-	private class MongoTemplateQuery extends MongodbQuery<T> {
-
-		public MongoTemplateQuery(MongoOperations operations) {
-			super(operations.getCollection(getEntityInformation().getCollectionName()), transformer, serializer);
-		}
-	}
-
-	/**
-	 * {@link Transformer} implementation to delegate to a {@link MongoConverter}.
-	 * 
-	 * @author Oliver Gierke
-	 */
-	private class MongoConverterTransformer implements Transformer<DBObject, T> {
-
-		private final MongoConverter converter;
-
-		/**
-		 * Creates a new {@link MongoConverterTransformer} with the given {@link MongoConverter}.
-		 * 
-		 * @param converter
-		 */
-		public MongoConverterTransformer(MongoConverter converter) {
-
-			this.converter = converter;
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see
-		 * org.apache.commons.collections15.Transformer#transform(java.lang.
-		 * Object)
-		 */
-		public T transform(DBObject input) {
-
-			return converter.read(getEntityInformation().getJavaType(), input);
-		}
 	}
 }
