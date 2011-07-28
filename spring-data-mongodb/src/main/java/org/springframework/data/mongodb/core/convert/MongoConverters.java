@@ -20,6 +20,7 @@ import java.math.BigInteger;
 
 import org.bson.types.ObjectId;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.util.StringUtils;
 
 /**
  * Wrapper class to contain useful converters for the usage with Mongo.
@@ -44,7 +45,7 @@ abstract class MongoConverters {
 		INSTANCE;
 
 		public String convert(ObjectId id) {
-			return id.toString();
+			return id == null ? null : id.toString();
 		}
 	}
 
@@ -57,7 +58,7 @@ abstract class MongoConverters {
 		INSTANCE;
 
 		public ObjectId convert(String source) {
-			return new ObjectId(source);
+			return StringUtils.hasText(source) ? new ObjectId(source) : null;
 		}
 	}
 
@@ -70,7 +71,7 @@ abstract class MongoConverters {
 		INSTANCE;
 
 		public BigInteger convert(ObjectId source) {
-			return new BigInteger(source.toString(), 16);
+			return source == null ? null : new BigInteger(source.toString(), 16);
 		}
 	}
 
@@ -83,7 +84,7 @@ abstract class MongoConverters {
 		INSTANCE;
 
 		public ObjectId convert(BigInteger source) {
-			return new ObjectId(source.toString(16));
+			return source == null ? null : new ObjectId(source.toString(16));
 		}
 	}
 
@@ -92,7 +93,7 @@ abstract class MongoConverters {
 		INSTANCE;
 
 		public String convert(BigDecimal source) {
-			return source.toString();
+			return source == null ? null : source.toString();
 		}
 	}
 	
@@ -100,7 +101,23 @@ abstract class MongoConverters {
 		INSTANCE;
 		
 		public BigDecimal convert(String source) {
-			return new BigDecimal(source);
+			return StringUtils.hasText(source) ? new BigDecimal(source) : null;
+		}
+	}
+
+	public static enum BigIntegerToStringConverter implements Converter<BigInteger, String> {
+		INSTANCE;
+
+		public String convert(BigInteger source) {
+			return source == null ? null : source.toString();
+		}
+	}
+	
+	public static enum StringToBigIntegerConverter implements Converter<String, BigInteger> {
+		INSTANCE;
+		
+		public BigInteger convert(String source) {
+			return StringUtils.hasText(source) ? new BigInteger(source) : null;
 		}
 	}
 }

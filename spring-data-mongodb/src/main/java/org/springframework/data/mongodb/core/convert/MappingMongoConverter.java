@@ -357,10 +357,10 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		final MongoPersistentProperty idProperty = entity.getIdProperty();
 		if (!dbo.containsField("_id") && null != idProperty) {
 			Object idObj = null;
-			Class<?>[] targetClasses = new Class<?>[] { ObjectId.class, Object.class };
-			for (Class<?> targetClasse : targetClasses) {
+			Class<?>[] targetClasses = new Class<?>[] { ObjectId.class, String.class, Object.class };
+			for (Class<?> targetClass : targetClasses) {
 				try {
-					idObj = wrapper.getProperty(idProperty, targetClasse, useFieldAccessOnly);
+					idObj = wrapper.getProperty(idProperty, targetClass, useFieldAccessOnly);
 					if (null != idObj) {
 						break;
 					}

@@ -29,8 +29,10 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.support.ConversionServiceFactory;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.mongodb.core.convert.MongoConverters.BigIntegerToObjectIdConverter;
+import org.springframework.data.mongodb.core.convert.MongoConverters.BigIntegerToStringConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.ObjectIdToBigIntegerConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.ObjectIdToStringConverter;
+import org.springframework.data.mongodb.core.convert.MongoConverters.StringToBigIntegerConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.StringToObjectIdConverter;
 
 import com.mongodb.BasicDBList;
@@ -86,6 +88,12 @@ public abstract class AbstractMongoConverter implements MongoConverter, Initiali
 		}
 		if (!conversionService.canConvert(BigInteger.class, ObjectId.class)) {
 			conversionService.addConverter(BigIntegerToObjectIdConverter.INSTANCE);
+		}
+		if (!conversionService.canConvert(BigInteger.class, String.class)) {
+			conversionService.addConverter(BigIntegerToStringConverter.INSTANCE);
+		}
+		if (!conversionService.canConvert(String.class, BigInteger.class)) {
+			conversionService.addConverter(StringToBigIntegerConverter.INSTANCE);
 		}
 		
 		conversions.registerConvertersIn(conversionService);

@@ -20,6 +20,7 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -40,6 +41,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.convert.CustomConversions;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
@@ -508,6 +510,18 @@ public class MappingMongoConverterUnitTests {
 		assertThat(((DBObject) map).keySet(), hasItem("en_US"));
 	}
 	
+	@Test
+	public void writesBigIntegerIdCorrectly() {
+		
+		ClassWithBigIntegerId foo = new ClassWithBigIntegerId();
+		foo.id = BigInteger.valueOf(23L);
+		
+		DBObject result = new BasicDBObject();
+		converter.write(foo, result);
+		
+		assertThat(result.get("_id"), is(instanceOf(String.class)));
+	}
+	
 	class GenericType<T> {
 		T content;
 	}
@@ -569,6 +583,11 @@ public class MappingMongoConverterUnitTests {
 
 	class LocaleWrapper {
 		Locale locale;
+	}
+	
+	class ClassWithBigIntegerId {
+		@Id
+		BigInteger id;
 	}
 	
 	private class LocalDateToDateConverter implements Converter<LocalDate, Date> {
