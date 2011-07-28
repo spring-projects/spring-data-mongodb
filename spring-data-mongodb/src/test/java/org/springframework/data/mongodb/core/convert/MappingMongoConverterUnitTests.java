@@ -491,6 +491,23 @@ public class MappingMongoConverterUnitTests {
 		
 	}
 	
+	/**
+	 * @see DATADOC-228
+	 */
+	@Test
+	public void writesNullValuesForMaps() {
+		
+		ClassWithMapProperty foo = new ClassWithMapProperty();
+		foo.map = Collections.singletonMap(Locale.US, null);
+		
+		DBObject result = new BasicDBObject();
+		converter.write(foo, result);
+		
+		Object map = result.get("map");
+		assertThat(map, is(instanceOf(DBObject.class)));
+		assertThat(((DBObject) map).keySet(), hasItem("en_US"));
+	}
+	
 	class GenericType<T> {
 		T content;
 	}

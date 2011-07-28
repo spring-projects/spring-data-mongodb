@@ -568,7 +568,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				// Don't use conversion service here as removal of ObjectToString converter results in some primitive types not
 				// being convertable
 				String simpleKey = key.toString();
-				if (conversions.isSimpleType(val.getClass())) {
+				if (val == null || conversions.isSimpleType(val.getClass())) {
 					writeSimpleInternal(simpleKey, val, dbo);
 				} else {
 					DBObject newDbo = new BasicDBObject();
