@@ -106,6 +106,8 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Query> {
 	@Override
 	protected Query complete(Query query, Sort sort) {
 
+		QueryUtils.applySorting(query, sort);
+		
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("Created query " + query.getQueryObject());
 		}

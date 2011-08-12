@@ -20,6 +20,7 @@ import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.geo.Box;
 import org.springframework.data.mongodb.core.geo.Circle;
 import org.springframework.data.mongodb.core.geo.Point;
@@ -68,6 +69,8 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	 * @return
 	 */
 	List<Person> findByFirstnameLike(String firstname);
+	
+	List<Person> findByFirstnameLikeOrderByLastnameAsc(String firstname, Sort sort);
 
 	/**
 	 * Returns a page of {@link Person}s with a lastname mathing the given one (*-wildcards supported).

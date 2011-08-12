@@ -17,6 +17,7 @@ import org.springframework.data.mongodb.repository.QPerson;
 import org.springframework.data.mongodb.repository.Person.Sex;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.geo.Box;
 import org.springframework.data.mongodb.core.geo.Circle;
@@ -291,11 +292,29 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		repository.save(daveSyer);
 	}
 
-//	@Test
+	/**
+	 * @see DATADOC-236
+	 */
+	@Test
 	public void findsPeopleByLastnameAndOrdersCorrectly() {
 		List<Person> result = repository.findByLastnameOrderByFirstnameAsc("Matthews");
 		assertThat(result.size(), is(2));
 		assertThat(result.get(0), is(dave));
 		assertThat(result.get(1), is(oliver));
 	}
+	
+	/**
+	 * @see DATADOC-236
+	 */
+	@Test
+	public void appliesStaticAndDynamicSorting() {
+		List<Person> result = repository.findByFirstnameLikeOrderByLastnameAsc("*e*", new Sort("age"));
+		assertThat(result.size(), is(5));
+		assertThat(result.get(0), is(carter));
+		assertThat(result.get(1), is(stefan));
+		assertThat(result.get(2), is(oliver));
+		assertThat(result.get(3), is(dave));
+		assertThat(result.get(4), is(leroi));
+	}
+	
 }
