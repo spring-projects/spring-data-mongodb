@@ -39,17 +39,6 @@ Defines a MongoDbFactory for connecting to a specific database
 			]]></xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType>
-			<!-- 
-			<xsd:sequence minOccurs="0" maxOccurs="1">
-				<xsd:element name="mongo" type="mongoType">
-					<xsd:annotation>
-						<xsd:documentation><![CDATA[
-Defines a Mongo instance used for accessing MongoDB'.
-							]]></xsd:documentation>
-					</xsd:annotation>
-				</xsd:element>
-			</xsd:sequence>
-			-->
 			<xsd:attribute name="id" type="xsd:ID" use="optional">
 				<xsd:annotation>
 					<xsd:documentation><![CDATA[
@@ -251,6 +240,19 @@ The name of the Mongo object that determines what server to monitor. (by default
 		<xsd:union memberTypes="xsd:string"/>
 	</xsd:simpleType>
 
+	<xsd:attributeGroup name="writeConcern">
+		<xsd:attribute name="write-concern">
+			<xsd:simpleType>
+				<xsd:restriction base="xsd:string">
+					<xsd:enumeration value="NONE" />
+					<xsd:enumeration value="NORMAL" />
+					<xsd:enumeration value="SAFE" />
+					<xsd:enumeration value="FSYNC_SAFE" />
+					<xsd:enumeration value="REPLICA_SAFE" />
+				</xsd:restriction>
+			</xsd:simpleType>
+		</xsd:attribute>
+	</xsd:attributeGroup>
 
 	<xsd:complexType name="mongoType">
 		<xsd:sequence minOccurs="0" maxOccurs="1">
@@ -267,6 +269,7 @@ The Mongo driver options
 				</xsd:annotation>
 			</xsd:element>
 		</xsd:sequence>
+		<xsd:attributeGroup ref="writeConcern" />
 		<xsd:attribute name="id" type="xsd:ID" use="optional">
 			<xsd:annotation>
 				<xsd:documentation><![CDATA[

@@ -43,6 +43,7 @@ public class MongoParser extends AbstractSingleBeanDefinitionParser {
 
 		ParsingUtils.setPropertyValue(element, builder, "port", "port");
 		ParsingUtils.setPropertyValue(element, builder, "host", "host");
+		ParsingUtils.setPropertyValue(element, builder, "write-concern", "writeConcern");
 
 		ParsingUtils.parseMongoOptions(parserContext, element, builder);
 		ParsingUtils.parseReplicaSet(parserContext, element, builder);
