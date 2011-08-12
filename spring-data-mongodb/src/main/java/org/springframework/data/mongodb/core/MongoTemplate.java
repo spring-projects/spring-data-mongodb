@@ -1252,6 +1252,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		private final Class<T> type;
 
 		public ReadDbObjectCallback(MongoReader<? super T> reader, Class<T> type) {
+			Assert.notNull(reader);
+			Assert.notNull(type);
 			this.reader = reader;
 			this.type = type;
 		}

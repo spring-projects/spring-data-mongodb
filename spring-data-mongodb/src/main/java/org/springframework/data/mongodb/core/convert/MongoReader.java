@@ -20,8 +20,7 @@ import com.mongodb.DBObject;
 /**
  * A MongoWriter is responsible for converting a native MongoDB DBObject to an object of type T.
  * 
- * @param <T>
- *          the type of the object to convert from a DBObject
+ * @param <T> the type of the object to convert from a DBObject
  * @author Mark Pollack
  * @author Thomas Risberg
  * @author Oliver Gierke
@@ -33,11 +32,9 @@ public interface MongoReader<T> {
 	 * starting point for marshalling the {@link DBObject} into it. So in case there's no real valid data inside
 	 * {@link DBObject} for the given type, just return an empty instance of the given type.
 	 * 
-	 * @param clazz
-	 *          the type of the return value
-	 * @param dbo
-	 *          theDBObject
-	 * @return the converted object
+	 * @param clazz the type of the return value. Will never be {@literal null}.
+	 * @param dbo the {@link DBObject} to convert into a domain object. Might be {@literal null}.
+	 * @return the converted object. Might be {@literal null}.
 	 */
 	<S extends T> S read(Class<S> clazz, DBObject dbo);
 }
