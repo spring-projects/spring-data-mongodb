@@ -106,7 +106,7 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 						Indexed index = field.getAnnotation(Indexed.class);
 						String name = index.name();
 						if (!StringUtils.hasText(name)) {
-							name = field.getName();
+							name = persistentProperty.getFieldName();
 						} else {
 							if (!name.equals(field.getName()) && index.unique() && !index.sparse()) {
 								// Names don't match, and sparse is not true. This situation will generate an error on the server.
@@ -159,7 +159,7 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 			defObj.put(name, (direction == IndexDirection.ASCENDING ? 1 : -1));
 		}
 		DBObject opts = new BasicDBObject();
-		// opts.put("name", name + "_idx");
+		opts.put("name", name);
 		opts.put("dropDups", dropDups);
 		opts.put("sparse", sparse);
 		opts.put("unique", unique);

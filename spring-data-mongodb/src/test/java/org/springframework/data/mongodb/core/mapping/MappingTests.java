@@ -251,7 +251,7 @@ public class MappingTests {
 			public Boolean doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 				List<DBObject> indexes = collection.getIndexInfo();
 				for (DBObject dbo : indexes) {
-					if ("name_1".equals(dbo.get("name"))) {
+					if ("name".equals(dbo.get("name"))) {
 						return true;
 					}
 				}
