@@ -528,6 +528,83 @@ public class MappingMongoConverterUnitTests {
 		assertThat(converter.convertToMongoType(id), is((Object) id));
 	}
 	
+	/**
+	 * @see DATADOC-235
+	 */
+	@Test
+	public void writesMapOfListsCorrectly() {
+		
+		ClassWithMapProperty input = new ClassWithMapProperty();
+		input.mapOfLists = Collections.singletonMap("Foo", Arrays.asList("Bar"));
+		
+		BasicDBObject result = new BasicDBObject();
+		converter.write(input, result);
+		
+		Object field = result.get("mapOfLists");
+		assertThat(field, is(instanceOf(DBObject.class)));
+		
+		DBObject map = (DBObject) field;
+		Object foo = map.get("Foo");
+		assertThat(foo, is(instanceOf(BasicDBList.class)));
+		
+		BasicDBList value = (BasicDBList) foo;
+		assertThat(value.size(), is(1));
+		assertThat((String) value.get(0), is("Bar"));
+	}
+	
+	/**
+	 * @see DATADOC-235
+	 */
+	@Test
+	public void readsMapListValuesCorrectly() {
+		
+		BasicDBList list = new BasicDBList();
+		list.add("Bar");
+		DBObject source = new BasicDBObject("mapOfLists", new BasicDBObject("Foo", list));
+		
+		ClassWithMapProperty result = converter.read(ClassWithMapProperty.class, source);
+		assertThat(result.mapOfLists, is(not(nullValue())));
+	}
+	
+	/**
+	 * @see DATADOC-235
+	 */
+	@Test
+	public void writesMapsOfObjectsCorrectly() {
+		
+		ClassWithMapProperty input = new ClassWithMapProperty();
+		input.mapOfObjects = new HashMap<String, Object>();
+		input.mapOfObjects.put("Foo", Arrays.asList("Bar"));
+		
+		BasicDBObject result = new BasicDBObject();
+		converter.write(input, result);
+		
+		Object field = result.get("mapOfObjects");
+		assertThat(field, is(instanceOf(DBObject.class)));
+		
+		DBObject map = (DBObject) field;
+		Object foo = map.get("Foo");
+		assertThat(foo, is(instanceOf(BasicDBList.class)));
+		
+		BasicDBList value = (BasicDBList) foo;
+		assertThat(value.size(), is(1));
+		assertThat((String) value.get(0), is("Bar"));
+	}
+	
+	/**
+	 * @see DATADOC-235
+	 */
+	@Test
+	public void readsMapOfObjectsListValuesCorrectly() {
+		
+		BasicDBList list = new BasicDBList();
+		list.add("Bar");
+		DBObject source = new BasicDBObject("mapOfObjects", new BasicDBObject("Foo", list));
+		
+		ClassWithMapProperty result = converter.read(ClassWithMapProperty.class, source);
+		assertThat(result.mapOfObjects, is(not(nullValue())));
+	}
+	
 	class GenericType<T> {
 		T content;
 	}
@@ -566,6 +643,8 @@ public class MappingMongoConverterUnitTests {
 	
 	class ClassWithMapProperty {
 		Map<Locale, String> map;
+		Map<String, List<String>> mapOfLists;
+		Map<String, Object> mapOfObjects;
 	}
 
 	class ClassWithNestedMaps {

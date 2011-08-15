@@ -149,7 +149,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		TypeInformation<? extends S> typeToUse = getMoreConcreteTargetType(dbo, type);
 		Class<? extends S> rawType = typeToUse.getType();
 
-		if (conversions.hasCustomReadTarget(DBObject.class, rawType)) {
+		if (conversions.hasCustomReadTarget(dbo.getClass(), rawType)) {
 			return conversionService.convert(dbo, rawType);
 		}
 
@@ -513,14 +513,14 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	/**
 	 * Creates a new {@link BasicDBList} from the given {@link Collection}.
 	 * 
-	 * @param type
-	 * @param source
+	 * @param type the {@link TypeInformation} to consider or {@literal null} if unknown.
+	 * @param source the collection to create a {@link BasicDBList} for, must not be {@literal null}.
 	 * @return
 	 */
 	private BasicDBList createCollectionDBObject(TypeInformation<?> type, Collection<?> source) {
 
 		BasicDBList dbList = new BasicDBList();
-		TypeInformation<?> componentType = type.getComponentType();
+		TypeInformation<?> componentType = type == null ? null : type.getComponentType();
 
 		for (Object element : source) {
 
@@ -556,6 +556,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				String simpleKey = key.toString();
 				if (val == null || conversions.isSimpleType(val.getClass())) {
 					writeSimpleInternal(simpleKey, val, dbo);
+				} else if (val instanceof Collection) {
+					dbo.put(simpleKey, createCollectionDBObject(propertyType.getMapValueType(), (Collection<?>) val));
 				} else {
 					DBObject newDbo = new BasicDBObject();
 					writeInternal(val, newDbo);
@@ -576,7 +578,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * @param value
 	 * @param dbObject
 	 */
-	public void addCustomTypeKeyIfNecessary(TypeInformation<?> type, Object value, DBObject dbObject) {
+	protected void addCustomTypeKeyIfNecessary(TypeInformation<?> type, Object value, DBObject dbObject) {
 
 		if (type == null) {
 			return;
@@ -801,6 +803,11 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 *         found.
 	 */
 	protected Class<?> findTypeToBeUsed(DBObject dbObject) {
+		
+		if (dbObject instanceof BasicDBList) {
+			return List.class;
+		}
+		
 		Object classToBeUsed = dbObject.get(CUSTOM_TYPE_KEY);
 
 		if (classToBeUsed == null) {
