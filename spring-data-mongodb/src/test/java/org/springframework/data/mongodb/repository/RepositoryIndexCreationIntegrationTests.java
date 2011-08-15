@@ -49,20 +49,7 @@ public class RepositoryIndexCreationIntegrationTests {
 	
 	@After
 	public void tearDown() {
-		operations.execute(Person.class, new CollectionCallback<Void>() {
-
-			public Void doInCollection(DBCollection collection) throws MongoException, DataAccessException {
-				
-				for (DBObject index : collection.getIndexInfo()) {
-					String indexName = index.get("name").toString();
-					if (indexName.startsWith("find")) {
-						collection.dropIndex(indexName);
-					}
-				}
-				
-				return null;
-			}
-		});
+		operations.dropCollection(Person.class);
 	}
 	
 	@Test
@@ -71,7 +58,7 @@ public class RepositoryIndexCreationIntegrationTests {
 
 			public Void doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 				List<DBObject> indexInfo = collection.getIndexInfo();
-				
+
 				assertThat(indexInfo.isEmpty(), is(false));
 				assertThat(indexInfo.size(), is(greaterThan(2)));
 				assertThat(getIndexNamesFrom(indexInfo), hasItems("findByLastname", "findByFirstnameNotIn"));

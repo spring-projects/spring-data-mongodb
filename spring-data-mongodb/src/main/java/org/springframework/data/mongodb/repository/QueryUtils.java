@@ -68,11 +68,14 @@ abstract class QueryUtils {
 		org.springframework.data.mongodb.core.query.Sort bSort = query.sort();
 
 		for (Order order : sort) {
-			bSort.on(order.getProperty(),
-					order.isAscending() ? org.springframework.data.mongodb.core.query.Order.ASCENDING
-							: org.springframework.data.mongodb.core.query.Order.DESCENDING);
+			bSort.on(order.getProperty(), toOrder(order));
 		}
 
 		return query;
+	}
+	
+	public static org.springframework.data.mongodb.core.query.Order toOrder(Order order) {
+		return order.isAscending() ? org.springframework.data.mongodb.core.query.Order.ASCENDING
+				: org.springframework.data.mongodb.core.query.Order.DESCENDING;
 	}
 }

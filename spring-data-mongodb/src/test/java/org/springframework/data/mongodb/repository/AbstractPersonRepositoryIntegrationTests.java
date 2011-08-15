@@ -33,7 +33,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 
 	@Autowired
 	protected PersonRepository repository;
-	Person dave, carter, boyd, stefan, leroi, alicia;
+	Person dave, oliver, carter, boyd, stefan, leroi, alicia;
 	QPerson person;
 	
 	List<Person> all;
@@ -44,6 +44,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		repository.deleteAll();
 
 		dave = new Person("Dave", "Matthews", 42);
+		oliver = new Person("Oliver August", "Matthews", 4);
 		carter = new Person("Carter", "Beauford", 49);
 		boyd = new Person("Boyd", "Tinsley", 45);
 		stefan = new Person("Stefan", "Lessard", 34);
@@ -53,7 +54,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 
 		person = new QPerson("person");
 
-		all = repository.save(Arrays.asList(dave, carter, boyd, stefan, leroi, alicia));
+		all = repository.save(Arrays.asList(oliver, dave, carter, boyd, stefan, leroi, alicia));
 	}
 
 	@Test
@@ -119,17 +120,26 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	@Test
 	public void findsPagedPersons() throws Exception {
 
-		Page<Person> result = repository.findAll(new PageRequest(1, 2, Direction.ASC, "lastname"));
+		Page<Person> result = repository.findAll(new PageRequest(1, 2, Direction.ASC, "lastname", "firstname"));
 		assertThat(result.isFirstPage(), is(false));
 		assertThat(result.isLastPage(), is(false));
 		assertThat(result, hasItems(dave, stefan));
-		System.out.println(result);
 	}
 
 	@Test
 	public void executesPagedFinderCorrectly() throws Exception {
 
-		Page<Person> page = repository.findByLastnameLike("*a*", new PageRequest(0, 2, Direction.ASC, "lastname"));
+		Page<Person> page = repository.findByLastnameLike("*a*", new PageRequest(0, 2, Direction.ASC, "lastname", "firstname"));
+		assertThat(page.isFirstPage(), is(true));
+		assertThat(page.isLastPage(), is(false));
+		assertThat(page.getNumberOfElements(), is(2));
+		assertThat(page, hasItems(carter, stefan));
+	}
+	
+	@Test
+	public void executesPagedFinderWithAnnotatedQueryCorrectly() throws Exception {
+
+		Page<Person> page = repository.findByLastnameLikeWithPageable(".*a.*", new PageRequest(0, 2, Direction.ASC, "lastname", "firstname"));
 		assertThat(page.isFirstPage(), is(true));
 		assertThat(page.isLastPage(), is(false));
 		assertThat(page.getNumberOfElements(), is(2));
@@ -279,5 +289,13 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(daveSyer.getEmail(), is("dave@dmband.com"));
 		
 		repository.save(daveSyer);
+	}
+
+//	@Test
+	public void findsPeopleByLastnameAndOrdersCorrectly() {
+		List<Person> result = repository.findByLastnameOrderByFirstnameAsc("Matthews");
+		assertThat(result.size(), is(2));
+		assertThat(result.get(0), is(dave));
+		assertThat(result.get(1), is(oliver));
 	}
 }

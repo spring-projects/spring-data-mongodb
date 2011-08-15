@@ -15,29 +15,28 @@
  */
 package org.springframework.data.mongodb.core.query;
 
+import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
 
+/**
+ * Custom {@link Query} implementation to setup a basic query from some arbitrary JSON query string.
+ *
+ * @author Thomas Risberg
+ * @author Oliver Gierke
+ */
 public class BasicQuery extends Query {
 
-	private DBObject queryObject = null;
-
-	private DBObject fieldsObject = null;
-
-	private DBObject sortObject = null;
-
-	private int skip;
-
-	private int limit;
+	private final DBObject queryObject;
+	private final DBObject fieldsObject;
+	private DBObject sortObject;
 
 	public BasicQuery(String query) {
-		super();
-		this.queryObject = (DBObject) JSON.parse(query);
+		this((DBObject) JSON.parse(query));
 	}
 
 	public BasicQuery(DBObject queryObject) {
-		super();
-		this.queryObject = queryObject;
+		this(queryObject, null);
 	}
 
 	public BasicQuery(String query, String fields) {
@@ -56,36 +55,33 @@ public class BasicQuery extends Query {
 		return this;
 	}
 
+	@Override
 	public DBObject getQueryObject() {
 		return this.queryObject;
 	}
 
+	@Override
 	public DBObject getFieldsObject() {
 		return fieldsObject;
 	}
 
+	@Override
 	public DBObject getSortObject() {
-		return sortObject;
+		
+		BasicDBObject result = new BasicDBObject();
+		if (sortObject != null) {
+			result.putAll(sortObject);
+		}
+		
+		DBObject overrides = super.getSortObject();
+		if (overrides != null) {
+			result.putAll(overrides);
+		}
+		
+		return result;
 	}
 
 	public void setSortObject(DBObject sortObject) {
 		this.sortObject = sortObject;
 	}
-
-	public int getSkip() {
-		return skip;
-	}
-
-	public void setSkip(int skip) {
-		this.skip = skip;
-	}
-
-	public int getLimit() {
-		return this.limit;
-	}
-
-	public void setLimit(int limit) {
-		this.limit = limit;
-	}
-
 }

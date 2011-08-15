@@ -87,13 +87,6 @@ public class QueryTests {
 	}
 
 	@Test
-	public void testBasicQuery() {
-		Query q = new BasicQuery("{ \"name\" : \"Thomas\"}").addCriteria(where("age").lt(80));
-		String expected = "{ \"name\" : \"Thomas\" , \"age\" : { \"$lt\" : 80}}";
-		Assert.assertEquals(expected, q.getQueryObject().toString());
-	}
-
-	@Test
 	public void testSimpleQueryWithChainedCriteria() {
 		Query q = new Query(where("name").is("Thomas").and("age").lt(80));
 		String expected = "{ \"name\" : \"Thomas\" , \"age\" : { \"$lt\" : 80}}";

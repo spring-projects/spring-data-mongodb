@@ -324,6 +324,13 @@ public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID exten
 				Order order = toOrder(sort, property);
 				index.on(property, order);
 			}
+			
+			// Add fixed sorting criteria to index
+			if (sort != null) {
+				for (Sort.Order order : sort) {
+					index.on(order.getProperty(), QueryUtils.toOrder(order));
+				}
+			}
 
 			MongoEntityInformation<?, ?> metadata = query.getQueryMethod().getEntityInformation();
 			operations.ensureIndex(index, metadata.getCollectionName());

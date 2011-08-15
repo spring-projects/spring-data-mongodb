@@ -42,6 +42,14 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	 * @return
 	 */
 	List<Person> findByLastname(String lastname);
+	
+	/**
+	 * Returns all {@link Person}s with the given lastname ordered by their firstname.
+	 * 
+	 * @param lastname
+	 * @return
+	 */
+	List<Person> findByLastnameOrderByFirstnameAsc(String lastname);
 
 	/**
 	 * Returns the {@link Person}s with the given firstname. Uses {@link Query} annotation to define the query to be
@@ -70,6 +78,9 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	 */
 	Page<Person> findByLastnameLike(String lastname, Pageable pageable);
 
+	@Query("{ 'lastname' : { '$regex' : ?0, '$options' : ''}}")
+	Page<Person> findByLastnameLikeWithPageable(String lastname, Pageable pageable);
+	
 	/**
 	 * Returns all {@link Person}s with a firstname contained in the given varargs.
 	 * 
