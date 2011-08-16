@@ -37,7 +37,7 @@ import com.mongodb.MongoException;
 
 /**
  * Integration test for index creation for query methods.
- *
+ * 
  * @author Oliver Gierke
  */
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -46,12 +46,25 @@ public class RepositoryIndexCreationIntegrationTests {
 
 	@Autowired
 	MongoOperations operations;
-	
+
 	@After
 	public void tearDown() {
-		operations.dropCollection(Person.class);
+		operations.execute(Person.class, new CollectionCallback<Void>() {
+
+			public Void doInCollection(DBCollection collection) throws MongoException, DataAccessException {
+
+				for (DBObject index : collection.getIndexInfo()) {
+					String indexName = index.get("name").toString();
+					if (indexName.startsWith("find")) {
+						collection.dropIndex(indexName);
+					}
+				}
+
+				return null;
+			}
+		});
 	}
-	
+
 	@Test
 	public void testname() {
 		operations.execute(Person.class, new CollectionCallback<Void>() {
@@ -62,12 +75,12 @@ public class RepositoryIndexCreationIntegrationTests {
 				assertThat(indexInfo.isEmpty(), is(false));
 				assertThat(indexInfo.size(), is(greaterThan(2)));
 				assertThat(getIndexNamesFrom(indexInfo), hasItems("findByLastname", "findByFirstnameNotIn"));
-				
+
 				return null;
 			}
 		});
 	}
-	
+
 	private static List<String> getIndexNamesFrom(List<DBObject> indexes) {
 		List<String> result = new ArrayList<String>();
 		for (DBObject dbObject : indexes) {
