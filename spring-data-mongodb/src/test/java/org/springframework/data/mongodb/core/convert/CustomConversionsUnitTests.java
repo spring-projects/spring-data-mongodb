@@ -1,17 +1,17 @@
 package org.springframework.data.mongodb.core.convert;
 
-import static org.junit.Assert.*;
 import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
 
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.UUID;
 
+import org.bson.types.ObjectId;
 import org.junit.Test;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.ConversionServiceFactory;
 import org.springframework.core.convert.support.GenericConversionService;
-import org.springframework.data.mongodb.core.convert.CustomConversions;
 
 /**
  * Unit tests for {@link CustomConversions}.
@@ -52,6 +52,37 @@ public class CustomConversionsUnitTests {
 		assertThat(conversions.isSimpleType(UUID.class), is(true));
 	}
 
+	/**
+	 * @see DATADOC-240
+	 */
+	@Test
+	public void considersObjectIdToBeSimpleType() {
+		
+		CustomConversions conversions = new CustomConversions();
+		assertThat(conversions.isSimpleType(ObjectId.class), is(true));
+		assertThat(conversions.hasCustomWriteTarget(ObjectId.class), is(false));
+		
+		
+	}
+	
+	/**
+	 * @see DATADOC-240
+	 */
+	@Test
+	public void considersCustomConverterForSimpleType() {
+		
+		CustomConversions conversions = new CustomConversions(Arrays.asList(new Converter<ObjectId, String>() {
+			public String convert(ObjectId source) {
+				return source == null ? null : source.toString();
+			}
+		}));
+		
+		assertThat(conversions.isSimpleType(ObjectId.class), is(true));
+		assertThat(conversions.hasCustomWriteTarget(ObjectId.class), is(true));
+		assertThat(conversions.hasCustomReadTarget(ObjectId.class, String.class), is(true));
+		assertThat(conversions.hasCustomReadTarget(ObjectId.class, Object.class), is(false));
+	}
+	
 	@Test
 	public void populatesConversionServiceCorrectly() {
 

@@ -18,6 +18,8 @@ package org.springframework.data.mongodb.core;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
+import static org.springframework.data.mongodb.core.query.Query.*;
+import static org.springframework.data.mongodb.core.query.Update.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -749,5 +751,25 @@ public class MongoTemplateTests {
 	@Test
 	public void removingNullIsANoOp() {
 		template.remove(null);
+	}
+
+	/**
+	 * @see DATADOC-240, DATADOC-212
+	 */
+	@Test
+	public void updatesObjectIdsCorrectly() {
+		
+		PersonWithIdPropertyOfTypeObjectId person = new PersonWithIdPropertyOfTypeObjectId();
+		person.setId(new ObjectId());
+		person.setFirstName("Dave");
+		
+		template.save(person);
+		template.updateFirst(query(where("id").is(person.getId())), update("firstName", "Carter"),
+				PersonWithIdPropertyOfTypeObjectId.class);
+		
+		PersonWithIdPropertyOfTypeObjectId result = template.findById(person.getId(), PersonWithIdPropertyOfTypeObjectId.class);
+		assertThat(result, is(notNullValue()));
+		assertThat(result.getId(), is(person.getId()));
+		assertThat(result.getFirstName(), is("Carter"));
 	}
 }

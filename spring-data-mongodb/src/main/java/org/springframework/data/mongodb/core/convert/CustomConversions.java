@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
+import org.bson.types.ObjectId;
 import org.springframework.core.GenericTypeResolver;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.converter.Converter;
@@ -49,7 +50,7 @@ import com.mongodb.DBObject;
 public class CustomConversions {
 
 	@SuppressWarnings({ "unchecked" })
-	private static final List<Class<?>> MONGO_TYPES = Arrays.asList(Number.class, Date.class, String.class,
+	private static final List<Class<?>> MONGO_TYPES = Arrays.asList(Number.class, Date.class, ObjectId.class, String.class,
 			DBObject.class);
 
 	private final Set<ConvertiblePair> readingPairs;
@@ -78,6 +79,7 @@ public class CustomConversions {
 		this.readingPairs = new HashSet<ConvertiblePair>();
 		this.writingPairs = new HashSet<ConvertiblePair>();
 		this.customSimpleTypes = new HashSet<Class<?>>();
+		this.customSimpleTypes.add(ObjectId.class);
 
 		this.converters = new ArrayList<Object>();
 		this.converters.add(CustomToStringConverter.INSTANCE);

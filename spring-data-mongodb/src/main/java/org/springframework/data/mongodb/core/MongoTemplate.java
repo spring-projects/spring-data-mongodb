@@ -676,22 +676,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 		return execute(collectionName, new CollectionCallback<WriteResult>() {
 			public WriteResult doInCollection(DBCollection collection) throws MongoException, DataAccessException {
-				DBObject queryObj = query.getQueryObject();
+				
+				MongoPersistentEntity<?> entity = entityClass == null ? null : getPersistentEntity(entityClass);
+				
+				DBObject queryObj = mapper.getMappedObject(query.getQueryObject(), entity);
 				DBObject updateObj = update.getUpdateObject();
-
-				String idProperty = "id";
-				if (null != entityClass) {
-					idProperty = getPersistentEntity(entityClass).getIdProperty().getName();
-				}
-				for (String key : queryObj.keySet()) {
-					if (idProperty.equals(key)) {
-						// This is an ID field
-						queryObj.put(ID, mongoConverter.convertToMongoType(queryObj.get(key)));
-						queryObj.removeField(key);
-					} else {
-						queryObj.put(key, mongoConverter.convertToMongoType(queryObj.get(key)));
-					}
-				}
 
 				for (String key : updateObj.keySet()) {
 					updateObj.put(key, mongoConverter.convertToMongoType(updateObj.get(key)));
