@@ -384,9 +384,9 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				}
 				if (null != propertyObj) {
 					if (!conversions.isSimpleType(propertyObj.getClass())) {
-						writePropertyInternal(prop, propertyObj, dbo);
+						writePropertyInternal(propertyObj, dbo, prop);
 					} else {
-						writeSimpleInternal(prop.getFieldName(), propertyObj, dbo);
+						writeSimpleInternal(propertyObj, dbo, prop.getFieldName());
 					}
 				}
 			}
@@ -405,14 +405,14 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 					throw new MappingException(e.getMessage(), e);
 				}
 				if (null != propertyObj) {
-					writePropertyInternal(inverseProp, propertyObj, dbo);
+					writePropertyInternal(propertyObj, dbo, inverseProp);
 				}
 			}
 		});
 	}
 
 	@SuppressWarnings({ "unchecked" })
-	protected void writePropertyInternal(MongoPersistentProperty prop, Object obj, DBObject dbo) {
+	protected void writePropertyInternal(Object obj, DBObject dbo, MongoPersistentProperty prop) {
 
 		if (obj == null) {
 			return;
@@ -421,7 +421,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		String name = prop.getFieldName();
 
 		if (prop.isCollection()) {
-			DBObject collectionInternal = writeCollectionInternal(prop, asCollection(obj));
+			DBObject collectionInternal = createCollection(asCollection(obj), prop);
 			dbo.put(name, collectionInternal);
 			return;
 		}
@@ -485,14 +485,15 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	/**
 	 * Writes the given {@link Collection} using the given {@link MongoPersistentProperty} information.
 	 * 
-	 * @param property
-	 * @param collection
+	 * @param collection must not be {@literal null}.
+	 * @param property must not be {@literal null}.
+	 * 
 	 * @return
 	 */
-	protected DBObject writeCollectionInternal(MongoPersistentProperty property, Collection<?> collection) {
+	protected DBObject createCollection(Collection<?> collection, MongoPersistentProperty property) {
 
 		if (!property.isDbReference()) {
-			return createCollectionDBObject(property.getTypeInformation(), collection);
+			return createCollectionDBObject(collection, property.getTypeInformation());
 		}
 
 		BasicDBList dbList = new BasicDBList();
@@ -513,11 +514,11 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	/**
 	 * Creates a new {@link BasicDBList} from the given {@link Collection}.
 	 * 
-	 * @param type the {@link TypeInformation} to consider or {@literal null} if unknown.
 	 * @param source the collection to create a {@link BasicDBList} for, must not be {@literal null}.
+	 * @param type the {@link TypeInformation} to consider or {@literal null} if unknown.
 	 * @return
 	 */
-	private BasicDBList createCollectionDBObject(TypeInformation<?> type, Collection<?> source) {
+	private BasicDBList createCollectionDBObject(Collection<?> source, TypeInformation<?> type) {
 
 		BasicDBList dbList = new BasicDBList();
 		TypeInformation<?> componentType = type == null ? null : type.getComponentType();
@@ -533,7 +534,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			if (conversions.isSimpleType(elementType)) {
 				dbList.add(getPotentiallyConvertedSimpleWrite(element));
 			} else if (element instanceof Collection || elementType.isArray()) {
-				dbList.add(createCollectionDBObject(componentType, asCollection(element)));
+				dbList.add(createCollectionDBObject(asCollection(element), componentType));
 			} else {
 				BasicDBObject propDbObj = new BasicDBObject();
 				writeInternal(element, propDbObj,
@@ -555,9 +556,9 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				// being convertable
 				String simpleKey = key.toString();
 				if (val == null || conversions.isSimpleType(val.getClass())) {
-					writeSimpleInternal(simpleKey, val, dbo);
+					writeSimpleInternal(val, dbo, simpleKey);
 				} else if (val instanceof Collection) {
-					dbo.put(simpleKey, createCollectionDBObject(propertyType.getMapValueType(), (Collection<?>) val));
+					dbo.put(simpleKey, createCollectionDBObject((Collection<?>) val, propertyType.getMapValueType()));
 				} else {
 					DBObject newDbo = new BasicDBObject();
 					writeInternal(val, newDbo);
@@ -595,11 +596,11 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	/**
 	 * Writes the given simple value to the given {@link DBObject}. Will store enum names for enum values.
 	 * 
-	 * @param key
 	 * @param value
-	 * @param dbObject
+	 * @param dbObject must not be {@literal null}.
+	 * @param key must not be {@literal null}.
 	 */
-	private void writeSimpleInternal(String key, Object value, DBObject dbObject) {
+	private void writeSimpleInternal(Object value, DBObject dbObject, String key) {
 		dbObject.put(key, getPotentiallyConvertedSimpleWrite(value));
 	}
 
@@ -757,7 +758,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	private Map<Object, Object> readMap(TypeInformation<?> type, DBObject dbObject) {
+	protected Map<Object, Object> readMap(TypeInformation<?> type, DBObject dbObject) {
 
 		Assert.notNull(type);
 		Assert.isTrue(type.isMap());
