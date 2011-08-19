@@ -62,6 +62,7 @@ import org.springframework.expression.Expression;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.util.Assert;
+import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
@@ -816,7 +817,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		try {
-			return Class.forName(classToBeUsed.toString());
+			return ClassUtils.forName(classToBeUsed.toString(), null);
 		} catch (ClassNotFoundException e) {
 			return null;
 		}
