@@ -18,11 +18,7 @@ package org.springframework.data.mongodb.core.mapping;
 
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
-import java.util.HashSet;
-import java.util.Set;
 
-import org.bson.types.CodeWScope;
-import org.bson.types.ObjectId;
 import org.springframework.data.mapping.context.AbstractMappingContext;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.util.TypeInformation;
@@ -32,23 +28,12 @@ import org.springframework.data.util.TypeInformation;
  * @author Oliver Gierke ogierke@vmware.com
  */
 public class MongoMappingContext extends AbstractMappingContext<BasicMongoPersistentEntity<?>, MongoPersistentProperty> {
-
-	private static final Set<Class<?>> MONGO_SIMPLE_TYPES = new HashSet<Class<?>>();
-
-	static {
-		MONGO_SIMPLE_TYPES.add(com.mongodb.DBRef.class);
-		MONGO_SIMPLE_TYPES.add(ObjectId.class);
-		MONGO_SIMPLE_TYPES.add(CodeWScope.class);
-		MONGO_SIMPLE_TYPES.add(Character.class);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mapping.AbstractMappingContext#setSimpleTypeHolder(org.springframework.data.mapping.SimpleTypeHolder)
+	
+	/**
+	 * Creates a new {@link MongoMappingContext}.
 	 */
-	@Override
-	public void setSimpleTypeHolder(SimpleTypeHolder simpleTypes) {
-		super.setSimpleTypeHolder(new SimpleTypeHolder(MONGO_SIMPLE_TYPES, simpleTypes));
+	public MongoMappingContext() {
+		setSimpleTypeHolder(MongoSimpleTypes.HOLDER);
 	}
 
 	/*

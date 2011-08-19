@@ -51,6 +51,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
+import com.mongodb.DBRef;
 import com.mongodb.Mongo;
 import com.mongodb.MongoException;
 import com.mongodb.WriteResult;
@@ -771,5 +772,21 @@ public class MongoTemplateTests {
 		assertThat(result, is(notNullValue()));
 		assertThat(result.getId(), is(person.getId()));
 		assertThat(result.getFirstName(), is("Carter"));
+	}
+
+	/**
+	 * @see DATADOC-246
+	 */
+	@Test
+	public void updatesDBRefsCorrectly() {
+		
+		DBRef first = new DBRef(factory.getDb(), "foo", new ObjectId());
+		DBRef second = new DBRef(factory.getDb(), "bar", new ObjectId());
+		
+		template.updateFirst(null, Update.update("dbRefs", Arrays.asList(first, second)), ClassWithDBRefs.class);
+	}
+	
+	class ClassWithDBRefs {
+		List<DBRef> dbrefs;
 	}
 }

@@ -13,6 +13,8 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.ConversionServiceFactory;
 import org.springframework.core.convert.support.GenericConversionService;
 
+import com.mongodb.DBRef;
+
 /**
  * Unit tests for {@link CustomConversions}.
  * 
@@ -81,6 +83,13 @@ public class CustomConversionsUnitTests {
 		assertThat(conversions.hasCustomWriteTarget(ObjectId.class), is(true));
 		assertThat(conversions.hasCustomReadTarget(ObjectId.class, String.class), is(true));
 		assertThat(conversions.hasCustomReadTarget(ObjectId.class, Object.class), is(false));
+	}
+
+	@Test
+	public void considersDBRefsToBeSimpleTypes() {
+		
+		CustomConversions conversions = new CustomConversions();
+		assertThat(conversions.isSimpleType(DBRef.class), is(true));
 	}
 	
 	@Test

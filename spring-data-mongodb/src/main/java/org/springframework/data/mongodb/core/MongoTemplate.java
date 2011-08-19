@@ -679,7 +679,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				
 				MongoPersistentEntity<?> entity = entityClass == null ? null : getPersistentEntity(entityClass);
 				
-				DBObject queryObj = mapper.getMappedObject(query.getQueryObject(), entity);
+				DBObject queryObj = query == null ? new BasicDBObject() : mapper.getMappedObject(query.getQueryObject(), entity);
 				DBObject updateObj = update.getUpdateObject();
 
 				for (String key : updateObj.keySet()) {
@@ -1123,7 +1123,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	}
 
 	private static final MongoConverter getDefaultMongoConverter(MongoDbFactory factory) {
-		// ToDo: maybe add some additional configurations to this very basic one
 		MappingMongoConverter converter = new MappingMongoConverter(factory, new MongoMappingContext());
 		converter.afterPropertiesSet();
 		return converter;

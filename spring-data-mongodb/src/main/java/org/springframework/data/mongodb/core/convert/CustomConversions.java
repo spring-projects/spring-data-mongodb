@@ -34,6 +34,7 @@ import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.mongodb.core.convert.MongoConverters.BigDecimalToStringConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.StringToBigDecimalConverter;
+import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
 import org.springframework.util.Assert;
 
 import com.mongodb.DBObject;
@@ -48,7 +49,7 @@ import com.mongodb.DBObject;
  * @author Oliver Gierke
  */
 public class CustomConversions {
-
+	
 	@SuppressWarnings({ "unchecked" })
 	private static final List<Class<?>> MONGO_TYPES = Arrays.asList(Number.class, Date.class, ObjectId.class, String.class,
 			DBObject.class);
@@ -79,7 +80,6 @@ public class CustomConversions {
 		this.readingPairs = new HashSet<ConvertiblePair>();
 		this.writingPairs = new HashSet<ConvertiblePair>();
 		this.customSimpleTypes = new HashSet<Class<?>>();
-		this.customSimpleTypes.add(ObjectId.class);
 
 		this.converters = new ArrayList<Object>();
 		this.converters.add(CustomToStringConverter.INSTANCE);
@@ -91,7 +91,7 @@ public class CustomConversions {
 			registerConversion(c);
 		}
 
-		this.simpleTypeHolder = new SimpleTypeHolder(customSimpleTypes, true);
+		this.simpleTypeHolder = new SimpleTypeHolder(customSimpleTypes, MongoSimpleTypes.HOLDER);
 	}
 
 	/**
