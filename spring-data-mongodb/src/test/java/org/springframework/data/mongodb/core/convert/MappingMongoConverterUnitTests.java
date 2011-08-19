@@ -605,6 +605,24 @@ public class MappingMongoConverterUnitTests {
 		assertThat(result.mapOfObjects, is(not(nullValue())));
 	}
 	
+	/**
+	 * @see DATADOC-245
+	 */
+	@Test
+	public void readsMapListNestedValuesCorrectly() {
+
+		BasicDBList list = new BasicDBList();
+		BasicDBObject nested = new BasicDBObject();
+		nested.append("Hello", "World");
+		list.add(nested);
+		DBObject source = new BasicDBObject("mapOfObjects", new BasicDBObject("Foo", list));
+
+		ClassWithMapProperty result = converter.read(ClassWithMapProperty.class, source);
+		Object firstObjectInFoo = ((List<?>) result.mapOfObjects.get("Foo")).get(0);
+		assertThat(firstObjectInFoo, is(instanceOf(Map.class)));
+		assertThat((String)((Map<?,?>) firstObjectInFoo).get("Hello"), is(equalTo("World")));
+	}
+	
 	class GenericType<T> {
 		T content;
 	}

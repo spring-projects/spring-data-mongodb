@@ -79,6 +79,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	private static final List<Class<?>> VALID_ID_TYPES = Arrays.asList(new Class<?>[] { ObjectId.class, String.class,
 			BigInteger.class, byte[].class });
+	private static final TypeInformation<Map> MAP_TYPE_INFORMATION = ClassTypeInformation.from(Map.class);
+	
 	protected static final Log log = LogFactory.getLog(MappingMongoConverter.class);
 
 	protected final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
@@ -173,6 +175,10 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				}
 			}
 			return conversionService.convert(l, rawType);
+		}
+		
+		if (typeToUse.isMap()) {
+			return (S) readMap(typeToUse, dbo);
 		}
 
 		// Retrieve persistent entity info
@@ -638,6 +644,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private Object getPotentiallyConvertedSimpleRead(Object value, Class<?> target) {
 		
+		Assert.notNull(target);
+		
 		if (value == null) {
 			return null;
 		}
@@ -761,10 +769,9 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	@SuppressWarnings("unchecked")
 	protected Map<Object, Object> readMap(TypeInformation<?> type, DBObject dbObject) {
 
-		Assert.notNull(type);
-		Assert.isTrue(type.isMap());
 		Assert.notNull(dbObject);
-
+		
+		type = type == null ? MAP_TYPE_INFORMATION : type;
 		Class<?> customMapType = findTypeToBeUsed(dbObject);
 		Class<?> mapType = customMapType == null ? type.getType() : customMapType;
 
@@ -776,19 +783,26 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				continue;
 			}
 
-			Class<?> keyType = type.getComponentType().getType();
-			Object key = conversionService.convert(entry.getKey(), keyType);
+			Object key = entry.getKey();
+			
+			TypeInformation<?> keyTypeInformation = type.getComponentType();
+			if (keyTypeInformation != null) {
+				Class<?> keyType = keyTypeInformation.getType();
+				key = conversionService.convert(entry.getKey(), keyType);
+			}
+			
+			Object value = entry.getValue();
+			TypeInformation<?> valueType = type.getMapValueType();
+			valueType = valueType == null ? MAP_TYPE_INFORMATION : valueType;
 
-			if (null != entry.getValue() && entry.getValue() instanceof DBObject) {
-
-				DBObject valueSource = (DBObject) entry.getValue();
-				TypeInformation<?> valueType = type.getMapValueType();
-
-				Object value = valueType.isMap() ? readMap(valueType, valueSource) : read(valueType, valueSource);
-
-				map.put(key, value);
+			if (value instanceof BasicDBList) {
+				BasicDBList list =(BasicDBList) value;
+				map.put(key, read(valueType, list));
+			} else if (value instanceof DBObject) {
+				DBObject valueSource = (DBObject) value;
+				map.put(key, valueType.isMap() ? readMap(valueType, valueSource) : read(valueType, valueSource));
 			} else {
-				map.put(key, getPotentiallyConvertedSimpleRead(entry.getValue(), type.getMapValueType().getType()));
+				map.put(key, getPotentiallyConvertedSimpleRead(value, valueType.getType()));
 			}
 		}
 
@@ -835,9 +849,13 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	private <S> TypeInformation<? extends S> getMoreConcreteTargetType(DBObject dbObject, TypeInformation<S> basicType) {
 		Class<?> documentsTargetType = findTypeToBeUsed(dbObject);
 		Class<S> rawType = basicType.getType();
+		
+		if (documentsTargetType == null && Object.class.equals(rawType)) {
+			return (TypeInformation<? extends S>) MAP_TYPE_INFORMATION;
+		}
+		
 		boolean isMoreConcreteCustomType = documentsTargetType != null && rawType.isAssignableFrom(documentsTargetType);
-		return isMoreConcreteCustomType ? (TypeInformation<? extends S>) ClassTypeInformation.from(documentsTargetType)
-				: basicType;
+		return isMoreConcreteCustomType ? (TypeInformation<? extends S>) ClassTypeInformation.from(documentsTargetType) : basicType;
 	}
 
 	protected <T> List<?> unwrapList(BasicDBList dbList, TypeInformation<T> targetType) {
