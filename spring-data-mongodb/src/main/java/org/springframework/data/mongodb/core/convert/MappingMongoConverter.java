@@ -77,9 +77,10 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	public static final String CUSTOM_TYPE_KEY = "_class";
 
+	@SuppressWarnings("rawtypes")
+	private static final TypeInformation<Map> MAP_TYPE_INFORMATION = ClassTypeInformation.from(Map.class);
 	private static final List<Class<?>> VALID_ID_TYPES = Arrays.asList(new Class<?>[] { ObjectId.class, String.class,
 			BigInteger.class, byte[].class });
-	private static final TypeInformation<Map> MAP_TYPE_INFORMATION = ClassTypeInformation.from(Map.class);
 	
 	protected static final Log log = LogFactory.getLog(MappingMongoConverter.class);
 

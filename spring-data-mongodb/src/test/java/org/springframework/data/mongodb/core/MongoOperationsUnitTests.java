@@ -20,9 +20,7 @@ import static org.junit.Assert.*;
 
 import java.util.Arrays;
 import java.util.List;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
-import org.bson.types.ObjectId;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -30,14 +28,13 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.mapping.context.MappingContext;
-import org.springframework.data.mongodb.core.CollectionCallback;
-import org.springframework.data.mongodb.core.CollectionOptions;
-import org.springframework.data.mongodb.core.DbCallback;
-import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.convert.AbstractMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
 
 /**
  * Abstract base class for unit tests to specify behaviour we expect from {@link MongoOperations}. Subclasses return
@@ -74,14 +71,9 @@ public abstract class MongoOperationsUnitTests {
 				return (S) person;
 			}
 
-			public ObjectId convertObjectId(Object id) {
-				return null;
-			}
-
 			public MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> getMappingContext() {
 				return null;
 			}
-			
 
 			public Object convertToMongoType(Object obj) {
 				return null;
