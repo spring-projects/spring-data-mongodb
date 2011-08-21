@@ -47,18 +47,26 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Query> {
 
 	private static final Log LOG = LogFactory.getLog(MongoQueryCreator.class);
 	private final MongoParameterAccessor accessor;
+	private final boolean isGeoNearQuery;
 
+	public MongoQueryCreator(PartTree tree, ConvertingParameterAccessor accessor) {
+		this(tree, accessor, false);
+	}
+	
 	/**
 	 * Creates a new {@link MongoQueryCreator} from the given {@link PartTree} and {@link ParametersParameterAccessor}.
 	 * 
 	 * @param tree
 	 * @param accessor
+	 * @param isGeoNearQuery
 	 */
-	public MongoQueryCreator(PartTree tree, ConvertingParameterAccessor accessor) {
+	public MongoQueryCreator(PartTree tree, ConvertingParameterAccessor accessor, boolean isGeoNearQuery) {
 
 		super(tree, accessor);
 		this.accessor = accessor;
+		this.isGeoNearQuery = isGeoNearQuery;
 	}
+	
 
 	/*
 	* (non-Javadoc)
@@ -66,6 +74,10 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Query> {
 	*/
 	@Override
 	protected Query create(Part part, Iterator<Object> iterator) {
+		
+		if (isGeoNearQuery && part.getType().equals(Type.NEAR)) {
+			return null;
+		}
 
 		Criteria criteria = from(part.getType(), where(part.getProperty().toDotPath()),
 				(PotentiallyConvertingIterator) iterator);
@@ -79,6 +91,10 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Query> {
 	*/
 	@Override
 	protected Query and(Part part, Query base, Iterator<Object> iterator) {
+		
+		if (base == null) {
+			return create(part, iterator);
+		}
 
 		Criteria criteria = from(part.getType(), where(part.getProperty().toDotPath()),
 				(PotentiallyConvertingIterator) iterator);

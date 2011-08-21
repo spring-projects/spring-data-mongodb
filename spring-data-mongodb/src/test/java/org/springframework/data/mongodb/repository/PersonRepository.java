@@ -23,6 +23,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.geo.Box;
 import org.springframework.data.mongodb.core.geo.Circle;
+import org.springframework.data.mongodb.core.geo.Distance;
+import org.springframework.data.mongodb.core.geo.GeoResults;
 import org.springframework.data.mongodb.core.geo.Point;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
@@ -140,4 +142,6 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	List<Person> findBySex(Sex sex);
 	
 	List<Person> findByNamedQuery(String firstname);
+	
+	GeoResults<Person> findByLocationNear(Point point, Distance maxDistance);
 }

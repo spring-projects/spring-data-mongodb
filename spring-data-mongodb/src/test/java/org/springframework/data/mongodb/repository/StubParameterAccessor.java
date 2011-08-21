@@ -22,6 +22,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.convert.MongoWriter;
 import org.springframework.data.mongodb.core.geo.Distance;
+import org.springframework.data.mongodb.core.geo.Point;
 import org.springframework.data.mongodb.repository.ConvertingParameterAccessor;
 import org.springframework.data.repository.query.ParameterAccessor;
 
@@ -91,5 +92,12 @@ class StubParameterAccessor implements MongoParameterAccessor {
 	  */
 	public Iterator<Object> iterator() {
 		return Arrays.asList(values).iterator();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.MongoParameterAccessor#getGeoNearLocation()
+	 */
+	public Point getGeoNearLocation() {
+		return null;
 	}
 }

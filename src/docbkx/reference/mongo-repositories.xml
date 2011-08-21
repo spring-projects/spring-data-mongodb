@@ -286,6 +286,66 @@ public class PersonRepositoryTests {
       </table></para>
 
     <section>
+      <title>Geo-spatial repository queries</title>
+
+      <para>As you've just seen there are a few keywords triggering
+      geo-spatial operations within a MongoDB query. The <code>Near</code>
+      keyword allows some further modification. Let's have look at some
+      examples:</para>
+
+      <example>
+        <title>Advanced <code>Near</code> queries</title>
+
+        <programlisting language="java">public interface PersonRepository extends MongoRepository&lt;Person, String&gt;
+
+  // { 'location' : { '$near' : [point.x, point.y], '$maxDistance' : distance}}
+  List&lt;Person&gt; findByLocationNear(Point location, Distance distance);
+}</programlisting>
+      </example>
+
+      <para>Adding a <classname>Distance</classname> parameter to the query
+      method allows restricting results to those within the given distance. If
+      the <classname>Distance</classname> was set up containing a
+      <interfacename>Metric</interfacename> we will transparently use
+      <code>$nearSphere</code> instead of $code.</para>
+
+      <example>
+        <title>Using <code>Distance</code> with <code>Metrics</code></title>
+
+        <programlisting language="java">Point point = new Point(43.7, 48.8);
+Distance distance = new Distance(200, Metrics.KILOMETERS);
+… = repository.findByLocationNear(point, distance);
+// {'location' : {'$nearSphere' : [43.7, 48.8], '$maxDistance' : 0.03135711885774796}}</programlisting>
+      </example>
+
+      <para>As you can see using a <classname>Distance</classname> equipped
+      with a <interfacename>Metric</interfacename> causes
+      <code>$nearSphere</code> clause to be added instead of a plain
+      <code>$near</code>. Beyond that the actual distance gets calculated
+      according to the <classname>Metrics</classname> used.</para>
+
+      <simplesect>
+        <title>Geo-near queries</title>
+
+        <para></para>
+
+        <programlisting language="java">public interface PersonRepository extends MongoRepository&lt;Person, String&gt;
+
+  // {'geoNear' : 'location', 'near' : [x, y] }
+  GeoResults&lt;Person&gt; findByLocationNear(Point location);
+
+  // No metric: {'geoNear' : 'person', 'near' : [x, y], maxDistance : distance }
+  // Metric: {'geoNear' : 'person', 'near' : [x, y], 'maxDistance' : distance, 
+  //          'distanceMultiplier' : metric.multiplier, 'spherical' : true }
+  GeoResults&lt;Person&gt; findByLocationNear(Point location, Distance distance);
+
+  // {'geoNear' : 'location', 'near' : [x, y] }
+  GeoResults&lt;Person&gt; findByLocationNear(Point location);
+}</programlisting>
+      </simplesect>
+    </section>
+
+    <section>
       <title>Mongo JSON based query methods and field restriction</title>
 
       <para>By adding the annotation

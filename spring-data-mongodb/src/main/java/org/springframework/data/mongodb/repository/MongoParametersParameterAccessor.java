@@ -16,24 +16,27 @@
 package org.springframework.data.mongodb.repository;
 
 import org.springframework.data.mongodb.core.geo.Distance;
+import org.springframework.data.mongodb.core.geo.Point;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
 
 /**
  * Mongo-specific {@link ParametersParameterAccessor} to allow access to the {@link Distance} parameter.
- * 
+ *
  * @author Oliver Gierke
  */
 public class MongoParametersParameterAccessor extends ParametersParameterAccessor implements MongoParameterAccessor {
 
-	private final MongoParameters parameters;
-
+	private final MongoQueryMethod method;
+	
 	/**
-	 * @param parameters
-	 * @param values
+	 * Creates a new {@link MongoParametersParameterAccessor}.
+	 * 
+	 * @param method must not be {@literal null}.
+	 * @param values must not be {@@iteral null}.
 	 */
-	public MongoParametersParameterAccessor(MongoParameters parameters, Object[] values) {
-		super(parameters, values);
-		this.parameters = parameters;
+	public MongoParametersParameterAccessor(MongoQueryMethod method, Object[] values) {
+		super(method.getParameters(), values);
+		this.method = method;
 	}
 
 	/*
@@ -41,7 +44,37 @@ public class MongoParametersParameterAccessor extends ParametersParameterAccesso
 	 * @see org.springframework.data.mongodb.repository.MongoParameterAccessor#getMaxDistance()
 	 */
 	public Distance getMaxDistance() {
-		int index = parameters.getDistanceIndex();
+		int index = method.getParameters().getDistanceIndex();
 		return index == -1 ? null : (Distance) getValue(index);
+	}
+	
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.MongoParameterAccessor#getGeoNearLocation()
+	 */
+	public Point getGeoNearLocation() {
+		
+		int nearIndex = method.getParameters().getNearIndex();
+		
+		if (nearIndex == -1) {
+			return null;
+		}
+		
+		Object value = getValue(nearIndex);
+		
+		if (value == null) {
+			return null;
+		}
+		
+		if (value instanceof double[]) {
+			double[] typedValue = (double[]) value;
+			if (typedValue.length != 2) {
+				throw new IllegalArgumentException("The given double[] must have exactly 2 elements!");
+			} else {
+				return new Point(typedValue[0], typedValue[1]);
+			}
+		}
+		
+		return (Point) value;
 	}
 }

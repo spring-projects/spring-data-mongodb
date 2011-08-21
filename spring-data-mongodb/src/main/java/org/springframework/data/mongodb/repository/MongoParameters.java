@@ -17,9 +17,11 @@ package org.springframework.data.mongodb.repository;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.List;
 
 import org.springframework.core.MethodParameter;
 import org.springframework.data.mongodb.core.geo.Distance;
+import org.springframework.data.mongodb.core.geo.Point;
 import org.springframework.data.repository.query.Parameter;
 import org.springframework.data.repository.query.Parameters;
 
@@ -30,40 +32,107 @@ import org.springframework.data.repository.query.Parameters;
  */
 public class MongoParameters extends Parameters {
 
-	private int distanceIndex = -1;
-
-	public MongoParameters(Method method) {
-
+	private final Integer distanceIndex;
+	private Integer nearIndex;
+	
+	/**
+	 * Creates a new {@link MongoParameters} instance from the given {@link Method} and {@link MongoQueryMethod}.
+	 * 
+	 * @param method must not be {@literal null}.
+	 * @param queryMethod must not be {@literal null}.
+	 */
+	public MongoParameters(Method method, boolean isGeoNearMethod) {
+		
 		super(method);
-		this.distanceIndex = Arrays.asList(method.getParameterTypes()).indexOf(Distance.class);
+		List<Class<?>> parameterTypes = Arrays.asList(method.getParameterTypes());
+		this.distanceIndex = parameterTypes.indexOf(Distance.class);
+		
+		if (this.nearIndex == null && isGeoNearMethod) {
+			this.nearIndex = getNearIndex(parameterTypes);
+		} else if (this.nearIndex == null) {
+			this.nearIndex = -1;
+		}
 	}
-
-	/* (non-Javadoc)
+	
+	@SuppressWarnings("unchecked")
+	private final int getNearIndex(List<Class<?>> parameterTypes) {
+		
+		for (Class<?> reference : Arrays.asList(Point.class, double[].class)) {
+			
+			int nearIndex = parameterTypes.indexOf(reference);
+			
+			if (nearIndex == -1) {
+				continue;
+			}
+			
+			if (nearIndex == parameterTypes.lastIndexOf(reference)) {
+				return nearIndex;
+			} else {
+				throw new IllegalStateException("Multiple Point parameters found but none annotated with @Near!");
+			}
+		}
+		
+		return -1;
+	}
+	
+	/*
+	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.query.Parameters#createParameter(org.springframework.core.MethodParameter)
 	 */
 	@Override
 	protected Parameter createParameter(MethodParameter parameter) {
-		return new MongoParameter(parameter, this);
-	}
-
-	public int getDistanceIndex() {
-		return distanceIndex;
+		
+		MongoParameter mongoParameter = new MongoParameter(parameter);
+		
+		// Detect manually annotated @Near Point and reject multiple annotated ones
+		if (this.nearIndex == null && mongoParameter.isManuallyAnnotatedNearParameter()) {
+			this.nearIndex = mongoParameter.getIndex();
+		} else if (mongoParameter.isManuallyAnnotatedNearParameter()) {
+			throw new IllegalStateException(String.format("Found multiple @Near annotations ond method %s! Only one allowed!", parameter.getMethod().toString()));
+		}
+		
+		return mongoParameter;
 	}
 
 	/**
-	 * Custom {@link Parameter} implementation adding parameters of type {@link Distance} to the special ones.
+	 * Returns the index of a {@link Distance} parameter to be used for geo queries.
 	 * 
+	 * @return
+	 */
+	public int getDistanceIndex() {
+		return distanceIndex;
+	}
+	
+	/**
+	 * Returns the index of the parameter to be used to start a geo-near query from.
+	 * 
+	 * @return
+	 */
+	public int getNearIndex() {
+		return nearIndex;
+	}
+	
+	/**
+	 * Custom {@link Parameter} implementation adding parameters of type {@link Distance} to the special ones.
+	 *
 	 * @author Oliver Gierke
 	 */
-	static class MongoParameter extends Parameter {
-
+	class MongoParameter extends Parameter {
+		
+		private final MethodParameter parameter;
+		
 		/**
+		 * Creates a new {@link MongoParameter}.
 		 * 
-		 * @param parameter
-		 * @param parameters
+		 * @param parameter must not be {@literal null}.
 		 */
-		MongoParameter(MethodParameter parameter, Parameters parameters) {
-			super(parameter, parameters);
+		MongoParameter(MethodParameter parameter) {
+			super(parameter);
+			this.parameter = parameter;
+			
+			if (!isPoint() && hasNearAnnotation()) {
+				throw new IllegalArgumentException("Near annotation is only allowed at Point parameter!");
+			}
 		}
 
 		/*
@@ -72,7 +141,25 @@ public class MongoParameters extends Parameters {
 		 */
 		@Override
 		public boolean isSpecialParameter() {
-			return super.isSpecialParameter() || getType().equals(Distance.class);
+			return super.isSpecialParameter() || getType().equals(Distance.class)
+					|| isNearParameter();
+		}
+		
+		private boolean isNearParameter() {
+			Integer nearIndex = MongoParameters.this.nearIndex;
+			return nearIndex != null && nearIndex.equals(getIndex());
+		}
+		
+		private boolean isManuallyAnnotatedNearParameter() {
+			return isPoint() && hasNearAnnotation();
+		}
+		
+		private boolean isPoint() {
+			return getType().equals(Point.class) || getType().equals(double[].class);
+		}
+		
+		private boolean hasNearAnnotation() {
+			return parameter.getParameterAnnotation(Near.class) != null;
 		}
 	}
 }

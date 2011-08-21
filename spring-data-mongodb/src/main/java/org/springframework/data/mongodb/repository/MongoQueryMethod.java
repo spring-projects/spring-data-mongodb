@@ -16,13 +16,21 @@
 package org.springframework.data.mongodb.repository;
 
 import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.List;
 
 import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.data.mongodb.core.geo.GeoPage;
+import org.springframework.data.mongodb.core.geo.GeoResult;
+import org.springframework.data.mongodb.core.geo.GeoResults;
 import org.springframework.data.mongodb.repository.MongoRepositoryFactoryBean.EntityInformationCreator;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.query.Parameters;
 import org.springframework.data.repository.query.QueryMethod;
 import org.springframework.data.repository.util.ClassUtils;
+import org.springframework.data.util.ClassTypeInformation;
+import org.springframework.data.util.TypeInformation;
+import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 /**
@@ -32,6 +40,10 @@ import org.springframework.util.StringUtils;
  * @author Oliver Gierke
  */
 class MongoQueryMethod extends QueryMethod {
+
+	@SuppressWarnings("unchecked")
+	private static final List<Class<?>> GEO_NEAR_RESULTS = Arrays
+			.asList(GeoResult.class, GeoResults.class, GeoPage.class);
 
 	private final Method method;
 	private final MongoEntityInformation<?, ?> entityInformation;
@@ -43,6 +55,7 @@ class MongoQueryMethod extends QueryMethod {
 	 */
 	public MongoQueryMethod(Method method, RepositoryMetadata metadata, EntityInformationCreator entityInformationCreator) {
 		super(method, metadata);
+		Assert.notNull(entityInformationCreator, "EntityInformationCreator must not be null!");
 		this.method = method;
 		this.entityInformation = entityInformationCreator.getEntityInformation(ClassUtils.getReturnedDomainClass(method),
 				getDomainClass());
@@ -54,7 +67,7 @@ class MongoQueryMethod extends QueryMethod {
 	 */
 	@Override
 	protected Parameters createParameters(Method method) {
-		return new MongoParameters(method);
+		return new MongoParameters(method, isGeoNearQuery(method));
 	}
 
 	/**
@@ -109,12 +122,39 @@ class MongoQueryMethod extends QueryMethod {
 	}
 
 	/**
+	 * Returns whether te query is a geoNear query.
+	 * 
+	 * @return
+	 */
+	public boolean isGeoNearQuery() {
+
+		return isGeoNearQuery(this.method);
+	}
+
+	private boolean isGeoNearQuery(Method method) {
+
+		if (GEO_NEAR_RESULTS.contains(method.getReturnType())) {
+			return true;
+		}
+
+		if (Iterable.class.isAssignableFrom(method.getReturnType())) {
+			TypeInformation<?> from = ClassTypeInformation.fromReturnTypeOf(method);
+			return GeoResult.class.equals(from.getComponentType().getType());
+		}
+
+		return false;
+	}
+
+	/**
 	 * Returns the {@link Query} annotation that is applied to the method or {@code null} if none available.
 	 * 
 	 * @return
 	 */
 	private Query getQueryAnnotation() {
-
 		return method.getAnnotation(Query.class);
+	}
+
+	TypeInformation<?> getReturnType() {
+		return ClassTypeInformation.fromReturnTypeOf(method);
 	}
 }
