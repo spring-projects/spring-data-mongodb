@@ -21,6 +21,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoWriter;
+import org.springframework.data.mongodb.core.geo.Distance;
 import org.springframework.data.repository.query.ParameterAccessor;
 
 import com.mongodb.BasicDBList;
@@ -31,17 +32,17 @@ import com.mongodb.DBObject;
  * 
  * @author Oliver Gierke
  */
-public class ConvertingParameterAccessor implements ParameterAccessor {
+public class ConvertingParameterAccessor implements MongoParameterAccessor {
 
 	private final MongoWriter<Object> writer;
-	private final ParameterAccessor delegate;
+	private final MongoParameterAccessor delegate;
 
 	/**
 	 * Creates a new {@link ConvertingParameterAccessor} with the given {@link MongoWriter} and delegate.
 	 * 
 	 * @param writer
 	 */
-	public ConvertingParameterAccessor(MongoWriter<Object> writer, ParameterAccessor delegate) {
+	public ConvertingParameterAccessor(MongoWriter<Object> writer, MongoParameterAccessor delegate) {
 		this.writer = writer;
 		this.delegate = delegate;
 	}
@@ -51,7 +52,7 @@ public class ConvertingParameterAccessor implements ParameterAccessor {
 	  *
 	  * @see java.lang.Iterable#iterator()
 	  */
-	public Iterator<Object> iterator() {
+	public PotentiallyConvertingIterator iterator() {
 		return new ConvertingIterator(delegate.iterator());
 	}
 
@@ -79,6 +80,14 @@ public class ConvertingParameterAccessor implements ParameterAccessor {
 	public Object getBindableValue(int index) {
 
 		return getConvertedValue(delegate.getBindableValue(index));
+	}
+	
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.MongoParameterAccessor#getMaxDistance()
+	 */
+	public Distance getMaxDistance() {
+		return delegate.getMaxDistance();
 	}
 
 	/**

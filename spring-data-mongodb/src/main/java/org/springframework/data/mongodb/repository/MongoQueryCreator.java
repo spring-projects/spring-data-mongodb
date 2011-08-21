@@ -26,12 +26,12 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.geo.Box;
 import org.springframework.data.mongodb.core.geo.Circle;
+import org.springframework.data.mongodb.core.geo.Distance;
 import org.springframework.data.mongodb.core.geo.Point;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.ConvertingParameterAccessor.PotentiallyConvertingIterator;
-import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
 import org.springframework.data.repository.query.parser.AbstractQueryCreator;
 import org.springframework.data.repository.query.parser.Part;
@@ -46,6 +46,7 @@ import org.springframework.data.repository.query.parser.PartTree;
 class MongoQueryCreator extends AbstractQueryCreator<Query, Query> {
 
 	private static final Log LOG = LogFactory.getLog(MongoQueryCreator.class);
+	private final MongoParameterAccessor accessor;
 
 	/**
 	 * Creates a new {@link MongoQueryCreator} from the given {@link PartTree} and {@link ParametersParameterAccessor}.
@@ -53,9 +54,10 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Query> {
 	 * @param tree
 	 * @param accessor
 	 */
-	public MongoQueryCreator(PartTree tree, ParameterAccessor accessor) {
+	public MongoQueryCreator(PartTree tree, ConvertingParameterAccessor accessor) {
 
 		super(tree, accessor);
+		this.accessor = accessor;
 	}
 
 	/*
@@ -144,9 +146,23 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Query> {
 			String value = parameters.next().toString();
 			return criteria.is(toLikeRegex(value));
 		case NEAR:
-			return criteria.near(nextAs(parameters, Point.class));
+			
+			Distance distance = accessor.getMaxDistance();
+			Point point = nextAs(parameters, Point.class);
+			
+			if (distance == null) {
+				return criteria.near(point);
+			} else {
+				if (distance.getMetric() != null) {
+					criteria.nearSphere(point);
+				} else {
+					criteria.near(point);
+				}
+				criteria.maxDistance(distance.getNormalizedValue());
+			}
+			return criteria;
+			
 		case WITHIN:
-
 			Object parameter = parameters.next();
 			if (parameter instanceof Box) {
 				return criteria.withinBox((Box) parameter);

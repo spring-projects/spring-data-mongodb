@@ -46,7 +46,7 @@ public class NearQuery {
 		Assert.notNull(point);
 
 		this.criteria = new BasicDBObject();
-		this.criteria.put("near", point.asArray());
+		this.criteria.put("near", point.asList());
 
 		this.metric = metric;
 		if (metric != null) {

@@ -20,6 +20,7 @@ import java.lang.reflect.Method;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.data.mongodb.repository.MongoRepositoryFactoryBean.EntityInformationCreator;
 import org.springframework.data.repository.core.RepositoryMetadata;
+import org.springframework.data.repository.query.Parameters;
 import org.springframework.data.repository.query.QueryMethod;
 import org.springframework.data.repository.util.ClassUtils;
 import org.springframework.util.StringUtils;
@@ -44,6 +45,15 @@ class MongoQueryMethod extends QueryMethod {
 		super(method, metadata);
 		this.method = method;
 		this.entityInformation = entityInformationCreator.getEntityInformation(ClassUtils.getReturnedDomainClass(method));
+	}
+	
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.query.QueryMethod#getParameters(java.lang.reflect.Method)
+	 */
+	@Override
+	protected Parameters createParameters(Method method) {
+		return new MongoParameters(method);
 	}
 
 	/**
@@ -78,13 +88,23 @@ class MongoQueryMethod extends QueryMethod {
 		return StringUtils.hasText(value) ? value : null;
 	}
 
-	/* (non-Javadoc)
-	  * @see org.springframework.data.repository.query.QueryMethod#getEntityMetadata()
-	  */
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.query.QueryMethod#getEntityInformation()
+	 */
 	@Override
 	public MongoEntityInformation<?, ?> getEntityInformation() {
 
 		return entityInformation;
+	}
+	
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.query.QueryMethod#getParameters()
+	 */
+	@Override
+	public MongoParameters getParameters() {
+		return (MongoParameters) super.getParameters();
 	}
 
 	/**

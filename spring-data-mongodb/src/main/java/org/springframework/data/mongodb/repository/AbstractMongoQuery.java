@@ -19,18 +19,18 @@ import static org.springframework.data.mongodb.repository.QueryUtils.*;
 
 import java.util.List;
 
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.CollectionCallback;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.repository.query.ParameterAccessor;
-import org.springframework.data.repository.query.ParametersParameterAccessor;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.util.Assert;
+
+import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
+import com.mongodb.DBObject;
 
 /**
  * Base class for {@link RepositoryQuery} implementations for Mongo.
@@ -72,15 +72,14 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	  */
 	public Object execute(Object[] parameters) {
 
-		ParameterAccessor accessor = new ParametersParameterAccessor(method.getParameters(), parameters);
+		MongoParameterAccessor accessor = new MongoParametersParameterAccessor(method.getParameters(), parameters);
 		Query query = createQuery(new ConvertingParameterAccessor(template.getConverter(), accessor));
 
-		switch (method.getType()) {
-		case COLLECTION:
+		if (method.isCollectionQuery()) {
 			return new CollectionExecution().execute(query);
-		case PAGING:
+		} else if (method.isPageQuery()) {
 			return new PagedExecution(accessor.getPageable()).execute(query);
-		default:
+		} else {
 			return new SingleEntityExecution().execute(query);
 		}
 	}

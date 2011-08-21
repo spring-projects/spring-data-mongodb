@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2010 the original author or authors.
+ * Copyright 2011 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,8 +19,12 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 import static org.hamcrest.CoreMatchers.*;
 import static org.springframework.data.mongodb.repository.StubParameterAccessor.*;
+import static org.springframework.data.mongodb.core.query.Query.*;
+import static org.springframework.data.mongodb.core.query.Criteria.*;
 
 import java.lang.reflect.Method;
+import java.util.List;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -31,6 +35,9 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
 import org.springframework.data.mongodb.core.Person;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.core.geo.Distance;
+import org.springframework.data.mongodb.core.geo.Metrics;
+import org.springframework.data.mongodb.core.geo.Point;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.MongoQueryCreator;
@@ -95,5 +102,43 @@ public class MongoQueryCreatorUnitTests {
 		Query query = new MongoQueryCreator(tree, getAccessor(converter)).createQuery();
 
 		assertThat(query.getQueryObject(), is(new Query(Criteria.where("firstName").is(null)).getQueryObject()));
+	}
+	
+	@Test
+	public void bindsMetricDistanceParameterToNearSphereCorrectly() throws Exception {
+
+		Point point = new Point(10, 20);
+		Distance distance = new Distance(2.5, Metrics.KILOMETERS);
+		
+		Query query = query(where("location").nearSphere(point).maxDistance(distance.getNormalizedValue()).and("firstname").is("Dave"));
+		assertBindsDistanceToQuery(point, distance, query);
+	}
+	
+	@Test
+	public void bindsDistanceParameterToNearCorrectly() throws Exception {
+
+		Point point = new Point(10, 20);
+		Distance distance = new Distance(2.5);
+		
+		Query query = query(where("location").near(point).maxDistance(distance.getNormalizedValue()).and("firstname").is("Dave"));
+		assertBindsDistanceToQuery(point, distance, query);
+	}
+	
+	private void assertBindsDistanceToQuery(Point point, Distance distance, Query reference) throws Exception {
+			
+			when(converter.convertToMongoType("Dave")).thenReturn("Dave");
+			
+			PartTree tree = new PartTree("findByLocationNearAndFirstname", org.springframework.data.mongodb.repository.Person.class);
+			MongoParameters parameters = new MongoParameters(PersonRepository.class.getMethod("findByLocationNearAndFirstname", Point.class, Distance.class, String.class));
+			MongoParameterAccessor accessor = new MongoParametersParameterAccessor(parameters, new Object[] { point, distance, "Dave" });
+
+			Query query = new MongoQueryCreator(tree, new ConvertingParameterAccessor(converter, accessor)).createQuery();
+			assertThat(query.getQueryObject(), is(query.getQueryObject()));
+		
+	}
+	
+	interface PersonRepository {
+		
+		List<Person> findByLocationNearAndFirstname(Point location, Distance maxDistance, String firstname);
 	}
 }

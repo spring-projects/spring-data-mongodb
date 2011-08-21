@@ -18,7 +18,6 @@ package org.springframework.data.mongodb.core.query;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.List;
 
 import com.mongodb.BasicDBObject;
@@ -295,8 +294,8 @@ public class Criteria implements CriteriaDefinition {
 	 */
 	public Criteria withinCenter(Circle circle) {
 		Assert.notNull(circle);
-		LinkedList<Object> list = new LinkedList<Object>();
-		list.addLast(circle.getCenter().asArray());
+		List<Object> list = new ArrayList<Object>();
+		list.add(circle.getCenter().asList());
 		list.add(circle.getRadius());
 		criteria.put("$within", new BasicDBObject("$center", list));
 		return this;
@@ -311,8 +310,8 @@ public class Criteria implements CriteriaDefinition {
 	 */
 	public Criteria withinCenterSphere(Circle circle) {
 		Assert.notNull(circle);
-		LinkedList<Object> list = new LinkedList<Object>();
-		list.addLast(circle.getCenter().asArray());
+		List<Object> list = new ArrayList<Object>();
+		list.add(circle.getCenter().asList());
 		list.add(circle.getRadius());
 		criteria.put("$within", new BasicDBObject("$centerSphere", list));
 		return this;
@@ -326,9 +325,9 @@ public class Criteria implements CriteriaDefinition {
 	 */
 	public Criteria withinBox(Box box) {
 		Assert.notNull(box);
-		LinkedList<double[]> list = new LinkedList<double[]>();
-		list.addLast(box.getLowerLeft().asArray());
-		list.addLast(box.getUpperRight().asArray());
+		List<List<Double>> list = new ArrayList<List<Double>>();
+		list.add(box.getLowerLeft().asList());
+		list.add(box.getUpperRight().asList());
 		criteria.put("$within", new BasicDBObject("$box", list));
 		return this;
 	}
@@ -342,7 +341,7 @@ public class Criteria implements CriteriaDefinition {
 	 */
 	public Criteria near(Point point) {
 		Assert.notNull(point);
-		criteria.put("$near", point.asArray());
+		criteria.put("$near", point.asList());
 		return this;
 	}
 
@@ -355,7 +354,7 @@ public class Criteria implements CriteriaDefinition {
 	 */
 	public Criteria nearSphere(Point point) {
 		Assert.notNull(point);
-		criteria.put("$nearSphere", point.asArray());
+		criteria.put("$nearSphere", point.asList());
 		return this;
 	}
 

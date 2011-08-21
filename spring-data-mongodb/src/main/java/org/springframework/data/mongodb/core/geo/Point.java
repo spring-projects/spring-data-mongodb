@@ -15,6 +15,9 @@
  */
 package org.springframework.data.mongodb.core.geo;
 
+import java.util.Arrays;
+import java.util.List;
+
 import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.util.Assert;
@@ -54,6 +57,10 @@ public class Point {
 
 	public double[] asArray() {
 		return new double[] { x, y };
+	}
+	
+	public List<Double> asList() {
+		return Arrays.asList(x, y);
 	}
 
 	@Override

@@ -21,6 +21,7 @@ import java.util.Iterator;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.convert.MongoWriter;
+import org.springframework.data.mongodb.core.geo.Distance;
 import org.springframework.data.mongodb.repository.ConvertingParameterAccessor;
 import org.springframework.data.repository.query.ParameterAccessor;
 
@@ -29,7 +30,7 @@ import org.springframework.data.repository.query.ParameterAccessor;
  * 
  * @author Oliver Gierke
  */
-class StubParameterAccessor implements ParameterAccessor {
+class StubParameterAccessor implements MongoParameterAccessor {
 
 	private final Object[] values;
 
@@ -72,6 +73,14 @@ class StubParameterAccessor implements ParameterAccessor {
 	  * @see org.springframework.data.repository.query.ParameterAccessor#getSort()
 	  */
 	public Sort getSort() {
+		return null;
+	}
+	
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.MongoParameterAccessor#getMaxDistance()
+	 */
+	public Distance getMaxDistance() {
 		return null;
 	}
 
