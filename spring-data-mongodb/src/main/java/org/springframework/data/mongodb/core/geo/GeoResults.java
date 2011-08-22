@@ -61,6 +61,8 @@ public class GeoResults<T> implements Iterable<GeoResult<T>> {
 	}
 
 	/**
+	 * Returns the average distance of all {@link GeoResult}s in this list.
+	 * 
 	 * @return the averageDistance
 	 */
 	public Distance getAverageDistance() {

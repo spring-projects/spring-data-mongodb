@@ -136,7 +136,7 @@ public class Distance {
 		StringBuilder builder = new StringBuilder();
 		builder.append(value);
 
-		if (metric != null) {
+		if (metric != Metrics.NEUTRAL) {
 			builder.append(" ").append(metric.toString());
 		}
 

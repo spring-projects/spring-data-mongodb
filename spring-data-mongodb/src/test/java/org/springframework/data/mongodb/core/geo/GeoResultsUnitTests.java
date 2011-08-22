@@ -15,10 +15,28 @@
  */
 package org.springframework.data.mongodb.core.geo;
 
+import static org.hamcrest.CoreMatchers.*;
+import static org.junit.Assert.*;
+
+import java.util.Arrays;
+
+import org.junit.Test;
+
 /**
+ * Unit tests for {@link GeoResults}.
  *
  * @author Oliver Gierke
  */
 public class GeoResultsUnitTests {
 
+	@Test
+	@SuppressWarnings("unchecked")
+	public void calculatesAverageForGivenGeoResults() {
+		
+		GeoResult<Object> first = new GeoResult<Object>(new Object(), new Distance(2));
+		GeoResult<Object> second = new GeoResult<Object>(new Object(), new Distance(5));
+		GeoResults<Object> geoResults = new GeoResults<Object>(Arrays.asList(first, second));
+		
+		assertThat(geoResults.getAverageDistance(), is(new Distance(3.5)));
+	}
 }
