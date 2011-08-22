@@ -81,7 +81,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	private static final TypeInformation<Map> MAP_TYPE_INFORMATION = ClassTypeInformation.from(Map.class);
 	private static final List<Class<?>> VALID_ID_TYPES = Arrays.asList(new Class<?>[] { ObjectId.class, String.class,
 			BigInteger.class, byte[].class });
-	
+
 	protected static final Log log = LogFactory.getLog(MappingMongoConverter.class);
 
 	protected final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
@@ -158,26 +158,9 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		if (typeToUse.isCollectionLike() && dbo instanceof BasicDBList) {
-			List<Object> l = new ArrayList<Object>();
-			BasicDBList dbList = (BasicDBList) dbo;
-			for (Object o : dbList) {
-				if (o instanceof DBObject) {
-
-					Object newObj = read(typeToUse.getComponentType(), (DBObject) o);
-					Class<?> rawComponentType = typeToUse.getComponentType().getType();
-
-					if (newObj.getClass().isAssignableFrom(rawComponentType)) {
-						l.add(newObj);
-					} else {
-						l.add(conversionService.convert(newObj, rawComponentType));
-					}
-				} else {
-					l.add(o);
-				}
-			}
-			return conversionService.convert(l, rawType);
+			return (S) readCollectionOrArray(typeToUse, (BasicDBList) dbo);
 		}
-		
+
 		if (typeToUse.isMap()) {
 			return (S) readMap(typeToUse, dbo);
 		}
@@ -228,8 +211,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 					return read(type, ((DBRef) obj).fetch());
 				} else if (obj instanceof BasicDBList) {
 					BasicDBList objAsDbList = (BasicDBList) obj;
-					List<?> l = unwrapList(objAsDbList, type);
-					return conversionService.convert(l, rawType);
+					return conversionService.convert(readCollectionOrArray(type, objAsDbList), rawType);
 				} else if (obj instanceof DBObject) {
 					return read(type, ((DBObject) obj));
 				} else if (null != obj && obj.getClass().isAssignableFrom(rawType)) {
@@ -435,7 +417,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		TypeInformation<?> type = prop.getTypeInformation();
-		
+
 		if (prop.isMap()) {
 			BasicDBObject mapDbObj = new BasicDBObject();
 			writeMapInternal((Map<Object, Object>) obj, mapDbObj, type);
@@ -461,14 +443,14 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		BasicDBObject propDbObj = new BasicDBObject();
 		addCustomTypeKeyIfNecessary(type, obj, propDbObj);
-		
+
 		MongoPersistentEntity<?> entity = isSubtype(prop.getType(), obj.getClass()) ? mappingContext
 				.getPersistentEntity(obj.getClass()) : mappingContext.getPersistentEntity(type);
-		
+
 		writeInternal(obj, propDbObj, entity);
 		dbo.put(name, propDbObj);
 	}
-	
+
 	private boolean isSubtype(Class<?> left, Class<?> right) {
 		return left.isAssignableFrom(right) && !left.equals(right);
 	}
@@ -620,11 +602,11 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * @return
 	 */
 	private Object getPotentiallyConvertedSimpleWrite(Object value) {
-		
+
 		if (value == null) {
 			return null;
 		}
-		
+
 		Class<?> customTarget = conversions.getCustomWriteTarget(value.getClass(), null);
 
 		if (customTarget != null) {
@@ -633,7 +615,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			return value.getClass().isEnum() ? ((Enum<?>) value).name() : value;
 		}
 	}
-	
+
 	/**
 	 * Checks whether we have a custom conversion for the given simple object. Converts the given value if so, applies
 	 * {@link Enum} handling or returns the value as is.
@@ -644,21 +626,21 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private Object getPotentiallyConvertedSimpleRead(Object value, Class<?> target) {
-		
+
 		Assert.notNull(target);
-		
+
 		if (value == null) {
 			return null;
 		}
-		
+
 		if (conversions.hasCustomReadTarget(value.getClass(), target)) {
 			return conversionService.convert(value, target);
 		}
-		
+
 		if (target.isEnum()) {
 			return Enum.valueOf((Class<Enum>) target, value.toString());
 		}
-		
+
 		return value;
 	}
 
@@ -725,23 +707,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 					// It's empty
 					return Array.newInstance(prop.getComponentType(), 0);
 				} else if (prop.isCollection() && sourceValue instanceof BasicDBList) {
-
-					BasicDBList dbObjList = (BasicDBList) sourceValue;
-					Collection<Object> items = prop.isArray() ? new ArrayList<Object>() : CollectionFactory.createCollection(
-							propertyType, dbObjList.size());
-
-					for (int i = 0; i < dbObjList.size(); i++) {
-						Object dbObjItem = dbObjList.get(i);
-						if (dbObjItem instanceof DBRef) {
-							items.add(read(prop.getComponentType(), ((DBRef) dbObjItem).fetch()));
-						} else if (dbObjItem instanceof DBObject) {
-							items.add(read(prop.getComponentType(), (DBObject) dbObjItem));
-						} else {
-							items.add(getPotentiallyConvertedSimpleRead(dbObjItem, prop.getComponentType()));
-						}
-					}
-
-					return items;
+					return readCollectionOrArray((TypeInformation<? extends Collection<?>>) prop.getTypeInformation(),
+							(BasicDBList) sourceValue);
 				}
 
 				Class<?> toType = findTypeToBeUsed((DBObject) sourceValue);
@@ -761,6 +728,35 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	}
 
 	/**
+	 * Reads the given {@link BasicDBList} into a collection of the given {@link TypeInformation}.
+	 * 
+	 * @param targetType must not be {@literal null}.
+	 * @param sourceValue must not be {@literal null}.
+	 * @return the converted {@link Collections}, will never be {@literal null}.
+	 */
+	@SuppressWarnings("unchecked")
+	private Collection<?> readCollectionOrArray(TypeInformation<?> targetType, BasicDBList sourceValue) {
+
+		Assert.notNull(targetType);
+
+		Collection<Object> items = targetType.getType().isArray() ? new ArrayList<Object>() : CollectionFactory
+				.createCollection(targetType.getType(), sourceValue.size());
+
+		for (int i = 0; i < sourceValue.size(); i++) {
+			Object dbObjItem = sourceValue.get(i);
+			if (dbObjItem instanceof DBRef) {
+				items.add(read(targetType.getComponentType(), ((DBRef) dbObjItem).fetch()));
+			} else if (dbObjItem instanceof DBObject) {
+				items.add(read(targetType.getComponentType(), (DBObject) dbObjItem));
+			} else {
+				items.add(getPotentiallyConvertedSimpleRead(dbObjItem, targetType.getComponentType().getType()));
+			}
+		}
+
+		return items;
+	}
+
+	/**
 	 * Reads the given {@link DBObject} into a {@link Map}. will recursively resolve nested {@link Map}s as well.
 	 * 
 	 * @param type the {@link Map} {@link TypeInformation} to be used to unmarshall this {@link DBObject}.
@@ -772,10 +768,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		Assert.notNull(dbObject);
 		
-		type = type == null ? MAP_TYPE_INFORMATION : type;
-		Class<?> customMapType = findTypeToBeUsed(dbObject);
-		Class<?> mapType = customMapType == null ? type.getType() : customMapType;
-
+		Class<?> mapType = getMoreConcreteTargetType(dbObject, type).getType();
 		Map<Object, Object> map = CollectionFactory.createMap(mapType, dbObject.keySet().size());
 		Map<String, Object> sourceMap = dbObject.toMap();
 
@@ -785,24 +778,20 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			}
 
 			Object key = entry.getKey();
-			
+
 			TypeInformation<?> keyTypeInformation = type.getComponentType();
 			if (keyTypeInformation != null) {
 				Class<?> keyType = keyTypeInformation.getType();
 				key = conversionService.convert(entry.getKey(), keyType);
 			}
-			
+
 			Object value = entry.getValue();
 			TypeInformation<?> valueType = type.getMapValueType();
-			valueType = valueType == null ? MAP_TYPE_INFORMATION : valueType;
 
-			if (value instanceof BasicDBList) {
-				BasicDBList list =(BasicDBList) value;
-				map.put(key, read(valueType, list));
-			} else if (value instanceof DBObject) {
-				DBObject valueSource = (DBObject) value;
-				map.put(key, valueType.isMap() ? readMap(valueType, valueSource) : read(valueType, valueSource));
+			if (value instanceof DBObject) {
+				map.put(key, read(valueType, (DBObject) value));
 			} else {
+				valueType = valueType == null ? MAP_TYPE_INFORMATION : valueType;
 				map.put(key, getPotentiallyConvertedSimpleRead(value, valueType.getType()));
 			}
 		}
@@ -820,11 +809,11 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 *         found.
 	 */
 	protected Class<?> findTypeToBeUsed(DBObject dbObject) {
-		
+
 		if (dbObject instanceof BasicDBList) {
 			return List.class;
 		}
-		
+
 		Object classToBeUsed = dbObject.get(CUSTOM_TYPE_KEY);
 
 		if (classToBeUsed == null) {
@@ -837,6 +826,16 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			return null;
 		}
 	}
+	
+	private Class<?> getDefaultedTypeToBeUsed(DBObject dbObject) {
+		 Class<?> result = findTypeToBeUsed(dbObject);
+		 
+		 if (result != null) {
+			 return result;
+		 }
+		 
+		 return dbObject instanceof BasicDBList ? List.class : Map.class;
+	}
 
 	/**
 	 * Inspects the a custom class definition stored inside the given {@link DBObject} and returns that in case it's a
@@ -848,15 +847,13 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 */
 	@SuppressWarnings("unchecked")
 	private <S> TypeInformation<? extends S> getMoreConcreteTargetType(DBObject dbObject, TypeInformation<S> basicType) {
-		Class<?> documentsTargetType = findTypeToBeUsed(dbObject);
-		Class<S> rawType = basicType.getType();
-		
-		if (documentsTargetType == null && Object.class.equals(rawType)) {
-			return (TypeInformation<? extends S>) MAP_TYPE_INFORMATION;
-		}
-		
-		boolean isMoreConcreteCustomType = documentsTargetType != null && rawType.isAssignableFrom(documentsTargetType);
-		return isMoreConcreteCustomType ? (TypeInformation<? extends S>) ClassTypeInformation.from(documentsTargetType) : basicType;
+
+		Class<?> documentsTargetType = getDefaultedTypeToBeUsed(dbObject);
+		Class<S> rawType = basicType == null ? null : basicType.getType();
+
+		boolean isMoreConcreteCustomType = rawType == null ? false : rawType.isAssignableFrom(documentsTargetType);
+		return isMoreConcreteCustomType ? (TypeInformation<? extends S>) ClassTypeInformation.from(documentsTargetType)
+				: basicType;
 	}
 
 	protected <T> List<?> unwrapList(BasicDBList dbList, TypeInformation<T> targetType) {
@@ -876,11 +873,11 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	@SuppressWarnings("unchecked")
 	public Object convertToMongoType(Object obj) {
-		
+
 		if (obj == null) {
 			return null;
 		}
-		
+
 		Class<?> target = conversions.getCustomWriteTarget(getClass());
 		if (target != null) {
 			return conversionService.convert(obj, target);

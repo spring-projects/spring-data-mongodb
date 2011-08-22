@@ -42,6 +42,7 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.convert.CustomConversions;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
@@ -646,13 +647,22 @@ public class MappingMongoConverterUnitTests {
 
 	}
 
-	class Person implements Contact {
+	public static class Person implements Contact {
 		LocalDate birthDate;
 		
 		@Field("foo")
 		String firstname;
 		
 		Set<Address> addresses;
+		
+		public Person() {
+			
+		}
+
+		@PersistenceConstructor
+		public Person(Set<Address> addresses) {
+			this.addresses = addresses;
+		}
 	}
 
 	class ClassWithSortedMap {
