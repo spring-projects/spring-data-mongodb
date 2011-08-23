@@ -64,14 +64,13 @@ public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID exten
 	/**
 	 * Configures the {@link MongoTemplate} to be used.
 	 * 
-	 * @param template
-	 *          the template to set
+	 * @param template the template to set
 	 */
 	public void setTemplate(MongoTemplate template) {
 
 		this.template = template;
 	}
-	
+
 	/**
 	 * Configures whether to automatically create indexes for the properties referenced in a query method.
 	 * 
@@ -92,14 +91,14 @@ public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID exten
 	protected final RepositoryFactorySupport createRepositoryFactory() {
 
 		RepositoryFactorySupport factory = getFactoryInstance(template);
-		
+
 		if (createIndexesForQueryMethods) {
 			factory.addQueryCreationListener(new IndexEnsuringQueryCreationListener(template));
 		}
 
 		return factory;
 	}
-	
+
 	/**
 	 * Creates and initializes a {@link RepositoryFactorySupport} instance.
 	 * 
@@ -137,16 +136,14 @@ public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID exten
 		/**
 		 * Creates a new {@link MongoRepositoryFactory} with the given {@link MongoTemplate} and {@link MappingContext}.
 		 * 
-		 * @param template
-		 *          must not be {@literal null}
+		 * @param template must not be {@literal null}
 		 * @param mappingContext
 		 */
 		public MongoRepositoryFactory(MongoTemplate template) {
 
 			Assert.notNull(template);
 			this.template = template;
-			this.entityInformationCreator = new EntityInformationCreator(template.getConverter()
-					.getMappingContext());
+			this.entityInformationCreator = new EntityInformationCreator(template.getConverter().getMappingContext());
 		}
 
 		/*
@@ -222,7 +219,7 @@ public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID exten
 
 				MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, entityInformationCreator);
 				String namedQueryName = queryMethod.getNamedQueryName();
-				
+
 				if (namedQueries.hasQuery(namedQueryName)) {
 					String namedQuery = namedQueries.getQuery(namedQueryName);
 					return new StringBasedMongoQuery(namedQuery, queryMethod, template);
@@ -271,16 +268,24 @@ public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID exten
 
 		private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 
-		public EntityInformationCreator(MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
+		public EntityInformationCreator(
+				MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
 			Assert.notNull(mappingContext);
 			this.mappingContext = mappingContext;
 		}
 
-		@SuppressWarnings("unchecked")
 		public <T, ID extends Serializable> MongoEntityInformation<T, ID> getEntityInformation(Class<T> domainClass) {
+			return getEntityInformation(domainClass, null);
+		}
+
+		@SuppressWarnings("unchecked")
+		public <T, ID extends Serializable> MongoEntityInformation<T, ID> getEntityInformation(Class<T> domainClass,
+				Class<?> collectionClass) {
 			MongoPersistentEntity<T> persistentEntity = (MongoPersistentEntity<T>) mappingContext
 					.getPersistentEntity(domainClass);
-			return new MappingMongoEntityInformation<T, ID>(persistentEntity);
+			String customCollectionName = collectionClass == null ? null : mappingContext
+					.getPersistentEntity(collectionClass).getCollection();
+			return new MappingMongoEntityInformation<T, ID>(persistentEntity, customCollectionName);
 		}
 	}
 
@@ -324,7 +329,7 @@ public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID exten
 				Order order = toOrder(sort, property);
 				index.on(property, order);
 			}
-			
+
 			// Add fixed sorting criteria to index
 			if (sort != null) {
 				for (Sort.Order order : sort) {

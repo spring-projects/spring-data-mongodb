@@ -17,14 +17,14 @@ package org.springframework.data.mongodb.repository;
 
 import java.io.Serializable;
 import org.springframework.data.mapping.model.BeanWrapper;
-import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.repository.core.support.AbstractEntityInformation;
 
 /**
- * {@link MongoEntityInformation} implementation using a {@link BasicMongoPersistentEntity} instance to lookup the
- * necessary information.
+ * {@link MongoEntityInformation} implementation using a {@link MongoPersistentEntity} instance to lookup the necessary
+ * information. Can be configured with a custom collection to be returned which will trump the one returned by the
+ * {@link MongoPersistentEntity} if given.
  * 
  * @author Oliver Gierke
  */
@@ -32,16 +32,28 @@ public class MappingMongoEntityInformation<T, ID extends Serializable> extends A
 		implements MongoEntityInformation<T, ID> {
 
 	private final MongoPersistentEntity<T> entityMetadata;
+	private final String customCollectionName;
 
 	/**
 	 * Creates a new {@link MappingMongoEntityInformation} for the given {@link MongoPersistentEntity}.
 	 * 
-	 * @param domainClass
-	 * @param entity
+	 * @param entity must not be {@literal null}.
 	 */
 	public MappingMongoEntityInformation(MongoPersistentEntity<T> entity) {
+		this(entity, null);
+	}
+	
+	/**
+	 * Creates a new {@link MappingMongoEntityInformation} for the given {@link MongoPersistentEntity} and custom
+	 * collection name.
+	 * 
+	 * @param entity must not be {@literal null}.
+	 * @param customCollectionName
+	 */
+	public MappingMongoEntityInformation(MongoPersistentEntity<T> entity, String customCollectionName) {
 		super(entity.getType());
 		this.entityMetadata = entity;
+		this.customCollectionName = customCollectionName;
 	}
 
 	/* (non-Javadoc)
@@ -71,7 +83,7 @@ public class MappingMongoEntityInformation<T, ID extends Serializable> extends A
 	 * @see org.springframework.data.mongodb.repository.MongoEntityInformation#getCollectionName()
 	 */
 	public String getCollectionName() {
-		return entityMetadata.getCollection();
+		return customCollectionName == null ? entityMetadata.getCollection() : customCollectionName;
 	}
 
 	/* (non-Javadoc)

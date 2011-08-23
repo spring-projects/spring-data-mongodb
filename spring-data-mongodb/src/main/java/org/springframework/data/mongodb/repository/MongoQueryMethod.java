@@ -44,7 +44,8 @@ class MongoQueryMethod extends QueryMethod {
 	public MongoQueryMethod(Method method, RepositoryMetadata metadata, EntityInformationCreator entityInformationCreator) {
 		super(method, metadata);
 		this.method = method;
-		this.entityInformation = entityInformationCreator.getEntityInformation(ClassUtils.getReturnedDomainClass(method));
+		this.entityInformation = entityInformationCreator.getEntityInformation(
+				ClassUtils.getReturnedDomainClass(method), getDomainClass());
 	}
 	
 	/*
