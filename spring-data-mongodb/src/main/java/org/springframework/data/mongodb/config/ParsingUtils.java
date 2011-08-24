@@ -29,7 +29,7 @@ import com.mongodb.ServerAddress;
 abstract class ParsingUtils {
 
   /**
-   * Parses the mongo replica-set element.  
+   * Parses the mongo replica-set element.
    * @param parserContext the parser context
    * @param element the mongo element
    * @param mongoBuilder the bean definition builder to populate
@@ -42,17 +42,17 @@ abstract class ParsingUtils {
     if (StringUtils.hasText(replicaSetString)) {
       ManagedList<Object> serverAddresses = new ManagedList<Object>();
       String[] replicaSetStringArray = StringUtils.commaDelimitedListToStringArray(replicaSetString);
-      for (int i = 0; i < replicaSetStringArray.length; i++) {
-        String[] hostAndPort = StringUtils.delimitedListToStringArray(replicaSetStringArray[i], ":");
+      for (String element2 : replicaSetStringArray) {
+        String[] hostAndPort = StringUtils.delimitedListToStringArray(element2, ":");
         BeanDefinitionBuilder defBuilder = BeanDefinitionBuilder.genericBeanDefinition(ServerAddress.class);
         defBuilder.addConstructorArgValue(hostAndPort[0]);
         defBuilder.addConstructorArgValue(hostAndPort[1]);
         serverAddresses.add(defBuilder.getBeanDefinition());
-      }    
+      }
       if (!serverAddresses.isEmpty()) {
         mongoBuilder.addPropertyValue("replicaSetSeeds", serverAddresses);
       }
-    }    
+    }
     return true;
     
   }
@@ -63,8 +63,9 @@ abstract class ParsingUtils {
    */
   static boolean parseMongoOptions(ParserContext parserContext, Element element, BeanDefinitionBuilder mongoBuilder) {
     Element optionsElement = DomUtils.getChildElementByTagName(element, "options");
-    if (optionsElement == null)
-      return false;
+    if (optionsElement == null) {
+			return false;
+		}
 
     BeanDefinitionBuilder optionsDefBuilder = BeanDefinitionBuilder
         .genericBeanDefinition(MongoOptionsFactoryBean.class);
@@ -75,12 +76,12 @@ abstract class ParsingUtils {
     setPropertyValue(optionsElement, optionsDefBuilder, "max-wait-time", "maxWaitTime");
     setPropertyValue(optionsElement, optionsDefBuilder, "connect-timeout", "connectTimeout");
     setPropertyValue(optionsElement, optionsDefBuilder, "socket-timeout", "socketTimeout");
-    setPropertyValue(optionsElement, optionsDefBuilder, "socket-keep-alive", "socketKeepAlive");    
+    setPropertyValue(optionsElement, optionsDefBuilder, "socket-keep-alive", "socketKeepAlive");
     setPropertyValue(optionsElement, optionsDefBuilder, "auto-connect-retry", "autoConnectRetry");
-    setPropertyValue(optionsElement, optionsDefBuilder, "write-number", "writeNumber");   
+    setPropertyValue(optionsElement, optionsDefBuilder, "write-number", "writeNumber");
     setPropertyValue(optionsElement, optionsDefBuilder, "write-timeout", "writeTimeout");
     setPropertyValue(optionsElement, optionsDefBuilder, "write-fsync", "writeFsync");
-    setPropertyValue(optionsElement, optionsDefBuilder, "slave-ok", "slaveOk");   
+    setPropertyValue(optionsElement, optionsDefBuilder, "slave-ok", "slaveOk");
     
     
 
@@ -92,6 +93,21 @@ abstract class ParsingUtils {
     String attr = element.getAttribute(attrName);
     if (StringUtils.hasText(attr)) {
       builder.addPropertyValue(propertyName, attr);
+    }
+  }
+  
+  /**
+	 * Sets the property with the given attribute name on the given {@link BeanDefinitionBuilder} to the value of the
+	 * attribute with the given name.
+	 * 
+	 * @param element must not be {@literal null}.
+	 * @param builder must not be {@literal null}.
+	 * @param attrName must not be {@literal null} or empty.
+	 */
+  static void setPropertyValue(Element element, BeanDefinitionBuilder builder, String attrName) {
+    String attr = element.getAttribute(attrName);
+    if (StringUtils.hasText(attr)) {
+      builder.addPropertyValue(attrName, attr);
     }
   }
 }

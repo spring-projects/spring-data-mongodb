@@ -87,6 +87,7 @@ The password to use when connecting to a MongoDB server.
 							]]></xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
+			<xsd:attributeGroup ref="writeConcern" />
 		</xsd:complexType>
 	</xsd:element>
 

@@ -24,7 +24,6 @@ import org.springframework.beans.factory.FactoryBean;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mongodb.CannotGetMongoDbConnectionException;
-
 import com.mongodb.Mongo;
 import com.mongodb.MongoOptions;
 import com.mongodb.ServerAddress;
@@ -93,7 +92,7 @@ public class MongoFactoryBean implements FactoryBean<Mongo>, PersistenceExceptio
 
 		if (host == null) {
 			
-			logger.warn("Property host not specified. Using default configuration");
+			logger.debug("Property host not specified. Using default configuration");
 			mongo = new Mongo();
 			
 		} else {
