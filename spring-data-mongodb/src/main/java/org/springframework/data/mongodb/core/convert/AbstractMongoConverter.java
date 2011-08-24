@@ -62,8 +62,9 @@ public abstract class AbstractMongoConverter implements MongoConverter, Initiali
 	}
 
 	/**
-	 * Registers converters for {@link ObjectId} handling, removes plain {@link #toString()} converter and promotes the
-	 * configured {@link ConversionService} to {@link MappingBeanHelper}.
+	 * Registers additional converters that will be available when using the {@link ConversionService} directly (e.g. for
+	 * id conversion). These converters are not custom conversions as they'd introduce unwanted conversions (e.g.
+	 * ObjectId-to-String).
 	 */
 	private void initializeConverters() {
 

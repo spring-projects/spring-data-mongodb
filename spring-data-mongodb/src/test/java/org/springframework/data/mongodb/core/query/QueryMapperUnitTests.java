@@ -17,7 +17,8 @@ package org.springframework.data.mongodb.core.query;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+
+import java.math.BigInteger;
 
 import org.bson.types.ObjectId;
 import org.junit.Before;
@@ -25,10 +26,12 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.springframework.core.convert.ConversionService;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.QueryMapper;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
-import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
@@ -39,30 +42,31 @@ import com.mongodb.DBObject;
  * @author Oliver Gierke
  */
 @RunWith(MockitoJUnitRunner.class)
+@SuppressWarnings("unused")
 public class QueryMapperUnitTests {
 
 	QueryMapper mapper;
+  MongoMappingContext context;
 
 	@Mock
-	ConversionService converter;
-	@Mock
-	MongoPersistentEntity<?> entity;
-	@Mock
-	MongoPersistentProperty property;
+	MongoDbFactory factory;
 
 	@Before
 	public void setUp() {
-		when(entity.getIdProperty()).thenReturn(property);
-		when(converter.convert(any(), eq(ObjectId.class))).thenReturn(new ObjectId());
-		mapper = new QueryMapper(converter);
+		
+		context = new MongoMappingContext();
+		
+		MappingMongoConverter converter = new MappingMongoConverter(factory, context);
+		converter.afterPropertiesSet();
+		
+		mapper = new QueryMapper(converter.getConversionService());
 	}
 
 	@Test
 	public void translatesIdPropertyIntoIdKey() {
 
 		DBObject query = new BasicDBObject("foo", "value");
-
-		when(property.getName()).thenReturn("foo");
+		MongoPersistentEntity<?> entity = context.getPersistentEntity(Sample.class);
 
 		DBObject result = mapper.getMappedObject(query, entity);
 		assertThat(result.get("_id"), is(notNullValue()));
@@ -75,5 +79,25 @@ public class QueryMapperUnitTests {
 		DBObject query = new BasicDBObject("_id", new ObjectId().toString());
 		DBObject result = mapper.getMappedObject(query, null);
 		assertThat(result.get("_id"), is(ObjectId.class));
+	}
+	
+	@Test
+	public void handlesBigIntegerIdsCorrectly() {
+		
+		DBObject dbObject = new BasicDBObject("id", new BigInteger("1"));
+		DBObject result = mapper.getMappedObject(dbObject, null);
+		assertThat(result.get("_id"), is((Object) "1"));
+	}
+	
+	class Sample {
+		
+		@Id
+		private String foo;
+	}
+	
+	class BigIntegerId {
+		
+		@Id
+		private BigInteger id;
 	}
 }

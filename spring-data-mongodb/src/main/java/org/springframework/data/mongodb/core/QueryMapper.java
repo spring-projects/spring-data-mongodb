@@ -16,11 +16,10 @@
 package org.springframework.data.mongodb.core;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 import org.bson.types.BasicBSONList;
 import org.bson.types.ObjectId;
 import org.springframework.core.convert.ConversionException;
@@ -28,6 +27,9 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.util.Assert;
+
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
 
 /**
  * A helper class to encapsulate any modifications of a Query object before it gets submitted to the database.
@@ -78,26 +80,15 @@ public class QueryMapper {
 						String inKey = valueDbo.containsField("$in") ? "$in" : "$nin";
 						List<Object> ids = new ArrayList<Object>();
 						for (Object id : (Object[]) valueDbo.get(inKey)) {
-							if (!(id instanceof ObjectId)) {
-								try {
-									ObjectId oid = conversionService.convert(id, ObjectId.class);
-									ids.add(oid);
-								} catch (ConversionException ignored) {
-									ids.add(id);
-								}
-							} else {
-								ids.add(id);
-							}
+							ids.add(convertId(id));
 						}
 						valueDbo.put(inKey, ids.toArray(new Object[ids.size()]));
 					} else {
 						value = getMappedObject((DBObject) value, entity);
 					}
 				} else {
-					try {
-						value = conversionService.convert(value, ObjectId.class);
-					} catch (ConversionException ignored) {
-					}
+					
+					value = convertId(value);
 				}
 				newKey = "_id";
 			} else if (key.startsWith("$") && key.endsWith("or")) {
@@ -117,4 +108,28 @@ public class QueryMapper {
 		return newDbo;
 	}
 
+	/**
+	 * Converts the given raw id value into either {@link ObjectId} or {@link String}.
+	 * 
+	 * @param id
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public Object convertId(Object id) {
+		
+		for (Class<?> type : Arrays.asList(ObjectId.class, String.class)) {
+			
+			if (id.getClass().isAssignableFrom(type)) {
+				return id;
+			}
+			
+			try {
+				return conversionService.convert(id, type);
+			} catch (ConversionException e) {
+				// Ignore
+			}
+		}
+		
+		return id;
+	}
 }
