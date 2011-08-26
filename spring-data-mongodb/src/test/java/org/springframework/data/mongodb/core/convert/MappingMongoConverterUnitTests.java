@@ -624,6 +624,49 @@ public class MappingMongoConverterUnitTests {
 		assertThat((String)((Map<?,?>) firstObjectInFoo).get("Hello"), is(equalTo("World")));
 	}
 	
+
+	/**
+	 * @see DATADOC-245
+	 */
+	@Test
+	public void readsMapDoublyNestedValuesCorrectly() {
+
+		BasicDBObject nested = new BasicDBObject();
+		BasicDBObject doubly = new BasicDBObject();
+		doubly.append("Hello", "World");
+		nested.append("nested", doubly);
+		DBObject source = new BasicDBObject("mapOfObjects", new BasicDBObject("Foo", nested));
+
+		ClassWithMapProperty result = converter.read(ClassWithMapProperty.class, source);
+		Object foo = result.mapOfObjects.get("Foo");
+		assertThat(foo, is(instanceOf(Map.class)));
+		Object doublyNestedObject = ((Map<?, ?>) foo).get("nested");
+		assertThat(doublyNestedObject, is(instanceOf(Map.class)));
+		assertThat((String) ((Map<?, ?>) doublyNestedObject).get("Hello"), is(equalTo("World")));
+	}
+
+	/**
+	 * @see DATADOC-245
+	 */
+	@Test
+	public void readsMapListDoublyNestedValuesCorrectly() {
+
+		BasicDBList list = new BasicDBList();
+		BasicDBObject nested = new BasicDBObject();
+		BasicDBObject doubly = new BasicDBObject();
+		doubly.append("Hello", "World");
+		nested.append("nested", doubly);
+		list.add(nested);
+		DBObject source = new BasicDBObject("mapOfObjects", new BasicDBObject("Foo", list));
+
+		ClassWithMapProperty result = converter.read(ClassWithMapProperty.class, source);
+		Object firstObjectInFoo = ((List<?>) result.mapOfObjects.get("Foo")).get(0);
+		assertThat(firstObjectInFoo, is(instanceOf(Map.class)));
+		Object doublyNestedObject = ((Map<?, ?>) firstObjectInFoo).get("nested");
+		assertThat(doublyNestedObject, is(instanceOf(Map.class)));
+		assertThat((String) ((Map<?, ?>) doublyNestedObject).get("Hello"), is(equalTo("World")));
+	}
+
 	class GenericType<T> {
 		T content;
 	}

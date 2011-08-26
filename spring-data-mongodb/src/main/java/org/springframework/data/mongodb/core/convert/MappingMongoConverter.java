@@ -851,7 +851,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		Class<?> documentsTargetType = getDefaultedTypeToBeUsed(dbObject);
 		Class<S> rawType = basicType == null ? null : basicType.getType();
 
-		boolean isMoreConcreteCustomType = rawType == null ? false : rawType.isAssignableFrom(documentsTargetType);
+		boolean isMoreConcreteCustomType = rawType == null ? true : rawType.isAssignableFrom(documentsTargetType) && !rawType.equals(documentsTargetType);
 		return isMoreConcreteCustomType ? (TypeInformation<? extends S>) ClassTypeInformation.from(documentsTargetType)
 				: basicType;
 	}
