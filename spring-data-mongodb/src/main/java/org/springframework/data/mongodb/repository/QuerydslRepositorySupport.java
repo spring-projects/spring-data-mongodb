@@ -71,7 +71,7 @@ public abstract class QuerydslRepositorySupport {
 	 * @return
 	 */
 	protected <T> MongodbQuery<T> from(final EntityPath<T> path, String collection) {
-		
+
 		Assert.notNull(path);
 		Assert.hasText(collection);
 

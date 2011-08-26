@@ -22,10 +22,10 @@ public class InvalidMongoDbApiUsageException extends InvalidDataAccessApiUsageEx
 	private static final long serialVersionUID = 2034770973290508041L;
 
 	public InvalidMongoDbApiUsageException(String msg) {
-    super(msg);
-  }
+		super(msg);
+	}
 
-  public InvalidMongoDbApiUsageException(String msg, Throwable cause) {
-    super(msg, cause);
-  }
+	public InvalidMongoDbApiUsageException(String msg, Throwable cause) {
+		super(msg, cause);
+	}
 }

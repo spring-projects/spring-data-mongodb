@@ -114,7 +114,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements Paging
 	 * )
 	 */
 	public boolean exists(final ID id) {
-		
+
 		return template.findOne(new Query(Criteria.where("_id").is(id)), Object.class,
 				entityInformation.getCollectionName()) != null;
 	}

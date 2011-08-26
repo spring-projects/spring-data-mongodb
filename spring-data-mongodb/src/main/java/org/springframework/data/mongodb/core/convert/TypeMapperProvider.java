@@ -17,7 +17,7 @@ package org.springframework.data.mongodb.core.convert;
 
 /**
  * Interfaces for components being able to provide a {@link TypeMapper}.
- *
+ * 
  * @author Oliver Gierke
  */
 public interface TypeMapperProvider {

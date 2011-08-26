@@ -65,14 +65,14 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 	public String getCollection() {
 		return collection;
 	}
-	
+
 	/**
 	 * {@link Comparator} implementation inspecting the {@link MongoPersistentProperty}'s order.
-	 *
+	 * 
 	 * @author Oliver Gierke
 	 */
 	static enum MongoPersistentPropertyComparator implements Comparator<MongoPersistentProperty> {
-		
+
 		INSTANCE;
 
 		/*
@@ -80,15 +80,15 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 		 * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
 		 */
 		public int compare(MongoPersistentProperty o1, MongoPersistentProperty o2) {
-			
+
 			if (o1.getFieldOrder() == Integer.MAX_VALUE) {
 				return 1;
 			}
-			
+
 			if (o2.getFieldOrder() == Integer.MAX_VALUE) {
 				return -1;
 			}
-			
+
 			return o1.getFieldOrder() - o2.getFieldOrder();
 		}
 	}

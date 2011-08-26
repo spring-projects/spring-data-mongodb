@@ -89,8 +89,7 @@ public class Criteria implements CriteriaDefinition {
 					"Multiple 'is' values declared. You need to use 'and' with multiple criteria");
 		}
 		if (this.criteria.size() > 0 && "$not".equals(this.criteria.keySet().toArray()[this.criteria.size() - 1])) {
-			throw new InvalidMongoDbApiUsageException(
-					"Invalid query: 'not' can't be used with 'is' - use 'ne' instead.");
+			throw new InvalidMongoDbApiUsageException("Invalid query: 'not' can't be used with 'is' - use 'ne' instead.");
 		}
 		this.isValue = o;
 		return this;
@@ -154,8 +153,7 @@ public class Criteria implements CriteriaDefinition {
 	/**
 	 * Creates a criterion using the $in operator
 	 * 
-	 * @param o
-	 *          the values to match against
+	 * @param o the values to match against
 	 * @return
 	 */
 	public Criteria in(Object... o) {
@@ -170,8 +168,7 @@ public class Criteria implements CriteriaDefinition {
 	/**
 	 * Creates a criterion using the $in operator
 	 * 
-	 * @param c
-	 *          the collection containing the values to match against
+	 * @param c the collection containing the values to match against
 	 * @return
 	 */
 	public Criteria in(Collection<?> c) {
@@ -288,8 +285,7 @@ public class Criteria implements CriteriaDefinition {
 	/**
 	 * Creates a geospatial criterion using a $within $center operation
 	 * 
-	 * @param circle
-	 *          must not be {@literal null}
+	 * @param circle must not be {@literal null}
 	 * @return
 	 */
 	public Criteria withinCenter(Circle circle) {
@@ -304,8 +300,7 @@ public class Criteria implements CriteriaDefinition {
 	/**
 	 * Creates a geospatial criterion using a $within $center operation. This is only available for Mongo 1.7 and higher.
 	 * 
-	 * @param circle
-	 *          must not be {@literal null}
+	 * @param circle must not be {@literal null}
 	 * @return
 	 */
 	public Criteria withinCenterSphere(Circle circle) {
@@ -335,8 +330,7 @@ public class Criteria implements CriteriaDefinition {
 	/**
 	 * Creates a geospatial criterion using a $near operation
 	 * 
-	 * @param point
-	 *          must not be {@literal null}
+	 * @param point must not be {@literal null}
 	 * @return
 	 */
 	public Criteria near(Point point) {
@@ -348,8 +342,7 @@ public class Criteria implements CriteriaDefinition {
 	/**
 	 * Creates a geospatial criterion using a $nearSphere operation. This is only available for Mongo 1.7 and higher.
 	 * 
-	 * @param point
-	 *          must not be {@literal null}
+	 * @param point must not be {@literal null}
 	 * @return
 	 */
 	public Criteria nearSphere(Point point) {

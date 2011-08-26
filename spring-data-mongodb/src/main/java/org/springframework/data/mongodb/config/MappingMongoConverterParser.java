@@ -66,7 +66,7 @@ public class MappingMongoConverterParser extends AbstractBeanDefinitionParser {
 	@Override
 	protected AbstractBeanDefinition parseInternal(Element element, ParserContext parserContext) {
 		BeanDefinitionRegistry registry = parserContext.getRegistry();
-		
+
 		BeanDefinition conversionsDefinition = getCustomConversions(element, parserContext);
 		String ctxRef = potentiallyCreateMappingContext(element, parserContext, conversionsDefinition);
 
@@ -100,7 +100,8 @@ public class MappingMongoConverterParser extends AbstractBeanDefinitionParser {
 			if (!StringUtils.hasText(dbFactoryRef)) {
 				dbFactoryRef = DB_FACTORY;
 			}
-			BeanDefinitionBuilder indexHelperBuilder = BeanDefinitionBuilder.genericBeanDefinition(MongoPersistentEntityIndexCreator.class);
+			BeanDefinitionBuilder indexHelperBuilder = BeanDefinitionBuilder
+					.genericBeanDefinition(MongoPersistentEntityIndexCreator.class);
 			indexHelperBuilder.addConstructorArgValue(new RuntimeBeanReference(ctxRef));
 			indexHelperBuilder.addConstructorArgValue(new RuntimeBeanReference(dbFactoryRef));
 			registry.registerBeanDefinition(INDEX_HELPER, indexHelperBuilder.getBeanDefinition());
@@ -108,9 +109,10 @@ public class MappingMongoConverterParser extends AbstractBeanDefinitionParser {
 
 		return converterBuilder.getBeanDefinition();
 	}
-	
-	private String potentiallyCreateMappingContext(Element element, ParserContext parserContext, BeanDefinition conversionsDefinition) {
-		
+
+	private String potentiallyCreateMappingContext(Element element, ParserContext parserContext,
+			BeanDefinition conversionsDefinition) {
+
 		String ctxRef = element.getAttribute("mapping-context-ref");
 		if (!StringUtils.hasText(ctxRef)) {
 			BeanDefinitionBuilder mappingContextBuilder = BeanDefinitionBuilder
@@ -120,26 +122,26 @@ public class MappingMongoConverterParser extends AbstractBeanDefinitionParser {
 			if (classesToAdd != null) {
 				mappingContextBuilder.addPropertyValue("initialEntitySet", classesToAdd);
 			}
-			
+
 			if (conversionsDefinition != null) {
 				AbstractBeanDefinition simpleTypesDefinition = new GenericBeanDefinition();
 				simpleTypesDefinition.setFactoryBeanName("customConversions");
 				simpleTypesDefinition.setFactoryMethodName("getSimpleTypeHolder");
-				
+
 				mappingContextBuilder.addPropertyValue("simpleTypeHolder", simpleTypesDefinition);
 			}
 
 			parserContext.getRegistry().registerBeanDefinition(MAPPING_CONTEXT, mappingContextBuilder.getBeanDefinition());
 			ctxRef = MAPPING_CONTEXT;
 		}
-		
+
 		return ctxRef;
 	}
-	
+
 	private BeanDefinition getCustomConversions(Element element, ParserContext parserContext) {
-		
+
 		List<Element> customConvertersElements = DomUtils.getChildElementsByTagName(element, "custom-converters");
-		
+
 		if (customConvertersElements.size() == 1) {
 			Element customerConvertersElement = customConvertersElements.get(0);
 			ManagedList<BeanMetadataElement> converterBeans = new ManagedList<BeanMetadataElement>();
@@ -149,18 +151,18 @@ public class MappingMongoConverterParser extends AbstractBeanDefinitionParser {
 					converterBeans.add(parseConverter(listenerElement, parserContext));
 				}
 			}
-			
+
 			BeanDefinitionBuilder conversionsBuilder = BeanDefinitionBuilder.rootBeanDefinition(CustomConversions.class);
 			conversionsBuilder.addConstructorArgValue(converterBeans);
-			
+
 			AbstractBeanDefinition conversionsBean = conversionsBuilder.getBeanDefinition();
 			conversionsBean.setSource(parserContext.extractSource(element));
-			
+
 			parserContext.getRegistry().registerBeanDefinition("customConversions", conversionsBean);
-			
+
 			return conversionsBean;
 		}
-		
+
 		return null;
 	}
 

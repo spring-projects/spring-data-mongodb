@@ -154,7 +154,7 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 	 * @return
 	 */
 	private MongodbQuery<T> createQueryFor(Predicate predicate) {
-		
+
 		DBCollection collection = getMongoOperations().getCollection(getEntityInformation().getCollectionName());
 		MongodbQuery<T> query = new MongodbQuery<T>(collection, new Transformer<DBObject, T>() {
 			public T transform(DBObject input) {

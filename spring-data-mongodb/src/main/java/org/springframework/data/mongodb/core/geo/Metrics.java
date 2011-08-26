@@ -4,7 +4,7 @@ import org.springframework.data.mongodb.core.query.NearQuery;
 
 /**
  * Commonly used {@link Metrics} for {@link NearQuery}s.
- *
+ * 
  * @author Oliver Gierke
  */
 public enum Metrics implements Metric {

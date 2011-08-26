@@ -46,24 +46,24 @@ public abstract class AbstractMongoConfiguration {
 
 	@Bean
 	public MongoTemplate mongoTemplate() throws Exception {
-	  return new MongoTemplate(mongoDbFactory(), mappingMongoConverter());
+		return new MongoTemplate(mongoDbFactory(), mappingMongoConverter());
 	}
 
 	@Bean
-	public MongoDbFactory mongoDbFactory() throws Exception {	 
-	  if (getUserCredentials() == null) {
-	    return new SimpleMongoDbFactory(mongo(), getDatabaseName());
-	  } else {
-	    return new SimpleMongoDbFactory(mongo(), getDatabaseName(), getUserCredentials());
-	  }
+	public MongoDbFactory mongoDbFactory() throws Exception {
+		if (getUserCredentials() == null) {
+			return new SimpleMongoDbFactory(mongo(), getDatabaseName());
+		} else {
+			return new SimpleMongoDbFactory(mongo(), getDatabaseName(), getUserCredentials());
+		}
 	}
 
 	public String getMappingBasePackage() {
 		return "";
 	}
-	
+
 	public UserCredentials getUserCredentials() {
-	  return null;
+		return null;
 	}
 
 	@Bean
@@ -71,13 +71,15 @@ public abstract class AbstractMongoConfiguration {
 		MongoMappingContext mappingContext = new MongoMappingContext();
 		String basePackage = getMappingBasePackage();
 		if (StringUtils.hasText(basePackage)) {
-			ClassPathScanningCandidateComponentProvider componentProvider = new ClassPathScanningCandidateComponentProvider(false);
+			ClassPathScanningCandidateComponentProvider componentProvider = new ClassPathScanningCandidateComponentProvider(
+					false);
 			componentProvider.addIncludeFilter(new AnnotationTypeFilter(Document.class));
 			componentProvider.addIncludeFilter(new AnnotationTypeFilter(Persistent.class));
 
 			Set<Class<?>> initialEntitySet = new HashSet<Class<?>>();
 			for (BeanDefinition candidate : componentProvider.findCandidateComponents(basePackage)) {
-				initialEntitySet.add(ClassUtils.forName(candidate.getBeanClassName(), mappingContext.getClass().getClassLoader()));
+				initialEntitySet.add(ClassUtils.forName(candidate.getBeanClassName(), mappingContext.getClass()
+						.getClassLoader()));
 			}
 			mappingContext.setInitialEntitySet(initialEntitySet);
 		}
@@ -93,7 +95,7 @@ public abstract class AbstractMongoConfiguration {
 
 	/**
 	 * Hook that allows post-processing after the MappingMongoConverter has been successfully created.
-	 *
+	 * 
 	 * @param converter
 	 */
 	protected void afterMappingMongoConverterCreation(MappingMongoConverter converter) {

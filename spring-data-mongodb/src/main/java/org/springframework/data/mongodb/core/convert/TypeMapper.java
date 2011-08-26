@@ -21,7 +21,7 @@ import com.mongodb.DBObject;
 
 /**
  * Interface to define strategies how to store type information in a {@link DBObject}.
- *
+ * 
  * @author Oliver Gierke
  */
 public interface TypeMapper {
@@ -33,7 +33,7 @@ public interface TypeMapper {
 	 * @return
 	 */
 	boolean isTypeKey(String key);
-	
+
 	/**
 	 * Reads the {@link TypeInformation} from the given {@link DBObject}.
 	 * 
@@ -41,7 +41,7 @@ public interface TypeMapper {
 	 * @return
 	 */
 	TypeInformation<?> readType(DBObject dbObject);
-	
+
 	/**
 	 * Writes type information for the given type into the given {@link DBObject}.
 	 * 
@@ -49,7 +49,7 @@ public interface TypeMapper {
 	 * @param dbObject must not be {@literal null}.
 	 */
 	void writeType(Class<?> type, DBObject dbObject);
-	
+
 	/**
 	 * Writes type information for the given {@link TypeInformation} into the given {@link DBObject}.
 	 * 

@@ -109,7 +109,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Query> {
 	protected Query complete(Query query, Sort sort) {
 
 		QueryUtils.applySorting(query, sort);
-		
+
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("Created query " + query.getQueryObject());
 		}
@@ -146,10 +146,10 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Query> {
 			String value = parameters.next().toString();
 			return criteria.is(toLikeRegex(value));
 		case NEAR:
-			
+
 			Distance distance = accessor.getMaxDistance();
 			Point point = nextAs(parameters, Point.class);
-			
+
 			if (distance == null) {
 				return criteria.near(point);
 			} else {
@@ -161,7 +161,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Query> {
 				criteria.maxDistance(distance.getNormalizedValue());
 			}
 			return criteria;
-			
+
 		case WITHIN:
 			Object parameter = parameters.next();
 			if (parameter instanceof Box) {
@@ -185,8 +185,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Query> {
 	 * @param <T>
 	 * @param iterator
 	 * @param type
-	 * @throws IllegalArgumentException
-	 *           in case the next element in the iterator is not of the given type.
+	 * @throws IllegalArgumentException in case the next element in the iterator is not of the given type.
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")

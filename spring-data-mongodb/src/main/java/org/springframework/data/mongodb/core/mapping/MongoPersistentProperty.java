@@ -23,14 +23,14 @@ import org.springframework.data.mapping.PersistentProperty;
  * @author Oliver Gierke
  */
 public interface MongoPersistentProperty extends PersistentProperty<MongoPersistentProperty> {
-	
+
 	/**
 	 * Returns the name of the field a property is persisted to.
 	 * 
 	 * @return
 	 */
 	String getFieldName();
-	
+
 	/**
 	 * Returns the order of the field if defined. Will return -1 if undefined.
 	 * 
@@ -45,7 +45,7 @@ public interface MongoPersistentProperty extends PersistentProperty<MongoPersist
 	 * @return
 	 */
 	boolean isDbReference();
-	
+
 	/**
 	 * Returns the {@link DBRef} if the property is a reference.
 	 * 

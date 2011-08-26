@@ -22,7 +22,7 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 
 /**
  * Central Mongo specific converter interface which combines {@link MongoWriter} and {@link MongoReader}.
- *
+ * 
  * @author Oliver Gierke
  */
 public interface MongoConverter extends MongoWriter<Object>, MongoReader<Object> {
@@ -33,7 +33,7 @@ public interface MongoConverter extends MongoWriter<Object>, MongoReader<Object>
 	 * @return never {@literal null}
 	 */
 	MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> getMappingContext();
-	
+
 	/**
 	 * Returns the underlying {@link ConversionService} used by the converter.
 	 * 

@@ -6,7 +6,7 @@ import com.mongodb.DB;
 
 /**
  * Interface for factories creating {@link DB} instances.
- *
+ * 
  * @author Mark Pollack
  */
 public interface MongoDbFactory {
@@ -18,7 +18,7 @@ public interface MongoDbFactory {
 	 * @throws DataAccessException
 	 */
 	DB getDb() throws DataAccessException;
-	
+
 	/**
 	 * Creates a {@link DB} instance to access the database with the given name.
 	 * 

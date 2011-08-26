@@ -188,7 +188,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 		 */
 		@Override
 		Object execute(Query query) {
-			
+
 			MongoEntityInformation<?, ?> entityInformation = method.getEntityInformation();
 			return template.findOne(query, entityInformation.getJavaType());
 		}

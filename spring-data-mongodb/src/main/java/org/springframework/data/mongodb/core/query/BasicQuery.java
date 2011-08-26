@@ -21,7 +21,7 @@ import com.mongodb.util.JSON;
 
 /**
  * Custom {@link Query} implementation to setup a basic query from some arbitrary JSON query string.
- *
+ * 
  * @author Thomas Risberg
  * @author Oliver Gierke
  */
@@ -67,17 +67,17 @@ public class BasicQuery extends Query {
 
 	@Override
 	public DBObject getSortObject() {
-		
+
 		BasicDBObject result = new BasicDBObject();
 		if (sortObject != null) {
 			result.putAll(sortObject);
 		}
-		
+
 		DBObject overrides = super.getSortObject();
 		if (overrides != null) {
 			result.putAll(overrides);
 		}
-		
+
 		return result;
 	}
 

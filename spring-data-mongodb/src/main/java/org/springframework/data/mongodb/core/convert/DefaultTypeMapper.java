@@ -98,13 +98,13 @@ public class DefaultTypeMapper implements TypeMapper {
 	public void writeType(TypeInformation<?> info, DBObject dbObject) {
 
 		Assert.notNull(info);
-		
+
 		if (typeKey == null) {
 			return;
 		}
-		
+
 		String string = getTypeString(info);
-		
+
 		if (string != null) {
 			dbObject.put(typeKey, getTypeString(info));
 		}
@@ -133,11 +133,11 @@ public class DefaultTypeMapper implements TypeMapper {
 	 *         class cannot be loaded.
 	 */
 	protected TypeInformation<?> getTypeInformation(String value) {
-		
+
 		if (!StringUtils.hasText(value)) {
 			return null;
 		}
-		
+
 		try {
 			return ClassTypeInformation.from(ClassUtils.forName(value, null));
 		} catch (ClassNotFoundException e) {

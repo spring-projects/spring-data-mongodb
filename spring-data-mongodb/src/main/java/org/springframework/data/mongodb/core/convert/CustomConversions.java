@@ -49,10 +49,10 @@ import com.mongodb.DBObject;
  * @author Oliver Gierke
  */
 public class CustomConversions {
-	
+
 	@SuppressWarnings({ "unchecked" })
-	private static final List<Class<?>> MONGO_TYPES = Arrays.asList(Number.class, Date.class, ObjectId.class, String.class,
-			DBObject.class);
+	private static final List<Class<?>> MONGO_TYPES = Arrays.asList(Number.class, Date.class, ObjectId.class,
+			String.class, DBObject.class);
 
 	private final Set<ConvertiblePair> readingPairs;
 	private final Set<ConvertiblePair> writingPairs;

@@ -27,7 +27,7 @@ import org.w3c.dom.Element;
 
 /**
  * Parser for &lt;mongo;gt; definitions. If no name
- *
+ * 
  * @author Mark Pollack
  */
 public class MongoParser extends AbstractSingleBeanDefinitionParser {

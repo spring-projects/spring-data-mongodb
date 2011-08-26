@@ -49,7 +49,7 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 		this.query = query;
 		this.fieldSpec = method.getFieldSpecification();
 	}
-	
+
 	public StringBasedMongoQuery(MongoQueryMethod method, MongoTemplate template) {
 		this(method.getAnnotatedQuery(), method, template);
 	}

@@ -30,7 +30,7 @@ import com.mongodb.DBRef;
  * @author Oliver Gierke
  */
 public abstract class MongoSimpleTypes {
-	
+
 	private static final Set<Class<?>> MONGO_SIMPLE_TYPES = new HashSet<Class<?>>();
 
 	static {
@@ -38,7 +38,7 @@ public abstract class MongoSimpleTypes {
 		MONGO_SIMPLE_TYPES.add(ObjectId.class);
 		MONGO_SIMPLE_TYPES.add(CodeWScope.class);
 	}
-	
+
 	public static final SimpleTypeHolder HOLDER = new SimpleTypeHolder(MONGO_SIMPLE_TYPES, true);
 
 	private MongoSimpleTypes() {

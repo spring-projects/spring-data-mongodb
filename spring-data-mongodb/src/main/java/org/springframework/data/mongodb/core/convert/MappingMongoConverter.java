@@ -72,7 +72,8 @@ import org.springframework.util.StringUtils;
  * @author Jon Brisbin <jbrisbin@vmware.com>
  * @author Oliver Gierke
  */
-public class MappingMongoConverter extends AbstractMongoConverter implements ApplicationContextAware, TypeMapperProvider {
+public class MappingMongoConverter extends AbstractMongoConverter implements ApplicationContextAware,
+		TypeMapperProvider {
 
 	@SuppressWarnings("rawtypes")
 	private static final TypeInformation<Map> MAP_TYPE_INFORMATION = ClassTypeInformation.from(Map.class);
@@ -116,7 +117,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	public void setTypeMapper(TypeMapper typeMapper) {
 		this.typeMapper = typeMapper == null ? new DefaultTypeMapper() : typeMapper;
 	}
-	
+
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.convert.MongoConverter#getTypeMapper()
@@ -124,7 +125,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	public TypeMapper getTypeMapper() {
 		return this.typeMapper;
 	}
-	
+
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.core.convert.MongoConverter#getMappingContext()
@@ -143,7 +144,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	public void setUseFieldAccessOnly(boolean useFieldAccessOnly) {
 		this.useFieldAccessOnly = useFieldAccessOnly;
 	}
-	
+
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.context.ApplicationContextAware#setApplicationContext(org.springframework.context.ApplicationContext)
@@ -785,7 +786,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	protected Map<Object, Object> readMap(TypeInformation<?> type, DBObject dbObject) {
 
 		Assert.notNull(dbObject);
-		
+
 		Class<?> mapType = getMoreConcreteTargetType(dbObject, type).getType();
 		Map<Object, Object> map = CollectionFactory.createMap(mapType, dbObject.keySet().size());
 		Map<String, Object> sourceMap = dbObject.toMap();
@@ -829,15 +830,15 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	protected TypeInformation<?> findTypeToBeUsed(DBObject dbObject) {
 		return typeMapper.readType(dbObject);
 	}
-	
+
 	private Class<?> getDefaultedTypeToBeUsed(DBObject dbObject) {
-		 TypeInformation<?> result = findTypeToBeUsed(dbObject);
-		 
-		 if (result != null) {
-			 return result.getType();
-		 }
-		 
-		 return dbObject instanceof BasicDBList ? List.class : Map.class;
+		TypeInformation<?> result = findTypeToBeUsed(dbObject);
+
+		if (result != null) {
+			return result.getType();
+		}
+
+		return dbObject instanceof BasicDBList ? List.class : Map.class;
 	}
 
 	/**
@@ -854,7 +855,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		Class<?> documentsTargetType = getDefaultedTypeToBeUsed(dbObject);
 		Class<S> rawType = basicType == null ? null : basicType.getType();
 
-		boolean isMoreConcreteCustomType = rawType == null ? true : rawType.isAssignableFrom(documentsTargetType) && !rawType.equals(documentsTargetType);
+		boolean isMoreConcreteCustomType = rawType == null ? true : rawType.isAssignableFrom(documentsTargetType)
+				&& !rawType.equals(documentsTargetType);
 		return isMoreConcreteCustomType ? (TypeInformation<? extends S>) ClassTypeInformation.from(documentsTargetType)
 				: basicType;
 	}

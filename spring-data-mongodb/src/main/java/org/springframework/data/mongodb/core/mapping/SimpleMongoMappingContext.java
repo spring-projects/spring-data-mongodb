@@ -64,7 +64,8 @@ public class SimpleMongoMappingContext extends
 		 * @param propertyDescriptor
 		 * @param information
 		 */
-		public SimplePersistentProperty(Field field, PropertyDescriptor propertyDescriptor, MongoPersistentEntity<?> owner, SimpleTypeHolder simpleTypeHolder) {
+		public SimplePersistentProperty(Field field, PropertyDescriptor propertyDescriptor, MongoPersistentEntity<?> owner,
+				SimpleTypeHolder simpleTypeHolder) {
 			super(field, propertyDescriptor, owner, simpleTypeHolder);
 		}
 
@@ -81,7 +82,7 @@ public class SimpleMongoMappingContext extends
 		public String getFieldName() {
 			return isIdProperty() ? "_id" : getName();
 		}
-		
+
 		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.core.mapping.MongoPersistentProperty#getFieldOrder()
@@ -97,14 +98,14 @@ public class SimpleMongoMappingContext extends
 		protected Association<MongoPersistentProperty> createAssociation() {
 			return new Association<MongoPersistentProperty>(this, null);
 		}
-		
+
 		/* (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.core.mapping.MongoPersistentProperty#isDbReference()
 		 */
 		public boolean isDbReference() {
 			return false;
 		}
-		
+
 		/* (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.core.mapping.MongoPersistentProperty#getDBRef()
 		 */

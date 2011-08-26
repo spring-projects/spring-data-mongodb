@@ -103,7 +103,7 @@ public class NearQuery {
 		Assert.notNull(point);
 		return new NearQuery(point, metric);
 	}
-	
+
 	/**
 	 * Returns the {@link Metric} underlying the actual query.
 	 * 
@@ -149,7 +149,7 @@ public class NearQuery {
 		this.spherical(true);
 		return maxDistance(getNormalizedDistance(maxDistance, metric));
 	}
-	
+
 	/**
 	 * Sets the maximum distance to the given {@link Distance}.
 	 * 
@@ -259,7 +259,7 @@ public class NearQuery {
 
 		return dbObject;
 	}
-	
+
 	private double getNormalizedDistance(double distance, Metric metric) {
 		return metric == null ? distance : distance / metric.getMultiplier();
 	}

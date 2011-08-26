@@ -24,7 +24,7 @@ import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
 
 /**
- * {@link TypeMapper} allowing to configure a {@link Map} containing {@link String} to {@link Class} mappings that will
+ * {@link TypeMapper} allowing to configure a {@link Map} containing {@link Class} to {@link String} mappings that will
  * be used to map the values found under the configured type key (see {@link DefaultTypeMapper#setTypeKey(String)}. This
  * allows declarative type mapping in a Spring config file for example.
  * 
@@ -81,7 +81,7 @@ public class ConfigurableTypeMapper extends DefaultTypeMapper {
 				return entry.getKey();
 			}
 		}
-		
+
 		return handleUnmappedClasses ? super.getTypeInformation(value) : null;
 	}
 

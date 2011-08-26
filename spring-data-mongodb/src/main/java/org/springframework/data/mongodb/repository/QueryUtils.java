@@ -73,7 +73,7 @@ abstract class QueryUtils {
 
 		return query;
 	}
-	
+
 	public static org.springframework.data.mongodb.core.query.Order toOrder(Order order) {
 		return order.isAscending() ? org.springframework.data.mongodb.core.query.Order.ASCENDING
 				: org.springframework.data.mongodb.core.query.Order.DESCENDING;

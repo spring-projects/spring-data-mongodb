@@ -88,7 +88,7 @@ public class SimpleMongoRepositoryConfiguration
 	public String getNamedQueriesLocation() {
 		return "classpath*:META-INF/mongo-named-queries.properties";
 	}
-	
+
 	/*
 	* (non-Javadoc)
 	*
@@ -110,7 +110,7 @@ public class SimpleMongoRepositoryConfiguration
 			SingleRepositoryConfigInformation<SimpleMongoRepositoryConfiguration> {
 
 		String getMongoTemplateRef();
-		
+
 		boolean getCreateQueryIndexes();
 	}
 
@@ -144,12 +144,12 @@ public class SimpleMongoRepositoryConfiguration
 
 			return getAttribute(MONGO_TEMPLATE_REF);
 		}
-		
+
 		/* (non-Javadoc)
 		 * @see org.springframework.data.mongodb.config.SimpleMongoRepositoryConfiguration.MongoRepositoryConfiguration#getCreateQueryIndexes()
 		 */
 		public boolean getCreateQueryIndexes() {
-			
+
 			String attribute = getAttribute(CREATE_QUERY_INDEXES);
 			return attribute == null ? false : Boolean.parseBoolean(attribute);
 		}
@@ -185,7 +185,7 @@ public class SimpleMongoRepositoryConfiguration
 
 			return getParent().getMongoTemplateRef();
 		}
-		
+
 		/* (non-Javadoc)
 		 * @see org.springframework.data.mongodb.config.SimpleMongoRepositoryConfiguration.MongoRepositoryConfiguration#getCreateQueryIndexes()
 		 */

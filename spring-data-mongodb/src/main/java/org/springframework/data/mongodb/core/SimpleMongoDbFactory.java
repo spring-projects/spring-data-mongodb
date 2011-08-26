@@ -91,15 +91,15 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 	 * @see org.springframework.data.mongodb.MongoDbFactory#getDb(java.lang.String)
 	 */
 	public DB getDb(String dbName) throws DataAccessException {
-		
+
 		Assert.hasText(dbName, "Database name must not be empty.");
-		
+
 		DB db = MongoDbUtils.getDB(mongo, dbName, username, password == null ? null : password.toCharArray());
-		
+
 		if (writeConcern != null) {
 			db.setWriteConcern(writeConcern);
 		}
-		
+
 		return db;
 	}
 

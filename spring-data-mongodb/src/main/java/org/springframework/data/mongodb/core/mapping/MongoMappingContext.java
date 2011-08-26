@@ -28,7 +28,7 @@ import org.springframework.data.util.TypeInformation;
  * @author Oliver Gierke ogierke@vmware.com
  */
 public class MongoMappingContext extends AbstractMappingContext<BasicMongoPersistentEntity<?>, MongoPersistentProperty> {
-	
+
 	/**
 	 * Creates a new {@link MongoMappingContext}.
 	 */

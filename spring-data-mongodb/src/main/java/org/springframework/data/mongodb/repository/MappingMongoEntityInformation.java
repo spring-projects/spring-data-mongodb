@@ -42,7 +42,7 @@ public class MappingMongoEntityInformation<T, ID extends Serializable> extends A
 	public MappingMongoEntityInformation(MongoPersistentEntity<T> entity) {
 		this(entity, null);
 	}
-	
+
 	/**
 	 * Creates a new {@link MappingMongoEntityInformation} for the given {@link MongoPersistentEntity} and custom
 	 * collection name.

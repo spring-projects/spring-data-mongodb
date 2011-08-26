@@ -28,75 +28,74 @@ import com.mongodb.ServerAddress;
 
 abstract class ParsingUtils {
 
-  /**
-   * Parses the mongo replica-set element.
-   * @param parserContext the parser context
-   * @param element the mongo element
-   * @param mongoBuilder the bean definition builder to populate
-   * @return true if parsing actually occured, false otherwise
-   */
-  static boolean parseReplicaSet(ParserContext parserContext, Element element, BeanDefinitionBuilder mongoBuilder) {
-     
-    
-    String replicaSetString = element.getAttribute("replica-set");
-    if (StringUtils.hasText(replicaSetString)) {
-      ManagedList<Object> serverAddresses = new ManagedList<Object>();
-      String[] replicaSetStringArray = StringUtils.commaDelimitedListToStringArray(replicaSetString);
-      for (String element2 : replicaSetStringArray) {
-        String[] hostAndPort = StringUtils.delimitedListToStringArray(element2, ":");
-        BeanDefinitionBuilder defBuilder = BeanDefinitionBuilder.genericBeanDefinition(ServerAddress.class);
-        defBuilder.addConstructorArgValue(hostAndPort[0]);
-        defBuilder.addConstructorArgValue(hostAndPort[1]);
-        serverAddresses.add(defBuilder.getBeanDefinition());
-      }
-      if (!serverAddresses.isEmpty()) {
-        mongoBuilder.addPropertyValue("replicaSetSeeds", serverAddresses);
-      }
-    }
-    return true;
-    
-  }
-  /**
-   * Parses the mongo:options sub-element. Populates the given attribute factory with the proper attributes.
-   * 
-   * @return true if parsing actually occured, false otherwise
-   */
-  static boolean parseMongoOptions(ParserContext parserContext, Element element, BeanDefinitionBuilder mongoBuilder) {
-    Element optionsElement = DomUtils.getChildElementByTagName(element, "options");
-    if (optionsElement == null) {
+	/**
+	 * Parses the mongo replica-set element.
+	 * 
+	 * @param parserContext the parser context
+	 * @param element the mongo element
+	 * @param mongoBuilder the bean definition builder to populate
+	 * @return true if parsing actually occured, false otherwise
+	 */
+	static boolean parseReplicaSet(ParserContext parserContext, Element element, BeanDefinitionBuilder mongoBuilder) {
+
+		String replicaSetString = element.getAttribute("replica-set");
+		if (StringUtils.hasText(replicaSetString)) {
+			ManagedList<Object> serverAddresses = new ManagedList<Object>();
+			String[] replicaSetStringArray = StringUtils.commaDelimitedListToStringArray(replicaSetString);
+			for (String element2 : replicaSetStringArray) {
+				String[] hostAndPort = StringUtils.delimitedListToStringArray(element2, ":");
+				BeanDefinitionBuilder defBuilder = BeanDefinitionBuilder.genericBeanDefinition(ServerAddress.class);
+				defBuilder.addConstructorArgValue(hostAndPort[0]);
+				defBuilder.addConstructorArgValue(hostAndPort[1]);
+				serverAddresses.add(defBuilder.getBeanDefinition());
+			}
+			if (!serverAddresses.isEmpty()) {
+				mongoBuilder.addPropertyValue("replicaSetSeeds", serverAddresses);
+			}
+		}
+		return true;
+
+	}
+
+	/**
+	 * Parses the mongo:options sub-element. Populates the given attribute factory with the proper attributes.
+	 * 
+	 * @return true if parsing actually occured, false otherwise
+	 */
+	static boolean parseMongoOptions(ParserContext parserContext, Element element, BeanDefinitionBuilder mongoBuilder) {
+		Element optionsElement = DomUtils.getChildElementByTagName(element, "options");
+		if (optionsElement == null) {
 			return false;
 		}
 
-    BeanDefinitionBuilder optionsDefBuilder = BeanDefinitionBuilder
-        .genericBeanDefinition(MongoOptionsFactoryBean.class);
+		BeanDefinitionBuilder optionsDefBuilder = BeanDefinitionBuilder
+				.genericBeanDefinition(MongoOptionsFactoryBean.class);
 
-    setPropertyValue(optionsElement, optionsDefBuilder, "connections-per-host", "connectionsPerHost");
-    setPropertyValue(optionsElement, optionsDefBuilder, "threads-allowed-to-block-for-connection-multiplier",
-        "threadsAllowedToBlockForConnectionMultiplier");
-    setPropertyValue(optionsElement, optionsDefBuilder, "max-wait-time", "maxWaitTime");
-    setPropertyValue(optionsElement, optionsDefBuilder, "connect-timeout", "connectTimeout");
-    setPropertyValue(optionsElement, optionsDefBuilder, "socket-timeout", "socketTimeout");
-    setPropertyValue(optionsElement, optionsDefBuilder, "socket-keep-alive", "socketKeepAlive");
-    setPropertyValue(optionsElement, optionsDefBuilder, "auto-connect-retry", "autoConnectRetry");
-    setPropertyValue(optionsElement, optionsDefBuilder, "write-number", "writeNumber");
-    setPropertyValue(optionsElement, optionsDefBuilder, "write-timeout", "writeTimeout");
-    setPropertyValue(optionsElement, optionsDefBuilder, "write-fsync", "writeFsync");
-    setPropertyValue(optionsElement, optionsDefBuilder, "slave-ok", "slaveOk");
-    
-    
+		setPropertyValue(optionsElement, optionsDefBuilder, "connections-per-host", "connectionsPerHost");
+		setPropertyValue(optionsElement, optionsDefBuilder, "threads-allowed-to-block-for-connection-multiplier",
+				"threadsAllowedToBlockForConnectionMultiplier");
+		setPropertyValue(optionsElement, optionsDefBuilder, "max-wait-time", "maxWaitTime");
+		setPropertyValue(optionsElement, optionsDefBuilder, "connect-timeout", "connectTimeout");
+		setPropertyValue(optionsElement, optionsDefBuilder, "socket-timeout", "socketTimeout");
+		setPropertyValue(optionsElement, optionsDefBuilder, "socket-keep-alive", "socketKeepAlive");
+		setPropertyValue(optionsElement, optionsDefBuilder, "auto-connect-retry", "autoConnectRetry");
+		setPropertyValue(optionsElement, optionsDefBuilder, "write-number", "writeNumber");
+		setPropertyValue(optionsElement, optionsDefBuilder, "write-timeout", "writeTimeout");
+		setPropertyValue(optionsElement, optionsDefBuilder, "write-fsync", "writeFsync");
+		setPropertyValue(optionsElement, optionsDefBuilder, "slave-ok", "slaveOk");
 
-    mongoBuilder.addPropertyValue("mongoOptions", optionsDefBuilder.getBeanDefinition());
-    return true;
-  }
-  
-  static void setPropertyValue(Element element, BeanDefinitionBuilder builder, String attrName, String propertyName) {
-    String attr = element.getAttribute(attrName);
-    if (StringUtils.hasText(attr)) {
-      builder.addPropertyValue(propertyName, attr);
-    }
-  }
-  
-  /**
+		mongoBuilder.addPropertyValue("mongoOptions", optionsDefBuilder.getBeanDefinition());
+		return true;
+	}
+
+	static void setPropertyValue(Element element, BeanDefinitionBuilder builder, String attrName, String propertyName) {
+		String attr = element.getAttribute(attrName);
+		if (StringUtils.hasText(attr)) {
+			builder.addPropertyValue(propertyName, attr);
+		}
+	}
+
+	/**
 	 * Sets the property with the given attribute name on the given {@link BeanDefinitionBuilder} to the value of the
 	 * attribute with the given name.
 	 * 
@@ -104,10 +103,10 @@ abstract class ParsingUtils {
 	 * @param builder must not be {@literal null}.
 	 * @param attrName must not be {@literal null} or empty.
 	 */
-  static void setPropertyValue(Element element, BeanDefinitionBuilder builder, String attrName) {
-    String attr = element.getAttribute(attrName);
-    if (StringUtils.hasText(attr)) {
-      builder.addPropertyValue(attrName, attr);
-    }
-  }
+	static void setPropertyValue(Element element, BeanDefinitionBuilder builder, String attrName) {
+		String attr = element.getAttribute(attrName);
+		if (StringUtils.hasText(attr)) {
+			builder.addPropertyValue(attrName, attr);
+		}
+	}
 }

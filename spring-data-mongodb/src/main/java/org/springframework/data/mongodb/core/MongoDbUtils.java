@@ -48,10 +48,8 @@ public abstract class MongoDbUtils {
 	/**
 	 * Obtains a {@link DB} connection for the given {@link Mongo} instance and database name
 	 * 
-	 * @param mongo
-	 *          The {@link Mongo} instance
-	 * @param databaseName
-	 *          The database name
+	 * @param mongo The {@link Mongo} instance
+	 * @param databaseName The database name
 	 * @return The {@link DB} connection
 	 */
 	public static DB getDB(Mongo mongo, String databaseName) {
@@ -61,14 +59,10 @@ public abstract class MongoDbUtils {
 	/**
 	 * Obtains a {@link DB} connection for the given {@link Mongo} instance and database name
 	 * 
-	 * @param mongo
-	 *          The {@link Mongo} instance
-	 * @param databaseName
-	 *          The database name
-	 * @param username
-	 *          The username to authenticate with
-	 * @param password
-	 *          The password to authenticate with
+	 * @param mongo The {@link Mongo} instance
+	 * @param databaseName The database name
+	 * @param username The username to authenticate with
+	 * @param password The password to authenticate with
 	 * @return The {@link DB} connection
 	 */
 	public static DB getDB(Mongo mongo, String databaseName, String username, char[] password) {
@@ -140,10 +134,8 @@ public abstract class MongoDbUtils {
 	 * Return whether the given DB instance is transactional, that is, bound to the current thread by Spring's transaction
 	 * facilities.
 	 * 
-	 * @param db
-	 *          the DB to check
-	 * @param mongo
-	 *          the Mongo instance that the DB was created with (may be <code>null</code>)
+	 * @param db the DB to check
+	 * @param mongo the Mongo instance that the DB was created with (may be <code>null</code>)
 	 * @return whether the DB is transactional
 	 */
 	public static boolean isDBTransactional(DB db, Mongo mongo) {
@@ -157,8 +149,7 @@ public abstract class MongoDbUtils {
 	/**
 	 * Perform actual closing of the Mongo DB object, catching and logging any cleanup exceptions thrown.
 	 * 
-	 * @param db
-	 *          the DB to close (may be <code>null</code>)
+	 * @param db the DB to close (may be <code>null</code>)
 	 */
 	public static void closeDB(DB db) {
 		if (db != null) {

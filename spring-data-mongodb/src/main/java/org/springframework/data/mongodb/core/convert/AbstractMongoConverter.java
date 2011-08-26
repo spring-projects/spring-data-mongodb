@@ -86,10 +86,9 @@ public abstract class AbstractMongoConverter implements MongoConverter, Initiali
 		if (!conversionService.canConvert(String.class, BigInteger.class)) {
 			conversionService.addConverter(StringToBigIntegerConverter.INSTANCE);
 		}
-		
+
 		conversions.registerConvertersIn(conversionService);
 	}
-
 
 	/*
 	 * (non-Javadoc)

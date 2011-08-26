@@ -82,7 +82,7 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 
 		return getConvertedValue(delegate.getBindableValue(index));
 	}
-	
+
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.repository.MongoParameterAccessor#getMaxDistance()
@@ -98,15 +98,15 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 	 * @return
 	 */
 	private Object getConvertedValue(Object value) {
-		
+
 		if (!(writer instanceof TypeMapperProvider)) {
 			return value;
 		}
-		
+
 		TypeMapper mapper = ((TypeMapperProvider) writer).getTypeMapper();
 		return removeTypeInfoRecursively(writer.convertToMongoType(value), mapper);
 	}
-	
+
 	/**
 	 * Removes the type information from the conversion result.
 	 * 
@@ -114,19 +114,19 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 	 * @return
 	 */
 	private Object removeTypeInfoRecursively(Object object, TypeMapper mapper) {
-		
+
 		if (!(object instanceof DBObject) || mapper == null) {
 			return object;
 		}
-		
+
 		DBObject dbObject = (DBObject) object;
 		String keyToRemove = null;
 		for (String key : dbObject.keySet()) {
-			
+
 			if (mapper.isTypeKey(key)) {
 				keyToRemove = key;
 			}
-			
+
 			Object value = dbObject.get(key);
 			if (value instanceof BasicDBList) {
 				for (Object element : (BasicDBList) value) {
@@ -136,11 +136,11 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 				removeTypeInfoRecursively(value, mapper);
 			}
 		}
-		
+
 		if (keyToRemove != null) {
 			dbObject.removeField(keyToRemove);
 		}
-		
+
 		return dbObject;
 	}
 

@@ -88,7 +88,6 @@ abstract class MongoConverters {
 		}
 	}
 
-
 	public static enum BigDecimalToStringConverter implements Converter<BigDecimal, String> {
 		INSTANCE;
 
@@ -96,10 +95,10 @@ abstract class MongoConverters {
 			return source == null ? null : source.toString();
 		}
 	}
-	
+
 	public static enum StringToBigDecimalConverter implements Converter<String, BigDecimal> {
 		INSTANCE;
-		
+
 		public BigDecimal convert(String source) {
 			return StringUtils.hasText(source) ? new BigDecimal(source) : null;
 		}
@@ -112,10 +111,10 @@ abstract class MongoConverters {
 			return source == null ? null : source.toString();
 		}
 	}
-	
+
 	public static enum StringToBigIntegerConverter implements Converter<String, BigInteger> {
 		INSTANCE;
-		
+
 		public BigInteger convert(String source) {
 			return StringUtils.hasText(source) ? new BigInteger(source) : null;
 		}

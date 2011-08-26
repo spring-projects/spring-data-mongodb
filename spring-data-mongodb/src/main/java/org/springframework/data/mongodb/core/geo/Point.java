@@ -58,7 +58,7 @@ public class Point {
 	public double[] asArray() {
 		return new double[] { x, y };
 	}
-	
+
 	public List<Double> asList() {
 		return Arrays.asList(x, y);
 	}

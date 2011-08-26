@@ -440,27 +440,27 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	public <T> GeoResults<T> geoNear(NearQuery near, Class<T> entityClass) {
 		return geoNear(near, entityClass, determineCollectionName(entityClass));
 	}
-	
+
 	public <T> GeoResults<T> geoNear(NearQuery near, Class<T> entityClass, String collectionName) {
-		
+
 		String collection = StringUtils.hasText(collectionName) ? collectionName : determineCollectionName(entityClass);
 		BasicDBObject command = new BasicDBObject("geoNear", collection);
 		command.putAll(near.toDBObject());
-		
+
 		CommandResult commandResult = executeCommand(command);
 		BasicDBList results = (BasicDBList) commandResult.get("results");
-		DbObjectCallback<GeoResult<T>> callback = new GeoNearResultDbObjectCallback<T>(new ReadDbObjectCallback<T>(mongoConverter, entityClass), near.getMetric());
+		DbObjectCallback<GeoResult<T>> callback = new GeoNearResultDbObjectCallback<T>(new ReadDbObjectCallback<T>(
+				mongoConverter, entityClass), near.getMetric());
 		List<GeoResult<T>> result = new ArrayList<GeoResult<T>>(results.size());
-		
+
 		for (Object element : results) {
 			result.add(callback.doWith((DBObject) element));
 		}
-		
+
 		double averageDistance = (Double) ((DBObject) commandResult.get("stats")).get("avgDistance");
 		return new GeoResults<T>(result, new Distance(averageDistance, near.getMetric()));
 	}
-	
-	
+
 	// Find methods that take a Query to express the query and that return a single object that is also removed from the
 	// collection in the database.
 
@@ -707,10 +707,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 		return execute(collectionName, new CollectionCallback<WriteResult>() {
 			public WriteResult doInCollection(DBCollection collection) throws MongoException, DataAccessException {
-				
+
 				MongoPersistentEntity<?> entity = entityClass == null ? null : getPersistentEntity(entityClass);
-				
-				DBObject queryObj = query == null ? new BasicDBObject() : mapper.getMappedObject(query.getQueryObject(), entity);
+
+				DBObject queryObj = query == null ? new BasicDBObject()
+						: mapper.getMappedObject(query.getQueryObject(), entity);
 				DBObject updateObj = update.getUpdateObject();
 
 				for (String key : updateObj.keySet()) {

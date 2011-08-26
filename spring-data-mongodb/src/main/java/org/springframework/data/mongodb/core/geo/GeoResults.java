@@ -42,7 +42,7 @@ public class GeoResults<T> implements Iterable<GeoResult<T>> {
 	public GeoResults(List<GeoResult<T>> results) {
 		this(results, (Metric) null);
 	}
-	
+
 	public GeoResults(List<GeoResult<T>> results, Metric metric) {
 		this(results, calculateAverageDistance(results, metric));
 	}
@@ -117,7 +117,7 @@ public class GeoResults<T> implements Iterable<GeoResult<T>> {
 		result += 31 * averageDistance.hashCode();
 		return result;
 	}
-	
+
 	/*
 	 * (non-Javadoc)
 	 * @see java.lang.Object#toString()

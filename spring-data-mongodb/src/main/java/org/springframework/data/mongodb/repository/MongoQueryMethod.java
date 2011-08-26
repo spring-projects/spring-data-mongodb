@@ -44,10 +44,10 @@ class MongoQueryMethod extends QueryMethod {
 	public MongoQueryMethod(Method method, RepositoryMetadata metadata, EntityInformationCreator entityInformationCreator) {
 		super(method, metadata);
 		this.method = method;
-		this.entityInformation = entityInformationCreator.getEntityInformation(
-				ClassUtils.getReturnedDomainClass(method), getDomainClass());
+		this.entityInformation = entityInformationCreator.getEntityInformation(ClassUtils.getReturnedDomainClass(method),
+				getDomainClass());
 	}
-	
+
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.query.QueryMethod#getParameters(java.lang.reflect.Method)
@@ -98,7 +98,7 @@ class MongoQueryMethod extends QueryMethod {
 
 		return entityInformation;
 	}
-	
+
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.query.QueryMethod#getParameters()

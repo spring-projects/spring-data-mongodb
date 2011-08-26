@@ -20,13 +20,13 @@ import org.springframework.data.repository.query.ParametersParameterAccessor;
 
 /**
  * Mongo-specific {@link ParametersParameterAccessor} to allow access to the {@link Distance} parameter.
- *
+ * 
  * @author Oliver Gierke
  */
 public class MongoParametersParameterAccessor extends ParametersParameterAccessor implements MongoParameterAccessor {
 
 	private final MongoParameters parameters;
-	
+
 	/**
 	 * @param parameters
 	 * @param values
@@ -35,7 +35,7 @@ public class MongoParametersParameterAccessor extends ParametersParameterAccesso
 		super(parameters, values);
 		this.parameters = parameters;
 	}
-	
+
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.repository.MongoParameterAccessor#getMaxDistance()

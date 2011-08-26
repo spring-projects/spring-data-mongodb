@@ -71,8 +71,7 @@ public class MongoAdmin implements MongoAdminOperations {
 	/**
 	 * Sets the username to use to connect to the Mongo database
 	 * 
-	 * @param username
-	 *          The username to use
+	 * @param username The username to use
 	 */
 	public void setUsername(String username) {
 		this.username = username;
@@ -81,8 +80,7 @@ public class MongoAdmin implements MongoAdminOperations {
 	/**
 	 * Sets the password to use to authenticate with the Mongo database.
 	 * 
-	 * @param password
-	 *          The password to use
+	 * @param password The password to use
 	 */
 	public void setPassword(String password) {
 

@@ -74,7 +74,7 @@ public class MongoDbFactoryParser extends AbstractBeanDefinitionParser {
 		if (userCredentials != null) {
 			dbFactoryBuilder.addConstructorArgValue(userCredentials);
 		}
-		
+
 		ParsingUtils.setPropertyValue(element, dbFactoryBuilder, "write-concern", "writeConcern");
 
 		return dbFactoryBuilder.getBeanDefinition();

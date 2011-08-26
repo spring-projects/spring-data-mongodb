@@ -91,18 +91,18 @@ public class MongoFactoryBean implements FactoryBean<Mongo>, PersistenceExceptio
 		Mongo mongo;
 
 		if (host == null) {
-			
+
 			logger.debug("Property host not specified. Using default configuration");
 			mongo = new Mongo();
-			
+
 		} else {
-			
+
 			ServerAddress defaultOptions = new ServerAddress();
-			
+
 			if (mongoOptions == null) {
 				mongoOptions = new MongoOptions();
 			}
-			
+
 			if (replicaPair != null) {
 				if (replicaPair.size() < 2) {
 					throw new CannotGetMongoDbConnectionException("A replica pair must have two server entries");

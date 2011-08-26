@@ -40,11 +40,12 @@ import org.springframework.util.StringUtils;
 /**
  * Component that inspects {@link BasicMongoPersistentEntity} instances contained in the given
  * {@link MongoMappingContext} for indexing metadata and ensures the indexes to be available.
- *
+ * 
  * @author Jon Brisbin <jbrisbin@vmware.com>
  * @author Oliver Gierke
  */
-public class MongoPersistentEntityIndexCreator implements ApplicationListener<MappingContextEvent<MongoPersistentEntity<MongoPersistentProperty>, MongoPersistentProperty>> {
+public class MongoPersistentEntityIndexCreator implements
+		ApplicationListener<MappingContextEvent<MongoPersistentEntity<MongoPersistentProperty>, MongoPersistentProperty>> {
 
 	private static final Log log = LogFactory.getLog(MongoPersistentEntityIndexCreator.class);
 
@@ -52,7 +53,8 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 	private final MongoDbFactory mongoDbFactory;
 
 	/**
-	 * Creats a new {@link MongoPersistentEntityIndexCreator} for the given {@link MongoMappingContext} and {@link MongoDbFactory}.
+	 * Creats a new {@link MongoPersistentEntityIndexCreator} for the given {@link MongoMappingContext} and
+	 * {@link MongoDbFactory}.
 	 * 
 	 * @param mappingContext must not be {@@iteral null}
 	 * @param mongoDbFactory must not be {@@iteral null}
@@ -72,7 +74,8 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 	 * (non-Javadoc)
 	 * @see org.springframework.context.ApplicationListener#onApplicationEvent(org.springframework.context.ApplicationEvent)
 	 */
-	public void onApplicationEvent(MappingContextEvent<MongoPersistentEntity<MongoPersistentProperty>, MongoPersistentProperty> event) {
+	public void onApplicationEvent(
+			MappingContextEvent<MongoPersistentEntity<MongoPersistentProperty>, MongoPersistentProperty> event) {
 		checkForIndexes(event.getPersistentEntity());
 	}
 
@@ -130,7 +133,8 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 						indexObject.named(StringUtils.hasText(index.name()) ? index.name() : field.getName());
 
 						String collection = StringUtils.hasText(index.collection()) ? index.collection() : entity.getCollection();
-						mongoDbFactory.getDb().getCollection(collection).ensureIndex(indexObject.getIndexKeys(), indexObject.getIndexOptions());
+						mongoDbFactory.getDb().getCollection(collection)
+								.ensureIndex(indexObject.getIndexKeys(), indexObject.getIndexOptions());
 
 						if (log.isDebugEnabled()) {
 							log.debug(String.format("Created %s for entity %s in collection %s! ", indexObject, entity.getType(),
@@ -144,13 +148,8 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 		}
 	}
 
-	protected void ensureIndex(String collection,
-														 final String name,
-														 final String def,
-														 final IndexDirection direction,
-														 final boolean unique,
-														 final boolean dropDups,
-														 final boolean sparse) {
+	protected void ensureIndex(String collection, final String name, final String def, final IndexDirection direction,
+			final boolean unique, final boolean dropDups, final boolean sparse) {
 		DBObject defObj;
 		if (null != def) {
 			defObj = (DBObject) JSON.parse(def);

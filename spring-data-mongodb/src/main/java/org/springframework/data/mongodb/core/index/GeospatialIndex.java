@@ -22,7 +22,7 @@ import com.mongodb.DBObject;
 
 /**
  * Value object to capture data to create a geo index.
- *
+ * 
  * @author Jon Brisbin
  * @author Oliver Gierke
  */

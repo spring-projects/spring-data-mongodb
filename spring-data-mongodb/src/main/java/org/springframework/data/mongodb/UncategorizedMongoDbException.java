@@ -22,6 +22,6 @@ public class UncategorizedMongoDbException extends UncategorizedDataAccessExcept
 	private static final long serialVersionUID = -2336595514062364929L;
 
 	public UncategorizedMongoDbException(String msg, Throwable cause) {
-    super(msg, cause);
-  }
+		super(msg, cause);
+	}
 }
