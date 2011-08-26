@@ -62,7 +62,6 @@ import org.springframework.expression.Expression;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.util.Assert;
-import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
@@ -73,9 +72,7 @@ import org.springframework.util.StringUtils;
  * @author Jon Brisbin <jbrisbin@vmware.com>
  * @author Oliver Gierke
  */
-public class MappingMongoConverter extends AbstractMongoConverter implements ApplicationContextAware {
-
-	public static final String CUSTOM_TYPE_KEY = "_class";
+public class MappingMongoConverter extends AbstractMongoConverter implements ApplicationContextAware, TypeMapperProvider {
 
 	@SuppressWarnings("rawtypes")
 	private static final TypeInformation<Map> MAP_TYPE_INFORMATION = ClassTypeInformation.from(Map.class);
@@ -89,6 +86,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	protected final MongoDbFactory mongoDbFactory;
 	protected ApplicationContext applicationContext;
 	protected boolean useFieldAccessOnly = true;
+	protected TypeMapper typeMapper = new DefaultTypeMapper();
 
 	/**
 	 * Creates a new {@link MappingMongoConverter} given the new {@link MongoDbFactory} and {@link MappingContext}.
@@ -108,6 +106,25 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		this.mappingContext = mappingContext;
 	}
 
+	/**
+	 * Configures the {@link TypeMapper} to be used to add type information to {@link DBObject}s created by the converter
+	 * and how to lookup type information from {@link DBObject}s when reading them. Uses a {@link DefaultTypeMapper} by
+	 * default. Setting this to {@literal null} will reset the {@link TypeMapper} to the default one.
+	 * 
+	 * @param typeMapper the typeMapper to set
+	 */
+	public void setTypeMapper(TypeMapper typeMapper) {
+		this.typeMapper = typeMapper == null ? new DefaultTypeMapper() : typeMapper;
+	}
+	
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.convert.MongoConverter#getTypeMapper()
+	 */
+	public TypeMapper getTypeMapper() {
+		return this.typeMapper;
+	}
+	
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.core.convert.MongoConverter#getMappingContext()
@@ -126,7 +143,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	public void setUseFieldAccessOnly(boolean useFieldAccessOnly) {
 		this.useFieldAccessOnly = useFieldAccessOnly;
 	}
-
+	
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.context.ApplicationContextAware#setApplicationContext(org.springframework.context.ApplicationContext)
@@ -281,7 +298,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		boolean handledByCustomConverter = conversions.getCustomWriteTarget(obj.getClass(), DBObject.class) != null;
 
 		if (!handledByCustomConverter) {
-			dbo.put(CUSTOM_TYPE_KEY, obj.getClass().getName());
+			typeMapper.writeType(ClassTypeInformation.from(obj.getClass()), dbo);
 		}
 
 		writeInternal(obj, dbo);
@@ -566,8 +583,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * the one given. This is usually the case if you store a subtype of the actual declared type of the property.
 	 * 
 	 * @param type
-	 * @param value
-	 * @param dbObject
+	 * @param value must not be {@literal null}.
+	 * @param dbObject must not be {@literal null}.
 	 */
 	protected void addCustomTypeKeyIfNecessary(TypeInformation<?> type, Object value, DBObject dbObject) {
 
@@ -579,7 +596,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		boolean notTheSameClass = !value.getClass().equals(reference);
 		if (notTheSameClass) {
-			dbObject.put(CUSTOM_TYPE_KEY, value.getClass().getName());
+			typeMapper.writeType(value.getClass(), dbObject);
 		}
 	}
 
@@ -711,11 +728,12 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 							(BasicDBList) sourceValue);
 				}
 
-				Class<?> toType = findTypeToBeUsed((DBObject) sourceValue);
+				TypeInformation<?> toType = findTypeToBeUsed((DBObject) sourceValue);
 
 				// It's a complex object, have to read it in
 				if (toType != null) {
-					dbo.removeField(CUSTOM_TYPE_KEY);
+					// TODO: why do we remove the type?
+					// dbo.removeField(CUSTOM_TYPE_KEY);
 					o = read(toType, (DBObject) sourceValue);
 				} else {
 					o = read(mappingContext.getPersistentEntity(prop.getTypeInformation()), (DBObject) sourceValue);
@@ -773,7 +791,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		Map<String, Object> sourceMap = dbObject.toMap();
 
 		for (Entry<String, Object> entry : sourceMap.entrySet()) {
-			if (entry.getKey().equals(CUSTOM_TYPE_KEY)) {
+			if (typeMapper.isTypeKey(entry.getKey())) {
 				continue;
 			}
 
@@ -808,30 +826,15 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * @return the type to be used for converting the given {@link DBObject} into or {@literal null} if there's no type
 	 *         found.
 	 */
-	protected Class<?> findTypeToBeUsed(DBObject dbObject) {
-
-		if (dbObject instanceof BasicDBList) {
-			return List.class;
-		}
-
-		Object classToBeUsed = dbObject.get(CUSTOM_TYPE_KEY);
-
-		if (classToBeUsed == null) {
-			return null;
-		}
-
-		try {
-			return ClassUtils.forName(classToBeUsed.toString(), null);
-		} catch (ClassNotFoundException e) {
-			return null;
-		}
+	protected TypeInformation<?> findTypeToBeUsed(DBObject dbObject) {
+		return typeMapper.readType(dbObject);
 	}
 	
 	private Class<?> getDefaultedTypeToBeUsed(DBObject dbObject) {
-		 Class<?> result = findTypeToBeUsed(dbObject);
+		 TypeInformation<?> result = findTypeToBeUsed(dbObject);
 		 
 		 if (result != null) {
-			 return result;
+			 return result.getType();
 		 }
 		 
 		 return dbObject instanceof BasicDBList ? List.class : Map.class;

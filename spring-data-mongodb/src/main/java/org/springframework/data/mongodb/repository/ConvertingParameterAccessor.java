@@ -19,8 +19,9 @@ import java.util.Iterator;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoWriter;
+import org.springframework.data.mongodb.core.convert.TypeMapper;
+import org.springframework.data.mongodb.core.convert.TypeMapperProvider;
 import org.springframework.data.mongodb.core.geo.Distance;
 import org.springframework.data.repository.query.ParameterAccessor;
 
@@ -34,7 +35,7 @@ import com.mongodb.DBObject;
  */
 public class ConvertingParameterAccessor implements MongoParameterAccessor {
 
-	private final MongoWriter<Object> writer;
+	private final MongoWriter<?> writer;
 	private final MongoParameterAccessor delegate;
 
 	/**
@@ -42,7 +43,7 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 	 * 
 	 * @param writer
 	 */
-	public ConvertingParameterAccessor(MongoWriter<Object> writer, MongoParameterAccessor delegate) {
+	public ConvertingParameterAccessor(MongoWriter<?> writer, MongoParameterAccessor delegate) {
 		this.writer = writer;
 		this.delegate = delegate;
 	}
@@ -98,7 +99,12 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 	 */
 	private Object getConvertedValue(Object value) {
 		
-		return removeTypeInfoRecursively(writer.convertToMongoType(value));
+		if (!(writer instanceof TypeMapperProvider)) {
+			return value;
+		}
+		
+		TypeMapper mapper = ((TypeMapperProvider) writer).getTypeMapper();
+		return removeTypeInfoRecursively(writer.convertToMongoType(value), mapper);
 	}
 	
 	/**
@@ -107,24 +113,32 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 	 * @param object
 	 * @return
 	 */
-	private Object removeTypeInfoRecursively(Object object) {
+	private Object removeTypeInfoRecursively(Object object, TypeMapper mapper) {
 		
-		if (!(object instanceof DBObject)) {
+		if (!(object instanceof DBObject) || mapper == null) {
 			return object;
 		}
 		
 		DBObject dbObject = (DBObject) object;
-		
-		dbObject.removeField(MappingMongoConverter.CUSTOM_TYPE_KEY);
+		String keyToRemove = null;
 		for (String key : dbObject.keySet()) {
+			
+			if (mapper.isTypeKey(key)) {
+				keyToRemove = key;
+			}
+			
 			Object value = dbObject.get(key);
 			if (value instanceof BasicDBList) {
 				for (Object element : (BasicDBList) value) {
-					removeTypeInfoRecursively(element);
+					removeTypeInfoRecursively(element, mapper);
 				}
 			} else {
-				removeTypeInfoRecursively(value);
+				removeTypeInfoRecursively(value, mapper);
 			}
+		}
+		
+		if (keyToRemove != null) {
+			dbObject.removeField(keyToRemove);
 		}
 		
 		return dbObject;

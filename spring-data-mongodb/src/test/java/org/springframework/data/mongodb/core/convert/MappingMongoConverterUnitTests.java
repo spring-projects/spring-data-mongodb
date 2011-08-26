@@ -153,7 +153,7 @@ public class MappingMongoConverterUnitTests {
 
 		DBObject dbObject = new BasicDBObject();
 		dbObject.put("birthDate", new LocalDate());
-		dbObject.put(MappingMongoConverter.CUSTOM_TYPE_KEY, Person.class.getName());
+		dbObject.put(DefaultTypeMapper.DEFAULT_TYPE_KEY, Person.class.getName());
 
 		assertThat(converter.read(Contact.class, dbObject), is(Person.class));
 	}
@@ -166,7 +166,7 @@ public class MappingMongoConverterUnitTests {
 
 		DBObject dbObject = new BasicDBObject();
 		dbObject.put("birthDate", new LocalDate());
-		dbObject.put(MappingMongoConverter.CUSTOM_TYPE_KEY, Person.class.getName());
+		dbObject.put(DefaultTypeMapper.DEFAULT_TYPE_KEY, Person.class.getName());
 
 		assertThat(converter.read(BirthDateContainer.class, dbObject), is(BirthDateContainer.class));
 	}
@@ -180,8 +180,8 @@ public class MappingMongoConverterUnitTests {
 		DBObject result = new BasicDBObject();
 		converter.write(person, result);
 
-		assertThat(result.containsField(MappingMongoConverter.CUSTOM_TYPE_KEY), is(true));
-		assertThat(result.get(MappingMongoConverter.CUSTOM_TYPE_KEY).toString(), is(Person.class.getName()));
+		assertThat(result.containsField(DefaultTypeMapper.DEFAULT_TYPE_KEY), is(true));
+		assertThat(result.get(DefaultTypeMapper.DEFAULT_TYPE_KEY).toString(), is(Person.class.getName()));
 	}
 
 	/**
@@ -295,7 +295,7 @@ public class MappingMongoConverterUnitTests {
 		BasicDBList contacts = (BasicDBList) result;
 		DBObject personDbObject = (DBObject) contacts.get(0);
 		assertThat(personDbObject.get("foo").toString(), is("Oliver"));
-		assertThat((String) personDbObject.get(MappingMongoConverter.CUSTOM_TYPE_KEY), is(Person.class.getName()));
+		assertThat((String) personDbObject.get(DefaultTypeMapper.DEFAULT_TYPE_KEY), is(Person.class.getName()));
 	}
 	
 	/**
@@ -304,7 +304,7 @@ public class MappingMongoConverterUnitTests {
 	@Test
 	public void readsCollectionWithInterfaceCorrectly() {
 		
-		BasicDBObject person = new BasicDBObject(MappingMongoConverter.CUSTOM_TYPE_KEY, Person.class.getName());
+		BasicDBObject person = new BasicDBObject(DefaultTypeMapper.DEFAULT_TYPE_KEY, Person.class.getName());
 		person.put("foo", "Oliver");
 		
 		BasicDBList contacts = new BasicDBList();
