@@ -13,42 +13,54 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.data.mongodb.core.mapping.event;
 
 import com.mongodb.DBObject;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
+import org.springframework.core.GenericTypeResolver;
 
 /**
- * @author Jon Brisbin <jbrisbin@vmware.com>
+ * Base class to implement domain class specific {@link ApplicationListener}s.
+ * 
+ * @author Jon Brisbin
+ * @author Oliver Gierke
  */
-public abstract class AbstractMappingEventListener<T extends ApplicationEvent, E> implements ApplicationListener<T> {
+public abstract class AbstractMongoEventListener<E> implements ApplicationListener<MongoMappingEvent<E>> {
 
 	protected final Log log = LogFactory.getLog(getClass());
+	private final Class<?> domainClass;
+	
+	/**
+	 * Creates a new {@link AbstractMongoEventListener}.
+	 */
+	public AbstractMongoEventListener() {
+		this.domainClass = GenericTypeResolver.resolveTypeArgument(this.getClass(), AbstractMongoEventListener.class);
+	}
 
-	@SuppressWarnings({ "unchecked" })
-	public void onApplicationEvent(T appEvent) {
-		if (appEvent instanceof MongoMappingEvent) {
-			try {
-				MongoMappingEvent<E> event = (MongoMappingEvent<E>) appEvent;
-				if (event instanceof BeforeConvertEvent) {
-					onBeforeConvert(event.getSource());
-				} else if (event instanceof BeforeSaveEvent) {
-					onBeforeSave(event.getSource(), event.getDBObject());
-				} else if (event instanceof AfterSaveEvent) {
-					onAfterSave(event.getSource(), event.getDBObject());
-				} else if (event instanceof AfterLoadEvent) {
-					onAfterLoad((DBObject) event.getSource());
-				} else if (event instanceof AfterConvertEvent) {
-					onAfterConvert(event.getDBObject(), event.getSource());
-				}
-			} catch (ClassCastException e) {
-				// Not a mapping event for this entity, apparently.
-				// Just ignore it for now.
-			}
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.context.ApplicationListener#onApplicationEvent(org.springframework.context.ApplicationEvent)
+	 */
+	public void onApplicationEvent(MongoMappingEvent<E> event) {
+		
+		E source = event.getSource();
+		
+		if (source != null && !domainClass.isAssignableFrom(source.getClass())) {
+			return;
+		}
+
+		if (event instanceof BeforeConvertEvent) {
+			onBeforeConvert(source);
+		} else if (event instanceof BeforeSaveEvent) {
+			onBeforeSave(source, event.getDBObject());
+		} else if (event instanceof AfterSaveEvent) {
+			onAfterSave(source, event.getDBObject());
+		} else if (event instanceof AfterLoadEvent) {
+			onAfterLoad((DBObject) event.getSource());
+		} else if (event instanceof AfterConvertEvent) {
+			onAfterConvert(event.getDBObject(), source);
 		}
 	}
 
@@ -81,5 +93,4 @@ public abstract class AbstractMappingEventListener<T extends ApplicationEvent, E
 			log.debug("onAfterConvert(" + dbo + "," + source + ")");
 		}
 	}
-
 }

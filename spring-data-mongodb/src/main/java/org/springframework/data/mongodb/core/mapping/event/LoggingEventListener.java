@@ -22,8 +22,7 @@ import org.apache.commons.logging.LogFactory;
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
  */
-@SuppressWarnings({ "hiding", "rawtypes" })
-public class LoggingEventListener<MongoMappingEvent> extends AbstractMappingEventListener {
+public class LoggingEventListener extends AbstractMongoEventListener<Object> {
 
 	private Log log = LogFactory.getLog(getClass());
 

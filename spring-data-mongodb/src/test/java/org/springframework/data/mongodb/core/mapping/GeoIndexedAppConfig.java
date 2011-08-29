@@ -4,7 +4,6 @@ import com.mongodb.Mongo;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
 import org.springframework.data.mongodb.core.mapping.event.LoggingEventListener;
-import org.springframework.data.mongodb.core.mapping.event.MongoMappingEvent;
 
 public class GeoIndexedAppConfig extends AbstractMongoConfiguration {
 
@@ -28,7 +27,7 @@ public class GeoIndexedAppConfig extends AbstractMongoConfiguration {
 	}
 	
   @Bean
-  public LoggingEventListener<MongoMappingEvent<?>> mappingEventsListener() {
-    return new LoggingEventListener<MongoMappingEvent<?>>();
+  public LoggingEventListener mappingEventsListener() {
+    return new LoggingEventListener();
   }
 }
