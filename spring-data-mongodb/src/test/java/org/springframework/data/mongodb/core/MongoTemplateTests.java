@@ -27,6 +27,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import org.bson.types.ObjectId;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -50,6 +51,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.DBRef;
 import com.mongodb.Mongo;
@@ -58,7 +60,7 @@ import com.mongodb.WriteResult;
 
 /**
  * Integration test for {@link MongoTemplate}.
- *
+ * 
  * @author Oliver Gierke
  * @author Thomas Risberg
  */
@@ -92,8 +94,17 @@ public class MongoTemplateTests {
 		this.mappingTemplate = new MongoTemplate(factory, mappingConverter);
 	}
 
-	@Before
+	@Before	
 	public void setUp() {
+		cleanDb();
+	}
+	
+	@After
+	public void cleanUp() {
+		cleanDb();
+	}
+	
+	protected void cleanDb() {
 		template.dropCollection(template.getCollectionName(Person.class));
 		template.dropCollection(template.getCollectionName(PersonWith_idPropertyOfTypeObjectId.class));
 		template.dropCollection(template.getCollectionName(PersonWith_idPropertyOfTypeString.class));
@@ -112,8 +123,7 @@ public class MongoTemplateTests {
 		person.setAge(25);
 		template.insert(person);
 
-		List<Person> result = template.find(new Query(Criteria.where("_id").is(person.getId())),
-				Person.class);
+		List<Person> result = template.find(new Query(Criteria.where("_id").is(person.getId())), Person.class);
 		assertThat(result.size(), is(1));
 		assertThat(result, hasItem(person));
 	}
@@ -173,7 +183,7 @@ public class MongoTemplateTests {
 	}
 
 	private void testProperHandlingOfDifferentIdTypes(MongoTemplate mongoTemplate) throws Exception {
-		
+
 		// String id - generated
 		PersonWithIdPropertyOfTypeString p1 = new PersonWithIdPropertyOfTypeString();
 		p1.setFirstName("Sven_1");
@@ -366,7 +376,7 @@ public class MongoTemplateTests {
 	private void checkCollectionContents(Class<?> entityClass, int count) {
 		assertThat(template.findAll(entityClass).size(), is(count));
 	}
-	
+
 	@Test
 	public void testFindAndRemove() throws Exception {
 
@@ -727,8 +737,7 @@ public class MongoTemplateTests {
 	@Test
 	public void testUsingSlaveOk() throws Exception {
 		this.template.execute("slaveOkTest", new CollectionCallback<Object>() {
-			public Object doInCollection(DBCollection collection)
-					throws MongoException, DataAccessException {
+			public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 				assertThat(collection.getOptions(), is(0));
 				assertThat(collection.getDB().getOptions(), is(0));
 				return null;
@@ -737,8 +746,7 @@ public class MongoTemplateTests {
 		MongoTemplate slaveTemplate = new MongoTemplate(factory);
 		slaveTemplate.setSlaveOk(true);
 		slaveTemplate.execute("slaveOkTest", new CollectionCallback<Object>() {
-			public Object doInCollection(DBCollection collection)
-					throws MongoException, DataAccessException {
+			public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 				assertThat(collection.getOptions(), is(4));
 				assertThat(collection.getDB().getOptions(), is(0));
 				return null;
@@ -759,16 +767,17 @@ public class MongoTemplateTests {
 	 */
 	@Test
 	public void updatesObjectIdsCorrectly() {
-		
+
 		PersonWithIdPropertyOfTypeObjectId person = new PersonWithIdPropertyOfTypeObjectId();
 		person.setId(new ObjectId());
 		person.setFirstName("Dave");
-		
+
 		template.save(person);
 		template.updateFirst(query(where("id").is(person.getId())), update("firstName", "Carter"),
 				PersonWithIdPropertyOfTypeObjectId.class);
-		
-		PersonWithIdPropertyOfTypeObjectId result = template.findById(person.getId(), PersonWithIdPropertyOfTypeObjectId.class);
+
+		PersonWithIdPropertyOfTypeObjectId result = template.findById(person.getId(),
+				PersonWithIdPropertyOfTypeObjectId.class);
 		assertThat(result, is(notNullValue()));
 		assertThat(result.getId(), is(person.getId()));
 		assertThat(result.getFirstName(), is("Carter"));
@@ -779,14 +788,63 @@ public class MongoTemplateTests {
 	 */
 	@Test
 	public void updatesDBRefsCorrectly() {
-		
+
 		DBRef first = new DBRef(factory.getDb(), "foo", new ObjectId());
 		DBRef second = new DBRef(factory.getDb(), "bar", new ObjectId());
-		
+
 		template.updateFirst(null, Update.update("dbRefs", Arrays.asList(first, second)), ClassWithDBRefs.class);
 	}
-	
+
 	class ClassWithDBRefs {
 		List<DBRef> dbrefs;
+	}
+
+	/**
+	 * @see DATADOC-202
+	 */
+	@Test
+	public void executeDocument() {
+		template.insert(new Person("Tom"));
+		template.insert(new Person("Dick"));
+		template.insert(new Person("Harry"));
+		final List<String> names = new ArrayList<String>();
+		template.executeQuery(new Query(), template.getCollectionName(Person.class), new DocumentCallbackHandler() {
+			public void processDocument(DBObject dbObject) {
+				String name = (String) dbObject.get("firstName");
+				if (name != null) {
+					names.add(name);
+				}
+			}
+		});
+		assertEquals(3, names.size());
+		//template.remove(new Query(), Person.class);
+	}
+
+	/**
+	 * @see DATADOC-202
+	 */
+	@Test
+	public void executeDocumentWithCursorPreparer() {
+		template.insert(new Person("Tom"));
+		template.insert(new Person("Dick"));
+		template.insert(new Person("Harry"));
+		final List<String> names = new ArrayList<String>();
+		template.executeQuery(new Query(), template.getCollectionName(Person.class), new DocumentCallbackHandler() {
+			public void processDocument(DBObject dbObject) {
+				String name = (String) dbObject.get("firstName");
+				if (name != null) {
+					names.add(name);
+				}
+			}
+		}, new CursorPreparer() {
+
+			public DBCursor prepare(DBCursor cursor) {
+				cursor.limit(1);
+				return cursor;
+			}
+
+		});
+		assertEquals(1, names.size());
+		//template.remove(new Query(), Person.class);
 	}
 }

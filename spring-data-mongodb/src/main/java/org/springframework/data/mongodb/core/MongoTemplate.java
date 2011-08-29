@@ -265,6 +265,19 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		return result;
 	}
 
+	public void executeQuery(Query query, String collectionName, DocumentCallbackHandler dch) {
+		executeQuery(query, collectionName, dch, null);
+	}
+
+	public void executeQuery(Query query, String collectionName, DocumentCallbackHandler dch, CursorPreparer preparer) {
+		DBObject queryObject = query.getQueryObject();
+		DBObject fieldsObject = query.getFieldsObject();
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("find using query: " + queryObject + " fields: " + fieldsObject + " in collection: " + collectionName);
+		}
+		this.executeQueryInternal(new FindCallback(queryObject, fieldsObject), preparer, dch, collectionName);		
+	}
+
 	public <T> T execute(DbCallback<T> action) {
 
 		Assert.notNull(action);
@@ -1075,6 +1088,24 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			}
 
 			return result;
+		} catch (RuntimeException e) {
+			throw potentiallyConvertRuntimeException(e);
+		}
+	}
+	
+	private void executeQueryInternal(CollectionCallback<DBCursor> collectionCallback,
+																		CursorPreparer preparer, DocumentCallbackHandler callbackHandler, String collectionName) {
+
+		try {
+			DBCursor cursor = collectionCallback.doInCollection(getAndPrepareCollection(getDb(), collectionName));
+
+			if (preparer != null) {
+				cursor = preparer.prepare(cursor);
+			}
+
+			for (DBObject dbobject : cursor) {
+				callbackHandler.processDocument(dbobject);
+			}
 		} catch (RuntimeException e) {
 			throw potentiallyConvertRuntimeException(e);
 		}

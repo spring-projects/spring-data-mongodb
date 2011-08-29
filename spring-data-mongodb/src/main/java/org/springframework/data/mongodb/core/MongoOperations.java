@@ -66,6 +66,28 @@ public interface MongoOperations {
 	 * @param command a MongoDB command
 	 */
 	CommandResult executeCommand(DBObject command);
+	
+	/**
+	 * Execute a MongoDB query and iterate over the query results on a per-document basis with a DocumentCallbackHandler. 
+	 * 
+	 * @param query the query class that specifies the criteria used to find a record and also an optional fields
+	 *          specification
+	 * @param collectionName name of the collection to retrieve the objects from         
+	 * @param dch the handler that will extract results, one document at a time 
+	 */
+	void executeQuery(Query query, String collectionName, DocumentCallbackHandler dch);
+	
+	/**
+	 * Execute a MongoDB query and iterate over the query results on a per-document basis with a DocumentCallbackHandler using the 
+	 * provided CursorPreparer.
+	 * @param query the query class that specifies the criteria used to find a record and also an optional fields
+	 *          specification
+	 * @param collectionName name of the collection to retrieve the objects from         
+	 * @param dch the handler that will extract results, one document at a time 
+	 * @param preparer allows for customization of the DBCursor used when iterating over the result set, (apply limits,
+	 *          skips and so on).
+	 */
+	void executeQuery(Query query, String collectionName, DocumentCallbackHandler dch, CursorPreparer preparer);
 
 	/**
 	 * Executes a {@link DbCallback} translating any exceptions as necessary.
