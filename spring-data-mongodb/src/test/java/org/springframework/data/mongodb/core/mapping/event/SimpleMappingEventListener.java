@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import com.mongodb.DBObject;
 
 
-public class SimpleMappingEventListener extends AbstractMappingEventListener<MongoMappingEvent<Object>, Object>  {
+public class SimpleMappingEventListener extends AbstractMongoEventListener<Object>  {
 
 	public final ArrayList<BeforeConvertEvent<Object>> onBeforeConvertEvents = new ArrayList<BeforeConvertEvent<Object>>();
 	public final ArrayList<BeforeSaveEvent<Object>> onBeforeSaveEvents = new ArrayList<BeforeSaveEvent<Object>>();
