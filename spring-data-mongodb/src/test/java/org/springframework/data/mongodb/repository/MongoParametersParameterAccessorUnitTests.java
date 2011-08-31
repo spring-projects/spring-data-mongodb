@@ -25,6 +25,11 @@ import org.junit.Test;
 import org.springframework.data.mongodb.core.geo.Distance;
 import org.springframework.data.mongodb.core.geo.Metrics;
 import org.springframework.data.mongodb.core.geo.Point;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.repository.MongoRepositoryFactoryBean.EntityInformationCreator;
+import org.springframework.data.repository.Repository;
+import org.springframework.data.repository.core.RepositoryMetadata;
+import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
 
 /**
  * Unit tests for {@link MongoParametersParameterAccessor}.
@@ -34,14 +39,17 @@ import org.springframework.data.mongodb.core.geo.Point;
 public class MongoParametersParameterAccessorUnitTests {
 
 	private static final Distance DISTANCE = new Distance(2.5, Metrics.KILOMETERS);
+	private static final RepositoryMetadata metadata = new DefaultRepositoryMetadata(PersonRepository.class);
+	private static final MongoMappingContext context = new MongoMappingContext();
+	private static final EntityInformationCreator creator = new EntityInformationCreator(context);
 
 	@Test
 	public void returnsNullForDistanceIfNoneAvailable() throws NoSuchMethodException, SecurityException {
 
 		Method method = PersonRepository.class.getMethod("findByLocationNear", Point.class);
-		MongoParameters parameters = new MongoParameters(method);
+		MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, creator);
 
-		MongoParameterAccessor accessor = new MongoParametersParameterAccessor(parameters,
+		MongoParameterAccessor accessor = new MongoParametersParameterAccessor(queryMethod,
 				new Object[] { new Point(10, 20) });
 		assertThat(accessor.getMaxDistance(), is(nullValue()));
 	}
@@ -50,14 +58,14 @@ public class MongoParametersParameterAccessorUnitTests {
 	public void returnsDistanceIfAvailable() throws NoSuchMethodException, SecurityException {
 
 		Method method = PersonRepository.class.getMethod("findByLocationNear", Point.class, Distance.class);
-		MongoParameters parameters = new MongoParameters(method);
+		MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, creator);
 
-		MongoParameterAccessor accessor = new MongoParametersParameterAccessor(parameters, new Object[] {
+		MongoParameterAccessor accessor = new MongoParametersParameterAccessor(queryMethod, new Object[] {
 				new Point(10, 20), DISTANCE });
 		assertThat(accessor.getMaxDistance(), is(DISTANCE));
 	}
 
-	interface PersonRepository {
+	interface PersonRepository extends Repository<Person, Long> {
 
 		List<Person> findByLocationNear(Point point);
 

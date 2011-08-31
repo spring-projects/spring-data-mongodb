@@ -22,36 +22,92 @@ import java.lang.reflect.Method;
 import java.util.List;
 
 import org.junit.Test;
-import org.springframework.core.MethodParameter;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.mongodb.core.geo.Distance;
+import org.springframework.data.mongodb.core.geo.GeoResults;
 import org.springframework.data.mongodb.core.geo.Point;
-import org.springframework.data.mongodb.repository.MongoParameters.MongoParameter;
+import org.springframework.data.repository.query.Parameter;
 
 /**
  * Unit tests for {@link MongoParameters}.
  * 
  * @author Oliver Gierke
  */
+@RunWith(MockitoJUnitRunner.class)
 public class MongoParametersUnitTests {
+
+	@Mock
+	MongoQueryMethod queryMethod;
 
 	@Test
 	public void discoversDistanceParameter() throws NoSuchMethodException, SecurityException {
 		Method method = PersonRepository.class.getMethod("findByLocationNear", Point.class, Distance.class);
-		MongoParameters parameters = new MongoParameters(method);
-		
+		MongoParameters parameters = new MongoParameters(method, false);
+
 		assertThat(parameters.getNumberOfParameters(), is(2));
 		assertThat(parameters.getDistanceIndex(), is(1));
 		assertThat(parameters.getBindableParameters().getNumberOfParameters(), is(1));
 
-		MongoParameter parameter = new MongoParameters.MongoParameter(new MethodParameter(method,
-				parameters.getDistanceIndex()), parameters);
+		Parameter parameter = parameters.getParameter(1);
 
 		assertThat(parameter.isSpecialParameter(), is(true));
 		assertThat(parameter.isBindable(), is(false));
 	}
 
+	@Test
+	public void doesNotConsiderPointAsNearForSimpleQuery() throws Exception {
+		Method method = PersonRepository.class.getMethod("findByLocationNear", Point.class, Distance.class);
+		MongoParameters parameters = new MongoParameters(method, false);
+
+		assertThat(parameters.getNearIndex(), is(-1));
+	}
+
+	@Test(expected = IllegalStateException.class)
+	public void rejectsMultiplePointsForGeoNearMethod() throws Exception {
+		Method method = PersonRepository.class.getMethod("findByLocationNearAndOtherLocation", Point.class, Point.class);
+		new MongoParameters(method, true);
+	}
+	
+	@Test(expected = IllegalStateException.class)
+	public void rejectsMultipleDoubleArraysForGeoNearMethod() throws Exception {
+		Method method = PersonRepository.class.getMethod("invalidDoubleArrays", double[].class, double[].class);
+		new MongoParameters(method, true);
+	}
+
+	@Test
+	public void doesNotRejectMultiplePointsForSimpleQueryMethod() throws Exception {
+		Method method = PersonRepository.class.getMethod("someOtherMethod", Point.class, Point.class);
+		new MongoParameters(method, false);
+	}
+
+	@Test
+	public void findsAnnotatedPointForGeoNearQuery() throws Exception {
+		Method method = PersonRepository.class.getMethod("findByOtherLocationAndLocationNear", Point.class, Point.class);
+		MongoParameters parameters = new MongoParameters(method, true);
+		assertThat(parameters.getNearIndex(), is(1));
+	}
+	
+	@Test
+	public void findsAnnotatedDoubleArrayForGeoNearQuery() throws Exception {
+		Method method = PersonRepository.class.getMethod("validDoubleArrays", double[].class, double[].class);
+		MongoParameters parameters = new MongoParameters(method, true);
+		assertThat(parameters.getNearIndex(), is(1));
+	}
+
 	interface PersonRepository {
 
 		List<Person> findByLocationNear(Point point, Distance distance);
+
+		GeoResults<Person> findByLocationNearAndOtherLocation(Point point, Point anotherLocation);
+		
+		GeoResults<Person> invalidDoubleArrays(double[] first, double[] second);
+
+		List<Person> someOtherMethod(Point first, Point second);
+
+		GeoResults<Person> findByOtherLocationAndLocationNear(Point point, @Near Point anotherLocation);
+		
+		GeoResults<Person> validDoubleArrays(double[] first, @Near double[] second);
 	}
 }

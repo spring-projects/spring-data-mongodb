@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.repository;
 
 import org.springframework.data.mongodb.core.geo.Distance;
+import org.springframework.data.mongodb.core.geo.Point;
 import org.springframework.data.repository.query.ParameterAccessor;
 
 /**
@@ -32,4 +33,11 @@ public interface MongoParameterAccessor extends ParameterAccessor {
 	 *         at all or the given value for it was {@literal null}.
 	 */
 	Distance getMaxDistance();
+	
+	/**
+	 * Returns the {@link Point} to use for a geo-near query.
+	 * 
+	 * @return
+	 */
+	Point getGeoNearLocation();
 }

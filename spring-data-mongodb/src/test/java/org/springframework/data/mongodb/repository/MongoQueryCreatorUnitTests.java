@@ -15,12 +15,13 @@
  */
 package org.springframework.data.mongodb.repository;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
 import static org.hamcrest.CoreMatchers.*;
-import static org.springframework.data.mongodb.repository.StubParameterAccessor.*;
-import static org.springframework.data.mongodb.core.query.Query.*;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
+import static org.springframework.data.mongodb.core.query.Query.*;
+import static org.springframework.data.mongodb.repository.StubParameterAccessor.*;
 
 import java.lang.reflect.Method;
 import java.util.List;
@@ -38,9 +39,12 @@ import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.geo.Distance;
 import org.springframework.data.mongodb.core.geo.Metrics;
 import org.springframework.data.mongodb.core.geo.Point;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.repository.MongoQueryCreator;
+import org.springframework.data.mongodb.repository.MongoRepositoryFactoryBean.EntityInformationCreator;
+import org.springframework.data.repository.Repository;
+import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
 import org.springframework.data.repository.query.parser.PartTree;
 
 import com.mongodb.BasicDBObject;
@@ -103,42 +107,49 @@ public class MongoQueryCreatorUnitTests {
 
 		assertThat(query.getQueryObject(), is(new Query(Criteria.where("firstName").is(null)).getQueryObject()));
 	}
-	
+
 	@Test
 	public void bindsMetricDistanceParameterToNearSphereCorrectly() throws Exception {
 
 		Point point = new Point(10, 20);
 		Distance distance = new Distance(2.5, Metrics.KILOMETERS);
-		
-		Query query = query(where("location").nearSphere(point).maxDistance(distance.getNormalizedValue()).and("firstname").is("Dave"));
+
+		Query query = query(where("location").nearSphere(point).maxDistance(distance.getNormalizedValue()).and("firstname")
+				.is("Dave"));
 		assertBindsDistanceToQuery(point, distance, query);
 	}
-	
+
 	@Test
 	public void bindsDistanceParameterToNearCorrectly() throws Exception {
 
 		Point point = new Point(10, 20);
 		Distance distance = new Distance(2.5);
-		
-		Query query = query(where("location").near(point).maxDistance(distance.getNormalizedValue()).and("firstname").is("Dave"));
+
+		Query query = query(where("location").near(point).maxDistance(distance.getNormalizedValue()).and("firstname")
+				.is("Dave"));
 		assertBindsDistanceToQuery(point, distance, query);
 	}
-	
-	private void assertBindsDistanceToQuery(Point point, Distance distance, Query reference) throws Exception {
-			
-			when(converter.convertToMongoType("Dave")).thenReturn("Dave");
-			
-			PartTree tree = new PartTree("findByLocationNearAndFirstname", org.springframework.data.mongodb.repository.Person.class);
-			MongoParameters parameters = new MongoParameters(PersonRepository.class.getMethod("findByLocationNearAndFirstname", Point.class, Distance.class, String.class));
-			MongoParameterAccessor accessor = new MongoParametersParameterAccessor(parameters, new Object[] { point, distance, "Dave" });
 
-			Query query = new MongoQueryCreator(tree, new ConvertingParameterAccessor(converter, accessor)).createQuery();
-			assertThat(query.getQueryObject(), is(query.getQueryObject()));
-		
+	private void assertBindsDistanceToQuery(Point point, Distance distance, Query reference) throws Exception {
+
+		when(converter.convertToMongoType("Dave")).thenReturn("Dave");
+
+		PartTree tree = new PartTree("findByLocationNearAndFirstname",
+				org.springframework.data.mongodb.repository.Person.class);
+		Method method = PersonRepository.class.getMethod("findByLocationNearAndFirstname", Point.class, Distance.class,
+				String.class);
+		MongoQueryMethod queryMethod = new MongoQueryMethod(method, new DefaultRepositoryMetadata(PersonRepository.class),
+				new EntityInformationCreator(new MongoMappingContext()));
+		MongoParameterAccessor accessor = new MongoParametersParameterAccessor(queryMethod, new Object[] { point, distance,
+				"Dave" });
+
+		Query query = new MongoQueryCreator(tree, new ConvertingParameterAccessor(converter, accessor)).createQuery();
+		assertThat(query.getQueryObject(), is(query.getQueryObject()));
+
 	}
-	
-	interface PersonRepository {
-		
+
+	interface PersonRepository extends Repository<Person, Long> {
+
 		List<Person> findByLocationNearAndFirstname(Point location, Distance maxDistance, String firstname);
 	}
 }

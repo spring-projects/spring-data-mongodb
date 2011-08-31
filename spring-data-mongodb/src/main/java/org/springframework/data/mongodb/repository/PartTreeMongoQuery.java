@@ -29,6 +29,7 @@ import org.springframework.data.repository.query.parser.PartTree;
 public class PartTreeMongoQuery extends AbstractMongoQuery {
 
 	private final PartTree tree;
+	private final boolean isGeoNearQuery;
 
 	/**
 	 * Creates a new {@link PartTreeMongoQuery} from the given {@link QueryMethod} and {@link MongoTemplate}.
@@ -40,6 +41,7 @@ public class PartTreeMongoQuery extends AbstractMongoQuery {
 
 		super(method, template);
 		this.tree = new PartTree(method.getName(), method.getEntityInformation().getJavaType());
+		this.isGeoNearQuery = method.isGeoNearQuery();
 	}
 
 	/**
@@ -59,7 +61,7 @@ public class PartTreeMongoQuery extends AbstractMongoQuery {
 	@Override
 	protected Query createQuery(ConvertingParameterAccessor accessor) {
 
-		MongoQueryCreator creator = new MongoQueryCreator(tree, accessor);
+		MongoQueryCreator creator = new MongoQueryCreator(tree, accessor, isGeoNearQuery);
 		return creator.createQuery();
 	}
 }

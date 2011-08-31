@@ -23,6 +23,7 @@ import org.springframework.data.mongodb.core.convert.MongoWriter;
 import org.springframework.data.mongodb.core.convert.TypeMapper;
 import org.springframework.data.mongodb.core.convert.TypeMapperProvider;
 import org.springframework.data.mongodb.core.geo.Distance;
+import org.springframework.data.mongodb.core.geo.Point;
 import org.springframework.data.repository.query.ParameterAccessor;
 
 import com.mongodb.BasicDBList;
@@ -89,6 +90,13 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 	 */
 	public Distance getMaxDistance() {
 		return delegate.getMaxDistance();
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.MongoParameterAccessor#getGeoNearLocation()
+	 */
+	public Point getGeoNearLocation() {
+		return delegate.getGeoNearLocation();
 	}
 
 	/**

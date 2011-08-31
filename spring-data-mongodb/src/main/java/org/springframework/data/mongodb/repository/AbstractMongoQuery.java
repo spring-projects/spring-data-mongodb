@@ -23,9 +23,15 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.CollectionCallback;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.geo.Distance;
+import org.springframework.data.mongodb.core.geo.GeoResult;
+import org.springframework.data.mongodb.core.geo.GeoResults;
+import org.springframework.data.mongodb.core.geo.Point;
+import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.repository.query.RepositoryQuery;
+import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
 
 import com.mongodb.DBCollection;
@@ -72,10 +78,12 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	  */
 	public Object execute(Object[] parameters) {
 
-		MongoParameterAccessor accessor = new MongoParametersParameterAccessor(method.getParameters(), parameters);
+		MongoParameterAccessor accessor = new MongoParametersParameterAccessor(method, parameters);
 		Query query = createQuery(new ConvertingParameterAccessor(template.getConverter(), accessor));
 
-		if (method.isCollectionQuery()) {
+		if (method.isGeoNearQuery()) {
+			return new GeoNearExecution(accessor).execute(query);
+		} else if (method.isCollectionQuery()) {
 			return new CollectionExecution().execute(query);
 		} else if (method.isPageQuery()) {
 			return new PagedExecution(accessor.getPageable()).execute(query);
@@ -146,10 +154,9 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 		}
 
 		/*
-		   * (non-Javadoc)
-		   *
-		   * @see org.springframework.data.mongodb.repository.MongoQuery.Execution #execute(com.mongodb.DBObject)
-		   */
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.repository.AbstractMongoQuery.Execution#execute(org.springframework.data.mongodb.core.query.Query)
+		 */
 		@Override
 		@SuppressWarnings({ "rawtypes", "unchecked" })
 		Object execute(Query query) {
@@ -191,6 +198,51 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 
 			MongoEntityInformation<?, ?> entityInformation = method.getEntityInformation();
 			return template.findOne(query, entityInformation.getJavaType());
+		}
+	}
+
+	/**
+	 * {@link Execution} to execute geo-near queries.
+	 *
+	 * @author Oliver Gierke
+	 */
+	class GeoNearExecution extends Execution {
+		
+		private final MongoParameterAccessor accessor;
+		
+		public GeoNearExecution(MongoParameterAccessor accessor) {
+			this.accessor = accessor;
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.repository.AbstractMongoQuery.Execution#execute(org.springframework.data.mongodb.core.query.Query)
+		 */
+		@Override
+		Object execute(Query query) {
+			
+			Point nearLocation = accessor.getGeoNearLocation();
+			NearQuery nearQuery = NearQuery.near(nearLocation);
+			
+			if (query != null) {
+				nearQuery.query(query);
+			}
+			
+			Distance maxDistance = accessor.getMaxDistance();
+			if (maxDistance != null) {
+				nearQuery.maxDistance(maxDistance);
+			}
+			
+			MongoEntityInformation<?,?> entityInformation = method.getEntityInformation();
+			GeoResults<?> results = template.geoNear(nearQuery, entityInformation.getJavaType(), entityInformation.getCollectionName());
+			
+			return isListOfGeoResult() ? results.getContent() : results;
+		}
+		
+		private boolean isListOfGeoResult() {
+			
+			TypeInformation<?> returnType = method.getReturnType();
+			return returnType.getType().equals(List.class) && GeoResult.class.equals(returnType.getComponentType());
 		}
 	}
 }

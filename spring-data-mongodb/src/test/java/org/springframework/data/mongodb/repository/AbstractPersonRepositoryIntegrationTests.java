@@ -21,6 +21,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.geo.Box;
 import org.springframework.data.mongodb.core.geo.Circle;
+import org.springframework.data.mongodb.core.geo.Distance;
+import org.springframework.data.mongodb.core.geo.GeoResults;
+import org.springframework.data.mongodb.core.geo.Metrics;
 import org.springframework.data.mongodb.core.geo.Point;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -317,4 +320,15 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result.get(4), is(leroi));
 	}
 	
+	
+	@Test
+	public void executesGeoNearQueryForResultsCorrectly() {
+		
+		Point point = new Point(-73.99171, 40.738868);
+		dave.setLocation(point);
+		repository.save(dave);
+		
+		GeoResults<Person> results = repository.findByLocationNear(new Point(-73.99, 40.73), new Distance(2000, Metrics.KILOMETERS));
+		assertThat(results.getContent().isEmpty(), is(false));
+	}
 }
