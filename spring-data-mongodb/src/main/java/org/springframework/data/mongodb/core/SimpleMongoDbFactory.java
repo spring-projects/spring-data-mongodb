@@ -52,6 +52,7 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 	public SimpleMongoDbFactory(Mongo mongo, String databaseName) {
 		Assert.notNull(mongo, "Mongo must not be null");
 		Assert.hasText(databaseName, "Database name must not be empty");
+		Assert.isTrue(databaseName.matches("[\\w-]+"), "Database name must only contain letters, numbers, underscores and dashes!");
 		this.mongo = mongo;
 		this.databaseName = databaseName;
 	}
