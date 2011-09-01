@@ -31,11 +31,23 @@ public class UpdateTests {
 		Assert.assertEquals("{ \"$set\" : { \"directory\" : \"/Users/Test/Desktop\"}}", u.getUpdateObject().toString());
 	}
 
+    @Test
+    public void testSetSet() {
+        Update u = new Update().set("directory", "/Users/Test/Desktop").set("size", 0);
+        Assert.assertEquals("{ \"$set\" : { \"directory\" : \"/Users/Test/Desktop\" , \"size\" : 0}}", u.getUpdateObject().toString());
+    }
+
 	@Test
 	public void testInc() {
 		Update u = new Update().inc("size", 1);
 		Assert.assertEquals("{ \"$inc\" : { \"size\" : 1}}", u.getUpdateObject().toString());
 	}
+
+    @Test
+    public void testIncInc() {
+        Update u = new Update().inc("size", 1).inc("count", 1);
+        Assert.assertEquals("{ \"$inc\" : { \"size\" : 1 , \"count\" : 1}}", u.getUpdateObject().toString());
+    }
 
 	@Test
 	public void testIncAndSet() {
