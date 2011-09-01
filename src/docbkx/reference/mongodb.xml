@@ -242,7 +242,7 @@ public class MongoApp {
     </itemizedlist>
 
     <section id="mongodb-required-jars">
-       
+      
 
       <title>Required Jars</title>
 
@@ -1163,7 +1163,7 @@ import static org.springframework.data.document.mongodb.query.Criteria.query;
         "person" collection. You can customize this by providing a different
         collection name using the @Document annotation. You can also override
         the collection name by providing your own collection name as the last
-        parameter for the selected MongoTemplate method calls. </para>
+        parameter for the selected MongoTemplate method calls.</para>
       </section>
 
       <section>
@@ -1751,36 +1751,37 @@ public class Venue {
   } 
 }</programlisting>
 
-      <para>To find locations within a circle, the following query can be
-      used.</para>
+      <para>To find locations within a <classname>Circle</classname>, the
+      following query can be used.</para>
 
       <programlisting lang="" language="java">Circle circle = new Circle(-73.99171, 40.738868, 0.01);
 List&lt;Venue&gt; venues = 
     template.find(new Query(Criteria.where("location").withinCenter(circle)), Venue.class);</programlisting>
 
-      <para>To find venues within a circle using Spherical coordinates the
-      following query can be used</para>
+      <para>To find venues within a <classname>Circle</classname> using
+      spherical coordinates the following query can be used</para>
 
       <programlisting lang="" language="java">Circle circle = new Circle(-73.99171, 40.738868, 0.003712240453784);
 List&lt;Venue&gt; venues = 
     template.find(new Query(Criteria.where("location").withinCenterSphere(circle)), Venue.class);</programlisting>
 
-      <para>To find venues within a Box the following query can be used</para>
+      <para>To find venues within a <classname>Box</classname> the following
+      query can be used</para>
 
       <programlisting language="java">//lower-left then upper-right
 Box box = new Box(new Point(-73.99756, 40.73083), new Point(-73.988135, 40.741404));  
 List&lt;Venue&gt; venues = 
     template.find(new Query(Criteria.where("location").withinBox(box)), Venue.class);</programlisting>
 
-      <para>To find venues near a Point, the following query can be
-      used</para>
+      <para>To find venues near a <classname>Point</classname>, the following
+      query can be used</para>
 
       <programlisting language="java">Point point = new Point(-73.99171, 40.738868);
 List&lt;Venue&gt; venues = 
     template.find(new Query(Criteria.where("location").near(point).maxDistance(0.01)), Venue.class);</programlisting>
 
-      <para>To find venues near a Point using Spherical coordines the
-      following query can be used</para>
+      <para>To find venues near a <classname>Point</classname> using spherical
+      coordines the following query can be used</para>
 
       <programlisting language="java">Point point = new Point(-73.99171, 40.738868);
 List&lt;Venue&gt; venues = 
@@ -1789,10 +1790,48 @@ List&lt;Venue&gt; venues =
         Venue.class);
 </programlisting>
 
-      <note>
-        <para>Support for the GeoNear command will be provided in the RC
-        release.</para>
-      </note>
+      <section>
+        <title>Geo near queries</title>
+
+        <para>MongoDB supports querying the database for geo locations and
+        calculation the distance from a given origin at the very same time.
+        With geo-near queries it's possible to express queries like: "find all
+        restaurants in the surrounding 10 miles". To do so
+        <interfacename>MongoOperations</interfacename> provides
+        <methodname>geoNear(…)</methodname> methods taking a
+        <classname>NearQuery</classname> as argument as well as the already
+        familiar entity type and collection</para>
+
+        <programlisting language="java">Point location = new Point(-73.99171, 40.738868);
+NearQuery query = NearQuery.near(location).maxDistance(new Distance(10, Metrics.MILES));
+
+GeoResults&lt;Restaurant&gt; = operations.geoNear(query, Restaurant.class);</programlisting>
+
+        <para>As you can see we use the <classname>NearQuery</classname>
+        builder API to set up a query to return all
+        <classname>Restaurant</classname> instances surrounding the given
+        <classname>Point</classname> by 10 miles maximum. The
+        <classname>Metrics</classname> enum used here actually implements an
+        interface so that other metrics could be plugged into a distance as
+        well. A <interfacename>Metric</interfacename> is backed by a
+        multiplier to transform the distance value of the given metric into
+        native distances. The sample shown here would consider the 10 to be
+        miles. Using one of the pre-built in metrics (miles and kilometers)
+        will automatically trigger the spherical flag to be set on the query.
+        If you want to avoid that, simply hand in plain
+        <classname>double</classname> values into
+        <methodname>maxDistance(…)</methodname>. For more information see the
+        JavaDoc of <classname>NearQuery</classname> and
+        <classname>Distance</classname>.</para>
+
+        <para>The geo near operations return a
+        <classname>GeoResults</classname> wrapper object that encapsulates
+        <classname>GeoResult</classname> instances. The wrapping
+        <classname>GeoResults</classname> allows to access the average
+        distance of all results. A single <classname>GeoResult</classname>
+        object simply carries the entity found plus its distance from the
+        origin.</para>
+      </section>
     </section>
   </section>
 
@@ -1807,10 +1846,11 @@ List&lt;Venue&gt; venues =
     <para>The <classname>MappingMongoConverter</classname> checks to see if
     there are any Spring converters that can handle a specific class before
     attempting to map the object itself. To 'hijack' the normal mapping
-    strategies of the MappingMongoConverter, perhaps for increased performance
-    or other custom mapping needs, you first need to create an implementation
-    of the Spring <interfacename>Converter</interfacename> interface and then
-    register it with the MappingConverter.</para>
+    strategies of the <classname>MappingMongoConverter</classname>, perhaps
+    for increased performance or other custom mapping needs, you first need to
+    create an implementation of the Spring
+    <interfacename>Converter</interfacename> interface and then register it
+    with the MappingConverter.</para>
 
     <note>
       <para>For more information on the Spring type conversion service see the
@@ -2013,20 +2053,18 @@ mongoTemplate.dropCollection("MyNewCollection");        </programlisting>
     <para>To intercept an object before it goes through the conversion process
     (which turns your domain object into a
     <classname>com.mongodb.DBObject</classname>), you'd register a subclass of
-    <classname>org.springframework.data.document.mongodb.mapping.event.AbstractMappingEventListener</classname>
-    that overrides the <code>onBeforeConvert</code> method. When the event is
-    dispatched, your listener will be called and passed the domain object
-    before it goes into the converter.</para>
+    <classname>AbstractMongoEventListener</classname> that overrides the
+    <code>onBeforeConvert</code> method. When the event is dispatched, your
+    listener will be called and passed the domain object before it goes into
+    the converter.</para>
 
     <example>
-      <programlisting language="java">
-public class BeforeConvertListener&lt;BeforeConvertEvent, Person&gt; extends AbstractMappingEventListener {
+      <programlisting language="java">public class BeforeConvertListener extends AbstractMongoEventListener&lt;Person&gt; {
   @Override
   public void onBeforeConvert(Person p) {
     ... does some auditing manipulation, set timestamps, whatever ...
   }
-}
-        </programlisting>
+}        </programlisting>
     </example>
 
     <para>To intercept an object before it goes into the database, you'd
@@ -2037,14 +2075,12 @@ public class BeforeConvertListener&lt;BeforeConvertEvent, Person&gt; extends Abs
     the converted <classname>com.mongodb.DBObject</classname>.</para>
 
     <example>
-      <programlisting language="java">
-public class BeforeSaveListener&lt;BeforeSaveEvent, Person&gt; extends AbstractMappingEventListener {
+      <programlisting language="java">public class BeforeSaveListener extends AbstractMongoEventListener&lt;Person&gt; {
   @Override
   public void onBeforeSave(Person p, DBObject dbo) {
-    ... change values, delete them, whatever ...
+    … change values, delete them, whatever …
   }
-}
-        </programlisting>
+}       </programlisting>
     </example>
 
     <para>Simply declaring these beans in your Spring ApplicationContext will
