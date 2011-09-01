@@ -270,48 +270,52 @@ public interface MongoOperations {
 	
 	/**
 	 * Execute a map-reduce operation.  The map-reduce operation will be formed with an output type of INLINE
+	 * @param inputCollectionName the collection where the map-reduce will read from
 	 * @param mapFunction The JavaScript map function
 	 * @param reduceFunction The JavaScript reduce function
 	 * @param mapReduceOptions Options that specify detailed map-reduce behavior
 	 * @param entityClass The parameterized type of the returned list
 	 * @return The results of the map reduce operation
 	 */
-	<T> MapReduceResults<T> mapReduce(String mapFunction, String reduceFunction, Class<T> entityClass );
+	<T> MapReduceResults<T> mapReduce(String inputCollectionName, String mapFunction, String reduceFunction, Class<T> entityClass );
 
 	
 	/**
 	 * Execute a map-reduce operation that takes additional map-reduce options.
+	 * @param inputCollectionName the collection where the map-reduce will read from
 	 * @param mapFunction The JavaScript map function
 	 * @param reduceFunction The JavaScript reduce function
 	 * @param mapReduceOptions Options that specify detailed map-reduce behavior
 	 * @param entityClass The parameterized type of the returned list
 	 * @return The results of the map reduce operation
 	 */
-	<T> MapReduceResults<T> mapReduce(String mapFunction, String reduceFunction, MapReduceOptions mapReduceOptions, Class<T> entityClass );
+	<T> MapReduceResults<T> mapReduce(String inputCollectionName, String mapFunction, String reduceFunction, MapReduceOptions mapReduceOptions, Class<T> entityClass );
 	
 	
 	
 	/**
 	 * Execute a map-reduce operation that takes a query.  The map-reduce operation will be formed with an output type of INLINE
 	 * @param query The query to use to select the data for the map phase
+	 * @param inputCollectionName the collection where the map-reduce will read from
 	 * @param mapFunction The JavaScript map function
 	 * @param reduceFunction The JavaScript reduce function
 	 * @param mapReduceOptions Options that specify detailed map-reduce behavior
 	 * @param entityClass The parameterized type of the returned list
 	 * @return The results of the map reduce operation
 	 */
-	<T> MapReduceResults<T> mapReduce(Query query, String mapFunction, String reduceFunction, Class<T> entityClass );
+	<T> MapReduceResults<T> mapReduce(Query query, String inputCollectionName, String mapFunction, String reduceFunction, Class<T> entityClass );
 	
 	/**
 	 * Execute a map-reduce operation that takes a query and additional map-reduce options
 	 * @param query The query to use to select the data for the map phase
+	 * @param inputCollectionName the collection where the map-reduce will read from
 	 * @param mapFunction The JavaScript map function
 	 * @param reduceFunction The JavaScript reduce function
 	 * @param mapReduceOptions Options that specify detailed map-reduce behavior
 	 * @param entityClass The parameterized type of the returned list
 	 * @return The results of the map reduce operation
 	 */
-	<T> MapReduceResults<T> mapReduce(Query query, String mapFunction, String reduceFunction, MapReduceOptions mapReduceOptions, Class<T> entityClass );
+	<T> MapReduceResults<T> mapReduce(Query query,  String inputCollectionName, String mapFunction, String reduceFunction, MapReduceOptions mapReduceOptions, Class<T> entityClass );
 
 	/**
 	 * Returns {@link GeoResult} for all entities matching the given {@link NearQuery}. Will consider entity mapping

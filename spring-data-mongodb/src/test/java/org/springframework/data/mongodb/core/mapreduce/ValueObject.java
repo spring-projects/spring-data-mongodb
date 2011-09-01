@@ -22,8 +22,5 @@ public class ValueObject {
 	public String toString() {
 		return "ValueObject [id=" + id + ", value=" + value + "]";
 	}
-
-
-	
 	
 }

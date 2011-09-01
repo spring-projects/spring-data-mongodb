@@ -28,6 +28,7 @@ import java.util.Map;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -87,9 +88,18 @@ public class MapReduceTests {
 	protected void cleanDb() {
 		template.dropCollection(template.getCollectionName(ValueObject.class));
 		template.dropCollection("jmr1_out");
-
+		template.dropCollection("jmr1");
 	}
 
+	@Test
+	@Ignore
+	public void testForDocs() {
+		createMapReduceData();
+		MapReduceResults<ValueObject> results = mongoTemplate.mapReduce("jmr1", mapFunction, reduceFunction, ValueObject.class);
+		for (ValueObject valueObject : results) {
+			System.out.println(valueObject);
+		}
+	}
 	@Test
 	public void testMapReduce() {
 		performMapReduce(false, false);
@@ -114,7 +124,7 @@ public class MapReduceTests {
 		
 		String mapWithExcludeFunction =  "function(){ for ( var i=0; i<this.x.length; i++ ){ if(this.x[i] != exclude) emit( this.x[i] , 1 ); } }";
 	
-		MapReduceResults<ValueObject> results = mongoTemplate.mapReduce(mapWithExcludeFunction, reduceFunction,
+		MapReduceResults<ValueObject> results = mongoTemplate.mapReduce("jmr1", mapWithExcludeFunction, reduceFunction,
 				new MapReduceOptions().scopeVariables(scopeVariables).outputTypeInline(), ValueObject.class);
 		Map<String, Float> m = copyToMap(results);
 		assertEquals(3, m.size());
@@ -128,7 +138,7 @@ public class MapReduceTests {
 		createMapReduceData();
 		
 		Query query = new Query(where("x").ne(new String[] { "a", "b" }));
-		MapReduceResults<ValueObject> results = mongoTemplate.mapReduce(query, mapFunction, reduceFunction, ValueObject.class);
+		MapReduceResults<ValueObject> results = mongoTemplate.mapReduce(query, "jmr1", mapFunction, reduceFunction, ValueObject.class);
 		
 		Map<String, Float> m = copyToMap(results);
 		assertEquals(3, m.size());
@@ -144,15 +154,15 @@ public class MapReduceTests {
 		MapReduceResults<ValueObject> results;
 		if (inline) {
 			if (withQuery) {
-				results = mongoTemplate.mapReduce(new Query(), "classpath:map.js", "classpath:reduce.js", ValueObject.class);
+				results = mongoTemplate.mapReduce(new Query(), "jmr1", "classpath:map.js", "classpath:reduce.js", ValueObject.class);
 			} else {
-				results = mongoTemplate.mapReduce(mapFunction, reduceFunction, ValueObject.class);
+				results = mongoTemplate.mapReduce("jmr1", mapFunction, reduceFunction, ValueObject.class);
 			}
 		} else {
 			if (withQuery) {
-				results = mongoTemplate.mapReduce(new Query(), mapFunction, reduceFunction, options().outputCollection("jmr1_out"), ValueObject.class);
+				results = mongoTemplate.mapReduce(new Query(), "jmr1", mapFunction, reduceFunction, options().outputCollection("jmr1_out"), ValueObject.class);
 			} else {
-				results = mongoTemplate.mapReduce(mapFunction, reduceFunction, new MapReduceOptions().outputCollection("jmr1_out"), ValueObject.class);
+				results = mongoTemplate.mapReduce("jmr1", mapFunction, reduceFunction, new MapReduceOptions().outputCollection("jmr1_out"), ValueObject.class);
 			}
 		}
 		Map<String, Float> m = copyToMap(results);
@@ -160,7 +170,7 @@ public class MapReduceTests {
 	}
 
 	private void createMapReduceData() {
-		DBCollection c = mongoTemplate.getDb().getCollection(template.getCollectionName(ValueObject.class));
+		DBCollection c = mongoTemplate.getDb().getCollection("jmr1");
 		c.save(new BasicDBObject("x", new String[] { "a", "b" }));
 		c.save(new BasicDBObject("x", new String[] { "b", "c" }));
 		c.save(new BasicDBObject("x", new String[] { "c", "d" }));

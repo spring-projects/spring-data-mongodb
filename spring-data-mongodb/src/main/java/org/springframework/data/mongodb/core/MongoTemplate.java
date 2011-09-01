@@ -832,24 +832,24 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				entityClass), collectionName);
 	}
 
-	public <T> MapReduceResults<T> mapReduce(String mapFunction, String reduceFunction, Class<T> entityClass) {
-		return mapReduce(null, mapFunction, reduceFunction, new MapReduceOptions().outputTypeInline(), entityClass);
+	public <T> MapReduceResults<T> mapReduce(String inputCollectionName, String mapFunction, String reduceFunction, Class<T> entityClass) {
+		return mapReduce(null, inputCollectionName, mapFunction, reduceFunction, new MapReduceOptions().outputTypeInline(), entityClass);
 	}
 
-	public <T> MapReduceResults<T> mapReduce(String mapFunction, String reduceFunction,
+	public <T> MapReduceResults<T> mapReduce(String inputCollectionName, String mapFunction, String reduceFunction,
 			MapReduceOptions mapReduceOptions, Class<T> entityClass) {
-		return mapReduce(null, mapFunction, reduceFunction, mapReduceOptions, entityClass);
+		return mapReduce(null, inputCollectionName, mapFunction, reduceFunction, mapReduceOptions, entityClass);
 	}
 
-	public <T> MapReduceResults<T> mapReduce(Query query, String mapFunction, String reduceFunction, Class<T> entityClass) {
-		return mapReduce(query, mapFunction, reduceFunction, new MapReduceOptions().outputTypeInline(), entityClass);
+	public <T> MapReduceResults<T> mapReduce(Query query, String inputCollectionName, String mapFunction, String reduceFunction, Class<T> entityClass) {
+		return mapReduce(query, inputCollectionName, mapFunction, reduceFunction, new MapReduceOptions().outputTypeInline(), entityClass);
 	}
 
-	public <T> MapReduceResults<T> mapReduce(Query query, String mapFunction, String reduceFunction,
+	public <T> MapReduceResults<T> mapReduce(Query query, String inputCollectionName, String mapFunction, String reduceFunction,
 			MapReduceOptions mapReduceOptions, Class<T> entityClass) {
 		String mapFunc = replaceWithResourceIfNecessary(mapFunction);
 		String reduceFunc = replaceWithResourceIfNecessary(reduceFunction);
-		DBCollection inputCollection = getCollection(this.determineCollectionName(entityClass));
+		DBCollection inputCollection = getCollection(inputCollectionName);
 		MapReduceCommand command = new MapReduceCommand(inputCollection, mapFunc, reduceFunc,
 				mapReduceOptions.getOutputCollection(), mapReduceOptions.getOutputType(), null);
 
@@ -866,11 +866,18 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			} else {
 				commandResult = executeCommand(commandObject);
 			}
-			commandResult.throwOnError();
+			commandResult.throwOnError(); 
 		} catch (RuntimeException ex) {
 			this.potentiallyConvertRuntimeException(ex);
 		}
-
+		String error = commandResult.getErrorMessage();
+		if (error != null) {
+			throw new InvalidDataAccessApiUsageException("Command execution failed:  Error [" + error + "], Command = " + commandObject);
+		}
+			
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("MapReduce command result = [" + commandResult + "]");
+		}
 		MapReduceOutput mapReduceOutput = new MapReduceOutput(inputCollection, commandObject, commandResult);
 		List<T> mappedResults = new ArrayList<T>();
 		DbObjectCallback<T> callback = new ReadDbObjectCallback<T>(mongoConverter, entityClass);
