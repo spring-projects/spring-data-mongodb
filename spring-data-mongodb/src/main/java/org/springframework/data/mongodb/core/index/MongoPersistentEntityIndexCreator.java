@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core.index;
 
 import java.lang.reflect.Field;
 import java.util.Collections;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -49,7 +50,7 @@ public class MongoPersistentEntityIndexCreator implements
 
 	private static final Log log = LogFactory.getLog(MongoPersistentEntityIndexCreator.class);
 
-	private final Set<Class<?>> classesSeen = Collections.newSetFromMap(new ConcurrentHashMap<Class<?>, Boolean>());
+	private final Map<Class<?>, Boolean> classesSeen = new ConcurrentHashMap<Class<?>, Boolean>();
 	private final MongoDbFactory mongoDbFactory;
 
 	/**
@@ -81,7 +82,7 @@ public class MongoPersistentEntityIndexCreator implements
 
 	protected void checkForIndexes(final MongoPersistentEntity<?> entity) {
 		final Class<?> type = entity.getType();
-		if (!classesSeen.contains(type)) {
+		if (!classesSeen.containsKey(type)) {
 			if (log.isDebugEnabled()) {
 				log.debug("Analyzing class " + type + " for index information.");
 			}
@@ -144,7 +145,7 @@ public class MongoPersistentEntityIndexCreator implements
 				}
 			});
 
-			classesSeen.add(type);
+			classesSeen.put(type, true);
 		}
 	}
 
