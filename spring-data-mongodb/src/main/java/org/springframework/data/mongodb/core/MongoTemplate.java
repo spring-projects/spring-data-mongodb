@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.Set;
 
 import com.mongodb.BasicDBList;
@@ -51,6 +52,8 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
@@ -135,6 +138,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	private final QueryMapper mapper;
 
 	private ApplicationEventPublisher eventPublisher;
+	private ResourceLoader resourceLoader;
 	private MongoPersistentEntityIndexCreator indexCreator;
 
 	/**
@@ -231,6 +235,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		if (mappingContext instanceof ApplicationEventPublisherAware) {
 			((ApplicationEventPublisherAware) mappingContext).setApplicationEventPublisher(eventPublisher);
 		}
+		resourceLoader = applicationContext;
 	}
 
 	/**
@@ -842,14 +847,20 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 	public <T> MapReduceResults<T> mapReduce(Query query, String mapFunction, String reduceFunction,
 			MapReduceOptions mapReduceOptions, Class<T> entityClass) {
+		String mapFunc = replaceWithResourceIfNecessary(mapFunction);
+		String reduceFunc = replaceWithResourceIfNecessary(reduceFunction);
 		DBCollection inputCollection = getCollection(this.determineCollectionName(entityClass));
-		MapReduceCommand command = new MapReduceCommand(inputCollection, mapFunction, reduceFunction,
+		MapReduceCommand command = new MapReduceCommand(inputCollection, mapFunc, reduceFunc,
 				mapReduceOptions.getOutputCollection(), mapReduceOptions.getOutputType(), null);
 
 		DBObject commandObject = copyQuery(query, copyMapReduceOptions(mapReduceOptions, command));
 
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("Executing MapReduce on collection [" + command.getInput() + "], mapFunction [" + mapFunc
+					+ "], reduceFunction [" + reduceFunc + "]");
+		}
 		CommandResult commandResult = null;
-		try {			
+		try {
 			if (command.getOutputType() == MapReduceCommand.OutputType.INLINE) {
 				commandResult = executeCommand(commandObject, getDb().getOptions());
 			} else {
@@ -870,6 +881,21 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		MapReduceResults<T> mapReduceResult = new MapReduceResults<T>(mappedResults, commandResult);
 		return mapReduceResult;
 
+	}
+
+	protected String replaceWithResourceIfNecessary(String function) {
+		String func = function;
+		if (this.resourceLoader != null) {
+			try {
+				Resource functionResource = resourceLoader.getResource(func);
+				if (functionResource.exists()) {
+					return new Scanner(functionResource.getInputStream()).useDelimiter("\\A").next();
+				}
+			} catch (Exception e) {
+				// ignore - could be embedded JavaScript text
+			}
+		}
+		return func;
 	}
 
 	private DBObject copyQuery(Query query, DBObject copyMapReduceOptions) {
@@ -901,7 +927,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			}
 		}
 		if (mapReduceOptions.getFinalizeFunction() != null) {
-			command.setFinalize(mapReduceOptions.getFinalizeFunction());
+			command.setFinalize(this.replaceWithResourceIfNecessary(mapReduceOptions.getFinalizeFunction()));
 		}
 		if (mapReduceOptions.getOutputDatabase() != null) {
 			command.setOutputDB(mapReduceOptions.getOutputDatabase());

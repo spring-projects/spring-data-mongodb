@@ -144,7 +144,7 @@ public class MapReduceTests {
 		MapReduceResults<ValueObject> results;
 		if (inline) {
 			if (withQuery) {
-				results = mongoTemplate.mapReduce(new Query(), mapFunction, reduceFunction, ValueObject.class);
+				results = mongoTemplate.mapReduce(new Query(), "classpath:map.js", "classpath:reduce.js", ValueObject.class);
 			} else {
 				results = mongoTemplate.mapReduce(mapFunction, reduceFunction, ValueObject.class);
 			}
