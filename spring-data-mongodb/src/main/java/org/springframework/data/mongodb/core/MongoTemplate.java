@@ -34,6 +34,8 @@ import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
+import com.mongodb.MapReduceCommand;
+import com.mongodb.MapReduceOutput;
 import com.mongodb.Mongo;
 import com.mongodb.MongoException;
 import com.mongodb.WriteConcern;
@@ -77,6 +79,8 @@ import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeConvertEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeSaveEvent;
 import org.springframework.data.mongodb.core.mapping.event.MongoMappingEvent;
+import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
+import org.springframework.data.mongodb.core.mapreduce.MapReduceResults;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
@@ -254,6 +258,23 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			}
 		});
 
+		logCommandExecutionError(command, result);
+		return result;
+	}
+
+	public CommandResult executeCommand(final DBObject command, final int options) {
+
+		CommandResult result = execute(new DbCallback<CommandResult>() {
+			public CommandResult doInDB(DB db) throws MongoException, DataAccessException {
+				return db.command(command, options);
+			}
+		});
+
+		logCommandExecutionError(command, result);
+		return result;
+	}
+
+	protected void logCommandExecutionError(final DBObject command, CommandResult result) {
 		String error = result.getErrorMessage();
 		if (error != null) {
 			// TODO: DATADOC-204 allow configuration of logging level / throw
@@ -262,7 +283,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			// command.toString() + " failed: " + error);
 			LOGGER.warn("Command execution of " + command.toString() + " failed: " + error);
 		}
-		return result;
 	}
 
 	public void executeQuery(Query query, String collectionName, DocumentCallbackHandler dch) {
@@ -273,9 +293,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		DBObject queryObject = query.getQueryObject();
 		DBObject fieldsObject = query.getFieldsObject();
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("find using query: " + queryObject + " fields: " + fieldsObject + " in collection: " + collectionName);
+			LOGGER.debug("find using query: " + queryObject + " fields: " + fieldsObject + " in collection: "
+					+ collectionName);
 		}
-		this.executeQueryInternal(new FindCallback(queryObject, fieldsObject), preparer, dch, collectionName);		
+		this.executeQueryInternal(new FindCallback(queryObject, fieldsObject), preparer, dch, collectionName);
 	}
 
 	public <T> T execute(DbCallback<T> action) {
@@ -806,6 +827,98 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				entityClass), collectionName);
 	}
 
+	public <T> MapReduceResults<T> mapReduce(String mapFunction, String reduceFunction, Class<T> entityClass) {
+		return mapReduce(null, mapFunction, reduceFunction, new MapReduceOptions().outputTypeInline(), entityClass);
+	}
+
+	public <T> MapReduceResults<T> mapReduce(String mapFunction, String reduceFunction,
+			MapReduceOptions mapReduceOptions, Class<T> entityClass) {
+		return mapReduce(null, mapFunction, reduceFunction, mapReduceOptions, entityClass);
+	}
+
+	public <T> MapReduceResults<T> mapReduce(Query query, String mapFunction, String reduceFunction, Class<T> entityClass) {
+		return mapReduce(query, mapFunction, reduceFunction, new MapReduceOptions().outputTypeInline(), entityClass);
+	}
+
+	public <T> MapReduceResults<T> mapReduce(Query query, String mapFunction, String reduceFunction,
+			MapReduceOptions mapReduceOptions, Class<T> entityClass) {
+		DBCollection inputCollection = getCollection(this.determineCollectionName(entityClass));
+		MapReduceCommand command = new MapReduceCommand(inputCollection, mapFunction, reduceFunction,
+				mapReduceOptions.getOutputCollection(), mapReduceOptions.getOutputType(), null);
+
+		DBObject commandObject = copyQuery(query, copyMapReduceOptions(mapReduceOptions, command));
+
+		CommandResult commandResult = null;
+		try {			
+			if (command.getOutputType() == MapReduceCommand.OutputType.INLINE) {
+				commandResult = executeCommand(commandObject, getDb().getOptions());
+			} else {
+				commandResult = executeCommand(commandObject);
+			}
+			commandResult.throwOnError();
+		} catch (RuntimeException ex) {
+			this.potentiallyConvertRuntimeException(ex);
+		}
+
+		MapReduceOutput mapReduceOutput = new MapReduceOutput(inputCollection, commandObject, commandResult);
+		List<T> mappedResults = new ArrayList<T>();
+		DbObjectCallback<T> callback = new ReadDbObjectCallback<T>(mongoConverter, entityClass);
+		for (DBObject dbObject : mapReduceOutput.results()) {
+			mappedResults.add(callback.doWith(dbObject));
+		}
+
+		MapReduceResults<T> mapReduceResult = new MapReduceResults<T>(mappedResults, commandResult);
+		return mapReduceResult;
+
+	}
+
+	private DBObject copyQuery(Query query, DBObject copyMapReduceOptions) {
+		if (query != null) {
+			if (query.getSkip() != 0 || query.getFieldsObject() != null) {
+				throw new InvalidDataAccessApiUsageException(
+						"Can not use skip or field specification with map reduce operations");
+			}
+			if (query.getQueryObject() != null) {
+				copyMapReduceOptions.put("query", query.getQueryObject());
+			}
+			if (query.getLimit() > 0) {
+				copyMapReduceOptions.put("limit", query.getLimit());
+			}
+			if (query.getSortObject() != null) {
+				copyMapReduceOptions.put("sort", query.getSortObject());
+			}
+		}
+		return copyMapReduceOptions;
+	}
+
+	private DBObject copyMapReduceOptions(MapReduceOptions mapReduceOptions, MapReduceCommand command) {
+		if (mapReduceOptions.getJavaScriptMode() != null) {
+			command.addExtraOption("jsMode", true);
+		}
+		if (!mapReduceOptions.getExtraOptions().isEmpty()) {
+			for (Map.Entry<String, Object> entry : mapReduceOptions.getExtraOptions().entrySet()) {
+				command.addExtraOption(entry.getKey(), entry.getValue());
+			}
+		}
+		if (mapReduceOptions.getFinalizeFunction() != null) {
+			command.setFinalize(mapReduceOptions.getFinalizeFunction());
+		}
+		if (mapReduceOptions.getOutputDatabase() != null) {
+			command.setOutputDB(mapReduceOptions.getOutputDatabase());
+		}
+		if (!mapReduceOptions.getScopeVariables().isEmpty()) {
+			command.setScope(mapReduceOptions.getScopeVariables());
+		}
+
+		DBObject commandObject = command.toDBObject();
+		DBObject outObject = (DBObject) commandObject.get("out");
+
+		if (mapReduceOptions.getOutputSharded() != null) {
+			outObject.put("sharded", mapReduceOptions.getOutputSharded());
+		}
+		return commandObject;
+	}
+
 	public Set<String> getCollectionNames() {
 		return execute(new DbCallback<Set<String>>() {
 			public Set<String> doInDB(DB db) throws MongoException, DataAccessException {
@@ -1092,9 +1205,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			throw potentiallyConvertRuntimeException(e);
 		}
 	}
-	
-	private void executeQueryInternal(CollectionCallback<DBCursor> collectionCallback,
-																		CursorPreparer preparer, DocumentCallbackHandler callbackHandler, String collectionName) {
+
+	private void executeQueryInternal(CollectionCallback<DBCursor> collectionCallback, CursorPreparer preparer,
+			DocumentCallbackHandler callbackHandler, String collectionName) {
 
 		try {
 			DBCursor cursor = collectionCallback.doInCollection(getAndPrepareCollection(getDb(), collectionName));
