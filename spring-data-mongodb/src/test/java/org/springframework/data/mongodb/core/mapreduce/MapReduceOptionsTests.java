@@ -29,7 +29,6 @@ public class MapReduceOptionsTests {
 	@Test
 	public void testFinalize() {
 		MapReduceOptions o = new MapReduceOptions().finalizeFunction("code");
-		assertEquals("{ \"finalize\" : \"code\"}", o.getOptionsObject().toString());
-		
+	
 	}
 }

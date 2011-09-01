@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core.mapreduce;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import com.mongodb.BasicDBObject;
@@ -33,15 +34,24 @@ public class MapReduceOptions {
 
 	private String finalizeFunction;
 
-	private Map<String, Object> scopeVariables;
+	private Map<String, Object> scopeVariables = new HashMap<String, Object>();
 
 	private Boolean jsMode;
 
 	private Boolean verbose = true;
 	
-	private DBObject extraOptions = new BasicDBObject();
+	private Map<String, Object> extraOptions = new HashMap<String, Object>();
 	
 	
+	/**
+	 * Static factory method to create a Criteria using the provided key
+	 * 
+	 * @param key
+	 * @return
+	 */
+	public static MapReduceOptions options() {
+		return new MapReduceOptions();
+	}
 
 	/**
 	 * Limit the number of objects to return from the collection that is fed into the map reduce operation Often used in
@@ -194,7 +204,40 @@ public class MapReduceOptions {
 		extraOptions.put(key, value);
 		return this;
 	}
-
+	
+	public Map<String, Object> getExtraOptions() {
+			return extraOptions;
+	}
+	
+	public String getFinalizeFunction() {
+		return this.finalizeFunction;
+	}
+	
+	public Boolean getJavaScriptMode() {
+		return this.jsMode;
+	}
+	
+	public String getOutputCollection() {
+		return this.outputCollection;
+	}
+	
+	public String getOutputDatabase() {
+		return this.outputDatabase;
+	}
+	
+	public Boolean getOutputSharded() {
+		return this.outputSharded;
+	}
+	
+	public MapReduceCommand.OutputType getOutputType() {
+		return this.outputType;
+	}
+	
+	public Map<String, Object> getScopeVariables() {
+		return this.scopeVariables;
+	}
+	
+	
 	public DBObject getOptionsObject() {
 		BasicDBObject cmd = new BasicDBObject();
 
@@ -227,13 +270,13 @@ public class MapReduceOptions {
 			out.put("inline", 1);
 			break;
 		case REPLACE:
-			out.put("replace", outputType);
+			out.put("replace", outputCollection);
 			break;
 		case MERGE:
-			out.put("merge", outputType);
+			out.put("merge", outputCollection);
 			break;
 		case REDUCE:
-			out.put("reduce", outputType);
+			out.put("reduce", outputCollection);
 			break;
 		}
 

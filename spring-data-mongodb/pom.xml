@@ -13,7 +13,7 @@
 	<name>Spring Data MongoDB Support</name>
 
 	<properties>
-		<mongo.version>2.5.3</mongo.version>
+		<mongo.version>2.6.5</mongo.version>
 		<querydsl.version>2.2.0</querydsl.version>
 	</properties>
 
