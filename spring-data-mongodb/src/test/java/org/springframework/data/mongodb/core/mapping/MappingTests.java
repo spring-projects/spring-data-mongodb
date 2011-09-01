@@ -251,7 +251,7 @@ public class MappingTests {
 			public Boolean doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 				List<DBObject> indexes = collection.getIndexInfo();
 				for (DBObject dbo : indexes) {
-					if ("name".equals(dbo.get("name"))) {
+                    if (dbo.get("name") != null && dbo.get("name") instanceof String && ((String)dbo.get("name")).startsWith("name")) {
 						return true;
 					}
 				}
@@ -267,7 +267,7 @@ public class MappingTests {
 					public Boolean doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 						List<DBObject> indexes = collection.getIndexInfo();
 						for (DBObject dbo : indexes) {
-							if ("name_1".equals(dbo.get("name"))) {
+							if (dbo.get("name") != null && dbo.get("name") instanceof String && ((String)dbo.get("name")).startsWith("name")) {
 								return true;
 							}
 						}
