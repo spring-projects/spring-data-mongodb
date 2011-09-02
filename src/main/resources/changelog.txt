@@ -1,11 +1,83 @@
 Spring Data Document Changelog
 =============================================
 
-Changes in version 1.0.0.RC1 MongoDB (2011-??-??)
--------------------------------------------------
+Changes in version 1.0.0.M4 MongoDB (2011-09-01)
+------------------------------------------------
 
-Mapping
-* [DATADOC-167] - @Documentation annotation is now inherited into subclasses
+** Bug
+    * [DATADOC-134] - MongoDB: No exception when saving duplicate value to an attribute annotated with @Indexed(unique=true)
+    * [DATADOC-162] - Exception thrown on toString of Point class
+    * [DATADOC-167] - @Document annotation is not inherited
+    * [DATADOC-168] - Registering a custom converter from String to UUID causes all Strings to be converted to UUIDs
+    * [DATADOC-172] - Unable to force property order when saving document
+    * [DATADOC-176] - @DBRef annotation only supports ids of type ObjectId
+    * [DATADOC-177] - Sorting on multiple fields does not maintain order
+    * [DATADOC-181] - MongoFactoryBean does not call Mongo.close() on shutdown
+    * [DATADOC-190] - SimpleMongoRepository.exists(…) returns false for existing entities with non-ObjectId id
+    * [DATADOC-192] - MappingMongoConverter does not read empty Sets correctly
+    * [DATADOC-199] - Synchronisation during performance tests
+    * [DATADOC-207] - MappingMongoConverter fails when reading empty java.util.SortedMaps
+    * [DATADOC-209] - Collections of enums not handled correctly
+    * [DATADOC-210] - spring-data-mongodb requires Java 1.6, should require 1.5
+    * [DATADOC-212] - NPE during MongoTemplate.update() if no ID field is defined (via field name or annotation)
+    * [DATADOC-217] - Set cannot be used as a collection in a Document
+    * [DATADOC-218] - Adding of custom simple types is not easy
+    * [DATADOC-221] - BigDecimal values not read correctly in maps
+    * [DATADOC-224] - MappingMongoConverter does not inspect value type for Object properties
+    * [DATADOC-228] - NullPointerException when persiting Map with null values
+    * [DATADOC-229] - When a parameterized List is used in the PersistentConstructor, conversion fail
+    * [DATADOC-231] - spring-data-mongodb does not work in an OSGi server because of unresolved dependencies
+    * [DATADOC-232] - mongodb allow to $inc many fields in one query, but Updat().inc(firs).inc(last)  do only last inc 
+    * [DATADOC-235] - Unable to map unstructured data
+    * [DATADOC-236] - Repository queries do not honour order defined in method name
+    * [DATADOC-237] - @Indexed annotation doesn't honor field name from @Field annotation
+    * [DATADOC-240] - Update with id key is not working
+    * [DATADOC-243] - mongo:mapping-converter schema does not allow db-factory-ref
+    * [DATADOC-246] - Stack overflow when Update.pushAll(push)
+    * [DATADOC-247] - QueryMapper does not handle BigInteger ids correctly
+    * [DATADOC-248] - MongoDB Query and Collection mapping
+    * [DATADOC-249] - ConcurrentModificationException when calling MongoTemplate.updateFirst
+    * [DATADOC-254] - SimpleMongoDbFactory should handle dots in database names correctly
+
+** Improvement
+    * [DATADOC-32] - SimpleMongoConverter could support identifying Spring EL expressions in keys
+    * [DATADOC-63] - Converters to support use of a 'typeId' strategy to determine class to marshall/unmarshal from Mongo 
+    * [DATADOC-166] - Check for null if various template CRUD methods
+    * [DATADOC-169] - Registering custom converters for a type requires treating the type as simple in mapping context
+    * [DATADOC-171] - IllegalArgumentException when persisting entity with BigDecimal field
+    * [DATADOC-178] - System.out.println in the in method of Criteria. Line 179.
+    * [DATADOC-188] - Allow means to disable repository infrastructure creating indexes
+    * [DATADOC-189] - Improve extensibility of MongoRepositoryFactoryBean
+    * [DATADOC-215] - Allow configuring WriteConcern via MongoFactoryBean and thus the namespace
+    * [DATADOC-223] - Registering of customSimpleTypes should be available through the mongo namespace of spring-data-mongodb
+    * [DATADOC-225] - BasicMongoPersistentEntity shouldn't reject root entities without an id property
+    * [DATADOC-241] - Allow Map conversion behavior overriding
+    * [DATADOC-255] - Add to MongoOperations and executeCommand with an additional integer options argument
+    * [DATADOC-256] - Update to use MongoDB driver version 2.6.5
+
+** New Feature
+    * [DATADOC-7] - Support for map-reduce operations in MongoTemplate
+    * [DATADOC-64] - Allow defining the collections a query is ran against on finder methods
+    * [DATADOC-68] - Support for geoNear command
+    * [DATADOC-87] - Provide @GeoSpatialIndexed annotation that mirrors GeoSpatialIndex class for use in mapping.
+    * [DATADOC-100] - Provide means to externalize manually defined queries
+    * [DATADOC-202] - Add a 'DocumentCallbackHandler' so that a callback can process each DBObject returned from a query
+    * [DATADOC-216] - Allow configuring a WriteConcern on SimpleMongoDbFactory for DB wide WriteConcern
+    * [DATADOC-226] - Add QuerydslRepositorySupport helper class similar to the one in Spring Data JPA
+
+** Refactoring
+    * [DATADOC-170] - Review listener design
+    * [DATADOC-191] - Remove 'document' from package names
+    * [DATADOC-214] - MongoConverter refactorings
+
+** Task
+    * [DATADOC-91] - Add more TestCases for the basic functionality
+    * [DATADOC-152] - Investigate failing of test for repository.findbyLocationWithinBox
+    * [DATADOC-175] - Review DSM matrix and remove package cycles if found.
+    * [DATADOC-194] - Remove use of Class.forName to support use in an OSGi environment
+    * [DATADOC-206] - Upgrade to Querydsl 2.2.0
+    * [DATADOC-253] - Upgrade to Spring 3.0.6
+
 
 Changes in version 1.0.0.M3 MongoDB (2011-06-02)
 ------------------------------------------------
