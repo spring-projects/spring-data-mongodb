@@ -1841,31 +1841,33 @@ GeoResults&lt;Restaurant&gt; = operations.geoNear(query, Restaurant.class);</pro
   <section id="mongo.mapreduce">
     <title>Map-Reduce</title>
 
-    <para>You can query MongoDB using Map-Reduce which his useful for batch processing, data aggregation, and
+    <para>You can query MongoDB using Map-Reduce which is useful for batch processing, data aggregation, and
     for when the query language doesn't fulfill your needs.  Spring provides integration with MongoDB's map reduce
     by providing methods on MongoOperations to simplify the creation and execution of Map-Reduce operations.
     It also integrates
     with Spring's <ulink url="http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/html/resources.html">Resource abstraction</ulink>
     abstraction.  This will let you place your JavaScript files on the file system, classpath, http server or any other Spring Resource implementation and
     then reference the JavaScript resources via an easy URI style syntax, e.g. 'classpath:reduce.js;. 
-    Externalizing JavaScript code in files is preferable to embedding them as Java strings in your code.
+    Externalizing JavaScript code in files is preferable to embedding them as Java strings in your code.  You can still pass JavaScript code
+    as Java strings if you prefer.
     </para>
+    <section id="mongo.mapreduce.example" lang="">
+      <title>Example Usage</title>
     
     <para>To understand how to perform Map-Reduce operations an example from the book 'MongoDB - The definitive guide' is used.  In this example
-    we will create three documents, that have the values [a,b], [b,c], and [c,d] respectfully.  The values in each document are associated with the key 'x' as shown below.
-    For the example assume it is in the collection named "jmr1".
-    <programlisting>
-{ "_id" : ObjectId("4e5ff893c0277826074ec533"), "x" : [ "a", "b" ] }
+    we will create three documents that have the values [a,b], [b,c], and [c,d] respectfully.  The values in each document are associated with the key 'x' as shown below.
+    For this example assume these documents are in the collection named "jmr1".
+    <programlisting>{ "_id" : ObjectId("4e5ff893c0277826074ec533"), "x" : [ "a", "b" ] }
 { "_id" : ObjectId("4e5ff893c0277826074ec534"), "x" : [ "b", "c" ] }
 { "_id" : ObjectId("4e5ff893c0277826074ec535"), "x" : [ "c", "d" ] }
-    </programlisting>
+</programlisting>
     A map function that will count the occurance of each letter in the array for each document is shown below
         <programlisting language="java">function () {
     for (var i = 0; i &lt; this.x.length; i++) {
         emit(this.x[i], 1);
     }
 }
-	</programlisting>
+</programlisting>
     The reduce function that will sum up the occurance of each letter across all the documents is shown below
         <programlisting language="java">function (key, values) {
     var sum = 0;
@@ -1873,7 +1875,7 @@ GeoResults&lt;Restaurant&gt; = operations.geoNear(query, Restaurant.class);</pro
         sum += values[i];
     return sum;
 }
-        </programlisting>
+</programlisting>
 	Executing this will result in a collection as shown below.
 	<programlisting>
 { "_id" : "a", "value" : 1 }
@@ -1884,66 +1886,69 @@ GeoResults&lt;Restaurant&gt; = operations.geoNear(query, Restaurant.class);</pro
 	Assuming that the map and reduce functions are located in map.js and reduce.js and bundled in your jar so they are available on the classpath, you
 	can execute a map-reduce operation and obtain the results as shown below
 	<programlisting language="java">
-  MapReduceResults&lt;ValueObject> results = mongoOperations.mapReduce("jmr1", "classpath:map.js", "classpath:reduce.js", ValueObject.class);
-  for (ValueObject valueObject : results) {
-    System.out.println(valueObject);
-  }  
-	</programlisting>
+MapReduceResults&lt;ValueObject> results = mongoOperations.mapReduce("jmr1", "classpath:map.js", "classpath:reduce.js", ValueObject.class);
+for (ValueObject valueObject : results) {
+  System.out.println(valueObject);
+}  
+</programlisting>
 	The output of the above code is 	
-	<programlisting>
+<programlisting>
 ValueObject [id=a, value=1.0]
 ValueObject [id=b, value=2.0]
 ValueObject [id=c, value=2.0]
 ValueObject [id=d, value=1.0]
-	</programlisting>
-	The MapReduceResults class implement <classname>Iterable</classname> and provides access to the raw output, as well as timing and count statisticas.  The <classname>ValueObject</classname> class is simply
+</programlisting>
+	The MapReduceResults class implements <classname>Iterable</classname> and provides access to the raw output, as well as timing and count statisticas.  The <classname>ValueObject</classname> class is simply
 	<programlisting language="java">
 public class ValueObject {
 
-	private String id;
+  private String id;
+
+  private float value;
 	
-	public String getId() {
-		return id;
-	}
+  public String getId() {
+    return id;
+  }
 
-	private float value;
+  public float getValue() {
+    return value;
+  }
 
-	public float getValue() {
-		return value;
-	}
+  public void setValue(float value) {
+    this.value = value;
+  }
 
-	public void setValue(float value) {
-		this.value = value;
-	}
-
-	@Override
-	public String toString() {
-		return "ValueObject [id=" + id + ", value=" + value + "]";
-	}
+  @Override
+  public String toString() {
+    return "ValueObject [id=" + id + ", value=" + value + "]";
+  }
 	
 }
-	</programlisting>
+</programlisting>
 	By default the output type of INLINE is used so you don't have to specify an output collection.  To specify additional map-reduce options use an overloaded method
-	that takes an additional The class <classname>MapReduceOptions</classname> argument.  <classname>MapReduceOptions</classname> has a fluent API so adding additional options can be done
+	that takes an additional <classname>MapReduceOptions</classname> argument. The class <classname>MapReduceOptions</classname> has a fluent API so adding additional options can be done
 	in a very compact syntax.  Here an example that sets the output collection to "jmr1_out".  Note that setting only the output collection assumes a 
 	default output type of REPLACE.
 	<programlisting language="java">
-  MapReduceResults&lt;ValueObject> results = mongoOperations.mapReduce("jmr1", "classpath:map.js", "classpath:reduce.js", new MapReduceOptions().outputCollection("jmr1_out"), ValueObject.class);
+MapReduceResults&lt;ValueObject> results = mongoOperations.mapReduce("jmr1", "classpath:map.js", "classpath:reduce.js", 
+                                                                     new MapReduceOptions().outputCollection("jmr1_out"), ValueObject.class);
 	</programlisting>
 	There is also a static import <literal>import static org.springframework.data.mongodb.core.mapreduce.MapReduceOptions.options;</literal> that can be used to make the syntax slightly more compact
 	<programlisting language="java">
-  MapReduceResults&lt;ValueObject> results = mongoOperations.mapReduce("jmr1", "classpath:map.js", "classpath:reduce.js", options().outputCollection("jmr1_out"), ValueObject.class);
+MapReduceResults&lt;ValueObject> results = mongoOperations.mapReduce("jmr1", "classpath:map.js", "classpath:reduce.js", 
+                                                                     options().outputCollection("jmr1_out"), ValueObject.class);
 	</programlisting>
         You can also specify a query to reduce the set of data that will be used to feed into the map-reduce operation.  This will remove the document that contains [a,b] from consideration for map-reduce operations.
 	<programlisting language="java">
-  Query query = new Query(where("x").ne(new String[] { "a", "b" }));
-  MapReduceResults&lt;ValueObject> results = mongoOperations.mapReduce(query, "jmr1", "classpath:map.js", "classpath:reduce.js", options().outputCollection("jmr1_out"), ValueObject.class);
+Query query = new Query(where("x").ne(new String[] { "a", "b" }));
+MapReduceResults&lt;ValueObject> results = mongoOperations.mapReduce(query, "jmr1", "classpath:map.js", "classpath:reduce.js", 
+                                                                     options().outputCollection("jmr1_out"), ValueObject.class);
 	</programlisting>	
 
 	Note that you can specify additional limit and sort values as well on the query but not skip values.
 	
     </para>
-    
+    </section>
   </section>
 
   <section>
