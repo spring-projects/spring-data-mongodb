@@ -666,6 +666,51 @@ public class MappingMongoConverterUnitTests {
 		assertThat(doublyNestedObject, is(instanceOf(Map.class)));
 		assertThat((String) ((Map<?, ?>) doublyNestedObject).get("Hello"), is(equalTo("World")));
 	}
+	
+	/**
+	 * @see DATADOC-259
+	 */
+	@Test
+	public void writesListOfMapsCorrectly() {
+		
+		Map<String, Locale> map = Collections.singletonMap("Foo", Locale.ENGLISH);
+		
+		CollectionWrapper wrapper = new CollectionWrapper();
+		wrapper.listOfMaps = new ArrayList<Map<String,Locale>>();
+		wrapper.listOfMaps.add(map);
+		
+		DBObject result = new BasicDBObject();
+		converter.write(wrapper, result);
+		
+		BasicDBList list = (BasicDBList) result.get("listOfMaps");
+		assertThat(list, is(notNullValue()));
+		assertThat(list.size(), is(1));
+		
+		DBObject dbObject = (DBObject) list.get(0);
+		assertThat(dbObject.containsField("Foo"), is(true));
+		assertThat((String) dbObject.get("Foo"), is(Locale.ENGLISH.toString()));
+	}
+	
+	/**
+	 * @see DATADOC-259
+	 */
+	@Test
+	public void readsListOfMapsCorrectly() {
+		
+		DBObject map = new BasicDBObject("Foo", "en");
+		
+		BasicDBList list = new BasicDBList();
+		list.add(map);
+		
+		DBObject wrapperSource = new BasicDBObject("listOfMaps", list);
+		
+		CollectionWrapper wrapper = converter.read(CollectionWrapper.class, wrapperSource);
+		
+		assertThat(wrapper.listOfMaps, is(notNullValue()));
+		assertThat(wrapper.listOfMaps.size(), is(1));
+		assertThat(wrapper.listOfMaps.get(0), is(notNullValue()));
+		assertThat(wrapper.listOfMaps.get(0).get("Foo"), is(Locale.ENGLISH));
+	}
 
 	class GenericType<T> {
 		T content;
@@ -735,6 +780,7 @@ public class MappingMongoConverterUnitTests {
 	class CollectionWrapper {
 		List<Contact> contacts;
 		List<List<String>> strings;
+		List<Map<String, Locale>> listOfMaps;
 	}
 
 	class LocaleWrapper {

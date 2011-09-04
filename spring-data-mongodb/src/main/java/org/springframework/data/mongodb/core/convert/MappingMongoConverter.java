@@ -69,14 +69,12 @@ import org.springframework.util.StringUtils;
  * {@link MongoConverter} that uses a {@link MappingContext} to do sophisticated mapping of domain objects to
  * {@link DBObject}.
  * 
- * @author Jon Brisbin <jbrisbin@vmware.com>
  * @author Oliver Gierke
+ * @author Jon Brisbin
  */
 public class MappingMongoConverter extends AbstractMongoConverter implements ApplicationContextAware,
 		TypeMapperProvider {
 
-	@SuppressWarnings("rawtypes")
-	private static final TypeInformation<Map> MAP_TYPE_INFORMATION = ClassTypeInformation.from(Map.class);
 	private static final List<Class<?>> VALID_ID_TYPES = Arrays.asList(new Class<?>[] { ObjectId.class, String.class,
 			BigInteger.class, byte[].class });
 
@@ -545,8 +543,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				dbList.add(createCollectionDBObject(asCollection(element), componentType));
 			} else {
 				BasicDBObject propDbObj = new BasicDBObject();
-				writeInternal(element, propDbObj,
-						mappingContext.getPersistentEntity(ClassTypeInformation.from(element.getClass())));
+				writeInternal(element, propDbObj);
 				addCustomTypeKeyIfNecessary(componentType, element, propDbObj);
 				dbList.add(propDbObj);
 			}
@@ -645,10 +642,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private Object getPotentiallyConvertedSimpleRead(Object value, Class<?> target) {
 
-		Assert.notNull(target);
-
-		if (value == null) {
-			return null;
+		if (value == null || target == null) {
+			return value;
 		}
 
 		if (conversions.hasCustomReadTarget(value.getClass(), target)) {
@@ -658,8 +653,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		if (target.isEnum()) {
 			return Enum.valueOf((Class<Enum>) target, value.toString());
 		}
-
-		return value;
+		
+		return target.isAssignableFrom(value.getClass()) ? value : conversionService.convert(value, target);
 	}
 
 	protected DBRef createDBRef(Object target, org.springframework.data.mongodb.core.mapping.DBRef dbref) {
@@ -810,8 +805,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			if (value instanceof DBObject) {
 				map.put(key, read(valueType, (DBObject) value));
 			} else {
-				valueType = valueType == null ? MAP_TYPE_INFORMATION : valueType;
-				map.put(key, getPotentiallyConvertedSimpleRead(value, valueType.getType()));
+				Class<?> valueClass = valueType == null ? null : valueType.getType();
+				map.put(key, getPotentiallyConvertedSimpleRead(value, valueClass));
 			}
 		}
 
