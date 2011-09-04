@@ -15,20 +15,13 @@
  */
 package org.springframework.data.mongodb.core.mapreduce;
 
-import static org.junit.Assert.*;
-import static org.hamcrest.CoreMatchers.*;
 import org.junit.Test;
-import org.springframework.data.mongodb.core.query.Criteria;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 
 public class MapReduceOptionsTests {
 
 
 	@Test
 	public void testFinalize() {
-		MapReduceOptions o = new MapReduceOptions().finalizeFunction("code");
-	
+		new MapReduceOptions().finalizeFunction("code");
 	}
 }
