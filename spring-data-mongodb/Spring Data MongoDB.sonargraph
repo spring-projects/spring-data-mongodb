@@ -7,7 +7,7 @@
         <architecture>
             <element name="Config" type="Layer">
                 <element name="Assignment" type="TypeFilter">
-                    <element name="**.config.**" type="IncludeTypePattern"/>
+                    <element name="**.config.**" type="WeakTypePattern"/>
                 </element>
                 <dependency type="AllowedDependency" toName="Project|spring-data-mongodb::Layer|Core"/>
                 <dependency type="AllowedDependency" toName="Project|spring-data-mongodb::Layer|Monitoring"/>
@@ -16,6 +16,30 @@
             <element name="Repositories" type="Layer">
                 <element name="Assignment" type="TypeFilter">
                     <element name="**.repository.**" type="IncludeTypePattern"/>
+                </element>
+                <element name="API" type="Subsystem">
+                    <element name="Assignment" type="TypeFilter">
+                        <element name="**.repository.*" type="IncludeTypePattern"/>
+                    </element>
+                </element>
+                <element name="Query" type="Subsystem">
+                    <element name="Assignment" type="TypeFilter">
+                        <element name="**.query.**" type="IncludeTypePattern"/>
+                    </element>
+                    <dependency type="AllowedDependency" toName="Project|spring-data-mongodb::Layer|Repositories::Subsystem|API"/>
+                </element>
+                <element name="Implementation" type="Subsystem">
+                    <element name="Assignment" type="TypeFilter">
+                        <element name="**.support.**" type="IncludeTypePattern"/>
+                    </element>
+                    <dependency type="AllowedDependency" toName="Project|spring-data-mongodb::Layer|Repositories::Subsystem|API"/>
+                    <dependency type="AllowedDependency" toName="Project|spring-data-mongodb::Layer|Repositories::Subsystem|Query"/>
+                </element>
+                <element name="Config" type="Subsystem">
+                    <element name="Assignment" type="TypeFilter">
+                        <element name="**.config.**" type="IncludeTypePattern"/>
+                    </element>
+                    <dependency type="AllowedDependency" toName="Project|spring-data-mongodb::Layer|Repositories::Subsystem|Implementation"/>
                 </element>
                 <dependency type="AllowedDependency" toName="Project|spring-data-mongodb::Layer|Core"/>
             </element>

@@ -17,14 +17,9 @@
 package org.springframework.data.mongodb.core.index;
 
 import java.lang.reflect.Field;
-import java.util.Collections;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
-import com.mongodb.util.JSON;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.context.ApplicationListener;
@@ -37,6 +32,10 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
+
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
+import com.mongodb.util.JSON;
 
 /**
  * Component that inspects {@link BasicMongoPersistentEntity} instances contained in the given

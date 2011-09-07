@@ -13,28 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.repository;
+package org.springframework.data.mongodb.repository.query;
 
-import org.bson.types.ObjectId;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
+import java.io.Serializable;
+
+import org.springframework.data.repository.core.EntityInformation;
 
 /**
- * Sample contactt domain class.
- *
+ * Mongo specific {@link EntityInformation}.
+ * 
  * @author Oliver Gierke
  */
-@Document
-public abstract class Contact {
+public interface MongoEntityInformation<T, ID extends Serializable> extends EntityInformation<T, ID> {
 
-	@Id
-	protected final String id;
+	/**
+	 * Returns the name of the collection the entity shall be persisted to.
+	 * 
+	 * @return
+	 */
+	String getCollectionName();
 
-	public Contact() {
-		this.id = new ObjectId().toString();
-	}
-
-	public String getId() {
-		return id;
-	}
+	/**
+	 * Returns the attribute that the id will be persisted to.
+	 * 
+	 * @return
+	 */
+	String getIdAttribute();
 }
