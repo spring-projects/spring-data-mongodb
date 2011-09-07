@@ -106,7 +106,7 @@
   &lt;dependency&gt;
     &lt;groupId&gt;org.springframework.data&lt;/groupId&gt;
     &lt;artifactId&gt;spring-data-mongodb&lt;/artifactId&gt;
-    &lt;version&gt;1.0.0.M3&lt;/version&gt;
+    &lt;version&gt;1.0.0.M4&lt;/version&gt;
   &lt;/dependency&gt;
 
 &lt;/dependencies&gt;
@@ -114,7 +114,7 @@
 
     <para>Also change the version of Spring in the pom.xml to be</para>
 
-    <programlisting lang="" language="xml">&lt;spring.framework.version&gt;3.0.5.RELEASE&lt;/spring.framework.version&gt;</programlisting>
+    <programlisting lang="" language="xml">&lt;spring.framework.version&gt;3.0.6.RELEASE&lt;/spring.framework.version&gt;</programlisting>
 
     <para>You will also need to add the location of the Spring Milestone
     repository for maven to your pom.xml which is at the same level of your
@@ -250,11 +250,11 @@ public class MongoApp {
 
       <itemizedlist>
         <listitem>
-          <para>spring-data-mongodb-1.0.0.M3.jar</para>
+          <para>spring-data-mongodb-1.0.0.M4.jar</para>
         </listitem>
 
         <listitem>
-          <para>spring-data-commons-1.1.0.M1.jar</para>
+          <para>spring-data-commons-1.2.0.M1.jar</para>
         </listitem>
       </itemizedlist>
 
@@ -274,27 +274,27 @@ public class MongoApp {
         </listitem>
 
         <listitem>
-          <para>spring-aop-3.0.5.RELEASE.jar</para>
+          <para>spring-aop-3.0.6.RELEASE.jar</para>
         </listitem>
 
         <listitem>
-          <para>spring-asm-3.0.5.RELEASE.jar</para>
+          <para>spring-asm-3.0.6.RELEASE.jar</para>
         </listitem>
 
         <listitem>
-          <para>spring-beans-3.0.5.RELEASE.jar</para>
+          <para>spring-beans-3.0.7.RELEASE.jar</para>
         </listitem>
 
         <listitem>
-          <para>spring-context-3I.0.5.RELEASE.jar</para>
+          <para>spring-context-3.0.6.RELEASE.jar</para>
         </listitem>
 
         <listitem>
-          <para>spring-core-3.0.5.RELEASE.jar</para>
+          <para>spring-core-3.0.6.RELEASE.jar</para>
         </listitem>
 
         <listitem>
-          <para>spring-expression-3.0.5.RELEASE.jar</para>
+          <para>spring-expression-3.0.6.RELEASE.jar</para>
         </listitem>
       </itemizedlist>
 
