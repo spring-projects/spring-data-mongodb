@@ -19,8 +19,6 @@ import static org.springframework.data.mongodb.core.query.Criteria.*;
 
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.regex.Pattern;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.data.domain.Sort;
@@ -123,6 +121,10 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Query> {
 	*/
 	@Override
 	protected Query complete(Query query, Sort sort) {
+		
+		if (query == null) {
+			return null;
+		}
 
 		QueryUtils.applySorting(query, sort);
 
@@ -160,7 +162,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Query> {
 			return criteria.in(nextAsArray(parameters));
 		case LIKE:
 			String value = parameters.next().toString();
-			return criteria.is(toLikeRegex(value));
+			return criteria.regex(toLikeRegex(value));
 		case NEAR:
 
 			Distance distance = accessor.getMaxDistance();
@@ -227,9 +229,8 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Query> {
 		return new Object[] { next };
 	}
 
-	private Pattern toLikeRegex(String source) {
+	private String toLikeRegex(String source) {
 
-		String regex = source.replaceAll("\\*", ".*");
-		return Pattern.compile(regex);
+		return source.replaceAll("\\*", ".*");
 	}
 }
