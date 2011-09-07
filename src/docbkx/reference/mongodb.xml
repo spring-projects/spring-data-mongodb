@@ -1793,7 +1793,7 @@ List&lt;Venue&gt; venues =
         Venue.class);
 </programlisting>
 
-      <section>
+      <section id="mongo.geo-near">
         <title>Geo near queries</title>
 
         <para>MongoDB supports querying the database for geo locations and
