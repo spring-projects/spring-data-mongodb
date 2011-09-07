@@ -712,6 +712,26 @@ public class MappingMongoConverterUnitTests {
 		assertThat(wrapper.listOfMaps.get(0).get("Foo"), is(Locale.ENGLISH));
 	}
 
+	/**
+	 * @see DATADOC-259
+	 */
+	@Test
+	public void writesPlainMapOfCollectionsCorrectly() {
+		
+		Map<String,List<Locale>> map = Collections.singletonMap("Foo", Arrays.asList(Locale.US));
+		DBObject result = new BasicDBObject();
+		converter.write(map, result);
+		
+		assertThat(result.containsField("Foo"), is(true));
+		assertThat(result.get("Foo"), is(notNullValue()));
+		assertThat(result.get("Foo"), is(BasicDBList.class));
+		
+		BasicDBList list = (BasicDBList) result.get("Foo");
+		
+		assertThat(list.size(), is(1));
+		assertThat(list.get(0), is((Object) Locale.US.toString()));
+	}
+	
 	class GenericType<T> {
 		T content;
 	}

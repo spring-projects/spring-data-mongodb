@@ -75,6 +75,8 @@ import org.springframework.util.StringUtils;
 public class MappingMongoConverter extends AbstractMongoConverter implements ApplicationContextAware,
 		TypeMapperProvider {
 
+	@SuppressWarnings("rawtypes")
+	private static final TypeInformation<Map> MAP_TYPE_INFORMATION = ClassTypeInformation.from(Map.class);
 	private static final List<Class<?>> VALID_ID_TYPES = Arrays.asList(new Class<?>[] { ObjectId.class, String.class,
 			BigInteger.class, byte[].class });
 
@@ -325,7 +327,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		if (Map.class.isAssignableFrom(obj.getClass())) {
-			writeMapInternal((Map<Object, Object>) obj, dbo, null);
+			writeMapInternal((Map<Object, Object>) obj, dbo, MAP_TYPE_INFORMATION);
 			return;
 		}
 
@@ -552,6 +554,13 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		return dbList;
 	}
 
+	/**
+	 * Writes the given {@link Map} to the given {@link DBObject} considering the given {@link TypeInformation}.
+	 * 
+	 * @param obj must not be {@literal null}.
+	 * @param dbo must not be {@literal null}.
+	 * @param propertyType must not be {@literal null}.
+	 */
 	protected void writeMapInternal(Map<Object, Object> obj, DBObject dbo, TypeInformation<?> propertyType) {
 		for (Map.Entry<Object, Object> entry : obj.entrySet()) {
 			Object key = entry.getKey();
@@ -586,7 +595,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 */
 	protected void addCustomTypeKeyIfNecessary(TypeInformation<?> type, Object value, DBObject dbObject) {
 
-		if (type == null) {
+		if (type == null || type.getActualType() == null) {
 			return;
 		}
 
