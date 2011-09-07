@@ -25,6 +25,4 @@ public abstract class BeanNames {
 	static final String INDEX_HELPER = "indexCreationHelper";
 	static final String MONGO = "mongo";
 	static final String DB_FACTORY = "mongoDbFactory";
-	static final String POST_PROCESSOR = "mappingContextAwareBeanPostProcessor";
-
 }

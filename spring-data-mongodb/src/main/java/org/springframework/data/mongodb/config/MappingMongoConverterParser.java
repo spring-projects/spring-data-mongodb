@@ -38,7 +38,6 @@ import org.springframework.beans.factory.xml.ParserContext;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.data.annotation.Persistent;
-import org.springframework.data.mapping.context.MappingContextAwareBeanPostProcessor;
 import org.springframework.data.mongodb.core.convert.CustomConversions;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexCreator;
@@ -69,15 +68,6 @@ public class MappingMongoConverterParser extends AbstractBeanDefinitionParser {
 
 		BeanDefinition conversionsDefinition = getCustomConversions(element, parserContext);
 		String ctxRef = potentiallyCreateMappingContext(element, parserContext, conversionsDefinition);
-
-		try {
-			registry.getBeanDefinition(POST_PROCESSOR);
-		} catch (NoSuchBeanDefinitionException ignored) {
-			BeanDefinitionBuilder postProcBuilder = BeanDefinitionBuilder
-					.genericBeanDefinition(MappingContextAwareBeanPostProcessor.class);
-			postProcBuilder.addPropertyValue("mappingContextBeanName", ctxRef);
-			registry.registerBeanDefinition(POST_PROCESSOR, postProcBuilder.getBeanDefinition());
-		}
 
 		// Need a reference to a Mongo instance
 		String dbFactoryRef = element.getAttribute("db-factory-ref");

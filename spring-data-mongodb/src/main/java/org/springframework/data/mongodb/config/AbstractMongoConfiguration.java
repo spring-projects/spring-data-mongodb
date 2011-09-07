@@ -26,7 +26,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.data.annotation.Persistent;
 import org.springframework.data.authentication.UserCredentials;
-import org.springframework.data.mapping.context.MappingContextAwareBeanPostProcessor;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
@@ -100,12 +99,4 @@ public abstract class AbstractMongoConfiguration {
 	 */
 	protected void afterMappingMongoConverterCreation(MappingMongoConverter converter) {
 	}
-
-	@Bean
-	public MappingContextAwareBeanPostProcessor mappingContextAwareBeanPostProcessor() {
-		MappingContextAwareBeanPostProcessor bpp = new MappingContextAwareBeanPostProcessor();
-		bpp.setMappingContextBeanName("mongoMappingContext");
-		return bpp;
-	}
-
 }
