@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.core.mapping;
 
+import java.math.BigInteger;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -31,14 +33,23 @@ import com.mongodb.DBRef;
  */
 public abstract class MongoSimpleTypes {
 
-	private static final Set<Class<?>> MONGO_SIMPLE_TYPES = new HashSet<Class<?>>();
-
+	public static final Set<Class<?>> SUPPORTED_ID_CLASSES;
+	
 	static {
-		MONGO_SIMPLE_TYPES.add(DBRef.class);
-		MONGO_SIMPLE_TYPES.add(ObjectId.class);
-		MONGO_SIMPLE_TYPES.add(CodeWScope.class);
+		Set<Class<?>> classes = new HashSet<Class<?>>();
+		classes.add(ObjectId.class);
+		classes.add(String.class);
+		classes.add(BigInteger.class);
+		SUPPORTED_ID_CLASSES = Collections.unmodifiableSet(classes);
+
+		Set<Class<?>> simpleTypes = new HashSet<Class<?>>();
+		simpleTypes.add(DBRef.class);
+		simpleTypes.add(ObjectId.class);
+		simpleTypes.add(CodeWScope.class);
+		MONGO_SIMPLE_TYPES = Collections.unmodifiableSet(simpleTypes);
 	}
 
+	private static final Set<Class<?>> MONGO_SIMPLE_TYPES;
 	public static final SimpleTypeHolder HOLDER = new SimpleTypeHolder(MONGO_SIMPLE_TYPES, true);
 
 	private MongoSimpleTypes() {

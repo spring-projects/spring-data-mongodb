@@ -29,10 +29,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.convert.MongoPropertyDescriptors.MongoPropertyDescriptor;
 import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
 import org.springframework.data.mongodb.core.query.Order;
 import org.springframework.data.querydsl.QueryDslPredicateExecutor;
 import org.springframework.data.repository.Repository;
@@ -239,9 +239,9 @@ public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID exten
 		protected void validate(RepositoryMetadata metadata) {
 
 			Class<?> idClass = metadata.getIdClass();
-			if (!MongoPropertyDescriptor.SUPPORTED_ID_CLASSES.contains(idClass)) {
+			if (!MongoSimpleTypes.SUPPORTED_ID_CLASSES.contains(idClass)) {
 				throw new IllegalArgumentException(String.format("Unsupported id class! Only %s are supported!",
-						StringUtils.collectionToCommaDelimitedString(MongoPropertyDescriptor.SUPPORTED_ID_CLASSES)));
+						StringUtils.collectionToCommaDelimitedString(MongoSimpleTypes.SUPPORTED_ID_CLASSES)));
 			}
 		}
 
