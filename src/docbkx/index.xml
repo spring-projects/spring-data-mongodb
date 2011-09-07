@@ -52,7 +52,9 @@
     <xi:include href="introduction/why-sd-doc.xml"/>
     <xi:include href="introduction/requirements.xml"/>
     <xi:include href="introduction/getting-started.xml"/>
-    <xi:include href="https://github.com/SpringSource/spring-data-commons/raw/master/src/docbkx/repositories.xml"/>
+    <xi:include href="https://github.com/SpringSource/spring-data-commons/raw/master/src/docbkx/repositories.xml">
+      <xi:fallback href="../../../spring-data-commons/src/docbkx/repositories.xml" />
+    </xi:include>
   </part>
 
   <part id="reference">
@@ -65,6 +67,14 @@
     <xi:include href="reference/cross-store.xml"/>
     <xi:include href="reference/logging.xml"/>
     <xi:include href="reference/jmx.xml"/>
+  </part>
+
+  <part id="appendix">
+    <title>Appendix</title>
+
+    <xi:include href="https://raw.github.com/SpringSource/spring-data-commons/master/src/docbkx/repository-namespace-reference.xml">
+    	<xi:fallback href="../../../spring-data-commons/src/docbkx/repository-namespace-reference.xml" />
+    </xi:include>
   </part>
 
 </book>
