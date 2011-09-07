@@ -50,7 +50,7 @@ public class CustomConversionsUnitTests {
 	@Test
 	public void considersTypesWeRegisteredConvertersForAsSimple() {
 
-		CustomConversions conversions = new CustomConversions(				Arrays.asList(UuidToStringConverter.INSTANCE));
+		CustomConversions conversions = new CustomConversions(Arrays.asList(UuidToStringConverter.INSTANCE));
 		assertThat(conversions.isSimpleType(UUID.class), is(true));
 	}
 
@@ -105,6 +105,15 @@ public class CustomConversionsUnitTests {
 		assertThat(conversionService.canConvert(String.class, UUID.class), is(true));
 	}
 
+	/**
+	 * @see DATADOC-259
+	 */
+	@Test
+	public void doesNotConsiderTypeSimpleIfOnlyReadConverterIsRegistered() {
+		CustomConversions conversions = new CustomConversions(Arrays.asList(StringToUUIDConverter.INSTANCE));
+		assertThat(conversions.isSimpleType(UUID.class), is(false));
+	}
+	
 	enum UuidToStringConverter implements Converter<UUID, String> {
 		INSTANCE;
 

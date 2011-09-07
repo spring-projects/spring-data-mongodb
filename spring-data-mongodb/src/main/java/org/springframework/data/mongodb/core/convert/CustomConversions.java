@@ -104,8 +104,10 @@ public class CustomConversions {
 	}
 
 	/**
-	 * Returns whether the given type is considered to be simple.
+	 * Returns whether the given type is considered to be simple. That means it's either a general simple type or we have
+	 * a writing {@link Converter} registered for a particular type.
 	 * 
+	 * @see SimpleTypeHolder#isSimpleType(Class)
 	 * @param type
 	 * @return
 	 */
@@ -176,7 +178,6 @@ public class CustomConversions {
 
 		if (isMongoBasicType(pair.getSourceType())) {
 			readingPairs.add(pair);
-			customSimpleTypes.add(pair.getTargetType());
 		}
 
 		if (isMongoBasicType(pair.getTargetType())) {
