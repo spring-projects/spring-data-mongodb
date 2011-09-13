@@ -90,31 +90,23 @@ public class MongoFactoryBean implements FactoryBean<Mongo>, PersistenceExceptio
 
 		Mongo mongo;
 
-		if (host == null) {
+		ServerAddress defaultOptions = new ServerAddress();
 
-			logger.debug("Property host not specified. Using default configuration");
-			mongo = new Mongo();
+		if (mongoOptions == null) {
+			mongoOptions = new MongoOptions();
+		}
 
+		if (replicaPair != null) {
+			if (replicaPair.size() < 2) {
+				throw new CannotGetMongoDbConnectionException("A replica pair must have two server entries");
+			}
+			mongo = new Mongo(replicaPair.get(0), replicaPair.get(1), mongoOptions);
+		} else if (replicaSetSeeds != null) {
+			mongo = new Mongo(replicaSetSeeds, mongoOptions);
 		} else {
-
-			ServerAddress defaultOptions = new ServerAddress();
-
-			if (mongoOptions == null) {
-				mongoOptions = new MongoOptions();
-			}
-
-			if (replicaPair != null) {
-				if (replicaPair.size() < 2) {
-					throw new CannotGetMongoDbConnectionException("A replica pair must have two server entries");
-				}
-				mongo = new Mongo(replicaPair.get(0), replicaPair.get(1), mongoOptions);
-			} else if (replicaSetSeeds != null) {
-				mongo = new Mongo(replicaSetSeeds, mongoOptions);
-			} else {
-				String mongoHost = host != null ? host : defaultOptions.getHost();
-				mongo = port != null ? new Mongo(new ServerAddress(mongoHost, port), mongoOptions) : new Mongo(mongoHost,
-						mongoOptions);
-			}
+			String mongoHost = host != null ? host : defaultOptions.getHost();
+			mongo = port != null ? new Mongo(new ServerAddress(mongoHost, port), mongoOptions) : new Mongo(mongoHost,
+					mongoOptions);
 		}
 
 		if (writeConcern != null) {

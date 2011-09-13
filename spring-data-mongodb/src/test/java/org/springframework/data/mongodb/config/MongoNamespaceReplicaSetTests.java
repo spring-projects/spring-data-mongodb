@@ -20,14 +20,18 @@ import static org.junit.Assert.*;
 
 import java.util.List;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.mongodb.core.MongoFactoryBean;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import com.mongodb.CommandResult;
+import com.mongodb.Mongo;
 import com.mongodb.ServerAddress;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -38,7 +42,7 @@ public class MongoNamespaceReplicaSetTests extends NamespaceTestSupport {
 	private ApplicationContext ctx;
 
 	@Test
-	public void testMongoWithReplicaSets() throws Exception {
+	public void testParsingMongoWithReplicaSets() throws Exception {
 		assertTrue(ctx.containsBean("replicaSetMongo"));
 		MongoFactoryBean mfb = (MongoFactoryBean) ctx.getBean("&replicaSetMongo");
 		
@@ -46,11 +50,27 @@ public class MongoNamespaceReplicaSetTests extends NamespaceTestSupport {
 		assertNotNull(replicaSetSeeds);
 		
 		assertEquals("127.0.0.1", replicaSetSeeds.get(0).getHost());
-		assertEquals(27017, replicaSetSeeds.get(0).getPort());
+		assertEquals(10001, replicaSetSeeds.get(0).getPort());
 		
     assertEquals("localhost", replicaSetSeeds.get(1).getHost());
-    assertEquals(27018, replicaSetSeeds.get(1).getPort());
+    assertEquals(10002, replicaSetSeeds.get(1).getPort());
     
-    // TODO test infrastructure to have replica sets
+	}
+	
+	@Test
+	@Ignore("CI infrastructure does not yet support replica sets")
+	public void testMongoWithReplicaSets() {
+		Mongo mongo = ctx.getBean(Mongo.class);
+		assertEquals(2, mongo.getAllAddress().size());
+		List<ServerAddress> servers = mongo.getAllAddress();
+		assertEquals("127.0.0.1", servers.get(0).getHost());
+		assertEquals("localhost", servers.get(1).getHost());
+		assertEquals(10001, servers.get(0).getPort());
+		assertEquals(10002, servers.get(1).getPort());
+		
+		MongoTemplate template = new MongoTemplate(mongo, "admin");
+		CommandResult result = template.executeCommand("{replSetGetStatus : 1}");
+		assertEquals("blort", result.getString("set"));
+		
 	}
 }
