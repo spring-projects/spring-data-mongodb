@@ -100,9 +100,8 @@ public class QueryMapper {
 					newConditions.add(getMappedObject((DBObject) iter.next(), entity));
 				}
 				value = newConditions;
-			} else {
-				// TODO: Implement other forms of conversion (like @Alias and whatnot)
 			}
+			
 			newDbo.put(newKey, value);
 		}
 		return newDbo;

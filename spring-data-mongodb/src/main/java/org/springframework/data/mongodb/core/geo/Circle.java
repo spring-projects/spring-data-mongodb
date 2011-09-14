@@ -51,6 +51,6 @@ public class Circle {
 
 	@Override
 	public String toString() {
-		return String.format("Circle [center=%s, radius=%d]", center, radius);
+		return String.format("Circle [center=%s, radius=%f]", center, radius);
 	}
 }

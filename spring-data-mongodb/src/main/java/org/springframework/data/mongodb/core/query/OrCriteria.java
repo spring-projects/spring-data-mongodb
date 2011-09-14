@@ -25,7 +25,7 @@ public class OrCriteria implements CriteriaDefinition {
 
 	public OrCriteria(Query[] queries) {
 		super();
-		this.queries = queries;
+		this.queries = queries == null ? null : queries.clone();
 	}
 
 	/*

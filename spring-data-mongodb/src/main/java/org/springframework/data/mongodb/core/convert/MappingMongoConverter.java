@@ -200,7 +200,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			spelCtx.setBeanResolver(new BeanFactoryResolver(applicationContext));
 		}
 		if (!(dbo instanceof BasicDBList)) {
-			String[] keySet = dbo.keySet().toArray(new String[] {});
+			String[] keySet = dbo.keySet().toArray(new String[dbo.keySet().size()]);
 			for (String key : keySet) {
 				spelCtx.setVariable(key, dbo.get(key));
 			}

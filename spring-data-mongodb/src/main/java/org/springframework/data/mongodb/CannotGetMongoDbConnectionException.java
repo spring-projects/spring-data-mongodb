@@ -35,10 +35,10 @@ public class CannotGetMongoDbConnectionException extends DataAccessResourceFailu
 		super(msg);
 	}
 
-	public CannotGetMongoDbConnectionException(String msg, String database, String username, char[] password2) {
+	public CannotGetMongoDbConnectionException(String msg, String database, String username, char[] password) {
 		super(msg);
 		this.username = username;
-		this.password = password2;
+		this.password = password == null ? null : password.clone();
 		this.database = database;
 	}
 

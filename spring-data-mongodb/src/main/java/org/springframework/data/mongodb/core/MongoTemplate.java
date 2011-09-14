@@ -866,7 +866,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			} else {
 				commandResult = executeCommand(commandObject);
 			}
-			commandResult.throwOnError(); 
+			commandResult.throwOnError();
 		} catch (RuntimeException ex) {
 			this.potentiallyConvertRuntimeException(ex);
 		}
@@ -1277,7 +1277,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 		if (entityClass == null) {
 			throw new InvalidDataAccessApiUsageException(
-					"No class parameter provided, entity collection can't be determined for " + entityClass);
+					"No class parameter provided, entity collection can't be determined!");
 		}
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
