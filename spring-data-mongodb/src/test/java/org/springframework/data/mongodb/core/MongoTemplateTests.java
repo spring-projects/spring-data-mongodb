@@ -94,7 +94,7 @@ public class MongoTemplateTests {
 		this.mappingTemplate = new MongoTemplate(factory, mappingConverter);
 	}
 
-	@Before	
+	@Before
 	public void setUp() {
 		cleanDb();
 	}
@@ -846,5 +846,47 @@ public class MongoTemplateTests {
 		});
 		assertEquals(1, names.size());
 		//template.remove(new Query(), Person.class);
+	}
+
+	/**
+	 * @see DATADOC-183
+	 */
+	@Test
+	public void countsDocumentsCorrectly() {
+		
+		assertThat(template.count(new Query(), Person.class), is(0L));
+		
+		Person dave = new Person("Dave");
+		Person carter = new Person("Carter");
+		
+		template.save(dave);
+		template.save(carter);
+		
+		assertThat(template.count(null, Person.class), is(2L));
+		assertThat(template.count(query(where("firstName").is("Carter")), Person.class), is(1L));
+	}
+	
+	/**
+	 * @see DATADOC-183
+	 */
+	@Test(expected = IllegalArgumentException.class)
+	public void countRejectsNullEntityClass() {
+		template.count(null, (Class<?>) null);
+	}
+	
+	/**
+	 * @see DATADOC-183
+	 */
+	@Test(expected = IllegalArgumentException.class)
+	public void countRejectsEmptyCollectionName() {
+		template.count(null, "");
+	}
+	
+	/**
+	 * @see DATADOC-183
+	 */
+	@Test(expected = IllegalArgumentException.class)
+	public void countRejectsNullCollectionName() {
+		template.count(null, (String) null);
 	}
 }

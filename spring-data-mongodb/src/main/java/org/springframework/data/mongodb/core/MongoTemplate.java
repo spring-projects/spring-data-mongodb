@@ -512,6 +512,28 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				entityClass);
 	}
 
+	public long count(Query query, Class<?> entityClass) {
+		Assert.notNull(entityClass);
+		return count(query, entityClass, determineCollectionName(entityClass));
+	}
+
+	public long count(final Query query, String collectionName) {
+		return count(query, null, collectionName);
+	}
+	
+	private long count(Query query, Class<?> entityClass, String collectionName) {
+		
+		Assert.hasText(collectionName);
+		final DBObject dbObject = query == null ? null : mapper.getMappedObject(query.getQueryObject(),
+				entityClass == null ? null : mappingContext.getPersistentEntity(entityClass));
+		
+		return execute(collectionName, new CollectionCallback<Long>() {
+			public Long doInCollection(DBCollection collection) throws MongoException, DataAccessException {
+				return collection.count(dbObject);
+			}
+		});
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.MongoOperations#insert(java.lang.Object)
@@ -832,8 +854,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				entityClass), collectionName);
 	}
 
-	public <T> MapReduceResults<T> mapReduce(String inputCollectionName, String mapFunction, String reduceFunction, Class<T> entityClass) {
-		return mapReduce(null, inputCollectionName, mapFunction, reduceFunction, new MapReduceOptions().outputTypeInline(), entityClass);
+	public <T> MapReduceResults<T> mapReduce(String inputCollectionName, String mapFunction, String reduceFunction,
+			Class<T> entityClass) {
+		return mapReduce(null, inputCollectionName, mapFunction, reduceFunction, new MapReduceOptions().outputTypeInline(),
+				entityClass);
 	}
 
 	public <T> MapReduceResults<T> mapReduce(String inputCollectionName, String mapFunction, String reduceFunction,
@@ -841,12 +865,14 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		return mapReduce(null, inputCollectionName, mapFunction, reduceFunction, mapReduceOptions, entityClass);
 	}
 
-	public <T> MapReduceResults<T> mapReduce(Query query, String inputCollectionName, String mapFunction, String reduceFunction, Class<T> entityClass) {
-		return mapReduce(query, inputCollectionName, mapFunction, reduceFunction, new MapReduceOptions().outputTypeInline(), entityClass);
+	public <T> MapReduceResults<T> mapReduce(Query query, String inputCollectionName, String mapFunction,
+			String reduceFunction, Class<T> entityClass) {
+		return mapReduce(query, inputCollectionName, mapFunction, reduceFunction,
+				new MapReduceOptions().outputTypeInline(), entityClass);
 	}
 
-	public <T> MapReduceResults<T> mapReduce(Query query, String inputCollectionName, String mapFunction, String reduceFunction,
-			MapReduceOptions mapReduceOptions, Class<T> entityClass) {
+	public <T> MapReduceResults<T> mapReduce(Query query, String inputCollectionName, String mapFunction,
+			String reduceFunction, MapReduceOptions mapReduceOptions, Class<T> entityClass) {
 		String mapFunc = replaceWithResourceIfNecessary(mapFunction);
 		String reduceFunc = replaceWithResourceIfNecessary(reduceFunction);
 		DBCollection inputCollection = getCollection(inputCollectionName);
@@ -872,9 +898,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		}
 		String error = commandResult.getErrorMessage();
 		if (error != null) {
-			throw new InvalidDataAccessApiUsageException("Command execution failed:  Error [" + error + "], Command = " + commandObject);
+			throw new InvalidDataAccessApiUsageException("Command execution failed:  Error [" + error + "], Command = "
+					+ commandObject);
 		}
-			
+
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug("MapReduce command result = [" + commandResult + "]");
 		}

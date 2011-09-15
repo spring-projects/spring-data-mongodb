@@ -79,22 +79,22 @@ public interface MongoOperations {
 	CommandResult executeCommand(DBObject command, int options);
 	
 	/**
-	 * Execute a MongoDB query and iterate over the query results on a per-document basis with a DocumentCallbackHandler. 
+	 * Execute a MongoDB query and iterate over the query results on a per-document basis with a DocumentCallbackHandler.
 	 * 
 	 * @param query the query class that specifies the criteria used to find a record and also an optional fields
 	 *          specification
-	 * @param collectionName name of the collection to retrieve the objects from         
-	 * @param dch the handler that will extract results, one document at a time 
+	 * @param collectionName name of the collection to retrieve the objects from
+	 * @param dch the handler that will extract results, one document at a time
 	 */
 	void executeQuery(Query query, String collectionName, DocumentCallbackHandler dch);
 	
 	/**
-	 * Execute a MongoDB query and iterate over the query results on a per-document basis with a DocumentCallbackHandler using the 
+	 * Execute a MongoDB query and iterate over the query results on a per-document basis with a DocumentCallbackHandler using the
 	 * provided CursorPreparer.
 	 * @param query the query class that specifies the criteria used to find a record and also an optional fields
 	 *          specification
-	 * @param collectionName name of the collection to retrieve the objects from         
-	 * @param dch the handler that will extract results, one document at a time 
+	 * @param collectionName name of the collection to retrieve the objects from
+	 * @param dch the handler that will extract results, one document at a time
 	 * @param preparer allows for customization of the DBCursor used when iterating over the result set, (apply limits,
 	 *          skips and so on).
 	 */
@@ -504,6 +504,24 @@ public interface MongoOperations {
 	 */
 	<T> T findAndRemove(Query query, Class<T> entityClass, String collectionName);
 
+	/**
+	 * Returns the number of documents for the given {@link Query} by querying the collection of the given entity class.
+	 * 
+	 * @param query
+	 * @param entityClass must not be {@literal null}.
+	 * @return
+	 */
+	long count(Query query, Class<?> entityClass);
+	
+	/**
+	 * Returns the number of documents for the given {@link Query} querying the given collection.
+	 * 
+	 * @param query
+	 * @param collectionName must not be {@literal null} or empty.
+	 * @return
+	 */
+	long count(Query query, String collectionName);
+	
 	/**
 	 * Insert the object into the collection for the entity type of the object to save.
 	 * <p/>
