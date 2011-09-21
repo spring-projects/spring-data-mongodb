@@ -24,14 +24,16 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
+import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
 import org.springframework.data.querydsl.EntityPathResolver;
 import org.springframework.data.querydsl.QueryDslPredicateExecutor;
 import org.springframework.data.querydsl.SimpleEntityPathResolver;
 import org.springframework.data.repository.core.EntityMetadata;
 import org.springframework.util.Assert;
-
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mysema.query.mongodb.MongodbQuery;
@@ -39,6 +41,8 @@ import com.mysema.query.mongodb.MongodbSerializer;
 import com.mysema.query.types.EntityPath;
 import com.mysema.query.types.Expression;
 import com.mysema.query.types.OrderSpecifier;
+import com.mysema.query.types.Path;
+import com.mysema.query.types.PathMetadata;
 import com.mysema.query.types.Predicate;
 import com.mysema.query.types.path.PathBuilder;
 
@@ -80,7 +84,7 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 		Assert.notNull(resolver);
 		EntityPath<T> path = resolver.createPath(entityInformation.getJavaType());
 		this.builder = new PathBuilder<T>(path.getType(), path.getMetadata());
-		this.serializer = new MongodbSerializer();
+		this.serializer = new SpringDataMongodbSerializer(template.getConverter().getMappingContext());
 	}
 
 	/*
@@ -216,5 +220,32 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 
 		return new OrderSpecifier(order.isAscending() ? com.mysema.query.types.Order.ASC
 				: com.mysema.query.types.Order.DESC, property);
+	}
+
+	/**
+	 * Custom {@link MongodbSerializer} to take mapping information into account when building keys for constraints.
+	 * 
+	 * @author Oliver Gierke
+	 */
+	static class SpringDataMongodbSerializer extends MongodbSerializer {
+
+		private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
+
+		/**
+		 * Creates a new {@link SpringDataMongodbSerializer} for the given {@link MappingContext}.
+		 * @param mappingContext
+		 */
+		public SpringDataMongodbSerializer(MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
+			this.mappingContext = mappingContext;
+		}
+
+		@Override
+		protected String getKeyForPath(Path<?> expr, PathMetadata<?> metadata) {
+
+			Path<?> parent = metadata.getParent();
+			MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(parent.getType());
+			MongoPersistentProperty property = entity.getPersistentProperty(metadata.getExpression().toString());
+			return property.getFieldName();
+		}
 	}
 }
