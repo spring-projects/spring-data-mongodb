@@ -20,8 +20,7 @@ import java.util.Iterator;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.convert.MongoWriter;
-import org.springframework.data.mongodb.core.convert.TypeMapper;
-import org.springframework.data.mongodb.core.convert.TypeMapperProvider;
+import org.springframework.data.mongodb.core.convert.TypeKeyAware;
 import org.springframework.data.mongodb.core.geo.Distance;
 import org.springframework.data.mongodb.core.geo.Point;
 import org.springframework.data.repository.query.ParameterAccessor;
@@ -107,12 +106,11 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 	 */
 	private Object getConvertedValue(Object value) {
 
-		if (!(writer instanceof TypeMapperProvider)) {
+		if (!(writer instanceof TypeKeyAware)) {
 			return value;
 		}
 
-		TypeMapper mapper = ((TypeMapperProvider) writer).getTypeMapper();
-		return removeTypeInfoRecursively(writer.convertToMongoType(value), mapper);
+		return removeTypeInfoRecursively(writer.convertToMongoType(value), ((TypeKeyAware) writer));
 	}
 
 	/**
@@ -121,9 +119,9 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 	 * @param object
 	 * @return
 	 */
-	private Object removeTypeInfoRecursively(Object object, TypeMapper mapper) {
+	private Object removeTypeInfoRecursively(Object object, TypeKeyAware typeKeyAware) {
 
-		if (!(object instanceof DBObject) || mapper == null) {
+		if (!(object instanceof DBObject) || typeKeyAware == null) {
 			return object;
 		}
 
@@ -131,17 +129,17 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 		String keyToRemove = null;
 		for (String key : dbObject.keySet()) {
 
-			if (mapper.isTypeKey(key)) {
+			if (typeKeyAware.isTypeKey(key)) {
 				keyToRemove = key;
 			}
 
 			Object value = dbObject.get(key);
 			if (value instanceof BasicDBList) {
 				for (Object element : (BasicDBList) value) {
-					removeTypeInfoRecursively(element, mapper);
+					removeTypeInfoRecursively(element, typeKeyAware);
 				}
 			} else {
-				removeTypeInfoRecursively(value, mapper);
+				removeTypeInfoRecursively(value, typeKeyAware);
 			}
 		}
 

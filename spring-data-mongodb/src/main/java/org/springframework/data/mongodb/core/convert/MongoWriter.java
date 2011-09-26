@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
+import org.springframework.data.convert.EntityWriter;
+
 import com.mongodb.DBObject;
 
 /**
@@ -25,15 +27,7 @@ import com.mongodb.DBObject;
  * @author Thomas Risberg
  * @author Oliver Gierke
  */
-public interface MongoWriter<T> {
-
-	/**
-	 * Write the given object of type T to the native MongoDB object representation DBObject.
-	 * 
-	 * @param t The object to convert to a DBObject
-	 * @param dbo The DBObject to use for writing.
-	 */
-	void write(T t, DBObject dbo);
+public interface MongoWriter<T> extends EntityWriter<T, DBObject> {
 
 	/**
 	 * Converts the given object into one Mongo will be able to store natively. If the given object can already be stored

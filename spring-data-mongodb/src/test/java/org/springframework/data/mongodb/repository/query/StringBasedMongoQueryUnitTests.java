@@ -28,7 +28,7 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.convert.DefaultTypeMapper;
+import org.springframework.data.mongodb.core.convert.DefaultMongoTypeMapper;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
@@ -95,7 +95,7 @@ public class StringBasedMongoQueryUnitTests {
 
 		DBObject dbObject = new BasicDBObject();
 		converter.write(address, dbObject);
-		dbObject.removeField(DefaultTypeMapper.DEFAULT_TYPE_KEY);
+		dbObject.removeField(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY);
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor);
 		BasicDBObject queryObject = new BasicDBObject("address", dbObject);
@@ -116,7 +116,7 @@ public class StringBasedMongoQueryUnitTests {
 		
 		DBObject addressDbObject = new BasicDBObject();
 		converter.write(address, addressDbObject);
-		addressDbObject.removeField(DefaultTypeMapper.DEFAULT_TYPE_KEY);
+		addressDbObject.removeField(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY);
 		
 		DBObject reference = new BasicDBObject("address", addressDbObject);
 		reference.put("lastname", "Matthews");

@@ -15,29 +15,20 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import org.springframework.core.convert.ConversionService;
-import org.springframework.data.mapping.context.MappingContext;
+import org.springframework.data.convert.EntityConverter;
+import org.springframework.data.convert.EntityReader;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+
+import com.mongodb.DBObject;
 
 /**
  * Central Mongo specific converter interface which combines {@link MongoWriter} and {@link MongoReader}.
  * 
  * @author Oliver Gierke
  */
-public interface MongoConverter extends MongoWriter<Object>, MongoReader<Object> {
+public interface MongoConverter extends
+		EntityConverter<MongoPersistentEntity<?>, MongoPersistentProperty, Object, DBObject>, MongoWriter<Object>,
+		EntityReader<Object, DBObject> {
 
-	/**
-	 * Returns the underlying {@link MappingContext} used by the converter.
-	 * 
-	 * @return never {@literal null}
-	 */
-	MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> getMappingContext();
-
-	/**
-	 * Returns the underlying {@link ConversionService} used by the converter.
-	 * 
-	 * @return never {@literal null}.
-	 */
-	ConversionService getConversionService();
 }

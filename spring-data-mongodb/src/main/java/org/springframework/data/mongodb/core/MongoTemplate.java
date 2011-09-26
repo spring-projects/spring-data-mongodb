@@ -1,7 +1,9 @@
 /*
  * Copyright 2010-2011 the original author or authors.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * Licensed under t
+import org.springframework.data.convert.EntityReader;
+he Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -58,13 +60,13 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.authentication.UserCredentials;
+import org.springframework.data.convert.EntityReader;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.BeanWrapper;
 import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
-import org.springframework.data.mongodb.core.convert.MongoReader;
 import org.springframework.data.mongodb.core.convert.MongoWriter;
 import org.springframework.data.mongodb.core.geo.Distance;
 import org.springframework.data.mongodb.core.geo.GeoResult;
@@ -1029,7 +1031,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * @return the List of converted objects.
 	 */
 	protected <T> T doFindOne(String collectionName, DBObject query, DBObject fields, Class<T> entityClass) {
-		MongoReader<? super T> readerToUse = this.mongoConverter;
+		EntityReader<? super T, DBObject> readerToUse = this.mongoConverter;
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
 		DBObject mappedQuery = mapper.getMappedObject(query, entity);
 
@@ -1088,7 +1090,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			LOGGER.debug("find using query: " + query + " fields: " + fields + " for class: " + entityClass
 					+ " in collection: " + collectionName);
 		}
-		MongoReader<? super T> readerToUse = this.mongoConverter;
+		EntityReader<? super T, DBObject> readerToUse = this.mongoConverter;
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
 		return executeFindMultiInternal(new FindCallback(mapper.getMappedObject(query, entity), fields), null,
 				new ReadDbObjectCallback<T>(readerToUse, entityClass), collectionName);
@@ -1123,7 +1125,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 */
 	protected <T> T doFindAndRemove(String collectionName, DBObject query, DBObject fields, DBObject sort,
 			Class<T> entityClass) {
-		MongoReader<? super T> readerToUse = this.mongoConverter;
+		EntityReader<? super T, DBObject> readerToUse = this.mongoConverter;
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug("findAndRemove using query: " + query + " fields: " + fields + " sort: " + sort + " for class: "
 					+ entityClass + " in collection: " + collectionName);
@@ -1472,10 +1474,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 */
 	private class ReadDbObjectCallback<T> implements DbObjectCallback<T> {
 
-		private final MongoReader<? super T> reader;
+		private final EntityReader<? super T, DBObject> reader;
 		private final Class<T> type;
 
-		public ReadDbObjectCallback(MongoReader<? super T> reader, Class<T> type) {
+		public ReadDbObjectCallback(EntityReader<? super T, DBObject> reader, Class<T> type) {
 			Assert.notNull(reader);
 			Assert.notNull(type);
 			this.reader = reader;

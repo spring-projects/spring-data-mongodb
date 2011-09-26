@@ -15,10 +15,8 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import static org.junit.Assert.*;
 import static org.hamcrest.Matchers.*;
-
-import java.util.List;
+import static org.junit.Assert.*;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -29,81 +27,81 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
 /**
- * Unit tests for {@link DefaultTypeMapper}.
+ * Unit tests for {@link DefaultMongoTypeMapper}.
  * 
  * @author Oliver Gierke
  */
 public class DefaultTypeMapperUnitTests {
 
-	DefaultTypeMapper mapper;
+	DefaultMongoTypeMapper mapper;
 
 	@Before
 	public void setUp() {
-		mapper = new DefaultTypeMapper();
+		mapper = new DefaultMongoTypeMapper();
 	}
 
 	@Test
 	public void addsFullyQualifiedClassNameUnderDefaultKeyByDefault() {
-		writesTypeToField(DefaultTypeMapper.DEFAULT_TYPE_KEY, new BasicDBObject(), String.class);
+		writesTypeToField(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY, new BasicDBObject(), String.class);
 	}
 
 	@Test
 	public void writesTypeToCustomFieldIfConfigured() {
-		mapper.setTypeKey("_custom");
+		mapper = new DefaultMongoTypeMapper("_custom");
 		writesTypeToField("_custom", new BasicDBObject(), String.class);
 	}
 
 	@Test
 	public void doesNotWriteTypeInformationInCaseKeyIsSetToNull() {
-		mapper.setTypeKey(null);
+		mapper = new DefaultMongoTypeMapper(null);
 		writesTypeToField(null, new BasicDBObject(), String.class);
 	}
 
 	@Test
 	public void readsTypeFromDefaultKeyByDefault() {
-		readsTypeFromField(new BasicDBObject(DefaultTypeMapper.DEFAULT_TYPE_KEY, String.class.getName()), String.class);
+		readsTypeFromField(new BasicDBObject(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY, String.class.getName()), String.class);
 	}
 
 	@Test
 	public void readsTypeFromCustomFieldConfigured() {
-		mapper.setTypeKey("_custom");
+		mapper = new DefaultMongoTypeMapper("_custom");
 		readsTypeFromField(new BasicDBObject("_custom", String.class.getName()), String.class);
 	}
 
 	@Test
 	public void returnsListForBasicDBLists() {
-		readsTypeFromField(new BasicDBList(), List.class);
+		readsTypeFromField(new BasicDBList(), null);
 	}
 
 	@Test
 	public void returnsNullIfNoTypeInfoInDBObject() {
 		readsTypeFromField(new BasicDBObject(), null);
-		readsTypeFromField(new BasicDBObject(DefaultTypeMapper.DEFAULT_TYPE_KEY, ""), null);
+		readsTypeFromField(new BasicDBObject(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY, ""), null);
 	}
 
 	@Test
 	public void returnsNullIfClassCannotBeLoaded() {
-		readsTypeFromField(new BasicDBObject(DefaultTypeMapper.DEFAULT_TYPE_KEY, "fooBar"), null);
+		readsTypeFromField(new BasicDBObject(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY, "fooBar"), null);
 	}
-	
+
 	@Test
 	public void returnsNullIfTypeKeySetToNull() {
-		mapper.setTypeKey(null);
-		readsTypeFromField(new BasicDBObject(DefaultTypeMapper.DEFAULT_TYPE_KEY, String.class), null);
+		mapper = new DefaultMongoTypeMapper(null);
+		readsTypeFromField(new BasicDBObject(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY, String.class), null);
 	}
-	
+
 	@Test
 	public void returnsCorrectTypeKey() {
-		
-		assertThat(mapper.isTypeKey(DefaultTypeMapper.DEFAULT_TYPE_KEY), is(true));
-		
-		mapper.setTypeKey("_custom");
+
+		assertThat(mapper.isTypeKey(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY), is(true));
+
+		mapper = new DefaultMongoTypeMapper("_custom");
 		assertThat(mapper.isTypeKey("_custom"), is(true));
-		assertThat(mapper.isTypeKey(DefaultTypeMapper.DEFAULT_TYPE_KEY), is(false));
-		
-		mapper.setTypeKey(null);
+		assertThat(mapper.isTypeKey(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY), is(false));
+
+		mapper = new DefaultMongoTypeMapper(null);
 		assertThat(mapper.isTypeKey("_custom"), is(false));
-		assertThat(mapper.isTypeKey(DefaultTypeMapper.DEFAULT_TYPE_KEY), is(false));
+		assertThat(mapper.isTypeKey(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY), is(false));
 	}
 
 	private void readsTypeFromField(DBObject dbObject, Class<?> type) {

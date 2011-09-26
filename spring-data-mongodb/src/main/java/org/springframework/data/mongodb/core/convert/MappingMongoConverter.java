@@ -29,11 +29,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import com.mongodb.BasicDBList;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
-import com.mongodb.DBObject;
-import com.mongodb.DBRef;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bson.types.ObjectId;
@@ -44,6 +39,7 @@ import org.springframework.context.expression.BeanFactoryResolver;
 import org.springframework.core.CollectionFactory;
 import org.springframework.core.convert.ConversionException;
 import org.springframework.core.convert.support.ConversionServiceFactory;
+import org.springframework.data.convert.TypeMapper;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.AssociationHandler;
 import org.springframework.data.mapping.PreferredConstructor;
@@ -65,6 +61,12 @@ import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
+import com.mongodb.BasicDBList;
+import com.mongodb.BasicDBObject;
+import com.mongodb.DB;
+import com.mongodb.DBObject;
+import com.mongodb.DBRef;
+
 /**
  * {@link MongoConverter} that uses a {@link MappingContext} to do sophisticated mapping of domain objects to
  * {@link DBObject}.
@@ -73,7 +75,7 @@ import org.springframework.util.StringUtils;
  * @author Jon Brisbin
  */
 public class MappingMongoConverter extends AbstractMongoConverter implements ApplicationContextAware,
-		TypeMapperProvider {
+		TypeKeyAware {
 
 	@SuppressWarnings("rawtypes")
 	private static final TypeInformation<Map> MAP_TYPE_INFORMATION = ClassTypeInformation.from(Map.class);
@@ -87,7 +89,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	protected final MongoDbFactory mongoDbFactory;
 	protected ApplicationContext applicationContext;
 	protected boolean useFieldAccessOnly = true;
-	protected TypeMapper typeMapper = new DefaultTypeMapper();
+	protected MongoTypeMapper typeMapper;
+	
 
 	/**
 	 * Creates a new {@link MappingMongoConverter} given the new {@link MongoDbFactory} and {@link MappingContext}.
@@ -105,30 +108,32 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		this.mongoDbFactory = mongoDbFactory;
 		this.mappingContext = mappingContext;
+		this.typeMapper = new DefaultMongoTypeMapper(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY, mappingContext);
 	}
 
 	/**
-	 * Configures the {@link TypeMapper} to be used to add type information to {@link DBObject}s created by the converter
-	 * and how to lookup type information from {@link DBObject}s when reading them. Uses a {@link DefaultTypeMapper} by
-	 * default. Setting this to {@literal null} will reset the {@link TypeMapper} to the default one.
+	 * Configures the {@link MongoTypeMapper} to be used to add type information to {@link DBObject}s created by the
+	 * converter and how to lookup type information from {@link DBObject}s when reading them. Uses a
+	 * {@link DefaultMongoTypeMapper} by default. Setting this to {@literal null} will reset the {@link TypeMapper} to the
+	 * default one.
 	 * 
 	 * @param typeMapper the typeMapper to set
 	 */
-	public void setTypeMapper(TypeMapper typeMapper) {
-		this.typeMapper = typeMapper == null ? new DefaultTypeMapper() : typeMapper;
+	public void setTypeMapper(MongoTypeMapper typeMapper) {
+		this.typeMapper = typeMapper == null ? new DefaultMongoTypeMapper(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY, mappingContext) : typeMapper;
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.convert.MongoConverter#getTypeMapper()
+	 * @see org.springframework.data.mongodb.core.convert.TypeKeyAware#isTypeKey(java.lang.String)
 	 */
-	public TypeMapper getTypeMapper() {
-		return this.typeMapper;
+	public boolean isTypeKey(String key) {
+		return typeMapper.isTypeKey(key);
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.core.convert.MongoConverter#getMappingContext()
+	 * @see org.springframework.data.convert.EntityConverter#getMappingContext()
 	 */
 	public MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> getMappingContext() {
 		return mappingContext;
@@ -168,7 +173,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			return null;
 		}
 
-		TypeInformation<? extends S> typeToUse = getMoreConcreteTargetType(dbo, type);
+		TypeInformation<? extends S> typeToUse = typeMapper.readType(dbo, type);
 		Class<? extends S> rawType = typeToUse.getType();
 
 		if (conversions.hasCustomReadTarget(dbo.getClass(), rawType)) {
@@ -662,7 +667,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		if (target.isEnum()) {
 			return Enum.valueOf((Class<Enum>) target, value.toString());
 		}
-		
+
 		return target.isAssignableFrom(value.getClass()) ? value : conversionService.convert(value, target);
 	}
 
@@ -733,7 +738,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 							(BasicDBList) sourceValue);
 				}
 
-				TypeInformation<?> toType = findTypeToBeUsed((DBObject) sourceValue);
+				TypeInformation<?> toType = typeMapper.readType((DBObject) sourceValue);
 
 				// It's a complex object, have to read it in
 				if (toType != null) {
@@ -791,7 +796,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		Assert.notNull(dbObject);
 
-		Class<?> mapType = getMoreConcreteTargetType(dbObject, type).getType();
+		Class<?> mapType = typeMapper.readType(dbObject, type).getType();
 		Map<Object, Object> map = CollectionFactory.createMap(mapType, dbObject.keySet().size());
 		Map<String, Object> sourceMap = dbObject.toMap();
 
@@ -820,49 +825,6 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		return map;
-	}
-
-	/**
-	 * Returns the type to be used to convert the DBObject given to. Will return {@literal null} if there's not type hint
-	 * found in the {@link DBObject} or the type hint found can't be converted into a {@link Class} as the type might not
-	 * be available.
-	 * 
-	 * @param dbObject
-	 * @return the type to be used for converting the given {@link DBObject} into or {@literal null} if there's no type
-	 *         found.
-	 */
-	protected TypeInformation<?> findTypeToBeUsed(DBObject dbObject) {
-		return typeMapper.readType(dbObject);
-	}
-
-	private Class<?> getDefaultedTypeToBeUsed(DBObject dbObject) {
-		TypeInformation<?> result = findTypeToBeUsed(dbObject);
-
-		if (result != null) {
-			return result.getType();
-		}
-
-		return dbObject instanceof BasicDBList ? List.class : Map.class;
-	}
-
-	/**
-	 * Inspects the a custom class definition stored inside the given {@link DBObject} and returns that in case it's a
-	 * subtype of the given basic one.
-	 * 
-	 * @param dbObject
-	 * @param basicType
-	 * @return
-	 */
-	@SuppressWarnings("unchecked")
-	private <S> TypeInformation<? extends S> getMoreConcreteTargetType(DBObject dbObject, TypeInformation<S> basicType) {
-
-		Class<?> documentsTargetType = getDefaultedTypeToBeUsed(dbObject);
-		Class<S> rawType = basicType == null ? null : basicType.getType();
-
-		boolean isMoreConcreteCustomType = rawType == null ? true : rawType.isAssignableFrom(documentsTargetType)
-				&& !rawType.equals(documentsTargetType);
-		return isMoreConcreteCustomType ? (TypeInformation<? extends S>) ClassTypeInformation.from(documentsTargetType)
-				: basicType;
 	}
 
 	protected <T> List<?> unwrapList(BasicDBList dbList, TypeInformation<T> targetType) {

@@ -15,17 +15,16 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
+import org.springframework.data.convert.TypeMapper;
+
+import com.mongodb.DBObject;
+
 /**
- * Interfaces for components being able to provide a {@link TypeMapper}.
+ * Combining interface to express Mongo specific {@link TypeMapper} implementations will be {@link TypeKeyAware} as
+ * well.
  * 
  * @author Oliver Gierke
  */
-public interface TypeMapperProvider {
+public interface MongoTypeMapper extends TypeMapper<DBObject>, TypeKeyAware {
 
-	/**
-	 * Returns the {@link TypeMapper}.
-	 * 
-	 * @return the {@link TypeMapper} or {@literal null} if none available.
-	 */
-	TypeMapper getTypeMapper();
 }
