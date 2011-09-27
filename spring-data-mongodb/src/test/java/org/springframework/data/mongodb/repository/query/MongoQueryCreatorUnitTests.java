@@ -130,6 +130,27 @@ public class MongoQueryCreatorUnitTests {
 		assertBindsDistanceToQuery(point, distance, query);
 	}
 
+	@Test
+	public void createsLessThanEqualQueryCorrectly() throws Exception {
+		
+		PartTree tree = new PartTree("findByAgeLessThanEqual", Person.class);
+		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, 18));
+		
+		Query reference = query(where("age").lte(18));
+		assertThat(creator.createQuery().getQueryObject(), is (reference.getQueryObject()));
+	}
+	
+	@Test
+  public void createsGreaterThanEqualQueryCorrectly() throws Exception {
+		
+		PartTree tree = new PartTree("findByAgeGreaterThanEqual", Person.class);
+		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, 18));
+		
+		Query reference = query(where("age").gte(18));
+		assertThat(creator.createQuery().getQueryObject(), is (reference.getQueryObject()));
+	}
+	
+
 	private void assertBindsDistanceToQuery(Point point, Distance distance, Query reference) throws Exception {
 
 		when(converter.convertToMongoType("Dave")).thenReturn("Dave");

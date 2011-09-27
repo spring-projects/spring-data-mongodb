@@ -148,8 +148,12 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Query> {
 		switch (type) {
 		case GREATER_THAN:
 			return criteria.gt(parameters.nextConverted());
+		case GREATER_THAN_EQUAL:
+			return criteria.gte(parameters.nextConverted());
 		case LESS_THAN:
 			return criteria.lt(parameters.nextConverted());
+		case LESS_THAN_EQUAL:
+			return criteria.lte(parameters.nextConverted());
 		case BETWEEN:
 			return criteria.gt(parameters.nextConverted()).lt(parameters.nextConverted());
 		case IS_NOT_NULL:
