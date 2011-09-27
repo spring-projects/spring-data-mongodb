@@ -731,7 +731,35 @@ public class MappingMongoConverterUnitTests {
 		assertThat(list.size(), is(1));
 		assertThat(list.get(0), is((Object) Locale.US.toString()));
 	}
-	
+
+	/**
+	 * @see DATADOC-285
+	 */
+	@Test
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public void testSaveMapWithACollectionAsValue() {
+		
+		Map<String, Object> keyValues = new HashMap<String, Object>();
+		keyValues.put("string", "hello");
+		List<String> list = new ArrayList<String>();
+		list.add("ping");
+		list.add("pong");
+		keyValues.put("list", list);
+
+		DBObject dbObject = new BasicDBObject();
+		converter.write(keyValues, dbObject);
+
+		Map<String, Object> keyValuesFromMongo = converter.read(Map.class, dbObject);
+
+		assertEquals(keyValues.size(), keyValuesFromMongo.size());
+		assertEquals(keyValues.get("string"), keyValuesFromMongo.get("string"));
+		assertTrue(List.class.isAssignableFrom(keyValuesFromMongo.get("list").getClass()));
+		List<String> listFromMongo = (List) keyValuesFromMongo.get("list");
+		assertEquals(list.size(), listFromMongo.size());
+		assertEquals(list.get(0), listFromMongo.get(0));
+		assertEquals(list.get(1), listFromMongo.get(1));
+	}
+
 	class GenericType<T> {
 		T content;
 	}
