@@ -60,7 +60,9 @@ public class QueryMapper {
 	 * @return
 	 */
 	public DBObject getMappedObject(DBObject query, MongoPersistentEntity<?> entity) {
+		
 		String idKey = null;
+		
 		if (null != entity && entity.getIdProperty() != null) {
 			idKey = entity.getIdProperty().getName();
 		} else if (query.containsField("id")) {
@@ -87,7 +89,6 @@ public class QueryMapper {
 						value = getMappedObject((DBObject) value, entity);
 					}
 				} else {
-
 					value = convertId(value);
 				}
 				newKey = "_id";
@@ -100,10 +101,13 @@ public class QueryMapper {
 					newConditions.add(getMappedObject((DBObject) iter.next(), entity));
 				}
 				value = newConditions;
+			} else if (key.equals("$ne")) {
+				value = convertId(value);
 			}
 			
 			newDbo.put(newKey, value);
 		}
+		
 		return newDbo;
 	}
 

@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.core.query;
 
-import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
 import java.math.BigInteger;
@@ -87,6 +87,21 @@ public class QueryMapperUnitTests {
 		DBObject dbObject = new BasicDBObject("id", new BigInteger("1"));
 		DBObject result = mapper.getMappedObject(dbObject, null);
 		assertThat(result.get("_id"), is((Object) "1"));
+	}
+	
+	/**
+	 * @see DATADOC-278
+	 */
+	@Test
+	public void translates$NeCorrectly() {
+		
+		Criteria criteria = Criteria.where("foo").ne(new ObjectId().toString());
+		
+		DBObject result = mapper.getMappedObject(criteria.getCriteriaObject(), context.getPersistentEntity(Sample.class));
+		Object object = result.get("_id");
+		assertThat(object, is(DBObject.class));
+		DBObject dbObject = (DBObject) object;
+		assertThat(dbObject.get("$ne"), is(ObjectId.class));
 	}
 	
 	class Sample {
