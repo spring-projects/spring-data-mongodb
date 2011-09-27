@@ -68,6 +68,8 @@ public class MongoOptionsFactoryBean implements FactoryBean<MongoOptions>, Initi
 	 */
 	private boolean autoConnectRetry = MONGO_OPTIONS.autoConnectRetry;
 
+	private long maxAutoConnectRetryTime = MONGO_OPTIONS.maxAutoConnectRetryTime;
+
 	/**
 	 * This specifies the number of servers to wait for on the write operation, and exception raising behavior.
 	 * 
@@ -184,6 +186,16 @@ public class MongoOptionsFactoryBean implements FactoryBean<MongoOptions>, Initi
 	}
 
 	/**
+	 * The maximum amount of time in millisecons to spend retrying to open connection to the same server. Default is 0,
+	 * which means to use the default 15s if autoConnectRetry is on.
+	 * 
+	 * @param maxAutoConnectRetryTime the maxAutoConnectRetryTime to set
+	 */
+	public void setMaxAutoConnectRetryTime(long maxAutoConnectRetryTime) {
+		this.maxAutoConnectRetryTime = maxAutoConnectRetryTime;
+	}
+
+	/**
 	 * Specifies if the driver is allowed to read from secondaries or slaves. Defaults to false.
 	 * 
 	 * @param slaveOk true if the driver should read from secondaries or slaves.
@@ -200,6 +212,7 @@ public class MongoOptionsFactoryBean implements FactoryBean<MongoOptions>, Initi
 		MONGO_OPTIONS.socketTimeout = socketTimeout;
 		MONGO_OPTIONS.socketKeepAlive = socketKeepAlive;
 		MONGO_OPTIONS.autoConnectRetry = autoConnectRetry;
+		MONGO_OPTIONS.maxAutoConnectRetryTime = maxAutoConnectRetryTime;
 		MONGO_OPTIONS.slaveOk = slaveOk;
 		MONGO_OPTIONS.w = writeNumber;
 		MONGO_OPTIONS.wtimeout = writeTimeout;

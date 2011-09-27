@@ -79,6 +79,7 @@ abstract class ParsingUtils {
 		setPropertyValue(optionsElement, optionsDefBuilder, "socket-timeout", "socketTimeout");
 		setPropertyValue(optionsElement, optionsDefBuilder, "socket-keep-alive", "socketKeepAlive");
 		setPropertyValue(optionsElement, optionsDefBuilder, "auto-connect-retry", "autoConnectRetry");
+		setPropertyValue(optionsElement, optionsDefBuilder, "max-auto-connect-retry-time", "maxAutoConnectRetryTime");
 		setPropertyValue(optionsElement, optionsDefBuilder, "write-number", "writeNumber");
 		setPropertyValue(optionsElement, optionsDefBuilder, "write-timeout", "writeTimeout");
 		setPropertyValue(optionsElement, optionsDefBuilder, "write-fsync", "writeFsync");

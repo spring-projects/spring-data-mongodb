@@ -26,6 +26,8 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.xml.XmlBeanFactory;
 import org.springframework.core.io.ClassPathResource;
 
+import com.mongodb.Mongo;
+
 /**
  * Integration tests for {@link MongoDbFactoryParser}.
  *
@@ -46,5 +48,16 @@ public class MongoDbFactoryParserIntegrationTests {
 	public void createsDbFactoryBean() {
 		XmlBeanFactory factory = new XmlBeanFactory(new ClassPathResource("namespace/db-factory-bean.xml"));
 		factory.getBean("first");
+	}
+	
+	/**
+	 * @see DATADOC-280
+	 */
+	@Test
+	public void parsesMaxAutoConnectRetryTimeCorrectly() {
+		
+		XmlBeanFactory factory = new XmlBeanFactory(new ClassPathResource("namespace/db-factory-bean.xml"));
+		Mongo mongo = factory.getBean(Mongo.class);
+		assertThat(mongo.getMongoOptions().maxAutoConnectRetryTime, is(27L));
 	}
 }

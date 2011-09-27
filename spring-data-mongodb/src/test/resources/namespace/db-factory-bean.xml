@@ -5,6 +5,9 @@
 	xsi:schemaLocation="http://www.springframework.org/schema/data/mongo http://www.springframework.org/schema/data/mongo/spring-mongo.xsd
 		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
 
-	<mongo:db-factory id="first" write-concern="SAFE"/>
+	<mongo:db-factory id="first" write-concern="SAFE" mongo-ref="mongo" />
 
+	<mongo:mongo id="mongo">
+		<mongo:options max-auto-connect-retry-time="27" />
+	</mongo:mongo>
 </beans>

@@ -364,6 +364,13 @@ This controls whether or not on a connect, the system retries automatically.  De
 				]]></xsd:documentation>
 			</xsd:annotation>
 		</xsd:attribute>
+		<xsd:attribute name="max-auto-connect-retry-time" type="xsd:long">
+			<xsd:annotation>
+				<xsd:documentation><![CDATA[
+The maximum amount of time in millisecons to spend retrying to open connection to the same server. Default is 0, which means to use the default 15s if autoConnectRetry is on. 
+				]]></xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
 		<xsd:attribute name="write-number" type="xsd:string">
 			<xsd:annotation>
 				<xsd:documentation><![CDATA[
