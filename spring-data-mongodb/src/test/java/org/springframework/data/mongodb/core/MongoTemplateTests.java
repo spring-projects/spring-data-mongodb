@@ -23,10 +23,15 @@ import static org.springframework.data.mongodb.core.query.Update.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 
 import org.bson.types.ObjectId;
+import org.hamcrest.Matchers;
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.ISODateTimeFormat;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -35,10 +40,13 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.convert.converter.Converter;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.core.convert.CustomConversions;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.index.Index.Duplicates;
@@ -81,16 +89,22 @@ public class MongoTemplateTests {
 	@SuppressWarnings("unchecked")
 	public void setMongo(Mongo mongo) throws Exception {
 
+		CustomConversions conversions = new CustomConversions(Arrays.asList(DateToDateTimeConverter.INSTANCE,
+				DateTimeToDateConverter.INSTANCE));
+		
 		MongoMappingContext mappingContext = new MongoMappingContext();
 		mappingContext.setInitialEntitySet(new HashSet<Class<?>>(Arrays.asList(PersonWith_idPropertyOfTypeObjectId.class,
 				PersonWith_idPropertyOfTypeString.class, PersonWithIdPropertyOfTypeObjectId.class,
 				PersonWithIdPropertyOfTypeString.class, PersonWithIdPropertyOfTypeInteger.class,
 				PersonWithIdPropertyOfPrimitiveInt.class, PersonWithIdPropertyOfTypeLong.class,
 				PersonWithIdPropertyOfPrimitiveLong.class)));
+		mappingContext.setSimpleTypeHolder(conversions.getSimpleTypeHolder());
 		mappingContext.afterPropertiesSet();
 
 		MappingMongoConverter mappingConverter = new MappingMongoConverter(factory, mappingContext);
+		mappingConverter.setCustomConversions(conversions);
 		mappingConverter.afterPropertiesSet();
+		
 		this.mappingTemplate = new MongoTemplate(factory, mappingConverter);
 	}
 
@@ -114,6 +128,7 @@ public class MongoTemplateTests {
 		template.dropCollection(template.getCollectionName(PersonWithIdPropertyOfPrimitiveInt.class));
 		template.dropCollection(template.getCollectionName(PersonWithIdPropertyOfTypeLong.class));
 		template.dropCollection(template.getCollectionName(PersonWithIdPropertyOfPrimitiveLong.class));
+		template.dropCollection(template.getCollectionName(TestClass.class));
 	}
 
 	@Test
@@ -888,5 +903,50 @@ public class MongoTemplateTests {
 	@Test(expected = IllegalArgumentException.class)
 	public void countRejectsNullCollectionName() {
 		template.count(null, (String) null);
+	}
+
+	@Test
+	public void returnsEntityWhenQueryingForDateTime() {
+		
+		DateTime dateTime = new DateTime(2011, 3, 3, 12, 0, 0, 0);
+		TestClass testClass = new TestClass(dateTime);
+		mappingTemplate.save(testClass);
+		
+		List<TestClass> testClassList = mappingTemplate.find(new Query(Criteria.where("myDate").is(dateTime.toDate())),
+				TestClass.class);
+		assertThat(testClassList.size(), is(1));
+		assertThat(testClassList.get(0).getMyDate(), is(testClass.getMyDate()));
+	}
+	
+	public class TestClass {
+
+		private DateTime myDate;
+
+		@PersistenceConstructor
+		public TestClass(DateTime date) {
+			this.myDate = date;
+		}
+
+		public DateTime getMyDate() {
+			return myDate;
+		}
+	}
+
+	static enum DateTimeToDateConverter implements Converter<DateTime, Date> {
+
+		INSTANCE;
+
+		public Date convert(DateTime source) {
+			return source == null ? null : source.toDate();
+		}
+	}
+
+	static enum DateToDateTimeConverter implements Converter<Date, DateTime> {
+		
+		INSTANCE;
+
+		public DateTime convert(Date source) {
+			return source == null ? null : new DateTime(source.getTime());
+		}
 	}
 }
