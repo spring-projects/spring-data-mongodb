@@ -50,6 +50,7 @@ import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mapping.model.ParameterValueProvider;
 import org.springframework.data.mapping.model.SpELAwareParameterValueProvider;
 import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.core.QueryMapper;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.util.ClassTypeInformation;
@@ -87,6 +88,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	protected final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 	protected final SpelExpressionParser spelExpressionParser = new SpelExpressionParser();
 	protected final MongoDbFactory mongoDbFactory;
+	protected final QueryMapper idMapper;
 	protected ApplicationContext applicationContext;
 	protected boolean useFieldAccessOnly = true;
 	protected MongoTypeMapper typeMapper;
@@ -109,6 +111,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		this.mongoDbFactory = mongoDbFactory;
 		this.mappingContext = mappingContext;
 		this.typeMapper = new DefaultMongoTypeMapper(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY, mappingContext);
+		this.idMapper = new QueryMapper(conversionService);
 	}
 
 	/**
@@ -672,6 +675,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	}
 
 	protected DBRef createDBRef(Object target, org.springframework.data.mongodb.core.mapping.DBRef dbref) {
+		
 		MongoPersistentEntity<?> targetEntity = mappingContext.getPersistentEntity(target.getClass());
 		if (null == targetEntity || null == targetEntity.getIdProperty()) {
 			return null;
@@ -680,6 +684,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		MongoPersistentProperty idProperty = targetEntity.getIdProperty();
 		Object id = null;
 		BeanWrapper<MongoPersistentEntity<Object>, Object> wrapper = BeanWrapper.create(target, conversionService);
+		
 		try {
 			id = wrapper.getProperty(idProperty, Object.class, useFieldAccessOnly);
 			if (null == id) {
@@ -698,7 +703,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		String dbname = dbref.db();
 		DB db = StringUtils.hasText(dbname) ? mongoDbFactory.getDb(dbname) : mongoDbFactory.getDb();
-		return new DBRef(db, collection, id);
+		
+		return new DBRef(db, collection, idMapper.convertId(id));
 	}
 
 	@SuppressWarnings("unchecked")

@@ -23,6 +23,7 @@ import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.core.query.Update.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,11 +35,13 @@ import com.mongodb.Mongo;
 import com.mongodb.MongoException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.dao.DataAccessException;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.MongoCollectionUtils;
 import org.springframework.data.mongodb.core.CollectionCallback;
 import org.springframework.data.mongodb.core.MongoDbUtils;
@@ -459,16 +462,56 @@ public class MappingTests {
 		assertNotNull(p2.getPersonPojoLongId());
 		assertEquals(12L, p2.getPersonPojoLongId().getId());
 	}
+	
+	/**
+	 * @see DATADOC-275
+	 */
+	@Test
+	public void readsAndWritesDBRefsCorrectly() {
 
-//	@Test
-//	public void testThroughput() {
-//		long start = System.currentTimeMillis();
-//		for (int i = 0; i < 10000; i++) {
-//			PersonPojo p = new PersonPojo(i, "throughput test", "");
-//			template.insert(p);
-//		}
-//		double elapsed = System.currentTimeMillis() - start;
-//		System.out.println("time: " + (elapsed / 1000) + "s");
-//	}
-
+		template.dropCollection(Item.class);
+		template.dropCollection(Container.class);
+		
+		Item item = new Item();
+		Item items = new Item();
+		template.insert(item);
+		template.insert(items);
+		
+		Container container = new Container();
+		container.item = item;
+		container.items = Arrays.asList(items);
+		
+		template.insert(container);
+		
+		Container result = template.findOne(query(where("id").is(container.id)), Container.class);
+		assertThat(result.item.id, is(item.id));
+		assertThat(result.items.size(), is(1));
+		assertThat(result.items.get(0).id, is(items.id));
+	}
+	
+	
+	class Container {
+		
+		@Id
+		final String id;
+		
+		public Container() {
+			id = new ObjectId().toString();
+		}
+		
+		@DBRef
+		Item item;
+		@DBRef
+		List<Item> items;
+	}
+	
+	class Item {
+		
+		@Id
+		final String id;
+		
+		public Item() {
+			this.id = new ObjectId().toString();
+		}
+	}
 }
