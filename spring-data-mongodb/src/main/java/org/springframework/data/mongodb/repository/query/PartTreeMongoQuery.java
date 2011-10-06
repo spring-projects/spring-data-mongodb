@@ -15,7 +15,9 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
+import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.repository.query.QueryMethod;
 import org.springframework.data.repository.query.RepositoryQuery;
@@ -30,6 +32,7 @@ public class PartTreeMongoQuery extends AbstractMongoQuery {
 
 	private final PartTree tree;
 	private final boolean isGeoNearQuery;
+	private final MappingContext<?, MongoPersistentProperty> context;
 
 	/**
 	 * Creates a new {@link PartTreeMongoQuery} from the given {@link QueryMethod} and {@link MongoTemplate}.
@@ -42,6 +45,7 @@ public class PartTreeMongoQuery extends AbstractMongoQuery {
 		super(method, template);
 		this.tree = new PartTree(method.getName(), method.getEntityInformation().getJavaType());
 		this.isGeoNearQuery = method.isGeoNearQuery();
+		this.context = template.getConverter().getMappingContext();
 	}
 
 	/**
@@ -61,7 +65,7 @@ public class PartTreeMongoQuery extends AbstractMongoQuery {
 	@Override
 	protected Query createQuery(ConvertingParameterAccessor accessor) {
 
-		MongoQueryCreator creator = new MongoQueryCreator(tree, accessor, isGeoNearQuery);
+		MongoQueryCreator creator = new MongoQueryCreator(tree, accessor, context, isGeoNearQuery);
 		return creator.createQuery();
 	}
 }

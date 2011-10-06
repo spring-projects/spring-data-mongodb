@@ -144,7 +144,7 @@ public class MappingTests {
 
 	@Test
 	public void testPersonMapProperty() {
-		PersonMapProperty p = new PersonMapProperty(1234567, "Map", "Property");
+		PersonMapProperty p = new PersonMapProperty(1234567, "Map", "PropertyPath");
 		Map<String, AccountPojo> accounts = new HashMap<String, AccountPojo>();
 
 		AccountPojo checking = new AccountPojo("checking", 1000.0f);

@@ -22,19 +22,22 @@ import java.util.Iterator;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.mapping.context.MappingContext;
+import org.springframework.data.mapping.context.PersistentPropertyPath;
 import org.springframework.data.mongodb.core.geo.Box;
 import org.springframework.data.mongodb.core.geo.Circle;
 import org.springframework.data.mongodb.core.geo.Distance;
 import org.springframework.data.mongodb.core.geo.Point;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.query.ConvertingParameterAccessor.PotentiallyConvertingIterator;
-import org.springframework.data.repository.query.ParametersParameterAccessor;
 import org.springframework.data.repository.query.parser.AbstractQueryCreator;
 import org.springframework.data.repository.query.parser.Part;
 import org.springframework.data.repository.query.parser.Part.Type;
 import org.springframework.data.repository.query.parser.PartTree;
+import org.springframework.util.Assert;
 
 /**
  * Custom query creator to create Mongo criterias.
@@ -47,24 +50,41 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Query> {
 	private final MongoParameterAccessor accessor;
 	private final boolean isGeoNearQuery;
 
-	public MongoQueryCreator(PartTree tree, ConvertingParameterAccessor accessor) {
-		this(tree, accessor, false);
-	}
-	
+	private final MappingContext<?, MongoPersistentProperty> context;
+
 	/**
-	 * Creates a new {@link MongoQueryCreator} from the given {@link PartTree} and {@link ParametersParameterAccessor}.
+	 * Creates a new {@link MongoQueryCreator} from the given {@link PartTree}, {@link ConvertingParameterAccessor} and
+	 * {@link MappingContext}.
 	 * 
 	 * @param tree
 	 * @param accessor
+	 * @param context
+	 */
+	public MongoQueryCreator(PartTree tree, ConvertingParameterAccessor accessor,
+			MappingContext<?, MongoPersistentProperty> context) {
+		this(tree, accessor, context, false);
+	}
+
+	/**
+	 * Creates a new {@link MongoQueryCreator} from the given {@link PartTree}, {@link ConvertingParameterAccessor} and
+	 * {@link MappingContext}.
+	 * 
+	 * @param tree
+	 * @param accessor
+	 * @param context
 	 * @param isGeoNearQuery
 	 */
-	public MongoQueryCreator(PartTree tree, ConvertingParameterAccessor accessor, boolean isGeoNearQuery) {
+	public MongoQueryCreator(PartTree tree, ConvertingParameterAccessor accessor,
+			MappingContext<?, MongoPersistentProperty> context, boolean isGeoNearQuery) {
 
 		super(tree, accessor);
+
+		Assert.notNull(context);
+
 		this.accessor = accessor;
 		this.isGeoNearQuery = isGeoNearQuery;
+		this.context = context;
 	}
-	
 
 	/*
 	* (non-Javadoc)
@@ -72,12 +92,14 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Query> {
 	*/
 	@Override
 	protected Query create(Part part, Iterator<Object> iterator) {
-		
+
 		if (isGeoNearQuery && part.getType().equals(Type.NEAR)) {
 			return null;
 		}
 
-		Criteria criteria = from(part.getType(), where(part.getProperty().toDotPath()),
+		PersistentPropertyPath<MongoPersistentProperty> path = context.getPersistentPropertyPath(part.getProperty());
+		Criteria criteria = from(part.getType(),
+				where(path.toDotPath(MongoPersistentProperty.PropertyToFieldNameConverter.INSTANCE)),
 				(PotentiallyConvertingIterator) iterator);
 
 		return new Query(criteria);
@@ -89,12 +111,15 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Query> {
 	*/
 	@Override
 	protected Query and(Part part, Query base, Iterator<Object> iterator) {
-		
+
 		if (base == null) {
 			return create(part, iterator);
 		}
 
-		Criteria criteria = from(part.getType(), where(part.getProperty().toDotPath()),
+		PersistentPropertyPath<MongoPersistentProperty> path2 = context.getPersistentPropertyPath(part.getProperty());
+
+		Criteria criteria = from(part.getType(),
+				where(path2.toDotPath(MongoPersistentProperty.PropertyToFieldNameConverter.INSTANCE)),
 				(PotentiallyConvertingIterator) iterator);
 		return base.addCriteria(criteria);
 	}
@@ -121,7 +146,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Query> {
 	*/
 	@Override
 	protected Query complete(Query query, Sort sort) {
-		
+
 		if (query == null) {
 			return null;
 		}

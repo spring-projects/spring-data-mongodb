@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core.mapping;
 
+import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.mapping.PersistentProperty;
 
 /**
@@ -53,4 +54,22 @@ public interface MongoPersistentProperty extends PersistentProperty<MongoPersist
 	 * @return
 	 */
 	DBRef getDBRef();
+
+	/**
+	 * Simple {@link Converter} implementation to transform a {@link MongoPersistentProperty} into its field name.
+	 * 
+	 * @author Oliver Gierke
+	 */
+	public enum PropertyToFieldNameConverter implements Converter<MongoPersistentProperty, String> {
+
+		INSTANCE;
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
+		 */
+		public String convert(MongoPersistentProperty source) {
+			return source.getFieldName();
+		}
+	}
 }
