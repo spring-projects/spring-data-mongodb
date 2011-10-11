@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 by the original author(s).
+ * Copyright 2011 by the original author(s).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,9 @@ import org.junit.Test;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.data.mongodb.repository.Person;
 
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
+
 /**
  * Unit tests for {@link AbstractMongoEventListener}.
  *
@@ -34,7 +37,7 @@ public class AbstractMongoEventListenerUnitTest {
 		MongoMappingEvent<Person> event = new BeforeConvertEvent<Person>(new Person("Dave", "Matthews"));
 		SampleEventListener listener = new SampleEventListener();
 		listener.onApplicationEvent(event);
-		assertThat(listener.invoked, is(true));
+		assertThat(listener.invokedOnBeforeConvert, is(true));
 	}
 	
 	@Test
@@ -47,21 +50,38 @@ public class AbstractMongoEventListenerUnitTest {
 		context.addApplicationListener(listener);
 		
 		context.publishEvent(new BeforeConvertEvent<Person>(new Person("Dave", "Matthews")));
-		assertThat(listener.invoked, is(true));
+		assertThat(listener.invokedOnBeforeConvert, is(true));
 		
-		listener.invoked = false;
+		listener.invokedOnBeforeConvert = false;
 		context.publishEvent(new BeforeConvertEvent<String>("Test"));
-		assertThat(listener.invoked, is(false));
-		
+		assertThat(listener.invokedOnBeforeConvert, is(false));
 	}
+	
+	/**
+	 * @see DATADOC-289
+	 */
+	@Test
+	public void afterLoadEffectGetsHandledCorrectly() {
+		
+		SampleEventListener listener = new SampleEventListener();
+		listener.onApplicationEvent(new AfterLoadEvent(new BasicDBObject()));
+		assertThat(listener.invokedOnAfterLoad, is(true));
+	}
+	
 
 	class SampleEventListener extends AbstractMongoEventListener<Person> {
 		
-		boolean invoked;
+		boolean invokedOnBeforeConvert;
+		boolean invokedOnAfterLoad;
 		
 		@Override
 		public void onBeforeConvert(Person source) {
-			invoked = true;
+			invokedOnBeforeConvert = true;
+		}
+		
+		@Override
+		public void onAfterLoad(DBObject dbo) {
+			invokedOnAfterLoad = true;
 		}
 	}
 }

@@ -16,10 +16,12 @@
 
 package org.springframework.data.mongodb.core.mapping.event;
 
+import com.mongodb.DBObject;
+
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
  */
-public class AfterLoadEvent<DBObject> extends MongoMappingEvent<DBObject> {
+public class AfterLoadEvent extends MongoMappingEvent<DBObject> {
 
 	private static final long serialVersionUID = 1L;
 

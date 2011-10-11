@@ -25,7 +25,7 @@ public class SimpleMappingEventListener extends AbstractMongoEventListener<Objec
 	public final ArrayList<BeforeConvertEvent<Object>> onBeforeConvertEvents = new ArrayList<BeforeConvertEvent<Object>>();
 	public final ArrayList<BeforeSaveEvent<Object>> onBeforeSaveEvents = new ArrayList<BeforeSaveEvent<Object>>();
 	public final ArrayList<AfterSaveEvent<Object>> onAfterSaveEvents = new ArrayList<AfterSaveEvent<Object>>();
-	public final ArrayList<AfterLoadEvent<Object>> onAfterLoadEvents = new ArrayList<AfterLoadEvent<Object>>();
+	public final ArrayList<AfterLoadEvent> onAfterLoadEvents = new ArrayList<AfterLoadEvent>();
 	public final ArrayList<AfterConvertEvent<Object>> onAfterConvertEvents = new ArrayList<AfterConvertEvent<Object>>();
 	
 	@Override
@@ -45,7 +45,7 @@ public class SimpleMappingEventListener extends AbstractMongoEventListener<Objec
 
 	@Override
 	public void onAfterLoad(DBObject dbo) {
-		onAfterLoadEvents.add(new AfterLoadEvent<Object>(dbo));
+		onAfterLoadEvents.add(new AfterLoadEvent(dbo));
 	}
 
 	@Override

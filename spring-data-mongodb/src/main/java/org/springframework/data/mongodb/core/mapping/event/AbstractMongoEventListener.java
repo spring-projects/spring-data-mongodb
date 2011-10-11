@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 by the original author(s).
+ * Copyright 2011 by the original author(s).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,9 +27,9 @@ import org.springframework.core.GenericTypeResolver;
  * @author Jon Brisbin
  * @author Oliver Gierke
  */
-public abstract class AbstractMongoEventListener<E> implements ApplicationListener<MongoMappingEvent<E>> {
+public abstract class AbstractMongoEventListener<E> implements ApplicationListener<MongoMappingEvent<?>> {
 
-	protected final Log log = LogFactory.getLog(getClass());
+	protected final Log LOG = LogFactory.getLog(getClass());
 	private final Class<?> domainClass;
 	
 	/**
@@ -43,54 +43,59 @@ public abstract class AbstractMongoEventListener<E> implements ApplicationListen
 	 * (non-Javadoc)
 	 * @see org.springframework.context.ApplicationListener#onApplicationEvent(org.springframework.context.ApplicationEvent)
 	 */
-	public void onApplicationEvent(MongoMappingEvent<E> event) {
+	@SuppressWarnings("unchecked")
+	public void onApplicationEvent(MongoMappingEvent<?> event) {
 		
-		E source = event.getSource();
+		Object source = event.getSource();
 		
+		// Invoke domain type independent events
+		if (event instanceof AfterLoadEvent) {
+			onAfterLoad(((AfterLoadEvent) event).getSource());
+		}
+		
+		// Check for matching domain type and invoke callbacks
 		if (source != null && !domainClass.isAssignableFrom(source.getClass())) {
 			return;
 		}
 
 		if (event instanceof BeforeConvertEvent) {
-			onBeforeConvert(source);
+			onBeforeConvert((E) source);
 		} else if (event instanceof BeforeSaveEvent) {
-			onBeforeSave(source, event.getDBObject());
+			onBeforeSave((E) source, event.getDBObject());
 		} else if (event instanceof AfterSaveEvent) {
-			onAfterSave(source, event.getDBObject());
-		} else if (event instanceof AfterLoadEvent) {
-			onAfterLoad((DBObject) event.getSource());
+			onAfterSave((E) source, event.getDBObject());
 		} else if (event instanceof AfterConvertEvent) {
-			onAfterConvert(event.getDBObject(), source);
+			onAfterConvert(event.getDBObject(), (E) source);
 		}
 	}
 
 	public void onBeforeConvert(E source) {
-		if (log.isDebugEnabled()) {
-			log.debug("onBeforeConvert(" + source + ")");
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("onBeforeConvert(" + source + ")");
 		}
 	}
 
 	public void onBeforeSave(E source, DBObject dbo) {
-		if (log.isDebugEnabled()) {
-			log.debug("onBeforeSave(" + source + ", " + dbo + ")");
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("onBeforeSave(" + source + ", " + dbo + ")");
 		}
 	}
 
 	public void onAfterSave(E source, DBObject dbo) {
-		if (log.isDebugEnabled()) {
-			log.debug("onAfterSave(" + source + ", " + dbo + ")");
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("onAfterSave(" + source + ", " + dbo + ")");
 		}
 	}
 
 	public void onAfterLoad(DBObject dbo) {
-		if (log.isDebugEnabled()) {
-			log.debug("onAfterLoad(" + dbo + ")");
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("onAfterLoad(" + dbo + ")");
 		}
 	}
 
 	public void onAfterConvert(DBObject dbo, E source) {
-		if (log.isDebugEnabled()) {
-			log.debug("onAfterConvert(" + dbo + "," + source + ")");
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("onAfterConvert(" + dbo + "," + source + ")");
 		}
 	}
 }
