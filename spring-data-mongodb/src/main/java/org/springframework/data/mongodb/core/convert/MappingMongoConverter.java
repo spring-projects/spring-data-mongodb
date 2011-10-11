@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 by the original author(s).
+ * Copyright 2011 by the original author(s).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.data.mongodb.core.convert;
 
 import java.lang.reflect.Array;
@@ -603,11 +602,12 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 */
 	protected void addCustomTypeKeyIfNecessary(TypeInformation<?> type, Object value, DBObject dbObject) {
 
-		if (type == null || type.getActualType() == null) {
+		if (type == null) {
 			return;
 		}
-
-		Class<?> reference = type.getActualType().getType();
+		
+		TypeInformation<?> actualType = type.getActualType();
+		Class<?> reference = actualType == null ? Object.class : actualType.getType();
 
 		boolean notTheSameClass = !value.getClass().equals(reference);
 		if (notTheSameClass) {

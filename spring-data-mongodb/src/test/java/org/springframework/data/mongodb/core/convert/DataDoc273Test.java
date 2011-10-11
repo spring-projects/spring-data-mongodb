@@ -1,0 +1,115 @@
+/*
+ * Copyright (c) 2011 by the original author(s).
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.springframework.data.mongodb.core.convert;
+
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
+
+/**
+ * Unit test to reproduce DATADOC-273.
+ *
+ * @author Harlan Iverson
+ */
+public class DataDoc273Test {
+
+  MappingMongoConverter converter;
+  
+  @Before
+  public void setupMongoConv() {
+  	
+		MongoMappingContext mappingContext = new MongoMappingContext();
+		mappingContext.afterPropertiesSet();
+    
+    MongoDbFactory factory = mock(MongoDbFactory.class);
+
+		converter = new MappingMongoConverter(factory, mappingContext);
+		converter.afterPropertiesSet();
+  }
+ 
+
+  /**
+   * @see DATADOC-273
+   */
+  @Test
+  public void convertMapOfThings() {
+  	
+    Plane plane = new Plane("Boeing", 4);
+    Train train = new Train("Santa Fe", 200);
+    Automobile automobile = new Automobile("Tesla", "Roadster", 2);
+    
+    Map<String, Object> mapOfThings = new HashMap<String, Object>();
+    mapOfThings.put("plane", plane);
+    mapOfThings.put("train", train);
+    mapOfThings.put("automobile", automobile);
+    
+    DBObject result = new BasicDBObject();
+    converter.write(mapOfThings, result);
+    
+    @SuppressWarnings("unchecked")
+		Map<String, Object> mapOfThings2 = converter.read(Map.class, result);
+    
+    assertTrue(mapOfThings2.get("plane") instanceof Plane);
+    assertTrue(mapOfThings2.get("train") instanceof Train);
+    assertTrue(mapOfThings2.get("automobile") instanceof Automobile);
+  }
+  
+  class Plane {
+  	
+  	String maker;
+  	int numberOfPropellers;
+  	
+  	public Plane(String maker, int numberOfPropellers) {
+  		this.maker = maker;
+  		this.numberOfPropellers = numberOfPropellers;
+  	}
+  }
+  
+  class Train {
+  	
+  	String railLine;
+  	int numberOfCars;
+  	
+  	public Train(String railLine, int numberOfCars) {
+  		this.railLine = railLine;
+  		this.numberOfCars = numberOfCars;
+  	}
+  }
+  
+  class Automobile {
+  	
+  	String make;
+  	String model;
+  	int numberOfDoors;
+  	
+  	public Automobile(String make, String model, int numberOfDoors) {
+  		this.make = make;
+  		this.model = model;
+  		this.numberOfDoors = numberOfDoors;
+  	}
+  }
+}
