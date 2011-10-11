@@ -19,15 +19,15 @@ import static org.springframework.data.mongodb.core.query.Criteria.*;
 
 import java.util.Collection;
 import java.util.Iterator;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.context.PersistentPropertyPath;
-import org.springframework.data.mongodb.core.geo.Box;
-import org.springframework.data.mongodb.core.geo.Circle;
 import org.springframework.data.mongodb.core.geo.Distance;
 import org.springframework.data.mongodb.core.geo.Point;
+import org.springframework.data.mongodb.core.geo.Shape;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
@@ -211,12 +211,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Query> {
 
 		case WITHIN:
 			Object parameter = parameters.next();
-			if (parameter instanceof Box) {
-				return criteria.withinBox((Box) parameter);
-			} else if (parameter instanceof Circle) {
-				return criteria.withinCenter((Circle) parameter);
-			}
-			throw new IllegalArgumentException("Parameter has to be either Box or Circle!");
+			return criteria.within((Shape) parameter);
 		case SIMPLE_PROPERTY:
 			return criteria.is(parameters.nextConverted());
 		case NEGATING_SIMPLE_PROPERTY:

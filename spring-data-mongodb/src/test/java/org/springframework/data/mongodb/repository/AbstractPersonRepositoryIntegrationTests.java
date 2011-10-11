@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +39,7 @@ import org.springframework.data.mongodb.core.geo.Distance;
 import org.springframework.data.mongodb.core.geo.GeoResults;
 import org.springframework.data.mongodb.core.geo.Metrics;
 import org.springframework.data.mongodb.core.geo.Point;
+import org.springframework.data.mongodb.core.geo.Polygon;
 import org.springframework.data.mongodb.repository.Person.Sex;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -53,7 +55,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	protected PersonRepository repository;
 	Person dave, oliver, carter, boyd, stefan, leroi, alicia;
 	QPerson person;
-	
+
 	List<Person> all;
 
 	@Before
@@ -67,7 +69,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		boyd = new Person("Boyd", "Tinsley", 45);
 		stefan = new Person("Stefan", "Lessard", 34);
 		leroi = new Person("Leroi", "Moore", 41);
-		
+
 		alicia = new Person("Alicia", "Keys", 30, Sex.FEMALE);
 
 		person = new QPerson("person");
@@ -147,17 +149,19 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	@Test
 	public void executesPagedFinderCorrectly() throws Exception {
 
-		Page<Person> page = repository.findByLastnameLike("*a*", new PageRequest(0, 2, Direction.ASC, "lastname", "firstname"));
+		Page<Person> page = repository.findByLastnameLike("*a*", new PageRequest(0, 2, Direction.ASC, "lastname",
+				"firstname"));
 		assertThat(page.isFirstPage(), is(true));
 		assertThat(page.isLastPage(), is(false));
 		assertThat(page.getNumberOfElements(), is(2));
 		assertThat(page, hasItems(carter, stefan));
 	}
-	
+
 	@Test
 	public void executesPagedFinderWithAnnotatedQueryCorrectly() throws Exception {
 
-		Page<Person> page = repository.findByLastnameLikeWithPageable(".*a.*", new PageRequest(0, 2, Direction.ASC, "lastname", "firstname"));
+		Page<Person> page = repository.findByLastnameLikeWithPageable(".*a.*", new PageRequest(0, 2, Direction.ASC,
+				"lastname", "firstname"));
 		assertThat(page.isFirstPage(), is(true));
 		assertThat(page.isLastPage(), is(false));
 		assertThat(page.getNumberOfElements(), is(2));
@@ -262,6 +266,24 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	}
 
 	@Test
+	@Ignore
+	public void findsPeopleByLocationWithinPolygon() {
+		
+		Point point = new Point(-73.99171, 40.738868);
+		dave.setLocation(point);
+		repository.save(dave);
+
+		Point first = new Point(-78.99171, 35.738868);
+		Point second = new Point(-78.99171, 45.738868);
+		Point third = new Point(-68.99171, 45.738868);
+		Point fourth = new Point(-68.99171, 35.738868);
+
+		List<Person> result = repository.findByLocationWithin(new Polygon(first, second, third, fourth));
+		assertThat(result.size(), is(1));
+		assertThat(result, hasItem(dave));
+	}
+
+	@Test
 	public void findsPagedPeopleByPredicate() throws Exception {
 
 		Page<Person> page = repository.findAll(person.lastname.contains("a"), new PageRequest(0, 2, Direction.ASC,
@@ -277,7 +299,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	 */
 	@Test
 	public void findsPeopleBySexCorrectly() {
-		
+
 		List<Person> females = repository.findBySex(Sex.FEMALE);
 		assertThat(females.size(), is(1));
 		assertThat(females.get(0), is(alicia));
@@ -300,12 +322,12 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 
 	@Test(expected = DuplicateKeyException.class)
 	public void rejectsDuplicateEmailAddressOnSave() {
-		
+
 		assertThat(dave.getEmail(), is("dave@dmband.com"));
-		
+
 		Person daveSyer = new Person("Dave", "Syer");
 		assertThat(daveSyer.getEmail(), is("dave@dmband.com"));
-		
+
 		repository.save(daveSyer);
 	}
 
@@ -319,7 +341,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result.get(0), is(dave));
 		assertThat(result.get(1), is(oliver));
 	}
-	
+
 	/**
 	 * @see DATADOC-236
 	 */
@@ -333,16 +355,16 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result.get(3), is(dave));
 		assertThat(result.get(4), is(leroi));
 	}
-	
-	
+
 	@Test
 	public void executesGeoNearQueryForResultsCorrectly() {
-		
+
 		Point point = new Point(-73.99171, 40.738868);
 		dave.setLocation(point);
 		repository.save(dave);
-		
-		GeoResults<Person> results = repository.findByLocationNear(new Point(-73.99, 40.73), new Distance(2000, Metrics.KILOMETERS));
+
+		GeoResults<Person> results = repository.findByLocationNear(new Point(-73.99, 40.73), new Distance(2000,
+				Metrics.KILOMETERS));
 		assertThat(results.getContent().isEmpty(), is(false));
 	}
 }

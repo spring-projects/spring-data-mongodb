@@ -20,15 +20,15 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
-
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
-import org.springframework.data.mongodb.core.geo.Box;
 import org.springframework.data.mongodb.core.geo.Circle;
 import org.springframework.data.mongodb.core.geo.Point;
+import org.springframework.data.mongodb.core.geo.Shape;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
+
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
 
 public class Criteria implements CriteriaDefinition {
 
@@ -283,47 +283,21 @@ public class Criteria implements CriteriaDefinition {
 	}
 
 	/**
-	 * Creates a geospatial criterion using a $within $center operation
-	 * 
-	 * @param circle must not be {@literal null}
-	 * @return
-	 */
-	public Criteria withinCenter(Circle circle) {
-		Assert.notNull(circle);
-		List<Object> list = new ArrayList<Object>();
-		list.add(circle.getCenter().asList());
-		list.add(circle.getRadius());
-		criteria.put("$within", new BasicDBObject("$center", list));
-		return this;
-	}
-
-	/**
 	 * Creates a geospatial criterion using a $within $center operation. This is only available for Mongo 1.7 and higher.
 	 * 
 	 * @param circle must not be {@literal null}
 	 * @return
 	 */
-	public Criteria withinCenterSphere(Circle circle) {
+	public Criteria withinSphere(Circle circle) {
 		Assert.notNull(circle);
-		List<Object> list = new ArrayList<Object>();
-		list.add(circle.getCenter().asList());
-		list.add(circle.getRadius());
-		criteria.put("$within", new BasicDBObject("$centerSphere", list));
+		criteria.put("$within", new BasicDBObject("$centerSphere", circle.asList()));
 		return this;
 	}
 
-	/**
-	 * Creates a geospatial criterion using a $within $box operation
-	 * 
-	 * @param box
-	 * @return
-	 */
-	public Criteria withinBox(Box box) {
-		Assert.notNull(box);
-		List<List<Double>> list = new ArrayList<List<Double>>();
-		list.add(box.getLowerLeft().asList());
-		list.add(box.getUpperRight().asList());
-		criteria.put("$within", new BasicDBObject("$box", list));
+	public Criteria within(Shape shape) {
+
+		Assert.notNull(shape);
+		criteria.put("$within", new BasicDBObject(shape.getCommand(), shape.asList()));
 		return this;
 	}
 

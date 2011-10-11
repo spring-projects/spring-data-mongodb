@@ -26,8 +26,7 @@ import org.springframework.data.mongodb.core.geo.Circle;
 import org.springframework.data.mongodb.core.geo.Distance;
 import org.springframework.data.mongodb.core.geo.GeoResults;
 import org.springframework.data.mongodb.core.geo.Point;
-import org.springframework.data.mongodb.repository.MongoRepository;
-import org.springframework.data.mongodb.repository.Query;
+import org.springframework.data.mongodb.core.geo.Polygon;
 import org.springframework.data.mongodb.repository.Person.Sex;
 import org.springframework.data.querydsl.QueryDslPredicateExecutor;
 
@@ -138,6 +137,8 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	List<Person> findByLocationWithin(Circle circle);
 
 	List<Person> findByLocationWithin(Box box);
+	
+	List<Person> findByLocationWithin(Polygon polygon);
 	
 	List<Person> findBySex(Sex sex);
 	

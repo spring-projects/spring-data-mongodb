@@ -15,6 +15,9 @@
  */
 package org.springframework.data.mongodb.core.geo;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.util.Assert;
 
@@ -24,7 +27,7 @@ import org.springframework.util.Assert;
  * @author Mark Pollack
  * @author Oliver Gierke
  */
-public class Box {
+public class Box implements Shape {
 
 	@Field(order = 10)
 	private final Point first;
@@ -53,6 +56,25 @@ public class Box {
 		return second;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.geo.Shape#asList()
+	 */
+	public List<? extends Object> asList() {
+		List<List<Double>> list = new ArrayList<List<Double>>();
+		list.add(getLowerLeft().asList());
+		list.add(getUpperRight().asList());
+		return list;
+	}
+	
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.geo.Shape#getCommand()
+	 */
+	public String getCommand() {
+		return "$box";
+	}
+	
 	@Override
 	public String toString() {
 		return String.format("Box [%s, %s]", first, second);
