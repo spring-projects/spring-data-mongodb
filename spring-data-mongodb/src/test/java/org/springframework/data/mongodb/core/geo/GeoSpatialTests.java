@@ -29,7 +29,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -142,7 +141,6 @@ public class GeoSpatialTests {
 	}
 
 	@Test
-	@Ignore
 	public void withinPolygon() {
 
 		Point first = new Point(-73.99756, 40.73083);

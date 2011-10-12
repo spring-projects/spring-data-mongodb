@@ -24,7 +24,6 @@ import java.util.HashSet;
 import java.util.List;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -266,7 +265,6 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	}
 
 	@Test
-	@Ignore
 	public void findsPeopleByLocationWithinPolygon() {
 		
 		Point point = new Point(-73.99171, 40.738868);
