@@ -15,12 +15,15 @@
  */
 package org.springframework.data.mongodb.core.mapping;
 
+import static org.mockito.Mockito.*;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
 import org.junit.Test;
-import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentEntity;
-import org.springframework.data.mongodb.core.mapping.Document;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.context.ApplicationContext;
 import org.springframework.data.util.ClassTypeInformation;
 
 /**
@@ -28,14 +31,40 @@ import org.springframework.data.util.ClassTypeInformation;
  *
  * @author Oliver Gierke
  */
+@RunWith(MockitoJUnitRunner.class)
 public class BasicMongoPersistentEntityUnitTests {
 
+	@Mock
+	ApplicationContext context;
+	
 	@Test
 	public void subclassInheritsAtDocumentAnnotation() {
 		
 		BasicMongoPersistentEntity<Person> entity = new BasicMongoPersistentEntity<Person>(
 				ClassTypeInformation.from(Person.class));
 		assertThat(entity.getCollection(), is("contacts"));
+	}
+	
+	@Test
+	public void evaluatesSpELExpression() {
+		
+		MongoPersistentEntity<Company> entity = new BasicMongoPersistentEntity<Company>(ClassTypeInformation.from(Company.class));
+		assertThat(entity.getCollection(), is("35"));
+	}
+	
+	@Test
+	public void collectionAllowsReferencingSpringBean() {
+		
+		CollectionProvider provider = new CollectionProvider();
+		provider.collectionName = "reference";
+		
+		when(context.getBean("myBean")).thenReturn(provider);
+		when(context.containsBean("myBean")).thenReturn(true);
+		
+		BasicMongoPersistentEntity<DynamicallyMapped> entity = new BasicMongoPersistentEntity<DynamicallyMapped>(ClassTypeInformation.from(DynamicallyMapped.class));
+		entity.setApplicationContext(context);
+		
+		assertThat(entity.getCollection(), is("reference"));
 	}
 	
 	@Document(collection = "contacts")
@@ -45,5 +74,23 @@ public class BasicMongoPersistentEntityUnitTests {
 	
 	class Person extends Contact {
 		
+	}
+	
+	@Document(collection = "#{35}")
+	class Company {
+		
+	}
+	
+	@Document(collection = "#{myBean.collectionName}")
+	class DynamicallyMapped {
+		
+	}
+	
+	class CollectionProvider {
+		String collectionName;
+		
+		public String getCollectionName() {
+			return collectionName;
+		}
 	}
 }

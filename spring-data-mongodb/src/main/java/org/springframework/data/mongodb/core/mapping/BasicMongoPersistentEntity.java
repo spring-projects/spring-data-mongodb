@@ -18,10 +18,19 @@ package org.springframework.data.mongodb.core.mapping;
 
 import java.util.Comparator;
 
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.expression.BeanFactoryAccessor;
+import org.springframework.context.expression.BeanFactoryResolver;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.model.BasicPersistentEntity;
 import org.springframework.data.mongodb.MongoCollectionUtils;
 import org.springframework.data.util.TypeInformation;
+import org.springframework.expression.Expression;
+import org.springframework.expression.ParserContext;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.util.StringUtils;
 
 /**
@@ -32,9 +41,11 @@ import org.springframework.util.StringUtils;
  * @author Oliver Gierke
  */
 public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, MongoPersistentProperty> implements
-		MongoPersistentEntity<T> {
+		MongoPersistentEntity<T>, ApplicationContextAware {
 
 	private final String collection;
+	private final SpelExpressionParser parser;
+	private final StandardEvaluationContext context;
 
 	/**
 	 * Creates a new {@link BasicMongoPersistentEntity} with the given {@link TypeInformation}. Will default the
@@ -45,6 +56,9 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 	public BasicMongoPersistentEntity(TypeInformation<T> typeInformation) {
 
 		super(typeInformation, MongoPersistentPropertyComparator.INSTANCE);
+
+		this.parser = new SpelExpressionParser();
+		this.context = new StandardEvaluationContext();
 
 		Class<?> rawType = typeInformation.getType();
 		String fallback = MongoCollectionUtils.getPreferredCollectionName(rawType);
@@ -57,13 +71,25 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 		}
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.context.ApplicationContextAware#setApplicationContext(org.springframework.context.ApplicationContext)
+	 */
+	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+		context.addPropertyAccessor(new BeanFactoryAccessor());
+		context.setBeanResolver(new BeanFactoryResolver(applicationContext));
+		context.setRootObject(applicationContext);
+	}
+
 	/**
 	 * Returns the collection the entity should be stored in.
 	 * 
 	 * @return
 	 */
 	public String getCollection() {
-		return collection;
+
+		Expression expression = parser.parseExpression(collection, ParserContext.TEMPLATE_EXPRESSION);
+		return expression.getValue(context, String.class);
 	}
 
 	/**

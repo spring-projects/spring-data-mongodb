@@ -19,6 +19,9 @@ package org.springframework.data.mongodb.core.mapping;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
 
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.data.mapping.context.AbstractMappingContext;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.util.TypeInformation;
@@ -27,7 +30,9 @@ import org.springframework.data.util.TypeInformation;
  * @author Jon Brisbin <jbrisbin@vmware.com>
  * @author Oliver Gierke ogierke@vmware.com
  */
-public class MongoMappingContext extends AbstractMappingContext<BasicMongoPersistentEntity<?>, MongoPersistentProperty> {
+public class MongoMappingContext extends AbstractMappingContext<BasicMongoPersistentEntity<?>, MongoPersistentProperty> implements ApplicationContextAware {
+
+	private ApplicationContext context;
 
 	/**
 	 * Creates a new {@link MongoMappingContext}.
@@ -46,11 +51,27 @@ public class MongoMappingContext extends AbstractMappingContext<BasicMongoPersis
 		return new CachingMongoPersistentProperty(field, descriptor, owner, simpleTypeHolder);
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
 	 * @see org.springframework.data.mapping.BasicMappingContext#createPersistentEntity(org.springframework.data.util.TypeInformation, org.springframework.data.mapping.model.MappingContext)
 	 */
 	@Override
 	protected <T> BasicMongoPersistentEntity<T> createPersistentEntity(TypeInformation<T> typeInformation) {
-		return new BasicMongoPersistentEntity<T>(typeInformation);
+		
+		BasicMongoPersistentEntity<T> entity = new BasicMongoPersistentEntity<T>(typeInformation);
+		
+		if (context != null) {
+			entity.setApplicationContext(context);
+		}
+		
+		return entity;
+	}
+	
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.context.ApplicationContextAware#setApplicationContext(org.springframework.context.ApplicationContext)
+	 */
+	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+		this.context = applicationContext;
 	}
 }

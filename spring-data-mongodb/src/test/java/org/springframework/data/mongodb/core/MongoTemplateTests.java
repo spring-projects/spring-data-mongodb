@@ -28,10 +28,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import org.bson.types.ObjectId;
-import org.hamcrest.Matchers;
 import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormatter;
-import org.joda.time.format.ISODateTimeFormat;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
