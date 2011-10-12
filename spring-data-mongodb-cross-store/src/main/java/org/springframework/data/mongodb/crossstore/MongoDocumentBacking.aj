@@ -30,11 +30,11 @@ import org.springframework.dao.DataAccessException;
 
 import org.springframework.data.mongodb.crossstore.RelatedDocument;
 import org.springframework.data.mongodb.crossstore.DocumentBacked;
-import org.springframework.data.persistence.ChangeSetBackedTransactionSynchronization;
-import org.springframework.data.persistence.ChangeSet;
-import org.springframework.data.persistence.ChangeSetPersister;
-import org.springframework.data.persistence.ChangeSetPersister.NotFoundException;
-import org.springframework.data.persistence.HashMapChangeSet;
+import org.springframework.data.crossstore.ChangeSetBackedTransactionSynchronization;
+import org.springframework.data.crossstore.ChangeSet;
+import org.springframework.data.crossstore.ChangeSetPersister;
+import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
+import org.springframework.data.crossstore.HashMapChangeSet;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 /**
