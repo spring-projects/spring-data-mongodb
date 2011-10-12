@@ -22,11 +22,11 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.crossstore.ChangeSet;
+import org.springframework.data.crossstore.ChangeSetBacked;
+import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.data.mongodb.core.CollectionCallback;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.persistence.ChangeSet;
-import org.springframework.data.persistence.ChangeSetBacked;
-import org.springframework.data.persistence.ChangeSetPersister;
 import org.springframework.util.ClassUtils;
 
 import com.mongodb.BasicDBObject;
