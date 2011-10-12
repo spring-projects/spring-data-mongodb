@@ -1,4 +1,4 @@
-package org.springframework.data.persistence.mongodb;
+package org.springframework.data.mongodb.crossstore;
 
 import java.lang.reflect.Field;
 
@@ -13,8 +13,8 @@ import org.aspectj.lang.reflect.FieldSignature;
 
 import org.springframework.dao.DataAccessException;
 
-import org.springframework.data.persistence.mongodb.RelatedDocument;
-import org.springframework.data.persistence.mongodb.DocumentBacked;
+import org.springframework.data.mongodb.crossstore.RelatedDocument;
+import org.springframework.data.mongodb.crossstore.DocumentBacked;
 import org.springframework.data.persistence.ChangeSetBackedTransactionSynchronization;
 import org.springframework.data.persistence.ChangeSet;
 import org.springframework.data.persistence.ChangeSetPersister;

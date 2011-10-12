@@ -1,9 +1,9 @@
-package org.springframework.data.document.persistence.test;
+package org.springframework.data.mongodb.crossstore.test;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
-import org.springframework.data.persistence.mongodb.RelatedDocument;
+import org.springframework.data.mongodb.crossstore.RelatedDocument;
 
 @Entity
 public class Person {

@@ -1,4 +1,4 @@
-package org.springframework.data.document.persistence;
+package org.springframework.data.mongodb.crossstore;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -7,10 +7,10 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.document.persistence.test.Address;
-import org.springframework.data.document.persistence.test.Person;
-import org.springframework.data.document.persistence.test.Resume;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.crossstore.test.Address;
+import org.springframework.data.mongodb.crossstore.test.Person;
+import org.springframework.data.mongodb.crossstore.test.Resume;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;

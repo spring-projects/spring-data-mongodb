@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.data.persistence.mongodb;
+package org.springframework.data.mongodb.crossstore;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

@@ -1,4 +1,4 @@
-package org.springframework.data.persistence.mongodb;
+package org.springframework.data.mongodb.crossstore;
 
 import org.springframework.data.persistence.ChangeSetBacked;
 

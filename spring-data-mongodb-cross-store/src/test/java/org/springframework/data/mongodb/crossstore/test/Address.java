@@ -1,4 +1,4 @@
-package org.springframework.data.document.persistence.test;
+package org.springframework.data.mongodb.crossstore.test;
 
 public class Address {
 	

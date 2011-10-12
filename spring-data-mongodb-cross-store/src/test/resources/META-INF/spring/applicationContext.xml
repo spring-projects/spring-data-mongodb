@@ -13,7 +13,7 @@
 
   <context:spring-configured/>
 
-  <context:component-scan base-package="org.springframework.persistence.test">
+  <context:component-scan base-package="org.springframework.persistence.mongodb.test">
     <context:exclude-filter expression="org.springframework.stereotype.Controller" type="annotation"/>
   </context:component-scan>
 
@@ -38,12 +38,12 @@
   <bean class="org.springframework.data.mongodb.core.MongoExceptionTranslator"/>
 
   <!--  Mongo aspect config -->
-  <bean class="org.springframework.data.persistence.mongodb.MongoDocumentBacking"
+  <bean class="org.springframework.data.mongodb.crossstore.MongoDocumentBacking"
         factory-method="aspectOf">
     <property name="changeSetPersister" ref="mongoChangeSetPersister"/>
   </bean>
   <bean id="mongoChangeSetPersister" 
-      class="org.springframework.data.persistence.mongodb.MongoChangeSetPersister">
+      class="org.springframework.data.mongodb.crossstore.MongoChangeSetPersister">
     <property name="mongoTemplate" ref="mongoTemplate"/>
     <property name="entityManagerFactory" ref="entityManagerFactory"/>
   </bean>

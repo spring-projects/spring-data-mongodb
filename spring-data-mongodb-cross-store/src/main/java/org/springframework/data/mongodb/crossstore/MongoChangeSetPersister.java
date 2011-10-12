@@ -1,4 +1,4 @@
-package org.springframework.data.persistence.mongodb;
+package org.springframework.data.mongodb.crossstore;
 
 import javax.persistence.EntityManagerFactory;
 
