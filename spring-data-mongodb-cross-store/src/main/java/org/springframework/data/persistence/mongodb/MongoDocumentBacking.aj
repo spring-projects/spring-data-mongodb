@@ -1,4 +1,4 @@
-package org.springframework.data.persistence.document.mongodb;
+package org.springframework.data.persistence.mongodb;
 
 import java.lang.reflect.Field;
 
@@ -12,10 +12,10 @@ import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.reflect.FieldSignature;
 
 import org.springframework.dao.DataAccessException;
-import org.springframework.data.persistence.document.RelatedDocument;
 
-import org.springframework.data.persistence.document.DocumentBacked;
-import org.springframework.data.persistence.document.DocumentBackedTransactionSynchronization;
+import org.springframework.data.persistence.mongodb.RelatedDocument;
+import org.springframework.data.persistence.mongodb.DocumentBacked;
+import org.springframework.data.persistence.ChangeSetBackedTransactionSynchronization;
 import org.springframework.data.persistence.ChangeSet;
 import org.springframework.data.persistence.ChangeSetPersister;
 import org.springframework.data.persistence.ChangeSetPersister.NotFoundException;
@@ -130,7 +130,7 @@ public aspect MongoDocumentBacking {
     entity.setChangeSet(new HashMapChangeSet());
     entity.itdChangeSetPersister = changeSetPersister;
     entity.itdTransactionSynchronization = 
-        new DocumentBackedTransactionSynchronization(changeSetPersister, entity);
+        new ChangeSetBackedTransactionSynchronization(changeSetPersister, entity);
     //registerTransactionSynchronization(entity);
   }
 
@@ -163,7 +163,7 @@ public aspect MongoDocumentBacking {
 
   @Transient private ChangeSetPersister<?> DocumentBacked.itdChangeSetPersister;
 
-  @Transient private DocumentBackedTransactionSynchronization DocumentBacked.itdTransactionSynchronization;
+  @Transient private ChangeSetBackedTransactionSynchronization DocumentBacked.itdTransactionSynchronization;
 
   public void DocumentBacked.setChangeSet(ChangeSet cs) {
     this.changeSet = cs;

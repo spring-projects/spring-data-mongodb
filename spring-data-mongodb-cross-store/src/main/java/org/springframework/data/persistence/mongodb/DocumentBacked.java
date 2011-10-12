@@ -1,4 +1,4 @@
-package org.springframework.data.persistence.document;
+package org.springframework.data.persistence.mongodb;
 
 import org.springframework.data.persistence.ChangeSetBacked;
 

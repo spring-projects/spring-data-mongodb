@@ -3,7 +3,7 @@ package org.springframework.data.document.persistence.test;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
-import org.springframework.data.persistence.document.RelatedDocument;
+import org.springframework.data.persistence.mongodb.RelatedDocument;
 
 @Entity
 public class Person {

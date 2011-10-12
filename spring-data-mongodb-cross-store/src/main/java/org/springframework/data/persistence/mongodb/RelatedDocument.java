@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.data.persistence.document;
+package org.springframework.data.persistence.mongodb;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
