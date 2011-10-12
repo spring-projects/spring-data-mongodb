@@ -59,6 +59,13 @@ public class QueryTests {
 	}
 
 	@Test
+	public void testAndQuery() {
+		Query q = new AndQuery(new Query(where("name").is("Sven")), new Query(where("age").lt(50)));
+		String expected = "{ \"$and\" : [ { \"name\" : \"Sven\"} , { \"age\" : { \"$lt\" : 50}}]}";
+		Assert.assertEquals(expected, q.getQueryObject().toString());
+	}
+
+	@Test
 	public void testNorQuery() {
 		Query q = new NorQuery(new Query(where("name").is("Sven")), new Query(where("age").lt(50)), new BasicQuery(
 				"{'name' : 'Thomas'}"));

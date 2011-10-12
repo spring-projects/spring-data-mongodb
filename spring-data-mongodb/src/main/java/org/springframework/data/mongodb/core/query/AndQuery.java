@@ -15,10 +15,10 @@
  */
 package org.springframework.data.mongodb.core.query;
 
-public class OrQuery extends Query {
+public class AndQuery extends Query {
 
-	public OrQuery(Query... q) {
-		super.or(q);
+	public AndQuery(Query... q) {
+		super.and(q);
 	}
 
 }

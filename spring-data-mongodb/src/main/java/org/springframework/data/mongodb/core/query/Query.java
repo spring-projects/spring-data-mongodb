@@ -50,6 +50,11 @@ public class Query {
 		return this;
 	}
 
+	public Query and(Query... queries) {
+		this.criteria.put("$and", new AndCriteria(queries));
+		return this;
+	}
+
 	public Query or(Query... queries) {
 		this.criteria.put("$or", new OrCriteria(queries));
 		return this;
