@@ -1486,7 +1486,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 		public T doWith(DBObject object) {
 			if (null != object) {
-				maybeEmitEvent(new AfterLoadEvent(object));
+				maybeEmitEvent(new AfterLoadEvent<T>(object, type));
 			}
 			T source = reader.read(type, object);
 			if (null != source) {

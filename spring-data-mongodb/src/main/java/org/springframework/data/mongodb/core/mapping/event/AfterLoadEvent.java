@@ -16,16 +16,42 @@
 
 package org.springframework.data.mongodb.core.mapping.event;
 
+import org.springframework.util.Assert;
+
 import com.mongodb.DBObject;
 
 /**
- * @author Jon Brisbin <jbrisbin@vmware.com>
+ * Event to be triggered after loading {@link DBObject}s to be mapped onto a given type.
+ * 
+ * @author Oliver Gierke
+ * @author Jon Brisbin
+ * @author Christoph Leiter
  */
-public class AfterLoadEvent extends MongoMappingEvent<DBObject> {
+public class AfterLoadEvent<T> extends MongoMappingEvent<DBObject> {
 
 	private static final long serialVersionUID = 1L;
+	private final Class<T> type;
 
-	public AfterLoadEvent(DBObject dbo) {
-		super(dbo, null);
+	/**
+	 * Creates a new {@link AfterLoadEvent} for the given {@link DBObject} and type.
+	 * 
+	 * @param dbo must not be {@literal null}.
+	 * @param type must not be {@literal null}.
+	 */
+	public AfterLoadEvent(DBObject dbo, Class<T> type) {
+		
+		super(dbo, dbo);
+		
+		Assert.notNull(type, "Type must not be null!");
+		this.type = type;
+	}
+
+	/**
+	 * Returns the type for which the {@link AfterLoadEvent} shall be invoked for.
+	 * 
+	 * @return
+	 */
+	public Class<T> getType() {
+		return type;
 	}
 }

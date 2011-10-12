@@ -17,8 +17,11 @@ package org.springframework.data.mongodb.core.mapping.event;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
+
 import org.junit.Test;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.springframework.data.mongodb.core.mapping.Account;
+import org.springframework.data.mongodb.repository.Contact;
 import org.springframework.data.mongodb.repository.Person;
 
 import com.mongodb.BasicDBObject;
@@ -35,7 +38,7 @@ public class AbstractMongoEventListenerUnitTest {
 	public void invokesCallbackForEventForPerson() {
 		
 		MongoMappingEvent<Person> event = new BeforeConvertEvent<Person>(new Person("Dave", "Matthews"));
-		SampleEventListener listener = new SampleEventListener();
+		SamplePersonEventListener listener = new SamplePersonEventListener();
 		listener.onApplicationEvent(event);
 		assertThat(listener.invokedOnBeforeConvert, is(true));
 	}
@@ -45,8 +48,8 @@ public class AbstractMongoEventListenerUnitTest {
 		
 		ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext();
 		context.refresh();
-		
-		SampleEventListener listener = new SampleEventListener();
+
+		SamplePersonEventListener listener = new SamplePersonEventListener();
 		context.addApplicationListener(listener);
 		
 		context.publishEvent(new BeforeConvertEvent<Person>(new Person("Dave", "Matthews")));
@@ -62,15 +65,59 @@ public class AbstractMongoEventListenerUnitTest {
 	 */
 	@Test
 	public void afterLoadEffectGetsHandledCorrectly() {
-		
-		SampleEventListener listener = new SampleEventListener();
-		listener.onApplicationEvent(new AfterLoadEvent(new BasicDBObject()));
+
+		SamplePersonEventListener listener = new SamplePersonEventListener();
+		listener.onApplicationEvent(new AfterLoadEvent<Person>(new BasicDBObject(), Person.class));
 		assertThat(listener.invokedOnAfterLoad, is(true));
 	}
-	
 
-	class SampleEventListener extends AbstractMongoEventListener<Person> {
-		
+	/**
+	 * @see DATADOC-289
+	 */
+	@Test
+	public void afterLoadEventGetsFilteredForDomainType() {
+
+		SamplePersonEventListener personListener = new SamplePersonEventListener();
+		SampleAccountEventListener accountListener = new SampleAccountEventListener();
+		personListener.onApplicationEvent(new AfterLoadEvent<Person>(new BasicDBObject(), Person.class));
+		accountListener.onApplicationEvent(new AfterLoadEvent<Person>(new BasicDBObject(), Person.class));
+
+		assertThat(personListener.invokedOnAfterLoad, is(true));
+		assertThat(accountListener.invokedOnAfterLoad, is(false));
+	}
+
+	/**
+	 * @see DATADOC-289
+	 */
+	@Test
+	public void afterLoadEventGetsFilteredForDomainTypeWorksForSubtypes() {
+
+		SamplePersonEventListener personListener = new SamplePersonEventListener();
+		SampleContactEventListener contactListener = new SampleContactEventListener();
+		personListener.onApplicationEvent(new AfterLoadEvent<Person>(new BasicDBObject(), Person.class));
+		contactListener.onApplicationEvent(new AfterLoadEvent<Person>(new BasicDBObject(), Person.class));
+
+		assertThat(personListener.invokedOnAfterLoad, is(true));
+		assertThat(contactListener.invokedOnAfterLoad, is(true));
+	}
+
+	/**
+	 * @see DATADOC-289
+	 */
+	@Test
+	public void afterLoadEventGetsFilteredForDomainTypeWorksForSubtypes2() {
+
+		SamplePersonEventListener personListener = new SamplePersonEventListener();
+		SampleContactEventListener contactListener = new SampleContactEventListener();
+		personListener.onApplicationEvent(new AfterLoadEvent<Contact>(new BasicDBObject(), Contact.class));
+		contactListener.onApplicationEvent(new AfterLoadEvent<Contact>(new BasicDBObject(), Contact.class));
+
+		assertThat(personListener.invokedOnAfterLoad, is(false));
+		assertThat(contactListener.invokedOnAfterLoad, is(true));
+	}
+
+	class SamplePersonEventListener extends AbstractMongoEventListener<Person> {
+
 		boolean invokedOnBeforeConvert;
 		boolean invokedOnAfterLoad;
 		
@@ -79,6 +126,38 @@ public class AbstractMongoEventListenerUnitTest {
 			invokedOnBeforeConvert = true;
 		}
 		
+		@Override
+		public void onAfterLoad(DBObject dbo) {
+			invokedOnAfterLoad = true;
+		}
+	}
+
+	class SampleContactEventListener extends AbstractMongoEventListener<Contact> {
+
+		boolean invokedOnBeforeConvert;
+		boolean invokedOnAfterLoad;
+
+		@Override
+		public void onBeforeConvert(Contact source) {
+			invokedOnBeforeConvert = true;
+		}
+
+		@Override
+		public void onAfterLoad(DBObject dbo) {
+			invokedOnAfterLoad = true;
+		}
+	}
+
+	class SampleAccountEventListener extends AbstractMongoEventListener<Account> {
+
+		boolean invokedOnBeforeConvert;
+		boolean invokedOnAfterLoad;
+
+		@Override
+		public void onBeforeConvert(Account source) {
+			invokedOnBeforeConvert = true;
+		}
+
 		@Override
 		public void onAfterLoad(DBObject dbo) {
 			invokedOnAfterLoad = true;

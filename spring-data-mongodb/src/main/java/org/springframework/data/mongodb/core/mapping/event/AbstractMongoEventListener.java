@@ -43,29 +43,35 @@ public abstract class AbstractMongoEventListener<E> implements ApplicationListen
 	 * (non-Javadoc)
 	 * @see org.springframework.context.ApplicationListener#onApplicationEvent(org.springframework.context.ApplicationEvent)
 	 */
-	@SuppressWarnings("unchecked")
 	public void onApplicationEvent(MongoMappingEvent<?> event) {
-		
-		Object source = event.getSource();
-		
+
 		// Invoke domain type independent events
 		if (event instanceof AfterLoadEvent) {
-			onAfterLoad(((AfterLoadEvent) event).getSource());
+			AfterLoadEvent<?> afterLoadEvent = (AfterLoadEvent<?>) event;
+
+			if (domainClass.isAssignableFrom(afterLoadEvent.getType())) {
+				onAfterLoad(event.getDBObject());
+			}
+
+			return;
 		}
-		
+
+		@SuppressWarnings("unchecked")
+		E source = (E) event.getSource();
+
 		// Check for matching domain type and invoke callbacks
 		if (source != null && !domainClass.isAssignableFrom(source.getClass())) {
 			return;
 		}
 
 		if (event instanceof BeforeConvertEvent) {
-			onBeforeConvert((E) source);
+			onBeforeConvert(source);
 		} else if (event instanceof BeforeSaveEvent) {
-			onBeforeSave((E) source, event.getDBObject());
+			onBeforeSave(source, event.getDBObject());
 		} else if (event instanceof AfterSaveEvent) {
-			onAfterSave((E) source, event.getDBObject());
+			onAfterSave(source, event.getDBObject());
 		} else if (event instanceof AfterConvertEvent) {
-			onAfterConvert(event.getDBObject(), (E) source);
+			onAfterConvert(event.getDBObject(), source);
 		}
 	}
 
