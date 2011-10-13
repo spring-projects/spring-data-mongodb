@@ -18,98 +18,172 @@ package org.springframework.data.mongodb.core.convert;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.data.mongodb.MongoDbFactory;
-import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 
+import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
 /**
  * Unit test to reproduce DATADOC-273.
- *
+ * 
  * @author Harlan Iverson
  */
 public class DataDoc273Test {
 
-  MappingMongoConverter converter;
-  
-  @Before
-  public void setupMongoConv() {
-  	
+	MappingMongoConverter converter;
+
+	@Before
+	public void setupMongoConv() {
+
 		MongoMappingContext mappingContext = new MongoMappingContext();
 		mappingContext.afterPropertiesSet();
-    
-    MongoDbFactory factory = mock(MongoDbFactory.class);
+
+		MongoDbFactory factory = mock(MongoDbFactory.class);
 
 		converter = new MappingMongoConverter(factory, mappingContext);
 		converter.afterPropertiesSet();
-  }
- 
+	}
 
-  /**
-   * @see DATADOC-273
-   */
-  @Test
-  public void convertMapOfThings() {
-  	
-    Plane plane = new Plane("Boeing", 4);
-    Train train = new Train("Santa Fe", 200);
-    Automobile automobile = new Automobile("Tesla", "Roadster", 2);
-    
-    Map<String, Object> mapOfThings = new HashMap<String, Object>();
-    mapOfThings.put("plane", plane);
-    mapOfThings.put("train", train);
-    mapOfThings.put("automobile", automobile);
-    
-    DBObject result = new BasicDBObject();
-    converter.write(mapOfThings, result);
-    
-    @SuppressWarnings("unchecked")
+	/**
+	 * @see DATADOC-273
+	 */
+	@Test
+	public void convertMapOfThings() {
+
+		Plane plane = new Plane("Boeing", 4);
+		Train train = new Train("Santa Fe", 200);
+		Automobile automobile = new Automobile("Tesla", "Roadster", 2);
+
+		Map<String, Object> mapOfThings = new HashMap<String, Object>();
+		mapOfThings.put("plane", plane);
+		mapOfThings.put("train", train);
+		mapOfThings.put("automobile", automobile);
+
+		DBObject result = new BasicDBObject();
+		converter.write(mapOfThings, result);
+
+		@SuppressWarnings("unchecked")
 		Map<String, Object> mapOfThings2 = converter.read(Map.class, result);
-    
-    assertTrue(mapOfThings2.get("plane") instanceof Plane);
-    assertTrue(mapOfThings2.get("train") instanceof Train);
-    assertTrue(mapOfThings2.get("automobile") instanceof Automobile);
-  }
-  
-  class Plane {
-  	
-  	String maker;
-  	int numberOfPropellers;
-  	
-  	public Plane(String maker, int numberOfPropellers) {
-  		this.maker = maker;
-  		this.numberOfPropellers = numberOfPropellers;
-  	}
-  }
-  
-  class Train {
-  	
-  	String railLine;
-  	int numberOfCars;
-  	
-  	public Train(String railLine, int numberOfCars) {
-  		this.railLine = railLine;
-  		this.numberOfCars = numberOfCars;
-  	}
-  }
-  
-  class Automobile {
-  	
-  	String make;
-  	String model;
-  	int numberOfDoors;
-  	
-  	public Automobile(String make, String model, int numberOfDoors) {
-  		this.make = make;
-  		this.model = model;
-  		this.numberOfDoors = numberOfDoors;
-  	}
-  }
+
+		assertTrue(mapOfThings2.get("plane") instanceof Plane);
+		assertTrue(mapOfThings2.get("train") instanceof Train);
+		assertTrue(mapOfThings2.get("automobile") instanceof Automobile);
+	}
+
+	/**
+	 * @see DATADOC-294
+	 */
+	@Test
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public void convertListOfThings() {
+		Plane plane = new Plane("Boeing", 4);
+		Train train = new Train("Santa Fe", 200);
+		Automobile automobile = new Automobile("Tesla", "Roadster", 2);
+
+		List listOfThings = new ArrayList();
+		listOfThings.add(plane);
+		listOfThings.add(train);
+		listOfThings.add(automobile);
+
+		DBObject result = new BasicDBList();
+		converter.write(listOfThings, result);
+		System.out.println(result.toString());
+
+		List listOfThings2 = converter.read(List.class, result);
+
+		assertTrue(listOfThings2.get(0) instanceof Plane);
+		assertTrue(listOfThings2.get(1) instanceof Train);
+		assertTrue(listOfThings2.get(2) instanceof Automobile);
+	}
+
+	/**
+	 * @see DATADOC-294
+	 */
+	@Test
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public void convertListOfThings_NestedInMap() {
+
+		Plane plane = new Plane("Boeing", 4);
+		Train train = new Train("Santa Fe", 200);
+		Automobile automobile = new Automobile("Tesla", "Roadster", 2);
+
+		List listOfThings = new ArrayList();
+		listOfThings.add(plane);
+		listOfThings.add(train);
+		listOfThings.add(automobile);
+
+		Map box = new HashMap();
+		box.put("one", listOfThings);
+
+		Shipment shipment = new Shipment(box);
+
+		DBObject result = new BasicDBObject();
+		converter.write(shipment, result);
+
+		Shipment shipment2 = converter.read(Shipment.class, result);
+
+		List listOfThings2 = (List) shipment2.getBoxes().get("one");
+
+		assertTrue(listOfThings2.get(0) instanceof Plane);
+		assertTrue(listOfThings2.get(1) instanceof Train);
+		assertTrue(listOfThings2.get(2) instanceof Automobile);
+	}
+
+	class Plane {
+
+		String maker;
+		int numberOfPropellers;
+
+		public Plane(String maker, int numberOfPropellers) {
+			this.maker = maker;
+			this.numberOfPropellers = numberOfPropellers;
+		}
+	}
+
+	class Train {
+
+		String railLine;
+		int numberOfCars;
+
+		public Train(String railLine, int numberOfCars) {
+			this.railLine = railLine;
+			this.numberOfCars = numberOfCars;
+		}
+	}
+
+	class Automobile {
+
+		String make;
+		String model;
+		int numberOfDoors;
+
+		public Automobile(String make, String model, int numberOfDoors) {
+			this.make = make;
+			this.model = model;
+			this.numberOfDoors = numberOfDoors;
+		}
+	}
+
+	@SuppressWarnings("rawtypes")
+	public class Shipment {
+		
+		Map boxes = new HashMap();
+
+		public Shipment(Map boxes) {
+			this.boxes = boxes;
+		}
+
+		public Map getBoxes() {
+			return boxes;
+		}
+	}
 }
