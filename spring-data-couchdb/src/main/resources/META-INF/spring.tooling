@@ -1,4 +1,0 @@
-# Tooling related information for the Couch DB namespace
-http\://www.springframework.org/schema/data/couch@name=Couch Namespace
-http\://www.springframework.org/schema/data/couch@prefix=couch
-http\://www.springframework.org/schema/data/couch@icon=org/springframework/jdbc/config/spring-jdbc.gif

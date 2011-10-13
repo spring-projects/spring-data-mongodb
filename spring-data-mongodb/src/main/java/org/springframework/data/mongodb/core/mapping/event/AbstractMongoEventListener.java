@@ -45,7 +45,6 @@ public abstract class AbstractMongoEventListener<E> implements ApplicationListen
 	 */
 	public void onApplicationEvent(MongoMappingEvent<?> event) {
 
-		// Invoke domain type independent events
 		if (event instanceof AfterLoadEvent) {
 			AfterLoadEvent<?> afterLoadEvent = (AfterLoadEvent<?>) event;
 

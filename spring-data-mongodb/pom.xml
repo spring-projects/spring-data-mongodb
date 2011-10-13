@@ -4,13 +4,12 @@
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>org.springframework.data</groupId>
-		<artifactId>spring-data-document-parent</artifactId>
+		<artifactId>spring-data-mongodb-parent</artifactId>
 		<version>1.0.0.BUILD-SNAPSHOT</version>
-		<relativePath>../spring-data-document-parent/pom.xml</relativePath>
+		<relativePath>../spring-data-mongodb-parent/pom.xml</relativePath>
 	</parent>
 	<artifactId>spring-data-mongodb</artifactId>
-	<packaging>jar</packaging>
-	<name>Spring Data MongoDB Support</name>
+	<name>Spring Data MongoDB</name>
 
 	<properties>
 		<mongo.version>2.6.5</mongo.version>

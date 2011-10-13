@@ -3,9 +3,9 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.springframework.data</groupId>
-  <artifactId>spring-data-document-parent</artifactId>
-  <name>Spring Data Document Parent</name>
-  <url>http://www.springsource.org/spring-data/data-document</url>
+  <artifactId>spring-data-mongodb-parent</artifactId>
+  <name>Spring Data MongoDB Parent</name>
+  <url>http://www.springsource.org/spring-data/mongodb</url>
   <version>1.0.0.BUILD-SNAPSHOT</version>
   <packaging>pom</packaging>
   <properties>
@@ -39,15 +39,15 @@
       <distributionManagement>
         <site>
           <id>spring-site-staging</id>
-          <url>file:///${java.io.tmpdir}/spring-data/data-document/docs</url>
+          <url>file:///${java.io.tmpdir}/spring-data/mongodb/docs</url>
         </site>
         <repository>
           <id>spring-milestone-staging</id>
-          <url>file:///${java.io.tmpdir}/spring-data/data-document/milestone</url>
+          <url>file:///${java.io.tmpdir}/spring-data/mongodb/milestone</url>
         </repository>
         <snapshotRepository>
           <id>spring-snapshot-staging</id>
-          <url>file:///${java.io.tmpdir}/spring-data/data-document/snapshot</url>
+          <url>file:///${java.io.tmpdir}/spring-data/mongodb/snapshot</url>
         </snapshotRepository>
       </distributionManagement>
     </profile>
@@ -63,7 +63,7 @@
     <site>
       <id>static.springframework.org</id>
       <url>
-        scp://static.springframework.org/var/www/domains/springframework.org/static/htdocs/spring-data/data-document/docs/${project.version}
+        scp://static.springframework.org/var/www/domains/springframework.org/static/htdocs/spring-data/mongodb/docs/${project.version}
       </url>
     </site>
     <repository>

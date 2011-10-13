@@ -4,12 +4,11 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.springframework.data</groupId>
-    <artifactId>spring-data-document-parent</artifactId>
+    <artifactId>spring-data-mongodb-parent</artifactId>
     <version>1.0.0.BUILD-SNAPSHOT</version>
-    <relativePath>../spring-data-document-parent/pom.xml</relativePath>
+    <relativePath>../spring-data-mongodb-parent/pom.xml</relativePath>
   </parent>
   <artifactId>spring-data-mongodb-log4j</artifactId>
-  <packaging>jar</packaging>
   <name>Spring Data MongoDB Log4J Appender</name>
 
   <properties>
