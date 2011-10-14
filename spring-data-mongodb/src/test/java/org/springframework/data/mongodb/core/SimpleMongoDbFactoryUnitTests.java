@@ -16,12 +16,19 @@
 package org.springframework.data.mongodb.core;
 
 import static org.junit.Assert.*;
+import static org.hamcrest.CoreMatchers.*;
+
+import java.net.UnknownHostException;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import com.mongodb.Mongo;
+import com.mongodb.MongoURI;
 
 /**
  * Unit tests for {@link SimpleMongoDbFactory}.
@@ -53,6 +60,22 @@ public class SimpleMongoDbFactoryUnitTests {
 		new SimpleMongoDbFactory(mongo, "foo01231bar");
 	}
 
+	/**
+	 * @see DATADOC-295
+	 * @throws UnknownHostException
+	 */
+	@Test
+	public void mongoUriConstructor() throws UnknownHostException {
+		
+		MongoURI mongoURI = new MongoURI("mongodb://myUsername:myPassword@localhost/myDatabase.myCollection");
+		MongoDbFactory mongoDbFactory = new SimpleMongoDbFactory(mongoURI);
+		
+		assertThat(ReflectionTestUtils.getField(mongoDbFactory, "username").toString(), is("myUsername"));
+		assertThat(ReflectionTestUtils.getField(mongoDbFactory, "password").toString(), is("myPassword"));
+		assertThat(ReflectionTestUtils.getField(mongoDbFactory, "databaseName").toString(), is("myDatabase"));
+		assertThat(ReflectionTestUtils.getField(mongoDbFactory, "databaseName").toString(), is("myDatabase"));
+	}
+	
 	private void rejectsDatabaseName(String databaseName) {
 
 		try {

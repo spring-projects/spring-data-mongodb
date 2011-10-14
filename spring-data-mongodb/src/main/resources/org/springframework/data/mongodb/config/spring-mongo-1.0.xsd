@@ -87,6 +87,12 @@ The password to use when connecting to a MongoDB server.
 							]]></xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
+			<xsd:attribute name="uri" type="xsd:string" use="optional">
+				<xsd:annotation>
+					<xsd:documentation><![CDATA[
+The Mongo URI string.]]></xsd:documentation>
+				</xsd:annotation>
+			</xsd:attribute>
 			<xsd:attributeGroup ref="writeConcern" />
 		</xsd:complexType>
 	</xsd:element>

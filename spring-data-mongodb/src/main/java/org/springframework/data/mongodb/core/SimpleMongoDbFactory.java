@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.core;
 
+import java.net.UnknownHostException;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.DisposableBean;
@@ -25,6 +27,8 @@ import org.springframework.util.Assert;
 
 import com.mongodb.DB;
 import com.mongodb.Mongo;
+import com.mongodb.MongoException;
+import com.mongodb.MongoURI;
 import com.mongodb.WriteConcern;
 
 /**
@@ -68,6 +72,19 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 		this(mongo, databaseName);
 		this.username = userCredentials.getUsername();
 		this.password = userCredentials.getPassword();
+	}
+	
+	/**
+	 * Creates a new {@link SimpleMongoDbFactory} instance from the given {@link MongoURI}.
+	 * 
+	 * @param uri must not be {@literal null}.
+	 * @throws MongoException
+	 * @throws UnknownHostException
+	 * @see MongoURI
+	 */
+	public SimpleMongoDbFactory(MongoURI uri) throws MongoException, UnknownHostException {
+		
+		this(new Mongo(uri), uri.getDatabase(), new UserCredentials(uri.getUsername(), String.valueOf(uri.getPassword())));
 	}
 
 	/**

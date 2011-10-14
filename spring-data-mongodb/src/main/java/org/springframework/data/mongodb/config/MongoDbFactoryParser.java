@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 by the original author(s).
+ * Copyright 2011 by the original author(s).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.config;
 
 import static org.springframework.data.mongodb.config.BeanNames.*;
+import static org.springframework.data.mongodb.config.ParsingUtils.*;
 
 import org.springframework.beans.factory.BeanDefinitionStoreException;
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -33,6 +34,7 @@ import org.springframework.util.StringUtils;
 import org.w3c.dom.Element;
 
 import com.mongodb.Mongo;
+import com.mongodb.MongoURI;
 
 /**
  * {@link BeanDefinitionParser} to parse {@code db-factory} elements into {@link BeanDefinition}s.
@@ -54,31 +56,37 @@ public class MongoDbFactoryParser extends AbstractBeanDefinitionParser {
 
 	@Override
 	protected AbstractBeanDefinition parseInternal(Element element, ParserContext parserContext) {
-
+		
+		String uri = element.getAttribute("uri");
 		String mongoRef = element.getAttribute("mongo-ref");
-		if (!StringUtils.hasText(mongoRef)) {
-			mongoRef = registerMongoBeanDefinition(element, parserContext);
-		}
-
-		// Database name
 		String dbname = element.getAttribute("dbname");
-		if (!StringUtils.hasText(dbname)) {
-			dbname = "db";
-		}
+		BeanDefinition userCredentials = getUserCredentialsBeanDefinition(element, parserContext);
 
+		// Common setup
 		BeanDefinitionBuilder dbFactoryBuilder = BeanDefinitionBuilder.genericBeanDefinition(SimpleMongoDbFactory.class);
+		ParsingUtils.setPropertyValue(element, dbFactoryBuilder, "write-concern", "writeConcern");
+		
+		if (StringUtils.hasText(uri)) {
+			if(StringUtils.hasText(mongoRef) || StringUtils.hasText(dbname) || userCredentials != null) {
+				parserContext.getReaderContext().error("Configure either Mongo URI or details individually!", parserContext.extractSource(element));
+			}
+			
+			dbFactoryBuilder.addConstructorArgValue(getMongoUri(uri));
+			return getSourceBeanDefinition(dbFactoryBuilder, parserContext, element);
+		}
+		
+		// Defaulting
+		mongoRef = StringUtils.hasText(mongoRef) ? mongoRef : registerMongoBeanDefinition(element, parserContext);
+		dbname = StringUtils.hasText(dbname) ? dbname : "db";
+		
 		dbFactoryBuilder.addConstructorArgValue(new RuntimeBeanReference(mongoRef));
 		dbFactoryBuilder.addConstructorArgValue(dbname);
 
-		BeanDefinition userCredentials = getUserCredentialsBeanDefinition(element);
 		if (userCredentials != null) {
 			dbFactoryBuilder.addConstructorArgValue(userCredentials);
 		}
 
-		ParsingUtils.setPropertyValue(element, dbFactoryBuilder, "write-concern", "writeConcern");
-
-		return dbFactoryBuilder.getBeanDefinition();
-
+		return getSourceBeanDefinition(dbFactoryBuilder, parserContext, element);
 	}
 
 	/**
@@ -105,7 +113,7 @@ public class MongoDbFactoryParser extends AbstractBeanDefinitionParser {
 	 * @param element
 	 * @return the {@link BeanDefinition} or {@literal null} if neither username nor password given.
 	 */
-	private BeanDefinition getUserCredentialsBeanDefinition(Element element) {
+	private BeanDefinition getUserCredentialsBeanDefinition(Element element, ParserContext context) {
 
 		String username = element.getAttribute("username");
 		String password = element.getAttribute("password");
@@ -118,6 +126,20 @@ public class MongoDbFactoryParser extends AbstractBeanDefinitionParser {
 		userCredentialsBuilder.addConstructorArgValue(StringUtils.hasText(username) ? username : null);
 		userCredentialsBuilder.addConstructorArgValue(StringUtils.hasText(password) ? password : null);
 
-		return userCredentialsBuilder.getBeanDefinition();
+		return getSourceBeanDefinition(userCredentialsBuilder, context, element);
+	}
+	
+	/**
+	 * Creates a {@link BeanDefinition} for a {@link MongoURI}.
+	 * 
+	 * @param uri
+	 * @return
+	 */
+	private BeanDefinition getMongoUri(String uri) {
+		
+		BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(MongoURI.class);
+		builder.addConstructorArgValue(uri);
+		
+		return builder.getBeanDefinition();
 	}
 }

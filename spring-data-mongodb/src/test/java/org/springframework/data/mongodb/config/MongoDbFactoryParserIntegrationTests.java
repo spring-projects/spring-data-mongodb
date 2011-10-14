@@ -23,10 +23,14 @@ import java.util.List;
 import org.junit.Test;
 import org.springframework.beans.PropertyValue;
 import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.beans.factory.config.ConstructorArgumentValues;
+import org.springframework.beans.factory.config.ConstructorArgumentValues.ValueHolder;
+import org.springframework.beans.factory.parsing.BeanDefinitionParsingException;
 import org.springframework.beans.factory.xml.XmlBeanFactory;
 import org.springframework.core.io.ClassPathResource;
 
 import com.mongodb.Mongo;
+import com.mongodb.MongoURI;
 
 /**
  * Integration tests for {@link MongoDbFactoryParser}.
@@ -59,5 +63,28 @@ public class MongoDbFactoryParserIntegrationTests {
 		XmlBeanFactory factory = new XmlBeanFactory(new ClassPathResource("namespace/db-factory-bean.xml"));
 		Mongo mongo = factory.getBean(Mongo.class);
 		assertThat(mongo.getMongoOptions().maxAutoConnectRetryTime, is(27L));
+	}
+	
+	/**
+	 * @see DATADOC-295
+	 */
+	@Test
+	public void setsUpMongoDbFactoryUsingAMongoUri() {
+		
+		XmlBeanFactory factory = new XmlBeanFactory(new ClassPathResource("namespace/mongo-uri.xml"));
+		BeanDefinition definition = factory.getBeanDefinition("mongoDbFactory");
+		ConstructorArgumentValues constructorArguments = definition.getConstructorArgumentValues();
+		
+		assertThat(constructorArguments.getArgumentCount(), is(1));
+		ValueHolder argument = constructorArguments.getArgumentValue(0, MongoURI.class);
+		assertThat(argument, is(notNullValue()));
+	}
+	
+	/**
+	 * @see DATADOC-295
+	 */
+	@Test(expected = BeanDefinitionParsingException.class)
+	public void rejectsUriPlusDetailedConfiguration() {
+		new XmlBeanFactory(new ClassPathResource("namespace/mongo-uri-and-details.xml"));
 	}
 }

@@ -16,6 +16,8 @@
 
 package org.springframework.data.mongodb.config;
 
+import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.ManagedList;
 import org.springframework.beans.factory.xml.ParserContext;
@@ -109,5 +111,20 @@ abstract class ParsingUtils {
 		if (StringUtils.hasText(attr)) {
 			builder.addPropertyValue(attrName, attr);
 		}
+	}
+
+	/**
+	 * Returns the {@link BeanDefinition} built by the given {@link BeanDefinitionBuilder} enriched with source
+	 * information derived from the given {@link Element}.
+	 * 
+	 * @param builder must not be {@literal null}.
+	 * @param context must not be {@literal null}.
+	 * @param element must not be {@literal null}.
+	 * @return
+	 */
+	static AbstractBeanDefinition getSourceBeanDefinition(BeanDefinitionBuilder builder, ParserContext context, Element element) {
+		AbstractBeanDefinition definition = builder.getBeanDefinition();
+		definition.setSource(context.extractSource(element));
+		return definition;
 	}
 }
