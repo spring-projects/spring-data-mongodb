@@ -1903,7 +1903,7 @@ ValueObject [id=c, value=2.0]
 ValueObject [id=d, value=1.0]
 </programlisting> The MapReduceResults class implements
       <classname>Iterable</classname> and provides access to the raw output,
-      as well as timing and count statisticas. The
+      as well as timing and count statistics. The
       <classname>ValueObject</classname> class is simply <programlisting
       language="java">
 public class ValueObject {
