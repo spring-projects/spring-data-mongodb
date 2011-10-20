@@ -357,26 +357,32 @@ public class Criteria implements CriteriaDefinition {
 	}
 
 	/**
-	 * Creates an or query using the $or operator for all of the provided queries
+	 * Creates an 'or' criteria using the $or operator for all of the provided criteria
 	 *
-	 * @param queries
+	 * @param criteria
 	 */
-	public void or(List<Query> queries) {
-		criteria.put("$or", queries);
-	}
-
 	public Criteria orOperator(Criteria... criteria) {
 		BasicBSONList bsonList = createCriteriaList(criteria);
 		criteriaChain.add(new Criteria("$or").is(bsonList));
 		return this;
 	}
 
+	/**
+	 * Creates a 'nor' criteria using the $nor operator for all of the provided criteria
+	 *
+	 * @param criteria
+	 */
 	public Criteria norOperator(Criteria... criteria) {
 		BasicBSONList bsonList = createCriteriaList(criteria);
 		criteriaChain.add(new Criteria("$nor").is(bsonList));
 		return this;
 	}
 
+	/**
+	 * Creates an 'and' criteria using the $and operator for all of the provided criteria
+	 *
+	 * @param criteria
+	 */
 	public Criteria andOperator(Criteria... criteria) {
 		BasicBSONList bsonList = createCriteriaList(criteria);
 		criteriaChain.add(new Criteria("$and").is(bsonList));
