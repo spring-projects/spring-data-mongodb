@@ -15,14 +15,18 @@
  */
 package org.springframework.data.mongodb.core.query;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 
 public class Query {
 
-	private LinkedHashMap<String, CriteriaDefinition> criteria = new LinkedHashMap<String, CriteriaDefinition>();
+	private LinkedHashMap<String, Criteria> criteria = new LinkedHashMap<String, Criteria>();
 	private Field fieldSpec;
 	private Sort sort;
 	private int skip;
@@ -30,7 +34,7 @@ public class Query {
 
 	/**
 	 * Static factory method to create a Query using the provided criteria
-	 * 
+	 *
 	 * @param critera
 	 * @return
 	 */
@@ -46,22 +50,16 @@ public class Query {
 	}
 
 	public Query addCriteria(Criteria criteria) {
-		this.criteria.put(criteria.getKey(), criteria);
-		return this;
-	}
-
-	public Query and(Query... queries) {
-		this.criteria.put("$and", new AndCriteria(queries));
-		return this;
-	}
-
-	public Query or(Query... queries) {
-		this.criteria.put("$or", new OrCriteria(queries));
-		return this;
-	}
-
-	public Query nor(Query... queries) {
-		this.criteria.put("$nor", new NorCriteria(queries));
+		CriteriaDefinition existing = this.criteria.get(criteria.getKey());
+		String key = criteria.getKey();
+		if (existing == null) {
+			this.criteria.put(key, criteria);
+		}
+		else {
+			throw new InvalidDataAccessApiUsageException("Due to limitations of the com.mongodb.BasicDBObject, " +
+					"you can't add a second '" + key + "' criteria. " +
+					"Query already contains '" + existing.getCriteriaObject() + "'.");
+		}
 		return this;
 	}
 
@@ -123,5 +121,9 @@ public class Query {
 
 	public int getLimit() {
 		return this.limit;
+	}
+
+	protected List<Criteria> getCriteria() {
+		return new ArrayList<Criteria>(this.criteria.values());
 	}
 }

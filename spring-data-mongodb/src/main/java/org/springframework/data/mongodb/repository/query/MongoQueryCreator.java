@@ -31,6 +31,7 @@ import org.springframework.data.mongodb.core.geo.Shape;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
+import org.springframework.data.mongodb.core.query.OrQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.query.ConvertingParameterAccessor.PotentiallyConvertingIterator;
 import org.springframework.data.repository.query.parser.AbstractQueryCreator;
@@ -133,8 +134,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Query> {
 	*/
 	@Override
 	protected Query or(Query base, Query query) {
-
-		return new Query().or(base, query);
+		return new OrQuery(new Query[] {base, query});
 	}
 
 	/*

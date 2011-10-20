@@ -20,6 +20,8 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 
+import org.bson.types.BasicBSONList;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.data.mongodb.core.geo.Circle;
 import org.springframework.data.mongodb.core.geo.Point;
@@ -30,6 +32,10 @@ import org.springframework.util.StringUtils;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
+/**
+ * Central class for creating queries. It follows a fluent API style so that you can easily chain together multiple
+ * criteria. Static import of the 'Criteria.where' method will improve readability.
+ */
 public class Criteria implements CriteriaDefinition {
 
 	/**
@@ -45,6 +51,10 @@ public class Criteria implements CriteriaDefinition {
 
 	private Object isValue = NOT_SET;
 
+	public Criteria() {
+		this.criteriaChain = new ArrayList<Criteria>();
+	}
+
 	public Criteria(String key) {
 		this.criteriaChain = new ArrayList<Criteria>();
 		this.criteriaChain.add(this);
@@ -59,7 +69,7 @@ public class Criteria implements CriteriaDefinition {
 
 	/**
 	 * Static factory method to create a Criteria using the provided key
-	 * 
+	 *
 	 * @param key
 	 * @return
 	 */
@@ -69,8 +79,7 @@ public class Criteria implements CriteriaDefinition {
 
 	/**
 	 * Static factory method to create a Criteria using the provided key
-	 * 
-	 * @param key
+	 *
 	 * @return
 	 */
 	public Criteria and(String key) {
@@ -79,7 +88,7 @@ public class Criteria implements CriteriaDefinition {
 
 	/**
 	 * Creates a criterion using equality
-	 * 
+	 *
 	 * @param o
 	 * @return
 	 */
@@ -97,7 +106,7 @@ public class Criteria implements CriteriaDefinition {
 
 	/**
 	 * Creates a criterion using the $ne operator
-	 * 
+	 *
 	 * @param o
 	 * @return
 	 */
@@ -108,7 +117,7 @@ public class Criteria implements CriteriaDefinition {
 
 	/**
 	 * Creates a criterion using the $lt operator
-	 * 
+	 *
 	 * @param o
 	 * @return
 	 */
@@ -119,7 +128,7 @@ public class Criteria implements CriteriaDefinition {
 
 	/**
 	 * Creates a criterion using the $lte operator
-	 * 
+	 *
 	 * @param o
 	 * @return
 	 */
@@ -130,7 +139,7 @@ public class Criteria implements CriteriaDefinition {
 
 	/**
 	 * Creates a criterion using the $gt operator
-	 * 
+	 *
 	 * @param o
 	 * @return
 	 */
@@ -141,7 +150,7 @@ public class Criteria implements CriteriaDefinition {
 
 	/**
 	 * Creates a criterion using the $gte operator
-	 * 
+	 *
 	 * @param o
 	 * @return
 	 */
@@ -152,7 +161,7 @@ public class Criteria implements CriteriaDefinition {
 
 	/**
 	 * Creates a criterion using the $in operator
-	 * 
+	 *
 	 * @param o the values to match against
 	 * @return
 	 */
@@ -167,7 +176,7 @@ public class Criteria implements CriteriaDefinition {
 
 	/**
 	 * Creates a criterion using the $in operator
-	 * 
+	 *
 	 * @param c the collection containing the values to match against
 	 * @return
 	 */
@@ -178,7 +187,7 @@ public class Criteria implements CriteriaDefinition {
 
 	/**
 	 * Creates a criterion using the $nin operator
-	 * 
+	 *
 	 * @param o
 	 * @return
 	 */
@@ -189,7 +198,7 @@ public class Criteria implements CriteriaDefinition {
 
 	/**
 	 * Creates a criterion using the $mod operator
-	 * 
+	 *
 	 * @param value
 	 * @param remainder
 	 * @return
@@ -204,7 +213,7 @@ public class Criteria implements CriteriaDefinition {
 
 	/**
 	 * Creates a criterion using the $all operator
-	 * 
+	 *
 	 * @param o
 	 * @return
 	 */
@@ -215,7 +224,7 @@ public class Criteria implements CriteriaDefinition {
 
 	/**
 	 * Creates a criterion using the $size operator
-	 * 
+	 *
 	 * @param s
 	 * @return
 	 */
@@ -226,7 +235,7 @@ public class Criteria implements CriteriaDefinition {
 
 	/**
 	 * Creates a criterion using the $exists operator
-	 * 
+	 *
 	 * @param b
 	 * @return
 	 */
@@ -237,7 +246,7 @@ public class Criteria implements CriteriaDefinition {
 
 	/**
 	 * Creates a criterion using the $type operator
-	 * 
+	 *
 	 * @param t
 	 * @return
 	 */
@@ -248,7 +257,7 @@ public class Criteria implements CriteriaDefinition {
 
 	/**
 	 * Creates a criterion using the $not meta operator which affects the clause directly following
-	 * 
+	 *
 	 * @return
 	 */
 	public Criteria not() {
@@ -258,7 +267,7 @@ public class Criteria implements CriteriaDefinition {
 
 	/**
 	 * Creates a criterion using a $regex
-	 * 
+	 *
 	 * @param re
 	 * @return
 	 */
@@ -269,7 +278,7 @@ public class Criteria implements CriteriaDefinition {
 
 	/**
 	 * Creates a criterion using a $regex and $options
-	 * 
+	 *
 	 * @param re
 	 * @param options
 	 * @return
@@ -284,7 +293,7 @@ public class Criteria implements CriteriaDefinition {
 
 	/**
 	 * Creates a geospatial criterion using a $within $center operation. This is only available for Mongo 1.7 and higher.
-	 * 
+	 *
 	 * @param circle must not be {@literal null}
 	 * @return
 	 */
@@ -303,7 +312,7 @@ public class Criteria implements CriteriaDefinition {
 
 	/**
 	 * Creates a geospatial criterion using a $near operation
-	 * 
+	 *
 	 * @param point must not be {@literal null}
 	 * @return
 	 */
@@ -315,7 +324,7 @@ public class Criteria implements CriteriaDefinition {
 
 	/**
 	 * Creates a geospatial criterion using a $nearSphere operation. This is only available for Mongo 1.7 and higher.
-	 * 
+	 *
 	 * @param point must not be {@literal null}
 	 * @return
 	 */
@@ -327,7 +336,7 @@ public class Criteria implements CriteriaDefinition {
 
 	/**
 	 * Creates a geospatical criterion using a $maxDistance operation, for use with $near
-	 * 
+	 *
 	 * @param maxDistance
 	 * @return
 	 */
@@ -338,7 +347,7 @@ public class Criteria implements CriteriaDefinition {
 
 	/**
 	 * Creates a criterion using the $elemMatch operator
-	 * 
+	 *
 	 * @param c
 	 * @return
 	 */
@@ -349,12 +358,31 @@ public class Criteria implements CriteriaDefinition {
 
 	/**
 	 * Creates an or query using the $or operator for all of the provided queries
-	 * 
+	 *
 	 * @param queries
 	 */
 	public void or(List<Query> queries) {
 		criteria.put("$or", queries);
 	}
+
+	public Criteria orOperator(Criteria... criteria) {
+		BasicBSONList bsonList = createCriteriaList(criteria);
+		criteriaChain.add(new Criteria("$or").is(bsonList));
+		return this;
+	}
+
+	public Criteria norOperator(Criteria... criteria) {
+		BasicBSONList bsonList = createCriteriaList(criteria);
+		criteriaChain.add(new Criteria("$nor").is(bsonList));
+		return this;
+	}
+
+	public Criteria andOperator(Criteria... criteria) {
+		BasicBSONList bsonList = createCriteriaList(criteria);
+		criteriaChain.add(new Criteria("$and").is(bsonList));
+		return this;
+	}
+
 
 	public String getKey() {
 		return this.key;
@@ -372,7 +400,10 @@ public class Criteria implements CriteriaDefinition {
 		} else {
 			DBObject criteriaObject = new BasicDBObject();
 			for (Criteria c : this.criteriaChain) {
-				criteriaObject.putAll(c.getSingleCriteriaObject());
+				DBObject dbo = c.getSingleCriteriaObject();
+				for (String k : dbo.keySet()) {
+					setValue(criteriaObject, k, dbo.get(k));
+				}
 			}
 			return criteriaObject;
 		}
@@ -403,6 +434,26 @@ public class Criteria implements CriteriaDefinition {
 			queryCriteria.put(this.key, dbo);
 		}
 		return queryCriteria;
+	}
+
+	private BasicBSONList createCriteriaList(Criteria[] criteria) {
+		BasicBSONList bsonList = new BasicBSONList();
+		for (Criteria c : criteria) {
+			bsonList.add(c.getCriteriaObject());
+		}
+		return bsonList;
+	}
+
+	private void setValue(DBObject dbo, String key, Object value) {
+		Object existing = dbo.get(key);
+		if (existing == null) {
+			dbo.put(key, value);
+		}
+		else {
+			throw new InvalidDataAccessApiUsageException("Due to limitations of the com.mongodb.BasicDBObject, " +
+					"you can't add a second '" + key + "' expression specified as '" + key + " : " + value + "'. " +
+					"Criteria already contains '" + key + " : " + existing + "'.");
+		}
 	}
 
 }

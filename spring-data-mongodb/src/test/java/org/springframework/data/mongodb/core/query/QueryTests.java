@@ -20,10 +20,6 @@ import static org.springframework.data.mongodb.core.query.Criteria.*;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
-import org.springframework.data.mongodb.core.query.BasicQuery;
-import org.springframework.data.mongodb.core.query.NorQuery;
-import org.springframework.data.mongodb.core.query.OrQuery;
-import org.springframework.data.mongodb.core.query.Query;
 
 public class QueryTests {
 
@@ -52,23 +48,21 @@ public class QueryTests {
 
 	@Test
 	public void testOrQuery() {
-		Query q = new OrQuery(new Query(where("name").is("Sven").and("age").lt(50)), new Query(where("age").lt(50)),
-				new BasicQuery("{'name' : 'Thomas'}"));
+		Query q = new Query(new Criteria().orOperator(where("name").is("Sven").and("age").lt(50), where("age").lt(50), where("name").is("Thomas")));
 		String expected = "{ \"$or\" : [ { \"name\" : \"Sven\" , \"age\" : { \"$lt\" : 50}} , { \"age\" : { \"$lt\" : 50}} , { \"name\" : \"Thomas\"}]}";
 		Assert.assertEquals(expected, q.getQueryObject().toString());
 	}
 
 	@Test
 	public void testAndQuery() {
-		Query q = new AndQuery(new Query(where("name").is("Sven")), new Query(where("age").lt(50)));
+		Query q = new Query(new Criteria().andOperator(where("name").is("Sven"), where("age").lt(50)));
 		String expected = "{ \"$and\" : [ { \"name\" : \"Sven\"} , { \"age\" : { \"$lt\" : 50}}]}";
 		Assert.assertEquals(expected, q.getQueryObject().toString());
 	}
 
 	@Test
 	public void testNorQuery() {
-		Query q = new NorQuery(new Query(where("name").is("Sven")), new Query(where("age").lt(50)), new BasicQuery(
-				"{'name' : 'Thomas'}"));
+		Query q = new Query(new Criteria().norOperator(where("name").is("Sven"), where("age").lt(50), where("name").is("Thomas")));
 		String expected = "{ \"$nor\" : [ { \"name\" : \"Sven\"} , { \"age\" : { \"$lt\" : 50}} , { \"name\" : \"Thomas\"}]}";
 		Assert.assertEquals(expected, q.getQueryObject().toString());
 	}

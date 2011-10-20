@@ -363,7 +363,8 @@ public class MappingTests {
 
 		Query one = query(where("ssn").is(1));
 		Query two = query(where("ssn").is(2));
-		List<PersonWithObjectId> results = template.find(new Query().or(one, two), PersonWithObjectId.class);
+		List<PersonWithObjectId> results = template.find(new Query(
+				new Criteria().orOperator(where("ssn").is(1), where("ssn").is(2))), PersonWithObjectId.class);
 
 		assertNotNull(results);
 		assertThat(results.size(), is(2));
@@ -462,7 +463,7 @@ public class MappingTests {
 		assertNotNull(p2.getPersonPojoLongId());
 		assertEquals(12L, p2.getPersonPojoLongId().getId());
 	}
-	
+
 	/**
 	 * @see DATADOC-275
 	 */
@@ -471,45 +472,45 @@ public class MappingTests {
 
 		template.dropCollection(Item.class);
 		template.dropCollection(Container.class);
-		
+
 		Item item = new Item();
 		Item items = new Item();
 		template.insert(item);
 		template.insert(items);
-		
+
 		Container container = new Container();
 		container.item = item;
 		container.items = Arrays.asList(items);
-		
+
 		template.insert(container);
-		
+
 		Container result = template.findOne(query(where("id").is(container.id)), Container.class);
 		assertThat(result.item.id, is(item.id));
 		assertThat(result.items.size(), is(1));
 		assertThat(result.items.get(0).id, is(items.id));
 	}
-	
-	
+
+
 	class Container {
-		
+
 		@Id
 		final String id;
-		
+
 		public Container() {
 			id = new ObjectId().toString();
 		}
-		
+
 		@DBRef
 		Item item;
 		@DBRef
 		List<Item> items;
 	}
-	
+
 	class Item {
-		
+
 		@Id
 		final String id;
-		
+
 		public Item() {
 			this.id = new ObjectId().toString();
 		}

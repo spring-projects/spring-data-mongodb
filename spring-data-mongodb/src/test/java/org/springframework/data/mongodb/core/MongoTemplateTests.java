@@ -641,9 +641,7 @@ public class MongoTemplateTests {
 		p4.setAge(41);
 		template.insert(p4);
 
-		Query q1 = new Query(Criteria.where("age").in(11, 21));
-		Query q2 = new Query(Criteria.where("age").is(31));
-		Query orQuery = new Query().or(q1, q2);
+		Query orQuery = new Query(new Criteria().orOperator(where("age").in(11, 21), where("age").is(31)));
 		List<PersonWithIdPropertyOfTypeObjectId> results = template.find(orQuery, PersonWithIdPropertyOfTypeObjectId.class);
 		assertThat(results.size(), is(3));
 		for (PersonWithIdPropertyOfTypeObjectId p : results) {

@@ -220,14 +220,19 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements Paging
 
 		Query query = null;
 
+		//TODO: verify intent
+//		for (ID id : ids) {
+//			if (query == null) {
+//				query = getIdQuery(id);
+//			} else {
+//				query = new Query().or(getIdQuery(id));
+//			}
+//		}
+		List<ID> idList = new ArrayList<ID>();
 		for (ID id : ids) {
-			if (query == null) {
-				query = getIdQuery(id);
-			} else {
-				query = new Query().or(getIdQuery(id));
-			}
+			idList.add(id);
 		}
-
+		query = new Query(Criteria.where(entityInformation.getIdAttribute()).in(idList));
 		return findAll(query);
 	}
 

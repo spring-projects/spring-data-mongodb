@@ -15,10 +15,21 @@
  */
 package org.springframework.data.mongodb.core.query;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class OrQuery extends Query {
 
 	public OrQuery(Query... q) {
-		super.or(q);
+		super(getOrCriteria(q));
+	}
+
+	private static Criteria getOrCriteria(Query[] queries) {
+		List<Criteria> criteriaList = new ArrayList<Criteria>();
+		for (Query q : queries) {
+			criteriaList.addAll(q.getCriteria());
+		}
+		return new Criteria(criteriaList, "$or");
 	}
 
 }
