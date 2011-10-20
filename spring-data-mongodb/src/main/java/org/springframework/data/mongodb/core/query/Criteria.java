@@ -21,7 +21,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 
 import org.bson.types.BasicBSONList;
-import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.data.mongodb.core.geo.Circle;
 import org.springframework.data.mongodb.core.geo.Point;
@@ -456,7 +455,7 @@ public class Criteria implements CriteriaDefinition {
 			dbo.put(key, value);
 		}
 		else {
-			throw new InvalidDataAccessApiUsageException("Due to limitations of the com.mongodb.BasicDBObject, " +
+			throw new InvalidMongoDbApiUsageException("Due to limitations of the com.mongodb.BasicDBObject, " +
 					"you can't add a second '" + key + "' expression specified as '" + key + " : " + value + "'. " +
 					"Criteria already contains '" + key + " : " + existing + "'.");
 		}

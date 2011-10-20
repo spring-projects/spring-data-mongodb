@@ -16,13 +16,12 @@
 package org.springframework.data.mongodb.core.query;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
-import org.springframework.dao.InvalidDataAccessApiUsageException;
+import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 
 public class Query {
 
@@ -56,7 +55,7 @@ public class Query {
 			this.criteria.put(key, criteria);
 		}
 		else {
-			throw new InvalidDataAccessApiUsageException("Due to limitations of the com.mongodb.BasicDBObject, " +
+			throw new InvalidMongoDbApiUsageException("Due to limitations of the com.mongodb.BasicDBObject, " +
 					"you can't add a second '" + key + "' criteria. " +
 					"Query already contains '" + existing.getCriteriaObject() + "'.");
 		}
