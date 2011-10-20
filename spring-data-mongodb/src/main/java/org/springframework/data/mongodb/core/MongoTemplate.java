@@ -809,7 +809,50 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			return;
 		}
 
-		remove(new Query(where(getIdPropertyName(object)).is(getIdValue(object))), object.getClass());
+		remove(getIdQueryFor(object), object.getClass());
+	}
+	
+	public void remove(Object object, String collection) {
+		
+		Assert.hasText(collection);
+		
+		if (object == null) {
+			return;
+		}
+		
+		remove(getIdQueryFor(object), collection);
+	}
+	
+	/**
+	 * Returns a {@link Query} for the given entity by its id.
+	 * 
+	 * @param object must not be {@literal null}.
+	 * @return
+	 */
+	private Query getIdQueryFor(Object object) {
+		
+		Assert.notNull(object);
+		
+		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(object.getClass());
+		MongoPersistentProperty idProp = entity.getIdProperty();
+
+		if (idProp == null) {
+			throw new MappingException("No id property found for object of type " + entity.getType().getName());
+		}
+
+		ConversionService service = mongoConverter.getConversionService();
+		Object idProperty = null;
+
+		try {
+			
+			idProperty = BeanWrapper.create(object, service).getProperty(idProp, Object.class, true);
+			return new Query(where(idProp.getFieldName()).is(idProperty));
+			
+		} catch (IllegalAccessException e) {
+			throw new MappingException(e.getMessage(), e);
+		} catch (InvocationTargetException e) {
+			throw new MappingException(e.getMessage(), e);
+		}
 	}
 
 	public <T> void remove(Query query, Class<T> entityClass) {
@@ -1133,35 +1176,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
 		return executeFindOneInternal(new FindAndRemoveCallback(mapper.getMappedObject(query, entity), fields, sort),
 				new ReadDbObjectCallback<T>(readerToUse, entityClass), collectionName);
-	}
-
-	protected Object getIdValue(Object object) {
-
-		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(object.getClass());
-		MongoPersistentProperty idProp = entity.getIdProperty();
-
-		if (idProp == null) {
-			throw new MappingException("No id property found for object of type " + entity.getType().getName());
-		}
-
-		ConversionService service = mongoConverter.getConversionService();
-
-		try {
-			return BeanWrapper.create(object, service).getProperty(idProp, Object.class, true);
-		} catch (IllegalAccessException e) {
-			throw new MappingException(e.getMessage(), e);
-		} catch (InvocationTargetException e) {
-			throw new MappingException(e.getMessage(), e);
-		}
-	}
-
-	protected String getIdPropertyName(Object object) {
-		Assert.notNull(object);
-
-		MongoPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(object.getClass());
-		MongoPersistentProperty idProperty = persistentEntity.getIdProperty();
-
-		return idProperty == null ? ID : idProperty.getName();
 	}
 
 	/**

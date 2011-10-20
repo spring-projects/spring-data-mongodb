@@ -657,11 +657,19 @@ public interface MongoOperations {
 	WriteResult updateMulti(Query query, Update update, String collectionName);
 
 	/**
-	 * Remove the given object from the collection by Id
+	 * Remove the given object from the collection by id.
 	 * 
 	 * @param object
 	 */
 	void remove(Object object);
+	
+	/**
+	 * Removes the given object from the given collection.
+	 * 
+	 * @param object
+	 * @param collection must not be {@literal null} or empty.
+	 */
+	void remove(Object object, String collection);
 
 	/**
 	 * Remove all documents that match the provided query document criteria from the the collection used to store the

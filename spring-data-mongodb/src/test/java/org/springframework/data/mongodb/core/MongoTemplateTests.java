@@ -914,6 +914,23 @@ public class MongoTemplateTests {
 		assertThat(testClassList.size(), is(1));
 		assertThat(testClassList.get(0).getMyDate(), is(testClass.getMyDate()));
 	}
+
+	/**
+	 * @see DATADOC-230
+	 */
+	@Test
+	public void removesEntityFromCollection() {
+		
+		template.remove(new Query(), "mycollection");
+		
+		Person person = new Person("Dave");
+		
+		template.save(person, "mycollection");
+		assertThat(template.findAll(TestClass.class, "mycollection").size(), is(1));
+		
+		template.remove(person, "mycollection");
+		assertThat(template.findAll(Person.class, "mycollection").isEmpty(), is(true));
+	}
 	
 	public class TestClass {
 
