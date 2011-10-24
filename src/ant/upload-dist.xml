@@ -7,15 +7,15 @@
 
   ant -f src/ant/upload-dist.xml \
       -Ddist.id=spring-data-document \
-      -Ddist.name='Spring Data Document' \
+      -Ddist.name='Spring Data MongoDB' \
       -Ddist.key=DATADOC \
       -Ddist.releaseType=milestone \
       -Ddist.accessKey=<access key> \
       -Ddist.secretKey=<secret key> \
       -Ddist.bucketName=dist.springframework.org \
-      -Ddist.fileName=spring-data-document-1.0.0.M1.zip \
-      -Ddist.filePath=../../spring-data-document-1.0.0.M1.zip \
-      -Ddist.version=1.0.0.M1 \
+      -Ddist.fileName=spring-data-mongodb-1.0.0.M5.zip \
+      -Ddist.filePath=../../spring-data-mongodb-1.0.0.M5.zip \
+      -Ddist.version=1.0.0.M5 \
       upload-dist
   -->
 

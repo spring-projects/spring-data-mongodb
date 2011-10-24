@@ -1,6 +1,54 @@
 Spring Data Document Changelog
 =============================================
 
+Changes in version 1.0.0.M5 MongoDB (2011-10-24)
+------------------------------------------------
+
+** Bug
+    * [DATAMONGO-259] - Maps inside collections are not written correctly
+    * [DATAMONGO-268] - CustomConversions is too liberal in registering "simple types" (asymmetric conversion)
+    * [DATAMONGO-269] - XML configuration for replica sets is not working
+    * [DATAMONGO-275] - DBRef fields and collections are returning nulls
+    * [DATAMONGO-281] - Improve the <mongo:db-factory> to handle blank username and password when using property placholders like ${mongo.username}
+    * [DATAMONGO-282] - Cannot create a "range" query
+    * [DATAMONGO-284] - Execution of Querydsl query maps id incorrectly
+    * [DATAMONGO-285] - NPE in MappingMongoConverter.writeMapInternal when saving a Map<String,Object> with val instance of Collection
+    * [DATAMONGO-288] - querying same property multiple times produces incorrect query 
+    * [DATAMONGO-289] - AbstractMongoEventListener will never call onAfterLoad
+    * [DATAMONGO-294] - List elements nested in Map lose their type when persisted
+
+** Improvement
+    * [DATAMONGO-65] - Allow Spring EL usage in collection name attribute of @Document
+    * [DATAMONGO-183] - Query count() support for pagination
+    * [DATAMONGO-258] - M4 documentation states SD Commons 1.1.0.M1 required but actually needs 1.2.0.M1
+    * [DATAMONGO-261] - Reference documentation for geoNear queries has no stable section id
+    * [DATAMONGO-270] - Approach Sonar results to improve code quality
+    * [DATAMONGO-271] - Remove 'document' from cross-store package names
+    * [DATAMONGO-272] - Namespace configuration file still resides in 'document' package
+    * [DATAMONGO-276] - QueryUtils should be public
+    * [DATAMONGO-280] - Add maxAutoConnectRetryTime for <mongo:db-factory> and  MongoOptionsFactoryBean
+    * [DATAMONGO-283] - $and support
+    * [DATAMONGO-286] - MongoDB Repository no query methods for $lte and $gte
+    * [DATAMONGO-291] - Path expressions in repository methods should honour mapping metadata
+    * [DATAMONGO-293] - Add support for new polygon based within search in Mongo 2.0.
+    * [DATAMONGO-295] - Allow MongoTemplate to be configured using MongoURI
+    * [DATAMONGO-300] - Re-work the Query/Criteria to better support $and, $or and $nor queries
+    * [DATAMONGO-302] - Consistently handle null values given to CrudRepository implementation
+
+** New Feature
+    * [DATAMONGO-230] - MongoTemplate missing method remove(Object object, String collectionName)
+
+** Refactoring
+    * [DATAMONGO-274] - Split up repository package according to the structure in Spring Data JPA
+
+** Task
+    * [DATAMONGO-264] - Ensure Data Document examples work 
+    * [DATAMONGO-265] - Create new github repository for mongodb
+    * [DATAMONGO-266] - Create new github repository for CouchDB
+    * [DATAMONGO-297] - Prune project directory
+    * [DATAMONGO-303] - Update to QueryDsl 2.2.4
+
+
 Changes in version 1.0.0.M4 MongoDB (2011-09-01)
 ------------------------------------------------
 

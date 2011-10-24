@@ -5,7 +5,7 @@
   <groupId>org.springframework.data</groupId>
   <artifactId>spring-data-mongo-dist</artifactId>
   <name>Spring Data MongoDB Distribution</name>
-  <version>1.0.0.BUILD-SNAPSHOT</version>
+  <version>1.0.0.M5</version>
   <packaging>pom</packaging>
   <modules>
     <module>spring-data-mongodb</module>
@@ -89,7 +89,7 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <!-- dist.* properties are used by the antrun tasks below -->
-    <dist.id>spring-data-document</dist.id>
+    <dist.id>spring-data-mongo</dist.id>
     <dist.name>Spring Data Mongo</dist.name>
     <dist.key>SDMONGO</dist.key>
     <dist.version>${project.version}</dist.version>
@@ -174,7 +174,7 @@
               </fileset>
             </copy>
             <move file="${project.basedir}/target/site/reference/pdf/index.pdf"
-                  tofile="${project.basedir}/target/site/reference/pdf/spring-data-document-reference.pdf"
+                  tofile="${project.basedir}/target/site/reference/pdf/spring-data-mongo-reference.pdf"
                   failonerror="false"/>
           </postProcess>
         </configuration>
@@ -257,8 +257,8 @@
         </dependencies>
       </plugin>
     </plugins>
-    <!-- the name of this project is 'spring-data-document-dist';
-         make sure the zip file is just 'spring-data-document'. -->
+    <!-- the name of this project is 'spring-data-mongo-dist';
+         make sure the zip file is just 'spring-data-mongo'. -->
     <finalName>${dist.finalName}</finalName>
   </build>
 
