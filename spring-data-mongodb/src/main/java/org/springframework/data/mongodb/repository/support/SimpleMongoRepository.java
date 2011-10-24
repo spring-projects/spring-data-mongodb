@@ -97,6 +97,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements Paging
 	 * )
 	 */
 	public T findOne(ID id) {
+		Assert.notNull(id, "The given id must not be null!");
 		return template.findById(id, entityInformation.getJavaType());
 	}
 
@@ -115,8 +116,9 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements Paging
 	 * org.springframework.data.repository.Repository#exists(java.io.Serializable
 	 * )
 	 */
-	public boolean exists(final ID id) {
+	public boolean exists(ID id) {
 
+		Assert.notNull(id, "The given id must not be null!");
 		return template.findOne(new Query(Criteria.where("_id").is(id)), Object.class,
 				entityInformation.getCollectionName()) != null;
 	}
@@ -136,6 +138,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements Paging
 	 * @see org.springframework.data.repository.Repository#delete(java.io.Serializable)
 	 */
 	public void delete(ID id) {
+		Assert.notNull(id, "The given id must not be null!");
 		template.remove(getIdQuery(id), entityInformation.getJavaType());
 	}
 
@@ -146,6 +149,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements Paging
 	 * org.springframework.data.repository.Repository#delete(java.lang.Object)
 	 */
 	public void delete(T entity) {
+		Assert.notNull(entity, "The given entity must not be null!");
 		delete(entityInformation.getId(entity));
 	}
 
