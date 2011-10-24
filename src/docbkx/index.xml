@@ -3,7 +3,7 @@
     "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
 <book xmlns:xi="http://www.w3.org/2001/XInclude">
   <bookinfo>
-    <title>Spring Datastore Document - Reference Documentation</title>
+    <title>Spring Data MongoDB - Reference Documentation</title>
 
     <releaseinfo>&version;</releaseinfo>
 

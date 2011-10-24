@@ -4,10 +4,10 @@
 <preface id="preface">
   <title>Preface</title>
 
-  <para>The Spring Datastore Document project applies core Spring concepts to
-    the development of solutions using a document style data store. We provide a
-    "template" as a high-level abstraction for storing and querying documents.
-    You will notice similarities to the JDBC support in the Spring
+  <para>The Spring Data MongoDB project applies core Spring concepts to
+    the development of solutions using the MongoDB document style data store. 
+    We provide a "template" as a high-level abstraction for storing and querying
+    documents. You will notice similarities to the JDBC support in the Spring
     Framework.
   </para>
 </preface>

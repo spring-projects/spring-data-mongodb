@@ -1,7 +1,7 @@
-SPRING DATASTORE DOCUMENT 1.0.0.M1 MongoDB
-------------------------------------------
+SPRING DATA MongoDB 1.0.0.M5
+----------------------------
 
-Spring Datastore Document is released under the terms of the Apache Software License Version 2.0 (see license.txt).
+Spring Data MongoDB is released under the terms of the Apache Software License Version 2.0 (see license.txt).
 
 
 DISTRIBUTION CONTENTS:
