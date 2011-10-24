@@ -81,7 +81,7 @@
     <title>Getting Started</title>
 
     <para>Spring MongoDB support requires MongoDB 1.4 or higher and Java SE 5
-    or higher. The latest production release (1.8.x as of this writing) is
+    or higher. The latest production release (2.0.x as of this writing) is
     recommended. An easy way to bootstrap setting up a working environment is
     to create a Spring based project in <ulink
     url="http://www.springsource.com/developer/sts">STS</ulink>.</para>
@@ -106,7 +106,7 @@
   &lt;dependency&gt;
     &lt;groupId&gt;org.springframework.data&lt;/groupId&gt;
     &lt;artifactId&gt;spring-data-mongodb&lt;/artifactId&gt;
-    &lt;version&gt;1.0.0.M4&lt;/version&gt;
+    &lt;version&gt;1.0.0.M5&lt;/version&gt;
   &lt;/dependency&gt;
 
 &lt;/dependencies&gt;
@@ -174,13 +174,13 @@ public class Person {
 
     <programlisting language="java">package org.spring.mongodb.example;
 
-import static org.springframework.data.document.mongodb.query.Criteria.where;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.data.document.mongodb.MongoOperations;
-import org.springframework.data.document.mongodb.MongoTemplate;
-import org.springframework.data.document.mongodb.query.Query;
+import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Query;
 
 import com.mongodb.Mongo;
 
@@ -203,10 +203,10 @@ public class MongoApp {
     <para>This will produce the following output</para>
 
     <programlisting>10:01:32,062 DEBUG apping.MongoPersistentEntityIndexCreator:  80 - Analyzing class class org.spring.example.Person for index information.
-10:01:32,265 DEBUG work.data.document.mongodb.MongoTemplate: 631 - insert DBObject containing fields: [_class, age, name] in collection: Person
-10:01:32,765 DEBUG work.data.document.mongodb.MongoTemplate:1243 - findOne using query: { "name" : "Joe"} in db.collection: database.Person
+10:01:32,265 DEBUG work.data.mongodb.core.MongoTemplate: 631 - insert DBObject containing fields: [_class, age, name] in collection: Person
+10:01:32,765 DEBUG work.data.mongodb.core.MongoTemplate:1243 - findOne using query: { "name" : "Joe"} in db.collection: database.Person
 10:01:32,953  INFO      org.spring.mongodb.example.MongoApp:  25 - Person [id=4ddbba3c0be56b7e1b210166, name=Joe, age=34]
-10:01:32,984 DEBUG work.data.document.mongodb.MongoTemplate: 375 - Dropped collection [database.person]</programlisting>
+10:01:32,984 DEBUG work.data.mongodb.core.MongoTemplate: 375 - Dropped collection [database.person]</programlisting>
 
     <para>Even in this simple example, there are few things to take notice
     of</para>
@@ -535,7 +535,7 @@ public class AppConfig {
       username and password. With that information you can obtain a
       com.mongodb.DB object and access all the functionality of a specific
       MongoDB database instance. Spring provides the
-      <classname>org.springframework.data.document.mongodb.MongoDbFactory</classname>
+      <classname>org.springframework.data.mongodb.core.MongoDbFactory</classname>
       interface shown below to bootstrap connectivity to the database.</para>
 
       <programlisting language="java">public interface MongoDbFactory {
@@ -553,7 +553,7 @@ public class AppConfig {
       MongoTemplate.</para>
 
       <para>The class
-      <classname>org.springframework.data.document.mongodb.SimpleMongoDbFactory</classname>
+      <classname>org.springframework.data.mongodb.core.SimpleMongoDbFactory</classname>
       provides implements the MongoDbFactory interface and is created with a
       standard <classname>com.mongodb.Mongo</classname> instance, the database
       name and an optional
@@ -681,7 +681,7 @@ public class MongoConfiguration {
 
 &lt;mongo:db-factory dbname="database" mongo-ref="mongo"/&gt;
 
-&lt;bean id="anotherMongoTemplate" class="org.springframework.data.document.mongodb.MongoTemplate"&gt;
+&lt;bean id="anotherMongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate"&gt;
   &lt;constructor-arg name="mongoDbFactory" ref="mongoDbFactory"/&gt;
 &lt;/bean&gt;</programlisting>
 
@@ -832,7 +832,7 @@ public class AppConfig {
 
       <programlisting language="java">  &lt;mongo:mongo host="localhost" port="27017"/&gt;
   
-  &lt;bean id="mongoTemplate" class="org.springframework.data.document.mongodb.MongoTemplate"&gt;
+  &lt;bean id="mongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate"&gt;
     &lt;constructor-arg ref="mongo"/&gt;
     &lt;constructor-arg name="databaseName" value="geospatial"/&gt;
   &lt;/bean&gt;</programlisting>
@@ -933,17 +933,17 @@ public class AppConfig {
 
     <programlisting language="java">package org.spring.example;
 
-import static org.springframework.data.document.mongodb.query.Criteria.where;
-import static org.springframework.data.document.mongodb.query.Update.update;
-import static org.springframework.data.document.mongodb.query.Query.query;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.springframework.data.mongodb.core.query.Update.update;
+import static org.springframework.data.mongodb.core.query.Query.query;
 
 import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.data.document.mongodb.MongoOperations;
-import org.springframework.data.document.mongodb.MongoTemplate;
-import org.springframework.data.document.mongodb.SimpleMongoDbFactory;
+import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 
 import com.mongodb.Mongo;
 
@@ -987,16 +987,16 @@ public class MongoApp {
     messages from <classname>MongoTemplate</classname> itself)</para>
 
     <programlisting>DEBUG apping.MongoPersistentEntityIndexCreator:  80 - Analyzing class class org.spring.example.Person for index information.
-DEBUG work.data.document.mongodb.MongoTemplate: 632 - insert DBObject containing fields: [_class, age, name] in collection: person
+DEBUG work.data.mongodb.core.MongoTemplate: 632 - insert DBObject containing fields: [_class, age, name] in collection: person
 INFO               org.spring.example.MongoApp:  30 - Insert: Person [id=4ddc6e784ce5b1eba3ceaf5c, name=Joe, age=34]
-DEBUG work.data.document.mongodb.MongoTemplate:1246 - findOne using query: { "_id" : { "$oid" : "4ddc6e784ce5b1eba3ceaf5c"}} in db.collection: database.person
+DEBUG work.data.mongodb.core.MongoTemplate:1246 - findOne using query: { "_id" : { "$oid" : "4ddc6e784ce5b1eba3ceaf5c"}} in db.collection: database.person
 INFO               org.spring.example.MongoApp:  34 - Found: Person [id=4ddc6e784ce5b1eba3ceaf5c, name=Joe, age=34]
-DEBUG work.data.document.mongodb.MongoTemplate: 778 - calling update using query: { "name" : "Joe"} and update: { "$set" : { "age" : 35}} in collection: person
-DEBUG work.data.document.mongodb.MongoTemplate:1246 - findOne using query: { "name" : "Joe"} in db.collection: database.person
+DEBUG work.data.mongodb.core.MongoTemplate: 778 - calling update using query: { "name" : "Joe"} and update: { "$set" : { "age" : 35}} in collection: person
+DEBUG work.data.mongodb.core.MongoTemplate:1246 - findOne using query: { "name" : "Joe"} in db.collection: database.person
 INFO               org.spring.example.MongoApp:  39 - Updated: Person [id=4ddc6e784ce5b1eba3ceaf5c, name=Joe, age=35]
-DEBUG work.data.document.mongodb.MongoTemplate: 823 - remove using query: { "id" : "4ddc6e784ce5b1eba3ceaf5c"} in collection: person
+DEBUG work.data.mongodb.core.MongoTemplate: 823 - remove using query: { "id" : "4ddc6e784ce5b1eba3ceaf5c"} in collection: person
 INFO               org.spring.example.MongoApp:  46 - Number of people = : 0
-DEBUG work.data.document.mongodb.MongoTemplate: 376 - Dropped collection [database.person]</programlisting>
+DEBUG work.data.mongodb.core.MongoTemplate: 376 - Dropped collection [database.person]</programlisting>
 
     <para>There was implicit conversion using the MongoConverter between a
     String and ObjectId as stored in the database and recognizing a convention
@@ -1108,8 +1108,8 @@ DEBUG work.data.document.mongodb.MongoTemplate: 376 - Dropped collection [databa
         <title>Inserting and retrieving documents using the
         MongoTemplate</title>
 
-        <programlisting language="java">import static org.springframework.data.document.mongodb.query.Criteria.where;
-import static org.springframework.data.document.mongodb.query.Criteria.query;
+        <programlisting language="java">import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.springframework.data.mongodb.core.query.Criteria.query;
 
     ...
 
@@ -1227,9 +1227,9 @@ import static org.springframework.data.document.mongodb.query.Criteria.query;
       <example>
         <title>Updating documents using the MongoTemplate</title>
 
-        <programlisting language="java">import static org.springframework.data.document.mongodb.query.Criteria.where;
-import static org.springframework.data.document.mongodb.query.Query;
-import static org.springframework.data.document.mongodb.query.Update;
+        <programlisting language="java">import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.springframework.data.mongodb.core.query.Query;
+import static org.springframework.data.mongodb.core.query.Update;
 
           ...
 
@@ -1402,8 +1402,8 @@ import static org.springframework.data.document.mongodb.query.Update;
       <example>
         <title>Querying for documents using the MongoTemplate</title>
 
-        <programlisting language="java">import static org.springframework.data.document.mongodb.query.Criteria.where;
-import static org.springframework.data.document.mongodb.query.Query.query;
+        <programlisting language="java">import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.springframework.data.mongodb.core.query.Query.query;
 
     ...
 
@@ -1418,7 +1418,7 @@ import static org.springframework.data.document.mongodb.query.Query.query;
       named <classname>where</classname> used to instantiate a new
       <classname>Criteria</classname> object. We recommend using a static
       import for
-      <classname>org.springframework.data.document.mongodb.query.Criteria.where</classname>
+      <classname>org.springframework.data.mongodb.core.query.Criteria.where</classname>
       and <literal>Query.query</literal> to make the query more
       readable.</para>
 
@@ -1448,6 +1448,14 @@ import static org.springframework.data.document.mongodb.query.Query.query;
               <literal>key</literal> to the current
               <classname>Criteria</classname> and retuns the newly created
               one</para>
+            </listitem>
+
+            <listitem>
+              <para><literal>Criteria</literal> <emphasis role="bold">andOperator
+              </emphasis> <literal>(Criteria...
+              criteria)</literal>Creates an and query using the
+              <literal>$and</literal> operator for all of the provided
+              criteria (requires MongoDB 2.0 or later)</para>
             </listitem>
 
             <listitem>
@@ -1527,6 +1535,14 @@ import static org.springframework.data.document.mongodb.query.Query.query;
             </listitem>
 
             <listitem>
+              <para><literal>Criteria</literal> <emphasis role="bold">norOperator
+              </emphasis> <literal>(Criteria...
+              criteria)</literal>Creates an nor query using the
+              <literal>$nor</literal> operator for all of the provided
+              criteria</para>
+            </listitem>
+
+            <listitem>
               <para><literal>Criteria</literal> <emphasis role="bold">not
               </emphasis> <literal>()</literal>Creates a criterion using the
               <literal>$not</literal> meta operator which affects the clause
@@ -1534,11 +1550,11 @@ import static org.springframework.data.document.mongodb.query.Query.query;
             </listitem>
 
             <listitem>
-              <para><literal>Criteria</literal> <emphasis role="bold">or
-              </emphasis> <literal>(List&lt;Query&gt;
-              queries)</literal>Creates an or query using the
+              <para><literal>Criteria</literal> <emphasis role="bold">orOperator
+              </emphasis> <literal>(Criteria...
+              criteria)</literal>Creates an or query using the
               <literal>$or</literal> operator for all of the provided
-              queries</para>
+              criteria</para>
             </listitem>
 
             <listitem>
@@ -1622,14 +1638,6 @@ import static org.springframework.data.document.mongodb.query.Query.query;
               <para><literal>Query</literal> <emphasis role="bold">addCriteria
               </emphasis> <literal>(Criteria criteria)</literal> used to add
               additional criteria to the query</para>
-            </listitem>
-
-            <listitem>
-              <para><literal>void</literal> <emphasis
-              role="bold">or</emphasis> <literal>(List&lt;Query&gt;
-              queries)</literal> Creates an or query using the
-              <literal>$or</literal> operator for all of the provided
-              queries</para>
             </listitem>
 
             <listitem>
@@ -2038,14 +2046,14 @@ public class PersonWriteConverter implements Converter&lt;Person, DBObject&gt; {
   &lt;mongo:custom-converters&gt;
     &lt;mongo:converter ref="readConverter"/&gt;
     &lt;mongo:converter&gt;
-      &lt;bean class="org.springframework.data.document.mongodb.PersonWriteConverter"/&gt;
+      &lt;bean class="org.springframework.data.mongodb.test.PersonWriteConverter"/&gt;
     &lt;/mongo:converter&gt;
   &lt;/mongo:custom-converters&gt;
 &lt;/mongo:mapping-converter&gt;
 
-&lt;bean id="readConverter" class="org.springframework.data.document.mongodb.PersonReadConverter"/&gt;
+&lt;bean id="readConverter" class="org.springframework.data.mongodb.test.PersonReadConverter"/&gt;
 
-&lt;bean id="mongoTemplate" class="org.springframework.data.document.mongodb.MongoTemplate"&gt;
+&lt;bean id="mongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate"&gt;
   &lt;constructor-arg name="mongoDbFactory" ref="mongoDbFactory"/&gt;
   &lt;constructor-arg name="mongoConverter" ref="mappingConverter"/&gt;
 &lt;/bean&gt;
@@ -2193,7 +2201,7 @@ mongoTemplate.dropCollection("MyNewCollection");        </programlisting>
 
     <para>To intercept an object before it goes into the database, you'd
     register a subclass of
-    <classname>org.springframework.data.document.mongodb.mapping.event.AbstractMappingEventListener</classname>
+    <classname>org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener</classname>
     that overrides the <code>onBeforeSave</code> method. When the event is
     dispatched, your listener will be called and passed the domain object and
     the converted <classname>com.mongodb.DBObject</classname>.</para>

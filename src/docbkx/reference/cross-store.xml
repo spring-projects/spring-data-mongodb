@@ -150,13 +150,13 @@
   &lt;!--  Mongo config --&gt;
   &lt;mongo:mongo host="localhost" port="27017"/&gt;
 
-  &lt;bean id="mongoTemplate" class="org.springframework.data.document.mongodb.MongoTemplate"&gt;
+  &lt;bean id="mongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate"&gt;
     &lt;constructor-arg name="mongo" ref="mongo"/&gt;
     &lt;constructor-arg name="databaseName" value="test"/&gt;
     &lt;constructor-arg name="defaultCollectionName" value="cross-store"/&gt;
   &lt;/bean&gt;
 
-  &lt;bean class="org.springframework.data.document.mongodb.MongoExceptionTranslator"/&gt;
+  &lt;bean class="org.springframework.data.mongodb.core.MongoExceptionTranslator"/&gt;
 
   &lt;!--  Mongo cross-store aspect config --&gt;
   &lt;bean class="org.springframework.data.persistence.document.mongo.MongoDocumentBacking"

@@ -73,7 +73,7 @@
 
   &lt;mongo:mongo id="mongo" /&gt;
   
-  &lt;bean id="mongoTemplate" class="org.springframework.data.document.mongodb.MongoTemplate"&gt;
+  &lt;bean id="mongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate"&gt;
     &lt;constructor-arg ref="mongo" /&gt;
     &lt;constructor-arg value="databaseName" /&gt;
   &lt;/bean&gt;
@@ -349,7 +349,7 @@ Distance distance = new Distance(200, Metrics.KILOMETERS);
       <title>Mongo JSON based query methods and field restriction</title>
 
       <para>By adding the annotation
-      <classname>org.springframework.data.document.mongodb.repository.Query</classname>
+      <classname>org.springframework.data.mongodb.repository.Query</classname>
       repository finder methods you can specify a Mongo JSON query string to
       use instead of having the query derived from the method name. For
       example</para>

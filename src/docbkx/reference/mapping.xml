@@ -174,8 +174,8 @@ public class GeoSpatialAppConfig extends AbstractMongoConfiguration {
   @Override
   protected void afterMappingMongoConverterCreation(MappingMongoConverter converter) {
     Set&lt;Converter&lt;?, ?&gt;&gt; converterList = new HashSet&lt;Converter&lt;?, ?&gt;&gt;();
-    converterList.add(new org.springframework.data.document.mongodb.PersonReadConverter());
-    converterList.add(new org.springframework.data.document.mongodb.PersonWriteConverter());
+    converterList.add(new org.springframework.data.mongodb.test.PersonReadConverter());
+    converterList.add(new org.springframework.data.mongodb.test.PersonWriteConverter());
     converter.setCustomConverters(converterList);
   }
 
@@ -193,7 +193,7 @@ public class GeoSpatialAppConfig extends AbstractMongoConfiguration {
     <classname>AbstractMongoConfiguration</classname> also has a method you
     can override named '<methodname>getMappingBasePackage</methodname>' which
     tells the converter where to scan for classes annotated with the
-    <classname>@org.springframework.data.document.mongodb.mapping.Document</classname>
+    <classname>@org.springframework.data.mongodb.core.mapping.Document</classname>
     annotation.</para>
 
     <para>You can add additional converters to the converter by overriding the
@@ -237,20 +237,20 @@ public class GeoSpatialAppConfig extends AbstractMongoConfiguration {
     &lt;mongo:custom-converters&gt;
       &lt;mongo:converter ref="readConverter"/&gt;
       &lt;mongo:converter&gt;
-        &lt;bean class="org.springframework.data.document.mongodb.PersonWriteConverter"/&gt;
+        &lt;bean class="org.springframework.data.mongodb.test.PersonWriteConverter"/&gt;
       &lt;/mongo:converter&gt;
     &lt;/mongo:custom-converters&gt;
   &lt;/mongo:mapping-converter&gt;
 
-  &lt;bean id="readConverter" class="org.springframework.data.document.mongodb.PersonReadConverter"/&gt;
+  &lt;bean id="readConverter" class="org.springframework.data.mongodb.test.PersonReadConverter"/&gt;
 
   &lt;!-- set the mapping converter to be used by the MongoTemplate --&gt;
-  &lt;bean id="mongoTemplate" class="org.springframework.data.document.mongodb.MongoTemplate"&gt;
+  &lt;bean id="mongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate"&gt;
     &lt;constructor-arg name="mongoDbFactory" ref="mongoDbFactory"/&gt;
     &lt;constructor-arg name="mongoConverter" ref="mappingConverter"/&gt;
   &lt;/bean&gt;
 
-  &lt;bean class="org.springframework.data.document.mongodb.mapping.event.LoggingEventListener"/&gt;
+  &lt;bean class="org.springframework.data.mongodb.core.mapping.event.LoggingEventListener"/&gt;
 
 &lt;/beans
       </programlisting>
@@ -258,7 +258,7 @@ public class GeoSpatialAppConfig extends AbstractMongoConfiguration {
 
     <para>The <code>base-package</code> property tells it where to scan for
     classes annotated with the
-    <classname>@org.springframework.data.document.mongodb.mapping.Document</classname>
+    <classname>@org.springframework.data.mongodb.core.mapping.Document</classname>
     annotation.</para>
   </section>
 
@@ -268,7 +268,7 @@ public class GeoSpatialAppConfig extends AbstractMongoConfiguration {
     <para>To take full advantage of the object mapping functionality inside
     the Spring Data/MongoDB support, you should annotate your mapped objects
     with the
-    <classname>@org.springframework.data.document.mongodb.mapping.Document</classname>
+    <classname>@org.springframework.data.mongodb.core.mapping.Document</classname>
     annotation. Although it is not necessary for the mapping framework to have
     this annotation (your POJOs will be mapped correctly, even without any
     annotations), it allows the classpath scanner to find and pre-process your
