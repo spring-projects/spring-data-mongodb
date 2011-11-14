@@ -45,18 +45,35 @@ public class MongoNamespaceReplicaSetTests extends NamespaceTestSupport {
 	public void testParsingMongoWithReplicaSets() throws Exception {
 		assertTrue(ctx.containsBean("replicaSetMongo"));
 		MongoFactoryBean mfb = (MongoFactoryBean) ctx.getBean("&replicaSetMongo");
-		
+
 		List<ServerAddress> replicaSetSeeds = readField("replicaSetSeeds", mfb);
 		assertNotNull(replicaSetSeeds);
-		
+
 		assertEquals("127.0.0.1", replicaSetSeeds.get(0).getHost());
 		assertEquals(10001, replicaSetSeeds.get(0).getPort());
-		
-    assertEquals("localhost", replicaSetSeeds.get(1).getHost());
-    assertEquals(10002, replicaSetSeeds.get(1).getPort());
-    
+
+		assertEquals("localhost", replicaSetSeeds.get(1).getHost());
+		assertEquals(10002, replicaSetSeeds.get(1).getPort());
+
 	}
-	
+
+	@Test
+	public void testParsingWithPropertyPlaceHolder() throws Exception {
+		assertTrue(ctx.containsBean("manyReplicaSetMongo"));
+		MongoFactoryBean mfb = (MongoFactoryBean) ctx.getBean("&manyReplicaSetMongo");
+
+		List<ServerAddress> replicaSetSeeds = readField("replicaSetSeeds", mfb);
+		assertNotNull(replicaSetSeeds);
+
+		assertEquals("192.168.174.130", replicaSetSeeds.get(0).getHost());
+		assertEquals(27017, replicaSetSeeds.get(0).getPort());
+		assertEquals("192.168.174.130", replicaSetSeeds.get(1).getHost());
+		assertEquals(27018, replicaSetSeeds.get(1).getPort());
+		assertEquals("192.168.174.130", replicaSetSeeds.get(2).getHost());
+		assertEquals(27019, replicaSetSeeds.get(2).getPort());
+
+	}
+
 	@Test
 	@Ignore("CI infrastructure does not yet support replica sets")
 	public void testMongoWithReplicaSets() {
@@ -67,10 +84,10 @@ public class MongoNamespaceReplicaSetTests extends NamespaceTestSupport {
 		assertEquals("localhost", servers.get(1).getHost());
 		assertEquals(10001, servers.get(0).getPort());
 		assertEquals(10002, servers.get(1).getPort());
-		
+
 		MongoTemplate template = new MongoTemplate(mongo, "admin");
 		CommandResult result = template.executeCommand("{replSetGetStatus : 1}");
 		assertEquals("blort", result.getString("set"));
-		
+
 	}
 }

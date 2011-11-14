@@ -7,6 +7,11 @@
 			 http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
 			 http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd">
 
+	
+    <context:property-placeholder location="classpath:replicaSet.properties"/>
+
+    <mongo:mongo id="manyReplicaSetMongo" replica-set="${mongo.hosts}"/>
+    
 	<mongo:mongo id="replicaSetMongo" replica-set="127.0.0.1:10001,localhost:10002"/>		
 
 <!-- 

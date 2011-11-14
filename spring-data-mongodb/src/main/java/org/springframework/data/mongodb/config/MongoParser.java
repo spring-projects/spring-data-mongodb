@@ -16,9 +16,15 @@
 
 package org.springframework.data.mongodb.config;
 
+import java.util.Map;
+
 import org.springframework.beans.factory.BeanDefinitionStoreException;
+import org.springframework.beans.factory.config.CustomEditorConfigurer;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
+import org.springframework.beans.factory.support.BeanDefinitionReaderUtils;
+import org.springframework.beans.factory.support.BeanDefinitionRegistry;
+import org.springframework.beans.factory.support.ManagedMap;
 import org.springframework.beans.factory.xml.AbstractSingleBeanDefinitionParser;
 import org.springframework.beans.factory.xml.ParserContext;
 import org.springframework.data.mongodb.core.MongoFactoryBean;
@@ -26,7 +32,7 @@ import org.springframework.util.StringUtils;
 import org.w3c.dom.Element;
 
 /**
- * Parser for &lt;mongo;gt; definitions. If no name
+ * Parser for &lt;mongo;gt; definitions.
  * 
  * @author Mark Pollack
  */
@@ -39,17 +45,31 @@ public class MongoParser extends AbstractSingleBeanDefinitionParser {
 
 	@Override
 	protected void doParse(Element element, ParserContext parserContext, BeanDefinitionBuilder builder) {
-		super.doParse(element, builder);
 
 		ParsingUtils.setPropertyValue(element, builder, "port", "port");
 		ParsingUtils.setPropertyValue(element, builder, "host", "host");
 		ParsingUtils.setPropertyValue(element, builder, "write-concern", "writeConcern");
 
-		ParsingUtils.parseMongoOptions(parserContext, element, builder);
-		ParsingUtils.parseReplicaSet(parserContext, element, builder);
+		ParsingUtils.parseMongoOptions(element, builder);
+		ParsingUtils.parseReplicaSet(element, builder);
+				
+		registerCustomEditorConfigurer(parserContext.getRegistry());
 
 	}
 
+	/**
+	 * One should only register one bean definition but want to have the convenience of using AbstractSingleBeanDefinitionParser but have the side effect of
+	 * registering a 'default' property editor with the container.  
+	 * @param parserContext the ParserContext to 
+	 */
+	private void registerCustomEditorConfigurer(BeanDefinitionRegistry registry) {
+		BeanDefinitionBuilder customEditorConfigurer = BeanDefinitionBuilder.genericBeanDefinition(CustomEditorConfigurer.class);
+		Map<String, String> customEditors = new ManagedMap<String, String>(); 
+		customEditors.put("java.util.List", "org.springframework.data.mongodb.config.ServerAddressPropertyEditor");
+		customEditorConfigurer.addPropertyValue("customEditors", customEditors);
+		BeanDefinitionReaderUtils.registerWithGeneratedName(customEditorConfigurer.getBeanDefinition(),	registry);
+	}
+	
 	@Override
 	protected String resolveId(Element element, AbstractBeanDefinition definition, ParserContext parserContext)
 			throws BeanDefinitionStoreException {

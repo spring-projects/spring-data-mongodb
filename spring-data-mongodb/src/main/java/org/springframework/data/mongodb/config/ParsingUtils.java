@@ -19,14 +19,11 @@ package org.springframework.data.mongodb.config;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
-import org.springframework.beans.factory.support.ManagedList;
 import org.springframework.beans.factory.xml.ParserContext;
 import org.springframework.data.mongodb.core.MongoOptionsFactoryBean;
 import org.springframework.util.StringUtils;
 import org.springframework.util.xml.DomUtils;
 import org.w3c.dom.Element;
-
-import com.mongodb.ServerAddress;
 
 abstract class ParsingUtils {
 
@@ -38,22 +35,11 @@ abstract class ParsingUtils {
 	 * @param mongoBuilder the bean definition builder to populate
 	 * @return true if parsing actually occured, false otherwise
 	 */
-	static boolean parseReplicaSet(ParserContext parserContext, Element element, BeanDefinitionBuilder mongoBuilder) {
+	static boolean parseReplicaSet(Element element, BeanDefinitionBuilder mongoBuilder) {
 
 		String replicaSetString = element.getAttribute("replica-set");
 		if (StringUtils.hasText(replicaSetString)) {
-			ManagedList<Object> serverAddresses = new ManagedList<Object>();
-			String[] replicaSetStringArray = StringUtils.commaDelimitedListToStringArray(replicaSetString);
-			for (String element2 : replicaSetStringArray) {
-				String[] hostAndPort = StringUtils.delimitedListToStringArray(element2, ":");
-				BeanDefinitionBuilder defBuilder = BeanDefinitionBuilder.genericBeanDefinition(ServerAddress.class);
-				defBuilder.addConstructorArgValue(hostAndPort[0]);
-				defBuilder.addConstructorArgValue(hostAndPort[1]);
-				serverAddresses.add(defBuilder.getBeanDefinition());
-			}
-			if (!serverAddresses.isEmpty()) {
-				mongoBuilder.addPropertyValue("replicaSetSeeds", serverAddresses);
-			}
+			mongoBuilder.addPropertyValue("replicaSetSeeds", replicaSetString);
 		}
 		return true;
 
@@ -64,7 +50,7 @@ abstract class ParsingUtils {
 	 * 
 	 * @return true if parsing actually occured, false otherwise
 	 */
-	static boolean parseMongoOptions(ParserContext parserContext, Element element, BeanDefinitionBuilder mongoBuilder) {
+	static boolean parseMongoOptions(Element element, BeanDefinitionBuilder mongoBuilder) {
 		Element optionsElement = DomUtils.getChildElementByTagName(element, "options");
 		if (optionsElement == null) {
 			return false;
