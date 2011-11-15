@@ -370,6 +370,13 @@ public class Person {
           Language statement to transform a key's value retrieved in the
           database before it is used to construct a domain object.</para>
         </listitem>
+
+        <listitem>
+          <para><literal>@Field</literal> - applied at the field level and
+          described the name of the field as it will be represented in the
+          MongoDB BSON document thus allowing the name to be different than
+          the fieldname of the class.</para>
+        </listitem>
       </itemizedlist>
 
       <para>The mapping metadata infrastructure is defined in a seperate
@@ -388,16 +395,24 @@ public class Person&lt;T extends Address&gt; {
 
   @Id
   private String id;
+
   @Indexed(unique = true)
   private Integer ssn;
+
+  @Field("fName")
   private String firstName;
+
   @Indexed
   private String lastName;
+
   private Integer age;
+
   @Transient
   private Integer accountTotal;
+
   @DBRef
   private List&lt;Account&gt; accounts;
+
   private T address;
 
   
