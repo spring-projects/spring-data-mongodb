@@ -15,12 +15,13 @@
  */
 package org.springframework.data.mongodb.repository.support;
 
-import static org.springframework.data.querydsl.QueryDslUtils.*;
+import static org.springframework.data.querydsl.QueryDslUtils.QUERY_DSL_PRESENT;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
 
 import org.springframework.data.mapping.context.MappingContext;
+import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
 import org.springframework.data.mongodb.repository.MongoRepository;
@@ -46,7 +47,7 @@ import org.springframework.util.StringUtils;
  */
 public class MongoRepositoryFactory extends RepositoryFactorySupport {
 
-	private final MongoTemplate template;
+	private final MongoOperations mongoOperations;
 	private final EntityInformationCreator entityInformationCreator;
 
 	/**
@@ -55,11 +56,11 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 	 * @param template must not be {@literal null}
 	 * @param mappingContext
 	 */
-	public MongoRepositoryFactory(MongoTemplate template) {
+	public MongoRepositoryFactory(MongoOperations mongoOperations) {
 
-		Assert.notNull(template);
-		this.template = template;
-		this.entityInformationCreator = new DefaultEntityInformationCreator(template.getConverter().getMappingContext());
+		Assert.notNull(mongoOperations);
+		this.mongoOperations = mongoOperations;
+		this.entityInformationCreator = new DefaultEntityInformationCreator(mongoOperations.getConverter().getMappingContext());
 	}
 
 	/*
@@ -84,9 +85,9 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 		MongoEntityInformation<?, Serializable> entityInformation = getEntityInformation(metadata.getDomainClass());
 
 		if (isQueryDslRepository(repositoryInterface)) {
-			return new QueryDslMongoRepository(entityInformation, template);
+			return new QueryDslMongoRepository(entityInformation, mongoOperations);
 		} else {
-			return new SimpleMongoRepository(entityInformation, template);
+			return new SimpleMongoRepository(entityInformation, mongoOperations);
 		}
 	}
 
@@ -122,11 +123,11 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 
 			if (namedQueries.hasQuery(namedQueryName)) {
 				String namedQuery = namedQueries.getQuery(namedQueryName);
-				return new StringBasedMongoQuery(namedQuery, queryMethod, template);
+				return new StringBasedMongoQuery(namedQuery, queryMethod, mongoOperations);
 			} else if (queryMethod.hasAnnotatedQuery()) {
-				return new StringBasedMongoQuery(queryMethod, template);
+				return new StringBasedMongoQuery(queryMethod, mongoOperations);
 			} else {
-				return new PartTreeMongoQuery(queryMethod, template);
+				return new PartTreeMongoQuery(queryMethod, mongoOperations);
 			}
 		}
 	}

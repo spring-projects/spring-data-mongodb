@@ -21,7 +21,7 @@ import java.util.regex.Pattern;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bson.types.ObjectId;
-import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Query;
 
@@ -44,14 +44,14 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 	 * @param method
 	 * @param template
 	 */
-	public StringBasedMongoQuery(String query, MongoQueryMethod method, MongoTemplate template) {
-		super(method, template);
+	public StringBasedMongoQuery(String query, MongoQueryMethod method, MongoOperations mongoOperations) {
+		super(method, mongoOperations);
 		this.query = query;
 		this.fieldSpec = method.getFieldSpecification();
 	}
 
-	public StringBasedMongoQuery(MongoQueryMethod method, MongoTemplate template) {
-		this(method.getAnnotatedQuery(), method, template);
+	public StringBasedMongoQuery(MongoQueryMethod method, MongoOperations mongoOperations) {
+		this(method.getAnnotatedQuery(), method, mongoOperations);
 	}
 
 	/*

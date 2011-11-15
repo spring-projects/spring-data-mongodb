@@ -25,6 +25,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mapping.context.MappingContext;
+import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
@@ -64,9 +65,9 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 	 * @param entityInformation
 	 * @param template
 	 */
-	public QueryDslMongoRepository(MongoEntityInformation<T, ID> entityInformation, MongoTemplate template) {
+	public QueryDslMongoRepository(MongoEntityInformation<T, ID> entityInformation, MongoOperations mongoOperations) {
 
-		this(entityInformation, template, SimpleEntityPathResolver.INSTANCE);
+		this(entityInformation, mongoOperations, SimpleEntityPathResolver.INSTANCE);
 	}
 
 	/**
@@ -74,17 +75,17 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 	 * and {@link EntityPathResolver}.
 	 * 
 	 * @param entityInformation
-	 * @param template
+	 * @param mongoOperations
 	 * @param resolver
 	 */
-	public QueryDslMongoRepository(MongoEntityInformation<T, ID> entityInformation, MongoTemplate template,
+	public QueryDslMongoRepository(MongoEntityInformation<T, ID> entityInformation, MongoOperations mongoOperations,
 			EntityPathResolver resolver) {
 
-		super(entityInformation, template);
+		super(entityInformation, mongoOperations);
 		Assert.notNull(resolver);
 		EntityPath<T> path = resolver.createPath(entityInformation.getJavaType());
 		this.builder = new PathBuilder<T>(path.getType(), path.getMetadata());
-		this.serializer = new SpringDataMongodbSerializer(template.getConverter().getMappingContext());
+		this.serializer = new SpringDataMongodbSerializer(mongoOperations.getConverter().getMappingContext());
 	}
 
 	/*

@@ -42,7 +42,7 @@ import org.springframework.util.Assert;
  */
 public class SimpleMongoRepository<T, ID extends Serializable> implements PagingAndSortingRepository<T, ID> {
 
-	private final MongoTemplate template;
+	private final MongoOperations mongoOperations;
 	private final MongoEntityInformation<T, ID> entityInformation;
 
 	/**
@@ -51,12 +51,12 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements Paging
 	 * @param metadata
 	 * @param template
 	 */
-	public SimpleMongoRepository(MongoEntityInformation<T, ID> metadata, MongoTemplate template) {
+	public SimpleMongoRepository(MongoEntityInformation<T, ID> metadata, MongoOperations mongoOperations) {
 
-		Assert.notNull(template);
+		Assert.notNull(mongoOperations);
 		Assert.notNull(metadata);
 		this.entityInformation = metadata;
-		this.template = template;
+		this.mongoOperations = mongoOperations;
 	}
 
 	/*
@@ -67,7 +67,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements Paging
 	 */
 	public T save(T entity) {
 
-		template.save(entity, entityInformation.getCollectionName());
+		mongoOperations.save(entity, entityInformation.getCollectionName());
 		return entity;
 	}
 
@@ -98,7 +98,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements Paging
 	 */
 	public T findOne(ID id) {
 		Assert.notNull(id, "The given id must not be null!");
-		return template.findById(id, entityInformation.getJavaType());
+		return mongoOperations.findById(id, entityInformation.getJavaType());
 	}
 
 	private Query getIdQuery(Object id) {
@@ -119,7 +119,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements Paging
 	public boolean exists(ID id) {
 
 		Assert.notNull(id, "The given id must not be null!");
-		return template.findOne(new Query(Criteria.where("_id").is(id)), Object.class,
+		return mongoOperations.findOne(new Query(Criteria.where("_id").is(id)), Object.class,
 				entityInformation.getCollectionName()) != null;
 	}
 
@@ -130,7 +130,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements Paging
 	 */
 	public long count() {
 
-		return template.getCollection(entityInformation.getCollectionName()).count();
+		return mongoOperations.getCollection(entityInformation.getCollectionName()).count();
 	}
 
 	/*
@@ -139,7 +139,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements Paging
 	 */
 	public void delete(ID id) {
 		Assert.notNull(id, "The given id must not be null!");
-		template.remove(getIdQuery(id), entityInformation.getJavaType());
+		mongoOperations.remove(getIdQuery(id), entityInformation.getJavaType());
 	}
 
 	/*
@@ -173,7 +173,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements Paging
 	 */
 	public void deleteAll() {
 
-		template.remove(new Query(), entityInformation.getCollectionName());
+		mongoOperations.remove(new Query(), entityInformation.getCollectionName());
 	}
 
 	/*
@@ -246,7 +246,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements Paging
 			return Collections.emptyList();
 		}
 
-		return template.find(query, entityInformation.getJavaType(), entityInformation.getCollectionName());
+		return mongoOperations.find(query, entityInformation.getJavaType(), entityInformation.getCollectionName());
 	}
 
 	/**
@@ -256,7 +256,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements Paging
 	 */
 	protected MongoOperations getMongoOperations() {
 
-		return this.template;
+		return this.mongoOperations;
 	}
 
 	/**

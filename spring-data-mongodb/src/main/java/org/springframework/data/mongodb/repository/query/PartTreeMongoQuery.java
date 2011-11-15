@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.repository.query;
 
 import org.springframework.data.mapping.context.MappingContext;
+import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.query.Query;
@@ -40,12 +41,12 @@ public class PartTreeMongoQuery extends AbstractMongoQuery {
 	 * @param method
 	 * @param template
 	 */
-	public PartTreeMongoQuery(MongoQueryMethod method, MongoTemplate template) {
+	public PartTreeMongoQuery(MongoQueryMethod method, MongoOperations mongoOperations) {
 
-		super(method, template);
+		super(method, mongoOperations);
 		this.tree = new PartTree(method.getName(), method.getEntityInformation().getJavaType());
 		this.isGeoNearQuery = method.isGeoNearQuery();
-		this.context = template.getConverter().getMappingContext();
+		this.context = mongoOperations.getConverter().getMappingContext();
 	}
 
 	/**

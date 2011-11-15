@@ -15,14 +15,14 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import static org.springframework.data.mongodb.repository.query.QueryUtils.*;
+import static org.springframework.data.mongodb.repository.query.QueryUtils.applyPagination;
 
 import java.util.List;
 
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.CollectionCallback;
-import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.geo.Distance;
 import org.springframework.data.mongodb.core.geo.GeoResult;
 import org.springframework.data.mongodb.core.geo.GeoResults;
@@ -46,21 +46,21 @@ import com.mongodb.DBObject;
 public abstract class AbstractMongoQuery implements RepositoryQuery {
 
 	private final MongoQueryMethod method;
-	private final MongoTemplate template;
+	private final MongoOperations mongoOperations;
 
 	/**
-	 * Creates a new {@link AbstractMongoQuery} from the given {@link MongoQueryMethod} and {@link MongoTemplate}.
+	 * Creates a new {@link AbstractMongoQuery} from the given {@link MongoQueryMethod} and {@link MongoOperations}.
 	 * 
 	 * @param method
 	 * @param template
 	 */
-	public AbstractMongoQuery(MongoQueryMethod method, MongoTemplate template) {
+	public AbstractMongoQuery(MongoQueryMethod method, MongoOperations template) {
 
 		Assert.notNull(template);
 		Assert.notNull(method);
 
 		this.method = method;
-		this.template = template;
+		this.mongoOperations = template;
 	}
 
 	/* (non-Javadoc)
@@ -79,7 +79,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	public Object execute(Object[] parameters) {
 
 		MongoParameterAccessor accessor = new MongoParametersParameterAccessor(method, parameters);
-		Query query = createQuery(new ConvertingParameterAccessor(template.getConverter(), accessor));
+		Query query = createQuery(new ConvertingParameterAccessor(mongoOperations.getConverter(), accessor));
 
 		if (method.isGeoNearQuery()) {
 			return new GeoNearExecution(accessor).execute(query);
@@ -110,7 +110,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 			MongoEntityInformation<?, ?> metadata = method.getEntityInformation();
 
 			String collectionName = metadata.getCollectionName();
-			return template.find(query, metadata.getJavaType(), collectionName);
+			return mongoOperations.find(query, metadata.getJavaType(), collectionName);
 		}
 	}
 
@@ -164,7 +164,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 			MongoEntityInformation<?, ?> metadata = method.getEntityInformation();
 			int count = getCollectionCursor(metadata.getCollectionName(), query.getQueryObject()).count();
 
-			List<?> result = template.find(applyPagination(query, pageable), metadata.getJavaType(),
+			List<?> result = mongoOperations.find(applyPagination(query, pageable), metadata.getJavaType(),
 					metadata.getCollectionName());
 
 			return new PageImpl(result, pageable, count);
@@ -172,7 +172,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 
 		private DBCursor getCollectionCursor(String collectionName, final DBObject query) {
 
-			return template.execute(collectionName, new CollectionCallback<DBCursor>() {
+			return mongoOperations.execute(collectionName, new CollectionCallback<DBCursor>() {
 
 				public DBCursor doInCollection(DBCollection collection) {
 
@@ -197,7 +197,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 		Object execute(Query query) {
 
 			MongoEntityInformation<?, ?> entityInformation = method.getEntityInformation();
-			return template.findOne(query, entityInformation.getJavaType());
+			return mongoOperations.findOne(query, entityInformation.getJavaType());
 		}
 	}
 
@@ -234,7 +234,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 			}
 			
 			MongoEntityInformation<?,?> entityInformation = method.getEntityInformation();
-			GeoResults<?> results = template.geoNear(nearQuery, entityInformation.getJavaType(), entityInformation.getCollectionName());
+			GeoResults<?> results = mongoOperations.geoNear(nearQuery, entityInformation.getJavaType(), entityInformation.getCollectionName());
 			
 			return isListOfGeoResult() ? results.getContent() : results;
 		}
