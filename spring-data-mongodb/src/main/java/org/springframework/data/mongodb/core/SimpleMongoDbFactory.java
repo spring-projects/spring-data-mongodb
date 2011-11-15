@@ -82,9 +82,8 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 	 * @throws UnknownHostException
 	 * @see MongoURI
 	 */
-	public SimpleMongoDbFactory(MongoURI uri) throws MongoException, UnknownHostException {
-		
-		this(new Mongo(uri), uri.getDatabase(), new UserCredentials(uri.getUsername(), String.valueOf(uri.getPassword())));
+	public SimpleMongoDbFactory(MongoURI uri) throws MongoException, UnknownHostException {		
+		this(new Mongo(uri), uri.getDatabase(), new UserCredentials(uri.getUsername(), parseChars(uri.getPassword())));
 	}
 
 	/**
@@ -126,5 +125,13 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 	 */
 	public void destroy() throws Exception {
 		mongo.close();
+	}
+	
+	public static String parseChars(char[] chars) {
+		if (chars == null) {
+			return null;
+		} else {
+			return String.valueOf(chars);
+		}
 	}
 }

@@ -28,7 +28,9 @@ import org.springframework.beans.factory.config.ConstructorArgumentValues.ValueH
 import org.springframework.beans.factory.parsing.BeanDefinitionParsingException;
 import org.springframework.beans.factory.xml.XmlBeanFactory;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.data.mongodb.MongoDbFactory;
 
+import com.mongodb.DB;
 import com.mongodb.Mongo;
 import com.mongodb.MongoURI;
 
@@ -78,6 +80,27 @@ public class MongoDbFactoryParserIntegrationTests {
 		assertThat(constructorArguments.getArgumentCount(), is(1));
 		ValueHolder argument = constructorArguments.getArgumentValue(0, MongoURI.class);
 		assertThat(argument, is(notNullValue()));
+	}
+	
+	/**
+	 * @see DATADOC-306
+	 */
+	@Test
+	public void setsUpMongoDbFactoryUsingAMongoUriWithoutCredentials() {
+		
+		XmlBeanFactory factory = new XmlBeanFactory(new ClassPathResource("namespace/mongo-uri-no-credentials.xml"));
+		BeanDefinition definition = factory.getBeanDefinition("mongoDbFactory");		
+		ConstructorArgumentValues constructorArguments = definition.getConstructorArgumentValues();
+		
+		assertThat(constructorArguments.getArgumentCount(), is(1));
+		ValueHolder argument = constructorArguments.getArgumentValue(0, MongoURI.class);
+		assertThat(argument, is(notNullValue()));
+	
+		MongoDbFactory dbFactory = factory.getBean("mongoDbFactory", MongoDbFactory.class);
+		DB db = dbFactory.getDb();
+		assertThat("database", is(db.getName()));
+		
+		
 	}
 	
 	/**
