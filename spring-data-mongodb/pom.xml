@@ -12,7 +12,7 @@
 	<name>Spring Data MongoDB</name>
 
 	<properties>
-		<mongo.version>2.6.5</mongo.version>
+		<mongo.version>2.7.1</mongo.version>
 		<querydsl.version>2.2.4</querydsl.version>
 	</properties>
 

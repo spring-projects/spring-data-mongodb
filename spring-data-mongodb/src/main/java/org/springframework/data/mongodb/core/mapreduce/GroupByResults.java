@@ -39,6 +39,8 @@ public class GroupByResults<T> implements Iterable<T> {
 	
 	private int keys;
 	
+	private String serverUsed;
+	
 	public GroupByResults(List<T> mappedResults, DBObject rawResults) {
 		Assert.notNull(mappedResults);
 		Assert.notNull(rawResults);
@@ -46,6 +48,7 @@ public class GroupByResults<T> implements Iterable<T> {
 		this.rawResults = rawResults;
 		parseKeys();		
 		parseCount();
+		parseServerUsed();
 	}
 	
 	public double getCount() {
@@ -54,6 +57,10 @@ public class GroupByResults<T> implements Iterable<T> {
 
 	public int getKeys() {
 		return keys;
+	}
+	
+	public String getServerUsed() {
+		return serverUsed;
 	}
 
 	public Iterator<T> iterator() {
@@ -65,18 +72,25 @@ public class GroupByResults<T> implements Iterable<T> {
 	}
 	
 	private void parseCount() {
-		Object object = (Object) rawResults.get("count");
+		Object object = rawResults.get("count");
 		if (object instanceof Double) {
-			count = (Double)object;
+			count = (Double) object;
 		}
 		
 	}
 
 	private void parseKeys() {
-		Object object = (Object) rawResults.get("keys");
+		Object object = rawResults.get("keys");
 		if (object instanceof Integer) {
-			keys = (Integer)object;
+			keys = (Integer) object;
 		}		
 	}
 	
+	private void parseServerUsed() {
+		//"serverUsed" : "127.0.0.1:27017"
+		Object object = rawResults.get("serverUsed");
+		if (object instanceof String) {
+			serverUsed = (String) object;
+		}
+	}
 }
