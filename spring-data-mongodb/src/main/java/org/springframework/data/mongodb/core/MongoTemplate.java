@@ -84,8 +84,11 @@ import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeConvertEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeSaveEvent;
 import org.springframework.data.mongodb.core.mapping.event.MongoMappingEvent;
+import org.springframework.data.mongodb.core.mapreduce.GroupBy;
+import org.springframework.data.mongodb.core.mapreduce.GroupByResults;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceResults;
+import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
@@ -959,6 +962,75 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 		MapReduceResults<T> mapReduceResult = new MapReduceResults<T>(mappedResults, commandResult);
 		return mapReduceResult;
+
+	}
+	
+	public <T> GroupByResults<T> group(String inputCollectionName, GroupBy groupBy, Class<T> entityClass) {
+		return group(null, inputCollectionName, groupBy, entityClass);
+	}
+	
+	public <T> GroupByResults<T> group(Criteria criteria, String inputCollectionName, GroupBy groupBy, Class<T> entityClass) {
+		
+		DBObject dbo = groupBy.getGroupByObject();
+		dbo.put("ns", inputCollectionName);
+		 
+		if (criteria == null) {
+			dbo.put("cond", null);
+		} else {
+			dbo.put("cond", criteria.getCriteriaObject());
+		}
+		//If initial document was a JavaScript string, potentially loaded by Spring's Resource abstraction, load it and convert to DBObject
+			
+		if (dbo.containsField("initial")) {
+			Object initialObj = dbo.get("initial");
+			if (initialObj instanceof String) {
+				  String initialAsString = replaceWithResourceIfNecessary((String)initialObj);
+					dbo.put("initial", JSON.parse(initialAsString));
+			}
+		}		
+
+		if (dbo.containsField("$reduce")) {
+			dbo.put("$reduce", replaceWithResourceIfNecessary(dbo.get("$reduce").toString()));
+		}
+		if (dbo.containsField("$keyf")) {
+			dbo.put("$keyf", replaceWithResourceIfNecessary(dbo.get("$keyf").toString()));
+		}
+		if (dbo.containsField("finalize")) {
+			dbo.put("finalize", replaceWithResourceIfNecessary(dbo.get("finalize").toString()));
+		}
+		
+		DBObject commandObject = new BasicDBObject("group", dbo);
+		
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("Executing Group with DBObject [" + commandObject.toString() + "]");
+		}
+		CommandResult commandResult = null;
+		try {
+				commandResult = executeCommand(commandObject, getDb().getOptions());
+				commandResult.throwOnError();
+		} catch (RuntimeException ex) {
+			this.potentiallyConvertRuntimeException(ex);
+		}
+		String error = commandResult.getErrorMessage();
+		if (error != null) {
+			throw new InvalidDataAccessApiUsageException("Command execution failed:  Error [" + error + "], Command = "
+					+ commandObject);
+		}
+
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("Group command result = [" + commandResult + "]");
+		}
+		
+		Iterable<DBObject> resultSet = (Iterable<DBObject>) commandResult.get( "retval" );
+		
+		List<T> mappedResults = new ArrayList<T>();
+		DbObjectCallback<T> callback = new ReadDbObjectCallback<T>(mongoConverter, entityClass);
+		for (DBObject dbObject : resultSet) {
+			mappedResults.add(callback.doWith(dbObject));
+		}
+		GroupByResults<T> groupByResult = new GroupByResults<T>(mappedResults, commandResult);
+		return groupByResult;
+		
 
 	}
 

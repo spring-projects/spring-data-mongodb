@@ -22,6 +22,12 @@ import org.springframework.util.Assert;
 
 import com.mongodb.DBObject;
 
+/**
+ * Collects the results of performing a MapReduce operations.
+ * @author Mark Pollack
+ *
+ * @param <T> The class in which the results are mapped onto, accessible via an interator.
+ */
 public class MapReduceResults<T> implements Iterable<T> {
 
 	private final List<T> mappedResults;

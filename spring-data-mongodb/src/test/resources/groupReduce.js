@@ -1,0 +1,1 @@
+function(doc, prev) { prev.count += 1 }

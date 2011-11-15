@@ -1451,8 +1451,8 @@ import static org.springframework.data.mongodb.core.query.Query.query;
             </listitem>
 
             <listitem>
-              <para><literal>Criteria</literal> <emphasis role="bold">andOperator
-              </emphasis> <literal>(Criteria...
+              <para><literal>Criteria</literal> <emphasis
+              role="bold">andOperator </emphasis> <literal>(Criteria...
               criteria)</literal>Creates an and query using the
               <literal>$and</literal> operator for all of the provided
               criteria (requires MongoDB 2.0 or later)</para>
@@ -1535,8 +1535,8 @@ import static org.springframework.data.mongodb.core.query.Query.query;
             </listitem>
 
             <listitem>
-              <para><literal>Criteria</literal> <emphasis role="bold">norOperator
-              </emphasis> <literal>(Criteria...
+              <para><literal>Criteria</literal> <emphasis
+              role="bold">norOperator </emphasis> <literal>(Criteria...
               criteria)</literal>Creates an nor query using the
               <literal>$nor</literal> operator for all of the provided
               criteria</para>
@@ -1550,8 +1550,8 @@ import static org.springframework.data.mongodb.core.query.Query.query;
             </listitem>
 
             <listitem>
-              <para><literal>Criteria</literal> <emphasis role="bold">orOperator
-              </emphasis> <literal>(Criteria...
+              <para><literal>Criteria</literal> <emphasis
+              role="bold">orOperator </emphasis> <literal>(Criteria...
               criteria)</literal>Creates an or query using the
               <literal>$or</literal> operator for all of the provided
               criteria</para>
@@ -1847,22 +1847,24 @@ GeoResults&lt;Restaurant&gt; = operations.geoNear(query, Restaurant.class);</pro
   </section>
 
   <section id="mongo.mapreduce">
-    <title>Map-Reduce</title>
+    <title>Map-Reduce Operations</title>
 
     <para>You can query MongoDB using Map-Reduce which is useful for batch
     processing, data aggregation, and for when the query language doesn't
-    fulfill your needs. Spring provides integration with MongoDB's map reduce
-    by providing methods on MongoOperations to simplify the creation and
-    execution of Map-Reduce operations. It also integrates with Spring's
-    <ulink
+    fulfill your needs.</para>
+
+    <para>Spring provides integration with MongoDB's map reduce by providing
+    methods on MongoOperations to simplify the creation and execution of
+    Map-Reduce operations. It can convert the results of a Map-Reduce
+    operation to a POJO also integrates with Spring's <ulink
     url="http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/html/resources.html">Resource
     abstraction</ulink> abstraction. This will let you place your JavaScript
     files on the file system, classpath, http server or any other Spring
     Resource implementation and then reference the JavaScript resources via an
     easy URI style syntax, e.g. 'classpath:reduce.js;. Externalizing
-    JavaScript code in files is preferable to embedding them as Java strings
-    in your code. You can still pass JavaScript code as Java strings if you
-    prefer.</para>
+    JavaScript code in files is often preferable to embedding them as Java
+    strings in your code. Note that you can still pass JavaScript code as Java
+    strings if you prefer.</para>
 
     <section id="mongo.mapreduce.example" lang="">
       <title>Example Usage</title>
@@ -1964,6 +1966,138 @@ MapReduceResults&lt;ValueObject&gt; results = mongoOperations.mapReduce(query, "
                                                                      options().outputCollection("jmr1_out"), ValueObject.class);
 	</programlisting> Note that you can specify additional limit and sort values
       as well on the query but not skip values.</para>
+    </section>
+  </section>
+
+  <section id="mongo.group">
+    <title>Group Operations</title>
+
+    <para>As an alternative to usiing Map-Reduce to perform data aggregation,
+    you can use the <ulink
+    url="http://www.mongodb.org/display/DOCS/Aggregation#Aggregation-Group"><literal>group</literal>
+    operation</ulink> which feels similar to using SQL's group by query style,
+    so it may feel more approachable vs. using Map-Reduce. Using the group
+    operations does have some limitations, for example it is not supported in
+    a shareded environment and it returns the full result set in a single BSON
+    object, so the result should be small, less than 10,000 keys. </para>
+
+    <para>Spring provides integration with MongoDB's group operation by
+    providing methods on MongoOperations to simplify the creation and
+    execution of group operations. It can convert the results of the group
+    operation to a POJO and also integrates with Spring's <ulink
+    url="http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/html/resources.html">Resource
+    abstraction</ulink> abstraction. This will let you place your JavaScript
+    files on the file system, classpath, http server or any other Spring
+    Resource implementation and then reference the JavaScript resources via an
+    easy URI style syntax, e.g. 'classpath:reduce.js;. Externalizing
+    JavaScript code in files if often preferable to embedding them as Java
+    strings in your code. Note that you can still pass JavaScript code as Java
+    strings if you prefer.</para>
+
+    <section>
+      <title>Example Usage</title>
+
+      <para>In order to understand how group operations work the following
+      example is used, which is somewhat artifical. For a more realistic
+      example consult the book 'MongoDB - The definitive guide'. A collection
+      named "group_test_collection" created with the following rows.</para>
+
+      <programlisting>{ "_id" : ObjectId("4ec1d25d41421e2015da64f1"), "x" : 1 }
+{ "_id" : ObjectId("4ec1d25d41421e2015da64f2"), "x" : 1 }
+{ "_id" : ObjectId("4ec1d25d41421e2015da64f3"), "x" : 2 }
+{ "_id" : ObjectId("4ec1d25d41421e2015da64f4"), "x" : 3 }
+{ "_id" : ObjectId("4ec1d25d41421e2015da64f5"), "x" : 3 }
+{ "_id" : ObjectId("4ec1d25d41421e2015da64f6"), "x" : 3 }</programlisting>
+
+      <para>We would like to group by the only field in each row, the 'x'
+      field and aggregate the number of times each specific value of 'x'
+      occurs. To do this we need to create an initial document that contains
+      our count variable and also a reduce function which will increment it
+      each time it is encountered. The Java code to execute the group
+      operation is shown below</para>
+
+      <programlisting language="java">GroupByResults&lt;XObject&gt; results = mongoTemplate.group("group_test_collection", 
+                                                      GroupBy.key("x").initialDocument("{ count: 0 }").reduceFunction("function(doc, prev) { prev.count += 1 }"), 
+                                                      XObject.class);</programlisting>
+
+      <para>The first argument is the name of the collection to run the group
+      operation over, the second is a fluent API that specifies properties of
+      the group operation via a <classname>GroupBy</classname> class. In this
+      example we are using just the <methodname>intialDocument</methodname>
+      and <methodname>reduceFunction</methodname> methods. You can also
+      specify a key-function, as well as a finalizer as part of the fluent
+      API. If you have multiple keys to group by, you can pass in a comma
+      separated list of keys.</para>
+
+      <para>The raw results of the group operation is a JSON document that
+      looks like this</para>
+
+      <programlisting>{ 
+  "retval" : [ { "x" : 1.0 , "count" : 2.0} , 
+               { "x" : 2.0 , "count" : 1.0} , 
+               { "x" : 3.0 , "count" : 3.0} ] , 
+  "count" : 6.0 , 
+  "keys" : 3 , 
+  "ok" : 1.0
+}</programlisting>
+
+      <para>The document under the "retval" field is mapped onto the third
+      argument in the group method, in this case XObject which is shown
+      below.</para>
+
+      <programlisting>public class XObject {
+
+	private float x;
+	
+	private float count;
+
+
+	public float getX() {
+		return x;
+	}
+
+
+	public void setX(float x) {
+		this.x = x;
+	}
+
+
+	public float getCount() {
+		return count;
+	}
+
+
+	public void setCount(float count) {
+		this.count = count;
+	}
+
+
+	@Override
+	public String toString() {
+		return "XObject [x=" + x + " count = " + count + "]";
+	}
+	
+}</programlisting>
+
+      <para>You can also obtain tha raw result as a
+      <classname>DbObject</classname> by calling the method
+      <methodname>getRawResults</methodname> on the
+      <classname>GroupByResults</classname> class.</para>
+
+      <para>There is an additional method overload of the group method on
+      <interfacename>MongoOperations</interfacename> which lets you specify a
+      <classname>Criteria</classname> object for selecting a subset of the
+      rows. An example which uses a <classname>Criteria</classname> object,
+      with some syntax sugar using static imports, as well as referencing a
+      key-function and reduce function javascript files via a Spring Resource
+      string is shown below.</para>
+
+      <programlisting>import static org.springframework.data.mongodb.core.mapreduce.GroupBy.keyFunction;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+
+GroupByResults&lt;XObject&gt; results = mongoTemplate.group(where("x").gt(0), 
+                                        "group_test_collection", 
+                                        keyFunction("classpath:keyFunction.js").initialDocument("{ count: 0 }").reduceFunction("classpath:groupReduce.js"), XObject.class);</programlisting>
     </section>
   </section>
 

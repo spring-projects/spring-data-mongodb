@@ -28,8 +28,11 @@ import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.geo.GeoResult;
 import org.springframework.data.mongodb.core.geo.GeoResults;
 import org.springframework.data.mongodb.core.index.IndexDefinition;
+import org.springframework.data.mongodb.core.mapreduce.GroupBy;
+import org.springframework.data.mongodb.core.mapreduce.GroupByResults;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceResults;
+import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
@@ -267,7 +270,31 @@ public interface MongoOperations {
 	<T> List<T> findAll(Class<T> entityClass, String collectionName);
 	
 	
+	/**
+	 * Execute a group operation over the entire collection. 
+	 * The group operation entity class should match the 'shape' of the returned object that takes int account the
+	 * initial document structure as well as any finalize functions.
+	 * 
+	 * @param criteria The criteria that restricts the row that are considered for grouping.  If not specified all rows are considered.
+	 * @param inputCollectionName the collection where the group operation will read from
+	 * @param groupBy the conditions under which the group operation will be performed, e.g. keys, initial document, reduce function.
+	 * @param entityClass The parameterized type of the returned list
+	 * @return The results of the group operation
+	 */
+	<T> GroupByResults<T> group(String inputCollectionName, GroupBy groupBy, Class<T> entityClass); 
 	
+	/**
+	 * Execute a group operation restricting the rows to those which match the provided Criteria.
+	 * The group operation entity class should match the 'shape' of the returned object that takes int account the
+	 * initial document structure as well as any finalize functions.
+	 * 
+	 * @param criteria The criteria that restricts the row that are considered for grouping.  If not specified all rows are considered.
+	 * @param inputCollectionName the collection where the group operation will read from
+	 * @param groupBy the conditions under which the group operation will be performed, e.g. keys, initial document, reduce function.
+	 * @param entityClass The parameterized type of the returned list
+	 * @return The results of the group operation
+	 */
+	<T> GroupByResults<T> group(Criteria criteria, String inputCollectionName, GroupBy groupBy, Class<T> entityClass);
 	/**
 	 * Execute a map-reduce operation.  The map-reduce operation will be formed with an output type of INLINE
 	 * @param inputCollectionName the collection where the map-reduce will read from

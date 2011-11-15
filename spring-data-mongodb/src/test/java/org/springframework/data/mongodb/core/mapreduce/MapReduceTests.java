@@ -60,6 +60,7 @@ public class MapReduceTests {
 	MongoTemplate template;
 	@Autowired
 	MongoDbFactory factory;
+	
 	MongoTemplate mongoTemplate;
 
 	@Autowired

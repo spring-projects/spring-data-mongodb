@@ -1,0 +1,1 @@
+function(doc) { return { x : doc.x }; }
