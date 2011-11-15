@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.config;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
+import java.net.UnknownHostException;
 import java.util.List;
 
 import org.junit.Test;
@@ -27,12 +28,17 @@ import org.springframework.beans.factory.config.ConstructorArgumentValues;
 import org.springframework.beans.factory.config.ConstructorArgumentValues.ValueHolder;
 import org.springframework.beans.factory.parsing.BeanDefinitionParsingException;
 import org.springframework.beans.factory.xml.XmlBeanFactory;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 
 import com.mongodb.DB;
 import com.mongodb.Mongo;
+import com.mongodb.MongoException;
 import com.mongodb.MongoURI;
+import com.mongodb.WriteConcern;
 
 /**
  * Integration tests for {@link MongoDbFactoryParser}.
@@ -41,15 +47,53 @@ import com.mongodb.MongoURI;
  */
 public class MongoDbFactoryParserIntegrationTests {
 
+	
 	@Test
-	public void parsesWriteConcern() {
-		XmlBeanFactory factory = new XmlBeanFactory(new ClassPathResource("namespace/db-factory-bean.xml"));
-		BeanDefinition definition = factory.getBeanDefinition("first");
-		
-		List<PropertyValue> values = definition.getPropertyValues().getPropertyValueList();
-		assertThat(values, hasItem(new PropertyValue("writeConcern", "SAFE")));
+	public void testWriteConcern() throws Exception {
+		SimpleMongoDbFactory dbFactory = new SimpleMongoDbFactory(new Mongo("localhost"), "database");
+		dbFactory.setWriteConcern(WriteConcern.SAFE);
+		DB db = dbFactory.getDb();
+		assertThat(WriteConcern.SAFE, is(dbFactory.getWriteConcern()));
 	}
 	
+	@Test
+	public void parsesWriteConcern() {
+		ClassPathXmlApplicationContext ctx = new ClassPathXmlApplicationContext("namespace/db-factory-bean.xml");		
+		assertWriteConcern(ctx, WriteConcern.SAFE);
+	}
+	
+	@Test
+	public void parsesCustomWriteConcern() {
+		ClassPathXmlApplicationContext ctx = new ClassPathXmlApplicationContext("namespace/db-factory-bean-custom-write-concern.xml");		
+		assertWriteConcern(ctx, new WriteConcern("rack1"));
+	}
+
+	private void assertWriteConcern(ClassPathXmlApplicationContext ctx, WriteConcern expectedWriteConcern) {
+		SimpleMongoDbFactory dbFactory = ctx.getBean("first", SimpleMongoDbFactory.class);
+		DB db = dbFactory.getDb();
+		assertThat("db", is(db.getName()));
+
+		MyWriteConcern myDbFactoryWriteConcern = new MyWriteConcern(dbFactory.getWriteConcern());
+		MyWriteConcern myDbWriteConcern = new MyWriteConcern(db.getWriteConcern());
+		MyWriteConcern myExpectedWriteConcern = new MyWriteConcern(expectedWriteConcern);
+
+		
+		assertThat(myDbFactoryWriteConcern, equalTo(myExpectedWriteConcern));
+		assertThat(myDbWriteConcern, equalTo(myExpectedWriteConcern));
+		assertThat(myDbWriteConcern, equalTo(myDbFactoryWriteConcern));
+	}
+	
+	//This test will fail since equals in WriteConcern uses == for _w and not .equals
+	public void testWriteConcernEquality() {
+		String s1 =  new String("rack1");
+		String s2 =  new String("rack1");
+		WriteConcern wc1 = new WriteConcern(s1);
+		WriteConcern wc2 = new WriteConcern(s2);
+		assertThat(wc1, equalTo(wc2));
+	}
+	
+	
+
 	@Test
 	public void createsDbFactoryBean() {
 		XmlBeanFactory factory = new XmlBeanFactory(new ClassPathResource("namespace/db-factory-bean.xml"));
@@ -64,7 +108,7 @@ public class MongoDbFactoryParserIntegrationTests {
 		
 		XmlBeanFactory factory = new XmlBeanFactory(new ClassPathResource("namespace/db-factory-bean.xml"));
 		Mongo mongo = factory.getBean(Mongo.class);
-		assertThat(mongo.getMongoOptions().maxAutoConnectRetryTime, is(27L));
+		assertThat(mongo.getMongoOptions().maxAutoConnectRetryTime, is(27L));		
 	}
 	
 	/**
@@ -98,7 +142,7 @@ public class MongoDbFactoryParserIntegrationTests {
 	
 		MongoDbFactory dbFactory = factory.getBean("mongoDbFactory", MongoDbFactory.class);
 		DB db = dbFactory.getDb();
-		assertThat("database", is(db.getName()));
+		assertThat(db.getName(), is("database"));
 		
 		
 	}

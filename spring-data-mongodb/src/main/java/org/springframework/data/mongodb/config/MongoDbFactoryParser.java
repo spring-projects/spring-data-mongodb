@@ -15,15 +15,20 @@
  */
 package org.springframework.data.mongodb.config;
 
-import static org.springframework.data.mongodb.config.BeanNames.*;
-import static org.springframework.data.mongodb.config.ParsingUtils.*;
+import static org.springframework.data.mongodb.config.BeanNames.DB_FACTORY;
+import static org.springframework.data.mongodb.config.ParsingUtils.getSourceBeanDefinition;
+
+import java.util.Map;
 
 import org.springframework.beans.factory.BeanDefinitionStoreException;
 import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.beans.factory.config.CustomEditorConfigurer;
 import org.springframework.beans.factory.config.RuntimeBeanReference;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionReaderUtils;
+import org.springframework.beans.factory.support.BeanDefinitionRegistry;
+import org.springframework.beans.factory.support.ManagedMap;
 import org.springframework.beans.factory.xml.AbstractBeanDefinitionParser;
 import org.springframework.beans.factory.xml.BeanDefinitionParser;
 import org.springframework.beans.factory.xml.ParserContext;
@@ -60,7 +65,7 @@ public class MongoDbFactoryParser extends AbstractBeanDefinitionParser {
 		String uri = element.getAttribute("uri");
 		String mongoRef = element.getAttribute("mongo-ref");
 		String dbname = element.getAttribute("dbname");
-		BeanDefinition userCredentials = getUserCredentialsBeanDefinition(element, parserContext);
+		BeanDefinition userCredentials = getUserCredentialsBeanDefinition(element, parserContext);		
 
 		// Common setup
 		BeanDefinitionBuilder dbFactoryBuilder = BeanDefinitionBuilder.genericBeanDefinition(SimpleMongoDbFactory.class);
@@ -85,6 +90,10 @@ public class MongoDbFactoryParser extends AbstractBeanDefinitionParser {
 		if (userCredentials != null) {
 			dbFactoryBuilder.addConstructorArgValue(userCredentials);
 		}
+		
+		//Register property editor to parse WriteConcern
+		
+		registerWriteConcernPropertyEditor(parserContext.getRegistry());
 
 		return getSourceBeanDefinition(dbFactoryBuilder, parserContext, element);
 	}
@@ -105,6 +114,14 @@ public class MongoDbFactoryParser extends AbstractBeanDefinitionParser {
 
 		return BeanDefinitionReaderUtils.registerWithGeneratedName(mongoBuilder.getBeanDefinition(),
 				parserContext.getRegistry());
+	}
+	
+	private void registerWriteConcernPropertyEditor(BeanDefinitionRegistry registry) {
+		BeanDefinitionBuilder customEditorConfigurer = BeanDefinitionBuilder.genericBeanDefinition(CustomEditorConfigurer.class);
+		Map<String, String> customEditors = new ManagedMap<String, String>(); 
+		customEditors.put("com.mongodb.WriteConcern", "org.springframework.data.mongodb.config.WriteConcernPropertyEditor");
+		customEditorConfigurer.addPropertyValue("customEditors", customEditors);
+		BeanDefinitionReaderUtils.registerWithGeneratedName(customEditorConfigurer.getBeanDefinition(),	registry);
 	}
 
 	/**

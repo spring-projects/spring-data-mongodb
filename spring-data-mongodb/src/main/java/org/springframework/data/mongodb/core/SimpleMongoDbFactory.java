@@ -94,6 +94,10 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 	public void setWriteConcern(WriteConcern writeConcern) {
 		this.writeConcern = writeConcern;
 	}
+	
+	public WriteConcern getWriteConcern() {
+		return writeConcern;
+	}
 
 	/*
 	 * (non-Javadoc)
