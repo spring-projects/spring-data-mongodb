@@ -117,6 +117,7 @@ public class MongoTemplateTests {
 	
 	protected void cleanDb() {
 		template.dropCollection(template.getCollectionName(Person.class));
+		template.dropCollection(template.getCollectionName(PersonWithAList.class));
 		template.dropCollection(template.getCollectionName(PersonWith_idPropertyOfTypeObjectId.class));
 		template.dropCollection(template.getCollectionName(PersonWith_idPropertyOfTypeString.class));
 		template.dropCollection(template.getCollectionName(PersonWithIdPropertyOfTypeObjectId.class));
@@ -742,8 +743,36 @@ public class MongoTemplateTests {
 		assertThat(p4.getWishList().size(), is(1));
 		assertThat(p4.getFriends().size(), is(1));
 
+
 	}
 
+	
+	@Test
+	public void testFindOneWithSort() {
+		PersonWithAList p = new PersonWithAList();
+		p.setFirstName("Sven");
+		p.setAge(22);
+		template.insert(p);
+		
+		PersonWithAList p2 = new PersonWithAList();
+		p2.setFirstName("Erik");
+		p2.setAge(21);
+		template.insert(p2);
+		
+		PersonWithAList p3 = new PersonWithAList();
+		p3.setFirstName("Mark");
+		p3.setAge(40);
+		template.insert(p3);
+	
+		
+		//test query with a sort
+		Query q2 = new Query(Criteria.where("age").gt(10));
+		q2.sort().on("age", Order.DESCENDING);
+		PersonWithAList p5 = template.findOne(q2, PersonWithAList.class);
+		assertThat(p5.getFirstName(), is("Mark"));
+	}
+	
+	
 	@Test
 	public void testUsingSlaveOk() throws Exception {
 		this.template.execute("slaveOkTest", new CollectionCallback<Object>() {

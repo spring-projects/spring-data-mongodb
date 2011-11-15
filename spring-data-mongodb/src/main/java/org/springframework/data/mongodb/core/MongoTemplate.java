@@ -429,7 +429,13 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	}
 
 	public <T> T findOne(Query query, Class<T> entityClass, String collectionName) {
-		return doFindOne(collectionName, query.getQueryObject(), query.getFieldsObject(), entityClass);
+		if (query.getSortObject() == null) {
+			return doFindOne(collectionName, query.getQueryObject(), query.getFieldsObject(), entityClass);
+		} else {
+			query.limit(1);
+			List<T> results = find(query, entityClass, collectionName);
+			return (results.isEmpty() ? null : results.get(0));
+		}
 	}
 
 	// Find methods that take a Query to express the query and that return a List of objects.
