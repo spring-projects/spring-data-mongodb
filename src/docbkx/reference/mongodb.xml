@@ -770,7 +770,7 @@ public class MongoConfiguration {
     <classname>MongoTemplate</classname> in the context of the Spring
     container.</para>
 
-    <section>
+    <section id="mongo-template.instantiating" label=" ">
       <title>Instantiating MongoTemplate</title>
 
       <para>You can use Java to create and register an instance of
@@ -840,8 +840,8 @@ public class AppConfig {
       <para>Other optional properties that you might like to set when creating
       a <classname>MongoTemplate</classname> are the default
       <classname>WriteResultCheckingPolicy</classname>,
-      <classname>WriteConcern</classname>, and <classname>SlaveOk</classname>
-      write option.</para>
+      <classname>WriteConcern</classname>, and
+      <classname>ReadPreference</classname>.</para>
 
       <note>
         <para>The preferred way to reference the operations on
@@ -849,7 +849,7 @@ public class AppConfig {
         <interfacename>MongoOperations</interfacename>.</para>
       </note>
 
-      <section>
+      <section id="mongo-template.writeresultchecking">
         <title>WriteResultChecking Policy</title>
 
         <para>When in development it is very handy to either log or throw an
@@ -864,24 +864,59 @@ public class AppConfig {
         use a <literal>WriteResultChecking</literal> value of NONE.</para>
       </section>
 
-      <section>
+      <section id="mongo-template.writeconcern">
         <title>WriteConcern</title>
 
         <para>You can set the <classname>com.mongodb.WriteConcern</classname>
         property that the <classname>MongoTemplate</classname> will use for
         write operations if it has not yet been specified via the driver at a
-        higher level such as com.mongodb.Mongo. If MongoTemplate's
-        <classname>WriteConcern</classname> property is not set it will
-        default to the one set in the MongoDB driver's DB or Collection
-        setting.</para>
+        higher level such as <classname>com.mongodb.Mongo</classname>. If
+        MongoTemplate's <classname>WriteConcern</classname> property is not
+        set it will default to the one set in the MongoDB driver's DB or
+        Collection setting.</para>
+      </section>
 
-        <note>
-          <para>Setting the <classname>WriteConcern</classname> to different
-          values when saving an object will be provided in a future release.
-          This will most likely be handled using mapping metadata provided
-          either in the form of annotations on the domain object or by an
-          external fluent DSL.</para>
-        </note>
+      <section id="mongo-template.writeconcernresolver">
+        <title>WriteConcernResolver</title>
+
+        <para>For more advanced cases where you want to set different
+        <classname>WriteConcern</classname> values on a per-operation basis
+        (for remove, update, insert and save operations), a strategy interface
+        called <interfacename>WriteConcernResolver</interfacename> can be
+        configured on <classname>MongoTemplate</classname>. Since
+        <classname>MongoTemplate</classname> is used to persist POJOs, the
+        <interfacename>WriteConcernResolver</interfacename> lets you create a
+        policy that can map a specific POJO class to a
+        <classname>WriteConcern</classname> value. The
+        <interfacename>WriteConcernResolver</interfacename> interface is shown
+        below.</para>
+
+        <programlisting language="java">public interface WriteConcernResolver {
+  WriteConcern resolve(MongoAction action);
+}</programlisting>
+
+        <para>The passed in argument, MongoAction, is what you use to
+        determine the <classname>WriteConcern</classname> value to be used or
+        to use the value of the Template itself as a default.
+        <classname>MongoAction</classname> contains the collection name being
+        written to, the <classname>java.lang.Class</classname> of the POJO,
+        the converted <classname>DBObject</classname>, as well as the
+        operation as an enumeration
+        (<classname>MongoActionOperation</classname>: REMOVE, UPDATE, INSERT,
+        INSERT_LIST, SAVE) and a few other pieces of contextual information.
+        For example,</para>
+
+        <programlisting>	private class MyAppWriteConcernResolver implements WriteConcernResolver {
+
+		public WriteConcern resolve(MongoAction action) {
+			if (action.getEntityClass().getSimpleName().contains("Audit")) {
+				return WriteConcern.NONE;
+			} else if (action.getEntityClass().getSimpleName().contains("Metadata")) {
+				return WriteConcern.JOURNAL_SAFE;
+			}
+			return action.getDefaultWriteConcern();
+		}		
+	}</programlisting>
       </section>
     </section>
   </section>
@@ -1979,7 +2014,7 @@ MapReduceResults&lt;ValueObject&gt; results = mongoOperations.mapReduce(query, "
     so it may feel more approachable vs. using Map-Reduce. Using the group
     operations does have some limitations, for example it is not supported in
     a shareded environment and it returns the full result set in a single BSON
-    object, so the result should be small, less than 10,000 keys. </para>
+    object, so the result should be small, less than 10,000 keys.</para>
 
     <para>Spring provides integration with MongoDB's group operation by
     providing methods on MongoOperations to simplify the creation and
