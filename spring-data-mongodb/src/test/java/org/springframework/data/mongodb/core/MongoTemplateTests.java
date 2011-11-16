@@ -61,6 +61,8 @@ import com.mongodb.DBObject;
 import com.mongodb.DBRef;
 import com.mongodb.Mongo;
 import com.mongodb.MongoException;
+import com.mongodb.ReadPreference;
+import com.mongodb.WriteConcern;
 import com.mongodb.WriteResult;
 
 /**
@@ -774,8 +776,8 @@ public class MongoTemplateTests {
 	
 	
 	@Test
-	public void testUsingSlaveOk() throws Exception {
-		this.template.execute("slaveOkTest", new CollectionCallback<Object>() {
+	public void testUsingReadPreference() throws Exception {
+		this.template.execute("readPref", new CollectionCallback<Object>() {
 			public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 				assertThat(collection.getOptions(), is(0));
 				assertThat(collection.getDB().getOptions(), is(0));
@@ -783,10 +785,10 @@ public class MongoTemplateTests {
 			}
 		});
 		MongoTemplate slaveTemplate = new MongoTemplate(factory);
-		slaveTemplate.setSlaveOk(true);
-		slaveTemplate.execute("slaveOkTest", new CollectionCallback<Object>() {
+		slaveTemplate.setReadPreference(ReadPreference.SECONDARY);
+		slaveTemplate.execute("readPref", new CollectionCallback<Object>() {
 			public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
-				assertThat(collection.getOptions(), is(4));
+				assertThat(collection.getReadPreference(), is(ReadPreference.SECONDARY));
 				assertThat(collection.getDB().getOptions(), is(0));
 				return null;
 			}
@@ -821,6 +823,55 @@ public class MongoTemplateTests {
 		assertThat(result.getId(), is(person.getId()));
 		assertThat(result.getFirstName(), is("Carter"));
 	}
+	
+	@Test
+	public void testWriteConcernResolver() {
+	
+		PersonWithIdPropertyOfTypeObjectId person = new PersonWithIdPropertyOfTypeObjectId();
+		person.setId(new ObjectId());
+		person.setFirstName("Dave");
+
+		template.setWriteConcern(WriteConcern.NONE);
+		template.save(person);
+		WriteResult result = template.updateFirst(query(where("id").is(person.getId())), update("firstName", "Carter"),
+				PersonWithIdPropertyOfTypeObjectId.class);
+		WriteConcern lastWriteConcern = result.getLastConcern();
+		assertThat(lastWriteConcern, equalTo(WriteConcern.NONE));
+	
+		FsyncSafeWriteConcernResolver resolver = new FsyncSafeWriteConcernResolver();
+		template.setWriteConcernResolver(resolver);
+		Query q = query(where("_id").is(person.getId()));
+		Update u = update("firstName", "Carter");
+		result = template.updateFirst(q, u, PersonWithIdPropertyOfTypeObjectId.class);
+		lastWriteConcern = result.getLastConcern();
+		assertThat(lastWriteConcern, equalTo(WriteConcern.FSYNC_SAFE));
+		
+		MongoAction lastMongoAction = resolver.getMongoAction();
+		assertThat(lastMongoAction.getCollectionName(), is("personWithIdPropertyOfTypeObjectId"));
+		assertThat(lastMongoAction.getDefaultWriteConcern(), equalTo(WriteConcern.NONE));
+		assertThat(lastMongoAction.getDocument(), notNullValue());
+		assertThat(lastMongoAction.getEntityClass().toString(), is(PersonWithIdPropertyOfTypeObjectId.class.toString()));
+		assertThat(lastMongoAction.getMongoActionOperation(), is(MongoActionOperation.UPDATE));
+		assertThat(lastMongoAction.getQuery(), equalTo(q.getQueryObject()));
+		assertThat(lastMongoAction.getDocument(), equalTo(u.getUpdateObject()));
+		
+	}
+	
+	private class FsyncSafeWriteConcernResolver implements WriteConcernResolver {
+
+		private MongoAction mongoAction;
+		
+		public WriteConcern resolve(MongoAction action) {
+			this.mongoAction = action;
+			return WriteConcern.FSYNC_SAFE;
+		}
+		
+		public MongoAction getMongoAction() { 
+			return mongoAction;
+		}
+	}
+	
+	
 
 	/**
 	 * @see DATADOC-246

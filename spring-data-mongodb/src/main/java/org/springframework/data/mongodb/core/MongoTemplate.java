@@ -41,6 +41,7 @@ import com.mongodb.MapReduceCommand;
 import com.mongodb.MapReduceOutput;
 import com.mongodb.Mongo;
 import com.mongodb.MongoException;
+import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
 import com.mongodb.WriteResult;
 import com.mongodb.util.JSON;
@@ -124,6 +125,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * the DB or Collection.
 	 */
 	private WriteConcern writeConcern = null;
+	
+	private WriteConcernResolver writeConcernResolver = new DefaultWriteConcernResolver();
 
 	/*
 	 * WriteResultChecking to be used for write operations if it has been
@@ -131,10 +134,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 */
 	private WriteResultChecking writeResultChecking = WriteResultChecking.NONE;
 
-	/*
-	 * Flag used to indicate use of slaveOk() for any operations on collections.
+	/**
+	 * Set the ReadPreference when operating on a collection.  See {@link #prepareCollection(DBCollection)} 
 	 */
-	private boolean slaveOk = false;
+	private ReadPreference readPreference = null;
 
 	private final MongoConverter mongoConverter;
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
@@ -223,12 +226,20 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	}
 
 	/**
-	 * TODO: document properly
+	 * Configures the {@link WriteConcernResolver} to be used with the template.
 	 * 
-	 * @param slaveOk
+	 * @param writeConcernResolver
 	 */
-	public void setSlaveOk(boolean slaveOk) {
-		this.slaveOk = slaveOk;
+	public void setWriteConcernResolver(WriteConcernResolver writeConcernResolver) {
+		this.writeConcernResolver = writeConcernResolver;
+	}
+	
+	/**
+	 * Used by @{link {@link #prepareCollection(DBCollection)} to set the {@link ReadPreference} before any operations are performed.
+	 * @param readPreference
+	 */
+	public void setReadPreference(ReadPreference readPreference) {
+		this.readPreference = readPreference;
 	}
 
 	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
@@ -578,8 +589,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * @param collection
 	 */
 	protected void prepareCollection(DBCollection collection) {
-		if (this.slaveOk) {
-			collection.slaveOk();
+		if (this.readPreference != null) {
+			collection.setReadPreference(readPreference);
 		}
 	}
 
@@ -590,8 +601,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * @param writeConcern any WriteConcern already configured or null
 	 * @return The prepared WriteConcern or null
 	 */
-	protected WriteConcern prepareWriteConcern(WriteConcern writeConcern) {
-		return writeConcern;
+	protected WriteConcern prepareWriteConcern(MongoAction mongoAction) {
+		return writeConcernResolver.resolve(mongoAction);
 	}
 
 	protected <T> void doInsert(String collectionName, T objectToSave, MongoWriter<T> writer) {
@@ -601,7 +612,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		writer.write(objectToSave, dbDoc);
 
 		maybeEmitEvent(new BeforeSaveEvent<T>(objectToSave, dbDoc));
-		Object id = insertDBObject(collectionName, dbDoc);
+		Object id = insertDBObject(collectionName, dbDoc, objectToSave.getClass());
 
 		populateIdIfNecessary(objectToSave, id);
 		maybeEmitEvent(new AfterSaveEvent<T>(objectToSave, dbDoc));
@@ -685,19 +696,20 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		writer.write(objectToSave, dbDoc);
 
 		maybeEmitEvent(new BeforeSaveEvent<T>(objectToSave, dbDoc));
-		Object id = saveDBObject(collectionName, dbDoc);
+		Object id = saveDBObject(collectionName, dbDoc, objectToSave.getClass());
 
 		populateIdIfNecessary(objectToSave, id);
 		maybeEmitEvent(new AfterSaveEvent<T>(objectToSave, dbDoc));
 	}
 
-	protected Object insertDBObject(String collectionName, final DBObject dbDoc) {
+	protected Object insertDBObject(final String collectionName, final DBObject dbDoc, final Class<?> entityClass) {
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug("insert DBObject containing fields: " + dbDoc.keySet() + " in collection: " + collectionName);
 		}
 		return execute(collectionName, new CollectionCallback<Object>() {
 			public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
-				WriteConcern writeConcernToUse = prepareWriteConcern(writeConcern);
+				MongoAction mongoAction = new MongoAction(writeConcern, MongoActionOperation.INSERT, collectionName, entityClass, dbDoc, null);
+				WriteConcern writeConcernToUse = prepareWriteConcern(mongoAction);
 				if (writeConcernToUse == null) {
 					collection.insert(dbDoc);
 				} else {
@@ -708,7 +720,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		});
 	}
 
-	protected List<ObjectId> insertDBObjectList(String collectionName, final List<DBObject> dbDocList) {
+	protected List<ObjectId> insertDBObjectList(final String collectionName, final List<DBObject> dbDocList) {
 		if (dbDocList.isEmpty()) {
 			return Collections.emptyList();
 		}
@@ -718,7 +730,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		}
 		execute(collectionName, new CollectionCallback<Void>() {
 			public Void doInCollection(DBCollection collection) throws MongoException, DataAccessException {
-				WriteConcern writeConcernToUse = prepareWriteConcern(writeConcern);
+				MongoAction mongoAction = new MongoAction(writeConcern, MongoActionOperation.INSERT_LIST, collectionName, null, null, null);
+				WriteConcern writeConcernToUse = prepareWriteConcern(mongoAction);
 				if (writeConcernToUse == null) {
 					collection.insert(dbDocList);
 				} else {
@@ -741,13 +754,14 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		return ids;
 	}
 
-	protected Object saveDBObject(String collectionName, final DBObject dbDoc) {
+	protected Object saveDBObject(final String collectionName, final DBObject dbDoc, final Class<?> entityClass) {
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug("save DBObject containing fields: " + dbDoc.keySet());
 		}
 		return execute(collectionName, new CollectionCallback<Object>() {
 			public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
-				WriteConcern writeConcernToUse = prepareWriteConcern(writeConcern);
+				MongoAction mongoAction = new MongoAction(writeConcern, MongoActionOperation.SAVE, collectionName, entityClass, dbDoc, null);
+				WriteConcern writeConcernToUse = prepareWriteConcern(mongoAction);
 				if (writeConcernToUse == null) {
 					collection.save(dbDoc);
 				} else {
@@ -796,7 +810,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				}
 
 				WriteResult wr;
-				WriteConcern writeConcernToUse = prepareWriteConcern(writeConcern);
+				MongoAction mongoAction = new MongoAction(writeConcern, MongoActionOperation.UPDATE, collectionName, entityClass, updateObj, queryObj);				
+				WriteConcern writeConcernToUse = prepareWriteConcern(mongoAction);
 				if (writeConcernToUse == null) {
 					if (multi) {
 						wr = collection.updateMulti(queryObj, updateObj);
@@ -869,7 +884,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		doRemove(determineCollectionName(entityClass), query, entityClass);
 	}
 
-	protected <T> void doRemove(String collectionName, final Query query, Class<T> entityClass) {
+	protected <T> void doRemove(final String collectionName, final Query query, final Class<T> entityClass) {
 		if (query == null) {
 			throw new InvalidDataAccessApiUsageException("Query passed in to remove can't be null");
 		}
@@ -879,7 +894,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			public Void doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 				DBObject dboq = mapper.getMappedObject(queryObject, entity);
 				WriteResult wr = null;
-				WriteConcern writeConcernToUse = prepareWriteConcern(writeConcern);
+				MongoAction mongoAction = new MongoAction(writeConcern, MongoActionOperation.REMOVE, collectionName, entityClass, null, queryObject);		
+				WriteConcern writeConcernToUse = prepareWriteConcern(mongoAction);
 				if (LOGGER.isDebugEnabled()) {
 					LOGGER.debug("remove using query: " + queryObject + " in collection: " + collection.getName());
 				}
@@ -1412,8 +1428,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	/**
 	 * Checks and handles any errors.
 	 * <p/>
-	 * TODO: current implementation logs errors - will be configurable to log warning, errors or throw exception in later
-	 * versions
+	 * Current implementation logs errors.  Future version may make this configurable to log warning, errors or throw exception.
 	 */
 	private void handleAnyWriteResultErrors(WriteResult wr, DBObject query, String operation) {
 		if (WriteResultChecking.NONE == this.writeResultChecking) {
@@ -1586,6 +1601,14 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			}
 			return source;
 		}
+	}
+	
+	private class DefaultWriteConcernResolver implements WriteConcernResolver {
+
+		public WriteConcern resolve(MongoAction action) {
+				return action.getDefaultWriteConcern();
+		}
+		
 	}
 
 	/**
