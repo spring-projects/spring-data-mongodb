@@ -1384,6 +1384,18 @@ import static org.springframework.data.mongodb.core.query.Update;
     </section>
 
     <section>
+      <title>Upserting documents in a collection</title>
+
+      <para>Related to perfomring an <methodname>updateFirst</methodname>
+      operations, you can also perform an upsert operation which will perform
+      an insert if no document is found that matches the query. The document
+      that is inserted is a combination of the query document and the update
+      document. Here is an example</para>
+
+      <programlisting>template.upsert(query(where("ssn").is(1111).and("firstName").is("Joe").and("Fraizer").is("Update")), update("address", addr), Person.class);</programlisting>
+    </section>
+
+    <section>
       <title>Methods for removing documents</title>
 
       <para>You can use several overloaded methods to remove an object from

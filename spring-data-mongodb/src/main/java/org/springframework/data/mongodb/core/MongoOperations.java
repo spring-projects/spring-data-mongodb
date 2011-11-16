@@ -640,6 +640,30 @@ public interface MongoOperations {
 	void save(Object objectToSave, String collectionName);
 
 	/**
+	 * Performs an upsert. If no document is found that matches the query, a new document is created and inserted 
+	 * by combining the query document and the update document.
+	 * 
+	 * @param query the query document that specifies the criteria used to select a record to be upserted
+	 * @param update the update document that contains the updated object or $ operators to manipulate the existing object
+	 * @param entityClass class that determines the collection to use
+	 * @return the WriteResult which lets you access the results of the previous write.
+	 */
+	WriteResult upsert(Query query, Update update, Class<?> entityClass);
+	
+
+	/**
+	 * Performs an upsert. If no document is found that matches the query, a new document is created and inserted 
+	 * by combining the query document and the update document.
+	 * 
+	 * @param query the query document that specifies the criteria used to select a record to be updated
+	 * @param update the update document that contains the updated object or $ operators to manipulate the existing
+	 *          object.
+	 * @param collectionName name of the collection to update the object in
+	 * @return the WriteResult which lets you access the results of the previous write.
+	 */
+	WriteResult upsert(Query query, Update update, String collectionName);
+	
+	/**
 	 * Updates the first object that is found in the collection of the entity class that matches the query document with
 	 * the provided update document.
 	 * 
@@ -647,6 +671,7 @@ public interface MongoOperations {
 	 * @param update the update document that contains the updated object or $ operators to manipulate the existing
 	 *          object.
 	 * @param entityClass class that determines the collection to use
+	 * @return the WriteResult which lets you access the results of the previous write.
 	 */
 	WriteResult updateFirst(Query query, Update update, Class<?> entityClass);
 
@@ -658,6 +683,7 @@ public interface MongoOperations {
 	 * @param update the update document that contains the updated object or $ operators to manipulate the existing
 	 *          object.
 	 * @param collectionName name of the collection to update the object in
+	 * @return the WriteResult which lets you access the results of the previous write.
 	 */
 	WriteResult updateFirst(Query query, Update update, String collectionName);
 
@@ -669,6 +695,7 @@ public interface MongoOperations {
 	 * @param update the update document that contains the updated object or $ operators to manipulate the existing
 	 *          object.
 	 * @param entityClass class that determines the collection to use
+	 * @return the WriteResult which lets you access the results of the previous write.
 	 */
 	WriteResult updateMulti(Query query, Update update, Class<?> entityClass);
 
@@ -680,6 +707,7 @@ public interface MongoOperations {
 	 * @param update the update document that contains the updated object or $ operators to manipulate the existing
 	 *          object.
 	 * @param collectionName name of the collection to update the object in
+	 * @return the WriteResult which lets you access the results of the previous write.
 	 */
 	WriteResult updateMulti(Query query, Update update, String collectionName);
 

@@ -353,7 +353,31 @@ public class MappingTests {
 		Person p2 = template.findOne(query(where("ssn").is(1111)), Person.class);
 		assertThat(p2.getAddress().getCity(), is("New Town"));
 	}
+	
+	@Test
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public void testUpsert() {		
+		Address addr = new Address();
+		addr.setLines(new String[]{"1234 W. 1st Street", "Apt. 12"});
+		addr.setCity("Anytown");
+		addr.setPostalCode(12345);
+		addr.setCountry("USA");
 
+		Person p2 = template.findOne(query(where("ssn").is(1111)), Person.class);
+		assertNull(p2);
+		
+		template.upsert(query(where("ssn").is(1111).and("firstName").is("Query").and("lastName").is("Update")), update("address", addr), Person.class);
+
+		p2 = template.findOne(query(where("ssn").is(1111)), Person.class);
+		assertThat(p2.getAddress().getCity(), is("Anytown"));
+		
+		template.dropCollection(Person.class);
+		template.upsert(query(where("ssn").is(1111).and("firstName").is("Query").and("lastName").is("Update")), update("address", addr), "person");
+		p2 = template.findOne(query(where("ssn").is(1111)), Person.class);
+		assertThat(p2.getAddress().getCity(), is("Anytown"));
+		
+	}
+	
 	@Test
 	public void testOrQuery() {
 		PersonWithObjectId p1 = new PersonWithObjectId(1, "first", "");

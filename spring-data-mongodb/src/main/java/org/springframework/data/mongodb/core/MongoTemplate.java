@@ -772,6 +772,15 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		});
 	}
 
+	
+	public WriteResult upsert(Query query, Update update, Class<?> entityClass) {
+		return doUpdate(determineCollectionName(entityClass), query, update, entityClass, true, false);
+	}
+	
+	public WriteResult upsert(Query query, Update update, String collectionName) {
+		return doUpdate(collectionName, query, update, null, true, false);
+	}
+	
 	public WriteResult updateFirst(Query query, Update update, Class<?> entityClass) {
 		return doUpdate(determineCollectionName(entityClass), query, update, entityClass, false, false);
 	}
@@ -813,11 +822,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				MongoAction mongoAction = new MongoAction(writeConcern, MongoActionOperation.UPDATE, collectionName, entityClass, updateObj, queryObj);				
 				WriteConcern writeConcernToUse = prepareWriteConcern(mongoAction);
 				if (writeConcernToUse == null) {
-					if (multi) {
-						wr = collection.updateMulti(queryObj, updateObj);
-					} else {
-						wr = collection.update(queryObj, updateObj);
-					}
+					wr = collection.update(queryObj, updateObj, upsert, multi);
 				} else {
 					wr = collection.update(queryObj, updateObj, upsert, multi, writeConcernToUse);
 				}
