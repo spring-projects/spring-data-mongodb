@@ -495,6 +495,13 @@ public interface MongoOperations {
 	 */
 	<T> T findById(Object id, Class<T> entityClass, String collectionName);
 
+	<T> T findAndModify(Query query, Update update, Class<T> entityClass);
+	
+	<T> T findAndModify(Query query, Update update, Class<T> entityClass, String collectionName);
+
+	<T> T findAndModify(Query query, Update update, FindAndModifyOptions options, Class<T> entityClass);
+	
+	<T> T findAndModify(Query query, Update update, FindAndModifyOptions options, Class<T> entityClass, String collectionName);
 	/**
 	 * Map the results of an ad-hoc query on the collection for the entity type to a single instance of an object of the
 	 * specified type. The first document that matches the query is returned and also removed from the collection in the

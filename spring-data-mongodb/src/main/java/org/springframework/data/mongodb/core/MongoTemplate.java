@@ -522,6 +522,27 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		return new GeoResults<T>(result, new Distance(averageDistance, near.getMetric()));
 	}
 
+	public <T> T findAndModify(Query query, Update update, Class<T> entityClass) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public <T> T findAndModify(Query query, Update update, Class<T> entityClass, String collectionName) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public <T> T findAndModify(Query query, Update update, FindAndModifyOptions options, Class<T> entityClass) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public <T> T findAndModify(Query query, Update update, FindAndModifyOptions options, Class<T> entityClass,
+			String collectionName) {
+		return doFindAndModify(collectionName, query.getQueryObject(), query.getFieldsObject(), query.getSortObject(), 
+				entityClass, update, options);
+	}
+	
 	// Find methods that take a Query to express the query and that return a single object that is also removed from the
 	// collection in the database.
 
@@ -1276,6 +1297,29 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		return executeFindOneInternal(new FindAndRemoveCallback(mapper.getMappedObject(query, entity), fields, sort),
 				new ReadDbObjectCallback<T>(readerToUse, entityClass), collectionName);
 	}
+	
+	protected <T> T doFindAndModify(String collectionName, DBObject query, DBObject fields, DBObject sort,
+			Class<T> entityClass, Update update, FindAndModifyOptions options ) {
+		
+		EntityReader<? super T, DBObject> readerToUse = this.mongoConverter;
+
+		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
+		
+		DBObject updateObj = update.getUpdateObject();
+		for (String key : updateObj.keySet()) {
+			updateObj.put(key, mongoConverter.convertToMongoType(updateObj.get(key)));
+		}
+		
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("findAndModify using query: " + query + " fields: " + fields + " sort: " + sort + " for class: "
+					+ entityClass + " and update: " + updateObj + " in collection: " + collectionName);
+		}
+
+		
+		return executeFindOneInternal(new FindAndModifyCallback(mapper.getMappedObject(query, entity), fields, sort, updateObj, options),
+				new ReadDbObjectCallback<T>(readerToUse, entityClass), collectionName);
+	}
+
 
 	/**
 	 * Populates the id property of the saved object, if it's not set already.
@@ -1566,6 +1610,27 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			return collection.findAndModify(query, fields, sort, true, null, false, false);
 		}
 	}
+	
+	private static class FindAndModifyCallback implements CollectionCallback<DBObject> {
+
+		private final DBObject query;
+		private final DBObject fields;
+		private final DBObject sort;
+		private final DBObject update;
+		private final FindAndModifyOptions options;
+
+		public FindAndModifyCallback(DBObject query, DBObject fields, DBObject sort, DBObject update, FindAndModifyOptions options) {
+			this.query = query;
+			this.fields = fields;
+			this.sort = sort;
+			this.update = update;
+			this.options = options;
+		}
+
+		public DBObject doInCollection(DBCollection collection) throws MongoException, DataAccessException {
+			return collection.findAndModify(query, fields, sort, options.isRemove(), update, options.isReturnNew(), options.isUpsert());
+		}
+	}
 
 	/**
 	 * Simple internal callback to allow operations on a {@link DBObject}.
@@ -1649,4 +1714,5 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			return new GeoResult<T>(doWith, new Distance(distance, metric));
 		}
 	}
+
 }

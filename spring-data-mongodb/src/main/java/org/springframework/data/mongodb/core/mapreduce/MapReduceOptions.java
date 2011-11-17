@@ -44,10 +44,9 @@ public class MapReduceOptions {
 	
 	
 	/**
-	 * Static factory method to create a Criteria using the provided key
+	 * Static factory method to create a MapReduceOptions instance
 	 * 
-	 * @param key
-	 * @return
+	 * @return a new instance
 	 */
 	public static MapReduceOptions options() {
 		return new MapReduceOptions();
