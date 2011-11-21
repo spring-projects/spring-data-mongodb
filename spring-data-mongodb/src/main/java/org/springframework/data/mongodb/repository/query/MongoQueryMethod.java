@@ -27,7 +27,6 @@ import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.query.Parameters;
 import org.springframework.data.repository.query.QueryMethod;
-import org.springframework.data.repository.util.ClassUtils;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
@@ -57,7 +56,7 @@ public class MongoQueryMethod extends QueryMethod {
 		super(method, metadata);
 		Assert.notNull(entityInformationCreator, "DefaultEntityInformationCreator must not be null!");
 		this.method = method;
-		this.entityInformation = entityInformationCreator.getEntityInformation(ClassUtils.getReturnedDomainClass(method),
+		this.entityInformation = entityInformationCreator.getEntityInformation(metadata.getReturnedDomainClass(method),
 				getDomainClass());
 	}
 
