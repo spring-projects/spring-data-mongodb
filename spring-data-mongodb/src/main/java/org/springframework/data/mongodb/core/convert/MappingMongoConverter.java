@@ -653,7 +653,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		if (customTarget != null) {
 			return conversionService.convert(value, customTarget);
 		} else {
-			return value.getClass().isEnum() ? ((Enum<?>) value).name() : value;
+			return Enum.class.isAssignableFrom(value.getClass()) ? ((Enum<?>) value).name() : value;
 		}
 	}
 
@@ -676,7 +676,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			return conversionService.convert(value, target);
 		}
 
-		if (target.isEnum()) {
+		if (Enum.class.isAssignableFrom(target)) {
 			return Enum.valueOf((Class<Enum>) target, value.toString());
 		}
 

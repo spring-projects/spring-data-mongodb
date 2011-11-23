@@ -254,8 +254,8 @@ public class MappingMongoConverterUnitTests {
 	public void considersFieldNameWhenWriting() {
 		
 		Person person = new Person();
-		person.firstname ="Oliver";
-		
+		person.firstname = "Oliver";
+
 		DBObject result = new BasicDBObject();
 		converter.write(person, result);
 		
@@ -621,7 +621,7 @@ public class MappingMongoConverterUnitTests {
 		ClassWithMapProperty result = converter.read(ClassWithMapProperty.class, source);
 		Object firstObjectInFoo = ((List<?>) result.mapOfObjects.get("Foo")).get(0);
 		assertThat(firstObjectInFoo, is(instanceOf(Map.class)));
-		assertThat((String)((Map<?,?>) firstObjectInFoo).get("Hello"), is(equalTo("World")));
+		assertThat((String) ((Map<?, ?>) firstObjectInFoo).get("Hello"), is(equalTo("World")));
 	}
 	
 
@@ -676,7 +676,7 @@ public class MappingMongoConverterUnitTests {
 		Map<String, Locale> map = Collections.singletonMap("Foo", Locale.ENGLISH);
 		
 		CollectionWrapper wrapper = new CollectionWrapper();
-		wrapper.listOfMaps = new ArrayList<Map<String,Locale>>();
+		wrapper.listOfMaps = new ArrayList<Map<String, Locale>>();
 		wrapper.listOfMaps.add(map);
 		
 		DBObject result = new BasicDBObject();
@@ -717,8 +717,8 @@ public class MappingMongoConverterUnitTests {
 	 */
 	@Test
 	public void writesPlainMapOfCollectionsCorrectly() {
-		
-		Map<String,List<Locale>> map = Collections.singletonMap("Foo", Arrays.asList(Locale.US));
+
+		Map<String, List<Locale>> map = Collections.singletonMap("Foo", Arrays.asList(Locale.US));
 		DBObject result = new BasicDBObject();
 		converter.write(map, result);
 		
@@ -797,7 +797,19 @@ public class MappingMongoConverterUnitTests {
 	}
 	
 	enum SampleEnum {
-		FIRST, SECOND;
+		FIRST {
+			@Override
+			void method() {
+							}
+		},
+		SECOND {
+			@Override
+			void method() {
+				
+			}
+		};
+
+		abstract void method();
 	}
 	
 	class Address {
@@ -838,7 +850,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	class ClassWithNestedMaps {
-    Map<String, Map<String, Map<String, String>>> nestedMaps;
+		Map<String, Map<String, Map<String, String>>> nestedMaps;
 	}
 	
 	class BirthDateContainer {
