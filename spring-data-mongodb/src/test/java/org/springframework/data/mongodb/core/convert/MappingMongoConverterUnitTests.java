@@ -781,9 +781,9 @@ public class MappingMongoConverterUnitTests {
 		Object valueObject = map.get("foo");
 		assertThat(valueObject, is(BasicDBList.class));
 		
-		List list = (List) valueObject;
+		List<Object> list = (List<Object>) valueObject;
 		assertThat(list.size(), is(1));
-		assertThat(list, hasItem("bar"));
+		assertThat(list, hasItem((Object) "bar"));
 	}
 	
 	class GenericType<T> {
