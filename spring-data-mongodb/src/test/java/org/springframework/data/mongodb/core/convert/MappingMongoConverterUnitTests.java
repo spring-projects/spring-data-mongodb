@@ -119,7 +119,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	/**
-	 * @see DATADOC-130
+	 * @see DATAMONGO-130
 	 */
 	@Test
 	public void writesMapTypeCorrectly() {
@@ -133,7 +133,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	/**
-	 * @see DATADOC-130
+	 * @see DATAMONGO-130
 	 */
 	@Test
 	public void readsMapWithCustomKeyTypeCorrectly() {
@@ -146,7 +146,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	/**
-	 * @see DATADOC-128
+	 * @see DATAMONGO-128
 	 */
 	@Test
 	public void usesDocumentsStoredTypeIfSubtypeOfRequest() {
@@ -159,7 +159,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	/**
-	 * @see DATADOC-128
+	 * @see DATAMONGO-128
 	 */
 	@Test
 	public void ignoresDocumentsStoredTypeIfCompletelyDifferentTypeRequested() {
@@ -185,7 +185,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	/**
-	 * @see DATADOC-136
+	 * @see DATAMONGO-136
 	 */
 	@Test
 	public void writesEnumsCorrectly() {
@@ -201,7 +201,7 @@ public class MappingMongoConverterUnitTests {
 	}
 	
 	/**
-	 * @see DATADOC-209
+	 * @see DATAMONGO-209
 	 */
 	@Test
 	public void writesEnumCollectionCorrectly() {
@@ -220,7 +220,7 @@ public class MappingMongoConverterUnitTests {
 	}
 	
 	/**
-	 * @see DATADOC-136
+	 * @see DATAMONGO-136
 	 */
 	@Test
 	public void readsEnumsCorrectly() {
@@ -231,7 +231,7 @@ public class MappingMongoConverterUnitTests {
 	}
 	
 	/**
-	 * @see DATADOC-209
+	 * @see DATAMONGO-209
 	 */
 	@Test
 	public void readsEnumCollectionsCorrectly() {
@@ -248,7 +248,7 @@ public class MappingMongoConverterUnitTests {
 	}
 	
 	/**
-	 * @see DATADOC-144
+	 * @see DATAMONGO-144
 	 */
 	@Test
 	public void considersFieldNameWhenWriting() {
@@ -264,7 +264,7 @@ public class MappingMongoConverterUnitTests {
 	}
 	
 	/**
-	 * @see DATADOC-144
+	 * @see DATAMONGO-144
 	 */
 	@Test
 	public void considersFieldNameWhenReading() {
@@ -276,7 +276,7 @@ public class MappingMongoConverterUnitTests {
 	}
 	
 	/**
-	 * @see DATADOC-145
+	 * @see DATAMONGO-145
 	 */
 	@Test
 	public void writesCollectionWithInterfaceCorrectly() {
@@ -299,7 +299,7 @@ public class MappingMongoConverterUnitTests {
 	}
 	
 	/**
-	 * @see DATADOC-145
+	 * @see DATAMONGO-145
 	 */
 	@Test
 	public void readsCollectionWithInterfaceCorrectly() {
@@ -336,7 +336,7 @@ public class MappingMongoConverterUnitTests {
 	}
 	
 	/**
-	 * @see DATADOC-161
+	 * @see DATAMONGO-161
 	 */
 	@Test
 	public void readsNestedMapsCorrectly() {
@@ -363,7 +363,7 @@ public class MappingMongoConverterUnitTests {
 	}
 	
 	/**
-	 * @see DATACMNS-42, DATADOC-171
+	 * @see DATACMNS-42, DATAMONGO-171
 	 */
 	@Test
 	public void writesClassWithBigDecimal() {
@@ -381,7 +381,7 @@ public class MappingMongoConverterUnitTests {
 	}
 	
 	/**
-	 * @see DATACMNS-42, DATADOC-171
+	 * @see DATACMNS-42, DATAMONGO-171
 	 */
 	@Test
 	public void readsClassWithBigDecimal() {
@@ -417,7 +417,7 @@ public class MappingMongoConverterUnitTests {
 	}
 	
 	/**
-	 * @see DATADOC-192
+	 * @see DATAMONGO-192
 	 */
 	@Test
 	public void readsEmptySetsCorrectly() {
@@ -446,7 +446,7 @@ public class MappingMongoConverterUnitTests {
 	}
 	
 	/**
-	 * @see DATADOC-207
+	 * @see DATAMONGO-207
 	 */
 	@Test
 	public void convertsCustomEmptyMapCorrectly() {
@@ -461,7 +461,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	/**
-	 * @see DATADOC-211
+	 * @see DATAMONGO-211
 	 */
 	@Test
 	public void maybeConvertHandlesNullValuesCorrectly() {
@@ -495,7 +495,7 @@ public class MappingMongoConverterUnitTests {
 	}
 	
 	/**
-	 * @see DATADOC-228
+	 * @see DATAMONGO-228
 	 */
 	@Test
 	public void writesNullValuesForMaps() {
@@ -530,7 +530,7 @@ public class MappingMongoConverterUnitTests {
 	}
 	
 	/**
-	 * @see DATADOC-235
+	 * @see DATAMONGO-235
 	 */
 	@Test
 	public void writesMapOfListsCorrectly() {
@@ -554,7 +554,7 @@ public class MappingMongoConverterUnitTests {
 	}
 	
 	/**
-	 * @see DATADOC-235
+	 * @see DATAMONGO-235
 	 */
 	@Test
 	public void readsMapListValuesCorrectly() {
@@ -568,7 +568,7 @@ public class MappingMongoConverterUnitTests {
 	}
 	
 	/**
-	 * @see DATADOC-235
+	 * @see DATAMONGO-235
 	 */
 	@Test
 	public void writesMapsOfObjectsCorrectly() {
@@ -593,7 +593,7 @@ public class MappingMongoConverterUnitTests {
 	}
 	
 	/**
-	 * @see DATADOC-235
+	 * @see DATAMONGO-235
 	 */
 	@Test
 	public void readsMapOfObjectsListValuesCorrectly() {
@@ -607,7 +607,7 @@ public class MappingMongoConverterUnitTests {
 	}
 	
 	/**
-	 * @see DATADOC-245
+	 * @see DATAMONGO-245
 	 */
 	@Test
 	public void readsMapListNestedValuesCorrectly() {
@@ -626,7 +626,7 @@ public class MappingMongoConverterUnitTests {
 	
 
 	/**
-	 * @see DATADOC-245
+	 * @see DATAMONGO-245
 	 */
 	@Test
 	public void readsMapDoublyNestedValuesCorrectly() {
@@ -646,7 +646,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	/**
-	 * @see DATADOC-245
+	 * @see DATAMONGO-245
 	 */
 	@Test
 	public void readsMapListDoublyNestedValuesCorrectly() {
@@ -668,7 +668,7 @@ public class MappingMongoConverterUnitTests {
 	}
 	
 	/**
-	 * @see DATADOC-259
+	 * @see DATAMONGO-259
 	 */
 	@Test
 	public void writesListOfMapsCorrectly() {
@@ -692,7 +692,7 @@ public class MappingMongoConverterUnitTests {
 	}
 	
 	/**
-	 * @see DATADOC-259
+	 * @see DATAMONGO-259
 	 */
 	@Test
 	public void readsListOfMapsCorrectly() {
@@ -713,7 +713,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	/**
-	 * @see DATADOC-259
+	 * @see DATAMONGO-259
 	 */
 	@Test
 	public void writesPlainMapOfCollectionsCorrectly() {
@@ -733,7 +733,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	/**
-	 * @see DATADOC-285
+	 * @see DATAMONGO-285
 	 */
 	@Test
 	@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -760,6 +760,32 @@ public class MappingMongoConverterUnitTests {
 		assertEquals(list.get(1), listFromMongo.get(1));
 	}
 
+	/**
+	 * @see DATAMONGO-309
+	 */
+	@Test
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public void writesArraysAsMapValuesCorrectly() {
+		
+		ClassWithMapProperty wrapper = new ClassWithMapProperty();
+		wrapper.mapOfObjects = new HashMap<String, Object>();
+		wrapper.mapOfObjects.put("foo", new String[] { "bar" });
+		
+		DBObject result = new BasicDBObject();
+		converter.write(wrapper, result);
+		
+		Object mapObject = result.get("mapOfObjects");
+		assertThat(mapObject, is(BasicDBObject.class));
+		
+		DBObject map = (DBObject) mapObject;
+		Object valueObject = map.get("foo");
+		assertThat(valueObject, is(BasicDBList.class));
+		
+		List list = (List) valueObject;
+		assertThat(list.size(), is(1));
+		assertThat(list, hasItem("bar"));
+	}
+	
 	class GenericType<T> {
 		T content;
 	}

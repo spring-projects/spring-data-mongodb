@@ -589,9 +589,9 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				String simpleKey = key.toString();
 				if (val == null || conversions.isSimpleType(val.getClass())) {
 					writeSimpleInternal(val, dbo, simpleKey);
-				} else if (val instanceof Collection) {
+				} else if (val instanceof Collection || val.getClass().isArray()) {
 					dbo.put(simpleKey,
-							writeCollectionInternal((Collection<?>) val, propertyType.getMapValueType(), new BasicDBList()));
+							writeCollectionInternal(asCollection(val), propertyType.getMapValueType(), new BasicDBList()));
 				} else {
 					DBObject newDbo = new BasicDBObject();
 					writeInternal(val, newDbo, propertyType);
