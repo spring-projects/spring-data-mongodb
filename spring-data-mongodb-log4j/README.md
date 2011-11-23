@@ -5,7 +5,7 @@ and connects directly to the MongoDB server using the driver. It has no dependen
 
 To use it, configure a host, port, (optionally) applicationId, and database property in your Log4J configuration:
 
-    log4j.appender.stdout=org.springframework.data.document.mongodb.log4j.MongoLog4jAppender
+    log4j.appender.stdout=org.springframework.data.mongodb.log4j.MongoLog4jAppender
     log4j.appender.stdout.layout=org.apache.log4j.PatternLayout
     log4j.appender.stdout.layout.ConversionPattern=%d %p [%c] - <%m>%n
     log4j.appender.stdout.host = localhost
@@ -32,7 +32,7 @@ An example log entry might look like:
     {
       "_id" : ObjectId("4d89341a8ef397e06940d5cd"),
       "applicationId" : "my.application",
-      "name" : "org.springframework.data.document.mongodb.log4j.AppenderTest",
+      "name" : "org.springframework.data.mongodb.log4j.AppenderTest",
       "level" : "DEBUG",
       "timestamp" : ISODate("2011-03-23T16:53:46.778Z"),
       "properties" : {

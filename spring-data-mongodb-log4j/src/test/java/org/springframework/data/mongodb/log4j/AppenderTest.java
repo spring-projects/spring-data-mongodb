@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.data.document.mongodb.log4j;
+package org.springframework.data.mongodb.log4j;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
