@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.repository.support;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.apache.commons.collections15.Transformer;
 import org.springframework.data.domain.Page;
@@ -27,6 +28,7 @@ import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
@@ -35,6 +37,7 @@ import org.springframework.data.querydsl.QueryDslPredicateExecutor;
 import org.springframework.data.querydsl.SimpleEntityPathResolver;
 import org.springframework.data.repository.core.EntityMetadata;
 import org.springframework.util.Assert;
+
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mysema.query.mongodb.MongodbQuery;
@@ -85,7 +88,7 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 		Assert.notNull(resolver);
 		EntityPath<T> path = resolver.createPath(entityInformation.getJavaType());
 		this.builder = new PathBuilder<T>(path.getType(), path.getMetadata());
-		this.serializer = new SpringDataMongodbSerializer(mongoOperations.getConverter().getMappingContext());
+		this.serializer = new SpringDataMongodbSerializer(mongoOperations.getConverter());
 	}
 
 	/*
@@ -230,14 +233,17 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 	 */
 	static class SpringDataMongodbSerializer extends MongodbSerializer {
 
+		private final MongoConverter converter;
 		private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 
 		/**
 		 * Creates a new {@link SpringDataMongodbSerializer} for the given {@link MappingContext}.
+		 * 
 		 * @param mappingContext
 		 */
-		public SpringDataMongodbSerializer(MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
-			this.mappingContext = mappingContext;
+		public SpringDataMongodbSerializer(MongoConverter converter) {
+			this.mappingContext = converter.getMappingContext();
+			this.converter = converter;
 		}
 
 		@Override
@@ -247,6 +253,12 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 			MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(parent.getType());
 			MongoPersistentProperty property = entity.getPersistentProperty(metadata.getExpression().toString());
 			return property.getFieldName();
+		}
+
+		@Override
+		protected DBObject asDBObject(String key, Object value) {
+
+			return super.asDBObject(key, value instanceof Pattern ? value : converter.convertToMongoType(value));
 		}
 	}
 }
