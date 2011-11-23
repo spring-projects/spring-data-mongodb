@@ -63,10 +63,8 @@ public class Query {
 	}
 
 	public Field fields() {
-		synchronized (this) {
-			if (fieldSpec == null) {
-				this.fieldSpec = new Field();
-			}
+		if (fieldSpec == null) {
+			this.fieldSpec = new Field();
 		}
 		return this.fieldSpec;
 	}
@@ -82,11 +80,10 @@ public class Query {
 	}
 
 	public Sort sort() {
-		synchronized (this) {
-			if (this.sort == null) {
-				this.sort = new Sort();
-			}
+		if (this.sort == null) {
+			this.sort = new Sort();
 		}
+	
 		return this.sort;
 	}
 
