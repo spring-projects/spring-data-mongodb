@@ -24,6 +24,7 @@ import org.springframework.data.mongodb.core.convert.TypeKeyAware;
 import org.springframework.data.mongodb.core.geo.Distance;
 import org.springframework.data.mongodb.core.geo.Point;
 import org.springframework.data.repository.query.ParameterAccessor;
+import org.springframework.util.Assert;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.DBObject;
@@ -41,9 +42,14 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 	/**
 	 * Creates a new {@link ConvertingParameterAccessor} with the given {@link MongoWriter} and delegate.
 	 * 
-	 * @param writer
+	 * @param writer must not be {@literal null}.
+	 * @param delegate must not be {@literal null}.
 	 */
 	public ConvertingParameterAccessor(MongoWriter<?> writer, MongoParameterAccessor delegate) {
+		
+		Assert.notNull(writer);
+		Assert.notNull(delegate);
+		
 		this.writer = writer;
 		this.delegate = delegate;
 	}

@@ -22,8 +22,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -888,24 +886,19 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		if (obj instanceof Map) {
-			Map<Object, Object> m = new HashMap<Object, Object>();
+			DBObject result = new BasicDBObject();
 			for (Map.Entry<Object, Object> entry : ((Map<Object, Object>) obj).entrySet()) {
-				m.put(entry.getKey(), convertToMongoType(entry.getValue()));
+				result.put(entry.getKey().toString(), convertToMongoType(entry.getValue()));
 			}
-			return m;
+			return result;
 		}
 
 		if (obj instanceof List) {
-			List<?> l = (List<?>) obj;
-			List<Object> newList = new ArrayList<Object>();
-			for (Object o : l) {
-				newList.add(convertToMongoType(o));
-			}
-			return newList;
+			return maybeConvertList((List<?>) obj);
 		}
 
 		if (obj.getClass().isArray()) {
-			return maybeConvertArray((Object[]) obj);
+			return maybeConvertList(Arrays.asList((Object[]) obj));
 		}
 
 		DBObject newDbo = new BasicDBObject();
@@ -913,20 +906,10 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		return newDbo;
 	}
 
-	public Object[] maybeConvertArray(Object[] src) {
-		Object[] newArr = new Object[src.length];
-		for (int i = 0; i < src.length; i++) {
-			newArr[i] = convertToMongoType(src[i]);
-		}
-		return newArr;
-	}
-
-	public BasicDBList maybeConvertList(BasicDBList dbl) {
+	public BasicDBList maybeConvertList(Iterable<?> source) {
 		BasicDBList newDbl = new BasicDBList();
-		Iterator<?> iter = dbl.iterator();
-		while (iter.hasNext()) {
-			Object o = iter.next();
-			newDbl.add(convertToMongoType(o));
+		for (Object element : source) {
+			newDbl.add(convertToMongoType(element));
 		}
 		return newDbl;
 	}
