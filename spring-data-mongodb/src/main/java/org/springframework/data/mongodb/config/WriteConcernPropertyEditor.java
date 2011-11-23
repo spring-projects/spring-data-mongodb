@@ -16,28 +16,23 @@
 package org.springframework.data.mongodb.config;
 
 import java.beans.PropertyEditorSupport;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.List;
 
-import org.springframework.util.StringUtils;
-
-import com.mongodb.ServerAddress;
 import com.mongodb.WriteConcern;
 
 /**
- * Parse a string to a WriteConcern.  If it is a well know String as identified by the WriteConcern.valueOf, use the
- * well known WriteConcern value, otherwise pass the string as is to the constructor of the write concern.
- * There is no support for other constructor signatures when parsing from a string value.
+ * Parse a string to a {@link WriteConcern}. If it is a well know {@link String} as identified by the
+ * {@link WriteConcern#valueOf(String)}, use the well known {@link WriteConcern} value, otherwise pass the string as is
+ * to the constructor of the write concern. There is no support for other constructor signatures when parsing from a
+ * string value.
  * 
  * @author Mark Pollack
- *
  */
 public class WriteConcernPropertyEditor extends PropertyEditorSupport {
 
 	/**
 	 * Parse a string to a List<ServerAddress>
 	 */
+	@Override
 	public void setAsText(String writeConcernString) {
 
 		WriteConcern writeConcern = WriteConcern.valueOf(writeConcernString);

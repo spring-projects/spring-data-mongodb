@@ -96,6 +96,7 @@ public class MongoOptionsFactoryBean implements FactoryBean<MongoOptions>, Initi
 	 * 
 	 * Defaults to false
 	 */
+	@SuppressWarnings("deprecation")
 	private boolean slaveOk = MONGO_OPTIONS.slaveOk;
 
 	/**
@@ -204,6 +205,7 @@ public class MongoOptionsFactoryBean implements FactoryBean<MongoOptions>, Initi
 		this.slaveOk = slaveOk;
 	}
 
+	@SuppressWarnings("deprecation")
 	public void afterPropertiesSet() {
 		MONGO_OPTIONS.connectionsPerHost = connectionsPerHost;
 		MONGO_OPTIONS.threadsAllowedToBlockForConnectionMultiplier = threadsAllowedToBlockForConnectionMultiplier;

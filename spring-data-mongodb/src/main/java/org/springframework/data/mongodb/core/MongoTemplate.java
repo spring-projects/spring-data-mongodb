@@ -135,7 +135,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	private WriteResultChecking writeResultChecking = WriteResultChecking.NONE;
 
 	/**
-	 * Set the ReadPreference when operating on a collection.  See {@link #prepareCollection(DBCollection)} 
+	 * Set the ReadPreference when operating on a collection.  See {@link #prepareCollection(DBCollection)}
 	 */
 	private ReadPreference readPreference = null;
 
@@ -539,7 +539,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 	public <T> T findAndModify(Query query, Update update, FindAndModifyOptions options, Class<T> entityClass,
 			String collectionName) {
-		return doFindAndModify(collectionName, query.getQueryObject(), query.getFieldsObject(), query.getSortObject(), 
+		return doFindAndModify(collectionName, query.getQueryObject(), query.getFieldsObject(), query.getSortObject(),
 				entityClass, update, options);
 	}
 	
@@ -840,7 +840,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				}
 
 				WriteResult wr;
-				MongoAction mongoAction = new MongoAction(writeConcern, MongoActionOperation.UPDATE, collectionName, entityClass, updateObj, queryObj);				
+				MongoAction mongoAction = new MongoAction(writeConcern, MongoActionOperation.UPDATE, collectionName, entityClass, updateObj, queryObj);
 				WriteConcern writeConcernToUse = prepareWriteConcern(mongoAction);
 				if (writeConcernToUse == null) {
 					wr = collection.update(queryObj, updateObj, upsert, multi);
@@ -920,7 +920,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			public Void doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 				DBObject dboq = mapper.getMappedObject(queryObject, entity);
 				WriteResult wr = null;
-				MongoAction mongoAction = new MongoAction(writeConcern, MongoActionOperation.REMOVE, collectionName, entityClass, null, queryObject);		
+				MongoAction mongoAction = new MongoAction(writeConcern, MongoActionOperation.REMOVE, collectionName, entityClass, null, queryObject);
 				WriteConcern writeConcernToUse = prepareWriteConcern(mongoAction);
 				if (LOGGER.isDebugEnabled()) {
 					LOGGER.debug("remove using query: " + queryObject + " in collection: " + collection.getName());
@@ -1035,7 +1035,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				  String initialAsString = replaceWithResourceIfNecessary((String)initialObj);
 					dbo.put("initial", JSON.parse(initialAsString));
 			}
-		}		
+		}
 
 		if (dbo.containsField("$reduce")) {
 			dbo.put("$reduce", replaceWithResourceIfNecessary(dbo.get("$reduce").toString()));
@@ -1069,6 +1069,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			LOGGER.debug("Group command result = [" + commandResult + "]");
 		}
 		
+		@SuppressWarnings("unchecked")
 		Iterable<DBObject> resultSet = (Iterable<DBObject>) commandResult.get( "retval" );
 		
 		List<T> mappedResults = new ArrayList<T>();
