@@ -74,6 +74,8 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 		} else {
 			query = new BasicQuery(queryString);
 		}
+		
+		QueryUtils.applySorting(query, accessor.getSort());
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug(String.format("Created query %s", query.getQueryObject()));

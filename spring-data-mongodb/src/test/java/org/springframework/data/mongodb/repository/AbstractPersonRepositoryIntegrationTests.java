@@ -365,4 +365,22 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 				Metrics.KILOMETERS));
 		assertThat(results.getContent().isEmpty(), is(false));
 	}
+
+	/**
+	 * @see DATAMONGO-323
+	 */
+	@Test
+	public void considersSortForAnnotatedQuery() {
+		
+		List<Person> result = repository.findByAgeLessThan(60, new Sort("firstname"));
+		
+		assertThat(result.size(), is(7));
+		assertThat(result.get(0), is(alicia));
+		assertThat(result.get(1), is(boyd));
+		assertThat(result.get(2), is(carter));
+		assertThat(result.get(3), is(dave));
+		assertThat(result.get(4), is(leroi));
+		assertThat(result.get(5), is(oliver));
+		assertThat(result.get(6), is(stefan));
+	}
 }

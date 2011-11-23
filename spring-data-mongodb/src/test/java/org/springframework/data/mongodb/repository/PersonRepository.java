@@ -72,6 +72,9 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	List<Person> findByFirstnameLike(String firstname);
 	
 	List<Person> findByFirstnameLikeOrderByLastnameAsc(String firstname, Sort sort);
+	
+	@Query("{'age' : { '$lt' : ?0 } }")
+	List<Person> findByAgeLessThan(int age, Sort sort);
 
 	/**
 	 * Returns a page of {@link Person}s with a lastname mathing the given one (*-wildcards supported).
