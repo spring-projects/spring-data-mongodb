@@ -55,7 +55,7 @@ public class CustomConversionsUnitTests {
 	}
 
 	/**
-	 * @see DATADOC-240
+	 * @see DATAMONGO-240
 	 */
 	@Test
 	public void considersObjectIdToBeSimpleType() {
@@ -68,7 +68,7 @@ public class CustomConversionsUnitTests {
 	}
 	
 	/**
-	 * @see DATADOC-240
+	 * @see DATAMONGO-240
 	 */
 	@Test
 	public void considersCustomConverterForSimpleType() {
@@ -106,12 +106,24 @@ public class CustomConversionsUnitTests {
 	}
 
 	/**
-	 * @see DATADOC-259
+	 * @see DATAMONGO-259
 	 */
 	@Test
 	public void doesNotConsiderTypeSimpleIfOnlyReadConverterIsRegistered() {
 		CustomConversions conversions = new CustomConversions(Arrays.asList(StringToUUIDConverter.INSTANCE));
 		assertThat(conversions.isSimpleType(UUID.class), is(false));
+	}
+	
+	
+	/**
+	 * @see DATAMONGO-298
+	 */
+	@Test
+	public void discoversConvertersForSubtypesOfMongoTypes() {
+		
+		CustomConversions conversions = new CustomConversions(Arrays.asList(StringToIntegerConverter.INSTANCE));
+		assertThat(conversions.hasCustomReadTarget(String.class, Integer.class), is(true));
+		assertThat(conversions.hasCustomWriteTarget(String.class, Integer.class), is(true));
 	}
 	
 	enum UuidToStringConverter implements Converter<UUID, String> {
@@ -140,6 +152,13 @@ public class CustomConversionsUnitTests {
 		INSTANCE;
 		public Number convert(String source) {
 			return 0L;
+		}
+	}
+	
+	enum StringToIntegerConverter implements Converter<String, Integer> {
+		INSTANCE;
+		public Integer convert(String source) {
+			return 0;
 		}
 	}
 }

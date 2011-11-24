@@ -24,6 +24,7 @@ import org.bson.types.CodeWScope;
 import org.bson.types.ObjectId;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 
+import com.mongodb.DBObject;
 import com.mongodb.DBRef;
 
 /**
@@ -46,6 +47,7 @@ public abstract class MongoSimpleTypes {
 		simpleTypes.add(DBRef.class);
 		simpleTypes.add(ObjectId.class);
 		simpleTypes.add(CodeWScope.class);
+		simpleTypes.add(DBObject.class);
 		MONGO_SIMPLE_TYPES = Collections.unmodifiableSet(simpleTypes);
 	}
 

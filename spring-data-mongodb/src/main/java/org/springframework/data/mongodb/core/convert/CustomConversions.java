@@ -17,13 +17,11 @@ package org.springframework.data.mongodb.core.convert;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
-import org.bson.types.ObjectId;
 import org.springframework.core.GenericTypeResolver;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.converter.Converter;
@@ -37,8 +35,6 @@ import org.springframework.data.mongodb.core.convert.MongoConverters.StringToBig
 import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
 import org.springframework.util.Assert;
 
-import com.mongodb.DBObject;
-
 /**
  * Value object to capture custom conversion. That is essentially a {@link List} of converters and some additional logic
  * around them. The converters are pretty much builds up two sets of types which Mongo basic types {@see #MONGO_TYPES}
@@ -49,10 +45,6 @@ import com.mongodb.DBObject;
  * @author Oliver Gierke
  */
 public class CustomConversions {
-
-	@SuppressWarnings({ "unchecked" })
-	private static final List<Class<?>> MONGO_TYPES = Arrays.asList(Number.class, Date.class, ObjectId.class,
-			String.class, DBObject.class);
 
 	private final Set<ConvertiblePair> readingPairs;
 	private final Set<ConvertiblePair> writingPairs;
@@ -279,8 +271,8 @@ public class CustomConversions {
 	 * @param type
 	 * @return
 	 */
-	private static boolean isMongoBasicType(Class<?> type) {
-		return MONGO_TYPES.contains(type);
+	private boolean isMongoBasicType(Class<?> type) {
+		return MongoSimpleTypes.HOLDER.isSimpleType(type);
 	}
 
 	private enum CustomToStringConverter implements GenericConverter {
