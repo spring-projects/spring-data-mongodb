@@ -764,7 +764,7 @@ public class MappingMongoConverterUnitTests {
 	 * @see DATAMONGO-309
 	 */
 	@Test
-	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@SuppressWarnings({ "unchecked" })
 	public void writesArraysAsMapValuesCorrectly() {
 		
 		ClassWithMapProperty wrapper = new ClassWithMapProperty();
@@ -785,6 +785,39 @@ public class MappingMongoConverterUnitTests {
 		assertThat(list.size(), is(1));
 		assertThat(list, hasItem((Object) "bar"));
 	}
+	
+	/**
+	 * @see DATAMONGO-324
+	 */
+	@Test
+	public void writesDbObjectCorrectly() {
+	
+		DBObject dbObject = new BasicDBObject();
+		dbObject.put("foo", "bar");
+		
+		DBObject result = new BasicDBObject();
+		
+		converter.write(dbObject, result);
+		
+		result.removeField(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY);
+		assertThat(dbObject, is(result));
+	}
+	
+	/**
+	 * @see DATAMONGO-324
+	 */
+	@Test
+	public void readsDbObjectCorrectly() {
+		
+		DBObject dbObject = new BasicDBObject();
+		dbObject.put("foo", "bar");
+		
+		DBObject result = converter.read(DBObject.class, dbObject);
+		
+		assertThat(result, is(dbObject));
+	}
+	
+	
 	
 	class GenericType<T> {
 		T content;
@@ -817,6 +850,7 @@ public class MappingMongoConverterUnitTests {
 		String city;
 	}
 
+	
 	interface Contact {
 
 	}

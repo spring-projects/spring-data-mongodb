@@ -182,6 +182,10 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		if (conversions.hasCustomReadTarget(dbo.getClass(), rawType)) {
 			return conversionService.convert(dbo, rawType);
 		}
+		
+		if (DBObject.class.isAssignableFrom(rawType)) {
+			return (S) dbo;
+		}
 
 		if (typeToUse.isCollectionLike() && dbo instanceof BasicDBList) {
 			return (S) readCollectionOrArray(typeToUse, (BasicDBList) dbo);
