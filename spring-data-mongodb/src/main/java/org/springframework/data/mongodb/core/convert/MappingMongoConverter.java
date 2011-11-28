@@ -447,7 +447,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		String name = prop.getFieldName();
 
-		if (prop.isCollection()) {
+		if (prop.isCollectionLike()) {
 			DBObject collectionInternal = createCollection(asCollection(obj), prop);
 			dbo.put(name, collectionInternal);
 			return;
@@ -750,7 +750,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 						&& ((DBObject) sourceValue).keySet().size() == 0) {
 					// It's empty
 					return Array.newInstance(prop.getComponentType(), 0);
-				} else if (prop.isCollection() && sourceValue instanceof BasicDBList) {
+				} else if (prop.isCollectionLike() && sourceValue instanceof BasicDBList) {
 					return readCollectionOrArray((TypeInformation<? extends Collection<?>>) prop.getTypeInformation(),
 							(BasicDBList) sourceValue);
 				}
