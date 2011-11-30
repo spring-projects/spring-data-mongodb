@@ -5,7 +5,9 @@
 	xsi:schemaLocation="http://www.springframework.org/schema/data/mongo http://www.springframework.org/schema/data/mongo/spring-mongo.xsd
 		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
 
-	<mongo:mapping-converter id="converter" db-factory-ref="factory" />
+	<mongo:mapping-converter id="converter" db-factory-ref="factory">
+		<mongo:custom-converters base-package="org.springframework.data.mongodb.config" />
+	</mongo:mapping-converter>
 	
 	<mongo:db-factory id="factory" />
 

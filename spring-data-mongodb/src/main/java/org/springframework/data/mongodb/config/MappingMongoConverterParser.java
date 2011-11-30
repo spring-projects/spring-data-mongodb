@@ -18,6 +18,9 @@ package org.springframework.data.mongodb.config;
 
 import static org.springframework.data.mongodb.config.BeanNames.*;
 
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -36,13 +39,20 @@ import org.springframework.beans.factory.support.ManagedSet;
 import org.springframework.beans.factory.xml.AbstractBeanDefinitionParser;
 import org.springframework.beans.factory.xml.ParserContext;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
+import org.springframework.core.convert.converter.Converter;
+import org.springframework.core.convert.converter.GenericConverter;
+import org.springframework.core.type.classreading.MetadataReader;
+import org.springframework.core.type.classreading.MetadataReaderFactory;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
+import org.springframework.core.type.filter.AssignableTypeFilter;
+import org.springframework.core.type.filter.TypeFilter;
 import org.springframework.data.annotation.Persistent;
 import org.springframework.data.mongodb.core.convert.CustomConversions;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexCreator;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 import org.springframework.util.xml.DomUtils;
 import org.w3c.dom.Element;
@@ -133,12 +143,26 @@ public class MappingMongoConverterParser extends AbstractBeanDefinitionParser {
 		List<Element> customConvertersElements = DomUtils.getChildElementsByTagName(element, "custom-converters");
 
 		if (customConvertersElements.size() == 1) {
+			
 			Element customerConvertersElement = customConvertersElements.get(0);
 			ManagedList<BeanMetadataElement> converterBeans = new ManagedList<BeanMetadataElement>();
 			List<Element> converterElements = DomUtils.getChildElementsByTagName(customerConvertersElement, "converter");
+			
 			if (converterElements != null) {
 				for (Element listenerElement : converterElements) {
 					converterBeans.add(parseConverter(listenerElement, parserContext));
+				}
+			}
+
+			// Scan for Converter and GenericConverter beans in the given base-package
+			String packageToScan = customerConvertersElement.getAttribute(BASE_PACKAGE);
+			if (StringUtils.hasText(packageToScan)) {
+				ClassPathScanningCandidateComponentProvider provider = new ClassPathScanningCandidateComponentProvider(true);
+				provider.addExcludeFilter(new NegatingFilter(new AssignableTypeFilter(Converter.class), new AssignableTypeFilter(
+						GenericConverter.class)));
+	
+				for (BeanDefinition candidate : provider.findCandidateComponents(packageToScan)) {
+					converterBeans.add(candidate);
 				}
 			}
 
@@ -193,5 +217,40 @@ public class MappingMongoConverterParser extends AbstractBeanDefinitionParser {
 		parserContext.getReaderContext().error(
 				"Element <converter> must specify 'ref' or contain a bean definition for the converter", element);
 		return null;
+	}
+
+	/**
+	 * {@link TypeFilter} that returns {@literal false} in case any of the given delegates matches.
+	 *
+	 * @author Oliver Gierke
+	 */
+	private static class NegatingFilter implements TypeFilter {
+
+		private final Set<TypeFilter> delegates;
+
+		/**
+		 * Creates a new {@link NegatingFilter} with the given delegates.
+		 * 
+		 * @param filters
+		 */
+		public NegatingFilter(TypeFilter... filters) {
+			Assert.notNull(filters);
+			this.delegates = new HashSet<TypeFilter>(Arrays.asList(filters));
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.core.type.filter.TypeFilter#match(org.springframework.core.type.classreading.MetadataReader, org.springframework.core.type.classreading.MetadataReaderFactory)
+		 */
+		public boolean match(MetadataReader metadataReader, MetadataReaderFactory metadataReaderFactory) throws IOException {
+
+			for (TypeFilter delegate : delegates) {
+				if (delegate.match(metadataReader, metadataReaderFactory)) {
+					return false;
+				}
+			}
+
+			return true;
+		}
 	}
 }

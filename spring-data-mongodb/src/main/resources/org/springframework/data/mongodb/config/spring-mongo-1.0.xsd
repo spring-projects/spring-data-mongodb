@@ -11,7 +11,6 @@
 						xsi:schemaLocation="http://www.springframework.org/schema/beans
             http://www.springframework.org/schema/beans/spring-beans-2.5.xsd">
 
-
 	<xsd:import namespace="http://www.springframework.org/schema/beans"/>
 	<xsd:import namespace="http://www.springframework.org/schema/tool"/>
 	<xsd:import namespace="http://www.springframework.org/schema/context"
@@ -103,9 +102,6 @@ The Mongo URI string.]]></xsd:documentation>
 					<xsd:union memberTypes="writeConcernEnumeration xsd:string"/>
 				</xsd:simpleType>
 			</xsd:attribute>
-			<!-- MLP
-			<xsd:attributeGroup ref="writeConcern" />
-			-->
 		</xsd:complexType>
 	</xsd:element>
 
@@ -152,9 +148,10 @@ The Mongo URI string.]]></xsd:documentation>
 
 	<xsd:element name="mapping-converter">
 		<xsd:annotation>
-			<xsd:documentation><![CDATA[
-Defines a MongoConverter for getting rich mapping functionality.
-			]]></xsd:documentation>
+			<xsd:documentation><![CDATA[Defines a MongoConverter for getting rich mapping functionality.]]></xsd:documentation>
+			<xsd:appinfo>
+				<tool:exports type="org.springframework.data.mongodb.core.convert.MappingMongoConverter" />
+			</xsd:appinfo>
 		</xsd:annotation>
 		<xsd:complexType>
 			<xsd:sequence>
@@ -162,14 +159,14 @@ Defines a MongoConverter for getting rich mapping functionality.
 					<xsd:annotation>
 						<xsd:documentation><![CDATA[
         Top-level element that contains one or more custom converters to be used for mapping
-        domain objects to and from Mongo's DBObject
-              ]]>
+        domain objects to and from Mongo's DBObject]]>
 						</xsd:documentation>
 					</xsd:annotation>
 					<xsd:complexType>
 						<xsd:sequence>
 							<xsd:element name="converter" type="customConverterType" minOccurs="0" maxOccurs="unbounded"/>
 						</xsd:sequence>
+						<xsd:attribute name="base-package" type="xsd:string" />
 					</xsd:complexType>
 				</xsd:element>
 			</xsd:sequence>

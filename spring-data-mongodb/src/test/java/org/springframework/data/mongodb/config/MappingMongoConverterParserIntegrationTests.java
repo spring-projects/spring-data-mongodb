@@ -15,10 +15,26 @@
  */
 package org.springframework.data.mongodb.config;
 
+import static org.hamcrest.CoreMatchers.*;
+import static org.junit.Assert.*;
+
+import java.util.Collections;
+import java.util.Set;
+
+import org.junit.Before;
 import org.junit.Test;
-import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
-import org.springframework.beans.factory.xml.XmlBeanFactory;
+import org.springframework.beans.factory.support.DefaultListableBeanFactory;
+import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
+import org.springframework.core.convert.TypeDescriptor;
+import org.springframework.core.convert.converter.Converter;
+import org.springframework.core.convert.converter.GenericConverter;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.data.mongodb.core.convert.CustomConversions;
+import org.springframework.data.mongodb.core.mapping.Account;
+import org.springframework.data.mongodb.repository.Person;
+import org.springframework.stereotype.Component;
+
+import com.mongodb.DBObject;
 
 /**
  * Integration tests for {@link MongoParser}.
@@ -26,13 +42,48 @@ import org.springframework.core.io.ClassPathResource;
  * @author Oliver Gierke
  */
 public class MappingMongoConverterParserIntegrationTests {
+	
+	DefaultListableBeanFactory factory;
+	
+	
+	@Before
+	public void setUp() {
+		factory = new DefaultListableBeanFactory();
+		XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(factory);
+		reader.loadBeanDefinitions(new ClassPathResource("namespace/converter.xml"));
+	}
 
 	@Test
 	public void allowsDbFactoryRefAttribute() {
-
-		ConfigurableListableBeanFactory factory = new XmlBeanFactory(new ClassPathResource("namespace/converter.xml"));
 		
 		factory.getBeanDefinition("converter");
 		factory.getBean("converter");
+	}
+	
+	@Test
+	public void scansForConverterAndSetsUpCustomConversionsAccordingly() {
+		
+		CustomConversions conversions = factory.getBean(CustomConversions.class);
+		assertThat(conversions.hasCustomWriteTarget(Person.class), is(true));
+		assertThat(conversions.hasCustomWriteTarget(Account.class), is(true));
+	}
+	
+	@Component
+	public static class SampleConverter implements Converter<Person, DBObject> {
+		public DBObject convert(Person source) {
+			return null;
+		}
+	}
+	
+	@Component
+	public static class SampleConverterFactory implements GenericConverter {
+
+		public Set<ConvertiblePair> getConvertibleTypes() {
+			return Collections.singleton(new ConvertiblePair(Account.class, DBObject.class));
+		}
+
+		public Object convert(Object source, TypeDescriptor sourceType, TypeDescriptor targetType) {
+			return null;
+		}
 	}
 }
