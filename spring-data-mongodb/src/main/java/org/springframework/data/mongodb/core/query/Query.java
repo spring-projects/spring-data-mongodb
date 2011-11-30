@@ -19,9 +19,11 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 
+import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
+import org.springframework.util.Assert;
+
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
-import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 
 public class Query {
 
@@ -30,6 +32,7 @@ public class Query {
 	private Sort sort;
 	private int skip;
 	private int limit;
+	private String hint;
 
 	/**
 	 * Static factory method to create a Query using the provided criteria
@@ -79,6 +82,18 @@ public class Query {
 		return this;
 	}
 
+	/**
+	 * Configures the query to use the given hint when being executed.
+	 * 
+	 * @param name must not be {@literal null} or empty.
+	 * @return
+	 */
+	public Query withHint(String name) {
+		Assert.hasText(name, "Hint must not be empty or null!");
+		this.hint = name;
+		return this;
+	}
+	
 	public Sort sort() {
 		if (this.sort == null) {
 			this.sort = new Sort();
@@ -119,6 +134,10 @@ public class Query {
 		return this.limit;
 	}
 
+	public String getHint() {
+		return hint;
+	}
+	
 	protected List<Criteria> getCriteria() {
 		return new ArrayList<Criteria>(this.criteria.values());
 	}

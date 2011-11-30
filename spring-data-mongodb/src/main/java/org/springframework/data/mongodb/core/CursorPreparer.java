@@ -22,7 +22,7 @@ import com.mongodb.DBCursor;
  * 
  * @author Oliver Gierke
  */
-public interface CursorPreparer {
+interface CursorPreparer {
 
 	/**
 	 * Prepare the given cursor (apply limits, skips and so on). Returns th eprepared cursor.

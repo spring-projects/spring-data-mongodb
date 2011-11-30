@@ -92,18 +92,6 @@ public interface MongoOperations {
 	void executeQuery(Query query, String collectionName, DocumentCallbackHandler dch);
 	
 	/**
-	 * Execute a MongoDB query and iterate over the query results on a per-document basis with a DocumentCallbackHandler using the
-	 * provided CursorPreparer.
-	 * @param query the query class that specifies the criteria used to find a record and also an optional fields
-	 *          specification
-	 * @param collectionName name of the collection to retrieve the objects from
-	 * @param dch the handler that will extract results, one document at a time
-	 * @param preparer allows for customization of the DBCursor used when iterating over the result set, (apply limits,
-	 *          skips and so on).
-	 */
-	void executeQuery(Query query, String collectionName, DocumentCallbackHandler dch, CursorPreparer preparer);
-
-	/**
 	 * Executes a {@link DbCallback} translating any exceptions as necessary.
 	 * <p/>
 	 * Allows for returning a result object, that is a domain object or a collection of domain objects.
@@ -271,7 +259,7 @@ public interface MongoOperations {
 	
 	
 	/**
-	 * Execute a group operation over the entire collection. 
+	 * Execute a group operation over the entire collection.
 	 * The group operation entity class should match the 'shape' of the returned object that takes int account the
 	 * initial document structure as well as any finalize functions.
 	 * 
@@ -281,7 +269,7 @@ public interface MongoOperations {
 	 * @param entityClass The parameterized type of the returned list
 	 * @return The results of the group operation
 	 */
-	<T> GroupByResults<T> group(String inputCollectionName, GroupBy groupBy, Class<T> entityClass); 
+	<T> GroupByResults<T> group(String inputCollectionName, GroupBy groupBy, Class<T> entityClass);
 	
 	/**
 	 * Execute a group operation restricting the rows to those which match the provided Criteria.
@@ -451,26 +439,6 @@ public interface MongoOperations {
 	 * @return the List of converted objects
 	 */
 	<T> List<T> find(Query query, Class<T> entityClass, String collectionName);
-
-	/**
-	 * Map the results of an ad-hoc query on the specified collection to a List of the specified type.
-	 * <p/>
-	 * The object is converted from the MongoDB native representation using an instance of {@see MongoConverter}. Unless
-	 * configured otherwise, an instance of SimpleMongoConverter will be used.
-	 * <p/>
-	 * The query is specified as a {@link Query} which can be created either using the {@link BasicQuery} or the more
-	 * feature rich {@link Query}.
-	 * 
-	 * @param query the query class that specifies the criteria used to find a record and also an optional fields
-	 *          specification
-	 * @param entityClass the parameterized type of the returned list.
-	 * @param preparer allows for customization of the DBCursor used when iterating over the result set, (apply limits,
-	 *          skips and so on).
-	 * @param collectionName name of the collection to retrieve the objects from
-	 * 
-	 * @return the List of converted objects.
-	 */
-	<T> List<T> find(Query query, Class<T> entityClass, CursorPreparer preparer, String collectionName);
 
 	/**
 	 * Returns a document with the given id mapped onto the given class. The collection the query is ran against will be
@@ -647,7 +615,7 @@ public interface MongoOperations {
 	void save(Object objectToSave, String collectionName);
 
 	/**
-	 * Performs an upsert. If no document is found that matches the query, a new document is created and inserted 
+	 * Performs an upsert. If no document is found that matches the query, a new document is created and inserted
 	 * by combining the query document and the update document.
 	 * 
 	 * @param query the query document that specifies the criteria used to select a record to be upserted
@@ -659,7 +627,7 @@ public interface MongoOperations {
 	
 
 	/**
-	 * Performs an upsert. If no document is found that matches the query, a new document is created and inserted 
+	 * Performs an upsert. If no document is found that matches the query, a new document is created and inserted
 	 * by combining the query document and the update document.
 	 * 
 	 * @param query the query document that specifies the criteria used to select a record to be updated
