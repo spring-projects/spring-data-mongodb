@@ -21,6 +21,7 @@ package org.springframework.data.mongodb.core;
 
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -32,21 +33,6 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
 
-import com.mongodb.BasicDBList;
-import com.mongodb.BasicDBObject;
-import com.mongodb.CommandResult;
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
-import com.mongodb.MapReduceCommand;
-import com.mongodb.MapReduceOutput;
-import com.mongodb.Mongo;
-import com.mongodb.MongoException;
-import com.mongodb.ReadPreference;
-import com.mongodb.WriteConcern;
-import com.mongodb.WriteResult;
-import com.mongodb.util.JSON;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bson.types.ObjectId;
@@ -97,7 +83,24 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.jca.cci.core.ConnectionCallback;
 import org.springframework.util.Assert;
+import org.springframework.util.ResourceUtils;
 import org.springframework.util.StringUtils;
+
+import com.mongodb.BasicDBList;
+import com.mongodb.BasicDBObject;
+import com.mongodb.CommandResult;
+import com.mongodb.DB;
+import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
+import com.mongodb.DBObject;
+import com.mongodb.MapReduceCommand;
+import com.mongodb.MapReduceOutput;
+import com.mongodb.Mongo;
+import com.mongodb.MongoException;
+import com.mongodb.ReadPreference;
+import com.mongodb.WriteConcern;
+import com.mongodb.WriteResult;
+import com.mongodb.util.JSON;
 
 /**
  * Primary implementation of {@link MongoOperations}.
@@ -1009,7 +1012,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 		MapReduceResults<T> mapReduceResult = new MapReduceResults<T>(mappedResults, commandResult);
 		return mapReduceResult;
-
 	}
 
 	public <T> GroupByResults<T> group(String inputCollectionName, GroupBy groupBy, Class<T> entityClass) {
@@ -1084,17 +1086,24 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	}
 
 	protected String replaceWithResourceIfNecessary(String function) {
+
 		String func = function;
-		if (this.resourceLoader != null) {
+
+		if (this.resourceLoader != null && ResourceUtils.isUrl(function)) {
+
+			Resource functionResource = resourceLoader.getResource(func);
+
+			if (!functionResource.exists()) {
+				throw new InvalidDataAccessApiUsageException(String.format("Resource %s not found!", function));
+			}
+
 			try {
-				Resource functionResource = resourceLoader.getResource(func);
-				if (functionResource.exists()) {
-					return new Scanner(functionResource.getInputStream()).useDelimiter("\\A").next();
-				}
-			} catch (Exception e) {
-				// ignore - could be embedded JavaScript text
+				return new Scanner(functionResource.getInputStream()).useDelimiter("\\A").next();
+			} catch (IOException e) {
+				throw new InvalidDataAccessApiUsageException(String.format("Cannot read map-reduce file %s!", function), e);
 			}
 		}
+
 		return func;
 	}
 
@@ -1696,13 +1705,13 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		 * @see org.springframework.data.mongodb.core.CursorPreparer#prepare(com.mongodb.DBCursor)
 		 */
 		public DBCursor prepare(DBCursor cursor) {
-			
+
 			if (query == null) {
 				return cursor;
 			}
 
-			if (query.getSkip() <= 0 && query.getLimit() <= 0 && query.getSortObject() == null && !StringUtils
-							.hasText(query.getHint())) {
+			if (query.getSkip() <= 0 && query.getLimit() <= 0 && query.getSortObject() == null
+					&& !StringUtils.hasText(query.getHint())) {
 				return cursor;
 			}
 
@@ -1728,7 +1737,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			return cursorToUse;
 		}
 	}
-	
+
 	/**
 	 * {@link DbObjectCallback} that assumes a {@link GeoResult} to be created, delegates actual content unmarshalling to
 	 * a delegate and creates a {@link GeoResult} from the result.

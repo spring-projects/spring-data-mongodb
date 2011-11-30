@@ -26,7 +26,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.dao.DataAccessException;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -75,6 +77,12 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		assertTrue(ReflectionTestUtils.getField(template, "mongoConverter") instanceof MappingMongoConverter);
 	}
 
+	@Test(expected = InvalidDataAccessApiUsageException.class)
+	public void rejectsNotFoundMapReduceResource() {
+		template.setApplicationContext(new GenericApplicationContext());
+		template.mapReduce("foo", "classpath:doesNotExist.js", "function() {}", Person.class);
+	}
+	
 	/**
 	 * Mocks out the {@link MongoTemplate#getDb()} method to return the {@link DB} mock instead of executing the actual
 	 * behaviour.
