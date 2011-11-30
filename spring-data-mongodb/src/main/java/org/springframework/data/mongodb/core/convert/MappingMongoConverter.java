@@ -446,16 +446,16 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		String name = prop.getFieldName();
+		TypeInformation<?> valueType = ClassTypeInformation.from(obj.getClass());
+		TypeInformation<?> type = prop.getTypeInformation();
 
-		if (prop.isCollectionLike()) {
+		if (valueType.isCollectionLike()) {
 			DBObject collectionInternal = createCollection(asCollection(obj), prop);
 			dbo.put(name, collectionInternal);
 			return;
 		}
 
-		TypeInformation<?> type = prop.getTypeInformation();
-
-		if (prop.isMap()) {
+		if (valueType.isMap()) {
 			BasicDBObject mapDbObj = new BasicDBObject();
 			writeMapInternal((Map<Object, Object>) obj, mapDbObj, type);
 			dbo.put(name, mapDbObj);
@@ -596,7 +596,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 							writeCollectionInternal(asCollection(val), propertyType.getMapValueType(), new BasicDBList()));
 				} else {
 					DBObject newDbo = new BasicDBObject();
-					writeInternal(val, newDbo, propertyType);
+					TypeInformation<?> valueTypeInfo = propertyType.isMap() ? propertyType.getMapValueType() : ClassTypeInformation.from(Object.class);
+					writeInternal(val, newDbo, valueTypeInfo);
 					dbo.put(simpleKey, newDbo);
 				}
 			} else {
