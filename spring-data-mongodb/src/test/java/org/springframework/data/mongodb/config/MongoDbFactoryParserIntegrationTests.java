@@ -18,11 +18,7 @@ package org.springframework.data.mongodb.config;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
-import java.net.UnknownHostException;
-import java.util.List;
-
 import org.junit.Test;
-import org.springframework.beans.PropertyValue;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.ConstructorArgumentValues;
 import org.springframework.beans.factory.config.ConstructorArgumentValues.ValueHolder;
@@ -36,7 +32,6 @@ import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 
 import com.mongodb.DB;
 import com.mongodb.Mongo;
-import com.mongodb.MongoException;
 import com.mongodb.MongoURI;
 import com.mongodb.WriteConcern;
 
@@ -47,25 +42,37 @@ import com.mongodb.WriteConcern;
  */
 public class MongoDbFactoryParserIntegrationTests {
 
-	
 	@Test
 	public void testWriteConcern() throws Exception {
 		SimpleMongoDbFactory dbFactory = new SimpleMongoDbFactory(new Mongo("localhost"), "database");
 		dbFactory.setWriteConcern(WriteConcern.SAFE);
-		DB db = dbFactory.getDb();
+		dbFactory.getDb();
 		assertThat(WriteConcern.SAFE, is(dbFactory.getWriteConcern()));
 	}
 	
 	@Test
 	public void parsesWriteConcern() {
-		ClassPathXmlApplicationContext ctx = new ClassPathXmlApplicationContext("namespace/db-factory-bean.xml");		
+		ClassPathXmlApplicationContext ctx = new ClassPathXmlApplicationContext("namespace/db-factory-bean.xml");
 		assertWriteConcern(ctx, WriteConcern.SAFE);
 	}
 	
 	@Test
 	public void parsesCustomWriteConcern() {
-		ClassPathXmlApplicationContext ctx = new ClassPathXmlApplicationContext("namespace/db-factory-bean-custom-write-concern.xml");		
+		ClassPathXmlApplicationContext ctx = new ClassPathXmlApplicationContext("namespace/db-factory-bean-custom-write-concern.xml");
 		assertWriteConcern(ctx, new WriteConcern("rack1"));
+	}
+	
+	/**
+	 * @see DATAMONGO-331
+	 */
+	@Test
+	public void readsReplicasWriteConcernCorrectly() {
+		
+		ApplicationContext ctx = new ClassPathXmlApplicationContext("namespace/db-factory-bean-custom-write-concern.xml");
+		MongoDbFactory factory = ctx.getBean("second", MongoDbFactory.class);
+		DB db = factory.getDb();
+		
+		assertThat(db.getWriteConcern(), is(WriteConcern.REPLICAS_SAFE));
 	}
 
 	private void assertWriteConcern(ClassPathXmlApplicationContext ctx, WriteConcern expectedWriteConcern) {
@@ -108,7 +115,7 @@ public class MongoDbFactoryParserIntegrationTests {
 		
 		XmlBeanFactory factory = new XmlBeanFactory(new ClassPathResource("namespace/db-factory-bean.xml"));
 		Mongo mongo = factory.getBean(Mongo.class);
-		assertThat(mongo.getMongoOptions().maxAutoConnectRetryTime, is(27L));		
+		assertThat(mongo.getMongoOptions().maxAutoConnectRetryTime, is(27L));
 	}
 	
 	/**
@@ -133,7 +140,7 @@ public class MongoDbFactoryParserIntegrationTests {
 	public void setsUpMongoDbFactoryUsingAMongoUriWithoutCredentials() {
 		
 		XmlBeanFactory factory = new XmlBeanFactory(new ClassPathResource("namespace/mongo-uri-no-credentials.xml"));
-		BeanDefinition definition = factory.getBeanDefinition("mongoDbFactory");		
+		BeanDefinition definition = factory.getBeanDefinition("mongoDbFactory");
 		ConstructorArgumentValues constructorArguments = definition.getConstructorArgumentValues();
 		
 		assertThat(constructorArguments.getArgumentCount(), is(1));

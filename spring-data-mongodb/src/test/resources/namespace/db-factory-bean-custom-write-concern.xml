@@ -11,6 +11,8 @@
 		<mongo:options max-auto-connect-retry-time="27" />
 	</mongo:mongo>
 	
+	<mongo:db-factory id="second" write-concern="REPLICAS_SAFE" />
+	
 	<!-- now part of the namespace
 	<bean class="org.springframework.beans.factory.config.CustomEditorConfigurer">
 	  <property name="customEditors">

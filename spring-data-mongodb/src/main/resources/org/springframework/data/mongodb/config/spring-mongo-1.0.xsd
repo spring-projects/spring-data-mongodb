@@ -274,7 +274,7 @@ The name of the Mongo object that determines what server to monitor. (by default
 					<xsd:enumeration value="NORMAL" />
 					<xsd:enumeration value="SAFE" />
 					<xsd:enumeration value="FSYNC_SAFE" />
-					<xsd:enumeration value="REPLICA_SAFE" />
+					<xsd:enumeration value="REPLICAS_SAFE" />
 					<xsd:enumeration value="JOURNAL_SAFE" />
 					<xsd:enumeration value="MAJORITY" />
 		</xsd:restriction>
