@@ -17,6 +17,8 @@ package org.springframework.data.mongodb.core.query;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
+import static org.springframework.data.mongodb.core.query.Query.*;
+import static org.springframework.data.mongodb.core.query.Criteria.*;
 
 import java.math.BigInteger;
 
@@ -59,7 +61,7 @@ public class QueryMapperUnitTests {
 		MappingMongoConverter converter = new MappingMongoConverter(factory, context);
 		converter.afterPropertiesSet();
 		
-		mapper = new QueryMapper(converter.getConversionService());
+		mapper = new QueryMapper(converter);
 	}
 
 	@Test
@@ -90,18 +92,30 @@ public class QueryMapperUnitTests {
 	}
 	
 	/**
-	 * @see DATADOC-278
+	 * @see DATAMONGO-278
 	 */
 	@Test
 	public void translates$NeCorrectly() {
 		
-		Criteria criteria = Criteria.where("foo").ne(new ObjectId().toString());
+		Criteria criteria = where("foo").ne(new ObjectId().toString());
 		
 		DBObject result = mapper.getMappedObject(criteria.getCriteriaObject(), context.getPersistentEntity(Sample.class));
 		Object object = result.get("_id");
 		assertThat(object, is(DBObject.class));
 		DBObject dbObject = (DBObject) object;
 		assertThat(dbObject.get("$ne"), is(ObjectId.class));
+	}
+	
+	/**
+	 * @see DATAMONGO-326
+	 */
+	@Test
+	public void handlesEnumsCorrectly() {
+		Query query = query(where("foo").is(Enum.INSTANCE));
+		DBObject result = mapper.getMappedObject(query.getQueryObject(), null);
+		
+		Object object = result.get("foo");
+		assertThat(object, is(String.class));
 	}
 	
 	class Sample {
@@ -114,5 +128,9 @@ public class QueryMapperUnitTests {
 		
 		@Id
 		private BigInteger id;
+	}
+
+	enum Enum {
+		INSTANCE;
 	}
 }

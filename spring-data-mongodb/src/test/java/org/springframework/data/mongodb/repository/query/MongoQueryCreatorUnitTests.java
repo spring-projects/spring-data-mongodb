@@ -30,7 +30,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
@@ -49,9 +48,6 @@ import org.springframework.data.mongodb.repository.support.DefaultEntityInformat
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
 import org.springframework.data.repository.query.parser.PartTree;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 
 /**
  * Unit test for {@link MongoQueryCreator}.
@@ -72,14 +68,12 @@ public class MongoQueryCreatorUnitTests {
 	public void setUp() throws SecurityException, NoSuchMethodException {
 		
 		context = new MongoMappingContext();
-
-		doAnswer(new Answer<Void>() {
-			public Void answer(InvocationOnMock invocation) throws Throwable {
-				DBObject dbObject = (DBObject) invocation.getArguments()[1];
-				dbObject.put("value", new BasicDBObject("value", "value"));
-				return null;
+		
+		doAnswer(new Answer<Object>() {
+			public Object answer(InvocationOnMock invocation) throws Throwable {
+				return invocation.getArguments()[0];
 			}
-		}).when(converter).write(any(), Mockito.any(DBObject.class));
+		}).when(converter).convertToMongoType(any());
 	}
 
 	@Test

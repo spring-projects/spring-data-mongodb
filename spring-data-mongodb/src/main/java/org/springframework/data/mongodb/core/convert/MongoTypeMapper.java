@@ -20,11 +20,16 @@ import org.springframework.data.convert.TypeMapper;
 import com.mongodb.DBObject;
 
 /**
- * Combining interface to express Mongo specific {@link TypeMapper} implementations will be {@link TypeKeyAware} as
- * well.
+ * Mongo-specific {@link TypeMapper} exposing that {@link DBObject}s might contain a type key.
  * 
  * @author Oliver Gierke
  */
-public interface MongoTypeMapper extends TypeMapper<DBObject>, TypeKeyAware {
+public interface MongoTypeMapper extends TypeMapper<DBObject> {
 
+	/**
+	 * Returns whether the given key is the type key.
+	 * 
+	 * @return
+	 */
+	boolean isTypeKey(String key);
 }

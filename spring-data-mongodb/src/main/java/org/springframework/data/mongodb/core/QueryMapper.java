@@ -25,6 +25,7 @@ import org.bson.types.ObjectId;
 import org.springframework.core.convert.ConversionException;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.data.mapping.PersistentEntity;
+import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.util.Assert;
 
@@ -40,15 +41,17 @@ import com.mongodb.DBObject;
 public class QueryMapper {
 
 	private final ConversionService conversionService;
+	private final MongoConverter converter;
 
 	/**
-	 * Creates a new {@link QueryMapper} with the given {@link ConversionService}.
+	 * Creates a new {@link QueryMapper} with the given {@link MongoConverter}.
 	 * 
-	 * @param conversionService must not be {@literal null}.
+	 * @param converter must not be {@literal null}.
 	 */
-	public QueryMapper(ConversionService conversionService) {
-		Assert.notNull(conversionService);
-		this.conversionService = conversionService;
+	public QueryMapper(MongoConverter converter) {
+		Assert.notNull(converter);
+		this.conversionService = converter.getConversionService();
+		this.converter = converter;
 	}
 
 	/**
@@ -105,7 +108,7 @@ public class QueryMapper {
 				value = convertId(value);
 			}
 			
-			newDbo.put(newKey, value);
+			newDbo.put(newKey, converter.convertToMongoType(value));
 		}
 		
 		return newDbo;

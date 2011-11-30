@@ -20,14 +20,10 @@ import java.util.Iterator;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.convert.MongoWriter;
-import org.springframework.data.mongodb.core.convert.TypeKeyAware;
 import org.springframework.data.mongodb.core.geo.Distance;
 import org.springframework.data.mongodb.core.geo.Point;
 import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.util.Assert;
-
-import com.mongodb.BasicDBList;
-import com.mongodb.DBObject;
 
 /**
  * Custom {@link ParameterAccessor} that uses a {@link MongoWriter} to serialize parameters into Mongo format.
@@ -111,49 +107,7 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 	 * @return
 	 */
 	private Object getConvertedValue(Object value) {
-
-		if (!(writer instanceof TypeKeyAware)) {
-			return value;
-		}
-
-		return removeTypeInfoRecursively(writer.convertToMongoType(value), ((TypeKeyAware) writer));
-	}
-
-	/**
-	 * Removes the type information from the conversion result.
-	 * 
-	 * @param object
-	 * @return
-	 */
-	private Object removeTypeInfoRecursively(Object object, TypeKeyAware typeKeyAware) {
-
-		if (!(object instanceof DBObject) || typeKeyAware == null) {
-			return object;
-		}
-
-		DBObject dbObject = (DBObject) object;
-		String keyToRemove = null;
-		for (String key : dbObject.keySet()) {
-
-			if (typeKeyAware.isTypeKey(key)) {
-				keyToRemove = key;
-			}
-
-			Object value = dbObject.get(key);
-			if (value instanceof BasicDBList) {
-				for (Object element : (BasicDBList) value) {
-					removeTypeInfoRecursively(element, typeKeyAware);
-				}
-			} else {
-				removeTypeInfoRecursively(value, typeKeyAware);
-			}
-		}
-
-		if (keyToRemove != null) {
-			dbObject.removeField(keyToRemove);
-		}
-
-		return dbObject;
+		return writer.convertToMongoType(value);
 	}
 
 	/**

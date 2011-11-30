@@ -68,6 +68,7 @@ public class MongoNamespaceTests {
 	}
 
 	@Test
+	@SuppressWarnings("deprecation")
 	public void testMongoSingletonWithPropertyPlaceHolders() throws Exception {
 		assertTrue(ctx.containsBean("mongo"));
 		MongoFactoryBean mfb = (MongoFactoryBean) ctx.getBean("&mongo");

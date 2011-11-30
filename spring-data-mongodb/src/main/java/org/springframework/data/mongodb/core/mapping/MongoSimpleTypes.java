@@ -19,6 +19,7 @@ import java.math.BigInteger;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import org.bson.types.CodeWScope;
 import org.bson.types.ObjectId;
@@ -48,6 +49,7 @@ public abstract class MongoSimpleTypes {
 		simpleTypes.add(ObjectId.class);
 		simpleTypes.add(CodeWScope.class);
 		simpleTypes.add(DBObject.class);
+		simpleTypes.add(Pattern.class);
 		MONGO_SIMPLE_TYPES = Collections.unmodifiableSet(simpleTypes);
 	}
 

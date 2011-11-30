@@ -72,7 +72,7 @@ import com.mongodb.DBRef;
  * @author Oliver Gierke
  * @author Jon Brisbin
  */
-public class MappingMongoConverter extends AbstractMongoConverter implements ApplicationContextAware, TypeKeyAware {
+public class MappingMongoConverter extends AbstractMongoConverter implements ApplicationContextAware {
 
 	@SuppressWarnings("rawtypes")
 	private static final TypeInformation<Map> MAP_TYPE_INFORMATION = ClassTypeInformation.from(Map.class);
@@ -110,7 +110,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		this.mongoDbFactory = mongoDbFactory;
 		this.mappingContext = mappingContext;
 		this.typeMapper = new DefaultMongoTypeMapper(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY, mappingContext);
-		this.idMapper = new QueryMapper(conversionService);
+		this.idMapper = new QueryMapper(this);
 	}
 
 	/**
@@ -124,14 +124,6 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	public void setTypeMapper(MongoTypeMapper typeMapper) {
 		this.typeMapper = typeMapper == null ? new DefaultMongoTypeMapper(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY,
 				mappingContext) : typeMapper;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.convert.TypeKeyAware#isTypeKey(java.lang.String)
-	 */
-	public boolean isTypeKey(String key) {
-		return typeMapper.isTypeKey(key);
 	}
 
 	/*
@@ -908,7 +900,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		DBObject newDbo = new BasicDBObject();
 		this.write(obj, newDbo);
-		return newDbo;
+		return removeTypeInfoRecursively(newDbo);
 	}
 
 	public BasicDBList maybeConvertList(Iterable<?> source) {
@@ -917,5 +909,42 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			newDbl.add(convertToMongoType(element));
 		}
 		return newDbl;
+	}
+	
+	/**
+	 * Removes the type information from the conversion result.
+	 * 
+	 * @param object
+	 * @return
+	 */
+	private Object removeTypeInfoRecursively(Object object) {
+
+		if (!(object instanceof DBObject)) {
+			return object;
+		}
+
+		DBObject dbObject = (DBObject) object;
+		String keyToRemove = null;
+		for (String key : dbObject.keySet()) {
+
+			if (typeMapper.isTypeKey(key)) {
+				keyToRemove = key;
+			}
+
+			Object value = dbObject.get(key);
+			if (value instanceof BasicDBList) {
+				for (Object element : (BasicDBList) value) {
+					removeTypeInfoRecursively(element);
+				}
+			} else {
+				removeTypeInfoRecursively(value);
+			}
+		}
+
+		if (keyToRemove != null) {
+			dbObject.removeField(keyToRemove);
+		}
+
+		return dbObject;
 	}
 }
