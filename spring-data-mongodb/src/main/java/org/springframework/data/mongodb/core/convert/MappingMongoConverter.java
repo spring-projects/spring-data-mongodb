@@ -99,6 +99,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * @param mongoDbFactory must not be {@literal null}.
 	 * @param mappingContext must not be {@literal null}.
 	 */
+	@SuppressWarnings("deprecation")
 	public MappingMongoConverter(MongoDbFactory mongoDbFactory,
 			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
 

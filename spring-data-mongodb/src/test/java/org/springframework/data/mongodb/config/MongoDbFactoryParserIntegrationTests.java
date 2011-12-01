@@ -18,12 +18,15 @@ package org.springframework.data.mongodb.config;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.ConstructorArgumentValues;
 import org.springframework.beans.factory.config.ConstructorArgumentValues.ValueHolder;
 import org.springframework.beans.factory.parsing.BeanDefinitionParsingException;
-import org.springframework.beans.factory.xml.XmlBeanFactory;
+import org.springframework.beans.factory.support.BeanDefinitionReader;
+import org.springframework.beans.factory.support.DefaultListableBeanFactory;
+import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.core.io.ClassPathResource;
@@ -41,6 +44,15 @@ import com.mongodb.WriteConcern;
  * @author Oliver Gierke
  */
 public class MongoDbFactoryParserIntegrationTests {
+	
+	DefaultListableBeanFactory factory;
+	BeanDefinitionReader reader;
+	
+	@Before
+	public void setUp() {
+		factory = new DefaultListableBeanFactory();
+		reader = new XmlBeanDefinitionReader(factory);
+	}
 
 	@Test
 	public void testWriteConcern() throws Exception {
@@ -103,7 +115,8 @@ public class MongoDbFactoryParserIntegrationTests {
 
 	@Test
 	public void createsDbFactoryBean() {
-		XmlBeanFactory factory = new XmlBeanFactory(new ClassPathResource("namespace/db-factory-bean.xml"));
+		
+		reader.loadBeanDefinitions(new ClassPathResource("namespace/db-factory-bean.xml"));
 		factory.getBean("first");
 	}
 	
@@ -113,7 +126,7 @@ public class MongoDbFactoryParserIntegrationTests {
 	@Test
 	public void parsesMaxAutoConnectRetryTimeCorrectly() {
 		
-		XmlBeanFactory factory = new XmlBeanFactory(new ClassPathResource("namespace/db-factory-bean.xml"));
+		reader.loadBeanDefinitions(new ClassPathResource("namespace/db-factory-bean.xml"));
 		Mongo mongo = factory.getBean(Mongo.class);
 		assertThat(mongo.getMongoOptions().maxAutoConnectRetryTime, is(27L));
 	}
@@ -124,7 +137,7 @@ public class MongoDbFactoryParserIntegrationTests {
 	@Test
 	public void setsUpMongoDbFactoryUsingAMongoUri() {
 		
-		XmlBeanFactory factory = new XmlBeanFactory(new ClassPathResource("namespace/mongo-uri.xml"));
+		reader.loadBeanDefinitions(new ClassPathResource("namespace/mongo-uri.xml"));
 		BeanDefinition definition = factory.getBeanDefinition("mongoDbFactory");
 		ConstructorArgumentValues constructorArguments = definition.getConstructorArgumentValues();
 		
@@ -139,7 +152,7 @@ public class MongoDbFactoryParserIntegrationTests {
 	@Test
 	public void setsUpMongoDbFactoryUsingAMongoUriWithoutCredentials() {
 		
-		XmlBeanFactory factory = new XmlBeanFactory(new ClassPathResource("namespace/mongo-uri-no-credentials.xml"));
+		reader.loadBeanDefinitions(new ClassPathResource("namespace/mongo-uri-no-credentials.xml"));
 		BeanDefinition definition = factory.getBeanDefinition("mongoDbFactory");
 		ConstructorArgumentValues constructorArguments = definition.getConstructorArgumentValues();
 		
@@ -150,8 +163,6 @@ public class MongoDbFactoryParserIntegrationTests {
 		MongoDbFactory dbFactory = factory.getBean("mongoDbFactory", MongoDbFactory.class);
 		DB db = dbFactory.getDb();
 		assertThat(db.getName(), is("database"));
-		
-		
 	}
 	
 	/**
@@ -159,6 +170,6 @@ public class MongoDbFactoryParserIntegrationTests {
 	 */
 	@Test(expected = BeanDefinitionParsingException.class)
 	public void rejectsUriPlusDetailedConfiguration() {
-		new XmlBeanFactory(new ClassPathResource("namespace/mongo-uri-and-details.xml"));
+		reader.loadBeanDefinitions(new ClassPathResource("namespace/mongo-uri-and-details.xml"));
 	}
 }

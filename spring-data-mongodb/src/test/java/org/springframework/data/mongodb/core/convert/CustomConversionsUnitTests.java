@@ -95,6 +95,7 @@ public class CustomConversionsUnitTests {
 	@Test
 	public void populatesConversionServiceCorrectly() {
 
+		@SuppressWarnings("deprecation")
 		GenericConversionService conversionService = ConversionServiceFactory.createDefaultConversionService();
 		assertThat(conversionService.canConvert(String.class, UUID.class), is(false));
 

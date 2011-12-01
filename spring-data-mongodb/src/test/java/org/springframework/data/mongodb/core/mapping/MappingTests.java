@@ -69,6 +69,7 @@ public class MappingTests {
 			MongoCollectionUtils.getPreferredCollectionName(PersonMultiDimArrays.class),
 			MongoCollectionUtils.getPreferredCollectionName(PersonMultiCollection.class),
 			MongoCollectionUtils.getPreferredCollectionName(PersonWithDbRef.class),
+			MongoCollectionUtils.getPreferredCollectionName(PersonWithLongDBRef.class),
 			MongoCollectionUtils.getPreferredCollectionName(PersonNullProperties.class),
 			MongoCollectionUtils.getPreferredCollectionName(Account.class),
 			MongoCollectionUtils.getPreferredCollectionName(PrimitiveId.class),
@@ -355,8 +356,8 @@ public class MappingTests {
 	}
 	
 	@Test
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public void testUpsert() {		
+	@SuppressWarnings("rawtypes")
+	public void testUpsert() {
 		Address addr = new Address();
 		addr.setLines(new String[]{"1234 W. 1st Street", "Apt. 12"});
 		addr.setCity("Anytown");
@@ -385,8 +386,6 @@ public class MappingTests {
 		PersonWithObjectId p2 = new PersonWithObjectId(2, "second", "");
 		template.save(p2);
 
-		Query one = query(where("ssn").is(1));
-		Query two = query(where("ssn").is(2));
 		List<PersonWithObjectId> results = template.find(new Query(
 				new Criteria().orOperator(where("ssn").is(1), where("ssn").is(2))), PersonWithObjectId.class);
 

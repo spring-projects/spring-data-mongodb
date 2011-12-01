@@ -46,6 +46,7 @@ public abstract class AbstractMongoConverter implements MongoConverter, Initiali
 	 * 
 	 * @param conversionService
 	 */
+	@SuppressWarnings("deprecation")
 	public AbstractMongoConverter(GenericConversionService conversionService) {
 		this.conversionService = conversionService == null ? ConversionServiceFactory.createDefaultConversionService()
 				: conversionService;

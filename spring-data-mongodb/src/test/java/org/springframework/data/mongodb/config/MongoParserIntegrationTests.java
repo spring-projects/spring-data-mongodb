@@ -20,11 +20,13 @@ import static org.hamcrest.Matchers.*;
 
 import java.util.List;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.PropertyValue;
 import org.springframework.beans.factory.config.BeanDefinition;
-import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
-import org.springframework.beans.factory.xml.XmlBeanFactory;
+import org.springframework.beans.factory.support.BeanDefinitionReader;
+import org.springframework.beans.factory.support.DefaultListableBeanFactory;
+import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.core.io.ClassPathResource;
 
 /**
@@ -33,11 +35,20 @@ import org.springframework.core.io.ClassPathResource;
  * @author Oliver Gierke
  */
 public class MongoParserIntegrationTests {
+	
+	DefaultListableBeanFactory factory;
+	BeanDefinitionReader reader;
+	
+	@Before
+	public void setUp() {
+		factory = new DefaultListableBeanFactory();
+		reader = new XmlBeanDefinitionReader(factory);
+	}
 
 	@Test
 	public void readsMongoAttributesCorrectly() {
 
-		ConfigurableListableBeanFactory factory = new XmlBeanFactory(new ClassPathResource("namespace/mongo-bean.xml"));
+		reader.loadBeanDefinitions(new ClassPathResource("namespace/mongo-bean.xml"));
 		BeanDefinition definition = factory.getBeanDefinition("mongo");
 
 		List<PropertyValue> values = definition.getPropertyValues().getPropertyValueList();
