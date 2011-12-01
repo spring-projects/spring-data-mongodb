@@ -7,10 +7,7 @@ Import-Package:
 Export-Template:
  org.springframework.data.mongodb.*;version="${project.version}"
 Import-Template: 
- org.springframework.*;version="${org.springframework.version.30:[=.=.=.=,+1.0.0)}",
- org.springframework.data.*;version="${data.commons.version:[=.=.=.=,+1.0.0)}",
- org.springframework.data.mongodb.*;version="${project.version:[=.=.=.=,+1.0.0)}",
- com.mongodb.*;version="${mongo.version:[=.=,+1.0.0)}",
+ com.mongodb.*;version="0",
  com.mysema.query.*;version="[2.1.1, 3.0.0)";resolution:=optional,
  javax.annotation.processing.*;version="0",
  javax.tools.*;version="0",
@@ -18,4 +15,7 @@ Import-Template:
  org.apache.commons.collections15.*;version="[4.0.0,5.0.0)";resolution:=optional,
  org.apache.commons.logging.*;version="[1.1.1, 2.0.0)",
  org.bson.*;version="0",
+ org.springframework.*;version="${org.springframework.version.30:[=.=.=.=,+1.0.0)}",
+ org.springframework.data.*;version="${data.commons.version:[=.=.=.=,+1.0.0)}",
+ org.springframework.data.mongodb.*;version="${project.version:[=.=.=.=,+1.0.0)}",
  org.w3c.dom.*;version="0"
