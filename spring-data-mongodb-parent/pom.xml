@@ -289,6 +289,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
+        <version>2.3.2</version>
         <configuration>
           <source>1.5</source>
           <target>1.5</target>
@@ -308,6 +309,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
+        <version>2.8</version>
         <configuration>
           <useFile>false</useFile>
           <includes>
@@ -321,6 +323,7 @@
       </plugin>
       <plugin>
         <artifactId>maven-source-plugin</artifactId>
+        <version>2.1.2</version>
         <executions>
           <execution>
             <id>attach-sources</id>
@@ -375,24 +378,24 @@
     <pluginRepository>
       <id>repository.springframework.maven.release</id>
       <name>Spring Framework Maven Release Repository</name>
-      <url>http://maven.springframework.org/release</url>
+      <url>http://repo.springsource.org/release</url>
     </pluginRepository>
   </pluginRepositories>
   <repositories>
     <repository>
       <id>repository.springframework.maven.release</id>
       <name>Spring Framework Maven Release Repository</name>
-      <url>http://maven.springframework.org/release</url>
+      <url>http://repo.springsource.org/release</url>
     </repository>
     <repository>
       <id>repository.springframework.maven.milestone</id>
       <name>Spring Framework Maven Milestone Repository</name>
-      <url>http://maven.springframework.org/milestone</url>
+      <url>http://repo.springsource.org/milestone</url>
     </repository>
     <repository>
       <id>repository.springframework.maven.snapshot</id>
       <name>Spring Framework Maven Snapshot Repository</name>
-      <url>http://maven.springframework.org/snapshot</url>
+      <url>http://repo.springsource.org/snapshot</url>
     </repository>
   </repositories>
   <reporting>
