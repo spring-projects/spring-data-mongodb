@@ -115,6 +115,17 @@ public class AbstractMongoEventListenerUnitTest {
 		assertThat(personListener.invokedOnAfterLoad, is(false));
 		assertThat(contactListener.invokedOnAfterLoad, is(true));
 	}
+	
+	/**
+	 * @see DATADOC-333
+	 */
+	@Test
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public void handlesUntypedImplementations() {
+		
+		UntypedEventListener listener = new UntypedEventListener();
+		listener.onApplicationEvent(new MongoMappingEvent(new Object(), new BasicDBObject()));
+	}
 
 	class SamplePersonEventListener extends AbstractMongoEventListener<Person> {
 
@@ -162,5 +173,10 @@ public class AbstractMongoEventListenerUnitTest {
 		public void onAfterLoad(DBObject dbo) {
 			invokedOnAfterLoad = true;
 		}
+	}
+
+	@SuppressWarnings("rawtypes")
+	class UntypedEventListener extends AbstractMongoEventListener {
+		
 	}
 }

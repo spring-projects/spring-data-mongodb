@@ -36,7 +36,8 @@ public abstract class AbstractMongoEventListener<E> implements ApplicationListen
 	 * Creates a new {@link AbstractMongoEventListener}.
 	 */
 	public AbstractMongoEventListener() {
-		this.domainClass = GenericTypeResolver.resolveTypeArgument(this.getClass(), AbstractMongoEventListener.class);
+		Class<?> typeArgument = GenericTypeResolver.resolveTypeArgument(this.getClass(), AbstractMongoEventListener.class);
+		this.domainClass = typeArgument == null ? Object.class : typeArgument;
 	}
 
 	/*
