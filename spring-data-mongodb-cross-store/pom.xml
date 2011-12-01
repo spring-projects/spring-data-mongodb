@@ -23,7 +23,7 @@
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-aspects</artifactId>
-      <version>${org.springframework.version}</version>
+      <version>${org.springframework.version.range}</version>
     </dependency>
     <dependency>
       <groupId>org.springframework</groupId>

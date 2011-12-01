@@ -7,7 +7,7 @@ Import-Package:
 Export-Template:
  org.springframework.data.mongodb.*;version="${project.version}"
 Import-Template: 
- org.springframework.*;version="${org.springframework.version:[=.=.=.=,+1.0.0)}",
+ org.springframework.*;version="${org.springframework.version.30:[=.=.=.=,+1.0.0)}",
  org.springframework.data.*;version="${data.commons.version:[=.=.=.=,+1.0.0)}",
  org.springframework.data.mongodb.*;version="${project.version:[=.=.=.=,+1.0.0)}",
  com.mongodb.*;version="${mongo.version:[=.=,+1.0.0)}",
