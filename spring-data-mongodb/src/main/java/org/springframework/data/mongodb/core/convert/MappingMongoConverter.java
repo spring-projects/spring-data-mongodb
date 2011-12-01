@@ -17,7 +17,6 @@ package org.springframework.data.mongodb.core.convert;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -28,7 +27,6 @@ import java.util.Map.Entry;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.bson.types.ObjectId;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -79,9 +77,6 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	@SuppressWarnings("rawtypes")
 	private static final TypeInformation<Collection> COLLECTION_TYPE_INFORMATION = ClassTypeInformation
 			.from(Collection.class);
-
-	private static final List<Class<?>> VALID_ID_TYPES = Arrays.asList(new Class<?>[] { ObjectId.class, String.class,
-			BigInteger.class, byte[].class });
 
 	protected static final Log log = LogFactory.getLog(MappingMongoConverter.class);
 
@@ -362,29 +357,15 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		// Write the ID
 		final MongoPersistentProperty idProperty = entity.getIdProperty();
 		if (!dbo.containsField("_id") && null != idProperty) {
-			Object idObj = null;
-			Class<?>[] targetClasses = new Class<?>[] { ObjectId.class, String.class, Object.class };
-			for (Class<?> targetClass : targetClasses) {
-				try {
-					idObj = wrapper.getProperty(idProperty, targetClass, useFieldAccessOnly);
-					if (null != idObj) {
-						break;
-					}
-				} catch (ConversionException ignored) {
-				} catch (IllegalAccessException e) {
-					throw new MappingException(e.getMessage(), e);
-				} catch (InvocationTargetException e) {
-					throw new MappingException(e.getMessage(), e);
-				}
-			}
-
-			if (null != idObj) {
-				dbo.put("_id", idObj);
-			} else {
-				if (!VALID_ID_TYPES.contains(idProperty.getType())) {
-					throw new MappingException("Invalid data type " + idProperty.getType().getName()
-							+ " for Id property. Should be one of " + VALID_ID_TYPES);
-				}
+			
+			try {
+				Object id = wrapper.getProperty(idProperty, Object.class, useFieldAccessOnly);
+				dbo.put("_id", idMapper.convertId(id));
+			} catch (ConversionException ignored) {
+			} catch (IllegalAccessException e) {
+				throw new MappingException(e.getMessage(), e);
+			} catch (InvocationTargetException e) {
+				throw new MappingException(e.getMessage(), e);
 			}
 		}
 

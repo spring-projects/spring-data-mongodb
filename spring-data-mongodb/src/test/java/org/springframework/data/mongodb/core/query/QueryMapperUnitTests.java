@@ -91,6 +91,15 @@ public class QueryMapperUnitTests {
 		assertThat(result.get("_id"), is((Object) "1"));
 	}
 	
+	@Test
+	public void handlesObjectIdCapableBigIntegerIdsCorrectly() {
+		
+		ObjectId id = new ObjectId();
+		DBObject dbObject = new BasicDBObject("id", new BigInteger(id.toString(), 16));
+		DBObject result = mapper.getMappedObject(dbObject, null);
+		assertThat(result.get("_id"), is((Object) id));
+	}
+	
 	/**
 	 * @see DATAMONGO-278
 	 */

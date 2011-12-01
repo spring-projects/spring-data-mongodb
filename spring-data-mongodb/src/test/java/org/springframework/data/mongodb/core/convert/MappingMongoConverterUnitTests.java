@@ -844,6 +844,18 @@ public class MappingMongoConverterUnitTests {
 		assertThat((String) inner.get("value"), is("testValue"));
 	}
 	
+	@Test
+	public void writesIntIdCorrectly() {
+		
+		ClassWithIntId value = new ClassWithIntId();
+		value.id = 5;
+		
+		DBObject result = new BasicDBObject();
+		converter.write(value, result);
+		
+		assertThat(result.get("_id"), is((Object) 5));
+	}
+	
 	class GenericType<T> {
 		T content;
 	}
@@ -946,6 +958,12 @@ public class MappingMongoConverterUnitTests {
 			this.valueType = value.getClass().getName();
 			this.value = value;
 		}
+	}
+
+	class ClassWithIntId {
+		
+		@Id
+		int id;
 	}
 	
 	private class LocalDateToDateConverter implements Converter<LocalDate, Date> {

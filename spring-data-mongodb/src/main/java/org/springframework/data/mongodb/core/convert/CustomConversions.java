@@ -31,7 +31,9 @@ import org.springframework.core.convert.converter.GenericConverter.ConvertiblePa
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.mongodb.core.convert.MongoConverters.BigDecimalToStringConverter;
+import org.springframework.data.mongodb.core.convert.MongoConverters.BigIntegerToStringConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.StringToBigDecimalConverter;
+import org.springframework.data.mongodb.core.convert.MongoConverters.StringToBigIntegerConverter;
 import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
 import org.springframework.util.Assert;
 
@@ -77,6 +79,8 @@ public class CustomConversions {
 		this.converters.add(CustomToStringConverter.INSTANCE);
 		this.converters.add(BigDecimalToStringConverter.INSTANCE);
 		this.converters.add(StringToBigDecimalConverter.INSTANCE);
+		this.converters.add(BigIntegerToStringConverter.INSTANCE);
+		this.converters.add(StringToBigIntegerConverter.INSTANCE);
 		this.converters.addAll(converters);
 
 		for (Object c : this.converters) {

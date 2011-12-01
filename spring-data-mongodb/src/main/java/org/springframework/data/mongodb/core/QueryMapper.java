@@ -16,7 +16,6 @@
 package org.springframework.data.mongodb.core;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -120,22 +119,14 @@ public class QueryMapper {
 	 * @param id
 	 * @return
 	 */
-	@SuppressWarnings("unchecked")
 	public Object convertId(Object id) {
-
-		for (Class<?> type : Arrays.asList(ObjectId.class, String.class)) {
-
-			if (id.getClass().isAssignableFrom(type)) {
-				return id;
-			}
-
-			try {
-				return conversionService.convert(id, type);
-			} catch (ConversionException e) {
-				// Ignore
-			}
+		
+		try {
+			return conversionService.convert(id, ObjectId.class);
+		} catch (ConversionException e) {
+			// Ignore
 		}
-
-		return id;
+		
+		return converter.convertToMongoType(id);
 	}
 }
