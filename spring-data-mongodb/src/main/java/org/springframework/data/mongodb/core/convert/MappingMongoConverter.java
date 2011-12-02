@@ -256,13 +256,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				}
 
 				Object obj = getValueInternal(prop, dbo, spelCtx, prop.getSpelExpression());
-				try {
-					wrapper.setProperty(prop, obj, useFieldAccessOnly);
-				} catch (IllegalAccessException e) {
-					throw new MappingException(e.getMessage(), e);
-				} catch (InvocationTargetException e) {
-					throw new MappingException(e.getMessage(), e);
-				}
+				wrapper.setProperty(prop, obj, useFieldAccessOnly);
 			}
 		});
 
@@ -362,27 +356,19 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				Object id = wrapper.getProperty(idProperty, Object.class, useFieldAccessOnly);
 				dbo.put("_id", idMapper.convertId(id));
 			} catch (ConversionException ignored) {
-			} catch (IllegalAccessException e) {
-				throw new MappingException(e.getMessage(), e);
-			} catch (InvocationTargetException e) {
-				throw new MappingException(e.getMessage(), e);
 			}
 		}
 
 		// Write the properties
 		entity.doWithProperties(new PropertyHandler<MongoPersistentProperty>() {
 			public void doWithPersistentProperty(MongoPersistentProperty prop) {
+				
 				if (prop.equals(idProperty)) {
 					return;
 				}
-				Object propertyObj;
-				try {
-					propertyObj = wrapper.getProperty(prop, prop.getType(), useFieldAccessOnly);
-				} catch (IllegalAccessException e) {
-					throw new MappingException(e.getMessage(), e);
-				} catch (InvocationTargetException e) {
-					throw new MappingException(e.getMessage(), e);
-				}
+				
+				Object propertyObj = wrapper.getProperty(prop, prop.getType(), useFieldAccessOnly);
+				
 				if (null != propertyObj) {
 					if (!conversions.isSimpleType(propertyObj.getClass())) {
 						writePropertyInternal(propertyObj, dbo, prop);
@@ -397,14 +383,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			public void doWithAssociation(Association<MongoPersistentProperty> association) {
 				MongoPersistentProperty inverseProp = association.getInverse();
 				Class<?> type = inverseProp.getType();
-				Object propertyObj;
-				try {
-					propertyObj = wrapper.getProperty(inverseProp, type, useFieldAccessOnly);
-				} catch (IllegalAccessException e) {
-					throw new MappingException(e.getMessage(), e);
-				} catch (InvocationTargetException e) {
-					throw new MappingException(e.getMessage(), e);
-				}
+				Object propertyObj = wrapper.getProperty(inverseProp, type, useFieldAccessOnly);
 				if (null != propertyObj) {
 					writePropertyInternal(propertyObj, dbo, inverseProp);
 				}
@@ -668,18 +647,11 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		MongoPersistentProperty idProperty = targetEntity.getIdProperty();
-		Object id = null;
 		BeanWrapper<MongoPersistentEntity<Object>, Object> wrapper = BeanWrapper.create(target, conversionService);
-
-		try {
-			id = wrapper.getProperty(idProperty, Object.class, useFieldAccessOnly);
-			if (null == id) {
-				throw new MappingException("Cannot create a reference to an object with a NULL id.");
-			}
-		} catch (IllegalAccessException e) {
-			throw new MappingException(e.getMessage(), e);
-		} catch (InvocationTargetException e) {
-			throw new MappingException(e.getMessage(), e);
+		Object id = wrapper.getProperty(idProperty, Object.class, useFieldAccessOnly);
+		
+		if (null == id) {
+			throw new MappingException("Cannot create a reference to an object with a NULL id.");
 		}
 
 		String collection = dbref.collection();

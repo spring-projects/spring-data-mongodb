@@ -894,16 +894,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		ConversionService service = mongoConverter.getConversionService();
 		Object idProperty = null;
 
-		try {
-
-			idProperty = BeanWrapper.create(object, service).getProperty(idProp, Object.class, true);
-			return new Query(where(idProp.getFieldName()).is(idProperty));
-
-		} catch (IllegalAccessException e) {
-			throw new MappingException(e.getMessage(), e);
-		} catch (InvocationTargetException e) {
-			throw new MappingException(e.getMessage(), e);
-		}
+		idProperty = BeanWrapper.create(object, service).getProperty(idProp, Object.class, true);
+		return new Query(where(idProp.getFieldName()).is(idProperty));
 	}
 
 	public <T> void remove(Query query, Class<T> entityClass) {
