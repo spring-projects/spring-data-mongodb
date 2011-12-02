@@ -32,7 +32,7 @@ import com.mongodb.DBObject;
  *
  * @author Oliver Gierke
  */
-public class AbstractMongoEventListenerUnitTest {
+public class AbstractMongoEventListenerUnitTests {
 	
 	@Test
 	public void invokesCallbackForEventForPerson() {
