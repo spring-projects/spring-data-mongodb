@@ -72,12 +72,6 @@ import com.mongodb.DBRef;
  */
 public class MappingMongoConverter extends AbstractMongoConverter implements ApplicationContextAware {
 
-	@SuppressWarnings("rawtypes")
-	private static final TypeInformation<Map> MAP_TYPE_INFORMATION = ClassTypeInformation.from(Map.class);
-	@SuppressWarnings("rawtypes")
-	private static final TypeInformation<Collection> COLLECTION_TYPE_INFORMATION = ClassTypeInformation
-			.from(Collection.class);
-
 	protected static final Log log = LogFactory.getLog(MappingMongoConverter.class);
 
 	protected final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
@@ -322,12 +316,12 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		if (Map.class.isAssignableFrom(obj.getClass())) {
-			writeMapInternal((Map<Object, Object>) obj, dbo, MAP_TYPE_INFORMATION);
+			writeMapInternal((Map<Object, Object>) obj, dbo, ClassTypeInformation.MAP);
 			return;
 		}
 
 		if (Collection.class.isAssignableFrom(obj.getClass())) {
-			writeCollectionInternal((Collection<?>) obj, COLLECTION_TYPE_INFORMATION, (BasicDBList) dbo);
+			writeCollectionInternal((Collection<?>) obj, ClassTypeInformation.LIST, (BasicDBList) dbo);
 			return;
 		}
 
@@ -549,7 +543,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 							writeCollectionInternal(asCollection(val), propertyType.getMapValueType(), new BasicDBList()));
 				} else {
 					DBObject newDbo = new BasicDBObject();
-					TypeInformation<?> valueTypeInfo = propertyType.isMap() ? propertyType.getMapValueType() : ClassTypeInformation.from(Object.class);
+					TypeInformation<?> valueTypeInfo = propertyType.isMap() ? propertyType.getMapValueType() : ClassTypeInformation.OBJECT;
 					writeInternal(val, newDbo, valueTypeInfo);
 					dbo.put(simpleKey, newDbo);
 				}
