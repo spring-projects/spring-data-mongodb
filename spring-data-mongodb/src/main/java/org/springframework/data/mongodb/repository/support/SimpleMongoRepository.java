@@ -66,6 +66,8 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements Paging
 	 * org.springframework.data.repository.Repository#save(java.lang.Object)
 	 */
 	public T save(T entity) {
+		
+		Assert.notNull(entity, "Entity must not be null!");
 
 		mongoOperations.save(entity, entityInformation.getCollectionName());
 		return entity;
@@ -79,6 +81,8 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements Paging
 	 */
 	public List<T> save(Iterable<? extends T> entities) {
 
+		Assert.notNull(entities, "The given Iterable of entities not be null!");
+		
 		List<T> result = new ArrayList<T>();
 
 		for (T entity : entities) {
@@ -161,6 +165,8 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements Paging
 	 */
 	public void delete(Iterable<? extends T> entities) {
 
+		Assert.notNull(entities, "The given Iterable of entities not be null!");
+		
 		for (T entity : entities) {
 			delete(entity);
 		}
