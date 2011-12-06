@@ -15,22 +15,36 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.CoreMatchers.*;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
-import com.mongodb.DB;
-import com.mongodb.Mongo;
-import com.mongodb.MongoException;
+import java.math.BigInteger;
+
+import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.stubbing.Answer;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.MongoWriter;
 import org.springframework.test.util.ReflectionTestUtils;
+
+import com.mongodb.BasicDBObject;
+import com.mongodb.DB;
+import com.mongodb.DBCollection;
+import com.mongodb.DBObject;
+import com.mongodb.Mongo;
+import com.mongodb.MongoException;
+import com.mongodb.WriteResult;
 
 /**
  * Unit tests for {@link MongoTemplate}.
@@ -48,9 +62,15 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Mock
 	DB db;
 
+	@Mock
+	DBCollection collection;
+
 	@Before
 	public void setUp() {
 		this.template = new MongoTemplate(mongo, "database");
+
+		when(mongo.getDB("database")).thenReturn(db);
+		when(db.getCollection(Mockito.any(String.class))).thenReturn(collection);
 	}
 
 	@Test(expected = IllegalArgumentException.class)
@@ -82,7 +102,57 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		template.setApplicationContext(new GenericApplicationContext());
 		template.mapReduce("foo", "classpath:doesNotExist.js", "function() {}", Person.class);
 	}
-	
+
+	/**
+	 * @see DATAMONGO-322
+	 */
+	@Test(expected = InvalidDataAccessApiUsageException.class)
+	public void rejectsEntityWithNullIdIfNotSupportedIdType() {
+
+		Object entity = new NotAutogenerateableId();
+		template.save(entity);
+	}
+
+	/**
+	 * @see DATAMONGO-322
+	 */
+	@Test
+	public void storesEntityWithSetIdAlthoughNotAutogenerateable() {
+
+		NotAutogenerateableId entity = new NotAutogenerateableId();
+		entity.id = 1;
+
+		template.save(entity);
+	}
+
+	/**
+	 * @see DATAMONGO-322
+	 */
+	@Test
+	public void autogeneratesIdForEntityWithAutogeneratableId() {
+
+		MongoTemplate template = spy(this.template);
+		doReturn(new ObjectId()).when(template).saveDBObject(Mockito.any(String.class), Mockito.any(DBObject.class),
+				Mockito.any(Class.class));
+
+		AutogenerateableId entity = new AutogenerateableId();
+		template.save(entity);
+
+		assertThat(entity.id, is(notNullValue()));
+	}
+
+	class AutogenerateableId {
+
+		@Id
+		BigInteger id;
+	}
+
+	class NotAutogenerateableId {
+
+		@Id
+		Integer id;
+	}
+
 	/**
 	 * Mocks out the {@link MongoTemplate#getDb()} method to return the {@link DB} mock instead of executing the actual
 	 * behaviour.

@@ -30,10 +30,8 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
-import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Person;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
-import org.springframework.data.mongodb.repository.support.MappingMongoEntityInformation;
 
 /**
  * Unit test for {@link MongoRepositoryFactory}.
@@ -45,7 +43,7 @@ public class MongoRepositoryFactoryUnitTests {
 
 	@Mock
 	MongoTemplate template;
-	
+
 	@Mock
 	MongoConverter converter;
 
@@ -55,18 +53,12 @@ public class MongoRepositoryFactoryUnitTests {
 	@Mock
 	@SuppressWarnings("rawtypes")
 	MongoPersistentEntity entity;
-	
+
 	@Before
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public void setUp() {
 		when(template.getConverter()).thenReturn(converter);
 		when(converter.getMappingContext()).thenReturn((MappingContext) mappingContext);
-	}
-
-	@Test(expected = IllegalArgumentException.class)
-	public void rejectsInvalidIdType() throws Exception {
-		MongoRepositoryFactory factory = new MongoRepositoryFactory(template);
-		factory.getRepository(SampleRepository.class);
 	}
 
 	@Test
@@ -79,9 +71,5 @@ public class MongoRepositoryFactoryUnitTests {
 		MongoRepositoryFactory factory = new MongoRepositoryFactory(template);
 		MongoEntityInformation<Person, Serializable> entityInformation = factory.getEntityInformation(Person.class);
 		assertTrue(entityInformation instanceof MappingMongoEntityInformation);
-	}
-
-	private interface SampleRepository extends MongoRepository<Person, Long> {
-
 	}
 }

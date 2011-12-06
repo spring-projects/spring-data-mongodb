@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.repository.support;
 
-import static org.springframework.data.querydsl.QueryDslUtils.QUERY_DSL_PRESENT;
+import static org.springframework.data.querydsl.QueryDslUtils.*;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
@@ -23,7 +23,6 @@ import java.lang.reflect.Method;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.query.EntityInformationCreator;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
@@ -38,7 +37,6 @@ import org.springframework.data.repository.query.QueryLookupStrategy;
 import org.springframework.data.repository.query.QueryLookupStrategy.Key;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.util.Assert;
-import org.springframework.util.StringUtils;
 
 /**
  * Factory to create {@link MongoRepository} instances.
@@ -60,7 +58,8 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 
 		Assert.notNull(mongoOperations);
 		this.mongoOperations = mongoOperations;
-		this.entityInformationCreator = new DefaultEntityInformationCreator(mongoOperations.getConverter().getMappingContext());
+		this.entityInformationCreator = new DefaultEntityInformationCreator(mongoOperations.getConverter()
+				.getMappingContext());
 	}
 
 	/*
@@ -111,13 +110,13 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 	 * @author Oliver Gierke
 	 */
 	private class MongoQueryLookupStrategy implements QueryLookupStrategy {
-		
+
 		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.repository.query.QueryLookupStrategy#resolveQuery(java.lang.reflect.Method, org.springframework.data.repository.core.RepositoryMetadata, org.springframework.data.repository.core.NamedQueries)
 		 */
 		public RepositoryQuery resolveQuery(Method method, RepositoryMetadata metadata, NamedQueries namedQueries) {
-			
+
 			MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, entityInformationCreator);
 			String namedQueryName = queryMethod.getNamedQueryName();
 
@@ -129,20 +128,6 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 			} else {
 				return new PartTreeMongoQuery(queryMethod, mongoOperations);
 			}
-		}
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.support.RepositoryFactorySupport#validate(org.springframework.data.repository.support.RepositoryMetadata)
-	 */
-	@Override
-	protected void validate(RepositoryMetadata metadata) {
-
-		Class<?> idClass = metadata.getIdClass();
-		if (!MongoSimpleTypes.SUPPORTED_ID_CLASSES.contains(idClass)) {
-			throw new IllegalArgumentException(String.format("Unsupported id class! Only %s are supported!",
-					StringUtils.collectionToCommaDelimitedString(MongoSimpleTypes.SUPPORTED_ID_CLASSES)));
 		}
 	}
 
