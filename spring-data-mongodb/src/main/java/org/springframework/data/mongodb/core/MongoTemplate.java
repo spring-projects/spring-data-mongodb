@@ -436,25 +436,13 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			}
 		});
 	}
-
-	// Indexing methods
-
-	public void ensureIndex(IndexDefinition indexDefinition, Class<?> entityClass) {
-		ensureIndex(indexDefinition, determineCollectionName(entityClass));
+	
+	public IndexOperations indexOps(String collectionName) {
+		return new DefaultIndexOperations(this, collectionName);
 	}
-
-	public void ensureIndex(final IndexDefinition indexDefinition, String collectionName) {
-		execute(collectionName, new CollectionCallback<Object>() {
-			public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
-				DBObject indexOptions = indexDefinition.getIndexOptions();
-				if (indexOptions != null) {
-					collection.ensureIndex(indexDefinition.getIndexKeys(), indexOptions);
-				} else {
-					collection.ensureIndex(indexDefinition.getIndexKeys());
-				}
-				return null;
-			}
-		});
+	
+	public IndexOperations indexOps(Class<?> entityClass) {
+		return new DefaultIndexOperations(this, determineCollectionName(entityClass));
 	}
 
 	// Find methods that take a Query to express the query and that return a single object.
@@ -1460,7 +1448,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		return null;
 	}
 
-	private String determineCollectionName(Class<?> entityClass) {
+	String determineCollectionName(Class<?> entityClass) {
 
 		if (entityClass == null) {
 			throw new InvalidDataAccessApiUsageException(

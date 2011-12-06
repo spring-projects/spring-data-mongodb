@@ -227,6 +227,18 @@ public interface MongoOperations {
 	 * @param collectionName name of the collection to drop/delete.
 	 */
 	void dropCollection(String collectionName);
+	
+	/**
+	 * Returns the operations that can be performed on indexes
+	 * @return index operations on the named collection
+	 */
+	IndexOperations indexOps(String collectionName);
+	
+	/**
+	 * Returns the operations that can be performed on indexes
+	 * @return index operations on the named collection associated with the given entity class
+	 */
+	IndexOperations indexOps(Class<?> entityClass);
 
 	/**
 	 * Query for a list of objects of type T from the collection used by the entity class.
@@ -352,23 +364,6 @@ public interface MongoOperations {
 	 * @return
 	 */
 	<T> GeoResults<T> geoNear(NearQuery near, Class<T> entityClass, String collectionName);
-
-	/**
-	 * Ensure that an index for the provided {@link IndexDefinition} exists for the collection indicated by the entity
-	 * class. If not it will be created.
-	 * 
-	 * @param indexDefinition
-	 * @param entityClass class that determines the collection to use
-	 */
-	void ensureIndex(IndexDefinition indexDefinition, Class<?> entityClass);
-
-	/**
-	 * Ensure that an index for the provided {@link IndexDefinition} exists. If not it will be created.
-	 * 
-	 * @param index
-	 * @param collectionName
-	 */
-	void ensureIndex(IndexDefinition indexDefinition, String collectionName);
 
 	/**
 	 * Map the results of an ad-hoc query on the collection for the entity class to a single instance of an object of the

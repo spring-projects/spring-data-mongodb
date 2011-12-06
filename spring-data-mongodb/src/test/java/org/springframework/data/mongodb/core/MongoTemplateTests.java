@@ -47,6 +47,7 @@ import org.springframework.data.mongodb.core.convert.CustomConversions;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.index.Index.Duplicates;
+import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Order;
@@ -171,11 +172,10 @@ public class MongoTemplateTests {
 		p2.setAge(40);
 		template.insert(p2);
 
-		template.ensureIndex(new Index().on("age", Order.DESCENDING).unique(Duplicates.DROP), Person.class);
+		template.indexOps(Person.class).ensureIndex(new Index().on("age", Order.DESCENDING).unique(Duplicates.DROP));
 
 		DBCollection coll = template.getCollection(template.getCollectionName(Person.class));
 		List<DBObject> indexInfo = coll.getIndexInfo();
-
 		assertThat(indexInfo.size(), is(2));
 		String indexKey = null;
 		boolean unique = false;
@@ -190,6 +190,16 @@ public class MongoTemplateTests {
 		assertThat(indexKey, is("{ \"age\" : -1}"));
 		assertThat(unique, is(true));
 		assertThat(dropDupes, is(true));
+		
+		List<IndexInfo> indexInfoList = template.indexOps(Person.class).getIndexInfo();
+		System.out.println(indexInfoList);
+		assertThat(indexInfoList.size(), is(2));
+		IndexInfo ii = indexInfoList.get(1);
+		assertThat(ii.isUnique(), is(true));
+		assertThat(ii.isDropDuplicates(), is(true));
+		assertThat(ii.isSparse(), is(false));
+		assertThat(ii.getFieldSpec().containsKey("age"), is(true));
+		assertThat(ii.getFieldSpec().containsValue(Order.DESCENDING), is(true));
 	}
 
 	@Test

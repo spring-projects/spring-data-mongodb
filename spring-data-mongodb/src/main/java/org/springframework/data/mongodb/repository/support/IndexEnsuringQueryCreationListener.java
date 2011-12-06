@@ -86,7 +86,7 @@ class IndexEnsuringQueryCreationListener implements QueryCreationListener<PartTr
 		}
 
 		MongoEntityInformation<?, ?> metadata = query.getQueryMethod().getEntityInformation();
-		operations.ensureIndex(index, metadata.getCollectionName());
+		operations.indexOps(metadata.getCollectionName()).ensureIndex(index);
 		LOG.debug(String.format("Created %s!", index));
 	}
 

@@ -73,7 +73,7 @@ public class GeoSpatialTests {
 		applicationContext = new AnnotationConfigApplicationContext(GeoSpatialAppConfig.class);
 		template = applicationContext.getBean(MongoTemplate.class);
 		template.setWriteConcern(WriteConcern.FSYNC_SAFE);
-		template.ensureIndex(new GeospatialIndex("location"), Venue.class);
+		template.indexOps(Venue.class).ensureIndex(new GeospatialIndex("location"));
 		indexCreated();
 		addVenues();
 		parser = new SpelExpressionParser();
