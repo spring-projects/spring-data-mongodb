@@ -88,9 +88,10 @@
 
     <para>First you need to set up a running Mongodb server. Refer to the
     <ulink url="http://www.mongodb.org/display/DOCS/Quickstart">Mongodb Quick
-    Start guide</ulink> for an explanation on how to startup a Mongo instance.
-    Once installed starting Mongo is typically a matter of executing the
-    following command: <literal>MONGO_HOME/bin/mongod</literal></para>
+    Start guide</ulink> for an explanation on how to startup a MongoDB
+    instance. Once installed starting MongoDB is typically a matter of
+    executing the following command:
+    <literal>MONGO_HOME/bin/mongod</literal></para>
 
     <para>To create a Spring project in STS go to File -&gt; New -&gt; Spring
     Template Project -&gt; Simple Spring Utility Project --&gt; press Yes when
@@ -246,7 +247,7 @@ public class MongoApp {
 
       <title>Required Jars</title>
 
-       The following jars are required to use Spring Data Mongo 
+       The following jars are required to use Spring Data MongoDB 
 
       <itemizedlist>
         <listitem>
@@ -415,7 +416,7 @@ public class AppConfig {
       compared to instantiating a <classname>com.mongodb.Mongo</classname>
       instance directly, the FactoryBean approach does not throw a checked
       exception and has the added advantage of also providing the container
-      with an ExceptionTranslator implementation that translates Mongo
+      with an ExceptionTranslator implementation that translates MongoDB
       exceptions to exceptions in Spring's portable
       <classname>DataAccessException</classname> hierarchy for data access
       classes annoated with the <literal>@Repository</literal> annotation.
@@ -529,11 +530,11 @@ public class AppConfig {
     <section>
       <title>The MongoDbFactory interface</title>
 
-      <para>While com.mongodb.Mongo is the entry point to the MongoDB driver
-      API, connecting to a specific MongoDB database instance requires
-      additional information such as the database name and an optional
-      username and password. With that information you can obtain a
-      com.mongodb.DB object and access all the functionality of a specific
+      <para>While <classname>com.mongodb.Mongo</classname> is the entry point
+      to the MongoDB driver API, connecting to a specific MongoDB database
+      instance requires additional information such as the database name and
+      an optional username and password. With that information you can obtain
+      a com.mongodb.DB object and access all the functionality of a specific
       MongoDB database instance. Spring provides the
       <classname>org.springframework.data.mongodb.core.MongoDbFactory</classname>
       interface shown below to bootstrap connectivity to the database.</para>
@@ -644,8 +645,8 @@ public class MongoConfiguration {
       the id attribute is specified.</para>
 
       <para>You can also provide the host and port for the underlying
-      com.mongodb.Mongo instance as shown below, in addition to username and
-      password for the database.</para>
+      <classname>com.mongodb.Mongo</classname> instance as shown below, in
+      addition to username and password for the database.</para>
 
       <programlisting language="xml">&lt;mongo:db-factory id="anotherMongoDbFactory"
                   host="localhost"
@@ -705,7 +706,7 @@ public class MongoConfiguration {
       thread-safe and can be reused across multiple instances.</para>
     </note>
 
-    <para>The mapping between Mongo documents and domain classes is done by
+    <para>The mapping between MongoDB documents and domain classes is done by
     delegating to an implementation of the interface
     <interfacename>MongoConverter</interfacename>. Spring provides two
     implementations, <classname>SimpleMappingConverter</classname> and
@@ -750,17 +751,17 @@ public class MongoConfiguration {
       </note></para>
 
     <para>Another central feature of MongoTemplate is exception translation of
-    exceptions thrown in the Mongo Java driver into Spring's portable Data
+    exceptions thrown in the MongoDB Java driver into Spring's portable Data
     Access Exception hierarchy. Refer to the section on <link
     linkend="mongo.exception">exception translation</link> for more
     information.</para>
 
     <para>While there are many convenience methods on
     <classname>MongoTemplate</classname> to help you easily perform common
-    tasks if you should need to access the Mongo driver API directly to access
-    functionality not explicitly exposed by the MongoTemplate you can use one
-    of several Execute callback methods to access underlying driver APIs. The
-    execute callbacks will give you a reference to either a
+    tasks if you should need to access the MongoDB driver API directly to
+    access functionality not explicitly exposed by the MongoTemplate you can
+    use one of several Execute callback methods to access underlying driver
+    APIs. The execute callbacks will give you a reference to either a
     <classname>com.mongodb.Collection</classname> or a
     <classname>com.mongodb.DB</classname> object. Please see the section
     <ulink url="mongo.executioncallback">Execution Callbacks</ulink> for more
@@ -801,8 +802,8 @@ public class AppConfig {
         <listitem>
           <para><emphasis role="bold">MongoTemplate </emphasis>
           <literal>(Mongo mongo, String databaseName)</literal> - takes the
-          com.mongodb.Mongo object and the default database name to operate
-          against.</para>
+          <classname>com.mongodb.Mongo</classname> object and the default
+          database name to operate against.</para>
         </listitem>
 
         <listitem>
@@ -815,8 +816,9 @@ public class AppConfig {
         <listitem>
           <para><emphasis role="bold">MongoTemplate</emphasis>
           <literal>(MongoDbFactory mongoDbFactory)</literal> - takes a
-          MongoDbFactory object that encapsulated the com.mongodb.Mongo
-          object, database name, and username and password.</para>
+          MongoDbFactory object that encapsulated the
+          <classname>com.mongodb.Mongo</classname> object, database name, and
+          username and password.</para>
         </listitem>
 
         <listitem>
@@ -1049,11 +1051,12 @@ DEBUG work.data.mongodb.core.MongoTemplate: 376 - Dropped collection [database.p
     <section>
       <title>How the '_id' field is handled in the mapping layer</title>
 
-      <para>Mongo requires that you have an '_id' field for all documents. If
-      you don't provide one the driver will assign a ObjectId with a generated
-      value. When using the <classname>MongoMappingConverter</classname> there
-      are certain rules that govern how properties from the Java class is
-      mapped to this '_id' field.</para>
+      <para>MongoDB requires that you have an '_id' field for all documents.
+      If you don't provide one the driver will assign a
+      <classname>ObjectId</classname> with a generated value. When using the
+      <classname>MongoMappingConverter</classname> there are certain rules
+      that govern how properties from the Java class is mapped to this '_id'
+      field.</para>
 
       <para>The following outlines what property will be mapped to the '_id'
       document field:</para>
@@ -1083,8 +1086,8 @@ DEBUG work.data.mongodb.core.MongoTemplate: 376 - Dropped collection [database.p
           <para>An id property or field declared as a String in the Java class
           will be converted to and stored as an ObjectId if possible using a
           Spring Converter&lt;String, ObjectId&gt;. Valid conversion rules are
-          delegated to the Mongo Java driver. If it cannot be converted to an
-          ObjectId, then the value will be stored as a string in the
+          delegated to the MongoDB Java driver. If it cannot be converted to
+          an ObjectId, then the value will be stored as a string in the
           database.</para>
         </listitem>
 
@@ -1641,7 +1644,7 @@ import static org.springframework.data.mongodb.core.query.Query.query;
           <para><literal>Criteria</literal> <emphasis
           role="bold">withinCenterSphere </emphasis> <literal>(Circle circle)
           </literal>Creates a geospatial criterion using <literal>$within
-          $center</literal> operators. This is only available for Mongo 1.7
+          $center</literal> operators. This is only available for MongoDB 1.7
           and higher.</para>
         </listitem>
 
@@ -1662,7 +1665,7 @@ import static org.springframework.data.mongodb.core.query.Query.query;
           <para><literal>Criteria</literal> <emphasis role="bold">nearSphere
           </emphasis> <literal>(Point point) </literal>Creates a geospatial
           criterion using <literal>$nearSphere$center</literal> operations.
-          This is only available for Mongo 1.7 and higher.</para>
+          This is only available for MongoDB 1.7 and higher.</para>
         </listitem>
 
         <listitem>
@@ -2245,8 +2248,31 @@ public class PersonWriteConverter implements Converter&lt;Person, DBObject&gt; {
   <section>
     <title>Index and Collection managment</title>
 
-    <para>MongoTemplate provides a few methods for managing indexes and
-    collections.</para>
+    <para><classname>MongoTemplate</classname> provides a few methods for
+    managing indexes and collections. These are collected into a helper
+    interface called <interfacename>IndexOperations</interfacename>. You
+    access these operations by calilng the method
+    <methodname>indexOps</methodname> and pass in either the collection name
+    or the <literal>java.lang.Class</literal> of your entity (the collection
+    name will be derived from the .class either by name or via annotation
+    metadata).</para>
+
+    <para>The <interfacename>IndexOperations</interfacename> interface is
+    shown below</para>
+
+    <programlisting language="java">public interface IndexOperations {
+
+  void ensureIndex(IndexDefinition indexDefinition);
+
+  void dropIndex(String name);
+
+  void dropAllIndexes();
+
+  void resetIndexCache();
+  
+  List&lt;IndexInfo&gt; getIndexInfo();
+
+}</programlisting>
 
     <section>
       <title>Methods for creating an Index</title>
@@ -2257,7 +2283,7 @@ public class PersonWriteConverter implements Converter&lt;Person, DBObject&gt; {
       <example>
         <title>Creating an index using the MongoTemplate</title>
 
-        <programlisting language="java">mongoTemplate.ensureIndex(new Index().on("name",Order.ASCENDING), Person.class);        </programlisting>
+        <programlisting language="java">mongoTemplate.indexOps(Person.class).ensureIndex(new Index().on("name",Order.ASCENDING));        </programlisting>
       </example>
 
       <para><itemizedlist>
@@ -2274,7 +2300,25 @@ public class PersonWriteConverter implements Converter&lt;Person, DBObject&gt; {
       the Venue class defined in a previous section, you would declare a
       geospatial query as shown below</para>
 
-      <programlisting language="java">mongoTemplate.ensureIndex(new GeospatialIndex("location"), Venue.class);</programlisting>
+      <programlisting language="java">mongoTemplate.indexOps(Venue.class).ensureIndex(new GeospatialIndex("location"));</programlisting>
+    </section>
+
+    <section>
+      <title>Accessing index information</title>
+
+      <para>The IndexOperations interface has the method getIndexInfo that
+      returns a list of IndexInfo objects. This contains all the indexes
+      defined on the collectcion. Here is an example that defines an index on
+      the Person class that has age property.</para>
+
+      <programlisting>template.indexOps(Person.class).ensureIndex(new Index().on("age", Order.DESCENDING).unique(Duplicates.DROP));
+
+List&lt;IndexInfo&gt; indexInfoList = template.indexOps(Person.class).getIndexInfo();
+
+// Contains
+// [IndexInfo [fieldSpec={_id=ASCENDING}, name=_id_, unique=false, dropDuplicates=false, sparse=false], 
+//  IndexInfo [fieldSpec={age=DESCENDING}, name=age_-1, unique=true, dropDuplicates=true, sparse=false]]
+</programlisting>
     </section>
 
     <section>
@@ -2327,7 +2371,7 @@ mongoTemplate.dropCollection("MyNewCollection");        </programlisting>
   <section>
     <title>Executing Commands</title>
 
-    <para>You can also get at the Mongo driver's <classname>DB.command(
+    <para>You can also get at the MongoDB driver's <classname>DB.command(
     )</classname> method using the executeCommand methods on MongoTemplate.
     These will also perform exception translation into Spring's Data Access
     Exception hierarchy.</para>
@@ -2441,8 +2485,8 @@ mongoTemplate.dropCollection("MyNewCollection");        </programlisting>
 
     <para>The Spring framework provides exception translation for a wide
     variety of database and mapping technologies. This has traditionally been
-    for JDBC and JPA. The Spring support for Mongo extends this feature to the
-    MongoDB Database by providing an implementation of the
+    for JDBC and JPA. The Spring support for MongoDB extends this feature to
+    the MongoDB Database by providing an implementation of the
     <classname>org.springframework.dao.support.PersistenceExceptionTranslator</classname>
     interface.</para>
 
@@ -2476,7 +2520,7 @@ mongoTemplate.dropCollection("MyNewCollection");        </programlisting>
     greater need in the case of JDBC and JMS than with MongoDB, it still
     offers a single spot for exception translation and logging to occur. As
     such, using thexe execute callback is the preferred way to access the
-    Mongo driver's DB and Collection objects to perform uncommon operations
+    MongoDB driver's DB and Collection objects to perform uncommon operations
     that were not exposed as methods on
     <classname>MongoTemplate</classname>.</para>
 

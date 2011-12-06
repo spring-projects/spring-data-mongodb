@@ -2,7 +2,7 @@
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
 "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
 <chapter id="mongo.repositories">
-  <title>Mongo repositories</title>
+  <title>MongoDB repositories</title>
 
   <section id="mongo-repo-intro">
     <title>Introduction</title>
@@ -60,7 +60,7 @@
     add</para>
 
     <example>
-      <title>General mongo repository Spring configuration</title>
+      <title>General MongoDB repository Spring configuration</title>
 
       <programlisting language="xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
 &lt;beans xmlns="http://www.springframework.org/schema/beans"
@@ -129,7 +129,7 @@ public class PersonRepositoryTests {
     <title>Query methods</title>
 
     <para>Most of the data access operations you usually trigger on a
-    repository result a query being executed against the Mongo databases.
+    repository result a query being executed against the MongoDB databases.
     Defining such a query is just a matter of declaring a method on the
     repository interface</para>
 
@@ -346,11 +346,11 @@ Distance distance = new Distance(200, Metrics.KILOMETERS);
     </section>
 
     <section>
-      <title>Mongo JSON based query methods and field restriction</title>
+      <title>MongoDB JSON based query methods and field restriction</title>
 
       <para>By adding the annotation
       <classname>org.springframework.data.mongodb.repository.Query</classname>
-      repository finder methods you can specify a Mongo JSON query string to
+      repository finder methods you can specify a MongoDB JSON query string to
       use instead of having the query derived from the method name. For
       example</para>
 
@@ -382,7 +382,7 @@ Distance distance = new Distance(200, Metrics.KILOMETERS);
     <section>
       <title>Type-safe Query methods</title>
 
-      <para>Mongo repository support integrates with the <ulink
+      <para>MongoDB repository support integrates with the <ulink
       url="http://www.querydsl.com/">QueryDSL</ulink> project which provides a
       means to perform type-safe queries in Java. To quote from the project
       description, "Instead of writing queries as inline strings or

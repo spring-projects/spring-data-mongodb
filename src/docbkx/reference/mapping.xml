@@ -69,13 +69,14 @@
     <section>
       <title>How the '_id' field is handled in the mapping layer</title>
 
-      <para>Mongo requires that you have an '_id' field for all documents. If
-      you don't provide one the driver will assign a ObjectId with a generated
-      value. The "_id" field can be of any type the, other than arrays, so
-      long as it is unique. The driver naturally supports all primitive types
-      and Dates. When using the <classname>MongoMappingConverter</classname>
-      there are certain rules that govern how properties from the Java class
-      is mapped to this '_id' field.</para>
+      <para>MongoDB requires that you have an '_id' field for all documents.
+      If you don't provide one the driver will assign a ObjectId with a
+      generated value. The "_id" field can be of any type the, other than
+      arrays, so long as it is unique. The driver naturally supports all
+      primitive types and Dates. When using the
+      <classname>MongoMappingConverter</classname> there are certain rules
+      that govern how properties from the Java class is mapped to this '_id'
+      field.</para>
 
       <para>The following outlines what field will be mapped to the '_id'
       document field:</para>
@@ -212,7 +213,7 @@ public class GeoSpatialAppConfig extends AbstractMongoConfiguration {
     getUserCredentials()</literal> to provide the username and password
     information to connect to the database.</para>
 
-    <para>Spring's Mongo namespace enables you to easily enable mapping
+    <para>Spring's MongoDB namespace enables you to easily enable mapping
     functionality in XML</para>
 
     <example>
@@ -381,7 +382,7 @@ public class Person {
 
       <para>The mapping metadata infrastructure is defined in a seperate
       spring-data-commons project that is technology agnostic. Specific
-      subclasses are using in the Mongo support to support annotation based
+      subclasses are using in the MongoDB support to support annotation based
       metadata. Other strategies are also possible to put in place if there is
       demand.</para>
 
