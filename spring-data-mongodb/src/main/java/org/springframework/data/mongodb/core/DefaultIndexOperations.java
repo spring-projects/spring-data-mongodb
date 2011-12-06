@@ -33,23 +33,37 @@ import com.mongodb.DBObject;
 import com.mongodb.MongoException;
 
 /**
- * Default implementation of {@link IndexOperations}
+ * Default implementation of {@link IndexOperations}.
+ * 
  * @author Mark Pollack
- *
+ * @author Oliver Gierke
  */
 public class DefaultIndexOperations implements IndexOperations {
 
-	private MongoTemplate mongoTemplate;
-	private String collectionName;
+	private final MongoOperations mongoOperations;
+	private final String collectionName;
 
-	public DefaultIndexOperations(MongoTemplate mongoTemplate, String collectionName) {
-		Assert.notNull(collectionName, "collectionName can not be null");
-		this.mongoTemplate = mongoTemplate;
+	/**
+	 * Creates a new {@link DefaultIndexOperations}.
+	 * 
+	 * @param mongoOperations must not be {@literal null}.
+	 * @param collectionName must not be {@literal null}.
+	 */
+	public DefaultIndexOperations(MongoOperations mongoOperations, String collectionName) {
+
+		Assert.notNull(mongoOperations, "MongoOperations must not be null!");
+		Assert.notNull(collectionName, "Collection name can not be null!");
+
+		this.mongoOperations = mongoOperations;
 		this.collectionName = collectionName;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.IndexOperations#ensureIndex(org.springframework.data.mongodb.core.index.IndexDefinition)
+	 */
 	public void ensureIndex(final IndexDefinition indexDefinition) {
-		mongoTemplate.execute(collectionName, new CollectionCallback<Object>() {
+		mongoOperations.execute(collectionName, new CollectionCallback<Object>() {
 			public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 				DBObject indexOptions = indexDefinition.getIndexOptions();
 				if (indexOptions != null) {
@@ -62,67 +76,87 @@ public class DefaultIndexOperations implements IndexOperations {
 		});
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.IndexOperations#dropIndex(java.lang.String)
+	 */
 	public void dropIndex(final String name) {
-		mongoTemplate.execute(collectionName, new CollectionCallback<Object>() {
-			public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
+		mongoOperations.execute(collectionName, new CollectionCallback<Void>() {
+			public Void doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 				collection.dropIndex(name);
 				return null;
 			}
 		});
-		
+
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.IndexOperations#dropAllIndexes()
+	 */
 	public void dropAllIndexes() {
-		dropIndex("*");		
+		dropIndex("*");
 	}
-	
-  public void resetIndexCache()  {
-		mongoTemplate.execute(collectionName, new CollectionCallback<Object>() {
-			public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.IndexOperations#resetIndexCache()
+	 */
+	public void resetIndexCache() {
+		mongoOperations.execute(collectionName, new CollectionCallback<Void>() {
+			public Void doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 				collection.resetIndexCache();
 				return null;
 			}
 		});
-  }
+	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.IndexOperations#getIndexInfo()
+	 */
 	public List<IndexInfo> getIndexInfo() {
-		return mongoTemplate.execute(collectionName, new CollectionCallback<List<IndexInfo> >() {
+
+		return mongoOperations.execute(collectionName, new CollectionCallback<List<IndexInfo>>() {
 			public List<IndexInfo> doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 				List<DBObject> dbObjectList = collection.getIndexInfo();
 				return getIndexData(dbObjectList);
-				//return indexInfoList;
 			}
 
+			@SuppressWarnings("unchecked")
 			private List<IndexInfo> getIndexData(List<DBObject> dbObjectList) {
-				List<IndexInfo> indexInfoList = new ArrayList<IndexInfo>(); 
+
+				List<IndexInfo> indexInfoList = new ArrayList<IndexInfo>();
+
 				for (DBObject ix : dbObjectList) {
+
 					Map<String, Order> keyOrderMap = new LinkedHashMap<String, Order>();
 					DBObject keyDbObject = (DBObject) ix.get("key");
-					Iterator entries = keyDbObject.toMap().entrySet().iterator();					
+					Iterator<?> entries = keyDbObject.toMap().entrySet().iterator();
+
 					while (entries.hasNext()) {
-					  Entry thisEntry = (Entry) entries.next();
-					  String key = thisEntry.getKey().toString();
-					  int value = (Integer) thisEntry.getValue();
-					  if (value == 1) {
-					  	keyOrderMap.put(key, Order.ASCENDING);
-					  } else {
-					  	keyOrderMap.put(key, Order.DESCENDING);
-					  }
+						Entry<Object, Integer> thisEntry = (Entry<Object, Integer>) entries.next();
+						String key = thisEntry.getKey().toString();
+						int value = thisEntry.getValue();
+						if (value == 1) {
+							keyOrderMap.put(key, Order.ASCENDING);
+						} else {
+							keyOrderMap.put(key, Order.DESCENDING);
+						}
 					}
-					
 
 					String name = ix.get("name").toString();
-					boolean unique = 	ix.containsField("unique") ? (Boolean)ix.get("unique") : false;
-					boolean dropDuplicates = ix.containsField("dropDups") ? (Boolean)ix.get("dropDups") : false;
+
+					boolean unique = ix.containsField("unique") ? (Boolean) ix.get("unique") : false;
+					boolean dropDuplicates = ix.containsField("dropDups") ? (Boolean) ix.get("dropDups") : false;
 					boolean sparse = ix.containsField("sparse") ? (Boolean) ix.get("sparse") : false;
-					
+
 					indexInfoList.add(new IndexInfo(keyOrderMap, name, unique, dropDuplicates, sparse));
 				}
+
 				return indexInfoList;
 			}
 		});
 	}
 
-  
-  
 }

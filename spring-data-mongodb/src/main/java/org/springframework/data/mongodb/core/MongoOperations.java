@@ -19,23 +19,23 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-import com.mongodb.CommandResult;
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
-import com.mongodb.WriteResult;
-
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.geo.GeoResult;
 import org.springframework.data.mongodb.core.geo.GeoResults;
-import org.springframework.data.mongodb.core.index.IndexDefinition;
 import org.springframework.data.mongodb.core.mapreduce.GroupBy;
 import org.springframework.data.mongodb.core.mapreduce.GroupByResults;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceResults;
+import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+
+import com.mongodb.CommandResult;
+import com.mongodb.DBCollection;
+import com.mongodb.DBObject;
+import com.mongodb.WriteResult;
 
 /**
  * Interface that specifies a basic set of MongoDB operations. Implemented by {@link MongoTemplate}. Not often used but
@@ -51,6 +51,7 @@ public interface MongoOperations {
 	/**
 	 * The collection name used for the specified class by this template.
 	 * 
+	 * @param entityClass must not be {@literal null}.
 	 * @return
 	 */
 	String getCollectionName(Class<?> entityClass);
@@ -71,7 +72,7 @@ public interface MongoOperations {
 	 * @param command a MongoDB command
 	 */
 	CommandResult executeCommand(DBObject command);
-	
+
 	/**
 	 * Execute a MongoDB command. Any errors that result from executing this command will be converted into Spring's DAO
 	 * exception hierarchy.
@@ -80,7 +81,7 @@ public interface MongoOperations {
 	 * @param options query options to use
 	 */
 	CommandResult executeCommand(DBObject command, int options);
-	
+
 	/**
 	 * Execute a MongoDB query and iterate over the query results on a per-document basis with a DocumentCallbackHandler.
 	 * 
@@ -90,7 +91,7 @@ public interface MongoOperations {
 	 * @param dch the handler that will extract results, one document at a time
 	 */
 	void executeQuery(Query query, String collectionName, DocumentCallbackHandler dch);
-	
+
 	/**
 	 * Executes a {@link DbCallback} translating any exceptions as necessary.
 	 * <p/>
@@ -227,15 +228,17 @@ public interface MongoOperations {
 	 * @param collectionName name of the collection to drop/delete.
 	 */
 	void dropCollection(String collectionName);
-	
+
 	/**
 	 * Returns the operations that can be performed on indexes
+	 * 
 	 * @return index operations on the named collection
 	 */
 	IndexOperations indexOps(String collectionName);
-	
+
 	/**
 	 * Returns the operations that can be performed on indexes
+	 * 
 	 * @return index operations on the named collection associated with the given entity class
 	 */
 	IndexOperations indexOps(Class<?> entityClass);
@@ -268,35 +271,39 @@ public interface MongoOperations {
 	 * @return the converted collection
 	 */
 	<T> List<T> findAll(Class<T> entityClass, String collectionName);
-	
-	
+
 	/**
-	 * Execute a group operation over the entire collection.
-	 * The group operation entity class should match the 'shape' of the returned object that takes int account the
-	 * initial document structure as well as any finalize functions.
+	 * Execute a group operation over the entire collection. The group operation entity class should match the 'shape' of
+	 * the returned object that takes int account the initial document structure as well as any finalize functions.
 	 * 
-	 * @param criteria The criteria that restricts the row that are considered for grouping.  If not specified all rows are considered.
+	 * @param criteria The criteria that restricts the row that are considered for grouping. If not specified all rows are
+	 *          considered.
 	 * @param inputCollectionName the collection where the group operation will read from
-	 * @param groupBy the conditions under which the group operation will be performed, e.g. keys, initial document, reduce function.
+	 * @param groupBy the conditions under which the group operation will be performed, e.g. keys, initial document,
+	 *          reduce function.
 	 * @param entityClass The parameterized type of the returned list
 	 * @return The results of the group operation
 	 */
 	<T> GroupByResults<T> group(String inputCollectionName, GroupBy groupBy, Class<T> entityClass);
-	
+
 	/**
-	 * Execute a group operation restricting the rows to those which match the provided Criteria.
-	 * The group operation entity class should match the 'shape' of the returned object that takes int account the
-	 * initial document structure as well as any finalize functions.
+	 * Execute a group operation restricting the rows to those which match the provided Criteria. The group operation
+	 * entity class should match the 'shape' of the returned object that takes int account the initial document structure
+	 * as well as any finalize functions.
 	 * 
-	 * @param criteria The criteria that restricts the row that are considered for grouping.  If not specified all rows are considered.
+	 * @param criteria The criteria that restricts the row that are considered for grouping. If not specified all rows are
+	 *          considered.
 	 * @param inputCollectionName the collection where the group operation will read from
-	 * @param groupBy the conditions under which the group operation will be performed, e.g. keys, initial document, reduce function.
+	 * @param groupBy the conditions under which the group operation will be performed, e.g. keys, initial document,
+	 *          reduce function.
 	 * @param entityClass The parameterized type of the returned list
 	 * @return The results of the group operation
 	 */
 	<T> GroupByResults<T> group(Criteria criteria, String inputCollectionName, GroupBy groupBy, Class<T> entityClass);
+
 	/**
-	 * Execute a map-reduce operation.  The map-reduce operation will be formed with an output type of INLINE
+	 * Execute a map-reduce operation. The map-reduce operation will be formed with an output type of INLINE
+	 * 
 	 * @param inputCollectionName the collection where the map-reduce will read from
 	 * @param mapFunction The JavaScript map function
 	 * @param reduceFunction The JavaScript reduce function
@@ -304,11 +311,12 @@ public interface MongoOperations {
 	 * @param entityClass The parameterized type of the returned list
 	 * @return The results of the map reduce operation
 	 */
-	<T> MapReduceResults<T> mapReduce(String inputCollectionName, String mapFunction, String reduceFunction, Class<T> entityClass );
+	<T> MapReduceResults<T> mapReduce(String inputCollectionName, String mapFunction, String reduceFunction,
+			Class<T> entityClass);
 
-	
 	/**
 	 * Execute a map-reduce operation that takes additional map-reduce options.
+	 * 
 	 * @param inputCollectionName the collection where the map-reduce will read from
 	 * @param mapFunction The JavaScript map function
 	 * @param reduceFunction The JavaScript reduce function
@@ -316,12 +324,13 @@ public interface MongoOperations {
 	 * @param entityClass The parameterized type of the returned list
 	 * @return The results of the map reduce operation
 	 */
-	<T> MapReduceResults<T> mapReduce(String inputCollectionName, String mapFunction, String reduceFunction, MapReduceOptions mapReduceOptions, Class<T> entityClass );
-	
-	
-	
+	<T> MapReduceResults<T> mapReduce(String inputCollectionName, String mapFunction, String reduceFunction,
+			MapReduceOptions mapReduceOptions, Class<T> entityClass);
+
 	/**
-	 * Execute a map-reduce operation that takes a query.  The map-reduce operation will be formed with an output type of INLINE
+	 * Execute a map-reduce operation that takes a query. The map-reduce operation will be formed with an output type of
+	 * INLINE
+	 * 
 	 * @param query The query to use to select the data for the map phase
 	 * @param inputCollectionName the collection where the map-reduce will read from
 	 * @param mapFunction The JavaScript map function
@@ -330,10 +339,12 @@ public interface MongoOperations {
 	 * @param entityClass The parameterized type of the returned list
 	 * @return The results of the map reduce operation
 	 */
-	<T> MapReduceResults<T> mapReduce(Query query, String inputCollectionName, String mapFunction, String reduceFunction, Class<T> entityClass );
-	
+	<T> MapReduceResults<T> mapReduce(Query query, String inputCollectionName, String mapFunction, String reduceFunction,
+			Class<T> entityClass);
+
 	/**
 	 * Execute a map-reduce operation that takes a query and additional map-reduce options
+	 * 
 	 * @param query The query to use to select the data for the map phase
 	 * @param inputCollectionName the collection where the map-reduce will read from
 	 * @param mapFunction The JavaScript map function
@@ -342,7 +353,8 @@ public interface MongoOperations {
 	 * @param entityClass The parameterized type of the returned list
 	 * @return The results of the map reduce operation
 	 */
-	<T> MapReduceResults<T> mapReduce(Query query,  String inputCollectionName, String mapFunction, String reduceFunction, MapReduceOptions mapReduceOptions, Class<T> entityClass );
+	<T> MapReduceResults<T> mapReduce(Query query, String inputCollectionName, String mapFunction, String reduceFunction,
+			MapReduceOptions mapReduceOptions, Class<T> entityClass);
 
 	/**
 	 * Returns {@link GeoResult} for all entities matching the given {@link NearQuery}. Will consider entity mapping
@@ -459,12 +471,14 @@ public interface MongoOperations {
 	<T> T findById(Object id, Class<T> entityClass, String collectionName);
 
 	<T> T findAndModify(Query query, Update update, Class<T> entityClass);
-	
+
 	<T> T findAndModify(Query query, Update update, Class<T> entityClass, String collectionName);
 
 	<T> T findAndModify(Query query, Update update, FindAndModifyOptions options, Class<T> entityClass);
-	
-	<T> T findAndModify(Query query, Update update, FindAndModifyOptions options, Class<T> entityClass, String collectionName);
+
+	<T> T findAndModify(Query query, Update update, FindAndModifyOptions options, Class<T> entityClass,
+			String collectionName);
+
 	/**
 	 * Map the results of an ad-hoc query on the collection for the entity type to a single instance of an object of the
 	 * specified type. The first document that matches the query is returned and also removed from the collection in the
@@ -509,7 +523,7 @@ public interface MongoOperations {
 	 * @return
 	 */
 	long count(Query query, Class<?> entityClass);
-	
+
 	/**
 	 * Returns the number of documents for the given {@link Query} querying the given collection.
 	 * 
@@ -518,7 +532,7 @@ public interface MongoOperations {
 	 * @return
 	 */
 	long count(Query query, String collectionName);
-	
+
 	/**
 	 * Insert the object into the collection for the entity type of the object to save.
 	 * <p/>
@@ -610,8 +624,8 @@ public interface MongoOperations {
 	void save(Object objectToSave, String collectionName);
 
 	/**
-	 * Performs an upsert. If no document is found that matches the query, a new document is created and inserted
-	 * by combining the query document and the update document.
+	 * Performs an upsert. If no document is found that matches the query, a new document is created and inserted by
+	 * combining the query document and the update document.
 	 * 
 	 * @param query the query document that specifies the criteria used to select a record to be upserted
 	 * @param update the update document that contains the updated object or $ operators to manipulate the existing object
@@ -619,11 +633,10 @@ public interface MongoOperations {
 	 * @return the WriteResult which lets you access the results of the previous write.
 	 */
 	WriteResult upsert(Query query, Update update, Class<?> entityClass);
-	
 
 	/**
-	 * Performs an upsert. If no document is found that matches the query, a new document is created and inserted
-	 * by combining the query document and the update document.
+	 * Performs an upsert. If no document is found that matches the query, a new document is created and inserted by
+	 * combining the query document and the update document.
 	 * 
 	 * @param query the query document that specifies the criteria used to select a record to be updated
 	 * @param update the update document that contains the updated object or $ operators to manipulate the existing
@@ -632,7 +645,7 @@ public interface MongoOperations {
 	 * @return the WriteResult which lets you access the results of the previous write.
 	 */
 	WriteResult upsert(Query query, Update update, String collectionName);
-	
+
 	/**
 	 * Updates the first object that is found in the collection of the entity class that matches the query document with
 	 * the provided update document.
@@ -687,7 +700,7 @@ public interface MongoOperations {
 	 * @param object
 	 */
 	void remove(Object object);
-	
+
 	/**
 	 * Removes the given object from the given collection.
 	 * 

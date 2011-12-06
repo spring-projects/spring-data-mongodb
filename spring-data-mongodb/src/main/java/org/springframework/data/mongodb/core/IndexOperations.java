@@ -21,45 +21,42 @@ import org.springframework.data.mongodb.core.index.IndexDefinition;
 import org.springframework.data.mongodb.core.index.IndexInfo;
 
 /**
- * Index operations on a collection
+ * Index operations on a collection.
  * 
  * @author Mark Pollack
- *
+ * @author Oliver Gierke
  */
 public interface IndexOperations {
-	
+
 	/**
 	 * Ensure that an index for the provided {@link IndexDefinition} exists for the collection indicated by the entity
 	 * class. If not it will be created.
 	 * 
-	 * @param indexDefinition
-	 * @param entityClass class that determines the collection to use
+	 * @param indexDefinition must not be {@literal null}.
 	 */
 	void ensureIndex(IndexDefinition indexDefinition);
-	
-  /**
-   * Drops an index from this collection
-   * @param name name of index to drop
-   */
-	void dropIndex(String name);
-	
-  /**
-   * Drops all indices from this collection
-   */
-  void dropAllIndexes();
-	
 
-  /**
-   * Clears all indices that have not yet been applied to this collection.
-   */
-  void resetIndexCache();
-  
-  
-  /**
-   * Returns the index information on the collection
-   * @return index information on the collection
-   */
-  List<IndexInfo> getIndexInfo();
-  
-	
+	/**
+	 * Drops an index from this collection.
+	 * 
+	 * @param name name of index to drop
+	 */
+	void dropIndex(String name);
+
+	/**
+	 * Drops all indices from this collection.
+	 */
+	void dropAllIndexes();
+
+	/**
+	 * Clears all indices that have not yet been applied to this collection.
+	 */
+	void resetIndexCache();
+
+	/**
+	 * Returns the index information on the collection.
+	 * 
+	 * @return index information on the collection
+	 */
+	List<IndexInfo> getIndexInfo();
 }
