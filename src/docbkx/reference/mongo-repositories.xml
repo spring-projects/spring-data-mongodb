@@ -236,6 +236,16 @@ public class PersonRepositoryTests {
             </row>
 
             <row>
+              <entry><literal>Regex</literal></entry>
+
+              <entry><methodname>findByFirstnameRegex(String
+              firstname)</methodname></entry>
+
+              <entry><code>{"firstname" : {"$regex" : firstname
+              }}</code></entry>
+            </row>
+
+            <row>
               <entry>(No keyword)</entry>
 
               <entry><methodname>findByFirstname(String
@@ -279,7 +289,34 @@ public class PersonRepositoryTests {
               box)</methodname></entry>
 
               <entry><code>{"location" : {"$within" : {"$box" : [ [x1, y1],
-              x2, y2]}}}</code></entry>
+              x2, y2]}}}True</code></entry>
+            </row>
+
+            <row>
+              <entry><literal>IsTrue</literal>,
+              <literal>True</literal></entry>
+
+              <entry><code>findByActiveIsTrue()</code></entry>
+
+              <entry><code>{"active" : true}</code></entry>
+            </row>
+
+            <row>
+              <entry><literal>IsFalse</literal>,
+              <literal>False</literal></entry>
+
+              <entry><code>findByActiveIsFalse()</code></entry>
+
+              <entry><code>{"active" : false}</code></entry>
+            </row>
+
+            <row>
+              <entry><literal>Exists</literal></entry>
+
+              <entry><methodname>findByLocationExists(boolean
+              exists)</methodname></entry>
+
+              <entry><code>{"location" : {"$exists" : exists }}</code></entry>
             </row>
           </tbody>
         </tgroup>
