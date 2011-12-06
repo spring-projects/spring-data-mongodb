@@ -91,7 +91,7 @@ public class MongoTemplateTests {
 
 		CustomConversions conversions = new CustomConversions(Arrays.asList(DateToDateTimeConverter.INSTANCE,
 				DateTimeToDateConverter.INSTANCE));
-		
+
 		MongoMappingContext mappingContext = new MongoMappingContext();
 		mappingContext.setInitialEntitySet(new HashSet<Class<?>>(Arrays.asList(PersonWith_idPropertyOfTypeObjectId.class,
 				PersonWith_idPropertyOfTypeString.class, PersonWithIdPropertyOfTypeObjectId.class,
@@ -104,7 +104,7 @@ public class MongoTemplateTests {
 		MappingMongoConverter mappingConverter = new MappingMongoConverter(factory, mappingContext);
 		mappingConverter.setCustomConversions(conversions);
 		mappingConverter.afterPropertiesSet();
-		
+
 		this.mappingTemplate = new MongoTemplate(factory, mappingConverter);
 	}
 
@@ -112,12 +112,12 @@ public class MongoTemplateTests {
 	public void setUp() {
 		cleanDb();
 	}
-	
+
 	@After
 	public void cleanUp() {
 		cleanDb();
 	}
-	
+
 	protected void cleanDb() {
 		template.dropCollection(template.getCollectionName(Person.class));
 		template.dropCollection(template.getCollectionName(PersonWithAList.class));
@@ -190,7 +190,7 @@ public class MongoTemplateTests {
 		assertThat(indexKey, is("{ \"age\" : -1}"));
 		assertThat(unique, is(true));
 		assertThat(dropDupes, is(true));
-		
+
 		List<IndexInfo> indexInfoList = template.indexOps(Person.class).getIndexInfo();
 		System.out.println(indexInfoList);
 		assertThat(indexInfoList.size(), is(2));
@@ -401,46 +401,49 @@ public class MongoTemplateTests {
 	private void checkCollectionContents(Class<?> entityClass, int count) {
 		assertThat(template.findAll(entityClass).size(), is(count));
 	}
-	
-	
+
+	/**
+	 * @see DATAMONGO-234
+	 */
 	@Test
 	public void testFindAndUpdate() {
+
 		template.insert(new Person("Tom", 21));
 		template.insert(new Person("Dick", 22));
 		template.insert(new Person("Harry", 23));
-		
+
 		Query query = new Query(Criteria.where("firstName").is("Harry"));
 		Update update = new Update().inc("age", 1);
-		Person p = template.findAndModify(query, update, Person.class);  // return old
+		Person p = template.findAndModify(query, update, Person.class); // return old
 		assertThat(p.getFirstName(), is("Harry"));
 		assertThat(p.getAge(), is(23));
 		p = template.findOne(query, Person.class);
-		assertThat(p.getAge(), is(24));		
-		
+		assertThat(p.getAge(), is(24));
+
 		p = template.findAndModify(query, update, Person.class, "person");
-		assertThat(p.getAge(), is(24));	
+		assertThat(p.getAge(), is(24));
 		p = template.findOne(query, Person.class);
-		assertThat(p.getAge(), is(25));	
-		
+		assertThat(p.getAge(), is(25));
+
 		p = template.findAndModify(query, update, new FindAndModifyOptions().returnNew(true), Person.class);
-		assertThat(p.getAge(), is(26));	
-		
+		assertThat(p.getAge(), is(26));
+
 		p = template.findAndModify(query, update, null, Person.class, "person");
 		assertThat(p.getAge(), is(26));
 		p = template.findOne(query, Person.class);
 		assertThat(p.getAge(), is(27));
-		
 	}
-	
+
 	@Test
 	public void testFindAndUpdateUpsert() {
 		template.insert(new Person("Tom", 21));
-		template.insert(new Person("Dick", 22));				
+		template.insert(new Person("Dick", 22));
 		Query query = new Query(Criteria.where("firstName").is("Harry"));
 		Update update = new Update().set("age", 23);
-		Person p = template.findAndModify(query, update, new FindAndModifyOptions().upsert(true).returnNew(true), Person.class);
+		Person p = template.findAndModify(query, update, new FindAndModifyOptions().upsert(true).returnNew(true),
+				Person.class);
 		assertThat(p.getFirstName(), is("Harry"));
-		assertThat(p.getAge(), is(23));		
+		assertThat(p.getAge(), is(23));
 	}
 
 	@Test
@@ -796,36 +799,32 @@ public class MongoTemplateTests {
 		assertThat(p4.getWishList().size(), is(1));
 		assertThat(p4.getFriends().size(), is(1));
 
-
 	}
 
-	
 	@Test
 	public void testFindOneWithSort() {
 		PersonWithAList p = new PersonWithAList();
 		p.setFirstName("Sven");
 		p.setAge(22);
 		template.insert(p);
-		
+
 		PersonWithAList p2 = new PersonWithAList();
 		p2.setFirstName("Erik");
 		p2.setAge(21);
 		template.insert(p2);
-		
+
 		PersonWithAList p3 = new PersonWithAList();
 		p3.setFirstName("Mark");
 		p3.setAge(40);
 		template.insert(p3);
-	
-		
-		//test query with a sort
+
+		// test query with a sort
 		Query q2 = new Query(Criteria.where("age").gt(10));
 		q2.sort().on("age", Order.DESCENDING);
 		PersonWithAList p5 = template.findOne(q2, PersonWithAList.class);
 		assertThat(p5.getFirstName(), is("Mark"));
 	}
-	
-	
+
 	@Test
 	public void testUsingReadPreference() throws Exception {
 		this.template.execute("readPref", new CollectionCallback<Object>() {
@@ -874,10 +873,10 @@ public class MongoTemplateTests {
 		assertThat(result.getId(), is(person.getId()));
 		assertThat(result.getFirstName(), is("Carter"));
 	}
-	
+
 	@Test
 	public void testWriteConcernResolver() {
-	
+
 		PersonWithIdPropertyOfTypeObjectId person = new PersonWithIdPropertyOfTypeObjectId();
 		person.setId(new ObjectId());
 		person.setFirstName("Dave");
@@ -888,7 +887,7 @@ public class MongoTemplateTests {
 				PersonWithIdPropertyOfTypeObjectId.class);
 		WriteConcern lastWriteConcern = result.getLastConcern();
 		assertThat(lastWriteConcern, equalTo(WriteConcern.NONE));
-	
+
 		FsyncSafeWriteConcernResolver resolver = new FsyncSafeWriteConcernResolver();
 		template.setWriteConcernResolver(resolver);
 		Query q = query(where("_id").is(person.getId()));
@@ -896,7 +895,7 @@ public class MongoTemplateTests {
 		result = template.updateFirst(q, u, PersonWithIdPropertyOfTypeObjectId.class);
 		lastWriteConcern = result.getLastConcern();
 		assertThat(lastWriteConcern, equalTo(WriteConcern.FSYNC_SAFE));
-		
+
 		MongoAction lastMongoAction = resolver.getMongoAction();
 		assertThat(lastMongoAction.getCollectionName(), is("personWithIdPropertyOfTypeObjectId"));
 		assertThat(lastMongoAction.getDefaultWriteConcern(), equalTo(WriteConcern.NONE));
@@ -905,24 +904,22 @@ public class MongoTemplateTests {
 		assertThat(lastMongoAction.getMongoActionOperation(), is(MongoActionOperation.UPDATE));
 		assertThat(lastMongoAction.getQuery(), equalTo(q.getQueryObject()));
 		assertThat(lastMongoAction.getDocument(), equalTo(u.getUpdateObject()));
-		
+
 	}
-	
+
 	private class FsyncSafeWriteConcernResolver implements WriteConcernResolver {
 
 		private MongoAction mongoAction;
-		
+
 		public WriteConcern resolve(MongoAction action) {
 			this.mongoAction = action;
 			return WriteConcern.FSYNC_SAFE;
 		}
-		
-		public MongoAction getMongoAction() { 
+
+		public MongoAction getMongoAction() {
 			return mongoAction;
 		}
 	}
-	
-	
 
 	/**
 	 * @see DATADOC-246
@@ -958,7 +955,7 @@ public class MongoTemplateTests {
 			}
 		});
 		assertEquals(3, names.size());
-		//template.remove(new Query(), Person.class);
+		// template.remove(new Query(), Person.class);
 	}
 
 	/**
@@ -986,7 +983,7 @@ public class MongoTemplateTests {
 
 		});
 		assertEquals(1, names.size());
-		//template.remove(new Query(), Person.class);
+		// template.remove(new Query(), Person.class);
 	}
 
 	/**
@@ -994,19 +991,19 @@ public class MongoTemplateTests {
 	 */
 	@Test
 	public void countsDocumentsCorrectly() {
-		
+
 		assertThat(template.count(new Query(), Person.class), is(0L));
-		
+
 		Person dave = new Person("Dave");
 		Person carter = new Person("Carter");
-		
+
 		template.save(dave);
 		template.save(carter);
-		
+
 		assertThat(template.count(null, Person.class), is(2L));
 		assertThat(template.count(query(where("firstName").is("Carter")), Person.class), is(1L));
 	}
-	
+
 	/**
 	 * @see DATADOC-183
 	 */
@@ -1014,7 +1011,7 @@ public class MongoTemplateTests {
 	public void countRejectsNullEntityClass() {
 		template.count(null, (Class<?>) null);
 	}
-	
+
 	/**
 	 * @see DATADOC-183
 	 */
@@ -1022,7 +1019,7 @@ public class MongoTemplateTests {
 	public void countRejectsEmptyCollectionName() {
 		template.count(null, "");
 	}
-	
+
 	/**
 	 * @see DATADOC-183
 	 */
@@ -1033,11 +1030,11 @@ public class MongoTemplateTests {
 
 	@Test
 	public void returnsEntityWhenQueryingForDateTime() {
-		
+
 		DateTime dateTime = new DateTime(2011, 3, 3, 12, 0, 0, 0);
 		TestClass testClass = new TestClass(dateTime);
 		mappingTemplate.save(testClass);
-		
+
 		List<TestClass> testClassList = mappingTemplate.find(new Query(Criteria.where("myDate").is(dateTime.toDate())),
 				TestClass.class);
 		assertThat(testClassList.size(), is(1));
@@ -1049,18 +1046,18 @@ public class MongoTemplateTests {
 	 */
 	@Test
 	public void removesEntityFromCollection() {
-		
+
 		template.remove(new Query(), "mycollection");
-		
+
 		Person person = new Person("Dave");
-		
+
 		template.save(person, "mycollection");
 		assertThat(template.findAll(TestClass.class, "mycollection").size(), is(1));
-		
+
 		template.remove(person, "mycollection");
 		assertThat(template.findAll(Person.class, "mycollection").isEmpty(), is(true));
 	}
-	
+
 	public class TestClass {
 
 		private DateTime myDate;
@@ -1085,7 +1082,7 @@ public class MongoTemplateTests {
 	}
 
 	static enum DateToDateTimeConverter implements Converter<Date, DateTime> {
-		
+
 		INSTANCE;
 
 		public DateTime convert(Date source) {

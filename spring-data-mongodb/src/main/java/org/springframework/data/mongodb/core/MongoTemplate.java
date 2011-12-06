@@ -61,7 +61,6 @@ import org.springframework.data.mongodb.core.geo.Distance;
 import org.springframework.data.mongodb.core.geo.GeoResult;
 import org.springframework.data.mongodb.core.geo.GeoResults;
 import org.springframework.data.mongodb.core.geo.Metric;
-import org.springframework.data.mongodb.core.index.IndexDefinition;
 import org.springframework.data.mongodb.core.index.MongoMappingEventPublisher;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexCreator;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
@@ -436,11 +435,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			}
 		});
 	}
-	
+
 	public IndexOperations indexOps(String collectionName) {
 		return new DefaultIndexOperations(this, collectionName);
 	}
-	
+
 	public IndexOperations indexOps(Class<?> entityClass) {
 		return new DefaultIndexOperations(this, determineCollectionName(entityClass));
 	}
@@ -1289,10 +1288,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			Class<T> entityClass, Update update, FindAndModifyOptions options) {
 
 		EntityReader<? super T, DBObject> readerToUse = this.mongoConverter;
-		
+
 		if (options == null) {
 			options = new FindAndModifyOptions();
-		}			
+		}
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
 
