@@ -391,6 +391,47 @@ public class MongoTemplateTests {
 	private void checkCollectionContents(Class<?> entityClass, int count) {
 		assertThat(template.findAll(entityClass).size(), is(count));
 	}
+	
+	
+	@Test
+	public void testFindAndUpdate() {
+		template.insert(new Person("Tom", 21));
+		template.insert(new Person("Dick", 22));
+		template.insert(new Person("Harry", 23));
+		
+		Query query = new Query(Criteria.where("firstName").is("Harry"));
+		Update update = new Update().inc("age", 1);
+		Person p = template.findAndModify(query, update, Person.class);  // return old
+		assertThat(p.getFirstName(), is("Harry"));
+		assertThat(p.getAge(), is(23));
+		p = template.findOne(query, Person.class);
+		assertThat(p.getAge(), is(24));		
+		
+		p = template.findAndModify(query, update, Person.class, "person");
+		assertThat(p.getAge(), is(24));	
+		p = template.findOne(query, Person.class);
+		assertThat(p.getAge(), is(25));	
+		
+		p = template.findAndModify(query, update, new FindAndModifyOptions().returnNew(true), Person.class);
+		assertThat(p.getAge(), is(26));	
+		
+		p = template.findAndModify(query, update, null, Person.class, "person");
+		assertThat(p.getAge(), is(26));
+		p = template.findOne(query, Person.class);
+		assertThat(p.getAge(), is(27));
+		
+	}
+	
+	@Test
+	public void testFindAndUpdateUpsert() {
+		template.insert(new Person("Tom", 21));
+		template.insert(new Person("Dick", 22));				
+		Query query = new Query(Criteria.where("firstName").is("Harry"));
+		Update update = new Update().set("age", 23);
+		Person p = template.findAndModify(query, update, new FindAndModifyOptions().upsert(true).returnNew(true), Person.class);
+		assertThat(p.getFirstName(), is("Harry"));
+		assertThat(p.getAge(), is(23));		
+	}
 
 	@Test
 	public void testFindAndRemove() throws Exception {

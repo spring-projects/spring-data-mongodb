@@ -521,18 +521,15 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	}
 
 	public <T> T findAndModify(Query query, Update update, Class<T> entityClass) {
-		// TODO Auto-generated method stub
-		return null;
+		return findAndModify(query, update, new FindAndModifyOptions(), entityClass, determineCollectionName(entityClass));
 	}
 
 	public <T> T findAndModify(Query query, Update update, Class<T> entityClass, String collectionName) {
-		// TODO Auto-generated method stub
-		return null;
+		return findAndModify(query, update, new FindAndModifyOptions(), entityClass, collectionName);
 	}
 
 	public <T> T findAndModify(Query query, Update update, FindAndModifyOptions options, Class<T> entityClass) {
-		// TODO Auto-generated method stub
-		return null;
+		return findAndModify(query, update, options, entityClass, determineCollectionName(entityClass));
 	}
 
 	public <T> T findAndModify(Query query, Update update, FindAndModifyOptions options, Class<T> entityClass,
@@ -1304,6 +1301,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			Class<T> entityClass, Update update, FindAndModifyOptions options) {
 
 		EntityReader<? super T, DBObject> readerToUse = this.mongoConverter;
+		
+		if (options == null) {
+			options = new FindAndModifyOptions();
+		}			
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
 

@@ -31,9 +31,20 @@ public class Person {
 		this.id = new ObjectId();
 	}
 
+	@Override
+	public String toString() {
+		return "Person [id=" + id + ", firstName=" + firstName + ", age=" + age + ", friend=" + friend + "]";
+	}
+
 	public Person(ObjectId id, String firstname) {
 		this.id = id;
 		this.firstName = firstname;
+	}
+	
+	public Person(String firstname, int age) {
+		this();
+		this.firstName = firstname;
+		this.age = age;
 	}
 
 	public Person(String firstname) {
