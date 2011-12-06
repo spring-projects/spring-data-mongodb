@@ -203,10 +203,10 @@ public class MongoApp {
     <para>This will produce the following output</para>
 
     <programlisting>10:01:32,062 DEBUG apping.MongoPersistentEntityIndexCreator:  80 - Analyzing class class org.spring.example.Person for index information.
-10:01:32,265 DEBUG work.data.mongodb.core.MongoTemplate: 631 - insert DBObject containing fields: [_class, age, name] in collection: Person
-10:01:32,765 DEBUG work.data.mongodb.core.MongoTemplate:1243 - findOne using query: { "name" : "Joe"} in db.collection: database.Person
+10:01:32,265 DEBUG ramework.data.mongodb.core.MongoTemplate: 631 - insert DBObject containing fields: [_class, age, name] in collection: Person
+10:01:32,765 DEBUG ramework.data.mongodb.core.MongoTemplate:1243 - findOne using query: { "name" : "Joe"} in db.collection: database.Person
 10:01:32,953  INFO      org.spring.mongodb.example.MongoApp:  25 - Person [id=4ddbba3c0be56b7e1b210166, name=Joe, age=34]
-10:01:32,984 DEBUG work.data.mongodb.core.MongoTemplate: 375 - Dropped collection [database.person]</programlisting>
+10:01:32,984 DEBUG ramework.data.mongodb.core.MongoTemplate: 375 - Dropped collection [database.person]</programlisting>
 
     <para>Even in this simple example, there are few things to take notice
     of</para>
@@ -250,11 +250,11 @@ public class MongoApp {
 
       <itemizedlist>
         <listitem>
-          <para>spring-data-mongodb-1.0.0.M4.jar</para>
+          <para>spring-data-mongodb-1.0.0.RC1.jar</para>
         </listitem>
 
         <listitem>
-          <para>spring-data-commons-1.2.0.M1.jar</para>
+          <para>spring-data-commons-1.2.0.RC1.jar</para>
         </listitem>
       </itemizedlist>
 
@@ -282,7 +282,7 @@ public class MongoApp {
         </listitem>
 
         <listitem>
-          <para>spring-beans-3.0.7.RELEASE.jar</para>
+          <para>spring-beans-3.0.6.RELEASE.jar</para>
         </listitem>
 
         <listitem>
