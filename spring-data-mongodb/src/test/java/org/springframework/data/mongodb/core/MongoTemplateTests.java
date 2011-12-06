@@ -428,6 +428,12 @@ public class MongoTemplateTests {
 		assertThat(p.getAge(), is(26));
 		p = template.findOne(query, Person.class);
 		assertThat(p.getAge(), is(27));
+		
+		Query query2 = new Query(Criteria.where("firstName").is("Mary"));
+		p = template.findAndModify(query2, update, new FindAndModifyOptions().returnNew(true).upsert(true), Person.class);
+		assertThat(p.getFirstName(), is("Mary"));
+		assertThat(p.getAge(), is(1));
+		
 	}
 
 	@Test
