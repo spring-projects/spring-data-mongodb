@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core.query;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -191,6 +192,10 @@ public class Criteria implements CriteriaDefinition {
 	 * @return
 	 */
 	public Criteria nin(Object... o) {
+		return nin(Arrays.asList(o));
+	}
+
+	public Criteria nin(Collection<?> o) {
 		criteria.put("$nin", o);
 		return this;
 	}
@@ -217,6 +222,10 @@ public class Criteria implements CriteriaDefinition {
 	 * @return
 	 */
 	public Criteria all(Object... o) {
+		return all(Arrays.asList(o));
+	}
+
+	public Criteria all(Collection<?> o) {
 		criteria.put("$all", o);
 		return this;
 	}
