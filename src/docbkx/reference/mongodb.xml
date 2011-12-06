@@ -302,7 +302,7 @@ public class MongoApp {
        
     </section>
 
-    <section>
+    <section id="mongo.migrate-m2-m3">
       <title>Migrating from M2 to M3</title>
 
       <para>There were several API changes introduced in the M3 release. To
@@ -356,7 +356,7 @@ public class MongoApp {
     </section>
   </section>
 
-  <section>
+  <section id="mongo.examples-repo">
     <title>Examples Repository</title>
 
     <para>There is an <ulink
@@ -382,7 +382,7 @@ public class MongoApp {
         here</ulink>.</para>
       </note></para>
 
-    <section>
+    <section id="mongo.mongo-java-config">
       <title>Registering a Mongo instance using Java based metadata</title>
 
       <para>An example of using Java based bean metadata to register an
@@ -455,7 +455,7 @@ public class AppConfig {
       </example>
     </section>
 
-    <section>
+    <section id="mongo.mongo-xml-config">
       <title>Registering a Mongo instance using XML based metadata</title>
 
       <para>While you can use Spring's traditional
@@ -527,7 +527,7 @@ public class AppConfig {
         </example></para>
     </section>
 
-    <section>
+    <section id="mongo.mongo-db-factory">
       <title>The MongoDbFactory interface</title>
 
       <para>While <classname>com.mongodb.Mongo</classname> is the entry point
@@ -587,7 +587,7 @@ public class AppConfig {
       section</link>.</para>
     </section>
 
-    <section>
+    <section id="mongo.mongo-db-factory-java">
       <title>Registering a MongoDbFactory instance using Java based
       metadata</title>
 
@@ -627,7 +627,7 @@ public class MongoConfiguration {
       <para></para>
     </section>
 
-    <section>
+    <section id="mongo.mongo-db-factory-xml">
       <title>Registering a MongoDbFactory instance using XML based
       metadata</title>
 
@@ -908,22 +908,22 @@ public class AppConfig {
         INSERT_LIST, SAVE) and a few other pieces of contextual information.
         For example,</para>
 
-        <programlisting>	private class MyAppWriteConcernResolver implements WriteConcernResolver {
+        <programlisting>private class MyAppWriteConcernResolver implements WriteConcernResolver {
 
-		public WriteConcern resolve(MongoAction action) {
-			if (action.getEntityClass().getSimpleName().contains("Audit")) {
-				return WriteConcern.NONE;
-			} else if (action.getEntityClass().getSimpleName().contains("Metadata")) {
-				return WriteConcern.JOURNAL_SAFE;
-			}
-			return action.getDefaultWriteConcern();
-		}		
-	}</programlisting>
+  public WriteConcern resolve(MongoAction action) {
+    if (action.getEntityClass().getSimpleName().contains("Audit")) {
+      return WriteConcern.NONE;
+    } else if (action.getEntityClass().getSimpleName().contains("Metadata")) {
+      return WriteConcern.JOURNAL_SAFE;
+    }
+    return action.getDefaultWriteConcern();
+  }
+}</programlisting>
       </section>
     </section>
   </section>
 
-  <section>
+  <section id="mongo-template.save-update-remove">
     <title>Saving, Updating, and Removing Documents</title>
 
     <para><classname>MongoTemplate</classname> provides a simple way for you
@@ -1048,7 +1048,7 @@ DEBUG work.data.mongodb.core.MongoTemplate: 376 - Dropped collection [database.p
     <para>The query stynax used in the example is explained in more detail in
     the section <link linkend="mongo.query">Querying Documents</link>.</para>
 
-    <section>
+    <section id="mongo-template.id-handling">
       <title>How the '_id' field is handled in the mapping layer</title>
 
       <para>MongoDB requires that you have an '_id' field for all documents.
@@ -1084,17 +1084,20 @@ DEBUG work.data.mongodb.core.MongoTemplate: 376 - Dropped collection [database.p
       <itemizedlist>
         <listitem>
           <para>An id property or field declared as a String in the Java class
-          will be converted to and stored as an ObjectId if possible using a
-          Spring Converter&lt;String, ObjectId&gt;. Valid conversion rules are
-          delegated to the MongoDB Java driver. If it cannot be converted to
-          an ObjectId, then the value will be stored as a string in the
-          database.</para>
+          will be converted to and stored as an
+          <classname>ObjectId</classname> if possible using a Spring
+          <interfacename>Converter&lt;String, ObjectId&gt;</interfacename>.
+          Valid conversion rules are delegated to the MongoDB Java driver. If it
+          cannot be converted to an ObjectId, then the value will be stored as
+          a string in the database.</para>
         </listitem>
 
         <listitem>
-          <para>An id property or field declared as BigInteger in the Java
-          class will be converted to and stored as an ObjectId using a Spring
-          Converter&lt;BigInteger, ObjectId&gt;.</para>
+          <para>An id property or field declared as
+          <classname>BigInteger</classname> in the Java class will be
+          converted to and stored as an <classname>ObjectId</classname> using
+          a Spring <interfacename>Converter&lt;BigInteger,
+          ObjectId&gt;</interfacename>.</para>
         </listitem>
       </itemizedlist>
 
@@ -1110,15 +1113,16 @@ DEBUG work.data.mongodb.core.MongoTemplate: 376 - Dropped collection [database.p
       domain classes.</para>
     </section>
 
-    <section>
+    <section id="mongo-template.save-insert">
       <title>Methods for saving and inserting documents</title>
 
       <para>There are several convenient methods on
       <classname>MongoTemplate</classname> for saving and inserting your
       objects. To have more fine grained control over the conversion process
-      you can register Spring converters with the MappingMongoConverter, for
-      example Converter&lt;Person, DBObject&gt; and Converter&lt;DBObject,
-      Person&gt;.</para>
+      you can register Spring converters with the
+      <classname>MappingMongoConverter</classname>, for example
+      <interfacename>Converter&lt;Person, DBObject&gt;</interfacename> and
+      <interfacename>Converter&lt;DBObject, Person&gt;</interfacename>.</para>
 
       <note>
         <para>The difference between insert and save operations is that a save
@@ -1149,13 +1153,12 @@ DEBUG work.data.mongodb.core.MongoTemplate: 376 - Dropped collection [database.p
         <programlisting language="java">import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Criteria.query;
 
-    ...
+…
 
-    Person p = new Person("Bob", 33);
-    mongoTemplate.insert(p);
+Person p = new Person("Bob", 33);
+mongoTemplate.insert(p);
 
-    Person qp = mongoTemplate.findOne(query(where("age").is(33)), Person.class);
-        </programlisting>
+Person qp = mongoTemplate.findOne(query(where("age").is(33)), Person.class);        </programlisting>
       </example>
 
       <para>The insert/save operations available to you are listed
@@ -1191,7 +1194,7 @@ import static org.springframework.data.mongodb.core.query.Criteria.query;
           </listitem>
         </itemizedlist></para>
 
-      <section>
+      <section id="mongo-template.save-insert.collection">
         <title>Which collection will my documents be saved into?</title>
 
         <para>There are two ways to manage the collection name that is used
@@ -1204,7 +1207,7 @@ import static org.springframework.data.mongodb.core.query.Criteria.query;
         parameter for the selected MongoTemplate method calls.</para>
       </section>
 
-      <section>
+      <section id="mongo-template.save-insert.individual">
         <title>Inserting or saving individual objects</title>
 
         <para>The MongoDB driver supports inserting a collection of documents
@@ -1233,7 +1236,7 @@ import static org.springframework.data.mongodb.core.query.Criteria.query;
           </itemizedlist></para>
       </section>
 
-      <section>
+      <section id="mongo-template.save-insert.batch">
         <title>Inserting several objects in a batch</title>
 
         <para>The MongoDB driver supports inserting a collection of documents
@@ -1286,7 +1289,7 @@ import static org.springframework.data.mongodb.core.query.Update;
       <classname>Update</classname> object to provide a fluent style for the
       API.</para>
 
-      <section>
+      <section id="mongodb-template-update.methods">
         <title>Methods for executing updates for documents</title>
 
         <para><itemizedlist>
@@ -1302,11 +1305,9 @@ import static org.springframework.data.mongodb.core.query.Update;
               updated document.</para>
             </listitem>
           </itemizedlist></para>
-
-        <para></para>
       </section>
 
-      <section>
+      <section id="mongodb-template-update.update">
         <title>Methods for the Update class</title>
 
         <para>The Update class can be used with a little 'syntax sugar' as its
@@ -1386,7 +1387,7 @@ import static org.springframework.data.mongodb.core.query.Update;
       </section>
     </section>
 
-    <section>
+    <section id="mongo-template.upserts">
       <title>Upserting documents in a collection</title>
 
       <para>Related to perfomring an <methodname>updateFirst</methodname>
@@ -1446,7 +1447,7 @@ assertThat(p.getFirstName(), is("Mary"));
 assertThat(p.getAge(), is(1));</programlisting>
     </section>
 
-    <section>
+    <section id="mongo-template.delete">
       <title>Methods for removing documents</title>
 
       <para>You can use several overloaded methods to remove an object from
@@ -1528,7 +1529,7 @@ import static org.springframework.data.mongodb.core.query.Query.query;
       <classname>Criteria</classname> object to provide a fluent style for the
       API.</para>
 
-      <section>
+      <section id="mongodb-template-query.criteria">
         <title>Methods for the Criteria class</title>
 
         <para>
@@ -1677,7 +1678,7 @@ import static org.springframework.data.mongodb.core.query.Query.query;
       </section>
 
       <para>There are also methods on the Criteria class for geospatial
-      queries. Here is al isting but look at the section on <link
+      queries. Here is a listing but look at the section on <link
       linkend="mongo.geospatial">GeoSpatial Queries</link> to see them in
       action.</para>
 
@@ -1727,7 +1728,7 @@ import static org.springframework.data.mongodb.core.query.Query.query;
       <para>The <classname>Query</classname> class has some additional methods
       used to provide options for the query.</para>
 
-      <section>
+      <section id="mongodb-template-query.query">
         <title>Methods for the Query class</title>
 
         <para>
@@ -1768,7 +1769,7 @@ import static org.springframework.data.mongodb.core.query.Query.query;
       </section>
     </section>
 
-    <section>
+    <section id="mongo-template.querying">
       <title>Methods for querying for documents</title>
 
       <para>The query methods need to specify the target type T that will be
@@ -2019,7 +2020,7 @@ public class ValueObject {
   private String id;
 
   private float value;
-	
+
   public String getId() {
     return id;
   }
@@ -2036,9 +2037,7 @@ public class ValueObject {
   public String toString() {
     return "ValueObject [id=" + id + ", value=" + value + "]";
   }
-	
-}
-</programlisting> By default the output type of INLINE is used so you don't
+}</programlisting> By default the output type of INLINE is used so you don't
       have to specify an output collection. To specify additional map-reduce
       options use an overloaded method that takes an additional
       <classname>MapReduceOptions</classname> argument. The class
@@ -2046,24 +2045,21 @@ public class ValueObject {
       additional options can be done in a very compact syntax. Here an example
       that sets the output collection to "jmr1_out". Note that setting only
       the output collection assumes a default output type of REPLACE.
-      <programlisting language="java">
-MapReduceResults&lt;ValueObject&gt; results = mongoOperations.mapReduce("jmr1", "classpath:map.js", "classpath:reduce.js", 
-                                                                     new MapReduceOptions().outputCollection("jmr1_out"), ValueObject.class);
-	</programlisting> There is also a static import <literal>import static
+      <programlisting language="java">MapReduceResults&lt;ValueObject&gt; results = mongoOperations.mapReduce("jmr1", "classpath:map.js", "classpath:reduce.js", 
+                                                                     new MapReduceOptions().outputCollection("jmr1_out"), ValueObject.class);</programlisting>
+      There is also a static import <literal>import static
       org.springframework.data.mongodb.core.mapreduce.MapReduceOptions.options;</literal>
       that can be used to make the syntax slightly more compact
-      <programlisting language="java">
-MapReduceResults&lt;ValueObject&gt; results = mongoOperations.mapReduce("jmr1", "classpath:map.js", "classpath:reduce.js", 
-                                                                     options().outputCollection("jmr1_out"), ValueObject.class);
-	</programlisting> You can also specify a query to reduce the set of data that
-      will be used to feed into the map-reduce operation. This will remove the
-      document that contains [a,b] from consideration for map-reduce
-      operations. <programlisting language="java">
-Query query = new Query(where("x").ne(new String[] { "a", "b" }));
+      <programlisting language="java">MapReduceResults&lt;ValueObject&gt; results = mongoOperations.mapReduce("jmr1", "classpath:map.js", "classpath:reduce.js", 
+                                                                     options().outputCollection("jmr1_out"), ValueObject.class);</programlisting>
+      You can also specify a query to reduce the set of data that will be used
+      to feed into the map-reduce operation. This will remove the document
+      that contains [a,b] from consideration for map-reduce operations.
+      <programlisting language="java">Query query = new Query(where("x").ne(new String[] { "a", "b" }));
 MapReduceResults&lt;ValueObject&gt; results = mongoOperations.mapReduce(query, "jmr1", "classpath:map.js", "classpath:reduce.js", 
-                                                                     options().outputCollection("jmr1_out"), ValueObject.class);
-	</programlisting> Note that you can specify additional limit and sort values
-      as well on the query but not skip values.</para>
+                                                                     options().outputCollection("jmr1_out"), ValueObject.class);</programlisting>
+      Note that you can specify additional limit and sort values as well on
+      the query but not skip values.</para>
     </section>
   </section>
 
@@ -2092,7 +2088,7 @@ MapReduceResults&lt;ValueObject&gt; results = mongoOperations.mapReduce(query, "
     strings in your code. Note that you can still pass JavaScript code as Java
     strings if you prefer.</para>
 
-    <section>
+    <section id="mongo.group.example">
       <title>Example Usage</title>
 
       <para>In order to understand how group operations work the following
@@ -2143,38 +2139,33 @@ MapReduceResults&lt;ValueObject&gt; results = mongoOperations.mapReduce(query, "
       argument in the group method, in this case XObject which is shown
       below.</para>
 
-      <programlisting>public class XObject {
+      <programlisting language="java">public class XObject {
 
-	private float x;
-	
-	private float count;
+  private float x;
 
-
-	public float getX() {
-		return x;
-	}
+  private float count;
 
 
-	public void setX(float x) {
-		this.x = x;
-	}
+  public float getX() {
+    return x;
+  }
 
+  public void setX(float x) {
+    this.x = x;
+  }
 
-	public float getCount() {
-		return count;
-	}
+  public float getCount() {
+    return count;
+  }
 
+  public void setCount(float count) {
+    this.count = count;
+  }
 
-	public void setCount(float count) {
-		this.count = count;
-	}
-
-
-	@Override
-	public String toString() {
-		return "XObject [x=" + x + " count = " + count + "]";
-	}
-	
+  @Override
+  public String toString() {
+    return "XObject [x=" + x + " count = " + count + "]";
+  }
 }</programlisting>
 
       <para>You can also obtain tha raw result as a
@@ -2199,7 +2190,7 @@ GroupByResults&lt;XObject&gt; results = mongoTemplate.group(where("x").gt(0),
     </section>
   </section>
 
-  <section>
+  <section id="mongo.custom-converters">
     <title>Overriding default mapping with custom converters</title>
 
     <para>In order to have more fine grained control over the mapping process
@@ -2222,7 +2213,7 @@ GroupByResults&lt;XObject&gt; results = mongoTemplate.group(where("x").gt(0),
       url="http://static.springsource.org/spring/docs/3.0.x/reference/validation.html#core-convert">here</ulink>.</para>
     </note>
 
-    <section>
+    <section id="mongo.custom-converters.writer">
       <title>Saving using a registered Spring Converter</title>
 
       <para>An example implementation of the
@@ -2244,11 +2235,10 @@ public class PersonWriteConverter implements Converter&lt;Person, DBObject&gt; {
     dbo.put("age", source.getAge());
     return dbo;
   }
-
 }</programlisting>
     </section>
 
-    <section>
+    <section id="mongo.custom-converters.reader">
       <title>Reading using a Spring Converter</title>
 
       <para>An example implemention of a Converter that converts from a
@@ -2261,11 +2251,10 @@ public class PersonWriteConverter implements Converter&lt;Person, DBObject&gt; {
     p.setAge((Integer) source.get("age"));
     return p;
   }
-
 }</programlisting>
     </section>
 
-    <section>
+    <section id="mongo.custom-converters.xml">
       <title>Registering Spring Converters with the MongoConverter</title>
 
       <para>The mongo XSD namespace provides a convenience way to register
@@ -2293,7 +2282,7 @@ public class PersonWriteConverter implements Converter&lt;Person, DBObject&gt; {
     </section>
   </section>
 
-  <section>
+  <section id="mongo-template.index-and-collections">
     <title>Index and Collection managment</title>
 
     <para><classname>MongoTemplate</classname> provides a few methods for
@@ -2322,7 +2311,7 @@ public class PersonWriteConverter implements Converter&lt;Person, DBObject&gt; {
 
 }</programlisting>
 
-    <section>
+    <section id="mongo-template.index-and-collections.index">
       <title>Methods for creating an Index</title>
 
       <para>We can create an index on a collection to improve query
@@ -2351,7 +2340,7 @@ public class PersonWriteConverter implements Converter&lt;Person, DBObject&gt; {
       <programlisting language="java">mongoTemplate.indexOps(Venue.class).ensureIndex(new GeospatialIndex("location"));</programlisting>
     </section>
 
-    <section>
+    <section id="mongo-template.index-and-collections.access">
       <title>Accessing index information</title>
 
       <para>The IndexOperations interface has the method getIndexInfo that
@@ -2369,7 +2358,7 @@ List&lt;IndexInfo&gt; indexInfoList = template.indexOps(Person.class).getIndexIn
 </programlisting>
     </section>
 
-    <section>
+    <section id="mongo-template.index-and-collections.collection">
       <title>Methods for working with a Collection</title>
 
       <para>It's time to look at some code examples showing how to use the
@@ -2416,15 +2405,16 @@ mongoTemplate.dropCollection("MyNewCollection");        </programlisting>
     </section>
   </section>
 
-  <section>
+  <section id="mongo-template.commands">
     <title>Executing Commands</title>
 
     <para>You can also get at the MongoDB driver's <classname>DB.command(
-    )</classname> method using the executeCommand methods on MongoTemplate.
-    These will also perform exception translation into Spring's Data Access
-    Exception hierarchy.</para>
+    )</classname> method using the <methodname>executeCommand(…)</methodname>
+    methods on <classname>MongoTemplate</classname>. These will also perform
+    exception translation into Spring's
+    <classname>DataAccessException</classname> hierarchy.</para>
 
-    <section>
+    <section id="mongo-template.commands.execution">
       <title>Methods for executing commands</title>
 
       <para><itemizedlist>
@@ -2528,7 +2518,7 @@ mongoTemplate.dropCollection("MyNewCollection");        </programlisting>
     </itemizedlist>
   </section>
 
-  <section id="mongo.exception" label="">
+  <section id="mongo.exception">
     <title>Exception Translation</title>
 
     <para>The Spring framework provides exception translation for a wide
@@ -2551,15 +2541,16 @@ mongoTemplate.dropCollection("MyNewCollection");        </programlisting>
     MongoDB driver inherit from the MongoException class. The inner exception
     and message are preserved so no information is lost.</para>
 
-    <para>Some of the mappings performed by the MongoExceptionTranslator are:
-    com.mongodb.Network to DataAccessResourceFailureException and
-    MongoException error codes 1003, 12001, 12010, 12011, 12012 to
-    InvalidDataAccessApiUsageException. Look into the implementation for more
-    details on the mapping.</para>
+    <para>Some of the mappings performed by the
+    <classname>MongoExceptionTranslator</classname> are: com.mongodb.Network
+    to DataAccessResourceFailureException and
+    <classname>MongoException</classname> error codes 1003, 12001, 12010,
+    12011, 12012 to <classname>InvalidDataAccessApiUsageException</classname>.
+    Look into the implementation for more details on the mapping.</para>
   </section>
 
   <section id="mongo.executioncallback">
-    <title>Execution Callback</title>
+    <title>Execution callbacks</title>
 
     <para>One common design feature of all Spring template classes is that all
     functionality is routed into one of the templates execute callback
@@ -2568,7 +2559,8 @@ mongoTemplate.dropCollection("MyNewCollection");        </programlisting>
     greater need in the case of JDBC and JMS than with MongoDB, it still
     offers a single spot for exception translation and logging to occur. As
     such, using thexe execute callback is the preferred way to access the
-    MongoDB driver's DB and Collection objects to perform uncommon operations
+    MongoDB driver's <classname>DB</classname> and
+    <classname>DBCollection</classname> objects to perform uncommon operations
     that were not exposed as methods on
     <classname>MongoTemplate</classname>.</para>
 
@@ -2614,19 +2606,20 @@ mongoTemplate.dropCollection("MyNewCollection");        </programlisting>
         </listitem>
       </itemizedlist></para>
 
-    <para>Here is an example that uses the CollectionCallback to return
-    information about an index.</para>
+    <para>Here is an example that uses the
+    <interfacename>CollectionCallback</interfacename> to return information
+    about an index</para>
 
-    <programlisting language="java">    boolean hasIndex = template.execute("geolocation", new CollectionCallback&lt;Boolean&gt;() {
-      public Boolean doInCollection(Venue.class, DBCollection collection) throws MongoException, DataAccessException {
-        List&lt;DBObject&gt; indexes = collection.getIndexInfo();
-        for (DBObject dbo : indexes) {
-          if ("location_2d".equals(dbo.get("name"))) {
-            return true;
-          }
-        }
-        return false;
+    <programlisting language="java">boolean hasIndex = template.execute("geolocation", new CollectionCallbackBoolean&gt;() {
+  public Boolean doInCollection(Venue.class, DBCollection collection) throws MongoException, DataAccessException {
+    List&lt;DBObject&gt; indexes = collection.getIndexInfo();
+    for (DBObject dbo : indexes) {
+      if ("location_2d".equals(dbo.get("name"))) {
+        return true;
       }
-    });</programlisting>
+    }
+    return false;
+  }
+});</programlisting>
   </section>
 </chapter>
