@@ -1,6 +1,67 @@
 Spring Data Document Changelog
 =============================================
 
+Changes in version 1.0.0.RC1 MongoDB (2011-12-6)
+------------------------------------------------
+
+
+** Bug
+    * [DATAMONGO-199] - Synchronisation during performance tests
+    * [DATAMONGO-298] - Spring custom converters do not work for subclasses of java.lang.Number
+    * [DATAMONGO-306] - NullPointerException if mongo factory created via URI with out credentials
+    * [DATAMONGO-309] - POJO containing a List of Maps not persisting properly
+    * [DATAMONGO-312] - Cannot retrieve persisted Enum implementing an abstract method
+    * [DATAMONGO-315] - MongoTemplate.findOne(query) methods ignore SortOrder on query
+    * [DATAMONGO-316] - Replica Set configuration via properties file throws ArrayIndexOutOfBoundsException
+    * [DATAMONGO-318] - Distinguishing write errors and writes with zero documents affected
+    * [DATAMONGO-321] - An ID field of type integer is always saved as zero if not set by the user before calling save.  Throw exception to indicate an int field will not be autopopulated.
+    * [DATAMONGO-322] - Throw exception in a save operation if the POJO's ID field is null and field type is not String, BigInteger or ObjectId.
+    * [DATAMONGO-325] - MongoTemplate fails to correctly report a js file not found on classpath while calling mapReduce
+    * [DATAMONGO-328] - Fix the import statement in mongodb manifest
+    * [DATAMONGO-329] - Map value not converted correctly
+    * [DATAMONGO-333] - AbstractMongoEventListener throws NullPointerException if used without generic parameter
+
+
+
+** Improvement
+    * [DATAMONGO-26] - Investigate performance of POJO serialization.
+    * [DATAMONGO-174] - Add additional constructor to MongoTemplate that take com.mongodb.Mongo, database name, user credentials and MongoConverter.
+    * [DATAMONGO-208] - Add suppoprt for group() operation on collection in MongoOperations
+    * [DATAMONGO-213] - Provide additional options for setting WriteConcern on a per operation basis
+    * [DATAMONGO-234] - MongoTemplate should support the findAndModify operation to update version fields
+    * [DATAMONGO-292] - Several mongo for different database names
+    * [DATAMONGO-301] - Allow converters to be included through scanning
+    * [DATAMONGO-305] - Remove synchronized(this) from sort() and fields() methods in the Query class
+    * [DATAMONGO-310] - Allow Collections as parameters in @Query
+    * [DATAMONGO-320] - Remove use of slaveOk boolean option in MongoTemplate as it is deprecated.  Replace with ReadPreference
+    * [DATAMONGO-323] - Using @Query and a Sort parameter on the same method should produce sorted results
+    * [DATAMONGO-324] - Support for JSON in mongo template
+    * [DATAMONGO-337] - The "nin" and "all" methods on Criteria should take a collection like the "in" method.
+    * [DATAMONGO-338] - Add query derivation implementations for newly introduced Regex, Exists, True and False keywords
+
+** New Feature
+    * [DATAMONGO-185] - Add hint to Query
+    * [DATAMONGO-251] - Support geting index information on a collection or mapped class.
+    * [DATAMONGO-308] - Add support for upsert methods
+
+
+** Refactoring
+    * [DATAMONGO-304] - Change package name for Class MongoLog4jAppender
+    * [DATAMONGO-313] - Use MongoOperations interface instead of MongoTemplate class
+
+
+
+** Task
+    * [DATAMONGO-195] - Add description of @Field mapping annotation to reference docs
+    * [DATAMONGO-262] - Ensure Cloud Foundry Runtime works with RC1
+    * [DATAMONGO-263] - Ensure Cloud Foundry Examples work with RC1
+    * [DATAMONGO-311] - Update MongoDB driver to v 2.7.x
+    * [DATAMONGO-332] - Update reference documentation to list correct necessary dependencies
+    * [DATAMONGO-334] - Use repository URLs pointing to Artifactory
+    * [DATAMONGO-335] - Create hybrid Spring 3.0.6 / 3.1 build
+
+
+
 Changes in version 1.0.0.M5 MongoDB (2011-10-24)
 ------------------------------------------------
 
