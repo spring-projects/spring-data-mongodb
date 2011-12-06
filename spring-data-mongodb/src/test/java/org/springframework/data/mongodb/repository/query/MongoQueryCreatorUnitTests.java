@@ -66,9 +66,9 @@ public class MongoQueryCreatorUnitTests {
 
 	@Before
 	public void setUp() throws SecurityException, NoSuchMethodException {
-		
+
 		context = new MongoMappingContext();
-		
+
 		doAnswer(new Answer<Object>() {
 			public Object answer(InvocationOnMock invocation) throws Throwable {
 				return invocation.getArguments()[0];
@@ -151,16 +151,64 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	/**
-	 * DATADOC-291
+	 * @see DATAMONGO-291
 	 */
 	@Test
 	public void honoursMappingInformationForPropertyPaths() {
 
 		PartTree partTree = new PartTree("findByUsername", User.class);
-		
+
 		MongoQueryCreator creator = new MongoQueryCreator(partTree, getAccessor(converter, "Oliver"), context);
 		Query reference = query(where("foo").is("Oliver"));
 		assertThat(creator.createQuery().getQueryObject(), is(reference.getQueryObject()));
+	}
+
+	/**
+	 * @see DATAMONGO-338
+	 */
+	@Test
+	public void createsExistsClauseCorrectly() {
+
+		PartTree tree = new PartTree("findByAgeExists", Person.class);
+		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, true), context);
+		Query query = query(where("age").exists(true));
+		assertThat(creator.createQuery().getQueryObject(), is(query.getQueryObject()));
+	}
+
+	/**
+	 * @see DATAMONGO-338
+	 */
+	@Test
+	public void createsRegexClauseCorrectly() {
+
+		PartTree tree = new PartTree("findByFirstNameRegex", Person.class);
+		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, ".*"), context);
+		Query query = query(where("firstName").regex(".*"));
+		assertThat(creator.createQuery().getQueryObject(), is(query.getQueryObject()));
+	}
+
+	/**
+	 * @see DATAMONGO-338
+	 */
+	@Test
+	public void createsTrueClauseCorrectly() {
+
+		PartTree tree = new PartTree("findByActiveTrue", Person.class);
+		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter), context);
+		Query query = query(where("active").is(true));
+		assertThat(creator.createQuery().getQueryObject(), is(query.getQueryObject()));
+	}
+
+	/**
+	 * @see DATAMONGO-338
+	 */
+	@Test
+	public void createsFalseClauseCorrectly() {
+
+		PartTree tree = new PartTree("findByActiveFalse", Person.class);
+		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter), context);
+		Query query = query(where("active").is(false));
+		assertThat(creator.createQuery().getQueryObject(), is(query.getQueryObject()));
 	}
 
 	private void assertBindsDistanceToQuery(Point point, Distance distance, Query reference) throws Exception {
@@ -185,9 +233,9 @@ public class MongoQueryCreatorUnitTests {
 
 		List<Person> findByLocationNearAndFirstname(Point location, Distance maxDistance, String firstname);
 	}
-	
+
 	class User {
-		
+
 		@Field("foo")
 		String username;
 	}

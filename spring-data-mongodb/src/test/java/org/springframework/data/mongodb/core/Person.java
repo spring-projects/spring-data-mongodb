@@ -27,6 +27,8 @@ public class Person {
 
 	private Person friend;
 
+	private boolean active = true;
+
 	public Person() {
 		this.id = new ObjectId();
 	}
@@ -78,6 +80,13 @@ public class Person {
 
 	public void setFriend(Person friend) {
 		this.friend = friend;
+	}
+
+	/**
+	 * @return the active
+	 */
+	public boolean isActive() {
+		return active;
 	}
 
 	/*

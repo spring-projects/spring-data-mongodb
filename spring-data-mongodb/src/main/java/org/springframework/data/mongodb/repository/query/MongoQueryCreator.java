@@ -134,7 +134,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Query> {
 	*/
 	@Override
 	protected Query or(Query base, Query query) {
-		return new OrQuery(new Query[] {base, query});
+		return new OrQuery(new Query[] { base, query });
 	}
 
 	/*
@@ -192,6 +192,14 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Query> {
 		case LIKE:
 			String value = parameters.next().toString();
 			return criteria.regex(toLikeRegex(value));
+		case REGEX:
+			return criteria.regex(parameters.next().toString());
+		case EXISTS:
+			return criteria.exists((Boolean) parameters.next());
+		case TRUE:
+			return criteria.is(true);
+		case FALSE:
+			return criteria.is(false);
 		case NEAR:
 
 			Distance distance = accessor.getMaxDistance();
