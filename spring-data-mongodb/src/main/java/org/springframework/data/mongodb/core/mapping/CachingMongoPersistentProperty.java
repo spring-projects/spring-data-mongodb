@@ -53,7 +53,7 @@ public class CachingMongoPersistentProperty extends BasicMongoPersistentProperty
 		if (this.isIdProperty == null) {
 			this.isIdProperty = super.isIdProperty();
 		}
-		
+
 		return this.isIdProperty;
 	}
 
@@ -67,7 +67,7 @@ public class CachingMongoPersistentProperty extends BasicMongoPersistentProperty
 		if (this.fieldName == null) {
 			this.fieldName = super.getFieldName();
 		}
-		
-		return super.getFieldName();
+
+		return this.fieldName;
 	}
 }
