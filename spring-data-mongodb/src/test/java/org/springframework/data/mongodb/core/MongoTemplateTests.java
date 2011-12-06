@@ -39,7 +39,6 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.dao.DataAccessException;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.data.mongodb.MongoDbFactory;
@@ -145,7 +144,7 @@ public class MongoTemplateTests {
 	}
 
 	@Test
-	public void updateFailure() throws Exception {
+	public void bogusUpdateDoesNotTriggerException() throws Exception {
 
 		MongoTemplate mongoTemplate = new MongoTemplate(factory);
 		mongoTemplate.setWriteResultChecking(WriteResultChecking.EXCEPTION);
@@ -156,10 +155,7 @@ public class MongoTemplateTests {
 
 		Query q = new Query(Criteria.where("BOGUS").gt(22));
 		Update u = new Update().set("firstName", "Sven");
-		thrown.expect(DataIntegrityViolationException.class);
-		thrown.expectMessage(endsWith("0 documents updated"));
 		mongoTemplate.updateFirst(q, u, Person.class);
-
 	}
 
 	@Test

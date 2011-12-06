@@ -1468,27 +1468,24 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * Current implementation logs errors. Future version may make this configurable to log warning, errors or throw
 	 * exception.
 	 */
-	private void handleAnyWriteResultErrors(WriteResult wr, DBObject query, String operation) {
+	protected void handleAnyWriteResultErrors(WriteResult wr, DBObject query, String operation) {
+
 		if (WriteResultChecking.NONE == this.writeResultChecking) {
 			return;
 		}
+
 		String error = wr.getError();
-		int n = wr.getN();
+
 		if (error != null) {
-			String message = "Execution of '" + operation + (query == null ? "" : "' using '" + query.toString() + "' query")
-					+ " failed: " + error;
+
+			String message = String.format("Execution of %s%s failed: %s", operation, query == null ? "" : "' using '"
+					+ query.toString() + "' query", error);
+
 			if (WriteResultChecking.EXCEPTION == this.writeResultChecking) {
 				throw new DataIntegrityViolationException(message);
 			} else {
 				LOGGER.error(message);
-			}
-		} else if (n == 0) {
-			String message = "Execution of '" + operation + (query == null ? "" : "' using '" + query.toString() + "' query")
-					+ " did not succeed: 0 documents updated";
-			if (WriteResultChecking.EXCEPTION == this.writeResultChecking) {
-				throw new DataIntegrityViolationException(message);
-			} else {
-				LOGGER.warn(message);
+				return;
 			}
 		}
 	}
