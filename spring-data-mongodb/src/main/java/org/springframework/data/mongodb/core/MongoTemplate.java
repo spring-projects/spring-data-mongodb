@@ -490,6 +490,14 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 	public <T> GeoResults<T> geoNear(NearQuery near, Class<T> entityClass, String collectionName) {
 
+		if (near == null) {
+			throw new InvalidDataAccessApiUsageException("NearQuery must not be null!");
+		}
+
+		if (entityClass == null) {
+			throw new InvalidDataAccessApiUsageException("Entity class must not be null!");
+		}
+
 		String collection = StringUtils.hasText(collectionName) ? collectionName : determineCollectionName(entityClass);
 		BasicDBObject command = new BasicDBObject("geoNear", collection);
 		command.putAll(near.toDBObject());

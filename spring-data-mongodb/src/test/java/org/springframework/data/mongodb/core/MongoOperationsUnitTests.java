@@ -30,8 +30,10 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.convert.AbstractMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.core.geo.Point;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.mongodb.core.query.NearQuery;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
@@ -286,6 +288,66 @@ public abstract class MongoOperationsUnitTests {
 			@Override
 			public void doWith(MongoOperations operations) {
 				operations.insert(persons, "collection");
+			}
+		}.assertDataAccessException();
+	}
+
+	/**
+	 * @see DATAMONGO-341
+	 */
+	@Test
+	public void geoNearRejectsNullNearQuery() {
+
+		new Execution() {
+			@Override
+			public void doWith(MongoOperations operations) {
+				operations.geoNear(null, Person.class);
+			}
+		}.assertDataAccessException();
+	}
+
+	/**
+	 * @see DATAMONGO-341
+	 */
+	@Test
+	public void geoNearRejectsNullNearQueryifCollectionGiven() {
+
+		new Execution() {
+			@Override
+			public void doWith(MongoOperations operations) {
+				operations.geoNear(null, Person.class, "collection");
+			}
+		}.assertDataAccessException();
+	}
+
+	/**
+	 * @see DATAMONGO-341
+	 */
+	@Test
+	public void geoNearRejectsNullEntityClass() {
+
+		final NearQuery query = NearQuery.near(new Point(10, 20));
+
+		new Execution() {
+			@Override
+			public void doWith(MongoOperations operations) {
+				operations.geoNear(query, null);
+			}
+		}.assertDataAccessException();
+	}
+
+	/**
+	 * @see DATAMONGO-341
+	 */
+	@Test
+	public void geoNearRejectsNullEntityClassIfCollectionGiven() {
+
+		final NearQuery query = NearQuery.near(new Point(10, 20));
+
+		new Execution() {
+			@Override
+			public void doWith(MongoOperations operations) {
+				operations.geoNear(query, null, "collection");
 			}
 		}.assertDataAccessException();
 	}
