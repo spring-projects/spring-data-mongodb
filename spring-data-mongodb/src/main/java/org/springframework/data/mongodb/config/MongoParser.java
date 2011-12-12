@@ -52,33 +52,30 @@ public class MongoParser extends AbstractSingleBeanDefinitionParser {
 
 		ParsingUtils.parseMongoOptions(element, builder);
 		ParsingUtils.parseReplicaSet(element, builder);
-				
+
 		registerServerAddressPropertyEditor(parserContext.getRegistry());
-		registerWriteConcernPropertyEditor(parserContext.getRegistry());
+		ParsingUtils.registerWriteConcernPropertyEditor(parserContext.getRegistry());
 
 	}
 
 	/**
-	 * One should only register one bean definition but want to have the convenience of using AbstractSingleBeanDefinitionParser but have the side effect of
-	 * registering a 'default' property editor with the container.  
-	 * @param parserContext the ParserContext to 
+	 * One should only register one bean definition but want to have the convenience of using
+	 * AbstractSingleBeanDefinitionParser but have the side effect of registering a 'default' property editor with the
+	 * container.
+	 * 
+	 * @param parserContext the ParserContext to
 	 */
 	private void registerServerAddressPropertyEditor(BeanDefinitionRegistry registry) {
-		BeanDefinitionBuilder customEditorConfigurer = BeanDefinitionBuilder.genericBeanDefinition(CustomEditorConfigurer.class);
-		Map<String, String> customEditors = new ManagedMap<String, String>(); 
-		customEditors.put("java.util.List", "org.springframework.data.mongodb.config.ServerAddressPropertyEditor");
+
+		BeanDefinitionBuilder customEditorConfigurer = BeanDefinitionBuilder
+				.genericBeanDefinition(CustomEditorConfigurer.class);
+		Map<String, String> customEditors = new ManagedMap<String, String>();
+		customEditors.put("com.mongodb.ServerAddress[]",
+				"org.springframework.data.mongodb.config.ServerAddressPropertyEditor");
 		customEditorConfigurer.addPropertyValue("customEditors", customEditors);
-		BeanDefinitionReaderUtils.registerWithGeneratedName(customEditorConfigurer.getBeanDefinition(),	registry);
+		BeanDefinitionReaderUtils.registerWithGeneratedName(customEditorConfigurer.getBeanDefinition(), registry);
 	}
-	
-	private void registerWriteConcernPropertyEditor(BeanDefinitionRegistry registry) {
-		BeanDefinitionBuilder customEditorConfigurer = BeanDefinitionBuilder.genericBeanDefinition(CustomEditorConfigurer.class);
-		Map<String, String> customEditors = new ManagedMap<String, String>(); 
-		customEditors.put("com.mongodb.WriteConcern", "org.springframework.data.mongodb.config.WriteConcernPropertyEditor");
-		customEditorConfigurer.addPropertyValue("customEditors", customEditors);
-		BeanDefinitionReaderUtils.registerWithGeneratedName(customEditorConfigurer.getBeanDefinition(),	registry);
-	}
-	
+
 	@Override
 	protected String resolveId(Element element, AbstractBeanDefinition definition, ParserContext parserContext)
 			throws BeanDefinitionStoreException {

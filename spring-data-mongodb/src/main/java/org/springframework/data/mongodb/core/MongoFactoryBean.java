@@ -16,6 +16,7 @@
 
 package org.springframework.data.mongodb.core;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
@@ -24,6 +25,7 @@ import org.springframework.beans.factory.FactoryBean;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mongodb.CannotGetMongoDbConnectionException;
+
 import com.mongodb.Mongo;
 import com.mongodb.MongoOptions;
 import com.mongodb.ServerAddress;
@@ -57,12 +59,12 @@ public class MongoFactoryBean implements FactoryBean<Mongo>, PersistenceExceptio
 		this.mongoOptions = mongoOptions;
 	}
 
-	public void setReplicaSetSeeds(List<ServerAddress> replicaSetSeeds) {
-		this.replicaSetSeeds = replicaSetSeeds;
+	public void setReplicaSetSeeds(ServerAddress[] replicaSetSeeds) {
+		this.replicaSetSeeds = Arrays.asList(replicaSetSeeds);
 	}
 
-	public void setReplicaPair(List<ServerAddress> replicaPair) {
-		this.replicaPair = replicaPair;
+	public void setReplicaPair(ServerAddress[] replicaPair) {
+		this.replicaPair = Arrays.asList(replicaPair);
 	}
 
 	public void setHost(String host) {

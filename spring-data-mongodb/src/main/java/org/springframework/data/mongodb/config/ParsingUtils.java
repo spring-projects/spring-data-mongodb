@@ -16,11 +16,18 @@
 
 package org.springframework.data.mongodb.config;
 
+import java.util.Map;
+
 import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.beans.factory.config.CustomEditorConfigurer;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
+import org.springframework.beans.factory.support.BeanDefinitionReaderUtils;
+import org.springframework.beans.factory.support.BeanDefinitionRegistry;
+import org.springframework.beans.factory.support.ManagedMap;
 import org.springframework.beans.factory.xml.ParserContext;
 import org.springframework.data.mongodb.core.MongoOptionsFactoryBean;
+import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 import org.springframework.util.xml.DomUtils;
 import org.w3c.dom.Element;
@@ -108,9 +115,27 @@ abstract class ParsingUtils {
 	 * @param element must not be {@literal null}.
 	 * @return
 	 */
-	static AbstractBeanDefinition getSourceBeanDefinition(BeanDefinitionBuilder builder, ParserContext context, Element element) {
+	static AbstractBeanDefinition getSourceBeanDefinition(BeanDefinitionBuilder builder, ParserContext context,
+			Element element) {
 		AbstractBeanDefinition definition = builder.getBeanDefinition();
 		definition.setSource(context.extractSource(element));
 		return definition;
+	}
+
+	/**
+	 * Registers a {@link WriteConcernPropertyEditor} in the given {@link BeanDefinitionRegistry}.
+	 * 
+	 * @param registry must not be {@literal null}.
+	 */
+	static void registerWriteConcernPropertyEditor(BeanDefinitionRegistry registry) {
+
+		Assert.notNull(registry);
+
+		BeanDefinitionBuilder customEditorConfigurer = BeanDefinitionBuilder
+				.genericBeanDefinition(CustomEditorConfigurer.class);
+		Map<String, Class<?>> customEditors = new ManagedMap<String, Class<?>>();
+		customEditors.put("com.mongodb.WriteConcern", WriteConcernPropertyEditor.class);
+		customEditorConfigurer.addPropertyValue("customEditors", customEditors);
+		BeanDefinitionReaderUtils.registerWithGeneratedName(customEditorConfigurer.getBeanDefinition(), registry);
 	}
 }

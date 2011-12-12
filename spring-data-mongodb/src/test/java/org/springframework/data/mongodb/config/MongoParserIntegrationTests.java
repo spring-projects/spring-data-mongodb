@@ -15,8 +15,8 @@
  */
 package org.springframework.data.mongodb.config;
 
-import static org.junit.Assert.*;
 import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
 
 import java.util.List;
 
@@ -27,7 +27,10 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionReader;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
+import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.io.ClassPathResource;
+
+import com.mongodb.Mongo;
 
 /**
  * Integration tests for {@link MongoParser}.
@@ -35,10 +38,10 @@ import org.springframework.core.io.ClassPathResource;
  * @author Oliver Gierke
  */
 public class MongoParserIntegrationTests {
-	
+
 	DefaultListableBeanFactory factory;
 	BeanDefinitionReader reader;
-	
+
 	@Before
 	public void setUp() {
 		factory = new DefaultListableBeanFactory();
@@ -55,5 +58,19 @@ public class MongoParserIntegrationTests {
 		assertThat(values, hasItem(new PropertyValue("writeConcern", "SAFE")));
 
 		factory.getBean("mongo");
+	}
+
+	/**
+	 * @see DATAMONGO-343
+	 */
+	@Test
+	public void readsServerAddressesCorrectly() {
+
+		reader.loadBeanDefinitions(new ClassPathResource("namespace/mongo-bean.xml"));
+
+		GenericApplicationContext context = new GenericApplicationContext(factory);
+		context.refresh();
+
+		assertThat(context.getBean("mongo2", Mongo.class), is(notNullValue()));
 	}
 }

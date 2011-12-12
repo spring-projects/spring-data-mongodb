@@ -17,37 +17,42 @@ package org.springframework.data.mongodb.config;
 
 import java.beans.PropertyEditorSupport;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.springframework.util.StringUtils;
 
 import com.mongodb.ServerAddress;
 
 /**
- * Parse a string to a List<ServerAddress>.  The format is host1:port1,host2:port2,host3:port3.
+ * Parse a {@link String} to a {@link ServerAddress} array. The format is host1:port1,host2:port2,host3:port3.
+ * 
  * @author Mark Pollack
- *
+ * @author Oliver Gierke
  */
 public class ServerAddressPropertyEditor extends PropertyEditorSupport {
 
-	/**
-	 * Parse a string to a List<ServerAddress>
+	/*
+	 * (non-Javadoc)
+	 * @see java.beans.PropertyEditorSupport#setAsText(java.lang.String)
 	 */
+	@Override
 	public void setAsText(String replicaSetString) {
 
-		List<ServerAddress> serverAddresses = new ArrayList<ServerAddress>();
 		String[] replicaSetStringArray = StringUtils.commaDelimitedListToStringArray(replicaSetString);
-		for (String element2 : replicaSetStringArray) {
-			String[] hostAndPort = StringUtils.delimitedListToStringArray(element2, ":");		
+		ServerAddress[] serverAddresses = new ServerAddress[replicaSetStringArray.length];
+
+		for (int i = 0; i < replicaSetStringArray.length; i++) {
+
+			String[] hostAndPort = StringUtils.delimitedListToStringArray(replicaSetStringArray[i], ":");
+
 			try {
-				serverAddresses.add(new ServerAddress(hostAndPort[0], Integer.parseInt(hostAndPort[1])));
+				serverAddresses[i] = new ServerAddress(hostAndPort[0], Integer.parseInt(hostAndPort[1]));
 			} catch (NumberFormatException e) {
-				throw new IllegalArgumentException("Could not parse port " + hostAndPort[1], e );
+				throw new IllegalArgumentException("Could not parse port " + hostAndPort[1], e);
 			} catch (UnknownHostException e) {
-				throw new IllegalArgumentException("Could not parse host " + hostAndPort[0], e );
+				throw new IllegalArgumentException("Could not parse host " + hostAndPort[0], e);
 			}
 		}
+
 		setValue(serverAddresses);
 	}
 }
