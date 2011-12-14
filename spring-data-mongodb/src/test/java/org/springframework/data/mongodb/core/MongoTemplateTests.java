@@ -39,6 +39,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.dao.DataAccessException;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.data.mongodb.MongoDbFactory;
@@ -428,12 +429,12 @@ public class MongoTemplateTests {
 		assertThat(p.getAge(), is(26));
 		p = template.findOne(query, Person.class);
 		assertThat(p.getAge(), is(27));
-		
+
 		Query query2 = new Query(Criteria.where("firstName").is("Mary"));
 		p = template.findAndModify(query2, update, new FindAndModifyOptions().returnNew(true).upsert(true), Person.class);
 		assertThat(p.getFirstName(), is("Mary"));
 		assertThat(p.getAge(), is(1));
-		
+
 	}
 
 	@Test
@@ -1058,6 +1059,31 @@ public class MongoTemplateTests {
 
 		template.remove(person, "mycollection");
 		assertThat(template.findAll(Person.class, "mycollection").isEmpty(), is(true));
+	}
+
+	/**
+	 * @see DATADOC-349
+	 */
+	@Test
+	public void removesEntityWithAnnotatedIdIfIdNeedsMassaging() {
+
+		String id = new ObjectId().toString();
+
+		Sample sample = new Sample();
+		sample.id = id;
+
+		template.save(sample);
+
+		assertThat(template.findOne(query(where("id").is(id)), Sample.class).id, is(id));
+
+		template.remove(sample);
+		assertThat(template.findOne(query(where("id").is(id)), Sample.class), is(nullValue()));
+	}
+
+	public class Sample {
+
+		@Id
+		String id;
 	}
 
 	public class TestClass {

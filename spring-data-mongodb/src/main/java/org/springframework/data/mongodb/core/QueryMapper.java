@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -26,6 +27,7 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.util.Assert;
 
 import com.mongodb.BasicDBObject;
@@ -62,22 +64,13 @@ public class QueryMapper {
 	 * @return
 	 */
 	public DBObject getMappedObject(DBObject query, MongoPersistentEntity<?> entity) {
-		
-		String idKey = null;
-		
-		if (null != entity && entity.getIdProperty() != null) {
-			idKey = entity.getIdProperty().getName();
-		} else if (query.containsField("id")) {
-			idKey = "id";
-		} else if (query.containsField("_id")) {
-			idKey = "_id";
-		}
 
 		DBObject newDbo = new BasicDBObject();
+
 		for (String key : query.keySet()) {
 			String newKey = key;
 			Object value = query.get(key);
-			if (key.equals(idKey)) {
+			if (isIdKey(key, entity)) {
 				if (value instanceof DBObject) {
 					DBObject valueDbo = (DBObject) value;
 					if (valueDbo.containsField("$in") || valueDbo.containsField("$nin")) {
@@ -106,11 +99,28 @@ public class QueryMapper {
 			} else if (key.equals("$ne")) {
 				value = convertId(value);
 			}
-			
+
 			newDbo.put(newKey, converter.convertToMongoType(value));
 		}
-		
+
 		return newDbo;
+	}
+
+	/**
+	 * Returns whether the given key will be considered an id key.
+	 * 
+	 * @param key
+	 * @param entity
+	 * @return
+	 */
+	private boolean isIdKey(String key, MongoPersistentEntity<?> entity) {
+
+		if (null != entity && entity.getIdProperty() != null) {
+			MongoPersistentProperty idProperty = entity.getIdProperty();
+			return idProperty.getName().equals(key) || idProperty.getFieldName().equals(key);
+		}
+
+		return Arrays.asList("id", "_id").contains(key);
 	}
 
 	/**
@@ -120,13 +130,13 @@ public class QueryMapper {
 	 * @return
 	 */
 	public Object convertId(Object id) {
-		
+
 		try {
 			return conversionService.convert(id, ObjectId.class);
 		} catch (ConversionException e) {
 			// Ignore
 		}
-		
+
 		return converter.convertToMongoType(id);
 	}
 }
