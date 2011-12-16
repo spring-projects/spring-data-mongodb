@@ -12,6 +12,7 @@ import org.junit.Test;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.ConversionServiceFactory;
 import org.springframework.core.convert.support.GenericConversionService;
+import org.springframework.data.mongodb.core.convert.MongoConverters.StringToBigIntegerConverter;
 
 import com.mongodb.DBRef;
 
@@ -40,8 +41,8 @@ public class CustomConversionsUnitTests {
 	@SuppressWarnings("unchecked")
 	public void considersSubtypesCorrectly() {
 
-		CustomConversions conversions = new CustomConversions(Arrays.asList(
-				NumberToStringConverter.INSTANCE, StringToNumberConverter.INSTANCE));
+		CustomConversions conversions = new CustomConversions(Arrays.asList(NumberToStringConverter.INSTANCE,
+				StringToNumberConverter.INSTANCE));
 
 		assertThat(conversions.getCustomWriteTarget(Long.class, null), is(typeCompatibleWith(String.class)));
 		assertThat(conversions.hasCustomReadTarget(String.class, Long.class), is(true));
@@ -59,26 +60,25 @@ public class CustomConversionsUnitTests {
 	 */
 	@Test
 	public void considersObjectIdToBeSimpleType() {
-		
+
 		CustomConversions conversions = new CustomConversions();
 		assertThat(conversions.isSimpleType(ObjectId.class), is(true));
 		assertThat(conversions.hasCustomWriteTarget(ObjectId.class), is(false));
-		
-		
+
 	}
-	
+
 	/**
 	 * @see DATAMONGO-240
 	 */
 	@Test
 	public void considersCustomConverterForSimpleType() {
-		
+
 		CustomConversions conversions = new CustomConversions(Arrays.asList(new Converter<ObjectId, String>() {
 			public String convert(ObjectId source) {
 				return source == null ? null : source.toString();
 			}
 		}));
-		
+
 		assertThat(conversions.isSimpleType(ObjectId.class), is(true));
 		assertThat(conversions.hasCustomWriteTarget(ObjectId.class), is(true));
 		assertThat(conversions.hasCustomReadTarget(ObjectId.class, String.class), is(true));
@@ -87,11 +87,11 @@ public class CustomConversionsUnitTests {
 
 	@Test
 	public void considersDBRefsToBeSimpleTypes() {
-		
+
 		CustomConversions conversions = new CustomConversions();
 		assertThat(conversions.isSimpleType(DBRef.class), is(true));
 	}
-	
+
 	@Test
 	public void populatesConversionServiceCorrectly() {
 
@@ -99,10 +99,9 @@ public class CustomConversionsUnitTests {
 		GenericConversionService conversionService = ConversionServiceFactory.createDefaultConversionService();
 		assertThat(conversionService.canConvert(String.class, UUID.class), is(false));
 
-		CustomConversions conversions = new CustomConversions(
-				Arrays.asList(StringToUUIDConverter.INSTANCE));
+		CustomConversions conversions = new CustomConversions(Arrays.asList(StringToUUIDConverter.INSTANCE));
 		conversions.registerConvertersIn(conversionService);
-		
+
 		assertThat(conversionService.canConvert(String.class, UUID.class), is(true));
 	}
 
@@ -114,19 +113,33 @@ public class CustomConversionsUnitTests {
 		CustomConversions conversions = new CustomConversions(Arrays.asList(StringToUUIDConverter.INSTANCE));
 		assertThat(conversions.isSimpleType(UUID.class), is(false));
 	}
-	
-	
+
 	/**
 	 * @see DATAMONGO-298
 	 */
 	@Test
 	public void discoversConvertersForSubtypesOfMongoTypes() {
-		
+
 		CustomConversions conversions = new CustomConversions(Arrays.asList(StringToIntegerConverter.INSTANCE));
 		assertThat(conversions.hasCustomReadTarget(String.class, Integer.class), is(true));
 		assertThat(conversions.hasCustomWriteTarget(String.class, Integer.class), is(true));
 	}
-	
+
+	/**
+	 * @see DATAMONGO-342
+	 */
+	@Test
+	public void doesNotHaveConverterForStringToBigIntegerByDefault() {
+
+		CustomConversions conversions = new CustomConversions();
+		assertThat(conversions.hasCustomWriteTarget(String.class), is(false));
+		assertThat(conversions.getCustomWriteTarget(String.class), is(nullValue()));
+
+		conversions = new CustomConversions(Arrays.asList(StringToBigIntegerConverter.INSTANCE));
+		assertThat(conversions.hasCustomWriteTarget(String.class), is(false));
+		assertThat(conversions.getCustomWriteTarget(String.class), is(nullValue()));
+	}
+
 	enum UuidToStringConverter implements Converter<UUID, String> {
 		INSTANCE;
 
@@ -155,7 +168,7 @@ public class CustomConversionsUnitTests {
 			return 0L;
 		}
 	}
-	
+
 	enum StringToIntegerConverter implements Converter<String, Integer> {
 		INSTANCE;
 		public Integer convert(String source) {

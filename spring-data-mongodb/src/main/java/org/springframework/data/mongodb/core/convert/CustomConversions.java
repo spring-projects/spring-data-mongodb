@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.core.GenericTypeResolver;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.converter.Converter;
@@ -29,6 +31,8 @@ import org.springframework.core.convert.converter.ConverterFactory;
 import org.springframework.core.convert.converter.GenericConverter;
 import org.springframework.core.convert.converter.GenericConverter.ConvertiblePair;
 import org.springframework.core.convert.support.GenericConversionService;
+import org.springframework.data.convert.ReadingConverter;
+import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.mongodb.core.convert.MongoConverters.BigDecimalToStringConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.BigIntegerToStringConverter;
@@ -47,6 +51,10 @@ import org.springframework.util.Assert;
  * @author Oliver Gierke
  */
 public class CustomConversions {
+
+	private static final Log LOG = LogFactory.getLog(CustomConversions.class);
+	private static final String READ_CONVERTER_NOT_SIMPLE = "Registering converter from %s to %s as reading converter although it doesn't convert from a Mongo supported type! You might wanna check you annotation setup at the converter implementation.";
+	private static final String WRITE_CONVERTER_NOT_SIMPLE = "Registering converter from %s to %s as writing converter although it doesn't convert to a Mongo supported type! You might wanna check you annotation setup at the converter implementation.";
 
 	private final Set<ConvertiblePair> readingPairs;
 	private final Set<ConvertiblePair> writingPairs;
@@ -151,14 +159,18 @@ public class CustomConversions {
 	 */
 	private void registerConversion(Object converter) {
 
+		Class<?> type = converter.getClass();
+		boolean isWriting = type.isAnnotationPresent(WritingConverter.class);
+		boolean isReading = type.isAnnotationPresent(ReadingConverter.class);
+
 		if (converter instanceof GenericConverter) {
 			GenericConverter genericConverter = (GenericConverter) converter;
 			for (ConvertiblePair pair : genericConverter.getConvertibleTypes()) {
-				register(pair);
+				register(new ConverterRegistration(pair, isReading, isWriting));
 			}
 		} else if (converter instanceof Converter) {
 			Class<?>[] arguments = GenericTypeResolver.resolveTypeArguments(converter.getClass(), Converter.class);
-			register(new ConvertiblePair(arguments[0], arguments[1]));
+			register(new ConverterRegistration(arguments[0], arguments[1], isReading, isWriting));
 		} else {
 			throw new IllegalArgumentException("Unsupported Converter type!");
 		}
@@ -170,15 +182,27 @@ public class CustomConversions {
 	 * 
 	 * @param pair
 	 */
-	private void register(ConvertiblePair pair) {
+	private void register(ConverterRegistration context) {
 
-		if (isMongoBasicType(pair.getSourceType())) {
+		ConvertiblePair pair = context.getConvertiblePair();
+
+		if (context.isReading()) {
+
 			readingPairs.add(pair);
+
+			if (LOG.isWarnEnabled() && !context.isSimpleSourceType()) {
+				LOG.warn(String.format(READ_CONVERTER_NOT_SIMPLE, pair.getSourceType(), pair.getTargetType()));
+			}
 		}
 
-		if (isMongoBasicType(pair.getTargetType())) {
+		if (context.isWriting()) {
+
 			writingPairs.add(pair);
 			customSimpleTypes.add(pair.getSourceType());
+
+			if (LOG.isWarnEnabled() && !context.isSimpleTargetType()) {
+				LOG.warn(String.format(WRITE_CONVERTER_NOT_SIMPLE, pair.getSourceType(), pair.getTargetType()));
+			}
 		}
 	}
 
@@ -269,16 +293,7 @@ public class CustomConversions {
 		return null;
 	}
 
-	/**
-	 * Returns whether the given type is a type that Mongo can handle basically.
-	 * 
-	 * @param type
-	 * @return
-	 */
-	private boolean isMongoBasicType(Class<?> type) {
-		return MongoSimpleTypes.HOLDER.isSimpleType(type);
-	}
-
+	@WritingConverter
 	private enum CustomToStringConverter implements GenericConverter {
 		INSTANCE;
 
