@@ -76,7 +76,7 @@ public class QueryMapper {
 					if (valueDbo.containsField("$in") || valueDbo.containsField("$nin")) {
 						String inKey = valueDbo.containsField("$in") ? "$in" : "$nin";
 						List<Object> ids = new ArrayList<Object>();
-						for (Object id : (Object[]) valueDbo.get(inKey)) {
+						for (Object id : (Iterable<?>) valueDbo.get(inKey)) {
 							ids.add(convertId(id));
 						}
 						valueDbo.put(inKey, ids.toArray(new Object[ids.size()]));
@@ -98,6 +98,9 @@ public class QueryMapper {
 				value = newConditions;
 			} else if (key.equals("$ne")) {
 				value = convertId(value);
+			} else if (value instanceof DBObject) {
+				newDbo.put(newKey, getMappedObject((DBObject) value, entity));
+				return newDbo;
 			}
 
 			newDbo.put(newKey, converter.convertToMongoType(value));

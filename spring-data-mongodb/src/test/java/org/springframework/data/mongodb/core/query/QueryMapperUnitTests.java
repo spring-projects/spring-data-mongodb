@@ -17,8 +17,8 @@ package org.springframework.data.mongodb.core.query;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
-import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
+import static org.springframework.data.mongodb.core.query.Query.*;
 
 import java.math.BigInteger;
 
@@ -35,6 +35,7 @@ import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 
+import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
@@ -127,6 +128,38 @@ public class QueryMapperUnitTests {
 		assertThat(object, is(String.class));
 	}
 	
+
+	@Test
+	public void handlesEnumsInNotEqualCorrectly() {
+		Query query = query(where("foo").ne(Enum.INSTANCE));
+		DBObject result = mapper.getMappedObject(query.getQueryObject(), null);
+
+		Object object = result.get("foo");
+		assertThat(object, is(DBObject.class));
+
+		Object ne = ((DBObject) object).get("$ne");
+		assertThat(ne, is(String.class));
+		assertThat(ne.toString(), is(Enum.INSTANCE.name()));
+	}
+
+	@Test
+	public void handlesEnumsIn$InCorrectly() {
+
+		Query query = query(where("foo").in(Enum.INSTANCE));
+		DBObject result = mapper.getMappedObject(query.getQueryObject(), null);
+
+		Object object = result.get("foo");
+		assertThat(object, is(DBObject.class));
+
+		Object in = ((DBObject) object).get("$in");
+		assertThat(in, is(BasicDBList.class));
+
+		BasicDBList list = (BasicDBList) in;
+		assertThat(list.size(), is(1));
+		assertThat(list.get(0), is(String.class));
+		assertThat(list.get(0).toString(), is(Enum.INSTANCE.name()));
+	}
+
 	class Sample {
 		
 		@Id

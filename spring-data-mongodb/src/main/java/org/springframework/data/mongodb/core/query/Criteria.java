@@ -170,7 +170,7 @@ public class Criteria implements CriteriaDefinition {
 			throw new InvalidMongoDbApiUsageException("You can only pass in one argument of type "
 					+ o[1].getClass().getName());
 		}
-		criteria.put("$in", o);
+		criteria.put("$in", Arrays.asList(o));
 		return this;
 	}
 
@@ -181,7 +181,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @return
 	 */
 	public Criteria in(Collection<?> c) {
-		criteria.put("$in", c.toArray());
+		criteria.put("$in", c);
 		return this;
 	}
 
