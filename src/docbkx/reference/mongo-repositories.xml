@@ -159,6 +159,12 @@ public class PersonRepositoryTests {
     that you can query based on properties which are not a primitive
     type.</para>
 
+    <note>
+      <para>Note that for version 1.0 we currently don't support referring to
+      parameters that are mapped as <classname>DBRef</classname> in the domain
+      class.</para>
+    </note>
+
     <para><table>
         <title>Supported keywords for query methods</title>
 
