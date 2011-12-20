@@ -1035,9 +1035,11 @@ DEBUG work.data.mongodb.core.MongoTemplate: 823 - remove using query: { "id" : "
 INFO               org.spring.example.MongoApp:  46 - Number of people = : 0
 DEBUG work.data.mongodb.core.MongoTemplate: 376 - Dropped collection [database.person]</programlisting>
 
-    <para>There was implicit conversion using the MongoConverter between a
-    String and ObjectId as stored in the database and recognizing a convention
-    of the property "Id" name.</para>
+    <para>There was implicit conversion using the
+    <interfacename>MongoConverter</interfacename> between a
+    <classname>String</classname> and <classname>ObjectId</classname> as
+    stored in the database and recognizing a convention of the property "Id"
+    name.</para>
 
     <note>
       <para>This example is meant to show the use of save, update and remove
@@ -1087,9 +1089,9 @@ DEBUG work.data.mongodb.core.MongoTemplate: 376 - Dropped collection [database.p
           will be converted to and stored as an
           <classname>ObjectId</classname> if possible using a Spring
           <interfacename>Converter&lt;String, ObjectId&gt;</interfacename>.
-          Valid conversion rules are delegated to the MongoDB Java driver. If it
-          cannot be converted to an ObjectId, then the value will be stored as
-          a string in the database.</para>
+          Valid conversion rules are delegated to the MongoDB Java driver. If
+          it cannot be converted to an ObjectId, then the value will be stored
+          as a string in the database.</para>
         </listitem>
 
         <listitem>
@@ -1402,22 +1404,26 @@ import static org.springframework.data.mongodb.core.query.Update;
     <section>
       <title>Finding and Upserting documents in a collection</title>
 
-      <para>The findAndModify method on DBCollection can update a document and
-      return either the old or newly updated document in a single operation.
-      MongoTemplate provides a findAndModify method that takes Query and
-      Update classes and converts from DBObject to your POJOs. Here are the
+      <para>The <methodname>findAndModify(…)</methodname> method on
+      DBCollection can update a document and return either the old or newly
+      updated document in a single operation.
+      <classname>MongoTemplate</classname> provides a findAndModify method
+      that takes <classname>Query</classname> and
+      <classname>Update</classname> classes and converts from
+      <classname>DBObject</classname> to your POJOs. Here are the
       methods</para>
 
-      <programlisting language="java">	&lt;T&gt; T findAndModify(Query query, Update update, Class&lt;T&gt; entityClass);
+      <programlisting language="java">&lt;T&gt; T findAndModify(Query query, Update update, Class&lt;T&gt; entityClass);
 
-	&lt;T&gt; T findAndModify(Query query, Update update, Class&lt;T&gt; entityClass, String collectionName);
+&lt;T&gt; T findAndModify(Query query, Update update, Class&lt;T&gt; entityClass, String collectionName);
 
-	&lt;T&gt; T findAndModify(Query query, Update update, FindAndModifyOptions options, Class&lt;T&gt; entityClass);
+&lt;T&gt; T findAndModify(Query query, Update update, FindAndModifyOptions options, Class&lt;T&gt; entityClass);
 
-	&lt;T&gt; T findAndModify(Query query, Update update, FindAndModifyOptions options, Class&lt;T&gt; entityClass, String collectionName);</programlisting>
+&lt;T&gt; T findAndModify(Query query, Update update, FindAndModifyOptions options, Class&lt;T&gt; entityClass, String collectionName);</programlisting>
 
-      <para>As an example usage, we will insert of few Person objects into the
-      container and perform a simple findAndUpdate operation</para>
+      <para>As an example usage, we will insert of few
+      <classname>Person</classname> objects into the container and perform a
+      simple findAndUpdate operation</para>
 
       <programlisting language="java">mongoTemplate.insert(new Person("Tom", 21));
 mongoTemplate.insert(new Person("Dick", 22));
@@ -1819,7 +1825,8 @@ import static org.springframework.data.mongodb.core.query.Query.query;
       are available on the <classname>Criteria</classname> class. There are
       also a few shape classes, <classname>Box</classname>,
       <classname>Circle</classname>, and <classname>Point</classname> that are
-      used in conjunction with geospatial related Criteria methods.</para>
+      used in conjunction with geospatial related
+      <classname>Criteria</classname> methods.</para>
 
       <para>To understand how to perform GeoSpatial queries we will use the
       following Venue class taken from the integration tests.which relies on
@@ -1982,43 +1989,34 @@ GeoResults&lt;Restaurant&gt; = operations.geoNear(query, Restaurant.class);</pro
     for (var i = 0; i &lt; this.x.length; i++) {
         emit(this.x[i], 1);
     }
-}
-</programlisting> The reduce function that will sum up the occurance of each
+}</programlisting> The reduce function that will sum up the occurance of each
       letter across all the documents is shown below <programlisting
       language="java">function (key, values) {
     var sum = 0;
     for (var i = 0; i &lt; values.length; i++)
         sum += values[i];
     return sum;
-}
-</programlisting> Executing this will result in a collection as shown below.
-      <programlisting>
-{ "_id" : "a", "value" : 1 }
+}</programlisting> Executing this will result in a collection as shown below.
+      <programlisting>{ "_id" : "a", "value" : 1 }
 { "_id" : "b", "value" : 2 }
 { "_id" : "c", "value" : 2 }
-{ "_id" : "d", "value" : 1 }
-	</programlisting> Assuming that the map and reduce functions are located in
-      map.js and reduce.js and bundled in your jar so they are available on
-      the classpath, you can execute a map-reduce operation and obtain the
-      results as shown below <programlisting language="java">
-MapReduceResults&lt;ValueObject&gt; results = mongoOperations.mapReduce("jmr1", "classpath:map.js", "classpath:reduce.js", ValueObject.class);
+{ "_id" : "d", "value" : 1 }</programlisting> Assuming that the map and reduce
+      functions are located in map.js and reduce.js and bundled in your jar so
+      they are available on the classpath, you can execute a map-reduce
+      operation and obtain the results as shown below <programlisting
+      language="java">MapReduceResults&lt;ValueObject&gt; results = mongoOperations.mapReduce("jmr1", "classpath:map.js", "classpath:reduce.js", ValueObject.class);
 for (ValueObject valueObject : results) {
   System.out.println(valueObject);
-}  
-</programlisting> The output of the above code is <programlisting>
-ValueObject [id=a, value=1.0]
+}</programlisting> The output of the above code is <programlisting>ValueObject [id=a, value=1.0]
 ValueObject [id=b, value=2.0]
 ValueObject [id=c, value=2.0]
-ValueObject [id=d, value=1.0]
-</programlisting> The MapReduceResults class implements
-      <classname>Iterable</classname> and provides access to the raw output,
-      as well as timing and count statistics. The
+ValueObject [id=d, value=1.0]</programlisting> The MapReduceResults class
+      implements <classname>Iterable</classname> and provides access to the
+      raw output, as well as timing and count statistics. The
       <classname>ValueObject</classname> class is simply <programlisting
-      language="java">
-public class ValueObject {
+      language="java">public class ValueObject {
 
   private String id;
-
   private float value;
 
   public String getId() {
@@ -2257,11 +2255,14 @@ public class PersonWriteConverter implements Converter&lt;Person, DBObject&gt; {
     <section id="mongo.custom-converters.xml">
       <title>Registering Spring Converters with the MongoConverter</title>
 
-      <para>The mongo XSD namespace provides a convenience way to register
-      Spring Converters as shown below as well as configuring it into a
-      MongoTemplate.</para>
+      <para>The Mongo Spring namespace provides a convenience way to register
+      Spring <interfacename>Converter</interfacename>s with the
+      <classname>MappingMongoConverter</classname>. The configuration snippet
+      below shows how to manually register converter beans as well as
+      configuring the wrapping <classname>MappingMongoConverter</classname>
+      into a <classname>MongoTemplate</classname>.</para>
 
-      <programlisting language="java">&lt;mongo:db-factory dbname="database"/&gt;
+      <programlisting language="xml">&lt;mongo:db-factory dbname="database"/&gt;
 
 &lt;mongo:mapping-converter&gt;
   &lt;mongo:custom-converters&gt;
@@ -2277,8 +2278,46 @@ public class PersonWriteConverter implements Converter&lt;Person, DBObject&gt; {
 &lt;bean id="mongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate"&gt;
   &lt;constructor-arg name="mongoDbFactory" ref="mongoDbFactory"/&gt;
   &lt;constructor-arg name="mongoConverter" ref="mappingConverter"/&gt;
-&lt;/bean&gt;
-</programlisting>
+&lt;/bean&gt;</programlisting>
+
+      <para>You can also use the base-package attribute of the
+      custom-converters element to enable classpath scanning for all
+      <interfacename>Converter</interfacename> and
+      <interfacename>GenericConverter</interfacename> implementations below
+      the given package.</para>
+
+      <programlisting language="xml">&lt;mongo:mapping-converter&gt;
+  &lt;mongo:custom-converters base-package="com.acme.**.converters" /&gt;
+&lt;/mongo:mapping-converter&gt;</programlisting>
+    </section>
+
+    <section>
+      <title>Converter disambiguation</title>
+
+      <para>Generally we inspect the <interfacename>Converter</interfacename>
+      implementations for the source and target types they convert from and
+      to. Depending on whether one of those is a type MongoDB can handle
+      natively we will register the converter instance as reading or writing
+      one. Have a look at the following samples:</para>
+
+      <programlisting language="java">// Write converter as only the target type is one Mongo can handle natively
+class MyConverter implements Converter&lt;Person, String&gt; { … }
+
+// Read converter as only the source type is one Mongo can handle natively
+class MyConverter implements Converter&lt;String, Person&gt; { … }</programlisting>
+
+      <para>In case you write a <interfacename>Converter</interfacename> whose
+      source and target type are native Mongo types there's no way for us to
+      determine whether we should consider it as reading or writing converter.
+      Registering the converter instance as both might lead to unwanted
+      results then. E.g. a <interfacename>Converter&lt;String,
+      Long&gt;</interfacename> is ambiguous although it probably does not make
+      sense to try to convert all <classname>String</classname>s into
+      <classname>Long</classname>s when writing. To be generally able to force
+      the infrastructure to register a converter for one way only we provide
+      <interfacename>@ReadingConverter</interfacename> as well as
+      <interfacename>@WritingConverter</interfacename> to be used at the
+      converter implementation.</para>
     </section>
   </section>
 
@@ -2308,7 +2347,6 @@ public class PersonWriteConverter implements Converter&lt;Person, DBObject&gt; {
   void resetIndexCache();
   
   List&lt;IndexInfo&gt; getIndexInfo();
-
 }</programlisting>
 
     <section id="mongo-template.index-and-collections.index">
