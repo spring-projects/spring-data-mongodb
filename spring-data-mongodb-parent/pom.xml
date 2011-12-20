@@ -16,7 +16,7 @@
     <org.mockito.version>1.8.4</org.mockito.version>
     <org.slf4j.version>1.5.10</org.slf4j.version>
     <org.codehaus.jackson.version>1.6.1</org.codehaus.jackson.version>
-    <org.springframework.version.30>3.0.6.RELEASE</org.springframework.version.30>
+    <org.springframework.version.30>3.0.7.RELEASE</org.springframework.version.30>
     <org.springframework.version.40>4.0.0.RELEASE</org.springframework.version.40>
     <org.springframework.version.range>[${org.springframework.version.30}, ${org.springframework.version.40})</org.springframework.version.range>
     <data.commons.version>1.2.0.BUILD-SNAPSHOT</data.commons.version>

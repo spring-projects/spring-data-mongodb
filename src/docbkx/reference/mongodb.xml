@@ -275,27 +275,27 @@ public class MongoApp {
         </listitem>
 
         <listitem>
-          <para>spring-aop-3.0.6.RELEASE.jar</para>
+          <para>spring-aop-3.0.7.RELEASE.jar</para>
         </listitem>
 
         <listitem>
-          <para>spring-asm-3.0.6.RELEASE.jar</para>
+          <para>spring-asm-3.0.7.RELEASE.jar</para>
         </listitem>
 
         <listitem>
-          <para>spring-beans-3.0.6.RELEASE.jar</para>
+          <para>spring-beans-3.0.7.RELEASE.jar</para>
         </listitem>
 
         <listitem>
-          <para>spring-context-3.0.6.RELEASE.jar</para>
+          <para>spring-context-3.0.7.RELEASE.jar</para>
         </listitem>
 
         <listitem>
-          <para>spring-core-3.0.6.RELEASE.jar</para>
+          <para>spring-core-3.0.7.RELEASE.jar</para>
         </listitem>
 
         <listitem>
-          <para>spring-expression-3.0.6.RELEASE.jar</para>
+          <para>spring-expression-3.0.7.RELEASE.jar</para>
         </listitem>
       </itemizedlist>
 
