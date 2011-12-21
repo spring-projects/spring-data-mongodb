@@ -18,8 +18,8 @@ package org.springframework.data.mongodb.core.geo;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
-import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
+import static org.springframework.data.mongodb.core.query.Query.*;
 
 import java.net.UnknownHostException;
 import java.util.Collection;
@@ -134,7 +134,7 @@ public class GeoSpatialTests {
 
 	@Test
 	public void withinBox() {
-		
+
 		Box box = new Box(new Point(-73.99756, 40.73083), new Point(-73.988135, 40.741404));
 		List<Venue> venues = template.find(query(where("location").within(box)), Venue.class);
 		assertThat(venues.size(), is(4));
@@ -171,23 +171,23 @@ public class GeoSpatialTests {
 
 	@Test
 	public void searchAllData() {
-		
+
 		Venue foundVenue = template.findOne(query(where("name").is("Penn Station")), Venue.class);
 		assertThat(foundVenue, is(notNullValue()));
-		
+
 		List<Venue> venues = template.findAll(Venue.class);
 		assertThat(venues.size(), is(12));
-		
+
 		Collection<?> names = (Collection<?>) parser.parseExpression("![name]").getValue(venues);
 		assertThat(names.size(), is(12));
 
 	}
 
 	public void indexCreated() {
-		
+
 		List<DBObject> indexInfo = getIndexInfo(Venue.class);
 		LOGGER.debug(indexInfo);
-		
+
 		assertThat(indexInfo.size(), is(2));
 		assertThat(indexInfo.get(1).get("name").toString(), is("location_2d"));
 		assertThat(indexInfo.get(1).get("ns").toString(), is("database.newyork"));

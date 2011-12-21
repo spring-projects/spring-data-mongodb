@@ -86,7 +86,6 @@ import org.springframework.util.Assert;
 import org.springframework.util.ResourceUtils;
 import org.springframework.util.StringUtils;
 
-import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.CommandResult;
 import com.mongodb.DB;
@@ -488,6 +487,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		return geoNear(near, entityClass, determineCollectionName(entityClass));
 	}
 
+	@SuppressWarnings("unchecked")
 	public <T> GeoResults<T> geoNear(NearQuery near, Class<T> entityClass, String collectionName) {
 
 		if (near == null) {
@@ -503,7 +503,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		command.putAll(near.toDBObject());
 
 		CommandResult commandResult = executeCommand(command);
-		BasicDBList results = (BasicDBList) commandResult.get("results");
+		List<Object> results = (List<Object>) commandResult.get("results");
+		results = results == null ? Collections.emptyList() : results;
+
 		DbObjectCallback<GeoResult<T>> callback = new GeoNearResultDbObjectCallback<T>(new ReadDbObjectCallback<T>(
 				mongoConverter, entityClass), near.getMetric());
 		List<GeoResult<T>> result = new ArrayList<GeoResult<T>>(results.size());
@@ -512,7 +514,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			result.add(callback.doWith((DBObject) element));
 		}
 
-		double averageDistance = (Double) ((DBObject) commandResult.get("stats")).get("avgDistance");
+		DBObject stats = (DBObject) commandResult.get("stats");
+		double averageDistance = stats == null ? 0 : (Double) stats.get("avgDistance");
 		return new GeoResults<T>(result, new Distance(averageDistance, near.getMetric()));
 	}
 
