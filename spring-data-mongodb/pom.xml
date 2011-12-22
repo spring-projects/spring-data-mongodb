@@ -13,7 +13,7 @@
 
 	<properties>
 		<mongo.version>2.7.1</mongo.version>
-		<querydsl.version>2.2.5</querydsl.version>
+		<querydsl.version>2.3.0</querydsl.version>
 	</properties>
 
 	<dependencies>

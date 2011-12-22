@@ -16,14 +16,11 @@
 package org.springframework.data.mongodb.repository.support;
 
 import java.util.Collections;
-import java.util.Set;
 
-import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
-import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
 
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -33,8 +30,9 @@ import com.mysema.query.annotations.QueryEmbedded;
 import com.mysema.query.annotations.QueryEntities;
 import com.mysema.query.annotations.QuerySupertype;
 import com.mysema.query.annotations.QueryTransient;
+import com.mysema.query.apt.AbstractQuerydslProcessor;
+import com.mysema.query.apt.Configuration;
 import com.mysema.query.apt.DefaultConfiguration;
-import com.mysema.query.apt.Processor;
 
 /**
  * Annotation processor to create Querydsl query types for QueryDsl annoated classes.
@@ -44,10 +42,14 @@ import com.mysema.query.apt.Processor;
 @SuppressWarnings("restriction")
 @SupportedAnnotationTypes({ "com.mysema.query.annotations.*", "org.springframework.data.mongodb.core.mapping.*" })
 @SupportedSourceVersion(SourceVersion.RELEASE_6)
-public class MongoAnnotationProcessor extends AbstractProcessor {
+public class MongoAnnotationProcessor extends AbstractQuerydslProcessor {
 
+	/*
+	 * (non-Javadoc)
+	 * @see com.mysema.query.apt.AbstractQuerydslProcessor#createConfiguration(javax.annotation.processing.RoundEnvironment)
+	 */
 	@Override
-	public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+	protected Configuration createConfiguration(RoundEnvironment roundEnv) {
 
 		processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, "Running " + getClass().getSimpleName());
 
@@ -56,8 +58,6 @@ public class MongoAnnotationProcessor extends AbstractProcessor {
 				QueryEmbeddable.class, QueryEmbedded.class, QueryTransient.class);
 		configuration.setUnknownAsEmbedded(true);
 
-		Processor processor = new Processor(processingEnv, roundEnv, configuration);
-		processor.process();
-		return true;
+		return configuration;
 	}
 }
