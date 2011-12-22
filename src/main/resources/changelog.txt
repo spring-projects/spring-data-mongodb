@@ -1,9 +1,35 @@
 Spring Data Document Changelog
 =============================================
 
+Changes in version 1.0.0.RELEASE MongoDB (2011-12-22)
+-----------------------------------------------------
+
+** Bug
+    * [DATAMONGO-260] - MapReduce fails when using with Long as key-type.
+    * [DATAMONGO-319] - WriteConcern not parsed correctly in namespace handlers
+    * [DATAMONGO-336] - MongoDB GeoNear returning  null pointer exception when giving data more precision than test data
+    * [DATAMONGO-343] - ServerAddressPropertyEditor disables default Spring conversion
+    * [DATAMONGO-346] - MongoTemplate.remove(Object arg) not working
+    * [DATAMONGO-349] - remove doesn't work in RC1 for mongo db
+
+** Improvement
+    * [DATAMONGO-139] - Startup behavior should be that MongoTemplate does not eagerly try to connect to MongoDB
+    * [DATAMONGO-296] - Add hook to use MongoConverter for Querydsl argument handling
+    * [DATAMONGO-326] - Enums can't be used in Criteria
+    * [DATAMONGO-341] - Tighten implementation of MongoTemplate's geoNear(...) methods
+
+** Task
+    * [DATAMONGO-81] - Create unit tests for exception translation in MongoTemplate
+    * [DATAMONGO-93] - Create integration tests for authentication
+    * [DATAMONGO-257] - Document TypeMapper abstraction to control how type information is stored and retrieved from documents
+    * [DATAMONGO-330] - Document classpath scanning for Converters
+    * [DATAMONGO-350] - Upgrade to latest Querydsl
+    * [DATAMONGO-355] - Upgrade to Spring 3.0.7
+    * [DATAMONGO-357] - Release 1.0 GA
+
+
 Changes in version 1.0.0.RC1 MongoDB (2011-12-6)
 ------------------------------------------------
-
 
 ** Bug
     * [DATAMONGO-199] - Synchronisation during performance tests
@@ -20,8 +46,6 @@ Changes in version 1.0.0.RC1 MongoDB (2011-12-6)
     * [DATAMONGO-328] - Fix the import statement in mongodb manifest
     * [DATAMONGO-329] - Map value not converted correctly
     * [DATAMONGO-333] - AbstractMongoEventListener throws NullPointerException if used without generic parameter
-
-
 
 ** Improvement
     * [DATAMONGO-26] - Investigate performance of POJO serialization.
@@ -44,12 +68,9 @@ Changes in version 1.0.0.RC1 MongoDB (2011-12-6)
     * [DATAMONGO-251] - Support geting index information on a collection or mapped class.
     * [DATAMONGO-308] - Add support for upsert methods
 
-
 ** Refactoring
     * [DATAMONGO-304] - Change package name for Class MongoLog4jAppender
     * [DATAMONGO-313] - Use MongoOperations interface instead of MongoTemplate class
-
-
 
 ** Task
     * [DATAMONGO-195] - Add description of @Field mapping annotation to reference docs
@@ -59,7 +80,6 @@ Changes in version 1.0.0.RC1 MongoDB (2011-12-6)
     * [DATAMONGO-332] - Update reference documentation to list correct necessary dependencies
     * [DATAMONGO-334] - Use repository URLs pointing to Artifactory
     * [DATAMONGO-335] - Create hybrid Spring 3.0.6 / 3.1 build
-
 
 
 Changes in version 1.0.0.M5 MongoDB (2011-10-24)

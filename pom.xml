@@ -3,9 +3,9 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.springframework.data</groupId>
-  <artifactId>spring-data-mongo-dist</artifactId>
+  <artifactId>spring-data-mongodb-dist</artifactId>
   <name>Spring Data MongoDB Distribution</name>
-  <version>1.0.0.BUILD-SNAPSHOT</version>
+  <version>1.0.0.RELEASE</version>
   <packaging>pom</packaging>
   <modules>
     <module>spring-data-mongodb</module>
@@ -272,7 +272,7 @@
     <pluginRepository>
       <id>repository.springframework.maven.release</id>
       <name>Spring Framework Maven Release Repository</name>
-      <url>http://maven.springframework.org/release</url>
+      <url>http://repo.springsource.org/release</url>
     </pluginRepository>
   </pluginRepositories>
 
@@ -282,13 +282,13 @@
     <site>
       <id>static.springframework.org</id>
       <url>
-        scp://static.springframework.org/var/www/domains/springframework.org/static/htdocs/spring-data/data-document/snapshot-site/
+        scp://static.springframework.org/var/www/domains/springframework.org/static/htdocs/spring-data/data-mongodb/docs/${project.version}
       </url>
     </site>
     <repository>
-      <id>spring-milestone</id>
-      <name>Spring Milestone Repository</name>
-      <url>s3://maven.springframework.org/milestone</url>
+      <id>spring-release</id>
+      <name>Spring Release Repository</name>
+      <url>s3://maven.springframework.org/release</url>
     </repository>
     <snapshotRepository>
       <id>spring-snapshot</id>

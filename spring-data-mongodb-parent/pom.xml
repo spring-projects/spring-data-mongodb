@@ -6,7 +6,7 @@
   <artifactId>spring-data-mongodb-parent</artifactId>
   <name>Spring Data MongoDB Parent</name>
   <url>http://www.springsource.org/spring-data/mongodb</url>
-  <version>1.0.0.BUILD-SNAPSHOT</version>
+  <version>1.0.0.RELEASE</version>
   <packaging>pom</packaging>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -19,7 +19,7 @@
     <org.springframework.version.30>3.0.7.RELEASE</org.springframework.version.30>
     <org.springframework.version.40>4.0.0.RELEASE</org.springframework.version.40>
     <org.springframework.version.range>[${org.springframework.version.30}, ${org.springframework.version.40})</org.springframework.version.range>
-    <data.commons.version>1.2.0.BUILD-SNAPSHOT</data.commons.version>
+    <data.commons.version>1.2.0.RELEASE</data.commons.version>
     <aspectj.version>1.6.11.RELEASE</aspectj.version>
   </properties>
   <profiles>
@@ -65,13 +65,13 @@
     <site>
       <id>static.springframework.org</id>
       <url>
-        scp://static.springframework.org/var/www/domains/springframework.org/static/htdocs/spring-data/mongodb/docs/${project.version}
+        scp://static.springframework.org/var/www/domains/springframework.org/static/htdocs/spring-data/data-mongodb/docs/${project.version}
       </url>
     </site>
     <repository>
-      <id>spring-milestone</id>
-      <name>Spring Milestone Repository</name>
-      <url>s3://maven.springframework.org/milestone</url>
+      <id>spring-release</id>
+      <name>Spring Release Repository</name>
+      <url>s3://maven.springframework.org/release</url>
     </repository>
     <snapshotRepository>
       <id>spring-snapshot</id>
@@ -385,16 +385,6 @@
       <id>repository.springframework.maven.release</id>
       <name>Spring Framework Maven Release Repository</name>
       <url>http://repo.springsource.org/release</url>
-    </repository>
-    <repository>
-      <id>repository.springframework.maven.milestone</id>
-      <name>Spring Framework Maven Milestone Repository</name>
-      <url>http://repo.springsource.org/milestone</url>
-    </repository>
-    <repository>
-      <id>repository.springframework.maven.snapshot</id>
-      <name>Spring Framework Maven Snapshot Repository</name>
-      <url>http://repo.springsource.org/snapshot</url>
     </repository>
   </repositories>
   <reporting>
