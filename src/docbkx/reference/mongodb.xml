@@ -1115,6 +1115,70 @@ DEBUG work.data.mongodb.core.MongoTemplate: 376 - Dropped collection [database.p
       domain classes.</para>
     </section>
 
+    <section id="mongo-template.type-mapping">
+      <title>Type mapping</title>
+
+      <para>As MongoDB collections can contain documents that represent
+      instances of a variety of types. A great example here is if you store a
+      hierarchy of classes or simply have a class with a property of type
+      <classname>Object</classname>. In the latter case the values held inside
+      that property have to be read in correctly when retrieving the object.
+      Thus we need a mechanism to store type information alongside the actual
+      document.</para>
+
+      <para>To achieve that the <classname>MappingMongoConverter</classname>
+      uses a <interfacename>MongoTypeMapper</interfacename> abstraction with
+      <classname>DefaultMongoTypeMapper</classname> as it's main
+      implementation. It's default behaviour is storing the fully qualified
+      classname under <code>_class</code> inside the document for the
+      top-level document as well as for every value if it's a complex type and
+      a subtype of the property type declared.</para>
+
+      <example>
+        <title>Type mapping</title>
+
+        <programlisting language="java">public class Sample {
+  Contact value;
+}
+
+public abstract class Contact { … }
+
+public class Person extends Contact { … }
+
+Sample sample = new Sample();
+sample.value = new Person();
+
+mongoTemplate.save(sample);
+
+{ "_class" : "com.acme.Sample",
+  "value" : { "_class" : "com.acme.Person" }
+}</programlisting>
+      </example>
+
+      <para>As you can see we store the type information for the actual root
+      class persistet as well as for the nested type as it is complex and a
+      subtype of <classname>Contact</classname>. So if you're now using
+      <methodname>mongoTemplate.findAll(Object.class, "sample")</methodname>
+      we are able to find out that the document stored shall be a
+      <classname>Sample</classname> instance. We are also able to find out
+      that the value property shall be a <classname>Person</classname>
+      actually.</para>
+
+      <simplesect>
+        <title>Customizing type mapping</title>
+
+        <para>In case you want to avoid writing the entire Java class name as
+        type information but rather like to use some key you can use the
+        <interfacename>@TypeAlias</interfacename> annotation at the entity
+        class being persisted. If you need to customize the mapping even more
+        have a look at the
+        <interfacename>TypeInformationMapper</interfacename> interface. An
+        instance of that interface can be configured at the
+        <classname>DefaultMongoTypeMapper</classname> which can be configured
+        in turn on <classname>MappingMongoConverter</classname>.</para>
+      </simplesect>
+    </section>
+
     <section id="mongo-template.save-insert">
       <title>Methods for saving and inserting documents</title>
 
@@ -1468,8 +1532,6 @@ assertThat(p.getAge(), is(1));</programlisting>
             name.</para>
           </listitem>
         </itemizedlist></para>
-
-      <para></para>
     </section>
   </section>
 
