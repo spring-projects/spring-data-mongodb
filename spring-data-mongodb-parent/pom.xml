@@ -6,7 +6,7 @@
   <artifactId>spring-data-mongodb-parent</artifactId>
   <name>Spring Data MongoDB Parent</name>
   <url>http://www.springsource.org/spring-data/mongodb</url>
-  <version>1.0.0.RELEASE</version>
+  <version>1.1.0.BUILD-SNAPSHOT</version>
   <packaging>pom</packaging>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -65,13 +65,13 @@
     <site>
       <id>static.springframework.org</id>
       <url>
-        scp://static.springframework.org/var/www/domains/springframework.org/static/htdocs/spring-data/data-mongodb/docs/${project.version}
+        scp://static.springframework.org/var/www/domains/springframework.org/static/htdocs/spring-data/data-mongodb/snapshot-site
       </url>
     </site>
     <repository>
-      <id>spring-release</id>
-      <name>Spring Release Repository</name>
-      <url>s3://maven.springframework.org/release</url>
+      <id>spring-milestone</id>
+      <name>Spring Milestone Repository</name>
+      <url>s3://maven.springframework.org/milestone</url>
     </repository>
     <snapshotRepository>
       <id>spring-snapshot</id>
