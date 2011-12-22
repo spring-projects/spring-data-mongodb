@@ -17,6 +17,7 @@
 package org.springframework.data.mongodb.core.convert;
 
 import java.math.BigInteger;
+
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.convert.ConversionService;
@@ -48,7 +49,6 @@ public abstract class AbstractMongoConverter implements MongoConverter, Initiali
 	public AbstractMongoConverter(GenericConversionService conversionService) {
 		this.conversionService = conversionService == null ? ConversionServiceFactory.createDefaultConversionService()
 				: conversionService;
-		this.conversionService.removeConvertible(Object.class, String.class);
 	}
 
 	/**
