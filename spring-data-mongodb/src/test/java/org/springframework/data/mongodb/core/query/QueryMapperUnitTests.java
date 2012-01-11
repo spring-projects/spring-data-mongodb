@@ -21,6 +21,7 @@ import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
 import java.math.BigInteger;
+import java.util.Arrays;
 
 import org.bson.types.ObjectId;
 import org.junit.Before;
@@ -38,6 +39,7 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
+import com.mongodb.QueryBuilder;
 
 /**
  * Unit tests for {@link QueryMapper}.
@@ -158,6 +160,16 @@ public class QueryMapperUnitTests {
 		assertThat(list.size(), is(1));
 		assertThat(list.get(0), is(String.class));
 		assertThat(list.get(0).toString(), is(Enum.INSTANCE.name()));
+	}
+
+	/**
+	 * @see DATAMONGO-373
+	 */
+	@Test
+	public void handlesNativelyBuiltQueryCorrectly() {
+
+		DBObject query = new QueryBuilder().or(new BasicDBObject("foo", "bar")).get();
+		mapper.getMappedObject(query, null);
 	}
 
 	class Sample {

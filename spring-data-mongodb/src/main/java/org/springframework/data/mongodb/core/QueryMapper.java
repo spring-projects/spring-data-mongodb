@@ -89,9 +89,9 @@ public class QueryMapper {
 				newKey = "_id";
 			} else if (key.startsWith("$") && key.endsWith("or")) {
 				// $or/$nor
-				BasicBSONList conditions = (BasicBSONList) value;
+				Iterable<?> conditions = (Iterable<?>) value;
 				BasicBSONList newConditions = new BasicBSONList();
-				Iterator<Object> iter = conditions.iterator();
+				Iterator<?> iter = conditions.iterator();
 				while (iter.hasNext()) {
 					newConditions.add(getMappedObject((DBObject) iter.next(), entity));
 				}
