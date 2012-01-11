@@ -15,8 +15,8 @@
  */
 package org.springframework.data.mongodb.repository;
 
-import static org.junit.Assert.*;
 import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,6 +46,9 @@ public class RepositoryIndexCreationIntegrationTests {
 
 	@Autowired
 	MongoOperations operations;
+
+	@Autowired
+	PersonRepository repository;
 
 	@After
 	public void tearDown() {
