@@ -31,6 +31,7 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.core.Person;
 import org.springframework.data.mongodb.core.QueryMapper;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
@@ -172,14 +173,28 @@ public class QueryMapperUnitTests {
 		mapper.getMappedObject(query, null);
 	}
 
+	/**
+	 * @see DATAMONGO-369
+	 */
+	@Test
+	public void handlesAllPropertiesIfDBObject() {
+
+		DBObject query = new BasicDBObject();
+		query.put("foo", new BasicDBObject("$in", Arrays.asList(1, 2)));
+		query.put("bar", new Person());
+
+		DBObject result = mapper.getMappedObject(query, null);
+		assertThat(result.get("bar"), is(notNullValue()));
+	}
+
 	class Sample {
-		
+
 		@Id
 		private String foo;
 	}
-	
+
 	class BigIntegerId {
-		
+
 		@Id
 		private BigInteger id;
 	}

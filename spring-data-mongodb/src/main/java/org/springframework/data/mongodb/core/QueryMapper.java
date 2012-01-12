@@ -100,7 +100,7 @@ public class QueryMapper {
 				value = convertId(value);
 			} else if (value instanceof DBObject) {
 				newDbo.put(newKey, getMappedObject((DBObject) value, entity));
-				return newDbo;
+				continue;
 			}
 
 			newDbo.put(newKey, converter.convertToMongoType(value));
