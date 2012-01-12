@@ -28,6 +28,7 @@ import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.repository.QAddress;
 import org.springframework.data.mongodb.repository.QPerson;
 import org.springframework.data.mongodb.repository.support.QueryDslMongoRepository.SpringDataMongodbSerializer;
 
@@ -85,6 +86,16 @@ public class SpringDataMongodbSerializerUnitTests {
 
 		Object reference = converter.convertToMongoType(address);
 		assertThat(value, is(reference));
+	}
+
+	/**
+	 * @see DATAMONGO-376
+	 */
+	@Test
+	public void returnsEmptyStringIfNoPathExpressionIsGiven() {
+
+		QAddress address = QPerson.person.shippingAddresses.any();
+		assertThat(serializer.getKeyForPath(address, address.getMetadata()), is(""));
 	}
 
 	class Address {
