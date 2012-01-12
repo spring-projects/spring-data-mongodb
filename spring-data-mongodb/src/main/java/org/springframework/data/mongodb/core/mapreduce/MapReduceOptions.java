@@ -39,10 +39,9 @@ public class MapReduceOptions {
 	private Boolean jsMode;
 
 	private Boolean verbose = true;
-	
+
 	private Map<String, Object> extraOptions = new HashMap<String, Object>();
-	
-	
+
 	/**
 	 * Static factory method to create a MapReduceOptions instance
 	 * 
@@ -189,12 +188,12 @@ public class MapReduceOptions {
 		this.verbose = verbose;
 		return this;
 	}
-	
+
 	/**
-	 * Add additional extra options that may not have a method on this class.  This method will help if you use a 
-	 * version of this client library with a server version that has added additional map-reduce options that do not 
-	 * yet have an method for use in setting them.
-	 * options
+	 * Add additional extra options that may not have a method on this class. This method will help if you use a version
+	 * of this client library with a server version that has added additional map-reduce options that do not yet have an
+	 * method for use in setting them. options
+	 * 
 	 * @param key The key option
 	 * @param value The value of the option
 	 * @return MapReduceOptions so that methods can be chained in a fluent API style
@@ -203,40 +202,39 @@ public class MapReduceOptions {
 		extraOptions.put(key, value);
 		return this;
 	}
-	
+
 	public Map<String, Object> getExtraOptions() {
-			return extraOptions;
+		return extraOptions;
 	}
-	
+
 	public String getFinalizeFunction() {
 		return this.finalizeFunction;
 	}
-	
+
 	public Boolean getJavaScriptMode() {
 		return this.jsMode;
 	}
-	
+
 	public String getOutputCollection() {
 		return this.outputCollection;
 	}
-	
+
 	public String getOutputDatabase() {
 		return this.outputDatabase;
 	}
-	
+
 	public Boolean getOutputSharded() {
 		return this.outputSharded;
 	}
-	
+
 	public MapReduceCommand.OutputType getOutputType() {
 		return this.outputType;
 	}
-	
+
 	public Map<String, Object> getScopeVariables() {
 		return this.scopeVariables;
 	}
-	
-	
+
 	public DBObject getOptionsObject() {
 		BasicDBObject cmd = new BasicDBObject();
 
@@ -253,7 +251,7 @@ public class MapReduceOptions {
 		if (scopeVariables != null) {
 			cmd.put("scope", scopeVariables);
 		}
-		
+
 		if (!extraOptions.keySet().isEmpty()) {
 			cmd.putAll(extraOptions);
 		}

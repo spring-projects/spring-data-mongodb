@@ -61,12 +61,10 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements Paging
 
 	/*
 	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.springframework.data.repository.Repository#save(java.lang.Object)
+	 * @see org.springframework.data.repository.CrudRepository#save(java.lang.Object)
 	 */
 	public T save(T entity) {
-		
+
 		Assert.notNull(entity, "Entity must not be null!");
 
 		mongoOperations.save(entity, entityInformation.getCollectionName());
@@ -75,14 +73,12 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements Paging
 
 	/*
 	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.springframework.data.repository.Repository#save(java.lang.Iterable)
+	 * @see org.springframework.data.repository.CrudRepository#save(java.lang.Iterable)
 	 */
 	public List<T> save(Iterable<? extends T> entities) {
 
 		Assert.notNull(entities, "The given Iterable of entities not be null!");
-		
+
 		List<T> result = new ArrayList<T>();
 
 		for (T entity : entities) {
@@ -95,10 +91,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements Paging
 
 	/*
 	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.springframework.data.repository.Repository#findById(java.io.Serializable
-	 * )
+	 * @see org.springframework.data.repository.CrudRepository#findOne(java.io.Serializable)
 	 */
 	public T findOne(ID id) {
 		Assert.notNull(id, "The given id must not be null!");
@@ -115,10 +108,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements Paging
 
 	/*
 	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.springframework.data.repository.Repository#exists(java.io.Serializable
-	 * )
+	 * @see org.springframework.data.repository.CrudRepository#exists(java.io.Serializable)
 	 */
 	public boolean exists(ID id) {
 
@@ -129,8 +119,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements Paging
 
 	/*
 	 * (non-Javadoc)
-	 * 
-	 * @see org.springframework.data.repository.Repository#count()
+	 * @see org.springframework.data.repository.CrudRepository#count()
 	 */
 	public long count() {
 
@@ -139,7 +128,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements Paging
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.Repository#delete(java.io.Serializable)
+	 * @see org.springframework.data.repository.CrudRepository#delete(java.io.Serializable)
 	 */
 	public void delete(ID id) {
 		Assert.notNull(id, "The given id must not be null!");
@@ -148,9 +137,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements Paging
 
 	/*
 	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.springframework.data.repository.Repository#delete(java.lang.Object)
+	 * @see org.springframework.data.repository.CrudRepository#delete(java.lang.Object)
 	 */
 	public void delete(T entity) {
 		Assert.notNull(entity, "The given entity must not be null!");
@@ -159,14 +146,12 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements Paging
 
 	/*
 	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.springframework.data.repository.Repository#delete(java.lang.Iterable)
+	 * @see org.springframework.data.repository.CrudRepository#delete(java.lang.Iterable)
 	 */
 	public void delete(Iterable<? extends T> entities) {
 
 		Assert.notNull(entities, "The given Iterable of entities not be null!");
-		
+
 		for (T entity : entities) {
 			delete(entity);
 		}
@@ -174,8 +159,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements Paging
 
 	/*
 	 * (non-Javadoc)
-	 * 
-	 * @see org.springframework.data.repository.Repository#deleteAll()
+	 * @see org.springframework.data.repository.CrudRepository#deleteAll()
 	 */
 	public void deleteAll() {
 
@@ -184,8 +168,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements Paging
 
 	/*
 	 * (non-Javadoc)
-	 * 
-	 * @see org.springframework.data.repository.Repository#findAll()
+	 * @see org.springframework.data.repository.CrudRepository#findAll()
 	 */
 	public List<T> findAll() {
 
@@ -194,10 +177,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements Paging
 
 	/*
 	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.springframework.data.repository.PagingAndSortingRepository#findAll
-	 * (org.springframework.data.domain.Pageable)
+	 * @see org.springframework.data.repository.PagingAndSortingRepository#findAll(org.springframework.data.domain.Pageable)
 	 */
 	public Page<T> findAll(final Pageable pageable) {
 
@@ -209,41 +189,11 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements Paging
 
 	/*
 	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.springframework.data.repository.PagingAndSortingRepository#findAll
-	 * (org.springframework.data.domain.Sort)
+	 * @see org.springframework.data.repository.PagingAndSortingRepository#findAll(org.springframework.data.domain.Sort)
 	 */
 	public List<T> findAll(final Sort sort) {
 
 		return findAll(QueryUtils.applySorting(new Query(), sort));
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.springframework.data.repository.Repository#findAll(java.lang.Iterable
-	 * )
-	 */
-	public List<T> findAll(Iterable<ID> ids) {
-
-		Query query = null;
-
-		//TODO: verify intent
-//		for (ID id : ids) {
-//			if (query == null) {
-//				query = getIdQuery(id);
-//			} else {
-//				query = new Query().or(getIdQuery(id));
-//			}
-//		}
-		List<ID> idList = new ArrayList<ID>();
-		for (ID id : ids) {
-			idList.add(id);
-		}
-		query = new Query(Criteria.where(entityInformation.getIdAttribute()).in(idList));
-		return findAll(query);
 	}
 
 	private List<T> findAll(Query query) {

@@ -31,7 +31,6 @@ public class IndexInfo {
 
 	private boolean sparse = false;
 
-
 	public IndexInfo(Map<String, Order> fieldSpec, String name, boolean unique, boolean dropDuplicates, boolean sparse) {
 		super();
 		this.fieldSpec = fieldSpec;
@@ -107,9 +106,8 @@ public class IndexInfo {
 		return true;
 	}
 
-
 	/**
-	 * [{ "v" : 1 , "key" : { "_id" : 1} ,  "ns" : "database.person" , "name" : "_id_"}, 
-      { "v" : 1 , "key" : { "age" : -1} , "ns" : "database.person" , "name" : "age_-1" ,  "unique" : true , "dropDups" : true}]
+	 * [{ "v" : 1 , "key" : { "_id" : 1} , "ns" : "database.person" , "name" : "_id_"}, { "v" : 1 , "key" : { "age" : -1}
+	 * , "ns" : "database.person" , "name" : "age_-1" , "unique" : true , "dropDups" : true}]
 	 */
 }

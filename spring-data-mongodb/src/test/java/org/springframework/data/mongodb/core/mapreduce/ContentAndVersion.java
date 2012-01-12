@@ -3,17 +3,17 @@ package org.springframework.data.mongodb.core.mapreduce;
 public class ContentAndVersion {
 
 	private String id;
-	
+
 	private String document_id;
-	
+
 	private String content;
-	
+
 	private String author;
 
 	private Long version;
-	
+
 	private Long value;
-	
+
 	public String getAuthor() {
 		return author;
 	}
@@ -37,7 +37,6 @@ public class ContentAndVersion {
 	public void setDocumentId(String documentId) {
 		this.document_id = documentId;
 	}
-
 
 	public String getId() {
 		return id;
@@ -68,6 +67,5 @@ public class ContentAndVersion {
 		return "ContentAndVersion [id=" + id + ", document_id=" + document_id + ", content=" + content + ", author="
 				+ author + ", version=" + version + ", value=" + value + "]";
 	}
-	
 
 }

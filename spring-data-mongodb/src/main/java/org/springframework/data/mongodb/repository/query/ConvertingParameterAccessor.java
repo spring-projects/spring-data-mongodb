@@ -42,10 +42,10 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 	 * @param delegate must not be {@literal null}.
 	 */
 	public ConvertingParameterAccessor(MongoWriter<?> writer, MongoParameterAccessor delegate) {
-		
+
 		Assert.notNull(writer);
 		Assert.notNull(delegate);
-		
+
 		this.writer = writer;
 		this.delegate = delegate;
 	}
@@ -92,7 +92,7 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 	public Distance getMaxDistance() {
 		return delegate.getMaxDistance();
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.springframework.data.mongodb.repository.MongoParameterAccessor#getGeoNearLocation()
 	 */

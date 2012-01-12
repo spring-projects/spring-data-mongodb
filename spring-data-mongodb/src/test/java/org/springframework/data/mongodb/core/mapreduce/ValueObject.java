@@ -3,7 +3,7 @@ package org.springframework.data.mongodb.core.mapreduce;
 public class ValueObject {
 
 	private String id;
-	
+
 	public String getId() {
 		return id;
 	}
@@ -22,5 +22,5 @@ public class ValueObject {
 	public String toString() {
 		return "ValueObject [id=" + id + ", value=" + value + "]";
 	}
-	
+
 }

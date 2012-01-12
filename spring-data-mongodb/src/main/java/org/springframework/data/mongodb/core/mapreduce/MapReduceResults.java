@@ -24,77 +24,77 @@ import com.mongodb.DBObject;
 
 /**
  * Collects the results of performing a MapReduce operations.
+ * 
  * @author Mark Pollack
- *
+ * 
  * @param <T> The class in which the results are mapped onto, accessible via an interator.
  */
 public class MapReduceResults<T> implements Iterable<T> {
 
 	private final List<T> mappedResults;
-	
+
 	private DBObject rawResults;
 
 	private MapReduceTiming mapReduceTiming;
-	
+
 	private MapReduceCounts mapReduceCounts;
-	
+
 	private String outputCollection;
-	
+
 	public MapReduceResults(List<T> mappedResults, DBObject rawResults) {
 		Assert.notNull(mappedResults);
 		Assert.notNull(rawResults);
 		this.mappedResults = mappedResults;
 		this.rawResults = rawResults;
 		parseTiming(rawResults);
-		parseCounts(rawResults);		
+		parseCounts(rawResults);
 		if (rawResults.get("result") != null) {
 			this.outputCollection = (String) rawResults.get("result");
 		}
 	}
-	
+
 	public Iterator<T> iterator() {
-			return mappedResults.iterator();
+		return mappedResults.iterator();
 	}
-		
+
 	public MapReduceTiming getTiming() {
 		return mapReduceTiming;
 	}
-	
+
 	public MapReduceCounts getCounts() {
 		return mapReduceCounts;
 	}
-	
+
 	public String getOutputCollection() {
 		return outputCollection;
 	}
-	
+
 	public DBObject getRawResults() {
 		return rawResults;
 	}
-	
+
 	protected void parseTiming(DBObject rawResults) {
 		DBObject timing = (DBObject) rawResults.get("timing");
 		if (timing != null) {
 			if (timing.get("mapTime") != null && timing.get("emitLoop") != null && timing.get("total") != null) {
-				mapReduceTiming =  new MapReduceTiming( (Long)timing.get("mapTime"), 
-																								(Integer)timing.get("emitLoop"), 
-																								(Integer)timing.get("total"));
+				mapReduceTiming = new MapReduceTiming((Long) timing.get("mapTime"), (Integer) timing.get("emitLoop"),
+						(Integer) timing.get("total"));
 			}
 		} else {
-			mapReduceTiming = new MapReduceTiming(-1,-1,-1);
+			mapReduceTiming = new MapReduceTiming(-1, -1, -1);
 		}
 	}
-	
-	
+
 	protected void parseCounts(DBObject rawResults) {
 		DBObject counts = (DBObject) rawResults.get("counts");
 		if (counts != null) {
 			if (counts.get("input") != null && counts.get("emit") != null && counts.get("output") != null) {
-				mapReduceCounts =  new MapReduceCounts( (Integer)counts.get("input"), (Integer)counts.get("emit"), (Integer)counts.get("output"));
+				mapReduceCounts = new MapReduceCounts((Integer) counts.get("input"), (Integer) counts.get("emit"),
+						(Integer) counts.get("output"));
 			}
 		} else {
-			mapReduceCounts = new MapReduceCounts(-1,-1,-1);
+			mapReduceCounts = new MapReduceCounts(-1, -1, -1);
 		}
 	}
-	
+
 }

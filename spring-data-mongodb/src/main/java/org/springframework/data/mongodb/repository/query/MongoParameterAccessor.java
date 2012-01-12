@@ -33,7 +33,7 @@ public interface MongoParameterAccessor extends ParameterAccessor {
 	 *         at all or the given value for it was {@literal null}.
 	 */
 	Distance getMaxDistance();
-	
+
 	/**
 	 * Returns the {@link Point} to use for a geo-near query.
 	 * 

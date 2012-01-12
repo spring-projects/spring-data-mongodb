@@ -26,11 +26,11 @@ import com.mongodb.DBObject;
 
 /**
  * Unit tests for {@link BasicQuery}.
- *
+ * 
  * @author Oliver Gierke
  */
 public class BasicQueryUnitTests {
-	
+
 	@Test
 	public void createsQueryFromPlainJson() {
 		Query q = new BasicQuery("{ \"name\" : \"Thomas\"}");
@@ -45,14 +45,14 @@ public class BasicQueryUnitTests {
 		reference.put("age", new BasicDBObject("$lt", 80));
 		assertThat(q.getQueryObject(), is(reference));
 	}
-	
+
 	@Test
 	public void overridesSortCorrectly() {
-		
+
 		BasicQuery query = new BasicQuery("{}");
 		query.setSortObject(new BasicDBObject("name", -1));
 		query.sort().on("lastname", Order.ASCENDING);
-		
+
 		DBObject sortReference = new BasicDBObject("name", -1);
 		sortReference.put("lastname", 1);
 		assertThat(query.getSortObject(), is(sortReference));

@@ -36,9 +36,9 @@ import org.springframework.util.ReflectionUtils;
  * @author Oliver Gierke
  */
 public class BasicMongoPersistentPropertyUnitTests {
-	
+
 	MongoPersistentEntity<Person> entity;
-	
+
 	@Before
 	public void setup() {
 		entity = new BasicMongoPersistentEntity<Person>(ClassTypeInformation.from(Person.class));
@@ -46,11 +46,11 @@ public class BasicMongoPersistentPropertyUnitTests {
 
 	@Test
 	public void usesAnnotatedFieldName() {
-		
+
 		Field field = ReflectionUtils.findField(Person.class, "firstname");
 		assertThat(getPropertyFor(field).getFieldName(), is("foo"));
 	}
-	
+
 	@Test
 	public void returns_IdForIdProperty() {
 		Field field = ReflectionUtils.findField(Person.class, "id");
@@ -58,32 +58,32 @@ public class BasicMongoPersistentPropertyUnitTests {
 		assertThat(property.isIdProperty(), is(true));
 		assertThat(property.getFieldName(), is("_id"));
 	}
-	
+
 	@Test
 	public void returnsPropertyNameForUnannotatedProperties() {
-		
+
 		Field field = ReflectionUtils.findField(Person.class, "lastname");
 		assertThat(getPropertyFor(field).getFieldName(), is("lastname"));
 	}
-	
+
 	@Test
 	public void preventsNegativeOrder() {
 		getPropertyFor(ReflectionUtils.findField(Person.class, "ssn"));
 	}
-	
+
 	private MongoPersistentProperty getPropertyFor(Field field) {
 		return new BasicMongoPersistentProperty(field, null, entity, new SimpleTypeHolder());
 	}
-	
+
 	class Person {
-		
+
 		@Id
 		String id;
-		
+
 		@org.springframework.data.mongodb.core.mapping.Field("foo")
 		String firstname;
 		String lastname;
-		
+
 		@org.springframework.data.mongodb.core.mapping.Field(order = -20)
 		String ssn;
 	}

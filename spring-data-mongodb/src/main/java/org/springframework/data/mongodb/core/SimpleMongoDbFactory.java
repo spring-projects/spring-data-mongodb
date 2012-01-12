@@ -56,7 +56,8 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 	public SimpleMongoDbFactory(Mongo mongo, String databaseName) {
 		Assert.notNull(mongo, "Mongo must not be null");
 		Assert.hasText(databaseName, "Database name must not be empty");
-		Assert.isTrue(databaseName.matches("[\\w-]+"), "Database name must only contain letters, numbers, underscores and dashes!");
+		Assert.isTrue(databaseName.matches("[\\w-]+"),
+				"Database name must only contain letters, numbers, underscores and dashes!");
 		this.mongo = mongo;
 		this.databaseName = databaseName;
 	}
@@ -73,7 +74,7 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 		this.username = userCredentials.getUsername();
 		this.password = userCredentials.getPassword();
 	}
-	
+
 	/**
 	 * Creates a new {@link SimpleMongoDbFactory} instance from the given {@link MongoURI}.
 	 * 
@@ -82,7 +83,7 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 	 * @throws UnknownHostException
 	 * @see MongoURI
 	 */
-	public SimpleMongoDbFactory(MongoURI uri) throws MongoException, UnknownHostException {		
+	public SimpleMongoDbFactory(MongoURI uri) throws MongoException, UnknownHostException {
 		this(new Mongo(uri), uri.getDatabase(), new UserCredentials(uri.getUsername(), parseChars(uri.getPassword())));
 	}
 
@@ -94,7 +95,7 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 	public void setWriteConcern(WriteConcern writeConcern) {
 		this.writeConcern = writeConcern;
 	}
-	
+
 	public WriteConcern getWriteConcern() {
 		return writeConcern;
 	}
@@ -130,7 +131,7 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 	public void destroy() throws Exception {
 		mongo.close();
 	}
-	
+
 	public static String parseChars(char[] chars) {
 		if (chars == null) {
 			return null;

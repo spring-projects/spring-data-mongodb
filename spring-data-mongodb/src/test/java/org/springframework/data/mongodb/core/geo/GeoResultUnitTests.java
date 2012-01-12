@@ -21,11 +21,11 @@ import org.junit.Test;
 
 /**
  * Unit tests for {@link GeoResult}.
- *
+ * 
  * @author Oliver Gierke
  */
 public class GeoResultUnitTests {
-	
+
 	GeoResult<String> first = new GeoResult<String>("Foo", new Distance(2.5));
 	GeoResult<String> second = new GeoResult<String>("Foo", new Distance(2.5));
 	GeoResult<String> third = new GeoResult<String>("Bar", new Distance(2.5));
@@ -33,10 +33,10 @@ public class GeoResultUnitTests {
 
 	@Test
 	public void considersSameInstanceEqual() {
-		
+
 		assertThat(first.equals(first), is(true));
 	}
-	
+
 	@Test
 	public void considersSameValuesAsEqual() {
 		assertThat(first.equals(second), is(true));
@@ -46,7 +46,7 @@ public class GeoResultUnitTests {
 		assertThat(first.equals(fourth), is(false));
 		assertThat(fourth.equals(first), is(false));
 	}
-	
+
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Test(expected = IllegalArgumentException.class)
 	public void rejectsNullContent() {

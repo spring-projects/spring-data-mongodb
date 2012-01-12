@@ -29,37 +29,37 @@ import com.mongodb.DBObject;
 
 /**
  * Unit tests for {@link AbstractMongoEventListener}.
- *
+ * 
  * @author Oliver Gierke
  */
 public class AbstractMongoEventListenerUnitTests {
-	
+
 	@Test
 	public void invokesCallbackForEventForPerson() {
-		
+
 		MongoMappingEvent<Person> event = new BeforeConvertEvent<Person>(new Person("Dave", "Matthews"));
 		SamplePersonEventListener listener = new SamplePersonEventListener();
 		listener.onApplicationEvent(event);
 		assertThat(listener.invokedOnBeforeConvert, is(true));
 	}
-	
+
 	@Test
 	public void dropsEventIfNotForCorrectDomainType() {
-		
+
 		ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext();
 		context.refresh();
 
 		SamplePersonEventListener listener = new SamplePersonEventListener();
 		context.addApplicationListener(listener);
-		
+
 		context.publishEvent(new BeforeConvertEvent<Person>(new Person("Dave", "Matthews")));
 		assertThat(listener.invokedOnBeforeConvert, is(true));
-		
+
 		listener.invokedOnBeforeConvert = false;
 		context.publishEvent(new BeforeConvertEvent<String>("Test"));
 		assertThat(listener.invokedOnBeforeConvert, is(false));
 	}
-	
+
 	/**
 	 * @see DATADOC-289
 	 */
@@ -115,14 +115,14 @@ public class AbstractMongoEventListenerUnitTests {
 		assertThat(personListener.invokedOnAfterLoad, is(false));
 		assertThat(contactListener.invokedOnAfterLoad, is(true));
 	}
-	
+
 	/**
 	 * @see DATADOC-333
 	 */
 	@Test
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public void handlesUntypedImplementations() {
-		
+
 		UntypedEventListener listener = new UntypedEventListener();
 		listener.onApplicationEvent(new MongoMappingEvent(new Object(), new BasicDBObject()));
 	}
@@ -131,12 +131,12 @@ public class AbstractMongoEventListenerUnitTests {
 
 		boolean invokedOnBeforeConvert;
 		boolean invokedOnAfterLoad;
-		
+
 		@Override
 		public void onBeforeConvert(Person source) {
 			invokedOnBeforeConvert = true;
 		}
-		
+
 		@Override
 		public void onAfterLoad(DBObject dbo) {
 			invokedOnAfterLoad = true;
@@ -177,6 +177,6 @@ public class AbstractMongoEventListenerUnitTests {
 
 	@SuppressWarnings("rawtypes")
 	class UntypedEventListener extends AbstractMongoEventListener {
-		
+
 	}
 }

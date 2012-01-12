@@ -33,7 +33,7 @@ public class Person extends Contact {
 	public enum Sex {
 		MALE, FEMALE;
 	}
-	
+
 	private String firstname;
 	private String lastname;
 	@Indexed(unique = true, dropDups = true)
@@ -62,9 +62,9 @@ public class Person extends Contact {
 
 		this(firstname, lastname, age, Sex.MALE);
 	}
-	
+
 	public Person(String firstname, String lastname, Integer age, Sex sex) {
-		
+
 		super();
 		this.firstname = firstname;
 		this.lastname = lastname;
@@ -82,8 +82,7 @@ public class Person extends Contact {
 	}
 
 	/**
-	 * @param firstname
-	 *          the firstname to set
+	 * @param firstname the firstname to set
 	 */
 	public void setFirstname(String firstname) {
 
@@ -99,8 +98,7 @@ public class Person extends Contact {
 	}
 
 	/**
-	 * @param lastname
-	 *          the lastname to set
+	 * @param lastname the lastname to set
 	 */
 	public void setLastname(String lastname) {
 
@@ -113,14 +111,14 @@ public class Person extends Contact {
 	public String getEmail() {
 		return email;
 	}
-	
+
 	/**
 	 * @param email the email to set
 	 */
 	public void setEmail(String email) {
 		this.email = email;
 	}
-	
+
 	/**
 	 * @return the age
 	 */
@@ -130,8 +128,7 @@ public class Person extends Contact {
 	}
 
 	/**
-	 * @param age
-	 *          the age to set
+	 * @param age the age to set
 	 */
 	public void setAge(Integer age) {
 
@@ -146,8 +143,7 @@ public class Person extends Contact {
 	}
 
 	/**
-	 * @param location
-	 *          the location to set
+	 * @param location the location to set
 	 */
 	public void setLocation(Point location) {
 		this.location = location;
@@ -161,8 +157,7 @@ public class Person extends Contact {
 	}
 
 	/**
-	 * @param address
-	 *          the address to set
+	 * @param address the address to set
 	 */
 	public void setAddress(Address address) {
 		this.address = address;
@@ -176,8 +171,7 @@ public class Person extends Contact {
 	}
 
 	/**
-	 * @param addresses
-	 *          the addresses to set
+	 * @param addresses the addresses to set
 	 */
 	public void setShippingAddresses(Set<Address> addresses) {
 		this.shippingAddresses = addresses;

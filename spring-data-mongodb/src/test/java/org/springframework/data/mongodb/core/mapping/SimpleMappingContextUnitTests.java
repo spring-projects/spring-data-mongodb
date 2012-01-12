@@ -17,10 +17,10 @@ public class SimpleMappingContextUnitTests {
 
 	@Test
 	public void returnsIdPropertyCorrectly() {
-		
+
 		SimpleMongoMappingContext context = new SimpleMongoMappingContext();
 		SimpleMongoPersistentEntity<?> entity = context.getPersistentEntity(Person.class);
-		
+
 		MongoPersistentProperty idProperty = entity.getIdProperty();
 		assertThat(idProperty, is(notNullValue()));
 		assertThat(idProperty.getName(), is("id"));

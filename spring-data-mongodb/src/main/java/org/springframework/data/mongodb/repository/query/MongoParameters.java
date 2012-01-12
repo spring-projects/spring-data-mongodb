@@ -35,7 +35,7 @@ public class MongoParameters extends Parameters {
 
 	private final Integer distanceIndex;
 	private Integer nearIndex;
-	
+
 	/**
 	 * Creates a new {@link MongoParameters} instance from the given {@link Method} and {@link MongoQueryMethod}.
 	 * 
@@ -43,55 +43,56 @@ public class MongoParameters extends Parameters {
 	 * @param queryMethod must not be {@literal null}.
 	 */
 	public MongoParameters(Method method, boolean isGeoNearMethod) {
-		
+
 		super(method);
 		List<Class<?>> parameterTypes = Arrays.asList(method.getParameterTypes());
 		this.distanceIndex = parameterTypes.indexOf(Distance.class);
-		
+
 		if (this.nearIndex == null && isGeoNearMethod) {
 			this.nearIndex = getNearIndex(parameterTypes);
 		} else if (this.nearIndex == null) {
 			this.nearIndex = -1;
 		}
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	private final int getNearIndex(List<Class<?>> parameterTypes) {
-		
+
 		for (Class<?> reference : Arrays.asList(Point.class, double[].class)) {
-			
+
 			int nearIndex = parameterTypes.indexOf(reference);
-			
+
 			if (nearIndex == -1) {
 				continue;
 			}
-			
+
 			if (nearIndex == parameterTypes.lastIndexOf(reference)) {
 				return nearIndex;
 			} else {
 				throw new IllegalStateException("Multiple Point parameters found but none annotated with @Near!");
 			}
 		}
-		
+
 		return -1;
 	}
-	
+
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.query.Parameters#createParameter(org.springframework.core.MethodParameter)
 	 */
 	@Override
 	protected Parameter createParameter(MethodParameter parameter) {
-		
+
 		MongoParameter mongoParameter = new MongoParameter(parameter);
-		
+
 		// Detect manually annotated @Near Point and reject multiple annotated ones
 		if (this.nearIndex == null && mongoParameter.isManuallyAnnotatedNearParameter()) {
 			this.nearIndex = mongoParameter.getIndex();
 		} else if (mongoParameter.isManuallyAnnotatedNearParameter()) {
-			throw new IllegalStateException(String.format("Found multiple @Near annotations ond method %s! Only one allowed!", parameter.getMethod().toString()));
+			throw new IllegalStateException(String.format(
+					"Found multiple @Near annotations ond method %s! Only one allowed!", parameter.getMethod().toString()));
 		}
-		
+
 		return mongoParameter;
 	}
 
@@ -103,7 +104,7 @@ public class MongoParameters extends Parameters {
 	public int getDistanceIndex() {
 		return distanceIndex;
 	}
-	
+
 	/**
 	 * Returns the index of the parameter to be used to start a geo-near query from.
 	 * 
@@ -112,16 +113,16 @@ public class MongoParameters extends Parameters {
 	public int getNearIndex() {
 		return nearIndex;
 	}
-	
+
 	/**
 	 * Custom {@link Parameter} implementation adding parameters of type {@link Distance} to the special ones.
-	 *
+	 * 
 	 * @author Oliver Gierke
 	 */
 	class MongoParameter extends Parameter {
-		
+
 		private final MethodParameter parameter;
-		
+
 		/**
 		 * Creates a new {@link MongoParameter}.
 		 * 
@@ -130,7 +131,7 @@ public class MongoParameters extends Parameters {
 		MongoParameter(MethodParameter parameter) {
 			super(parameter);
 			this.parameter = parameter;
-			
+
 			if (!isPoint() && hasNearAnnotation()) {
 				throw new IllegalArgumentException("Near annotation is only allowed at Point parameter!");
 			}
@@ -142,23 +143,22 @@ public class MongoParameters extends Parameters {
 		 */
 		@Override
 		public boolean isSpecialParameter() {
-			return super.isSpecialParameter() || getType().equals(Distance.class)
-					|| isNearParameter();
+			return super.isSpecialParameter() || getType().equals(Distance.class) || isNearParameter();
 		}
-		
+
 		private boolean isNearParameter() {
 			Integer nearIndex = MongoParameters.this.nearIndex;
 			return nearIndex != null && nearIndex.equals(getIndex());
 		}
-		
+
 		private boolean isManuallyAnnotatedNearParameter() {
 			return isPoint() && hasNearAnnotation();
 		}
-		
+
 		private boolean isPoint() {
 			return getType().equals(Point.class) || getType().equals(double[].class);
 		}
-		
+
 		private boolean hasNearAnnotation() {
 			return parameter.getParameterAnnotation(Near.class) != null;
 		}

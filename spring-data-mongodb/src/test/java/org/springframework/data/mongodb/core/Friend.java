@@ -15,7 +15,6 @@
  */
 package org.springframework.data.mongodb.core;
 
-
 public class Friend {
 
 	private String id;

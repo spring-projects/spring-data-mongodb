@@ -26,31 +26,27 @@ import com.mongodb.DBObject;
  * Collects the results of executing a group operation.
  * 
  * @author Mark Pollack
- *
  * @param <T> The class in which the results are mapped onto, accessible via an interator.
  */
 public class GroupByResults<T> implements Iterable<T> {
 
 	private final List<T> mappedResults;
-	
-	private DBObject rawResults;
-	
+	private final DBObject rawResults;
+
 	private double count;
-	
 	private int keys;
-	
 	private String serverUsed;
-	
+
 	public GroupByResults(List<T> mappedResults, DBObject rawResults) {
 		Assert.notNull(mappedResults);
 		Assert.notNull(rawResults);
 		this.mappedResults = mappedResults;
 		this.rawResults = rawResults;
-		parseKeys();		
+		parseKeys();
 		parseCount();
 		parseServerUsed();
 	}
-	
+
 	public double getCount() {
 		return count;
 	}
@@ -58,36 +54,36 @@ public class GroupByResults<T> implements Iterable<T> {
 	public int getKeys() {
 		return keys;
 	}
-	
+
 	public String getServerUsed() {
 		return serverUsed;
 	}
 
 	public Iterator<T> iterator() {
-			return mappedResults.iterator();
+		return mappedResults.iterator();
 	}
-		
+
 	public DBObject getRawResults() {
 		return rawResults;
 	}
-	
+
 	private void parseCount() {
 		Object object = rawResults.get("count");
 		if (object instanceof Double) {
 			count = (Double) object;
 		}
-		
+
 	}
 
 	private void parseKeys() {
 		Object object = rawResults.get("keys");
 		if (object instanceof Integer) {
 			keys = (Integer) object;
-		}		
+		}
 	}
-	
+
 	private void parseServerUsed() {
-		//"serverUsed" : "127.0.0.1:27017"
+		// "serverUsed" : "127.0.0.1:27017"
 		Object object = rawResults.get("serverUsed");
 		if (object instanceof String) {
 			serverUsed = (String) object;

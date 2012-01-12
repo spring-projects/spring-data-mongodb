@@ -38,27 +38,27 @@ public class DefaultMongoTypeMapperUnitTests {
 
 	ConfigurableTypeInformationMapper configurableTypeInformationMapper;
 	SimpleTypeInformationMapper simpleTypeInformationMapper;
-	
-	
+
 	DefaultMongoTypeMapper typeMapper;
 
 	@Before
 	public void setUp() {
-		
-		configurableTypeInformationMapper = new ConfigurableTypeInformationMapper(Collections.singletonMap(String.class, "1"));
+
+		configurableTypeInformationMapper = new ConfigurableTypeInformationMapper(Collections.singletonMap(String.class,
+				"1"));
 		simpleTypeInformationMapper = SimpleTypeInformationMapper.INSTANCE;
 
-		typeMapper = new DefaultMongoTypeMapper(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY, Arrays.asList(
-				configurableTypeInformationMapper));
+		typeMapper = new DefaultMongoTypeMapper(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY,
+				Arrays.asList(configurableTypeInformationMapper));
 	}
-	
+
 	@Test
 	public void defaultInstanceWritesClasses() {
-		
+
 		typeMapper = new DefaultMongoTypeMapper();
 		writesTypeToField(new BasicDBObject(), String.class, String.class.getName());
 	}
-	
+
 	@Test
 	public void defaultInstanceReadsClasses() {
 		typeMapper = new DefaultMongoTypeMapper();
@@ -74,10 +74,10 @@ public class DefaultMongoTypeMapperUnitTests {
 
 	@Test
 	public void writesClassNamesForUnmappedValuesIfConfigured() {
-		
+
 		typeMapper = new DefaultMongoTypeMapper(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY, Arrays.asList(
 				configurableTypeInformationMapper, simpleTypeInformationMapper));
-		
+
 		writesTypeToField(new BasicDBObject(), String.class, "1");
 		writesTypeToField(new BasicDBObject(), Object.class, Object.class.getName());
 	}
@@ -90,10 +90,10 @@ public class DefaultMongoTypeMapperUnitTests {
 
 	@Test
 	public void readsTypeLoadingClassesForUnmappedTypesIfConfigured() {
-		
+
 		typeMapper = new DefaultMongoTypeMapper(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY, Arrays.asList(
 				configurableTypeInformationMapper, simpleTypeInformationMapper));
-		
+
 		readsTypeFromField(new BasicDBObject(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY, "1"), String.class);
 		readsTypeFromField(new BasicDBObject(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY, Object.class.getName()), Object.class);
 	}

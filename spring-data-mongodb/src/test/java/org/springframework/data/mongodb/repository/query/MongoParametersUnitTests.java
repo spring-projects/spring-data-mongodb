@@ -73,7 +73,7 @@ public class MongoParametersUnitTests {
 		Method method = PersonRepository.class.getMethod("findByLocationNearAndOtherLocation", Point.class, Point.class);
 		new MongoParameters(method, true);
 	}
-	
+
 	@Test(expected = IllegalStateException.class)
 	public void rejectsMultipleDoubleArraysForGeoNearMethod() throws Exception {
 		Method method = PersonRepository.class.getMethod("invalidDoubleArrays", double[].class, double[].class);
@@ -92,7 +92,7 @@ public class MongoParametersUnitTests {
 		MongoParameters parameters = new MongoParameters(method, true);
 		assertThat(parameters.getNearIndex(), is(1));
 	}
-	
+
 	@Test
 	public void findsAnnotatedDoubleArrayForGeoNearQuery() throws Exception {
 		Method method = PersonRepository.class.getMethod("validDoubleArrays", double[].class, double[].class);
@@ -105,13 +105,13 @@ public class MongoParametersUnitTests {
 		List<Person> findByLocationNear(Point point, Distance distance);
 
 		GeoResults<Person> findByLocationNearAndOtherLocation(Point point, Point anotherLocation);
-		
+
 		GeoResults<Person> invalidDoubleArrays(double[] first, double[] second);
 
 		List<Person> someOtherMethod(Point first, Point second);
 
 		GeoResults<Person> findByOtherLocationAndLocationNear(Point point, @Near Point anotherLocation);
-		
+
 		GeoResults<Person> validDoubleArrays(double[] first, @Near double[] second);
 	}
 }

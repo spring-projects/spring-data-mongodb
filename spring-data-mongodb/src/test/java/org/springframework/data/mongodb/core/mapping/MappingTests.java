@@ -58,7 +58,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 public class MappingTests {
 
 	private static final Log LOGGER = LogFactory.getLog(MongoDbUtils.class);
-	private final String[] collectionsToDrop = new String[]{
+	private final String[] collectionsToDrop = new String[] {
 			MongoCollectionUtils.getPreferredCollectionName(Person.class),
 			MongoCollectionUtils.getPreferredCollectionName(PersonMapProperty.class),
 			MongoCollectionUtils.getPreferredCollectionName(PersonWithObjectId.class),
@@ -72,8 +72,8 @@ public class MappingTests {
 			MongoCollectionUtils.getPreferredCollectionName(PersonWithLongDBRef.class),
 			MongoCollectionUtils.getPreferredCollectionName(PersonNullProperties.class),
 			MongoCollectionUtils.getPreferredCollectionName(Account.class),
-			MongoCollectionUtils.getPreferredCollectionName(PrimitiveId.class),
-			"foobar", "geolocation", "person1", "person2", "account"};
+			MongoCollectionUtils.getPreferredCollectionName(PrimitiveId.class), "foobar", "geolocation", "person1",
+			"person2", "account" };
 
 	ApplicationContext applicationContext;
 	Mongo mongo;
@@ -110,7 +110,8 @@ public class MappingTests {
 		LOGGER.info("done inserting");
 		assertNotNull(p.getId());
 
-		List<PersonWithObjectId> result = template.find(new Query(Criteria.where("ssn").is(12345)), PersonWithObjectId.class);
+		List<PersonWithObjectId> result = template.find(new Query(Criteria.where("ssn").is(12345)),
+				PersonWithObjectId.class);
 		assertThat(result.size(), is(1));
 		assertThat(result.get(0).getSsn(), is(12345));
 	}
@@ -166,11 +167,11 @@ public class MappingTests {
 	}
 
 	@Test
-	@SuppressWarnings({"unchecked", "rawtypes"})
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public void testWriteEntity() {
 
 		Address addr = new Address();
-		addr.setLines(new String[]{"1234 W. 1st Street", "Apt. 12"});
+		addr.setLines(new String[] { "1234 W. 1st Street", "Apt. 12" });
 		addr.setCity("Anytown");
 		addr.setPostalCode(12345);
 		addr.setCountry("USA");
@@ -202,10 +203,10 @@ public class MappingTests {
 	}
 
 	@Test
-	@SuppressWarnings({"unchecked", "rawtypes"})
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public void testUniqueIndex() {
 		Address addr = new Address();
-		addr.setLines(new String[]{"1234 W. 1st Street", "Apt. 12"});
+		addr.setLines(new String[] { "1234 W. 1st Street", "Apt. 12" });
 		addr.setCity("Anytown");
 		addr.setPostalCode(12345);
 		addr.setCountry("USA");
@@ -229,17 +230,17 @@ public class MappingTests {
 		persons.add(new PersonCustomCollection2(66666, "Person", "Two"));
 		template.insertAll(persons);
 
-		List<PersonCustomCollection1> p1Results = template.find(new Query(Criteria.where("ssn").is(55555)), PersonCustomCollection1.class,
-				"person1");
-		List<PersonCustomCollection2> p2Results = template.find(new Query(Criteria.where("ssn").is(66666)), PersonCustomCollection2.class,
-				"person2");
+		List<PersonCustomCollection1> p1Results = template.find(new Query(Criteria.where("ssn").is(55555)),
+				PersonCustomCollection1.class, "person1");
+		List<PersonCustomCollection2> p2Results = template.find(new Query(Criteria.where("ssn").is(66666)),
+				PersonCustomCollection2.class, "person2");
 		assertThat(p1Results.size(), is(1));
 		assertThat(p2Results.size(), is(1));
 	}
 
 	@Test
 	public void testPrimitivesAndCustomCollectionName() {
-		Location loc = new Location(new double[]{1.0, 2.0}, new int[]{1, 2, 3, 4}, new float[]{1.0f, 2.0f});
+		Location loc = new Location(new double[] { 1.0, 2.0 }, new int[] { 1, 2, 3, 4 }, new float[] { 1.0f, 2.0f });
 		template.insert(loc);
 
 		List<Location> result = template.find(new Query(Criteria.where("_id").is(loc.getId())), Location.class, "places");
@@ -255,7 +256,8 @@ public class MappingTests {
 			public Boolean doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 				List<DBObject> indexes = collection.getIndexInfo();
 				for (DBObject dbo : indexes) {
-                    if (dbo.get("name") != null && dbo.get("name") instanceof String && ((String)dbo.get("name")).startsWith("name")) {
+					if (dbo.get("name") != null && dbo.get("name") instanceof String
+							&& ((String) dbo.get("name")).startsWith("name")) {
 						return true;
 					}
 				}
@@ -271,7 +273,8 @@ public class MappingTests {
 					public Boolean doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 						List<DBObject> indexes = collection.getIndexInfo();
 						for (DBObject dbo : indexes) {
-							if (dbo.get("name") != null && dbo.get("name") instanceof String && ((String)dbo.get("name")).startsWith("name")) {
+							if (dbo.get("name") != null && dbo.get("name") instanceof String
+									&& ((String) dbo.get("name")).startsWith("name")) {
 								return true;
 							}
 						}
@@ -282,8 +285,8 @@ public class MappingTests {
 
 	@Test
 	public void testMultiDimensionalArrayProperties() {
-		String[][] grid = new String[][]{new String[]{"1", "2", "3", "4"}, new String[]{"5", "6", "7", "8"},
-				new String[]{"9", "10", "11", "12"}};
+		String[][] grid = new String[][] { new String[] { "1", "2", "3", "4" }, new String[] { "5", "6", "7", "8" },
+				new String[] { "9", "10", "11", "12" } };
 		PersonMultiDimArrays p = new PersonMultiDimArrays(123, "Multi", "Dimensional", grid);
 
 		template.insert(p);
@@ -316,7 +319,7 @@ public class MappingTests {
 
 	@Test
 	public void testDbRef() {
-		double[] pos = new double[]{37.0625, -95.677068};
+		double[] pos = new double[] { 37.0625, -95.677068 };
 		GeoLocation geo = new GeoLocation(pos);
 		template.insert(geo);
 
@@ -340,7 +343,7 @@ public class MappingTests {
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public void testQueryUpdate() {
 		Address addr = new Address();
-		addr.setLines(new String[]{"1234 W. 1st Street", "Apt. 12"});
+		addr.setLines(new String[] { "1234 W. 1st Street", "Apt. 12" });
 		addr.setCity("Anytown");
 		addr.setPostalCode(12345);
 		addr.setCountry("USA");
@@ -354,31 +357,33 @@ public class MappingTests {
 		Person p2 = template.findOne(query(where("ssn").is(1111)), Person.class);
 		assertThat(p2.getAddress().getCity(), is("New Town"));
 	}
-	
+
 	@Test
 	@SuppressWarnings("rawtypes")
 	public void testUpsert() {
 		Address addr = new Address();
-		addr.setLines(new String[]{"1234 W. 1st Street", "Apt. 12"});
+		addr.setLines(new String[] { "1234 W. 1st Street", "Apt. 12" });
 		addr.setCity("Anytown");
 		addr.setPostalCode(12345);
 		addr.setCountry("USA");
 
 		Person p2 = template.findOne(query(where("ssn").is(1111)), Person.class);
 		assertNull(p2);
-		
-		template.upsert(query(where("ssn").is(1111).and("firstName").is("Query").and("lastName").is("Update")), update("address", addr), Person.class);
+
+		template.upsert(query(where("ssn").is(1111).and("firstName").is("Query").and("lastName").is("Update")),
+				update("address", addr), Person.class);
 
 		p2 = template.findOne(query(where("ssn").is(1111)), Person.class);
 		assertThat(p2.getAddress().getCity(), is("Anytown"));
-		
+
 		template.dropCollection(Person.class);
-		template.upsert(query(where("ssn").is(1111).and("firstName").is("Query").and("lastName").is("Update")), update("address", addr), "person");
+		template.upsert(query(where("ssn").is(1111).and("firstName").is("Query").and("lastName").is("Update")),
+				update("address", addr), "person");
 		p2 = template.findOne(query(where("ssn").is(1111)), Person.class);
 		assertThat(p2.getAddress().getCity(), is("Anytown"));
-		
+
 	}
-	
+
 	@Test
 	public void testOrQuery() {
 		PersonWithObjectId p1 = new PersonWithObjectId(1, "first", "");
@@ -386,8 +391,8 @@ public class MappingTests {
 		PersonWithObjectId p2 = new PersonWithObjectId(2, "second", "");
 		template.save(p2);
 
-		List<PersonWithObjectId> results = template.find(new Query(
-				new Criteria().orOperator(where("ssn").is(1), where("ssn").is(2))), PersonWithObjectId.class);
+		List<PersonWithObjectId> results = template.find(
+				new Query(new Criteria().orOperator(where("ssn").is(1), where("ssn").is(2))), PersonWithObjectId.class);
 
 		assertNotNull(results);
 		assertThat(results.size(), is(2));
@@ -426,41 +431,34 @@ public class MappingTests {
 	public void testNoMappingAnnotationsUsingLongAsId() {
 		PersonPojoLongId p = new PersonPojoLongId(1, "Text");
 		template.insert(p);
-		template.updateFirst(query(where("id").is(1)), update("text", "New Text"),
-				PersonPojoLongId.class);
+		template.updateFirst(query(where("id").is(1)), update("text", "New Text"), PersonPojoLongId.class);
 
-		PersonPojoLongId p2 = template.findOne(query(where("id").is(1)),
-				PersonPojoLongId.class);
+		PersonPojoLongId p2 = template.findOne(query(where("id").is(1)), PersonPojoLongId.class);
 		assertEquals("New Text", p2.getText());
 
 		p.setText("Different Text");
 		template.save(p);
 
-		PersonPojoLongId p3 = template.findOne(query(where("id").is(1)),
-				PersonPojoLongId.class);
+		PersonPojoLongId p3 = template.findOne(query(where("id").is(1)), PersonPojoLongId.class);
 		assertEquals("Different Text", p3.getText());
 
 	}
 
 	@Test
 	public void testNoMappingAnnotationsUsingStringAsId() {
-		//Assign the String Id in code
+		// Assign the String Id in code
 		PersonPojoStringId p = new PersonPojoStringId("1", "Text");
 		template.insert(p);
-		template.updateFirst(query(where("id").is("1")), update("text", "New Text"),
-				PersonPojoStringId.class);
+		template.updateFirst(query(where("id").is("1")), update("text", "New Text"), PersonPojoStringId.class);
 
-		PersonPojoStringId p2 = template.findOne(query(where("id").is("1")),
-				PersonPojoStringId.class);
+		PersonPojoStringId p2 = template.findOne(query(where("id").is("1")), PersonPojoStringId.class);
 		assertEquals("New Text", p2.getText());
 
 		p.setText("Different Text");
 		template.save(p);
 
-		PersonPojoStringId p3 = template.findOne(query(where("id").is("1")),
-				PersonPojoStringId.class);
+		PersonPojoStringId p3 = template.findOne(query(where("id").is("1")), PersonPojoStringId.class);
 		assertEquals("Different Text", p3.getText());
-
 
 		PersonPojoStringId p4 = new PersonPojoStringId("2", "Text-2");
 		template.insert(p4);
@@ -512,7 +510,6 @@ public class MappingTests {
 		assertThat(result.items.size(), is(1));
 		assertThat(result.items.get(0).id, is(items.id));
 	}
-
 
 	class Container {
 

@@ -106,25 +106,25 @@ public class StringBasedMongoQueryUnitTests {
 
 	@Test
 	public void bindsMultipleParametersCorrectly() throws SecurityException, NoSuchMethodException {
-		
+
 		Method method = SampleRepository.class.getMethod("findByLastnameAndAddress", String.class, Address.class);
 		MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, creator);
 		StringBasedMongoQuery mongoQuery = new StringBasedMongoQuery(queryMethod, template);
-		
+
 		Address address = new Address("Foo", "0123", "Bar");
 		ConvertingParameterAccessor accesor = StubParameterAccessor.getAccessor(converter, "Matthews", address);
-		
+
 		DBObject addressDbObject = new BasicDBObject();
 		converter.write(address, addressDbObject);
 		addressDbObject.removeField(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY);
-		
+
 		DBObject reference = new BasicDBObject("address", addressDbObject);
 		reference.put("lastname", "Matthews");
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor);
 		assertThat(query.getQueryObject(), is(reference));
 	}
-	
+
 	private interface SampleRepository {
 
 		@Query("{ 'lastname' : ?0 }")
@@ -132,7 +132,7 @@ public class StringBasedMongoQueryUnitTests {
 
 		@Query("{ 'address' : ?0 }")
 		Person findByAddress(Address address);
-		
+
 		@Query("{ 'lastname' : ?0, 'address' : ?1 }")
 		Person findByLastnameAndAddress(String lastname, Address address);
 	}

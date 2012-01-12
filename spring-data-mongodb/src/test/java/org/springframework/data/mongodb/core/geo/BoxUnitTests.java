@@ -24,26 +24,26 @@ import org.springframework.data.mongodb.core.geo.Point;
 
 /**
  * Unit tests for {@link Box}.
- *
+ * 
  * @author Oliver Gierke
  */
 public class BoxUnitTests {
-	
+
 	Box first = new Box(new Point(1d, 1d), new Point(2d, 2d));
 	Box second = new Box(new Point(1d, 1d), new Point(2d, 2d));
 	Box third = new Box(new Point(3d, 3d), new Point(1d, 1d));
 
 	@Test
 	public void equalsWorksCorrectly() {
-		
+
 		assertThat(first.equals(second), is(true));
 		assertThat(second.equals(first), is(true));
 		assertThat(first.equals(third), is(false));
 	}
-	
+
 	@Test
 	public void hashCodeWorksCorrectly() {
-		
+
 		assertThat(first.hashCode(), is(second.hashCode()));
 		assertThat(first.hashCode(), is(not(third.hashCode())));
 	}

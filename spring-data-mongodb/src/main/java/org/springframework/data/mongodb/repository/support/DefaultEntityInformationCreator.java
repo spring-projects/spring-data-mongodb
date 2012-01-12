@@ -25,7 +25,8 @@ import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
 import org.springframework.util.Assert;
 
 /**
- * Simple {@link EntityInformationCreator} to to create {@link MongoEntityInformation} instances based on a {@link MappingContext}.
+ * Simple {@link EntityInformationCreator} to to create {@link MongoEntityInformation} instances based on a
+ * {@link MappingContext}.
  * 
  * @author Oliver Gierke
  */

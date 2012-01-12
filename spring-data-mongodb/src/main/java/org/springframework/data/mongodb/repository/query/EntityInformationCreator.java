@@ -17,10 +17,9 @@ package org.springframework.data.mongodb.repository.query;
 
 import java.io.Serializable;
 
-
 /**
  * Interface for components being able to provide {@link EntityInformationCreator} for a given {@link Class}.
- *
+ * 
  * @author Oliver Gierke
  */
 public interface EntityInformationCreator {

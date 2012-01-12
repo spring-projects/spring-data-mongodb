@@ -20,35 +20,38 @@ import com.mongodb.DBObject;
 import com.mongodb.WriteConcern;
 
 /**
- * Represents an action taken against the collection.  Used by {@link WriteConcernResolver} to determine a custom
+ * Represents an action taken against the collection. Used by {@link WriteConcernResolver} to determine a custom
  * WriteConcern based on this information.
  * 
- * Properties that will always be not-null are collectionName and defaultWriteConcern.  
- * The EntityClass is null only for the MongoActionOperaton.INSERT_LIST.
+ * Properties that will always be not-null are collectionName and defaultWriteConcern. The EntityClass is null only for
+ * the MongoActionOperaton.INSERT_LIST.
  * 
- * INSERT, SAVE have null query, 
- * REMOVE has null document
- * INSERT_LIST has null entityClass, document, and query.
+ * <ul>
+ * <li>INSERT, SAVE have null query</li>
+ * <li>REMOVE has null document</li>
+ * <li>INSERT_LIST has null entityClass, document, and query</li>
+ * </ul>
  * 
  * @author Mark Pollack
- *
+ * 
  */
 public class MongoAction {
-	
+
 	private String collectionName;
-	
+
 	private WriteConcern defaultWriteConcern;
-	
+
 	private Class<?> entityClass;
-	
+
 	private MongoActionOperation mongoActionOperation;
-	
+
 	private DBObject query;
-	
+
 	private DBObject document;
 
 	/**
 	 * Create an instance of a MongoAction
+	 * 
 	 * @param defaultWriteConcern the default write concern
 	 * @param mongoActionOperation action being taken against the collection
 	 * @param collectionName the collection name
@@ -90,7 +93,5 @@ public class MongoAction {
 	public DBObject getDocument() {
 		return document;
 	}
-	
-	
-	
+
 }

@@ -19,7 +19,6 @@ import java.util.ArrayList;
 
 import com.mongodb.DBObject;
 
-
 public class SimpleMappingEventListener extends AbstractMongoEventListener<Object> {
 
 	public final ArrayList<BeforeConvertEvent<Object>> onBeforeConvertEvents = new ArrayList<BeforeConvertEvent<Object>>();
@@ -27,7 +26,7 @@ public class SimpleMappingEventListener extends AbstractMongoEventListener<Objec
 	public final ArrayList<AfterSaveEvent<Object>> onAfterSaveEvents = new ArrayList<AfterSaveEvent<Object>>();
 	public final ArrayList<AfterLoadEvent<Object>> onAfterLoadEvents = new ArrayList<AfterLoadEvent<Object>>();
 	public final ArrayList<AfterConvertEvent<Object>> onAfterConvertEvents = new ArrayList<AfterConvertEvent<Object>>();
-	
+
 	@Override
 	public void onBeforeConvert(Object source) {
 		onBeforeConvertEvents.add(new BeforeConvertEvent<Object>(source));

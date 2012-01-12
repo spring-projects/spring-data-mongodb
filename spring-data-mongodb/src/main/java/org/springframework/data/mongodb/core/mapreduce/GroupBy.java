@@ -19,24 +19,19 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
 /**
- * Collects the parameters required to perform a group operation on a collection.  The query condition and the input collection are specified on the group method as method arguments
- * to be consistent with other operations, e.g. map-reduce.
+ * Collects the parameters required to perform a group operation on a collection. The query condition and the input
+ * collection are specified on the group method as method arguments to be consistent with other operations, e.g.
+ * map-reduce.
  * 
  * @author Mark Pollack
- *
  */
 public class GroupBy {
 
 	private DBObject dboKeys;
-
 	private String keyFunction;
-
 	private String initial;
-	
 	private DBObject initialDbObject;
-
 	private String reduce;
-
 	private String finalize;
 
 	public GroupBy(String... keys) {
@@ -71,23 +66,21 @@ public class GroupBy {
 		initial = initialDocument;
 		return this;
 	}
-	
+
 	public GroupBy initialDocument(DBObject initialDocument) {
 		initialDbObject = initialDocument;
 		return this;
 	}
-	
+
 	public GroupBy reduceFunction(String reduceFunction) {
 		reduce = reduceFunction;
 		return this;
 	}
-	
+
 	public GroupBy finalizeFunction(String finalizeFunction) {
 		finalize = finalizeFunction;
 		return this;
 	}
-
-	
 
 	public DBObject getGroupByObject() {
 		// return new GroupCommand(dbCollection, dboKeys, condition, initial, reduce, finalize);
@@ -100,19 +93,15 @@ public class GroupBy {
 		}
 
 		dbo.put("$reduce", reduce);
-		
-		dbo.put("initial", initialDbObject); 					
+
+		dbo.put("initial", initialDbObject);
 		if (initial != null) {
 			dbo.put("initial", initial);
 		}
 		if (finalize != null) {
 			dbo.put("finalize", finalize);
 		}
-		return dbo;				
+		return dbo;
 	}
-
-
-
-
 
 }

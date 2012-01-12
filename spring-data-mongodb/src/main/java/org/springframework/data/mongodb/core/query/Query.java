@@ -36,7 +36,7 @@ public class Query {
 
 	/**
 	 * Static factory method to create a Query using the provided criteria
-	 *
+	 * 
 	 * @param critera
 	 * @return
 	 */
@@ -56,11 +56,10 @@ public class Query {
 		String key = criteria.getKey();
 		if (existing == null) {
 			this.criteria.put(key, criteria);
-		}
-		else {
-			throw new InvalidMongoDbApiUsageException("Due to limitations of the com.mongodb.BasicDBObject, " +
-					"you can't add a second '" + key + "' criteria. " +
-					"Query already contains '" + existing.getCriteriaObject() + "'.");
+		} else {
+			throw new InvalidMongoDbApiUsageException("Due to limitations of the com.mongodb.BasicDBObject, "
+					+ "you can't add a second '" + key + "' criteria. " + "Query already contains '"
+					+ existing.getCriteriaObject() + "'.");
 		}
 		return this;
 	}
@@ -93,12 +92,12 @@ public class Query {
 		this.hint = name;
 		return this;
 	}
-	
+
 	public Sort sort() {
 		if (this.sort == null) {
 			this.sort = new Sort();
 		}
-	
+
 		return this.sort;
 	}
 
@@ -137,7 +136,7 @@ public class Query {
 	public String getHint() {
 		return hint;
 	}
-	
+
 	protected List<Criteria> getCriteria() {
 		return new ArrayList<Criteria>(this.criteria.values());
 	}

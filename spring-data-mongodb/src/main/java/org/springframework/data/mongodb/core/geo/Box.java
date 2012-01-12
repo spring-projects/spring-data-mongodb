@@ -66,7 +66,7 @@ public class Box implements Shape {
 		list.add(getUpperRight().asList());
 		return list;
 	}
-	
+
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.geo.Shape#getCommand()
@@ -74,7 +74,7 @@ public class Box implements Shape {
 	public String getCommand() {
 		return "$box";
 	}
-	
+
 	@Override
 	public String toString() {
 		return String.format("Box [%s, %s]", first, second);

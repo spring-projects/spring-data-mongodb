@@ -18,9 +18,9 @@ package org.springframework.data.mongodb.core;
 public class FindAndModifyOptions {
 
 	boolean returnNew;
-	
+
 	boolean upsert;
-	
+
 	boolean remove;
 
 	/**
@@ -31,17 +31,17 @@ public class FindAndModifyOptions {
 	public static FindAndModifyOptions options() {
 		return new FindAndModifyOptions();
 	}
-	
+
 	public FindAndModifyOptions returnNew(boolean returnNew) {
 		this.returnNew = returnNew;
 		return this;
 	}
-	
+
 	public FindAndModifyOptions upsert(boolean upsert) {
 		this.upsert = upsert;
 		return this;
 	}
-	
+
 	public FindAndModifyOptions remove(boolean remove) {
 		this.remove = remove;
 		return this;
@@ -58,7 +58,5 @@ public class FindAndModifyOptions {
 	public boolean isRemove() {
 		return remove;
 	}
-	
-	
 
 }

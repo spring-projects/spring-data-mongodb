@@ -23,7 +23,7 @@ import static org.junit.Assert.*;
 
 /**
  * Unit tests for {@link MongoOptionsFactoryBean}.
- *
+ * 
  * @author Oliver Gierke
  */
 public class MongoOptionsFactoryBeanUnitTests {
@@ -33,11 +33,11 @@ public class MongoOptionsFactoryBeanUnitTests {
 	 */
 	@Test
 	public void setsMaxConnectRetryTime() {
-		
+
 		MongoOptionsFactoryBean bean = new MongoOptionsFactoryBean();
 		bean.setMaxAutoConnectRetryTime(27);
 		bean.afterPropertiesSet();
-		
+
 		MongoOptions options = bean.getObject();
 		assertThat(options.maxAutoConnectRetryTime, is(27L));
 	}

@@ -39,12 +39,12 @@ public class ApplicationContextEventTestsAppConfig extends AbstractMongoConfigur
 	public PersonBeforeSaveListener personBeforeSaveListener() {
 		return new PersonBeforeSaveListener();
 	}
-	
+
 	@Bean
 	public AfterSaveListener afterSaveListener() {
 		return new AfterSaveListener();
 	}
-	
+
 	@Bean
 	public SimpleMappingEventListener simpleMappingEventListener() {
 		return new SimpleMappingEventListener();

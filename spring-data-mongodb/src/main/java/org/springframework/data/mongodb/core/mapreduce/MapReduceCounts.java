@@ -15,13 +15,14 @@
  */
 package org.springframework.data.mongodb.core.mapreduce;
 
+/**
+ * @author Mark Pollack
+ */
 public class MapReduceCounts {
 
-	private int inputCount;
-	
-	private int emitCount;
-	
-	private int outputCount;
+	private final int inputCount;
+	private final int emitCount;
+	private final int outputCount;
 
 	public MapReduceCounts(int inputCount, int emitCount, int outputCount) {
 		super();
@@ -42,12 +43,20 @@ public class MapReduceCounts {
 		return outputCount;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
 	@Override
 	public String toString() {
 		return "MapReduceCounts [inputCount=" + inputCount + ", emitCount=" + emitCount + ", outputCount=" + outputCount
 				+ "]";
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see java.lang.Object#hashCode()
+	 */
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -58,24 +67,31 @@ public class MapReduceCounts {
 		return result;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see java.lang.Object#equals(java.lang.Object)
+	 */
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj)
+		if (this == obj) {
 			return true;
-		if (obj == null)
+		}
+		if (obj == null) {
 			return false;
-		if (getClass() != obj.getClass())
+		}
+		if (getClass() != obj.getClass()) {
 			return false;
+		}
 		MapReduceCounts other = (MapReduceCounts) obj;
-		if (emitCount != other.emitCount)
+		if (emitCount != other.emitCount) {
 			return false;
-		if (inputCount != other.inputCount)
+		}
+		if (inputCount != other.inputCount) {
 			return false;
-		if (outputCount != other.outputCount)
+		}
+		if (outputCount != other.outputCount) {
 			return false;
+		}
 		return true;
 	}
-
-	
-	
 }

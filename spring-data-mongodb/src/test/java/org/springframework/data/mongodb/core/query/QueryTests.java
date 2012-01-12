@@ -48,7 +48,8 @@ public class QueryTests {
 
 	@Test
 	public void testOrQuery() {
-		Query q = new Query(new Criteria().orOperator(where("name").is("Sven").and("age").lt(50), where("age").lt(50), where("name").is("Thomas")));
+		Query q = new Query(new Criteria().orOperator(where("name").is("Sven").and("age").lt(50), where("age").lt(50),
+				where("name").is("Thomas")));
 		String expected = "{ \"$or\" : [ { \"name\" : \"Sven\" , \"age\" : { \"$lt\" : 50}} , { \"age\" : { \"$lt\" : 50}} , { \"name\" : \"Thomas\"}]}";
 		Assert.assertEquals(expected, q.getQueryObject().toString());
 	}
@@ -62,7 +63,8 @@ public class QueryTests {
 
 	@Test
 	public void testNorQuery() {
-		Query q = new Query(new Criteria().norOperator(where("name").is("Sven"), where("age").lt(50), where("name").is("Thomas")));
+		Query q = new Query(new Criteria().norOperator(where("name").is("Sven"), where("age").lt(50),
+				where("name").is("Thomas")));
 		String expected = "{ \"$nor\" : [ { \"name\" : \"Sven\"} , { \"age\" : { \"$lt\" : 50}} , { \"name\" : \"Thomas\"}]}";
 		Assert.assertEquals(expected, q.getQueryObject().toString());
 	}

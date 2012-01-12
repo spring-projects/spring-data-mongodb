@@ -24,7 +24,7 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 
 /**
  * Unit tests for {@link MongoMappingContext}.
- *
+ * 
  * @author Oliver Gierke
  */
 public class MongoMappingContextUnitTests {

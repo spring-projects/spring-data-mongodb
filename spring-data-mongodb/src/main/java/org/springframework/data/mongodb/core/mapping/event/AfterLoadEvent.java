@@ -39,9 +39,9 @@ public class AfterLoadEvent<T> extends MongoMappingEvent<DBObject> {
 	 * @param type must not be {@literal null}.
 	 */
 	public AfterLoadEvent(DBObject dbo, Class<T> type) {
-		
+
 		super(dbo, dbo);
-		
+
 		Assert.notNull(type, "Type must not be null!");
 		this.type = type;
 	}

@@ -17,14 +17,14 @@ public class PointUnitTests {
 	public void rejectsNullforCopyConstructor() {
 		new Point(null);
 	}
-	
+
 	@Test
 	public void equalsIsImplementedCorrectly() {
 		assertThat(new Point(1.5, 1.5), is(equalTo(new Point(1.5, 1.5))));
 		assertThat(new Point(1.5, 1.5), is(not(equalTo(new Point(2.0, 2.0)))));
 		assertThat(new Point(2.0, 2.0), is(not(equalTo(new Point(1.5, 1.5)))));
 	}
-	
+
 	@Test
 	public void invokingToStringWorksCorrectly() {
 		new Point(1.5, 1.5).toString();

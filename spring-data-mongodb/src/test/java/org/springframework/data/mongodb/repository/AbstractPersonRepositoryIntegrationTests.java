@@ -266,7 +266,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 
 	@Test
 	public void findsPeopleByLocationWithinPolygon() {
-		
+
 		Point point = new Point(-73.99171, 40.738868);
 		dave.setLocation(point);
 		repository.save(dave);
@@ -371,9 +371,9 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	 */
 	@Test
 	public void considersSortForAnnotatedQuery() {
-		
+
 		List<Person> result = repository.findByAgeLessThan(60, new Sort("firstname"));
-		
+
 		assertThat(result.size(), is(7));
 		assertThat(result.get(0), is(alicia));
 		assertThat(result.get(1), is(boyd));

@@ -175,7 +175,7 @@ public class DataDoc273Test {
 
 	@SuppressWarnings("rawtypes")
 	public class Shipment {
-		
+
 		Map boxes = new HashMap();
 
 		public Shipment(Map boxes) {

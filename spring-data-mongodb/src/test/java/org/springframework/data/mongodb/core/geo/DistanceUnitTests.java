@@ -27,7 +27,7 @@ import org.junit.Test;
  * @author Oliver Gierke
  */
 public class DistanceUnitTests {
-	
+
 	@Test
 	public void defaultsMetricToNeutralOne() {
 		assertThat(new Distance(2.5).getMetric(), is((Metric) Metrics.NEUTRAL));
@@ -40,7 +40,7 @@ public class DistanceUnitTests {
 		Distance right = new Distance(2.5, KILOMETERS);
 		assertThat(left.add(right), is(new Distance(5.0, KILOMETERS)));
 	}
-	
+
 	@Test
 	public void addsDistancesWithExplicitMetric() {
 		Distance left = new Distance(2.5, KILOMETERS);

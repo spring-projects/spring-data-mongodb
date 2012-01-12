@@ -27,18 +27,18 @@ import org.springframework.data.mongodb.core.convert.MongoConverters.StringToBig
 
 /**
  * Unit tests for {@link MongoConverters}.
- *
+ * 
  * @author Oliver Gierke
  */
 public class MongoConvertersUnitTests {
 
 	@Test
 	public void convertsBigDecimalToStringAndBackCorrectly() {
-		
+
 		BigDecimal bigDecimal = BigDecimal.valueOf(254, 1);
 		String value = BigDecimalToStringConverter.INSTANCE.convert(bigDecimal);
 		assertThat(value, is("25.4"));
-		
+
 		BigDecimal reference = StringToBigDecimalConverter.INSTANCE.convert(value);
 		assertThat(reference, is(bigDecimal));
 	}

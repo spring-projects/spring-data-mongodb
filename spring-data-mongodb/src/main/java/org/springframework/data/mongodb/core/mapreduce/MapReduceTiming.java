@@ -18,15 +18,15 @@ package org.springframework.data.mongodb.core.mapreduce;
 public class MapReduceTiming {
 
 	private long mapTime;
-	
+
 	private long emitLoopTime;
-	
+
 	private long totalTime;
-	
+
 	public MapReduceTiming(long mapTime, long emitLoopTime, long totalTime) {
 		this.mapTime = mapTime;
 		this.emitLoopTime = emitLoopTime;
-		this.totalTime = totalTime;		
+		this.totalTime = totalTime;
 	}
 
 	public long getMapTime() {
@@ -73,8 +73,5 @@ public class MapReduceTiming {
 			return false;
 		return true;
 	}
-	
-	
-	
-	
+
 }
