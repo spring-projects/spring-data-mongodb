@@ -35,7 +35,7 @@ public class SortTests {
 		Sort s = new Sort().on("name", DESCENDING);
 		assertEquals("{ \"name\" : -1}", s.getSortObject().toString());
 	}
-	
+
 	/**
 	 * @see DATADOC-177
 	 */

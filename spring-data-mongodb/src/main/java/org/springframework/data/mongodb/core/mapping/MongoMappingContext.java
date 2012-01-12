@@ -30,7 +30,8 @@ import org.springframework.data.util.TypeInformation;
  * @author Jon Brisbin <jbrisbin@vmware.com>
  * @author Oliver Gierke ogierke@vmware.com
  */
-public class MongoMappingContext extends AbstractMappingContext<BasicMongoPersistentEntity<?>, MongoPersistentProperty> implements ApplicationContextAware {
+public class MongoMappingContext extends AbstractMappingContext<BasicMongoPersistentEntity<?>, MongoPersistentProperty>
+		implements ApplicationContextAware {
 
 	private ApplicationContext context;
 
@@ -57,16 +58,16 @@ public class MongoMappingContext extends AbstractMappingContext<BasicMongoPersis
 	 */
 	@Override
 	protected <T> BasicMongoPersistentEntity<T> createPersistentEntity(TypeInformation<T> typeInformation) {
-		
+
 		BasicMongoPersistentEntity<T> entity = new BasicMongoPersistentEntity<T>(typeInformation);
-		
+
 		if (context != null) {
 			entity.setApplicationContext(context);
 		}
-		
+
 		return entity;
 	}
-	
+
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.context.ApplicationContextAware#setApplicationContext(org.springframework.context.ApplicationContext)

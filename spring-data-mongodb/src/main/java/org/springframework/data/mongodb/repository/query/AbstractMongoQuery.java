@@ -203,13 +203,13 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 
 	/**
 	 * {@link Execution} to execute geo-near queries.
-	 *
+	 * 
 	 * @author Oliver Gierke
 	 */
 	class GeoNearExecution extends Execution {
-		
+
 		private final MongoParameterAccessor accessor;
-		
+
 		public GeoNearExecution(MongoParameterAccessor accessor) {
 			this.accessor = accessor;
 		}
@@ -220,27 +220,28 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 		 */
 		@Override
 		Object execute(Query query) {
-			
+
 			Point nearLocation = accessor.getGeoNearLocation();
 			NearQuery nearQuery = NearQuery.near(nearLocation);
-			
+
 			if (query != null) {
 				nearQuery.query(query);
 			}
-			
+
 			Distance maxDistance = accessor.getMaxDistance();
 			if (maxDistance != null) {
 				nearQuery.maxDistance(maxDistance);
 			}
-			
-			MongoEntityInformation<?,?> entityInformation = method.getEntityInformation();
-			GeoResults<?> results = mongoOperations.geoNear(nearQuery, entityInformation.getJavaType(), entityInformation.getCollectionName());
-			
+
+			MongoEntityInformation<?, ?> entityInformation = method.getEntityInformation();
+			GeoResults<?> results = mongoOperations.geoNear(nearQuery, entityInformation.getJavaType(),
+					entityInformation.getCollectionName());
+
 			return isListOfGeoResult() ? results.getContent() : results;
 		}
-		
+
 		private boolean isListOfGeoResult() {
-			
+
 			TypeInformation<?> returnType = method.getReturnType();
 			return returnType.getType().equals(List.class) && GeoResult.class.equals(returnType.getComponentType());
 		}

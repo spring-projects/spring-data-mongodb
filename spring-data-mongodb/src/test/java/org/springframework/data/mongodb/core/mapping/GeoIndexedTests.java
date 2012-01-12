@@ -42,7 +42,7 @@ import com.mongodb.MongoException;
  */
 public class GeoIndexedTests {
 
-	private final String[] collectionsToDrop = new String[] { GeoIndexedAppConfig.GEO_COLLECTION, "Person"};
+	private final String[] collectionsToDrop = new String[] { GeoIndexedAppConfig.GEO_COLLECTION, "Person" };
 
 	ApplicationContext applicationContext;
 	MongoTemplate template;

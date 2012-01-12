@@ -33,7 +33,7 @@ import com.mysema.query.mongodb.MongodbQuery;
 
 /**
  * Unit tests for {@link QuerydslRepositorySupport}.
- *
+ * 
  * @author Oliver Gierke
  */
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -43,18 +43,19 @@ public class QuerydslRepositorySupportUnitTests {
 	@Autowired
 	MongoOperations operations;
 	Person person;
-	
+
 	@Before
 	public void setUp() {
 		operations.remove(new Query(), Person.class);
 		person = new Person("Dave", "Matthews");
 		operations.save(person);
 	}
-	
+
 	@Test
 	public void providesMongoQuery() {
 		QPerson p = QPerson.person;
-		QuerydslRepositorySupport support = new QuerydslRepositorySupport(operations) {};
+		QuerydslRepositorySupport support = new QuerydslRepositorySupport(operations) {
+		};
 		MongodbQuery<Person> query = support.from(p).where(p.lastname.eq("Matthews"));
 		assertThat(query.uniqueResult(), is(person));
 	}

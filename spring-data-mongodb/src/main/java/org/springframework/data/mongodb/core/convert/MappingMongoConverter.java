@@ -164,7 +164,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		if (conversions.hasCustomReadTarget(dbo.getClass(), rawType)) {
 			return conversionService.convert(dbo, rawType);
 		}
-		
+
 		if (DBObject.class.isAssignableFrom(rawType)) {
 			return (S) dbo;
 		}
@@ -286,7 +286,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		boolean handledByCustomConverter = conversions.getCustomWriteTarget(obj.getClass(), DBObject.class) != null;
 		TypeInformation<? extends Object> type = ClassTypeInformation.from(obj.getClass());
-		
+
 		if (!handledByCustomConverter && !(dbo instanceof BasicDBList)) {
 			typeMapper.writeType(type, dbo);
 		}
@@ -345,7 +345,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		// Write the ID
 		final MongoPersistentProperty idProperty = entity.getIdProperty();
 		if (!dbo.containsField("_id") && null != idProperty) {
-			
+
 			try {
 				Object id = wrapper.getProperty(idProperty, Object.class, useFieldAccessOnly);
 				dbo.put("_id", idMapper.convertId(id));
@@ -356,13 +356,13 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		// Write the properties
 		entity.doWithProperties(new PropertyHandler<MongoPersistentProperty>() {
 			public void doWithPersistentProperty(MongoPersistentProperty prop) {
-				
+
 				if (prop.equals(idProperty)) {
 					return;
 				}
-				
+
 				Object propertyObj = wrapper.getProperty(prop, prop.getType(), useFieldAccessOnly);
-				
+
 				if (null != propertyObj) {
 					if (!conversions.isSimpleType(propertyObj.getClass())) {
 						writePropertyInternal(propertyObj, dbo, prop);
@@ -528,7 +528,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * @return
 	 */
 	protected DBObject writeMapInternal(Map<Object, Object> obj, DBObject dbo, TypeInformation<?> propertyType) {
-		
+
 		for (Map.Entry<Object, Object> entry : obj.entrySet()) {
 			Object key = entry.getKey();
 			Object val = entry.getValue();
@@ -543,7 +543,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 							writeCollectionInternal(asCollection(val), propertyType.getMapValueType(), new BasicDBList()));
 				} else {
 					DBObject newDbo = new BasicDBObject();
-					TypeInformation<?> valueTypeInfo = propertyType.isMap() ? propertyType.getMapValueType() : ClassTypeInformation.OBJECT;
+					TypeInformation<?> valueTypeInfo = propertyType.isMap() ? propertyType.getMapValueType()
+							: ClassTypeInformation.OBJECT;
 					writeInternal(val, newDbo, valueTypeInfo);
 					dbo.put(simpleKey, newDbo);
 				}
@@ -551,7 +552,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				throw new MappingException("Cannot use a complex object as a key value.");
 			}
 		}
-		
+
 		return dbo;
 	}
 
@@ -643,7 +644,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		MongoPersistentProperty idProperty = targetEntity.getIdProperty();
 		BeanWrapper<MongoPersistentEntity<Object>, Object> wrapper = BeanWrapper.create(target, conversionService);
 		Object id = wrapper.getProperty(idProperty, Object.class, useFieldAccessOnly);
-		
+
 		if (null == id) {
 			throw new MappingException("Cannot create a reference to an object with a NULL id.");
 		}
@@ -858,7 +859,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 		return newDbl;
 	}
-	
+
 	/**
 	 * Removes the type information from the conversion result.
 	 * 

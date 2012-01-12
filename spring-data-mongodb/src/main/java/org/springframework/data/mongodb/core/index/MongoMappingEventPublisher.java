@@ -23,12 +23,12 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 
 /**
- * An implementation of ApplicationEventPublisher that will only fire MappingContextEvents for use by the index creator when
- * MongoTemplate is used 'stand-alone', that is not declared inside a Spring ApplicationContext.
+ * An implementation of ApplicationEventPublisher that will only fire MappingContextEvents for use by the index creator
+ * when MongoTemplate is used 'stand-alone', that is not declared inside a Spring ApplicationContext.
  * 
- * Declare MongoTemplate inside an ApplicationContext to enable the publishing of all persistence events such as 
- * {@link AfterLoadEvent}, {@link AfterSaveEvent}, etc. 
- *
+ * Declare MongoTemplate inside an ApplicationContext to enable the publishing of all persistence events such as
+ * {@link AfterLoadEvent}, {@link AfterSaveEvent}, etc.
+ * 
  * @author Jon Brisbin <jbrisbin@vmware.com>
  */
 public class MongoMappingEventPublisher implements ApplicationEventPublisher {

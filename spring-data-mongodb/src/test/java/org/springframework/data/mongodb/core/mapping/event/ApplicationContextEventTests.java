@@ -65,46 +65,47 @@ public class ApplicationContextEventTests {
 			db.getCollection(coll).drop();
 		}
 	}
-	
-	@Test	
+
+	@Test
 	@SuppressWarnings("unchecked")
 	public void beforeSaveEvent() {
 		PersonBeforeSaveListener personBeforeSaveListener = applicationContext.getBean(PersonBeforeSaveListener.class);
 		AfterSaveListener afterSaveListener = applicationContext.getBean(AfterSaveListener.class);
-		SimpleMappingEventListener simpleMappingEventListener = applicationContext.getBean(SimpleMappingEventListener.class);
-		
+		SimpleMappingEventListener simpleMappingEventListener = applicationContext
+				.getBean(SimpleMappingEventListener.class);
+
 		assertEquals(0, personBeforeSaveListener.seenEvents.size());
 		assertEquals(0, afterSaveListener.seenEvents.size());
-		
+
 		assertEquals(0, simpleMappingEventListener.onBeforeSaveEvents.size());
 		assertEquals(0, simpleMappingEventListener.onAfterSaveEvents.size());
-		
-		
+
 		PersonPojoStringId p = new PersonPojoStringId("1", "Text");
 		template.insert(p);
-		
+
 		assertEquals(1, personBeforeSaveListener.seenEvents.size());
 		assertEquals(1, afterSaveListener.seenEvents.size());
-		
+
 		assertEquals(1, simpleMappingEventListener.onBeforeSaveEvents.size());
 		assertEquals(1, simpleMappingEventListener.onAfterSaveEvents.size());
 
 		Assert.assertTrue(personBeforeSaveListener.seenEvents.get(0) instanceof BeforeSaveEvent<?>);
 		Assert.assertTrue(afterSaveListener.seenEvents.get(0) instanceof AfterSaveEvent<?>);
 
-		BeforeSaveEvent<PersonPojoStringId> beforeSaveEvent = (BeforeSaveEvent<PersonPojoStringId>)personBeforeSaveListener.seenEvents.get(0);
+		BeforeSaveEvent<PersonPojoStringId> beforeSaveEvent = (BeforeSaveEvent<PersonPojoStringId>) personBeforeSaveListener.seenEvents
+				.get(0);
 		PersonPojoStringId p2 = beforeSaveEvent.getSource();
 		DBObject dbo = beforeSaveEvent.getDBObject();
-		
+
 		comparePersonAndDbo(p, p2, dbo);
-		
-		AfterSaveEvent<Object> afterSaveEvent = (AfterSaveEvent<Object>)afterSaveListener.seenEvents.get(0);
+
+		AfterSaveEvent<Object> afterSaveEvent = (AfterSaveEvent<Object>) afterSaveListener.seenEvents.get(0);
 		Assert.assertTrue(afterSaveEvent.getSource() instanceof PersonPojoStringId);
-		p2 = (PersonPojoStringId)afterSaveEvent.getSource();
+		p2 = (PersonPojoStringId) afterSaveEvent.getSource();
 		dbo = beforeSaveEvent.getDBObject();
-		
+
 		comparePersonAndDbo(p, p2, dbo);
-		
+
 	}
 
 	private void comparePersonAndDbo(PersonPojoStringId p, PersonPojoStringId p2, DBObject dbo) {

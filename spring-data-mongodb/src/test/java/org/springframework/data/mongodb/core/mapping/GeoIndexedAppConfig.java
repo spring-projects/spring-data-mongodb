@@ -25,9 +25,9 @@ public class GeoIndexedAppConfig extends AbstractMongoConfiguration {
 	public String getMappingBasePackage() {
 		return "org.springframework.data.mongodb.core.core.mapping";
 	}
-	
-  @Bean
-  public LoggingEventListener mappingEventsListener() {
-    return new LoggingEventListener();
-  }
+
+	@Bean
+	public LoggingEventListener mappingEventsListener() {
+		return new LoggingEventListener();
+	}
 }

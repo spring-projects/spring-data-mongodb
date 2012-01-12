@@ -16,18 +16,14 @@
 package org.springframework.data.mongodb.core;
 
 /**
- * Enumeration for operations on a collection.  Used with {@link MongoAction} to help determine the
- * WriteConcern to use for a given mutating operation
+ * Enumeration for operations on a collection. Used with {@link MongoAction} to help determine the WriteConcern to use
+ * for a given mutating operation
  * 
  * @author Mark Pollack
  * @see MongoAction
- *
+ * 
  */
 public enum MongoActionOperation {
-	
-		REMOVE,
-		UPDATE,
-		INSERT,
-		INSERT_LIST,
-		SAVE
+
+	REMOVE, UPDATE, INSERT, INSERT_LIST, SAVE
 }

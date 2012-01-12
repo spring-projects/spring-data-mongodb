@@ -44,7 +44,7 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	 * @return
 	 */
 	List<Person> findByLastname(String lastname);
-	
+
 	/**
 	 * Returns all {@link Person}s with the given lastname ordered by their firstname.
 	 * 
@@ -70,9 +70,9 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	 * @return
 	 */
 	List<Person> findByFirstnameLike(String firstname);
-	
+
 	List<Person> findByFirstnameLikeOrderByLastnameAsc(String firstname, Sort sort);
-	
+
 	@Query("{'age' : { '$lt' : ?0 } }")
 	List<Person> findByAgeLessThan(int age, Sort sort);
 
@@ -87,7 +87,7 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 
 	@Query("{ 'lastname' : { '$regex' : ?0, '$options' : ''}}")
 	Page<Person> findByLastnameLikeWithPageable(String lastname, Pageable pageable);
-	
+
 	/**
 	 * Returns all {@link Person}s with a firstname contained in the given varargs.
 	 * 
@@ -140,12 +140,12 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	List<Person> findByLocationWithin(Circle circle);
 
 	List<Person> findByLocationWithin(Box box);
-	
+
 	List<Person> findByLocationWithin(Polygon polygon);
-	
+
 	List<Person> findBySex(Sex sex);
-	
+
 	List<Person> findByNamedQuery(String firstname);
-	
+
 	GeoResults<Person> findByLocationNear(Point point, Distance maxDistance);
 }

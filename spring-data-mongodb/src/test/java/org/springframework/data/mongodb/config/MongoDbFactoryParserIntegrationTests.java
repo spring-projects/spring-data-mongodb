@@ -40,14 +40,14 @@ import com.mongodb.WriteConcern;
 
 /**
  * Integration tests for {@link MongoDbFactoryParser}.
- *
+ * 
  * @author Oliver Gierke
  */
 public class MongoDbFactoryParserIntegrationTests {
-	
+
 	DefaultListableBeanFactory factory;
 	BeanDefinitionReader reader;
-	
+
 	@Before
 	public void setUp() {
 		factory = new DefaultListableBeanFactory();
@@ -61,29 +61,30 @@ public class MongoDbFactoryParserIntegrationTests {
 		dbFactory.getDb();
 		assertThat(WriteConcern.SAFE, is(dbFactory.getWriteConcern()));
 	}
-	
+
 	@Test
 	public void parsesWriteConcern() {
 		ClassPathXmlApplicationContext ctx = new ClassPathXmlApplicationContext("namespace/db-factory-bean.xml");
 		assertWriteConcern(ctx, WriteConcern.SAFE);
 	}
-	
+
 	@Test
 	public void parsesCustomWriteConcern() {
-		ClassPathXmlApplicationContext ctx = new ClassPathXmlApplicationContext("namespace/db-factory-bean-custom-write-concern.xml");
+		ClassPathXmlApplicationContext ctx = new ClassPathXmlApplicationContext(
+				"namespace/db-factory-bean-custom-write-concern.xml");
 		assertWriteConcern(ctx, new WriteConcern("rack1"));
 	}
-	
+
 	/**
 	 * @see DATAMONGO-331
 	 */
 	@Test
 	public void readsReplicasWriteConcernCorrectly() {
-		
+
 		ApplicationContext ctx = new ClassPathXmlApplicationContext("namespace/db-factory-bean-custom-write-concern.xml");
 		MongoDbFactory factory = ctx.getBean("second", MongoDbFactory.class);
 		DB db = factory.getDb();
-		
+
 		assertThat(db.getWriteConcern(), is(WriteConcern.REPLICAS_SAFE));
 	}
 
@@ -96,75 +97,72 @@ public class MongoDbFactoryParserIntegrationTests {
 		MyWriteConcern myDbWriteConcern = new MyWriteConcern(db.getWriteConcern());
 		MyWriteConcern myExpectedWriteConcern = new MyWriteConcern(expectedWriteConcern);
 
-		
 		assertThat(myDbFactoryWriteConcern, equalTo(myExpectedWriteConcern));
 		assertThat(myDbWriteConcern, equalTo(myExpectedWriteConcern));
 		assertThat(myDbWriteConcern, equalTo(myDbFactoryWriteConcern));
 	}
-	
-	//This test will fail since equals in WriteConcern uses == for _w and not .equals
+
+	// This test will fail since equals in WriteConcern uses == for _w and not .equals
 	public void testWriteConcernEquality() {
-		String s1 =  new String("rack1");
-		String s2 =  new String("rack1");
+		String s1 = new String("rack1");
+		String s2 = new String("rack1");
 		WriteConcern wc1 = new WriteConcern(s1);
 		WriteConcern wc2 = new WriteConcern(s2);
 		assertThat(wc1, equalTo(wc2));
 	}
-	
-	
 
 	@Test
 	public void createsDbFactoryBean() {
-		
+
 		reader.loadBeanDefinitions(new ClassPathResource("namespace/db-factory-bean.xml"));
 		factory.getBean("first");
 	}
-	
+
 	/**
 	 * @see DATADOC-280
 	 */
 	@Test
 	public void parsesMaxAutoConnectRetryTimeCorrectly() {
-		
+
 		reader.loadBeanDefinitions(new ClassPathResource("namespace/db-factory-bean.xml"));
 		Mongo mongo = factory.getBean(Mongo.class);
 		assertThat(mongo.getMongoOptions().maxAutoConnectRetryTime, is(27L));
 	}
-	
+
 	/**
 	 * @see DATADOC-295
 	 */
 	@Test
 	public void setsUpMongoDbFactoryUsingAMongoUri() {
-		
+
 		reader.loadBeanDefinitions(new ClassPathResource("namespace/mongo-uri.xml"));
 		BeanDefinition definition = factory.getBeanDefinition("mongoDbFactory");
 		ConstructorArgumentValues constructorArguments = definition.getConstructorArgumentValues();
-		
+
 		assertThat(constructorArguments.getArgumentCount(), is(1));
 		ValueHolder argument = constructorArguments.getArgumentValue(0, MongoURI.class);
 		assertThat(argument, is(notNullValue()));
 	}
-	
+
 	/**
 	 * @see DATADOC-306
 	 */
 	@Test
 	public void setsUpMongoDbFactoryUsingAMongoUriWithoutCredentials() {
-		
+
 		reader.loadBeanDefinitions(new ClassPathResource("namespace/mongo-uri-no-credentials.xml"));
 		BeanDefinition definition = factory.getBeanDefinition("mongoDbFactory");
 		ConstructorArgumentValues constructorArguments = definition.getConstructorArgumentValues();
-		
+
 		assertThat(constructorArguments.getArgumentCount(), is(1));
 		ValueHolder argument = constructorArguments.getArgumentValue(0, MongoURI.class);
 		assertThat(argument, is(notNullValue()));
-	
+
 		MongoDbFactory dbFactory = factory.getBean("mongoDbFactory", MongoDbFactory.class);
 		DB db = dbFactory.getDb();
 		assertThat(db.getName(), is("database"));
 	}
-	
+
 	/**
 	 * @see DATADOC-295
 	 */

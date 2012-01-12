@@ -19,7 +19,6 @@ import org.junit.Test;
 
 public class MapReduceOptionsTests {
 
-
 	@Test
 	public void testFinalize() {
 		new MapReduceOptions().finalizeFunction("code");

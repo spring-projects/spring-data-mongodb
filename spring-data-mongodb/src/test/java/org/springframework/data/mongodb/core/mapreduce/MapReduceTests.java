@@ -112,10 +112,10 @@ public class MapReduceTests {
 		String reduce = "function (key, values) { return Math.max.apply(Math, values); }";
 		MapReduceResults<ContentAndVersion> results = mongoTemplate.mapReduce("jmr2", map, reduce,
 				new MapReduceOptions().outputCollection("jmr2_out"), ContentAndVersion.class);
-		
+
 		int size = 0;
 		for (ContentAndVersion cv : results) {
-			if (cv.getId().equals("Resume"))  { 
+			if (cv.getId().equals("Resume")) {
 				assertEquals(6, cv.getValue().longValue());
 			}
 			if (cv.getId().equals("Schema")) {
@@ -126,7 +126,7 @@ public class MapReduceTests {
 			}
 			size++;
 		}
-		assertEquals(3,size);
+		assertEquals(3, size);
 	}
 
 	@Test
@@ -134,11 +134,11 @@ public class MapReduceTests {
 		createNumberAndVersionData();
 		String map = "function () { emit(this.number, this.version); }";
 		String reduce = "function (key, values) { return Math.max.apply(Math, values); }";
-		MapReduceResults<NumberAndVersion> results = 
-				mongoTemplate.mapReduce("jmr2", map, reduce, new MapReduceOptions().outputCollection("jmr2_out"), NumberAndVersion.class);
-		int size = 0;		
+		MapReduceResults<NumberAndVersion> results = mongoTemplate.mapReduce("jmr2", map, reduce,
+				new MapReduceOptions().outputCollection("jmr2_out"), NumberAndVersion.class);
+		int size = 0;
 		for (NumberAndVersion nv : results) {
-			if (nv.getId().equals("1"))  { 
+			if (nv.getId().equals("1")) {
 				assertEquals(2, nv.getValue().longValue());
 			}
 			if (nv.getId().equals("2")) {
@@ -149,7 +149,7 @@ public class MapReduceTests {
 			}
 			size++;
 		}
-		assertEquals(3,size);
+		assertEquals(3, size);
 	}
 
 	private void createNumberAndVersionData() {

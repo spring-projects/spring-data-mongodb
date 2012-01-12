@@ -21,7 +21,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 /**
  * Sample contactt domain class.
- *
+ * 
  * @author Oliver Gierke
  */
 @Document

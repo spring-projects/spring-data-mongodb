@@ -46,33 +46,30 @@ public class GroupByTests {
 
 	@Autowired
 	MongoDbFactory factory;
-	
+
 	@Autowired
 	ApplicationContext applicationContext;
-	
-	//@Autowired
-	//MongoTemplate mongoTemplate;
-	
-	
+
+	// @Autowired
+	// MongoTemplate mongoTemplate;
+
 	MongoTemplate mongoTemplate;
 
 	@Autowired
 	@SuppressWarnings("unchecked")
 	public void setMongo(Mongo mongo) throws Exception {
 
-		
 		MongoMappingContext mappingContext = new MongoMappingContext();
 		mappingContext.setInitialEntitySet(new HashSet<Class<?>>(Arrays.asList(XObject.class)));
 		mappingContext.afterPropertiesSet();
 
-		MappingMongoConverter mappingConverter = new MappingMongoConverter(factory, mappingContext);		
+		MappingMongoConverter mappingConverter = new MappingMongoConverter(factory, mappingContext);
 		mappingConverter.afterPropertiesSet();
 		this.mongoTemplate = new MongoTemplate(factory, mappingConverter);
 		mongoTemplate.setApplicationContext(applicationContext);
-		
+
 	}
-	
-	
+
 	@Before
 	public void setUp() {
 		cleanDb();
@@ -87,92 +84,95 @@ public class GroupByTests {
 		mongoTemplate.dropCollection(mongoTemplate.getCollectionName(XObject.class));
 		mongoTemplate.dropCollection("group_test_collection");
 	}
-	
+
 	@Test
-	public void singleKeyCreation() {			
-			DBObject gc = new GroupBy("a").getGroupByObject();
-			//String expected = "{ \"group\" : { \"ns\" : \"test\" , \"key\" : { \"a\" : 1} , \"cond\" :  null  , \"$reduce\" :  null  , \"initial\" :  null }}";
-			String expected = "{ \"key\" : { \"a\" : 1} , \"$reduce\" :  null  , \"initial\" :  null }";
-			Assert.assertEquals(expected, gc.toString());				
+	public void singleKeyCreation() {
+		DBObject gc = new GroupBy("a").getGroupByObject();
+		// String expected =
+		// "{ \"group\" : { \"ns\" : \"test\" , \"key\" : { \"a\" : 1} , \"cond\" :  null  , \"$reduce\" :  null  , \"initial\" :  null }}";
+		String expected = "{ \"key\" : { \"a\" : 1} , \"$reduce\" :  null  , \"initial\" :  null }";
+		Assert.assertEquals(expected, gc.toString());
 	}
-	
+
 	@Test
 	public void multipleKeyCreation() {
-			DBObject gc = GroupBy.key("a","b").getGroupByObject();			
-			//String expected = "{ \"group\" : { \"ns\" : \"test\" , \"key\" : { \"a\" : 1 , \"b\" : 1} , \"cond\" :  null  , \"$reduce\" :  null  , \"initial\" :  null }}";
-			String expected = "{ \"key\" : { \"a\" : 1 , \"b\" : 1} , \"$reduce\" :  null  , \"initial\" :  null }";
-			Assert.assertEquals(expected, gc.toString());				
+		DBObject gc = GroupBy.key("a", "b").getGroupByObject();
+		// String expected =
+		// "{ \"group\" : { \"ns\" : \"test\" , \"key\" : { \"a\" : 1 , \"b\" : 1} , \"cond\" :  null  , \"$reduce\" :  null  , \"initial\" :  null }}";
+		String expected = "{ \"key\" : { \"a\" : 1 , \"b\" : 1} , \"$reduce\" :  null  , \"initial\" :  null }";
+		Assert.assertEquals(expected, gc.toString());
 	}
-	
+
 	@Test
 	public void keyFunctionCreation() {
-			DBObject gc = GroupBy.keyFunction("classpath:keyFunction.js").getGroupByObject();			
-			String expected = "{ \"$keyf\" : \"classpath:keyFunction.js\" , \"$reduce\" :  null  , \"initial\" :  null }";
-			Assert.assertEquals(expected, gc.toString());				
+		DBObject gc = GroupBy.keyFunction("classpath:keyFunction.js").getGroupByObject();
+		String expected = "{ \"$keyf\" : \"classpath:keyFunction.js\" , \"$reduce\" :  null  , \"initial\" :  null }";
+		Assert.assertEquals(expected, gc.toString());
 	}
 
 	@Test
 	public void SimpleGroup() {
 		createGroupByData();
 		GroupByResults<XObject> results;
-		
-		results = mongoTemplate.group("group_test_collection", 
-														GroupBy.key("x").initialDocument(new BasicDBObject("count", 0)).reduceFunction("function(doc, prev) { prev.count += 1 }"), XObject.class);
-		
+
+		results = mongoTemplate.group(
+				"group_test_collection",
+				GroupBy.key("x").initialDocument(new BasicDBObject("count", 0))
+						.reduceFunction("function(doc, prev) { prev.count += 1 }"), XObject.class);
+
 		assertMapReduceResults(results);
-		
+
 	}
-	
+
 	@Test
 	public void SimpleGroupWithKeyFunction() {
 		createGroupByData();
 		GroupByResults<XObject> results;
-		
-		results = mongoTemplate.group("group_test_collection", 
-														GroupBy.keyFunction("function(doc) { return { x : doc.x }; }").initialDocument("{ count: 0 }").reduceFunction("function(doc, prev) { prev.count += 1 }"), XObject.class);
-		
-		assertMapReduceResults(results);		
+
+		results = mongoTemplate.group(
+				"group_test_collection",
+				GroupBy.keyFunction("function(doc) { return { x : doc.x }; }").initialDocument("{ count: 0 }")
+						.reduceFunction("function(doc, prev) { prev.count += 1 }"), XObject.class);
+
+		assertMapReduceResults(results);
 	}
-	
+
 	@Test
 	public void SimpleGroupWithFunctionsAsResources() {
 		createGroupByData();
 		GroupByResults<XObject> results;
-		
-		results = mongoTemplate.group("group_test_collection", 
-																  GroupBy.keyFunction("classpath:keyFunction.js").initialDocument("{ count: 0 }").reduceFunction("classpath:groupReduce.js"), XObject.class);
-		
-		assertMapReduceResults(results);		
+
+		results = mongoTemplate.group("group_test_collection", GroupBy.keyFunction("classpath:keyFunction.js")
+				.initialDocument("{ count: 0 }").reduceFunction("classpath:groupReduce.js"), XObject.class);
+
+		assertMapReduceResults(results);
 	}
-	
-	
+
 	@Test
 	public void SimpleGroupWithQueryAndFunctionsAsResources() {
 		createGroupByData();
 		GroupByResults<XObject> results;
-		
-		results = mongoTemplate.group(where("x").gt(0),
-																 "group_test_collection", 
-																  keyFunction("classpath:keyFunction.js").initialDocument("{ count: 0 }").reduceFunction("classpath:groupReduce.js"), XObject.class);
-		
-		assertMapReduceResults(results);		
+
+		results = mongoTemplate.group(where("x").gt(0), "group_test_collection", keyFunction("classpath:keyFunction.js")
+				.initialDocument("{ count: 0 }").reduceFunction("classpath:groupReduce.js"), XObject.class);
+
+		assertMapReduceResults(results);
 	}
-	
-	
+
 	private void assertMapReduceResults(GroupByResults<XObject> results) {
 		DBObject dboRawResults = results.getRawResults();
 		String expected = "{ \"serverUsed\" : \"127.0.0.1:27017\" , \"retval\" : [ { \"x\" : 1.0 , \"count\" : 2.0} , { \"x\" : 2.0 , \"count\" : 1.0} , { \"x\" : 3.0 , \"count\" : 3.0}] , \"count\" : 6.0 , \"keys\" : 3 , \"ok\" : 1.0}";
 		Assert.assertEquals(expected, dboRawResults.toString());
-		
+
 		int numResults = 0;
 		for (XObject xObject : results) {
-			if (xObject.getX() == 1) { 
+			if (xObject.getX() == 1) {
 				Assert.assertEquals(2, xObject.getCount(), 0.001);
 			}
-			if (xObject.getX() == 2) { 
+			if (xObject.getX() == 2) {
 				Assert.assertEquals(1, xObject.getCount(), 0.001);
 			}
-			if (xObject.getX() == 3) { 
+			if (xObject.getX() == 3) {
 				Assert.assertEquals(3, xObject.getCount(), 0.001);
 			}
 			numResults++;
@@ -181,7 +181,6 @@ public class GroupByTests {
 		Assert.assertEquals(6, results.getCount(), 0.001);
 		Assert.assertEquals(3, results.getKeys());
 	}
-
 
 	private void createGroupByData() {
 		DBCollection c = mongoTemplate.getDb().getCollection("group_test_collection");

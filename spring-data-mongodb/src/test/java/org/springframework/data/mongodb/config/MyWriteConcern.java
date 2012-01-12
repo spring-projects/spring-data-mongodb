@@ -3,7 +3,7 @@ package org.springframework.data.mongodb.config;
 import com.mongodb.WriteConcern;
 
 public class MyWriteConcern {
-	
+
 	public MyWriteConcern(WriteConcern wc) {
 		this._w = wc.getWObject();
 		this._continueOnErrorForInsert = wc.getContinueOnErrorForInsert();
@@ -12,11 +12,12 @@ public class MyWriteConcern {
 		this._wtimeout = wc.getWtimeout();
 	}
 
-  Object _w = 0;
-  int _wtimeout = 0;
-  boolean _fsync = false;
-  boolean _j = false;
-  boolean _continueOnErrorForInsert = false;
+	Object _w = 0;
+	int _wtimeout = 0;
+	boolean _fsync = false;
+	boolean _j = false;
+	boolean _continueOnErrorForInsert = false;
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -28,6 +29,7 @@ public class MyWriteConcern {
 		result = prime * result + _wtimeout;
 		return result;
 	}
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)
@@ -52,5 +54,5 @@ public class MyWriteConcern {
 			return false;
 		return true;
 	}
-  
+
 }

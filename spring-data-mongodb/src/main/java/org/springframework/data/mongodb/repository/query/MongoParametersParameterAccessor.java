@@ -21,13 +21,13 @@ import org.springframework.data.repository.query.ParametersParameterAccessor;
 
 /**
  * Mongo-specific {@link ParametersParameterAccessor} to allow access to the {@link Distance} parameter.
- *
+ * 
  * @author Oliver Gierke
  */
 public class MongoParametersParameterAccessor extends ParametersParameterAccessor implements MongoParameterAccessor {
 
 	private final MongoQueryMethod method;
-	
+
 	/**
 	 * Creates a new {@link MongoParametersParameterAccessor}.
 	 * 
@@ -47,25 +47,25 @@ public class MongoParametersParameterAccessor extends ParametersParameterAccesso
 		int index = method.getParameters().getDistanceIndex();
 		return index == -1 ? null : (Distance) getValue(index);
 	}
-	
+
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.repository.MongoParameterAccessor#getGeoNearLocation()
 	 */
 	public Point getGeoNearLocation() {
-		
+
 		int nearIndex = method.getParameters().getNearIndex();
-		
+
 		if (nearIndex == -1) {
 			return null;
 		}
-		
+
 		Object value = getValue(nearIndex);
-		
+
 		if (value == null) {
 			return null;
 		}
-		
+
 		if (value instanceof double[]) {
 			double[] typedValue = (double[]) value;
 			if (typedValue.length != 2) {
@@ -74,7 +74,7 @@ public class MongoParametersParameterAccessor extends ParametersParameterAccesso
 				return new Point(typedValue[0], typedValue[1]);
 			}
 		}
-		
+
 		return (Point) value;
 	}
 }

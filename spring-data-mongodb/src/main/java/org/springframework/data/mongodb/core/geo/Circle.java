@@ -40,10 +40,10 @@ public class Circle implements Shape {
 	 */
 	@PersistenceConstructor
 	public Circle(Point center, double radius) {
-		
+
 		Assert.notNull(center);
 		Assert.isTrue(radius >= 0, "Radius must not be negative!");
-		
+
 		this.center = center;
 		this.radius = radius;
 	}
@@ -76,7 +76,7 @@ public class Circle implements Shape {
 	public double getRadius() {
 		return radius;
 	}
-	
+
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.geo.Shape#asList()
@@ -87,7 +87,7 @@ public class Circle implements Shape {
 		result.add(getRadius());
 		return result;
 	}
-	
+
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.geo.Shape#getCommand()
@@ -104,26 +104,26 @@ public class Circle implements Shape {
 	public String toString() {
 		return String.format("Circle [center=%s, radius=%f]", center, radius);
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see java.lang.Object#equals(java.lang.Object)
 	 */
 	@Override
 	public boolean equals(Object obj) {
-		
+
 		if (this == obj) {
 			return true;
 		}
-		
+
 		if (obj == null || !getClass().equals(obj.getClass())) {
 			return false;
 		}
-		
+
 		Circle that = (Circle) obj;
-		
+
 		return this.center.equals(that.center) && this.radius == that.radius;
 	}
-	
+
 	/*
 	 * (non-Javadoc)
 	 * @see java.lang.Object#hashCode()

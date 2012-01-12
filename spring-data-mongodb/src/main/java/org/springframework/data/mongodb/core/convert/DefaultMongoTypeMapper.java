@@ -50,23 +50,22 @@ public class DefaultMongoTypeMapper extends DefaultTypeMapper<DBObject> implemen
 	public DefaultMongoTypeMapper() {
 		this(DEFAULT_TYPE_KEY, Arrays.asList(SimpleTypeInformationMapper.INSTANCE));
 	}
-	
+
 	public DefaultMongoTypeMapper(String typeKey) {
 		super(new DBObjectTypeAliasAccessor(typeKey));
 		this.typeKey = typeKey;
 	}
-	
-	public DefaultMongoTypeMapper(String typeKey, MappingContext<? extends PersistentEntity<?,?>, ?> mappingContext) {
+
+	public DefaultMongoTypeMapper(String typeKey, MappingContext<? extends PersistentEntity<?, ?>, ?> mappingContext) {
 		super(new DBObjectTypeAliasAccessor(typeKey), mappingContext, Arrays.asList(SimpleTypeInformationMapper.INSTANCE));
 		this.typeKey = typeKey;
 	}
-	
+
 	public DefaultMongoTypeMapper(String typeKey, List<? extends TypeInformationMapper> mappers) {
 		super(new DBObjectTypeAliasAccessor(typeKey), mappers);
 		this.typeKey = typeKey;
 	}
-	
-	
+
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.convert.MongoTypeMapper#isTypeKey(java.lang.String)
@@ -75,7 +74,6 @@ public class DefaultMongoTypeMapper extends DefaultTypeMapper<DBObject> implemen
 		return typeKey == null ? false : typeKey.equals(key);
 	}
 
-
 	/* (non-Javadoc)
 	 * @see org.springframework.data.convert.DefaultTypeMapper#getFallbackTypeFor(java.lang.Object)
 	 */
@@ -83,29 +81,29 @@ public class DefaultMongoTypeMapper extends DefaultTypeMapper<DBObject> implemen
 	protected TypeInformation<?> getFallbackTypeFor(DBObject source) {
 		return source instanceof BasicDBList ? LIST_TYPE_INFO : MAP_TYPE_INFO;
 	}
-	
+
 	/**
 	 * 
 	 * @author Oliver Gierke
 	 */
 	public static final class DBObjectTypeAliasAccessor implements TypeAliasAccessor<DBObject> {
-		
+
 		private final String typeKey;
-		
+
 		public DBObjectTypeAliasAccessor(String typeKey) {
 			this.typeKey = typeKey;
 		}
-		
+
 		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.convert.TypeAliasAccessor#readAliasFrom(java.lang.Object)
 		 */
 		public Object readAliasFrom(DBObject source) {
-			
+
 			if (source instanceof BasicDBList) {
 				return null;
 			}
-			
+
 			return source.get(typeKey);
 		}
 

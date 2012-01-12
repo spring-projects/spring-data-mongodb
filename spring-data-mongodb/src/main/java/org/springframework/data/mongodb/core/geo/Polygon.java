@@ -50,22 +50,22 @@ public class Polygon implements Shape, Iterable<Point> {
 		this.points.addAll(Arrays.asList(x, y, z));
 		this.points.addAll(Arrays.asList(others));
 	}
-	
+
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.geo.Shape#asList()
 	 */
 	public List<List<Double>> asList() {
-		
+
 		List<List<Double>> result = new ArrayList<List<Double>>();
-		
+
 		for (Point point : points) {
 			result.add(point.asList());
 		}
-		
+
 		return result;
 	}
-	
+
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.geo.Shape#getCommand()
@@ -73,7 +73,7 @@ public class Polygon implements Shape, Iterable<Point> {
 	public String getCommand() {
 		return "$polygon";
 	}
-	
+
 	/*
 	 * (non-Javadoc)
 	 * @see java.lang.Iterable#iterator()
@@ -88,20 +88,20 @@ public class Polygon implements Shape, Iterable<Point> {
 	 */
 	@Override
 	public boolean equals(Object obj) {
-		
+
 		if (this == obj) {
 			return true;
 		}
-		
+
 		if (obj == null || !getClass().equals(obj.getClass())) {
 			return false;
 		}
-		
+
 		Polygon that = (Polygon) obj;
-		
+
 		return this.points.equals(that.points);
 	}
-	
+
 	/*
 	 * (non-Javadoc)
 	 * @see java.lang.Object#hashCode()

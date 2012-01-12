@@ -28,7 +28,7 @@ import org.springframework.data.util.ClassTypeInformation;
 
 /**
  * Unit tests for {@link BasicMongoPersistentEntity}.
- *
+ * 
  * @author Oliver Gierke
  */
 @RunWith(MockitoJUnitRunner.class)
@@ -36,59 +36,61 @@ public class BasicMongoPersistentEntityUnitTests {
 
 	@Mock
 	ApplicationContext context;
-	
+
 	@Test
 	public void subclassInheritsAtDocumentAnnotation() {
-		
+
 		BasicMongoPersistentEntity<Person> entity = new BasicMongoPersistentEntity<Person>(
 				ClassTypeInformation.from(Person.class));
 		assertThat(entity.getCollection(), is("contacts"));
 	}
-	
+
 	@Test
 	public void evaluatesSpELExpression() {
-		
-		MongoPersistentEntity<Company> entity = new BasicMongoPersistentEntity<Company>(ClassTypeInformation.from(Company.class));
+
+		MongoPersistentEntity<Company> entity = new BasicMongoPersistentEntity<Company>(
+				ClassTypeInformation.from(Company.class));
 		assertThat(entity.getCollection(), is("35"));
 	}
-	
+
 	@Test
 	public void collectionAllowsReferencingSpringBean() {
-		
+
 		CollectionProvider provider = new CollectionProvider();
 		provider.collectionName = "reference";
-		
+
 		when(context.getBean("myBean")).thenReturn(provider);
 		when(context.containsBean("myBean")).thenReturn(true);
-		
-		BasicMongoPersistentEntity<DynamicallyMapped> entity = new BasicMongoPersistentEntity<DynamicallyMapped>(ClassTypeInformation.from(DynamicallyMapped.class));
+
+		BasicMongoPersistentEntity<DynamicallyMapped> entity = new BasicMongoPersistentEntity<DynamicallyMapped>(
+				ClassTypeInformation.from(DynamicallyMapped.class));
 		entity.setApplicationContext(context);
-		
+
 		assertThat(entity.getCollection(), is("reference"));
 	}
-	
+
 	@Document(collection = "contacts")
 	class Contact {
-		
+
 	}
-	
+
 	class Person extends Contact {
-		
+
 	}
-	
+
 	@Document(collection = "#{35}")
 	class Company {
-		
+
 	}
-	
+
 	@Document(collection = "#{myBean.collectionName}")
 	class DynamicallyMapped {
-		
+
 	}
-	
+
 	class CollectionProvider {
 		String collectionName;
-		
+
 		public String getCollectionName() {
 			return collectionName;
 		}

@@ -24,14 +24,16 @@ import com.mongodb.WriteConcern;
  * Return the passed in default WriteConcern (a property on MongoAction) if no determination can be made.
  * 
  * @author Mark Pollack
- *
+ * 
  */
 public interface WriteConcernResolver {
 
-		/**
-		 * Resolve the WriteConcern given the MongoAction
-		 * @param action describes the context of the Mongo action. Contains a default WriteConcern to use if one should not be resolved.
-		 * @return a WriteConcern based on the passed in MongoAction value, maybe null
-		 */
-		WriteConcern resolve(MongoAction action);
+	/**
+	 * Resolve the WriteConcern given the MongoAction
+	 * 
+	 * @param action describes the context of the Mongo action. Contains a default WriteConcern to use if one should not
+	 *          be resolved.
+	 * @return a WriteConcern based on the passed in MongoAction value, maybe null
+	 */
+	WriteConcern resolve(MongoAction action);
 }

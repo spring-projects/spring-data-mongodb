@@ -35,5 +35,4 @@ public class TestMongoConfiguration extends AbstractMongoConfiguration {
 		converter.setCustomConversions(new CustomConversions(converters));
 	}
 
-
 }

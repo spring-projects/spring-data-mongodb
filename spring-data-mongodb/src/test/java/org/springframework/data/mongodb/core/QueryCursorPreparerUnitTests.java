@@ -31,7 +31,7 @@ import com.mongodb.DBCursor;
 
 /**
  * Unit tests for {@link QueryCursorPreparer}.
- *
+ * 
  * @author Oliver Gierke
  */
 @RunWith(MockitoJUnitRunner.class)
@@ -41,18 +41,18 @@ public class QueryCursorPreparerUnitTests {
 	MongoDbFactory factory;
 	@Mock
 	DBCursor cursor;
-	
+
 	/**
 	 * @see DATAMONGO-185
 	 */
 	@Test
 	public void appliesHintsCorrectly() {
-		
+
 		Query query = query(where("foo").is("bar")).withHint("hint");
-		
+
 		CursorPreparer preparer = new MongoTemplate(factory).new QueryCursorPreparer(query);
 		preparer.prepare(cursor);
-		
+
 		verify(cursor).hint("hint");
 	}
 }

@@ -52,19 +52,19 @@ import com.mongodb.QueryBuilder;
 public class QueryMapperUnitTests {
 
 	QueryMapper mapper;
-  MongoMappingContext context;
+	MongoMappingContext context;
 
 	@Mock
 	MongoDbFactory factory;
 
 	@Before
 	public void setUp() {
-		
+
 		context = new MongoMappingContext();
-		
+
 		MappingMongoConverter converter = new MappingMongoConverter(factory, context);
 		converter.afterPropertiesSet();
-		
+
 		mapper = new QueryMapper(converter);
 	}
 
@@ -86,39 +86,39 @@ public class QueryMapperUnitTests {
 		DBObject result = mapper.getMappedObject(query, null);
 		assertThat(result.get("_id"), is(ObjectId.class));
 	}
-	
+
 	@Test
 	public void handlesBigIntegerIdsCorrectly() {
-		
+
 		DBObject dbObject = new BasicDBObject("id", new BigInteger("1"));
 		DBObject result = mapper.getMappedObject(dbObject, null);
 		assertThat(result.get("_id"), is((Object) "1"));
 	}
-	
+
 	@Test
 	public void handlesObjectIdCapableBigIntegerIdsCorrectly() {
-		
+
 		ObjectId id = new ObjectId();
 		DBObject dbObject = new BasicDBObject("id", new BigInteger(id.toString(), 16));
 		DBObject result = mapper.getMappedObject(dbObject, null);
 		assertThat(result.get("_id"), is((Object) id));
 	}
-	
+
 	/**
 	 * @see DATAMONGO-278
 	 */
 	@Test
 	public void translates$NeCorrectly() {
-		
+
 		Criteria criteria = where("foo").ne(new ObjectId().toString());
-		
+
 		DBObject result = mapper.getMappedObject(criteria.getCriteriaObject(), context.getPersistentEntity(Sample.class));
 		Object object = result.get("_id");
 		assertThat(object, is(DBObject.class));
 		DBObject dbObject = (DBObject) object;
 		assertThat(dbObject.get("$ne"), is(ObjectId.class));
 	}
-	
+
 	/**
 	 * @see DATAMONGO-326
 	 */
@@ -126,11 +126,10 @@ public class QueryMapperUnitTests {
 	public void handlesEnumsCorrectly() {
 		Query query = query(where("foo").is(Enum.INSTANCE));
 		DBObject result = mapper.getMappedObject(query.getQueryObject(), null);
-		
+
 		Object object = result.get("foo");
 		assertThat(object, is(String.class));
 	}
-	
 
 	@Test
 	public void handlesEnumsInNotEqualCorrectly() {

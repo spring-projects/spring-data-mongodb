@@ -19,7 +19,7 @@ import java.util.List;
 
 /**
  * Common interface for all shapes. Allows building MongoDB representations of them.
- *
+ * 
  * @author Oliver Gierke
  */
 public interface Shape {
@@ -31,7 +31,7 @@ public interface Shape {
 	 * @return
 	 */
 	List<? extends Object> asList();
-	
+
 	/**
 	 * Returns the command to be used to create the {@literal $within} criterion.
 	 * 

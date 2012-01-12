@@ -29,17 +29,17 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 /**
  * Integration tests for {@link MongoDbFactory}.
- *
+ * 
  * @author Thomas Risbergf
  */
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration
 public class MongoDbFactoryNoDatabaseRunningTests {
-	
+
 	@Autowired
 	MongoTemplate mongoTemplate;
-	
+
 	/**
 	 * @see DATADOC-139
 	 */
@@ -47,7 +47,7 @@ public class MongoDbFactoryNoDatabaseRunningTests {
 	public void startsUpWithoutADatabaseRunning() {
 		assertThat(mongoTemplate.getClass().getName(), is("org.springframework.data.mongodb.core.MongoTemplate"));
 	}
-	
+
 	@Test(expected = DataAccessResourceFailureException.class)
 	public void failsDataAccessWithoutADatabaseRunning() {
 		mongoTemplate.getCollectionNames();

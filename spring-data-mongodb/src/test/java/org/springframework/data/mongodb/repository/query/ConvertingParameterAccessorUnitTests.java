@@ -33,7 +33,7 @@ import com.mongodb.BasicDBList;
 
 /**
  * Unit tests for {@link ConvertingParameterAccessor}.
- *
+ * 
  * @author Oliver Gierke
  */
 @RunWith(MockitoJUnitRunner.class)
@@ -43,37 +43,37 @@ public class ConvertingParameterAccessorUnitTests {
 	MongoDbFactory factory;
 	@Mock
 	MongoParameterAccessor accessor;
-	
+
 	MongoMappingContext context;
 	MappingMongoConverter converter;
-	
+
 	@Before
 	public void setUp() {
 		context = new MongoMappingContext();
 		converter = new MappingMongoConverter(factory, context);
 	}
-	
+
 	@Test(expected = IllegalArgumentException.class)
 	public void rejectsNullWriter() {
 		new MappingMongoConverter(null, context);
 	}
-	
+
 	@Test(expected = IllegalArgumentException.class)
 	public void rejectsNullContext() {
 		new MappingMongoConverter(factory, null);
 	}
-	
+
 	@Test
 	public void convertsCollectionUponAccess() {
-		
+
 		when(accessor.getBindableValue(0)).thenReturn(Arrays.asList("Foo"));
-		
+
 		ConvertingParameterAccessor parameterAccessor = new ConvertingParameterAccessor(converter, accessor);
 		Object result = parameterAccessor.getBindableValue(0);
-		
+
 		BasicDBList reference = new BasicDBList();
 		reference.add("Foo");
-		
+
 		assertThat(result, is((Object) reference));
 	}
 }

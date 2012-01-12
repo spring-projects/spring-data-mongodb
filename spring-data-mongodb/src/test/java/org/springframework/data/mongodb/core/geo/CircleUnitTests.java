@@ -22,7 +22,7 @@ import org.junit.Test;
 
 /**
  * Unit tests for {@link Circle}.
- *
+ * 
  * @author Oliver Gierke
  */
 public class CircleUnitTests {
@@ -31,23 +31,23 @@ public class CircleUnitTests {
 	public void rejectsNullOrigin() {
 		new Circle(null, 0);
 	}
-	
+
 	@Test(expected = IllegalArgumentException.class)
 	public void rejectsNegativeRadius() {
 		new Circle(1, 1, -1);
 	}
-	
+
 	@Test
 	public void considersTwoCirclesEqualCorrectly() {
-		
+
 		Circle left = new Circle(1, 1, 1);
 		Circle right = new Circle(1, 1, 1);
-		
+
 		assertThat(left, is(right));
 		assertThat(right, is(left));
-		
-		right = new Circle(new Point(1,1), 1);
-		
+
+		right = new Circle(new Point(1, 1), 1);
+
 		assertThat(left, is(right));
 		assertThat(right, is(left));
 	}

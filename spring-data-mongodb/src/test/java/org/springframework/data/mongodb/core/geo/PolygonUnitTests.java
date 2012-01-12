@@ -35,19 +35,19 @@ public class PolygonUnitTests {
 	public void rejectsNullPoints() {
 		new Polygon(null, null, null);
 	}
-	
+
 	@Test
 	public void createsSimplePolygon() {
 		Polygon polygon = new Polygon(third, second, first);
 		assertThat(polygon, is(notNullValue()));
 	}
-	
+
 	@Test
 	public void isEqualForSamePoints() {
-		
+
 		Polygon left = new Polygon(third, second, first);
 		Polygon right = new Polygon(third, second, first);
-		
+
 		assertThat(left, is(right));
 		assertThat(right, is(left));
 	}

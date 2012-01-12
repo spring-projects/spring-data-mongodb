@@ -50,8 +50,7 @@ public class Address {
 	}
 
 	/**
-	 * @param street
-	 *          the street to set
+	 * @param street the street to set
 	 */
 	public void setStreet(String street) {
 		this.street = street;
@@ -65,8 +64,7 @@ public class Address {
 	}
 
 	/**
-	 * @param zipCode
-	 *          the zipCode to set
+	 * @param zipCode the zipCode to set
 	 */
 	public void setZipCode(String zipCode) {
 		this.zipCode = zipCode;
@@ -80,8 +78,7 @@ public class Address {
 	}
 
 	/**
-	 * @param city
-	 *          the city to set
+	 * @param city the city to set
 	 */
 	public void setCity(String city) {
 		this.city = city;

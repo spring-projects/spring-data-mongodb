@@ -36,13 +36,13 @@ import com.mongodb.MongoException;
 
 /**
  * Integration tests for index handling.
- *
+ * 
  * @author Oliver Gierke
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:infrastructure.xml")
 public class IndexingIntegrationTests {
-	
+
 	@Autowired
 	MongoOperations operations;
 
@@ -50,25 +50,24 @@ public class IndexingIntegrationTests {
 	public void tearDown() {
 		operations.dropCollection(IndexedPerson.class);
 	}
-	
-	
+
 	/**
 	 * @see DATADOC-237
 	 */
 	@Test
 	public void createsIndexWithFieldName() {
-		
+
 		operations.save(new IndexedPerson());
 		assertThat(hasIndex("_firstname", IndexedPerson.class), is(true));
 	}
-	
+
 	class IndexedPerson {
-		
+
 		@Field("_firstname")
 		@Indexed
 		String firstname;
 	}
-	
+
 	/**
 	 * Returns whether an index with the given name exists for the given entity type.
 	 * 
@@ -77,7 +76,7 @@ public class IndexingIntegrationTests {
 	 * @return
 	 */
 	private boolean hasIndex(final String indexName, Class<?> entityType) {
-		
+
 		return operations.execute(entityType, new CollectionCallback<Boolean>() {
 			public Boolean doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 				for (DBObject indexInfo : collection.getIndexInfo()) {

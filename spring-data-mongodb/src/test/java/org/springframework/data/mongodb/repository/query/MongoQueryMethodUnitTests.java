@@ -86,7 +86,7 @@ public class MongoQueryMethodUnitTests {
 		MongoQueryMethod queryMethod = queryMethod("findByLocationNear", Point.class, Distance.class, Pageable.class);
 		assertThat(queryMethod.isGeoNearQuery(), is(true));
 		assertThat(queryMethod.isPageQuery(), is(true));
-		
+
 		queryMethod = queryMethod("findByFirstname", String.class, Point.class);
 		assertThat(queryMethod.isGeoNearQuery(), is(true));
 		assertThat(queryMethod.isPageQuery(), is(false));
@@ -107,7 +107,7 @@ public class MongoQueryMethodUnitTests {
 		Method method = PersonRepository.class.getMethod("findByFirstname", String.class, Point.class);
 		new MongoQueryMethod(method, new DefaultRepositoryMetadata(PersonRepository.class), null);
 	}
-	
+
 	@Test
 	public void considersMethodReturningGeoPageAsPagingMethod() throws Exception {
 		MongoQueryMethod method = queryMethod("findByLocationNear", Point.class, Distance.class, Pageable.class);

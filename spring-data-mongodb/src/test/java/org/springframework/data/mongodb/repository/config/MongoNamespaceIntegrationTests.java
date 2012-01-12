@@ -23,7 +23,7 @@ public class MongoNamespaceIntegrationTests extends AbstractPersonRepositoryInte
 
 	DefaultListableBeanFactory factory;
 	BeanDefinitionReader reader;
-	
+
 	@Before
 	@Override
 	public void setUp() {
@@ -31,12 +31,11 @@ public class MongoNamespaceIntegrationTests extends AbstractPersonRepositoryInte
 		factory = new DefaultListableBeanFactory();
 		reader = new XmlBeanDefinitionReader(factory);
 	}
-	
+
 	@Test
 	public void assertDefaultMappingContextIsWired() {
 
-		reader.loadBeanDefinitions(new ClassPathResource("MongoNamespaceIntegrationTests-context.xml",
-				getClass()));
+		reader.loadBeanDefinitions(new ClassPathResource("MongoNamespaceIntegrationTests-context.xml", getClass()));
 		BeanDefinition definition = factory.getBeanDefinition("personRepository");
 		assertThat(definition, is(notNullValue()));
 	}

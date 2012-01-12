@@ -42,51 +42,51 @@ import com.mysema.query.types.path.StringPath;
  */
 @RunWith(MockitoJUnitRunner.class)
 public class SpringDataMongodbSerializerUnitTests {
-	
+
 	@Mock
 	MongoDbFactory dbFactory;
 	MongoConverter converter;
 	SpringDataMongodbSerializer serializer;
-	
+
 	@Before
 	public void setUp() {
 		MongoMappingContext context = new MongoMappingContext();
 		converter = new MappingMongoConverter(dbFactory, context);
 		serializer = new QueryDslMongoRepository.SpringDataMongodbSerializer(converter);
 	}
-	
+
 	@Test
 	public void uses_idAsKeyForIdProperty() {
 
 		StringPath path = QPerson.person.id;
 		assertThat(serializer.getKeyForPath(path, path.getMetadata()), is("_id"));
 	}
-	
+
 	@Test
 	public void buildsNestedKeyCorrectly() {
 		StringPath path = QPerson.person.address.street;
 		assertThat(serializer.getKeyForPath(path, path.getMetadata()), is("street"));
 	}
-	
+
 	@Test
 	public void convertsComplexObjectOnSerializing() {
-		
+
 		Address address = new Address();
 		address.street = "Foo";
 		address.zipCode = "01234";
-		
+
 		DBObject result = serializer.asDBObject("foo", address);
 		assertThat(result, is(BasicDBObject.class));
 		BasicDBObject dbObject = (BasicDBObject) result;
-		
+
 		Object value = dbObject.get("foo");
 		assertThat(value, is(notNullValue()));
 		assertThat(value, is(BasicDBObject.class));
-		
+
 		Object reference = converter.convertToMongoType(address);
 		assertThat(value, is(reference));
 	}
-	
+
 	class Address {
 		String street;
 		@Field("zip_code")

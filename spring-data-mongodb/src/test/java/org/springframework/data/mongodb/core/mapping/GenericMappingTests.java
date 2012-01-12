@@ -42,7 +42,7 @@ public class GenericMappingTests {
 
 	MongoMappingContext context;
 	MongoConverter converter;
-	
+
 	@Mock
 	MongoDbFactory factory;
 

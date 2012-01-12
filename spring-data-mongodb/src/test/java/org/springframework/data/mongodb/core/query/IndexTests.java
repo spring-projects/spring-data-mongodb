@@ -71,7 +71,7 @@ public class IndexTests {
 
 	@Test
 	public void ensuresPropertyOrder() {
-		
+
 		Index on = new Index("foo", Order.ASCENDING).on("bar", Order.ASCENDING);
 		assertThat(on.getIndexKeys().toString(), is("{ \"foo\" : 1 , \"bar\" : 1}"));
 	}

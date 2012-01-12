@@ -31,7 +31,7 @@ public abstract class AbstractMongoEventListener<E> implements ApplicationListen
 
 	protected final Log LOG = LogFactory.getLog(getClass());
 	private final Class<?> domainClass;
-	
+
 	/**
 	 * Creates a new {@link AbstractMongoEventListener}.
 	 */

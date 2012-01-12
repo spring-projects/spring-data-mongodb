@@ -143,11 +143,11 @@ public class MappingMongoConverterParser extends AbstractBeanDefinitionParser {
 		List<Element> customConvertersElements = DomUtils.getChildElementsByTagName(element, "custom-converters");
 
 		if (customConvertersElements.size() == 1) {
-			
+
 			Element customerConvertersElement = customConvertersElements.get(0);
 			ManagedList<BeanMetadataElement> converterBeans = new ManagedList<BeanMetadataElement>();
 			List<Element> converterElements = DomUtils.getChildElementsByTagName(customerConvertersElement, "converter");
-			
+
 			if (converterElements != null) {
 				for (Element listenerElement : converterElements) {
 					converterBeans.add(parseConverter(listenerElement, parserContext));
@@ -158,9 +158,9 @@ public class MappingMongoConverterParser extends AbstractBeanDefinitionParser {
 			String packageToScan = customerConvertersElement.getAttribute(BASE_PACKAGE);
 			if (StringUtils.hasText(packageToScan)) {
 				ClassPathScanningCandidateComponentProvider provider = new ClassPathScanningCandidateComponentProvider(true);
-				provider.addExcludeFilter(new NegatingFilter(new AssignableTypeFilter(Converter.class), new AssignableTypeFilter(
-						GenericConverter.class)));
-	
+				provider.addExcludeFilter(new NegatingFilter(new AssignableTypeFilter(Converter.class),
+						new AssignableTypeFilter(GenericConverter.class)));
+
 				for (BeanDefinition candidate : provider.findCandidateComponents(packageToScan)) {
 					converterBeans.add(candidate);
 				}
@@ -221,7 +221,7 @@ public class MappingMongoConverterParser extends AbstractBeanDefinitionParser {
 
 	/**
 	 * {@link TypeFilter} that returns {@literal false} in case any of the given delegates matches.
-	 *
+	 * 
 	 * @author Oliver Gierke
 	 */
 	private static class NegatingFilter implements TypeFilter {

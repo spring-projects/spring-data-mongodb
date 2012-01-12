@@ -77,7 +77,7 @@ class StubParameterAccessor implements MongoParameterAccessor {
 	public Sort getSort() {
 		return null;
 	}
-	
+
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.repository.MongoParameterAccessor#getMaxDistance()

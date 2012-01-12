@@ -42,10 +42,9 @@ import com.mongodb.DBObject;
  * @author Oliver Gierke
  */
 public class MappingMongoConverterParserIntegrationTests {
-	
+
 	DefaultListableBeanFactory factory;
-	
-	
+
 	@Before
 	public void setUp() {
 		factory = new DefaultListableBeanFactory();
@@ -55,26 +54,26 @@ public class MappingMongoConverterParserIntegrationTests {
 
 	@Test
 	public void allowsDbFactoryRefAttribute() {
-		
+
 		factory.getBeanDefinition("converter");
 		factory.getBean("converter");
 	}
-	
+
 	@Test
 	public void scansForConverterAndSetsUpCustomConversionsAccordingly() {
-		
+
 		CustomConversions conversions = factory.getBean(CustomConversions.class);
 		assertThat(conversions.hasCustomWriteTarget(Person.class), is(true));
 		assertThat(conversions.hasCustomWriteTarget(Account.class), is(true));
 	}
-	
+
 	@Component
 	public static class SampleConverter implements Converter<Person, DBObject> {
 		public DBObject convert(Person source) {
 			return null;
 		}
 	}
-	
+
 	@Component
 	public static class SampleConverterFactory implements GenericConverter {
 
