@@ -23,6 +23,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -44,8 +45,6 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.mongodb.MongoDbFactory;
-import org.springframework.data.mongodb.core.convert.CustomConversions;
-import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.PersonPojoStringId;
@@ -853,6 +852,25 @@ public class MappingMongoConverterUnitTests {
 		converter.write(value, result);
 
 		assertThat(result.get("_id"), is((Object) 5));
+	}
+
+	/**
+	 * @see DATAMONGO-368
+	 */
+	@Test
+	@SuppressWarnings("unchecked")
+	public void writesNullValuesForCollection() {
+
+		CollectionWrapper wrapper = new CollectionWrapper();
+		wrapper.contacts = Arrays.<Contact> asList(new Person(), null);
+
+		DBObject result = new BasicDBObject();
+		converter.write(wrapper, result);
+
+		Object contacts = result.get("contacts");
+		assertThat(contacts, is(Collection.class));
+		assertThat(((Collection<?>) contacts).size(), is(2));
+		assertThat(((Collection<Object>) contacts), hasItem(nullValue()));
 	}
 
 	class GenericType<T> {

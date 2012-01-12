@@ -499,13 +499,9 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		for (Object element : source) {
 
-			if (element == null) {
-				continue;
-			}
+			Class<?> elementType = element == null ? null : element.getClass();
 
-			Class<?> elementType = element.getClass();
-
-			if (conversions.isSimpleType(elementType)) {
+			if (elementType == null || conversions.isSimpleType(elementType)) {
 				sink.add(getPotentiallyConvertedSimpleWrite(element));
 			} else if (element instanceof Collection || elementType.isArray()) {
 				sink.add(writeCollectionInternal(asCollection(element), componentType, new BasicDBList()));
