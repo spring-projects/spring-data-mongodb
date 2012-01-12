@@ -252,7 +252,7 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 			Path<?> parent = metadata.getParent();
 			MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(parent.getType());
 			MongoPersistentProperty property = entity.getPersistentProperty(metadata.getExpression().toString());
-			return property.getFieldName();
+			return property == null ? super.getKeyForPath(expr, metadata) : property.getFieldName();
 		}
 
 		@Override
