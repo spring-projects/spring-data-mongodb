@@ -20,8 +20,7 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
 import java.util.Collections;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -30,7 +29,9 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
-import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
 
 /**
  * Unit tests for testing the mapping works with generic types.
@@ -85,15 +86,15 @@ public class GenericMappingTests {
 		assertThat(result.container.content, is("Foo!"));
 	}
 
-	public class StringWrapper extends Wrapper<String> {
+	static class StringWrapper extends Wrapper<String> {
 
 	}
 
-	public class Wrapper<S> {
+	static class Wrapper<S> {
 		Container<S> container;
 	}
 
-	public class Container<T> {
+	static class Container<T> {
 		T content;
 	}
 }

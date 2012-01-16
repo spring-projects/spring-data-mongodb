@@ -28,11 +28,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
-import com.mongodb.Mongo;
-import com.mongodb.MongoException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bson.types.ObjectId;
@@ -46,11 +41,16 @@ import org.springframework.data.mongodb.MongoCollectionUtils;
 import org.springframework.data.mongodb.core.CollectionCallback;
 import org.springframework.data.mongodb.core.MongoDbUtils;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Order;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.test.util.ReflectionTestUtils;
+
+import com.mongodb.DB;
+import com.mongodb.DBCollection;
+import com.mongodb.DBObject;
+import com.mongodb.Mongo;
+import com.mongodb.MongoException;
 
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
@@ -511,7 +511,7 @@ public class MappingTests {
 		assertThat(result.items.get(0).id, is(items.id));
 	}
 
-	class Container {
+	static class Container {
 
 		@Id
 		final String id;
@@ -526,7 +526,7 @@ public class MappingTests {
 		List<Item> items;
 	}
 
-	class Item {
+	static class Item {
 
 		@Id
 		final String id;

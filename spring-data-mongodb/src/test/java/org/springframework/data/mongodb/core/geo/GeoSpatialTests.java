@@ -54,7 +54,6 @@ import com.mongodb.WriteConcern;
  * Modified from https://github.com/deftlabs/mongo-java-geospatial-example
  * 
  * @author Mark Pollack
- * 
  */
 public class GeoSpatialTests {
 
