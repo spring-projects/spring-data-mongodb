@@ -1041,7 +1041,7 @@ public class MongoTemplateTests {
 		List<TestClass> testClassList = mappingTemplate.find(new Query(Criteria.where("myDate").is(dateTime.toDate())),
 				TestClass.class);
 		assertThat(testClassList.size(), is(1));
-		assertThat(testClassList.get(0).getMyDate(), is(testClass.getMyDate()));
+		assertThat(testClassList.get(0).myDate, is(testClass.myDate));
 	}
 
 	/**
@@ -1080,23 +1080,19 @@ public class MongoTemplateTests {
 		assertThat(template.findOne(query(where("id").is(id)), Sample.class), is(nullValue()));
 	}
 
-	public class Sample {
+	public static class Sample {
 
 		@Id
 		String id;
 	}
 
-	public class TestClass {
+	static class TestClass {
 
-		private DateTime myDate;
+		DateTime myDate;
 
 		@PersistenceConstructor
-		public TestClass(DateTime date) {
-			this.myDate = date;
-		}
-
-		public DateTime getMyDate() {
-			return myDate;
+		TestClass(DateTime myDate) {
+			this.myDate = myDate;
 		}
 	}
 

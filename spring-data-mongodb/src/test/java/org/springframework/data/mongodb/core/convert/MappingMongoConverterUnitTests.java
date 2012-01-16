@@ -41,9 +41,11 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.PersistenceConstructor;
+import org.springframework.data.mapping.model.MappingInstantiationException;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
@@ -272,6 +274,22 @@ public class MappingMongoConverterUnitTests {
 		Person result = converter.read(Person.class, dbObject);
 
 		assertThat(result.firstname, is("Oliver"));
+	}
+
+	@Test
+	public void resolvesNestedComplexTypeForConstructorCorrectly() {
+
+		DBObject address = new BasicDBObject("street", "110 Southwark Street");
+		address.put("city", "London");
+
+		BasicDBList addresses = new BasicDBList();
+		addresses.add(address);
+
+		DBObject person = new BasicDBObject("firstname", "Oliver");
+		person.put("addresses", addresses);
+
+		Person result = converter.read(Person.class, person);
+		assertThat(result.addresses, is(notNullValue()));
 	}
 
 	/**
@@ -873,17 +891,55 @@ public class MappingMongoConverterUnitTests {
 		assertThat(((Collection<Object>) contacts), hasItem(nullValue()));
 	}
 
-	class GenericType<T> {
+	/**
+	 * @see DATAMONGO-379
+	 */
+	@Test
+	public void considersDefaultingExpressionsAtConstructorArguments() {
+
+		DBObject dbObject = new BasicDBObject("foo", "bar");
+		dbObject.put("foobar", 2.5);
+
+		DefaultedConstructorArgument result = converter.read(DefaultedConstructorArgument.class, dbObject);
+		assertThat(result.bar, is(-1));
+	}
+
+	/**
+	 * @see DATAMONGO-379
+	 */
+	@Test
+	public void usesDocumentFieldIfReferencedInAtValue() {
+
+		DBObject dbObject = new BasicDBObject("foo", "bar");
+		dbObject.put("something", 37);
+		dbObject.put("foobar", 2.5);
+
+		DefaultedConstructorArgument result = converter.read(DefaultedConstructorArgument.class, dbObject);
+		assertThat(result.bar, is(37));
+	}
+
+	/**
+	 * @see DATAMONGO-379
+	 */
+	@Test(expected = MappingInstantiationException.class)
+	public void rejectsNotFoundConstructorParameterForPrimitiveType() {
+
+		DBObject dbObject = new BasicDBObject("foo", "bar");
+
+		converter.read(DefaultedConstructorArgument.class, dbObject);
+	}
+
+	static class GenericType<T> {
 		T content;
 	}
 
-	class ClassWithEnumProperty {
+	static class ClassWithEnumProperty {
 
 		SampleEnum sampleEnum;
 		List<SampleEnum> enums;
 	}
 
-	enum SampleEnum {
+	static enum SampleEnum {
 		FIRST {
 			@Override
 			void method() {
@@ -899,7 +955,7 @@ public class MappingMongoConverterUnitTests {
 		abstract void method();
 	}
 
-	class Address {
+	static class Address {
 		String street;
 		String city;
 	}
@@ -908,7 +964,7 @@ public class MappingMongoConverterUnitTests {
 
 	}
 
-	public static class Person implements Contact {
+	static class Person implements Contact {
 		LocalDate birthDate;
 
 		@Field("foo")
@@ -926,46 +982,46 @@ public class MappingMongoConverterUnitTests {
 		}
 	}
 
-	class ClassWithSortedMap {
+	static class ClassWithSortedMap {
 		SortedMap<String, String> map;
 	}
 
-	class ClassWithMapProperty {
+	static class ClassWithMapProperty {
 		Map<Locale, String> map;
 		Map<String, List<String>> mapOfLists;
 		Map<String, Object> mapOfObjects;
 	}
 
-	class ClassWithNestedMaps {
+	static class ClassWithNestedMaps {
 		Map<String, Map<String, Map<String, String>>> nestedMaps;
 	}
 
-	class BirthDateContainer {
+	static class BirthDateContainer {
 		LocalDate birthDate;
 	}
 
-	class BigDecimalContainer {
+	static class BigDecimalContainer {
 		BigDecimal value;
 		Map<String, BigDecimal> map;
 		List<BigDecimal> collection;
 	}
 
-	class CollectionWrapper {
+	static class CollectionWrapper {
 		List<Contact> contacts;
 		List<List<String>> strings;
 		List<Map<String, Locale>> listOfMaps;
 	}
 
-	class LocaleWrapper {
+	static class LocaleWrapper {
 		Locale locale;
 	}
 
-	class ClassWithBigIntegerId {
+	static class ClassWithBigIntegerId {
 		@Id
 		BigInteger id;
 	}
 
-	class A<T> {
+	static class A<T> {
 
 		String valueType;
 		T value;
@@ -976,10 +1032,23 @@ public class MappingMongoConverterUnitTests {
 		}
 	}
 
-	class ClassWithIntId {
+	static class ClassWithIntId {
 
 		@Id
 		int id;
+	}
+
+	static class DefaultedConstructorArgument {
+
+		String foo;
+		int bar;
+		double foobar;
+
+		DefaultedConstructorArgument(String foo, @Value("#root.something ?: -1") int bar, double foobar) {
+			this.foo = foo;
+			this.bar = bar;
+			this.foobar = foobar;
+		}
 	}
 
 	private class LocalDateToDateConverter implements Converter<LocalDate, Date> {

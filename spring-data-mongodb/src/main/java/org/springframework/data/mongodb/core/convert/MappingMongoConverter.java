@@ -37,7 +37,7 @@ import org.springframework.core.convert.support.ConversionServiceFactory;
 import org.springframework.data.convert.TypeMapper;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.AssociationHandler;
-import org.springframework.data.mapping.PreferredConstructor;
+import org.springframework.data.mapping.PreferredConstructor.Parameter;
 import org.springframework.data.mapping.PropertyHandler;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.BeanWrapper;
@@ -189,52 +189,17 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	private <S extends Object> S read(final MongoPersistentEntity<S> entity, final DBObject dbo) {
 
-		final StandardEvaluationContext spelCtx = new StandardEvaluationContext();
-		if (null != applicationContext) {
+		final StandardEvaluationContext spelCtx = new StandardEvaluationContext(dbo);
+		spelCtx.addPropertyAccessor(DBObjectPropertyAccessor.INSTANCE);
+
+		if (applicationContext != null) {
 			spelCtx.setBeanResolver(new BeanFactoryResolver(applicationContext));
 		}
-		if (!(dbo instanceof BasicDBList)) {
-			String[] keySet = dbo.keySet().toArray(new String[dbo.keySet().size()]);
-			for (String key : keySet) {
-				spelCtx.setVariable(key, dbo.get(key));
-			}
-		}
 
-		final List<String> ctorParamNames = new ArrayList<String>();
-		final MongoPersistentProperty idProperty = entity.getIdProperty();
+		final MappedConstructor constructor = new MappedConstructor(entity, mappingContext);
 
-		ParameterValueProvider provider = new SpELAwareParameterValueProvider(spelExpressionParser, spelCtx) {
-			@Override
-			@SuppressWarnings("unchecked")
-			public <T> T getParameterValue(PreferredConstructor.Parameter<T> parameter) {
-
-				if (parameter.getKey() != null) {
-					return super.getParameterValue(parameter);
-				}
-
-				String name = parameter.getName();
-				TypeInformation<T> type = parameter.getType();
-				Class<T> rawType = parameter.getRawType();
-				String key = idProperty == null ? name : idProperty.getName().equals(name) ? idProperty.getFieldName() : name;
-				Object obj = dbo.get(key);
-
-				ctorParamNames.add(name);
-				if (obj instanceof DBRef) {
-					return read(type, ((DBRef) obj).fetch());
-				} else if (obj instanceof BasicDBList) {
-					BasicDBList objAsDbList = (BasicDBList) obj;
-					return conversionService.convert(readCollectionOrArray(type, objAsDbList), rawType);
-				} else if (obj instanceof DBObject) {
-					return read(type, ((DBObject) obj));
-				} else if (null != obj && obj.getClass().isAssignableFrom(rawType)) {
-					return (T) obj;
-				} else if (null != obj) {
-					return conversionService.convert(obj, rawType);
-				}
-
-				return null;
-			}
-		};
+		SpELAwareParameterValueProvider delegate = new SpELAwareParameterValueProvider(spelExpressionParser, spelCtx);
+		ParameterValueProvider provider = new DelegatingParameterValueProvider(constructor, dbo, delegate);
 
 		final BeanWrapper<MongoPersistentEntity<S>, S> wrapper = BeanWrapper.create(entity, provider, conversionService);
 
@@ -242,7 +207,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		entity.doWithProperties(new PropertyHandler<MongoPersistentProperty>() {
 			public void doWithPersistentProperty(MongoPersistentProperty prop) {
 
-				boolean isConstructorProperty = ctorParamNames.contains(prop.getName());
+				boolean isConstructorProperty = constructor.isConstructorParameter(prop);
 				boolean hasValueForProperty = dbo.containsField(prop.getFieldName());
 
 				if (!hasValueForProperty || isConstructorProperty) {
@@ -891,5 +856,56 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		return dbObject;
+	}
+
+	private class DelegatingParameterValueProvider implements ParameterValueProvider {
+
+		private final DBObject source;
+		private final ParameterValueProvider delegate;
+		private final MappedConstructor constructor;
+
+		/**
+		 * {@link ParameterValueProvider} to delegate source object lookup to a {@link SpELAwareParameterValueProvider} in
+		 * case a MappCon
+		 * 
+		 * @param constructor must not be {@literal null}.
+		 * @param source must not be {@literal null}.
+		 * @param delegate must not be {@literal null}.
+		 */
+		public DelegatingParameterValueProvider(MappedConstructor constructor, DBObject source,
+				SpELAwareParameterValueProvider delegate) {
+
+			Assert.notNull(constructor);
+			Assert.notNull(source);
+			Assert.notNull(delegate);
+
+			this.constructor = constructor;
+			this.source = source;
+			this.delegate = delegate;
+		}
+
+		/* 
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mapping.model.ParameterValueProvider#getParameterValue(org.springframework.data.mapping.PreferredConstructor.Parameter)
+		 */
+		@SuppressWarnings("unchecked")
+		public <T> T getParameterValue(Parameter<T> parameter) {
+
+			MappedConstructor.MappedParameter mappedParameter = constructor.getFor(parameter);
+			Object value = mappedParameter.hasSpELExpression() ? delegate.getParameterValue(parameter) : source
+					.get(mappedParameter.getFieldName());
+
+			TypeInformation<?> type = mappedParameter.getPropertyTypeInformation();
+
+			if (value instanceof DBRef) {
+				return (T) read(type, ((DBRef) value).fetch());
+			} else if (value instanceof BasicDBList) {
+				return (T) getPotentiallyConvertedSimpleRead(readCollectionOrArray(type, (BasicDBList) value), type.getType());
+			} else if (value instanceof DBObject) {
+				return (T) read(type, (DBObject) value);
+			} else {
+				return (T) getPotentiallyConvertedSimpleRead(value, type.getType());
+			}
+		}
 	}
 }
