@@ -23,6 +23,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.support.ConversionServiceFactory;
 import org.springframework.core.convert.support.GenericConversionService;
+import org.springframework.data.convert.EntityInstantiators;
 import org.springframework.data.mongodb.core.convert.MongoConverters.BigIntegerToObjectIdConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.ObjectIdToBigIntegerConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.ObjectIdToStringConverter;
@@ -39,6 +40,7 @@ public abstract class AbstractMongoConverter implements MongoConverter, Initiali
 
 	protected final GenericConversionService conversionService;
 	protected CustomConversions conversions = new CustomConversions();
+	protected EntityInstantiators instantiators = new EntityInstantiators();
 
 	/**
 	 * Creates a new {@link AbstractMongoConverter} using the given {@link GenericConversionService}.
@@ -58,6 +60,15 @@ public abstract class AbstractMongoConverter implements MongoConverter, Initiali
 	 */
 	public void setCustomConversions(CustomConversions conversions) {
 		this.conversions = conversions;
+	}
+
+	/**
+	 * Registers {@link EntityInstantiators} to customize entity instantiation.
+	 * 
+	 * @param instantiators
+	 */
+	public void setInstantiators(EntityInstantiators instantiators) {
+		this.instantiators = instantiators == null ? new EntityInstantiators() : instantiators;
 	}
 
 	/**
