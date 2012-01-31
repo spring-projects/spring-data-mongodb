@@ -270,9 +270,9 @@
       <url>http://repository.springsource.com/maven/bundles/release</url>
     </pluginRepository>
     <pluginRepository>
-      <id>repository.springframework.maven.release</id>
+      <id>spring-libs-release</id>
       <name>Spring Framework Maven Release Repository</name>
-      <url>http://repo.springsource.org/release</url>
+      <url>http://repo.springsource.org/libs-release</url>
     </pluginRepository>
   </pluginRepositories>
 

@@ -128,6 +128,7 @@
 		</dependency>
 
 	</dependencies>
+	
 	<build>
 		<plugins>
 			<plugin>
@@ -154,15 +155,5 @@
 			</plugin>
 		</plugins>
 	</build>
-
-	<repositories>
-		<repository>
-			<id>querydsl</id>
-			<name>Mysema QueryDsl</name>
-			<url>http://source.mysema.com/maven2/releases</url>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-		</repository>
-	</repositories>
+	
 </project>
