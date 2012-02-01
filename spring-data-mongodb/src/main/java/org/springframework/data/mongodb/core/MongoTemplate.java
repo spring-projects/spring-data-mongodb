@@ -1,15 +1,11 @@
 /*
- * Copyright 2010-2011 the original author or authors.
+ * Copyright 2010-2012 the original author or authors.
  *
- * Licensed under t
-import org.springframework.util.ResourceUtils;
-
-import org.springframework.data.convert.EntityReader;
-he Apache License, Version 2.0 (the "License");
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *			http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -830,11 +826,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 				DBObject queryObj = query == null ? new BasicDBObject()
 						: mapper.getMappedObject(query.getQueryObject(), entity);
-				DBObject updateObj = update.getUpdateObject();
-
-				for (String key : updateObj.keySet()) {
-					updateObj.put(key, mongoConverter.convertToMongoType(updateObj.get(key)));
-				}
+				DBObject updateObj = update == null ? new BasicDBObject() : mapper.getMappedObject(update.getUpdateObject(),
+						entity);
 
 				if (LOGGER.isDebugEnabled()) {
 					LOGGER.debug("calling update using query: " + queryObj + " and update: " + updateObj + " in collection: "

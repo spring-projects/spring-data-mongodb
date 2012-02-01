@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 the original author or authors.
+ * Copyright 2010-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,9 +17,11 @@ package org.springframework.data.mongodb.core;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
 import java.math.BigInteger;
+import java.util.Collections;
 
 import org.bson.types.ObjectId;
 import org.junit.Before;
@@ -29,10 +31,16 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.context.support.GenericApplicationContext;
+import org.springframework.core.convert.converter.Converter;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.core.convert.CustomConversions;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.mongodb.DB;
@@ -52,19 +60,23 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	MongoTemplate template;
 
 	@Mock
+	MongoDbFactory factory;
+	@Mock
 	Mongo mongo;
-
 	@Mock
 	DB db;
-
 	@Mock
 	DBCollection collection;
 
+	MappingMongoConverter converter;
+
 	@Before
 	public void setUp() {
-		this.template = new MongoTemplate(mongo, "database");
 
-		when(mongo.getDB("database")).thenReturn(db);
+		this.converter = new MappingMongoConverter(factory, new MongoMappingContext());
+		this.template = new MongoTemplate(factory, converter);
+
+		when(factory.getDb()).thenReturn(db);
 		when(db.getCollection(Mockito.any(String.class))).thenReturn(collection);
 	}
 
@@ -126,6 +138,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test
 	public void autogeneratesIdForEntityWithAutogeneratableId() {
 
+		this.converter.afterPropertiesSet();
+
 		MongoTemplate template = spy(this.template);
 		doReturn(new ObjectId()).when(template).saveDBObject(Mockito.any(String.class), Mockito.any(DBObject.class),
 				Mockito.any(Class.class));
@@ -134,6 +148,27 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		template.save(entity);
 
 		assertThat(entity.id, is(notNullValue()));
+	}
+
+	/**
+	 * @see DATAMONGO-374
+	 */
+	@Test
+	public void convertsUpdateConstraintsUsingConverters() {
+
+		CustomConversions conversions = new CustomConversions(Collections.singletonList(MyConverter.INSTANCE));
+		this.converter.setCustomConversions(conversions);
+		this.converter.afterPropertiesSet();
+
+		Query query = new Query();
+		Update update = new Update().set("foo", new AutogenerateableId());
+
+		template.updateFirst(query, update, Wrapper.class);
+
+		QueryMapper queryMapper = new QueryMapper(converter);
+		DBObject reference = queryMapper.getMappedObject(update.getUpdateObject(), null);
+
+		verify(collection, times(1)).update(Mockito.any(DBObject.class), eq(reference), anyBoolean(), anyBoolean());
 	}
 
 	class AutogenerateableId {
@@ -146,6 +181,20 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 
 		@Id
 		Integer id;
+	}
+
+	enum MyConverter implements Converter<AutogenerateableId, String> {
+
+		INSTANCE;
+
+		public String convert(AutogenerateableId source) {
+			return source.toString();
+		}
+	}
+
+	class Wrapper {
+
+		AutogenerateableId foo;
 	}
 
 	/**
