@@ -658,7 +658,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 							(BasicDBList) sourceValue);
 				}
 
-				TypeInformation<?> toType = typeMapper.readType((DBObject) sourceValue);
+				TypeInformation<?> toType = typeMapper.readType((DBObject) sourceValue, prop.getTypeInformation());
 
 				// It's a complex object, have to read it in
 				if (toType != null) {
@@ -687,8 +687,11 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		Assert.notNull(targetType);
 
+		Class<?> collectionType = targetType.getType();
+		collectionType = Collection.class.isAssignableFrom(collectionType) ? collectionType : List.class;
+
 		Collection<Object> items = targetType.getType().isArray() ? new ArrayList<Object>() : CollectionFactory
-				.createCollection(targetType.getType(), sourceValue.size());
+				.createCollection(collectionType, sourceValue.size());
 
 		for (int i = 0; i < sourceValue.size(); i++) {
 			Object dbObjItem = sourceValue.get(i);
@@ -697,7 +700,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			} else if (dbObjItem instanceof DBObject) {
 				items.add(read(targetType.getComponentType(), (DBObject) dbObjItem));
 			} else {
-				items.add(getPotentiallyConvertedSimpleRead(dbObjItem, targetType.getComponentType().getType()));
+				TypeInformation<?> componentType = targetType.getComponentType();
+				items.add(getPotentiallyConvertedSimpleRead(dbObjItem, componentType == null ? null : componentType.getType()));
 			}
 		}
 

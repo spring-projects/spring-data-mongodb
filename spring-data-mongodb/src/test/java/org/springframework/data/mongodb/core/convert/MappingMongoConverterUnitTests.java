@@ -929,6 +929,35 @@ public class MappingMongoConverterUnitTests {
 		converter.read(DefaultedConstructorArgument.class, dbObject);
 	}
 
+	/**
+	 * @see DATAMONGO-358
+	 */
+	@Test
+	public void writesListForObjectPropertyCorrectly() {
+
+		Attribute attribute = new Attribute();
+		attribute.key = "key";
+		attribute.value = Arrays.asList("1", "2");
+
+		Item item = new Item();
+		item.attributes = Arrays.asList(attribute);
+
+		DBObject result = new BasicDBObject();
+
+		converter.write(item, result);
+
+		Item read = converter.read(Item.class, result);
+		assertThat(read.attributes.size(), is(1));
+		assertThat(read.attributes.get(0).key, is(attribute.key));
+		assertThat(read.attributes.get(0).value, is(Collection.class));
+
+		@SuppressWarnings("unchecked")
+		Collection<String> values = (Collection<String>) read.attributes.get(0).value;
+
+		assertThat(values.size(), is(2));
+		assertThat(values, hasItems("1", "2"));
+	}
+
 	static class GenericType<T> {
 		T content;
 	}
@@ -1049,6 +1078,15 @@ public class MappingMongoConverterUnitTests {
 			this.bar = bar;
 			this.foobar = foobar;
 		}
+	}
+
+	static class Item {
+		List<Attribute> attributes;
+	}
+
+	static class Attribute {
+		String key;
+		Object value;
 	}
 
 	private class LocalDateToDateConverter implements Converter<LocalDate, Date> {
