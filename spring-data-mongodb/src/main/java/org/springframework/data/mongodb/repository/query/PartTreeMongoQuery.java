@@ -38,8 +38,8 @@ public class PartTreeMongoQuery extends AbstractMongoQuery {
 	/**
 	 * Creates a new {@link PartTreeMongoQuery} from the given {@link QueryMethod} and {@link MongoTemplate}.
 	 * 
-	 * @param method
-	 * @param template
+	 * @param method must not be {@literal null}.
+	 * @param template must not be {@literal null}.
 	 */
 	public PartTreeMongoQuery(MongoQueryMethod method, MongoOperations mongoOperations) {
 
@@ -50,6 +50,8 @@ public class PartTreeMongoQuery extends AbstractMongoQuery {
 	}
 
 	/**
+	 * Return the {@link PartTree} backing the query.
+	 * 
 	 * @return the tree
 	 */
 	public PartTree getTree() {
@@ -57,16 +59,22 @@ public class PartTreeMongoQuery extends AbstractMongoQuery {
 	}
 
 	/*
-	  * (non-Javadoc)
-	  *
-	  * @see
-	  * org.springframework.data.mongodb.repository.AbstractMongoQuery#createQuery(org.springframework.data.
-	  * document.mongodb.repository.ConvertingParameterAccessor)
-	  */
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery#createQuery(org.springframework.data.mongodb.repository.query.ConvertingParameterAccessor, boolean)
+	 */
 	@Override
 	protected Query createQuery(ConvertingParameterAccessor accessor) {
 
 		MongoQueryCreator creator = new MongoQueryCreator(tree, accessor, context, isGeoNearQuery);
 		return creator.createQuery();
+	}
+
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery#createCountQuery(org.springframework.data.mongodb.repository.query.ConvertingParameterAccessor)
+	 */
+	@Override
+	protected Query createCountQuery(ConvertingParameterAccessor accessor) {
+		return new MongoQueryCreator(tree, accessor, context, false).createQuery();
 	}
 }

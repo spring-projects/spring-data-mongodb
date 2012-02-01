@@ -24,6 +24,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.geo.Box;
 import org.springframework.data.mongodb.core.geo.Circle;
 import org.springframework.data.mongodb.core.geo.Distance;
+import org.springframework.data.mongodb.core.geo.GeoPage;
 import org.springframework.data.mongodb.core.geo.GeoResults;
 import org.springframework.data.mongodb.core.geo.Point;
 import org.springframework.data.mongodb.core.geo.Polygon;
@@ -148,4 +149,6 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	List<Person> findByNamedQuery(String firstname);
 
 	GeoResults<Person> findByLocationNear(Point point, Distance maxDistance);
+
+	GeoPage<Person> findByLocationNear(Point point, Distance maxDistance, Pageable pageable);
 }

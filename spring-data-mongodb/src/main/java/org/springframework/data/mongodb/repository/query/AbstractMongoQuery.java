@@ -15,15 +15,15 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import static org.springframework.data.mongodb.repository.query.QueryUtils.applyPagination;
+import static org.springframework.data.mongodb.repository.query.QueryUtils.*;
 
 import java.util.List;
 
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.mongodb.core.CollectionCallback;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.geo.Distance;
+import org.springframework.data.mongodb.core.geo.GeoPage;
 import org.springframework.data.mongodb.core.geo.GeoResult;
 import org.springframework.data.mongodb.core.geo.GeoResults;
 import org.springframework.data.mongodb.core.geo.Point;
@@ -33,10 +33,6 @@ import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
-
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
 
 /**
  * Base class for {@link RepositoryQuery} implementations for Mongo.
@@ -51,8 +47,8 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	/**
 	 * Creates a new {@link AbstractMongoQuery} from the given {@link MongoQueryMethod} and {@link MongoOperations}.
 	 * 
-	 * @param method
-	 * @param template
+	 * @param method must not be {@literal null}.
+	 * @param template must not be {@literal null}.
 	 */
 	public AbstractMongoQuery(MongoQueryMethod method, MongoOperations template) {
 
@@ -63,25 +59,30 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 		this.mongoOperations = template;
 	}
 
-	/* (non-Javadoc)
+	/* 
+	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.query.RepositoryQuery#getQueryMethod()
 	 */
 	public MongoQueryMethod getQueryMethod() {
-
 		return method;
 	}
 
 	/*
-	  * (non-Javadoc)
-	  *
-	  * @see org.springframework.data.repository.query.RepositoryQuery#execute(java .lang.Object[])
-	  */
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.query.RepositoryQuery#execute(java.lang.Object[])
+	 */
 	public Object execute(Object[] parameters) {
 
 		MongoParameterAccessor accessor = new MongoParametersParameterAccessor(method, parameters);
 		Query query = createQuery(new ConvertingParameterAccessor(mongoOperations.getConverter(), accessor));
 
-		if (method.isGeoNearQuery()) {
+		if (method.isGeoNearQuery() && method.isPageQuery()) {
+
+			MongoParameterAccessor countAccessor = new MongoParametersParameterAccessor(method, parameters);
+			Query countQuery = createCountQuery(new ConvertingParameterAccessor(mongoOperations.getConverter(), countAccessor));
+
+			return new GeoNearExecution(accessor).execute(query, countQuery);
+		} else if (method.isGeoNearQuery()) {
 			return new GeoNearExecution(accessor).execute(query);
 		} else if (method.isCollectionQuery()) {
 			return new CollectionExecution().execute(query);
@@ -93,13 +94,24 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	}
 
 	/**
-	 * Create a {@link Query} instance using the given {@link ParameterAccessor}
+	 * Creates a {@link Query} instance using the given {@link ParameterAccessor}
 	 * 
-	 * @param accessor
-	 * @param converter
+	 * @param accessor must not be {@literal null}.
 	 * @return
 	 */
 	protected abstract Query createQuery(ConvertingParameterAccessor accessor);
+
+	/**
+	 * Creates a {@link Query} instance using the given {@link ConvertingParameterAccessor}. Will delegate to
+	 * {@link #createQuery(ConvertingParameterAccessor)} by default but allows customization of the count query to be
+	 * triggered.
+	 * 
+	 * @param accessor must not be {@literal null}.
+	 * @return
+	 */
+	protected Query createCountQuery(ConvertingParameterAccessor accessor) {
+		return createQuery(accessor);
+	}
 
 	private abstract class Execution {
 
@@ -122,13 +134,11 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	class CollectionExecution extends Execution {
 
 		/*
-		   * (non-Javadoc)
-		   *
-		   * @see org.springframework.data.mongodb.repository.MongoQuery.Execution #execute(com.mongodb.DBObject)
-		   */
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery.Execution#execute(org.springframework.data.mongodb.core.query.Query)
+		 */
 		@Override
 		public Object execute(Query query) {
-
 			return readCollection(query);
 		}
 	}
@@ -162,23 +172,12 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 		Object execute(Query query) {
 
 			MongoEntityInformation<?, ?> metadata = method.getEntityInformation();
-			int count = getCollectionCursor(metadata.getCollectionName(), query.getQueryObject()).count();
+			long count = mongoOperations.count(query, metadata.getCollectionName());
 
 			List<?> result = mongoOperations.find(applyPagination(query, pageable), metadata.getJavaType(),
 					metadata.getCollectionName());
 
 			return new PageImpl(result, pageable, count);
-		}
-
-		private DBCursor getCollectionCursor(String collectionName, final DBObject query) {
-
-			return mongoOperations.execute(collectionName, new CollectionCallback<DBCursor>() {
-
-				public DBCursor doInCollection(DBCollection collection) {
-
-					return collection.find(query);
-				}
-			});
 		}
 	}
 
@@ -221,6 +220,28 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 		@Override
 		Object execute(Query query) {
 
+			GeoResults<?> results = doExecuteQuery(query);
+			return isListOfGeoResult() ? results.getContent() : results;
+		}
+
+		/**
+		 * Executes the given {@link Query} to return a page.
+		 * 
+		 * @param query must not be {@literal null}.
+		 * @param countQuery must not be {@literal null}.
+		 * @return
+		 */
+		Object execute(Query query, Query countQuery) {
+
+			MongoEntityInformation<?, ?> information = method.getEntityInformation();
+			long count = mongoOperations.count(countQuery, information.getCollectionName());
+
+			return new GeoPage<Object>(doExecuteQuery(query), accessor.getPageable(), count);
+		}
+
+		@SuppressWarnings("unchecked")
+		private GeoResults<Object> doExecuteQuery(Query query) {
+
 			Point nearLocation = accessor.getGeoNearLocation();
 			NearQuery nearQuery = NearQuery.near(nearLocation);
 
@@ -234,10 +255,8 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 			}
 
 			MongoEntityInformation<?, ?> entityInformation = method.getEntityInformation();
-			GeoResults<?> results = mongoOperations.geoNear(nearQuery, entityInformation.getJavaType(),
+			return (GeoResults<Object>) mongoOperations.geoNear(nearQuery, entityInformation.getJavaType(),
 					entityInformation.getCollectionName());
-
-			return isListOfGeoResult() ? results.getContent() : results;
 		}
 
 		private boolean isListOfGeoResult() {
