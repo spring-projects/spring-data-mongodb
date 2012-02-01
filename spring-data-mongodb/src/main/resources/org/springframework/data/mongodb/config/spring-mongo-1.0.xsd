@@ -7,16 +7,14 @@
 						xmlns:context="http://www.springframework.org/schema/context"
 						xmlns:repository="http://www.springframework.org/schema/data/repository"
 						targetNamespace="http://www.springframework.org/schema/data/mongo"
-						elementFormDefault="qualified" attributeFormDefault="unqualified"
-						xsi:schemaLocation="http://www.springframework.org/schema/beans
-            http://www.springframework.org/schema/beans/spring-beans-2.5.xsd">
+						elementFormDefault="qualified" attributeFormDefault="unqualified">
 
-	<xsd:import namespace="http://www.springframework.org/schema/beans"/>
-	<xsd:import namespace="http://www.springframework.org/schema/tool"/>
+	<xsd:import namespace="http://www.springframework.org/schema/beans" />
+	<xsd:import namespace="http://www.springframework.org/schema/tool" />
 	<xsd:import namespace="http://www.springframework.org/schema/context"
-							schemaLocation="http://www.springframework.org/schema/context/spring-context.xsd"/>
+				schemaLocation="http://www.springframework.org/schema/context/spring-context.xsd" />
 	<xsd:import namespace="http://www.springframework.org/schema/data/repository"
-							schemaLocation="http://www.springframework.org/schema/data/repository/spring-repository.xsd"/>
+				schemaLocation="http://www.springframework.org/schema/data/repository/spring-repository.xsd" />
 
 	<xsd:element name="mongo" type="mongoType">
 		<xsd:annotation>
