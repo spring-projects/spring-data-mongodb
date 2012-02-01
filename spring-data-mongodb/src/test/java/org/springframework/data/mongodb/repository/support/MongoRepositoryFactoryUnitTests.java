@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.repository.support;
 
+import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
@@ -29,9 +30,9 @@ import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
-import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.repository.Person;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
+import org.springframework.data.repository.Repository;
 
 /**
  * Unit test for {@link MongoRepositoryFactory}.
@@ -48,17 +49,18 @@ public class MongoRepositoryFactoryUnitTests {
 	MongoConverter converter;
 
 	@Mock
-	MappingContext<MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
+	@SuppressWarnings("rawtypes")
+	MappingContext mappingContext;
 
 	@Mock
 	@SuppressWarnings("rawtypes")
 	MongoPersistentEntity entity;
 
 	@Before
-	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@SuppressWarnings("unchecked")
 	public void setUp() {
 		when(template.getConverter()).thenReturn(converter);
-		when(converter.getMappingContext()).thenReturn((MappingContext) mappingContext);
+		when(converter.getMappingContext()).thenReturn(mappingContext);
 	}
 
 	@Test
@@ -71,5 +73,24 @@ public class MongoRepositoryFactoryUnitTests {
 		MongoRepositoryFactory factory = new MongoRepositoryFactory(template);
 		MongoEntityInformation<Person, Serializable> entityInformation = factory.getEntityInformation(Person.class);
 		assertTrue(entityInformation instanceof MappingMongoEntityInformation);
+	}
+
+	/**
+	 * @see DATAMONGO-385
+	 */
+	@Test
+	@SuppressWarnings("unchecked")
+	public void createsRepositoryWithIdTypeLong() {
+
+		when(mappingContext.getPersistentEntity(Person.class)).thenReturn(entity);
+		when(entity.getType()).thenReturn(Person.class);
+
+		MongoRepositoryFactory factory = new MongoRepositoryFactory(template);
+		MyPersonRepository repository = factory.getRepository(MyPersonRepository.class);
+		assertThat(repository, is(notNullValue()));
+	}
+
+	interface MyPersonRepository extends Repository<Person, Long> {
+
 	}
 }
