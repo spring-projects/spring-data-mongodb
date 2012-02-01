@@ -35,6 +35,7 @@ import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.geo.Box;
 import org.springframework.data.mongodb.core.geo.Circle;
 import org.springframework.data.mongodb.core.geo.Distance;
+import org.springframework.data.mongodb.core.geo.GeoPage;
 import org.springframework.data.mongodb.core.geo.GeoResults;
 import org.springframework.data.mongodb.core.geo.Metrics;
 import org.springframework.data.mongodb.core.geo.Point;
@@ -363,6 +364,18 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 
 		GeoResults<Person> results = repository.findByLocationNear(new Point(-73.99, 40.73), new Distance(2000,
 				Metrics.KILOMETERS));
+		assertThat(results.getContent().isEmpty(), is(false));
+	}
+
+	@Test
+	public void executesGeoPageQueryForResultsCorrectly() {
+
+		Point point = new Point(-73.99171, 40.738868);
+		dave.setLocation(point);
+		repository.save(dave);
+
+		GeoPage<Person> results = repository.findByLocationNear(new Point(-73.99, 40.73), new Distance(2000,
+				Metrics.KILOMETERS), new PageRequest(0, 20));
 		assertThat(results.getContent().isEmpty(), is(false));
 	}
 

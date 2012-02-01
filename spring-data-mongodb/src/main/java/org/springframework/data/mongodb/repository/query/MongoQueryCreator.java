@@ -203,7 +203,8 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Query> {
 		case NEAR:
 
 			Distance distance = accessor.getMaxDistance();
-			Point point = nextAs(parameters, Point.class);
+			Point point = accessor.getGeoNearLocation();
+			point = point == null ? nextAs(parameters, Point.class) : point;
 
 			if (distance == null) {
 				return criteria.near(point);
