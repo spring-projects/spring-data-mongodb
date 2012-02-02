@@ -23,8 +23,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.convert.MongoWriter;
 import org.springframework.data.mongodb.core.geo.Distance;
 import org.springframework.data.mongodb.core.geo.Point;
-import org.springframework.data.mongodb.repository.query.ConvertingParameterAccessor;
-import org.springframework.data.mongodb.repository.query.MongoParameterAccessor;
 import org.springframework.data.repository.query.ParameterAccessor;
 
 /**
@@ -45,7 +43,6 @@ class StubParameterAccessor implements MongoParameterAccessor {
 	 * @return
 	 */
 	public static ConvertingParameterAccessor getAccessor(MongoWriter<Object> converter, Object... parameters) {
-
 		return new ConvertingParameterAccessor(converter, new StubParameterAccessor(parameters));
 	}
 
@@ -54,26 +51,33 @@ class StubParameterAccessor implements MongoParameterAccessor {
 	}
 
 	/*
-	  * (non-Javadoc)
-	  *
-	  * @see org.springframework.data.repository.query.ParameterAccessor#getPageable()
-	  */
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.query.ParameterAccessor#getPageable()
+	 */
 	public Pageable getPageable() {
 		return null;
 	}
 
-	/* (non-Javadoc)
-	  * @see org.springframework.data.repository.query.ParameterAccessor#getBindableParameter(int)
-	  */
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.query.ParameterAccessor#getBindableValue(int)
+	 */
 	public Object getBindableValue(int index) {
 		return values[index];
 	}
 
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.query.ParameterAccessor#hasBindableNullValue()
+	 */
+	public boolean hasBindableNullValue() {
+		return false;
+	}
+
 	/*
-	  * (non-Javadoc)
-	  *
-	  * @see org.springframework.data.repository.query.ParameterAccessor#getSort()
-	  */
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.query.ParameterAccessor#getSort()
+	 */
 	public Sort getSort() {
 		return null;
 	}
@@ -87,15 +91,15 @@ class StubParameterAccessor implements MongoParameterAccessor {
 	}
 
 	/*
-	  * (non-Javadoc)
-	  *
-	  * @see java.lang.Iterable#iterator()
-	  */
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.query.ParameterAccessor#iterator()
+	 */
 	public Iterator<Object> iterator() {
 		return Arrays.asList(values).iterator();
 	}
 
-	/* (non-Javadoc)
+	/* 
+	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.repository.MongoParameterAccessor#getGeoNearLocation()
 	 */
 	public Point getGeoNearLocation() {

@@ -110,6 +110,14 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 		return writer.convertToMongoType(value);
 	}
 
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.query.ParameterAccessor#hasBindableNullValue()
+	 */
+	public boolean hasBindableNullValue() {
+		return delegate.hasBindableNullValue();
+	}
+
 	/**
 	 * Custom {@link Iterator} to convert items before returning them.
 	 * 
