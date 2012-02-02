@@ -20,7 +20,9 @@ import static org.springframework.data.mongodb.core.query.Criteria.*;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -171,8 +173,21 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements Paging
 	 * @see org.springframework.data.repository.CrudRepository#findAll()
 	 */
 	public List<T> findAll() {
-
 		return findAll(new Query());
+	}
+
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.CrudRepository#findAll(java.lang.Iterable)
+	 */
+	public Iterable<T> findAll(Iterable<ID> ids) {
+
+		Set<ID> parameters = new HashSet<ID>();
+		for (ID id : ids) {
+			parameters.add(id);
+		}
+
+		return findAll(new Query(new Criteria(entityInformation.getIdAttribute()).in(parameters)));
 	}
 
 	/*

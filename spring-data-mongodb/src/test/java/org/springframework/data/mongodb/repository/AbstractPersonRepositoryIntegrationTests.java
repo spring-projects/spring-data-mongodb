@@ -91,6 +91,14 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	}
 
 	@Test
+	public void findsAllWithGivenIds() {
+
+		Iterable<Person> result = repository.findAll(Arrays.asList(dave.id, boyd.id));
+		assertThat(result, hasItems(dave, boyd));
+		assertThat(result, not(hasItems(oliver, carter, stefan, leroi, alicia)));
+	}
+
+	@Test
 	public void deletesPersonCorrectly() throws Exception {
 
 		repository.delete(dave);
