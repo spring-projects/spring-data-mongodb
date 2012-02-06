@@ -21,6 +21,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import org.bson.types.Binary;
 import org.bson.types.CodeWScope;
 import org.bson.types.ObjectId;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
@@ -50,6 +51,7 @@ public abstract class MongoSimpleTypes {
 		simpleTypes.add(CodeWScope.class);
 		simpleTypes.add(DBObject.class);
 		simpleTypes.add(Pattern.class);
+		simpleTypes.add(Binary.class);
 		MONGO_SIMPLE_TYPES = Collections.unmodifiableSet(simpleTypes);
 	}
 

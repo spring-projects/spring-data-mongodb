@@ -3,14 +3,17 @@ package org.springframework.data.mongodb.core.convert;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
+import java.text.DateFormat;
+import java.text.Format;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.UUID;
 
+import org.bson.types.Binary;
 import org.bson.types.ObjectId;
 import org.junit.Test;
 import org.springframework.core.convert.converter.Converter;
-import org.springframework.core.convert.support.ConversionServiceFactory;
+import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.mongodb.core.convert.MongoConverters.StringToBigIntegerConverter;
 
@@ -27,13 +30,13 @@ public class CustomConversionsUnitTests {
 	@SuppressWarnings("unchecked")
 	public void findsBasicReadAndWriteConversions() {
 
-		CustomConversions conversions = new CustomConversions(Arrays.asList(UuidToStringConverter.INSTANCE,
-				StringToUUIDConverter.INSTANCE));
+		CustomConversions conversions = new CustomConversions(Arrays.asList(FormatToStringConverter.INSTANCE,
+				StringToFormatConverter.INSTANCE));
 
-		assertThat(conversions.getCustomWriteTarget(UUID.class, null), is(typeCompatibleWith(String.class)));
+		assertThat(conversions.getCustomWriteTarget(Format.class, null), is(typeCompatibleWith(String.class)));
 		assertThat(conversions.getCustomWriteTarget(String.class, null), is(nullValue()));
 
-		assertThat(conversions.hasCustomReadTarget(String.class, UUID.class), is(true));
+		assertThat(conversions.hasCustomReadTarget(String.class, Format.class), is(true));
 		assertThat(conversions.hasCustomReadTarget(String.class, Locale.class), is(false));
 	}
 
@@ -51,7 +54,7 @@ public class CustomConversionsUnitTests {
 	@Test
 	public void considersTypesWeRegisteredConvertersForAsSimple() {
 
-		CustomConversions conversions = new CustomConversions(Arrays.asList(UuidToStringConverter.INSTANCE));
+		CustomConversions conversions = new CustomConversions(Arrays.asList(FormatToStringConverter.INSTANCE));
 		assertThat(conversions.isSimpleType(UUID.class), is(true));
 	}
 
@@ -95,14 +98,13 @@ public class CustomConversionsUnitTests {
 	@Test
 	public void populatesConversionServiceCorrectly() {
 
-		@SuppressWarnings("deprecation")
-		GenericConversionService conversionService = ConversionServiceFactory.createDefaultConversionService();
+		GenericConversionService conversionService = new DefaultConversionService();
 		assertThat(conversionService.canConvert(String.class, UUID.class), is(false));
 
-		CustomConversions conversions = new CustomConversions(Arrays.asList(StringToUUIDConverter.INSTANCE));
+		CustomConversions conversions = new CustomConversions(Arrays.asList(StringToFormatConverter.INSTANCE));
 		conversions.registerConvertersIn(conversionService);
 
-		assertThat(conversionService.canConvert(String.class, UUID.class), is(true));
+		assertThat(conversionService.canConvert(String.class, Format.class), is(true));
 	}
 
 	/**
@@ -110,8 +112,8 @@ public class CustomConversionsUnitTests {
 	 */
 	@Test
 	public void doesNotConsiderTypeSimpleIfOnlyReadConverterIsRegistered() {
-		CustomConversions conversions = new CustomConversions(Arrays.asList(StringToUUIDConverter.INSTANCE));
-		assertThat(conversions.isSimpleType(UUID.class), is(false));
+		CustomConversions conversions = new CustomConversions(Arrays.asList(StringToFormatConverter.INSTANCE));
+		assertThat(conversions.isSimpleType(Format.class), is(false));
 	}
 
 	/**
@@ -140,18 +142,38 @@ public class CustomConversionsUnitTests {
 		assertThat(conversions.getCustomWriteTarget(String.class), is(nullValue()));
 	}
 
-	enum UuidToStringConverter implements Converter<UUID, String> {
+	/**
+	 * @see DATAMONGO-390
+	 */
+	@Test
+	public void considersBinaryASimpleType() {
+
+		CustomConversions conversions = new CustomConversions();
+		assertThat(conversions.isSimpleType(Binary.class), is(true));
+	}
+
+	/**
+	 * @see DATAMONGO-390
+	 */
+	@Test
+	public void convertsUUIDsToBinaryByDefault() {
+
+		CustomConversions conversions = new CustomConversions();
+		assertThat(conversions.hasCustomWriteTarget(UUID.class), is(true));
+	}
+
+	enum FormatToStringConverter implements Converter<Format, String> {
 		INSTANCE;
 
-		public String convert(UUID source) {
+		public String convert(Format source) {
 			return source.toString();
 		}
 	}
 
-	enum StringToUUIDConverter implements Converter<String, UUID> {
+	enum StringToFormatConverter implements Converter<String, Format> {
 		INSTANCE;
-		public UUID convert(String source) {
-			return UUID.fromString(source);
+		public Format convert(String source) {
+			return DateFormat.getInstance();
 		}
 	}
 

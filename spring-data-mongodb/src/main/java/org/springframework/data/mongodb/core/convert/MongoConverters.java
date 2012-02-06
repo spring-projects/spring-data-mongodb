@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2011-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,18 +15,18 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
+import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.UUID;
 
-<<<<<<< HEAD
-=======
 import org.bson.BSON;
 import org.bson.types.Binary;
->>>>>>> d1396e2... DATAMONGO-391 - Move to SLF4J for logging.
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.mapping.model.MappingException;
 import org.springframework.util.StringUtils;
 
 /**
@@ -126,8 +126,6 @@ abstract class MongoConverters {
 			return StringUtils.hasText(source) ? new BigInteger(source) : null;
 		}
 	}
-<<<<<<< HEAD
-=======
 
 	/**
 	 * Custom {@link Converter} to convert {@link UUID}s into {@link Binary}s.
@@ -176,5 +174,4 @@ abstract class MongoConverters {
 			}
 		}
 	}
->>>>>>> d1396e2... DATAMONGO-391 - Move to SLF4J for logging.
 }
