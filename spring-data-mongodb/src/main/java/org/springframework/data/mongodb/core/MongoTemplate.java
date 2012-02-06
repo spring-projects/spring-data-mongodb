@@ -29,9 +29,9 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.bson.types.ObjectId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -107,7 +107,7 @@ import com.mongodb.util.JSON;
  */
 public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
-	private static final Log LOGGER = LogFactory.getLog(MongoTemplate.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(MongoTemplate.class);
 	private static final String ID = "_id";
 	private static final WriteResultChecking DEFAULT_WRITE_RESULT_CHECKING = WriteResultChecking.NONE;
 	@SuppressWarnings("serial")

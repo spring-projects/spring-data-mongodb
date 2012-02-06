@@ -12,9 +12,9 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <!-- versions for commonly-used dependencies -->
     <junit.version>4.8.1</junit.version>
-    <log4j.version>1.2.15</log4j.version>
+    <log4j.version>1.2.16</log4j.version>
     <org.mockito.version>1.8.4</org.mockito.version>
-    <org.slf4j.version>1.5.10</org.slf4j.version>
+    <org.slf4j.version>1.6.1</org.slf4j.version>
     <org.codehaus.jackson.version>1.6.1</org.codehaus.jackson.version>
     <org.springframework.version.30>3.0.7.RELEASE</org.springframework.version.30>
     <org.springframework.version.40>4.0.0.RELEASE</org.springframework.version.40>
@@ -22,42 +22,7 @@
     <data.commons.version>1.3.0.BUILD-SNAPSHOT</data.commons.version>
     <aspectj.version>1.6.11.RELEASE</aspectj.version>
   </properties>
-  <profiles>
-    <profile>
-      <id>strict</id>
-      <properties>
-        <maven.test.failure.ignore>false</maven.test.failure.ignore>
-      </properties>
-    </profile>
-    <profile>
-      <id>fast</id>
-      <properties>
-        <maven.test.skip>true</maven.test.skip>
-        <maven.javadoc.skip>true</maven.javadoc.skip>
-      </properties>
-    </profile>
-    <profile>
-      <id>staging</id>
-      <distributionManagement>
-        <site>
-          <id>spring-site-staging</id>
-          <url>file:///${java.io.tmpdir}/spring-data/mongodb/docs</url>
-        </site>
-        <repository>
-          <id>spring-milestone-staging</id>
-          <url>file:///${java.io.tmpdir}/spring-data/mongodb/milestone</url>
-        </repository>
-        <snapshotRepository>
-          <id>spring-snapshot-staging</id>
-          <url>file:///${java.io.tmpdir}/spring-data/mongodb/snapshot</url>
-        </snapshotRepository>
-      </distributionManagement>
-    </profile>
-    <profile>
-      <id>bootstrap</id>
-      <!-- TODO: move the repositories in here before release -->
-    </profile>
-  </profiles>
+ 
   <distributionManagement>
     <!-- see 'staging' profile for dry-run deployment settings -->
     <downloadUrl>http://www.springsource.com/download/community
@@ -79,163 +44,62 @@
       <url>s3://maven.springframework.org/snapshot</url>
     </snapshotRepository>
   </distributionManagement>
-  <dependencyManagement>
-    <!--
-        inheritable <dependency> declarations for child poms. children still
-        must explicitly declare the groupId/artifactId of these dependencies
-        in order for them to show up on the classpath, but metadata like
-        <version> and <scope> are inherited, which cuts down on verbosity.
-        see
-        http://www.sonatype.com/books/mvnref-book/reference/pom-relationships-sect-dep-manage.html
-      -->
-    <dependencies>
-
-      <!--  Spring -->
-      <dependency>
-        <groupId>org.springframework</groupId>
-        <artifactId>spring-aop</artifactId>
-        <version>${org.springframework.version.range}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.springframework</groupId>
-        <artifactId>spring-beans</artifactId>
-        <version>${org.springframework.version.range}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.springframework</groupId>
-        <artifactId>spring-core</artifactId>
-        <version>${org.springframework.version.range}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.springframework</groupId>
-        <artifactId>spring-tx</artifactId>
-        <version>${org.springframework.version.range}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.springframework</groupId>
-        <artifactId>spring-orm</artifactId>
-        <version>${org.springframework.version.range}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.springframework</groupId>
-        <artifactId>spring-web</artifactId>
-        <version>${org.springframework.version.range}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.springframework</groupId>
-        <artifactId>spring-expression</artifactId>
-        <version>${org.springframework.version.range}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.springframework</groupId>
-        <artifactId>spring-test</artifactId>
-        <version>${org.springframework.version.range}</version>
-        <scope>test</scope>
-      </dependency>
-
-      <!--  Spring Data -->
-      <dependency>
-        <groupId>org.springframework.data</groupId>
-        <artifactId>spring-data-commons-core</artifactId>
-        <version>${data.commons.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.springframework.data</groupId>
-        <artifactId>spring-data-commons-aspects</artifactId>
-        <version>${data.commons.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.springframework.data</groupId>
-        <artifactId>spring-data-couchdb</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.springframework.data</groupId>
-        <artifactId>spring-data-mongodb</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-
-      <!-- Logging -->
-      <dependency>
-        <groupId>org.slf4j</groupId>
-        <artifactId>slf4j-api</artifactId>
-        <version>${org.slf4j.version}</version>
-        <scope>runtime</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.slf4j</groupId>
-        <artifactId>jcl-over-slf4j</artifactId>
-        <version>${org.slf4j.version}</version>
-        <scope>runtime</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.slf4j</groupId>
-        <artifactId>slf4j-log4j12</artifactId>
-        <version>${org.slf4j.version}</version>
-        <scope>runtime</scope>
-      </dependency>
-      <dependency>
-        <groupId>log4j</groupId>
-        <artifactId>log4j</artifactId>
-        <version>${log4j.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>javax.mail</groupId>
-            <artifactId>mail</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>javax.jms</groupId>
-            <artifactId>jms</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>com.sun.jdmk</groupId>
-            <artifactId>jmxtools</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>com.sun.jmx</groupId>
-            <artifactId>jmxri</artifactId>
-          </exclusion>
-        </exclusions>
-        <scope>runtime</scope>
-      </dependency>
-
-      <dependency>
-        <groupId>javax.annotation</groupId>
-        <artifactId>jsr250-api</artifactId>
-        <version>1.0</version>
-        <optional>true</optional>
-      </dependency>
-
-      <dependency>
-        <groupId>org.mockito</groupId>
-        <artifactId>mockito-all</artifactId>
-        <version>${org.mockito.version}</version>
-        <scope>test</scope>
-      </dependency>
-
-      <dependency>
-        <groupId>junit</groupId>
-        <artifactId>junit</artifactId>
-        <version>${junit.version}</version>
-        <scope>test</scope>
-      </dependency>
-
-    </dependencies>
-  </dependencyManagement>
+  
   <dependencies>
-    <!--
-        dependency definitions to be inherited by child poms. any
-        <dependency> declarations here will automatically show up on child
-        project classpaths. only items that are truly common across all
-        projects (modules and samples) should go here. otherwise, consider
-        <dependencyManagement> above
-      -->
-    <dependency>
-      <groupId>log4j</groupId>
-      <artifactId>log4j</artifactId>
-      <version>${log4j.version}</version>
-      <scope>test</scope>
-    </dependency>
+
+<!-- Test dependencies -->
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-all</artifactId>
+			<version>${org.mockito.version}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.hamcrest</groupId>
+			<artifactId>hamcrest-all</artifactId>
+			<version>1.1</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>${junit.version}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>joda-time</groupId>
+			<artifactId>joda-time</artifactId>
+			<version>1.6</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>${org.slf4j.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>jcl-over-slf4j</artifactId>
+			<version>${org.slf4j.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-log4j12</artifactId>
+			<version>${org.slf4j.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>log4j</groupId>
+			<artifactId>log4j</artifactId>
+			<version>${log4j.version}</version>
+			<scope>test</scope>
+		</dependency>
+
   </dependencies>
 
   <build>
@@ -369,22 +233,14 @@
   </build>
   <pluginRepositories>
     <pluginRepository>
-      <!-- necessary for bundlor and utils -->
-      <id>repository.plugin.springsource.release</id>
-      <name>SpringSource Maven Repository</name>
-      <url>http://repository.springsource.com/maven/bundles/release</url>
-    </pluginRepository>
-    <pluginRepository>
-      <id>spring-libs-release</id>
-      <name>Spring Framework Maven Release Repository</name>
-      <url>http://repo.springsource.org/libs-release</url>
+      <id>spring-plugins-release</id>
+      <url>http://repo.springsource.org/plugins-release</url>
     </pluginRepository>
   </pluginRepositories>
   <repositories>
     <repository>
-      <id>spring-libs-snapshot</id>
-      <name>Spring Framework Maven Release Repository</name>
-      <url>http://repo.springsource.org/libs-snapshot</url>
+      <id>spring-libs-release</id>
+      <url>http://repo.springsource.org/libs-release</url>
     </repository>
   </repositories>
   <reporting>

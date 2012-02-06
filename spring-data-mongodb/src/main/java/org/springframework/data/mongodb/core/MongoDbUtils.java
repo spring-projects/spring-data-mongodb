@@ -15,13 +15,14 @@
  */
 package org.springframework.data.mongodb.core;
 
-import com.mongodb.DB;
-import com.mongodb.Mongo;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.mongodb.CannotGetMongoDbConnectionException;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.util.Assert;
+
+import com.mongodb.DB;
+import com.mongodb.Mongo;
 
 /**
  * Helper class featuring helper methods for internal MongoDb classes.
@@ -36,7 +37,7 @@ import org.springframework.util.Assert;
  */
 public abstract class MongoDbUtils {
 
-	private static final Log LOGGER = LogFactory.getLog(MongoDbUtils.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(MongoDbUtils.class);
 
 	/**
 	 * Private constructor to prevent instantiation.

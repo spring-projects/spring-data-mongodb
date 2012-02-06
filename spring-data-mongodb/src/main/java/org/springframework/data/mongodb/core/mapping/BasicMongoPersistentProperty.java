@@ -21,9 +21,9 @@ import java.math.BigInteger;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.bson.types.ObjectId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.model.AnnotationBasedPersistentProperty;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
@@ -39,7 +39,7 @@ import com.mongodb.DBObject;
 public class BasicMongoPersistentProperty extends AnnotationBasedPersistentProperty<MongoPersistentProperty> implements
 		MongoPersistentProperty {
 
-	private static final Log LOG = LogFactory.getLog(BasicMongoPersistentProperty.class);
+	private static final Logger LOG = LoggerFactory.getLogger(BasicMongoPersistentProperty.class);
 
 	private static final String ID_FIELD_NAME = "_id";
 	private static final Set<Class<?>> SUPPORTED_ID_TYPES = new HashSet<Class<?>>();

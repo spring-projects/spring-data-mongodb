@@ -150,7 +150,7 @@
           <entities>
             <entity>
               <name>version</name>
-              <value>${pom.version}</value>
+              <value>${project.version}</value>
             </entity>
           </entities>
           <postProcess>
@@ -184,7 +184,7 @@
         <artifactId>maven-javadoc-plugin</artifactId>
         <version>2.5</version>
         <configuration>
-          <javadoc:aggregate>true</javadoc:aggregate>
+          <aggregate>true</aggregate>
           <breakiterator>true</breakiterator>
           <header>Spring Data Document</header>
           <source>1.5</source>
@@ -263,16 +263,10 @@
   </build>
 
   <pluginRepositories>
+    <!-- Necessary for the build extension -->
     <pluginRepository>
-      <!-- necessary for bundlor and utils -->
-      <id>repository.plugin.springsource.release</id>
-      <name>SpringSource Maven Repository</name>
-      <url>http://repository.springsource.com/maven/bundles/release</url>
-    </pluginRepository>
-    <pluginRepository>
-      <id>spring-libs-release</id>
-      <name>Spring Framework Maven Release Repository</name>
-      <url>http://repo.springsource.org/libs-release</url>
+      <id>spring-plugins-release</id>
+      <url>http://repo.springsource.org/plugins-release</url>
     </pluginRepository>
   </pluginRepositories>
 

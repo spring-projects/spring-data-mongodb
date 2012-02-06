@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 the original author or authors.
+ * Copyright 2010-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,14 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.data.mongodb.core;
 
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
@@ -40,11 +37,6 @@ import com.mongodb.WriteConcern;
  * @since 1.0
  */
 public class MongoFactoryBean implements FactoryBean<Mongo>, PersistenceExceptionTranslator {
-
-	/**
-	 * Logger, available to subclasses.
-	 */
-	protected final Log logger = LogFactory.getLog(getClass());
 
 	private MongoOptions mongoOptions;
 	private String host;

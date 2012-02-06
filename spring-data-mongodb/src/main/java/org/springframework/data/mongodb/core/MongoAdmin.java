@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2011 the original author or authors.
+ * Copyright 2011-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,32 +15,27 @@
  */
 package org.springframework.data.mongodb.core;
 
-import com.mongodb.DB;
-import com.mongodb.Mongo;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.jmx.export.annotation.ManagedOperation;
 import org.springframework.jmx.export.annotation.ManagedResource;
+import org.springframework.util.Assert;
+
+import com.mongodb.DB;
+import com.mongodb.Mongo;
 
 /**
  * Mongo server administration exposed via JMX annotations
  * 
  * @author Mark Pollack
  */
-
 @ManagedResource(description = "Mongo Admin Operations")
 public class MongoAdmin implements MongoAdminOperations {
 
-	/**
-	 * Logger available to subclasses
-	 */
-	protected final Log logger = LogFactory.getLog(getClass());
-
-	private Mongo mongo;
+	private final Mongo mongo;
 	private String username;
 	private String password;
 
 	public MongoAdmin(Mongo mongo) {
+		Assert.notNull(mongo);
 		this.mongo = mongo;
 	}
 

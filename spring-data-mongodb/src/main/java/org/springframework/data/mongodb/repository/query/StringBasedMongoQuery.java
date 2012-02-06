@@ -18,9 +18,9 @@ package org.springframework.data.mongodb.repository.query;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.bson.types.ObjectId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Query;
@@ -33,7 +33,7 @@ import org.springframework.data.mongodb.core.query.Query;
 public class StringBasedMongoQuery extends AbstractMongoQuery {
 
 	private static final Pattern PLACEHOLDER = Pattern.compile("\\?(\\d+)");
-	private static final Log LOG = LogFactory.getLog(StringBasedMongoQuery.class);
+	private static final Logger LOG = LoggerFactory.getLogger(StringBasedMongoQuery.class);
 
 	private final String query;
 	private final String fieldSpec;

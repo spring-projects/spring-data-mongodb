@@ -19,8 +19,8 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.index.Index;
@@ -43,7 +43,7 @@ import org.springframework.util.Assert;
 class IndexEnsuringQueryCreationListener implements QueryCreationListener<PartTreeMongoQuery> {
 
 	private static final Set<Type> GEOSPATIAL_TYPES = new HashSet<Type>(Arrays.asList(Type.NEAR, Type.WITHIN));
-	private static final Log LOG = LogFactory.getLog(IndexEnsuringQueryCreationListener.class);
+	private static final Logger LOG = LoggerFactory.getLogger(IndexEnsuringQueryCreationListener.class);
 
 	private final MongoOperations operations;
 

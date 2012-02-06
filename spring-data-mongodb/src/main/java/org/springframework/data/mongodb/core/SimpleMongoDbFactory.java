@@ -17,8 +17,6 @@ package org.springframework.data.mongodb.core;
 
 import java.net.UnknownHostException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.authentication.UserCredentials;
@@ -38,8 +36,6 @@ import com.mongodb.WriteConcern;
  * @author Oliver Gierke
  */
 public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
-
-	protected final Log logger = LogFactory.getLog(getClass());
 
 	private final Mongo mongo;
 	private final String databaseName;

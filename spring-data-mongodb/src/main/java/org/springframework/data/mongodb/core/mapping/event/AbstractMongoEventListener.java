@@ -15,11 +15,12 @@
  */
 package org.springframework.data.mongodb.core.mapping.event;
 
-import com.mongodb.DBObject;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationListener;
 import org.springframework.core.GenericTypeResolver;
+
+import com.mongodb.DBObject;
 
 /**
  * Base class to implement domain class specific {@link ApplicationListener}s.
@@ -29,7 +30,7 @@ import org.springframework.core.GenericTypeResolver;
  */
 public abstract class AbstractMongoEventListener<E> implements ApplicationListener<MongoMappingEvent<?>> {
 
-	protected final Log LOG = LogFactory.getLog(getClass());
+	private static final Logger LOG = LoggerFactory.getLogger(AbstractMongoEventListener.class);
 	private final Class<?> domainClass;
 
 	/**

@@ -15,13 +15,14 @@
  */
 package org.springframework.data.mongodb.monitor;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.mongodb.core.MongoDbUtils;
+
 import com.mongodb.CommandResult;
 import com.mongodb.DB;
 import com.mongodb.Mongo;
 import com.mongodb.MongoException;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.springframework.data.mongodb.core.MongoDbUtils;
 
 /**
  * Base class to encapsulate common configuration settings when connecting to a database
@@ -30,7 +31,7 @@ import org.springframework.data.mongodb.core.MongoDbUtils;
  */
 public abstract class AbstractMonitor {
 
-	private final Log logger = LogFactory.getLog(getClass());
+	private final Logger logger = LoggerFactory.getLogger(getClass());
 
 	protected Mongo mongo;
 	private String username;

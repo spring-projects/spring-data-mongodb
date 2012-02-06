@@ -20,8 +20,8 @@ import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationListener;
 import org.springframework.data.mapping.PropertyHandler;
 import org.springframework.data.mapping.event.MappingContextEvent;
@@ -47,7 +47,7 @@ import com.mongodb.util.JSON;
 public class MongoPersistentEntityIndexCreator implements
 		ApplicationListener<MappingContextEvent<MongoPersistentEntity<MongoPersistentProperty>, MongoPersistentProperty>> {
 
-	private static final Log log = LogFactory.getLog(MongoPersistentEntityIndexCreator.class);
+	private static final Logger log = LoggerFactory.getLogger(MongoPersistentEntityIndexCreator.class);
 
 	private final Map<Class<?>, Boolean> classesSeen = new ConcurrentHashMap<Class<?>, Boolean>();
 	private final MongoDbFactory mongoDbFactory;

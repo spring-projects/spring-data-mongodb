@@ -20,8 +20,8 @@ import static org.springframework.data.mongodb.core.query.Criteria.*;
 import java.util.Collection;
 import java.util.Iterator;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.context.PersistentPropertyPath;
@@ -47,7 +47,7 @@ import org.springframework.util.Assert;
  */
 class MongoQueryCreator extends AbstractQueryCreator<Query, Query> {
 
-	private static final Log LOG = LogFactory.getLog(MongoQueryCreator.class);
+	private static final Logger LOG = LoggerFactory.getLogger(MongoQueryCreator.class);
 	private final MongoParameterAccessor accessor;
 	private final boolean isGeoNearQuery;
 
