@@ -5,6 +5,7 @@
   <groupId>org.springframework.data</groupId>
   <artifactId>spring-data-mongodb-parent</artifactId>
   <name>Spring Data MongoDB Parent</name>
+  <description>Spring Data project for MongoDB</description>
   <url>http://www.springsource.org/spring-data/mongodb</url>
   <version>1.0.1.BUILD-SNAPSHOT</version>
   <packaging>pom</packaging>
@@ -22,6 +23,79 @@
     <data.commons.version>1.2.0.RELEASE</data.commons.version>
     <aspectj.version>1.6.11.RELEASE</aspectj.version>
   </properties>
+
+  <developers>
+    <developer>
+      <id>ogierke</id>
+      <name>Oliver Gierke</name>
+      <email>ogierke at vmware.com</email>
+      <organization>SpringSource</organization>
+      <organizationUrl>http://www.springsource.com</organizationUrl>
+      <roles>
+        <role>Project lead</role>
+      </roles>
+      <timezone>+1</timezone>
+    </developer>
+    <developer>
+      <id>trisberg</id>
+      <name>Thomas Risberg</name>
+      <email>trisberg at vmware.com</email>
+      <organization>SpringSource</organization>
+      <organizationUrl>http://www.SpringSource.com</organizationUrl>
+      <roles>
+        <role>Project Admin</role>
+        <role>Developer</role>
+      </roles>
+      <timezone>-5</timezone>
+    </developer>
+    <developer>
+      <id>mpollack</id>
+      <name>Mark Pollack</name>
+      <email>mpollack at vmware.com</email>
+      <organization>SpringSource</organization>
+      <organizationUrl>http://www.SpringSource.com</organizationUrl>
+      <roles>
+        <role>Project Admin</role>
+        <role>Developer</role>
+      </roles>
+      <timezone>-5</timezone>
+    </developer>
+    <developer>
+      <id>jbrisbin</id>
+      <name>Jon Brisbin</name>
+      <email>jbrisbin at vmware.com</email>
+      <organization>SpringSource</organization>
+      <organizationUrl>http://www.springsource.com</organizationUrl>
+      <roles>
+        <role>Developer</role>
+      </roles>
+      <timezone>-6</timezone>
+    </developer>
+  </developers>
+
+  <licenses>
+    <license>
+      <name>Apache License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0</url>
+      <comments>
+        Copyright 2010 the original author or authors.
+
+        Licensed under the Apache License, Version 2.0 (the "License");
+        you may not use this file except in compliance with the License.
+        You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+        Unless required by applicable law or agreed to in writing, software
+        distributed under the License is distributed on an "AS IS" BASIS,
+        WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+        implied.
+        See the License for the specific language governing permissions and
+        limitations under the License.
+      </comments>
+    </license>
+  </licenses>
+
   <profiles>
     <profile>
       <id>strict</id>
@@ -79,6 +153,9 @@
       <url>s3://maven.springframework.org/snapshot</url>
     </snapshotRepository>
   </distributionManagement>
+  <scm>
+  	<url>https://github.com/SpringSource/spring-data-mongodb</url>
+  </scm>
   <dependencyManagement>
     <!--
         inheritable <dependency> declarations for child poms. children still

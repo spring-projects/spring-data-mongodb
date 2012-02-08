@@ -5,6 +5,8 @@
   <groupId>org.springframework.data</groupId>
   <artifactId>spring-data-mongodb-dist</artifactId>
   <name>Spring Data MongoDB Distribution</name>
+  <description>Spring Data project for MongoDB</description>
+  <url>http://www.springsource.org/spring-data/mongodb</url>
   <version>1.0.1.BUILD-SNAPSHOT</version>
   <packaging>pom</packaging>
   <modules>
@@ -14,7 +16,18 @@
     <module>spring-data-mongodb-parent</module>
   </modules>
 
-  <developers>
+   <developers>
+    <developer>
+      <id>ogierke</id>
+      <name>Oliver Gierke</name>
+      <email>ogierke at vmware.com</email>
+      <organization>SpringSource</organization>
+      <organizationUrl>http://www.springsource.com</organizationUrl>
+      <roles>
+        <role>Project lead</role>
+      </roles>
+      <timezone>+1</timezone>
+    </developer>
     <developer>
       <id>trisberg</id>
       <name>Thomas Risberg</name>
@@ -38,17 +51,6 @@
         <role>Developer</role>
       </roles>
       <timezone>-5</timezone>
-    </developer>
-    <developer>
-      <id>ogierke</id>
-      <name>Oliver Gierke</name>
-      <email>ogierke at vmware.com</email>
-      <organization>SpringSource</organization>
-      <organizationUrl>http://www.springsource.com</organizationUrl>
-      <roles>
-        <role>Developer</role>
-      </roles>
-      <timezone>+1</timezone>
     </developer>
     <developer>
       <id>jbrisbin</id>
@@ -296,5 +298,7 @@
       <url>s3://maven.springframework.org/snapshot</url>
     </snapshotRepository>
   </distributionManagement>
-
+  <scm>
+    <url>https://github.com/SpringSource/spring-data-mongodb</url>
+  </scm>
 </project>
