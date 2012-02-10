@@ -45,6 +45,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.PersistenceConstructor;
+import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mapping.model.MappingInstantiationException;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -956,6 +957,45 @@ public class MappingMongoConverterUnitTests {
 
 		assertThat(values.size(), is(2));
 		assertThat(values, hasItems("1", "2"));
+	}
+
+	/**
+	 * @see DATAMONGO-380
+	 */
+	@Test(expected = MappingException.class)
+	public void rejectsMapWithKeyContainingDotsByDefault() {
+		converter.write(Collections.singletonMap("foo.bar", "foobar"), new BasicDBObject());
+	}
+
+	/**
+	 * @see DATAMONGO-380
+	 */
+	@Test
+	public void escapesDotInMapKeysIfReplacementConfigured() {
+
+		converter.setMapKeyDotReplacement("~");
+
+		DBObject dbObject = new BasicDBObject();
+		converter.write(Collections.singletonMap("foo.bar", "foobar"), dbObject);
+
+		assertThat((String) dbObject.get("foo~bar"), is("foobar"));
+		assertThat(dbObject.containsField("foo.bar"), is(false));
+	}
+
+	/**
+	 * @see DATAMONGO-380
+	 */
+	@Test
+	@SuppressWarnings("unchecked")
+	public void unescapesDotInMapKeysIfReplacementConfigured() {
+
+		converter.setMapKeyDotReplacement("~");
+
+		DBObject dbObject = new BasicDBObject("foo~bar", "foobar");
+		Map<String, String> result = converter.read(Map.class, dbObject);
+
+		assertThat(result.get("foo.bar"), is("foobar"));
+		assertThat(result.containsKey("foobar"), is(false));
 	}
 
 	static class GenericType<T> {
