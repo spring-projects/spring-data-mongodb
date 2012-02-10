@@ -42,21 +42,21 @@ import org.springframework.util.Assert;
 public abstract class AbstractMongoQuery implements RepositoryQuery {
 
 	private final MongoQueryMethod method;
-	private final MongoOperations mongoOperations;
+	private final MongoOperations operations;
 
 	/**
 	 * Creates a new {@link AbstractMongoQuery} from the given {@link MongoQueryMethod} and {@link MongoOperations}.
 	 * 
 	 * @param method must not be {@literal null}.
-	 * @param template must not be {@literal null}.
+	 * @param operations must not be {@literal null}.
 	 */
-	public AbstractMongoQuery(MongoQueryMethod method, MongoOperations template) {
+	public AbstractMongoQuery(MongoQueryMethod method, MongoOperations operations) {
 
-		Assert.notNull(template);
+		Assert.notNull(operations);
 		Assert.notNull(method);
 
 		this.method = method;
-		this.mongoOperations = template;
+		this.operations = operations;
 	}
 
 	/* 
@@ -74,12 +74,12 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	public Object execute(Object[] parameters) {
 
 		MongoParameterAccessor accessor = new MongoParametersParameterAccessor(method, parameters);
-		Query query = createQuery(new ConvertingParameterAccessor(mongoOperations.getConverter(), accessor));
+		Query query = createQuery(new ConvertingParameterAccessor(operations.getConverter(), accessor));
 
 		if (method.isGeoNearQuery() && method.isPageQuery()) {
 
 			MongoParameterAccessor countAccessor = new MongoParametersParameterAccessor(method, parameters);
-			Query countQuery = createCountQuery(new ConvertingParameterAccessor(mongoOperations.getConverter(), countAccessor));
+			Query countQuery = createCountQuery(new ConvertingParameterAccessor(operations.getConverter(), countAccessor));
 
 			return new GeoNearExecution(accessor).execute(query, countQuery);
 		} else if (method.isGeoNearQuery()) {
@@ -122,7 +122,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 			MongoEntityInformation<?, ?> metadata = method.getEntityInformation();
 
 			String collectionName = metadata.getCollectionName();
-			return mongoOperations.find(query, metadata.getJavaType(), collectionName);
+			return operations.find(query, metadata.getJavaType(), collectionName);
 		}
 	}
 
@@ -172,9 +172,9 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 		Object execute(Query query) {
 
 			MongoEntityInformation<?, ?> metadata = method.getEntityInformation();
-			long count = mongoOperations.count(query, metadata.getCollectionName());
+			long count = operations.count(query, metadata.getCollectionName());
 
-			List<?> result = mongoOperations.find(applyPagination(query, pageable), metadata.getJavaType(),
+			List<?> result = operations.find(applyPagination(query, pageable), metadata.getJavaType(),
 					metadata.getCollectionName());
 
 			return new PageImpl(result, pageable, count);
@@ -196,7 +196,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 		Object execute(Query query) {
 
 			MongoEntityInformation<?, ?> entityInformation = method.getEntityInformation();
-			return mongoOperations.findOne(query, entityInformation.getJavaType());
+			return operations.findOne(query, entityInformation.getJavaType());
 		}
 	}
 
@@ -234,7 +234,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 		Object execute(Query query, Query countQuery) {
 
 			MongoEntityInformation<?, ?> information = method.getEntityInformation();
-			long count = mongoOperations.count(countQuery, information.getCollectionName());
+			long count = operations.count(countQuery, information.getCollectionName());
 
 			return new GeoPage<Object>(doExecuteQuery(query), accessor.getPageable(), count);
 		}
@@ -255,7 +255,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 			}
 
 			MongoEntityInformation<?, ?> entityInformation = method.getEntityInformation();
-			return (GeoResults<Object>) mongoOperations.geoNear(nearQuery, entityInformation.getJavaType(),
+			return (GeoResults<Object>) operations.geoNear(nearQuery, entityInformation.getJavaType(),
 					entityInformation.getCollectionName());
 		}
 

@@ -17,7 +17,7 @@
 	</bean>
 
 	<bean class="org.springframework.data.mongodb.repository.support.MongoRepositoryFactoryBean">
-		<property name="template" ref="mongoTemplate"/>
+		<property name="mongoOperations" ref="mongoTemplate"/>
 		<property name="repositoryInterface" value="org.springframework.data.mongodb.repository.PersonRepository"/>
 		<property name="namedQueries">
 			<bean class="org.springframework.data.repository.core.support.PropertiesBasedNamedQueries">

@@ -17,7 +17,7 @@ package org.springframework.data.mongodb.repository.support;
 
 import java.io.Serializable;
 
-import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.RepositoryFactoryBeanSupport;
@@ -32,17 +32,17 @@ import org.springframework.util.Assert;
 public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID extends Serializable> extends
 		RepositoryFactoryBeanSupport<T, S, ID> {
 
-	private MongoTemplate template;
+	private MongoOperations operations;
 	private boolean createIndexesForQueryMethods = false;
 
 	/**
-	 * Configures the {@link MongoTemplate} to be used.
+	 * Configures the {@link MongoOperations} to be used.
 	 * 
-	 * @param template the template to set
+	 * @param operations the operations to set
 	 */
-	public void setTemplate(MongoTemplate template) {
+	public void setMongoOperations(MongoOperations operations) {
 
-		this.template = template;
+		this.operations = operations;
 	}
 
 	/**
@@ -64,10 +64,10 @@ public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID exten
 	@Override
 	protected final RepositoryFactorySupport createRepositoryFactory() {
 
-		RepositoryFactorySupport factory = getFactoryInstance(template);
+		RepositoryFactorySupport factory = getFactoryInstance(operations);
 
 		if (createIndexesForQueryMethods) {
-			factory.addQueryCreationListener(new IndexEnsuringQueryCreationListener(template));
+			factory.addQueryCreationListener(new IndexEnsuringQueryCreationListener(operations));
 		}
 
 		return factory;
@@ -76,11 +76,11 @@ public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID exten
 	/**
 	 * Creates and initializes a {@link RepositoryFactorySupport} instance.
 	 * 
-	 * @param template
+	 * @param operations
 	 * @return
 	 */
-	protected RepositoryFactorySupport getFactoryInstance(MongoTemplate template) {
-		return new MongoRepositoryFactory(template);
+	protected RepositoryFactorySupport getFactoryInstance(MongoOperations operations) {
+		return new MongoRepositoryFactory(operations);
 	}
 
 	/*
@@ -94,6 +94,6 @@ public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID exten
 	public void afterPropertiesSet() {
 
 		super.afterPropertiesSet();
-		Assert.notNull(template, "MongoTemplate must not be null!");
+		Assert.notNull(operations, "MongoTemplate must not be null!");
 	}
 }

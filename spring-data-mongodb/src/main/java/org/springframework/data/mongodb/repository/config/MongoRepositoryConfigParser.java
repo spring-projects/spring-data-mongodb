@@ -48,7 +48,7 @@ public class MongoRepositoryConfigParser extends
 	protected void postProcessBeanDefinition(MongoRepositoryConfiguration context, BeanDefinitionBuilder builder,
 			BeanDefinitionRegistry registry, Object beanSource) {
 
-		builder.addPropertyReference("template", context.getMongoTemplateRef());
+		builder.addPropertyReference("mongoOperations", context.getMongoTemplateRef());
 		builder.addPropertyValue("createIndexesForQueryMethods", context.getCreateQueryIndexes());
 	}
 }

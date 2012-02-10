@@ -15,9 +15,9 @@
  */
 package org.springframework.data.mongodb.repository.support;
 
-import static org.mockito.Mockito.*;
-import static org.junit.Assert.*;
 import static org.hamcrest.CoreMatchers.*;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 import java.util.List;
 
@@ -26,9 +26,8 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.mapping.context.MappingContext;
-import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
-import org.springframework.data.mongodb.repository.support.MongoRepositoryFactoryBean;
 import org.springframework.data.repository.core.support.QueryCreationListener;
 import org.springframework.data.repository.core.support.RepositoryFactorySupport;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -42,7 +41,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 public class MongoRepositoryFactoryBeanUnitTests {
 
 	@Mock
-	MongoTemplate template;
+	MongoOperations operations;
 
 	@Mock
 	MongoConverter converter;
@@ -74,10 +73,10 @@ public class MongoRepositoryFactoryBeanUnitTests {
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private List<QueryCreationListener<?>> getListenersFromFactory(MongoRepositoryFactoryBean factoryBean) {
 
-		when(template.getConverter()).thenReturn(converter);
+		when(operations.getConverter()).thenReturn(converter);
 		when(converter.getMappingContext()).thenReturn(context);
 
-		factoryBean.setTemplate(template);
+		factoryBean.setMongoOperations(operations);
 		factoryBean.afterPropertiesSet();
 
 		RepositoryFactorySupport factory = factoryBean.createRepositoryFactory();
