@@ -81,6 +81,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	protected ApplicationContext applicationContext;
 	protected boolean useFieldAccessOnly = true;
 	protected MongoTypeMapper typeMapper;
+	protected String mapKeyDotReplacement = null;
 
 	private SpELContext spELContext;
 
@@ -118,6 +119,18 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	public void setTypeMapper(MongoTypeMapper typeMapper) {
 		this.typeMapper = typeMapper == null ? new DefaultMongoTypeMapper(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY,
 				mappingContext) : typeMapper;
+	}
+
+	/**
+	 * Configure the characters dots potentially contained in a {@link Map} shall be replaced with. By default we don't do
+	 * any translation but rather reject a {@link Map} with keys containing dots causing the conversion for the entire
+	 * object to fail. If further customization of the translation is needed, have a look at
+	 * {@link #potentiallyEscapeMapKey(String)} as well as {@link #potentiallyUnescapeMapKey(String)}.
+	 * 
+	 * @param mapKeyDotReplacement the mapKeyDotReplacement to set
+	 */
+	public void setMapKeyDotReplacement(String mapKeyDotReplacement) {
+		this.mapKeyDotReplacement = mapKeyDotReplacement;
 	}
 
 	/*
@@ -507,7 +520,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			if (conversions.isSimpleType(key.getClass())) {
 				// Don't use conversion service here as removal of ObjectToString converter results in some primitive types not
 				// being convertable
-				String simpleKey = key.toString();
+				String simpleKey = potentiallyEscapeMapKey(key.toString());
 				if (val == null || conversions.isSimpleType(val.getClass())) {
 					writeSimpleInternal(val, dbo, simpleKey);
 				} else if (val instanceof Collection || val.getClass().isArray()) {
@@ -526,6 +539,39 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		return dbo;
+	}
+
+	/**
+	 * Potentially replaces dots in the given map key with the configured map key replacement if configured or aborts
+	 * conversion if none is configured.
+	 * 
+	 * @see #setMapKeyDotReplacement(String)
+	 * @param source
+	 * @return
+	 */
+	protected String potentiallyEscapeMapKey(String source) {
+
+		if (!source.contains(".")) {
+			return source;
+		}
+
+		if (mapKeyDotReplacement == null) {
+			throw new MappingException(String.format("Map key %s contains dots but no replacement was configured! Make "
+					+ "sure map keys don't contain dots in the first place or configure an appropriate replacement!", source));
+		}
+
+		return source.replaceAll("\\.", mapKeyDotReplacement);
+	}
+
+	/**
+	 * Translates the map key replacements in the given key just read with a dot in case a map key replacement has been
+	 * configured.
+	 * 
+	 * @param source
+	 * @return
+	 */
+	protected String potentiallyUnescapeMapKey(String source) {
+		return mapKeyDotReplacement == null ? source : source.replaceAll(mapKeyDotReplacement, "\\.");
 	}
 
 	/**
@@ -692,12 +738,12 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				continue;
 			}
 
-			Object key = entry.getKey();
+			Object key = potentiallyUnescapeMapKey(entry.getKey());
 
 			TypeInformation<?> keyTypeInformation = type.getComponentType();
 			if (keyTypeInformation != null) {
 				Class<?> keyType = keyTypeInformation.getType();
-				key = conversionService.convert(entry.getKey(), keyType);
+				key = conversionService.convert(key, keyType);
 			}
 
 			Object value = entry.getValue();
