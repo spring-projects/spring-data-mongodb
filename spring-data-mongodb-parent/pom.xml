@@ -1,13 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.springframework.data</groupId>
   <artifactId>spring-data-mongodb-parent</artifactId>
   <name>Spring Data MongoDB Parent</name>
   <description>Spring Data project for MongoDB</description>
   <url>http://www.springsource.org/spring-data/mongodb</url>
-  <version>1.0.1.BUILD-SNAPSHOT</version>
+  <version>1.0.1.RELEASE</version>
   <packaging>pom</packaging>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -229,7 +228,7 @@
       <dependency>
         <groupId>org.springframework.data</groupId>
         <artifactId>spring-data-mongodb</artifactId>
-        <version>${project.version}</version>
+        <version>1.0.1.RELEASE</version>
       </dependency>
 
       <!-- Logging -->
