@@ -6,7 +6,7 @@
   <name>Spring Data MongoDB Parent</name>
   <description>Spring Data project for MongoDB</description>
   <url>http://www.springsource.org/spring-data/mongodb</url>
-  <version>1.0.1.RELEASE</version>
+  <version>1.0.2.BUILD-SNAPSHOT</version>
   <packaging>pom</packaging>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -228,7 +228,7 @@
       <dependency>
         <groupId>org.springframework.data</groupId>
         <artifactId>spring-data-mongodb</artifactId>
-        <version>1.0.1.RELEASE</version>
+        <version>1.0.2.BUILD-SNAPSHOT</version>
       </dependency>
 
       <!-- Logging -->
