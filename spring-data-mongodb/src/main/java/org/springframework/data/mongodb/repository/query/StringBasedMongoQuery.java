@@ -99,8 +99,12 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 	}
 
 	private String getParameterWithIndex(ConvertingParameterAccessor accessor, int index) {
+
 		Object parameter = accessor.getBindableValue(index);
-		if (parameter instanceof String || parameter.getClass().isEnum()) {
+
+		if (parameter == null) {
+			return "null";
+		} else if (parameter instanceof String || parameter.getClass().isEnum()) {
 			return String.format("\"%s\"", parameter);
 		} else if (parameter instanceof ObjectId) {
 			return String.format("{ '$oid' : '%s' }", parameter);

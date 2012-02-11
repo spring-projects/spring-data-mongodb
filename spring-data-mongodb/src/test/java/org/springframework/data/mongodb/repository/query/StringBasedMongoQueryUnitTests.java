@@ -27,7 +27,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.mongodb.MongoDbFactory;
-import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.convert.DefaultMongoTypeMapper;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
@@ -36,9 +36,6 @@ import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.repository.Address;
 import org.springframework.data.mongodb.repository.Person;
 import org.springframework.data.mongodb.repository.Query;
-import org.springframework.data.mongodb.repository.query.ConvertingParameterAccessor;
-import org.springframework.data.mongodb.repository.query.MongoQueryMethod;
-import org.springframework.data.mongodb.repository.query.StringBasedMongoQuery;
 import org.springframework.data.repository.core.RepositoryMetadata;
 
 import com.mongodb.BasicDBObject;
@@ -53,7 +50,7 @@ import com.mongodb.DBObject;
 public class StringBasedMongoQueryUnitTests {
 
 	@Mock
-	MongoTemplate template;
+	MongoOperations operations;
 	@Mock
 	RepositoryMetadata metadata;
 	@Mock
@@ -66,7 +63,7 @@ public class StringBasedMongoQueryUnitTests {
 	@Before
 	public void setUp() {
 		converter = new MappingMongoConverter(factory, new MongoMappingContext());
-		when(template.getConverter()).thenReturn(converter);
+		when(operations.getConverter()).thenReturn(converter);
 	}
 
 	@Test
@@ -74,7 +71,7 @@ public class StringBasedMongoQueryUnitTests {
 
 		Method method = SampleRepository.class.getMethod("findByLastname", String.class);
 		MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, creator);
-		StringBasedMongoQuery mongoQuery = new StringBasedMongoQuery(queryMethod, template);
+		StringBasedMongoQuery mongoQuery = new StringBasedMongoQuery(queryMethod, operations);
 		ConvertingParameterAccessor accesor = StubParameterAccessor.getAccessor(converter, "Matthews");
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor);
@@ -86,9 +83,7 @@ public class StringBasedMongoQueryUnitTests {
 	@Test
 	public void bindsComplexPropertyCorrectly() throws Exception {
 
-		Method method = SampleRepository.class.getMethod("findByAddress", Address.class);
-		MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, creator);
-		StringBasedMongoQuery mongoQuery = new StringBasedMongoQuery(queryMethod, template);
+		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByAddress", Address.class);
 
 		Address address = new Address("Foo", "0123", "Bar");
 		ConvertingParameterAccessor accesor = StubParameterAccessor.getAccessor(converter, address);
@@ -105,11 +100,9 @@ public class StringBasedMongoQueryUnitTests {
 	}
 
 	@Test
-	public void bindsMultipleParametersCorrectly() throws SecurityException, NoSuchMethodException {
+	public void bindsMultipleParametersCorrectly() throws Exception {
 
-		Method method = SampleRepository.class.getMethod("findByLastnameAndAddress", String.class, Address.class);
-		MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, creator);
-		StringBasedMongoQuery mongoQuery = new StringBasedMongoQuery(queryMethod, template);
+		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByLastnameAndAddress", String.class, Address.class);
 
 		Address address = new Address("Foo", "0123", "Bar");
 		ConvertingParameterAccessor accesor = StubParameterAccessor.getAccessor(converter, "Matthews", address);
@@ -123,6 +116,24 @@ public class StringBasedMongoQueryUnitTests {
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor);
 		assertThat(query.getQueryObject(), is(reference));
+	}
+
+	@Test
+	public void bindsNullParametersCorrectly() throws Exception {
+
+		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByAddress", Address.class);
+		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, new Object[] { null });
+
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
+		assertThat(query.getQueryObject().containsField("address"), is(true));
+		assertThat(query.getQueryObject().get("address"), is(nullValue()));
+	}
+
+	private StringBasedMongoQuery createQueryForMethod(String name, Class<?>... parameters) throws Exception {
+
+		Method method = SampleRepository.class.getMethod(name, parameters);
+		MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, creator);
+		return new StringBasedMongoQuery(queryMethod, operations);
 	}
 
 	private interface SampleRepository {
