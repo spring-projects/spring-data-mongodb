@@ -23,6 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.context.ApplicationListener;
+import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PropertyHandler;
 import org.springframework.data.mapping.event.MappingContextEvent;
 import org.springframework.data.mongodb.MongoDbFactory;
@@ -76,7 +77,13 @@ public class MongoPersistentEntityIndexCreator implements
 	 */
 	public void onApplicationEvent(
 			MappingContextEvent<MongoPersistentEntity<MongoPersistentProperty>, MongoPersistentProperty> event) {
-		checkForIndexes(event.getPersistentEntity());
+
+		PersistentEntity<?, ?> entity = event.getPersistentEntity();
+
+		// Double check type as Spring infrastructure does not consider nested generics
+		if (entity instanceof MongoPersistentEntity) {
+			checkForIndexes(event.getPersistentEntity());
+		}
 	}
 
 	protected void checkForIndexes(final MongoPersistentEntity<?> entity) {
