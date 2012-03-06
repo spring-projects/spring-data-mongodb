@@ -998,6 +998,24 @@ public class MappingMongoConverterUnitTests {
 		assertThat(result.containsKey("foobar"), is(false));
 	}
 
+	/**
+	 * @see DATAMONGO-382
+	 */
+	@Test
+	public void convertsSetToBasicDBList() {
+
+		Address address = new Address();
+		address.city = "London";
+		address.street = "Foo";
+
+		Object result = converter.convertToMongoType(Collections.singleton(address));
+		assertThat(result, is(BasicDBList.class));
+
+		Set<?> readResult = converter.read(Set.class, (BasicDBList) result);
+		assertThat(readResult.size(), is(1));
+		assertThat(readResult.iterator().next(), is(Map.class));
+	}
+
 	static class GenericType<T> {
 		T content;
 	}
