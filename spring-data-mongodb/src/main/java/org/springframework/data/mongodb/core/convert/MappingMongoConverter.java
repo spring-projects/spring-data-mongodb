@@ -850,12 +850,12 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			return result;
 		}
 
-		if (obj instanceof List) {
-			return maybeConvertList((List<?>) obj);
-		}
-
 		if (obj.getClass().isArray()) {
 			return maybeConvertList(Arrays.asList((Object[]) obj));
+		}
+
+		if (obj instanceof Collection) {
+			return maybeConvertList((Collection<?>) obj);
 		}
 
 		DBObject newDbo = new BasicDBObject();
