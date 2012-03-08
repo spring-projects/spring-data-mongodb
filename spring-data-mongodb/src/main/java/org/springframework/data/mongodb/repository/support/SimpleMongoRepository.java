@@ -32,9 +32,9 @@ import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
 import org.springframework.data.mongodb.repository.query.QueryUtils;
-import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.util.Assert;
 
 /**
@@ -42,7 +42,7 @@ import org.springframework.util.Assert;
  * 
  * @author Oliver Gierke
  */
-public class SimpleMongoRepository<T, ID extends Serializable> implements PagingAndSortingRepository<T, ID> {
+public class SimpleMongoRepository<T, ID extends Serializable> implements MongoRepository<T, ID> {
 
 	private final MongoOperations mongoOperations;
 	private final MongoEntityInformation<T, ID> entityInformation;

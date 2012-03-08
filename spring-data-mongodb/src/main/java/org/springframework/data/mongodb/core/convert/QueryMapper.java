@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.core;
+package org.springframework.data.mongodb.core.convert;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -25,7 +25,6 @@ import org.bson.types.ObjectId;
 import org.springframework.core.convert.ConversionException;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.data.mapping.PersistentEntity;
-import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.util.Assert;

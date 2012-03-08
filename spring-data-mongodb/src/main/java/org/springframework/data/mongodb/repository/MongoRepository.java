@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2010 the original author or authors.
+ * Copyright 2010-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,22 +32,19 @@ public interface MongoRepository<T, ID extends Serializable> extends PagingAndSo
 
 	/*
 	 * (non-Javadoc)
-	 * 
-	 * @see org.springframework.data.repository.Repository#save(java.lang.Iterable)
+	 * @see org.springframework.data.repository.CrudRepository#save(java.lang.Iterable)
 	 */
 	List<T> save(Iterable<? extends T> entites);
 
 	/*
-	  * (non-Javadoc)
-	  *
-	  * @see org.springframework.data.repository.Repository#findAll()
-	  */
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.CrudRepository#findAll()
+	 */
 	List<T> findAll();
 
 	/*
-	  * (non-Javadoc)
-	  *
-	  * @see org.springframework.data.repository.PagingAndSortingRepository#findAll(org.springframework.data.domain.Sort)
-	  */
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.PagingAndSortingRepository#findAll(org.springframework.data.domain.Sort)
+	 */
 	List<T> findAll(Sort sort);
 }

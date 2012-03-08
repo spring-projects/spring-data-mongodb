@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.core.query;
+package org.springframework.data.mongodb.core.convert;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
@@ -32,10 +32,12 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.Person;
-import org.springframework.data.mongodb.core.QueryMapper;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;

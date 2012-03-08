@@ -53,6 +53,7 @@ import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoWriter;
+import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.geo.Distance;
 import org.springframework.data.mongodb.core.geo.GeoResult;
 import org.springframework.data.mongodb.core.geo.GeoResults;

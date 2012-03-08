@@ -49,6 +49,12 @@
                 </element>
                 <dependency type="AllowedDependency" toName="Project|spring-data-mongodb::Layer|Core"/>
             </element>
+            <element name="GridFS" type="Layer">
+                <element name="Assignment" type="TypeFilter">
+                    <element name="**.gridfs.**" type="IncludeTypePattern"/>
+                </element>
+                <dependency type="AllowedDependency" toName="Project|spring-data-mongodb::Layer|Core"/>
+            </element>
             <element name="Core" type="Layer">
                 <element name="Assignment" type="TypeFilter">
                     <element name="**.core.**" type="IncludeTypePattern"/>

@@ -20,6 +20,7 @@ import java.util.List;
 import org.springframework.data.mongodb.core.index.IndexDefinition;
 import org.springframework.data.mongodb.core.index.IndexInfo;
 
+
 /**
  * Index operations on a collection.
  * 

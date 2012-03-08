@@ -24,8 +24,8 @@ import java.util.List;
 
 import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.data.mongodb.MongoDbFactory;
-import org.springframework.data.mongodb.core.QueryMapper;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;

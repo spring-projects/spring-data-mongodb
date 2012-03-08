@@ -47,7 +47,6 @@ import org.springframework.data.mapping.model.PropertyValueProvider;
 import org.springframework.data.mapping.model.SpELContext;
 import org.springframework.data.mapping.model.SpELExpressionEvaluator;
 import org.springframework.data.mongodb.MongoDbFactory;
-import org.springframework.data.mongodb.core.QueryMapper;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.util.ClassTypeInformation;
