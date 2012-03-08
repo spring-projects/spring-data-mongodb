@@ -1,11 +1,11 @@
 /*
- * Copyright (c) 2011 by the original author(s).
+ * Copyright 2011-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -33,11 +33,12 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
 /**
- * Unit test to reproduce DATADOC-273.
+ * Unit test to reproduce DATAMONGO-273.
  * 
  * @author Harlan Iverson
+ * @author Oliver Gierke
  */
-public class DataDoc273Test {
+public class DataMongo273Tests {
 
 	MappingMongoConverter converter;
 
@@ -54,7 +55,7 @@ public class DataDoc273Test {
 	}
 
 	/**
-	 * @see DATADOC-273
+	 * @see DATAMONGO-273
 	 */
 	@Test
 	public void convertMapOfThings() {
@@ -80,7 +81,7 @@ public class DataDoc273Test {
 	}
 
 	/**
-	 * @see DATADOC-294
+	 * @see DATAMONGO-294
 	 */
 	@Test
 	@SuppressWarnings({ "rawtypes", "unchecked" })
@@ -96,7 +97,6 @@ public class DataDoc273Test {
 
 		DBObject result = new BasicDBList();
 		converter.write(listOfThings, result);
-		System.out.println(result.toString());
 
 		List listOfThings2 = converter.read(List.class, result);
 
@@ -106,7 +106,7 @@ public class DataDoc273Test {
 	}
 
 	/**
-	 * @see DATADOC-294
+	 * @see DATAMONGO-294
 	 */
 	@Test
 	@SuppressWarnings({ "rawtypes", "unchecked" })
@@ -121,7 +121,7 @@ public class DataDoc273Test {
 		listOfThings.add(train);
 		listOfThings.add(automobile);
 
-		Map box = new HashMap();
+		Map<String, Object> box = new HashMap<String, Object>();
 		box.put("one", listOfThings);
 
 		Shipment shipment = new Shipment(box);
@@ -138,7 +138,7 @@ public class DataDoc273Test {
 		assertTrue(listOfThings2.get(2) instanceof Automobile);
 	}
 
-	class Plane {
+	static class Plane {
 
 		String maker;
 		int numberOfPropellers;
@@ -149,7 +149,7 @@ public class DataDoc273Test {
 		}
 	}
 
-	class Train {
+	static class Train {
 
 		String railLine;
 		int numberOfCars;
@@ -160,7 +160,7 @@ public class DataDoc273Test {
 		}
 	}
 
-	class Automobile {
+	static class Automobile {
 
 		String make;
 		String model;
@@ -174,11 +174,11 @@ public class DataDoc273Test {
 	}
 
 	@SuppressWarnings("rawtypes")
-	public class Shipment {
+	static class Shipment {
 
-		Map boxes = new HashMap();
+		Map<String, Object> boxes;
 
-		public Shipment(Map boxes) {
+		public Shipment(Map<String, Object> boxes) {
 			this.boxes = boxes;
 		}
 
