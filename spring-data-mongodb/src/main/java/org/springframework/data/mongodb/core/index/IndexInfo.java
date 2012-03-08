@@ -15,33 +15,36 @@
  */
 package org.springframework.data.mongodb.core.index;
 
-import java.util.Map;
+import java.util.Collections;
+import java.util.List;
 
-import org.springframework.data.mongodb.core.query.Order;
+import org.springframework.util.ObjectUtils;
 
 public class IndexInfo {
 
-	private final Map<String, Order> fieldSpec;
+	private final List<IndexField> indexFields;
 
-	private String name;
+	private final String name;
+	private final boolean unique;
+	private final boolean dropDuplicates;
+	private final boolean sparse;
 
-	private boolean unique = false;
+	public IndexInfo(List<IndexField> indexFields, String name, boolean unique, boolean dropDuplicates, boolean sparse) {
 
-	private boolean dropDuplicates = false;
-
-	private boolean sparse = false;
-
-	public IndexInfo(Map<String, Order> fieldSpec, String name, boolean unique, boolean dropDuplicates, boolean sparse) {
-		super();
-		this.fieldSpec = fieldSpec;
+		this.indexFields = Collections.unmodifiableList(indexFields);
 		this.name = name;
 		this.unique = unique;
 		this.dropDuplicates = dropDuplicates;
 		this.sparse = sparse;
 	}
 
-	public Map<String, Order> getFieldSpec() {
-		return fieldSpec;
+	/**
+	 * Returns the individual index fields of the index.
+	 * 
+	 * @return
+	 */
+	public List<IndexField> getIndexFields() {
+		return this.indexFields;
 	}
 
 	public String getName() {
@@ -62,7 +65,7 @@ public class IndexInfo {
 
 	@Override
 	public String toString() {
-		return "IndexInfo [fieldSpec=" + fieldSpec + ", name=" + name + ", unique=" + unique + ", dropDuplicates="
+		return "IndexInfo [indexFields=" + indexFields + ", name=" + name + ", unique=" + unique + ", dropDuplicates="
 				+ dropDuplicates + ", sparse=" + sparse + "]";
 	}
 
@@ -71,7 +74,7 @@ public class IndexInfo {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + (dropDuplicates ? 1231 : 1237);
-		result = prime * result + ((fieldSpec == null) ? 0 : fieldSpec.hashCode());
+		result = prime * result + ObjectUtils.nullSafeHashCode(indexFields);
 		result = prime * result + ((name == null) ? 0 : name.hashCode());
 		result = prime * result + (sparse ? 1231 : 1237);
 		result = prime * result + (unique ? 1231 : 1237);
@@ -80,34 +83,39 @@ public class IndexInfo {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj)
+		if (this == obj) {
 			return true;
-		if (obj == null)
+		}
+		if (obj == null) {
 			return false;
-		if (getClass() != obj.getClass())
+		}
+		if (getClass() != obj.getClass()) {
 			return false;
+		}
 		IndexInfo other = (IndexInfo) obj;
-		if (dropDuplicates != other.dropDuplicates)
+		if (dropDuplicates != other.dropDuplicates) {
 			return false;
-		if (fieldSpec == null) {
-			if (other.fieldSpec != null)
+		}
+		if (indexFields == null) {
+			if (other.indexFields != null) {
 				return false;
-		} else if (!fieldSpec.equals(other.fieldSpec))
+			}
+		} else if (!indexFields.equals(other.indexFields)) {
 			return false;
+		}
 		if (name == null) {
-			if (other.name != null)
+			if (other.name != null) {
 				return false;
-		} else if (!name.equals(other.name))
+			}
+		} else if (!name.equals(other.name)) {
 			return false;
-		if (sparse != other.sparse)
+		}
+		if (sparse != other.sparse) {
 			return false;
-		if (unique != other.unique)
+		}
+		if (unique != other.unique) {
 			return false;
+		}
 		return true;
 	}
-
-	/**
-	 * [{ "v" : 1 , "key" : { "_id" : 1} , "ns" : "database.person" , "name" : "_id_"}, { "v" : 1 , "key" : { "age" : -1}
-	 * , "ns" : "database.person" , "name" : "age_-1" , "unique" : true , "dropDups" : true}]
-	 */
 }

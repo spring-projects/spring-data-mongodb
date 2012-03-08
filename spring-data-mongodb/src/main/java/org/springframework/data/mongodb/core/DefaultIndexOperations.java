@@ -16,14 +16,11 @@
 package org.springframework.data.mongodb.core;
 
 import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.mongodb.core.index.IndexDefinition;
+import org.springframework.data.mongodb.core.index.IndexField;
 import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.core.query.Order;
 import org.springframework.util.Assert;
@@ -123,25 +120,27 @@ public class DefaultIndexOperations implements IndexOperations {
 				return getIndexData(dbObjectList);
 			}
 
-			@SuppressWarnings("unchecked")
 			private List<IndexInfo> getIndexData(List<DBObject> dbObjectList) {
 
 				List<IndexInfo> indexInfoList = new ArrayList<IndexInfo>();
 
 				for (DBObject ix : dbObjectList) {
 
-					Map<String, Order> keyOrderMap = new LinkedHashMap<String, Order>();
 					DBObject keyDbObject = (DBObject) ix.get("key");
-					Iterator<?> entries = keyDbObject.toMap().entrySet().iterator();
+					int numberOfElements = keyDbObject.keySet().size();
 
-					while (entries.hasNext()) {
-						Entry<Object, Integer> thisEntry = (Entry<Object, Integer>) entries.next();
-						String key = thisEntry.getKey().toString();
-						int value = thisEntry.getValue();
-						if (value == 1) {
-							keyOrderMap.put(key, Order.ASCENDING);
-						} else {
-							keyOrderMap.put(key, Order.DESCENDING);
+					List<IndexField> indexFields = new ArrayList<IndexField>(numberOfElements);
+
+					for (String key : keyDbObject.keySet()) {
+
+						Object value = keyDbObject.get(key);
+
+						if (Integer.valueOf(1).equals(value)) {
+							indexFields.add(IndexField.create(key, Order.ASCENDING));
+						} else if (Integer.valueOf(-1).equals(value)) {
+							indexFields.add(IndexField.create(key, Order.DESCENDING));
+						} else if ("2d".equals(value)) {
+							indexFields.add(IndexField.geo(key));
 						}
 					}
 
@@ -151,12 +150,11 @@ public class DefaultIndexOperations implements IndexOperations {
 					boolean dropDuplicates = ix.containsField("dropDups") ? (Boolean) ix.get("dropDups") : false;
 					boolean sparse = ix.containsField("sparse") ? (Boolean) ix.get("sparse") : false;
 
-					indexInfoList.add(new IndexInfo(keyOrderMap, name, unique, dropDuplicates, sparse));
+					indexInfoList.add(new IndexInfo(indexFields, name, unique, dropDuplicates, sparse));
 				}
 
 				return indexInfoList;
 			}
 		});
 	}
-
 }

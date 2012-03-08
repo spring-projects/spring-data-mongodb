@@ -46,8 +46,9 @@ import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.convert.CustomConversions;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.index.Index;
-import org.springframework.data.mongodb.core.index.Index.Duplicates;
+import org.springframework.data.mongodb.core.index.IndexField;
 import org.springframework.data.mongodb.core.index.IndexInfo;
+import org.springframework.data.mongodb.core.index.Index.Duplicates;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Order;
@@ -195,8 +196,11 @@ public class MongoTemplateTests {
 		assertThat(ii.isUnique(), is(true));
 		assertThat(ii.isDropDuplicates(), is(true));
 		assertThat(ii.isSparse(), is(false));
-		assertThat(ii.getFieldSpec().containsKey("age"), is(true));
-		assertThat(ii.getFieldSpec().containsValue(Order.DESCENDING), is(true));
+
+		List<IndexField> indexFields = ii.getIndexFields();
+		IndexField field = indexFields.get(0);
+
+		assertThat(field, is(IndexField.create("age", Order.DESCENDING)));
 	}
 
 	@Test
