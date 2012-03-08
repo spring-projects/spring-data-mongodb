@@ -34,10 +34,14 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.mongodb.core.CollectionCallback;
+import org.springframework.data.mongodb.core.IndexOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.Venue;
 import org.springframework.data.mongodb.core.index.GeospatialIndex;
+import org.springframework.data.mongodb.core.index.IndexField;
+import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.core.query.NearQuery;
+import org.springframework.data.mongodb.core.query.Order;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.monitor.ServerInfo;
 import org.springframework.expression.ExpressionParser;
@@ -190,6 +194,26 @@ public class GeoSpatialTests {
 		assertThat(indexInfo.size(), is(2));
 		assertThat(indexInfo.get(1).get("name").toString(), is("location_2d"));
 		assertThat(indexInfo.get(1).get("ns").toString(), is("database.newyork"));
+	}
+
+	/**
+	 * @see DATAMONGO-360
+	 */
+	@Test
+	public void indexInfoIsCorrect() {
+
+		IndexOperations operations = template.indexOps(Venue.class);
+		List<IndexInfo> indexInfo = operations.getIndexInfo();
+
+		assertThat(indexInfo.size(), is(2));
+
+		List<IndexField> fields = indexInfo.get(0).getIndexFields();
+		assertThat(fields.size(), is(1));
+		assertThat(fields, hasItem(IndexField.create("_id", Order.ASCENDING)));
+
+		fields = indexInfo.get(1).getIndexFields();
+		assertThat(fields.size(), is(1));
+		assertThat(fields, hasItem(IndexField.geo("location")));
 	}
 
 	// TODO move to MongoAdmin
