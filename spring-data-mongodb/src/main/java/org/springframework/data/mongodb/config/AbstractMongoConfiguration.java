@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 the original author or authors.
+ * Copyright 2011-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ package org.springframework.data.mongodb.config;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.mongodb.Mongo;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
@@ -35,6 +34,14 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
 
+import com.mongodb.Mongo;
+
+/**
+ * Abstract base class to ease JavaConfig setup for Spring Data MongoDB.
+ * 
+ * @author Mark Pollack
+ * @author Oliver Gierke
+ */
 @Configuration
 public abstract class AbstractMongoConfiguration {
 
@@ -50,10 +57,11 @@ public abstract class AbstractMongoConfiguration {
 
 	@Bean
 	public MongoDbFactory mongoDbFactory() throws Exception {
-		if (getUserCredentials() == null) {
+		UserCredentials credentials = getUserCredentials();
+		if (credentials == null) {
 			return new SimpleMongoDbFactory(mongo(), getDatabaseName());
 		} else {
-			return new SimpleMongoDbFactory(mongo(), getDatabaseName(), getUserCredentials());
+			return new SimpleMongoDbFactory(mongo(), getDatabaseName(), credentials);
 		}
 	}
 
