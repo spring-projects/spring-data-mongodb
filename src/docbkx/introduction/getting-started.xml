@@ -51,7 +51,7 @@
 
     <para>If you encounter a bug or want to suggest an improvement, please
     create a ticket on the Spring Data issue <ulink
-    url="https://jira.springframework.org/browse/DATAKV">tracker</ulink>.</para>
+    url="https://jira.springframework.org/browse/DATAMONGO">tracker</ulink>.</para>
 
     <para>To stay up to date with the latest news and announcements in the
     Spring eco system, subscribe to the Spring Community <ulink

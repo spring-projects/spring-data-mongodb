@@ -1,3 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
+    "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
 <partintro>
   <title>Document Structure</title>
 
@@ -14,7 +17,5 @@
     <xref linkend="mongo.repositories"/>
     introduces the repository support for MongoDB.
   </para>
-
-  <!-- <para><xref linkend="couch.core"/> introduces the CouchDB module feature set.</para> -->
 
 </partintro>
