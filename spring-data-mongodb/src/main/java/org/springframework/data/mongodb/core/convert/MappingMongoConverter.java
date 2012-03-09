@@ -169,8 +169,12 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		return read(ClassTypeInformation.from(clazz), dbo);
 	}
 
-	@SuppressWarnings("unchecked")
 	protected <S extends Object> S read(TypeInformation<S> type, DBObject dbo) {
+		return read(type, dbo, null);
+	}
+
+	@SuppressWarnings("unchecked")
+	protected <S extends Object> S read(TypeInformation<S> type, DBObject dbo, Object parent) {
 
 		if (null == dbo) {
 			return null;
@@ -188,11 +192,11 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		if (typeToUse.isCollectionLike() && dbo instanceof BasicDBList) {
-			return (S) readCollectionOrArray(typeToUse, (BasicDBList) dbo);
+			return (S) readCollectionOrArray(typeToUse, (BasicDBList) dbo, parent);
 		}
 
 		if (typeToUse.isMap()) {
-			return (S) readMap(typeToUse, dbo);
+			return (S) readMap(typeToUse, dbo, parent);
 		}
 
 		// Retrieve persistent entity info
@@ -202,29 +206,30 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			throw new MappingException("No mapping metadata found for " + rawType.getName());
 		}
 
-		return read(persistentEntity, dbo);
+		return read(persistentEntity, dbo, parent);
 	}
 
 	private ParameterValueProvider<MongoPersistentProperty> getParameterProvider(MongoPersistentEntity<?> entity,
-			DBObject source, DefaultSpELExpressionEvaluator evaluator) {
+			DBObject source, DefaultSpELExpressionEvaluator evaluator, Object parent) {
 
-		MongoDbPropertyValueProvider provider = new MongoDbPropertyValueProvider(source, evaluator);
+		MongoDbPropertyValueProvider provider = new MongoDbPropertyValueProvider(source, evaluator, parent);
 		PersistentEntityParameterValueProvider<MongoPersistentProperty> parameterProvider = new PersistentEntityParameterValueProvider<MongoPersistentProperty>(
-				entity, provider);
+				entity, provider, parent);
 		parameterProvider.setSpELEvaluator(evaluator);
 
 		return parameterProvider;
 	}
 
-	private <S extends Object> S read(final MongoPersistentEntity<S> entity, final DBObject dbo) {
+	private <S extends Object> S read(final MongoPersistentEntity<S> entity, final DBObject dbo, Object parent) {
 
 		final DefaultSpELExpressionEvaluator evaluator = new DefaultSpELExpressionEvaluator(dbo, spELContext);
 
-		ParameterValueProvider<MongoPersistentProperty> provider = getParameterProvider(entity, dbo, evaluator);
+		ParameterValueProvider<MongoPersistentProperty> provider = getParameterProvider(entity, dbo, evaluator, parent);
 		EntityInstantiator instantiator = instantiators.getInstantiatorFor(entity);
 		S instance = instantiator.createInstance(entity, provider);
 
 		final BeanWrapper<MongoPersistentEntity<S>, S> wrapper = BeanWrapper.create(instance, conversionService);
+		final S result = wrapper.getBean();
 
 		// Set properties not already set in the constructor
 		entity.doWithProperties(new PropertyHandler<MongoPersistentProperty>() {
@@ -237,7 +242,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 					return;
 				}
 
-				Object obj = getValueInternal(prop, dbo, evaluator);
+				Object obj = getValueInternal(prop, dbo, evaluator, result);
 				wrapper.setProperty(prop, obj, useFieldAccessOnly);
 			}
 		});
@@ -246,7 +251,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		entity.doWithAssociations(new AssociationHandler<MongoPersistentProperty>() {
 			public void doWithAssociation(Association<MongoPersistentProperty> association) {
 				MongoPersistentProperty inverseProp = association.getInverse();
-				Object obj = getValueInternal(inverseProp, dbo, evaluator);
+				Object obj = getValueInternal(inverseProp, dbo, evaluator, result);
 				try {
 					wrapper.setProperty(inverseProp, obj);
 				} catch (IllegalAccessException e) {
@@ -257,7 +262,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			}
 		});
 
-		return wrapper.getBean();
+		return result;
 	}
 
 	/**
@@ -677,9 +682,10 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		return new DBRef(db, collection, idMapper.convertId(id));
 	}
 
-	protected Object getValueInternal(MongoPersistentProperty prop, DBObject dbo, SpELExpressionEvaluator eval) {
+	protected Object getValueInternal(MongoPersistentProperty prop, DBObject dbo, SpELExpressionEvaluator eval,
+			Object parent) {
 
-		MongoDbPropertyValueProvider provider = new MongoDbPropertyValueProvider(dbo, spELContext);
+		MongoDbPropertyValueProvider provider = new MongoDbPropertyValueProvider(dbo, spELContext, parent);
 		return provider.getPropertyValue(prop);
 	}
 
@@ -691,7 +697,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * @return the converted {@link Collections}, will never be {@literal null}.
 	 */
 	@SuppressWarnings("unchecked")
-	private Collection<?> readCollectionOrArray(TypeInformation<?> targetType, BasicDBList sourceValue) {
+	private Collection<?> readCollectionOrArray(TypeInformation<?> targetType, BasicDBList sourceValue, Object parent) {
 
 		Assert.notNull(targetType);
 
@@ -704,9 +710,9 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		for (int i = 0; i < sourceValue.size(); i++) {
 			Object dbObjItem = sourceValue.get(i);
 			if (dbObjItem instanceof DBRef) {
-				items.add(read(targetType.getComponentType(), ((DBRef) dbObjItem).fetch()));
+				items.add(read(targetType.getComponentType(), ((DBRef) dbObjItem).fetch(), parent));
 			} else if (dbObjItem instanceof DBObject) {
-				items.add(read(targetType.getComponentType(), (DBObject) dbObjItem));
+				items.add(read(targetType.getComponentType(), (DBObject) dbObjItem, parent));
 			} else {
 				TypeInformation<?> componentType = targetType.getComponentType();
 				items.add(getPotentiallyConvertedSimpleRead(dbObjItem, componentType == null ? null : componentType.getType()));
@@ -724,7 +730,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	protected Map<Object, Object> readMap(TypeInformation<?> type, DBObject dbObject) {
+	protected Map<Object, Object> readMap(TypeInformation<?> type, DBObject dbObject, Object parent) {
 
 		Assert.notNull(dbObject);
 
@@ -749,7 +755,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			TypeInformation<?> valueType = type.getMapValueType();
 
 			if (value instanceof DBObject) {
-				map.put(key, read(valueType, (DBObject) value));
+				map.put(key, read(valueType, (DBObject) value, parent));
 			} else {
 				Class<?> valueClass = valueType == null ? null : valueType.getType();
 				map.put(key, getPotentiallyConvertedSimpleRead(value, valueClass));
@@ -874,18 +880,20 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		private final DBObject source;
 		private final SpELExpressionEvaluator evaluator;
+		private final Object parent;
 
-		public MongoDbPropertyValueProvider(DBObject source, SpELContext factory) {
-			this(source, new DefaultSpELExpressionEvaluator(source, factory));
+		public MongoDbPropertyValueProvider(DBObject source, SpELContext factory, Object parent) {
+			this(source, new DefaultSpELExpressionEvaluator(source, factory), parent);
 		}
 
-		public MongoDbPropertyValueProvider(DBObject source, DefaultSpELExpressionEvaluator evaluator) {
+		public MongoDbPropertyValueProvider(DBObject source, DefaultSpELExpressionEvaluator evaluator, Object parent) {
 
 			Assert.notNull(source);
 			Assert.notNull(evaluator);
 
 			this.source = source;
 			this.evaluator = evaluator;
+			this.parent = parent;
 		}
 
 		/* 
@@ -906,11 +914,12 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			if (conversions.hasCustomReadTarget(value.getClass(), type.getType())) {
 				return (T) conversionService.convert(value, type.getType());
 			} else if (value instanceof DBRef) {
-				return (T) read(type, ((DBRef) value).fetch());
+				return (T) read(type, ((DBRef) value).fetch(), parent);
 			} else if (value instanceof BasicDBList) {
-				return (T) getPotentiallyConvertedSimpleRead(readCollectionOrArray(type, (BasicDBList) value), type.getType());
+				return (T) getPotentiallyConvertedSimpleRead(readCollectionOrArray(type, (BasicDBList) value, parent),
+						type.getType());
 			} else if (value instanceof DBObject) {
-				return (T) read(type, (DBObject) value);
+				return (T) read(type, (DBObject) value, parent);
 			} else {
 				return (T) getPotentiallyConvertedSimpleRead(value, type.getType());
 			}

@@ -51,6 +51,7 @@ import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.PersonPojoStringId;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
@@ -1016,6 +1017,34 @@ public class MappingMongoConverterUnitTests {
 		assertThat(readResult.iterator().next(), is(Map.class));
 	}
 
+	/**
+	 * @see DATAMONGO-402
+	 */
+	@Test
+	public void readsMemberClassCorrectly() {
+
+		DBObject dbObject = new BasicDBObject("inner", new BasicDBObject("value", "FOO!"));
+
+		Outer outer = converter.read(Outer.class, dbObject);
+		assertThat(outer.inner, is(notNullValue()));
+		assertThat(outer.inner.value, is("FOO!"));
+		assertSyntheticFieldValueOf(outer.inner, outer);
+	}
+
+	private static void assertSyntheticFieldValueOf(Object target, Object expected) {
+
+		for (int i = 0; i < 10; i++) {
+			try {
+				assertThat(ReflectionTestUtils.getField(target, "this$" + i), is(expected));
+				return;
+			} catch (IllegalArgumentException e) {
+				// Suppress and try next
+			}
+		}
+
+		fail(String.format("Didn't find synthetic field on %s!", target));
+	}
+
 	static class GenericType<T> {
 		T content;
 	}
@@ -1145,6 +1174,15 @@ public class MappingMongoConverterUnitTests {
 	static class Attribute {
 		String key;
 		Object value;
+	}
+
+	static class Outer {
+
+		class Inner {
+			String value;
+		}
+
+		Inner inner;
 	}
 
 	private class LocalDateToDateConverter implements Converter<LocalDate, Date> {
