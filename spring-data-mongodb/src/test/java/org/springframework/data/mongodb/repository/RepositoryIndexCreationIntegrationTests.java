@@ -15,10 +15,9 @@
  */
 package org.springframework.data.mongodb.repository;
 
-import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.junit.After;
@@ -28,6 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.mongodb.core.CollectionCallback;
 import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -70,25 +70,21 @@ public class RepositoryIndexCreationIntegrationTests {
 
 	@Test
 	public void testname() {
-		operations.execute(Person.class, new CollectionCallback<Void>() {
 
-			public Void doInCollection(DBCollection collection) throws MongoException, DataAccessException {
-				List<DBObject> indexInfo = collection.getIndexInfo();
+		List<IndexInfo> indexInfo = operations.indexOps(Person.class).getIndexInfo();
 
-				assertThat(indexInfo.isEmpty(), is(false));
-				assertThat(indexInfo.size(), is(greaterThan(2)));
-				assertThat(getIndexNamesFrom(indexInfo), hasItems("findByLastname", "findByFirstnameNotIn"));
-
-				return null;
-			}
-		});
+		assertHasIndexForField(indexInfo, "lastname");
+		assertHasIndexForField(indexInfo, "firstname");
 	}
 
-	private static List<String> getIndexNamesFrom(List<DBObject> indexes) {
-		List<String> result = new ArrayList<String>();
-		for (DBObject dbObject : indexes) {
-			result.add(dbObject.get("name").toString());
+	private static void assertHasIndexForField(List<IndexInfo> indexInfo, String... fields) {
+
+		for (IndexInfo info : indexInfo) {
+			if (info.isIndexForFields(Arrays.asList(fields))) {
+				return;
+			}
 		}
-		return result;
+
+		fail(String.format("Did not find index for field(s) %s in %s!", fields, indexInfo));
 	}
 }

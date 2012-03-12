@@ -15,9 +15,12 @@
  */
 package org.springframework.data.mongodb.core.index;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 
 public class IndexInfo {
@@ -45,6 +48,24 @@ public class IndexInfo {
 	 */
 	public List<IndexField> getIndexFields() {
 		return this.indexFields;
+	}
+
+	/**
+	 * Returns whether the index is covering exactly the fields given independently of the order.
+	 * 
+	 * @param keys must not be {@literal null}.
+	 * @return
+	 */
+	public boolean isIndexForFields(Collection<String> keys) {
+
+		Assert.notNull(keys);
+		List<String> indexKeys = new ArrayList<String>(indexFields.size());
+
+		for (IndexField field : indexFields) {
+			indexKeys.add(field.getKey());
+		}
+
+		return indexKeys.containsAll(keys);
 	}
 
 	public String getName() {
