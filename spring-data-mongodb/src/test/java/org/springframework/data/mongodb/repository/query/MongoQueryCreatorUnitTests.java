@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2011-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -209,6 +209,20 @@ public class MongoQueryCreatorUnitTests {
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter), context);
 		Query query = query(where("active").is(false));
 		assertThat(creator.createQuery().getQueryObject(), is(query.getQueryObject()));
+	}
+
+	/**
+	 * @see DATAMONGO
+	 */
+	@Test
+	public void createsOrQueryCorrectly() {
+
+		PartTree tree = new PartTree("findByFirstNameOrAge", Person.class);
+		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "Dave", 42), context);
+
+		Query query = creator.createQuery();
+		assertThat(query.getQueryObject(),
+				is(query(new Criteria().orOperator(where("firstName").is("Dave"), where("age").is(42))).getQueryObject()));
 	}
 
 	private void assertBindsDistanceToQuery(Point point, Distance distance, Query reference) throws Exception {
