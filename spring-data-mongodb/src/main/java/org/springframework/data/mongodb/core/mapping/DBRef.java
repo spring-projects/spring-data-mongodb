@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 by the original author(s).
+ * Copyright 2011-2012 by the original author(s).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.data.mongodb.core.mapping;
 
+import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -24,19 +24,21 @@ import java.lang.annotation.Target;
 import org.springframework.data.annotation.Reference;
 
 /**
- * An annotation that indicates the annotated field is to be stored using a com.mongodb.DBRef
+ * An annotation that indicates the annotated field is to be stored using a {@link com.mongodb.DBRef}.
  * 
- * @author Jon Brisbin <jbrisbin@vmware.com>
+ * @author Jon Brisbin
+ * @authot Oliver Gierke
  */
+@Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.FIELD })
 @Reference
 public @interface DBRef {
 
-	String collection() default "";
-
-	String id() default "";
-
+	/**
+	 * The database the referred entity resides in.
+	 * 
+	 * @return
+	 */
 	String db() default "";
-
 }

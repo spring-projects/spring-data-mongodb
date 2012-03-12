@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 the original author or authors.
+ * Copyright 2010-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,10 @@
 package org.springframework.data.mongodb.core.convert;
 
 import org.springframework.data.convert.EntityWriter;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 
 import com.mongodb.DBObject;
+import com.mongodb.DBRef;
 
 /**
  * A MongoWriter is responsible for converting an object of type T to the native MongoDB representation DBObject.
@@ -37,4 +39,14 @@ public interface MongoWriter<T> extends EntityWriter<T, DBObject> {
 	 * @return
 	 */
 	Object convertToMongoType(Object obj);
+
+	/**
+	 * Creates a {@link DBRef} to refer to the given object.
+	 * 
+	 * @param object the object to create a {@link DBRef} to link to. The object's type has to carry an id attribute.
+	 * @param referingProperty the client-side property referring to the object which might carry additional metadata for
+	 *          the {@link DBRef} object to create. Can be {@literal null}.
+	 * @return will never be {@literal null}.
+	 */
+	DBRef toDBRef(Object object, MongoPersistentProperty referingProperty);
 }

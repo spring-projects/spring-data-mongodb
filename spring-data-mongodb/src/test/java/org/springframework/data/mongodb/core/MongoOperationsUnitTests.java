@@ -37,6 +37,7 @@ import org.springframework.data.mongodb.core.query.NearQuery;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
+import com.mongodb.DBRef;
 
 /**
  * Abstract base class for unit tests to specify behaviour we expect from {@link MongoOperations}. Subclasses return
@@ -78,6 +79,10 @@ public abstract class MongoOperationsUnitTests {
 			}
 
 			public Object convertToMongoType(Object obj) {
+				return null;
+			}
+
+			public DBRef toDBRef(Object object, MongoPersistentProperty referingProperty) {
 				return null;
 			}
 		};

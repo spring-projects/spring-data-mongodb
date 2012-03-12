@@ -151,4 +151,6 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	GeoResults<Person> findByLocationNear(Point point, Distance maxDistance);
 
 	GeoPage<Person> findByLocationNear(Point point, Distance maxDistance, Pageable pageable);
+
+	List<Person> findByCreator(User user);
 }

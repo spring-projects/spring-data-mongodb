@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 by the original author(s).
+ * Copyright 2011-2012 by the original author(s).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -263,6 +263,22 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		});
 
 		return result;
+	}
+
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.convert.MongoWriter#toDBRef(java.lang.Object, org.springframework.data.mongodb.core.mapping.MongoPersistentProperty)
+	 */
+	public DBRef toDBRef(Object object, MongoPersistentProperty referingProperty) {
+
+		org.springframework.data.mongodb.core.mapping.DBRef annotation = null;
+
+		if (referingProperty != null) {
+			annotation = referingProperty.getDBRef();
+			Assert.isTrue(annotation != null, "The referenced property has to be mapped with @DBRef!");
+		}
+
+		return createDBRef(object, annotation);
 	}
 
 	/**
@@ -658,12 +674,20 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	protected DBRef createDBRef(Object target, org.springframework.data.mongodb.core.mapping.DBRef dbref) {
 
+		Assert.notNull(target);
+
 		MongoPersistentEntity<?> targetEntity = mappingContext.getPersistentEntity(target.getClass());
-		if (null == targetEntity || null == targetEntity.getIdProperty()) {
-			return null;
+
+		if (null == targetEntity) {
+			throw new MappingException("No mapping metadata found for " + target.getClass());
 		}
 
 		MongoPersistentProperty idProperty = targetEntity.getIdProperty();
+
+		if (idProperty == null) {
+			throw new MappingException("No id property found on class " + targetEntity.getType());
+		}
+
 		BeanWrapper<MongoPersistentEntity<Object>, Object> wrapper = BeanWrapper.create(target, conversionService);
 		Object id = wrapper.getProperty(idProperty, Object.class, useFieldAccessOnly);
 
@@ -671,15 +695,10 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			throw new MappingException("Cannot create a reference to an object with a NULL id.");
 		}
 
-		String collection = dbref.collection();
-		if ("".equals(collection)) {
-			collection = targetEntity.getCollection();
-		}
+		DB db = mongoDbFactory.getDb();
+		db = dbref != null && StringUtils.hasText(dbref.db()) ? mongoDbFactory.getDb(dbref.db()) : db;
 
-		String dbname = dbref.db();
-		DB db = StringUtils.hasText(dbname) ? mongoDbFactory.getDb(dbname) : mongoDbFactory.getDb();
-
-		return new DBRef(db, collection, idMapper.convertId(id));
+		return new DBRef(db, targetEntity.getCollection(), idMapper.convertId(id));
 	}
 
 	protected Object getValueInternal(MongoPersistentProperty prop, DBObject dbo, SpELExpressionEvaluator eval,

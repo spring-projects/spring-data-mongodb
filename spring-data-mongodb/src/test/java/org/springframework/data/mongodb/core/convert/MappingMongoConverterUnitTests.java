@@ -45,17 +45,20 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.PersistenceConstructor;
+import org.springframework.data.mapping.PropertyPath;
 import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mapping.model.MappingInstantiationException;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.PersonPojoStringId;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
+import com.mongodb.DBRef;
 
 /**
  * Unit tests for {@link MappingMongoConverter}.
@@ -1031,6 +1034,37 @@ public class MappingMongoConverterUnitTests {
 		assertSyntheticFieldValueOf(outer.inner, outer);
 	}
 
+	/**
+	 * @see DATAMONGO-347
+	 */
+	@Test
+	public void createsSimpleDBRefCorrectly() {
+
+		Person person = new Person();
+		person.id = "foo";
+
+		DBRef dbRef = converter.toDBRef(person, null);
+		assertThat(dbRef.getId(), is((Object) "foo"));
+		assertThat(dbRef.getRef(), is("person"));
+	}
+
+	/**
+	 * @see DATAMONGO-347
+	 */
+	@Test
+	public void createsDBRefWithClientSpecCorrectly() {
+
+		PropertyPath path = PropertyPath.from("person", PersonClient.class);
+		MongoPersistentProperty property = mappingContext.getPersistentPropertyPath(path).getLeafProperty();
+
+		Person person = new Person();
+		person.id = "foo";
+
+		DBRef dbRef = converter.toDBRef(person, property);
+		assertThat(dbRef.getId(), is((Object) "foo"));
+		assertThat(dbRef.getRef(), is("person"));
+	}
+
 	private static void assertSyntheticFieldValueOf(Object target, Object expected) {
 
 		for (int i = 0; i < 10; i++) {
@@ -1081,6 +1115,10 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	static class Person implements Contact {
+
+		@Id
+		String id;
+
 		LocalDate birthDate;
 
 		@Field("foo")
@@ -1183,6 +1221,12 @@ public class MappingMongoConverterUnitTests {
 		}
 
 		Inner inner;
+	}
+
+	static class PersonClient {
+
+		@org.springframework.data.mongodb.core.mapping.DBRef
+		Person person;
 	}
 
 	private class LocalDateToDateConverter implements Converter<LocalDate, Date> {

@@ -20,6 +20,7 @@ import java.util.Set;
 import org.springframework.data.mongodb.core.geo.Point;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexed;
 import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 /**
@@ -47,6 +48,9 @@ public class Person extends Contact {
 
 	private Address address;
 	private Set<Address> shippingAddresses;
+
+	@DBRef
+	User creator;
 
 	public Person() {
 

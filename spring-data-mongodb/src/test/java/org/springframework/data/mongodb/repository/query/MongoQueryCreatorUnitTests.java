@@ -30,6 +30,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
@@ -39,6 +40,7 @@ import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.geo.Distance;
 import org.springframework.data.mongodb.core.geo.Metrics;
 import org.springframework.data.mongodb.core.geo.Point;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
@@ -212,7 +214,7 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	/**
-	 * @see DATAMONGO
+	 * @see DATAMONGO-413
 	 */
 	@Test
 	public void createsOrQueryCorrectly() {
@@ -223,6 +225,23 @@ public class MongoQueryCreatorUnitTests {
 		Query query = creator.createQuery();
 		assertThat(query.getQueryObject(),
 				is(query(new Criteria().orOperator(where("firstName").is("Dave"), where("age").is(42))).getQueryObject()));
+	}
+
+	/**
+	 * @see DATAMONGO-347
+	 */
+	@Test
+	public void createsQueryReferencingADBRefCorrectly() {
+
+		User user = new User();
+		com.mongodb.DBRef dbref = new com.mongodb.DBRef(null, "user", "id");
+		when(converter.toDBRef(eq(user), Mockito.any(MongoPersistentProperty.class))).thenReturn(dbref);
+
+		PartTree tree = new PartTree("findByCreator", User.class);
+		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, user), context);
+		Query query = creator.createQuery();
+
+		assertThat(query.getQueryObject(), is(query(where("creator").is(dbref)).getQueryObject()));
 	}
 
 	private void assertBindsDistanceToQuery(Point point, Distance distance, Query reference) throws Exception {
@@ -252,5 +271,8 @@ public class MongoQueryCreatorUnitTests {
 
 		@Field("foo")
 		String username;
+
+		@DBRef
+		User creator;
 	}
 }

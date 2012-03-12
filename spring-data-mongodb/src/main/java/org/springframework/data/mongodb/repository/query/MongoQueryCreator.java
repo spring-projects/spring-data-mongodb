@@ -98,7 +98,8 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 		}
 
 		PersistentPropertyPath<MongoPersistentProperty> path = context.getPersistentPropertyPath(part.getProperty());
-		Criteria criteria = from(part.getType(),
+		MongoPersistentProperty property = path.getLeafProperty();
+		Criteria criteria = from(part.getType(), property,
 				where(path.toDotPath(MongoPersistentProperty.PropertyToFieldNameConverter.INSTANCE)),
 				(PotentiallyConvertingIterator) iterator);
 
@@ -116,10 +117,11 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 			return create(part, iterator);
 		}
 
-		PersistentPropertyPath<MongoPersistentProperty> path2 = context.getPersistentPropertyPath(part.getProperty());
+		PersistentPropertyPath<MongoPersistentProperty> path = context.getPersistentPropertyPath(part.getProperty());
+		MongoPersistentProperty property = path.getLeafProperty();
 
-		Criteria criteria = from(part.getType(),
-				where(path2.toDotPath(MongoPersistentProperty.PropertyToFieldNameConverter.INSTANCE)),
+		Criteria criteria = from(part.getType(), property,
+				where(path.toDotPath(MongoPersistentProperty.PropertyToFieldNameConverter.INSTANCE)),
 				(PotentiallyConvertingIterator) iterator);
 
 		return criteria.andOperator(criteria);
@@ -164,34 +166,36 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 	}
 
 	/**
-	 * Populates the given {@link CriteriaDefinition} depending on the {@link Type} given.
+	 * Populates the given {@link CriteriaDefinition} depending on the {@link Part} given.
 	 * 
-	 * @param type
+	 * @param part
+	 * @param property
 	 * @param criteria
 	 * @param parameters
 	 * @return
 	 */
-	private Criteria from(Type type, Criteria criteria, PotentiallyConvertingIterator parameters) {
+	private Criteria from(Type type, MongoPersistentProperty property, Criteria criteria,
+			PotentiallyConvertingIterator parameters) {
 
 		switch (type) {
 		case GREATER_THAN:
-			return criteria.gt(parameters.nextConverted());
+			return criteria.gt(parameters.nextConverted(property));
 		case GREATER_THAN_EQUAL:
-			return criteria.gte(parameters.nextConverted());
+			return criteria.gte(parameters.nextConverted(property));
 		case LESS_THAN:
-			return criteria.lt(parameters.nextConverted());
+			return criteria.lt(parameters.nextConverted(property));
 		case LESS_THAN_EQUAL:
-			return criteria.lte(parameters.nextConverted());
+			return criteria.lte(parameters.nextConverted(property));
 		case BETWEEN:
-			return criteria.gt(parameters.nextConverted()).lt(parameters.nextConverted());
+			return criteria.gt(parameters.nextConverted(property)).lt(parameters.nextConverted(property));
 		case IS_NOT_NULL:
 			return criteria.ne(null);
 		case IS_NULL:
 			return criteria.is(null);
 		case NOT_IN:
-			return criteria.nin(nextAsArray(parameters));
+			return criteria.nin(nextAsArray(parameters, property));
 		case IN:
-			return criteria.in(nextAsArray(parameters));
+			return criteria.in(nextAsArray(parameters, property));
 		case LIKE:
 			String value = parameters.next().toString();
 			return criteria.regex(toLikeRegex(value));
@@ -225,9 +229,9 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 			Object parameter = parameters.next();
 			return criteria.within((Shape) parameter);
 		case SIMPLE_PROPERTY:
-			return criteria.is(parameters.nextConverted());
+			return criteria.is(parameters.nextConverted(property));
 		case NEGATING_SIMPLE_PROPERTY:
-			return criteria.not().is(parameters.nextConverted());
+			return criteria.not().is(parameters.nextConverted(property));
 		}
 
 		throw new IllegalArgumentException("Unsupported keyword!");
@@ -253,8 +257,8 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 				parameter.getClass()));
 	}
 
-	private Object[] nextAsArray(PotentiallyConvertingIterator iterator) {
-		Object next = iterator.nextConverted();
+	private Object[] nextAsArray(PotentiallyConvertingIterator iterator, MongoPersistentProperty property) {
+		Object next = iterator.nextConverted(property);
 
 		if (next instanceof Collection) {
 			return ((Collection<?>) next).toArray();

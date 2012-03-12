@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2011-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,6 +32,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.geo.Box;
 import org.springframework.data.mongodb.core.geo.Circle;
 import org.springframework.data.mongodb.core.geo.Distance;
@@ -53,6 +54,10 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 
 	@Autowired
 	protected PersonRepository repository;
+
+	@Autowired
+	MongoOperations operations;
+
 	Person dave, oliver, carter, boyd, stefan, leroi, alicia;
 	QPerson person;
 
@@ -403,5 +408,26 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result.get(4), is(leroi));
 		assertThat(result.get(5), is(oliver));
 		assertThat(result.get(6), is(stefan));
+	}
+
+	/**
+	 * @see DATAMONGO-347
+	 */
+	@Test
+	public void executesQueryWithDBRefReferenceCorrectly() {
+
+		operations.remove(new org.springframework.data.mongodb.core.query.Query(), User.class);
+
+		User user = new User();
+		user.username = "Oliver";
+
+		operations.save(user);
+
+		dave.creator = user;
+		repository.save(dave);
+
+		List<Person> result = repository.findByCreator(user);
+		assertThat(result.size(), is(1));
+		assertThat(result, hasItem(dave));
 	}
 }

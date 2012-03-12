@@ -22,6 +22,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.convert.MongoWriter;
 import org.springframework.data.mongodb.core.geo.Distance;
 import org.springframework.data.mongodb.core.geo.Point;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.util.Assert;
 
@@ -137,37 +138,33 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 		}
 
 		/*
-		   * (non-Javadoc)
-		   *
-		   * @see java.util.Iterator#hasNext()
-		   */
+		 * (non-Javadoc)
+		 * @see java.util.Iterator#hasNext()
+		 */
 		public boolean hasNext() {
 			return delegate.hasNext();
 		}
 
 		/*
-		   * (non-Javadoc)
-		   *
-		   * @see java.util.Iterator#next()
-		   */
+		 * (non-Javadoc)
+		 * @see java.util.Iterator#next()
+		 */
 		public Object next() {
-
 			return delegate.next();
 		}
 
-		/* (non-Javadoc)
+		/* 
+		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.repository.ConvertingParameterAccessor.PotentiallConvertingIterator#nextConverted()
 		 */
-		public Object nextConverted() {
-
-			return getConvertedValue(next());
+		public Object nextConverted(MongoPersistentProperty property) {
+			return property.isAssociation() ? writer.toDBRef(next(), property) : getConvertedValue(next());
 		}
 
 		/*
-		   * (non-Javadoc)
-		   *
-		   * @see java.util.Iterator#remove()
-		   */
+		 * (non-Javadoc)
+		 * @see java.util.Iterator#remove()
+		 */
 		public void remove() {
 			delegate.remove();
 		}
@@ -185,6 +182,6 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 		 * 
 		 * @return
 		 */
-		Object nextConverted();
+		Object nextConverted(MongoPersistentProperty property);
 	}
 }
