@@ -31,7 +31,6 @@ import org.springframework.data.mongodb.core.geo.Shape;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
-import org.springframework.data.mongodb.core.query.OrQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.query.ConvertingParameterAccessor.PotentiallyConvertingIterator;
 import org.springframework.data.repository.query.parser.AbstractQueryCreator;
@@ -45,7 +44,7 @@ import org.springframework.util.Assert;
  * 
  * @author Oliver Gierke
  */
-class MongoQueryCreator extends AbstractQueryCreator<Query, Query> {
+class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 
 	private static final Log LOG = LogFactory.getLog(MongoQueryCreator.class);
 	private final MongoParameterAccessor accessor;
@@ -92,7 +91,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Query> {
 	* @see org.springframework.data.repository.query.parser.AbstractQueryCreator#create(org.springframework.data.repository.query.parser.Part, java.util.Iterator)
 	*/
 	@Override
-	protected Query create(Part part, Iterator<Object> iterator) {
+	protected Criteria create(Part part, Iterator<Object> iterator) {
 
 		if (isGeoNearQuery && part.getType().equals(Type.NEAR)) {
 			return null;
@@ -103,7 +102,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Query> {
 				where(path.toDotPath(MongoPersistentProperty.PropertyToFieldNameConverter.INSTANCE)),
 				(PotentiallyConvertingIterator) iterator);
 
-		return new Query(criteria);
+		return criteria;
 	}
 
 	/*
@@ -111,7 +110,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Query> {
 	* @see org.springframework.data.repository.query.parser.AbstractQueryCreator#and(org.springframework.data.repository.query.parser.Part, java.lang.Object, java.util.Iterator)
 	*/
 	@Override
-	protected Query and(Part part, Query base, Iterator<Object> iterator) {
+	protected Criteria and(Part part, Criteria base, Iterator<Object> iterator) {
 
 		if (base == null) {
 			return create(part, iterator);
@@ -122,7 +121,8 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Query> {
 		Criteria criteria = from(part.getType(),
 				where(path2.toDotPath(MongoPersistentProperty.PropertyToFieldNameConverter.INSTANCE)),
 				(PotentiallyConvertingIterator) iterator);
-		return base.addCriteria(criteria);
+
+		return criteria.andOperator(criteria);
 	}
 
 	/*
@@ -133,8 +133,10 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Query> {
 	* #or(java.lang.Object, java.lang.Object)
 	*/
 	@Override
-	protected Query or(Query base, Query query) {
-		return new OrQuery(new Query[] { base, query });
+	protected Criteria or(Criteria base, Criteria criteria) {
+
+		Criteria result = new Criteria();
+		return result.orOperator(base, criteria);
 	}
 
 	/*
@@ -145,12 +147,13 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Query> {
 	* #complete(java.lang.Object, org.springframework.data.domain.Sort)
 	*/
 	@Override
-	protected Query complete(Query query, Sort sort) {
+	protected Query complete(Criteria criteria, Sort sort) {
 
-		if (query == null) {
+		if (criteria == null) {
 			return null;
 		}
 
+		Query query = new Query(criteria);
 		QueryUtils.applySorting(query, sort);
 
 		if (LOG.isDebugEnabled()) {
