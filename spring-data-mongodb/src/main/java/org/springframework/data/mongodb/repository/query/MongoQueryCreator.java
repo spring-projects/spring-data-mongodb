@@ -197,8 +197,11 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 		case IN:
 			return criteria.in(nextAsArray(parameters, property));
 		case LIKE:
+		case STARTING_WITH:
+		case ENDING_WITH:
+		case CONTAINING:
 			String value = parameters.next().toString();
-			return criteria.regex(toLikeRegex(value));
+			return criteria.regex(toLikeRegex(value, type));
 		case REGEX:
 			return criteria.regex(parameters.next().toString());
 		case EXISTS:
@@ -269,7 +272,19 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 		return new Object[] { next };
 	}
 
-	private String toLikeRegex(String source) {
+	private String toLikeRegex(String source, Type type) {
+
+		switch (type) {
+		case STARTING_WITH:
+			source = source + "*";
+			break;
+		case ENDING_WITH:
+			source = "*" + source;
+			break;
+		case CONTAINING:
+			source = "*" + source + "*";
+			break;
+		}
 
 		return source.replaceAll("\\*", ".*");
 	}

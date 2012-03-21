@@ -244,6 +244,45 @@ public class MongoQueryCreatorUnitTests {
 		assertThat(query.getQueryObject(), is(query(where("creator").is(dbref)).getQueryObject()));
 	}
 
+	/**
+	 * @see DATAMONGO-418
+	 */
+	@Test
+	public void createsQueryWithStartingWithPredicateCorrectly() {
+
+		PartTree tree = new PartTree("findByUsernameStartingWith", User.class);
+		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "Matt"), context);
+		Query query = creator.createQuery();
+
+		assertThat(query.getQueryObject(), is(query(where("foo").regex("Matt.*")).getQueryObject()));
+	}
+
+	/**
+	 * @see DATAMONGO-418
+	 */
+	@Test
+	public void createsQueryWithEndingWithPredicateCorrectly() {
+
+		PartTree tree = new PartTree("findByUsernameEndingWith", User.class);
+		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "ews"), context);
+		Query query = creator.createQuery();
+
+		assertThat(query.getQueryObject(), is(query(where("foo").regex(".*ews")).getQueryObject()));
+	}
+
+	/**
+	 * @see DATAMONGO-418
+	 */
+	@Test
+	public void createsQueryWithContainingPredicateCorrectly() {
+
+		PartTree tree = new PartTree("findByUsernameContaining", User.class);
+		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "thew"), context);
+		Query query = creator.createQuery();
+
+		assertThat(query.getQueryObject(), is(query(where("foo").regex(".*thew.*")).getQueryObject()));
+	}
+
 	private void assertBindsDistanceToQuery(Point point, Distance distance, Query reference) throws Exception {
 
 		when(converter.convertToMongoType("Dave")).thenReturn("Dave");
