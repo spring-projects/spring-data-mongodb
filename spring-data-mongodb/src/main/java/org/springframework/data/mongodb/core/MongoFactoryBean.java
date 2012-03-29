@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core;
 import java.util.Arrays;
 import java.util.List;
 
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
@@ -36,7 +37,7 @@ import com.mongodb.WriteConcern;
  * @author Oliver Gierke
  * @since 1.0
  */
-public class MongoFactoryBean implements FactoryBean<Mongo>, PersistenceExceptionTranslator {
+public class MongoFactoryBean implements FactoryBean<Mongo>, DisposableBean, PersistenceExceptionTranslator {
 
 	private MongoOptions mongoOptions;
 	private String host;
@@ -46,6 +47,8 @@ public class MongoFactoryBean implements FactoryBean<Mongo>, PersistenceExceptio
 	private List<ServerAddress> replicaPair;
 
 	private PersistenceExceptionTranslator exceptionTranslator = new MongoExceptionTranslator();
+
+    private Mongo mongo;
 
 	public void setMongoOptions(MongoOptions mongoOptions) {
 		this.mongoOptions = mongoOptions;
@@ -81,8 +84,6 @@ public class MongoFactoryBean implements FactoryBean<Mongo>, PersistenceExceptio
 	}
 
 	public Mongo getObject() throws Exception {
-
-		Mongo mongo;
 
 		ServerAddress defaultOptions = new ServerAddress();
 
@@ -126,6 +127,12 @@ public class MongoFactoryBean implements FactoryBean<Mongo>, PersistenceExceptio
 	public boolean isSingleton() {
 		return true;
 	}
+
+    public void destroy() throws Exception {
+        if (this.mongo != null) {
+            this.mongo.close();
+        }
+    }
 
 	/*
 	 * (non-Javadoc)
