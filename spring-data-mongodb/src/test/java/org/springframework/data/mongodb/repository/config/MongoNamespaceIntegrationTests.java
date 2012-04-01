@@ -26,7 +26,7 @@ public class MongoNamespaceIntegrationTests extends AbstractPersonRepositoryInte
 
 	@Before
 	@Override
-	public void setUp() {
+	public void setUp() throws InterruptedException {
 		super.setUp();
 		factory = new DefaultListableBeanFactory();
 		reader = new XmlBeanDefinitionReader(factory);

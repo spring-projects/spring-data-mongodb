@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.repository;
 
+import java.util.Date;
 import java.util.Set;
 
 import org.springframework.data.mongodb.core.geo.Point;
@@ -42,6 +43,7 @@ public class Person extends Contact {
 	private Integer age;
 	@SuppressWarnings("unused")
 	private Sex sex;
+	Date createdAt;
 
 	@GeoSpatialIndexed
 	private Point location;
@@ -75,6 +77,7 @@ public class Person extends Contact {
 		this.age = age;
 		this.sex = sex;
 		this.email = (firstname == null ? "noone" : firstname.toLowerCase()) + "@dmband.com";
+		this.createdAt = new Date();
 	}
 
 	/**

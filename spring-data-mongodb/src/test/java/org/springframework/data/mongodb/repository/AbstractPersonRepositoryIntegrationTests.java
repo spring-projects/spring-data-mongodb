@@ -64,13 +64,14 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	List<Person> all;
 
 	@Before
-	public void setUp() {
+	public void setUp() throws InterruptedException {
 
 		repository.deleteAll();
 
 		dave = new Person("Dave", "Matthews", 42);
 		oliver = new Person("Oliver August", "Matthews", 4);
 		carter = new Person("Carter", "Beauford", 49);
+		Thread.sleep(10);
 		boyd = new Person("Boyd", "Tinsley", 45);
 		stefan = new Person("Stefan", "Lessard", 34);
 		leroi = new Person("Leroi", "Moore", 41);
@@ -429,5 +430,25 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		List<Person> result = repository.findByCreator(user);
 		assertThat(result.size(), is(1));
 		assertThat(result, hasItem(dave));
+	}
+
+	/**
+	 * @see DATAMONGO-425
+	 */
+	@Test
+	public void bindsDateParameterForDerivedQueryCorrectly() {
+
+		List<Person> result = repository.findByCreatedAtLessThan(boyd.createdAt);
+		assertThat(result.isEmpty(), is(false));
+	}
+
+	/**
+	 * @see DATAMONGO-425
+	 */
+	@Test
+	public void bindsDateParameterForManuallyDefinedQueryCorrectly() {
+
+		List<Person> result = repository.findByCreatedAtLessThanManually(boyd.createdAt);
+		assertThat(result.isEmpty(), is(false));
 	}
 }
