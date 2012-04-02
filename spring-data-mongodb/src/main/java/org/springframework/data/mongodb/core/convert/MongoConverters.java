@@ -15,18 +15,11 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.UUID;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.bson.BSON;
-import org.bson.types.Binary;
 import org.bson.types.ObjectId;
 import org.springframework.core.convert.converter.Converter;
-import org.springframework.data.mapping.model.MappingException;
 import org.springframework.util.StringUtils;
 
 /**
@@ -124,54 +117,6 @@ abstract class MongoConverters {
 
 		public BigInteger convert(String source) {
 			return StringUtils.hasText(source) ? new BigInteger(source) : null;
-		}
-	}
-
-	/**
-	 * Custom {@link Converter} to convert {@link UUID}s into {@link Binary}s.
-	 * 
-	 * @author Oliver Gierke
-	 */
-	public static enum UUIDToBinaryConverter implements Converter<UUID, Binary> {
-
-		INSTANCE;
-
-		/* 
-		 * (non-Javadoc)
-		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
-		 */
-		public Binary convert(UUID source) {
-
-			try {
-				return source == null ? null : new Binary(BSON.B_UUID, source.toString().getBytes("UTF-8"));
-			} catch (UnsupportedEncodingException e) {
-				throw new MappingException(String.format("Could nor convert UUID %s into Binary!", source.toString()), e);
-			}
-		}
-	}
-
-	public static enum BinaryToUUIDConverter implements Converter<Binary, UUID> {
-
-		INSTANCE;
-
-		private static final Log LOG = LogFactory.getLog(BinaryToUUIDConverter.class);
-
-		/* 
-		 * (non-Javadoc)
-		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
-		 */
-		public UUID convert(Binary source) {
-
-			if (BSON.B_UUID != source.getType()) {
-				LOG.warn(String.format("Source binary %s is not an UUID actually! Trying to read it nevertheless...",
-						source.toString()));
-			}
-
-			try {
-				return source == null ? null : UUID.fromString(new String(source.getData(), "UTF-8"));
-			} catch (UnsupportedEncodingException e) {
-				throw new MappingException(String.format("Could not convert Binary %s into UUID!", source.toString()), e);
-			}
 		}
 	}
 }

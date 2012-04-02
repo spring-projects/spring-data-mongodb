@@ -152,16 +152,6 @@ public class CustomConversionsUnitTests {
 		assertThat(conversions.isSimpleType(Binary.class), is(true));
 	}
 
-	/**
-	 * @see DATAMONGO-390
-	 */
-	@Test
-	public void convertsUUIDsToBinaryByDefault() {
-
-		CustomConversions conversions = new CustomConversions();
-		assertThat(conversions.hasCustomWriteTarget(UUID.class), is(true));
-	}
-
 	enum FormatToStringConverter implements Converter<Format, String> {
 		INSTANCE;
 

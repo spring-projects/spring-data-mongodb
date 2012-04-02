@@ -19,15 +19,10 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
 import java.math.BigDecimal;
-import java.util.UUID;
 
-import org.bson.BSON;
-import org.bson.types.Binary;
 import org.junit.Test;
 import org.springframework.data.mongodb.core.convert.MongoConverters.BigDecimalToStringConverter;
-import org.springframework.data.mongodb.core.convert.MongoConverters.BinaryToUUIDConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.StringToBigDecimalConverter;
-import org.springframework.data.mongodb.core.convert.MongoConverters.UUIDToBinaryConverter;
 
 /**
  * Unit tests for {@link MongoConverters}.
@@ -45,21 +40,5 @@ public class MongoConvertersUnitTests {
 
 		BigDecimal reference = StringToBigDecimalConverter.INSTANCE.convert(value);
 		assertThat(reference, is(bigDecimal));
-	}
-
-	/**
-	 * @see DATAMONGO-390
-	 */
-	@Test
-	public void convertsUUIDToBinaryCorrectly() {
-
-		UUID uuid = UUID.randomUUID();
-		Binary binary = UUIDToBinaryConverter.INSTANCE.convert(uuid);
-
-		assertThat(binary, is(notNullValue()));
-		assertThat(binary.getType(), is(BSON.B_UUID));
-
-		UUID result = BinaryToUUIDConverter.INSTANCE.convert(binary);
-		assertThat(result, is(uuid));
 	}
 }
