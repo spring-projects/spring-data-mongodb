@@ -46,9 +46,9 @@ import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.convert.CustomConversions;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.index.Index;
+import org.springframework.data.mongodb.core.index.Index.Duplicates;
 import org.springframework.data.mongodb.core.index.IndexField;
 import org.springframework.data.mongodb.core.index.IndexInfo;
-import org.springframework.data.mongodb.core.index.Index.Duplicates;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Order;
@@ -131,6 +131,7 @@ public class MongoTemplateTests {
 		template.dropCollection(template.getCollectionName(PersonWithIdPropertyOfTypeLong.class));
 		template.dropCollection(template.getCollectionName(PersonWithIdPropertyOfPrimitiveLong.class));
 		template.dropCollection(template.getCollectionName(TestClass.class));
+		template.dropCollection(Sample.class);
 	}
 
 	@Test
@@ -1084,10 +1085,33 @@ public class MongoTemplateTests {
 		assertThat(template.findOne(query(where("id").is(id)), Sample.class), is(nullValue()));
 	}
 
+	/**
+	 * @see DATAMONGO-423
+	 */
+	@Test
+	public void executesQueryWithNegatedRegexCorrectly() {
+
+		Sample first = new Sample();
+		first.field = "Matthews";
+
+		Sample second = new Sample();
+		second.field = "Beauford";
+
+		template.save(first);
+		template.save(second);
+
+		Query query = query(where("field").not().regex("Matthews"));
+		System.out.println(query.getQueryObject());
+		List<Sample> result = template.find(query, Sample.class);
+		assertThat(result.size(), is(1));
+		assertThat(result.get(0).field, is("Beauford"));
+	}
+
 	public static class Sample {
 
 		@Id
 		String id;
+		String field;
 	}
 
 	static class TestClass {

@@ -20,14 +20,15 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.regex.Pattern;
 
+import org.bson.BSON;
 import org.bson.types.BasicBSONList;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.data.mongodb.core.geo.Circle;
 import org.springframework.data.mongodb.core.geo.Point;
 import org.springframework.data.mongodb.core.geo.Shape;
 import org.springframework.util.Assert;
-import org.springframework.util.StringUtils;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
@@ -97,11 +98,15 @@ public class Criteria implements CriteriaDefinition {
 			throw new InvalidMongoDbApiUsageException(
 					"Multiple 'is' values declared. You need to use 'and' with multiple criteria");
 		}
-		if (this.criteria.size() > 0 && "$not".equals(this.criteria.keySet().toArray()[this.criteria.size() - 1])) {
+		if (lastOperatorWasNot()) {
 			throw new InvalidMongoDbApiUsageException("Invalid query: 'not' can't be used with 'is' - use 'ne' instead.");
 		}
 		this.isValue = o;
 		return this;
+	}
+
+	private boolean lastOperatorWasNot() {
+		return this.criteria.size() > 0 && "$not".equals(this.criteria.keySet().toArray()[this.criteria.size() - 1]);
 	}
 
 	/**
@@ -269,7 +274,11 @@ public class Criteria implements CriteriaDefinition {
 	 * @return
 	 */
 	public Criteria not() {
-		criteria.put("$not", null);
+		return not(null);
+	}
+
+	private Criteria not(Object value) {
+		criteria.put("$not", value);
 		return this;
 	}
 
@@ -280,8 +289,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @return
 	 */
 	public Criteria regex(String re) {
-		criteria.put("$regex", re);
-		return this;
+		return regex(re, null);
 	}
 
 	/**
@@ -292,11 +300,30 @@ public class Criteria implements CriteriaDefinition {
 	 * @return
 	 */
 	public Criteria regex(String re, String options) {
-		criteria.put("$regex", re);
-		if (StringUtils.hasText(options)) {
-			criteria.put("$options", options);
+		return regex(toPattern(re, options));
+	}
+
+	/**
+	 * Syntactical sugar for {@link #is(Object)} making obvious that we create a regex predicate.
+	 * 
+	 * @param pattern
+	 * @return
+	 */
+	public Criteria regex(Pattern pattern) {
+
+		Assert.notNull(pattern);
+
+		if (lastOperatorWasNot()) {
+			return not(pattern);
 		}
+
+		this.isValue = pattern;
 		return this;
+	}
+
+	private Pattern toPattern(String regex, String options) {
+		Assert.notNull(regex);
+		return Pattern.compile(regex, options == null ? 0 : BSON.regexFlags(options));
 	}
 
 	/**
@@ -426,16 +453,17 @@ public class Criteria implements CriteriaDefinition {
 		DBObject dbo = new BasicDBObject();
 		boolean not = false;
 		for (String k : this.criteria.keySet()) {
+			Object value = this.criteria.get(k);
 			if (not) {
 				DBObject notDbo = new BasicDBObject();
-				notDbo.put(k, this.criteria.get(k));
+				notDbo.put(k, value);
 				dbo.put("$not", notDbo);
 				not = false;
 			} else {
-				if ("$not".equals(k)) {
+				if ("$not".equals(k) && value == null) {
 					not = true;
 				} else {
-					dbo.put(k, this.criteria.get(k));
+					dbo.put(k, value);
 				}
 			}
 		}

@@ -100,7 +100,7 @@ public class QueryTests {
 	public void testComplexQueryWithMultipleChainedCriteria() {
 		Query q = new Query(where("name").regex("^T.*").and("age").gt(20).lt(80).and("city")
 				.in("Stockholm", "London", "New York"));
-		String expected = "{ \"name\" : { \"$regex\" : \"^T.*\"} , \"age\" : { \"$gt\" : 20 , \"$lt\" : 80} , "
+		String expected = "{ \"name\" : { \"$regex\" : \"^T.*\" , \"$options\" : \"\"} , \"age\" : { \"$gt\" : 20 , \"$lt\" : 80} , "
 				+ "\"city\" : { \"$in\" : [ \"Stockholm\" , \"London\" , \"New York\"]}}";
 		Assert.assertEquals(expected, q.getQueryObject().toString());
 	}
@@ -134,7 +134,7 @@ public class QueryTests {
 	@Test
 	public void testQueryWithRegex() {
 		Query q = new Query(where("name").regex("b.*"));
-		String expected = "{ \"name\" : { \"$regex\" : \"b.*\"}}";
+		String expected = "{ \"name\" : { \"$regex\" : \"b.*\" , \"$options\" : \"\"}}";
 		Assert.assertEquals(expected, q.getQueryObject().toString());
 	}
 
