@@ -39,8 +39,8 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 
 	private final Mongo mongo;
 	private final String databaseName;
-	private String username;
-	private String password;
+	private final boolean mongoInstanceCreated;
+	private final UserCredentials credentials;
 	private WriteConcern writeConcern;
 
 	/**
@@ -50,12 +50,7 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 	 * @param databaseName database name, not be {@literal null}.
 	 */
 	public SimpleMongoDbFactory(Mongo mongo, String databaseName) {
-		Assert.notNull(mongo, "Mongo must not be null");
-		Assert.hasText(databaseName, "Database name must not be empty");
-		Assert.isTrue(databaseName.matches("[\\w-]+"),
-				"Database name must only contain letters, numbers, underscores and dashes!");
-		this.mongo = mongo;
-		this.databaseName = databaseName;
+		this(mongo, databaseName, UserCredentials.NO_CREDENTIALS, false);
 	}
 
 	/**
@@ -63,12 +58,10 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 	 * 
 	 * @param mongo Mongo instance, must not be {@literal null}.
 	 * @param databaseName Database name, must not be {@literal null}.
-	 * @param userCredentials username and password must not be {@literal null}.
+	 * @param credentials username and password.
 	 */
-	public SimpleMongoDbFactory(Mongo mongo, String databaseName, UserCredentials userCredentials) {
-		this(mongo, databaseName);
-		this.username = userCredentials.getUsername();
-		this.password = userCredentials.getPassword();
+	public SimpleMongoDbFactory(Mongo mongo, String databaseName, UserCredentials credentials) {
+		this(mongo, databaseName, credentials, false);
 	}
 
 	/**
@@ -80,7 +73,21 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 	 * @see MongoURI
 	 */
 	public SimpleMongoDbFactory(MongoURI uri) throws MongoException, UnknownHostException {
-		this(new Mongo(uri), uri.getDatabase(), new UserCredentials(uri.getUsername(), parseChars(uri.getPassword())));
+		this(new Mongo(uri), uri.getDatabase(), new UserCredentials(uri.getUsername(), parseChars(uri.getPassword())), true);
+	}
+
+	private SimpleMongoDbFactory(Mongo mongo, String databaseName, UserCredentials credentials,
+			boolean mongoInstanceCreated) {
+
+		Assert.notNull(mongo, "Mongo must not be null");
+		Assert.hasText(databaseName, "Database name must not be empty");
+		Assert.isTrue(databaseName.matches("[\\w-]+"),
+				"Database name must only contain letters, numbers, underscores and dashes!");
+
+		this.mongo = mongo;
+		this.databaseName = databaseName;
+		this.mongoInstanceCreated = mongoInstanceCreated;
+		this.credentials = credentials == null ? UserCredentials.NO_CREDENTIALS : credentials;
 	}
 
 	/**
@@ -90,10 +97,6 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 	 */
 	public void setWriteConcern(WriteConcern writeConcern) {
 		this.writeConcern = writeConcern;
-	}
-
-	public WriteConcern getWriteConcern() {
-		return writeConcern;
 	}
 
 	/*
@@ -112,7 +115,10 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 
 		Assert.hasText(dbName, "Database name must not be empty.");
 
-		DB db = MongoDbUtils.getDB(mongo, dbName, username, password == null ? null : password.toCharArray());
+		String username = credentials.getUsername();
+		char[] password = credentials.hasPassword() ? credentials.getPassword().toCharArray() : null;
+
+		DB db = MongoDbUtils.getDB(mongo, dbName, username, password);
 
 		if (writeConcern != null) {
 			db.setWriteConcern(writeConcern);
@@ -122,17 +128,17 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 	}
 
 	/**
-	 * Clean up the Mongo instance.
+	 * Clean up the Mongo instance if it was created by the factory itself.
+	 * 
+	 * @see DisposableBean#destroy()
 	 */
 	public void destroy() throws Exception {
-		mongo.close();
+		if (mongoInstanceCreated) {
+			mongo.close();
+		}
 	}
 
-	public static String parseChars(char[] chars) {
-		if (chars == null) {
-			return null;
-		} else {
-			return String.valueOf(chars);
-		}
+	private static String parseChars(char[] chars) {
+		return chars == null ? null : String.valueOf(chars);
 	}
 }

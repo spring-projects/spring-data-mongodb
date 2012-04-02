@@ -18,7 +18,9 @@ package org.springframework.data.mongodb.core;
 import java.util.Arrays;
 import java.util.List;
 
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.FactoryBean;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mongodb.CannotGetMongoDbConnectionException;
@@ -36,7 +38,10 @@ import com.mongodb.WriteConcern;
  * @author Oliver Gierke
  * @since 1.0
  */
-public class MongoFactoryBean implements FactoryBean<Mongo>, PersistenceExceptionTranslator {
+public class MongoFactoryBean implements FactoryBean<Mongo>, InitializingBean, DisposableBean,
+		PersistenceExceptionTranslator {
+
+	private Mongo mongo;
 
 	private MongoOptions mongoOptions;
 	private String host;
@@ -81,34 +86,7 @@ public class MongoFactoryBean implements FactoryBean<Mongo>, PersistenceExceptio
 	}
 
 	public Mongo getObject() throws Exception {
-
-		Mongo mongo;
-
-		ServerAddress defaultOptions = new ServerAddress();
-
-		if (mongoOptions == null) {
-			mongoOptions = new MongoOptions();
-		}
-
-		if (replicaPair != null) {
-			if (replicaPair.size() < 2) {
-				throw new CannotGetMongoDbConnectionException("A replica pair must have two server entries");
-			}
-			mongo = new Mongo(replicaPair.get(0), replicaPair.get(1), mongoOptions);
-		} else if (replicaSetSeeds != null) {
-			mongo = new Mongo(replicaSetSeeds, mongoOptions);
-		} else {
-			String mongoHost = host != null ? host : defaultOptions.getHost();
-			mongo = port != null ? new Mongo(new ServerAddress(mongoHost, port), mongoOptions) : new Mongo(mongoHost,
-					mongoOptions);
-		}
-
-		if (writeConcern != null) {
-			mongo.setWriteConcern(writeConcern);
-		}
-
 		return mongo;
-
 	}
 
 	/*
@@ -133,5 +111,46 @@ public class MongoFactoryBean implements FactoryBean<Mongo>, PersistenceExceptio
 	 */
 	public DataAccessException translateExceptionIfPossible(RuntimeException ex) {
 		return exceptionTranslator.translateExceptionIfPossible(ex);
+	}
+
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
+	 */
+	public void afterPropertiesSet() throws Exception {
+
+		Mongo mongo;
+		ServerAddress defaultOptions = new ServerAddress();
+
+		if (mongoOptions == null) {
+			mongoOptions = new MongoOptions();
+		}
+
+		if (replicaPair != null) {
+			if (replicaPair.size() < 2) {
+				throw new CannotGetMongoDbConnectionException("A replica pair must have two server entries");
+			}
+			mongo = new Mongo(replicaPair.get(0), replicaPair.get(1), mongoOptions);
+		} else if (replicaSetSeeds != null) {
+			mongo = new Mongo(replicaSetSeeds, mongoOptions);
+		} else {
+			String mongoHost = host != null ? host : defaultOptions.getHost();
+			mongo = port != null ? new Mongo(new ServerAddress(mongoHost, port), mongoOptions) : new Mongo(mongoHost,
+					mongoOptions);
+		}
+
+		if (writeConcern != null) {
+			mongo.setWriteConcern(writeConcern);
+		}
+
+		this.mongo = mongo;
+	}
+
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.beans.factory.DisposableBean#destroy()
+	 */
+	public void destroy() throws Exception {
+		this.mongo.close();
 	}
 }

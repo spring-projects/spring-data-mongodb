@@ -16,17 +16,19 @@
 
 package org.springframework.data.mongodb.config;
 
-import static org.springframework.test.util.ReflectionTestUtils.*;
 import static org.junit.Assert.*;
+import static org.springframework.test.util.ReflectionTestUtils.*;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.data.authentication.UserCredentials;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.MongoFactoryBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
 import com.mongodb.Mongo;
 import com.mongodb.MongoOptions;
 
@@ -62,8 +64,7 @@ public class MongoNamespaceTests {
 		Mongo mongo = (Mongo) getField(dbf, "mongo");
 		assertEquals("localhost", mongo.getAddress().getHost());
 		assertEquals(27017, mongo.getAddress().getPort());
-		assertEquals("joe", getField(dbf, "username"));
-		assertEquals("secret", getField(dbf, "password"));
+		assertEquals(new UserCredentials("joe", "secret"), getField(dbf, "credentials"));
 		assertEquals("database", getField(dbf, "databaseName"));
 	}
 

@@ -32,6 +32,7 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import com.mongodb.DB;
 import com.mongodb.Mongo;
@@ -59,7 +60,7 @@ public class MongoDbFactoryParserIntegrationTests {
 		SimpleMongoDbFactory dbFactory = new SimpleMongoDbFactory(new Mongo("localhost"), "database");
 		dbFactory.setWriteConcern(WriteConcern.SAFE);
 		dbFactory.getDb();
-		assertThat(WriteConcern.SAFE, is(dbFactory.getWriteConcern()));
+		assertThat(ReflectionTestUtils.getField(dbFactory, "writeConcern"), is((Object) WriteConcern.SAFE));
 	}
 
 	@Test
@@ -91,15 +92,17 @@ public class MongoDbFactoryParserIntegrationTests {
 	private void assertWriteConcern(ClassPathXmlApplicationContext ctx, WriteConcern expectedWriteConcern) {
 		SimpleMongoDbFactory dbFactory = ctx.getBean("first", SimpleMongoDbFactory.class);
 		DB db = dbFactory.getDb();
-		assertThat("db", is(db.getName()));
+		assertThat(db.getName(), is("db"));
 
-		MyWriteConcern myDbFactoryWriteConcern = new MyWriteConcern(dbFactory.getWriteConcern());
+		WriteConcern configuredConcern = (WriteConcern) ReflectionTestUtils.getField(dbFactory, "writeConcern");
+
+		MyWriteConcern myDbFactoryWriteConcern = new MyWriteConcern(configuredConcern);
 		MyWriteConcern myDbWriteConcern = new MyWriteConcern(db.getWriteConcern());
 		MyWriteConcern myExpectedWriteConcern = new MyWriteConcern(expectedWriteConcern);
 
-		assertThat(myDbFactoryWriteConcern, equalTo(myExpectedWriteConcern));
-		assertThat(myDbWriteConcern, equalTo(myExpectedWriteConcern));
-		assertThat(myDbWriteConcern, equalTo(myDbFactoryWriteConcern));
+		assertThat(myDbFactoryWriteConcern, is(myExpectedWriteConcern));
+		assertThat(myDbWriteConcern, is(myExpectedWriteConcern));
+		assertThat(myDbWriteConcern, is(myDbFactoryWriteConcern));
 	}
 
 	// This test will fail since equals in WriteConcern uses == for _w and not .equals
@@ -108,7 +111,7 @@ public class MongoDbFactoryParserIntegrationTests {
 		String s2 = new String("rack1");
 		WriteConcern wc1 = new WriteConcern(s1);
 		WriteConcern wc2 = new WriteConcern(s2);
-		assertThat(wc1, equalTo(wc2));
+		assertThat(wc1, is(wc2));
 	}
 
 	@Test
