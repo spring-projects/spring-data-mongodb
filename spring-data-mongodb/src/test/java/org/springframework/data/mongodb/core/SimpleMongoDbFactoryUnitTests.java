@@ -15,8 +15,8 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.junit.Assert.*;
 import static org.hamcrest.CoreMatchers.*;
+import static org.junit.Assert.*;
 
 import java.net.UnknownHostException;
 
@@ -24,6 +24,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.data.authentication.UserCredentials;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -70,8 +71,8 @@ public class SimpleMongoDbFactoryUnitTests {
 		MongoURI mongoURI = new MongoURI("mongodb://myUsername:myPassword@localhost/myDatabase.myCollection");
 		MongoDbFactory mongoDbFactory = new SimpleMongoDbFactory(mongoURI);
 
-		assertThat(ReflectionTestUtils.getField(mongoDbFactory, "username").toString(), is("myUsername"));
-		assertThat(ReflectionTestUtils.getField(mongoDbFactory, "password").toString(), is("myPassword"));
+		assertThat(ReflectionTestUtils.getField(mongoDbFactory, "credentials"), is((Object) new UserCredentials(
+				"myUsername", "myPassword")));
 		assertThat(ReflectionTestUtils.getField(mongoDbFactory, "databaseName").toString(), is("myDatabase"));
 		assertThat(ReflectionTestUtils.getField(mongoDbFactory, "databaseName").toString(), is("myDatabase"));
 	}
