@@ -77,7 +77,7 @@ public class RepositoryIndexCreationIntegrationTests {
 
 				assertThat(indexInfo.isEmpty(), is(false));
 				assertThat(indexInfo.size(), is(greaterThan(2)));
-				assertThat(getIndexNamesFrom(indexInfo), hasItems("findByLastname", "findByFirstnameNotIn"));
+				assertThat(getIndexNamesFrom(indexInfo), hasItems("findByLastnameLike", "findByFirstnameLike"));
 
 				return null;
 			}

@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.repository;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
@@ -151,4 +152,15 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	GeoResults<Person> findByLocationNear(Point point, Distance maxDistance);
 
 	GeoPage<Person> findByLocationNear(Point point, Distance maxDistance, Pageable pageable);
+
+	/**
+	 * @see DATAMONGO-425
+	 */
+	List<Person> findByCreatedAtLessThan(Date date);
+
+	/**
+	 * @see DATAMONGO-425
+	 */
+	@Query("{ 'createdAt' : { '$lt' : ?0 }}")
+	List<Person> findByCreatedAtLessThanManually(Date date);
 }

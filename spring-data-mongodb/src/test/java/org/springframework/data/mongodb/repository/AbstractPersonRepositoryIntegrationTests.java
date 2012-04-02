@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2011-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,6 +32,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.geo.Box;
 import org.springframework.data.mongodb.core.geo.Circle;
 import org.springframework.data.mongodb.core.geo.Distance;
@@ -53,19 +54,24 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 
 	@Autowired
 	protected PersonRepository repository;
+
+	@Autowired
+	MongoOperations operations;
+
 	Person dave, oliver, carter, boyd, stefan, leroi, alicia;
 	QPerson person;
 
 	List<Person> all;
 
 	@Before
-	public void setUp() {
+	public void setUp() throws InterruptedException {
 
 		repository.deleteAll();
 
 		dave = new Person("Dave", "Matthews", 42);
 		oliver = new Person("Oliver August", "Matthews", 4);
 		carter = new Person("Carter", "Beauford", 49);
+		Thread.sleep(10);
 		boyd = new Person("Boyd", "Tinsley", 45);
 		stefan = new Person("Stefan", "Lessard", 34);
 		leroi = new Person("Leroi", "Moore", 41);
@@ -395,5 +401,25 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result.get(4), is(leroi));
 		assertThat(result.get(5), is(oliver));
 		assertThat(result.get(6), is(stefan));
+	}
+
+	/**
+	 * @see DATAMONGO-425
+	 */
+	@Test
+	public void bindsDateParameterForDerivedQueryCorrectly() {
+
+		List<Person> result = repository.findByCreatedAtLessThan(boyd.createdAt);
+		assertThat(result.isEmpty(), is(false));
+	}
+
+	/**
+	 * @see DATAMONGO-425
+	 */
+	@Test
+	public void bindsDateParameterForManuallyDefinedQueryCorrectly() {
+
+		List<Person> result = repository.findByCreatedAtLessThanManually(boyd.createdAt);
+		assertThat(result.isEmpty(), is(false));
 	}
 }

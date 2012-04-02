@@ -20,10 +20,11 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Query;
+
+import com.mongodb.util.JSON;
 
 /**
  * Query to use a plain JSON String to create the {@link Query} to actually execute.
@@ -55,12 +56,9 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 	}
 
 	/*
-	  * (non-Javadoc)
-	  *
-	  * @see
-	  * org.springframework.data.mongodb.repository.AbstractMongoQuery#createQuery(org.springframework.data.
-	  * repository.query.SimpleParameterAccessor, org.springframework.data.mongodb.core.core.support.convert.MongoConverter)
-	  */
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery#createQuery(org.springframework.data.mongodb.repository.query.ConvertingParameterAccessor)
+	 */
 	@Override
 	protected Query createQuery(ConvertingParameterAccessor accessor) {
 
@@ -99,17 +97,6 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 	}
 
 	private String getParameterWithIndex(ConvertingParameterAccessor accessor, int index) {
-
-		Object parameter = accessor.getBindableValue(index);
-
-		if (parameter == null) {
-			return "null";
-		} else if (parameter instanceof String || parameter.getClass().isEnum()) {
-			return String.format("\"%s\"", parameter);
-		} else if (parameter instanceof ObjectId) {
-			return String.format("{ '$oid' : '%s' }", parameter);
-		}
-
-		return parameter.toString();
+		return JSON.serialize(accessor.getBindableValue(index));
 	}
 }
