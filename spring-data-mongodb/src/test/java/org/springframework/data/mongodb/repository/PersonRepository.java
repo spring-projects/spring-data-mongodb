@@ -163,6 +163,22 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	/**
 	 * @see DATAMONGO-425
 	 */
+	List<Person> findByCreatedAtGreaterThan(Date date);
+
+	/**
+	 * @see DATAMONGO-425
+	 */
 	@Query("{ 'createdAt' : { '$lt' : ?0 }}")
 	List<Person> findByCreatedAtLessThanManually(Date date);
+
+	/**
+	 * @see DATAMONGO-427
+	 */
+	List<Person> findByCreatedAtBefore(Date date);
+
+	/**
+	 * @see DATAMONGO-427
+	 */
+	List<Person> findByCreatedAtAfter(Date date);
+
 }

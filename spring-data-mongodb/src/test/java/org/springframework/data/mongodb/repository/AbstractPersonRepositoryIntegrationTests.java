@@ -436,10 +436,44 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	 * @see DATAMONGO-425
 	 */
 	@Test
-	public void bindsDateParameterForDerivedQueryCorrectly() {
+	public void bindsDateParameterForLessThanPredicateCorrectly() {
 
 		List<Person> result = repository.findByCreatedAtLessThan(boyd.createdAt);
-		assertThat(result.isEmpty(), is(false));
+		assertThat(result.size(), is(3));
+		assertThat(result, hasItems(dave, oliver, carter));
+	}
+
+	/**
+	 * @see DATAMONGO-425
+	 */
+	@Test
+	public void bindsDateParameterForGreaterThanPredicateCorrectly() {
+
+		List<Person> result = repository.findByCreatedAtGreaterThan(carter.createdAt);
+		assertThat(result.size(), is(4));
+		assertThat(result, hasItems(boyd, stefan, leroi, alicia));
+	}
+
+	/**
+	 * @see DATAMONGO-427
+	 */
+	@Test
+	public void bindsDateParameterToBeforePredicateCorrectly() {
+
+		List<Person> result = repository.findByCreatedAtBefore(boyd.createdAt);
+		assertThat(result.size(), is(3));
+		assertThat(result, hasItems(dave, oliver, carter));
+	}
+
+	/**
+	 * @see DATAMONGO-427
+	 */
+	@Test
+	public void bindsDateParameterForAfterPredicateCorrectly() {
+
+		List<Person> result = repository.findByCreatedAtAfter(carter.createdAt);
+		assertThat(result.size(), is(4));
+		assertThat(result, hasItems(boyd, stefan, leroi, alicia));
 	}
 
 	/**

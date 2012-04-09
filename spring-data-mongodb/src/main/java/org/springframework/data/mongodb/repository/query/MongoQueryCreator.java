@@ -178,10 +178,12 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 			PotentiallyConvertingIterator parameters) {
 
 		switch (type) {
+		case AFTER:
 		case GREATER_THAN:
 			return criteria.gt(parameters.nextConverted(property));
 		case GREATER_THAN_EQUAL:
 			return criteria.gte(parameters.nextConverted(property));
+		case BEFORE:
 		case LESS_THAN:
 			return criteria.lt(parameters.nextConverted(property));
 		case LESS_THAN_EQUAL:
