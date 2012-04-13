@@ -65,7 +65,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.CrudRepository#save(java.lang.Object)
 	 */
-	public T save(T entity) {
+	public <S extends T> S save(S entity) {
 
 		Assert.notNull(entity, "Entity must not be null!");
 
@@ -77,13 +77,13 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.CrudRepository#save(java.lang.Iterable)
 	 */
-	public List<T> save(Iterable<? extends T> entities) {
+	public <S extends T> List<S> save(Iterable<S> entities) {
 
 		Assert.notNull(entities, "The given Iterable of entities not be null!");
 
-		List<T> result = new ArrayList<T>();
+		List<S> result = new ArrayList<S>();
 
-		for (T entity : entities) {
+		for (S entity : entities) {
 			save(entity);
 			result.add(entity);
 		}

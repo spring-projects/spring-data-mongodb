@@ -34,7 +34,7 @@ public interface MongoRepository<T, ID extends Serializable> extends PagingAndSo
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.CrudRepository#save(java.lang.Iterable)
 	 */
-	List<T> save(Iterable<? extends T> entites);
+	<S extends T> List<S> save(Iterable<S> entites);
 
 	/*
 	 * (non-Javadoc)
