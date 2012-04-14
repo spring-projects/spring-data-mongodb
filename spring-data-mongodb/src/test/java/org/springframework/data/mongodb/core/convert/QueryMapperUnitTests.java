@@ -32,10 +32,9 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.Person;
-import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
-import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
+import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 
@@ -186,6 +185,18 @@ public class QueryMapperUnitTests {
 
 		DBObject result = mapper.getMappedObject(query, null);
 		assertThat(result.get("bar"), is(notNullValue()));
+	}
+
+	/**
+	 * @see DATAMONGO-429
+	 */
+	@Test
+	public void transformsArraysCorrectly() {
+
+		Query query = new BasicQuery("{ 'tags' : { '$all' : [ 'green', 'orange']}}");
+
+		DBObject result = mapper.getMappedObject(query.getQueryObject(), null);
+		assertThat(result, is(query.getQueryObject()));
 	}
 
 	class Sample {
