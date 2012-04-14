@@ -30,6 +30,7 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.util.Assert;
 
+import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
@@ -40,6 +41,9 @@ import com.mongodb.DBObject;
  * @author Oliver Gierke
  */
 public class QueryMapper {
+
+	private static final List<String> DEFAULT_ID_NAMES = Arrays.asList("id", "_id");
+	private static final String N_OR_PATTERN = "\\$.*or";
 
 	private final ConversionService conversionService;
 	private final MongoConverter converter;
@@ -59,8 +63,8 @@ public class QueryMapper {
 	 * Replaces the property keys used in the given {@link DBObject} with the appropriate keys by using the
 	 * {@link PersistentEntity} metadata.
 	 * 
-	 * @param query
-	 * @param entity
+	 * @param query must not be {@literal null}.
+	 * @param entity can be {@literal null}.
 	 * @return
 	 */
 	public DBObject getMappedObject(DBObject query, MongoPersistentEntity<?> entity) {
@@ -68,8 +72,10 @@ public class QueryMapper {
 		DBObject newDbo = new BasicDBObject();
 
 		for (String key : query.keySet()) {
+
 			String newKey = key;
 			Object value = query.get(key);
+
 			if (isIdKey(key, entity)) {
 				if (value instanceof DBObject) {
 					DBObject valueDbo = (DBObject) value;
@@ -81,32 +87,49 @@ public class QueryMapper {
 						}
 						valueDbo.put(inKey, ids.toArray(new Object[ids.size()]));
 					} else {
-						value = getMappedObject((DBObject) value, entity);
+						value = getMappedObject((DBObject) value, null);
 					}
 				} else {
 					value = convertId(value);
 				}
 				newKey = "_id";
-			} else if (key.startsWith("$") && key.endsWith("or")) {
+			} else if (key.matches(N_OR_PATTERN)) {
 				// $or/$nor
 				Iterable<?> conditions = (Iterable<?>) value;
 				BasicBSONList newConditions = new BasicBSONList();
 				Iterator<?> iter = conditions.iterator();
 				while (iter.hasNext()) {
-					newConditions.add(getMappedObject((DBObject) iter.next(), entity));
+					newConditions.add(getMappedObject((DBObject) iter.next(), null));
 				}
 				value = newConditions;
 			} else if (key.equals("$ne")) {
 				value = convertId(value);
-			} else if (value instanceof DBObject) {
-				newDbo.put(newKey, getMappedObject((DBObject) value, entity));
-				continue;
 			}
 
-			newDbo.put(newKey, converter.convertToMongoType(value));
+			newDbo.put(newKey, convertSimpleOrDBObject(value, null));
 		}
 
 		return newDbo;
+	}
+
+	/**
+	 * Retriggers mapping if the given source is a {@link DBObject} or simply invokes the
+	 * 
+	 * @param source
+	 * @param entity
+	 * @return
+	 */
+	private Object convertSimpleOrDBObject(Object source, MongoPersistentEntity<?> entity) {
+
+		if (source instanceof BasicDBList) {
+			return converter.convertToMongoType(source);
+		}
+
+		if (source instanceof DBObject) {
+			return getMappedObject((DBObject) source, entity);
+		}
+
+		return converter.convertToMongoType(source);
 	}
 
 	/**
@@ -123,7 +146,7 @@ public class QueryMapper {
 			return idProperty.getName().equals(key) || idProperty.getFieldName().equals(key);
 		}
 
-		return Arrays.asList("id", "_id").contains(key);
+		return DEFAULT_ID_NAMES.contains(key);
 	}
 
 	/**
