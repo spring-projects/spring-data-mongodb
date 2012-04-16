@@ -58,10 +58,8 @@ public class MongoChangeSetPersister implements ChangeSetPersister<Object> {
 		this.entityManagerFactory = entityManagerFactory;
 	}
 
-
-	public void getPersistentState(Class<? extends ChangeSetBacked> entityClass,
-			Object id, final ChangeSet changeSet)
-					throws DataAccessException, NotFoundException {
+	public void getPersistentState(Class<? extends ChangeSetBacked> entityClass, Object id, final ChangeSet changeSet)
+			throws DataAccessException, NotFoundException {
 
 		if (id == null) {
 			log.debug("Unable to load MongoDB data for null id");
@@ -77,8 +75,7 @@ public class MongoChangeSetPersister implements ChangeSetPersister<Object> {
 			log.debug("Loading MongoDB data for " + dbk);
 		}
 		mongoTemplate.execute(collName, new CollectionCallback<Object>() {
-			public Object doInCollection(DBCollection collection)
-					throws MongoException, DataAccessException {
+			public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 				for (DBObject dbo : collection.find(dbk)) {
 					String key = (String) dbo.get(ENTITY_FIELD_NAME);
 					if (log.isDebugEnabled()) {
@@ -87,9 +84,8 @@ public class MongoChangeSetPersister implements ChangeSetPersister<Object> {
 					if (!changeSet.getValues().containsKey(key)) {
 						String className = (String) dbo.get(ENTITY_FIELD_CLASS);
 						if (className == null) {
-							throw new DataIntegrityViolationException(
-									"Unble to convert property " + key
-									+ ": Invalid metadata, " + ENTITY_FIELD_CLASS + " not available");
+							throw new DataIntegrityViolationException("Unble to convert property " + key + ": Invalid metadata, "
+									+ ENTITY_FIELD_CLASS + " not available");
 						}
 						Class<?> clazz = ClassUtils.resolveClassName(className, ClassUtils.getDefaultClassLoader());
 						Object value = mongoTemplate.getConverter().read(clazz, dbo);
@@ -135,10 +131,8 @@ public class MongoChangeSetPersister implements ChangeSetPersister<Object> {
 				dbQuery.put(ENTITY_ID, getPersistentId(entity, cs));
 				dbQuery.put(ENTITY_CLASS, entity.getClass().getName());
 				dbQuery.put(ENTITY_FIELD_NAME, key);
-				DBObject dbId = mongoTemplate.execute(collName,
-						new CollectionCallback<DBObject>() {
-					public DBObject doInCollection(DBCollection collection)
-							throws MongoException, DataAccessException {
+				DBObject dbId = mongoTemplate.execute(collName, new CollectionCallback<DBObject>() {
+					public DBObject doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 						return collection.findOne(dbQuery);
 					}
 				});
@@ -147,14 +141,12 @@ public class MongoChangeSetPersister implements ChangeSetPersister<Object> {
 						log.debug("Flush: removing: " + dbQuery);
 					}
 					mongoTemplate.execute(collName, new CollectionCallback<Object>() {
-						public Object doInCollection(DBCollection collection)
-								throws MongoException, DataAccessException {
+						public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 							collection.remove(dbQuery);
 							return null;
 						}
 					});
-				}
-				else {
+				} else {
 					final DBObject dbDoc = new BasicDBObject();
 					dbDoc.putAll(dbQuery);
 					if (log.isDebugEnabled()) {
@@ -166,8 +158,7 @@ public class MongoChangeSetPersister implements ChangeSetPersister<Object> {
 						dbDoc.put("_id", dbId.get("_id"));
 					}
 					mongoTemplate.execute(collName, new CollectionCallback<Object>() {
-						public Object doInCollection(DBCollection collection)
-								throws MongoException, DataAccessException {
+						public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 							collection.save(dbDoc);
 							return null;
 						}

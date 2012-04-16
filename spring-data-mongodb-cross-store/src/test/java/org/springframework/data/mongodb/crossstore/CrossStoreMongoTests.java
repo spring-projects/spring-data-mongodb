@@ -90,8 +90,7 @@ public class CrossStoreMongoTests {
 		Assert.assertNotNull(found);
 		Assert.assertEquals(Long.valueOf(1), found.getId());
 		Assert.assertNotNull(found.getResume());
-		Assert.assertEquals("DiMark, DBA, 1990-2000" + "; "
-				+ "VMware, Developer, 2007-", found.getResume().getJobs());
+		Assert.assertEquals("DiMark, DBA, 1990-2000" + "; " + "VMware, Developer, 2007-", found.getResume().getJobs());
 		found.getResume().addJob("SpringDeveloper.com, Consultant, 2005-2006");
 		found.setAge(44);
 	}
@@ -106,8 +105,7 @@ public class CrossStoreMongoTests {
 		Assert.assertNotNull(found);
 		Assert.assertEquals(Long.valueOf(1), found.getId());
 		Assert.assertNotNull(found.getResume());
-		Assert.assertEquals("DiMark, DBA, 1990-2000" + "; "
-				+ "VMware, Developer, 2007-" + "; "
+		Assert.assertEquals("DiMark, DBA, 1990-2000" + "; " + "VMware, Developer, 2007-" + "; "
 				+ "SpringDeveloper.com, Consultant, 2005-2006", found.getResume().getJobs());
 	}
 

@@ -24,8 +24,6 @@ import java.lang.annotation.Target;
  * @author Thomas Risberg
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target({
-    ElementType.FIELD
-})
+@Target({ ElementType.FIELD })
 public @interface RelatedDocument {
 }
