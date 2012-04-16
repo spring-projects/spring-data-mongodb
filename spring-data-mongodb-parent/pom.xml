@@ -19,7 +19,7 @@
     <org.springframework.version.30>3.0.7.RELEASE</org.springframework.version.30>
     <org.springframework.version.40>4.0.0.RELEASE</org.springframework.version.40>
     <org.springframework.version.range>[${org.springframework.version.30}, ${org.springframework.version.40})</org.springframework.version.range>
-    <data.commons.version>1.3.0.BUILD-SNAPSHOT</data.commons.version>
+    <data.commons.version>1.3.0.RC1</data.commons.version>
     <aspectj.version>1.6.11.RELEASE</aspectj.version>
   </properties>
  
