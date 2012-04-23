@@ -17,8 +17,8 @@ import java.util.Set;
  *
  * @author Maciej Walkowiak <walkowiak.maciej@yahoo.com>
  */
-public class BeforeSaveValidator extends AbstractMongoEventListener implements InitializingBean {
-	private static final Logger LOG = LoggerFactory.getLogger(BeforeSaveValidator.class);
+public class ValidatingMongoEventListener extends AbstractMongoEventListener implements InitializingBean {
+	private static final Logger LOG = LoggerFactory.getLogger(ValidatingMongoEventListener.class);
 
 	private Validator validator;
 

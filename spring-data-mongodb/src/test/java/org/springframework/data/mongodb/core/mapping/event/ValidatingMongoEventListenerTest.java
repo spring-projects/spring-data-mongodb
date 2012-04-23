@@ -15,7 +15,7 @@ import static org.junit.Assert.fail;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration
-public class BeforeSaveValidatorTest {
+public class ValidatingMongoEventListenerTest {
 	@Autowired
 	private MongoTemplate mongoTemplate;
 
