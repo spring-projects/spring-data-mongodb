@@ -16,6 +16,17 @@
 	<xsd:import namespace="http://www.springframework.org/schema/data/repository"
 				schemaLocation="http://www.springframework.org/schema/data/repository/spring-repository.xsd" />
 
+	<xsd:element name="validation-enabled">
+		<xsd:annotation>
+			<xsd:documentation source="org.springframework.data.mongodb.core.mapping.event.BeforeSaveValidator"><![CDATA[
+Creates instance of JSR-303 based validatior that its invoked on Mongo documents before they are saved.
+			]]></xsd:documentation>
+		</xsd:annotation>
+		<xsd:simpleType>
+			<xsd:restriction base="xsd:string" />
+		</xsd:simpleType>
+	</xsd:element>
+
 	<xsd:element name="mongo" type="mongoType">
 		<xsd:annotation>
 			<xsd:documentation source="org.springframework.data.mongodb.core.core.MongoFactoryBean"><![CDATA[
