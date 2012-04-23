@@ -3,6 +3,8 @@ package org.springframework.data.mongodb.core.mapping.event;
 import com.mongodb.DBObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.util.Assert;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
@@ -15,10 +17,14 @@ import java.util.Set;
  *
  * @author Maciej Walkowiak <walkowiak.maciej@yahoo.com>
  */
-public class BeforeSaveValidator extends AbstractMongoEventListener {
+public class BeforeSaveValidator extends AbstractMongoEventListener implements InitializingBean {
 	private static final Logger LOG = LoggerFactory.getLogger(BeforeSaveValidator.class);
 
 	private Validator validator;
+
+	public void afterPropertiesSet() throws Exception {
+		Assert.notNull(validator, "Validator is not set");
+	}
 
 	@Override
 	public void onBeforeSave(Object source, DBObject dbo) {
