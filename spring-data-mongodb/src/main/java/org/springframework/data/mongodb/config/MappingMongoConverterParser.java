@@ -1,11 +1,11 @@
 /*
- * Copyright (c) 2011 by the original author(s).
+ * Copyright 2011-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.data.mongodb.config;
 
 import static org.springframework.data.mongodb.config.BeanNames.*;
@@ -30,12 +29,14 @@ import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinitionHolder;
 import org.springframework.beans.factory.config.RuntimeBeanReference;
+import org.springframework.beans.factory.parsing.BeanComponentDefinition;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.GenericBeanDefinition;
 import org.springframework.beans.factory.support.ManagedList;
 import org.springframework.beans.factory.support.ManagedSet;
+import org.springframework.beans.factory.support.RootBeanDefinition;
 import org.springframework.beans.factory.xml.AbstractBeanDefinitionParser;
 import org.springframework.beans.factory.xml.ParserContext;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
@@ -52,18 +53,25 @@ import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexCreator;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.mapping.event.ValidatingMongoEventListener;
 import org.springframework.util.Assert;
+import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.util.xml.DomUtils;
 import org.w3c.dom.Element;
 
 /**
- * @author Jon Brisbin <jbrisbin@vmware.com>
+ * Bean definition parser for the {@code mapping-converter} element.
+ * 
+ * @author Jon Brisbin
  * @author Oliver Gierke
+ * @author Maciej Walkowiak
  */
 public class MappingMongoConverterParser extends AbstractBeanDefinitionParser {
 
 	private static final String BASE_PACKAGE = "base-package";
+	private static final boolean jsr303Present = ClassUtils.isPresent("javax.validation.Validator",
+			MappingMongoConverterParser.class.getClassLoader());
 
 	@Override
 	protected String resolveId(Element element, AbstractBeanDefinition definition, ParserContext parserContext)
@@ -107,7 +115,51 @@ public class MappingMongoConverterParser extends AbstractBeanDefinitionParser {
 			registry.registerBeanDefinition(INDEX_HELPER, indexHelperBuilder.getBeanDefinition());
 		}
 
+		BeanDefinition validatingMongoEventListener = potentiallyCreateValidatingMongoEventListener(element, parserContext);
+
+		if (validatingMongoEventListener != null) {
+			registry.registerBeanDefinition(VALIDATING_EVENT_LISTENER, validatingMongoEventListener);
+		}
+
 		return converterBuilder.getBeanDefinition();
+	}
+
+	private BeanDefinition potentiallyCreateValidatingMongoEventListener(Element element, ParserContext parserContext) {
+
+		String disableValidation = element.getAttribute("disable-validation");
+		boolean validationDisabled = StringUtils.hasText(disableValidation) && Boolean.valueOf(disableValidation);
+
+		if (!validationDisabled) {
+
+			BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition();
+			RuntimeBeanReference validator = getValidator(builder, parserContext);
+
+			if (validator != null) {
+
+				builder.getRawBeanDefinition().setBeanClass(ValidatingMongoEventListener.class);
+				builder.addConstructorArgValue(validator);
+
+				return builder.getBeanDefinition();
+			}
+		}
+
+		return null;
+	}
+
+	private RuntimeBeanReference getValidator(Object source, ParserContext parserContext) {
+
+		if (!jsr303Present) {
+			return null;
+		}
+
+		RootBeanDefinition validatorDef = new RootBeanDefinition(
+				"org.springframework.validation.beanvalidation.LocalValidatorFactoryBean");
+		validatorDef.setSource(source);
+		validatorDef.setRole(BeanDefinition.ROLE_INFRASTRUCTURE);
+		String validatorName = parserContext.getReaderContext().registerWithGeneratedName(validatorDef);
+		parserContext.registerComponent(new BeanComponentDefinition(validatorDef, validatorName));
+
+		return new RuntimeBeanReference(validatorName);
 	}
 
 	private String potentiallyCreateMappingContext(Element element, ParserContext parserContext,

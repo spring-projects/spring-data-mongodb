@@ -12,6 +12,7 @@ Import-Template:
  javax.annotation.processing.*;version="0",
  javax.enterprise.*;version="${cdi.version:[=.=.=,+1.0.0)}";resolution:=optional,
  javax.tools.*;version="0",
+ javax.validation.*;version="${validation.version:[=.=.=.=,+1.0.0)}";resolution:=optional,
  org.aopalliance.*;version="[1.0.0, 2.0.0)";resolution:=optional,
  org.apache.commons.collections15.*;version="[4.0.0,5.0.0)";resolution:=optional,
  org.bson.*;version="0",
