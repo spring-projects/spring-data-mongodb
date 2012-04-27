@@ -214,6 +214,13 @@ The base package in which to scan for entities annotated with @Document
 					</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
+			<xsd:attribute name="disable-validation" type="xsd:boolean" use="optional">
+				<xsd:annotation>
+					<xsd:documentation source="org.springframework.data.mongodb.core.mapping.event.ValidatingMongoEventListener">
+						Disables JSR-303 validation on MongoDB documents before they are saved. By default it is set to false.
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:attribute>
 		</xsd:complexType>
 	</xsd:element>
 
