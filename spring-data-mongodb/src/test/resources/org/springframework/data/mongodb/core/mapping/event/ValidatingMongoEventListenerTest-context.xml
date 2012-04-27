@@ -17,14 +17,11 @@
 		<constructor-arg name="databaseName" value="database"/>
 	</bean>
 
-	<mongo:mapping-converter disable-validation="false" base-package="org.springframework.data.mongodb.core"/>
+	<mongo:mapping-converter base-package="org.springframework.data.mongodb.core"/>
 
 	<bean id="mongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate">
 		<constructor-arg name="mongoDbFactory" ref="mongoDbFactory"/>
 		<constructor-arg name="mongoConverter" ref="mappingConverter"/>
 	</bean>
-
-	<!-- enabling JSR-303 validation -->
-	<mongo:validation-enabled/>
 
 </beans>

@@ -37,7 +37,7 @@ import org.springframework.stereotype.Component;
 import com.mongodb.DBObject;
 
 /**
- * Integration tests for {@link MongoParser}.
+ * Integration tests for {@link MappingMongoConverterParser}.
  * 
  * @author Oliver Gierke
  */

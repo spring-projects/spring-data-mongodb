@@ -4,7 +4,7 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.Size;
 
 /**
- * Class used to test JSR-303 validation @{link org.springframework.data.mongodb.core.mapping.event.BeforeSaveValidator}
+ * Class used to test JSR-303 validation @{link org.springframework.data.mongodb.core.mapping.event.ValidatingMongoEventListener}
  *
  * @author Maciej Walkowiak
  */

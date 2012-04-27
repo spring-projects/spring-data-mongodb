@@ -16,17 +16,6 @@
 	<xsd:import namespace="http://www.springframework.org/schema/data/repository"
 				schemaLocation="http://www.springframework.org/schema/data/repository/spring-repository.xsd" />
 
-	<xsd:element name="validation-enabled">
-		<xsd:annotation>
-			<xsd:documentation source="org.springframework.data.mongodb.core.mapping.event.BeforeSaveValidator"><![CDATA[
-Creates instance of JSR-303 based validatior that its invoked on Mongo documents before they are saved.
-			]]></xsd:documentation>
-		</xsd:annotation>
-		<xsd:simpleType>
-			<xsd:restriction base="xsd:string" />
-		</xsd:simpleType>
-	</xsd:element>
-
 	<xsd:element name="mongo" type="mongoType">
 		<xsd:annotation>
 			<xsd:documentation source="org.springframework.data.mongodb.core.core.MongoFactoryBean"><![CDATA[
@@ -222,6 +211,13 @@ The base package in which to scan for entities annotated with @Document
 				<xsd:annotation>
 					<xsd:documentation source="org.springframework.data.mongodb.core.core.MongoTemplate">
 						The reference to a MongoTemplate. Will default to 'mongoTemplate'.
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:attribute>
+			<xsd:attribute name="disable-validation" type="xsd:boolean" use="optional">
+				<xsd:annotation>
+					<xsd:documentation source="org.springframework.data.mongodb.core.mapping.event.ValidatingMongoEventListener">
+						Disables JSR-303 validation on MongoDB documents before they are saved. By default it is set to false.
 					</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
