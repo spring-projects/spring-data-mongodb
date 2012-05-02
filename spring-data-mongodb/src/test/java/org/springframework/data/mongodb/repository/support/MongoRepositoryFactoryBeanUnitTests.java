@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2011-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.repository.support;
 
-import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
@@ -28,7 +28,6 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
-import org.springframework.data.repository.core.support.QueryCreationListener;
 import org.springframework.data.repository.core.support.RepositoryFactorySupport;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -57,21 +56,21 @@ public class MongoRepositoryFactoryBeanUnitTests {
 		MongoRepositoryFactoryBean factory = new MongoRepositoryFactoryBean();
 		factory.setCreateIndexesForQueryMethods(true);
 
-		List<QueryCreationListener<?>> listeners = getListenersFromFactory(factory);
-		assertThat(listeners.size(), is(1));
-		assertThat(listeners.get(0), is(instanceOf(IndexEnsuringQueryCreationListener.class)));
+		List<Object> listeners = getListenersFromFactory(factory);
+		assertThat(listeners.isEmpty(), is(false));
+		assertThat(listeners, hasItem(instanceOf(IndexEnsuringQueryCreationListener.class)));
 	}
 
 	@Test
 	@SuppressWarnings("rawtypes")
 	public void doesNotAddIndexEnsuringQueryCreationListenerByDefault() {
 
-		List<QueryCreationListener<?>> listeners = getListenersFromFactory(new MongoRepositoryFactoryBean());
-		assertThat(listeners.isEmpty(), is(true));
+		List<Object> listeners = getListenersFromFactory(new MongoRepositoryFactoryBean());
+		assertThat(listeners.size(), is(1));
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	private List<QueryCreationListener<?>> getListenersFromFactory(MongoRepositoryFactoryBean factoryBean) {
+	private List<Object> getListenersFromFactory(MongoRepositoryFactoryBean factoryBean) {
 
 		when(operations.getConverter()).thenReturn(converter);
 		when(converter.getMappingContext()).thenReturn(context);
@@ -80,6 +79,6 @@ public class MongoRepositoryFactoryBeanUnitTests {
 		factoryBean.afterPropertiesSet();
 
 		RepositoryFactorySupport factory = factoryBean.createRepositoryFactory();
-		return (List<QueryCreationListener<?>>) ReflectionTestUtils.getField(factory, "queryPostProcessors");
+		return (List<Object>) ReflectionTestUtils.getField(factory, "queryPostProcessors");
 	}
 }

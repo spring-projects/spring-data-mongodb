@@ -81,7 +81,7 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 	protected Object getTargetRepository(RepositoryMetadata metadata) {
 
 		Class<?> repositoryInterface = metadata.getRepositoryInterface();
-		MongoEntityInformation<?, Serializable> entityInformation = getEntityInformation(metadata.getDomainClass());
+		MongoEntityInformation<?, Serializable> entityInformation = getEntityInformation(metadata.getDomainType());
 
 		if (isQueryDslRepository(repositoryInterface)) {
 			return new QueryDslMongoRepository(entityInformation, mongoOperations);
