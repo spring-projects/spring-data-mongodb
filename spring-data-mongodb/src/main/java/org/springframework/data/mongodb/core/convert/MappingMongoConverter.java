@@ -720,20 +720,24 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		Assert.notNull(targetType);
 
+		if (sourceValue.isEmpty()) {
+			return Collections.emptySet();
+		}
+
 		Class<?> collectionType = targetType.getType();
 		collectionType = Collection.class.isAssignableFrom(collectionType) ? collectionType : List.class;
 
 		Collection<Object> items = targetType.getType().isArray() ? new ArrayList<Object>() : CollectionFactory
 				.createCollection(collectionType, sourceValue.size());
+		TypeInformation<?> componentType = targetType.getComponentType();
 
 		for (int i = 0; i < sourceValue.size(); i++) {
 			Object dbObjItem = sourceValue.get(i);
 			if (dbObjItem instanceof DBRef) {
-				items.add(read(targetType.getComponentType(), ((DBRef) dbObjItem).fetch(), parent));
+				items.add(read(componentType, ((DBRef) dbObjItem).fetch(), parent));
 			} else if (dbObjItem instanceof DBObject) {
-				items.add(read(targetType.getComponentType(), (DBObject) dbObjItem, parent));
+				items.add(read(componentType, (DBObject) dbObjItem, parent));
 			} else {
-				TypeInformation<?> componentType = targetType.getComponentType();
 				items.add(getPotentiallyConvertedSimpleRead(dbObjItem, componentType == null ? null : componentType.getType()));
 			}
 		}
@@ -923,24 +927,25 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		public <T> T getPropertyValue(MongoPersistentProperty property) {
 
 			String expression = property.getSpelExpression();
-			TypeInformation<?> type = property.getTypeInformation();
 			Object value = expression != null ? evaluator.evaluate(expression) : source.get(property.getFieldName());
 
 			if (value == null) {
 				return null;
 			}
 
-			if (conversions.hasCustomReadTarget(value.getClass(), type.getType())) {
-				return (T) conversionService.convert(value, type.getType());
+			TypeInformation<?> type = property.getTypeInformation();
+			Class<?> rawType = type.getType();
+
+			if (conversions.hasCustomReadTarget(value.getClass(), rawType)) {
+				return (T) conversionService.convert(value, rawType);
 			} else if (value instanceof DBRef) {
 				return (T) read(type, ((DBRef) value).fetch(), parent);
 			} else if (value instanceof BasicDBList) {
-				return (T) getPotentiallyConvertedSimpleRead(readCollectionOrArray(type, (BasicDBList) value, parent),
-						type.getType());
+				return (T) getPotentiallyConvertedSimpleRead(readCollectionOrArray(type, (BasicDBList) value, parent), rawType);
 			} else if (value instanceof DBObject) {
 				return (T) read(type, (DBObject) value, parent);
 			} else {
-				return (T) getPotentiallyConvertedSimpleRead(value, type.getType());
+				return (T) getPotentiallyConvertedSimpleRead(value, rawType);
 			}
 		}
 	}

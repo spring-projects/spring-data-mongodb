@@ -187,6 +187,9 @@
           <includes>
             <include>**/*Tests.java</include>
           </includes>
+          <excludes>
+          	<exclude>**/PerformanceTests.java</exclude>
+          </excludes>
           <junitArtifactName>junit:junit</junitArtifactName>
         </configuration>
       </plugin>

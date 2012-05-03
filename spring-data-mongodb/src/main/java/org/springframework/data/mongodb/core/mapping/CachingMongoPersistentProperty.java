@@ -28,6 +28,7 @@ import org.springframework.data.mapping.model.SimpleTypeHolder;
 public class CachingMongoPersistentProperty extends BasicMongoPersistentProperty {
 
 	private Boolean isIdProperty;
+	private Boolean isAssociation;
 	private String fieldName;
 
 	/**
@@ -55,6 +56,18 @@ public class CachingMongoPersistentProperty extends BasicMongoPersistentProperty
 		}
 
 		return this.isIdProperty;
+	}
+
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.mapping.BasicMongoPersistentProperty#isAssociation()
+	 */
+	@Override
+	public boolean isAssociation() {
+		if (this.isAssociation == null) {
+			this.isAssociation = super.isAssociation();
+		}
+		return this.isAssociation;
 	}
 
 	/*
