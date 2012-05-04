@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core.query;
 import static org.junit.Assert.*;
 import static org.hamcrest.CoreMatchers.*;
 import org.junit.Test;
+import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 import com.mongodb.BasicDBObject;
@@ -50,5 +51,11 @@ public class CriteriaTests {
 	public void testChainedCriteria() {
 		Criteria c = new Criteria("name").is("Bubba").and("age").lt(21);
 		assertEquals("{ \"name\" : \"Bubba\" , \"age\" : { \"$lt\" : 21}}", c.getCriteriaObject().toString());
+	}
+
+	@Test(expected = InvalidMongoDbApiUsageException.class)
+	public void testCriteriaWithMultipleConditionsForSameKey() {
+		Criteria c = new Criteria("name").gte("M").and("name").ne("A");
+		c.getCriteriaObject();
 	}
 }
