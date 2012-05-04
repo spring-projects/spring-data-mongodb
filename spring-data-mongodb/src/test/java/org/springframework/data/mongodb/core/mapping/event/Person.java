@@ -7,7 +7,7 @@ import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 /**
- * Used in {@link CascadingMongoEventListenerTest}.
+ * Used in {@link CascadingMongoEventListenerTests}.
  * Each field with {@link Address} type represents association with different cascade operation.
  *
  * @author Maciej Walkowiak

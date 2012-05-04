@@ -22,7 +22,7 @@ import static org.junit.Assert.fail;
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration
-public class CascadingMongoEventListenerTest {
+public class CascadingMongoEventListenerTests {
 	@Autowired
 	private MongoOperations mongoOperations;
 
@@ -36,7 +36,7 @@ public class CascadingMongoEventListenerTest {
 	}
 
 	/**
-	 * Tests {@link MongoOperations#save(Object)} with {@link org.springframework.data.mongodb.core.mapping.CascadeType.SAVE}
+	 * Tests {@link MongoOperations#save(Object)} with {@link org.springframework.data.mongodb.core.mapping.CascadeType#SAVE}
 	 */
 	@Test
 	public void testSavingWithCascadeSave() {
@@ -57,7 +57,7 @@ public class CascadingMongoEventListenerTest {
 	}
 
 	/**
-	 * Tests {@link MongoOperations#remove(Object)} with {@link org.springframework.data.mongodb.core.mapping.CascadeType.SAVE}
+	 * Tests {@link MongoOperations#remove(Object)} with {@link org.springframework.data.mongodb.core.mapping.CascadeType#SAVE}
 	 */
 	@Test
 	public void testDeletingWithCascadeSave() {
@@ -81,7 +81,7 @@ public class CascadingMongoEventListenerTest {
 	}
 
 	/**
-	 * Tests {@link MongoOperations#save(Object)} with {@link org.springframework.data.mongodb.core.mapping.CascadeType.DELETE}
+	 * Tests {@link MongoOperations#save(Object)} with {@link org.springframework.data.mongodb.core.mapping.CascadeType#DELETE}
 	 */
 	@Test
 	public void testSavingWithCascadeDelete() {
@@ -100,7 +100,7 @@ public class CascadingMongoEventListenerTest {
 	}
 
 	/**
-	 * Tests {@link MongoOperations#remove(Object)} with {@link org.springframework.data.mongodb.core.mapping.CascadeType.DELETE}
+	 * Tests {@link MongoOperations#remove(Object)} with {@link org.springframework.data.mongodb.core.mapping.CascadeType#DELETE}
 	 */
 	@Test
 	public void testDeletingWithCascadeDelete() {
@@ -128,7 +128,7 @@ public class CascadingMongoEventListenerTest {
 	}
 
 	/**
-	 * Tests {@link MongoOperations#save(Object)} with {@link org.springframework.data.mongodb.core.mapping.CascadeType.ALL}
+	 * Tests {@link MongoOperations#save(Object)} with {@link org.springframework.data.mongodb.core.mapping.CascadeType#ALL}
 	 */
 	@Test
 	public void testSavingWithCascadeAll() {
@@ -149,7 +149,7 @@ public class CascadingMongoEventListenerTest {
 	}
 
 	/**
-	 * Tests {@link MongoOperations#remove(Object)} with {@link org.springframework.data.mongodb.core.mapping.CascadeType.ALL}
+	 * Tests {@link MongoOperations#remove(Object)} with {@link org.springframework.data.mongodb.core.mapping.CascadeType#ALL}
 	 */
 	@Test
 	public void testDeletingWithCascadeAll() {
@@ -173,7 +173,7 @@ public class CascadingMongoEventListenerTest {
 	}
 
 	/**
-	 * Tests {@link MongoOperations#save(Object)} with {@link org.springframework.data.mongodb.core.mapping.CascadeType.NONE}
+	 * Tests {@link MongoOperations#save(Object)} with {@link org.springframework.data.mongodb.core.mapping.CascadeType#NONE}
 	 */
 	@Test
 	public void testSavingWithCascadeNone() {
@@ -192,7 +192,7 @@ public class CascadingMongoEventListenerTest {
 	}
 
 	/**
-	 * Tests {@link MongoOperations#remove(Object)} with {@link org.springframework.data.mongodb.core.mapping.CascadeType.NONE}
+	 * Tests {@link MongoOperations#remove(Object)} with {@link org.springframework.data.mongodb.core.mapping.CascadeType#NONE}
 	 */
 	@Test
 	public void testDeletingWithCascadeNone() {

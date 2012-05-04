@@ -7,15 +7,7 @@
 			 http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
 			 http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd">
 
-	<context:property-placeholder
-			location="classpath:/org/springframework/data/mongodb/config/mongo.properties"/>
-
-	<mongo:mongo host="localhost" port="27017"/>
-
-	<bean id="mongoDbFactory" class="org.springframework.data.mongodb.core.SimpleMongoDbFactory">
-		<constructor-arg name="mongo" ref="mongo"/>
-		<constructor-arg name="databaseName" value="database"/>
-	</bean>
+	<mongo:db-factory/>
 
 	<mongo:mapping-converter base-package="org.springframework.data.mongodb.core"/>
 
@@ -24,6 +16,10 @@
 		<constructor-arg name="mongoConverter" ref="mappingConverter"/>
 	</bean>
 
-	<bean class="org.springframework.data.mongodb.core.mapping.event.CascadingMongoEventListener" />
+	<bean class="org.springframework.data.mongodb.core.mapping.event.CascadingMongoEventListener">
+		<constructor-arg name="mappingContext" ref="mappingContext" />
+		<constructor-arg name="mongoConverter" ref="mappingConverter" />
+		<constructor-arg name="mongoOperations" ref="mongoTemplate" />
+	</bean>
 
 </beans>

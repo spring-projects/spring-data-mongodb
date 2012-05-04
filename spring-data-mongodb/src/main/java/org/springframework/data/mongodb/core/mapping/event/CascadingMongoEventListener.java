@@ -14,6 +14,7 @@ import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.util.Assert;
 
 /**
  * Performs cascade operations on child objects annotated with {@link DBRef}
@@ -23,14 +24,21 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 public class CascadingMongoEventListener extends AbstractMongoEventListener {
 	private static final Logger LOG = LoggerFactory.getLogger(CascadingMongoEventListener.class);
 
-	@Autowired
-	private MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
+	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
+	private final MongoConverter mongoConverter;
+	private final MongoOperations mongoOperations;
 
-	@Autowired
-	private MongoConverter mongoConverter;
+	public CascadingMongoEventListener(MappingContext<? extends MongoPersistentEntity<?>,
+			MongoPersistentProperty> mappingContext, MongoConverter mongoConverter, MongoOperations mongoOperations) {
 
-	@Autowired
-	private MongoOperations mongoOperations;
+		Assert.notNull(mappingContext);
+		Assert.notNull(mongoConverter);
+		Assert.notNull(mongoOperations);
+
+		this.mappingContext = mappingContext;
+		this.mongoConverter = mongoConverter;
+		this.mongoOperations = mongoOperations;
+	}
 
 	/**
 	 * Executes {@link CascadeSaveAssociationHandler} on each property annotated with {@link DBRef}
