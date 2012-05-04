@@ -699,7 +699,7 @@ public interface MongoOperations {
 	 * 
 	 * @param object
 	 */
-	void remove(Object object);
+	<T> void remove(T object);
 
 	/**
 	 * Removes the given object from the given collection.
@@ -707,7 +707,7 @@ public interface MongoOperations {
 	 * @param object
 	 * @param collection must not be {@literal null} or empty.
 	 */
-	void remove(Object object, String collection);
+	<T> void remove(T object, String collection);
 
 	/**
 	 * Remove all documents that match the provided query document criteria from the the collection used to store the

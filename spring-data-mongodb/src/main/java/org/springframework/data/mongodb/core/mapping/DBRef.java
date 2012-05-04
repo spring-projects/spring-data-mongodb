@@ -27,7 +27,8 @@ import org.springframework.data.annotation.Reference;
  * An annotation that indicates the annotated field is to be stored using a {@link com.mongodb.DBRef}.
  * 
  * @author Jon Brisbin
- * @authot Oliver Gierke
+ * @author Oliver Gierke
+ * @author Maciej Walkowiak
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
@@ -41,4 +42,11 @@ public @interface DBRef {
 	 * @return
 	 */
 	String db() default "";
+
+	/**
+	 * Defines cascade operations on referred entity
+	 *
+	 * @return
+	 */
+	CascadeType cascadeType() default CascadeType.NONE;
 }

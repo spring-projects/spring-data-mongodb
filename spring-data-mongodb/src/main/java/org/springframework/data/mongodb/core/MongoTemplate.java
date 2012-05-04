@@ -64,12 +64,7 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
-import org.springframework.data.mongodb.core.mapping.event.AfterConvertEvent;
-import org.springframework.data.mongodb.core.mapping.event.AfterLoadEvent;
-import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
-import org.springframework.data.mongodb.core.mapping.event.BeforeConvertEvent;
-import org.springframework.data.mongodb.core.mapping.event.BeforeSaveEvent;
-import org.springframework.data.mongodb.core.mapping.event.MongoMappingEvent;
+import org.springframework.data.mongodb.core.mapping.event.*;
 import org.springframework.data.mongodb.core.mapreduce.GroupBy;
 import org.springframework.data.mongodb.core.mapreduce.GroupByResults;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
@@ -850,16 +845,18 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		});
 	}
 
-	public void remove(Object object) {
+	public <T> void remove(T object) {
 
 		if (object == null) {
 			return;
 		}
 
 		remove(getIdQueryFor(object), object.getClass());
+
+		maybeEmitEvent(new AfterDeleteEvent<T>(object));
 	}
 
-	public void remove(Object object, String collection) {
+	public <T> void remove(T object, String collection) {
 
 		Assert.hasText(collection);
 
@@ -868,6 +865,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		}
 
 		remove(getIdQueryFor(object), collection);
+
+		maybeEmitEvent(new AfterDeleteEvent<T>(object));
 	}
 
 	/**
