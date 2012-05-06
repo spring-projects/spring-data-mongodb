@@ -31,6 +31,8 @@ import org.apache.log4j.Level;
 import org.apache.log4j.MDC;
 import org.apache.log4j.PatternLayout;
 import org.apache.log4j.spi.LoggingEvent;
+import org.springframework.data.authentication.UserCredentials;
+import org.springframework.data.mongodb.core.MongoTemplate;
 
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
@@ -51,6 +53,8 @@ public class MongoLog4jAppender extends AppenderSkeleton {
 
   protected String host = "localhost";
   protected int port = 27017;
+  protected String username = null;
+  protected String password = null;
   protected String database = "logs";
   protected String collectionPattern = "%c";
   protected PatternLayout collectionLayout = new PatternLayout(collectionPattern);
@@ -91,6 +95,22 @@ public class MongoLog4jAppender extends AppenderSkeleton {
     this.database = database;
   }
 
+  public String getUsername() {
+    return username;
+  }
+
+  public void setUsername(String username) {
+    this.username = username;
+  }
+
+  public String getPassword() {
+    return password;
+  }
+
+  public void setPassword(String password) {
+    this.password = password;
+  }
+    
   public String getCollectionPattern() {
     return collectionPattern;
   }
@@ -125,8 +145,17 @@ public class MongoLog4jAppender extends AppenderSkeleton {
   }
 
   protected void connectToMongo() throws UnknownHostException {
-    this.mongo = new Mongo(host, port);
-    this.db = mongo.getDB(database);
+
+    this.mongo = new Mongo(this.host, this.port);
+    
+    if(this.username != null & this.password != null) {
+    
+        this.mongoTemplate = new MongoTemplate(this.mongo, this.database, new UserCredentials(this.username, this.password));
+        this.db = this.mongoTemplate.getDb();
+    } else {
+        
+        this.db = this.mongo.getDB(this.database);
+    }
   }
 
   @SuppressWarnings({"unchecked"})
