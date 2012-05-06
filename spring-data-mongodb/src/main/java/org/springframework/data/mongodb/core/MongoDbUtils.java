@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.authentication.UserCredentials;
 import org.springframework.data.mongodb.CannotGetMongoDbConnectionException;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.util.Assert;
@@ -49,29 +50,32 @@ public abstract class MongoDbUtils {
 	/**
 	 * Obtains a {@link DB} connection for the given {@link Mongo} instance and database name
 	 * 
-	 * @param mongo The {@link Mongo} instance
-	 * @param databaseName The database name
-	 * @return The {@link DB} connection
+	 * @param mongo the {@link Mongo} instance, must not be {@literal null}.
+	 * @param databaseName the database name, must not be {@literal null} or empty.
+	 * @return the {@link DB} connection
 	 */
 	public static DB getDB(Mongo mongo, String databaseName) {
-		return doGetDB(mongo, databaseName, null, null, true);
+		return doGetDB(mongo, databaseName, UserCredentials.NO_CREDENTIALS, true);
 	}
 
 	/**
 	 * Obtains a {@link DB} connection for the given {@link Mongo} instance and database name
 	 * 
-	 * @param mongo The {@link Mongo} instance
-	 * @param databaseName The database name
-	 * @param username The username to authenticate with
-	 * @param password The password to authenticate with
-	 * @return The {@link DB} connection
+	 * @param mongo the {@link Mongo} instance, must not be {@literal null}.
+	 * @param databaseName the database name, must not be {@literal null} or empty.
+	 * @param credentials the credentials to use, must not be {@literal null}.
+	 * @return the {@link DB} connection
 	 */
-	public static DB getDB(Mongo mongo, String databaseName, String username, char[] password) {
-		return doGetDB(mongo, databaseName, username, password, true);
+	public static DB getDB(Mongo mongo, String databaseName, UserCredentials credentials) {
+
+		Assert.notNull(mongo, "No Mongo instance specified!");
+		Assert.hasText(databaseName, "Database name must be given!");
+		Assert.notNull(credentials, "Credentials must not be null, use UserCredentials.NO_CREDENTIALS!");
+
+		return doGetDB(mongo, databaseName, credentials, true);
 	}
 
-	public static DB doGetDB(Mongo mongo, String databaseName, String username, char[] password, boolean allowCreate) {
-		Assert.notNull(mongo, "No Mongo instance specified");
+	private static DB doGetDB(Mongo mongo, String databaseName, UserCredentials credentials, boolean allowCreate) {
 
 		DbHolder dbHolder = (DbHolder) TransactionSynchronizationManager.getResource(mongo);
 		if (dbHolder != null && !dbHolder.isEmpty()) {
@@ -94,13 +98,15 @@ public abstract class MongoDbUtils {
 		LOGGER.trace("Getting Mongo Database name=[" + databaseName + "]");
 		DB db = mongo.getDB(databaseName);
 
-		boolean credentialsGiven = username != null && password != null;
+		boolean credentialsGiven = credentials.hasUsername() && credentials.hasPassword();
 		if (credentialsGiven && !db.isAuthenticated()) {
 			// Note, can only authenticate once against the same com.mongodb.DB object.
-			if (!db.authenticate(username, password)) {
+			String username = credentials.getUsername();
+			String password = credentials.hasPassword() ? credentials.getPassword() : null;
+
+			if (!db.authenticate(username, password == null ? null : password.toCharArray())) {
 				throw new CannotGetMongoDbConnectionException("Failed to authenticate to database [" + databaseName
-						+ "], username = [" + username + "], password = [" + new String(password) + "]", databaseName, username,
-						password);
+						+ "], username = [" + username + "], password = [" + password + "]", databaseName, credentials);
 			}
 		}
 

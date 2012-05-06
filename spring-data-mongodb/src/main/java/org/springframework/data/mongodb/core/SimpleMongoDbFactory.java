@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2011-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -115,10 +115,7 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 
 		Assert.hasText(dbName, "Database name must not be empty.");
 
-		String username = credentials.getUsername();
-		char[] password = credentials.hasPassword() ? credentials.getPassword().toCharArray() : null;
-
-		DB db = MongoDbUtils.getDB(mongo, dbName, username, password);
+		DB db = MongoDbUtils.getDB(mongo, dbName, credentials);
 
 		if (writeConcern != null) {
 			db.setWriteConcern(writeConcern);

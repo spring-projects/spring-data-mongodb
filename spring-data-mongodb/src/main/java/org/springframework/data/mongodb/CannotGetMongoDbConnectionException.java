@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 the original author or authors.
+ * Copyright 2010-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,42 +16,51 @@
 package org.springframework.data.mongodb;
 
 import org.springframework.dao.DataAccessResourceFailureException;
+import org.springframework.data.authentication.UserCredentials;
 
+/**
+ * Exception being thrown in case we cannot connect to a MongoDB instance.
+ * 
+ * @author Oliver Gierke
+ */
 public class CannotGetMongoDbConnectionException extends DataAccessResourceFailureException {
 
-	private String username;
-
-	private char[] password;
-
-	private String database;
+	private final UserCredentials credentials;
+	private final String database;
 
 	private static final long serialVersionUID = 1172099106475265589L;
 
 	public CannotGetMongoDbConnectionException(String msg, Throwable cause) {
 		super(msg, cause);
+		this.database = null;
+		this.credentials = UserCredentials.NO_CREDENTIALS;
 	}
 
 	public CannotGetMongoDbConnectionException(String msg) {
-		super(msg);
+		this(msg, null, UserCredentials.NO_CREDENTIALS);
 	}
 
-	public CannotGetMongoDbConnectionException(String msg, String database, String username, char[] password) {
+	public CannotGetMongoDbConnectionException(String msg, String database, UserCredentials credentials) {
 		super(msg);
-		this.username = username;
-		this.password = password == null ? null : password.clone();
 		this.database = database;
+		this.credentials = credentials;
 	}
 
-	public String getUsername() {
-		return username;
+	/**
+	 * Returns the {@link UserCredentials} that were used when trying to connect to the MongoDB instance.
+	 * 
+	 * @return
+	 */
+	public UserCredentials getCredentials() {
+		return this.credentials;
 	}
 
-	public char[] getPassword() {
-		return password;
-	}
-
+	/**
+	 * Returns the name of the database trying to be accessed.
+	 * 
+	 * @return
+	 */
 	public String getDatabase() {
 		return database;
 	}
-
 }

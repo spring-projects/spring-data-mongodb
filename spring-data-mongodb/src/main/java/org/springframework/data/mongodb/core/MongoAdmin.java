@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core;
 
+import org.springframework.data.authentication.UserCredentials;
 import org.springframework.jmx.export.annotation.ManagedOperation;
 import org.springframework.jmx.export.annotation.ManagedResource;
 import org.springframework.util.Assert;
@@ -78,11 +79,10 @@ public class MongoAdmin implements MongoAdminOperations {
 	 * @param password The password to use
 	 */
 	public void setPassword(String password) {
-
 		this.password = password;
 	}
 
 	DB getDB(String databaseName) {
-		return MongoDbUtils.getDB(mongo, databaseName, username, password == null ? null : password.toCharArray());
+		return MongoDbUtils.getDB(mongo, databaseName, new UserCredentials(username, password));
 	}
 }
