@@ -1,5 +1,81 @@
-Spring Data Document Changelog
+Spring Data MongoDB Changelog
 =============================================
+
+Changes in version 1.1.0.M1 (2012-05-07)
+----------------------------------------
+
+** Bug
+    * [DATAMONGO-299] - Mongodb Query Does not allow for multiple query conditionals of the same time.
+    * [DATAMONGO-360] - java.lang.ClassCastException when placing GeospatialIndex into IndexOperations and invoking IndexOperations.getIndexInfo()
+    * [DATAMONGO-363] - Criteria.and() cannot be chained when using Criteria.gte and Criteria.lte
+    * [DATAMONGO-364] - Chaining of Criteria when including a GeoSpatial field is inconsistent.
+    * [DATAMONGO-366] - Chapter 3.2. points to wrong bugtracker
+    * [DATAMONGO-368] - Empty values in collections are not supported
+    * [DATAMONGO-369] - Wrong query created when one value is a DBObject
+    * [DATAMONGO-373] - QueryMapper is getting a ClassCasteException When trying to Convert an ArrayList to a BSONList
+    * [DATAMONGO-376] - Fix potential NPE in SpringDataMongodbSerializer
+    * [DATAMONGO-380] - maps with mongo reserved characters for keys generate on save: java.lang.IllegalArgumentException: fields stored in the db can't have . in them
+    * [DATAMONGO-387] - Executing query methods with GeoPage results doesn't work
+    * [DATAMONGO-401] - StringBasedMongoQuery suffers from NullPointerException in case a null parameter gets bound to a parameter placeholder
+    * [DATAMONGO-402] - Inner class not supported
+    * [DATAMONGO-403] - Conflicts between MongoDB and JPA
+    * [DATAMONGO-411] - Potential ClassCastExceptions in MongoPersistentEntityIndexCreator
+    * [DATAMONGO-412] - getUserCredentials() is called twice in AbstractMongoConfiguration::mongoDbFactory()
+    * [DATAMONGO-413] - Using "Or" in repository query yields a ClassCastException
+    * [DATAMONGO-423] - Criteria.regex should use java.util.Pattern instead of $regex
+
+** Defect
+    * [DATAMONGO-429] - using @Query annotation, arrays are translated somewhere between query creation and mongo interpretation
+
+** Improvement
+    * [DATAMONGO-347] - Repositories and DBRef
+    * [DATAMONGO-375] - Polish versions of referenced XSD schemas
+    * [DATAMONGO-379] - Exception when trying to instantiate an entity having a primitive constructor argument and no according document field
+    * [DATAMONGO-390] - Add Converter for UUID
+    * [DATAMONGO-391] - Move to SLF4J for logging
+    * [DATAMONGO-397] - MongoRepositoryFactoryBean should refer to MongoOperations instead of MongoTemplate
+    * [DATAMONGO-441] - Improve MongoDbUtils API
+
+** New Feature
+    * [DATAMONGO-6] - Integration with GridFS features
+    * [DATAMONGO-36] - Validation support to MongoTemplate
+    * [DATAMONGO-356] - Provide CDI integration
+    * [DATAMONGO-418] - Add support for newly introduced StartingWith, EndingWith and Containing keywords
+    * [DATAMONGO-427] - Support After and Before keywords for query creation
+
+** Refactoring
+    * [DATAMONGO-383] - Adapt new entity instantiation API from Spring Data Commons
+    * [DATAMONGO-431] - Adapt changes in CrudRepository
+
+** Task
+    * [DATAMONGO-443] - Upgrade to Querydsl 2.5.0
+    * [DATAMONGO-394] - Upgrade to Querydsl 2.3.2
+    * [DATAMONGO-396] - Release 1.1.0.M1.
+    * [DATAMONGO-432] - Upgrade to Spring Data Commons 1.3.0.RC1
+    * [DATAMONGO-439] - Add performance tests
+    
+Changes in version 1.0.1.RELEASE MongoDB (2012-02-11)
+-----------------------------------------------------
+
+** Bug
+    * [DATAMONGO-363] - Criteria.and() cannot be chained when using Criteria.gte and Criteria.lte
+    * [DATAMONGO-364] - Chaining of Criteria when including a GeoSpatial field is inconsistent.
+    * [DATAMONGO-368] - Empty values in collections are not supported
+    * [DATAMONGO-369] - Wrong query created when one value is a DBObject
+    * [DATAMONGO-376] - Fix potential NPE in SpringDataMongodbSerializer
+    * [DATAMONGO-380] - maps with mongo reserved characters for keys generate on save: java.lang.IllegalArgumentException: fields stored in the db can't have . in them
+    * [DATAMONGO-387] - Executing query methods with GeoPage results doesn't work
+    * [DATAMONGO-401] - StringBasedMongoQuery suffers from NullPointerException in case a null parameter gets bound to a parameter placeholder
+
+** Improvement
+    * [DATAMONGO-375] - Polish versions of referenced XSD schemas
+    * [DATAMONGO-379] - Exception when trying to instantiate an entity having a primitive constructor argument and no according document field
+    * [DATAMONGO-390] - Add Converter for UUID
+    * [DATAMONGO-397] - MongoRepositoryFactoryBean should refer to MongoOperations instead of MongoTemplate
+
+** Task
+    * [DATAMONGO-395] - Release 1.0.1.
+
 
 Changes in version 1.0.0.RELEASE MongoDB (2011-12-22)
 -----------------------------------------------------
