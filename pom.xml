@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.springframework.data</groupId>
   <artifactId>spring-data-mongodb-dist</artifactId>
   <name>Spring Data MongoDB Distribution</name>
-  <version>1.1.0.BUILD-SNAPSHOT</version>
+  <version>1.1.0.M1</version>
   <packaging>pom</packaging>
   <modules>
     <module>spring-data-mongodb</module>
@@ -145,7 +144,7 @@
           <htmlCustomization>${project.basedir}/src/docbkx/resources/xsl/html.xsl</htmlCustomization>
           <useExtensions>1</useExtensions>
           <highlightSource>1</highlightSource>
-          <highlightDefaultLanguage></highlightDefaultLanguage>
+          <highlightDefaultLanguage />
           <!-- callouts -->
           <entities>
             <entity>
@@ -156,26 +155,24 @@
           <postProcess>
             <copy todir="${project.basedir}/target/site/reference">
               <fileset dir="${project.basedir}/target/docbkx">
-                <include name="**/*.html"/>
-                <include name="**/*.pdf"/>
+                <include name="**/*.html" />
+                <include name="**/*.pdf" />
               </fileset>
             </copy>
             <copy todir="${project.basedir}/target/site/reference/html">
               <fileset dir="${project.basedir}/src/docbkx/resources">
-                <include name="**/*.css"/>
-                <include name="**/*.png"/>
-                <include name="**/*.gif"/>
-                <include name="**/*.jpg"/>
+                <include name="**/*.css" />
+                <include name="**/*.png" />
+                <include name="**/*.gif" />
+                <include name="**/*.jpg" />
               </fileset>
             </copy>
             <copy todir="${project.basedir}/target/site/reference/html">
               <fileset dir="${project.basedir}/src/docbkx/resources/images">
-                <include name="*.png"/>
+                <include name="*.png" />
               </fileset>
             </copy>
-            <move file="${project.basedir}/target/site/reference/pdf/index.pdf"
-                  tofile="${project.basedir}/target/site/reference/pdf/spring-data-mongo-reference.pdf"
-                  failonerror="false"/>
+            <move file="${project.basedir}/target/site/reference/pdf/index.pdf" tofile="${project.basedir}/target/site/reference/pdf/spring-data-mongo-reference.pdf" failonerror="false" />
           </postProcess>
         </configuration>
       </plugin>
@@ -234,7 +231,7 @@
             <configuration>
               <tasks>
                 <ant antfile="${basedir}/src/ant/upload-dist.xml">
-                  <target name="upload-dist"/>
+                  <target name="upload-dist" />
                 </ant>
               </tasks>
             </configuration>
