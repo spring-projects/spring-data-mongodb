@@ -7,6 +7,7 @@ Import-Package:
 Export-Template:
  org.springframework.data.mongodb.*;version="${project.version}"
 Import-Template: 
+ com.google.common.base.*;version="[11.0.0,12.0.0)";resolution:=optional,
  com.mongodb.*;version="0",
  com.mysema.query.*;version="[2.1.1, 3.0.0)";resolution:=optional,
  javax.annotation.processing.*;version="0",
@@ -14,7 +15,6 @@ Import-Template:
  javax.tools.*;version="0",
  javax.validation.*;version="${validation.version:[=.=.=.=,+1.0.0)}";resolution:=optional,
  org.aopalliance.*;version="[1.0.0, 2.0.0)";resolution:=optional,
- org.apache.commons.collections15.*;version="[4.0.0,5.0.0)";resolution:=optional,
  org.bson.*;version="0",
  org.slf4j.*;version="${org.slf4j.version:[=.=.=,+1.0.0)}",
  org.springframework.*;version="${org.springframework.version.30:[=.=.=.=,+1.0.0)}",

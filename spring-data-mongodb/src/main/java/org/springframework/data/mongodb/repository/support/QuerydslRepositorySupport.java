@@ -15,14 +15,11 @@
  */
 package org.springframework.data.mongodb.repository.support;
 
-import org.apache.commons.collections15.Transformer;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.util.Assert;
 
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
 import com.mysema.query.mongodb.MongodbQuery;
 import com.mysema.query.mongodb.MongodbSerializer;
 import com.mysema.query.types.EntityPath;
@@ -75,11 +72,6 @@ public abstract class QuerydslRepositorySupport {
 		Assert.notNull(path);
 		Assert.hasText(collection);
 
-		DBCollection dbCollection = template.getCollection(collection);
-		return new MongodbQuery<T>(dbCollection, new Transformer<DBObject, T>() {
-			public T transform(DBObject input) {
-				return template.getConverter().read(path.getType(), input);
-			}
-		}, serializer);
+		return new SpringDataMongodbQuery<T>(template, serializer, path.getType(), collection);
 	}
 }

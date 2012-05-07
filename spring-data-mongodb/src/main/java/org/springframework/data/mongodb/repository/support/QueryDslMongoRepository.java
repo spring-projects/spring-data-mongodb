@@ -19,7 +19,6 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import org.apache.commons.collections15.Transformer;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -38,7 +37,6 @@ import org.springframework.data.querydsl.SimpleEntityPathResolver;
 import org.springframework.data.repository.core.EntityMetadata;
 import org.springframework.util.Assert;
 
-import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mysema.query.mongodb.MongodbQuery;
 import com.mysema.query.mongodb.MongodbSerializer;
@@ -164,13 +162,9 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 	 */
 	private MongodbQuery<T> createQueryFor(Predicate predicate) {
 
-		DBCollection collection = getMongoOperations().getCollection(getEntityInformation().getCollectionName());
-		MongodbQuery<T> query = new MongodbQuery<T>(collection, new Transformer<DBObject, T>() {
-			public T transform(DBObject input) {
-				Class<T> type = getEntityInformation().getJavaType();
-				return getMongoOperations().getConverter().read(type, input);
-			}
-		}, serializer);
+		Class<T> domainType = getEntityInformation().getJavaType();
+
+		MongodbQuery<T> query = new SpringDataMongodbQuery<T>(getMongoOperations(), serializer, domainType);
 		return query.where(predicate);
 	}
 
