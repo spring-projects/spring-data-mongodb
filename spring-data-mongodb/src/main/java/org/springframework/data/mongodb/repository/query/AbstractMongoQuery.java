@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2011 the original author or authors.
+ * Copyright 2010-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -85,7 +85,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 		} else if (method.isGeoNearQuery()) {
 			return new GeoNearExecution(accessor).execute(query);
 		} else if (method.isCollectionQuery()) {
-			return new CollectionExecution().execute(query);
+			return new CollectionExecution(accessor.getPageable()).execute(query);
 		} else if (method.isPageQuery()) {
 			return new PagedExecution(accessor.getPageable()).execute(query);
 		} else {
@@ -133,12 +133,23 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	 */
 	class CollectionExecution extends Execution {
 
+		private final Pageable pageable;
+
+		CollectionExecution(Pageable pageable) {
+			this.pageable = pageable;
+		}
+
 		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery.Execution#execute(org.springframework.data.mongodb.core.query.Query)
 		 */
 		@Override
 		public Object execute(Query query) {
+
+			if (pageable != null) {
+				query = applyPagination(query, pageable);
+			}
+
 			return readCollection(query);
 		}
 	}
