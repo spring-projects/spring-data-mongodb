@@ -319,6 +319,13 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	}
 
 	@Test
+	public void findsPeopleBySexPaginated() {
+
+		List<Person> males = repository.findBySex(Sex.MALE, new PageRequest(0, 2));
+		assertThat(males.size(), is(2));
+	}
+
+	@Test
 	public void findsPeopleByNamedQuery() {
 		List<Person> result = repository.findByNamedQuery("Dave");
 		assertThat(result.size(), is(1));

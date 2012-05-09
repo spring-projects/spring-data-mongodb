@@ -85,7 +85,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 		} else if (method.isGeoNearQuery()) {
 			return new GeoNearExecution(accessor).execute(query);
 		} else if (method.isCollectionQuery()) {
-			return new CollectionExecution().execute(query);
+			return new CollectionExecution(accessor.getPageable()).execute(query);
 		} else if (method.isPageQuery()) {
 			return new PagedExecution(accessor.getPageable()).execute(query);
 		} else {
@@ -132,13 +132,21 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	 * @author Oliver Gierke
 	 */
 	class CollectionExecution extends Execution {
+		private final Pageable pageable;
+
+		CollectionExecution(Pageable pageable) {
+			this.pageable = pageable;
+		}
 
 		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery.Execution#execute(org.springframework.data.mongodb.core.query.Query)
-		 */
+				 * (non-Javadoc)
+				 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery.Execution#execute(org.springframework.data.mongodb.core.query.Query)
+				 */
 		@Override
 		public Object execute(Query query) {
+			if (pageable != null) {
+				query = applyPagination(query, pageable);
+			}
 			return readCollection(query);
 		}
 	}

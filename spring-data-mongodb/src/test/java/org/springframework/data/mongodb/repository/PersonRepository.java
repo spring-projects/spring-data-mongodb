@@ -147,6 +147,8 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 
 	List<Person> findBySex(Sex sex);
 
+	List<Person> findBySex(Sex sex, Pageable pageable);
+
 	List<Person> findByNamedQuery(String firstname);
 
 	GeoResults<Person> findByLocationNear(Point point, Distance maxDistance);
