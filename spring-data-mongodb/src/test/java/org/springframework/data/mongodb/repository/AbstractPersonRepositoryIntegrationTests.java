@@ -318,6 +318,16 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(females.get(0), is(alicia));
 	}
 
+	/**
+	 * @see DATAMONGO-446
+	 */
+	@Test
+	public void findsPeopleBySexPaginated() {
+
+		List<Person> males = repository.findBySex(Sex.MALE, new PageRequest(0, 2));
+		assertThat(males.size(), is(2));
+	}
+
 	@Test
 	public void findsPeopleByNamedQuery() {
 		List<Person> result = repository.findByNamedQuery("Dave");
