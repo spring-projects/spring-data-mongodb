@@ -20,6 +20,7 @@
     <org.springframework.version.range>[${org.springframework.version.30}, ${org.springframework.version.40})</org.springframework.version.range>
     <data.commons.version>1.3.0.RC2</data.commons.version>
     <aspectj.version>1.6.11.RELEASE</aspectj.version>
+    <bundlor.failOnWarnings>true</bundlor.failOnWarnings>
   </properties>
  
   <distributionManagement>
@@ -225,7 +226,7 @@
           <artifactId>com.springsource.bundlor.maven</artifactId>
           <version>1.0.0.RELEASE</version>
           <configuration>
-            <failOnWarnings>true</failOnWarnings>
+            <failOnWarnings>${bundlor.failOnWarnings}</failOnWarnings>
           </configuration>
           <executions>
             <execution>
