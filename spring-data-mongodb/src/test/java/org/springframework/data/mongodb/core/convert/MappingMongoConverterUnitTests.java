@@ -118,7 +118,7 @@ public class MappingMongoConverterUnitTests {
 		DBObject dbObject = new BasicDBObject();
 		converter.write(person, dbObject);
 
-		assertThat(dbObject.get("birthDate"), is(Date.class));
+		assertThat(dbObject.get("birthDate"), is(instanceOf(Date.class)));
 
 		Person result = converter.read(Person.class, dbObject);
 		assertThat(result.birthDate, is(notNullValue()));
@@ -161,7 +161,7 @@ public class MappingMongoConverterUnitTests {
 		dbObject.put("birthDate", new LocalDate());
 		dbObject.put(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY, Person.class.getName());
 
-		assertThat(converter.read(Contact.class, dbObject), is(Person.class));
+		assertThat(converter.read(Contact.class, dbObject), is(instanceOf(Person.class)));
 	}
 
 	/**
@@ -174,7 +174,7 @@ public class MappingMongoConverterUnitTests {
 		dbObject.put("birthDate", new LocalDate());
 		dbObject.put(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY, Person.class.getName());
 
-		assertThat(converter.read(BirthDateContainer.class, dbObject), is(BirthDateContainer.class));
+		assertThat(converter.read(BirthDateContainer.class, dbObject), is(instanceOf(BirthDateContainer.class)));
 	}
 
 	@Test
@@ -202,7 +202,7 @@ public class MappingMongoConverterUnitTests {
 		DBObject result = new BasicDBObject();
 		converter.write(value, result);
 
-		assertThat(result.get("sampleEnum"), is(String.class));
+		assertThat(result.get("sampleEnum"), is(instanceOf(String.class)));
 		assertThat(result.get("sampleEnum").toString(), is("FIRST"));
 	}
 
@@ -218,7 +218,7 @@ public class MappingMongoConverterUnitTests {
 		DBObject result = new BasicDBObject();
 		converter.write(value, result);
 
-		assertThat(result.get("enums"), is(BasicDBList.class));
+		assertThat(result.get("enums"), is(instanceOf(BasicDBList.class)));
 
 		BasicDBList enums = (BasicDBList) result.get("enums");
 		assertThat(enums.size(), is(1));
@@ -248,7 +248,7 @@ public class MappingMongoConverterUnitTests {
 
 		ClassWithEnumProperty result = converter.read(ClassWithEnumProperty.class, dbObject);
 
-		assertThat(result.enums, is(List.class));
+		assertThat(result.enums, is(instanceOf(List.class)));
 		assertThat(result.enums.size(), is(1));
 		assertThat(result.enums, hasItem(SampleEnum.FIRST));
 	}
@@ -313,7 +313,7 @@ public class MappingMongoConverterUnitTests {
 		converter.write(wrapper, dbObject);
 
 		Object result = dbObject.get("contacts");
-		assertThat(result, is(BasicDBList.class));
+		assertThat(result, is(instanceOf(BasicDBList.class)));
 		BasicDBList contacts = (BasicDBList) result;
 		DBObject personDbObject = (DBObject) contacts.get(0);
 		assertThat(personDbObject.get("foo").toString(), is("Oliver"));
@@ -336,7 +336,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(result.contacts, is(notNullValue()));
 		assertThat(result.contacts.size(), is(1));
 		Contact contact = result.contacts.get(0);
-		assertThat(contact, is(Person.class));
+		assertThat(contact, is(instanceOf(Person.class)));
 		assertThat(((Person) contact).firstname, is("Oliver"));
 
 	}
@@ -350,7 +350,7 @@ public class MappingMongoConverterUnitTests {
 		converter.write(wrapper, dbObject);
 
 		Object localeField = dbObject.get("locale");
-		assertThat(localeField, is(String.class));
+		assertThat(localeField, is(instanceOf(String.class)));
 		assertThat((String) localeField, is("en_US"));
 
 		LocaleWrapper read = converter.read(LocaleWrapper.class, dbObject);
@@ -458,13 +458,13 @@ public class MappingMongoConverterUnitTests {
 		DBObject dbo1 = new BasicDBObject();
 
 		converter.write(p1, dbo1);
-		assertThat(dbo1.get("_id"), is(String.class));
+		assertThat(dbo1.get("_id"), is(instanceOf(String.class)));
 
 		PersonPojoStringId p2 = new PersonPojoStringId(new ObjectId().toString(), "Text-1");
 		DBObject dbo2 = new BasicDBObject();
 
 		converter.write(p2, dbo2);
-		assertThat(dbo2.get("_id"), is(ObjectId.class));
+		assertThat(dbo2.get("_id"), is(instanceOf(ObjectId.class)));
 	}
 
 	/**
@@ -478,8 +478,8 @@ public class MappingMongoConverterUnitTests {
 
 		ClassWithSortedMap result = converter.read(ClassWithSortedMap.class, wrapper);
 
-		assertThat(result, is(ClassWithSortedMap.class));
-		assertThat(result.map, is(SortedMap.class));
+		assertThat(result, is(instanceOf(ClassWithSortedMap.class)));
+		assertThat(result.map, is(instanceOf(SortedMap.class)));
 	}
 
 	/**
@@ -745,7 +745,7 @@ public class MappingMongoConverterUnitTests {
 
 		assertThat(result.containsField("Foo"), is(true));
 		assertThat(result.get("Foo"), is(notNullValue()));
-		assertThat(result.get("Foo"), is(BasicDBList.class));
+		assertThat(result.get("Foo"), is(instanceOf(BasicDBList.class)));
 
 		BasicDBList list = (BasicDBList) result.get("Foo");
 
@@ -796,11 +796,11 @@ public class MappingMongoConverterUnitTests {
 		converter.write(wrapper, result);
 
 		Object mapObject = result.get("mapOfObjects");
-		assertThat(mapObject, is(BasicDBObject.class));
+		assertThat(mapObject, is(instanceOf(BasicDBObject.class)));
 
 		DBObject map = (DBObject) mapObject;
 		Object valueObject = map.get("foo");
-		assertThat(valueObject, is(BasicDBList.class));
+		assertThat(valueObject, is(instanceOf(BasicDBList.class)));
 
 		List<Object> list = (List<Object>) valueObject;
 		assertThat(list.size(), is(1));
@@ -891,7 +891,7 @@ public class MappingMongoConverterUnitTests {
 		converter.write(wrapper, result);
 
 		Object contacts = result.get("contacts");
-		assertThat(contacts, is(Collection.class));
+		assertThat(contacts, is(instanceOf(Collection.class)));
 		assertThat(((Collection<?>) contacts).size(), is(2));
 		assertThat(((Collection<Object>) contacts), hasItem(nullValue()));
 	}
@@ -954,7 +954,7 @@ public class MappingMongoConverterUnitTests {
 		Item read = converter.read(Item.class, result);
 		assertThat(read.attributes.size(), is(1));
 		assertThat(read.attributes.get(0).key, is(attribute.key));
-		assertThat(read.attributes.get(0).value, is(Collection.class));
+		assertThat(read.attributes.get(0).value, is(instanceOf(Collection.class)));
 
 		@SuppressWarnings("unchecked")
 		Collection<String> values = (Collection<String>) read.attributes.get(0).value;
@@ -1013,11 +1013,11 @@ public class MappingMongoConverterUnitTests {
 		address.street = "Foo";
 
 		Object result = converter.convertToMongoType(Collections.singleton(address));
-		assertThat(result, is(BasicDBList.class));
+		assertThat(result, is(instanceOf(BasicDBList.class)));
 
 		Set<?> readResult = converter.read(Set.class, (BasicDBList) result);
 		assertThat(readResult.size(), is(1));
-		assertThat(readResult.iterator().next(), is(Map.class));
+		assertThat(readResult.iterator().next(), is(instanceOf(Map.class)));
 	}
 
 	/**
