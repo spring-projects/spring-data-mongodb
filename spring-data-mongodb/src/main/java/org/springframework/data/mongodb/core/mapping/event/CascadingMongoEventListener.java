@@ -16,6 +16,8 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.util.Assert;
 
+import java.util.Collection;
+
 /**
  * Performs cascade operations on child objects annotated with {@link DBRef}
  *
@@ -82,14 +84,20 @@ public class CascadingMongoEventListener extends AbstractMongoEventListener {
 		}
 
 		@Override
-		void handle(Object referencedObject) {
+		void handleObject(Object referencedObject) {
 			final MongoPersistentEntity<?> referencedObjectEntity = mappingContext.getPersistentEntity(referencedObject.getClass());
 
 			if (referencedObjectEntity.getIdProperty() == null) {
 				throw new MappingException("Cannot perform cascade save on child object without id set");
 			}
-
 			mongoOperations.save(referencedObject);
+		}
+
+		@Override
+		void handleCollection(Collection collection) {
+			for (Object objectToSave : collection) {
+				mongoOperations.save(objectToSave);
+			}
 		}
 	}
 
@@ -107,8 +115,15 @@ public class CascadingMongoEventListener extends AbstractMongoEventListener {
 		}
 
 		@Override
-		void handle(Object referredObject) {
-			mongoOperations.remove(referredObject);
+		void handleObject(Object referencedObject) {
+			mongoOperations.remove(referencedObject);
+		}
+
+		@Override
+		void handleCollection(Collection collection) {
+			for (Object objectToDelete : collection) {
+				mongoOperations.remove(objectToDelete);
+			}
 		}
 	}
 
@@ -143,6 +158,16 @@ public class CascadingMongoEventListener extends AbstractMongoEventListener {
 
 		abstract boolean isAppliable(DBRef dbRef);
 
-		abstract void handle(Object referencedObject);
+		void handle(Object referencedObject) {
+			if (referencedObject instanceof Collection) {
+				handleCollection((Collection) referencedObject);
+			} else {
+				handleObject(referencedObject);
+			}
+		}
+
+		abstract void handleObject(Object referencedObject);
+
+		abstract void handleCollection(Collection referencedObject);
 	}
 }

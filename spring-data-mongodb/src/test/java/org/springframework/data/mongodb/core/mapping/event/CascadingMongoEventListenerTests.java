@@ -9,6 +9,7 @@ import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -217,5 +218,34 @@ public class CascadingMongoEventListenerTests {
 		person.setAddressWithCascadeNone(new Address());
 
 		return person;
+	}
+
+	@Test
+	public void testCascadeSaveOnCollections() {
+		// given
+		Person person = new Person();
+		person.setAddresses(Arrays.asList(new Address(), new Address(), new Address()));
+
+		// when
+		mongoOperations.save(person);
+
+		//then
+		assertEquals(1, mongoOperations.findAll(Person.class).size());
+		assertEquals(3, mongoOperations.findAll(Address.class).size());
+	}
+
+	@Test
+	public void testCascadeDeleteOnCollections() {
+		// given
+		Person person = new Person();
+		person.setAddresses(Arrays.asList(new Address(), new Address(), new Address()));
+		mongoOperations.save(person);
+
+		// when
+		mongoOperations.remove(person);
+
+		//then
+		assertEquals(0, mongoOperations.findAll(Person.class).size());
+		assertEquals(0, mongoOperations.findAll(Address.class).size());
 	}
 }

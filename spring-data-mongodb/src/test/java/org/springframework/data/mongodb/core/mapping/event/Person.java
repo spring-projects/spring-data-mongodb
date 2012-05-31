@@ -6,8 +6,10 @@ import org.springframework.data.mongodb.core.mapping.CascadeType;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.util.List;
+
 /**
- * Used in {@link CascadingMongoEventListenerTests}.
+ * Used in {@link CascadingMongoEventListenerTest}.
  * Each field with {@link Address} type represents association with different cascade operation.
  *
  * @author Maciej Walkowiak
@@ -28,6 +30,9 @@ public class Person {
 
 	@DBRef(cascadeType = CascadeType.NONE)
 	private Address addressWithCascadeNone;
+
+	@DBRef(cascadeType = CascadeType.ALL)
+	private List<Address> addresses;
 
 	public ObjectId getId() {
 		return id;
@@ -67,5 +72,13 @@ public class Person {
 
 	public void setAddressWithCascadeNone(Address addressWithCascadeNone) {
 		this.addressWithCascadeNone = addressWithCascadeNone;
+	}
+
+	public List<Address> getAddresses() {
+		return addresses;
+	}
+
+	public void setAddresses(List<Address> addresses) {
+		this.addresses = addresses;
 	}
 }
