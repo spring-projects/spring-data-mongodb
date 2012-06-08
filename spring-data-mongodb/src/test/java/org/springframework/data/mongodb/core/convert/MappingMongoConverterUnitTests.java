@@ -1,11 +1,11 @@
 /*
- * Copyright (c) 2011 by the original author(s).
+ * Copyright 2011-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.data.mongodb.core.convert;
 
 import static org.hamcrest.Matchers.*;
@@ -42,6 +41,8 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.PersistenceConstructor;
@@ -72,12 +73,15 @@ public class MappingMongoConverterUnitTests {
 	MongoMappingContext mappingContext;
 	@Mock
 	MongoDbFactory factory;
+	@Mock
+	ApplicationContext context;
 
 	@Before
 	public void setUp() {
 
 		mappingContext = new MongoMappingContext();
-		mappingContext.afterPropertiesSet();
+		mappingContext.setApplicationContext(context);
+		mappingContext.onApplicationEvent(new ContextRefreshedEvent(context));
 
 		converter = new MappingMongoConverter(factory, mappingContext);
 		converter.afterPropertiesSet();
@@ -181,7 +185,6 @@ public class MappingMongoConverterUnitTests {
 	public void writesTypeDiscriminatorIntoRootObject() {
 
 		Person person = new Person();
-		person.birthDate = new LocalDate();
 
 		DBObject result = new BasicDBObject();
 		converter.write(person, result);
@@ -302,8 +305,8 @@ public class MappingMongoConverterUnitTests {
 	 */
 	@Test
 	public void writesCollectionWithInterfaceCorrectly() {
+
 		Person person = new Person();
-		person.birthDate = new LocalDate();
 		person.firstname = "Oliver";
 
 		CollectionWrapper wrapper = new CollectionWrapper();
@@ -1065,6 +1068,20 @@ public class MappingMongoConverterUnitTests {
 		assertThat(dbRef.getRef(), is("person"));
 	}
 
+	/**
+	 * @see DATAMONGO-458
+	 */
+	@Test
+	public void readEmptyCollectionIsModifiable() {
+
+		DBObject dbObject = new BasicDBObject("contactsSet", new BasicDBList());
+		CollectionWrapper wrapper = converter.read(CollectionWrapper.class, dbObject);
+
+		assertThat(wrapper.contactsSet, is(notNullValue()));
+		wrapper.contactsSet.add(new Contact() {
+		});
+	}
+
 	private static void assertSyntheticFieldValueOf(Object target, Object expected) {
 
 		for (int i = 0; i < 10; i++) {
@@ -1164,6 +1181,7 @@ public class MappingMongoConverterUnitTests {
 		List<Contact> contacts;
 		List<List<String>> strings;
 		List<Map<String, Locale>> listOfMaps;
+		Set<Contact> contactsSet;
 	}
 
 	static class LocaleWrapper {
