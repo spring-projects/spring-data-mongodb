@@ -810,7 +810,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			return null;
 		}
 
-		Class<?> target = conversions.getCustomWriteTarget(getClass());
+		Class<?> target = conversions.getCustomWriteTarget(obj.getClass());
 		if (target != null) {
 			return conversionService.convert(obj, target);
 		}

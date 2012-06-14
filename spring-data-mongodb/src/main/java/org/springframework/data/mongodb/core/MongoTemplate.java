@@ -46,6 +46,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.authentication.UserCredentials;
 import org.springframework.data.convert.EntityReader;
+import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.BeanWrapper;
 import org.springframework.data.mapping.model.MappingException;
@@ -932,7 +933,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 						entityClass, null, queryObject);
 				WriteConcern writeConcernToUse = prepareWriteConcern(mongoAction);
 				if (LOGGER.isDebugEnabled()) {
-					LOGGER.debug("remove using query: " + queryObject + " in collection: " + collection.getName());
+					LOGGER.debug("remove using query: " + dboq + " in collection: " + collection.getName());
 				}
 				if (writeConcernToUse == null) {
 					wr = collection.remove(dboq);
@@ -1358,9 +1359,19 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			return;
 		}
 
+		ConversionService conversionService = mongoConverter.getConversionService();
+		BeanWrapper<PersistentEntity<Object, ?>, Object> wrapper = BeanWrapper.create(savedObject, conversionService);
+
 		try {
-			BeanWrapper.create(savedObject, mongoConverter.getConversionService()).setProperty(idProp, id);
-			return;
+
+			Object idValue = wrapper.getProperty(idProp);
+
+			if (idValue != null) {
+				return;
+			}
+
+			wrapper.setProperty(idProp, id);
+
 		} catch (IllegalAccessException e) {
 			throw new MappingException(e.getMessage(), e);
 		} catch (InvocationTargetException e) {
