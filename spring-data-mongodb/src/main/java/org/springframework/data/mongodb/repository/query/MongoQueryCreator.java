@@ -157,7 +157,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 		QueryUtils.applySorting(query, sort);
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("Created query " + query.getQueryObject());
+			LOG.debug("Created query " + query);
 		}
 
 		return query;

@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.core.query;
 
+import static org.springframework.data.mongodb.core.SerializationUtils.*;
+
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -139,5 +141,15 @@ public class Query {
 
 	protected List<Criteria> getCriteria() {
 		return new ArrayList<Criteria>(this.criteria.values());
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return String.format("Query: %s, Fields: %s, Sort: %s", serializeToJsonSafely(getQueryObject()),
+				serializeToJsonSafely(getFieldsObject()), serializeToJsonSafely(getSortObject()));
 	}
 }

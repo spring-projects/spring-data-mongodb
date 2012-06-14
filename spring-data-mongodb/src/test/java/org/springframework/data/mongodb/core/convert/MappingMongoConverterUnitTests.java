@@ -120,6 +120,24 @@ public class MappingMongoConverterUnitTests {
 		assertThat(result.birthDate, is(notNullValue()));
 	}
 
+	@Test
+	public void convertsCustomTypeOnConvertToMongoType() {
+
+		List<Converter<?, ?>> converters = new ArrayList<Converter<?, ?>>();
+		converters.add(new LocalDateToDateConverter());
+		converters.add(new DateToLocalDateConverter());
+
+		CustomConversions conversions = new CustomConversions(converters);
+		mappingContext.setSimpleTypeHolder(conversions.getSimpleTypeHolder());
+
+		converter = new MappingMongoConverter(factory, mappingContext);
+		converter.setCustomConversions(conversions);
+		converter.afterPropertiesSet();
+
+		LocalDate date = new LocalDate();
+		converter.convertToMongoType(date);
+	}
+
 	/**
 	 * @see DATAMONGO-130
 	 */

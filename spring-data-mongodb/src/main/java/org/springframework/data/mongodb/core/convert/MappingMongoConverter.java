@@ -439,7 +439,6 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * 
 	 * @param collection must not be {@literal null}.
 	 * @param property must not be {@literal null}.
-	 * 
 	 * @return
 	 */
 	protected DBObject createCollection(Collection<?> collection, MongoPersistentProperty property) {
@@ -819,7 +818,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			return null;
 		}
 
-		Class<?> target = conversions.getCustomWriteTarget(getClass());
+		Class<?> target = conversions.getCustomWriteTarget(obj.getClass());
 		if (target != null) {
 			return conversionService.convert(obj, target);
 		}

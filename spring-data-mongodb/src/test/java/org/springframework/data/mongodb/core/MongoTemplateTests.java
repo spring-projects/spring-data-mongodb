@@ -1103,6 +1103,35 @@ public class MongoTemplateTests {
 		assertThat(result.get(0).field, is("Beauford"));
 	}
 
+	/**
+	 * @see DATAMONGO-447
+	 */
+	@Test
+	public void storesAndRemovesTypeWithComplexId() {
+
+		MyId id = new MyId();
+		id.first = "foo";
+		id.second = "bar";
+
+		TypeWithMyId source = new TypeWithMyId();
+		source.id = id;
+
+		template.save(source);
+		template.remove(query(where("id").is(id)), TypeWithMyId.class);
+	}
+
+	static class MyId {
+
+		String first;
+		String second;
+	}
+
+	static class TypeWithMyId {
+
+		@Id
+		MyId id;
+	}
+
 	public static class Sample {
 
 		@Id
