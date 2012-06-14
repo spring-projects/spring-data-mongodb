@@ -1332,13 +1332,15 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			updateObj.put(key, mongoConverter.convertToMongoType(updateObj.get(key)));
 		}
 
+		DBObject mappedQuery = mapper.getMappedObject(query, entity);
+
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("findAndModify using query: " + query + " fields: " + fields + " sort: " + sort + " for class: "
-					+ entityClass + " and update: " + updateObj + " in collection: " + collectionName);
+			LOGGER.debug("findAndModify using query: " + mappedQuery + " fields: " + fields + " sort: " + sort
+					+ " for class: " + entityClass + " and update: " + updateObj + " in collection: " + collectionName);
 		}
 
-		return executeFindOneInternal(new FindAndModifyCallback(mapper.getMappedObject(query, entity), fields, sort,
-				updateObj, options), new ReadDbObjectCallback<T>(readerToUse, entityClass), collectionName);
+		return executeFindOneInternal(new FindAndModifyCallback(mappedQuery, fields, sort, updateObj, options),
+				new ReadDbObjectCallback<T>(readerToUse, entityClass), collectionName);
 	}
 
 	/**
