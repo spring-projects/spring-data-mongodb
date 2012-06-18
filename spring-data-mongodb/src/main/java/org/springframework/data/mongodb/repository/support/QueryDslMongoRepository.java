@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2011-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,19 +17,14 @@ package org.springframework.data.mongodb.repository.support;
 
 import java.io.Serializable;
 import java.util.List;
-import java.util.regex.Pattern;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
-import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.convert.MongoConverter;
-import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
-import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
 import org.springframework.data.querydsl.EntityPathResolver;
 import org.springframework.data.querydsl.QueryDslPredicateExecutor;
@@ -37,14 +32,10 @@ import org.springframework.data.querydsl.SimpleEntityPathResolver;
 import org.springframework.data.repository.core.EntityMetadata;
 import org.springframework.util.Assert;
 
-import com.mongodb.DBObject;
 import com.mysema.query.mongodb.MongodbQuery;
-import com.mysema.query.mongodb.MongodbSerializer;
 import com.mysema.query.types.EntityPath;
 import com.mysema.query.types.Expression;
 import com.mysema.query.types.OrderSpecifier;
-import com.mysema.query.types.Path;
-import com.mysema.query.types.PathMetadata;
 import com.mysema.query.types.Predicate;
 import com.mysema.query.types.path.PathBuilder;
 
@@ -56,7 +47,6 @@ import com.mysema.query.types.path.PathBuilder;
 public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleMongoRepository<T, ID> implements
 		QueryDslPredicateExecutor<T> {
 
-	private final MongodbSerializer serializer;
 	private final PathBuilder<T> builder;
 
 	/**
@@ -67,7 +57,6 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 	 * @param template
 	 */
 	public QueryDslMongoRepository(MongoEntityInformation<T, ID> entityInformation, MongoOperations mongoOperations) {
-
 		this(entityInformation, mongoOperations, SimpleEntityPathResolver.INSTANCE);
 	}
 
@@ -86,40 +75,27 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 		Assert.notNull(resolver);
 		EntityPath<T> path = resolver.createPath(entityInformation.getJavaType());
 		this.builder = new PathBuilder<T>(path.getType(), path.getMetadata());
-		this.serializer = new SpringDataMongodbSerializer(mongoOperations.getConverter());
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.springframework.data.mongodb.repository.QueryDslExecutor
-	 * #findOne(com.mysema.query.types.Predicate)
+	 * @see org.springframework.data.querydsl.QueryDslPredicateExecutor#findOne(com.mysema.query.types.Predicate)
 	 */
 	public T findOne(Predicate predicate) {
-
 		return createQueryFor(predicate).uniqueResult();
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.springframework.data.mongodb.repository.QueryDslExecutor
-	 * #findAll(com.mysema.query.types.Predicate)
+	 * @see org.springframework.data.querydsl.QueryDslPredicateExecutor#findAll(com.mysema.query.types.Predicate)
 	 */
 	public List<T> findAll(Predicate predicate) {
-
 		return createQueryFor(predicate).list();
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.springframework.data.mongodb.repository.QueryDslExecutor
-	 * #findAll(com.mysema.query.types.Predicate,
-	 * com.mysema.query.types.OrderSpecifier<?>[])
+	 * @see org.springframework.data.querydsl.QueryDslPredicateExecutor#findAll(com.mysema.query.types.Predicate, com.mysema.query.types.OrderSpecifier<?>[])
 	 */
 	public List<T> findAll(Predicate predicate, OrderSpecifier<?>... orders) {
 
@@ -128,11 +104,7 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 
 	/*
 	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.springframework.data.mongodb.repository.QueryDslExecutor
-	 * #findAll(com.mysema.query.types.Predicate,
-	 * org.springframework.data.domain.Pageable)
+	 * @see org.springframework.data.querydsl.QueryDslPredicateExecutor#findAll(com.mysema.query.types.Predicate, org.springframework.data.domain.Pageable)
 	 */
 	public Page<T> findAll(Predicate predicate, Pageable pageable) {
 
@@ -144,13 +116,9 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 
 	/*
 	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.springframework.data.mongodb.repository.QueryDslExecutor
-	 * #count(com.mysema.query.types.Predicate)
+	 * @see org.springframework.data.querydsl.QueryDslPredicateExecutor#count(com.mysema.query.types.Predicate)
 	 */
 	public long count(Predicate predicate) {
-
 		return createQueryFor(predicate).count();
 	}
 
@@ -164,7 +132,7 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 
 		Class<T> domainType = getEntityInformation().getJavaType();
 
-		MongodbQuery<T> query = new SpringDataMongodbQuery<T>(getMongoOperations(), serializer, domainType);
+		MongodbQuery<T> query = new SpringDataMongodbQuery<T>(getMongoOperations(), domainType);
 		return query.where(predicate);
 	}
 
@@ -218,41 +186,5 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 
 		return new OrderSpecifier(order.isAscending() ? com.mysema.query.types.Order.ASC
 				: com.mysema.query.types.Order.DESC, property);
-	}
-
-	/**
-	 * Custom {@link MongodbSerializer} to take mapping information into account when building keys for constraints.
-	 * 
-	 * @author Oliver Gierke
-	 */
-	static class SpringDataMongodbSerializer extends MongodbSerializer {
-
-		private final MongoConverter converter;
-		private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
-
-		/**
-		 * Creates a new {@link SpringDataMongodbSerializer} for the given {@link MappingContext}.
-		 * 
-		 * @param mappingContext
-		 */
-		public SpringDataMongodbSerializer(MongoConverter converter) {
-			this.mappingContext = converter.getMappingContext();
-			this.converter = converter;
-		}
-
-		@Override
-		protected String getKeyForPath(Path<?> expr, PathMetadata<?> metadata) {
-
-			Path<?> parent = metadata.getParent();
-			MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(parent.getType());
-			MongoPersistentProperty property = entity.getPersistentProperty(metadata.getExpression().toString());
-			return property == null ? super.getKeyForPath(expr, metadata) : property.getFieldName();
-		}
-
-		@Override
-		protected DBObject asDBObject(String key, Object value) {
-
-			return super.asDBObject(key, value instanceof Pattern ? value : converter.convertToMongoType(value));
-		}
 	}
 }

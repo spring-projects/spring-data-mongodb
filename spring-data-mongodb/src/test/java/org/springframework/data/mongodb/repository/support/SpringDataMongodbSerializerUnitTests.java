@@ -30,7 +30,6 @@ import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.repository.QAddress;
 import org.springframework.data.mongodb.repository.QPerson;
-import org.springframework.data.mongodb.repository.support.QueryDslMongoRepository.SpringDataMongodbSerializer;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
@@ -53,7 +52,7 @@ public class SpringDataMongodbSerializerUnitTests {
 	public void setUp() {
 		MongoMappingContext context = new MongoMappingContext();
 		converter = new MappingMongoConverter(dbFactory, context);
-		serializer = new QueryDslMongoRepository.SpringDataMongodbSerializer(converter);
+		serializer = new SpringDataMongodbSerializer(converter);
 	}
 
 	@Test

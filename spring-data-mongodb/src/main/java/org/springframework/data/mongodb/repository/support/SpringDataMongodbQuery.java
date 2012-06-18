@@ -21,7 +21,6 @@ import com.google.common.base.Function;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mysema.query.mongodb.MongodbQuery;
-import com.mysema.query.mongodb.MongodbSerializer;
 
 /**
  * Spring Data specfic {@link MongodbQuery} implementation.
@@ -36,30 +35,26 @@ class SpringDataMongodbQuery<T> extends MongodbQuery<T> {
 	 * Creates a new {@link SpringDataMongodbQuery}.
 	 * 
 	 * @param operations must not be {@literal null}.
-	 * @param serializer must not be {@literal null}.
 	 * @param type must not be {@literal null}.
 	 */
-	public SpringDataMongodbQuery(final MongoOperations operations, final MongodbSerializer serializer,
-			final Class<? extends T> type) {
-		this(operations, serializer, type, operations.getCollectionName(type));
+	public SpringDataMongodbQuery(final MongoOperations operations, final Class<? extends T> type) {
+		this(operations, type, operations.getCollectionName(type));
 	}
 
 	/**
 	 * Creates a new {@link SpringDataMongodbQuery} to query the given collection.
 	 * 
 	 * @param operations must not be {@literal null}.
-	 * @param serializer must not be {@literal null}.
 	 * @param type must not be {@literal null}.
 	 * @param collectionName must not be {@literal null} or empty.
 	 */
-	public SpringDataMongodbQuery(final MongoOperations operations, final MongodbSerializer serializer,
-			final Class<? extends T> type, String collectionName) {
+	public SpringDataMongodbQuery(final MongoOperations operations, final Class<? extends T> type, String collectionName) {
 
 		super(operations.getCollection(collectionName), new Function<DBObject, T>() {
 			public T apply(DBObject input) {
 				return operations.getConverter().read(type, input);
 			}
-		}, serializer);
+		}, new SpringDataMongodbSerializer(operations.getConverter()));
 
 		this.operations = operations;
 	}
