@@ -21,6 +21,7 @@ import static org.junit.Assert.*;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -1034,6 +1035,30 @@ public class MappingMongoConverterUnitTests {
 		assertThat(readResult.iterator().next(), is(Map.class));
 	}
 
+	/**
+	 * @see DATAMONGO-462
+	 */
+	@Test
+	public void readsURLsAsStringsByDefault() throws Exception {
+		DBObject dbObject = new BasicDBObject("url", new URL("http://springsource.org"));
+		URLWrapper result = converter.read(URLWrapper.class, dbObject);
+		assertThat(result.url, is(new URL("http://springsource.org")));
+	}
+
+	/**
+	 * @see DATAMONGO-462
+	 */
+	@Test
+	public void writesURLsAsStringsByDefault() throws Exception {
+
+		URLWrapper wrapper = new URLWrapper();
+		wrapper.url = new URL("http://springsource.org");
+		DBObject sink = new BasicDBObject();
+
+		converter.write(wrapper, sink);
+		assertThat(sink.get("url"), is((Object) "http://springsource.org"));
+	}
+
 	static class GenericType<T> {
 		T content;
 	}
@@ -1163,6 +1188,10 @@ public class MappingMongoConverterUnitTests {
 	static class Attribute {
 		String key;
 		Object value;
+	}
+
+	static class URLWrapper {
+		URL url;
 	}
 
 	private class LocalDateToDateConverter implements Converter<LocalDate, Date> {
