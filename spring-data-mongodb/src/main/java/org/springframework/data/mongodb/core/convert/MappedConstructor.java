@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core.convert;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.PreferredConstructor;
@@ -25,6 +26,7 @@ import org.springframework.data.mapping.PreferredConstructor.Parameter;
 import org.springframework.data.mapping.PropertyPath;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.context.PersistentPropertyPath;
+import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.util.TypeInformation;
@@ -37,6 +39,9 @@ import org.springframework.util.Assert;
  */
 class MappedConstructor {
 
+	private static final String REJECT_CONSTRUCTOR = String.format("Entity doesn't have a usable constructor, either "
+			+ "provide a custom converter or annotate a constructor with @%s!", PersistenceConstructor.class.getSimpleName());
+
 	private final Set<MappedConstructor.MappedParameter> parameters;
 
 	/**
@@ -44,12 +49,18 @@ class MappedConstructor {
 	 * 
 	 * @param entity must not be {@literal null}.
 	 * @param context must not be {@literal null}.
+	 * @throws MappingException in case the {@link MongoPersistentEntity} handed in does not have a
+	 *           {@link PreferredConstructor}.
 	 */
 	public MappedConstructor(MongoPersistentEntity<?> entity,
-			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> context) {
+			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> context) throws MappingException {
 
 		Assert.notNull(entity);
 		Assert.notNull(context);
+
+		if (entity.getPreferredConstructor() == null) {
+			throw new MappingException(REJECT_CONSTRUCTOR);
+		}
 
 		this.parameters = new HashSet<MappedConstructor.MappedParameter>();
 
@@ -83,6 +94,7 @@ class MappedConstructor {
 	 * 
 	 * @param parameter must not be {@literal null}.
 	 * @return
+	 * @throws MappingException in case no {@link MappedParameter} can be found for the given {@link Parameter}.
 	 */
 	public MappedParameter getFor(Parameter<?> parameter) {
 
@@ -92,7 +104,7 @@ class MappedConstructor {
 			}
 		}
 
-		throw new IllegalStateException(String.format("Didn't find a MappedParameter for %s!", parameter.toString()));
+		throw new MappingException(String.format("Didn't find a MappedParameter for %s!", parameter.toString()));
 	}
 
 	/**
