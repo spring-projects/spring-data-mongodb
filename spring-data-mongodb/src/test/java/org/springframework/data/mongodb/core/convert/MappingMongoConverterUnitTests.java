@@ -21,6 +21,7 @@ import static org.mockito.Mockito.*;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -1170,6 +1171,31 @@ public class MappingMongoConverterUnitTests {
 		assertThat(result.personMap.values(), hasItem(isPerson));
 	}
 
+	/**
+	 * @see DATAMONGO-462
+	 */
+	@Test
+	public void writesURLsAsStringOutOfTheBox() throws Exception {
+
+		URLWrapper wrapper = new URLWrapper();
+		wrapper.url = new URL("http://springsource.org");
+		DBObject sink = new BasicDBObject();
+
+		converter.write(wrapper, sink);
+
+		assertThat(sink.get("url"), is((Object) "http://springsource.org"));
+	}
+
+	/**
+	 * @see DATAMONGO-462
+	 */
+	@Test
+	public void readsURLFromStringOutOfTheBox() throws Exception {
+		DBObject dbObject = new BasicDBObject("url", "http://springsource.org");
+		URLWrapper result = converter.read(URLWrapper.class, dbObject);
+		assertThat(result.url, is(new URL("http://springsource.org")));
+	}
+
 	private static void assertSyntheticFieldValueOf(Object target, Object expected) {
 
 		for (int i = 0; i < 10; i++) {
@@ -1341,6 +1367,10 @@ public class MappingMongoConverterUnitTests {
 		List<DBRef> refs;
 		Map<String, DBRef> refMap;
 		Map<String, Person> personMap;
+	}
+
+	static class URLWrapper {
+		URL url;
 	}
 
 	private class LocalDateToDateConverter implements Converter<LocalDate, Date> {

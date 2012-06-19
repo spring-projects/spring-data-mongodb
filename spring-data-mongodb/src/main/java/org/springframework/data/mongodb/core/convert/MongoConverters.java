@@ -17,8 +17,12 @@ package org.springframework.data.mongodb.core.convert;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 import org.bson.types.ObjectId;
+import org.springframework.core.convert.ConversionFailedException;
+import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.util.StringUtils;
 
@@ -117,6 +121,30 @@ abstract class MongoConverters {
 
 		public BigInteger convert(String source) {
 			return StringUtils.hasText(source) ? new BigInteger(source) : null;
+		}
+	}
+
+	public static enum URLToStringConverter implements Converter<URL, String> {
+		INSTANCE;
+
+		public String convert(URL source) {
+			return source == null ? null : source.toString();
+		}
+	}
+
+	public static enum StringToURLConverter implements Converter<String, URL> {
+		INSTANCE;
+
+		private static final TypeDescriptor SOURCE = TypeDescriptor.valueOf(String.class);
+		private static final TypeDescriptor TARGET = TypeDescriptor.valueOf(URL.class);
+
+		public URL convert(String source) {
+
+			try {
+				return source == null ? null : new URL(source);
+			} catch (MalformedURLException e) {
+				throw new ConversionFailedException(SOURCE, TARGET, source, e);
+			}
 		}
 	}
 }

@@ -3,6 +3,7 @@ package org.springframework.data.mongodb.core.convert;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
+import java.net.URL;
 import java.text.DateFormat;
 import java.text.Format;
 import java.util.Arrays;
@@ -150,6 +151,25 @@ public class CustomConversionsUnitTests {
 
 		CustomConversions conversions = new CustomConversions();
 		assertThat(conversions.isSimpleType(Binary.class), is(true));
+	}
+
+	/**
+	 * @see DATAMONGO-462
+	 */
+	@Test
+	public void hasWriteConverterForURL() {
+
+		CustomConversions conversions = new CustomConversions();
+		assertThat(conversions.hasCustomWriteTarget(URL.class), is(true));
+	}
+
+	/**
+	 * @see DATAMONGO-462
+	 */
+	@Test
+	public void readTargetForURL() {
+		CustomConversions conversions = new CustomConversions();
+		assertThat(conversions.hasCustomReadTarget(String.class, URL.class), is(true));
 	}
 
 	enum FormatToStringConverter implements Converter<Format, String> {

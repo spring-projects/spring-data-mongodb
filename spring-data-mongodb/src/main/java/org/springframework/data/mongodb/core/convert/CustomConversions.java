@@ -38,6 +38,8 @@ import org.springframework.data.mongodb.core.convert.MongoConverters.BigDecimalT
 import org.springframework.data.mongodb.core.convert.MongoConverters.BigIntegerToStringConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.StringToBigDecimalConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.StringToBigIntegerConverter;
+import org.springframework.data.mongodb.core.convert.MongoConverters.StringToURLConverter;
+import org.springframework.data.mongodb.core.convert.MongoConverters.URLToStringConverter;
 import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
 import org.springframework.util.Assert;
 
@@ -89,6 +91,8 @@ public class CustomConversions {
 		this.converters.add(StringToBigDecimalConverter.INSTANCE);
 		this.converters.add(BigIntegerToStringConverter.INSTANCE);
 		this.converters.add(StringToBigIntegerConverter.INSTANCE);
+		this.converters.add(URLToStringConverter.INSTANCE);
+		this.converters.add(StringToURLConverter.INSTANCE);
 		this.converters.addAll(converters);
 
 		for (Object c : this.converters) {
