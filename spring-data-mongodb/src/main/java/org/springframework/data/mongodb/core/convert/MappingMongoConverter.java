@@ -730,15 +730,19 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		Collection<Object> items = targetType.getType().isArray() ? new ArrayList<Object>() : CollectionFactory
 				.createCollection(collectionType, sourceValue.size());
 		TypeInformation<?> componentType = targetType.getComponentType();
+		Class<?> rawComponentType = componentType == null ? null : componentType.getType();
 
 		for (int i = 0; i < sourceValue.size(); i++) {
+
 			Object dbObjItem = sourceValue.get(i);
+
 			if (dbObjItem instanceof DBRef) {
-				items.add(read(componentType, ((DBRef) dbObjItem).fetch(), parent));
+				items.add(DBRef.class.equals(rawComponentType) ? dbObjItem : read(componentType, ((DBRef) dbObjItem).fetch(),
+						parent));
 			} else if (dbObjItem instanceof DBObject) {
 				items.add(read(componentType, (DBObject) dbObjItem, parent));
 			} else {
-				items.add(getPotentiallyConvertedSimpleRead(dbObjItem, componentType == null ? null : componentType.getType()));
+				items.add(getPotentiallyConvertedSimpleRead(dbObjItem, rawComponentType));
 			}
 		}
 
@@ -776,9 +780,12 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 			Object value = entry.getValue();
 			TypeInformation<?> valueType = type.getMapValueType();
+			Class<?> rawValueType = valueType == null ? null : valueType.getType();
 
 			if (value instanceof DBObject) {
 				map.put(key, read(valueType, (DBObject) value, parent));
+			} else if (value instanceof DBRef) {
+				map.put(key, DBRef.class.equals(rawValueType) ? value : read(valueType, ((DBRef) value).fetch()));
 			} else {
 				Class<?> valueClass = valueType == null ? null : valueType.getType();
 				map.put(key, getPotentiallyConvertedSimpleRead(value, valueClass));
@@ -939,7 +946,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			if (conversions.hasCustomReadTarget(value.getClass(), rawType)) {
 				return (T) conversionService.convert(value, rawType);
 			} else if (value instanceof DBRef) {
-				return (T) read(type, ((DBRef) value).fetch(), parent);
+				return (T) (rawType.equals(DBRef.class) ? value : read(type, ((DBRef) value).fetch(), parent));
 			} else if (value instanceof BasicDBList) {
 				return (T) getPotentiallyConvertedSimpleRead(readCollectionOrArray(type, (BasicDBList) value, parent), rawType);
 			} else if (value instanceof DBObject) {

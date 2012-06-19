@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core.convert;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -34,6 +35,7 @@ import java.util.Set;
 import java.util.SortedMap;
 
 import org.bson.types.ObjectId;
+import org.hamcrest.Matcher;
 import org.joda.time.LocalDate;
 import org.junit.Before;
 import org.junit.Test;
@@ -58,6 +60,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
+import com.mongodb.DB;
 import com.mongodb.DBObject;
 import com.mongodb.DBRef;
 
@@ -1100,6 +1103,73 @@ public class MappingMongoConverterUnitTests {
 		});
 	}
 
+	/**
+	 * @see DATAMONGO-424
+	 */
+	@Test
+	public void readsPlainDBRefObject() {
+
+		DBRef dbRef = new DBRef(mock(DB.class), "foo", 2);
+		DBObject dbObject = new BasicDBObject("ref", dbRef);
+
+		DBRefWrapper result = converter.read(DBRefWrapper.class, dbObject);
+		assertThat(result.ref, is(dbRef));
+	}
+
+	/**
+	 * @see DATAMONGO-424
+	 */
+	@Test
+	public void readsCollectionOfDBRefs() {
+
+		DBRef dbRef = new DBRef(mock(DB.class), "foo", 2);
+		BasicDBList refs = new BasicDBList();
+		refs.add(dbRef);
+
+		DBObject dbObject = new BasicDBObject("refs", refs);
+
+		DBRefWrapper result = converter.read(DBRefWrapper.class, dbObject);
+		assertThat(result.refs, hasSize(1));
+		assertThat(result.refs, hasItem(dbRef));
+	}
+
+	/**
+	 * @see DATAMONGO-424
+	 */
+	@Test
+	public void readsDBRefMap() {
+
+		DBRef dbRef = mock(DBRef.class);
+		BasicDBObject refMap = new BasicDBObject("foo", dbRef);
+		DBObject dbObject = new BasicDBObject("refMap", refMap);
+
+		DBRefWrapper result = converter.read(DBRefWrapper.class, dbObject);
+
+		assertThat(result.refMap.entrySet(), hasSize(1));
+		assertThat(result.refMap.values(), hasItem(dbRef));
+	}
+
+	/**
+	 * @see DATAMONGO-424
+	 */
+	@Test
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public void resolvesDBRefMapValue() {
+
+		DBRef dbRef = mock(DBRef.class);
+		when(dbRef.fetch()).thenReturn(new BasicDBObject());
+
+		BasicDBObject refMap = new BasicDBObject("foo", dbRef);
+		DBObject dbObject = new BasicDBObject("personMap", refMap);
+
+		DBRefWrapper result = converter.read(DBRefWrapper.class, dbObject);
+
+		Matcher isPerson = instanceOf(Person.class);
+
+		assertThat(result.personMap.entrySet(), hasSize(1));
+		assertThat(result.personMap.values(), hasItem(isPerson));
+	}
+
 	private static void assertSyntheticFieldValueOf(Object target, Object expected) {
 
 		for (int i = 0; i < 10; i++) {
@@ -1263,6 +1333,14 @@ public class MappingMongoConverterUnitTests {
 
 		@org.springframework.data.mongodb.core.mapping.DBRef
 		Person person;
+	}
+
+	static class DBRefWrapper {
+
+		DBRef ref;
+		List<DBRef> refs;
+		Map<String, DBRef> refMap;
+		Map<String, Person> personMap;
 	}
 
 	private class LocalDateToDateConverter implements Converter<LocalDate, Date> {
