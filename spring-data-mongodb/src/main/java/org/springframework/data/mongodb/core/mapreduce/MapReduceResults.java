@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2011-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,33 +26,39 @@ import com.mongodb.DBObject;
  * Collects the results of performing a MapReduce operations.
  * 
  * @author Mark Pollack
- * 
- * @param <T> The class in which the results are mapped onto, accessible via an interator.
+ * @author Oliver Gierke
+ * @param <T> The class in which the results are mapped onto, accessible via an iterator.
  */
 public class MapReduceResults<T> implements Iterable<T> {
 
 	private final List<T> mappedResults;
+	private final DBObject rawResults;
+	private final String outputCollection;
+	private final MapReduceTiming mapReduceTiming;
+	private final MapReduceCounts mapReduceCounts;
 
-	private DBObject rawResults;
-
-	private MapReduceTiming mapReduceTiming;
-
-	private MapReduceCounts mapReduceCounts;
-
-	private String outputCollection;
-
+	/**
+	 * Creates a new {@link MapReduceResults} from the given mapped results and the raw one.
+	 * 
+	 * @param mappedResults must not be {@literal null}.
+	 * @param rawResults must not be {@literal null}.
+	 */
 	public MapReduceResults(List<T> mappedResults, DBObject rawResults) {
+
 		Assert.notNull(mappedResults);
 		Assert.notNull(rawResults);
+
 		this.mappedResults = mappedResults;
 		this.rawResults = rawResults;
-		parseTiming(rawResults);
-		parseCounts(rawResults);
-		if (rawResults.get("result") != null) {
-			this.outputCollection = (String) rawResults.get("result");
-		}
+		this.mapReduceTiming = parseTiming(rawResults);
+		this.mapReduceCounts = parseCounts(rawResults);
+		this.outputCollection = parseOutputCollection(rawResults);
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see java.lang.Iterable#iterator()
+	 */
 	public Iterator<T> iterator() {
 		return mappedResults.iterator();
 	}
@@ -73,28 +79,59 @@ public class MapReduceResults<T> implements Iterable<T> {
 		return rawResults;
 	}
 
-	protected void parseTiming(DBObject rawResults) {
+	private MapReduceTiming parseTiming(DBObject rawResults) {
+
 		DBObject timing = (DBObject) rawResults.get("timing");
-		if (timing != null) {
-			if (timing.get("mapTime") != null && timing.get("emitLoop") != null && timing.get("total") != null) {
-				mapReduceTiming = new MapReduceTiming((Long) timing.get("mapTime"), (Integer) timing.get("emitLoop"),
-						(Integer) timing.get("total"));
-			}
-		} else {
-			mapReduceTiming = new MapReduceTiming(-1, -1, -1);
+
+		if (timing == null) {
+			return new MapReduceTiming(-1, -1, -1);
 		}
+
+		if (timing.get("mapTime") != null && timing.get("emitLoop") != null && timing.get("total") != null) {
+			return new MapReduceTiming((Long) timing.get("mapTime"), (Integer) timing.get("emitLoop"),
+					(Integer) timing.get("total"));
+		}
+
+		return new MapReduceTiming(-1, -1, -1);
 	}
 
-	protected void parseCounts(DBObject rawResults) {
+	/**
+	 * Parses the raw {@link DBObject} result into a {@link MapReduceCounts} value object.
+	 * 
+	 * @param rawResults
+	 * @return
+	 */
+	private MapReduceCounts parseCounts(DBObject rawResults) {
+
 		DBObject counts = (DBObject) rawResults.get("counts");
-		if (counts != null) {
-			if (counts.get("input") != null && counts.get("emit") != null && counts.get("output") != null) {
-				mapReduceCounts = new MapReduceCounts((Integer) counts.get("input"), (Integer) counts.get("emit"),
-						(Integer) counts.get("output"));
-			}
-		} else {
-			mapReduceCounts = new MapReduceCounts(-1, -1, -1);
+
+		if (counts == null) {
+			return new MapReduceCounts(-1, -1, -1);
 		}
+
+		if (counts.get("input") != null && counts.get("emit") != null && counts.get("output") != null) {
+			return new MapReduceCounts((Integer) counts.get("input"), (Integer) counts.get("emit"),
+					(Integer) counts.get("output"));
+		}
+
+		return new MapReduceCounts(-1, -1, -1);
 	}
 
+	/**
+	 * Parses the output collection from the raw {@link DBObject} result.
+	 * 
+	 * @param rawResults
+	 * @return
+	 */
+	private String parseOutputCollection(DBObject rawResults) {
+
+		Object resultField = rawResults.get("result");
+
+		if (resultField == null) {
+			return null;
+		}
+
+		return resultField instanceof DBObject ? ((DBObject) resultField).get("collection").toString() : resultField
+				.toString();
+	}
 }
