@@ -88,11 +88,23 @@ public class MapReduceResults<T> implements Iterable<T> {
 		}
 
 		if (timing.get("mapTime") != null && timing.get("emitLoop") != null && timing.get("total") != null) {
-			return new MapReduceTiming((Long) timing.get("mapTime"), (Integer) timing.get("emitLoop"),
-					(Integer) timing.get("total"));
+			return new MapReduceTiming(getAsLong(timing, "mapTime"), getAsLong(timing, "emitLoop"),
+					getAsLong(timing, "total"));
 		}
 
 		return new MapReduceTiming(-1, -1, -1);
+	}
+
+	/**
+	 * Returns the value of the source's field with the given key as {@link Long}.
+	 * 
+	 * @param source
+	 * @param key
+	 * @return
+	 */
+	private Long getAsLong(DBObject source, String key) {
+		Object raw = source.get(key);
+		return raw instanceof Long ? (Long) raw : (Integer) raw;
 	}
 
 	/**
