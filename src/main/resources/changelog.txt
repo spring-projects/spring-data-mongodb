@@ -1,6 +1,34 @@
 Spring Data Document Changelog
 =============================================
 
+Changes in version 1.0.2.RELEASE MongoDB (2012-06-20)
+-----------------------------------------------------
+** Bug
+    * [DATAMONGO-360] - java.lang.ClassCastException when placing GeospatialIndex into IndexOperations and invoking IndexOperations.getIndexInfo()
+    * [DATAMONGO-366] - Chapter 3.2. points to wrong bugtracker
+    * [DATAMONGO-378] - MapReduceResults ClassCastException due to raw results counts as Long
+    * [DATAMONGO-411] - Potential ClassCastExceptions in MongoPersistentEntityIndexCreator
+    * [DATAMONGO-412] - getUserCredentials() is called twice in AbstractMongoConfiguration::mongoDbFactory()
+    * [DATAMONGO-413] - Using "Or" in repository query yields a ClassCastException
+    * [DATAMONGO-422] - UUIDToBinaryConverter not compatible with mongo java driver
+    * [DATAMONGO-423] - Criteria.regex should use java.util.Pattern instead of $regex
+    * [DATAMONGO-425] - Binding a Date to a manually defined repository query fails
+    * [DATAMONGO-428] - ClassCastException when using outputDatabase option in map-reduce
+    * [DATAMONGO-429] - using @Query annotation, arrays are translated somewhere between query creation and mongo interpretation
+    * [DATAMONGO-446] - Pageable query methods returning List are broken
+    * [DATAMONGO-447] - Removal of Documents fails in in debug mode for Documents with complex ids
+    * [DATAMONGO-450] - enabling DEBUG causes RuntimeException
+    * [DATAMONGO-454] - ServerAddressPropertyEditor fails if a hostname is unresolvable 
+    * [DATAMONGO-461] - MappedConstructor potentially throws NullPointerException
+    * [DATAMONGO-462] - findAll() fails with NPE - discovering the root cause
+
+** Improvement
+    * [DATAMONGO-448] - Remove the need for Converters for complex classes that are used as IDs
+    * [DATAMONGO-455] - Document how to use raw queries using BasicQuery
+
+** Task
+    * [DATAMONGO-463] - Release 1.0.2
+
 Changes in version 1.0.1.RELEASE MongoDB (2012-02-11)
 -----------------------------------------------------
 ** Bug
