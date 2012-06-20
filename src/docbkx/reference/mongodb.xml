@@ -624,7 +624,7 @@ public class MongoConfiguration {
 }
 </programlisting>
 
-      <para></para>
+      <para/>
     </section>
 
     <section id="mongo.mongo-db-factory-xml">
@@ -686,7 +686,7 @@ public class MongoConfiguration {
   &lt;constructor-arg name="mongoDbFactory" ref="mongoDbFactory"/&gt;
 &lt;/bean&gt;</programlisting>
 
-      <para></para>
+      <para/>
     </section>
   </section>
 
@@ -1546,8 +1546,17 @@ assertThat(p.getAge(), is(1));</programlisting>
     follow a fluent API style so that you can easily chain together multiple
     method criteria and queries while having easy to understand code. Static
     imports in Java are used to help remove the need to see the 'new' keyword
-    for creating Query and Criteria instances so as to improve
-    readability.</para>
+    for creating <classname>Query</classname> and
+    <classname>Criteria</classname> instances so as to improve readability. If
+    you like to create <classname>Query</classname> instances from a plain
+    JSON String use <classname>BasicQuery</classname>.</para>
+
+    <example>
+      <title>Creating a Query instance from a plain JSON String</title>
+
+      <programlisting language="java">BasicQuery query = new BasicQuery("{ age : { $lt : 50 }, accounts.balance : { $gt : 1000.00 }}");
+List&lt;Person&gt; result = mongoTemplate.find(query, Person.class);        </programlisting>
+    </example>
 
     <para>GeoSpatial queries are also supported and are described more in the
     section <link linkend="mongo.geospatial">GeoSpatial Queries</link>.</para>
@@ -1572,10 +1581,10 @@ assertThat(p.getAge(), is(1));</programlisting>
         <programlisting language="java">import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
-    ...
+…
 
-     List&lt;Person&gt; result = mongoTemplate.find(query(where("age").lt(50).and("accounts.balance").gt(1000.00d)), Person.class);
-        </programlisting>
+List&lt;Person&gt; result = mongoTemplate.find(query(where("age").lt(50)
+                                                .and("accounts.balance").gt(1000.00d)), Person.class);        </programlisting>
       </example>
 
       <para>All find methods take a <classname>Query</classname> object as a
@@ -1769,7 +1778,7 @@ import static org.springframework.data.mongodb.core.query.Query.query;
           <para><literal>Criteria</literal> <emphasis role="bold">withinBox
           </emphasis> <literal>(Box box)</literal> Creates a geospatial
           criterion using a <literal>$within $box</literal> operation
-          <literal /></para>
+          <literal/></para>
         </listitem>
 
         <listitem>
