@@ -251,7 +251,7 @@ public class MongoApp {
 
       <itemizedlist>
         <listitem>
-          <para>spring-data-mongodb-1.0.0.RELEASE.jar</para>
+          <para>spring-data-mongodb-1.0.2.RELEASE.jar</para>
         </listitem>
 
         <listitem>
