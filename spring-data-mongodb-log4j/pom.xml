@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.springframework.data</groupId>
     <artifactId>spring-data-mongodb-parent</artifactId>
-    <version>1.0.2.BUILD-SNAPSHOT</version>
+    <version>1.0.2.RELEASE</version>
     <relativePath>../spring-data-mongodb-parent/pom.xml</relativePath>
   </parent>
   <artifactId>spring-data-mongodb-log4j</artifactId>
