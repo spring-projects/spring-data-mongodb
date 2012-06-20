@@ -56,4 +56,17 @@ public class MapReduceResultsUnitTests {
 		assertThat(results.getOutputCollection(), is("FOO"));
 	}
 
+	/**
+	 * @see DATAMONGO-378
+	 */
+	@Test
+	public void handlesLongTotalInResult() {
+
+		DBObject inner = new BasicDBObject("total", 1L);
+		inner.put("mapTime", 1L);
+		inner.put("emitLoop", 1);
+
+		DBObject source = new BasicDBObject("timing", inner);
+		new MapReduceResults<Object>(Collections.emptyList(), source);
+	}
 }
