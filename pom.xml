@@ -151,7 +151,7 @@
           <entities>
             <entity>
               <name>version</name>
-              <value>${pom.version}</value>
+              <value>${project.version}</value>
             </entity>
           </entities>
           <postProcess>

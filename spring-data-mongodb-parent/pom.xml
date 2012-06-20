@@ -12,7 +12,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <!-- versions for commonly-used dependencies -->
     <junit.version>4.10</junit.version>
-    <log4j.version>1.2.15</log4j.version>
+    <log4j.version>1.2.16</log4j.version>
     <org.mockito.version>1.8.4</org.mockito.version>
     <hamcrest.version>1.2.1</hamcrest.version>
     <org.slf4j.version>1.5.10</org.slf4j.version>
