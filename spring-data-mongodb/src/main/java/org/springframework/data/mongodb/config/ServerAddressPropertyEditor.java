@@ -17,7 +17,11 @@ package org.springframework.data.mongodb.config;
 
 import java.beans.PropertyEditorSupport;
 import java.net.UnknownHostException;
+import java.util.HashSet;
+import java.util.Set;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.ServerAddress;
@@ -30,6 +34,8 @@ import com.mongodb.ServerAddress;
  */
 public class ServerAddressPropertyEditor extends PropertyEditorSupport {
 
+	private static final Log LOG = LogFactory.getLog(ServerAddressPropertyEditor.class);
+
 	/*
 	 * (non-Javadoc)
 	 * @see java.beans.PropertyEditorSupport#setAsText(java.lang.String)
@@ -38,21 +44,49 @@ public class ServerAddressPropertyEditor extends PropertyEditorSupport {
 	public void setAsText(String replicaSetString) {
 
 		String[] replicaSetStringArray = StringUtils.commaDelimitedListToStringArray(replicaSetString);
-		ServerAddress[] serverAddresses = new ServerAddress[replicaSetStringArray.length];
+		Set<ServerAddress> serverAddresses = new HashSet<ServerAddress>(replicaSetStringArray.length);
 
-		for (int i = 0; i < replicaSetStringArray.length; i++) {
+		for (String element : replicaSetStringArray) {
 
-			String[] hostAndPort = StringUtils.delimitedListToStringArray(replicaSetStringArray[i], ":");
+			ServerAddress address = parseServerAddress(element);
 
-			try {
-				serverAddresses[i] = new ServerAddress(hostAndPort[0], Integer.parseInt(hostAndPort[1]));
-			} catch (NumberFormatException e) {
-				throw new IllegalArgumentException("Could not parse port " + hostAndPort[1], e);
-			} catch (UnknownHostException e) {
-				throw new IllegalArgumentException("Could not parse host " + hostAndPort[0], e);
+			if (address != null) {
+				serverAddresses.add(address);
 			}
 		}
 
-		setValue(serverAddresses);
+		if (serverAddresses.isEmpty()) {
+			throw new IllegalArgumentException(
+					"Could not resolve at least one server of the replica set configuration! Validate your config!");
+		}
+
+		setValue(serverAddresses.toArray(new ServerAddress[serverAddresses.size()]));
+	}
+
+	/**
+	 * Parses the given source into a {@link ServerAddress}.
+	 * 
+	 * @param source
+	 * @return the
+	 */
+	private ServerAddress parseServerAddress(String source) {
+
+		String[] hostAndPort = StringUtils.delimitedListToStringArray(source.trim(), ":");
+
+		if (!StringUtils.hasText(source) || hostAndPort.length > 2) {
+			LOG.warn(String.format("Could not parse address source '%s'. Check your replica set configuration!", source));
+			return null;
+		}
+
+		try {
+			return hostAndPort.length == 1 ? new ServerAddress(hostAndPort[0]) : new ServerAddress(hostAndPort[0],
+					Integer.parseInt(hostAndPort[1]));
+		} catch (UnknownHostException e) {
+			LOG.warn(String.format("Could not parse host '%s'. Check your replica set configuration!", hostAndPort[0]));
+		} catch (NumberFormatException e) {
+			LOG.warn(String.format("Could not parse port '%s'. Check your replica set configuration!", hostAndPort[1]));
+		}
+
+		return null;
 	}
 }

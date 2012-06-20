@@ -77,12 +77,12 @@ public class SpringDataMongodbSerializerUnitTests {
 		address.zipCode = "01234";
 
 		DBObject result = serializer.asDBObject("foo", address);
-		assertThat(result, is(BasicDBObject.class));
+		assertThat(result, is(instanceOf(BasicDBObject.class)));
 		BasicDBObject dbObject = (BasicDBObject) result;
 
 		Object value = dbObject.get("foo");
 		assertThat(value, is(notNullValue()));
-		assertThat(value, is(BasicDBObject.class));
+		assertThat(value, is(instanceOf(BasicDBObject.class)));
 
 		Object reference = converter.convertToMongoType(address);
 		assertThat(value, is(reference));

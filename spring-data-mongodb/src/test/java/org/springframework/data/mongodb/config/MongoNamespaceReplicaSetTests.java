@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 the original author or authors.
+ * Copyright 2011-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 package org.springframework.data.mongodb.config;
 
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
 import java.util.List;
@@ -29,6 +30,7 @@ import org.springframework.data.mongodb.core.MongoFactoryBean;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import com.mongodb.CommandResult;
 import com.mongodb.Mongo;
@@ -36,47 +38,45 @@ import com.mongodb.ServerAddress;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration
-public class MongoNamespaceReplicaSetTests extends NamespaceTestSupport {
+public class MongoNamespaceReplicaSetTests {
 
 	@Autowired
 	private ApplicationContext ctx;
 
 	@Test
+	@SuppressWarnings("unchecked")
 	public void testParsingMongoWithReplicaSets() throws Exception {
+
 		assertTrue(ctx.containsBean("replicaSetMongo"));
 		MongoFactoryBean mfb = (MongoFactoryBean) ctx.getBean("&replicaSetMongo");
 
-		List<ServerAddress> replicaSetSeeds = readField("replicaSetSeeds", mfb);
-		assertNotNull(replicaSetSeeds);
+		List<ServerAddress> replicaSetSeeds = (List<ServerAddress>) ReflectionTestUtils.getField(mfb, "replicaSetSeeds");
 
-		assertEquals("127.0.0.1", replicaSetSeeds.get(0).getHost());
-		assertEquals(10001, replicaSetSeeds.get(0).getPort());
-
-		assertEquals("localhost", replicaSetSeeds.get(1).getHost());
-		assertEquals(10002, replicaSetSeeds.get(1).getPort());
-
+		assertThat(replicaSetSeeds, is(notNullValue()));
+		assertThat(replicaSetSeeds, hasItems(new ServerAddress("127.0.0.1", 10001), new ServerAddress("localhost", 10002)));
 	}
 
 	@Test
+	@SuppressWarnings("unchecked")
 	public void testParsingWithPropertyPlaceHolder() throws Exception {
+
 		assertTrue(ctx.containsBean("manyReplicaSetMongo"));
 		MongoFactoryBean mfb = (MongoFactoryBean) ctx.getBean("&manyReplicaSetMongo");
 
-		List<ServerAddress> replicaSetSeeds = readField("replicaSetSeeds", mfb);
-		assertNotNull(replicaSetSeeds);
+		List<ServerAddress> replicaSetSeeds = (List<ServerAddress>) ReflectionTestUtils.getField(mfb, "replicaSetSeeds");
 
-		assertEquals("192.168.174.130", replicaSetSeeds.get(0).getHost());
-		assertEquals(27017, replicaSetSeeds.get(0).getPort());
-		assertEquals("192.168.174.130", replicaSetSeeds.get(1).getHost());
-		assertEquals(27018, replicaSetSeeds.get(1).getPort());
-		assertEquals("192.168.174.130", replicaSetSeeds.get(2).getHost());
-		assertEquals(27019, replicaSetSeeds.get(2).getPort());
-
+		assertThat(replicaSetSeeds, is(notNullValue()));
+		assertThat(replicaSetSeeds, hasSize(3));
+		assertThat(
+				replicaSetSeeds,
+				hasItems(new ServerAddress("192.168.174.130", 27017), new ServerAddress("192.168.174.130", 27018),
+						new ServerAddress("192.168.174.130", 27019)));
 	}
 
 	@Test
 	@Ignore("CI infrastructure does not yet support replica sets")
 	public void testMongoWithReplicaSets() {
+
 		Mongo mongo = ctx.getBean(Mongo.class);
 		assertEquals(2, mongo.getAllAddress().size());
 		List<ServerAddress> servers = mongo.getAllAddress();
@@ -88,6 +88,5 @@ public class MongoNamespaceReplicaSetTests extends NamespaceTestSupport {
 		MongoTemplate template = new MongoTemplate(mongo, "admin");
 		CommandResult result = template.executeCommand("{replSetGetStatus : 1}");
 		assertEquals("blort", result.getString("set"));
-
 	}
 }

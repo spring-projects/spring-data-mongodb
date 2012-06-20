@@ -84,7 +84,7 @@ public class QueryMapperUnitTests {
 
 		DBObject query = new BasicDBObject("_id", new ObjectId().toString());
 		DBObject result = mapper.getMappedObject(query, null);
-		assertThat(result.get("_id"), is(ObjectId.class));
+		assertThat(result.get("_id"), is(instanceOf(ObjectId.class)));
 	}
 
 	@Test
@@ -114,9 +114,9 @@ public class QueryMapperUnitTests {
 
 		DBObject result = mapper.getMappedObject(criteria.getCriteriaObject(), context.getPersistentEntity(Sample.class));
 		Object object = result.get("_id");
-		assertThat(object, is(DBObject.class));
+		assertThat(object, is(instanceOf(DBObject.class)));
 		DBObject dbObject = (DBObject) object;
-		assertThat(dbObject.get("$ne"), is(ObjectId.class));
+		assertThat(dbObject.get("$ne"), is(instanceOf(ObjectId.class)));
 	}
 
 	/**
@@ -128,7 +128,7 @@ public class QueryMapperUnitTests {
 		DBObject result = mapper.getMappedObject(query.getQueryObject(), null);
 
 		Object object = result.get("foo");
-		assertThat(object, is(String.class));
+		assertThat(object, is(instanceOf(String.class)));
 	}
 
 	@Test
@@ -137,10 +137,10 @@ public class QueryMapperUnitTests {
 		DBObject result = mapper.getMappedObject(query.getQueryObject(), null);
 
 		Object object = result.get("foo");
-		assertThat(object, is(DBObject.class));
+		assertThat(object, is(instanceOf(DBObject.class)));
 
 		Object ne = ((DBObject) object).get("$ne");
-		assertThat(ne, is(String.class));
+		assertThat(ne, is(instanceOf(String.class)));
 		assertThat(ne.toString(), is(Enum.INSTANCE.name()));
 	}
 
@@ -151,14 +151,14 @@ public class QueryMapperUnitTests {
 		DBObject result = mapper.getMappedObject(query.getQueryObject(), null);
 
 		Object object = result.get("foo");
-		assertThat(object, is(DBObject.class));
+		assertThat(object, is(instanceOf(DBObject.class)));
 
 		Object in = ((DBObject) object).get("$in");
-		assertThat(in, is(BasicDBList.class));
+		assertThat(in, is(instanceOf(BasicDBList.class)));
 
 		BasicDBList list = (BasicDBList) in;
 		assertThat(list.size(), is(1));
-		assertThat(list.get(0), is(String.class));
+		assertThat(list.get(0), is(instanceOf(String.class)));
 		assertThat(list.get(0).toString(), is(Enum.INSTANCE.name()));
 	}
 

@@ -11,9 +11,10 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <!-- versions for commonly-used dependencies -->
-    <junit.version>4.8.1</junit.version>
+    <junit.version>4.10</junit.version>
     <log4j.version>1.2.15</log4j.version>
     <org.mockito.version>1.8.4</org.mockito.version>
+    <hamcrest.version>1.2.1</hamcrest.version>
     <org.slf4j.version>1.5.10</org.slf4j.version>
     <org.codehaus.jackson.version>1.6.1</org.codehaus.jackson.version>
     <org.springframework.version.30>3.0.7.RELEASE</org.springframework.version.30>
@@ -289,14 +290,14 @@
 
       <dependency>
         <groupId>org.mockito</groupId>
-        <artifactId>mockito-all</artifactId>
+        <artifactId>mockito-core</artifactId>
         <version>${org.mockito.version}</version>
         <scope>test</scope>
       </dependency>
 
       <dependency>
         <groupId>junit</groupId>
-        <artifactId>junit</artifactId>
+        <artifactId>junit-dep</artifactId>
         <version>${junit.version}</version>
         <scope>test</scope>
       </dependency>
@@ -304,19 +305,34 @@
     </dependencies>
   </dependencyManagement>
   <dependencies>
-    <!--
-        dependency definitions to be inherited by child poms. any
-        <dependency> declarations here will automatically show up on child
-        project classpaths. only items that are truly common across all
-        projects (modules and samples) should go here. otherwise, consider
-        <dependencyManagement> above
-      -->
+    
+    <!-- Test dependencies -->
     <dependency>
       <groupId>log4j</groupId>
       <artifactId>log4j</artifactId>
       <version>${log4j.version}</version>
       <scope>test</scope>
     </dependency>
+    
+    <dependency>
+      <groupId>org.hamcrest</groupId>
+      <artifactId>hamcrest-library</artifactId>
+      <version>${hamcrest.version}</version>
+      <scope>test</scope>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit-dep</artifactId>
+      <scope>test</scope>
+    </dependency>
+    
   </dependencies>
 
   <build>
@@ -398,7 +414,7 @@
           <includes>
             <include>**/*Tests.java</include>
           </includes>
-          <junitArtifactName>junit:junit</junitArtifactName>
+          <junitArtifactName>junit:junit-dep</junitArtifactName>
         </configuration>
       </plugin>
       <plugin>

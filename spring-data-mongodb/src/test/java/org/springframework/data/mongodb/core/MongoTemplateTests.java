@@ -907,8 +907,6 @@ public class MongoTemplateTests {
 		assertThat(lastMongoAction.getEntityClass().toString(), is(PersonWithIdPropertyOfTypeObjectId.class.toString()));
 		assertThat(lastMongoAction.getMongoActionOperation(), is(MongoActionOperation.UPDATE));
 		assertThat(lastMongoAction.getQuery(), equalTo(q.getQueryObject()));
-		assertThat(lastMongoAction.getDocument(), equalTo(u.getUpdateObject()));
-
 	}
 
 	private class FsyncSafeWriteConcernResolver implements WriteConcernResolver {
