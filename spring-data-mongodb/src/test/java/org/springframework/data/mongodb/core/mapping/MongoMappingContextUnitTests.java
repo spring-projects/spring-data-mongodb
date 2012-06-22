@@ -20,7 +20,8 @@ import java.util.Collections;
 import java.util.Map;
 
 import org.junit.Test;
-import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mapping.model.MappingException;
 
 /**
  * Unit tests for {@link MongoMappingContext}.
@@ -31,9 +32,26 @@ public class MongoMappingContextUnitTests {
 
 	@Test
 	public void addsSelfReferencingPersistentEntityCorrectly() throws Exception {
+
 		MongoMappingContext context = new MongoMappingContext();
+
 		context.setInitialEntitySet(Collections.singleton(SampleClass.class));
-		context.afterPropertiesSet();
+		context.initialize();
+	}
+
+	@Test(expected = MappingException.class)
+	public void rejectsEntityWithMultipleIdProperties() {
+
+		MongoMappingContext context = new MongoMappingContext();
+		context.getPersistentEntity(ClassWithMultipleIdProperties.class);
+	}
+
+	class ClassWithMultipleIdProperties {
+
+		@Id
+		String myId;
+
+		String id;
 	}
 
 	public class SampleClass {

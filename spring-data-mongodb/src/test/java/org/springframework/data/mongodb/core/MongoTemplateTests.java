@@ -37,6 +37,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.annotation.Id;
@@ -81,6 +82,7 @@ public class MongoTemplateTests {
 	MongoTemplate template;
 	@Autowired
 	MongoDbFactory factory;
+
 	MongoTemplate mappingTemplate;
 
 	@Rule
@@ -100,7 +102,7 @@ public class MongoTemplateTests {
 				PersonWithIdPropertyOfPrimitiveInt.class, PersonWithIdPropertyOfTypeLong.class,
 				PersonWithIdPropertyOfPrimitiveLong.class)));
 		mappingContext.setSimpleTypeHolder(conversions.getSimpleTypeHolder());
-		mappingContext.afterPropertiesSet();
+		mappingContext.initialize();
 
 		MappingMongoConverter mappingConverter = new MappingMongoConverter(factory, mappingContext);
 		mappingConverter.setCustomConversions(conversions);

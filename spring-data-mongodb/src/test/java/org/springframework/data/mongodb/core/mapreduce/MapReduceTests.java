@@ -15,9 +15,9 @@
  */
 package org.springframework.data.mongodb.core.mapreduce;
 
-import static org.junit.Assert.assertEquals;
-import static org.springframework.data.mongodb.core.query.Criteria.where;
-import static org.springframework.data.mongodb.core.mapreduce.MapReduceOptions.options;
+import static org.junit.Assert.*;
+import static org.springframework.data.mongodb.core.mapreduce.MapReduceOptions.*;
+import static org.springframework.data.mongodb.core.query.Criteria.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -69,7 +69,7 @@ public class MapReduceTests {
 
 		MongoMappingContext mappingContext = new MongoMappingContext();
 		mappingContext.setInitialEntitySet(new HashSet<Class<?>>(Arrays.asList(ValueObject.class)));
-		mappingContext.afterPropertiesSet();
+		mappingContext.initialize();
 
 		MappingMongoConverter mappingConverter = new MappingMongoConverter(factory, mappingContext);
 		mappingConverter.afterPropertiesSet();

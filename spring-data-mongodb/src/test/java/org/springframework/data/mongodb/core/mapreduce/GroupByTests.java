@@ -15,6 +15,9 @@
  */
 package org.springframework.data.mongodb.core.mapreduce;
 
+import static org.springframework.data.mongodb.core.mapreduce.GroupBy.*;
+import static org.springframework.data.mongodb.core.query.Criteria.*;
+
 import java.util.Arrays;
 import java.util.HashSet;
 
@@ -37,9 +40,6 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.Mongo;
 
-import static org.springframework.data.mongodb.core.query.Criteria.*;
-import static org.springframework.data.mongodb.core.mapreduce.GroupBy.*;
-
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:infrastructure.xml")
 public class GroupByTests {
@@ -50,9 +50,6 @@ public class GroupByTests {
 	@Autowired
 	ApplicationContext applicationContext;
 
-	// @Autowired
-	// MongoTemplate mongoTemplate;
-
 	MongoTemplate mongoTemplate;
 
 	@Autowired
@@ -61,7 +58,7 @@ public class GroupByTests {
 
 		MongoMappingContext mappingContext = new MongoMappingContext();
 		mappingContext.setInitialEntitySet(new HashSet<Class<?>>(Arrays.asList(XObject.class)));
-		mappingContext.afterPropertiesSet();
+		mappingContext.initialize();
 
 		MappingMongoConverter mappingConverter = new MappingMongoConverter(factory, mappingContext);
 		mappingConverter.afterPropertiesSet();

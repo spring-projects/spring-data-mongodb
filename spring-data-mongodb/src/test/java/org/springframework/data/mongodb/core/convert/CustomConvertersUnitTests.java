@@ -15,13 +15,12 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
+import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
 import java.util.Arrays;
 import java.util.HashSet;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 import org.hamcrest.CoreMatchers;
 import org.junit.Assert;
 import org.junit.Before;
@@ -32,10 +31,11 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.MongoDbFactory;
-import org.springframework.data.mongodb.core.convert.CustomConversions;
-import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
+
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
 
 /**
  * Test case to verify correct usage of custom {@link Converter} implementations to be used.
@@ -71,7 +71,7 @@ public class CustomConvertersUnitTests {
 		context = new MongoMappingContext();
 		context.setInitialEntitySet(new HashSet<Class<?>>(Arrays.asList(Foo.class, Bar.class)));
 		context.setSimpleTypeHolder(conversions.getSimpleTypeHolder());
-		context.afterPropertiesSet();
+		context.initialize();
 
 		converter = new MappingMongoConverter(mongoDbFactory, context);
 		converter.setCustomConversions(conversions);

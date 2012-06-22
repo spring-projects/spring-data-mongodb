@@ -46,8 +46,6 @@ public class DataMongo273Tests {
 	public void setupMongoConv() {
 
 		MongoMappingContext mappingContext = new MongoMappingContext();
-		mappingContext.afterPropertiesSet();
-
 		MongoDbFactory factory = mock(MongoDbFactory.class);
 
 		converter = new MappingMongoConverter(factory, mappingContext);

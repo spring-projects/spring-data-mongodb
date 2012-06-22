@@ -51,7 +51,7 @@ public class GenericMappingTests {
 	public void setUp() throws Exception {
 		context = new MongoMappingContext();
 		context.setInitialEntitySet(Collections.singleton(StringWrapper.class));
-		context.afterPropertiesSet();
+		context.initialize();
 
 		converter = new MappingMongoConverter(factory, context);
 	}
