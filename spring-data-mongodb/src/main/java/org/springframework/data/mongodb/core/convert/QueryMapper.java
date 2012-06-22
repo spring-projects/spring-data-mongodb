@@ -25,7 +25,6 @@ import org.bson.types.ObjectId;
 import org.springframework.core.convert.ConversionException;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.data.mapping.PersistentEntity;
-import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.util.Assert;
@@ -73,7 +72,6 @@ public class QueryMapper {
 
 		for (String key : query.keySet()) {
 
-			MongoPersistentEntity<?> nestedEntity = getNestedEntity(entity, key);
 			String newKey = key;
 			Object value = query.get(key);
 
@@ -88,7 +86,7 @@ public class QueryMapper {
 						}
 						valueDbo.put(inKey, ids.toArray(new Object[ids.size()]));
 					} else {
-						value = getMappedObject((DBObject) value, nestedEntity);
+						value = getMappedObject((DBObject) value, null);
 					}
 				} else {
 					value = convertId(value);
@@ -100,14 +98,14 @@ public class QueryMapper {
 				BasicBSONList newConditions = new BasicBSONList();
 				Iterator<?> iter = conditions.iterator();
 				while (iter.hasNext()) {
-					newConditions.add(getMappedObject((DBObject) iter.next(), nestedEntity));
+					newConditions.add(getMappedObject((DBObject) iter.next(), null));
 				}
 				value = newConditions;
 			} else if (key.equals("$ne")) {
 				value = convertId(value);
 			}
 
-			newDbo.put(newKey, convertSimpleOrDBObject(value, nestedEntity));
+			newDbo.put(newKey, convertSimpleOrDBObject(value, null));
 		}
 
 		return newDbo;
@@ -142,24 +140,17 @@ public class QueryMapper {
 	 */
 	private boolean isIdKey(String key, MongoPersistentEntity<?> entity) {
 
-		if (null != entity && entity.getIdProperty() != null) {
-			MongoPersistentProperty idProperty = entity.getIdProperty();
+		if (entity == null) {
+			return false;
+		}
+
+		MongoPersistentProperty idProperty = entity.getIdProperty();
+
+		if (idProperty != null) {
 			return idProperty.getName().equals(key) || idProperty.getFieldName().equals(key);
 		}
 
 		return DEFAULT_ID_NAMES.contains(key);
-	}
-
-	private MongoPersistentEntity<?> getNestedEntity(MongoPersistentEntity<?> entity, String key) {
-
-		MongoPersistentProperty property = entity == null ? null : entity.getPersistentProperty(key);
-
-		if (property == null || !property.isEntity()) {
-			return null;
-		}
-
-		MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> context = converter.getMappingContext();
-		return context.getPersistentEntity(property);
 	}
 
 	/**

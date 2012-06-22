@@ -84,7 +84,7 @@ public class QueryMapperUnitTests {
 	public void convertsStringIntoObjectId() {
 
 		DBObject query = new BasicDBObject("_id", new ObjectId().toString());
-		DBObject result = mapper.getMappedObject(query, null);
+		DBObject result = mapper.getMappedObject(query, context.getPersistentEntity(IdWrapper.class));
 		assertThat(result.get("_id"), is(instanceOf(ObjectId.class)));
 	}
 
@@ -92,7 +92,7 @@ public class QueryMapperUnitTests {
 	public void handlesBigIntegerIdsCorrectly() {
 
 		DBObject dbObject = new BasicDBObject("id", new BigInteger("1"));
-		DBObject result = mapper.getMappedObject(dbObject, null);
+		DBObject result = mapper.getMappedObject(dbObject, context.getPersistentEntity(IdWrapper.class));
 		assertThat(result.get("_id"), is((Object) "1"));
 	}
 
@@ -101,7 +101,7 @@ public class QueryMapperUnitTests {
 
 		ObjectId id = new ObjectId();
 		DBObject dbObject = new BasicDBObject("id", new BigInteger(id.toString(), 16));
-		DBObject result = mapper.getMappedObject(dbObject, null);
+		DBObject result = mapper.getMappedObject(dbObject, context.getPersistentEntity(IdWrapper.class));
 		assertThat(result.get("_id"), is((Object) id));
 	}
 
@@ -197,6 +197,29 @@ public class QueryMapperUnitTests {
 
 		DBObject result = mapper.getMappedObject(query.getQueryObject(), null);
 		assertThat(result, is(query.getQueryObject()));
+	}
+
+	@Test
+	public void doesNotHandleNestedFieldsWithDefaultIdNames() {
+
+		BasicDBObject dbObject = new BasicDBObject("id", new ObjectId().toString());
+		dbObject.put("nested", new BasicDBObject("id", new ObjectId().toString()));
+
+		MongoPersistentEntity<?> entity = context.getPersistentEntity(ClassWithDefaultId.class);
+
+		DBObject result = mapper.getMappedObject(dbObject, entity);
+		assertThat(result.get("_id"), is(instanceOf(ObjectId.class)));
+		assertThat(((DBObject) result.get("nested")).get("id"), is(instanceOf(String.class)));
+	}
+
+	class IdWrapper {
+		Object id;
+	}
+
+	class ClassWithDefaultId {
+
+		String id;
+		ClassWithDefaultId nested;
 	}
 
 	class Sample {
