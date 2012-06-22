@@ -141,7 +141,11 @@ public class QueryMapper {
 	 */
 	private boolean isIdKey(String key, MongoPersistentEntity<?> entity) {
 
-		if (null != entity && entity.getIdProperty() != null) {
+		if (entity == null) {
+			return false;
+		}
+
+		if (entity.getIdProperty() != null) {
 			MongoPersistentProperty idProperty = entity.getIdProperty();
 			return idProperty.getName().equals(key) || idProperty.getFieldName().equals(key);
 		}
