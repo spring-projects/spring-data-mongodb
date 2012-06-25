@@ -78,29 +78,36 @@ public abstract class MongoDbUtils {
 	private static DB doGetDB(Mongo mongo, String databaseName, UserCredentials credentials, boolean allowCreate) {
 
 		DbHolder dbHolder = (DbHolder) TransactionSynchronizationManager.getResource(mongo);
+
 		if (dbHolder != null && !dbHolder.isEmpty()) {
-			// pre-bound Mongo DB
+
 			DB db = null;
+
 			if (TransactionSynchronizationManager.isSynchronizationActive() && dbHolder.doesNotHoldNonDefaultDB()) {
-				// Spring transaction management is active ->
-				db = dbHolder.getDB();
+
+				db = dbHolder.getDB(databaseName);
+
 				if (db != null && !dbHolder.isSynchronizedWithTransaction()) {
-					LOGGER.debug("Registering Spring transaction synchronization for existing Mongo DB");
+
+					LOGGER.debug("Registering Spring transaction synchronization for existing MongoDB {}.", databaseName);
+
 					TransactionSynchronizationManager.registerSynchronization(new MongoSynchronization(dbHolder, mongo));
 					dbHolder.setSynchronizedWithTransaction(true);
 				}
 			}
+
 			if (db != null) {
 				return db;
 			}
 		}
 
-		LOGGER.trace("Getting Mongo Database name=[" + databaseName + "]");
-		DB db = mongo.getDB(databaseName);
+		LOGGER.debug("Getting Mongo Database name=[{}]", databaseName);
 
+		DB db = mongo.getDB(databaseName);
 		boolean credentialsGiven = credentials.hasUsername() && credentials.hasPassword();
+
 		if (credentialsGiven && !db.isAuthenticated()) {
-			// Note, can only authenticate once against the same com.mongodb.DB object.
+
 			String username = credentials.getUsername();
 			String password = credentials.hasPassword() ? credentials.getPassword() : null;
 
@@ -113,16 +120,20 @@ public abstract class MongoDbUtils {
 		// Use same Session for further Mongo actions within the transaction.
 		// Thread object will get removed by synchronization at transaction completion.
 		if (TransactionSynchronizationManager.isSynchronizationActive()) {
-			// We're within a Spring-managed transaction, possibly from JtaTransactionManager.
-			LOGGER.debug("Registering Spring transaction synchronization for new Hibernate Session");
+
+			LOGGER.debug("Registering Spring transaction synchronization for MongoDB instance {}.", databaseName);
+
 			DbHolder holderToUse = dbHolder;
+
 			if (holderToUse == null) {
-				holderToUse = new DbHolder(db);
+				holderToUse = new DbHolder(databaseName, db);
 			} else {
-				holderToUse.addDB(db);
+				holderToUse.addDB(databaseName, db);
 			}
+
 			TransactionSynchronizationManager.registerSynchronization(new MongoSynchronization(holderToUse, mongo));
 			holderToUse.setSynchronizedWithTransaction(true);
+
 			if (holderToUse != dbHolder) {
 				TransactionSynchronizationManager.bindResource(mongo, holderToUse);
 			}
@@ -146,6 +157,7 @@ public abstract class MongoDbUtils {
 	 * @return whether the DB is transactional
 	 */
 	public static boolean isDBTransactional(DB db, Mongo mongo) {
+
 		if (mongo == null) {
 			return false;
 		}
@@ -159,6 +171,7 @@ public abstract class MongoDbUtils {
 	 * @param db the DB to close (may be <code>null</code>)
 	 */
 	public static void closeDB(DB db) {
+
 		if (db != null) {
 			LOGGER.debug("Closing Mongo DB object");
 			try {
