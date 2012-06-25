@@ -19,6 +19,7 @@ import java.util.regex.Pattern;
 
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.util.Assert;
@@ -37,6 +38,7 @@ class SpringDataMongodbSerializer extends MongodbSerializer {
 
 	private final MongoConverter converter;
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
+	private final QueryMapper mapper;
 
 	/**
 	 * Creates a new {@link SpringDataMongodbSerializer} for the given {@link MappingContext}.
@@ -49,6 +51,7 @@ class SpringDataMongodbSerializer extends MongodbSerializer {
 
 		this.mappingContext = converter.getMappingContext();
 		this.converter = converter;
+		this.mapper = new QueryMapper(converter);
 	}
 
 	/*
@@ -70,6 +73,11 @@ class SpringDataMongodbSerializer extends MongodbSerializer {
 	 */
 	@Override
 	protected DBObject asDBObject(String key, Object value) {
+
+		if ("_id".equals(key)) {
+			return super.asDBObject(key, mapper.convertId(value));
+		}
+
 		return super.asDBObject(key, value instanceof Pattern ? value : converter.convertToMongoType(value));
 	}
 }

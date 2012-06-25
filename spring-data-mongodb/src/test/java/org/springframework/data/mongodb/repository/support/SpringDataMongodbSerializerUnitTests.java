@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2011-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.repository.support;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
+import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -33,6 +34,8 @@ import org.springframework.data.mongodb.repository.QPerson;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
+import com.mysema.query.types.expr.BooleanOperation;
+import com.mysema.query.types.path.PathBuilder;
 import com.mysema.query.types.path.StringPath;
 
 /**
@@ -97,7 +100,25 @@ public class SpringDataMongodbSerializerUnitTests {
 		assertThat(serializer.getKeyForPath(address, address.getMetadata()), is(""));
 	}
 
+	/**
+	 * @see DATAMONGO-467
+	 */
+	@Test
+	public void convertsIdPropertyCorrectly() {
+
+		ObjectId id = new ObjectId();
+
+		PathBuilder<Address> builder = new PathBuilder<Address>(Address.class, "address");
+		StringPath idPath = builder.getString("id");
+
+		DBObject result = (DBObject) serializer.visit((BooleanOperation) idPath.eq(id.toString()), (Void) null);
+		assertThat(result.get("_id"), is(notNullValue()));
+		assertThat(result.get("_id"), is(instanceOf(ObjectId.class)));
+		assertThat(result.get("_id"), is((Object) id));
+	}
+
 	class Address {
+		String id;
 		String street;
 		@Field("zip_code")
 		String zipCode;
