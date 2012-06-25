@@ -28,6 +28,7 @@ import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.QueryMapper;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
@@ -235,6 +236,7 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 
 		private final MongoConverter converter;
 		private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
+		private final QueryMapper mapper;
 
 		/**
 		 * Creates a new {@link SpringDataMongodbSerializer} for the given {@link MappingContext}.
@@ -244,6 +246,7 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 		public SpringDataMongodbSerializer(MongoConverter converter) {
 			this.mappingContext = converter.getMappingContext();
 			this.converter = converter;
+			this.mapper = new QueryMapper(converter);
 		}
 
 		@Override
@@ -257,6 +260,10 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 
 		@Override
 		protected DBObject asDBObject(String key, Object value) {
+
+			if ("_id".equals(key)) {
+				return super.asDBObject(key, mapper.convertId(value));
+			}
 
 			return super.asDBObject(key, value instanceof Pattern ? value : converter.convertToMongoType(value));
 		}
