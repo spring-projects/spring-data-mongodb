@@ -15,13 +15,14 @@
  */
 package org.springframework.data.mongodb.core;
 
-import com.mongodb.DB;
-import com.mongodb.Mongo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.data.mongodb.CannotGetMongoDbConnectionException;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.util.Assert;
+
+import com.mongodb.DB;
+import com.mongodb.Mongo;
 
 /**
  * Helper class featuring helper methods for internal MongoDb classes.
@@ -78,7 +79,7 @@ public abstract class MongoDbUtils {
 			DB db = null;
 			if (TransactionSynchronizationManager.isSynchronizationActive() && dbHolder.doesNotHoldNonDefaultDB()) {
 				// Spring transaction management is active ->
-				db = dbHolder.getDB();
+				db = dbHolder.getDB(databaseName);
 				if (db != null && !dbHolder.isSynchronizedWithTransaction()) {
 					LOGGER.debug("Registering Spring transaction synchronization for existing Mongo DB");
 					TransactionSynchronizationManager.registerSynchronization(new MongoSynchronization(dbHolder, mongo));
@@ -110,9 +111,9 @@ public abstract class MongoDbUtils {
 			LOGGER.debug("Registering Spring transaction synchronization for new Hibernate Session");
 			DbHolder holderToUse = dbHolder;
 			if (holderToUse == null) {
-				holderToUse = new DbHolder(db);
+				holderToUse = new DbHolder(databaseName, db);
 			} else {
-				holderToUse.addDB(db);
+				holderToUse.addDB(databaseName, db);
 			}
 			TransactionSynchronizationManager.registerSynchronization(new MongoSynchronization(holderToUse, mongo));
 			holderToUse.setSynchronizedWithTransaction(true);
