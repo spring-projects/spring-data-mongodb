@@ -82,12 +82,22 @@ public class MongoQueryCreatorUnitTests {
 		PartTree tree = new PartTree("findByFirstName", Person.class);
 
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "Oliver"), context);
+		Query query = creator.createQuery();
+		assertThat(query, is(query(where("firstName").is("Oliver"))));
+	}
 
-		creator.createQuery();
+	/**
+	 * @see DATAMONGO-469
+	 */
+	@Test
+	public void createsAndQueryCorrectly() {
 
-		creator = new MongoQueryCreator(new PartTree("findByFirstNameAndFriend", Person.class), getAccessor(converter,
-				"Oliver", new Person()), context);
-		creator.createQuery();
+		Person person = new Person();
+		MongoQueryCreator creator = new MongoQueryCreator(new PartTree("findByFirstNameAndFriend", Person.class),
+				getAccessor(converter, "Oliver", person), context);
+		Query query = creator.createQuery();
+
+		assertThat(query, is(query(where("firstName").is("Oliver").and("friend").is(person))));
 	}
 
 	@Test
@@ -96,7 +106,7 @@ public class MongoQueryCreatorUnitTests {
 		PartTree tree = new PartTree("findByFirstNameNotNull", Person.class);
 		Query query = new MongoQueryCreator(tree, getAccessor(converter), context).createQuery();
 
-		assertThat(query.getQueryObject(), is(new Query(Criteria.where("firstName").ne(null)).getQueryObject()));
+		assertThat(query, is(new Query(Criteria.where("firstName").ne(null))));
 	}
 
 	@Test
@@ -105,7 +115,7 @@ public class MongoQueryCreatorUnitTests {
 		PartTree tree = new PartTree("findByFirstNameIsNull", Person.class);
 		Query query = new MongoQueryCreator(tree, getAccessor(converter), context).createQuery();
 
-		assertThat(query.getQueryObject(), is(new Query(Criteria.where("firstName").is(null)).getQueryObject()));
+		assertThat(query, is(new Query(Criteria.where("firstName").is(null))));
 	}
 
 	@Test
@@ -137,7 +147,7 @@ public class MongoQueryCreatorUnitTests {
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, 18), context);
 
 		Query reference = query(where("age").lte(18));
-		assertThat(creator.createQuery().getQueryObject(), is(reference.getQueryObject()));
+		assertThat(creator.createQuery(), is(reference));
 	}
 
 	@Test
@@ -147,7 +157,7 @@ public class MongoQueryCreatorUnitTests {
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, 18), context);
 
 		Query reference = query(where("age").gte(18));
-		assertThat(creator.createQuery().getQueryObject(), is(reference.getQueryObject()));
+		assertThat(creator.createQuery(), is(reference));
 	}
 
 	/**
@@ -160,7 +170,7 @@ public class MongoQueryCreatorUnitTests {
 
 		MongoQueryCreator creator = new MongoQueryCreator(partTree, getAccessor(converter, "Oliver"), context);
 		Query reference = query(where("foo").is("Oliver"));
-		assertThat(creator.createQuery().getQueryObject(), is(reference.getQueryObject()));
+		assertThat(creator.createQuery(), is(reference));
 	}
 
 	/**
@@ -172,7 +182,7 @@ public class MongoQueryCreatorUnitTests {
 		PartTree tree = new PartTree("findByAgeExists", Person.class);
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, true), context);
 		Query query = query(where("age").exists(true));
-		assertThat(creator.createQuery().getQueryObject(), is(query.getQueryObject()));
+		assertThat(creator.createQuery(), is(query));
 	}
 
 	/**
@@ -184,7 +194,7 @@ public class MongoQueryCreatorUnitTests {
 		PartTree tree = new PartTree("findByFirstNameRegex", Person.class);
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, ".*"), context);
 		Query query = query(where("firstName").regex(".*"));
-		assertThat(creator.createQuery().getQueryObject(), is(query.getQueryObject()));
+		assertThat(creator.createQuery(), is(query));
 	}
 
 	/**
@@ -196,7 +206,7 @@ public class MongoQueryCreatorUnitTests {
 		PartTree tree = new PartTree("findByActiveTrue", Person.class);
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter), context);
 		Query query = query(where("active").is(true));
-		assertThat(creator.createQuery().getQueryObject(), is(query.getQueryObject()));
+		assertThat(creator.createQuery(), is(query));
 	}
 
 	/**
@@ -208,7 +218,7 @@ public class MongoQueryCreatorUnitTests {
 		PartTree tree = new PartTree("findByActiveFalse", Person.class);
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter), context);
 		Query query = query(where("active").is(false));
-		assertThat(creator.createQuery().getQueryObject(), is(query.getQueryObject()));
+		assertThat(creator.createQuery(), is(query));
 	}
 
 	/**
@@ -221,8 +231,7 @@ public class MongoQueryCreatorUnitTests {
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "Dave", 42), context);
 
 		Query query = creator.createQuery();
-		assertThat(query.getQueryObject(),
-				is(query(new Criteria().orOperator(where("firstName").is("Dave"), where("age").is(42))).getQueryObject()));
+		assertThat(query, is(query(new Criteria().orOperator(where("firstName").is("Dave"), where("age").is(42)))));
 	}
 
 	private void assertBindsDistanceToQuery(Point point, Distance distance, Query reference) throws Exception {
@@ -240,7 +249,7 @@ public class MongoQueryCreatorUnitTests {
 
 		Query query = new MongoQueryCreator(tree, new ConvertingParameterAccessor(converter, accessor), context)
 				.createQuery();
-		assertThat(query.getQueryObject(), is(query.getQueryObject()));
+		assertThat(query, is(query));
 	}
 
 	interface PersonRepository extends Repository<Person, Long> {
