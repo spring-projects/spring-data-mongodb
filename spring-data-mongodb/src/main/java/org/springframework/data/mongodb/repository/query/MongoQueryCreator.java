@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2010 the original author or authors.
+ * Copyright 2010-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -87,9 +87,9 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 	}
 
 	/*
-	* (non-Javadoc)
-	* @see org.springframework.data.repository.query.parser.AbstractQueryCreator#create(org.springframework.data.repository.query.parser.Part, java.util.Iterator)
-	*/
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.query.parser.AbstractQueryCreator#create(org.springframework.data.repository.query.parser.Part, java.util.Iterator)
+	 */
 	@Override
 	protected Criteria create(Part part, Iterator<Object> iterator) {
 
@@ -107,9 +107,9 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 	}
 
 	/*
-	* (non-Javadoc)
-	* @see org.springframework.data.repository.query.parser.AbstractQueryCreator#and(org.springframework.data.repository.query.parser.Part, java.lang.Object, java.util.Iterator)
-	*/
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.query.parser.AbstractQueryCreator#and(org.springframework.data.repository.query.parser.Part, java.lang.Object, java.util.Iterator)
+	 */
 	@Override
 	protected Criteria and(Part part, Criteria base, Iterator<Object> iterator) {
 
@@ -126,12 +126,9 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 	}
 
 	/*
-	* (non-Javadoc)
-	*
-	* @see
-	* org.springframework.data.repository.query.parser.AbstractQueryCreator
-	* #or(java.lang.Object, java.lang.Object)
-	*/
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.query.parser.AbstractQueryCreator#or(java.lang.Object, java.lang.Object)
+	 */
 	@Override
 	protected Criteria or(Criteria base, Criteria criteria) {
 
@@ -140,12 +137,9 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 	}
 
 	/*
-	* (non-Javadoc)
-	*
-	* @see
-	* org.springframework.data.repository.query.parser.AbstractQueryCreator
-	* #complete(java.lang.Object, org.springframework.data.domain.Sort)
-	*/
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.query.parser.AbstractQueryCreator#complete(java.lang.Object, org.springframework.data.domain.Sort)
+	 */
 	@Override
 	protected Query complete(Criteria criteria, Sort sort) {
 
