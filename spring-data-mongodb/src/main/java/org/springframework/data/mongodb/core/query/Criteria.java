@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.core.query;
 
+import static org.springframework.util.ObjectUtils.*;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -29,6 +31,7 @@ import org.springframework.data.mongodb.core.geo.Circle;
 import org.springframework.data.mongodb.core.geo.Point;
 import org.springframework.data.mongodb.core.geo.Shape;
 import org.springframework.util.Assert;
+import org.springframework.util.ObjectUtils;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
@@ -429,11 +432,9 @@ public class Criteria implements CriteriaDefinition {
 	}
 
 	/*
-		 * (non-Javadoc)
-		 *
-		 * @see org.springframework.datastore.document.mongodb.query.Criteria#
-		 * getCriteriaObject(java.lang.String)
-		 */
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.query.CriteriaDefinition#getCriteriaObject()
+	 */
 	public DBObject getCriteriaObject() {
 		if (this.criteriaChain.size() == 1) {
 			return criteriaChain.get(0).getSingleCriteriaObject();
@@ -496,4 +497,63 @@ public class Criteria implements CriteriaDefinition {
 		}
 	}
 
+	/* 
+	 * (non-Javadoc)
+	 * @see java.lang.Object#equals(java.lang.Object)
+	 */
+	@Override
+	public boolean equals(Object obj) {
+
+		if (this == obj) {
+			return true;
+		}
+
+		if (obj == null || !getClass().equals(obj.getClass())) {
+			return false;
+		}
+
+		Criteria that = (Criteria) obj;
+
+		boolean keyEqual = this.key == null ? that.key == null : this.key.equals(that.key);
+		boolean criteriaEqual = this.criteria.equals(that.criteria);
+		boolean valueEqual = isEqual(this.isValue, that.isValue);
+
+		return keyEqual && criteriaEqual && valueEqual;
+	}
+
+	/**
+	 * Checks the given objects for equality. Handles {@link Pattern} and arrays correctly.
+	 * 
+	 * @param left
+	 * @param right
+	 * @return
+	 */
+	private boolean isEqual(Object left, Object right) {
+
+		if (left == null) {
+			return right == null;
+		}
+
+		if (left instanceof Pattern) {
+			return right instanceof Pattern ? ((Pattern) left).pattern().equals(((Pattern) right).pattern()) : false;
+		}
+
+		return ObjectUtils.nullSafeEquals(left, right);
+	}
+
+	/* 
+	 * (non-Javadoc)
+	 * @see java.lang.Object#hashCode()
+	 */
+	@Override
+	public int hashCode() {
+
+		int result = 17;
+
+		result += nullSafeHashCode(key);
+		result += criteria.hashCode();
+		result += nullSafeHashCode(isValue);
+
+		return result;
+	}
 }
