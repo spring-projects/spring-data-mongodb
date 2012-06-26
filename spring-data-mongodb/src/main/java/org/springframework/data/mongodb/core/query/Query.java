@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core.query;
 
 import static org.springframework.data.mongodb.core.SerializationUtils.*;
+import static org.springframework.util.ObjectUtils.*;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -151,5 +152,51 @@ public class Query {
 	public String toString() {
 		return String.format("Query: %s, Fields: %s, Sort: %s", serializeToJsonSafely(getQueryObject()),
 				serializeToJsonSafely(getFieldsObject()), serializeToJsonSafely(getSortObject()));
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see java.lang.Object#equals(java.lang.Object)
+	 */
+	@Override
+	public boolean equals(Object obj) {
+
+		if (this == obj) {
+			return true;
+		}
+
+		if (obj == null || !getClass().equals(obj.getClass())) {
+			return false;
+		}
+
+		Query that = (Query) obj;
+
+		boolean criteriaEqual = this.criteria.equals(that.criteria);
+		boolean fieldsEqual = this.fieldSpec == null ? that.fieldSpec == null : this.fieldSpec.equals(that.fieldSpec);
+		boolean sortEqual = this.sort == null ? that.sort == null : this.sort.equals(that.sort);
+		boolean hintEqual = this.hint == null ? that.hint == null : this.hint.equals(that.hint);
+		boolean skipEqual = this.skip == that.skip;
+		boolean limitEqual = this.limit == that.limit;
+
+		return criteriaEqual && fieldsEqual && sortEqual && hintEqual && skipEqual && limitEqual;
+	}
+
+	/* 
+	 * (non-Javadoc)
+	 * @see java.lang.Object#hashCode()
+	 */
+	@Override
+	public int hashCode() {
+
+		int result = 17;
+
+		result += 31 * criteria.hashCode();
+		result += 31 * nullSafeHashCode(fieldSpec);
+		result += 31 * nullSafeHashCode(sort);
+		result += 31 * nullSafeHashCode(hint);
+		result += 31 * skip;
+		result += 31 * limit;
+
+		return result;
 	}
 }
