@@ -120,11 +120,9 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 		PersistentPropertyPath<MongoPersistentProperty> path = context.getPersistentPropertyPath(part.getProperty());
 		MongoPersistentProperty property = path.getLeafProperty();
 
-		Criteria criteria = from(part.getType(), property,
-				where(path.toDotPath(MongoPersistentProperty.PropertyToFieldNameConverter.INSTANCE)),
+		return from(part.getType(), property,
+				base.and(path.toDotPath(MongoPersistentProperty.PropertyToFieldNameConverter.INSTANCE)),
 				(PotentiallyConvertingIterator) iterator);
-
-		return criteria.andOperator(criteria);
 	}
 
 	/*
