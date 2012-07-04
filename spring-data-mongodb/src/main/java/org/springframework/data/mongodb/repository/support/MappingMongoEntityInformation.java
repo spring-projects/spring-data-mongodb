@@ -71,6 +71,30 @@ public class MappingMongoEntityInformation<T, ID extends Serializable> extends A
 			throw new RuntimeException(e);
 		}
 	}
+	
+	/* (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.query.MongoEntityInformation#getVersion(T)
+	 */
+	public Object getVersion(T entity) {
+		MongoPersistentProperty versionProperty = entityMetadata.getVersionProperty();
+		try {
+			return BeanWrapper.create(entity, null).getProperty(versionProperty);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.query.MongoEntityInformation#hasVersion(T)
+	 */
+	public boolean hasVersion(T entity) {
+		try {
+			getVersion(entity);
+			return true;
+		} catch (Exception e) {
+			return false;
+		}
+	}
 
 	/* (non-Javadoc)
 	 * @see org.springframework.data.repository.support.EntityInformation#getIdType()
@@ -92,5 +116,12 @@ public class MappingMongoEntityInformation<T, ID extends Serializable> extends A
 	 */
 	public String getIdAttribute() {
 		return entityMetadata.getIdProperty().getName();
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.MongoEntityInformation#getVersionAttribute()
+	 */
+	public String getVersionAttribute() {
+		return entityMetadata.getVersionProperty().getName();
 	}
 }

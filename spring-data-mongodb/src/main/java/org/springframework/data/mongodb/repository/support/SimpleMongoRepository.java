@@ -69,6 +69,13 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 
 		Assert.notNull(entity, "Entity must not be null!");
 
+
+		if (entityInformation.isNew(entity) || !entityInformation.hasVersion(entity)) {
+			mongoOperations.save(entity, entityInformation.getCollectionName());
+		} else {
+			mongoOperations.updateFirst( getUpdateQuery(entityInformation.getId(entity),
+							entityInformation.getVersion(entity)), entity, entity.getClass());
+		}
 		mongoOperations.save(entity, entityInformation.getCollectionName());
 		return entity;
 	}
@@ -106,6 +113,15 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 
 	private Criteria getIdCriteria(Object id) {
 		return where(entityInformation.getIdAttribute()).is(id);
+	}
+	
+	private Query getUpdateQuery(Object id, Object version) {
+		return new Query(getIdCriteria(id).andOperator(
+				getVersionCriteria(version)));
+	}
+	
+	private Criteria getVersionCriteria(Object version) {
+		return where(entityInformation.getVersionAttribute()).is(version);
 	}
 
 	/*

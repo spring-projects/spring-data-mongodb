@@ -23,6 +23,7 @@ import org.springframework.data.mongodb.core.index.GeoSpatialIndexed;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Version;
 
 /**
  * Sample domain class.
@@ -54,8 +55,10 @@ public class Person extends Contact {
 	@DBRef
 	User creator;
 
+	@Version
+	private Long version= 1L;	
+	
 	public Person() {
-
 		this(null, null);
 	}
 
@@ -189,6 +192,13 @@ public class Person extends Contact {
 	 */
 	public String getName() {
 		return String.format("%s %s", firstname, lastname);
+	}
+	
+	/**
+	 * @return the version
+	 */
+	public Long getVersion() {
+		return version;
 	}
 
 	/*

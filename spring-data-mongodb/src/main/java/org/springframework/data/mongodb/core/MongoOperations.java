@@ -657,6 +657,8 @@ public interface MongoOperations {
 	 * @return the WriteResult which lets you access the results of the previous write.
 	 */
 	WriteResult updateFirst(Query query, Update update, Class<?> entityClass);
+	
+	WriteResult updateFirst(Query query, Object object, Class<?> entityClass);
 
 	/**
 	 * Updates the first object that is found in the specified collection that matches the query document criteria with

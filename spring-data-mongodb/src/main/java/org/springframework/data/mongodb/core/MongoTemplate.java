@@ -809,6 +809,18 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	public WriteResult updateFirst(final Query query, final Update update, final String collectionName) {
 		return doUpdate(collectionName, query, update, null, false, false);
 	}
+	
+	public WriteResult updateFirst(final Query query, final Object object,
+			Class<?> entityClass) {
+
+		BasicDBObject dbObject = new BasicDBObject();
+		this.mongoConverter.write(object, dbObject);
+
+		return doUpdate(determineEntityCollectionName(entityClass), query,
+				Update.fromDBObject(dbObject, ID,
+						getPersistentEntity(entityClass).getVersionProperty()
+								.getName()), entityClass, false, false);
+	}
 
 	public WriteResult updateMulti(Query query, Update update, Class<?> entityClass) {
 		return doUpdate(determineCollectionName(entityClass), query, update, entityClass, false, true);
@@ -831,6 +843,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				DBObject updateObj = update == null ? new BasicDBObject() : mapper.getMappedObject(update.getUpdateObject(),
 						entity);
 
+				if(null != update && entity.hasVersion()) {
+					update.inc(entity.getVersionProperty().getName(), 1);
+				}
+				
 				if (LOGGER.isDebugEnabled()) {
 					LOGGER.debug("calling update using query: " + queryObj + " and update: " + updateObj + " in collection: "
 							+ collectionName);
@@ -1485,6 +1501,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 	private <T> String determineEntityCollectionName(T obj) {
 		if (null != obj) {
+			if(obj instanceof Class<?>) {
+				return determineEntityCollectionName((Class<?>)obj);
+			}
 			return determineCollectionName(obj.getClass());
 		}
 
