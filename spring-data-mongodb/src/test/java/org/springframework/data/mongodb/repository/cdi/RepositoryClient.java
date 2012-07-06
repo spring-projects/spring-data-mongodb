@@ -18,18 +18,17 @@ package org.springframework.data.mongodb.repository.cdi;
 import javax.inject.Inject;
 
 /**
- * 
  * @author Oliver Gierke
  */
 class RepositoryClient {
 
 	@Inject
-	PersonRepository repository;
+	CdiPersonRepository repository;
 
 	/**
 	 * @return the repository
 	 */
-	public PersonRepository getRepository() {
+	public CdiPersonRepository getRepository() {
 		return repository;
 	}
 }

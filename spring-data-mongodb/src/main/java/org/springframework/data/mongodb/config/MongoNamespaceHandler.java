@@ -16,7 +16,9 @@
 package org.springframework.data.mongodb.config;
 
 import org.springframework.beans.factory.xml.NamespaceHandlerSupport;
-import org.springframework.data.mongodb.repository.config.MongoRepositoryConfigParser;
+import org.springframework.data.mongodb.repository.config.MongoRepositoryConfigurationExtension;
+import org.springframework.data.repository.config.RepositoryBeanDefinitionParser;
+import org.springframework.data.repository.config.RepositoryConfigurationExtension;
 
 /**
  * {@link org.springframework.beans.factory.xml.NamespaceHandler} for Mongo DB based repositories.
@@ -32,7 +34,10 @@ public class MongoNamespaceHandler extends NamespaceHandlerSupport {
 	*/
 	public void init() {
 
-		registerBeanDefinitionParser("repositories", new MongoRepositoryConfigParser());
+		RepositoryConfigurationExtension extension = new MongoRepositoryConfigurationExtension();
+		RepositoryBeanDefinitionParser repositoryBeanDefinitionParser = new RepositoryBeanDefinitionParser(extension);
+
+		registerBeanDefinitionParser("repositories", repositoryBeanDefinitionParser);
 		registerBeanDefinitionParser("mapping-converter", new MappingMongoConverterParser());
 		registerBeanDefinitionParser("mongo", new MongoParser());
 		registerBeanDefinitionParser("db-factory", new MongoDbFactoryParser());

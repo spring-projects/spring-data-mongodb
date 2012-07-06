@@ -103,15 +103,6 @@ The Mongo URI string.]]></xsd:documentation>
 		</xsd:complexType>
 	</xsd:element>
 
-	<xsd:complexType name="mongo-repository">
-		<xsd:complexContent>
-			<xsd:extension base="repository:repository">
-				<xsd:attributeGroup ref="mongo-repository-attributes"/>
-				<xsd:attributeGroup ref="repository:repository-attributes"/>
-			</xsd:extension>
-		</xsd:complexContent>
-	</xsd:complexType>
-
 	<xsd:attributeGroup name="mongo-repository-attributes">
 		<xsd:attribute name="mongo-template-ref" type="mongoTemplateRef" default="mongoTemplate">
 			<xsd:annotation>
@@ -134,9 +125,6 @@ The Mongo URI string.]]></xsd:documentation>
 		<xsd:complexType>
 			<xsd:complexContent>
 				<xsd:extension base="repository:repositories">
-					<xsd:sequence>
-						<xsd:element name="repository" minOccurs="0" maxOccurs="unbounded" type="mongo-repository"/>
-					</xsd:sequence>
 					<xsd:attributeGroup ref="mongo-repository-attributes"/>
 					<xsd:attributeGroup ref="repository:repository-attributes"/>
 				</xsd:extension>
