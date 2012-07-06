@@ -18,7 +18,7 @@ package org.springframework.data.mongodb.repository.cdi;
 import org.springframework.data.mongodb.repository.Person;
 import org.springframework.data.repository.Repository;
 
-public interface PersonRepository extends Repository<Person, String> {
+public interface CdiPersonRepository extends Repository<Person, String> {
 
 	void deleteAll();
 

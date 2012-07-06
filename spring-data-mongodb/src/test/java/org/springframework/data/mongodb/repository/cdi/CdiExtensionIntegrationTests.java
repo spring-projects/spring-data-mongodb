@@ -20,6 +20,7 @@ import static org.junit.Assert.*;
 
 import org.apache.webbeans.cditest.CdiTestContainer;
 import org.apache.webbeans.cditest.CdiTestContainerLoader;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.springframework.data.mongodb.repository.Person;
@@ -39,11 +40,16 @@ public class CdiExtensionIntegrationTests {
 		container.bootContainer();
 	}
 
+	@AfterClass
+	public static void tearDown() throws Exception {
+		container.shutdownContainer();
+	}
+
 	@Test
 	public void bootstrapsRepositoryCorrectly() {
 
 		RepositoryClient client = container.getInstance(RepositoryClient.class);
-		PersonRepository repository = client.getRepository();
+		CdiPersonRepository repository = client.getRepository();
 
 		assertThat(repository, is(notNullValue()));
 

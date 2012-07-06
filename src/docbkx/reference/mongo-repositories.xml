@@ -9,8 +9,8 @@
 
     <para>This chapter will point out the specialties for repository support
     for MongoDB. This builds on the core repository support explained in <xref
-    linkend="repositories" />. So make sure you've got a sound understanding
-    of the basic concepts explained there.</para>
+    linkend="repositories"/>. So make sure you've got a sound understanding of
+    the basic concepts explained there.</para>
   </section>
 
   <section id="mongo-repo-usage">
@@ -91,6 +91,36 @@
     configure <code>mongo-template-ref</code> explicitly if you deviate from
     this convention.</para>
 
+    <para>If you'd rather like to go with JavaConfig use the
+    <interfacename>@EnableMongoRepositories</interfacename> annotation. The
+    annotation carries the very same attributes like the namespace element. If
+    no base package is configured the infrastructure will scan the package of
+    the annotated configuration class.</para>
+
+    <example>
+      <title>JavaConfig for repositories</title>
+
+      <programlisting id="id2371855_07-mongodb" language="java">@Configuration
+@EnableMongoRepositories
+class ApplicationConfig extends AbstractMongoConfiguration {
+
+  @Override
+  protected String getDatabaseName() {
+    return "e-store";
+  }
+
+  @Override
+  public Mongo mongo() throws Exception {
+    return new Mongo();
+  }
+
+  @Override
+  protected String getMappingBasePackage() {
+    return "com.oreilly.springdata.mongodb"
+  }
+}</programlisting>
+    </example>
+
     <para>As our domain repository extends
     <interfacename>PagingAndSortingRepository</interfacename> it provides you
     with CRUD operations as well as methods for paginated and sorted access to
@@ -169,11 +199,11 @@ public class PersonRepositoryTests {
         <title>Supported keywords for query methods</title>
 
         <tgroup cols="3">
-          <colspec colwidth="1*" />
+          <colspec colwidth="1*"/>
 
-          <colspec colwidth="2*" />
+          <colspec colwidth="2*"/>
 
-          <colspec colwidth="2*" />
+          <colspec colwidth="2*"/>
 
           <thead>
             <row>
@@ -370,7 +400,7 @@ Distance distance = new Distance(200, Metrics.KILOMETERS);
       <simplesect>
         <title>Geo-near queries</title>
 
-        <para></para>
+        <para/>
 
         <programlisting language="java">public interface PersonRepository extends MongoRepository&lt;Person, String&gt;
 
