@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,11 +15,17 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
-import static org.springframework.data.mongodb.core.query.Criteria.*;
-import static org.springframework.data.mongodb.core.query.Query.*;
-import static org.springframework.data.mongodb.core.query.Update.*;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.isOneOf;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.springframework.data.mongodb.core.query.Query.query;
+import static org.springframework.data.mongodb.core.query.Update.update;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -37,9 +43,9 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.dao.DataAccessException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
@@ -70,9 +76,10 @@ import com.mongodb.WriteResult;
 
 /**
  * Integration test for {@link MongoTemplate}.
- * 
+ *
  * @author Oliver Gierke
  * @author Thomas Risberg
+ * @author Amol Nayak
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:infrastructure.xml")
@@ -161,6 +168,103 @@ public class MongoTemplateTests {
 		Query q = new Query(Criteria.where("BOGUS").gt(22));
 		Update u = new Update().set("firstName", "Sven");
 		mongoTemplate.updateFirst(q, u, Person.class);
+	}
+
+	/**
+	 * The method to test the exception that is thrown if we insert a DB object with the same object
+	 * id twice.
+	 *
+	 */
+	@Test
+	public void insertDuplicateIds() {
+		MongoTemplate template = new MongoTemplate(factory);
+		template.setWriteResultChecking(WriteResultChecking.EXCEPTION);
+		Person person = new Person(new ObjectId(),"Amol");
+		person.setAge(28);
+		template.insert(person);
+		try {
+			template.insert(person);
+		} catch (DataIntegrityViolationException e) {
+			Assert.assertTrue(e.getMessage()
+							.indexOf("E11000 duplicate key error index: " +
+									"database.person.$_id_  dup key:") > 0);
+			return;
+		}
+		Assert.assertTrue("Should have caught DataIntegrityViolationException", false);
+	}
+
+
+	/**
+	 * The method is used to test the error message on update when we try to push to
+	 * an element that is not an array
+	 */
+	@Test
+	public void updateWithIncorrectPushOperator() {
+		MongoTemplate template = new MongoTemplate(factory);
+		template.setWriteResultChecking(WriteResultChecking.EXCEPTION);
+		ObjectId id = new ObjectId();
+		Person person = new Person(id,"Amol");
+		person.setAge(28);
+		template.insert(person);
+		try {
+			Query query = new Query(Criteria.where("firstName").is("Amol"));
+			Update upd = new Update().push("age", 29);
+			template.updateFirst(query, upd, Person.class);
+		} catch (DataIntegrityViolationException e) {
+			Assert.assertEquals("Execution of update with '{ \"$push\" : { \"age\" : 29}}'' using '{ \"firstName\" : \"Amol\"}' " +
+			"query failed: Cannot apply $push/$pushAll modifier to non-array",e.getMessage());
+			return;
+		}
+		Assert.assertTrue("Should have caught DataIntegrityViolationException", false);
+	}
+
+	/**
+	 * This method attempts to violate a unique index on the person name (well not likely
+	 * but I have assumed that for the junit purpose). The WriteResultChecking is set to EXCEPTION
+	 * so we should expect to see an exception with two person records with same name are attempted to
+	 * be inserted
+	 */
+	@Test
+	public void saveAndViolateAUniqueIndex() {
+		MongoTemplate template = new MongoTemplate(factory);
+		template.setWriteResultChecking(WriteResultChecking.EXCEPTION);
+		template.indexOps(Person.class).ensureIndex(new Index().on("firstName", Order.DESCENDING).unique());
+		Person person = new Person(new ObjectId(),"Amol");
+		person.setAge(28);
+		template.save(person);
+		person = new Person(new ObjectId(),"Amol");
+		person.setAge(28);
+		try {
+			template.save(person);
+		} catch (DataIntegrityViolationException e) {
+			Assert.assertTrue(e.getMessage().indexOf("E11000 duplicate key error index: database.person.$firstName_-1  dup key:") > 0);
+			return;
+		}
+		Assert.assertTrue("Should have caught DataIntegrityViolationException", false);
+	}
+
+	/**
+	 *
+	 */
+	@Test
+	public void duplicateObjectIdInsertInInsertList() {
+		MongoTemplate template = new MongoTemplate(factory);
+		template.setWriteResultChecking(WriteResultChecking.EXCEPTION);
+		ObjectId id = new ObjectId();
+		Person person = new Person(id,"Amol");
+		person.setAge(28);
+		List<Person> records = new ArrayList<Person>();
+		records.add(person);
+		records.add(person);
+		try {
+			template.insertAll(records);
+		} catch (DataIntegrityViolationException e) {
+			Assert.assertTrue(e.getMessage().startsWith("Insert list failed: E11000 duplicate key error index: " +
+								"database.person.$_id_  dup key: { : ObjectId"));
+			return;
+		}
+		Assert.assertTrue("Should have caught DataIntegrityViolationException", false);
+
 	}
 
 	@Test
@@ -939,7 +1043,7 @@ public class MongoTemplateTests {
 		DBRef first = new DBRef(factory.getDb(), "foo", new ObjectId());
 		DBRef second = new DBRef(factory.getDb(), "bar", new ObjectId());
 
-		template.updateFirst(null, Update.update("dbRefs", Arrays.asList(first, second)), ClassWithDBRefs.class);
+		template.updateFirst(null, update("dbRefs", Arrays.asList(first, second)), ClassWithDBRefs.class);
 	}
 
 	class ClassWithDBRefs {

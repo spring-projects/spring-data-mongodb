@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.springframework.data.mongodb.core.query.Criteria.*;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -101,11 +101,12 @@ import com.mongodb.util.JSON;
 
 /**
  * Primary implementation of {@link MongoOperations}.
- * 
+ *
  * @author Thomas Risberg
  * @author Graeme Rocher
  * @author Mark Pollack
  * @author Oliver Gierke
+ * @author Amol Nayak
  */
 public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
@@ -153,7 +154,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 	/**
 	 * Constructor used for a basic template configuration
-	 * 
+	 *
 	 * @param mongo
 	 * @param databaseName
 	 */
@@ -164,7 +165,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	/**
 	 * Constructor used for a template configuration with user credentials in the form of
 	 * {@link org.springframework.data.authentication.UserCredentials}
-	 * 
+	 *
 	 * @param mongo
 	 * @param databaseName
 	 * @param userCredentials
@@ -175,7 +176,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 	/**
 	 * Constructor used for a basic template configuration
-	 * 
+	 *
 	 * @param mongoDbFactory
 	 */
 	public MongoTemplate(MongoDbFactory mongoDbFactory) {
@@ -184,7 +185,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 	/**
 	 * Constructor used for a basic template configuration.
-	 * 
+	 *
 	 * @param mongoDbFactory
 	 * @param mongoConverter
 	 */
@@ -212,7 +213,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	/**
 	 * Configures the {@link WriteResultChecking} to be used with the template. Setting {@literal null} will reset the
 	 * default of {@value #DEFAULT_WRITE_RESULT_CHECKING}.
-	 * 
+	 *
 	 * @param resultChecking
 	 */
 	public void setWriteResultChecking(WriteResultChecking resultChecking) {
@@ -221,7 +222,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 	/**
 	 * Configures the {@link WriteConcern} to be used with the template.
-	 * 
+	 *
 	 * @param writeConcern
 	 */
 	public void setWriteConcern(WriteConcern writeConcern) {
@@ -230,7 +231,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 	/**
 	 * Configures the {@link WriteConcernResolver} to be used with the template.
-	 * 
+	 *
 	 * @param writeConcernResolver
 	 */
 	public void setWriteConcernResolver(WriteConcernResolver writeConcernResolver) {
@@ -240,7 +241,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	/**
 	 * Used by @{link {@link #prepareCollection(DBCollection)} to set the {@link ReadPreference} before any operations are
 	 * performed.
-	 * 
+	 *
 	 * @param readPreference
 	 */
 	public void setReadPreference(ReadPreference readPreference) {
@@ -261,7 +262,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 	/**
 	 * Returns the default {@link org.springframework.data.mongodb.core.core.convert.MongoConverter}.
-	 * 
+	 *
 	 * @return
 	 */
 	public MongoConverter getConverter() {
@@ -318,7 +319,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	/**
 	 * Execute a MongoDB query and iterate over the query results on a per-document basis with a
 	 * {@link DocumentCallbackHandler} using the provided CursorPreparer.
-	 * 
+	 *
 	 * @param query the query class that specifies the criteria used to find a record and also an optional fields
 	 *          specification, must not be {@literal null}.
 	 * @param collectionName name of the collection to retrieve the objects from
@@ -598,7 +599,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	/**
 	 * Prepare the collection before any processing is done using it. This allows a convenient way to apply settings like
 	 * slaveOk() etc. Can be overridden in sub-classes.
-	 * 
+	 *
 	 * @param collection
 	 */
 	protected void prepareCollection(DBCollection collection) {
@@ -610,7 +611,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	/**
 	 * Prepare the WriteConcern before any processing is done using it. This allows a convenient way to apply custom
 	 * settings in sub-classes.
-	 * 
+	 *
 	 * @param writeConcern any WriteConcern already configured or null
 	 * @return The prepared WriteConcern or null
 	 */
@@ -730,11 +731,13 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				MongoAction mongoAction = new MongoAction(writeConcern, MongoActionOperation.INSERT, collectionName,
 						entityClass, dbDoc, null);
 				WriteConcern writeConcernToUse = prepareWriteConcern(mongoAction);
+				WriteResult wr;
 				if (writeConcernToUse == null) {
-					collection.insert(dbDoc);
+					wr = collection.insert(dbDoc);
 				} else {
-					collection.insert(dbDoc, writeConcernToUse);
+					wr = collection.insert(dbDoc, writeConcernToUse);
 				}
+				handleAnyWriteResultErrors(wr, dbDoc, "insert");
 				return dbDoc.get(ID);
 			}
 		});
@@ -753,11 +756,13 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				MongoAction mongoAction = new MongoAction(writeConcern, MongoActionOperation.INSERT_LIST, collectionName, null,
 						null, null);
 				WriteConcern writeConcernToUse = prepareWriteConcern(mongoAction);
+				WriteResult wr;
 				if (writeConcernToUse == null) {
-					collection.insert(dbDocList);
+					wr = collection.insert(dbDocList);
 				} else {
-					collection.insert(dbDocList.toArray((DBObject[]) new BasicDBObject[dbDocList.size()]), writeConcernToUse);
+					wr = collection.insert(dbDocList.toArray((DBObject[]) new BasicDBObject[dbDocList.size()]), writeConcernToUse);
 				}
+				handleAnyWriteResultErrors(wr, null, "insert_list");
 				return null;
 			}
 		});
@@ -784,11 +789,13 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				MongoAction mongoAction = new MongoAction(writeConcern, MongoActionOperation.SAVE, collectionName, entityClass,
 						dbDoc, null);
 				WriteConcern writeConcernToUse = prepareWriteConcern(mongoAction);
+				WriteResult wr;
 				if (writeConcernToUse == null) {
-					collection.save(dbDoc);
+					wr = collection.save(dbDoc);
 				} else {
-					collection.save(dbDoc, writeConcernToUse);
+					wr = collection.save(dbDoc, writeConcernToUse);
 				}
+				handleAnyWriteResultErrors(wr, dbDoc, "save");
 				return dbDoc.get(ID);
 			}
 		});
@@ -873,7 +880,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 	/**
 	 * Returns a {@link Query} for the given entity by its id.
-	 * 
+	 *
 	 * @param object must not be {@literal null}.
 	 * @return
 	 */
@@ -1182,7 +1189,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 	/**
 	 * Create the specified collection using the provided options
-	 * 
+	 *
 	 * @param collectionName
 	 * @param collectionOptions
 	 * @return the collection that was created
@@ -1204,7 +1211,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * Map the results of an ad-hoc query on the default MongoDB collection to an object using the template's converter
 	 * <p/>
 	 * The query document is specified as a standard DBObject and so is the fields specification.
-	 * 
+	 *
 	 * @param collectionName name of the collection to retrieve the objects from
 	 * @param query the query document that specifies the criteria used to find a record
 	 * @param fields the document that specifies the fields to be returned
@@ -1229,7 +1236,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * The query document is specified as a standard DBObject and so is the fields specification.
 	 * <p/>
 	 * Can be overridden by subclasses.
-	 * 
+	 *
 	 * @param collectionName name of the collection to retrieve the objects from
 	 * @param query the query document that specifies the criteria used to find a record
 	 * @param fields the document that specifies the fields to be returned
@@ -1259,7 +1266,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * Map the results of an ad-hoc query on the default MongoDB collection to a List using the template's converter.
 	 * <p/>
 	 * The query document is specified as a standard DBObject and so is the fields specification.
-	 * 
+	 *
 	 * @param collectionName name of the collection to retrieve the objects from
 	 * @param query the query document that specifies the criteria used to find a record
 	 * @param fields the document that specifies the fields to be returned
@@ -1298,7 +1305,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * The first document that matches the query is returned and also removed from the collection in the database.
 	 * <p/>
 	 * The query document is specified as a standard DBObject and so is the fields specification.
-	 * 
+	 *
 	 * @param collectionName name of the collection to retrieve the objects from
 	 * @param query the query document that specifies the criteria used to find a record
 	 * @param entityClass the parameterized type of the returned list.
@@ -1345,7 +1352,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 	/**
 	 * Populates the id property of the saved object, if it's not set already.
-	 * 
+	 *
 	 * @param savedObject
 	 * @param id
 	 */
@@ -1398,7 +1405,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * <li>Execute the given {@link ConnectionCallback} for a {@link DBObject}.</li>
 	 * <li>Apply the given {@link DbObjectCallback} to each of the {@link DBObject}s to obtain the result.</li>
 	 * <ol>
-	 * 
+	 *
 	 * @param <T>
 	 * @param collectionCallback the callback to retrieve the {@link DBObject} with
 	 * @param objectCallback the {@link DbObjectCallback} to transform {@link DBObject}s into the actual domain type
@@ -1427,7 +1434,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * <li>Iterate over the {@link DBCursor} and applies the given {@link DbObjectCallback} to each of the
 	 * {@link DBObject}s collecting the actual result {@link List}.</li>
 	 * <ol>
-	 * 
+	 *
 	 * @param <T>
 	 * @param collectionCallback the callback to retrieve the {@link DBCursor} with
 	 * @param preparer the {@link CursorPreparer} to potentially modify the {@link DBCursor} before ireating over it
@@ -1521,9 +1528,19 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		String error = wr.getError();
 
 		if (error != null) {
-
-			String message = String.format("Execution of %s%s failed: %s", operation, query == null ? "" : "' using '"
+			String message;
+			if(operation.equals("insert") || operation.equals("save")) {
+				//assuming the insert operations will begin with insert string
+				message = String.format("Insert/Save for %s failed: %s", query,error);
+			}
+			else if(operation.equals("insert_list")) {
+				message = String.format("Insert list failed: %s", error);
+			}
+			else {
+				message = String.format("Execution of %s%s failed: %s", operation, query == null ? "" : "' using '"
 					+ query.toString() + "' query", error);
+			}
+
 
 			if (WriteResultChecking.EXCEPTION == this.writeResultChecking) {
 				throw new DataIntegrityViolationException(message);
@@ -1537,7 +1554,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	/**
 	 * Tries to convert the given {@link RuntimeException} into a {@link DataAccessException} but returns the original
 	 * exception if the conversation failed. Thus allows safe rethrowing of the return value.
-	 * 
+	 *
 	 * @param ex
 	 * @return
 	 */
@@ -1557,7 +1574,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	/**
 	 * Simple {@link CollectionCallback} that takes a query {@link DBObject} plus an optional fields specification
 	 * {@link DBObject} and executes that against the {@link DBCollection}.
-	 * 
+	 *
 	 * @author Oliver Gierke
 	 * @author Thomas Risberg
 	 */
@@ -1590,7 +1607,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	/**
 	 * Simple {@link CollectionCallback} that takes a query {@link DBObject} plus an optional fields specification
 	 * {@link DBObject} and executes that against the {@link DBCollection}.
-	 * 
+	 *
 	 * @author Oliver Gierke
 	 * @author Thomas Risberg
 	 */
@@ -1621,7 +1638,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	/**
 	 * Simple {@link CollectionCallback} that takes a query {@link DBObject} plus an optional fields specification
 	 * {@link DBObject} and executes that against the {@link DBCollection}.
-	 * 
+	 *
 	 * @author Thomas Risberg
 	 */
 	private static class FindAndRemoveCallback implements CollectionCallback<DBObject> {
@@ -1666,7 +1683,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 	/**
 	 * Simple internal callback to allow operations on a {@link DBObject}.
-	 * 
+	 *
 	 * @author Oliver Gierke
 	 */
 
@@ -1678,7 +1695,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	/**
 	 * Simple {@link DbObjectCallback} that will transform {@link DBObject} into the given target type using the given
 	 * {@link MongoReader}.
-	 * 
+	 *
 	 * @author Oliver Gierke
 	 */
 	private class ReadDbObjectCallback<T> implements DbObjectCallback<T> {
@@ -1762,7 +1779,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	/**
 	 * {@link DbObjectCallback} that assumes a {@link GeoResult} to be created, delegates actual content unmarshalling to
 	 * a delegate and creates a {@link GeoResult} from the result.
-	 * 
+	 *
 	 * @author Oliver Gierke
 	 */
 	static class GeoNearResultDbObjectCallback<T> implements DbObjectCallback<GeoResult<T>> {
@@ -1773,7 +1790,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		/**
 		 * Creates a new {@link GeoNearResultDbObjectCallback} using the given {@link DbObjectCallback} delegate for
 		 * {@link GeoResult} content unmarshalling.
-		 * 
+		 *
 		 * @param delegate
 		 */
 		public GeoNearResultDbObjectCallback(DbObjectCallback<T> delegate, Metric metric) {
