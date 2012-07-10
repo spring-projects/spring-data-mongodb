@@ -106,6 +106,7 @@ import com.mongodb.util.JSON;
  * @author Graeme Rocher
  * @author Mark Pollack
  * @author Oliver Gierke
+ * @author Amol Nayak
  */
 public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
@@ -731,11 +732,13 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				MongoAction mongoAction = new MongoAction(writeConcern, MongoActionOperation.INSERT, collectionName,
 						entityClass, dbDoc, null);
 				WriteConcern writeConcernToUse = prepareWriteConcern(mongoAction);
+				WriteResult wr;
 				if (writeConcernToUse == null) {
-					collection.insert(dbDoc);
+					wr = collection.insert(dbDoc);
 				} else {
-					collection.insert(dbDoc, writeConcernToUse);
+					wr = collection.insert(dbDoc, writeConcernToUse);
 				}
+				handleAnyWriteResultErrors(wr, dbDoc, "insert");
 				return dbDoc.get(ID);
 			}
 		});
@@ -754,11 +757,13 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				MongoAction mongoAction = new MongoAction(writeConcern, MongoActionOperation.INSERT_LIST, collectionName, null,
 						null, null);
 				WriteConcern writeConcernToUse = prepareWriteConcern(mongoAction);
+				WriteResult wr;
 				if (writeConcernToUse == null) {
-					collection.insert(dbDocList);
+					wr = collection.insert(dbDocList);
 				} else {
-					collection.insert(dbDocList.toArray((DBObject[]) new BasicDBObject[dbDocList.size()]), writeConcernToUse);
+					wr = collection.insert(dbDocList.toArray((DBObject[]) new BasicDBObject[dbDocList.size()]), writeConcernToUse);
 				}
+				handleAnyWriteResultErrors(wr, null, "insert_list");
 				return null;
 			}
 		});
@@ -785,11 +790,13 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				MongoAction mongoAction = new MongoAction(writeConcern, MongoActionOperation.SAVE, collectionName, entityClass,
 						dbDoc, null);
 				WriteConcern writeConcernToUse = prepareWriteConcern(mongoAction);
+				WriteResult wr;
 				if (writeConcernToUse == null) {
-					collection.save(dbDoc);
+					wr = collection.save(dbDoc);
 				} else {
-					collection.save(dbDoc, writeConcernToUse);
+					wr = collection.save(dbDoc, writeConcernToUse);
 				}
+				handleAnyWriteResultErrors(wr, dbDoc, "save");
 				return dbDoc.get(ID);
 			}
 		});
@@ -890,7 +897,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 	/**
 	 * Returns a {@link Query} for the given entity by its id.
-	 * 
+	 *
 	 * @param object must not be {@literal null}.
 	 * @return
 	 */
@@ -1181,7 +1188,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 	/**
 	 * Create the specified collection using the provided options
-	 * 
+	 *
 	 * @param collectionName
 	 * @param collectionOptions
 	 * @return the collection that was created
@@ -1203,7 +1210,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * Map the results of an ad-hoc query on the default MongoDB collection to an object using the template's converter
 	 * <p/>
 	 * The query document is specified as a standard DBObject and so is the fields specification.
-	 * 
+	 *
 	 * @param collectionName name of the collection to retrieve the objects from
 	 * @param query the query document that specifies the criteria used to find a record
 	 * @param fields the document that specifies the fields to be returned
@@ -1228,7 +1235,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * The query document is specified as a standard DBObject and so is the fields specification.
 	 * <p/>
 	 * Can be overridden by subclasses.
-	 * 
+	 *
 	 * @param collectionName name of the collection to retrieve the objects from
 	 * @param query the query document that specifies the criteria used to find a record
 	 * @param fields the document that specifies the fields to be returned
@@ -1258,7 +1265,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * Map the results of an ad-hoc query on the default MongoDB collection to a List using the template's converter.
 	 * <p/>
 	 * The query document is specified as a standard DBObject and so is the fields specification.
-	 * 
+	 *
 	 * @param collectionName name of the collection to retrieve the objects from
 	 * @param query the query document that specifies the criteria used to find a record
 	 * @param fields the document that specifies the fields to be returned
@@ -1297,7 +1304,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * The first document that matches the query is returned and also removed from the collection in the database.
 	 * <p/>
 	 * The query document is specified as a standard DBObject and so is the fields specification.
-	 * 
+	 *
 	 * @param collectionName name of the collection to retrieve the objects from
 	 * @param query the query document that specifies the criteria used to find a record
 	 * @param entityClass the parameterized type of the returned list.
@@ -1344,7 +1351,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 	/**
 	 * Populates the id property of the saved object, if it's not set already.
-	 * 
+	 *
 	 * @param savedObject
 	 * @param id
 	 */
@@ -1397,7 +1404,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * <li>Execute the given {@link ConnectionCallback} for a {@link DBObject}.</li>
 	 * <li>Apply the given {@link DbObjectCallback} to each of the {@link DBObject}s to obtain the result.</li>
 	 * <ol>
-	 * 
+	 *
 	 * @param <T>
 	 * @param collectionCallback the callback to retrieve the {@link DBObject} with
 	 * @param objectCallback the {@link DbObjectCallback} to transform {@link DBObject}s into the actual domain type
@@ -1523,9 +1530,16 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		String error = wr.getError();
 
 		if (error != null) {
-
-			String message = String.format("Execution of %s%s failed: %s", operation, query == null ? "" : "' using '"
-					+ query.toString() + "' query", error);
+			String message;
+			if (operation.equals("insert") || operation.equals("save")) {
+				// assuming the insert operations will begin with insert string
+				message = String.format("Insert/Save for %s failed: %s", query, error);
+			} else if (operation.equals("insert_list")) {
+				message = String.format("Insert list failed: %s", error);
+			} else {
+				message = String.format("Execution of %s%s failed: %s", operation,
+						query == null ? "" : "' using '" + query.toString() + "' query", error);
+			}
 
 			if (WriteResultChecking.EXCEPTION == this.writeResultChecking) {
 				throw new DataIntegrityViolationException(message);

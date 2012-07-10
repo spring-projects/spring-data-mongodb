@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2011-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,9 +37,9 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.dao.DataAccessException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
@@ -73,6 +73,7 @@ import com.mongodb.WriteResult;
  * 
  * @author Oliver Gierke
  * @author Thomas Risberg
+ * @author Amol Nayak
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:infrastructure.xml")
@@ -163,6 +164,112 @@ public class MongoTemplateTests {
 		mongoTemplate.updateFirst(q, u, Person.class);
 	}
 
+	/**
+	 * @see DATAMONGO-480
+	 */
+	@Test
+	public void throwsExceptionForDuplicateIds() {
+
+		MongoTemplate template = new MongoTemplate(factory);
+		template.setWriteResultChecking(WriteResultChecking.EXCEPTION);
+
+		Person person = new Person(new ObjectId(), "Amol");
+		person.setAge(28);
+
+		template.insert(person);
+
+		try {
+			template.insert(person);
+			fail("Expected DataIntegrityViolationException!");
+		} catch (DataIntegrityViolationException e) {
+			assertThat(e.getMessage(), containsString("E11000 duplicate key error index: database.person.$_id_  dup key:"));
+		}
+	}
+
+	/**
+	 * @see DATAMONGO-480
+	 */
+	@Test
+	public void throwsExceptionForUpdateWithInvalidPushOperator() {
+
+		MongoTemplate template = new MongoTemplate(factory);
+		template.setWriteResultChecking(WriteResultChecking.EXCEPTION);
+
+		ObjectId id = new ObjectId();
+		Person person = new Person(id, "Amol");
+		person.setAge(28);
+
+		template.insert(person);
+
+		try {
+
+			Query query = new Query(Criteria.where("firstName").is("Amol"));
+			Update upd = new Update().push("age", 29);
+			template.updateFirst(query, upd, Person.class);
+			fail("Expected DataIntegrityViolationException!");
+
+		} catch (DataIntegrityViolationException e) {
+
+			assertThat(e.getMessage(),
+					is("Execution of update with '{ \"$push\" : { \"age\" : 29}}'' using '{ \"firstName\" : \"Amol\"}' "
+							+ "query failed: Cannot apply $push/$pushAll modifier to non-array"));
+		}
+	}
+
+	/**
+	 * @see DATAMONGO-480
+	 */
+	@Test
+	public void throwsExceptionForIndexViolationIfConfigured() {
+
+		MongoTemplate template = new MongoTemplate(factory);
+		template.setWriteResultChecking(WriteResultChecking.EXCEPTION);
+		template.indexOps(Person.class).ensureIndex(new Index().on("firstName", Order.DESCENDING).unique());
+
+		Person person = new Person(new ObjectId(), "Amol");
+		person.setAge(28);
+
+		template.save(person);
+
+		person = new Person(new ObjectId(), "Amol");
+		person.setAge(28);
+
+		try {
+			template.save(person);
+			fail("Expected DataIntegrityViolationException!");
+		} catch (DataIntegrityViolationException e) {
+			assertThat(e.getMessage(),
+					containsString("E11000 duplicate key error index: database.person.$firstName_-1  dup key:"));
+		}
+	}
+
+	/**
+	 * @see DATAMONGO-480
+	 */
+	@Test
+	public void rejectsDuplicateIdInInsertAll() {
+
+		MongoTemplate template = new MongoTemplate(factory);
+		template.setWriteResultChecking(WriteResultChecking.EXCEPTION);
+
+		ObjectId id = new ObjectId();
+		Person person = new Person(id, "Amol");
+		person.setAge(28);
+
+		List<Person> records = new ArrayList<Person>();
+		records.add(person);
+		records.add(person);
+
+		try {
+			template.insertAll(records);
+			fail("Expected DataIntegrityViolationException!");
+		} catch (DataIntegrityViolationException e) {
+			assertThat(
+					e.getMessage(),
+					startsWith("Insert list failed: E11000 duplicate key error index: database.person.$_id_  dup key: { : ObjectId"));
+		}
+	}
+
 	@Test
 	public void testEnsureIndex() throws Exception {
 
@@ -193,7 +300,7 @@ public class MongoTemplateTests {
 		assertThat(dropDupes, is(true));
 
 		List<IndexInfo> indexInfoList = template.indexOps(Person.class).getIndexInfo();
-		System.out.println(indexInfoList);
+
 		assertThat(indexInfoList.size(), is(2));
 		IndexInfo ii = indexInfoList.get(1);
 		assertThat(ii.isUnique(), is(true));
@@ -939,7 +1046,7 @@ public class MongoTemplateTests {
 		DBRef first = new DBRef(factory.getDb(), "foo", new ObjectId());
 		DBRef second = new DBRef(factory.getDb(), "bar", new ObjectId());
 
-		template.updateFirst(null, Update.update("dbRefs", Arrays.asList(first, second)), ClassWithDBRefs.class);
+		template.updateFirst(null, update("dbRefs", Arrays.asList(first, second)), ClassWithDBRefs.class);
 	}
 
 	class ClassWithDBRefs {
@@ -1102,7 +1209,7 @@ public class MongoTemplateTests {
 		template.save(second);
 
 		Query query = query(where("field").not().regex("Matthews"));
-		System.out.println(query.getQueryObject());
+
 		List<Sample> result = template.find(query, Sample.class);
 		assertThat(result.size(), is(1));
 		assertThat(result.get(0).field, is("Beauford"));
