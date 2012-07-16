@@ -2135,7 +2135,7 @@ MapReduceResults&lt;ValueObject&gt; results = mongoOperations.mapReduce(query, "
   <section id="mongo.group">
     <title>Group Operations</title>
 
-    <para>As an alternative to usiing Map-Reduce to perform data aggregation,
+    <para>As an alternative to using Map-Reduce to perform data aggregation,
     you can use the <ulink
     url="http://www.mongodb.org/display/DOCS/Aggregation#Aggregation-Group"><literal>group</literal>
     operation</ulink> which feels similar to using SQL's group by query style,
