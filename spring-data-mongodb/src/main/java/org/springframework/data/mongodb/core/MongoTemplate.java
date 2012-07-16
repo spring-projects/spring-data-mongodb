@@ -998,22 +998,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			LOGGER.debug("Executing MapReduce on collection [" + command.getInput() + "], mapFunction [" + mapFunc
 					+ "], reduceFunction [" + reduceFunc + "]");
 		}
-		CommandResult commandResult = null;
-		try {
-			if (command.getOutputType() == MapReduceCommand.OutputType.INLINE) {
-				commandResult = executeCommand(commandObject, getDb().getOptions());
-			} else {
-				commandResult = executeCommand(commandObject);
-			}
-			commandResult.throwOnError();
-		} catch (RuntimeException ex) {
-			this.potentiallyConvertRuntimeException(ex);
-		}
-		String error = commandResult.getErrorMessage();
-		if (error != null) {
-			throw new InvalidDataAccessApiUsageException("Command execution failed:  Error [" + error + "], Command = "
-					+ commandObject);
-		}
+
+		CommandResult commandResult = command.getOutputType() == MapReduceCommand.OutputType.INLINE ? executeCommand(
+				commandObject, getDb().getOptions()) : executeCommand(commandObject);
+		handleCommandError(commandResult, commandObject);
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug(String.format("MapReduce command result = [%s]",
@@ -1044,7 +1032,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		if (criteria == null) {
 			dbo.put("cond", null);
 		} else {
-			dbo.put("cond", criteria.getCriteriaObject());
+			dbo.put("cond", mapper.getMappedObject(criteria.getCriteriaObject(), null));
 		}
 		// If initial document was a JavaScript string, potentially loaded by Spring's Resource abstraction, load it and
 		// convert to DBObject
@@ -1073,18 +1061,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			LOGGER.debug(String.format("Executing Group with DBObject [%s]",
 					SerializationUtils.serializeToJsonSafely(commandObject)));
 		}
-		CommandResult commandResult = null;
-		try {
-			commandResult = executeCommand(commandObject, getDb().getOptions());
-			commandResult.throwOnError();
-		} catch (RuntimeException ex) {
-			this.potentiallyConvertRuntimeException(ex);
-		}
-		String error = commandResult.getErrorMessage();
-		if (error != null) {
-			throw new InvalidDataAccessApiUsageException("Command execution failed:  Error [" + error + "], Command = "
-					+ commandObject);
-		}
+
+		CommandResult commandResult = executeCommand(commandObject, getDb().getOptions());
+		handleCommandError(commandResult, commandObject);
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug("Group command result = [" + commandResult + "]");
@@ -1554,6 +1533,27 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	private RuntimeException potentiallyConvertRuntimeException(RuntimeException ex) {
 		RuntimeException resolved = this.exceptionTranslator.translateExceptionIfPossible(ex);
 		return resolved == null ? ex : resolved;
+	}
+
+	/**
+	 * Inspects the given {@link CommandResult} for erros and potentially throws an
+	 * {@link InvalidDataAccessApiUsageException} for that error.
+	 * 
+	 * @param result must not be {@literal null}.
+	 * @param source must not be {@literal null}.
+	 */
+	private void handleCommandError(CommandResult result, DBObject source) {
+
+		try {
+			result.throwOnError();
+		} catch (MongoException ex) {
+
+			String error = result.getErrorMessage();
+			error = error == null ? "NO MESSAGE" : error;
+
+			throw new InvalidDataAccessApiUsageException("Command execution failed:  Error [" + error + "], Command = "
+					+ source, ex);
+		}
 	}
 
 	private static final MongoConverter getDefaultMongoConverter(MongoDbFactory factory) {
