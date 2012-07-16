@@ -334,11 +334,12 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		Assert.notNull(query);
 
 		DBObject queryObject = query.getQueryObject();
+		DBObject sortObject = query.getSortObject();
 		DBObject fieldsObject = query.getFieldsObject();
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("find using query: " + queryObject + " fields: " + fieldsObject + " in collection: "
-					+ collectionName);
+			LOGGER.debug(String.format("Executing query: %s sort: %s fields: %s in collection: $s",
+					SerializationUtils.serializeToJsonSafely(queryObject), sortObject, fieldsObject, collectionName));
 		}
 
 		this.executeQueryInternal(new FindCallback(queryObject, fieldsObject), preparer, dch, collectionName);
@@ -1015,8 +1016,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		}
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("MapReduce command result = [" + commandResult + "]");
+			LOGGER.debug(String.format("MapReduce command result = [%s]",
+					SerializationUtils.serializeToJsonSafely(commandObject)));
 		}
+
 		MapReduceOutput mapReduceOutput = new MapReduceOutput(inputCollection, commandObject, commandResult);
 		List<T> mappedResults = new ArrayList<T>();
 		DbObjectCallback<T> callback = new ReadDbObjectCallback<T>(mongoConverter, entityClass);
@@ -1067,7 +1070,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		DBObject commandObject = new BasicDBObject("group", dbo);
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("Executing Group with DBObject [" + commandObject.toString() + "]");
+			LOGGER.debug(String.format("Executing Group with DBObject [%s]",
+					SerializationUtils.serializeToJsonSafely(commandObject)));
 		}
 		CommandResult commandResult = null;
 		try {
