@@ -1059,6 +1059,42 @@ public class MappingMongoConverterUnitTests {
 		assertThat(sink.get("url"), is((Object) "http://springsource.org"));
 	}
 
+	/**
+	 * @see DATAMONGO-485
+	 */
+	@Test
+	public void writesComplexIdCorrectly() {
+
+		ComplexId id = new ComplexId();
+		id.innerId = 4711L;
+
+		ClassWithComplexId entity = new ClassWithComplexId();
+		entity.complexId = id;
+
+		DBObject dbObject = new BasicDBObject();
+		converter.write(entity, dbObject);
+
+		Object idField = dbObject.get("_id");
+		assertThat(idField, is(notNullValue()));
+		assertThat(idField, is(instanceOf(DBObject.class)));
+		assertThat(((DBObject) idField).get("innerId"), is((Object) 4711L));
+	}
+
+	/**
+	 * @see DATAMONGO-485
+	 */
+	@Test
+	public void readsComplexIdCorrectly() {
+
+		DBObject innerId = new BasicDBObject("innerId", 4711L);
+		DBObject entity = new BasicDBObject("_id", innerId);
+
+		ClassWithComplexId result = converter.read(ClassWithComplexId.class, entity);
+
+		assertThat(result.complexId, is(notNullValue()));
+		assertThat(result.complexId.innerId, is(4711L));
+	}
+
 	static class GenericType<T> {
 		T content;
 	}
@@ -1192,6 +1228,16 @@ public class MappingMongoConverterUnitTests {
 
 	static class URLWrapper {
 		URL url;
+	}
+
+	static class ClassWithComplexId {
+
+		@Id
+		ComplexId complexId;
+	}
+
+	static class ComplexId {
+		Long innerId;
 	}
 
 	private class LocalDateToDateConverter implements Converter<LocalDate, Date> {
