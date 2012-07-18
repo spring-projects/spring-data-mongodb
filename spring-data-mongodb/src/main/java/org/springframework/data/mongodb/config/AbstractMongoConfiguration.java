@@ -127,7 +127,7 @@ public abstract class AbstractMongoConfiguration {
 		MongoMappingContext mappingContext = new MongoMappingContext();
 		mappingContext.setInitialEntitySet(getInitialEntitySet());
 		mappingContext.setSimpleTypeHolder(customConversions().getSimpleTypeHolder());
-		mappingContext.afterPropertiesSet();
+		mappingContext.initialize();
 
 		return mappingContext;
 	}
