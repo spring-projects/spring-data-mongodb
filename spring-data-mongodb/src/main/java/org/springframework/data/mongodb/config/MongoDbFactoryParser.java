@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 by the original author(s).
+ * Copyright 2011-2012 by the original author(s).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,19 +15,19 @@
  */
 package org.springframework.data.mongodb.config;
 
-import static org.springframework.data.mongodb.config.BeanNames.*;
-import static org.springframework.data.mongodb.config.ParsingUtils.*;
+import static org.springframework.data.config.ParsingUtils.*;
+import static org.springframework.data.mongodb.config.MongoParsingUtils.*;
 
 import org.springframework.beans.factory.BeanDefinitionStoreException;
 import org.springframework.beans.factory.config.BeanDefinition;
-import org.springframework.beans.factory.config.RuntimeBeanReference;
+import org.springframework.beans.factory.parsing.BeanComponentDefinition;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
-import org.springframework.beans.factory.support.BeanDefinitionReaderUtils;
 import org.springframework.beans.factory.xml.AbstractBeanDefinitionParser;
 import org.springframework.beans.factory.xml.BeanDefinitionParser;
 import org.springframework.beans.factory.xml.ParserContext;
 import org.springframework.data.authentication.UserCredentials;
+import org.springframework.data.config.BeanComponentDefinitionBuilder;
 import org.springframework.data.mongodb.core.MongoFactoryBean;
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 import org.springframework.util.StringUtils;
@@ -44,18 +44,28 @@ import com.mongodb.MongoURI;
  */
 public class MongoDbFactoryParser extends AbstractBeanDefinitionParser {
 
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.beans.factory.xml.AbstractBeanDefinitionParser#resolveId(org.w3c.dom.Element, org.springframework.beans.factory.support.AbstractBeanDefinition, org.springframework.beans.factory.xml.ParserContext)
+	 */
 	@Override
 	protected String resolveId(Element element, AbstractBeanDefinition definition, ParserContext parserContext)
 			throws BeanDefinitionStoreException {
-		String id = element.getAttribute("id");
-		if (!StringUtils.hasText(id)) {
-			id = DB_FACTORY;
-		}
-		return id;
+
+		String id = super.resolveId(element, definition, parserContext);
+		return StringUtils.hasText(id) ? id : BeanNames.DB_FACTORY;
 	}
 
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.beans.factory.xml.AbstractBeanDefinitionParser#parseInternal(org.w3c.dom.Element, org.springframework.beans.factory.xml.ParserContext)
+	 */
 	@Override
 	protected AbstractBeanDefinition parseInternal(Element element, ParserContext parserContext) {
+
+		Object source = parserContext.extractSource(element);
+
+		BeanComponentDefinitionBuilder helper = new BeanComponentDefinitionBuilder(element, parserContext);
 
 		String uri = element.getAttribute("uri");
 		String mongoRef = element.getAttribute("mongo-ref");
@@ -64,12 +74,11 @@ public class MongoDbFactoryParser extends AbstractBeanDefinitionParser {
 
 		// Common setup
 		BeanDefinitionBuilder dbFactoryBuilder = BeanDefinitionBuilder.genericBeanDefinition(SimpleMongoDbFactory.class);
-		ParsingUtils.setPropertyValue(element, dbFactoryBuilder, "write-concern", "writeConcern");
+		setPropertyValue(dbFactoryBuilder, element, "write-concern", "writeConcern");
 
 		if (StringUtils.hasText(uri)) {
 			if (StringUtils.hasText(mongoRef) || StringUtils.hasText(dbname) || userCredentials != null) {
-				parserContext.getReaderContext().error("Configure either Mongo URI or details individually!",
-						parserContext.extractSource(element));
+				parserContext.getReaderContext().error("Configure either Mongo URI or details individually!", source);
 			}
 
 			dbFactoryBuilder.addConstructorArgValue(getMongoUri(uri));
@@ -77,19 +86,26 @@ public class MongoDbFactoryParser extends AbstractBeanDefinitionParser {
 		}
 
 		// Defaulting
-		mongoRef = StringUtils.hasText(mongoRef) ? mongoRef : registerMongoBeanDefinition(element, parserContext);
-		dbname = StringUtils.hasText(dbname) ? dbname : "db";
+		if (StringUtils.hasText(mongoRef)) {
+			dbFactoryBuilder.addConstructorArgReference(mongoRef);
+		} else {
+			dbFactoryBuilder.addConstructorArgValue(registerMongoBeanDefinition(element, parserContext));
+		}
 
-		dbFactoryBuilder.addConstructorArgValue(new RuntimeBeanReference(mongoRef));
+		dbname = StringUtils.hasText(dbname) ? dbname : "db";
 		dbFactoryBuilder.addConstructorArgValue(dbname);
 
 		if (userCredentials != null) {
 			dbFactoryBuilder.addConstructorArgValue(userCredentials);
 		}
 
-		ParsingUtils.registerWriteConcernPropertyEditor(parserContext.getRegistry());
+		BeanDefinitionBuilder writeConcernPropertyEditorBuilder = getWriteConcernPropertyEditorBuilder();
 
-		return getSourceBeanDefinition(dbFactoryBuilder, parserContext, element);
+		BeanComponentDefinition component = helper.getComponent(writeConcernPropertyEditorBuilder);
+		parserContext.registerBeanComponent(component);
+
+		return (AbstractBeanDefinition) helper.getComponentIdButFallback(dbFactoryBuilder, BeanNames.DB_FACTORY)
+				.getBeanDefinition();
 	}
 
 	/**
@@ -100,14 +116,13 @@ public class MongoDbFactoryParser extends AbstractBeanDefinitionParser {
 	 * @param parserContext must not be {@literal null}.
 	 * @return
 	 */
-	private String registerMongoBeanDefinition(Element element, ParserContext parserContext) {
+	private BeanDefinition registerMongoBeanDefinition(Element element, ParserContext parserContext) {
 
 		BeanDefinitionBuilder mongoBuilder = BeanDefinitionBuilder.genericBeanDefinition(MongoFactoryBean.class);
-		ParsingUtils.setPropertyValue(element, mongoBuilder, "host");
-		ParsingUtils.setPropertyValue(element, mongoBuilder, "port");
+		setPropertyValue(mongoBuilder, element, "host");
+		setPropertyValue(mongoBuilder, element, "port");
 
-		return BeanDefinitionReaderUtils.registerWithGeneratedName(mongoBuilder.getBeanDefinition(),
-				parserContext.getRegistry());
+		return getSourceBeanDefinition(mongoBuilder, parserContext, element);
 	}
 
 	/**

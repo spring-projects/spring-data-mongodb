@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.repository.config;
 
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.core.annotation.AnnotationAttributes;
+import org.springframework.data.config.ParsingUtils;
 import org.springframework.data.mongodb.repository.support.MongoRepositoryFactoryBean;
 import org.springframework.data.repository.config.AnnotationRepositoryConfigurationSource;
 import org.springframework.data.repository.config.RepositoryConfigurationExtension;
@@ -60,11 +61,8 @@ public class MongoRepositoryConfigurationExtension extends RepositoryConfigurati
 
 		Element element = config.getElement();
 
-		String attribute = element.getAttribute(MONGO_TEMPLATE_REF);
-		builder.addPropertyReference("mongoOperations", attribute);
-
-		attribute = element.getAttribute(CREATE_QUERY_INDEXES);
-		builder.addPropertyValue("createIndexesForQueryMethods", attribute);
+		ParsingUtils.setPropertyReference(builder, element, MONGO_TEMPLATE_REF, "mongoOperations");
+		ParsingUtils.setPropertyValue(builder, element, CREATE_QUERY_INDEXES, "createIndexesForQueryMethods");
 	}
 
 	/* 
