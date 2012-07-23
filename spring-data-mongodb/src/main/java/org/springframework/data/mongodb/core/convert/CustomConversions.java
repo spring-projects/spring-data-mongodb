@@ -222,8 +222,8 @@ public class CustomConversions {
 	}
 
 	/**
-	 * Returns the target type we can write an onject of the given source type to. The returned type might be a subclass
-	 * oth the given expected type though. If {@code expexctedTargetType} is {@literal null} we will simply return the
+	 * Returns the target type we can write an object of the given source type to. The returned type might be a subclass
+	 * oth the given expected type though. If {@code expectedTargetType} is {@literal null} we will simply return the
 	 * first target type matching or {@literal null} if no conversion can be found.
 	 * 
 	 * @param source must not be {@literal null}
