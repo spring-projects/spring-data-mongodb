@@ -713,10 +713,10 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * 
 	 * @param targetType must not be {@literal null}.
 	 * @param sourceValue must not be {@literal null}.
-	 * @return the converted {@link Collections}, will never be {@literal null}.
+	 * @return the converted {@link Collection} or array, will never be {@literal null}.
 	 */
 	@SuppressWarnings("unchecked")
-	private Collection<?> readCollectionOrArray(TypeInformation<?> targetType, BasicDBList sourceValue, Object parent) {
+	private Object readCollectionOrArray(TypeInformation<?> targetType, BasicDBList sourceValue, Object parent) {
 
 		Assert.notNull(targetType);
 
@@ -746,7 +746,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			}
 		}
 
-		return items;
+		return getPotentiallyConvertedSimpleRead(items, targetType.getType());
 	}
 
 	/**
@@ -948,7 +948,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			} else if (value instanceof DBRef) {
 				return (T) (rawType.equals(DBRef.class) ? value : read(type, ((DBRef) value).fetch(), parent));
 			} else if (value instanceof BasicDBList) {
-				return (T) getPotentiallyConvertedSimpleRead(readCollectionOrArray(type, (BasicDBList) value, parent), rawType);
+				return (T) readCollectionOrArray(type, (BasicDBList) value, parent);
 			} else if (value instanceof DBObject) {
 				return (T) read(type, (DBObject) value, parent);
 			} else {
