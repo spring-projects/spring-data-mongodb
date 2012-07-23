@@ -363,7 +363,6 @@ public class MappingMongoConverterUnitTests {
 		Contact contact = result.contacts.get(0);
 		assertThat(contact, is(instanceOf(Person.class)));
 		assertThat(((Person) contact).firstname, is("Oliver"));
-
 	}
 
 	@Test
@@ -1232,6 +1231,27 @@ public class MappingMongoConverterUnitTests {
 		assertThat(result.complexId.innerId, is(4711L));
 	}
 
+	/**
+	 * @see DATAMONGO-489
+	 */
+	@Test
+	public void readsArraysAsMapValuesCorrectly() {
+
+		BasicDBList list = new BasicDBList();
+		list.add("Foo");
+		list.add("Bar");
+
+		DBObject map = new BasicDBObject("key", list);
+		DBObject wrapper = new BasicDBObject("mapOfStrings", map);
+
+		ClassWithMapProperty result = converter.read(ClassWithMapProperty.class, wrapper);
+		assertThat(result.mapOfStrings, is(notNullValue()));
+
+		String[] values = result.mapOfStrings.get("key");
+		assertThat(values, is(notNullValue()));
+		assertThat(values, is(arrayWithSize(2)));
+	}
+
 	private static void assertSyntheticFieldValueOf(Object target, Object expected) {
 
 		for (int i = 0; i < 10; i++) {
@@ -1311,6 +1331,7 @@ public class MappingMongoConverterUnitTests {
 		Map<Locale, String> map;
 		Map<String, List<String>> mapOfLists;
 		Map<String, Object> mapOfObjects;
+		Map<String, String[]> mapOfStrings;
 	}
 
 	static class ClassWithNestedMaps {
