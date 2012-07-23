@@ -86,12 +86,12 @@ public abstract class AbstractMongoConfiguration {
 	@Bean
 	public SimpleMongoDbFactory mongoDbFactory() throws Exception {
 
-		UserCredentials creadentials = getUserCredentials();
+		UserCredentials credentials = getUserCredentials();
 
-		if (creadentials == null) {
+		if (credentials == null) {
 			return new SimpleMongoDbFactory(mongo(), getDatabaseName());
 		} else {
-			return new SimpleMongoDbFactory(mongo(), getDatabaseName(), creadentials);
+			return new SimpleMongoDbFactory(mongo(), getDatabaseName(), credentials);
 		}
 	}
 
