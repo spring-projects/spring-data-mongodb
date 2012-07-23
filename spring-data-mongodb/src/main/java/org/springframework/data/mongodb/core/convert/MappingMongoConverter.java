@@ -728,7 +728,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * @return the converted {@link Collections}, will never be {@literal null}.
 	 */
 	@SuppressWarnings("unchecked")
-	private Collection<?> readCollectionOrArray(TypeInformation<?> targetType, BasicDBList sourceValue) {
+	private Object readCollectionOrArray(TypeInformation<?> targetType, BasicDBList sourceValue) {
 
 		Assert.notNull(targetType);
 
@@ -750,7 +750,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			}
 		}
 
-		return items;
+		return getPotentiallyConvertedSimpleRead(items, targetType.getType());
 	}
 
 	/**

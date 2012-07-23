@@ -1095,6 +1095,27 @@ public class MappingMongoConverterUnitTests {
 		assertThat(result.complexId.innerId, is(4711L));
 	}
 
+	/**
+	 * @see DATAMONGO-489
+	 */
+	@Test
+	public void readsArraysAsMapValuesCorrectly() {
+
+		BasicDBList list = new BasicDBList();
+		list.add("Foo");
+		list.add("Bar");
+
+		DBObject map = new BasicDBObject("key", list);
+		DBObject wrapper = new BasicDBObject("mapOfStrings", map);
+
+		ClassWithMapProperty result = converter.read(ClassWithMapProperty.class, wrapper);
+		assertThat(result.mapOfStrings, is(notNullValue()));
+
+		String[] values = result.mapOfStrings.get("key");
+		assertThat(values, is(notNullValue()));
+		assertThat(values, is(arrayWithSize(2)));
+	}
+
 	static class GenericType<T> {
 		T content;
 	}
@@ -1156,6 +1177,7 @@ public class MappingMongoConverterUnitTests {
 		Map<Locale, String> map;
 		Map<String, List<String>> mapOfLists;
 		Map<String, Object> mapOfObjects;
+		Map<String, String[]> mapOfStrings;
 	}
 
 	static class ClassWithNestedMaps {
