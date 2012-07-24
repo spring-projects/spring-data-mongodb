@@ -20,6 +20,7 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 import java.math.BigInteger;
+import java.util.regex.Pattern;
 
 import org.bson.types.ObjectId;
 import org.junit.Before;
@@ -136,6 +137,31 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		assertThat(entity.id, is(notNullValue()));
 	}
 
+	/**
+	 * @see DATAMONGO-474
+	 */
+	@Test
+	public void setsUnpopulatedIdField() {
+
+		NotAutogenerateableId entity = new NotAutogenerateableId();
+
+		template.populateIdIfNecessary(entity, 5);
+		assertThat(entity.id, is(5));
+	}
+
+	/**
+	 * @see DATAMONGO-474
+	 */
+	@Test
+	public void doesNotSetAlreadyPopulatedId() {
+
+		NotAutogenerateableId entity = new NotAutogenerateableId();
+		entity.id = 5;
+
+		template.populateIdIfNecessary(entity, 7);
+		assertThat(entity.id, is(5));
+	}
+
 	class AutogenerateableId {
 
 		@Id
@@ -146,6 +172,10 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 
 		@Id
 		Integer id;
+
+		public Pattern getId() {
+			return Pattern.compile(".");
+		}
 	}
 
 	/**
@@ -161,9 +191,10 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		return template;
 	}
 
-	/* (non-Javadoc)
-	  * @see org.springframework.data.mongodb.core.core.MongoOperationsUnitTests#getOperations()
-	  */
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.MongoOperationsUnitTests#getOperationsForExceptionHandling()
+	 */
 	@Override
 	protected MongoOperations getOperationsForExceptionHandling() {
 		MongoTemplate template = spy(this.template);
@@ -171,9 +202,10 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		return template;
 	}
 
-	/* (non-Javadoc)
-	  * @see org.springframework.data.mongodb.core.core.MongoOperationsUnitTests#getOperations()
-	  */
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.MongoOperationsUnitTests#getOperations()
+	 */
 	@Override
 	protected MongoOperations getOperations() {
 		return this.template;

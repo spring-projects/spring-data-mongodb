@@ -1362,7 +1362,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 		try {
 
-			Object idValue = wrapper.getProperty(idProp);
+			Object idValue = wrapper.getProperty(idProp, idProp.getType(), true);
 
 			if (idValue != null) {
 				return;
