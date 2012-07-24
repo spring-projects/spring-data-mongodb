@@ -22,6 +22,7 @@ import static org.mockito.Mockito.*;
 
 import java.math.BigInteger;
 import java.util.Collections;
+import java.util.regex.Pattern;
 
 import org.bson.types.ObjectId;
 import org.junit.Before;
@@ -172,6 +173,31 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		verify(collection, times(1)).update(Mockito.any(DBObject.class), eq(reference), anyBoolean(), anyBoolean());
 	}
 
+	/**
+	 * @see DATAMONGO-474
+	 */
+	@Test
+	public void setsUnpopulatedIdField() {
+
+		NotAutogenerateableId entity = new NotAutogenerateableId();
+
+		template.populateIdIfNecessary(entity, 5);
+		assertThat(entity.id, is(5));
+	}
+
+	/**
+	 * @see DATAMONGO-474
+	 */
+	@Test
+	public void doesNotSetAlreadyPopulatedId() {
+
+		NotAutogenerateableId entity = new NotAutogenerateableId();
+		entity.id = 5;
+
+		template.populateIdIfNecessary(entity, 7);
+		assertThat(entity.id, is(5));
+	}
+
 	class AutogenerateableId {
 
 		@Id
@@ -182,6 +208,10 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 
 		@Id
 		Integer id;
+
+		public Pattern getId() {
+			return Pattern.compile(".");
+		}
 	}
 
 	enum MyConverter implements Converter<AutogenerateableId, String> {
