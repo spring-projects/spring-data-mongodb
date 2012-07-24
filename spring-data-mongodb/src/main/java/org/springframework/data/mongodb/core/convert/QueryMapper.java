@@ -85,6 +85,8 @@ public class QueryMapper {
 							ids.add(convertId(id));
 						}
 						valueDbo.put(inKey, ids.toArray(new Object[ids.size()]));
+					} else if (valueDbo.containsField("$ne")) {
+						valueDbo.put("$ne", convertId(valueDbo.get("$ne")));
 					} else {
 						value = getMappedObject((DBObject) value, null);
 					}
@@ -101,8 +103,6 @@ public class QueryMapper {
 					newConditions.add(getMappedObject((DBObject) iter.next(), null));
 				}
 				value = newConditions;
-			} else if (key.equals("$ne")) {
-				value = convertId(value);
 			}
 
 			newDbo.put(newKey, convertSimpleOrDBObject(value, null));
