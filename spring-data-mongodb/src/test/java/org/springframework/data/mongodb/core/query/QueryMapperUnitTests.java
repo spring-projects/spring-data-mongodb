@@ -21,7 +21,9 @@ import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import org.bson.types.ObjectId;
 import org.junit.Before;
@@ -211,6 +213,25 @@ public class QueryMapperUnitTests {
 		assertThat(((DBObject) result.get("nested")).get("id"), is(instanceOf(String.class)));
 	}
 
+	/**
+	 * @see DATAMONGO-493
+	 */
+	@Test
+	public void doesNotTranslateNonIdPropertiesFor$NeCriteria() {
+
+		ObjectId accidentallyAnObjectId = new ObjectId();
+
+		Query query = Query.query(Criteria.where("id").is("id_value").and("publishers")
+				.ne(accidentallyAnObjectId.toString()));
+
+		DBObject dbObject = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(UserEntity.class));
+		assertThat(dbObject.get("publishers"), is(instanceOf(DBObject.class)));
+
+		DBObject publishers = (DBObject) dbObject.get("publishers");
+		assertThat(publishers.containsField("$ne"), is(true));
+		assertThat(publishers.get("$ne"), is(instanceOf(String.class)));
+	}
+
 	class IdWrapper {
 		Object id;
 	}
@@ -235,5 +256,10 @@ public class QueryMapperUnitTests {
 
 	enum Enum {
 		INSTANCE;
+	}
+
+	class UserEntity {
+		String id;
+		List<String> publishers = new ArrayList<String>();
 	}
 }
