@@ -1,6 +1,23 @@
 Spring Data Document Changelog
 =============================================
 
+** Bug
+    * [DATAMONGO-467] - String @id field is not mapped to ObjectId when using QueryDSL ".id" path
+    * [DATAMONGO-469] - Query creation from method names using AND criteria does not work anymore
+    * [DATAMONGO-474] - Wrong property is used for Id mapping
+    * [DATAMONGO-475] - 'group' operation fails where query references non primitive property
+    * [DATAMONGO-480] - The WriteResultChecking is not used in case of insert or save of documents.
+    * [DATAMONGO-483] - @Indexed(unique=true, name="foo") puts name's value to the 'key' in the MongoDB 
+    * [DATAMONGO-489] - ClassCastException when loading Map<String, String[]>
+
+** Improvement
+    * [DATAMONGO-466] - QueryMapper shouldn't map id properties of nested classes
+    * [DATAMONGO-470] - Criteria and Query should have proper equals(…) and hashCode() method.
+    * [DATAMONGO-482] - typo in documentation - 2 i's in usiing 
+
+** Task
+    * [DATAMONGO-492] - Release 1.0.3
+
 Changes in version 1.0.2.RELEASE MongoDB (2012-06-20)
 -----------------------------------------------------
 ** Bug
