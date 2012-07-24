@@ -218,17 +218,19 @@ public class QueryMapperUnitTests {
 	 * @see DATAMONGO-493
 	 */
 	@Test
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public void foo() {
+	public void doesNotTranslateNonIdPropertiesFor$NeCriteria() {
 
-		Query query = Query.query(Criteria.where("id").is("id_value").and("publishers").ne("a_string_value"));
+		ObjectId accidentallyAnObjectId = new ObjectId();
+
+		Query query = Query.query(Criteria.where("id").is("id_value").and("publishers")
+				.ne(accidentallyAnObjectId.toString()));
 
 		DBObject dbObject = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(UserEntity.class));
-		assertThat(dbObject.get("publishers"), isA((Class) DBObject.class));
+		assertThat(dbObject.get("publishers"), is(instanceOf(DBObject.class)));
 
 		DBObject publishers = (DBObject) dbObject.get("publishers");
 		assertThat(publishers.containsField("$ne"), is(true));
-		assertThat(publishers.get("$ne"), is((Object) "a_string_value"));
+		assertThat(publishers.get("$ne"), is(instanceOf(String.class)));
 	}
 
 	class IdWrapper {
