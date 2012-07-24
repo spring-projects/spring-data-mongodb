@@ -1,6 +1,97 @@
 Spring Data MongoDB Changelog
 =============================================
 
+Changes in version 1.1.0.M2 (2012-24-07)
+----------------------------------------
+** Bug
+    * [DATAMONGO-378] - MapReduceResults ClassCastException due to raw results counts as Long
+    * [DATAMONGO-424] - Declaring a list of DBRef in a domian class results in Null for each DBRef when reading from mongo database
+    * [DATAMONGO-425] - Binding a Date to a manually defined repository query fails
+    * [DATAMONGO-428] - ClassCastException when using outputDatabase option in map-reduce
+    * [DATAMONGO-446] - Pageable query methods returning List are broken
+    * [DATAMONGO-447] - Removal of Documents fails in in debug mode for Documents with complex ids
+    * [DATAMONGO-450] - enabling DEBUG causes RuntimeException
+    * [DATAMONGO-454] - ServerAddressPropertyEditor fails if a hostname is unresolvable 
+    * [DATAMONGO-458] - When reading back empty collections unmodifiable instances of Collections.emptyList/Set is returned.
+    * [DATAMONGO-462] - findAll() fails with NPE - discovering the root cause
+    * [DATAMONGO-465] - Mongo inserts document with "_id" as an integer but saves with "_id" as a string. 
+    * [DATAMONGO-467] - String @id field is not mapped to ObjectId when using QueryDSL ".id" path
+    * [DATAMONGO-469] - Query creation from method names using AND criteria does not work anymore
+    * [DATAMONGO-474] - Wrong property is used for Id mapping
+    * [DATAMONGO-475] - 'group' operation fails where query references non primitive property
+    * [DATAMONGO-480] - The WriteResultChecking is not used in case of insert or save of documents.
+    * [DATAMONGO-483] - @Indexed(unique=true, name="foo") puts name's value to the 'key' in the MongoDB 
+    * [DATAMONGO-489] - ClassCastException when loading Map<String, String[]>
+
+** Improvement
+    * [DATAMONGO-448] - Remove the need for Converters for complex classes that are used as IDs
+    * [DATAMONGO-455] - Document how to use raw queries using BasicQuery
+    * [DATAMONGO-460] - Improve Querydsl implementation internals
+    * [DATAMONGO-466] - QueryMapper shouldn't map id properties of nested classes
+    * [DATAMONGO-470] - Criteria and Query should have proper equals(…) and hashCode() method.
+    * [DATAMONGO-477] - Change upper bound of Google Guava package import to 13
+    * [DATAMONGO-482] - typo in documentation - 2 i's in usiing 
+    * [DATAMONGO-486] - Polish namspace implementation
+    * [DATAMONGO-491] - Release 1.1.0.M2
+
+** New Feature
+    * [DATAMONGO-476] - JavaConfig support for Mongo repositories
+
+** Task
+    * [DATAMONGO-451] - Tweak pom.xml to let Sonar build run without Bundlor
+    * [DATAMONGO-490] - Fix minor typos
+
+
+Changes in version 1.0.3.RELEASE (2012-24-07)
+---------------------------------------------
+** Bug
+    * [DATAMONGO-467] - String @id field is not mapped to ObjectId when using QueryDSL ".id" path
+    * [DATAMONGO-469] - Query creation from method names using AND criteria does not work anymore
+    * [DATAMONGO-474] - Wrong property is used for Id mapping
+    * [DATAMONGO-475] - 'group' operation fails where query references non primitive property
+    * [DATAMONGO-480] - The WriteResultChecking is not used in case of insert or save of documents.
+    * [DATAMONGO-483] - @Indexed(unique=true, name="foo") puts name's value to the 'key' in the MongoDB 
+    * [DATAMONGO-489] - ClassCastException when loading Map<String, String[]>
+
+** Improvement
+    * [DATAMONGO-466] - QueryMapper shouldn't map id properties of nested classes
+    * [DATAMONGO-470] - Criteria and Query should have proper equals(…) and hashCode() method.
+    * [DATAMONGO-482] - typo in documentation - 2 i's in usiing 
+
+** Task
+    * [DATAMONGO-492] - Release 1.0.3
+
+
+Changes in version 1.0.2.RELEASE (2012-06-20)
+---------------------------------------------
+** Bug
+    * [DATAMONGO-360] - java.lang.ClassCastException when placing GeospatialIndex into IndexOperations and invoking IndexOperations.getIndexInfo()
+    * [DATAMONGO-366] - Chapter 3.2. points to wrong bugtracker
+    * [DATAMONGO-378] - MapReduceResults ClassCastException due to raw results counts as Long
+    * [DATAMONGO-382] - ClassCastException: "com.mongodb.BasicDBObject cannot be cast to com.mongodb.BasicDBList" during find()
+    * [DATAMONGO-411] - Potential ClassCastExceptions in MongoPersistentEntityIndexCreator
+    * [DATAMONGO-412] - getUserCredentials() is called twice in AbstractMongoConfiguration::mongoDbFactory()
+    * [DATAMONGO-413] - Using "Or" in repository query yields a ClassCastException
+    * [DATAMONGO-422] - UUIDToBinaryConverter not compatible with mongo java driver
+    * [DATAMONGO-423] - Criteria.regex should use java.util.Pattern instead of $regex
+    * [DATAMONGO-425] - Binding a Date to a manually defined repository query fails
+    * [DATAMONGO-428] - ClassCastException when using outputDatabase option in map-reduce
+    * [DATAMONGO-429] - using @Query annotation, arrays are translated somewhere between query creation and mongo interpretation
+    * [DATAMONGO-446] - Pageable query methods returning List are broken
+    * [DATAMONGO-447] - Removal of Documents fails in in debug mode for Documents with complex ids
+    * [DATAMONGO-450] - enabling DEBUG causes RuntimeException
+    * [DATAMONGO-454] - ServerAddressPropertyEditor fails if a hostname is unresolvable 
+    * [DATAMONGO-461] - MappedConstructor potentially throws NullPointerException
+    * [DATAMONGO-462] - findAll() fails with NPE - discovering the root cause
+
+** Improvement
+    * [DATAMONGO-448] - Remove the need for Converters for complex classes that are used as IDs
+    * [DATAMONGO-455] - Document how to use raw queries using BasicQuery
+
+** Task
+    * [DATAMONGO-463] - Release 1.0.2
+
+
 Changes in version 1.1.0.M1 (2012-05-07)
 ----------------------------------------
 
