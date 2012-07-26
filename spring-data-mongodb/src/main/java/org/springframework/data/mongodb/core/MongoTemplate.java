@@ -1,15 +1,11 @@
 /*
- * Copyright 2010-2011 the original author or authors.
+ * Copyright 2010-2012 the original author or authors.
  *
- * Licensed under t
-import org.springframework.util.ResourceUtils;
-
-import org.springframework.data.convert.EntityReader;
-he Apache License, Version 2.0 (the "License");
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *			http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,6 +15,7 @@ he Apache License, Version 2.0 (the "License");
  */
 package org.springframework.data.mongodb.core;
 
+import static org.springframework.data.mongodb.core.SerializationUtils.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 
 import java.io.IOException;
@@ -340,7 +337,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug(String.format("Executing query: %s sort: %s fields: %s in collection: $s",
-					SerializationUtils.serializeToJsonSafely(queryObject), sortObject, fieldsObject, collectionName));
+					serializeToJsonSafely(queryObject), sortObject, fieldsObject, collectionName));
 		}
 
 		this.executeQueryInternal(new FindCallback(queryObject, fieldsObject), preparer, dch, collectionName);
@@ -887,7 +884,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 	/**
 	 * Returns a {@link Query} for the given entity by its id.
-	 *
+	 * 
 	 * @param object must not be {@literal null}.
 	 * @return
 	 */
@@ -1011,8 +1008,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		handleCommandError(commandResult, commandObject);
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug(String.format("MapReduce command result = [%s]",
-					SerializationUtils.serializeToJsonSafely(commandObject)));
+			LOGGER.debug(String.format("MapReduce command result = [%s]", serializeToJsonSafely(commandObject)));
 		}
 
 		MapReduceOutput mapReduceOutput = new MapReduceOutput(inputCollection, commandObject, commandResult);
@@ -1065,8 +1061,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		DBObject commandObject = new BasicDBObject("group", dbo);
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug(String.format("Executing Group with DBObject [%s]",
-					SerializationUtils.serializeToJsonSafely(commandObject)));
+			LOGGER.debug(String.format("Executing Group with DBObject [%s]", serializeToJsonSafely(commandObject)));
 		}
 
 		CommandResult commandResult = executeCommand(commandObject, getDb().getOptions());
@@ -1178,7 +1173,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 	/**
 	 * Create the specified collection using the provided options
-	 *
+	 * 
 	 * @param collectionName
 	 * @param collectionOptions
 	 * @return the collection that was created
@@ -1200,7 +1195,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * Map the results of an ad-hoc query on the default MongoDB collection to an object using the template's converter
 	 * <p/>
 	 * The query document is specified as a standard DBObject and so is the fields specification.
-	 *
+	 * 
 	 * @param collectionName name of the collection to retrieve the objects from
 	 * @param query the query document that specifies the criteria used to find a record
 	 * @param fields the document that specifies the fields to be returned
@@ -1225,7 +1220,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * The query document is specified as a standard DBObject and so is the fields specification.
 	 * <p/>
 	 * Can be overridden by subclasses.
-	 *
+	 * 
 	 * @param collectionName name of the collection to retrieve the objects from
 	 * @param query the query document that specifies the criteria used to find a record
 	 * @param fields the document that specifies the fields to be returned
@@ -1242,11 +1237,14 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 	protected <S, T> List<T> doFind(String collectionName, DBObject query, DBObject fields, Class<S> entityClass,
 			CursorPreparer preparer, DbObjectCallback<T> objectCallback) {
+
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
+
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("find using query: " + query + " fields: " + fields + " for class: " + entityClass
-					+ " in collection: " + collectionName);
+			LOGGER.debug(String.format("find using query: %s fields: %s for class: %s in collection: %s",
+					serializeToJsonSafely(query), fields, entityClass, collectionName));
 		}
+
 		return executeFindMultiInternal(new FindCallback(mapper.getMappedObject(query, entity), fields), preparer,
 				objectCallback, collectionName);
 	}
@@ -1255,7 +1253,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * Map the results of an ad-hoc query on the default MongoDB collection to a List using the template's converter.
 	 * <p/>
 	 * The query document is specified as a standard DBObject and so is the fields specification.
-	 *
+	 * 
 	 * @param collectionName name of the collection to retrieve the objects from
 	 * @param query the query document that specifies the criteria used to find a record
 	 * @param fields the document that specifies the fields to be returned
@@ -1294,7 +1292,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * The first document that matches the query is returned and also removed from the collection in the database.
 	 * <p/>
 	 * The query document is specified as a standard DBObject and so is the fields specification.
-	 *
+	 * 
 	 * @param collectionName name of the collection to retrieve the objects from
 	 * @param query the query document that specifies the criteria used to find a record
 	 * @param entityClass the parameterized type of the returned list.
@@ -1341,7 +1339,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 	/**
 	 * Populates the id property of the saved object, if it's not set already.
-	 *
+	 * 
 	 * @param savedObject
 	 * @param id
 	 */
@@ -1394,7 +1392,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * <li>Execute the given {@link ConnectionCallback} for a {@link DBObject}.</li>
 	 * <li>Apply the given {@link DbObjectCallback} to each of the {@link DBObject}s to obtain the result.</li>
 	 * <ol>
-	 *
+	 * 
 	 * @param <T>
 	 * @param collectionCallback the callback to retrieve the {@link DBObject} with
 	 * @param objectCallback the {@link DbObjectCallback} to transform {@link DBObject}s into the actual domain type
