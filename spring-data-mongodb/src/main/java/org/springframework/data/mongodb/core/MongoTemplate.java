@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core;
 
+import static org.springframework.data.mongodb.core.SerializationUtils.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 
 import java.io.IOException;
@@ -337,7 +338,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug(String.format("Executing query: %s sort: %s fields: %s in collection: $s",
-					SerializationUtils.serializeToJsonSafely(queryObject), sortObject, fieldsObject, collectionName));
+					serializeToJsonSafely(queryObject), sortObject, fieldsObject, collectionName));
 		}
 
 		this.executeQueryInternal(new FindCallback(queryObject, fieldsObject), preparer, dch, collectionName);
@@ -1021,8 +1022,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		handleCommandError(commandResult, commandObject);
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug(String.format("MapReduce command result = [%s]",
-					SerializationUtils.serializeToJsonSafely(commandObject)));
+			LOGGER.debug(String.format("MapReduce command result = [%s]", serializeToJsonSafely(commandObject)));
 		}
 
 		MapReduceOutput mapReduceOutput = new MapReduceOutput(inputCollection, commandObject, commandResult);
@@ -1075,8 +1075,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		DBObject commandObject = new BasicDBObject("group", dbo);
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug(String.format("Executing Group with DBObject [%s]",
-					SerializationUtils.serializeToJsonSafely(commandObject)));
+			LOGGER.debug(String.format("Executing Group with DBObject [%s]", serializeToJsonSafely(commandObject)));
 		}
 
 		CommandResult commandResult = executeCommand(commandObject, getDb().getOptions());
@@ -1252,11 +1251,14 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 	protected <S, T> List<T> doFind(String collectionName, DBObject query, DBObject fields, Class<S> entityClass,
 			CursorPreparer preparer, DbObjectCallback<T> objectCallback) {
+
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
+
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("find using query: " + query + " fields: " + fields + " for class: " + entityClass
-					+ " in collection: " + collectionName);
+			LOGGER.debug(String.format("find using query: %s fields: %s for class: %s in collection: %s",
+					serializeToJsonSafely(query), fields, entityClass, collectionName));
 		}
+
 		return executeFindMultiInternal(new FindCallback(mapper.getMappedObject(query, entity), fields), preparer,
 				objectCallback, collectionName);
 	}
