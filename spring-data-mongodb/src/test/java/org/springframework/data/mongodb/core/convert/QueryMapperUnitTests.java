@@ -1,11 +1,11 @@
 /*
- * Copyright (c) 2011 by the original author(s).
+ * Copyright 2011-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,6 +19,7 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
+import static org.springframework.data.mongodb.core.DBObjectUtils.*;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -51,7 +52,6 @@ import com.mongodb.QueryBuilder;
  * @author Oliver Gierke
  */
 @RunWith(MockitoJUnitRunner.class)
-@SuppressWarnings("unused")
 public class QueryMapperUnitTests {
 
 	QueryMapper mapper;
@@ -231,6 +231,26 @@ public class QueryMapperUnitTests {
 		DBObject publishers = (DBObject) dbObject.get("publishers");
 		assertThat(publishers.containsField("$ne"), is(true));
 		assertThat(publishers.get("$ne"), is(instanceOf(String.class)));
+	}
+
+	/**
+	 * @see DATAMONGO-494
+	 */
+	@Test
+	public void usesEntityMetadataInOr() {
+
+		Query query = query(new Criteria().orOperator(where("foo").is("bar")));
+		DBObject result = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(Sample.class));
+
+		assertThat(result.keySet(), hasSize(1));
+		assertThat(result.keySet(), hasItem("$or"));
+
+		BasicDBList ors = getAsDBList(result, "$or");
+		assertThat(ors, hasSize(1));
+		DBObject criterias = getAsDBObject(ors, 0);
+		assertThat(criterias.keySet(), hasSize(1));
+		assertThat(criterias.get("_id"), is(notNullValue()));
+		assertThat(criterias.get("foo"), is(nullValue()));
 	}
 
 	class IdWrapper {
