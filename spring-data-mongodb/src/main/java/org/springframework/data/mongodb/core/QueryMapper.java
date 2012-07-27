@@ -101,7 +101,7 @@ public class QueryMapper {
 				BasicBSONList newConditions = new BasicBSONList();
 				Iterator<?> iter = conditions.iterator();
 				while (iter.hasNext()) {
-					newConditions.add(getMappedObject((DBObject) iter.next(), null));
+					newConditions.add(getMappedObject((DBObject) iter.next(), entity));
 				}
 				value = newConditions;
 			}

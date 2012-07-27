@@ -19,6 +19,7 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
+import static org.springframework.data.mongodb.core.DBObjectUtils.*;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -50,7 +51,6 @@ import com.mongodb.QueryBuilder;
  * @author Oliver Gierke
  */
 @RunWith(MockitoJUnitRunner.class)
-@SuppressWarnings("unused")
 public class QueryMapperUnitTests {
 
 	QueryMapper mapper;
@@ -230,6 +230,26 @@ public class QueryMapperUnitTests {
 		DBObject publishers = (DBObject) dbObject.get("publishers");
 		assertThat(publishers.containsField("$ne"), is(true));
 		assertThat(publishers.get("$ne"), is(instanceOf(String.class)));
+	}
+
+	/**
+	 * @see DATAMONGO-494
+	 */
+	@Test
+	public void usesEntityMetadataInOr() {
+
+		Query query = query(new Criteria().orOperator(where("foo").is("bar")));
+		DBObject result = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(Sample.class));
+
+		assertThat(result.keySet(), hasSize(1));
+		assertThat(result.keySet(), hasItem("$or"));
+
+		BasicDBList ors = getAsDBList(result, "$or");
+		assertThat(ors, hasSize(1));
+		DBObject criterias = getAsDBObject(ors, 0);
+		assertThat(criterias.keySet(), hasSize(1));
+		assertThat(criterias.get("_id"), is(notNullValue()));
+		assertThat(criterias.get("foo"), is(nullValue()));
 	}
 
 	class IdWrapper {
