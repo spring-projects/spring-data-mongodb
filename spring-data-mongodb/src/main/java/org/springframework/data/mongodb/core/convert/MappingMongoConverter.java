@@ -720,11 +720,12 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		Assert.notNull(targetType);
 
+		Class<?> collectionType = targetType.getType();
+
 		if (sourceValue.isEmpty()) {
-			return new HashSet<Object>();
+			return getPotentiallyConvertedSimpleRead(new HashSet<Object>(), collectionType);
 		}
 
-		Class<?> collectionType = targetType.getType();
 		collectionType = Collection.class.isAssignableFrom(collectionType) ? collectionType : List.class;
 
 		Collection<Object> items = targetType.getType().isArray() ? new ArrayList<Object>() : CollectionFactory
