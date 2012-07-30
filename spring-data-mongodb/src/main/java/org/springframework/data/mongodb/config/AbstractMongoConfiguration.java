@@ -39,7 +39,7 @@ import org.springframework.util.StringUtils;
 import com.mongodb.Mongo;
 
 /**
- * Base class for Spring Data Mongo configuration using JavaConfig.
+ * Base class for Spring Data MongoDB configuration using JavaConfig.
  * 
  * @author Mark Pollack
  * @author Oliver Gierke
@@ -96,12 +96,16 @@ public abstract class AbstractMongoConfiguration {
 	}
 
 	/**
-	 * Return the base package to scan for mapped {@link Document}s.
+	 * Return the base package to scan for mapped {@link Document}s. Will return the package name of the configuration
+	 * class' (the concrete class, not this one here) by default. So if you have a {@code com.acme.AppConfig} extending
+	 * {@link AbstractMongoConfiguration} the base package will be considered {@code com.acme} unless the method is
+	 * overriden to implement alternate behaviour.
 	 * 
-	 * @return
+	 * @return the base package to scan for mapped {@link Document} classes or {@literal null} to not enable scanning for
+	 *         entities.
 	 */
 	protected String getMappingBasePackage() {
-		return null;
+		return getClass().getPackage().getName();
 	}
 
 	/**
