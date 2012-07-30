@@ -1252,6 +1252,18 @@ public class MappingMongoConverterUnitTests {
 		assertThat(values, is(arrayWithSize(2)));
 	}
 
+	/**
+	 * @see DATAMONGO-497
+	 */
+	@Test
+	public void readsEmptyCollectionIntoConstructorCorrectly() {
+
+		DBObject source = new BasicDBObject("attributes", new BasicDBList());
+
+		TypWithCollectionConstructor result = converter.read(TypWithCollectionConstructor.class, source);
+		assertThat(result.attributes, is(notNullValue()));
+	}
+
 	private static void assertSyntheticFieldValueOf(Object target, Object expected) {
 
 		for (int i = 0; i < 10; i++) {
@@ -1438,6 +1450,15 @@ public class MappingMongoConverterUnitTests {
 
 	static class ComplexId {
 		Long innerId;
+	}
+
+	static class TypWithCollectionConstructor {
+
+		List<Attribute> attributes;
+
+		public TypWithCollectionConstructor(List<Attribute> attributes) {
+			this.attributes = attributes;
+		}
 	}
 
 	private class LocalDateToDateConverter implements Converter<LocalDate, Date> {
