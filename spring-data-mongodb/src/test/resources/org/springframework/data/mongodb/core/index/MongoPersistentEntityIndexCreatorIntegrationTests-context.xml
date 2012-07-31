@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:mongo="http://www.springframework.org/schema/data/mongo"
+	xsi:schemaLocation="http://www.springframework.org/schema/data/mongo http://www.springframework.org/schema/data/mongo/spring-mongo.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+	<mongo:mapping-converter id="mongoConverter" db-factory-ref="factory1" 
+		base-package="org.springframework.data.mongodb.core.index" />
+
+	<bean id="mongo1" class="org.springframework.data.mongodb.core.MongoTemplate">
+		<constructor-arg ref="factory1" />
+		<constructor-arg ref="mongoConverter" />
+	</bean>
+
+	<bean id="mongo2" class="org.springframework.data.mongodb.core.MongoTemplate">
+		<constructor-arg ref="factory2" />
+	</bean>
+
+	<mongo:db-factory id="factory1" host="127.0.0.1" dbname="mongo-index-db1" />
+	<mongo:db-factory id="factory2" host="127.0.0.1" dbname="mongo-index-db2" />
+
+</beans>

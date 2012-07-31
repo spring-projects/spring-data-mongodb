@@ -15,7 +15,6 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -253,13 +252,9 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			public void doWithAssociation(Association<MongoPersistentProperty> association) {
 				MongoPersistentProperty inverseProp = association.getInverse();
 				Object obj = getValueInternal(inverseProp, dbo, evaluator, result);
-				try {
-					wrapper.setProperty(inverseProp, obj);
-				} catch (IllegalAccessException e) {
-					throw new MappingException(e.getMessage(), e);
-				} catch (InvocationTargetException e) {
-					throw new MappingException(e.getMessage(), e);
-				}
+
+				wrapper.setProperty(inverseProp, obj);
+
 			}
 		});
 

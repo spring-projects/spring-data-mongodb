@@ -1356,21 +1356,13 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		ConversionService conversionService = mongoConverter.getConversionService();
 		BeanWrapper<PersistentEntity<Object, ?>, Object> wrapper = BeanWrapper.create(savedObject, conversionService);
 
-		try {
+		Object idValue = wrapper.getProperty(idProp, idProp.getType(), true);
 
-			Object idValue = wrapper.getProperty(idProp, idProp.getType(), true);
-
-			if (idValue != null) {
-				return;
-			}
-
-			wrapper.setProperty(idProp, id);
-
-		} catch (IllegalAccessException e) {
-			throw new MappingException(e.getMessage(), e);
-		} catch (InvocationTargetException e) {
-			throw new MappingException(e.getMessage(), e);
+		if (idValue != null) {
+			return;
 		}
+
+		wrapper.setProperty(idProp, id);
 	}
 
 	private DBCollection getAndPrepareCollection(DB db, String collectionName) {
