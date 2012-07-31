@@ -14,7 +14,7 @@
 	<xsd:import namespace="http://www.springframework.org/schema/context"
 				schemaLocation="http://www.springframework.org/schema/context/spring-context.xsd" />
 	<xsd:import namespace="http://www.springframework.org/schema/data/repository"
-				schemaLocation="http://www.springframework.org/schema/data/repository/spring-repository.xsd" />
+				schemaLocation="http://www.springframework.org/schema/data/repository/spring-repository-1.0.xsd" />
 
 	<xsd:element name="mongo" type="mongoType">
 		<xsd:annotation>
