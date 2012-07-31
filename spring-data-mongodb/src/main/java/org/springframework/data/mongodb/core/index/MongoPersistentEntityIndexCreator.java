@@ -44,12 +44,13 @@ import com.mongodb.util.JSON;
  * @author Oliver Gierke
  */
 public class MongoPersistentEntityIndexCreator implements
-		ApplicationListener<MappingContextEvent<MongoPersistentEntity<MongoPersistentProperty>, MongoPersistentProperty>> {
+		ApplicationListener<MappingContextEvent<MongoPersistentEntity<?>, MongoPersistentProperty>> {
 
 	private static final Logger log = LoggerFactory.getLogger(MongoPersistentEntityIndexCreator.class);
 
 	private final Map<Class<?>, Boolean> classesSeen = new ConcurrentHashMap<Class<?>, Boolean>();
 	private final MongoDbFactory mongoDbFactory;
+	private final MongoMappingContext mappingContext;
 
 	/**
 	 * Creats a new {@link MongoPersistentEntityIndexCreator} for the given {@link MongoMappingContext} and
@@ -62,7 +63,9 @@ public class MongoPersistentEntityIndexCreator implements
 
 		Assert.notNull(mongoDbFactory);
 		Assert.notNull(mappingContext);
+
 		this.mongoDbFactory = mongoDbFactory;
+		this.mappingContext = mappingContext;
 
 		for (MongoPersistentEntity<?> entity : mappingContext.getPersistentEntities()) {
 			checkForIndexes(entity);
@@ -73,8 +76,11 @@ public class MongoPersistentEntityIndexCreator implements
 	 * (non-Javadoc)
 	 * @see org.springframework.context.ApplicationListener#onApplicationEvent(org.springframework.context.ApplicationEvent)
 	 */
-	public void onApplicationEvent(
-			MappingContextEvent<MongoPersistentEntity<MongoPersistentProperty>, MongoPersistentProperty> event) {
+	public void onApplicationEvent(MappingContextEvent<MongoPersistentEntity<?>, MongoPersistentProperty> event) {
+
+		if (!event.wasEmittedBy(mappingContext)) {
+			return;
+		}
 
 		PersistentEntity<?, ?> entity = event.getPersistentEntity();
 

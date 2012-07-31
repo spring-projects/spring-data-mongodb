@@ -24,9 +24,13 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.context.ApplicationContext;
+import org.springframework.data.mapping.event.MappingContextEvent;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 
 import com.mongodb.DBObject;
 
@@ -40,6 +44,8 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 
 	@Mock
 	MongoDbFactory factory;
+	@Mock
+	ApplicationContext context;
 
 	@Test
 	public void buildsIndexDefinitionUsingFieldName() {
@@ -53,6 +59,26 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 		assertThat(creator.indexDefinition, is(notNullValue()));
 		assertThat(creator.indexDefinition.keySet(), hasItem("fieldname"));
 		assertThat(creator.name, is("indexName"));
+	}
+
+	@Test
+	public void doesNotCreateIndexForEntityComingFromDifferentMappingContext() {
+
+		MongoMappingContext mappingContext = new MongoMappingContext();
+
+		MongoMappingContext personMappingContext = new MongoMappingContext();
+		personMappingContext.setInitialEntitySet(Collections.singleton(Person.class));
+		personMappingContext.initialize();
+
+		DummyMongoPersistentEntityIndexCreator creator = new DummyMongoPersistentEntityIndexCreator(mappingContext, factory);
+
+		MongoPersistentEntity<?> entity = personMappingContext.getPersistentEntity(Person.class);
+		MappingContextEvent<MongoPersistentEntity<?>, MongoPersistentProperty> event = new MappingContextEvent<MongoPersistentEntity<?>, MongoPersistentProperty>(
+				personMappingContext, entity);
+
+		creator.onApplicationEvent(event);
+
+		assertThat(creator.indexDefinition, is(nullValue()));
 	}
 
 	static class Person {

@@ -48,6 +48,7 @@ import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.core.type.filter.AssignableTypeFilter;
 import org.springframework.core.type.filter.TypeFilter;
 import org.springframework.data.annotation.Persistent;
+import org.springframework.data.config.BeanComponentDefinitionBuilder;
 import org.springframework.data.mongodb.core.convert.CustomConversions;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexCreator;
@@ -166,26 +167,34 @@ public class MappingMongoConverterParser extends AbstractBeanDefinitionParser {
 			BeanDefinition conversionsDefinition) {
 
 		String ctxRef = element.getAttribute("mapping-context-ref");
-		if (!StringUtils.hasText(ctxRef)) {
-			BeanDefinitionBuilder mappingContextBuilder = BeanDefinitionBuilder
-					.genericBeanDefinition(MongoMappingContext.class);
 
-			Set<String> classesToAdd = getInititalEntityClasses(element, mappingContextBuilder);
-			if (classesToAdd != null) {
-				mappingContextBuilder.addPropertyValue("initialEntitySet", classesToAdd);
-			}
-
-			if (conversionsDefinition != null) {
-				AbstractBeanDefinition simpleTypesDefinition = new GenericBeanDefinition();
-				simpleTypesDefinition.setFactoryBeanName("customConversions");
-				simpleTypesDefinition.setFactoryMethodName("getSimpleTypeHolder");
-
-				mappingContextBuilder.addPropertyValue("simpleTypeHolder", simpleTypesDefinition);
-			}
-
-			parserContext.getRegistry().registerBeanDefinition(MAPPING_CONTEXT, mappingContextBuilder.getBeanDefinition());
-			ctxRef = MAPPING_CONTEXT;
+		if (StringUtils.hasText(ctxRef)) {
+			return ctxRef;
 		}
+
+		BeanComponentDefinitionBuilder componentDefinitionBuilder = new BeanComponentDefinitionBuilder(element,
+				parserContext);
+
+		BeanDefinitionBuilder mappingContextBuilder = BeanDefinitionBuilder
+				.genericBeanDefinition(MongoMappingContext.class);
+
+		Set<String> classesToAdd = getInititalEntityClasses(element, mappingContextBuilder);
+		if (classesToAdd != null) {
+			mappingContextBuilder.addPropertyValue("initialEntitySet", classesToAdd);
+		}
+
+		if (conversionsDefinition != null) {
+			AbstractBeanDefinition simpleTypesDefinition = new GenericBeanDefinition();
+			simpleTypesDefinition.setFactoryBeanName("customConversions");
+			simpleTypesDefinition.setFactoryMethodName("getSimpleTypeHolder");
+
+			mappingContextBuilder.addPropertyValue("simpleTypeHolder", simpleTypesDefinition);
+		}
+
+		parserContext.getRegistry().registerBeanDefinition(MAPPING_CONTEXT, mappingContextBuilder.getBeanDefinition());
+		ctxRef = MAPPING_CONTEXT;
+
+		parserContext.registerBeanComponent(componentDefinitionBuilder.getComponent(mappingContextBuilder, ctxRef));
 
 		return ctxRef;
 	}
