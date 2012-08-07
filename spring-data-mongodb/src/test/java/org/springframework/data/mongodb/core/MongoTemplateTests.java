@@ -15,17 +15,28 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
-import static org.springframework.data.mongodb.core.query.Criteria.*;
-import static org.springframework.data.mongodb.core.query.Query.*;
-import static org.springframework.data.mongodb.core.query.Update.*;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.isOneOf;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.startsWith;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.springframework.data.mongodb.core.query.Query.query;
+import static org.springframework.data.mongodb.core.query.Update.update;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.bson.types.ObjectId;
 import org.joda.time.DateTime;
@@ -58,6 +69,7 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
@@ -70,7 +82,7 @@ import com.mongodb.WriteResult;
 
 /**
  * Integration test for {@link MongoTemplate}.
- * 
+ *
  * @author Oliver Gierke
  * @author Thomas Risberg
  * @author Amol Nayak
@@ -1230,6 +1242,225 @@ public class MongoTemplateTests {
 
 		template.save(source);
 		template.remove(query(where("id").is(id)), TypeWithMyId.class);
+	}
+
+	/**
+	 * @see DATAMONGO-501
+	 */
+	@Test
+	public void isCollectionCappedOnNonExistent() {
+		boolean isCapped = template.isCollectionCapped("SomeNonExistentColl");
+		Assert.assertEquals(false, isCapped);
+	}
+
+
+	/**
+	 * @see DATAMONGO-501
+	 */
+	@Test
+	public void isCollectionCappedOnNonCapped() {
+		template.dropCollection("TestNonCappedCollection");
+		template.createCollection("TestNonCappedCollection");
+		boolean isCapped = template.isCollectionCapped("TestNonCappedCollection");
+		Assert.assertEquals(false, isCapped);
+	}
+
+	/**
+	 * @see DATAMONGO-501
+	 */
+	@Test
+	public void isCollectionCappedOnCapped() {
+		template.dropCollection("TestCappedCollection");
+		template.createCollection("TestCappedCollection",new CollectionOptions(1024, null, true));
+		boolean isCapped = template.isCollectionCapped("TestCappedCollection");
+		Assert.assertEquals(true, isCapped);
+	}
+
+	/**
+	 * @see DATAMONGO-501
+	 */
+	@Test
+	public void withNullTailingCursorConfig() {
+		try {
+			template.tailCollection(null, null);
+		} catch (IllegalArgumentException e) {
+			Assert.assertEquals("Provide a non null instance of TailingCursorConfig", e.getMessage());
+		}
+	}
+
+	/**
+	 * @see DATAMONGO-501
+	 */
+	@Test
+	public void withNullTailingCursorListener() {
+		try {
+			template.tailCollection(new TailingCursorConfig(), null);
+		} catch (IllegalArgumentException e) {
+			Assert.assertEquals("Provide a non null instance of TailingCursorDocumentListener", e.getMessage());
+		}
+	}
+
+
+	/**
+	 * @see DATAMONGO-501
+	 */
+	@Test
+	public void tailWithNullCollection() {
+		try {
+			template.tailCollection(new TailingCursorConfig(), new TailingCursorDocumentListener() {
+
+				public void processDocument(DBObject doc) {
+					//NOP
+				}
+			});
+		} catch (IllegalArgumentException e) {
+			Assert.assertEquals("Provide a non null and non empty collection name", e.getMessage());
+		}
+	}
+
+	/**
+	 * @see DATAMONGO-501
+	 */
+	@Test
+	public void tailWithNullIncreasingKey() {
+		try {
+			template.tailCollection(new TailingCursorConfig()
+									.withCollectionName("CollName"),
+									new TailingCursorDocumentListener() {
+
+				public void processDocument(DBObject doc) {
+					//NOP
+				}
+			});
+		} catch (IllegalArgumentException e) {
+			Assert.assertEquals("Provide a non null and non empty increasing key", e.getMessage());
+		}
+	}
+
+	/**
+	 * @see DATAMONGO-501
+	 */
+	@Test
+	public void tailOnNonCappedCollection() {
+		template.dropCollection("TestNonCappedCollection");
+		template.createCollection("TestNonCappedCollection");
+		try {
+			template.tailCollection("TestNonCappedCollection", "SomeIncKey",
+					new TailingCursorDocumentListener() {
+
+						public void processDocument(DBObject doc) {
+							//NOP
+
+						}
+					});
+		} catch (Exception e) {
+			Assert.assertEquals("Tail can be invoked only on capped collections," +
+					" TestNonCappedCollection is not a capped collection",e.getMessage());
+		}
+	}
+
+	/**
+	 * @see DATAMONGO-501
+	 */
+	@Test
+	public void tailAnEmptyCollection() throws Exception {
+		template.dropCollection("SomeTestCappedCollection");
+		template.createCollection("SomeTestCappedCollection",
+				new CollectionOptions(1024,100,true));
+		final AtomicInteger counter = new AtomicInteger(0);
+		//Latch to indicate that all the docs are now delivered
+		final CountDownLatch  latch = new CountDownLatch(3);
+		template.tailCollection("SomeTestCappedCollection", "id",
+				new TailingCursorDocumentListener() {
+					public void processDocument(DBObject doc) {
+						counter.incrementAndGet();
+						latch.countDown();
+					}
+				});
+		Thread.sleep(100);
+		template.insertDBObjectList("SomeTestCappedCollection",
+				new ArrayList<DBObject>((Arrays.asList(
+							new BasicDBObject("id", 1).append("name", "Name1")
+							,new BasicDBObject("id", 2).append("name", "Name2")
+							,new BasicDBObject("id", 3).append("name", "Name3")))));
+		latch.await();
+		Assert.assertEquals(3, counter.get());
+	}
+
+	/**
+	 * @see DATAMONGO-501
+	 */
+	@Test
+	public void tailANonEmptyCollection() throws Exception {
+		setupCappedCollectionWithData();
+		final AtomicInteger counter = new AtomicInteger(0);
+		//Latch to indicate that all the docs are now delivered
+		final CountDownLatch  latch = new CountDownLatch(3);
+
+		template.tailCollection("SomeTestCappedCollection", "id",
+				new TailingCursorDocumentListener() {
+					public void processDocument(DBObject doc) {
+						counter.incrementAndGet();
+						latch.countDown();
+					}
+				});
+
+		Thread.sleep(100);
+		template.insertDBObjectList("SomeTestCappedCollection",
+				new ArrayList<DBObject>((Arrays.asList(
+							new BasicDBObject("id", 4).append("name", "Name4")
+							,new BasicDBObject("id", 5).append("name", "Name5")
+							,new BasicDBObject("id", 6).append("name", "Name6")))));
+		latch.await();
+		Assert.assertEquals(3, counter.get());
+	}
+
+	private void setupCappedCollectionWithData() throws InterruptedException {
+		template.dropCollection("SomeTestCappedCollection");
+		template.createCollection("SomeTestCappedCollection",
+				new CollectionOptions(1024,100,true));
+		template.insertDBObjectList("SomeTestCappedCollection",
+				new ArrayList<DBObject>((Arrays.asList(
+							new BasicDBObject("id", 1).append("name", "Name1")
+							,new BasicDBObject("id", 2).append("name", "Name2")
+							,new BasicDBObject("id", 3).append("name", "Name3")))));
+		Thread.sleep(100);
+	}
+
+	/**
+	 * @see DATAMONGO-501
+	 */
+	@Test
+	public void tailStopTest() throws Exception {
+		setupCappedCollectionWithData();
+
+		final AtomicInteger counter = new AtomicInteger(0);
+		//Latch to indicate that all the docs are now delivered
+		final CountDownLatch  latch = new CountDownLatch(3);
+
+		TailingCursorHandle handle = template.tailCollection("SomeTestCappedCollection", "id",
+				new TailingCursorDocumentListener() {
+					public void processDocument(DBObject doc) {
+						counter.incrementAndGet();
+						latch.countDown();
+					}
+				});
+
+		Thread.sleep(100);
+		template.insertDBObjectList("SomeTestCappedCollection",
+				new ArrayList<DBObject>((Arrays.asList(
+							new BasicDBObject("id", 4).append("name", "Name4")
+							,new BasicDBObject("id", 5).append("name", "Name5")
+							,new BasicDBObject("id", 6).append("name", "Name6")))));
+		Thread.sleep(100);
+		handle.stopTailing();
+		template.insertDBObjectList("SomeTestCappedCollection",
+				new ArrayList<DBObject>((Arrays.asList(
+							new BasicDBObject("id", 7).append("name", "Name4")
+							,new BasicDBObject("id", 8).append("name", "Name5")
+							,new BasicDBObject("id", 9).append("name", "Name6")))));
+		latch.await();
+		Assert.assertEquals(3, counter.get());
 	}
 
 	static class MyId {
