@@ -17,9 +17,9 @@ package org.springframework.data.mongodb.core.convert;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
+import static org.springframework.data.mongodb.core.DBObjectUtils.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
-import static org.springframework.data.mongodb.core.DBObjectUtils.*;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -35,6 +35,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.Person;
+import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.query.BasicQuery;
@@ -253,6 +254,39 @@ public class QueryMapperUnitTests {
 		assertThat(criterias.get("foo"), is(nullValue()));
 	}
 
+	@Test
+	public void translatesPropertyReferenceCorrectly() {
+
+		Query query = query(where("field").is(new CustomizedField()));
+		DBObject result = mapper
+				.getMappedObject(query.getQueryObject(), context.getPersistentEntity(CustomizedField.class));
+
+		assertThat(result.containsField("foo"), is(true));
+		assertThat(result.keySet().size(), is(1));
+	}
+
+	@Test
+	public void translatesNestedPropertyReferenceCorrectly() {
+
+		Query query = query(where("field.field").is(new CustomizedField()));
+		DBObject result = mapper
+				.getMappedObject(query.getQueryObject(), context.getPersistentEntity(CustomizedField.class));
+
+		assertThat(result.containsField("foo.foo"), is(true));
+		assertThat(result.keySet().size(), is(1));
+	}
+
+	@Test
+	public void returnsOriginalKeyIfNoPropertyReference() {
+
+		Query query = query(where("bar").is(new CustomizedField()));
+		DBObject result = mapper
+				.getMappedObject(query.getQueryObject(), context.getPersistentEntity(CustomizedField.class));
+
+		assertThat(result.containsField("bar"), is(true));
+		assertThat(result.keySet().size(), is(1));
+	}
+
 	class IdWrapper {
 		Object id;
 	}
@@ -282,5 +316,11 @@ public class QueryMapperUnitTests {
 	class UserEntity {
 		String id;
 		List<String> publishers = new ArrayList<String>();
+	}
+
+	class CustomizedField {
+
+		@Field("foo")
+		CustomizedField field;
 	}
 }

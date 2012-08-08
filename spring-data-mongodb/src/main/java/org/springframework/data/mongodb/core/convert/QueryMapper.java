@@ -25,6 +25,10 @@ import org.bson.types.ObjectId;
 import org.springframework.core.convert.ConversionException;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.data.mapping.PersistentEntity;
+import org.springframework.data.mapping.PropertyPath;
+import org.springframework.data.mapping.PropertyReferenceException;
+import org.springframework.data.mapping.context.MappingContext;
+import org.springframework.data.mapping.context.PersistentPropertyPath;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.util.Assert;
@@ -46,6 +50,7 @@ public class QueryMapper {
 
 	private final ConversionService conversionService;
 	private final MongoConverter converter;
+	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 
 	/**
 	 * Creates a new {@link QueryMapper} with the given {@link MongoConverter}.
@@ -53,9 +58,12 @@ public class QueryMapper {
 	 * @param converter must not be {@literal null}.
 	 */
 	public QueryMapper(MongoConverter converter) {
+
 		Assert.notNull(converter);
+
 		this.conversionService = converter.getConversionService();
 		this.converter = converter;
+		this.mappingContext = converter.getMappingContext();
 	}
 
 	/**
@@ -72,7 +80,7 @@ public class QueryMapper {
 
 		for (String key : query.keySet()) {
 
-			String newKey = key;
+			String newKey = determineKey(key, entity);
 			Object value = query.get(key);
 
 			if (isIdKey(key, entity)) {
@@ -109,6 +117,28 @@ public class QueryMapper {
 		}
 
 		return newDbo;
+	}
+
+	/**
+	 * Returns the translated key assuming the given one is a propert (path) reference.
+	 * 
+	 * @param key the source key
+	 * @param entity the base entity
+	 * @return the translated key
+	 */
+	private String determineKey(String key, MongoPersistentEntity<?> entity) {
+
+		if (entity == null) {
+			return key;
+		}
+
+		try {
+			PropertyPath path = PropertyPath.from(key, entity.getTypeInformation());
+			PersistentPropertyPath<MongoPersistentProperty> propertyPath = mappingContext.getPersistentPropertyPath(path);
+			return propertyPath.toDotPath(MongoPersistentProperty.PropertyToFieldNameConverter.INSTANCE);
+		} catch (PropertyReferenceException e) {
+			return key;
+		}
 	}
 
 	/**
