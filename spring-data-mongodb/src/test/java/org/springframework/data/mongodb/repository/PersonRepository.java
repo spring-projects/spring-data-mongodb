@@ -183,4 +183,11 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	 */
 	List<Person> findByCreatedAtAfter(Date date);
 
+	/**
+	 * @see DATAMONGO-472
+	 * @param lastname
+	 * @return
+	 */
+	List<Person> findByLastnameNot(String lastname);
+
 }
