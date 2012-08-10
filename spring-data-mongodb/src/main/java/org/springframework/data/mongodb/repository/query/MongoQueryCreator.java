@@ -228,7 +228,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 		case SIMPLE_PROPERTY:
 			return criteria.is(parameters.nextConverted(property));
 		case NEGATING_SIMPLE_PROPERTY:
-			return criteria.not().is(parameters.nextConverted(property));
+			return criteria.ne(parameters.nextConverted(property));
 		}
 
 		throw new IllegalArgumentException("Unsupported keyword!");

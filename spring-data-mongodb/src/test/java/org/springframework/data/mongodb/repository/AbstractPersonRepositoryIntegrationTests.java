@@ -495,4 +495,15 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		List<Person> result = repository.findByCreatedAtLessThanManually(boyd.createdAt);
 		assertThat(result.isEmpty(), is(false));
 	}
+
+	/**
+	 * @see DATAMONGO-472
+	 */
+	@Test
+	public void findsPeopleUsingNotPredicate() {
+
+		List<Person> result = repository.findByLastnameNot("Matthews");
+		assertThat(result, not(hasItem(dave)));
+		assertThat(result, hasSize(5));
+	}
 }
