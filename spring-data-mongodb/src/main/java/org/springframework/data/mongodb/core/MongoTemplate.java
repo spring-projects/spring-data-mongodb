@@ -15,8 +15,8 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.springframework.data.mongodb.core.SerializationUtils.*;
-import static org.springframework.data.mongodb.core.query.Criteria.*;
+import static org.springframework.data.mongodb.core.SerializationUtils.serializeToJsonSafely;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -29,6 +29,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
@@ -86,6 +89,7 @@ import org.springframework.util.ResourceUtils;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.BasicDBObject;
+import com.mongodb.Bytes;
 import com.mongodb.CommandResult;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
@@ -95,6 +99,7 @@ import com.mongodb.MapReduceCommand;
 import com.mongodb.MapReduceOutput;
 import com.mongodb.Mongo;
 import com.mongodb.MongoException;
+import com.mongodb.MongoException.CursorNotFound;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
 import com.mongodb.WriteResult;
@@ -102,18 +107,22 @@ import com.mongodb.util.JSON;
 
 /**
  * Primary implementation of {@link MongoOperations}.
- * 
+ *
  * @author Thomas Risberg
  * @author Graeme Rocher
  * @author Mark Pollack
  * @author Oliver Gierke
  * @author Amol Nayak
+ *
  */
 public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(MongoTemplate.class);
 	private static final String ID = "_id";
 	private static final WriteResultChecking DEFAULT_WRITE_RESULT_CHECKING = WriteResultChecking.NONE;
+	//TODO: Currently setting the max number of threads to 100, finalize on an approach
+	private final ExecutorService executorService = Executors.newFixedThreadPool(100);
+
 	@SuppressWarnings("serial")
 	private static final List<String> ITERABLE_CLASSES = new ArrayList<String>() {
 		{
@@ -155,7 +164,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 	/**
 	 * Constructor used for a basic template configuration
-	 * 
+	 *
 	 * @param mongo
 	 * @param databaseName
 	 */
@@ -166,7 +175,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	/**
 	 * Constructor used for a template configuration with user credentials in the form of
 	 * {@link org.springframework.data.authentication.UserCredentials}
-	 * 
+	 *
 	 * @param mongo
 	 * @param databaseName
 	 * @param userCredentials
@@ -177,7 +186,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 	/**
 	 * Constructor used for a basic template configuration
-	 * 
+	 *
 	 * @param mongoDbFactory
 	 */
 	public MongoTemplate(MongoDbFactory mongoDbFactory) {
@@ -186,7 +195,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 	/**
 	 * Constructor used for a basic template configuration.
-	 * 
+	 *
 	 * @param mongoDbFactory
 	 * @param mongoConverter
 	 */
@@ -208,13 +217,12 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				((ApplicationEventPublisherAware) mappingContext).setApplicationEventPublisher(eventPublisher);
 			}
 		}
-
 	}
 
 	/**
 	 * Configures the {@link WriteResultChecking} to be used with the template. Setting {@literal null} will reset the
 	 * default of {@value #DEFAULT_WRITE_RESULT_CHECKING}.
-	 * 
+	 *
 	 * @param resultChecking
 	 */
 	public void setWriteResultChecking(WriteResultChecking resultChecking) {
@@ -223,7 +231,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 	/**
 	 * Configures the {@link WriteConcern} to be used with the template.
-	 * 
+	 *
 	 * @param writeConcern
 	 */
 	public void setWriteConcern(WriteConcern writeConcern) {
@@ -232,7 +240,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 	/**
 	 * Configures the {@link WriteConcernResolver} to be used with the template.
-	 * 
+	 *
 	 * @param writeConcernResolver
 	 */
 	public void setWriteConcernResolver(WriteConcernResolver writeConcernResolver) {
@@ -242,7 +250,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	/**
 	 * Used by @{link {@link #prepareCollection(DBCollection)} to set the {@link ReadPreference} before any operations are
 	 * performed.
-	 * 
+	 *
 	 * @param readPreference
 	 */
 	public void setReadPreference(ReadPreference readPreference) {
@@ -263,7 +271,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 	/**
 	 * Returns the default {@link org.springframework.data.mongodb.core.core.convert.MongoConverter}.
-	 * 
+	 *
 	 * @return
 	 */
 	public MongoConverter getConverter() {
@@ -320,7 +328,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	/**
 	 * Execute a MongoDB query and iterate over the query results on a per-document basis with a
 	 * {@link DocumentCallbackHandler} using the provided CursorPreparer.
-	 * 
+	 *
 	 * @param query the query class that specifies the criteria used to find a record and also an optional fields
 	 *          specification, must not be {@literal null}.
 	 * @param collectionName name of the collection to retrieve the objects from
@@ -601,7 +609,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	/**
 	 * Prepare the collection before any processing is done using it. This allows a convenient way to apply settings like
 	 * slaveOk() etc. Can be overridden in sub-classes.
-	 * 
+	 *
 	 * @param collection
 	 */
 	protected void prepareCollection(DBCollection collection) {
@@ -613,7 +621,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	/**
 	 * Prepare the WriteConcern before any processing is done using it. This allows a convenient way to apply custom
 	 * settings in sub-classes.
-	 * 
+	 *
 	 * @param writeConcern any WriteConcern already configured or null
 	 * @return The prepared WriteConcern or null
 	 */
@@ -1151,12 +1159,173 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		return commandObject;
 	}
 
+
+
 	public Set<String> getCollectionNames() {
 		return execute(new DbCallback<Set<String>>() {
 			public Set<String> doInDB(DB db) throws MongoException, DataAccessException {
 				return db.getCollectionNames();
 			}
 		});
+	}
+
+	/**
+	 * Helper method that tells whether the given collection is capped or not.
+	 *
+	 * @param 	collection
+	 * @return 	boolean value that indicates if the collection is capped or not, true if the
+	 * 			collection is capped
+	 */
+	public boolean isCollectionCapped(String collection) {
+		DBCollection dbCol = getDb().getCollection(collection);
+		if(dbCol != null) {
+			return dbCol.isCapped();
+		}
+		return false;
+	}
+
+
+	/**
+	  * The convenience method that delegates call to {@link #tailCollection(TailingCursorConfig, TailingCursorDocumentListener)}
+	  *
+	  * @param collection
+	  * @param increasingKey
+	  * @return
+	  */
+	public TailingCursorHandle tailCollection(String collection,
+			String increasingKey, TailingCursorDocumentListener listener) {
+		return tailCollection(new TailingCursorConfig()
+									.withCollectionName(collection)
+									.withIncreasingKey(increasingKey), listener);
+	}
+
+	 /**
+	  * This method starts a new thread which will tail a capped collection in the background and
+	  * will invoke the {@link TailingCursorDocumentListener#processDocument(DBObject)} with the
+	  * latest document at the tail of the cursor
+	  *
+	  * @param config The instance of {@link TailingCursorConfig} that contains the configuration
+	  * @param listener An instance if {@link TailingCursorDocumentListener} which receives the
+	  * 		notifications for new documents.
+	  * @return
+	  */
+	public TailingCursorHandle tailCollection(TailingCursorConfig config,
+			TailingCursorDocumentListener listener) {
+		Assert.notNull(config,"Provide a non null instance of TailingCursorConfig");
+		Assert.notNull(listener, "Provide a non null instance of TailingCursorDocumentListener");
+		final String collectionName = config.getCollectionName();
+		final String increasingKey = config.getIncreasingKey();
+		Assert.isTrue(StringUtils.hasText(collectionName),"Provide a non null and non empty collection name");
+		Assert.isTrue(StringUtils.hasText(increasingKey),"Provide a non null and non empty increasing key");
+		Assert.notNull(listener, "Provide a non null instance of TailingCursorDocumentListener");
+		Assert.isTrue(isCollectionCapped(collectionName),"Tail can be invoked only on capped collections, "
+				+ collectionName + " is not a capped collection");
+
+		final AtomicBoolean running = doTailCollection(config,listener);
+
+		TailingCursorHandle handle = new TailingCursorHandle() {
+			public void stopTailing() {
+				running.set(false);
+			}
+
+			public String getCollectionName() {
+				return collectionName;
+			}
+
+			public String getIncreasingKey() {
+				return increasingKey;
+			}
+
+		};
+
+		return handle;
+	}
+
+	/**
+	 * The method starts a new thread and tails a capped collection
+	 * @param config
+	 * @param listener
+	 *
+	 */
+	private AtomicBoolean doTailCollection(final TailingCursorConfig config,
+					final TailingCursorDocumentListener listener) {
+		final AtomicBoolean running = new AtomicBoolean(true);
+		executorService.execute(new Runnable() {
+			public void run() {
+				DBCollection cappedCollection = getDb().getCollection(config.getCollectionName());
+				String increasingKey = config.getIncreasingKey();
+				Object lastVal = null;
+
+				//find if there are already records present in the collection and get its tail
+				DBCursor curs = cappedCollection.find()
+					.sort(new BasicDBObject("$natural", -1)).limit(1);
+				if(curs.hasNext()) {
+					lastVal = curs.next().get(increasingKey);
+				}
+
+				while(running.get()) {
+					DBCursor cursor = getCursor(cappedCollection,increasingKey,lastVal);
+					try {
+						while(cursor.hasNext() && cursor.getCursorId() != 0 && running.get()) {
+							DBObject object = cursor.next();
+							if(running.get()) {
+								try {
+									listener.processDocument(object);
+									lastVal = object.get(increasingKey);
+								} catch (Exception e) {
+									LOGGER.warn("Caught exception while processing document",e);
+								}
+							}
+							else {
+								break;
+							}
+						}
+					} catch(CursorNotFound e) {
+
+					}
+					try {
+						cursor.close();
+					} catch (Exception e) {
+						LOGGER.info("Caught exception while trying to close the cursor");
+					}
+
+					if(running.get()) {
+						try {
+							Thread.sleep(config.getCursorRegenerationInterval());
+						} catch (InterruptedException e) {
+							LOGGER.error("Thread Interrupted", e);
+						}
+					}
+					else {
+						break;
+					}
+
+				}
+			}
+		});
+		return running;
+	}
+
+	private DBCursor getCursor(DBCollection cappedCollection,String increasingKey,Object lastVal) {
+		DBCursor cursor;
+		//if this is still null, it means the collection in empty initially
+		if(lastVal == null) {
+			cursor =
+				cappedCollection.find()
+							.sort(new BasicDBObject("$natural", 1))
+							.addOption(Bytes.QUERYOPTION_TAILABLE)
+							.addOption(Bytes.QUERYOPTION_AWAITDATA);
+		}
+		else {
+			cursor =
+				cappedCollection.find(new BasicDBObject(increasingKey,
+											new BasicDBObject("$gt", lastVal)))
+							.sort(new BasicDBObject("$natural", 1))
+							.addOption(Bytes.QUERYOPTION_TAILABLE)
+							.addOption(Bytes.QUERYOPTION_AWAITDATA);
+		}
+
+		return cursor;
 	}
 
 	public DB getDb() {
@@ -1411,7 +1580,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * <li>Iterate over the {@link DBCursor} and applies the given {@link DbObjectCallback} to each of the
 	 * {@link DBObject}s collecting the actual result {@link List}.</li>
 	 * <ol>
-	 * 
+	 *
 	 * @param <T>
 	 * @param collectionCallback the callback to retrieve the {@link DBCursor} with
 	 * @param preparer the {@link CursorPreparer} to potentially modify the {@link DBCursor} before ireating over it
@@ -1528,7 +1697,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	/**
 	 * Tries to convert the given {@link RuntimeException} into a {@link DataAccessException} but returns the original
 	 * exception if the conversation failed. Thus allows safe rethrowing of the return value.
-	 * 
+	 *
 	 * @param ex
 	 * @return
 	 */
@@ -1540,7 +1709,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	/**
 	 * Inspects the given {@link CommandResult} for erros and potentially throws an
 	 * {@link InvalidDataAccessApiUsageException} for that error.
-	 * 
+	 *
 	 * @param result must not be {@literal null}.
 	 * @param source must not be {@literal null}.
 	 */
@@ -1569,7 +1738,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	/**
 	 * Simple {@link CollectionCallback} that takes a query {@link DBObject} plus an optional fields specification
 	 * {@link DBObject} and executes that against the {@link DBCollection}.
-	 * 
+	 *
 	 * @author Oliver Gierke
 	 * @author Thomas Risberg
 	 */
@@ -1602,7 +1771,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	/**
 	 * Simple {@link CollectionCallback} that takes a query {@link DBObject} plus an optional fields specification
 	 * {@link DBObject} and executes that against the {@link DBCollection}.
-	 * 
+	 *
 	 * @author Oliver Gierke
 	 * @author Thomas Risberg
 	 */
@@ -1633,7 +1802,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	/**
 	 * Simple {@link CollectionCallback} that takes a query {@link DBObject} plus an optional fields specification
 	 * {@link DBObject} and executes that against the {@link DBCollection}.
-	 * 
+	 *
 	 * @author Thomas Risberg
 	 */
 	private static class FindAndRemoveCallback implements CollectionCallback<DBObject> {
@@ -1678,7 +1847,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 	/**
 	 * Simple internal callback to allow operations on a {@link DBObject}.
-	 * 
+	 *
 	 * @author Oliver Gierke
 	 */
 
@@ -1690,7 +1859,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	/**
 	 * Simple {@link DbObjectCallback} that will transform {@link DBObject} into the given target type using the given
 	 * {@link MongoReader}.
-	 * 
+	 *
 	 * @author Oliver Gierke
 	 */
 	private class ReadDbObjectCallback<T> implements DbObjectCallback<T> {
@@ -1774,7 +1943,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	/**
 	 * {@link DbObjectCallback} that assumes a {@link GeoResult} to be created, delegates actual content unmarshalling to
 	 * a delegate and creates a {@link GeoResult} from the result.
-	 * 
+	 *
 	 * @author Oliver Gierke
 	 */
 	static class GeoNearResultDbObjectCallback<T> implements DbObjectCallback<GeoResult<T>> {
@@ -1785,7 +1954,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		/**
 		 * Creates a new {@link GeoNearResultDbObjectCallback} using the given {@link DbObjectCallback} delegate for
 		 * {@link GeoResult} content unmarshalling.
-		 * 
+		 *
 		 * @param delegate
 		 */
 		public GeoNearResultDbObjectCallback(DbObjectCallback<T> delegate, Metric metric) {
