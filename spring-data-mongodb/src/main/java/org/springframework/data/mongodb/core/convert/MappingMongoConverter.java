@@ -671,6 +671,10 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		Assert.notNull(target);
 
+		if (target instanceof DBRef) {
+			return (DBRef) target;
+		}
+
 		MongoPersistentEntity<?> targetEntity = mappingContext.getPersistentEntity(target.getClass());
 
 		if (null == targetEntity) {

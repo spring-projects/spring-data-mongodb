@@ -1278,6 +1278,20 @@ public class MappingMongoConverterUnitTests {
 		fail(String.format("Didn't find synthetic field on %s!", target));
 	}
 
+	/**
+	 * @see DATAMGONGO-508
+	 */
+	@Test
+	public void eagerlyReturnsDBRefObjectIfTargetAlreadyIsOne() {
+
+		DB db = mock(DB.class);
+		DBRef dbRef = new DBRef(db, "collection", "id");
+
+		org.springframework.data.mongodb.core.mapping.DBRef annotation = mock(org.springframework.data.mongodb.core.mapping.DBRef.class);
+
+		assertThat(converter.createDBRef(dbRef, annotation), is(dbRef));
+	}
+
 	static class GenericType<T> {
 		T content;
 	}
