@@ -15,7 +15,11 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -25,6 +29,9 @@ import org.springframework.data.mongodb.core.geo.Point;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.util.Assert;
+import org.springframework.util.CollectionUtils;
+
+import com.mongodb.DBRef;
 
 /**
  * Custom {@link ParameterAccessor} that uses a {@link MongoWriter} to serialize parameters into Mongo format.
@@ -158,7 +165,28 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 		 * @see org.springframework.data.mongodb.repository.ConvertingParameterAccessor.PotentiallConvertingIterator#nextConverted()
 		 */
 		public Object nextConverted(MongoPersistentProperty property) {
-			return property.isAssociation() ? writer.toDBRef(next(), property) : getConvertedValue(next());
+
+			Object next = next();
+
+			if (next == null) {
+				return null;
+			}
+
+			if (property.isAssociation()) {
+				if (next.getClass().isArray() || next instanceof Iterable) {
+
+					List<DBRef> dbRefs = new ArrayList<DBRef>();
+					for (Object element : asCollection(next)) {
+						dbRefs.add(writer.toDBRef(element, property));
+					}
+
+					return dbRefs;
+				} else {
+					return writer.toDBRef(next, property);
+				}
+			}
+
+			return getConvertedValue(next);
 		}
 
 		/*
@@ -168,6 +196,33 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 		public void remove() {
 			delegate.remove();
 		}
+	}
+
+	/**
+	 * Returns the given object as {@link Collection}. Will do a copy of it if it implements {@link Iterable} or is an
+	 * array. Will return an empty {@link Collection} in case {@literal null} is given. Will wrap all other types into a
+	 * single-element collction
+	 * 
+	 * @param source
+	 * @return
+	 */
+	private static Collection<?> asCollection(Object source) {
+
+		if (source instanceof Iterable) {
+
+			List<Object> result = new ArrayList<Object>();
+			for (Object element : (Iterable<?>) source) {
+				result.add(element);
+			}
+
+			return result;
+		}
+
+		if (source == null) {
+			return Collections.emptySet();
+		}
+
+		return source.getClass().isArray() ? CollectionUtils.arrayToList(source) : Collections.singleton(source);
 	}
 
 	/**

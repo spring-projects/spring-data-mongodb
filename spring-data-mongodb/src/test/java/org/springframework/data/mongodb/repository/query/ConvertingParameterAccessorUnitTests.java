@@ -15,11 +15,13 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import static org.mockito.Mockito.*;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
-import static org.hamcrest.CoreMatchers.*;
+import static org.mockito.Mockito.*;
 
 import java.util.Arrays;
+import java.util.Collection;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -27,7 +29,11 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.mongodb.repository.query.ConvertingParameterAccessor.PotentiallyConvertingIterator;
 
 import com.mongodb.BasicDBList;
 
@@ -75,5 +81,67 @@ public class ConvertingParameterAccessorUnitTests {
 		reference.add("Foo");
 
 		assertThat(result, is((Object) reference));
+	}
+
+	/**
+	 * @see DATAMONGO-505
+	 */
+	@Test
+	public void convertsAssociationsToDBRef() {
+
+		Property property = new Property();
+		property.id = 5L;
+
+		Object result = setupAndConvert(property);
+
+		assertThat(result, is(instanceOf(com.mongodb.DBRef.class)));
+		com.mongodb.DBRef dbRef = (com.mongodb.DBRef) result;
+		assertThat(dbRef.getRef(), is("property"));
+		assertThat(dbRef.getId(), is((Object) 5L));
+	}
+
+	/**
+	 * @see DATAMONGO-505
+	 */
+	@Test
+	public void convertsAssociationsToDBRefForCollections() {
+
+		Property property = new Property();
+		property.id = 5L;
+
+		Object result = setupAndConvert(Arrays.asList(property));
+
+		assertThat(result, is(instanceOf(Collection.class)));
+		Collection<?> collection = (Collection<?>) result;
+
+		assertThat(collection, hasSize(1));
+		Object element = collection.iterator().next();
+
+		assertThat(element, is(instanceOf(com.mongodb.DBRef.class)));
+		com.mongodb.DBRef dbRef = (com.mongodb.DBRef) element;
+		assertThat(dbRef.getRef(), is("property"));
+		assertThat(dbRef.getId(), is((Object) 5L));
+	}
+
+	private Object setupAndConvert(Object... parameters) {
+
+		MongoParameterAccessor delegate = new StubParameterAccessor(parameters);
+		PotentiallyConvertingIterator iterator = new ConvertingParameterAccessor(converter, delegate).iterator();
+
+		MongoPersistentEntity<?> entity = context.getPersistentEntity(Entity.class);
+		MongoPersistentProperty property = entity.getPersistentProperty("property");
+
+		return iterator.nextConverted(property);
+	}
+
+	static class Entity {
+
+		@DBRef
+		Property property;
+	}
+
+	static class Property {
+
+		Long id;
 	}
 }
