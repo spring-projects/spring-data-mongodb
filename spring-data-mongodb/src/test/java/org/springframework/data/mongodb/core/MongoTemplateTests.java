@@ -51,6 +51,7 @@ import org.springframework.data.mongodb.core.index.Index.Duplicates;
 import org.springframework.data.mongodb.core.index.IndexField;
 import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Order;
 import org.springframework.data.mongodb.core.query.Query;
@@ -1232,6 +1233,35 @@ public class MongoTemplateTests {
 		template.remove(query(where("id").is(id)), TypeWithMyId.class);
 	}
 
+	/**
+	 * @see DATAMONGO-506
+	 */
+	@Test
+	public void exceutesBasicQueryCorrectly() {
+
+		Address address = new Address();
+		address.state = "PA";
+		address.city = "Philadelphia";
+
+		MyPerson person = new MyPerson();
+		person.name = "Oleg";
+		person.address = address;
+
+		template.save(person);
+
+		Query query = new BasicQuery("{'name' : 'Oleg'}");
+		List<MyPerson> result = template.find(query, MyPerson.class);
+
+		assertThat(result, hasSize(1));
+		assertThat(result.get(0), hasProperty("name", is("Oleg")));
+
+		query = new BasicQuery("{'address.state' : 'PA' }");
+		result = template.find(query, MyPerson.class);
+
+		assertThat(result, hasSize(1));
+		assertThat(result.get(0), hasProperty("name", is("Oleg")));
+	}
+
 	static class MyId {
 
 		String first;
@@ -1277,5 +1307,22 @@ public class MongoTemplateTests {
 		public DateTime convert(Date source) {
 			return source == null ? null : new DateTime(source.getTime());
 		}
+	}
+
+	public static class MyPerson {
+
+		String id;
+		String name;
+		Address address;
+
+		public String getName() {
+			return name;
+		}
+	}
+
+	static class Address {
+
+		String state;
+		String city;
 	}
 }
