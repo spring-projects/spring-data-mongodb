@@ -131,8 +131,11 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 	public boolean exists(ID id) {
 
 		Assert.notNull(id, "The given id must not be null!");
-		return mongoOperations.findOne(new Query(Criteria.where("_id").is(id)), Object.class,
-				entityInformation.getCollectionName()) != null;
+
+		final Query idQuery = getIdQuery(id);
+		idQuery.fields();
+
+		return mongoOperations.findOne(idQuery, entityInformation.getJavaType(), entityInformation.getCollectionName()) != null;
 	}
 
 	/*
