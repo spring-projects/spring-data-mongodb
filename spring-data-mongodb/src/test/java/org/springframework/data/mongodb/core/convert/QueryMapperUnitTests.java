@@ -35,6 +35,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.Person;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
@@ -57,6 +58,7 @@ public class QueryMapperUnitTests {
 
 	QueryMapper mapper;
 	MongoMappingContext context;
+	MappingMongoConverter converter;
 
 	@Mock
 	MongoDbFactory factory;
@@ -66,7 +68,7 @@ public class QueryMapperUnitTests {
 
 		context = new MongoMappingContext();
 
-		MappingMongoConverter converter = new MappingMongoConverter(factory, context);
+		converter = new MappingMongoConverter(factory, context);
 		converter.afterPropertiesSet();
 
 		mapper = new QueryMapper(converter);
@@ -203,7 +205,7 @@ public class QueryMapperUnitTests {
 	}
 
 	@Test
-	public void doesNotHandleNestedFieldsWithDefaultIdNames() {
+	public void doesHandleNestedFieldsWithDefaultIdNames() {
 
 		BasicDBObject dbObject = new BasicDBObject("id", new ObjectId().toString());
 		dbObject.put("nested", new BasicDBObject("id", new ObjectId().toString()));
@@ -212,7 +214,7 @@ public class QueryMapperUnitTests {
 
 		DBObject result = mapper.getMappedObject(dbObject, entity);
 		assertThat(result.get("_id"), is(instanceOf(ObjectId.class)));
-		assertThat(((DBObject) result.get("nested")).get("id"), is(instanceOf(String.class)));
+		assertThat(((DBObject) result.get("nested")).get("_id"), is(instanceOf(ObjectId.class)));
 	}
 
 	/**
@@ -287,6 +289,35 @@ public class QueryMapperUnitTests {
 		assertThat(result.keySet().size(), is(1));
 	}
 
+	@Test
+	public void convertsAssociationCorrectly() {
+
+		Reference reference = new Reference();
+		reference.id = 5L;
+
+		Query query = query(where("reference").is(reference));
+		DBObject object = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(WithDBRef.class));
+
+		Object referenceObject = object.get("reference");
+
+		assertThat(referenceObject, is(instanceOf(com.mongodb.DBRef.class)));
+	}
+
+	@Test
+	public void convertsNestedAssociationCorrectly() {
+
+		Reference reference = new Reference();
+		reference.id = 5L;
+
+		Query query = query(where("withDbRef.reference").is(reference));
+		DBObject object = mapper.getMappedObject(query.getQueryObject(),
+				context.getPersistentEntity(WithDBRefWrapper.class));
+
+		Object referenceObject = object.get("withDbRef.reference");
+
+		assertThat(referenceObject, is(instanceOf(com.mongodb.DBRef.class)));
+	}
+
 	class IdWrapper {
 		Object id;
 	}
@@ -322,5 +353,21 @@ public class QueryMapperUnitTests {
 
 		@Field("foo")
 		CustomizedField field;
+	}
+
+	class WithDBRef {
+
+		@DBRef
+		Reference reference;
+	}
+
+	class Reference {
+
+		Long id;
+	}
+
+	class WithDBRefWrapper {
+
+		WithDBRef withDbRef;
 	}
 }
