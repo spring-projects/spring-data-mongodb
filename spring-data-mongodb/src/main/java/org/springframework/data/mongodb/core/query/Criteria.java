@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import org.bson.BSON;
-import org.bson.types.BasicBSONList;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.data.mongodb.core.geo.Circle;
 import org.springframework.data.mongodb.core.geo.Point;
@@ -33,6 +32,7 @@ import org.springframework.data.mongodb.core.geo.Shape;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 
+import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
@@ -400,7 +400,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @param criteria
 	 */
 	public Criteria orOperator(Criteria... criteria) {
-		BasicBSONList bsonList = createCriteriaList(criteria);
+		BasicDBList bsonList = createCriteriaList(criteria);
 		criteriaChain.add(new Criteria("$or").is(bsonList));
 		return this;
 	}
@@ -411,7 +411,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @param criteria
 	 */
 	public Criteria norOperator(Criteria... criteria) {
-		BasicBSONList bsonList = createCriteriaList(criteria);
+		BasicDBList bsonList = createCriteriaList(criteria);
 		criteriaChain.add(new Criteria("$nor").is(bsonList));
 		return this;
 	}
@@ -422,7 +422,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @param criteria
 	 */
 	public Criteria andOperator(Criteria... criteria) {
-		BasicBSONList bsonList = createCriteriaList(criteria);
+		BasicDBList bsonList = createCriteriaList(criteria);
 		criteriaChain.add(new Criteria("$and").is(bsonList));
 		return this;
 	}
@@ -478,8 +478,8 @@ public class Criteria implements CriteriaDefinition {
 		return queryCriteria;
 	}
 
-	private BasicBSONList createCriteriaList(Criteria[] criteria) {
-		BasicBSONList bsonList = new BasicBSONList();
+	private BasicDBList createCriteriaList(Criteria[] criteria) {
+		BasicDBList bsonList = new BasicDBList();
 		for (Criteria c : criteria) {
 			bsonList.add(c.getCriteriaObject());
 		}
