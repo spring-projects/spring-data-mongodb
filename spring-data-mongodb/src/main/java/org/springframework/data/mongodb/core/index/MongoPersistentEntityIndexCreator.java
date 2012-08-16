@@ -56,8 +56,8 @@ public class MongoPersistentEntityIndexCreator implements
 	 * Creats a new {@link MongoPersistentEntityIndexCreator} for the given {@link MongoMappingContext} and
 	 * {@link MongoDbFactory}.
 	 * 
-	 * @param mappingContext must not be {@@iteral null}
-	 * @param mongoDbFactory must not be {@@iteral null}
+	 * @param mappingContext must not be {@literal null}
+	 * @param mongoDbFactory must not be {@literal null}
 	 */
 	public MongoPersistentEntityIndexCreator(MongoMappingContext mappingContext, MongoDbFactory mongoDbFactory) {
 

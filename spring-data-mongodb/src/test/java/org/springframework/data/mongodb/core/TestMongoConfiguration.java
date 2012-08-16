@@ -21,7 +21,7 @@ public class TestMongoConfiguration extends AbstractMongoConfiguration {
 	@Override
 	@Bean
 	public Mongo mongo() throws Exception {
-		return new Mongo("localhost", 27017);
+		return new Mongo("127.0.0.1", 27017);
 	}
 
 	@Override

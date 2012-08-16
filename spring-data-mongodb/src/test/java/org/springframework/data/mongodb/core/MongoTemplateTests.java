@@ -124,18 +124,19 @@ public class MongoTemplateTests {
 	}
 
 	protected void cleanDb() {
-		template.dropCollection(template.getCollectionName(Person.class));
-		template.dropCollection(template.getCollectionName(PersonWithAList.class));
-		template.dropCollection(template.getCollectionName(PersonWith_idPropertyOfTypeObjectId.class));
-		template.dropCollection(template.getCollectionName(PersonWith_idPropertyOfTypeString.class));
-		template.dropCollection(template.getCollectionName(PersonWithIdPropertyOfTypeObjectId.class));
-		template.dropCollection(template.getCollectionName(PersonWithIdPropertyOfTypeString.class));
-		template.dropCollection(template.getCollectionName(PersonWithIdPropertyOfTypeInteger.class));
-		template.dropCollection(template.getCollectionName(PersonWithIdPropertyOfPrimitiveInt.class));
-		template.dropCollection(template.getCollectionName(PersonWithIdPropertyOfTypeLong.class));
-		template.dropCollection(template.getCollectionName(PersonWithIdPropertyOfPrimitiveLong.class));
-		template.dropCollection(template.getCollectionName(TestClass.class));
+		template.dropCollection(Person.class);
+		template.dropCollection(PersonWithAList.class);
+		template.dropCollection(PersonWith_idPropertyOfTypeObjectId.class);
+		template.dropCollection(PersonWith_idPropertyOfTypeString.class);
+		template.dropCollection(PersonWithIdPropertyOfTypeObjectId.class);
+		template.dropCollection(PersonWithIdPropertyOfTypeString.class);
+		template.dropCollection(PersonWithIdPropertyOfTypeInteger.class);
+		template.dropCollection(PersonWithIdPropertyOfPrimitiveInt.class);
+		template.dropCollection(PersonWithIdPropertyOfTypeLong.class);
+		template.dropCollection(PersonWithIdPropertyOfPrimitiveLong.class);
+		template.dropCollection(TestClass.class);
 		template.dropCollection(Sample.class);
+		template.dropCollection(MyPerson.class);
 	}
 
 	@Test
