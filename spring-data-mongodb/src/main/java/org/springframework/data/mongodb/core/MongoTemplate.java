@@ -19,7 +19,6 @@ import static org.springframework.data.mongodb.core.SerializationUtils.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -208,7 +207,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				((ApplicationEventPublisherAware) mappingContext).setApplicationEventPublisher(eventPublisher);
 			}
 		}
-
 	}
 
 	/**

@@ -16,12 +16,17 @@
 
 package org.springframework.data.mongodb.core.mapping;
 
+import static org.hamcrest.CoreMatchers.*;
+import static org.junit.Assert.*;
+
 import java.util.Collections;
 import java.util.Map;
 
 import org.junit.Test;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mapping.model.MappingException;
+
+import com.mongodb.DBRef;
 
 /**
  * Unit tests for {@link MongoMappingContext}.
@@ -44,6 +49,13 @@ public class MongoMappingContextUnitTests {
 
 		MongoMappingContext context = new MongoMappingContext();
 		context.getPersistentEntity(ClassWithMultipleIdProperties.class);
+	}
+
+	@Test
+	public void doesNotReturnPersistentEntityForMongoSimpleType() {
+
+		MongoMappingContext context = new MongoMappingContext();
+		assertThat(context.getPersistentEntity(DBRef.class), is(nullValue()));
 	}
 
 	class ClassWithMultipleIdProperties {
