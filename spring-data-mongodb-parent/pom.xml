@@ -16,8 +16,7 @@
     <org.slf4j.version>1.6.1</org.slf4j.version>
     <org.codehaus.jackson.version>1.6.1</org.codehaus.jackson.version>
     <org.springframework.version.30>3.0.7.RELEASE</org.springframework.version.30>
-    <org.springframework.version.40>4.0.0.RELEASE</org.springframework.version.40>
-    <org.springframework.version.range>[${org.springframework.version.30}, ${org.springframework.version.40})</org.springframework.version.range>
+    <org.springframework.version.range>3.1.2.RELEASE</org.springframework.version.range>
     <data.commons.version>1.4.0.BUILD-SNAPSHOT</data.commons.version>
     <aspectj.version>1.6.11.RELEASE</aspectj.version>
     <bundlor.failOnWarnings>true</bundlor.failOnWarnings>
