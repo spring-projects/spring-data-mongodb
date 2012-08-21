@@ -34,6 +34,7 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.core.DBObjectUtils;
 import org.springframework.data.mongodb.core.Person;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -316,6 +317,22 @@ public class QueryMapperUnitTests {
 		Object referenceObject = object.get("withDbRef.reference");
 
 		assertThat(referenceObject, is(instanceOf(com.mongodb.DBRef.class)));
+	}
+
+	@Test
+	public void convertsInKeywordCorrectly() {
+
+		Reference first = new Reference();
+		first.id = 5L;
+
+		Reference second = new Reference();
+		second.id = 6L;
+
+		Query query = query(where("reference").in(first, second));
+		DBObject result = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(WithDBRef.class));
+
+		DBObject reference = DBObjectUtils.getAsDBObject(result, "reference");
+		assertThat(reference.containsField("$in"), is(true));
 	}
 
 	class IdWrapper {
