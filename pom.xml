@@ -6,7 +6,7 @@
   <name>Spring Data MongoDB Distribution</name>
   <description>Spring Data project for MongoDB</description>
   <url>http://www.springsource.org/spring-data/mongodb</url>
-  <version>1.0.4.BUILD-SNAPSHOT</version>
+  <version>1.0.4.RELEASE</version>
   <packaging>pom</packaging>
   <modules>
     <module>spring-data-mongodb</module>
