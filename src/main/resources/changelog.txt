@@ -1,6 +1,44 @@
 Spring Data MongoDB Changelog
 =============================================
 
+Changes in version 1.1.0.RC1 (2012-24-08)
+-----------------------------------------
+** Bug
+    * [DATAMONGO-493] - Criteria.ne() method converts all value into ObjectId
+    * [DATAMONGO-494] - $or/$nor expressions do not consider entity class mapping
+    * [DATAMONGO-495] - JSON can't serialize Enum when printing Query in DEBUG message
+    * [DATAMONGO-497] - Reading an empty List throws a MappingInstantiationException because it returns an HashSet instead of returning an ArrayList
+    * [DATAMONGO-505] - Conversion of associations doesn't work for collection values
+    * [DATAMONGO-508] - DBRef can accidentally get added as PersistentProperty
+    * [DATAMONGO-517] - QueryMapping incorrectly translates complex keywords
+
+** Improvement
+    * [DATAMONGO-496] - AbstractMongoConfiguration.getMappingBasePackage() could default to config class' package
+    * [DATAMONGO-499] - Namespace XSDs of current release version should refer to repositories XSD in version 1.0
+    * [DATAMONGO-500] - Index creation reacts on events not intended for it
+    * [DATAMONGO-502] - QueryMapper should transparently translate property names to field names
+    * [DATAMONGO-509] - SimpleMongoRepository.exists(…) can be improved.
+    * [DATAMONGO-510] - Criteria should only use BasicDBList internally
+    * [DATAMONGO-511] - QueryMapper should correctly transform associations
+    * [DATAMONGO-516] - Make Spring 3.1.2.RELEASE default Spring dependency version
+
+** Task
+    * [DATAMONGO-513] - Release 1.1 RC1
+
+
+Changes in version 1.0.4.RELEASE MongoDB (2012-08-24)
+-----------------------------------------------------
+** Bug
+    * [DATAMONGO-493] - Criteria.ne() method converts all value into ObjectId
+    * [DATAMONGO-494] - $or/$nor expressions do not consider entity class mapping
+    * [DATAMONGO-495] - JSON can't serialize Enum when printing Query in DEBUG message
+
+** Improvement
+    * [DATAMONGO-499] - Namespace XSDs of current release version should refer to repositories XSD in version 1.0
+
+** Task
+    * [DATAMONGO-514] - Release 1.0.4.
+
 Changes in version 1.1.0.M2 (2012-24-07)
 ----------------------------------------
 ** Bug
