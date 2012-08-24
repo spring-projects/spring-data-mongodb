@@ -5,7 +5,7 @@
   <artifactId>spring-data-mongodb-parent</artifactId>
   <name>Spring Data MongoDB Parent</name>
   <url>http://www.springsource.org/spring-data/mongodb</url>
-  <version>1.1.0.RC1</version>
+  <version>1.1.0.BUILD-SNAPSHOT</version>
   <packaging>pom</packaging>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
