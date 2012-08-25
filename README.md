@@ -2,15 +2,19 @@ Spring Data - Document
 ======================
 
 The primary goal of the [Spring Data](http://www.springsource.org/spring-data) project is to make it easier to build Spring-powered applications that use new data access technologies such as non-relational databases, map-reduce frameworks, and cloud based data services.
-As the name implies, the **Document** modules provides integration with document databases such as [MongoDB](http://www.mongodb.org/) and [CouchDB](http://couchdb.apache.org/).
 
 Getting Help
 ------------
 
-At this point your best bet is to look at the Look at the [JavaDocs](http://static.springsource.org/spring-data/data-document/docs/1.0.0.BUILD-SNAPSHOT/spring-data-mongodb/apidocs/) for MongoDB integration and corresponding and source code. For more detailed questions, use the [forum](http://forum.springsource.org/forumdisplay.php?f=80). If you are new to Spring as well as to Spring Data, look for information about [Spring projects](http://www.springsource.org/projects). 
+For a comprehensive treatmet of all the Spring Data MongoDB features, please refer to the The [User Guide](http://static.springsource.org/spring-data/data-mongodb/docs/current/reference/html/) 
 
-The [User Guide](http://static.springsource.org/spring-data/data-document/docs/1.0.0.BUILD-SNAPSHOT/reference/html/) (A work in progress). 
+The [JavaDocs](http://static.springsource.org/spring-data/data-mongodb/docs/current/api/) have extensive comments in them as well.
 
+The home page of [Spring Data MongoDB](http://www.springsource.org/spring-data/mongodb) contains links to articles and other resources.
+
+For more detailed questions, use the [forum](http://forum.springsource.org/forumdisplay.php?f=80). 
+
+If you are new to Spring as well as to Spring Data, look for information about [Spring projects](http://www.springsource.org/projects). 
 
 
 Quick Start
@@ -135,11 +139,6 @@ This will register an object in the container named PersonRepository.  You can u
 
        }
     }
-
-
-## CouchDB
-
-TBD
 
 
 Contributing to Spring Data
