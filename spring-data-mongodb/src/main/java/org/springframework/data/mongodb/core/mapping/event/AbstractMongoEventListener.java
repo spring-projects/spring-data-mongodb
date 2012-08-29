@@ -73,6 +73,8 @@ public abstract class AbstractMongoEventListener<E> implements ApplicationListen
 			onAfterSave(source, event.getDBObject());
 		} else if (event instanceof AfterConvertEvent) {
 			onAfterConvert(event.getDBObject(), source);
+		} else if (event instanceof AfterDeleteEvent) {
+			onAfterDelete(source);
 		}
 	}
 
@@ -103,6 +105,12 @@ public abstract class AbstractMongoEventListener<E> implements ApplicationListen
 	public void onAfterConvert(DBObject dbo, E source) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("onAfterConvert(" + dbo + "," + source + ")");
+		}
+	}
+
+	public void onAfterDelete(E source) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("onAfterDelete(" + source + ")");
 		}
 	}
 }
