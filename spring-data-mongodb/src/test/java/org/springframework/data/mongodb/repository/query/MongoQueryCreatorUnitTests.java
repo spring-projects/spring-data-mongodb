@@ -97,7 +97,8 @@ public class MongoQueryCreatorUnitTests {
 				getAccessor(converter, "Oliver", person), context);
 		Query query = creator.createQuery();
 
-		assertThat(query, is(query(where("firstName").is("Oliver").and("friend").is(person))));
+		Criteria criteria = new Criteria().andOperator(where("firstName").is("Oliver"), where("friend").is(person));
+		assertThat(query, is(query(criteria)));
 	}
 
 	@Test
@@ -222,7 +223,7 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	/**
-	 * @see DATAMONGO
+	 * @see DATAMONGO-413
 	 */
 	@Test
 	public void createsOrQueryCorrectly() {

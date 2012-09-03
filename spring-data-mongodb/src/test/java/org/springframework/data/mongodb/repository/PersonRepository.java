@@ -106,6 +106,8 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	 */
 	List<Person> findByFirstnameNotIn(Collection<String> firstnames);
 
+	List<Person> findByFirstnameAndLastname(String firstname, String lastname);
+
 	/**
 	 * Returns all {@link Person}s with an age between the two given values.
 	 * 
