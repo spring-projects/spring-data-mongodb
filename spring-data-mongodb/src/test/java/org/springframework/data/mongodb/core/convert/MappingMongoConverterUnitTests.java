@@ -49,6 +49,7 @@ import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.PersistenceConstructor;
+import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.mapping.PropertyPath;
 import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mapping.model.MappingInstantiationException;
@@ -1292,6 +1293,23 @@ public class MappingMongoConverterUnitTests {
 		assertThat(converter.createDBRef(dbRef, annotation), is(dbRef));
 	}
 
+	/**
+	 * @see DATAMONGO-523
+	 */
+	@Test
+	public void considersTypeAliasAnnotation() {
+
+		Aliased aliased = new Aliased();
+		aliased.name = "foo";
+
+		DBObject result = new BasicDBObject();
+		converter.write(aliased, result);
+
+		Object type = result.get("_class");
+		assertThat(type, is(notNullValue()));
+		assertThat(type.toString(), is("_"));
+	}
+
 	static class GenericType<T> {
 		T content;
 	}
@@ -1473,6 +1491,11 @@ public class MappingMongoConverterUnitTests {
 		public TypWithCollectionConstructor(List<Attribute> attributes) {
 			this.attributes = attributes;
 		}
+	}
+
+	@TypeAlias("_")
+	static class Aliased {
+		String name;
 	}
 
 	private class LocalDateToDateConverter implements Converter<LocalDate, Date> {
