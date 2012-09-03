@@ -69,19 +69,6 @@
 			<artifactId>querydsl-mongodb</artifactId>
 			<version>${querydsl.version}</version>
 			<optional>true</optional>
-			<exclusions>
-				<exclusion>
-					<groupId>com.google.code.morphia</groupId>
-					<artifactId>morphia</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-
-		<dependency>
-			<groupId>com.mysema.querydsl</groupId>
-			<artifactId>querydsl-apt</artifactId>
-			<version>${querydsl.version}</version>
-			<scope>provided</scope>
 		</dependency>
 
 		<dependency>
@@ -131,7 +118,14 @@
 			<plugin>
 				<groupId>com.mysema.maven</groupId>
 				<artifactId>maven-apt-plugin</artifactId>
-				<version>1.0.2</version>
+				<version>1.0.4</version>
+				<dependencies>
+					<dependency>
+						<groupId>com.mysema.querydsl</groupId>
+						<artifactId>querydsl-apt</artifactId>
+						<version>${querydsl.version}</version>
+					</dependency>
+				</dependencies>
 				<executions>
 					<execution>
 						<phase>generate-test-sources</phase>
