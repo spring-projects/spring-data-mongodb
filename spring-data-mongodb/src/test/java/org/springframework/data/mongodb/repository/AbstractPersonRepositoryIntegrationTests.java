@@ -506,4 +506,21 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result, not(hasItem(dave)));
 		assertThat(result, hasSize(5));
 	}
+
+	/**
+	 * @see DATAMONGO-521
+	 */
+	@Test
+	public void executesAndQueryCorrectly() {
+
+		List<Person> result = repository.findByFirstnameAndLastname("Dave", "Matthews");
+
+		assertThat(result, hasSize(1));
+		assertThat(result, hasItem(dave));
+
+		result = repository.findByFirstnameAndLastname("Oliver August", "Matthews");
+
+		assertThat(result, hasSize(1));
+		assertThat(result, hasItem(oliver));
+	}
 }
