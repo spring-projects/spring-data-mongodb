@@ -514,9 +514,28 @@ public class Criteria implements CriteriaDefinition {
 
 		Criteria that = (Criteria) obj;
 
-		boolean keyEqual = this.key == null ? that.key == null : this.key.equals(that.key);
-		boolean criteriaEqual = this.criteria.equals(that.criteria);
-		boolean valueEqual = isEqual(this.isValue, that.isValue);
+		if (this.criteriaChain.size() != that.criteriaChain.size()) {
+			return false;
+		}
+
+		for (int i = 0; i < this.criteriaChain.size(); i++) {
+
+			Criteria left = this.criteriaChain.get(i);
+			Criteria right = that.criteriaChain.get(i);
+
+			if (!simpleCriteriaEquals(left, right)) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	private boolean simpleCriteriaEquals(Criteria left, Criteria right) {
+
+		boolean keyEqual = left.key == null ? right.key == null : left.key.equals(right.key);
+		boolean criteriaEqual = left.criteria.equals(right.criteria);
+		boolean valueEqual = isEqual(left.isValue, right.isValue);
 
 		return keyEqual && criteriaEqual && valueEqual;
 	}

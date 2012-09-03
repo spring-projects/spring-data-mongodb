@@ -15,10 +15,10 @@
  */
 package org.springframework.data.mongodb.core.query;
 
-import static org.junit.Assert.*;
 import static org.hamcrest.CoreMatchers.*;
+import static org.junit.Assert.*;
+
 import org.junit.Test;
-import org.springframework.data.mongodb.core.query.Criteria;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
@@ -50,5 +50,15 @@ public class CriteriaTests {
 	public void testChainedCriteria() {
 		Criteria c = new Criteria("name").is("Bubba").and("age").lt(21);
 		assertEquals("{ \"name\" : \"Bubba\" , \"age\" : { \"$lt\" : 21}}", c.getCriteriaObject().toString());
+	}
+
+	@Test
+	public void equalIfCriteriaMatches() {
+
+		Criteria left = new Criteria("name").is("Foo").and("lastname").is("Bar");
+		Criteria right = new Criteria("name").is("Bar").and("lastname").is("Bar");
+
+		assertThat(left, is(not(right)));
+		assertThat(right, is(not(left)));
 	}
 }
