@@ -40,6 +40,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
@@ -134,6 +135,7 @@ public class MongoTemplateTests {
 		template.dropCollection(PersonWithIdPropertyOfPrimitiveInt.class);
 		template.dropCollection(PersonWithIdPropertyOfTypeLong.class);
 		template.dropCollection(PersonWithIdPropertyOfPrimitiveLong.class);
+		template.dropCollection(PersonWithVersionPropertyOfTypeInteger.class);
 		template.dropCollection(TestClass.class);
 		template.dropCollection(Sample.class);
 		template.dropCollection(MyPerson.class);
@@ -1261,6 +1263,39 @@ public class MongoTemplateTests {
 
 		assertThat(result, hasSize(1));
 		assertThat(result.get(0), hasProperty("name", is("Oleg")));
+	}
+	
+	@Test(expected = OptimisticLockingFailureException.class)
+	public void optimisticLockingHandling() {
+		
+		//Init version
+		PersonWithVersionPropertyOfTypeInteger person = new PersonWithVersionPropertyOfTypeInteger();
+		person.setAge(29);
+		person.setFirstName("Patryk");
+		template.save(person);
+		
+		List<PersonWithVersionPropertyOfTypeInteger> result = template.findAll(PersonWithVersionPropertyOfTypeInteger.class);
+		
+		assertThat(result, hasSize(1));
+		assertThat(result.get(0), hasProperty("version", is(0)));
+		
+		//Version change
+		person = result.get(0);
+		person.setFirstName("Patryk2");
+		
+		template.save(person);
+		
+		result = mappingTemplate.findAll(PersonWithVersionPropertyOfTypeInteger.class);
+		
+		assertThat(result, hasSize(1));
+		assertThat(result.get(0), hasProperty("version", is(1)));
+		
+		//Optimistic lock exception
+		person.setVersion(0);
+		person.setFirstName("Patryk3");
+		
+		template.save(person);
+		
 	}
 
 	static class MyId {
