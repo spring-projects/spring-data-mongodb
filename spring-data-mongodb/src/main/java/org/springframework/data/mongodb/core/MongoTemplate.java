@@ -706,14 +706,19 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	public void save(Object objectToSave, String collectionName) {
 		 MongoPersistentEntity<?> mongoPersistentEntity = getPersistentEntity(objectToSave.getClass());
 		 if(mongoPersistentEntity.hasVersion()){
-			 BeanWrapper<PersistentEntity<Object,?>, Object> beanWrapper = BeanWrapper.create(objectToSave, null);
+			 BeanWrapper<PersistentEntity<Object,?>, Object> beanWrapper = BeanWrapper.create(objectToSave, this.mongoConverter.getConversionService());
 			 Object id = beanWrapper.getProperty(mongoPersistentEntity.getIdProperty());
 			 if(id == null){
 				beanWrapper.setProperty(mongoPersistentEntity.getVersionProperty(), 0);
 				doSave(collectionName, objectToSave, this.mongoConverter);
 			 } else {
-				 updateFirst( getUpdateVersionQuery(id,
-						 beanWrapper.getProperty(mongoPersistentEntity.getVersionProperty()),mongoPersistentEntity),
+				 Query query = getUpdateVersionQuery(id,
+						 beanWrapper.getProperty(mongoPersistentEntity.getVersionProperty()),mongoPersistentEntity);
+				 
+				 Number number = (Number) beanWrapper.getProperty(mongoPersistentEntity.getVersionProperty());
+				 beanWrapper.setProperty(mongoPersistentEntity.getVersionProperty(), number.longValue()+1);
+				 
+				 updateFirst( query,
 						 	objectToSave, objectToSave.getClass());
 			 }
 		 } else {
@@ -844,9 +849,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		this.mongoConverter.write(object, dbObject);
 
 		return doUpdate(determineCollectionName(entityClass), query,
-				Update.fromDBObject(dbObject, ID,
-						getPersistentEntity(entityClass).getVersionProperty()
-								.getName()), entityClass, false, false);
+				Update.fromDBObject(dbObject, ID), entityClass, false, false);
 	}
 
 	public WriteResult updateMulti(Query query, Update update, Class<?> entityClass) {
@@ -867,10 +870,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 				DBObject queryObj = query == null ? new BasicDBObject()
 						: mapper.getMappedObject(query.getQueryObject(), entity);
-				
-				if(null != update && null != entity && entity.hasVersion()) {
-					update.inc(entity.getVersionProperty().getName(), 1);
-				}
 
 				DBObject updateObj = update == null ? new BasicDBObject() : mapper.getMappedObject(update.getUpdateObject(),
 						entity);

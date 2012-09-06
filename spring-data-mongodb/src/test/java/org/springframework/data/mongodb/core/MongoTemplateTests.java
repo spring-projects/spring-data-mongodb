@@ -1285,6 +1285,8 @@ public class MongoTemplateTests {
 		
 		template.save(person);
 		
+		assertThat(person, hasProperty("version",is(1)));
+		
 		result = mappingTemplate.findAll(PersonWithVersionPropertyOfTypeInteger.class);
 		
 		assertThat(result, hasSize(1));
