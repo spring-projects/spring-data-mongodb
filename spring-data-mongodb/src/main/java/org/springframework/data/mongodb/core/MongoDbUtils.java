@@ -79,21 +79,18 @@ public abstract class MongoDbUtils {
 
 		DbHolder dbHolder = (DbHolder) TransactionSynchronizationManager.getResource(mongo);
 
-		if (dbHolder != null && !dbHolder.isEmpty()) {
+		// Do we have a populated holder and TX sync active?
+		if (dbHolder != null && !dbHolder.isEmpty() && TransactionSynchronizationManager.isSynchronizationActive()) {
 
-			DB db = null;
+			DB db = dbHolder.getDB(databaseName);
 
-			if (TransactionSynchronizationManager.isSynchronizationActive() && dbHolder.doesNotHoldNonDefaultDB()) {
+			// DB found but not yet synchronized
+			if (db != null && !dbHolder.isSynchronizedWithTransaction()) {
 
-				db = dbHolder.getDB(databaseName);
+				LOGGER.debug("Registering Spring transaction synchronization for existing MongoDB {}.", databaseName);
 
-				if (db != null && !dbHolder.isSynchronizedWithTransaction()) {
-
-					LOGGER.debug("Registering Spring transaction synchronization for existing MongoDB {}.", databaseName);
-
-					TransactionSynchronizationManager.registerSynchronization(new MongoSynchronization(dbHolder, mongo));
-					dbHolder.setSynchronizedWithTransaction(true);
-				}
+				TransactionSynchronizationManager.registerSynchronization(new MongoSynchronization(dbHolder, mongo));
+				dbHolder.setSynchronizedWithTransaction(true);
 			}
 
 			if (db != null) {
@@ -101,6 +98,7 @@ public abstract class MongoDbUtils {
 			}
 		}
 
+		// Lookup fresh database instance
 		LOGGER.debug("Getting Mongo Database name=[{}]", databaseName);
 
 		DB db = mongo.getDB(databaseName);
@@ -117,8 +115,7 @@ public abstract class MongoDbUtils {
 			}
 		}
 
-		// Use same Session for further Mongo actions within the transaction.
-		// Thread object will get removed by synchronization at transaction completion.
+		// TX sync active, bind new database to thread
 		if (TransactionSynchronizationManager.isSynchronizationActive()) {
 
 			LOGGER.debug("Registering Spring transaction synchronization for MongoDB instance {}.", databaseName);

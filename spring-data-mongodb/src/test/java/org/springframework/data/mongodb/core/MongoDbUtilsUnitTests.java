@@ -17,10 +17,17 @@ package org.springframework.data.mongodb.core;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.stubbing.Answer;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import com.mongodb.DB;
@@ -31,13 +38,21 @@ import com.mongodb.Mongo;
  * 
  * @author Oliver Gierke
  */
+@RunWith(MockitoJUnitRunner.class)
 public class MongoDbUtilsUnitTests {
 
+	@Mock
 	Mongo mongo;
 
 	@Before
 	public void setUp() throws Exception {
-		this.mongo = new Mongo();
+
+		when(mongo.getDB(anyString())).then(new Answer<DB>() {
+			public DB answer(InvocationOnMock invocation) throws Throwable {
+				return mock(DB.class);
+			}
+		});
+
 		TransactionSynchronizationManager.initSynchronization();
 	}
 
@@ -55,11 +70,15 @@ public class MongoDbUtilsUnitTests {
 	public void returnsNewInstanceForDifferentDatabaseName() {
 
 		DB first = MongoDbUtils.getDB(mongo, "first");
-		assertThat(first, is(notNullValue()));
-		assertThat(MongoDbUtils.getDB(mongo, "first"), is(first));
-
 		DB second = MongoDbUtils.getDB(mongo, "second");
 		assertThat(second, is(not(first)));
-		assertThat(MongoDbUtils.getDB(mongo, "second"), is(second));
+	}
+
+	@Test
+	public void returnsSameInstanceForSameDatabaseName() {
+
+		DB first = MongoDbUtils.getDB(mongo, "first");
+		assertThat(first, is(notNullValue()));
+		assertThat(MongoDbUtils.getDB(mongo, "first"), is(sameInstance(first)));
 	}
 }
