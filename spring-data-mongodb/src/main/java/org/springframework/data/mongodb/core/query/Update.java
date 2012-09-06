@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 the original author or authors.
+ * Copyright 2010-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,13 +15,23 @@
  */
 package org.springframework.data.mongodb.core.query;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
+
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
-import org.springframework.dao.InvalidDataAccessApiUsageException;
 
+/**
+ * Class to easily construct MongoDB update clauses.
+ * 
+ * @author Thomas Risberg
+ * @author Mark Pollack
+ * @author Oliver Gierke
+ */
 public class Update {
 
 	public enum Position {
@@ -38,6 +48,31 @@ public class Update {
 	 */
 	public static Update update(String key, Object value) {
 		return new Update().set(key, value);
+	}
+
+	/**
+	 * Creates an {@link Update} instance from the given {@link DBObject}. Allows to explicitly exlude fields from making
+	 * it into the created {@link Update} object.
+	 * 
+	 * @param object the source {@link DBObject} to create the update from.
+	 * @param exclude the fields to exclude.
+	 * @return
+	 */
+	public static Update fromDBObject(DBObject object, String... exclude) {
+
+		Update update = new Update();
+		List<String> excludeList = Arrays.asList(exclude);
+
+		for (String key : object.keySet()) {
+
+			if (excludeList.contains(key)) {
+				continue;
+			}
+
+			update.set(key, object.get(key));
+		}
+
+		return update;
 	}
 
 	/**

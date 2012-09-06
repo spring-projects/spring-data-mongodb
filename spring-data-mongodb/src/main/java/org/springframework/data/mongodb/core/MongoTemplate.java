@@ -38,6 +38,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
+import org.springframework.context.ApplicationListener;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.io.Resource;
@@ -45,6 +46,7 @@ import org.springframework.core.io.ResourceLoader;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.authentication.UserCredentials;
 import org.springframework.data.convert.EntityReader;
 import org.springframework.data.mapping.PersistentEntity;
@@ -108,6 +110,7 @@ import com.mongodb.util.JSON;
  * @author Mark Pollack
  * @author Oliver Gierke
  * @author Amol Nayak
+ * @author Patryk Wasik
  */
 public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
@@ -486,7 +489,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		} else {
 			query.limit(1);
 			List<T> results = find(query, entityClass, collectionName);
-			return (results.isEmpty() ? null : results.get(0));
+			return results.isEmpty() ? null : results.get(0);
 		}
 	}
 
@@ -734,7 +737,53 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	}
 
 	public void save(Object objectToSave, String collectionName) {
-		doSave(collectionName, objectToSave, this.mongoConverter);
+
+		MongoPersistentEntity<?> mongoPersistentEntity = getPersistentEntity(objectToSave.getClass());
+
+		// No optimistic locking -> simple save
+		if (!mongoPersistentEntity.hasVersionProperty()) {
+			doSave(collectionName, objectToSave, this.mongoConverter);
+			return;
+		}
+
+		doSaveVersioned(objectToSave, mongoPersistentEntity, collectionName);
+	}
+
+	private <T> void doSaveVersioned(T objectToSave, MongoPersistentEntity<?> entity, String collectionName) {
+
+		BeanWrapper<PersistentEntity<T, ?>, T> beanWrapper = BeanWrapper.create(objectToSave,
+				this.mongoConverter.getConversionService());
+		MongoPersistentProperty idProperty = entity.getIdProperty();
+		MongoPersistentProperty versionProperty = entity.getVersionProperty();
+		Object id = beanWrapper.getProperty(idProperty);
+
+		// Fresh instance -> initialize version property
+		if (id == null) {
+			beanWrapper.setProperty(versionProperty, 0);
+			doSave(collectionName, objectToSave, this.mongoConverter);
+		} else {
+
+			assertUpdateableIdIfNotSet(objectToSave);
+
+			// Create query for entity with the id and old version
+			Object version = beanWrapper.getProperty(versionProperty);
+			Query query = new Query(Criteria.where(idProperty.getName()).is(id).and(versionProperty.getName()).is(version));
+
+			// Bump version number
+			Number number = beanWrapper.getProperty(versionProperty, Number.class, false);
+			beanWrapper.setProperty(versionProperty, number.longValue() + 1);
+
+			BasicDBObject dbObject = new BasicDBObject();
+
+			maybeEmitEvent(new BeforeConvertEvent<T>(objectToSave));
+			this.mongoConverter.write(objectToSave, dbObject);
+
+			maybeEmitEvent(new BeforeSaveEvent<T>(objectToSave, dbObject));
+			Update update = Update.fromDBObject(dbObject, ID);
+
+			updateFirst(query, update, objectToSave.getClass());
+			maybeEmitEvent(new AfterSaveEvent<T>(objectToSave, dbObject));
+		}
 	}
 
 	protected <T> void doSave(String collectionName, T objectToSave, MongoWriter<T> writer) {
@@ -883,6 +932,14 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				} else {
 					wr = collection.update(queryObj, updateObj, upsert, multi, writeConcernToUse);
 				}
+
+				if (entity != null && entity.hasVersionProperty() && !multi) {
+					if (wr.getN() == 0) {
+						throw new OptimisticLockingFailureException("Optimistic lock exception on saving entity: "
+								+ updateObj.toMap().toString());
+					}
+				}
+
 				handleAnyWriteResultErrors(wr, queryObj, "update with '" + updateObj + "'");
 				return wr;
 			}

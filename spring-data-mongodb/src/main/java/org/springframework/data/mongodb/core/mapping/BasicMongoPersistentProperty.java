@@ -1,11 +1,11 @@
 /*
- * Copyright (c) 2011 by the original author(s).
+ * Copyright 2011-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -32,9 +32,10 @@ import org.springframework.util.StringUtils;
 import com.mongodb.DBObject;
 
 /**
- * Mongo specific {@link org.springframework.data.mapping.PersistentProperty} implementation.
+ * MongoDB specific {@link org.springframework.data.mapping.MongoPersistentProperty} implementation.
  * 
  * @author Oliver Gierke
+ * @author Patryk Wasik
  */
 public class BasicMongoPersistentProperty extends AnnotationBasedPersistentProperty<MongoPersistentProperty> implements
 		MongoPersistentProperty {
@@ -112,8 +113,9 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 		return annotation != null && StringUtils.hasText(annotation.value()) ? annotation.value() : field.getName();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.core.mapping.MongoPersistentProperty#getFieldOrder()
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentProperty#getFieldOrder()
 	 */
 	public int getFieldOrder() {
 		org.springframework.data.mongodb.core.mapping.Field annotation = getField().getAnnotation(
@@ -121,25 +123,36 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 		return annotation != null ? annotation.order() : Integer.MAX_VALUE;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.springframework.data.mapping.AbstractPersistentProperty#createAssociation()
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mapping.model.AbstractPersistentProperty#createAssociation()
 	 */
 	@Override
 	protected Association<MongoPersistentProperty> createAssociation() {
 		return new Association<MongoPersistentProperty>(this, null);
 	}
 
-	/* (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.core.mapping.MongoPersistentProperty#isDbReference()
-		 */
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentProperty#isDbReference()
+	 */
 	public boolean isDbReference() {
 		return getField().isAnnotationPresent(DBRef.class);
 	}
 
-	/* (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.core.mapping.MongoPersistentProperty#getDBRef()
-		 */
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentProperty#getDBRef()
+	 */
 	public DBRef getDBRef() {
 		return getField().getAnnotation(DBRef.class);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentProperty#isVersionProperty()
+	 */
+	public boolean isVersionProperty() {
+		return getField().isAnnotationPresent(Version.class);
 	}
 }

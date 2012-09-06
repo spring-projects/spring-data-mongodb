@@ -1,11 +1,11 @@
 /*
- * Copyright (c) 2011 by the original author(s).
+ * Copyright 2012-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -29,22 +29,25 @@ import org.springframework.data.mongodb.MongoCollectionUtils;
 import org.springframework.data.util.TypeInformation;
 
 /**
- * 
+ * @deprecated use {@link MongoMappingContext} instead.
  * @author Oliver Gierke
  */
+@Deprecated
 public class SimpleMongoMappingContext extends
 		AbstractMappingContext<SimpleMongoMappingContext.SimpleMongoPersistentEntity<?>, MongoPersistentProperty> {
 
-	/* (non-Javadoc)
-	 * @see org.springframework.data.mapping.BasicMappingContext#createPersistentEntity(org.springframework.data.util.TypeInformation)
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mapping.context.AbstractMappingContext#createPersistentEntity(org.springframework.data.util.TypeInformation)
 	 */
 	@Override
 	protected <T> SimpleMongoPersistentEntity<T> createPersistentEntity(TypeInformation<T> typeInformation) {
 		return new SimpleMongoPersistentEntity<T>(typeInformation);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.springframework.data.mapping.BasicMappingContext#createPersistentProperty(java.lang.reflect.Field, java.beans.PropertyDescriptor, org.springframework.data.util.TypeInformation, org.springframework.data.mapping.BasicPersistentEntity)
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mapping.context.AbstractMappingContext#createPersistentProperty(java.lang.reflect.Field, java.beans.PropertyDescriptor, org.springframework.data.mapping.model.MutablePersistentEntity, org.springframework.data.mapping.model.SimpleTypeHolder)
 	 */
 	@Override
 	protected SimplePersistentProperty createPersistentProperty(Field field, PropertyDescriptor descriptor,
@@ -112,6 +115,14 @@ public class SimpleMongoMappingContext extends
 		public DBRef getDBRef() {
 			return null;
 		}
+
+		/* (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.core.mapping.MongoPersistentProperty#isVersion()
+		 */
+		public boolean isVersionProperty() {
+			return false;
+		}
+
 	}
 
 	static class SimpleMongoPersistentEntity<T> extends BasicPersistentEntity<T, MongoPersistentProperty> implements
@@ -129,6 +140,21 @@ public class SimpleMongoMappingContext extends
 		 */
 		public String getCollection() {
 			return MongoCollectionUtils.getPreferredCollectionName(getType());
+		}
+
+		/* (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.core.mapping.MongoPersistentEntity#getVersionProperty()
+		 */
+		public MongoPersistentProperty getVersionProperty() {
+			return null;
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentEntity#hasVersionProperty()
+		 */
+		public boolean hasVersionProperty() {
+			return false;
 		}
 	}
 }

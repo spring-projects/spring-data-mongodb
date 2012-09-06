@@ -40,6 +40,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
@@ -75,20 +76,18 @@ import com.mongodb.WriteResult;
  * @author Oliver Gierke
  * @author Thomas Risberg
  * @author Amol Nayak
+ * @author Patryk Wasik
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:infrastructure.xml")
 public class MongoTemplateTests {
 
-	@Autowired
-	MongoTemplate template;
-	@Autowired
-	MongoDbFactory factory;
+	@Autowired MongoTemplate template;
+	@Autowired MongoDbFactory factory;
 
 	MongoTemplate mappingTemplate;
 
-	@Rule
-	public ExpectedException thrown = ExpectedException.none();
+	@Rule public ExpectedException thrown = ExpectedException.none();
 
 	@Autowired
 	@SuppressWarnings("unchecked")
@@ -134,6 +133,7 @@ public class MongoTemplateTests {
 		template.dropCollection(PersonWithIdPropertyOfPrimitiveInt.class);
 		template.dropCollection(PersonWithIdPropertyOfTypeLong.class);
 		template.dropCollection(PersonWithIdPropertyOfPrimitiveLong.class);
+		template.dropCollection(PersonWithVersionPropertyOfTypeInteger.class);
 		template.dropCollection(TestClass.class);
 		template.dropCollection(Sample.class);
 		template.dropCollection(MyPerson.class);
@@ -1263,6 +1263,44 @@ public class MongoTemplateTests {
 		assertThat(result.get(0), hasProperty("name", is("Oleg")));
 	}
 
+	/**
+	 * @see DATAMONGO-279
+	 */
+	@Test(expected = OptimisticLockingFailureException.class)
+	public void optimisticLockingHandling() {
+
+		// Init version
+		PersonWithVersionPropertyOfTypeInteger person = new PersonWithVersionPropertyOfTypeInteger();
+		person.age = 29;
+		person.firstName = "Patryk";
+		template.save(person);
+
+		List<PersonWithVersionPropertyOfTypeInteger> result = template
+				.findAll(PersonWithVersionPropertyOfTypeInteger.class);
+
+		assertThat(result, hasSize(1));
+		assertThat(result.get(0).version, is(0));
+
+		// Version change
+		person = result.get(0);
+		person.firstName = "Patryk2";
+
+		template.save(person);
+
+		assertThat(person.version, is(1));
+
+		result = mappingTemplate.findAll(PersonWithVersionPropertyOfTypeInteger.class);
+
+		assertThat(result, hasSize(1));
+		assertThat(result.get(0).version, is(1));
+
+		// Optimistic lock exception
+		person.version = 0;
+		person.firstName = "Patryk3";
+
+		template.save(person);
+	}
+
 	static class MyId {
 
 		String first;
@@ -1271,14 +1309,12 @@ public class MongoTemplateTests {
 
 	static class TypeWithMyId {
 
-		@Id
-		MyId id;
+		@Id MyId id;
 	}
 
 	public static class Sample {
 
-		@Id
-		String id;
+		@Id String id;
 		String field;
 	}
 
