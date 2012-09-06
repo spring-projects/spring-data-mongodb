@@ -65,7 +65,8 @@ public class MongoAuditingBeanDefinitionParser extends AbstractSingleBeanDefinit
 			String mappingContextName = BeanNames.MAPPING_CONTEXT;
 
 			if (!registry.containsBeanDefinition(BeanNames.MAPPING_CONTEXT)) {
-				mappingContextName = MappingMongoConverterParser.potentiallyCreateMappingContext(element, parserContext, null);
+				mappingContextName = MappingMongoConverterParser.potentiallyCreateMappingContext(element, parserContext, null,
+						BeanNames.DEFAULT_CONVERTER_BEAN_NAME);
 			}
 
 			MappingMongoConverterParser.createIsNewStrategyFactoryBeanDefinition(mappingContextName, parserContext, element);
