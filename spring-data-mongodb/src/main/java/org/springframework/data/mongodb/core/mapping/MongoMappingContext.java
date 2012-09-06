@@ -83,6 +83,8 @@ public class MongoMappingContext extends AbstractMappingContext<BasicMongoPersis
 	 */
 	@Override
 	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+
 		this.context = applicationContext;
+		super.setApplicationContext(applicationContext);
 	}
 }
