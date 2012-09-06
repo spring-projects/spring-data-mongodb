@@ -880,7 +880,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 	/**
 	 * Returns a {@link Query} for the given entity by its id.
-	 *
+	 * 
 	 * @param object must not be {@literal null}.
 	 * @return
 	 */
@@ -1169,7 +1169,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 	/**
 	 * Create the specified collection using the provided options
-	 *
+	 * 
 	 * @param collectionName
 	 * @param collectionOptions
 	 * @return the collection that was created
@@ -1191,7 +1191,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * Map the results of an ad-hoc query on the default MongoDB collection to an object using the template's converter
 	 * <p/>
 	 * The query document is specified as a standard DBObject and so is the fields specification.
-	 *
+	 * 
 	 * @param collectionName name of the collection to retrieve the objects from
 	 * @param query the query document that specifies the criteria used to find a record
 	 * @param fields the document that specifies the fields to be returned
@@ -1216,7 +1216,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * The query document is specified as a standard DBObject and so is the fields specification.
 	 * <p/>
 	 * Can be overridden by subclasses.
-	 *
+	 * 
 	 * @param collectionName name of the collection to retrieve the objects from
 	 * @param query the query document that specifies the criteria used to find a record
 	 * @param fields the document that specifies the fields to be returned
@@ -1249,7 +1249,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * Map the results of an ad-hoc query on the default MongoDB collection to a List using the template's converter.
 	 * <p/>
 	 * The query document is specified as a standard DBObject and so is the fields specification.
-	 *
+	 * 
 	 * @param collectionName name of the collection to retrieve the objects from
 	 * @param query the query document that specifies the criteria used to find a record
 	 * @param fields the document that specifies the fields to be returned
@@ -1288,7 +1288,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * The first document that matches the query is returned and also removed from the collection in the database.
 	 * <p/>
 	 * The query document is specified as a standard DBObject and so is the fields specification.
-	 *
+	 * 
 	 * @param collectionName name of the collection to retrieve the objects from
 	 * @param query the query document that specifies the criteria used to find a record
 	 * @param entityClass the parameterized type of the returned list.
@@ -1335,7 +1335,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 	/**
 	 * Populates the id property of the saved object, if it's not set already.
-	 *
+	 * 
 	 * @param savedObject
 	 * @param id
 	 */
@@ -1380,7 +1380,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * <li>Execute the given {@link ConnectionCallback} for a {@link DBObject}.</li>
 	 * <li>Apply the given {@link DbObjectCallback} to each of the {@link DBObject}s to obtain the result.</li>
 	 * <ol>
-	 *
+	 * 
 	 * @param <T>
 	 * @param collectionCallback the callback to retrieve the {@link DBObject} with
 	 * @param objectCallback the {@link DbObjectCallback} to transform {@link DBObject}s into the actual domain type
