@@ -39,4 +39,30 @@ public interface MongoEntityInformation<T, ID extends Serializable> extends Enti
 	 * @return
 	 */
 	String getIdAttribute();
+	
+	
+	/**
+	 * Returns the attribute that the version will be persisted to.
+	 * 
+	 * @return
+	 */
+	String getVersionAttribute();
+	
+	
+	/**
+	 * Returns the entity version.
+	 * 
+	 * @return
+	 */
+	Object getVersion(T entity);
+	
+	
+	
+	/**
+	 * Returns whether entity has version. 
+	 * 
+	 * @param entity
+	 * @return
+	 */
+	boolean hasVersion(T entity);
 }

@@ -44,6 +44,7 @@ import org.springframework.core.io.ResourceLoader;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.authentication.UserCredentials;
 import org.springframework.data.convert.EntityReader;
 import org.springframework.data.mapping.PersistentEntity;
@@ -703,7 +704,26 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	}
 
 	public void save(Object objectToSave, String collectionName) {
-		doSave(collectionName, objectToSave, this.mongoConverter);
+		 MongoPersistentEntity<?> mongoPersistentEntity = getPersistentEntity(objectToSave.getClass());
+		 if(mongoPersistentEntity.hasVersion()){
+			 BeanWrapper<PersistentEntity<Object,?>, Object> beanWrapper = BeanWrapper.create(objectToSave, null);
+			 Object id = beanWrapper.getProperty(mongoPersistentEntity.getIdProperty());
+			 if(id == null){
+				beanWrapper.setProperty(mongoPersistentEntity.getVersionProperty(), 0);
+				doSave(collectionName, objectToSave, this.mongoConverter);
+			 } else {
+				 updateFirst( getUpdateVersionQuery(id,
+						 beanWrapper.getProperty(mongoPersistentEntity.getVersionProperty()),mongoPersistentEntity),
+						 	objectToSave, objectToSave.getClass());
+			 }
+		 } else {
+			 doSave(collectionName, objectToSave, this.mongoConverter);
+		 }
+	}
+	
+	private Query getUpdateVersionQuery(Object id, Object version,MongoPersistentEntity<?> mongoPersistentEntity) {
+		return new Query( Criteria.where(mongoPersistentEntity.getIdProperty().getName()).is(id)
+				.and(mongoPersistentEntity.getVersionProperty().getName()).is(version));
 	}
 
 	protected <T> void doSave(String collectionName, T objectToSave, MongoWriter<T> writer) {
@@ -816,6 +836,18 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	public WriteResult updateFirst(final Query query, final Update update, final String collectionName) {
 		return doUpdate(collectionName, query, update, null, false, false);
 	}
+	
+	public WriteResult updateFirst(final Query query, final Object object,
+			Class<?> entityClass) {
+
+		BasicDBObject dbObject = new BasicDBObject();
+		this.mongoConverter.write(object, dbObject);
+
+		return doUpdate(determineCollectionName(entityClass), query,
+				Update.fromDBObject(dbObject, ID,
+						getPersistentEntity(entityClass).getVersionProperty()
+								.getName()), entityClass, false, false);
+	}
 
 	public WriteResult updateMulti(Query query, Update update, Class<?> entityClass) {
 		return doUpdate(determineCollectionName(entityClass), query, update, entityClass, false, true);
@@ -835,9 +867,14 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 				DBObject queryObj = query == null ? new BasicDBObject()
 						: mapper.getMappedObject(query.getQueryObject(), entity);
+				
+				if(null != update && null != entity && entity.hasVersion()) {
+					update.inc(entity.getVersionProperty().getName(), 1);
+				}
+
 				DBObject updateObj = update == null ? new BasicDBObject() : mapper.getMappedObject(update.getUpdateObject(),
 						entity);
-
+				
 				if (LOGGER.isDebugEnabled()) {
 					LOGGER.debug("calling update using query: " + queryObj + " and update: " + updateObj + " in collection: "
 							+ collectionName);
@@ -851,6 +888,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 					wr = collection.update(queryObj, updateObj, upsert, multi);
 				} else {
 					wr = collection.update(queryObj, updateObj, upsert, multi, writeConcernToUse);
+				}
+				if(null != entity && entity.hasVersion() && !multi){
+					if(wr.getN() == 0){
+						throw new OptimisticLockingFailureException("Optimistic lock exception on saveing entity: "+updateObj.toMap().toString());
+					}
 				}
 				handleAnyWriteResultErrors(wr, queryObj, "update with '" + updateObj + "'");
 				return wr;
