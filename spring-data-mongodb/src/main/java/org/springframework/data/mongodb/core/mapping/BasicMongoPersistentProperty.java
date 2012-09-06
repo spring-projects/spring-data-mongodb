@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core.mapping;
 
 import java.beans.PropertyDescriptor;
+import java.io.ObjectInputStream.GetField;
 import java.lang.reflect.Field;
 import java.math.BigInteger;
 import java.util.HashSet;
@@ -141,5 +142,12 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 		 */
 	public DBRef getDBRef() {
 		return getField().getAnnotation(DBRef.class);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.core.mapping.MongoPersistentProperty#isVersion()
+	 */
+	public boolean isVersion() {		
+		return getField().isAnnotationPresent(Version.class);
 	}
 }

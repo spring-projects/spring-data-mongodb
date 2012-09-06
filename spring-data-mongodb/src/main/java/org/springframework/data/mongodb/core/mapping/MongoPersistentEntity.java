@@ -9,4 +9,8 @@ import org.springframework.data.mapping.PersistentEntity;
 public interface MongoPersistentEntity<T> extends PersistentEntity<T, MongoPersistentProperty> {
 
 	String getCollection();
+	
+	MongoPersistentProperty getVersionProperty();
+	
+	boolean hasVersion();
 }

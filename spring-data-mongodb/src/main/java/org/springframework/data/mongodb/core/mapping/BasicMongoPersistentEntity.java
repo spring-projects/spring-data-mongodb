@@ -25,6 +25,7 @@ import org.springframework.context.expression.BeanFactoryAccessor;
 import org.springframework.context.expression.BeanFactoryResolver;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.model.BasicPersistentEntity;
+import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mongodb.MongoCollectionUtils;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.Expression;
@@ -46,6 +47,8 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 	private final String collection;
 	private final SpelExpressionParser parser;
 	private final StandardEvaluationContext context;
+	
+	private MongoPersistentProperty versionProperty;
 
 	/**
 	 * Creates a new {@link BasicMongoPersistentEntity} with the given {@link TypeInformation}. Will default the
@@ -70,6 +73,25 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 			this.collection = fallback;
 		}
 	}
+	
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mapping.MutablePersistentEntity#addPersistentProperty(P)
+	 */
+	@Override
+	public void addPersistentProperty(MongoPersistentProperty property) {		
+		if (property.isVersion()) {
+			if (this.versionProperty != null) {
+				throw new MappingException(
+						String.format(
+								"Attempt to add version property %s but already have property %s registered "
+										+ "as version. Check your mapping configuration!",
+								property.getField(), versionProperty.getField()));
+			}
+			this.versionProperty = property;
+		}
+		super.addPersistentProperty(property);
+	}
 
 	/*
 	 * (non-Javadoc)
@@ -90,6 +112,14 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 
 		Expression expression = parser.parseExpression(collection, ParserContext.TEMPLATE_EXPRESSION);
 		return expression.getValue(context, String.class);
+	}
+	
+	public MongoPersistentProperty getVersionProperty() {	
+		return versionProperty;
+	}
+
+	public boolean hasVersion() {	
+		return getVersionProperty() != null;
 	}
 
 	/**
@@ -117,5 +147,5 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 
 			return o1.getFieldOrder() - o2.getFieldOrder();
 		}
-	}
+	}	
 }

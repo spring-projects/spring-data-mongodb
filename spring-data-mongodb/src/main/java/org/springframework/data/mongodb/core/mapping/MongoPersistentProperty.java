@@ -54,6 +54,15 @@ public interface MongoPersistentProperty extends PersistentProperty<MongoPersist
 	 * @return
 	 */
 	DBRef getDBRef();
+	
+		
+	/**
+	 * Returns whether the property is {@link Version}. 
+	 * 
+	 * @return
+	 */
+	boolean isVersion();	
+		
 
 	/**
 	 * Simple {@link Converter} implementation to transform a {@link MongoPersistentProperty} into its field name.

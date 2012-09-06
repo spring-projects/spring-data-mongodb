@@ -15,8 +15,10 @@
  */
 package org.springframework.data.mongodb.core.query;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
@@ -38,6 +40,18 @@ public class Update {
 	 */
 	public static Update update(String key, Object value) {
 		return new Update().set(key, value);
+	}
+		
+	public static Update fromDBObject(DBObject object, String... exclude) {
+		Update update = new Update();
+		List<String> excludeList = Arrays.asList(exclude);
+		for (String key : object.keySet()) {	
+			if(excludeList.contains(key)) {
+				continue;
+			}
+			update.set(key, object.get(key));
+		}		
+		return update;
 	}
 
 	/**

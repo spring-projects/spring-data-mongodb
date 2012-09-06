@@ -112,7 +112,15 @@ public class SimpleMongoMappingContext extends
 		public DBRef getDBRef() {
 			return null;
 		}
-	}
+		
+		/* (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.core.mapping.MongoPersistentProperty#isVersion()
+		 */
+		public boolean isVersion() {
+			return false;
+		}
+		
+	} 
 
 	static class SimpleMongoPersistentEntity<T> extends BasicPersistentEntity<T, MongoPersistentProperty> implements
 			MongoPersistentEntity<T> {
@@ -129,6 +137,17 @@ public class SimpleMongoMappingContext extends
 		 */
 		public String getCollection() {
 			return MongoCollectionUtils.getPreferredCollectionName(getType());
+		}
+		
+		/* (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.core.mapping.MongoPersistentEntity#getVersionProperty()
+		 */
+		public MongoPersistentProperty getVersionProperty() {
+			return null;
+		}
+
+		public boolean hasVersion() {
+			return false;
 		}
 	}
 }
