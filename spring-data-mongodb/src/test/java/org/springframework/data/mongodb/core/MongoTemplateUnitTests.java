@@ -15,12 +15,13 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
 import java.math.BigInteger;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.regex.Pattern;
 
@@ -31,6 +32,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.context.ApplicationListener;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.dao.DataAccessException;
@@ -40,6 +42,7 @@ import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.convert.CustomConversions;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
+import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexCreator;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
@@ -71,11 +74,13 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	DBCollection collection;
 
 	MappingMongoConverter converter;
+	MongoMappingContext mappingContext;
 
 	@Before
 	public void setUp() {
 
-		this.converter = new MappingMongoConverter(factory, new MongoMappingContext());
+		this.mappingContext = new MongoMappingContext();
+		this.converter = new MappingMongoConverter(factory, mappingContext);
 		this.template = new MongoTemplate(factory, converter);
 
 		when(factory.getDb()).thenReturn(db);
@@ -196,6 +201,29 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 
 		template.populateIdIfNecessary(entity, 7);
 		assertThat(entity.id, is(5));
+	}
+
+	/**
+	 * @see DATAMONGO-533
+	 */
+	@Test
+	public void registersDefaultEntityIndexCreatorIfApplicationContextHasOneForDifferentMappingContext() {
+
+		GenericApplicationContext applicationContext = new GenericApplicationContext();
+		applicationContext.getBeanFactory().registerSingleton("foo",
+				new MongoPersistentEntityIndexCreator(new MongoMappingContext(), factory));
+
+		MongoTemplate mongoTemplate = new MongoTemplate(factory, converter);
+		mongoTemplate.setApplicationContext(applicationContext);
+
+		Collection<ApplicationListener<?>> listeners = applicationContext.getApplicationListeners();
+		assertThat(listeners, hasSize(1));
+
+		ApplicationListener<?> listener = listeners.iterator().next();
+
+		assertThat(listener, is(instanceOf(MongoPersistentEntityIndexCreator.class)));
+		MongoPersistentEntityIndexCreator creator = (MongoPersistentEntityIndexCreator) listener;
+		assertThat(creator.isIndexCreatorFor(mappingContext), is(true));
 	}
 
 	class AutogenerateableId {

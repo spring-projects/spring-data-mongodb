@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -113,14 +114,17 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	private static final Logger LOGGER = LoggerFactory.getLogger(MongoTemplate.class);
 	private static final String ID = "_id";
 	private static final WriteResultChecking DEFAULT_WRITE_RESULT_CHECKING = WriteResultChecking.NONE;
-	@SuppressWarnings("serial")
-	private static final List<String> ITERABLE_CLASSES = new ArrayList<String>() {
-		{
-			add(List.class.getName());
-			add(Collection.class.getName());
-			add(Iterator.class.getName());
-		}
-	};
+	private static final Collection<String> ITERABLE_CLASSES;
+
+	static {
+
+		Set<String> iterableClasses = new HashSet<String>();
+		iterableClasses.add(List.class.getName());
+		iterableClasses.add(Collection.class.getName());
+		iterableClasses.add(Iterator.class.getName());
+
+		ITERABLE_CLASSES = Collections.unmodifiableCollection(iterableClasses);
+	}
 
 	/*
 	 * WriteConcern to be used for write operations if it has been specified.
@@ -247,16 +251,43 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		this.readPreference = readPreference;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.context.ApplicationContextAware#setApplicationContext(org.springframework.context.ApplicationContext)
+	 */
 	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-		String[] beans = applicationContext.getBeanNamesForType(MongoPersistentEntityIndexCreator.class);
-		if ((null == beans || beans.length == 0) && applicationContext instanceof ConfigurableApplicationContext) {
-			((ConfigurableApplicationContext) applicationContext).addApplicationListener(indexCreator);
-		}
+
+		prepareIndexCreator(applicationContext);
+
 		eventPublisher = applicationContext;
 		if (mappingContext instanceof ApplicationEventPublisherAware) {
 			((ApplicationEventPublisherAware) mappingContext).setApplicationEventPublisher(eventPublisher);
 		}
 		resourceLoader = applicationContext;
+	}
+
+	/**
+	 * Inspects the given {@link ApplicationContext} for {@link MongoPersistentEntityIndexCreator} and those in turn if
+	 * they were registered for the current {@link MappingContext}. If no creator for the current {@link MappingContext}
+	 * can be found we manually add the internally created one as {@link ApplicationListener} to make sure indexes get
+	 * created appropriately for entity types persisted through this {@link MongoTemplate} instance.
+	 * 
+	 * @param context
+	 */
+	private void prepareIndexCreator(ApplicationContext context) {
+
+		String[] indexCreators = context.getBeanNamesForType(MongoPersistentEntityIndexCreator.class);
+
+		for (String creator : indexCreators) {
+			MongoPersistentEntityIndexCreator creatorBean = context.getBean(creator, MongoPersistentEntityIndexCreator.class);
+			if (creatorBean.isIndexCreatorFor(mappingContext)) {
+				return;
+			}
+		}
+
+		if (context instanceof ConfigurableApplicationContext) {
+			((ConfigurableApplicationContext) context).addApplicationListener(indexCreator);
+		}
 	}
 
 	/**

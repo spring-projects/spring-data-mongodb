@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationListener;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PropertyHandler;
+import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.context.MappingContextEvent;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
@@ -169,6 +170,26 @@ public class MongoPersistentEntityIndexCreator implements
 		}
 	}
 
+	/**
+	 * Returns whether the current index creator was registered for the given {@link MappingContext}.
+	 * 
+	 * @param context
+	 * @return
+	 */
+	public boolean isIndexCreatorFor(MappingContext<?, ?> context) {
+		return this.mappingContext.equals(context);
+	}
+
+	/**
+	 * Triggers the actual index creation.
+	 * 
+	 * @param collection the collection to create the index in
+	 * @param name the name of the index about to be created
+	 * @param indexDefinition the index definition
+	 * @param unique whether it shall be a unique index
+	 * @param dropDups whether to drop duplicates
+	 * @param sparse sparse or not
+	 */
 	protected void ensureIndex(String collection, String name, DBObject indexDefinition, boolean unique,
 			boolean dropDups, boolean sparse) {
 

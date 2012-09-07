@@ -81,6 +81,20 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 		assertThat(creator.indexDefinition, is(nullValue()));
 	}
 
+	/**
+	 * @see DATAMONGO-530
+	 */
+	@Test
+	public void isIndexCreatorForMappingContextHandedIntoConstructor() {
+
+		MongoMappingContext mappingContext = new MongoMappingContext();
+		mappingContext.initialize();
+
+		MongoPersistentEntityIndexCreator creator = new DummyMongoPersistentEntityIndexCreator(mappingContext, factory);
+		assertThat(creator.isIndexCreatorFor(mappingContext), is(true));
+		assertThat(creator.isIndexCreatorFor(new MongoMappingContext()), is(false));
+	}
+
 	static class Person {
 
 		@Indexed(name = "indexName")

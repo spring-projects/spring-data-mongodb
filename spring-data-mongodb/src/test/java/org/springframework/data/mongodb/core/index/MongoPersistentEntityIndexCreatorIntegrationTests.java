@@ -54,13 +54,13 @@ public class MongoPersistentEntityIndexCreatorIntegrationTests {
 	}
 
 	@Test
-	public void foo() {
+	public void createsIndexForConfiguredMappingContextOnly() {
 
 		List<IndexInfo> indexInfo = templateOne.indexOps(SampleEntity.class).getIndexInfo();
 		assertThat(indexInfo, hasSize(greaterThan(0)));
 		assertThat(indexInfo, Matchers.<IndexInfo> hasItem(hasProperty("name", is("prop"))));
 
-		indexInfo = templateTwo.indexOps(SampleEntity.class).getIndexInfo();
+		indexInfo = templateTwo.indexOps("sampleEntity").getIndexInfo();
 		assertThat(indexInfo, hasSize(0));
 	}
 }
