@@ -17,12 +17,13 @@ package org.springframework.data.mongodb.core;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
-import static org.springframework.data.mongodb.core.SerializationUtils.*;
+import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
 
 import java.util.Arrays;
 
 import org.hamcrest.Matcher;
 import org.junit.Test;
+import org.springframework.data.mongodb.core.query.SerializationUtils;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
