@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.core.query;
 
-import static org.springframework.data.mongodb.core.SerializationUtils.*;
+import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
 import static org.springframework.util.ObjectUtils.*;
 
 import java.util.ArrayList;
