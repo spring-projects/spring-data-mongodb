@@ -97,10 +97,12 @@ public abstract class MongoDbUtils {
 		boolean credentialsGiven = username != null && password != null;
 		if (credentialsGiven && !db.isAuthenticated()) {
 			// Note, can only authenticate once against the same com.mongodb.DB object.
-			if (!db.authenticate(username, password)) {
-				throw new CannotGetMongoDbConnectionException("Failed to authenticate to database [" + databaseName
-						+ "], username = [" + username + "], password = [" + new String(password) + "]", databaseName, username,
-						password);
+			synchronized (db) {
+				if (!db.authenticate(username, password)) {
+					throw new CannotGetMongoDbConnectionException("Failed to authenticate to database [" + databaseName
+							+ "], username = [" + username + "], password = [" + new String(password) + "]", databaseName, username,
+							password);
+				}
 			}
 		}
 
@@ -144,7 +146,7 @@ public abstract class MongoDbUtils {
 			return false;
 		}
 		DbHolder dbHolder = (DbHolder) TransactionSynchronizationManager.getResource(mongo);
-		return (dbHolder != null && dbHolder.containsDB(db));
+		return dbHolder != null && dbHolder.containsDB(db);
 	}
 
 	/**
