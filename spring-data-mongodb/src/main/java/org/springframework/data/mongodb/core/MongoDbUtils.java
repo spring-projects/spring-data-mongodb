@@ -109,9 +109,11 @@ public abstract class MongoDbUtils {
 			String username = credentials.getUsername();
 			String password = credentials.hasPassword() ? credentials.getPassword() : null;
 
-			if (!db.authenticate(username, password == null ? null : password.toCharArray())) {
-				throw new CannotGetMongoDbConnectionException("Failed to authenticate to database [" + databaseName
-						+ "], username = [" + username + "], password = [" + password + "]", databaseName, credentials);
+			synchronized (db) {
+				if (!db.authenticate(username, password == null ? null : password.toCharArray())) {
+					throw new CannotGetMongoDbConnectionException("Failed to authenticate to database [" + databaseName
+							+ "], username = [" + username + "], password = [" + password + "]", databaseName, credentials);
+				}
 			}
 		}
 
@@ -159,7 +161,7 @@ public abstract class MongoDbUtils {
 			return false;
 		}
 		DbHolder dbHolder = (DbHolder) TransactionSynchronizationManager.getResource(mongo);
-		return (dbHolder != null && dbHolder.containsDB(db));
+		return dbHolder != null && dbHolder.containsDB(db);
 	}
 
 	/**
