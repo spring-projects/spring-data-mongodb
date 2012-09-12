@@ -44,11 +44,9 @@ import com.mongodb.MongoException;
 @ContextConfiguration
 public class RepositoryIndexCreationIntegrationTests {
 
-	@Autowired
-	MongoOperations operations;
+	@Autowired MongoOperations operations;
 
-	@Autowired
-	PersonRepository repository;
+	@Autowired PersonRepository repository;
 
 	@After
 	public void tearDown() {
@@ -72,12 +70,13 @@ public class RepositoryIndexCreationIntegrationTests {
 	public void testname() {
 		operations.execute(Person.class, new CollectionCallback<Void>() {
 
+			@SuppressWarnings("unchecked")
 			public Void doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 				List<DBObject> indexInfo = collection.getIndexInfo();
 
 				assertThat(indexInfo.isEmpty(), is(false));
 				assertThat(indexInfo.size(), is(greaterThan(2)));
-				assertThat(getIndexNamesFrom(indexInfo), hasItems("findByLastnameLike", "findByFirstnameLike"));
+				assertThat(getIndexNamesFrom(indexInfo), hasItems(startsWith("findByLastname"), startsWith("findByFirstname")));
 
 				return null;
 			}
