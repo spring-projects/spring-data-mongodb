@@ -21,6 +21,7 @@ import static org.junit.Assert.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hamcrest.Matcher;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -76,8 +77,12 @@ public class RepositoryIndexCreationIntegrationTests {
 
 				assertThat(indexInfo.isEmpty(), is(false));
 				assertThat(indexInfo.size(), is(greaterThan(2)));
-				assertThat(getIndexNamesFrom(indexInfo), hasItems(startsWith("findByLastname"), startsWith("findByFirstname")));
 
+				Matcher<String> lastnameIndex = startsWith("findByLastname");
+				Matcher<String> firstnameIndex = startsWith("findByFirstname");
+				Matcher<Iterable<String>> hasItems = hasItems(lastnameIndex, firstnameIndex);
+
+				assertThat(getIndexNamesFrom(indexInfo), hasItems);
 				return null;
 			}
 		});
