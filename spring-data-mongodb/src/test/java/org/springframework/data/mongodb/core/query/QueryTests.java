@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 the original author or authors.
+ * Copyright 2010-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -100,7 +100,7 @@ public class QueryTests {
 	public void testComplexQueryWithMultipleChainedCriteria() {
 		Query q = new Query(where("name").regex("^T.*").and("age").gt(20).lt(80).and("city")
 				.in("Stockholm", "London", "New York"));
-		String expected = "{ \"name\" : { \"$regex\" : \"^T.*\" , \"$options\" : \"\"} , \"age\" : { \"$gt\" : 20 , \"$lt\" : 80} , "
+		String expected = "{ \"name\" : { \"$regex\" : \"^T.*\"} , \"age\" : { \"$gt\" : 20 , \"$lt\" : 80} , "
 				+ "\"city\" : { \"$in\" : [ \"Stockholm\" , \"London\" , \"New York\"]}}";
 		Assert.assertEquals(expected, q.getQueryObject().toString());
 	}
@@ -134,12 +134,12 @@ public class QueryTests {
 	@Test
 	public void testQueryWithRegex() {
 		Query q = new Query(where("name").regex("b.*"));
-		String expected = "{ \"name\" : { \"$regex\" : \"b.*\" , \"$options\" : \"\"}}";
+		String expected = "{ \"name\" : { \"$regex\" : \"b.*\"}}";
 		Assert.assertEquals(expected, q.getQueryObject().toString());
 	}
 
 	@Test
-	public void testQueryWithRegexandOption() {
+	public void testQueryWithRegexAndOption() {
 		Query q = new Query(where("name").regex("b.*", "i"));
 		String expected = "{ \"name\" : { \"$regex\" : \"b.*\" , \"$options\" : \"i\"}}";
 		Assert.assertEquals(expected, q.getQueryObject().toString());

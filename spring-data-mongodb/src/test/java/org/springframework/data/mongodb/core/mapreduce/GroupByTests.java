@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2011-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,11 +44,9 @@ import com.mongodb.Mongo;
 @ContextConfiguration("classpath:infrastructure.xml")
 public class GroupByTests {
 
-	@Autowired
-	MongoDbFactory factory;
+	@Autowired MongoDbFactory factory;
 
-	@Autowired
-	ApplicationContext applicationContext;
+	@Autowired ApplicationContext applicationContext;
 
 	MongoTemplate mongoTemplate;
 
@@ -158,7 +156,7 @@ public class GroupByTests {
 
 	private void assertMapReduceResults(GroupByResults<XObject> results) {
 		DBObject dboRawResults = results.getRawResults();
-		String expected = "{ \"serverUsed\" : \"127.0.0.1:27017\" , \"retval\" : [ { \"x\" : 1.0 , \"count\" : 2.0} , { \"x\" : 2.0 , \"count\" : 1.0} , { \"x\" : 3.0 , \"count\" : 3.0}] , \"count\" : 6.0 , \"keys\" : 3 , \"ok\" : 1.0}";
+		String expected = "{ \"serverUsed\" : \"/127.0.0.1:27017\" , \"retval\" : [ { \"x\" : 1.0 , \"count\" : 2.0} , { \"x\" : 2.0 , \"count\" : 1.0} , { \"x\" : 3.0 , \"count\" : 3.0}] , \"count\" : 6.0 , \"keys\" : 3 , \"ok\" : 1.0}";
 		Assert.assertEquals(expected, dboRawResults.toString());
 
 		int numResults = 0;

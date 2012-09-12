@@ -11,7 +11,6 @@
 	<name>Spring Data MongoDB</name>
 
 	<properties>
-		<mongo.version>2.7.1</mongo.version>
 		<querydsl.version>2.6.0</querydsl.version>
 		<cdi.version>1.0</cdi.version>
 		<validation.version>1.0.0.GA</validation.version>
