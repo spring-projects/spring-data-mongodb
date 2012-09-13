@@ -1226,6 +1226,23 @@ public class MongoTemplateTests {
 		template.remove(query(where("id").is(id)), TypeWithMyId.class);
 	}
 
+	/**
+	 * @see DATAMONGO-539
+	 */
+	@Test
+	public void removesObjectFromExplicitCollection() {
+
+		String collectionName = "explicit";
+		template.remove(new Query(), collectionName);
+
+		Person person = new Person("Dave");
+		template.save(person, collectionName);
+		assertThat(template.findAll(Person.class, collectionName).isEmpty(), is(false));
+
+		template.remove(person, collectionName);
+		assertThat(template.findAll(Person.class, collectionName).isEmpty(), is(true));
+	}
+
 	static class MyId {
 
 		String first;
