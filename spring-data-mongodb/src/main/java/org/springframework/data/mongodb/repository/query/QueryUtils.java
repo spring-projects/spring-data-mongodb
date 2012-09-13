@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 the original author or authors.
+ * Copyright 2010-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,11 +15,12 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import com.mongodb.DBCursor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mongodb.core.query.Query;
+
+import com.mongodb.DBCursor;
 
 /**
  * Collection of utility methods to apply sorting and pagination to a {@link DBCursor}.
@@ -36,10 +37,12 @@ public abstract class QueryUtils {
 	 * Applies the given {@link Pageable} to the given {@link Query}. Will do nothing if {@link Pageable} is
 	 * {@literal null}.
 	 * 
-	 * @param query
+	 * @deprecated use {@link Query#with(Pageable)}.
+	 * @param query must not be {@literal null}.
 	 * @param pageable
 	 * @return
 	 */
+	@Deprecated
 	public static Query applyPagination(Query query, Pageable pageable) {
 
 		if (pageable == null) {
@@ -49,16 +52,18 @@ public abstract class QueryUtils {
 		query.limit(pageable.getPageSize());
 		query.skip(pageable.getOffset());
 
-		return applySorting(query, pageable.getSort());
+		return query.with(pageable.getSort());
 	}
 
 	/**
 	 * Applies the given {@link Sort} to the {@link Query}. Will do nothing if {@link Sort} is {@literal null}.
 	 * 
-	 * @param query
+	 * @deprecated use {@link Query#with(Pageable)}.
+	 * @param query must not be {@literal null}.
 	 * @param sort
 	 * @return
 	 */
+	@Deprecated
 	public static Query applySorting(Query query, Sort sort) {
 
 		if (sort == null) {

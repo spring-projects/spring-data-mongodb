@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 the original author or authors.
+ * Copyright 2010-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +34,6 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
-import org.springframework.data.mongodb.repository.query.QueryUtils;
 import org.springframework.util.Assert;
 
 /**
@@ -200,7 +199,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 	public Page<T> findAll(final Pageable pageable) {
 
 		Long count = count();
-		List<T> list = findAll(QueryUtils.applyPagination(new Query(), pageable));
+		List<T> list = findAll(new Query().with(pageable));
 
 		return new PageImpl<T>(list, pageable, count);
 	}
@@ -209,9 +208,8 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.PagingAndSortingRepository#findAll(org.springframework.data.domain.Sort)
 	 */
-	public List<T> findAll(final Sort sort) {
-
-		return findAll(QueryUtils.applySorting(new Query(), sort));
+	public List<T> findAll(Sort sort) {
+		return findAll(new Query().with(sort));
 	}
 
 	private List<T> findAll(Query query) {

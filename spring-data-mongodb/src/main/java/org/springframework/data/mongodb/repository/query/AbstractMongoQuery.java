@@ -15,8 +15,6 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import static org.springframework.data.mongodb.repository.query.QueryUtils.*;
-
 import java.util.List;
 
 import org.springframework.data.domain.PageImpl;
@@ -145,12 +143,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 		 */
 		@Override
 		public Object execute(Query query) {
-
-			if (pageable != null) {
-				query = applyPagination(query, pageable);
-			}
-
-			return readCollection(query);
+			return readCollection(query.with(pageable));
 		}
 	}
 
@@ -185,8 +178,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 			MongoEntityInformation<?, ?> metadata = method.getEntityInformation();
 			long count = operations.count(query, metadata.getCollectionName());
 
-			List<?> result = operations.find(applyPagination(query, pageable), metadata.getJavaType(),
-					metadata.getCollectionName());
+			List<?> result = operations.find(query.with(pageable), metadata.getJavaType(), metadata.getCollectionName());
 
 			return new PageImpl(result, pageable, count);
 		}

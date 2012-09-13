@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 the original author or authors.
+ * Copyright 2010-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,17 +22,25 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.util.Assert;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
+/**
+ * @author Thomas Risberg
+ * @author Oliver Gierke
+ */
 public class Query {
 
 	private LinkedHashMap<String, Criteria> criteria = new LinkedHashMap<String, Criteria>();
 	private Field fieldSpec;
-	private Sort sort;
+	private Sort coreSort;
+	@SuppressWarnings("deprecation")
+	private org.springframework.data.mongodb.core.query.Sort sort;
 	private int skip;
 	private int limit;
 	private String hint;
@@ -96,12 +104,59 @@ public class Query {
 		return this;
 	}
 
-	public Sort sort() {
+	/**
+	 * Returns a {@link org.springframework.data.mongodb.core.query.Sort} instance to define ordering properties.
+	 * 
+	 * @deprecated use {@link #with(Sort)} instead
+	 * @return
+	 */
+	@Deprecated
+	public org.springframework.data.mongodb.core.query.Sort sort() {
 		if (this.sort == null) {
-			this.sort = new Sort();
+			this.sort = new org.springframework.data.mongodb.core.query.Sort();
 		}
 
 		return this.sort;
+	}
+
+	/**
+	 * Sets the given pagination information on the {@link Query} instance. Will transparently set {@code skip} and
+	 * {@code limit} as well as applying the {@link Sort} instance defined with the {@link Pageable}.
+	 * 
+	 * @param pageable
+	 * @return
+	 */
+	public Query with(Pageable pageable) {
+
+		if (pageable == null) {
+			return this;
+		}
+
+		this.limit = pageable.getPageSize();
+		this.skip = pageable.getOffset();
+
+		return with(pageable.getSort());
+	}
+
+	/**
+	 * Adds a {@link Sort} to the {@link Query} instance.
+	 * 
+	 * @param sort
+	 * @return
+	 */
+	public Query with(Sort sort) {
+
+		if (sort == null) {
+			return this;
+		}
+
+		if (this.coreSort == null) {
+			this.coreSort = sort;
+		} else {
+			this.coreSort = this.coreSort.and(sort);
+		}
+
+		return this;
 	}
 
 	public DBObject getQueryObject() {
@@ -121,11 +176,26 @@ public class Query {
 		return fieldSpec.getFieldsObject();
 	}
 
+	@SuppressWarnings("deprecation")
 	public DBObject getSortObject() {
-		if (this.sort == null) {
+
+		if (this.coreSort == null && this.sort == null) {
 			return null;
 		}
-		return this.sort.getSortObject();
+
+		DBObject dbo = new BasicDBObject();
+
+		if (this.coreSort != null) {
+			for (org.springframework.data.domain.Sort.Order order : this.coreSort) {
+				dbo.put(order.getProperty(), order.isAscending() ? 1 : -1);
+			}
+		}
+
+		if (this.sort != null) {
+			dbo.putAll(this.sort.getSortObject());
+		}
+
+		return dbo;
 	}
 
 	public int getSkip() {

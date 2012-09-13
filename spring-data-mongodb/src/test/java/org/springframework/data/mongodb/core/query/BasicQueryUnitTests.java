@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2011-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,11 +15,12 @@
  */
 package org.springframework.data.mongodb.core.query;
 
-import static org.junit.Assert.*;
 import static org.hamcrest.CoreMatchers.*;
+import static org.junit.Assert.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 
 import org.junit.Test;
+import org.springframework.data.domain.Sort.Direction;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
@@ -51,7 +52,7 @@ public class BasicQueryUnitTests {
 
 		BasicQuery query = new BasicQuery("{}");
 		query.setSortObject(new BasicDBObject("name", -1));
-		query.sort().on("lastname", Order.ASCENDING);
+		query.with(new org.springframework.data.domain.Sort(Direction.ASC, "lastname"));
 
 		DBObject sortReference = new BasicDBObject("name", -1);
 		sortReference.put("lastname", 1);

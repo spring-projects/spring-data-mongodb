@@ -15,10 +15,13 @@
  */
 package org.springframework.data.mongodb.core.query;
 
+import static org.hamcrest.CoreMatchers.*;
+import static org.junit.Assert.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 
 public class QueryTests {
@@ -143,5 +146,28 @@ public class QueryTests {
 		Query q = new Query(where("name").regex("b.*", "i"));
 		String expected = "{ \"name\" : { \"$regex\" : \"b.*\" , \"$options\" : \"i\"}}";
 		Assert.assertEquals(expected, q.getQueryObject().toString());
+	}
+
+	/**
+	 * @see DATAMONGO-538
+	 */
+	@Test
+	@SuppressWarnings("deprecation")
+	public void addsDeprecatedSortCorrectly() {
+
+		Query query = new Query();
+		query.sort().on("foo", Order.DESCENDING);
+
+		assertThat(query.getSortObject().toString(), is("{ \"foo\" : -1}"));
+	}
+
+	/**
+	 * @see DATAMONGO-538
+	 */
+	@Test
+	public void addsSortCorrectly() {
+
+		Query query = new Query().with(new org.springframework.data.domain.Sort(Direction.DESC, "foo"));
+		assertThat(query.getSortObject().toString(), is("{ \"foo\" : -1}"));
 	}
 }

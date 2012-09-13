@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 the original author or authors.
+ * Copyright 2010-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,15 @@ import java.util.Map;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
+/**
+ * Helper class to define sorting criterias for a Query instance.
+ * 
+ * @author Thomas Risberg
+ * @author Oliver Gierke
+ * @deprecated use {@link org.springframework.data.domain.Sort} instead. See
+ *             {@link Query#with(org.springframework.data.domain.Sort)}.
+ */
+@Deprecated
 public class Sort {
 
 	private Map<String, Order> fieldSpec = new LinkedHashMap<String, Order>();
@@ -40,7 +49,7 @@ public class Sort {
 	public DBObject getSortObject() {
 		DBObject dbo = new BasicDBObject();
 		for (String k : fieldSpec.keySet()) {
-			dbo.put(k, (fieldSpec.get(k).equals(Order.ASCENDING) ? 1 : -1));
+			dbo.put(k, fieldSpec.get(k).equals(Order.ASCENDING) ? 1 : -1);
 		}
 		return dbo;
 	}
