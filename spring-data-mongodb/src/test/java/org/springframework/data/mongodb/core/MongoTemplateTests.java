@@ -82,12 +82,15 @@ import com.mongodb.WriteResult;
 @ContextConfiguration("classpath:infrastructure.xml")
 public class MongoTemplateTests {
 
-	@Autowired MongoTemplate template;
-	@Autowired MongoDbFactory factory;
+	@Autowired
+	MongoTemplate template;
+	@Autowired
+	MongoDbFactory factory;
 
 	MongoTemplate mappingTemplate;
 
-	@Rule public ExpectedException thrown = ExpectedException.none();
+	@Rule
+	public ExpectedException thrown = ExpectedException.none();
 
 	@Autowired
 	@SuppressWarnings("unchecked")
@@ -1301,6 +1304,23 @@ public class MongoTemplateTests {
 		template.save(person);
 	}
 
+	/**
+	 * @see DATAMONGO-539
+	 */
+	@Test
+	public void removesObjectFromExplicitCollection() {
+
+		String collectionName = "explicit";
+		template.remove(new Query(), collectionName);
+
+		Person person = new Person("Dave");
+		template.save(person, collectionName);
+		assertThat(template.findAll(Person.class, collectionName).isEmpty(), is(false));
+
+		template.remove(person, collectionName);
+		assertThat(template.findAll(Person.class, collectionName).isEmpty(), is(true));
+	}
+
 	static class MyId {
 
 		String first;
@@ -1309,12 +1329,14 @@ public class MongoTemplateTests {
 
 	static class TypeWithMyId {
 
-		@Id MyId id;
+		@Id
+		MyId id;
 	}
 
 	public static class Sample {
 
-		@Id String id;
+		@Id
+		String id;
 		String field;
 	}
 
