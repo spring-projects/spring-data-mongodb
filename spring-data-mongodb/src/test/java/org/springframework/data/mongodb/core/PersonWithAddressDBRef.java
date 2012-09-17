@@ -18,6 +18,9 @@ public class PersonWithAddressDBRef {
 
 	@DBRef
 	List<AddressWithPersonWithDBRef> addresses = new ArrayList<AddressWithPersonWithDBRef>();
+	
+	@DBRef(db="addressOtherDb")
+	AddressWithPersonWithDBRef otherDbAddress;
 
 	@Override
 	public int hashCode() {

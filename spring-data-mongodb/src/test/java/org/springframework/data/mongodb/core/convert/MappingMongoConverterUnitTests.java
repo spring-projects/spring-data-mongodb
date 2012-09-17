@@ -87,6 +87,10 @@ public class MappingMongoConverterUnitTests {
 		mappingContext = new MongoMappingContext();
 		mappingContext.setApplicationContext(context);
 		mappingContext.onApplicationEvent(new ContextRefreshedEvent(context));
+		
+		DB db = mock(DB.class);
+		when(db.getName()).thenReturn("database");
+		when(factory.getDb()).thenReturn(db);
 
 		converter = new MappingMongoConverter(factory, mappingContext);
 		converter.afterPropertiesSet();

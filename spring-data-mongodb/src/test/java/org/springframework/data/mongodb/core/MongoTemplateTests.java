@@ -1310,7 +1310,7 @@ public class MongoTemplateTests {
 	 * @see DATAMONGO-488
 	 */
 	@Test
-	public void resolveCirculeDBRefCorrectly() {
+	public void resolveCircleDBRefCorrectly() {
 		PersonWithAddressDBRef person = new PersonWithAddressDBRef();
 		person.name = "Patryk";
 		
@@ -1338,7 +1338,7 @@ public class MongoTemplateTests {
 	 * @see DATAMONGO-488
 	 */
 	@Test
-	public void resolveCirculeDBRefCorrectlyWithCollections() {
+	public void resolveCircleDBRefCorrectlyWithCollections() {
 		
 		//Collection to collection
 		PersonWithAddressDBRef person = new PersonWithAddressDBRef();
@@ -1388,6 +1388,34 @@ public class MongoTemplateTests {
 		assertThat(person.address,is(address));
 		assertThat(person.address.persons, hasItem(person));
 		
+	}
+	
+	/**
+	 * @see DATAMONGO-488
+	 */
+	@Test
+	public void resolveCircleDBRefCorrectlyWithOuterDb() {
+		PersonWithAddressDBRef person = new PersonWithAddressDBRef();
+		person.name = "Patryk";
+		
+		template.save(person);
+		
+		AddressWithPersonWithDBRef address = new AddressWithPersonWithDBRef();
+		address.street = "Miodowa";
+		address.otherDbPerson = person;
+		
+		template.save(address);
+		
+		person.otherDbAddress = address;
+		
+		template.save(person);
+		
+		person = template.findOne(Query.query(Criteria.where("name").is("Patryk")), PersonWithAddressDBRef.class);
+		
+		assertNotNull(person);
+		assertNotNull(person.otherDbAddress);
+		assertNotNull(person.otherDbAddress.otherDbPerson);
+		assertThat(person.otherDbAddress.otherDbPerson, is(person));
 	}
 	
 
