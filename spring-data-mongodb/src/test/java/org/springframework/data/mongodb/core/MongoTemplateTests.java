@@ -1235,12 +1235,13 @@ public class MongoTemplateTests {
 		String collectionName = "explicit";
 		template.remove(new Query(), collectionName);
 
-		Person person = new Person("Dave");
+		PersonWithConvertedId person = new PersonWithConvertedId();
+		person.name = "Dave";
 		template.save(person, collectionName);
-		assertThat(template.findAll(Person.class, collectionName).isEmpty(), is(false));
+		assertThat(template.findAll(PersonWithConvertedId.class, collectionName).isEmpty(), is(false));
 
 		template.remove(person, collectionName);
-		assertThat(template.findAll(Person.class, collectionName).isEmpty(), is(true));
+		assertThat(template.findAll(PersonWithConvertedId.class, collectionName).isEmpty(), is(true));
 	}
 
 	static class MyId {
@@ -1270,6 +1271,12 @@ public class MongoTemplateTests {
 		TestClass(DateTime myDate) {
 			this.myDate = myDate;
 		}
+	}
+
+	static class PersonWithConvertedId {
+
+		String id;
+		String name;
 	}
 
 	static enum DateTimeToDateConverter implements Converter<DateTime, Date> {

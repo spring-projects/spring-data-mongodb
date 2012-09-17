@@ -456,7 +456,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		} else {
 			query.limit(1);
 			List<T> results = find(query, entityClass, collectionName);
-			return (results.isEmpty() ? null : results.get(0));
+			return results.isEmpty() ? null : results.get(0);
 		}
 	}
 
@@ -879,7 +879,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			return;
 		}
 
-		remove(getIdQueryFor(object), collection);
+		doRemove(collection, getIdQueryFor(object), object.getClass());
 	}
 
 	/**
