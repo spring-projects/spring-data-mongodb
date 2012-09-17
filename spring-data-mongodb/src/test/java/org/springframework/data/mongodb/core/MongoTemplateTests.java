@@ -137,6 +137,8 @@ public class MongoTemplateTests {
 		template.dropCollection(PersonWithIdPropertyOfTypeLong.class);
 		template.dropCollection(PersonWithIdPropertyOfPrimitiveLong.class);
 		template.dropCollection(PersonWithVersionPropertyOfTypeInteger.class);
+		template.dropCollection(PersonWithAddressDBRef.class);
+		template.dropCollection(AddressWithPersonWithDBRef.class);
 		template.dropCollection(TestClass.class);
 		template.dropCollection(Sample.class);
 		template.dropCollection(MyPerson.class);
@@ -1303,6 +1305,91 @@ public class MongoTemplateTests {
 
 		template.save(person);
 	}
+	
+	/**
+	 * @see DATAMONGO-488
+	 */
+	@Test
+	public void resolveCirculeDBRefCorrectly() {
+		PersonWithAddressDBRef person = new PersonWithAddressDBRef();
+		person.name = "Patryk";
+		
+		template.save(person);
+		
+		AddressWithPersonWithDBRef address = new AddressWithPersonWithDBRef();
+		address.street = "Miodowa";
+		address.person = person;
+		
+		template.save(address);
+		
+		person.address = address;
+		
+		template.save(person);
+		
+		person = template.findOne(Query.query(Criteria.where("name").is("Patryk")), PersonWithAddressDBRef.class);
+		
+		assertNotNull(person);
+		assertNotNull(person.address);
+		assertNotNull(person.address.person);
+		assertThat(person.address.person, is(person));
+	}
+	
+	/**
+	 * @see DATAMONGO-488
+	 */
+	@Test
+	public void resolveCirculeDBRefCorrectlyWithCollections() {
+		
+		//Collection to collection
+		PersonWithAddressDBRef person = new PersonWithAddressDBRef();
+		person.name = "Patryk";
+		
+		template.save(person);
+		
+		
+		AddressWithPersonWithDBRef address = new AddressWithPersonWithDBRef();
+		address.street = "Miodowa";
+		address.persons.add(person);
+		
+		template.save(address);
+		
+		person.addresses.add(address);
+		
+		template.save(person);
+		
+		person = template.findOne(Query.query(Criteria.where("name").is("Patryk")), PersonWithAddressDBRef.class);
+		
+		assertNotNull(person);
+		assertThat(person.addresses,hasSize(1));
+		assertThat(person.addresses,hasItem(address));
+		assertThat(person.addresses.get(0).persons, hasItem(person));
+		
+		//Collection to field
+		
+		person = new PersonWithAddressDBRef();
+		person.name = "Patryk2";
+		
+		template.save(person);
+		
+		address = new AddressWithPersonWithDBRef();
+		address.street = "Miodowa2";
+		address.persons.add(person);
+		
+		template.save(address);
+		
+		person.address = address;
+		
+		template.save(person);
+		
+		person = template.findOne(Query.query(Criteria.where("name").is("Patryk2")), PersonWithAddressDBRef.class);
+		
+		assertNotNull(person);
+		assertNotNull(person.address);
+		assertThat(person.address,is(address));
+		assertThat(person.address.persons, hasItem(person));
+		
+	}
+	
 
 	/**
 	 * @see DATAMONGO-539
