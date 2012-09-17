@@ -18,6 +18,8 @@ package org.springframework.data.mongodb.core.mapping;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.util.Collections;
 
@@ -31,6 +33,7 @@ import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 
 import com.mongodb.BasicDBObject;
+import com.mongodb.DB;
 import com.mongodb.DBObject;
 
 /**
@@ -52,6 +55,10 @@ public class GenericMappingTests {
 		context = new MongoMappingContext();
 		context.setInitialEntitySet(Collections.singleton(StringWrapper.class));
 		context.initialize();
+		
+		DB db = mock(DB.class);
+		when(db.getName()).thenReturn("database");
+		when(factory.getDb()).thenReturn(db);
 
 		converter = new MappingMongoConverter(factory, context);
 	}

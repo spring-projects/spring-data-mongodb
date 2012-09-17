@@ -35,6 +35,7 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 
 import com.mongodb.BasicDBObject;
+import com.mongodb.DB;
 import com.mongodb.DBObject;
 
 /**
@@ -72,6 +73,10 @@ public class CustomConvertersUnitTests {
 		context.setInitialEntitySet(new HashSet<Class<?>>(Arrays.asList(Foo.class, Bar.class)));
 		context.setSimpleTypeHolder(conversions.getSimpleTypeHolder());
 		context.initialize();
+		
+		DB db = mock(DB.class);
+		when(db.getName()).thenReturn("database");
+		when(mongoDbFactory.getDb()).thenReturn(db);
 
 		converter = new MappingMongoConverter(mongoDbFactory, context);
 		converter.setCustomConversions(conversions);

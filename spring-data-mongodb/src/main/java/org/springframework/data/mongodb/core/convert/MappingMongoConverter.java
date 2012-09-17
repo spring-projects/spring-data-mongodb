@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -170,16 +171,16 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	}
 
 	protected <S extends Object> S read(TypeInformation<S> type, DBObject dbo) {
-		return read(type, dbo, null);
+		return read(type, dbo, null, new ProgressHolder(mongoDbFactory.getDb().getName()));
 	}
 
 	@SuppressWarnings("unchecked")
-	protected <S extends Object> S read(TypeInformation<S> type, DBObject dbo, Object parent) {
+	protected <S extends Object> S read(TypeInformation<S> type, DBObject dbo, Object parent,ProgressHolder progressHolder) {
 
 		if (null == dbo) {
 			return null;
 		}
-
+		
 		TypeInformation<? extends S> typeToUse = typeMapper.readType(dbo, type);
 		Class<? extends S> rawType = typeToUse.getType();
 
@@ -192,11 +193,11 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		if (typeToUse.isCollectionLike() && dbo instanceof BasicDBList) {
-			return (S) readCollectionOrArray(typeToUse, (BasicDBList) dbo, parent);
+			return (S) readCollectionOrArray(typeToUse, (BasicDBList) dbo, parent, progressHolder);
 		}
 
 		if (typeToUse.isMap()) {
-			return (S) readMap(typeToUse, dbo, parent);
+			return (S) readMap(typeToUse, dbo, parent, progressHolder);
 		}
 
 		// Retrieve persistent entity info
@@ -206,13 +207,13 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			throw new MappingException("No mapping metadata found for " + rawType.getName());
 		}
 
-		return read(persistentEntity, dbo, parent);
+		return read(persistentEntity, dbo, parent, progressHolder);
 	}
 
 	private ParameterValueProvider<MongoPersistentProperty> getParameterProvider(MongoPersistentEntity<?> entity,
-			DBObject source, DefaultSpELExpressionEvaluator evaluator, Object parent) {
+			DBObject source, DefaultSpELExpressionEvaluator evaluator, Object parent, ProgressHolder progressHolder) {
 
-		MongoDbPropertyValueProvider provider = new MongoDbPropertyValueProvider(source, evaluator, parent);
+		MongoDbPropertyValueProvider provider = new MongoDbPropertyValueProvider(source, evaluator, parent, progressHolder);
 		PersistentEntityParameterValueProvider<MongoPersistentProperty> parameterProvider = new PersistentEntityParameterValueProvider<MongoPersistentProperty>(
 				entity, provider, parent);
 		parameterProvider.setSpELEvaluator(evaluator);
@@ -220,17 +221,19 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		return parameterProvider;
 	}
 
-	private <S extends Object> S read(final MongoPersistentEntity<S> entity, final DBObject dbo, Object parent) {
+	private <S extends Object> S read(final MongoPersistentEntity<S> entity, final DBObject dbo, Object parent,final ProgressHolder progressHolder) {
 
 		final DefaultSpELExpressionEvaluator evaluator = new DefaultSpELExpressionEvaluator(dbo, spELContext);
 
-		ParameterValueProvider<MongoPersistentProperty> provider = getParameterProvider(entity, dbo, evaluator, parent);
+		ParameterValueProvider<MongoPersistentProperty> provider = getParameterProvider(entity, dbo, evaluator, parent, progressHolder);
 		EntityInstantiator instantiator = instantiators.getInstantiatorFor(entity);
 		S instance = instantiator.createInstance(entity, provider);
 
 		final BeanWrapper<MongoPersistentEntity<S>, S> wrapper = BeanWrapper.create(instance, conversionService);
 		final S result = wrapper.getBean();
-
+		
+		progressHolder.addResolved(progressHolder.getCurrentDbName(), entity.getCollection(), dbo.get(entity.getIdProperty() != null?entity.getIdProperty().getFieldName():"_id"), result);
+		
 		// Set properties not already set in the constructor
 		entity.doWithProperties(new PropertyHandler<MongoPersistentProperty>() {
 			public void doWithPersistentProperty(MongoPersistentProperty prop) {
@@ -242,16 +245,16 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 					return;
 				}
 
-				Object obj = getValueInternal(prop, dbo, evaluator, result);
+				Object obj = getValueInternal(prop, dbo, evaluator, result, progressHolder);
 				wrapper.setProperty(prop, obj, useFieldAccessOnly);
 			}
 		});
-
+		
 		// Handle associations
 		entity.doWithAssociations(new AssociationHandler<MongoPersistentProperty>() {
 			public void doWithAssociation(Association<MongoPersistentProperty> association) {
 				MongoPersistentProperty inverseProp = association.getInverse();
-				Object obj = getValueInternal(inverseProp, dbo, evaluator, result);
+				Object obj = getValueInternal(inverseProp, dbo, evaluator, result, progressHolder);
 
 				wrapper.setProperty(inverseProp, obj);
 
@@ -701,9 +704,9 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	}
 
 	protected Object getValueInternal(MongoPersistentProperty prop, DBObject dbo, SpELExpressionEvaluator eval,
-			Object parent) {
+			Object parent, ProgressHolder progressHolder) {
 
-		MongoDbPropertyValueProvider provider = new MongoDbPropertyValueProvider(dbo, spELContext, parent);
+		MongoDbPropertyValueProvider provider = new MongoDbPropertyValueProvider(dbo, spELContext, parent, progressHolder);
 		return provider.getPropertyValue(prop);
 	}
 
@@ -715,7 +718,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * @return the converted {@link Collection} or array, will never be {@literal null}.
 	 */
 	@SuppressWarnings("unchecked")
-	private Object readCollectionOrArray(TypeInformation<?> targetType, BasicDBList sourceValue, Object parent) {
+	private Object readCollectionOrArray(TypeInformation<?> targetType, BasicDBList sourceValue, Object parent,ProgressHolder progressHolder) {
 
 		Assert.notNull(targetType);
 
@@ -737,10 +740,9 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			Object dbObjItem = sourceValue.get(i);
 
 			if (dbObjItem instanceof DBRef) {
-				items.add(DBRef.class.equals(rawComponentType) ? dbObjItem : read(componentType, ((DBRef) dbObjItem).fetch(),
-						parent));
+				items.add(readDbRef(dbObjItem, progressHolder, componentType, parent));
 			} else if (dbObjItem instanceof DBObject) {
-				items.add(read(componentType, (DBObject) dbObjItem, parent));
+				items.add(read(componentType, (DBObject) dbObjItem, parent, progressHolder));
 			} else {
 				items.add(getPotentiallyConvertedSimpleRead(dbObjItem, rawComponentType));
 			}
@@ -757,7 +759,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	protected Map<Object, Object> readMap(TypeInformation<?> type, DBObject dbObject, Object parent) {
+	protected Map<Object, Object> readMap(TypeInformation<?> type, DBObject dbObject, Object parent,ProgressHolder progressHolder) {
 
 		Assert.notNull(dbObject);
 
@@ -783,7 +785,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			Class<?> rawValueType = valueType == null ? null : valueType.getType();
 
 			if (value instanceof DBObject) {
-				map.put(key, read(valueType, (DBObject) value, parent));
+				map.put(key, read(valueType, (DBObject) value, parent, progressHolder));
 			} else if (value instanceof DBRef) {
 				map.put(key, DBRef.class.equals(rawValueType) ? value : read(valueType, ((DBRef) value).fetch()));
 			} else {
@@ -905,18 +907,123 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		return dbObject;
 	}
+	
+	private class ProgressHolder {
+		
+		public ProgressHolder(String dbName) {
+			this.currentDbName = dbName;
+		}
 
+		private String currentDbName;
+		
+		private Map<InProgressKey, Object> inProgress = new HashMap<InProgressKey, Object>();
+		
+		public void addResolved(String db, String collectionName, Object id,Object document) {
+			inProgress.put(new InProgressKey(db, collectionName, id), document);
+		}
+		
+		public Object getAlreadyResolved(String db, String collectionName, Object id) {
+			return inProgress.get(new InProgressKey(db, collectionName, id));
+		}
+		
+		public String getCurrentDbName() {
+			return currentDbName;
+		}
+		
+		public ProgressHolder setCurrentDbName(
+				String dbName) {
+			this.currentDbName = dbName;
+			return this;
+		}
+	}
+	
+	private class InProgressKey {
+		private String db;
+		private String collectionName;
+		private Object id;
+		
+		public InProgressKey(String db, String collectionName, Object id) {
+			this.db = db;
+			this.collectionName = collectionName;
+			this.id = id;
+		}
+
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + getOuterType().hashCode();
+			result = prime
+					* result
+					+ ((collectionName == null) ? 0 : collectionName.hashCode());
+			result = prime * result + ((db == null) ? 0 : db.hashCode());
+			result = prime * result + ((id == null) ? 0 : id.hashCode());
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			InProgressKey other = (InProgressKey) obj;
+			if (!getOuterType().equals(other.getOuterType()))
+				return false;
+			if (collectionName == null) {
+				if (other.collectionName != null)
+					return false;
+			} else if (!collectionName.equals(other.collectionName))
+				return false;
+			if (db == null) {
+				if (other.db != null)
+					return false;
+			} else if (!db.equals(other.db))
+				return false;
+			if (id == null) {
+				if (other.id != null)
+					return false;
+			} else if (!id.equals(other.id))
+				return false;
+			return true;
+		}
+
+		private MappingMongoConverter getOuterType() {
+			return MappingMongoConverter.this;
+		}		
+		
+	}
+	
+	@SuppressWarnings("unchecked")
+	private <T> T readDbRef(Object value,ProgressHolder progressHolder,TypeInformation<?> type,Object parent) {
+		if(type.getType().equals(DBRef.class)){
+			return (T) value;
+		} else {
+			DBRef dbRef = (DBRef) value;
+			progressHolder.setCurrentDbName(dbRef.getDB().getName());
+			Object valueToReturn = progressHolder.getAlreadyResolved(progressHolder.getCurrentDbName(),dbRef.getRef(), dbRef.getId());
+			if(valueToReturn != null) {
+				return (T) valueToReturn;
+			}
+			valueToReturn = read(type, ((DBRef) value).fetch(), parent, progressHolder);
+			return (T) valueToReturn;
+		}
+	}
+	
 	private class MongoDbPropertyValueProvider implements PropertyValueProvider<MongoPersistentProperty> {
 
 		private final DBObject source;
 		private final SpELExpressionEvaluator evaluator;
 		private final Object parent;
+		private ProgressHolder progressHolder;
 
-		public MongoDbPropertyValueProvider(DBObject source, SpELContext factory, Object parent) {
-			this(source, new DefaultSpELExpressionEvaluator(source, factory), parent);
+		public MongoDbPropertyValueProvider(DBObject source, SpELContext factory, Object parent, ProgressHolder progressHolder) {
+			this(source, new DefaultSpELExpressionEvaluator(source, factory), parent, progressHolder);
 		}
 
-		public MongoDbPropertyValueProvider(DBObject source, DefaultSpELExpressionEvaluator evaluator, Object parent) {
+		public MongoDbPropertyValueProvider(DBObject source, DefaultSpELExpressionEvaluator evaluator, Object parent, ProgressHolder progressHolder) {
 
 			Assert.notNull(source);
 			Assert.notNull(evaluator);
@@ -924,6 +1031,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			this.source = source;
 			this.evaluator = evaluator;
 			this.parent = parent;
+			this.progressHolder = progressHolder;
 		}
 
 		/* 
@@ -935,7 +1043,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 			String expression = property.getSpelExpression();
 			Object value = expression != null ? evaluator.evaluate(expression) : source.get(property.getFieldName());
-
+			
 			if (value == null) {
 				return null;
 			}
@@ -946,11 +1054,11 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			if (conversions.hasCustomReadTarget(value.getClass(), rawType)) {
 				return (T) conversionService.convert(value, rawType);
 			} else if (value instanceof DBRef) {
-				return (T) (rawType.equals(DBRef.class) ? value : read(type, ((DBRef) value).fetch(), parent));
+				return readDbRef(value, progressHolder, type, parent);
 			} else if (value instanceof BasicDBList) {
-				return (T) readCollectionOrArray(type, (BasicDBList) value, parent);
+				return (T) readCollectionOrArray(type, (BasicDBList) value, parent, progressHolder);
 			} else if (value instanceof DBObject) {
-				return (T) read(type, (DBObject) value, parent);
+				return (T) read(type, (DBObject) value, parent, progressHolder);
 			} else {
 				return (T) getPotentiallyConvertedSimpleRead(value, rawType);
 			}
