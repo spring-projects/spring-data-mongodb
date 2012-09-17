@@ -5,11 +5,11 @@
 	xsi:schemaLocation="http://www.springframework.org/schema/data/mongo http://www.springframework.org/schema/data/mongo/spring-mongo.xsd
 		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
 
-	<mongo:db-factory id="dbFactory" dbname="database" />
-	<mongo:mapping-converter id="converter" db-factory-ref="dbFactory" />
+	<mongo:db-factory id="mongoDbFactory" dbname="database" />
+	<mongo:mapping-converter id="converter" />
 
 	<bean class="org.springframework.data.mongodb.gridfs.GridFsTemplate">
-		<constructor-arg ref="dbFactory" />
+		<constructor-arg ref="mongoDbFactory" />
 		<constructor-arg ref="converter" />
 	</bean>
 

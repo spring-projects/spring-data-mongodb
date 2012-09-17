@@ -19,6 +19,7 @@ import java.io.InputStream;
 import java.util.List;
 
 import org.springframework.core.io.support.ResourcePatternResolver;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Query;
 
 import com.mongodb.DBObject;
@@ -63,8 +64,10 @@ public interface GridFsOperations extends ResourcePatternResolver {
 	GridFSFile store(InputStream content, String filename, DBObject metadata);
 
 	/**
-	 * Returns all files matching the given query.
+	 * Returns all files matching the given query. Note, that currently {@link Sort} criterias defined at the
+	 * {@link Query} will not be regarded as MongoDB does not support ordering for GridFS file access.
 	 * 
+	 * @see https://jira.mongodb.org/browse/JAVA-431
 	 * @param query
 	 * @return
 	 */
