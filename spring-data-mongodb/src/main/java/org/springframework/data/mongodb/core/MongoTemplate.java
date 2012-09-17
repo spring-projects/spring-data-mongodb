@@ -963,7 +963,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			return;
 		}
 
-		remove(getIdQueryFor(object), collection);
+		doRemove(collection, getIdQueryFor(object), object.getClass());
 	}
 
 	/**
