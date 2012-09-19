@@ -25,6 +25,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.domain.PredicateBuilder;
+import org.springframework.data.mongodb.domain.Specification;
+import org.springframework.data.mongodb.repository.QueryDslMongoSpecificationExecutor;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
 import org.springframework.data.querydsl.EntityPathResolver;
 import org.springframework.data.querydsl.QueryDslPredicateExecutor;
@@ -45,7 +48,7 @@ import com.mysema.query.types.path.PathBuilder;
  * @author Oliver Gierke
  */
 public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleMongoRepository<T, ID> implements
-		QueryDslPredicateExecutor<T> {
+		QueryDslPredicateExecutor<T>, QueryDslMongoSpecificationExecutor<T> {
 
 	private final PathBuilder<T> builder;
 
@@ -186,5 +189,58 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 
 		return new OrderSpecifier(order.isAscending() ? com.mysema.query.types.Order.ASC
 				: com.mysema.query.types.Order.DESC, property);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.QueryDslMongoSpecificationExecutor#findOne(org.springframework.data.mongodb.domain.Specification)
+	 */
+	public T findOne(Specification<T> spec) {
+		return createQueryFor(spec).uniqueResult();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.QueryDslMongoSpecificationExecutor#findAll(org.springframework.data.mongodb.domain.Specification)
+	 */
+	public List<T> findAll(Specification<T> spec) {
+		return createQueryFor(spec).list();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.QueryDslMongoSpecificationExecutor#findAll(org.springframework.data.mongodb.domain.Specification, org.springframework.data.domain.Pageable)
+	 */
+	public Page<T> findAll(Specification<T> spec, Pageable pageable) {
+		MongodbQuery<T> countQuery = createQueryFor(spec);
+		MongodbQuery<T> query = createQueryFor(spec);
+		return new PageImpl<T>(applyPagination(query, pageable).list(),pageable,countQuery.count());
+	}
+
+	/* (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.QueryDslMongoSpecificationExecutor#findAll(org.springframework.data.mongodb.domain.Specification, org.springframework.data.domain.Sort)
+	 */
+	public List<T> findAll(Specification<T> spec, Sort sort) {
+		MongodbQuery<T> query = createQueryFor(spec);
+		return applySorting(query, sort).list();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.QueryDslMongoSpecificationExecutor#count(org.springframework.data.mongodb.domain.Specification)
+	 */
+	public long count(Specification<T> spec) {
+		return createQueryFor(spec).count();
+	}
+	
+	/**
+	 * Creates a {@link MongodbQuery} for the given {@link Specification}.
+	 * 
+	 * @param predicate
+	 * @return
+	 */
+	private MongodbQuery<T> createQueryFor(Specification<T> specification) {
+
+		Class<T> domainType = getEntityInformation().getJavaType();
+
+		MongodbQuery<T> query = new SpringDataMongodbQuery<T>(getMongoOperations(), domainType);
+		specification.buildPredicate(new PredicateBuilder<T>()).applyPredicate(query);
+		return query;
 	}
 }
