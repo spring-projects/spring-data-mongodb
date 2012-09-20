@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2012 the original author or authors.
+ * Copyright 2010-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,22 +47,33 @@ public class Query {
 	private String hint;
 
 	/**
-	 * Static factory method to create a Query using the provided criteria
+	 * Static factory method to create a {@link Query} using the provided {@link Criteria}.
 	 * 
-	 * @param critera
+	 * @param criteria must not be {@literal null}.
 	 * @return
 	 */
-	public static Query query(Criteria critera) {
-		return new Query(critera);
+	public static Query query(Criteria criteria) {
+		return new Query(criteria);
 	}
 
 	public Query() {
 	}
 
+	/**
+	 * Creates a new {@link Query} using the given {@link Criteria}.
+	 * 
+	 * @param criteria must not be {@literal null}.
+	 */
 	public Query(Criteria criteria) {
 		addCriteria(criteria);
 	}
 
+	/**
+	 * Adds the given {@link Criteria} to the current {@link Query}.
+	 * 
+	 * @param criteria must not be {@literal null}.
+	 * @return
+	 */
 	public Query addCriteria(Criteria criteria) {
 		CriteriaDefinition existing = this.criteria.get(criteria.getKey());
 		String key = criteria.getKey();
