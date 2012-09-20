@@ -48,11 +48,11 @@ public class Query {
 	/**
 	 * Static factory method to create a Query using the provided criteria
 	 * 
-	 * @param critera
+	 * @param criteria
 	 * @return
 	 */
-	public static Query query(Criteria critera) {
-		return new Query(critera);
+	public static Query query(Criteria criteria) {
+		return new Query(criteria);
 	}
 
 	public Query() {
