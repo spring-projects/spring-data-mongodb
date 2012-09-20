@@ -107,15 +107,14 @@
   &lt;dependency&gt;
     &lt;groupId&gt;org.springframework.data&lt;/groupId&gt;
     &lt;artifactId&gt;spring-data-mongodb&lt;/artifactId&gt;
-    &lt;version&gt;1.0.0.M5&lt;/version&gt;
+    &lt;version&gt;1.1.0.RELEASE&lt;/version&gt;
   &lt;/dependency&gt;
 
-&lt;/dependencies&gt;
-</programlisting>
+&lt;/dependencies&gt;</programlisting>
 
     <para>Also change the version of Spring in the pom.xml to be</para>
 
-    <programlisting lang="" language="xml">&lt;spring.framework.version&gt;3.0.6.RELEASE&lt;/spring.framework.version&gt;</programlisting>
+    <programlisting lang="" language="xml">&lt;spring.framework.version&gt;3.1.2.RELEASE&lt;/spring.framework.version&gt;</programlisting>
 
     <para>You will also need to add the location of the Spring Milestone
     repository for maven to your pom.xml which is at the same level of your
@@ -125,7 +124,7 @@
   &lt;repository&gt;
     &lt;id&gt;spring-milestone&lt;/id&gt;
     &lt;name&gt;Spring Maven MILESTONE Repository&lt;/name&gt;
-    &lt;url&gt;http://maven.springframework.org/milestone&lt;/url&gt;
+    &lt;url&gt;http://repo.springsource.org/libs-milestone&lt;/url&gt;
   &lt;/repository&gt;
 &lt;/repositories&gt;</programlisting>
 
@@ -133,8 +132,9 @@
     url="http://shrub.appspot.com/maven.springframework.org/milestone/org/springframework/data/">browseable
     here</ulink>.</para>
 
-    <para>You may also want to set the logging level to DEBUG to see some
-    additional information, edit the log4j.properties file to have</para>
+    <para>You may also want to set the logging level to <code>DEBUG</code> to
+    see some additional information, edit the log4j.properties file to
+    have</para>
 
     <programlisting>log4j.category.org.springframework.data.document.mongodb=DEBUG
 log4j.appender.stdout.layout.ConversionPattern=%d{ABSOLUTE} %5p %40.40c:%4L - %m%n</programlisting>
@@ -215,9 +215,10 @@ public class MongoApp {
     <itemizedlist>
       <listitem>
         <para>You can instantiate the central helper class of Spring Mongo,
-        <link linkend="mongo-template">MongoTemplate</link>, using the
-        standard <classname>com.mongodb.Mongo</classname> object and the name
-        of the database to use.</para>
+        <link
+        linkend="mongo-template"><classname>MongoTemplate</classname></link>,
+        using the standard <classname>com.mongodb.Mongo</classname> object and
+        the name of the database to use.</para>
       </listitem>
 
       <listitem>
@@ -241,119 +242,6 @@ public class MongoApp {
         stored document, they will be used to instantiate the object</para>
       </listitem>
     </itemizedlist>
-
-    <section id="mongodb-required-jars">
-       
-
-      <title>Required Jars</title>
-
-       The following jars are required to use Spring Data MongoDB 
-
-      <itemizedlist>
-        <listitem>
-          <para>spring-data-mongodb-1.0.0.RELEASE.jar</para>
-        </listitem>
-
-        <listitem>
-          <para>spring-data-commons-1.2.0.RELEASE.jar</para>
-        </listitem>
-      </itemizedlist>
-
-       In addition to the above listed Spring Data jars you need to provide the following dependencies: 
-
-      <itemizedlist>
-        <listitem>
-          <para>aopalliance-1.0.0.jar</para>
-        </listitem>
-
-        <listitem>
-          <para>commons-logging-1.1.1.jar</para>
-        </listitem>
-
-        <listitem>
-          <para>mongo-java-driver-2.5.3.jar</para>
-        </listitem>
-
-        <listitem>
-          <para>spring-aop-3.0.7.RELEASE.jar</para>
-        </listitem>
-
-        <listitem>
-          <para>spring-asm-3.0.7.RELEASE.jar</para>
-        </listitem>
-
-        <listitem>
-          <para>spring-beans-3.0.7.RELEASE.jar</para>
-        </listitem>
-
-        <listitem>
-          <para>spring-context-3.0.7.RELEASE.jar</para>
-        </listitem>
-
-        <listitem>
-          <para>spring-core-3.0.7.RELEASE.jar</para>
-        </listitem>
-
-        <listitem>
-          <para>spring-expression-3.0.7.RELEASE.jar</para>
-        </listitem>
-      </itemizedlist>
-
-       
-    </section>
-
-    <section id="mongo.migrate-m2-m3">
-      <title>Migrating from M2 to M3</title>
-
-      <para>There were several API changes introduced in the M3 release. To
-      upgrade from M2 to M3 you will need to make. For a full listing of API
-      changes please refer to this <ulink
-      url="http://static.springsource.org/spring-data/data-document/docs/jdiff-mongo-m2-m3/mongo-report/">JDiff
-      Report</ulink>.</para>
-
-      <para>The major changes are with respect to MongoTemplate</para>
-
-      <itemizedlist>
-        <listitem>
-          <para>Constructors have changed on
-          <classname>MongoTemplate</classname>. <literal>MongoTemplate(Mongo,
-          String, String)</literal> and <literal>MongoTemplate(Mongo, String,
-          String, MongoConverter)</literal> were removed.
-          <literal>MongoTemplate(Mongo, String, UserCredentials),
-          MongoTemplate(MongoDbFactory), MongoTemplate(MongoDbFactory,
-          MongoConverter)</literal> were added. These changes will also effect
-          usage of wiring up <classname>MongoTemplate</classname> in
-          &lt;bean/&gt; XML defintions.</para>
-        </listitem>
-
-        <listitem>
-          <para><classname>MongoTemplate</classname> no longer takes a default
-          collection name. The collection name is now either specified when
-          the method is invoked or inferred from the Java class, either the
-          class name or via mapping metadata.</para>
-        </listitem>
-
-        <listitem>
-          <para>Reordered parameters in some
-          <classname>MongoTemplate</classname> methods to make signatures more
-          consistent across the board.</para>
-        </listitem>
-
-        <listitem>
-          <para>Removed <classname>MongoTemplate</classname> methods that use
-          <interfacename>MongoReader</interfacename> and
-          <interfacename>MongoWriter</interfacename>. As an alternative
-          register a Spring converter with the MappingMongoConverter. See
-          <link linkend="mapping-explicit-converters">here</link> for
-          details.</para>
-        </listitem>
-
-        <listitem>
-          <para>Added <literal>findById</literal> methods to
-          <classname>MongoTemplate.</classname></para>
-        </listitem>
-      </itemizedlist>
-    </section>
   </section>
 
   <section id="mongo.examples-repo">
@@ -544,7 +432,6 @@ public class AppConfig {
   DB getDb() throws DataAccessException;
 
   DB getDb(String dbName) throws DataAccessException;
-
 }</programlisting>
 
       <para>The following sections show how you can use the contiainer with
@@ -601,7 +488,6 @@ public class MongoConfiguration {
   public @Bean MongoDbFactory mongoDbFactory() throws Exception {
     return new SimpleMongoDbFactory(new Mongo(), "database");
   }
-
 }</programlisting>
 
       <para>To define the username and password create an instance of
@@ -621,10 +507,7 @@ public class MongoConfiguration {
   public @Bean MongoTemplate mongoTemplate() throws Exception {
     return new MongoTemplate(mongoDbFactory());
   }
-}
-</programlisting>
-
-      <para/>
+}</programlisting>
     </section>
 
     <section id="mongo.mongo-db-factory-xml">
@@ -685,8 +568,6 @@ public class MongoConfiguration {
 &lt;bean id="anotherMongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate"&gt;
   &lt;constructor-arg name="mongoDbFactory" ref="mongoDbFactory"/&gt;
 &lt;/bean&gt;</programlisting>
-
-      <para/>
     </section>
   </section>
 
