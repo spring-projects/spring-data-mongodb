@@ -4,6 +4,8 @@
   <groupId>org.springframework.data</groupId>
   <artifactId>spring-data-mongodb-dist</artifactId>
   <name>Spring Data MongoDB Distribution</name>
+  <description>Spring Data project for MongoDB</description>
+  <url>http://www.springsource.org/spring-data/mongodb</url>
   <version>1.1.0.BUILD-SNAPSHOT</version>
   <packaging>pom</packaging>
   <modules>
@@ -287,5 +289,9 @@
       <url>s3://maven.springframework.org/snapshot</url>
     </snapshotRepository>
   </distributionManagement>
+
+  <scm>
+    <url>https://github.com/SpringSource/spring-data-mongodb</url>
+  </scm>
 
 </project>
