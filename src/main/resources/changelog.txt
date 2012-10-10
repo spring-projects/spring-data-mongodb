@@ -1,6 +1,38 @@
 Spring Data MongoDB Changelog
 =============================================
 
+Changes in version 1.1.0.GA (2012-10-10)
+----------------------------------------
+** Bug
+    * [DATAMONGO-523] - @TypeAlias annotation not used with AbstractMongoConfiguration 
+    * [DATAMONGO-527] - Criteria.equals(…) broken for complex criterias
+    * [DATAMONGO-530] - MongoMappingContext.setApplicationContext(…) does not invoke superclass method
+    * [DATAMONGO-531] - StackOverflowError when persisting Groovy beans
+    * [DATAMONGO-532] - Multithreading authentication issue
+    * [DATAMONGO-533] - Default MongoPersistentEntityIndexCreator not registered if ApplicationContext already contains one for different MappingContext
+    * [DATAMONGO-535] - Retrieve of existing Mongo DB from Transaction is not working
+    * [DATAMONGO-539] - Document remove doesn't work when giving collection name as a parameter
+
+** Improvement
+    * [DATAMONGO-279] - Optimistic locking using @Version field
+    * [DATAMONGO-456] - XSD incorrectly states the default value for the mongo-ref attribute of the mongo:db-factory configuration element
+    * [DATAMONGO-457] - broken links "Spring Data MongoDB - Reference Documentation"
+    * [DATAMONGO-526] - Polish README.md
+    * [DATAMONGO-529] - Improve Querydsl setup
+    * [DATAMONGO-538] - Unify usage of Sort APIs in Query API
+
+** New Feature
+    * [DATAMONGO-389] - stable release spring-data-mongodb should work with stable spring spring-data-jpa
+
+** Task
+    * [DATAMONGO-484] - Migrate to latest MongoDB Java driver
+    * [DATAMONGO-528] - Document GridFS support
+    * [DATAMONGO-536] - Fix package cycle introduced by SerializationUtils
+    * [DATAMONGO-541] - Release 1.1 GA
+    * [DATAMONGO-543] - Polish reference documentation
+    * [DATAMONGO-548] - Upgrade to Querydsl 2.8.0
+
+
 Changes in version 1.1.0.RC1 (2012-24-08)
 -----------------------------------------
 ** Bug
