@@ -18,7 +18,7 @@
     <org.codehaus.jackson.version>1.6.1</org.codehaus.jackson.version>
     <org.springframework.version.30>3.0.7.RELEASE</org.springframework.version.30>
     <org.springframework.version.range>3.1.2.RELEASE</org.springframework.version.range>
-    <data.commons.version>1.4.0.BUILD-SNAPSHOT</data.commons.version>
+    <data.commons.version>1.4.0.RELEASE</data.commons.version>
     <aspectj.version>1.6.11.RELEASE</aspectj.version>
     <bundlor.failOnWarnings>true</bundlor.failOnWarnings>
   </properties>
@@ -252,8 +252,8 @@
   </pluginRepositories>
   <repositories>
     <repository>
-      <id>spring-libs-snapshot</id>
-      <url>http://repo.springsource.org/libs-snapshot</url>
+      <id>spring-libs-release</id>
+      <url>http://repo.springsource.org/libs-release</url>
     </repository>
   </repositories>
   <reporting>
