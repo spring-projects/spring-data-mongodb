@@ -733,15 +733,20 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	}
 
 	public void save(Object objectToSave) {
+
+		Assert.notNull(objectToSave);
 		save(objectToSave, determineEntityCollectionName(objectToSave));
 	}
 
 	public void save(Object objectToSave, String collectionName) {
 
+		Assert.notNull(objectToSave);
+		Assert.hasText(collectionName);
+
 		MongoPersistentEntity<?> mongoPersistentEntity = getPersistentEntity(objectToSave.getClass());
 
 		// No optimistic locking -> simple save
-		if (!mongoPersistentEntity.hasVersionProperty()) {
+		if (mongoPersistentEntity == null || !mongoPersistentEntity.hasVersionProperty()) {
 			doSave(collectionName, objectToSave, this.mongoConverter);
 			return;
 		}
@@ -993,7 +998,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	private void assertUpdateableIdIfNotSet(Object entity) {
 
 		MongoPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(entity.getClass());
-		MongoPersistentProperty idProperty = persistentEntity.getIdProperty();
+		MongoPersistentProperty idProperty = persistentEntity == null ? null : persistentEntity.getIdProperty();
 
 		if (idProperty == null) {
 			return;

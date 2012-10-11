@@ -24,8 +24,10 @@ import static org.springframework.data.mongodb.core.query.Update.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 import org.bson.types.ObjectId;
 import org.joda.time.DateTime;
@@ -43,6 +45,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.PersistenceConstructor;
+import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.convert.CustomConversions;
@@ -1320,6 +1323,33 @@ public class MongoTemplateTests {
 
 		template.remove(person, collectionName);
 		assertThat(template.findAll(PersonWithConvertedId.class, collectionName).isEmpty(), is(true));
+	}
+
+	/**
+	 * @see DATAMONGO-549
+	 */
+	public void savesMapCorrectly() {
+
+		Map<String, String> map = new HashMap<String, String>();
+		map.put("key", "value");
+
+		template.save(map, "maps");
+	}
+
+	/**
+	 * @see DATAMONGO-549
+	 */
+	@Test(expected = MappingException.class)
+	public void savesMongoPrimitiveObjectCorrectly() {
+		template.save(new Object(), "collection");
+	}
+
+	/**
+	 * @see DATAMONGO-549
+	 */
+	@Test(expected = IllegalArgumentException.class)
+	public void rejectsNullObjectToBeSaved() {
+		template.save(null);
 	}
 
 	static class MyId {
