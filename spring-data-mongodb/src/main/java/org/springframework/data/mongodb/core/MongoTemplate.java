@@ -101,6 +101,7 @@ import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
 import com.mongodb.WriteResult;
 import com.mongodb.util.JSON;
+import com.mongodb.util.JSONParseException;
 
 /**
  * Primary implementation of {@link MongoOperations}.
@@ -790,6 +791,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	protected <T> void doSave(String collectionName, T objectToSave, MongoWriter<T> writer) {
 
 		assertUpdateableIdIfNotSet(objectToSave);
@@ -797,7 +799,16 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		DBObject dbDoc = new BasicDBObject();
 
 		maybeEmitEvent(new BeforeConvertEvent<T>(objectToSave));
-		writer.write(objectToSave, dbDoc);
+
+		if (!(objectToSave instanceof String)) {
+			writer.write(objectToSave, dbDoc);
+		} else {
+			try {
+				objectToSave = (T) JSON.parse((String) objectToSave);
+			} catch (JSONParseException e) {
+				throw new MappingException("Could not parse given String to save into a JSON document!", e);
+			}
+		}
 
 		maybeEmitEvent(new BeforeSaveEvent<T>(objectToSave, dbDoc));
 		Object id = saveDBObject(collectionName, dbDoc, objectToSave.getClass());

@@ -1393,6 +1393,22 @@ public class MongoTemplateTests {
 		assertThat(result.get("_id"), is(dbObject.get("_id")));
 	}
 
+	/**
+	 * @see DATAMONGO-551
+	 */
+	@Test
+	public void writesPlainString() {
+		template.save("{ 'foo' : 'bar' }", "collection");
+	}
+
+	/**
+	 * @see DATAMONGO-551
+	 */
+	@Test(expected = MappingException.class)
+	public void rejectsNonJsonStringForSave() {
+		template.save("Foobar!", "collection");
+	}
+
 	static class MyId {
 
 		String first;
