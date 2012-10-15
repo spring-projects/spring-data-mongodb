@@ -42,6 +42,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.PersistenceConstructor;
@@ -63,6 +64,7 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
@@ -143,6 +145,7 @@ public class MongoTemplateTests {
 		template.dropCollection(TestClass.class);
 		template.dropCollection(Sample.class);
 		template.dropCollection(MyPerson.class);
+		template.dropCollection("collection");
 	}
 
 	@Test
@@ -1350,6 +1353,44 @@ public class MongoTemplateTests {
 	@Test(expected = IllegalArgumentException.class)
 	public void rejectsNullObjectToBeSaved() {
 		template.save(null);
+	}
+
+	/**
+	 * @see DATAMONGO-550
+	 */
+	@Test
+	public void savesPlainDbObjectCorrectly() {
+
+		DBObject dbObject = new BasicDBObject("foo", "bar");
+		template.save(dbObject, "collection");
+
+		assertThat(dbObject.containsField("_id"), is(true));
+	}
+
+	/**
+	 * @see DATAMONGO-550
+	 */
+	@Test(expected = InvalidDataAccessApiUsageException.class)
+	public void rejectsPlainObjectWithOutExplicitCollection() {
+
+		DBObject dbObject = new BasicDBObject("foo", "bar");
+		template.save(dbObject, "collection");
+
+		template.findById(dbObject.get("_id"), DBObject.class);
+	}
+
+	/**
+	 * @see DATAMONGO-550
+	 */
+	@Test
+	public void readsPlainDbObjectById() {
+
+		DBObject dbObject = new BasicDBObject("foo", "bar");
+		template.save(dbObject, "collection");
+
+		DBObject result = template.findById(dbObject.get("_id"), DBObject.class, "collection");
+		assertThat(result.get("foo"), is(dbObject.get("foo")));
+		assertThat(result.get("_id"), is(dbObject.get("_id")));
 	}
 
 	static class MyId {

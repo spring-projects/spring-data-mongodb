@@ -505,13 +505,12 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	}
 
 	public <T> T findById(Object id, Class<T> entityClass) {
-		MongoPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(entityClass);
-		return findById(id, entityClass, persistentEntity.getCollection());
+		return findById(id, entityClass, determineCollectionName(entityClass));
 	}
 
 	public <T> T findById(Object id, Class<T> entityClass, String collectionName) {
 		MongoPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(entityClass);
-		MongoPersistentProperty idProperty = persistentEntity.getIdProperty();
+		MongoPersistentProperty idProperty = persistentEntity == null ? null : persistentEntity.getIdProperty();
 		String idKey = idProperty == null ? ID : idProperty.getName();
 		return doFindOne(collectionName, new BasicDBObject(idKey, id), null, entityClass);
 	}
@@ -795,7 +794,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 		assertUpdateableIdIfNotSet(objectToSave);
 
-		BasicDBObject dbDoc = new BasicDBObject();
+		DBObject dbDoc = new BasicDBObject();
 
 		maybeEmitEvent(new BeforeConvertEvent<T>(objectToSave));
 		writer.write(objectToSave, dbDoc);
@@ -982,7 +981,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		Assert.notNull(object);
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(object.getClass());
-		MongoPersistentProperty idProp = entity.getIdProperty();
+		MongoPersistentProperty idProp = entity == null ? null : entity.getIdProperty();
 
 		if (idProp == null) {
 			throw new MappingException("No id property found for object of type " + entity.getType().getName());
@@ -1438,6 +1437,12 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			return;
 		}
 
+		if (savedObject instanceof BasicDBObject) {
+			DBObject dbObject = (DBObject) savedObject;
+			dbObject.put(ID, id);
+			return;
+		}
+
 		MongoPersistentProperty idProp = getIdPropertyFor(savedObject.getClass());
 
 		if (idProp == null) {
@@ -1555,7 +1560,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	}
 
 	private MongoPersistentProperty getIdPropertyFor(Class<?> type) {
-		return mappingContext.getPersistentEntity(type).getIdProperty();
+		MongoPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(type);
+		return persistentEntity == null ? null : persistentEntity.getIdProperty();
 	}
 
 	private <T> String determineEntityCollectionName(T obj) {
