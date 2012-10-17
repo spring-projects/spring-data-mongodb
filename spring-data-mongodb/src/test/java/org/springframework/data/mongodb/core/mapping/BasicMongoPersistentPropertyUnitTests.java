@@ -68,6 +68,16 @@ public class BasicMongoPersistentPropertyUnitTests {
 		getPropertyFor(ReflectionUtils.findField(Person.class, "ssn"));
 	}
 
+	/**
+	 * @see DATAMONGO-553
+	 */
+	@Test
+	public void usesPropertyAccessForThrowableCause() {
+
+		MongoPersistentProperty property = getPropertyFor(ReflectionUtils.findField(Throwable.class, "cause"));
+		assertThat(property.usePropertyAccess(), is(true));
+	}
+
 	private MongoPersistentProperty getPropertyFor(Field field) {
 		return new BasicMongoPersistentProperty(field, null, entity, new SimpleTypeHolder());
 	}

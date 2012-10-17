@@ -123,6 +123,13 @@ public class SimpleMongoMappingContext extends
 			return false;
 		}
 
+		/* 
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentProperty#usePropertyAccess()
+		 */
+		public boolean usePropertyAccess() {
+			return false;
+		}
 	}
 
 	static class SimpleMongoPersistentEntity<T> extends BasicPersistentEntity<T, MongoPersistentProperty> implements

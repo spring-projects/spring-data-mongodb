@@ -346,13 +346,14 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		final BeanWrapper<MongoPersistentEntity<Object>, Object> wrapper = BeanWrapper.create(obj, conversionService);
-
-		// Write the ID
 		final MongoPersistentProperty idProperty = entity.getIdProperty();
+
 		if (!dbo.containsField("_id") && null != idProperty) {
 
+			boolean fieldAccessOnly = idProperty.usePropertyAccess() ? false : useFieldAccessOnly;
+
 			try {
-				Object id = wrapper.getProperty(idProperty, Object.class, useFieldAccessOnly);
+				Object id = wrapper.getProperty(idProperty, Object.class, fieldAccessOnly);
 				dbo.put("_id", idMapper.convertId(id));
 			} catch (ConversionException ignored) {
 			}
@@ -366,7 +367,9 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 					return;
 				}
 
-				Object propertyObj = wrapper.getProperty(prop, prop.getType(), useFieldAccessOnly);
+				boolean fieldAccessOnly = prop.usePropertyAccess() ? false : useFieldAccessOnly;
+
+				Object propertyObj = wrapper.getProperty(prop, prop.getType(), fieldAccessOnly);
 
 				if (null != propertyObj) {
 					if (!conversions.isSimpleType(propertyObj.getClass())) {

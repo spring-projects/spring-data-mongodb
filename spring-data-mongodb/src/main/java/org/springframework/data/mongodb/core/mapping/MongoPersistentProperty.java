@@ -80,4 +80,12 @@ public interface MongoPersistentProperty extends PersistentProperty<MongoPersist
 			return source.getFieldName();
 		}
 	}
+
+	/**
+	 * Returns whether property access shall be used for reading the property value. This means it will use the getter
+	 * instead of field access.
+	 * 
+	 * @return
+	 */
+	boolean usePropertyAccess();
 }

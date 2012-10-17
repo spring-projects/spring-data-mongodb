@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.model.AnnotationBasedPersistentProperty;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
+import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.DBObject;
@@ -46,6 +47,8 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 	private static final Set<Class<?>> SUPPORTED_ID_TYPES = new HashSet<Class<?>>();
 	private static final Set<String> SUPPORTED_ID_PROPERTY_NAMES = new HashSet<String>();
 
+	private static final Field CAUSE_FIELD;
+
 	static {
 		SUPPORTED_ID_TYPES.add(ObjectId.class);
 		SUPPORTED_ID_TYPES.add(String.class);
@@ -53,6 +56,8 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 
 		SUPPORTED_ID_PROPERTY_NAMES.add("id");
 		SUPPORTED_ID_PROPERTY_NAMES.add("_id");
+
+		CAUSE_FIELD = ReflectionUtils.findField(Throwable.class, "cause");
 	}
 
 	/**
@@ -154,5 +159,13 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 	 */
 	public boolean isVersionProperty() {
 		return getField().isAnnotationPresent(Version.class);
+	}
+
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentProperty#usePropertyAccess()
+	 */
+	public boolean usePropertyAccess() {
+		return CAUSE_FIELD.equals(getField());
 	}
 }

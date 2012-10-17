@@ -918,7 +918,7 @@ public class MappingMongoConverterUnitTests {
 		Object contacts = result.get("contacts");
 		assertThat(contacts, is(instanceOf(Collection.class)));
 		assertThat(((Collection<?>) contacts).size(), is(2));
-		assertThat(((Collection<Object>) contacts), hasItem(nullValue()));
+		assertThat((Collection<Object>) contacts, hasItem(nullValue()));
 	}
 
 	/**
@@ -1310,6 +1310,19 @@ public class MappingMongoConverterUnitTests {
 		assertThat(type.toString(), is("_"));
 	}
 
+	/**
+	 * @see DATAMONGO-533
+	 */
+	@Test
+	public void marshalsThrowableCorrectly() {
+
+		ThrowableWrapper wrapper = new ThrowableWrapper();
+		wrapper.throwable = new Exception();
+
+		DBObject dbObject = new BasicDBObject();
+		converter.write(wrapper, dbObject);
+	}
+
 	static class GenericType<T> {
 		T content;
 	}
@@ -1496,6 +1509,11 @@ public class MappingMongoConverterUnitTests {
 	@TypeAlias("_")
 	static class Aliased {
 		String name;
+	}
+
+	static class ThrowableWrapper {
+
+		Throwable throwable;
 	}
 
 	private class LocalDateToDateConverter implements Converter<LocalDate, Date> {
