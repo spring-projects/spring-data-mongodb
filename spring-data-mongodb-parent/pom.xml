@@ -6,7 +6,7 @@
   <name>Spring Data MongoDB Parent</name>
   <description>Spring Data project for MongoDB</description>
   <url>http://www.springsource.org/spring-data/mongodb</url>
-  <version>1.1.1.RELEASE</version>
+  <version>1.2.0.BUILD-SNAPSHOT</version>
   <packaging>pom</packaging>
   
   <developers>
