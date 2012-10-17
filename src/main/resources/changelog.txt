@@ -1,6 +1,17 @@
 Spring Data MongoDB Changelog
 =============================================
 
+Changes in version 1.1.1.GA (2012-10-17)
+----------------------------------------
+** Bug
+    * [DATAMONGO-549] - MongoTemplate.save(…) suffers from potential NullPointException
+    * [DATAMONGO-550] - MongoTemplate.save(BasicDBObject, String) results in NPE (after upgrading to 1.1.0.RELEASE
+    * [DATAMONGO-551] - MongoTemplate.save(String, String) results in NPE (after upgrading to 1.1.0.RELEASE
+
+** Task
+    * [DATAMONGO-559] - Release 1.1.1.RELEASE
+
+
 Changes in version 1.1.0.GA (2012-10-10)
 ----------------------------------------
 ** Bug
