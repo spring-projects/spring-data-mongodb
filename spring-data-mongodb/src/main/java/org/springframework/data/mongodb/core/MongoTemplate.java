@@ -760,10 +760,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				this.mongoConverter.getConversionService());
 		MongoPersistentProperty idProperty = entity.getIdProperty();
 		MongoPersistentProperty versionProperty = entity.getVersionProperty();
-		Object id = beanWrapper.getProperty(idProperty);
+
+		Number version = beanWrapper.getProperty(versionProperty, Number.class, !versionProperty.usePropertyAccess());
 
 		// Fresh instance -> initialize version property
-		if (id == null) {
+		if (version == null) {
 			beanWrapper.setProperty(versionProperty, 0);
 			doSave(collectionName, objectToSave, this.mongoConverter);
 		} else {
@@ -771,7 +772,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			assertUpdateableIdIfNotSet(objectToSave);
 
 			// Create query for entity with the id and old version
-			Object version = beanWrapper.getProperty(versionProperty);
+			Object id = beanWrapper.getProperty(idProperty);
 			Query query = new Query(Criteria.where(idProperty.getName()).is(id).and(versionProperty.getName()).is(version));
 
 			// Bump version number

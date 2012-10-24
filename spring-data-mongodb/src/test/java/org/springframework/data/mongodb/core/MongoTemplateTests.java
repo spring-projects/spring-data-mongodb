@@ -1311,6 +1311,19 @@ public class MongoTemplateTests {
 	}
 
 	/**
+	 * @see DATAMONGO-562
+	 */
+	@Test
+	public void optimisticLockingHandlingWithExistingId() {
+
+		PersonWithVersionPropertyOfTypeInteger person = new PersonWithVersionPropertyOfTypeInteger();
+		person.id = new ObjectId().toString();
+		person.age = 29;
+		person.firstName = "Patryk";
+		template.save(person);
+	}
+
+	/**
 	 * @see DATAMONGO-539
 	 */
 	@Test
