@@ -29,19 +29,19 @@ For those in a hurry:
 
 * Download the jar through Maven:
 
-      <dependency>
-        <groupId>org.springframework.data</groupId>
-        <artifactId>spring-data-mongodb</artifactId>
-        <version>1.0.0.BUILD-SNAPSHOT</version>
-      </dependency> 
+          <dependency>
+            <groupId>org.springframework.data</groupId>
+            <artifactId>spring-data-mongodb</artifactId>
+            <version>1.2.0.BUILD-SNAPSHOT</version>
+          </dependency> 
 
 
-      <repository>
-        <id>spring-maven-snapshot</id>
-        <snapshots><enabled>true</enabled></snapshots>
-        <name>Springframework Maven SNAPSHOT Repository</name>
-        <url>http://maven.springframework.org/snapshot</url>
-      </repository> 
+          <repository>
+            <id>spring-maven-snapshot</id>
+            <snapshots><enabled>true</enabled></snapshots>
+            <name>Springframework Maven SNAPSHOT Repository</name>
+            <url>http://maven.springframework.org/snapshot</url>
+          </repository> 
 
 ### MongoTemplate
 MongoTemplate is the central support class for Mongo database operations.  It provides
