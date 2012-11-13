@@ -86,7 +86,7 @@
     <!-- versions for commonly-used dependencies -->
     <mongo.version>2.9.2</mongo.version>
     <junit.version>4.10</junit.version>
-    <log4j.version>1.2.16</log4j.version>
+    <logback.version>1.0.6</logback.version>
     <org.mockito.version>1.9.0</org.mockito.version>
     <org.slf4j.version>1.6.1</org.slf4j.version>
     <org.codehaus.jackson.version>1.6.1</org.codehaus.jackson.version>
@@ -162,15 +162,9 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-log4j12</artifactId>
-			<version>${org.slf4j.version}</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>log4j</groupId>
-			<artifactId>log4j</artifactId>
-			<version>${log4j.version}</version>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-classic</artifactId>
+			<version>${logback.version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
