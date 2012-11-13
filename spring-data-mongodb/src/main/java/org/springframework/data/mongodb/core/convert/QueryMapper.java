@@ -263,7 +263,7 @@ public class QueryMapper {
 			return result;
 		}
 
-		return source instanceof DBRef ? source : converter.toDBRef(source, property);
+		return source == null || source instanceof DBRef ? source : converter.toDBRef(source, property);
 	}
 
 	/**
