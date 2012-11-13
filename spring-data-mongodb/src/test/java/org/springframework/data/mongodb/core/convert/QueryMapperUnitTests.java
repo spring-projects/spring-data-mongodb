@@ -335,6 +335,18 @@ public class QueryMapperUnitTests {
 		assertThat(reference.containsField("$in"), is(true));
 	}
 
+	/**
+	 * @see DATAMONGO-570
+	 */
+	@Test
+	public void correctlyConvertsNullReference() {
+
+		Query query = query(where("reference").is(null));
+		DBObject object = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(WithDBRef.class));
+
+		assertThat(object.get("reference"), is(nullValue()));
+	}
+
 	class IdWrapper {
 		Object id;
 	}
