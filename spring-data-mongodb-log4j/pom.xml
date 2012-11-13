@@ -10,6 +10,10 @@
   <artifactId>spring-data-mongodb-log4j</artifactId>
   <name>Spring Data MongoDB Log4J Appender</name>
 
+  <properties>
+    <log4j.version>1.2.16</log4j.version>
+  </properties>
+
   <dependencies>
 
     <!-- MongoDB -->
