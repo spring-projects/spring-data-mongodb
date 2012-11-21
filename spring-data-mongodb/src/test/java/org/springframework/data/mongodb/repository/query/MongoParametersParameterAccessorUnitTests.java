@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2011-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,6 @@ import org.springframework.data.mongodb.core.geo.Metrics;
 import org.springframework.data.mongodb.core.geo.Point;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.repository.Person;
-import org.springframework.data.mongodb.repository.support.DefaultEntityInformationCreator;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
@@ -42,13 +41,12 @@ public class MongoParametersParameterAccessorUnitTests {
 	private static final Distance DISTANCE = new Distance(2.5, Metrics.KILOMETERS);
 	private static final RepositoryMetadata metadata = new DefaultRepositoryMetadata(PersonRepository.class);
 	private static final MongoMappingContext context = new MongoMappingContext();
-	private static final EntityInformationCreator creator = new DefaultEntityInformationCreator(context);
 
 	@Test
 	public void returnsNullForDistanceIfNoneAvailable() throws NoSuchMethodException, SecurityException {
 
 		Method method = PersonRepository.class.getMethod("findByLocationNear", Point.class);
-		MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, creator);
+		MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, context);
 
 		MongoParameterAccessor accessor = new MongoParametersParameterAccessor(queryMethod,
 				new Object[] { new Point(10, 20) });
@@ -59,7 +57,7 @@ public class MongoParametersParameterAccessorUnitTests {
 	public void returnsDistanceIfAvailable() throws NoSuchMethodException, SecurityException {
 
 		Method method = PersonRepository.class.getMethod("findByLocationNear", Point.class, Distance.class);
-		MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, creator);
+		MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, context);
 
 		MongoParameterAccessor accessor = new MongoParametersParameterAccessor(queryMethod, new Object[] {
 				new Point(10, 20), DISTANCE });
