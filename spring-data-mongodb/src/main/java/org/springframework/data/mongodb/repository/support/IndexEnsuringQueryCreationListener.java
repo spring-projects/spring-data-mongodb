@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2011-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.query.Order;
-import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
+import org.springframework.data.mongodb.repository.query.MongoEntityMetadata;
 import org.springframework.data.mongodb.repository.query.PartTreeMongoQuery;
 import org.springframework.data.mongodb.repository.query.QueryUtils;
 import org.springframework.data.repository.core.support.QueryCreationListener;
@@ -85,7 +85,7 @@ class IndexEnsuringQueryCreationListener implements QueryCreationListener<PartTr
 			}
 		}
 
-		MongoEntityInformation<?, ?> metadata = query.getQueryMethod().getEntityInformation();
+		MongoEntityMetadata<?> metadata = query.getQueryMethod().getEntityInformation();
 		operations.indexOps(metadata.getCollectionName()).ensureIndex(index);
 		LOG.debug(String.format("Created %s!", index));
 	}

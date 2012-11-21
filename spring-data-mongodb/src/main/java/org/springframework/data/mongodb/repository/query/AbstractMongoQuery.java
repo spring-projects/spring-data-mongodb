@@ -117,7 +117,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 
 		protected List<?> readCollection(Query query) {
 
-			MongoEntityInformation<?, ?> metadata = method.getEntityInformation();
+			MongoEntityMetadata<?> metadata = method.getEntityInformation();
 
 			String collectionName = metadata.getCollectionName();
 			return operations.find(query, metadata.getJavaType(), collectionName);
@@ -175,7 +175,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 		@SuppressWarnings({ "rawtypes", "unchecked" })
 		Object execute(Query query) {
 
-			MongoEntityInformation<?, ?> metadata = method.getEntityInformation();
+			MongoEntityMetadata<?> metadata = method.getEntityInformation();
 			long count = operations.count(query, metadata.getCollectionName());
 
 			List<?> result = operations.find(query.with(pageable), metadata.getJavaType(), metadata.getCollectionName());
@@ -198,8 +198,8 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 		@Override
 		Object execute(Query query) {
 
-			MongoEntityInformation<?, ?> entityInformation = method.getEntityInformation();
-			return operations.findOne(query, entityInformation.getJavaType());
+			MongoEntityMetadata<?> metadata = method.getEntityInformation();
+			return operations.findOne(query, metadata.getJavaType());
 		}
 	}
 
@@ -236,8 +236,8 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 		 */
 		Object execute(Query query, Query countQuery) {
 
-			MongoEntityInformation<?, ?> information = method.getEntityInformation();
-			long count = operations.count(countQuery, information.getCollectionName());
+			MongoEntityMetadata<?> metadata = method.getEntityInformation();
+			long count = operations.count(countQuery, metadata.getCollectionName());
 
 			return new GeoPage<Object>(doExecuteQuery(query), accessor.getPageable(), count);
 		}
@@ -257,9 +257,8 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 				nearQuery.maxDistance(maxDistance);
 			}
 
-			MongoEntityInformation<?, ?> entityInformation = method.getEntityInformation();
-			return (GeoResults<Object>) operations.geoNear(nearQuery, entityInformation.getJavaType(),
-					entityInformation.getCollectionName());
+			MongoEntityMetadata<?> metadata = method.getEntityInformation();
+			return (GeoResults<Object>) operations.geoNear(nearQuery, metadata.getJavaType(), metadata.getCollectionName());
 		}
 
 		private boolean isListOfGeoResult() {

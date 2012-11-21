@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 the original author or authors.
+ * Copyright 2010-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,10 +21,11 @@ import java.io.Serializable;
 import java.lang.reflect.Method;
 
 import org.springframework.data.mapping.context.MappingContext;
+import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mongodb.core.MongoOperations;
-import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.repository.MongoRepository;
-import org.springframework.data.mongodb.repository.query.EntityInformationCreator;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
 import org.springframework.data.mongodb.repository.query.MongoQueryMethod;
 import org.springframework.data.mongodb.repository.query.PartTreeMongoQuery;
@@ -46,20 +47,18 @@ import org.springframework.util.Assert;
 public class MongoRepositoryFactory extends RepositoryFactorySupport {
 
 	private final MongoOperations mongoOperations;
-	private final EntityInformationCreator entityInformationCreator;
+	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 
 	/**
-	 * Creates a new {@link MongoRepositoryFactory} with the given {@link MongoTemplate} and {@link MappingContext}.
+	 * Creates a new {@link MongoRepositoryFactory} with the given {@link MongoOperations}.
 	 * 
-	 * @param template must not be {@literal null}
-	 * @param mappingContext
+	 * @param mongoOperations must not be {@literal null}
 	 */
 	public MongoRepositoryFactory(MongoOperations mongoOperations) {
 
 		Assert.notNull(mongoOperations);
 		this.mongoOperations = mongoOperations;
-		this.entityInformationCreator = new DefaultEntityInformationCreator(mongoOperations.getConverter()
-				.getMappingContext());
+		this.mappingContext = mongoOperations.getConverter().getMappingContext();
 	}
 
 	/*
@@ -117,7 +116,7 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 		 */
 		public RepositoryQuery resolveQuery(Method method, RepositoryMetadata metadata, NamedQueries namedQueries) {
 
-			MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, entityInformationCreator);
+			MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, mappingContext);
 			String namedQueryName = queryMethod.getNamedQueryName();
 
 			if (namedQueries.hasQuery(namedQueryName)) {
@@ -136,7 +135,16 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 	 * @see org.springframework.data.repository.core.support.RepositoryFactorySupport#getEntityInformation(java.lang.Class)
 	 */
 	@Override
+	@SuppressWarnings("unchecked")
 	public <T, ID extends Serializable> MongoEntityInformation<T, ID> getEntityInformation(Class<T> domainClass) {
-		return entityInformationCreator.getEntityInformation(domainClass);
+
+		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(domainClass);
+
+		if (entity == null) {
+			throw new MappingException(String.format("Could not lookup mapping metadata for domain class %s!",
+					domainClass.getName()));
+		}
+
+		return new MappingMongoEntityInformation<T, ID>((MongoPersistentEntity<T>) entity);
 	}
 }

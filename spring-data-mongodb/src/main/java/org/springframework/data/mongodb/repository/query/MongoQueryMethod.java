@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2011-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,9 +20,12 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.geo.GeoPage;
 import org.springframework.data.mongodb.core.geo.GeoResult;
 import org.springframework.data.mongodb.core.geo.GeoResults;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.query.Parameters;
@@ -33,8 +36,7 @@ import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 /**
- * TODO - Extract methods for {@link #getAnnotatedQuery()} into superclass as it is currently copied from Spring Data
- * JPA
+ * Mongo specific implementation of {@link QueryMethod}.
  * 
  * @author Oliver Gierke
  */
@@ -45,19 +47,24 @@ public class MongoQueryMethod extends QueryMethod {
 			.asList(GeoResult.class, GeoResults.class, GeoPage.class);
 
 	private final Method method;
-	private final MongoEntityInformation<?, ?> entityInformation;
+	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
+
+	private MongoEntityMetadata<?> metadata;
 
 	/**
 	 * Creates a new {@link MongoQueryMethod} from the given {@link Method}.
 	 * 
 	 * @param method
 	 */
-	public MongoQueryMethod(Method method, RepositoryMetadata metadata, EntityInformationCreator entityInformationCreator) {
+	public MongoQueryMethod(Method method, RepositoryMetadata metadata,
+			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
+
 		super(method, metadata);
-		Assert.notNull(entityInformationCreator, "DefaultEntityInformationCreator must not be null!");
+
+		Assert.notNull(mappingContext, "MappingContext must not be null!");
+
 		this.method = method;
-		this.entityInformation = entityInformationCreator.getEntityInformation(metadata.getReturnedDomainClass(method),
-				getDomainClass());
+		this.mappingContext = mappingContext;
 	}
 
 	/*
@@ -101,14 +108,30 @@ public class MongoQueryMethod extends QueryMethod {
 		return StringUtils.hasText(value) ? value : null;
 	}
 
-	/*
+	/* 
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.query.QueryMethod#getEntityInformation()
 	 */
 	@Override
-	public MongoEntityInformation<?, ?> getEntityInformation() {
+	@SuppressWarnings("unchecked")
+	public MongoEntityMetadata<?> getEntityInformation() {
 
-		return entityInformation;
+		if (metadata == null) {
+
+			Class<?> returnedObjectType = getReturnedObjectType();
+			Class<?> domainClass = getDomainClass();
+
+			MongoPersistentEntity<?> returnedEntity = mappingContext.getPersistentEntity(getReturnedObjectType());
+			MongoPersistentEntity<?> managedEntity = mappingContext.getPersistentEntity(domainClass);
+			returnedEntity = returnedEntity == null ? managedEntity : returnedEntity;
+			MongoPersistentEntity<?> collectionEntity = domainClass.isAssignableFrom(returnedObjectType) ? returnedEntity
+					: managedEntity;
+
+			this.metadata = new SimpleMongoEntityMetadata<Object>((Class<Object>) returnedEntity.getType(),
+					collectionEntity.getCollection());
+		}
+
+		return this.metadata;
 	}
 
 	/*
@@ -121,12 +144,11 @@ public class MongoQueryMethod extends QueryMethod {
 	}
 
 	/**
-	 * Returns whether te query is a geoNear query.
+	 * Returns whether te query is a geo near query.
 	 * 
 	 * @return
 	 */
 	public boolean isGeoNearQuery() {
-
 		return isGeoNearQuery(this.method);
 	}
 

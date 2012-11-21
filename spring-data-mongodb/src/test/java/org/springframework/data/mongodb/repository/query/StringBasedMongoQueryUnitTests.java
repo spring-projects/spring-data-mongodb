@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2011-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,8 +54,6 @@ public class StringBasedMongoQueryUnitTests {
 	@Mock
 	RepositoryMetadata metadata;
 	@Mock
-	EntityInformationCreator creator;
-	@Mock
 	MongoDbFactory factory;
 
 	MongoConverter converter;
@@ -70,7 +68,7 @@ public class StringBasedMongoQueryUnitTests {
 	public void bindsSimplePropertyCorrectly() throws Exception {
 
 		Method method = SampleRepository.class.getMethod("findByLastname", String.class);
-		MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, creator);
+		MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, converter.getMappingContext());
 		StringBasedMongoQuery mongoQuery = new StringBasedMongoQuery(queryMethod, operations);
 		ConvertingParameterAccessor accesor = StubParameterAccessor.getAccessor(converter, "Matthews");
 
@@ -132,7 +130,7 @@ public class StringBasedMongoQueryUnitTests {
 	private StringBasedMongoQuery createQueryForMethod(String name, Class<?>... parameters) throws Exception {
 
 		Method method = SampleRepository.class.getMethod(name, parameters);
-		MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, creator);
+		MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, converter.getMappingContext());
 		return new StringBasedMongoQuery(queryMethod, operations);
 	}
 
