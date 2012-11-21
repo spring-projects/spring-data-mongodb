@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2011-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,17 +21,16 @@ import org.springframework.data.repository.config.RepositoryBeanDefinitionParser
 import org.springframework.data.repository.config.RepositoryConfigurationExtension;
 
 /**
- * {@link org.springframework.beans.factory.xml.NamespaceHandler} for Mongo DB based repositories.
+ * {@link org.springframework.beans.factory.xml.NamespaceHandler} for Mongo DB configuration.
  * 
  * @author Oliver Gierke
  */
 public class MongoNamespaceHandler extends NamespaceHandlerSupport {
 
 	/*
-	* (non-Javadoc)
-	*
-	* @see org.springframework.beans.factory.xml.NamespaceHandler#init()
-	*/
+	 * (non-Javadoc)
+	 * @see org.springframework.beans.factory.xml.NamespaceHandler#init()
+	 */
 	public void init() {
 
 		RepositoryConfigurationExtension extension = new MongoRepositoryConfigurationExtension();
@@ -42,5 +41,6 @@ public class MongoNamespaceHandler extends NamespaceHandlerSupport {
 		registerBeanDefinitionParser("mongo", new MongoParser());
 		registerBeanDefinitionParser("db-factory", new MongoDbFactoryParser());
 		registerBeanDefinitionParser("jmx", new MongoJmxParser());
+		registerBeanDefinitionParser("auditing", new MongoAuditingBeanDefinitionParser());
 	}
 }

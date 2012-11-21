@@ -153,14 +153,6 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 		return getField().getAnnotation(DBRef.class);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentProperty#isVersionProperty()
-	 */
-	public boolean isVersionProperty() {
-		return getField().isAnnotationPresent(Version.class);
-	}
-
 	/* 
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentProperty#usePropertyAccess()

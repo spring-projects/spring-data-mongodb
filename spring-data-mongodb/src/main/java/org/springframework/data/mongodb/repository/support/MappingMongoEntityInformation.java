@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.repository.support;
 
 import java.io.Serializable;
+
 import org.springframework.data.mapping.model.BeanWrapper;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
@@ -57,13 +58,18 @@ public class MappingMongoEntityInformation<T, ID extends Serializable> extends A
 		this.customCollectionName = customCollectionName;
 	}
 
-	/* (non-Javadoc)
+	/* 
+	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.support.EntityInformation#getId(java.lang.Object)
 	 */
 	@SuppressWarnings("unchecked")
 	public ID getId(T entity) {
 
 		MongoPersistentProperty idProperty = entityMetadata.getIdProperty();
+
+		if (idProperty == null) {
+			return null;
+		}
 
 		try {
 			return (ID) BeanWrapper.create(entity, null).getProperty(idProperty);

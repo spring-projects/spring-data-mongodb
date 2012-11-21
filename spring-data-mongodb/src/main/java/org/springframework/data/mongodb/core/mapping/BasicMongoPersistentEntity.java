@@ -23,7 +23,6 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.expression.BeanFactoryAccessor;
 import org.springframework.context.expression.BeanFactoryResolver;
 import org.springframework.data.mapping.model.BasicPersistentEntity;
-import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mongodb.MongoCollectionUtils;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.Expression;
@@ -38,7 +37,6 @@ import org.springframework.util.StringUtils;
  * 
  * @author Jon Brisbin
  * @author Oliver Gierke
- * @author Patryk Wasik
  */
 public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, MongoPersistentProperty> implements
 		MongoPersistentEntity<T>, ApplicationContextAware {
@@ -73,27 +71,6 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 		}
 	}
 
-	/* 
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mapping.MutablePersistentEntity#addPersistentProperty(P)
-	 */
-	@Override
-	public void addPersistentProperty(MongoPersistentProperty property) {
-
-		if (property.isVersionProperty()) {
-
-			if (this.versionProperty != null) {
-				throw new MappingException(String.format(
-						"Attempt to add version property %s but already have property %s registered "
-								+ "as version. Check your mapping configuration!", property.getField(), versionProperty.getField()));
-			}
-
-			this.versionProperty = property;
-		}
-
-		super.addPersistentProperty(property);
-	}
-
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.context.ApplicationContextAware#setApplicationContext(org.springframework.context.ApplicationContext)
@@ -110,25 +87,8 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentEntity#getCollection()
 	 */
 	public String getCollection() {
-
 		Expression expression = parser.parseExpression(collection, ParserContext.TEMPLATE_EXPRESSION);
 		return expression.getValue(context, String.class);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentEntity#getVersionProperty()
-	 */
-	public MongoPersistentProperty getVersionProperty() {
-		return versionProperty;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentEntity#hasVersionProperty()
-	 */
-	public boolean hasVersionProperty() {
-		return getVersionProperty() != null;
 	}
 
 	/**

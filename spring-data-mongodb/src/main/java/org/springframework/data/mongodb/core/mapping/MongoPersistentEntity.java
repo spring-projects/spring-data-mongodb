@@ -21,7 +21,6 @@ import org.springframework.data.mapping.PersistentEntity;
  * MongoDB specific {@link PersistentEntity} abstraction.
  * 
  * @author Oliver Gierke
- * @author Patryk Wasik
  */
 public interface MongoPersistentEntity<T> extends PersistentEntity<T, MongoPersistentProperty> {
 
@@ -31,19 +30,4 @@ public interface MongoPersistentEntity<T> extends PersistentEntity<T, MongoPersi
 	 * @return
 	 */
 	String getCollection();
-
-	/**
-	 * Returns the {@link MongoPersistentProperty} that represents the version attribute of an entity. Will not be
-	 * {@literal null} if {@link #hasVersionProperty()}.
-	 * 
-	 * @return
-	 */
-	MongoPersistentProperty getVersionProperty();
-
-	/**
-	 * Returns whether the entity has a property representing the version of the entity.
-	 * 
-	 * @return
-	 */
-	boolean hasVersionProperty();
 }

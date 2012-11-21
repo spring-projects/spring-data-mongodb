@@ -27,12 +27,15 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.data.annotation.Persistent;
 import org.springframework.data.authentication.UserCredentials;
+import org.springframework.data.mapping.model.MappingContextIsNewStrategyFactory;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 import org.springframework.data.mongodb.core.convert.CustomConversions;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.support.CachingIsNewStrategyFactory;
+import org.springframework.data.support.IsNewStrategyFactory;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
 
@@ -134,6 +137,17 @@ public abstract class AbstractMongoConfiguration {
 		mappingContext.initialize();
 
 		return mappingContext;
+	}
+
+	/**
+	 * Returns a {@link MappingContextIsNewStrategyFactory} wrapped into a {@link CachingIsNewStrategyFactory}.
+	 * 
+	 * @return
+	 * @throws ClassNotFoundException
+	 */
+	@Bean
+	public IsNewStrategyFactory isNewStrategyFactory() throws ClassNotFoundException {
+		return new CachingIsNewStrategyFactory(new MappingContextIsNewStrategyFactory(mongoMappingContext()));
 	}
 
 	/**

@@ -27,10 +27,13 @@ import java.lang.annotation.Target;
  * 
  * @since 1.4
  * @author Patryk Wasik
+ * @deprecated use {@link org.springframework.data.annotation.Version} instead.
  */
+@Deprecated
 @Documented
 @Target({ FIELD })
 @Retention(RUNTIME)
+@org.springframework.data.annotation.Version
 public @interface Version {
 
 }

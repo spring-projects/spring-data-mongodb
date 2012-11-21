@@ -49,6 +49,8 @@ import org.springframework.core.type.filter.AssignableTypeFilter;
 import org.springframework.core.type.filter.TypeFilter;
 import org.springframework.data.annotation.Persistent;
 import org.springframework.data.config.BeanComponentDefinitionBuilder;
+import org.springframework.data.config.ParsingUtils;
+import org.springframework.data.mapping.model.MappingContextIsNewStrategyFactory;
 import org.springframework.data.mongodb.core.convert.CustomConversions;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexCreator;
@@ -87,6 +89,8 @@ public class MappingMongoConverterParser extends AbstractBeanDefinitionParser {
 
 		BeanDefinition conversionsDefinition = getCustomConversions(element, parserContext);
 		String ctxRef = potentiallyCreateMappingContext(element, parserContext, conversionsDefinition);
+
+		createIsNewStrategyFactoryBeanDefinition(ctxRef, parserContext, element);
 
 		// Need a reference to a Mongo instance
 		String dbFactoryRef = element.getAttribute("db-factory-ref");
@@ -163,7 +167,7 @@ public class MappingMongoConverterParser extends AbstractBeanDefinitionParser {
 		return new RuntimeBeanReference(validatorName);
 	}
 
-	private String potentiallyCreateMappingContext(Element element, ParserContext parserContext,
+	static String potentiallyCreateMappingContext(Element element, ParserContext parserContext,
 			BeanDefinition conversionsDefinition) {
 
 		String ctxRef = element.getAttribute("mapping-context-ref");
@@ -241,7 +245,7 @@ public class MappingMongoConverterParser extends AbstractBeanDefinitionParser {
 		return null;
 	}
 
-	public Set<String> getInititalEntityClasses(Element element, BeanDefinitionBuilder builder) {
+	private static Set<String> getInititalEntityClasses(Element element, BeanDefinitionBuilder builder) {
 
 		String basePackage = element.getAttribute(BASE_PACKAGE);
 
@@ -278,6 +282,19 @@ public class MappingMongoConverterParser extends AbstractBeanDefinitionParser {
 		parserContext.getReaderContext().error(
 				"Element <converter> must specify 'ref' or contain a bean definition for the converter", element);
 		return null;
+	}
+
+	public static String createIsNewStrategyFactoryBeanDefinition(String mappingContextRef, ParserContext context,
+			Element element) {
+
+		BeanDefinitionBuilder mappingContextStrategyFactoryBuilder = BeanDefinitionBuilder
+				.rootBeanDefinition(MappingContextIsNewStrategyFactory.class);
+		mappingContextStrategyFactoryBuilder.addConstructorArgReference(mappingContextRef);
+
+		context.getRegistry().registerBeanDefinition(IS_NEW_STRATEGY_FACTORY,
+				ParsingUtils.getSourceBeanDefinition(mappingContextStrategyFactoryBuilder, context, element));
+
+		return IS_NEW_STRATEGY_FACTORY;
 	}
 
 	/**
