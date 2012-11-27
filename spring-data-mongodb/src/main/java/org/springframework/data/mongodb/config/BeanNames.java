@@ -26,4 +26,6 @@ public abstract class BeanNames {
 	static final String MONGO = "mongo";
 	static final String DB_FACTORY = "mongoDbFactory";
 	static final String VALIDATING_EVENT_LISTENER = "validatingMongoEventListener";
+	static final String IS_NEW_STRATEGY_FACTORY = "isNewStrategyFactory";
+	static final String DEFAULT_CONVERTER_BEAN_NAME = "mappingConverter";
 }
