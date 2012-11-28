@@ -45,8 +45,6 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 	private final SpelExpressionParser parser;
 	private final StandardEvaluationContext context;
 
-	private MongoPersistentProperty versionProperty;
-
 	/**
 	 * Creates a new {@link BasicMongoPersistentEntity} with the given {@link TypeInformation}. Will default the
 	 * collection name to the entities simple type name.
