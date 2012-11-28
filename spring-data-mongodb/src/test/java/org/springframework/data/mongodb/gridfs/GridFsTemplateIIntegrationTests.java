@@ -77,6 +77,16 @@ public class GridFsTemplateIIntegrationTests {
 		assertSame(result.get(0), reference);
 	}
 
+    @Test
+    public void storesContentType() throws IOException {
+
+        GridFSFile reference = operations.store(resource.getInputStream(), "foo2.xml","application/xml");
+
+        List<GridFSDBFile> result = operations.find(query(whereContentType().is("application/xml")));
+        assertThat(result.size(), is(1));
+        assertSame(result.get(0), reference);
+    }
+
 	@Test
 	public void marshalsComplexMetadata() throws IOException {
 

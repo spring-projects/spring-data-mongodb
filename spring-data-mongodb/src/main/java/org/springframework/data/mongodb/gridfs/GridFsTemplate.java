@@ -87,6 +87,14 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 		return store(content, filename, (Object) null);
 	}
 
+    /*
+ * (non-Javadoc)
+ * @see org.springframework.data.mongodb.gridfs.GridFsOperations#store(java.io.InputStream, java.lang.String, java.lang.String)
+ */
+    public GridFSFile store(InputStream content, String filename, String contentType) {
+        return store(content, filename, (Object) null, contentType);
+    }
+
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#store(java.io.InputStream, java.lang.String, java.lang.Object)
@@ -98,11 +106,31 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 		return store(content, filename, dbObject);
 	}
 
+    /*
+ * (non-Javadoc)
+ * @see org.springframework.data.mongodb.gridfs.GridFsOperations#store(java.io.InputStream, java.lang.String, java.lang.Object, java.lang.String)
+ */
+    public GridFSFile store(InputStream content, String filename, Object metadata, String contentType) {
+
+        DBObject dbObject = new BasicDBObject();
+        converter.write(metadata, dbObject);
+        return store(content, filename, dbObject, contentType);
+    }
+
+
+    /*
+ * (non-Javadoc)
+ * @see org.springframework.data.mongodb.gridfs.GridFsOperations#store(java.io.InputStream, java.lang.String, com.mongodb.DBObject)
+ */
+    public GridFSFile store(InputStream content, String filename, DBObject metadata) {
+       return this.store(content,filename,metadata,null);
+    }
+
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#store(java.io.InputStream, java.lang.String, com.mongodb.DBObject)
 	 */
-	public GridFSFile store(InputStream content, String filename, DBObject metadata) {
+	public GridFSFile store(InputStream content, String filename, DBObject metadata, String contentType) {
 
 		Assert.notNull(content);
 		Assert.hasText(filename);
@@ -111,6 +139,9 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 		GridFSInputFile file = getGridFs().createFile(content);
 		file.setFilename(filename);
 		file.setMetaData(metadata);
+        if (contentType != null) {
+            file.setContentType(contentType);
+        }
 		file.save();
 
 		return file;
