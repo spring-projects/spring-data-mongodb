@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2011-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ import com.mongodb.gridfs.GridFSFile;
  * Collection of operations to store and read files from MongoDB GridFS.
  * 
  * @author Oliver Gierke
+ * @author Philipp Schneider
  */
 public interface GridFsOperations extends ResourcePatternResolver {
 
@@ -43,25 +44,58 @@ public interface GridFsOperations extends ResourcePatternResolver {
 	GridFSFile store(InputStream content, String filename);
 
 	/**
+	 * Stores the given content into a file with the given name and content type.
+	 * 
+	 * @param content must not be {@literal null}.
+	 * @param filename must not be {@literal null} or empty.
+	 * @param contentType can be {@literal null}.
+	 * @return the {@link GridFSFile} just created
+	 */
+	GridFSFile store(InputStream content, String filename, String contentType);
+
+	/**
 	 * Stores the given content into a file with the given name using the given metadata. The metadata object will be
 	 * marshalled before writing.
 	 * 
 	 * @param content must not be {@literal null}.
 	 * @param filename must not be {@literal null} or empty.
-	 * @param metadata
+	 * @param metadata can be {@literal null}.
 	 * @return the {@link GridFSFile} just created
 	 */
 	GridFSFile store(InputStream content, String filename, Object metadata);
+
+	/**
+	 * Stores the given content into a file with the given name and content type using the given metadata. The metadata
+	 * object will be marshalled before writing.
+	 * 
+	 * @param content must not be {@literal null}.
+	 * @param filename must not be {@literal null} or empty.
+	 * @param contentType can be {@literal null}.
+	 * @param metadata can be {@literal null}
+	 * @return the {@link GridFSFile} just created
+	 */
+	GridFSFile store(InputStream content, String filename, String contentType, Object metadata);
 
 	/**
 	 * Stores the given content into a file with the given name using the given metadata.
 	 * 
 	 * @param content must not be {@literal null}.
 	 * @param filename must not be {@literal null} or empty.
-	 * @param metadata must not be {@literal null}.
+	 * @param metadata can be {@literal null}.
 	 * @return the {@link GridFSFile} just created
 	 */
 	GridFSFile store(InputStream content, String filename, DBObject metadata);
+
+	/**
+	 * Stores the given content into a file with the given name and content type using the given metadata.
+	 * 
+	 * @param content must not be {@literal null}.
+	 * @param filename must not be {@literal null} or empty.
+	 * @param contentType can be {@literal null}.
+	 * @param metadata can be {@literal null}.
+	 * @return the {@link GridFSFile} just created
+	 */
+	GridFSFile store(InputStream content, String filename, String contentType, DBObject metadata);
 
 	/**
 	 * Returns all files matching the given query. Note, that currently {@link Sort} criterias defined at the

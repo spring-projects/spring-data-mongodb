@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2011-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,6 +41,7 @@ import com.mongodb.gridfs.GridFSFile;
  * Integration tests for {@link GridFsTemplate}.
  * 
  * @author Oliver Gierke
+ * @author Philipp Schneider
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:gridfs/gridfs.xml")
@@ -73,6 +74,19 @@ public class GridFsTemplateIIntegrationTests {
 		GridFSFile reference = operations.store(resource.getInputStream(), "foo.xml", metadata);
 
 		List<GridFSDBFile> result = operations.find(query(whereMetaData("key").is("value")));
+		assertThat(result.size(), is(1));
+		assertSame(result.get(0), reference);
+	}
+
+	/**
+	 * @see DATAMONGO-503
+	 */
+	@Test
+	public void storesContentType() throws IOException {
+
+		GridFSFile reference = operations.store(resource.getInputStream(), "foo2.xml", "application/xml");
+
+		List<GridFSDBFile> result = operations.find(query(whereContentType().is("application/xml")));
 		assertThat(result.size(), is(1));
 		assertSame(result.get(0), reference);
 	}

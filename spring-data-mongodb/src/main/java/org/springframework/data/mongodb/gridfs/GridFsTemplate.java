@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2011-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,6 +42,7 @@ import com.mongodb.gridfs.GridFSInputFile;
  * {@link GridFsOperations} implementation to store content into MongoDB GridFS.
  * 
  * @author Oliver Gierke
+ * @author Philipp Schneider
  */
 public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver {
 
@@ -89,13 +90,35 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 
 	/*
 	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#store(java.io.InputStream, java.lang.String, java.lang.String)
+	 */
+	public GridFSFile store(InputStream content, String filename, String contentType) {
+		return store(content, filename, contentType, (Object) null);
+	}
+
+	/*
+	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#store(java.io.InputStream, java.lang.String, java.lang.Object)
 	 */
 	public GridFSFile store(InputStream content, String filename, Object metadata) {
 
-		DBObject dbObject = new BasicDBObject();
-		converter.write(metadata, dbObject);
-		return store(content, filename, dbObject);
+		return store(content, filename, null, metadata);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#store(java.io.InputStream, java.lang.String, java.lang.String, java.lang.Object)
+	 */
+	public GridFSFile store(InputStream content, String filename, String contentType, Object metadata) {
+
+		DBObject dbObject = null;
+
+		if (metadata != null) {
+			dbObject = new BasicDBObject();
+			converter.write(metadata, dbObject);
+		}
+
+		return store(content, filename, contentType, dbObject);
 	}
 
 	/*
@@ -103,16 +126,30 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#store(java.io.InputStream, java.lang.String, com.mongodb.DBObject)
 	 */
 	public GridFSFile store(InputStream content, String filename, DBObject metadata) {
+		return this.store(content, filename, null, metadata);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#store(java.io.InputStream, java.lang.String, com.mongodb.DBObject)
+	 */
+	public GridFSFile store(InputStream content, String filename, String contentType, DBObject metadata) {
 
 		Assert.notNull(content);
 		Assert.hasText(filename);
-		Assert.notNull(metadata);
 
 		GridFSInputFile file = getGridFs().createFile(content);
 		file.setFilename(filename);
-		file.setMetaData(metadata);
-		file.save();
 
+		if (metadata != null) {
+			file.setMetaData(metadata);
+		}
+
+		if (contentType != null) {
+			file.setContentType(contentType);
+		}
+
+		file.save();
 		return file;
 	}
 
