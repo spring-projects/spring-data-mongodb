@@ -41,8 +41,8 @@ public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID exten
 	 * @param operations the operations to set
 	 */
 	public void setMongoOperations(MongoOperations operations) {
-
 		this.operations = operations;
+		setMappingContext(operations.getConverter().getMappingContext());
 	}
 
 	/**
