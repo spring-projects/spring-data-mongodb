@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 the original author or authors.
+ * Copyright 2012-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.core.index;
 
-import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
 import java.util.Collections;
@@ -38,6 +38,7 @@ import com.mongodb.DBObject;
  * Unit tests for {@link MongoPersistentEntityIndexCreator}.
  * 
  * @author Oliver Gierke
+ * @author Philipp Schneider
  */
 @RunWith(MockitoJUnitRunner.class)
 public class MongoPersistentEntityIndexCreatorUnitTests {
@@ -50,25 +51,20 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 	@Test
 	public void buildsIndexDefinitionUsingFieldName() {
 
-		MongoMappingContext mappingContext = new MongoMappingContext();
-		mappingContext.setInitialEntitySet(Collections.singleton(Person.class));
-		mappingContext.initialize();
-
+		MongoMappingContext mappingContext = prepareMappingContext(Person.class);
 		DummyMongoPersistentEntityIndexCreator creator = new DummyMongoPersistentEntityIndexCreator(mappingContext, factory);
 
 		assertThat(creator.indexDefinition, is(notNullValue()));
 		assertThat(creator.indexDefinition.keySet(), hasItem("fieldname"));
 		assertThat(creator.name, is("indexName"));
+		assertThat(creator.background, is(false));
 	}
 
 	@Test
 	public void doesNotCreateIndexForEntityComingFromDifferentMappingContext() {
 
 		MongoMappingContext mappingContext = new MongoMappingContext();
-
-		MongoMappingContext personMappingContext = new MongoMappingContext();
-		personMappingContext.setInitialEntitySet(Collections.singleton(Person.class));
-		personMappingContext.initialize();
+		MongoMappingContext personMappingContext = prepareMappingContext(Person.class);
 
 		DummyMongoPersistentEntityIndexCreator creator = new DummyMongoPersistentEntityIndexCreator(mappingContext, factory);
 
@@ -95,17 +91,49 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 		assertThat(creator.isIndexCreatorFor(new MongoMappingContext()), is(false));
 	}
 
+	/**
+	 * @see DATAMONGO-554
+	 */
+	@Test
+	public void triggersBackgroundIndexingIfConfigured() {
+
+		MongoMappingContext mappingContext = prepareMappingContext(AnotherPerson.class);
+		DummyMongoPersistentEntityIndexCreator creator = new DummyMongoPersistentEntityIndexCreator(mappingContext, factory);
+
+		assertThat(creator.indexDefinition, is(notNullValue()));
+		assertThat(creator.indexDefinition.keySet(), hasItem("lastname"));
+		assertThat(creator.name, is("lastname"));
+		assertThat(creator.background, is(true));
+	}
+
+	private static MongoMappingContext prepareMappingContext(Class<?> type) {
+
+		MongoMappingContext mappingContext = new MongoMappingContext();
+		mappingContext.setInitialEntitySet(Collections.singleton(type));
+		mappingContext.initialize();
+
+		return mappingContext;
+	}
+
 	static class Person {
 
 		@Indexed(name = "indexName")
 		@Field("fieldname")
 		String field;
+
+	}
+
+	static class AnotherPerson {
+
+		@Indexed(background = true)
+		String lastname;
 	}
 
 	static class DummyMongoPersistentEntityIndexCreator extends MongoPersistentEntityIndexCreator {
 
 		DBObject indexDefinition;
 		String name;
+		boolean background;
 
 		public DummyMongoPersistentEntityIndexCreator(MongoMappingContext mappingContext, MongoDbFactory mongoDbFactory) {
 			super(mappingContext, mongoDbFactory);
@@ -113,10 +141,11 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 
 		@Override
 		protected void ensureIndex(String collection, String name, DBObject indexDefinition, boolean unique,
-				boolean dropDups, boolean sparse) {
+				boolean dropDups, boolean sparse, boolean background) {
 
 			this.name = name;
 			this.indexDefinition = indexDefinition;
+			this.background = background;
 		}
 	}
 }

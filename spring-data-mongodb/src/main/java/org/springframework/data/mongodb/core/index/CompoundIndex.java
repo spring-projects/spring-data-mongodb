@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2012 the original author or authors.
+ * Copyright 2011-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import java.lang.annotation.Target;
  * 
  * @author Jon Brisbin
  * @author Oliver Gierke
+ * @author Philipp Schneider
  */
 @Target({ ElementType.TYPE })
 @Documented
@@ -69,4 +70,12 @@ public @interface CompoundIndex {
 	 * @return
 	 */
 	String collection() default "";
+
+	/**
+	 * If {@literal true} the index will be created in the background.
+	 * 
+	 * @see http://docs.mongodb.org/manual/core/indexes/#background-construction
+	 * @return
+	 */
+	boolean background() default false;
 }

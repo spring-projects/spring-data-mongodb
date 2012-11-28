@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2012 the original author or authors.
+ * Copyright 2011-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,6 +43,7 @@ import com.mongodb.util.JSON;
  * 
  * @author Jon Brisbin
  * @author Oliver Gierke
+ * @author Philipp Schneider
  */
 public class MongoPersistentEntityIndexCreator implements
 		ApplicationListener<MappingContextEvent<MongoPersistentEntity<?>, MongoPersistentProperty>> {
@@ -106,7 +107,8 @@ public class MongoPersistentEntityIndexCreator implements
 					String indexColl = StringUtils.hasText(index.collection()) ? index.collection() : entity.getCollection();
 					DBObject definition = (DBObject) JSON.parse(index.def());
 
-					ensureIndex(indexColl, index.name(), definition, index.unique(), index.dropDups(), index.sparse());
+					ensureIndex(indexColl, index.name(), definition, index.unique(), index.dropDups(), index.sparse(),
+							index.background());
 
 					if (log.isDebugEnabled()) {
 						log.debug("Created compound index " + index);
@@ -140,7 +142,8 @@ public class MongoPersistentEntityIndexCreator implements
 						int direction = index.direction() == IndexDirection.ASCENDING ? 1 : -1;
 						DBObject definition = new BasicDBObject(persistentProperty.getFieldName(), direction);
 
-						ensureIndex(collection, name, definition, index.unique(), index.dropDups(), index.sparse());
+						ensureIndex(collection, name, definition, index.unique(), index.dropDups(), index.sparse(),
+								index.background());
 
 						if (log.isDebugEnabled()) {
 							log.debug("Created property index " + index);
@@ -191,13 +194,14 @@ public class MongoPersistentEntityIndexCreator implements
 	 * @param sparse sparse or not
 	 */
 	protected void ensureIndex(String collection, String name, DBObject indexDefinition, boolean unique,
-			boolean dropDups, boolean sparse) {
+			boolean dropDups, boolean sparse, boolean background) {
 
 		DBObject opts = new BasicDBObject();
 		opts.put("name", name);
 		opts.put("dropDups", dropDups);
 		opts.put("sparse", sparse);
 		opts.put("unique", unique);
+		opts.put("background", background);
 
 		mongoDbFactory.getDb().getCollection(collection).ensureIndex(indexDefinition, opts);
 	}
