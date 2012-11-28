@@ -41,4 +41,6 @@ public @interface Indexed {
 	String name() default "";
 
 	String collection() default "";
+
+    boolean background() default false;
 }

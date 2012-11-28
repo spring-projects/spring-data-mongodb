@@ -69,4 +69,6 @@ public @interface CompoundIndex {
 	 * @return
 	 */
 	String collection() default "";
+
+    boolean background() default false;
 }
