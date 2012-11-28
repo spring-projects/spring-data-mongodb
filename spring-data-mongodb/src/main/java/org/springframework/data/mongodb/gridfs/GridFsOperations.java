@@ -42,6 +42,16 @@ public interface GridFsOperations extends ResourcePatternResolver {
 	 */
 	GridFSFile store(InputStream content, String filename);
 
+    /**
+     * Stores the given content into a file with the given name.
+     *
+     * @param content must not be {@literal null}.
+     * @param filename must not be {@literal null} or empty.
+     * @param contentType can be null.
+     * @return the {@link GridFSFile} just created
+     */
+    GridFSFile store(InputStream content, String filename, String contentType);
+
 	/**
 	 * Stores the given content into a file with the given name using the given metadata. The metadata object will be
 	 * marshalled before writing.
@@ -53,6 +63,18 @@ public interface GridFsOperations extends ResourcePatternResolver {
 	 */
 	GridFSFile store(InputStream content, String filename, Object metadata);
 
+    /**
+     * Stores the given content into a file with the given name using the given metadata. The metadata object will be
+     * marshalled before writing.
+     *
+     * @param content must not be {@literal null}.
+     * @param filename must not be {@literal null} or empty.
+     * @param metadata
+     * @param contentType can be null.
+     * @return the {@link GridFSFile} just created
+     */
+    GridFSFile store(InputStream content, String filename, Object metadata, String contentType);
+
 	/**
 	 * Stores the given content into a file with the given name using the given metadata.
 	 * 
@@ -62,6 +84,18 @@ public interface GridFsOperations extends ResourcePatternResolver {
 	 * @return the {@link GridFSFile} just created
 	 */
 	GridFSFile store(InputStream content, String filename, DBObject metadata);
+
+    /**
+     * Stores the given content into a file with the given name using the given metadata.
+     *
+     * @param content must not be {@literal null}.
+     * @param filename must not be {@literal null} or empty.
+     * @param metadata must not be {@literal null}.
+     * @param contentType can be null.
+     * @return the {@link GridFSFile} just created
+     */
+    GridFSFile store(InputStream content, String filename, DBObject metadata, String contentType);
+
 
 	/**
 	 * Returns all files matching the given query. Note, that currently {@link Sort} criterias defined at the
