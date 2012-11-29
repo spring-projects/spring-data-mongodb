@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 the original author or authors.
+ * Copyright 2010-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,30 +16,42 @@
 package org.springframework.data.mongodb.core.mapreduce;
 
 /**
+ * Value object to encapsulate results of a map-reduce count.
+ * 
  * @author Mark Pollack
+ * @author Oliver Gierke
  */
 public class MapReduceCounts {
 
-	private final int inputCount;
-	private final int emitCount;
-	private final int outputCount;
+	public static MapReduceCounts NONE = new MapReduceCounts(-1, -1, -1);
 
-	public MapReduceCounts(int inputCount, int emitCount, int outputCount) {
-		super();
+	private final long inputCount;
+	private final long emitCount;
+	private final long outputCount;
+
+	/**
+	 * Creates a new {@link MapReduceCounts} using the given input count, emit count, and output count.
+	 * 
+	 * @param inputCount
+	 * @param emitCount
+	 * @param outputCount
+	 */
+	public MapReduceCounts(long inputCount, long emitCount, long outputCount) {
+
 		this.inputCount = inputCount;
 		this.emitCount = emitCount;
 		this.outputCount = outputCount;
 	}
 
-	public int getInputCount() {
+	public long getInputCount() {
 		return inputCount;
 	}
 
-	public int getEmitCount() {
+	public long getEmitCount() {
 		return emitCount;
 	}
 
-	public int getOutputCount() {
+	public long getOutputCount() {
 		return outputCount;
 	}
 
@@ -59,12 +71,15 @@ public class MapReduceCounts {
 	 */
 	@Override
 	public int hashCode() {
+
 		final int prime = 31;
-		int result = 1;
+		long result = 1;
+
 		result = prime * result + emitCount;
 		result = prime * result + inputCount;
 		result = prime * result + outputCount;
-		return result;
+
+		return Long.valueOf(result).intValue();
 	}
 
 	/*

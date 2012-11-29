@@ -118,15 +118,14 @@ public class MapReduceResults<T> implements Iterable<T> {
 		DBObject counts = (DBObject) rawResults.get("counts");
 
 		if (counts == null) {
-			return new MapReduceCounts(-1, -1, -1);
+			return MapReduceCounts.NONE;
 		}
 
 		if (counts.get("input") != null && counts.get("emit") != null && counts.get("output") != null) {
-			return new MapReduceCounts((Integer) counts.get("input"), (Integer) counts.get("emit"),
-					(Integer) counts.get("output"));
+			return new MapReduceCounts(getAsLong(counts, "input"), getAsLong(counts, "emit"), getAsLong(counts, "output"));
 		}
 
-		return new MapReduceCounts(-1, -1, -1);
+		return MapReduceCounts.NONE;
 	}
 
 	/**

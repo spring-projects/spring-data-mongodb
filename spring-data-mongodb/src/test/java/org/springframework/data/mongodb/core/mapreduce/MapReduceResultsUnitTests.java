@@ -69,4 +69,18 @@ public class MapReduceResultsUnitTests {
 		DBObject source = new BasicDBObject("timing", inner);
 		new MapReduceResults<Object>(Collections.emptyList(), source);
 	}
+
+	/**
+	 * @see DATAMONGO-378
+	 */
+	@Test
+	public void handlesLongResultsForCounts() {
+
+		DBObject inner = new BasicDBObject("input", 1L);
+		inner.put("emit", 1L);
+		inner.put("output", 1);
+
+		DBObject source = new BasicDBObject("counts", inner);
+		new MapReduceResults<Object>(Collections.emptyList(), source);
+	}
 }
