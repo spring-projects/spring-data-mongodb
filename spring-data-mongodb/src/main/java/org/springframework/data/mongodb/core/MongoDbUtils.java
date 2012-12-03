@@ -104,12 +104,13 @@ public abstract class MongoDbUtils {
 		DB db = mongo.getDB(databaseName);
 		boolean credentialsGiven = credentials.hasUsername() && credentials.hasPassword();
 
-		if (credentialsGiven && !db.isAuthenticated()) {
+		synchronized (db) {
 
-			String username = credentials.getUsername();
-			String password = credentials.hasPassword() ? credentials.getPassword() : null;
+			if (credentialsGiven && !db.isAuthenticated()) {
 
-			synchronized (db) {
+				String username = credentials.getUsername();
+				String password = credentials.hasPassword() ? credentials.getPassword() : null;
+
 				if (!db.authenticate(username, password == null ? null : password.toCharArray())) {
 					throw new CannotGetMongoDbConnectionException("Failed to authenticate to database [" + databaseName
 							+ "], username = [" + username + "], password = [" + password + "]", databaseName, credentials);
