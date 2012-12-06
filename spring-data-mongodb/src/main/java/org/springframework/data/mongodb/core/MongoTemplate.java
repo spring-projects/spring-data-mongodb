@@ -1531,19 +1531,24 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			CursorPreparer preparer, DbObjectCallback<T> objectCallback, String collectionName) {
 
 		try {
-			DBCursor cursor = collectionCallback.doInCollection(getAndPrepareCollection(getDb(), collectionName));
+			DBCursor cursor = null;
+            List<T> result = new ArrayList<T>();
+            try {
+                cursor = collectionCallback.doInCollection(getAndPrepareCollection(getDb(), collectionName));
 
-			if (preparer != null) {
-				cursor = preparer.prepare(cursor);
-			}
-
-			List<T> result = new ArrayList<T>();
-
-			for (DBObject object : cursor) {
-				result.add(objectCallback.doWith(object));
-			}
-
-			return result;
+                if (preparer != null) {
+                    cursor = preparer.prepare(cursor);
+                }
+                while(cursor.hasNext()){
+                    DBObject object = cursor.next();
+                    result.add(objectCallback.doWith(object));
+                }
+            } finally {
+                if  (cursor != null){
+                    cursor.close();
+                }
+            }
+            return result;
 		} catch (RuntimeException e) {
 			throw potentiallyConvertRuntimeException(e);
 		}
@@ -1553,16 +1558,24 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			DocumentCallbackHandler callbackHandler, String collectionName) {
 
 		try {
-			DBCursor cursor = collectionCallback.doInCollection(getAndPrepareCollection(getDb(), collectionName));
+			DBCursor cursor = null;
+            try {
+                cursor = collectionCallback.doInCollection(getAndPrepareCollection(getDb(), collectionName));
 
-			if (preparer != null) {
-				cursor = preparer.prepare(cursor);
-			}
+                if (preparer != null) {
+                    cursor = preparer.prepare(cursor);
+                }
+                while (cursor.hasNext()){
+                    DBObject dbobject = cursor.next();
+                    callbackHandler.processDocument(dbobject);
+                }
+            } finally {
+                if(cursor != null){
+                    cursor.close();
+                }
+            }
 
-			for (DBObject dbobject : cursor) {
-				callbackHandler.processDocument(dbobject);
-			}
-		} catch (RuntimeException e) {
+        } catch (RuntimeException e) {
 			throw potentiallyConvertRuntimeException(e);
 		}
 	}
