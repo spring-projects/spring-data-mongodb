@@ -657,6 +657,22 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 		assertUpdateableIdIfNotSet(objectToSave);
 
+		MongoPersistentEntity<?> mongoPersistentEntity = getPersistentEntity(objectToSave.getClass());
+
+		// Optimistic locking
+		if (mongoPersistentEntity != null && mongoPersistentEntity.hasVersionProperty()) {
+			BeanWrapper<PersistentEntity<T, ?>, T> beanWrapper = BeanWrapper.create(objectToSave,
+					this.mongoConverter.getConversionService());
+			MongoPersistentProperty versionProperty = mongoPersistentEntity.getVersionProperty();
+
+			Number version = beanWrapper.getProperty(versionProperty, Number.class, !versionProperty.usePropertyAccess());
+
+			// Initialize version property if not set
+			if (version == null) {
+				beanWrapper.setProperty(versionProperty, 0);
+			}
+		}
+
 		BasicDBObject dbDoc = new BasicDBObject();
 
 		maybeEmitEvent(new BeforeConvertEvent<T>(objectToSave));

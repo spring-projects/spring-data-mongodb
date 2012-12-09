@@ -1324,6 +1324,25 @@ public class MongoTemplateTests {
 	}
 
 	/**
+	 * @see DATAMONGO-588
+	 */
+	@Test
+	public void optimisticLockingHandlingInsertWithNullVersion() {
+
+		PersonWithVersionPropertyOfTypeInteger person = new PersonWithVersionPropertyOfTypeInteger();
+		person.age = 3;
+		person.firstName = "Tristan";
+		person.version = null;
+		template.insert(person);
+
+		List<PersonWithVersionPropertyOfTypeInteger> result = template
+				.findAll(PersonWithVersionPropertyOfTypeInteger.class);
+
+		assertThat(result, hasSize(1));
+		assertThat(result.get(0).version, is(0));
+	}
+
+	/**
 	 * @see DATAMONGO-539
 	 */
 	@Test
