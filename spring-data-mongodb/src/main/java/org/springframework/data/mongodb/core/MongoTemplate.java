@@ -657,6 +657,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 		assertUpdateableIdIfNotSet(objectToSave);
 
+		initializeVersionProperty(objectToSave);
+
 		BasicDBObject dbDoc = new BasicDBObject();
 
 		maybeEmitEvent(new BeforeConvertEvent<T>(objectToSave));
@@ -667,6 +669,16 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 		populateIdIfNecessary(objectToSave, id);
 		maybeEmitEvent(new AfterSaveEvent<T>(objectToSave, dbDoc));
+	}
+
+	private void initializeVersionProperty(Object entity) {
+
+		MongoPersistentEntity<?> mongoPersistentEntity = getPersistentEntity(entity.getClass());
+
+		if (mongoPersistentEntity == null || mongoPersistentEntity.hasVersionProperty()) {
+			BeanWrapper<PersistentEntity<Object, ?>, Object> wrapper = BeanWrapper.create(entity, null);
+			wrapper.setProperty(mongoPersistentEntity.getVersionProperty(), 0);
+		}
 	}
 
 	public void insert(Collection<? extends Object> batchToSave, Class<?> entityClass) {
@@ -713,6 +725,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 		List<DBObject> dbObjectList = new ArrayList<DBObject>();
 		for (T o : batchToSave) {
+
+			initializeVersionProperty(o);
 			BasicDBObject dbDoc = new BasicDBObject();
 
 			maybeEmitEvent(new BeforeConvertEvent<T>(o));

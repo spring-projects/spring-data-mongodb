@@ -1422,6 +1422,34 @@ public class MongoTemplateTests {
 		template.save("Foobar!", "collection");
 	}
 
+	/**
+	 * @see DATAMONGO-588
+	 */
+	@Test
+	public void initializesVersionOnInsert() {
+
+		PersonWithVersionPropertyOfTypeInteger person = new PersonWithVersionPropertyOfTypeInteger();
+		person.firstName = "Dave";
+
+		template.insert(person);
+
+		assertThat(person.version, is(0));
+	}
+
+	/**
+	 * @see DATAMONGO-588
+	 */
+	@Test
+	public void initializesVersionOnBatchInsert() {
+
+		PersonWithVersionPropertyOfTypeInteger person = new PersonWithVersionPropertyOfTypeInteger();
+		person.firstName = "Dave";
+
+		template.insertAll(Arrays.asList(person));
+
+		assertThat(person.version, is(0));
+	}
+
 	static class MyId {
 
 		String first;
