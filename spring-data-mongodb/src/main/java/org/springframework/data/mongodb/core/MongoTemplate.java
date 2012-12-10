@@ -116,7 +116,7 @@ import com.mongodb.util.JSONParseException;
 public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(MongoTemplate.class);
-	private static final String ID = "_id";
+	private static final String ID_FIELD = "_id";
 	private static final WriteResultChecking DEFAULT_WRITE_RESULT_CHECKING = WriteResultChecking.NONE;
 	private static final Collection<String> ITERABLE_CLASSES;
 
@@ -130,32 +130,16 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		ITERABLE_CLASSES = Collections.unmodifiableCollection(iterableClasses);
 	}
 
-	/*
-	 * WriteConcern to be used for write operations if it has been specified.
-	 * Otherwise we should not use a WriteConcern defaulting to the one set for
-	 * the DB or Collection.
-	 */
-	private WriteConcern writeConcern = null;
-
-	private WriteConcernResolver writeConcernResolver = new DefaultWriteConcernResolver();
-
-	/*
-	 * WriteResultChecking to be used for write operations if it has been
-	 * specified. Otherwise we should not do any checking.
-	 */
-	private WriteResultChecking writeResultChecking = WriteResultChecking.NONE;
-
-	/**
-	 * Set the ReadPreference when operating on a collection. See {@link #prepareCollection(DBCollection)}
-	 */
-	private ReadPreference readPreference = null;
-
 	private final MongoConverter mongoConverter;
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 	private final MongoDbFactory mongoDbFactory;
 	private final MongoExceptionTranslator exceptionTranslator = new MongoExceptionTranslator();
 	private final QueryMapper mapper;
 
+	private WriteConcern writeConcern;
+	private WriteConcernResolver writeConcernResolver = DefaultWriteConcernResolver.INSTANCE;
+	private WriteResultChecking writeResultChecking = WriteResultChecking.NONE;
+	private ReadPreference readPreference;
 	private ApplicationEventPublisher eventPublisher;
 	private ResourceLoader resourceLoader;
 	private MongoPersistentEntityIndexCreator indexCreator;
@@ -163,8 +147,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	/**
 	 * Constructor used for a basic template configuration
 	 * 
-	 * @param mongo
-	 * @param databaseName
+	 * @param mongo must not be {@literal null}.
+	 * @param databaseName must not be {@literal null} or empty.
 	 */
 	public MongoTemplate(Mongo mongo, String databaseName) {
 		this(new SimpleMongoDbFactory(mongo, databaseName), null);
@@ -174,8 +158,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * Constructor used for a template configuration with user credentials in the form of
 	 * {@link org.springframework.data.authentication.UserCredentials}
 	 * 
-	 * @param mongo
-	 * @param databaseName
+	 * @param mongo must not be {@literal null}.
+	 * @param databaseName must not be {@literal null} or empty.
 	 * @param userCredentials
 	 */
 	public MongoTemplate(Mongo mongo, String databaseName, UserCredentials userCredentials) {
@@ -183,9 +167,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	}
 
 	/**
-	 * Constructor used for a basic template configuration
+	 * Constructor used for a basic template configuration.
 	 * 
-	 * @param mongoDbFactory
+	 * @param mongoDbFactory must not be {@literal null}.
 	 */
 	public MongoTemplate(MongoDbFactory mongoDbFactory) {
 		this(mongoDbFactory, null);
@@ -194,7 +178,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	/**
 	 * Constructor used for a basic template configuration.
 	 * 
-	 * @param mongoDbFactory
+	 * @param mongoDbFactory must not be {@literal null}.
 	 * @param mongoConverter
 	 */
 	public MongoTemplate(MongoDbFactory mongoDbFactory, MongoConverter mongoConverter) {
@@ -228,7 +212,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	}
 
 	/**
-	 * Configures the {@link WriteConcern} to be used with the template.
+	 * Configures the {@link WriteConcern} to be used with the template. If none is configured the {@link WriteConcern}
+	 * configured on the {@link MongoDbFactory} will apply. If you configured a {@link Mongo} instance no
+	 * {@link WriteConcern} will be used.
 	 * 
 	 * @param writeConcern
 	 */
@@ -276,7 +262,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * can be found we manually add the internally created one as {@link ApplicationListener} to make sure indexes get
 	 * created appropriately for entity types persisted through this {@link MongoTemplate} instance.
 	 * 
-	 * @param context
+	 * @param context must not be {@literal null}.
 	 */
 	private void prepareIndexCreator(ApplicationContext context) {
 
@@ -512,7 +498,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	public <T> T findById(Object id, Class<T> entityClass, String collectionName) {
 		MongoPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(entityClass);
 		MongoPersistentProperty idProperty = persistentEntity == null ? null : persistentEntity.getIdProperty();
-		String idKey = idProperty == null ? ID : idProperty.getName();
+		String idKey = idProperty == null ? ID_FIELD : idProperty.getName();
 		return doFindOne(collectionName, new BasicDBObject(idKey, id), null, entityClass);
 	}
 
@@ -799,7 +785,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			this.mongoConverter.write(objectToSave, dbObject);
 
 			maybeEmitEvent(new BeforeSaveEvent<T>(objectToSave, dbObject));
-			Update update = Update.fromDBObject(dbObject, ID);
+			Update update = Update.fromDBObject(dbObject, ID_FIELD);
 
 			updateFirst(query, update, objectToSave.getClass());
 			maybeEmitEvent(new AfterSaveEvent<T>(objectToSave, dbObject));
@@ -834,21 +820,17 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 	protected Object insertDBObject(final String collectionName, final DBObject dbDoc, final Class<?> entityClass) {
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("insert DBObject containing fields: " + dbDoc.keySet() + " in collection: " + collectionName);
+			LOGGER.debug("Inserting DBObject containing fields: " + dbDoc.keySet() + " in collection: " + collectionName);
 		}
 		return execute(collectionName, new CollectionCallback<Object>() {
 			public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 				MongoAction mongoAction = new MongoAction(writeConcern, MongoActionOperation.INSERT, collectionName,
 						entityClass, dbDoc, null);
 				WriteConcern writeConcernToUse = prepareWriteConcern(mongoAction);
-				WriteResult wr;
-				if (writeConcernToUse == null) {
-					wr = collection.insert(dbDoc);
-				} else {
-					wr = collection.insert(dbDoc, writeConcernToUse);
-				}
-				handleAnyWriteResultErrors(wr, dbDoc, "insert");
-				return dbDoc.get(ID);
+				WriteResult writeResult = writeConcernToUse == null ? collection.insert(dbDoc) : collection.insert(dbDoc,
+						writeConcernToUse);
+				handleAnyWriteResultErrors(writeResult, dbDoc, MongoActionOperation.INSERT);
+				return dbDoc.get(ID_FIELD);
 			}
 		});
 	}
@@ -859,27 +841,23 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		}
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("insert list of DBObjects containing " + dbDocList.size() + " items");
+			LOGGER.debug("Inserting list of DBObjects containing " + dbDocList.size() + " items");
 		}
 		execute(collectionName, new CollectionCallback<Void>() {
 			public Void doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 				MongoAction mongoAction = new MongoAction(writeConcern, MongoActionOperation.INSERT_LIST, collectionName, null,
 						null, null);
 				WriteConcern writeConcernToUse = prepareWriteConcern(mongoAction);
-				WriteResult wr;
-				if (writeConcernToUse == null) {
-					wr = collection.insert(dbDocList);
-				} else {
-					wr = collection.insert(dbDocList.toArray((DBObject[]) new BasicDBObject[dbDocList.size()]), writeConcernToUse);
-				}
-				handleAnyWriteResultErrors(wr, null, "insert_list");
+				WriteResult writeResult = writeConcernToUse == null ? collection.insert(dbDocList) : collection.insert(
+						dbDocList.toArray((DBObject[]) new BasicDBObject[dbDocList.size()]), writeConcernToUse);
+				handleAnyWriteResultErrors(writeResult, null, MongoActionOperation.INSERT_LIST);
 				return null;
 			}
 		});
 
 		List<ObjectId> ids = new ArrayList<ObjectId>();
 		for (DBObject dbo : dbDocList) {
-			Object id = dbo.get(ID);
+			Object id = dbo.get(ID_FIELD);
 			if (id instanceof ObjectId) {
 				ids.add((ObjectId) id);
 			} else {
@@ -892,21 +870,17 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 	protected Object saveDBObject(final String collectionName, final DBObject dbDoc, final Class<?> entityClass) {
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("save DBObject containing fields: " + dbDoc.keySet());
+			LOGGER.debug("Saving DBObject containing fields: " + dbDoc.keySet());
 		}
 		return execute(collectionName, new CollectionCallback<Object>() {
 			public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 				MongoAction mongoAction = new MongoAction(writeConcern, MongoActionOperation.SAVE, collectionName, entityClass,
 						dbDoc, null);
 				WriteConcern writeConcernToUse = prepareWriteConcern(mongoAction);
-				WriteResult wr;
-				if (writeConcernToUse == null) {
-					wr = collection.save(dbDoc);
-				} else {
-					wr = collection.save(dbDoc, writeConcernToUse);
-				}
-				handleAnyWriteResultErrors(wr, dbDoc, "save");
-				return dbDoc.get(ID);
+				WriteResult writeResult = writeConcernToUse == null ? collection.save(dbDoc) : collection.save(dbDoc,
+						writeConcernToUse);
+				handleAnyWriteResultErrors(writeResult, dbDoc, MongoActionOperation.SAVE);
+				return dbDoc.get(ID_FIELD);
 			}
 		});
 	}
@@ -949,29 +923,25 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 						entity);
 
 				if (LOGGER.isDebugEnabled()) {
-					LOGGER.debug("calling update using query: " + queryObj + " and update: " + updateObj + " in collection: "
+					LOGGER.debug("Calling update using query: " + queryObj + " and update: " + updateObj + " in collection: "
 							+ collectionName);
 				}
 
-				WriteResult wr;
 				MongoAction mongoAction = new MongoAction(writeConcern, MongoActionOperation.UPDATE, collectionName,
 						entityClass, updateObj, queryObj);
 				WriteConcern writeConcernToUse = prepareWriteConcern(mongoAction);
-				if (writeConcernToUse == null) {
-					wr = collection.update(queryObj, updateObj, upsert, multi);
-				} else {
-					wr = collection.update(queryObj, updateObj, upsert, multi, writeConcernToUse);
-				}
+				WriteResult writeResult = writeConcernToUse == null ? collection.update(queryObj, updateObj, upsert, multi)
+						: collection.update(queryObj, updateObj, upsert, multi, writeConcernToUse);
 
 				if (entity != null && entity.hasVersionProperty() && !multi) {
-					if (wr.getN() == 0) {
+					if (writeResult.getN() == 0) {
 						throw new OptimisticLockingFailureException("Optimistic lock exception on saving entity: "
 								+ updateObj.toMap().toString());
 					}
 				}
 
-				handleAnyWriteResultErrors(wr, queryObj, "update with '" + updateObj + "'");
-				return wr;
+				handleAnyWriteResultErrors(writeResult, queryObj, MongoActionOperation.UPDATE);
+				return writeResult;
 			}
 		});
 	}
@@ -1045,27 +1015,30 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	}
 
 	protected <T> void doRemove(final String collectionName, final Query query, final Class<T> entityClass) {
+
 		if (query == null) {
 			throw new InvalidDataAccessApiUsageException("Query passed in to remove can't be null");
 		}
+
 		final DBObject queryObject = query.getQueryObject();
 		final MongoPersistentEntity<?> entity = getPersistentEntity(entityClass);
+
 		execute(collectionName, new CollectionCallback<Void>() {
 			public Void doInCollection(DBCollection collection) throws MongoException, DataAccessException {
+
 				DBObject dboq = mapper.getMappedObject(queryObject, entity);
-				WriteResult wr = null;
+
 				MongoAction mongoAction = new MongoAction(writeConcern, MongoActionOperation.REMOVE, collectionName,
 						entityClass, null, queryObject);
 				WriteConcern writeConcernToUse = prepareWriteConcern(mongoAction);
+
 				if (LOGGER.isDebugEnabled()) {
-					LOGGER.debug("remove using query: " + dboq + " in collection: " + collection.getName());
+					LOGGER.debug("Remove using query: {} in collection: {}.", new Object[] { dboq, collection.getName() });
 				}
-				if (writeConcernToUse == null) {
-					wr = collection.remove(dboq);
-				} else {
-					wr = collection.remove(dboq, writeConcernToUse);
-				}
-				handleAnyWriteResultErrors(wr, dboq, "remove");
+
+				WriteResult wr = writeConcernToUse == null ? collection.remove(dboq) : collection.remove(dboq,
+						writeConcernToUse);
+				handleAnyWriteResultErrors(wr, dboq, MongoActionOperation.REMOVE);
 				return null;
 			}
 		});
@@ -1122,7 +1095,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		handleCommandError(commandResult, commandObject);
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug(String.format("MapReduce command result = [%s]", serializeToJsonSafely(commandObject)));
+			LOGGER.debug("MapReduce command result = [{}]", serializeToJsonSafely(commandObject));
 		}
 
 		MapReduceOutput mapReduceOutput = new MapReduceOutput(inputCollection, commandObject, commandResult);
@@ -1175,14 +1148,14 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		DBObject commandObject = new BasicDBObject("group", dbo);
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug(String.format("Executing Group with DBObject [%s]", serializeToJsonSafely(commandObject)));
+			LOGGER.debug("Executing Group with DBObject [{}]", serializeToJsonSafely(commandObject));
 		}
 
 		CommandResult commandResult = executeCommand(commandObject, getDb().getOptions());
 		handleCommandError(commandResult, commandObject);
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("Group command result = [" + commandResult + "]");
+			LOGGER.debug("Group command result = [{}]", commandResult);
 		}
 
 		@SuppressWarnings("unchecked")
@@ -1298,7 +1271,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				DBCollection coll = db.createCollection(collectionName, collectionOptions);
 				// TODO: Emit a collection created event
 				if (LOGGER.isDebugEnabled()) {
-					LOGGER.debug("Created collection [" + coll.getFullName() + "]");
+					LOGGER.debug("Created collection [{}]", coll.getFullName());
 				}
 				return coll;
 			}
@@ -1326,14 +1299,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	}
 
 	/**
-	 * Map the results of an ad-hoc query on the default MongoDB collection to a List of the specified type.
-	 * <p/>
-	 * The object is converted from the MongoDB native representation using an instance of {@see MongoConverter}. Unless
-	 * configured otherwise, an instance of SimpleMongoConverter will be used.
-	 * <p/>
-	 * The query document is specified as a standard DBObject and so is the fields specification.
-	 * <p/>
-	 * Can be overridden by subclasses.
+	 * Map the results of an ad-hoc query on the default MongoDB collection to a List of the specified type. The object is
+	 * converted from the MongoDB native representation using an instance of {@see MongoConverter}. Unless configured
+	 * otherwise, an instance of SimpleMongoConverter will be used. The query document is specified as a standard DBObject
+	 * and so is the fields specification. Can be overridden by subclasses.
 	 * 
 	 * @param collectionName name of the collection to retrieve the objects from
 	 * @param query the query document that specifies the criteria used to find a record
@@ -1364,9 +1333,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	}
 
 	/**
-	 * Map the results of an ad-hoc query on the default MongoDB collection to a List using the template's converter.
-	 * <p/>
-	 * The query document is specified as a standard DBObject and so is the fields specification.
+	 * Map the results of an ad-hoc query on the default MongoDB collection to a List using the template's converter. The
+	 * query document is specified as a standard DBObject and so is the fields specification.
 	 * 
 	 * @param collectionName name of the collection to retrieve the objects from
 	 * @param query the query document that specifies the criteria used to find a record
@@ -1465,7 +1433,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 		if (savedObject instanceof BasicDBObject) {
 			DBObject dbObject = (DBObject) savedObject;
-			dbObject.put(ID, id);
+			dbObject.put(ID_FIELD, id);
 			return;
 		}
 
@@ -1614,37 +1582,45 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	}
 
 	/**
-	 * Checks and handles any errors.
-	 * <p/>
-	 * Current implementation logs errors. Future version may make this configurable to log warning, errors or throw
-	 * exception.
+	 * Handles {@link WriteResult} errors based on the configured {@link WriteResultChecking}.
+	 * 
+	 * @param writeResult
+	 * @param query
+	 * @param operation
 	 */
-	protected void handleAnyWriteResultErrors(WriteResult wr, DBObject query, String operation) {
+	protected void handleAnyWriteResultErrors(WriteResult writeResult, DBObject query, MongoActionOperation operation) {
 
-		if (WriteResultChecking.NONE == this.writeResultChecking) {
+		if (writeResultChecking == WriteResultChecking.NONE) {
 			return;
 		}
 
-		String error = wr.getError();
+		String error = writeResult.getError();
 
-		if (error != null) {
-			String message;
-			if (operation.equals("insert") || operation.equals("save")) {
-				// assuming the insert operations will begin with insert string
+		if (error == null) {
+			return;
+		}
+
+		String message;
+
+		switch (operation) {
+
+			case INSERT:
+			case SAVE:
 				message = String.format("Insert/Save for %s failed: %s", query, error);
-			} else if (operation.equals("insert_list")) {
+				break;
+			case INSERT_LIST:
 				message = String.format("Insert list failed: %s", error);
-			} else {
+				break;
+			default:
 				message = String.format("Execution of %s%s failed: %s", operation,
-						query == null ? "" : "' using '" + query.toString() + "' query", error);
-			}
+						query == null ? "" : " using query " + query.toString(), error);
+		}
 
-			if (WriteResultChecking.EXCEPTION == this.writeResultChecking) {
-				throw new DataIntegrityViolationException(message);
-			} else {
-				LOGGER.error(message);
-				return;
-			}
+		if (writeResultChecking == WriteResultChecking.EXCEPTION) {
+			throw new DataIntegrityViolationException(message);
+		} else {
+			LOGGER.error(message);
+			return;
 		}
 	}
 
@@ -1732,7 +1708,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	private static class FindCallback implements CollectionCallback<DBCursor> {
 
 		private final DBObject query;
-
 		private final DBObject fields;
 
 		public FindCallback(DBObject query) {
@@ -1840,12 +1815,13 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		}
 	}
 
-	private class DefaultWriteConcernResolver implements WriteConcernResolver {
+	private enum DefaultWriteConcernResolver implements WriteConcernResolver {
+
+		INSTANCE;
 
 		public WriteConcern resolve(MongoAction action) {
 			return action.getDefaultWriteConcern();
 		}
-
 	}
 
 	class QueryCursorPreparer implements CursorPreparer {
@@ -1909,7 +1885,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		 * Creates a new {@link GeoNearResultDbObjectCallback} using the given {@link DbObjectCallback} delegate for
 		 * {@link GeoResult} content unmarshalling.
 		 * 
-		 * @param delegate
+		 * @param delegate must not be {@literal null}.
 		 */
 		public GeoNearResultDbObjectCallback(DbObjectCallback<T> delegate, Metric metric) {
 			Assert.notNull(delegate);
