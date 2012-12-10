@@ -212,19 +212,14 @@ public class MongoTemplateTests {
 
 		template.insert(person);
 
-		try {
+		thrown.expect(DataIntegrityViolationException.class);
+		thrown.expectMessage("Execution");
+		thrown.expectMessage("$push");
+		thrown.expectMessage("firstName");
 
-			Query query = new Query(Criteria.where("firstName").is("Amol"));
-			Update upd = new Update().push("age", 29);
-			template.updateFirst(query, upd, Person.class);
-			fail("Expected DataIntegrityViolationException!");
-
-		} catch (DataIntegrityViolationException e) {
-
-			assertThat(e.getMessage(),
-					is("Execution of update with '{ \"$push\" : { \"age\" : 29}}'' using '{ \"firstName\" : \"Amol\"}' "
-							+ "query failed: Cannot apply $push/$pushAll modifier to non-array"));
-		}
+		Query query = new Query(Criteria.where("firstName").is("Amol"));
+		Update upd = new Update().push("age", 29);
+		template.updateFirst(query, upd, Person.class);
 	}
 
 	/**
@@ -1028,7 +1023,7 @@ public class MongoTemplateTests {
 		assertThat(lastMongoAction.getCollectionName(), is("personWithIdPropertyOfTypeObjectId"));
 		assertThat(lastMongoAction.getDefaultWriteConcern(), equalTo(WriteConcern.NONE));
 		assertThat(lastMongoAction.getDocument(), notNullValue());
-		assertThat(lastMongoAction.getEntityClass().toString(), is(PersonWithIdPropertyOfTypeObjectId.class.toString()));
+		assertThat(lastMongoAction.getEntityType().toString(), is(PersonWithIdPropertyOfTypeObjectId.class.toString()));
 		assertThat(lastMongoAction.getMongoActionOperation(), is(MongoActionOperation.UPDATE));
 		assertThat(lastMongoAction.getQuery(), equalTo(q.getQueryObject()));
 

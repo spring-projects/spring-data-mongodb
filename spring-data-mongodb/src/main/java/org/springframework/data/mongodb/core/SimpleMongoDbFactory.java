@@ -47,7 +47,7 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 	 * Create an instance of {@link SimpleMongoDbFactory} given the {@link Mongo} instance and database name.
 	 * 
 	 * @param mongo Mongo instance, must not be {@literal null}.
-	 * @param databaseName database name, not be {@literal null}.
+	 * @param databaseName database name, not be {@literal null} or empty.
 	 */
 	public SimpleMongoDbFactory(Mongo mongo, String databaseName) {
 		this(mongo, databaseName, UserCredentials.NO_CREDENTIALS, false);
@@ -57,7 +57,7 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 	 * Create an instance of SimpleMongoDbFactory given the Mongo instance, database name, and username/password
 	 * 
 	 * @param mongo Mongo instance, must not be {@literal null}.
-	 * @param databaseName Database name, must not be {@literal null}.
+	 * @param databaseName Database name, must not be {@literal null} or empty.
 	 * @param credentials username and password.
 	 */
 	public SimpleMongoDbFactory(Mongo mongo, String databaseName, UserCredentials credentials) {
