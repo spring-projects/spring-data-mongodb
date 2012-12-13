@@ -962,24 +962,29 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		});
 	}
 
-	public void remove(Object object) {
+    /**
+     *
+     * @param object object to remove
+     * @return WriteResult of the operation
+     */
+	public WriteResult remove(Object object) {
 
 		if (object == null) {
-			return;
+			return null;
 		}
 
-		remove(getIdQueryFor(object), object.getClass());
+		return remove(getIdQueryFor(object), object.getClass());
 	}
 
-	public void remove(Object object, String collection) {
+	public WriteResult remove(Object object, String collection) {
 
 		Assert.hasText(collection);
 
 		if (object == null) {
-			return;
+			return null;
 		}
 
-		doRemove(collection, getIdQueryFor(object), object.getClass());
+		return doRemove(collection, getIdQueryFor(object), object.getClass());
 	}
 
 	/**
@@ -1025,19 +1030,19 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		}
 	}
 
-	public <T> void remove(Query query, Class<T> entityClass) {
+	public <T> WriteResult remove(Query query, Class<T> entityClass) {
 		Assert.notNull(query);
-		doRemove(determineCollectionName(entityClass), query, entityClass);
+		return doRemove(determineCollectionName(entityClass), query, entityClass);
 	}
 
-	protected <T> void doRemove(final String collectionName, final Query query, final Class<T> entityClass) {
+	protected <T> WriteResult doRemove(final String collectionName, final Query query, final Class<T> entityClass) {
 		if (query == null) {
 			throw new InvalidDataAccessApiUsageException("Query passed in to remove can't be null");
 		}
 		final DBObject queryObject = query.getQueryObject();
 		final MongoPersistentEntity<?> entity = getPersistentEntity(entityClass);
-		execute(collectionName, new CollectionCallback<Void>() {
-			public Void doInCollection(DBCollection collection) throws MongoException, DataAccessException {
+		return execute(collectionName, new CollectionCallback<WriteResult>() {
+			public WriteResult doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 				DBObject dboq = mapper.getMappedObject(queryObject, entity);
 				WriteResult wr = null;
 				MongoAction mongoAction = new MongoAction(writeConcern, MongoActionOperation.REMOVE, collectionName,
@@ -1052,13 +1057,13 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 					wr = collection.remove(dboq, writeConcernToUse);
 				}
 				handleAnyWriteResultErrors(wr, dboq, "remove");
-				return null;
+				return wr;
 			}
 		});
 	}
 
-	public void remove(final Query query, String collectionName) {
-		doRemove(collectionName, query, null);
+	public WriteResult remove(final Query query, String collectionName) {
+		return doRemove(collectionName, query, null);
 	}
 
 	public <T> List<T> findAll(Class<T> entityClass) {

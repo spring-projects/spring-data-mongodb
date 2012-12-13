@@ -699,7 +699,7 @@ public interface MongoOperations {
 	 * 
 	 * @param object
 	 */
-	void remove(Object object);
+    WriteResult remove(Object object);
 
 	/**
 	 * Removes the given object from the given collection.
@@ -707,7 +707,7 @@ public interface MongoOperations {
 	 * @param object
 	 * @param collection must not be {@literal null} or empty.
 	 */
-	void remove(Object object, String collection);
+    WriteResult remove(Object object, String collection);
 
 	/**
 	 * Remove all documents that match the provided query document criteria from the the collection used to store the
@@ -717,7 +717,7 @@ public interface MongoOperations {
 	 * @param query
 	 * @param entityClass
 	 */
-	<T> void remove(Query query, Class<T> entityClass);
+	<T> WriteResult remove(Query query, Class<T> entityClass);
 
 	/**
 	 * Remove all documents from the specified collection that match the provided query document criteria. There is no
@@ -726,7 +726,7 @@ public interface MongoOperations {
 	 * @param query the query document that specifies the criteria used to remove a record
 	 * @param collectionName name of the collection where the objects will removed
 	 */
-	void remove(Query query, String collectionName);
+    WriteResult remove(Query query, String collectionName);
 
 	/**
 	 * Returns the underlying {@link MongoConverter}.
