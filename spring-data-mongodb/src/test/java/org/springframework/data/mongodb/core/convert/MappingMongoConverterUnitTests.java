@@ -54,6 +54,7 @@ import org.springframework.data.mapping.PropertyPath;
 import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mapping.model.MappingInstantiationException;
 import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
@@ -65,6 +66,7 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBObject;
 import com.mongodb.DBRef;
+import com.mongodb.util.JSON;
 
 /**
  * Unit tests for {@link MappingMongoConverter}.
@@ -1323,6 +1325,18 @@ public class MappingMongoConverterUnitTests {
 		converter.write(wrapper, dbObject);
 	}
 
+	/**
+	 * @see DATAMONGO-592
+	 */
+	@Test
+	public void recursivelyConvertsSpELReadValue() {
+
+		DBObject input = (DBObject) JSON
+				.parse("{ \"_id\" : { \"$oid\" : \"50ca271c4566a2b08f2d667a\" }, \"_class\" : \"com.recorder.TestRecorder2$ObjectContainer\", \"property\" : { \"property\" : 100 } }");
+
+		converter.read(ObjectContainer.class, input);
+	}
+
 	static class GenericType<T> {
 		T content;
 	}
@@ -1514,6 +1528,38 @@ public class MappingMongoConverterUnitTests {
 	static class ThrowableWrapper {
 
 		Throwable throwable;
+	}
+
+	@Document
+	static class PrimitiveContainer {
+
+		@Field("property")
+		private final int m_property;
+
+		@PersistenceConstructor
+		public PrimitiveContainer(@Value("#root.property") int a_property) {
+			m_property = a_property;
+		}
+
+		public int property() {
+			return m_property;
+		}
+	}
+
+	@Document
+	static class ObjectContainer {
+
+		@Field("property")
+		private final PrimitiveContainer m_property;
+
+		@PersistenceConstructor
+		public ObjectContainer(@Value("#root.property") PrimitiveContainer a_property) {
+			m_property = a_property;
+		}
+
+		public PrimitiveContainer property() {
+			return m_property;
+		}
 	}
 
 	private class LocalDateToDateConverter implements Converter<LocalDate, Date> {

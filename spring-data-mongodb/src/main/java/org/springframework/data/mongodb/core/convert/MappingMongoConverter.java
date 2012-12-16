@@ -31,11 +31,13 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.CollectionFactory;
 import org.springframework.core.convert.ConversionException;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.support.ConversionServiceFactory;
 import org.springframework.data.convert.EntityInstantiator;
 import org.springframework.data.convert.TypeMapper;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.AssociationHandler;
+import org.springframework.data.mapping.PreferredConstructor.Parameter;
 import org.springframework.data.mapping.PropertyHandler;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.BeanWrapper;
@@ -46,6 +48,7 @@ import org.springframework.data.mapping.model.PersistentEntityParameterValueProv
 import org.springframework.data.mapping.model.PropertyValueProvider;
 import org.springframework.data.mapping.model.SpELContext;
 import org.springframework.data.mapping.model.SpELExpressionEvaluator;
+import org.springframework.data.mapping.model.SpELExpressionParameterValueProvider;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
@@ -215,9 +218,9 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		MongoDbPropertyValueProvider provider = new MongoDbPropertyValueProvider(source, evaluator, parent);
 		PersistentEntityParameterValueProvider<MongoPersistentProperty> parameterProvider = new PersistentEntityParameterValueProvider<MongoPersistentProperty>(
 				entity, provider, parent);
-		parameterProvider.setSpELEvaluator(evaluator);
 
-		return parameterProvider;
+		return new ConverterAwareSpELExpressionParameterValueProvider(evaluator, conversionService, parameterProvider,
+				parent);
 	}
 
 	private <S extends Object> S read(final MongoPersistentEntity<S> entity, final DBObject dbo, Object parent) {
@@ -933,7 +936,6 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		 * (non-Javadoc)
 		 * @see org.springframework.data.convert.PropertyValueProvider#getPropertyValue(org.springframework.data.mapping.PersistentProperty)
 		 */
-		@SuppressWarnings("unchecked")
 		public <T> T getPropertyValue(MongoPersistentProperty property) {
 
 			String expression = property.getSpelExpression();
@@ -943,20 +945,60 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				return null;
 			}
 
-			TypeInformation<?> type = property.getTypeInformation();
-			Class<?> rawType = type.getType();
+			return readValue(value, property.getTypeInformation(), parent);
+		}
+	}
 
-			if (conversions.hasCustomReadTarget(value.getClass(), rawType)) {
-				return (T) conversionService.convert(value, rawType);
-			} else if (value instanceof DBRef) {
-				return (T) (rawType.equals(DBRef.class) ? value : read(type, ((DBRef) value).fetch(), parent));
-			} else if (value instanceof BasicDBList) {
-				return (T) readCollectionOrArray(type, (BasicDBList) value, parent);
-			} else if (value instanceof DBObject) {
-				return (T) read(type, (DBObject) value, parent);
-			} else {
-				return (T) getPotentiallyConvertedSimpleRead(value, rawType);
-			}
+	/**
+	 * Extension of {@link SpELExpressionParameterValueProvider} to recursively trigger value conversion on the raw
+	 * resolved SpEL value.
+	 * 
+	 * @author Oliver Gierke
+	 */
+	private class ConverterAwareSpELExpressionParameterValueProvider extends
+			SpELExpressionParameterValueProvider<MongoPersistentProperty> {
+
+		private final Object parent;
+
+		/**
+		 * Creates a new {@link ConverterAwareSpELExpressionParameterValueProvider}.
+		 * 
+		 * @param evaluator must not be {@literal null}.
+		 * @param conversionService must not be {@literal null}.
+		 * @param delegate must not be {@literal null}.
+		 */
+		public ConverterAwareSpELExpressionParameterValueProvider(SpELExpressionEvaluator evaluator,
+				ConversionService conversionService, ParameterValueProvider<MongoPersistentProperty> delegate, Object parent) {
+
+			super(evaluator, conversionService, delegate);
+			this.parent = parent;
+		}
+
+		/* 
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mapping.model.SpELExpressionParameterValueProvider#potentiallyConvertSpelValue(java.lang.Object, org.springframework.data.mapping.PreferredConstructor.Parameter)
+		 */
+		@Override
+		protected <T> T potentiallyConvertSpelValue(Object object, Parameter<T, MongoPersistentProperty> parameter) {
+			return readValue(object, parameter.getType(), parent);
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	private <T> T readValue(Object value, TypeInformation<?> type, Object parent) {
+
+		Class<?> rawType = type.getType();
+
+		if (conversions.hasCustomReadTarget(value.getClass(), rawType)) {
+			return (T) conversionService.convert(value, rawType);
+		} else if (value instanceof DBRef) {
+			return (T) (rawType.equals(DBRef.class) ? value : read(type, ((DBRef) value).fetch(), parent));
+		} else if (value instanceof BasicDBList) {
+			return (T) readCollectionOrArray(type, (BasicDBList) value, parent);
+		} else if (value instanceof DBObject) {
+			return (T) read(type, (DBObject) value, parent);
+		} else {
+			return (T) getPotentiallyConvertedSimpleRead(value, rawType);
 		}
 	}
 }
