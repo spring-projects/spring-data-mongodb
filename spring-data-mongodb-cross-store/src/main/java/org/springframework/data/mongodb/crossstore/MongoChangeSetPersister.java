@@ -17,8 +17,8 @@ package org.springframework.data.mongodb.crossstore;
 
 import javax.persistence.EntityManagerFactory;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -44,7 +44,7 @@ public class MongoChangeSetPersister implements ChangeSetPersister<Object> {
 
 	private static final String ENTITY_FIELD_CLASS = "_entity_field_class";
 
-	protected final Log log = LogFactory.getLog(getClass());
+	protected final Logger log = LoggerFactory.getLogger(getClass());
 
 	private MongoTemplate mongoTemplate;
 

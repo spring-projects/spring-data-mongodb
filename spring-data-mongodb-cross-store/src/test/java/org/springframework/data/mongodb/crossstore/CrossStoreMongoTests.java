@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2011-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,9 @@ package org.springframework.data.mongodb.crossstore;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +28,6 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.crossstore.test.Address;
 import org.springframework.data.mongodb.crossstore.test.Person;
 import org.springframework.data.mongodb.crossstore.test.Resume;
-import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -39,20 +40,55 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(locations = "classpath:/META-INF/spring/applicationContext.xml")
+@ContextConfiguration("classpath:/META-INF/spring/applicationContext.xml")
 public class CrossStoreMongoTests {
 
 	@Autowired
-	private MongoTemplate mongoTemplate;
-
-	private EntityManager entityManager;
-
-	@Autowired
-	private PlatformTransactionManager transactionManager;
+	MongoTemplate mongoTemplate;
 
 	@PersistenceContext
-	public void setEntityManager(EntityManager entityManager) {
-		this.entityManager = entityManager;
+	EntityManager entityManager;
+
+	@Autowired
+	PlatformTransactionManager transactionManager;
+	TransactionTemplate txTemplate;
+
+	@Before
+	public void setUp() {
+
+		txTemplate = new TransactionTemplate(transactionManager);
+
+		clearData(Person.class.getName());
+
+		Address address = new Address(12, "MAin St.", "Boston", "MA", "02101");
+
+		Resume resume = new Resume();
+		resume.addEducation("Skanstulls High School, 1975");
+		resume.addEducation("Univ. of Stockholm, 1980");
+		resume.addJob("DiMark, DBA, 1990-2000");
+		resume.addJob("VMware, Developer, 2007-");
+
+		final Person person = new Person("Thomas", 20);
+		person.setAddress(address);
+		person.setResume(resume);
+		person.setId(1L);
+
+		txTemplate.execute(new TransactionCallback<Void>() {
+			public Void doInTransaction(TransactionStatus status) {
+				entityManager.persist(person);
+				return null;
+			}
+		});
+	}
+
+	@After
+	public void tearDown() {
+		txTemplate.execute(new TransactionCallback<Void>() {
+			public Void doInTransaction(TransactionStatus status) {
+				entityManager.remove(entityManager.find(Person.class, 1L));
+				return null;
+			}
+		});
 	}
 
 	private void clearData(String collectionName) {
@@ -64,26 +100,8 @@ public class CrossStoreMongoTests {
 
 	@Test
 	@Transactional
-	@Rollback(false)
-	public void testCreateJpaToMongoEntityRelationship() {
-		clearData(Person.class.getName());
-		Person p = new Person("Thomas", 20);
-		Address a = new Address(12, "MAin St.", "Boston", "MA", "02101");
-		p.setAddress(a);
-		Resume r = new Resume();
-		r.addEducation("Skanstulls High School, 1975");
-		r.addEducation("Univ. of Stockholm, 1980");
-		r.addJob("DiMark, DBA, 1990-2000");
-		r.addJob("VMware, Developer, 2007-");
-		p.setResume(r);
-		p.setId(1L);
-		entityManager.persist(p);
-	}
-
-	@Test
-	@Transactional
-	@Rollback(false)
 	public void testReadJpaToMongoEntityRelationship() {
+
 		Person found = entityManager.find(Person.class, 1L);
 		Assert.assertNotNull(found);
 		Assert.assertEquals(Long.valueOf(1), found.getId());
@@ -91,15 +109,18 @@ public class CrossStoreMongoTests {
 		Assert.assertEquals(Long.valueOf(1), found.getId());
 		Assert.assertNotNull(found.getResume());
 		Assert.assertEquals("DiMark, DBA, 1990-2000" + "; " + "VMware, Developer, 2007-", found.getResume().getJobs());
-		found.getResume().addJob("SpringDeveloper.com, Consultant, 2005-2006");
-		found.setAge(44);
 	}
 
 	@Test
 	@Transactional
-	@Rollback(false)
 	public void testUpdatedJpaToMongoEntityRelationship() {
+
 		Person found = entityManager.find(Person.class, 1L);
+		found.setAge(44);
+		found.getResume().addJob("SpringDeveloper.com, Consultant, 2005-2006");
+
+		entityManager.merge(found);
+
 		Assert.assertNotNull(found);
 		Assert.assertEquals(Long.valueOf(1), found.getId());
 		Assert.assertNotNull(found);
@@ -111,14 +132,19 @@ public class CrossStoreMongoTests {
 
 	@Test
 	public void testMergeJpaEntityWithMongoDocument() {
-		TransactionTemplate txTemplate = new TransactionTemplate(transactionManager);
+
 		final Person detached = entityManager.find(Person.class, 1L);
+		entityManager.detach(detached);
 		detached.getResume().addJob("TargetRx, Developer, 2000-2005");
+
 		Person merged = txTemplate.execute(new TransactionCallback<Person>() {
 			public Person doInTransaction(TransactionStatus status) {
-				return entityManager.merge(detached);
+				Person result = entityManager.merge(detached);
+				entityManager.flush();
+				return result;
 			}
 		});
+
 		Assert.assertTrue(detached.getResume().getJobs().contains("TargetRx, Developer, 2000-2005"));
 		Assert.assertTrue(merged.getResume().getJobs().contains("TargetRx, Developer, 2000-2005"));
 		final Person updated = entityManager.find(Person.class, 1L);
@@ -127,7 +153,7 @@ public class CrossStoreMongoTests {
 
 	@Test
 	public void testRemoveJpaEntityWithMongoDocument() {
-		TransactionTemplate txTemplate = new TransactionTemplate(transactionManager);
+
 		txTemplate.execute(new TransactionCallback<Person>() {
 			public Person doInTransaction(TransactionStatus status) {
 				Person p2 = new Person("Thomas", 20);
@@ -154,7 +180,9 @@ public class CrossStoreMongoTests {
 				return null;
 			}
 		});
+
 		boolean weFound3 = false;
+
 		for (DBObject dbo : this.mongoTemplate.getCollection(Person.class.getName()).find()) {
 			Assert.assertTrue(!dbo.get("_entity_id").equals(2L));
 			if (dbo.get("_entity_id").equals(3L)) {

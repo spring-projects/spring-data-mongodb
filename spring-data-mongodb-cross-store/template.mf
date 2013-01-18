@@ -1,0 +1,18 @@
+Bundle-SymbolicName: org.springframework.data.mongodb.crossstore
+Bundle-Name: Spring Data MongoDB Cross Store Support
+Bundle-Vendor: SpringSource
+Bundle-ManifestVersion: 2
+Import-Package: 
+ sun.reflect;version="0";resolution:=optional
+Export-Template:
+ org.springframework.data.mongodb.crossstore.*;version="${project.version}"
+Import-Template: 
+ com.mongodb.*;version="0",
+ javax.persistence.*;version="${jpa:[=.=.=,+1.0.0)}",
+ org.aspectj.*;version="${aspectj:[1.0.0, 2.0.0)}",
+ org.bson.*;version="0",
+ org.slf4j.*;version="${slf4j:[=.=.=,+1.0.0)}",
+ org.springframework.*;version="${spring30:[=.=.=.=,+1.0.0)}",
+ org.springframework.data.*;version="${springdata.commons:[=.=.=.=,+1.0.0)}",
+ org.springframework.data.mongodb.*;version="${project.version:[=.=.=.=,+1.0.0)}",
+ org.w3c.dom.*;version="0"

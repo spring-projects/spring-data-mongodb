@@ -1,76 +1,78 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
 	<modelVersion>4.0.0</modelVersion>
+	
+	<artifactId>spring-data-mongodb</artifactId>
+
+	<name>Spring Data MongoDB - Core</name>
+	<description>MongoDB support for Spring Data</description>
+
 	<parent>
 		<groupId>org.springframework.data</groupId>
 		<artifactId>spring-data-mongodb-parent</artifactId>
 		<version>1.2.0.BUILD-SNAPSHOT</version>
-		<relativePath>../spring-data-mongodb-parent/pom.xml</relativePath>
+		<relativePath>../pom.xml</relativePath>
 	</parent>
-	<artifactId>spring-data-mongodb</artifactId>
-	<name>Spring Data MongoDB</name>
 
 	<properties>
-		<querydsl.version>2.8.0</querydsl.version>
-		<cdi.version>1.0</cdi.version>
-		<validation.version>1.0.0.GA</validation.version>
-		<webbeans.version>1.1.3</webbeans.version>
+		<validation>1.0.0.GA</validation>
 	</properties>
 
 	<dependencies>
-
+		
 		<!--  Spring -->
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-tx</artifactId>
-			<version>${org.springframework.version.range}</version>
+			<version>${spring}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-context</artifactId>
-			<version>${org.springframework.version.range}</version>
+			<version>${spring}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-beans</artifactId>
-			<version>${org.springframework.version.range}</version>
+			<version>${spring}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-core</artifactId>
-			<version>${org.springframework.version.range}</version>
+			<version>${spring}</version>
 			<exclusions>
 				<exclusion>
-          			<groupId>commons-logging</groupId>
-          			<artifactId>commons-logging</artifactId>
-        		</exclusion>
+					<groupId>commons-logging</groupId>
+					<artifactId>commons-logging</artifactId>
+				</exclusion>
 			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-expression</artifactId>
-			<version>${org.springframework.version.range}</version>
+			<version>${spring}</version>
 		</dependency>
 
 		<!--  Spring Data -->
-		<dependency>
-			<groupId>org.springframework.data</groupId>
-			<artifactId>spring-data-commons-core</artifactId>
-			<version>${data.commons.version}</version>
-		</dependency>
-
-		<!-- MongoDB -->
-		<dependency>
-			<groupId>org.mongodb</groupId>
-			<artifactId>mongo-java-driver</artifactId>
-			<version>${mongo.version}</version>
+			<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>spring-data-commons</artifactId>
+			<version>${springdata.commons}</version>
 		</dependency>
 
 		<dependency>
 			<groupId>com.mysema.querydsl</groupId>
 			<artifactId>querydsl-mongodb</artifactId>
-			<version>${querydsl.version}</version>
+			<version>${querydsl}</version>
 			<optional>true</optional>
+		</dependency>
+
+		<dependency>
+			<groupId>com.mysema.querydsl</groupId>
+			<artifactId>querydsl-apt</artifactId>
+			<version>${querydsl}</version>
+			<scope>provided</scope>
 		</dependency>
 
 		<dependency>
@@ -84,7 +86,7 @@
 		<dependency>
 			<groupId>javax.enterprise</groupId>
 			<artifactId>cdi-api</artifactId>
-			<version>${cdi.version}</version>
+			<version>${cdi}</version>
 			<scope>provided</scope>
 			<optional>true</optional>
 		</dependency>
@@ -92,14 +94,14 @@
 		<dependency>
 			<groupId>javax.el</groupId>
 			<artifactId>el-api</artifactId>
-			<version>${cdi.version}</version>
+			<version>${cdi}</version>
 			<scope>test</scope>
 		</dependency>
 		
 		<dependency>
 			<groupId>org.apache.openwebbeans.test</groupId>
 			<artifactId>cditest-owb</artifactId>
-			<version>${webbeans.version}</version>
+			<version>${webbeans}</version>
 			<scope>test</scope>
 		</dependency>
 		
@@ -114,7 +116,7 @@
 		<dependency>
 			<groupId>javax.validation</groupId>
 			<artifactId>validation-api</artifactId>
-			<version>${validation.version}</version>
+			<version>${validation}</version>
 			<optional>true</optional>
 		</dependency>
 
@@ -124,39 +126,18 @@
 			<version>4.2.0.Final</version>
 			<scope>test</scope>
 		</dependency>
-
+		
+		<dependency>
+			<groupId>joda-time</groupId>
+			<artifactId>joda-time</artifactId>
+			<version>${jodatime}</version>
+			<scope>test</scope>
+		</dependency>
+		
 	</dependencies>
-	
-	<profiles>
-		<profile>
-			<id>performance-tests</id>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-surefire-plugin</artifactId>
-						<version>2.8</version>
-						<configuration>
-							<includes>
-								<include>**/PerformanceTests.java</include>
-							</includes>
-							<excludes>
-								<exclude>none</exclude>
-							</excludes>
-							<junitArtifactName>junit:junit-dep</junitArtifactName>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-	</profiles>
 	
 	<build>
 		<plugins>
-			<plugin>
-				<groupId>com.springsource.bundlor</groupId>
-				<artifactId>com.springsource.bundlor.maven</artifactId>
-			</plugin>
 
 			<plugin>
 				<groupId>com.mysema.maven</groupId>
@@ -166,7 +147,7 @@
 					<dependency>
 						<groupId>com.mysema.querydsl</groupId>
 						<artifactId>querydsl-apt</artifactId>
-						<version>${querydsl.version}</version>
+						<version>${querydsl}</version>
 					</dependency>
 				</dependencies>
 				<executions>
@@ -182,7 +163,25 @@
 					</execution>
 				</executions>
 			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>2.12</version>
+				<configuration>
+					<useFile>false</useFile>
+					<includes>
+						<include>**/*Tests.java</include>
+					</includes>
+					<excludes>
+						<exclude>**/PerformanceTests.java</exclude>
+					</excludes>
+					<systemPropertyVariables>
+						<java.util.logging.config.file>src/test/resources/logging.properties</java.util.logging.config.file>
+					</systemPropertyVariables>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
-	
+
 </project>

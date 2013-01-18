@@ -1,44 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <parent>
-    <groupId>org.springframework.data</groupId>
-    <artifactId>spring-data-mongodb-parent</artifactId>
-    <version>1.2.0.BUILD-SNAPSHOT</version>
-    <relativePath>../spring-data-mongodb-parent/pom.xml</relativePath>
-  </parent>
-  <artifactId>spring-data-mongodb-log4j</artifactId>
-  <name>Spring Data MongoDB Log4J Appender</name>
+	<modelVersion>4.0.0</modelVersion>
+	
+	<parent>
+		<groupId>org.springframework.data</groupId>
+		<artifactId>spring-data-mongodb-parent</artifactId>
+		<version>1.2.0.BUILD-SNAPSHOT</version>
+		<relativePath>../pom.xml</relativePath>
+	</parent>
 
-  <properties>
-    <log4j.version>1.2.16</log4j.version>
-  </properties>
+	<artifactId>spring-data-mongodb-log4j</artifactId>
+	<name>Spring Data MongoDB - Log4J Appender</name>
 
-  <dependencies>
+	<properties>
+		<log4j>1.2.16</log4j>
+	</properties>
 
-    <!-- MongoDB -->
-    <dependency>
-      <groupId>org.mongodb</groupId>
-      <artifactId>mongo-java-driver</artifactId>
-      <version>${mongo.version}</version>
-    </dependency>
+	<dependencies>
 
-    <!-- Logging -->
-    <dependency>
-      <groupId>log4j</groupId>
-      <artifactId>log4j</artifactId>
-      <version>${log4j.version}</version>
-    </dependency>
+		<!-- Logging -->
+		<dependency>
+			<groupId>log4j</groupId>
+			<artifactId>log4j</artifactId>
+			<version>${log4j}</version>
+		</dependency>
 
-  </dependencies>
-
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>com.springsource.bundlor</groupId>
-        <artifactId>com.springsource.bundlor.maven</artifactId>
-      </plugin>
-    </plugins>
-  </build>
+	</dependencies>
 
 </project>

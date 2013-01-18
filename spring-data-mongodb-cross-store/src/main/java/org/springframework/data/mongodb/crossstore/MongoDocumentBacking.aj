@@ -21,13 +21,12 @@ import javax.persistence.EntityManager;
 import javax.persistence.Transient;
 import javax.persistence.Entity;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.reflect.FieldSignature;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessException;
-
 import org.springframework.data.mongodb.crossstore.RelatedDocument;
 import org.springframework.data.mongodb.crossstore.DocumentBacked;
 import org.springframework.data.crossstore.ChangeSetBackedTransactionSynchronization;
@@ -44,7 +43,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
  */
 public aspect MongoDocumentBacking {
 
-	private static final Log LOGGER = LogFactory.getLog(MongoDocumentBacking.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(MongoDocumentBacking.class);
 
 	// Aspect shared config
 	private ChangeSetPersister<Object> changeSetPersister;
