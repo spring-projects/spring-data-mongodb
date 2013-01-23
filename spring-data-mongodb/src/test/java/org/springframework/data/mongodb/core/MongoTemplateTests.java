@@ -1445,6 +1445,16 @@ public class MongoTemplateTests {
 		assertThat(person.version, is(0));
 	}
 
+	/**
+	 * @see DATAMONGO-568
+	 */
+	@Test
+	public void queryCantBeNull() {
+
+		List<PersonWithIdPropertyOfTypeObjectId> result = template.findAll(PersonWithIdPropertyOfTypeObjectId.class);
+		assertThat(template.find(null, PersonWithIdPropertyOfTypeObjectId.class), is(result));
+	}
+
 	static class MyId {
 
 		String first;
