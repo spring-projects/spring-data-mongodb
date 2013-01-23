@@ -58,6 +58,9 @@ public class MongoExceptionTranslator implements PersistenceExceptionTranslator 
 		if (ex instanceof CursorNotFound) {
 			return new DataAccessResourceFailureException(ex.getMessage(), ex);
 		}
+        if (ex instanceof MongoInternalException) {
+            return new InvalidDataAccessResourceUsageException(ex.getMessage(), ex);
+        }
 		if (ex instanceof MongoException) {
 			int code = ((MongoException) ex).getCode();
 			if (code == 11000 || code == 11001) {
@@ -68,9 +71,6 @@ public class MongoExceptionTranslator implements PersistenceExceptionTranslator 
 				throw new InvalidDataAccessApiUsageException(ex.getMessage(), ex);
 			}
 			return new UncategorizedMongoDbException(ex.getMessage(), ex);
-		}
-		if (ex instanceof MongoInternalException) {
-			return new InvalidDataAccessResourceUsageException(ex.getMessage(), ex);
 		}
 
 		// If we get here, we have an exception that resulted from user code,
