@@ -487,8 +487,13 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	}
 
 	public <T> List<T> find(final Query query, Class<T> entityClass, String collectionName) {
-		CursorPreparer cursorPreparer = query == null ? null : new QueryCursorPreparer(query);
-		return doFind(collectionName, query.getQueryObject(), query.getFieldsObject(), entityClass, cursorPreparer);
+
+		if (query == null) {
+			return findAll(entityClass, collectionName);
+		}
+
+		return doFind(collectionName, query.getQueryObject(), query.getFieldsObject(), entityClass,
+				new QueryCursorPreparer(query));
 	}
 
 	public <T> T findById(Object id, Class<T> entityClass) {
