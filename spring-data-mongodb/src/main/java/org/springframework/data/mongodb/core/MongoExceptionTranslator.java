@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 the original author or authors.
+ * Copyright 2010-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,12 +15,6 @@
  */
 package org.springframework.data.mongodb.core;
 
-import com.mongodb.MongoException;
-import com.mongodb.MongoException.CursorNotFound;
-import com.mongodb.MongoException.DuplicateKey;
-import com.mongodb.MongoException.Network;
-import com.mongodb.MongoInternalException;
-
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.dao.DuplicateKeyException;
@@ -29,21 +23,26 @@ import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mongodb.UncategorizedMongoDbException;
 
+import com.mongodb.MongoException;
+import com.mongodb.MongoException.CursorNotFound;
+import com.mongodb.MongoException.DuplicateKey;
+import com.mongodb.MongoException.Network;
+import com.mongodb.MongoInternalException;
+
 /**
  * Simple {@link PersistenceExceptionTranslator} for Mongo. Convert the given runtime exception to an appropriate
  * exception from the {@code org.springframework.dao} hierarchy. Return {@literal null} if no translation is
  * appropriate: any other exception may have resulted from user code, and should not be translated.
  * 
  * @author Oliver Gierke
+ * @author Michal Vich
  */
 public class MongoExceptionTranslator implements PersistenceExceptionTranslator {
 
 	/*
-	  * (non-Javadoc)
-	  *
-	  * @see org.springframework.dao.support.PersistenceExceptionTranslator#
-	  * translateExceptionIfPossible(java.lang.RuntimeException)
-	  */
+	 * (non-Javadoc)
+	 * @see org.springframework.dao.support.PersistenceExceptionTranslator#translateExceptionIfPossible(java.lang.RuntimeException)
+	 */
 	public DataAccessException translateExceptionIfPossible(RuntimeException ex) {
 
 		// Check for well-known MongoException subclasses.
@@ -52,14 +51,23 @@ public class MongoExceptionTranslator implements PersistenceExceptionTranslator 
 		if (ex instanceof DuplicateKey) {
 			return new DuplicateKeyException(ex.getMessage(), ex);
 		}
+
 		if (ex instanceof Network) {
 			return new DataAccessResourceFailureException(ex.getMessage(), ex);
 		}
+
 		if (ex instanceof CursorNotFound) {
 			return new DataAccessResourceFailureException(ex.getMessage(), ex);
 		}
+
+		if (ex instanceof MongoInternalException) {
+			return new InvalidDataAccessResourceUsageException(ex.getMessage(), ex);
+		}
+
 		if (ex instanceof MongoException) {
+
 			int code = ((MongoException) ex).getCode();
+
 			if (code == 11000 || code == 11001) {
 				throw new DuplicateKeyException(ex.getMessage(), ex);
 			} else if (code == 12000 || code == 13440) {
@@ -68,9 +76,6 @@ public class MongoExceptionTranslator implements PersistenceExceptionTranslator 
 				throw new InvalidDataAccessApiUsageException(ex.getMessage(), ex);
 			}
 			return new UncategorizedMongoDbException(ex.getMessage(), ex);
-		}
-		if (ex instanceof MongoInternalException) {
-			return new InvalidDataAccessResourceUsageException(ex.getMessage(), ex);
 		}
 
 		// If we get here, we have an exception that resulted from user code,
