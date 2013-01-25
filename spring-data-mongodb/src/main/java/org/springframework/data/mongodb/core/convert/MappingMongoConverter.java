@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2012 by the original author(s).
+ * Copyright 2011-2013 by the original author(s).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -816,8 +816,12 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		return rootList;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.convert.MongoWriter#convertToMongoType(java.lang.Object, org.springframework.data.util.TypeInformation)
+	 */
 	@SuppressWarnings("unchecked")
-	public Object convertToMongoType(Object obj) {
+	public Object convertToMongoType(Object obj, TypeInformation<?> typeInformation) {
 
 		if (obj == null) {
 			return null;
@@ -864,7 +868,12 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		DBObject newDbo = new BasicDBObject();
 		this.write(obj, newDbo);
-		return removeTypeInfoRecursively(newDbo);
+
+		if (typeInformation == null) {
+			return removeTypeInfoRecursively(newDbo);
+		}
+
+		return !obj.getClass().equals(typeInformation.getType()) ? newDbo : removeTypeInfoRecursively(newDbo);
 	}
 
 	public BasicDBList maybeConvertList(Iterable<?> source) {

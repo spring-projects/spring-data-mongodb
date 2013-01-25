@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2012 the original author or authors.
+ * Copyright 2010-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core.convert;
 
 import org.springframework.data.convert.EntityWriter;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.util.TypeInformation;
 
 import com.mongodb.DBObject;
 import com.mongodb.DBRef;
@@ -35,10 +36,20 @@ public interface MongoWriter<T> extends EntityWriter<T, DBObject> {
 	 * Converts the given object into one Mongo will be able to store natively. If the given object can already be stored
 	 * as is, no conversion will happen.
 	 * 
-	 * @param obj
+	 * @param obj can be {@literal null}.
 	 * @return
 	 */
 	Object convertToMongoType(Object obj);
+
+	/**
+	 * Converts the given object into one Mongo will be able to store natively but retains the type information in case
+	 * the given {@link TypeInformation} differs from the given object type.
+	 * 
+	 * @param obj can be {@literal null}.
+	 * @param typeInformation can be {@literal null}.
+	 * @return
+	 */
+	Object convertToMongoType(Object obj, TypeInformation<?> typeInformation);
 
 	/**
 	 * Creates a {@link DBRef} to refer to the given object.

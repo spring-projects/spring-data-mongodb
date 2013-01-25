@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2011-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ import org.springframework.data.mongodb.core.geo.Distance;
 import org.springframework.data.mongodb.core.geo.Point;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.repository.query.ParameterAccessor;
+import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
@@ -85,12 +86,12 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 		return delegate.getSort();
 	}
 
-	/* (non-Javadoc)
-	  * @see org.springframework.data.repository.query.ParameterAccessor#getBindableParameter(int)
-	  */
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.query.ParameterAccessor#getBindableValue(int)
+	 */
 	public Object getBindableValue(int index) {
-
-		return getConvertedValue(delegate.getBindableValue(index));
+		return getConvertedValue(delegate.getBindableValue(index), null);
 	}
 
 	/*
@@ -101,7 +102,8 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 		return delegate.getMaxDistance();
 	}
 
-	/* (non-Javadoc)
+	/* 
+	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.repository.MongoParameterAccessor#getGeoNearLocation()
 	 */
 	public Point getGeoNearLocation() {
@@ -111,11 +113,12 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 	/**
 	 * Converts the given value with the underlying {@link MongoWriter}.
 	 * 
-	 * @param value
+	 * @param value can be {@literal null}.
+	 * @param typeInformation can be {@literal null}.
 	 * @return
 	 */
-	private Object getConvertedValue(Object value) {
-		return writer.convertToMongoType(value);
+	private Object getConvertedValue(Object value, TypeInformation<?> typeInformation) {
+		return writer.convertToMongoType(value, typeInformation == null ? null : typeInformation.getActualType());
 	}
 
 	/* 
@@ -186,7 +189,7 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 				}
 			}
 
-			return getConvertedValue(next);
+			return getConvertedValue(next, property.getTypeInformation());
 		}
 
 		/*
