@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2011-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,6 +34,7 @@ import org.springframework.data.mongodb.core.geo.Point;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.query.NearQuery;
+import org.springframework.data.util.TypeInformation;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
@@ -78,7 +79,7 @@ public abstract class MongoOperationsUnitTests {
 				return null;
 			}
 
-			public Object convertToMongoType(Object obj) {
+			public Object convertToMongoType(Object obj, TypeInformation<?> typeInformation) {
 				return null;
 			}
 

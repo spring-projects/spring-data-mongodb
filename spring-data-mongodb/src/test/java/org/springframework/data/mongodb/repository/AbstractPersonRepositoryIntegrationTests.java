@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2012 the original author or authors.
+ * Copyright 2011-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -522,5 +522,24 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 
 		assertThat(result, hasSize(1));
 		assertThat(result, hasItem(oliver));
+	}
+
+	/**
+	 * @see DATAMONGO-600
+	 */
+	@Test
+	public void readsDocumentsWithNestedPolymorphismCorrectly() {
+
+		UsernameAndPassword usernameAndPassword = new UsernameAndPassword();
+		usernameAndPassword.username = "dave";
+		usernameAndPassword.password = "btcs";
+
+		dave.credentials = usernameAndPassword;
+
+		repository.save(dave);
+
+		List<Person> result = repository.findByCredentials(usernameAndPassword);
+		assertThat(result, hasSize(1));
+		assertThat(result, hasItem(dave));
 	}
 }
