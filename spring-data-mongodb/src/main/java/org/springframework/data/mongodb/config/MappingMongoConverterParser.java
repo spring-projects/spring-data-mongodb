@@ -50,7 +50,7 @@ import org.springframework.core.type.filter.AssignableTypeFilter;
 import org.springframework.core.type.filter.TypeFilter;
 import org.springframework.data.annotation.Persistent;
 import org.springframework.data.config.BeanComponentDefinitionBuilder;
-import org.springframework.data.mapping.model.MappingContextIsNewStrategyFactory;
+import org.springframework.data.mapping.context.MappingContextIsNewStrategyFactory;
 import org.springframework.data.mongodb.core.convert.CustomConversions;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexCreator;

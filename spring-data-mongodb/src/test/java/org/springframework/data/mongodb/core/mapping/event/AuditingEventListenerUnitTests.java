@@ -25,7 +25,7 @@ import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.auditing.IsNewAwareAuditingHandler;
-import org.springframework.data.mapping.model.MappingContextIsNewStrategyFactory;
+import org.springframework.data.mapping.context.MappingContextIsNewStrategyFactory;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.support.IsNewStrategyFactory;
 

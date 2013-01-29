@@ -27,7 +27,7 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.data.annotation.Persistent;
 import org.springframework.data.authentication.UserCredentials;
-import org.springframework.data.mapping.model.MappingContextIsNewStrategyFactory;
+import org.springframework.data.mapping.context.MappingContextIsNewStrategyFactory;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 import org.springframework.data.mongodb.core.convert.CustomConversions;
