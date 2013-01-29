@@ -113,7 +113,7 @@ public abstract class MongoDbUtils {
 
 				if (!db.authenticate(username, password == null ? null : password.toCharArray())) {
 					throw new CannotGetMongoDbConnectionException("Failed to authenticate to database [" + databaseName
-							+ "], username = [" + username + "], password = [" + password + "]", databaseName, credentials);
+							+ "], username = [" + username + "], password = [ -not-shown- ]", databaseName, credentials);
 				}
 			}
 		}
