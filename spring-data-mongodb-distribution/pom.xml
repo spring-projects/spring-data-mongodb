@@ -19,6 +19,8 @@
 	
 	<properties>
 		<project.root>${basedir}/..</project.root>
+		<dist.id>spring-data-mongodb</dist.id>
+		<dist.key>SDMONGO</dist.key>
 	</properties>
 
 	<build>
@@ -26,6 +28,10 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-assembly-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>wagon-maven-plugin</artifactId>
 			</plugin>
 		</plugins>
 	</build>
