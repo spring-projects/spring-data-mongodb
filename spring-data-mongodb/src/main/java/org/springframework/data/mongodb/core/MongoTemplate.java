@@ -1186,7 +1186,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 		// prepare command
     DBObject command = new BasicDBObject("aggregate", inputCollectionName );
-    command.put( "pipeline", pipeline.getOps() );		
+    command.put( "pipeline", pipeline.getOperations() );		
     
 		// execute command
     CommandResult commandResult = executeCommand(command);
