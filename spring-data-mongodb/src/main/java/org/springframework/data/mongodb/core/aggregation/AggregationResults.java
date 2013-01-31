@@ -66,7 +66,6 @@ public class AggregationResults<T> implements Iterable<T> {
 	}
 
 	private void parseServerUsed() {
-		// "serverUsed" : "127.0.0.1:27017"
 		Object object = rawResults.get("serverUsed");
 		if (object instanceof String) {
 			serverUsed = (String) object;

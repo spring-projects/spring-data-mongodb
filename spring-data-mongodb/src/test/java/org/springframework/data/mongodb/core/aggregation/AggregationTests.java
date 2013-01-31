@@ -62,7 +62,7 @@ public class AggregationTests {
 
 	@Test(expected = IllegalArgumentException.class)
 	public void shouldHandleMissingInputCollection() {
-		mongoTemplate.aggregate(null, new AggregationPipeline((String[]) null), TagCount.class);
+		mongoTemplate.aggregate(null, new AggregationPipeline(), TagCount.class);
 	}
 
 	@Test(expected = IllegalArgumentException.class)
@@ -72,13 +72,13 @@ public class AggregationTests {
 
 	@Test(expected = IllegalArgumentException.class)
 	public void shouldHandleMissingEntityClass() {
-		mongoTemplate.aggregate(INPUT_COLLECTION, new AggregationPipeline((String[]) null), null);
+		mongoTemplate.aggregate(INPUT_COLLECTION, new AggregationPipeline(), null);
 	}
 
 	@Test(expected = IllegalArgumentException.class)
-	public void shouldDetectIllegaAggregationOperation() {
+	public void shouldDetectIllegalJsonInOperation() {
 		// given
-		AggregationPipeline pipeline = new AggregationPipeline("{ foo bar");
+		AggregationPipeline pipeline = new AggregationPipeline().project("{ foo bar");
 
 		// when
 		mongoTemplate.aggregate(INPUT_COLLECTION, pipeline, TagCount.class);
@@ -90,8 +90,12 @@ public class AggregationTests {
 	public void shouldAggregate() {
 		// given
 		createDocuments();
-		AggregationPipeline pipeline = new AggregationPipeline("{$project:{_id:0,tags:1}}", "{$unwind: \"$tags\"}",
-				"{$group:{_id:\"$tags\", n:{$sum:1}}}", "{$project:{tag: \"$_id\", n:1, _id:0}}", "{$sort:{n:-1}}");
+		AggregationPipeline pipeline = new AggregationPipeline()
+			.project("{_id:0,tags:1}}")
+			.unwind("$tags")
+			.group("{_id:\"$tags\", n:{$sum:1}}")
+			.project("{tag: \"$_id\", n:1, _id:0}")
+			.sort("{n:-1}");
 
 		// when
 		AggregationResults<TagCount> results = mongoTemplate.aggregate(INPUT_COLLECTION, pipeline, TagCount.class);
@@ -112,7 +116,7 @@ public class AggregationTests {
 	public void shouldDetectIllegalAggregationOperation() {
 		// given
 		createDocuments();
-		AggregationPipeline pipeline = new AggregationPipeline("{$foobar:{_id:0,tags:1}}");
+		AggregationPipeline pipeline = new AggregationPipeline().project("{$foobar:{_id:0,tags:1}}");
 
 		// when
 		mongoTemplate.aggregate(INPUT_COLLECTION, pipeline, TagCount.class);
@@ -123,9 +127,13 @@ public class AggregationTests {
 	@Test
 	public void shouldAggregateEmptyCollection() {
 		// given
-		AggregationPipeline pipeline = new AggregationPipeline("{$project:{_id:0,tags:1}}", "{$unwind: \"$tags\"}",
-				"{$group:{_id:\"$tags\", n:{$sum:1}}}", "{$project:{tag: \"$_id\", n:1, _id:0}}", "{$sort:{n:-1}}");
-
+		AggregationPipeline pipeline = new AggregationPipeline()
+		.project("{_id:0,tags:1}}")
+		.unwind("$tags")
+		.group("{_id:\"$tags\", n:{$sum:1}}")
+		.project("{tag: \"$_id\", n:1, _id:0}")
+		.sort("{n:-1}");
+		
 		// when
 		AggregationResults<TagCount> results = mongoTemplate.aggregate(INPUT_COLLECTION, pipeline, TagCount.class);
 
@@ -138,6 +146,30 @@ public class AggregationTests {
 		assertThat(tagCount.size(), is(0));
 	}
 
+	@Test
+	public void shouldDetectResultMismatch() {
+		// given
+		createDocuments();	
+		AggregationPipeline pipeline = new AggregationPipeline()
+		.project("{_id:0,tags:1}}")
+		.unwind("$tags")
+		.group("{_id:\"$tags\", count:{$sum:1}}")
+		.limit(2);
+		
+		// when
+		AggregationResults<TagCount> results = mongoTemplate.aggregate(INPUT_COLLECTION, pipeline, TagCount.class);
+
+		// then
+		assertThat(results, notNullValue());
+		assertThat(results.getServerUsed(), is("/127.0.0.1:27017"));
+
+		List<TagCount> tagCount = results.getAggregationResult();
+		assertThat(tagCount, notNullValue());
+		assertThat(tagCount.size(), is(2));
+		assertTagCount(null, 0, tagCount.get(0));
+		assertTagCount(null, 0, tagCount.get(1));
+	}
+	
 	protected void cleanDb() {
 		mongoTemplate.dropCollection(INPUT_COLLECTION);
 	}
