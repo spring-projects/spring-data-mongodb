@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2011-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core.query;
 
+import org.springframework.data.mongodb.core.geo.CustomMetric;
 import org.springframework.data.mongodb.core.geo.Distance;
 import org.springframework.data.mongodb.core.geo.Metric;
 import org.springframework.data.mongodb.core.geo.Metrics;
@@ -31,10 +32,12 @@ import com.mongodb.DBObject;
  */
 public class NearQuery {
 
-	private final DBObject criteria;
+	private final Point point;
 	private Query query;
-	private Double maxDistance;
+	private Distance maxDistance;
 	private Metric metric;
+	private boolean spherical;
+	private Integer num;
 
 	/**
 	 * Creates a new {@link NearQuery}.
@@ -45,13 +48,11 @@ public class NearQuery {
 
 		Assert.notNull(point);
 
-		this.criteria = new BasicDBObject();
-		this.criteria.put("near", point.asList());
+		this.point = point;
+		this.spherical = false;
 
-		this.metric = metric;
 		if (metric != null) {
-			spherical(true);
-			distanceMultiplier(metric);
+			in(metric);
 		}
 	}
 
@@ -105,12 +106,13 @@ public class NearQuery {
 	}
 
 	/**
-	 * Returns the {@link Metric} underlying the actual query.
+	 * Returns the {@link Metric} underlying the actual query. If no metric was set explicitly {@link Metrics#NEUTRAL}
+	 * will be returned.
 	 * 
-	 * @return
+	 * @return will never be {@literal null}.
 	 */
 	public Metric getMetric() {
-		return metric;
+		return metric == null ? Metrics.NEUTRAL : metric;
 	}
 
 	/**
@@ -120,68 +122,96 @@ public class NearQuery {
 	 * @return
 	 */
 	public NearQuery num(int num) {
-		this.criteria.put("num", num);
+		this.num = num;
 		return this;
 	}
 
 	/**
-	 * Sets the max distance results shall have from the configured origin. Will normalize the given value using a
-	 * potentially already configured {@link Metric}.
+	 * Sets the max distance results shall have from the configured origin. If a {@link Metric} was set before the given
+	 * value will be interpreted as being a value in that metric. E.g.
+	 * 
+	 * <pre>
+	 * NearQuery query = near(10.0, 20.0, Metrics.KILOMETERS).maxDistance(150);
+	 * </pre>
+	 * 
+	 * Will set the maximum distance to 150 kilometers.
 	 * 
 	 * @param maxDistance
 	 * @return
 	 */
 	public NearQuery maxDistance(double maxDistance) {
-		this.maxDistance = getNormalizedDistance(maxDistance, this.metric);
-		return this;
+		return maxDistance(new Distance(maxDistance, getMetric()));
 	}
 
 	/**
 	 * Sets the maximum distance supplied in a given metric. Will normalize the distance but not reconfigure the query's
-	 * {@link Metric}.
+	 * result {@link Metric} if one was configured before.
 	 * 
 	 * @param maxDistance
 	 * @param metric must not be {@literal null}.
 	 * @return
 	 */
 	public NearQuery maxDistance(double maxDistance, Metric metric) {
+
 		Assert.notNull(metric);
-		this.spherical(true);
-		return maxDistance(getNormalizedDistance(maxDistance, metric));
+		return maxDistance(new Distance(maxDistance, metric));
 	}
 
 	/**
-	 * Sets the maximum distance to the given {@link Distance}.
+	 * Sets the maximum distance to the given {@link Distance}. Will set the returned {@link Metric} to be the one of the
+	 * given {@link Distance} if no {@link Metric} was set before.
 	 * 
-	 * @param distance
+	 * @param distance must not be {@literal null}.
 	 * @return
 	 */
 	public NearQuery maxDistance(Distance distance) {
+
 		Assert.notNull(distance);
-		return maxDistance(distance.getValue(), distance.getMetric());
+
+		if (distance.getMetric() != Metrics.NEUTRAL) {
+			this.spherical(true);
+		}
+
+		if (this.metric == null) {
+			in(distance.getMetric());
+		}
+
+		this.maxDistance = distance;
+		return this;
 	}
 
 	/**
-	 * Configures a distance multiplier the resulting distances get applied.
+	 * Returns the maximum {@link Distance}.
+	 * 
+	 * @return
+	 */
+	public Distance getMaxDistance() {
+		return this.maxDistance;
+	}
+
+	/**
+	 * Configures a {@link CustomMetric} with the given multiplier.
 	 * 
 	 * @param distanceMultiplier
 	 * @return
 	 */
 	public NearQuery distanceMultiplier(double distanceMultiplier) {
-		this.criteria.put("distanceMultiplier", distanceMultiplier);
+
+		this.metric = new CustomMetric(distanceMultiplier);
 		return this;
 	}
 
 	/**
-	 * Configures the distance multiplier to the multiplier of the given {@link Metric}. Does <em>not</em> recalculate the
-	 * {@link #maxDistance(double)}.
+	 * Configures the distance multiplier to the multiplier of the given {@link Metric}.
 	 * 
+	 * @deprecated use {@link #in(Metric)} instead.
 	 * @param metric must not be {@literal null}.
 	 * @return
 	 */
+	@Deprecated
 	public NearQuery distanceMultiplier(Metric metric) {
 		Assert.notNull(metric);
-		return distanceMultiplier(metric.getMultiplier());
+		return in(metric);
 	}
 
 	/**
@@ -191,8 +221,17 @@ public class NearQuery {
 	 * @return
 	 */
 	public NearQuery spherical(boolean spherical) {
-		this.criteria.put("spherical", spherical);
+		this.spherical = spherical;
 		return this;
+	}
+
+	/**
+	 * Returns whether spharical values will be returned.
+	 * 
+	 * @return
+	 */
+	public boolean isSpherical() {
+		return this.spherical;
 	}
 
 	/**
@@ -216,6 +255,18 @@ public class NearQuery {
 	}
 
 	/**
+	 * Will cause the results' distances being returned in the given metric. Sets {@link #distanceMultiplier(double)}
+	 * accordingly as well as {@link #spherical(boolean)} if the given {@link Metric} is not {@link Metrics#NEUTRAL}.
+	 * 
+	 * @param metric the metric the results shall be returned in. Uses {@link Metrics#NEUTRAL} if {@literal null} is
+	 *          passed.
+	 * @return
+	 */
+	public NearQuery in(Metric metric) {
+		return adaptMetric(metric == null ? Metrics.NEUTRAL : metric);
+	}
+
+	/**
 	 * Configures the given {@link Metric} to be used as base on for this query and recalculate the maximum distance if no
 	 * metric was set before.
 	 * 
@@ -223,12 +274,12 @@ public class NearQuery {
 	 */
 	private NearQuery adaptMetric(Metric metric) {
 
-		if (this.metric == null && maxDistance != null) {
-			maxDistance(this.maxDistance, metric);
+		if (metric != Metrics.NEUTRAL) {
+			spherical(true);
 		}
 
-		spherical(true);
-		return distanceMultiplier(metric);
+		this.metric = metric;
+		return this;
 	}
 
 	/**
@@ -249,18 +300,27 @@ public class NearQuery {
 	 */
 	public DBObject toDBObject() {
 
-		BasicDBObject dbObject = new BasicDBObject(criteria.toMap());
+		BasicDBObject dbObject = new BasicDBObject();
+
 		if (query != null) {
 			dbObject.put("query", query.getQueryObject());
 		}
+
 		if (maxDistance != null) {
-			dbObject.put("maxDistance", maxDistance);
+			dbObject.put("maxDistance", this.maxDistance.getNormalizedValue());
 		}
 
-		return dbObject;
-	}
+		if (metric != null) {
+			dbObject.put("distanceMultiplier", metric.getMultiplier());
+		}
 
-	private double getNormalizedDistance(double distance, Metric metric) {
-		return metric == null ? distance : distance / metric.getMultiplier();
+		if (num != null) {
+			dbObject.put("num", num);
+		}
+
+		dbObject.put("near", point.asList());
+		dbObject.put("spherical", spherical);
+
+		return dbObject;
 	}
 }

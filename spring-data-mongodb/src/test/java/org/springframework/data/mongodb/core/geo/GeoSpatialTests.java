@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 the original author or authors.
+ * Copyright 2010-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -115,10 +115,12 @@ public class GeoSpatialTests {
 
 	@Test
 	public void geoNear() {
-		NearQuery geoNear = NearQuery.near(-73, 40, Metrics.KILOMETERS).num(10).maxDistance(150);
-		GeoResults<Venue> geoNearResult = template.geoNear(geoNear, Venue.class);
 
-		assertThat(geoNearResult.getContent().size(), is(not(0)));
+		NearQuery geoNear = NearQuery.near(-73, 40, Metrics.KILOMETERS).num(10).maxDistance(150);
+
+		GeoResults<Venue> result = template.geoNear(geoNear, Venue.class);
+		assertThat(result.getContent().size(), is(not(0)));
+		assertThat(result.getAverageDistance().getMetric(), is((Metric) Metrics.KILOMETERS));
 	}
 
 	@Test

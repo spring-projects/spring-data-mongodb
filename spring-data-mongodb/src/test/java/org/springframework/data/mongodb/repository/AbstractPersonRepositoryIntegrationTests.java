@@ -38,6 +38,7 @@ import org.springframework.data.mongodb.core.geo.Circle;
 import org.springframework.data.mongodb.core.geo.Distance;
 import org.springframework.data.mongodb.core.geo.GeoPage;
 import org.springframework.data.mongodb.core.geo.GeoResults;
+import org.springframework.data.mongodb.core.geo.Metric;
 import org.springframework.data.mongodb.core.geo.Metrics;
 import org.springframework.data.mongodb.core.geo.Point;
 import org.springframework.data.mongodb.core.geo.Polygon;
@@ -401,6 +402,9 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		GeoPage<Person> results = repository.findByLocationNear(new Point(-73.99, 40.73), new Distance(2000,
 				Metrics.KILOMETERS), new PageRequest(0, 20));
 		assertThat(results.getContent().isEmpty(), is(false));
+
+		// DATAMONGO-607
+		assertThat(results.getAverageDistance().getMetric(), is((Metric) Metrics.KILOMETERS));
 	}
 
 	/**
