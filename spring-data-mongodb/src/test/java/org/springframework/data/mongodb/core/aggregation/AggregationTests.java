@@ -28,6 +28,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -95,7 +97,7 @@ public class AggregationTests {
 			.unwind("$tags")
 			.group("{_id:\"$tags\", n:{$sum:1}}")
 			.project("{tag: \"$_id\", n:1, _id:0}")
-			.sort("{n:-1}");
+			.sort( new Sort(new Sort.Order(Direction.DESC, "n")) );
 
 		// when
 		AggregationResults<TagCount> results = mongoTemplate.aggregate(INPUT_COLLECTION, pipeline, TagCount.class);
