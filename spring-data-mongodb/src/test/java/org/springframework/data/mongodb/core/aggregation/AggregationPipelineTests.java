@@ -51,15 +51,27 @@ public class AggregationPipelineTests {
 
 	@Test public void unwindOperation() {
 		// given
+		pipeline.unwind("$field");
+		
+		// when
+		List<DBObject> rawPipeline = pipeline.getOperations();
+		
+		// then
+		assertDBObject("$unwind", "$field", rawPipeline);
+	}
+
+	@Test public void unwindOperationWithAddedPrefix() {
+		// given
 		pipeline.unwind("field");
 		
 		// when
 		List<DBObject> rawPipeline = pipeline.getOperations();
 		
 		// then
-		assertDBObject("$unwind", "field", rawPipeline);
+		assertDBObject("$unwind", "$field", rawPipeline);
 	}
-
+	
+	
 	@Test public void matchOperation() {
 		// given
 		Criteria criteria = new Criteria("title").is("Doc 1");
