@@ -33,7 +33,9 @@ import com.mongodb.util.JSONParseException;
  * @author Tobias Trelle
  */
 public class AggregationPipeline {
-
+	
+	private static final String OPERATOR_PREFIX = "$";
+	
 	private List<DBObject> operations = new ArrayList<DBObject>();
 
 	/**
@@ -54,6 +56,11 @@ public class AggregationPipeline {
 	 */
 	public AggregationPipeline unwind(String field) {
 		Assert.notNull(field, "Missing field name");
+		
+		if (!field.startsWith(OPERATOR_PREFIX)) {
+			field = OPERATOR_PREFIX + field;
+		}
+		
 		addOperation("unwind", field);
 		return this;
 	}
@@ -85,6 +92,8 @@ public class AggregationPipeline {
 	 * @return The pipeline.
 	 */
 	public AggregationPipeline sort(Sort sort) {
+		Assert.notNull(sort);
+		
 		DBObject dbo = new BasicDBObject();
 
 		for (org.springframework.data.domain.Sort.Order order : sort) {
@@ -112,6 +121,8 @@ public class AggregationPipeline {
 	 * @return The pipeline.
 	 */
 	public AggregationPipeline match(Criteria criteria) {
+		Assert.notNull(criteria);
+		
 		addOperation("match", criteria.getCriteriaObject());
 		return this;
 	}
@@ -149,7 +160,7 @@ public class AggregationPipeline {
 	}
 
 	private void addOperation(String key, Object value) {
-		this.operations.add(new BasicDBObject("$" + key, value));
+		this.operations.add(new BasicDBObject(OPERATOR_PREFIX + key, value));
 	}
 
 	private DBObject parseJson(String json) {

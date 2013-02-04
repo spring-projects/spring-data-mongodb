@@ -94,7 +94,7 @@ public class AggregationTests {
 		createDocuments();
 		AggregationPipeline pipeline = new AggregationPipeline()
 			.project("{_id:0,tags:1}}")
-			.unwind("$tags")
+			.unwind("tags")
 			.group("{_id:\"$tags\", n:{$sum:1}}")
 			.project("{tag: \"$_id\", n:1, _id:0}")
 			.sort( new Sort(new Sort.Order(Direction.DESC, "n")) );
