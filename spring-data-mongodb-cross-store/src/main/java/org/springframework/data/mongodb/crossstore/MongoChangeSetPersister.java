@@ -170,7 +170,7 @@ public class MongoChangeSetPersister implements ChangeSetPersister<Object> {
 	}
 
 	private String getCollectionNameForEntity(Class<? extends ChangeSetBacked> entityClass) {
-		return ClassUtils.getQualifiedName(entityClass);
+		return mongoTemplate.getCollectionName(entityClass);
 	}
 
 }
