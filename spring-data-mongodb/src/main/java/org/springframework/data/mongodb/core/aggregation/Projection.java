@@ -15,6 +15,12 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.EmptyStackException;
+import java.util.List;
+import java.util.Stack;
+
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.mongodb.core.query.Field;
 import org.springframework.util.Assert;
@@ -26,7 +32,7 @@ import com.mongodb.DBObject;
  * Projection of field to be used in an {@link AggregationPipeline}.
  * <p/>
  * A projection is similar to a {@link Field} inclusion/exclusion but more powerful. It can generate new fields, change
- * values of given field etc.
+ * values of given field etc. 
  * 
  * @author Tobias Trelle
  */
@@ -36,10 +42,10 @@ public class Projection {
 	
 	private DBObject document = new BasicDBObject();
 
-	/** Key of the current field. */
-	private String ref;
-
-	private String modifier;
+	private DBObject rightHandExpression;
+	
+	/** Stack of key names. Size is 0 or 1. */
+	private Stack<String> reference = new Stack<String>();
 
 	/** Create an empty projection. */
 	public Projection() {
@@ -75,10 +81,9 @@ public class Projection {
 	 */
 	public final Projection include(String key) {
 		Assert.notNull(key, "Missing key");
-		if (canPop()) {
-			document.put(pop(), 1);
-		}
-		push(key);
+
+		safePop();
+		reference.push(key);
 		
 		return this;
 	}
@@ -86,36 +91,47 @@ public class Projection {
 	/**
 	 * Sets the key for a computed field.
 	 * 
-v	 */
+	 */
 	public final Projection as(String key) {
 		Assert.notNull(key, "Missing key");
 
-		document.put( key, safeReference(pop()) );
+		try {
+			document.put(key, rightHandSide(safeReference(reference.pop())) );
+		} catch (EmptyStackException e) {
+			throw new InvalidDataAccessApiUsageException("Invalid use of as()", e);
+		}
 		return this;
 	}
 
-	private void push(String r) {
-		if (ref != null) {
-			throw new InvalidDataAccessApiUsageException("No field selected");
+	public final Projection plus(Number n) {
+		return arithmeticOperation("add", n);
+	}
+	
+	public final Projection minus(Number n) {
+		return arithmeticOperation("substract", n);
+	}	
+	
+	private Projection arithmeticOperation(String op, Number n) {
+		Assert.notNull(n, "Missing number");
+		
+		rightHandExpression = createArrayObject(op, safeReference(reference.peek()), n);
+		
+		return this;		
+	}
+	
+	private DBObject createArrayObject(String op, Object... items) {
+		List<Object> list = new ArrayList<Object>();
+		Collections.addAll(list, items);
+		
+		return new BasicDBObject( safeReference(op), list );
+	}
+	
+	private void safePop() {
+		if ( !reference.empty() ) {
+			document.put( reference.pop(), rightHandSide(1) );
 		}
-		ref = r;
 	}
-
-	private String pop() {
-		if (ref == null) {
-			throw new InvalidDataAccessApiUsageException("No field selected");
-		}
-		String r = ref;
-		ref = null;
-		modifier = null;
-
-		return r;
-	}
-
-	private boolean canPop() {
-		return ref != null;
-	}
-
+	
 	private String safeReference(String key) {
 		Assert.notNull(key);
 		
@@ -125,11 +141,15 @@ v	 */
 			return key;
 		}
 	}
+
+	private Object rightHandSide(Object defaultValue) {
+		Object value = rightHandExpression != null ? rightHandExpression : defaultValue;
+		rightHandExpression = null;
+		return value;
+	}
 	
 	DBObject toDBObject() {
-		if (canPop()) {
-			document.put(pop(), 1);
-		}
+		safePop();
 		return document;
 	}
 
