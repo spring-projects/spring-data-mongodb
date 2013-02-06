@@ -104,6 +104,21 @@ public class AggregationPipelineTests {
 		assertSingleDBObject( "n" , 1, orderDoc );
 	}
 	
+	@Test public void projectOperation() {
+		// given
+		Projection projection = new Projection("a");
+		pipeline.project(projection);
+		
+		// when
+		List<DBObject> rawPipeline = pipeline.getOperations();
+		
+		// then
+		assertOneDocument(rawPipeline);
+		DBObject projectionDoc = rawPipeline.get(0);
+		DBObject fields = (DBObject)projectionDoc.get("$project");
+		assertThat( fields, notNullValue() );
+		assertSingleDBObject( "a" , 1, fields );
+	}
 	
 	private static void assertOneDocument(List<DBObject> result) {
 		assertThat( result, notNullValue() );
