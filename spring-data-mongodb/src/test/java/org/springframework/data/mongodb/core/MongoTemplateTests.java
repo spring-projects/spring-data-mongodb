@@ -29,6 +29,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import java.lang.IllegalArgumentException;
 import org.bson.types.ObjectId;
 import org.joda.time.DateTime;
 import org.junit.After;
@@ -1444,6 +1445,16 @@ public class MongoTemplateTests {
 
 		assertThat(person.version, is(0));
 	}
+
+    /**
+     * @see DATAMONGO-568
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void queryCantBeNull() {
+
+        template.find(null, PersonWithIdPropertyOfTypeObjectId.class);
+
+    }
 
 	static class MyId {
 
