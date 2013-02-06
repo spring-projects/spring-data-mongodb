@@ -49,6 +49,16 @@ public class AggregationPipeline {
 	}
 
 	/**
+	 * Adds a projection operation to the pipeline.
+	 * 
+	 * @param projection Type safe projection object.
+	 * @return The pipeline.
+	 */
+	public AggregationPipeline project(Projection projection) {
+		return addOperation("project", projection.toDBObject() );
+	}
+	
+	/**
 	 * Adds an unwind operation to the pipeline.
 	 * 
 	 * @param field Name of the field to unwind (should be an array).
@@ -61,8 +71,7 @@ public class AggregationPipeline {
 			field = OPERATOR_PREFIX + field;
 		}
 		
-		addOperation("unwind", field);
-		return this;
+		return addOperation("unwind", field);
 	}
 
 	/**
@@ -99,9 +108,7 @@ public class AggregationPipeline {
 		for (org.springframework.data.domain.Sort.Order order : sort) {
 			dbo.put(order.getProperty(), order.isAscending() ? 1 : -1);
 		}
-		addOperation("sort", dbo);
-		
-		return this;
+		return addOperation("sort", dbo);
 	}
 
 	/**
@@ -123,8 +130,7 @@ public class AggregationPipeline {
 	public AggregationPipeline match(Criteria criteria) {
 		Assert.notNull(criteria);
 		
-		addOperation("match", criteria.getCriteriaObject());
-		return this;
+		return addOperation("match", criteria.getCriteriaObject());
 	}
 
 	/**
@@ -134,8 +140,7 @@ public class AggregationPipeline {
 	 * @return The pipeline.
 	 */
 	public AggregationPipeline limit(long n) {
-		addOperation("limit", n);
-		return this;
+		return addOperation("limit", n);
 	}
 
 	/**
@@ -145,8 +150,7 @@ public class AggregationPipeline {
 	 * @return The pipeline.
 	 */
 	public AggregationPipeline skip(long n) {
-		addOperation("skip", n);
-		return this;
+		return addOperation("skip", n);
 	}
 
 	public List<DBObject> getOperations() {
@@ -155,12 +159,12 @@ public class AggregationPipeline {
 
 	private AggregationPipeline addDocumentOperation(String opName, String operation) {
 		Assert.notNull(operation, "Missing " + opName);
-		addOperation(opName, parseJson(operation));
-		return this;
+		return addOperation(opName, parseJson(operation));
 	}
 
-	private void addOperation(String key, Object value) {
+	private AggregationPipeline addOperation(String key, Object value) {
 		this.operations.add(new BasicDBObject(OPERATOR_PREFIX + key, value));
+		return this;
 	}
 
 	private DBObject parseJson(String json) {
