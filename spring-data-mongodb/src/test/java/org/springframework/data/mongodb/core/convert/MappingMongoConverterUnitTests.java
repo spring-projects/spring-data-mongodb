@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2012 the original author or authors.
+ * Copyright 2011-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -112,15 +112,7 @@ public class MappingMongoConverterUnitTests {
 	@Test
 	public void convertsJodaTimeTypesCorrectly() {
 
-		List<Converter<?, ?>> converters = new ArrayList<Converter<?, ?>>();
-		converters.add(new LocalDateToDateConverter());
-		converters.add(new DateToLocalDateConverter());
-
-		CustomConversions conversions = new CustomConversions(converters);
-		mappingContext.setSimpleTypeHolder(conversions.getSimpleTypeHolder());
-
 		converter = new MappingMongoConverter(factory, mappingContext);
-		converter.setCustomConversions(conversions);
 		converter.afterPropertiesSet();
 
 		Person person = new Person();
@@ -138,15 +130,7 @@ public class MappingMongoConverterUnitTests {
 	@Test
 	public void convertsCustomTypeOnConvertToMongoType() {
 
-		List<Converter<?, ?>> converters = new ArrayList<Converter<?, ?>>();
-		converters.add(new LocalDateToDateConverter());
-		converters.add(new DateToLocalDateConverter());
-
-		CustomConversions conversions = new CustomConversions(converters);
-		mappingContext.setSimpleTypeHolder(conversions.getSimpleTypeHolder());
-
 		converter = new MappingMongoConverter(factory, mappingContext);
-		converter.setCustomConversions(conversions);
 		converter.afterPropertiesSet();
 
 		LocalDate date = new LocalDate();
