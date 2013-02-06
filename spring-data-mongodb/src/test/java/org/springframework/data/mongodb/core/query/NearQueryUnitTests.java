@@ -24,6 +24,8 @@ import org.springframework.data.mongodb.core.geo.Metric;
 import org.springframework.data.mongodb.core.geo.Metrics;
 
 /**
+ * Unit tests for {@link NearQuery}.
+ * 
  * @author Oliver Gierke
  */
 public class NearQueryUnitTests {
@@ -43,9 +45,6 @@ public class NearQueryUnitTests {
 		assertThat(query.getMaxDistance(), is(ONE_FIFTY_KILOMETERS));
 		assertThat(query.getMetric(), is((Metric) Metrics.KILOMETERS));
 		assertThat(query.isSpherical(), is(true));
-
-		System.out.println(query.toDBObject().get("maxDistance"));
-		System.out.println(query.toDBObject().get("distanceMultiplier"));
 	}
 
 	@Test
