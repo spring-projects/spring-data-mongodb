@@ -1,5 +1,29 @@
 Spring Data MongoDB Changelog
-=============================================
+=============================
+
+Changes in version 1.1.2.GA (2013-02-08)
+----------------------------------------
+** Bug
+    * [DATAMONGO-562] - Cannot create entity with OptimisticLocking (@Version) and initial id
+    * [DATAMONGO-568] - MongoTemplate.find(...)  method causes Nullpointer if query parameter is null
+    * [DATAMONGO-570] - Query methods on @DBRef field with the qualifier isNull throws Exception
+    * [DATAMONGO-578] - pom version issues in 1.1.x branch
+    * [DATAMONGO-583] - Check if you are using for loop with a DBCursor
+    * [DATAMONGO-585] - Exception during authentication in multithreaded access
+    * [DATAMONGO-588] - MongoTemplate.insert does not initialize null versions to zero
+    * [DATAMONGO-600] - Issues with polymorphism of nested types
+    * [DATAMONGO-601] - CannotGetMongoDbConnectionException should not print password in logfile
+
+** Improvement
+    * [DATAMONGO-573] - Move to Logback for test logging
+    * [DATAMONGO-580] - Polish BeanDefinitionParsers to avoid warnings in STS
+
+** Task
+    * [DATAMONGO-81] - Create unit tests for exception translation in MongoTemplate
+    * [DATAMONGO-563] - Upgrade to MongoDB driver 2.9.2 as it fixes a serious regression introduced in 2.9.0
+    * [DATAMONGO-576] - Configure java.util.logging to reduce verbose test logging
+    * [DATAMONGO-590] - Clean up code in MongoTemplate
+    * [DATAMONGO-608] - Release 1.1.2
 
 Changes in version 1.1.1.GA (2012-10-17)
 ----------------------------------------
