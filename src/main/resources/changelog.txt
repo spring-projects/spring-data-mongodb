@@ -1,5 +1,61 @@
 Spring Data MongoDB Changelog
-=============================================
+=============================
+
+Changes in version 1.2.0.GA (2013-02-08)
+----------------------------------------
+** Bug
+    * [DATAMONGO-378] - MapReduceResults ClassCastException due to raw results counts as Long
+    * [DATAMONGO-568] - MongoTemplate.find(...)  method causes Nullpointer if query parameter is null
+    * [DATAMONGO-570] - Query methods on @DBRef field with the qualifier isNull throws Exception
+    * [DATAMONGO-583] - Check if you are using for loop with a DBCursor
+    * [DATAMONGO-585] - Exception during authentication in multithreaded access
+    * [DATAMONGO-588] - MongoTemplate.insert does not initialize null versions to zero
+    * [DATAMONGO-592] - Persisting Objects containing Objects with PersistenceConstructor causes MappingInstantiationException
+    * [DATAMONGO-593] - Persisting objects containing primitive arrays with PersistenceConstructor causes MappingInstantiationException
+    * [DATAMONGO-600] - Issues with polymorphism of nested types
+    * [DATAMONGO-601] - CannotGetMongoDbConnectionException should not print password in logfile
+    * [DATAMONGO-603] - Results of geo queries in repository dont't get metrics of supplied distance applied
+
+** Improvement
+    * [DATAMONGO-503] - GridFsTemplate is not setting the file Content-Type
+    * [DATAMONGO-573] - Move to Logback for test logging
+    * [DATAMONGO-580] - Polish BeanDefinitionParsers to avoid warnings in STS
+    * [DATAMONGO-581] - Expose managed PersistentEntity in MongoRepositoryFactoryBean
+    * [DATAMONGO-606] - Register converter for JodaTime types if present on classpath
+
+** New Feature
+    * [DATAMONGO-577] - Add support for auditing
+
+** Task
+    * [DATAMONGO-81] - Create unit tests for exception translation in MongoTemplate
+    * [DATAMONGO-576] - Configure java.util.logging to reduce verbose test logging
+    * [DATAMONGO-590] - Clean up code in MongoTemplate
+    * [DATAMONGO-598] - Upgrade to new build infrastructure
+    * [DATAMONGO-609] - Release 1.2.0
+
+Changes in version 1.1.2.GA (2013-02-08)
+----------------------------------------
+** Bug
+    * [DATAMONGO-562] - Cannot create entity with OptimisticLocking (@Version) and initial id
+    * [DATAMONGO-568] - MongoTemplate.find(...)  method causes Nullpointer if query parameter is null
+    * [DATAMONGO-570] - Query methods on @DBRef field with the qualifier isNull throws Exception
+    * [DATAMONGO-578] - pom version issues in 1.1.x branch
+    * [DATAMONGO-583] - Check if you are using for loop with a DBCursor
+    * [DATAMONGO-585] - Exception during authentication in multithreaded access
+    * [DATAMONGO-588] - MongoTemplate.insert does not initialize null versions to zero
+    * [DATAMONGO-600] - Issues with polymorphism of nested types
+    * [DATAMONGO-601] - CannotGetMongoDbConnectionException should not print password in logfile
+
+** Improvement
+    * [DATAMONGO-573] - Move to Logback for test logging
+    * [DATAMONGO-580] - Polish BeanDefinitionParsers to avoid warnings in STS
+
+** Task
+    * [DATAMONGO-81] - Create unit tests for exception translation in MongoTemplate
+    * [DATAMONGO-563] - Upgrade to MongoDB driver 2.9.2 as it fixes a serious regression introduced in 2.9.0
+    * [DATAMONGO-576] - Configure java.util.logging to reduce verbose test logging
+    * [DATAMONGO-590] - Clean up code in MongoTemplate
+    * [DATAMONGO-608] - Release 1.1.2
 
 Changes in version 1.1.1.GA (2012-10-17)
 ----------------------------------------
