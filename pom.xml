@@ -15,7 +15,7 @@
 	<parent>
 		<groupId>org.springframework.data.build</groupId>
 		<artifactId>spring-data-parent</artifactId>
-		<version>1.0.0.BUILD-SNAPSHOT</version>
+		<version>1.0.0.RELEASE</version>
 		<relativePath>../spring-data-build/parent/pom.xml</relativePath>
 	</parent>
 	
@@ -30,7 +30,7 @@
 	<properties>
 		<project.type>multi</project.type>
 		<dist.name>spring-data-mongodb</dist.name>
-		<springdata.commons>1.5.0.BUILD-SNAPSHOT</springdata.commons>
+		<springdata.commons>1.5.0.RELEASE</springdata.commons>
 		<mongo>2.10.1</mongo>
 	</properties>
 	
@@ -89,12 +89,5 @@
 			<version>${mongo}</version>
 		</dependency>
 	</dependencies>
-
-	<repositories>
-		<repository>
-			<id>spring-libs-snapshot</id>
-			<url>http://repo.springsource.org/libs-snapshot-local</url>
-		</repository>
-	</repositories>
 
 </project>
