@@ -19,7 +19,6 @@
 	
 	<properties>
 		<project.root>${basedir}/..</project.root>
-		<dist.id>spring-data-mongodb</dist.id>
 		<dist.key>SDMONGO</dist.key>
 	</properties>
 
