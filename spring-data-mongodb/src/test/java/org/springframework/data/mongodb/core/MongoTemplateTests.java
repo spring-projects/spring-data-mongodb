@@ -1319,6 +1319,18 @@ public class MongoTemplateTests {
 	}
 
 	/**
+	 * @see DATAMONGO-617
+	 */
+	@Test
+	public void doesNotFailOnVersionInitForUnversionedEntity() {
+
+		DBObject dbObject = new BasicDBObject();
+		dbObject.put("firstName", "Oliver");
+
+		template.insert(dbObject, template.determineCollectionName(PersonWithVersionPropertyOfTypeInteger.class));
+	}
+
+	/**
 	 * @see DATAMONGO-539
 	 */
 	@Test
