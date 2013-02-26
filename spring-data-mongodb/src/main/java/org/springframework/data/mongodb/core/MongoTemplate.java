@@ -771,8 +771,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 		// Fresh instance -> initialize version property
 		if (version == null) {
-			beanWrapper.setProperty(versionProperty, 0);
-			doSave(collectionName, objectToSave, this.mongoConverter);
+			doInsert(collectionName, objectToSave, this.mongoConverter);
 		} else {
 
 			assertUpdateableIdIfNotSet(objectToSave);
