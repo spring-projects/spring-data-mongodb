@@ -51,13 +51,6 @@
 
 	<bean id="readConverter" class="org.springframework.data.mongodb.core.PersonReadConverter"/>
 
-	<bean id="mongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate">
-		<constructor-arg name="mongoDbFactory" ref="mongoDbFactory"/>
-		<constructor-arg name="mongoConverter" ref="mappingConverter"/>
-	</bean>
-	
-	<bean id="anotherMongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate">
-		<constructor-arg name="mongoDbFactory" ref="mongoDbFactory"/>
-	</bean>
-
+	<mongo:template id="mongoTemplate" db-factory-ref="mongoDbFactory" converter-ref="mappingConverter"/>
+	<mongo:template id="anotherMongoTemplate" db-factory-ref="mongoDbFactory" write-concern="SAFE" />
 </beans>
