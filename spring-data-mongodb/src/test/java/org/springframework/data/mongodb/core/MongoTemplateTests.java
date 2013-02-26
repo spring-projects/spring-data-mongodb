@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2012 the original author or authors.
+ * Copyright 2011-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -146,6 +146,7 @@ public class MongoTemplateTests {
 		template.dropCollection(Sample.class);
 		template.dropCollection(MyPerson.class);
 		template.dropCollection("collection");
+		template.dropCollection("personX");
 	}
 
 	@Test
@@ -949,6 +950,7 @@ public class MongoTemplateTests {
 	}
 
 	@Test
+	@SuppressWarnings("deprecation")
 	public void testUsingReadPreference() throws Exception {
 		this.template.execute("readPref", new CollectionCallback<Object>() {
 			public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
@@ -1465,6 +1467,22 @@ public class MongoTemplateTests {
 
 		List<PersonWithIdPropertyOfTypeObjectId> result = template.findAll(PersonWithIdPropertyOfTypeObjectId.class);
 		assertThat(template.find(null, PersonWithIdPropertyOfTypeObjectId.class), is(result));
+	}
+
+	/**
+	 * @see DATAMONGO-620
+	 */
+	@Test
+	public void versionsObjectIntoDedicatedCollection() {
+
+		PersonWithVersionPropertyOfTypeInteger person = new PersonWithVersionPropertyOfTypeInteger();
+		person.firstName = "Dave";
+
+		template.save(person, "personX");
+		assertThat(person.version, is(0));
+
+		template.save(person, "personX");
+		assertThat(person.version, is(1));
 	}
 
 	static class MyId {

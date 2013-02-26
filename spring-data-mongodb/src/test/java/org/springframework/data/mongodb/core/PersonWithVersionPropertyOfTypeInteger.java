@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.core;
 
-import org.springframework.data.mongodb.core.mapping.Version;
+import org.springframework.data.annotation.Version;
 
 public class PersonWithVersionPropertyOfTypeInteger {
 

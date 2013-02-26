@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2012 the original author or authors.
+ * Copyright 2010-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -792,7 +792,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			maybeEmitEvent(new BeforeSaveEvent<T>(objectToSave, dbObject));
 			Update update = Update.fromDBObject(dbObject, ID_FIELD);
 
-			updateFirst(query, update, objectToSave.getClass());
+			doUpdate(collectionName, query, update, objectToSave.getClass(), false, false);
 			maybeEmitEvent(new AfterSaveEvent<T>(objectToSave, dbObject));
 		}
 	}
@@ -941,7 +941,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				if (entity != null && entity.hasVersionProperty() && !multi) {
 					if (writeResult.getN() == 0) {
 						throw new OptimisticLockingFailureException("Optimistic lock exception on saving entity: "
-								+ updateObj.toMap().toString());
+								+ updateObj.toMap().toString() + " to collection " + collectionName);
 					}
 				}
 
