@@ -1485,6 +1485,19 @@ public class MongoTemplateTests {
 		assertThat(person.version, is(1));
 	}
 
+	/**
+	 * @see DATAMONGO-621
+	 */
+	@Test
+	public void correctlySetsLongVersionProperty() {
+
+		PersonWithVersionPropertyOfTypeLong person = new PersonWithVersionPropertyOfTypeLong();
+		person.firstName = "Dave";
+
+		template.save(person);
+		assertThat(person.version, is(0L));
+	}
+
 	static class MyId {
 
 		String first;

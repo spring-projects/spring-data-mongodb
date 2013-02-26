@@ -667,7 +667,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		MongoPersistentEntity<?> mongoPersistentEntity = getPersistentEntity(entity.getClass());
 
 		if (mongoPersistentEntity != null && mongoPersistentEntity.hasVersionProperty()) {
-			BeanWrapper<PersistentEntity<Object, ?>, Object> wrapper = BeanWrapper.create(entity, null);
+			BeanWrapper<PersistentEntity<Object, ?>, Object> wrapper = BeanWrapper.create(entity,
+					this.mongoConverter.getConversionService());
 			wrapper.setProperty(mongoPersistentEntity.getVersionProperty(), 0);
 		}
 	}
