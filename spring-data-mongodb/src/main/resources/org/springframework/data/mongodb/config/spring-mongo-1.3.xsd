@@ -490,4 +490,108 @@ This controls if the driver is allowed to read from secondaries or slaves.  Defa
 		</xsd:attribute>
 	</xsd:complexType>
 
+	<xsd:simpleType name="converterRef">
+		<xsd:annotation>
+			<xsd:appinfo>
+				<tool:annotation kind="ref">
+					<tool:assignable-to type="org.springframework.data.mongodb.core.convert.MongoConverter"/>
+				</tool:annotation>
+			</xsd:appinfo>
+		</xsd:annotation>
+		<xsd:union memberTypes="xsd:string"/>
+	</xsd:simpleType>
+
+	<xsd:element name="template">
+		<xsd:annotation>
+			<xsd:documentation><![CDATA[
+Defines a MongoDbFactory for connecting to a specific database
+			]]></xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexType>
+			<xsd:attribute name="id" type="xsd:ID" use="optional">
+				<xsd:annotation>
+					<xsd:documentation><![CDATA[
+The name of the mongo definition (by default "mongoDbFactory").]]></xsd:documentation>
+				</xsd:annotation>
+			</xsd:attribute>
+			<xsd:attribute name="converter-ref" type="converterRef" use="optional">
+				<xsd:annotation>
+					<xsd:documentation><![CDATA[
+The reference to a Mongoconverter instance.
+					]]>
+					</xsd:documentation>
+					<xsd:appinfo>
+						<tool:annotation kind="ref">
+							<tool:assignable-to type="org.springframework.data.mongodb.core.convert.MongoConverter"/>
+						</tool:annotation>
+					</xsd:appinfo>
+				</xsd:annotation>
+			</xsd:attribute>
+			<xsd:attribute name="db-factory-ref" type="xsd:string"
+				use="optional">
+				<xsd:annotation>
+					<xsd:documentation>
+						The reference to a DbFactory.
+					</xsd:documentation>
+					<xsd:appinfo>
+						<tool:annotation kind="ref">
+							<tool:assignable-to
+								type="org.springframework.data.mongodb.MongoDbFactory" />
+						</tool:annotation>
+					</xsd:appinfo>
+				</xsd:annotation>
+			</xsd:attribute>
+			<xsd:attribute name="write-concern">
+				<xsd:annotation>
+					<xsd:documentation>
+					The WriteConcern that will be the default value used when asking the MongoDbFactory for a DB object
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:union memberTypes="writeConcernEnumeration xsd:string"/>
+				</xsd:simpleType>
+			</xsd:attribute>
+		</xsd:complexType>
+	</xsd:element>
+	
+	<xsd:element name="gridFsTemplate">
+		<xsd:annotation>
+			<xsd:documentation><![CDATA[
+Defines a MongoDbFactory for connecting to a specific database
+			]]></xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexType>
+			<xsd:attribute name="id" type="xsd:ID" use="optional">
+				<xsd:annotation>
+					<xsd:documentation><![CDATA[
+The name of the mongo definition (by default "mongoDbFactory").]]></xsd:documentation>
+				</xsd:annotation>
+			</xsd:attribute>
+			<xsd:attribute name="converter-ref" type="converterRef" use="optional">
+				<xsd:annotation>
+					<xsd:documentation><![CDATA[
+The reference to a Mongoconverter instance.
+					]]>
+					</xsd:documentation>
+					<xsd:appinfo>
+						<tool:annotation kind="ref">
+							<tool:assignable-to type="org.springframework.data.mongodb.core.convert.MongoConverter"/>
+						</tool:annotation>
+					</xsd:appinfo>
+				</xsd:annotation>
+			</xsd:attribute>
+			<xsd:attribute name="db-factory-ref" type="xsd:string" use="optional">
+				<xsd:annotation>
+					<xsd:documentation>
+						The reference to a DbFactory.
+					</xsd:documentation>
+					<xsd:appinfo>
+						<tool:annotation kind="ref">
+							<tool:assignable-to type="org.springframework.data.mongodb.MongoDbFactory" />
+						</tool:annotation>
+					</xsd:appinfo>
+				</xsd:annotation>
+			</xsd:attribute>
+		</xsd:complexType>
+	</xsd:element>
 </xsd:schema>

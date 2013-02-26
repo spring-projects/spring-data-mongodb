@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 the original author or authors.
+ * Copyright 2010-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.data.mongodb.config;
 
 import static org.junit.Assert.*;
@@ -26,12 +25,23 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.data.authentication.UserCredentials;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.MongoFactoryBean;
+import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.gridfs.GridFsOperations;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.mongodb.Mongo;
 import com.mongodb.MongoOptions;
+import com.mongodb.WriteConcern;
 
+/**
+ * Integration tests for the MongoDB namespace.
+ * 
+ * @author Mark Pollack
+ * @author Oliver Gierke
+ * @author Martin Baumgartner
+ */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration
 public class MongoNamespaceTests {
@@ -58,7 +68,7 @@ public class MongoNamespaceTests {
 	}
 
 	@Test
-	public void testSecondMongoDbFactory() throws Exception {
+	public void testSecondMongoDbFactory() {
 		assertTrue(ctx.containsBean("secondMongoDbFactory"));
 		MongoDbFactory dbf = (MongoDbFactory) ctx.getBean("secondMongoDbFactory");
 		Mongo mongo = (Mongo) getField(dbf, "mongo");
@@ -66,6 +76,58 @@ public class MongoNamespaceTests {
 		assertEquals(27017, mongo.getAddress().getPort());
 		assertEquals(new UserCredentials("joe", "secret"), getField(dbf, "credentials"));
 		assertEquals("database", getField(dbf, "databaseName"));
+	}
+
+	/**
+	 * @see DATAMONGO-140
+	 */
+	@Test
+	public void testMongoTemplateFactory() {
+		assertTrue(ctx.containsBean("mongoTemplate"));
+		MongoOperations operations = (MongoOperations) ctx.getBean("mongoTemplate");
+		MongoDbFactory dbf = (MongoDbFactory) getField(operations, "mongoDbFactory");
+		assertEquals("database", getField(dbf, "databaseName"));
+		MongoConverter converter = (MongoConverter) getField(operations, "mongoConverter");
+		assertNotNull(converter);
+	}
+
+	/**
+	 * @see DATAMONGO-140
+	 */
+	@Test
+	public void testSecondMongoTemplateFactory() {
+		assertTrue(ctx.containsBean("anotherMongoTemplate"));
+		MongoOperations operations = (MongoOperations) ctx.getBean("anotherMongoTemplate");
+		MongoDbFactory dbf = (MongoDbFactory) getField(operations, "mongoDbFactory");
+		assertEquals("database", getField(dbf, "databaseName"));
+		WriteConcern writeConcern = (WriteConcern) getField(operations, "writeConcern");
+		assertEquals(WriteConcern.SAFE, writeConcern);
+	}
+
+	/**
+	 * @see DATAMONGO-628
+	 */
+	@Test
+	public void testGridFsTemplateFactory() {
+		assertTrue(ctx.containsBean("gridFsTemplate"));
+		GridFsOperations operations = (GridFsOperations) ctx.getBean("gridFsTemplate");
+		MongoDbFactory dbf = (MongoDbFactory) getField(operations, "dbFactory");
+		assertEquals("database", getField(dbf, "databaseName"));
+		MongoConverter converter = (MongoConverter) getField(operations, "converter");
+		assertNotNull(converter);
+	}
+
+	/**
+	 * @see DATAMONGO-628
+	 */
+	@Test
+	public void testSecondGridFsTemplateFactory() {
+		assertTrue(ctx.containsBean("antoherGridFsTemplate"));
+		GridFsOperations operations = (GridFsOperations) ctx.getBean("antoherGridFsTemplate");
+		MongoDbFactory dbf = (MongoDbFactory) getField(operations, "dbFactory");
+		assertEquals("database", getField(dbf, "databaseName"));
+		MongoConverter converter = (MongoConverter) getField(operations, "converter");
+		assertNotNull(converter);
 	}
 
 	@Test
