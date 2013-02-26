@@ -42,6 +42,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.annotation.Id;
@@ -1496,6 +1497,24 @@ public class MongoTemplateTests {
 
 		template.save(person);
 		assertThat(person.version, is(0L));
+	}
+
+	/**
+	 * @see DATAMONGO-622
+	 */
+	@Test(expected = DuplicateKeyException.class)
+	public void preventsDuplicateInsert() {
+
+		template.setWriteConcern(WriteConcern.SAFE);
+
+		PersonWithVersionPropertyOfTypeInteger person = new PersonWithVersionPropertyOfTypeInteger();
+		person.firstName = "Dave";
+
+		template.save(person);
+		assertThat(person.version, is(0));
+
+		person.version = null;
+		template.save(person);
 	}
 
 	static class MyId {
