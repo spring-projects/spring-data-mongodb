@@ -57,7 +57,7 @@ public class MongoTemplateParser extends AbstractBeanDefinitionParser {
 		BeanComponentDefinition component = helper.getComponent(writeConcernPropertyEditorBuilder);
 		parserContext.registerBeanComponent(component);
 
-		return (AbstractBeanDefinition) helper.getComponentIdButFallback(mongoTemplateBuilder, BeanNames.DB_FACTORY)
+		return (AbstractBeanDefinition) helper.getComponentIdButFallback(mongoTemplateBuilder, BeanNames.MONGO_TEMPLATE)
 				.getBeanDefinition();
 	}
 
