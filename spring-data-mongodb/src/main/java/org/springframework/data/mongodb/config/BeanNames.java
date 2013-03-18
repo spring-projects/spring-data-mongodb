@@ -22,6 +22,8 @@ package org.springframework.data.mongodb.config;
 public abstract class BeanNames {
 
 	static final String MAPPING_CONTEXT = "mappingContext";
+	//TODO or mongoOperations?
+	static final String MONGO_TEMPLATE = "mongoTemplate";
 	static final String INDEX_HELPER = "indexCreationHelper";
 	static final String MONGO = "mongo";
 	static final String DB_FACTORY = "mongoDbFactory";
