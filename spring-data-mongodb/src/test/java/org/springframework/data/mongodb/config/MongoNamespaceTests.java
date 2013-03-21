@@ -28,6 +28,7 @@ import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.MongoFactoryBean;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.gridfs.GridFsOperations;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -90,6 +91,27 @@ public class MongoNamespaceTests {
 		assertEquals("database", getField(dbf, "databaseName"));
 		WriteConcern writeConcern = (WriteConcern) getField(operations, "writeConcern");
 		assertEquals(WriteConcern.SAFE, writeConcern);
+	}
+	
+	@Test
+	public void testGridFsTemplateFactory() throws Exception {
+		assertTrue(ctx.containsBean("gridFsTemplate"));
+		GridFsOperations operations = (GridFsOperations) ctx.getBean("gridFsTemplate");
+		MongoDbFactory dbf = (MongoDbFactory) getField(operations, "dbFactory");
+		assertEquals("database", getField(dbf, "databaseName"));
+		MongoConverter converter = (MongoConverter) getField(operations, "converter");
+		// may improve the converter check?
+		assertNotNull(converter);
+	}
+	
+	@Test
+	public void testGridFsMongoTemplateFactory() throws Exception {
+		assertTrue(ctx.containsBean("antoherGridFsTemplate"));
+		GridFsOperations operations = (GridFsOperations) ctx.getBean("antoherGridFsTemplate");
+		MongoDbFactory dbf = (MongoDbFactory) getField(operations, "dbFactory");
+		assertEquals("database", getField(dbf, "databaseName"));
+		MongoConverter converter = (MongoConverter) getField(operations, "converter");
+		assertNotNull(converter);
 		}
 
 	@Test

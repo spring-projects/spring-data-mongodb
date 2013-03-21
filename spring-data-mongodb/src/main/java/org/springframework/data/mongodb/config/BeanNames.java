@@ -30,4 +30,6 @@ public abstract class BeanNames {
 	static final String DEFAULT_CONVERTER_BEAN_NAME = "mappingConverter";
 	// TODO or mongoOperations?
 	static final String MONGO_TEMPLATE = "mongoTemplate";
+	// TODO or gridFsOperations?
+	static final String GRID_FS_TEMPLATE = "gridFsTemplate";
 }

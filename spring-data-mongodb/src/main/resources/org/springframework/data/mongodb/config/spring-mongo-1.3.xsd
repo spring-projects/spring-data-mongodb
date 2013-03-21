@@ -554,4 +554,47 @@ The reference to a Mongoconverter instance.
 			</xsd:attribute>
 		</xsd:complexType>
 	</xsd:element>
+	
+		<xsd:element name="gridFsTemplate">
+		<xsd:annotation>
+			<xsd:documentation><![CDATA[
+Defines a MongoDbFactory for connecting to a specific database
+			]]></xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexType>
+			<xsd:attribute name="id" type="xsd:ID" use="optional">
+				<xsd:annotation>
+					<xsd:documentation><![CDATA[
+The name of the mongo definition (by default "mongoDbFactory").]]></xsd:documentation>
+				</xsd:annotation>
+			</xsd:attribute>
+			<xsd:attribute name="converter-ref" type="converterRef" use="optional">
+				<xsd:annotation>
+					<xsd:documentation><![CDATA[
+The reference to a Mongoconverter instance.
+					]]> 
+					</xsd:documentation>
+					<xsd:appinfo>
+						<tool:annotation kind="ref">
+							<tool:assignable-to type="org.springframework.data.mongodb.core.convert.MongoConverter"/>
+						</tool:annotation>
+					</xsd:appinfo>
+				</xsd:annotation>
+			</xsd:attribute>
+			<xsd:attribute name="db-factory-ref" type="xsd:string"
+				use="optional">
+				<xsd:annotation>
+					<xsd:documentation>
+						The reference to a DbFactory.
+					</xsd:documentation>
+					<xsd:appinfo>
+						<tool:annotation kind="ref">
+							<tool:assignable-to
+								type="org.springframework.data.mongodb.MongoDbFactory" />
+						</tool:annotation>
+					</xsd:appinfo>
+				</xsd:annotation>
+			</xsd:attribute>
+		</xsd:complexType>
+	</xsd:element>
 </xsd:schema>

@@ -478,5 +478,4 @@ This controls if the driver is allowed to read from secondaries or slaves.  Defa
 			</xsd:annotation>
 		</xsd:attribute>
 	</xsd:complexType>
-
 </xsd:schema>
