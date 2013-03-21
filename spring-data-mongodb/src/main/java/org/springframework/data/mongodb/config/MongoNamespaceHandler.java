@@ -42,5 +42,6 @@ public class MongoNamespaceHandler extends NamespaceHandlerSupport {
 		registerBeanDefinitionParser("db-factory", new MongoDbFactoryParser());
 		registerBeanDefinitionParser("jmx", new MongoJmxParser());
 		registerBeanDefinitionParser("auditing", new MongoAuditingBeanDefinitionParser());
+		registerBeanDefinitionParser("template", new MongoTemplateParser());
 	}
 }
