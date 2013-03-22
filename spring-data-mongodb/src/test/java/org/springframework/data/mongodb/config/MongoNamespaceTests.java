@@ -105,7 +105,7 @@ public class MongoNamespaceTests {
 	}
 	
 	@Test
-	public void testGridFsMongoTemplateFactory() throws Exception {
+	public void testSecondGridFsTemplateFactory() throws Exception {
 		assertTrue(ctx.containsBean("antoherGridFsTemplate"));
 		GridFsOperations operations = (GridFsOperations) ctx.getBean("antoherGridFsTemplate");
 		MongoDbFactory dbf = (MongoDbFactory) getField(operations, "dbFactory");
