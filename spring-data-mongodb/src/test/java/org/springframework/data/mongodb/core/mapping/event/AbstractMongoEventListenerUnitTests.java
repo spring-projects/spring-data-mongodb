@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 by the original author(s).
+ * Copyright 2011-2013 by the original author(s).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,6 +31,7 @@ import com.mongodb.DBObject;
  * Unit tests for {@link AbstractMongoEventListener}.
  * 
  * @author Oliver Gierke
+ * @author Martin Baumgartner
  */
 public class AbstractMongoEventListenerUnitTests {
 
@@ -61,7 +62,7 @@ public class AbstractMongoEventListenerUnitTests {
 	}
 
 	/**
-	 * @see DATADOC-289
+	 * @see DATAMONGO-289
 	 */
 	@Test
 	public void afterLoadEffectGetsHandledCorrectly() {
@@ -72,7 +73,7 @@ public class AbstractMongoEventListenerUnitTests {
 	}
 
 	/**
-	 * @see DATADOC-289
+	 * @see DATAMONGO-289
 	 */
 	@Test
 	public void afterLoadEventGetsFilteredForDomainType() {
@@ -87,7 +88,7 @@ public class AbstractMongoEventListenerUnitTests {
 	}
 
 	/**
-	 * @see DATADOC-289
+	 * @see DATAMONGO-289
 	 */
 	@Test
 	public void afterLoadEventGetsFilteredForDomainTypeWorksForSubtypes() {
@@ -102,7 +103,7 @@ public class AbstractMongoEventListenerUnitTests {
 	}
 
 	/**
-	 * @see DATADOC-289
+	 * @see DATAMONGO-289
 	 */
 	@Test
 	public void afterLoadEventGetsFilteredForDomainTypeWorksForSubtypes2() {
@@ -117,7 +118,7 @@ public class AbstractMongoEventListenerUnitTests {
 	}
 
 	/**
-	 * @see DATADOC-333
+	 * @see DATAMONGO-333
 	 */
 	@Test
 	@SuppressWarnings({ "rawtypes", "unchecked" })
@@ -127,10 +128,64 @@ public class AbstractMongoEventListenerUnitTests {
 		listener.onApplicationEvent(new MongoMappingEvent(new Object(), new BasicDBObject()));
 	}
 
+	/**
+	 * @see DATAMONGO-545
+	 */
+	@Test
+	public void invokeContactCallbackForPersonEvent() {
+
+		MongoMappingEvent<DBObject> event = new BeforeDeleteEvent<Person>(new BasicDBObject(), Person.class);
+		SampleContactEventListener listener = new SampleContactEventListener();
+		listener.onApplicationEvent(event);
+
+		assertThat(listener.invokedOnBeforeDelete, is(true));
+	}
+
+	/**
+	 * @see DATAMONGO-545
+	 */
+	@Test
+	public void invokePersonCallbackForPersonEvent() {
+
+		MongoMappingEvent<DBObject> event = new BeforeDeleteEvent<Person>(new BasicDBObject(), Person.class);
+		SamplePersonEventListener listener = new SamplePersonEventListener();
+		listener.onApplicationEvent(event);
+
+		assertThat(listener.invokedOnBeforeDelete, is(true));
+	}
+
+	/**
+	 * @see DATAMONGO-545
+	 */
+	@Test
+	public void dontInvokePersonCallbackForAccountEvent() {
+
+		MongoMappingEvent<DBObject> event = new BeforeDeleteEvent<Account>(new BasicDBObject(), Account.class);
+		SamplePersonEventListener listener = new SamplePersonEventListener();
+		listener.onApplicationEvent(event);
+
+		assertThat(listener.invokedOnBeforeDelete, is(false));
+	}
+
+	/**
+	 * @see DATAMONGO-545
+	 */
+	@Test
+	public void donInvokePersonCallbackForUntypedEvent() {
+
+		MongoMappingEvent<DBObject> event = new BeforeDeleteEvent<Account>(new BasicDBObject(), null);
+		SamplePersonEventListener listener = new SamplePersonEventListener();
+		listener.onApplicationEvent(event);
+
+		assertThat(listener.invokedOnBeforeDelete, is(false));
+	}
+
 	class SamplePersonEventListener extends AbstractMongoEventListener<Person> {
 
 		boolean invokedOnBeforeConvert;
 		boolean invokedOnAfterLoad;
+		boolean invokedOnBeforeDelete;
+		boolean invokedOnAfterDelete;
 
 		@Override
 		public void onBeforeConvert(Person source) {
@@ -141,12 +196,24 @@ public class AbstractMongoEventListenerUnitTests {
 		public void onAfterLoad(DBObject dbo) {
 			invokedOnAfterLoad = true;
 		}
+
+		@Override
+		public void onAfterDelete(DBObject dbo) {
+			invokedOnAfterDelete = true;
+		}
+
+		@Override
+		public void onBeforeDelete(DBObject dbo) {
+			invokedOnBeforeDelete = true;
+		}
 	}
 
 	class SampleContactEventListener extends AbstractMongoEventListener<Contact> {
 
 		boolean invokedOnBeforeConvert;
 		boolean invokedOnAfterLoad;
+		boolean invokedOnBeforeDelete;
+		boolean invokedOnAfterDelete;
 
 		@Override
 		public void onBeforeConvert(Contact source) {
@@ -157,6 +224,17 @@ public class AbstractMongoEventListenerUnitTests {
 		public void onAfterLoad(DBObject dbo) {
 			invokedOnAfterLoad = true;
 		}
+
+		@Override
+		public void onAfterDelete(DBObject dbo) {
+			invokedOnAfterDelete = true;
+		}
+
+		@Override
+		public void onBeforeDelete(DBObject dbo) {
+			invokedOnBeforeDelete = true;
+		}
+
 	}
 
 	class SampleAccountEventListener extends AbstractMongoEventListener<Account> {

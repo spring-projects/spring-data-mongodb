@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 by the original author(s).
+ * Copyright 2011-2013 by the original author(s).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import com.mongodb.DBObject;
  * 
  * @author Jon Brisbin
  * @author Oliver Gierke
+ * @author Martin Baumgartner
  */
 public abstract class AbstractMongoEventListener<E> implements ApplicationListener<MongoMappingEvent<?>> {
 
@@ -45,6 +46,7 @@ public abstract class AbstractMongoEventListener<E> implements ApplicationListen
 	 * (non-Javadoc)
 	 * @see org.springframework.context.ApplicationListener#onApplicationEvent(org.springframework.context.ApplicationEvent)
 	 */
+	@SuppressWarnings("rawtypes")
 	public void onApplicationEvent(MongoMappingEvent<?> event) {
 
 		if (event instanceof AfterLoadEvent) {
@@ -52,6 +54,22 @@ public abstract class AbstractMongoEventListener<E> implements ApplicationListen
 
 			if (domainClass.isAssignableFrom(afterLoadEvent.getType())) {
 				onAfterLoad(event.getDBObject());
+			}
+
+			return;
+		}
+
+		if (event instanceof AbstractDeleteEvent) {
+
+			Class<?> eventDomainType = ((AbstractDeleteEvent) event).getType();
+
+			if (eventDomainType != null && domainClass.isAssignableFrom(eventDomainType)) {
+				if (event instanceof BeforeDeleteEvent) {
+					onBeforeDelete(event.getDBObject());
+				}
+				if (event instanceof AfterDeleteEvent) {
+					onAfterDelete(event.getDBObject());
+				}
 			}
 
 			return;
@@ -78,31 +96,43 @@ public abstract class AbstractMongoEventListener<E> implements ApplicationListen
 
 	public void onBeforeConvert(E source) {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("onBeforeConvert(" + source + ")");
+			LOG.debug("onBeforeConvert({})", source);
 		}
 	}
 
 	public void onBeforeSave(E source, DBObject dbo) {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("onBeforeSave(" + source + ", " + dbo + ")");
+			LOG.debug("onBeforeSave({}, {})", source, dbo);
 		}
 	}
 
 	public void onAfterSave(E source, DBObject dbo) {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("onAfterSave(" + source + ", " + dbo + ")");
+			LOG.debug("onAfterSave({}, {})", source, dbo);
 		}
 	}
 
 	public void onAfterLoad(DBObject dbo) {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("onAfterLoad(" + dbo + ")");
+			LOG.debug("onAfterLoad({})", dbo);
 		}
 	}
 
 	public void onAfterConvert(DBObject dbo, E source) {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("onAfterConvert(" + dbo + "," + source + ")");
+			LOG.debug("onAfterConvert({}, {})", dbo, source);
+		}
+	}
+
+	public void onAfterDelete(DBObject dbo) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("onAfterConvert({})", dbo);
+		}
+	}
+
+	public void onBeforeDelete(DBObject dbo) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("onAfterConvert({})", dbo);
 		}
 	}
 }
