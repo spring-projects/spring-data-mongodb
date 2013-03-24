@@ -131,7 +131,9 @@ public class AbstractMongoEventListenerUnitTests {
 
 		boolean invokedOnBeforeConvert;
 		boolean invokedOnAfterLoad;
-
+		boolean invokedOnBeforeDelete;
+		boolean invokedOnAfterDelete;
+		
 		@Override
 		public void onBeforeConvert(Person source) {
 			invokedOnBeforeConvert = true;
@@ -141,12 +143,24 @@ public class AbstractMongoEventListenerUnitTests {
 		public void onAfterLoad(DBObject dbo) {
 			invokedOnAfterLoad = true;
 		}
+		
+		@Override
+		public void onAfterDelete(DBObject dbo) {
+			invokedOnAfterDelete = true;
+		}
+
+		@Override
+		public void onBeforeDelete(DBObject dbo) {
+			invokedOnBeforeDelete = true;
+		}
 	}
 
 	class SampleContactEventListener extends AbstractMongoEventListener<Contact> {
 
 		boolean invokedOnBeforeConvert;
 		boolean invokedOnAfterLoad;
+		boolean invokedOnBeforeDelete;
+		boolean invokedOnAfterDelete;
 
 		@Override
 		public void onBeforeConvert(Contact source) {
@@ -157,6 +171,18 @@ public class AbstractMongoEventListenerUnitTests {
 		public void onAfterLoad(DBObject dbo) {
 			invokedOnAfterLoad = true;
 		}
+
+		@Override
+		public void onAfterDelete(DBObject dbo) {
+			invokedOnAfterDelete = true;
+		}
+
+		@Override
+		public void onBeforeDelete(DBObject dbo) {
+			invokedOnBeforeDelete = true;
+		}
+		
+
 	}
 
 	class SampleAccountEventListener extends AbstractMongoEventListener<Account> {
@@ -178,5 +204,23 @@ public class AbstractMongoEventListenerUnitTests {
 	@SuppressWarnings("rawtypes")
 	class UntypedEventListener extends AbstractMongoEventListener {
 
+	}
+	
+	//invoke with event from different class
+	@Test
+	public void dontInvokeContactCallbackForPersonEvent() {
+		MongoMappingEvent<DBObject> event = new BeforeDeleteEvent<Person>(new BasicDBObject(), Person.class);
+		SampleContactEventListener listener = new SampleContactEventListener();
+		listener.onApplicationEvent(event);
+		assertThat(listener.invokedOnBeforeDelete, is(false));
+	}
+	
+	@Test
+	public void dontInvokePersonCallbackForPersonEvent() {
+
+		MongoMappingEvent<DBObject> event = new BeforeDeleteEvent<Person>(new BasicDBObject(), Person.class);
+		SamplePersonEventListener listener = new SamplePersonEventListener();
+		listener.onApplicationEvent(event);
+		assertThat(listener.invokedOnBeforeDelete, is(true));
 	}
 }

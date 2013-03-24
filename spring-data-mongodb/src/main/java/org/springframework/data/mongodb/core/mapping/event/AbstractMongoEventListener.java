@@ -45,6 +45,7 @@ public abstract class AbstractMongoEventListener<E> implements ApplicationListen
 	 * (non-Javadoc)
 	 * @see org.springframework.context.ApplicationListener#onApplicationEvent(org.springframework.context.ApplicationEvent)
 	 */
+	@SuppressWarnings("rawtypes")
 	public void onApplicationEvent(MongoMappingEvent<?> event) {
 
 		if (event instanceof AfterLoadEvent) {
@@ -56,6 +57,19 @@ public abstract class AbstractMongoEventListener<E> implements ApplicationListen
 
 			return;
 		}
+		
+		if (event instanceof AbstractDeleteEvent){
+			if (domainClass.isAssignableFrom(((AbstractDeleteEvent) event).getType())){
+				if(event instanceof BeforeDeleteEvent){
+					onBeforeDelete(event.getDBObject());
+				}
+				if(event instanceof AfterDeleteEvent){
+					onAfterDelete(event.getDBObject());
+				}
+			}
+			return;
+		}
+
 
 		@SuppressWarnings("unchecked")
 		E source = (E) event.getSource();
@@ -103,6 +117,18 @@ public abstract class AbstractMongoEventListener<E> implements ApplicationListen
 	public void onAfterConvert(DBObject dbo, E source) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("onAfterConvert(" + dbo + "," + source + ")");
+		}
+	}
+	
+	public void onAfterDelete(DBObject dbo) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("onAfterConvert({})", dbo);
+		}
+	}
+	
+	public void onBeforeDelete(DBObject dbo) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("onAfterConvert({})", dbo);
 		}
 	}
 }

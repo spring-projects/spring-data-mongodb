@@ -74,4 +74,15 @@ public class LoggingEventListener extends AbstractMongoEventListener<Object> {
 	public void onAfterConvert(DBObject dbo, Object source) {
 		log.info("onAfterConvert: " + dbo + ", " + source);
 	}
+
+	@Override
+	public void onAfterDelete(DBObject dbo) {
+		log.info("onAfterDelete: {}", dbo );
+	}
+
+	@Override
+	public void onBeforeDelete(DBObject dbo) {
+		log.info("onBeforeDelete: {}", dbo );
+
+	}
 }
