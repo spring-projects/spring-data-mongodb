@@ -27,7 +27,7 @@ public abstract class AbstractDeleteEvent<T> extends
 	private final Class<T> type;
 
 	/**
-	 * Creates a new {@link AfterLoadEvent} for the given {@link DBObject} and
+	 * Creates a new {@link AbstractDeleteEvent} for the given {@link DBObject} and
 	 * type.
 	 * 
 	 * @param dbo
@@ -42,7 +42,7 @@ public abstract class AbstractDeleteEvent<T> extends
 	}
 
 	/**
-	 * Returns the type for which the {@link AfterLoadEvent} shall be invoked
+	 * Returns the type for which the {@link AbstractDeleteEvent} shall be invoked
 	 * for.
 	 * 
 	 * @return
