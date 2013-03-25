@@ -55,14 +55,6 @@ public class MongoRepositoryBean<T> extends CdiRepositoryBean<T> {
 
 	/* 
 	 * (non-Javadoc)
-	 * @see javax.enterprise.inject.spi.Bean#getScope()
-	 */
-	public Class<? extends Annotation> getScope() {
-		return operations.getScope();
-	}
-
-	/* 
-	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.cdi.CdiRepositoryBean#create(javax.enterprise.context.spi.CreationalContext, java.lang.Class)
 	 */
 	@Override
