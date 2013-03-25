@@ -264,7 +264,13 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 		private boolean isListOfGeoResult() {
 
 			TypeInformation<?> returnType = method.getReturnType();
-			return returnType.getType().equals(List.class) && GeoResult.class.equals(returnType.getComponentType());
+
+			if (!returnType.getType().equals(List.class)) {
+				return false;
+			}
+
+			TypeInformation<?> componentType = returnType.getComponentType();
+			return componentType == null ? false : GeoResult.class.equals(componentType.getType());
 		}
 	}
 }
