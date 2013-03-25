@@ -24,6 +24,7 @@ import java.util.List;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.util.Assert;
 
@@ -148,6 +149,13 @@ public class Query {
 
 		if (sort == null) {
 			return this;
+		}
+
+		for (Order order : sort) {
+			if (order.isIgnoreCase()) {
+				throw new IllegalArgumentException(String.format("Gven sort contained an Order for %s with ignore case! "
+						+ "MongoDB does not support sorting ignoreing case currently!", order.getProperty()));
+			}
 		}
 
 		if (this.coreSort == null) {

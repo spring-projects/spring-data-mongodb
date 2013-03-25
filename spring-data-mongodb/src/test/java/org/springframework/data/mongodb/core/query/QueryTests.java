@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2012 the original author or authors.
+ * Copyright 2010-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,11 +20,23 @@ import static org.junit.Assert.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 
+/**
+ * Unit tests for {@link Query}.
+ * 
+ * @author Thomas Risberg
+ * @author Oliver Gierke
+ */
 public class QueryTests {
+
+	@Rule
+	public ExpectedException exception = ExpectedException.none();
 
 	@Test
 	public void testSimpleQuery() {
@@ -169,5 +181,14 @@ public class QueryTests {
 
 		Query query = new Query().with(new org.springframework.data.domain.Sort(Direction.DESC, "foo"));
 		assertThat(query.getSortObject().toString(), is("{ \"foo\" : -1}"));
+	}
+
+	@Test
+	public void rejectsOrderWithIgnoreCase() {
+
+		exception.expect(IllegalArgumentException.class);
+		exception.expectMessage("foo");
+
+		new Query().with(new Sort(new Sort.Order("foo").ignoreCase()));
 	}
 }
