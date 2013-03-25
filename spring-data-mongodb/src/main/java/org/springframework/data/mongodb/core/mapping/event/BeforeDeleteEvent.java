@@ -25,7 +25,7 @@ public class BeforeDeleteEvent<T> extends AbstractDeleteEvent<T> {
 	private static final long serialVersionUID = 1L;
 
 	/**
-	 * Creates a new {@link AfterLoadEvent} for the given {@link DBObject} and type.
+	 * Creates a new {@link BeforeDeleteEvent} for the given {@link DBObject} and type.
 	 * 
 	 * @param dbo must not be {@literal null}.
 	 * @param type, possibly be {@literal null}.
