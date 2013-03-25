@@ -25,7 +25,7 @@ public class AfterDeleteEvent<T> extends AbstractDeleteEvent<T> {
 	private static final long serialVersionUID = 1L;
 
 	/**
-	 * Creates a new {@link AfterLoadEvent} for the given {@link DBObject} and
+	 * Creates a new {@link AfterDeleteEvent} for the given {@link DBObject} and
 	 * type.
 	 * 
 	 * @param dbo
