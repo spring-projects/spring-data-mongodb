@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2011-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,11 @@
  */
 package org.springframework.data.mongodb.repository;
 
-import java.lang.annotation.*;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * Annotation to declare finder queries directly on repository methods. Both attributes allow using a placeholder
@@ -43,4 +47,12 @@ public @interface Query {
 	 * @return
 	 */
 	String fields() default "";
+
+	/**
+	 * Returns whether the query defined should be executed as count projection.
+	 * 
+	 * @since 1.3
+	 * @return
+	 */
+	boolean count() default false;
 }

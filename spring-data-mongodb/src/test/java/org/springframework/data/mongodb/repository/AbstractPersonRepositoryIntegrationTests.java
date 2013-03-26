@@ -546,4 +546,28 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result, hasSize(1));
 		assertThat(result, hasItem(dave));
 	}
+
+	/**
+	 * @see DATAMONGO-636
+	 */
+	@Test
+	public void executesDerivedCountProjection() {
+		assertThat(repository.countByLastname("Matthews"), is(2L));
+	}
+
+	/**
+	 * @see DATAMONGO-636
+	 */
+	@Test
+	public void executesDerivedCountProjectionToInt() {
+		assertThat(repository.countByFirstname("Oliver August"), is(1));
+	}
+
+	/**
+	 * @see DATAMONGO-636
+	 */
+	@Test
+	public void executesAnnotatedCountProjection() {
+		assertThat(repository.someCountQuery("Matthews"), is(2L));
+	}
 }

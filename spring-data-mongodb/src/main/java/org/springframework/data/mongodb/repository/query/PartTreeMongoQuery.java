@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2010 the original author or authors.
+ * Copyright 2002-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -76,5 +76,14 @@ public class PartTreeMongoQuery extends AbstractMongoQuery {
 	@Override
 	protected Query createCountQuery(ConvertingParameterAccessor accessor) {
 		return new MongoQueryCreator(tree, accessor, context, false).createQuery();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery#isCountQuery()
+	 */
+	@Override
+	protected boolean isCountQuery() {
+		return tree.isCountProjection();
 	}
 }

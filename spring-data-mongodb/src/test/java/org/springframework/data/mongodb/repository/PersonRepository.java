@@ -198,4 +198,20 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	 * @return
 	 */
 	List<Person> findByCredentials(Credentials credentials);
+
+	/**
+	 * @see DATAMONGO-636
+	 */
+	long countByLastname(String lastname);
+
+	/**
+	 * @see DATAMONGO-636
+	 */
+	int countByFirstname(String firstname);
+
+	/**
+	 * @see DATAMONGO-636
+	 */
+	@Query(value = "{ 'lastname' : ?0 }", count = true)
+	long someCountQuery(String lastname);
 }

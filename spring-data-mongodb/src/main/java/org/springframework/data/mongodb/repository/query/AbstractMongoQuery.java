@@ -17,6 +17,8 @@ package org.springframework.data.mongodb.repository.query;
 
 import java.util.List;
 
+import org.springframework.core.convert.ConversionService;
+import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoOperations;
@@ -38,6 +40,8 @@ import org.springframework.util.Assert;
  * @author Oliver Gierke
  */
 public abstract class AbstractMongoQuery implements RepositoryQuery {
+
+	private static final ConversionService CONVERSION_SERVICE = new DefaultConversionService();
 
 	private final MongoQueryMethod method;
 	private final MongoOperations operations;
@@ -86,18 +90,22 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 			return new CollectionExecution(accessor.getPageable()).execute(query);
 		} else if (method.isPageQuery()) {
 			return new PagedExecution(accessor.getPageable()).execute(query);
-		} else {
-			return new SingleEntityExecution().execute(query);
 		}
-	}
 
-	/**
-	 * Creates a {@link Query} instance using the given {@link ParameterAccessor}
-	 * 
-	 * @param accessor must not be {@literal null}.
-	 * @return
-	 */
-	protected abstract Query createQuery(ConvertingParameterAccessor accessor);
+		Object result = new SingleEntityExecution(isCountQuery()).execute(query);
+
+		if (result == null) {
+			return result;
+		}
+
+		Class<?> expectedReturnType = method.getReturnType().getType();
+
+		if (expectedReturnType.isAssignableFrom(result.getClass())) {
+			return result;
+		}
+
+		return CONVERSION_SERVICE.convert(result, expectedReturnType);
+	}
 
 	/**
 	 * Creates a {@link Query} instance using the given {@link ConvertingParameterAccessor}. Will delegate to
@@ -110,6 +118,21 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	protected Query createCountQuery(ConvertingParameterAccessor accessor) {
 		return createQuery(accessor);
 	}
+
+	/**
+	 * Creates a {@link Query} instance using the given {@link ParameterAccessor}
+	 * 
+	 * @param accessor must not be {@literal null}.
+	 * @return
+	 */
+	protected abstract Query createQuery(ConvertingParameterAccessor accessor);
+
+	/**
+	 * Returns whether the query should get a count projection applied.
+	 * 
+	 * @return
+	 */
+	protected abstract boolean isCountQuery();
 
 	private abstract class Execution {
 
@@ -191,6 +214,12 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	 */
 	class SingleEntityExecution extends Execution {
 
+		private final boolean countProjection;
+
+		private SingleEntityExecution(boolean countProjection) {
+			this.countProjection = countProjection;
+		}
+
 		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.repository.AbstractMongoQuery.Execution#execute(org.springframework.data.mongodb.core.core.query.Query)
@@ -199,7 +228,8 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 		Object execute(Query query) {
 
 			MongoEntityMetadata<?> metadata = method.getEntityInformation();
-			return operations.findOne(query, metadata.getJavaType());
+			return countProjection ? operations.count(query, metadata.getJavaType()) : operations.findOne(query,
+					metadata.getJavaType());
 		}
 	}
 

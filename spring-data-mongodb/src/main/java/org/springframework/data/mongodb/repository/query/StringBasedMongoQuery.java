@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2012 the original author or authors.
+ * Copyright 2011-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,17 +38,21 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 
 	private final String query;
 	private final String fieldSpec;
+	private final boolean isCountQuery;
 
 	/**
 	 * Creates a new {@link StringBasedMongoQuery}.
 	 * 
-	 * @param method
-	 * @param template
+	 * @param method must not be {@literal null}.
+	 * @param template must not be {@literal null}.
 	 */
 	public StringBasedMongoQuery(String query, MongoQueryMethod method, MongoOperations mongoOperations) {
+
 		super(method, mongoOperations);
+
 		this.query = query;
 		this.fieldSpec = method.getFieldSpecification();
+		this.isCountQuery = method.hasAnnotatedQuery() ? method.getQueryAnnotation().count() : false;
 	}
 
 	public StringBasedMongoQuery(MongoQueryMethod method, MongoOperations mongoOperations) {
@@ -80,6 +84,15 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 		}
 
 		return query;
+	}
+
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery#isCountQuery()
+	 */
+	@Override
+	protected boolean isCountQuery() {
+		return isCountQuery;
 	}
 
 	private String replacePlaceholders(String input, ConvertingParameterAccessor accessor) {
