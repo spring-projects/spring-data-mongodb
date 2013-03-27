@@ -1517,6 +1517,22 @@ public class MongoTemplateTests {
 		template.save(person);
 	}
 
+	/**
+	 * @see DATAMONGO-629
+	 */
+	@Test
+	public void countAndFindWithoutTypeInformation() {
+
+		Person person = new Person();
+		template.save(person);
+
+		Query query = query(where("_id").is(person.getId()));
+		String collectionName = template.getCollectionName(Person.class);
+
+		assertThat(template.find(query, HashMap.class, collectionName), hasSize(1));
+		assertThat(template.count(query, collectionName), is(1L));
+	}
+
 	static class MyId {
 
 		String first;
