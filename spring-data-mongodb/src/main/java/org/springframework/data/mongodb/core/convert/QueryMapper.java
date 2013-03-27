@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2012 the original author or authors.
+ * Copyright 2011-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -214,7 +214,11 @@ public class QueryMapper {
 	 */
 	private String determineKey(String key, MongoPersistentEntity<?> entity) {
 
-		if (entity == null && DEFAULT_ID_NAMES.contains(key)) {
+		if (entity == null) {
+			return key;
+		}
+
+		if (!entity.hasIdProperty() && DEFAULT_ID_NAMES.contains(key)) {
 			return "_id";
 		}
 
