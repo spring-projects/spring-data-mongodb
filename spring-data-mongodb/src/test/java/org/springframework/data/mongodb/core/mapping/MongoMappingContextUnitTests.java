@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 by the original author(s).
+ * Copyright 2011-2013 by the original author(s).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.data.mongodb.core.mapping;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
 import java.lang.reflect.Field;
+import java.util.AbstractMap;
 import java.util.Collections;
 import java.util.Map;
 
@@ -78,6 +78,16 @@ public class MongoMappingContextUnitTests {
 		Field field = ReflectionUtils.findField(AbstractMappingContext.class, "applicationContext");
 		ReflectionUtils.makeAccessible(field);
 		assertThat(ReflectionUtils.getField(field, context), is(notNullValue()));
+	}
+
+	/**
+	 * @see DATAMONGO-638
+	 */
+	@Test
+	public void doesNotCreatePersistentEntityForAbstractMap() {
+
+		MongoMappingContext context = new MongoMappingContext();
+		assertThat(context.getPersistentEntity(AbstractMap.class), is(nullValue()));
 	}
 
 	class ClassWithMultipleIdProperties {
