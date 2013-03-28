@@ -17,7 +17,7 @@ package org.springframework.data.mongodb.core.mapping;
 
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
-import java.util.HashMap;
+import java.util.AbstractMap;
 
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
@@ -52,7 +52,7 @@ public class MongoMappingContext extends AbstractMappingContext<BasicMongoPersis
 	 */
 	@Override
 	protected boolean shouldCreatePersistentEntityFor(TypeInformation<?> type) {
-		return !MongoSimpleTypes.HOLDER.isSimpleType(type.getType()) && !type.getType().equals(HashMap.class);
+		return !MongoSimpleTypes.HOLDER.isSimpleType(type.getType()) && !AbstractMap.class.isAssignableFrom(type.getType());
 	}
 
 	/*
