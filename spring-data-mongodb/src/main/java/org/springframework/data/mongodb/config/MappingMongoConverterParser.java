@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2012 the original author or authors.
+ * Copyright 2011-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,6 +54,7 @@ import org.springframework.data.mapping.context.MappingContextIsNewStrategyFacto
 import org.springframework.data.mongodb.core.convert.CustomConversions;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexCreator;
+import org.springframework.data.mongodb.core.mapping.CamelCaseAbbreviatingFieldNamingStrategy;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.event.ValidatingMongoEventListener;
@@ -198,6 +199,12 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 			simpleTypesDefinition.setFactoryMethodName("getSimpleTypeHolder");
 
 			mappingContextBuilder.addPropertyValue("simpleTypeHolder", simpleTypesDefinition);
+		}
+
+		String abbreviateFieldNames = element.getAttribute("abbreviate-field-names");
+		if ("true".equals(abbreviateFieldNames)) {
+			mappingContextBuilder.addPropertyValue("fieldNamingStrategy", new RootBeanDefinition(
+					CamelCaseAbbreviatingFieldNamingStrategy.class));
 		}
 
 		ctxRef = converterId + "." + MAPPING_CONTEXT;

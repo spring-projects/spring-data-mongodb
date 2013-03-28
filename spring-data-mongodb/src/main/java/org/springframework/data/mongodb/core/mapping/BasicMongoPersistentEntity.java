@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2012 the original author or authors.
+ * Copyright 2011-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,19 @@
 package org.springframework.data.mongodb.core.mapping;
 
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.expression.BeanFactoryAccessor;
 import org.springframework.context.expression.BeanFactoryResolver;
+import org.springframework.data.mapping.Association;
+import org.springframework.data.mapping.AssociationHandler;
+import org.springframework.data.mapping.PropertyHandler;
 import org.springframework.data.mapping.model.BasicPersistentEntity;
+import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mongodb.MongoCollectionUtils;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.Expression;
@@ -41,6 +47,7 @@ import org.springframework.util.StringUtils;
 public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, MongoPersistentProperty> implements
 		MongoPersistentEntity<T>, ApplicationContextAware {
 
+	private static final String AMBIGUOUS_FIELD_MAPPING = "Ambiguous field mapping detected! Both %s and %s map to the same field name %s! Disambiguate using @Field annotation!";
 	private final String collection;
 	private final SpelExpressionParser parser;
 	private final StandardEvaluationContext context;
@@ -89,6 +96,19 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 		return expression.getValue(context, String.class);
 	}
 
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mapping.model.BasicPersistentEntity#verify()
+	 */
+	@Override
+	public void verify() {
+
+		AssertFieldNameUniquenessHandler handler = new AssertFieldNameUniquenessHandler();
+
+		doWithProperties(handler);
+		doWithAssociations(handler);
+	}
+
 	/**
 	 * {@link Comparator} implementation inspecting the {@link MongoPersistentProperty}'s order.
 	 * 
@@ -113,6 +133,39 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 			}
 
 			return o1.getFieldOrder() - o2.getFieldOrder();
+		}
+	}
+
+	/**
+	 * Handler to collect {@link MongoPersistentProperty} instances and check that each of them is mapped to a distinct
+	 * field name.
+	 * 
+	 * @author Oliver Gierke
+	 */
+	private static class AssertFieldNameUniquenessHandler implements PropertyHandler<MongoPersistentProperty>,
+			AssociationHandler<MongoPersistentProperty> {
+
+		private final Map<String, MongoPersistentProperty> properties = new HashMap<String, MongoPersistentProperty>();
+
+		public void doWithPersistentProperty(MongoPersistentProperty persistentProperty) {
+			assertUniqueness(persistentProperty);
+		}
+
+		public void doWithAssociation(Association<MongoPersistentProperty> association) {
+			assertUniqueness(association.getInverse());
+		}
+
+		private void assertUniqueness(MongoPersistentProperty property) {
+
+			String fieldName = property.getFieldName();
+			MongoPersistentProperty existingProperty = properties.get(fieldName);
+
+			if (existingProperty != null) {
+				throw new MappingException(String.format(AMBIGUOUS_FIELD_MAPPING, property.toString(),
+						existingProperty.toString(), fieldName));
+			}
+
+			properties.put(fieldName, property);
 		}
 	}
 }

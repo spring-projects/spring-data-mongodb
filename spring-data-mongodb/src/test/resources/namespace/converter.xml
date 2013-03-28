@@ -10,5 +10,7 @@
 	</mongo:mapping-converter>
 	
 	<mongo:db-factory id="factory" />
+	
+	<mongo:mapping-converter id="abbreviatingConverter" abbreviate-field-names="true" />
 
 </beans>

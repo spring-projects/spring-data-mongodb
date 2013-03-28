@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2012 the original author or authors.
+ * Copyright 2011-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.config;
 
-import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
 import java.util.Collections;
@@ -23,6 +23,7 @@ import java.util.Set;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.core.convert.TypeDescriptor;
@@ -31,6 +32,7 @@ import org.springframework.core.convert.converter.GenericConverter;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.mongodb.core.convert.CustomConversions;
 import org.springframework.data.mongodb.core.mapping.Account;
+import org.springframework.data.mongodb.core.mapping.CamelCaseAbbreviatingFieldNamingStrategy;
 import org.springframework.data.mongodb.repository.Person;
 import org.springframework.stereotype.Component;
 
@@ -65,6 +67,20 @@ public class MappingMongoConverterParserIntegrationTests {
 		CustomConversions conversions = factory.getBean(CustomConversions.class);
 		assertThat(conversions.hasCustomWriteTarget(Person.class), is(true));
 		assertThat(conversions.hasCustomWriteTarget(Account.class), is(true));
+	}
+
+	/**
+	 * @see DATAMONGO-607
+	 */
+	@Test
+	public void activatesAbbreviatingPropertiesCorrectly() {
+
+		BeanDefinition definition = factory.getBeanDefinition("abbreviatingConverter.mappingContext");
+		Object value = definition.getPropertyValues().getPropertyValue("fieldNamingStrategy").getValue();
+
+		assertThat(value, is(instanceOf(BeanDefinition.class)));
+		BeanDefinition strategy = (BeanDefinition) value;
+		assertThat(strategy.getBeanClassName(), is(CamelCaseAbbreviatingFieldNamingStrategy.class.getName()));
 	}
 
 	@Component

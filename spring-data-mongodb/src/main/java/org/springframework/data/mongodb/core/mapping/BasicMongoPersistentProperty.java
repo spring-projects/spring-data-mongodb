@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2012 the original author or authors.
+ * Copyright 2011-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.model.AnnotationBasedPersistentProperty;
+import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
@@ -60,6 +61,8 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 		CAUSE_FIELD = ReflectionUtils.findField(Throwable.class, "cause");
 	}
 
+	private final FieldNamingStrategy fieldNamingStrategy;
+
 	/**
 	 * Creates a new {@link BasicMongoPersistentProperty}.
 	 * 
@@ -67,10 +70,14 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 	 * @param propertyDescriptor
 	 * @param owner
 	 * @param simpleTypeHolder
+	 * @param fieldNamingStrategy
 	 */
 	public BasicMongoPersistentProperty(Field field, PropertyDescriptor propertyDescriptor,
-			MongoPersistentEntity<?> owner, SimpleTypeHolder simpleTypeHolder) {
+			MongoPersistentEntity<?> owner, SimpleTypeHolder simpleTypeHolder, FieldNamingStrategy fieldNamingStrategy) {
+
 		super(field, propertyDescriptor, owner, simpleTypeHolder);
+		this.fieldNamingStrategy = fieldNamingStrategy == null ? PropertyNameFieldNamingStrategy.INSTANCE
+				: fieldNamingStrategy;
 
 		if (isIdProperty() && getFieldName() != ID_FIELD_NAME) {
 			LOG.warn("Customizing field name for id property not allowed! Custom name will not be considered!");
@@ -113,9 +120,20 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 			return ID_FIELD_NAME;
 		}
 
-		org.springframework.data.mongodb.core.mapping.Field annotation = getField().getAnnotation(
-				org.springframework.data.mongodb.core.mapping.Field.class);
-		return annotation != null && StringUtils.hasText(annotation.value()) ? annotation.value() : field.getName();
+		org.springframework.data.mongodb.core.mapping.Field annotation = findAnnotation(org.springframework.data.mongodb.core.mapping.Field.class);
+
+		if (annotation != null && StringUtils.hasText(annotation.value())) {
+			return annotation.value();
+		}
+
+		String fieldName = fieldNamingStrategy.getFieldName(this);
+
+		if (!StringUtils.hasText(fieldName)) {
+			throw new MappingException(String.format("Invalid (null or empty) field name returned for property %s by %s!",
+					this, fieldNamingStrategy.getClass()));
+		}
+
+		return fieldName;
 	}
 
 	/*

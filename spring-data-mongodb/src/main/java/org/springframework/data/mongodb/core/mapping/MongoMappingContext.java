@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2012 the original author or authors.
+ * Copyright 2011-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,6 +37,9 @@ import org.springframework.data.util.TypeInformation;
 public class MongoMappingContext extends AbstractMappingContext<BasicMongoPersistentEntity<?>, MongoPersistentProperty>
 		implements ApplicationContextAware {
 
+	private static final FieldNamingStrategy DEFAULT_NAMING_STRATEGY = PropertyNameFieldNamingStrategy.INSTANCE;
+
+	private FieldNamingStrategy fieldNamingStrategy = DEFAULT_NAMING_STRATEGY;
 	private ApplicationContext context;
 
 	/**
@@ -44,6 +47,17 @@ public class MongoMappingContext extends AbstractMappingContext<BasicMongoPersis
 	 */
 	public MongoMappingContext() {
 		setSimpleTypeHolder(MongoSimpleTypes.HOLDER);
+	}
+
+	/**
+	 * Configures the {@link FieldNamingStrategy} to be used to determine the field name if no manual mapping is applied.
+	 * Defaults to a strategy using the plain property name.
+	 * 
+	 * @param fieldNamingStrategy the {@link FieldNamingStrategy} to be used to determine the field name if no manual
+	 *          mapping is applied.
+	 */
+	public void setFieldNamingStrategy(FieldNamingStrategy fieldNamingStrategy) {
+		this.fieldNamingStrategy = fieldNamingStrategy == null ? DEFAULT_NAMING_STRATEGY : fieldNamingStrategy;
 	}
 
 	/*
@@ -62,7 +76,7 @@ public class MongoMappingContext extends AbstractMappingContext<BasicMongoPersis
 	@Override
 	public MongoPersistentProperty createPersistentProperty(Field field, PropertyDescriptor descriptor,
 			BasicMongoPersistentEntity<?> owner, SimpleTypeHolder simpleTypeHolder) {
-		return new CachingMongoPersistentProperty(field, descriptor, owner, simpleTypeHolder);
+		return new CachingMongoPersistentProperty(field, descriptor, owner, simpleTypeHolder, fieldNamingStrategy);
 	}
 
 	/*

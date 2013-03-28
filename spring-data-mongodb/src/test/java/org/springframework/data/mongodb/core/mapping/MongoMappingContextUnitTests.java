@@ -21,9 +21,12 @@ import static org.junit.Assert.*;
 import java.lang.reflect.Field;
 import java.util.AbstractMap;
 import java.util.Collections;
+import java.util.Locale;
 import java.util.Map;
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
@@ -45,6 +48,9 @@ public class MongoMappingContextUnitTests {
 
 	@Mock
 	ApplicationContext applicationContext;
+
+	@Rule
+	public ExpectedException exception = ExpectedException.none();
 
 	@Test
 	public void addsSelfReferencingPersistentEntityCorrectly() throws Exception {
@@ -90,6 +96,41 @@ public class MongoMappingContextUnitTests {
 		assertThat(context.getPersistentEntity(AbstractMap.class), is(nullValue()));
 	}
 
+	/**
+	 * @see DATAMONGO-607
+	 */
+	@Test
+	public void populatesPersistentPropertyWithCustomFieldNamingStrategy() {
+
+		MongoMappingContext context = new MongoMappingContext();
+		context.setApplicationContext(applicationContext);
+		context.setFieldNamingStrategy(new FieldNamingStrategy() {
+
+			public String getFieldName(MongoPersistentProperty property) {
+				return property.getName().toUpperCase(Locale.US);
+			}
+		});
+
+		MongoPersistentEntity<?> entity = context.getPersistentEntity(Person.class);
+		assertThat(entity.getPersistentProperty("firstname").getFieldName(), is("FIRSTNAME"));
+	}
+
+	/**
+	 * @see DATAMONGO-607
+	 */
+	@Test
+	public void rejectsClassWithAmbiguousFieldMappings() {
+
+		exception.expect(MappingException.class);
+		exception.expectMessage("firstname");
+		exception.expectMessage("lastname");
+		exception.expectMessage("foo");
+
+		MongoMappingContext context = new MongoMappingContext();
+		context.setApplicationContext(applicationContext);
+		context.getPersistentEntity(InvalidPerson.class);
+	}
+
 	class ClassWithMultipleIdProperties {
 
 		@Id
@@ -101,5 +142,16 @@ public class MongoMappingContextUnitTests {
 	public class SampleClass {
 
 		Map<String, SampleClass> children;
+	}
+
+	class Person {
+
+		String firstname, lastname;
+	}
+
+	class InvalidPerson {
+
+		@org.springframework.data.mongodb.core.mapping.Field("foo")
+		String firstname, lastname;
 	}
 }
