@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2012 the original author or authors.
+ * Copyright 2011-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,6 +32,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 import org.springframework.data.mongodb.core.convert.CustomConversions;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.mapping.CamelCaseAbbreviatingFieldNamingStrategy;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.support.CachingIsNewStrategyFactory;
@@ -134,6 +135,11 @@ public abstract class AbstractMongoConfiguration {
 		MongoMappingContext mappingContext = new MongoMappingContext();
 		mappingContext.setInitialEntitySet(getInitialEntitySet());
 		mappingContext.setSimpleTypeHolder(customConversions().getSimpleTypeHolder());
+
+		if (abbreviateFieldNames()) {
+			mappingContext.setFieldNamingStrategy(new CamelCaseAbbreviatingFieldNamingStrategy());
+		}
+
 		mappingContext.initialize();
 
 		return mappingContext;
@@ -204,5 +210,16 @@ public abstract class AbstractMongoConfiguration {
 		}
 
 		return initialEntitySet;
+	}
+
+	/**
+	 * Configures whether to abbreviate field names for domain objects by configuring a
+	 * {@link CamelCaseAbbreviatingFieldNamingStrategy} on the {@link MongoMappingContext} instance created. For advanced
+	 * customization needs, consider overriding {@link #mappingMongoConverter()}.
+	 * 
+	 * @return
+	 */
+	protected boolean abbreviateFieldNames() {
+		return false;
 	}
 }
