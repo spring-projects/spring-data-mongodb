@@ -36,9 +36,14 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 
+/**
+ * Integration tests for MongoDB cross-store persistence (mainly {@link MongoChangeSetPersister}).
+ * 
+ * @author Thomas Risberg
+ * @author Oliver Gierke
+ */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:/META-INF/spring/applicationContext.xml")
 public class CrossStoreMongoTests {
@@ -58,7 +63,7 @@ public class CrossStoreMongoTests {
 
 		txTemplate = new TransactionTemplate(transactionManager);
 
-		clearData(Person.class.getName());
+		clearData(Person.class);
 
 		Address address = new Address(12, "MAin St.", "Boston", "MA", "02101");
 
@@ -91,11 +96,10 @@ public class CrossStoreMongoTests {
 		});
 	}
 
-	private void clearData(String collectionName) {
-		DBCollection col = this.mongoTemplate.getCollection(collectionName);
-		if (col != null) {
-			this.mongoTemplate.dropCollection(collectionName);
-		}
+	private void clearData(Class<?> domainType) {
+
+		String collectionName = mongoTemplate.getCollectionName(domainType);
+		mongoTemplate.dropCollection(collectionName);
 	}
 
 	@Test
@@ -183,7 +187,7 @@ public class CrossStoreMongoTests {
 
 		boolean weFound3 = false;
 
-		for (DBObject dbo : this.mongoTemplate.getCollection(Person.class.getName()).find()) {
+		for (DBObject dbo : this.mongoTemplate.getCollection(mongoTemplate.getCollectionName(Person.class)).find()) {
 			Assert.assertTrue(!dbo.get("_entity_id").equals(2L));
 			if (dbo.get("_entity_id").equals(3L)) {
 				weFound3 = true;
