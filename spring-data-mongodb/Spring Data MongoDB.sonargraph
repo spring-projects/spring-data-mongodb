@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<context version="7.0.3.1152">
+<context version="7.1.7.187">
     <scope name="spring-data-mongodb" type="Project">
         <element name="Filter" type="TypeFilterReferenceOverridden">
             <element name="org.springframework.data.mongodb.**" type="IncludeTypePattern"/>
@@ -10,6 +10,7 @@
                     <element name="**.config.**" type="WeakTypePattern"/>
                 </element>
                 <dependency type="AllowedDependency" toName="Project|spring-data-mongodb::Layer|Core"/>
+                <dependency type="AllowedDependency" toName="Project|spring-data-mongodb::Layer|GridFS"/>
                 <dependency type="AllowedDependency" toName="Project|spring-data-mongodb::Layer|Monitoring"/>
                 <dependency type="AllowedDependency" toName="Project|spring-data-mongodb::Layer|Repositories"/>
             </element>
