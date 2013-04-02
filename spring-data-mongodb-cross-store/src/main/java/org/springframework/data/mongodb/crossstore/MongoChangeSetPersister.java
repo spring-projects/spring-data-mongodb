@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2011-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,6 +34,10 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.MongoException;
 
+/**
+ * @author Thomas Risberg
+ * @author Oliver Gierke
+ */
 public class MongoChangeSetPersister implements ChangeSetPersister<Object> {
 
 	private static final String ENTITY_CLASS = "_entity_class";
@@ -58,6 +62,10 @@ public class MongoChangeSetPersister implements ChangeSetPersister<Object> {
 		this.entityManagerFactory = entityManagerFactory;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.crossstore.ChangeSetPersister#getPersistentState(java.lang.Class, java.lang.Object, org.springframework.data.crossstore.ChangeSet)
+	 */
 	public void getPersistentState(Class<? extends ChangeSetBacked> entityClass, Object id, final ChangeSet changeSet)
 			throws DataAccessException, NotFoundException {
 
@@ -100,6 +108,10 @@ public class MongoChangeSetPersister implements ChangeSetPersister<Object> {
 		});
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.crossstore.ChangeSetPersister#getPersistentId(org.springframework.data.crossstore.ChangeSetBacked, org.springframework.data.crossstore.ChangeSet)
+	 */
 	public Object getPersistentId(ChangeSetBacked entity, ChangeSet cs) throws DataAccessException {
 		log.debug("getPersistentId called on " + entity);
 		if (entityManagerFactory == null) {
@@ -109,6 +121,10 @@ public class MongoChangeSetPersister implements ChangeSetPersister<Object> {
 		return o;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.crossstore.ChangeSetPersister#persistState(org.springframework.data.crossstore.ChangeSetBacked, org.springframework.data.crossstore.ChangeSet)
+	 */
 	public Object persistState(ChangeSetBacked entity, ChangeSet cs) throws DataAccessException {
 		if (cs == null) {
 			log.debug("Flush: changeset was null, nothing to flush.");
@@ -169,8 +185,13 @@ public class MongoChangeSetPersister implements ChangeSetPersister<Object> {
 		return 0L;
 	}
 
+	/**
+	 * Returns the collection the given entity type shall be persisted to.
+	 * 
+	 * @param entityClass must not be {@literal null}.
+	 * @return
+	 */
 	private String getCollectionNameForEntity(Class<? extends ChangeSetBacked> entityClass) {
-		return ClassUtils.getQualifiedName(entityClass);
+		return mongoTemplate.getCollectionName(entityClass);
 	}
-
 }
