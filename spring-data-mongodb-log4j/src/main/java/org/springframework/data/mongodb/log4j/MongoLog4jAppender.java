@@ -1,11 +1,11 @@
 /*
- * Copyright (c) 2011 by the original author(s).
+ * Copyright 2011-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.data.mongodb.log4j;
 
 import java.net.UnknownHostException;
@@ -34,7 +33,10 @@ import com.mongodb.Mongo;
 import com.mongodb.WriteConcern;
 
 /**
- * @author Jon Brisbin <jbrisbin@vmware.com>
+ * Log4j appender writing log entries into a MongoDB instance.
+ * 
+ * @author Jon Brisbin
+ * @author Oliver Gierke
  */
 public class MongoLog4jAppender extends AppenderSkeleton {
 
@@ -130,8 +132,12 @@ public class MongoLog4jAppender extends AppenderSkeleton {
 		this.db = mongo.getDB(database);
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	/*
+	 * (non-Javadoc)
+	 * @see org.apache.log4j.AppenderSkeleton#append(org.apache.log4j.spi.LoggingEvent)
+	 */
 	@Override
+	@SuppressWarnings({ "unchecked" })
 	protected void append(final LoggingEvent event) {
 		if (null == db) {
 			try {
@@ -199,10 +205,21 @@ public class MongoLog4jAppender extends AppenderSkeleton {
 		db.getCollection(coll).insert(dbo, wc);
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.apache.log4j.AppenderSkeleton#close()
+	 */
 	public void close() {
-		mongo.close();
+
+		if (mongo != null) {
+			mongo.close();
+		}
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.apache.log4j.AppenderSkeleton#requiresLayout()
+	 */
 	public boolean requiresLayout() {
 		return true;
 	}
