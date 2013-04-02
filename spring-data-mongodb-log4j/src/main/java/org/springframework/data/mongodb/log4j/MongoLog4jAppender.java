@@ -199,7 +199,9 @@ public class MongoLog4jAppender extends AppenderSkeleton {
   }
 
   public void close() {
-    mongo.close();
+    if (mongo != null) {
+      mongo.close();
+    }
   }
 
   public boolean requiresLayout() {
