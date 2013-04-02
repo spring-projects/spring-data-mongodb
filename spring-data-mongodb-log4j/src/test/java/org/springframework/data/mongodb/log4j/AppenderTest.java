@@ -35,41 +35,41 @@ import org.junit.Test;
  */
 public class AppenderTest {
 
-  private static final String NAME = AppenderTest.class.getName();
-  private Logger log = Logger.getLogger(NAME);
-  private Mongo mongo;
-  private DB db;
-  private String collection;
+	private static final String NAME = AppenderTest.class.getName();
+	private Logger log = Logger.getLogger(NAME);
+	private Mongo mongo;
+	private DB db;
+	private String collection;
 
-  @Before
-  public void setup() {
-    try {
-      mongo = new Mongo("localhost", 27017);
-      db = mongo.getDB("logs");
-      Calendar now = Calendar.getInstance();
-      collection = String.valueOf(now.get(Calendar.YEAR)) + String.format("%1$02d", now.get(Calendar.MONTH) + 1);
-      db.getCollection(collection).drop();
-    } catch (UnknownHostException e) {
-      throw new RuntimeException(e.getMessage(), e);
-    }
-  }
+	@Before
+	public void setup() {
+		try {
+			mongo = new Mongo("localhost", 27017);
+			db = mongo.getDB("logs");
+			Calendar now = Calendar.getInstance();
+			collection = String.valueOf(now.get(Calendar.YEAR)) + String.format("%1$02d", now.get(Calendar.MONTH) + 1);
+			db.getCollection(collection).drop();
+		} catch (UnknownHostException e) {
+			throw new RuntimeException(e.getMessage(), e);
+		}
+	}
 
-  @Test
-  public void testLogging() {
-    log.debug("DEBUG message");
-    log.info("INFO message");
-    log.warn("WARN message");
-    log.error("ERROR message");
+	@Test
+	public void testLogging() {
+		log.debug("DEBUG message");
+		log.info("INFO message");
+		log.warn("WARN message");
+		log.error("ERROR message");
 
-    DBCursor msgs = db.getCollection(collection).find();
-    assertThat(msgs.count(), is(4));
+		DBCursor msgs = db.getCollection(collection).find();
+		assertThat(msgs.count(), is(4));
 
-  }
+	}
 
-  @Test
-  public void testProperties() {
-    MDC.put("property", "one");
-    log.debug("DEBUG message");
-  }
+	@Test
+	public void testProperties() {
+		MDC.put("property", "one");
+		log.debug("DEBUG message");
+	}
 
 }
