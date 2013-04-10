@@ -35,7 +35,7 @@ Defines a MongoDbFactory for connecting to a specific database
 			]]></xsd:documentation>
 		</xsd:annotation>
 		<xsd:complexType>
-			<xsd:attribute name="id" type="xsd:ID" use="optional">
+			<xsd:attribute name="id" type="xsd:string" use="optional">
 				<xsd:annotation>
 					<xsd:documentation><![CDATA[
 The name of the mongo definition (by default "mongoDbFactory").]]></xsd:documentation>
@@ -156,7 +156,7 @@ The Mongo URI string.]]></xsd:documentation>
 					</xsd:complexType>
 				</xsd:element>
 			</xsd:sequence>
-			<xsd:attribute name="id" type="xsd:ID" use="optional">
+			<xsd:attribute name="id" type="xsd:string" use="optional">
 				<xsd:annotation>
 					<xsd:documentation><![CDATA[
 The name of the MappingMongoConverter instance (by default "mappingConverter").]]></xsd:documentation>
@@ -335,7 +335,7 @@ The Mongo driver options
 		<!-- MLP 
 		<xsd:attributeGroup ref="writeConcern" />
 		-->
-		<xsd:attribute name="id" type="xsd:ID" use="optional">
+		<xsd:attribute name="id" type="xsd:string" use="optional">
 			<xsd:annotation>
 				<xsd:documentation><![CDATA[
 The name of the mongo definition (by default "mongo").]]></xsd:documentation>
