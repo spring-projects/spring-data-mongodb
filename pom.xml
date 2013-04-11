@@ -26,7 +26,6 @@
 		<module>spring-data-mongodb-distribution</module>
 	</modules>
 
-
 	<properties>
 		<project.type>multi</project.type>
 		<dist.id>spring-data-mongodb</dist.id>
@@ -89,5 +88,12 @@
 			<version>${mongo}</version>
 		</dependency>
 	</dependencies>
+	
+	<repositories>
+		<repository>
+			<id>spring-libs-snapshot</id>
+			<url>http://repo.springsource.org/libs-snapshot</url>
+		</repository>
+	</repositories>
 
 </project>
