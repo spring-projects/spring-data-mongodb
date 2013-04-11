@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2012 the original author or authors.
+ * Copyright 2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,17 +31,18 @@ import com.mongodb.util.JSONParseException;
  * Holds the operations of an aggregation pipeline.
  * 
  * @author Tobias Trelle
+ * @since 1.3
  */
 public class AggregationPipeline {
-	
+
 	private static final String OPERATOR_PREFIX = "$";
-	
-	private List<DBObject> operations = new ArrayList<DBObject>();
+
+	private final List<DBObject> operations = new ArrayList<DBObject>();
 
 	/**
 	 * Adds a projection operation to the pipeline.
 	 * 
-	 * @param projection JSON string holding the projection.
+	 * @param projection JSON string holding the projection, must not be {@literal null} or empty.
 	 * @return The pipeline.
 	 */
 	public AggregationPipeline project(String projection) {
@@ -51,33 +52,36 @@ public class AggregationPipeline {
 	/**
 	 * Adds a projection operation to the pipeline.
 	 * 
-	 * @param projection Type safe projection object.
+	 * @param projection Type safe projection object, must not be {@literal null}.
 	 * @return The pipeline.
 	 */
 	public AggregationPipeline project(Projection projection) {
-		return addOperation("project", projection.toDBObject() );
+
+		Assert.notNull(projection, "Projection must not be null!");
+		return addOperation("project", projection.toDBObject());
 	}
-	
+
 	/**
 	 * Adds an unwind operation to the pipeline.
 	 * 
-	 * @param field Name of the field to unwind (should be an array).
+	 * @param field Name of the field to unwind (should be an array), must not be {@literal null} or empty.
 	 * @return The pipeline.
 	 */
 	public AggregationPipeline unwind(String field) {
-		Assert.notNull(field, "Missing field name");
-		
+
+		Assert.hasText(field, "Missing field name");
+
 		if (!field.startsWith(OPERATOR_PREFIX)) {
 			field = OPERATOR_PREFIX + field;
 		}
-		
+
 		return addOperation("unwind", field);
 	}
 
 	/**
 	 * Adds a group operation to the pipeline.
 	 * 
-	 * @param projection JSON string holding the group.
+	 * @param projection JSON string holding the group, must not be {@literal null} or empty.
 	 * @return The pipeline.
 	 */
 	public AggregationPipeline group(String group) {
@@ -87,7 +91,7 @@ public class AggregationPipeline {
 	/**
 	 * Adds a sort operation to the pipeline.
 	 * 
-	 * @param sort JSON string holding the sorting.
+	 * @param sort JSON string holding the sorting, must not be {@literal null} or empty.
 	 * @return The pipeline.
 	 */
 	public AggregationPipeline sort(String sort) {
@@ -97,12 +101,12 @@ public class AggregationPipeline {
 	/**
 	 * Adds a sort operation to the pipeline.
 	 * 
-	 * @param sort Type safe sort operation.
+	 * @param sort Type safe sort operation, must not be {@literal null}.
 	 * @return The pipeline.
 	 */
 	public AggregationPipeline sort(Sort sort) {
+
 		Assert.notNull(sort);
-		
 		DBObject dbo = new BasicDBObject();
 
 		for (org.springframework.data.domain.Sort.Order order : sort) {
@@ -112,9 +116,9 @@ public class AggregationPipeline {
 	}
 
 	/**
-	 * Adds a match operation to the pipeline that is basically a query on the collection.s
+	 * Adds a match operation to the pipeline that is basically a query on the collections.
 	 * 
-	 * @param projection JSON string holding the criteria.
+	 * @param projection JSON string holding the criteria, must not be {@literal null} or empty.
 	 * @return The pipeline.
 	 */
 	public AggregationPipeline match(String match) {
@@ -124,12 +128,12 @@ public class AggregationPipeline {
 	/**
 	 * Adds a match operation to the pipeline that is basically a query on the collection.s
 	 * 
-	 * @param criteria Type safe criteria to filter documents from the collection.
+	 * @param criteria Type safe criteria to filter documents from the collection, must not be {@literal null}.
 	 * @return The pipeline.
 	 */
 	public AggregationPipeline match(Criteria criteria) {
+
 		Assert.notNull(criteria);
-		
 		return addOperation("match", criteria.getCriteriaObject());
 	}
 
@@ -158,7 +162,8 @@ public class AggregationPipeline {
 	}
 
 	private AggregationPipeline addDocumentOperation(String opName, String operation) {
-		Assert.notNull(operation, "Missing " + opName);
+
+		Assert.hasText(operation, "Missing operation name!");
 		return addOperation(opName, parseJson(operation));
 	}
 
@@ -174,5 +179,4 @@ public class AggregationPipeline {
 			throw new IllegalArgumentException("Not a valid JSON document: " + json, e);
 		}
 	}
-
 }

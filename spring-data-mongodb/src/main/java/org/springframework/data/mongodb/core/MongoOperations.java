@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 the original author or authors.
+ * Copyright 2010-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,6 +47,7 @@ import com.mongodb.WriteResult;
  * @author Thomas Risberg
  * @author Mark Pollack
  * @author Oliver Gierke
+ * @author Tobias Trelle
  */
 public interface MongoOperations {
 
@@ -306,13 +307,15 @@ public interface MongoOperations {
 	/**
 	 * Execute an aggregation operation. The raw results will be mapped to the given entity class.
 	 * 
-	 * @param inputCollectionName the collection there the aggregation operation will read from.
-	 * @param pipeline The pipeline holding the aggregation operations.
-	 * @param entityClass The parameterized type of the returned list.
+	 * @param inputCollectionName the collection there the aggregation operation will read from, must not be
+	 *          {@literal null} or empty.
+	 * @param pipeline The pipeline holding the aggregation operations, must not be {@literal null}.
+	 * @param entityClass The parameterized type of the returned list, must not be {@literal null}.
 	 * @return The results of the aggregation operation.
+	 * @since 1.3
 	 */
 	<T> AggregationResults<T> aggregate(String inputCollectionName, AggregationPipeline pipeline, Class<T> entityClass);
-	
+
 	/**
 	 * Execute a map-reduce operation. The map-reduce operation will be formed with an output type of INLINE
 	 * 
@@ -420,7 +423,6 @@ public interface MongoOperations {
 	 *          specification
 	 * @param entityClass the parameterized type of the returned list.
 	 * @param collectionName name of the collection to retrieve the objects from
-	 * 
 	 * @return the converted object
 	 */
 	<T> T findOne(Query query, Class<T> entityClass, String collectionName);
@@ -454,7 +456,6 @@ public interface MongoOperations {
 	 *          specification
 	 * @param entityClass the parameterized type of the returned list.
 	 * @param collectionName name of the collection to retrieve the objects from
-	 * 
 	 * @return the List of converted objects
 	 */
 	<T> List<T> find(Query query, Class<T> entityClass, String collectionName);
@@ -476,7 +477,6 @@ public interface MongoOperations {
 	 * @param id the id of the document to return
 	 * @param entityClass the type to convert the document to
 	 * @param collectionName the collection to query for the document
-	 * 
 	 * @param <T>
 	 * @return
 	 */
@@ -522,7 +522,6 @@ public interface MongoOperations {
 	 *          specification
 	 * @param entityClass the parameterized type of the returned list.
 	 * @param collectionName name of the collection to retrieve the objects from
-	 * 
 	 * @return the converted object
 	 */
 	<T> T findAndRemove(Query query, Class<T> entityClass, String collectionName);
