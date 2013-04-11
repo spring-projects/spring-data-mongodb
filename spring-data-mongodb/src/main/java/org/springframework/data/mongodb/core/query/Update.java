@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2012 the original author or authors.
+ * Copyright 2010-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,7 +52,10 @@ public class Update {
 
 	/**
 	 * Creates an {@link Update} instance from the given {@link DBObject}. Allows to explicitly exlude fields from making
-	 * it into the created {@link Update} object.
+	 * it into the created {@link Update} object. Note, that this will set attributes directly and <em>not</em> use
+	 * {@literal $set}. This means fields not given in the {@link DBObject} will be nulled when executing the update. To
+	 * create an only-updating {@link Update} instance of a {@link DBObject}, call {@link #set(String, Object)} for each
+	 * value in it.
 	 * 
 	 * @param object the source {@link DBObject} to create the update from.
 	 * @param exclude the fields to exclude.
@@ -69,7 +72,7 @@ public class Update {
 				continue;
 			}
 
-			update.set(key, object.get(key));
+			update.modifierOps.put(key, object.get(key));
 		}
 
 		return update;
@@ -160,7 +163,7 @@ public class Update {
 	 * @return
 	 */
 	public Update pop(String key, Position pos) {
-		addMultiFieldOperation("$pop", key, (pos == Position.FIRST ? -1 : 1));
+		addMultiFieldOperation("$pop", key, pos == Position.FIRST ? -1 : 1);
 		return this;
 	}
 
