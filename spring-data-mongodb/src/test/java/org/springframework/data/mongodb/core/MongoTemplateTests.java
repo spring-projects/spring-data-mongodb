@@ -47,6 +47,7 @@ import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.PersistenceConstructor;
+import org.springframework.data.annotation.Version;
 import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.data.mongodb.MongoDbFactory;
@@ -1533,6 +1534,42 @@ public class MongoTemplateTests {
 		assertThat(template.count(query, collectionName), is(1L));
 	}
 
+	/**
+	 * @see DATAMONGO-571
+	 */
+	@Test
+	public void nullsPropertiesForVersionObjectUpdates() {
+
+		VersionedPerson person = new VersionedPerson();
+		person.firstname = "Dave";
+		person.lastname = "Matthews";
+
+		template.save(person);
+		assertThat(person.id, is(notNullValue()));
+
+		person.lastname = null;
+		template.save(person);
+
+		person = template.findOne(query(where("id").is(person.id)), VersionedPerson.class);
+		assertThat(person.lastname, is(nullValue()));
+	}
+
+	/**
+	 * @see DATAMONGO-571
+	 */
+	@Test
+	public void nullsValuesForUpdatesOfUnversionedEntity() {
+
+		Person person = new Person("Dave");
+		template.save(person);
+
+		person.setFirstName(null);
+		template.save(person);
+
+		person = template.findOne(query(where("id").is(person.getId())), Person.class);
+		assertThat(person.getFirstName(), is(nullValue()));
+	}
+
 	static class MyId {
 
 		String first;
@@ -1601,5 +1638,12 @@ public class MongoTemplateTests {
 
 		String state;
 		String city;
+	}
+
+	static class VersionedPerson {
+
+		@Version
+		Long version;
+		String id, firstname, lastname;
 	}
 }
