@@ -1,8 +1,22 @@
+/*
+ * Copyright 2013 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.springframework.data.mongodb.core.aggregation;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.CoreMatchers.*;
+import static org.junit.Assert.*;
 
 import java.util.List;
 
@@ -15,12 +29,12 @@ import com.mongodb.DBObject;
 /**
  * Tests of {@link Projection}.
  * 
+ * @see DATAMONGO-586
  * @author Tobias Trelle
  */
 public class ProjectionTests {
 
-	/** Unit under test. */
-	private Projection projection;
+	Projection projection;
 
 	@Before
 	public void setUp() {
@@ -29,31 +43,24 @@ public class ProjectionTests {
 
 	@Test
 	public void emptyProjection() {
-		// when
-		DBObject raw = projection.toDBObject();
 
-		// then
-		assertThat(raw, notNullValue());
+		DBObject raw = projection.toDBObject();
+		assertThat(raw, is(notNullValue()));
 		assertThat(raw.toMap().isEmpty(), is(true));
 	}
 
 	@Test(expected = IllegalArgumentException.class)
 	public void shouldDetectNullIncludesInConstructor() {
-		// when
 		new Projection((String[]) null);
-		// then: throw expected exception
 	}
 
 	@Test
 	public void includesWithConstructor() {
-		// given
+
 		projection = new Projection("a", "b");
 
-		// when
 		DBObject raw = projection.toDBObject();
-
-		// then
-		assertThat(raw, notNullValue());
+		assertThat(raw, is(notNullValue()));
 		assertThat(raw.toMap().size(), is(3));
 		assertThat((Integer) raw.get("_id"), is(0));
 		assertThat((Integer) raw.get("a"), is(1));
@@ -62,102 +69,88 @@ public class ProjectionTests {
 
 	@Test
 	public void include() {
-		// given
+
 		projection.include("a");
 
-		// when
 		DBObject raw = projection.toDBObject();
-
-		// then
 		assertSingleDBObject("a", 1, raw);
 	}
 
 	@Test
 	public void exclude() {
-		// given
+
 		projection.exclude("a");
 
-		// when
 		DBObject raw = projection.toDBObject();
-
-		// then
 		assertSingleDBObject("a", 0, raw);
 	}
 
 	@Test
 	public void includeAlias() {
-		// given
+
 		projection.include("a").as("b");
 
-		// when
 		DBObject raw = projection.toDBObject();
-
-		// then
 		assertSingleDBObject("b", "$a", raw);
 	}
 
 	@Test(expected = InvalidDataAccessApiUsageException.class)
 	public void shouldDetectAliasWithoutInclude() {
-		// when
 		projection.as("b");
-		// then: throw expected exception
 	}
 
 	@Test(expected = InvalidDataAccessApiUsageException.class)
 	public void shouldDetectDuplicateAlias() {
-		// when
 		projection.include("a").as("b").as("c");
-		// then: throw expected exception
 	}
 
 	@Test
+	@SuppressWarnings("unchecked")
 	public void plus() {
-		// given
+
 		projection.include("a").plus(10);
 
-		// when
 		DBObject raw = projection.toDBObject();
-
-		// then
 		assertNotNullDBObject(raw);
-		DBObject addition = (DBObject)raw.get("a");
-		assertNotNullDBObject(addition);	
-		@SuppressWarnings("unchecked")
-		List<Object> summands = (List<Object>)addition.get("$add");
-		assertThat( summands, notNullValue() );
-		assertThat( summands.size(), is(2) );
-		assertThat( (String)summands.get(0), is("$a") );
-		assertThat( (Integer)summands.get(1), is (10) );
+
+		DBObject addition = (DBObject) raw.get("a");
+		assertNotNullDBObject(addition);
+
+		List<Object> summands = (List<Object>) addition.get("$add");
+		assertThat(summands, is(notNullValue()));
+		assertThat(summands.size(), is(2));
+		assertThat((String) summands.get(0), is("$a"));
+		assertThat((Integer) summands.get(1), is(10));
 	}
 
 	@Test
+	@SuppressWarnings("unchecked")
 	public void plusWithAlias() {
-		// given
+
 		projection.include("a").plus(10).as("b");
 
-		// when
 		DBObject raw = projection.toDBObject();
-
-		// then
 		assertNotNullDBObject(raw);
-		DBObject addition = (DBObject)raw.get("b");
-		assertNotNullDBObject(addition);	
-		@SuppressWarnings("unchecked")
-		List<Object> summands = (List<Object>)addition.get("$add");
-		assertThat( summands, notNullValue() );
-		assertThat( summands.size(), is(2) );
-		assertThat( (String)summands.get(0), is("$a") );
-		assertThat( (Integer)summands.get(1), is (10) );
+
+		DBObject addition = (DBObject) raw.get("b");
+		assertNotNullDBObject(addition);
+
+		List<Object> summands = (List<Object>) addition.get("$add");
+		assertThat(summands, is(notNullValue()));
+		assertThat(summands.size(), is(2));
+		assertThat((String) summands.get(0), is("$a"));
+		assertThat((Integer) summands.get(1), is(10));
 	}
-	
-	
+
 	private static void assertSingleDBObject(String key, Object value, DBObject doc) {
+
 		assertNotNullDBObject(doc);
 		assertThat(doc.get(key), is(value));
 	}
 
 	private static void assertNotNullDBObject(DBObject doc) {
-		assertThat(doc, notNullValue());
+
+		assertThat(doc, is(notNullValue()));
 		assertThat(doc.toMap().size(), is(1));
 	}
 }

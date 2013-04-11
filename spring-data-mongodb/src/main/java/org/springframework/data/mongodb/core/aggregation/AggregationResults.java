@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2012 the original author or authors.
+ * Copyright 2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -27,49 +27,61 @@ import com.mongodb.DBObject;
  * Collects the results of executing an aggregation operation.
  * 
  * @author Tobias Trelle
- * 
+ * @author Oliver Gierke
  * @param <T> The class in which the results are mapped onto.
+ * @since 1.3
  */
 public class AggregationResults<T> implements Iterable<T> {
 
 	private final List<T> mappedResults;
 	private final DBObject rawResults;
+	private final String serverUsed;
 
-	private String serverUsed;
-	
+	/**
+	 * Creates a new {@link AggregationResults} instance from the given mapped and raw results.
+	 * 
+	 * @param mappedResults must not be {@literal null}.
+	 * @param rawResults must not be {@literal null}.
+	 */
 	public AggregationResults(List<T> mappedResults, DBObject rawResults) {
+
 		Assert.notNull(mappedResults);
 		Assert.notNull(rawResults);
-		this.mappedResults = mappedResults;
+
+		this.mappedResults = Collections.unmodifiableList(mappedResults);
 		this.rawResults = rawResults;
-		parseServerUsed();
+		this.serverUsed = parseServerUsed();
 	}
 
+	/**
+	 * Returns the aggregation results.
+	 * 
+	 * @return
+	 */
 	public List<T> getAggregationResult() {
-		List<T> result = new ArrayList<T>();
-		Iterator<T> it = iterator();
-
-		while (it.hasNext()) {
-			result.add(it.next());
-		}
-
-		return result;
+		return mappedResults;
 	}
 
-	@Override
+	/*
+	 * (non-Javadoc)
+	 * @see java.lang.Iterable#iterator()
+	 */
 	public Iterator<T> iterator() {
 		return mappedResults.iterator();
 	}
-	
+
+	/**
+	 * Returns the server that has been used to perform the aggregation.
+	 * 
+	 * @return
+	 */
 	public String getServerUsed() {
 		return serverUsed;
 	}
 
-	private void parseServerUsed() {
+	private String parseServerUsed() {
+
 		Object object = rawResults.get("serverUsed");
-		if (object instanceof String) {
-			serverUsed = (String) object;
-		}
+		return object instanceof String ? (String) object : null;
 	}
-	
 }

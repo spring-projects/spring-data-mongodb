@@ -47,6 +47,7 @@ import com.mongodb.WriteResult;
  * @author Thomas Risberg
  * @author Mark Pollack
  * @author Oliver Gierke
+ * @author Tobias Trelle
  */
 public interface MongoOperations {
 
@@ -306,13 +307,15 @@ public interface MongoOperations {
 	/**
 	 * Execute an aggregation operation. The raw results will be mapped to the given entity class.
 	 * 
-	 * @param inputCollectionName the collection there the aggregation operation will read from.
-	 * @param pipeline The pipeline holding the aggregation operations.
-	 * @param entityClass The parameterized type of the returned list.
+	 * @param inputCollectionName the collection there the aggregation operation will read from, must not be
+	 *          {@literal null} or empty.
+	 * @param pipeline The pipeline holding the aggregation operations, must not be {@literal null}.
+	 * @param entityClass The parameterized type of the returned list, must not be {@literal null}.
 	 * @return The results of the aggregation operation.
+	 * @since 1.3
 	 */
 	<T> AggregationResults<T> aggregate(String inputCollectionName, AggregationPipeline pipeline, Class<T> entityClass);
-	
+
 	/**
 	 * Execute a map-reduce operation. The map-reduce operation will be formed with an output type of INLINE
 	 * 

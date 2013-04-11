@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2012 the original author or authors.
+ * Copyright 2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,33 +32,37 @@ import com.mongodb.DBObject;
  * Projection of field to be used in an {@link AggregationPipeline}.
  * <p/>
  * A projection is similar to a {@link Field} inclusion/exclusion but more powerful. It can generate new fields, change
- * values of given field etc. 
+ * values of given field etc.
  * 
  * @author Tobias Trelle
+ * @since 1.3
  */
 public class Projection {
 
 	private static final String REFERENCE_PREFIX = "$";
-	
-	private DBObject document = new BasicDBObject();
+
+	/** Stack of key names. Size is 0 or 1. */
+	private final Stack<String> reference = new Stack<String>();
+	private final DBObject document = new BasicDBObject();
 
 	private DBObject rightHandExpression;
-	
-	/** Stack of key names. Size is 0 or 1. */
-	private Stack<String> reference = new Stack<String>();
 
-	/** Create an empty projection. */
+	/**
+	 * Create an empty projection.
+	 */
 	public Projection() {
 	}
 
 	/**
-	 * This convenience constructor excludes the field <code>_id</code> and includes the given fields.
+	 * This convenience constructor excludes the field {@code _id} and includes the given fields.
 	 * 
-	 * @param includes Keys of field to include.
+	 * @param includes Keys of field to include, must not be {@literal null} or empty.
 	 */
 	public Projection(String... includes) {
+
 		Assert.notEmpty(includes);
 		exclude("_id");
+
 		for (String key : includes) {
 			include(key);
 		}
@@ -69,73 +73,82 @@ public class Projection {
 	 * 
 	 * @param key The key of the field.
 	 */
-	public final void exclude(String key) {
-		Assert.notNull(key, "Missing key");
+	public final Projection exclude(String key) {
+
+		Assert.hasText(key, "Missing key");
 		document.put(key, 0);
+		return this;
 	}
 
 	/**
 	 * Includes a given field.
 	 * 
-	 * @param key The key of the field.
+	 * @param key The key of the field, must not be {@literal null} or empty.
 	 */
 	public final Projection include(String key) {
-		Assert.notNull(key, "Missing key");
+
+		Assert.hasText(key, "Missing key");
 
 		safePop();
 		reference.push(key);
-		
+
 		return this;
 	}
 
 	/**
 	 * Sets the key for a computed field.
 	 * 
+	 * @param key must not be {@literal null} or empty.
 	 */
 	public final Projection as(String key) {
-		Assert.notNull(key, "Missing key");
+
+		Assert.hasText(key, "Missing key");
 
 		try {
-			document.put(key, rightHandSide(safeReference(reference.pop())) );
+			document.put(key, rightHandSide(safeReference(reference.pop())));
 		} catch (EmptyStackException e) {
 			throw new InvalidDataAccessApiUsageException("Invalid use of as()", e);
 		}
+
 		return this;
 	}
 
 	public final Projection plus(Number n) {
 		return arithmeticOperation("add", n);
 	}
-	
+
 	public final Projection minus(Number n) {
 		return arithmeticOperation("substract", n);
-	}	
-	
-	private Projection arithmeticOperation(String op, Number n) {
-		Assert.notNull(n, "Missing number");
-		
-		rightHandExpression = createArrayObject(op, safeReference(reference.peek()), n);
-		
-		return this;		
 	}
-	
+
+	private Projection arithmeticOperation(String op, Number n) {
+
+		Assert.notNull(n, "Missing number");
+
+		rightHandExpression = createArrayObject(op, safeReference(reference.peek()), n);
+		return this;
+	}
+
 	private DBObject createArrayObject(String op, Object... items) {
+
 		List<Object> list = new ArrayList<Object>();
 		Collections.addAll(list, items);
-		
-		return new BasicDBObject( safeReference(op), list );
+
+		return new BasicDBObject(safeReference(op), list);
 	}
-	
+
 	private void safePop() {
-		if ( !reference.empty() ) {
-			document.put( reference.pop(), rightHandSide(1) );
+
+		if (!reference.empty()) {
+			document.put(reference.pop(), rightHandSide(1));
 		}
 	}
-	
+
 	private String safeReference(String key) {
-		Assert.notNull(key);
-		
-		if ( !key.startsWith(REFERENCE_PREFIX) ) {
+
+		Assert.hasText(key);
+
+		if (!key.startsWith(REFERENCE_PREFIX)) {
 			return REFERENCE_PREFIX + key;
 		} else {
 			return key;
@@ -147,10 +160,9 @@ public class Projection {
 		rightHandExpression = null;
 		return value;
 	}
-	
+
 	DBObject toDBObject() {
 		safePop();
 		return document;
 	}
-
 }
