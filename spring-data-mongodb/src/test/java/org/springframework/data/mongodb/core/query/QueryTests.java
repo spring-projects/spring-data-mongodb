@@ -29,7 +29,7 @@ import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 
 /**
  * Unit tests for {@link Query}.
- * 
+ *
  * @author Thomas Risberg
  * @author Oliver Gierke
  */
@@ -103,6 +103,17 @@ public class QueryTests {
 		String expectedFields = "{ \"address\" : 0 , \"name\" : 1 , \"orders\" : { \"$slice\" : 10}}";
 		Assert.assertEquals(expectedFields, q.getFieldsObject().toString());
 	}
+
+    @Test
+    public void testQueryWithFieldsElemMatchAndPositionalOperator() {
+        Query q = new Query(where("name").gte("M").lte("T").and("age").not().gt(22));
+        q.fields().elemMatch("products",Criteria.where("name").is("milk")).position("comments",2);
+
+        String expected = "{ \"name\" : { \"$gte\" : \"M\" , \"$lte\" : \"T\"} , \"age\" : { \"$not\" : { \"$gt\" : 22}}}";
+        Assert.assertEquals(expected, q.getQueryObject().toString());
+        String expectedFields = "{ \"products\" : { \"$elemMatch\" : { \"name\" : \"milk\"}} , \"comments.$\" : 2}";
+        Assert.assertEquals(expectedFields, q.getFieldsObject().toString());
+    }
 
 	@Test
 	public void testSimpleQueryWithChainedCriteria() {

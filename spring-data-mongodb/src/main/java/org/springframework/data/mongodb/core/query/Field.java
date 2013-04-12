@@ -15,17 +15,19 @@
  */
 package org.springframework.data.mongodb.core.query;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class Field {
 
 	private Map<String, Integer> criteria = new HashMap<String, Integer>();
-
 	private Map<String, Object> slices = new HashMap<String, Object>();
+	private Map<String, Criteria> elemMatchs = new HashMap<String, Criteria>();
+	private String postionKey;
+	private int positionValue;
 
 	public Field include(String key) {
 		criteria.put(key, Integer.valueOf(1));
@@ -43,7 +45,27 @@ public class Field {
 	}
 
 	public Field slice(String key, int offset, int size) {
-		slices.put(key, new Integer[] { Integer.valueOf(offset), Integer.valueOf(size) });
+		slices.put(key, new Integer[]{Integer.valueOf(offset), Integer.valueOf(size)});
+		return this;
+	}
+
+	public Field elemMatch(String key, Criteria elemMatchCriteria) {
+		elemMatchs.put(key, elemMatchCriteria);
+		return this;
+	}
+
+	/**
+	 * The array field must appear in the query
+	 * Only one positional $ operator can appear in the projection and
+	 * only one array field can appear in the query
+	 *
+	 * @param field query array field
+	 * @param value
+	 * @return
+	 */
+	public Field position(String field, int value) {
+		postionKey = field;
+		positionValue = value;
 		return this;
 	}
 
@@ -54,6 +76,12 @@ public class Field {
 		}
 		for (String k : slices.keySet()) {
 			dbo.put(k, new BasicDBObject("$slice", (slices.get(k))));
+		}
+		for (String k : elemMatchs.keySet()) {
+			dbo.put(k, new BasicDBObject("$elemMatch", elemMatchs.get(k).getCriteriaObject()));
+		}
+		if (postionKey != null) {
+			dbo.put(postionKey + ".$", positionValue);
 		}
 		return dbo;
 	}
