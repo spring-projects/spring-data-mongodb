@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 the original author or authors.
+ * Copyright 2010-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,15 +17,25 @@ package org.springframework.data.mongodb.core.query;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
+
+import org.springframework.util.Assert;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
+/**
+ * @author Thomas Risberg
+ * @author Oliver Gierke
+ * @author Patryk Wasik
+ */
 public class Field {
 
-	private Map<String, Integer> criteria = new HashMap<String, Integer>();
-
-	private Map<String, Object> slices = new HashMap<String, Object>();
+	private final Map<String, Integer> criteria = new HashMap<String, Integer>();
+	private final Map<String, Object> slices = new HashMap<String, Object>();
+	private final Map<String, Criteria> elemMatchs = new HashMap<String, Criteria>();
+	private String postionKey;
+	private int positionValue;
 
 	public Field include(String key) {
 		criteria.put(key, Integer.valueOf(1));
@@ -47,14 +57,50 @@ public class Field {
 		return this;
 	}
 
+	public Field elemMatch(String key, Criteria elemMatchCriteria) {
+		elemMatchs.put(key, elemMatchCriteria);
+		return this;
+	}
+
+	/**
+	 * The array field must appear in the query. Only one positional {@code $} operator can appear in the projection and
+	 * only one array field can appear in the query.
+	 * 
+	 * @param field query array field, must not be {@literal null} or empty.
+	 * @param value
+	 * @return
+	 */
+	public Field position(String field, int value) {
+
+		Assert.hasText(field, "Field must not be null or empty!");
+
+		postionKey = field;
+		positionValue = value;
+
+		return this;
+	}
+
 	public DBObject getFieldsObject() {
+
 		DBObject dbo = new BasicDBObject();
+
 		for (String k : criteria.keySet()) {
-			dbo.put(k, (criteria.get(k)));
+			dbo.put(k, criteria.get(k));
 		}
+
 		for (String k : slices.keySet()) {
-			dbo.put(k, new BasicDBObject("$slice", (slices.get(k))));
+			dbo.put(k, new BasicDBObject("$slice", slices.get(k)));
 		}
+
+		for (Entry<String, Criteria> entry : elemMatchs.entrySet()) {
+			DBObject dbObject = new BasicDBObject("$elemMatch", entry.getValue().getCriteriaObject());
+			dbo.put(entry.getKey(), dbObject);
+		}
+
+		if (postionKey != null) {
+			dbo.put(postionKey + ".$", positionValue);
+		}
+
 		return dbo;
 	}
 }
