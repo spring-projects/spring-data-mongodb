@@ -44,7 +44,6 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.dao.DataAccessException;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.authentication.UserCredentials;
@@ -53,6 +52,7 @@ import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.BeanWrapper;
 import org.springframework.data.mapping.model.MappingException;
+import org.springframework.data.mongodb.MongoDataIntegrityViolationException;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
@@ -1647,7 +1647,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		}
 
 		if (writeResultChecking == WriteResultChecking.EXCEPTION) {
-			throw new DataIntegrityViolationException(message);
+			throw new MongoDataIntegrityViolationException(message, writeResult, operation);
 		} else {
 			LOGGER.error(message);
 			return;
