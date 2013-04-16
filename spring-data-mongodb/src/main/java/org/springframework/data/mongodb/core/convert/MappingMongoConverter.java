@@ -71,6 +71,7 @@ import com.mongodb.DBRef;
  * 
  * @author Oliver Gierke
  * @author Jon Brisbin
+ * @author Patrik Wasik
  */
 public class MappingMongoConverter extends AbstractMongoConverter implements ApplicationContextAware {
 
@@ -414,8 +415,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		if (valueType.isMap()) {
-			BasicDBObject mapDbObj = new BasicDBObject();
-			writeMapInternal((Map<Object, Object>) obj, mapDbObj, type);
+			DBObject mapDbObj = createMap((Map<Object, Object>) obj, prop);
 			dbo.put(name, mapDbObj);
 			return;
 		}
@@ -493,6 +493,42 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		return dbList;
+	}
+
+	/**
+	 * Writes the given {@link Map} using the given {@link MongoPersistentProperty} information.
+	 * 
+	 * @param map must not {@literal null}.
+	 * @param property must not be {@literal null}.
+	 * @return
+	 */
+	protected DBObject createMap(Map<Object, Object> map, MongoPersistentProperty property) {
+
+		Assert.notNull(map, "Given map must not be null!");
+		Assert.notNull(property, "PersistentProperty must not be null!");
+
+		if (!property.isDbReference()) {
+			return writeMapInternal(map, new BasicDBObject(), property.getTypeInformation());
+		}
+
+		BasicDBObject dbObject = new BasicDBObject();
+
+		for (Map.Entry<Object, Object> entry : map.entrySet()) {
+
+			Object key = entry.getKey();
+			Object value = entry.getValue();
+
+			if (conversions.isSimpleType(key.getClass())) {
+
+				String simpleKey = potentiallyEscapeMapKey(key.toString());
+				dbObject.put(simpleKey, value != null ? createDBRef(value, property.getDBRef()) : null);
+
+			} else {
+				throw new MappingException("Cannot use a complex object as a key value.");
+			}
+		}
+
+		return dbObject;
 	}
 
 	/**
