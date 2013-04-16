@@ -414,8 +414,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		if (valueType.isMap()) {
-			BasicDBObject mapDbObj = new BasicDBObject();
-			writeMapInternal((Map<Object, Object>) obj, mapDbObj, type);
+			DBObject mapDbObj = createMap((Map<Object, Object>) obj,prop);
 			dbo.put(name, mapDbObj);
 			return;
 		}
@@ -494,6 +493,37 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		return dbList;
 	}
+
+	/**
+	 * Writes the given {@link Map} using the given {@link MongoPersistentProperty} information.
+	 *
+	 * @param map must not {@literal null}.
+	 * @param property  must not be {@literal null}.
+	 * @return
+	 */
+	protected DBObject createMap(Map<Object,Object> map,MongoPersistentProperty property){
+		if(!property.isDbReference()){
+			return writeMapInternal(map,new BasicDBObject(),property.getTypeInformation());
+		}
+
+		BasicDBObject dbObject = new BasicDBObject();
+		for (Map.Entry<Object, Object> entry : map.entrySet()) {
+			Object key = entry.getKey();
+			Object val = entry.getValue();
+			if (conversions.isSimpleType(key.getClass())) {
+				String simpleKey = potentiallyEscapeMapKey(key.toString());
+				Object value = null;
+				if(val!=null){
+					value = createDBRef(val,property.getDBRef());
+				}
+				dbObject.put(simpleKey,value);
+			} else {
+				throw new MappingException("Cannot use a complex object as a key value.");
+			}
+		}
+		return dbObject;
+	}
+
 
 	/**
 	 * Populates the given {@link BasicDBList} with values from the given {@link Collection}.
