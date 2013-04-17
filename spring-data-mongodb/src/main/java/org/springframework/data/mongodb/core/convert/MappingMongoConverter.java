@@ -501,22 +501,29 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * @param property  must not be {@literal null}.
 	 * @return
 	 */
-	protected DBObject createMap(Map<Object,Object> map,MongoPersistentProperty property){
-		if(!property.isDbReference()){
-			return writeMapInternal(map,new BasicDBObject(),property.getTypeInformation());
+	protected DBObject createMap(Map<Object, Object> map, MongoPersistentProperty property) {
+
+		if (!property.isDbReference()) {
+			return writeMapInternal(map, new BasicDBObject(), property.getTypeInformation());
 		}
 
 		BasicDBObject dbObject = new BasicDBObject();
+
 		for (Map.Entry<Object, Object> entry : map.entrySet()) {
+
 			Object key = entry.getKey();
 			Object val = entry.getValue();
+
 			if (conversions.isSimpleType(key.getClass())) {
+
 				String simpleKey = potentiallyEscapeMapKey(key.toString());
 				Object value = null;
-				if(val!=null){
-					value = createDBRef(val,property.getDBRef());
+
+				if (val != null) {
+					value = createDBRef(val, property.getDBRef());
 				}
-				dbObject.put(simpleKey,value);
+
+				dbObject.put(simpleKey, value);
 			} else {
 				throw new MappingException("Cannot use a complex object as a key value.");
 			}
