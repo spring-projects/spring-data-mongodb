@@ -1,6 +1,36 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 1.2.1.GA (2013-04-17)
+----------------------------------------
+** Bug
+    * [DATAMONGO-571] - Spring Data for MongoDb doesn't save null values when @Version is added to domain class 
+    * [DATAMONGO-612] - Fix PDF reference documentation name
+    * [DATAMONGO-613] - Images missing from reference documentation
+    * [DATAMONGO-617] - NullPointerException in MongoTemplate.initializeVersionProperty(…)
+    * [DATAMONGO-620] - MongoTemplate.doSaveVersioned(…) does not consider collection handed into the method
+    * [DATAMONGO-621] - MongoTemplate.initializeVersionProperty(…) does not use ConversionService
+    * [DATAMONGO-622] - An unversioned object should be created using insert(…) instead of save.
+    * [DATAMONGO-629] - Different results when using count and find with the same criteria with 'id' field
+    * [DATAMONGO-638] - MappingContext should not create PersistentEntity instances for native maps
+    * [DATAMONGO-640] - MongoLog4jAppender suffers from potential NullPointerException when closing Mongo instance
+    * [DATAMONGO-641] - MongoLog4jAppender suffers from potential NullPointerException when closing Mongo instance
+    * [DATAMONGO-642] - MongoChangeSetPersister does not use mapped collection name
+    * [DATAMONGO-646] - Can't insert DBObjects through MongoTemplate
+    * [DATAMONGO-648] - ID attributes in namespace shouldn't be XSD IDs
+
+** Improvement
+    * [DATAMONGO-594] - cross-store=> Define document name using annotation
+    * [DATAMONGO-632] - Polish namespace XSD to avoid errors in STS
+    * [DATAMONGO-635] - Fix some Sonar warnings
+    * [DATAMONGO-637] - Typo in Query.query(…)
+    * [DATAMONGO-651] - WriteResult not available from thrown Exception
+    * [DATAMONGO-656] - Potential NullPointerException when debugging in MongoTemplate
+    
+** Task
+    * [DATAMONGO-597] - Website is severely out-of-date
+    * [DATAMONGO-654] - Release 1.2.1
+
 Changes in version 1.2.0.GA (2013-02-08)
 ----------------------------------------
 ** Bug

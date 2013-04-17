@@ -1,4 +1,4 @@
-SPRING DATA MongoDB 1.0.0.M5
+SPRING DATA MongoDB 1.2.1.GA
 ----------------------------
 
 Spring Data MongoDB is released under the terms of the Apache Software License Version 2.0 (see license.txt).
