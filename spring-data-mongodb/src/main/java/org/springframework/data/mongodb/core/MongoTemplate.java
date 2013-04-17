@@ -981,11 +981,12 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 		Assert.notNull(object);
 
-		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(object.getClass());
+		Class<?> objectType = object.getClass();
+		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(objectType);
 		MongoPersistentProperty idProp = entity == null ? null : entity.getIdProperty();
 
 		if (idProp == null) {
-			throw new MappingException("No id property found for object of type " + entity.getType().getName());
+			throw new MappingException("No id property found for object of type " + objectType);
 		}
 
 		ConversionService service = mongoConverter.getConversionService();
