@@ -3,7 +3,7 @@ Spring Data MongoDB
 
 The primary goal of the [Spring Data](http://www.springsource.org/spring-data) project is to make it easier to build Spring-powered applications that use new data access technologies such as non-relational databases, map-reduce frameworks, and cloud based data services.
 
-The Spring Data MongoDB aims to provide a familiar and consistent Spring-based programming model for for new datastores while retaining store-specific features and capabilities. The Spring Data MongoDB project provides integration with the MongoDB document database. Key functional areas of Spring Data MongoDB are a POJO centric model for interacting with a MongoDB DBCollection and easily writing a Repository style data access layer
+The Spring Data MongoDB project aims to provide a familiar and consistent Spring-based programming model for new datastores while retaining store-specific features and capabilities. The Spring Data MongoDB project provides integration with the MongoDB document database. Key functional areas of Spring Data MongoDB are a POJO centric model for interacting with a MongoDB DBCollection and easily writing a Repository style data access layer.
 
 Getting Help
 ------------
@@ -22,26 +22,22 @@ If you are new to Spring as well as to Spring Data, look for information about [
 Quick Start
 -----------
 
-## MongoDB
+### Maven configuration
 
-For those in a hurry:
+Add the maven repository and dependency:
 
+    <dependency>
+        <groupId>org.springframework.data</groupId>
+        <artifactId>spring-data-mongodb</artifactId>
+        <version>1.2.0.BUILD-SNAPSHOT</version>
+    </dependency>
 
-* Download the jar through Maven:
-
-          <dependency>
-            <groupId>org.springframework.data</groupId>
-            <artifactId>spring-data-mongodb</artifactId>
-            <version>1.2.0.BUILD-SNAPSHOT</version>
-          </dependency> 
-
-
-          <repository>
-            <id>spring-maven-snapshot</id>
-            <snapshots><enabled>true</enabled></snapshots>
-            <name>Springframework Maven SNAPSHOT Repository</name>
-            <url>http://maven.springframework.org/snapshot</url>
-          </repository> 
+    <repository>
+        <id>spring-maven-snapshot</id>
+        <snapshots><enabled>true</enabled></snapshots>
+        <name>Springframework Maven SNAPSHOT Repository</name>
+        <url>http://maven.springframework.org/snapshot</url>
+    </repository>
 
 ### MongoTemplate
 MongoTemplate is the central support class for Mongo database operations.  It provides
@@ -58,26 +54,26 @@ To simplify the creation of Data Repositories a generic Repository interface and
 
 The Repository interface is
 
-        public interface Repository<T, ID extends Serializable> { 
+    public interface Repository<T, ID extends Serializable> {
 
-          T save(T entity);
+        T save(T entity);
 
-          List<T> save(Iterable<? extends T> entities);
+        List<T> save(Iterable<? extends T> entities);
 
-          T findById(ID id);
+        T findById(ID id);
 
-          boolean exists(ID id);
+        boolean exists(ID id);
 
-          List<T> findAll();
+        List<T> findAll();
 
-          Long count();
+        Long count();
 
-          void delete(T entity);
+        void delete(T entity);
 
-          void delete(Iterable<? extends T> entities);
+        void delete(Iterable<? extends T> entities);
 
-          void deleteAll();
-        }
+        void deleteAll();
+    }
 
 
 The MongoRepository extends Repository and will in future add more Mongo specific methods.
@@ -94,52 +90,50 @@ For example, given a Person class with first and last name properties, a PersonR
 
     public interface PersonRepository extends MongoRepository<Person, Long> {
 
-      List<Person> findByLastname(String lastname);
+        List<Person> findByLastname(String lastname);
 
-      List<Person> findByFirstnameLike(String firstname);
+        List<Person> findByFirstnameLike(String firstname);
     }
 
 You can have Spring automatically generate the implemention as shown below
 
-        <bean id="template" class="org.springframework.data.document.mongodb.MongoTemplate">
-                <constructor-arg>
-                        <bean class="com.mongodb.Mongo">
-                                <constructor-arg value="localhost" />
-                                <constructor-arg value="27017" />
-                        </bean>
-                </constructor-arg>
-                <constructor-arg value="database" />
-                <property name="defaultCollectionName" value="springdata" />
-        </bean>
+    <bean id="template" class="org.springframework.data.document.mongodb.MongoTemplate">
+        <constructor-arg>
+            <bean class="com.mongodb.Mongo">
+                <constructor-arg value="localhost" />
+                <constructor-arg value="27017" />
+            </bean>
+        </constructor-arg>
+        <constructor-arg value="database" />
+        <property name="defaultCollectionName" value="springdata" />
+    </bean>
 
-        <bean class="org.springframework.data.document.mongodb.repository.MongoRepositoryFactoryBean">
-                <property name="template" ref="template" />
-                <property name="repositoryInterface" value="org.springframework.data.document.mongodb.repository.PersonRepository" />
-        </bean>
+    <bean class="org.springframework.data.document.mongodb.repository.MongoRepositoryFactoryBean">
+        <property name="template" ref="template" />
+        <property name="repositoryInterface" value="org.springframework.data.document.mongodb.repository.PersonRepository" />
+    </bean>
 
 This will register an object in the container named PersonRepository.  You can use it as shown below
 
-     @Service
-     public class MyService {
+    @Service
+    public class MyService {
 
         @Autowired
         PersonRepository repository;
 
-
         public void doWork() {
 
-           repository.deleteAll();
+            repository.deleteAll();
 
-           Person person = new Person();
-           person.setFirstname("Oliver");
-           person.setLastname("Gierke");
-           person = repository.save(person);
+            Person person = new Person();
+            person.setFirstname("Oliver");
+            person.setLastname("Gierke");
+            person = repository.save(person);
 
-           List<Person> lastNameResults = repository.findByLastname("Gierke");
+            List<Person> lastNameResults = repository.findByLastname("Gierke");
 
-           List<Person> firstNameResults = repository.findByFirstnameLike("Oli*");
-
-       }
+            List<Person> firstNameResults = repository.findByFirstnameLike("Oli*");
+        }
     }
 
 
