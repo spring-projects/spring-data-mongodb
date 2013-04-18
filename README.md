@@ -3,7 +3,7 @@ Spring Data MongoDB
 
 The primary goal of the [Spring Data](http://www.springsource.org/spring-data) project is to make it easier to build Spring-powered applications that use new data access technologies such as non-relational databases, map-reduce frameworks, and cloud based data services.
 
-The Spring Data MongoDB aims to provide a familiar and consistent Spring-based programming model for for new datastores while retaining store-specific features and capabilities. The Spring Data MongoDB project provides integration with the MongoDB document database. Key functional areas of Spring Data MongoDB are a POJO centric model for interacting with a MongoDB DBCollection and easily writing a Repository style data access layer
+The Spring Data MongoDB project aims to provide a familiar and consistent Spring-based programming model for new datastores while retaining store-specific features and capabilities. The Spring Data MongoDB project provides integration with the MongoDB document database. Key functional areas of Spring Data MongoDB are a POJO centric model for interacting with a MongoDB DBCollection and easily writing a Repository style data access layer.
 
 Getting Help
 ------------
@@ -22,12 +22,9 @@ If you are new to Spring as well as to Spring Data, look for information about [
 Quick Start
 -----------
 
-## MongoDB
+### Maven configuration
 
-For those in a hurry:
-
-
-* Download the jar through Maven:
+Add the maven dependency:
 
 ```xml
 <dependency>
@@ -80,7 +77,7 @@ The `MongoRepository` extends `Repository` and will in future add more Mongo spe
 
 ```java
 public interface MongoRepository<T, ID extends Serializable> extends Repository<T, ID> {
-}
+    }
 ```
 
 `SimpleMongoRepository` is the out of the box implementation of the `MongoRepository` you can use for basid CRUD operations.  
@@ -117,12 +114,16 @@ You can have Spring automatically create a proxy for the interface as shown belo
 
 This will find the repository interface and register a proxy object in the container.  You can use it as shown below:
 
-``java
+```java
 @Service
 public class MyService {
 
   @Autowired
   private final PersonRepository repository;
+  
+  public MyService(PersonRepository repository) {
+    this.repository = repository;
+  }
 
   public void doWork() {
 
@@ -134,13 +135,10 @@ public class MyService {
      person = repository.save(person);
 
      List<Person> lastNameResults = repository.findByLastname("Gierke");
-
      List<Person> firstNameResults = repository.findByFirstnameLike("Oli*");
-
  }
 }
 ```
-
 
 Contributing to Spring Data
 ---------------------------
