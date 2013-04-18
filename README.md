@@ -1,30 +1,26 @@
-Spring Data MongoDB
-======================
+# Spring Data MongoDB
 
 The primary goal of the [Spring Data](http://www.springsource.org/spring-data) project is to make it easier to build Spring-powered applications that use new data access technologies such as non-relational databases, map-reduce frameworks, and cloud based data services.
 
-The Spring Data MongoDB project aims to provide a familiar and consistent Spring-based programming model for new datastores while retaining store-specific features and capabilities. The Spring Data MongoDB project provides integration with the MongoDB document database. Key functional areas of Spring Data MongoDB are a POJO centric model for interacting with a MongoDB DBCollection and easily writing a Repository style data access layer.
+The Spring Data MongoDB project aims to provide a familiar and consistent Spring-based programming model for new datastores while retaining store-specific features and capabilities. The Spring Data MongoDB project provides integration with the MongoDB document database. Key functional areas of Spring Data MongoDB are a POJO centric model for interacting with a MongoDB DBCollection and easily writing a repository style data access layer.
 
-Getting Help
-------------
+## Getting Help
 
-For a comprehensive treatmet of all the Spring Data MongoDB features, please refer to the The [User Guide](http://static.springsource.org/spring-data/data-mongodb/docs/current/reference/html/) 
+For a comprehensive treatmet of all the Spring Data MongoDB features, please refer to:
 
-The [JavaDocs](http://static.springsource.org/spring-data/data-mongodb/docs/current/api/) have extensive comments in them as well.
-
-The home page of [Spring Data MongoDB](http://www.springsource.org/spring-data/mongodb) contains links to articles and other resources.
-
-For more detailed questions, use the [forum](http://forum.springsource.org/forumdisplay.php?f=80). 
+* the [User Guide](http://static.springsource.org/spring-data/data-mongodb/docs/current/reference/html/) 
+* the [JavaDocs](http://static.springsource.org/spring-data/data-mongodb/docs/current/api/) have extensive comments in them as well.
+* the home page of [Spring Data MongoDB](http://www.springsource.org/spring-data/mongodb) contains links to articles and other resources.
+* for more detailed questions, use the [forum](http://forum.springsource.org/forumdisplay.php?f=80). 
 
 If you are new to Spring as well as to Spring Data, look for information about [Spring projects](http://www.springsource.org/projects). 
 
 
-Quick Start
------------
+## Quick Start
 
 ### Maven configuration
 
-Add the maven dependency:
+Add the Maven dependency:
 
 ```xml
 <dependency>
@@ -34,60 +30,39 @@ Add the maven dependency:
 </dependency>
 ```
 
+If you'd rather like the latest snapshots of the upcoming major version, use our Maven snapshot repository and declare the appropriate dependency version.
+
+```xml
+<dependency>
+  <groupId>org.springframework.data</groupId>
+  <artifactId>spring-data-mongodb</artifactId>
+  <version>1.2.1.RELEASE</version>
+</dependency>
+
+<repository>
+  <id>spring-libs-snapshot</id>
+  <name>Spring Snapshot Repository</name>
+  <url>http://repo.springsource.org/libs-snapshot</url>
+</repository>
+```
+
 ### MongoTemplate
-MongoTemplate is the central support class for Mongo database operations.  It provides
+
+MongoTemplate is the central support class for Mongo database operations. It provides:
 
 * Basic POJO mapping support to and from BSON
-* Connection Affinity callback
+* Convenience methods to interact with the store (insert object, update objects) and MongoDB specific ones (geo-spatial operations, upserts, map-reduce etc.)
+* Connection affinity callback
 * Exception translation into Spring's [technology agnostic DAO exception hierarchy](http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/html/dao.html#dao-exceptions).
 
-Future plans are to support optional logging and/or exception throwing based on WriteResult return value, common map-reduce operations, GridFS operations.  A simple API for partial document updates is also planned.
+### Spring Data repositories
 
-### Easy Data Repository generation
+To simplify the creation of data repositories Sprin Data MongoDB provides a generic repository programming model. It will automatically create a repository proxy for you that adds implementations of finder methods you specify on an interface.  
 
-To simplify the creation of data repositories a generic `Repository` interface and default implementation is provided.  Furthermore, Spring will automatically create a Repository implementation for you that adds implementations of finder methods you specify on an interface.  
-
-The Repository interface is
+For example, given a `Person` class with first and last name properties, a `PersonRepository` interface that can query for `Person` by last name and when the first name matches a like expression is shown below:
 
 ```java
-public interface Repository<T, ID extends Serializable> { 
-
-  T save(T entity);
-
-  List<T> save(Iterable<? extends T> entities);
-
-  T findById(ID id);
-
-  boolean exists(ID id);
-
-  List<T> findAll();
-
-  Long count();
-
-  void delete(T entity);
-
-  void delete(Iterable<? extends T> entities);
-
-  void deleteAll();
-}
-```
-
-
-The `MongoRepository` extends `Repository` and will in future add more Mongo specific methods.
-
-```java
-public interface MongoRepository<T, ID extends Serializable> extends Repository<T, ID> {
-    }
-```
-
-`SimpleMongoRepository` is the out of the box implementation of the `MongoRepository` you can use for basid CRUD operations.  
-
-To go beyond basic CRUD, extend the `MongoRepository` interface and supply your own finder methods that follow simple naming conventions such that they can be easily converted into queries.  
-
-For example, given a `Person` class with first and last name properties, a `PersonRepository` interface that can query for `Person` by last name and when the first name matches a regular expression is shown below
-
-```java
-public interface PersonRepository extends MongoRepository<Person, Long> {
+public interface PersonRepository extends CrudRepository<Person, Long> {
 
   List<Person> findByLastname(String lastname);
 
@@ -95,32 +70,52 @@ public interface PersonRepository extends MongoRepository<Person, Long> {
 }
 ```
 
-You can have Spring automatically create a proxy for the interface as shown below:
+The queries issued on execution will be derived from the method name. Exending `CrudRepository` causes CRUD methods being pulled into the interface so that you can easily save and find single entities and collections of them.
+
+You can have Spring automatically create a proxy for the interface by using the following JavaConfig:
+
+```java
+@Configuration
+@EnableMongoRepositories
+class ApplicationConfig extends AbstractMongoConfiguration {
+
+  @Override
+  public Mongo mongo() throws Exception {
+    return new Mongo();
+  }
+
+  @Override
+  protected String getDatabaseName() {
+    return "springdata";
+  }
+}
+```
+
+This sets up a connection to a local MongoDB instance and enables the detection of Spring Data repositories (through `@EnableMongoRepositories`). The same configuration would look like this in XML:
 
 ```xml
 <bean id="template" class="org.springframework.data.document.mongodb.MongoTemplate">
-        <constructor-arg>
-                <bean class="com.mongodb.Mongo">
-                        <constructor-arg value="localhost" />
-                        <constructor-arg value="27017" />
-                </bean>
-        </constructor-arg>
-        <constructor-arg value="database" />
-        <property name="defaultCollectionName" value="springdata" />
+  <constructor-arg>
+    <bean class="com.mongodb.Mongo">
+       <constructor-arg value="localhost" />
+       <constructor-arg value="27017" />
+    </bean>
+  </constructor-arg>
+  <constructor-arg value="database" />
 </bean>
 
 <mongo:repositories base-package="com.acme.repository" />
 ```
 
-This will find the repository interface and register a proxy object in the container.  You can use it as shown below:
+This will find the repository interface and register a proxy object in the container. You can use it as shown below:
 
 ```java
 @Service
 public class MyService {
 
-  @Autowired
   private final PersonRepository repository;
-  
+
+  @Autowired
   public MyService(PersonRepository repository) {
     this.repository = repository;
   }
@@ -140,8 +135,7 @@ public class MyService {
 }
 ```
 
-Contributing to Spring Data
----------------------------
+## Contributing to Spring Data
 
 Here are some ways for you to get involved in the community:
 
