@@ -1321,6 +1321,50 @@ public class MappingMongoConverterUnitTests {
 		converter.read(ObjectContainer.class, input);
 	}
 
+	@Test
+	public void convertDocumentWithMapDBRef() {
+
+		MapDBRef mapDBRef = new MapDBRef();
+
+		MapDBRefVal val = new MapDBRefVal();
+		val.id = BigInteger.ONE;
+
+		Map<String, MapDBRefVal> mapVal = new HashMap<String, MapDBRefVal>();
+		mapVal.put("test", val);
+
+		mapDBRef.map = mapVal;
+
+		BasicDBObject dbObject = new BasicDBObject();
+		converter.write(mapDBRef, dbObject);
+
+		DBObject map = (DBObject) dbObject.get("map");
+
+		assertThat(map.get("test"), instanceOf(DBRef.class));
+
+		DBObject mapValDBObject = new BasicDBObject();
+		mapValDBObject.put("_id", BigInteger.ONE);
+
+		DBRef dbRef = mock(DBRef.class);
+		when(dbRef.fetch()).thenReturn(mapValDBObject);
+
+		((DBObject) dbObject.get("map")).put("test", dbRef);
+
+		MapDBRef read = converter.read(MapDBRef.class, dbObject);
+
+		assertThat(read.map.get("test").id, is(BigInteger.ONE));
+	}
+
+	@Document
+	class MapDBRef {
+		@org.springframework.data.mongodb.core.mapping.DBRef
+		Map<String, MapDBRefVal> map;
+	}
+
+	@Document
+	class MapDBRefVal {
+		BigInteger id;
+	}
+
 	static class GenericType<T> {
 		T content;
 	}
