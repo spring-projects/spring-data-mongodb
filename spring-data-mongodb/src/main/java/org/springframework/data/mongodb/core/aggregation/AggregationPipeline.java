@@ -161,6 +161,14 @@ public class AggregationPipeline {
 		return operations;
 	}
 
+    /**
+     * creates an empty pipeline
+     * @return the new pipeline
+     */
+    public static AggregationPipeline pipeline() {
+        return new AggregationPipeline();
+    }
+
 	private AggregationPipeline addDocumentOperation(String opName, String operation) {
 
 		Assert.hasText(operation, "Missing operation name!");
