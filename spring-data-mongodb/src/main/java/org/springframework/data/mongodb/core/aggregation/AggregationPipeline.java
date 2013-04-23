@@ -81,7 +81,7 @@ public class AggregationPipeline {
 	/**
 	 * Adds a group operation to the pipeline.
 	 * 
-	 * @param projection JSON string holding the group, must not be {@literal null} or empty.
+	 * @param group JSON string holding the group, must not be {@literal null} or empty.
 	 * @return The pipeline.
 	 */
 	public AggregationPipeline group(String group) {
@@ -118,7 +118,7 @@ public class AggregationPipeline {
 	/**
 	 * Adds a match operation to the pipeline that is basically a query on the collections.
 	 * 
-	 * @param projection JSON string holding the criteria, must not be {@literal null} or empty.
+	 * @param match JSON string holding the criteria, must not be {@literal null} or empty.
 	 * @return The pipeline.
 	 */
 	public AggregationPipeline match(String match) {
