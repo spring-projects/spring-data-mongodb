@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.aggregation.operation.AggregationOperation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.util.Assert;
 
@@ -38,6 +39,18 @@ public class AggregationPipeline {
 	private static final String OPERATOR_PREFIX = "$";
 
 	private final List<DBObject> operations = new ArrayList<DBObject>();
+
+    public AggregationPipeline() {
+    }
+
+    public AggregationPipeline(AggregationOperation... operations) {
+        Assert.notNull(operations, "Operations are missing");
+
+        for (AggregationOperation operation : operations) {
+            Assert.notNull(operation, "Operation is not allowed to be null");
+            this.operations.add(operation.getDBObject());
+        }
+    }
 
 	/**
 	 * Adds a projection operation to the pipeline.
@@ -81,7 +94,7 @@ public class AggregationPipeline {
 	/**
 	 * Adds a group operation to the pipeline.
 	 * 
-	 * @param projection JSON string holding the group, must not be {@literal null} or empty.
+	 * @param group JSON string holding the group, must not be {@literal null} or empty.
 	 * @return The pipeline.
 	 */
 	public AggregationPipeline group(String group) {
@@ -118,7 +131,7 @@ public class AggregationPipeline {
 	/**
 	 * Adds a match operation to the pipeline that is basically a query on the collections.
 	 * 
-	 * @param projection JSON string holding the criteria, must not be {@literal null} or empty.
+	 * @param match JSON string holding the criteria, must not be {@literal null} or empty.
 	 * @return The pipeline.
 	 */
 	public AggregationPipeline match(String match) {
@@ -160,6 +173,14 @@ public class AggregationPipeline {
 	public List<DBObject> getOperations() {
 		return operations;
 	}
+
+    /**
+     * creates an empty pipeline
+     * @return the new pipeline
+     */
+    public static AggregationPipeline pipeline() {
+        return new AggregationPipeline();
+    }
 
 	private AggregationPipeline addDocumentOperation(String opName, String operation) {
 
