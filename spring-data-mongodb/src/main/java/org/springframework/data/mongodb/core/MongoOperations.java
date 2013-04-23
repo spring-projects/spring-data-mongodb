@@ -19,8 +19,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-import org.springframework.data.mongodb.core.aggregation.AggregationPipeline;
-import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.geo.GeoResult;
 import org.springframework.data.mongodb.core.geo.GeoResults;
@@ -315,6 +313,19 @@ public interface MongoOperations {
 	 * @since 1.3
 	 */
 	<T> AggregationResults<T> aggregate(String inputCollectionName, AggregationPipeline pipeline, Class<T> entityClass);
+
+	/**
+	 * Execute an aggregation operation. The raw results will be mapped to the given entity class.
+	 * 
+	 * @param inputCollectionName the collection there the aggregation operation will read from, must not be
+	 *          {@literal null} or empty.
+	 * @param entityClass The parameterized type of the returned list, must not be {@literal null}.
+	 * @param operations The aggregation operations, must not be {@literal null}.
+	 * @return The results of the aggregation operation.
+	 * @since 1.3
+	 */
+	<T> AggregationResults<T> aggregate(String inputCollectionName, Class<T> entityClass,
+			AggregationOperation... operations);
 
 	/**
 	 * Execute a map-reduce operation. The map-reduce operation will be formed with an output type of INLINE
