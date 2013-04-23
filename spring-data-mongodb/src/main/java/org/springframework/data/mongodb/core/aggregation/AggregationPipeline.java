@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.aggregation.operation.AggregationOperation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.util.Assert;
 
@@ -38,6 +39,18 @@ public class AggregationPipeline {
 	private static final String OPERATOR_PREFIX = "$";
 
 	private final List<DBObject> operations = new ArrayList<DBObject>();
+
+    public AggregationPipeline() {
+    }
+
+    public AggregationPipeline(AggregationOperation... operations) {
+        Assert.notNull(operations, "Operations are missing");
+
+        for (AggregationOperation operation : operations) {
+            Assert.notNull(operation, "Operation is not allowed to be null");
+            this.operations.add(operation.getDBObject());
+        }
+    }
 
 	/**
 	 * Adds a projection operation to the pipeline.
