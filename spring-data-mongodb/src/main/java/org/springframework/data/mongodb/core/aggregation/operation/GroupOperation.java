@@ -59,13 +59,178 @@ public class GroupOperation implements AggregationOperation {
      *          name: {$addToSet: "$field"}
      *     }}
      * </pre>
-     * @param name
-     * @param field
+     * @param name key of the field
+     * @param field reference to a field of the document
      * @return
      *
      */
     public GroupOperation addToSet(String name, String field) {
-        return addField(name, new BasicDBObject("$addToSet", ReferenceUtil.safeReference(field)));
+        return addOperation("$addToSet", name, field);
+    }
+
+    /**
+     * Adds a field with the
+     * <a href="http://docs.mongodb.org/manual/reference/aggregation/addToSet/#grp._S_first">$first operation</a>.
+     * <pre>
+     *     {$group: {
+     *          _id: "$id_field",
+     *          name: {$first: "$field"}
+     *     }}
+     * </pre>
+     * @param name key of the field
+     * @param field reference to a field of the document
+     * @return
+     *
+     */
+    public GroupOperation first(String name, String field) {
+        return addOperation("$first", name, field);
+    }
+
+    /**
+     * Adds a field with the
+     * <a href="http://docs.mongodb.org/manual/reference/aggregation/addToSet/#grp._S_last">$last operation</a>.
+     * <pre>
+     *     {$group: {
+     *          _id: "$id_field",
+     *          name: {$last: "$field"}
+     *     }}
+     * </pre>
+     * @param name key of the field
+     * @param field reference to a field of the document
+     * @return
+     *
+     */
+    public GroupOperation last(String name, String field) {
+        return addOperation("$last", name, field);
+    }
+
+    /**
+     * Adds a field with the
+     * <a href="http://docs.mongodb.org/manual/reference/aggregation/addToSet/#grp._S_max">$max operation</a>.
+     * <pre>
+     *     {$group: {
+     *          _id: "$id_field",
+     *          name: {$max: "$field"}
+     *     }}
+     * </pre>
+     * @param name key of the field
+     * @param field reference to a field of the document
+     * @return
+     *
+     */
+    public GroupOperation max(String name, String field) {
+        return addOperation("$max", name, field);
+    }
+
+    /**
+     * Adds a field with the
+     * <a href="http://docs.mongodb.org/manual/reference/aggregation/addToSet/#grp._S_min">$min operation</a>.
+     * <pre>
+     *     {$group: {
+     *          _id: "$id_field",
+     *          name: {$min: "$field"}
+     *     }}
+     * </pre>
+     * @param name key of the field
+     * @param field reference to a field of the document
+     * @return
+     *
+     */
+    public GroupOperation min(String name, String field) {
+        return addOperation("$min", name, field);
+    }
+
+
+    /**
+     * Adds a field with the
+     * <a href="http://docs.mongodb.org/manual/reference/aggregation/addToSet/#grp._S_avg">$avg operation</a>.
+     * <pre>
+     *     {$group: {
+     *          _id: "$id_field",
+     *          name: {$avg: "$field"}
+     *     }}
+     * </pre>
+     * @param name key of the field
+     * @param field reference to a field of the document
+     * @return
+     *
+     */
+    public GroupOperation avg(String name, String field) {
+        return addOperation("$avg", name, field);
+    }
+
+
+    /**
+     * Adds a field with the
+     * <a href="http://docs.mongodb.org/manual/reference/aggregation/addToSet/#grp._S_push">$push operation</a>.
+     * <pre>
+     *     {$group: {
+     *          _id: "$id_field",
+     *          name: {$push: "$field"}
+     *     }}
+     * </pre>
+     * @param name key of the field
+     * @param field reference to a field of the document
+     * @return
+     *
+     */
+    public GroupOperation push(String name, String field) {
+        return addOperation("$push", name, field);
+    }
+
+    /**
+     * Adds a field with the
+     * <a href="http://docs.mongodb.org/manual/reference/aggregation/addToSet/#grp._S_sum">$sum operation</a>
+     * with a constant value.
+     * <pre>
+     *     {$group: {
+     *          _id: "$id_field",
+     *          name: {$sum: increment}
+     *     }}
+     * </pre>
+     * @param name key of the field
+     * @param increment increment for each item
+     * @return
+     *
+     */
+    public GroupOperation count(String name, double increment) {
+        return addField(name, new BasicDBObject("$sum", increment));
+    }
+
+    /**
+     * Adds a field with the
+     * <a href="http://docs.mongodb.org/manual/reference/aggregation/addToSet/#grp._S_sum">$sum operation</a>
+     * count every item.
+     * <pre>
+     *     {$group: {
+     *          _id: "$id_field",
+     *          name: {$sum: 1}
+     *     }}
+     * </pre>
+     * @param name key of the field
+     * @return
+     *
+     */
+    public GroupOperation count(String name) {
+        return count(name, 1);
+    }
+
+    /**
+     * Adds a field with the
+     * <a href="http://docs.mongodb.org/manual/reference/aggregation/addToSet/#grp._S_sum">$sum operation</a>.
+     * <pre>
+     *     {$group: {
+     *          _id: "$id_field",
+     *          name: {$sum: "$field"}
+     *     }}
+     * </pre>
+     * @param name key of the field
+     * @param field reference to a field of the document
+     * @return
+     *
+     */
+    public GroupOperation sum(String name, String field) {
+        return addOperation("$sum", name, field);
     }
 
     /**
@@ -76,6 +241,10 @@ public class GroupOperation implements AggregationOperation {
      */
     public static GroupOperation group(String field) {
         return new GroupOperation(ReferenceUtil.safeReference(field));
+    }
+
+    protected GroupOperation addOperation(String operation, String name, String field) {
+        return addField(name, new BasicDBObject(operation, ReferenceUtil.safeReference(field)));
     }
 
     /**
