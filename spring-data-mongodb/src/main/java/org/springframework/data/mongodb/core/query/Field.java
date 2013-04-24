@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 the original author or authors.
+ * Copyright 2010-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,14 +18,15 @@ package org.springframework.data.mongodb.core.query;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.springframework.util.ObjectUtils;
+
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
 public class Field {
 
-	private Map<String, Integer> criteria = new HashMap<String, Integer>();
-
-	private Map<String, Object> slices = new HashMap<String, Object>();
+	private final Map<String, Integer> criteria = new HashMap<String, Integer>();
+	private final Map<String, Object> slices = new HashMap<String, Object>();
 
 	public Field include(String key) {
 		criteria.put(key, Integer.valueOf(1));
@@ -50,11 +51,54 @@ public class Field {
 	public DBObject getFieldsObject() {
 		DBObject dbo = new BasicDBObject();
 		for (String k : criteria.keySet()) {
-			dbo.put(k, (criteria.get(k)));
+			dbo.put(k, criteria.get(k));
 		}
 		for (String k : slices.keySet()) {
-			dbo.put(k, new BasicDBObject("$slice", (slices.get(k))));
+			dbo.put(k, new BasicDBObject("$slice", slices.get(k)));
 		}
 		return dbo;
+	}
+
+	/* 
+	 * (non-Javadoc)
+	 * @see java.lang.Object#equals(java.lang.Object)
+	 */
+	@Override
+	public boolean equals(Object object) {
+
+		if (this == object) {
+			return true;
+		}
+
+		if (!(object instanceof Field)) {
+			return false;
+		}
+
+		Field that = (Field) object;
+
+		if (!this.criteria.equals(that.criteria)) {
+			return false;
+		}
+
+		if (!this.slices.equals(that.slices)) {
+			return false;
+		}
+
+		return true;
+	}
+
+	/* 
+	 * (non-Javadoc)
+	 * @see java.lang.Object#hashCode()
+	 */
+	@Override
+	public int hashCode() {
+
+		int result = 17;
+
+		result += 31 * ObjectUtils.nullSafeHashCode(this.criteria);
+		result += 31 * ObjectUtils.nullSafeHashCode(this.slices);
+
+		return result;
 	}
 }
