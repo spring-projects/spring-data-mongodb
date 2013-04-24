@@ -44,7 +44,6 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.dao.DataAccessException;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.authentication.UserCredentials;
@@ -53,7 +52,9 @@ import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.BeanWrapper;
 import org.springframework.data.mapping.model.MappingException;
+import org.springframework.data.mongodb.MongoDataIntegrityViolationException;
 import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.core.aggregation.operation.AggregationOperation;
 import org.springframework.data.mongodb.core.aggregation.AggregationPipeline;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
@@ -984,11 +985,12 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 		Assert.notNull(object);
 
-		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(object.getClass());
+		Class<?> objectType = object.getClass();
+		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(objectType);
 		MongoPersistentProperty idProp = entity == null ? null : entity.getIdProperty();
 
 		if (idProp == null) {
-			throw new MappingException("No id property found for object of type " + entity.getType().getName());
+			throw new MappingException("No id property found for object of type " + objectType);
 		}
 
 		ConversionService service = mongoConverter.getConversionService();
@@ -1205,6 +1207,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 		return new AggregationResults<T>(mappedResults, commandResult);
 	}
+
+    public <T> AggregationResults<T> aggregate(String inputCollectionName, Class<T> entityClass, AggregationOperation... operations) {
+        return aggregate(inputCollectionName, new AggregationPipeline(operations), entityClass);
+    }
+
 
 	protected String replaceWithResourceIfNecessary(String function) {
 
@@ -1677,7 +1684,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		}
 
 		if (writeResultChecking == WriteResultChecking.EXCEPTION) {
-			throw new DataIntegrityViolationException(message);
+			throw new MongoDataIntegrityViolationException(message, writeResult, operation);
 		} else {
 			LOGGER.error(message);
 			return;

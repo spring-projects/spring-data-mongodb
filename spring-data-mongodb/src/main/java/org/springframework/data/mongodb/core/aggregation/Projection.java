@@ -39,9 +39,7 @@ import com.mongodb.DBObject;
  */
 public class Projection {
 
-	private static final String REFERENCE_PREFIX = "$";
-
-	/** Stack of key names. Size is 0 or 1. */
+    /** Stack of key names. Size is 0 or 1. */
 	private final Stack<String> reference = new Stack<String>();
 	private final DBObject document = new BasicDBObject();
 
@@ -105,7 +103,7 @@ public class Projection {
 		Assert.hasText(key, "Missing key");
 
 		try {
-			document.put(key, rightHandSide(safeReference(reference.pop())));
+			document.put(key, rightHandSide(ReferenceUtil.safeReference(reference.pop())));
 		} catch (EmptyStackException e) {
 			throw new InvalidDataAccessApiUsageException("Invalid use of as()", e);
 		}
@@ -125,7 +123,7 @@ public class Projection {
 
 		Assert.notNull(n, "Missing number");
 
-		rightHandExpression = createArrayObject(op, safeReference(reference.peek()), n);
+		rightHandExpression = createArrayObject(op, ReferenceUtil.safeReference(reference.peek()), n);
 		return this;
 	}
 
@@ -134,7 +132,7 @@ public class Projection {
 		List<Object> list = new ArrayList<Object>();
 		Collections.addAll(list, items);
 
-		return new BasicDBObject(safeReference(op), list);
+		return new BasicDBObject(ReferenceUtil.safeReference(op), list);
 	}
 
 	private void safePop() {
@@ -144,18 +142,7 @@ public class Projection {
 		}
 	}
 
-	private String safeReference(String key) {
-
-		Assert.hasText(key);
-
-		if (!key.startsWith(REFERENCE_PREFIX)) {
-			return REFERENCE_PREFIX + key;
-		} else {
-			return key;
-		}
-	}
-
-	private Object rightHandSide(Object defaultValue) {
+    private Object rightHandSide(Object defaultValue) {
 		Object value = rightHandExpression != null ? rightHandExpression : defaultValue;
 		rightHandExpression = null;
 		return value;

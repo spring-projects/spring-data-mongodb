@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core.query;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
+import static org.springframework.data.mongodb.core.query.Query.*;
 
 import org.junit.Assert;
 import org.junit.Rule;
@@ -32,6 +33,7 @@ import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
  * 
  * @author Thomas Risberg
  * @author Oliver Gierke
+ * @author Patryk Wasik
  */
 public class QueryTests {
 
@@ -102,6 +104,21 @@ public class QueryTests {
 		Assert.assertEquals(expected, q.getQueryObject().toString());
 		String expectedFields = "{ \"address\" : 0 , \"name\" : 1 , \"orders\" : { \"$slice\" : 10}}";
 		Assert.assertEquals(expectedFields, q.getFieldsObject().toString());
+	}
+
+	/**
+	 * @see DATAMONGO-652
+	 */
+	@Test
+	public void testQueryWithFieldsElemMatchAndPositionalOperator() {
+
+		Query query = query(where("name").gte("M").lte("T").and("age").not().gt(22));
+		query.fields().elemMatch("products", where("name").is("milk")).position("comments", 2);
+
+		String expected = "{ \"name\" : { \"$gte\" : \"M\" , \"$lte\" : \"T\"} , \"age\" : { \"$not\" : { \"$gt\" : 22}}}";
+		assertThat(query.getQueryObject().toString(), is(expected));
+		String expectedFields = "{ \"products\" : { \"$elemMatch\" : { \"name\" : \"milk\"}} , \"comments.$\" : 2}";
+		assertThat(query.getFieldsObject().toString(), is(expectedFields));
 	}
 
 	@Test

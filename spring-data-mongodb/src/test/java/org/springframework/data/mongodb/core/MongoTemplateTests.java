@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.core.query.Update.*;
@@ -30,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.bson.types.ObjectId;
+import org.hamcrest.CoreMatchers;
 import org.joda.time.DateTime;
 import org.junit.After;
 import org.junit.Assert;
@@ -50,6 +52,7 @@ import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
+import org.springframework.data.mongodb.MongoDataIntegrityViolationException;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.convert.CustomConversions;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
@@ -275,7 +278,8 @@ public class MongoTemplateTests {
 		} catch (DataIntegrityViolationException e) {
 			assertThat(
 					e.getMessage(),
-					startsWith("Insert list failed: E11000 duplicate key error index: database.person.$_id_  dup key: { : ObjectId"));
+					CoreMatchers
+							.startsWith("Insert list failed: E11000 duplicate key error index: database.person.$_id_  dup key: { : ObjectId"));
 		}
 	}
 
@@ -1568,6 +1572,29 @@ public class MongoTemplateTests {
 
 		person = template.findOne(query(where("id").is(person.getId())), Person.class);
 		assertThat(person.getFirstName(), is(nullValue()));
+	}
+
+	/**
+	 * @see DATAMONGO-651
+	 */
+	@Test
+	public void throwsMongoSpecificExceptionForDataIntegrityViolations() {
+
+		WriteResult result = mock(WriteResult.class);
+		when(result.getError()).thenReturn("ERROR");
+
+		MongoActionOperation operation = MongoActionOperation.INSERT;
+
+		MongoTemplate mongoTemplate = new MongoTemplate(factory);
+		mongoTemplate.setWriteResultChecking(WriteResultChecking.EXCEPTION);
+
+		try {
+			mongoTemplate.handleAnyWriteResultErrors(result, null, operation);
+			fail("Expected MonogoDataIntegrityViolationException!");
+		} catch (MongoDataIntegrityViolationException o_O) {
+			assertThat(o_O.getActionOperation(), is(operation));
+			assertThat(o_O.getWriteResult(), is(result));
+		}
 	}
 
 	static class MyId {
