@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.springframework.util.Assert;
+import org.springframework.util.ObjectUtils;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
@@ -102,5 +103,59 @@ public class Field {
 		}
 
 		return dbo;
+	}
+
+	/* 
+	 * (non-Javadoc)
+	 * @see java.lang.Object#equals(java.lang.Object)
+	 */
+	@Override
+	public boolean equals(Object object) {
+
+		if (this == object) {
+			return true;
+		}
+
+		if (!(object instanceof Field)) {
+			return false;
+		}
+
+		Field that = (Field) object;
+
+		if (!this.criteria.equals(that.criteria)) {
+			return false;
+		}
+
+		if (!this.slices.equals(that.slices)) {
+			return false;
+		}
+
+		if (!this.elemMatchs.equals(that.elemMatchs)) {
+			return false;
+		}
+
+		boolean samePositionKey = this.postionKey == null ? that.postionKey == null : this.postionKey
+				.equals(that.postionKey);
+		boolean samePositionValue = this.positionValue == that.positionValue;
+
+		return samePositionKey && samePositionValue;
+	}
+
+	/* 
+	 * (non-Javadoc)
+	 * @see java.lang.Object#hashCode()
+	 */
+	@Override
+	public int hashCode() {
+
+		int result = 17;
+
+		result += 31 * ObjectUtils.nullSafeHashCode(this.criteria);
+		result += 31 * ObjectUtils.nullSafeHashCode(this.elemMatchs);
+		result += 31 * ObjectUtils.nullSafeHashCode(this.slices);
+		result += 31 * ObjectUtils.nullSafeHashCode(this.postionKey);
+		result += 31 * ObjectUtils.nullSafeHashCode(this.positionValue);
+
+		return result;
 	}
 }
