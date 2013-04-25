@@ -38,13 +38,13 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.MongoCollectionUtils;
 import org.springframework.data.mongodb.core.CollectionCallback;
 import org.springframework.data.mongodb.core.MongoDbUtils;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
@@ -79,7 +79,7 @@ public class MappingTests {
 	ApplicationContext applicationContext;
 	Mongo mongo;
 	MongoTemplate template;
-	MongoMappingContext mappingContext;
+	MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 
 	@Before
 	public void setUp() throws Exception {
@@ -90,7 +90,7 @@ public class MappingTests {
 		}
 		applicationContext = new ClassPathXmlApplicationContext("/mapping.xml");
 		template = applicationContext.getBean(MongoTemplate.class);
-		mappingContext = (MongoMappingContext) ReflectionTestUtils.getField(template, "mappingContext");
+		mappingContext = template.getConverter().getMappingContext();
 	}
 
 	@Test

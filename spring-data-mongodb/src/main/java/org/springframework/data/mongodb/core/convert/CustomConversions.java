@@ -17,9 +17,11 @@ package org.springframework.data.mongodb.core.convert;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -63,6 +65,7 @@ public class CustomConversions {
 	private final Set<ConvertiblePair> writingPairs;
 	private final Set<Class<?>> customSimpleTypes;
 	private final SimpleTypeHolder simpleTypeHolder;
+	private final Map<Class<?>, HashMap<Class<?>, CacheValue>> cache;
 
 	private final List<Object> converters;
 
@@ -85,6 +88,7 @@ public class CustomConversions {
 		this.readingPairs = new HashSet<ConvertiblePair>();
 		this.writingPairs = new HashSet<ConvertiblePair>();
 		this.customSimpleTypes = new HashSet<Class<?>>();
+		this.cache = new HashMap<Class<?>, HashMap<Class<?>, CacheValue>>();
 
 		this.converters = new ArrayList<Object>();
 		this.converters.add(CustomToStringConverter.INSTANCE);
@@ -268,9 +272,11 @@ public class CustomConversions {
 	 * @return
 	 */
 	public boolean hasCustomReadTarget(Class<?> source, Class<?> expectedTargetType) {
+
 		Assert.notNull(source);
 		Assert.notNull(expectedTargetType);
-		return getCustomTarget(source, expectedTargetType, readingPairs) != null;
+
+		return getCustomReadTarget(source, expectedTargetType) != null;
 	}
 
 	/**
@@ -299,8 +305,32 @@ public class CustomConversions {
 		return null;
 	}
 
+	private Class<?> getCustomReadTarget(Class<?> source, Class<?> expectedTargetType) {
+
+		Class<?> type = expectedTargetType == null ? PlaceholderType.class : expectedTargetType;
+
+		Map<Class<?>, CacheValue> map;
+		CacheValue toReturn;
+
+		if ((map = cache.get(source)) == null || (toReturn = map.get(type)) == null) {
+
+			Class<?> target = getCustomTarget(source, type, readingPairs);
+
+			if (cache.get(source) == null) {
+				cache.put(source, new HashMap<Class<?>, CacheValue>());
+			}
+
+			Map<Class<?>, CacheValue> value = cache.get(source);
+			toReturn = target == null ? CacheValue.NULL : new CacheValue(target);
+			value.put(type, toReturn);
+		}
+
+		return toReturn.clazz;
+	}
+
 	@WritingConverter
 	private enum CustomToStringConverter implements GenericConverter {
+
 		INSTANCE;
 
 		public Set<ConvertiblePair> getConvertibleTypes() {
@@ -311,6 +341,32 @@ public class CustomConversions {
 
 		public Object convert(Object source, TypeDescriptor sourceType, TypeDescriptor targetType) {
 			return source.toString();
+		}
+	}
+
+	/**
+	 * Placeholder type to allow registering not-found values in the converter cache.
+	 * 
+	 * @author Patryk Wasik
+	 * @author Oliver Gierke
+	 */
+	private static class PlaceholderType {
+
+	}
+
+	/**
+	 * Wrapper to safely store {@literal null} values in the type cache.
+	 * 
+	 * @author Patryk Wasik
+	 * @author Oliver Gierke
+	 */
+	private static class CacheValue {
+
+		public static final CacheValue NULL = new CacheValue(null);
+		private final Class<?> clazz;
+
+		public CacheValue(Class<?> clazz) {
+			this.clazz = clazz;
 		}
 	}
 }

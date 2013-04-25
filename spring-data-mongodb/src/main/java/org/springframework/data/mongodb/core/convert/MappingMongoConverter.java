@@ -239,10 +239,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		entity.doWithProperties(new PropertyHandler<MongoPersistentProperty>() {
 			public void doWithPersistentProperty(MongoPersistentProperty prop) {
 
-				boolean isConstructorProperty = entity.isConstructorArgument(prop);
-				boolean hasValueForProperty = dbo.containsField(prop.getFieldName());
-
-				if (!hasValueForProperty || isConstructorProperty) {
+				if (!dbo.containsField(prop.getFieldName()) || entity.isConstructorArgument(prop)) {
 					return;
 				}
 

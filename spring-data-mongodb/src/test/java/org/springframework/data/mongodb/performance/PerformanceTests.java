@@ -18,12 +18,16 @@ package org.springframework.data.mongodb.performance;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -35,12 +39,15 @@ import org.springframework.core.Constants;
 import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
-import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.support.MongoRepositoryFactoryBean;
 import org.springframework.util.Assert;
 import org.springframework.util.StopWatch;
+import org.springframework.util.StringUtils;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
@@ -60,29 +67,40 @@ import com.mongodb.WriteConcern;
 public class PerformanceTests {
 
 	private static final String DATABASE_NAME = "performance";
-	private static final int NUMBER_OF_PERSONS = 30000;
+	private static final int NUMBER_OF_PERSONS = 300;
+	private static final int ITERATIONS = 50;
 	private static final StopWatch watch = new StopWatch();
 	private static final Collection<String> IGNORED_WRITE_CONCERNS = Arrays.asList("MAJORITY", "REPLICAS_SAFE",
-			"FSYNC_SAFE", "JOURNAL_SAFE");
+			"FSYNC_SAFE", "FSYNCED", "JOURNAL_SAFE", "JOURNALED", "REPLICA_ACKNOWLEDGED");
 	private static final int COLLECTION_SIZE = 1024 * 1024 * 256; // 256 MB
 	private static final Collection<String> COLLECTION_NAMES = Arrays.asList("template", "driver", "person");
 
 	Mongo mongo;
 	MongoTemplate operations;
 	PersonRepository repository;
+	MongoConverter converter;
 
 	@Before
 	public void setUp() throws Exception {
 
 		this.mongo = new Mongo();
-		this.operations = new MongoTemplate(new SimpleMongoDbFactory(this.mongo, DATABASE_NAME));
+
+		SimpleMongoDbFactory mongoDbFactory = new SimpleMongoDbFactory(this.mongo, DATABASE_NAME);
+
+		MongoMappingContext context = new MongoMappingContext();
+		context.setInitialEntitySet(Collections.singleton(Person.class));
+		context.afterPropertiesSet();
+
+		this.converter = new MappingMongoConverter(mongoDbFactory, context);
+		this.operations = new MongoTemplate(new SimpleMongoDbFactory(this.mongo, DATABASE_NAME), converter);
 
 		MongoRepositoryFactoryBean<PersonRepository, Person, ObjectId> factory = new MongoRepositoryFactoryBean<PersonRepository, Person, ObjectId>();
 		factory.setMongoOperations(operations);
 		factory.setRepositoryInterface(PersonRepository.class);
 		factory.afterPropertiesSet();
 
-		repository = factory.getObject();
+		this.repository = factory.getObject();
+
 	}
 
 	@Test
@@ -90,69 +108,137 @@ public class PerformanceTests {
 		executeWithWriteConcerns(new WriteConcernCallback() {
 			public void doWithWriteConcern(String constantName, WriteConcern concern) {
 				writeHeadline("WriteConcern: " + constantName);
-				writingObjectsUsingPlainDriver("Writing %s objects using plain driver");
-				writingObjectsUsingMongoTemplate("Writing %s objects using template");
-				writingObjectsUsingRepositories("Writing %s objects using repository");
+				System.out.println(String.format("Writing %s objects using plain driver took %sms", NUMBER_OF_PERSONS,
+						writingObjectsUsingPlainDriver(NUMBER_OF_PERSONS)));
+				System.out.println(String.format("Writing %s objects using template took %sms", NUMBER_OF_PERSONS,
+						writingObjectsUsingMongoTemplate(NUMBER_OF_PERSONS)));
+				System.out.println(String.format("Writing %s objects using repository took %sms", NUMBER_OF_PERSONS,
+						writingObjectsUsingRepositories(NUMBER_OF_PERSONS)));
 				writeFooter();
 			}
 		});
 	}
 
 	@Test
-	public void writeAndRead() {
+	public void plainConversion() throws InterruptedException {
+
+		Statistics statistics = new Statistics("Plain conversion of " + NUMBER_OF_PERSONS * 100
+				+ " persons - After %s iterations");
+
+		List<DBObject> dbObjects = getPersonDBObjects(NUMBER_OF_PERSONS * 100);
+
+		for (int i = 0; i < ITERATIONS; i++) {
+			statistics.registerTime(Api.DIRECT, Mode.READ, convertDirectly(dbObjects));
+			statistics.registerTime(Api.CONVERTER, Mode.READ, convertUsingConverter(dbObjects));
+		}
+
+		statistics.printResults(ITERATIONS);
+	}
+
+	private long convertDirectly(final List<DBObject> dbObjects) {
+
+		executeWatched(new WatchCallback<List<Person>>() {
+
+			@Override
+			public List<Person> doInWatch() {
+
+				List<Person> persons = new ArrayList<PerformanceTests.Person>();
+
+				for (DBObject dbObject : dbObjects) {
+					persons.add(Person.from(dbObject));
+				}
+
+				return persons;
+			}
+		});
+
+		return watch.getLastTaskTimeMillis();
+	}
+
+	private long convertUsingConverter(final List<DBObject> dbObjects) {
+
+		executeWatched(new WatchCallback<List<Person>>() {
+
+			@Override
+			public List<Person> doInWatch() {
+
+				List<Person> persons = new ArrayList<PerformanceTests.Person>();
+
+				for (DBObject dbObject : dbObjects) {
+					persons.add(converter.read(Person.class, dbObject));
+				}
+
+				return persons;
+			}
+		});
+
+		return watch.getLastTaskTimeMillis();
+	}
+
+	@Test
+	public void writeAndRead() throws Exception {
 
 		mongo.setWriteConcern(WriteConcern.SAFE);
 
-		for (int i = 3; i > 0; i--) {
+		readsAndWrites(NUMBER_OF_PERSONS, ITERATIONS);
+	}
+
+	private void readsAndWrites(int numberOfPersons, int iterations) {
+
+		Statistics statistics = new Statistics("Reading " + numberOfPersons + " - After %s iterations");
+
+		for (int i = 0; i < iterations; i++) {
 
 			setupCollections();
 
-			writeHeadline("Plain driver");
-			writingObjectsUsingPlainDriver("Writing %s objects using plain driver");
-			readingUsingPlainDriver("Reading all objects using plain driver");
-			queryUsingPlainDriver("Executing query using plain driver");
-			writeFooter();
+			statistics.registerTime(Api.DRIVER, Mode.WRITE, writingObjectsUsingPlainDriver(numberOfPersons));
+			statistics.registerTime(Api.TEMPLATE, Mode.WRITE, writingObjectsUsingMongoTemplate(numberOfPersons));
+			statistics.registerTime(Api.REPOSITORY, Mode.WRITE, writingObjectsUsingRepositories(numberOfPersons));
 
-			writeHeadline("Template");
-			writingObjectsUsingMongoTemplate("Writing %s objects using template");
-			readingUsingTemplate("Reading all objects using template");
-			queryUsingTemplate("Executing query using template");
-			writeFooter();
+			statistics.registerTime(Api.DRIVER, Mode.READ, readingUsingPlainDriver());
+			statistics.registerTime(Api.TEMPLATE, Mode.READ, readingUsingTemplate());
+			statistics.registerTime(Api.REPOSITORY, Mode.READ, readingUsingRepository());
 
-			writeHeadline("Repositories");
-			writingObjectsUsingRepositories("Writing %s objects using repository");
-			readingUsingRepository("Reading all objects using repository");
-			queryUsingRepository("Executing query using repository");
-			writeFooter();
+			statistics.registerTime(Api.DRIVER, Mode.QUERY, queryUsingPlainDriver());
+			statistics.registerTime(Api.TEMPLATE, Mode.QUERY, queryUsingTemplate());
+			statistics.registerTime(Api.REPOSITORY, Mode.QUERY, queryUsingRepository());
 
-			writeFooter();
+			if (i > 0 && i % (iterations / 10) == 0) {
+				statistics.printResults(i);
+			}
 		}
+
+		statistics.printResults(iterations);
 	}
 
 	private void writeHeadline(String headline) {
 		System.out.println(headline);
-		System.out.println("---------------------------------".substring(0, headline.length()));
+		System.out.println(createUnderline(headline));
 	}
 
 	private void writeFooter() {
 		System.out.println();
 	}
 
-	private void queryUsingTemplate(String template) {
-		executeWatchedWithTimeAndResultSize(template, new WatchCallback<List<Person>>() {
+	private long queryUsingTemplate() {
+		executeWatched(new WatchCallback<List<Person>>() {
 			public List<Person> doInWatch() {
 				Query query = query(where("addresses.zipCode").regex(".*1.*"));
 				return operations.find(query, Person.class, "template");
 			}
 		});
+
+		return watch.getLastTaskTimeMillis();
 	}
 
-	private void queryUsingRepository(String template) {
-		executeWatchedWithTimeAndResultSize(template, new WatchCallback<List<Person>>() {
+	private long queryUsingRepository() {
+		executeWatched(new WatchCallback<List<Person>>() {
 			public List<Person> doInWatch() {
 				return repository.findByAddressesZipCodeContaining("1");
 			}
 		});
+
+		return watch.getLastTaskTimeMillis();
 	}
 
 	private void executeWithWriteConcerns(WriteConcernCallback callback) {
@@ -181,7 +267,7 @@ public class PerformanceTests {
 		for (String collectionName : COLLECTION_NAMES) {
 			DBCollection collection = db.getCollection(collectionName);
 			collection.drop();
-			db.command(getCreateCollectionCommand(collectionName));
+			collection.getDB().command(getCreateCollectionCommand(collectionName));
 			collection.ensureIndex(new BasicDBObject("firstname", -1));
 			collection.ensureIndex(new BasicDBObject("lastname", -1));
 		}
@@ -195,38 +281,42 @@ public class PerformanceTests {
 		return dbObject;
 	}
 
-	private void writingObjectsUsingPlainDriver(String template) {
+	private long writingObjectsUsingPlainDriver(int numberOfPersons) {
 
 		final DBCollection collection = mongo.getDB(DATABASE_NAME).getCollection("driver");
-		final List<DBObject> persons = getPersonDBObjects();
+		final List<Person> persons = getPersonObjects(numberOfPersons);
 
-		executeWatchedWithTime(template, new WatchCallback<Void>() {
+		executeWatched(new WatchCallback<Void>() {
 			public Void doInWatch() {
-				for (DBObject person : persons) {
-					collection.save(person);
+				for (Person person : persons) {
+					collection.save(person.toDBObject());
 				}
 				return null;
 			}
 		});
+
+		return watch.getLastTaskTimeMillis();
 	}
 
-	private void writingObjectsUsingRepositories(String template) {
+	private long writingObjectsUsingRepositories(int numberOfPersons) {
 
-		final List<Person> persons = getPersonObjects();
+		final List<Person> persons = getPersonObjects(numberOfPersons);
 
-		executeWatchedWithTime(template, new WatchCallback<Void>() {
+		executeWatched(new WatchCallback<Void>() {
 			public Void doInWatch() {
 				repository.save(persons);
 				return null;
 			}
 		});
+
+		return watch.getLastTaskTimeMillis();
 	}
 
-	private void writingObjectsUsingMongoTemplate(String template) {
+	private long writingObjectsUsingMongoTemplate(int numberOfPersons) {
 
-		final List<Person> persons = getPersonObjects();
+		final List<Person> persons = getPersonObjects(numberOfPersons);
 
-		executeWatchedWithTime(template, new WatchCallback<Void>() {
+		executeWatched(new WatchCallback<Void>() {
 			public Void doInWatch() {
 				for (Person person : persons) {
 					operations.save(person, "template");
@@ -234,110 +324,101 @@ public class PerformanceTests {
 				return null;
 			}
 		});
+
+		return watch.getLastTaskTimeMillis();
 	}
 
-	private void readingUsingPlainDriver(String template) {
+	private long readingUsingPlainDriver() {
 
-		final DBCollection collection = mongo.getDB(DATABASE_NAME).getCollection("driver");
-
-		executeWatchedWithTimeAndResultSize(String.format(template, NUMBER_OF_PERSONS), new WatchCallback<List<Person>>() {
+		executeWatched(new WatchCallback<List<Person>>() {
 			public List<Person> doInWatch() {
-				return toPersons(collection.find());
+				return toPersons(mongo.getDB(DATABASE_NAME).getCollection("driver").find());
 			}
 		});
+
+		return watch.getLastTaskTimeMillis();
 	}
 
-	private void readingUsingTemplate(String template) {
-		executeWatchedWithTimeAndResultSize(String.format(template, NUMBER_OF_PERSONS), new WatchCallback<List<Person>>() {
+	private long readingUsingTemplate() {
+		executeWatched(new WatchCallback<List<Person>>() {
 			public List<Person> doInWatch() {
 				return operations.findAll(Person.class, "template");
 			}
 		});
+
+		return watch.getLastTaskTimeMillis();
 	}
 
-	private void readingUsingRepository(String template) {
-		executeWatchedWithTimeAndResultSize(String.format(template, NUMBER_OF_PERSONS), new WatchCallback<List<Person>>() {
+	private long readingUsingRepository() {
+		executeWatched(new WatchCallback<List<Person>>() {
 			public List<Person> doInWatch() {
 				return repository.findAll();
 			}
 		});
+
+		return watch.getLastTaskTimeMillis();
 	}
 
-	private void queryUsingPlainDriver(String template) {
+	private long queryUsingPlainDriver() {
 
-		final DBCollection collection = mongo.getDB(DATABASE_NAME).getCollection("driver");
-
-		executeWatchedWithTimeAndResultSize(template, new WatchCallback<List<Person>>() {
+		executeWatched(new WatchCallback<List<Person>>() {
 			public List<Person> doInWatch() {
+
+				DBCollection collection = mongo.getDB(DATABASE_NAME).getCollection("driver");
+
 				DBObject regex = new BasicDBObject("$regex", Pattern.compile(".*1.*"));
 				DBObject query = new BasicDBObject("addresses.zipCode", regex);
 				return toPersons(collection.find(query));
 			}
 		});
+
+		return watch.getLastTaskTimeMillis();
 	}
 
-	private List<DBObject> getPersonDBObjects() {
+	private List<Person> getPersonObjects(int numberOfPersons) {
 
-		List<DBObject> result = new ArrayList<DBObject>(NUMBER_OF_PERSONS);
+		List<Person> result = new ArrayList<Person>();
 
-		for (Person person : getPersonObjects()) {
-			result.add(person.toDBObject());
-		}
+		for (int i = 0; i < numberOfPersons; i++) {
 
-		return result;
-	}
+			List<Address> addresses = new ArrayList<Address>();
 
-	private List<Person> getPersonObjects() {
+			for (int a = 0; a < 5; a++) {
+				addresses.add(new Address("zip" + a, "city" + a));
+			}
 
-		List<Person> result = new ArrayList<Person>(NUMBER_OF_PERSONS);
+			Person person = new Person("Firstname" + i, "Lastname" + i, addresses);
 
-		watch.start("Created " + NUMBER_OF_PERSONS + " Persons");
+			for (int o = 0; o < 10; o++) {
+				person.orders.add(new Order(LineItem.generate()));
+			}
 
-		for (int i = 0; i < NUMBER_OF_PERSONS; i++) {
-
-			Address address = new Address("zip" + i, "city" + i);
-			Person person = new Person("Firstname" + i, "Lastname" + i, Arrays.asList(address));
-			person.orders.add(new Order(LineItem.generate()));
-			person.orders.add(new Order(LineItem.generate()));
 			result.add(person);
 		}
 
-		watch.stop();
-
 		return result;
 	}
 
-	private <T> T executeWatched(String template, WatchCallback<T> callback) {
+	private List<DBObject> getPersonDBObjects(int numberOfPersons) {
 
-		watch.start(String.format(template, NUMBER_OF_PERSONS));
+		List<DBObject> dbObjects = new ArrayList<DBObject>(numberOfPersons);
+
+		for (Person person : getPersonObjects(numberOfPersons)) {
+			dbObjects.add(person.toDBObject());
+		}
+
+		return dbObjects;
+	}
+
+	private <T> T executeWatched(WatchCallback<T> callback) {
+
+		watch.start();
 
 		try {
 			return callback.doInWatch();
 		} finally {
 			watch.stop();
 		}
-	}
-
-	private <T> void executeWatchedWithTime(String template, WatchCallback<?> callback) {
-		executeWatched(template, callback);
-		printStatistics(null);
-	}
-
-	private <T> void executeWatchedWithTimeAndResultSize(String template, WatchCallback<List<T>> callback) {
-		printStatistics(executeWatched(template, callback));
-	}
-
-	private void printStatistics(Collection<?> result) {
-
-		long time = watch.getLastTaskTimeMillis();
-		StringBuilder builder = new StringBuilder(watch.getLastTaskName());
-
-		if (result != null) {
-			builder.append(" returned ").append(result.size()).append(" results and");
-		}
-
-		builder.append(" took ").append(time).append(" milliseconds");
-		System.out.println(builder);
 	}
 
 	private static List<Person> toPersons(DBCursor cursor) {
@@ -354,10 +435,9 @@ public class PerformanceTests {
 	static class Person {
 
 		ObjectId id;
-		@Indexed
-		final String firstname, lastname;
-		final List<Address> addresses;
-		final Set<Order> orders;
+		String firstname, lastname;
+		List<Address> addresses;
+		Set<Order> orders;
 
 		public Person(String firstname, String lastname, List<Address> addresses) {
 			this.firstname = firstname;
@@ -579,11 +659,253 @@ public class PerformanceTests {
 		DBObject toDBObject();
 	}
 
-	private static List<DBObject> writeAll(Collection<? extends Convertible> convertibles) {
-		List<DBObject> result = new ArrayList<DBObject>();
+	private static BasicDBList writeAll(Collection<? extends Convertible> convertibles) {
+		BasicDBList result = new BasicDBList();
 		for (Convertible convertible : convertibles) {
 			result.add(convertible.toDBObject());
 		}
 		return result;
+	}
+
+	static enum Api {
+		DRIVER, TEMPLATE, REPOSITORY, DIRECT, CONVERTER;
+	}
+
+	static enum Mode {
+		WRITE, READ, QUERY;
+	}
+
+	private static class Statistics {
+
+		private final String headline;
+		private final Map<Mode, ModeTimes> times;
+
+		public Statistics(String headline) {
+
+			this.headline = headline;
+			this.times = new HashMap<Mode, ModeTimes>();
+
+			for (Mode mode : Mode.values()) {
+				times.put(mode, new ModeTimes(mode));
+			}
+		}
+
+		public void registerTime(Api api, Mode mode, double time) {
+			times.get(mode).add(api, time);
+		}
+
+		public void printResults(int iterations) {
+
+			String title = String.format(headline, iterations);
+
+			System.out.println(title);
+			System.out.println(createUnderline(title));
+
+			StringBuilder builder = new StringBuilder();
+			for (Mode mode : Mode.values()) {
+				String print = times.get(mode).print();
+				if (!print.isEmpty()) {
+					builder.append(print).append('\n');
+				}
+			}
+
+			System.out.println(builder.toString());
+		}
+
+		@Override
+		public String toString() {
+
+			StringBuilder builder = new StringBuilder(times.size());
+
+			for (ModeTimes times : this.times.values()) {
+				builder.append(times.toString());
+			}
+
+			return builder.toString();
+		}
+	}
+
+	private static String createUnderline(String input) {
+
+		StringBuilder builder = new StringBuilder(input.length());
+
+		for (int i = 0; i < input.length(); i++) {
+			builder.append("-");
+		}
+
+		return builder.toString();
+	}
+
+	static class ApiTimes {
+
+		private static final String TIME_TEMPLATE = "%s %s time -\tAverage: %sms%s,%sMedian: %sms%s";
+
+		private static final DecimalFormat TIME_FORMAT;
+		private static final DecimalFormat DEVIATION_FORMAT;
+
+		static {
+
+			TIME_FORMAT = new DecimalFormat("0.00");
+
+			DEVIATION_FORMAT = new DecimalFormat("0.00");
+			DEVIATION_FORMAT.setPositivePrefix("+");
+		}
+
+		private final Api api;
+		private final Mode mode;
+		private final List<Double> times;
+
+		public ApiTimes(Api api, Mode mode) {
+			this.api = api;
+			this.mode = mode;
+			this.times = new ArrayList<Double>();
+		}
+
+		public void add(double time) {
+			this.times.add(time);
+		}
+
+		public boolean hasTimes() {
+			return !times.isEmpty();
+		}
+
+		public double getAverage() {
+
+			double result = 0;
+
+			for (Double time : times) {
+				result += time;
+			}
+
+			return result == 0.0 ? 0.0 : result / times.size();
+		}
+
+		public double getMedian() {
+
+			if (times.isEmpty()) {
+				return 0.0;
+			}
+
+			ArrayList<Double> list = new ArrayList<Double>(times);
+			Collections.sort(list);
+
+			int size = list.size();
+
+			if (size % 2 == 0) {
+				return (list.get(size / 2 - 1) + list.get(size / 2)) / 2;
+			} else {
+				return list.get(size / 2);
+			}
+		}
+
+		private double getDeviationFrom(double otherAverage) {
+
+			double average = getAverage();
+			return average * 100 / otherAverage - 100;
+		}
+
+		private double getMediaDeviationFrom(double otherMedian) {
+			double median = getMedian();
+			return median * 100 / otherMedian - 100;
+		}
+
+		public String print() {
+
+			if (times.isEmpty()) {
+				return "";
+			}
+
+			return basicPrint("", "\t\t", "") + '\n';
+		}
+
+		private String basicPrint(String extension, String middle, String foo) {
+			return String.format(TIME_TEMPLATE, api, mode, TIME_FORMAT.format(getAverage()), extension, middle,
+					TIME_FORMAT.format(getMedian()), foo);
+		}
+
+		public String print(double referenceAverage, double referenceMedian) {
+
+			if (times.isEmpty()) {
+				return "";
+			}
+
+			return basicPrint(String.format(" %s%%", DEVIATION_FORMAT.format(getDeviationFrom(referenceAverage))), "\t",
+					String.format(" %s%%", DEVIATION_FORMAT.format(getMediaDeviationFrom(referenceMedian)))) + '\n';
+		}
+
+		/* 
+		 * (non-Javadoc)
+		 * @see java.lang.Object#toString()
+		 */
+		@Override
+		public String toString() {
+			return times.isEmpty() ? "" : String.format("%s, %s: %s", api, mode,
+					StringUtils.collectionToCommaDelimitedString(times)) + '\n';
+		}
+	}
+
+	static class ModeTimes {
+
+		private final Map<Api, ApiTimes> times;
+
+		public ModeTimes(Mode mode) {
+
+			this.times = new HashMap<Api, ApiTimes>();
+
+			for (Api api : Api.values()) {
+				this.times.put(api, new ApiTimes(api, mode));
+			}
+		}
+
+		public void add(Api api, double time) {
+			times.get(api).add(time);
+		}
+
+		@SuppressWarnings("null")
+		public String print() {
+
+			if (times.isEmpty()) {
+				return "";
+			}
+
+			Double previousTime = null;
+			Double previousMedian = null;
+			StringBuilder builder = new StringBuilder();
+
+			for (Api api : Api.values()) {
+
+				ApiTimes apiTimes = times.get(api);
+
+				if (!apiTimes.hasTimes()) {
+					continue;
+				}
+
+				if (previousTime == null) {
+					builder.append(apiTimes.print());
+					previousTime = apiTimes.getAverage();
+					previousMedian = apiTimes.getMedian();
+				} else {
+					builder.append(apiTimes.print(previousTime, previousMedian));
+				}
+			}
+
+			return builder.toString();
+		}
+
+		/* 
+		 * (non-Javadoc)
+		 * @see java.lang.Object#toString()
+		 */
+		@Override
+		public String toString() {
+
+			StringBuilder builder = new StringBuilder(times.size());
+
+			for (ApiTimes times : this.times.values()) {
+				builder.append(times.toString());
+			}
+
+			return builder.toString();
+		}
 	}
 }
