@@ -35,7 +35,11 @@ import org.springframework.core.Constants;
 import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.ProfiledCustomConversions;
+import org.springframework.data.mongodb.core.convert.ProfiledDefaultMongoTypeMapper;
 import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.ProfiledMongoMappingContext;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.support.MongoRepositoryFactoryBean;
@@ -60,7 +64,7 @@ import com.mongodb.WriteConcern;
 public class PerformanceTests {
 
 	private static final String DATABASE_NAME = "performance";
-	private static final int NUMBER_OF_PERSONS = 30000;
+	private static final int NUMBER_OF_PERSONS = 3000;
 	private static final StopWatch watch = new StopWatch();
 	private static final Collection<String> IGNORED_WRITE_CONCERNS = Arrays.asList("MAJORITY", "REPLICAS_SAFE",
 			"FSYNC_SAFE", "JOURNAL_SAFE");
@@ -70,12 +74,19 @@ public class PerformanceTests {
 	Mongo mongo;
 	MongoTemplate operations;
 	PersonRepository repository;
+	MongoTemplate profiledMongoTemplate;
 
 	@Before
 	public void setUp() throws Exception {
 
 		this.mongo = new Mongo();
-		this.operations = new MongoTemplate(new SimpleMongoDbFactory(this.mongo, DATABASE_NAME));
+		SimpleMongoDbFactory simpleMongoDbFactory = new SimpleMongoDbFactory(this.mongo, DATABASE_NAME);
+		this.operations = new MongoTemplate(simpleMongoDbFactory);
+
+		MappingMongoConverter mappingMongoConverter = new MappingMongoConverter(simpleMongoDbFactory,new ProfiledMongoMappingContext());
+		mappingMongoConverter.setTypeMapper(new ProfiledDefaultMongoTypeMapper());
+		mappingMongoConverter.setCustomConversions(new ProfiledCustomConversions());
+		this.profiledMongoTemplate = new MongoTemplate(simpleMongoDbFactory,mappingMongoConverter);
 
 		MongoRepositoryFactoryBean<PersonRepository, Person, ObjectId> factory = new MongoRepositoryFactoryBean<PersonRepository, Person, ObjectId>();
 		factory.setMongoOperations(operations);
@@ -96,6 +107,41 @@ public class PerformanceTests {
 				writeFooter();
 			}
 		});
+	}
+
+	@Test
+	public void readAfterWarmup() {
+
+		mongo.setWriteConcern(WriteConcern.SAFE);
+
+		setupCollections();
+
+		writingObjectsUsingMongoTemplate("Writing %s objects using template");
+
+		for (int i = 0; i < 30; i++) {
+			readingUsingTemplate("Reading all objects using template");
+			readingUsingProfiledTemplate("Reading all objects using template");
+		}
+
+		long time = 0;
+
+		for (int i = 0; i < 100; i++) {
+			readingUsingProfiledTemplate2("Reading all objects using template");
+			time += watch.getLastTaskTimeMillis();
+		}
+		long after = time / 100;
+
+		time = 0;
+
+		for (int i = 0; i < 100; i++) {
+			readingUsingTemplate2("Reading all objects using template");
+			time += watch.getLastTaskTimeMillis();
+		}
+		long before = time / 100;
+
+		System.out.println("Before ----------------------------> " + before);
+		System.out.println("After ----------------------------> " + after);
+		System.out.println("Diff ----------------------------> " + (100 - ((double) after / (double) before) * 100.0) + "%");
 	}
 
 	@Test
@@ -251,6 +297,30 @@ public class PerformanceTests {
 		executeWatchedWithTimeAndResultSize(String.format(template, NUMBER_OF_PERSONS), new WatchCallback<List<Person>>() {
 			public List<Person> doInWatch() {
 				return operations.findAll(Person.class, "template");
+			}
+		});
+	}
+
+	private void readingUsingTemplate2(String template) {
+		executeWatchedWithTimeAndResultSize(String.format(template, NUMBER_OF_PERSONS), new WatchCallback<List<Person>>() {
+			public List<Person> doInWatch() {
+				return operations.findAll(Person.class, "template");
+			}
+		});
+	}
+
+	private void readingUsingProfiledTemplate(String template) {
+		executeWatchedWithTimeAndResultSize(String.format(template, NUMBER_OF_PERSONS), new WatchCallback<List<Person>>() {
+			public List<Person> doInWatch() {
+				return profiledMongoTemplate.findAll(Person.class, "template");
+			}
+		});
+	}
+
+	private void readingUsingProfiledTemplate2(String template) {
+		executeWatchedWithTimeAndResultSize(String.format(template, NUMBER_OF_PERSONS), new WatchCallback<List<Person>>() {
+			public List<Person> doInWatch() {
+				return profiledMongoTemplate.findAll(Person.class, "template");
 			}
 		});
 	}
