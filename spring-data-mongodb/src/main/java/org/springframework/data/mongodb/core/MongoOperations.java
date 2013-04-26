@@ -19,6 +19,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
+import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
+import org.springframework.data.mongodb.core.aggregation.AggregationPipeline;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.geo.GeoResult;
 import org.springframework.data.mongodb.core.geo.GeoResults;
