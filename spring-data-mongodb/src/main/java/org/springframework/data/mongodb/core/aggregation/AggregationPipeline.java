@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.data.domain.Sort;
-import org.springframework.data.mongodb.core.aggregation.operation.AggregationOperation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.util.Assert;
 
@@ -40,17 +39,24 @@ public class AggregationPipeline {
 
 	private final List<DBObject> operations = new ArrayList<DBObject>();
 
-    public AggregationPipeline() {
-    }
+	public AggregationPipeline() {
+	}
 
-    public AggregationPipeline(AggregationOperation... operations) {
-        Assert.notNull(operations, "Operations are missing");
+	/**
+	 * Creates a new {@link AggregationPipeline} from the given {@link AggregationOperation}s.
+	 * 
+	 * @param operations must not be {@literal null} or empty.
+	 */
+	public AggregationPipeline(AggregationOperation... operations) {
 
-        for (AggregationOperation operation : operations) {
-            Assert.notNull(operation, "Operation is not allowed to be null");
-            this.operations.add(operation.getDBObject());
-        }
-    }
+		Assert.notNull(operations, "Operations must not be null!");
+		Assert.isTrue(operations.length > 0, "operations must not be empty!");
+
+		for (AggregationOperation operation : operations) {
+			Assert.notNull(operation, "Operation is not allowed to be null");
+			this.operations.add(operation.getDBObject());
+		}
+	}
 
 	/**
 	 * Adds a projection operation to the pipeline.
@@ -174,17 +180,18 @@ public class AggregationPipeline {
 		return operations;
 	}
 
-    /**
-     * creates an empty pipeline
-     * @return the new pipeline
-     */
-    public static AggregationPipeline pipeline() {
-        return new AggregationPipeline();
-    }
+	/**
+	 * creates an empty pipeline
+	 * 
+	 * @return the new pipeline
+	 */
+	public static AggregationPipeline pipeline() {
+		return new AggregationPipeline();
+	}
 
 	private AggregationPipeline addDocumentOperation(String opName, String operation) {
 
-		Assert.hasText(operation, "Missing operation name!");
+		Assert.hasText(operation, "Operation must not be null or empty!");
 		return addOperation(opName, parseJson(operation));
 	}
 
@@ -194,10 +201,11 @@ public class AggregationPipeline {
 	}
 
 	private DBObject parseJson(String json) {
+
 		try {
 			return (DBObject) JSON.parse(json);
 		} catch (JSONParseException e) {
-			throw new IllegalArgumentException("Not a valid JSON document: " + json, e);
+			throw new IllegalArgumentException("Invalid JSON document: " + json, e);
 		}
 	}
 }

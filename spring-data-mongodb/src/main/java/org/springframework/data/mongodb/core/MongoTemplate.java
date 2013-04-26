@@ -53,7 +53,7 @@ import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.BeanWrapper;
 import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mongodb.MongoDbFactory;
-import org.springframework.data.mongodb.core.aggregation.operation.AggregationOperation;
+import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
 import org.springframework.data.mongodb.core.aggregation.AggregationPipeline;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
@@ -118,6 +118,7 @@ import com.mongodb.util.JSONParseException;
  * @author Amol Nayak
  * @author Patryk Wasik
  * @author Tobias Trelle
+ * @author Sebastian Herold
  */
 public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
@@ -1239,10 +1240,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		return new AggregationResults<T>(mappedResults, commandResult);
 	}
 
-    public <T> AggregationResults<T> aggregate(String inputCollectionName, Class<T> entityClass, AggregationOperation... operations) {
-        return aggregate(inputCollectionName, new AggregationPipeline(operations), entityClass);
-    }
-
+	public <T> AggregationResults<T> aggregate(String inputCollectionName, Class<T> entityClass,
+			AggregationOperation... operations) {
+		return aggregate(inputCollectionName, new AggregationPipeline(operations), entityClass);
+	}
 
 	protected String replaceWithResourceIfNecessary(String function) {
 
