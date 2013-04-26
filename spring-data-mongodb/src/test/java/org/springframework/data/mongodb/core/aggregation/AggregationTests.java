@@ -89,17 +89,23 @@ public class AggregationTests {
 
 		createDocuments();
 
-		AggregationPipeline pipeline = new AggregationPipeline().project("{_id:0,tags:1}}").unwind("tags")
-				.group("{_id:\"$tags\", n:{$sum:1}}").project("{tag: \"$_id\", n:1, _id:0}")
-				.sort(new Sort(new Sort.Order(Direction.DESC, "n")));
+		AggregationPipeline pipeline = new AggregationPipeline(). //
+				project("{_id:0,tags:1}}"). //
+				unwind("tags"). //
+				group("{_id:\"$tags\", n:{$sum:1}}"). //
+				project("{tag: \"$_id\", n:1, _id:0}"). //
+				sort(new Sort(new Sort.Order(Direction.DESC, "n")));
 
 		AggregationResults<TagCount> results = mongoTemplate.aggregate(INPUT_COLLECTION, pipeline, TagCount.class);
+
 		assertThat(results, is(notNullValue()));
 		assertThat(results.getServerUsed(), is("/127.0.0.1:27017"));
 
 		List<TagCount> tagCount = results.getAggregationResult();
+
 		assertThat(tagCount, is(notNullValue()));
 		assertThat(tagCount.size(), is(3));
+
 		assertTagCount("spring", 3, tagCount.get(0));
 		assertTagCount("mongodb", 2, tagCount.get(1));
 		assertTagCount("nosql", 1, tagCount.get(2));
@@ -116,14 +122,20 @@ public class AggregationTests {
 	@Test
 	public void shouldAggregateEmptyCollection() {
 
-		AggregationPipeline pipeline = new AggregationPipeline().project("{_id:0,tags:1}}").unwind("$tags")
-				.group("{_id:\"$tags\", n:{$sum:1}}").project("{tag: \"$_id\", n:1, _id:0}").sort("{n:-1}");
+		AggregationPipeline pipeline = new AggregationPipeline(). //
+				project("{_id:0,tags:1}}"). //
+				unwind("$tags").//
+				group("{_id:\"$tags\", n:{$sum:1}}").//
+				project("{tag: \"$_id\", n:1, _id:0}").//
+				sort("{n:-1}");
 
 		AggregationResults<TagCount> results = mongoTemplate.aggregate(INPUT_COLLECTION, pipeline, TagCount.class);
+
 		assertThat(results, is(notNullValue()));
 		assertThat(results.getServerUsed(), is("/127.0.0.1:27017"));
 
 		List<TagCount> tagCount = results.getAggregationResult();
+
 		assertThat(tagCount, is(notNullValue()));
 		assertThat(tagCount.size(), is(0));
 	}
@@ -132,14 +144,19 @@ public class AggregationTests {
 	public void shouldDetectResultMismatch() {
 
 		createDocuments();
-		AggregationPipeline pipeline = new AggregationPipeline().project("{_id:0,tags:1}}").unwind("$tags")
-				.group("{_id:\"$tags\", count:{$sum:1}}").limit(2);
+		AggregationPipeline pipeline = new AggregationPipeline(). //
+				project("{_id:0,tags:1}}"). //
+				unwind("$tags"). //
+				group("{_id:\"$tags\", count:{$sum:1}}"). //
+				limit(2);
 
 		AggregationResults<TagCount> results = mongoTemplate.aggregate(INPUT_COLLECTION, pipeline, TagCount.class);
+
 		assertThat(results, is(notNullValue()));
 		assertThat(results.getServerUsed(), is("/127.0.0.1:27017"));
 
 		List<TagCount> tagCount = results.getAggregationResult();
+
 		assertThat(tagCount, is(notNullValue()));
 		assertThat(tagCount.size(), is(2));
 		assertTagCount(null, 0, tagCount.get(0));
@@ -153,6 +170,7 @@ public class AggregationTests {
 	private void createDocuments() {
 
 		DBCollection coll = mongoTemplate.getCollection(INPUT_COLLECTION);
+
 		coll.insert(createDocument("Doc1", "spring", "mongodb", "nosql"));
 		coll.insert(createDocument("Doc2", "spring", "mongodb"));
 		coll.insert(createDocument("Doc3", "spring"));
