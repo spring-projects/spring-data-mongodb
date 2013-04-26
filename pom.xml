@@ -92,7 +92,7 @@
 	<repositories>
 		<repository>
 			<id>spring-lib-snapshot</id>
-			<url>http://repo.springsource.org/lib-snapshot</url>
+			<url>http://repo.springsource.org/lib-snapshot-local</url>
 		</repository>
 	</repositories>
 
