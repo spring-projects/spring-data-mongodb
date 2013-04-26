@@ -103,4 +103,24 @@ public class Field {
 
 		return dbo;
 	}
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Field field = (Field) o;
+
+        if (criteria != null ? !criteria.equals(field.criteria) : field.criteria != null) return false;
+        if (slices != null ? !slices.equals(field.slices) : field.slices != null) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = criteria != null ? criteria.hashCode() : 0;
+        result = 31 * result + (slices != null ? slices.hashCode() : 0);
+        return result;
+    }
 }
