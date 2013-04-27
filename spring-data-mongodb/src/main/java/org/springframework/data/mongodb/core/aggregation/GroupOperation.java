@@ -305,9 +305,11 @@ public class GroupOperation implements AggregationOperation {
 	 */
 	public static GroupOperation group(IdField... idFields) {
 		Assert.notNull(idFields, "Combined id is null");
+		Assert.isTrue(idFields.length > 0, "At least one id field is necessary");
 
 		BasicDBObject id = new BasicDBObject();
 		for (IdField idField : idFields) {
+			Assert.notNull(idField, "Id field is null");
 			id.put(idField.getKey(), idField.getValue());
 		}
 
