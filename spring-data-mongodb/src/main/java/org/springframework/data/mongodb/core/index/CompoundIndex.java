@@ -69,4 +69,12 @@ public @interface CompoundIndex {
 	 * @return
 	 */
 	String collection() default "";
+
+    /**
+     * If true the Index will be created in the background.
+     * Please see the official MongoDB documentation:
+     * http://docs.mongodb.org/manual/core/indexes/#background-construction
+     * @return
+     */
+    boolean background() default false;
 }

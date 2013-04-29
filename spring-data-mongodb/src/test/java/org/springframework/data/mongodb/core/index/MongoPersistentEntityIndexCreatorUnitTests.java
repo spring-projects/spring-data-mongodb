@@ -113,7 +113,7 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 
 		@Override
 		protected void ensureIndex(String collection, String name, DBObject indexDefinition, boolean unique,
-				boolean dropDups, boolean sparse) {
+				boolean dropDups, boolean sparse, boolean background) {
 
 			this.name = name;
 			this.indexDefinition = indexDefinition;
