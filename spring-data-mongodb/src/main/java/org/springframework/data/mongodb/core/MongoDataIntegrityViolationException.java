@@ -13,10 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb;
+package org.springframework.data.mongodb.core;
 
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.data.mongodb.core.MongoActionOperation;
 import org.springframework.util.Assert;
 
 import com.mongodb.WriteResult;

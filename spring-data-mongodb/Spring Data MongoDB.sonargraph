@@ -94,6 +94,12 @@
                     <dependency type="AllowedDependency" toName="Project|spring-data-mongodb::Layer|Core::Subsystem|Query"/>
                 </element>
             </element>
+            <element name="API" type="Subsystem">
+                <element name="Assignment" type="TypeFilter">
+                    <element name="org.springframework.data.mongodb.*" type="IncludeTypePattern"/>
+                </element>
+                <stereotype name="Public"/>
+            </element>
         </architecture>
         <workspace>
             <element name="src/main/java" type="JavaRootDirectory">
