@@ -181,22 +181,9 @@ public class QueryTests {
 	 * @see DATAMONGO-538
 	 */
 	@Test
-	@SuppressWarnings("deprecation")
-	public void addsDeprecatedSortCorrectly() {
-
-		Query query = new Query();
-		query.sort().on("foo", Order.DESCENDING);
-
-		assertThat(query.getSortObject().toString(), is("{ \"foo\" : -1}"));
-	}
-
-	/**
-	 * @see DATAMONGO-538
-	 */
-	@Test
 	public void addsSortCorrectly() {
 
-		Query query = new Query().with(new org.springframework.data.domain.Sort(Direction.DESC, "foo"));
+		Query query = new Query().with(new Sort(Direction.DESC, "foo"));
 		assertThat(query.getSortObject().toString(), is("{ \"foo\" : -1}"));
 	}
 

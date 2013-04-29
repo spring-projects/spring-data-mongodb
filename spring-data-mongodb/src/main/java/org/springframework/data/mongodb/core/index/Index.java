@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 the original author or authors.
+ * Copyright 2010-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,18 +18,20 @@ package org.springframework.data.mongodb.core.index;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.query.Order;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
+@SuppressWarnings("deprecation")
 public class Index implements IndexDefinition {
 
 	public enum Duplicates {
 		RETAIN, DROP
 	}
 
-	private final Map<String, Order> fieldSpec = new LinkedHashMap<String, Order>();
+	private final Map<String, Direction> fieldSpec = new LinkedHashMap<String, Direction>();
 
 	private String name;
 
@@ -42,12 +44,37 @@ public class Index implements IndexDefinition {
 	public Index() {
 	}
 
-	public Index(String key, Order order) {
-		fieldSpec.put(key, order);
+	public Index(String key, Direction direction) {
+		fieldSpec.put(key, direction);
 	}
 
+	/**
+	 * Creates a new {@link Indexed} on the given key and {@link Order}.
+	 * 
+	 * @deprecated use {@link #Index(String, Direction)} instead.
+	 * @param key must not be {@literal null} or empty.
+	 * @param order must not be {@literal null}.
+	 */
+	@Deprecated
+	public Index(String key, Order order) {
+		this(key, order.toDirection());
+	}
+
+	/**
+	 * Adds the given field to the index.
+	 * 
+	 * @deprecated use {@link #on(String, Direction)} instead.
+	 * @param key must not be {@literal null} or empty.
+	 * @param order must not be {@literal null}.
+	 * @return
+	 */
+	@Deprecated
 	public Index on(String key, Order order) {
-		fieldSpec.put(key, order);
+		return on(key, order.toDirection());
+	}
+
+	public Index on(String key, Direction direction) {
+		fieldSpec.put(key, direction);
 		return this;
 	}
 
@@ -76,7 +103,7 @@ public class Index implements IndexDefinition {
 	public DBObject getIndexKeys() {
 		DBObject dbo = new BasicDBObject();
 		for (String k : fieldSpec.keySet()) {
-			dbo.put(k, (fieldSpec.get(k).equals(Order.ASCENDING) ? 1 : -1));
+			dbo.put(k, fieldSpec.get(k).equals(Direction.ASC) ? 1 : -1);
 		}
 		return dbo;
 	}

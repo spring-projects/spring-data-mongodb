@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 the original author or authors.
+ * Copyright 2012-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core.index;
 
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.query.Order;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
@@ -24,30 +25,38 @@ import org.springframework.util.ObjectUtils;
  * 
  * @author Oliver Gierke
  */
+@SuppressWarnings("deprecation")
 public final class IndexField {
 
 	private final String key;
-	private final Order order;
+	private final Direction direction;
 	private final boolean isGeo;
 
-	private IndexField(String key, Order order, boolean isGeo) {
+	private IndexField(String key, Direction direction, boolean isGeo) {
 
 		Assert.hasText(key);
-		Assert.isTrue(order != null ^ isGeo);
+		Assert.isTrue(direction != null ^ isGeo);
 
 		this.key = key;
-		this.order = order;
+		this.direction = direction;
 		this.isGeo = isGeo;
 	}
 
 	/**
 	 * Creates a default {@link IndexField} with the given key and {@link Order}.
 	 * 
+	 * @deprecated use {@link #create(String, Direction)}.
 	 * @param key must not be {@literal null} or emtpy.
-	 * @param order must not be {@literal null}.
+	 * @param direction must not be {@literal null}.
 	 * @return
 	 */
+	@Deprecated
 	public static IndexField create(String key, Order order) {
+		Assert.notNull(order);
+		return new IndexField(key, order.toDirection(), false);
+	}
+
+	public static IndexField create(String key, Direction order) {
 		Assert.notNull(order);
 		return new IndexField(key, order, false);
 	}
@@ -70,12 +79,23 @@ public final class IndexField {
 	}
 
 	/**
-	 * Returns the order of the {@link IndexField} or {@literal null} in case we have a geo index field.
+	 * Returns the direction of the {@link IndexField} or {@literal null} in case we have a geo index field.
 	 * 
-	 * @return the order
+	 * @deprecated use {@link #getDirection()} instead.
+	 * @return the direction
 	 */
+	@Deprecated
 	public Order getOrder() {
-		return order;
+		return Direction.ASC.equals(direction) ? Order.ASCENDING : Order.DESCENDING;
+	}
+
+	/**
+	 * Returns the direction of the {@link IndexField} or {@literal null} in case we have a geo index field.
+	 * 
+	 * @return the direction
+	 */
+	public Direction getDirection() {
+		return direction;
 	}
 
 	/**
@@ -104,7 +124,8 @@ public final class IndexField {
 
 		IndexField that = (IndexField) obj;
 
-		return this.key.equals(that.key) && ObjectUtils.nullSafeEquals(this.order, that.order) && this.isGeo == that.isGeo;
+		return this.key.equals(that.key) && ObjectUtils.nullSafeEquals(this.direction, that.direction)
+				&& this.isGeo == that.isGeo;
 	}
 
 	/* 
@@ -116,7 +137,7 @@ public final class IndexField {
 
 		int result = 17;
 		result += 31 * ObjectUtils.nullSafeHashCode(key);
-		result += 31 * ObjectUtils.nullSafeHashCode(order);
+		result += 31 * ObjectUtils.nullSafeHashCode(direction);
 		result += 31 * ObjectUtils.nullSafeHashCode(isGeo);
 		return result;
 	}
@@ -127,6 +148,6 @@ public final class IndexField {
 	 */
 	@Override
 	public String toString() {
-		return String.format("IndexField [ key: %s, order: %s, isGeo: %s]", key, order, isGeo);
+		return String.format("IndexField [ key: %s, direction: %s, isGeo: %s]", key, direction, isGeo);
 	}
 }

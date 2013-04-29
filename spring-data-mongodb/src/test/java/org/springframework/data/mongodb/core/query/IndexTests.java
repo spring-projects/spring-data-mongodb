@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 the original author or authors.
+ * Copyright 2010-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,32 +15,32 @@
  */
 package org.springframework.data.mongodb.core.query;
 
-import static org.junit.Assert.*;
 import static org.hamcrest.CoreMatchers.*;
+import static org.junit.Assert.*;
 
 import org.junit.Test;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.index.GeospatialIndex;
 import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.index.Index.Duplicates;
-import org.springframework.data.mongodb.core.query.Order;
 
 public class IndexTests {
 
 	@Test
 	public void testWithAscendingIndex() {
-		Index i = new Index().on("name", Order.ASCENDING);
+		Index i = new Index().on("name", Direction.ASC);
 		assertEquals("{ \"name\" : 1}", i.getIndexKeys().toString());
 	}
 
 	@Test
 	public void testWithDescendingIndex() {
-		Index i = new Index().on("name", Order.DESCENDING);
+		Index i = new Index().on("name", Direction.DESC);
 		assertEquals("{ \"name\" : -1}", i.getIndexKeys().toString());
 	}
 
 	@Test
 	public void testNamedMultiFieldUniqueIndex() {
-		Index i = new Index().on("name", Order.ASCENDING).on("age", Order.DESCENDING);
+		Index i = new Index().on("name", Direction.ASC).on("age", Direction.DESC);
 		i.named("test").unique();
 		assertEquals("{ \"name\" : 1 , \"age\" : -1}", i.getIndexKeys().toString());
 		assertEquals("{ \"name\" : \"test\" , \"unique\" : true}", i.getIndexOptions().toString());
@@ -48,7 +48,7 @@ public class IndexTests {
 
 	@Test
 	public void testWithDropDuplicates() {
-		Index i = new Index().on("name", Order.ASCENDING);
+		Index i = new Index().on("name", Direction.ASC);
 		i.unique(Duplicates.DROP);
 		assertEquals("{ \"name\" : 1}", i.getIndexKeys().toString());
 		assertEquals("{ \"unique\" : true , \"dropDups\" : true}", i.getIndexOptions().toString());
@@ -56,7 +56,7 @@ public class IndexTests {
 
 	@Test
 	public void testWithSparse() {
-		Index i = new Index().on("name", Order.ASCENDING);
+		Index i = new Index().on("name", Direction.ASC);
 		i.sparse().unique();
 		assertEquals("{ \"name\" : 1}", i.getIndexKeys().toString());
 		assertEquals("{ \"unique\" : true , \"sparse\" : true}", i.getIndexOptions().toString());
@@ -72,7 +72,7 @@ public class IndexTests {
 	@Test
 	public void ensuresPropertyOrder() {
 
-		Index on = new Index("foo", Order.ASCENDING).on("bar", Order.ASCENDING);
+		Index on = new Index("foo", Direction.ASC).on("bar", Direction.ASC);
 		assertThat(on.getIndexKeys().toString(), is("{ \"foo\" : 1 , \"bar\" : 1}"));
 	}
 }

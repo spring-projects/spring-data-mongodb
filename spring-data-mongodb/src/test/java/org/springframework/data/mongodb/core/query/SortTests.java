@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2012 the original author or authors.
+ * Copyright 2010-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,22 +17,27 @@ package org.springframework.data.mongodb.core.query;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
-import static org.springframework.data.mongodb.core.query.Order.*;
 
 import org.junit.Test;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 
-@SuppressWarnings("deprecation")
+/**
+ * Unit tests for sorting.
+ * 
+ * @author Oliver Gierke
+ */
 public class SortTests {
 
 	@Test
 	public void testWithSortAscending() {
-		Sort s = new Sort().on("name", ASCENDING);
+		Query s = new Query().with(new Sort(Direction.ASC, "name"));
 		assertEquals("{ \"name\" : 1}", s.getSortObject().toString());
 	}
 
 	@Test
 	public void testWithSortDescending() {
-		Sort s = new Sort().on("name", DESCENDING);
+		Query s = new Query().with(new Sort(Direction.DESC, "name"));
 		assertEquals("{ \"name\" : -1}", s.getSortObject().toString());
 	}
 
@@ -41,7 +46,8 @@ public class SortTests {
 	 */
 	@Test
 	public void preservesOrderKeysOnMultipleSorts() {
-		Sort sort = new Sort("foo", DESCENDING).on("bar", DESCENDING);
+
+		Query sort = new Query().with(new Sort(Direction.DESC, "foo").and(new Sort(Direction.DESC, "bar")));
 		assertThat(sort.getSortObject().toString(), is("{ \"foo\" : -1 , \"bar\" : -1}"));
 	}
 }

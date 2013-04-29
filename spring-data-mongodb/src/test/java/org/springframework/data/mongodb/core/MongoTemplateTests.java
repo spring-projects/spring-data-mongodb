@@ -50,6 +50,8 @@ import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.annotation.Version;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.data.mongodb.MongoDbFactory;
@@ -62,7 +64,6 @@ import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Order;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.test.context.ContextConfiguration;
@@ -235,7 +236,7 @@ public class MongoTemplateTests {
 
 		MongoTemplate template = new MongoTemplate(factory);
 		template.setWriteResultChecking(WriteResultChecking.EXCEPTION);
-		template.indexOps(Person.class).ensureIndex(new Index().on("firstName", Order.DESCENDING).unique());
+		template.indexOps(Person.class).ensureIndex(new Index().on("firstName", Direction.DESC).unique());
 
 		Person person = new Person(new ObjectId(), "Amol");
 		person.setAge(28);
@@ -292,7 +293,7 @@ public class MongoTemplateTests {
 		p2.setAge(40);
 		template.insert(p2);
 
-		template.indexOps(Person.class).ensureIndex(new Index().on("age", Order.DESCENDING).unique(Duplicates.DROP));
+		template.indexOps(Person.class).ensureIndex(new Index().on("age", Direction.DESC).unique(Duplicates.DROP));
 
 		DBCollection coll = template.getCollection(template.getCollectionName(Person.class));
 		List<DBObject> indexInfo = coll.getIndexInfo();
@@ -322,7 +323,7 @@ public class MongoTemplateTests {
 		List<IndexField> indexFields = ii.getIndexFields();
 		IndexField field = indexFields.get(0);
 
-		assertThat(field, is(IndexField.create("age", Order.DESCENDING)));
+		assertThat(field, is(IndexField.create("age", Direction.DESC)));
 	}
 
 	@Test
@@ -949,7 +950,7 @@ public class MongoTemplateTests {
 
 		// test query with a sort
 		Query q2 = new Query(Criteria.where("age").gt(10));
-		q2.sort().on("age", Order.DESCENDING);
+		q2.with(new Sort(Direction.DESC, "age"));
 		PersonWithAList p5 = template.findOne(q2, PersonWithAList.class);
 		assertThat(p5.getFirstName(), is("Mark"));
 	}

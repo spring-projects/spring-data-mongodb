@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2012 the original author or authors.
+ * Copyright 2011-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,12 +22,11 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.index.Index;
-import org.springframework.data.mongodb.core.query.Order;
 import org.springframework.data.mongodb.repository.query.MongoEntityMetadata;
 import org.springframework.data.mongodb.repository.query.PartTreeMongoQuery;
-import org.springframework.data.mongodb.repository.query.QueryUtils;
 import org.springframework.data.repository.core.support.QueryCreationListener;
 import org.springframework.data.repository.query.parser.Part;
 import org.springframework.data.repository.query.parser.Part.Type;
@@ -74,14 +73,14 @@ class IndexEnsuringQueryCreationListener implements QueryCreationListener<PartTr
 				return;
 			}
 			String property = part.getProperty().toDotPath();
-			Order order = toOrder(sort, property);
+			Direction order = toDirection(sort, property);
 			index.on(property, order);
 		}
 
 		// Add fixed sorting criteria to index
 		if (sort != null) {
 			for (Sort.Order order : sort) {
-				index.on(order.getProperty(), QueryUtils.toOrder(order));
+				index.on(order.getProperty(), order.getDirection());
 			}
 		}
 
@@ -90,13 +89,13 @@ class IndexEnsuringQueryCreationListener implements QueryCreationListener<PartTr
 		LOG.debug(String.format("Created %s!", index));
 	}
 
-	private static Order toOrder(Sort sort, String property) {
+	private static Direction toDirection(Sort sort, String property) {
 
 		if (sort == null) {
-			return Order.DESCENDING;
+			return Direction.DESC;
 		}
 
 		org.springframework.data.domain.Sort.Order order = sort.getOrderFor(property);
-		return order == null ? Order.DESCENDING : order.isAscending() ? Order.ASCENDING : Order.DESCENDING;
+		return order == null ? Direction.DESC : order.isAscending() ? Direction.ASC : Direction.DESC;
 	}
 }

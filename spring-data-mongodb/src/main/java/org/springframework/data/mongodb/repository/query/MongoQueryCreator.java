@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2012 the original author or authors.
+ * Copyright 2010-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -169,68 +169,68 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 			PotentiallyConvertingIterator parameters) {
 
 		switch (type) {
-		case AFTER:
-		case GREATER_THAN:
-			return criteria.gt(parameters.nextConverted(property));
-		case GREATER_THAN_EQUAL:
-			return criteria.gte(parameters.nextConverted(property));
-		case BEFORE:
-		case LESS_THAN:
-			return criteria.lt(parameters.nextConverted(property));
-		case LESS_THAN_EQUAL:
-			return criteria.lte(parameters.nextConverted(property));
-		case BETWEEN:
-			return criteria.gt(parameters.nextConverted(property)).lt(parameters.nextConverted(property));
-		case IS_NOT_NULL:
-			return criteria.ne(null);
-		case IS_NULL:
-			return criteria.is(null);
-		case NOT_IN:
-			return criteria.nin(nextAsArray(parameters, property));
-		case IN:
-			return criteria.in(nextAsArray(parameters, property));
-		case LIKE:
-		case STARTING_WITH:
-		case ENDING_WITH:
-		case CONTAINING:
-			String value = parameters.next().toString();
-			return criteria.regex(toLikeRegex(value, type));
-		case REGEX:
-			return criteria.regex(parameters.next().toString());
-		case EXISTS:
-			return criteria.exists((Boolean) parameters.next());
-		case TRUE:
-			return criteria.is(true);
-		case FALSE:
-			return criteria.is(false);
-		case NEAR:
+			case AFTER:
+			case GREATER_THAN:
+				return criteria.gt(parameters.nextConverted(property));
+			case GREATER_THAN_EQUAL:
+				return criteria.gte(parameters.nextConverted(property));
+			case BEFORE:
+			case LESS_THAN:
+				return criteria.lt(parameters.nextConverted(property));
+			case LESS_THAN_EQUAL:
+				return criteria.lte(parameters.nextConverted(property));
+			case BETWEEN:
+				return criteria.gt(parameters.nextConverted(property)).lt(parameters.nextConverted(property));
+			case IS_NOT_NULL:
+				return criteria.ne(null);
+			case IS_NULL:
+				return criteria.is(null);
+			case NOT_IN:
+				return criteria.nin(nextAsArray(parameters, property));
+			case IN:
+				return criteria.in(nextAsArray(parameters, property));
+			case LIKE:
+			case STARTING_WITH:
+			case ENDING_WITH:
+			case CONTAINING:
+				String value = parameters.next().toString();
+				return criteria.regex(toLikeRegex(value, type));
+			case REGEX:
+				return criteria.regex(parameters.next().toString());
+			case EXISTS:
+				return criteria.exists((Boolean) parameters.next());
+			case TRUE:
+				return criteria.is(true);
+			case FALSE:
+				return criteria.is(false);
+			case NEAR:
 
-			Distance distance = accessor.getMaxDistance();
-			Point point = accessor.getGeoNearLocation();
-			point = point == null ? nextAs(parameters, Point.class) : point;
+				Distance distance = accessor.getMaxDistance();
+				Point point = accessor.getGeoNearLocation();
+				point = point == null ? nextAs(parameters, Point.class) : point;
 
-			if (distance == null) {
-				return criteria.near(point);
-			} else {
-				if (distance.getMetric() != null) {
-					criteria.nearSphere(point);
+				if (distance == null) {
+					return criteria.near(point);
 				} else {
-					criteria.near(point);
+					if (distance.getMetric() != null) {
+						criteria.nearSphere(point);
+					} else {
+						criteria.near(point);
+					}
+					criteria.maxDistance(distance.getNormalizedValue());
 				}
-				criteria.maxDistance(distance.getNormalizedValue());
-			}
-			return criteria;
+				return criteria;
 
-		case WITHIN:
-			Object parameter = parameters.next();
-			return criteria.within((Shape) parameter);
-		case SIMPLE_PROPERTY:
-			return criteria.is(parameters.nextConverted(property));
-		case NEGATING_SIMPLE_PROPERTY:
-			return criteria.ne(parameters.nextConverted(property));
+			case WITHIN:
+				Object parameter = parameters.next();
+				return criteria.within((Shape) parameter);
+			case SIMPLE_PROPERTY:
+				return criteria.is(parameters.nextConverted(property));
+			case NEGATING_SIMPLE_PROPERTY:
+				return criteria.ne(parameters.nextConverted(property));
+			default:
+				throw new IllegalArgumentException("Unsupported keyword!");
 		}
-
-		throw new IllegalArgumentException("Unsupported keyword!");
 	}
 
 	/**
@@ -268,15 +268,16 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 	private String toLikeRegex(String source, Type type) {
 
 		switch (type) {
-		case STARTING_WITH:
-			source = source + "*";
-			break;
-		case ENDING_WITH:
-			source = "*" + source;
-			break;
-		case CONTAINING:
-			source = "*" + source + "*";
-			break;
+			case STARTING_WITH:
+				source = source + "*";
+				break;
+			case ENDING_WITH:
+				source = "*" + source;
+				break;
+			case CONTAINING:
+				source = "*" + source + "*";
+				break;
+			default:
 		}
 
 		return source.replaceAll("\\*", ".*");

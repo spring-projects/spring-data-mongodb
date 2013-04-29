@@ -33,6 +33,7 @@ import org.junit.Test;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.dao.DataAccessException;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.CollectionCallback;
 import org.springframework.data.mongodb.core.IndexOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -41,7 +42,6 @@ import org.springframework.data.mongodb.core.index.GeospatialIndex;
 import org.springframework.data.mongodb.core.index.IndexField;
 import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.core.query.NearQuery;
-import org.springframework.data.mongodb.core.query.Order;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.monitor.ServerInfo;
 import org.springframework.expression.ExpressionParser;
@@ -58,6 +58,7 @@ import com.mongodb.WriteConcern;
  * Modified from https://github.com/deftlabs/mongo-java-geospatial-example
  * 
  * @author Mark Pollack
+ * @author Oliver Gierke
  */
 public class GeoSpatialTests {
 
@@ -211,7 +212,7 @@ public class GeoSpatialTests {
 
 		List<IndexField> fields = indexInfo.get(0).getIndexFields();
 		assertThat(fields.size(), is(1));
-		assertThat(fields, hasItem(IndexField.create("_id", Order.ASCENDING)));
+		assertThat(fields, hasItem(IndexField.create("_id", Direction.ASC)));
 
 		fields = indexInfo.get(1).getIndexFields();
 		assertThat(fields.size(), is(1));

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 the original author or authors.
+ * Copyright 2010-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,11 +15,31 @@
  */
 package org.springframework.data.mongodb.core.query;
 
+import org.springframework.data.domain.Sort.Direction;
+
 /**
  * An enum that specifies the ordering for sort or index specifications
  * 
- * @author trisberg
+ * @deprecated prefer {@link Direction}
+ * @author Thomas Risberg
+ * @author Oliver Gierke
  */
+@Deprecated
 public enum Order {
-	ASCENDING, DESCENDING
+
+	ASCENDING {
+		@Override
+		public Direction toDirection() {
+			return Direction.ASC;
+		}
+	},
+
+	DESCENDING {
+		@Override
+		public Direction toDirection() {
+			return Direction.DESC;
+		}
+	};
+
+	public abstract Direction toDirection();
 }

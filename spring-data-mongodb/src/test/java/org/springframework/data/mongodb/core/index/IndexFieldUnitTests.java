@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 the original author or authors.
+ * Copyright 2012-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
 import org.junit.Test;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.query.Order;
 
 /**
@@ -26,14 +27,16 @@ import org.springframework.data.mongodb.core.query.Order;
  * 
  * @author Oliver Gierke
  */
+@SuppressWarnings("deprecation")
 public class IndexFieldUnitTests {
 
 	@Test
 	public void createsPlainIndexFieldCorrectly() {
 
-		IndexField field = IndexField.create("foo", Order.ASCENDING);
+		IndexField field = IndexField.create("foo", Direction.ASC);
 
 		assertThat(field.getKey(), is("foo"));
+		assertThat(field.getDirection(), is(Direction.ASC));
 		assertThat(field.getOrder(), is(Order.ASCENDING));
 		assertThat(field.isGeo(), is(false));
 	}
@@ -44,15 +47,15 @@ public class IndexFieldUnitTests {
 		IndexField field = IndexField.geo("foo");
 
 		assertThat(field.getKey(), is("foo"));
-		assertThat(field.getOrder(), is(nullValue()));
+		assertThat(field.getDirection(), is(nullValue()));
 		assertThat(field.isGeo(), is(true));
 	}
 
 	@Test
 	public void correctEqualsForPlainFields() {
 
-		IndexField first = IndexField.create("foo", Order.ASCENDING);
-		IndexField second = IndexField.create("foo", Order.ASCENDING);
+		IndexField first = IndexField.create("foo", Direction.ASC);
+		IndexField second = IndexField.create("foo", Direction.ASC);
 
 		assertThat(first, is(second));
 		assertThat(second, is(first));

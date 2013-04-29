@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 the original author or authors.
+ * Copyright 2012-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ import static org.junit.Assert.*;
 import java.util.Arrays;
 
 import org.junit.Test;
-import org.springframework.data.mongodb.core.query.Order;
+import org.springframework.data.domain.Sort.Direction;
 
 /**
  * Unit tests for {@link IndexInfo}.
@@ -33,8 +33,8 @@ public class IndexInfoUnitTests {
 	@Test
 	public void isIndexForFieldsCorrectly() {
 
-		IndexField fooField = IndexField.create("foo", Order.ASCENDING);
-		IndexField barField = IndexField.create("bar", Order.DESCENDING);
+		IndexField fooField = IndexField.create("foo", Direction.ASC);
+		IndexField barField = IndexField.create("bar", Direction.DESC);
 
 		IndexInfo info = new IndexInfo(Arrays.asList(fooField, barField), "myIndex", false, false, false);
 		assertThat(info.isIndexForFields(Arrays.asList("foo", "bar")), is(true));

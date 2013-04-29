@@ -39,9 +39,7 @@ public class Query {
 
 	private LinkedHashMap<String, Criteria> criteria = new LinkedHashMap<String, Criteria>();
 	private Field fieldSpec;
-	private Sort coreSort;
-	@SuppressWarnings("deprecation")
-	private org.springframework.data.mongodb.core.query.Sort sort;
+	private Sort sort;
 	private int skip;
 	private int limit;
 	private String hint;
@@ -117,21 +115,6 @@ public class Query {
 	}
 
 	/**
-	 * Returns a {@link org.springframework.data.mongodb.core.query.Sort} instance to define ordering properties.
-	 * 
-	 * @deprecated use {@link #with(Sort)} instead
-	 * @return
-	 */
-	@Deprecated
-	public org.springframework.data.mongodb.core.query.Sort sort() {
-		if (this.sort == null) {
-			this.sort = new org.springframework.data.mongodb.core.query.Sort();
-		}
-
-		return this.sort;
-	}
-
-	/**
 	 * Sets the given pagination information on the {@link Query} instance. Will transparently set {@code skip} and
 	 * {@code limit} as well as applying the {@link Sort} instance defined with the {@link Pageable}.
 	 * 
@@ -169,10 +152,10 @@ public class Query {
 			}
 		}
 
-		if (this.coreSort == null) {
-			this.coreSort = sort;
+		if (this.sort == null) {
+			this.sort = sort;
 		} else {
-			this.coreSort = this.coreSort.and(sort);
+			this.sort = this.sort.and(sort);
 		}
 
 		return this;
@@ -195,23 +178,18 @@ public class Query {
 		return fieldSpec.getFieldsObject();
 	}
 
-	@SuppressWarnings("deprecation")
 	public DBObject getSortObject() {
 
-		if (this.coreSort == null && this.sort == null) {
+		if (this.sort == null && this.sort == null) {
 			return null;
 		}
 
 		DBObject dbo = new BasicDBObject();
 
-		if (this.coreSort != null) {
-			for (org.springframework.data.domain.Sort.Order order : this.coreSort) {
+		if (this.sort != null) {
+			for (org.springframework.data.domain.Sort.Order order : this.sort) {
 				dbo.put(order.getProperty(), order.isAscending() ? 1 : -1);
 			}
-		}
-
-		if (this.sort != null) {
-			dbo.putAll(this.sort.getSortObject());
 		}
 
 		return dbo;

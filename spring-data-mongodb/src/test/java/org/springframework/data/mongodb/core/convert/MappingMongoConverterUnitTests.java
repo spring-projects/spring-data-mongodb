@@ -46,7 +46,6 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.event.ContextRefreshedEvent;
-import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.annotation.TypeAlias;
@@ -1591,20 +1590,6 @@ public class MappingMongoConverterUnitTests {
 
 		public PrimitiveContainer property() {
 			return m_property;
-		}
-	}
-
-	private class LocalDateToDateConverter implements Converter<LocalDate, Date> {
-
-		public Date convert(LocalDate source) {
-			return source.toDateMidnight().toDate();
-		}
-	}
-
-	private class DateToLocalDateConverter implements Converter<Date, LocalDate> {
-
-		public LocalDate convert(Date source) {
-			return new LocalDate(source.getTime());
 		}
 	}
 }
