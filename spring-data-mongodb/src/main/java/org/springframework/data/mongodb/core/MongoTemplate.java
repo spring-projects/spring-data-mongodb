@@ -68,9 +68,11 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
 import org.springframework.data.mongodb.core.mapping.event.AfterConvertEvent;
+import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterLoadEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeConvertEvent;
+import org.springframework.data.mongodb.core.mapping.event.BeforeDeleteEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeSaveEvent;
 import org.springframework.data.mongodb.core.mapping.event.MongoMappingEvent;
 import org.springframework.data.mongodb.core.mapreduce.GroupBy;
@@ -1030,6 +1032,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 		execute(collectionName, new CollectionCallback<Void>() {
 			public Void doInCollection(DBCollection collection) throws MongoException, DataAccessException {
+				maybeEmitEvent(new BeforeDeleteEvent<T>(queryObject, entityClass));
 
 				DBObject dboq = mapper.getMappedObject(queryObject, entity);
 
@@ -1044,6 +1047,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				WriteResult wr = writeConcernToUse == null ? collection.remove(dboq) : collection.remove(dboq,
 						writeConcernToUse);
 				handleAnyWriteResultErrors(wr, dboq, MongoActionOperation.REMOVE);
+				maybeEmitEvent(new AfterDeleteEvent<T>(queryObject, entityClass));
+
 				return null;
 			}
 		});
