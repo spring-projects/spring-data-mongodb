@@ -45,7 +45,6 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.PersistenceConstructor;
@@ -88,7 +87,7 @@ public class MappingMongoConverterUnitTests {
 
 		mappingContext = new MongoMappingContext();
 		mappingContext.setApplicationContext(context);
-		mappingContext.onApplicationEvent(new ContextRefreshedEvent(context));
+		mappingContext.afterPropertiesSet();
 
 		converter = new MappingMongoConverter(factory, mappingContext);
 		converter.afterPropertiesSet();

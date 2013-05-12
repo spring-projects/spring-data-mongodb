@@ -29,7 +29,7 @@
 	<properties>
 		<project.type>multi</project.type>
 		<dist.id>spring-data-mongodb</dist.id>
-		<springdata.commons>1.5.1.RELEASE</springdata.commons>
+		<springdata.commons>1.5.2.BUILD-SNAPSHOT</springdata.commons>
 		<mongo>2.10.1</mongo>
 	</properties>
 	
@@ -88,5 +88,12 @@
 			<version>${mongo}</version>
 		</dependency>
 	</dependencies>
+
+	<repositories>
+		<repository>
+			<id>spring-libs-snapshot</id>
+			<url>http://repo.springsource.org/libs-snapshot-local</url>
+		</repository>
+	</repositories>
 
 </project>

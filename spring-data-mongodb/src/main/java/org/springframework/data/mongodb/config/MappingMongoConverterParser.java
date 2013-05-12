@@ -118,6 +118,7 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 					.genericBeanDefinition(MongoPersistentEntityIndexCreator.class);
 			indexHelperBuilder.addConstructorArgReference(ctxRef);
 			indexHelperBuilder.addConstructorArgReference(dbFactoryRef);
+			indexHelperBuilder.addDependsOn(ctxRef);
 
 			parserContext.registerBeanComponent(new BeanComponentDefinition(indexHelperBuilder.getBeanDefinition(),
 					INDEX_HELPER));
