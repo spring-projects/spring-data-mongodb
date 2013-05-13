@@ -18,7 +18,6 @@ package org.springframework.data.mongodb.core.mapping;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
-import java.lang.reflect.Field;
 import java.util.AbstractMap;
 import java.util.Collections;
 import java.util.Locale;
@@ -32,9 +31,7 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mapping.context.AbstractMappingContext;
 import org.springframework.data.mapping.model.MappingException;
-import org.springframework.util.ReflectionUtils;
 
 import com.mongodb.DBRef;
 
@@ -73,17 +70,6 @@ public class MongoMappingContextUnitTests {
 
 		MongoMappingContext context = new MongoMappingContext();
 		assertThat(context.getPersistentEntity(DBRef.class), is(nullValue()));
-	}
-
-	@Test
-	public void populatesAbstractMappingContextsApplicationCorrectly() {
-
-		MongoMappingContext context = new MongoMappingContext();
-		context.setApplicationContext(applicationContext);
-
-		Field field = ReflectionUtils.findField(AbstractMappingContext.class, "applicationContext");
-		ReflectionUtils.makeAccessible(field);
-		assertThat(ReflectionUtils.getField(field, context), is(notNullValue()));
 	}
 
 	/**
