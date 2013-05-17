@@ -18,9 +18,15 @@ package org.springframework.data.mongodb.config;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
+import org.junit.Rule;
 import org.junit.Test;
-import org.springframework.context.annotation.Bean;
+import org.junit.rules.ExpectedException;
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 
 import com.mongodb.Mongo;
 
@@ -30,6 +36,9 @@ import com.mongodb.Mongo;
  * @author Oliver Gierke
  */
 public class AbstractMongoConfigurationUnitTests {
+
+	@Rule
+	public ExpectedException exception = ExpectedException.none();
 
 	/**
 	 * @see DATAMONGO-496
@@ -63,6 +72,31 @@ public class AbstractMongoConfigurationUnitTests {
 		assertScanningDisabled(" ");
 	}
 
+	/**
+	 * @see DATAMONGO-569
+	 */
+	@Test
+	public void containsMongoDbFactoryButNoMongoBean() {
+
+		AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(SampleMongoConfiguration.class);
+
+		assertThat(context.getBean(MongoDbFactory.class), is(notNullValue()));
+
+		exception.expect(NoSuchBeanDefinitionException.class);
+		context.getBean(Mongo.class);
+	}
+
+	@Test
+	public void returnsUninitializedMappingContext() throws Exception {
+
+		SampleMongoConfiguration configuration = new SampleMongoConfiguration();
+		MongoMappingContext context = configuration.mongoMappingContext();
+
+		assertThat(context.getPersistentEntities(), is(emptyIterable()));
+		context.initialize();
+		assertThat(context.getPersistentEntities(), is(not(emptyIterable())));
+	}
+
 	private static void assertScanningDisabled(final String value) throws ClassNotFoundException {
 
 		AbstractMongoConfiguration configuration = new SampleMongoConfiguration() {
@@ -76,6 +110,7 @@ public class AbstractMongoConfigurationUnitTests {
 		assertThat(configuration.getInitialEntitySet(), hasSize(0));
 	}
 
+	@Configuration
 	static class SampleMongoConfiguration extends AbstractMongoConfiguration {
 
 		@Override
@@ -83,7 +118,6 @@ public class AbstractMongoConfigurationUnitTests {
 			return "database";
 		}
 
-		@Bean
 		@Override
 		public Mongo mongo() throws Exception {
 			return new Mongo();

@@ -59,12 +59,12 @@ public abstract class AbstractMongoConfiguration {
 	protected abstract String getDatabaseName();
 
 	/**
-	 * Return the {@link Mongo} instance to connect to.
+	 * Return the {@link Mongo} instance to connect to. Annotate with {@link Bean} in case you want to expose a
+	 * {@link Mongo} instance to the {@link org.springframework.context.ApplicationContext}.
 	 * 
 	 * @return
 	 * @throws Exception
 	 */
-	@Bean
 	public abstract Mongo mongo() throws Exception;
 
 	/**
@@ -139,8 +139,6 @@ public abstract class AbstractMongoConfiguration {
 		if (abbreviateFieldNames()) {
 			mappingContext.setFieldNamingStrategy(new CamelCaseAbbreviatingFieldNamingStrategy());
 		}
-
-		mappingContext.initialize();
 
 		return mappingContext;
 	}
