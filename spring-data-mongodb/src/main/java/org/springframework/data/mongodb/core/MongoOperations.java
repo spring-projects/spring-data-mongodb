@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 the original author or authors.
+ * Copyright 2010-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -408,7 +408,6 @@ public interface MongoOperations {
 	 *          specification
 	 * @param entityClass the parameterized type of the returned list.
 	 * @param collectionName name of the collection to retrieve the objects from
-	 * 
 	 * @return the converted object
 	 */
 	<T> T findOne(Query query, Class<T> entityClass, String collectionName);
@@ -442,7 +441,6 @@ public interface MongoOperations {
 	 *          specification
 	 * @param entityClass the parameterized type of the returned list.
 	 * @param collectionName name of the collection to retrieve the objects from
-	 * 
 	 * @return the List of converted objects
 	 */
 	<T> List<T> find(Query query, Class<T> entityClass, String collectionName);
@@ -464,7 +462,6 @@ public interface MongoOperations {
 	 * @param id the id of the document to return
 	 * @param entityClass the type to convert the document to
 	 * @param collectionName the collection to query for the document
-	 * 
 	 * @param <T>
 	 * @return
 	 */
@@ -510,7 +507,6 @@ public interface MongoOperations {
 	 *          specification
 	 * @param entityClass the parameterized type of the returned list.
 	 * @param collectionName name of the collection to retrieve the objects from
-	 * 
 	 * @return the converted object
 	 */
 	<T> T findAndRemove(Query query, Class<T> entityClass, String collectionName);
@@ -713,11 +709,12 @@ public interface MongoOperations {
 	 * Remove all documents that match the provided query document criteria from the the collection used to store the
 	 * entityClass. The Class parameter is also used to help convert the Id of the object if it is present in the query.
 	 * 
-	 * @param <T>
 	 * @param query
 	 * @param entityClass
 	 */
-	<T> void remove(Query query, Class<T> entityClass);
+	void remove(Query query, Class<?> entityClass);
+
+	void remove(Query query, Class<?> entityClass, String collectionName);
 
 	/**
 	 * Remove all documents from the specified collection that match the provided query document criteria. There is no

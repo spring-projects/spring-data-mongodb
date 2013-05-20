@@ -1015,16 +1015,25 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		}
 	}
 
-	public <T> void remove(Query query, Class<T> entityClass) {
-		Assert.notNull(query);
-		doRemove(determineCollectionName(entityClass), query, entityClass);
+	public void remove(Query query, String collectionName) {
+		remove(query, null, collectionName);
+	}
+
+	public void remove(Query query, Class<?> entityClass) {
+		remove(query, entityClass, determineCollectionName(entityClass));
+	}
+
+	public void remove(Query query, Class<?> entityClass, String collectionName) {
+		doRemove(collectionName, query, entityClass);
 	}
 
 	protected <T> void doRemove(final String collectionName, final Query query, final Class<T> entityClass) {
 
 		if (query == null) {
-			throw new InvalidDataAccessApiUsageException("Query passed in to remove can't be null");
+			throw new InvalidDataAccessApiUsageException("Query passed in to remove can't be null!");
 		}
+
+		Assert.hasText(collectionName, "Collection name must not be null or empty!");
 
 		final DBObject queryObject = query.getQueryObject();
 		final MongoPersistentEntity<?> entity = getPersistentEntity(entityClass);
@@ -1053,10 +1062,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				return null;
 			}
 		});
-	}
-
-	public void remove(final Query query, String collectionName) {
-		doRemove(collectionName, query, null);
 	}
 
 	public <T> List<T> findAll(Class<T> entityClass) {
