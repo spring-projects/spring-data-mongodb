@@ -25,6 +25,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import org.bson.types.ObjectId;
 import org.junit.Before;
@@ -53,6 +54,7 @@ import com.mongodb.QueryBuilder;
  * Unit tests for {@link QueryMapper}.
  * 
  * @author Oliver Gierke
+ * @author Patryk Wasik
  */
 @RunWith(MockitoJUnitRunner.class)
 public class QueryMapperUnitTests {
@@ -363,6 +365,25 @@ public class QueryMapperUnitTests {
 		assertThat(object.containsField("_id"), is(false));
 	}
 
+	/**
+	 * @see DATAMONGO-677
+	 */
+	@Test
+	public void handleMapWithDBRefCorrectly() {
+
+		DBObject mapDbObject = new BasicDBObject();
+		mapDbObject.put("test", new com.mongodb.DBRef(null, "test", "test"));
+		DBObject dbObject = new BasicDBObject();
+		dbObject.put("mapWithDBRef", mapDbObject);
+
+		DBObject mapped = mapper.getMappedObject(dbObject, context.getPersistentEntity(WithMapDBRef.class));
+
+		assertThat(mapped.containsField("mapWithDBRef"), is(true));
+		assertThat(mapped.get("mapWithDBRef"), instanceOf(BasicDBObject.class));
+		assertThat(((BasicDBObject) mapped.get("mapWithDBRef")).containsField("test"), is(true));
+		assertThat(((BasicDBObject) mapped.get("mapWithDBRef")).get("test"), instanceOf(com.mongodb.DBRef.class));
+	}
+
 	class IdWrapper {
 		Object id;
 	}
@@ -414,5 +435,11 @@ public class QueryMapperUnitTests {
 	class WithDBRefWrapper {
 
 		WithDBRef withDbRef;
+	}
+
+	class WithMapDBRef {
+
+		@DBRef
+		Map<String,Sample> mapWithDBRef;
 	}
 }

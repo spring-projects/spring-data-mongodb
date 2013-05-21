@@ -41,6 +41,7 @@ import com.mongodb.DBRef;
  * 
  * @author Jon Brisbin
  * @author Oliver Gierke
+ * @author Patryk Wasik
  */
 public class QueryMapper {
 
@@ -263,6 +264,16 @@ public class QueryMapper {
 			BasicDBList result = new BasicDBList();
 			for (Object element : (Iterable<?>) source) {
 				result.add(element instanceof DBRef ? element : converter.toDBRef(element, property));
+			}
+			return result;
+		}
+
+		if (property.isMap()) {
+			BasicDBObject result = new BasicDBObject();
+			DBObject dbObject = (DBObject) source;
+			for (String key : dbObject.keySet()) {
+				Object o = dbObject.get(key);
+				result.put(key, o instanceof DBRef ? o : converter.toDBRef(o, property));
 			}
 			return result;
 		}
