@@ -797,7 +797,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	protected <T> void doSave(String collectionName, T objectToSave, MongoWriter<T> writer) {
 
 		assertUpdateableIdIfNotSet(objectToSave);
@@ -810,7 +809,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			writer.write(objectToSave, dbDoc);
 		} else {
 			try {
-				objectToSave = (T) JSON.parse((String) objectToSave);
+				dbDoc = (DBObject) JSON.parse((String) objectToSave);
 			} catch (JSONParseException e) {
 				throw new MappingException("Could not parse given String to save into a JSON document!", e);
 			}

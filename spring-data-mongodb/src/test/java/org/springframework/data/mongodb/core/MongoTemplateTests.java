@@ -1597,6 +1597,21 @@ public class MongoTemplateTests {
 		}
 	}
 
+	/**
+	 * @see DATAMONGO-679
+	 */
+	@Test
+	public void savesJsonStringCorrectly() {
+
+		DBObject dbObject = new BasicDBObject().append("first", "first").append("second", "second");
+
+		template.save(dbObject.toString(), "collection");
+
+		List<DBObject> result = template.findAll(DBObject.class, "collection");
+		assertThat(result.size(), is(1));
+		assertThat(result.get(0).containsField("first"), is(true));
+	}
+
 	static class MyId {
 
 		String first;
