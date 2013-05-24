@@ -96,7 +96,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 	 */
 	public T findOne(ID id) {
 		Assert.notNull(id, "The given id must not be null!");
-		return mongoOperations.findById(id, entityInformation.getJavaType());
+		return mongoOperations.findById(id, entityInformation.getJavaType(), entityInformation.getCollectionName());
 	}
 
 	private Query getIdQuery(Object id) {
@@ -136,7 +136,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 	 */
 	public void delete(ID id) {
 		Assert.notNull(id, "The given id must not be null!");
-		mongoOperations.remove(getIdQuery(id), entityInformation.getJavaType());
+		mongoOperations.remove(getIdQuery(id), entityInformation.getCollectionName());
 	}
 
 	/*
