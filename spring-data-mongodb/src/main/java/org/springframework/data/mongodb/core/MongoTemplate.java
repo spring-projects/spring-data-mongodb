@@ -481,6 +481,24 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		}
 	}
 
+	public boolean exists(Query query, Class<?> entityClass) {
+		return exists(query, entityClass, determineCollectionName(entityClass));
+	}
+
+	public boolean exists(Query query, String collectionName) {
+		return exists(query, null, collectionName);
+	}
+
+	public boolean exists(Query query, Class<?> entityClass, String collectionName) {
+
+		if (query == null) {
+			throw new InvalidDataAccessApiUsageException("Query passed in to exist can't be null");
+		}
+
+		DBObject mappedQuery = mapper.getMappedObject(query.getQueryObject(), getPersistentEntity(entityClass));
+		return execute(collectionName, new FindCallback(mappedQuery)).hasNext();
+	}
+
 	// Find methods that take a Query to express the query and that return a List of objects.
 
 	public <T> List<T> find(Query query, Class<T> entityClass) {

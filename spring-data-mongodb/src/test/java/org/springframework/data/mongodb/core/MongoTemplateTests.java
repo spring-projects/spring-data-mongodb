@@ -1612,6 +1612,19 @@ public class MongoTemplateTests {
 		assertThat(result.get(0).containsField("first"), is(true));
 	}
 
+	@Test
+	public void executesExistsCorrectly() {
+
+		Sample sample = new Sample();
+		template.save(sample);
+
+		Query query = query(where("id").is(sample.id));
+
+		assertThat(template.exists(query, Sample.class), is(true));
+		assertThat(template.exists(query(where("_id").is(sample.id)), template.getCollectionName(Sample.class)), is(true));
+		assertThat(template.exists(query, Sample.class, template.getCollectionName(Sample.class)), is(true));
+	}
+
 	static class MyId {
 
 		String first;

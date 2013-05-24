@@ -49,13 +49,14 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 	/**
 	 * Creates a ew {@link SimpleMongoRepository} for the given {@link MongoEntityInformation} and {@link MongoTemplate}.
 	 * 
-	 * @param metadata
-	 * @param template
+	 * @param metadata must not be {@literal null}.
+	 * @param template must not be {@literal null}.
 	 */
 	public SimpleMongoRepository(MongoEntityInformation<T, ID> metadata, MongoOperations mongoOperations) {
 
 		Assert.notNull(mongoOperations);
 		Assert.notNull(metadata);
+
 		this.entityInformation = metadata;
 		this.mongoOperations = mongoOperations;
 	}
@@ -114,11 +115,8 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 	public boolean exists(ID id) {
 
 		Assert.notNull(id, "The given id must not be null!");
-
-		final Query idQuery = getIdQuery(id);
-		idQuery.fields();
-
-		return mongoOperations.findOne(idQuery, entityInformation.getJavaType(), entityInformation.getCollectionName()) != null;
+		return mongoOperations.exists(getIdQuery(id), entityInformation.getJavaType(),
+				entityInformation.getCollectionName());
 	}
 
 	/*
@@ -126,7 +124,6 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 	 * @see org.springframework.data.repository.CrudRepository#count()
 	 */
 	public long count() {
-
 		return mongoOperations.getCollection(entityInformation.getCollectionName()).count();
 	}
 
@@ -166,7 +163,6 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 	 * @see org.springframework.data.repository.CrudRepository#deleteAll()
 	 */
 	public void deleteAll() {
-
 		mongoOperations.remove(new Query(), entityInformation.getCollectionName());
 	}
 
@@ -227,7 +223,6 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 	 * @return
 	 */
 	protected MongoOperations getMongoOperations() {
-
 		return this.mongoOperations;
 	}
 
@@ -235,7 +230,6 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 	 * @return the entityInformation
 	 */
 	protected MongoEntityInformation<T, ID> getEntityInformation() {
-
 		return entityInformation;
 	}
 }

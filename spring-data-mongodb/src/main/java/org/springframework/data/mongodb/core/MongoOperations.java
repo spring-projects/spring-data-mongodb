@@ -412,6 +412,12 @@ public interface MongoOperations {
 	 */
 	<T> T findOne(Query query, Class<T> entityClass, String collectionName);
 
+	boolean exists(Query query, String collectionName);
+
+	boolean exists(Query query, Class<?> entityClass);
+
+	boolean exists(Query query, Class<?> entityClass, String collectionName);
+
 	/**
 	 * Map the results of an ad-hoc query on the collection for the entity class to a List of the specified type.
 	 * <p/>
