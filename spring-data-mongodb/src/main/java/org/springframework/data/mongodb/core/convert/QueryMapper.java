@@ -84,11 +84,8 @@ public class QueryMapper {
 
 		for (String key : query.keySet()) {
 
-			MongoPersistentProperty targetProperty = getTargetProperty(key, entity);
-			String newKey = determineKey(key, entity);
-			Object value = query.get(key);
-
-			result.put(newKey, getMappedValue(value, targetProperty, newKey));
+			Field field = entity == null ? new Field(key) : new MetadataBackedField(key, entity, mappingContext);
+			result.put(field.getMappedKey(), getMappedValue(query.get(key), field));
 		}
 
 		return result;
@@ -126,13 +123,13 @@ public class QueryMapper {
 	 * @param property
 	 * @return
 	 */
-	public DBObject getMappedKeyword(Keyword keyword, MongoPersistentProperty property) {
+	public DBObject getMappedKeyword(Keyword keyword, Field property) {
 
 		if (property.isAssociation()) {
-			convertAssociation(keyword.value, property);
+			convertAssociation(keyword.value, property.getProperty());
 		}
 
-		return new BasicDBObject(keyword.key, getMappedValue(keyword.value, property, keyword.key));
+		return new BasicDBObject(keyword.key, getMappedValue(keyword.value, property.with(keyword.key)));
 	}
 
 	/**
@@ -144,13 +141,9 @@ public class QueryMapper {
 	 * @param newKey the key the value will be bound to eventually
 	 * @return
 	 */
-	private Object getMappedValue(Object source, MongoPersistentProperty property, String newKey) {
+	private Object getMappedValue(Object source, Field key) {
 
-		if (property == null) {
-			return convertSimpleOrDBObject(source, null);
-		}
-
-		if (property.isIdProperty() || "_id".equals(newKey)) {
+		if (key.isIdField()) {
 
 			if (source instanceof DBObject) {
 				DBObject valueDbo = (DBObject) source;
@@ -174,57 +167,12 @@ public class QueryMapper {
 			}
 		}
 
-		if (property.isAssociation()) {
-			return Keyword.isKeyword(source) ? getMappedKeyword(new Keyword(source), property) : convertAssociation(source,
-					property);
+		if (key.isAssociation()) {
+			return Keyword.isKeyword(source) ? getMappedKeyword(new Keyword(source), key) : convertAssociation(source,
+					key.getProperty());
 		}
 
-		return convertSimpleOrDBObject(source, mappingContext.getPersistentEntity(property));
-	}
-
-	private MongoPersistentProperty getTargetProperty(String key, MongoPersistentEntity<?> entity) {
-
-		if (isIdKey(key, entity)) {
-			return entity.getIdProperty();
-		}
-
-		PersistentPropertyPath<MongoPersistentProperty> path = getPath(key, entity);
-		return path == null ? null : path.getLeafProperty();
-	}
-
-	private PersistentPropertyPath<MongoPersistentProperty> getPath(String key, MongoPersistentEntity<?> entity) {
-
-		if (entity == null) {
-			return null;
-		}
-
-		try {
-			PropertyPath path = PropertyPath.from(key, entity.getTypeInformation());
-			return mappingContext.getPersistentPropertyPath(path);
-		} catch (PropertyReferenceException e) {
-			return null;
-		}
-	}
-
-	/**
-	 * Returns the translated key assuming the given one is a propert (path) reference.
-	 * 
-	 * @param key the source key
-	 * @param entity the base entity
-	 * @return the translated key
-	 */
-	private String determineKey(String key, MongoPersistentEntity<?> entity) {
-
-		if (entity == null) {
-			return key;
-		}
-
-		if (!entity.hasIdProperty() && DEFAULT_ID_NAMES.contains(key)) {
-			return "_id";
-		}
-
-		PersistentPropertyPath<MongoPersistentProperty> path = getPath(key, entity);
-		return path == null ? key : path.toDotPath(MongoPersistentProperty.PropertyToFieldNameConverter.INSTANCE);
+		return convertSimpleOrDBObject(source, key.getPropertyEntity());
 	}
 
 	/**
@@ -282,28 +230,6 @@ public class QueryMapper {
 	}
 
 	/**
-	 * Returns whether the given key will be considered an id key.
-	 * 
-	 * @param key
-	 * @param entity
-	 * @return
-	 */
-	private boolean isIdKey(String key, MongoPersistentEntity<?> entity) {
-
-		if (entity == null) {
-			return false;
-		}
-
-		MongoPersistentProperty idProperty = entity.getIdProperty();
-
-		if (idProperty != null) {
-			return idProperty.getName().equals(key) || idProperty.getFieldName().equals(key);
-		}
-
-		return DEFAULT_ID_NAMES.contains(key);
-	}
-
-	/**
 	 * Converts the given raw id value into either {@link ObjectId} or {@link String}.
 	 * 
 	 * @param id
@@ -357,6 +283,194 @@ public class QueryMapper {
 
 			DBObject dbObject = (DBObject) value;
 			return dbObject.keySet().size() == 1 && dbObject.keySet().iterator().next().startsWith("$");
+		}
+	}
+
+	/**
+	 * Value object to represent a field and its meta-information.
+	 * 
+	 * @author Oliver Gierke
+	 */
+	private static class Field {
+
+		private static final String ID_KEY = "_id";
+
+		protected final String name;
+
+		/**
+		 * Creates a new {@link Field} without meta-information but the given name.
+		 * 
+		 * @param name must not be {@literal null} or empty.
+		 */
+		public Field(String name) {
+
+			Assert.hasText(name, "Name must not be null!");
+			this.name = name;
+		}
+
+		/**
+		 * Returns a new {@link Field} with the given name.
+		 * 
+		 * @param name must not be {@literal null} or empty.
+		 * @return
+		 */
+		public Field with(String name) {
+			return new Field(name);
+		}
+
+		/**
+		 * Returns whether the current field is the id field.
+		 * 
+		 * @return
+		 */
+		public boolean isIdField() {
+			return ID_KEY.equals(name);
+		}
+
+		/**
+		 * Returns the underlying {@link MongoPersistentProperty} backing the field.
+		 * 
+		 * @return
+		 */
+		public MongoPersistentProperty getProperty() {
+			return null;
+		}
+
+		/**
+		 * Returns the {@link MongoPersistentEntity} that field is conatined in.
+		 * 
+		 * @return
+		 */
+		public MongoPersistentEntity<?> getPropertyEntity() {
+			return null;
+		}
+
+		/**
+		 * Returns whether the field represents an association.
+		 * 
+		 * @return
+		 */
+		public boolean isAssociation() {
+			return false;
+		}
+
+		/**
+		 * Returns the key to be used in the mapped document eventually.
+		 * 
+		 * @return
+		 */
+		public String getMappedKey() {
+			return isIdField() ? ID_KEY : name;
+		}
+	}
+
+	/**
+	 * Extension of {@link Field} to be backed with mapping metadata.
+	 * 
+	 * @author Oliver Gierke
+	 */
+	private static class MetadataBackedField extends Field {
+
+		private final MongoPersistentEntity<?> entity;
+		private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
+		private final MongoPersistentProperty property;
+
+		/**
+		 * Creates a new {@link MetadataBackedField} with the given name, {@link MongoPersistentEntity} and
+		 * {@link MappingContext}.
+		 * 
+		 * @param name must not be {@literal null} or empty.
+		 * @param entity must not be {@literal null}.
+		 * @param context must not be {@literal null}.
+		 */
+		public MetadataBackedField(String name, MongoPersistentEntity<?> entity,
+				MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> context) {
+
+			super(name);
+
+			Assert.notNull(entity, "MongoPersistentEntity must not be null!");
+
+			this.entity = entity;
+			this.mappingContext = context;
+
+			PersistentPropertyPath<MongoPersistentProperty> path = getPath(name);
+			this.property = path == null ? null : path.getLeafProperty();
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.convert.QueryMapper.Field#with(java.lang.String)
+		 */
+		@Override
+		public MetadataBackedField with(String name) {
+			return new MetadataBackedField(name, entity, mappingContext);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.convert.QueryMapper.Field#isIdKey()
+		 */
+		@Override
+		public boolean isIdField() {
+
+			MongoPersistentProperty idProperty = entity.getIdProperty();
+
+			if (idProperty != null) {
+				return idProperty.getName().equals(name) || idProperty.getFieldName().equals(name);
+			}
+
+			return DEFAULT_ID_NAMES.contains(name);
+		}
+
+		/* 
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.convert.QueryMapper.Field#getProperty()
+		 */
+		@Override
+		public MongoPersistentProperty getProperty() {
+			return property;
+		}
+
+		/* 
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.convert.QueryMapper.Field#getEntity()
+		 */
+		@Override
+		public MongoPersistentEntity<?> getPropertyEntity() {
+			MongoPersistentProperty property = getProperty();
+			return property == null ? null : mappingContext.getPersistentEntity(property);
+		}
+
+		/* 
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.convert.QueryMapper.Field#isAssociation()
+		 */
+		@Override
+		public boolean isAssociation() {
+
+			MongoPersistentProperty property = getProperty();
+			return property == null ? false : property.isAssociation();
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.convert.QueryMapper.Field#getTargetKey()
+		 */
+		@Override
+		public String getMappedKey() {
+
+			PersistentPropertyPath<MongoPersistentProperty> path = getPath(name);
+			return path == null ? name : path.toDotPath(MongoPersistentProperty.PropertyToFieldNameConverter.INSTANCE);
+		}
+
+		private PersistentPropertyPath<MongoPersistentProperty> getPath(String name) {
+
+			try {
+				PropertyPath path = PropertyPath.from(name, entity.getTypeInformation());
+				return mappingContext.getPersistentPropertyPath(path);
+			} catch (PropertyReferenceException e) {
+				return null;
+			}
 		}
 	}
 }
