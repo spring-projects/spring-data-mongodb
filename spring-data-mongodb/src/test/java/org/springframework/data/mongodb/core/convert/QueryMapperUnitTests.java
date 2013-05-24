@@ -384,6 +384,16 @@ public class QueryMapperUnitTests {
 		assertThat(((BasicDBObject) mapped.get("mapWithDBRef")).get("test"), instanceOf(com.mongodb.DBRef.class));
 	}
 
+	@Test
+	public void convertsUnderscoreIdValueWithoutMetadata() {
+
+		DBObject dbObject = new BasicDBObject().append("_id", new ObjectId().toString());
+
+		DBObject mapped = mapper.getMappedObject(dbObject, null);
+		assertThat(mapped.containsField("_id"), is(true));
+		assertThat(mapped.get("_id"), is(instanceOf(ObjectId.class)));
+	}
+
 	class IdWrapper {
 		Object id;
 	}
@@ -440,6 +450,6 @@ public class QueryMapperUnitTests {
 	class WithMapDBRef {
 
 		@DBRef
-		Map<String,Sample> mapWithDBRef;
+		Map<String, Sample> mapWithDBRef;
 	}
 }
