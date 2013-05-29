@@ -247,7 +247,7 @@ public interface MongoOperations {
 	 * Query for a list of objects of type T from the collection used by the entity class.
 	 * <p/>
 	 * The object is converted from the MongoDB native representation using an instance of {@see MongoConverter}. Unless
-	 * configured otherwise, an instance of SimpleMongoConverter will be used.
+	 * configured otherwise, an instance of MappingMongoConverter will be used.
 	 * <p/>
 	 * If your collection does not contain a homogeneous collection of types, this operation will not be an efficient way
 	 * to map objects since the test for class type is done in the client and not on the server.
@@ -261,7 +261,7 @@ public interface MongoOperations {
 	 * Query for a list of objects of type T from the specified collection.
 	 * <p/>
 	 * The object is converted from the MongoDB native representation using an instance of {@see MongoConverter}. Unless
-	 * configured otherwise, an instance of SimpleMongoConverter will be used.
+	 * configured otherwise, an instance of MappingMongoConverter will be used.
 	 * <p/>
 	 * If your collection does not contain a homogeneous collection of types, this operation will not be an efficient way
 	 * to map objects since the test for class type is done in the client and not on the server.
@@ -382,7 +382,7 @@ public interface MongoOperations {
 	 * specified type.
 	 * <p/>
 	 * The object is converted from the MongoDB native representation using an instance of {@see MongoConverter}. Unless
-	 * configured otherwise, an instance of SimpleMongoConverter will be used.
+	 * configured otherwise, an instance of MappingMongoConverter will be used.
 	 * <p/>
 	 * The query is specified as a {@link Query} which can be created either using the {@link BasicQuery} or the more
 	 * feature rich {@link Query}.
@@ -399,7 +399,7 @@ public interface MongoOperations {
 	 * type.
 	 * <p/>
 	 * The object is converted from the MongoDB native representation using an instance of {@see MongoConverter}. Unless
-	 * configured otherwise, an instance of SimpleMongoConverter will be used.
+	 * configured otherwise, an instance of MappingMongoConverter will be used.
 	 * <p/>
 	 * The query is specified as a {@link Query} which can be created either using the {@link BasicQuery} or the more
 	 * feature rich {@link Query}.
@@ -422,7 +422,7 @@ public interface MongoOperations {
 	 * Map the results of an ad-hoc query on the collection for the entity class to a List of the specified type.
 	 * <p/>
 	 * The object is converted from the MongoDB native representation using an instance of {@see MongoConverter}. Unless
-	 * configured otherwise, an instance of SimpleMongoConverter will be used.
+	 * configured otherwise, an instance of MappingMongoConverter will be used.
 	 * <p/>
 	 * The query is specified as a {@link Query} which can be created either using the {@link BasicQuery} or the more
 	 * feature rich {@link Query}.
@@ -438,7 +438,7 @@ public interface MongoOperations {
 	 * Map the results of an ad-hoc query on the specified collection to a List of the specified type.
 	 * <p/>
 	 * The object is converted from the MongoDB native representation using an instance of {@see MongoConverter}. Unless
-	 * configured otherwise, an instance of SimpleMongoConverter will be used.
+	 * configured otherwise, an instance of MappingMongoConverter will be used.
 	 * <p/>
 	 * The query is specified as a {@link Query} which can be created either using the {@link BasicQuery} or the more
 	 * feature rich {@link Query}.
@@ -504,7 +504,7 @@ public interface MongoOperations {
 	 * type. The first document that matches the query is returned and also removed from the collection in the database.
 	 * <p/>
 	 * The object is converted from the MongoDB native representation using an instance of {@see MongoConverter}. Unless
-	 * configured otherwise, an instance of SimpleMongoConverter will be used.
+	 * configured otherwise, an instance of MappingMongoConverter will be used.
 	 * <p/>
 	 * The query is specified as a {@link Query} which can be created either using the {@link BasicQuery} or the more
 	 * feature rich {@link Query}.
@@ -557,7 +557,7 @@ public interface MongoOperations {
 	 * Insert the object into the specified collection.
 	 * <p/>
 	 * The object is converted to the MongoDB native representation using an instance of {@see MongoConverter}. Unless
-	 * configured otherwise, an instance of SimpleMongoConverter will be used.
+	 * configured otherwise, an instance of MappingMongoConverter will be used.
 	 * <p/>
 	 * Insert is used to initially store the object into the database. To update an existing object use the save method.
 	 * 
@@ -595,7 +595,7 @@ public interface MongoOperations {
 	 * object is not already present, that is an 'upsert'.
 	 * <p/>
 	 * The object is converted to the MongoDB native representation using an instance of {@see MongoConverter}. Unless
-	 * configured otherwise, an instance of SimpleMongoConverter will be used.
+	 * configured otherwise, an instance of MappingMongoConverter will be used.
 	 * <p/>
 	 * If you object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
 	 * String then MongoDB ObjectId will be used to populate that string. Otherwise, the conversion from ObjectId to your
@@ -612,7 +612,7 @@ public interface MongoOperations {
 	 * is an 'upsert'.
 	 * <p/>
 	 * The object is converted to the MongoDB native representation using an instance of {@see MongoConverter}. Unless
-	 * configured otherwise, an instance of SimpleMongoConverter will be used.
+	 * configured otherwise, an instance of MappingMongoConverter will be used.
 	 * <p/>
 	 * If you object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
 	 * String then MongoDB ObjectId will be used to populate that string. Otherwise, the conversion from ObjectId to your
