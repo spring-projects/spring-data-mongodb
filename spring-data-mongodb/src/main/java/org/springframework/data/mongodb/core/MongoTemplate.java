@@ -1335,7 +1335,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	/**
 	 * Map the results of an ad-hoc query on the default MongoDB collection to a List of the specified type. The object is
 	 * converted from the MongoDB native representation using an instance of {@see MongoConverter}. Unless configured
-	 * otherwise, an instance of SimpleMongoConverter will be used. The query document is specified as a standard DBObject
+	 * otherwise, an instance of MappingMongoConverter will be used. The query document is specified as a standard DBObject
 	 * and so is the fields specification. Can be overridden by subclasses.
 	 * 
 	 * @param collectionName name of the collection to retrieve the objects from
