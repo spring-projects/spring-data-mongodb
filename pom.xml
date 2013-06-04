@@ -15,7 +15,7 @@
 	<parent>
 		<groupId>org.springframework.data.build</groupId>
 		<artifactId>spring-data-parent</artifactId>
-		<version>1.1.0.BUILD-SNAPSHOT</version>
+		<version>1.1.0.RELEASE</version>
 		<relativePath>../spring-data-build/parent/pom.xml</relativePath>
 	</parent>
 	
@@ -29,7 +29,7 @@
 	<properties>
 		<project.type>multi</project.type>
 		<dist.id>spring-data-mongodb</dist.id>
-		<springdata.commons>1.6.0.BUILD-SNAPSHOT</springdata.commons>
+		<springdata.commons>1.6.0.M1</springdata.commons>
 		<mongo>2.10.1</mongo>
 	</properties>
 	
@@ -91,8 +91,8 @@
 	
 	<repositories>
 		<repository>
-			<id>spring-lib-snapshot</id>
-			<url>http://repo.springsource.org/lib-snapshot-local</url>
+			<id>spring-lib-milestone</id>
+			<url>http://repo.springsource.org/libs-milestone-local</url>
 		</repository>
 	</repositories>
 

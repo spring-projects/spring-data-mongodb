@@ -1,6 +1,94 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 1.3.0.M1 (2013-06-04)
+----------------------------------------
+** Bug
+    * [DATAMONGO-571] - Spring Data for MongoDb doesn't save null values when @Version is added to domain class 
+    * [DATAMONGO-612] - Fix PDF reference documentation name
+    * [DATAMONGO-613] - Images missing from reference documentation
+    * [DATAMONGO-617] - NullPointerException in MongoTemplate.initializeVersionProperty(…)
+    * [DATAMONGO-620] - MongoTemplate.doSaveVersioned(…) does not consider collection handed into the method
+    * [DATAMONGO-621] - MongoTemplate.initializeVersionProperty(…) does not use ConversionService
+    * [DATAMONGO-622] - An unversioned object should be created using insert(…) instead of save.
+    * [DATAMONGO-629] - Different results when using count and find with the same criteria with 'id' field
+    * [DATAMONGO-638] - MappingContext should not create PersistentEntity instances for native maps
+    * [DATAMONGO-640] - MongoLog4jAppender suffers from potential NullPointerException when closing Mongo instance
+    * [DATAMONGO-641] - MongoLog4jAppender suffers from potential NullPointerException when closing Mongo instance
+    * [DATAMONGO-642] - MongoChangeSetPersister does not use mapped collection name
+    * [DATAMONGO-646] - Can't insert DBObjects through MongoTemplate
+    * [DATAMONGO-648] - ID attributes in namespace shouldn't be XSD IDs
+    * [DATAMONGO-663] - org.springframework.data.mongodb.core.query.Field needs an equals method
+    * [DATAMONGO-669] - Incompatibility with Querydsl 3.1.1
+    * [DATAMONGO-676] - SimpleMongoRepository fails if used with customized collection name
+    * [DATAMONGO-677] - QueryMapper does not handled correctly Map with DBRef value
+    * [DATAMONGO-679] - MongoTemplate.doSave(…) passed a JSON String doesn't save it.
+    * [DATAMONGO-683] - QueryMapper does not handle default _id when no MappingMetadata is present
+
+** Improvement
+    * [DATAMONGO-140] - Add XML namespace element for MongoTemplate
+    * [DATAMONGO-545] - Add before delete and after delete events for AbstractMongoEventListener
+    * [DATAMONGO-554] - Add background attribute to @Indexed and @CompoundIndex
+    * [DATAMONGO-569] - AbstractMongoConfiguration cannot be used on CloudFoundry
+    * [DATAMONGO-594] - cross-store=> Define document name using annotation
+    * [DATAMONGO-631] - Explicitly prevent an Order instance set to ignore case from being piped into a query
+    * [DATAMONGO-632] - Polish namespace XSD to avoid errors in STS
+    * [DATAMONGO-633] - Upgrade to Querydsl 3.0.0
+    * [DATAMONGO-634] - Inherit application scope from basic CDI bean of Spring Data Commons
+    * [DATAMONGO-635] - Fix some Sonar warnings
+    * [DATAMONGO-636] - Add support for countBy projections
+    * [DATAMONGO-637] - Typo in Query.query(…)
+    * [DATAMONGO-651] - WriteResult not available from thrown Exception
+    * [DATAMONGO-652] - Add support for elemMatch and positional operator projections
+    * [DATAMONGO-656] - Potential NullPointerException when debugging in MongoTemplate 
+    * [DATAMONGO-657] - Allow to write Map value as DBRef
+    * [DATAMONGO-666] - Fix architecture inconsistency created by MongoDataIntegrityViolationException
+    * [DATAMONGO-680] - SimpleMongoRepository.exists(ID) improvement
+    * [DATAMONGO-681] - Expose MongoTemplate.exists() method
+    * [DATAMONGO-682] - Remove performance hotspots
+
+** New Feature
+    * [DATAMONGO-607] - Add an abbreviating field naming strategy
+    * [DATAMONGO-628] - Add XML namespace elements for MongoTemplate and GridFsTemplate
+
+** Task
+    * [DATAMONGO-597] - Website is severely out-of-date
+    * [DATAMONGO-658] - Minor formatting changes to README.md
+    * [DATAMONGO-667] - Remove deprecations and further deprecate sorting/ordering types
+    * [DATAMONGO-672] - Upgrade to latest Spring Data Build and Commons
+    * [DATAMONGO-678] - Performance improvements in CustomConversions
+    * [DATAMONGO-690] - Release 1.3 M1
+    
+Changes in version 1.2.1.GA (2013-04-17)
+----------------------------------------
+** Bug
+    * [DATAMONGO-571] - Spring Data for MongoDb doesn't save null values when @Version is added to domain class 
+    * [DATAMONGO-612] - Fix PDF reference documentation name
+    * [DATAMONGO-613] - Images missing from reference documentation
+    * [DATAMONGO-617] - NullPointerException in MongoTemplate.initializeVersionProperty(…)
+    * [DATAMONGO-620] - MongoTemplate.doSaveVersioned(…) does not consider collection handed into the method
+    * [DATAMONGO-621] - MongoTemplate.initializeVersionProperty(…) does not use ConversionService
+    * [DATAMONGO-622] - An unversioned object should be created using insert(…) instead of save.
+    * [DATAMONGO-629] - Different results when using count and find with the same criteria with 'id' field
+    * [DATAMONGO-638] - MappingContext should not create PersistentEntity instances for native maps
+    * [DATAMONGO-640] - MongoLog4jAppender suffers from potential NullPointerException when closing Mongo instance
+    * [DATAMONGO-641] - MongoLog4jAppender suffers from potential NullPointerException when closing Mongo instance
+    * [DATAMONGO-642] - MongoChangeSetPersister does not use mapped collection name
+    * [DATAMONGO-646] - Can't insert DBObjects through MongoTemplate
+    * [DATAMONGO-648] - ID attributes in namespace shouldn't be XSD IDs
+
+** Improvement
+    * [DATAMONGO-594] - cross-store=> Define document name using annotation
+    * [DATAMONGO-632] - Polish namespace XSD to avoid errors in STS
+    * [DATAMONGO-635] - Fix some Sonar warnings
+    * [DATAMONGO-637] - Typo in Query.query(…)
+    * [DATAMONGO-651] - WriteResult not available from thrown Exception
+    * [DATAMONGO-656] - Potential NullPointerException when debugging in MongoTemplate
+    
+** Task
+    * [DATAMONGO-597] - Website is severely out-of-date
+    * [DATAMONGO-654] - Release 1.2.1
+
 Changes in version 1.2.0.GA (2013-02-08)
 ----------------------------------------
 ** Bug
