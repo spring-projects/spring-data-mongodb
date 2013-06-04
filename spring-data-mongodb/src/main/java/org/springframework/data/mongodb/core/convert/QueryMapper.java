@@ -46,7 +46,6 @@ import com.mongodb.DBRef;
 public class QueryMapper {
 
 	private static final List<String> DEFAULT_ID_NAMES = Arrays.asList("id", "_id");
-	private static final String N_OR_PATTERN = "\\$.*or";
 
 	private final ConversionService conversionService;
 	private final MongoConverter converter;
@@ -76,104 +75,64 @@ public class QueryMapper {
 	 */
 	public DBObject getMappedObject(DBObject query, MongoPersistentEntity<?> entity) {
 
-		if (Keyword.isKeyword(query)) {
-			return getMappedKeyword(new Keyword(query), entity);
-		}
+		return getMappedObject(query, entity, null);
+	}
+
+	/**
+	 * Replaces the property keys used in the given {@link DBObject} with the appropriate keys by using the
+	 * {@link PersistentEntity} metadata and considering the parent {@link MongoPersistentProperty}
+	 *
+	 * @param query
+	 * @param entity
+	 * @param parent
+	 * @return
+	 */
+	private DBObject getMappedObject(DBObject query, MongoPersistentEntity entity, Field parent) {
 
 		DBObject result = new BasicDBObject();
 
 		for (String key : query.keySet()) {
 
-			Field field = entity == null ? new Field(key) : new MetadataBackedField(key, entity, mappingContext);
-			result.put(field.getMappedKey(), getMappedValue(query.get(key), field));
+			if (isKeyword(key)) {
+				if (parent != null) {
+					result.put(key, getMappedValue(query.get(key), parent));
+				} else {
+					result.put(key, convertSimpleOrDBObject(query.get(key), entity));
+				}
+			} else {
+
+				Field field = entity == null ? new Field(key) : new MetadataBackedField(key, entity, mappingContext);
+				result.put(field.getMappedKey(), getMappedValue(query.get(key), field));
+			}
 		}
 
 		return result;
 	}
 
-	/**
-	 * Returns the given {@link DBObject} representing a keyword by mapping the keyword's value.
-	 * 
-	 * @param query the {@link DBObject} representing a keyword (e.g. {@code $ne : … } )
-	 * @param entity
-	 * @return
-	 */
-	private DBObject getMappedKeyword(Keyword query, MongoPersistentEntity<?> entity) {
-
-		// $or/$nor
-		if (query.key.matches(N_OR_PATTERN)) {
-
-			Iterable<?> conditions = (Iterable<?>) query.value;
-			BasicDBList newConditions = new BasicDBList();
-
-			for (Object condition : conditions) {
-				newConditions.add(getMappedObject((DBObject) condition, entity));
-			}
-
-			return new BasicDBObject(query.key, newConditions);
-		}
-
-		return new BasicDBObject(query.key, convertSimpleOrDBObject(query.value, entity));
-	}
-
-	/**
-	 * Returns the mapped keyword considered defining a criteria for the given property.
-	 * 
-	 * @param keyword
-	 * @param property
-	 * @return
-	 */
-	public DBObject getMappedKeyword(Keyword keyword, Field property) {
-
-		if (property.isAssociation()) {
-			convertAssociation(keyword.value, property.getProperty());
-		}
-
-		return new BasicDBObject(keyword.key, getMappedValue(keyword.value, property.with(keyword.key)));
-	}
 
 	/**
 	 * Returns the mapped value for the given source object assuming it's a value for the given
 	 * {@link MongoPersistentProperty}.
-	 * 
-	 * @param source the source object to be mapped
-	 * @param property the property the value is a value for
-	 * @param newKey the key the value will be bound to eventually
+	 *
+	 * @param field the property the value is a value for
+	 * @param value the source object to be mapped
 	 * @return
 	 */
-	private Object getMappedValue(Object source, Field key) {
+	private Object getMappedValue(Object value, Field field) {
 
-		if (key.isIdField()) {
-
-			if (source instanceof DBObject) {
-				DBObject valueDbo = (DBObject) source;
-				if (valueDbo.containsField("$in") || valueDbo.containsField("$nin")) {
-					String inKey = valueDbo.containsField("$in") ? "$in" : "$nin";
-					List<Object> ids = new ArrayList<Object>();
-					for (Object id : (Iterable<?>) valueDbo.get(inKey)) {
-						ids.add(convertId(id));
-					}
-					valueDbo.put(inKey, ids.toArray(new Object[ids.size()]));
-				} else if (valueDbo.containsField("$ne")) {
-					valueDbo.put("$ne", convertId(valueDbo.get("$ne")));
-				} else {
-					return getMappedObject((DBObject) source, null);
-				}
-
-				return valueDbo;
-
-			} else {
-				return convertId(source);
-			}
+		if (value instanceof DBObject) {
+			return getMappedObject((DBObject) value, field.getPropertyEntity(), field);
 		}
 
-		if (key.isAssociation()) {
-			return Keyword.isKeyword(source) ? getMappedKeyword(new Keyword(source), key) : convertAssociation(source,
-					key.getProperty());
+		if (field.isAssociation()) {
+			return convertAssociation(value, field.getProperty());
+		} else if (field.isIdField()) {
+			return convertOneOrMoreIds(value);
+		} else {
+			return convertSimpleOrDBObject(value, field.getPropertyEntity());
 		}
-
-		return convertSimpleOrDBObject(source, key.getPropertyEntity());
 	}
+
 
 	/**
 	 * Retriggers mapping if the given source is a {@link DBObject} or simply invokes the
@@ -184,8 +143,12 @@ public class QueryMapper {
 	 */
 	private Object convertSimpleOrDBObject(Object source, MongoPersistentEntity<?> entity) {
 
-		if (source instanceof BasicDBList) {
-			return converter.convertToMongoType(source);
+		if (source instanceof Iterable) {
+			BasicDBList result = new BasicDBList();
+			for (Object element : (Iterable<?>) source) {
+				result.add(convertSimpleOrDBObject(element, entity));
+			}
+			return result;
 		}
 
 		if (source instanceof DBObject) {
@@ -230,6 +193,26 @@ public class QueryMapper {
 	}
 
 	/**
+	 * Convert collection or one id
+	 *
+	 * @param source
+	 * @return
+	 */
+	private Object convertOneOrMoreIds(Object source) {
+
+		if (source instanceof Iterable) {
+
+			BasicDBList result = new BasicDBList();
+			for (Object id : (Iterable<?>) source) {
+				result.add(convertId(id));
+			}
+			return result;
+		} else {
+			return convertId(source);
+		}
+	}
+
+	/**
 	 * Converts the given raw id value into either {@link ObjectId} or {@link String}.
 	 * 
 	 * @param id
@@ -247,43 +230,14 @@ public class QueryMapper {
 	}
 
 	/**
-	 * Value object to capture a query keyword representation.
-	 * 
-	 * @author Oliver Gierke
+	 * Returns whether the given value actually represents a keyword.
+	 *
+	 * @param key
+	 * @return
 	 */
-	private static class Keyword {
+	boolean isKeyword(String key) {
 
-		String key;
-		Object value;
-
-		Keyword(Object source) {
-
-			Assert.isInstanceOf(DBObject.class, source);
-
-			DBObject value = (DBObject) source;
-
-			Assert.isTrue(value.keySet().size() == 1, "Keyword must have a single key only!");
-
-			this.key = value.keySet().iterator().next();
-			this.value = value.get(key);
-		}
-
-		/**
-		 * Returns whether the given value actually represents a keyword. If this returns {@literal true} it's safe to call
-		 * the constructor.
-		 * 
-		 * @param value
-		 * @return
-		 */
-		static boolean isKeyword(Object value) {
-
-			if (!(value instanceof DBObject)) {
-				return false;
-			}
-
-			DBObject dbObject = (DBObject) value;
-			return dbObject.keySet().size() == 1 && dbObject.keySet().iterator().next().startsWith("$");
-		}
+		return key.startsWith("$");
 	}
 
 	/**

@@ -394,6 +394,46 @@ public class QueryMapperUnitTests {
 		assertThat(mapped.get("_id"), is(instanceOf(ObjectId.class)));
 	}
 
+	@Test
+	public void handleANDWithORCorrectly(){
+
+		Query query = Query.query(where("name").is("test").orOperator(where("orEnum").is(OrEnum.FOO), where("number").lt(1)));
+
+		DBObject mappedObject = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(OrClass.class));
+
+		assertNotNull(mappedObject);
+		assertThat(mappedObject.get("$or"),instanceOf(BasicDBList.class));
+		assertThat(((BasicDBList)mappedObject.get("$or")).get(0),instanceOf(DBObject.class));
+		assertThat(((DBObject)((BasicDBList)mappedObject.get("$or")).get(0)).get("enum"),instanceOf(String.class));
+		assertThat(((DBObject)((BasicDBList)mappedObject.get("$or")).get(0)).get("enum").toString(),is("FOO"));
+		assertThat(((DBObject)((BasicDBList)mappedObject.get("$or")).get(1)).get("n"),instanceOf(BasicDBObject.class));
+		assertThat((Integer)((BasicDBObject)((DBObject)((BasicDBList)mappedObject.get("$or")).get(1)).get("n")).get("$lt"),is(1));
+
+	}
+
+	@Test
+	public void handleANDWithORDBRefCorrectly(){
+
+		Reference ref1 = new Reference();
+		ref1.id = 1L;
+
+		Reference ref2 = new Reference();
+		ref2.id = 2L;
+
+		Query query = Query.query(where("_id").is("123").orOperator(where("reference").is(ref1), where("reference").is(ref2)));
+
+		DBObject mappedObject = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(WithDBRef.class));
+
+		assertNotNull(mappedObject);
+		assertThat(mappedObject.get("$or"), instanceOf(BasicDBList.class));
+		assertThat(((BasicDBList)mappedObject.get("$or")).get(0),instanceOf(DBObject.class));
+		assertThat(((DBObject)((BasicDBList)mappedObject.get("$or")).get(0)).get("reference"),instanceOf(com.mongodb.DBRef.class));
+		com.mongodb.DBRef dbRef = new com.mongodb.DBRef(null,"reference",1L);
+		assertThat((com.mongodb.DBRef)((DBObject)((BasicDBList)mappedObject.get("$or")).get(0)).get("reference"),is(dbRef));
+
+	}
+
+
 	class IdWrapper {
 		Object id;
 	}
@@ -451,5 +491,20 @@ public class QueryMapperUnitTests {
 
 		@DBRef
 		Map<String, Sample> mapWithDBRef;
+	}
+
+	enum OrEnum {
+		FOO, BAR
+	}
+
+	class OrClass {
+
+		String name;
+
+		@Field("enum")
+		OrEnum orEnum;
+
+		@Field("n")
+		Integer number;
 	}
 }
