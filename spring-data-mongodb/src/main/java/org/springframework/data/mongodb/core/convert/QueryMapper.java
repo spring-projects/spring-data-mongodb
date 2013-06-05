@@ -15,7 +15,6 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -87,18 +86,15 @@ public class QueryMapper {
 	 * @param parent
 	 * @return
 	 */
-	private DBObject getMappedObject(DBObject query, MongoPersistentEntity entity, Field parent) {
+	private DBObject getMappedObject(DBObject query, MongoPersistentEntity<?> entity, Field parent) {
 
 		DBObject result = new BasicDBObject();
 
 		for (String key : query.keySet()) {
 
-			if (isKeyword(key)) {
-				if (parent != null) {
-					result.put(key, getMappedValue(query.get(key), parent));
-				} else {
-					result.put(key, convertSimpleOrDBObject(query.get(key), entity));
-				}
+			if (Keyword.isKeyword(key)) {
+
+				result.putAll(getMappedKeyword(new Keyword(key, query.get(key)), entity, parent));
 			} else {
 
 				Field field = entity == null ? new Field(key) : new MetadataBackedField(key, entity, mappingContext);
@@ -109,6 +105,24 @@ public class QueryMapper {
 		return result;
 	}
 
+	/**
+	 * Returns the mapped keyword considered defining a criteria for the given property.
+	 *
+	 * @param keyword
+	 * @param field
+	 * @return
+	 */
+	private DBObject getMappedKeyword(Keyword keyword, MongoPersistentEntity<?> entity, Field field) {
+
+		BasicDBObject dbObject = new BasicDBObject();
+		if (field != null) {
+			dbObject.put(keyword.key, getMappedValue(keyword.value, field));
+		} else {
+			dbObject.put(keyword.key, convertSimpleOrDBObject(keyword.value, entity));
+		}
+
+		return dbObject;
+	}
 
 	/**
 	 * Returns the mapped value for the given source object assuming it's a value for the given
@@ -230,14 +244,38 @@ public class QueryMapper {
 	}
 
 	/**
-	 * Returns whether the given value actually represents a keyword.
+	 * Value object to capture a query keyword representation.
 	 *
-	 * @param key
-	 * @return
+	 * @author Oliver Gierke
 	 */
-	boolean isKeyword(String key) {
+	private static class Keyword {
 
-		return key.startsWith("$");
+		String key;
+		Object value;
+
+		Keyword(String key,Object value) {
+
+			Assert.isTrue(key.startsWith("$"), "Keyword must have a single key only!");
+
+			this.key = key;
+			this.value = value;
+		}
+
+		/**
+		 * Returns whether the given value actually represents a keyword. If this returns {@literal true} it's safe to call
+		 * the constructor.
+		 *
+		 * @param value
+		 * @return
+		 */
+		static boolean isKeyword(String value) {
+
+			if (value == null) {
+				return false;
+			}
+
+			return value.startsWith("$");
+		}
 	}
 
 	/**
