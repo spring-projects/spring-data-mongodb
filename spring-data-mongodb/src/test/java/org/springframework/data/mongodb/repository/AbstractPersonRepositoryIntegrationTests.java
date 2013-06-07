@@ -53,11 +53,9 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 @RunWith(SpringJUnit4ClassRunner.class)
 public abstract class AbstractPersonRepositoryIntegrationTests {
 
-	@Autowired
-	protected PersonRepository repository;
+	@Autowired protected PersonRepository repository;
 
-	@Autowired
-	MongoOperations operations;
+	@Autowired MongoOperations operations;
 
 	Person dave, oliver, carter, boyd, stefan, leroi, alicia;
 	QPerson person;
@@ -569,5 +567,27 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	@Test
 	public void executesAnnotatedCountProjection() {
 		assertThat(repository.someCountQuery("Matthews"), is(2L));
+	}
+
+	/**
+	 * @see DATAMONGO-701
+	 */
+	@Test
+	public void executesDerivedStartsWithQueryCorrectly() {
+
+		List<Person> result = repository.findByLastnameStartsWith("Matt");
+		assertThat(result, hasSize(2));
+		assertThat(result, hasItems(dave, oliver));
+	}
+
+	/**
+	 * @see DATAMONGO-701
+	 */
+	@Test
+	public void executesDerivedEndsWithQueryCorrectly() {
+
+		List<Person> result = repository.findByLastnameEndsWith("thews");
+		assertThat(result, hasSize(2));
+		assertThat(result, hasItems(dave, oliver));
 	}
 }

@@ -269,10 +269,10 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 
 		switch (type) {
 			case STARTING_WITH:
-				source = source + "*";
+				source = "^" + source;
 				break;
 			case ENDING_WITH:
-				source = "*" + source;
+				source = source + "$";
 				break;
 			case CONTAINING:
 				source = "*" + source + "*";
