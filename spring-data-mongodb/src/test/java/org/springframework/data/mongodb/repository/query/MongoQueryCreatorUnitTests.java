@@ -263,7 +263,7 @@ public class MongoQueryCreatorUnitTests {
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "Matt"), context);
 		Query query = creator.createQuery();
 
-		assertThat(query, is(query(where("foo").regex("Matt.*"))));
+		assertThat(query, is(query(where("foo").regex("^Matt"))));
 	}
 
 	/**
@@ -276,7 +276,7 @@ public class MongoQueryCreatorUnitTests {
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "ews"), context);
 		Query query = creator.createQuery();
 
-		assertThat(query, is(query(where("foo").regex(".*ews"))));
+		assertThat(query, is(query(where("foo").regex("ews$"))));
 	}
 
 	/**
