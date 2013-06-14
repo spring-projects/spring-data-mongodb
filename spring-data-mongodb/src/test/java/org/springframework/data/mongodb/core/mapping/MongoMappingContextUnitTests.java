@@ -117,6 +117,17 @@ public class MongoMappingContextUnitTests {
 		context.getPersistentEntity(InvalidPerson.class);
 	}
 
+	/**
+	 * @see DATAMONGO-694
+	 */
+	@Test
+	public void doesNotConsiderOverrridenAccessorANewField() {
+
+		MongoMappingContext context = new MongoMappingContext();
+		context.setApplicationContext(applicationContext);
+		context.getPersistentEntity(Child.class);
+	}
+
 	class ClassWithMultipleIdProperties {
 
 		@Id
@@ -139,5 +150,22 @@ public class MongoMappingContextUnitTests {
 
 		@org.springframework.data.mongodb.core.mapping.Field("foo")
 		String firstname, lastname;
+	}
+
+	class Parent {
+
+		String name;
+
+		public String getName() {
+			return name;
+		}
+	}
+
+	class Child extends Parent {
+
+		@Override
+		public String getName() {
+			return super.getName();
+		}
 	}
 }
