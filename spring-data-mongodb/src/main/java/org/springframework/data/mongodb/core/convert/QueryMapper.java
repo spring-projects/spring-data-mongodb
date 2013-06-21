@@ -123,13 +123,13 @@ public class QueryMapper {
 	 * @param property
 	 * @return
 	 */
-	public DBObject getMappedKeyword(Keyword keyword, Field property) {
+	private DBObject getMappedKeyword(Keyword keyword, Field property) {
 
-		if (property.isAssociation()) {
-			convertAssociation(keyword.value, property.getProperty());
-		}
+		boolean needsAssociationConversion = property.isAssociation() && !keyword.isExists();
+		Object value = needsAssociationConversion ? convertAssociation(keyword.value, property.getProperty())
+				: getMappedValue(keyword.value, property.with(keyword.key));
 
-		return new BasicDBObject(keyword.key, getMappedValue(keyword.value, property.with(keyword.key)));
+		return new BasicDBObject(keyword.key, value);
 	}
 
 	/**
@@ -196,7 +196,7 @@ public class QueryMapper {
 	}
 
 	/**
-	 * Converts the given source assuming it's actually an association to anoter object.
+	 * Converts the given source assuming it's actually an association to another object.
 	 * 
 	 * @param source
 	 * @param property
@@ -256,7 +256,7 @@ public class QueryMapper {
 		String key;
 		Object value;
 
-		Keyword(Object source) {
+		public Keyword(Object source) {
 
 			Assert.isInstanceOf(DBObject.class, source);
 
@@ -269,13 +269,22 @@ public class QueryMapper {
 		}
 
 		/**
+		 * Returns whether the current keyword is the {@code $exists} keyword.
+		 * 
+		 * @return
+		 */
+		public boolean isExists() {
+			return "$exists".equalsIgnoreCase(key);
+		}
+
+		/**
 		 * Returns whether the given value actually represents a keyword. If this returns {@literal true} it's safe to call
 		 * the constructor.
 		 * 
 		 * @param value
 		 * @return
 		 */
-		static boolean isKeyword(Object value) {
+		public static boolean isKeyword(Object value) {
 
 			if (!(value instanceof DBObject)) {
 				return false;
