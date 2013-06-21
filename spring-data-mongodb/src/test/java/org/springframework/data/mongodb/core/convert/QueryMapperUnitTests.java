@@ -37,6 +37,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.DBObjectUtils;
 import org.springframework.data.mongodb.core.Person;
+import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
@@ -63,8 +64,7 @@ public class QueryMapperUnitTests {
 	MongoMappingContext context;
 	MappingMongoConverter converter;
 
-	@Mock
-	MongoDbFactory factory;
+	@Mock MongoDbFactory factory;
 
 	@Before
 	public void setUp() {
@@ -334,7 +334,11 @@ public class QueryMapperUnitTests {
 		DBObject result = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(WithDBRef.class));
 
 		DBObject reference = DBObjectUtils.getAsDBObject(result, "reference");
-		assertThat(reference.containsField("$in"), is(true));
+
+		BasicDBList inClause = getAsDBList(reference, "$in");
+		assertThat(inClause, hasSize(2));
+		assertThat(inClause.get(0), is(instanceOf(com.mongodb.DBRef.class)));
+		assertThat(inClause.get(1), is(instanceOf(com.mongodb.DBRef.class)));
 	}
 
 	/**
@@ -394,6 +398,22 @@ public class QueryMapperUnitTests {
 		assertThat(mapped.get("_id"), is(instanceOf(ObjectId.class)));
 	}
 
+	/**
+	 * @see DATAMONGO-705
+	 */
+	@Test
+	public void convertsDBRefWithExistsQuery() {
+
+		Query query = query(where("reference").exists(false));
+
+		BasicMongoPersistentEntity<?> entity = context.getPersistentEntity(WithDBRef.class);
+		DBObject mappedObject = mapper.getMappedObject(query.getQueryObject(), entity);
+
+		DBObject reference = getAsDBObject(mappedObject, "reference");
+		assertThat(reference.containsField("$exists"), is(true));
+		assertThat(reference.get("$exists"), is((Object) false));
+	}
+
 	class IdWrapper {
 		Object id;
 	}
@@ -406,14 +426,12 @@ public class QueryMapperUnitTests {
 
 	class Sample {
 
-		@Id
-		private String foo;
+		@Id private String foo;
 	}
 
 	class BigIntegerId {
 
-		@Id
-		private BigInteger id;
+		@Id private BigInteger id;
 	}
 
 	enum Enum {
@@ -427,14 +445,12 @@ public class QueryMapperUnitTests {
 
 	class CustomizedField {
 
-		@Field("foo")
-		CustomizedField field;
+		@Field("foo") CustomizedField field;
 	}
 
 	class WithDBRef {
 
-		@DBRef
-		Reference reference;
+		@DBRef Reference reference;
 	}
 
 	class Reference {
@@ -449,7 +465,6 @@ public class QueryMapperUnitTests {
 
 	class WithMapDBRef {
 
-		@DBRef
-		Map<String, Sample> mapWithDBRef;
+		@DBRef Map<String, Sample> mapWithDBRef;
 	}
 }
