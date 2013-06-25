@@ -226,7 +226,13 @@ public class QueryMapper {
 			return result;
 		}
 
-		return source == null || source instanceof DBRef ? source : converter.toDBRef(source, property);
+		if (source == null || source instanceof DBRef) {
+			return source;
+		} else if (mappingContext.getPersistentEntity(source.getClass()) == null) {
+			return source;
+		} else {
+			return converter.toDBRef(source, property);
+		}
 	}
 
 	/**

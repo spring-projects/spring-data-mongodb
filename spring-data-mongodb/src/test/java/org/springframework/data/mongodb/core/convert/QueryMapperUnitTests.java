@@ -394,6 +394,18 @@ public class QueryMapperUnitTests {
 		assertThat(mapped.get("_id"), is(instanceOf(ObjectId.class)));
 	}
 
+	@Test
+	public void convertsDBRefWithExistsQuery() {
+
+		Query query = Query.query(Criteria.where("reference").exists(false));
+
+		DBObject mappedObject = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(WithDBRef.class));
+
+		assertThat(mappedObject.containsField("reference"), is(true));
+		assertThat(((DBObject) mappedObject.get("reference")).containsField("$exists"), is(true));
+		assertEquals(false, ((DBObject) mappedObject.get("reference")).get("$exists"));
+	}
+
 	class IdWrapper {
 		Object id;
 	}
