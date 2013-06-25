@@ -47,6 +47,10 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	 */
 	List<Person> findByLastname(String lastname);
 
+	List<Person> findByLastnameStartsWith(String prefix);
+
+	List<Person> findByLastnameEndsWith(String postfix);
+
 	/**
 	 * Returns all {@link Person}s with the given lastname ordered by their firstname.
 	 * 
