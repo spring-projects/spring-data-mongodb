@@ -414,6 +414,30 @@ public class QueryMapperUnitTests {
 		assertThat(reference.get("$exists"), is((Object) false));
 	}
 
+	/**
+	 * @see DATAMONGO-706
+	 */
+	@Test
+	public void convertsNestedDBRefsCorrectly() {
+
+		Reference reference = new Reference();
+		reference.id = 5L;
+
+		Query query = query(where("someString").is("foo").andOperator(where("reference").in(reference)));
+
+		BasicMongoPersistentEntity<?> entity = context.getPersistentEntity(WithDBRef.class);
+		DBObject mappedObject = mapper.getMappedObject(query.getQueryObject(), entity);
+
+		assertThat(mappedObject.get("someString"), is((Object) "foo"));
+
+		BasicDBList andClause = getAsDBList(mappedObject, "$and");
+		assertThat(andClause, hasSize(1));
+
+		BasicDBList inClause = getAsDBList(getAsDBObject(getAsDBObject(andClause, 0), "reference"), "$in");
+		assertThat(inClause, hasSize(1));
+		assertThat(inClause.get(0), is(instanceOf(com.mongodb.DBRef.class)));
+	}
+
 	class IdWrapper {
 		Object id;
 	}
@@ -450,6 +474,7 @@ public class QueryMapperUnitTests {
 
 	class WithDBRef {
 
+		String someString;
 		@DBRef Reference reference;
 	}
 
