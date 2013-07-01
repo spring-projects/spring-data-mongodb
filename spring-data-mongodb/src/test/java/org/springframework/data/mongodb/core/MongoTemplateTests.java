@@ -61,6 +61,7 @@ import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.index.Index.Duplicates;
 import org.springframework.data.mongodb.core.index.IndexField;
 import org.springframework.data.mongodb.core.index.IndexInfo;
+import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -92,15 +93,12 @@ import com.mongodb.WriteResult;
 @ContextConfiguration("classpath:infrastructure.xml")
 public class MongoTemplateTests {
 
-	@Autowired
-	MongoTemplate template;
-	@Autowired
-	MongoDbFactory factory;
+	@Autowired MongoTemplate template;
+	@Autowired MongoDbFactory factory;
 
 	MongoTemplate mappingTemplate;
 
-	@Rule
-	public ExpectedException thrown = ExpectedException.none();
+	@Rule public ExpectedException thrown = ExpectedException.none();
 
 	@Autowired
 	@SuppressWarnings("unchecked")
@@ -150,6 +148,7 @@ public class MongoTemplateTests {
 		template.dropCollection(TestClass.class);
 		template.dropCollection(Sample.class);
 		template.dropCollection(MyPerson.class);
+		template.dropCollection(TypeWithFieldAnnotation.class);
 		template.dropCollection("collection");
 		template.dropCollection("personX");
 	}
@@ -772,8 +771,7 @@ public class MongoTemplateTests {
 			Query q3 = new Query(Criteria.where("age").in(l1, l2));
 			template.find(q3, PersonWithIdPropertyOfTypeObjectId.class);
 			Assert.fail("Should have trown an InvalidDocumentStoreApiUsageException");
-		} catch (InvalidMongoDbApiUsageException e) {
-		}
+		} catch (InvalidMongoDbApiUsageException e) {}
 	}
 
 	@Test
@@ -1625,6 +1623,25 @@ public class MongoTemplateTests {
 		assertThat(template.exists(query, Sample.class, template.getCollectionName(Sample.class)), is(true));
 	}
 
+	/**
+	 * @see DATAMONGO-675
+	 */
+	@Test
+	public void updateConsidersMappingAnnotations() {
+
+		TypeWithFieldAnnotation entity = new TypeWithFieldAnnotation();
+		entity.emailAddress = "old";
+
+		template.save(entity);
+
+		Query query = query(where("_id").is(entity.id));
+		Update update = Update.update("emailAddress", "new");
+
+		FindAndModifyOptions options = new FindAndModifyOptions().returnNew(true);
+		TypeWithFieldAnnotation result = template.findAndModify(query, update, options, TypeWithFieldAnnotation.class);
+		assertThat(result.emailAddress, is("new"));
+	}
+
 	static class MyId {
 
 		String first;
@@ -1633,14 +1650,12 @@ public class MongoTemplateTests {
 
 	static class TypeWithMyId {
 
-		@Id
-		MyId id;
+		@Id MyId id;
 	}
 
 	public static class Sample {
 
-		@Id
-		String id;
+		@Id String id;
 		String field;
 	}
 
@@ -1697,8 +1712,13 @@ public class MongoTemplateTests {
 
 	static class VersionedPerson {
 
-		@Version
-		Long version;
+		@Version Long version;
 		String id, firstname, lastname;
+	}
+
+	static class TypeWithFieldAnnotation {
+
+		@Id ObjectId id;
+		@Field("email") String emailAddress;
 	}
 }

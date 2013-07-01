@@ -217,22 +217,23 @@ public class Update {
 		return dbo;
 	}
 
-	@SuppressWarnings("unchecked")
 	protected void addMultiFieldOperation(String operator, String key, Object value) {
+
 		Object existingValue = this.modifierOps.get(operator);
-		LinkedHashMap<String, Object> keyValueMap;
+		DBObject keyValueMap;
+
 		if (existingValue == null) {
-			keyValueMap = new LinkedHashMap<String, Object>();
+			keyValueMap = new BasicDBObject();
 			this.modifierOps.put(operator, keyValueMap);
 		} else {
-			if (existingValue instanceof LinkedHashMap) {
-				keyValueMap = (LinkedHashMap<String, Object>) existingValue;
+			if (existingValue instanceof BasicDBObject) {
+				keyValueMap = (BasicDBObject) existingValue;
 			} else {
 				throw new InvalidDataAccessApiUsageException("Modifier Operations should be a LinkedHashMap but was "
 						+ existingValue.getClass());
 			}
 		}
+
 		keyValueMap.put(key, value);
 	}
-
 }

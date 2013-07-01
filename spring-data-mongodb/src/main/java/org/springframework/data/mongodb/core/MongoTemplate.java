@@ -1335,8 +1335,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	/**
 	 * Map the results of an ad-hoc query on the default MongoDB collection to a List of the specified type. The object is
 	 * converted from the MongoDB native representation using an instance of {@see MongoConverter}. Unless configured
-	 * otherwise, an instance of MappingMongoConverter will be used. The query document is specified as a standard DBObject
-	 * and so is the fields specification. Can be overridden by subclasses.
+	 * otherwise, an instance of MappingMongoConverter will be used. The query document is specified as a standard
+	 * DBObject and so is the fields specification. Can be overridden by subclasses.
 	 * 
 	 * @param collectionName name of the collection to retrieve the objects from
 	 * @param query the query document that specifies the criteria used to find a record
@@ -1437,19 +1437,15 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
 
-		DBObject updateObj = update.getUpdateObject();
-		for (String key : updateObj.keySet()) {
-			updateObj.put(key, mongoConverter.convertToMongoType(updateObj.get(key)));
-		}
-
+		DBObject mappedUpdate = mapper.getMappedObject(update.getUpdateObject(), entity);
 		DBObject mappedQuery = mapper.getMappedObject(query, entity);
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug("findAndModify using query: " + mappedQuery + " fields: " + fields + " sort: " + sort
-					+ " for class: " + entityClass + " and update: " + updateObj + " in collection: " + collectionName);
+					+ " for class: " + entityClass + " and update: " + mappedUpdate + " in collection: " + collectionName);
 		}
 
-		return executeFindOneInternal(new FindAndModifyCallback(mappedQuery, fields, sort, updateObj, options),
+		return executeFindOneInternal(new FindAndModifyCallback(mappedQuery, fields, sort, mappedUpdate, options),
 				new ReadDbObjectCallback<T>(readerToUse, entityClass), collectionName);
 	}
 
