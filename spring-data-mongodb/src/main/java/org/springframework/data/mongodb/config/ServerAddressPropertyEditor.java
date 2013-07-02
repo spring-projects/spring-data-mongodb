@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2011-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,6 +31,7 @@ import com.mongodb.ServerAddress;
  * 
  * @author Mark Pollack
  * @author Oliver Gierke
+ * @author Thomas Darimont
  */
 public class ServerAddressPropertyEditor extends PropertyEditorSupport {
 
@@ -42,6 +43,11 @@ public class ServerAddressPropertyEditor extends PropertyEditorSupport {
 	 */
 	@Override
 	public void setAsText(String replicaSetString) {
+
+		if (!StringUtils.hasText(replicaSetString)) {
+			setValue(null);
+			return;
+		}
 
 		String[] replicaSetStringArray = StringUtils.commaDelimitedListToStringArray(replicaSetString);
 		Set<ServerAddress> serverAddresses = new HashSet<ServerAddress>(replicaSetStringArray.length);

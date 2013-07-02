@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 the original author or authors.
+ * Copyright 2012-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,15 +21,19 @@ import static org.junit.Assert.*;
 import org.junit.Test;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.support.RootBeanDefinition;
+import org.springframework.data.mongodb.config.ServerAddressPropertyEditor;
 import org.springframework.data.mongodb.config.WriteConcernPropertyEditor;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import com.mongodb.Mongo;
+import com.mongodb.ServerAddress;
 import com.mongodb.WriteConcern;
 
 /**
  * Integration tests for {@link MongoFactoryBean}.
  * 
  * @author Oliver Gierke
+ * @author Thomas Darimont
  */
 public class MongoFactoryBeanIntegrationTest {
 
@@ -48,5 +52,23 @@ public class MongoFactoryBeanIntegrationTest {
 
 		MongoFactoryBean bean = factory.getBean("&factory", MongoFactoryBean.class);
 		assertThat(ReflectionTestUtils.getField(bean, "writeConcern"), is((Object) WriteConcern.SAFE));
+	}
+
+	/**
+	 * @see DATAMONGO-693
+	 */
+	@Test
+	public void createMongoInstanceWithHostAndEmptyReplicaSets() {
+
+		RootBeanDefinition definition = new RootBeanDefinition(MongoFactoryBean.class);
+		definition.getPropertyValues().addPropertyValue("host", "localhost");
+		definition.getPropertyValues().addPropertyValue("replicaPair", "");
+
+		DefaultListableBeanFactory factory = new DefaultListableBeanFactory();
+		factory.registerCustomEditor(ServerAddress.class, ServerAddressPropertyEditor.class);
+		factory.registerBeanDefinition("factory", definition);
+
+		Mongo mongo = factory.getBean(Mongo.class);
+		assertNotNull(mongo);
 	}
 }

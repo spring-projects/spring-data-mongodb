@@ -15,7 +15,9 @@
  */
 package org.springframework.data.mongodb.core;
 
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import org.springframework.beans.factory.DisposableBean;
@@ -24,6 +26,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mongodb.CannotGetMongoDbConnectionException;
+import org.springframework.util.StringUtils;
 
 import com.mongodb.Mongo;
 import com.mongodb.MongoOptions;
@@ -36,6 +39,7 @@ import com.mongodb.WriteConcern;
  * @author Thomas Risberg
  * @author Graeme Rocher
  * @author Oliver Gierke
+ * @author Thomas Darimont
  * @since 1.0
  */
 public class MongoFactoryBean implements FactoryBean<Mongo>, InitializingBean, DisposableBean,
@@ -57,11 +61,38 @@ public class MongoFactoryBean implements FactoryBean<Mongo>, InitializingBean, D
 	}
 
 	public void setReplicaSetSeeds(ServerAddress[] replicaSetSeeds) {
-		this.replicaSetSeeds = Arrays.asList(replicaSetSeeds);
+		this.replicaSetSeeds = filterNonNullElementsAsList(replicaSetSeeds);
 	}
 
+	/**
+	 * @deprecated use {@link #setReplicaSetSeeds(ServerAddress[])} instead
+	 * 
+	 * @param replicaPair
+	 */
+	@Deprecated
 	public void setReplicaPair(ServerAddress[] replicaPair) {
-		this.replicaPair = Arrays.asList(replicaPair);
+		this.replicaPair = filterNonNullElementsAsList(replicaPair);
+	}
+
+	/**
+	 * @param elements the elements to filter <T>
+	 * @return a new unmodifiable {@link List#} from the given elements without nulls
+	 */
+	private <T> List<T> filterNonNullElementsAsList(T[] elements) {
+
+		if (elements == null) {
+			return Collections.emptyList();
+		}
+
+		List<T> candidateElements = new ArrayList<T>();
+
+		for (T element : elements) {
+			if (element != null) {
+				candidateElements.add(element);
+			}
+		}
+
+		return Collections.unmodifiableList(candidateElements);
 	}
 
 	public void setHost(String host) {
@@ -127,15 +158,15 @@ public class MongoFactoryBean implements FactoryBean<Mongo>, InitializingBean, D
 			mongoOptions = new MongoOptions();
 		}
 
-		if (replicaPair != null) {
+		if (!isNullOrEmpty(replicaPair)) {
 			if (replicaPair.size() < 2) {
 				throw new CannotGetMongoDbConnectionException("A replica pair must have two server entries");
 			}
 			mongo = new Mongo(replicaPair.get(0), replicaPair.get(1), mongoOptions);
-		} else if (replicaSetSeeds != null) {
+		} else if (!isNullOrEmpty(replicaSetSeeds)) {
 			mongo = new Mongo(replicaSetSeeds, mongoOptions);
 		} else {
-			String mongoHost = host != null ? host : defaultOptions.getHost();
+			String mongoHost = StringUtils.hasText(host) ? host : defaultOptions.getHost();
 			mongo = port != null ? new Mongo(new ServerAddress(mongoHost, port), mongoOptions) : new Mongo(mongoHost,
 					mongoOptions);
 		}
@@ -145,6 +176,10 @@ public class MongoFactoryBean implements FactoryBean<Mongo>, InitializingBean, D
 		}
 
 		this.mongo = mongo;
+	}
+
+	private boolean isNullOrEmpty(Collection<?> elements) {
+		return elements == null || elements.isEmpty();
 	}
 
 	/* 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 the original author or authors.
+ * Copyright 2012-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,6 +31,7 @@ import com.mongodb.ServerAddress;
  * Unit tests for {@link ServerAddressPropertyEditor}.
  * 
  * @author Oliver Gierke
+ * @author Thomas Darimont
  */
 public class ServerAddressPropertyEditorUnitTests {
 
@@ -68,6 +69,16 @@ public class ServerAddressPropertyEditorUnitTests {
 
 		editor.setAsText(", localhost");
 		assertSingleAddressOfLocalhost(editor.getValue());
+	}
+
+	/**
+	 * @see DATAMONGO-693
+	 */
+	@Test
+	public void interpretEmptyStringAsNull() {
+
+		editor.setAsText("");
+		assertNull(editor.getValue());
 	}
 
 	private static void assertSingleAddressOfLocalhost(Object result) throws UnknownHostException {
