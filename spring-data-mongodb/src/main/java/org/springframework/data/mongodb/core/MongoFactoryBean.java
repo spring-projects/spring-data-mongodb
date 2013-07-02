@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -63,6 +64,12 @@ public class MongoFactoryBean implements FactoryBean<Mongo>, InitializingBean, D
 		this.replicaSetSeeds = filterNonNullElementsAsList(replicaSetSeeds);
 	}
 
+	/**
+	 * @deprecated use {@link #setReplicaSetSeeds(ServerAddress[])} instead
+	 * 
+	 * @param replicaPair
+	 */
+	@Deprecated
 	public void setReplicaPair(ServerAddress[] replicaPair) {
 		this.replicaPair = filterNonNullElementsAsList(replicaPair);
 	}
@@ -72,14 +79,19 @@ public class MongoFactoryBean implements FactoryBean<Mongo>, InitializingBean, D
 	 * @return a new unmodifiable {@link List#} from the given elements without nulls
 	 */
 	private <T> List<T> filterNonNullElementsAsList(T[] elements) {
+
+		if (elements == null) {
+			return Collections.emptyList();
+		}
+
 		List<T> candidateElements = new ArrayList<T>();
-		if (elements != null) {
-			for (T element : elements) {
-				if (element != null) {
-					candidateElements.add(element);
-				}
+
+		for (T element : elements) {
+			if (element != null) {
+				candidateElements.add(element);
 			}
 		}
+
 		return Collections.unmodifiableList(candidateElements);
 	}
 
@@ -146,12 +158,12 @@ public class MongoFactoryBean implements FactoryBean<Mongo>, InitializingBean, D
 			mongoOptions = new MongoOptions();
 		}
 
-		if (replicaPair != null && !replicaPair.isEmpty()) {
+		if (!isNullOrEmpty(replicaPair)) {
 			if (replicaPair.size() < 2) {
 				throw new CannotGetMongoDbConnectionException("A replica pair must have two server entries");
 			}
 			mongo = new Mongo(replicaPair.get(0), replicaPair.get(1), mongoOptions);
-		} else if (replicaSetSeeds != null && !replicaSetSeeds.isEmpty()) {
+		} else if (!isNullOrEmpty(replicaSetSeeds)) {
 			mongo = new Mongo(replicaSetSeeds, mongoOptions);
 		} else {
 			String mongoHost = StringUtils.hasText(host) ? host : defaultOptions.getHost();
@@ -164,6 +176,10 @@ public class MongoFactoryBean implements FactoryBean<Mongo>, InitializingBean, D
 		}
 
 		this.mongo = mongo;
+	}
+
+	private boolean isNullOrEmpty(Collection<?> elements) {
+		return elements == null || elements.isEmpty();
 	}
 
 	/* 
