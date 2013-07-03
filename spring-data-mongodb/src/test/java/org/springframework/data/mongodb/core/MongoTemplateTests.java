@@ -149,6 +149,7 @@ public class MongoTemplateTests {
 		template.dropCollection(Sample.class);
 		template.dropCollection(MyPerson.class);
 		template.dropCollection(TypeWithFieldAnnotation.class);
+		template.dropCollection(TypeWithDate.class);
 		template.dropCollection("collection");
 		template.dropCollection("personX");
 	}
@@ -1629,6 +1630,24 @@ public class MongoTemplateTests {
 		assertThat(result.emailAddress, is("new"));
 	}
 
+	/**
+	 * @see DATAMONGO-671
+	 */
+	@Test
+	public void findsEntityByDateReference() {
+
+		TypeWithDate entity = new TypeWithDate();
+		entity.date = new Date();
+
+		template.save(entity);
+
+		Query query = query(where("date").lt(new Date()));
+		List<TypeWithDate> result = template.find(query, TypeWithDate.class);
+
+		assertThat(result, hasSize(1));
+		assertThat(result.get(0).date, is(notNullValue()));
+	}
+
 	static class MyId {
 
 		String first;
@@ -1707,5 +1726,11 @@ public class MongoTemplateTests {
 
 		@Id ObjectId id;
 		@Field("email") String emailAddress;
+	}
+
+	static class TypeWithDate {
+
+		@Id String id;
+		Date date;
 	}
 }
