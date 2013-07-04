@@ -1669,13 +1669,13 @@ public class MongoTemplateTests {
 	@Test
 	public void findOneAfterUpsertForNonExistingObjectReturnsTheInsertedObject() {
 
-		String collectionName = "datamongo540";
-
 		String idValue = "4711";
 		Query query = new Query(Criteria.where("id").is(idValue));
 
 		String fieldValue = "bubu";
 		Update update = Update.update("field", fieldValue);
+
+		String collectionName = "datamongo540";
 		template.upsert(query, update, collectionName);
 		Sample result = template.findOne(query, Sample.class, collectionName);
 
