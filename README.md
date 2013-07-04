@@ -6,7 +6,7 @@ The Spring Data MongoDB project aims to provide a familiar and consistent Spring
 
 ## Getting Help
 
-For a comprehensive treatmet of all the Spring Data MongoDB features, please refer to:
+For a comprehensive treatment of all the Spring Data MongoDB features, please refer to:
 
 * the [User Guide](http://static.springsource.org/spring-data/data-mongodb/docs/current/reference/html/) 
 * the [JavaDocs](http://static.springsource.org/spring-data/data-mongodb/docs/current/api/) have extensive comments in them as well.
@@ -57,7 +57,7 @@ MongoTemplate is the central support class for Mongo database operations. It pro
 
 ### Spring Data repositories
 
-To simplify the creation of data repositories Sprin Data MongoDB provides a generic repository programming model. It will automatically create a repository proxy for you that adds implementations of finder methods you specify on an interface.  
+To simplify the creation of data repositories Spring Data MongoDB provides a generic repository programming model. It will automatically create a repository proxy for you that adds implementations of finder methods you specify on an interface.  
 
 For example, given a `Person` class with first and last name properties, a `PersonRepository` interface that can query for `Person` by last name and when the first name matches a like expression is shown below:
 
@@ -70,7 +70,7 @@ public interface PersonRepository extends CrudRepository<Person, Long> {
 }
 ```
 
-The queries issued on execution will be derived from the method name. Exending `CrudRepository` causes CRUD methods being pulled into the interface so that you can easily save and find single entities and collections of them.
+The queries issued on execution will be derived from the method name. Extending `CrudRepository` causes CRUD methods being pulled into the interface so that you can easily save and find single entities and collections of them.
 
 You can have Spring automatically create a proxy for the interface by using the following JavaConfig:
 
