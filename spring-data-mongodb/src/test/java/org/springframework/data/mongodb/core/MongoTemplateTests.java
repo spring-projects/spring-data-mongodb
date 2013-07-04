@@ -88,6 +88,7 @@ import com.mongodb.WriteResult;
  * @author Thomas Risberg
  * @author Amol Nayak
  * @author Patryk Wasik
+ * @author Thomas Darimont
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:infrastructure.xml")
@@ -1678,6 +1679,7 @@ public class MongoTemplateTests {
 		template.upsert(query, update, collectionName);
 		Sample result = template.findOne(query, Sample.class, collectionName);
 
+		assertThat(result, is(notNullValue()));
 		assertThat(result.field, is(fieldValue));
 		assertThat(result.id, is(idValue));
 	}
