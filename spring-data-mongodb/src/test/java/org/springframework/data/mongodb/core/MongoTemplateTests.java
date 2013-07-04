@@ -88,6 +88,7 @@ import com.mongodb.WriteResult;
  * @author Thomas Risberg
  * @author Amol Nayak
  * @author Patryk Wasik
+ * @author Thomas Darimont
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:infrastructure.xml")
@@ -1646,6 +1647,27 @@ public class MongoTemplateTests {
 
 		assertThat(result, hasSize(1));
 		assertThat(result.get(0).date, is(notNullValue()));
+	}
+
+	/**
+	 * @see DATAMONGO-540
+	 */
+	@Test
+	public void findOneAfterUpsertForNonExistingObjectReturnsTheInsertedObject() {
+
+		String idValue = "4711";
+		Query query = new Query(Criteria.where("id").is(idValue));
+
+		String fieldValue = "bubu";
+		Update update = Update.update("field", fieldValue);
+
+		String collectionName = "datamongo540";
+		template.upsert(query, update, collectionName);
+		Sample result = template.findOne(query, Sample.class, collectionName);
+
+		assertThat(result, is(notNullValue()));
+		assertThat(result.field, is(fieldValue));
+		assertThat(result.id, is(idValue));
 	}
 
 	static class MyId {
