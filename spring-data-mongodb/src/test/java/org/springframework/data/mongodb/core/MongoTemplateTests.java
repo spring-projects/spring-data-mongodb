@@ -772,7 +772,8 @@ public class MongoTemplateTests {
 			Query q3 = new Query(Criteria.where("age").in(l1, l2));
 			template.find(q3, PersonWithIdPropertyOfTypeObjectId.class);
 			Assert.fail("Should have trown an InvalidDocumentStoreApiUsageException");
-		} catch (InvalidMongoDbApiUsageException e) {}
+		} catch (InvalidMongoDbApiUsageException e) {
+		}
 	}
 
 	@Test
@@ -1650,8 +1651,8 @@ public class MongoTemplateTests {
 	public void findsEntityByDateReference() {
 
 		TypeWithDate entity = new TypeWithDate();
-		entity.date = new Date();
-
+		entity.date = new Date(System.currentTimeMillis() - 10); /* required to guarantee a time difference
+																															  even on very fast machines :) */
 		template.save(entity);
 
 		Query query = query(where("date").lt(new Date()));
@@ -1659,6 +1660,26 @@ public class MongoTemplateTests {
 
 		assertThat(result, hasSize(1));
 		assertThat(result.get(0).date, is(notNullValue()));
+	}
+
+	/**
+	 * @see DATAMONGO-540
+	 */
+	@Test
+	public void findOneAfterUpsertForNonExistingObjectReturnsTheInsertedObject() {
+
+		String collectionName = "datamongo540";
+
+		String idValue = "4711";
+		Query query = new Query(Criteria.where("id").is(idValue));
+
+		String fieldValue = "bubu";
+		Update update = Update.update("field", fieldValue);
+		template.upsert(query, update, collectionName);
+		Sample result = template.findOne(query, Sample.class, collectionName);
+
+		assertThat(result.field, is(fieldValue));
+		assertThat(result.id, is(idValue));
 	}
 
 	static class MyId {
