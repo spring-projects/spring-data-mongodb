@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core.mapping;
 
+import java.lang.reflect.Field;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
@@ -24,6 +25,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.expression.BeanFactoryAccessor;
 import org.springframework.context.expression.BeanFactoryResolver;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.AssociationHandler;
 import org.springframework.data.mapping.PropertyHandler;
@@ -35,6 +37,7 @@ import org.springframework.expression.Expression;
 import org.springframework.expression.ParserContext;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
+import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 /**
@@ -43,6 +46,7 @@ import org.springframework.util.StringUtils;
  * 
  * @author Jon Brisbin
  * @author Oliver Gierke
+ * @author Thomas Darimont
  */
 public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, MongoPersistentProperty> implements
 		MongoPersistentEntity<T>, ApplicationContextAware {
@@ -134,6 +138,64 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 
 			return o1.getFieldOrder() - o2.getFieldOrder();
 		}
+	}
+
+	/**
+	 * As a general note: An implicit id property has a name that matches "id" or "_id". An explicit id property is one
+	 * that is annotated with @see {@link Id}. The property id is updated according to the following rules: 1) An id
+	 * property which is defined explicitly takes precedence over an implicitly defined id property. 2) In case of any
+	 * ambiguity a @see {@link MappingException} is thrown.
+	 * 
+	 * @param property - the new id property candidate
+	 * @return
+	 */
+	@Override
+	protected MongoPersistentProperty returnPropertyIfBetterIdPropertyCandidateOrNull(MongoPersistentProperty property) {
+
+		Assert.notNull(property);
+
+		if (!property.isIdProperty()) {
+			return null;
+		}
+
+		MongoPersistentProperty currentIdProperty = getIdProperty();
+
+		boolean currentIdPropertyIsSet = currentIdProperty != null;
+
+		@SuppressWarnings("null")
+		// null test for currentIdProperty via currentIdPropertyIsSet guard
+		boolean currentIdPropertyIsExplicit = currentIdPropertyIsSet ? currentIdProperty.isExplicitIdProperty() : false;
+
+		boolean newIdPropertyIsExplicit = property.isExplicitIdProperty();
+
+		if (!currentIdPropertyIsSet) {
+			return property;
+
+		} else {
+			@SuppressWarnings("null")
+			// null test for currentIdProperty via currentIdPropertyIsSet guard
+			Field currentIdPropertyField = currentIdProperty.getField();
+
+			if (newIdPropertyIsExplicit && currentIdPropertyIsExplicit) {
+				throw new MappingException(String.format(
+						"Attempt to add explicit id property %s but already have an property %s registered "
+								+ "as explicit id. Check your mapping configuration!", property.getField(), currentIdPropertyField));
+
+			} else if (newIdPropertyIsExplicit && !currentIdPropertyIsExplicit) {
+				// explicit id property takes precedence over implicit id property
+				return property;
+
+			} else if (!newIdPropertyIsExplicit && currentIdPropertyIsExplicit) {
+				// no id property override - current property is explicitly defined
+
+			} else {
+				throw new MappingException(String.format(
+						"Attempt to add id property %s but already have an property %s registered "
+								+ "as id. Check your mapping configuration!", property.getField(), currentIdPropertyField));
+			}
+		}
+
+		return null;
 	}
 
 	/**

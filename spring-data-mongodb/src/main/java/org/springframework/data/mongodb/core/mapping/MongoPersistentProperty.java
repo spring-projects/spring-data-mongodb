@@ -16,6 +16,8 @@
 package org.springframework.data.mongodb.core.mapping;
 
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PersistentProperty;
 
 /**
@@ -47,6 +49,14 @@ public interface MongoPersistentProperty extends PersistentProperty<MongoPersist
 	 * @return
 	 */
 	boolean isDbReference();
+
+	/**
+	 * Returns whether the property is explicitly marked as an identifier property of the owning {@link PersistentEntity}.
+	 * A property is an explicit id property if it is annotated with @see {@link Id}.
+	 * 
+	 * @return
+	 */
+	boolean isExplicitIdProperty();
 
 	/**
 	 * Returns the {@link DBRef} if the property is a reference.

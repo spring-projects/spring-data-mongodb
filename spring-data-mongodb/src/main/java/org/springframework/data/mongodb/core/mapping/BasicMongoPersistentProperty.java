@@ -24,6 +24,7 @@ import java.util.Set;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.model.AnnotationBasedPersistentProperty;
 import org.springframework.data.mapping.model.MappingException;
@@ -38,6 +39,7 @@ import com.mongodb.DBObject;
  * 
  * @author Oliver Gierke
  * @author Patryk Wasik
+ * @author Thomas Darimont
  */
 public class BasicMongoPersistentProperty extends AnnotationBasedPersistentProperty<MongoPersistentProperty> implements
 		MongoPersistentProperty {
@@ -100,13 +102,21 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 	 */
 	@Override
 	public boolean isIdProperty() {
-
 		if (super.isIdProperty()) {
 			return true;
 		}
 
 		// We need to support a wider range of ID types than just the ones that can be converted to an ObjectId
 		return SUPPORTED_ID_PROPERTY_NAMES.contains(field.getName());
+	}
+
+	public boolean isExplicitIdProperty() {
+		/*
+		 * The code here is the same as in isIdProperty() to provide a 
+		 * reasonable default for testing whether a property is explicitly 
+		 * meant to be an identifier property
+		 */
+		return isAnnotationPresent(Id.class);
 	}
 
 	/**
@@ -117,7 +127,17 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 	public String getFieldName() {
 
 		if (isIdProperty()) {
-			return ID_FIELD_NAME;
+
+			if (owner == null) {
+				return ID_FIELD_NAME;
+
+			} else if (owner.getIdProperty() == null) {
+				return ID_FIELD_NAME;
+
+			} else if (owner.isIdProperty(this)) {
+				return ID_FIELD_NAME;
+
+			}
 		}
 
 		org.springframework.data.mongodb.core.mapping.Field annotation = findAnnotation(org.springframework.data.mongodb.core.mapping.Field.class);
