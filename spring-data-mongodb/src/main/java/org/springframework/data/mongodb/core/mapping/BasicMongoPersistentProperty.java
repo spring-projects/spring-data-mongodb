@@ -24,6 +24,7 @@ import java.util.Set;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.model.AnnotationBasedPersistentProperty;
 import org.springframework.data.mapping.model.MappingException;
@@ -38,6 +39,7 @@ import com.mongodb.DBObject;
  * 
  * @author Oliver Gierke
  * @author Patryk Wasik
+ * @author Thomas Darimont
  */
 public class BasicMongoPersistentProperty extends AnnotationBasedPersistentProperty<MongoPersistentProperty> implements
 		MongoPersistentProperty {
@@ -109,6 +111,15 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 		return SUPPORTED_ID_PROPERTY_NAMES.contains(field.getName());
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentProperty#isExplicitIdProperty()
+	 */
+	@Override
+	public boolean isExplicitIdProperty() {
+		return isAnnotationPresent(Id.class);
+	}
+
 	/**
 	 * Returns the key to be used to store the value of the property inside a Mongo {@link DBObject}.
 	 * 
@@ -117,7 +128,18 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 	public String getFieldName() {
 
 		if (isIdProperty()) {
-			return ID_FIELD_NAME;
+
+			if (owner == null) {
+				return ID_FIELD_NAME;
+			}
+
+			if (owner.getIdProperty() == null) {
+				return ID_FIELD_NAME;
+			}
+
+			if (owner.isIdProperty(this)) {
+				return ID_FIELD_NAME;
+			}
 		}
 
 		org.springframework.data.mongodb.core.mapping.Field annotation = findAnnotation(org.springframework.data.mongodb.core.mapping.Field.class);

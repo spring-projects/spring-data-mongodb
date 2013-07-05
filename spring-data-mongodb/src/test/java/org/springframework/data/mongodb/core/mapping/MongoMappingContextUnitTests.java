@@ -39,15 +39,14 @@ import com.mongodb.DBRef;
  * Unit tests for {@link MongoMappingContext}.
  * 
  * @author Oliver Gierke
+ * @author Thomas Darimont
  */
 @RunWith(MockitoJUnitRunner.class)
 public class MongoMappingContextUnitTests {
 
-	@Mock
-	ApplicationContext applicationContext;
+	@Mock ApplicationContext applicationContext;
 
-	@Rule
-	public ExpectedException exception = ExpectedException.none();
+	@Rule public ExpectedException exception = ExpectedException.none();
 
 	@Test
 	public void addsSelfReferencingPersistentEntityCorrectly() throws Exception {
@@ -56,13 +55,6 @@ public class MongoMappingContextUnitTests {
 
 		context.setInitialEntitySet(Collections.singleton(SampleClass.class));
 		context.initialize();
-	}
-
-	@Test(expected = MappingException.class)
-	public void rejectsEntityWithMultipleIdProperties() {
-
-		MongoMappingContext context = new MongoMappingContext();
-		context.getPersistentEntity(ClassWithMultipleIdProperties.class);
 	}
 
 	@Test
@@ -128,12 +120,61 @@ public class MongoMappingContextUnitTests {
 		context.getPersistentEntity(Child.class);
 	}
 
-	class ClassWithMultipleIdProperties {
+	/**
+	 * @see DATAMONGO-688
+	 */
+	@Test
+	public void mappingContextShouldAcceptClassWithImplicitIdProperty() {
 
-		@Id
-		String myId;
+		MongoMappingContext context = new MongoMappingContext();
+		BasicMongoPersistentEntity<?> pe = context.getPersistentEntity(ClassWithImplicitId.class);
 
-		String id;
+		assertThat(pe, is(not(nullValue())));
+		assertThat(pe.isIdProperty(pe.getPersistentProperty("id")), is(true));
+	}
+
+	/**
+	 * @see DATAMONGO-688
+	 */
+	@Test
+	public void mappingContextShouldAcceptClassWithExplicitIdProperty() {
+
+		MongoMappingContext context = new MongoMappingContext();
+		BasicMongoPersistentEntity<?> pe = context.getPersistentEntity(ClassWithExplicitId.class);
+
+		assertThat(pe, is(not(nullValue())));
+		assertThat(pe.isIdProperty(pe.getPersistentProperty("myId")), is(true));
+	}
+
+	/**
+	 * @see DATAMONGO-688
+	 */
+	@Test
+	public void mappingContextShouldAcceptClassWithExplicitAndImplicitIdPropertyByGivingPrecedenceToExplicitIdProperty() {
+
+		MongoMappingContext context = new MongoMappingContext();
+		BasicMongoPersistentEntity<?> pe = context.getPersistentEntity(ClassWithExplicitIdAndImplicitId.class);
+		assertThat(pe, is(not(nullValue())));
+	}
+
+	/**
+	 * @see DATAMONGO-688
+	 */
+	@Test(expected = MappingException.class)
+	public void rejectsClassWithAmbiguousExplicitIdPropertyFieldMappings() {
+
+		MongoMappingContext context = new MongoMappingContext();
+		context.getPersistentEntity(ClassWithMultipleExplicitIds.class);
+	}
+
+	/**
+	 * @see DATAMONGO-688
+	 */
+	@Test(expected = MappingException.class)
+	public void rejectsClassWithAmbiguousImplicitIdPropertyFieldMappings() {
+
+		MongoMappingContext context = new MongoMappingContext();
+		context.getPersistentEntity(ClassWithMultipleImplicitIds.class);
 	}
 
 	public class SampleClass {
@@ -148,8 +189,7 @@ public class MongoMappingContextUnitTests {
 
 	class InvalidPerson {
 
-		@org.springframework.data.mongodb.core.mapping.Field("foo")
-		String firstname, lastname;
+		@org.springframework.data.mongodb.core.mapping.Field("foo") String firstname, lastname;
 	}
 
 	class Parent {
@@ -167,5 +207,35 @@ public class MongoMappingContextUnitTests {
 		public String getName() {
 			return super.getName();
 		}
+	}
+
+	class ClassWithImplicitId {
+
+		String field;
+		String id;
+	}
+
+	class ClassWithExplicitId {
+
+		@Id String myId;
+		String field;
+	}
+
+	class ClassWithExplicitIdAndImplicitId {
+
+		@Id String myId;
+		String id;
+	}
+
+	class ClassWithMultipleExplicitIds {
+
+		@Id String myId;
+		@Id String id;
+	}
+
+	class ClassWithMultipleImplicitIds {
+
+		String _id;
+		String id;
 	}
 }
