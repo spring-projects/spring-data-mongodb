@@ -1651,8 +1651,7 @@ public class MongoTemplateTests {
 	public void findsEntityByDateReference() {
 
 		TypeWithDate entity = new TypeWithDate();
-		entity.date = new Date();
-
+		entity.date = new Date(System.currentTimeMillis() - 10);
 		template.save(entity);
 
 		Query query = query(where("date").lt(new Date()));
