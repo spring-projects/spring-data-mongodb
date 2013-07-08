@@ -1316,57 +1316,28 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	}
 
 	/**
-	 * Map the results of an ad-hoc query on the default MongoDB collection to an object using the template's converter
-	 * <p/>
-	 * The query document is specified as a standard DBObject and so is the fields specification.
+	 * Map the results of an ad-hoc query on the default MongoDB collection to an object using the template's converter.
+	 * The query document is specified as a standard {@link DBObject} and so is the fields specification.
 	 * 
-	 * @param collectionName name of the collection to retrieve the objects from
-	 * @param query the query document that specifies the criteria used to find a record
-	 * @param fields the document that specifies the fields to be returned
+	 * @param collectionName name of the collection to retrieve the objects from.
+	 * @param query the query document that specifies the criteria used to find a record.
+	 * @param fields the document that specifies the fields to be returned.
 	 * @param entityClass the parameterized type of the returned list.
-	 * @return the List of converted objects.
+	 * @return the {@link List} of converted objects.
 	 */
 	protected <T> T doFindOne(String collectionName, DBObject query, DBObject fields, Class<T> entityClass) {
-		EntityReader<? super T, DBObject> readerToUse = this.mongoConverter;
+
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
 		DBObject mappedQuery = queryMapper.getMappedObject(query, entity);
-
-		return executeFindOneInternal(new FindOneCallback(mappedQuery, fields), new ReadDbObjectCallback<T>(readerToUse,
-				entityClass), collectionName);
-	}
-
-	/**
-	 * Map the results of an ad-hoc query on the default MongoDB collection to a List of the specified type. The object is
-	 * converted from the MongoDB native representation using an instance of {@see MongoConverter}. Unless configured
-	 * otherwise, an instance of MappingMongoConverter will be used. The query document is specified as a standard
-	 * DBObject and so is the fields specification. Can be overridden by subclasses.
-	 * 
-	 * @param collectionName name of the collection to retrieve the objects from
-	 * @param query the query document that specifies the criteria used to find a record
-	 * @param fields the document that specifies the fields to be returned
-	 * @param entityClass the parameterized type of the returned list.
-	 * @param preparer allows for customization of the DBCursor used when iterating over the result set, (apply limits,
-	 *          skips and so on).
-	 * @return the List of converted objects.
-	 */
-	protected <T> List<T> doFind(String collectionName, DBObject query, DBObject fields, Class<T> entityClass,
-			CursorPreparer preparer) {
-		return doFind(collectionName, query, fields, entityClass, preparer, new ReadDbObjectCallback<T>(mongoConverter,
-				entityClass));
-	}
-
-	protected <S, T> List<T> doFind(String collectionName, DBObject query, DBObject fields, Class<S> entityClass,
-			CursorPreparer preparer, DbObjectCallback<T> objectCallback) {
-
-		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
+		DBObject mappedFields = fields == null ? null : queryMapper.getMappedObject(fields, entity);
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug(String.format("find using query: %s fields: %s for class: %s in collection: %s",
-					serializeToJsonSafely(query), fields, entityClass, collectionName));
+			LOGGER.debug(String.format("findOne using query: %s fields: %s for class: %s in collection: %s",
+					serializeToJsonSafely(query), mappedFields, entityClass, collectionName));
 		}
 
-		return executeFindMultiInternal(new FindCallback(queryMapper.getMappedObject(query, entity), fields), preparer,
-				objectCallback, collectionName);
+		return executeFindOneInternal(new FindOneCallback(mappedQuery, mappedFields), new ReadDbObjectCallback<T>(
+				this.mongoConverter, entityClass), collectionName);
 	}
 
 	/**
@@ -1380,14 +1351,43 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * @return the List of converted objects.
 	 */
 	protected <T> List<T> doFind(String collectionName, DBObject query, DBObject fields, Class<T> entityClass) {
-		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("find using query: " + query + " fields: " + fields + " for class: " + entityClass
-					+ " in collection: " + collectionName);
-		}
-		EntityReader<? super T, DBObject> readerToUse = this.mongoConverter;
+		return doFind(collectionName, query, fields, entityClass, null, new ReadDbObjectCallback<T>(this.mongoConverter,
+				entityClass));
+	}
+
+	/**
+	 * Map the results of an ad-hoc query on the default MongoDB collection to a List of the specified type. The object is
+	 * converted from the MongoDB native representation using an instance of {@see MongoConverter}. The query document is
+	 * specified as a standard DBObject and so is the fields specification.
+	 * 
+	 * @param collectionName name of the collection to retrieve the objects from.
+	 * @param query the query document that specifies the criteria used to find a record.
+	 * @param fields the document that specifies the fields to be returned.
+	 * @param entityClass the parameterized type of the returned list.
+	 * @param preparer allows for customization of the {@link DBCursor} used when iterating over the result set, (apply
+	 *          limits, skips and so on).
+	 * @return the {@link List} of converted objects.
+	 */
+	protected <T> List<T> doFind(String collectionName, DBObject query, DBObject fields, Class<T> entityClass,
+			CursorPreparer preparer) {
+		return doFind(collectionName, query, fields, entityClass, preparer, new ReadDbObjectCallback<T>(mongoConverter,
+				entityClass));
+	}
+
+	protected <S, T> List<T> doFind(String collectionName, DBObject query, DBObject fields, Class<S> entityClass,
+			CursorPreparer preparer, DbObjectCallback<T> objectCallback) {
+
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
-		return executeFindMultiInternal(new FindCallback(queryMapper.getMappedObject(query, entity), fields), null,
-				new ReadDbObjectCallback<T>(readerToUse, entityClass), collectionName);
+		DBObject mappedFields = fields == null ? null : queryMapper.getMappedObject(fields, entity);
+		DBObject mappedQuery = queryMapper.getMappedObject(query, entity);
+
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug(String.format("find using query: %s fields: %s for class: %s in collection: %s",
+					serializeToJsonSafely(query), mappedFields, entityClass, collectionName));
+		}
+
+		return executeFindMultiInternal(new FindCallback(mappedQuery, mappedFields), preparer, objectCallback,
+				collectionName);
 	}
 
 	protected DBObject convertToDbObject(CollectionOptions collectionOptions) {
