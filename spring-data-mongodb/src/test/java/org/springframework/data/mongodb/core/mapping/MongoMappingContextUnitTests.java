@@ -212,35 +212,30 @@ public class MongoMappingContextUnitTests {
 	class ClassWithImplicitId {
 
 		String field;
-
 		String id;
 	}
 
 	class ClassWithExplicitId {
 
 		@Id String myId;
-
 		String field;
 	}
 
 	class ClassWithExplicitIdAndImplicitId {
 
 		@Id String myId;
-
 		String id;
 	}
 
 	class ClassWithMultipleExplicitIds {
 
 		@Id String myId;
-
 		@Id String id;
 	}
 
 	class ClassWithMultipleImplicitIds {
 
 		String _id;
-
 		String id;
 	}
 }

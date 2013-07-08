@@ -161,38 +161,34 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 		MongoPersistentProperty currentIdProperty = getIdProperty();
 
 		boolean currentIdPropertyIsSet = currentIdProperty != null;
-
 		@SuppressWarnings("null")
-		// null test for currentIdProperty via currentIdPropertyIsSet guard
 		boolean currentIdPropertyIsExplicit = currentIdPropertyIsSet ? currentIdProperty.isExplicitIdProperty() : false;
-
 		boolean newIdPropertyIsExplicit = property.isExplicitIdProperty();
 
 		if (!currentIdPropertyIsSet) {
 			return property;
 
+		}
+
+		@SuppressWarnings("null")
+		Field currentIdPropertyField = currentIdProperty.getField();
+
+		if (newIdPropertyIsExplicit && currentIdPropertyIsExplicit) {
+			throw new MappingException(String.format(
+					"Attempt to add explicit id property %s but already have an property %s registered "
+							+ "as explicit id. Check your mapping configuration!", property.getField(), currentIdPropertyField));
+
+		} else if (newIdPropertyIsExplicit && !currentIdPropertyIsExplicit) {
+			// explicit id property takes precedence over implicit id property
+			return property;
+
+		} else if (!newIdPropertyIsExplicit && currentIdPropertyIsExplicit) {
+			// no id property override - current property is explicitly defined
+
 		} else {
-			@SuppressWarnings("null")
-			// null test for currentIdProperty via currentIdPropertyIsSet guard
-			Field currentIdPropertyField = currentIdProperty.getField();
-
-			if (newIdPropertyIsExplicit && currentIdPropertyIsExplicit) {
-				throw new MappingException(String.format(
-						"Attempt to add explicit id property %s but already have an property %s registered "
-								+ "as explicit id. Check your mapping configuration!", property.getField(), currentIdPropertyField));
-
-			} else if (newIdPropertyIsExplicit && !currentIdPropertyIsExplicit) {
-				// explicit id property takes precedence over implicit id property
-				return property;
-
-			} else if (!newIdPropertyIsExplicit && currentIdPropertyIsExplicit) {
-				// no id property override - current property is explicitly defined
-
-			} else {
-				throw new MappingException(String.format(
-						"Attempt to add id property %s but already have an property %s registered "
-								+ "as id. Check your mapping configuration!", property.getField(), currentIdPropertyField));
-			}
+			throw new MappingException(String.format(
+					"Attempt to add id property %s but already have an property %s registered "
+							+ "as id. Check your mapping configuration!", property.getField(), currentIdPropertyField));
 		}
 
 		return null;

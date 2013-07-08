@@ -110,12 +110,12 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 		return SUPPORTED_ID_PROPERTY_NAMES.contains(field.getName());
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentProperty#isExplicitIdProperty()
+	 */
+	@Override
 	public boolean isExplicitIdProperty() {
-		/*
-		 * The code here is the same as in isIdProperty() to provide a 
-		 * reasonable default for testing whether a property is explicitly 
-		 * meant to be an identifier property
-		 */
 		return isAnnotationPresent(Id.class);
 	}
 
@@ -130,13 +130,14 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 
 			if (owner == null) {
 				return ID_FIELD_NAME;
+			}
 
-			} else if (owner.getIdProperty() == null) {
+			if (owner.getIdProperty() == null) {
 				return ID_FIELD_NAME;
+			}
 
-			} else if (owner.isIdProperty(this)) {
+			if (owner.isIdProperty(this)) {
 				return ID_FIELD_NAME;
-
 			}
 		}
 
