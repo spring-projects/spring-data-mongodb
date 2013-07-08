@@ -57,6 +57,7 @@ import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoWriter;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
+import org.springframework.data.mongodb.core.convert.UpdateQueryMapper;
 import org.springframework.data.mongodb.core.geo.Distance;
 import org.springframework.data.mongodb.core.geo.GeoResult;
 import org.springframework.data.mongodb.core.geo.GeoResults;
@@ -135,7 +136,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 	private final MongoDbFactory mongoDbFactory;
 	private final MongoExceptionTranslator exceptionTranslator = new MongoExceptionTranslator();
-	private final QueryMapper mapper;
+	private final QueryMapper queryMapper;
+	private final UpdateQueryMapper updateMapper;
 
 	private WriteConcern writeConcern;
 	private WriteConcernResolver writeConcernResolver = DefaultWriteConcernResolver.INSTANCE;
@@ -188,7 +190,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 		this.mongoDbFactory = mongoDbFactory;
 		this.mongoConverter = mongoConverter == null ? getDefaultMongoConverter(mongoDbFactory) : mongoConverter;
-		this.mapper = new QueryMapper(this.mongoConverter);
+		this.queryMapper = new QueryMapper(this.mongoConverter);
+		this.updateMapper = new UpdateQueryMapper(this.mongoConverter);
 
 		// We always have a mapping context in the converter, whether it's a simple one or not
 		mappingContext = this.mongoConverter.getMappingContext();
@@ -495,7 +498,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			throw new InvalidDataAccessApiUsageException("Query passed in to exist can't be null");
 		}
 
-		DBObject mappedQuery = mapper.getMappedObject(query.getQueryObject(), getPersistentEntity(entityClass));
+		DBObject mappedQuery = queryMapper.getMappedObject(query.getQueryObject(), getPersistentEntity(entityClass));
 		return execute(collectionName, new FindCallback(mappedQuery)).hasNext();
 	}
 
@@ -604,7 +607,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	private long count(Query query, Class<?> entityClass, String collectionName) {
 
 		Assert.hasText(collectionName);
-		final DBObject dbObject = query == null ? null : mapper.getMappedObject(query.getQueryObject(),
+		final DBObject dbObject = query == null ? null : queryMapper.getMappedObject(query.getQueryObject(),
 				entityClass == null ? null : mappingContext.getPersistentEntity(entityClass));
 
 		return execute(collectionName, new CollectionCallback<Long>() {
@@ -940,10 +943,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 				MongoPersistentEntity<?> entity = entityClass == null ? null : getPersistentEntity(entityClass);
 
-				DBObject queryObj = query == null ? new BasicDBObject()
-						: mapper.getMappedObject(query.getQueryObject(), entity);
-				DBObject updateObj = update == null ? new BasicDBObject() : mapper.getMappedObject(update.getUpdateObject(),
+				DBObject queryObj = query == null ? new BasicDBObject() : queryMapper.getMappedObject(query.getQueryObject(),
 						entity);
+				DBObject updateObj = update == null ? new BasicDBObject() : updateMapper.getMappedObject(
+						update.getUpdateObject(), entity);
 
 				if (LOGGER.isDebugEnabled()) {
 					LOGGER.debug("Calling update using query: " + queryObj + " and update: " + updateObj + " in collection: "
@@ -1061,7 +1064,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 				maybeEmitEvent(new BeforeDeleteEvent<T>(queryObject, entityClass));
 
-				DBObject dboq = mapper.getMappedObject(queryObject, entity);
+				DBObject dboq = queryMapper.getMappedObject(queryObject, entity);
 
 				MongoAction mongoAction = new MongoAction(writeConcern, MongoActionOperation.REMOVE, collectionName,
 						entityClass, null, queryObject);
@@ -1156,7 +1159,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		if (criteria == null) {
 			dbo.put("cond", null);
 		} else {
-			dbo.put("cond", mapper.getMappedObject(criteria.getCriteriaObject(), null));
+			dbo.put("cond", queryMapper.getMappedObject(criteria.getCriteriaObject(), null));
 		}
 		// If initial document was a JavaScript string, potentially loaded by Spring's Resource abstraction, load it and
 		// convert to DBObject
@@ -1326,7 +1329,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	protected <T> T doFindOne(String collectionName, DBObject query, DBObject fields, Class<T> entityClass) {
 		EntityReader<? super T, DBObject> readerToUse = this.mongoConverter;
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
-		DBObject mappedQuery = mapper.getMappedObject(query, entity);
+		DBObject mappedQuery = queryMapper.getMappedObject(query, entity);
 
 		return executeFindOneInternal(new FindOneCallback(mappedQuery, fields), new ReadDbObjectCallback<T>(readerToUse,
 				entityClass), collectionName);
@@ -1362,7 +1365,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 					serializeToJsonSafely(query), fields, entityClass, collectionName));
 		}
 
-		return executeFindMultiInternal(new FindCallback(mapper.getMappedObject(query, entity), fields), preparer,
+		return executeFindMultiInternal(new FindCallback(queryMapper.getMappedObject(query, entity), fields), preparer,
 				objectCallback, collectionName);
 	}
 
@@ -1383,7 +1386,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		}
 		EntityReader<? super T, DBObject> readerToUse = this.mongoConverter;
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
-		return executeFindMultiInternal(new FindCallback(mapper.getMappedObject(query, entity), fields), null,
+		return executeFindMultiInternal(new FindCallback(queryMapper.getMappedObject(query, entity), fields), null,
 				new ReadDbObjectCallback<T>(readerToUse, entityClass), collectionName);
 	}
 
@@ -1422,7 +1425,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 					+ entityClass + " in collection: " + collectionName);
 		}
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
-		return executeFindOneInternal(new FindAndRemoveCallback(mapper.getMappedObject(query, entity), fields, sort),
+		return executeFindOneInternal(new FindAndRemoveCallback(queryMapper.getMappedObject(query, entity), fields, sort),
 				new ReadDbObjectCallback<T>(readerToUse, entityClass), collectionName);
 	}
 
@@ -1437,8 +1440,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
 
-		DBObject mappedUpdate = mapper.getMappedObject(update.getUpdateObject(), entity);
-		DBObject mappedQuery = mapper.getMappedObject(query, entity);
+		DBObject mappedUpdate = queryMapper.getMappedObject(update.getUpdateObject(), entity);
+		DBObject mappedQuery = queryMapper.getMappedObject(query, entity);
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug("findAndModify using query: " + mappedQuery + " fields: " + fields + " sort: " + sort
