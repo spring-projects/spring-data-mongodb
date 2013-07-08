@@ -1673,9 +1673,8 @@ public class MongoTemplateTests {
 		String fieldValue = "bubu";
 		Update update = Update.update("field", fieldValue);
 
-		String collectionName = "datamongo540";
-		template.upsert(query, update, collectionName);
-		Sample result = template.findOne(query, Sample.class, collectionName);
+		template.upsert(query, update, Sample.class);
+		Sample result = template.findOne(query, Sample.class);
 
 		assertThat(result, is(notNullValue()));
 		assertThat(result.field, is(fieldValue));
