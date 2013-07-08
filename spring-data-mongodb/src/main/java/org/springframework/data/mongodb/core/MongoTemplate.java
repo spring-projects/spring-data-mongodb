@@ -1330,9 +1330,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		EntityReader<? super T, DBObject> readerToUse = this.mongoConverter;
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
 		DBObject mappedQuery = queryMapper.getMappedObject(query, entity);
+		DBObject mappedFields = entity == null ? fields : fields == null ? null : queryMapper.getMappedObject(fields,
+				entity);
 
-		return executeFindOneInternal(new FindOneCallback(mappedQuery, fields), new ReadDbObjectCallback<T>(readerToUse,
-				entityClass), collectionName);
+		return executeFindOneInternal(new FindOneCallback(mappedQuery, mappedFields), new ReadDbObjectCallback<T>(
+				readerToUse, entityClass), collectionName);
 	}
 
 	/**

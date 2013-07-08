@@ -154,6 +154,8 @@ public class MongoTemplateTests {
 		template.dropCollection("collection");
 		template.dropCollection("personX");
 		template.dropCollection(Document.class);
+		template.dropCollection(ObjectWith3AliasedFields.class);
+		template.dropCollection(ObjectWith3AliasedFieldsAndNestedAddress.class);
 	}
 
 	@Test
@@ -1706,6 +1708,135 @@ public class MongoTemplateTests {
 		assertThat(result.model.value(), is(newModelValue));
 	}
 
+	/**
+	 * @see DATAMONGO-702
+	 */
+	@Test
+	public void queryShouldSupportRealAndAliasedPropertyNamesForFieldInclusions() {
+
+		ObjectWith3AliasedFields obj = new ObjectWith3AliasedFields();
+		obj.id = "4711";
+		obj.property1 = "P1";
+		obj.property2 = "P2";
+		obj.property3 = "P3";
+
+		template.insert(obj);
+
+		Query query = new Query(Criteria.where("id").is(obj.id));
+		query.fields() //
+				.include("property2") // real property name
+				.include("prop3"); // aliased property name
+
+		ObjectWith3AliasedFields result = template.findOne(query, ObjectWith3AliasedFields.class);
+
+		assertThat(result.id, is(obj.id));
+		assertThat(result.property1, is(nullValue()));
+		assertThat(result.property2, is(obj.property2));
+		assertThat(result.property3, is(obj.property3));
+	}
+
+	/**
+	 * @see DATAMONGO-702
+	 */
+	@Test
+	public void queryShouldSupportRealAndAliasedPropertyNamesForFieldExclusions() {
+
+		ObjectWith3AliasedFields obj = new ObjectWith3AliasedFields();
+		obj.id = "4711";
+		obj.property1 = "P1";
+		obj.property2 = "P2";
+		obj.property3 = "P3";
+
+		template.insert(obj);
+
+		Query query = new Query(Criteria.where("id").is(obj.id));
+		query.fields() //
+				.exclude("property2") // real property name
+				.exclude("prop3"); // aliased property name
+
+		ObjectWith3AliasedFields result = template.findOne(query, ObjectWith3AliasedFields.class);
+
+		assertThat(result.id, is(obj.id));
+		assertThat(result.property1, is(obj.property1));
+		assertThat(result.property2, is(nullValue()));
+		assertThat(result.property3, is(nullValue()));
+	}
+
+	/**
+	 * @see DATAMONGO-702
+	 */
+	@Test
+	public void findMultipleWithQueryShouldSupportRealAndAliasedPropertyNamesForFieldExclusions() {
+
+		ObjectWith3AliasedFields obj0 = new ObjectWith3AliasedFields().withId("4711").withProperty1("P10")
+				.withProperty1("P20").withProperty1("P30");
+		ObjectWith3AliasedFields obj1 = new ObjectWith3AliasedFields().withId("4712").withProperty1("P11")
+				.withProperty1("P21").withProperty1("P31");
+
+		template.insert(obj0);
+		template.insert(obj1);
+
+		Query query = new Query(Criteria.where("id").in(obj0.id, obj1.id));
+		query.fields() //
+				.exclude("property2") // real property name
+				.exclude("prop3"); // aliased property name
+
+		List<ObjectWith3AliasedFields> results = template.find(query, ObjectWith3AliasedFields.class);
+
+		assertThat(results, is(notNullValue()));
+		assertThat(results.size(), is(2));
+
+		ObjectWith3AliasedFields result0 = results.get(0);
+		assertThat(result0, is(notNullValue()));
+		assertThat(result0.id, is(obj0.id));
+		assertThat(result0.property1, is(obj0.property1));
+		assertThat(result0.property2, is(nullValue()));
+		assertThat(result0.property3, is(nullValue()));
+
+		ObjectWith3AliasedFields result1 = results.get(1);
+		assertThat(result1, is(notNullValue()));
+		assertThat(result1.id, is(obj1.id));
+		assertThat(result1.property1, is(obj1.property1));
+		assertThat(result1.property2, is(nullValue()));
+		assertThat(result1.property3, is(nullValue()));
+	}
+
+	/**
+	 * @see DATAMONGO-702
+	 */
+	@Test
+	public void queryShouldSupportNestedPropertyNamesForFieldInclusions() {
+
+		ObjectWith3AliasedFieldsAndNestedAddress obj = new ObjectWith3AliasedFieldsAndNestedAddress();
+		obj.id = "4711";
+		obj.property1 = "P1";
+		obj.property2 = "P2";
+		obj.property3 = "P3";
+		Address address = new Address();
+		String stateValue = "WA";
+		address.state = stateValue;
+		address.city = "Washington";
+		obj.address = address;
+
+		template.insert(obj);
+
+		Query query = new Query(Criteria.where("id").is(obj.id));
+		query.fields() //
+				.include("property2") // real property name
+				.include("address.state"); // aliased property name
+
+		ObjectWith3AliasedFieldsAndNestedAddress result = template.findOne(query,
+				ObjectWith3AliasedFieldsAndNestedAddress.class);
+
+		assertThat(result.id, is(obj.id));
+		assertThat(result.property1, is(nullValue()));
+		assertThat(result.property2, is(obj.property2));
+		assertThat(result.property3, is(nullValue()));
+		assertThat(result.address, is(notNullValue()));
+		assertThat(result.address.city, is(nullValue()));
+		assertThat(result.address.state, is(stateValue));
+	}
+
 	static interface Model {
 		String value();
 
@@ -1818,5 +1949,37 @@ public class MongoTemplateTests {
 
 		@Id String id;
 		Date date;
+	}
+
+	static class ObjectWith3AliasedFields {
+
+		@Id String id;
+		@Field("prop1") String property1;
+		@Field("prop2") String property2;
+		@Field("prop3") String property3;
+
+		ObjectWith3AliasedFields withId(String value) {
+			this.id = value;
+			return this;
+		}
+
+		ObjectWith3AliasedFields withProperty1(String value) {
+			this.property1 = value;
+			return this;
+		}
+
+		ObjectWith3AliasedFields withProperty2(String value) {
+			this.property2 = value;
+			return this;
+		}
+
+		ObjectWith3AliasedFields withProperty3(String value) {
+			this.property3 = value;
+			return this;
+		}
+	}
+
+	static class ObjectWith3AliasedFieldsAndNestedAddress extends ObjectWith3AliasedFields {
+		@Field("adr") Address address;
 	}
 }
