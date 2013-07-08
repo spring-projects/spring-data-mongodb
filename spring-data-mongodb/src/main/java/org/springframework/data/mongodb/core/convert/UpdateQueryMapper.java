@@ -24,11 +24,14 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
  */
 public class UpdateQueryMapper extends QueryMapper {
 
+	private final MongoConverter converter;
+
 	/**
 	 * @param converter
 	 */
 	public UpdateQueryMapper(MongoConverter converter) {
 		super(converter);
+		this.converter = converter;
 	}
 
 	/**
@@ -43,5 +46,4 @@ public class UpdateQueryMapper extends QueryMapper {
 		return entity == null ? super.delegateConvertToMongoType(source, null) : converter.convertToMongoType(source,
 				entity.getTypeInformation());
 	}
-
 }

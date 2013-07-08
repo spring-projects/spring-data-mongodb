@@ -1687,6 +1687,7 @@ public class MongoTemplateTests {
 	 */
 	@Test
 	public void updatesShouldRetainTypeInformation() {
+
 		Document doc = new Document();
 		doc.id = "4711";
 		doc.model = new ModelA().withValue("foo");
@@ -1712,7 +1713,8 @@ public class MongoTemplateTests {
 	}
 
 	public static class ModelA implements Model {
-		public String value;
+
+		private String value;
 
 		@Override
 		public String value() {
@@ -1727,6 +1729,7 @@ public class MongoTemplateTests {
 	}
 
 	public static class Document {
+
 		@Id public String id;
 		public Model model;
 	}

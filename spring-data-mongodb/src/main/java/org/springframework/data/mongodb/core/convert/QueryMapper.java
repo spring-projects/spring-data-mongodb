@@ -50,7 +50,7 @@ public class QueryMapper {
 	private static final String N_OR_PATTERN = "\\$.*or";
 
 	private final ConversionService conversionService;
-	protected final MongoConverter converter;
+	private final MongoConverter converter;
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 
 	/**
