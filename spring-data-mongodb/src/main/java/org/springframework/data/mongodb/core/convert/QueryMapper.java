@@ -204,13 +204,25 @@ public class QueryMapper {
 	private Object convertSimpleOrDBObject(Object source, MongoPersistentEntity<?> entity) {
 
 		if (source instanceof BasicDBList) {
-			return converter.convertToMongoType(source);
+			return delegateConvertToMongoType(source, entity);
 		}
 
 		if (source instanceof DBObject) {
 			return getMappedObject((DBObject) source, entity);
 		}
 
+		return delegateConvertToMongoType(source, entity);
+	}
+
+	/**
+	 * Converts the given source Object to a mongo type with the type information of the original source type omitted.
+	 * Subclasses may overwrite this method to retain the type information of the source type on the resulting mongo type.
+	 * 
+	 * @param source
+	 * @param entity
+	 * @return the converted mongo type or null if source is null
+	 */
+	protected Object delegateConvertToMongoType(Object source, MongoPersistentEntity<?> entity) {
 		return converter.convertToMongoType(source);
 	}
 
@@ -262,7 +274,7 @@ public class QueryMapper {
 			// Ignore
 		}
 
-		return converter.convertToMongoType(id);
+		return delegateConvertToMongoType(id, null);
 	}
 
 	/**

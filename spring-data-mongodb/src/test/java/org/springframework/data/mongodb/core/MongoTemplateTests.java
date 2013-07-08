@@ -153,6 +153,7 @@ public class MongoTemplateTests {
 		template.dropCollection(TypeWithDate.class);
 		template.dropCollection("collection");
 		template.dropCollection("personX");
+		template.dropCollection(Document.class);
 	}
 
 	@Test
@@ -1681,6 +1682,58 @@ public class MongoTemplateTests {
 		assertThat(result.id, is(idValue));
 	}
 
+	/**
+	 * @see DATAMONGO-392
+	 */
+	@Test
+	public void updatesShouldRetainTypeInformation() {
+
+		Document doc = new Document();
+		doc.id = "4711";
+		doc.model = new ModelA().withValue("foo");
+		template.insert(doc);
+
+		Query query = new Query(Criteria.where("id").is(doc.id));
+		String newModelValue = "bar";
+		Update update = Update.update("model", new ModelA().withValue(newModelValue));
+		template.updateFirst(query, update, Document.class);
+
+		Document result = template.findOne(query, Document.class);
+
+		assertThat(result, is(notNullValue()));
+		assertThat(result.id, is(doc.id));
+		assertThat(result.model, is(notNullValue()));
+		assertThat(result.model.value(), is(newModelValue));
+	}
+
+	static interface Model {
+		String value();
+
+		Model withValue(String value);
+	}
+
+	static class ModelA implements Model {
+
+		private String value;
+
+		@Override
+		public String value() {
+			return this.value;
+		}
+
+		@Override
+		public Model withValue(String value) {
+			this.value = value;
+			return this;
+		}
+	}
+
+	static class Document {
+
+		@Id public String id;
+		public Model model;
+	}
+
 	static class MyId {
 
 		String first;
@@ -1692,7 +1745,7 @@ public class MongoTemplateTests {
 		@Id MyId id;
 	}
 
-	public static class Sample {
+	static class Sample {
 
 		@Id String id;
 		String field;
