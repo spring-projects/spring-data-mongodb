@@ -21,9 +21,12 @@ import org.springframework.util.Assert;
  * Utility class for mongo db reference operator <code>$</code>
  * 
  * @author Sebastian Herold
+ * @author Thomas Darimont
  * @since 1.3
  */
 class ReferenceUtil {
+
+	public static final String ID_KEY = "_id";
 
 	private static final String REFERENCE_PREFIX = "$";
 
@@ -60,4 +63,46 @@ class ReferenceUtil {
 
 		return field;
 	}
+
+	/**
+	 * @return $_id
+	 */
+	public static String $id() {
+		return $(ID_KEY);
+	}
+
+	/**
+	 * <pre>
+	 *  $("a") -> $a
+	 * </pre>
+	 * 
+	 * @param fieldName
+	 * @return the field name prefixed with {@literal $}
+	 * @see #safeReference(String)
+	 */
+	public static String $(String fieldName) {
+		return safeReference(fieldName);
+	}
+
+	/**
+	 * <pre>
+	 * 	$id("a") -> $_id.a
+	 * </pre>
+	 * 
+	 * @param fieldName
+	 * @return
+	 * @see #safeNonReference(String)
+	 */
+	public static String $id(String fieldName) {
+		return $id() + "." + safeNonReference(fieldName);
+	}
+
+	/**
+	 * @param fieldName
+	 * @return
+	 */
+	public static String id(String fieldName) {
+		return ID_KEY + "." + fieldName;
+	}
+
 }

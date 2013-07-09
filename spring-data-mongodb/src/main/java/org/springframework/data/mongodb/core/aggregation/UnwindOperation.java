@@ -15,23 +15,23 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import com.mongodb.DBObject;
+import org.springframework.util.Assert;
 
 /**
- * Represents one single operation in an aggregation pipeline.
- * 
- * @author Sebastian Herold
  * @author Thomas Darimont
- * @since 1.3
  */
-public interface AggregationOperation {
+public class UnwindOperation extends AbstractAggregateOperation {
 
-	String OPERATOR_PREFIX = "$";
+	private final String fieldName;
 
-	/**
-	 * Creates a {@link DBObject} representation backing this object.
-	 * 
-	 * @return the DBObject
-	 */
-	DBObject toDbObject();
+	public UnwindOperation(String fieldName) {
+		super("unwind");
+		Assert.notNull(fieldName);
+		this.fieldName = fieldName;
+	}
+
+	@Override
+	public Object getOperationArgument() {
+		return ReferenceUtil.safeReference(fieldName);
+	}
 }

@@ -29,32 +29,81 @@ import com.mongodb.DBObject;
  * 
  * @see http://docs.mongodb.org/manual/reference/aggregation/group/#stage._S_group
  * @author Sebastian Herold
+ * @author Thomas Darimont
  * @since 1.3
  */
-public class GroupOperation implements AggregationOperation {
+public class GroupOperation extends AbstractAggregateOperation {
 
-	private static final String ID_KEY = "_id";
-
-	private final Object id;
-	private final Map<String, DBObject> fields = new HashMap<String, DBObject>();
+	final Object id;
+	final Map<String, DBObject> fields = new HashMap<String, DBObject>();
 
 	public GroupOperation(Object id) {
+		super("group");
 		this.id = id;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#getDBObject()
+	/**
+	 * Creates a <code>$group</code> operation with <code>_id</code> referencing to a field of the document. The returned
+	 * db object equals to
+	 * 
+	 * <pre>
+	 * {_id: "$field"}
+	 * </pre>
+	 * 
+	 * @param id
+	 * @param moreIdFields
 	 */
-	public DBObject getDBObject() {
+	public GroupOperation(String idField, String... moreIdFields) {
+		this(createGroupIdFrom(idField, moreIdFields));
+	}
 
-		DBObject projection = new BasicDBObject(ID_KEY, id);
+	/**
+	 * @param idField
+	 * @param moreIdFields
+	 * @return
+	 */
+	private static Object createGroupIdFrom(String idField, String[] moreIdFields) {
+
+		Assert.notNull(idField, "idField must not be null!");
+		Object result = ReferenceUtil.safeReference(idField);
+
+		if (moreIdFields != null && moreIdFields.length > 0) {
+			DBObject idReferences = new BasicDBObject(moreIdFields.length + 1);
+			idReferences.put(ReferenceUtil.safeNonReference(idField), ReferenceUtil.safeReference(idField));
+
+			for (String additionalIdField : moreIdFields) {
+				idReferences.put(ReferenceUtil.safeNonReference(additionalIdField),
+						ReferenceUtil.safeReference(additionalIdField));
+			}
+
+			result = idReferences;
+		}
+
+		return result;
+	}
+
+	public GroupOperation(Fields idFields) {
+		this((Object) idFields.getValues());
+	}
+
+	/* (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.AbstractAggregateOperation#getOperationArgument()
+	 */
+	@Override
+	public Object getOperationArgument() {
+		return createProjection();
+	}
+
+	/**
+	 * @return
+	 */
+	private DBObject createProjection() {
+		DBObject projection = new BasicDBObject(ReferenceUtil.ID_KEY, id);
 
 		for (Entry<String, DBObject> entry : fields.entrySet()) {
 			projection.put(entry.getKey(), entry.getValue());
 		}
-
-		return new BasicDBObject("$group", projection);
+		return projection;
 	}
 
 	public GroupOperation addField(String key, DBObject value) {
@@ -64,7 +113,7 @@ public class GroupOperation implements AggregationOperation {
 
 		String trimmedKey = key.trim();
 
-		if (ID_KEY.equals(trimmedKey)) {
+		if (ReferenceUtil.ID_KEY.equals(trimmedKey)) {
 			throw new IllegalArgumentException("_id field can only be set in constructor");
 		}
 
@@ -263,18 +312,21 @@ public class GroupOperation implements AggregationOperation {
 	}
 
 	/**
-	 * Creates a <code>$group</code> operation with <code>_id</code> referencing to a field of the document. The returned
-	 * db object equals to
+	 * Adds a field with the <a href="http://docs.mongodb.org/manual/reference/aggregation/addToSet/#grp._S_sum">$sum
+	 * operation</a>.
 	 * 
 	 * <pre>
-	 * {_id: "$field"}
+	 *     {$group: {
+	 *          _id: "$id_field",
+	 *          field: {$sum: "$field"}
+	 *     }}
 	 * </pre>
 	 * 
-	 * @param field
+	 * @param field reference to a field of the document
 	 * @return
 	 */
-	public static GroupOperation group(String field) {
-		return new GroupOperation(ReferenceUtil.safeReference(field));
+	public GroupOperation sum(String field) {
+		return sum(field, field);
 	}
 
 	protected GroupOperation addOperation(String operation, String name, String field) {
@@ -303,6 +355,7 @@ public class GroupOperation implements AggregationOperation {
 	 * @param idFields
 	 * @return
 	 */
+	// TODO still relevant? IdField is probably a better abstraction than Fields?!
 	public static GroupOperation group(IdField... idFields) {
 		Assert.notNull(idFields, "Combined id is null");
 

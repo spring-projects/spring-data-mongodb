@@ -53,9 +53,9 @@ import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.BeanWrapper;
 import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mongodb.MongoDbFactory;
-import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
-import org.springframework.data.mongodb.core.aggregation.AggregationPipeline;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoWriter;
@@ -119,6 +119,7 @@ import com.mongodb.util.JSONParseException;
  * @author Patryk Wasik
  * @author Tobias Trelle
  * @author Sebastian Herold
+ * @author Thomas Darimont
  */
 public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
@@ -1213,16 +1214,30 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 	}
 
-	public <T> AggregationResults<T> aggregate(String inputCollectionName, AggregationPipeline pipeline,
-			Class<T> entityClass) {
+	@Override
+	public <I, O> AggregationResults<O> aggregate(TypedAggregation<I, O> aggregation, Class<O> outputType) {
+		return aggregate(aggregation, determineCollectionName(aggregation.getInputType()), outputType);
+	}
+
+	@Override
+	public <I, O> AggregationResults<O> aggregate(TypedAggregation<I, O> aggregation, String inputCollectionName,
+			Class<O> outputType) {
+		return aggregate(inputCollectionName, aggregation, outputType);
+	}
+
+	public <I, O> AggregationResults<O> aggregate(Class<I> inputType, Aggregation<I, O> aggregation, Class<O> outputType) {
+		return aggregate(determineCollectionName(inputType), aggregation, outputType);
+	}
+
+	public <O> AggregationResults<O> aggregate(String inputCollectionName, Aggregation<? extends Object, O> aggregation,
+			Class<O> outputType) {
 
 		Assert.notNull(inputCollectionName, "Collection name is missing");
-		Assert.notNull(pipeline, "Aggregation pipeline is missing");
-		Assert.notNull(entityClass, "Entity class is missing");
+		Assert.notNull(aggregation, "Aggregation pipeline is missing");
+		Assert.notNull(outputType, "Entity class is missing");
 
 		// prepare command
-		DBObject command = new BasicDBObject("aggregate", inputCollectionName);
-		command.put("pipeline", pipeline.getOperations());
+		DBObject command = aggregation.toDbObject(inputCollectionName);
 
 		// execute command
 		CommandResult commandResult = executeCommand(command);
@@ -1231,18 +1246,13 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		// map results
 		@SuppressWarnings("unchecked")
 		Iterable<DBObject> resultSet = (Iterable<DBObject>) commandResult.get("result");
-		List<T> mappedResults = new ArrayList<T>();
-		DbObjectCallback<T> callback = new ReadDbObjectCallback<T>(mongoConverter, entityClass);
+		List<O> mappedResults = new ArrayList<O>();
+		DbObjectCallback<O> callback = new ReadDbObjectCallback<O>(mongoConverter, outputType);
 		for (DBObject dbObject : resultSet) {
 			mappedResults.add(callback.doWith(dbObject));
 		}
 
-		return new AggregationResults<T>(mappedResults, commandResult);
-	}
-
-	public <T> AggregationResults<T> aggregate(String inputCollectionName, Class<T> entityClass,
-			AggregationOperation... operations) {
-		return aggregate(inputCollectionName, new AggregationPipeline(operations), entityClass);
+		return new AggregationResults<O>(mappedResults, commandResult);
 	}
 
 	protected String replaceWithResourceIfNecessary(String function) {

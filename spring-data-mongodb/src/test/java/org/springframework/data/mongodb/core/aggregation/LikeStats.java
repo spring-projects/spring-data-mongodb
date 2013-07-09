@@ -15,23 +15,13 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import com.mongodb.DBObject;
+import org.springframework.data.mongodb.core.mapping.Field;
 
 /**
- * Represents one single operation in an aggregation pipeline.
- * 
- * @author Sebastian Herold
  * @author Thomas Darimont
- * @since 1.3
  */
-public interface AggregationOperation {
+public class LikeStats {
 
-	String OPERATOR_PREFIX = "$";
-
-	/**
-	 * Creates a {@link DBObject} representation backing this object.
-	 * 
-	 * @return the DBObject
-	 */
-	DBObject toDbObject();
+	String id;
+	@Field("number") long count;
 }

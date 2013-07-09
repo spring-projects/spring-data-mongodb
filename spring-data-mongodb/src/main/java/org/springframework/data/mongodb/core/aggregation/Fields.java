@@ -15,23 +15,17 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import com.mongodb.DBObject;
+import java.util.Map;
 
 /**
- * Represents one single operation in an aggregation pipeline.
+ * Fields is a collection of key-value pairs.
  * 
- * @author Sebastian Herold
  * @author Thomas Darimont
- * @since 1.3
  */
-public interface AggregationOperation {
+public interface Fields {
+	Map<String, Object> getValues();
 
-	String OPERATOR_PREFIX = "$";
+	Fields and(String name);
 
-	/**
-	 * Creates a {@link DBObject} representation backing this object.
-	 * 
-	 * @return the DBObject
-	 */
-	DBObject toDbObject();
+	Fields and(String name, Object value);
 }

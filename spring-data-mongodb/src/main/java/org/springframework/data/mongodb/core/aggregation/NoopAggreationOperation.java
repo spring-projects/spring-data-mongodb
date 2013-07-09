@@ -15,23 +15,14 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
+import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
 /**
- * Represents one single operation in an aggregation pipeline.
- * 
- * @author Sebastian Herold
  * @author Thomas Darimont
- * @since 1.3
  */
-public interface AggregationOperation {
-
-	String OPERATOR_PREFIX = "$";
-
-	/**
-	 * Creates a {@link DBObject} representation backing this object.
-	 * 
-	 * @return the DBObject
-	 */
-	DBObject toDbObject();
+public class NoopAggreationOperation implements AggregationOperation {
+	public DBObject toDbObject() {
+		return new BasicDBObject();
+	}
 }

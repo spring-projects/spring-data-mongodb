@@ -15,38 +15,48 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.util.Assert;
-
+import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
 /**
- * Encapsulates the {@code $match}-operation
- * 
- * @author Sebastian Herold
  * @author Thomas Darimont
- * @since 1.3
  */
-public class MatchOperation extends AbstractAggregateOperation {
-	private final DBObject criteria;
+abstract class AbstractAggregateOperation implements AggregationOperation {
+	private final String operationName;
 
 	/**
-	 * Creates a new {@link MatchOperation} for the given {@link Criteria}.
-	 * 
-	 * @param criteria must not be {@literal null}.
+	 * @param operationName
 	 */
-	public MatchOperation(Criteria criteria) {
+	public AbstractAggregateOperation(String operationName) {
+		this.operationName = operationName;
+	}
 
-		super("match");
-		Assert.notNull(criteria, "Criteria must not be null!");
-		this.criteria = criteria.getCriteriaObject();
+	/**
+	 * @return the operationName
+	 */
+	public String getOperationName() {
+		return operationName;
+	}
+
+	public String getOperationCommand() {
+		return OPERATOR_PREFIX + getOperationName();
+	}
+
+	/**
+	 * @return the argument for the operation
+	 */
+	public abstract Object getOperationArgument();
+
+	@Override
+	public DBObject toDbObject() {
+		return new BasicDBObject(getOperationCommand(), getOperationArgument());
 	}
 
 	/* (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AbstractAggregateOperation#getOperationArgument()
+	 * @see java.lang.Object#toString()
 	 */
 	@Override
-	public Object getOperationArgument() {
-		return criteria;
+	public String toString() {
+		return String.valueOf(toDbObject());
 	}
 }

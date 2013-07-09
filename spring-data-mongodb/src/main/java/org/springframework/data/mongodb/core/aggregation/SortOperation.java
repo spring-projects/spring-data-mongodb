@@ -15,31 +15,35 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.domain.Sort;
 import org.springframework.util.Assert;
 
+import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
 /**
- * Encapsulates the {@code $match}-operation
- * 
- * @author Sebastian Herold
  * @author Thomas Darimont
- * @since 1.3
  */
-public class MatchOperation extends AbstractAggregateOperation {
-	private final DBObject criteria;
+public class SortOperation extends AbstractAggregateOperation {
+
+	private Sort sort;
 
 	/**
-	 * Creates a new {@link MatchOperation} for the given {@link Criteria}.
-	 * 
-	 * @param criteria must not be {@literal null}.
+	 * @param sort
 	 */
-	public MatchOperation(Criteria criteria) {
+	public SortOperation(Sort sort) {
+		super("sort");
 
-		super("match");
-		Assert.notNull(criteria, "Criteria must not be null!");
-		this.criteria = criteria.getCriteriaObject();
+		Assert.notNull(sort);
+		this.sort = sort;
+	}
+
+	public SortOperation and(Sort sort) {
+		return new SortOperation(this.sort.and(sort));
+	}
+
+	public SortOperation and(Sort.Direction direction, String... fields) {
+		return and(new Sort(direction, fields));
 	}
 
 	/* (non-Javadoc)
@@ -47,6 +51,17 @@ public class MatchOperation extends AbstractAggregateOperation {
 	 */
 	@Override
 	public Object getOperationArgument() {
-		return criteria;
+		return createSortProperties();
+	}
+
+	/**
+	 * @return
+	 */
+	private DBObject createSortProperties() {
+		DBObject sortProperties = new BasicDBObject();
+		for (org.springframework.data.domain.Sort.Order order : sort) {
+			sortProperties.put(order.getProperty(), order.isAscending() ? 1 : -1);
+		}
+		return sortProperties;
 	}
 }

@@ -15,23 +15,23 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import com.mongodb.DBObject;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
- * Represents one single operation in an aggregation pipeline.
- * 
- * @author Sebastian Herold
  * @author Thomas Darimont
- * @since 1.3
  */
-public interface AggregationOperation {
+public class UserWithLikes {
 
-	String OPERATOR_PREFIX = "$";
+	String id;
+	Date joined;
+	Set<String> likes = new HashSet<String>();
 
-	/**
-	 * Creates a {@link DBObject} representation backing this object.
-	 * 
-	 * @return the DBObject
-	 */
-	DBObject toDbObject();
+	public UserWithLikes(String id, Date joined, String... likes) {
+		this.id = id;
+		this.joined = joined;
+		this.likes = new HashSet<String>(Arrays.asList(likes));
+	}
 }
