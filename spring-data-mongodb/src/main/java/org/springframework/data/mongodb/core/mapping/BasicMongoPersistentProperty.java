@@ -102,7 +102,6 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 	 */
 	@Override
 	public boolean isIdProperty() {
-
 		if (super.isIdProperty()) {
 			return true;
 		}
