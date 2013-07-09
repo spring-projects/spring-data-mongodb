@@ -1330,9 +1330,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		EntityReader<? super T, DBObject> readerToUse = this.mongoConverter;
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
 		DBObject mappedQuery = queryMapper.getMappedObject(query, entity);
+		DBObject mappedFields = fields == null ? null : queryMapper.getMappedObject(fields, entity);
 
-		return executeFindOneInternal(new FindOneCallback(mappedQuery, fields), new ReadDbObjectCallback<T>(readerToUse,
-				entityClass), collectionName);
+		return executeFindOneInternal(new FindOneCallback(mappedQuery, mappedFields), new ReadDbObjectCallback<T>(
+				readerToUse, entityClass), collectionName);
 	}
 
 	/**
@@ -1359,14 +1360,15 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			CursorPreparer preparer, DbObjectCallback<T> objectCallback) {
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
+		DBObject mappedFields = fields == null ? null : queryMapper.getMappedObject(fields, entity);
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug(String.format("find using query: %s fields: %s for class: %s in collection: %s",
-					serializeToJsonSafely(query), fields, entityClass, collectionName));
+					serializeToJsonSafely(query), mappedFields, entityClass, collectionName));
 		}
 
-		return executeFindMultiInternal(new FindCallback(queryMapper.getMappedObject(query, entity), fields), preparer,
-				objectCallback, collectionName);
+		return executeFindMultiInternal(new FindCallback(queryMapper.getMappedObject(query, entity), mappedFields),
+				preparer, objectCallback, collectionName);
 	}
 
 	/**
