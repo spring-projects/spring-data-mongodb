@@ -1768,10 +1768,16 @@ public class MongoTemplateTests {
 	@Test
 	public void findMultipleWithQueryShouldSupportRealAndAliasedPropertyNamesForFieldExclusions() {
 
-		ObjectWith3AliasedFields obj0 = new ObjectWith3AliasedFields().withId("4711").withProperty1("P10")
-				.withProperty1("P20").withProperty1("P30");
-		ObjectWith3AliasedFields obj1 = new ObjectWith3AliasedFields().withId("4712").withProperty1("P11")
-				.withProperty1("P21").withProperty1("P31");
+		ObjectWith3AliasedFields obj0 = new ObjectWith3AliasedFields();
+		obj0.id = "4711";
+		obj0.property1 = "P10";
+		obj0.property2 = "P20";
+		obj0.property3 = "P30";
+		ObjectWith3AliasedFields obj1 = new ObjectWith3AliasedFields();
+		obj1.id = "4712";
+		obj1.property1 = "P11";
+		obj1.property2 = "P21";
+		obj1.property3 = "P31";
 
 		template.insert(obj0);
 		template.insert(obj1);
@@ -1957,26 +1963,6 @@ public class MongoTemplateTests {
 		@Field("prop1") String property1;
 		@Field("prop2") String property2;
 		@Field("prop3") String property3;
-
-		ObjectWith3AliasedFields withId(String value) {
-			this.id = value;
-			return this;
-		}
-
-		ObjectWith3AliasedFields withProperty1(String value) {
-			this.property1 = value;
-			return this;
-		}
-
-		ObjectWith3AliasedFields withProperty2(String value) {
-			this.property2 = value;
-			return this;
-		}
-
-		ObjectWith3AliasedFields withProperty3(String value) {
-			this.property3 = value;
-			return this;
-		}
 	}
 
 	static class ObjectWith3AliasedFieldsAndNestedAddress extends ObjectWith3AliasedFields {
