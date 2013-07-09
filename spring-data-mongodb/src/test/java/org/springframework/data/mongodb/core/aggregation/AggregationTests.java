@@ -18,30 +18,41 @@ package org.springframework.data.mongodb.core.aggregation;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
+import java.io.BufferedInputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Scanner;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.dao.DataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.mongodb.core.DbCallback;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.mongodb.BasicDBObject;
+import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
+import com.mongodb.MongoException;
+import com.mongodb.util.JSON;
 
 /**
  * Tests for {@link MongoTemplate#aggregate(String, AggregationPipeline, Class)}.
  * 
  * @see DATAMONGO-586
  * @author Tobias Trelle
+ * @author Thomas Darimont
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:infrastructure.xml")
@@ -49,17 +60,48 @@ public class AggregationTests {
 
 	private static final String INPUT_COLLECTION = "aggregation_test_collection";
 
-	@Autowired
-	MongoTemplate mongoTemplate;
+	@Autowired MongoTemplate mongoTemplate;
 
 	@Before
 	public void setUp() {
 		cleanDb();
+		initSampleDataIfNecessary();
 	}
 
 	@After
 	public void cleanUp() {
 		cleanDb();
+	}
+
+	private void cleanDb() {
+		mongoTemplate.dropCollection(INPUT_COLLECTION);
+	}
+
+	private void initSampleDataIfNecessary() {
+
+		if (!mongoTemplate.collectionExists(ZipInfo.class)) {
+			mongoTemplate.dropCollection(ZipInfo.class);
+			mongoTemplate.execute(new DbCallback<Void>() {
+				@Override
+				public Void doInDB(DB db) throws MongoException, DataAccessException {
+
+					DBCollection zipInfoCollection = db.createCollection(ZipInfo.class.getSimpleName(), null);
+					Scanner scanner = null;
+					try {
+						scanner = new Scanner(new BufferedInputStream(new ClassPathResource("zips.json").getInputStream()));
+						while (scanner.hasNextLine()) {
+							String zipInfoRecord = scanner.nextLine();
+							zipInfoCollection.save((DBObject) JSON.parse(zipInfoRecord));
+						}
+					} catch (Exception e) {
+						// ignore
+						scanner.close();
+					}
+
+					return null;
+				}
+			});
+		}
 	}
 
 	@Test(expected = IllegalArgumentException.class)
@@ -163,8 +205,57 @@ public class AggregationTests {
 		assertTagCount(null, 0, tagCount.get(1));
 	}
 
-	protected void cleanDb() {
-		mongoTemplate.dropCollection(INPUT_COLLECTION);
+	@Test
+	public void complexAggregationFrameworkUsageLargestAndSmallestCitiesByState() {
+		/*
+		 //complex mongodb aggregation framework example from http://docs.mongodb.org/manual/tutorial/aggregation-examples/#largest-and-smallest-cities-by-state
+		db.zipcodes.aggregate( 
+		 { 
+			$group:	{ 
+				_id: { state: "$state", city: "$city"},
+		  	pop: { $sum: "$pop" } 
+		   } 
+		 },
+		 { 
+		 	$sort: { pop: 1 } 
+		 },
+		{ 
+			$group: { 
+				_id: "$_id.state",
+		    biggestCity:  { $last: "$_id.city" },
+		    biggestPop:   { $last: "$pop" },
+		    smallestCity: { $first: "$_id.city" },
+		    smallestPop:  { $first: "$pop" } 
+		   } 
+		 },
+			// the following $project is optional, and
+			// modifies the output format.
+		 { 
+			 $project: {
+				 _id: 0,
+		  	 state: "$_id",
+		  	 biggestCity:  { name: "$biggestCity",  pop: "$biggestPop" },
+		  	 smallestCity: { name: "$smallestCity", pop: "$smallestPop" } 
+		  	} 
+		  } 
+		)
+		  */
+		AggregationPipeline pipeline = new AggregationPipeline()
+				. //
+				group("{ \"_id\": { \"state\": \"$state\", \"city\": \"$city\"}, \"pop\": { \"$sum\": \"$pop\"}}")
+				.//
+				sort("{ \"pop\": 1}")
+				. //
+				group(
+						"{\"_id\":\"$_id.state\", \"biggestCity\": { \"$last\": \"$_id.city\" }, \"biggestPop\": { $last: \"$pop\" }, \"smallestCity\": { $first: \"$_id.city\" }, \"smallestPop\": { \"$first\": \"$pop\" }}")
+				.//
+				project(
+						"{ \"_id\": 0, \"state\": \"$_id\", \"biggestCity\":{ \"name\": \"$biggestCity\", \"pop\": \"$biggestPop\"}, \"smallestCity\":{ \"name\": \"$smallestCity\", \"pop\": \"$smallestPop\"}}");
+
+		AggregationResults<ZipInfoStats> result = mongoTemplate.aggregate(ZipInfo.class.getSimpleName(), pipeline,
+				ZipInfoStats.class);
+		assertThat(result, is(notNullValue()));
+		assertThat(result.getAggregationResult(), is(notNullValue()));
 	}
 
 	private void createDocuments() {
@@ -193,5 +284,48 @@ public class AggregationTests {
 
 		assertThat(tagCount.getTag(), is(tag));
 		assertThat(tagCount.getN(), is(n));
+	}
+
+	/**
+	 * Data model from mongodb reference data set
+	 * 
+	 * @see http://docs.mongodb.org/manual/tutorial/aggregation-examples/
+	 * @see http://media.mongodb.org/zips.json
+	 */
+	static class ZipInfo {
+
+		String id;
+		String city;
+		String state;
+		@Field("pop") int population;
+		@Field("loc") double[] location;
+
+		public String toString() {
+			return "ZipInfo [id=" + id + ", city=" + city + ", state=" + state + ", population=" + population + ", location="
+					+ Arrays.toString(location) + "]";
+		}
+	}
+
+	static class ZipInfoStats {
+
+		String id;
+		String state;
+		City biggestCity;
+		City smallestCity;
+
+		public String toString() {
+			return "ZipInfoStats [id=" + id + ", state=" + state + ", biggestCity=" + biggestCity + ", smallestCity="
+					+ smallestCity + "]";
+		}
+	}
+
+	static class City {
+
+		String name;
+		@Field("pop") int population;
+
+		public String toString() {
+			return "City [name=" + name + ", population=" + population + "]";
+		}
 	}
 }
