@@ -15,19 +15,20 @@
  */
 package org.springframework.data.mongodb.monitor;
 
-import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-import com.mongodb.Mongo;
 import org.springframework.jmx.export.annotation.ManagedMetric;
 import org.springframework.jmx.export.annotation.ManagedOperation;
 import org.springframework.jmx.export.annotation.ManagedResource;
 import org.springframework.jmx.support.MetricType;
 
+import com.mongodb.Mongo;
+
 /**
  * Expose basic server information via JMX
  * 
  * @author Mark Pollack
+ * @author Thomas Darimont
  */
 @ManagedResource(description = "Server Information")
 public class ServerInfo extends AbstractMonitor {
@@ -36,9 +37,20 @@ public class ServerInfo extends AbstractMonitor {
 		this.mongo = mongo;
 	}
 
+	/**
+	 * Returns the hostname of the used server reported by mongo.
+	 * 
+	 * @return the reported hostname can also be an IP address.
+	 * @throws UnknownHostException
+	 */
 	@ManagedOperation(description = "Server host name")
 	public String getHostName() throws UnknownHostException {
-		return InetAddress.getLocalHost().getHostName();
+
+		/* 
+		 * UnknownHostException is not necessary anymore, but clients could have
+		 * called this method in a try..catch(UnknownHostException) already
+		 */
+		return getServerStatus().getServerUsed().getHost();
 	}
 
 	@ManagedMetric(displayName = "Uptime Estimate")

@@ -15,34 +15,57 @@
  */
 package org.springframework.data.mongodb.monitor;
 
-import com.mongodb.Mongo;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
+
+import java.net.UnknownHostException;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.mongodb.monitor.OperationCounters;
-import org.springframework.data.mongodb.monitor.ServerInfo;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
+import com.mongodb.Mongo;
+
 /**
  * This test class assumes that you are already running the MongoDB server.
  * 
  * @author Mark Pollack
+ * @author Thomas Darimont
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration
+@ContextConfiguration("classpath:infrastructure.xml")
 public class MongoMonitorIntegrationTests {
 
-	@Autowired
-	Mongo mongo;
+	@Autowired Mongo mongo;
 
 	@Test
 	public void serverInfo() {
 		ServerInfo serverInfo = new ServerInfo(mongo);
 		serverInfo.getVersion();
 		Assert.isTrue(StringUtils.hasText("1."));
+	}
+
+	/**
+	 * @see DATAMONGO-685
+	 */
+	@Test
+	public void getHostNameShouldReturnServerNameReportedByMongo() {
+
+		ServerInfo serverInfo = new ServerInfo(mongo);
+
+		String hostName = null;
+		try {
+			hostName = serverInfo.getHostName();
+		} catch (UnknownHostException e) {
+			fail(e.getMessage());
+		}
+
+		assertThat(hostName, is(notNullValue()));
+		assertThat(hostName, is("127.0.0.1"));
 	}
 
 	@Test
