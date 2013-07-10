@@ -19,8 +19,13 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
 import org.junit.Test;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
+import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.expression.spel.support.StandardEvaluationContext;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import com.mongodb.Mongo;
 
@@ -61,6 +66,17 @@ public class AbstractMongoConfigurationUnitTests {
 
 		assertScanningDisabled("");
 		assertScanningDisabled(" ");
+	}
+
+	@Test
+	public void lifecycleCallbacksAreInvokedInAppropriateOrder() {
+
+		AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(SampleMongoConfiguration.class);
+		MongoMappingContext mappingContext = context.getBean(MongoMappingContext.class);
+		BasicMongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(Entity.class);
+		StandardEvaluationContext spElContext = (StandardEvaluationContext) ReflectionTestUtils.getField(entity, "context");
+
+		assertThat(spElContext.getBeanResolver(), is(notNullValue()));
 	}
 
 	private static void assertScanningDisabled(final String value) throws ClassNotFoundException {
