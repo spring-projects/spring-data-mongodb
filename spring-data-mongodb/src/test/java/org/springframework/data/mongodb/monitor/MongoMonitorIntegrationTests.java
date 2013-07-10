@@ -50,10 +50,11 @@ public class MongoMonitorIntegrationTests {
 	}
 
 	/**
+	 * @throws UnknownHostException
 	 * @see DATAMONGO-685
 	 */
 	@Test
-	public void getHostNameShouldReturnServerNameReportedByMongo() {
+	public void getHostNameShouldReturnServerNameReportedByMongo() throws UnknownHostException {
 
 		ServerInfo serverInfo = new ServerInfo(mongo);
 
@@ -61,7 +62,7 @@ public class MongoMonitorIntegrationTests {
 		try {
 			hostName = serverInfo.getHostName();
 		} catch (UnknownHostException e) {
-			fail(e.getMessage());
+			throw e;
 		}
 
 		assertThat(hostName, is(notNullValue()));
