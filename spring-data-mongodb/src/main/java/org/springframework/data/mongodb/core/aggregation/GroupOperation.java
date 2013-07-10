@@ -42,6 +42,10 @@ public class GroupOperation implements AggregationOperation {
 		this.id = id;
 	}
 
+	public GroupOperation(Projection idProtection) {
+		this.id = idProtection.toDBObject();
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#getDBObject()
@@ -260,6 +264,24 @@ public class GroupOperation implements AggregationOperation {
 	 */
 	public GroupOperation sum(String name, String field) {
 		return addOperation("$sum", name, field);
+	}
+
+	/**
+	 * Adds a field with the <a href="http://docs.mongodb.org/manual/reference/aggregation/addToSet/#grp._S_sum">$sum
+	 * operation</a>.
+	 * 
+	 * <pre>
+	 *     {$group: {
+	 *          _id: "$id_field",
+	 *          field: {$sum: "$field"}
+	 *     }}
+	 * </pre>
+	 * 
+	 * @param field reference to a field of the document
+	 * @return
+	 */
+	public GroupOperation sum(String field) {
+		return sum(field, field);
 	}
 
 	/**

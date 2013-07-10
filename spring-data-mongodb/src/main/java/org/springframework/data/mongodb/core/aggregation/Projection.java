@@ -39,7 +39,7 @@ import com.mongodb.DBObject;
  */
 public class Projection {
 
-    /** Stack of key names. Size is 0 or 1. */
+	/** Stack of key names. Size is 0 or 1. */
 	private final Stack<String> reference = new Stack<String>();
 	private final DBObject document = new BasicDBObject();
 
@@ -48,8 +48,7 @@ public class Projection {
 	/**
 	 * Create an empty projection.
 	 */
-	public Projection() {
-	}
+	public Projection() {}
 
 	/**
 	 * This convenience constructor excludes the field {@code _id} and includes the given fields.
@@ -111,6 +110,23 @@ public class Projection {
 		return this;
 	}
 
+	/**
+	 * Sets the key for a computed field.
+	 * 
+	 * @param key must not be {@literal null} or empty.
+	 */
+	public final Projection asSelf() {
+
+		try {
+			String selfRef = reference.pop();
+			document.put(selfRef, rightHandSide(ReferenceUtil.safeReference(selfRef)));
+		} catch (EmptyStackException e) {
+			throw new InvalidDataAccessApiUsageException("Invalid use of as()", e);
+		}
+
+		return this;
+	}
+
 	public final Projection plus(Number n) {
 		return arithmeticOperation("add", n);
 	}
@@ -142,7 +158,7 @@ public class Projection {
 		}
 	}
 
-    private Object rightHandSide(Object defaultValue) {
+	private Object rightHandSide(Object defaultValue) {
 		Object value = rightHandExpression != null ? rightHandExpression : defaultValue;
 		rightHandExpression = null;
 		return value;
