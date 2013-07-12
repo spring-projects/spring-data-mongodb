@@ -27,7 +27,7 @@ import com.mongodb.WriteConcern;
  * 
  * @author Oliver Gierke
  */
-public class StringToWriteConcernConverterUnitTest {
+public class StringToWriteConcernConverterUnitTests {
 
 	StringToWriteConcernConverter converter = new StringToWriteConcernConverter();
 
