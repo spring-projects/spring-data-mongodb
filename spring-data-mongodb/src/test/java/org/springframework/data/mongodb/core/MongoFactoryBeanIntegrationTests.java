@@ -35,7 +35,7 @@ import com.mongodb.WriteConcern;
  * @author Oliver Gierke
  * @author Thomas Darimont
  */
-public class MongoFactoryBeanIntegrationTest {
+public class MongoFactoryBeanIntegrationTests {
 
 	/**
 	 * @see DATAMONGO-408

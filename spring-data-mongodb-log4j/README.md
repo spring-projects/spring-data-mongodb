@@ -32,7 +32,7 @@ An example log entry might look like:
     {
       "_id" : ObjectId("4d89341a8ef397e06940d5cd"),
       "applicationId" : "my.application",
-      "name" : "org.springframework.data.mongodb.log4j.AppenderTest",
+      "name" : "org.springframework.data.mongodb.log4j.MongoLog4jAppenderIntegrationTests",
       "level" : "DEBUG",
       "timestamp" : ISODate("2011-03-23T16:53:46.778Z"),
       "properties" : {
