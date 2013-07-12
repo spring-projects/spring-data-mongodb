@@ -15,20 +15,53 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
+import org.springframework.data.domain.Sort;
+import org.springframework.util.Assert;
+
+import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
 /**
  * @author Thomas Darimont
  */
-public class SortOperation implements AggregationOperation {
+public class SortOperation extends AbstractAggregateOperation {
 
-	/* (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#getDBObject()
+	private Sort sort;
+
+	/**
+	 * @param sort
 	 */
-	@Override
-	public DBObject getDBObject() {
-		// TODO Auto-generated method stub
-		return null;
+	public SortOperation(Sort sort) {
+		super("sort");
+
+		Assert.notNull(sort);
+		this.sort = sort;
 	}
 
+	public SortOperation and(Sort sort) {
+		return new SortOperation(this.sort.and(sort));
+	}
+
+	public SortOperation and(Sort.Direction direction, String... fields) {
+		return and(new Sort(direction, fields));
+	}
+
+	/* (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.AbstractAggregateOperation#getOperationArgument()
+	 */
+	@Override
+	public Object getOperationArgument() {
+		return createSortProperties();
+	}
+
+	/**
+	 * @return
+	 */
+	private DBObject createSortProperties() {
+		DBObject sortProperties = new BasicDBObject();
+		for (org.springframework.data.domain.Sort.Order order : sort) {
+			sortProperties.put(order.getProperty(), order.isAscending() ? 1 : -1);
+		}
+		return sortProperties;
+	}
 }

@@ -13,16 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.core.aggregation;
-
 /**
- * Represents one single operation in an aggregation pipeline.
- * 
- * @author Sebastian Herold
  * @author Thomas Darimont
- * @since 1.3
  */
-public interface AggregationOperation extends HasToDbObject {
-
-	String OPERATOR_PREFIX = "$";
-}
+package org.springframework.data.mongodb.core.aggregation;

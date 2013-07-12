@@ -17,49 +17,40 @@ package org.springframework.data.mongodb.core.aggregation;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.DSL.*;
 
 import java.util.List;
 
-import org.junit.Before;
 import org.junit.Test;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 
 import com.mongodb.DBObject;
 
 /**
- * Tests of {@link Projection}.
+ * Tests of {@link ProjectionOperation}.
  * 
  * @see DATAMONGO-586
  * @author Tobias Trelle
  */
 public class ProjectionTests {
 
-	Projection projection;
-
-	@Before
-	public void setUp() {
-		projection = new Projection();
-	}
-
 	@Test
 	public void emptyProjection() {
 
-		DBObject raw = projection.toDBObject();
+		DBObject raw = safeExtractDbObjectFromProjection(project());
 		assertThat(raw, is(notNullValue()));
 		assertThat(raw.toMap().isEmpty(), is(true));
 	}
 
 	@Test(expected = IllegalArgumentException.class)
 	public void shouldDetectNullIncludesInConstructor() {
-		new Projection((String[]) null);
+		new ProjectionOperation((String[]) null);
 	}
 
 	@Test
 	public void includesWithConstructor() {
 
-		projection = new Projection("a", "b");
-
-		DBObject raw = projection.toDBObject();
+		DBObject raw = safeExtractDbObjectFromProjection(project("a", "b"));
 		assertThat(raw, is(notNullValue()));
 		assertThat(raw.toMap().size(), is(3));
 		assertThat((Integer) raw.get("_id"), is(0));
@@ -70,47 +61,39 @@ public class ProjectionTests {
 	@Test
 	public void include() {
 
-		projection.include("a");
-
-		DBObject raw = projection.toDBObject();
+		DBObject raw = safeExtractDbObjectFromProjection(project().include("a"));
 		assertSingleDBObject("a", 1, raw);
 	}
 
 	@Test
 	public void exclude() {
 
-		projection.exclude("a");
-
-		DBObject raw = projection.toDBObject();
+		DBObject raw = safeExtractDbObjectFromProjection(project().exclude("a"));
 		assertSingleDBObject("a", 0, raw);
 	}
 
 	@Test
 	public void includeAlias() {
 
-		projection.include("a").as("b");
-
-		DBObject raw = projection.toDBObject();
+		DBObject raw = safeExtractDbObjectFromProjection(project().include("a").as("b"));
 		assertSingleDBObject("b", "$a", raw);
 	}
 
 	@Test(expected = InvalidDataAccessApiUsageException.class)
 	public void shouldDetectAliasWithoutInclude() {
-		projection.as("b");
+		project().as("b");
 	}
 
 	@Test(expected = InvalidDataAccessApiUsageException.class)
 	public void shouldDetectDuplicateAlias() {
-		projection.include("a").as("b").as("c");
+		project().include("a").as("b").as("c");
 	}
 
 	@Test
 	@SuppressWarnings("unchecked")
 	public void plus() {
 
-		projection.include("a").plus(10);
-
-		DBObject raw = projection.toDBObject();
+		DBObject raw = safeExtractDbObjectFromProjection(project().include("a").plus(10));
 		assertNotNullDBObject(raw);
 
 		DBObject addition = (DBObject) raw.get("a");
@@ -127,9 +110,7 @@ public class ProjectionTests {
 	@SuppressWarnings("unchecked")
 	public void plusWithAlias() {
 
-		projection.include("a").plus(10).as("b");
-
-		DBObject raw = projection.toDBObject();
+		DBObject raw = safeExtractDbObjectFromProjection(project().include("a").plus(10).as("b"));
 		assertNotNullDBObject(raw);
 
 		DBObject addition = (DBObject) raw.get("b");
@@ -140,6 +121,29 @@ public class ProjectionTests {
 		assertThat(summands.size(), is(2));
 		assertThat((String) summands.get(0), is("$a"));
 		assertThat((Integer) summands.get(1), is(10));
+	}
+
+	@Test
+	public void projectionWithFields() {
+		ProjectionOperation projectionOperation = project(ZipInfoStats.class) //
+				.field("_id", 0) //
+				.field("state", $id()) // $id() -> $_id
+				.field("biggestCity", fields().and("name", $("biggestCity")).and("population", $("biggestPop"))) //
+				.field("smallestCity", fields().and("name", $("smallestCity")).and("population", $("smallestPop")));
+
+		assertThat(projectionOperation, is(notNullValue()));
+	}
+
+	private static DBObject safeExtractDbObjectFromProjection(ProjectionOperation projectionOperation) {
+
+		assertThat(projectionOperation, is(notNullValue()));
+		DBObject dbObject = projectionOperation.toDbObject();
+		assertNotNullDBObject(dbObject);
+		Object projection = dbObject.get("$project");
+		assertThat("Expected non null value for key $project ", projection, is(notNullValue()));
+		assertTrue("projection contents should be a " + DBObject.class.getSimpleName(), projection instanceof DBObject);
+
+		return DBObject.class.cast(projection);
 	}
 
 	private static void assertSingleDBObject(String key, Object value, DBObject doc) {

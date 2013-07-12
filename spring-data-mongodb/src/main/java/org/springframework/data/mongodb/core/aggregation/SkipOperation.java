@@ -16,13 +16,25 @@
 package org.springframework.data.mongodb.core.aggregation;
 
 /**
- * Represents one single operation in an aggregation pipeline.
- * 
- * @author Sebastian Herold
  * @author Thomas Darimont
- * @since 1.3
  */
-public interface AggregationOperation extends HasToDbObject {
+public class SkipOperation extends AbstractAggregateOperation {
 
-	String OPERATOR_PREFIX = "$";
+	private final long skipCount;
+
+	/**
+	 * @param skipCount Number of documents to skip.
+	 */
+	public SkipOperation(long skipCount) {
+		super("skip");
+		this.skipCount = skipCount;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.AbstractAggregateOperation#getOperationArgument()
+	 */
+	@Override
+	public Object getOperationArgument() {
+		return skipCount;
+	}
 }

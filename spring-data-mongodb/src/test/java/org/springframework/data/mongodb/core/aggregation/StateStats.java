@@ -15,14 +15,14 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-/**
- * Represents one single operation in an aggregation pipeline.
- * 
- * @author Sebastian Herold
- * @author Thomas Darimont
- * @since 1.3
- */
-public interface AggregationOperation extends HasToDbObject {
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Field;
 
-	String OPERATOR_PREFIX = "$";
+/**
+ * @author Thomas Darimont
+ */
+class StateStats {
+	@Id String id;
+	String state;
+	@Field("totalPop") int totalPopulation;
 }

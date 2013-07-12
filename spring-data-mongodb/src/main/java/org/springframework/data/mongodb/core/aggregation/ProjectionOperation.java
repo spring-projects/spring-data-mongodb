@@ -29,33 +29,37 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
 /**
- * Projection of field to be used in an {@link AggregationPipeline}.
+ * Projection of field to be used in an {@link Aggregation}.
  * <p/>
  * A projection is similar to a {@link Field} inclusion/exclusion but more powerful. It can generate new fields, change
  * values of given field etc.
  * 
  * @author Tobias Trelle
+ * @author Thomas Darimont
  * @since 1.3
  */
-public class Projection {
+public class ProjectionOperation extends AbstractAggregateOperation {
 
 	/** Stack of key names. Size is 0 or 1. */
 	private final Stack<String> reference = new Stack<String>();
-	private final DBObject document = new BasicDBObject();
+	private final DBObject projection = new BasicDBObject();
 
 	private DBObject rightHandExpression;
 
 	/**
 	 * Create an empty projection.
 	 */
-	public Projection() {}
+	public ProjectionOperation() {
+		super("project");
+	}
 
 	/**
 	 * This convenience constructor excludes the field {@code _id} and includes the given fields.
 	 * 
 	 * @param includes Keys of field to include, must not be {@literal null} or empty.
 	 */
-	public Projection(String... includes) {
+	public ProjectionOperation(String... includes) {
+		this();
 
 		Assert.notEmpty(includes);
 		exclude("_id");
@@ -66,14 +70,23 @@ public class Projection {
 	}
 
 	/**
+	 * Create an empty projection.
+	 * 
+	 * @param targetClass
+	 */
+	public ProjectionOperation(Class<?> targetClass) {
+		this();
+	}
+
+	/**
 	 * Excludes a given field.
 	 * 
 	 * @param key The key of the field.
 	 */
-	public final Projection exclude(String key) {
+	public final ProjectionOperation exclude(String key) {
 
 		Assert.hasText(key, "Missing key");
-		document.put(key, 0);
+		projection.put(key, 0);
 		return this;
 	}
 
@@ -82,7 +95,7 @@ public class Projection {
 	 * 
 	 * @param key The key of the field, must not be {@literal null} or empty.
 	 */
-	public final Projection include(String key) {
+	public final ProjectionOperation include(String key) {
 
 		Assert.hasText(key, "Missing key");
 
@@ -97,12 +110,12 @@ public class Projection {
 	 * 
 	 * @param key must not be {@literal null} or empty.
 	 */
-	public final Projection as(String key) {
+	public final ProjectionOperation as(String key) {
 
 		Assert.hasText(key, "Missing key");
 
 		try {
-			document.put(key, rightHandSide(ReferenceUtil.safeReference(reference.pop())));
+			projection.put(key, rightHandSide(ReferenceUtil.safeReference(reference.pop())));
 		} catch (EmptyStackException e) {
 			throw new InvalidDataAccessApiUsageException("Invalid use of as()", e);
 		}
@@ -115,11 +128,11 @@ public class Projection {
 	 * 
 	 * @param key must not be {@literal null} or empty.
 	 */
-	public final Projection asSelf() {
+	public final ProjectionOperation asSelf() {
 
 		try {
 			String selfRef = reference.pop();
-			document.put(selfRef, rightHandSide(ReferenceUtil.safeReference(selfRef)));
+			projection.put(selfRef, rightHandSide(ReferenceUtil.safeReference(selfRef)));
 		} catch (EmptyStackException e) {
 			throw new InvalidDataAccessApiUsageException("Invalid use of as()", e);
 		}
@@ -127,15 +140,15 @@ public class Projection {
 		return this;
 	}
 
-	public final Projection plus(Number n) {
+	public final ProjectionOperation plus(Number n) {
 		return arithmeticOperation("add", n);
 	}
 
-	public final Projection minus(Number n) {
+	public final ProjectionOperation minus(Number n) {
 		return arithmeticOperation("substract", n);
 	}
 
-	private Projection arithmeticOperation(String op, Number n) {
+	private ProjectionOperation arithmeticOperation(String op, Number n) {
 
 		Assert.notNull(n, "Missing number");
 
@@ -154,7 +167,7 @@ public class Projection {
 	private void safePop() {
 
 		if (!reference.empty()) {
-			document.put(reference.pop(), rightHandSide(1));
+			projection.put(reference.pop(), rightHandSide(1));
 		}
 	}
 
@@ -164,8 +177,36 @@ public class Projection {
 		return value;
 	}
 
-	DBObject toDBObject() {
+	/**
+	 * @param string
+	 * @param projection
+	 * @return
+	 */
+	public ProjectionOperation addField(String key, Object value) {
+
+		Assert.notNull(key, "Missing Key");
+		Assert.notNull(value);
+		this.projection.put(key, value instanceof Fields ? ((Fields) value).getValues() : value);
+		return this;
+	}
+
+	/**
+	 * @param name
+	 * @param value
+	 * @return
+	 */
+	public ProjectionOperation field(String name, Object value) {
+		addField(name, value);
+		return this;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.AbstractAggregateOperation#getOperationArgument()
+	 */
+	@Override
+	public Object getOperationArgument() {
+
 		safePop();
-		return document;
+		return projection;
 	}
 }

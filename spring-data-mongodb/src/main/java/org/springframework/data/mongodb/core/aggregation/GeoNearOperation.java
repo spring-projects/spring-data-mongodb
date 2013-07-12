@@ -15,14 +15,28 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-/**
- * Represents one single operation in an aggregation pipeline.
- * 
- * @author Sebastian Herold
- * @author Thomas Darimont
- * @since 1.3
- */
-public interface AggregationOperation extends HasToDbObject {
+import org.springframework.data.mongodb.core.query.NearQuery;
+import org.springframework.util.Assert;
 
-	String OPERATOR_PREFIX = "$";
+/**
+ * @author Thomas Darimont
+ */
+public class GeoNearOperation extends AbstractAggregateOperation {
+
+	private final NearQuery nearQuery;
+
+	public GeoNearOperation(NearQuery nearQuery) {
+		super("geoNear");
+		Assert.notNull(nearQuery);
+		this.nearQuery = nearQuery;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.AbstractAggregateOperation#getOperationArgument()
+	 */
+	@Override
+	public Object getOperationArgument() {
+		return nearQuery.toDBObject();
+	}
+
 }

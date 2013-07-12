@@ -16,13 +16,25 @@
 package org.springframework.data.mongodb.core.aggregation;
 
 /**
- * Represents one single operation in an aggregation pipeline.
- * 
- * @author Sebastian Herold
  * @author Thomas Darimont
- * @since 1.3
  */
-public interface AggregationOperation extends HasToDbObject {
+class LimitOperation extends AbstractAggregateOperation {
 
-	String OPERATOR_PREFIX = "$";
+	private final long maxElements;
+
+	/**
+	 * @param maxElements Number of documents to consider.
+	 */
+	public LimitOperation(long maxElements) {
+		super("limit");
+		this.maxElements = maxElements;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.AbstractAggregateOperation#getOperationArgument()
+	 */
+	@Override
+	public Object getOperationArgument() {
+		return maxElements;
+	}
 }

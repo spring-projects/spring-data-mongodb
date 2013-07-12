@@ -15,14 +15,15 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-/**
- * Represents one single operation in an aggregation pipeline.
- * 
- * @author Sebastian Herold
- * @author Thomas Darimont
- * @since 1.3
- */
-public interface AggregationOperation extends HasToDbObject {
+import java.util.Map;
 
-	String OPERATOR_PREFIX = "$";
+/**
+ * @author Thomas Darimont
+ */
+public interface Fields {
+	Map<String, Object> getValues();
+
+	Fields and(String name);
+
+	Fields and(String name, Object value);
 }

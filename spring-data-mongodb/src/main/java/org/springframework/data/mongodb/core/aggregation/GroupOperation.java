@@ -29,36 +29,41 @@ import com.mongodb.DBObject;
  * 
  * @see http://docs.mongodb.org/manual/reference/aggregation/group/#stage._S_group
  * @author Sebastian Herold
+ * @author Thomas Darimont
  * @since 1.3
  */
-public class GroupOperation implements AggregationOperation {
+public class GroupOperation extends AbstractAggregateOperation {
 
-	private static final String ID_KEY = "_id";
-
-	private final Object id;
-	private final Map<String, DBObject> fields = new HashMap<String, DBObject>();
+	final Object id;
+	final Map<String, DBObject> fields = new HashMap<String, DBObject>();
 
 	public GroupOperation(Object id) {
+		super("group");
 		this.id = id;
 	}
 
-	public GroupOperation(Projection idProtection) {
-		this.id = idProtection.toDBObject();
+	public GroupOperation(Fields idFields) {
+		this((Object) idFields.getValues());
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#getDBObject()
+	/* (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.AbstractAggregateOperation#getOperationArgument()
 	 */
-	public DBObject getDBObject() {
+	@Override
+	public Object getOperationArgument() {
+		return createProjection();
+	}
 
-		DBObject projection = new BasicDBObject(ID_KEY, id);
+	/**
+	 * @return
+	 */
+	private DBObject createProjection() {
+		DBObject projection = new BasicDBObject(ReferenceUtil.ID_KEY, id);
 
 		for (Entry<String, DBObject> entry : fields.entrySet()) {
 			projection.put(entry.getKey(), entry.getValue());
 		}
-
-		return new BasicDBObject("$group", projection);
+		return projection;
 	}
 
 	public GroupOperation addField(String key, DBObject value) {
@@ -68,7 +73,7 @@ public class GroupOperation implements AggregationOperation {
 
 		String trimmedKey = key.trim();
 
-		if (ID_KEY.equals(trimmedKey)) {
+		if (ReferenceUtil.ID_KEY.equals(trimmedKey)) {
 			throw new IllegalArgumentException("_id field can only be set in constructor");
 		}
 
@@ -325,6 +330,7 @@ public class GroupOperation implements AggregationOperation {
 	 * @param idFields
 	 * @return
 	 */
+	// TODO still relevant? IdField is probably a better abstraction than Fields?!
 	public static GroupOperation group(IdField... idFields) {
 		Assert.notNull(idFields, "Combined id is null");
 
