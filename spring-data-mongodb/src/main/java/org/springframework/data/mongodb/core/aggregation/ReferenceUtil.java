@@ -64,16 +64,41 @@ class ReferenceUtil {
 		return field;
 	}
 
+	/**
+	 * @return $_id
+	 */
 	public static String $id() {
 		return $(ID_KEY);
 	}
 
-	public static String $(String name) {
-		return safeReference(name);
+	/**
+	 * @see #safeReference(String) <pre>
+	 *  $("a") -> $a
+	 * </pre>
+	 * @param fieldName
+	 * @return the field name prefixed with {@literal $}
+	 */
+	public static String $(String fieldName) {
+		return safeReference(fieldName);
 	}
 
-	public static String $id(String name) {
-		return $id() + "." + safeNonReference(name);
+	/**
+	 * @see #safeNonReference(String) <pre>
+	 * 	$id("a") -> $_id.a
+	 * </pre>
+	 * @param fieldName
+	 * @return
+	 */
+	public static String $id(String fieldName) {
+		return $id() + "." + safeNonReference(fieldName);
+	}
+
+	/**
+	 * @param fieldName
+	 * @return
+	 */
+	public static String id(String fieldName) {
+		return ID_KEY + "." + fieldName;
 	}
 
 }

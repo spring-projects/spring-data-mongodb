@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.MongoCollectionUtils;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
@@ -102,7 +103,9 @@ public class Aggregation<I, O> implements HasToDbObject {
 		return inputType;
 	}
 
-	/* (non-Javadoc)
+	/**
+	 * Converts this {@link Aggregation} specification to a @see {@link DBObject}.
+	 * 
 	 * @see org.springframework.data.mongodb.core.aggregation.HasToDbObject#toDbObject()
 	 */
 	@Override
@@ -140,18 +143,47 @@ public class Aggregation<I, O> implements HasToDbObject {
 		return StringUtils.collectionToCommaDelimitedString(operations);
 	}
 
+	/**
+	 * Holds the embedded DSL for Mongo DB Aggregation Framework operations. One-stop-shop for a static import.
+	 * 
+	 * @author Thomas Darimont
+	 */
 	public static class DSL {
 
-		public static GroupOperation group(Object id) {
-			return new GroupOperation(id);
-		}
-
-		public static GroupOperation group(Fields id) {
+		/**
+		 * Factory method to create a new {@link GroupOperation} for the given {@literal id}.
+		 * 
+		 * @param id, must not be null
+		 * @return
+		 */
+		public static GroupOperation group(DBObject id) {
 			return new GroupOperation(id);
 		}
 
 		/**
-		 * Creates a {@link ProjectionOperation} from the given field list. The {@literal _id} field is implicitly excluded.
+		 * Factory method to create a new {@link GroupOperation} for the given {@literal idFields}.
+		 * 
+		 * @param idField the first idField to use, must not be null.
+		 * @param moreIdFields more id fields to use, can be null.
+		 * @return
+		 */
+		public static GroupOperation group(String idField, String... moreIdFields) {
+			return new GroupOperation(idField, moreIdFields);
+		}
+
+		/**
+		 * Factory method to create a new {@link GroupOperation} for the given {@literal idFields}.
+		 * 
+		 * @param idFields
+		 * @return
+		 */
+		public static GroupOperation group(Fields idFields) {
+			return new GroupOperation(idFields);
+		}
+
+		/**
+		 * Factory method to create a new {@link ProjectionOperation} for the given {@literal fields}. The {@literal _id}
+		 * field is implicitly excluded.
 		 * 
 		 * @param fields a list of fields to include in the projection.
 		 * @return The {@link ProjectionOperation}.
@@ -161,7 +193,7 @@ public class Aggregation<I, O> implements HasToDbObject {
 		}
 
 		/**
-		 * Creates a {@link ProjectionOperation}.
+		 * Factory method to create a new {@link ProjectionOperation}.
 		 * 
 		 * @return The {@link ProjectionOperation}.
 		 */
@@ -170,7 +202,7 @@ public class Aggregation<I, O> implements HasToDbObject {
 		}
 
 		/**
-		 * Creates a {@link ProjectionOperation}.
+		 * Factory method to create a new {@link ProjectionOperation} for the given {@literal targetClass}.
 		 * 
 		 * @param targetClass
 		 * @return
@@ -190,6 +222,8 @@ public class Aggregation<I, O> implements HasToDbObject {
 		}
 
 		/**
+		 * Factory method to create a new {@link UnwindOperation} for the given {@literal fieldName}.
+		 * 
 		 * @param fieldName {@link UnwindOperation}.
 		 * @return
 		 */
@@ -198,9 +232,9 @@ public class Aggregation<I, O> implements HasToDbObject {
 		}
 
 		/**
-		 * Creates a {@link SkipOperation}.
+		 * Factory method to create a new {@link SkipOperation} for the given {@literal skipCount}.
 		 * 
-		 * @param skipCount
+		 * @param skipCount the number of documents to skip.
 		 * @return
 		 */
 		public static SkipOperation skip(int skipCount) {
@@ -208,9 +242,9 @@ public class Aggregation<I, O> implements HasToDbObject {
 		}
 
 		/**
-		 * Creates a {@link LimitOperation}.
+		 * Factory method to create a new {@link LimitOperation} for the given {@literal maxElements}.
 		 * 
-		 * @param maxElements
+		 * @param maxElements, the max number of documents to return.
 		 * @return
 		 */
 		public static LimitOperation limit(int maxElements) {
@@ -218,9 +252,9 @@ public class Aggregation<I, O> implements HasToDbObject {
 		}
 
 		/**
-		 * Creates a {@link GeoNearOperation}.
+		 * Factory method to create a new {@link GeoNearOperation} for the given {@literal nearQuery}.
 		 * 
-		 * @param nearQuery
+		 * @param nearQuery, must not be null.
 		 * @return
 		 */
 		public static GeoNearOperation geoNear(NearQuery nearQuery) {
@@ -228,10 +262,11 @@ public class Aggregation<I, O> implements HasToDbObject {
 		}
 
 		/**
-		 * Creates a {@link SortOperation}.
+		 * Factory method to create a new {@link SortOperation} for the given sort {@link Direction}  {@literal direction}
+		 * and {@literal fields}.
 		 * 
-		 * @param direction
-		 * @param fields
+		 * @param direction, the sort direction, must not be null.
+		 * @param fields must not be null.
 		 * @return
 		 */
 		public static SortOperation sort(Sort.Direction direction, String... fields) {
@@ -239,7 +274,7 @@ public class Aggregation<I, O> implements HasToDbObject {
 		}
 
 		/**
-		 * Creates a {@link SortOperation}.
+		 * Factory method to create a new {@link SortOperation} for the given {@link Sort}.
 		 * 
 		 * @param sort
 		 * @return
@@ -249,7 +284,7 @@ public class Aggregation<I, O> implements HasToDbObject {
 		}
 
 		/**
-		 * Creates a {@link BackendFields} element.
+		 * Factory method to create a new empty {@link Fields} container for key-value pairs.
 		 * 
 		 * @return
 		 */
@@ -258,8 +293,8 @@ public class Aggregation<I, O> implements HasToDbObject {
 		}
 
 		/**
-		 * Creates a {@link BackendFields} element containing fields with the given names. A call to fields("a","b","c")
-		 * generates:
+		 * Factory method to create a new {@link Fields} container for key-value pairs from the given {@literal fieldNames}.
+		 * A call to fields("a","b","c") generates:
 		 * 
 		 * <pre>
 		 * {    
@@ -271,8 +306,8 @@ public class Aggregation<I, O> implements HasToDbObject {
 		 * 
 		 * @return
 		 */
-		public static Fields fields(String... names) {
-			return new BackendFields(names);
+		public static Fields fields(String... fieldNames) {
+			return new BackendFields(fieldNames);
 		}
 
 		/**
@@ -289,9 +324,8 @@ public class Aggregation<I, O> implements HasToDbObject {
 		 * 
 		 * @return
 		 */
-
-		public static String $(String name) {
-			return ReferenceUtil.$(name);
+		public static String $(String fieldName) {
+			return ReferenceUtil.$(fieldName);
 		}
 
 		/**
@@ -299,9 +333,26 @@ public class Aggregation<I, O> implements HasToDbObject {
 		 * 
 		 * @return
 		 */
+		public static String $id(String fieldName) {
+			return ReferenceUtil.$id(fieldName);
+		}
 
-		public static String $id(String name) {
-			return ReferenceUtil.$id(name);
+		/**
+		 * A convenience shortcut to {@link ReferenceUtil#ID_KEY}
+		 * 
+		 * @return
+		 */
+		public static String id() {
+			return ReferenceUtil.ID_KEY;
+		}
+
+		/**
+		 * A convenience shortcut to {@link ReferenceUtil#id(String)}
+		 * 
+		 * @return
+		 */
+		public static String id(String fieldName) {
+			return ReferenceUtil.id(fieldName);
 		}
 
 		/**

@@ -15,17 +15,13 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import java.util.Map;
+import org.springframework.data.mongodb.core.mapping.Field;
 
 /**
- * Fields is a collection of key-value pairs.
- * 
  * @author Thomas Darimont
  */
-public interface Fields {
-	Map<String, Object> getValues();
+public class LikeStats {
 
-	Fields and(String name);
-
-	Fields and(String name, Object value);
+	String id;
+	@Field("number") long count;
 }

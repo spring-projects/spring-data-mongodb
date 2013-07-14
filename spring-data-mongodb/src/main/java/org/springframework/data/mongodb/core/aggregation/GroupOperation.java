@@ -42,6 +42,46 @@ public class GroupOperation extends AbstractAggregateOperation {
 		this.id = id;
 	}
 
+	/**
+	 * Creates a <code>$group</code> operation with <code>_id</code> referencing to a field of the document. The returned
+	 * db object equals to
+	 * 
+	 * <pre>
+	 * {_id: "$field"}
+	 * </pre>
+	 * 
+	 * @param id
+	 * @param moreIdFields
+	 */
+	public GroupOperation(String idField, String... moreIdFields) {
+		this(createGroupIdFrom(idField, moreIdFields));
+	}
+
+	/**
+	 * @param idField
+	 * @param moreIdFields
+	 * @return
+	 */
+	private static Object createGroupIdFrom(String idField, String[] moreIdFields) {
+
+		Assert.notNull(idField, "idField must not be null!");
+		Object result = ReferenceUtil.safeReference(idField);
+
+		if (moreIdFields != null && moreIdFields.length > 0) {
+			DBObject idReferences = new BasicDBObject(moreIdFields.length + 1);
+			idReferences.put(ReferenceUtil.safeNonReference(idField), ReferenceUtil.safeReference(idField));
+
+			for (String additionalIdField : moreIdFields) {
+				idReferences.put(ReferenceUtil.safeNonReference(additionalIdField),
+						ReferenceUtil.safeReference(additionalIdField));
+			}
+
+			result = idReferences;
+		}
+
+		return result;
+	}
+
 	public GroupOperation(Fields idFields) {
 		this((Object) idFields.getValues());
 	}
@@ -287,21 +327,6 @@ public class GroupOperation extends AbstractAggregateOperation {
 	 */
 	public GroupOperation sum(String field) {
 		return sum(field, field);
-	}
-
-	/**
-	 * Creates a <code>$group</code> operation with <code>_id</code> referencing to a field of the document. The returned
-	 * db object equals to
-	 * 
-	 * <pre>
-	 * {_id: "$field"}
-	 * </pre>
-	 * 
-	 * @param field
-	 * @return
-	 */
-	public static GroupOperation group(String field) {
-		return new GroupOperation(ReferenceUtil.safeReference(field));
 	}
 
 	protected GroupOperation addOperation(String operation, String name, String field) {

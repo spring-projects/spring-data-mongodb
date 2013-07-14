@@ -15,17 +15,23 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import java.util.Map;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
- * Fields is a collection of key-value pairs.
- * 
  * @author Thomas Darimont
  */
-public interface Fields {
-	Map<String, Object> getValues();
+public class UserWithLikes {
 
-	Fields and(String name);
+	String id;
+	Date joined;
+	Set<String> likes = new HashSet<String>();
 
-	Fields and(String name, Object value);
+	public UserWithLikes(String id, Date joined, String... likes) {
+		this.id = id;
+		this.joined = joined;
+		this.likes = new HashSet<String>(Arrays.asList(likes));
+	}
 }

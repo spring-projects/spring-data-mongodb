@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
+ * Implementation of {@link Fields}
+ * 
  * @author Thomas Darimont
  */
 class BackendFields implements Fields {
