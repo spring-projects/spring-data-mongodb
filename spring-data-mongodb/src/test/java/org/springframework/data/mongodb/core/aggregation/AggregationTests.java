@@ -18,7 +18,7 @@ package org.springframework.data.mongodb.core.aggregation;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 import static org.springframework.data.domain.Sort.Direction.*;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.DSL.*;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 
 import java.io.BufferedInputStream;
@@ -34,15 +34,13 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.dao.DataAccessException;
-import org.springframework.data.mongodb.MongoCollectionUtils;
-import org.springframework.data.mongodb.core.DbCallback;
+import org.springframework.data.mongodb.core.CollectionCallback;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.MongoException;
@@ -92,18 +90,16 @@ public class AggregationTests {
 
 		if (!mongoTemplate.collectionExists(ZipInfo.class)) {
 			mongoTemplate.dropCollection(ZipInfo.class);
-			mongoTemplate.execute(new DbCallback<Void>() {
-				@Override
-				public Void doInDB(DB db) throws MongoException, DataAccessException {
 
-					DBCollection zipInfoCollection = db.createCollection(
-							MongoCollectionUtils.getPreferredCollectionName(ZipInfo.class), null);
+			mongoTemplate.execute(ZipInfo.class, new CollectionCallback<Void>() {
+				@Override
+				public Void doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 					Scanner scanner = null;
 					try {
 						scanner = new Scanner(new BufferedInputStream(new ClassPathResource("zips.json").getInputStream()));
 						while (scanner.hasNextLine()) {
 							String zipInfoRecord = scanner.nextLine();
-							zipInfoCollection.save((DBObject) JSON.parse(zipInfoRecord));
+							collection.save((DBObject) JSON.parse(zipInfoRecord));
 						}
 					} catch (Exception e) {
 						if (scanner != null) {
@@ -111,6 +107,7 @@ public class AggregationTests {
 						}
 						throw new RuntimeException("Could not load mongodb sample dataset!", e);
 					}
+
 					return null;
 				}
 			});
@@ -137,7 +134,7 @@ public class AggregationTests {
 
 		createTagDocuments();
 
-		Aggregation<Object, TagCount> agg = newAggregation(INPUT_COLLECTION, //
+		Aggregation<Object, TagCount> agg = newAggregation( //
 				project("tags"), //
 				unwind("tags"), //
 				group($("tags")).count("n"), //
@@ -145,7 +142,7 @@ public class AggregationTests {
 				sort(DESC, "n") //
 		);
 
-		AggregationResults<TagCount> results = mongoTemplate.aggregate(agg, TagCount.class);
+		AggregationResults<TagCount> results = mongoTemplate.aggregate(INPUT_COLLECTION, agg, TagCount.class);
 
 		assertThat(results, is(notNullValue()));
 		assertThat(results.getServerUsed(), is("/127.0.0.1:27017"));
@@ -163,7 +160,7 @@ public class AggregationTests {
 	@Test
 	public void shouldAggregateEmptyCollection() {
 
-		Aggregation<Object, TagCount> agg = newAggregation(INPUT_COLLECTION, //
+		Aggregation<Object, TagCount> agg = newAggregation(//
 				project("tags"), //
 				unwind("tags"), //
 				group($("tags")).count("n"), //
@@ -186,14 +183,14 @@ public class AggregationTests {
 	public void shouldDetectResultMismatch() {
 
 		createTagDocuments();
-		Aggregation<Object, TagCount> agg = newAggregation(INPUT_COLLECTION, //
+		Aggregation<Object, TagCount> agg = newAggregation( //
 				project("tags"), //
 				unwind("tags"), //
 				group($("tags")).count("count"), //
 				limit(2) //
 		);
 
-		AggregationResults<TagCount> results = mongoTemplate.aggregate(agg, TagCount.class);
+		AggregationResults<TagCount> results = mongoTemplate.aggregate(INPUT_COLLECTION, agg, TagCount.class);
 
 		assertThat(results, is(notNullValue()));
 		assertThat(results.getServerUsed(), is("/127.0.0.1:27017"));
@@ -299,7 +296,7 @@ public class AggregationTests {
 		)
 		*/
 
-		Aggregation<ZipInfo, ZipInfoStats> agg = newAggregation(
+		TypedAggregation<ZipInfo, ZipInfoStats> agg = newAggregation(
 				ZipInfo.class, //
 				group("state", "city").sum("pop"), // group("state", "city") -> _id: {state: $state, city: $city}
 				sort(ASC, "pop", id("state"), id("city")), //
@@ -369,7 +366,7 @@ public class AggregationTests {
 		)
 		  */
 
-		Aggregation<ZipInfo, StateStats> agg = newAggregation(ZipInfo.class, //
+		TypedAggregation<ZipInfo, StateStats> agg = newAggregation(ZipInfo.class, //
 				group("state").sum("totalPop", $("pop")), // fields("state", "city") -> state: $state, city: $city
 				sort(ASC, id(), "totalPop"), //
 				match(where("totalPop").gte(10 * 1000 * 1000)) //
@@ -398,7 +395,7 @@ public class AggregationTests {
 
 		createUserWithLikesDocuments();
 
-		Aggregation<UserWithLikes, LikeStats> agg = newAggregation(UserWithLikes.class, //
+		TypedAggregation<UserWithLikes, LikeStats> agg = newAggregation(UserWithLikes.class, //
 				unwind("likes"), //
 				group("likes").count("number"), //
 				sort(DESC, "number"), //

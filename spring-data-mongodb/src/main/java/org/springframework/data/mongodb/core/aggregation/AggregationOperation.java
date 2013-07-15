@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
+import com.mongodb.DBObject;
+
 /**
  * Represents one single operation in an aggregation pipeline.
  * 
@@ -22,7 +24,14 @@ package org.springframework.data.mongodb.core.aggregation;
  * @author Thomas Darimont
  * @since 1.3
  */
-public interface AggregationOperation extends HasToDbObject {
+public interface AggregationOperation {
 
 	String OPERATOR_PREFIX = "$";
+
+	/**
+	 * Creates a {@link DBObject} representation backing this object.
+	 * 
+	 * @return the DBObject
+	 */
+	DBObject toDbObject();
 }

@@ -30,9 +30,10 @@ import com.mongodb.DBObject;
 
 /**
  * Projection of field to be used in an {@link Aggregation}.
- * <p/>
+ * <p>
  * A projection is similar to a {@link Field} inclusion/exclusion but more powerful. It can generate new fields, change
  * values of given field etc.
+ * <p>
  * 
  * @author Tobias Trelle
  * @author Thomas Darimont

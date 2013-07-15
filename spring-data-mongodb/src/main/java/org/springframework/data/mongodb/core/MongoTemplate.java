@@ -52,11 +52,10 @@ import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.BeanWrapper;
 import org.springframework.data.mapping.model.MappingException;
-import org.springframework.data.mongodb.MongoCollectionUtils;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
-import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoWriter;
@@ -1215,12 +1214,19 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 	}
 
-	public <I, O> AggregationResults<O> aggregate(Aggregation<I, O> aggrenation, Class<O> outputType) {
-		return aggregate(aggrenation.getInputCollectionName(), aggrenation, outputType);
+	@Override
+	public <I, O> AggregationResults<O> aggregate(TypedAggregation<I, O> aggregation, Class<O> outputType) {
+		return aggregate(aggregation, determineCollectionName(aggregation.getInputType()), outputType);
+	}
+
+	@Override
+	public <I, O> AggregationResults<O> aggregate(TypedAggregation<I, O> aggregation, String inputCollectionName,
+			Class<O> outputType) {
+		return aggregate(inputCollectionName, aggregation, outputType);
 	}
 
 	public <I, O> AggregationResults<O> aggregate(Class<I> inputType, Aggregation<I, O> aggregation, Class<O> outputType) {
-		return aggregate(MongoCollectionUtils.getPreferredCollectionName(inputType), aggregation, outputType);
+		return aggregate(determineCollectionName(inputType), aggregation, outputType);
 	}
 
 	public <O> AggregationResults<O> aggregate(String inputCollectionName, Aggregation<? extends Object, O> aggregation,
@@ -1231,7 +1237,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		Assert.notNull(outputType, "Entity class is missing");
 
 		// prepare command
-		DBObject command = aggregation.toDbObject();
+		DBObject command = aggregation.toDbObject(inputCollectionName);
 
 		// execute command
 		CommandResult commandResult = executeCommand(command);
@@ -1247,16 +1253,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		}
 
 		return new AggregationResults<O>(mappedResults, commandResult);
-	}
-
-	public <O> AggregationResults<O> aggregate(String inputCollectionName, Class<O> outputType,
-			AggregationOperation... operations) {
-		return aggregate(inputCollectionName, new Aggregation<Object, O>(operations), outputType);
-	}
-
-	public <I, O> AggregationResults<O> aggregate(Class<I> inputType, Class<O> outputType,
-			AggregationOperation... operations) {
-		return aggregate(Aggregation.DSL.<I, O> newAggregation(inputType, operations), outputType);
 	}
 
 	protected String replaceWithResourceIfNecessary(String function) {

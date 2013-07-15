@@ -23,7 +23,7 @@ public class SkipOperation extends AbstractAggregateOperation {
 	private final long skipCount;
 
 	/**
-	 * @param skipCount Number of documents to skip.
+	 * @param skipCount number of documents to skip.
 	 */
 	public SkipOperation(long skipCount) {
 		super("skip");

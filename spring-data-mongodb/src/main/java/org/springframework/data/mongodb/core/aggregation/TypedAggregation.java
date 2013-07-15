@@ -15,16 +15,30 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import com.mongodb.DBObject;
-
 /**
+ * A {@code TypedAggregation} is a special {@link Aggregation} that holds information of the input aggregation type.
+ * 
  * @author Thomas Darimont
  */
-interface HasToDbObject {
+public class TypedAggregation<I, O> extends Aggregation<I, O> {
+
+	private Class<I> inputType;
+
 	/**
-	 * Creates a {@link DBObject} representation backing this object.
+	 * Creates a new {@link TypedAggregation} from the given {@link AggregationOperation}s.
 	 * 
-	 * @return the DBObject
+	 * @param operations must not be {@literal null} or empty.
 	 */
-	DBObject toDbObject();
+	public TypedAggregation(Class<I> inputType, AggregationOperation... operations) {
+		super(operations);
+		this.inputType = inputType;
+	}
+
+	/**
+	 * @return the inputType
+	 */
+	public Class<?> getInputType() {
+		return inputType;
+	}
+
 }

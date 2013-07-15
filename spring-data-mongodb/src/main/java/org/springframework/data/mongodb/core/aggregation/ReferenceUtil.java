@@ -72,22 +72,26 @@ class ReferenceUtil {
 	}
 
 	/**
-	 * @see #safeReference(String) <pre>
+	 * <pre>
 	 *  $("a") -> $a
 	 * </pre>
+	 * 
 	 * @param fieldName
 	 * @return the field name prefixed with {@literal $}
+	 * @see #safeReference(String)
 	 */
 	public static String $(String fieldName) {
 		return safeReference(fieldName);
 	}
 
 	/**
-	 * @see #safeNonReference(String) <pre>
+	 * <pre>
 	 * 	$id("a") -> $_id.a
 	 * </pre>
+	 * 
 	 * @param fieldName
 	 * @return
+	 * @see #safeNonReference(String)
 	 */
 	public static String $id(String fieldName) {
 		return $id() + "." + safeNonReference(fieldName);
