@@ -99,7 +99,7 @@ public class QueryMapper {
 				Keyword keyword = new Keyword((DBObject) rawValue);
 				result.put(newKey, getMappedKeyword(field, keyword));
 			} else {
-				result.put(newKey, getMappedValue(field, query.get(key)));
+				result.put(newKey, getMappedValue(field, rawValue));
 			}
 		}
 
