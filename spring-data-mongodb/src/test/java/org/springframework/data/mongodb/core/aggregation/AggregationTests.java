@@ -37,6 +37,7 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.data.mongodb.MongoCollectionUtils;
 import org.springframework.data.mongodb.core.DbCallback;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -45,6 +46,7 @@ import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.MongoException;
+import com.mongodb.WriteConcern;
 import com.mongodb.util.JSON;
 
 /**
@@ -55,6 +57,7 @@ import com.mongodb.util.JSON;
  * @author Thomas Darimont
  */
 @RunWith(SpringJUnit4ClassRunner.class)
+@DirtiesContext
 @ContextConfiguration("classpath:infrastructure.xml")
 public class AggregationTests {
 
@@ -64,6 +67,7 @@ public class AggregationTests {
 
 	@Before
 	public void setUp() {
+		mongoTemplate.setWriteConcern(WriteConcern.SAFE); // safe due to DirtiesContext
 		cleanDb();
 		initSampleDataIfNecessary();
 	}
