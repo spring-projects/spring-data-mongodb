@@ -31,20 +31,22 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.mongodb.core.CollectionCallback;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.mongodb.BasicDBObject;
+import com.mongodb.CommandResult;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.MongoException;
-import com.mongodb.WriteConcern;
 import com.mongodb.util.JSON;
 
 /**
@@ -55,17 +57,17 @@ import com.mongodb.util.JSON;
  * @author Thomas Darimont
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@DirtiesContext
 @ContextConfiguration("classpath:infrastructure.xml")
 public class AggregationTests {
 
 	private static final String INPUT_COLLECTION = "aggregation_test_collection";
+	private static boolean initialized = false;
+	private static final Logger LOGGER = LoggerFactory.getLogger(AggregationTests.class);
 
 	@Autowired MongoTemplate mongoTemplate;
 
 	@Before
 	public void setUp() {
-		mongoTemplate.setWriteConcern(WriteConcern.SAFE); // safe due to DirtiesContext
 		cleanDb();
 		initSampleDataIfNecessary();
 	}
@@ -88,12 +90,17 @@ public class AggregationTests {
 	 */
 	private void initSampleDataIfNecessary() {
 
-		if (!mongoTemplate.collectionExists(ZipInfo.class)) {
-			mongoTemplate.dropCollection(ZipInfo.class);
+		if (!initialized) {
 
+			CommandResult result = mongoTemplate.executeCommand(new BasicDBObject("buildInfo", 1));
+			LOGGER.error(result.toString());
+
+			mongoTemplate.dropCollection(ZipInfo.class);
 			mongoTemplate.execute(ZipInfo.class, new CollectionCallback<Void>() {
+
 				@Override
 				public Void doInCollection(DBCollection collection) throws MongoException, DataAccessException {
+
 					Scanner scanner = null;
 					try {
 						scanner = new Scanner(new BufferedInputStream(new ClassPathResource("zips.json").getInputStream()));
@@ -111,6 +118,11 @@ public class AggregationTests {
 					return null;
 				}
 			});
+
+			long count = mongoTemplate.count(new Query(), ZipInfo.class);
+			assertThat(count, is(29467L));
+
+			initialized = true;
 		}
 	}
 
