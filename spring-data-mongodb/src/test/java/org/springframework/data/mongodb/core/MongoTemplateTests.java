@@ -153,9 +153,10 @@ public class MongoTemplateTests {
 		template.dropCollection(TypeWithDate.class);
 		template.dropCollection("collection");
 		template.dropCollection("personX");
-		template.dropCollection(Document.class);
+		template.dropCollection(Doc.class);
 		template.dropCollection(ObjectWith3AliasedFields.class);
 		template.dropCollection(ObjectWith3AliasedFieldsAndNestedAddress.class);
+		template.dropCollection(ParentClass.class);
 	}
 
 	@Test
@@ -1690,7 +1691,7 @@ public class MongoTemplateTests {
 	@Test
 	public void updatesShouldRetainTypeInformation() {
 
-		Document doc = new Document();
+		Doc doc = new Doc();
 		doc.id = "4711";
 		doc.model = new ModelA().withValue("foo");
 		template.insert(doc);
@@ -1698,9 +1699,9 @@ public class MongoTemplateTests {
 		Query query = new Query(Criteria.where("id").is(doc.id));
 		String newModelValue = "bar";
 		Update update = Update.update("model", new ModelA().withValue(newModelValue));
-		template.updateFirst(query, update, Document.class);
+		template.updateFirst(query, update, Doc.class);
 
-		Document result = template.findOne(query, Document.class);
+		Doc result = template.findOne(query, Doc.class);
 
 		assertThat(result, is(notNullValue()));
 		assertThat(result.id, is(doc.id));
@@ -1843,6 +1844,27 @@ public class MongoTemplateTests {
 		assertThat(result.address.state, is(stateValue));
 	}
 
+	/**
+	 * @see DATAMONGO-721
+	 */
+	@Test
+	public void retainTypeInformationForCollectionElementsOnUpdate() {
+
+		ParentClass parent = new ParentClass("4711", Arrays.asList(new ConcreteChildClass("1", "FOO")));
+		template.insert(parent);
+
+		Query qry = Query.query(Criteria.where("id").is("4711"));
+		ParentClass resultBeforeUpdate = template.findOne(qry, ParentClass.class,
+				template.determineCollectionName(ParentClass.class));
+		assertThat(resultBeforeUpdate, is(notNullValue()));
+
+		template.updateFirst(qry, new Update().push("list", new ConcreteChildClass("2", "BAR")), ParentClass.class);
+
+		ParentClass resultAfterUpdate = template.findOne(qry, ParentClass.class,
+				template.determineCollectionName(ParentClass.class));
+		assertThat(resultAfterUpdate, is(notNullValue()));
+	}
+
 	static interface Model {
 		String value();
 
@@ -1865,7 +1887,7 @@ public class MongoTemplateTests {
 		}
 	}
 
-	static class Document {
+	static class Doc {
 
 		@Id public String id;
 		public Model model;
@@ -1967,5 +1989,37 @@ public class MongoTemplateTests {
 
 	static class ObjectWith3AliasedFieldsAndNestedAddress extends ObjectWith3AliasedFields {
 		@Field("adr") Address address;
+	}
+
+	// @Document
+	static class ParentClass {
+		String id;
+		List<? extends AbstractChildClass> list;
+
+		public ParentClass(String id, List<? extends AbstractChildClass> list) {
+			this.id = id;
+			this.list = list;
+		}
+
+	}
+
+	// @Document
+	static abstract class AbstractChildClass {
+
+		String id;
+		String value;
+
+		public AbstractChildClass(String id, String value) {
+			this.id = id;
+			this.value = value;
+		}
+	}
+
+	static class ConcreteChildClass extends AbstractChildClass {
+
+		public ConcreteChildClass(String id, String value) {
+			super(id, value);
+		}
+
 	}
 }
