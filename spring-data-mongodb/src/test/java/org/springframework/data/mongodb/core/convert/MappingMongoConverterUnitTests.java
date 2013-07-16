@@ -1374,7 +1374,8 @@ public class MappingMongoConverterUnitTests {
 
 			@Override
 			public DBObject convert(Person source) {
-				return new BasicDBObject().append("firstname", source.firstname);
+				return new BasicDBObject().append("firstname", source.firstname)//
+						.append("_class", Person.class.getName());
 			}
 
 		}, new Converter<DBObject, Person>() {
@@ -1383,6 +1384,7 @@ public class MappingMongoConverterUnitTests {
 			public Person convert(DBObject source) {
 				Person person = new Person();
 				person.firstname = source.get("firstname").toString();
+				person.lastname = "converter";
 				return person;
 			}
 		}));
@@ -1408,7 +1410,9 @@ public class MappingMongoConverterUnitTests {
 		assertThat(result.mapOfObjects, is(notNullValue()));
 		Object value = result.mapOfObjects.get("foo");
 		assertThat(value, is(notNullValue()));
-		assertThat(value, is(instanceOf(Map.class)));
+		assertThat(value, is(instanceOf(Person.class)));
+		assertThat(((Person) value).firstname, is("Dave"));
+		assertThat(((Person) value).lastname, is("converter"));
 	}
 
 	@Document
@@ -1462,6 +1466,7 @@ public class MappingMongoConverterUnitTests {
 		LocalDate birthDate;
 
 		@Field("foo") String firstname;
+		String lastname;
 
 		Set<Address> addresses;
 
