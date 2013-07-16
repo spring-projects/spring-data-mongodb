@@ -45,6 +45,7 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
+import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.annotation.TypeAlias;
@@ -77,10 +78,8 @@ public class MappingMongoConverterUnitTests {
 
 	MappingMongoConverter converter;
 	MongoMappingContext mappingContext;
-	@Mock
-	MongoDbFactory factory;
-	@Mock
-	ApplicationContext context;
+	@Mock MongoDbFactory factory;
+	@Mock ApplicationContext context;
 
 	@Before
 	public void setUp() {
@@ -1085,8 +1084,7 @@ public class MappingMongoConverterUnitTests {
 		CollectionWrapper wrapper = converter.read(CollectionWrapper.class, dbObject);
 
 		assertThat(wrapper.contactsSet, is(notNullValue()));
-		wrapper.contactsSet.add(new Contact() {
-		});
+		wrapper.contactsSet.add(new Contact() {});
 	}
 
 	/**
@@ -1356,10 +1354,66 @@ public class MappingMongoConverterUnitTests {
 		assertThat(read.map.get("test").id, is(BigInteger.ONE));
 	}
 
+	/**
+	 * @see DATAMONGO-724
+	 */
+	@Test
+	@SuppressWarnings("unchecked")
+	public void mappingConsidersCustomConvertersNotWritingTypeInformation() {
+
+		Person person = new Person();
+		person.firstname = "Dave";
+
+		ClassWithMapProperty entity = new ClassWithMapProperty();
+		entity.mapOfPersons = new HashMap<String, Person>();
+		entity.mapOfPersons.put("foo", person);
+		entity.mapOfObjects = new HashMap<String, Object>();
+		entity.mapOfObjects.put("foo", person);
+
+		CustomConversions conversions = new CustomConversions(Arrays.asList(new Converter<Person, DBObject>() {
+
+			@Override
+			public DBObject convert(Person source) {
+				return new BasicDBObject().append("firstname", source.firstname);
+			}
+
+		}, new Converter<DBObject, Person>() {
+
+			@Override
+			public Person convert(DBObject source) {
+				Person person = new Person();
+				person.firstname = source.get("firstname").toString();
+				return person;
+			}
+		}));
+
+		MongoMappingContext context = new MongoMappingContext();
+		context.setSimpleTypeHolder(conversions.getSimpleTypeHolder());
+		context.afterPropertiesSet();
+
+		MappingMongoConverter mongoConverter = new MappingMongoConverter(factory, context);
+		mongoConverter.setCustomConversions(conversions);
+		mongoConverter.afterPropertiesSet();
+
+		BasicDBObject dbObject = new BasicDBObject();
+		mongoConverter.write(entity, dbObject);
+
+		ClassWithMapProperty result = mongoConverter.read(ClassWithMapProperty.class, dbObject);
+
+		assertThat(result.mapOfPersons, is(notNullValue()));
+		Person personCandidate = result.mapOfPersons.get("foo");
+		assertThat(personCandidate, is(notNullValue()));
+		assertThat(personCandidate.firstname, is("Dave"));
+
+		assertThat(result.mapOfObjects, is(notNullValue()));
+		Object value = result.mapOfObjects.get("foo");
+		assertThat(value, is(notNullValue()));
+		assertThat(value, is(instanceOf(Map.class)));
+	}
+
 	@Document
 	class MapDBRef {
-		@org.springframework.data.mongodb.core.mapping.DBRef
-		Map<String, MapDBRefVal> map;
+		@org.springframework.data.mongodb.core.mapping.DBRef Map<String, MapDBRefVal> map;
 	}
 
 	@Document
@@ -1380,8 +1434,7 @@ public class MappingMongoConverterUnitTests {
 	static enum SampleEnum {
 		FIRST {
 			@Override
-			void method() {
-			}
+			void method() {}
 		},
 		SECOND {
 			@Override
@@ -1404,13 +1457,11 @@ public class MappingMongoConverterUnitTests {
 
 	static class Person implements Contact {
 
-		@Id
-		String id;
+		@Id String id;
 
 		LocalDate birthDate;
 
-		@Field("foo")
-		String firstname;
+		@Field("foo") String firstname;
 
 		Set<Address> addresses;
 
@@ -1433,6 +1484,7 @@ public class MappingMongoConverterUnitTests {
 		Map<String, List<String>> mapOfLists;
 		Map<String, Object> mapOfObjects;
 		Map<String, String[]> mapOfStrings;
+		Map<String, Person> mapOfPersons;
 	}
 
 	static class ClassWithNestedMaps {
@@ -1461,8 +1513,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	static class ClassWithBigIntegerId {
-		@Id
-		BigInteger id;
+		@Id BigInteger id;
 	}
 
 	static class A<T> {
@@ -1478,8 +1529,7 @@ public class MappingMongoConverterUnitTests {
 
 	static class ClassWithIntId {
 
-		@Id
-		int id;
+		@Id int id;
 	}
 
 	static class DefaultedConstructorArgument {
@@ -1515,8 +1565,7 @@ public class MappingMongoConverterUnitTests {
 
 	static class PersonClient {
 
-		@org.springframework.data.mongodb.core.mapping.DBRef
-		Person person;
+		@org.springframework.data.mongodb.core.mapping.DBRef Person person;
 	}
 
 	static class DBRefWrapper {
@@ -1533,8 +1582,7 @@ public class MappingMongoConverterUnitTests {
 
 	static class ClassWithComplexId {
 
-		@Id
-		ComplexId complexId;
+		@Id ComplexId complexId;
 	}
 
 	static class ComplexId {
@@ -1563,8 +1611,7 @@ public class MappingMongoConverterUnitTests {
 	@Document
 	static class PrimitiveContainer {
 
-		@Field("property")
-		private final int m_property;
+		@Field("property") private final int m_property;
 
 		@PersistenceConstructor
 		public PrimitiveContainer(@Value("#root.property") int a_property) {
@@ -1579,8 +1626,7 @@ public class MappingMongoConverterUnitTests {
 	@Document
 	static class ObjectContainer {
 
-		@Field("property")
-		private final PrimitiveContainer m_property;
+		@Field("property") private final PrimitiveContainer m_property;
 
 		@PersistenceConstructor
 		public ObjectContainer(@Value("#root.property") PrimitiveContainer a_property) {
