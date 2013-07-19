@@ -41,4 +41,9 @@ public class TypedAggregation<I, O> extends Aggregation<I, O> {
 		return inputType;
 	}
 
+	protected AggregateOperationContext createInitialAggregateOperationContext() {
+
+		// TODO construct initial aggregate operation context from input type.
+		return super.createInitialAggregateOperationContext();
+	}
 }

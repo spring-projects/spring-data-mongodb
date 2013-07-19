@@ -22,9 +22,12 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
 /**
+ * Encapsulates the aggregation framework {@code $sort}-operation.
+ * 
+ * @see http://docs.mongodb.org/manual/reference/aggregation/sort/#pipe._S_sort
  * @author Thomas Darimont
  */
-public class SortOperation extends AbstractAggregateOperation {
+public class SortOperation extends AbstractContextAwareAggregateOperation implements ContextConsumingAggregateOperation {
 
 	private Sort sort;
 
@@ -50,17 +53,14 @@ public class SortOperation extends AbstractAggregateOperation {
 	 * @see org.springframework.data.mongodb.core.aggregation.AbstractAggregateOperation#getOperationArgument()
 	 */
 	@Override
-	public Object getOperationArgument() {
-		return createSortProperties();
-	}
+	public Object getOperationArgument(AggregateOperationContext inputAggregateOperationContext) {
 
-	/**
-	 * @return
-	 */
-	private DBObject createSortProperties() {
+		Assert.notNull(inputAggregateOperationContext, "inputAggregateOperationContext must not be null!");
+
 		DBObject sortProperties = new BasicDBObject();
 		for (org.springframework.data.domain.Sort.Order order : sort) {
-			sortProperties.put(order.getProperty(), order.isAscending() ? 1 : -1);
+			String fieldName = inputAggregateOperationContext.returnFieldNameAliasIfAvailableOr(order.getProperty());
+			sortProperties.put(fieldName, order.isAscending() ? 1 : -1);
 		}
 		return sortProperties;
 	}

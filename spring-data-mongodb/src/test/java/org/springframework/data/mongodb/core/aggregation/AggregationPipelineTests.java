@@ -50,13 +50,13 @@ public class AggregationPipelineTests {
 	@Test
 	public void unwindOperation() {
 
-		assertSingleDBObject("$unwind", "$field", unwind("$field").toDbObject());
+		assertSingleDBObject("$unwind", "$field", unwind("$field").toDbObject(new BasicAggregateOperationContext()));
 	}
 
 	@Test
 	public void unwindOperationWithAddedPrefix() {
 
-		assertSingleDBObject("$unwind", "$field", unwind("field").toDbObject());
+		assertSingleDBObject("$unwind", "$field", unwind("field").toDbObject(new BasicAggregateOperationContext()));
 	}
 
 	@Test
@@ -71,7 +71,7 @@ public class AggregationPipelineTests {
 	@Test
 	public void sortOperation() {
 
-		DBObject sortDoc = sort(ASC, "n").toDbObject();
+		DBObject sortDoc = sort(ASC, "n").toDbObject(new BasicAggregateOperationContext());
 		DBObject orderDoc = getAsDBObject(sortDoc, "$sort");
 		assertThat(orderDoc, is(notNullValue()));
 		assertSingleDBObject("n", 1, orderDoc);
@@ -80,7 +80,7 @@ public class AggregationPipelineTests {
 	@Test
 	public void projectOperation() {
 
-		DBObject projectionDoc = project("a").toDbObject();
+		DBObject projectionDoc = project("a").toDbObject(new BasicAggregateOperationContext());
 		DBObject fields = getAsDBObject(projectionDoc, "$project");
 		assertThat(fields, is(notNullValue()));
 		assertSingleDBObject("a", 1, fields);

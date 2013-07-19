@@ -26,7 +26,7 @@ class BackendFields implements Fields {
 	 * @return
 	 */
 	public Fields and(String name) {
-		return and(name, ReferenceUtil.safeReference(name));
+		return and(name, name);
 	}
 
 	/**

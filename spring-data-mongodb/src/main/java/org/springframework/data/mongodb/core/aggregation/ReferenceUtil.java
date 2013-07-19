@@ -105,4 +105,17 @@ class ReferenceUtil {
 		return ID_KEY + "." + fieldName;
 	}
 
+	/**
+	 * <pre>
+	 * a: $a -> true
+	 * </pre>
+	 * 
+	 * @param idFieldName
+	 * @param idFieldValue
+	 * @return true if {@code idFieldValue} corresponds to the given {@code idFieldName} e.g.
+	 */
+	public static boolean isValueFieldReference(String idFieldName, Object idFieldValue) {
+		return idFieldValue instanceof String && idFieldName.equals(safeNonReference((String) idFieldValue));
+	}
+
 }
