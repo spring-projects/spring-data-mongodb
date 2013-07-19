@@ -1,4 +1,4 @@
-Spring Data Document 1.2.1
+Spring Data Document 1.2.2
 Copyright (c) [2010-2013] SpringSource, a division of VMware, Inc.
 
 This product is licensed to you under the Apache License, Version 2.0 (the "License").  

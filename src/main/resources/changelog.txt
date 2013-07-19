@@ -1,6 +1,31 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 1.2.2.GA (2013-07-19)
+----------------------------------------
+** Bug
+    * [DATAMONGO-663] - org.springframework.data.mongodb.core.query.Field needs an equals method
+    * [DATAMONGO-677] - QueryMapper does not handled correctly Map with DBRef value
+    * [DATAMONGO-679] - MongoTemplate.doSave(…) passed a JSON String doesn't save it.
+    * [DATAMONGO-683] - QueryMapper does not handle default _id when no MappingMetadata is present
+    * [DATAMONGO-685] - JMX ServerInfo bean may return wrong info
+    * [DATAMONGO-693] - MongoFactoryBean should create a mongo instance with host/port if replicaset is null or empty
+    * [DATAMONGO-704] - Remove references to SimpleMongoConverter from JavaDoc.
+    * [DATAMONGO-705] - QueryMapper doesn't handles exists query with DBRef field
+    * [DATAMONGO-706] - QueryMapper does not transform DBRefs in nested keywords correctly
+    * [DATAMONGO-717] - Application context is not properly distributed to persistent entities
+
+** Improvement
+    * [DATAMONGO-682] - Remove performance hotspots
+    * [DATAMONGO-701] - Improve performance of indexed starts-with queries
+
+** Task
+    * [DATAMONGO-658] - Minor formatting changes to README.md
+    * [DATAMONGO-678] - Performance improvements in CustomConversions
+    * [DATAMONGO-714] - Add latest formatter to project sources
+    * [DATAMONGO-723] - Clean up test cases
+    * [DATAMONGO-727] - Release 1.2.2
+
 Changes in version 1.2.1.GA (2013-04-17)
 ----------------------------------------
 ** Bug
