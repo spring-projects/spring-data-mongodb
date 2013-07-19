@@ -15,9 +15,9 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.springframework.util.Assert;
 
@@ -32,15 +32,10 @@ import com.mongodb.DBObject;
  * @author Thomas Darimont
  * @since 1.3
  */
-public class GroupOperation extends AbstractAggregateOperation {
+public class GroupOperation extends AbstractContextProducingAggregateOperation {
 
 	final Object id;
-	final Map<String, DBObject> fields = new HashMap<String, DBObject>();
-
-	public GroupOperation(Object id) {
-		super("group");
-		this.id = id;
-	}
+	final List<GroupingOperation> ops = new ArrayList<GroupOperation.GroupingOperation>();
 
 	/**
 	 * Creates a <code>$group</code> operation with <code>_id</code> referencing to a field of the document. The returned
@@ -53,72 +48,129 @@ public class GroupOperation extends AbstractAggregateOperation {
 	 * @param id
 	 * @param moreIdFields
 	 */
-	public GroupOperation(String idField, String... moreIdFields) {
-		this(createGroupIdFrom(idField, moreIdFields));
+	public GroupOperation(Fields fields) {
+		super("group");
+		this.id = createGroupIdFrom(fields);
 	}
 
 	/**
-	 * @param idField
-	 * @param moreIdFields
+	 * @param fields
 	 * @return
 	 */
-	private static Object createGroupIdFrom(String idField, String[] moreIdFields) {
+	private Object createGroupIdFrom(Fields fields) {
 
-		Assert.notNull(idField, "idField must not be null!");
-		Object result = ReferenceUtil.safeReference(idField);
+		Assert.notNull(fields, "fields must not be null!");
+		Map<String, Object> values = fields.getValues();
+		Assert.notEmpty(values, "fields.values must not be empty!");
 
-		if (moreIdFields != null && moreIdFields.length > 0) {
-			DBObject idReferences = new BasicDBObject(moreIdFields.length + 1);
-			idReferences.put(ReferenceUtil.safeNonReference(idField), ReferenceUtil.safeReference(idField));
-
-			for (String additionalIdField : moreIdFields) {
-				idReferences.put(ReferenceUtil.safeNonReference(additionalIdField),
-						ReferenceUtil.safeReference(additionalIdField));
-			}
-
-			result = idReferences;
+		DBObject idReferences = new BasicDBObject(values.size());
+		for (Map.Entry<String, Object> entry : values.entrySet()) {
+			String idFieldName = ReferenceUtil.safeNonReference(entry.getKey());
+			Object idFieldValue = entry.getValue() instanceof String ? ReferenceUtil.safeReference(entry.getValue()
+					.toString()) : entry.getValue();
+			idReferences.put(idFieldName, idFieldValue);
 		}
-
-		return result;
-	}
-
-	public GroupOperation(Fields idFields) {
-		this((Object) idFields.getValues());
+		return idReferences;
 	}
 
 	/* (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.aggregation.AbstractAggregateOperation#getOperationArgument()
 	 */
 	@Override
-	public Object getOperationArgument() {
-		return createProjection();
-	}
+	public Object getOperationArgument(AggregateOperationContext inputAggregateOperationContext) {
 
-	/**
-	 * @return
-	 */
-	private DBObject createProjection() {
-		DBObject projection = new BasicDBObject(ReferenceUtil.ID_KEY, id);
+		DBObject projection = new BasicDBObject();
 
-		for (Entry<String, DBObject> entry : fields.entrySet()) {
-			projection.put(entry.getKey(), entry.getValue());
+		Object idToUse = id;
+		if (idToUse instanceof DBObject) {
+			idToUse = createGroupIdObject((DBObject) idToUse, inputAggregateOperationContext);
 		}
+		projection.put(ReferenceUtil.ID_KEY, idToUse);
+
+		for (GroupingOperation op : ops) {
+			projection.put(op.alias, op.toDbObject(inputAggregateOperationContext));
+		}
+
 		return projection;
 	}
 
-	public GroupOperation addField(String key, DBObject value) {
+	/**
+	 * @param idCandidate
+	 * @param inputAggregateOperationContext
+	 * @return
+	 */
+	private Object createGroupIdObject(DBObject groupIdObject, AggregateOperationContext inputAggregateOperationContext) {
 
-		Assert.hasText(key, "Key is empty");
-		Assert.notNull(value, "Value is null");
-
-		String trimmedKey = key.trim();
-
-		if (ReferenceUtil.ID_KEY.equals(trimmedKey)) {
-			throw new IllegalArgumentException("_id field can only be set in constructor");
+		Object simpleIdOrNull = returnIfGroupIdIsSingleFieldReference(inputAggregateOperationContext, groupIdObject);
+		if (simpleIdOrNull != null) {
+			return simpleIdOrNull;
 		}
 
-		fields.put(key, value);
-		return this;
+		DBObject idObject = new BasicDBObject();
+		for (String idFieldName : groupIdObject.keySet()) {
+
+			Object idFieldValue = groupIdObject.get(idFieldName);
+			Object idFieldValueOrNull = returnIfFieldValueReferencesAvailableField(inputAggregateOperationContext,
+					idFieldName, idFieldValue);
+			if (idFieldValueOrNull != null) {
+				idFieldValue = idFieldValueOrNull;
+			}
+
+			getOutputAggregateOperationContext().registerAvailableField(idFieldName, ReferenceUtil.id(idFieldName));
+			idObject.put(idFieldName, idFieldValue);
+		}
+
+		return idObject;
+	}
+
+	private Object returnIfGroupIdIsSingleFieldReference(AggregateOperationContext inputAggregateOperationContext,
+			DBObject idObject) {
+
+		if (idObject.keySet().size() != 1) {
+			return null;
+		}
+
+		return returnIfFieldNameIsSimpleReference(inputAggregateOperationContext, idObject, idObject.keySet().iterator()
+				.next());
+	}
+
+	private Object returnIfFieldValueReferencesAvailableField(AggregateOperationContext inputAggregateOperationContext,
+			String idFieldName, Object idFieldValue) {
+
+		Assert.notNull(inputAggregateOperationContext, "inputAggregateOperationContext must not be null");
+
+		if (!ReferenceUtil.isValueFieldReference(idFieldName, idFieldValue)) {
+			return null;
+		}
+
+		if (!inputAggregateOperationContext.isFieldAvailable(idFieldName)) {
+			return null;
+		}
+
+		String idFieldNameToUse = inputAggregateOperationContext.returnFieldNameAliasIfAvailableOr(idFieldName);
+		return ReferenceUtil.safeReference(inputAggregateOperationContext instanceof GroupOperation ? ReferenceUtil
+				.id(idFieldNameToUse) : idFieldNameToUse);
+	}
+
+	private Object returnIfFieldNameIsSimpleReference(AggregateOperationContext inputAggregateOperationContext,
+			DBObject idObject, String idFieldName) {
+
+		Object idFieldValue = idObject.get(idFieldName);
+
+		if (!idFieldValueIsSimpleIdFieldExpression(idFieldName, idFieldValue)) {
+			return null;
+		}
+
+		getOutputAggregateOperationContext().registerAvailableField(idFieldName, ReferenceUtil.id(idFieldName));
+		idFieldValue = ReferenceUtil.safeReference(inputAggregateOperationContext
+				.returnFieldNameAliasIfAvailableOr(idFieldName));
+
+		return idFieldValue;
+	}
+
+	private static boolean idFieldValueIsSimpleIdFieldExpression(String idFieldName, Object idFieldValue) {
+		return idFieldValue instanceof String
+				&& idFieldName.equals(ReferenceUtil.safeNonReference(idFieldValue.toString()));
 	}
 
 	/**
@@ -271,7 +323,7 @@ public class GroupOperation extends AbstractAggregateOperation {
 	 * @return
 	 */
 	public GroupOperation count(String name, double increment) {
-		return addField(name, new BasicDBObject("$sum", increment));
+		return sum(name, increment);
 	}
 
 	/**
@@ -292,6 +344,10 @@ public class GroupOperation extends AbstractAggregateOperation {
 		return count(name, 1);
 	}
 
+	private GroupOperation sum(String name, Object field) {
+		return addOperation("$sum", name, field);
+	}
+
 	/**
 	 * Adds a field with the <a href="http://docs.mongodb.org/manual/reference/aggregation/addToSet/#grp._S_sum">$sum
 	 * operation</a>.
@@ -308,7 +364,7 @@ public class GroupOperation extends AbstractAggregateOperation {
 	 * @return
 	 */
 	public GroupOperation sum(String name, String field) {
-		return addOperation("$sum", name, field);
+		return sum(name, (Object) field);
 	}
 
 	/**
@@ -329,106 +385,37 @@ public class GroupOperation extends AbstractAggregateOperation {
 		return sum(field, field);
 	}
 
-	protected GroupOperation addOperation(String operation, String name, String field) {
-		return addField(name, new BasicDBObject(operation, ReferenceUtil.safeReference(field)));
+	protected GroupOperation addOperation(String operation, String name, Object field) {
+
+		getOutputAggregateOperationContext().registerAvailableField(name);
+		this.ops.add(new GroupingOperation(operation, name, field));
+		return this;
 	}
 
-	/**
-	 * Creates a <code>$group</code> operation with a id that consists of multiple fields. Using
-	 * {@link IdField#idField(String)} or {@link IdField#idField(String, String)} you can easily create complex id fields
-	 * like:
-	 * 
-	 * <pre>
-	 * 
-	 * group(idField(&quot;path&quot;), idField(&quot;pageView&quot;, &quot;page.views&quot;), idField(&quot;field3&quot;))
-	 * 
-	 * </pre>
-	 * 
-	 * which would result in:
-	 * 
-	 * <pre>
-	 * 
-	 *     {$group: {_id: {path: "$path", pageView: "$page.views", field3: "$field3"}}}
-	 * 
-	 * </pre>
-	 * 
-	 * @param idFields
-	 * @return
-	 */
-	// TODO still relevant? IdField is probably a better abstraction than Fields?!
-	public static GroupOperation group(IdField... idFields) {
-		Assert.notNull(idFields, "Combined id is null");
+	static class GroupingOperation {
+		final String operation;
+		final String alias;
+		final Object fieldNameOrValue;
 
-		BasicDBObject id = new BasicDBObject();
-		for (IdField idField : idFields) {
-			id.put(idField.getKey(), idField.getValue());
+		public GroupingOperation(String operation, String alias, Object fieldNameOrValue) {
+			this.operation = operation;
+			this.alias = alias;
+			this.fieldNameOrValue = fieldNameOrValue;
 		}
 
-		return new GroupOperation(id);
-	}
+		public DBObject toDbObject(AggregateOperationContext inputAggregateOperationContext) {
 
-	/**
-	 * Represents a single field in a complex id of a <code>$group</code> operation. For example:
-	 * 
-	 * <pre>
-	 *     {$group: {_id: {key: "$value"}}}
-	 * </pre>
-	 */
-	public static class IdField {
+			Object fieldNameOrValueToUse = fieldNameOrValue;
 
-		private final String key;
-		private final String value;
+			if (fieldNameOrValue instanceof String) {
+				if (inputAggregateOperationContext != null) {
+					fieldNameOrValueToUse = inputAggregateOperationContext
+							.returnFieldNameAliasIfAvailableOr((String) fieldNameOrValueToUse);
+				}
+				fieldNameOrValueToUse = ReferenceUtil.safeReference((String) fieldNameOrValueToUse);
+			}
 
-		/**
-		 * Creates a new {@link IdField} with the given key and value.
-		 * 
-		 * @param key must not be {@literal null} or empty.
-		 * @param value must not be {@literal null} or empty.
-		 */
-		public IdField(String key, String value) {
-
-			Assert.hasText(key, "Key must not be null or empty");
-			Assert.hasText(value, "Value must not be null or empty");
-
-			this.key = ReferenceUtil.safeNonReference(key);
-			this.value = ReferenceUtil.safeReference(value);
-		}
-
-		public String getKey() {
-			return key;
-		}
-
-		public String getValue() {
-			return value;
-		}
-
-		/**
-		 * Creates an id field with the name of the referenced field:
-		 * 
-		 * <pre>
-		 * _id : { field : "$field" }
-		 * </pre>
-		 * 
-		 * @param field reference to a field of the document
-		 * @return the id field
-		 */
-		public static IdField idField(String field) {
-			return new IdField(field, field);
-		}
-
-		/**
-		 * Creates an id field with key and reference.
-		 * 
-		 * <pre>
-		 * _id: {key: "$field"}
-		 * </pre>
-		 * 
-		 * @param key the key
-		 * @param field reference to a field of the document
-		 * @return the id field
-		 */
-		public static IdField idField(String key, String field) {
-			return new IdField(key, field);
+			return new BasicDBObject(operation, fieldNameOrValueToUse);
 		}
 	}
 }

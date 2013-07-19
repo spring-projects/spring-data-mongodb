@@ -18,20 +18,27 @@ package org.springframework.data.mongodb.core.aggregation;
 import org.springframework.util.Assert;
 
 /**
+ * Encapsulates the aggregation framework {@code $unwind}-operation.
+ * 
+ * @see http://docs.mongodb.org/manual/reference/aggregation/unwind/#pipe._S_unwind
  * @author Thomas Darimont
  */
-public class UnwindOperation extends AbstractAggregateOperation {
+public class UnwindOperation extends AbstractContextProducingAggregateOperation implements
+		ContextConsumingAggregateOperation {
 
 	private final String fieldName;
 
 	public UnwindOperation(String fieldName) {
+
 		super("unwind");
 		Assert.notNull(fieldName);
 		this.fieldName = fieldName;
+
+		getOutputAggregateOperationContext().registerAvailableField(fieldName, fieldName);
 	}
 
 	@Override
-	public Object getOperationArgument() {
+	public Object getOperationArgument(AggregateOperationContext inputAggregateOperationContext) {
 		return ReferenceUtil.safeReference(fieldName);
 	}
 }

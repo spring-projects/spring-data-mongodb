@@ -16,6 +16,9 @@
 package org.springframework.data.mongodb.core.aggregation;
 
 /**
+ * Encapsulates the aggregation framework {@code $skip}-operation.
+ * 
+ * @see http://docs.mongodb.org/manual/reference/aggregation/skip/
  * @author Thomas Darimont
  */
 public class SkipOperation extends AbstractAggregateOperation {
@@ -30,9 +33,6 @@ public class SkipOperation extends AbstractAggregateOperation {
 		this.skipCount = skipCount;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AbstractAggregateOperation#getOperationArgument()
-	 */
 	@Override
 	public Object getOperationArgument() {
 		return skipCount;

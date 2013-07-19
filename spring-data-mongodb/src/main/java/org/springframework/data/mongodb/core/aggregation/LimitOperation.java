@@ -16,6 +16,9 @@
 package org.springframework.data.mongodb.core.aggregation;
 
 /**
+ * Encapsulates the {@code $limit}-operation
+ * 
+ * @see http://docs.mongodb.org/manual/reference/aggregation/limit/
  * @author Thomas Darimont
  */
 class LimitOperation extends AbstractAggregateOperation {
@@ -30,9 +33,6 @@ class LimitOperation extends AbstractAggregateOperation {
 		this.maxElements = maxElements;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AbstractAggregateOperation#getOperationArgument()
-	 */
 	@Override
 	public Object getOperationArgument() {
 		return maxElements;

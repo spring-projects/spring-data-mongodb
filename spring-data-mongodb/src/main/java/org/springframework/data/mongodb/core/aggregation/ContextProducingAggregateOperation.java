@@ -15,24 +15,12 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import org.springframework.data.mongodb.core.query.NearQuery;
-import org.springframework.util.Assert;
-
 /**
+ * Represents one single operation in an aggregation pipeline that is aware of an {@link AggregateOperationContext} that
+ * produces an {@link AggregateOperationContext} as output.
+ * 
  * @author Thomas Darimont
  */
-public class GeoNearOperation extends AbstractAggregateOperation {
-
-	private final NearQuery nearQuery;
-
-	public GeoNearOperation(NearQuery nearQuery) {
-		super("geoNear");
-		Assert.notNull(nearQuery);
-		this.nearQuery = nearQuery;
-	}
-
-	@Override
-	public Object getOperationArgument() {
-		return nearQuery.toDBObject();
-	}
+public interface ContextProducingAggregateOperation extends AggregationOperation {
+	AggregateOperationContext getOutputAggregateOperationContext();
 }

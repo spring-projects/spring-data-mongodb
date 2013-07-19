@@ -38,8 +38,8 @@ public class ProjectionTests {
 	public void emptyProjection() {
 
 		DBObject raw = safeExtractDbObjectFromProjection(project());
-		assertThat(raw, is(notNullValue()));
-		assertThat(raw.toMap().isEmpty(), is(true));
+		assertThat(raw.toMap().size(), is(1));
+		assertThat((Integer) raw.get("_id"), is(0));
 	}
 
 	@Test(expected = IllegalArgumentException.class)
@@ -69,14 +69,19 @@ public class ProjectionTests {
 	public void exclude() {
 
 		DBObject raw = safeExtractDbObjectFromProjection(project().exclude("a"));
-		assertSingleDBObject("a", 0, raw);
+		assertThat(raw.toMap().size(), is(2));
+		assertThat((Integer) raw.get("_id"), is(0));
+		assertThat((Integer) raw.get("a"), is(0));
+
 	}
 
 	@Test
 	public void includeAlias() {
 
 		DBObject raw = safeExtractDbObjectFromProjection(project().include("a").as("b"));
-		assertSingleDBObject("b", "$a", raw);
+		assertThat(raw.toMap().size(), is(2));
+		assertThat((Integer) raw.get("_id"), is(0));
+		assertThat((String) raw.get("b"), is("$a"));
 	}
 
 	@Test(expected = InvalidDataAccessApiUsageException.class)
@@ -94,10 +99,10 @@ public class ProjectionTests {
 	public void plus() {
 
 		DBObject raw = safeExtractDbObjectFromProjection(project().include("a").plus(10));
-		assertNotNullDBObject(raw);
+		assertThat(raw, is(notNullValue()));
 
 		DBObject addition = (DBObject) raw.get("a");
-		assertNotNullDBObject(addition);
+		assertThat(addition, is(notNullValue()));
 
 		List<Object> summands = (List<Object>) addition.get("$add");
 		assertThat(summands, is(notNullValue()));
@@ -111,10 +116,10 @@ public class ProjectionTests {
 	public void plusWithAlias() {
 
 		DBObject raw = safeExtractDbObjectFromProjection(project().include("a").plus(10).as("b"));
-		assertNotNullDBObject(raw);
+		assertThat(raw, is(notNullValue()));
 
 		DBObject addition = (DBObject) raw.get("b");
-		assertNotNullDBObject(addition);
+		assertThat(addition, is(notNullValue()));
 
 		List<Object> summands = (List<Object>) addition.get("$add");
 		assertThat(summands, is(notNullValue()));
@@ -137,8 +142,8 @@ public class ProjectionTests {
 	private static DBObject safeExtractDbObjectFromProjection(ProjectionOperation projectionOperation) {
 
 		assertThat(projectionOperation, is(notNullValue()));
-		DBObject dbObject = projectionOperation.toDbObject();
-		assertNotNullDBObject(dbObject);
+		DBObject dbObject = projectionOperation.toDbObject(new BasicAggregateOperationContext());
+		assertThat(dbObject, is(notNullValue()));
 		Object projection = dbObject.get("$project");
 		assertThat("Expected non null value for key $project ", projection, is(notNullValue()));
 		assertTrue("projection contents should be a " + DBObject.class.getSimpleName(), projection instanceof DBObject);
@@ -148,13 +153,7 @@ public class ProjectionTests {
 
 	private static void assertSingleDBObject(String key, Object value, DBObject doc) {
 
-		assertNotNullDBObject(doc);
-		assertThat(doc.get(key), is(value));
-	}
-
-	private static void assertNotNullDBObject(DBObject doc) {
-
 		assertThat(doc, is(notNullValue()));
-		assertThat(doc.toMap().size(), is(1));
+		assertThat(doc.get(key), is(value));
 	}
 }

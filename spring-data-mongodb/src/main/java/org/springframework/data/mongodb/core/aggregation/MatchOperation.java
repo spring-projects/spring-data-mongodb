@@ -23,6 +23,7 @@ import com.mongodb.DBObject;
 /**
  * Encapsulates the {@code $match}-operation
  * 
+ * @see http://docs.mongodb.org/manual/reference/aggregation/match/
  * @author Sebastian Herold
  * @author Thomas Darimont
  * @since 1.3

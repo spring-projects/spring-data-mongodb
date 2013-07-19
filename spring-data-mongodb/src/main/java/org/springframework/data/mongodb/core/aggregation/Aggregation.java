@@ -23,7 +23,6 @@ import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.util.Assert;
-import org.springframework.util.StringUtils;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
@@ -73,40 +72,53 @@ public class Aggregation<I, O> {
 
 	private List<DBObject> getOperationObjects() {
 
+		AggregateOperationContext aggregateOperationContext = createInitialAggregateOperationContext();
 		List<DBObject> operationObjects = new ArrayList<DBObject>();
 		for (AggregationOperation operation : operations) {
-			operationObjects.add(operation.toDbObject());
+
+			if (operation instanceof NoopAggreationOperation) {
+				continue;
+			}
+
+			operationObjects.add(toOperationObject(operation, aggregateOperationContext));
+			if (operation instanceof ContextProducingAggregateOperation) {
+				aggregateOperationContext = ((ContextProducingAggregateOperation) operation)
+						.getOutputAggregateOperationContext();
+			}
 		}
 		return operationObjects;
 	}
 
-	/* (non-Javadoc)
-	 * @see java.lang.Object#toString()
+	/**
+	 * @param aggregateOperationContext
+	 * @param operation
+	 * @return the {@link DBObject} representation of the given {@link AggregationOperation}
 	 */
-	@Override
-	public String toString() {
-		return StringUtils.collectionToCommaDelimitedString(operations);
+	protected DBObject toOperationObject(AggregationOperation operation,
+			AggregateOperationContext aggregateOperationContext) {
+
+		DBObject operationObject;
+		if (operation instanceof ContextConsumingAggregateOperation) {
+			operationObject = ((ContextConsumingAggregateOperation) operation).toDbObject(aggregateOperationContext);
+		} else {
+			operationObject = operation.toDbObject();
+		}
+		return operationObject;
 	}
 
-	/**
-	 * Factory method to create a new {@link GroupOperation} for the given {@code id}.
-	 * 
-	 * @param id, must not be {@literal null}
-	 * @return
-	 */
-	public static GroupOperation group(DBObject id) {
-		return new GroupOperation(id);
+	protected AggregateOperationContext createInitialAggregateOperationContext() {
+		return new BasicAggregateOperationContext();
 	}
 
 	/**
 	 * Factory method to create a new {@link GroupOperation} for the given {@code idFields}.
 	 * 
 	 * @param idField the first idField to use, must not be {@literal null}.
-	 * @param moreIdFields more id fields to use, can be {@literal null}.
+	 * @param additionalIdFields more id fields to use, can be {@literal null}.
 	 * @return
 	 */
-	public static GroupOperation group(String idField, String... moreIdFields) {
-		return new GroupOperation(idField, moreIdFields);
+	public static GroupOperation group(String idField, String... additionalIdFields) {
+		return new GroupOperation(fields(idField, additionalIdFields));
 	}
 
 	/**
@@ -222,15 +234,6 @@ public class Aggregation<I, O> {
 	}
 
 	/**
-	 * Factory method to create a new empty {@link Fields} container for key-value pairs.
-	 * 
-	 * @return
-	 */
-	public static Fields fields() {
-		return fields(new String[0]);
-	}
-
-	/**
 	 * Factory method to create a new {@link Fields} container for key-value pairs from the given {@code fieldNames}.
 	 * <p>
 	 * A call to fields("a","b","c") generates:
@@ -246,8 +249,16 @@ public class Aggregation<I, O> {
 	 * 
 	 * @return
 	 */
-	public static Fields fields(String... fieldNames) {
-		return new BackendFields(fieldNames);
+	public static Fields fields(String fieldName, String... additionalFieldNames) {
+		return new BackendFields(additionalFieldNames).and(fieldName);
+	}
+
+	public static Fields fields() {
+		return new BackendFields();
+	}
+
+	public static Fields pick(String fieldName, Object fieldNameOrValue) {
+		return fields().and(fieldName, fieldNameOrValue);
 	}
 
 	/**

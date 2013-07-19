@@ -31,9 +31,6 @@ abstract class AbstractAggregateOperation implements AggregationOperation {
 		this.operationName = operationName;
 	}
 
-	/**
-	 * @return the operationName
-	 */
 	public String getOperationName() {
 		return operationName;
 	}
@@ -42,19 +39,18 @@ abstract class AbstractAggregateOperation implements AggregationOperation {
 		return OPERATOR_PREFIX + getOperationName();
 	}
 
-	/**
-	 * @return the argument for the operation
-	 */
-	public abstract Object getOperationArgument();
+	public Object getOperationArgument() {
+		return new BasicDBObject();
+	}
 
+	/* (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#toDbObject()
+	 */
 	@Override
 	public DBObject toDbObject() {
 		return new BasicDBObject(getOperationCommand(), getOperationArgument());
 	}
 
-	/* (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
 	@Override
 	public String toString() {
 		return String.valueOf(toDbObject());

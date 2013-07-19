@@ -19,9 +19,12 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
 /**
+ * Represents a skippable AggregationOperation that is not considered for execution.
+ * 
  * @author Thomas Darimont
  */
 public class NoopAggreationOperation implements AggregationOperation {
+
 	public DBObject toDbObject() {
 		return new BasicDBObject();
 	}

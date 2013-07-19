@@ -70,6 +70,11 @@ public class AggregationTests {
 	public void setUp() {
 		cleanDb();
 		initSampleDataIfNecessary();
+
+		CommandResult result = mongoTemplate.executeCommand("{ buildInfo: 1 }");
+		Object version = result.get("version");
+
+		LOGGER.debug("Server uses MongoDB Version: {}", version);
 	}
 
 	@After
@@ -149,7 +154,7 @@ public class AggregationTests {
 		Aggregation<Object, TagCount> agg = newAggregation( //
 				project("tags"), //
 				unwind("tags"), //
-				group($("tags")).count("n"), //
+				group("tags").count("n"), //
 				project().field("tag", $id()).field("n", 1), //
 				sort(DESC, "n") //
 		);
@@ -175,7 +180,7 @@ public class AggregationTests {
 		Aggregation<Object, TagCount> agg = newAggregation(//
 				project("tags"), //
 				unwind("tags"), //
-				group($("tags")).count("n"), //
+				group("tags").count("n"), //
 				project().field("tag", $id()).field("n", 1), //
 				sort(DESC, "n") //
 		);
@@ -198,7 +203,7 @@ public class AggregationTests {
 		Aggregation<Object, TagCount> agg = newAggregation( //
 				project("tags"), //
 				unwind("tags"), //
-				group($("tags")).count("count"), //
+				group("tags").count("count"), //
 				limit(2) //
 		);
 
@@ -222,29 +227,53 @@ public class AggregationTests {
 		assertThat(fields, is(notNullValue()));
 		assertThat(fields.getValues(), is(notNullValue()));
 		assertThat(fields.getValues().size(), is(4));
-		assertThat(fields.getValues().get("a"), is((Object) "$a"));
-		assertThat(fields.getValues().get("b"), is((Object) "$b"));
-		assertThat(fields.getValues().get("c"), is((Object) "$c"));
+		assertThat(fields.getValues().get("a"), is((Object) "a"));
+		assertThat(fields.getValues().get("b"), is((Object) "b"));
+		assertThat(fields.getValues().get("c"), is((Object) "c"));
 		assertThat(fields.getValues().get("d"), is((Object) 42));
 	}
 
 	@Test
-	public void groupFactoryMethodWithFieldsAndSumOperation() {
+	public void shouldCreateSimpleIdForGroupOperationWithSingleSimpleIdField() {
 
-		Fields fields = fields("a", "b").and("c").and("d", 42);
-		GroupOperation groupOperation = group(fields).sum("e");
+		Fields fields = fields("a");
+		GroupOperation groupOperation = new GroupOperation(fields);
 
-		assertThat(groupOperation, is(notNullValue()));
-		assertThat(groupOperation.toDbObject(), is(notNullValue()));
-		assertThat(groupOperation.id, is(notNullValue()));
-		assertThat(groupOperation.id, is((Object) fields.getValues()));
-		assertThat(groupOperation.fields, is(notNullValue()));
-		assertThat(groupOperation.fields.size(), is(1));
-		assertThat(groupOperation.fields.containsKey("e"), is(true));
-		assertThat(groupOperation.fields.get("e"), is(notNullValue()));
-		assertThat(groupOperation.fields.get("e").get("$sum"), is(notNullValue()));
-		assertThat(groupOperation.fields.get("e").get("$sum"), is((Object) "$e"));
+		DBObject dbObject = groupOperation.toDbObject(new BasicAggregateOperationContext());
+		assertThat(dbObject, is(notNullValue()));
+		assertThat(dbObject.get("$group"), is(notNullValue()));
+		assertThat(((DBObject) dbObject.get("$group")).get(id()), is(notNullValue()));
+		assertThat(((DBObject) dbObject.get("$group")).get(id()), is((Object) "$a"));
 	}
+
+	@Test
+	public void shouldCreateComplexIdForGroupOperationWithSingleComplexIdField() {
+
+		Fields fields = fields().and("a", 42);
+		GroupOperation groupOperation = new GroupOperation(fields);
+
+		assertThat(groupOperation.toDbObject(new BasicAggregateOperationContext()), is(notNullValue()));
+		assertThat(groupOperation.id, is(notNullValue()));
+		assertThat(groupOperation.id, is((Object) new BasicDBObject("a", 42)));
+	}
+
+	// @Test
+	// public void groupFactoryMethodWithMultipleFieldsAndSumOperation() {
+	//
+	// Fields fields = fields("a", "b").pick("c").pick("d", 42);
+	// GroupOperation groupOperation = group(fields).sum("e");
+	//
+	// assertThat(groupOperation, is(notNullValue()));
+	// assertThat(groupOperation.toDbObject(null), is(notNullValue()));
+	// assertThat(groupOperation.id, is(notNullValue()));
+	// assertThat(groupOperation.id, is((Object) new BasicDBObject(fields.getValues())));
+	// assertThat(groupOperation.fields, is(notNullValue()));
+	// assertThat(groupOperation.fields.size(), is(1));
+	// assertThat(groupOperation.fields.containsKey("e"), is(true));
+	// assertThat(groupOperation.fields.get("e"), is(notNullValue()));
+	// assertThat(groupOperation.fields.get("e").get("$sum"), is(notNullValue()));
+	// assertThat(groupOperation.fields.get("e").get("$sum"), is((Object) "$e"));
+	// }
 
 	@Test
 	public void complexAggregationFrameworkUsageLargestAndSmallestCitiesByState() {
@@ -308,20 +337,19 @@ public class AggregationTests {
 		)
 		*/
 
-		TypedAggregation<ZipInfo, ZipInfoStats> agg = newAggregation(
-				ZipInfo.class, //
-				group("state", "city").sum("pop"), // group("state", "city") -> _id: {state: $state, city: $city}
-				sort(ASC, "pop", id("state"), id("city")), //
-				group($id("state")) // $id("state") -> _id : $_id.state
-						.last("biggestCity", $id("city")) //
-						.last("biggestPop", $("pop")) //
-						.first("smallestCity", $id("city")) //
-						.first("smallestPop", $("pop")), //
+		TypedAggregation<ZipInfo, ZipInfoStats> agg = newAggregation(ZipInfo.class, //
+				group("state", "city").sum("pop"), //
+				sort(ASC, "pop", "state", "city"), //
+				group("state") //
+						.last("biggestCity", "city") //
+						.last("biggestPop", "pop") //
+						.first("smallestCity", "city") //
+						.first("smallestPop", "pop"), //
 				project(ZipInfoStats.class) //
 						.field("_id", 0) //
-						.field("state", $id()) // $id() -> $_id
-						.field("biggestCity", fields().and("name", $("biggestCity")).and("population", $("biggestPop"))) //
-						.field("smallestCity", fields().and("name", $("smallestCity")).and("population", $("smallestPop"))),
+						.field("state", id()) //
+						.field("biggestCity", pick("name", "biggestCity").and("population", "biggestPop")) //
+						.field("smallestCity", pick("name", "smallestCity").and("population", "smallestPop")), //
 				sort(ASC, "state") //
 		);
 
@@ -359,10 +387,12 @@ public class AggregationTests {
 	@Test
 	public void findStatesWithPopulationOver10MillionAggregationExample() {
 		/*
-		 //complex mongodb aggregation framework example from http://docs.mongodb.org/manual/tutorial/aggregation-examples/#largest-and-smallest-cities-by-state
+		 //complex mongodb aggregation framework example from 
+		 http://docs.mongodb.org/manual/tutorial/aggregation-examples/#largest-and-smallest-cities-by-state
+		 
 		 db.zipcodes.aggregate( 
 			 	{
-				   $group:{
+				   $group: {
 				      _id:"$state",
 				      totalPop:{ $sum:"$pop"}
 		 			 }
@@ -371,7 +401,7 @@ public class AggregationTests {
 		 			$sort: { _id: 1, "totalPop": 1 } 
 		 		},
 				{
-				   $match:{
+				   $match: {
 				      totalPop: { $gte:10*1000*1000 }
 				   }
 				}
@@ -379,7 +409,7 @@ public class AggregationTests {
 		  */
 
 		TypedAggregation<ZipInfo, StateStats> agg = newAggregation(ZipInfo.class, //
-				group("state").sum("totalPop", $("pop")), // fields("state", "city") -> state: $state, city: $city
+				group("state").sum("totalPop", "pop"), //
 				sort(ASC, id(), "totalPop"), //
 				match(where("totalPop").gte(10 * 1000 * 1000)) //
 		);
@@ -406,6 +436,16 @@ public class AggregationTests {
 	public void returnFiveMostCommonLikesAggregationFrameworkExample() {
 
 		createUserWithLikesDocuments();
+
+		/*
+		 ...
+		  $group: {
+				      _id:"$like",
+				      number:{ $sum:1}
+		 			 }
+		  ...
+		 
+		 */
 
 		TypedAggregation<UserWithLikes, LikeStats> agg = newAggregation(UserWithLikes.class, //
 				unwind("likes"), //
