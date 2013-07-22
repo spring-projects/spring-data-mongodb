@@ -30,6 +30,7 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.convert.AbstractMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.core.convert.MongoTypeMapper;
 import org.springframework.data.mongodb.core.geo.Point;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
@@ -45,14 +46,13 @@ import com.mongodb.DBRef;
  * instances of their implementation and thus can see if it correctly implements the {@link MongoOperations} interface.
  * 
  * @author Oliver Gierke
+ * @author Thomas Darimont
  */
 @RunWith(MockitoJUnitRunner.class)
 public abstract class MongoOperationsUnitTests {
 
-	@Mock
-	CollectionCallback<Object> collectionCallback;
-	@Mock
-	DbCallback<Object> dbCallback;
+	@Mock CollectionCallback<Object> collectionCallback;
+	@Mock DbCallback<Object> dbCallback;
 
 	MongoConverter converter;
 	Person person;
@@ -84,6 +84,11 @@ public abstract class MongoOperationsUnitTests {
 			}
 
 			public DBRef toDBRef(Object object, MongoPersistentProperty referingProperty) {
+				return null;
+			}
+
+			@Override
+			public MongoTypeMapper getTypeMapper() {
 				return null;
 			}
 		};

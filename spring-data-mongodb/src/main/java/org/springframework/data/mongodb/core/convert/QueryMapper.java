@@ -30,6 +30,7 @@ import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.context.PersistentPropertyPath;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.util.Assert;
 
 import com.mongodb.BasicDBList;
@@ -75,6 +76,7 @@ public class QueryMapper {
 	 * @param entity can be {@literal null}.
 	 * @return
 	 */
+	@SuppressWarnings("deprecation")
 	public DBObject getMappedObject(DBObject query, MongoPersistentEntity<?> entity) {
 
 		if (Keyword.isKeyword(query)) {
@@ -84,6 +86,16 @@ public class QueryMapper {
 		DBObject result = new BasicDBObject();
 
 		for (String key : query.keySet()) {
+
+			// TODO: remove one once QueryMapper can work with Query instances directly
+			if (Query.isRestrictedTypeKey(key)) {
+
+				@SuppressWarnings("unchecked")
+				Set<Class<?>> restrictedTypes = (Set<Class<?>>) query.get(key);
+				this.converter.getTypeMapper().writeTypeRestrictions(result, restrictedTypes);
+
+				continue;
+			}
 
 			if (Keyword.isKeyword(key)) {
 				result.putAll(getMappedKeyword(new Keyword(query, key), entity));

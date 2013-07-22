@@ -19,8 +19,11 @@ import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
 import static org.springframework.util.ObjectUtils.*;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -34,9 +37,13 @@ import com.mongodb.DBObject;
 /**
  * @author Thomas Risberg
  * @author Oliver Gierke
+ * @author Thomas Darimont
  */
 public class Query {
 
+	private final static String RESTRICTED_TYPES_KEY = "_$RESTRICTED_TYPES";
+
+	private final Set<Class<?>> restrictedTypes = new HashSet<Class<?>>();
 	private LinkedHashMap<String, Criteria> criteria = new LinkedHashMap<String, Criteria>();
 	private Field fieldSpec;
 	private Sort sort;
@@ -54,8 +61,7 @@ public class Query {
 		return new Query(criteria);
 	}
 
-	public Query() {
-	}
+	public Query() {}
 
 	/**
 	 * Creates a new {@link Query} using the given {@link Criteria}.
@@ -161,13 +167,46 @@ public class Query {
 		return this;
 	}
 
+	/**
+	 * @return the restrictedTypes
+	 */
+	public Set<Class<?>> getRestrictedTypes() {
+		return restrictedTypes == null ? Collections.<Class<?>> emptySet() : restrictedTypes;
+	}
+
+	/**
+	 * Restricts the query to only return documents instances that are exactly of the given types.
+	 * 
+	 * @param type may not be {@literal null}
+	 * @param additionalTypes may not be {@literal null}
+	 * @return
+	 */
+	public Query restrict(Class<?> type, Class<?>... additionalTypes) {
+
+		Assert.notNull(type, "Type must not be null!");
+		Assert.notNull(additionalTypes, "AdditionalTypes must not be null");
+
+		restrictedTypes.add(type);
+		for (Class<?> additionalType : additionalTypes) {
+			restrictedTypes.add(additionalType);
+		}
+
+		return this;
+	}
+
 	public DBObject getQueryObject() {
+
 		DBObject dbo = new BasicDBObject();
 		for (String k : criteria.keySet()) {
 			CriteriaDefinition c = criteria.get(k);
 			DBObject cl = c.getCriteriaObject();
 			dbo.putAll(cl);
 		}
+
+		if (!restrictedTypes.isEmpty()) {
+			dbo.put(RESTRICTED_TYPES_KEY, getRestrictedTypes());
+		}
+
 		return dbo;
 	}
 
@@ -265,5 +304,18 @@ public class Query {
 		result += 31 * limit;
 
 		return result;
+	}
+
+	/**
+	 * Returns whether the given key is the one used to hold the type restriction information.
+	 * 
+	 * @deprecated don't call this method as the restricted type handling will undergo some significant changes going
+	 *             forward.
+	 * @param key
+	 * @return
+	 */
+	@Deprecated
+	public static boolean isRestrictedTypeKey(String key) {
+		return RESTRICTED_TYPES_KEY.equals(key);
 	}
 }

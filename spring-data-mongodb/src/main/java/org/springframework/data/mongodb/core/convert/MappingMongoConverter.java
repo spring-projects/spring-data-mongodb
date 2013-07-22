@@ -72,6 +72,7 @@ import com.mongodb.DBRef;
  * @author Oliver Gierke
  * @author Jon Brisbin
  * @author Patrik Wasik
+ * @author Thomas Darimont
  */
 public class MappingMongoConverter extends AbstractMongoConverter implements ApplicationContextAware {
 
@@ -122,6 +123,15 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	public void setTypeMapper(MongoTypeMapper typeMapper) {
 		this.typeMapper = typeMapper == null ? new DefaultMongoTypeMapper(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY,
 				mappingContext) : typeMapper;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.convert.MongoConverter#getTypeMapper()
+	 */
+	@Override
+	public MongoTypeMapper getTypeMapper() {
+		return this.typeMapper;
 	}
 
 	/**
@@ -356,8 +366,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			try {
 				Object id = wrapper.getProperty(idProperty, Object.class, fieldAccessOnly);
 				dbo.put("_id", idMapper.convertId(id));
-			} catch (ConversionException ignored) {
-			}
+			} catch (ConversionException ignored) {}
 		}
 
 		// Write the properties

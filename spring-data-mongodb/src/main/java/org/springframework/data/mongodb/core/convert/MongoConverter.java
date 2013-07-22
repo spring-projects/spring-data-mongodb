@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 the original author or authors.
+ * Copyright 2010-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core.convert;
 
 import org.springframework.data.convert.EntityConverter;
 import org.springframework.data.convert.EntityReader;
+import org.springframework.data.convert.TypeMapper;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 
@@ -26,9 +27,17 @@ import com.mongodb.DBObject;
  * Central Mongo specific converter interface which combines {@link MongoWriter} and {@link MongoReader}.
  * 
  * @author Oliver Gierke
+ * @author Thomas Darimont
  */
 public interface MongoConverter extends
 		EntityConverter<MongoPersistentEntity<?>, MongoPersistentProperty, Object, DBObject>, MongoWriter<Object>,
 		EntityReader<Object, DBObject> {
 
+	/**
+	 * Returns thw {@link TypeMapper} being used to write type information into {@link DBObject}s created with that
+	 * converter.
+	 * 
+	 * @return will never be {@literal null}.
+	 */
+	MongoTypeMapper getTypeMapper();
 }
