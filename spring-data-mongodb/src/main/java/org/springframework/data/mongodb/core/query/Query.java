@@ -19,13 +19,19 @@ import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
 import static org.springframework.util.ObjectUtils.*;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Set;
 
+import org.springframework.data.convert.SimpleTypeInformationMapper;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
+import org.springframework.data.mongodb.core.convert.DefaultMongoTypeMapper;
+import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.util.Assert;
 
 import com.mongodb.BasicDBObject;
@@ -34,6 +40,7 @@ import com.mongodb.DBObject;
 /**
  * @author Thomas Risberg
  * @author Oliver Gierke
+ * @author Thomas Darimont
  */
 public class Query {
 
@@ -43,6 +50,7 @@ public class Query {
 	private int skip;
 	private int limit;
 	private String hint;
+	private Set<Class<?>> restrictedTypes;
 
 	/**
 	 * Static factory method to create a {@link Query} using the provided {@link Criteria}.
@@ -54,8 +62,7 @@ public class Query {
 		return new Query(criteria);
 	}
 
-	public Query() {
-	}
+	public Query() {}
 
 	/**
 	 * Creates a new {@link Query} using the given {@link Criteria}.
@@ -156,6 +163,46 @@ public class Query {
 			this.sort = sort;
 		} else {
 			this.sort = this.sort.and(sort);
+		}
+
+		return this;
+	}
+
+	/**
+	 * @return the restrictedTypes
+	 */
+	public Set<Class<?>> getRestrictedTypes() {
+		return restrictedTypes == null ? Collections.<Class<?>> emptySet() : restrictedTypes;
+	}
+
+	/**
+	 * Restricts the query to only return documents instances that are exactly of the given types.
+	 * 
+	 * @param firstType may not be {@literal null}
+	 * @param additionalTypes may not be {@literal null}
+	 * @return
+	 */
+	public Query restrict(Class<?> firstType, Class<?>... additionalTypes) {
+
+		Assert.notNull(firstType, "firstType must not be null!");
+		Assert.notNull(additionalTypes, "additionalTypes must not be null");
+
+		if (restrictedTypes == null) {
+			restrictedTypes = new HashSet<Class<?>>();
+		}
+
+		restrictedTypes.add(firstType);
+		for (Class<?> additionalType : additionalTypes) {
+			restrictedTypes.add(additionalType);
+		}
+
+		if (!restrictedTypes.isEmpty()) {
+			List<String> restrictedMappedTypes = new ArrayList<String>();
+			for (Class<?> restrictedType : restrictedTypes) {
+				restrictedMappedTypes.add(SimpleTypeInformationMapper.INSTANCE.createAliasFor(ClassTypeInformation
+						.from(restrictedType)));
+			}
+			addCriteria(Criteria.where(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY).in(restrictedMappedTypes));
 		}
 
 		return this;

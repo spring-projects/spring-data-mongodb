@@ -20,6 +20,8 @@ import static org.junit.Assert.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
+import java.util.Arrays;
+
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -27,6 +29,7 @@ import org.junit.rules.ExpectedException;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
+import org.springframework.data.mongodb.core.SpecialDoc;
 
 /**
  * Unit tests for {@link Query}.
@@ -34,11 +37,11 @@ import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
  * @author Thomas Risberg
  * @author Oliver Gierke
  * @author Patryk Wasik
+ * @author Thomas Darimont
  */
 public class QueryTests {
 
-	@Rule
-	public ExpectedException exception = ExpectedException.none();
+	@Rule public ExpectedException exception = ExpectedException.none();
 
 	@Test
 	public void testSimpleQuery() {
@@ -59,8 +62,7 @@ public class QueryTests {
 		try {
 			new Query(where("name").not().is("Thomas"));
 			Assert.fail("This should have caused an InvalidDocumentStoreApiUsageException");
-		} catch (InvalidMongoDbApiUsageException e) {
-		}
+		} catch (InvalidMongoDbApiUsageException e) {}
 	}
 
 	@Test
@@ -194,5 +196,20 @@ public class QueryTests {
 		exception.expectMessage("foo");
 
 		new Query().with(new Sort(new Sort.Order("foo").ignoreCase()));
+	}
+
+	/**
+	 * @see DATAMONGO-709
+	 */
+	@Test
+	@SuppressWarnings("unchecked")
+	public void shouldReturnClassHierarchyOfRestrictedTypes() {
+
+		Query query = new Query(where("name").is("foo")).restrict(SpecialDoc.class);
+		assertThat(query.getQueryObject().toString(), is("{ \"name\" : \"foo\" , \"_class\" : { \"$in\" : [ \""
+				+ SpecialDoc.class.getName() + "\"]}}"));
+		assertThat(query.getRestrictedTypes(), is(notNullValue()));
+		assertThat(query.getRestrictedTypes().size(), is(1));
+		assertThat(query.getRestrictedTypes(), hasItems(Arrays.asList(SpecialDoc.class).toArray(new Class<?>[0])));
 	}
 }
