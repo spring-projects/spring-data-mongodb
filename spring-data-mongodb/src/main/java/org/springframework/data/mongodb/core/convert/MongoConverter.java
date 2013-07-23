@@ -31,4 +31,5 @@ public interface MongoConverter extends
 		EntityConverter<MongoPersistentEntity<?>, MongoPersistentProperty, Object, DBObject>, MongoWriter<Object>,
 		EntityReader<Object, DBObject> {
 
+	MongoTypeMapper getMongoTypeMapper();
 }

@@ -156,6 +156,7 @@ public class MongoTemplateTests {
 		template.dropCollection(Document.class);
 		template.dropCollection(ObjectWith3AliasedFields.class);
 		template.dropCollection(ObjectWith3AliasedFieldsAndNestedAddress.class);
+		template.dropCollection(BaseDoc.class);
 	}
 
 	@Test
@@ -1841,6 +1842,96 @@ public class MongoTemplateTests {
 		assertThat(result.address, is(notNullValue()));
 		assertThat(result.address.city, is(nullValue()));
 		assertThat(result.address.state, is(stateValue));
+	}
+
+	/**
+	 * @see DATAMONGO-709
+	 */
+	@Test
+	public void aQueryRestrictedWithOneRestrictedResultTypeShouldReturnOnlyInstancesOfTheRestrictedType() {
+
+		BaseDoc doc0 = new BaseDoc();
+		doc0.value = "foo";
+		SpecialDoc doc1 = new SpecialDoc();
+		doc1.value = "foo";
+		doc1.specialValue = "specialfoo";
+		VerySpecialDoc doc2 = new VerySpecialDoc();
+		doc2.value = "foo";
+		doc2.specialValue = "specialfoo";
+		doc2.verySpecialValue = 4711;
+
+		String collectionName = template.getCollectionName(BaseDoc.class);
+		template.insert(doc0, collectionName);
+		template.insert(doc1, collectionName);
+		template.insert(doc2, collectionName);
+
+		Query query = Query.query(where("value").is("foo")).restrict(SpecialDoc.class);
+		List<BaseDoc> result = template.find(query, BaseDoc.class);
+
+		assertThat(result, is(notNullValue()));
+		assertThat(result.size(), is(1));
+		assertThat(result.get(0), is(instanceOf(SpecialDoc.class)));
+	}
+
+	/**
+	 * @see DATAMONGO-709
+	 */
+	@Test
+	public void aQueryRestrictedWithMultipleRestrictedResultTypesShouldReturnOnlyInstancesOfTheRestrictedTypes() {
+
+		BaseDoc doc0 = new BaseDoc();
+		doc0.value = "foo";
+		SpecialDoc doc1 = new SpecialDoc();
+		doc1.value = "foo";
+		doc1.specialValue = "specialfoo";
+		VerySpecialDoc doc2 = new VerySpecialDoc();
+		doc2.value = "foo";
+		doc2.specialValue = "specialfoo";
+		doc2.verySpecialValue = 4711;
+
+		String collectionName = template.getCollectionName(BaseDoc.class);
+		template.insert(doc0, collectionName);
+		template.insert(doc1, collectionName);
+		template.insert(doc2, collectionName);
+
+		Query query = Query.query(where("value").is("foo")).restrict(BaseDoc.class, VerySpecialDoc.class);
+		List<BaseDoc> result = template.find(query, BaseDoc.class);
+
+		assertThat(result, is(notNullValue()));
+		assertThat(result.size(), is(2));
+		assertThat(result.get(0).getClass(), is((Object) BaseDoc.class));
+		assertThat(result.get(1).getClass(), is((Object) VerySpecialDoc.class));
+	}
+
+	/**
+	 * @see DATAMONGO-709
+	 */
+	@Test
+	public void aQueryWithNoRestrictedResultTypesShouldReturnAllInstancesWithinTheGivenCollection() {
+
+		BaseDoc doc0 = new BaseDoc();
+		doc0.value = "foo";
+		SpecialDoc doc1 = new SpecialDoc();
+		doc1.value = "foo";
+		doc1.specialValue = "specialfoo";
+		VerySpecialDoc doc2 = new VerySpecialDoc();
+		doc2.value = "foo";
+		doc2.specialValue = "specialfoo";
+		doc2.verySpecialValue = 4711;
+
+		String collectionName = template.getCollectionName(BaseDoc.class);
+		template.insert(doc0, collectionName);
+		template.insert(doc1, collectionName);
+		template.insert(doc2, collectionName);
+
+		Query query = Query.query(where("value").is("foo"));
+		List<BaseDoc> result = template.find(query, BaseDoc.class);
+
+		assertThat(result, is(notNullValue()));
+		assertThat(result.size(), is(3));
+		assertThat(result.get(0).getClass(), is((Object) BaseDoc.class));
+		assertThat(result.get(1).getClass(), is((Object) SpecialDoc.class));
+		assertThat(result.get(2).getClass(), is((Object) VerySpecialDoc.class));
 	}
 
 	static interface Model {
