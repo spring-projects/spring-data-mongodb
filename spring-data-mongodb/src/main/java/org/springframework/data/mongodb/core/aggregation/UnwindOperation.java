@@ -15,30 +15,50 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
+import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.util.Assert;
+
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
 
 /**
  * Encapsulates the aggregation framework {@code $unwind}-operation.
  * 
  * @see http://docs.mongodb.org/manual/reference/aggregation/unwind/#pipe._S_unwind
  * @author Thomas Darimont
+ * @author Oliver Gierke
+ * @since 1.3
  */
-public class UnwindOperation extends AbstractContextProducingAggregateOperation implements
-		ContextConsumingAggregateOperation {
+public class UnwindOperation extends ExposedFieldsAggregationOperationContext implements AggregationOperation {
 
-	private final String fieldName;
+	private final ExposedField field;
 
-	public UnwindOperation(String fieldName) {
+	/**
+	 * Creates a new {@link UnwindOperation} for the given {@link Field}.
+	 * 
+	 * @param field must not be {@literal null}.
+	 */
+	public UnwindOperation(Field field) {
 
-		super("unwind");
-		Assert.notNull(fieldName);
-		this.fieldName = fieldName;
-
-		getOutputAggregateOperationContext().registerAvailableField(fieldName, fieldName);
+		Assert.notNull(field);
+		this.field = new ExposedField(field, true);
 	}
 
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.ExposedFieldsAggregationOperationContext#getFields()
+	 */
 	@Override
-	public Object getOperationArgument(AggregateOperationContext inputAggregateOperationContext) {
-		return ReferenceUtil.safeReference(fieldName);
+	protected ExposedFields getFields() {
+		return ExposedFields.from(field);
+	}
+
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#toDBObject(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
+	 */
+	@Override
+	public DBObject toDBObject(AggregationOperationContext context) {
+		return new BasicDBObject("$unwind", context.getReference(field).toString());
 	}
 }

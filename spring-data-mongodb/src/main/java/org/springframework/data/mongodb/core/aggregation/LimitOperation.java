@@ -15,13 +15,20 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
+import org.springframework.util.Assert;
+
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
+
 /**
  * Encapsulates the {@code $limit}-operation
  * 
  * @see http://docs.mongodb.org/manual/reference/aggregation/limit/
  * @author Thomas Darimont
+ * @author Oliver Gierke
+ * @since 1.3
  */
-class LimitOperation extends AbstractAggregateOperation {
+class LimitOperation implements AggregationOperation {
 
 	private final long maxElements;
 
@@ -29,12 +36,17 @@ class LimitOperation extends AbstractAggregateOperation {
 	 * @param maxElements Number of documents to consider.
 	 */
 	public LimitOperation(long maxElements) {
-		super("limit");
+
+		Assert.isTrue(maxElements >= 0, "Maximum number of elements must be greater or equal to zero!");
 		this.maxElements = maxElements;
 	}
 
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#toDBObject(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
+	 */
 	@Override
-	public Object getOperationArgument() {
-		return maxElements;
+	public DBObject toDBObject(AggregationOperationContext context) {
+		return new BasicDBObject("$limit", maxElements);
 	}
 }

@@ -22,16 +22,16 @@ import com.mongodb.DBObject;
  * 
  * @author Sebastian Herold
  * @author Thomas Darimont
+ * @author Oliver Gierke
  * @since 1.3
  */
 public interface AggregationOperation {
 
-	String OPERATOR_PREFIX = "$";
-
 	/**
-	 * Creates a {@link DBObject} representation backing this object.
+	 * Turns the {@link AggregationOperation} into a {@link DBObject} by using the given
+	 * {@link AggregationOperationContext}.
 	 * 
 	 * @return the DBObject
 	 */
-	DBObject toDbObject();
+	DBObject toDBObject(AggregationOperationContext context);
 }

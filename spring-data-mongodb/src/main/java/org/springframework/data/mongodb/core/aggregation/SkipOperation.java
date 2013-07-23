@@ -15,26 +15,36 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
+
 /**
  * Encapsulates the aggregation framework {@code $skip}-operation.
  * 
  * @see http://docs.mongodb.org/manual/reference/aggregation/skip/
  * @author Thomas Darimont
+ * @author Oliver Gierke
+ * @since 1.3
  */
-public class SkipOperation extends AbstractAggregateOperation {
+public class SkipOperation implements AggregationOperation {
 
 	private final long skipCount;
 
 	/**
+	 * Creates a new {@link SkipOperation} skipping the given number of elements.
+	 * 
 	 * @param skipCount number of documents to skip.
 	 */
 	public SkipOperation(long skipCount) {
-		super("skip");
 		this.skipCount = skipCount;
 	}
 
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#toDBObject(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
+	 */
 	@Override
-	public Object getOperationArgument() {
-		return skipCount;
+	public DBObject toDBObject(AggregationOperationContext context) {
+		return new BasicDBObject("$skip", skipCount);
 	}
 }

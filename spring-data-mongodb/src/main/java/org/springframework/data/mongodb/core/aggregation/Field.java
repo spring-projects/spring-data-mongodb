@@ -16,24 +16,14 @@
 package org.springframework.data.mongodb.core.aggregation;
 
 /**
- * @author Thomas Darimont
+ * @author Oliver Gierke
+ * @since 1.3
  */
-abstract class AbstractContextProducingAggregateOperation extends AbstractContextAwareAggregateOperation implements
-		ContextProducingAggregateOperation {
+public interface Field {
 
-	private final AggregateOperationContext outputAggregateOperationContext;
+	String getName();
 
-	public AbstractContextProducingAggregateOperation(String operationName) {
-		super(operationName);
-		this.outputAggregateOperationContext = createAggregateContext();
-	}
+	String getTarget();
 
-	private AggregateOperationContext createAggregateContext() {
-		return new BasicAggregateOperationContext();
-	}
-
-	public AggregateOperationContext getOutputAggregateOperationContext() {
-		return this.outputAggregateOperationContext;
-	}
-
+	boolean hasExplicitTarget();
 }

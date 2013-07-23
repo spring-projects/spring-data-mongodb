@@ -311,13 +311,12 @@ public interface MongoOperations {
 	 * 
 	 * @param aggregation The {@link TypedAggregation} specification holding the aggregation operations, must not be
 	 *          {@literal null}.
-	 * @param inputCollectionName The name of the input collection to use for the aggreation.
+	 * @param collectionName The name of the input collection to use for the aggreation.
 	 * @param outputType The parameterized type of the returned list, must not be {@literal null}.
 	 * @return The results of the aggregation operation.
 	 * @since 1.3
 	 */
-	<I, O> AggregationResults<O> aggregate(TypedAggregation<I, O> aggregation, String inputCollectionName,
-			Class<O> outputType);
+	<I, O> AggregationResults<O> aggregate(TypedAggregation<I> aggregation, String collectionName, Class<O> outputType);
 
 	/**
 	 * Execute an aggregation operation. The raw results will be mapped to the given entity class. The name of the
@@ -329,33 +328,33 @@ public interface MongoOperations {
 	 * @return The results of the aggregation operation.
 	 * @since 1.3
 	 */
-	<I, O> AggregationResults<O> aggregate(TypedAggregation<I, O> aggregation, Class<O> outputType);
+	<I, O> AggregationResults<O> aggregate(TypedAggregation<I> aggregation, Class<O> outputType);
 
 	/**
 	 * Execute an aggregation operation. The raw results will be mapped to the given entity class.
 	 * 
+	 * @param aggregation The {@link Aggregation} specification holding the aggregation operations, must not be
+	 *          {@literal null}.
 	 * @param inputType the inputType where the aggregation operation will read from, must not be {@literal null} or
 	 *          empty.
-	 * @param aggregation The {@link Aggregation} specification holding the aggregation operations, must not be
-	 *          {@literal null}.
 	 * @param outputType The parameterized type of the returned list, must not be {@literal null}.
 	 * @return The results of the aggregation operation.
 	 * @since 1.3
 	 */
-	<I, O> AggregationResults<O> aggregate(Class<I> inputType, Aggregation<I, O> aggregation, Class<O> outputType);
+	<O> AggregationResults<O> aggregate(Aggregation aggregation, Class<?> inputType, Class<O> outputType);
 
 	/**
 	 * Execute an aggregation operation. The raw results will be mapped to the given entity class.
 	 * 
-	 * @param inputCollectionName the collection where the aggregation operation will read from, must not be
-	 *          {@literal null} or empty.
 	 * @param aggregation The {@link Aggregation} specification holding the aggregation operations, must not be
 	 *          {@literal null}.
+	 * @param collectionName the collection where the aggregation operation will read from, must not be {@literal null} or
+	 *          empty.
 	 * @param outputType The parameterized type of the returned list, must not be {@literal null}.
 	 * @return The results of the aggregation operation.
 	 * @since 1.3
 	 */
-	<O> AggregationResults<O> aggregate(String inputCollectionName, Aggregation<?, O> aggregation, Class<O> outputType);
+	<O> AggregationResults<O> aggregate(Aggregation aggregation, String collectionName, Class<O> outputType);
 
 	/**
 	 * Execute a map-reduce operation. The map-reduce operation will be formed with an output type of INLINE

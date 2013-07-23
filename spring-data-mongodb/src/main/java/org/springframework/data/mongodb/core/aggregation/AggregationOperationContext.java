@@ -15,22 +15,21 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
+import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
+
 import com.mongodb.DBObject;
 
 /**
- * Represents one single operation in an aggregation pipeline that is aware of an {@link AggregateOperationContext}. The
- * {@code AggregateOperationContext} can be used to resolve the correct field reference expression for field references.
+ * The context for an {@link AggregationOperation}.
  * 
- * @author Thomas Darimont
+ * @author Oliver Gierke
+ * @since 1.3
  */
-public interface ContextConsumingAggregateOperation extends AggregationOperation {
+public interface AggregationOperationContext {
 
-	/**
-	 * Creates a {@link DBObject} representation backing this object and considers the field references from the given
-	 * {@link AggregateOperationContext}.
-	 * 
-	 * @param inputAggregateOperationContext
-	 * @return
-	 */
-	DBObject toDbObject(AggregateOperationContext inputAggregateOperationContext);
+	DBObject getMappedObject(DBObject dbObject);
+
+	FieldReference getReference(Field field);
+
+	FieldReference getReference(String name);
 }

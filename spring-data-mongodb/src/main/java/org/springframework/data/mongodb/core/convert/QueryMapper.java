@@ -356,7 +356,7 @@ public class QueryMapper {
 		protected final String name;
 
 		/**
-		 * Creates a new {@link Field} without meta-information but the given name.
+		 * Creates a new {@link DocumentField} without meta-information but the given name.
 		 * 
 		 * @param name must not be {@literal null} or empty.
 		 */
@@ -367,7 +367,7 @@ public class QueryMapper {
 		}
 
 		/**
-		 * Returns a new {@link Field} with the given name.
+		 * Returns a new {@link DocumentField} with the given name.
 		 * 
 		 * @param name must not be {@literal null} or empty.
 		 * @return
@@ -423,7 +423,7 @@ public class QueryMapper {
 	}
 
 	/**
-	 * Extension of {@link Field} to be backed with mapping metadata.
+	 * Extension of {@link DocumentField} to be backed with mapping metadata.
 	 * 
 	 * @author Oliver Gierke
 	 */

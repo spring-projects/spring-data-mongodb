@@ -15,17 +15,31 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import com.mongodb.BasicDBObject;
+import static org.hamcrest.CoreMatchers.*;
+import static org.junit.Assert.*;
+
+import org.junit.Test;
+import org.springframework.data.mongodb.core.DBObjectUtils;
+
 import com.mongodb.DBObject;
 
 /**
- * Represents a skippable AggregationOperation that is not considered for execution.
+ * Unit tests for {@link ProjectionOperation}.
  * 
- * @author Thomas Darimont
+ * @author Oliver Gierke
  */
-public class NoopAggreationOperation implements AggregationOperation {
+public class ProjectionOperationUnitTests {
 
-	public DBObject toDbObject() {
-		return new BasicDBObject();
+	static final String PROJECT = "$project";
+
+	@Test
+	public void declaresBackReferenceCorrectly() {
+
+		ProjectionOperation operation = new ProjectionOperation();
+		operation = operation.and("prop").backReference();
+
+		DBObject dbObject = operation.toDBObject(Aggregation.DEFAULT_CONTEXT);
+		DBObject projectClause = DBObjectUtils.getAsDBObject(dbObject, PROJECT);
+		assertThat(projectClause.get("prop"), is((Object) Fields.UNDERSCORE_ID_REF));
 	}
 }

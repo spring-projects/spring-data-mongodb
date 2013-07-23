@@ -73,7 +73,7 @@ public class Field {
 	 */
 	public Field position(String field, int value) {
 
-		Assert.hasText(field, "Field must not be null or empty!");
+		Assert.hasText(field, "DocumentField must not be null or empty!");
 
 		postionKey = field;
 		positionValue = value;

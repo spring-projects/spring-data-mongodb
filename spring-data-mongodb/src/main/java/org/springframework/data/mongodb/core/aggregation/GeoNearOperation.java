@@ -18,21 +18,29 @@ package org.springframework.data.mongodb.core.aggregation;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.util.Assert;
 
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
+
 /**
  * @author Thomas Darimont
+ * @since 1.3
  */
-public class GeoNearOperation extends AbstractAggregateOperation {
+public class GeoNearOperation implements AggregationOperation {
 
 	private final NearQuery nearQuery;
 
 	public GeoNearOperation(NearQuery nearQuery) {
-		super("geoNear");
+
 		Assert.notNull(nearQuery);
 		this.nearQuery = nearQuery;
 	}
 
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#toDBObject(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
+	 */
 	@Override
-	public Object getOperationArgument() {
-		return nearQuery.toDBObject();
+	public DBObject toDBObject(AggregationOperationContext context) {
+		return new BasicDBObject("$geoNear", context.getMappedObject(nearQuery.toDBObject()));
 	}
 }
