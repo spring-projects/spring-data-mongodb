@@ -25,13 +25,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 
-import org.springframework.data.convert.SimpleTypeInformationMapper;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
-import org.springframework.data.mongodb.core.convert.DefaultMongoTypeMapper;
-import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.util.Assert;
 
 import com.mongodb.BasicDBObject;
@@ -44,13 +41,15 @@ import com.mongodb.DBObject;
  */
 public class Query {
 
+	private final static String RESTRICTED_TYPES_KEY = "_$RESTRICTED_TYPES";
+
 	private LinkedHashMap<String, Criteria> criteria = new LinkedHashMap<String, Criteria>();
 	private Field fieldSpec;
 	private Sort sort;
 	private int skip;
 	private int limit;
 	private String hint;
-	private Set<Class<?>> restrictedTypes;
+	private final Set<Class<?>> restrictedTypes = new HashSet<Class<?>>();
 
 	/**
 	 * Static factory method to create a {@link Query} using the provided {@link Criteria}.
@@ -187,34 +186,27 @@ public class Query {
 		Assert.notNull(firstType, "firstType must not be null!");
 		Assert.notNull(additionalTypes, "additionalTypes must not be null");
 
-		if (restrictedTypes == null) {
-			restrictedTypes = new HashSet<Class<?>>();
-		}
-
 		restrictedTypes.add(firstType);
 		for (Class<?> additionalType : additionalTypes) {
 			restrictedTypes.add(additionalType);
-		}
-
-		if (!restrictedTypes.isEmpty()) {
-			List<String> restrictedMappedTypes = new ArrayList<String>();
-			for (Class<?> restrictedType : restrictedTypes) {
-				restrictedMappedTypes.add(SimpleTypeInformationMapper.INSTANCE.createAliasFor(ClassTypeInformation
-						.from(restrictedType)));
-			}
-			addCriteria(Criteria.where(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY).in(restrictedMappedTypes));
 		}
 
 		return this;
 	}
 
 	public DBObject getQueryObject() {
+
 		DBObject dbo = new BasicDBObject();
 		for (String k : criteria.keySet()) {
 			CriteriaDefinition c = criteria.get(k);
 			DBObject cl = c.getCriteriaObject();
 			dbo.putAll(cl);
 		}
+
+		if (!restrictedTypes.isEmpty()) {
+			dbo.put(RESTRICTED_TYPES_KEY, getRestrictedTypes());
+		}
+
 		return dbo;
 	}
 
@@ -312,5 +304,13 @@ public class Query {
 		result += 31 * limit;
 
 		return result;
+	}
+
+	/**
+	 * @param key
+	 * @return
+	 */
+	public static boolean isRestrictedTypeKey(String key) {
+		return RESTRICTED_TYPES_KEY.equals(key);
 	}
 }

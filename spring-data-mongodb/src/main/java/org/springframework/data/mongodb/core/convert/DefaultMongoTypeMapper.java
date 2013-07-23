@@ -15,18 +15,22 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
-import org.springframework.data.convert.SimpleTypeInformationMapper;
 import org.springframework.data.convert.DefaultTypeMapper;
+import org.springframework.data.convert.SimpleTypeInformationMapper;
 import org.springframework.data.convert.TypeAliasAccessor;
 import org.springframework.data.convert.TypeInformationMapper;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.context.MappingContext;
+import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
+
 import com.mongodb.BasicDBList;
 import com.mongodb.DBObject;
 
@@ -41,10 +45,10 @@ import com.mongodb.DBObject;
 public class DefaultMongoTypeMapper extends DefaultTypeMapper<DBObject> implements MongoTypeMapper {
 
 	public static final String DEFAULT_TYPE_KEY = "_class";
-	@SuppressWarnings("rawtypes")
-	private static final TypeInformation<List> LIST_TYPE_INFO = ClassTypeInformation.from(List.class);
-	@SuppressWarnings("rawtypes")
-	private static final TypeInformation<Map> MAP_TYPE_INFO = ClassTypeInformation.from(Map.class);
+	@SuppressWarnings("rawtypes") private static final TypeInformation<List> LIST_TYPE_INFO = ClassTypeInformation
+			.from(List.class);
+	@SuppressWarnings("rawtypes") private static final TypeInformation<Map> MAP_TYPE_INFO = ClassTypeInformation
+			.from(Map.class);
 	private String typeKey = DEFAULT_TYPE_KEY;
 
 	public DefaultMongoTypeMapper() {
@@ -75,6 +79,26 @@ public class DefaultMongoTypeMapper extends DefaultTypeMapper<DBObject> implemen
 	}
 
 	/* (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.convert.MongoTypeMapper#writeTypeRestrictions(java.util.Set)
+	 */
+	@Override
+	public void writeTypeRestrictions(DBObject result, Set<Class<?>> restrictedTypes) {
+
+		if (!restrictedTypes.isEmpty()) {
+			List<String> restrictedMappedTypes = new ArrayList<String>();
+			for (Class<?> restrictedType : restrictedTypes) {
+
+				Object typeAlias = getAliasFor(ClassTypeInformation.from(restrictedType));
+				if (typeAlias != null) {
+					restrictedMappedTypes.add(typeAlias.toString());
+				}
+			}
+
+			result.putAll(Criteria.where(typeKey).in(restrictedMappedTypes).getCriteriaObject());
+		}
+	}
+
+	/* (non-Javadoc)
 	 * @see org.springframework.data.convert.DefaultTypeMapper#getFallbackTypeFor(java.lang.Object)
 	 */
 	@Override
@@ -83,7 +107,6 @@ public class DefaultMongoTypeMapper extends DefaultTypeMapper<DBObject> implemen
 	}
 
 	/**
-	 * 
 	 * @author Oliver Gierke
 	 */
 	public static final class DBObjectTypeAliasAccessor implements TypeAliasAccessor<DBObject> {

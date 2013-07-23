@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
+import java.util.Set;
+
 import org.springframework.data.convert.TypeMapper;
 
 import com.mongodb.DBObject;
@@ -32,4 +34,14 @@ public interface MongoTypeMapper extends TypeMapper<DBObject> {
 	 * @return
 	 */
 	boolean isTypeKey(String key);
+
+	/**
+	 * Writes type restrictions to the given {@link DBObject}. This usually results in an {@code $in}-clause to be
+	 * generated that restricts the type-key (e.g. {@code _class}) to be in the set of type aliases for the given
+	 * {@code restrictedTypes}.
+	 * 
+	 * @param result must not be {@literal null}
+	 * @param restrictedTypes must not be {@literal null}
+	 */
+	void writeTypeRestrictions(DBObject result, Set<Class<?>> restrictedTypes);
 }

@@ -206,8 +206,9 @@ public class QueryTests {
 	public void shouldReturnClassHierarchyOfRestrictedTypes() {
 
 		Query query = new Query(where("name").is("foo")).restrict(SpecialDoc.class);
-		assertThat(query.getQueryObject().toString(), is("{ \"name\" : \"foo\" , \"_class\" : { \"$in\" : [ \""
-				+ SpecialDoc.class.getName() + "\"]}}"));
+		assertThat(
+				query.toString(),
+				is("Query: { \"name\" : \"foo\", \"_$RESTRICTED_TYPES\" : [ { $java : class org.springframework.data.mongodb.core.SpecialDoc } ] }, Fields: null, Sort: null"));
 		assertThat(query.getRestrictedTypes(), is(notNullValue()));
 		assertThat(query.getRestrictedTypes().size(), is(1));
 		assertThat(query.getRestrictedTypes(), hasItems(Arrays.asList(SpecialDoc.class).toArray(new Class<?>[0])));

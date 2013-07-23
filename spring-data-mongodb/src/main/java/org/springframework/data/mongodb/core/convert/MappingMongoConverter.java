@@ -124,6 +124,14 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				mappingContext) : typeMapper;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.convert.MongoConverter#getMongoTypeMapper()
+	 */
+	@Override
+	public MongoTypeMapper getMongoTypeMapper() {
+		return this.typeMapper;
+	}
+
 	/**
 	 * Configure the characters dots potentially contained in a {@link Map} shall be replaced with. By default we don't do
 	 * any translation but rather reject a {@link Map} with keys containing dots causing the conversion for the entire
@@ -356,8 +364,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			try {
 				Object id = wrapper.getProperty(idProperty, Object.class, fieldAccessOnly);
 				dbo.put("_id", idMapper.convertId(id));
-			} catch (ConversionException ignored) {
-			}
+			} catch (ConversionException ignored) {}
 		}
 
 		// Write the properties
