@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core.aggregation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.util.Assert;
 
+import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
 /**
@@ -26,10 +27,12 @@ import com.mongodb.DBObject;
  * @see http://docs.mongodb.org/manual/reference/aggregation/match/
  * @author Sebastian Herold
  * @author Thomas Darimont
+ * @author Oliver Gierke
  * @since 1.3
  */
-public class MatchOperation extends AbstractAggregateOperation {
-	private final DBObject criteria;
+public class MatchOperation implements AggregationOperation {
+
+	private final Criteria criteria;
 
 	/**
 	 * Creates a new {@link MatchOperation} for the given {@link Criteria}.
@@ -38,16 +41,16 @@ public class MatchOperation extends AbstractAggregateOperation {
 	 */
 	public MatchOperation(Criteria criteria) {
 
-		super("match");
 		Assert.notNull(criteria, "Criteria must not be null!");
-		this.criteria = criteria.getCriteriaObject();
+		this.criteria = criteria;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AbstractAggregateOperation#getOperationArgument()
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#toDBObject(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
 	 */
 	@Override
-	public Object getOperationArgument() {
-		return criteria;
+	public DBObject toDBObject(AggregationOperationContext context) {
+		return new BasicDBObject("$match", context.getMappedObject(criteria.getCriteriaObject()));
 	}
 }

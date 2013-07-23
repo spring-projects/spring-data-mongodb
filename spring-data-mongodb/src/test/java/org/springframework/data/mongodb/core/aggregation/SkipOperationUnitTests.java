@@ -15,22 +15,33 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
+import static org.hamcrest.CoreMatchers.*;
+import static org.junit.Assert.*;
+
+import org.junit.Test;
+
 import com.mongodb.DBObject;
 
 /**
- * Represents one single operation in an aggregation pipeline that is aware of an {@link AggregateOperationContext}. The
- * {@code AggregateOperationContext} can be used to resolve the correct field reference expression for field references.
+ * Unit tests for {@link SkipOperation}.
  * 
- * @author Thomas Darimont
+ * @author Oliver Gierke
  */
-public interface ContextConsumingAggregateOperation extends AggregationOperation {
+public class SkipOperationUnitTests {
 
-	/**
-	 * Creates a {@link DBObject} representation backing this object and considers the field references from the given
-	 * {@link AggregateOperationContext}.
-	 * 
-	 * @param inputAggregateOperationContext
-	 * @return
-	 */
-	DBObject toDbObject(AggregateOperationContext inputAggregateOperationContext);
+	static final String OP = "$skip";
+
+	@Test(expected = IllegalArgumentException.class)
+	public void rejectsNegativeSkip() {
+		new SkipOperation(-1L);
+	}
+
+	@Test
+	public void rendersSkipOperation() {
+
+		SkipOperation operation = new SkipOperation(10L);
+		DBObject dbObject = operation.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(dbObject.get(OP), is((Object) 10L));
+	}
 }

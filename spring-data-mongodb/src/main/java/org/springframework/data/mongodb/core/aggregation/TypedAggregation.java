@@ -15,14 +15,17 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
+import org.springframework.util.Assert;
+
 /**
  * A {@code TypedAggregation} is a special {@link Aggregation} that holds information of the input aggregation type.
  * 
  * @author Thomas Darimont
+ * @author Oliver Gierke
  */
-public class TypedAggregation<I, O> extends Aggregation<I, O> {
+public class TypedAggregation<I> extends Aggregation {
 
-	private Class<I> inputType;
+	private final Class<I> inputType;
 
 	/**
 	 * Creates a new {@link TypedAggregation} from the given {@link AggregationOperation}s.
@@ -30,20 +33,19 @@ public class TypedAggregation<I, O> extends Aggregation<I, O> {
 	 * @param operations must not be {@literal null} or empty.
 	 */
 	public TypedAggregation(Class<I> inputType, AggregationOperation... operations) {
+
 		super(operations);
+
+		Assert.notNull(inputType, "Input type must not be null!");
 		this.inputType = inputType;
 	}
 
 	/**
-	 * @return the inputType
+	 * Returns the input type for the {@link Aggregation}.
+	 * 
+	 * @return the inputType will never be {@literal null}.
 	 */
-	public Class<?> getInputType() {
+	public Class<I> getInputType() {
 		return inputType;
-	}
-
-	protected AggregateOperationContext createInitialAggregateOperationContext() {
-
-		// TODO construct initial aggregate operation context from input type.
-		return super.createInitialAggregateOperationContext();
 	}
 }

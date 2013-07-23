@@ -15,13 +15,19 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
+import static org.springframework.data.mongodb.core.aggregation.Fields.*;
+
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
+import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
+import org.springframework.data.mongodb.core.aggregation.Fields.AggregationField;
 import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.NearQuery;
+import org.springframework.data.mongodb.core.query.SerializationUtils;
 import org.springframework.util.Assert;
 
 import com.mongodb.BasicDBObject;
@@ -31,30 +37,179 @@ import com.mongodb.DBObject;
  * An {@code Aggregation} is a representation of a list of aggregation steps to be performed by the MongoDB Aggregation
  * Framework.
  * 
- * @author Tobias Trelle - Original API and Implementation
- * @author Thomas Darimont - Refactoring, embedded DSL
+ * @author Tobias Trelle
+ * @author Thomas Darimont
+ * @author Oliver Gierke
+ * @since 1.3
  */
-public class Aggregation<I, O> {
+public class Aggregation {
 
-	private final List<AggregationOperation> operations = new ArrayList<AggregationOperation>();
+	public static final AggregationOperationContext DEFAULT_CONTEXT = new NoOpAggregationOperationContext();
+
+	private final List<AggregationOperation> operations;
 
 	/**
 	 * Creates a new {@link Aggregation} from the given {@link AggregationOperation}s.
 	 * 
 	 * @param operations must not be {@literal null} or empty.
 	 */
-	public Aggregation(AggregationOperation... operations) {
-		registerOperations(operations);
+	public static Aggregation newAggregation(AggregationOperation... operations) {
+		return new Aggregation(operations);
 	}
 
-	private void registerOperations(AggregationOperation... operations) {
+	/**
+	 * Creates a new {@link TypedAggregation} for the given type and {@link AggregationOperation}s.
+	 * 
+	 * @param type must not be {@literal null}.
+	 * @param operations must not be {@literal null} or empty.
+	 */
+	public static <T> TypedAggregation<T> newAggregation(Class<T> type, AggregationOperation... operations) {
+		return new TypedAggregation<T>(type, operations);
+	}
 
-		Assert.notNull(operations, "Operations must not be null!");
-		Assert.isTrue(operations.length > 0, "operations must not be empty!");
-		for (AggregationOperation operation : operations) {
-			Assert.notNull(operation, "Operation is not allowed to be null");
-			this.operations.add(operation);
-		}
+	/**
+	 * Creates a new {@link Aggregation} from the given {@link AggregationOperation}s.
+	 * 
+	 * @param aggregationOperations must not be {@literal null} or empty.
+	 */
+	protected Aggregation(AggregationOperation... aggregationOperations) {
+
+		Assert.notNull(aggregationOperations, "AggregationOperations must not be null!");
+		Assert.isTrue(aggregationOperations.length > 0, "At least one AggregationOperation has to be provided");
+
+		this.operations = Arrays.asList(aggregationOperations);
+	}
+
+	/**
+	 * A pointer to the previous {@link AggregationOperation}.
+	 * 
+	 * @return
+	 */
+	public static String previousOperation() {
+		return "_id";
+	}
+
+	/**
+	 * Creates a new {@link ProjectionOperation} including the given fields.
+	 * 
+	 * @param fields must not be {@literal null}.
+	 * @return
+	 */
+	public static ProjectionOperation project(String... fields) {
+		return project(fields(fields));
+	}
+
+	/**
+	 * Creates a new {@link ProjectionOperation} includeing the given {@link Fields}.
+	 * 
+	 * @param fields must not be {@literal null}.
+	 * @return
+	 */
+	public static ProjectionOperation project(Fields fields) {
+		return new ProjectionOperation(fields);
+	}
+
+	/**
+	 * Factory method to create a new {@link UnwindOperation} for the field with the given name.
+	 * 
+	 * @param fieldName must not be {@literal null} or empty.
+	 * @return
+	 */
+	public static UnwindOperation unwind(String field) {
+		return new UnwindOperation(field(field));
+	}
+
+	/**
+	 * Creates a new {@link GroupOperation} for the given fields.
+	 * 
+	 * @param fields must not be {@literal null}.
+	 * @return
+	 */
+	public static GroupOperation group(String... fields) {
+		return group(fields(fields));
+	}
+
+	/**
+	 * Creates a new {@link GroupOperation} for the given {@link Fields}.
+	 * 
+	 * @param fields must not be {@literal null}.
+	 * @return
+	 */
+	public static GroupOperation group(Fields fields) {
+		return new GroupOperation(fields);
+	}
+
+	/**
+	 * Factory method to create a new {@link SortOperation} for the given {@link Sort}.
+	 * 
+	 * @param sort must not be {@literal null}.
+	 * @return
+	 */
+	public static SortOperation sort(Sort sort) {
+		return new SortOperation(sort);
+	}
+
+	/**
+	 * Factory method to create a new {@link SortOperation} for the given sort {@link Direction} and {@code fields}.
+	 * 
+	 * @param direction must not be {@literal null}.
+	 * @param fields must not be {@literal null}.
+	 * @return
+	 */
+	public static SortOperation sort(Direction direction, String... fields) {
+		return new SortOperation(new Sort(direction, fields));
+	}
+
+	/**
+	 * Creates a new {@link SkipOperation} skipping the given number of elements.
+	 * 
+	 * @param elementsToSkip must not be less than zero.
+	 * @return
+	 */
+	public static SkipOperation skip(int elementsToSkip) {
+		return new SkipOperation(elementsToSkip);
+	}
+
+	/**
+	 * Creates a new {@link LimitOperation} limiting the result to the given number of elements.
+	 * 
+	 * @param maxElements must not be less than zero.
+	 * @return
+	 */
+	public static LimitOperation limit(long maxElements) {
+		return new LimitOperation(maxElements);
+	}
+
+	/**
+	 * Creates a new {@link MatchOperation} using the given {@link Criteria}.
+	 * 
+	 * @param criteria must not be {@literal null}.
+	 * @return
+	 */
+	public static MatchOperation match(Criteria criteria) {
+		return new MatchOperation(criteria);
+	}
+
+	/**
+	 * Creates a new {@link Fields} instance for the given field names.
+	 * 
+	 * @see Fields#fields(String...)
+	 * @param fields must not be {@literal null}.
+	 * @return
+	 */
+	public static Fields fields(String... fields) {
+		return Fields.fields(fields);
+	}
+
+	/**
+	 * Creates a new {@link Fields} instance from the given field name and target reference.
+	 * 
+	 * @param name must not be {@literal null} or empty.
+	 * @param target must not be {@literal null} or empty.
+	 * @return
+	 */
+	public static Fields bind(String name, String target) {
+		return Fields.from(field(name, target));
 	}
 
 	/**
@@ -63,273 +218,68 @@ public class Aggregation<I, O> {
 	 * @param inputCollectionName the name of the input collection
 	 * @return the {@code DBObject} representing this aggregation
 	 */
-	public DBObject toDbObject(String inputCollectionName) {
+	public DBObject toDbObject(String inputCollectionName, AggregationOperationContext rootContext) {
+
+		AggregationOperationContext context = rootContext;
+		List<DBObject> operationDocuments = new ArrayList<DBObject>(operations.size());
+
+		for (AggregationOperation operation : operations) {
+
+			operationDocuments.add(operation.toDBObject(context));
+
+			if (operation instanceof AggregationOperationContext) {
+				context = (AggregationOperationContext) operation;
+			}
+		}
 
 		DBObject command = new BasicDBObject("aggregate", inputCollectionName);
-		command.put("pipeline", getOperationObjects());
+		command.put("pipeline", operationDocuments);
+
 		return command;
 	}
 
-	private List<DBObject> getOperationObjects() {
+	/* 
+	 * (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return SerializationUtils
+				.serializeToJsonSafely(toDbObject("__collection__", new NoOpAggregationOperationContext()));
+	}
 
-		AggregateOperationContext aggregateOperationContext = createInitialAggregateOperationContext();
-		List<DBObject> operationObjects = new ArrayList<DBObject>();
-		for (AggregationOperation operation : operations) {
+	/**
+	 * Simple {@link AggregationOperationContext} that just returns {@link FieldReference}s as is.
+	 * 
+	 * @author Oliver Gierke
+	 */
+	private static class NoOpAggregationOperationContext implements AggregationOperationContext {
 
-			if (operation instanceof NoopAggreationOperation) {
-				continue;
-			}
-
-			operationObjects.add(toOperationObject(operation, aggregateOperationContext));
-			if (operation instanceof ContextProducingAggregateOperation) {
-				aggregateOperationContext = ((ContextProducingAggregateOperation) operation)
-						.getOutputAggregateOperationContext();
-			}
+		/* 
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getMappedObject(com.mongodb.DBObject)
+		 */
+		@Override
+		public DBObject getMappedObject(DBObject dbObject) {
+			return dbObject;
 		}
-		return operationObjects;
-	}
 
-	/**
-	 * @param aggregateOperationContext
-	 * @param operation
-	 * @return the {@link DBObject} representation of the given {@link AggregationOperation}
-	 */
-	protected DBObject toOperationObject(AggregationOperation operation,
-			AggregateOperationContext aggregateOperationContext) {
-
-		DBObject operationObject;
-		if (operation instanceof ContextConsumingAggregateOperation) {
-			operationObject = ((ContextConsumingAggregateOperation) operation).toDbObject(aggregateOperationContext);
-		} else {
-			operationObject = operation.toDbObject();
+		/* 
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getReference(org.springframework.data.mongodb.core.aggregation.ExposedFields.AvailableField)
+		 */
+		@Override
+		public FieldReference getReference(Field field) {
+			return new FieldReference(new ExposedField(field, true));
 		}
-		return operationObject;
-	}
 
-	protected AggregateOperationContext createInitialAggregateOperationContext() {
-		return new BasicAggregateOperationContext();
+		/* 
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getReference(java.lang.String)
+		 */
+		@Override
+		public FieldReference getReference(String name) {
+			return new FieldReference(new ExposedField(new AggregationField(name), true));
+		}
 	}
-
-	/**
-	 * Factory method to create a new {@link GroupOperation} for the given {@code idFields}.
-	 * 
-	 * @param idField the first idField to use, must not be {@literal null}.
-	 * @param additionalIdFields more id fields to use, can be {@literal null}.
-	 * @return
-	 */
-	public static GroupOperation group(String idField, String... additionalIdFields) {
-		return new GroupOperation(fields(idField, additionalIdFields));
-	}
-
-	/**
-	 * Factory method to create a new {@link GroupOperation} for the given {@code idFields}.
-	 * 
-	 * @param idFields
-	 * @return
-	 */
-	public static GroupOperation group(Fields idFields) {
-		return new GroupOperation(idFields);
-	}
-
-	/**
-	 * Factory method to create a new {@link ProjectionOperation} for the given {@code fields}. The {@code _id} field is
-	 * implicitly excluded.
-	 * 
-	 * @param fields a list of fields to include in the projection.
-	 * @return The {@link ProjectionOperation}.
-	 */
-	public static ProjectionOperation project(String... fields) {
-		return new ProjectionOperation(fields);
-	}
-
-	/**
-	 * Factory method to create a new {@link ProjectionOperation}.
-	 * 
-	 * @return The {@link ProjectionOperation}.
-	 */
-	public static ProjectionOperation project() {
-		return new ProjectionOperation();
-	}
-
-	/**
-	 * Factory method to create a new {@link ProjectionOperation} for the given {@code targetClass}.
-	 * 
-	 * @param targetClass
-	 * @return
-	 */
-	public static ProjectionOperation project(Class<?> targetClass) {
-		return new ProjectionOperation(targetClass);
-	}
-
-	/**
-	 * Factory method to create a new {@link MatchOperation} for the given {@link Criteria}.
-	 * 
-	 * @param criteria must not be {@literal null}
-	 * @return
-	 */
-	public static MatchOperation match(Criteria criteria) {
-		return new MatchOperation(criteria);
-	}
-
-	/**
-	 * Factory method to create a new {@link UnwindOperation} for the given {@literal fieldName}.
-	 * 
-	 * @param fieldName {@link UnwindOperation}.
-	 * @return
-	 */
-	public static UnwindOperation unwind(String fieldName) {
-		return new UnwindOperation(fieldName);
-	}
-
-	/**
-	 * Factory method to create a new {@link SkipOperation} for the given {@code skipCount}.
-	 * 
-	 * @param skipCount the number of documents to skip.
-	 * @return
-	 */
-	public static SkipOperation skip(int skipCount) {
-		return new SkipOperation(skipCount);
-	}
-
-	/**
-	 * Factory method to create a new {@link LimitOperation} for the given {@code maxElements}.
-	 * 
-	 * @param maxElements, the max number of documents to return.
-	 * @return
-	 */
-	public static LimitOperation limit(int maxElements) {
-		return new LimitOperation(maxElements);
-	}
-
-	/**
-	 * Factory method to create a new {@link GeoNearOperation} for the given {@code nearQuery}.
-	 * 
-	 * @param nearQuery, must not be {@literal null}.
-	 * @return
-	 */
-	public static GeoNearOperation geoNear(NearQuery nearQuery) {
-		return new GeoNearOperation(nearQuery);
-	}
-
-	/**
-	 * Factory method to create a new {@link SortOperation} for the given sort {@link Direction}  {@code direction} and
-	 * {@code fields}.
-	 * 
-	 * @param direction, the sort direction, must not be {@literal null}.
-	 * @param fields must not be {@literal null}.
-	 * @return
-	 */
-	public static SortOperation sort(Sort.Direction direction, String... fields) {
-		return sort(new Sort(direction, fields));
-	}
-
-	/**
-	 * Factory method to create a new {@link SortOperation} for the given {@link Sort}.
-	 * 
-	 * @param sort
-	 * @return
-	 */
-	public static SortOperation sort(Sort sort) {
-		return new SortOperation(sort);
-	}
-
-	/**
-	 * Factory method to create a new {@link Fields} container for key-value pairs from the given {@code fieldNames}.
-	 * <p>
-	 * A call to fields("a","b","c") generates:
-	 * <p>
-	 * 
-	 * <pre>
-	 * {    
-	 *   a: $a,
-	 *   b: $b,
-	 *   c: $c
-	 * }
-	 * </pre>
-	 * 
-	 * @return
-	 */
-	public static Fields fields(String fieldName, String... additionalFieldNames) {
-		return new BackendFields(additionalFieldNames).and(fieldName);
-	}
-
-	public static Fields fields() {
-		return new BackendFields();
-	}
-
-	public static Fields pick(String fieldName, Object fieldNameOrValue) {
-		return fields().and(fieldName, fieldNameOrValue);
-	}
-
-	/**
-	 * A convenience shortcut to {@link ReferenceUtil#$id()}
-	 * 
-	 * @return
-	 */
-	public static String $id() {
-		return ReferenceUtil.$id();
-	}
-
-	/**
-	 * A convenience shortcut to {@link ReferenceUtil#$(String)}
-	 * 
-	 * @return
-	 */
-	public static String $(String fieldName) {
-		return ReferenceUtil.$(fieldName);
-	}
-
-	/**
-	 * A convenience shortcut to {@link ReferenceUtil#$id(String)}
-	 * 
-	 * @return
-	 */
-	public static String $id(String fieldName) {
-		return ReferenceUtil.$id(fieldName);
-	}
-
-	/**
-	 * A convenience shortcut to {@link ReferenceUtil#ID_KEY}
-	 * 
-	 * @return
-	 */
-	public static String id() {
-		return ReferenceUtil.ID_KEY;
-	}
-
-	/**
-	 * A convenience shortcut to {@link ReferenceUtil#id(String)}
-	 * 
-	 * @return
-	 */
-	public static String id(String fieldName) {
-		return ReferenceUtil.id(fieldName);
-	}
-
-	/**
-	 * Creates a new {@link Aggregation}.
-	 * 
-	 * @param <I> the input type of the {@link Aggregation}.
-	 * @param <O> the output type of the {@link Aggregation}.
-	 * @param inputType
-	 * @param operations
-	 * @return
-	 */
-	public static <I, O> TypedAggregation<I, O> newAggregation(Class<I> inputType, AggregationOperation... operations) {
-		return new TypedAggregation<I, O>(inputType, operations);
-	}
-
-	/**
-	 * Creates a new {@link Aggregation}.
-	 * 
-	 * @param <I> the input type of the {@link Aggregation}.
-	 * @param <O> the output type of the {@link Aggregation}.
-	 * @param inputType
-	 * @param operations
-	 * @return
-	 */
-	public static <I, O> Aggregation<I, O> newAggregation(AggregationOperation... operations) {
-		return new Aggregation<I, O>(operations);
-	}
-
 }

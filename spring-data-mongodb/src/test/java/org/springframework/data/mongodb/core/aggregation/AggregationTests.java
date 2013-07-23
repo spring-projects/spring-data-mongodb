@@ -55,26 +55,24 @@ import com.mongodb.util.JSON;
  * @see DATAMONGO-586
  * @author Tobias Trelle
  * @author Thomas Darimont
+ * @author Oliver Gierke
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:infrastructure.xml")
 public class AggregationTests {
 
 	private static final String INPUT_COLLECTION = "aggregation_test_collection";
-	private static boolean initialized = false;
 	private static final Logger LOGGER = LoggerFactory.getLogger(AggregationTests.class);
+
+	private static boolean initialized = false;
 
 	@Autowired MongoTemplate mongoTemplate;
 
 	@Before
 	public void setUp() {
+
 		cleanDb();
 		initSampleDataIfNecessary();
-
-		CommandResult result = mongoTemplate.executeCommand("{ buildInfo: 1 }");
-		Object version = result.get("version");
-
-		LOGGER.debug("Server uses MongoDB Version: {}", version);
 	}
 
 	@After
@@ -97,8 +95,9 @@ public class AggregationTests {
 
 		if (!initialized) {
 
-			CommandResult result = mongoTemplate.executeCommand(new BasicDBObject("buildInfo", 1));
-			LOGGER.error(result.toString());
+			CommandResult result = mongoTemplate.executeCommand("{ buildInfo: 1 }");
+			Object version = result.get("version");
+			LOGGER.debug("Server uses MongoDB Version: {}", version);
 
 			mongoTemplate.dropCollection(ZipInfo.class);
 			mongoTemplate.execute(ZipInfo.class, new CollectionCallback<Void>() {
@@ -133,17 +132,17 @@ public class AggregationTests {
 
 	@Test(expected = IllegalArgumentException.class)
 	public void shouldHandleMissingInputCollection() {
-		mongoTemplate.aggregate((String) null, new Aggregation<Object, TagCount>(), TagCount.class);
+		mongoTemplate.aggregate(newAggregation(), (String) null, TagCount.class);
 	}
 
 	@Test(expected = IllegalArgumentException.class)
 	public void shouldHandleMissingAggregationPipeline() {
-		mongoTemplate.aggregate(INPUT_COLLECTION, null, TagCount.class);
+		mongoTemplate.aggregate(null, INPUT_COLLECTION, TagCount.class);
 	}
 
 	@Test(expected = IllegalArgumentException.class)
 	public void shouldHandleMissingEntityClass() {
-		mongoTemplate.aggregate(INPUT_COLLECTION, new Aggregation<Object, TagCount>(), null);
+		mongoTemplate.aggregate(newAggregation(), INPUT_COLLECTION, null);
 	}
 
 	@Test
@@ -151,20 +150,22 @@ public class AggregationTests {
 
 		createTagDocuments();
 
-		Aggregation<Object, TagCount> agg = newAggregation( //
+		Aggregation agg = newAggregation( //
 				project("tags"), //
 				unwind("tags"), //
-				group("tags").count("n"), //
-				project().field("tag", $id()).field("n", 1), //
+				group("tags") //
+						.and("n").count(), //
+				project("n") //
+						.and("tag").previousOperation(), //
 				sort(DESC, "n") //
 		);
 
-		AggregationResults<TagCount> results = mongoTemplate.aggregate(INPUT_COLLECTION, agg, TagCount.class);
+		AggregationResults<TagCount> results = mongoTemplate.aggregate(agg, INPUT_COLLECTION, TagCount.class);
 
 		assertThat(results, is(notNullValue()));
 		assertThat(results.getServerUsed(), is("/127.0.0.1:27017"));
 
-		List<TagCount> tagCount = results.getAggregationResult();
+		List<TagCount> tagCount = results.getMappedResults();
 
 		assertThat(tagCount, is(notNullValue()));
 		assertThat(tagCount.size(), is(3));
@@ -177,20 +178,22 @@ public class AggregationTests {
 	@Test
 	public void shouldAggregateEmptyCollection() {
 
-		Aggregation<Object, TagCount> agg = newAggregation(//
+		Aggregation aggregation = newAggregation(//
 				project("tags"), //
 				unwind("tags"), //
-				group("tags").count("n"), //
-				project().field("tag", $id()).field("n", 1), //
+				group("tags") //
+						.and("n").count(), //
+				project("n") //
+						.and("tag").previousOperation(), //
 				sort(DESC, "n") //
 		);
 
-		AggregationResults<TagCount> results = mongoTemplate.aggregate(INPUT_COLLECTION, agg, TagCount.class);
+		AggregationResults<TagCount> results = mongoTemplate.aggregate(aggregation, INPUT_COLLECTION, TagCount.class);
 
 		assertThat(results, is(notNullValue()));
 		assertThat(results.getServerUsed(), is("/127.0.0.1:27017"));
 
-		List<TagCount> tagCount = results.getAggregationResult();
+		List<TagCount> tagCount = results.getMappedResults();
 
 		assertThat(tagCount, is(notNullValue()));
 		assertThat(tagCount.size(), is(0));
@@ -200,80 +203,27 @@ public class AggregationTests {
 	public void shouldDetectResultMismatch() {
 
 		createTagDocuments();
-		Aggregation<Object, TagCount> agg = newAggregation( //
+
+		Aggregation aggregation = newAggregation( //
 				project("tags"), //
 				unwind("tags"), //
-				group("tags").count("count"), //
+				group("tags") //
+						.and("count").count(), //
 				limit(2) //
 		);
 
-		AggregationResults<TagCount> results = mongoTemplate.aggregate(INPUT_COLLECTION, agg, TagCount.class);
+		AggregationResults<TagCount> results = mongoTemplate.aggregate(aggregation, INPUT_COLLECTION, TagCount.class);
 
 		assertThat(results, is(notNullValue()));
 		assertThat(results.getServerUsed(), is("/127.0.0.1:27017"));
 
-		List<TagCount> tagCount = results.getAggregationResult();
+		List<TagCount> tagCount = results.getMappedResults();
 
 		assertThat(tagCount, is(notNullValue()));
 		assertThat(tagCount.size(), is(2));
 		assertTagCount(null, 0, tagCount.get(0));
 		assertTagCount(null, 0, tagCount.get(1));
 	}
-
-	@Test
-	public void fieldsFactoryMethod() {
-
-		Fields fields = fields("a", "b").and("c").and("d", 42);
-		assertThat(fields, is(notNullValue()));
-		assertThat(fields.getValues(), is(notNullValue()));
-		assertThat(fields.getValues().size(), is(4));
-		assertThat(fields.getValues().get("a"), is((Object) "a"));
-		assertThat(fields.getValues().get("b"), is((Object) "b"));
-		assertThat(fields.getValues().get("c"), is((Object) "c"));
-		assertThat(fields.getValues().get("d"), is((Object) 42));
-	}
-
-	@Test
-	public void shouldCreateSimpleIdForGroupOperationWithSingleSimpleIdField() {
-
-		Fields fields = fields("a");
-		GroupOperation groupOperation = new GroupOperation(fields);
-
-		DBObject dbObject = groupOperation.toDbObject(new BasicAggregateOperationContext());
-		assertThat(dbObject, is(notNullValue()));
-		assertThat(dbObject.get("$group"), is(notNullValue()));
-		assertThat(((DBObject) dbObject.get("$group")).get(id()), is(notNullValue()));
-		assertThat(((DBObject) dbObject.get("$group")).get(id()), is((Object) "$a"));
-	}
-
-	@Test
-	public void shouldCreateComplexIdForGroupOperationWithSingleComplexIdField() {
-
-		Fields fields = fields().and("a", 42);
-		GroupOperation groupOperation = new GroupOperation(fields);
-
-		assertThat(groupOperation.toDbObject(new BasicAggregateOperationContext()), is(notNullValue()));
-		assertThat(groupOperation.id, is(notNullValue()));
-		assertThat(groupOperation.id, is((Object) new BasicDBObject("a", 42)));
-	}
-
-	// @Test
-	// public void groupFactoryMethodWithMultipleFieldsAndSumOperation() {
-	//
-	// Fields fields = fields("a", "b").pick("c").pick("d", 42);
-	// GroupOperation groupOperation = group(fields).sum("e");
-	//
-	// assertThat(groupOperation, is(notNullValue()));
-	// assertThat(groupOperation.toDbObject(null), is(notNullValue()));
-	// assertThat(groupOperation.id, is(notNullValue()));
-	// assertThat(groupOperation.id, is((Object) new BasicDBObject(fields.getValues())));
-	// assertThat(groupOperation.fields, is(notNullValue()));
-	// assertThat(groupOperation.fields.size(), is(1));
-	// assertThat(groupOperation.fields.containsKey("e"), is(true));
-	// assertThat(groupOperation.fields.get("e"), is(notNullValue()));
-	// assertThat(groupOperation.fields.get("e").get("$sum"), is(notNullValue()));
-	// assertThat(groupOperation.fields.get("e").get("$sum"), is((Object) "$e"));
-	// }
 
 	@Test
 	public void complexAggregationFrameworkUsageLargestAndSmallestCitiesByState() {
@@ -337,31 +287,31 @@ public class AggregationTests {
 		)
 		*/
 
-		TypedAggregation<ZipInfo, ZipInfoStats> agg = newAggregation(ZipInfo.class, //
-				group("state", "city").sum("pop"), //
+		TypedAggregation<ZipInfo> aggregation = newAggregation(ZipInfo.class, //
+				group("state", "city").and("pop").sum("population"), //
 				sort(ASC, "pop", "state", "city"), //
 				group("state") //
-						.last("biggestCity", "city") //
-						.last("biggestPop", "pop") //
-						.first("smallestCity", "city") //
-						.first("smallestPop", "pop"), //
-				project(ZipInfoStats.class) //
-						.field("_id", 0) //
-						.field("state", id()) //
-						.field("biggestCity", pick("name", "biggestCity").and("population", "biggestPop")) //
-						.field("smallestCity", pick("name", "smallestCity").and("population", "smallestPop")), //
+						.and("biggestCity").last("city") //
+						.and("biggestPop").last("pop") //
+						.and("smallestCity").first("city") //
+						.and("smallestPop").first("pop"), //
+				project() //
+						// .and(previousOperation()).exclude() //
+						.and("state").previousOperation() //
+						.and("biggestCity").nested(bind("name", "biggestCity").and("population", "biggestPop")) //
+						.and("smallestCity").nested(bind("name", "smallestCity").and("population", "smallestPop")), //
 				sort(ASC, "state") //
 		);
 
-		assertThat(agg, is(notNullValue()));
-		assertThat(agg.toString(), is(notNullValue()));
+		assertThat(aggregation, is(notNullValue()));
+		assertThat(aggregation.toString(), is(notNullValue()));
 
-		AggregationResults<ZipInfoStats> result = mongoTemplate.aggregate(agg, ZipInfoStats.class);
+		AggregationResults<ZipInfoStats> result = mongoTemplate.aggregate(aggregation, ZipInfoStats.class);
 		assertThat(result, is(notNullValue()));
-		assertThat(result.getAggregationResult(), is(notNullValue()));
-		assertThat(result.getAggregationResult().size(), is(51));
+		assertThat(result.getMappedResults(), is(notNullValue()));
+		assertThat(result.getMappedResults().size(), is(51));
 
-		ZipInfoStats firstZipInfoStats = result.getAggregationResult().get(0);
+		ZipInfoStats firstZipInfoStats = result.getMappedResults().get(0);
 		assertThat(firstZipInfoStats, is(notNullValue()));
 		assertThat(firstZipInfoStats.id, is(nullValue()));
 		assertThat(firstZipInfoStats.state, is("AK"));
@@ -372,7 +322,7 @@ public class AggregationTests {
 		assertThat(firstZipInfoStats.biggestCity.name, is("ANCHORAGE"));
 		assertThat(firstZipInfoStats.biggestCity.population, is(183987));
 
-		ZipInfoStats lastZipInfoStats = result.getAggregationResult().get(50);
+		ZipInfoStats lastZipInfoStats = result.getMappedResults().get(50);
 		assertThat(lastZipInfoStats, is(notNullValue()));
 		assertThat(lastZipInfoStats.id, is(nullValue()));
 		assertThat(lastZipInfoStats.state, is("WY"));
@@ -408,9 +358,10 @@ public class AggregationTests {
 		)
 		  */
 
-		TypedAggregation<ZipInfo, StateStats> agg = newAggregation(ZipInfo.class, //
-				group("state").sum("totalPop", "pop"), //
-				sort(ASC, id(), "totalPop"), //
+		TypedAggregation<ZipInfo> agg = newAggregation(ZipInfo.class, //
+				group("state") //
+						.and("totalPop").sum("population"), //
+				sort(ASC, previousOperation(), "totalPop"), //
 				match(where("totalPop").gte(10 * 1000 * 1000)) //
 		);
 
@@ -419,10 +370,10 @@ public class AggregationTests {
 
 		AggregationResults<StateStats> result = mongoTemplate.aggregate(agg, StateStats.class);
 		assertThat(result, is(notNullValue()));
-		assertThat(result.getAggregationResult(), is(notNullValue()));
-		assertThat(result.getAggregationResult().size(), is(7));
+		assertThat(result.getMappedResults(), is(notNullValue()));
+		assertThat(result.getMappedResults().size(), is(7));
 
-		StateStats stateStats = result.getAggregationResult().get(0);
+		StateStats stateStats = result.getMappedResults().get(0);
 		assertThat(stateStats, is(notNullValue()));
 		assertThat(stateStats.id, is("CA"));
 		assertThat(stateStats.state, is(nullValue()));
@@ -447,12 +398,12 @@ public class AggregationTests {
 		 
 		 */
 
-		TypedAggregation<UserWithLikes, LikeStats> agg = newAggregation(UserWithLikes.class, //
+		TypedAggregation<UserWithLikes> agg = newAggregation(UserWithLikes.class, //
 				unwind("likes"), //
-				group("likes").count("number"), //
+				group("likes").and("number").count(), //
 				sort(DESC, "number"), //
 				limit(5), //
-				sort(ASC, id()) //
+				sort(ASC, previousOperation()) //
 		);
 
 		assertThat(agg, is(notNullValue()));
@@ -460,14 +411,14 @@ public class AggregationTests {
 
 		AggregationResults<LikeStats> result = mongoTemplate.aggregate(agg, LikeStats.class);
 		assertThat(result, is(notNullValue()));
-		assertThat(result.getAggregationResult(), is(notNullValue()));
-		assertThat(result.getAggregationResult().size(), is(5));
+		assertThat(result.getMappedResults(), is(notNullValue()));
+		assertThat(result.getMappedResults().size(), is(5));
 
-		assertLikeStats(result.getAggregationResult().get(0), "a", 4);
-		assertLikeStats(result.getAggregationResult().get(1), "b", 2);
-		assertLikeStats(result.getAggregationResult().get(2), "c", 4);
-		assertLikeStats(result.getAggregationResult().get(3), "d", 2);
-		assertLikeStats(result.getAggregationResult().get(4), "e", 3);
+		assertLikeStats(result.getMappedResults().get(0), "a", 4);
+		assertLikeStats(result.getMappedResults().get(1), "b", 2);
+		assertLikeStats(result.getMappedResults().get(2), "c", 4);
+		assertLikeStats(result.getMappedResults().get(3), "d", 2);
+		assertLikeStats(result.getMappedResults().get(4), "e", 3);
 	}
 
 	private void assertLikeStats(LikeStats like, String id, long count) {

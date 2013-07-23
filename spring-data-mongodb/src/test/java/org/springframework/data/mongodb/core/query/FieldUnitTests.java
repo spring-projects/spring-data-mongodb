@@ -21,7 +21,7 @@ import static org.junit.Assert.*;
 import org.junit.Test;
 
 /**
- * Unit tests for {@link Field}.
+ * Unit tests for {@link DocumentField}.
  * 
  * @author Oliver Gierke
  */

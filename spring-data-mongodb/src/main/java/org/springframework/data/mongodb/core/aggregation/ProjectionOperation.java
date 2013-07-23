@@ -16,268 +16,386 @@
 package org.springframework.data.mongodb.core.aggregation;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
-import java.util.EmptyStackException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Stack;
 
-import org.springframework.dao.InvalidDataAccessApiUsageException;
-import org.springframework.data.mongodb.core.query.Field;
+import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
+import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
+import org.springframework.data.mongodb.core.aggregation.ProjectionOperation.ProjectionOperationBuilder.FieldProjection;
 import org.springframework.util.Assert;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
 /**
- * Encapsulates the aggregation framework {@code $project}-operation.
- * <p>
- * Projection of field to be used in an {@link Aggregation}. A projection is similar to a {@link Field}
- * inclusion/exclusion but more powerful. It can generate new fields, change values of given field etc.
+ * Encapsulates the aggregation framework {@code $project}-operation. Projection of field to be used in an
+ * {@link Aggregation}. A projection is similar to a {@link Field} inclusion/exclusion but more powerful. It can
+ * generate new fields, change values of given field etc.
  * <p>
  * 
  * @see http://docs.mongodb.org/manual/reference/aggregation/project/
  * @author Tobias Trelle
  * @author Thomas Darimont
+ * @author Oliver Gierke
  * @since 1.3
  */
-public class ProjectionOperation extends AbstractContextProducingAggregateOperation {
+public class ProjectionOperation extends ExposedFieldsAggregationOperationContext implements AggregationOperation {
 
-	/** Stack of key names. Size is 0 or 1. */
-	private final Stack<String> reference = new Stack<String>();
-	private final Map<String, Object> projection = new HashMap<String, Object>();
+	private static final List<Projection> NONE = Collections.emptyList();
 
-	private DBObject rightHandExpression;
+	private final List<Projection> projections;
 
-	/**
-	 * This convenience constructor excludes the field {@code _id} and includes the given fields.
-	 * 
-	 * @param includes Keys of field to include, must not be {@literal null} or empty.
-	 */
-	public ProjectionOperation(String... includes) {
+	public ProjectionOperation() {
+		this(NONE, NONE);
+	}
 
-		super("project");
+	public ProjectionOperation(Fields fields) {
+		this(NONE, ProjectionOperationBuilder.FieldProjection.from(fields, true));
+	}
 
-		Assert.notNull(includes, "includes must not be null");
-		exclude("_id");
+	private ProjectionOperation(List<? extends Projection> current, List<? extends Projection> projections) {
 
-		for (String key : includes) {
-			include(key);
-		}
+		this.projections = new ArrayList<ProjectionOperation.Projection>(current.size() + projections.size());
+		this.projections.addAll(current);
+		this.projections.addAll(projections);
+	}
+
+	protected ProjectionOperation and(Projection projection) {
+		return new ProjectionOperation(this.projections, Arrays.asList(projection));
 	}
 
 	/**
-	 * Create an empty projection.
+	 * Creates a new {@link ProjectionOperationBuilder} to define a projection for the field with the given name.
 	 * 
-	 * @param targetClass
-	 */
-	public ProjectionOperation(Class<?> targetClass) {
-		this(extractFieldsFrom(targetClass));
-	}
-
-	/**
-	 * @param targetClass
+	 * @param name must not be {@literal null} or empty.
 	 * @return
 	 */
-	private static String[] extractFieldsFrom(Class<?> targetClass) {
-		return new String[0];
+	public ProjectionOperationBuilder and(String name) {
+		return new ProjectionOperationBuilder(name, this);
 	}
 
 	/**
-	 * Excludes a given field.
+	 * Excludes the given fields from the projection.
 	 * 
-	 * @param key The key of the field.
-	 */
-	public final ProjectionOperation exclude(String key) {
-
-		Assert.hasText(key, "Missing key");
-		getOutputAggregateOperationContext().unregisterAvailableField(ReferenceUtil.safeNonReference(key));
-
-		projection.put(key, 0);
-		return this;
-	}
-
-	/**
-	 * Includes a given field.
-	 * 
-	 * @param key The key of the field, must not be {@literal null} or empty.
-	 */
-	public final ProjectionOperation include(String key) {
-
-		Assert.hasText(key, "Missing key");
-
-		safePop();
-		reference.push(key);
-		getOutputAggregateOperationContext().registerAvailableField(key);
-
-		return this;
-	}
-
-	/**
-	 * Sets the key for a computed field.
-	 * 
-	 * @param key must not be {@literal null} or empty.
-	 */
-	public final ProjectionOperation as(String key) {
-
-		Assert.hasText(key, "Missing key");
-
-		try {
-			String rhsFieldName = reference.pop();
-			getOutputAggregateOperationContext().unregisterAvailableField(ReferenceUtil.safeNonReference(rhsFieldName));
-			getOutputAggregateOperationContext().registerAvailableField(ReferenceUtil.safeNonReference(key));
-			projection.put(key, rightHandSide(ReferenceUtil.safeReference(rhsFieldName)));
-		} catch (EmptyStackException e) {
-			throw new InvalidDataAccessApiUsageException("Invalid use of as()", e);
-		}
-
-		return this;
-	}
-
-	/**
-	 * Sets the key for a computed field.
-	 * 
-	 * @param key must not be {@literal null} or empty.
-	 */
-	public final ProjectionOperation asSelf() {
-
-		try {
-			String selfRef = reference.pop();
-			projection.put(selfRef, rightHandSide(ReferenceUtil.safeReference(selfRef)));
-		} catch (EmptyStackException e) {
-			throw new InvalidDataAccessApiUsageException("Invalid use of as()", e);
-		}
-
-		return this;
-	}
-
-	public final ProjectionOperation plus(Number n) {
-		return arithmeticOperation("add", n);
-	}
-
-	public final ProjectionOperation minus(Number n) {
-		return arithmeticOperation("substract", n);
-	}
-
-	private ProjectionOperation arithmeticOperation(String op, Number n) {
-
-		Assert.notNull(n, "Missing number");
-		rightHandExpression = createArrayObject(op, ReferenceUtil.safeReference(reference.peek()), n);
-		return this;
-	}
-
-	private DBObject createArrayObject(String op, Object... items) {
-
-		List<Object> list = new ArrayList<Object>();
-		Collections.addAll(list, items);
-
-		return new BasicDBObject(ReferenceUtil.safeReference(op), list);
-	}
-
-	private void safePop() {
-
-		if (!reference.empty()) {
-			projection.put(reference.pop(), rightHandSide(1));
-		}
-	}
-
-	private Object rightHandSide(Object defaultValue) {
-		Object value = rightHandExpression != null ? rightHandExpression : defaultValue;
-		rightHandExpression = null;
-		return value;
-	}
-
-	/**
-	 * @param string
-	 * @param projection
+	 * @param fields must not be {@literal null}.
 	 * @return
 	 */
-	public ProjectionOperation addField(String key, Object value) {
-
-		Assert.notNull(key, "Missing Key");
-		Assert.notNull(value);
-
-		getOutputAggregateOperationContext().registerAvailableField(key);
-		registerAvailableFieldsRecursive(key, value);
-		this.projection.put(key, value);
-
-		return this;
-	}
-
-	private void registerAvailableFieldsRecursive(String outerKey, Object value) {
-
-		if (value instanceof Fields) {
-			Map<String, Object> values = ((Fields) value).getValues();
-			for (String key : values.keySet()) {
-				String innerKey = outerKey + "." + key;
-				getOutputAggregateOperationContext().registerAvailableField(innerKey);
-				registerAvailableFieldsRecursive(innerKey, values.get(key));
-			}
-		}
+	public ProjectionOperation andExclude(String... fields) {
+		List<FieldProjection> excludeProjections = FieldProjection.from(Fields.fields(fields), false);
+		return new ProjectionOperation(this.projections, excludeProjections);
 	}
 
 	/**
-	 * @param name
-	 * @param value
+	 * Includes the given fields into the projection.
+	 * 
+	 * @param fields must not be {@literal null}.
 	 * @return
 	 */
-	public ProjectionOperation field(String name, Object value) {
-		addField(name, value);
-		return this;
+	public ProjectionOperation andInclude(String... fields) {
+
+		List<FieldProjection> projections = FieldProjection.from(Fields.fields(fields), true);
+		return new ProjectionOperation(this.projections, projections);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AbstractAggregateOperation#getOperationArgument()
+	/**
+	 * Includes the given fields into the projection.
+	 * 
+	 * @param fields must not be {@literal null}.
+	 * @return
+	 */
+	public ProjectionOperation andInclude(Fields fields) {
+		return new ProjectionOperation(this.projections, FieldProjection.from(fields, true));
+	}
+
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.ExposedFieldsAggregationOperationContext#getFields()
 	 */
 	@Override
-	public Object getOperationArgument(AggregateOperationContext inputAggregateOperationContext) {
+	protected ExposedFields getFields() {
 
-		Assert.notNull(inputAggregateOperationContext, "inputAggregateOperationContext must not be null");
-		safePop();
+		ExposedFields fields = null;
 
-		DBObject projectionObject = new BasicDBObject();
-		for (Map.Entry<String, Object> entry : projection.entrySet()) {
-			Object fieldNameOrValueToUse = entry.getValue();
-
-			DBObject fieldsObject = returnIfValueIsIdFields(inputAggregateOperationContext, fieldNameOrValueToUse);
-			if (fieldsObject != null) {
-				projectionObject.put(entry.getKey(), fieldsObject != null ? fieldsObject : fieldNameOrValueToUse);
-				continue;
-			}
-
-			if (fieldNameOrValueToUse instanceof String) {
-				String fieldName = inputAggregateOperationContext
-						.returnFieldNameAliasIfAvailableOr((String) fieldNameOrValueToUse);
-				fieldNameOrValueToUse = ReferenceUtil.safeReference(fieldName);
-			}
-
-			projectionObject.put(entry.getKey(), fieldNameOrValueToUse);
+		for (Projection projection : projections) {
+			ExposedField field = projection.getField();
+			fields = fields == null ? ExposedFields.from(field) : fields.and(field);
 		}
 
-		return projectionObject;
+		return fields;
 	}
 
-	private DBObject returnIfValueIsIdFields(AggregateOperationContext inputAggregateOperationContext,
-			Object fieldNameOrValueToUse) {
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#toDBObject(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
+	 */
+	@Override
+	public DBObject toDBObject(AggregationOperationContext context) {
 
-		Assert.notNull(inputAggregateOperationContext, "inputAggregateOperationContext must not be null");
+		BasicDBObject fieldObject = new BasicDBObject();
 
-		if (!(fieldNameOrValueToUse instanceof Fields)) {
-			return null;
+		for (Projection projection : projections) {
+			fieldObject.putAll(projection.toDBObject(context));
 		}
 
-		DBObject fieldsObject = new BasicDBObject();
-		for (Map.Entry<String, Object> fieldsEntry : ((Fields) fieldNameOrValueToUse).getValues().entrySet()) {
+		return new BasicDBObject("$project", fieldObject);
+	}
 
-			Object fieldsEntryFieldNameOrValueToUse = fieldsEntry.getValue();
-			if (fieldsEntryFieldNameOrValueToUse instanceof String && inputAggregateOperationContext != null) {
-				String fieldName = inputAggregateOperationContext
-						.returnFieldNameAliasIfAvailableOr((String) fieldsEntryFieldNameOrValueToUse);
-				fieldsEntryFieldNameOrValueToUse = ReferenceUtil.safeReference(fieldName);
+	/**
+	 * Builder for {@link ProjectionOperation}s on a field.
+	 * 
+	 * @author Oliver Gierke
+	 */
+	public static class ProjectionOperationBuilder {
+
+		private final String name;
+		private final ProjectionOperation operation;
+
+		/**
+		 * Creates a new {@link ProjectionOperationBuilder} for the field with the given name on top of the given
+		 * {@link ProjectionOperation}.
+		 * 
+		 * @param name must not be {@literal null} or empty.
+		 * @param operation must not be {@literal null}.
+		 */
+		public ProjectionOperationBuilder(String name, ProjectionOperation operation) {
+
+			Assert.hasText(name, "Field name must not be null or empty!");
+			Assert.notNull(operation, "ProjectionOperation must not be null!");
+
+			this.name = name;
+			this.operation = operation;
+		}
+
+		/**
+		 * Projects the result of the previous operation onto the current field. Will automatically add an exclusion for
+		 * {@code _id} as what would be held in it by default will now go into the field just projected into.
+		 * 
+		 * @return
+		 */
+		public ProjectionOperation previousOperation() {
+
+			return this.operation.andExclude(Fields.UNDERSCORE_ID) //
+					.and(new PreviousOperationProjection(name));
+		}
+
+		/**
+		 * Defines a nested field binding for the current field.
+		 * 
+		 * @param fields must not be {@literal null}.
+		 * @return
+		 */
+		public ProjectionOperation nested(Fields fields) {
+			return this.operation.and(new NestedFieldProjection(name, fields));
+		}
+
+		public ProjectionOperation plus(Number number) {
+			Assert.notNull(number, "Number must not be null!");
+			return project("add", number);
+		}
+
+		public ProjectionOperation minus(Number number) {
+			Assert.notNull(number, "Number must not be null!");
+			return project("substract", number);
+		}
+
+		/**
+		 * Adds a generic projection for the current field.
+		 * 
+		 * @param operation the operation key, e.g. {@code $add}.
+		 * @param values the values to be set for the projection operation.
+		 * @return
+		 */
+		public ProjectionOperation project(String operation, Object... values) {
+			return this.operation.and(new OperationProjection(name, operation, values));
+		}
+
+		/**
+		 * A {@link Projection} to pull in the result of the previous operation.
+		 * 
+		 * @author Oliver Gierke
+		 */
+		static class PreviousOperationProjection extends Projection {
+
+			private final String name;
+
+			/**
+			 * Creates a new {@link PreviousOperationProjection} for the field with the given name.
+			 * 
+			 * @param name must not be {@literal null} or empty.
+			 */
+			public PreviousOperationProjection(String name) {
+				super(Fields.field(name));
+				this.name = name;
 			}
-			fieldsObject.put(fieldsEntry.getKey(), fieldsEntryFieldNameOrValueToUse);
+
+			/* 
+			 * (non-Javadoc)
+			 * @see org.springframework.data.mongodb.core.aggregation.ProjectionOperation.Projection#toDBObject(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
+			 */
+			@Override
+			public DBObject toDBObject(AggregationOperationContext context) {
+				return new BasicDBObject(name, Fields.UNDERSCORE_ID_REF);
+			}
 		}
-		return fieldsObject;
+
+		/**
+		 * A {@link FieldProjection} to map a result of a previous {@link AggregationOperation} to a new field.
+		 * 
+		 * @author Oliver Gierke
+		 */
+		static class FieldProjection extends Projection {
+
+			private final Field field;
+			private final Object value;
+
+			/**
+			 * Creates a new {@link FieldProjection} for the field of the given name, assigning the given value.
+			 * 
+			 * @param name must not be {@literal null} or empty.
+			 * @param value
+			 */
+			public FieldProjection(String name, Object value) {
+				this(Fields.field(name), value);
+			}
+
+			private FieldProjection(Field field, Object value) {
+
+				super(field);
+
+				this.field = field;
+				this.value = value;
+			}
+
+			/**
+			 * Factory method to easily create {@link FieldProjection}s for the given {@link Fields}.
+			 * 
+			 * @param fields the {@link Fields} to in- or exclude, must not be {@literal null}.
+			 * @param include whether to include or exclude the fields.
+			 * @return
+			 */
+			public static List<FieldProjection> from(Fields fields, boolean include) {
+
+				Assert.notNull(fields, "Fields must not be null!");
+				List<FieldProjection> projections = new ArrayList<FieldProjection>();
+
+				for (Field field : fields) {
+					projections.add(new FieldProjection(field, include ? null : 0));
+				}
+
+				return projections;
+			}
+
+			/* 
+			 * (non-Javadoc)
+			 * @see org.springframework.data.mongodb.core.aggregation.ProjectionOperation.Projection#toDBObject(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
+			 */
+			@Override
+			public DBObject toDBObject(AggregationOperationContext context) {
+
+				if (value != null) {
+					return new BasicDBObject(field.getName(), value);
+				}
+
+				FieldReference reference = context.getReference(field.getTarget());
+				return new BasicDBObject(field.getName(), reference.toString());
+			}
+		}
+
+		static class OperationProjection extends Projection {
+
+			private final String name;
+			private final String operation;
+			private final List<Object> values;
+
+			/**
+			 * Creates a new {@link OperationProjection} for the given field.
+			 * 
+			 * @param name the name of the field to add the operation projection for, must not be {@literal null} or empty.
+			 * @param operation the actual operation key, must not be {@literal null} or empty.
+			 * @param values the values to pass into the operation, must not be {@literal null}.
+			 */
+			public OperationProjection(String name, String operation, Object... values) {
+
+				super(Fields.field(name));
+
+				Assert.hasText(operation, "Operation must not be null or empty!");
+				Assert.notNull(values, "Values must not be null!");
+
+				this.name = name;
+				this.operation = operation;
+				this.values = Arrays.asList(values);
+			}
+
+			/* 
+			 * (non-Javadoc)
+			 * @see org.springframework.data.mongodb.core.aggregation.ProjectionOperation.Projection#toDBObject(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
+			 */
+			@Override
+			public DBObject toDBObject(AggregationOperationContext context) {
+
+				List<Object> values = buildReferences(context);
+				DBObject inner = new BasicDBObject(operation, values.size() == 1 ? values.get(0) : values.toArray());
+
+				return new BasicDBObject(name, inner);
+			}
+
+			private List<Object> buildReferences(AggregationOperationContext context) {
+
+				List<Object> result = new ArrayList<Object>(values.size());
+
+				for (Object element : values) {
+					result.add(element instanceof Field ? context.getReference((Field) element).toString() : element);
+				}
+
+				return result;
+			}
+		}
+
+		static class NestedFieldProjection extends Projection {
+
+			private final String name;
+			private final Fields fields;
+
+			public NestedFieldProjection(String name, Fields fields) {
+
+				super(Fields.field(name));
+				this.name = name;
+				this.fields = fields;
+			}
+
+			/* 
+			 * (non-Javadoc)
+			 * @see org.springframework.data.mongodb.core.aggregation.ProjectionOperation.Projection#toDBObject(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
+			 */
+			@Override
+			public DBObject toDBObject(AggregationOperationContext context) {
+
+				DBObject nestedObject = new BasicDBObject();
+
+				for (Field field : fields) {
+					nestedObject.put(field.getName(), context.getReference(field.getTarget()).toString());
+				}
+
+				return new BasicDBObject(name, nestedObject);
+			}
+		}
+	}
+
+	private static abstract class Projection {
+
+		private final ExposedField field;
+
+		public Projection(Field name) {
+
+			Assert.notNull(name, "Field must not be null!");
+			this.field = new ExposedField(name, true);
+		}
+
+		public ExposedField getField() {
+			return field;
+		}
+
+		public abstract DBObject toDBObject(AggregationOperationContext context);
 	}
 }

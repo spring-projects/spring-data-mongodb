@@ -16,6 +16,9 @@
 package org.springframework.data.mongodb.core.aggregation;
 
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.domain.Sort.Order;
+import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
 import org.springframework.util.Assert;
 
 import com.mongodb.BasicDBObject;
@@ -26,42 +29,48 @@ import com.mongodb.DBObject;
  * 
  * @see http://docs.mongodb.org/manual/reference/aggregation/sort/#pipe._S_sort
  * @author Thomas Darimont
+ * @author Oliver Gierke
+ * @since 1.3
  */
-public class SortOperation extends AbstractContextAwareAggregateOperation implements ContextConsumingAggregateOperation {
+public class SortOperation implements AggregationOperation {
 
-	private Sort sort;
+	private final Sort sort;
 
 	/**
-	 * @param sort
+	 * Creates a new {@link SortOperation} for the given {@link Sort} instance.
+	 * 
+	 * @param sort must not be {@literal null}.
 	 */
 	public SortOperation(Sort sort) {
-		super("sort");
 
-		Assert.notNull(sort);
+		Assert.notNull(sort, "Sort must not be null!");
 		this.sort = sort;
+	}
+
+	public SortOperation and(Direction direction, String... fields) {
+		return and(new Sort(direction, fields));
 	}
 
 	public SortOperation and(Sort sort) {
 		return new SortOperation(this.sort.and(sort));
 	}
 
-	public SortOperation and(Sort.Direction direction, String... fields) {
-		return and(new Sort(direction, fields));
-	}
-
-	/* (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AbstractAggregateOperation#getOperationArgument()
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#toDBObject(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
 	 */
 	@Override
-	public Object getOperationArgument(AggregateOperationContext inputAggregateOperationContext) {
+	public DBObject toDBObject(AggregationOperationContext context) {
 
-		Assert.notNull(inputAggregateOperationContext, "inputAggregateOperationContext must not be null!");
+		BasicDBObject object = new BasicDBObject();
 
-		DBObject sortProperties = new BasicDBObject();
-		for (org.springframework.data.domain.Sort.Order order : sort) {
-			String fieldName = inputAggregateOperationContext.returnFieldNameAliasIfAvailableOr(order.getProperty());
-			sortProperties.put(fieldName, order.isAscending() ? 1 : -1);
+		for (Order order : sort) {
+
+			// Check reference
+			FieldReference reference = context.getReference(order.getProperty());
+			object.put(reference.getRaw(), order.isAscending() ? 1 : -1);
 		}
-		return sortProperties;
+
+		return new BasicDBObject("$sort", object);
 	}
 }

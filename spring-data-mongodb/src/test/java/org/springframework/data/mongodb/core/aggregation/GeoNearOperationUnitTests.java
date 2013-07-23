@@ -15,17 +15,30 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import com.mongodb.BasicDBObject;
+import static org.hamcrest.CoreMatchers.*;
+import static org.junit.Assert.*;
+
+import org.junit.Test;
+import org.springframework.data.mongodb.core.DBObjectUtils;
+import org.springframework.data.mongodb.core.query.NearQuery;
+
 import com.mongodb.DBObject;
 
 /**
- * Represents a skippable AggregationOperation that is not considered for execution.
+ * Unit tests for {@link GeoNearOperation}.
  * 
- * @author Thomas Darimont
+ * @author Oliver Gierke
  */
-public class NoopAggreationOperation implements AggregationOperation {
+public class GeoNearOperationUnitTests {
 
-	public DBObject toDbObject() {
-		return new BasicDBObject();
+	@Test
+	public void rendersNearQueryAsAggregationOperation() {
+
+		NearQuery query = NearQuery.near(10.0, 10.0);
+		GeoNearOperation operation = new GeoNearOperation(query);
+		DBObject dbObject = operation.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		DBObject nearClause = DBObjectUtils.getAsDBObject(dbObject, "$geoNear");
+		assertThat(nearClause, is(query.toDBObject()));
 	}
 }

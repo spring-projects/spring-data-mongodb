@@ -17,9 +17,12 @@ package org.springframework.data.mongodb.core.aggregation;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+import java.util.Locale;
 
+import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
+import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
@@ -30,392 +33,232 @@ import com.mongodb.DBObject;
  * @see http://docs.mongodb.org/manual/reference/aggregation/group/#stage._S_group
  * @author Sebastian Herold
  * @author Thomas Darimont
+ * @author Oliver Gierke
  * @since 1.3
  */
-public class GroupOperation extends AbstractContextProducingAggregateOperation {
+public class GroupOperation extends ExposedFieldsAggregationOperationContext implements AggregationOperation {
 
-	final Object id;
-	final List<GroupingOperation> ops = new ArrayList<GroupOperation.GroupingOperation>();
+	private final ExposedFields nonSynthecticFields;
+	private final List<Operation> operations;
 
 	/**
-	 * Creates a <code>$group</code> operation with <code>_id</code> referencing to a field of the document. The returned
-	 * db object equals to
+	 * Creates a new {@link GroupOperation} including the given {@link Fields}.
 	 * 
-	 * <pre>
-	 * {_id: "$field"}
-	 * </pre>
-	 * 
-	 * @param id
-	 * @param moreIdFields
+	 * @param fields must not be {@literal null}.
 	 */
 	public GroupOperation(Fields fields) {
-		super("group");
-		this.id = createGroupIdFrom(fields);
+
+		this.nonSynthecticFields = ExposedFields.nonSynthetic(fields);
+		this.operations = new ArrayList<Operation>();
 	}
 
 	/**
-	 * @param fields
-	 * @return
+	 * Creates a new {@link GroupOperation} from the given {@link GroupOperation} and the given {@link Operation}.
+	 * 
+	 * @param current must not be {@literal null}.
+	 * @param operation must not be {@literal null}.
 	 */
-	private Object createGroupIdFrom(Fields fields) {
+	protected GroupOperation(GroupOperation current, Operation operation) {
 
-		Assert.notNull(fields, "fields must not be null!");
-		Map<String, Object> values = fields.getValues();
-		Assert.notEmpty(values, "fields.values must not be empty!");
+		Assert.notNull(current, "GroupOperation must not be null!");
+		Assert.notNull(operation, "Operation must not be null!");
 
-		DBObject idReferences = new BasicDBObject(values.size());
-		for (Map.Entry<String, Object> entry : values.entrySet()) {
-			String idFieldName = ReferenceUtil.safeNonReference(entry.getKey());
-			Object idFieldValue = entry.getValue() instanceof String ? ReferenceUtil.safeReference(entry.getValue()
-					.toString()) : entry.getValue();
-			idReferences.put(idFieldName, idFieldValue);
-		}
-		return idReferences;
+		this.nonSynthecticFields = current.nonSynthecticFields;
+		this.operations = new ArrayList<Operation>(current.operations.size() + 1);
+		this.operations.addAll(current.operations);
+		this.operations.add(operation);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AbstractAggregateOperation#getOperationArgument()
+	/**
+	 * Creates a new {@link GroupOperation} from the current one adding the given {@link Operation}.
+	 * 
+	 * @param operation must not be {@literal null}.
+	 * @return
+	 */
+	protected GroupOperation and(Operation operation) {
+		return new GroupOperation(this, operation);
+	}
+
+	/**
+	 * Returns a {@link GroupOperationBuilder} to build a grouping operation for the field with the given name
+	 * 
+	 * @param field must not be {@literal null} or empty.
+	 * @return
+	 */
+	public GroupOperationBuilder and(String field) {
+		return new GroupOperationBuilder(field, this);
+	}
+
+	public class GroupOperationBuilder {
+
+		private final String name;
+		private final GroupOperation current;
+
+		public GroupOperationBuilder(String name, GroupOperation current) {
+
+			Assert.hasText(name, "Field name must not be null or empty!");
+			Assert.notNull(current, "GroupOperation must not be null!");
+
+			this.name = name;
+			this.current = current;
+		}
+
+		public GroupOperation count() {
+			return sum(1);
+		}
+
+		public GroupOperation count(String reference) {
+			return sum(reference, 1);
+		}
+
+		public GroupOperation sum() {
+			return sum(name);
+		}
+
+		public GroupOperation sum(String reference) {
+			return sum(reference, null);
+		}
+
+		public GroupOperation sum(Object value) {
+			return sum(null, value);
+		}
+
+		public GroupOperation sum(String reference, Object value) {
+			return current.and(new Operation(GroupOps.SUM, name, reference, value));
+		}
+
+		public GroupOperation addToSet() {
+			return addToSet(null);
+		}
+
+		public GroupOperation addToSet(String reference) {
+			return current.and(new Operation(GroupOps.ADD_TO_SET, name, reference, null));
+		}
+
+		public GroupOperation last() {
+			return last(null);
+		}
+
+		public GroupOperation last(String reference) {
+			return current.and(new Operation(GroupOps.LAST, name, reference, null));
+		}
+
+		public GroupOperation first() {
+			return first(null);
+		}
+
+		public GroupOperation first(String reference) {
+			return current.and(new Operation(GroupOps.FIRST, name, reference, null));
+		}
+
+		public GroupOperation avg() {
+			return avg(null);
+		}
+
+		public GroupOperation avg(String reference) {
+			return current.and(new Operation(GroupOps.AVG, name, reference, null));
+		}
+	}
+
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getFields()
 	 */
 	@Override
-	public Object getOperationArgument(AggregateOperationContext inputAggregateOperationContext) {
+	public ExposedFields getFields() {
 
-		DBObject projection = new BasicDBObject();
+		ExposedFields fields = this.nonSynthecticFields.and(new ExposedField(Fields.UNDERSCORE_ID, true));
 
-		Object idToUse = id;
-		if (idToUse instanceof DBObject) {
-			idToUse = createGroupIdObject((DBObject) idToUse, inputAggregateOperationContext);
-		}
-		projection.put(ReferenceUtil.ID_KEY, idToUse);
-
-		for (GroupingOperation op : ops) {
-			projection.put(op.alias, op.toDbObject(inputAggregateOperationContext));
+		for (Operation operation : operations) {
+			fields = fields.and(operation.asField());
 		}
 
-		return projection;
+		return fields;
 	}
 
-	/**
-	 * @param idCandidate
-	 * @param inputAggregateOperationContext
-	 * @return
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#toDBObject(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
 	 */
-	private Object createGroupIdObject(DBObject groupIdObject, AggregateOperationContext inputAggregateOperationContext) {
+	@Override
+	public com.mongodb.DBObject toDBObject(AggregationOperationContext context) {
 
-		Object simpleIdOrNull = returnIfGroupIdIsSingleFieldReference(inputAggregateOperationContext, groupIdObject);
-		if (simpleIdOrNull != null) {
-			return simpleIdOrNull;
-		}
+		BasicDBObject operationObject = new BasicDBObject();
 
-		DBObject idObject = new BasicDBObject();
-		for (String idFieldName : groupIdObject.keySet()) {
+		if (nonSynthecticFields.exposesSingleFieldOnly()) {
 
-			Object idFieldValue = groupIdObject.get(idFieldName);
-			Object idFieldValueOrNull = returnIfFieldValueReferencesAvailableField(inputAggregateOperationContext,
-					idFieldName, idFieldValue);
-			if (idFieldValueOrNull != null) {
-				idFieldValue = idFieldValueOrNull;
+			FieldReference reference = context.getReference(nonSynthecticFields.iterator().next());
+			operationObject.put(Fields.UNDERSCORE_ID, reference.toString());
+
+		} else {
+
+			BasicDBObject inner = new BasicDBObject();
+
+			for (ExposedField field : nonSynthecticFields) {
+				FieldReference reference = context.getReference(field);
+				inner.put(field.getName(), reference.toString());
 			}
 
-			getOutputAggregateOperationContext().registerAvailableField(idFieldName, ReferenceUtil.id(idFieldName));
-			idObject.put(idFieldName, idFieldValue);
+			operationObject.put(Fields.UNDERSCORE_ID, inner);
 		}
 
-		return idObject;
-	}
-
-	private Object returnIfGroupIdIsSingleFieldReference(AggregateOperationContext inputAggregateOperationContext,
-			DBObject idObject) {
-
-		if (idObject.keySet().size() != 1) {
-			return null;
+		for (Operation operation : operations) {
+			operationObject.putAll(operation.toDBObject(context));
 		}
 
-		return returnIfFieldNameIsSimpleReference(inputAggregateOperationContext, idObject, idObject.keySet().iterator()
-				.next());
+		return new BasicDBObject("$group", operationObject);
 	}
 
-	private Object returnIfFieldValueReferencesAvailableField(AggregateOperationContext inputAggregateOperationContext,
-			String idFieldName, Object idFieldValue) {
+	interface Keyword {
 
-		Assert.notNull(inputAggregateOperationContext, "inputAggregateOperationContext must not be null");
-
-		if (!ReferenceUtil.isValueFieldReference(idFieldName, idFieldValue)) {
-			return null;
-		}
-
-		if (!inputAggregateOperationContext.isFieldAvailable(idFieldName)) {
-			return null;
-		}
-
-		String idFieldNameToUse = inputAggregateOperationContext.returnFieldNameAliasIfAvailableOr(idFieldName);
-		return ReferenceUtil.safeReference(inputAggregateOperationContext instanceof GroupOperation ? ReferenceUtil
-				.id(idFieldNameToUse) : idFieldNameToUse);
+		String toString();
 	}
 
-	private Object returnIfFieldNameIsSimpleReference(AggregateOperationContext inputAggregateOperationContext,
-			DBObject idObject, String idFieldName) {
+	private static enum GroupOps implements Keyword {
 
-		Object idFieldValue = idObject.get(idFieldName);
+		SUM, LAST, FIRST, PUSH, AVG, MIN, MAX, ADD_TO_SET, COUNT;
 
-		if (!idFieldValueIsSimpleIdFieldExpression(idFieldName, idFieldValue)) {
-			return null;
-		}
+		@Override
+		public String toString() {
 
-		getOutputAggregateOperationContext().registerAvailableField(idFieldName, ReferenceUtil.id(idFieldName));
-		idFieldValue = ReferenceUtil.safeReference(inputAggregateOperationContext
-				.returnFieldNameAliasIfAvailableOr(idFieldName));
+			String[] parts = name().split("_");
 
-		return idFieldValue;
-	}
+			StringBuilder builder = new StringBuilder();
 
-	private static boolean idFieldValueIsSimpleIdFieldExpression(String idFieldName, Object idFieldValue) {
-		return idFieldValue instanceof String
-				&& idFieldName.equals(ReferenceUtil.safeNonReference(idFieldValue.toString()));
-	}
-
-	/**
-	 * Adds a field with the <a
-	 * href="http://docs.mongodb.org/manual/reference/aggregation/addToSet/#grp._S_addToSet">$addToSet operation</a>.
-	 * 
-	 * <pre>
-	 * { $group : {
-	 *      _id : "$id_field",
-	 *     name : { $addToSet : "$field" }
-	 * }}
-	 * </pre>
-	 * 
-	 * @see http://docs.mongodb.org/manual/reference/aggregation/addToSet/#grp._S_addToSet
-	 * @param name key of the field.
-	 * @param field reference to a field of the document.
-	 * @return
-	 */
-	public GroupOperation addToSet(String name, String field) {
-		return addOperation("$addToSet", name, field);
-	}
-
-	/**
-	 * Adds a field with the {@code $first} operation.
-	 * 
-	 * <pre>
-	 * { $group : {
-	 *      _id : "$id_field",
-	 *     name : { $first : "$field" }
-	 * }}
-	 * </pre>
-	 * 
-	 * @see http://docs.mongodb.org/manual/reference/aggregation/addToSet/#grp._S_first
-	 * @param name key of the field
-	 * @param field reference to a field of the document
-	 * @return
-	 */
-	public GroupOperation first(String name, String field) {
-		return addOperation("$first", name, field);
-	}
-
-	/**
-	 * Adds a field with the <a href="http://docs.mongodb.org/manual/reference/aggregation/addToSet/#grp._S_last">$last
-	 * operation</a>.
-	 * 
-	 * <pre>
-	 *     {$group: {
-	 *          _id: "$id_field",
-	 *          name: {$last: "$field"}
-	 *     }}
-	 * </pre>
-	 * 
-	 * @param name key of the field
-	 * @param field reference to a field of the document
-	 * @return
-	 */
-	public GroupOperation last(String name, String field) {
-		return addOperation("$last", name, field);
-	}
-
-	/**
-	 * Adds a field with the <a href="http://docs.mongodb.org/manual/reference/aggregation/addToSet/#grp._S_max">$max
-	 * operation</a>.
-	 * 
-	 * <pre>
-	 *     {$group: {
-	 *          _id: "$id_field",
-	 *          name: {$max: "$field"}
-	 *     }}
-	 * </pre>
-	 * 
-	 * @param name key of the field
-	 * @param field reference to a field of the document
-	 * @return
-	 */
-	public GroupOperation max(String name, String field) {
-		return addOperation("$max", name, field);
-	}
-
-	/**
-	 * Adds a field with the <a href="http://docs.mongodb.org/manual/reference/aggregation/addToSet/#grp._S_min">$min
-	 * operation</a>.
-	 * 
-	 * <pre>
-	 *     {$group: {
-	 *          _id: "$id_field",
-	 *          name: {$min: "$field"}
-	 *     }}
-	 * </pre>
-	 * 
-	 * @param name key of the field
-	 * @param field reference to a field of the document
-	 * @return
-	 */
-	public GroupOperation min(String name, String field) {
-		return addOperation("$min", name, field);
-	}
-
-	/**
-	 * Adds a field with the <a href="http://docs.mongodb.org/manual/reference/aggregation/addToSet/#grp._S_avg">$avg
-	 * operation</a>.
-	 * 
-	 * <pre>
-	 *     {$group: {
-	 *          _id: "$id_field",
-	 *          name: {$avg: "$field"}
-	 *     }}
-	 * </pre>
-	 * 
-	 * @param name key of the field
-	 * @param field reference to a field of the document
-	 * @return
-	 */
-	public GroupOperation avg(String name, String field) {
-		return addOperation("$avg", name, field);
-	}
-
-	/**
-	 * Adds a field with the <a href="http://docs.mongodb.org/manual/reference/aggregation/addToSet/#grp._S_push">$push
-	 * operation</a>.
-	 * 
-	 * <pre>
-	 *     {$group: {
-	 *          _id: "$id_field",
-	 *          name: {$push: "$field"}
-	 *     }}
-	 * </pre>
-	 * 
-	 * @param name key of the field
-	 * @param field reference to a field of the document
-	 * @return
-	 */
-	public GroupOperation push(String name, String field) {
-		return addOperation("$push", name, field);
-	}
-
-	/**
-	 * Adds a field with the <a href="http://docs.mongodb.org/manual/reference/aggregation/addToSet/#grp._S_sum">$sum
-	 * operation</a> with a constant value.
-	 * 
-	 * <pre>
-	 *     {$group: {
-	 *          _id: "$id_field",
-	 *          name: {$sum: increment}
-	 *     }}
-	 * </pre>
-	 * 
-	 * @param name key of the field
-	 * @param increment increment for each item
-	 * @return
-	 */
-	public GroupOperation count(String name, double increment) {
-		return sum(name, increment);
-	}
-
-	/**
-	 * Adds a field with the <a href="http://docs.mongodb.org/manual/reference/aggregation/addToSet/#grp._S_sum">$sum
-	 * operation</a> count every item.
-	 * 
-	 * <pre>
-	 *     {$group: {
-	 *          _id: "$id_field",
-	 *          name: {$sum: 1}
-	 *     }}
-	 * </pre>
-	 * 
-	 * @param name key of the field
-	 * @return
-	 */
-	public GroupOperation count(String name) {
-		return count(name, 1);
-	}
-
-	private GroupOperation sum(String name, Object field) {
-		return addOperation("$sum", name, field);
-	}
-
-	/**
-	 * Adds a field with the <a href="http://docs.mongodb.org/manual/reference/aggregation/addToSet/#grp._S_sum">$sum
-	 * operation</a>.
-	 * 
-	 * <pre>
-	 *     {$group: {
-	 *          _id: "$id_field",
-	 *          name: {$sum: "$field"}
-	 *     }}
-	 * </pre>
-	 * 
-	 * @param name key of the field
-	 * @param field reference to a field of the document
-	 * @return
-	 */
-	public GroupOperation sum(String name, String field) {
-		return sum(name, (Object) field);
-	}
-
-	/**
-	 * Adds a field with the <a href="http://docs.mongodb.org/manual/reference/aggregation/addToSet/#grp._S_sum">$sum
-	 * operation</a>.
-	 * 
-	 * <pre>
-	 *     {$group: {
-	 *          _id: "$id_field",
-	 *          field: {$sum: "$field"}
-	 *     }}
-	 * </pre>
-	 * 
-	 * @param field reference to a field of the document
-	 * @return
-	 */
-	public GroupOperation sum(String field) {
-		return sum(field, field);
-	}
-
-	protected GroupOperation addOperation(String operation, String name, Object field) {
-
-		getOutputAggregateOperationContext().registerAvailableField(name);
-		this.ops.add(new GroupingOperation(operation, name, field));
-		return this;
-	}
-
-	static class GroupingOperation {
-		final String operation;
-		final String alias;
-		final Object fieldNameOrValue;
-
-		public GroupingOperation(String operation, String alias, Object fieldNameOrValue) {
-			this.operation = operation;
-			this.alias = alias;
-			this.fieldNameOrValue = fieldNameOrValue;
-		}
-
-		public DBObject toDbObject(AggregateOperationContext inputAggregateOperationContext) {
-
-			Object fieldNameOrValueToUse = fieldNameOrValue;
-
-			if (fieldNameOrValue instanceof String) {
-				if (inputAggregateOperationContext != null) {
-					fieldNameOrValueToUse = inputAggregateOperationContext
-							.returnFieldNameAliasIfAvailableOr((String) fieldNameOrValueToUse);
-				}
-				fieldNameOrValueToUse = ReferenceUtil.safeReference((String) fieldNameOrValueToUse);
+			for (String part : parts) {
+				String lowerCase = part.toLowerCase(Locale.US);
+				builder.append(builder.length() == 0 ? lowerCase : StringUtils.capitalize(lowerCase));
 			}
 
-			return new BasicDBObject(operation, fieldNameOrValueToUse);
+			return "$" + builder.toString();
+		}
+	}
+
+	static class Operation implements AggregationOperation {
+
+		private final Keyword op;
+		private final String key;
+		private final String reference;
+		private final Object value;
+
+		public Operation(Keyword op, String key, String reference, Object value) {
+
+			this.op = op;
+			this.key = key;
+			this.reference = reference;
+			this.value = value;
+		}
+
+		public ExposedField asField() {
+			return new ExposedField(key, true);
+		}
+
+		public DBObject toDBObject(AggregationOperationContext context) {
+			return new BasicDBObject(key, new BasicDBObject(op.toString(), getValue(context)));
+		}
+
+		public Object getValue(AggregationOperationContext context) {
+			return reference == null ? value : context.getReference(reference).toString();
 		}
 	}
 }

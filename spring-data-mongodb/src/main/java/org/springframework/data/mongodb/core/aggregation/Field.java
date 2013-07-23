@@ -16,24 +16,24 @@
 package org.springframework.data.mongodb.core.aggregation;
 
 /**
- * @author Thomas Darimont
+ * Abstraction for a field.
+ * 
+ * @author Oliver Gierke
+ * @since 1.3
  */
-abstract class AbstractContextProducingAggregateOperation extends AbstractContextAwareAggregateOperation implements
-		ContextProducingAggregateOperation {
+public interface Field {
 
-	private final AggregateOperationContext outputAggregateOperationContext;
+	/**
+	 * Returns the name of the field.
+	 * 
+	 * @return must not be {@literal null}.
+	 */
+	String getName();
 
-	public AbstractContextProducingAggregateOperation(String operationName) {
-		super(operationName);
-		this.outputAggregateOperationContext = createAggregateContext();
-	}
-
-	private AggregateOperationContext createAggregateContext() {
-		return new BasicAggregateOperationContext();
-	}
-
-	public AggregateOperationContext getOutputAggregateOperationContext() {
-		return this.outputAggregateOperationContext;
-	}
-
+	/**
+	 * Returns the target of the field. In case no explicit target is available {@link #getName()} should be returned.
+	 * 
+	 * @return must not be {@literal null}.
+	 */
+	String getTarget();
 }
