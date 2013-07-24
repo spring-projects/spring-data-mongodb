@@ -1,6 +1,12 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 1.2.3.GA (2013-07-24)
+----------------------------------------
+** Task
+    * [DATAMONGO-728] - Add missing package-info.java files
+    * [DATAMONGO-729] - Release 1.2.3.
+
 Changes in version 1.2.2.GA (2013-07-19)
 ----------------------------------------
 ** Bug

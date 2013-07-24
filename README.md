@@ -33,7 +33,7 @@ For those in a hurry:
 <dependency>
   <groupId>org.springframework.data</groupId>
   <artifactId>spring-data-mongodb</artifactId>
-  <version>1.2.1.RELEASE</version>
+  <version>1.2.3.RELEASE</version>
 </dependency>
 ```
 
