@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
+import org.springframework.util.Assert;
+
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
@@ -36,6 +38,8 @@ public class SkipOperation implements AggregationOperation {
 	 * @param skipCount number of documents to skip.
 	 */
 	public SkipOperation(long skipCount) {
+
+		Assert.isTrue(skipCount >= 0, "Skip count must not be negative!");
 		this.skipCount = skipCount;
 	}
 
