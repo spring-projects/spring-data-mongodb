@@ -56,6 +56,7 @@ import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+import org.springframework.data.mongodb.core.aggregation.Fields;
 import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
@@ -1266,8 +1267,26 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		Iterable<DBObject> resultSet = (Iterable<DBObject>) commandResult.get("result");
 		List<O> mappedResults = new ArrayList<O>();
 		DbObjectCallback<O> callback = new ReadDbObjectCallback<O>(mongoConverter, outputType);
+
 		for (DBObject dbObject : resultSet) {
-			mappedResults.add(callback.doWith(dbObject));
+
+			DBObject toMap = new BasicDBObject();
+			Object idField = dbObject.get(Fields.UNDERSCORE_ID);
+
+			if (idField instanceof DBObject) {
+				DBObject nested = (DBObject) idField;
+				toMap.putAll(nested);
+
+				for (String key : dbObject.keySet()) {
+					if (!Fields.UNDERSCORE_ID.equals(key)) {
+						toMap.put(key, dbObject.get(key));
+					}
+				}
+			} else {
+				toMap = dbObject;
+			}
+
+			mappedResults.add(callback.doWith(toMap));
 		}
 
 		return new AggregationResults<O>(mappedResults, commandResult);

@@ -208,7 +208,7 @@ public class ProjectionOperation extends ExposedFieldsAggregationOperationContex
 				}
 
 				FieldReference reference = context.getReference(field.getTarget());
-				return new BasicDBObject(field.getName(), field.hasExplicitTarget() ? reference.toString() : 1);
+				return new BasicDBObject(field.getName(), reference.toString());
 			}
 		}
 
