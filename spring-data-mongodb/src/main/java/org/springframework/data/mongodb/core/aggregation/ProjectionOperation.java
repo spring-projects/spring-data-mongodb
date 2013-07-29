@@ -20,7 +20,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
 import org.springframework.util.Assert;
@@ -209,7 +208,7 @@ class ProjectionOperation extends ExposedFieldsAggregationOperationContext imple
 				}
 
 				FieldReference reference = context.getReference(field.getTarget());
-				return new BasicDBObject(field.getName(), reference.toString());
+				return new BasicDBObject(field.getName(), field.hasExplicitTarget() ? reference.toString() : 1);
 			}
 		}
 

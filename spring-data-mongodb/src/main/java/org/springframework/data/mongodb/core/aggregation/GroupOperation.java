@@ -80,15 +80,32 @@ public class GroupOperation extends ExposedFieldsAggregationOperationContext imp
 		return this;
 	}
 
+	public GroupOperation last(String field) {
+		return last(field, field);
+	}
+
 	public GroupOperation last(String field, String reference) {
 
 		this.operations.add(new Operation(GroupOps.LAST, field, reference, null));
 		return this;
 	}
 
+	public GroupOperation first(String field) {
+		return first(field, field);
+	}
+
 	public GroupOperation first(String field, String reference) {
 
 		this.operations.add(new Operation(GroupOps.FIRST, field, reference, null));
+		return this;
+	}
+
+	public GroupOperation avg(String field) {
+		return avg(field, field);
+	}
+
+	public GroupOperation avg(String field, String reference) {
+		this.operations.add(new Operation(GroupOps.AVG, field, reference, null));
 		return this;
 	}
 

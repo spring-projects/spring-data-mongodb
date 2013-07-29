@@ -1217,12 +1217,12 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	}
 
 	@Override
-	public <I, O> AggregationResults<O> aggregate(TypedAggregation<I> aggregation, Class<O> outputType) {
+	public <O> AggregationResults<O> aggregate(TypedAggregation<?> aggregation, Class<O> outputType) {
 		return aggregate(aggregation, determineCollectionName(aggregation.getInputType()), outputType);
 	}
 
 	@Override
-	public <I, O> AggregationResults<O> aggregate(TypedAggregation<I> aggregation, String inputCollectionName,
+	public <O> AggregationResults<O> aggregate(TypedAggregation<?> aggregation, String inputCollectionName,
 			Class<O> outputType) {
 
 		Assert.notNull(aggregation, "Aggregation pipeline must not be null!");

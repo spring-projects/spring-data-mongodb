@@ -316,7 +316,7 @@ public interface MongoOperations {
 	 * @return The results of the aggregation operation.
 	 * @since 1.3
 	 */
-	<I, O> AggregationResults<O> aggregate(TypedAggregation<I> aggregation, String collectionName, Class<O> outputType);
+	<O> AggregationResults<O> aggregate(TypedAggregation<?> aggregation, String collectionName, Class<O> outputType);
 
 	/**
 	 * Execute an aggregation operation. The raw results will be mapped to the given entity class. The name of the
@@ -328,7 +328,7 @@ public interface MongoOperations {
 	 * @return The results of the aggregation operation.
 	 * @since 1.3
 	 */
-	<I, O> AggregationResults<O> aggregate(TypedAggregation<I> aggregation, Class<O> outputType);
+	<O> AggregationResults<O> aggregate(TypedAggregation<?> aggregation, Class<O> outputType);
 
 	/**
 	 * Execute an aggregation operation. The raw results will be mapped to the given entity class.

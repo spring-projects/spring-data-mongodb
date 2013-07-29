@@ -42,4 +42,15 @@ public class ProjectionOperationUnitTests {
 		DBObject projectClause = DBObjectUtils.getAsDBObject(dbObject, PROJECT);
 		assertThat(projectClause.get("prop"), is((Object) Fields.UNDERSCORE_ID_REF));
 	}
+
+	@Test
+	public void usesOneForImplicitTarget() {
+
+		ProjectionOperation operation = new ProjectionOperation(Fields.fields("foo").and("bar", "foobar"));
+
+		DBObject dbObject = operation.toDBObject(Aggregation.DEFAULT_CONTEXT);
+		DBObject projectClause = DBObjectUtils.getAsDBObject(dbObject, PROJECT);
+		assertThat(projectClause.get("foo"), is((Object) 1));
+		assertThat(projectClause.get("bar"), is((Object) "$foobar"));
+	}
 }
