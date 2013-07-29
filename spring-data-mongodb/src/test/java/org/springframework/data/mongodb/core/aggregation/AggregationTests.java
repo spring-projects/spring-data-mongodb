@@ -294,7 +294,7 @@ public class AggregationTests {
 						.last("biggestPop", "pop") //
 						.first("smallestCity", "city") //
 						.first("smallestPop", "pop"), //
-				project("_id").drop() //
+				project(previousOperation()).drop() //
 						.and("state").backReference() //
 						.and("biggestCity").nested(bind("name", "biggestCity").and("population", "biggestPop")) //
 						.and("smallestCity").nested(bind("name", "smallestCity").and("population", "smallestPop")), //

@@ -39,7 +39,7 @@ import com.mongodb.DBObject;
  * @author Oliver Gierke
  * @since 1.3
  */
-class ProjectionOperation extends ExposedFieldsAggregationOperationContext implements AggregationOperation {
+public class ProjectionOperation extends ExposedFieldsAggregationOperationContext implements AggregationOperation {
 
 	private static final List<Projection> NONE = Collections.emptyList();
 
