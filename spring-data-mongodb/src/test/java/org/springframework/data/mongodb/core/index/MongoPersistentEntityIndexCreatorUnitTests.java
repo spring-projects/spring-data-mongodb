@@ -40,7 +40,6 @@ import com.mongodb.DBObject;
  * 
  * @author Oliver Gierke
  * @author Philipp Schneider
- * @author Johno Crawford
  */
 @RunWith(MockitoJUnitRunner.class)
 public class MongoPersistentEntityIndexCreatorUnitTests {

@@ -44,7 +44,6 @@ import com.mongodb.util.JSON;
  * @author Jon Brisbin
  * @author Oliver Gierke
  * @author Philipp Schneider
- * @author Johno Crawford
  */
 public class MongoPersistentEntityIndexCreator implements
 		ApplicationListener<MappingContextEvent<MongoPersistentEntity<?>, MongoPersistentProperty>> {

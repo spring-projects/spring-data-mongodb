@@ -26,7 +26,6 @@ import java.lang.annotation.Target;
  * @author Jon Brisbin
  * @author Oliver Gierke
  * @author Philipp Schneider
- * @author Johno Crawford
  */
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
