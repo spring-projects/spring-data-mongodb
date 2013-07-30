@@ -78,4 +78,7 @@ public @interface CompoundIndex {
 	 * @return
 	 */
 	boolean background() default false;
+
+	int expireAfterSeconds() default -1;
+
 }
