@@ -44,6 +44,7 @@ import com.mongodb.util.JSON;
  * @author Jon Brisbin
  * @author Oliver Gierke
  * @author Philipp Schneider
+ * @author Johno Crawford
  */
 public class MongoPersistentEntityIndexCreator implements
 		ApplicationListener<MappingContextEvent<MongoPersistentEntity<?>, MongoPersistentProperty>> {
@@ -108,7 +109,7 @@ public class MongoPersistentEntityIndexCreator implements
 					DBObject definition = (DBObject) JSON.parse(index.def());
 
 					ensureIndex(indexColl, index.name(), definition, index.unique(), index.dropDups(), index.sparse(),
-							index.background());
+							index.background(), index.expireAfterSeconds());
 
 					if (log.isDebugEnabled()) {
 						log.debug("Created compound index " + index);
@@ -143,7 +144,7 @@ public class MongoPersistentEntityIndexCreator implements
 						DBObject definition = new BasicDBObject(persistentProperty.getFieldName(), direction);
 
 						ensureIndex(collection, name, definition, index.unique(), index.dropDups(), index.sparse(),
-								index.background());
+								index.background(), index.expireAfterSeconds());
 
 						if (log.isDebugEnabled()) {
 							log.debug("Created property index " + index);
@@ -192,9 +193,11 @@ public class MongoPersistentEntityIndexCreator implements
 	 * @param unique whether it shall be a unique index
 	 * @param dropDups whether to drop duplicates
 	 * @param sparse sparse or not
+	 * @param background whether the index will be created in the background
+	 * @param expireAfterSeconds the time to live for documents in the collection
 	 */
 	protected void ensureIndex(String collection, String name, DBObject indexDefinition, boolean unique,
-			boolean dropDups, boolean sparse, boolean background) {
+			boolean dropDups, boolean sparse, boolean background, int expireAfterSeconds) {
 
 		DBObject opts = new BasicDBObject();
 		opts.put("name", name);
@@ -202,6 +205,10 @@ public class MongoPersistentEntityIndexCreator implements
 		opts.put("sparse", sparse);
 		opts.put("unique", unique);
 		opts.put("background", background);
+
+		if (expireAfterSeconds != -1) {
+			opts.put("expireAfterSeconds", expireAfterSeconds);
+		}
 
 		mongoDbFactory.getDb().getCollection(collection).ensureIndex(indexDefinition, opts);
 	}

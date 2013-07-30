@@ -19,6 +19,7 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
 import java.util.Collections;
+import java.util.Date;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -39,14 +40,13 @@ import com.mongodb.DBObject;
  * 
  * @author Oliver Gierke
  * @author Philipp Schneider
+ * @author Johno Crawford
  */
 @RunWith(MockitoJUnitRunner.class)
 public class MongoPersistentEntityIndexCreatorUnitTests {
 
-	@Mock
-	MongoDbFactory factory;
-	@Mock
-	ApplicationContext context;
+	@Mock MongoDbFactory factory;
+	@Mock ApplicationContext context;
 
 	@Test
 	public void buildsIndexDefinitionUsingFieldName() {
@@ -58,6 +58,7 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 		assertThat(creator.indexDefinition.keySet(), hasItem("fieldname"));
 		assertThat(creator.name, is("indexName"));
 		assertThat(creator.background, is(false));
+		assertThat(creator.expireAfterSeconds, is(-1));
 	}
 
 	@Test
@@ -106,6 +107,20 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 		assertThat(creator.background, is(true));
 	}
 
+	/**
+	 * @see DATAMONGO-544
+	 */
+	@Test
+	public void expireAfterSecondsIfConfigured() {
+
+		MongoMappingContext mappingContext = prepareMappingContext(Milk.class);
+		DummyMongoPersistentEntityIndexCreator creator = new DummyMongoPersistentEntityIndexCreator(mappingContext, factory);
+
+		assertThat(creator.indexDefinition, is(notNullValue()));
+		assertThat(creator.indexDefinition.keySet(), hasItem("expiry"));
+		assertThat(creator.expireAfterSeconds, is(60));
+	}
+
 	private static MongoMappingContext prepareMappingContext(Class<?> type) {
 
 		MongoMappingContext mappingContext = new MongoMappingContext();
@@ -117,16 +132,18 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 
 	static class Person {
 
-		@Indexed(name = "indexName")
-		@Field("fieldname")
-		String field;
+		@Indexed(name = "indexName") @Field("fieldname") String field;
 
 	}
 
 	static class AnotherPerson {
 
-		@Indexed(background = true)
-		String lastname;
+		@Indexed(background = true) String lastname;
+	}
+
+	static class Milk {
+
+		@Indexed(expireAfterSeconds = 60) Date expiry;
 	}
 
 	static class DummyMongoPersistentEntityIndexCreator extends MongoPersistentEntityIndexCreator {
@@ -134,6 +151,7 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 		DBObject indexDefinition;
 		String name;
 		boolean background;
+		int expireAfterSeconds;
 
 		public DummyMongoPersistentEntityIndexCreator(MongoMappingContext mappingContext, MongoDbFactory mongoDbFactory) {
 			super(mappingContext, mongoDbFactory);
@@ -141,11 +159,12 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 
 		@Override
 		protected void ensureIndex(String collection, String name, DBObject indexDefinition, boolean unique,
-				boolean dropDups, boolean sparse, boolean background) {
+				boolean dropDups, boolean sparse, boolean background, int expireAfterSeconds) {
 
 			this.name = name;
 			this.indexDefinition = indexDefinition;
 			this.background = background;
+			this.expireAfterSeconds = expireAfterSeconds;
 		}
 	}
 }

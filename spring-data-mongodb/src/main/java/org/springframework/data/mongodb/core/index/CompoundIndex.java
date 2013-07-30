@@ -27,6 +27,7 @@ import java.lang.annotation.Target;
  * @author Jon Brisbin
  * @author Oliver Gierke
  * @author Philipp Schneider
+ * @author Johno Crawford
  */
 @Target({ ElementType.TYPE })
 @Documented
@@ -78,4 +79,12 @@ public @interface CompoundIndex {
 	 * @return
 	 */
 	boolean background() default false;
+
+	/**
+	 * Configures the number of seconds after which the collection should expire. Defaults to -1 for no expiry.
+	 * 
+	 * @see http://docs.mongodb.org/manual/tutorial/expire-data/
+	 * @return
+	 */
+	int expireAfterSeconds() default -1;
 }
