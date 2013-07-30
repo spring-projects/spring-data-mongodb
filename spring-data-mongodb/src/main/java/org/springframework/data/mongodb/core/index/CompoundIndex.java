@@ -27,6 +27,7 @@ import java.lang.annotation.Target;
  * @author Jon Brisbin
  * @author Oliver Gierke
  * @author Philipp Schneider
+ * @author Johno Crawford
  */
 @Target({ ElementType.TYPE })
 @Documented
@@ -78,4 +79,7 @@ public @interface CompoundIndex {
 	 * @return
 	 */
 	boolean background() default false;
+
+	int expireAfterSeconds() default -1;
+
 }
