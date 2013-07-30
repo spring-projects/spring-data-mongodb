@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2011-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import org.springframework.core.MethodParameter;
 import org.springframework.data.mongodb.core.geo.Distance;
 import org.springframework.data.mongodb.core.geo.Point;
 import org.springframework.data.mongodb.repository.Near;
+import org.springframework.data.mongodb.repository.query.MongoParameters.MongoParameter;
 import org.springframework.data.repository.query.Parameter;
 import org.springframework.data.repository.query.Parameters;
 
@@ -31,7 +32,7 @@ import org.springframework.data.repository.query.Parameters;
  * 
  * @author Oliver Gierke
  */
-public class MongoParameters extends Parameters {
+public class MongoParameters extends Parameters<MongoParameters, MongoParameter> {
 
 	private final Integer distanceIndex;
 	private Integer nearIndex;
@@ -53,6 +54,14 @@ public class MongoParameters extends Parameters {
 		} else if (this.nearIndex == null) {
 			this.nearIndex = -1;
 		}
+	}
+
+	private MongoParameters(List<MongoParameter> parameters, Integer distanceIndex, Integer nearIndex) {
+
+		super(parameters);
+
+		this.distanceIndex = distanceIndex;
+		this.nearIndex = nearIndex;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -81,7 +90,7 @@ public class MongoParameters extends Parameters {
 	 * @see org.springframework.data.repository.query.Parameters#createParameter(org.springframework.core.MethodParameter)
 	 */
 	@Override
-	protected Parameter createParameter(MethodParameter parameter) {
+	protected MongoParameter createParameter(MethodParameter parameter) {
 
 		MongoParameter mongoParameter = new MongoParameter(parameter);
 
@@ -112,6 +121,15 @@ public class MongoParameters extends Parameters {
 	 */
 	public int getNearIndex() {
 		return nearIndex;
+	}
+
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.query.Parameters#createFrom(java.util.List)
+	 */
+	@Override
+	protected MongoParameters createFrom(List<MongoParameter> parameters) {
+		return new MongoParameters(parameters, this.distanceIndex, this.nearIndex);
 	}
 
 	/**

@@ -28,7 +28,6 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.repository.core.RepositoryMetadata;
-import org.springframework.data.repository.query.Parameters;
 import org.springframework.data.repository.query.QueryMethod;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
@@ -42,9 +41,8 @@ import org.springframework.util.StringUtils;
  */
 public class MongoQueryMethod extends QueryMethod {
 
-	@SuppressWarnings("unchecked")
-	private static final List<Class<?>> GEO_NEAR_RESULTS = Arrays
-			.asList(GeoResult.class, GeoResults.class, GeoPage.class);
+	@SuppressWarnings("unchecked") private static final List<Class<?>> GEO_NEAR_RESULTS = Arrays.asList(GeoResult.class,
+			GeoResults.class, GeoPage.class);
 
 	private final Method method;
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
@@ -72,7 +70,7 @@ public class MongoQueryMethod extends QueryMethod {
 	 * @see org.springframework.data.repository.query.QueryMethod#getParameters(java.lang.reflect.Method)
 	 */
 	@Override
-	protected Parameters createParameters(Method method) {
+	protected MongoParameters createParameters(Method method) {
 		return new MongoParameters(method, isGeoNearQuery(method));
 	}
 
