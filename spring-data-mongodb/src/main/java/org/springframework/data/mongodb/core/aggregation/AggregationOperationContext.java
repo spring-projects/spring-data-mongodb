@@ -27,9 +27,29 @@ import com.mongodb.DBObject;
  */
 public interface AggregationOperationContext {
 
+	/**
+	 * Returns the mapped {@link DBObject}, potentially converting the source considering mapping metadata etc.
+	 * 
+	 * @param dbObject will never be {@literal null}.
+	 * @return must not be {@literal null}.
+	 */
 	DBObject getMappedObject(DBObject dbObject);
 
+	/**
+	 * Returns a {@link FieldReference} for the given field or {@literal null} if the context does not expose the given
+	 * field.
+	 * 
+	 * @param field must not be {@literal null}.
+	 * @return
+	 */
 	FieldReference getReference(Field field);
 
+	/**
+	 * Returns the {@link FieldReference} for the field with the given name or {@literal null} if the context does not
+	 * expose a field with the given name.
+	 * 
+	 * @param name must not be {@literal null} or empty.
+	 * @return
+	 */
 	FieldReference getReference(String name);
 }

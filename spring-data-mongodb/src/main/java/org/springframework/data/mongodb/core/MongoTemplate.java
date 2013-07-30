@@ -1266,27 +1266,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		@SuppressWarnings("unchecked")
 		Iterable<DBObject> resultSet = (Iterable<DBObject>) commandResult.get("result");
 		List<O> mappedResults = new ArrayList<O>();
-		DbObjectCallback<O> callback = new ReadDbObjectCallback<O>(mongoConverter, outputType);
+		DbObjectCallback<O> callback = new UnwrapAndReadDbObjectCallback<O>(mongoConverter, outputType);
 
 		for (DBObject dbObject : resultSet) {
-
-			DBObject toMap = new BasicDBObject();
-			Object idField = dbObject.get(Fields.UNDERSCORE_ID);
-
-			if (idField instanceof DBObject) {
-				DBObject nested = (DBObject) idField;
-				toMap.putAll(nested);
-
-				for (String key : dbObject.keySet()) {
-					if (!Fields.UNDERSCORE_ID.equals(key)) {
-						toMap.put(key, dbObject.get(key));
-					}
-				}
-			} else {
-				toMap = dbObject;
-			}
-
-			mappedResults.add(callback.doWith(toMap));
+			mappedResults.add(callback.doWith(dbObject));
 		}
 
 		return new AggregationResults<O>(mappedResults, commandResult);
@@ -1954,6 +1937,35 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				maybeEmitEvent(new AfterConvertEvent<T>(object, source));
 			}
 			return source;
+		}
+	}
+
+	class UnwrapAndReadDbObjectCallback<T> extends ReadDbObjectCallback<T> {
+
+		public UnwrapAndReadDbObjectCallback(EntityReader<? super T, DBObject> reader, Class<T> type) {
+			super(reader, type);
+		}
+
+		@Override
+		public T doWith(DBObject object) {
+
+			Object idField = object.get(Fields.UNDERSCORE_ID);
+
+			if (!(idField instanceof DBObject)) {
+				return super.doWith(object);
+			}
+
+			DBObject toMap = new BasicDBObject();
+			DBObject nested = (DBObject) idField;
+			toMap.putAll(nested);
+
+			for (String key : object.keySet()) {
+				if (!Fields.UNDERSCORE_ID.equals(key)) {
+					toMap.put(key, object.get(key));
+				}
+			}
+
+			return super.doWith(toMap);
 		}
 	}
 

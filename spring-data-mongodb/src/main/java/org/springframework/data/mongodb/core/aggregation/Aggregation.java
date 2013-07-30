@@ -26,7 +26,6 @@ import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
 import org.springframework.data.mongodb.core.aggregation.Fields.AggregationField;
-import org.springframework.data.mongodb.core.aggregation.ProjectionOperation.ProjectionOperationBuilder;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.SerializationUtils;
 import org.springframework.util.Assert;
@@ -81,20 +80,33 @@ public class Aggregation {
 		this.operations = Arrays.asList(aggregationOperations);
 	}
 
+	/**
+	 * A pointer to the previous {@link AggregationOperation}.
+	 * 
+	 * @return
+	 */
 	public static String previousOperation() {
 		return "_id";
 	}
 
+	/**
+	 * Creates a new {@link ProjectionOperation} including the given fields.
+	 * 
+	 * @param fields must not be {@literal null}.
+	 * @return
+	 */
 	public static ProjectionOperation project(String... fields) {
 		return project(fields(fields));
 	}
 
+	/**
+	 * Creates a new {@link ProjectionOperation} includeing the given {@link Fields}.
+	 * 
+	 * @param fields must not be {@literal null}.
+	 * @return
+	 */
 	public static ProjectionOperation project(Fields fields) {
 		return new ProjectionOperation(fields);
-	}
-
-	public static ProjectionOperationBuilder project(String field) {
-		return new ProjectionOperationBuilder(field);
 	}
 
 	/**
@@ -107,10 +119,22 @@ public class Aggregation {
 		return new UnwindOperation(field(field));
 	}
 
+	/**
+	 * Creates a new {@link GroupOperation} for the given fields.
+	 * 
+	 * @param fields must not be {@literal null}.
+	 * @return
+	 */
 	public static GroupOperation group(String... fields) {
 		return group(fields(fields));
 	}
 
+	/**
+	 * Creates a new {@link GroupOperation} for the given {@link Fields}.
+	 * 
+	 * @param fields must not be {@literal null}.
+	 * @return
+	 */
 	public static GroupOperation group(Fields fields) {
 		return new GroupOperation(fields);
 	}
@@ -136,22 +160,54 @@ public class Aggregation {
 		return new SortOperation(new Sort(direction, fields));
 	}
 
+	/**
+	 * Creates a new {@link SkipOperation} skipping the given number of elements.
+	 * 
+	 * @param elementsToSkip must not be less than zero.
+	 * @return
+	 */
 	public static SkipOperation skip(int elementsToSkip) {
 		return new SkipOperation(elementsToSkip);
 	}
 
+	/**
+	 * Creates a new {@link LimitOperation} limiting the result to the given number of elements.
+	 * 
+	 * @param maxElements must not be less than zero.
+	 * @return
+	 */
 	public static LimitOperation limit(long maxElements) {
 		return new LimitOperation(maxElements);
 	}
 
+	/**
+	 * Creates a new {@link MatchOperation} using the given {@link Criteria}.
+	 * 
+	 * @param criteria must not be {@literal null}.
+	 * @return
+	 */
 	public static MatchOperation match(Criteria criteria) {
 		return new MatchOperation(criteria);
 	}
 
+	/**
+	 * Creates a new {@link Fields} instance for the given field names.
+	 * 
+	 * @see Fields#fields(String...)
+	 * @param fields must not be {@literal null}.
+	 * @return
+	 */
 	public static Fields fields(String... fields) {
 		return Fields.fields(fields);
 	}
 
+	/**
+	 * Creates a new {@link Fields} instance from the given field name and target reference.
+	 * 
+	 * @param name must not be {@literal null} or empty.
+	 * @param target must not be {@literal null} or empty.
+	 * @return
+	 */
 	public static Fields bind(String name, String target) {
 		return Fields.from(field(name, target));
 	}
@@ -169,7 +225,7 @@ public class Aggregation {
 
 		for (AggregationOperation operation : operations) {
 
-			operationDocuments.add(postProcess(operation.toDBObject(context)));
+			operationDocuments.add(operation.toDBObject(context));
 
 			if (operation instanceof AggregationOperationContext) {
 				context = (AggregationOperationContext) operation;
@@ -182,10 +238,6 @@ public class Aggregation {
 		return command;
 	}
 
-	protected DBObject postProcess(DBObject document) {
-		return document;
-	}
-
 	/* 
 	 * (non-Javadoc)
 	 * @see java.lang.Object#toString()
@@ -196,6 +248,11 @@ public class Aggregation {
 				.serializeToJsonSafely(toDbObject("__collection__", new NoOpAggregationOperationContext()));
 	}
 
+	/**
+	 * Simple {@link AggregationOperationContext} that just returns {@link FieldReference}s as is.
+	 * 
+	 * @author Oliver Gierke
+	 */
 	private static class NoOpAggregationOperationContext implements AggregationOperationContext {
 
 		/* 

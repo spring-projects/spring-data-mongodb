@@ -30,6 +30,9 @@ import org.springframework.util.Assert;
 import com.mongodb.DBObject;
 
 /**
+ * {@link AggregationOperationContext} aware of a particular type and a {@link MappingContext} to potentially translate
+ * property references into document field names.
+ * 
  * @author Oliver Gierke
  * @since 1.3
  */
@@ -39,10 +42,21 @@ public class TypeBasedAggregationOperationContext implements AggregationOperatio
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 	private final QueryMapper mapper;
 
+	/**
+	 * Creates a new {@link TypeBasedAggregationOperationContext} for the given type, {@link MappingContext} and
+	 * {@link QueryMapper}.
+	 * 
+	 * @param type must not be {@literal null}.
+	 * @param mappingContext must not be {@literal null}.
+	 * @param mapper must not be {@literal null}.
+	 */
 	public TypeBasedAggregationOperationContext(Class<?> type,
 			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext, QueryMapper mapper) {
 
 		Assert.notNull(type, "Type must not be null!");
+		Assert.notNull(mappingContext, "MappingContext must not be null!");
+		Assert.notNull(mapper, "QueryMapper must not be null!");
+
 		this.type = type;
 		this.mappingContext = mappingContext;
 		this.mapper = mapper;
@@ -68,7 +82,8 @@ public class TypeBasedAggregationOperationContext implements AggregationOperatio
 		return getReferenceFor(field);
 	}
 
-	/* (non-Javadoc)
+	/* 
+	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getReference(java.lang.String)
 	 */
 	@Override

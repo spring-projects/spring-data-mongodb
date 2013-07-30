@@ -16,14 +16,24 @@
 package org.springframework.data.mongodb.core.aggregation;
 
 /**
+ * Abstraction for a field.
+ * 
  * @author Oliver Gierke
  * @since 1.3
  */
 public interface Field {
 
+	/**
+	 * Returns the name of the field.
+	 * 
+	 * @return must not be {@literal null}.
+	 */
 	String getName();
 
+	/**
+	 * Returns the target of the field. In case no explicit target is available {@link #getName()} should be returned.
+	 * 
+	 * @return must not be {@literal null}.
+	 */
 	String getTarget();
-
-	boolean hasExplicitTarget();
 }

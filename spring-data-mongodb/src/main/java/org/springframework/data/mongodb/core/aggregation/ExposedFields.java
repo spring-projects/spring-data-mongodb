@@ -39,10 +39,22 @@ public class ExposedFields implements Iterable<ExposedField> {
 	private final List<ExposedField> originalFields;
 	private final List<ExposedField> syntheticFields;
 
+	/**
+	 * Creates a new {@link ExposedFields} instance from the given {@link ExposedField}s.
+	 * 
+	 * @param fields must not be {@literal null}.
+	 * @return
+	 */
 	public static ExposedFields from(ExposedField... fields) {
 		return from(Arrays.asList(fields));
 	}
 
+	/**
+	 * Creates a new {@link ExposedFields} instance from the given {@link ExposedField}s.
+	 * 
+	 * @param fields must not be {@literal null}.
+	 * @return
+	 */
 	private static ExposedFields from(List<ExposedField> fields) {
 
 		ExposedFields result = EMPTY;
@@ -210,15 +222,6 @@ public class ExposedFields implements Iterable<ExposedField> {
 		@Override
 		public String getTarget() {
 			return field.getTarget();
-		}
-
-		/* 
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.Field#hasExplicitTarget()
-		 */
-		@Override
-		public boolean hasExplicitTarget() {
-			return field.hasExplicitTarget();
 		}
 
 		/**

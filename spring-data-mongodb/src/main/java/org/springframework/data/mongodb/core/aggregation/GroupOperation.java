@@ -21,6 +21,7 @@ import java.util.Locale;
 
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
+import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.BasicDBObject;
@@ -37,76 +38,126 @@ import com.mongodb.DBObject;
  */
 public class GroupOperation extends ExposedFieldsAggregationOperationContext implements AggregationOperation {
 
-	private static final String UNDERSCORE_ID = "_id";
-
-	private final ExposedFields fields;
+	private final ExposedFields nonSynthecticFields;
 	private final List<Operation> operations;
 
+	/**
+	 * Creates a new {@link GroupOperation} including the given {@link Fields}.
+	 * 
+	 * @param fields must not be {@literal null}.
+	 */
 	public GroupOperation(Fields fields) {
 
-		this.fields = ExposedFields.nonSynthetic(fields);
+		this.nonSynthecticFields = ExposedFields.nonSynthetic(fields);
 		this.operations = new ArrayList<Operation>();
 	}
 
-	public GroupOperation count(String field) {
-		return sum(field, 1);
+	/**
+	 * Creates a new {@link GroupOperation} from the given {@link GroupOperation} and the given {@link Operation}.
+	 * 
+	 * @param current must not be {@literal null}.
+	 * @param operation must not be {@literal null}.
+	 */
+	protected GroupOperation(GroupOperation current, Operation operation) {
+
+		Assert.notNull(current, "GroupOperation must not be null!");
+		Assert.notNull(operation, "Operation must not be null!");
+
+		this.nonSynthecticFields = current.nonSynthecticFields;
+		this.operations = new ArrayList<Operation>(current.operations.size() + 1);
+		this.operations.addAll(current.operations);
+		this.operations.add(operation);
 	}
 
-	public GroupOperation sum(String field) {
-		return sum(field, field);
+	/**
+	 * Creates a new {@link GroupOperation} from the current one adding the given {@link Operation}.
+	 * 
+	 * @param operation must not be {@literal null}.
+	 * @return
+	 */
+	protected GroupOperation and(Operation operation) {
+		return new GroupOperation(this, operation);
 	}
 
-	public GroupOperation sum(String field, String reference) {
-		return sum(field, reference, null);
+	/**
+	 * Returns a {@link GroupOperationBuilder} to build a grouping operation for the field with the given name
+	 * 
+	 * @param field must not be {@literal null} or empty.
+	 * @return
+	 */
+	public GroupOperationBuilder and(String field) {
+		return new GroupOperationBuilder(field, this);
 	}
 
-	public GroupOperation sum(String field, Object value) {
-		return sum(field, null, value);
-	}
+	public class GroupOperationBuilder {
 
-	public GroupOperation sum(String field, String reference, Object value) {
+		private final String name;
+		private final GroupOperation current;
 
-		this.operations.add(new Operation(GroupOps.SUM, field, reference, value));
-		return this;
-	}
+		public GroupOperationBuilder(String name, GroupOperation current) {
 
-	public GroupOperation addToSet(String field) {
-		return addToSet(field, field);
-	}
+			Assert.hasText(name, "Field name must not be null or empty!");
+			Assert.notNull(current, "GroupOperation must not be null!");
 
-	public GroupOperation addToSet(String field, String reference) {
+			this.name = name;
+			this.current = current;
+		}
 
-		this.operations.add(new Operation(GroupOps.ADD_TO_SET, field, reference, null));
-		return this;
-	}
+		public GroupOperation count() {
+			return sum(1);
+		}
 
-	public GroupOperation last(String field) {
-		return last(field, field);
-	}
+		public GroupOperation count(String reference) {
+			return sum(reference, 1);
+		}
 
-	public GroupOperation last(String field, String reference) {
+		public GroupOperation sum() {
+			return sum(name);
+		}
 
-		this.operations.add(new Operation(GroupOps.LAST, field, reference, null));
-		return this;
-	}
+		public GroupOperation sum(String reference) {
+			return sum(reference, null);
+		}
 
-	public GroupOperation first(String field) {
-		return first(field, field);
-	}
+		public GroupOperation sum(Object value) {
+			return sum(null, value);
+		}
 
-	public GroupOperation first(String field, String reference) {
+		public GroupOperation sum(String reference, Object value) {
+			return current.and(new Operation(GroupOps.SUM, name, reference, value));
+		}
 
-		this.operations.add(new Operation(GroupOps.FIRST, field, reference, null));
-		return this;
-	}
+		public GroupOperation addToSet() {
+			return addToSet(null);
+		}
 
-	public GroupOperation avg(String field) {
-		return avg(field, field);
-	}
+		public GroupOperation addToSet(String reference) {
+			return current.and(new Operation(GroupOps.ADD_TO_SET, name, reference, null));
+		}
 
-	public GroupOperation avg(String field, String reference) {
-		this.operations.add(new Operation(GroupOps.AVG, field, reference, null));
-		return this;
+		public GroupOperation last() {
+			return last(null);
+		}
+
+		public GroupOperation last(String reference) {
+			return current.and(new Operation(GroupOps.LAST, name, reference, null));
+		}
+
+		public GroupOperation first() {
+			return first(null);
+		}
+
+		public GroupOperation first(String reference) {
+			return current.and(new Operation(GroupOps.FIRST, name, reference, null));
+		}
+
+		public GroupOperation avg() {
+			return avg(null);
+		}
+
+		public GroupOperation avg(String reference) {
+			return current.and(new Operation(GroupOps.AVG, name, reference, null));
+		}
 	}
 
 	/* 
@@ -116,7 +167,7 @@ public class GroupOperation extends ExposedFieldsAggregationOperationContext imp
 	@Override
 	public ExposedFields getFields() {
 
-		ExposedFields fields = this.fields.and(new ExposedField(UNDERSCORE_ID, true));
+		ExposedFields fields = this.nonSynthecticFields.and(new ExposedField(Fields.UNDERSCORE_ID, true));
 
 		for (Operation operation : operations) {
 			fields = fields.and(operation.asField());
@@ -134,21 +185,21 @@ public class GroupOperation extends ExposedFieldsAggregationOperationContext imp
 
 		BasicDBObject operationObject = new BasicDBObject();
 
-		if (fields.exposesSingleFieldOnly()) {
+		if (nonSynthecticFields.exposesSingleFieldOnly()) {
 
-			FieldReference reference = context.getReference(fields.iterator().next());
-			operationObject.put(UNDERSCORE_ID, reference.toString());
+			FieldReference reference = context.getReference(nonSynthecticFields.iterator().next());
+			operationObject.put(Fields.UNDERSCORE_ID, reference.toString());
 
 		} else {
 
 			BasicDBObject inner = new BasicDBObject();
 
-			for (ExposedField field : fields) {
+			for (ExposedField field : nonSynthecticFields) {
 				FieldReference reference = context.getReference(field);
 				inner.put(field.getName(), reference.toString());
 			}
 
-			operationObject.put(UNDERSCORE_ID, inner);
+			operationObject.put(Fields.UNDERSCORE_ID, inner);
 		}
 
 		for (Operation operation : operations) {
@@ -183,7 +234,7 @@ public class GroupOperation extends ExposedFieldsAggregationOperationContext imp
 		}
 	}
 
-	private static class Operation implements AggregationOperation {
+	static class Operation implements AggregationOperation {
 
 		private final Keyword op;
 		private final String key;

@@ -110,7 +110,6 @@ public class FieldsUnitTests {
 
 		assertThat(field, is(notNullValue()));
 		assertThat(field.getName(), is(name));
-		assertThat(field.hasExplicitTarget(), is(target != null));
-		assertThat(field.getTarget(), is(field.hasExplicitTarget() ? field.getTarget() : field.getName()));
+		assertThat(field.getTarget(), is(target != null ? target : name));
 	}
 }

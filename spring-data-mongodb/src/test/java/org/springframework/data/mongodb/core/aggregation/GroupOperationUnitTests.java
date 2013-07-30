@@ -32,6 +32,11 @@ import com.mongodb.DBObject;
  */
 public class GroupOperationUnitTests {
 
+	@Test(expected = IllegalArgumentException.class)
+	public void rejectsNullFields() {
+		new GroupOperation(null);
+	}
+
 	@Test
 	public void createsGroupOperationWithSingleField() {
 
@@ -71,7 +76,7 @@ public class GroupOperationUnitTests {
 	public void groupFactoryMethodWithMultipleFieldsAndSumOperation() {
 
 		Fields fields = fields("a", "b").and("c"); // .and("d", 42);
-		GroupOperation groupOperation = new GroupOperation(fields).sum("e");
+		GroupOperation groupOperation = new GroupOperation(fields).and("e").sum();
 
 		DBObject dbObject = groupOperation.toDBObject(Aggregation.DEFAULT_CONTEXT);
 

@@ -32,11 +32,16 @@ public class ProjectionOperationUnitTests {
 
 	static final String PROJECT = "$project";
 
+	@Test(expected = IllegalArgumentException.class)
+	public void rejectsNullFields() {
+		new ProjectionOperation(null);
+	}
+
 	@Test
 	public void declaresBackReferenceCorrectly() {
 
 		ProjectionOperation operation = new ProjectionOperation();
-		operation = operation.and("prop").backReference();
+		operation = operation.and("prop").previousOperation();
 
 		DBObject dbObject = operation.toDBObject(Aggregation.DEFAULT_CONTEXT);
 		DBObject projectClause = DBObjectUtils.getAsDBObject(dbObject, PROJECT);
@@ -44,14 +49,12 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test
-	public void usesOneForImplicitTarget() {
+	public void alwaysUsesExplicitReference() {
 
 		ProjectionOperation operation = new ProjectionOperation(Fields.fields("foo").and("bar", "foobar"));
 
 		DBObject dbObject = operation.toDBObject(Aggregation.DEFAULT_CONTEXT);
 		DBObject projectClause = DBObjectUtils.getAsDBObject(dbObject, PROJECT);
-
-		System.out.println(projectClause);
 
 		assertThat(projectClause.get("foo"), is((Object) "$foo"));
 		assertThat(projectClause.get("bar"), is((Object) "$foobar"));

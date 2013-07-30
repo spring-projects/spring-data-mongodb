@@ -58,8 +58,19 @@ public class AggregationResults<T> implements Iterable<T> {
 	 * 
 	 * @return
 	 */
-	public List<T> getAggregationResult() {
+	public List<T> getMappedResults() {
 		return mappedResults;
+	}
+
+	/**
+	 * Returns the unique mapped result. Assumes no result or exactly one.
+	 * 
+	 * @return
+	 * @throws IllegalArgumentException in case more than one result is available.
+	 */
+	public T getUniqueMappedResult() {
+		Assert.isTrue(mappedResults.size() < 2, "Expected unique result or null, but got more than one!");
+		return mappedResults.size() == 1 ? mappedResults.get(0) : null;
 	}
 
 	/*

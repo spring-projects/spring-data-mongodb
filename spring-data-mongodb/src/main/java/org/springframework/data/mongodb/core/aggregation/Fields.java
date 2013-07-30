@@ -56,7 +56,7 @@ public class Fields implements Iterable<Field> {
 	/**
 	 * Creates a new {@link Fields} instance for {@link Field}s with the given names.
 	 * 
-	 * @param names must not be {@literal null} or empty.
+	 * @param names must not be {@literal null}.
 	 * @return
 	 */
 	public static Fields fields(String... names) {
@@ -90,12 +90,11 @@ public class Fields implements Iterable<Field> {
 	/**
 	 * Creates a new {@link Fields} instance using the given {@link Field}s.
 	 * 
-	 * @param fields
+	 * @param fields must not be {@literal null}.
 	 */
 	private Fields(List<Field> fields) {
 
 		Assert.notNull(fields, "Fields must not be null!");
-		Assert.isTrue(!fields.isEmpty(), "Fields must not be empty!");
 
 		this.fields = verify(fields);
 	}
@@ -221,16 +220,7 @@ public class Fields implements Iterable<Field> {
 		 * @see org.springframework.data.mongodb.core.aggregation.Field#getAlias()
 		 */
 		public String getTarget() {
-			return hasExplicitTarget() ? this.target : this.name;
-		}
-
-		/* 
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.Field#hasExplicitTarget()
-		 */
-		@Override
-		public boolean hasExplicitTarget() {
-			return StringUtils.hasText(this.target);
+			return StringUtils.hasText(this.target) ? this.target : this.name;
 		}
 
 		/* 

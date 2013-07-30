@@ -62,20 +62,17 @@ import com.mongodb.util.JSON;
 public class AggregationTests {
 
 	private static final String INPUT_COLLECTION = "aggregation_test_collection";
-	private static boolean initialized = false;
 	private static final Logger LOGGER = LoggerFactory.getLogger(AggregationTests.class);
+
+	private static boolean initialized = false;
 
 	@Autowired MongoTemplate mongoTemplate;
 
 	@Before
 	public void setUp() {
+
 		cleanDb();
 		initSampleDataIfNecessary();
-
-		CommandResult result = mongoTemplate.executeCommand("{ buildInfo: 1 }");
-		Object version = result.get("version");
-
-		LOGGER.debug("Server uses MongoDB Version: {}", version);
 	}
 
 	@After
@@ -98,8 +95,9 @@ public class AggregationTests {
 
 		if (!initialized) {
 
-			CommandResult result = mongoTemplate.executeCommand(new BasicDBObject("buildInfo", 1));
-			LOGGER.error(result.toString());
+			CommandResult result = mongoTemplate.executeCommand("{ buildInfo: 1 }");
+			Object version = result.get("version");
+			LOGGER.debug("Server uses MongoDB Version: {}", version);
 
 			mongoTemplate.dropCollection(ZipInfo.class);
 			mongoTemplate.execute(ZipInfo.class, new CollectionCallback<Void>() {
@@ -153,11 +151,12 @@ public class AggregationTests {
 		createTagDocuments();
 
 		Aggregation agg = newAggregation( //
-				project(fields("tags")), //
+				project("tags"), //
 				unwind("tags"), //
-				group("tags").count("n"), //
-				project("tag").backReference()//
-						.and(fields("n")), //
+				group("tags") //
+						.and("n").count(), //
+				project("n") //
+						.and("tag").previousOperation(), //
 				sort(DESC, "n") //
 		);
 
@@ -166,7 +165,7 @@ public class AggregationTests {
 		assertThat(results, is(notNullValue()));
 		assertThat(results.getServerUsed(), is("/127.0.0.1:27017"));
 
-		List<TagCount> tagCount = results.getAggregationResult();
+		List<TagCount> tagCount = results.getMappedResults();
 
 		assertThat(tagCount, is(notNullValue()));
 		assertThat(tagCount.size(), is(3));
@@ -180,11 +179,12 @@ public class AggregationTests {
 	public void shouldAggregateEmptyCollection() {
 
 		Aggregation aggregation = newAggregation(//
-				project(fields("tags")), //
+				project("tags"), //
 				unwind("tags"), //
-				group("tags").count("n"), //
-				project("tag").backReference() //
-						.and(fields("n")), //
+				group("tags") //
+						.and("n").count(), //
+				project("n") //
+						.and("tag").previousOperation(), //
 				sort(DESC, "n") //
 		);
 
@@ -193,7 +193,7 @@ public class AggregationTests {
 		assertThat(results, is(notNullValue()));
 		assertThat(results.getServerUsed(), is("/127.0.0.1:27017"));
 
-		List<TagCount> tagCount = results.getAggregationResult();
+		List<TagCount> tagCount = results.getMappedResults();
 
 		assertThat(tagCount, is(notNullValue()));
 		assertThat(tagCount.size(), is(0));
@@ -205,9 +205,10 @@ public class AggregationTests {
 		createTagDocuments();
 
 		Aggregation aggregation = newAggregation( //
-				project(fields("tags")), //
+				project("tags"), //
 				unwind("tags"), //
-				group("tags").count("count"), //
+				group("tags") //
+						.and("count").count(), //
 				limit(2) //
 		);
 
@@ -216,7 +217,7 @@ public class AggregationTests {
 		assertThat(results, is(notNullValue()));
 		assertThat(results.getServerUsed(), is("/127.0.0.1:27017"));
 
-		List<TagCount> tagCount = results.getAggregationResult();
+		List<TagCount> tagCount = results.getMappedResults();
 
 		assertThat(tagCount, is(notNullValue()));
 		assertThat(tagCount.size(), is(2));
@@ -287,15 +288,16 @@ public class AggregationTests {
 		*/
 
 		TypedAggregation<ZipInfo> aggregation = newAggregation(ZipInfo.class, //
-				group("state", "city").sum("pop", "population"), //
+				group("state", "city").and("pop").sum("population"), //
 				sort(ASC, "pop", "state", "city"), //
 				group("state") //
-						.last("biggestCity", "city") //
-						.last("biggestPop", "pop") //
-						.first("smallestCity", "city") //
-						.first("smallestPop", "pop"), //
-				project(previousOperation()).drop() //
-						.and("state").backReference() //
+						.and("biggestCity").last("city") //
+						.and("biggestPop").last("pop") //
+						.and("smallestCity").first("city") //
+						.and("smallestPop").first("pop"), //
+				project() //
+						// .and(previousOperation()).exclude() //
+						.and("state").previousOperation() //
 						.and("biggestCity").nested(bind("name", "biggestCity").and("population", "biggestPop")) //
 						.and("smallestCity").nested(bind("name", "smallestCity").and("population", "smallestPop")), //
 				sort(ASC, "state") //
@@ -306,10 +308,10 @@ public class AggregationTests {
 
 		AggregationResults<ZipInfoStats> result = mongoTemplate.aggregate(aggregation, ZipInfoStats.class);
 		assertThat(result, is(notNullValue()));
-		assertThat(result.getAggregationResult(), is(notNullValue()));
-		assertThat(result.getAggregationResult().size(), is(51));
+		assertThat(result.getMappedResults(), is(notNullValue()));
+		assertThat(result.getMappedResults().size(), is(51));
 
-		ZipInfoStats firstZipInfoStats = result.getAggregationResult().get(0);
+		ZipInfoStats firstZipInfoStats = result.getMappedResults().get(0);
 		assertThat(firstZipInfoStats, is(notNullValue()));
 		assertThat(firstZipInfoStats.id, is(nullValue()));
 		assertThat(firstZipInfoStats.state, is("AK"));
@@ -320,7 +322,7 @@ public class AggregationTests {
 		assertThat(firstZipInfoStats.biggestCity.name, is("ANCHORAGE"));
 		assertThat(firstZipInfoStats.biggestCity.population, is(183987));
 
-		ZipInfoStats lastZipInfoStats = result.getAggregationResult().get(50);
+		ZipInfoStats lastZipInfoStats = result.getMappedResults().get(50);
 		assertThat(lastZipInfoStats, is(notNullValue()));
 		assertThat(lastZipInfoStats.id, is(nullValue()));
 		assertThat(lastZipInfoStats.state, is("WY"));
@@ -357,7 +359,8 @@ public class AggregationTests {
 		  */
 
 		TypedAggregation<ZipInfo> agg = newAggregation(ZipInfo.class, //
-				group("state").sum("totalPop", "population"), //
+				group("state") //
+						.and("totalPop").sum("population"), //
 				sort(ASC, previousOperation(), "totalPop"), //
 				match(where("totalPop").gte(10 * 1000 * 1000)) //
 		);
@@ -367,10 +370,10 @@ public class AggregationTests {
 
 		AggregationResults<StateStats> result = mongoTemplate.aggregate(agg, StateStats.class);
 		assertThat(result, is(notNullValue()));
-		assertThat(result.getAggregationResult(), is(notNullValue()));
-		assertThat(result.getAggregationResult().size(), is(7));
+		assertThat(result.getMappedResults(), is(notNullValue()));
+		assertThat(result.getMappedResults().size(), is(7));
 
-		StateStats stateStats = result.getAggregationResult().get(0);
+		StateStats stateStats = result.getMappedResults().get(0);
 		assertThat(stateStats, is(notNullValue()));
 		assertThat(stateStats.id, is("CA"));
 		assertThat(stateStats.state, is(nullValue()));
@@ -397,7 +400,7 @@ public class AggregationTests {
 
 		TypedAggregation<UserWithLikes> agg = newAggregation(UserWithLikes.class, //
 				unwind("likes"), //
-				group("likes").count("number"), //
+				group("likes").and("number").count(), //
 				sort(DESC, "number"), //
 				limit(5), //
 				sort(ASC, previousOperation()) //
@@ -408,14 +411,14 @@ public class AggregationTests {
 
 		AggregationResults<LikeStats> result = mongoTemplate.aggregate(agg, LikeStats.class);
 		assertThat(result, is(notNullValue()));
-		assertThat(result.getAggregationResult(), is(notNullValue()));
-		assertThat(result.getAggregationResult().size(), is(5));
+		assertThat(result.getMappedResults(), is(notNullValue()));
+		assertThat(result.getMappedResults().size(), is(5));
 
-		assertLikeStats(result.getAggregationResult().get(0), "a", 4);
-		assertLikeStats(result.getAggregationResult().get(1), "b", 2);
-		assertLikeStats(result.getAggregationResult().get(2), "c", 4);
-		assertLikeStats(result.getAggregationResult().get(3), "d", 2);
-		assertLikeStats(result.getAggregationResult().get(4), "e", 3);
+		assertLikeStats(result.getMappedResults().get(0), "a", 4);
+		assertLikeStats(result.getMappedResults().get(1), "b", 2);
+		assertLikeStats(result.getMappedResults().get(2), "c", 4);
+		assertLikeStats(result.getMappedResults().get(3), "d", 2);
+		assertLikeStats(result.getMappedResults().get(4), "e", 3);
 	}
 
 	private void assertLikeStats(LikeStats like, String id, long count) {

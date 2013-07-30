@@ -32,7 +32,7 @@ import com.mongodb.DBObject;
 public class GeoNearOperationUnitTests {
 
 	@Test
-	public void rendersNeqrQueryAsAggregationOperation() {
+	public void rendersNearQueryAsAggregationOperation() {
 
 		NearQuery query = NearQuery.near(10.0, 10.0);
 		GeoNearOperation operation = new GeoNearOperation(query);
