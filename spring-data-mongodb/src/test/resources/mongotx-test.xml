@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns="http://www.springframework.org/schema/beans"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:mongo="http://www.springframework.org/schema/data/mongo"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
+          http://www.springframework.org/schema/data/mongo http://www.springframework.org/schema/data/mongo/spring-mongo-1.0.xsd">
+
+  <mongo:mongo id="mongo" host="127.0.0.1" port="27018"/>
+
+  <mongo:db-factory id="mongoDbFactory" mongo-ref="mongo" dbname="mongotx_junit"/>
+
+  <bean id="mongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate">
+    <constructor-arg ref="mongoDbFactory"/>
+  </bean>
+
+  <bean id="transactionManager" class="org.springframework.data.mongodb.core.MongoTokuMxTransactionManager">
+    <constructor-arg ref="mongoDbFactory"/>
+  </bean>
+
+  <tx:annotation-driven transaction-manager="transactionManager"/>
+
+</beans>
