@@ -34,7 +34,7 @@ public class GroupOperationUnitTests {
 
 	@Test(expected = IllegalArgumentException.class)
 	public void rejectsNullFields() {
-		new GroupOperation(null);
+		new GroupOperation((Fields) null);
 	}
 
 	@Test
@@ -42,8 +42,7 @@ public class GroupOperationUnitTests {
 
 		GroupOperation operation = new GroupOperation(fields("a"));
 
-		DBObject dbObject = operation.toDBObject(Aggregation.DEFAULT_CONTEXT);
-		DBObject groupClause = DBObjectUtils.getAsDBObject(dbObject, "$group");
+		DBObject groupClause = extractDbObjectFromGroupOperation(operation);
 
 		assertThat(groupClause.get(UNDERSCORE_ID), is((Object) "$a"));
 	}
@@ -53,8 +52,7 @@ public class GroupOperationUnitTests {
 
 		GroupOperation operation = new GroupOperation(fields("a").and("b", "c"));
 
-		DBObject dbObject = operation.toDBObject(Aggregation.DEFAULT_CONTEXT);
-		DBObject groupClause = DBObjectUtils.getAsDBObject(dbObject, "$group");
+		DBObject groupClause = extractDbObjectFromGroupOperation(operation);
 		DBObject idClause = DBObjectUtils.getAsDBObject(groupClause, UNDERSCORE_ID);
 
 		assertThat(idClause.get("a"), is((Object) "$a"));
@@ -75,13 +73,98 @@ public class GroupOperationUnitTests {
 	@Test
 	public void groupFactoryMethodWithMultipleFieldsAndSumOperation() {
 
-		Fields fields = fields("a", "b").and("c"); // .and("d", 42);
-		GroupOperation groupOperation = new GroupOperation(fields).and("e").sum();
+		GroupOperation groupOperation = Aggregation.group(fields("a", "b").and("c")) //
+				.sum("e").as("e");
 
-		DBObject dbObject = groupOperation.toDBObject(Aggregation.DEFAULT_CONTEXT);
-
-		DBObject groupClause = DBObjectUtils.getAsDBObject(dbObject, "$group");
+		DBObject groupClause = extractDbObjectFromGroupOperation(groupOperation);
 		DBObject eOp = DBObjectUtils.getAsDBObject(groupClause, "e");
 		assertThat(eOp, is((DBObject) new BasicDBObject("$sum", "$e")));
+	}
+
+	@Test
+	public void groupFactoryMethodWithMultipleFieldsAndSumOperationWithAlias() {
+
+		GroupOperation groupOperation = Aggregation.group(fields("a", "b").and("c")) //
+				.sum("e").as("ee");
+
+		DBObject groupClause = extractDbObjectFromGroupOperation(groupOperation);
+		DBObject eOp = DBObjectUtils.getAsDBObject(groupClause, "ee");
+		assertThat(eOp, is((DBObject) new BasicDBObject("$sum", "$e")));
+	}
+
+	@Test
+	public void groupFactoryMethodWithMultipleFieldsAndCountOperationWithout() {
+
+		GroupOperation groupOperation = Aggregation.group(fields("a", "b").and("c")) //
+				.count().as("count");
+
+		DBObject groupClause = extractDbObjectFromGroupOperation(groupOperation);
+		DBObject eOp = DBObjectUtils.getAsDBObject(groupClause, "count");
+		assertThat(eOp, is((DBObject) new BasicDBObject("$sum", 1)));
+	}
+
+	@Test
+	public void groupFactoryMethodWithMultipleFieldsAndMultipleAggregateOperationsWithAlias() {
+
+		GroupOperation groupOperation = Aggregation.group(fields("a", "b").and("c")) //
+				.sum("e").as("sum") //
+				.min("e").as("min"); //
+
+		DBObject groupClause = extractDbObjectFromGroupOperation(groupOperation);
+		DBObject sum = DBObjectUtils.getAsDBObject(groupClause, "sum");
+		assertThat(sum, is((DBObject) new BasicDBObject("$sum", "$e")));
+
+		DBObject min = DBObjectUtils.getAsDBObject(groupClause, "min");
+		assertThat(min, is((DBObject) new BasicDBObject("$min", "$e")));
+	}
+
+	@Test
+	public void groupOperationPushWithValue() {
+
+		GroupOperation groupOperation = Aggregation.group("a", "b").push(1).as("x");
+
+		DBObject groupClause = extractDbObjectFromGroupOperation(groupOperation);
+		DBObject push = DBObjectUtils.getAsDBObject(groupClause, "x");
+
+		assertThat(push, is((DBObject) new BasicDBObject("$push", 1)));
+	}
+
+	@Test
+	public void groupOperationPushWithReference() {
+
+		GroupOperation groupOperation = Aggregation.group("a", "b").push("ref").as("x");
+
+		DBObject groupClause = extractDbObjectFromGroupOperation(groupOperation);
+		DBObject push = DBObjectUtils.getAsDBObject(groupClause, "x");
+
+		assertThat(push, is((DBObject) new BasicDBObject("$push", "$ref")));
+	}
+
+	@Test
+	public void groupOperationAddToSetWithReference() {
+
+		GroupOperation groupOperation = Aggregation.group("a", "b").addToSet("ref").as("x");
+
+		DBObject groupClause = extractDbObjectFromGroupOperation(groupOperation);
+		DBObject push = DBObjectUtils.getAsDBObject(groupClause, "x");
+
+		assertThat(push, is((DBObject) new BasicDBObject("$addToSet", "$ref")));
+	}
+
+	@Test
+	public void groupOperationAddToSetWithValue() {
+
+		GroupOperation groupOperation = Aggregation.group("a", "b").addToSet(42).as("x");
+
+		DBObject groupClause = extractDbObjectFromGroupOperation(groupOperation);
+		DBObject push = DBObjectUtils.getAsDBObject(groupClause, "x");
+
+		assertThat(push, is((DBObject) new BasicDBObject("$addToSet", 42)));
+	}
+
+	private DBObject extractDbObjectFromGroupOperation(GroupOperation groupOperation) {
+		DBObject dbObject = groupOperation.toDBObject(Aggregation.DEFAULT_CONTEXT);
+		DBObject groupClause = DBObjectUtils.getAsDBObject(dbObject, "$group");
+		return groupClause;
 	}
 }
