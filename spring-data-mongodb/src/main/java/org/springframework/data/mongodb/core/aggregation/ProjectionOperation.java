@@ -23,9 +23,9 @@ import java.util.List;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
 import org.springframework.data.mongodb.core.aggregation.ProjectionOperation.ProjectionOperationBuilder.FieldProjection;
-import org.springframework.data.mongodb.core.aggregation.ProjectionOperation.ProjectionOperationBuilder.OperationProjection;
 import org.springframework.util.Assert;
 
+import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
@@ -47,23 +47,61 @@ public class ProjectionOperation extends ExposedFieldsAggregationOperationContex
 
 	private final List<Projection> projections;
 
+	/**
+	 * Creates a new empty {@link ProjectionOperation}.
+	 */
 	public ProjectionOperation() {
 		this(NONE, NONE);
 	}
 
+	/**
+	 * Creates a new {@link ProjectionOperation} including the given {@link Fields}.
+	 * 
+	 * @param fields must not be {@literal null}.
+	 */
 	public ProjectionOperation(Fields fields) {
 		this(NONE, ProjectionOperationBuilder.FieldProjection.from(fields, true));
 	}
 
+	/**
+	 * Copy constructor to allow building up {@link ProjectionOperation} instances from already existing
+	 * {@link Projection}s.
+	 * 
+	 * @param current must not be {@literal null}.
+	 * @param projections must not be {@literal null}.
+	 */
 	private ProjectionOperation(List<? extends Projection> current, List<? extends Projection> projections) {
+
+		Assert.notNull(current, "Current projections must not be null!");
+		Assert.notNull(projections, "Projections must not be null!");
 
 		this.projections = new ArrayList<ProjectionOperation.Projection>(current.size() + projections.size());
 		this.projections.addAll(current);
 		this.projections.addAll(projections);
 	}
 
-	protected ProjectionOperation and(Projection projection) {
+	/**
+	 * Creates a new {@link ProjectionOperation} with the current {@link Projection}s and the given one.
+	 * 
+	 * @param projection must not be {@literal null}.
+	 * @return
+	 */
+	private ProjectionOperation and(Projection projection) {
 		return new ProjectionOperation(this.projections, Arrays.asList(projection));
+	}
+
+	/**
+	 * Creates a new {@link ProjectionOperation} with the current {@link Projection}s replacing the last current one with
+	 * the given one.
+	 * 
+	 * @param projection must not be {@literal null}.
+	 * @return
+	 */
+	private ProjectionOperation andReplaceLastOneWith(Projection projection) {
+
+		List<Projection> projections = this.projections.isEmpty() ? Collections.<Projection> emptyList() : this.projections
+				.subList(0, this.projections.size() - 1);
+		return new ProjectionOperation(projections, Arrays.asList(projection));
 	}
 
 	/**
@@ -119,21 +157,11 @@ public class ProjectionOperation extends ExposedFieldsAggregationOperationContex
 		ExposedFields fields = null;
 
 		for (Projection projection : projections) {
-			ExposedField field = projection.getField();
+			ExposedField field = projection.getExposedField();
 			fields = fields == null ? ExposedFields.from(field) : fields.and(field);
 		}
 
 		return fields;
-	}
-
-	/**
-	 * Removes the given projectionOperation from the list of current projection operations. Needed in order to support
-	 * aliasing.
-	 * 
-	 * @param projectionOperation
-	 */
-	private void remove(OperationProjection projectionOperation) {
-		this.projections.remove(projectionOperation);
 	}
 
 	/*
@@ -211,9 +239,11 @@ public class ProjectionOperation extends ExposedFieldsAggregationOperationContex
 		 */
 		public ProjectionOperation as(String alias) {
 
-			Assert.notNull(this.previousProjection, "previousProjection must not be null!");
-			this.operation.remove(this.previousProjection);
-			return this.operation.and(previousProjection.withAlias(alias));
+			if (previousProjection != null) {
+				return this.operation.andReplaceLastOneWith(previousProjection.withAlias(alias));
+			} else {
+				return this.operation.and(new FieldProjection(Fields.field(alias, name), null));
+			}
 		}
 
 		/**
@@ -295,7 +325,7 @@ public class ProjectionOperation extends ExposedFieldsAggregationOperationContex
 		 * @return
 		 */
 		public ProjectionOperationBuilder project(String operation, Object... values) {
-			OperationProjection projectionOperation = new OperationProjection(name, operation, name, values);
+			OperationProjection projectionOperation = new OperationProjection(Fields.field(name), operation, values);
 			return new ProjectionOperationBuilder(name, this.operation.and(projectionOperation), projectionOperation);
 		}
 
@@ -393,31 +423,25 @@ public class ProjectionOperation extends ExposedFieldsAggregationOperationContex
 
 		static class OperationProjection extends Projection {
 
-			private final String name;
+			private final Field field;
 			private final String operation;
 			private final List<Object> values;
-
-			private final String aliasName;
 
 			/**
 			 * Creates a new {@link OperationProjection} for the given field.
 			 * 
 			 * @param name the name of the field to add the operation projection for, must not be {@literal null} or empty.
-			 * @param aliasName the name of the field alias to write that will hold the operation projection, must not be
-			 *          {@literal null} or empty.
 			 * @param operation the actual operation key, must not be {@literal null} or empty.
 			 * @param values the values to pass into the operation, must not be {@literal null}.
 			 */
-			public OperationProjection(String name, String operation, String aliasName, Object[] values) {
+			public OperationProjection(Field field, String operation, Object[] values) {
 
-				super(Fields.field(name));
+				super(field);
 
-				Assert.hasText(aliasName, "aliasName must not be null or empty!");
 				Assert.hasText(operation, "Operation must not be null or empty!");
 				Assert.notNull(values, "Values must not be null!");
 
-				this.name = name;
-				this.aliasName = aliasName;
+				this.field = field;
 				this.operation = operation;
 				this.values = Arrays.asList(values);
 			}
@@ -429,16 +453,18 @@ public class ProjectionOperation extends ExposedFieldsAggregationOperationContex
 			@Override
 			public DBObject toDBObject(AggregationOperationContext context) {
 
-				List<Object> values = buildReferences(context);
-				DBObject inner = new BasicDBObject("$" + operation, values.toArray());
+				BasicDBList values = new BasicDBList();
+				values.addAll(buildReferences(context));
 
-				return new BasicDBObject(this.aliasName, inner);
+				DBObject inner = new BasicDBObject("$" + operation, values);
+
+				return new BasicDBObject(this.field.getName(), inner);
 			}
 
 			private List<Object> buildReferences(AggregationOperationContext context) {
 
 				List<Object> result = new ArrayList<Object>(values.size());
-				result.add(context.getReference(this.name).toString());
+				result.add(context.getReference(field.getTarget()).toString());
 
 				for (Object element : values) {
 					result.add(element instanceof Field ? context.getReference((Field) element).toString() : element);
@@ -450,11 +476,11 @@ public class ProjectionOperation extends ExposedFieldsAggregationOperationContex
 			/**
 			 * Creates a new instance of this {@link OperationProjection} with the given alias.
 			 * 
-			 * @param aliasName the aliasName to set
+			 * @param alias the alias to set
 			 * @return
 			 */
-			public OperationProjection withAlias(String aliasName) {
-				return new OperationProjection(name, operation, aliasName, values.toArray());
+			public OperationProjection withAlias(String alias) {
+				return new OperationProjection(Fields.field(alias, this.field.getName()), operation, values.toArray());
 			}
 		}
 
@@ -488,20 +514,42 @@ public class ProjectionOperation extends ExposedFieldsAggregationOperationContex
 		}
 	}
 
+	/**
+	 * Base class for {@link Projection} implementations.
+	 * 
+	 * @author Oliver Gierke
+	 */
 	private static abstract class Projection {
 
 		private final ExposedField field;
 
-		public Projection(Field name) {
+		/**
+		 * Creates new {@link Projection} for the given {@link Field}.
+		 * 
+		 * @param field must not be {@literal null}.
+		 */
+		public Projection(Field field) {
 
-			Assert.notNull(name, "Field must not be null!");
-			this.field = new ExposedField(name, true);
+			Assert.notNull(field, "Field must not be null!");
+			this.field = new ExposedField(field, true);
 		}
 
-		public ExposedField getField() {
+		/**
+		 * Returns the field exposed by the {@link Projection}.
+		 * 
+		 * @return will never be {@literal null}.
+		 */
+		public ExposedField getExposedField() {
 			return field;
 		}
 
+		/**
+		 * Renders the current {@link Projection} into a {@link DBObject} based on the given
+		 * {@link AggregationOperationContext}.
+		 * 
+		 * @param context will never be {@literal null}.
+		 * @return
+		 */
 		public abstract DBObject toDBObject(AggregationOperationContext context);
 	}
 
