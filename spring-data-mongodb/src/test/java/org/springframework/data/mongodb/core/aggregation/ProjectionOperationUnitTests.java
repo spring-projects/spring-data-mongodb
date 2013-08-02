@@ -15,12 +15,13 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
 import org.junit.Test;
 import org.springframework.data.mongodb.core.DBObjectUtils;
 
+import com.mongodb.BasicDBList;
 import com.mongodb.DBObject;
 
 /**
@@ -58,5 +59,31 @@ public class ProjectionOperationUnitTests {
 
 		assertThat(projectClause.get("foo"), is((Object) "$foo"));
 		assertThat(projectClause.get("bar"), is((Object) "$foobar"));
+	}
+
+	@Test
+	public void aliasesSimpleFieldProjection() {
+
+		ProjectionOperation operation = new ProjectionOperation();
+
+		DBObject dbObject = operation.and("foo").as("bar").toDBObject(Aggregation.DEFAULT_CONTEXT);
+		DBObject projectClause = DBObjectUtils.getAsDBObject(dbObject, PROJECT);
+
+		assertThat(projectClause.get("bar"), is((Object) "$foo"));
+	}
+
+	@Test
+	public void aliasesArithmeticProjection() {
+
+		ProjectionOperation operation = new ProjectionOperation();
+
+		DBObject dbObject = operation.and("foo").plus(41).as("bar").toDBObject(Aggregation.DEFAULT_CONTEXT);
+		DBObject projectClause = DBObjectUtils.getAsDBObject(dbObject, PROJECT);
+		DBObject barClause = DBObjectUtils.getAsDBObject(projectClause, "bar");
+		BasicDBList addClause = DBObjectUtils.getAsDBList(barClause, "$add");
+
+		assertThat(addClause, hasSize(2));
+		assertThat(addClause.get(0), is((Object) "$foo"));
+		assertThat(addClause.get(1), is((Object) 41));
 	}
 }
