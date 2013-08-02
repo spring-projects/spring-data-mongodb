@@ -82,6 +82,7 @@ public class AggregationTests {
 
 	private void cleanDb() {
 		mongoTemplate.dropCollection(INPUT_COLLECTION);
+		mongoTemplate.dropCollection(Product.class);
 		mongoTemplate.dropCollection(UserWithLikes.class);
 	}
 
@@ -419,6 +420,40 @@ public class AggregationTests {
 		assertLikeStats(result.getMappedResults().get(2), "c", 4);
 		assertLikeStats(result.getMappedResults().get(3), "d", 2);
 		assertLikeStats(result.getMappedResults().get(4), "e", 3);
+	}
+
+	@Test
+	public void arithmenticOperatorsInProjectionExample() {
+
+		double taxRate = 0.19;
+		double netPrice = 1.99;
+		double discountRate = 0.05;
+		int spaceUnits = 3;
+		String productId = "P1";
+		String productName = "A";
+		mongoTemplate.insert(new Product(productId, productName, netPrice, spaceUnits, discountRate, taxRate));
+
+		TypedAggregation<Product> agg = newAggregation(Product.class, //
+				project("name", "netPrice") //
+						.and("netPrice").plus(1).as("netPricePlus1") //
+						.and("netPrice").minus(1).as("netPriceMinus1") //
+						.and("netPrice").multiply(2).as("netPriceMul2") //
+						.and("netPrice").divide(1.19).as("netPriceDiv119") //
+						.and("spaceUnits").mod(2).as("spaceUnitsMod2") //
+		);
+
+		AggregationResults<DBObject> result = mongoTemplate.aggregate(agg, DBObject.class);
+		List<DBObject> resultList = result.getMappedResults();
+
+		assertThat(resultList, is(notNullValue()));
+		assertThat((String) resultList.get(0).get("_id"), is(productId));
+		assertThat((String) resultList.get(0).get("name"), is(productName));
+		assertThat((Double) resultList.get(0).get("netPricePlus1"), is(netPrice + 1));
+		assertThat((Double) resultList.get(0).get("netPriceMinus1"), is(netPrice - 1));
+		assertThat((Double) resultList.get(0).get("netPriceMul2"), is(netPrice * 2));
+		assertThat((Double) resultList.get(0).get("netPriceDiv119"), is(netPrice / 1.19));
+		assertThat((Integer) resultList.get(0).get("spaceUnitsMod2"), is(spaceUnits % 2));
+
 	}
 
 	private void assertLikeStats(LikeStats like, String id, long count) {
