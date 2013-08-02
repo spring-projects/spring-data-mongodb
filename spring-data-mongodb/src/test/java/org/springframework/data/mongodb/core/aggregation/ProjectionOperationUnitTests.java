@@ -18,8 +18,11 @@ package org.springframework.data.mongodb.core.aggregation;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
+import java.util.Arrays;
+
 import org.junit.Test;
 import org.springframework.data.mongodb.core.DBObjectUtils;
+import org.springframework.data.mongodb.core.aggregation.ProjectionOperation.ProjectionOperationBuilder;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.DBObject;
@@ -31,6 +34,11 @@ import com.mongodb.DBObject;
  */
 public class ProjectionOperationUnitTests {
 
+	static final String MOD = "$mod";
+	static final String ADD = "$add";
+	static final String SUBTRACT = "$subtract";
+	static final String MULTIPLY = "$multiply";
+	static final String DIVIDE = "$divide";
 	static final String PROJECT = "$project";
 
 	@Test(expected = IllegalArgumentException.class)
@@ -85,5 +93,103 @@ public class ProjectionOperationUnitTests {
 		assertThat(addClause, hasSize(2));
 		assertThat(addClause.get(0), is((Object) "$foo"));
 		assertThat(addClause.get(1), is((Object) 41));
+	}
+
+	public void arithmenticProjectionOperationWithoutAlias() {
+
+		String fieldName = "a";
+		ProjectionOperationBuilder operation = new ProjectionOperation().and(fieldName).plus(1);
+		DBObject dbObject = operation.toDBObject(Aggregation.DEFAULT_CONTEXT);
+		DBObject projectClause = DBObjectUtils.getAsDBObject(dbObject, PROJECT);
+		DBObject oper = exctractOperation(fieldName, projectClause);
+
+		assertThat(oper.containsField(ADD), is(true));
+		assertThat(oper.get(ADD), is((Object) Arrays.<Object> asList("$a", 1)));
+	}
+
+	@Test
+	public void arithmenticProjectionOperationPlus() {
+
+		String fieldName = "a";
+		String fieldAlias = "b";
+		ProjectionOperation operation = new ProjectionOperation().and(fieldName).plus(1).as(fieldAlias);
+		DBObject dbObject = operation.toDBObject(Aggregation.DEFAULT_CONTEXT);
+		DBObject projectClause = DBObjectUtils.getAsDBObject(dbObject, PROJECT);
+
+		DBObject oper = exctractOperation(fieldAlias, projectClause);
+		assertThat(oper.containsField(ADD), is(true));
+		assertThat(oper.get(ADD), is((Object) Arrays.<Object> asList("$a", 1)));
+	}
+
+	@Test
+	public void arithmenticProjectionOperationMinus() {
+
+		String fieldName = "a";
+		String fieldAlias = "b";
+		ProjectionOperation operation = new ProjectionOperation().and(fieldName).minus(1).as(fieldAlias);
+		DBObject dbObject = operation.toDBObject(Aggregation.DEFAULT_CONTEXT);
+		DBObject projectClause = DBObjectUtils.getAsDBObject(dbObject, PROJECT);
+		DBObject oper = exctractOperation(fieldAlias, projectClause);
+
+		assertThat(oper.containsField(SUBTRACT), is(true));
+		assertThat(oper.get(SUBTRACT), is((Object) Arrays.<Object> asList("$a", 1)));
+	}
+
+	@Test
+	public void arithmenticProjectionOperationMultiply() {
+
+		String fieldName = "a";
+		String fieldAlias = "b";
+		ProjectionOperation operation = new ProjectionOperation().and(fieldName).multiply(1).as(fieldAlias);
+		DBObject dbObject = operation.toDBObject(Aggregation.DEFAULT_CONTEXT);
+		DBObject projectClause = DBObjectUtils.getAsDBObject(dbObject, PROJECT);
+		DBObject oper = exctractOperation(fieldAlias, projectClause);
+
+		assertThat(oper.containsField(MULTIPLY), is(true));
+		assertThat(oper.get(MULTIPLY), is((Object) Arrays.<Object> asList("$a", 1)));
+	}
+
+	@Test
+	public void arithmenticProjectionOperationDivide() {
+
+		String fieldName = "a";
+		String fieldAlias = "b";
+		ProjectionOperation operation = new ProjectionOperation().and(fieldName).divide(1).as(fieldAlias);
+		DBObject dbObject = operation.toDBObject(Aggregation.DEFAULT_CONTEXT);
+		DBObject projectClause = DBObjectUtils.getAsDBObject(dbObject, PROJECT);
+		DBObject oper = exctractOperation(fieldAlias, projectClause);
+
+		assertThat(oper.containsField(DIVIDE), is(true));
+		assertThat(oper.get(DIVIDE), is((Object) Arrays.<Object> asList("$a", 1)));
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void arithmenticProjectionOperationDivideByZeroException() {
+
+		new ProjectionOperation().and("a").divide(0);
+	}
+
+	@Test
+	public void arithmenticProjectionOperationMod() {
+
+		String fieldName = "a";
+		String fieldAlias = "b";
+		ProjectionOperation operation = new ProjectionOperation().and(fieldName).mod(3).as(fieldAlias);
+		DBObject dbObject = operation.toDBObject(Aggregation.DEFAULT_CONTEXT);
+		DBObject projectClause = DBObjectUtils.getAsDBObject(dbObject, PROJECT);
+		DBObject oper = exctractOperation(fieldAlias, projectClause);
+
+		assertThat(oper.containsField(MOD), is(true));
+		assertThat(oper.get(MOD), is((Object) Arrays.<Object> asList("$a", 3)));
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void arithmenticProjectionOperationModByZeroException() {
+
+		new ProjectionOperation().and("a").mod(0);
+	}
+
+	private static DBObject exctractOperation(String field, DBObject fromProjectClause) {
+		return (DBObject) fromProjectClause.get(field);
 	}
 }
