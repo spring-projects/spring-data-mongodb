@@ -45,6 +45,7 @@ import com.mongodb.WriteResult;
  * @author Thomas Risberg
  * @author Mark Pollack
  * @author Oliver Gierke
+ * @author Chuong Ngo
  */
 public interface MongoOperations {
 

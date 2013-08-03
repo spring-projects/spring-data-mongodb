@@ -114,6 +114,7 @@ import com.mongodb.util.JSONParseException;
  * @author Oliver Gierke
  * @author Amol Nayak
  * @author Patryk Wasik
+ * @author Chuong Ngo
  */
 public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
