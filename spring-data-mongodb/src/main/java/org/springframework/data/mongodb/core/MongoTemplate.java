@@ -114,6 +114,7 @@ import com.mongodb.util.JSONParseException;
  * @author Oliver Gierke
  * @author Amol Nayak
  * @author Patryk Wasik
+ * @author Chuong Ngo
  */
 public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
@@ -918,6 +919,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	public WriteResult upsert(Query query, Update update, String collectionName) {
 		return doUpdate(collectionName, query, update, null, true, false);
 	}
+	
+	public WriteResult upsert(Query query, Update update, Class<?> entityClass, String collectionName) {
+		return doUpdate(collectionName, query, update, entityClass, true, false);
+	}
 
 	public WriteResult updateFirst(Query query, Update update, Class<?> entityClass) {
 		return doUpdate(determineCollectionName(entityClass), query, update, entityClass, false, false);
@@ -926,6 +931,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	public WriteResult updateFirst(final Query query, final Update update, final String collectionName) {
 		return doUpdate(collectionName, query, update, null, false, false);
 	}
+	
+	public WriteResult updateFirst(Query query, Update update, Class<?> entityClass, String collectionName) {
+		return doUpdate(collectionName, query, update, entityClass, false, false);
+	}
 
 	public WriteResult updateMulti(Query query, Update update, Class<?> entityClass) {
 		return doUpdate(determineCollectionName(entityClass), query, update, entityClass, false, true);
@@ -933,6 +942,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 	public WriteResult updateMulti(final Query query, final Update update, String collectionName) {
 		return doUpdate(collectionName, query, update, null, false, true);
+	}
+	
+	public WriteResult updateMulti(final Query query, final Update update, Class<?> entityClass, String collectionName) {
+		return doUpdate(collectionName, query, update, entityClass, false, true);
 	}
 
 	protected WriteResult doUpdate(final String collectionName, final Query query, final Update update,
