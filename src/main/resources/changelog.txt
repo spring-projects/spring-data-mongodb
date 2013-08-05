@@ -1,6 +1,70 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 1.3.0.RC1 (2013-08-05)
+-----------------------------------------
+** Bug
+    * [DATAMONGO-392] - Updating an object does not write type information for objects to be updated
+    * [DATAMONGO-685] - JMX ServerInfo bean may return wrong info
+    * [DATAMONGO-688] - There is no precedence between @Id annotation and field named "id" - both are attempted to be used
+    * [DATAMONGO-693] - MongoFactoryBean should create a mongo instance with host/port if replicaset is null or empty
+    * [DATAMONGO-702] - Spring Data MongoDB projection search, is not properly configured with respective Java Pojo
+    * [DATAMONGO-704] - Remove references to SimpleMongoConverter from JavaDoc.
+    * [DATAMONGO-705] - QueryMapper doesn't handles exists query with DBRef field
+    * [DATAMONGO-706] - QueryMapper does not transform DBRefs in nested keywords correctly
+    * [DATAMONGO-709] - Polymorphic query on documents in same collection
+    * [DATAMONGO-717] - Application context is not properly distributed to persistent entities
+    * [DATAMONGO-721] - Polymorphic attribute type not persisted on update operations
+
+** Improvement
+    * [DATAMONGO-701] - Improve performance of indexed starts-with queries
+    * [DATAMONGO-713] - Typos in readme.md
+
+** New Feature
+    * [DATAMONGO-544] - Support for TTL collection via Indexed annotation
+    * [DATAMONGO-586] - Add support for new Aggregation Framework
+
+** Task
+    * [DATAMONGO-714] - Add latest formatter to project sources
+    * [DATAMONGO-723] - Clean up test cases
+    * [DATAMONGO-728] - Add missing package-info.java files
+    * [DATAMONGO-731] - Adapt refactorings in Spring Data Commons
+    * [DATAMONGO-732] - Release 1.3 RC1
+
+
+Changes in version 1.2.3.GA (2013-07-24)
+----------------------------------------
+** Task
+    * [DATAMONGO-728] - Add missing package-info.java files
+    * [DATAMONGO-729] - Release 1.2.3.
+
+
+Changes in version 1.2.2.GA (2013-07-19)
+----------------------------------------
+** Bug
+    * [DATAMONGO-663] - org.springframework.data.mongodb.core.query.Field needs an equals method
+    * [DATAMONGO-677] - QueryMapper does not handled correctly Map with DBRef value
+    * [DATAMONGO-679] - MongoTemplate.doSave(…) passed a JSON String doesn't save it.
+    * [DATAMONGO-683] - QueryMapper does not handle default _id when no MappingMetadata is present
+    * [DATAMONGO-685] - JMX ServerInfo bean may return wrong info
+    * [DATAMONGO-693] - MongoFactoryBean should create a mongo instance with host/port if replicaset is null or empty
+    * [DATAMONGO-704] - Remove references to SimpleMongoConverter from JavaDoc.
+    * [DATAMONGO-705] - QueryMapper doesn't handles exists query with DBRef field
+    * [DATAMONGO-706] - QueryMapper does not transform DBRefs in nested keywords correctly
+    * [DATAMONGO-717] - Application context is not properly distributed to persistent entities
+
+** Improvement
+    * [DATAMONGO-682] - Remove performance hotspots
+    * [DATAMONGO-701] - Improve performance of indexed starts-with queries
+
+** Task
+    * [DATAMONGO-658] - Minor formatting changes to README.md
+    * [DATAMONGO-678] - Performance improvements in CustomConversions
+    * [DATAMONGO-714] - Add latest formatter to project sources
+    * [DATAMONGO-723] - Clean up test cases
+    * [DATAMONGO-727] - Release 1.2.2
+
+
 Changes in version 1.3.0.M1 (2013-06-04)
 ----------------------------------------
 ** Bug
