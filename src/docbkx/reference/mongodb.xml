@@ -2183,7 +2183,7 @@ GroupByResults&lt;XObject&gt; results = mongoTemplate.group(where("x").gt(0),
           <para>The actual aggregate operation is executed by the
           <methodname>aggregate</methodname> method of the
           <classname>MongoTemplate</classname> which also takes the desired
-          output class as parameter. </para>
+          output class as parameter.</para>
         </listitem>
 
         <listitem>
@@ -2206,7 +2206,7 @@ GroupByResults&lt;XObject&gt; results = mongoTemplate.group(where("x").gt(0),
           the result of an aggregate operation. It provides access to the raw
           aggreation result in the form of an <classname>DBObject</classname>,
           to the mapped objects and information which performed the
-          aggregation. </para>
+          aggregation.</para>
         </listitem>
       </itemizedlist>
 
@@ -2294,8 +2294,15 @@ List&lt;OutputType&gt; mappedResult = results.getMappedResults();
             <row>
               <entry>Group Aggregation Operators</entry>
 
-              <entry>add_to_set, first, last, max, min, avg, push, sum,
+              <entry>addToSet, first, last, max, min, avg, push, sum,
               (*count)</entry>
+            </row>
+
+            <row>
+              <entry>Arithmetic Aggregation Operators</entry>
+
+              <entry>add (*via plus), subtract (*via minus), multiply, divide,
+              mod</entry>
             </row>
 
             <row>
@@ -2308,7 +2315,8 @@ List&lt;OutputType&gt; mappedResult = results.getMappedResults();
       </table>
 
       <para>Note that the aggregation operations not listed here are currently
-      not supported by Spring Data MongoDB. </para>
+      not supported by Spring Data MongoDB. Comparison aggregation operators
+      are expressed as <classname>Criteria</classname> expressions.</para>
 
       <para>*) The operation is mapped or added by Spring Data MongoDB.</para>
     </section>
@@ -2325,26 +2333,27 @@ List&lt;OutputType&gt; mappedResult = results.getMappedResults();
       <para>In order to do this we first create a new aggregation via the
       <methodname>newAggregation</methodname> static factory method to which
       we pass a list of aggregation operations. These aggregate operations
-      form the aggregation pipeline of our <classname>Aggregation</classname>.
-      </para>
+      form the aggregation pipeline of our
+      <classname>Aggregation</classname>.</para>
 
       <para>As a first step we select the <code>"tags"</code> field (which is
       an array of strings) from the input collection with the
-      <methodname>project</methodname> operation. </para>
+      <methodname>project</methodname> operation.</para>
 
       <para>In a second step we use the <methodname>unwind</methodname>
       operation to generate a new document for each tag within the
-      <code>"tags"</code> array. </para>
+      <code>"tags"</code> array.</para>
 
       <para>In the third step we use the <methodname>group</methodname>
       operation to define a group for each <code>"tags"</code>-value for which
       we aggregate the occurence count via the <methodname>count</methodname>
       aggregation operator and collect the result in a new field called
-      <code>"n"</code>. </para>
+      <code>"n"</code>.</para>
 
       <para>As a forth step we select the field <code>"n"</code> and create an
-      alias for the id-field generated from the previous group operation with
-      the name <code>"tag"</code>. </para>
+      alias for the id-field generated from the previous group operation
+      (hence the call to <code>previousOperation()</code>) with the name
+      <code>"tag"</code>.</para>
 
       <para>Finally as the fifth step we sort the resulting list of tags by
       their occurence count in descending order via the
@@ -2353,7 +2362,7 @@ List&lt;OutputType&gt; mappedResult = results.getMappedResults();
       <para>In order to let MongoDB perform the acutal aggregation operation
       we call the <methodname>aggregate</methodname> Method on the
       MongoTemplate with the created <classname>Aggregation</classname> as an
-      argument. </para>
+      argument.</para>
 
       <programlisting language="java">class TagCount {
  private String tag;
@@ -2366,9 +2375,9 @@ import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 Aggregation agg = newAggregation(
     project("tags"),
     unwind("tags"),
-    group("tags").and("n").count(),
+    group("tags").count().as("n"),
     project("n").and("tag").previousOperation(),
-    sort(DESC, "n")
+    sort(DESC, "n") 
 );
 
 AggregationResults&lt;TagCount&gt; results = mongoTemplate.aggregate(agg, "tags", TagCount.class);
@@ -2379,7 +2388,7 @@ List&lt;TagCount&gt; tagCount = results.getMappedResults();
       <code>"tags"</code> parameter to the <methodname>aggregate</methodname>
       Method. If the name of the input collection is not specified explicitly,
       it is derived from the input-class passed as first parameter to the
-      <methodname>newAggreation</methodname> Method. </para>
+      <methodname>newAggreation</methodname> Method.</para>
     </section>
 
     <section id="mongo.aggregation.example-2">
@@ -2412,7 +2421,7 @@ List&lt;TagCount&gt; tagCount = results.getMappedResults();
       ascending order, such that the smallest city is at the top and the
       biggest city is at the bottom of the result. Note that the sorting on
       "state" and <code>"city"</code> is implicitly performed against the
-      group id fields which Spring Data MongoDB took care of. </para>
+      group id fields which Spring Data MongoDB took care of.</para>
 
       <para>In the third step we use a <methodname>group</methodname>
       operation again to group the intermediate result by
@@ -2430,7 +2439,7 @@ List&lt;TagCount&gt; tagCount = results.getMappedResults();
       <code>and(previousOperation()).exclude()</code>. As we want to populate
       the nested <classname>City</classname> structures in our output-class
       accordingly we have to emit appropriate sub-documents with the nested
-      method. </para>
+      method.</para>
 
       <para>Finally as the fifth step we sort the resulting list of
       <classname>StateStats</classname> by their state name in ascending order
@@ -2462,18 +2471,17 @@ class ZipInfoStats {
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 …
 TypedAggregation&lt;ZipInfo&gt; aggregation = newAggregation(ZipInfo.class,
-    group("state", "city").and("pop").sum("population"),
+    group("state", "city").sum("population").as("pop"),
     sort(ASC, "pop", "state", "city"),
     group("state")
-        .and("biggestCity").last("city")
-        .and("biggestPop").last("pop")
-        .and("smallestCity").first("city")
-        .and("smallestPop").first("pop"),
+       .last("city").as("biggestCity")
+       .last("pop").as("biggestPop")
+       .first("city").as("smallestCity")
+       .first("pop").as("smallestPop"),
     project()
-        .and(previousOperation()).exclude()
-        .and("state").previousOperation()
-        .and("biggestCity").nested(bind("name", "biggestCity").and("population", "biggestPop"))
-        .and("smallestCity").nested(bind("name", "smallestCity").and("population", "smallestPop")),
+       .and("state").previousOperation()
+       .and("biggestCity").nested(bind("name", "biggestCity").and("population", "biggestPop"))
+       .and("smallestCity").nested(bind("name", "smallestCity").and("population", "smallestPop")),
     sort(ASC, "state")
 );
 
@@ -2522,9 +2530,9 @@ ZipInfoStats firstZipInfoStats = result.getMappedResults().get(0);
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 …
 TypedAggregation&lt;ZipInfo&gt; agg = newAggregation(ZipInfo.class,
-   group("state").and("totalPop").sum("population"),
-   sort(ASC, previousOperation(), "totalPop"),
-   match(where("totalPop").gte(10 * 1000 * 1000))
+    group("state").sum("population").as("totalPop"),
+    sort(ASC, previousOperation(), "totalPop"),
+    match(where("totalPop").gte(10 * 1000 * 1000))
 );
 
 AggregationResults&lt;StateStats&gt; result = mongoTemplate.aggregate(agg, StateStats.class);
