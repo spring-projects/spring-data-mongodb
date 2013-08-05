@@ -297,7 +297,6 @@ public class AggregationTests {
 						.first("city").as("smallestCity") //
 						.first("pop").as("smallestPop"), //
 				project() //
-						// .and(previousOperation()).exclude() //
 						.and("state").previousOperation() //
 						.and("biggestCity").nested(bind("name", "biggestCity").and("population", "biggestPop")) //
 						.and("smallestCity").nested(bind("name", "smallestCity").and("population", "smallestPop")), //
