@@ -2214,17 +2214,16 @@ GroupByResults&lt;XObject&gt; results = mongoTemplate.group(where("x").gt(0),
       for the MongoDB Aggregation Framework looks as follows:</para>
 
       <programlisting language="java">import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
-…
+
 Aggregation agg = newAggregation(
     pipelineOP1(),
     pipelineOP2(),
-…
     pipelineOPn()
 );
 
 AggregationResults&lt;OutputType&gt; results = mongoTemplate.aggregate(agg, "INPUT_COLLECTION_NAME", OutputType.class);
 List&lt;OutputType&gt; mappedResult = results.getMappedResults();
-…</programlisting>
+</programlisting>
 
       <para>Note that if you provide an input class as the first parameter to
       the <methodname>newAggregation</methodname> method the
@@ -2321,57 +2320,29 @@ List&lt;OutputType&gt; mappedResult = results.getMappedResults();
       <para>*) The operation is mapped or added by Spring Data MongoDB.</para>
     </section>
 
-    <section id="mongo.aggregation.introductory-example">
-      <title>Aggregation Framework Example 1</title>
+    <section id="mongo.aggregation.examples">
+      <title>Aggregation Framework Examples</title>
 
-      <para>In this introductory example we want to aggregate a list of tags
-      to get the occurence count of a particular tag from a MongoDB collection
-      called <code>"tags"</code> sorted by the occurence count in descending
-      order. This example demonstrates the usage of grouping, sorting,
-      projections (selection) and unwinding (result splitting).</para>
+      <para>The follwing examples demonstrate the usage patterns for the
+      MongoDB Aggregation Framework with Spring Data MongoDB.</para>
 
-      <para>In order to do this we first create a new aggregation via the
-      <methodname>newAggregation</methodname> static factory method to which
-      we pass a list of aggregation operations. These aggregate operations
-      form the aggregation pipeline of our
-      <classname>Aggregation</classname>.</para>
+      <example id="mongo.aggregation.examples.example1">
+        <title>Aggregation Framework Example 1</title>
 
-      <para>As a first step we select the <code>"tags"</code> field (which is
-      an array of strings) from the input collection with the
-      <methodname>project</methodname> operation.</para>
+        <para>In this introductory example we want to aggregate a list of tags
+        to get the occurence count of a particular tag from a MongoDB
+        collection called <code>"tags"</code> sorted by the occurence count in
+        descending order. This example demonstrates the usage of grouping,
+        sorting, projections (selection) and unwinding (result
+        splitting).</para>
 
-      <para>In a second step we use the <methodname>unwind</methodname>
-      operation to generate a new document for each tag within the
-      <code>"tags"</code> array.</para>
+        <programlisting language="java">class TagCount {
+ String tag;
+ int n;
+}</programlisting>
 
-      <para>In the third step we use the <methodname>group</methodname>
-      operation to define a group for each <code>"tags"</code>-value for which
-      we aggregate the occurence count via the <methodname>count</methodname>
-      aggregation operator and collect the result in a new field called
-      <code>"n"</code>.</para>
+        <programlisting language="java">import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
-      <para>As a forth step we select the field <code>"n"</code> and create an
-      alias for the id-field generated from the previous group operation
-      (hence the call to <code>previousOperation()</code>) with the name
-      <code>"tag"</code>.</para>
-
-      <para>Finally as the fifth step we sort the resulting list of tags by
-      their occurence count in descending order via the
-      <methodname>sort</methodname> operation.</para>
-
-      <para>In order to let MongoDB perform the acutal aggregation operation
-      we call the <methodname>aggregate</methodname> Method on the
-      MongoTemplate with the created <classname>Aggregation</classname> as an
-      argument.</para>
-
-      <programlisting language="java">class TagCount {
- private String tag;
- private int n;
-…
-}
-
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
-…
 Aggregation agg = newAggregation(
     project("tags"),
     unwind("tags"),
@@ -2381,83 +2352,88 @@ Aggregation agg = newAggregation(
 );
 
 AggregationResults&lt;TagCount&gt; results = mongoTemplate.aggregate(agg, "tags", TagCount.class);
-List&lt;TagCount&gt; tagCount = results.getMappedResults();
-…</programlisting>
+List&lt;TagCount&gt; tagCount = results.getMappedResults();</programlisting>
+      </example>
+
+      <itemizedlist>
+        <listitem>
+          <para>In order to do this we first create a new aggregation via the
+          <methodname>newAggregation</methodname> static factory method to
+          which we pass a list of aggregation operations. These aggregate
+          operations define the aggregation pipeline of our
+          <classname>Aggregation</classname>.</para>
+        </listitem>
+
+        <listitem>
+          <para>As a second step we select the <code>"tags"</code> field
+          (which is an array of strings) from the input collection with the
+          <methodname>project</methodname> operation.</para>
+        </listitem>
+
+        <listitem>
+          <para>In a third step we use the <methodname>unwind</methodname>
+          operation to generate a new document for each tag within the
+          <code>"tags"</code> array.</para>
+        </listitem>
+
+        <listitem>
+          <para>In the forth step we use the <methodname>group</methodname>
+          operation to define a group for each <code>"tags"</code>-value for
+          which we aggregate the occurence count via the
+          <methodname>count</methodname> aggregation operator and collect the
+          result in a new field called <code>"n"</code>.</para>
+        </listitem>
+
+        <listitem>
+          <para>As a fifth step we select the field <code>"n"</code> and
+          create an alias for the id-field generated from the previous group
+          operation (hence the call to <code>previousOperation()</code>) with
+          the name <code>"tag"</code>.</para>
+        </listitem>
+
+        <listitem>
+          <para>As the sixth step we sort the resulting list of tags by their
+          occurence count in descending order via the
+          <methodname>sort</methodname> operation.</para>
+        </listitem>
+
+        <listitem>
+          <para>Finally we call the <methodname>aggregate</methodname> Method
+          on the MongoTemplate in order to let MongoDB perform the acutal
+          aggregation operation with the created
+          <classname>Aggregation</classname> as an argument.</para>
+        </listitem>
+      </itemizedlist>
 
       <para>Note that the input collection is explicitly specified as the
       <code>"tags"</code> parameter to the <methodname>aggregate</methodname>
       Method. If the name of the input collection is not specified explicitly,
       it is derived from the input-class passed as first parameter to the
       <methodname>newAggreation</methodname> Method.</para>
-    </section>
 
-    <section id="mongo.aggregation.example-2">
-      <title>Aggregation Framework Example 2</title>
+      <example id="mongo.aggregation.examples.example2">
+        <title>Aggregation Framework Example 2</title>
 
-      <para>This example is based on the <ulink
-      url="http://docs.mongodb.org/manual/tutorial/aggregation-examples/#largest-and-smallest-cities-by-state">Largest
-      and Smallest Cities by State</ulink> example from the MongoDB
-      Aggregation Framework documentation. We added additional sorting to
-      produce stable results with different MongoDB versions. Here we want to
-      return the smallest and largest cities by population for each state,
-      using the aggregation framework. This example demonstrates the usage of
-      grouping, sorting and projections (selection).</para>
+        <para>This example is based on the <ulink
+        url="http://docs.mongodb.org/manual/tutorial/aggregation-examples/#largest-and-smallest-cities-by-state">Largest
+        and Smallest Cities by State</ulink> example from the MongoDB
+        Aggregation Framework documentation. We added additional sorting to
+        produce stable results with different MongoDB versions. Here we want
+        to return the smallest and largest cities by population for each
+        state, using the aggregation framework. This example demonstrates the
+        usage of grouping, sorting and projections (selection).</para>
 
-      <para>The class <classname>ZipInfo</classname> maps the structure of the
-      given input-collection. The class <classname>ZipInfoStats</classname>
-      defines the structure in the desired output format.</para>
-
-      <para>As a first step we use the <methodname>group</methodname>
-      operation to define a group from the input-collection. The grouping
-      criteria is the combination of the fields <code>"state"</code> and
-      <code>"city" </code>which forms the id structure of the group. We
-      aggregate the value of the <code>"population"</code> field from the
-      grouped elements with by using the <methodname>sum</methodname> operator
-      saving the result in the field <code>"pop"</code>.</para>
-
-      <para>In a second step we use the <methodname>sort</methodname>
-      operation to sort the intermediate-result by the fields
-      <code>"pop"</code>, <code>"state"</code> and <code>"city"</code> in
-      ascending order, such that the smallest city is at the top and the
-      biggest city is at the bottom of the result. Note that the sorting on
-      "state" and <code>"city"</code> is implicitly performed against the
-      group id fields which Spring Data MongoDB took care of.</para>
-
-      <para>In the third step we use a <methodname>group</methodname>
-      operation again to group the intermediate result by
-      <code>"state"</code>. Note that <code>"state"</code> again implicitly
-      references an group-id field. We select the name and the population
-      count of the biggest and smallest city with calls to the
-      <code>last(…)</code> and <code>first(...)</code> operator respectively
-      via the <methodname>project</methodname> operation.</para>
-
-      <para>As the forth step we select the <code>"state"</code> field from
-      the previous <methodname>group</methodname> operation. Note that
-      <code>"state"</code> again implicitly references an group-id field. As
-      we do not want an implict generated id to appear, we exclude the id from
-      the previous operation via
-      <code>and(previousOperation()).exclude()</code>. As we want to populate
-      the nested <classname>City</classname> structures in our output-class
-      accordingly we have to emit appropriate sub-documents with the nested
-      method.</para>
-
-      <para>Finally as the fifth step we sort the resulting list of
-      <classname>StateStats</classname> by their state name in ascending order
-      via the <methodname>sort</methodname> operation.</para>
-
-      <programlisting language="java">class ZipInfo {
+        <programlisting language="java">class ZipInfo {
    String id;
    String city;
    String state;
    @Field("pop") int population;
    @Field("loc") double[] location;
-…
 }
 
 class City {
    String name;
    int population;
-…
 }
 
 class ZipInfoStats {
@@ -2465,13 +2441,13 @@ class ZipInfoStats {
    String state;
    City biggestCity;
    City smallestCity;
-…
-}
+}</programlisting>
 
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
-…
+        <programlisting language="java">import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
+
 TypedAggregation&lt;ZipInfo&gt; aggregation = newAggregation(ZipInfo.class,
-    group("state", "city").sum("population").as("pop"),
+    group("state", "city")
+       .sum("population").as("pop"),
     sort(ASC, "pop", "state", "city"),
     group("state")
        .last("city").as("biggestCity")
@@ -2480,55 +2456,100 @@ TypedAggregation&lt;ZipInfo&gt; aggregation = newAggregation(ZipInfo.class,
        .first("pop").as("smallestPop"),
     project()
        .and("state").previousOperation()
-       .and("biggestCity").nested(bind("name", "biggestCity").and("population", "biggestPop"))
-       .and("smallestCity").nested(bind("name", "smallestCity").and("population", "smallestPop")),
+       .and("biggestCity")
+          .nested(bind("name", "biggestCity").and("population", "biggestPop"))
+       .and("smallestCity")
+          .nested(bind("name", "smallestCity").and("population", "smallestPop")),
     sort(ASC, "state")
 );
 
 AggregationResults&lt;ZipInfoStats&gt; result = mongoTemplate.aggregate(aggregation, ZipInfoStats.class);
 ZipInfoStats firstZipInfoStats = result.getMappedResults().get(0);
-…
 </programlisting>
+      </example>
+
+      <itemizedlist>
+        <listitem>
+          <para>The class <classname>ZipInfo</classname> maps the structure of
+          the given input-collection. The class
+          <classname>ZipInfoStats</classname> defines the structure in the
+          desired output format.</para>
+        </listitem>
+
+        <listitem>
+          <para>As a first step we use the <methodname>group</methodname>
+          operation to define a group from the input-collection. The grouping
+          criteria is the combination of the fields <code>"state"</code> and
+          <code>"city" </code>which forms the id structure of the group. We
+          aggregate the value of the <code>"population"</code> property from
+          the grouped elements with by using the <methodname>sum</methodname>
+          operator saving the result in the field <code>"pop"</code>.</para>
+        </listitem>
+
+        <listitem>
+          <para>In a second step we use the <methodname>sort</methodname>
+          operation to sort the intermediate-result by the fields
+          <code>"pop"</code>, <code>"state"</code> and <code>"city"</code> in
+          ascending order, such that the smallest city is at the top and the
+          biggest city is at the bottom of the result. Note that the sorting
+          on "state" and <code>"city"</code> is implicitly performed against
+          the group id fields which Spring Data MongoDB took care of.</para>
+        </listitem>
+
+        <listitem>
+          <para>In the third step we use a <methodname>group</methodname>
+          operation again to group the intermediate result by
+          <code>"state"</code>. Note that <code>"state"</code> again
+          implicitly references an group-id field. We select the name and the
+          population count of the biggest and smallest city with calls to the
+          <code>last(…)</code> and <code>first(...)</code> operator
+          respectively via the <methodname>project</methodname>
+          operation.</para>
+        </listitem>
+
+        <listitem>
+          <para>As the forth step we select the <code>"state"</code> field
+          from the previous <methodname>group</methodname> operation. Note
+          that <code>"state"</code> again implicitly references an group-id
+          field. As we do not want an implict generated id to appear, we
+          exclude the id from the previous operation via
+          <code>and(previousOperation()).exclude()</code>. As we want to
+          populate the nested <classname>City</classname> structures in our
+          output-class accordingly we have to emit appropriate sub-documents
+          with the nested method.</para>
+        </listitem>
+
+        <listitem>
+          <para>Finally as the fifth step we sort the resulting list of
+          <classname>StateStats</classname> by their state name in ascending
+          order via the <methodname>sort</methodname> operation.</para>
+        </listitem>
+      </itemizedlist>
 
       <para>Note that we derive the name of the input-collection from the
       <classname>ZipInfo</classname>-class passed as first parameter to the
       <methodname>newAggregation</methodname>-Method.</para>
-    </section>
 
-    <section id="mongo.aggregation.example-3">
-      <title>Aggregation Framework Example 3</title>
+      <example id="mongo.aggregation.examples.example3">
+        <title>Aggregation Framework Example 3</title>
 
-      <para>This example is based on the <ulink
-      url="http://docs.mongodb.org/manual/tutorial/aggregation-examples/#states-with-populations-over-10-million">States
-      with Populations Over 10 Million </ulink>example from the MongoDB
-      Aggregation Framework documentation. We added additional sorting to
-      produce stable results with different MongoDB versions. Here we want to
-      return all states with a population greater than 10 million, using the
-      aggregation framework. This example demonstrates the usage of grouping,
-      sorting and matching (filtering).</para>
+        <para>This example is based on the <ulink
+        url="http://docs.mongodb.org/manual/tutorial/aggregation-examples/#states-with-populations-over-10-million">States
+        with Populations Over 10 Million </ulink>example from the MongoDB
+        Aggregation Framework documentation. We added additional sorting to
+        produce stable results with different MongoDB versions. Here we want
+        to return all states with a population greater than 10 million, using
+        the aggregation framework. This example demonstrates the usage of
+        grouping, sorting and matching (filtering).</para>
 
-      <para>In the first step we group the input collection by the
-      <code>"state"</code> field and calculate the sum of the
-      <code>"population"</code> field and store the result in the new field
-      <code>"totalPop"</code>.</para>
-
-      <para>As a second step we sort the intermediate result by the
-      id-reference of the previous group operation in addition to the
-      <code>"totalPop"</code> field in ascending order.</para>
-
-      <para>Finally in the third step we filter the intermediate result by
-      using a <methodname>match</methodname> operation which accepts a
-      <classname>Criteria</classname> query as an argument.</para>
-
-      <programlisting language="java">class StateStats {
+        <programlisting language="java">class StateStats {
    @Id String id;
    String state;
    @Field("totalPop") int totalPopulation;
-…
-}
+}</programlisting>
 
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
-…
+        <programlisting language="java">import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
+
 TypedAggregation&lt;ZipInfo&gt; agg = newAggregation(ZipInfo.class,
     group("state").sum("population").as("totalPop"),
     sort(ASC, previousOperation(), "totalPop"),
@@ -2536,11 +2557,64 @@ TypedAggregation&lt;ZipInfo&gt; agg = newAggregation(ZipInfo.class,
 );
 
 AggregationResults&lt;StateStats&gt; result = mongoTemplate.aggregate(agg, StateStats.class);
-List&lt;StateStats&gt; stateStatsList = result.getMappedResults();
-…</programlisting>
+List&lt;StateStats&gt; stateStatsList = result.getMappedResults();</programlisting>
+      </example>
+
+      <itemizedlist>
+        <listitem>
+          <para>As a first step we group the input collection by the
+          <code>"state"</code> field and calculate the sum of the
+          <code>"population"</code> field and store the result in the new
+          field <code>"totalPop"</code>.</para>
+        </listitem>
+
+        <listitem>
+          <para>In the second step we sort the intermediate result by the
+          id-reference of the previous group operation in addition to the
+          <code>"totalPop"</code> field in ascending order.</para>
+        </listitem>
+
+        <listitem>
+          <para>Finally in the third step we filter the intermediate result by
+          using a <methodname>match</methodname> operation which accepts a
+          <classname>Criteria</classname> query as an argument.</para>
+        </listitem>
+      </itemizedlist>
 
       <para>Note that we derive the name of the input-collection from the
       <classname>ZipInfo</classname>-class passed as first parameter to the
+      <methodname>newAggregation</methodname>-Method.</para>
+
+      <example id="mongo.aggregation.examples.example4">
+        <title>Aggregation Framework Example 4</title>
+
+        <para>This example demonstrates the use of arithmetic operations in
+        the projection operation.</para>
+
+        <programlisting language="java">class Product {
+    String id;
+    String name;
+    double netPrice;
+    int spaceUnits;
+}</programlisting>
+
+        <programlisting language="java">import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
+
+TypedAggregation&lt;Product&gt; agg = newAggregation(Product.class,
+    project("name", "netPrice")
+        .and("netPrice").plus(1).as("netPricePlus1")
+        .and("netPrice").minus(1).as("netPriceMinus1")
+        .and("netPrice").multiply(1.19).as("grossPrice")
+        .and("netPrice").divide(2).as("netPriceDiv2")
+        .and("spaceUnits").mod(2).as("spaceUnitsMod2")
+);
+
+AggregationResults&lt;DBObject&gt; result = mongoTemplate.aggregate(agg, DBObject.class);
+List&lt;DBObject&gt; resultList = result.getMappedResults();</programlisting>
+      </example>
+
+      <para>Note that we derive the name of the input-collection from the
+      <classname>Product</classname>-class passed as first parameter to the
       <methodname>newAggregation</methodname>-Method.</para>
     </section>
   </section>
