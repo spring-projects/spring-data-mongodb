@@ -155,7 +155,7 @@ public class AggregationTests {
 				project("tags"), //
 				unwind("tags"), //
 				group("tags") //
-						.and("n").count(), //
+						.count().as("n"), //
 				project("n") //
 						.and("tag").previousOperation(), //
 				sort(DESC, "n") //
@@ -183,7 +183,7 @@ public class AggregationTests {
 				project("tags"), //
 				unwind("tags"), //
 				group("tags") //
-						.and("n").count(), //
+						.count().as("n"), //
 				project("n") //
 						.and("tag").previousOperation(), //
 				sort(DESC, "n") //
@@ -209,7 +209,7 @@ public class AggregationTests {
 				project("tags"), //
 				unwind("tags"), //
 				group("tags") //
-						.and("count").count(), //
+						.count().as("count"), // count field not present
 				limit(2) //
 		);
 
@@ -289,13 +289,13 @@ public class AggregationTests {
 		*/
 
 		TypedAggregation<ZipInfo> aggregation = newAggregation(ZipInfo.class, //
-				group("state", "city").and("pop").sum("population"), //
+				group("state", "city").sum("population").as("pop"), //
 				sort(ASC, "pop", "state", "city"), //
 				group("state") //
-						.and("biggestCity").last("city") //
-						.and("biggestPop").last("pop") //
-						.and("smallestCity").first("city") //
-						.and("smallestPop").first("pop"), //
+						.last("city").as("biggestCity") //
+						.last("pop").as("biggestPop") //
+						.first("city").as("smallestCity") //
+						.first("pop").as("smallestPop"), //
 				project() //
 						// .and(previousOperation()).exclude() //
 						.and("state").previousOperation() //
@@ -361,7 +361,7 @@ public class AggregationTests {
 
 		TypedAggregation<ZipInfo> agg = newAggregation(ZipInfo.class, //
 				group("state") //
-						.and("totalPop").sum("population"), //
+						.sum("population").as("totalPop"), //
 				sort(ASC, previousOperation(), "totalPop"), //
 				match(where("totalPop").gte(10 * 1000 * 1000)) //
 		);
@@ -401,7 +401,7 @@ public class AggregationTests {
 
 		TypedAggregation<UserWithLikes> agg = newAggregation(UserWithLikes.class, //
 				unwind("likes"), //
-				group("likes").and("number").count(), //
+				group("likes").count().as("number"), //
 				sort(DESC, "number"), //
 				limit(5), //
 				sort(ASC, previousOperation()) //

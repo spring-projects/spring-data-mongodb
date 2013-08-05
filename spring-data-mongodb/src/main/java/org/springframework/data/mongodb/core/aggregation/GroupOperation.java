@@ -16,6 +16,8 @@
 package org.springframework.data.mongodb.core.aggregation;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
@@ -53,20 +55,29 @@ public class GroupOperation extends ExposedFieldsAggregationOperationContext imp
 	}
 
 	/**
-	 * Creates a new {@link GroupOperation} from the given {@link GroupOperation} and the given {@link Operation}.
+	 * Creates a new {@link GroupOperation} from the given {@link GroupOperation}.
 	 * 
-	 * @param current must not be {@literal null}.
-	 * @param operation must not be {@literal null}.
+	 * @param groupOperation must not be {@literal null}.
 	 */
-	protected GroupOperation(GroupOperation current, Operation operation) {
+	protected GroupOperation(GroupOperation groupOperation) {
+		this(groupOperation, Collections.<Operation> emptyList());
+	}
 
-		Assert.notNull(current, "GroupOperation must not be null!");
-		Assert.notNull(operation, "Operation must not be null!");
+	/**
+	 * Creates a new {@link GroupOperation} from the given {@link GroupOperation} and the given {@link Operation}s.
+	 * 
+	 * @param groupOperation
+	 * @param nextOperations
+	 */
+	private GroupOperation(GroupOperation groupOperation, List<Operation> nextOperations) {
 
-		this.nonSynthecticFields = current.nonSynthecticFields;
-		this.operations = new ArrayList<Operation>(current.operations.size() + 1);
-		this.operations.addAll(current.operations);
-		this.operations.add(operation);
+		Assert.notNull(groupOperation, "GroupOperation must not be null!");
+		Assert.notNull(nextOperations, "NextOperations must not be null!");
+
+		this.nonSynthecticFields = groupOperation.nonSynthecticFields;
+		this.operations = new ArrayList<Operation>(nextOperations.size() + 1);
+		this.operations.addAll(groupOperation.operations);
+		this.operations.addAll(nextOperations);
 	}
 
 	/**
@@ -76,88 +87,171 @@ public class GroupOperation extends ExposedFieldsAggregationOperationContext imp
 	 * @return
 	 */
 	protected GroupOperation and(Operation operation) {
-		return new GroupOperation(this, operation);
+		return new GroupOperation(this, Arrays.asList(operation));
 	}
 
 	/**
-	 * Returns a {@link GroupOperationBuilder} to build a grouping operation for the field with the given name
+	 * Builder for {@link GroupOperation}s on a field.
 	 * 
-	 * @param field must not be {@literal null} or empty.
-	 * @return
+	 * @author Thomas Darimont
 	 */
-	public GroupOperationBuilder and(String field) {
-		return new GroupOperationBuilder(field, this);
-	}
-
 	public class GroupOperationBuilder {
 
-		private final String name;
-		private final GroupOperation current;
+		private final GroupOperation groupOperation;
+		private final Operation operation;
 
-		public GroupOperationBuilder(String name, GroupOperation current) {
+		/**
+		 * Creates a new {@link GroupOperationBuilder} from the given {@link GroupOperation} and {@link Operation}.
+		 * 
+		 * @param groupOperation
+		 * @param operation
+		 */
+		private GroupOperationBuilder(GroupOperation groupOperation, Operation operation) {
 
-			Assert.hasText(name, "Field name must not be null or empty!");
-			Assert.notNull(current, "GroupOperation must not be null!");
+			Assert.notNull(groupOperation, "GroupOperation must not be null!");
+			Assert.notNull(operation, "Operation must not be null!");
 
-			this.name = name;
-			this.current = current;
+			this.groupOperation = groupOperation;
+			this.operation = operation;
 		}
 
-		public GroupOperation count() {
-			return sum(1);
+		/**
+		 * Allows to specify an alias for the new-operation operation.
+		 * 
+		 * @param alias
+		 * @return
+		 */
+		public GroupOperation as(String alias) {
+			return this.groupOperation.and(operation.withAlias(alias));
 		}
+	}
 
-		public GroupOperation count(String reference) {
-			return sum(reference, 1);
-		}
+	/**
+	 * Generates an {@link GroupOperationBuilder} for a {@code $sum}-expression.
+	 * <p>
+	 * Count expressions are emulated via {@code $sum: 1}.
+	 * <p>
+	 * 
+	 * @return
+	 */
+	public GroupOperationBuilder count() {
+		return newBuilder(GroupOps.SUM, null, 1);
+	}
 
-		public GroupOperation sum() {
-			return sum(name);
-		}
+	/**
+	 * Generates an {@link GroupOperationBuilder} for a {@code $sum}-expression for the given field-reference.
+	 * 
+	 * @param reference
+	 * @return
+	 */
+	public GroupOperationBuilder sum(String reference) {
+		return sum(reference, null);
+	}
 
-		public GroupOperation sum(String reference) {
-			return sum(reference, null);
-		}
+	private GroupOperationBuilder sum(String reference, Object value) {
+		return newBuilder(GroupOps.SUM, reference, value);
+	}
 
-		public GroupOperation sum(Object value) {
-			return sum(null, value);
-		}
+	/**
+	 * Generates an {@link GroupOperationBuilder} for an {@code $add_to_set}-expression for the given field-reference.
+	 * 
+	 * @param reference
+	 * @return
+	 */
+	public GroupOperationBuilder addToSet(String reference) {
+		return addToSet(reference, null);
+	}
 
-		public GroupOperation sum(String reference, Object value) {
-			return current.and(new Operation(GroupOps.SUM, name, reference, value));
-		}
+	/**
+	 * Generates an {@link GroupOperationBuilder} for an {@code $add_to_set}-expression for the given value.
+	 * 
+	 * @param value
+	 * @return
+	 */
+	public GroupOperationBuilder addToSet(Object value) {
+		return addToSet(null, value);
+	}
 
-		public GroupOperation addToSet() {
-			return addToSet(null);
-		}
+	private GroupOperationBuilder addToSet(String reference, Object value) {
+		return newBuilder(GroupOps.ADD_TO_SET, reference, value);
+	}
 
-		public GroupOperation addToSet(String reference) {
-			return current.and(new Operation(GroupOps.ADD_TO_SET, name, reference, null));
-		}
+	/**
+	 * Generates an {@link GroupOperationBuilder} for an {@code $last}-expression for the given field-reference.
+	 * 
+	 * @param reference
+	 * @return
+	 */
+	public GroupOperationBuilder last(String reference) {
+		return newBuilder(GroupOps.LAST, reference, null);
+	}
 
-		public GroupOperation last() {
-			return last(null);
-		}
+	/**
+	 * Generates an {@link GroupOperationBuilder} for a {@code $first}-expression for the given field-reference.
+	 * 
+	 * @param reference
+	 * @return
+	 */
+	public GroupOperationBuilder first(String reference) {
+		return newBuilder(GroupOps.FIRST, reference, null);
+	}
 
-		public GroupOperation last(String reference) {
-			return current.and(new Operation(GroupOps.LAST, name, reference, null));
-		}
+	/**
+	 * Generates an {@link GroupOperationBuilder} for an {@code $avg}-expression for the given field-reference.
+	 * 
+	 * @param reference
+	 * @return
+	 */
+	public GroupOperationBuilder avg(String reference) {
+		return newBuilder(GroupOps.AVG, reference, null);
+	}
 
-		public GroupOperation first() {
-			return first(null);
-		}
+	/**
+	 * Generates an {@link GroupOperationBuilder} for an {@code $push}-expression for the given field-reference.
+	 * 
+	 * @param reference
+	 * @return
+	 */
+	public GroupOperationBuilder push(String reference) {
+		return push(reference, null);
+	}
 
-		public GroupOperation first(String reference) {
-			return current.and(new Operation(GroupOps.FIRST, name, reference, null));
-		}
+	/**
+	 * Generates an {@link GroupOperationBuilder} for an {@code $push}-expression for the given value.
+	 * 
+	 * @param value
+	 * @return
+	 */
+	public GroupOperationBuilder push(Object value) {
+		return push(null, value);
+	}
 
-		public GroupOperation avg() {
-			return avg(null);
-		}
+	private GroupOperationBuilder push(String reference, Object value) {
+		return newBuilder(GroupOps.PUSH, reference, value);
+	}
 
-		public GroupOperation avg(String reference) {
-			return current.and(new Operation(GroupOps.AVG, name, reference, null));
-		}
+	/**
+	 * Generates an {@link GroupOperationBuilder} for an {@code $min}-expression that for the given field-reference.
+	 * 
+	 * @param reference
+	 * @return
+	 */
+	public GroupOperationBuilder min(String reference) {
+		return newBuilder(GroupOps.MIN, reference, null);
+	}
+
+	/**
+	 * Generates an {@link GroupOperationBuilder} for an {@code $max}-expression that for the given field-reference.
+	 * 
+	 * @param reference
+	 * @return
+	 */
+	public GroupOperationBuilder max(String reference) {
+		return newBuilder(GroupOps.MAX, reference, null);
+	}
+
+	private GroupOperationBuilder newBuilder(Keyword keyword, String reference, Object value) {
+		return new GroupOperationBuilder(this, new Operation(keyword, null, reference, value));
 	}
 
 	/* 
@@ -249,6 +343,10 @@ public class GroupOperation extends ExposedFieldsAggregationOperationContext imp
 			this.value = value;
 		}
 
+		public Operation withAlias(String key) {
+			return new Operation(op, key, reference, value);
+		}
+
 		public ExposedField asField() {
 			return new ExposedField(key, true);
 		}
@@ -259,6 +357,11 @@ public class GroupOperation extends ExposedFieldsAggregationOperationContext imp
 
 		public Object getValue(AggregationOperationContext context) {
 			return reference == null ? value : context.getReference(reference).toString();
+		}
+
+		@Override
+		public String toString() {
+			return "Operation [op=" + op + ", key=" + key + ", reference=" + reference + ", value=" + value + "]";
 		}
 	}
 }
