@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 the original author or authors.
+ * Copyright 2010-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,10 @@ import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
+/**
+ * @author Oliver Gierke
+ * @author Thomas Darimont
+ */
 public class CriteriaTests {
 
 	@Test
@@ -67,5 +71,51 @@ public class CriteriaTests {
 
 		assertThat(left, is(not(right)));
 		assertThat(right, is(not(left)));
+	}
+
+	/**
+	 * @see DATAMONGO-507
+	 */
+	@Test(expected = IllegalArgumentException.class)
+	public void shouldThrowExceptionWhenTryingToNegateAndOperation() {
+
+		new Criteria() //
+				.not() //
+				.andOperator(Criteria.where("delete").is(true).and("_id").is(42)); //
+	}
+
+	/**
+	 * @see DATAMONGO-507
+	 */
+	@Test(expected = IllegalArgumentException.class)
+	public void shouldThrowExceptionWhenTryingToNegateOrOperation() {
+
+		new Criteria() //
+				.not() //
+				.orOperator(Criteria.where("delete").is(true).and("_id").is(42)); //
+	}
+
+	/**
+	 * @see DATAMONGO-507
+	 */
+	@Test(expected = IllegalArgumentException.class)
+	public void shouldThrowExceptionWhenTryingToNegateNorOperation() {
+
+		new Criteria() //
+				.not() //
+				.norOperator(Criteria.where("delete").is(true).and("_id").is(42)); //
+	}
+
+	/**
+	 * @see DATAMONGO-507
+	 */
+	@Test
+	public void shouldNegateFollowingSimpleExpression() {
+
+		Criteria c = Criteria.where("age").not().gt(18).and("status").is("student");
+		DBObject co = c.getCriteriaObject();
+
+		assertThat(co, is(notNullValue()));
+		assertThat(co.toString(), is("{ \"age\" : { \"$not\" : { \"$gt\" : 18}} , \"status\" : \"student\"}"));
 	}
 }
