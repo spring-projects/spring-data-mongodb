@@ -60,17 +60,6 @@ public class GroupOperationUnitTests {
 	}
 
 	@Test
-	public void shouldCreateComplexIdForGroupOperationWithSingleComplexIdField() {
-
-		// Fields fields = fields().and("a", 42);
-		// GroupOperation groupOperation = new GroupOperation(fields());
-		//
-		// assertThat(groupOperation.toDBObject(Aggregation.DEFAULT_CONTEXT), is(notNullValue()));
-		// assertThat(groupOperation.id, is(notNullValue()));
-		// assertThat(groupOperation.id, is((Object) new BasicDBObject("a", 42)));
-	}
-
-	@Test
 	public void groupFactoryMethodWithMultipleFieldsAndSumOperation() {
 
 		GroupOperation groupOperation = Aggregation.group(fields("a", "b").and("c")) //

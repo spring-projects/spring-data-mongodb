@@ -44,7 +44,7 @@ public abstract class ExposedFieldsAggregationOperationContext implements Aggreg
 	 */
 	@Override
 	public FieldReference getReference(Field field) {
-		return getReference(field.getName());
+		return getReference(field.getTarget());
 	}
 
 	/* 

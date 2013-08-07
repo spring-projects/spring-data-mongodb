@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.util.Assert;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -230,6 +231,41 @@ public class Fields implements Iterable<Field> {
 		@Override
 		public String toString() {
 			return String.format("AggregationField - name: %s, target: %s", name, target);
+		}
+
+		/* 
+		 * (non-Javadoc)
+		 * @see java.lang.Object#equals(java.lang.Object)
+		 */
+		@Override
+		public boolean equals(Object obj) {
+
+			if (this == obj) {
+				return true;
+			}
+
+			if (!(obj instanceof AggregationField)) {
+				return false;
+			}
+
+			AggregationField that = (AggregationField) obj;
+
+			return this.name.equals(that.name) && ObjectUtils.nullSafeEquals(this.target, that.target);
+		}
+
+		/* 
+		 * (non-Javadoc)
+		 * @see java.lang.Object#hashCode()
+		 */
+		@Override
+		public int hashCode() {
+
+			int result = 17;
+
+			result += 31 * name.hashCode();
+			result += 31 * ObjectUtils.nullSafeHashCode(target);
+
+			return result;
 		}
 	}
 }

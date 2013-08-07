@@ -78,7 +78,7 @@ public class TypeBasedAggregationOperationContext implements AggregationOperatio
 	@Override
 	public FieldReference getReference(Field field) {
 
-		PropertyPath.from(field.getName(), type);
+		PropertyPath.from(field.getTarget(), type);
 		return getReferenceFor(field);
 	}
 

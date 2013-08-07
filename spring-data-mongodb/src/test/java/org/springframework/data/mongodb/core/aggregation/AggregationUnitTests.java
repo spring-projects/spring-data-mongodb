@@ -16,10 +16,10 @@
 package org.springframework.data.mongodb.core.aggregation;
 
 import org.junit.Test;
-import org.springframework.data.mongodb.core.aggregation.Aggregation;
-import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
 
 /**
+ * Unit tests for {@link Aggregation}.
+ * 
  * @author Oliver Gierke
  */
 public class AggregationUnitTests {

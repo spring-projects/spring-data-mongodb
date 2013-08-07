@@ -242,6 +242,41 @@ public class ExposedFields implements Iterable<ExposedField> {
 		public String toString() {
 			return String.format("AggregationField: %s, synthetic: %s", field, synthetic);
 		}
+
+		/* 
+		 * (non-Javadoc)
+		 * @see java.lang.Object#equals(java.lang.Object)
+		 */
+		@Override
+		public boolean equals(Object obj) {
+
+			if (this == obj) {
+				return true;
+			}
+
+			if (!(obj instanceof ExposedField)) {
+				return false;
+			}
+
+			ExposedField that = (ExposedField) obj;
+
+			return this.field.equals(that.field) && this.synthetic == that.synthetic;
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see java.lang.Object#hashCode()
+		 */
+		@Override
+		public int hashCode() {
+
+			int result = 17;
+
+			result += 31 * field.hashCode();
+			result += 31 * (synthetic ? 0 : 1);
+
+			return result;
+		}
 	}
 
 	/**
@@ -281,6 +316,35 @@ public class ExposedFields implements Iterable<ExposedField> {
 		@Override
 		public String toString() {
 			return String.format("$%s", getRaw());
+		}
+
+		/* 
+		 * (non-Javadoc)
+		 * @see java.lang.Object#equals(java.lang.Object)
+		 */
+		@Override
+		public boolean equals(Object obj) {
+
+			if (this == obj) {
+				return true;
+			}
+
+			if (!(obj instanceof FieldReference)) {
+				return false;
+			}
+
+			FieldReference that = (FieldReference) obj;
+
+			return this.field.equals(that.field);
+		}
+
+		/* 
+		 * (non-Javadoc)
+		 * @see java.lang.Object#hashCode()
+		 */
+		@Override
+		public int hashCode() {
+			return field.hashCode();
 		}
 	}
 }
