@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 the original author or authors.
+ * Copyright 2010-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,6 +39,10 @@ import com.mongodb.DBObject;
 /**
  * Central class for creating queries. It follows a fluent API style so that you can easily chain together multiple
  * criteria. Static import of the 'Criteria.where' method will improve readability.
+ * 
+ * @author Thomas Risberg
+ * @author Oliver Gierke
+ * @author Thomas Darimont
  */
 public class Criteria implements CriteriaDefinition {
 
@@ -396,34 +400,54 @@ public class Criteria implements CriteriaDefinition {
 
 	/**
 	 * Creates an 'or' criteria using the $or operator for all of the provided criteria
+	 * <p>
+	 * Note that mongodb doesn't support an $or operator to be wrapped in a $not operator.
+	 * <p>
 	 * 
+	 * @throws IllegalArgumentException if {@link #orOperator(Criteria...)} follows a not() call directly.
 	 * @param criteria
 	 */
 	public Criteria orOperator(Criteria... criteria) {
 		BasicDBList bsonList = createCriteriaList(criteria);
-		criteriaChain.add(new Criteria("$or").is(bsonList));
-		return this;
+		return registerCriteriaChainElement(new Criteria("$or").is(bsonList));
 	}
 
 	/**
-	 * Creates a 'nor' criteria using the $nor operator for all of the provided criteria
+	 * Creates a 'nor' criteria using the $nor operator for all of the provided criteria.
+	 * <p>
+	 * Note that mongodb doesn't support an $nor operator to be wrapped in a $not operator.
+	 * <p>
 	 * 
+	 * @throws IllegalArgumentException if {@link #norOperator(Criteria...)} follows a not() call directly.
 	 * @param criteria
 	 */
 	public Criteria norOperator(Criteria... criteria) {
 		BasicDBList bsonList = createCriteriaList(criteria);
-		criteriaChain.add(new Criteria("$nor").is(bsonList));
-		return this;
+		return registerCriteriaChainElement(new Criteria("$nor").is(bsonList));
 	}
 
 	/**
-	 * Creates an 'and' criteria using the $and operator for all of the provided criteria
+	 * Creates an 'and' criteria using the $and operator for all of the provided criteria.
+	 * <p>
+	 * Note that mongodb doesn't support an $and operator to be wrapped in a $not operator.
+	 * <p>
 	 * 
+	 * @throws IllegalArgumentException if {@link #andOperator(Criteria...)} follows a not() call directly.
 	 * @param criteria
 	 */
 	public Criteria andOperator(Criteria... criteria) {
 		BasicDBList bsonList = createCriteriaList(criteria);
-		criteriaChain.add(new Criteria("$and").is(bsonList));
+		return registerCriteriaChainElement(new Criteria("$and").is(bsonList));
+	}
+
+	private Criteria registerCriteriaChainElement(Criteria criteria) {
+
+		if (lastOperatorWasNot()) {
+			throw new IllegalArgumentException("operator $not is not allowed around criteria chain element: "
+					+ criteria.getCriteriaObject());
+		} else {
+			criteriaChain.add(criteria);
+		}
 		return this;
 	}
 
@@ -468,6 +492,7 @@ public class Criteria implements CriteriaDefinition {
 				}
 			}
 		}
+
 		DBObject queryCriteria = new BasicDBObject();
 		if (isValue != NOT_SET) {
 			queryCriteria.put(this.key, this.isValue);
