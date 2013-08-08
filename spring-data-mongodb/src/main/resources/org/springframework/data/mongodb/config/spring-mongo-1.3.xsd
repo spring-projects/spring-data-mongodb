@@ -181,10 +181,10 @@ The base package in which to scan for entities annotated with @Document
 					</xsd:appinfo>
 				</xsd:annotation>
 			</xsd:attribute>
-			<xsd:attribute name="mongo-ref" type="mongoRef" use="optional">
+			<xsd:attribute name="type-mapper-ref" type="typeMapperRef" use="optional">
 				<xsd:annotation>
 					<xsd:documentation>
-						The reference to a Mongo. Will default to 'mongo'.
+						The reference to a MongoTypeMapper to be used by this MappingMongoConverter.
 					</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
@@ -192,13 +192,6 @@ The base package in which to scan for entities annotated with @Document
 				<xsd:annotation>
 					<xsd:documentation source="org.springframework.data.mapping.model.MappingContext">
 						The reference to a MappingContext. Will default to 'mappingContext'.
-					</xsd:documentation>
-				</xsd:annotation>
-			</xsd:attribute>
-			<xsd:attribute name="mongo-template-ref" type="mongoTemplateRef" use="optional">
-				<xsd:annotation>
-					<xsd:documentation source="org.springframework.data.mongodb.core.core.MongoTemplate">
-						The reference to a MongoTemplate. Will default to 'mongoTemplate'.
 					</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
@@ -256,6 +249,17 @@ The name of the Mongo object that determines what server to monitor. (by default
 			<xsd:attribute name="mapping-context-ref" type="mappingContextRef" />
 		</xsd:complexType>
 	</xsd:element>
+
+	<xsd:simpleType name="typeMapperRef">
+		<xsd:annotation>
+			<xsd:appinfo>
+				<tool:annotation kind="ref">
+					<tool:assignable-to type="org.springframework.data.mongodb.core.convert.MongoTypeMapper"/>
+				</tool:annotation>
+			</xsd:appinfo>
+		</xsd:annotation>
+		<xsd:union memberTypes="xsd:string"/>
+	</xsd:simpleType>
 
 	<xsd:simpleType name="mappingContextRef">
 		<xsd:annotation>

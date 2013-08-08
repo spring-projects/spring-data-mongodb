@@ -31,6 +31,8 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.converter.GenericConverter;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.mongodb.core.convert.CustomConversions;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.MongoTypeMapper;
 import org.springframework.data.mongodb.core.mapping.Account;
 import org.springframework.data.mongodb.core.mapping.CamelCaseAbbreviatingFieldNamingStrategy;
 import org.springframework.data.mongodb.repository.Person;
@@ -42,6 +44,7 @@ import com.mongodb.DBObject;
  * Integration tests for {@link MappingMongoConverterParser}.
  * 
  * @author Oliver Gierke
+ * @author Thomas Darimont
  */
 public class MappingMongoConverterParserIntegrationTests {
 
@@ -59,6 +62,15 @@ public class MappingMongoConverterParserIntegrationTests {
 
 		factory.getBeanDefinition("converter");
 		factory.getBean("converter");
+	}
+
+	@Test
+	public void hasCustomTypeMapper() {
+
+		MappingMongoConverter converter = factory.getBean("converter", MappingMongoConverter.class);
+		MongoTypeMapper customMongoTypeMapper = factory.getBean(CustomMongoTypeMapper.class);
+
+		assertThat(converter.getTypeMapper(), is(customMongoTypeMapper));
 	}
 
 	@Test
