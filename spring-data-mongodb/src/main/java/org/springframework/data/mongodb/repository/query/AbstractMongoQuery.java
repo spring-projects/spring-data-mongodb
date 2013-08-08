@@ -38,6 +38,7 @@ import org.springframework.util.Assert;
  * Base class for {@link RepositoryQuery} implementations for Mongo.
  * 
  * @author Oliver Gierke
+ * @author Thomas Darimont
  */
 public abstract class AbstractMongoQuery implements RepositoryQuery {
 
@@ -285,6 +286,11 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 			Distance maxDistance = accessor.getMaxDistance();
 			if (maxDistance != null) {
 				nearQuery.maxDistance(maxDistance).in(maxDistance.getMetric());
+			}
+
+			Pageable pageable = accessor.getPageable();
+			if (pageable != null) {
+				nearQuery.with(pageable);
 			}
 
 			MongoEntityMetadata<?> metadata = method.getEntityInformation();
