@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 the original author or authors.
+ * Copyright 2012-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,6 +33,7 @@ import org.springframework.core.io.ClassPathResource;
  * 
  * @see DATAMONGO-36
  * @author Maciej Walkowiak
+ * @author Thomas Darimont
  */
 public class MappingMongoConverterParserValidationIntegrationTests {
 
@@ -64,5 +65,12 @@ public class MappingMongoConverterParserValidationIntegrationTests {
 
 		reader.loadBeanDefinitions(new ClassPathResource("namespace/converter-validation-disabled.xml"));
 		factory.getBean(BeanNames.VALIDATING_EVENT_LISTENER);
+	}
+
+	@Test
+	public void validatingEventListenerCreatedWithCustomTypeMapperConfig() {
+
+		reader.loadBeanDefinitions(new ClassPathResource("namespace/converter-custom-typeMapper.xml"));
+		assertThat(factory.getBean(BeanNames.VALIDATING_EVENT_LISTENER), is(not(nullValue())));
 	}
 }

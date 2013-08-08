@@ -1057,6 +1057,77 @@ mongoTemplate.save(sample);
         instance of that interface can be configured at the
         <classname>DefaultMongoTypeMapper</classname> which can be configured
         in turn on <classname>MappingMongoConverter</classname>.</para>
+
+        <example>
+          <title>Defining a TypeAlias for an Entity</title>
+
+          <programlisting language="java">@TypeAlias("pers")
+class Person {
+
+}</programlisting>
+
+          <para>Note that the resulting document will contain
+          <code>"pers"</code> as the value in the <code>_class</code>
+          Field.</para>
+        </example>
+      </simplesect>
+
+      <simplesect>
+        <title>Configuring custom type mapping</title>
+
+        <para>The following example demonstrates how to configure a custom
+        <classname>MongoTypeMapper</classname> in
+        <classname>MappingMongoConverter</classname>.</para>
+
+        <example>
+          <title>Configuring a custom MongoTypeMapper via Spring Java
+          Config</title>
+
+          <programlisting language="java">class CustomMongoTypeMapper extends DefaultMongoTypeMapper {
+  //implement custom type mapping here
+}</programlisting>
+
+          <programlisting language="java">@Configuration
+class SampleMongoConfiguration extends AbstractMongoConfiguration {
+
+    @Override
+    protected String getDatabaseName() {
+        return "database";
+    }
+
+    @Override
+    public Mongo mongo() throws Exception {
+        return new Mongo();
+    }
+
+    @Bean
+    @Override
+    public MappingMongoConverter mappingMongoConverter() throws Exception {
+        MappingMongoConverter mmc = super.mappingMongoConverter();
+        mmc.setTypeMapper(customTypeMapper());
+        return mmc;
+    }
+
+    @Bean
+    public MongoTypeMapper customTypeMapper() {
+        return new CustomMongoTypeMapper();
+    }
+}</programlisting>
+
+          <para>Note that we are extending the
+          <classname>AbstractMongoConfiguration</classname> class and override
+          the bean definition of the
+          <classname>MappingMongoConverter</classname> where we configure our
+          custom <classname>MongoTypeMapper</classname>. </para>
+        </example>
+
+        <example>
+          <title>Configuring a custom MongoTypeMapper via XML</title>
+
+          <programlisting language="xml">&lt;mongo:mapping-converter type-mapper-ref="customMongoTypeMapper"/&gt;
+
+&lt;bean name="customMongoTypeMapper" class="com.bubu.mongo.CustomMongoTypeMapper"/&gt;</programlisting>
+        </example>
       </simplesect>
     </section>
 

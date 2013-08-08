@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 the original author or authors.
+ * Copyright 2012-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,8 +23,11 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.MongoTypeMapper;
 import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
@@ -37,6 +40,7 @@ import com.mongodb.Mongo;
  * Unit tests for {@link AbstractMongoConfiguration}.
  * 
  * @author Oliver Gierke
+ * @author Thomas Darimont
  */
 public class AbstractMongoConfigurationUnitTests {
 
@@ -113,6 +117,20 @@ public class AbstractMongoConfigurationUnitTests {
 		assertThat(spElContext.getBeanResolver(), is(notNullValue()));
 	}
 
+	/**
+	 * @see DATAMONGO-725
+	 */
+	@Test
+	public void shouldBeAbleToConfigureCustomTypeMapperViaJavaConfig() {
+
+		AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(SampleMongoConfiguration.class);
+		MongoTypeMapper typeMapper = context.getBean(CustomMongoTypeMapper.class);
+		MappingMongoConverter mmc = context.getBean(MappingMongoConverter.class);
+
+		assertThat(mmc, is(notNullValue()));
+		assertThat(mmc.getTypeMapper(), is(typeMapper));
+	}
+
 	private static void assertScanningDisabled(final String value) throws ClassNotFoundException {
 
 		AbstractMongoConfiguration configuration = new SampleMongoConfiguration() {
@@ -137,6 +155,19 @@ public class AbstractMongoConfigurationUnitTests {
 		@Override
 		public Mongo mongo() throws Exception {
 			return new Mongo();
+		}
+
+		@Bean
+		@Override
+		public MappingMongoConverter mappingMongoConverter() throws Exception {
+			MappingMongoConverter mmc = super.mappingMongoConverter();
+			mmc.setTypeMapper(typeMapper());
+			return mmc;
+		}
+
+		@Bean
+		public MongoTypeMapper typeMapper() {
+			return new CustomMongoTypeMapper();
 		}
 	}
 

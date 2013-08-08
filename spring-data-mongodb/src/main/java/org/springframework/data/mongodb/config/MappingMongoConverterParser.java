@@ -70,6 +70,7 @@ import org.w3c.dom.Element;
  * @author Jon Brisbin
  * @author Oliver Gierke
  * @author Maciej Walkowiak
+ * @author Thomas Darimont
  */
 public class MappingMongoConverterParser implements BeanDefinitionParser {
 
@@ -104,6 +105,11 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 		BeanDefinitionBuilder converterBuilder = BeanDefinitionBuilder.genericBeanDefinition(MappingMongoConverter.class);
 		converterBuilder.addConstructorArgReference(dbFactoryRef);
 		converterBuilder.addConstructorArgReference(ctxRef);
+
+		String typeMapperRef = element.getAttribute("type-mapper-ref");
+		if (StringUtils.hasText(typeMapperRef)) {
+			converterBuilder.addPropertyReference("typeMapper", typeMapperRef);
+		}
 
 		if (conversionsDefinition != null) {
 			converterBuilder.addPropertyValue("customConversions", conversionsDefinition);
