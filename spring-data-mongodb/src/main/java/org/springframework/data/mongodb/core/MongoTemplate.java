@@ -534,8 +534,26 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				mongoConverter, entityClass), near.getMetric());
 		List<GeoResult<T>> result = new ArrayList<GeoResult<T>>(results.size());
 
+		int index = 0;
+		int elementsToSkip = near.getSkip() != null ? near.getSkip() : 0;
+
 		for (Object element : results) {
-			result.add(callback.doWith((DBObject) element));
+
+			/*
+			 * As MongoDB currently (2.4.4) doesn't support the skipping of elements in near queries
+			 * we skip the elements ourselves to avoid at least the document 2 object mapping overhead.
+			 * 
+			 * @see https://jira.mongodb.org/browse/SERVER-3925
+			 */
+			if (index >= elementsToSkip) {
+				result.add(callback.doWith((DBObject) element));
+			}
+			index++;
+		}
+
+		if (elementsToSkip > 0) {
+			// as we skipped some elements we have to calculate the averageDistance ourselves:
+			return new GeoResults<T>(result, near.getMetric());
 		}
 
 		DBObject stats = (DBObject) commandResult.get("stats");

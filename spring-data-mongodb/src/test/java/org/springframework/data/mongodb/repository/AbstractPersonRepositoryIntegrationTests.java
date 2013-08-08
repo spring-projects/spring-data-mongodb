@@ -566,4 +566,94 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result, hasSize(2));
 		assertThat(result, hasItems(dave, oliver));
 	}
+
+	/**
+	 * @see DATAMONGO-445
+	 */
+	@Test
+	public void executesGeoPageQueryForWithPageRequestForPageInBetween() {
+
+		Point farAway = new Point(-73.9, 40.7);
+		Point here = new Point(-73.99, 40.73);
+
+		dave.setLocation(farAway);
+		oliver.setLocation(here);
+		carter.setLocation(here);
+		boyd.setLocation(here);
+		leroi.setLocation(here);
+
+		repository.save(Arrays.asList(dave, oliver, carter, boyd, leroi));
+
+		GeoPage<Person> results = repository.findByLocationNear(new Point(-73.99, 40.73), new Distance(2000,
+				Metrics.KILOMETERS), new PageRequest(1, 2));
+
+		assertThat(results.getContent().isEmpty(), is(false));
+		assertThat(results.getNumberOfElements(), is(2));
+		assertThat(results.isFirstPage(), is(false));
+		assertThat(results.isLastPage(), is(false));
+		assertThat(results.getAverageDistance().getMetric(), is((Metric) Metrics.KILOMETERS));
+		assertThat(results.getAverageDistance().getNormalizedValue(), is(0.0));
+	}
+
+	/**
+	 * @see DATAMONGO-445
+	 */
+	@Test
+	public void executesGeoPageQueryForWithPageRequestForPageAtTheEnd() {
+
+		Point point = new Point(-73.99171, 40.738868);
+
+		dave.setLocation(point);
+		oliver.setLocation(point);
+		carter.setLocation(point);
+
+		repository.save(Arrays.asList(dave, oliver, carter));
+
+		GeoPage<Person> results = repository.findByLocationNear(new Point(-73.99, 40.73), new Distance(2000,
+				Metrics.KILOMETERS), new PageRequest(1, 2));
+		assertThat(results.getContent().isEmpty(), is(false));
+		assertThat(results.getNumberOfElements(), is(1));
+		assertThat(results.isFirstPage(), is(false));
+		assertThat(results.isLastPage(), is(true));
+		assertThat(results.getAverageDistance().getMetric(), is((Metric) Metrics.KILOMETERS));
+	}
+
+	/**
+	 * @see DATAMONGO-445
+	 */
+	@Test
+	public void executesGeoPageQueryForWithPageRequestForJustOneElement() {
+
+		Point point = new Point(-73.99171, 40.738868);
+		dave.setLocation(point);
+		repository.save(dave);
+
+		GeoPage<Person> results = repository.findByLocationNear(new Point(-73.99, 40.73), new Distance(2000,
+				Metrics.KILOMETERS), new PageRequest(0, 2));
+
+		assertThat(results.getContent().isEmpty(), is(false));
+		assertThat(results.getNumberOfElements(), is(1));
+		assertThat(results.isFirstPage(), is(true));
+		assertThat(results.isLastPage(), is(true));
+		assertThat(results.getAverageDistance().getMetric(), is((Metric) Metrics.KILOMETERS));
+	}
+
+	/**
+	 * @see DATAMONGO-445
+	 */
+	@Test
+	public void executesGeoPageQueryForWithPageRequestForJustOneElementEmptyPage() {
+
+		dave.setLocation(new Point(-73.99171, 40.738868));
+		repository.save(dave);
+
+		GeoPage<Person> results = repository.findByLocationNear(new Point(-73.99, 40.73), new Distance(2000,
+				Metrics.KILOMETERS), new PageRequest(1, 2));
+
+		assertThat(results.getContent().isEmpty(), is(true));
+		assertThat(results.getNumberOfElements(), is(0));
+		assertThat(results.isFirstPage(), is(false));
+		assertThat(results.isLastPage(), is(true));
+		assertThat(results.getAverageDistance().getMetric(), is((Metric) Metrics.KILOMETERS));
+	}
 }

@@ -19,14 +19,18 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
 import org.junit.Test;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.geo.Distance;
 import org.springframework.data.mongodb.core.geo.Metric;
 import org.springframework.data.mongodb.core.geo.Metrics;
+import org.springframework.data.mongodb.core.geo.Point;
 
 /**
  * Unit tests for {@link NearQuery}.
  * 
  * @author Oliver Gierke
+ * @author Thomas Darimont
  */
 public class NearQueryUnitTests {
 
@@ -74,5 +78,49 @@ public class NearQueryUnitTests {
 
 		query = query.maxDistance(new Distance(200, Metrics.KILOMETERS));
 		assertThat(query.getMetric(), is((Metric) Metrics.MILES));
+	}
+
+	/**
+	 * @see DATAMONGO-445
+	 */
+	@Test
+	public void shouldTakeSkipAndLimitSettingsFromGivenPageable() {
+
+		Pageable pageable = new PageRequest(3, 5);
+		NearQuery query = NearQuery.near(new Point(1, 1)).with(pageable);
+
+		assertThat(query.getSkip(), is(pageable.getPageNumber() * pageable.getPageSize()));
+		assertThat((Integer) query.toDBObject().get("num"), is((pageable.getPageNumber() + 1) * pageable.getPageSize()));
+	}
+
+	/**
+	 * @see DATAMONGO-445
+	 */
+	@Test
+	public void shouldTakeSkipAndLimitSettingsFromGivenQuery() {
+
+		int limit = 10;
+		int skip = 5;
+		NearQuery query = NearQuery.near(new Point(1, 1)).query(
+				Query.query(Criteria.where("foo").is("bar")).limit(limit).skip(skip));
+
+		assertThat(query.getSkip(), is(skip));
+		assertThat((Integer) query.toDBObject().get("num"), is(limit));
+	}
+
+	/**
+	 * @see DATAMONGO-445
+	 */
+	@Test
+	public void shouldTakeSkipAndLimitSettingsFromPageableEvenIfItWasSpecifiedOnQuery() {
+
+		int limit = 10;
+		int skip = 5;
+		Pageable pageable = new PageRequest(3, 5);
+		NearQuery query = NearQuery.near(new Point(1, 1))
+				.query(Query.query(Criteria.where("foo").is("bar")).limit(limit).skip(skip)).with(pageable);
+
+		assertThat(query.getSkip(), is(pageable.getPageNumber() * pageable.getPageSize()));
+		assertThat((Integer) query.toDBObject().get("num"), is((pageable.getPageNumber() + 1) * pageable.getPageSize()));
 	}
 }
