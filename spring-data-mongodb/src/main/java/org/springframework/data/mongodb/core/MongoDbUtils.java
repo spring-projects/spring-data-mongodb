@@ -131,8 +131,11 @@ public abstract class MongoDbUtils {
 				holderToUse.addDB(databaseName, db);
 			}
 
-			TransactionSynchronizationManager.registerSynchronization(new MongoSynchronization(holderToUse, mongo));
-			holderToUse.setSynchronizedWithTransaction(true);
+			// synchronize holder only if not yet synchronized
+			if (!holderToUse.isSynchronizedWithTransaction()) {
+				TransactionSynchronizationManager.registerSynchronization(new MongoSynchronization(holderToUse, mongo));
+				holderToUse.setSynchronizedWithTransaction(true);
+			}
 
 			if (holderToUse != dbHolder) {
 				TransactionSynchronizationManager.bindResource(mongo, holderToUse);
