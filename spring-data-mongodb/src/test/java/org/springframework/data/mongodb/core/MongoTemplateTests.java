@@ -22,6 +22,7 @@ import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.core.query.Update.*;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -112,8 +113,8 @@ public class MongoTemplateTests {
 		mappingContext.setInitialEntitySet(new HashSet<Class<?>>(Arrays.asList(PersonWith_idPropertyOfTypeObjectId.class,
 				PersonWith_idPropertyOfTypeString.class, PersonWithIdPropertyOfTypeObjectId.class,
 				PersonWithIdPropertyOfTypeString.class, PersonWithIdPropertyOfTypeInteger.class,
-				PersonWithIdPropertyOfPrimitiveInt.class, PersonWithIdPropertyOfTypeLong.class,
-				PersonWithIdPropertyOfPrimitiveLong.class)));
+				PersonWithIdPropertyOfTypeBigInteger.class, PersonWithIdPropertyOfPrimitiveInt.class,
+				PersonWithIdPropertyOfTypeLong.class, PersonWithIdPropertyOfPrimitiveLong.class)));
 		mappingContext.setSimpleTypeHolder(conversions.getSimpleTypeHolder());
 		mappingContext.initialize();
 
@@ -142,6 +143,7 @@ public class MongoTemplateTests {
 		template.dropCollection(PersonWithIdPropertyOfTypeObjectId.class);
 		template.dropCollection(PersonWithIdPropertyOfTypeString.class);
 		template.dropCollection(PersonWithIdPropertyOfTypeInteger.class);
+		template.dropCollection(PersonWithIdPropertyOfTypeBigInteger.class);
 		template.dropCollection(PersonWithIdPropertyOfPrimitiveInt.class);
 		template.dropCollection(PersonWithIdPropertyOfTypeLong.class);
 		template.dropCollection(PersonWithIdPropertyOfPrimitiveLong.class);
@@ -478,6 +480,25 @@ public class MongoTemplateTests {
 		assertThat(p9q.getId(), is(p9.getId()));
 		checkCollectionContents(PersonWithIdPropertyOfTypeInteger.class, 1);
 
+		/*
+		 * @see DATAMONGO-602
+		 */
+		// BigInteger id - provided
+		PersonWithIdPropertyOfTypeBigInteger p9bi = new PersonWithIdPropertyOfTypeBigInteger();
+		p9bi.setFirstName("Sven_9bi");
+		p9bi.setAge(22);
+		p9bi.setId(BigInteger.valueOf(12345));
+		// insert
+		mongoTemplate.insert(p9bi);
+		// also try save
+		mongoTemplate.save(p9bi);
+		assertThat(p9bi.getId(), notNullValue());
+		PersonWithIdPropertyOfTypeBigInteger p9qbi = mongoTemplate.findOne(new Query(where("id").in(p9bi.getId())),
+				PersonWithIdPropertyOfTypeBigInteger.class);
+		assertThat(p9qbi, notNullValue());
+		assertThat(p9qbi.getId(), is(p9bi.getId()));
+		checkCollectionContents(PersonWithIdPropertyOfTypeBigInteger.class, 1);
+
 		// int id - provided
 		PersonWithIdPropertyOfPrimitiveInt p10 = new PersonWithIdPropertyOfPrimitiveInt();
 		p10.setFirstName("Sven_10");
@@ -697,6 +718,47 @@ public class MongoTemplateTests {
 		List<PersonWithIdPropertyOfTypeLong> results2 = template.find(q2, PersonWithIdPropertyOfTypeLong.class);
 		Query q3 = new Query(Criteria.where("id").in(1001L, 1004L));
 		List<PersonWithIdPropertyOfTypeLong> results3 = template.find(q3, PersonWithIdPropertyOfTypeLong.class);
+		assertThat(results1.size(), is(3));
+		assertThat(results2.size(), is(2));
+		assertThat(results3.size(), is(2));
+	}
+
+	/**
+	 * @see DATAMONGO-602
+	 */
+	@Test
+	public void testUsingAnInQueryWithBigIntegerId() throws Exception {
+
+		template.remove(new Query(), PersonWithIdPropertyOfTypeBigInteger.class);
+
+		PersonWithIdPropertyOfTypeBigInteger p1 = new PersonWithIdPropertyOfTypeBigInteger();
+		p1.setFirstName("Sven");
+		p1.setAge(11);
+		p1.setId(new BigInteger("2666666666666666665069473312490162649510603601"));
+		template.insert(p1);
+		PersonWithIdPropertyOfTypeBigInteger p2 = new PersonWithIdPropertyOfTypeBigInteger();
+		p2.setFirstName("Mary");
+		p2.setAge(21);
+		p2.setId(new BigInteger("2666666666666666665069473312490162649510603602"));
+		template.insert(p2);
+		PersonWithIdPropertyOfTypeBigInteger p3 = new PersonWithIdPropertyOfTypeBigInteger();
+		p3.setFirstName("Ann");
+		p3.setAge(31);
+		p3.setId(new BigInteger("2666666666666666665069473312490162649510603603"));
+		template.insert(p3);
+		PersonWithIdPropertyOfTypeBigInteger p4 = new PersonWithIdPropertyOfTypeBigInteger();
+		p4.setFirstName("John");
+		p4.setAge(41);
+		p4.setId(new BigInteger("2666666666666666665069473312490162649510603604"));
+		template.insert(p4);
+
+		Query q1 = new Query(Criteria.where("age").in(11, 21, 41));
+		List<PersonWithIdPropertyOfTypeBigInteger> results1 = template.find(q1, PersonWithIdPropertyOfTypeBigInteger.class);
+		Query q2 = new Query(Criteria.where("firstName").in("Ann", "Mary"));
+		List<PersonWithIdPropertyOfTypeBigInteger> results2 = template.find(q2, PersonWithIdPropertyOfTypeBigInteger.class);
+		Query q3 = new Query(Criteria.where("id").in(new BigInteger("2666666666666666665069473312490162649510603601"),
+				new BigInteger("2666666666666666665069473312490162649510603604")));
+		List<PersonWithIdPropertyOfTypeBigInteger> results3 = template.find(q3, PersonWithIdPropertyOfTypeBigInteger.class);
 		assertThat(results1.size(), is(3));
 		assertThat(results2.size(), is(2));
 		assertThat(results3.size(), is(2));

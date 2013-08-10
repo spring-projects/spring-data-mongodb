@@ -53,6 +53,12 @@ import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.BeanWrapper;
 import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+import org.springframework.data.mongodb.core.aggregation.Fields;
+import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContext;
+import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoWriter;
@@ -114,6 +120,9 @@ import com.mongodb.util.JSONParseException;
  * @author Oliver Gierke
  * @author Amol Nayak
  * @author Patryk Wasik
+ * @author Tobias Trelle
+ * @author Sebastian Herold
+ * @author Thomas Darimont
  * @author Chuong Ngo
  */
 public class MongoTemplate implements MongoOperations, ApplicationContextAware {
@@ -924,6 +933,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		return doUpdate(collectionName, query, update, entityClass, true, false);
 	}
 
+	public WriteResult upsert(Query query, Update update, Class<?> entityClass, String collectionName) {
+		return doUpdate(collectionName, query, update, entityClass, true, false);
+	}
+
 	public WriteResult updateFirst(Query query, Update update, Class<?> entityClass) {
 		return doUpdate(determineCollectionName(entityClass), query, update, entityClass, false, false);
 	}
@@ -936,6 +949,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		return doUpdate(collectionName, query, update, entityClass, false, false);
 	}
 
+	public WriteResult updateFirst(Query query, Update update, Class<?> entityClass, String collectionName) {
+		return doUpdate(collectionName, query, update, entityClass, false, false);
+	}
+
 	public WriteResult updateMulti(Query query, Update update, Class<?> entityClass) {
 		return doUpdate(determineCollectionName(entityClass), query, update, entityClass, false, true);
 	}
@@ -944,6 +961,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		return doUpdate(collectionName, query, update, null, false, true);
 	}
 	
+	public WriteResult updateMulti(final Query query, final Update update, Class<?> entityClass, String collectionName) {
+		return doUpdate(collectionName, query, update, entityClass, false, true);
+	}
+
 	public WriteResult updateMulti(final Query query, final Update update, Class<?> entityClass, String collectionName) {
 		return doUpdate(collectionName, query, update, entityClass, false, true);
 	}
@@ -1219,6 +1240,64 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		GroupByResults<T> groupByResult = new GroupByResults<T>(mappedResults, commandResult);
 		return groupByResult;
 
+	}
+
+	@Override
+	public <O> AggregationResults<O> aggregate(TypedAggregation<?> aggregation, Class<O> outputType) {
+		return aggregate(aggregation, determineCollectionName(aggregation.getInputType()), outputType);
+	}
+
+	@Override
+	public <O> AggregationResults<O> aggregate(TypedAggregation<?> aggregation, String inputCollectionName,
+			Class<O> outputType) {
+
+		Assert.notNull(aggregation, "Aggregation pipeline must not be null!");
+
+		AggregationOperationContext context = new TypeBasedAggregationOperationContext(aggregation.getInputType(),
+				mappingContext, queryMapper);
+		return aggregate(aggregation, inputCollectionName, outputType, context);
+	}
+
+	@Override
+	public <O> AggregationResults<O> aggregate(Aggregation aggregation, Class<?> inputType, Class<O> outputType) {
+
+		return aggregate(aggregation, determineCollectionName(inputType), outputType,
+				new TypeBasedAggregationOperationContext(inputType, mappingContext, queryMapper));
+	}
+
+	@Override
+	public <O> AggregationResults<O> aggregate(Aggregation aggregation, String collectionName, Class<O> outputType) {
+		return aggregate(aggregation, collectionName, outputType, null);
+	}
+
+	protected <O> AggregationResults<O> aggregate(Aggregation aggregation, String collectionName, Class<O> outputType,
+			AggregationOperationContext context) {
+
+		Assert.hasText(collectionName, "Collection name must not be null or empty!");
+		Assert.notNull(aggregation, "Aggregation pipeline must not be null!");
+		Assert.notNull(outputType, "Output type must not be null!");
+
+		AggregationOperationContext rootContext = context == null ? Aggregation.DEFAULT_CONTEXT : context;
+		DBObject command = aggregation.toDbObject(collectionName, rootContext);
+
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("Executing aggregation: {}", serializeToJsonSafely(command));
+		}
+
+		CommandResult commandResult = executeCommand(command);
+		handleCommandError(commandResult, command);
+
+		// map results
+		@SuppressWarnings("unchecked")
+		Iterable<DBObject> resultSet = (Iterable<DBObject>) commandResult.get("result");
+		List<O> mappedResults = new ArrayList<O>();
+		DbObjectCallback<O> callback = new UnwrapAndReadDbObjectCallback<O>(mongoConverter, outputType);
+
+		for (DBObject dbObject : resultSet) {
+			mappedResults.add(callback.doWith(dbObject));
+		}
+
+		return new AggregationResults<O>(mappedResults, commandResult);
 	}
 
 	protected String replaceWithResourceIfNecessary(String function) {
@@ -1883,6 +1962,35 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				maybeEmitEvent(new AfterConvertEvent<T>(object, source));
 			}
 			return source;
+		}
+	}
+
+	class UnwrapAndReadDbObjectCallback<T> extends ReadDbObjectCallback<T> {
+
+		public UnwrapAndReadDbObjectCallback(EntityReader<? super T, DBObject> reader, Class<T> type) {
+			super(reader, type);
+		}
+
+		@Override
+		public T doWith(DBObject object) {
+
+			Object idField = object.get(Fields.UNDERSCORE_ID);
+
+			if (!(idField instanceof DBObject)) {
+				return super.doWith(object);
+			}
+
+			DBObject toMap = new BasicDBObject();
+			DBObject nested = (DBObject) idField;
+			toMap.putAll(nested);
+
+			for (String key : object.keySet()) {
+				if (!Fields.UNDERSCORE_ID.equals(key)) {
+					toMap.put(key, object.get(key));
+				}
+			}
+
+			return super.doWith(toMap);
 		}
 	}
 

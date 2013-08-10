@@ -18,7 +18,7 @@ package org.springframework.data.mongodb.core.mapping;
 /**
  * SPI interface to determine how to name document fields in cases the field name is not manually defined.
  * 
- * @see Field
+ * @see DocumentField
  * @see PropertyNameFieldNamingStrategy
  * @see CamelCaseAbbreviatingFieldNamingStrategy
  * @since 1.3

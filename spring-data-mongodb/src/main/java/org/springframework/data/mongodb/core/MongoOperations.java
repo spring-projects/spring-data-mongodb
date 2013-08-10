@@ -19,6 +19,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.geo.GeoResult;
 import org.springframework.data.mongodb.core.geo.GeoResults;
@@ -45,6 +48,7 @@ import com.mongodb.WriteResult;
  * @author Thomas Risberg
  * @author Mark Pollack
  * @author Oliver Gierke
+ * @author Tobias Trelle
  * @author Chuong Ngo
  */
 public interface MongoOperations {
@@ -301,6 +305,57 @@ public interface MongoOperations {
 	 * @return The results of the group operation
 	 */
 	<T> GroupByResults<T> group(Criteria criteria, String inputCollectionName, GroupBy groupBy, Class<T> entityClass);
+
+	/**
+	 * Execute an aggregation operation. The raw results will be mapped to the given entity class. The name of the
+	 * inputCollection is derived from the inputType of the aggregation.
+	 * 
+	 * @param aggregation The {@link TypedAggregation} specification holding the aggregation operations, must not be
+	 *          {@literal null}.
+	 * @param collectionName The name of the input collection to use for the aggreation.
+	 * @param outputType The parameterized type of the returned list, must not be {@literal null}.
+	 * @return The results of the aggregation operation.
+	 * @since 1.3
+	 */
+	<O> AggregationResults<O> aggregate(TypedAggregation<?> aggregation, String collectionName, Class<O> outputType);
+
+	/**
+	 * Execute an aggregation operation. The raw results will be mapped to the given entity class. The name of the
+	 * inputCollection is derived from the inputType of the aggregation.
+	 * 
+	 * @param aggregation The {@link TypedAggregation} specification holding the aggregation operations, must not be
+	 *          {@literal null}.
+	 * @param outputType The parameterized type of the returned list, must not be {@literal null}.
+	 * @return The results of the aggregation operation.
+	 * @since 1.3
+	 */
+	<O> AggregationResults<O> aggregate(TypedAggregation<?> aggregation, Class<O> outputType);
+
+	/**
+	 * Execute an aggregation operation. The raw results will be mapped to the given entity class.
+	 * 
+	 * @param aggregation The {@link Aggregation} specification holding the aggregation operations, must not be
+	 *          {@literal null}.
+	 * @param inputType the inputType where the aggregation operation will read from, must not be {@literal null} or
+	 *          empty.
+	 * @param outputType The parameterized type of the returned list, must not be {@literal null}.
+	 * @return The results of the aggregation operation.
+	 * @since 1.3
+	 */
+	<O> AggregationResults<O> aggregate(Aggregation aggregation, Class<?> inputType, Class<O> outputType);
+
+	/**
+	 * Execute an aggregation operation. The raw results will be mapped to the given entity class.
+	 * 
+	 * @param aggregation The {@link Aggregation} specification holding the aggregation operations, must not be
+	 *          {@literal null}.
+	 * @param collectionName the collection where the aggregation operation will read from, must not be {@literal null} or
+	 *          empty.
+	 * @param outputType The parameterized type of the returned list, must not be {@literal null}.
+	 * @return The results of the aggregation operation.
+	 * @since 1.3
+	 */
+	<O> AggregationResults<O> aggregate(Aggregation aggregation, String collectionName, Class<O> outputType);
 
 	/**
 	 * Execute a map-reduce operation. The map-reduce operation will be formed with an output type of INLINE
@@ -662,6 +717,18 @@ public interface MongoOperations {
 	WriteResult upsert(Query query, Update update, Class<?> entityClass, String collectionName);
 
 	/**
+	 * Performs an upsert. If no document is found that matches the query, a new document is created and inserted by
+	 * combining the query document and the update document.
+	 * 
+	 * @param query the query document that specifies the criteria used to select a record to be upserted
+	 * @param update the update document that contains the updated object or $ operators to manipulate the existing object
+	 * @param entityClass class of the pojo to be operated on
+	 * @param collectionName name of the collection to update the object in
+	 * @return the WriteResult which lets you access the results of the previous write.
+	 */
+	WriteResult upsert(Query query, Update update, Class<?> entityClass, String collectionName);
+
+	/**
 	 * Updates the first object that is found in the collection of the entity class that matches the query document with
 	 * the provided update document.
 	 * 
@@ -699,6 +766,19 @@ public interface MongoOperations {
 	WriteResult updateFirst(Query query, Update update, Class<?> entityClass, String collectionName);
 
 	/**
+	 * Updates the first object that is found in the specified collection that matches the query document criteria with
+	 * the provided updated document.
+	 * 
+	 * @param query the query document that specifies the criteria used to select a record to be updated
+	 * @param update the update document that contains the updated object or $ operators to manipulate the existing
+	 *          object.
+	 * @param entityClass class of the pojo to be operated on
+	 * @param collectionName name of the collection to update the object in
+	 * @return the WriteResult which lets you access the results of the previous write.
+	 */
+	WriteResult updateFirst(Query query, Update update, Class<?> entityClass, String collectionName);
+
+	/**
 	 * Updates all objects that are found in the collection for the entity class that matches the query document criteria
 	 * with the provided updated document.
 	 * 
@@ -722,6 +802,19 @@ public interface MongoOperations {
 	 */
 	WriteResult updateMulti(Query query, Update update, String collectionName);
 	
+	/**
+	 * Updates all objects that are found in the collection for the entity class that matches the query document criteria
+	 * with the provided updated document.
+	 * 
+	 * @param query the query document that specifies the criteria used to select a record to be updated
+	 * @param update the update document that contains the updated object or $ operators to manipulate the existing
+	 *          object.
+	 * @param entityClass class of the pojo to be operated on
+	 * @param collectionName name of the collection to update the object in
+	 * @return the WriteResult which lets you access the results of the previous write.
+	 */
+	WriteResult updateMulti(final Query query, final Update update, Class<?> entityClass, String collectionName);
+
 	/**
 	 * Updates all objects that are found in the collection for the entity class that matches the query document criteria
 	 * with the provided updated document.

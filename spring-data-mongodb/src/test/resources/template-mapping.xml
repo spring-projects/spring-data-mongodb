@@ -35,8 +35,7 @@
     <constructor-arg name="mongoConverter" ref="mappingConverter1"/>
   </bean>
 
-  <mongo:mapping-converter id="mappingConverter2" base-package="org.springframework.data.mongodb.core.mapping"
-      mongo-template-ref="mongoTemplate2">
+  <mongo:mapping-converter id="mappingConverter2" base-package="org.springframework.data.mongodb.core.mapping">
       <mongo:custom-converters>
         <mongo:converter>
           <bean class="org.springframework.data.mongodb.core.PersonReadConverter"/>
