@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 the original author or authors.
+ * Copyright 2010-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,14 +26,13 @@ import com.mongodb.DB;
 import com.mongodb.Mongo;
 
 /**
- * Helper class featuring helper methods for internal MongoDb classes.
- * <p/>
- * <p>
- * Mainly intended for internal use within the framework.
+ * Helper class featuring helper methods for internal MongoDb classes. Mainly intended for internal use within the
+ * framework.
  * 
  * @author Thomas Risberg
  * @author Graeme Rocher
  * @author Oliver Gierke
+ * @author Randy Watler
  * @since 1.0
  */
 public abstract class MongoDbUtils {
@@ -131,8 +130,11 @@ public abstract class MongoDbUtils {
 				holderToUse.addDB(databaseName, db);
 			}
 
-			TransactionSynchronizationManager.registerSynchronization(new MongoSynchronization(holderToUse, mongo));
-			holderToUse.setSynchronizedWithTransaction(true);
+			// synchronize holder only if not yet synchronized
+			if (!holderToUse.isSynchronizedWithTransaction()) {
+				TransactionSynchronizationManager.registerSynchronization(new MongoSynchronization(holderToUse, mongo));
+				holderToUse.setSynchronizedWithTransaction(true);
+			}
 
 			if (holderToUse != dbHolder) {
 				TransactionSynchronizationManager.bindResource(mongo, holderToUse);

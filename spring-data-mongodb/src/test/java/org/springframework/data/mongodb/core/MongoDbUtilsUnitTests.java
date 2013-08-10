@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 the original author or authors.
+ * Copyright 2012-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,8 @@ import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
+import java.util.List;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -28,7 +30,9 @@ import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
+import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.transaction.support.TransactionSynchronizationUtils;
 
 import com.mongodb.DB;
 import com.mongodb.Mongo;
@@ -37,12 +41,12 @@ import com.mongodb.Mongo;
  * Unit tests for {@link MongoDbUtils}.
  * 
  * @author Oliver Gierke
+ * @author Randy Watler
  */
 @RunWith(MockitoJUnitRunner.class)
 public class MongoDbUtilsUnitTests {
 
-	@Mock
-	Mongo mongo;
+	@Mock Mongo mongo;
 
 	@Before
 	public void setUp() throws Exception {
@@ -80,5 +84,95 @@ public class MongoDbUtilsUnitTests {
 		DB first = MongoDbUtils.getDB(mongo, "first");
 		assertThat(first, is(notNullValue()));
 		assertThat(MongoDbUtils.getDB(mongo, "first"), is(sameInstance(first)));
+	}
+
+	/**
+	 * @see DATAMONGO-737
+	 */
+	@Test
+	public void handlesTransactionSynchronizationLifecycle() {
+
+		// ensure transaction synchronization manager has no registered
+		// transaction synchronizations or bound resources at start of test
+		assertThat(TransactionSynchronizationManager.getSynchronizations().isEmpty(), is(true));
+		assertThat(TransactionSynchronizationManager.getResourceMap().isEmpty(), is(true));
+
+		// access database for one mongo instance, (registers transaction
+		// synchronization and binds transaction resource)
+		MongoDbUtils.getDB(mongo, "first");
+
+		// ensure transaction synchronization manager has registered
+		// transaction synchronizations and bound resources
+		assertThat(TransactionSynchronizationManager.getSynchronizations().isEmpty(), is(false));
+		assertThat(TransactionSynchronizationManager.getResourceMap().isEmpty(), is(false));
+
+		// simulate transaction completion, (unbinds transaction resource)
+		try {
+			simulateTransactionCompletion();
+		} catch (Exception e) {
+			fail("Unexpected exception thrown during transaction completion: " + e);
+		}
+
+		// ensure transaction synchronization manager has no bound resources
+		// at end of test
+		assertThat(TransactionSynchronizationManager.getResourceMap().isEmpty(), is(true));
+	}
+
+	/**
+	 * @see DATAMONGO-737
+	 */
+	@Test
+	public void handlesTransactionSynchronizationsLifecycle() {
+
+		// ensure transaction synchronization manager has no registered
+		// transaction synchronizations or bound resources at start of test
+		assertThat(TransactionSynchronizationManager.getSynchronizations().isEmpty(), is(true));
+		assertThat(TransactionSynchronizationManager.getResourceMap().isEmpty(), is(true));
+
+		// access multiple databases for one mongo instance, (registers
+		// transaction synchronizations and binds transaction resources)
+		MongoDbUtils.getDB(mongo, "first");
+		MongoDbUtils.getDB(mongo, "second");
+
+		// ensure transaction synchronization manager has registered
+		// transaction synchronizations and bound resources
+		assertThat(TransactionSynchronizationManager.getSynchronizations().isEmpty(), is(false));
+		assertThat(TransactionSynchronizationManager.getResourceMap().isEmpty(), is(false));
+
+		// simulate transaction completion, (unbinds transaction resources)
+		try {
+			simulateTransactionCompletion();
+		} catch (Exception e) {
+			fail("Unexpected exception thrown during transaction completion: " + e);
+		}
+
+		// ensure transaction synchronization manager has no bound
+		// transaction resources at end of test
+		assertThat(TransactionSynchronizationManager.getResourceMap().isEmpty(), is(true));
+	}
+
+	/**
+	 * Simulate transaction rollback/commit completion protocol on managed transaction synchronizations which will unbind
+	 * managed transaction resources. Does not swallow exceptions for testing purposes.
+	 * 
+	 * @see TransactionSynchronizationUtils#triggerBeforeCompletion()
+	 * @see TransactionSynchronizationUtils#triggerAfterCompletion(int)
+	 */
+	private void simulateTransactionCompletion() {
+
+		// triggerBeforeCompletion() implementation without swallowed exceptions
+		List<TransactionSynchronization> synchronizations = TransactionSynchronizationManager.getSynchronizations();
+		for (TransactionSynchronization synchronization : synchronizations) {
+			synchronization.beforeCompletion();
+		}
+
+		// triggerAfterCompletion() implementation without swallowed exceptions
+		List<TransactionSynchronization> remainingSynchronizations = TransactionSynchronizationManager
+				.getSynchronizations();
+		if (remainingSynchronizations != null) {
+			for (TransactionSynchronization remainingSynchronization : remainingSynchronizations) {
+				remainingSynchronization.afterCompletion(TransactionSynchronization.STATUS_ROLLED_BACK);
+			}
+		}
 	}
 }
