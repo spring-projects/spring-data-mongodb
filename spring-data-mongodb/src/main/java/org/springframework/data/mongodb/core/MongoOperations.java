@@ -703,18 +703,6 @@ public interface MongoOperations {
 	 * @return the WriteResult which lets you access the results of the previous write.
 	 */
 	WriteResult upsert(Query query, Update update, String collectionName);
-	
-	/**
-	 * Performs an upsert. If no document is found that matches the query, a new document is created and inserted by
-	 * combining the query document and the update document.
-	 * 
-	 * @param query the query document that specifies the criteria used to select a record to be upserted
-	 * @param update the update document that contains the updated object or $ operators to manipulate the existing object
-	 * @param entityClass class of the pojo to be operated on
-	 * @param collectionName name of the collection to update the object in
-	 * @return the WriteResult which lets you access the results of the previous write.
-	 */
-	WriteResult upsert(Query query, Update update, Class<?> entityClass, String collectionName);
 
 	/**
 	 * Performs an upsert. If no document is found that matches the query, a new document is created and inserted by
@@ -727,6 +715,18 @@ public interface MongoOperations {
 	 * @return the WriteResult which lets you access the results of the previous write.
 	 */
 	WriteResult upsert(Query query, Update update, Class<?> entityClass, String collectionName);
+	
+	/**
+	 * Performs an upsert. If no document is found that matches the query, a new document is created and inserted by
+	 * combining the query document and the update document.
+	 * 
+	 * @param query the query document that specifies the criteria used to select a record to be upserted
+	 * @param entity	the pojo to be operated on.
+	 * @param entityClass class of the pojo to be operated on
+	 * @param collectionName name of the collection to update the object in
+	 * @return the WriteResult which lets you access the results of the previous write.
+	 */
+	WriteResult upsert(Query query, Object entity, Class<?> entityClass, String collectionName);
 
 	/**
 	 * Updates the first object that is found in the collection of the entity class that matches the query document with
@@ -751,19 +751,6 @@ public interface MongoOperations {
 	 * @return the WriteResult which lets you access the results of the previous write.
 	 */
 	WriteResult updateFirst(Query query, Update update, String collectionName);
-	
-	/**
-	 * Updates the first object that is found in the specified collection that matches the query document criteria with
-	 * the provided updated document.
-	 * 
-	 * @param query the query document that specifies the criteria used to select a record to be updated
-	 * @param update the update document that contains the updated object or $ operators to manipulate the existing
-	 *          object.
-	 * @param entityClass class of the pojo to be operated on
-	 * @param collectionName name of the collection to update the object in
-	 * @return the WriteResult which lets you access the results of the previous write.
-	 */
-	WriteResult updateFirst(Query query, Update update, Class<?> entityClass, String collectionName);
 
 	/**
 	 * Updates the first object that is found in the specified collection that matches the query document criteria with
@@ -777,6 +764,18 @@ public interface MongoOperations {
 	 * @return the WriteResult which lets you access the results of the previous write.
 	 */
 	WriteResult updateFirst(Query query, Update update, Class<?> entityClass, String collectionName);
+	
+	/**
+	 * Updates the first object that is found in the specified collection that matches the query document criteria with
+	 * the provided updated document.
+	 * 
+	 * @param query the query document that specifies the criteria used to select a record to be updated
+	 * @param entity	the pojo to be operated on.
+	 * @param entityClass class of the pojo to be operated on.  This determines the converter to be used.
+	 * @param collectionName name of the collection to update the object in
+	 * @return the WriteResult which lets you access the results of the previous write.
+	 */
+	WriteResult updateFirst(Query query, Object entity, Class<?> entityClass, String collectionName);
 
 	/**
 	 * Updates all objects that are found in the collection for the entity class that matches the query document criteria
@@ -814,19 +813,18 @@ public interface MongoOperations {
 	 * @return the WriteResult which lets you access the results of the previous write.
 	 */
 	WriteResult updateMulti(final Query query, final Update update, Class<?> entityClass, String collectionName);
-
+	
 	/**
-	 * Updates all objects that are found in the collection for the entity class that matches the query document criteria
-	 * with the provided updated document.
+	 * Updates all objects that are found in the specified collection that matches the query document criteria with the
+	 * provided updated document.
 	 * 
 	 * @param query the query document that specifies the criteria used to select a record to be updated
-	 * @param update the update document that contains the updated object or $ operators to manipulate the existing
-	 *          object.
+	 * @param entity	the pojo to be operated on
 	 * @param entityClass class of the pojo to be operated on
 	 * @param collectionName name of the collection to update the object in
 	 * @return the WriteResult which lets you access the results of the previous write.
 	 */
-	WriteResult updateMulti(final Query query, final Update update, Class<?> entityClass, String collectionName);
+	WriteResult updateMulti(Query query, Object entity, Class<?> entityClass, String collectionName);
 
 	/**
 	 * Remove the given object from the collection by id.

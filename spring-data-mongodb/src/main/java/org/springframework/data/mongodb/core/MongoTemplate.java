@@ -932,8 +932,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	public WriteResult upsert(Query query, Update update, Class<?> entityClass, String collectionName) {
 		return doUpdate(collectionName, query, update, entityClass, true, false);
 	}
-
-	public WriteResult upsert(Query query, Update update, Class<?> entityClass, String collectionName) {
+	
+	public WriteResult upsert(Query query, Object entity, Class<?> entityClass, String collectionName) {
+		Update update = Update.fromDBObject((DBObject) getConverter().convertToMongoType(entity));
+		
 		return doUpdate(collectionName, query, update, entityClass, true, false);
 	}
 
@@ -948,8 +950,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	public WriteResult updateFirst(Query query, Update update, Class<?> entityClass, String collectionName) {
 		return doUpdate(collectionName, query, update, entityClass, false, false);
 	}
-
-	public WriteResult updateFirst(Query query, Update update, Class<?> entityClass, String collectionName) {
+	
+	public WriteResult updateFirst(Query query, Object entity, Class<?> entityClass, String collectionName) {
+		Update update = Update.fromDBObject((DBObject) getConverter().convertToMongoType(entity));
+		
 		return doUpdate(collectionName, query, update, entityClass, false, false);
 	}
 
@@ -964,8 +968,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	public WriteResult updateMulti(final Query query, final Update update, Class<?> entityClass, String collectionName) {
 		return doUpdate(collectionName, query, update, entityClass, false, true);
 	}
-
-	public WriteResult updateMulti(final Query query, final Update update, Class<?> entityClass, String collectionName) {
+	
+	public WriteResult updateMulti(Query query, Object entity, Class<?> entityClass, String collectionName) {
+		Update update = Update.fromDBObject((DBObject) getConverter().convertToMongoType(entity));
+		
 		return doUpdate(collectionName, query, update, entityClass, false, true);
 	}
 
