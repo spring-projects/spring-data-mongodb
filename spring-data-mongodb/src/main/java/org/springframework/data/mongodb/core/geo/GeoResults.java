@@ -131,7 +131,7 @@ public class GeoResults<T> implements Iterable<GeoResult<T>> {
 	private static Distance calculateAverageDistance(List<? extends GeoResult<?>> results, Metric metric) {
 
 		if (results.isEmpty()) {
-			return new Distance(0, null);
+			return new Distance(0, metric);
 		}
 
 		double averageDistance = 0;

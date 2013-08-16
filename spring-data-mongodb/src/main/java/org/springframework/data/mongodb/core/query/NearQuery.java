@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core.query;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.geo.CustomMetric;
 import org.springframework.data.mongodb.core.geo.Distance;
 import org.springframework.data.mongodb.core.geo.Metric;
@@ -29,6 +30,7 @@ import com.mongodb.DBObject;
  * Builder class to build near-queries.
  * 
  * @author Oliver Gierke
+ * @author Thomas Darimont
  */
 public class NearQuery {
 
@@ -38,6 +40,7 @@ public class NearQuery {
 	private Metric metric;
 	private boolean spherical;
 	private Integer num;
+	private Integer skip;
 
 	/**
 	 * Creates a new {@link NearQuery}.
@@ -116,13 +119,36 @@ public class NearQuery {
 	}
 
 	/**
-	 * Configures the number of results to return.
+	 * Configures the maximum number of results to return.
 	 * 
 	 * @param num
 	 * @return
 	 */
 	public NearQuery num(int num) {
 		this.num = num;
+		return this;
+	}
+
+	/**
+	 * Configures the number of results to skip.
+	 * 
+	 * @param skip
+	 * @return
+	 */
+	public NearQuery skip(int skip) {
+		this.skip = skip;
+		return this;
+	}
+
+	/**
+	 * Configures the {@link Pageable} to use.
+	 * 
+	 * @param pageable
+	 * @return
+	 */
+	public NearQuery with(Pageable pageable) {
+		this.num = (pageable.getPageNumber() + 1) * pageable.getPageSize();
+		this.skip = pageable.getPageNumber() * pageable.getPageSize();
 		return this;
 	}
 
@@ -290,7 +316,16 @@ public class NearQuery {
 	 */
 	public NearQuery query(Query query) {
 		this.query = query;
+		this.skip = query.getSkip();
+		this.num = query.getLimit();
 		return this;
+	}
+
+	/**
+	 * @return the number of elements to skip.
+	 */
+	public Integer getSkip() {
+		return skip;
 	}
 
 	/**
