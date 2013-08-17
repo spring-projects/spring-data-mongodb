@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2012 the original author or authors.
+ * Copyright 2011-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,8 +20,11 @@ import java.util.List;
 
 import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.CollectionCallback;
+import org.springframework.data.mongodb.core.DbCallback;
 import org.springframework.data.mongodb.core.query.Query;
 
+import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.gridfs.GridFSDBFile;
 import com.mongodb.gridfs.GridFSFile;
@@ -31,6 +34,7 @@ import com.mongodb.gridfs.GridFSFile;
  * 
  * @author Oliver Gierke
  * @author Philipp Schneider
+ * @author Aparna Chaudhary
  */
 public interface GridFsOperations extends ResourcePatternResolver {
 
@@ -98,6 +102,22 @@ public interface GridFsOperations extends ResourcePatternResolver {
 	GridFSFile store(InputStream content, String filename, String contentType, DBObject metadata);
 
 	/**
+	 * Returns the operations that can be performed on indexes
+	 */
+	GridFsIndexOperations indexOps();
+
+	/**
+	 * Executes the given {@link DbCallback} on the GridFs files collection.
+	 * <p/>
+	 * Allows for returning a result object, that is a domain object or a collection of domain objects.
+	 * 
+	 * @param <T> return type
+	 * @param action callback that specified the GridFs actions to perform on the DB instance
+	 * @return a result object returned by the action or <tt>null</tt>
+	 */
+	<T> T execute(CollectionCallback<T> callback);
+
+	/**
 	 * Returns all files matching the given query. Note, that currently {@link Sort} criterias defined at the
 	 * {@link Query} will not be regarded as MongoDB does not support ordering for GridFS file access.
 	 * 
@@ -123,12 +143,20 @@ public interface GridFsOperations extends ResourcePatternResolver {
 	void delete(Query query);
 
 	/**
+	 * Gets the {@link DBCollection} in which the file’s metadata is stored.
+	 * 
+	 * @return files collection
+	 */
+	DBCollection getFilesCollection();
+
+	/**
 	 * Returns all {@link GridFsResource} with the given file name.
 	 * 
 	 * @param filename
 	 * @return
 	 * @see ResourcePatternResolver#getResource(String)
 	 */
+	@Override
 	GridFsResource getResource(String filename);
 
 	/**
@@ -138,5 +166,6 @@ public interface GridFsOperations extends ResourcePatternResolver {
 	 * @return
 	 * @see ResourcePatternResolver#getResources(String)
 	 */
+	@Override
 	GridFsResource[] getResources(String filenamePattern);
 }

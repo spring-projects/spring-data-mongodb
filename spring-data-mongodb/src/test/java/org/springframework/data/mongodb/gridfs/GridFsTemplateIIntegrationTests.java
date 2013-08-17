@@ -31,11 +31,13 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.mongodb.BasicDBObject;
+import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.gridfs.GridFSDBFile;
 import com.mongodb.gridfs.GridFSFile;
@@ -45,6 +47,7 @@ import com.mongodb.gridfs.GridFSFile;
  * 
  * @author Oliver Gierke
  * @author Philipp Schneider
+ * @author Aparna Chaudhary
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:gridfs/gridfs.xml")
@@ -160,6 +163,51 @@ public class GridFsTemplateIIntegrationTests {
 
 		assertThat(result, hasSize(1));
 		assertSame(result.get(0), reference);
+	}
+
+	/**
+	 * Tests index creation with default bucket
+	 * 
+	 * @see DATAMONGO-653
+	 */
+	@Test
+	public void testEnsureIndex() {
+
+		operations.indexOps().ensureIndex(new Index().on("md5", Direction.ASC).unique());
+
+		DBCollection coll = operations.getFilesCollection();
+		List<DBObject> indexInfo = coll.getIndexInfo();
+		assertThat(indexInfo.size(), is(3));
+		String indexKey = null;
+		boolean unique = false;
+		for (DBObject ix : indexInfo) {
+			if ("md5_1".equals(ix.get("name"))) {
+				indexKey = ix.get("key").toString();
+				unique = (Boolean) ix.get("unique");
+			}
+		}
+		assertThat(indexKey, is("{ \"md5\" : 1}"));
+		assertThat(unique, is(true));
+	}
+
+	/**
+	 * Tests index deletion with default bucket
+	 * 
+	 * @see DATAMONGO-653
+	 */
+	@Test
+	public void testDropIndex() {
+
+		operations.indexOps().ensureIndex(new Index().on("md5", Direction.ASC).unique());
+
+		DBCollection coll = operations.getFilesCollection();
+		List<DBObject> indexInfo = coll.getIndexInfo();
+		assertThat(indexInfo.size(), is(3));
+
+		operations.indexOps().dropIndex("md5_1");
+
+		indexInfo = coll.getIndexInfo();
+		assertThat(indexInfo.size(), is(2));
 	}
 
 	private static void assertSame(GridFSFile left, GridFSFile right) {

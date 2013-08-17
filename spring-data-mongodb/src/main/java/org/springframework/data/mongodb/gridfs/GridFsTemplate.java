@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2012 the original author or authors.
+ * Copyright 2011-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.core.io.support.ResourcePatternResolver;
+import org.springframework.dao.DataAccessException;
 import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.core.CollectionCallback;
+import org.springframework.data.mongodb.core.MongoExceptionTranslator;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.query.Query;
@@ -32,6 +35,7 @@ import org.springframework.util.StringUtils;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
+import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.gridfs.GridFS;
 import com.mongodb.gridfs.GridFSDBFile;
@@ -43,6 +47,7 @@ import com.mongodb.gridfs.GridFSInputFile;
  * 
  * @author Oliver Gierke
  * @author Philipp Schneider
+ * @author Aparna Chaudhary
  */
 public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver {
 
@@ -50,6 +55,7 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 	private final String bucket;
 	private final MongoConverter converter;
 	private final QueryMapper queryMapper;
+	private final MongoExceptionTranslator exceptionTranslator = new MongoExceptionTranslator();
 
 	/**
 	 * Creates a new {@link GridFsTemplate} using the given {@link MongoDbFactory} and {@link MongoConverter}.
@@ -153,6 +159,27 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 		return file;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#execute(org.springframework.data.mongodb.core.CollectionCallback)
+	 */
+	public <T> T execute(CollectionCallback<T> callback) {
+
+		Assert.notNull(callback);
+		try {
+			DBCollection collection = getFilesCollection();
+			return callback.doInCollection(collection);
+		} catch (RuntimeException e) {
+			throw potentiallyConvertRuntimeException(e);
+		}
+	}
+
+	/* (non-Javadoc)
+	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#indexOps()
+	 */
+	public GridFsIndexOperations indexOps() {
+		return new DefaultGridFsIndexOperations(this);
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#find(com.mongodb.DBObject)
@@ -183,6 +210,21 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 	 */
 	public void delete(Query query) {
 		getGridFs().remove(getMappedQuery(query));
+	}
+
+	/* (non-Javadoc)
+	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#getFilesCollection()
+	 */
+	public DBCollection getFilesCollection() {
+
+		try {
+			DB db = getGridFs().getDB();
+			String fsCollection = bucket == null ? "fs.files" : bucket.concat(".files");
+			DBCollection collection = db.getCollectionFromString(fsCollection);
+			return collection;
+		} catch (RuntimeException e) {
+			throw potentiallyConvertRuntimeException(e);
+		}
 	}
 
 	/*
@@ -239,5 +281,18 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 	private GridFS getGridFs() {
 		DB db = dbFactory.getDb();
 		return bucket == null ? new GridFS(db) : new GridFS(db, bucket);
+	}
+
+	/**
+	 * Tries to convert the given {@link RuntimeException} into a {@link DataAccessException} but returns the original
+	 * exception if the conversation failed. Thus allows safe rethrowing of the return value.
+	 * 
+	 * @param ex exception to translate
+	 * @return translated {@link DataAccessException} or {@link RuntimeException} if translation fails
+	 */
+	private RuntimeException potentiallyConvertRuntimeException(RuntimeException ex) {
+
+		RuntimeException resolved = this.exceptionTranslator.translateExceptionIfPossible(ex);
+		return resolved == null ? ex : resolved;
 	}
 }
