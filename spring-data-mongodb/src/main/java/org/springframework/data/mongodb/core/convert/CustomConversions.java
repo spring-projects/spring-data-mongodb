@@ -39,6 +39,7 @@ import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.mongodb.core.convert.MongoConverters.BigDecimalToStringConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.BigIntegerToStringConverter;
+import org.springframework.data.mongodb.core.convert.MongoConverters.DBObjectToStringConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.StringToBigDecimalConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.StringToBigIntegerConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.StringToURLConverter;
@@ -98,6 +99,7 @@ public class CustomConversions {
 		this.converters.add(StringToBigIntegerConverter.INSTANCE);
 		this.converters.add(URLToStringConverter.INSTANCE);
 		this.converters.add(StringToURLConverter.INSTANCE);
+		this.converters.add(DBObjectToStringConverter.INSTANCE);
 		this.converters.addAll(JodaTimeConverters.getConvertersToRegister());
 		this.converters.addAll(converters);
 

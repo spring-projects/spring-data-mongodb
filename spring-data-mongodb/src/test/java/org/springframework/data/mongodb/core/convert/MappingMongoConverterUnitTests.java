@@ -1415,6 +1415,16 @@ public class MappingMongoConverterUnitTests {
 		assertThat(((Person) value).lastname, is("converter"));
 	}
 
+	/**
+	 * @see DATAMONGO-743
+	 */
+	@Test
+	public void readsIntoStringsOutOfTheBox() {
+
+		DBObject dbObject = new BasicDBObject("firstname", "Dave");
+		assertThat(converter.read(String.class, dbObject), is("{ \"firstname\" : \"Dave\"}"));
+	}
+
 	@Document
 	class MapDBRef {
 		@org.springframework.data.mongodb.core.mapping.DBRef Map<String, MapDBRefVal> map;

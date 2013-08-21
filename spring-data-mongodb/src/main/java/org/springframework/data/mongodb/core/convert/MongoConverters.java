@@ -24,7 +24,10 @@ import org.bson.types.ObjectId;
 import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.convert.ReadingConverter;
 import org.springframework.util.StringUtils;
+
+import com.mongodb.DBObject;
 
 /**
  * Wrapper class to contain useful converters for the usage with Mongo.
@@ -145,6 +148,17 @@ abstract class MongoConverters {
 			} catch (MalformedURLException e) {
 				throw new ConversionFailedException(SOURCE, TARGET, source, e);
 			}
+		}
+	}
+
+	@ReadingConverter
+	public static enum DBObjectToStringConverter implements Converter<DBObject, String> {
+
+		INSTANCE;
+
+		@Override
+		public String convert(DBObject source) {
+			return source == null ? null : source.toString();
 		}
 	}
 }
