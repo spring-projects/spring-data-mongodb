@@ -950,6 +950,16 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	public WriteResult upsert(Query query, Update update, Class<?> entityClass, String collectionName) {
 		return doUpdate(collectionName, query, update, entityClass, true, false);
 	}
+	
+	@Override
+	public WriteResult upsert(Query query, Object entity, Class<?> entityClass, String collectionName) {
+		DBObject dbDoc = new BasicDBObject();
+		this.getConverter().write(entity, dbDoc);
+		
+		Update update = Update.fromDBObject(dbDoc);
+		
+		return doUpdate(collectionName, query, update, entityClass, true, false);
+	}
 
 	public WriteResult updateFirst(Query query, Update update, Class<?> entityClass) {
 		return doUpdate(determineCollectionName(entityClass), query, update, entityClass, false, false);
@@ -962,6 +972,16 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	public WriteResult updateFirst(Query query, Update update, Class<?> entityClass, String collectionName) {
 		return doUpdate(collectionName, query, update, entityClass, false, false);
 	}
+	
+	@Override
+	public WriteResult updateFirst(Query query, Object entity, Class<?> entityClass,
+			String collectionName) {
+		DBObject dbDoc = new BasicDBObject();
+		this.getConverter().write(entity, dbDoc);
+		Update update = Update.fromDBObject(dbDoc);
+		
+		return doUpdate(collectionName, query, update, entityClass, false, false);
+	}
 
 	public WriteResult updateMulti(Query query, Update update, Class<?> entityClass) {
 		return doUpdate(determineCollectionName(entityClass), query, update, entityClass, false, true);
@@ -972,6 +992,16 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	}
 
 	public WriteResult updateMulti(final Query query, final Update update, Class<?> entityClass, String collectionName) {
+		return doUpdate(collectionName, query, update, entityClass, false, true);
+	}
+	
+	@Override
+	public WriteResult updateMulti(Query query, Object entity, Class<?> entityClass,
+			String collectionName) {
+		DBObject dbDoc = new BasicDBObject();
+		this.getConverter().write(entity, dbDoc);
+		Update update = Update.fromDBObject(dbDoc);
+		
 		return doUpdate(collectionName, query, update, entityClass, false, true);
 	}
 
@@ -2088,5 +2118,4 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			return new GeoResult<T>(doWith, new Distance(distance, metric));
 		}
 	}
-
 }
