@@ -1,0 +1,102 @@
+---
+layout: base_layout
+
+# The name of your project
+title: Spring Data MongoDB
+
+badges:
+
+  # Specify your project's twitter handle, if any. Delete if none.
+  twitter: SpringData
+
+  # Customize your project's badges. Delete any entries that do not apply.
+  custom:
+    - name: Source (GitHub)
+      url:  https://github.com/spring-projects/spring-data-mongodb
+      icon: github
+
+    - name: Issues (JIRA)
+      url:  https://jira.springframework.org/browse/DATAMONGO
+      icon: tracking
+
+    - name: CI (Bamboo)
+      url:  https://build.springsource.org/browse/SPRINGDATAMONGODB-MONGO
+      icon: ci
+
+    - name: Forum
+      url:  http://forum.spring.io/forum/spring-projects/data/nosql
+      icon: forum
+
+    - name: StackOverflow
+      url:  http://stackoverflow.com/questions/tagged/spring+mongodb
+      icon: stackoverflow
+
+    - name: Metrics (SonarQube)
+      url:  https://build.springsource.org/browse/SPRINGDATAMONGODB-MONGOSONAR
+      icon: metrics
+
+---
+<!DOCTYPE HTML>
+<html lang="en-US">
+
+<!-- Specify the parent of this project (or delete if none) to influence the rendering of the breadcrumb -->
+{% capture parent_link %}
+[Spring Data]({{ site.projects_site_url }}/spring-data)
+{% endcapture %}
+
+
+{% capture billboard_description %}
+Spring Data for [MongoDB](http://www.mongodb.org/) is part of the umbrella Spring Data project which aims to provide a familiar and consistent Spring-based programming model for for new datastores while retaining store-specific features and capabilities. 
+{% endcapture %}
+
+{% capture main_content %}
+
+## Introduction
+
+The Spring Data MongoDB project provides integration with the MongoDB document database. Key functional areas of Spring Data MongoDB are a POJO centric model for interacting with a MongoDB DBCollection and easily writing a Repository style data access layer.
+
+## Features
+
+* Spring configuration support using Java based @Configuration classes or an XML namespace for a Mongo driver instance and replica sets.
+* MongoTemplate helper class that increases productivity performing common Mongo operations. Includes integrated object mapping between documents and POJOs.
+* Exception translation into Spring's portable Data Access Exception hierarchy
+* Feature Rich Object Mapping integrated with Spring's Conversion Service
+* Annotation based mapping metadata but extensible to support other metadata formats
+* Persistence and mapping lifecycle events
+* Low-level mapping using MongoReader/MongoWriter abstractions
+* Java based Query, Criteria, and Update DSLs
+* Automatic implementation of Repository interfaces including support for custom finder methods.
+* QueryDSL integration to support type-safe queries.
+* Cross-store persistance - support for JPA Entities with fields transparently persisted/retrieved using MongoDB
+* Log4j log appender
+* GeoSpatial integration
+* Map-Reduce integration
+* JMX administration and monitoring
+* CDI support for repositories
+* GridFS support
+
+<span id="quick-start"></span>
+## Quick Start
+
+{% include download_widget.md %}
+
+{% endcapture %}
+
+{% capture related_resources %}
+
+### Sample Projects
+
+* [Spring Data Book](https://github.com/springsource/spring-data-book)
+
+### Getting Started Guides
+
+* [Accessing Data with Mongo]({{site.main_site_url}}/guides/gs/accessing-data-mongo)
+
+### Tutorials
+
+* [Persisting data with Spring]({{site.main_site_url}}/guides/tutorials/data)
+
+{% endcapture %}
+
+{% include project_page.html %}
+</html>
