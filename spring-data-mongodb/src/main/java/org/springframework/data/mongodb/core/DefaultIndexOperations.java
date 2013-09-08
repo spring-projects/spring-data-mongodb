@@ -34,6 +34,7 @@ import com.mongodb.MongoException;
  * 
  * @author Mark Pollack
  * @author Oliver Gierke
+ * @author Komi Innocent
  */
 public class DefaultIndexOperations implements IndexOperations {
 
@@ -135,12 +136,15 @@ public class DefaultIndexOperations implements IndexOperations {
 
 						Object value = keyDbObject.get(key);
 
-						if (Integer.valueOf(1).equals(value)) {
-							indexFields.add(IndexField.create(key, Order.ASCENDING));
-						} else if (Integer.valueOf(-1).equals(value)) {
-							indexFields.add(IndexField.create(key, Order.DESCENDING));
-						} else if ("2d".equals(value)) {
+						if("2d".equals(value)){
 							indexFields.add(IndexField.geo(key));
+						}else{
+							Double keyValue=new Double(value.toString());
+							if(Double.valueOf(1).equals(keyValue)){
+								indexFields.add(IndexField.create(key, Order.ASCENDING));
+							}else if(Double.valueOf(-1).equals(keyValue)){
+								indexFields.add(IndexField.create(key, Order.DESCENDING));
+							}
 						}
 					}
 
