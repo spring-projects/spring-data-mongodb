@@ -90,6 +90,7 @@ import com.mongodb.WriteResult;
  * @author Amol Nayak
  * @author Patryk Wasik
  * @author Thomas Darimont
+ * @author Komi Innocent
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:infrastructure.xml")
@@ -328,6 +329,43 @@ public class MongoTemplateTests {
 		assertThat(ii.isSparse(), is(false));
 
 		List<IndexField> indexFields = ii.getIndexFields();
+		IndexField field = indexFields.get(0);
+
+		assertThat(field, is(IndexField.create("age", Direction.DESC)));
+	}
+
+	/**
+	 * @see DATAMONGO-746
+	 */
+	@Test
+	public void testReadIndexInfoForIndicesCreatedViaMongoShellCommands() throws Exception {
+
+		String command = "db." + template.getCollectionName(Person.class)
+				+ ".ensureIndex({'age':-1}, {'unique':true, 'sparse':true})";
+		template.indexOps(Person.class).dropAllIndexes();
+
+		assertThat(template.indexOps(Person.class).getIndexInfo().isEmpty(), is(true));
+		factory.getDb().eval(command);
+
+		List<DBObject> indexInfo = template.getCollection(template.getCollectionName(Person.class)).getIndexInfo();
+		String indexKey = null;
+		boolean unique = false;
+
+		for (DBObject ix : indexInfo) {
+			if ("age_-1".equals(ix.get("name"))) {
+				indexKey = ix.get("key").toString();
+				unique = (Boolean) ix.get("unique");
+			}
+		}
+
+		assertThat(indexKey, is("{ \"age\" : -1.0}"));
+		assertThat(unique, is(true));
+
+		IndexInfo info = template.indexOps(Person.class).getIndexInfo().get(1);
+		assertThat(info.isUnique(), is(true));
+		assertThat(info.isSparse(), is(true));
+
+		List<IndexField> indexFields = info.getIndexFields();
 		IndexField field = indexFields.get(0);
 
 		assertThat(field, is(IndexField.create("age", Direction.DESC)));
