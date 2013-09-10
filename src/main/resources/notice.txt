@@ -1,4 +1,4 @@
-Spring Data Document 1.3.0 RELEASE
+Spring Data Document 1.3.1 RELEASE
 Copyright (c) [2010-2013] Pivotal Inc.
 
 This product is licensed to you under the Apache License, Version 2.0 (the "License").  
