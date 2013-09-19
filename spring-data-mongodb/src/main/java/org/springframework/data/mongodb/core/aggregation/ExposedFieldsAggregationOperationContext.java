@@ -64,4 +64,11 @@ public abstract class ExposedFieldsAggregationOperationContext implements Aggreg
 	}
 
 	protected abstract ExposedFields getFields();
+
+	/* (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#hasReferenceFor(java.lang.String)
+	 */
+	protected boolean hasReferenceFor(String name) {
+		return getFields().getField(name) != null;
+	}
 }

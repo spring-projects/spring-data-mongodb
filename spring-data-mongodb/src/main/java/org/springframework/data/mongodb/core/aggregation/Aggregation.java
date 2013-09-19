@@ -227,8 +227,8 @@ public class Aggregation {
 
 			operationDocuments.add(operation.toDBObject(context));
 
-			if (operation instanceof AggregationOperationContext) {
-				context = (AggregationOperationContext) operation;
+			if (operation instanceof FieldsExposingAggregationOperation) {
+				context = new CombiningAggregationOperationContext(context, (FieldsExposingAggregationOperation) operation);
 			}
 		}
 
@@ -280,6 +280,32 @@ public class Aggregation {
 		@Override
 		public FieldReference getReference(String name) {
 			return new FieldReference(new ExposedField(new AggregationField(name), true));
+		}
+	}
+
+	private static class CombiningAggregationOperationContext extends ExposedFieldsAggregationOperationContext {
+
+		private final AggregationOperationContext aggregationOperationContext;
+		private final FieldsExposingAggregationOperation fieldExposingOperation;
+
+		public CombiningAggregationOperationContext(AggregationOperationContext aggregationOperationContext,
+				FieldsExposingAggregationOperation fieldExposingOperation) {
+			this.aggregationOperationContext = aggregationOperationContext;
+			this.fieldExposingOperation = fieldExposingOperation;
+		}
+
+		@Override
+		public FieldReference getReference(String name) {
+			if (hasReferenceFor(name)) {
+				return super.getReference(name);
+			} else {
+				return aggregationOperationContext.getReference(name);
+			}
+		}
+
+		@Override
+		protected ExposedFields getFields() {
+			return fieldExposingOperation.getFields();
 		}
 	}
 }
