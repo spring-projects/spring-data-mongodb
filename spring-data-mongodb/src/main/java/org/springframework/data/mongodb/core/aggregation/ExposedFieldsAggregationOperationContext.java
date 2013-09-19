@@ -17,17 +17,32 @@ package org.springframework.data.mongodb.core.aggregation;
 
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
+import org.springframework.util.Assert;
 
 import com.mongodb.DBObject;
 
 /**
- * Support class to implement {@link AggregationOperation}s that will become an {@link AggregationOperationContext} as
- * well defining {@link ExposedFields}.
+ * {@link AggregationOperationContext} that combines the available field references from a given
+ * {@code AggregationOperationContext} and an {@link FieldsExposingAggregationOperation}.
  * 
+ * @author Thomas Darimont
  * @author Oliver Gierke
- * @since 1.3
+ * @since 1.4
  */
-public abstract class ExposedFieldsAggregationOperationContext implements AggregationOperationContext {
+class ExposedFieldsAggregationOperationContext implements AggregationOperationContext {
+
+	private final ExposedFields exposedFields;
+
+	/**
+	 * Creates a new {@link ExposedFieldsAggregationOperationContext} from the given {@link ExposedFields}.
+	 * 
+	 * @param exposedFields must not be {@literal null}.
+	 */
+	public ExposedFieldsAggregationOperationContext(ExposedFields exposedFields) {
+
+		Assert.notNull(exposedFields, "ExposedFields must not be null!");
+		this.exposedFields = exposedFields;
+	}
 
 	/* 
 	 * (non-Javadoc)
@@ -54,7 +69,7 @@ public abstract class ExposedFieldsAggregationOperationContext implements Aggreg
 	@Override
 	public FieldReference getReference(String name) {
 
-		ExposedField field = getFields().getField(name);
+		ExposedField field = exposedFields.getField(name);
 
 		if (field != null) {
 			return new FieldReference(field);
@@ -62,6 +77,4 @@ public abstract class ExposedFieldsAggregationOperationContext implements Aggreg
 
 		throw new IllegalArgumentException(String.format("Invalid reference '%s'!", name));
 	}
-
-	protected abstract ExposedFields getFields();
 }

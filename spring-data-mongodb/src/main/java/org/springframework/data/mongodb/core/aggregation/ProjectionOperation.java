@@ -41,7 +41,7 @@ import com.mongodb.DBObject;
  * @author Oliver Gierke
  * @since 1.3
  */
-public class ProjectionOperation extends ExposedFieldsAggregationOperationContext implements AggregationOperation {
+public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 	private static final List<Projection> NONE = Collections.emptyList();
 
@@ -149,10 +149,10 @@ public class ProjectionOperation extends ExposedFieldsAggregationOperationContex
 
 	/* 
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.ExposedFieldsAggregationOperationContext#getFields()
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContextSupport#getFields()
 	 */
 	@Override
-	protected ExposedFields getFields() {
+	public ExposedFields getFields() {
 
 		ExposedFields fields = null;
 

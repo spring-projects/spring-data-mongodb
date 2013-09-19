@@ -227,8 +227,9 @@ public class Aggregation {
 
 			operationDocuments.add(operation.toDBObject(context));
 
-			if (operation instanceof AggregationOperationContext) {
-				context = (AggregationOperationContext) operation;
+			if (operation instanceof FieldsExposingAggregationOperation) {
+				FieldsExposingAggregationOperation exposedFieldsOperation = (FieldsExposingAggregationOperation) operation;
+				context = new ExposedFieldsAggregationOperationContext(exposedFieldsOperation.getFields());
 			}
 		}
 
