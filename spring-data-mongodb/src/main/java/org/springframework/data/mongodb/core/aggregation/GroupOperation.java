@@ -38,7 +38,7 @@ import com.mongodb.DBObject;
  * @author Oliver Gierke
  * @since 1.3
  */
-public class GroupOperation extends ExposedFieldsAggregationOperationContext implements AggregationOperation {
+public class GroupOperation implements FieldsExposingAggregationOperation {
 
 	private final ExposedFields nonSynthecticFields;
 	private final List<Operation> operations;

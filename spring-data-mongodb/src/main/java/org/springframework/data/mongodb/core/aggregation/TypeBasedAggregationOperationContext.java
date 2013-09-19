@@ -71,9 +71,9 @@ public class TypeBasedAggregationOperationContext implements AggregationOperatio
 		return mapper.getMappedObject(dbObject, mappingContext.getPersistentEntity(type));
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getReference(org.springframework.data.mongodb.core.aggregation.ExposedFields.AvailableField)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getReference(org.springframework.data.mongodb.core.aggregation.Field)
 	 */
 	@Override
 	public FieldReference getReference(Field field) {
