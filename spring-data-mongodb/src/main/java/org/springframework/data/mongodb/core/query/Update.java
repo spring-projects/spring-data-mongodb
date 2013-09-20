@@ -31,6 +31,7 @@ import com.mongodb.DBObject;
  * @author Thomas Risberg
  * @author Mark Pollack
  * @author Oliver Gierke
+ * @author Becca Gaspard
  */
 public class Update {
 
@@ -87,6 +88,18 @@ public class Update {
 	 */
 	public Update set(String key, Object value) {
 		addMultiFieldOperation("$set", key, value);
+		return this;
+	}
+
+	/**
+	 * Update using the $setOnInsert update modifier
+	 * 
+	 * @param key
+	 * @param value
+	 * @return
+	 */
+	public Update setOnInsert(String key, Object value) {
+		addMultiFieldOperation("$setOnInsert", key, value);
 		return this;
 	}
 

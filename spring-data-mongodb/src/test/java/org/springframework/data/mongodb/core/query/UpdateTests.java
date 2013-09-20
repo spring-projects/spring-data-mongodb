@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 the original author or authors.
+ * Copyright 2010-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,9 +20,13 @@ import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.springframework.data.mongodb.core.query.BasicUpdate;
-import org.springframework.data.mongodb.core.query.Update;
 
+/**
+ * Test cases for {@link Update}.
+ * 
+ * @author Oliver Gierke
+ * @author Becca Gaspard
+ */
 public class UpdateTests {
 
 	@Test
@@ -134,5 +138,23 @@ public class UpdateTests {
 		Update u = new BasicUpdate("{ \"$inc\" : { \"size\" : 1}}").set("directory", "/Users/Test/Desktop");
 		Assert.assertEquals("{ \"$inc\" : { \"size\" : 1} , \"$set\" : { \"directory\" : \"/Users/Test/Desktop\"}}", u
 				.getUpdateObject().toString());
+	}
+
+	/**
+	 * @see DATAMONGO-630
+	 */
+	@Test
+	public void testSetOnInsert() {
+		Update u = new Update().setOnInsert("size", 1);
+		Assert.assertEquals("{ \"$setOnInsert\" : { \"size\" : 1}}", u.getUpdateObject().toString());
+	}
+
+	/**
+	 * @see DATAMONGO-630
+	 */
+	@Test
+	public void testSetOnInsertSetOnInsert() {
+		Update u = new Update().setOnInsert("size", 1).setOnInsert("count", 1);
+		Assert.assertEquals("{ \"$setOnInsert\" : { \"size\" : 1 , \"count\" : 1}}", u.getUpdateObject().toString());
 	}
 }
