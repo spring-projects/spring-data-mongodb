@@ -362,6 +362,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 * A {@link FieldProjection} to map a result of a previous {@link AggregationOperation} to a new field.
 		 * 
 		 * @author Oliver Gierke
+		 * @author Thomas Darimont
 		 */
 		static class FieldProjection extends Projection {
 
@@ -399,6 +400,17 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 				List<FieldProjection> projections = new ArrayList<FieldProjection>();
 
 				for (Field field : fields) {
+
+					if (!include) {
+						if (!Fields.UNDERSCORE_ID.equals(field.getName())) {
+							throw new IllegalArgumentException(
+									String
+											.format(
+													"Exclusion of field %s not allowed. Projections by the mongodb aggregation framework only support the exclusion of the %s field!",
+													field.getName(), Fields.UNDERSCORE_ID));
+						}
+					}
+
 					projections.add(new FieldProjection(field, include ? null : 0));
 				}
 

@@ -31,6 +31,7 @@ import com.mongodb.DBObject;
  * Unit tests for {@link ProjectionOperation}.
  * 
  * @author Oliver Gierke
+ * @author Thomas Darimont
  */
 public class ProjectionOperationUnitTests {
 
@@ -181,6 +182,27 @@ public class ProjectionOperationUnitTests {
 
 		assertThat(oper.containsField(MOD), is(true));
 		assertThat(oper.get(MOD), is((Object) Arrays.<Object> asList("$a", 3)));
+	}
+
+	/**
+	 * @see DATAMONGO-758
+	 */
+	@Test(expected = IllegalArgumentException.class)
+	public void excludeShouldThrowExceptionForFieldsOtherThanUnderscoreId() {
+
+		new ProjectionOperation().andExclude("foo");
+	}
+
+	/**
+	 * @see DATAMONGO-758
+	 */
+	@Test
+	public void excludeShouldExclusionOfUnderscoreId() {
+
+		ProjectionOperation projectionOp = new ProjectionOperation().andExclude(Fields.UNDERSCORE_ID);
+		DBObject dbObject = projectionOp.toDBObject(Aggregation.DEFAULT_CONTEXT);
+		DBObject projectClause = DBObjectUtils.getAsDBObject(dbObject, PROJECT);
+		assertThat((Integer) projectClause.get(Fields.UNDERSCORE_ID), is(0));
 	}
 
 	@Test(expected = IllegalArgumentException.class)
