@@ -40,7 +40,11 @@ import com.mongodb.DBObject;
  */
 public class GroupOperation extends ExposedFieldsAggregationOperationContext implements AggregationOperation {
 
-	private final ExposedFields nonSynthecticFields;
+	/**
+	 * Holds the non-synthetic fields which are the fields of the group-id structure.
+	 */
+	private final ExposedFields idFields;
+
 	private final List<Operation> operations;
 
 	/**
@@ -50,7 +54,7 @@ public class GroupOperation extends ExposedFieldsAggregationOperationContext imp
 	 */
 	public GroupOperation(Fields fields) {
 
-		this.nonSynthecticFields = ExposedFields.nonSynthetic(fields);
+		this.idFields = ExposedFields.nonSynthetic(fields);
 		this.operations = new ArrayList<Operation>();
 	}
 
@@ -74,7 +78,7 @@ public class GroupOperation extends ExposedFieldsAggregationOperationContext imp
 		Assert.notNull(groupOperation, "GroupOperation must not be null!");
 		Assert.notNull(nextOperations, "NextOperations must not be null!");
 
-		this.nonSynthecticFields = groupOperation.nonSynthecticFields;
+		this.idFields = groupOperation.idFields;
 		this.operations = new ArrayList<Operation>(nextOperations.size() + 1);
 		this.operations.addAll(groupOperation.operations);
 		this.operations.addAll(nextOperations);
@@ -261,7 +265,7 @@ public class GroupOperation extends ExposedFieldsAggregationOperationContext imp
 	@Override
 	public ExposedFields getFields() {
 
-		ExposedFields fields = this.nonSynthecticFields.and(new ExposedField(Fields.UNDERSCORE_ID, true));
+		ExposedFields fields = this.idFields.and(new ExposedField(Fields.UNDERSCORE_ID, true));
 
 		for (Operation operation : operations) {
 			fields = fields.and(operation.asField());
@@ -279,16 +283,20 @@ public class GroupOperation extends ExposedFieldsAggregationOperationContext imp
 
 		BasicDBObject operationObject = new BasicDBObject();
 
-		if (nonSynthecticFields.exposesSingleFieldOnly()) {
+		if (idFields.exposesNoNonSyntheticFields()) {
 
-			FieldReference reference = context.getReference(nonSynthecticFields.iterator().next());
+			operationObject.put(Fields.UNDERSCORE_ID, null);
+
+		} else if (idFields.exposesSingleNonSyntheticFieldOnly()) {
+
+			FieldReference reference = context.getReference(idFields.iterator().next());
 			operationObject.put(Fields.UNDERSCORE_ID, reference.toString());
 
 		} else {
 
 			BasicDBObject inner = new BasicDBObject();
 
-			for (ExposedField field : nonSynthecticFields) {
+			for (ExposedField field : idFields) {
 				FieldReference reference = context.getReference(field);
 				inner.put(field.getName(), reference.toString());
 			}
