@@ -37,6 +37,38 @@ public class GroupOperationUnitTests {
 		new GroupOperation((Fields) null);
 	}
 
+	/**
+	 * @see DATAMONGO-759
+	 */
+	@Test
+	public void groupOperationWithNoGroupIdFieldsShouldGenerateNullAsGroupId() {
+
+		GroupOperation operation = new GroupOperation(Fields.from());
+		ExposedFields fields = operation.getFields();
+		DBObject groupClause = extractDbObjectFromGroupOperation(operation);
+
+		assertThat(fields.exposesSingleFieldOnly(), is(true));
+		assertThat(fields.exposesNoFields(), is(false));
+		assertThat(groupClause.get(UNDERSCORE_ID), is(nullValue()));
+	}
+
+	/**
+	 * @see DATAMONGO-759
+	 */
+	@Test
+	public void groupOperationWithNoGroupIdFieldsButAdditionalFieldsShouldGenerateNullAsGroupId() {
+
+		GroupOperation operation = new GroupOperation(Fields.from()).count().as("cnt").last("foo").as("foo");
+		ExposedFields fields = operation.getFields();
+		DBObject groupClause = extractDbObjectFromGroupOperation(operation);
+
+		assertThat(fields.exposesSingleFieldOnly(), is(false));
+		assertThat(fields.exposesNoFields(), is(false));
+		assertThat(groupClause.get(UNDERSCORE_ID), is(nullValue()));
+		assertThat((BasicDBObject) groupClause.get("cnt"), is(new BasicDBObject("$sum", 1)));
+		assertThat((BasicDBObject) groupClause.get("foo"), is(new BasicDBObject("$last", "$foo")));
+	}
+
 	@Test
 	public void createsGroupOperationWithSingleField() {
 

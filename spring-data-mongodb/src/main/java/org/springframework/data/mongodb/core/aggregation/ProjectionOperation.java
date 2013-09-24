@@ -155,9 +155,9 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		return new ProjectionOperation(this.projections, FieldProjection.from(fields, true));
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContextSupport#getFields()
+	 * @see org.springframework.data.mongodb.core.aggregation.FieldsExposingAggregationOperation#getFields()
 	 */
 	@Override
 	public ExposedFields getFields() {
