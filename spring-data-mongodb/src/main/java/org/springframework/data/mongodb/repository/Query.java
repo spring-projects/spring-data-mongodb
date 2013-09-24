@@ -21,15 +21,19 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import org.springframework.data.annotation.QueryAnnotation;
+
 /**
  * Annotation to declare finder queries directly on repository methods. Both attributes allow using a placeholder
  * notation of {@code ?0}, {@code ?1} and so on.
  * 
  * @author Oliver Gierke
+ * @author Thomas Darimont
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 @Documented
+@QueryAnnotation
 public @interface Query {
 
 	/**
