@@ -36,7 +36,7 @@ import com.mongodb.DBObject;
  * @author Oliver Gierke
  * @since 1.3
  */
-public class TypeBasedAggregationOperationContext implements AggregationOperationContext {
+public class TypeBasedAggregationOperationContext extends ExposedFieldsAggregationOperationContext {
 
 	private final Class<?> type;
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;

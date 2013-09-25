@@ -29,7 +29,7 @@ import com.mongodb.DBObject;
  * @author Oliver Gierke
  * @since 1.3
  */
-public class UnwindOperation extends ExposedFieldsAggregationOperationContext implements AggregationOperation {
+public class UnwindOperation implements AggregationOperation {
 
 	private final ExposedField field;
 
@@ -42,15 +42,6 @@ public class UnwindOperation extends ExposedFieldsAggregationOperationContext im
 
 		Assert.notNull(field);
 		this.field = new ExposedField(field, true);
-	}
-
-	/* 
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.ExposedFieldsAggregationOperationContext#getFields()
-	 */
-	@Override
-	protected ExposedFields getFields() {
-		return ExposedFields.from(field);
 	}
 
 	/* 

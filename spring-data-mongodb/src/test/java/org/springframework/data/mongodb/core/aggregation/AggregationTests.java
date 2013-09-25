@@ -84,6 +84,7 @@ public class AggregationTests {
 		mongoTemplate.dropCollection(INPUT_COLLECTION);
 		mongoTemplate.dropCollection(Product.class);
 		mongoTemplate.dropCollection(UserWithLikes.class);
+		mongoTemplate.dropCollection(DATAMONGO753.class);
 	}
 
 	/**
@@ -452,7 +453,38 @@ public class AggregationTests {
 		assertThat((Double) resultList.get(0).get("netPriceMul2"), is(netPrice * 2));
 		assertThat((Double) resultList.get(0).get("netPriceDiv119"), is(netPrice / 1.19));
 		assertThat((Integer) resultList.get(0).get("spaceUnitsMod2"), is(spaceUnits % 2));
+	}
 
+	/**
+	 * @see DATAMONGO-753
+	 * @see http 
+	 *      ://stackoverflow.com/questions/18653574/spring-data-mongodb-aggregation-framework-invalid-reference-in-group
+	 *      -operati
+	 */
+	@Test
+	public void allowNestedFieldReferencesAsGroupIdsInGroupExpressions() {
+
+		mongoTemplate.insert(new DATAMONGO753().withPDs(new PD("A", 1), new PD("B", 1), new PD("C", 1)));
+		mongoTemplate.insert(new DATAMONGO753().withPDs(new PD("B", 1), new PD("B", 1), new PD("C", 1)));
+
+		Aggregation agg = newAggregation( //
+				unwind("pd"), //
+				group("pd.pDch") // the nested field expression
+						.sum("pd.up").as("uplift") //
+				, project("_id", "uplift"));
+
+		AggregationResults<DBObject> result = mongoTemplate.aggregate(agg, //
+				DATAMONGO753.class //
+				, DBObject.class);
+		List<DBObject> stats = result.getMappedResults();
+
+		assertThat(stats.size(), is(3));
+		assertThat(stats.get(0).get("_id").toString(), is("C"));
+		assertThat((Integer) stats.get(0).get("uplift"), is(2));
+		assertThat(stats.get(1).get("_id").toString(), is("B"));
+		assertThat((Integer) stats.get(1).get("uplift"), is(3));
+		assertThat(stats.get(2).get("_id").toString(), is("A"));
+		assertThat((Integer) stats.get(2).get("uplift"), is(1));
 	}
 
 	private void assertLikeStats(LikeStats like, String id, long count) {
@@ -502,4 +534,22 @@ public class AggregationTests {
 		assertThat(tagCount.getN(), is(n));
 	}
 
+	static class DATAMONGO753 {
+		PD[] pd;
+
+		DATAMONGO753 withPDs(PD... pds) {
+			this.pd = pds;
+			return this;
+		}
+	}
+
+	static class PD {
+		String pDch;
+		int up;
+
+		public PD(String pDch, int up) {
+			this.pDch = pDch;
+			this.up = up;
+		}
+	}
 }
