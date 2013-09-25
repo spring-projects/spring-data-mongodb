@@ -16,6 +16,9 @@
 package org.springframework.data.mongodb.core.aggregation;
 
 /**
+ * {@link AggregationOperation} that exposes new {@link ExposedFields} that can be used for later aggregation pipeline
+ * {@code AggregationOperation}s.
+ * 
  * @author Thomas Darimont
  */
 public interface FieldsExposingAggregationOperation extends AggregationOperation {

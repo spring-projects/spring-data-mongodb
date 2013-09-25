@@ -15,7 +15,6 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
 
 import com.mongodb.DBObject;
@@ -45,30 +44,5 @@ public abstract class ExposedFieldsAggregationOperationContext implements Aggreg
 	@Override
 	public FieldReference getReference(Field field) {
 		return getReference(field.getTarget());
-	}
-
-	/* 
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getReference(java.lang.String)
-	 */
-	@Override
-	public FieldReference getReference(String name) {
-
-		ExposedField field = getFields().getField(name);
-
-		if (field != null) {
-			return new FieldReference(field);
-		}
-
-		throw new IllegalArgumentException(String.format("Invalid reference '%s'!", name));
-	}
-
-	protected abstract ExposedFields getFields();
-
-	/* (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#hasReferenceFor(java.lang.String)
-	 */
-	protected boolean hasReferenceFor(String name) {
-		return getFields().getField(name) != null;
 	}
 }

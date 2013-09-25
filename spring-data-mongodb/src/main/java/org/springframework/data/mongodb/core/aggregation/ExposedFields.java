@@ -50,6 +50,22 @@ public class ExposedFields implements Iterable<ExposedField> {
 	}
 
 	/**
+	 * Creates a new {@link ExposedFields} instance from the given {@link ExposedFields}.
+	 * 
+	 * @param fields must not be {@literal null}.
+	 * @return
+	 */
+	public static ExposedFields from(ExposedFields fields) {
+
+		List<ExposedField> exposedFields = new ArrayList<ExposedFields.ExposedField>();
+		for (ExposedField field : fields) {
+			exposedFields.add(field);
+		}
+
+		return from(exposedFields);
+	}
+
+	/**
 	 * Creates a new {@link ExposedFields} instance from the given {@link ExposedField}s.
 	 * 
 	 * @param fields must not be {@literal null}.
@@ -132,6 +148,24 @@ public class ExposedFields implements Iterable<ExposedField> {
 		result.add(field);
 
 		return new ExposedFields(field.synthetic ? originalFields : result, field.synthetic ? result : syntheticFields);
+	}
+
+	/**
+	 * Creates a new {@link ExposedFields} adding the given {@link ExposedFields}.
+	 * 
+	 * @param field must not be {@literal null}.
+	 * @return
+	 */
+	public ExposedFields and(ExposedFields fields) {
+
+		Assert.notNull(fields, "Exposed fields must not be null!");
+
+		ExposedFields result = from(this);
+		for (ExposedField field : fields) {
+			result = result.and(field);
+		}
+
+		return result;
 	}
 
 	/**

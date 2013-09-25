@@ -457,25 +457,27 @@ public class AggregationTests {
 
 	/**
 	 * @see DATAMONGO-753
+	 * @see http 
+	 *      ://stackoverflow.com/questions/18653574/spring-data-mongodb-aggregation-framework-invalid-reference-in-group
+	 *      -operati
 	 */
 	@Test
-	public void foo() {
+	public void allowNestedFieldReferencesAsGroupIdsInGroupExpressions() {
 
 		mongoTemplate.insert(new DATAMONGO753().withPDs(new PD("A", 1), new PD("B", 1), new PD("C", 1)));
 		mongoTemplate.insert(new DATAMONGO753().withPDs(new PD("B", 1), new PD("B", 1), new PD("C", 1)));
 
 		Aggregation agg = newAggregation( //
 				unwind("pd"), //
-				group("pd.pDch") //
+				group("pd.pDch") // the nested field expression
 						.sum("pd.up").as("uplift") //
-		);
+				, project("_id", "uplift"));
 
 		AggregationResults<DBObject> result = mongoTemplate.aggregate(agg, //
 				DATAMONGO753.class //
-				// "dATAMONGO753" //
 				, DBObject.class);
-
 		List<DBObject> stats = result.getMappedResults();
+
 		assertThat(stats.size(), is(3));
 		assertThat(stats.get(0).get("_id").toString(), is("C"));
 		assertThat((Integer) stats.get(0).get("uplift"), is(2));
@@ -483,7 +485,6 @@ public class AggregationTests {
 		assertThat((Integer) stats.get(1).get("uplift"), is(3));
 		assertThat(stats.get(2).get("_id").toString(), is("A"));
 		assertThat((Integer) stats.get(2).get("uplift"), is(1));
-
 	}
 
 	private void assertLikeStats(LikeStats like, String id, long count) {
