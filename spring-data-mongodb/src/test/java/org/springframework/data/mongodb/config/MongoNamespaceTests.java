@@ -18,6 +18,8 @@ package org.springframework.data.mongodb.config;
 import static org.junit.Assert.*;
 import static org.springframework.test.util.ReflectionTestUtils.*;
 
+import javax.net.ssl.SSLSocketFactory;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,13 +43,13 @@ import com.mongodb.WriteConcern;
  * @author Mark Pollack
  * @author Oliver Gierke
  * @author Martin Baumgartner
+ * @author Thomas Darimont
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration
 public class MongoNamespaceTests {
 
-	@Autowired
-	private ApplicationContext ctx;
+	@Autowired private ApplicationContext ctx;
 
 	@Test
 	public void testMongoSingleton() throws Exception {
@@ -59,12 +61,46 @@ public class MongoNamespaceTests {
 
 	@Test
 	public void testMongoSingletonWithAttributes() throws Exception {
+
 		assertTrue(ctx.containsBean("defaultMongo"));
 		MongoFactoryBean mfb = (MongoFactoryBean) ctx.getBean("&defaultMongo");
 		String host = (String) getField(mfb, "host");
 		Integer port = (Integer) getField(mfb, "port");
 		assertEquals("localhost", host);
 		assertEquals(new Integer(27017), port);
+
+		MongoOptions options = (MongoOptions) getField(mfb, "mongoOptions");
+		assertFalse("By default socketFactory should not be a SSLSocketFactory",
+				options.getSocketFactory() instanceof SSLSocketFactory);
+	}
+
+	/**
+	 * @see DATAMONGO-764
+	 */
+	@Test
+	public void testMongoSingletonWithSslEnabled() throws Exception {
+
+		assertTrue(ctx.containsBean("mongoSsl"));
+		MongoFactoryBean mfb = (MongoFactoryBean) ctx.getBean("&mongoSsl");
+
+		MongoOptions options = (MongoOptions) getField(mfb, "mongoOptions");
+		assertTrue("socketFactory should be a SSLSocketFactory", options.getSocketFactory() instanceof SSLSocketFactory);
+	}
+
+	/**
+	 * @see DATAMONGO-764
+	 */
+	@Test
+	public void testMongoSingletonWithSslEnabledAndCustomSslSocketFactory() throws Exception {
+
+		assertTrue(ctx.containsBean("mongoSslWithCustomSslFactory"));
+		MongoFactoryBean mfb = (MongoFactoryBean) ctx.getBean("&mongoSslWithCustomSslFactory");
+
+		SSLSocketFactory customSslSocketFactory = ctx.getBean("customSslSocketFactory", SSLSocketFactory.class);
+		MongoOptions options = (MongoOptions) getField(mfb, "mongoOptions");
+
+		assertTrue("socketFactory should be a SSLSocketFactory", options.getSocketFactory() instanceof SSLSocketFactory);
+		assertSame(customSslSocketFactory, options.getSocketFactory());
 	}
 
 	@Test

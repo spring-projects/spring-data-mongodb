@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2011-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,16 +15,20 @@
  */
 package org.springframework.data.mongodb.core;
 
+import static org.hamcrest.CoreMatchers.*;
+import static org.junit.Assert.*;
+
+import javax.net.ssl.SSLSocketFactory;
+
 import org.junit.Test;
 
 import com.mongodb.MongoOptions;
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
 
 /**
  * Unit tests for {@link MongoOptionsFactoryBean}.
  * 
  * @author Oliver Gierke
+ * @author Mike Saavedra
  */
 public class MongoOptionsFactoryBeanUnitTests {
 
@@ -40,5 +44,20 @@ public class MongoOptionsFactoryBeanUnitTests {
 
 		MongoOptions options = bean.getObject();
 		assertThat(options.maxAutoConnectRetryTime, is(27L));
+	}
+
+	/**
+	 * @see DATAMONGO-764
+	 */
+	@Test
+	public void testSslConnection() {
+
+		MongoOptionsFactoryBean bean = new MongoOptionsFactoryBean();
+		bean.setSsl(true);
+		bean.afterPropertiesSet();
+
+		MongoOptions options = bean.getObject();
+		assertNotNull(options.getSocketFactory());
+		assertTrue(options.getSocketFactory() instanceof SSLSocketFactory);
 	}
 }
