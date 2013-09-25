@@ -117,23 +117,34 @@ public class ProjectionOperation extends ExposedFieldsAggregationOperationContex
 	/**
 	 * Excludes the given fields from the projection.
 	 * 
-	 * @param fields must not be {@literal null}.
+	 * @param fieldNames must not be {@literal null}.
 	 * @return
 	 */
-	public ProjectionOperation andExclude(String... fields) {
-		List<FieldProjection> excludeProjections = FieldProjection.from(Fields.fields(fields), false);
+	public ProjectionOperation andExclude(String... fieldNames) {
+
+		for (String fieldName : fieldNames) {
+			Assert
+					.isTrue(
+							Fields.UNDERSCORE_ID.equals(fieldName),
+							String
+									.format(
+											"Exclusion of field %s not allowed. Projections by the mongodb aggregation framework only support the exclusion of the %s field!",
+											fieldName, Fields.UNDERSCORE_ID));
+		}
+
+		List<FieldProjection> excludeProjections = FieldProjection.from(Fields.fields(fieldNames), false);
 		return new ProjectionOperation(this.projections, excludeProjections);
 	}
 
 	/**
 	 * Includes the given fields into the projection.
 	 * 
-	 * @param fields must not be {@literal null}.
+	 * @param fieldNames must not be {@literal null}.
 	 * @return
 	 */
-	public ProjectionOperation andInclude(String... fields) {
+	public ProjectionOperation andInclude(String... fieldNames) {
 
-		List<FieldProjection> projections = FieldProjection.from(Fields.fields(fields), true);
+		List<FieldProjection> projections = FieldProjection.from(Fields.fields(fieldNames), true);
 		return new ProjectionOperation(this.projections, projections);
 	}
 
@@ -362,6 +373,7 @@ public class ProjectionOperation extends ExposedFieldsAggregationOperationContex
 		 * A {@link FieldProjection} to map a result of a previous {@link AggregationOperation} to a new field.
 		 * 
 		 * @author Oliver Gierke
+		 * @author Thomas Darimont
 		 */
 		static class FieldProjection extends Projection {
 
