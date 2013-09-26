@@ -451,6 +451,13 @@ This controls if the driver is allowed to read from secondaries or slaves.  Defa
 				]]></xsd:documentation>
 			</xsd:annotation>
 		</xsd:attribute>				
+		<xsd:attribute name="ssl" type="xsd:boolean">
+			<xsd:annotation>
+				<xsd:documentation><![CDATA[
+This controls if the driver should us an SSL connection.  Defaults to false.
+				]]></xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>				
 	</xsd:complexType>
 
 	<xsd:group name="beanElementGroup">
