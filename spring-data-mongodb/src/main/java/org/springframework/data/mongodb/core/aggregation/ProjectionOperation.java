@@ -60,7 +60,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 	 * @param fields must not be {@literal null}.
 	 */
 	public ProjectionOperation(Fields fields) {
-		this(NONE, ProjectionOperationBuilder.FieldProjection.from(fields, true));
+		this(NONE, ProjectionOperationBuilder.FieldProjection.from(fields));
 	}
 
 	/**
@@ -117,23 +117,34 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 	/**
 	 * Excludes the given fields from the projection.
 	 * 
-	 * @param fields must not be {@literal null}.
+	 * @param fieldNames must not be {@literal null}.
 	 * @return
 	 */
-	public ProjectionOperation andExclude(String... fields) {
-		List<FieldProjection> excludeProjections = FieldProjection.from(Fields.fields(fields), false);
+	public ProjectionOperation andExclude(String... fieldNames) {
+
+		for (String fieldName : fieldNames) {
+			Assert
+					.isTrue(
+							Fields.UNDERSCORE_ID.equals(fieldName),
+							String
+									.format(
+											"Exclusion of field %s not allowed. Projections by the mongodb aggregation framework only support the exclusion of the %s field!",
+											fieldName, Fields.UNDERSCORE_ID));
+		}
+
+		List<FieldProjection> excludeProjections = FieldProjection.from(Fields.fields(fieldNames), false);
 		return new ProjectionOperation(this.projections, excludeProjections);
 	}
 
 	/**
 	 * Includes the given fields into the projection.
 	 * 
-	 * @param fields must not be {@literal null}.
+	 * @param fieldNames must not be {@literal null}.
 	 * @return
 	 */
-	public ProjectionOperation andInclude(String... fields) {
+	public ProjectionOperation andInclude(String... fieldNames) {
 
-		List<FieldProjection> projections = FieldProjection.from(Fields.fields(fields), true);
+		List<FieldProjection> projections = FieldProjection.from(Fields.fields(fieldNames), true);
 		return new ProjectionOperation(this.projections, projections);
 	}
 
@@ -388,30 +399,33 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 			}
 
 			/**
+			 * Factory method to easily create {@link FieldProjection}s for the given {@link Fields}. Fields are projected as
+			 * references with their given name.
+			 * <p>
+			 * A field {@code foo} will be projected as: {@code foo: '$foo'}
+			 * <p>
+			 * 
+			 * @param fields the {@link Fields} to in- or exclude, must not be {@literal null}.
+			 * @return
+			 */
+			public static List<? extends Projection> from(Fields fields) {
+				return from(fields, null);
+			}
+
+			/**
 			 * Factory method to easily create {@link FieldProjection}s for the given {@link Fields}.
 			 * 
 			 * @param fields the {@link Fields} to in- or exclude, must not be {@literal null}.
-			 * @param include whether to include or exclude the fields.
+			 * @param value to use for the given field.
 			 * @return
 			 */
-			public static List<FieldProjection> from(Fields fields, boolean include) {
+			public static List<FieldProjection> from(Fields fields, Object value) {
 
 				Assert.notNull(fields, "Fields must not be null!");
 				List<FieldProjection> projections = new ArrayList<FieldProjection>();
 
 				for (Field field : fields) {
-
-					if (!include) {
-						if (!Fields.UNDERSCORE_ID.equals(field.getName())) {
-							throw new IllegalArgumentException(
-									String
-											.format(
-													"Exclusion of field %s not allowed. Projections by the mongodb aggregation framework only support the exclusion of the %s field!",
-													field.getName(), Fields.UNDERSCORE_ID));
-						}
-					}
-
-					projections.add(new FieldProjection(field, include ? null : 0));
+					projections.add(new FieldProjection(field, value));
 				}
 
 				return projections;
@@ -423,13 +437,32 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 			 */
 			@Override
 			public DBObject toDBObject(AggregationOperationContext context) {
+				return new BasicDBObject(field.getName(), renderFieldValue(context));
+			}
 
-				if (value != null) {
-					return new BasicDBObject(field.getName(), value);
+			private Object renderFieldValue(AggregationOperationContext context) {
+
+				// implicit reference or explicit include?
+				if (value == null || Boolean.TRUE.equals(value)) {
+
+					// check whether referenced field exists in the context
+					FieldReference reference = context.getReference(field.getTarget());
+
+					if (field.getName().equals(field.getTarget())) {
+
+						// render field as included
+						return 1;
+					}
+
+					// render field reference
+					return reference.toString();
+				} else if (Boolean.FALSE.equals(value)) {
+
+					// render field as excluded
+					return 0;
 				}
 
-				FieldReference reference = context.getReference(field.getTarget());
-				return new BasicDBObject(field.getName(), reference.toString());
+				return value;
 			}
 		}
 

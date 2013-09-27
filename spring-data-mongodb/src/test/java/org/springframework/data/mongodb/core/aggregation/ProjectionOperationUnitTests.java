@@ -66,7 +66,7 @@ public class ProjectionOperationUnitTests {
 		DBObject dbObject = operation.toDBObject(Aggregation.DEFAULT_CONTEXT);
 		DBObject projectClause = DBObjectUtils.getAsDBObject(dbObject, PROJECT);
 
-		assertThat(projectClause.get("foo"), is((Object) "$foo"));
+		assertThat((Integer) projectClause.get("foo"), is(1));
 		assertThat(projectClause.get("bar"), is((Object) "$foobar"));
 	}
 
@@ -197,12 +197,31 @@ public class ProjectionOperationUnitTests {
 	 * @see DATAMONGO-758
 	 */
 	@Test
-	public void excludeShouldExclusionOfUnderscoreId() {
+	public void excludeShouldAllowExclusionOfUnderscoreId() {
 
 		ProjectionOperation projectionOp = new ProjectionOperation().andExclude(Fields.UNDERSCORE_ID);
 		DBObject dbObject = projectionOp.toDBObject(Aggregation.DEFAULT_CONTEXT);
 		DBObject projectClause = DBObjectUtils.getAsDBObject(dbObject, PROJECT);
 		assertThat((Integer) projectClause.get(Fields.UNDERSCORE_ID), is(0));
+	}
+
+	/**
+	 * @see DATAMONGO-757
+	 */
+	@Test
+	public void usesImplictAndExplicitFieldAliasAndIncludeExclude() {
+
+		ProjectionOperation operation = Aggregation.project("foo").and("foobar").as("bar").andInclude("inc1", "inc2")
+				.andExclude("_id");
+
+		DBObject dbObject = operation.toDBObject(Aggregation.DEFAULT_CONTEXT);
+		DBObject projectClause = DBObjectUtils.getAsDBObject(dbObject, PROJECT);
+
+		assertThat((Integer) projectClause.get("foo"), is(1)); // implicit
+		assertThat(projectClause.get("bar"), is((Object) "$foobar")); // explicit
+		assertThat((Integer) projectClause.get("inc1"), is(1)); // include shortcut
+		assertThat((Integer) projectClause.get("inc2"), is(1));
+		assertThat((Integer) projectClause.get("_id"), is(0));
 	}
 
 	@Test(expected = IllegalArgumentException.class)
