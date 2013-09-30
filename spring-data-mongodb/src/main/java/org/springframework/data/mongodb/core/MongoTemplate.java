@@ -117,7 +117,7 @@ import com.mongodb.util.JSONParseException;
  * @author Thomas Risberg
  * @author Graeme Rocher
  * @author Mark Pollack
- * @author Oliver Gierke^^                           ^
+ * @author Oliver Gierke
  * @author Amol Nayak
  * @author Patryk Wasik
  * @author Tobias Trelle
