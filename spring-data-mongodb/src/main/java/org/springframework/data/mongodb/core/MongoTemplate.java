@@ -117,7 +117,7 @@ import com.mongodb.util.JSONParseException;
  * @author Thomas Risberg
  * @author Graeme Rocher
  * @author Mark Pollack
- * @author Oliver Gierke
+ * @author Oliver Gierke^^                           ^
  * @author Amol Nayak
  * @author Patryk Wasik
  * @author Tobias Trelle
@@ -853,6 +853,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 		DBObject dbDoc = new BasicDBObject();
 
+        // TODO read annotation method , and call the method of the instance
+        // (inject value in parameter DbObject when needed...
 		maybeEmitEvent(new BeforeConvertEvent<T>(objectToSave));
 
 		if (!(objectToSave instanceof String)) {
