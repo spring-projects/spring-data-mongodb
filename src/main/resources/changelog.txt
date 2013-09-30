@@ -1,6 +1,16 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 1.2.4.GA (2013-09-30)
+----------------------------------------
+** Bug
+    * [DATAMONGO-445] - GeoNear Query Doesn't Work with Pageable
+    * [DATAMONGO-602] - Querying with $in operator on the id field of type BigInteger returns zero results
+    * [DATAMONGO-737] - Extra MongoSynchronizations cause TransactionSynchronizationManager to throw IllegalStateException on transaction complete
+** Task
+    * [DATAMONGO-742] - Document CDI integration in reference documentation
+    * [DATAMONGO-755] - Release 1.2.4
+
 Changes in version 1.2.3.GA (2013-07-24)
 ----------------------------------------
 ** Task
