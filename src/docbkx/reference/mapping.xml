@@ -369,7 +369,11 @@ public class Person {
           Spring Framework . Within the mapping framework it can be applied to
           constructor arguments. This lets you use a Spring Expression
           Language statement to transform a key's value retrieved in the
-          database before it is used to construct a domain object.</para>
+          database before it is used to construct a domain object. In order to
+          reference a property of a given document one has to use expressions
+          like: <code>@Value("#root.myProperty")</code> where
+          <literal>root</literal> refers to the root of the given
+          document.</para>
         </listitem>
 
         <listitem>
@@ -444,7 +448,75 @@ public class Person&lt;T extends Address&gt; {
 // other getters/setters ommitted
 </programlisting>
 
-      <para></para>
+      <para/>
+    </section>
+
+    <section id="mapping-custom-object-construction">
+      <title>Customized Object Construction</title>
+
+      <para>The Mapping Subsystem allows the customization of the object
+      construction by annotating a constructor with the
+      <literal>@PersistenceConstructor</literal> annotation. The values to be
+      used for the constructor parameters are resolved in the following
+      way:</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>If a parameter is annotated with the <code>@Value</code>
+          annotation, the given expression is evaluated and the result is used
+          as the parameter value.</para>
+        </listitem>
+
+        <listitem>
+          <para>If the Java type has a property whose name matches the given
+          field of the input document, then it's property information is used
+          to select the appropriate constructor parameter to pass the input
+          field value to. This works only if the parameter name information is
+          present in the java .class files which can be achieved by compiling
+          the source with debug information or using the new
+          <literal>-parameters</literal> command-line switch for javac in Java
+          8.</para>
+        </listitem>
+
+        <listitem>
+          <para>Otherwise an <classname>MappingException</classname> will be
+          thrown indicating that the given constructor parameter could not be
+          bound.</para>
+        </listitem>
+      </itemizedlist>
+
+      <programlisting language="java">class OrderItem {
+  
+  @Id String id;
+  int quantity;
+  double unitPrice;
+
+  OrderItem(String id, @Value("#root.qty ?: 0") int quantity, double unitPrice) {
+    this.id = id;
+    this.quantity = quantity;
+    this.unitPrice = unitPrice;
+  }
+
+  // getters/setters ommitted
+}
+
+DBObject input = new BasicDBObject("id", "4711");
+input.put("unitPrice", 2.5);
+input.put("qty",5);
+OrderItem item = converter.read(OrderItem.class, input);</programlisting>
+
+      <note>
+        <para>The SpEL expression in the <literal>@Value</literal> annotation
+        of the <literal>quantity</literal> parameter falls back to the value
+        <literal>0</literal> if the given property path cannot be
+        resolved.</para>
+      </note>
+
+      <para>Additional examples for using the
+      <classname>@PersistenceConstructor</classname> annotation can be found
+      in the <ulink
+      url="https://github.com/spring-projects/spring-data-mongodb/blob/master/spring-data-mongodb/src/test/java/org/springframework/data/mongodb/core/convert/MappingMongoConverterUnitTests.java">MappingMongoConverterUnitTests</ulink>
+      test suite.</para>
     </section>
 
     <section id="mapping-usage-indexes">
@@ -608,7 +680,7 @@ public class Person {
 
 }</programlisting>
 
-      <para></para>
+      <para/>
     </section>
   </section>
 </chapter>
