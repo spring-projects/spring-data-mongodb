@@ -5,12 +5,12 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 /**
- * Call after the document is converted from datastore
+ *
+ * Call after the document is loaded from datastore
  *
  * @author Regis Leray
- *
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
-public @interface OnAfterLoad {
+public @interface OnAfterDelete {
 }

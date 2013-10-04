@@ -74,14 +74,7 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
-import org.springframework.data.mongodb.core.mapping.event.AfterConvertEvent;
-import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
-import org.springframework.data.mongodb.core.mapping.event.AfterLoadEvent;
-import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
-import org.springframework.data.mongodb.core.mapping.event.BeforeConvertEvent;
-import org.springframework.data.mongodb.core.mapping.event.BeforeDeleteEvent;
-import org.springframework.data.mongodb.core.mapping.event.BeforeSaveEvent;
-import org.springframework.data.mongodb.core.mapping.event.MongoMappingEvent;
+import org.springframework.data.mongodb.core.mapping.event.*;
 import org.springframework.data.mongodb.core.mapreduce.GroupBy;
 import org.springframework.data.mongodb.core.mapreduce.GroupByResults;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
@@ -156,6 +149,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	private ApplicationEventPublisher eventPublisher;
 	private ResourceLoader resourceLoader;
 	private MongoPersistentEntityIndexCreator indexCreator;
+    private AnnotationMethodFinder annotationMethodFinder;
 
 	/**
 	 * Constructor used for a basic template configuration
@@ -213,6 +207,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				((ApplicationEventPublisherAware) mappingContext).setApplicationEventPublisher(eventPublisher);
 			}
 		}
+
+        this.annotationMethodFinder = new CacheAnnotationMethodFinder();
 	}
 
 	/**
@@ -703,16 +699,24 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		BasicDBObject dbDoc = new BasicDBObject();
 
 		maybeEmitEvent(new BeforeConvertEvent<T>(objectToSave));
+        maybeCallAnnotation(objectToSave, OnBeforeConvert.class);
+
 		writer.write(objectToSave, dbDoc);
 
 		maybeEmitEvent(new BeforeSaveEvent<T>(objectToSave, dbDoc));
+        maybeCallAnnotation(objectToSave,new Object[]{dbDoc}, OnBeforeSave.class);
+
 		Object id = insertDBObject(collectionName, dbDoc, objectToSave.getClass());
 
 		populateIdIfNecessary(objectToSave, id);
 		maybeEmitEvent(new AfterSaveEvent<T>(objectToSave, dbDoc));
+        maybeCallAnnotation(objectToSave,new Object[]{dbDoc}, OnAfterSave.class);
 	}
 
-	private void initializeVersionProperty(Object entity) {
+
+
+
+    private void initializeVersionProperty(Object entity) {
 
 		MongoPersistentEntity<?> mongoPersistentEntity = getPersistentEntity(entity.getClass());
 
@@ -772,9 +776,13 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			BasicDBObject dbDoc = new BasicDBObject();
 
 			maybeEmitEvent(new BeforeConvertEvent<T>(o));
+            maybeCallAnnotation(o, OnBeforeConvert.class);
+
 			writer.write(o, dbDoc);
 
 			maybeEmitEvent(new BeforeSaveEvent<T>(o, dbDoc));
+            maybeCallAnnotation(o, new Object[]{dbDoc}, OnBeforeSave.class);
+
 			dbObjectList.add(dbDoc);
 		}
 		List<ObjectId> ids = insertDBObjectList(collectionName, dbObjectList);
@@ -783,6 +791,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			if (i < ids.size()) {
 				populateIdIfNecessary(obj, ids.get(i));
 				maybeEmitEvent(new AfterSaveEvent<T>(obj, dbObjectList.get(i)));
+                maybeCallAnnotation(obj, new Object[]{dbObjectList.get(i)}, OnAfterSave.class);
 			}
 			i++;
 		}
@@ -837,13 +846,18 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			BasicDBObject dbObject = new BasicDBObject();
 
 			maybeEmitEvent(new BeforeConvertEvent<T>(objectToSave));
+            maybeCallAnnotation(objectToSave, OnBeforeConvert.class);
+
 			this.mongoConverter.write(objectToSave, dbObject);
 
 			maybeEmitEvent(new BeforeSaveEvent<T>(objectToSave, dbObject));
+            maybeCallAnnotation(objectToSave, new Object[]{dbObject}, OnBeforeSave.class);
+
 			Update update = Update.fromDBObject(dbObject, ID_FIELD);
 
 			doUpdate(collectionName, query, update, objectToSave.getClass(), false, false);
 			maybeEmitEvent(new AfterSaveEvent<T>(objectToSave, dbObject));
+            maybeCallAnnotation(objectToSave, new Object[]{dbObject}, OnAfterSave.class);
 		}
 	}
 
@@ -853,9 +867,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 		DBObject dbDoc = new BasicDBObject();
 
-        // TODO read annotation method , and call the method of the instance
-        // (inject value in parameter DbObject when needed...
-		maybeEmitEvent(new BeforeConvertEvent<T>(objectToSave));
+        maybeEmitEvent(new BeforeConvertEvent<T>(objectToSave));
+        maybeCallAnnotation(objectToSave, OnBeforeConvert.class);
 
 		if (!(objectToSave instanceof String)) {
 			writer.write(objectToSave, dbDoc);
@@ -868,10 +881,12 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		}
 
 		maybeEmitEvent(new BeforeSaveEvent<T>(objectToSave, dbDoc));
+        maybeCallAnnotation(objectToSave, new Object[]{dbDoc}, OnBeforeSave.class);
 		Object id = saveDBObject(collectionName, dbDoc, objectToSave.getClass());
 
 		populateIdIfNecessary(objectToSave, id);
 		maybeEmitEvent(new AfterSaveEvent<T>(objectToSave, dbDoc));
+        maybeCallAnnotation(objectToSave, new Object[]{dbDoc}, OnAfterSave.class);
 	}
 
 	protected Object insertDBObject(final String collectionName, final DBObject dbDoc, final Class<?> entityClass) {
@@ -1105,6 +1120,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			public Void doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 
 				maybeEmitEvent(new BeforeDeleteEvent<T>(queryObject, entityClass));
+                maybeCallAnnotation(queryObject, OnBeforeDelete.class);
 
 				DBObject dboq = queryMapper.getMappedObject(queryObject, entity);
 
@@ -1121,6 +1137,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				handleAnyWriteResultErrors(wr, dboq, MongoActionOperation.REMOVE);
 
 				maybeEmitEvent(new AfterDeleteEvent<T>(queryObject, entityClass));
+                maybeCallAnnotation(queryObject, OnAfterDelete.class);
 
 				return null;
 			}
@@ -1394,6 +1411,14 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			eventPublisher.publishEvent(event);
 		}
 	}
+
+    private <T> void maybeCallAnnotation(T objectToSave, Class<?> annotation) {
+        annotationMethodFinder.executeMethodAnnotatedWith(objectToSave, new Object[0], annotation);
+    }
+
+    private <T> void maybeCallAnnotation(T objectToSave, Object[] args, Class<?> annotation) {
+        annotationMethodFinder.executeMethodAnnotatedWith(objectToSave, args, annotation);
+    }
 
 	/**
 	 * Create the specified collection using the provided options
@@ -1964,10 +1989,12 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		public T doWith(DBObject object) {
 			if (null != object) {
 				maybeEmitEvent(new AfterLoadEvent<T>(object, type));
+                maybeCallAnnotation(object, OnAfterLoad.class);
 			}
 			T source = reader.read(type, object);
 			if (null != source) {
 				maybeEmitEvent(new AfterConvertEvent<T>(object, source));
+                maybeCallAnnotation(object, OnAfterConvert.class);
 			}
 			return source;
 		}
