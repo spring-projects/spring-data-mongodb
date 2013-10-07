@@ -27,7 +27,9 @@ import java.lang.reflect.Method;
 import java.util.List;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -55,16 +57,18 @@ import org.springframework.data.util.TypeInformation;
  * Unit test for {@link MongoQueryCreator}.
  * 
  * @author Oliver Gierke
+ * @author Thomas Darimont
  */
 @RunWith(MockitoJUnitRunner.class)
 public class MongoQueryCreatorUnitTests {
 
 	Method findByFirstname, findByFirstnameAndFriend, findByFirstnameNotNull;
 
-	@Mock
-	MongoConverter converter;
+	@Mock MongoConverter converter;
 
 	MappingContext<?, MongoPersistentProperty> context;
+
+	@Rule public ExpectedException expection = ExpectedException.none();
 
 	@Before
 	public void setUp() throws SecurityException, NoSuchMethodException {
@@ -310,6 +314,99 @@ public class MongoQueryCreatorUnitTests {
 		assertThat(query, is(query));
 	}
 
+	/**
+	 * @see DATAMONGO-770
+	 */
+	@Test
+	public void createsQueryWithFindByIgnoreCaseCorrectly() {
+
+		PartTree tree = new PartTree("findByfirstNameIgnoreCase", Person.class);
+		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "dave"), context);
+
+		Query query = creator.createQuery();
+		assertThat(query, is(query(where("firstName").regex("^dave$", "i"))));
+	}
+
+	/**
+	 * @see DATAMONGO-770
+	 */
+	@Test
+	public void createsQueryWithFindByNotIgnoreCaseCorrectly() {
+
+		PartTree tree = new PartTree("findByFirstNameNotIgnoreCase", Person.class);
+		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "dave"), context);
+
+		Query query = creator.createQuery();
+		assertThat(query.toString(), is(query(where("firstName").not().regex("^dave$", "i")).toString()));
+	}
+
+	/**
+	 * @see DATAMONGO-770
+	 */
+	@Test
+	public void createsQueryWithFindByStartingWithIgnoreCaseCorrectly() {
+
+		PartTree tree = new PartTree("findByFirstNameStartingWithIgnoreCase", Person.class);
+		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "dave"), context);
+
+		Query query = creator.createQuery();
+		assertThat(query, is(query(where("firstName").regex("^dave", "i"))));
+	}
+
+	/**
+	 * @see DATAMONGO-770
+	 */
+	@Test
+	public void createsQueryWithFindByEndingWithIgnoreCaseCorrectly() {
+
+		PartTree tree = new PartTree("findByFirstNameEndingWithIgnoreCase", Person.class);
+		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "dave"), context);
+
+		Query query = creator.createQuery();
+		assertThat(query, is(query(where("firstName").regex("dave$", "i"))));
+	}
+
+	/**
+	 * @see DATAMONGO-770
+	 */
+	@Test
+	public void createsQueryWithFindByContainingIgnoreCaseCorrectly() {
+
+		PartTree tree = new PartTree("findByFirstNameContainingIgnoreCase", Person.class);
+		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "dave"), context);
+
+		Query query = creator.createQuery();
+		assertThat(query, is(query(where("firstName").regex(".*dave.*", "i"))));
+	}
+
+	/**
+	 * @see DATAMONGO-770
+	 */
+	@Test
+	public void shouldThrowExceptionForQueryWithFindByIgnoreCaseOnNonStringProperty() {
+
+		expection.expect(IllegalArgumentException.class);
+		expection.expectMessage("must be of type String");
+
+		PartTree tree = new PartTree("findByFirstNameAndAgeIgnoreCase", Person.class);
+		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "foo", 42), context);
+
+		creator.createQuery();
+	}
+
+	/**
+	 * @see DATAMONGO-770
+	 */
+	@Test
+	public void shouldOnlyGenerateLikeExpressionsForStringPropertiesIfAllIgnoreCase() {
+
+		PartTree tree = new PartTree("findByFirstNameAndAgeAllIgnoreCase", Person.class);
+		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "dave", 42), context);
+
+		Query query = creator.createQuery();
+		assertThat(query, is(query(where("firstName").regex("^dave$", "i").and("age").is(42))));
+	}
+
 	interface PersonRepository extends Repository<Person, Long> {
 
 		List<Person> findByLocationNearAndFirstname(Point location, Distance maxDistance, String firstname);
@@ -317,10 +414,8 @@ public class MongoQueryCreatorUnitTests {
 
 	class User {
 
-		@Field("foo")
-		String username;
+		@Field("foo") String username;
 
-		@DBRef
-		User creator;
+		@DBRef User creator;
 	}
 }

@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.repository.query;
 
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -35,6 +36,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.query.ConvertingParameterAccessor.PotentiallyConvertingIterator;
 import org.springframework.data.repository.query.parser.AbstractQueryCreator;
 import org.springframework.data.repository.query.parser.Part;
+import org.springframework.data.repository.query.parser.Part.IgnoreCaseType;
 import org.springframework.data.repository.query.parser.Part.Type;
 import org.springframework.data.repository.query.parser.PartTree;
 import org.springframework.util.Assert;
@@ -43,6 +45,7 @@ import org.springframework.util.Assert;
  * Custom query creator to create Mongo criterias.
  * 
  * @author Oliver Gierke
+ * @author Thomas Darimont
  */
 class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 
@@ -99,7 +102,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 
 		PersistentPropertyPath<MongoPersistentProperty> path = context.getPersistentPropertyPath(part.getProperty());
 		MongoPersistentProperty property = path.getLeafProperty();
-		Criteria criteria = from(part.getType(), property,
+		Criteria criteria = from(part, property,
 				where(path.toDotPath(MongoPersistentProperty.PropertyToFieldNameConverter.INSTANCE)),
 				(PotentiallyConvertingIterator) iterator);
 
@@ -120,7 +123,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 		PersistentPropertyPath<MongoPersistentProperty> path = context.getPersistentPropertyPath(part.getProperty());
 		MongoPersistentProperty property = path.getLeafProperty();
 
-		return from(part.getType(), property,
+		return from(part, property,
 				base.and(path.toDotPath(MongoPersistentProperty.PropertyToFieldNameConverter.INSTANCE)),
 				(PotentiallyConvertingIterator) iterator);
 	}
@@ -165,8 +168,10 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 	 * @param parameters
 	 * @return
 	 */
-	private Criteria from(Type type, MongoPersistentProperty property, Criteria criteria,
+	private Criteria from(Part part, MongoPersistentProperty property, Criteria criteria,
 			PotentiallyConvertingIterator parameters) {
+
+		Type type = part.getType();
 
 		switch (type) {
 			case AFTER:
@@ -193,8 +198,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 			case STARTING_WITH:
 			case ENDING_WITH:
 			case CONTAINING:
-				String value = parameters.next().toString();
-				return criteria.regex(toLikeRegex(value, type));
+				return addAppropriateLikeRegexTo(criteria, part, parameters.next().toString());
 			case REGEX:
 				return criteria.regex(parameters.next().toString());
 			case EXISTS:
@@ -220,17 +224,101 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 					criteria.maxDistance(distance.getNormalizedValue());
 				}
 				return criteria;
-
 			case WITHIN:
+
 				Object parameter = parameters.next();
 				return criteria.within((Shape) parameter);
 			case SIMPLE_PROPERTY:
-				return criteria.is(parameters.nextConverted(property));
+
+				return isSimpleComparisionPossible(part) ? criteria.is(parameters.nextConverted(property))
+						: createLikeRegexCriteriaOrThrow(part, property, criteria, parameters, false);
+
 			case NEGATING_SIMPLE_PROPERTY:
-				return criteria.ne(parameters.nextConverted(property));
+
+				return isSimpleComparisionPossible(part) ? criteria.ne(parameters.nextConverted(property))
+						: createLikeRegexCriteriaOrThrow(part, property, criteria, parameters, true);
 			default:
 				throw new IllegalArgumentException("Unsupported keyword!");
 		}
+	}
+
+	private boolean isSimpleComparisionPossible(Part part) {
+
+		switch (part.shouldIgnoreCase()) {
+			case NEVER:
+				return true;
+			case WHEN_POSSIBLE:
+				return part.getProperty().getType() != String.class;
+			case ALWAYS:
+				return false;
+			default:
+				return true;
+		}
+	}
+
+	/**
+	 * Creates and extends the given criteria with a like-regex if necessary.
+	 * 
+	 * @param part
+	 * @param property
+	 * @param criteria
+	 * @param parameters
+	 * @param shouldNegateExpression
+	 * @return the criteria extended with the like-regex.
+	 */
+	private Criteria createLikeRegexCriteriaOrThrow(Part part, MongoPersistentProperty property, Criteria criteria,
+			PotentiallyConvertingIterator parameters, boolean shouldNegateExpression) {
+
+		switch (part.shouldIgnoreCase()) {
+
+			case ALWAYS:
+				if (part.getProperty().getType() != String.class) {
+					throw new IllegalArgumentException(String.format("part %s must be of type String but was %s",
+							part.getProperty(), part.getType()));
+				}
+				// fall-through
+
+			case WHEN_POSSIBLE:
+				if (shouldNegateExpression) {
+					criteria = criteria.not();
+				}
+				return addAppropriateLikeRegexTo(criteria, part, parameters.nextConverted(property).toString());
+
+			case NEVER:
+				// intentional no-op
+		}
+
+		throw new IllegalArgumentException(String.format("part.shouldCaseIgnore must be one of %s, but was %s",
+				Arrays.asList(IgnoreCaseType.ALWAYS, IgnoreCaseType.WHEN_POSSIBLE), part.shouldIgnoreCase()));
+	}
+
+	/**
+	 * Creates an appropriate like-regex and appends it to the given criteria.
+	 * 
+	 * @param criteria
+	 * @param part
+	 * @param value
+	 * @return the criteria extended with the regex.
+	 */
+	private Criteria addAppropriateLikeRegexTo(Criteria criteria, Part part, String value) {
+
+		return criteria.regex(toLikeRegex(value, part), toRegexOptions(part));
+	}
+
+	/**
+	 * @param part
+	 * @return the regex options or {@literal null}.
+	 */
+	private String toRegexOptions(Part part) {
+
+		String regexOptions = null;
+		switch (part.shouldIgnoreCase()) {
+			case WHEN_POSSIBLE:
+			case ALWAYS:
+				regexOptions = "i";
+			case NEVER:
+		}
+		return regexOptions;
 	}
 
 	/**
@@ -265,7 +353,9 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 		return new Object[] { next };
 	}
 
-	private String toLikeRegex(String source, Type type) {
+	private String toLikeRegex(String source, Part part) {
+
+		Type type = part.getType();
 
 		switch (type) {
 			case STARTING_WITH:
@@ -277,6 +367,9 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 			case CONTAINING:
 				source = "*" + source + "*";
 				break;
+			case SIMPLE_PROPERTY:
+			case NEGATING_SIMPLE_PROPERTY:
+				source = "^" + source + "$";
 			default:
 		}
 

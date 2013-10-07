@@ -36,6 +36,7 @@ import org.springframework.data.querydsl.QueryDslPredicateExecutor;
  * Sample repository managing {@link Person} entities.
  * 
  * @author Oliver Gierke
+ * @author Thomas Darimont
  */
 public interface PersonRepository extends MongoRepository<Person, String>, QueryDslPredicateExecutor<Person> {
 
@@ -218,4 +219,30 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	 */
 	@Query(value = "{ 'lastname' : ?0 }", count = true)
 	long someCountQuery(String lastname);
+
+	/**
+	 * @see DATAMONGO-770
+	 */
+	List<Person> findByFirstnameIgnoreCase(String firstName);
+
+	/**
+	 * @see DATAMONGO-770
+	 */
+	List<Person> findByFirstnameNotIgnoreCase(String firstName);
+
+	/**
+	 * @see DATAMONGO-770
+	 */
+	List<Person> findByFirstnameStartingWithIgnoreCase(String firstName);
+
+	/**
+	 * @see DATAMONGO-770
+	 */
+	List<Person> findByFirstnameEndingWithIgnoreCase(String firstName);
+
+	/**
+	 * @see DATAMONGO-770
+	 */
+	List<Person> findByFirstnameContainingIgnoreCase(String firstName);
+
 }
