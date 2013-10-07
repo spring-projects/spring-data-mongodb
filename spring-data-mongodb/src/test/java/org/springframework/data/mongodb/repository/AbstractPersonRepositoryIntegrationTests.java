@@ -680,4 +680,61 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(results.isLastPage(), is(true));
 		assertThat(results.getAverageDistance().getMetric(), is((Metric) Metrics.KILOMETERS));
 	}
+
+	/**
+	 * @see DATAMONGO-770
+	 */
+	@Test
+	public void findByFirstNameIgnoreCase() {
+
+		List<Person> result = repository.findByFirstnameIgnoreCase("dave");
+
+		assertThat(result.size(), is(1));
+		assertThat(result.get(0), is(dave));
+	}
+
+	/**
+	 * @see DATAMONGO-770
+	 */
+	@Test
+	public void findByFirstnameNotIgnoreCase() {
+
+		List<Person> result = repository.findByFirstnameNotIgnoreCase("dave");
+
+		assertThat(result.size(), is(6));
+		assertThat(result, not(hasItem(dave)));
+	}
+
+	/**
+	 * @see DATAMONGO-770
+	 */
+	@Test
+	public void findByFirstnameStartingWithIgnoreCase() {
+
+		List<Person> result = repository.findByFirstnameStartingWithIgnoreCase("da");
+		assertThat(result.size(), is(1));
+		assertThat(result.get(0), is(dave));
+	}
+
+	/**
+	 * @see DATAMONGO-770
+	 */
+	@Test
+	public void findByFirstnameEndingWithIgnoreCase() {
+
+		List<Person> result = repository.findByFirstnameEndingWithIgnoreCase("VE");
+		assertThat(result.size(), is(1));
+		assertThat(result.get(0), is(dave));
+	}
+
+	/**
+	 * @see DATAMONGO-770
+	 */
+	@Test
+	public void findByFirstnameContainingIgnoreCase() {
+
+		List<Person> result = repository.findByFirstnameContainingIgnoreCase("AV");
+		assertThat(result.size(), is(1));
+		assertThat(result.get(0), is(dave));
+	}
 }
