@@ -36,6 +36,7 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mysema.query.types.expr.BooleanOperation;
 import com.mysema.query.types.path.PathBuilder;
+import com.mysema.query.types.path.SimplePath;
 import com.mysema.query.types.path.StringPath;
 
 /**
@@ -46,8 +47,7 @@ import com.mysema.query.types.path.StringPath;
 @RunWith(MockitoJUnitRunner.class)
 public class SpringDataMongodbSerializerUnitTests {
 
-	@Mock
-	MongoDbFactory dbFactory;
+	@Mock MongoDbFactory dbFactory;
 	MongoConverter converter;
 	SpringDataMongodbSerializer serializer;
 
@@ -117,10 +117,23 @@ public class SpringDataMongodbSerializerUnitTests {
 		assertThat(result.get("_id"), is((Object) id));
 	}
 
+	/**
+	 * @see DATAMONGO-761
+	 */
+	@Test
+	public void looksUpKeyForNonPropertyPath() {
+
+		PathBuilder<Address> builder = new PathBuilder<Address>(Address.class, "address");
+		SimplePath<Object> firstElementPath = builder.getArray("foo", String[].class).get(0);
+		String path = serializer.getKeyForPath(firstElementPath, firstElementPath.getMetadata());
+
+		assertThat(path, is("0"));
+	}
+
 	class Address {
 		String id;
 		String street;
-		@Field("zip_code")
-		String zipCode;
+		@Field("zip_code") String zipCode;
+		@Field("bar") String[] foo;
 	}
 }
