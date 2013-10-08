@@ -385,7 +385,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 					if (!conversions.isSimpleType(propertyObj.getClass())) {
 						writePropertyInternal(propertyObj, dbo, prop);
 					} else {
-						writeSimpleInternal(propertyObj, dbo, prop.getFieldName());
+						writeSimpleInternal(propertyObj, dbo, prop);
 					}
 				}
 			}
@@ -410,26 +410,27 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			return;
 		}
 
-		String name = prop.getFieldName();
+		DBObjectAccessor accessor = new DBObjectAccessor(dbo);
+
 		TypeInformation<?> valueType = ClassTypeInformation.from(obj.getClass());
 		TypeInformation<?> type = prop.getTypeInformation();
 
 		if (valueType.isCollectionLike()) {
 			DBObject collectionInternal = createCollection(asCollection(obj), prop);
-			dbo.put(name, collectionInternal);
+			accessor.put(prop, collectionInternal);
 			return;
 		}
 
 		if (valueType.isMap()) {
 			DBObject mapDbObj = createMap((Map<Object, Object>) obj, prop);
-			dbo.put(name, mapDbObj);
+			accessor.put(prop, mapDbObj);
 			return;
 		}
 
 		if (prop.isDbReference()) {
 			DBRef dbRefObj = createDBRef(obj, prop.getDBRef());
 			if (null != dbRefObj) {
-				dbo.put(name, dbRefObj);
+				accessor.put(prop, dbRefObj);
 				return;
 			}
 		}
@@ -438,18 +439,20 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		Class<?> basicTargetType = conversions.getCustomWriteTarget(obj.getClass(), null);
 
 		if (basicTargetType != null) {
-			dbo.put(name, conversionService.convert(obj, basicTargetType));
+			accessor.put(prop, conversionService.convert(obj, basicTargetType));
 			return;
 		}
 
-		BasicDBObject propDbObj = new BasicDBObject();
+		Object existingValue = accessor.get(prop);
+		BasicDBObject propDbObj = existingValue instanceof BasicDBObject ? (BasicDBObject) existingValue
+				: new BasicDBObject();
 		addCustomTypeKeyIfNecessary(type, obj, propDbObj);
 
 		MongoPersistentEntity<?> entity = isSubtype(prop.getType(), obj.getClass()) ? mappingContext
 				.getPersistentEntity(obj.getClass()) : mappingContext.getPersistentEntity(type);
 
 		writeInternal(obj, propDbObj, entity);
-		dbo.put(name, propDbObj);
+		accessor.put(prop, propDbObj);
 	}
 
 	private boolean isSubtype(Class<?> left, Class<?> right) {
@@ -665,6 +668,11 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 */
 	private void writeSimpleInternal(Object value, DBObject dbObject, String key) {
 		dbObject.put(key, getPotentiallyConvertedSimpleWrite(value));
+	}
+
+	private void writeSimpleInternal(Object value, DBObject dbObject, MongoPersistentProperty property) {
+		DBObjectAccessor accessor = new DBObjectAccessor(dbObject);
+		accessor.put(property, getPotentiallyConvertedSimpleWrite(value));
 	}
 
 	/**
@@ -965,7 +973,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	private class MongoDbPropertyValueProvider implements PropertyValueProvider<MongoPersistentProperty> {
 
-		private final DBObject source;
+		private final DBObjectAccessor source;
 		private final SpELExpressionEvaluator evaluator;
 		private final Object parent;
 
@@ -978,7 +986,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			Assert.notNull(source);
 			Assert.notNull(evaluator);
 
-			this.source = source;
+			this.source = new DBObjectAccessor(source);
 			this.evaluator = evaluator;
 			this.parent = parent;
 		}
@@ -990,7 +998,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		public <T> T getPropertyValue(MongoPersistentProperty property) {
 
 			String expression = property.getSpelExpression();
-			Object value = expression != null ? evaluator.evaluate(expression) : source.get(property.getFieldName());
+			Object value = expression != null ? evaluator.evaluate(expression) : source.get(property);
 
 			if (value == null) {
 				return null;
@@ -1052,4 +1060,5 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			return (T) getPotentiallyConvertedSimpleRead(value, rawType);
 		}
 	}
+
 }

@@ -53,6 +53,9 @@ import org.springframework.data.mapping.PropertyPath;
 import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mapping.model.MappingInstantiationException;
 import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.core.DBObjectUtils;
+import org.springframework.data.mongodb.core.convert.DBObjectAccessorUnitTests.NestedType;
+import org.springframework.data.mongodb.core.convert.DBObjectAccessorUnitTests.ProjectingType;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
@@ -1423,6 +1426,29 @@ public class MappingMongoConverterUnitTests {
 
 		DBObject dbObject = new BasicDBObject("firstname", "Dave");
 		assertThat(converter.read(String.class, dbObject), is("{ \"firstname\" : \"Dave\"}"));
+	}
+
+	/**
+	 * @see DATAMONGO-766
+	 */
+	@Test
+	public void writesProjectingTypeCorrectly() {
+
+		NestedType nested = new NestedType();
+		nested.c = "C";
+
+		ProjectingType type = new ProjectingType();
+		type.name = "name";
+		type.foo = "bar";
+		type.a = nested;
+
+		BasicDBObject result = new BasicDBObject();
+		converter.write(type, result);
+
+		assertThat(result.get("name"), is((Object) "name"));
+		DBObject aValue = DBObjectUtils.getAsDBObject(result, "a");
+		assertThat(aValue.get("b"), is((Object) "bar"));
+		assertThat(aValue.get("c"), is((Object) "C"));
 	}
 
 	@Document
