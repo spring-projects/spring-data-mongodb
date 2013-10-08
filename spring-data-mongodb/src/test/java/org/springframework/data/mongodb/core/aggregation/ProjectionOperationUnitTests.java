@@ -25,6 +25,7 @@ import org.springframework.data.mongodb.core.DBObjectUtils;
 import org.springframework.data.mongodb.core.aggregation.ProjectionOperation.ProjectionOperationBuilder;
 
 import com.mongodb.BasicDBList;
+import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
 /**
@@ -228,6 +229,41 @@ public class ProjectionOperationUnitTests {
 	public void arithmenticProjectionOperationModByZeroException() {
 
 		new ProjectionOperation().and("a").mod(0);
+	}
+
+	/**
+	 * @see DATAMONGO-769
+	 */
+	@Test
+	public void allowArithmeticOperationsWithFieldReferences() {
+
+		ProjectionOperation operation = Aggregation.project() //
+				.and("foo").plus("bar").as("fooPlusBar") //
+				.and("foo").minus("bar").as("fooMinusBar") //
+				.and("foo").multiply("bar").as("fooMultiplyBar") //
+				.and("foo").divide("bar").as("fooDivideBar") //
+				.and("foo").mod("bar").as("fooModBar") //
+		;
+		DBObject dbObject = operation.toDBObject(Aggregation.DEFAULT_CONTEXT);
+		DBObject projectClause = DBObjectUtils.getAsDBObject(dbObject, PROJECT);
+
+		assertThat((BasicDBObject) projectClause.get("fooPlusBar"), is(new BasicDBObject("$add", dbList("$foo", "$bar"))));
+		assertThat((BasicDBObject) projectClause.get("fooMinusBar"),
+				is(new BasicDBObject("$subtract", dbList("$foo", "$bar"))));
+		assertThat((BasicDBObject) projectClause.get("fooMultiplyBar"),
+				is(new BasicDBObject("$multiply", dbList("$foo", "$bar"))));
+		assertThat((BasicDBObject) projectClause.get("fooDivideBar"), is(new BasicDBObject("$divide",
+				dbList("$foo", "$bar"))));
+		assertThat((BasicDBObject) projectClause.get("fooModBar"), is(new BasicDBObject("$mod", dbList("$foo", "$bar"))));
+	}
+
+	public static BasicDBList dbList(Object... items) {
+
+		BasicDBList list = new BasicDBList();
+		for (Object item : items) {
+			list.add(item);
+		}
+		return list;
 	}
 
 	private static DBObject exctractOperation(String field, DBObject fromProjectClause) {

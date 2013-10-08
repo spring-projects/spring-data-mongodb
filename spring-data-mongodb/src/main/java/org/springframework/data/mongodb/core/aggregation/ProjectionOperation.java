@@ -267,6 +267,18 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		}
 
 		/**
+		 * Generates an {@code $add} expression that adds the value of the given field to the previously mentioned field.
+		 * 
+		 * @param fieldReference
+		 * @return
+		 */
+		public ProjectionOperationBuilder plus(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return project("add", Fields.field(fieldReference));
+		}
+
+		/**
 		 * Generates an {@code $subtract} expression that subtracts the given number to the previously mentioned field.
 		 * 
 		 * @param number
@@ -279,6 +291,19 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		}
 
 		/**
+		 * Generates an {@code $subtract} expression that subtracts the value of the given field to the previously mentioned
+		 * field.
+		 * 
+		 * @param fieldReference
+		 * @return
+		 */
+		public ProjectionOperationBuilder minus(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return project("subtract", Fields.field(fieldReference));
+		}
+
+		/**
 		 * Generates an {@code $multiply} expression that multiplies the given number with the previously mentioned field.
 		 * 
 		 * @param number
@@ -288,6 +313,19 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 			Assert.notNull(number, "Number must not be null!");
 			return project("multiply", number);
+		}
+
+		/**
+		 * Generates an {@code $multiply} expression that multiplies the value of the given field with the previously
+		 * mentioned field.
+		 * 
+		 * @param fieldReference
+		 * @return
+		 */
+		public ProjectionOperationBuilder multiply(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return project("multiply", Fields.field(fieldReference));
 		}
 
 		/**
@@ -304,6 +342,19 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		}
 
 		/**
+		 * Generates an {@code $divide} expression that divides the value of the given field by the previously mentioned
+		 * field.
+		 * 
+		 * @param fieldReference
+		 * @return
+		 */
+		public ProjectionOperationBuilder divide(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return project("divide", Fields.field(fieldReference));
+		}
+
+		/**
 		 * Generates an {@code $mod} expression that divides the previously mentioned field by the given number and returns
 		 * the remainder.
 		 * 
@@ -315,6 +366,19 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 			Assert.notNull(number, "Number must not be null!");
 			Assert.isTrue(Math.abs(number.intValue()) != 0, "Number must not be zero!");
 			return project("mod", number);
+		}
+
+		/**
+		 * Generates an {@code $mod} expression that divides the value of the given field by the previously mentioned field
+		 * and returns the remainder.
+		 * 
+		 * @param fieldReference
+		 * @return
+		 */
+		public ProjectionOperationBuilder mod(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return project("mod", Fields.field(fieldReference));
 		}
 
 		/* (non-Javadoc)
