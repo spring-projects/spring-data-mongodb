@@ -28,6 +28,7 @@ import com.mongodb.DBObject;
 import com.mysema.query.mongodb.MongodbSerializer;
 import com.mysema.query.types.Path;
 import com.mysema.query.types.PathMetadata;
+import com.mysema.query.types.PathType;
 
 /**
  * Custom {@link MongodbSerializer} to take mapping information into account when building keys for constraints.
@@ -60,6 +61,10 @@ class SpringDataMongodbSerializer extends MongodbSerializer {
 	 */
 	@Override
 	protected String getKeyForPath(Path<?> expr, PathMetadata<?> metadata) {
+
+		if (!metadata.getPathType().equals(PathType.PROPERTY)) {
+			return super.getKeyForPath(expr, metadata);
+		}
 
 		Path<?> parent = metadata.getParent();
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(parent.getType());
