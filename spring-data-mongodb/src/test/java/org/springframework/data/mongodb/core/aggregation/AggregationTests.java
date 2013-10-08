@@ -440,6 +440,11 @@ public class AggregationTests {
 						.and("netPrice").multiply(2).as("netPriceMul2") //
 						.and("netPrice").divide(1.19).as("netPriceDiv119") //
 						.and("spaceUnits").mod(2).as("spaceUnitsMod2") //
+						.and("spaceUnits").plus("spaceUnits").as("spaceUnitsPlusSpaceUnits") //
+						.and("spaceUnits").minus("spaceUnits").as("spaceUnitsMinusSpaceUnits") //
+						.and("spaceUnits").multiply("spaceUnits").as("spaceUnitsMultiplySpaceUnits") //
+						.and("spaceUnits").divide("spaceUnits").as("spaceUnitsDivideSpaceUnits") //
+						.and("spaceUnits").mod("spaceUnits").as("spaceUnitsModSpaceUnits") //
 		);
 
 		AggregationResults<DBObject> result = mongoTemplate.aggregate(agg, DBObject.class);
@@ -453,6 +458,11 @@ public class AggregationTests {
 		assertThat((Double) resultList.get(0).get("netPriceMul2"), is(netPrice * 2));
 		assertThat((Double) resultList.get(0).get("netPriceDiv119"), is(netPrice / 1.19));
 		assertThat((Integer) resultList.get(0).get("spaceUnitsMod2"), is(spaceUnits % 2));
+		assertThat((Integer) resultList.get(0).get("spaceUnitsPlusSpaceUnits"), is(spaceUnits + spaceUnits));
+		assertThat((Integer) resultList.get(0).get("spaceUnitsMinusSpaceUnits"), is(spaceUnits - spaceUnits));
+		assertThat((Integer) resultList.get(0).get("spaceUnitsMultiplySpaceUnits"), is(spaceUnits * spaceUnits));
+		assertThat((Double) resultList.get(0).get("spaceUnitsDivideSpaceUnits"), is((double) (spaceUnits / spaceUnits)));
+		assertThat((Integer) resultList.get(0).get("spaceUnitsModSpaceUnits"), is(spaceUnits % spaceUnits));
 	}
 
 	/**
