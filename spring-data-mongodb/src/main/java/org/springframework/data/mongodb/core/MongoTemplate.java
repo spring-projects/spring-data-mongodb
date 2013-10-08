@@ -700,16 +700,35 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 		initializeVersionProperty(objectToSave);
 
-		BasicDBObject dbDoc = new BasicDBObject();
-
 		maybeEmitEvent(new BeforeConvertEvent<T>(objectToSave));
-		writer.write(objectToSave, dbDoc);
+
+		DBObject dbDoc = toDbObject(objectToSave, writer);
 
 		maybeEmitEvent(new BeforeSaveEvent<T>(objectToSave, dbDoc));
 		Object id = insertDBObject(collectionName, dbDoc, objectToSave.getClass());
 
 		populateIdIfNecessary(objectToSave, id);
 		maybeEmitEvent(new AfterSaveEvent<T>(objectToSave, dbDoc));
+	}
+
+	/**
+	 * @param objectToSave
+	 * @param writer
+	 * @return
+	 */
+	private <T> DBObject toDbObject(T objectToSave, MongoWriter<T> writer) {
+
+		if (!(objectToSave instanceof String)) {
+			DBObject dbDoc = new BasicDBObject();
+			writer.write(objectToSave, dbDoc);
+			return dbDoc;
+		} else {
+			try {
+				return (DBObject) JSON.parse((String) objectToSave);
+			} catch (JSONParseException e) {
+				throw new MappingException("Could not parse given String to save into a JSON document!", e);
+			}
+		}
 	}
 
 	private void initializeVersionProperty(Object entity) {
@@ -851,19 +870,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 		assertUpdateableIdIfNotSet(objectToSave);
 
-		DBObject dbDoc = new BasicDBObject();
-
 		maybeEmitEvent(new BeforeConvertEvent<T>(objectToSave));
 
-		if (!(objectToSave instanceof String)) {
-			writer.write(objectToSave, dbDoc);
-		} else {
-			try {
-				dbDoc = (DBObject) JSON.parse((String) objectToSave);
-			} catch (JSONParseException e) {
-				throw new MappingException("Could not parse given String to save into a JSON document!", e);
-			}
-		}
+		DBObject dbDoc = toDbObject(objectToSave, writer);
 
 		maybeEmitEvent(new BeforeSaveEvent<T>(objectToSave, dbDoc));
 		Object id = saveDBObject(collectionName, dbDoc, objectToSave.getClass());

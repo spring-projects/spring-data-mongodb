@@ -1996,6 +1996,24 @@ public class MongoTemplateTests {
 		assertThat(result.get(2).getClass(), is((Object) VerySpecialDoc.class));
 	}
 
+	/**
+	 * @see DATAMONGO-771
+	 */
+	@Test
+	public void allowInsertWithPlainJsonString() {
+
+		String id = "4711";
+		String value = "bubu";
+		String json = String.format("{_id:%s, field: '%s'}", id, value);
+
+		template.insert(json, "sample");
+		List<Sample> result = template.findAll(Sample.class);
+
+		assertThat(result.size(), is(1));
+		assertThat(result.get(0).id, is(id));
+		assertThat(result.get(0).field, is(value));
+	}
+
 	static interface Model {
 		String value();
 
