@@ -26,7 +26,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.mongodb.MongoDbFactory;
-import org.springframework.data.mongodb.core.DBObjectUtils;
+import org.springframework.data.mongodb.core.DBObjectTestUtils;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.Update;
 
@@ -62,8 +62,8 @@ public class UpdateMapperUnitTests {
 		DBObject mappedObject = mapper.getMappedObject(update.getUpdateObject(),
 				context.getPersistentEntity(ParentClass.class));
 
-		DBObject push = DBObjectUtils.getAsDBObject(mappedObject, "$push");
-		DBObject list = DBObjectUtils.getAsDBObject(push, "list");
+		DBObject push = DBObjectTestUtils.getAsDBObject(mappedObject, "$push");
+		DBObject list = DBObjectTestUtils.getAsDBObject(push, "list");
 
 		assertThat(list.get("_class"), is((Object) ConcreteChildClass.class.getName()));
 	}

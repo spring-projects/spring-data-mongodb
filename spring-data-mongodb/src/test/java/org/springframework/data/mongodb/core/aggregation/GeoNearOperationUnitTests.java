@@ -19,7 +19,7 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
 import org.junit.Test;
-import org.springframework.data.mongodb.core.DBObjectUtils;
+import org.springframework.data.mongodb.core.DBObjectTestUtils;
 import org.springframework.data.mongodb.core.query.NearQuery;
 
 import com.mongodb.DBObject;
@@ -38,7 +38,7 @@ public class GeoNearOperationUnitTests {
 		GeoNearOperation operation = new GeoNearOperation(query);
 		DBObject dbObject = operation.toDBObject(Aggregation.DEFAULT_CONTEXT);
 
-		DBObject nearClause = DBObjectUtils.getAsDBObject(dbObject, "$geoNear");
+		DBObject nearClause = DBObjectTestUtils.getAsDBObject(dbObject, "$geoNear");
 		assertThat(nearClause, is(query.toDBObject()));
 	}
 }

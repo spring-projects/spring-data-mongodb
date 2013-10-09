@@ -116,6 +116,10 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		return new ProjectionOperationBuilder(name, this, null);
 	}
 
+	public ExpressionProjectionOperationBuilder andExpression(String expression, Object... params) {
+		return new ExpressionProjectionOperationBuilder(expression, this, params);
+	}
+
 	/**
 	 * Excludes the given fields from the projection.
 	 * 
@@ -189,12 +193,79 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 	}
 
 	/**
+	 * @author Thomas Darimont
+	 */
+	public static abstract class AbstractProjectionOperationBuilder implements AggregationOperation {
+
+		protected final Object value;
+		protected final ProjectionOperation operation;
+
+		public AbstractProjectionOperationBuilder(Object value, ProjectionOperation operation) {
+
+			Assert.notNull(value, "value must not be null or empty!");
+			Assert.notNull(operation, "ProjectionOperation must not be null!");
+
+			this.value = value;
+			this.operation = operation;
+		}
+
+		public abstract ProjectionOperation as(String alias);
+
+		/* (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#toDBObject(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
+		 */
+		@Override
+		public DBObject toDBObject(AggregationOperationContext context) {
+			return this.operation.toDBObject(context);
+		}
+	}
+
+	/**
+	 * @author Thomas Darimont
+	 */
+	public static class ExpressionProjectionOperationBuilder extends AbstractProjectionOperationBuilder {
+
+		private Object[] params;
+
+		public ExpressionProjectionOperationBuilder(Object value, ProjectionOperation operation, Object[] params) {
+			super(value, operation);
+			this.params = params;
+		}
+
+		public ProjectionOperation as(String alias) {
+
+			return this.operation.and(new ExpressionProjection(Fields.field(alias, "expr"), this.value.toString(), params));
+		}
+
+		static class ExpressionProjection extends Projection {
+
+			private String expression;
+			private Object[] params;
+
+			public ExpressionProjection(Field field, String expression, Object[] params) {
+				super(field);
+				this.expression = expression;
+				this.params = params;
+			}
+
+			/* (non-Javadoc)
+			 * @see org.springframework.data.mongodb.core.aggregation.ProjectionOperation.Projection#toDBObject(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
+			 */
+			@Override
+			public DBObject toDBObject(AggregationOperationContext context) {
+				return new BasicDBObject(getExposedField().getName(),
+						SpelExpressionToMongoExpressionTransformer.INSTANCE.transform(expression, context, params));
+			}
+		}
+	}
+
+	/**
 	 * Builder for {@link ProjectionOperation}s on a field.
 	 * 
 	 * @author Oliver Gierke
 	 * @author Thomas Darimont
 	 */
-	public static class ProjectionOperationBuilder implements AggregationOperation {
+	public static class ProjectionOperationBuilder extends AbstractProjectionOperationBuilder {
 
 		private final String name;
 		private final ProjectionOperation operation;
@@ -209,9 +280,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 * @param previousProjection the previous operation projection, may be {@literal null}.
 		 */
 		public ProjectionOperationBuilder(String name, ProjectionOperation operation, OperationProjection previousProjection) {
-
-			Assert.hasText(name, "Field name must not be null or empty!");
-			Assert.notNull(operation, "ProjectionOperation must not be null!");
+			super(name, operation);
 
 			this.name = name;
 			this.operation = operation;
@@ -248,8 +317,8 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 */
 		public ProjectionOperation as(String alias) {
 
-			if (previousProjection != null) {
-				return this.operation.andReplaceLastOneWith(previousProjection.withAlias(alias));
+			if (this.previousProjection != null) {
+				return this.operation.andReplaceLastOneWith(this.previousProjection.withAlias(alias));
 			} else {
 				return this.operation.and(new FieldProjection(Fields.field(alias, name), null));
 			}
