@@ -22,20 +22,26 @@ import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 
 import java.io.BufferedInputStream;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Scanner;
 
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.dao.DataAccessException;
+import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mongodb.core.CollectionCallback;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
@@ -68,11 +74,23 @@ public class AggregationTests {
 
 	@Autowired MongoTemplate mongoTemplate;
 
+	@Rule public ExpectedException exception = ExpectedException.none();
+	private static String mongoVersion;
+
 	@Before
 	public void setUp() {
 
+		queryMongoVersionIfNecessary();
 		cleanDb();
 		initSampleDataIfNecessary();
+	}
+
+	private void queryMongoVersionIfNecessary() {
+
+		if (mongoVersion == null) {
+			CommandResult result = mongoTemplate.executeCommand("{ buildInfo: 1 }");
+			mongoVersion = result.get("version").toString();
+		}
 	}
 
 	@After
@@ -85,6 +103,7 @@ public class AggregationTests {
 		mongoTemplate.dropCollection(Product.class);
 		mongoTemplate.dropCollection(UserWithLikes.class);
 		mongoTemplate.dropCollection(DATAMONGO753.class);
+		mongoTemplate.dropCollection(Data.class);
 	}
 
 	/**
@@ -97,9 +116,7 @@ public class AggregationTests {
 
 		if (!initialized) {
 
-			CommandResult result = mongoTemplate.executeCommand("{ buildInfo: 1 }");
-			Object version = result.get("version");
-			LOGGER.debug("Server uses MongoDB Version: {}", version);
+			LOGGER.debug("Server uses MongoDB Version: {}", mongoVersion);
 
 			mongoTemplate.dropCollection(ZipInfo.class);
 			mongoTemplate.execute(ZipInfo.class, new CollectionCallback<Void>() {
@@ -425,13 +442,8 @@ public class AggregationTests {
 	@Test
 	public void arithmenticOperatorsInProjectionExample() {
 
-		double taxRate = 0.19;
-		double netPrice = 1.99;
-		double discountRate = 0.05;
-		int spaceUnits = 3;
-		String productId = "P1";
-		String productName = "A";
-		mongoTemplate.insert(new Product(productId, productName, netPrice, spaceUnits, discountRate, taxRate));
+		Product product = new Product("P1", "A", 1.99, 3, 0.05, 0.19);
+		mongoTemplate.insert(product);
 
 		TypedAggregation<Product> agg = newAggregation(Product.class, //
 				project("name", "netPrice") //
@@ -451,18 +463,125 @@ public class AggregationTests {
 		List<DBObject> resultList = result.getMappedResults();
 
 		assertThat(resultList, is(notNullValue()));
-		assertThat((String) resultList.get(0).get("_id"), is(productId));
-		assertThat((String) resultList.get(0).get("name"), is(productName));
-		assertThat((Double) resultList.get(0).get("netPricePlus1"), is(netPrice + 1));
-		assertThat((Double) resultList.get(0).get("netPriceMinus1"), is(netPrice - 1));
-		assertThat((Double) resultList.get(0).get("netPriceMul2"), is(netPrice * 2));
-		assertThat((Double) resultList.get(0).get("netPriceDiv119"), is(netPrice / 1.19));
-		assertThat((Integer) resultList.get(0).get("spaceUnitsMod2"), is(spaceUnits % 2));
-		assertThat((Integer) resultList.get(0).get("spaceUnitsPlusSpaceUnits"), is(spaceUnits + spaceUnits));
-		assertThat((Integer) resultList.get(0).get("spaceUnitsMinusSpaceUnits"), is(spaceUnits - spaceUnits));
-		assertThat((Integer) resultList.get(0).get("spaceUnitsMultiplySpaceUnits"), is(spaceUnits * spaceUnits));
-		assertThat((Double) resultList.get(0).get("spaceUnitsDivideSpaceUnits"), is((double) (spaceUnits / spaceUnits)));
-		assertThat((Integer) resultList.get(0).get("spaceUnitsModSpaceUnits"), is(spaceUnits % spaceUnits));
+		assertThat((String) resultList.get(0).get("_id"), is(product.id));
+		assertThat((String) resultList.get(0).get("name"), is(product.name));
+		assertThat((Double) resultList.get(0).get("netPricePlus1"), is(product.netPrice + 1));
+		assertThat((Double) resultList.get(0).get("netPriceMinus1"), is(product.netPrice - 1));
+		assertThat((Double) resultList.get(0).get("netPriceMul2"), is(product.netPrice * 2));
+		assertThat((Double) resultList.get(0).get("netPriceDiv119"), is(product.netPrice / 1.19));
+		assertThat((Integer) resultList.get(0).get("spaceUnitsMod2"), is(product.spaceUnits % 2));
+		assertThat((Integer) resultList.get(0).get("spaceUnitsPlusSpaceUnits"), is(product.spaceUnits + product.spaceUnits));
+		assertThat((Integer) resultList.get(0).get("spaceUnitsMinusSpaceUnits"),
+				is(product.spaceUnits - product.spaceUnits));
+		assertThat((Integer) resultList.get(0).get("spaceUnitsMultiplySpaceUnits"), is(product.spaceUnits
+				* product.spaceUnits));
+		assertThat((Double) resultList.get(0).get("spaceUnitsDivideSpaceUnits"),
+				is((double) (product.spaceUnits / product.spaceUnits)));
+		assertThat((Integer) resultList.get(0).get("spaceUnitsModSpaceUnits"), is(product.spaceUnits % product.spaceUnits));
+	}
+
+	/**
+	 * @see DATAMONGO-774
+	 */
+	@Test
+	public void expressionsInProjectionExample() {
+
+		Product product = new Product("P1", "A", 1.99, 3, 0.05, 0.19);
+		mongoTemplate.insert(product);
+
+		TypedAggregation<Product> agg = newAggregation(Product.class, //
+				project("name", "netPrice") //
+						.andExpression("netPrice + 1").as("netPricePlus1") //
+						.andExpression("netPrice - 1").as("netPriceMinus1") //
+						.andExpression("netPrice / 2").as("netPriceDiv2") //
+						.andExpression("netPrice * 1.19").as("grossPrice") //
+						.andExpression("spaceUnits % 2").as("spaceUnitsMod2") //
+						.andExpression("(netPrice * 0.8  + 1.2) * 1.19").as("grossPriceIncludingDiscountAndCharge") //
+
+		);
+
+		AggregationResults<DBObject> result = mongoTemplate.aggregate(agg, DBObject.class);
+		List<DBObject> resultList = result.getMappedResults();
+
+		assertThat(resultList, is(notNullValue()));
+		assertThat((String) resultList.get(0).get("_id"), is(product.id));
+		assertThat((String) resultList.get(0).get("name"), is(product.name));
+		assertThat((Double) resultList.get(0).get("netPricePlus1"), is(product.netPrice + 1));
+		assertThat((Double) resultList.get(0).get("netPriceMinus1"), is(product.netPrice - 1));
+		assertThat((Double) resultList.get(0).get("netPriceDiv2"), is(product.netPrice / 2));
+		assertThat((Double) resultList.get(0).get("grossPrice"), is(product.netPrice * 1.19));
+		assertThat((Integer) resultList.get(0).get("spaceUnitsMod2"), is(product.spaceUnits % 2));
+		assertThat((Double) resultList.get(0).get("grossPriceIncludingDiscountAndCharge"),
+				is((product.netPrice * 0.8 + 1.2) * 1.19));
+	}
+
+	/**
+	 * @see DATAMONGO-774
+	 */
+	@Test
+	public void stringExpressionsInProjectionExample() {
+
+		Assume.assumeTrue(mongoVersion.startsWith("2.4"));
+
+		Product product = new Product("P1", "A", 1.99, 3, 0.05, 0.19);
+		mongoTemplate.insert(product);
+
+		TypedAggregation<Product> agg = newAggregation(Product.class, //
+				project("name", "netPrice") //
+						.andExpression("concat(name, '_bubu')").as("name_bubu") //
+		);
+
+		AggregationResults<DBObject> result = mongoTemplate.aggregate(agg, DBObject.class);
+		List<DBObject> resultList = result.getMappedResults();
+
+		assertThat(resultList, is(notNullValue()));
+		assertThat((String) resultList.get(0).get("_id"), is(product.id));
+		assertThat((String) resultList.get(0).get("name"), is(product.name));
+		assertThat((String) resultList.get(0).get("name_bubu"), is(product.name + "_bubu"));
+	}
+
+	/**
+	 * @see DATAMONGO-774
+	 */
+	@Test
+	public void expressionsInProjectionExampleShowcase() {
+
+		Product product = new Product("P1", "A", 1.99, 3, 0.05, 0.19);
+		mongoTemplate.insert(product);
+
+		double shippingCosts = 1.2;
+
+		TypedAggregation<Product> agg = newAggregation(Product.class, //
+				project("name", "netPrice") //
+						.andExpression("(netPrice * (1-discountRate)  + [0]) * (1+taxRate)", shippingCosts).as("salesPrice") //
+		);
+
+		AggregationResults<DBObject> result = mongoTemplate.aggregate(agg, DBObject.class);
+		List<DBObject> resultList = result.getMappedResults();
+
+		assertThat(resultList, is(notNullValue()));
+		DBObject firstItem = resultList.get(0);
+		assertThat((String) firstItem.get("_id"), is(product.id));
+		assertThat((String) firstItem.get("name"), is(product.name));
+		assertThat((Double) firstItem.get("salesPrice"), is((product.netPrice * (1 - product.discountRate) + shippingCosts)
+				* (1 + product.taxRate)));
+	}
+
+	@Test
+	public void shouldThrowExceptionIfUnknownFieldIsReferencedInArithmenticExpressionsInProjection() {
+
+		exception.expect(MappingException.class);
+		exception.expectMessage("unknown");
+
+		Product product = new Product("P1", "A", 1.99, 3, 0.05, 0.19);
+		mongoTemplate.insert(product);
+
+		TypedAggregation<Product> agg = newAggregation(Product.class, //
+				project("name", "netPrice") //
+						.andExpression("unknown + 1").as("netPricePlus1") //
+		);
+
+		mongoTemplate.aggregate(agg, DBObject.class);
 	}
 
 	/**
@@ -518,6 +637,78 @@ public class AggregationTests {
 		for (DBObject element : mappedResults) {
 			assertThat(element.get("up"), is((Object) 1));
 		}
+	}
+
+	/**
+	 * @DATAMONGO-774
+	 */
+	@Test
+	public void shouldPerformDateProjectionOperatorsCorrectly() throws ParseException {
+
+		Assume.assumeTrue(mongoVersion.startsWith("2.4"));
+
+		Data data = new Data();
+		data.stringValue = "ABC";
+		mongoTemplate.insert(data);
+
+		TypedAggregation<Data> agg = newAggregation(Data.class, project() //
+				.andExpression("concat(stringValue, 'DE')").as("concat") //
+				.andExpression("strcasecmp(stringValue,'XYZ')").as("strcasecmp") //
+				.andExpression("substr(stringValue,1,1)").as("substr") //
+				.andExpression("toLower(stringValue)").as("toLower") //
+				.andExpression("toUpper(toLower(stringValue))").as("toUpper") //
+		);
+
+		AggregationResults<DBObject> results = mongoTemplate.aggregate(agg, DBObject.class);
+		DBObject dbo = results.getUniqueMappedResult();
+
+		assertThat(dbo, is(notNullValue()));
+		assertThat((String) dbo.get("concat"), is("ABCDE"));
+		assertThat((Integer) dbo.get("strcasecmp"), is(-1));
+		assertThat((String) dbo.get("substr"), is("B"));
+		assertThat((String) dbo.get("toLower"), is("abc"));
+		assertThat((String) dbo.get("toUpper"), is("ABC"));
+	}
+
+	/**
+	 * @DATAMONGO-774
+	 */
+	@Test
+	public void shouldPerformStringProjectionOperatorsCorrectly() throws ParseException {
+
+		Assume.assumeTrue(mongoVersion.startsWith("2.4"));
+
+		Data data = new Data();
+		data.dateValue = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss.SSSZ").parse("29.08.1983 12:34:56.789+0000");
+		mongoTemplate.insert(data);
+
+		TypedAggregation<Data> agg = newAggregation(Data.class, project() //
+				.andExpression("dayOfYear(dateValue)").as("dayOfYear") //
+				.andExpression("dayOfMonth(dateValue)").as("dayOfMonth") //
+				.andExpression("dayOfWeek(dateValue)").as("dayOfWeek") //
+				.andExpression("year(dateValue)").as("year") //
+				.andExpression("month(dateValue)").as("month") //
+				.andExpression("week(dateValue)").as("week") //
+				.andExpression("hour(dateValue)").as("hour") //
+				.andExpression("minute(dateValue)").as("minute") //
+				.andExpression("second(dateValue)").as("second") //
+				.andExpression("millisecond(dateValue)").as("millisecond") //
+		);
+
+		AggregationResults<DBObject> results = mongoTemplate.aggregate(agg, DBObject.class);
+		DBObject dbo = results.getUniqueMappedResult();
+
+		assertThat(dbo, is(notNullValue()));
+		assertThat((Integer) dbo.get("dayOfYear"), is(241));
+		assertThat((Integer) dbo.get("dayOfMonth"), is(29));
+		assertThat((Integer) dbo.get("dayOfWeek"), is(2));
+		assertThat((Integer) dbo.get("year"), is(1983));
+		assertThat((Integer) dbo.get("month"), is(8));
+		assertThat((Integer) dbo.get("week"), is(35));
+		assertThat((Integer) dbo.get("hour"), is(12));
+		assertThat((Integer) dbo.get("minute"), is(34));
+		assertThat((Integer) dbo.get("second"), is(56));
+		assertThat((Integer) dbo.get("millisecond"), is(789));
 	}
 
 	private void assertLikeStats(LikeStats like, String id, long count) {

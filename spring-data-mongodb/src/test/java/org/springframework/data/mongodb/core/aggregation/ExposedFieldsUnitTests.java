@@ -25,6 +25,7 @@ import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedFi
  * Unit tests for {@link ExposedFields}.
  * 
  * @author Oliver Gierke
+ * @author Thomas Darimont
  */
 public class ExposedFieldsUnitTests {
 
@@ -41,6 +42,14 @@ public class ExposedFieldsUnitTests {
 	@Test(expected = IllegalArgumentException.class)
 	public void rejectsNullFieldsForNonSynthetics() {
 		ExposedFields.nonSynthetic(null);
+	}
+
+	@Test
+	public void mitigateLeadingDollarSignInFieldName() {
+
+		ExposedFields fields = ExposedFields.synthetic(Fields.fields("$foo"));
+		assertThat(fields.iterator().next().getName(), is("$foo"));
+		assertThat(fields.iterator().next().getTarget(), is("$foo"));
 	}
 
 	@Test

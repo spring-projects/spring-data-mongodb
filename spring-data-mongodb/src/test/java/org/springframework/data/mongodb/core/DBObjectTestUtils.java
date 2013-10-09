@@ -26,9 +26,9 @@ import com.mongodb.DBObject;
  * 
  * @author Oliver Gierke
  */
-public abstract class DBObjectUtils {
+public abstract class DBObjectTestUtils {
 
-	private DBObjectUtils() {
+	private DBObjectTestUtils() {
 
 	}
 

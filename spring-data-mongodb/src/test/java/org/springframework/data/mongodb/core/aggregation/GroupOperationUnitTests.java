@@ -20,7 +20,7 @@ import static org.junit.Assert.*;
 import static org.springframework.data.mongodb.core.aggregation.Fields.*;
 
 import org.junit.Test;
-import org.springframework.data.mongodb.core.DBObjectUtils;
+import org.springframework.data.mongodb.core.DBObjectTestUtils;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
@@ -85,7 +85,7 @@ public class GroupOperationUnitTests {
 		GroupOperation operation = new GroupOperation(fields("a").and("b", "c"));
 
 		DBObject groupClause = extractDbObjectFromGroupOperation(operation);
-		DBObject idClause = DBObjectUtils.getAsDBObject(groupClause, UNDERSCORE_ID);
+		DBObject idClause = DBObjectTestUtils.getAsDBObject(groupClause, UNDERSCORE_ID);
 
 		assertThat(idClause.get("a"), is((Object) "$a"));
 		assertThat(idClause.get("b"), is((Object) "$c"));
@@ -98,7 +98,7 @@ public class GroupOperationUnitTests {
 				.sum("e").as("e");
 
 		DBObject groupClause = extractDbObjectFromGroupOperation(groupOperation);
-		DBObject eOp = DBObjectUtils.getAsDBObject(groupClause, "e");
+		DBObject eOp = DBObjectTestUtils.getAsDBObject(groupClause, "e");
 		assertThat(eOp, is((DBObject) new BasicDBObject("$sum", "$e")));
 	}
 
@@ -109,7 +109,7 @@ public class GroupOperationUnitTests {
 				.sum("e").as("ee");
 
 		DBObject groupClause = extractDbObjectFromGroupOperation(groupOperation);
-		DBObject eOp = DBObjectUtils.getAsDBObject(groupClause, "ee");
+		DBObject eOp = DBObjectTestUtils.getAsDBObject(groupClause, "ee");
 		assertThat(eOp, is((DBObject) new BasicDBObject("$sum", "$e")));
 	}
 
@@ -120,7 +120,7 @@ public class GroupOperationUnitTests {
 				.count().as("count");
 
 		DBObject groupClause = extractDbObjectFromGroupOperation(groupOperation);
-		DBObject eOp = DBObjectUtils.getAsDBObject(groupClause, "count");
+		DBObject eOp = DBObjectTestUtils.getAsDBObject(groupClause, "count");
 		assertThat(eOp, is((DBObject) new BasicDBObject("$sum", 1)));
 	}
 
@@ -132,10 +132,10 @@ public class GroupOperationUnitTests {
 				.min("e").as("min"); //
 
 		DBObject groupClause = extractDbObjectFromGroupOperation(groupOperation);
-		DBObject sum = DBObjectUtils.getAsDBObject(groupClause, "sum");
+		DBObject sum = DBObjectTestUtils.getAsDBObject(groupClause, "sum");
 		assertThat(sum, is((DBObject) new BasicDBObject("$sum", "$e")));
 
-		DBObject min = DBObjectUtils.getAsDBObject(groupClause, "min");
+		DBObject min = DBObjectTestUtils.getAsDBObject(groupClause, "min");
 		assertThat(min, is((DBObject) new BasicDBObject("$min", "$e")));
 	}
 
@@ -145,7 +145,7 @@ public class GroupOperationUnitTests {
 		GroupOperation groupOperation = Aggregation.group("a", "b").push(1).as("x");
 
 		DBObject groupClause = extractDbObjectFromGroupOperation(groupOperation);
-		DBObject push = DBObjectUtils.getAsDBObject(groupClause, "x");
+		DBObject push = DBObjectTestUtils.getAsDBObject(groupClause, "x");
 
 		assertThat(push, is((DBObject) new BasicDBObject("$push", 1)));
 	}
@@ -156,7 +156,7 @@ public class GroupOperationUnitTests {
 		GroupOperation groupOperation = Aggregation.group("a", "b").push("ref").as("x");
 
 		DBObject groupClause = extractDbObjectFromGroupOperation(groupOperation);
-		DBObject push = DBObjectUtils.getAsDBObject(groupClause, "x");
+		DBObject push = DBObjectTestUtils.getAsDBObject(groupClause, "x");
 
 		assertThat(push, is((DBObject) new BasicDBObject("$push", "$ref")));
 	}
@@ -167,7 +167,7 @@ public class GroupOperationUnitTests {
 		GroupOperation groupOperation = Aggregation.group("a", "b").addToSet("ref").as("x");
 
 		DBObject groupClause = extractDbObjectFromGroupOperation(groupOperation);
-		DBObject push = DBObjectUtils.getAsDBObject(groupClause, "x");
+		DBObject push = DBObjectTestUtils.getAsDBObject(groupClause, "x");
 
 		assertThat(push, is((DBObject) new BasicDBObject("$addToSet", "$ref")));
 	}
@@ -178,14 +178,14 @@ public class GroupOperationUnitTests {
 		GroupOperation groupOperation = Aggregation.group("a", "b").addToSet(42).as("x");
 
 		DBObject groupClause = extractDbObjectFromGroupOperation(groupOperation);
-		DBObject push = DBObjectUtils.getAsDBObject(groupClause, "x");
+		DBObject push = DBObjectTestUtils.getAsDBObject(groupClause, "x");
 
 		assertThat(push, is((DBObject) new BasicDBObject("$addToSet", 42)));
 	}
 
 	private DBObject extractDbObjectFromGroupOperation(GroupOperation groupOperation) {
 		DBObject dbObject = groupOperation.toDBObject(Aggregation.DEFAULT_CONTEXT);
-		DBObject groupClause = DBObjectUtils.getAsDBObject(dbObject, "$group");
+		DBObject groupClause = DBObjectTestUtils.getAsDBObject(dbObject, "$group");
 		return groupClause;
 	}
 }

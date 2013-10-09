@@ -17,11 +17,12 @@ package org.springframework.data.mongodb.core.aggregation;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
+import static org.springframework.data.mongodb.util.DBObjectUtils.*;
 
 import java.util.Arrays;
 
 import org.junit.Test;
-import org.springframework.data.mongodb.core.DBObjectUtils;
+import org.springframework.data.mongodb.core.DBObjectTestUtils;
 import org.springframework.data.mongodb.core.aggregation.ProjectionOperation.ProjectionOperationBuilder;
 
 import com.mongodb.BasicDBList;
@@ -55,7 +56,7 @@ public class ProjectionOperationUnitTests {
 		operation = operation.and("prop").previousOperation();
 
 		DBObject dbObject = operation.toDBObject(Aggregation.DEFAULT_CONTEXT);
-		DBObject projectClause = DBObjectUtils.getAsDBObject(dbObject, PROJECT);
+		DBObject projectClause = DBObjectTestUtils.getAsDBObject(dbObject, PROJECT);
 		assertThat(projectClause.get("prop"), is((Object) Fields.UNDERSCORE_ID_REF));
 	}
 
@@ -65,7 +66,7 @@ public class ProjectionOperationUnitTests {
 		ProjectionOperation operation = new ProjectionOperation(Fields.fields("foo").and("bar", "foobar"));
 
 		DBObject dbObject = operation.toDBObject(Aggregation.DEFAULT_CONTEXT);
-		DBObject projectClause = DBObjectUtils.getAsDBObject(dbObject, PROJECT);
+		DBObject projectClause = DBObjectTestUtils.getAsDBObject(dbObject, PROJECT);
 
 		assertThat((Integer) projectClause.get("foo"), is(1));
 		assertThat(projectClause.get("bar"), is((Object) "$foobar"));
@@ -77,7 +78,7 @@ public class ProjectionOperationUnitTests {
 		ProjectionOperation operation = new ProjectionOperation();
 
 		DBObject dbObject = operation.and("foo").as("bar").toDBObject(Aggregation.DEFAULT_CONTEXT);
-		DBObject projectClause = DBObjectUtils.getAsDBObject(dbObject, PROJECT);
+		DBObject projectClause = DBObjectTestUtils.getAsDBObject(dbObject, PROJECT);
 
 		assertThat(projectClause.get("bar"), is((Object) "$foo"));
 	}
@@ -88,9 +89,9 @@ public class ProjectionOperationUnitTests {
 		ProjectionOperation operation = new ProjectionOperation();
 
 		DBObject dbObject = operation.and("foo").plus(41).as("bar").toDBObject(Aggregation.DEFAULT_CONTEXT);
-		DBObject projectClause = DBObjectUtils.getAsDBObject(dbObject, PROJECT);
-		DBObject barClause = DBObjectUtils.getAsDBObject(projectClause, "bar");
-		BasicDBList addClause = DBObjectUtils.getAsDBList(barClause, "$add");
+		DBObject projectClause = DBObjectTestUtils.getAsDBObject(dbObject, PROJECT);
+		DBObject barClause = DBObjectTestUtils.getAsDBObject(projectClause, "bar");
+		BasicDBList addClause = DBObjectTestUtils.getAsDBList(barClause, "$add");
 
 		assertThat(addClause, hasSize(2));
 		assertThat(addClause.get(0), is((Object) "$foo"));
@@ -102,7 +103,7 @@ public class ProjectionOperationUnitTests {
 		String fieldName = "a";
 		ProjectionOperationBuilder operation = new ProjectionOperation().and(fieldName).plus(1);
 		DBObject dbObject = operation.toDBObject(Aggregation.DEFAULT_CONTEXT);
-		DBObject projectClause = DBObjectUtils.getAsDBObject(dbObject, PROJECT);
+		DBObject projectClause = DBObjectTestUtils.getAsDBObject(dbObject, PROJECT);
 		DBObject oper = exctractOperation(fieldName, projectClause);
 
 		assertThat(oper.containsField(ADD), is(true));
@@ -116,7 +117,7 @@ public class ProjectionOperationUnitTests {
 		String fieldAlias = "b";
 		ProjectionOperation operation = new ProjectionOperation().and(fieldName).plus(1).as(fieldAlias);
 		DBObject dbObject = operation.toDBObject(Aggregation.DEFAULT_CONTEXT);
-		DBObject projectClause = DBObjectUtils.getAsDBObject(dbObject, PROJECT);
+		DBObject projectClause = DBObjectTestUtils.getAsDBObject(dbObject, PROJECT);
 
 		DBObject oper = exctractOperation(fieldAlias, projectClause);
 		assertThat(oper.containsField(ADD), is(true));
@@ -130,7 +131,7 @@ public class ProjectionOperationUnitTests {
 		String fieldAlias = "b";
 		ProjectionOperation operation = new ProjectionOperation().and(fieldName).minus(1).as(fieldAlias);
 		DBObject dbObject = operation.toDBObject(Aggregation.DEFAULT_CONTEXT);
-		DBObject projectClause = DBObjectUtils.getAsDBObject(dbObject, PROJECT);
+		DBObject projectClause = DBObjectTestUtils.getAsDBObject(dbObject, PROJECT);
 		DBObject oper = exctractOperation(fieldAlias, projectClause);
 
 		assertThat(oper.containsField(SUBTRACT), is(true));
@@ -144,7 +145,7 @@ public class ProjectionOperationUnitTests {
 		String fieldAlias = "b";
 		ProjectionOperation operation = new ProjectionOperation().and(fieldName).multiply(1).as(fieldAlias);
 		DBObject dbObject = operation.toDBObject(Aggregation.DEFAULT_CONTEXT);
-		DBObject projectClause = DBObjectUtils.getAsDBObject(dbObject, PROJECT);
+		DBObject projectClause = DBObjectTestUtils.getAsDBObject(dbObject, PROJECT);
 		DBObject oper = exctractOperation(fieldAlias, projectClause);
 
 		assertThat(oper.containsField(MULTIPLY), is(true));
@@ -158,7 +159,7 @@ public class ProjectionOperationUnitTests {
 		String fieldAlias = "b";
 		ProjectionOperation operation = new ProjectionOperation().and(fieldName).divide(1).as(fieldAlias);
 		DBObject dbObject = operation.toDBObject(Aggregation.DEFAULT_CONTEXT);
-		DBObject projectClause = DBObjectUtils.getAsDBObject(dbObject, PROJECT);
+		DBObject projectClause = DBObjectTestUtils.getAsDBObject(dbObject, PROJECT);
 		DBObject oper = exctractOperation(fieldAlias, projectClause);
 
 		assertThat(oper.containsField(DIVIDE), is(true));
@@ -178,7 +179,7 @@ public class ProjectionOperationUnitTests {
 		String fieldAlias = "b";
 		ProjectionOperation operation = new ProjectionOperation().and(fieldName).mod(3).as(fieldAlias);
 		DBObject dbObject = operation.toDBObject(Aggregation.DEFAULT_CONTEXT);
-		DBObject projectClause = DBObjectUtils.getAsDBObject(dbObject, PROJECT);
+		DBObject projectClause = DBObjectTestUtils.getAsDBObject(dbObject, PROJECT);
 		DBObject oper = exctractOperation(fieldAlias, projectClause);
 
 		assertThat(oper.containsField(MOD), is(true));
@@ -202,7 +203,7 @@ public class ProjectionOperationUnitTests {
 
 		ProjectionOperation projectionOp = new ProjectionOperation().andExclude(Fields.UNDERSCORE_ID);
 		DBObject dbObject = projectionOp.toDBObject(Aggregation.DEFAULT_CONTEXT);
-		DBObject projectClause = DBObjectUtils.getAsDBObject(dbObject, PROJECT);
+		DBObject projectClause = DBObjectTestUtils.getAsDBObject(dbObject, PROJECT);
 		assertThat((Integer) projectClause.get(Fields.UNDERSCORE_ID), is(0));
 	}
 
@@ -216,7 +217,7 @@ public class ProjectionOperationUnitTests {
 				.andExclude("_id");
 
 		DBObject dbObject = operation.toDBObject(Aggregation.DEFAULT_CONTEXT);
-		DBObject projectClause = DBObjectUtils.getAsDBObject(dbObject, PROJECT);
+		DBObject projectClause = DBObjectTestUtils.getAsDBObject(dbObject, PROJECT);
 
 		assertThat(projectClause.get("foo"), is((Object) 1)); // implicit
 		assertThat(projectClause.get("bar"), is((Object) "$foobar")); // explicit
@@ -245,7 +246,7 @@ public class ProjectionOperationUnitTests {
 				.and("foo").mod("bar").as("fooModBar");
 
 		DBObject dbObject = operation.toDBObject(Aggregation.DEFAULT_CONTEXT);
-		DBObject projectClause = DBObjectUtils.getAsDBObject(dbObject, PROJECT);
+		DBObject projectClause = DBObjectTestUtils.getAsDBObject(dbObject, PROJECT);
 
 		assertThat((BasicDBObject) projectClause.get("fooPlusBar"), //
 				is(new BasicDBObject("$add", dbList("$foo", "$bar"))));
@@ -259,13 +260,20 @@ public class ProjectionOperationUnitTests {
 				is(new BasicDBObject("$mod", dbList("$foo", "$bar"))));
 	}
 
-	public static BasicDBList dbList(Object... items) {
+	/**
+	 * @see DATAMONGO-774
+	 */
+	@Test
+	public void projectionExpressions() {
 
-		BasicDBList list = new BasicDBList();
-		for (Object item : items) {
-			list.add(item);
-		}
-		return list;
+		ProjectionOperation operation = Aggregation.project() //
+				.andExpression("(netPrice + surCharge) * taxrate * [0]", 2).as("grossSalesPrice") //
+				.and("foo").as("bar"); //
+
+		DBObject dbObject = operation.toDBObject(Aggregation.DEFAULT_CONTEXT);
+		assertThat(
+				dbObject.toString(),
+				is("{ \"$project\" : { \"grossSalesPrice\" : { \"$multiply\" : [ { \"$add\" : [ \"$netPrice\" , \"$surCharge\"]} , \"$taxrate\" , 2]} , \"bar\" : \"$foo\"}}"));
 	}
 
 	private static DBObject exctractOperation(String field, DBObject fromProjectClause) {

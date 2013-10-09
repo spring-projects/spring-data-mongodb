@@ -26,7 +26,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.data.convert.ConfigurableTypeInformationMapper;
 import org.springframework.data.convert.SimpleTypeInformationMapper;
-import org.springframework.data.mongodb.core.DBObjectUtils;
+import org.springframework.data.mongodb.core.DBObjectTestUtils;
 import org.springframework.data.util.TypeInformation;
 
 import com.mongodb.BasicDBList;
@@ -119,8 +119,8 @@ public class DefaultMongoTypeMapperUnitTests {
 		typeMapper = new DefaultMongoTypeMapper();
 		typeMapper.writeTypeRestrictions(result, Collections.<Class<?>> singleton(String.class));
 
-		DBObject typeInfo = DBObjectUtils.getAsDBObject(result, DefaultMongoTypeMapper.DEFAULT_TYPE_KEY);
-		List<Object> aliases = DBObjectUtils.getAsDBList(typeInfo, "$in");
+		DBObject typeInfo = DBObjectTestUtils.getAsDBObject(result, DefaultMongoTypeMapper.DEFAULT_TYPE_KEY);
+		List<Object> aliases = DBObjectTestUtils.getAsDBList(typeInfo, "$in");
 		assertThat(aliases, hasSize(1));
 		assertThat(aliases.get(0), is((Object) String.class.getName()));
 	}

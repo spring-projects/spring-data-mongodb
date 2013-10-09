@@ -19,7 +19,7 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
 import org.junit.Test;
-import org.springframework.data.mongodb.core.DBObjectUtils;
+import org.springframework.data.mongodb.core.DBObjectTestUtils;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
@@ -49,7 +49,7 @@ public class DBObjectAccessorUnitTests {
 		DBObjectAccessor accessor = new DBObjectAccessor(dbObject);
 		accessor.put(fooProperty, "FooBar");
 
-		DBObject aDbObject = DBObjectUtils.getAsDBObject(dbObject, "a");
+		DBObject aDbObject = DBObjectTestUtils.getAsDBObject(dbObject, "a");
 		assertThat(aDbObject.get("b"), is((Object) "FooBar"));
 	}
 
