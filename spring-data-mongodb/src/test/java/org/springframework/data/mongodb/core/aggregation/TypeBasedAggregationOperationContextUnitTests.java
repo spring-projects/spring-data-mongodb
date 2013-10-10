@@ -23,7 +23,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.springframework.data.mapping.PropertyReferenceException;
+import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
@@ -56,7 +56,7 @@ public class TypeBasedAggregationOperationContextUnitTests {
 		assertThat(getContext(Foo.class).getReference("bar"), is(notNullValue()));
 	}
 
-	@Test(expected = PropertyReferenceException.class)
+	@Test(expected = MappingException.class)
 	public void rejectsInvalidFieldReference() {
 		getContext(Foo.class).getReference("foo");
 	}

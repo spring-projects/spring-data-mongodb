@@ -88,11 +88,10 @@ public class TypeBasedAggregationOperationContext implements AggregationOperatio
 	 */
 	@Override
 	public FieldReference getReference(String name) {
-		PropertyPath path = PropertyPath.from(name, type);
 
-		PersistentPropertyPath<MongoPersistentProperty> propertyPath = mappingContext.getPersistentPropertyPath(path);
+		PersistentPropertyPath<MongoPersistentProperty> propertyPath = mappingContext.getPersistentPropertyPath(name, type);
 
-		return getReferenceFor(field(path.getLeafProperty().getSegment(),
+		return getReferenceFor(field(propertyPath.getLeafProperty().getName(),
 				propertyPath.toDotPath(MongoPersistentProperty.PropertyToFieldNameConverter.INSTANCE)));
 	}
 
