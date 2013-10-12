@@ -48,7 +48,6 @@ import com.mongodb.DBRef;
 public class QueryMapper {
 
 	private static final List<String> DEFAULT_ID_NAMES = Arrays.asList("id", "_id");
-	private static final String N_OR_PATTERN = "\\$.*or";
 
 	private final ConversionService conversionService;
 	private final MongoConverter converter;
@@ -79,7 +78,7 @@ public class QueryMapper {
 	@SuppressWarnings("deprecation")
 	public DBObject getMappedObject(DBObject query, MongoPersistentEntity<?> entity) {
 
-		if (Keyword.isKeyword(query)) {
+		if (isNestedKeyword(query)) {
 			return getMappedKeyword(new Keyword(query), entity);
 		}
 
@@ -97,7 +96,7 @@ public class QueryMapper {
 				continue;
 			}
 
-			if (Keyword.isKeyword(key)) {
+			if (isKeyword(key)) {
 				result.putAll(getMappedKeyword(new Keyword(query, key), entity));
 				continue;
 			}
@@ -107,7 +106,7 @@ public class QueryMapper {
 			Object rawValue = query.get(key);
 			String newKey = field.getMappedKey();
 
-			if (Keyword.isKeyword(rawValue) && !field.isIdField()) {
+			if (isNestedKeyword(rawValue) && !field.isIdField()) {
 				Keyword keyword = new Keyword((DBObject) rawValue);
 				result.put(newKey, getMappedKeyword(field, keyword));
 			} else {
@@ -121,16 +120,16 @@ public class QueryMapper {
 	/**
 	 * Returns the given {@link DBObject} representing a keyword by mapping the keyword's value.
 	 * 
-	 * @param query the {@link DBObject} representing a keyword (e.g. {@code $ne : … } )
+	 * @param keyword the {@link DBObject} representing a keyword (e.g. {@code $ne : … } )
 	 * @param entity
 	 * @return
 	 */
-	private DBObject getMappedKeyword(Keyword query, MongoPersistentEntity<?> entity) {
+	private DBObject getMappedKeyword(Keyword keyword, MongoPersistentEntity<?> entity) {
 
 		// $or/$nor
-		if (query.key.matches(N_OR_PATTERN) || query.value instanceof Iterable) {
+		if (keyword.isOrOrNor() || keyword.hasIterableValue()) {
 
-			Iterable<?> conditions = (Iterable<?>) query.value;
+			Iterable<?> conditions = keyword.getValue();
 			BasicDBList newConditions = new BasicDBList();
 
 			for (Object condition : conditions) {
@@ -138,10 +137,10 @@ public class QueryMapper {
 						: convertSimpleOrDBObject(condition, entity));
 			}
 
-			return new BasicDBObject(query.key, newConditions);
+			return new BasicDBObject(keyword.getKey(), newConditions);
 		}
 
-		return new BasicDBObject(query.key, convertSimpleOrDBObject(query.value, entity));
+		return new BasicDBObject(keyword.getKey(), convertSimpleOrDBObject(keyword.getValue(), entity));
 	}
 
 	/**
@@ -154,10 +153,12 @@ public class QueryMapper {
 	private DBObject getMappedKeyword(Field property, Keyword keyword) {
 
 		boolean needsAssociationConversion = property.isAssociation() && !keyword.isExists();
-		Object value = needsAssociationConversion ? convertAssociation(keyword.value, property.getProperty())
-				: getMappedValue(property.with(keyword.key), keyword.value);
+		Object value = keyword.getValue();
 
-		return new BasicDBObject(keyword.key, value);
+		Object convertedValue = needsAssociationConversion ? convertAssociation(value, property.getProperty())
+				: getMappedValue(property.with(keyword.getKey()), value);
+
+		return new BasicDBObject(keyword.key, convertedValue);
 	}
 
 	/**
@@ -195,7 +196,7 @@ public class QueryMapper {
 			}
 		}
 
-		if (Keyword.isKeyword(value)) {
+		if (isNestedKeyword(value)) {
 			return getMappedKeyword(new Keyword((DBObject) value), null);
 		}
 
@@ -290,14 +291,49 @@ public class QueryMapper {
 	}
 
 	/**
+	 * Returns whether the given {@link Object} is a keyword, i.e. if it's a {@link DBObject} with a keyword key.
+	 * 
+	 * @param candidate
+	 * @return
+	 */
+	protected boolean isNestedKeyword(Object candidate) {
+
+		if (!(candidate instanceof BasicDBObject)) {
+			return false;
+		}
+
+		BasicDBObject dbObject = (BasicDBObject) candidate;
+		Set<String> keys = dbObject.keySet();
+
+		if (keys.size() != 1) {
+			return false;
+		}
+
+		return isKeyword(keys.iterator().next().toString());
+	}
+
+	/**
+	 * Returns whether the given {@link String} is a MongoDB keyword. The default implementation will check against the
+	 * set of registered keywords returned by {@link #getKeywords()}.
+	 * 
+	 * @param candidate
+	 * @return
+	 */
+	protected boolean isKeyword(String candidate) {
+		return candidate.startsWith("$");
+	}
+
+	/**
 	 * Value object to capture a query keyword representation.
 	 * 
 	 * @author Oliver Gierke
 	 */
 	private static class Keyword {
 
-		String key;
-		Object value;
+		private static final String N_OR_PATTERN = "\\$.*or";
+
+		private final String key;
+		private final Object value;
 
 		public Keyword(DBObject source, String key) {
 			this.key = key;
@@ -322,25 +358,21 @@ public class QueryMapper {
 			return "$exists".equalsIgnoreCase(key);
 		}
 
-		/**
-		 * Returns whether the given value actually represents a keyword. If this returns {@literal true} it's safe to call
-		 * the constructor.
-		 * 
-		 * @param value
-		 * @return
-		 */
-		public static boolean isKeyword(Object value) {
+		public boolean isOrOrNor() {
+			return key.matches(N_OR_PATTERN);
+		}
 
-			if (value instanceof String) {
-				return ((String) value).startsWith("$");
-			}
+		public boolean hasIterableValue() {
+			return value instanceof Iterable;
+		}
 
-			if (!(value instanceof DBObject)) {
-				return false;
-			}
+		public String getKey() {
+			return key;
+		}
 
-			DBObject dbObject = (DBObject) value;
-			return dbObject.keySet().size() == 1 && dbObject.keySet().iterator().next().startsWith("$");
+		@SuppressWarnings("unchecked")
+		public <T> T getValue() {
+			return (T) value;
 		}
 	}
 

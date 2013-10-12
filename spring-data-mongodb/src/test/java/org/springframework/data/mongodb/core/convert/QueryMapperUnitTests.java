@@ -438,6 +438,34 @@ public class QueryMapperUnitTests {
 		assertThat(inClause.get(0), is(instanceOf(com.mongodb.DBRef.class)));
 	}
 
+	/**
+	 * @see DATAMONGO-752
+	 */
+	@Test
+	public void mapsSimpleValuesStartingWith$Correctly() {
+
+		Query query = query(where("myvalue").is("$334"));
+
+		DBObject result = mapper.getMappedObject(query.getQueryObject(), null);
+
+		assertThat(result.keySet(), hasSize(1));
+		assertThat(result.get("myvalue"), is((Object) "$334"));
+	}
+
+	/**
+	 * @see DATAMONGO-752
+	 */
+	@Test
+	public void mapsKeywordAsSimpleValuesCorrectly() {
+
+		Query query = query(where("myvalue").is("$center"));
+
+		DBObject result = mapper.getMappedObject(query.getQueryObject(), null);
+
+		assertThat(result.keySet(), hasSize(1));
+		assertThat(result.get("myvalue"), is((Object) "$center"));
+	}
+
 	class IdWrapper {
 		Object id;
 	}
