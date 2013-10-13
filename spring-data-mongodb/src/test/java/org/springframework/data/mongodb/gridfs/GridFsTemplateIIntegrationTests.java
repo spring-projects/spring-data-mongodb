@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2012 the original author or authors.
+ * Copyright 2011-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.gridfs;
 
-import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.gridfs.GridFsCriteria.*;
@@ -29,6 +29,9 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -49,8 +52,7 @@ public class GridFsTemplateIIntegrationTests {
 
 	Resource resource = new ClassPathResource("gridfs/gridfs.xml");
 
-	@Autowired
-	GridFsOperations operations;
+	@Autowired GridFsOperations operations;
 
 	@Before
 	public void setUp() {
@@ -125,6 +127,39 @@ public class GridFsTemplateIIntegrationTests {
 		assertThat(resources[0].getId(), is(reference.getId()));
 		assertThat(resources[0].contentLength(), is(reference.getLength()));
 		assertThat(resources[0].getContentType(), is(reference.getContentType()));
+	}
+
+	/**
+	 * @see DATAMONGO-534
+	 */
+	@Test
+	public void considersSortWhenQueryingFiles() throws IOException {
+
+		GridFSFile second = operations.store(resource.getInputStream(), "foo.xml");
+		GridFSFile third = operations.store(resource.getInputStream(), "foobar.xml");
+		GridFSFile first = operations.store(resource.getInputStream(), "bar.xml");
+
+		Query query = new Query().with(new Sort(Direction.ASC, "filename"));
+
+		List<GridFSDBFile> result = operations.find(query);
+		assertThat(result, hasSize(3));
+		assertSame(result.get(0), first);
+		assertSame(result.get(1), second);
+		assertSame(result.get(2), third);
+	}
+
+	/**
+	 * @see DATAMONGO-534
+	 */
+	@Test
+	public void queryingWithNullQueryReturnsAllFiles() throws IOException {
+
+		GridFSFile reference = operations.store(resource.getInputStream(), "foo.xml");
+
+		List<GridFSDBFile> result = operations.find(null);
+
+		assertThat(result, hasSize(1));
+		assertSame(result.get(0), reference);
 	}
 
 	private static void assertSame(GridFSFile left, GridFSFile right) {

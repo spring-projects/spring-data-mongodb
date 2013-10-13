@@ -158,7 +158,15 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#find(com.mongodb.DBObject)
 	 */
 	public List<GridFSDBFile> find(Query query) {
-		return getGridFs().find(getMappedQuery(query));
+
+		if (query == null) {
+			return getGridFs().find((DBObject) null);
+		}
+
+		DBObject queryObject = getMappedQuery(query.getQueryObject());
+		DBObject sortObject = getMappedQuery(query.getSortObject());
+
+		return getGridFs().find(queryObject, sortObject);
 	}
 
 	/*
@@ -221,7 +229,11 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 	}
 
 	private DBObject getMappedQuery(Query query) {
-		return query == null ? null : queryMapper.getMappedObject(query.getQueryObject(), null);
+		return query == null ? null : getMappedQuery(query.getQueryObject());
+	}
+
+	private DBObject getMappedQuery(DBObject query) {
+		return query == null ? null : queryMapper.getMappedObject(query, null);
 	}
 
 	private GridFS getGridFs() {
