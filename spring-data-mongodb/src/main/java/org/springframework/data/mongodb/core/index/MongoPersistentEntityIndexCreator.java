@@ -45,6 +45,7 @@ import com.mongodb.util.JSON;
  * @author Oliver Gierke
  * @author Philipp Schneider
  * @author Johno Crawford
+ * @author Laurent Canet
  */
 public class MongoPersistentEntityIndexCreator implements
 		ApplicationListener<MappingContextEvent<MongoPersistentEntity<?>, MongoPersistentProperty>> {
@@ -157,6 +158,8 @@ public class MongoPersistentEntityIndexCreator implements
 						GeospatialIndex indexObject = new GeospatialIndex(persistentProperty.getFieldName());
 						indexObject.withMin(index.min()).withMax(index.max());
 						indexObject.named(StringUtils.hasText(index.name()) ? index.name() : field.getName());
+						indexObject.typed(index.type()).withBucketSize(index.bucketSize())
+								.withAdditionalField(index.additionalField());
 
 						String collection = StringUtils.hasText(index.collection()) ? index.collection() : entity.getCollection();
 						mongoDbFactory.getDb().getCollection(collection)
