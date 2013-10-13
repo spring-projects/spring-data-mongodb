@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 the original author or authors.
+ * Copyright 2010-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core.index;
 
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
@@ -25,14 +26,18 @@ import com.mongodb.DBObject;
  * 
  * @author Jon Brisbin
  * @author Oliver Gierke
+ * @author Laurent Canet
  */
 public class GeospatialIndex implements IndexDefinition {
 
 	private final String field;
 	private String name;
-	private Integer min = null;
-	private Integer max = null;
-	private Integer bits = null;
+	private Integer min;
+	private Integer max;
+	private Integer bits;
+	private GeospatialIndexType type = GeospatialIndexType.GEO_2D;
+	private Double bucketSize = 1.0;
+	private String additionalField;
 
 	/**
 	 * Creates a new {@link GeospatialIndex} for the given field.
@@ -40,52 +45,139 @@ public class GeospatialIndex implements IndexDefinition {
 	 * @param field must not be empty or {@literal null}.
 	 */
 	public GeospatialIndex(String field) {
-		Assert.hasText(field);
+
+		Assert.hasText(field, "Field must have text!");
+
 		this.field = field;
 	}
 
+	/**
+	 * @param name must not be empty or {@literal null}.
+	 * @return
+	 */
 	public GeospatialIndex named(String name) {
+
+		Assert.hasText(name, "Name must have text!");
+
 		this.name = name;
 		return this;
 	}
 
+	/**
+	 * @param min
+	 * @return
+	 */
 	public GeospatialIndex withMin(int min) {
 		this.min = Integer.valueOf(min);
 		return this;
 	}
 
+	/**
+	 * @param max
+	 * @return
+	 */
 	public GeospatialIndex withMax(int max) {
 		this.max = Integer.valueOf(max);
 		return this;
 	}
 
+	/**
+	 * @param bits
+	 * @return
+	 */
 	public GeospatialIndex withBits(int bits) {
 		this.bits = Integer.valueOf(bits);
 		return this;
 	}
 
+	/**
+	 * @param type must not be {@literal null}.
+	 * @return
+	 */
+	public GeospatialIndex typed(GeospatialIndexType type) {
+
+		Assert.notNull(type, "Type must not be null!");
+
+		this.type = type;
+		return this;
+	}
+
+	/**
+	 * @param bucketSize
+	 * @return
+	 */
+	public GeospatialIndex withBucketSize(double bucketSize) {
+		this.bucketSize = bucketSize;
+		return this;
+	}
+
+	/**
+	 * @param fieldName.
+	 * @return
+	 */
+	public GeospatialIndex withAdditionalField(String fieldName) {
+		this.additionalField = fieldName;
+		return this;
+	}
+
 	public DBObject getIndexKeys() {
 		DBObject dbo = new BasicDBObject();
-		dbo.put(field, "2d");
+		switch (type) {
+			case GEO_2D:
+				dbo.put(field, "2d");
+				break;
+			case GEO_2DSPHERE:
+				dbo.put(field, "2dsphere");
+				break;
+			case GEO_HAYSTACK:
+				dbo.put(field, "geoHaystack");
+				if (!StringUtils.hasText(additionalField)) {
+					throw new IllegalArgumentException("When defining geoHaystack index, an additionnal field must be defined");
+				}
+				dbo.put(additionalField, 1);
+				break;
+			default:
+				throw new IllegalArgumentException("Unsupported geospatial index " + type);
+		}
 		return dbo;
 	}
 
 	public DBObject getIndexOptions() {
-		if (name == null && min == null && max == null) {
+
+		if (name == null && min == null && max == null && bucketSize == null) {
 			return null;
 		}
+
 		DBObject dbo = new BasicDBObject();
 		if (name != null) {
 			dbo.put("name", name);
 		}
-		if (min != null) {
-			dbo.put("min", min);
-		}
-		if (max != null) {
-			dbo.put("max", max);
-		}
-		if (bits != null) {
-			dbo.put("bits", bits);
+
+		switch (type) {
+
+			case GEO_2D:
+
+				if (min != null) {
+					dbo.put("min", min);
+				}
+				if (max != null) {
+					dbo.put("max", max);
+				}
+				if (bits != null) {
+					dbo.put("bits", bits);
+				}
+				break;
+
+			case GEO_2DSPHERE:
+
+				break;
+
+			case GEO_HAYSTACK:
+
+				if (bucketSize != null) {
+					dbo.put("bucketSize", bucketSize);
+				}
+				break;
 		}
 		return dbo;
 	}
