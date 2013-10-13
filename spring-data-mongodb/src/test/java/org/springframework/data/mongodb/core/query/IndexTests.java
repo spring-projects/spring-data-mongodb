@@ -21,6 +21,7 @@ import static org.junit.Assert.*;
 import org.junit.Test;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.index.GeospatialIndex;
+import org.springframework.data.mongodb.core.index.GeospatialIndexType;
 import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.index.Index.Duplicates;
 
@@ -67,6 +68,21 @@ public class IndexTests {
 		GeospatialIndex i = new GeospatialIndex("location").withMin(0);
 		assertEquals("{ \"location\" : \"2d\"}", i.getIndexKeys().toString());
 		assertEquals("{ \"min\" : 0}", i.getIndexOptions().toString());
+	}
+
+	@Test
+	public void testGeospatialIndex2DSphere() {
+		GeospatialIndex i = new GeospatialIndex("location").typed(GeospatialIndexType.GEO_2DSPHERE);
+		assertEquals("{ \"location\" : \"2dsphere\"}", i.getIndexKeys().toString());
+		assertEquals("{ }", i.getIndexOptions().toString());
+	}
+
+	@Test
+	public void testGeospatialIndexGeoHaystack() {
+		GeospatialIndex i = new GeospatialIndex("location").typed(GeospatialIndexType.GEO_HAYSTACK)
+				.withAdditionalField("name").withBucketSize(40);
+		assertEquals("{ \"location\" : \"geoHaystack\" , \"name\" : 1}", i.getIndexKeys().toString());
+		assertEquals("{ \"bucketSize\" : 40.0}", i.getIndexOptions().toString());
 	}
 
 	@Test
