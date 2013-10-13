@@ -15,129 +15,140 @@
  */
 package org.springframework.data.mongodb.core.query;
 
-import java.util.HashMap;
+import static org.hamcrest.CoreMatchers.*;
+import static org.junit.Assert.*;
+
+import java.util.Collections;
 import java.util.Map;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 /**
  * Test cases for {@link Update}.
  * 
  * @author Oliver Gierke
+ * @author Thomas Risberg
  * @author Becca Gaspard
  */
 public class UpdateTests {
 
 	@Test
 	public void testSet() {
+
 		Update u = new Update().set("directory", "/Users/Test/Desktop");
-		Assert.assertEquals("{ \"$set\" : { \"directory\" : \"/Users/Test/Desktop\"}}", u.getUpdateObject().toString());
+		assertThat(u.getUpdateObject().toString(), is("{ \"$set\" : { \"directory\" : \"/Users/Test/Desktop\"}}"));
 	}
 
 	@Test
 	public void testSetSet() {
+
 		Update u = new Update().set("directory", "/Users/Test/Desktop").set("size", 0);
-		Assert.assertEquals("{ \"$set\" : { \"directory\" : \"/Users/Test/Desktop\" , \"size\" : 0}}", u.getUpdateObject()
-				.toString());
+		assertThat(u.getUpdateObject().toString(),
+				is("{ \"$set\" : { \"directory\" : \"/Users/Test/Desktop\" , \"size\" : 0}}"));
 	}
 
 	@Test
 	public void testInc() {
+
 		Update u = new Update().inc("size", 1);
-		Assert.assertEquals("{ \"$inc\" : { \"size\" : 1}}", u.getUpdateObject().toString());
+		assertThat(u.getUpdateObject().toString(), is("{ \"$inc\" : { \"size\" : 1}}"));
 	}
 
 	@Test
 	public void testIncInc() {
+
 		Update u = new Update().inc("size", 1).inc("count", 1);
-		Assert.assertEquals("{ \"$inc\" : { \"size\" : 1 , \"count\" : 1}}", u.getUpdateObject().toString());
+		assertThat(u.getUpdateObject().toString(), is("{ \"$inc\" : { \"size\" : 1 , \"count\" : 1}}"));
 	}
 
 	@Test
 	public void testIncAndSet() {
+
 		Update u = new Update().inc("size", 1).set("directory", "/Users/Test/Desktop");
-		Assert.assertEquals("{ \"$inc\" : { \"size\" : 1} , \"$set\" : { \"directory\" : \"/Users/Test/Desktop\"}}", u
-				.getUpdateObject().toString());
+		assertThat(u.getUpdateObject().toString(),
+				is("{ \"$inc\" : { \"size\" : 1} , \"$set\" : { \"directory\" : \"/Users/Test/Desktop\"}}"));
 	}
 
 	@Test
 	public void testUnset() {
+
 		Update u = new Update().unset("directory");
-		Assert.assertEquals("{ \"$unset\" : { \"directory\" : 1}}", u.getUpdateObject().toString());
+		assertThat(u.getUpdateObject().toString(), is("{ \"$unset\" : { \"directory\" : 1}}"));
 	}
 
 	@Test
 	public void testPush() {
-		Map<String, Object> m = new HashMap<String, Object>();
-		m.put("name", "Sven");
-		Update u = new Update().push("authors", m);
-		Assert.assertEquals("{ \"$push\" : { \"authors\" : { \"name\" : \"Sven\"}}}", u.getUpdateObject().toString());
+
+		Update u = new Update().push("authors", Collections.singletonMap("name", "Sven"));
+		assertThat(u.getUpdateObject().toString(), is("{ \"$push\" : { \"authors\" : { \"name\" : \"Sven\"}}}"));
 	}
 
 	@Test
 	public void testPushAll() {
-		Map<String, Object> m1 = new HashMap<String, Object>();
-		m1.put("name", "Sven");
-		Map<String, Object> m2 = new HashMap<String, Object>();
-		m2.put("name", "Maria");
+
+		Map<String, String> m1 = Collections.singletonMap("name", "Sven");
+		Map<String, String> m2 = Collections.singletonMap("name", "Maria");
+
 		Update u = new Update().pushAll("authors", new Object[] { m1, m2 });
-		Assert.assertEquals("{ \"$pushAll\" : { \"authors\" : [ { \"name\" : \"Sven\"} , { \"name\" : \"Maria\"}]}}", u
-				.getUpdateObject().toString());
+		assertThat(u.getUpdateObject().toString(),
+				is("{ \"$pushAll\" : { \"authors\" : [ { \"name\" : \"Sven\"} , { \"name\" : \"Maria\"}]}}"));
 	}
 
 	@Test
 	public void testAddToSet() {
-		Map<String, Object> m = new HashMap<String, Object>();
-		m.put("name", "Sven");
-		Update u = new Update().addToSet("authors", m);
-		Assert.assertEquals("{ \"$addToSet\" : { \"authors\" : { \"name\" : \"Sven\"}}}", u.getUpdateObject().toString());
+
+		Update u = new Update().addToSet("authors", Collections.singletonMap("name", "Sven"));
+		assertThat(u.getUpdateObject().toString(), is("{ \"$addToSet\" : { \"authors\" : { \"name\" : \"Sven\"}}}"));
 	}
 
 	@Test
 	public void testPop() {
+
 		Update u = new Update().pop("authors", Update.Position.FIRST);
-		Assert.assertEquals("{ \"$pop\" : { \"authors\" : -1}}", u.getUpdateObject().toString());
+		assertThat(u.getUpdateObject().toString(), is("{ \"$pop\" : { \"authors\" : -1}}"));
+
 		u = new Update().pop("authors", Update.Position.LAST);
-		Assert.assertEquals("{ \"$pop\" : { \"authors\" : 1}}", u.getUpdateObject().toString());
+		assertThat(u.getUpdateObject().toString(), is("{ \"$pop\" : { \"authors\" : 1}}"));
 	}
 
 	@Test
 	public void testPull() {
-		Map<String, Object> m = new HashMap<String, Object>();
-		m.put("name", "Sven");
-		Update u = new Update().pull("authors", m);
-		Assert.assertEquals("{ \"$pull\" : { \"authors\" : { \"name\" : \"Sven\"}}}", u.getUpdateObject().toString());
+
+		Update u = new Update().pull("authors", Collections.singletonMap("name", "Sven"));
+		assertThat(u.getUpdateObject().toString(), is("{ \"$pull\" : { \"authors\" : { \"name\" : \"Sven\"}}}"));
 	}
 
 	@Test
 	public void testPullAll() {
-		Map<String, Object> m1 = new HashMap<String, Object>();
-		m1.put("name", "Sven");
-		Map<String, Object> m2 = new HashMap<String, Object>();
-		m2.put("name", "Maria");
+
+		Map<String, String> m1 = Collections.singletonMap("name", "Sven");
+		Map<String, String> m2 = Collections.singletonMap("name", "Maria");
+
 		Update u = new Update().pullAll("authors", new Object[] { m1, m2 });
-		Assert.assertEquals("{ \"$pullAll\" : { \"authors\" : [ { \"name\" : \"Sven\"} , { \"name\" : \"Maria\"}]}}", u
-				.getUpdateObject().toString());
+		assertThat(u.getUpdateObject().toString(),
+				is("{ \"$pullAll\" : { \"authors\" : [ { \"name\" : \"Sven\"} , { \"name\" : \"Maria\"}]}}"));
 	}
 
 	@Test
 	public void testRename() {
+
 		Update u = new Update().rename("directory", "folder");
-		Assert.assertEquals("{ \"$rename\" : { \"directory\" : \"folder\"}}", u.getUpdateObject().toString());
+		assertThat(u.getUpdateObject().toString(), is("{ \"$rename\" : { \"directory\" : \"folder\"}}"));
 	}
 
 	@Test
 	public void testBasicUpdateInc() {
+
 		Update u = new Update().inc("size", 1);
-		Assert.assertEquals("{ \"$inc\" : { \"size\" : 1}}", u.getUpdateObject().toString());
+		assertThat(u.getUpdateObject().toString(), is("{ \"$inc\" : { \"size\" : 1}}"));
 	}
 
 	@Test
 	public void testBasicUpdateIncAndSet() {
+
 		Update u = new BasicUpdate("{ \"$inc\" : { \"size\" : 1}}").set("directory", "/Users/Test/Desktop");
-		Assert.assertEquals("{ \"$inc\" : { \"size\" : 1} , \"$set\" : { \"directory\" : \"/Users/Test/Desktop\"}}", u
-				.getUpdateObject().toString());
+		assertThat(u.getUpdateObject().toString(),
+				is("{ \"$inc\" : { \"size\" : 1} , \"$set\" : { \"directory\" : \"/Users/Test/Desktop\"}}"));
 	}
 
 	/**
@@ -145,8 +156,9 @@ public class UpdateTests {
 	 */
 	@Test
 	public void testSetOnInsert() {
+
 		Update u = new Update().setOnInsert("size", 1);
-		Assert.assertEquals("{ \"$setOnInsert\" : { \"size\" : 1}}", u.getUpdateObject().toString());
+		assertThat(u.getUpdateObject().toString(), is("{ \"$setOnInsert\" : { \"size\" : 1}}"));
 	}
 
 	/**
@@ -154,7 +166,8 @@ public class UpdateTests {
 	 */
 	@Test
 	public void testSetOnInsertSetOnInsert() {
+
 		Update u = new Update().setOnInsert("size", 1).setOnInsert("count", 1);
-		Assert.assertEquals("{ \"$setOnInsert\" : { \"size\" : 1 , \"count\" : 1}}", u.getUpdateObject().toString());
+		assertThat(u.getUpdateObject().toString(), is("{ \"$setOnInsert\" : { \"size\" : 1 , \"count\" : 1}}"));
 	}
 }
