@@ -55,7 +55,7 @@
 		</dependency>
 
 		<!--  Spring Data -->
-			<dependency>
+		<dependency>
 			<groupId>${project.groupId}</groupId>
 			<artifactId>spring-data-commons</artifactId>
 			<version>${springdata.commons}</version>

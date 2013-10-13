@@ -23,6 +23,9 @@ import java.net.UnknownHostException;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.core.NestedRuntimeException;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataAccessResourceFailureException;
@@ -43,9 +46,12 @@ import com.mongodb.ServerAddress;
  * @author Michal Vich
  * @author Oliver Gierke
  */
+@RunWith(MockitoJUnitRunner.class)
 public class MongoExceptionTranslatorUnitTests {
 
 	MongoExceptionTranslator translator;
+
+	@Mock DuplicateKey exception;
 
 	@Before
 	public void setUp() {
@@ -55,10 +61,8 @@ public class MongoExceptionTranslatorUnitTests {
 	@Test
 	public void translateDuplicateKey() {
 
-		DuplicateKey exception = new DuplicateKey(1, "Duplicated key");
 		DataAccessException translatedException = translator.translateExceptionIfPossible(exception);
-
-		expectExceptionWithCauseMessage(translatedException, DuplicateKeyException.class, "Duplicated key");
+		expectExceptionWithCauseMessage(translatedException, DuplicateKeyException.class, null);
 	}
 
 	@Test
