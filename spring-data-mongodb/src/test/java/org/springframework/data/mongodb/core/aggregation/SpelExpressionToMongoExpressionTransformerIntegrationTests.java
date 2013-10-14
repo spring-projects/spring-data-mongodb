@@ -34,6 +34,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 /**
  * Integration tests for {@link SpelExpressionToMongoExpressionTransformer}.
  * 
+ * @see DATAMONGO-774
  * @author Thomas Darimont
  */
 @RunWith(SpringJUnit4ClassRunner.class)

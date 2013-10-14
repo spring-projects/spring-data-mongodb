@@ -106,6 +106,34 @@ public class FieldsUnitTests {
 		fields("b", "a.b");
 	}
 
+	/**
+	 * @see DATAMONGO-774
+	 */
+	@Test
+	public void stripsLeadingDollarsFromName() {
+
+		assertThat(Fields.field("$name").getName(), is("name"));
+		assertThat(Fields.field("$$$$name").getName(), is("name"));
+	}
+
+	/**
+	 * @see DATAMONGO-774
+	 */
+	@Test(expected = IllegalArgumentException.class)
+	public void rejectsNameConsistingOfDollarOnly() {
+		Fields.field("$");
+	}
+
+	/**
+	 * @see DATAMONGO-774
+	 */
+	@Test
+	public void stripsLeadingDollarsFromTarget() {
+
+		assertThat(Fields.field("$target").getTarget(), is("target"));
+		assertThat(Fields.field("$$$$target").getTarget(), is("target"));
+	}
+
 	private static void verify(Field field, String name, String target) {
 
 		assertThat(field, is(notNullValue()));

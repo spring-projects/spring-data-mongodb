@@ -24,6 +24,7 @@ import org.junit.Test;
 /**
  * Unit tests for {@link SpelExpressionToMongoExpressionTransformer}.
  * 
+ * @see DATAMONGO-774
  * @author Thomas Darimont
  */
 public class SpelExpressionToMongoExpressionTransformerTests {
@@ -32,6 +33,7 @@ public class SpelExpressionToMongoExpressionTransformerTests {
 
 	@Test
 	public void shouldRenderConstantExpression() {
+
 		assertThat(transformer.transform("1").toString(), is("1"));
 		assertThat(transformer.transform("-1").toString(), is("-1"));
 		assertThat(transformer.transform("1.0").toString(), is("1.0"));
@@ -40,6 +42,7 @@ public class SpelExpressionToMongoExpressionTransformerTests {
 
 	@Test
 	public void shouldSupportKnownOperands() {
+
 		assertThat(transformer.transform("a + b").toString(), is("{ \"$add\" : [ \"$a\" , \"$b\"]}"));
 		assertThat(transformer.transform("a - b").toString(), is("{ \"$subtract\" : [ \"$a\" , \"$b\"]}"));
 		assertThat(transformer.transform("a * b").toString(), is("{ \"$multiply\" : [ \"$a\" , \"$b\"]}"));
@@ -59,6 +62,7 @@ public class SpelExpressionToMongoExpressionTransformerTests {
 
 	@Test
 	public void shouldRenderFormula() {
+
 		assertThat(
 				transformer.transform("(netPrice + surCharge) * taxrate + 42").toString(),
 				is("{ \"$add\" : [ { \"$multiply\" : [ { \"$add\" : [ \"$netPrice\" , \"$surCharge\"]} , \"$taxrate\"]} , 42]}"));
@@ -66,6 +70,7 @@ public class SpelExpressionToMongoExpressionTransformerTests {
 
 	@Test
 	public void shouldRenderFormulaInCurlyBrackets() {
+
 		assertThat(
 				transformer.transform("{(netPrice + surCharge) * taxrate + 42}").toString(),
 				is("{ \"$add\" : [ { \"$multiply\" : [ { \"$add\" : [ \"$netPrice\" , \"$surCharge\"]} , \"$taxrate\"]} , 42]}"));
@@ -73,12 +78,14 @@ public class SpelExpressionToMongoExpressionTransformerTests {
 
 	@Test
 	public void shouldRenderFieldReference() {
+
 		assertThat(transformer.transform("foo").toString(), is("$foo"));
 		assertThat(transformer.transform("$foo").toString(), is("$foo"));
 	}
 
 	@Test
 	public void shouldRenderNestedFieldReference() {
+
 		assertThat(transformer.transform("foo.bar").toString(), is("$foo.bar"));
 		assertThat(transformer.transform("$foo.bar").toString(), is("$foo.bar"));
 	}
@@ -98,18 +105,21 @@ public class SpelExpressionToMongoExpressionTransformerTests {
 
 	@Test
 	public void shouldRenderComplexExpression0() {
+
 		assertThat(transformer.transform("-(1 + q)").toString(),
 				is("{ \"$multiply\" : [ -1 , { \"$add\" : [ 1 , \"$q\"]}]}"));
 	}
 
 	@Test
 	public void shouldRenderComplexExpression1() {
+
 		assertThat(transformer.transform("1 + (q + 1) / (q - 1)").toString(),
 				is("{ \"$add\" : [ 1 , { \"$divide\" : [ { \"$add\" : [ \"$q\" , 1]} , { \"$subtract\" : [ \"$q\" , 1]}]}]}"));
 	}
 
 	@Test
 	public void shouldRenderComplexExpression2() {
+
 		assertThat(
 				transformer.transform("(q + 1 + 4 - 5) / (q + 1 + 3 + 4)").toString(),
 				is("{ \"$divide\" : [ { \"$subtract\" : [ { \"$add\" : [ \"$q\" , 1 , 4]} , 5]} , { \"$add\" : [ \"$q\" , 1 , 3 , 4]}]}"));
@@ -117,19 +127,20 @@ public class SpelExpressionToMongoExpressionTransformerTests {
 
 	@Test
 	public void shouldRenderBinaryExpressionWithMixedSignsCorrectly() {
+
 		assertThat(transformer.transform("-4 + 1").toString(), is("{ \"$add\" : [ -4 , 1]}"));
 		assertThat(transformer.transform("1 + -4").toString(), is("{ \"$add\" : [ 1 , -4]}"));
 	}
 
 	@Test
 	public void shouldRenderConsecutiveOperationsInComplexExpression() {
+
 		assertThat(transformer.transform("1 + 1 + (1 + 1 + 1) / q").toString(),
 				is("{ \"$add\" : [ 1 , 1 , { \"$divide\" : [ { \"$add\" : [ 1 , 1 , 1]} , \"$q\"]}]}"));
 	}
 
 	@Test
 	public void shouldRenderParameterExpressionResults() {
-
 		assertThat(transformer.transform("[0] + [1] + [2]", 1, 2, 3).toString(), is("{ \"$add\" : [ 1 , 2 , 3]}"));
 	}
 
