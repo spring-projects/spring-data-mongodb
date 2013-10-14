@@ -45,14 +45,6 @@ public class ExposedFieldsUnitTests {
 	}
 
 	@Test
-	public void mitigateLeadingDollarSignInFieldName() {
-
-		ExposedFields fields = ExposedFields.synthetic(Fields.fields("$foo"));
-		assertThat(fields.iterator().next().getName(), is("$foo"));
-		assertThat(fields.iterator().next().getTarget(), is("$foo"));
-	}
-
-	@Test
 	public void exposesSingleField() {
 
 		ExposedFields fields = ExposedFields.synthetic(Fields.fields("foo"));

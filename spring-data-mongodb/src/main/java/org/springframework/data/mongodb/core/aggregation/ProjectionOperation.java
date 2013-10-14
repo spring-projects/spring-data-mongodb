@@ -193,13 +193,21 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 	}
 
 	/**
+	 * Base class for {@link ProjectionOperationBuilder}s.
+	 * 
 	 * @author Thomas Darimont
 	 */
-	public static abstract class AbstractProjectionOperationBuilder implements AggregationOperation {
+	private static abstract class AbstractProjectionOperationBuilder implements AggregationOperation {
 
 		protected final Object value;
 		protected final ProjectionOperation operation;
 
+		/**
+		 * Creates a new {@link AbstractProjectionOperationBuilder} fot the given value and {@link ProjectionOperation}.
+		 * 
+		 * @param value must not be {@literal null}.
+		 * @param operation must not be {@literal null}.
+		 */
 		public AbstractProjectionOperationBuilder(Object value, ProjectionOperation operation) {
 
 			Assert.notNull(value, "value must not be null or empty!");
@@ -209,15 +217,22 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 			this.operation = operation;
 		}
 
-		public abstract ProjectionOperation as(String alias);
-
-		/* (non-Javadoc)
+		/* 
+		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#toDBObject(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
 		 */
 		@Override
 		public DBObject toDBObject(AggregationOperationContext context) {
 			return this.operation.toDBObject(context);
 		}
+
+		/**
+		 * Returns the finally to be applied {@link ProjectionOperation} with the given alias.
+		 * 
+		 * @param alias will never be {@literal null} or empty.
+		 * @return
+		 */
+		public abstract ProjectionOperation as(String alias);
 	}
 
 	/**
@@ -225,36 +240,71 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 	 */
 	public static class ExpressionProjectionOperationBuilder extends AbstractProjectionOperationBuilder {
 
-		private Object[] params;
+		private final Object[] params;
 
-		public ExpressionProjectionOperationBuilder(Object value, ProjectionOperation operation, Object[] params) {
+		/**
+		 * Creates a new {@link ExpressionProjectionOperationBuilder} for the given value, {@link ProjectionOperation} and
+		 * parameters.
+		 * 
+		 * @param value must not be {@literal null}.
+		 * @param operation must not be {@literal null}.
+		 * @param parameters
+		 */
+		public ExpressionProjectionOperationBuilder(Object value, ProjectionOperation operation, Object[] parameters) {
+
 			super(value, operation);
-			this.params = params;
+			this.params = parameters;
 		}
 
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.aggregation.ProjectionOperation.AbstractProjectionOperationBuilder#as(java.lang.String)
+		 */
+		@Override
 		public ProjectionOperation as(String alias) {
 
-			return this.operation.and(new ExpressionProjection(Fields.field(alias, "expr"), this.value.toString(), params));
+			Field expressionField = Fields.field(alias, "expr");
+			return this.operation.and(new ExpressionProjection(expressionField, this.value.toString(), params));
 		}
 
+		/**
+		 * A {@link Projection} based on a SpEL expression.
+		 * 
+		 * @author Thomas Darimont
+		 * @author Oliver Gierke
+		 */
 		static class ExpressionProjection extends Projection {
 
-			private String expression;
-			private Object[] params;
+			private static final SpelExpressionTransformer TRANSFORMER = new SpelExpressionTransformer();
 
-			public ExpressionProjection(Field field, String expression, Object[] params) {
+			private final String expression;
+			private final Object[] params;
+
+			/**
+			 * Creates a new {@link ExpressionProjection} for the given field, SpEL expression and parameters.
+			 * 
+			 * @param field must not be {@literal null}.
+			 * @param expression must not be {@literal null} or empty.
+			 * @param parameters must not be {@literal null}.
+			 */
+			public ExpressionProjection(Field field, String expression, Object[] parameters) {
+
 				super(field);
+
+				Assert.hasText(expression, "Expression must not be null!");
+				Assert.notNull(parameters, "Parameters must not be null!");
+
 				this.expression = expression;
-				this.params = params;
+				this.params = parameters;
 			}
 
-			/* (non-Javadoc)
+			/* 
+			 * (non-Javadoc)
 			 * @see org.springframework.data.mongodb.core.aggregation.ProjectionOperation.Projection#toDBObject(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
 			 */
 			@Override
 			public DBObject toDBObject(AggregationOperationContext context) {
-				return new BasicDBObject(getExposedField().getName(),
-						SpelExpressionToMongoExpressionTransformer.INSTANCE.transform(expression, context, params));
+				return new BasicDBObject(getExposedField().getName(), TRANSFORMER.transform(expression, context, params));
 			}
 		}
 	}
@@ -315,6 +365,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 * @param string
 		 * @return
 		 */
+		@Override
 		public ProjectionOperation as(String alias) {
 
 			if (this.previousProjection != null) {

@@ -32,19 +32,20 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 /**
- * Integration tests for {@link SpelExpressionToMongoExpressionTransformer}.
+ * Integration tests for {@link SpelExpressionTransformer}.
  * 
+ * @see DATAMONGO-774
  * @author Thomas Darimont
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:infrastructure.xml")
-public class SpelExpressionToMongoExpressionTransformerIntegrationTests {
+public class SpelExpressionTransformerIntegrationTests {
 
 	@Autowired MongoDbFactory mongoDbFactory;
 
 	@Rule public ExpectedException exception = ExpectedException.none();
 
-	SpelExpressionToMongoExpressionTransformer transformer = SpelExpressionToMongoExpressionTransformer.INSTANCE;
+	SpelExpressionTransformer transformer = new SpelExpressionTransformer();
 
 	@Test
 	public void shouldConvertCompoundExpressionToPropertyPath() {
