@@ -22,6 +22,8 @@ import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 
 import java.io.BufferedInputStream;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -90,6 +92,7 @@ public class AggregationTests {
 		mongoTemplate.dropCollection(Product.class);
 		mongoTemplate.dropCollection(UserWithLikes.class);
 		mongoTemplate.dropCollection(DATAMONGO753.class);
+		mongoTemplate.dropCollection(Data.class);
 	}
 
 	/**
@@ -602,6 +605,74 @@ public class AggregationTests {
 		for (DBObject element : mappedResults) {
 			assertThat(element.get("up"), is((Object) 1));
 		}
+	}
+
+	/**
+	 * @DATAMONGO-774
+	 */
+	@Test
+	public void shouldPerformDateProjectionOperatorsCorrectly() throws ParseException {
+
+		Data data = new Data();
+		data.stringValue = "ABC";
+		mongoTemplate.insert(data);
+
+		TypedAggregation<Data> agg = newAggregation(Data.class, project() //
+				.andExpression("concat(stringValue, 'DE')").as("concat") //
+				.andExpression("strcasecmp(stringValue,'XYZ')").as("strcasecmp") //
+				.andExpression("substr(stringValue,1,1)").as("substr") //
+				.andExpression("toLower(stringValue)").as("toLower") //
+				.andExpression("toUpper(toLower(stringValue))").as("toUpper") //
+		);
+
+		AggregationResults<DBObject> results = mongoTemplate.aggregate(agg, DBObject.class);
+		DBObject dbo = results.getUniqueMappedResult();
+
+		assertThat(dbo, is(notNullValue()));
+		assertThat((String) dbo.get("concat"), is("ABCDE"));
+		assertThat((Integer) dbo.get("strcasecmp"), is(-1));
+		assertThat((String) dbo.get("substr"), is("B"));
+		assertThat((String) dbo.get("toLower"), is("abc"));
+		assertThat((String) dbo.get("toUpper"), is("ABC"));
+	}
+
+	/**
+	 * @DATAMONGO-774
+	 */
+	@Test
+	public void shouldPerformStringProjectionOperatorsCorrectly() throws ParseException {
+
+		Data data = new Data();
+		data.dateValue = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss.SSSZ").parse("29.08.1983 12:34:56.789+0000");
+		mongoTemplate.insert(data);
+
+		TypedAggregation<Data> agg = newAggregation(Data.class, project() //
+				.andExpression("dayOfYear(dateValue)").as("dayOfYear") //
+				.andExpression("dayOfMonth(dateValue)").as("dayOfMonth") //
+				.andExpression("dayOfWeek(dateValue)").as("dayOfWeek") //
+				.andExpression("year(dateValue)").as("year") //
+				.andExpression("month(dateValue)").as("month") //
+				.andExpression("week(dateValue)").as("week") //
+				.andExpression("hour(dateValue)").as("hour") //
+				.andExpression("minute(dateValue)").as("minute") //
+				.andExpression("second(dateValue)").as("second") //
+				.andExpression("millisecond(dateValue)").as("millisecond") //
+		);
+
+		AggregationResults<DBObject> results = mongoTemplate.aggregate(agg, DBObject.class);
+		DBObject dbo = results.getUniqueMappedResult();
+
+		assertThat(dbo, is(notNullValue()));
+		assertThat((Integer) dbo.get("dayOfYear"), is(241));
+		assertThat((Integer) dbo.get("dayOfMonth"), is(29));
+		assertThat((Integer) dbo.get("dayOfWeek"), is(2));
+		assertThat((Integer) dbo.get("year"), is(1983));
+		assertThat((Integer) dbo.get("month"), is(8));
+		assertThat((Integer) dbo.get("week"), is(35));
+		assertThat((Integer) dbo.get("hour"), is(12));
+		assertThat((Integer) dbo.get("minute"), is(34));
+		assertThat((Integer) dbo.get("second"), is(56));
+		assertThat((Integer) dbo.get("millisecond"), is(789));
 	}
 
 	private void assertLikeStats(LikeStats like, String id, long count) {

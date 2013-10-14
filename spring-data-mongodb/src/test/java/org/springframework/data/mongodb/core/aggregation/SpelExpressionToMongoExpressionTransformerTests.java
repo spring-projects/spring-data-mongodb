@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core.aggregation;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -31,6 +32,19 @@ public class SpelExpressionToMongoExpressionTransformerTests {
 
 	SpelExpressionToMongoExpressionTransformer transformer = SpelExpressionToMongoExpressionTransformer.INSTANCE;
 
+	Data data;
+
+	@Before
+	public void setup() {
+
+		this.data = new Data();
+		this.data.primitiveLongValue = 42;
+		this.data.primitiveDoubleValue = 1.2345;
+		this.data.doubleValue = 23.0;
+		this.data.item = new DataItem();
+		this.data.item.primitiveIntValue = 21;
+	}
+
 	@Test
 	public void shouldRenderConstantExpression() {
 
@@ -38,6 +52,7 @@ public class SpelExpressionToMongoExpressionTransformerTests {
 		assertThat(transformer.transform("-1").toString(), is("-1"));
 		assertThat(transformer.transform("1.0").toString(), is("1.0"));
 		assertThat(transformer.transform("-1.0").toString(), is("-1.0"));
+		assertThat(String.valueOf(transformer.transform("null")), is("null"));
 	}
 
 	@Test
@@ -147,8 +162,18 @@ public class SpelExpressionToMongoExpressionTransformerTests {
 	@Test
 	public void shouldRenderNestedParameterExpressionResults() {
 
-		assertThat(transformer.transform("[0].value1 + [0].value2 + [0].value3.longValue()", new Data()).toString(),
-				is("{ \"$add\" : [ 42 , 1.2345 , 23]}"));
+		assertThat(
+				transformer.transform("[0].primitiveLongValue + [0].primitiveDoubleValue + [0].doubleValue.longValue()", data)
+						.toString(), is("{ \"$add\" : [ 42 , 1.2345 , 23]}"));
+	}
+
+	@Test
+	public void shouldRenderNestedParameterExpressionResultsInNestedExpressions() {
+
+		assertThat(
+				transformer.transform(
+						"((1 + [0].primitiveLongValue) + [0].primitiveDoubleValue) * [0].doubleValue.longValue()", data).toString(),
+				is("{ \"$multiply\" : [ { \"$add\" : [ 1 , 42 , 1.2345]} , 23]}"));
 	}
 
 	@Test

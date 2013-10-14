@@ -53,7 +53,8 @@ public class SpelExpressionToMongoExpressionTransformerIntegrationTests {
 		MappingMongoConverter converter = new MappingMongoConverter(mongoDbFactory, new MongoMappingContext());
 		TypeBasedAggregationOperationContext ctxt = new TypeBasedAggregationOperationContext(Data.class,
 				new MongoMappingContext(), new QueryMapper(converter));
-		assertThat(transformer.transform("item.value", ctxt, new Object[0]).toString(), is("$item.value"));
+		assertThat(transformer.transform("item.primitiveIntValue", ctxt, new Object[0]).toString(),
+				is("$item.primitiveIntValue"));
 	}
 
 	@Test

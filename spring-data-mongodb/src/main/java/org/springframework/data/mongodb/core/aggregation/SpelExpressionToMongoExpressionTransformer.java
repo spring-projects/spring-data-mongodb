@@ -32,6 +32,7 @@ import org.springframework.expression.spel.ast.IntLiteral;
 import org.springframework.expression.spel.ast.Literal;
 import org.springframework.expression.spel.ast.LongLiteral;
 import org.springframework.expression.spel.ast.MethodReference;
+import org.springframework.expression.spel.ast.NullLiteral;
 import org.springframework.expression.spel.ast.OpDivide;
 import org.springframework.expression.spel.ast.OpMinus;
 import org.springframework.expression.spel.ast.OpModulus;
@@ -44,6 +45,7 @@ import org.springframework.expression.spel.ast.StringLiteral;
 import org.springframework.expression.spel.standard.SpelExpression;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
+import org.springframework.util.Assert;
 import org.springframework.util.NumberUtils;
 
 import com.mongodb.BasicDBList;
@@ -59,296 +61,187 @@ enum SpelExpressionToMongoExpressionTransformer {
 
 	INSTANCE;
 
-	private Map<String, String> arithmeticOperatorsSpelToMongoConversion = new HashMap<String, String>() {
-		private static final long serialVersionUID = 1L;
+	private List<SpelNodeConversion<? extends SpelNode>> conversions;
 
-		{
-			put("+", "$add");
-			put("-", "$subtract");
-			put("*", "$multiply");
-			put("/", "$divide");
-			put("%", "$mod");
-		}
-	};
+	/**
+	 * Creates a new {@link SpelExpressionToMongoExpressionTransformer}.
+	 */
+	private SpelExpressionToMongoExpressionTransformer() {
 
-	private Map<String, String> functionsSpelToMongoConversion = new HashMap<String, String>() {
-		private static final long serialVersionUID = 1L;
+		this.conversions = new ArrayList<SpelNodeConversion<? extends SpelNode>>();
+		this.conversions.add(new OperatorNodeConversion());
+		this.conversions.add(new LiteralNodeConversion());
+		this.conversions.add(new IndexerNodeConversion());
+		this.conversions.add(new InlineListNodeConversion());
+		this.conversions.add(new PropertyOrFieldReferenceNodeConversion());
+		this.conversions.add(new CompoundExpressionNodeConversion());
+		this.conversions.add(new MethodReferenceNodeConversion());
+	}
 
-		{
-			put("concat", "$concat"); // Concatenates two strings.
-			put("strcasecmp", "$strcasecmp"); // Compares two strings and returns an integer that reflects the comparison.
-			put("substr", "$substr"); // Takes a string and returns portion of that string.
-			put("toLower", "$toLower"); // Converts a string to lowercase.
-			put("toUpper", "$toUpper"); // Converts a string to uppercase.
-
-			put("dayOfYear", "$dayOfYear"); // Converts a date to a number between 1 and 366.
-			put("dayOfMonth", "$dayOfMonth"); // Converts a date to a number between 1 and 31.
-			put("dayOfWeek", "$dayOfWeek"); // Converts a date to a number between 1 and 7.
-			put("year", "$year"); // Converts a date to the full year.
-			put("month", "$month"); // Converts a date into a number between 1 and 12.
-			put("week", "$week"); // Cput("foo","onverts a date into a number between 0 and 53
-			put("hour", "$hour"); // Converts a date into a number between 0 and 23.
-			put("minute", "$minute"); // Converts a date into a number between 0 and 59.
-			put("second", "$second"); // Converts a date into a number between 0 and 59. May be 60 to account for leap
-																// seconds.
-			put("millisecond", "$millisecond"); // Returns the millisecond portion of a date as an integer between 0 and 999.
-		}
-	};
-
+	/**
+	 * Transforms the given SpEL expression string to a corresponding MongoDB Expression.
+	 * 
+	 * @param expression must be a SpEL expression.
+	 * @return
+	 */
 	public Object transform(String expression) {
 		return transform(expression, Aggregation.DEFAULT_CONTEXT, new Object[0]);
 	}
 
+	/**
+	 * Transforms the given SpEL expression string to a corresponding MongoDB expression against the
+	 * {@link Aggregation#DEFAULT_CONTEXT}.
+	 * <p>
+	 * Exposes the given @{code params} as <code>[0] ... [n]</code>.
+	 * 
+	 * @param expression must be a SpEL expression.
+	 * @param params must not be {@literal null}
+	 * @return
+	 */
 	public Object transform(String expression, Object... params) {
+
 		return transform(expression, Aggregation.DEFAULT_CONTEXT, params);
 	}
 
+	/**
+	 * Transforms the given SpEL expression string to a corresponding MongoDB expression against the given
+	 * {@link AggregationOperationContext} {@code context}.
+	 * <p>
+	 * Exposes the given @{code params} as <code>[0] ... [n]</code>.
+	 * 
+	 * @param expression must not be {@literal null}
+	 * @param context must not be {@literal null}
+	 * @param params must not be {@literal null}
+	 * @return
+	 */
 	public Object transform(String expression, AggregationOperationContext context, Object[] params) {
+
+		Assert.notNull(expression, "expression must not be null!");
+
 		return transform((SpelExpression) new SpelExpressionParser().parseExpression(expression), context, params);
 	}
 
+	/**
+	 * Transforms the given SpEL expression to a corresponding MongoDB expression against the given
+	 * {@link AggregationOperationContext} {@code context}.
+	 * <p>
+	 * Exposes the given @{code params} as <code>[0] ... [n]</code>.
+	 * 
+	 * @param expression must not be {@literal null}
+	 * @param context must not be {@literal null}
+	 * @param params must not be {@literal null}
+	 * @return
+	 */
 	public Object transform(SpelExpression expression, AggregationOperationContext context, Object[] params) {
+
+		Assert.notNull(params, "params must not be null!");
+
 		return transform(expression, context, new ExpressionState(new StandardEvaluationContext(params)));
 	}
 
+	/**
+	 * Transforms the given SpEL expression to a corresponding MongoDB expression against the given
+	 * {@link AggregationOperationContext} {@code context} and the given {@link ExpressionState}.
+	 * 
+	 * @param expression
+	 * @param aggregationContext
+	 * @param expressionState
+	 * @return
+	 */
 	public Object transform(SpelExpression expression, AggregationOperationContext aggregationContext,
 			ExpressionState expressionState) {
 
-		ExpressionConversionContext expressionContext = new ExpressionConversionContext(null, null, aggregationContext,
-				expressionState);
-		return convertSpelNodeToMongoObjectExpression(expression.getAST(), expressionContext);
+		Assert.notNull(expression, "expression must not be null!");
+		Assert.notNull(aggregationContext, "aggregationContext must not be null!");
+		Assert.notNull(expressionState, "expressionState must not be null!");
+
+		ExpressionTransformationContext expressionContext = new ExpressionTransformationContext(expression.getAST(), null,
+				null, aggregationContext, expressionState);
+		return doTransform(expressionContext);
 	}
 
-	private Object convertSpelNodeToMongoObjectExpression(SpelNode spelNode, ExpressionConversionContext context) {
+	/**
+	 * @param spelNode
+	 * @param context
+	 * @return
+	 */
+	private Object doTransform(ExpressionTransformationContext context) {
 
-		if (isOperatorNode(spelNode)) {
-			return convertOperatorNode((Operator) spelNode, context);
+		return lookupConversionFor(context.getCurrentNode()).convert(context);
+	}
+
+	/**
+	 * Returns an appropriate {@link SpelNodeConversion} for the given {@code node}. Throws an
+	 * {@link IllegalArgumentException} if no conversion could be found.
+	 * 
+	 * @param node
+	 * @return the appropriate {@link SpelNodeConversion} for the given {@link SpelNode}.
+	 */
+	private SpelNodeConversion<? extends SpelNode> lookupConversionFor(SpelNode node) {
+
+		for (SpelNodeConversion<? extends SpelNode> candidate : conversions) {
+			if (candidate.supports(node)) {
+				return candidate;
+			}
 		}
 
-		if (isValueLiteral(spelNode)) {
-			return convertValueLiteralNode((Literal) spelNode, context);
-		}
-
-		if (isPropertyOrFieldReference(spelNode)) {
-			return convertPropertyOrFieldReferenceNode((PropertyOrFieldReference) spelNode, context);
-		}
-
-		if (isIndexerNode(spelNode)) {
-			return convertIndexerExpression((Indexer) spelNode, context);
-		}
-
-		if (isInlistNode(spelNode)) {
-			return convertInlineListNode((InlineList) spelNode, context);
-		}
-
-		if (isCompoundExpression(spelNode)) {
-			return convertCompoundExpression((CompoundExpression) spelNode, context);
-		}
-
-		if (isMethodReference(spelNode)) {
-			return convertMethodReference((MethodReference) spelNode, context);
-		}
-
-		throw new IllegalArgumentException("Unsupported Element: " + spelNode + " Type: " + spelNode.getClass()
+		throw new IllegalArgumentException("Unsupported Element: " + node + " Type: " + node.getClass()
 				+ " You probably have a syntax error in your SpEL expression!");
 	}
 
-	private boolean isMethodReference(SpelNode spelNode) {
-		return spelNode instanceof MethodReference;
-	}
+	/**
+	 * Holds information about the current transformation context.
+	 * 
+	 * @author Thomas Darimont
+	 */
+	private static class ExpressionTransformationContext {
 
-	private boolean isCompoundExpression(SpelNode spelNode) {
-		return spelNode instanceof CompoundExpression;
-	}
-
-	private boolean isPropertyOrFieldReference(SpelNode node) {
-		return node instanceof PropertyOrFieldReference;
-	}
-
-	private boolean isValueLiteral(SpelNode node) {
-		return node instanceof FloatLiteral || node instanceof RealLiteral || node instanceof IntLiteral
-				|| node instanceof LongLiteral || node instanceof StringLiteral;
-	}
-
-	private boolean isOperatorNode(SpelNode node) {
-		return node instanceof OpMinus || node instanceof OpPlus || node instanceof OpMultiply || node instanceof OpDivide
-				|| node instanceof OpModulus;
-	}
-
-	private boolean isInlistNode(SpelNode node) {
-		return node instanceof InlineList;
-	}
-
-	private boolean isIndexerNode(SpelNode node) {
-		return node instanceof Indexer;
-	}
-
-	private String toMongoOperator(SpelNode node) {
-		return arithmeticOperatorsSpelToMongoConversion.get(((Operator) node).getOperatorName());
-	}
-
-	private Object convertIndexerExpression(Indexer indexer, ExpressionConversionContext context) {
-
-		Object value = indexer.getValue(context.getExpressionState());
-
-		if (context.isPreviousOperationPresent()) {
-			extractArgumentListFrom((DBObject) context.getPreviousOperationObject()).add(value);
-			return context.getPreviousOperationObject();
-		}
-
-		return value;
-	}
-
-	private Object convertInlineListNode(InlineList list, ExpressionConversionContext context) {
-
-		if (list.getChildCount() == 0) {
-			return null;
-		}
-
-		// just take the first item
-		ExpressionConversionContext nestedExpressionContext = new ExpressionConversionContext(list, null,
-				context.getAggregationContext(), context.getExpressionState());
-		return convertSpelNodeToMongoObjectExpression(list.getChild(0), nestedExpressionContext);
-	}
-
-	private Object convertPropertyOrFieldReferenceNode(PropertyOrFieldReference propertyOrFieldReference,
-			ExpressionConversionContext context) {
-
-		FieldReference fieldReference = context.getFieldReference(propertyOrFieldReference.getName());
-
-		if (context.isPreviousOperationPresent()) {
-			extractArgumentListFrom((DBObject) context.getPreviousOperationObject()).add(fieldReference.toString());
-			return context.getPreviousOperationObject();
-		}
-
-		return fieldReference.toString();
-	}
-
-	private Object convertValueLiteralNode(Literal literal, ExpressionConversionContext context) {
-
-		Object value = literal.getLiteralValue().getValue();
-
-		if (context.isPreviousOperationPresent()) {
-
-			if (context.getParentNode() instanceof OpMinus && ((OpMinus) context.getParentNode()).getRightOperand() == null) {
-				// unary minus operator
-				return NumberUtils.convertNumberToTargetClass(((Number) value).doubleValue() * -1,
-						(Class<Number>) value.getClass());
-			}
-
-			extractArgumentListFrom((DBObject) context.getPreviousOperationObject()).add(value);
-			return context.getPreviousOperationObject();
-		}
-
-		return value;
-	}
-
-	private Object convertOperatorNode(Operator currentOperator, ExpressionConversionContext context) {
-
-		boolean unaryOperator = currentOperator.getRightOperand() == null;
-		Object nextDbObject = new BasicDBObject(getOp(currentOperator), new BasicDBList());
-
-		if (context.isPreviousOperationPresent()) {
-			if (currentOperator.getClass().equals(context.getParentNode().getClass())) {
-				// same operator applied in a row e.g. 1 + 2 + 3 carry on with the operation and render as $add: [1, 2 ,3]
-				nextDbObject = context.getPreviousOperationObject();
-			} else if (!unaryOperator) {
-				// different operator -> add context object for next level to list if arguments of previous expression
-				extractArgumentListFrom((DBObject) context.getPreviousOperationObject()).add(nextDbObject);
-			}
-		}
-
-		Object leftResult = convertSpelNodeToMongoObjectExpression(
-				currentOperator.getLeftOperand(),
-				new ExpressionConversionContext(currentOperator, nextDbObject, context.getAggregationContext(), context
-						.getExpressionState()));
-
-		if (unaryOperator && currentOperator instanceof OpMinus) {
-			return convertUnaryMinusOperator(context.getPreviousOperationObject(), leftResult);
-		}
-
-		// we deliberately ignore the RHS result
-		convertSpelNodeToMongoObjectExpression(currentOperator.getRightOperand(), new ExpressionConversionContext(
-				currentOperator, nextDbObject, context.getAggregationContext(), context.getExpressionState()));
-
-		return nextDbObject;
-	}
-
-	private Object convertUnaryMinusOperator(Object dbObjectOrPlainValue, Object leftResult) {
-
-		Object result = leftResult instanceof Number ? leftResult : new BasicDBObject("$multiply", DBObjectUtils.dbList(-1,
-				leftResult));
-
-		if (dbObjectOrPlainValue != null) {
-			extractArgumentListFrom((DBObject) dbObjectOrPlainValue).add(result);
-		}
-
-		return result;
-	}
-
-	private Object convertMethodReference(MethodReference methodReference, ExpressionConversionContext context) {
-
-		String stringAST = methodReference.toStringAST();
-		String methodName = stringAST.substring(0, stringAST.indexOf('('));
-		String mongoFunction = getMongoFunctionFor(methodName);
-
-		List<Object> args = new ArrayList<Object>();
-		for (int i = 0; i < methodReference.getChildCount(); i++) {
-			args.add(convertSpelNodeToMongoObjectExpression(methodReference.getChild(i), context));
-		}
-
-		BasicDBObject functionObject = new BasicDBObject(mongoFunction, DBObjectUtils.dbList(args.toArray()));
-
-		if (context.isPreviousOperationPresent()) {
-			extractArgumentListFrom((DBObject) context.getPreviousOperationObject()).add(functionObject);
-			return context.getPreviousOperationObject();
-		}
-
-		return functionObject;
-	}
-
-	private String getMongoFunctionFor(String methodName) {
-		return functionsSpelToMongoConversion.get(methodName);
-	}
-
-	private Object convertCompoundExpression(CompoundExpression compoundExpression, ExpressionConversionContext context) {
-
-		if (compoundExpression.getChildCount() > 0 && !isIndexerNode(compoundExpression.getChild(0))) {
-			// we have a property path expression like: foo.bar -> render as reference
-			return context.getFieldReference(compoundExpression.toStringAST()).toString();
-		}
-
-		Object value = compoundExpression.getValue(context.getExpressionState());
-
-		if (context.isPreviousOperationPresent()) {
-			extractArgumentListFrom((DBObject) context.getPreviousOperationObject()).add(value);
-			return context.getPreviousOperationObject();
-		}
-
-		return value;
-	}
-
-	private BasicDBList extractArgumentListFrom(DBObject context) {
-		return (BasicDBList) context.get(context.keySet().iterator().next());
-	}
-
-	private String getOp(SpelNode node) {
-		return isOperatorNode(node) ? toMongoOperator(node) : null;
-	}
-
-	private static class ExpressionConversionContext {
+		private final SpelNode currentNode;
 
 		private final SpelNode parentNode;
-		private final Object dbObjectOrPlainValue;
+
+		private final Object previousOperationObject;
+
 		private final AggregationOperationContext aggregationContext;
+
 		private final ExpressionState expressionState;
 
-		public ExpressionConversionContext(SpelNode parentNode, Object dbObjectOrPlainValue,
+		/**
+		 * Creates a <code>ExpressionConversionContext<code>
+		 * 
+		 * @param currentNode, must not be {@literal null}
+		 * @param parentNode
+		 * @param previousOperationObject
+		 * @param aggregationContext, must not be {@literal null}
+		 * @param expressionState, must not be {@literal null}
+		 */
+		public ExpressionTransformationContext(SpelNode currentNode, SpelNode parentNode, Object previousOperationObject,
 				AggregationOperationContext aggregationContext, ExpressionState expressionState) {
+
+			Assert.notNull(currentNode, "currentNode must not be null!");
+			Assert.notNull(aggregationContext, "aggregationContext must not be null!");
+			Assert.notNull(expressionState, "expressionState must not be null!");
+
+			this.currentNode = currentNode;
 			this.parentNode = parentNode;
-			this.dbObjectOrPlainValue = dbObjectOrPlainValue;
+			this.previousOperationObject = previousOperationObject;
 			this.aggregationContext = aggregationContext;
 			this.expressionState = expressionState;
+		}
+
+		/**
+		 * Creates a {@link ExpressionTransformationContext}.
+		 * 
+		 * @param child, must not be {@literal null}
+		 * @param context, must not be {@literal null}
+		 */
+		public ExpressionTransformationContext(SpelNode currentNode, ExpressionTransformationContext context) {
+			this(currentNode, context.getParentNode(), context.getPreviousOperationObject(), context.getAggregationContext(),
+					context.getExpressionState());
+		}
+
+		public SpelNode getCurrentNode() {
+			return currentNode;
 		}
 
 		public SpelNode getParentNode() {
@@ -356,7 +249,7 @@ enum SpelExpressionToMongoExpressionTransformer {
 		}
 
 		public Object getPreviousOperationObject() {
-			return dbObjectOrPlainValue;
+			return previousOperationObject;
 		}
 
 		public AggregationOperationContext getAggregationContext() {
@@ -371,6 +264,13 @@ enum SpelExpressionToMongoExpressionTransformer {
 			return getPreviousOperationObject() != null;
 		}
 
+		/**
+		 * Returns a {@link FieldReference} for the given {@code fieldName}. Checks whether a field with the given
+		 * {@code fieldName} can be found in the {@link AggregationOperationContext}.
+		 * 
+		 * @param fieldName
+		 * @return
+		 */
 		private FieldReference getFieldReference(String fieldName) {
 
 			if (aggregationContext == null) {
@@ -378,6 +278,391 @@ enum SpelExpressionToMongoExpressionTransformer {
 			}
 
 			return aggregationContext.getReference(fieldName);
+		}
+	}
+
+	/**
+	 * Abstract base class for {@link SpelNode} to (Db)-object conversions.
+	 * 
+	 * @author Thomas Darimont
+	 */
+	static abstract class SpelNodeConversion<T extends SpelNode> {
+
+		protected final Class<T> nodeType;
+
+		public SpelNodeConversion(Class<T> nodeType) {
+			this.nodeType = nodeType;
+		}
+
+		/**
+		 * @param node
+		 * @return true if {@literal this} conversion can be applied to the given {@code node}.
+		 */
+		protected boolean supports(SpelNode node) {
+			return nodeType.isAssignableFrom(node.getClass());
+		}
+
+		/**
+		 * Performs the actual conversion from {@link SpelNode} to the corresponding representation for MongoDB.
+		 * 
+		 * @param context
+		 * @return
+		 */
+		abstract Object convert(ExpressionTransformationContext context);
+
+		/**
+		 * Extracts the argument list from the given {@code context}.
+		 * 
+		 * @param context
+		 * @return
+		 */
+		protected static BasicDBList extractArgumentListFrom(DBObject context) {
+			return (BasicDBList) context.get(context.keySet().iterator().next());
+		}
+
+		protected SpelExpressionToMongoExpressionTransformer getTransformer() {
+			return INSTANCE;
+		}
+	}
+
+	/**
+	 * A {@link SpelNodeConversion} that converts arithmetic operations.
+	 * 
+	 * @author Thomas Darimont
+	 */
+	static class OperatorNodeConversion extends SpelNodeConversion<Operator> {
+
+		private Map<String, String> arithmeticOperatorsSpelToMongoConversion = new HashMap<String, String>() {
+			private static final long serialVersionUID = 1L;
+
+			{
+				put("+", "$add");
+				put("-", "$subtract");
+				put("*", "$multiply");
+				put("/", "$divide");
+				put("%", "$mod");
+			}
+		};
+
+		public OperatorNodeConversion() {
+			super(Operator.class);
+		}
+
+		/* (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.aggregation.SpelExpressionToMongoExpressionTransformer.SpelNodeWrapper#convertSpelNodeToMongoObjectExpression(org.springframework.data.mongodb.core.aggregation.SpelExpressionToMongoExpressionTransformer.ExpressionConversionContext)
+		 */
+		@Override
+		Object convert(ExpressionTransformationContext context) {
+
+			Operator currentNode = Operator.class.cast(context.getCurrentNode());
+			boolean unaryOperator = currentNode.getRightOperand() == null;
+
+			Object operationObject = createOperationObjectAndAddToPreviousArgumentsIfNecessary(context, currentNode,
+					unaryOperator);
+
+			Object leftResult = convertPart(currentNode.getLeftOperand(), context, currentNode, operationObject);
+
+			if (unaryOperator && currentNode instanceof OpMinus) {
+
+				return convertUnaryMinusOp(context, leftResult);
+			}
+
+			// we deliberately ignore the RHS result
+			convertPart(currentNode.getRightOperand(), context, currentNode, operationObject);
+
+			return operationObject;
+		}
+
+		private Object convertPart(SpelNode currentNode, ExpressionTransformationContext context, Operator parentNode,
+				Object operationObject) {
+
+			return getTransformer().doTransform(
+					new ExpressionTransformationContext(currentNode, parentNode, operationObject,
+							context.getAggregationContext(), context.getExpressionState()));
+		}
+
+		private Object createOperationObjectAndAddToPreviousArgumentsIfNecessary(ExpressionTransformationContext context,
+				Operator currentNode, boolean unaryOperator) {
+
+			Object nextDbObject = new BasicDBObject(getOp(currentNode), new BasicDBList());
+
+			if (context.isPreviousOperationPresent()) {
+
+				if (currentNode.getClass().equals(context.getParentNode().getClass())) {
+
+					// same operator applied in a row e.g. 1 + 2 + 3 carry on with the operation and render as $add: [1, 2 ,3]
+					nextDbObject = context.getPreviousOperationObject();
+				} else if (!unaryOperator) {
+
+					// different operator -> add context object for next level to list if arguments of previous expression
+					extractArgumentListFrom((DBObject) context.getPreviousOperationObject()).add(nextDbObject);
+				}
+			}
+
+			return nextDbObject;
+		}
+
+		private Object convertUnaryMinusOp(ExpressionTransformationContext context, Object leftResult) {
+
+			Object result = leftResult instanceof Number ? leftResult : new BasicDBObject("$multiply", DBObjectUtils.dbList(
+					-1, leftResult));
+
+			if (leftResult != null && context.getPreviousOperationObject() != null) {
+				extractArgumentListFrom((DBObject) context.getPreviousOperationObject()).add(result);
+			}
+
+			return result;
+		}
+
+		/* (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.aggregation.SpelExpressionToMongoExpressionTransformer.SpelNodeWrapper#supports(java.lang.Class)
+		 */
+		@Override
+		protected boolean supports(SpelNode node) {
+			return node instanceof OpMinus || node instanceof OpPlus || node instanceof OpMultiply
+					|| node instanceof OpDivide || node instanceof OpModulus;
+		}
+
+		private String getOp(SpelNode node) {
+			return supports(node) ? toMongoOperator((Operator) node) : null;
+		}
+
+		private String toMongoOperator(Operator operator) {
+			return arithmeticOperatorsSpelToMongoConversion.get(operator.getOperatorName());
+		}
+	}
+
+	/**
+	 * A {@link SpelNodeConversion} that converts indexed expressions.
+	 * 
+	 * @author Thomas Darimont
+	 */
+	static class IndexerNodeConversion extends SpelNodeConversion<Indexer> {
+
+		public IndexerNodeConversion() {
+			super(Indexer.class);
+		}
+
+		/* (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.aggregation.SpelExpressionToMongoExpressionTransformer.SpelNodeWrapper#convertSpelNodeToMongoObjectExpression(org.springframework.data.mongodb.core.aggregation.SpelExpressionToMongoExpressionTransformer.ExpressionConversionContext)
+		 */
+		@Override
+		Object convert(ExpressionTransformationContext context) {
+
+			Indexer currentNode = Indexer.class.cast(context.getCurrentNode());
+			Object value = currentNode.getValue(context.getExpressionState());
+
+			if (context.isPreviousOperationPresent()) {
+
+				extractArgumentListFrom((DBObject) context.getPreviousOperationObject()).add(value);
+				return context.getPreviousOperationObject();
+			}
+
+			return value;
+		}
+	}
+
+	/**
+	 * A {@link SpelNodeConversion} that converts in-line list expressions.
+	 * 
+	 * @author Thomas Darimont
+	 */
+	static class InlineListNodeConversion extends SpelNodeConversion<InlineList> {
+
+		public InlineListNodeConversion() {
+			super(InlineList.class);
+		}
+
+		/* (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.aggregation.SpelExpressionToMongoExpressionTransformer.SpelNodeWrapper#convertSpelNodeToMongoObjectExpression(org.springframework.data.mongodb.core.aggregation.SpelExpressionToMongoExpressionTransformer.ExpressionConversionContext)
+		 */
+		@Override
+		Object convert(ExpressionTransformationContext context) {
+
+			InlineList currentNode = InlineList.class.cast(context.getCurrentNode());
+
+			if (currentNode.getChildCount() == 0) {
+				return null;
+			}
+
+			// just take the first item
+			ExpressionTransformationContext nestedExpressionContext = new ExpressionTransformationContext(
+					currentNode.getChild(0), currentNode, null, context.getAggregationContext(), context.getExpressionState());
+			return INSTANCE.doTransform(nestedExpressionContext);
+		}
+
+	}
+
+	/**
+	 * A {@link SpelNodeConversion} that converts property or field reference expressions.
+	 * 
+	 * @author Thomas Darimont
+	 */
+	static class PropertyOrFieldReferenceNodeConversion extends SpelNodeConversion<PropertyOrFieldReference> {
+
+		public PropertyOrFieldReferenceNodeConversion() {
+			super(PropertyOrFieldReference.class);
+		}
+
+		@Override
+		Object convert(ExpressionTransformationContext context) {
+
+			PropertyOrFieldReference currentNode = PropertyOrFieldReference.class.cast(context.getCurrentNode());
+			FieldReference fieldReference = context.getFieldReference(currentNode.getName());
+
+			if (context.isPreviousOperationPresent()) {
+				extractArgumentListFrom((DBObject) context.getPreviousOperationObject()).add(fieldReference.toString());
+				return context.getPreviousOperationObject();
+			}
+
+			return fieldReference.toString();
+		}
+	}
+
+	/**
+	 * A {@link SpelNodeConversion} that converts literal expressions.
+	 * 
+	 * @author Thomas Darimont
+	 */
+	static class LiteralNodeConversion extends SpelNodeConversion<Literal> {
+
+		public LiteralNodeConversion() {
+			super(Literal.class);
+		}
+
+		/* (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.aggregation.SpelExpressionToMongoExpressionTransformer.SpelNodeWrapper#convertSpelNodeToMongoObjectExpression(org.springframework.data.mongodb.core.aggregation.SpelExpressionToMongoExpressionTransformer.ExpressionConversionContext)
+		 */
+		@Override
+		Object convert(ExpressionTransformationContext context) {
+
+			Literal currentNode = Literal.class.cast(context.getCurrentNode());
+			Object value = currentNode.getLiteralValue().getValue();
+
+			if (context.isPreviousOperationPresent()) {
+
+				if (context.getParentNode() instanceof OpMinus && ((OpMinus) context.getParentNode()).getRightOperand() == null) {
+					// unary minus operator
+					return NumberUtils.convertNumberToTargetClass(((Number) value).doubleValue() * -1,
+							(Class<Number>) value.getClass()); // retain type, e.g. int to -int
+				}
+
+				extractArgumentListFrom((DBObject) context.getPreviousOperationObject()).add(value);
+				return context.getPreviousOperationObject();
+			}
+
+			return value;
+		}
+
+		/* (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.aggregation.SpelExpressionToMongoExpressionTransformer.SpelNodeWrapper#supports(org.springframework.expression.spel.SpelNode)
+		 */
+		@Override
+		protected boolean supports(SpelNode node) {
+			return node instanceof FloatLiteral || node instanceof RealLiteral || node instanceof IntLiteral
+					|| node instanceof LongLiteral || node instanceof StringLiteral || node instanceof NullLiteral;
+		}
+	}
+
+	/**
+	 * A {@link SpelNodeConversion} that converts method reference expressions.
+	 * 
+	 * @author Thomas Darimont
+	 */
+	static class MethodReferenceNodeConversion extends SpelNodeConversion<MethodReference> {
+
+		private Map<String, String> namedFunctionToMongoExpressionMap = new HashMap<String, String>() {
+			private static final long serialVersionUID = 1L;
+
+			{
+				put("concat", "$concat"); // Concatenates two strings.
+				put("strcasecmp", "$strcasecmp"); // Compares two strings and returns an integer that reflects the comparison.
+				put("substr", "$substr"); // Takes a string and returns portion of that string.
+				put("toLower", "$toLower"); // Converts a string to lowercase.
+				put("toUpper", "$toUpper"); // Converts a string to uppercase.
+
+				put("dayOfYear", "$dayOfYear"); // Converts a date to a number between 1 and 366.
+				put("dayOfMonth", "$dayOfMonth"); // Converts a date to a number between 1 and 31.
+				put("dayOfWeek", "$dayOfWeek"); // Converts a date to a number between 1 and 7.
+				put("year", "$year"); // Converts a date to the full year.
+				put("month", "$month"); // Converts a date into a number between 1 and 12.
+				put("week", "$week"); // Converts a date into a number between 0 and 53
+				put("hour", "$hour"); // Converts a date into a number between 0 and 23.
+				put("minute", "$minute"); // Converts a date into a number between 0 and 59.
+				put("second", "$second"); // Converts a date into a number between 0 and 59. May be 60 to account for leap
+																	// seconds.
+				put("millisecond", "$millisecond"); // Returns the millisecond portion of a date as an integer between 0 and
+																						// 999.
+			}
+		};
+
+		public MethodReferenceNodeConversion() {
+			super(MethodReference.class);
+		}
+
+		private String getMongoFunctionFor(String methodName) {
+			return namedFunctionToMongoExpressionMap.get(methodName);
+		}
+
+		/* (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.aggregation.SpelExpressionToMongoExpressionTransformer.SpelNodeWrapper#convertSpelNodeToMongoObjectExpression(org.springframework.data.mongodb.core.aggregation.SpelExpressionToMongoExpressionTransformer.ExpressionConversionContext)
+		 */
+		@Override
+		Object convert(ExpressionTransformationContext context) {
+
+			MethodReference currentNode = MethodReference.class.cast(context.getCurrentNode());
+			String stringAST = currentNode.toStringAST();
+			String methodName = stringAST.substring(0, stringAST.indexOf('('));
+			String mongoFunction = getMongoFunctionFor(methodName);
+
+			List<Object> args = new ArrayList<Object>();
+			for (int i = 0; i < currentNode.getChildCount(); i++) {
+				args.add(getTransformer().doTransform(new ExpressionTransformationContext(currentNode.getChild(i), context)));
+			}
+
+			BasicDBObject functionObject = new BasicDBObject(mongoFunction, DBObjectUtils.dbList(args.toArray()));
+
+			if (context.isPreviousOperationPresent()) {
+				extractArgumentListFrom((DBObject) context.getPreviousOperationObject()).add(functionObject);
+				return context.getPreviousOperationObject();
+			}
+
+			return functionObject;
+		}
+	}
+
+	/**
+	 * A {@link SpelNodeConversion} that converts method compound expressions.
+	 * 
+	 * @author Thomas Darimont
+	 */
+	static class CompoundExpressionNodeConversion extends SpelNodeConversion<CompoundExpression> {
+
+		public CompoundExpressionNodeConversion() {
+			super(CompoundExpression.class);
+		}
+
+		/* (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.aggregation.SpelExpressionToMongoExpressionTransformer.SpelNodeWrapper#convertSpelNodeToMongoObjectExpression(org.springframework.data.mongodb.core.aggregation.SpelExpressionToMongoExpressionTransformer.ExpressionConversionContext)
+		 */
+		@Override
+		Object convert(ExpressionTransformationContext context) {
+
+			CompoundExpression currentNode = CompoundExpression.class.cast(context.getCurrentNode());
+
+			if (currentNode.getChildCount() > 0 && !(currentNode.getChild(0) instanceof Indexer)) {
+				// we have a property path expression like: foo.bar -> render as reference
+				return context.getFieldReference(currentNode.toStringAST()).toString();
+			}
+
+			Object value = currentNode.getValue(context.getExpressionState());
+
+			if (context.isPreviousOperationPresent()) {
+				extractArgumentListFrom((DBObject) context.getPreviousOperationObject()).add(value);
+				return context.getPreviousOperationObject();
+			}
+
+			return value;
 		}
 	}
 }
