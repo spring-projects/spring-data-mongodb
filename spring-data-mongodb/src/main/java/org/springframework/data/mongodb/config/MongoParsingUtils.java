@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2012 the original author or authors.
+ * Copyright 2011-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,6 +33,7 @@ import org.w3c.dom.Element;
  * 
  * @author Mark Pollack
  * @author Oliver Gierke
+ * @author Thomas Darimont
  */
 abstract class MongoParsingUtils {
 
@@ -79,6 +80,8 @@ abstract class MongoParsingUtils {
 		setPropertyValue(optionsDefBuilder, optionsElement, "write-timeout", "writeTimeout");
 		setPropertyValue(optionsDefBuilder, optionsElement, "write-fsync", "writeFsync");
 		setPropertyValue(optionsDefBuilder, optionsElement, "slave-ok", "slaveOk");
+		setPropertyValue(optionsDefBuilder, optionsElement, "ssl", "ssl");
+		setPropertyReference(optionsDefBuilder, optionsElement, "ssl-socket-factory-ref", "sslSocketFactory");
 
 		mongoBuilder.addPropertyValue("mongoOptions", optionsDefBuilder.getBeanDefinition());
 		return true;
