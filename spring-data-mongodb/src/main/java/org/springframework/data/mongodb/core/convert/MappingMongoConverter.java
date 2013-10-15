@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -24,8 +25,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.aopalliance.intercept.MethodInterceptor;
+import org.aopalliance.intercept.MethodInvocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -57,6 +61,8 @@ import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.ReflectionUtils;
+import org.springframework.util.ReflectionUtils.FieldCallback;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.BasicDBList;
@@ -261,15 +267,27 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		// Handle associations
 		entity.doWithAssociations(new AssociationHandler<MongoPersistentProperty>() {
 			public void doWithAssociation(Association<MongoPersistentProperty> association) {
+
 				MongoPersistentProperty inverseProp = association.getInverse();
-				Object obj = getValueInternal(inverseProp, dbo, evaluator, result);
+
+				Object obj = selectDbRefResolverFor(inverseProp).resolve(inverseProp, dbo, evaluator, result);
 
 				wrapper.setProperty(inverseProp, obj);
-
 			}
+
 		});
 
 		return result;
+	}
+
+	/**
+	 * @param property
+	 * @return
+	 */
+	private DbRefResolver selectDbRefResolverFor(MongoPersistentProperty property) {
+
+		return property.getDBRef() != null && property.getDBRef().lazy() ? new LazyDbRefResolver()
+				: new EagerDbRefResolver();
 	}
 
 	/* 
@@ -1061,4 +1079,96 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 	}
 
+	/**
+	 * Used to resolve associations annotated with {@link org.springframework.data.mongodb.core.mapping.DBRef}.
+	 * 
+	 * @author Thomas Darimont
+	 */
+	interface DbRefResolver {
+		Object resolve(MongoPersistentProperty prop, DBObject dbo, final SpELExpressionEvaluator eval, Object parent);
+	}
+
+	/**
+	 * A {@link DbRefResolver} that resolves {@link org.springframework.data.mongodb.core.mapping.DBRef}s eagerly.
+	 * 
+	 * @author Thomas Darimont
+	 */
+	class EagerDbRefResolver implements DbRefResolver {
+		/* (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.convert.DBRefResolver#resolve()
+		 */
+		@Override
+		public Object resolve(MongoPersistentProperty prop, DBObject dbo, final SpELExpressionEvaluator eval, Object parent) {
+			return getValueInternal(prop, dbo, eval, parent);
+		}
+	}
+
+	/**
+	 * A {@link DbRefResolver} that resolves {@link org.springframework.data.mongodb.core.mapping.DBRef}s lazily.
+	 * 
+	 * @author Thomas Darimont
+	 */
+	class LazyDbRefResolver extends EagerDbRefResolver {
+
+		/* (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.convert.DBRefResolver#resolve()
+		 */
+		@Override
+		public Object resolve(final MongoPersistentProperty prop, final DBObject dbo, final SpELExpressionEvaluator eval,
+				final Object parent) {
+
+			class LazyLoadingInterceptor implements MethodInterceptor {
+
+				volatile boolean initialized;
+
+				Object result;
+
+				@Override
+				public Object invoke(MethodInvocation invocation) throws Throwable {
+
+					if (!initialized) {
+						initialize();
+					}
+
+					return invocation.getMethod().invoke(result, invocation.getArguments());
+				}
+
+				private synchronized void initialize() {
+
+					if (!initialized) {
+						try {
+							this.result = LazyDbRefResolver.super.resolve(prop, dbo, eval, parent);
+							this.initialized = true;
+						} catch (RuntimeException ex) {
+							throw mongoDbFactory.getExceptionTranslator().translateExceptionIfPossible(ex);
+						}
+						cleanupUnnecessaryReferences();
+					}
+				}
+
+				/**
+				 * Cleans up unnecessary references to avoid memory leaks.
+				 */
+				private void cleanupUnnecessaryReferences() {
+
+					ReflectionUtils.doWithFields(getClass(), new FieldCallback() {
+
+						@Override
+						public void doWith(Field field) throws IllegalArgumentException, IllegalAccessException {
+							if (field.getName().startsWith("val$") || field.getName().startsWith("this$1")) {
+								ReflectionUtils.makeAccessible(field);
+								ReflectionUtils.setField(field, LazyLoadingInterceptor.this, null);
+							}
+						}
+					});
+				}
+			}
+
+			ProxyFactory proxyFactory = new ProxyFactory();
+			proxyFactory.setInterfaces(new Class[] { prop.getRawType() });
+			proxyFactory.addAdvice(new LazyLoadingInterceptor());
+
+			return proxyFactory.getProxy();
+		}
+	}
 }

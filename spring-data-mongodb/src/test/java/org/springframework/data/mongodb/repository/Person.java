@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.repository;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 
 import org.springframework.data.mongodb.core.geo.Point;
@@ -28,6 +29,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
  * Sample domain class.
  * 
  * @author Oliver Gierke
+ * @author Thomas Darimont
  */
 @Document
 public class Person extends Contact {
@@ -38,21 +40,19 @@ public class Person extends Contact {
 
 	private String firstname;
 	private String lastname;
-	@Indexed(unique = true, dropDups = true)
-	private String email;
+	@Indexed(unique = true, dropDups = true) private String email;
 	private Integer age;
-	@SuppressWarnings("unused")
-	private Sex sex;
+	@SuppressWarnings("unused") private Sex sex;
 	Date createdAt;
 
-	@GeoSpatialIndexed
-	private Point location;
+	@GeoSpatialIndexed private Point location;
 
 	private Address address;
 	private Set<Address> shippingAddresses;
 
-	@DBRef
-	User creator;
+	@DBRef User creator;
+
+	@DBRef(lazy = true) List<User> fans;
 
 	Credentials credentials;
 
@@ -191,6 +191,20 @@ public class Person extends Contact {
 	 */
 	public String getName() {
 		return String.format("%s %s", firstname, lastname);
+	}
+
+	/**
+	 * @return the fans
+	 */
+	public List<User> getFans() {
+		return fans;
+	}
+
+	/**
+	 * @param fans the fans to set
+	 */
+	public void setFans(List<User> fans) {
+		this.fans = fans;
 	}
 
 	/*
