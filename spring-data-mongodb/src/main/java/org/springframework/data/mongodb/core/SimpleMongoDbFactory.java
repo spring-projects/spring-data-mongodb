@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2012 the original author or authors.
+ * Copyright 2011-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,6 +34,7 @@ import com.mongodb.WriteConcern;
  * 
  * @author Mark Pollack
  * @author Oliver Gierke
+ * @author Thomas Darimont
  */
 public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 
@@ -42,6 +43,7 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 	private final boolean mongoInstanceCreated;
 	private final UserCredentials credentials;
 	private WriteConcern writeConcern;
+	private final MongoExceptionTranslator exceptionTranslator = new MongoExceptionTranslator();
 
 	/**
 	 * Create an instance of {@link SimpleMongoDbFactory} given the {@link Mongo} instance and database name.
@@ -137,5 +139,13 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 
 	private static String parseChars(char[] chars) {
 		return chars == null ? null : String.valueOf(chars);
+	}
+
+	/* (non-Javadoc)
+	 * @see org.springframework.data.mongodb.MongoDbFactory#getExceptionTranslator()
+	 */
+	@Override
+	public MongoExceptionTranslator getExceptionTranslator() {
+		return this.exceptionTranslator;
 	}
 }
