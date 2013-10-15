@@ -53,6 +53,9 @@ public class Person extends Contact {
 
 	@DBRef
 	User creator;
+	
+	@DBRef
+	Boss boss;
 
 	Credentials credentials;
 

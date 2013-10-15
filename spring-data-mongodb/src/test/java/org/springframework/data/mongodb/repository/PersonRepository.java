@@ -38,7 +38,7 @@ import org.springframework.data.querydsl.QueryDslPredicateExecutor;
  * @author Oliver Gierke
  * @author Thomas Darimont
  */
-public interface PersonRepository extends MongoRepository<Person, String>, QueryDslPredicateExecutor<Person> {
+public interface PersonRepository extends MongoRepository<Person, String>, QueryDslPredicateExecutor<Person>, QueryDslMongoSpecificationExecutor<Person> {
 
 	/**
 	 * Returns all {@link Person}s with the given lastname.
