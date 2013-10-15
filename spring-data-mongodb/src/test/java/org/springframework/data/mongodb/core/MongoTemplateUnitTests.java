@@ -64,15 +64,12 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 
 	MongoTemplate template;
 
-	@Mock
-	MongoDbFactory factory;
-	@Mock
-	Mongo mongo;
-	@Mock
-	DB db;
-	@Mock
-	DBCollection collection;
+	@Mock MongoDbFactory factory;
+	@Mock Mongo mongo;
+	@Mock DB db;
+	@Mock DBCollection collection;
 
+	MongoExceptionTranslator exceptionTranslator = new MongoExceptionTranslator();
 	MappingMongoConverter converter;
 	MongoMappingContext mappingContext;
 
@@ -84,6 +81,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		this.template = new MongoTemplate(factory, converter);
 
 		when(factory.getDb()).thenReturn(db);
+		when(factory.getExceptionTranslator()).thenReturn(exceptionTranslator);
 		when(db.getCollection(Mockito.any(String.class))).thenReturn(collection);
 	}
 
@@ -228,14 +226,12 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 
 	class AutogenerateableId {
 
-		@Id
-		BigInteger id;
+		@Id BigInteger id;
 	}
 
 	class NotAutogenerateableId {
 
-		@Id
-		Integer id;
+		@Id Integer id;
 
 		public Pattern getId() {
 			return Pattern.compile(".");

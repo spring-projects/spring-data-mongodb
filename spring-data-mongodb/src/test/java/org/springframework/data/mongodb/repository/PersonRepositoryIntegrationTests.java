@@ -15,6 +15,13 @@
  */
 package org.springframework.data.mongodb.repository;
 
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
+
+import java.util.Arrays;
+import java.util.List;
+
+import org.junit.Test;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
@@ -24,4 +31,36 @@ import org.springframework.test.context.ContextConfiguration;
  */
 @ContextConfiguration
 public class PersonRepositoryIntegrationTests extends AbstractPersonRepositoryIntegrationTests {
+
+	/**
+	 * @see DATAMONGO-348
+	 */
+	@Test
+	public void shouldLoadAssociationWithDbRefAndLazyLoading() throws Exception {
+
+		operations.remove(new org.springframework.data.mongodb.core.query.Query(), User.class);
+
+		User thomas = new User();
+		thomas.username = "Oliver";
+		operations.save(thomas);
+
+		Person person = new Person();
+		person.setFirstname("Thomas");
+		person.setFans(Arrays.asList(thomas));
+		repository.save(person);
+
+		Person oliver = repository.findOne(person.id);
+		List<User> fans = oliver.getFans();
+		// TODO test internal object state of 'fans' before accessing
+		// initialized should be 'false'
+		// result should be 'null'
+
+		User user = fans.get(0);
+		// TODO test internal object state of 'fans' after accessing
+		// initialized should be 'true'
+		// result should be not 'null'
+		// other fields should be 'null'
+
+		assertThat(user.username, is(thomas.username));
+	}
 }
