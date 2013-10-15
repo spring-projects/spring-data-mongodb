@@ -32,83 +32,27 @@ import com.mongodb.MongoOptions;
  */
 public class MongoOptionsFactoryBean implements FactoryBean<MongoOptions>, InitializingBean {
 
+	@SuppressWarnings("deprecation")//
 	private final MongoOptions MONGO_OPTIONS = new MongoOptions();
 
-	/**
-	 * The number of connections allowed per host will block if run out.
-	 */
 	private int connectionsPerHost = MONGO_OPTIONS.connectionsPerHost;
 
-	/**
-	 * A multiplier for connectionsPerHost for # of threads that can block a connection.
-	 * <p>
-	 * If connectionsPerHost is {@literal 10}, and threadsAllowedToBlockForConnectionMultiplier is {@literal 5}, then
-	 * {@literal 50} threads can block. If more threads try to block an exception will be thrown.
-	 */
 	private int threadsAllowedToBlockForConnectionMultiplier = MONGO_OPTIONS.threadsAllowedToBlockForConnectionMultiplier;
-
-	/**
-	 * Max wait time of a blocking thread for a connection.
-	 */
 	private int maxWaitTime = MONGO_OPTIONS.maxWaitTime;
-
-	/**
-	 * Connect timeout in milliseconds. {@literal 0} is default and means infinite time.
-	 */
 	private int connectTimeout = MONGO_OPTIONS.connectTimeout;
-
-	/**
-	 * The socket timeout. {@literal 0} is default and means infinite time.
-	 */
 	private int socketTimeout = MONGO_OPTIONS.socketTimeout;
-
-	/**
-	 * This controls whether or not to have socket keep alive turned on (SO_KEEPALIVE). This defaults to {@literal false}.
-	 */
-	public boolean socketKeepAlive = MONGO_OPTIONS.socketKeepAlive;
-
-	/**
-	 * This controls whether or not the system retries automatically on a failed connect. This defaults to
-	 * {@literal false}.
-	 */
+	private boolean socketKeepAlive = MONGO_OPTIONS.socketKeepAlive;
 	private boolean autoConnectRetry = MONGO_OPTIONS.autoConnectRetry;
-
 	private long maxAutoConnectRetryTime = MONGO_OPTIONS.maxAutoConnectRetryTime;
-
-	/**
-	 * This specifies the number of servers to wait for on the write operation, and exception raising behavior. This
-	 * defaults to {@literal 0}.
-	 */
 	private int writeNumber;
-
-	/**
-	 * This controls timeout for write operations in milliseconds. This defaults to {@literal 0} (indefinite). Greater
-	 * than zero is number of milliseconds to wait.
-	 */
 	private int writeTimeout;
-
-	/**
-	 * This controls whether or not to fsync. This defaults to {@literal false}.
-	 */
 	private boolean writeFsync;
-
-	/**
-	 * Specifies if the driver is allowed to read from secondaries or slaves. This defaults to {@literal false}.
-	 */
 	@SuppressWarnings("deprecation") private boolean slaveOk = MONGO_OPTIONS.slaveOk;
-
-	/**
-	 * This controls SSL support via SSLSocketFactory. This defaults to {@literal false}.
-	 */
 	private boolean ssl;
-
-	/**
-	 * Specifies the {@link SSLSocketFactory} to use. This defaults to {@link SSLSocketFactory#getDefault()}
-	 */
 	private SSLSocketFactory sslSocketFactory;
 
 	/**
-	 * The maximum number of connections allowed per host until we will block.
+	 * Configures the maximum number of connections allowed per host until we will block.
 	 * 
 	 * @param connectionsPerHost
 	 */
@@ -117,9 +61,10 @@ public class MongoOptionsFactoryBean implements FactoryBean<MongoOptions>, Initi
 	}
 
 	/**
-	 * A multiplier for connectionsPerHost for # of threads that can block a connection.
+	 * A multiplier for connectionsPerHost for # of threads that can block a connection. If connectionsPerHost is 10, and
+	 * threadsAllowedToBlockForConnectionMultiplier is 5, then 50 threads can block. If more threads try to block an
+	 * exception will be thrown.
 	 * 
-	 * @see #threadsAllowedToBlockForConnectionMultiplier
 	 * @param threadsAllowedToBlockForConnectionMultiplier
 	 */
 	public void setThreadsAllowedToBlockForConnectionMultiplier(int threadsAllowedToBlockForConnectionMultiplier) {
@@ -136,7 +81,7 @@ public class MongoOptionsFactoryBean implements FactoryBean<MongoOptions>, Initi
 	}
 
 	/**
-	 * The connect timeout in milliseconds. {@literal 0} is default and infinite
+	 * Configures the connect timeout in milliseconds. Defaults to 0 (infinite time).
 	 * 
 	 * @param connectTimeout
 	 */
@@ -145,7 +90,7 @@ public class MongoOptionsFactoryBean implements FactoryBean<MongoOptions>, Initi
 	}
 
 	/**
-	 * The socket timeout. {@literal 0} is default and infinite.
+	 * Configures the socket timeout. Defaults to 0 (infinite time).
 	 * 
 	 * @param socketTimeout
 	 */
@@ -154,7 +99,7 @@ public class MongoOptionsFactoryBean implements FactoryBean<MongoOptions>, Initi
 	}
 
 	/**
-	 * This controls whether or not to have socket keep alive.
+	 * Configures whether or not to have socket keep alive turned on (SO_KEEPALIVE). Defaults to {@literal false}.
 	 * 
 	 * @param socketKeepAlive
 	 */
@@ -164,12 +109,12 @@ public class MongoOptionsFactoryBean implements FactoryBean<MongoOptions>, Initi
 
 	/**
 	 * This specifies the number of servers to wait for on the write operation, and exception raising behavior. The 'w'
-	 * option to the getlasterror command. Defaults to {@literal 0}.
+	 * option to the getlasterror command. Defaults to 0.
 	 * <ul>
-	 * <li>{@literal -1} = don't even report network errors</li>
-	 * <li>{@literal 0} = default, don't call getLastError by default</li>
-	 * <li>{@literal 1} = basic, call getLastError, but don't wait for slaves</li>
-	 * <li>{@literal 2} += wait for slaves</li>
+	 * <li>-1 = don't even report network errors</li>
+	 * <li>0 = default, don't call getLastError by default</li>
+	 * <li>1 = basic, call getLastError, but don't wait for slaves</li>
+	 * <li>2 += wait for slaves</li>
 	 * </ul>
 	 * 
 	 * @param writeNumber the number of servers to wait for on the write operation, and exception raising behavior.
@@ -179,16 +124,16 @@ public class MongoOptionsFactoryBean implements FactoryBean<MongoOptions>, Initi
 	}
 
 	/**
-	 * This controls timeout for write operations in milliseconds. The 'wtimeout' option to the getlasterror command.
+	 * Configures the timeout for write operations in milliseconds. This defaults to {@literal 0} (indefinite).
 	 * 
-	 * @param writeTimeout Defaults to {@literal 0} (indefinite). Greater than zero is number of milliseconds to wait.
+	 * @param writeTimeout
 	 */
 	public void setWriteTimeout(int writeTimeout) {
 		this.writeTimeout = writeTimeout;
 	}
 
 	/**
-	 * This controls whether or not to fsync. The 'fsync' option to the getlasterror command. Defaults to {@literal false}
+	 * Configures whether or not to fsync. The 'fsync' option to the getlasterror command. Defaults to {@literal false}.
 	 * 
 	 * @param writeFsync to fsync on <code>write (true)<code>, otherwise {@literal false}.
 	 */
@@ -197,17 +142,15 @@ public class MongoOptionsFactoryBean implements FactoryBean<MongoOptions>, Initi
 	}
 
 	/**
-	 * Controls whether or not the system retries automatically, on a failed connect.
-	 * 
-	 * @param autoConnectRetry
+	 * Configures whether or not the system retries automatically on a failed connect. This defaults to {@literal false}.
 	 */
 	public void setAutoConnectRetry(boolean autoConnectRetry) {
 		this.autoConnectRetry = autoConnectRetry;
 	}
 
 	/**
-	 * The maximum amount of time in millisecons to spend retrying to open connection to the same server. This defaults to
-	 * {@literal 0}, which means to use the default {@literal 15s} if {@link #autoConnectRetry} is on.
+	 * Configures the maximum amount of time in millisecons to spend retrying to open connection to the same server. This
+	 * defaults to {@literal 0}, which means to use the default {@literal 15s} if {@link #autoConnectRetry} is on.
 	 * 
 	 * @param maxAutoConnectRetryTime the maxAutoConnectRetryTime to set
 	 */
@@ -216,7 +159,7 @@ public class MongoOptionsFactoryBean implements FactoryBean<MongoOptions>, Initi
 	}
 
 	/**
-	 * Specifies if the driver is allowed to read from secondaries or slaves. This defaults to {@literal false}.
+	 * Specifies if the driver is allowed to read from secondaries or slaves. Defaults to {@literal false}.
 	 * 
 	 * @param slaveOk true if the driver should read from secondaries or slaves.
 	 */
@@ -225,18 +168,24 @@ public class MongoOptionsFactoryBean implements FactoryBean<MongoOptions>, Initi
 	}
 
 	/**
-	 * Specifies if the driver should use an SSL connection to Mongo. This defaults to {@literal false}.
+	 * Specifies if the driver should use an SSL connection to Mongo. This defaults to {@literal false}. By default
+	 * {@link SSLSocketFactory#getDefault()} will be used. See {@link #setSslSocketFactory(SSLSocketFactory)} if you want
+	 * to configure a custom factory.
 	 * 
 	 * @param ssl true if the driver should use an SSL connection.
+	 * @see #setSslSocketFactory(SSLSocketFactory)
 	 */
 	public void setSsl(boolean ssl) {
 		this.ssl = ssl;
 	}
 
 	/**
-	 * Specifies the SSLSocketFactory to use for creating SSL connections to Mongo.
+	 * Specifies the {@link SSLSocketFactory} to use for creating SSL connections to Mongo. Defaults to
+	 * {@link SSLSocketFactory#getDefault()}. Implicitly activates {@link #setSsl(boolean)} if a non-{@literal null} value
+	 * is given.
 	 * 
 	 * @param sslSocketFactory the sslSocketFactory to use.
+	 * @see #setSsl(boolean)
 	 */
 	public void setSslSocketFactory(SSLSocketFactory sslSocketFactory) {
 
@@ -244,6 +193,10 @@ public class MongoOptionsFactoryBean implements FactoryBean<MongoOptions>, Initi
 		this.sslSocketFactory = sslSocketFactory;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
+	 */
 	@SuppressWarnings("deprecation")
 	public void afterPropertiesSet() {
 
@@ -264,14 +217,26 @@ public class MongoOptionsFactoryBean implements FactoryBean<MongoOptions>, Initi
 		}
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.beans.factory.FactoryBean#getObject()
+	 */
 	public MongoOptions getObject() {
 		return MONGO_OPTIONS;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.beans.factory.FactoryBean#getObjectType()
+	 */
 	public Class<?> getObjectType() {
 		return MongoOptions.class;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.beans.factory.FactoryBean#isSingleton()
+	 */
 	public boolean isSingleton() {
 		return true;
 	}
