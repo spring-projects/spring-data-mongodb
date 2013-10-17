@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Scanner;
 
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -74,12 +75,22 @@ public class AggregationTests {
 	@Autowired MongoTemplate mongoTemplate;
 
 	@Rule public ExpectedException exception = ExpectedException.none();
+	private static String mongoVersion;
 
 	@Before
 	public void setUp() {
 
+		queryMongoVersionIfNecessary();
 		cleanDb();
 		initSampleDataIfNecessary();
+	}
+
+	private void queryMongoVersionIfNecessary() {
+
+		if (mongoVersion == null) {
+			CommandResult result = mongoTemplate.executeCommand("{ buildInfo: 1 }");
+			mongoVersion = result.get("version").toString();
+		}
 	}
 
 	@After
@@ -105,9 +116,7 @@ public class AggregationTests {
 
 		if (!initialized) {
 
-			CommandResult result = mongoTemplate.executeCommand("{ buildInfo: 1 }");
-			Object version = result.get("version");
-			LOGGER.debug("Server uses MongoDB Version: {}", version);
+			LOGGER.debug("Server uses MongoDB Version: {}", mongoVersion);
 
 			mongoTemplate.dropCollection(ZipInfo.class);
 			mongoTemplate.execute(ZipInfo.class, new CollectionCallback<Void>() {
@@ -488,7 +497,6 @@ public class AggregationTests {
 						.andExpression("netPrice * 1.19").as("grossPrice") //
 						.andExpression("spaceUnits % 2").as("spaceUnitsMod2") //
 						.andExpression("(netPrice * 0.8  + 1.2) * 1.19").as("grossPriceIncludingDiscountAndCharge") //
-						.andExpression("concat(name, '_bubu')").as("name_bubu") //
 
 		);
 
@@ -505,6 +513,30 @@ public class AggregationTests {
 		assertThat((Integer) resultList.get(0).get("spaceUnitsMod2"), is(product.spaceUnits % 2));
 		assertThat((Double) resultList.get(0).get("grossPriceIncludingDiscountAndCharge"),
 				is((product.netPrice * 0.8 + 1.2) * 1.19));
+	}
+
+	/**
+	 * @see DATAMONGO-774
+	 */
+	@Test
+	public void stringExpressionsInProjectionExample() {
+
+		Assume.assumeTrue(mongoVersion.startsWith("2.4"));
+
+		Product product = new Product("P1", "A", 1.99, 3, 0.05, 0.19);
+		mongoTemplate.insert(product);
+
+		TypedAggregation<Product> agg = newAggregation(Product.class, //
+				project("name", "netPrice") //
+						.andExpression("concat(name, '_bubu')").as("name_bubu") //
+		);
+
+		AggregationResults<DBObject> result = mongoTemplate.aggregate(agg, DBObject.class);
+		List<DBObject> resultList = result.getMappedResults();
+
+		assertThat(resultList, is(notNullValue()));
+		assertThat((String) resultList.get(0).get("_id"), is(product.id));
+		assertThat((String) resultList.get(0).get("name"), is(product.name));
 		assertThat((String) resultList.get(0).get("name_bubu"), is(product.name + "_bubu"));
 	}
 
@@ -613,6 +645,8 @@ public class AggregationTests {
 	@Test
 	public void shouldPerformDateProjectionOperatorsCorrectly() throws ParseException {
 
+		Assume.assumeTrue(mongoVersion.startsWith("2.4"));
+
 		Data data = new Data();
 		data.stringValue = "ABC";
 		mongoTemplate.insert(data);
@@ -641,6 +675,8 @@ public class AggregationTests {
 	 */
 	@Test
 	public void shouldPerformStringProjectionOperatorsCorrectly() throws ParseException {
+
+		Assume.assumeTrue(mongoVersion.startsWith("2.4"));
 
 		Data data = new Data();
 		data.dateValue = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss.SSSZ").parse("29.08.1983 12:34:56.789+0000");
