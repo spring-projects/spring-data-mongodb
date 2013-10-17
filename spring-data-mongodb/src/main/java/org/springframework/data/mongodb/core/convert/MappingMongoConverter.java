@@ -272,7 +272,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				Object obj = dbRefResolver.resolve(inverseProp, new AbstractDbRefResolveCallback(mongoDbFactory) {
 
 					@Override
-					public Object resolveEagerly(MongoPersistentProperty property) {
+					public Object doResolve(MongoPersistentProperty property) {
 						return getValueInternal(property, dbo, evaluator, parent);
 					}
 				});
@@ -1088,34 +1088,13 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			this.mongoDbFactory = mongoDbFactory;
 		}
 
-		/**
-		 * @param property
-		 * @return
-		 */
-		protected boolean isLazyDbRef(MongoPersistentProperty property) {
-			return property.getDBRef() != null && property.getDBRef().lazy();
-		}
-
 		/* (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.convert.DbRefResolveCallback#resolve(org.springframework.data.mongodb.core.mapping.MongoPersistentProperty)
 		 */
 		@Override
 		public Object resolve(MongoPersistentProperty property) {
-
-			if (isLazyDbRef(property)) {
-				return resolveLazily(property);
-			}
-
-			return doResolveEagerly(property);
-		}
-
-		/**
-		 * Resolves {@link org.springframework.data.mongodb.core.mapping.DBRef}s eagerly.
-		 */
-		protected Object doResolveEagerly(MongoPersistentProperty property) {
-
 			try {
-				return resolveEagerly(property);
+				return doResolve(property);
 			} catch (RuntimeException ex) {
 				throw mongoDbFactory.getExceptionTranslator().translateExceptionIfPossible(ex);
 			}
@@ -1125,28 +1104,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		 * @param property
 		 * @return
 		 */
-		public abstract Object resolveEagerly(MongoPersistentProperty property);
-
-		/**
-		 * @param property
-		 * @return
-		 */
-		public Object resolveLazily(MongoPersistentProperty property) {
-
-			ProxyFactory proxyFactory = new ProxyFactory();
-
-			if (property.getRawType().isInterface()) {
-				proxyFactory.addInterface(property.getRawType());
-			} else {
-				proxyFactory.setProxyTargetClass(true);
-				proxyFactory.setTargetClass(property.getRawType());
-			}
-
-			proxyFactory.addInterface(LazyLoadingProxy.class);
-			proxyFactory.addAdvice(new LazyLoadingInterceptor(this, property));
-
-			return proxyFactory.getProxy();
-		}
+		protected abstract Object doResolve(MongoPersistentProperty property);
 	}
 
 	/**
@@ -1157,15 +1115,19 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	public static interface LazyLoadingProxy {}
 
 	/**
+	 * A {@link MethodInterceptor} that is used within a lazy loading proxy. The property resolving is delegated to a
+	 * {@link DbRefResolveCallback}. The resolving process is triggered by a method invocation on the proxy and is
+	 * guaranteed to be performed only once.
+	 * 
 	 * @author Thomas Darimont
 	 */
-	static class LazyLoadingInterceptor implements MethodInterceptor {
+	public static class LazyLoadingInterceptor implements MethodInterceptor {
 
-		private AbstractDbRefResolveCallback callback;
+		private DbRefResolveCallback callback;
 
 		private MongoPersistentProperty property;
 
-		private volatile boolean initialized;
+		private volatile boolean resolved;
 
 		private Object result;
 
@@ -1173,7 +1135,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		 * @param callback
 		 * @param property
 		 */
-		public LazyLoadingInterceptor(AbstractDbRefResolveCallback callback, MongoPersistentProperty property) {
+		public LazyLoadingInterceptor(DbRefResolveCallback callback, MongoPersistentProperty property) {
 
 			this.callback = callback;
 			this.property = property;
@@ -1182,24 +1144,49 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		@Override
 		public Object invoke(MethodInvocation invocation) throws Throwable {
 
-			if (!initialized) {
-				this.result = initialize();
+			if (!resolved) {
+				this.result = resolve();
+				this.resolved = true;
 			}
 
 			return invocation.getMethod().invoke(result, invocation.getArguments());
 		}
 
-		private synchronized Object initialize() {
+		/**
+		 * @return
+		 */
+		private synchronized Object resolve() {
 
-			if (!initialized) {
+			if (!resolved) {
+
 				try {
-					return callback.doResolveEagerly(property);
+					return callback.resolve(property);
+				} catch (Exception ex) {
+					throw new RuntimeException("Could not resolve lazy DBRef: " + property, ex);
 				} finally {
 					cleanup();
 				}
 			}
 
-			throw new RuntimeException("Could not initialize lazy DBRef: " + property);
+			return result;
+		}
+
+		/**
+		 * Visible for testing.
+		 * 
+		 * @return
+		 */
+		public boolean isResolved() {
+			return resolved;
+		}
+
+		/**
+		 * Visible for testing.
+		 * 
+		 * @return the result
+		 */
+		public Object getResult() {
+			return result;
 		}
 
 		/**
@@ -1214,7 +1201,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	/**
 	 * A {@link DbRefResolver} that resolves {@link org.springframework.data.mongodb.core.mapping.DBRef}s by delegating to
-	 * a {@link DbRefResolveCallback}.
+	 * a {@link DbRefResolveCallback} than is able to generate lazy loading proxies.
 	 * 
 	 * @author Thomas Darimont
 	 */
@@ -1228,7 +1215,41 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			Assert.notNull(property, "property must not be null!");
 			Assert.notNull(callback, "callback must not be null!");
 
+			if (isLazyDbRef(property)) {
+				return createLazyLoadingProxy(property, callback);
+			}
+
 			return callback.resolve(property);
+		}
+
+		/**
+		 * @param property
+		 * @param callback
+		 * @return
+		 */
+		public Object createLazyLoadingProxy(MongoPersistentProperty property, DbRefResolveCallback callback) {
+
+			ProxyFactory proxyFactory = new ProxyFactory();
+
+			if (property.getRawType().isInterface()) {
+				proxyFactory.addInterface(property.getRawType());
+			} else {
+				proxyFactory.setProxyTargetClass(true);
+				proxyFactory.setTargetClass(property.getRawType());
+			}
+
+			proxyFactory.addInterface(LazyLoadingProxy.class);
+			proxyFactory.addAdvice(new LazyLoadingInterceptor(callback, property));
+
+			return proxyFactory.getProxy();
+		}
+
+		/**
+		 * @param property
+		 * @return
+		 */
+		protected boolean isLazyDbRef(MongoPersistentProperty property) {
+			return property.getDBRef() != null && property.getDBRef().lazy();
 		}
 	}
 }
