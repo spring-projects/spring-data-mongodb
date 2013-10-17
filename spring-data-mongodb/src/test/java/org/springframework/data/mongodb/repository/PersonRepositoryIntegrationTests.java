@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.repository;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -47,6 +48,7 @@ public class PersonRepositoryIntegrationTests extends AbstractPersonRepositoryIn
 		Person person = new Person();
 		person.setFirstname("Thomas");
 		person.setFans(Arrays.asList(thomas));
+		person.setRealFans(new ArrayList<User>(Arrays.asList(thomas)));
 		repository.save(person);
 
 		Person oliver = repository.findOne(person.id);
@@ -62,5 +64,10 @@ public class PersonRepositoryIntegrationTests extends AbstractPersonRepositoryIn
 		// other fields should be 'null'
 
 		assertThat(user.username, is(thomas.username));
+
+		List<User> realFans = oliver.getRealFans();
+
+		User realFan = realFans.get(0);
+		assertThat(realFan.username, is(thomas.username));
 	}
 }
