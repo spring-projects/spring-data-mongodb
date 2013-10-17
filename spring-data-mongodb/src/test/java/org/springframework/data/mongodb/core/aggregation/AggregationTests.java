@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core.aggregation;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
+import static org.junit.Assume.*;
 import static org.springframework.data.domain.Sort.Direction.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
@@ -30,7 +31,6 @@ import java.util.List;
 import java.util.Scanner;
 
 import org.junit.After;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -45,6 +45,7 @@ import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mongodb.core.CollectionCallback;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.util.Version;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -69,13 +70,14 @@ public class AggregationTests {
 
 	private static final String INPUT_COLLECTION = "aggregation_test_collection";
 	private static final Logger LOGGER = LoggerFactory.getLogger(AggregationTests.class);
+	private static final Version TWO_DOT_FOUR = new Version(2, 4);
 
 	private static boolean initialized = false;
 
 	@Autowired MongoTemplate mongoTemplate;
 
 	@Rule public ExpectedException exception = ExpectedException.none();
-	private static String mongoVersion;
+	private static Version mongoVersion;
 
 	@Before
 	public void setUp() {
@@ -89,7 +91,7 @@ public class AggregationTests {
 
 		if (mongoVersion == null) {
 			CommandResult result = mongoTemplate.executeCommand("{ buildInfo: 1 }");
-			mongoVersion = result.get("version").toString();
+			mongoVersion = Version.parse(result.get("version").toString());
 		}
 	}
 
@@ -521,7 +523,7 @@ public class AggregationTests {
 	@Test
 	public void stringExpressionsInProjectionExample() {
 
-		Assume.assumeTrue(mongoVersion.startsWith("2.4"));
+		assumeTrue(mongoVersion.isGreaterThanOrEqualTo(TWO_DOT_FOUR));
 
 		Product product = new Product("P1", "A", 1.99, 3, 0.05, 0.19);
 		mongoTemplate.insert(product);
@@ -645,7 +647,7 @@ public class AggregationTests {
 	@Test
 	public void shouldPerformDateProjectionOperatorsCorrectly() throws ParseException {
 
-		Assume.assumeTrue(mongoVersion.startsWith("2.4"));
+		assumeTrue(mongoVersion.isGreaterThanOrEqualTo(TWO_DOT_FOUR));
 
 		Data data = new Data();
 		data.stringValue = "ABC";
@@ -676,7 +678,7 @@ public class AggregationTests {
 	@Test
 	public void shouldPerformStringProjectionOperatorsCorrectly() throws ParseException {
 
-		Assume.assumeTrue(mongoVersion.startsWith("2.4"));
+		assumeTrue(mongoVersion.isGreaterThanOrEqualTo(TWO_DOT_FOUR));
 
 		Data data = new Data();
 		data.dateValue = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss.SSSZ").parse("29.08.1983 12:34:56.789+0000");
