@@ -26,7 +26,7 @@ import org.springframework.expression.spel.ast.Operator;
 import org.springframework.util.Assert;
 
 /**
- * A value object for nodes in an expression.
+ * A value object for nodes in an expression. Allows iterating ove potentially available child {@link ExpressionNode}s.
  * 
  * @author Oliver Gierke
  */
@@ -131,27 +131,60 @@ public class ExpressionNode implements Iterable<ExpressionNode> {
 		return false;
 	}
 
+	/**
+	 * Returns the value of the current node.
+	 * 
+	 * @return
+	 */
 	public Object getValue() {
 		return node.getValue(state);
 	}
 
+	/**
+	 * Returns whether the current node has child nodes.
+	 * 
+	 * @return
+	 */
 	public boolean hasChildren() {
 		return node.getChildCount() != 0;
 	}
 
+	/**
+	 * Returns the child {@link ExpressionNode} with the given index.
+	 * 
+	 * @param index must not be negative.
+	 * @return
+	 */
 	public ExpressionNode getChild(int index) {
+
+		Assert.isTrue(index >= 0);
 		return from(node.getChild(index), state);
 	}
 
+	/**
+	 * Returns whether the {@link ExpressionNode} has a first child node that is not of the given type.
+	 * 
+	 * @param type must not be {@literal null}.
+	 * @return
+	 */
 	public boolean hasfirstChildNotOfType(Class<?> type) {
+
+		Assert.notNull(type, "Type must not be null!");
 		return hasChildren() && !node.getChild(0).getClass().equals(type);
 	}
 
+	/**
+	 * Creates a new {@link ExpressionNode} from the given {@link SpelNode}.
+	 * 
+	 * @param node
+	 * @return
+	 */
 	protected ExpressionNode from(SpelNode node) {
 		return from(node, state);
 	}
 
-	/* (non-Javadoc)
+	/* 
+	 * (non-Javadoc)
 	 * @see java.lang.Iterable#iterator()
 	 */
 	@Override
