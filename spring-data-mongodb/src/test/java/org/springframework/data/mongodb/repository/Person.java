@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.repository;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -53,6 +54,8 @@ public class Person extends Contact {
 	@DBRef User creator;
 
 	@DBRef(lazy = true) List<User> fans;
+
+	@DBRef(lazy = true) ArrayList<User> realFans;
 
 	Credentials credentials;
 
@@ -205,6 +208,20 @@ public class Person extends Contact {
 	 */
 	public void setFans(List<User> fans) {
 		this.fans = fans;
+	}
+
+	/**
+	 * @return the realFans
+	 */
+	public ArrayList<User> getRealFans() {
+		return realFans;
+	}
+
+	/**
+	 * @param realFans the realFans to set
+	 */
+	public void setRealFans(ArrayList<User> realFans) {
+		this.realFans = realFans;
 	}
 
 	/*
