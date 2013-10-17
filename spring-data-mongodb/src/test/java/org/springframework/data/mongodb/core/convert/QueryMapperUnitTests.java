@@ -17,7 +17,7 @@ package org.springframework.data.mongodb.core.convert;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
-import static org.springframework.data.mongodb.core.DBObjectUtils.*;
+import static org.springframework.data.mongodb.core.DBObjectTestUtils.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
@@ -35,7 +35,7 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.MongoDbFactory;
-import org.springframework.data.mongodb.core.DBObjectUtils;
+import org.springframework.data.mongodb.core.DBObjectTestUtils;
 import org.springframework.data.mongodb.core.Person;
 import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.DBRef;
@@ -333,7 +333,7 @@ public class QueryMapperUnitTests {
 		Query query = query(where("reference").in(first, second));
 		DBObject result = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(WithDBRef.class));
 
-		DBObject reference = DBObjectUtils.getAsDBObject(result, "reference");
+		DBObject reference = DBObjectTestUtils.getAsDBObject(result, "reference");
 
 		BasicDBList inClause = getAsDBList(reference, "$in");
 		assertThat(inClause, hasSize(2));

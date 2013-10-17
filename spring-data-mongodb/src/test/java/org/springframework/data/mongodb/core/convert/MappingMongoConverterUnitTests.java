@@ -53,7 +53,7 @@ import org.springframework.data.mapping.PropertyPath;
 import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mapping.model.MappingInstantiationException;
 import org.springframework.data.mongodb.MongoDbFactory;
-import org.springframework.data.mongodb.core.DBObjectUtils;
+import org.springframework.data.mongodb.core.DBObjectTestUtils;
 import org.springframework.data.mongodb.core.convert.DBObjectAccessorUnitTests.NestedType;
 import org.springframework.data.mongodb.core.convert.DBObjectAccessorUnitTests.ProjectingType;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -1446,7 +1446,7 @@ public class MappingMongoConverterUnitTests {
 		converter.write(type, result);
 
 		assertThat(result.get("name"), is((Object) "name"));
-		DBObject aValue = DBObjectUtils.getAsDBObject(result, "a");
+		DBObject aValue = DBObjectTestUtils.getAsDBObject(result, "a");
 		assertThat(aValue.get("b"), is((Object) "bar"));
 		assertThat(aValue.get("c"), is((Object) "C"));
 	}

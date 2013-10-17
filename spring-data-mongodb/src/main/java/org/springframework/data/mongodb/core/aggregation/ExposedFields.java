@@ -340,7 +340,9 @@ public class ExposedFields implements Iterable<ExposedField> {
 		 * @return
 		 */
 		public String getRaw() {
+
 			String target = field.getTarget();
+
 			return field.synthetic ? target : String.format("%s.%s", Fields.UNDERSCORE_ID, target);
 		}
 

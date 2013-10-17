@@ -197,15 +197,28 @@ public class Fields implements Iterable<Field> {
 
 		public AggregationField(String name, String target) {
 
-			Assert.hasText(name, "AggregationField name must not be null or empty!");
+			String nameToSet = cleanUp(name);
+			String targetToSet = cleanUp(target);
+
+			Assert.hasText(nameToSet, "AggregationField name must not be null or empty!");
 
 			if (target == null && name.contains(".")) {
-				this.name = name.substring(name.indexOf(".") + 1);
-				this.target = name;
+				this.name = nameToSet.substring(nameToSet.indexOf(".") + 1);
+				this.target = nameToSet;
 			} else {
-				this.name = name;
-				this.target = target;
+				this.name = nameToSet;
+				this.target = targetToSet;
 			}
+		}
+
+		private static final String cleanUp(String source) {
+
+			if (source == null) {
+				return source;
+			}
+
+			int dollarIndex = source.lastIndexOf('$');
+			return dollarIndex == -1 ? source : source.substring(dollarIndex + 1);
 		}
 
 		/*

@@ -1118,7 +1118,7 @@ class SampleMongoConfiguration extends AbstractMongoConfiguration {
           <classname>AbstractMongoConfiguration</classname> class and override
           the bean definition of the
           <classname>MappingMongoConverter</classname> where we configure our
-          custom <classname>MongoTypeMapper</classname>. </para>
+          custom <classname>MongoTypeMapper</classname>.</para>
         </example>
 
         <example>
@@ -1550,8 +1550,9 @@ List&lt;Person&gt; result = mongoTemplate.find(query(where("age").lt(50)
       and <literal>Query.query</literal> to make the query more
       readable.</para>
 
-      <para>This query should return a list of Person objects that meet the
-      specified criteria. The Criteria class has the following methods that
+      <para>This query should return a list of <classname>Person</classname>
+      objects that meet the specified criteria. The
+      <classname>Criteria</classname> class has the following methods that
       correspond to the operators provided in MongoDB.</para>
 
       <para>As you can see most methods return the
@@ -2391,6 +2392,67 @@ List&lt;OutputType&gt; mappedResult = results.getMappedResults();
       <para>*) The operation is mapped or added by Spring Data MongoDB.</para>
     </section>
 
+    <section id="mongo.aggregation.projection">
+      <title>Projection Expressions</title>
+
+      <para>Projection expressions are used to define the fields that are the
+      outcome of a particular aggregation step. Projection expressions can be
+      defined via the <methodname>project</methodname> method of the
+      <classname>Aggregate</classname> class.</para>
+
+      <example>
+        <title>Projection expression examples</title>
+
+        <programlisting language="java">project("name", "netPrice") // will generate {$project: {name: 1, netPrice: 1}}
+project().and("foo").as("bar") // will generate {$project: {bar: $foo}}
+project("a","b").and("foo").as("bar") // will generate {$project: {a: 1, b: 1, bar: $foo}}</programlisting>
+
+        <para>Note that more examples for project operations can be found in
+        the <classname>AggregationTests</classname> class.</para>
+      </example>
+
+      <para>Note that further details regarding the projection expressions can
+      be found in the <ulink
+      url="http://docs.mongodb.org/manual/reference/operator/aggregation/project/#pipe._S_project">corresponding
+      section</ulink> of the MongoDB Aggregation Framework reference
+      documentation.</para>
+
+      <section id="mongo.aggregation.projection.expressions">
+        <title>Spring Expresison Support in Projection Expressions</title>
+
+        <para>As of Version 1.4.0 we support the use of SpEL expression in
+        projection expressions via the <methodname>andExpression</methodname>
+        method of the <classname>ProjectionOperation</classname> class. This
+        allows you to define the desired expression as a SpEL expression which
+        is translated into a corresponding MongoDB projection expression part
+        on query execution. This makes it much easier to express complex
+        calculations.</para>
+
+        <example>
+          <title>Complex calulations with SpEL expressions</title>
+
+          <para>The following SpEL expression:</para>
+
+          <programlisting language="java">1 + (q + 1) / (q - 1)</programlisting>
+
+          <para>will be translated into the following projection expression
+          part:</para>
+
+          <programlisting language="javascript">{ "$add" : [ 1, {
+    "$divide" : [ { 
+        "$add":["$q", 1]}, {
+        "$subtract":[ "$q", 1]}
+    ]
+}]}</programlisting>
+        </example>
+
+        <para>Have a look at an example in more context in <xref
+        linkend="mongo.aggregation.examples.example5"/>. You can find more
+        usage examples for supported SpEL expression constructs in
+        <classname>SpelExpressionTransformerUnitTests</classname>.</para>
+      </section>
+    </section>
+
     <section id="mongo.aggregation.examples">
       <title>Aggregation Framework Examples</title>
 
@@ -2659,8 +2721,8 @@ List&lt;StateStats&gt; stateStatsList = result.getMappedResults();</programlisti
       <example id="mongo.aggregation.examples.example4">
         <title>Aggregation Framework Example 4</title>
 
-        <para>This example demonstrates the use of arithmetic operations in
-        the projection operation.</para>
+        <para>This example demonstrates the use of simple arithmetic
+        operations in the projection operation.</para>
 
         <programlisting language="java">class Product {
     String id;
@@ -2687,6 +2749,76 @@ List&lt;DBObject&gt; resultList = result.getMappedResults();</programlisting>
       <para>Note that we derive the name of the input-collection from the
       <classname>Product</classname>-class passed as first parameter to the
       <methodname>newAggregation</methodname>-Method.</para>
+
+      <example id="mongo.aggregation.examples.example5">
+        <title>Aggregation Framework Example 5</title>
+
+        <para>This example demonstrates the use of simple arithmetic
+        operations derived from SpEL Expressions in the projection
+        operation.</para>
+
+        <programlisting language="java">class Product {
+    String id;
+    String name;
+    double netPrice;
+    int spaceUnits;
+}</programlisting>
+
+        <programlisting language="java">import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
+
+TypedAggregation&lt;Product&gt; agg = newAggregation(Product.class,
+    project("name", "netPrice")
+        .andExpression("netPrice + 1").as("netPricePlus1")
+        .andExpression("netPrice - 1").as("netPriceMinus1")
+        .andExpression("netPrice / 2").as("netPriceDiv2")
+        .andExpression("netPrice * 1.19").as("grossPrice")
+        .andExpression("spaceUnits % 2").as("spaceUnitsMod2")
+        .andExpression("(netPrice * 0.8  + 1.2) * 1.19").as("grossPriceIncludingDiscountAndCharge")
+
+);
+
+AggregationResults&lt;DBObject&gt; result = mongoTemplate.aggregate(agg, DBObject.class);
+List&lt;DBObject&gt; resultList = result.getMappedResults();</programlisting>
+      </example>
+
+      <example id="mongo.aggregation.examples.example6">
+        <title>Aggregation Framework Example 6</title>
+
+        <para>This example demonstrates the use of complex arithmetic
+        operations derived from SpEL Expressions in the projection
+        operation.</para>
+
+        <para>Note: The additional parameters passed to the
+        <methodname>addExpression</methodname> Method can be referenced via
+        indexer expressions according to their position. In this example we
+        reference the parameter <varname>shippingCosts</varname> which is the
+        first parameter of the parameters array via <code>[0]</code>. External
+        parameter expressions are replaced with their respective values when
+        the SpEL expression is transformed into a MongoDB aggregation
+        framework expression.</para>
+
+        <programlisting language="java">class Product {
+    String id;
+    String name;
+    double netPrice;
+    int spaceUnits;
+}</programlisting>
+
+        <programlisting language="java">import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
+
+double shippingCosts = 1.2;
+
+TypedAggregation&lt;Product&gt; agg = newAggregation(Product.class,
+    project("name", "netPrice")
+        .andExpression("(netPrice * (1-discountRate)  + [0]) * (1+taxRate)", shippingCosts).as("salesPrice")
+);
+
+AggregationResults&lt;DBObject&gt; result = mongoTemplate.aggregate(agg, DBObject.class);
+List&lt;DBObject&gt; resultList = result.getMappedResults();</programlisting>
+      </example>
+
+      <para>Note that we can also refer to other fields of the document within
+      the SpEL expression.</para>
     </section>
   </section>
 

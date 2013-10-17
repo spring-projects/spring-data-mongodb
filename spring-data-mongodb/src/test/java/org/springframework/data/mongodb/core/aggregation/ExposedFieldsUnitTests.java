@@ -25,6 +25,7 @@ import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedFi
  * Unit tests for {@link ExposedFields}.
  * 
  * @author Oliver Gierke
+ * @author Thomas Darimont
  */
 public class ExposedFieldsUnitTests {
 
