@@ -1550,8 +1550,9 @@ List&lt;Person&gt; result = mongoTemplate.find(query(where("age").lt(50)
       and <literal>Query.query</literal> to make the query more
       readable.</para>
 
-      <para>This query should return a list of Person objects that meet the
-      specified criteria. The Criteria class has the following methods that
+      <para>This query should return a list of <classname>Person</classname>
+      objects that meet the specified criteria. The
+      <classname>Criteria</classname> class has the following methods that
       correspond to the operators provided in MongoDB.</para>
 
       <para>As you can see most methods return the
@@ -2414,23 +2415,17 @@ project("a","b").and("foo").as("bar") // will generate {$project: {a: 1, b: 1, b
       be found in the <ulink
       url="http://docs.mongodb.org/manual/reference/operator/aggregation/project/#pipe._S_project">corresponding
       section</ulink> of the MongoDB Aggregation Framework reference
-      documentation. </para>
+      documentation.</para>
 
       <section id="mongo.aggregation.projection.expressions">
         <title>Spring Expresison Support in Projection Expressions</title>
 
-        <para>Since Version 1.4.0 we support the use of SpEL expression in
-        Projection expressions via the <methodname>andExpression</methodname>
+        <para>As of Version 1.4.0 we support the use of SpEL expression in
+        projection expressions via the <methodname>andExpression</methodname>
         method of the <classname>ProjectionOperation</classname> class. This
-        allows a developer to define the desired expression as a SpEL
-        expression string which is then translated to a corresponding MongoDB
-        projection expression part on query execution.</para>
-
-        <para>Note that one can find more usage examples for supported SpEL
-        expression constructs in
-        <classname>SpelExpressionToMongoExpressionTransformerUnitTests</classname>.</para>
-
-        <para>This makes it much easier to express complex
+        allows you to define the desired expression as a SpEL expression which
+        is translated into a corresponding MongoDB projection expression part
+        on query execution. This makes it much easier to express complex
         calculations.</para>
 
         <example>
@@ -2443,28 +2438,18 @@ project("a","b").and("foo").as("bar") // will generate {$project: {a: 1, b: 1, b
           <para>will be translated into the following projection expression
           part:</para>
 
-          <programlisting language="javascript">{
-   "$add":[
-      1,
-      {
-         "$divide":[
-            {
-               "$add":[
-                  "$q",
-                  1
-               ]
-            },
-            {
-               "$subtract":[
-                  "$q",
-                  1
-               ]
-            }
-         ]
-      }
-   ]
-}</programlisting>
+          <programlisting language="javascript">{ "$add" : [ 1, {
+    "$divide" : [ { 
+        "$add":["$q", 1]}, {
+        "$subtract":[ "$q", 1]}
+    ]
+}]}</programlisting>
         </example>
+
+        <para>Have a look at an example in more context in <xref
+        linkend="mongo.aggregation.examples.example5"/>. You can find more
+        usage examples for supported SpEL expression constructs in
+        <classname>SpelExpressionTransformerUnitTests</classname>.</para>
       </section>
     </section>
 
