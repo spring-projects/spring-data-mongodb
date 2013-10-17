@@ -53,6 +53,8 @@ public class Person extends Contact {
 
 	@DBRef User creator;
 
+	@DBRef(lazy = true) User coworker;
+
 	@DBRef(lazy = true) List<User> fans;
 
 	@DBRef(lazy = true) ArrayList<User> realFans;
@@ -222,6 +224,20 @@ public class Person extends Contact {
 	 */
 	public void setRealFans(ArrayList<User> realFans) {
 		this.realFans = realFans;
+	}
+
+	/**
+	 * @return the coworker
+	 */
+	public User getCoworker() {
+		return coworker;
+	}
+
+	/**
+	 * @param coworker the coworker to set
+	 */
+	public void setCoworker(User coworker) {
+		this.coworker = coworker;
 	}
 
 	/*

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2012 the original author or authors.
+ * Copyright 2010-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,52 +22,122 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.junit.Before;
 import org.junit.Test;
+import org.springframework.aop.Advisor;
+import org.springframework.aop.framework.Advised;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter.LazyLoadingInterceptor;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
  * Integration test for {@link PersonRepository}.
  * 
  * @author Oliver Gierke
+ * @author Thomas Darimont
  */
 @ContextConfiguration
 public class PersonRepositoryIntegrationTests extends AbstractPersonRepositoryIntegrationTests {
+
+	@Before
+	public void setUp() throws InterruptedException {
+
+		super.setUp();
+		operations.remove(new org.springframework.data.mongodb.core.query.Query(), User.class);
+	}
 
 	/**
 	 * @see DATAMONGO-348
 	 */
 	@Test
-	public void shouldLoadAssociationWithDbRefAndLazyLoading() throws Exception {
-
-		operations.remove(new org.springframework.data.mongodb.core.query.Query(), User.class);
+	public void shouldLoadAssociationWithDbRefOnInterfaceAndLazyLoadingEnabled() throws Exception {
 
 		User thomas = new User();
-		thomas.username = "Oliver";
+		thomas.username = "Thomas";
 		operations.save(thomas);
 
 		Person person = new Person();
-		person.setFirstname("Thomas");
+		person.setFirstname("Oliver");
 		person.setFans(Arrays.asList(thomas));
 		person.setRealFans(new ArrayList<User>(Arrays.asList(thomas)));
 		repository.save(person);
 
 		Person oliver = repository.findOne(person.id);
 		List<User> fans = oliver.getFans();
-		// TODO test internal object state of 'fans' before accessing
-		// initialized should be 'false'
-		// result should be 'null'
+		LazyLoadingInterceptor interceptor = extractInterceptor(fans);
+
+		assertThat(interceptor.getResult(), is(nullValue()));
+		assertThat(interceptor.isResolved(), is(false));
 
 		User user = fans.get(0);
-		// TODO test internal object state of 'fans' after accessing
-		// initialized should be 'true'
-		// result should be not 'null'
-		// other fields should be 'null'
+		assertThat(interceptor.getResult(), is(notNullValue()));
+		assertThat(interceptor.isResolved(), is(true));
+		assertThat(user.getUsername(), is(thomas.getUsername()));
+	}
 
-		assertThat(user.username, is(thomas.username));
+	/**
+	 * @see DATAMONGO-348
+	 */
+	@Test
+	public void shouldLoadAssociationWithDbRefOnConcreteCollectionAndLazyLoadingEnabled() throws Exception {
 
+		User thomas = new User();
+		thomas.username = "Thomas";
+		operations.save(thomas);
+
+		Person person = new Person();
+		person.setFirstname("Oliver");
+		person.setFans(Arrays.asList(thomas));
+		person.setRealFans(new ArrayList<User>(Arrays.asList(thomas)));
+		repository.save(person);
+
+		Person oliver = repository.findOne(person.id);
 		List<User> realFans = oliver.getRealFans();
+		LazyLoadingInterceptor interceptor = extractInterceptor(realFans);
+
+		assertThat(interceptor.getResult(), is(nullValue()));
+		assertThat(interceptor.isResolved(), is(false));
 
 		User realFan = realFans.get(0);
-		assertThat(realFan.username, is(thomas.username));
+		assertThat(interceptor.getResult(), is(notNullValue()));
+		assertThat(interceptor.isResolved(), is(true));
+		assertThat(realFan.getUsername(), is(thomas.getUsername()));
+
+		realFans = oliver.getRealFans();
+		assertThat(interceptor.getResult(), is(notNullValue()));
+		assertThat(interceptor.isResolved(), is(true));
+
+		realFan = realFans.get(0);
+		assertThat(realFan.getUsername(), is(thomas.getUsername()));
+	}
+
+	/**
+	 * @see DATAMONGO-348
+	 */
+	@Test
+	public void shouldLoadAssociationWithDbRefOnConcreteDomainClassAndLazyLoadingEnabled() throws Exception {
+
+		User thomas = new User();
+		thomas.username = "Thomas";
+		operations.save(thomas);
+
+		Person person = new Person();
+		person.setFirstname("Oliver");
+		person.setCoworker(thomas);
+		repository.save(person);
+
+		Person oliver = repository.findOne(person.id);
+
+		User coworker = oliver.getCoworker();
+		LazyLoadingInterceptor interceptor = extractInterceptor(coworker);
+
+		assertThat(interceptor.getResult(), is(nullValue()));
+		assertThat(interceptor.isResolved(), is(false));
+		assertThat(coworker.getUsername(), is(thomas.getUsername()));
+		assertThat(interceptor.isResolved(), is(true));
+		assertThat(coworker.getUsername(), is(thomas.getUsername()));
+	}
+
+	private LazyLoadingInterceptor extractInterceptor(Object proxy) {
+		return (LazyLoadingInterceptor) ((Advisor) ((Advised) proxy).getAdvisors()[0]).getAdvice();
 	}
 }
