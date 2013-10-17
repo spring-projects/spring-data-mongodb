@@ -275,6 +275,8 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 */
 		static class ExpressionProjection extends Projection {
 
+			private static final SpelExpressionTransformer TRANSFORMER = new SpelExpressionTransformer();
+
 			private final String expression;
 			private final Object[] params;
 
@@ -302,8 +304,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 			 */
 			@Override
 			public DBObject toDBObject(AggregationOperationContext context) {
-				return new BasicDBObject(getExposedField().getName(),
-						SpelExpressionToMongoExpressionTransformer.INSTANCE.transform(expression, context, params));
+				return new BasicDBObject(getExposedField().getName(), TRANSFORMER.transform(expression, context, params));
 			}
 		}
 	}

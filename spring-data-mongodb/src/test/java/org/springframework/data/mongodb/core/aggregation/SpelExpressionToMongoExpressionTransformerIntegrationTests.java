@@ -32,7 +32,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 /**
- * Integration tests for {@link SpelExpressionToMongoExpressionTransformer}.
+ * Integration tests for {@link SpelExpressionTransformer}.
  * 
  * @see DATAMONGO-774
  * @author Thomas Darimont
@@ -45,7 +45,7 @@ public class SpelExpressionToMongoExpressionTransformerIntegrationTests {
 
 	@Rule public ExpectedException exception = ExpectedException.none();
 
-	SpelExpressionToMongoExpressionTransformer transformer = SpelExpressionToMongoExpressionTransformer.INSTANCE;
+	SpelExpressionTransformer transformer = new SpelExpressionTransformer();
 
 	@Test
 	public void shouldConvertCompoundExpressionToPropertyPath() {
