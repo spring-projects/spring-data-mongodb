@@ -135,6 +135,44 @@ public class MyService {
 }
 ```
 
+### Creating MongoTemplate through JNDI Resource
+
+Creating MongoTemplate through JNDI Resource using SimpleMongoTemplateJNDIFactory class.
+
+Set in j2ee files for creating the MongoTemplate object during spring context initialization. 
+
+context.xml - create Jndi Resource entry, which provides the mongodb properties.
+```
+<Resource name="jndi/MongoDB"
+    auth="Container"
+    type="org.springframework.data.mongodb.core.MongoTemplate"
+    factory="org.springframework.data.mongodb.core.SimpleMongoTemplateJNDIFactory"
+    username="xxx"
+    password="xxx"
+    host="xxx.mongolab.com"
+    port="41377"
+    db="xxxx" />
+
+```
+web.xml -Have resource-ref entry giving jndi name and its return type in below way.
+
+```
+<resource-env-ref>
+    <description>Mongo JNDI configuration</description>
+    <resource-env-ref-name>jndi/MongoDB</resource-env-ref-name>
+    <resource-env-ref-type>org.springframework.data.mongodb.core.MongoTemplate</resource-env-ref-type>
+</resource-env-ref>
+
+```
+
++++Contribution source:
+
+http://stackoverflow.com/questions/4076254/mongodb-via-jndi
+
+
+
+
+
 ## Contributing to Spring Data
 
 Here are some ways for you to get involved in the community:
