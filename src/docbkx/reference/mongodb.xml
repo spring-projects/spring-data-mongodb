@@ -2465,7 +2465,7 @@ project("a","b").and("foo").as("bar") // will generate {$project: {a: 1, b: 1, b
 
         <para>In this introductory example we want to aggregate a list of tags
         to get the occurence count of a particular tag from a MongoDB
-        collection called <code>"tags"</code> sorted by the occurence count in
+        collection called <code>"tags"</code> sorted by the occurrence count in
         descending order. This example demonstrates the usage of grouping,
         sorting, projections (selection) and unwinding (result
         splitting).</para>
