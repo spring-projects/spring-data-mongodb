@@ -26,6 +26,20 @@ public class AnnotationMethodFinderTest {
     public void shouldFindAnnotationWithBeforeConvert(){
         new AnnotationMethodFinder().executeMethodAnnotatedWith(new PersonnWithAnnotations(mockObject), new Object[0], OnBeforeConvert.class);
         verify(mockObject).before();
+        verifyZeroInteractions(mockObject);
+    }
+
+    @Test
+    public void shouldFindAnnotationWithBeforeDelete(){
+        new AnnotationMethodFinder().executeMethodAnnotatedWith(new PersonnWithAnnotations(mockObject), new Object[0], OnBeforeDelete.class);
+        verify(mockObject).before();
+    }
+
+    @Test
+    public void shouldFindAnnotationWithBeforeSave(){
+        new AnnotationMethodFinder().executeMethodAnnotatedWith(new PersonnWithAnnotations(mockObject), new Object[]{new BasicDBObject()}, OnBeforeSave.class);
+        verify(mockObject).before();
+
     }
 
     @Test
@@ -41,12 +55,64 @@ public class AnnotationMethodFinderTest {
         //verifyZeroInteractions(mockObject);
     }
 
+
     @Test
-    public void shouldNotFindAnnotationWithAfter(){
-        new AnnotationMethodFinder().executeMethodAnnotatedWith(new PersonnWithoutAnnotation(mockObject), new Object[0], OnBeforeConvert.class);
+    public void shouldFindAnnotationWithAfterConvert(){
+        new AnnotationMethodFinder().executeMethodAnnotatedWith(new PersonnWithAnnotations(mockObject), new Object[]{new BasicDBObject()}, OnAfterConvert.class);
+        verify(mockObject).after();
+        verifyZeroInteractions(mockObject);
+    }
+
+    @Test
+    public void shouldFindAnnotationWithAfterDelete(){
+        new AnnotationMethodFinder().executeMethodAnnotatedWith(new PersonnWithAnnotations(mockObject), new Object[]{new BasicDBObject()}, OnAfterDelete.class);
+        verify(mockObject).after();
+        verifyZeroInteractions(mockObject);
+    }
+
+    @Test
+    public void shouldFindAnnotationWithAfterLoad(){
+        new AnnotationMethodFinder().executeMethodAnnotatedWith(new PersonnWithAnnotations(mockObject), new Object[]{new BasicDBObject()}, OnAfterLoad.class);
+        verify(mockObject).after();
+        verifyZeroInteractions(mockObject);
+    }
+
+
+    @Test
+    public void shouldNotFindAnnotationAfterOrBefore(){
+        AnnotationMethodFinder annotationMethodFinder = new AnnotationMethodFinder();
+        PersonnWithoutAnnotation targetObject = new PersonnWithoutAnnotation(mockObject);
+
+        annotationMethodFinder.executeMethodAnnotatedWith(targetObject, new Object[0], OnAfterLoad.class);
+        annotationMethodFinder.executeMethodAnnotatedWith(targetObject, new Object[]{new BasicDBObject()}, OnAfterConvert.class);
+        annotationMethodFinder.executeMethodAnnotatedWith(targetObject, new Object[0], OnAfterSave.class);
+        annotationMethodFinder.executeMethodAnnotatedWith(targetObject, new Object[0], OnAfterDelete.class);
+
+        annotationMethodFinder.executeMethodAnnotatedWith(targetObject, new Object[]{new BasicDBObject()}, OnBeforeSave.class);
+        annotationMethodFinder.executeMethodAnnotatedWith(targetObject, new Object[0], OnBeforeDelete.class);
+        annotationMethodFinder.executeMethodAnnotatedWith(targetObject, new Object[0], OnBeforeConvert.class);
 
         verifyZeroInteractions(mockObject);
     }
+
+
+    @Test
+    public void shouldFindAnnotationWithNoParametersOnAfterSave(){
+        new AnnotationMethodFinder().executeMethodAnnotatedWith(new PersonnWithAnnotationsAndNoParameters(mockObject),
+                new Object[]{new BasicDBObject()}, OnAfterSave.class);
+        verify(mockObject).after();
+
+    }
+
+    @Test
+    public void shouldFindAnnotationWithNoParametersOnBeforeSave(){
+        new AnnotationMethodFinder().executeMethodAnnotatedWith(new PersonnWithAnnotationsAndNoParameters(mockObject),
+                new Object[]{new BasicDBObject()}, OnBeforeSave.class);
+        verify(mockObject).before();
+
+    }
+
+
 
     public static interface CallObject{
         public void after();
@@ -65,9 +131,53 @@ public class AnnotationMethodFinderTest {
             injector.before();
         }
 
+        @OnBeforeDelete
+        public void onBeforeDelete(){
+            injector.before();
+        }
+
+        @OnBeforeSave
+        public void onBeforeSave(BasicDBObject dbObject){
+            injector.before();
+        }
+
+        @OnAfterConvert
+        public void onAfterConvert(){
+            injector.after();
+        }
+
+        @OnAfterDelete
+        public void onAfterDelete(){
+            injector.after();
+        }
+
         @OnAfterSave
         public void onafterSave(BasicDBObject dbObject){
             injector.after();
+        }
+
+        @OnAfterLoad
+        public void onAfterLoad(){
+            injector.after();
+        }
+    }
+
+    public static class PersonnWithAnnotationsAndNoParameters {
+
+        private CallObject injector;
+
+        public PersonnWithAnnotationsAndNoParameters(CallObject injector) {
+            this.injector = injector;
+        }
+
+        @OnAfterSave
+        public void onafterSave(){
+            injector.after();
+        }
+
+        @OnBeforeSave
+        public void onBeforeSave(){
+            injector.before();
         }
 
     }
