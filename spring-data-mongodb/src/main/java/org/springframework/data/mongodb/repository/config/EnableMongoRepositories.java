@@ -35,6 +35,7 @@ import org.springframework.data.repository.query.QueryLookupStrategy.Key;
  * {@link #basePackages()} or {@link #basePackageClasses()} it will trigger scanning of the package of annotated class.
  * 
  * @author Oliver Gierke
+ * @author Thomas Darimont
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
@@ -119,4 +120,10 @@ public @interface EnableMongoRepositories {
 	 * @return
 	 */
 	boolean createIndexesForQueryMethods() default false;
+
+	/**
+	 * Configures whether nested repository-interfaces (e.g. defined as inner classes) should be discovered by the
+	 * repositories infrastructure.
+	 */
+	boolean considerNestedRepositories() default false;
 }
