@@ -29,7 +29,7 @@
 	<properties>
 		<project.type>multi</project.type>
 		<dist.id>spring-data-mongodb</dist.id>
-		<springdata.commons>1.6.1.RELEASE</springdata.commons>
+		<springdata.commons>1.6.2.RELEASE</springdata.commons>
 		<mongo>2.10.1</mongo>
 	</properties>
 	
@@ -37,9 +37,9 @@
 		<developer>
 			<id>ogierke</id>
 			<name>Oliver Gierke</name>
-			<email>ogierke at vmware.com</email>
-			<organization>SpringSource</organization>
-			<organizationUrl>http://www.springsource.com</organizationUrl>
+			<email>ogierke at gopivotal.com</email>
+			<organization>Pivotal Inc.</organization>
+			<organizationUrl>http://www.gopivotal.com</organizationUrl>
 			<roles>
 				<role>Project Lean</role>
 			</roles>
@@ -48,9 +48,9 @@
 		<developer>
 			<id>trisberg</id>
 			<name>Thomas Risberg</name>
-			<email>trisberg at vmware.com</email>
-			<organization>SpringSource</organization>
-			<organizationUrl>http://www.springsource.com</organizationUrl>
+			<email>trisberg at gopivotal.com</email>
+			<organization>Pivotal Inc.</organization>
+			<organizationUrl>http://www.gopivotal.com</organizationUrl>
 			<roles>
 				<role>Developer</role>
 			</roles>
@@ -59,9 +59,9 @@
 		<developer>
 			<id>mpollack</id>
 			<name>Mark Pollack</name>
-			<email>mpollack at vmware.com</email>
-			<organization>SpringSource</organization>
-			<organizationUrl>http://www.springsource.com</organizationUrl>
+			<email>mpollack at gopivotal.com</email>
+			<organization>Pivotal Inc.</organization>
+			<organizationUrl>http://www.gopivotal.com</organizationUrl>
 			<roles>
 				<role>Developer</role>
 			</roles>
@@ -70,13 +70,24 @@
 		<developer>
 			<id>jbrisbin</id>
 			<name>Jon Brisbin</name>
-			<email>jbrisbin at vmware.com</email>
-			<organization>SpringSource</organization>
-			<organizationUrl>http://www.springsource.com</organizationUrl>
+			<email>jbrisbin at gopivotal.com</email>
+			<organization>Pivotal Inc.</organization>
+			<organizationUrl>http://www.gopivotal.com</organizationUrl>
 			<roles>
 				<role>Developer</role>
 			</roles>
 			<timezone>-6</timezone>
+		</developer>
+		<developer>
+			<id>tdarimont</id>
+			<name>Thomas Darimont</name>
+			<email>tdarimont at gopivotal.com</email>
+			<organization>Pivotal Inc.</organization>
+			<organizationUrl>http://www.gopivotal.com</organizationUrl>
+			<roles>
+				<role>Developer</role>
+			</roles>
+			<timezone>+1</timezone>
 		</developer>
 	</developers>
 
