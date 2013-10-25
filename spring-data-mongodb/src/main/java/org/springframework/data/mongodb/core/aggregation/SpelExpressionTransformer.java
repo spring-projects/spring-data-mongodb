@@ -29,6 +29,7 @@ import org.springframework.data.mongodb.core.spel.MethodReferenceNode;
 import org.springframework.data.mongodb.core.spel.OperatorNode;
 import org.springframework.expression.spel.ExpressionState;
 import org.springframework.expression.spel.SpelNode;
+import org.springframework.expression.spel.SpelParserConfiguration;
 import org.springframework.expression.spel.ast.CompoundExpression;
 import org.springframework.expression.spel.ast.Indexer;
 import org.springframework.expression.spel.ast.InlineList;
@@ -50,7 +51,9 @@ import com.mongodb.DBObject;
  */
 class SpelExpressionTransformer implements AggregationExpressionTransformer {
 
-	private final SpelExpressionParser parser = new SpelExpressionParser();
+	// TODO: remove explicit usage of a configuration once SPR-11031 gets fixed
+	private static final SpelParserConfiguration CONFIG = new SpelParserConfiguration(false, false);
+	private static final SpelExpressionParser PARSER = new SpelExpressionParser(CONFIG);
 	private final List<ExpressionNodeConversion<? extends ExpressionNode>> conversions;
 
 	/**
@@ -87,8 +90,8 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 		Assert.notNull(context, "AggregationOperationContext must not be null!");
 		Assert.notNull(params, "Parameters must not be null!");
 
-		SpelExpression spelExpression = (SpelExpression) parser.parseExpression(expression);
-		ExpressionState state = new ExpressionState(new StandardEvaluationContext(params));
+		SpelExpression spelExpression = (SpelExpression) PARSER.parseExpression(expression);
+		ExpressionState state = new ExpressionState(new StandardEvaluationContext(params), CONFIG);
 		ExpressionNode node = ExpressionNode.from(spelExpression.getAST(), state);
 
 		return transform(new AggregationExpressionTransformationContext<ExpressionNode>(node, null, null, context));

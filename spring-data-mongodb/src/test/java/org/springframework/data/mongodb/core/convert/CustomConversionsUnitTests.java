@@ -100,7 +100,6 @@ public class CustomConversionsUnitTests {
 	public void populatesConversionServiceCorrectly() {
 
 		GenericConversionService conversionService = new DefaultConversionService();
-		assertThat(conversionService.canConvert(String.class, UUID.class), is(false));
 
 		CustomConversions conversions = new CustomConversions(Arrays.asList(StringToFormatConverter.INSTANCE));
 		conversions.registerConvertersIn(conversionService);
