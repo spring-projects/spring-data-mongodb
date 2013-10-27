@@ -34,6 +34,7 @@ import com.mongodb.gridfs.GridFSFile;
  * 
  * @author Oliver Gierke
  * @author Philipp Schneider
+ * @author Aparna Chaudhary
  */
 public interface GridFsOperations extends ResourcePatternResolver {
 

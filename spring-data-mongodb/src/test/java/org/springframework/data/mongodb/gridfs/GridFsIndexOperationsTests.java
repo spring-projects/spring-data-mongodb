@@ -15,8 +15,8 @@
  */
 package org.springframework.data.mongodb.gridfs;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.CoreMatchers.*;
+import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.util.List;
@@ -42,7 +42,6 @@ import com.mongodb.DBObject;
  * Integration tests for {@link GridFsIndexOperations}.
  * 
  * @author Aparna Chaudhary
- * 
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:gridfs/customgridfs.xml")

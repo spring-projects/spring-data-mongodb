@@ -15,8 +15,8 @@
  */
 package org.springframework.data.mongodb.gridfs;
 
-import static org.springframework.data.mongodb.core.query.Query.query;
-import static org.springframework.data.mongodb.gridfs.GridFsCriteria.whereFilename;
+import static org.springframework.data.mongodb.core.query.Query.*;
+import static org.springframework.data.mongodb.gridfs.GridFsCriteria.*;
 
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -47,6 +47,7 @@ import com.mongodb.gridfs.GridFSInputFile;
  * 
  * @author Oliver Gierke
  * @author Philipp Schneider
+ * @author Aparna Chaudhary
  */
 public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver {
 
@@ -89,7 +90,6 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#store(java.io.InputStream, java.lang.String)
 	 */
-	@Override
 	public GridFSFile store(InputStream content, String filename) {
 		return store(content, filename, (Object) null);
 	}
@@ -98,7 +98,6 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#store(java.io.InputStream, java.lang.String, java.lang.String)
 	 */
-	@Override
 	public GridFSFile store(InputStream content, String filename, String contentType) {
 		return store(content, filename, contentType, (Object) null);
 	}
@@ -107,7 +106,6 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#store(java.io.InputStream, java.lang.String, java.lang.Object)
 	 */
-	@Override
 	public GridFSFile store(InputStream content, String filename, Object metadata) {
 
 		return store(content, filename, null, metadata);
@@ -117,7 +115,6 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#store(java.io.InputStream, java.lang.String, java.lang.String, java.lang.Object)
 	 */
-	@Override
 	public GridFSFile store(InputStream content, String filename, String contentType, Object metadata) {
 
 		DBObject dbObject = null;
@@ -134,7 +131,6 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#store(java.io.InputStream, java.lang.String, com.mongodb.DBObject)
 	 */
-	@Override
 	public GridFSFile store(InputStream content, String filename, DBObject metadata) {
 		return this.store(content, filename, null, metadata);
 	}
@@ -143,7 +139,6 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#store(java.io.InputStream, java.lang.String, com.mongodb.DBObject)
 	 */
-	@Override
 	public GridFSFile store(InputStream content, String filename, String contentType, DBObject metadata) {
 
 		Assert.notNull(content);
@@ -167,7 +162,6 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 	/* (non-Javadoc)
 	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#execute(org.springframework.data.mongodb.core.CollectionCallback)
 	 */
-	@Override
 	public <T> T execute(CollectionCallback<T> callback) {
 		Assert.notNull(callback);
 		try {
@@ -181,7 +175,6 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 	/* (non-Javadoc)
 	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#indexOps()
 	 */
-	@Override
 	public GridFsIndexOperations indexOps() {
 		return new DefaultGridFsIndexOperations(this);
 	}
@@ -190,7 +183,6 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#find(com.mongodb.DBObject)
 	 */
-	@Override
 	public List<GridFSDBFile> find(Query query) {
 
 		if (query == null) {
@@ -207,7 +199,6 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#findOne(com.mongodb.DBObject)
 	 */
-	@Override
 	public GridFSDBFile findOne(Query query) {
 		return getGridFs().findOne(getMappedQuery(query));
 	}
@@ -216,7 +207,6 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#delete(org.springframework.data.mongodb.core.query.Query)
 	 */
-	@Override
 	public void delete(Query query) {
 		getGridFs().remove(getMappedQuery(query));
 	}
@@ -224,7 +214,6 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 	/* (non-Javadoc)
 	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#getFilesCollection()
 	 */
-	@Override
 	public DBCollection getFilesCollection() {
 		try {
 			DB db = getGridFs().getDB();
@@ -240,7 +229,6 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 	 * (non-Javadoc)
 	 * @see org.springframework.core.io.ResourceLoader#getClassLoader()
 	 */
-	@Override
 	public ClassLoader getClassLoader() {
 		return dbFactory.getClass().getClassLoader();
 	}
@@ -249,7 +237,6 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 	 * (non-Javadoc)
 	 * @see org.springframework.core.io.ResourceLoader#getResource(java.lang.String)
 	 */
-	@Override
 	public GridFsResource getResource(String location) {
 		return new GridFsResource(findOne(query(whereFilename().is(location))));
 	}
@@ -258,7 +245,6 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 	 * (non-Javadoc)
 	 * @see org.springframework.core.io.support.ResourcePatternResolver#getResources(java.lang.String)
 	 */
-	@Override
 	public GridFsResource[] getResources(String locationPattern) {
 
 		if (!StringUtils.hasText(locationPattern)) {
