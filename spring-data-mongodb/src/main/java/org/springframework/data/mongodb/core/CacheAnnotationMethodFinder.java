@@ -1,6 +1,10 @@
 package org.springframework.data.mongodb.core;
 
+
+
 import java.lang.reflect.Method;
+import java.util.Collections;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 
@@ -8,6 +12,7 @@ public class CacheAnnotationMethodFinder extends AnnotationMethodFinder {
 
     private ConcurrentHashMap<KeyCacheAnnotation, WrapperMethod> cacheMethod = new ConcurrentHashMap<KeyCacheAnnotation, WrapperMethod>();
 
+    @Override
     public void executeMethodAnnotatedWith(Object targetObject, Object[] args, Class annotationMethod) {
         KeyCacheAnnotation key = new KeyCacheAnnotation(targetObject.getClass(), annotationMethod);
         Method foundMethod = getMethod(targetObject, annotationMethod, key);
@@ -27,6 +32,12 @@ public class CacheAnnotationMethodFinder extends AnnotationMethodFinder {
         return foundMethod.getMethod();
     }
 
+    /**
+     * Be able to insert a null value, if no annotation has been found
+     * We will always search in the map even if there is no match.
+     *
+     * The target object definition will be only process one time by reflection
+     */
     public static final class WrapperMethod {
 
         private Method method;
@@ -70,6 +81,11 @@ public class CacheAnnotationMethodFinder extends AnnotationMethodFinder {
             return result;
         }
     }
+
+    protected Map<KeyCacheAnnotation, WrapperMethod> getCacheMethod(){
+        return Collections.unmodifiableMap(cacheMethod);
+    }
+
 
 }
 

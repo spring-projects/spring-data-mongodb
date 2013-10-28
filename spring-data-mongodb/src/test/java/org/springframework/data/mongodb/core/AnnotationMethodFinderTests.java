@@ -9,12 +9,12 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.mongodb.core.mapping.event.*;
 
-import static org.hamcrest.Matchers.hasProperty;
-import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
-public class AnnotationMethodFinderTest {
+public class AnnotationMethodFinderTests {
 
     @Mock
     CallObject mockObject;
@@ -113,6 +113,64 @@ public class AnnotationMethodFinderTest {
     }
 
 
+    @Test
+    public void shouldRunBeforeMethodInCacheWithCache(){
+
+        CacheAnnotationMethodFinder cache = new CacheAnnotationMethodFinder();
+        cache.executeMethodAnnotatedWith(new PersonnWithAnnotations(mockObject), new Object[]{new BasicDBObject()}, OnBeforeSave.class);
+        cache.executeMethodAnnotatedWith(new PersonnWithAnnotations(mockObject), new Object[]{new BasicDBObject()}, OnBeforeSave.class);
+        assertThat(cache.getCacheMethod().size(), is(1));
+        assertThat(cache.getCacheMethod().values(), contains(hasProperty("method", hasProperty("name", is("onBeforeSave")))));
+        verify(mockObject, times(2)).before();
+    }
+
+    @Test
+    public void shouldRunAfterMethodInCacheWithCache(){
+
+        CacheAnnotationMethodFinder cache = new CacheAnnotationMethodFinder();
+        cache.executeMethodAnnotatedWith(new PersonnWithAnnotations(mockObject), new Object[]{new BasicDBObject()}, OnAfterSave.class);
+        cache.executeMethodAnnotatedWith(new PersonnWithAnnotations(mockObject), new Object[]{new BasicDBObject()}, OnAfterSave.class);
+        assertThat(cache.getCacheMethod().size(), is(1));
+        assertThat(cache.getCacheMethod().values(), contains(hasProperty("method", hasProperty("name", is("onAfterSave")))));
+        verify(mockObject, times(2)).after();
+    }
+
+    @Test
+    public void shouldNotRunMethodWithCache(){
+
+        PersonnWithoutAnnotation targetObject = new PersonnWithoutAnnotation(mockObject);
+
+        CacheAnnotationMethodFinder cache = new CacheAnnotationMethodFinder();
+
+        cache.executeMethodAnnotatedWith(new PersonnWithoutAnnotation(mockObject), new Object[0], OnAfterLoad.class);
+        cache.executeMethodAnnotatedWith(new PersonnWithoutAnnotation(mockObject), new Object[0], OnAfterLoad.class);
+
+        cache.executeMethodAnnotatedWith(targetObject, new Object[0], OnAfterLoad.class);
+        cache.executeMethodAnnotatedWith(targetObject, new Object[0], OnAfterLoad.class);
+
+        cache.executeMethodAnnotatedWith(targetObject, new Object[]{new BasicDBObject()}, OnAfterConvert.class);
+        cache.executeMethodAnnotatedWith(targetObject, new Object[]{new BasicDBObject()}, OnAfterConvert.class);
+
+        cache.executeMethodAnnotatedWith(targetObject, new Object[0], OnAfterSave.class);
+        cache.executeMethodAnnotatedWith(targetObject, new Object[0], OnAfterSave.class);
+
+        cache.executeMethodAnnotatedWith(targetObject, new Object[0], OnAfterDelete.class);
+        cache.executeMethodAnnotatedWith(targetObject, new Object[0], OnAfterDelete.class);
+
+
+        cache.executeMethodAnnotatedWith(targetObject, new Object[]{new BasicDBObject()}, OnBeforeSave.class);
+        cache.executeMethodAnnotatedWith(targetObject, new Object[]{new BasicDBObject()}, OnBeforeSave.class);
+
+        cache.executeMethodAnnotatedWith(targetObject, new Object[0], OnBeforeDelete.class);
+        cache.executeMethodAnnotatedWith(targetObject, new Object[0], OnBeforeDelete.class);
+
+        cache.executeMethodAnnotatedWith(targetObject, new Object[0], OnBeforeConvert.class);
+        cache.executeMethodAnnotatedWith(targetObject, new Object[0], OnBeforeConvert.class);
+
+        assertThat(cache.getCacheMethod().size(), is(7));
+        verifyZeroInteractions(mockObject);
+    }
+
 
     public static interface CallObject{
         public void after();
@@ -127,7 +185,7 @@ public class AnnotationMethodFinderTest {
         }
 
         @OnBeforeConvert
-        public void onbeforeConvert(){
+        public void onBeforeConvert(){
             injector.before();
         }
 
@@ -152,7 +210,7 @@ public class AnnotationMethodFinderTest {
         }
 
         @OnAfterSave
-        public void onafterSave(BasicDBObject dbObject){
+        public void onAfterSave(BasicDBObject dbObject){
             injector.after();
         }
 
