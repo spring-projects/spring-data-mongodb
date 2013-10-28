@@ -36,6 +36,7 @@ import org.springframework.core.CollectionFactory;
 import org.springframework.core.convert.ConversionException;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.support.ConversionServiceFactory;
+import org.springframework.dao.DataAccessException;
 import org.springframework.data.convert.EntityInstantiator;
 import org.springframework.data.convert.TypeMapper;
 import org.springframework.data.mapping.Association;
@@ -806,7 +807,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			Object dbObjItem = sourceValue.get(i);
 
 			if (dbObjItem instanceof DBRef) {
-				items.add(DBRef.class.equals(rawComponentType) ? dbObjItem : read(componentType, ((DBRef) dbObjItem).fetch(),
+				items.add(DBRef.class.equals(rawComponentType) ? dbObjItem : read(componentType, readRef((DBRef) dbObjItem),
 						parent));
 			} else if (dbObjItem instanceof DBObject) {
 				items.add(read(componentType, (DBObject) dbObjItem, parent));
@@ -854,7 +855,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			if (value instanceof DBObject) {
 				map.put(key, read(valueType, (DBObject) value, parent));
 			} else if (value instanceof DBRef) {
-				map.put(key, DBRef.class.equals(rawValueType) ? value : read(valueType, ((DBRef) value).fetch()));
+				map.put(key, DBRef.class.equals(rawValueType) ? value : read(valueType, readRef((DBRef) value)));
 			} else {
 				Class<?> valueClass = valueType == null ? null : valueType.getType();
 				map.put(key, getPotentiallyConvertedSimpleRead(value, valueClass));
@@ -1064,7 +1065,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		if (conversions.hasCustomReadTarget(value.getClass(), rawType)) {
 			return (T) conversionService.convert(value, rawType);
 		} else if (value instanceof DBRef) {
-			return (T) (rawType.equals(DBRef.class) ? value : read(type, ((DBRef) value).fetch(), parent));
+			return (T) (rawType.equals(DBRef.class) ? value : read(type, readRef((DBRef) value), parent));
 		} else if (value instanceof BasicDBList) {
 			return (T) readCollectionOrArray(type, (BasicDBList) value, parent);
 		} else if (value instanceof DBObject) {
@@ -1072,6 +1073,16 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		} else {
 			return (T) getPotentiallyConvertedSimpleRead(value, rawType);
 		}
+	}
+
+	/**
+	 * Performs the fetch operation for the given {@link DBRef}.
+	 * 
+	 * @param ref
+	 * @return
+	 */
+	DBObject readRef(DBRef ref) {
+		return ref.fetch();
 	}
 
 	/**
@@ -1096,7 +1107,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			try {
 				return doResolve(property);
 			} catch (RuntimeException ex) {
-				throw mongoDbFactory.getExceptionTranslator().translateExceptionIfPossible(ex);
+				DataAccessException tex = mongoDbFactory.getExceptionTranslator().translateExceptionIfPossible(ex);
+				throw tex != null ? tex : ex;
 			}
 		}
 
