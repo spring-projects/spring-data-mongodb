@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 the original author or authors.
+ * Copyright 2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,15 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.repository;
+package org.springframework.data.mongodb.core.convert;
 
-import org.springframework.test.context.ContextConfiguration;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 
 /**
- * Integration test for {@link PersonRepository}.
+ * Used to resolve associations annotated with {@link org.springframework.data.mongodb.core.mapping.DBRef}.
  * 
- * @author Oliver Gierke
  * @author Thomas Darimont
  */
-@ContextConfiguration
-public class PersonRepositoryIntegrationTests extends AbstractPersonRepositoryIntegrationTests {}
+interface DbRefResolver {
+
+	/**
+	 * @param property
+	 * @param callback
+	 * @return
+	 */
+	Object resolve(MongoPersistentProperty property, DbRefResolveCallback callback);
+}

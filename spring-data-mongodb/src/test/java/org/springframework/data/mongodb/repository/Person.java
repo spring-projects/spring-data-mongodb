@@ -15,7 +15,9 @@
  */
 package org.springframework.data.mongodb.repository;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 
 import org.springframework.data.mongodb.core.geo.Point;
@@ -28,6 +30,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
  * Sample domain class.
  * 
  * @author Oliver Gierke
+ * @author Thomas Darimont
  */
 @Document
 public class Person extends Contact {
@@ -38,21 +41,23 @@ public class Person extends Contact {
 
 	private String firstname;
 	private String lastname;
-	@Indexed(unique = true, dropDups = true)
-	private String email;
+	@Indexed(unique = true, dropDups = true) private String email;
 	private Integer age;
-	@SuppressWarnings("unused")
-	private Sex sex;
+	@SuppressWarnings("unused") private Sex sex;
 	Date createdAt;
 
-	@GeoSpatialIndexed
-	private Point location;
+	@GeoSpatialIndexed private Point location;
 
 	private Address address;
 	private Set<Address> shippingAddresses;
 
-	@DBRef
-	User creator;
+	@DBRef User creator;
+
+	@DBRef(lazy = true) User coworker;
+
+	@DBRef(lazy = true) List<User> fans;
+
+	@DBRef(lazy = true) ArrayList<User> realFans;
 
 	Credentials credentials;
 
@@ -191,6 +196,48 @@ public class Person extends Contact {
 	 */
 	public String getName() {
 		return String.format("%s %s", firstname, lastname);
+	}
+
+	/**
+	 * @return the fans
+	 */
+	public List<User> getFans() {
+		return fans;
+	}
+
+	/**
+	 * @param fans the fans to set
+	 */
+	public void setFans(List<User> fans) {
+		this.fans = fans;
+	}
+
+	/**
+	 * @return the realFans
+	 */
+	public ArrayList<User> getRealFans() {
+		return realFans;
+	}
+
+	/**
+	 * @param realFans the realFans to set
+	 */
+	public void setRealFans(ArrayList<User> realFans) {
+		this.realFans = realFans;
+	}
+
+	/**
+	 * @return the coworker
+	 */
+	public User getCoworker() {
+		return coworker;
+	}
+
+	/**
+	 * @param coworker the coworker to set
+	 */
+	public void setCoworker(User coworker) {
+		this.coworker = coworker;
 	}
 
 	/*
