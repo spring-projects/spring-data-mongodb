@@ -67,7 +67,7 @@ public class ProjectionOperationUnitTests {
 		DBObject dbObject = operation.toDBObject(Aggregation.DEFAULT_CONTEXT);
 		DBObject projectClause = DBObjectUtils.getAsDBObject(dbObject, PROJECT);
 
-		assertThat((Integer) projectClause.get("foo"), is(1));
+		assertThat(projectClause.get("foo"), is((Object) 1));
 		assertThat(projectClause.get("bar"), is((Object) "$foobar"));
 	}
 

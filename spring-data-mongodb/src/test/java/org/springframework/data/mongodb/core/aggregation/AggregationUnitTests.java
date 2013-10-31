@@ -117,7 +117,7 @@ public class AggregationUnitTests {
 		@SuppressWarnings("unchecked")
 		DBObject secondProjection = ((List<DBObject>) agg.get("pipeline")).get(2);
 		DBObject fields = DBObjectUtils.getAsDBObject(secondProjection, "$project");
-		assertThat((Integer) fields.get("aCnt"), is(1));
-		assertThat((String) fields.get("a"), is("$_id.a"));
+		assertThat(fields.get("aCnt"), is((Object) 1));
+		assertThat(fields.get("a"), is((Object) "$_id.a"));
 	}
 }

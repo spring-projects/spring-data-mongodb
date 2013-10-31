@@ -507,15 +507,8 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 					// check whether referenced field exists in the context
 					FieldReference reference = context.getReference(field.getTarget());
+					return reference.isSynthetic() && !field.isAliased() ? 1 : reference.toString();
 
-					if (field.getName().equals(field.getTarget()) && reference.isSynthetic()) {
-
-						// render field as included
-						return 1;
-					}
-
-					// render field reference
-					return reference.toString();
 				} else if (Boolean.FALSE.equals(value)) {
 
 					// render field as excluded

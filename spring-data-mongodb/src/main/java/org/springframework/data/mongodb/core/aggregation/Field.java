@@ -36,4 +36,11 @@ public interface Field {
 	 * @return must not be {@literal null}.
 	 */
 	String getTarget();
+
+	/**
+	 * Returns whether the Field is aliased, which means it has a name set different from the target.
+	 * 
+	 * @return
+	 */
+	boolean isAliased();
 }
