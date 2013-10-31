@@ -113,7 +113,10 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 
 	@Test(expected = InvalidDataAccessApiUsageException.class)
 	public void rejectsNotFoundMapReduceResource() {
-		template.setApplicationContext(new GenericApplicationContext());
+
+		GenericApplicationContext ctx = new GenericApplicationContext();
+		ctx.refresh();
+		template.setApplicationContext(ctx);
 		template.mapReduce("foo", "classpath:doesNotExist.js", "function() {}", Person.class);
 	}
 
