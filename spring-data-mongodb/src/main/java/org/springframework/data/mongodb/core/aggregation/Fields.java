@@ -237,6 +237,15 @@ public class Fields implements Iterable<Field> {
 			return StringUtils.hasText(this.target) ? this.target : this.name;
 		}
 
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.aggregation.Field#isAliased()
+		 */
+		@Override
+		public boolean isAliased() {
+			return !getName().equals(getTarget());
+		}
+
 		/* 
 		 * (non-Javadoc)
 		 * @see java.lang.Object#toString()

@@ -259,6 +259,15 @@ public class ExposedFields implements Iterable<ExposedField> {
 			return field.getTarget();
 		}
 
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.aggregation.Field#isAliased()
+		 */
+		@Override
+		public boolean isAliased() {
+			return field.isAliased();
+		}
+
 		/**
 		 * Returns whether the field can be referred to using the given name.
 		 * 
@@ -349,7 +358,6 @@ public class ExposedFields implements Iterable<ExposedField> {
 		public String getRaw() {
 
 			String target = field.getTarget();
-
 			return field.synthetic ? target : String.format("%s.%s", Fields.UNDERSCORE_ID, target);
 		}
 
