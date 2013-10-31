@@ -15,12 +15,19 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
+import static org.hamcrest.CoreMatchers.*;
+import static org.junit.Assert.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
+
+import java.util.List;
 
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.springframework.data.mongodb.core.DBObjectUtils;
+
+import com.mongodb.DBObject;
 
 /**
  * Unit tests for {@link Aggregation}.
@@ -93,5 +100,24 @@ public class AggregationUnitTests {
 				match(where("a").gte(1)), //
 				project("a", "b") // b should still be available
 		).toDbObject("foo", Aggregation.DEFAULT_CONTEXT);
+	}
+
+	/**
+	 * @see DATAMONGO-788
+	 */
+	@Test
+	public void referencesToGroupIdsShouldBeRenderedAsReferences() {
+
+		DBObject agg = newAggregation( //
+				project("a"), //
+				group("a").count().as("aCnt"), //
+				project("aCnt", "a") //
+		).toDbObject("foo", Aggregation.DEFAULT_CONTEXT);
+
+		@SuppressWarnings("unchecked")
+		DBObject secondProjection = ((List<DBObject>) agg.get("pipeline")).get(2);
+		DBObject fields = DBObjectUtils.getAsDBObject(secondProjection, "$project");
+		assertThat((Integer) fields.get("aCnt"), is(1));
+		assertThat((String) fields.get("a"), is("$_id.a"));
 	}
 }

@@ -85,6 +85,7 @@ public class AggregationTests {
 		mongoTemplate.dropCollection(Product.class);
 		mongoTemplate.dropCollection(UserWithLikes.class);
 		mongoTemplate.dropCollection(DATAMONGO753.class);
+		mongoTemplate.dropCollection(DATAMONGO788.class);
 	}
 
 	/**
@@ -520,6 +521,36 @@ public class AggregationTests {
 		}
 	}
 
+	/**
+	 * @see DATAMONGO-788
+	 */
+	@Test
+	public void referencesToGroupIdsShouldBeRenderedProperly() {
+
+		mongoTemplate.insert(new DATAMONGO788(1, 1));
+		mongoTemplate.insert(new DATAMONGO788(1, 1));
+		mongoTemplate.insert(new DATAMONGO788(1, 1));
+		mongoTemplate.insert(new DATAMONGO788(2, 1));
+		mongoTemplate.insert(new DATAMONGO788(2, 1));
+
+		AggregationOperation projectFirst = Aggregation.project("x", "y").and("xField").as("x").and("yField").as("y");
+		AggregationOperation group = Aggregation.group("x", "y").count().as("xPerY");
+		AggregationOperation project = Aggregation.project("xPerY", "x", "y").andExclude("_id");
+
+		TypedAggregation<DATAMONGO788> aggregation = Aggregation.newAggregation(DATAMONGO788.class, projectFirst, group,
+				project);
+		AggregationResults<DBObject> aggResults = mongoTemplate.aggregate(aggregation, DBObject.class);
+		List<DBObject> items = aggResults.getMappedResults();
+
+		assertThat(items.size(), is(2));
+		assertThat((Integer) items.get(0).get("xPerY"), is(2));
+		assertThat((Integer) items.get(0).get("x"), is(2));
+		assertThat((Integer) items.get(0).get("y"), is(1));
+		assertThat((Integer) items.get(1).get("xPerY"), is(3));
+		assertThat((Integer) items.get(1).get("x"), is(1));
+		assertThat((Integer) items.get(1).get("y"), is(1));
+	}
+
 	private void assertLikeStats(LikeStats like, String id, long count) {
 
 		assertThat(like, is(notNullValue()));
@@ -585,4 +616,22 @@ public class AggregationTests {
 			this.up = up;
 		}
 	}
+
+	static class DATAMONGO788 {
+
+		int x;
+		int y;
+		int xField;
+		int yField;
+
+		public DATAMONGO788() {}
+
+		public DATAMONGO788(int x, int y) {
+			this.x = x;
+			this.xField = x;
+			this.y = y;
+			this.yField = y;
+		}
+	}
+
 }

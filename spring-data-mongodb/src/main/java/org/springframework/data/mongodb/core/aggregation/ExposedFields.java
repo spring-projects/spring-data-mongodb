@@ -335,6 +335,13 @@ public class ExposedFields implements Iterable<ExposedField> {
 		}
 
 		/**
+		 * @return
+		 */
+		public boolean isSynthetic() {
+			return field.synthetic;
+		}
+
+		/**
 		 * Returns the raw, unqualified reference, i.e. the field reference without a {@literal $} prefix.
 		 * 
 		 * @return
