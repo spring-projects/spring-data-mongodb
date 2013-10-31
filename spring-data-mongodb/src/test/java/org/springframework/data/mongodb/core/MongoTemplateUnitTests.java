@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2012 the original author or authors.
+ * Copyright 2010-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,6 @@ import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
 import java.math.BigInteger;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.regex.Pattern;
 
@@ -29,10 +28,10 @@ import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentMatcher;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.springframework.context.ApplicationListener;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.dao.DataAccessException;
@@ -113,7 +112,10 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 
 	@Test(expected = InvalidDataAccessApiUsageException.class)
 	public void rejectsNotFoundMapReduceResource() {
-		template.setApplicationContext(new GenericApplicationContext());
+
+		GenericApplicationContext ctx = new GenericApplicationContext();
+		ctx.refresh();
+		template.setApplicationContext(ctx);
 		template.mapReduce("foo", "classpath:doesNotExist.js", "function() {}", Person.class);
 	}
 
@@ -212,18 +214,25 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		GenericApplicationContext applicationContext = new GenericApplicationContext();
 		applicationContext.getBeanFactory().registerSingleton("foo",
 				new MongoPersistentEntityIndexCreator(new MongoMappingContext(), factory));
+		applicationContext.refresh();
+
+		GenericApplicationContext spy = spy(applicationContext);
 
 		MongoTemplate mongoTemplate = new MongoTemplate(factory, converter);
-		mongoTemplate.setApplicationContext(applicationContext);
+		mongoTemplate.setApplicationContext(spy);
 
-		Collection<ApplicationListener<?>> listeners = applicationContext.getApplicationListeners();
-		assertThat(listeners, hasSize(1));
+		verify(spy, times(1)).addApplicationListener(argThat(new ArgumentMatcher<MongoPersistentEntityIndexCreator>() {
 
-		ApplicationListener<?> listener = listeners.iterator().next();
+			@Override
+			public boolean matches(Object argument) {
 
-		assertThat(listener, is(instanceOf(MongoPersistentEntityIndexCreator.class)));
-		MongoPersistentEntityIndexCreator creator = (MongoPersistentEntityIndexCreator) listener;
-		assertThat(creator.isIndexCreatorFor(mappingContext), is(true));
+				if (!(argument instanceof MongoPersistentEntityIndexCreator)) {
+					return false;
+				}
+
+				return ((MongoPersistentEntityIndexCreator) argument).isIndexCreatorFor(mappingContext);
+			}
+		}));
 	}
 
 	class AutogenerateableId {
