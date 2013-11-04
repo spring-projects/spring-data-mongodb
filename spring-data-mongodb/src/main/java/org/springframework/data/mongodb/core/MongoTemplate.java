@@ -145,7 +145,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	private final MongoConverter mongoConverter;
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 	private final MongoDbFactory mongoDbFactory;
-	private final MongoExceptionTranslator exceptionTranslator = new MongoExceptionTranslator();
 	private final QueryMapper queryMapper;
 	private final UpdateMapper updateMapper;
 
@@ -1797,7 +1796,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * @return
 	 */
 	private RuntimeException potentiallyConvertRuntimeException(RuntimeException ex) {
-		RuntimeException resolved = this.exceptionTranslator.translateExceptionIfPossible(ex);
+		RuntimeException resolved = this.mongoDbFactory.getExceptionTranslator().translateExceptionIfPossible(ex);
 		return resolved == null ? ex : resolved;
 	}
 
