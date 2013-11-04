@@ -45,6 +45,7 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 	private final UserCredentials credentials;
 	private final PersistenceExceptionTranslator exceptionTranslator;
 	private WriteConcern writeConcern;
+	private String authenticationDatabaseName;
 
 	/**
 	 * Create an instance of {@link SimpleMongoDbFactory} given the {@link Mongo} instance and database name.
@@ -53,7 +54,7 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 	 * @param databaseName database name, not be {@literal null} or empty.
 	 */
 	public SimpleMongoDbFactory(Mongo mongo, String databaseName) {
-		this(mongo, databaseName, UserCredentials.NO_CREDENTIALS, false);
+		this(mongo, databaseName, UserCredentials.NO_CREDENTIALS, false, databaseName);
 	}
 
 	/**
@@ -64,7 +65,21 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 	 * @param credentials username and password.
 	 */
 	public SimpleMongoDbFactory(Mongo mongo, String databaseName, UserCredentials credentials) {
-		this(mongo, databaseName, credentials, false);
+		this(mongo, databaseName, credentials, false, databaseName);
+	}
+
+	/**
+	 * Create an instance of SimpleMongoDbFactory given the Mongo instance, database name, and username/password
+	 * 
+	 * @param mongo Mongo instance, must not be {@literal null}.
+	 * @param databaseName Database name, must not be {@literal null} or empty.
+	 * @param credentials username and password.
+	 * @param authenticationDatabaseName the database name to use for authentication
+	 */
+	public SimpleMongoDbFactory(Mongo mongo, String databaseName, UserCredentials credentials,
+			String authenticationDatabaseName) {
+		this(mongo, databaseName, credentials, false, authenticationDatabaseName == null ? databaseName
+				: authenticationDatabaseName);
 	}
 
 	/**
@@ -77,22 +92,25 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 	 */
 	@SuppressWarnings("deprecation")
 	public SimpleMongoDbFactory(MongoURI uri) throws MongoException, UnknownHostException {
-		this(new Mongo(uri), uri.getDatabase(), new UserCredentials(uri.getUsername(), parseChars(uri.getPassword())), true);
+		this(new Mongo(uri), uri.getDatabase(), new UserCredentials(uri.getUsername(), parseChars(uri.getPassword())),
+				true, uri.getDatabase());
 	}
 
 	private SimpleMongoDbFactory(Mongo mongo, String databaseName, UserCredentials credentials,
-			boolean mongoInstanceCreated) {
+			boolean mongoInstanceCreated, String authenticationDatabaseName) {
 
 		Assert.notNull(mongo, "Mongo must not be null");
 		Assert.hasText(databaseName, "Database name must not be empty");
 		Assert.isTrue(databaseName.matches("[\\w-]+"),
 				"Database name must only contain letters, numbers, underscores and dashes!");
+		Assert.hasText(authenticationDatabaseName, "authenticationDatabaseName must not be empty!");
 
 		this.mongo = mongo;
 		this.databaseName = databaseName;
 		this.mongoInstanceCreated = mongoInstanceCreated;
 		this.credentials = credentials == null ? UserCredentials.NO_CREDENTIALS : credentials;
 		this.exceptionTranslator = new MongoExceptionTranslator();
+		this.authenticationDatabaseName = authenticationDatabaseName == null ? databaseName : authenticationDatabaseName;
 	}
 
 	/**
@@ -120,7 +138,7 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 
 		Assert.hasText(dbName, "Database name must not be empty.");
 
-		DB db = MongoDbUtils.getDB(mongo, dbName, credentials);
+		DB db = MongoDbUtils.getDB(mongo, dbName, credentials, authenticationDatabaseName);
 
 		if (writeConcern != null) {
 			db.setWriteConcern(writeConcern);

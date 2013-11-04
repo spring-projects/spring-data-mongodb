@@ -33,6 +33,7 @@ import com.mongodb.Mongo;
  * @author Graeme Rocher
  * @author Oliver Gierke
  * @author Randy Watler
+ * @author Thomas Darimont
  * @since 1.0
  */
 public abstract class MongoDbUtils {
@@ -54,7 +55,7 @@ public abstract class MongoDbUtils {
 	 * @return the {@link DB} connection
 	 */
 	public static DB getDB(Mongo mongo, String databaseName) {
-		return doGetDB(mongo, databaseName, UserCredentials.NO_CREDENTIALS, true);
+		return doGetDB(mongo, databaseName, UserCredentials.NO_CREDENTIALS, true, databaseName);
 	}
 
 	/**
@@ -71,10 +72,24 @@ public abstract class MongoDbUtils {
 		Assert.hasText(databaseName, "Database name must be given!");
 		Assert.notNull(credentials, "Credentials must not be null, use UserCredentials.NO_CREDENTIALS!");
 
-		return doGetDB(mongo, databaseName, credentials, true);
+		return getDB(mongo, databaseName, credentials, databaseName);
 	}
 
-	private static DB doGetDB(Mongo mongo, String databaseName, UserCredentials credentials, boolean allowCreate) {
+	/**
+	 * @param mongo
+	 * @param databaseName
+	 * @param credentials
+	 * @param authenticationDatabaseName
+	 * @return
+	 */
+	public static DB getDB(Mongo mongo, String databaseName, UserCredentials credentials,
+			String authenticationDatabaseName) {
+		return doGetDB(mongo, databaseName, credentials, true, authenticationDatabaseName == null ? databaseName
+				: authenticationDatabaseName);
+	}
+
+	private static DB doGetDB(Mongo mongo, String databaseName, UserCredentials credentials, boolean allowCreate,
+			String authenticationDatabaseName) {
 
 		DbHolder dbHolder = (DbHolder) TransactionSynchronizationManager.getResource(mongo);
 
@@ -103,14 +118,16 @@ public abstract class MongoDbUtils {
 		DB db = mongo.getDB(databaseName);
 		boolean credentialsGiven = credentials.hasUsername() && credentials.hasPassword();
 
-		synchronized (db) {
+		DB authDb = databaseName.equals(authenticationDatabaseName) ? db : mongo.getDB(authenticationDatabaseName);
 
-			if (credentialsGiven && !db.isAuthenticated()) {
+		synchronized (authDb) {
+
+			if (credentialsGiven && !authDb.isAuthenticated()) {
 
 				String username = credentials.getUsername();
 				String password = credentials.hasPassword() ? credentials.getPassword() : null;
 
-				if (!db.authenticate(username, password == null ? null : password.toCharArray())) {
+				if (!authDb.authenticate(username, password == null ? null : password.toCharArray())) {
 					throw new CannotGetMongoDbConnectionException("Failed to authenticate to database [" + databaseName + "], "
 							+ credentials.toString(), databaseName, credentials);
 				}
