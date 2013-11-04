@@ -15,6 +15,10 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.lang.reflect.Method;
 
 import org.aopalliance.intercept.MethodInterceptor;
@@ -150,7 +154,8 @@ public class DefaultDbRefResolver implements DbRefResolver {
 	 * 
 	 * @author Thomas Darimont
 	 */
-	static class LazyLoadingInterceptor implements MethodInterceptor, org.springframework.cglib.proxy.MethodInterceptor {
+	static class LazyLoadingInterceptor implements MethodInterceptor, org.springframework.cglib.proxy.MethodInterceptor,
+			Serializable {
 
 		private final DbRefResolverCallback callback;
 		private final MongoPersistentProperty property;
@@ -194,12 +199,33 @@ public class DefaultDbRefResolver implements DbRefResolver {
 		@Override
 		public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy) throws Throwable {
 
+			ensureResolved();
+
+			return method.invoke(result, args);
+		}
+
+		private void ensureResolved() {
+
 			if (!resolved) {
 				this.result = resolve();
 				this.resolved = true;
 			}
+		}
 
-			return method.invoke(result, args);
+		private void writeObject(ObjectOutputStream out) throws IOException {
+
+			ensureResolved();
+			out.writeObject(this.result);
+		}
+
+		private void readObject(ObjectInputStream in) throws IOException {
+
+			try {
+				this.resolved = true; // Object is guaranteed to be resolved after serializations
+				this.result = in.readObject();
+			} catch (ClassNotFoundException e) {
+				throw new LazyLoadingException("Could not deserialize result", e);
+			}
 		}
 
 		/**

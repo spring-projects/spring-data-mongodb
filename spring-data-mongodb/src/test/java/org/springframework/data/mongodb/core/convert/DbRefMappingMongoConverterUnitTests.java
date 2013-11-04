@@ -21,6 +21,7 @@ import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.convert.LazyLoadingTestUtils.*;
 
+import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -42,6 +43,7 @@ import org.springframework.data.mongodb.core.MongoExceptionTranslator;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverterUnitTests.Person;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.util.SerializationUtils;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
@@ -256,6 +258,35 @@ public class DbRefMappingMongoConverterUnitTests {
 		assertThat(result.dbRefToConcreteTypeWithPersistenceConstructorWithoutDefaultConstructor.getValue(), is(value));
 	}
 
+	/**
+	 * @see DATAMONGO-348
+	 */
+	@Test
+	public void lazyLoadingProxyForSerializableLazyDbRefOnConcreteType() {
+
+		String id = "42";
+		String value = "bubu";
+		MappingMongoConverter converterSpy = spy(converter);
+		doReturn(new BasicDBObject("_id", id).append("value", value)).when(converterSpy).readRef((DBRef) any());
+
+		BasicDBObject dbo = new BasicDBObject();
+		SerializableClassWithLazyDbRefs lazyDbRefs = new SerializableClassWithLazyDbRefs();
+		lazyDbRefs.dbRefToSerializableTarget = new SerializableLazyDbRefTarget(id, value);
+		converterSpy.write(lazyDbRefs, dbo);
+
+		SerializableClassWithLazyDbRefs result = converterSpy.read(SerializableClassWithLazyDbRefs.class, dbo);
+
+		SerializableClassWithLazyDbRefs deserializedResult = (SerializableClassWithLazyDbRefs) transport(result);
+
+		assertThat(deserializedResult.dbRefToSerializableTarget.getId(), is(id));
+		assertProxyIsResolved(deserializedResult.dbRefToSerializableTarget, true);
+		assertThat(deserializedResult.dbRefToSerializableTarget.getValue(), is(value));
+	}
+
+	private Object transport(Object result) {
+		return SerializationUtils.deserialize(SerializationUtils.serialize(result));
+	}
+
 	class MapDBRef {
 		@org.springframework.data.mongodb.core.mapping.DBRef Map<String, MapDBRefVal> map;
 	}
@@ -278,7 +309,16 @@ public class DbRefMappingMongoConverterUnitTests {
 		@org.springframework.data.mongodb.core.mapping.DBRef(lazy = true) LazyDbRefTargetWithPeristenceConstructorWithoutDefaultConstructor dbRefToConcreteTypeWithPersistenceConstructorWithoutDefaultConstructor;
 	}
 
-	static class LazyDbRefTarget {
+	static class SerializableClassWithLazyDbRefs implements Serializable {
+
+		private static final long serialVersionUID = 1L;
+
+		@org.springframework.data.mongodb.core.mapping.DBRef(lazy = true) SerializableLazyDbRefTarget dbRefToSerializableTarget;
+	}
+
+	static class LazyDbRefTarget implements Serializable {
+
+		private static final long serialVersionUID = 1L;
 
 		@Id String id;
 		String value;
@@ -335,5 +375,16 @@ public class DbRefMappingMongoConverterUnitTests {
 		public LazyDbRefTargetWithPeristenceConstructorWithoutDefaultConstructor(Object id, Object value) {
 			super(id.toString(), value.toString());
 		}
+	}
+
+	static class SerializableLazyDbRefTarget extends LazyDbRefTarget implements Serializable {
+
+		public SerializableLazyDbRefTarget() {}
+
+		public SerializableLazyDbRefTarget(String id, String value) {
+			super(id, value);
+		}
+
+		private static final long serialVersionUID = 1L;
 	}
 }
