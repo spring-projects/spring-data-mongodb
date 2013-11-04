@@ -46,8 +46,9 @@ public class UpdateMapperUnitTests {
 
 	@Before
 	public void setUp() {
-		context = new MongoMappingContext();
-		converter = new MappingMongoConverter(factory, context);
+
+		this.context = new MongoMappingContext();
+		this.converter = new MappingMongoConverter(new DefaultDbRefResolver(factory), context);
 	}
 
 	/**

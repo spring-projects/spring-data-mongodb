@@ -13,20 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.core.convert;
+package org.springframework.data.mongodb;
 
-import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.dao.UncategorizedDataAccessException;
 
 /**
- * Callback interface to be used in conjunction with {@link DbRefResolver}.
- * 
- * @author Thomas Darimont
+ * @author Oliver Gierke
  */
-interface DbRefResolveCallback {
+public class LazyLoadingException extends UncategorizedDataAccessException {
+
+	private static final long serialVersionUID = -7089224903873220037L;
 
 	/**
-	 * @param property
-	 * @return
+	 * @param msg
+	 * @param cause
 	 */
-	Object resolve(MongoPersistentProperty property);
+	public LazyLoadingException(String msg, Throwable cause) {
+		super(msg, cause);
+	}
 }

@@ -19,6 +19,7 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
 import org.junit.Test;
+import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.data.mongodb.core.mapping.Account;
 import org.springframework.data.mongodb.repository.Contact;
@@ -47,7 +48,7 @@ public class AbstractMongoEventListenerUnitTests {
 	@Test
 	public void dropsEventIfNotForCorrectDomainType() {
 
-		ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext();
+		AbstractApplicationContext context = new ClassPathXmlApplicationContext();
 		context.refresh();
 
 		SamplePersonEventListener listener = new SamplePersonEventListener();
@@ -59,6 +60,8 @@ public class AbstractMongoEventListenerUnitTests {
 		listener.invokedOnBeforeConvert = false;
 		context.publishEvent(new BeforeConvertEvent<String>("Test"));
 		assertThat(listener.invokedOnBeforeConvert, is(false));
+
+		context.close();
 	}
 
 	/**

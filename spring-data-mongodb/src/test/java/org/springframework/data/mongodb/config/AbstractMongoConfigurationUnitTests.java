@@ -25,6 +25,7 @@ import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoTypeMapper;
@@ -35,6 +36,7 @@ import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.mongodb.Mongo;
+import com.mongodb.MongoClient;
 
 /**
  * Unit tests for {@link AbstractMongoConfiguration}.
@@ -84,12 +86,13 @@ public class AbstractMongoConfigurationUnitTests {
 	@Test
 	public void containsMongoDbFactoryButNoMongoBean() {
 
-		AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(SampleMongoConfiguration.class);
+		AbstractApplicationContext context = new AnnotationConfigApplicationContext(SampleMongoConfiguration.class);
 
 		assertThat(context.getBean(MongoDbFactory.class), is(notNullValue()));
 
 		exception.expect(NoSuchBeanDefinitionException.class);
 		context.getBean(Mongo.class);
+		context.close();
 	}
 
 	@Test
@@ -109,12 +112,13 @@ public class AbstractMongoConfigurationUnitTests {
 	@Test
 	public void lifecycleCallbacksAreInvokedInAppropriateOrder() {
 
-		AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(SampleMongoConfiguration.class);
+		AbstractApplicationContext context = new AnnotationConfigApplicationContext(SampleMongoConfiguration.class);
 		MongoMappingContext mappingContext = context.getBean(MongoMappingContext.class);
 		BasicMongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(Entity.class);
 		StandardEvaluationContext spElContext = (StandardEvaluationContext) ReflectionTestUtils.getField(entity, "context");
 
 		assertThat(spElContext.getBeanResolver(), is(notNullValue()));
+		context.close();
 	}
 
 	/**
@@ -123,12 +127,13 @@ public class AbstractMongoConfigurationUnitTests {
 	@Test
 	public void shouldBeAbleToConfigureCustomTypeMapperViaJavaConfig() {
 
-		AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(SampleMongoConfiguration.class);
+		AbstractApplicationContext context = new AnnotationConfigApplicationContext(SampleMongoConfiguration.class);
 		MongoTypeMapper typeMapper = context.getBean(CustomMongoTypeMapper.class);
 		MappingMongoConverter mmc = context.getBean(MappingMongoConverter.class);
 
 		assertThat(mmc, is(notNullValue()));
 		assertThat(mmc.getTypeMapper(), is(typeMapper));
+		context.close();
 	}
 
 	private static void assertScanningDisabled(final String value) throws ClassNotFoundException {
@@ -154,7 +159,7 @@ public class AbstractMongoConfigurationUnitTests {
 
 		@Override
 		public Mongo mongo() throws Exception {
-			return new Mongo();
+			return new MongoClient();
 		}
 
 		@Bean

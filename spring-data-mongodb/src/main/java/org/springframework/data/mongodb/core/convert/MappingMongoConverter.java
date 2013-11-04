@@ -24,11 +24,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.aopalliance.intercept.MethodInterceptor;
-import org.aopalliance.intercept.MethodInvocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -36,7 +33,6 @@ import org.springframework.core.CollectionFactory;
 import org.springframework.core.convert.ConversionException;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.support.ConversionServiceFactory;
-import org.springframework.dao.DataAccessException;
 import org.springframework.data.convert.EntityInstantiator;
 import org.springframework.data.convert.TypeMapper;
 import org.springframework.data.mapping.Association;
@@ -61,11 +57,9 @@ import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.StringUtils;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
 import com.mongodb.DBObject;
 import com.mongodb.DBRef;
 
@@ -84,38 +78,49 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	protected final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 	protected final SpelExpressionParser spelExpressionParser = new SpelExpressionParser();
-	protected final MongoDbFactory mongoDbFactory;
 	protected final QueryMapper idMapper;
+	protected final DbRefResolver dbRefResolver;
 	protected ApplicationContext applicationContext;
 	protected boolean useFieldAccessOnly = true;
 	protected MongoTypeMapper typeMapper;
 	protected String mapKeyDotReplacement = null;
-	protected DbRefResolver dbRefResolver;
 
 	private SpELContext spELContext;
 
 	/**
-	 * Creates a new {@link MappingMongoConverter} given the new {@link MongoDbFactory} and {@link MappingContext}.
+	 * Creates a new {@link MappingMongoConverter} given the new {@link DbRefResolver} and {@link MappingContext}.
 	 * 
 	 * @param mongoDbFactory must not be {@literal null}.
 	 * @param mappingContext must not be {@literal null}.
 	 */
 	@SuppressWarnings("deprecation")
-	public MappingMongoConverter(MongoDbFactory mongoDbFactory,
+	public MappingMongoConverter(DbRefResolver dbRefResolver,
 			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
 
 		super(ConversionServiceFactory.createDefaultConversionService());
 
-		Assert.notNull(mongoDbFactory);
-		Assert.notNull(mappingContext);
+		Assert.notNull(dbRefResolver, "DbRefResolver must not be null!");
+		Assert.notNull(mappingContext, "MappingContext must not be null!");
 
-		this.mongoDbFactory = mongoDbFactory;
+		this.dbRefResolver = dbRefResolver;
 		this.mappingContext = mappingContext;
 		this.typeMapper = new DefaultMongoTypeMapper(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY, mappingContext);
 		this.idMapper = new QueryMapper(this);
 
 		this.spELContext = new SpELContext(DBObjectPropertyAccessor.INSTANCE);
-		this.dbRefResolver = new DelegatingDbRefResolver();
+	}
+
+	/**
+	 * Creates a new {@link MappingMongoConverter} given the new {@link MongoDbFactory} and {@link MappingContext}.
+	 * 
+	 * @deprecated use the constructor taking a {@link DbRefResolver} instead.
+	 * @param mongoDbFactory must not be {@literal null}.
+	 * @param mappingContext must not be {@literal null}.
+	 */
+	@Deprecated
+	public MappingMongoConverter(MongoDbFactory mongoDbFactory,
+			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
+		this(new DefaultDbRefResolver(mongoDbFactory), mappingContext);
 	}
 
 	/**
@@ -270,17 +275,16 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 				MongoPersistentProperty inverseProp = association.getInverse();
 
-				Object obj = dbRefResolver.resolve(inverseProp, new AbstractDbRefResolveCallback(mongoDbFactory) {
+				Object obj = dbRefResolver.resolveDbRef(inverseProp, new DbRefResolverCallback() {
 
 					@Override
-					public Object doResolve(MongoPersistentProperty property) {
+					public Object resolve(MongoPersistentProperty property) {
 						return getValueInternal(property, dbo, evaluator, parent);
 					}
 				});
 
 				wrapper.setProperty(inverseProp, obj);
 			}
-
 		});
 
 		return result;
@@ -764,10 +768,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			throw new MappingException("Cannot create a reference to an object with a NULL id.");
 		}
 
-		DB db = mongoDbFactory.getDb();
-		db = dbref != null && StringUtils.hasText(dbref.db()) ? mongoDbFactory.getDb(dbref.db()) : db;
-
-		return new DBRef(db, targetEntity.getCollection(), idMapper.convertId(id));
+		return dbRefResolver.createDbRef(dbref, targetEntity, idMapper.convertId(id));
 	}
 
 	protected Object getValueInternal(MongoPersistentProperty prop, DBObject dbo, SpELExpressionEvaluator eval,
@@ -1083,185 +1084,5 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 */
 	DBObject readRef(DBRef ref) {
 		return ref.fetch();
-	}
-
-	/**
-	 * @author Thomas Darimont
-	 */
-	static abstract class AbstractDbRefResolveCallback implements DbRefResolveCallback {
-
-		private final MongoDbFactory mongoDbFactory;
-
-		/**
-		 * @param mongoDbFactory
-		 */
-		public AbstractDbRefResolveCallback(MongoDbFactory mongoDbFactory) {
-			this.mongoDbFactory = mongoDbFactory;
-		}
-
-		/* (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.convert.DbRefResolveCallback#resolve(org.springframework.data.mongodb.core.mapping.MongoPersistentProperty)
-		 */
-		@Override
-		public Object resolve(MongoPersistentProperty property) {
-			try {
-				return doResolve(property);
-			} catch (RuntimeException ex) {
-				DataAccessException tex = mongoDbFactory.getExceptionTranslator().translateExceptionIfPossible(ex);
-				throw tex != null ? tex : ex;
-			}
-		}
-
-		/**
-		 * @param property
-		 * @return
-		 */
-		protected abstract Object doResolve(MongoPersistentProperty property);
-	}
-
-	/**
-	 * A marker interface that is used to mark lazy loading proxies.
-	 * 
-	 * @author Thomas Darimont
-	 */
-	public static interface LazyLoadingProxy {}
-
-	/**
-	 * A {@link MethodInterceptor} that is used within a lazy loading proxy. The property resolving is delegated to a
-	 * {@link DbRefResolveCallback}. The resolving process is triggered by a method invocation on the proxy and is
-	 * guaranteed to be performed only once.
-	 * 
-	 * @author Thomas Darimont
-	 */
-	public static class LazyLoadingInterceptor implements MethodInterceptor {
-
-		private DbRefResolveCallback callback;
-
-		private MongoPersistentProperty property;
-
-		private volatile boolean resolved;
-
-		private Object result;
-
-		/**
-		 * @param callback
-		 * @param property
-		 */
-		public LazyLoadingInterceptor(DbRefResolveCallback callback, MongoPersistentProperty property) {
-
-			this.callback = callback;
-			this.property = property;
-		}
-
-		@Override
-		public Object invoke(MethodInvocation invocation) throws Throwable {
-
-			if (!resolved) {
-				this.result = resolve();
-				this.resolved = true;
-			}
-
-			return invocation.getMethod().invoke(result, invocation.getArguments());
-		}
-
-		/**
-		 * @return
-		 */
-		private synchronized Object resolve() {
-
-			if (!resolved) {
-
-				try {
-					return callback.resolve(property);
-				} catch (Exception ex) {
-					throw new RuntimeException("Could not resolve lazy DBRef: " + property, ex);
-				} finally {
-					cleanup();
-				}
-			}
-
-			return result;
-		}
-
-		/**
-		 * Visible for testing.
-		 * 
-		 * @return
-		 */
-		public boolean isResolved() {
-			return resolved;
-		}
-
-		/**
-		 * Visible for testing.
-		 * 
-		 * @return the result
-		 */
-		public Object getResult() {
-			return result;
-		}
-
-		/**
-		 * Cleans up unnecessary references to avoid memory leaks.
-		 */
-		private void cleanup() {
-
-			this.callback = null;
-			this.property = null;
-		}
-	}
-
-	/**
-	 * A {@link DbRefResolver} that resolves {@link org.springframework.data.mongodb.core.mapping.DBRef}s by delegating to
-	 * a {@link DbRefResolveCallback} than is able to generate lazy loading proxies.
-	 * 
-	 * @author Thomas Darimont
-	 */
-	static class DelegatingDbRefResolver implements DbRefResolver {
-
-		/* (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.convert.DbRefResolver#resolve(org.springframework.data.mongodb.core.mapping.MongoPersistentProperty, org.springframework.data.mongodb.core.convert.DbRefResolveCallback)
-		 */
-		public Object resolve(MongoPersistentProperty property, DbRefResolveCallback callback) {
-
-			Assert.notNull(property, "property must not be null!");
-			Assert.notNull(callback, "callback must not be null!");
-
-			if (isLazyDbRef(property)) {
-				return createLazyLoadingProxy(property, callback);
-			}
-
-			return callback.resolve(property);
-		}
-
-		/**
-		 * @param property
-		 * @param callback
-		 * @return
-		 */
-		public Object createLazyLoadingProxy(MongoPersistentProperty property, DbRefResolveCallback callback) {
-
-			ProxyFactory proxyFactory = new ProxyFactory();
-
-			if (property.getRawType().isInterface()) {
-				proxyFactory.addInterface(property.getRawType());
-			} else {
-				proxyFactory.setProxyTargetClass(true);
-				proxyFactory.setTargetClass(property.getRawType());
-			}
-
-			proxyFactory.addInterface(LazyLoadingProxy.class);
-			proxyFactory.addAdvice(new LazyLoadingInterceptor(callback, property));
-
-			return proxyFactory.getProxy();
-		}
-
-		/**
-		 * @param property
-		 * @return
-		 */
-		protected boolean isLazyDbRef(MongoPersistentProperty property) {
-			return property.getDBRef() != null && property.getDBRef().lazy();
-		}
 	}
 }

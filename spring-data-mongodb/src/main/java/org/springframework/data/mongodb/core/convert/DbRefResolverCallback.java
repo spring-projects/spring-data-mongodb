@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2013 the original author or authors.
+ * Copyright 2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,24 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.core;
+package org.springframework.data.mongodb.core.convert;
 
-import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 
 /**
- * Server application than can be run as an app or unit test.
+ * Callback interface to be used in conjunction with {@link DbRefResolver}.
  * 
- * @author Mark Pollack
+ * @author Thomas Darimont
  * @author Oliver Gierke
  */
-public class JmxServer {
+public interface DbRefResolverCallback {
 
-	public static void main(String[] args) {
-		new JmxServer().run();
-	}
-
-	@SuppressWarnings("resource")
-	public void run() {
-		new ClassPathXmlApplicationContext(new String[] { "infrastructure.xml", "server-jmx.xml" });
-	}
+	/**
+	 * Resolve the final object for the given {@link MongoPersistentProperty}.
+	 * 
+	 * @param property will never be {@literal null}.
+	 * @return
+	 */
+	Object resolve(MongoPersistentProperty property);
 }

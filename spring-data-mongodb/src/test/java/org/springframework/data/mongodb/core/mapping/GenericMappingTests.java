@@ -26,7 +26,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 
@@ -44,16 +44,16 @@ public class GenericMappingTests {
 	MongoMappingContext context;
 	MongoConverter converter;
 
-	@Mock
-	MongoDbFactory factory;
+	@Mock DbRefResolver resolver;
 
 	@Before
 	public void setUp() throws Exception {
+
 		context = new MongoMappingContext();
 		context.setInitialEntitySet(Collections.singleton(StringWrapper.class));
 		context.initialize();
 
-		converter = new MappingMongoConverter(factory, context);
+		converter = new MappingMongoConverter(resolver, context);
 	}
 
 	@Test

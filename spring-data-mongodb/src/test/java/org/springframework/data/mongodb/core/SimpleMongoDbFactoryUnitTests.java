@@ -39,8 +39,7 @@ import com.mongodb.MongoURI;
 @RunWith(MockitoJUnitRunner.class)
 public class SimpleMongoDbFactoryUnitTests {
 
-	@Mock
-	Mongo mongo;
+	@Mock Mongo mongo;
 
 	/**
 	 * @see DATADOC-254
@@ -66,6 +65,7 @@ public class SimpleMongoDbFactoryUnitTests {
 	 * @throws UnknownHostException
 	 */
 	@Test
+	@SuppressWarnings("deprecation")
 	public void mongoUriConstructor() throws UnknownHostException {
 
 		MongoURI mongoURI = new MongoURI("mongodb://myUsername:myPassword@localhost/myDatabase.myCollection");

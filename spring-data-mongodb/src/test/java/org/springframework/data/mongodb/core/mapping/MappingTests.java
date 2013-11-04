@@ -27,71 +27,32 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.bson.types.ObjectId;
-import org.junit.Before;
 import org.junit.Test;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
-import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.MongoCollectionUtils;
+import org.springframework.data.mongodb.config.AbstractIntegrationTests;
 import org.springframework.data.mongodb.core.CollectionCallback;
-import org.springframework.data.mongodb.core.MongoDbUtils;
-import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 
-import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
-import com.mongodb.Mongo;
 import com.mongodb.MongoException;
 
 /**
  * @author Jon Brisbin
  * @author Oliver Gierke
  */
-public class MappingTests {
+public class MappingTests extends AbstractIntegrationTests {
 
-	private static final Log LOGGER = LogFactory.getLog(MongoDbUtils.class);
-	private final String[] collectionsToDrop = new String[] {
-			MongoCollectionUtils.getPreferredCollectionName(Person.class),
-			MongoCollectionUtils.getPreferredCollectionName(PersonMapProperty.class),
-			MongoCollectionUtils.getPreferredCollectionName(PersonWithObjectId.class),
-			MongoCollectionUtils.getPreferredCollectionName(PersonPojoIntId.class),
-			MongoCollectionUtils.getPreferredCollectionName(PersonPojoLongId.class),
-			MongoCollectionUtils.getPreferredCollectionName(PersonPojoStringId.class),
-			MongoCollectionUtils.getPreferredCollectionName(PersonCustomIdName.class),
-			MongoCollectionUtils.getPreferredCollectionName(PersonMultiDimArrays.class),
-			MongoCollectionUtils.getPreferredCollectionName(PersonMultiCollection.class),
-			MongoCollectionUtils.getPreferredCollectionName(PersonWithDbRef.class),
-			MongoCollectionUtils.getPreferredCollectionName(PersonWithLongDBRef.class),
-			MongoCollectionUtils.getPreferredCollectionName(PersonNullProperties.class),
-			MongoCollectionUtils.getPreferredCollectionName(Account.class),
-			MongoCollectionUtils.getPreferredCollectionName(PrimitiveId.class), "foobar", "geolocation", "person1",
-			"person2", "account" };
-
-	ApplicationContext applicationContext;
-	Mongo mongo;
-	MongoTemplate template;
-	MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
-
-	@Before
-	public void setUp() throws Exception {
-		mongo = new Mongo();
-		DB db = mongo.getDB("database");
-		for (String coll : collectionsToDrop) {
-			db.getCollection(coll).drop();
-		}
-		applicationContext = new ClassPathXmlApplicationContext("/mapping.xml");
-		template = applicationContext.getBean(MongoTemplate.class);
-		mappingContext = template.getConverter().getMappingContext();
-	}
+	@Autowired MongoOperations template;
 
 	@Test
 	public void testGeneratedId() {
@@ -104,11 +65,8 @@ public class MappingTests {
 	@Test
 	public void testPersonPojo() throws Exception {
 
-		LOGGER.info("about to create new personpojo");
 		PersonWithObjectId p = new PersonWithObjectId(12345, "Person", "Pojo");
-		LOGGER.info("about to insert");
 		template.insert(p);
-		LOGGER.info("done inserting");
 		assertNotNull(p.getId());
 
 		List<PersonWithObjectId> result = template.find(new Query(Criteria.where("ssn").is(12345)),
@@ -203,9 +161,10 @@ public class MappingTests {
 		assertThat(result.get(0).getAccounts(), notNullValue());
 	}
 
-	@Test
+	@Test(expected = DuplicateKeyException.class)
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public void testUniqueIndex() {
+
 		Address addr = new Address();
 		addr.setLines(new String[] { "1234 W. 1st Street", "Apt. 12" });
 		addr.setCity("Anytown");
@@ -215,13 +174,7 @@ public class MappingTests {
 		Person p1 = new Person(1234567890, "John", "Doe", 37, addr);
 		Person p2 = new Person(1234567890, "Jane", "Doe", 38, addr);
 
-		List<Person> persons = new ArrayList<Person>();
-		persons.add(p1);
-		persons.add(p2);
-		template.insert(persons, MongoCollectionUtils.getPreferredCollectionName(Person.class));
-
-		List<Person> result = template.find(new Query(Criteria.where("ssn").is(1234567890)), Person.class);
-		assertThat(result.size(), is(1));
+		template.insertAll(Arrays.asList(p1, p2));
 	}
 
 	@Test
@@ -514,23 +467,19 @@ public class MappingTests {
 
 	static class Container {
 
-		@Id
-		final String id;
+		@Id final String id;
 
 		public Container() {
 			id = new ObjectId().toString();
 		}
 
-		@DBRef
-		Item item;
-		@DBRef
-		List<Item> items;
+		@DBRef Item item;
+		@DBRef List<Item> items;
 	}
 
 	static class Item {
 
-		@Id
-		final String id;
+		@Id final String id;
 
 		public Item() {
 			this.id = new ObjectId().toString();

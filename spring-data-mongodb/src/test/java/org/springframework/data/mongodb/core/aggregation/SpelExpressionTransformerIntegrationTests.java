@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core.aggregation;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -25,6 +26,8 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.core.convert.DbRefResolver;
+import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
@@ -45,12 +48,19 @@ public class SpelExpressionTransformerIntegrationTests {
 
 	@Rule public ExpectedException exception = ExpectedException.none();
 
-	SpelExpressionTransformer transformer = new SpelExpressionTransformer();
+	SpelExpressionTransformer transformer;
+	DbRefResolver dbRefResolver;
+
+	@Before
+	public void setUp() {
+		this.transformer = new SpelExpressionTransformer();
+		this.dbRefResolver = new DefaultDbRefResolver(mongoDbFactory);
+	}
 
 	@Test
 	public void shouldConvertCompoundExpressionToPropertyPath() {
 
-		MappingMongoConverter converter = new MappingMongoConverter(mongoDbFactory, new MongoMappingContext());
+		MappingMongoConverter converter = new MappingMongoConverter(dbRefResolver, new MongoMappingContext());
 		TypeBasedAggregationOperationContext ctxt = new TypeBasedAggregationOperationContext(Data.class,
 				new MongoMappingContext(), new QueryMapper(converter));
 		assertThat(transformer.transform("item.primitiveIntValue", ctxt, new Object[0]).toString(),
@@ -63,7 +73,7 @@ public class SpelExpressionTransformerIntegrationTests {
 		exception.expect(MappingException.class);
 		exception.expectMessage("value2");
 
-		MappingMongoConverter converter = new MappingMongoConverter(mongoDbFactory, new MongoMappingContext());
+		MappingMongoConverter converter = new MappingMongoConverter(dbRefResolver, new MongoMappingContext());
 		TypeBasedAggregationOperationContext ctxt = new TypeBasedAggregationOperationContext(Data.class,
 				new MongoMappingContext(), new QueryMapper(converter));
 		assertThat(transformer.transform("item.value2", ctxt, new Object[0]).toString(), is("$item.value2"));

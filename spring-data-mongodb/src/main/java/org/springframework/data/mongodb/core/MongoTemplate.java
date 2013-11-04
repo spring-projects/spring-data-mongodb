@@ -46,6 +46,7 @@ import org.springframework.core.io.ResourceLoader;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.authentication.UserCredentials;
 import org.springframework.data.convert.EntityReader;
 import org.springframework.data.mapping.PersistentEntity;
@@ -59,6 +60,8 @@ import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.Fields;
 import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
+import org.springframework.data.mongodb.core.convert.DbRefResolver;
+import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoWriter;
@@ -145,6 +148,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	private final MongoConverter mongoConverter;
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 	private final MongoDbFactory mongoDbFactory;
+	private final PersistenceExceptionTranslator exceptionTranslator;
 	private final QueryMapper queryMapper;
 	private final UpdateMapper updateMapper;
 
@@ -198,6 +202,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		Assert.notNull(mongoDbFactory);
 
 		this.mongoDbFactory = mongoDbFactory;
+		this.exceptionTranslator = mongoDbFactory.getExceptionTranslator();
 		this.mongoConverter = mongoConverter == null ? getDefaultMongoConverter(mongoDbFactory) : mongoConverter;
 		this.queryMapper = new QueryMapper(this.mongoConverter);
 		this.updateMapper = new UpdateMapper(this.mongoConverter);
@@ -1796,7 +1801,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * @return
 	 */
 	private RuntimeException potentiallyConvertRuntimeException(RuntimeException ex) {
-		RuntimeException resolved = this.mongoDbFactory.getExceptionTranslator().translateExceptionIfPossible(ex);
+		RuntimeException resolved = this.exceptionTranslator.translateExceptionIfPossible(ex);
 		return resolved == null ? ex : resolved;
 	}
 
@@ -1822,7 +1827,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	}
 
 	private static final MongoConverter getDefaultMongoConverter(MongoDbFactory factory) {
-		MappingMongoConverter converter = new MappingMongoConverter(factory, new MongoMappingContext());
+
+		DbRefResolver dbRefResolver = new DefaultDbRefResolver(factory);
+		MappingMongoConverter converter = new MappingMongoConverter(dbRefResolver, new MongoMappingContext());
 		converter.afterPropertiesSet();
 		return converter;
 	}

@@ -1,11 +1,11 @@
 /*
- * Copyright (c) 2011 by the original author(s).
+ * Copyright 2011-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.data.mongodb.core.mapping;
 
 import static org.junit.Assert.*;
@@ -24,36 +23,39 @@ import java.util.List;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.mongodb.core.CollectionCallback;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.Mongo;
+import com.mongodb.MongoClient;
 import com.mongodb.MongoException;
 
 /**
- * @author Jon Brisbin <jbrisbin@vmware.com>
+ * @author Jon Brisbin
+ * @author Oliver Gierke
  */
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(classes = GeoIndexedAppConfig.class)
 public class GeoIndexedTests {
 
 	private final String[] collectionsToDrop = new String[] { GeoIndexedAppConfig.GEO_COLLECTION, "Person" };
 
-	ApplicationContext applicationContext;
-	MongoTemplate template;
-	MongoMappingContext mappingContext;
+	@Autowired ApplicationContext applicationContext;
+	@Autowired MongoTemplate template;
+	@Autowired MongoMappingContext mappingContext;
 
 	@Before
 	public void setUp() throws Exception {
 		cleanDb();
-		applicationContext = new AnnotationConfigApplicationContext(GeoIndexedAppConfig.class);
-		template = applicationContext.getBean(MongoTemplate.class);
-		mappingContext = applicationContext.getBean(MongoMappingContext.class);
 	}
 
 	@After
@@ -62,8 +64,10 @@ public class GeoIndexedTests {
 	}
 
 	private void cleanDb() throws UnknownHostException {
-		Mongo mongo = new Mongo();
+
+		Mongo mongo = new MongoClient();
 		DB db = mongo.getDB(GeoIndexedAppConfig.GEO_DB);
+
 		for (String coll : collectionsToDrop) {
 			db.getCollection(coll).drop();
 		}
@@ -88,5 +92,4 @@ public class GeoIndexedTests {
 
 		assertTrue(hasIndex);
 	}
-
 }

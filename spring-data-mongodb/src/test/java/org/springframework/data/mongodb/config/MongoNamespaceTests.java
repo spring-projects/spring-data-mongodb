@@ -49,7 +49,7 @@ import com.mongodb.WriteConcern;
 @ContextConfiguration
 public class MongoNamespaceTests {
 
-	@Autowired private ApplicationContext ctx;
+	@Autowired ApplicationContext ctx;
 
 	@Test
 	public void testMongoSingleton() throws Exception {

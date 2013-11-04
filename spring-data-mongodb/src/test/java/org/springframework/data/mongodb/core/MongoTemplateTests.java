@@ -57,6 +57,8 @@ import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.convert.CustomConversions;
+import org.springframework.data.mongodb.core.convert.DbRefResolver;
+import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.index.Index.Duplicates;
@@ -119,7 +121,8 @@ public class MongoTemplateTests {
 		mappingContext.setSimpleTypeHolder(conversions.getSimpleTypeHolder());
 		mappingContext.initialize();
 
-		MappingMongoConverter mappingConverter = new MappingMongoConverter(factory, mappingContext);
+		DbRefResolver dbRefResolver = new DefaultDbRefResolver(factory);
+		MappingMongoConverter mappingConverter = new MappingMongoConverter(dbRefResolver, mappingContext);
 		mappingConverter.setCustomConversions(conversions);
 		mappingConverter.afterPropertiesSet();
 

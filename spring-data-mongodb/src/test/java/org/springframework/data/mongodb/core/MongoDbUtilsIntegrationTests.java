@@ -32,6 +32,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolExecutorFactoryBean;
 
 import com.mongodb.DB;
 import com.mongodb.Mongo;
+import com.mongodb.MongoClient;
 import com.mongodb.MongoException;
 
 /**
@@ -54,7 +55,7 @@ public class MongoDbUtilsIntegrationTests {
 	@BeforeClass
 	public static void setUp() throws Exception {
 
-		mongo = new Mongo();
+		mongo = new MongoClient();
 		template = new MongoTemplate(mongo, DATABASE_NAME);
 
 		// Create sample user

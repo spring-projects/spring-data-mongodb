@@ -40,6 +40,7 @@ import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.convert.CustomConversions;
+import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexCreator;
@@ -76,13 +77,14 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Before
 	public void setUp() {
 
-		this.mappingContext = new MongoMappingContext();
-		this.converter = new MappingMongoConverter(factory, mappingContext);
-		this.template = new MongoTemplate(factory, converter);
-
 		when(factory.getDb()).thenReturn(db);
 		when(factory.getExceptionTranslator()).thenReturn(exceptionTranslator);
 		when(db.getCollection(Mockito.any(String.class))).thenReturn(collection);
+
+		this.mappingContext = new MongoMappingContext();
+		this.converter = new MappingMongoConverter(new DefaultDbRefResolver(factory), mappingContext);
+		this.template = new MongoTemplate(factory, converter);
+
 	}
 
 	@Test(expected = IllegalArgumentException.class)

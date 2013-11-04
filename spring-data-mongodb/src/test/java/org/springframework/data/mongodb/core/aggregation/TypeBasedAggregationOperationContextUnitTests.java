@@ -24,7 +24,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.mapping.model.MappingException;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
@@ -41,13 +41,13 @@ public class TypeBasedAggregationOperationContextUnitTests {
 	MappingMongoConverter converter;
 	QueryMapper mapper;
 
-	@Mock MongoDbFactory dbFactory;
+	@Mock DbRefResolver dbRefResolver;
 
 	@Before
 	public void setUp() {
 
 		this.context = new MongoMappingContext();
-		this.converter = new MappingMongoConverter(dbFactory, context);
+		this.converter = new MappingMongoConverter(dbRefResolver, context);
 		this.mapper = new QueryMapper(converter);
 	}
 

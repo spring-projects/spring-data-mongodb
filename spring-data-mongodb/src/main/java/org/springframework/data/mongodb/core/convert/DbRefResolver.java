@@ -15,19 +15,34 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
+import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+
+import com.mongodb.DBRef;
 
 /**
  * Used to resolve associations annotated with {@link org.springframework.data.mongodb.core.mapping.DBRef}.
  * 
  * @author Thomas Darimont
  */
-interface DbRefResolver {
+public interface DbRefResolver {
 
 	/**
-	 * @param property
-	 * @param callback
+	 * @param property will never be {@literal null}.
+	 * @param callback will never be {@literal null}.
 	 * @return
 	 */
-	Object resolve(MongoPersistentProperty property, DbRefResolveCallback callback);
+	Object resolveDbRef(MongoPersistentProperty property, DbRefResolverCallback callback);
+
+	/**
+	 * Creates a {@link DBRef} instance for the given {@link org.springframework.data.mongodb.core.mapping.DBRef}
+	 * annotation, {@link MongoPersistentEntity} and id.
+	 * 
+	 * @param annotation will never be {@literal null}.
+	 * @param entity will never be {@literal null}.
+	 * @param id will never be {@literal null}.
+	 * @return
+	 */
+	DBRef createDbRef(org.springframework.data.mongodb.core.mapping.DBRef annotation, MongoPersistentEntity<?> entity,
+			Object id);
 }

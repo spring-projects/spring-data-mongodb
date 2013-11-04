@@ -10,6 +10,7 @@ import org.springframework.data.mongodb.core.convert.CustomConversions;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 
 import com.mongodb.Mongo;
+import com.mongodb.MongoClient;
 
 public class TestMongoConfiguration extends AbstractMongoConfiguration {
 
@@ -21,7 +22,7 @@ public class TestMongoConfiguration extends AbstractMongoConfiguration {
 	@Override
 	@Bean
 	public Mongo mongo() throws Exception {
-		return new Mongo("127.0.0.1", 27017);
+		return new MongoClient("127.0.0.1", 27017);
 	}
 
 	@Override

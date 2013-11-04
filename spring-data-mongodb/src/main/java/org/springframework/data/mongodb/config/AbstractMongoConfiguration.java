@@ -31,6 +31,8 @@ import org.springframework.data.mapping.context.MappingContextIsNewStrategyFacto
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 import org.springframework.data.mongodb.core.convert.CustomConversions;
+import org.springframework.data.mongodb.core.convert.DbRefResolver;
+import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.mapping.CamelCaseAbbreviatingFieldNamingStrategy;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -178,8 +180,11 @@ public abstract class AbstractMongoConfiguration {
 	 */
 	@Bean
 	public MappingMongoConverter mappingMongoConverter() throws Exception {
-		MappingMongoConverter converter = new MappingMongoConverter(mongoDbFactory(), mongoMappingContext());
+
+		DbRefResolver dbRefResolver = new DefaultDbRefResolver(mongoDbFactory());
+		MappingMongoConverter converter = new MappingMongoConverter(dbRefResolver, mongoMappingContext());
 		converter.setCustomConversions(customConversions());
+
 		return converter;
 	}
 

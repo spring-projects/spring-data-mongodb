@@ -25,6 +25,7 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.MongoTemplate.UnwrapAndReadDbObjectCallback;
+import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 
@@ -46,7 +47,8 @@ public class UnwrapAndReadDbObjectCallbackUnitTests {
 	public void setUp() {
 
 		MongoTemplate template = new MongoTemplate(factory);
-		MappingMongoConverter converter = new MappingMongoConverter(factory, new MongoMappingContext());
+		MappingMongoConverter converter = new MappingMongoConverter(new DefaultDbRefResolver(factory),
+				new MongoMappingContext());
 
 		this.callback = template.new UnwrapAndReadDbObjectCallback<Target>(converter, Target.class);
 	}

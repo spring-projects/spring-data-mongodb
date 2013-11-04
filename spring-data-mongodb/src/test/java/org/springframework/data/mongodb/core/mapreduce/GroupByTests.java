@@ -30,6 +30,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.convert.DbRefResolver;
+import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.test.context.ContextConfiguration;
@@ -45,7 +47,6 @@ import com.mongodb.Mongo;
 public class GroupByTests {
 
 	@Autowired MongoDbFactory factory;
-
 	@Autowired ApplicationContext applicationContext;
 
 	MongoTemplate mongoTemplate;
@@ -58,11 +59,12 @@ public class GroupByTests {
 		mappingContext.setInitialEntitySet(new HashSet<Class<?>>(Arrays.asList(XObject.class)));
 		mappingContext.initialize();
 
-		MappingMongoConverter mappingConverter = new MappingMongoConverter(factory, mappingContext);
+		DbRefResolver dbRefResolver = new DefaultDbRefResolver(factory);
+		MappingMongoConverter mappingConverter = new MappingMongoConverter(dbRefResolver, mappingContext);
 		mappingConverter.afterPropertiesSet();
+
 		this.mongoTemplate = new MongoTemplate(factory, mappingConverter);
 		mongoTemplate.setApplicationContext(applicationContext);
-
 	}
 
 	@Before

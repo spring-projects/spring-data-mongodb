@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb;
 
 import org.springframework.dao.DataAccessException;
+import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mongodb.core.MongoExceptionTranslator;
 
 import com.mongodb.DB;
@@ -48,7 +49,7 @@ public interface MongoDbFactory {
 	/**
 	 * Exposes a shared {@link MongoExceptionTranslator}.
 	 * 
-	 * @return
+	 * @return will never be {@literal null}.
 	 */
-	MongoExceptionTranslator getExceptionTranslator();
+	PersistenceExceptionTranslator getExceptionTranslator();
 }

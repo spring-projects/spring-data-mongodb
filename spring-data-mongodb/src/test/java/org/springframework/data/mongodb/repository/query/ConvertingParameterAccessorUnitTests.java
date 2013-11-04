@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2011-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,6 +28,8 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.core.convert.DbRefResolver;
+import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
@@ -45,28 +47,35 @@ import com.mongodb.BasicDBList;
 @RunWith(MockitoJUnitRunner.class)
 public class ConvertingParameterAccessorUnitTests {
 
-	@Mock
-	MongoDbFactory factory;
-	@Mock
-	MongoParameterAccessor accessor;
+	@Mock MongoDbFactory factory;
+	@Mock MongoParameterAccessor accessor;
 
 	MongoMappingContext context;
 	MappingMongoConverter converter;
+	DbRefResolver resolver;
 
 	@Before
 	public void setUp() {
-		context = new MongoMappingContext();
-		converter = new MappingMongoConverter(factory, context);
+
+		this.context = new MongoMappingContext();
+		this.resolver = new DefaultDbRefResolver(factory);
+		this.converter = new MappingMongoConverter(resolver, context);
+	}
+
+	@SuppressWarnings("deprecation")
+	@Test(expected = IllegalArgumentException.class)
+	public void rejectsNullMongoDbFactory() {
+		new MappingMongoConverter((MongoDbFactory) null, context);
 	}
 
 	@Test(expected = IllegalArgumentException.class)
-	public void rejectsNullWriter() {
-		new MappingMongoConverter(null, context);
+	public void rejectsNullDbRefResolver() {
+		new MappingMongoConverter((DbRefResolver) null, context);
 	}
 
 	@Test(expected = IllegalArgumentException.class)
 	public void rejectsNullContext() {
-		new MappingMongoConverter(factory, null);
+		new MappingMongoConverter(resolver, null);
 	}
 
 	@Test
@@ -136,8 +145,7 @@ public class ConvertingParameterAccessorUnitTests {
 
 	static class Entity {
 
-		@DBRef
-		Property property;
+		@DBRef Property property;
 	}
 
 	static class Property {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2012 the original author or authors.
+ * Copyright 2011-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -47,15 +47,17 @@ import com.mysema.query.types.path.StringPath;
 @RunWith(MockitoJUnitRunner.class)
 public class SpringDataMongodbSerializerUnitTests {
 
-	@Mock MongoDbFactory dbFactory;
+	@Mock DbRefResolver dbFactory;
 	MongoConverter converter;
 	SpringDataMongodbSerializer serializer;
 
 	@Before
 	public void setUp() {
+
 		MongoMappingContext context = new MongoMappingContext();
-		converter = new MappingMongoConverter(dbFactory, context);
-		serializer = new SpringDataMongodbSerializer(converter);
+
+		this.converter = new MappingMongoConverter(dbFactory, context);
+		this.serializer = new SpringDataMongodbSerializer(converter);
 	}
 
 	@Test

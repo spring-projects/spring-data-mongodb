@@ -69,12 +69,12 @@ public class QueryMapperUnitTests {
 	@Before
 	public void setUp() {
 
-		context = new MongoMappingContext();
+		this.context = new MongoMappingContext();
 
-		converter = new MappingMongoConverter(factory, context);
-		converter.afterPropertiesSet();
+		this.converter = new MappingMongoConverter(new DefaultDbRefResolver(factory), context);
+		this.converter.afterPropertiesSet();
 
-		mapper = new QueryMapper(converter);
+		this.mapper = new QueryMapper(converter);
 	}
 
 	@Test

@@ -27,7 +27,7 @@ import org.springframework.data.mongodb.repository.PersonRepository;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.mongodb.Mongo;
+import com.mongodb.MongoClient;
 
 /**
  * Integration tests for {@link MongoRepositoriesRegistrar}.
@@ -44,12 +44,11 @@ public class MongoRepositoriesRegistrarIntegrationTests {
 
 		@Bean
 		public MongoOperations mongoTemplate() throws Exception {
-			return new MongoTemplate(new SimpleMongoDbFactory(new Mongo(), "database"));
+			return new MongoTemplate(new SimpleMongoDbFactory(new MongoClient(), "database"));
 		}
 	}
 
-	@Autowired
-	PersonRepository personRepository;
+	@Autowired PersonRepository personRepository;
 
 	@Test
 	public void testConfiguration() {

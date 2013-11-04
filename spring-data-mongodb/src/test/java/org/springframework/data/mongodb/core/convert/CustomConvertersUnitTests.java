@@ -48,12 +48,9 @@ public class CustomConvertersUnitTests {
 
 	MappingMongoConverter converter;
 
-	@Mock
-	BarToDBObjectConverter barToDBObjectConverter;
-	@Mock
-	DBObjectToBarConverter dbObjectToBarConverter;
-	@Mock
-	MongoDbFactory mongoDbFactory;
+	@Mock BarToDBObjectConverter barToDBObjectConverter;
+	@Mock DBObjectToBarConverter dbObjectToBarConverter;
+	@Mock MongoDbFactory mongoDbFactory;
 
 	MongoMappingContext context;
 	MongoPersistentEntity<Foo> fooEntity;
@@ -73,7 +70,7 @@ public class CustomConvertersUnitTests {
 		context.setSimpleTypeHolder(conversions.getSimpleTypeHolder());
 		context.initialize();
 
-		converter = new MappingMongoConverter(mongoDbFactory, context);
+		converter = new MappingMongoConverter(new DefaultDbRefResolver(mongoDbFactory), context);
 		converter.setCustomConversions(conversions);
 		converter.afterPropertiesSet();
 	}
@@ -121,14 +118,12 @@ public class CustomConvertersUnitTests {
 	}
 
 	public static class Foo {
-		@Id
-		public String id;
+		@Id public String id;
 		public Bar bar;
 	}
 
 	public static class Bar {
-		@Id
-		public String id;
+		@Id public String id;
 		public String foo;
 	}
 

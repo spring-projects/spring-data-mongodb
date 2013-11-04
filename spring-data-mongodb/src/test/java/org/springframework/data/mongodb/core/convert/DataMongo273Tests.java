@@ -25,7 +25,6 @@ import java.util.Map;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 
 import com.mongodb.BasicDBList;
@@ -43,10 +42,10 @@ public class DataMongo273Tests {
 	MappingMongoConverter converter;
 
 	@Before
-	public void setupMongoConv() {
+	public void setupMongoConverter() {
 
 		MongoMappingContext mappingContext = new MongoMappingContext();
-		MongoDbFactory factory = mock(MongoDbFactory.class);
+		DbRefResolver factory = mock(DbRefResolver.class);
 
 		converter = new MappingMongoConverter(factory, mappingContext);
 		converter.afterPropertiesSet();

@@ -17,16 +17,16 @@ package org.springframework.data.mongodb.core;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.mongodb.core.MongoTemplate;
 
 import com.mongodb.Mongo;
+import com.mongodb.MongoClient;
 
 @Configuration
 public class PersonExampleAppConfig {
 
 	@Bean
 	public Mongo mongo() throws Exception {
-		return new Mongo("localhost");
+		return new MongoClient("localhost");
 	}
 
 	@Bean

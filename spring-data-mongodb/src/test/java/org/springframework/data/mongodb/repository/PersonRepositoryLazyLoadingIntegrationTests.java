@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.repository;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
+import static org.springframework.data.mongodb.core.convert.LazyLoadingTestUtils.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -25,11 +26,8 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.aop.Advisor;
-import org.springframework.aop.framework.Advised;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoOperations;
-import org.springframework.data.mongodb.core.convert.MappingMongoConverter.LazyLoadingInterceptor;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -37,13 +35,13 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * Integration test for {@link PersonRepository} for lazy loading support.
  * 
  * @author Thomas Darimont
+ * @author Oliver Gierke
  */
 @ContextConfiguration(locations = "PersonRepositoryIntegrationTests-context.xml")
 @RunWith(SpringJUnit4ClassRunner.class)
 public class PersonRepositoryLazyLoadingIntegrationTests {
 
 	@Autowired PersonRepository repository;
-
 	@Autowired MongoOperations operations;
 
 	@Before
@@ -71,14 +69,11 @@ public class PersonRepositoryLazyLoadingIntegrationTests {
 
 		Person oliver = repository.findOne(person.id);
 		List<User> fans = oliver.getFans();
-		LazyLoadingInterceptor interceptor = extractInterceptor(fans);
 
-		assertThat(interceptor.getResult(), is(nullValue()));
-		assertThat(interceptor.isResolved(), is(false));
+		assertProxyIsResolved(fans, false);
 
 		User user = fans.get(0);
-		assertThat(interceptor.getResult(), is(notNullValue()));
-		assertThat(interceptor.isResolved(), is(true));
+		assertProxyIsResolved(fans, true);
 		assertThat(user.getUsername(), is(thomas.getUsername()));
 	}
 
@@ -100,19 +95,14 @@ public class PersonRepositoryLazyLoadingIntegrationTests {
 
 		Person oliver = repository.findOne(person.id);
 		List<User> realFans = oliver.getRealFans();
-		LazyLoadingInterceptor interceptor = extractInterceptor(realFans);
 
-		assertThat(interceptor.getResult(), is(nullValue()));
-		assertThat(interceptor.isResolved(), is(false));
-
+		assertProxyIsResolved(realFans, false);
 		User realFan = realFans.get(0);
-		assertThat(interceptor.getResult(), is(notNullValue()));
-		assertThat(interceptor.isResolved(), is(true));
+		assertProxyIsResolved(realFans, true);
 		assertThat(realFan.getUsername(), is(thomas.getUsername()));
 
 		realFans = oliver.getRealFans();
-		assertThat(interceptor.getResult(), is(notNullValue()));
-		assertThat(interceptor.isResolved(), is(true));
+		assertProxyIsResolved(realFans, true);
 
 		realFan = realFans.get(0);
 		assertThat(realFan.getUsername(), is(thomas.getUsername()));
@@ -136,16 +126,10 @@ public class PersonRepositoryLazyLoadingIntegrationTests {
 		Person oliver = repository.findOne(person.id);
 
 		User coworker = oliver.getCoworker();
-		LazyLoadingInterceptor interceptor = extractInterceptor(coworker);
 
-		assertThat(interceptor.getResult(), is(nullValue()));
-		assertThat(interceptor.isResolved(), is(false));
+		assertProxyIsResolved(coworker, false);
 		assertThat(coworker.getUsername(), is(thomas.getUsername()));
-		assertThat(interceptor.isResolved(), is(true));
+		assertProxyIsResolved(coworker, true);
 		assertThat(coworker.getUsername(), is(thomas.getUsername()));
-	}
-
-	private LazyLoadingInterceptor extractInterceptor(Object proxy) {
-		return (LazyLoadingInterceptor) ((Advisor) ((Advised) proxy).getAdvisors()[0]).getAdvice();
 	}
 }

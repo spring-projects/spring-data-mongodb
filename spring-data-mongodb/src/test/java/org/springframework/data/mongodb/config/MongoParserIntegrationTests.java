@@ -27,6 +27,7 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionReader;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
+import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.io.ClassPathResource;
 
@@ -44,8 +45,9 @@ public class MongoParserIntegrationTests {
 
 	@Before
 	public void setUp() {
-		factory = new DefaultListableBeanFactory();
-		reader = new XmlBeanDefinitionReader(factory);
+
+		this.factory = new DefaultListableBeanFactory();
+		this.reader = new XmlBeanDefinitionReader(factory);
 	}
 
 	@Test
@@ -68,9 +70,10 @@ public class MongoParserIntegrationTests {
 
 		reader.loadBeanDefinitions(new ClassPathResource("namespace/mongo-bean.xml"));
 
-		GenericApplicationContext context = new GenericApplicationContext(factory);
+		AbstractApplicationContext context = new GenericApplicationContext(factory);
 		context.refresh();
 
 		assertThat(context.getBean("mongo2", Mongo.class), is(notNullValue()));
+		context.close();
 	}
 }

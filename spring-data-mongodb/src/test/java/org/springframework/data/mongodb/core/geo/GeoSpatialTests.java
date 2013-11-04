@@ -21,19 +21,17 @@ import static org.junit.Assert.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
-import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.mongodb.config.AbstractIntegrationTests;
 import org.springframework.data.mongodb.core.CollectionCallback;
 import org.springframework.data.mongodb.core.IndexOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -43,14 +41,11 @@ import org.springframework.data.mongodb.core.index.IndexField;
 import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.monitor.ServerInfo;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 
-import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
-import com.mongodb.Mongo;
 import com.mongodb.MongoException;
 import com.mongodb.WriteConcern;
 
@@ -60,41 +55,22 @@ import com.mongodb.WriteConcern;
  * @author Mark Pollack
  * @author Oliver Gierke
  */
-public class GeoSpatialTests {
+public class GeoSpatialTests extends AbstractIntegrationTests {
 
 	private static final Log LOGGER = LogFactory.getLog(GeoSpatialTests.class);
-	private final String[] collectionsToDrop = new String[] { "newyork", "Person" };
 
-	ApplicationContext applicationContext;
-	MongoTemplate template;
-	ServerInfo serverInfo;
+	@Autowired MongoTemplate template;
 
-	ExpressionParser parser;
+	ExpressionParser parser = new SpelExpressionParser();
 
 	@Before
 	public void setUp() throws Exception {
-		cleanDb();
-		applicationContext = new AnnotationConfigApplicationContext(GeoSpatialAppConfig.class);
-		template = applicationContext.getBean(MongoTemplate.class);
+
 		template.setWriteConcern(WriteConcern.FSYNC_SAFE);
 		template.indexOps(Venue.class).ensureIndex(new GeospatialIndex("location"));
+
 		indexCreated();
 		addVenues();
-		parser = new SpelExpressionParser();
-	}
-
-	@After
-	public void cleanUp() throws Exception {
-		cleanDb();
-	}
-
-	private void cleanDb() throws UnknownHostException {
-		Mongo mongo = new Mongo();
-		serverInfo = new ServerInfo(mongo);
-		DB db = mongo.getDB("database");
-		for (String coll : collectionsToDrop) {
-			db.getCollection(coll).drop();
-		}
 	}
 
 	private void addVenues() {

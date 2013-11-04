@@ -34,6 +34,8 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.convert.DbRefResolver;
+import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.Query;
@@ -56,10 +58,8 @@ public class MapReduceTests {
 	private String mapFunction = "function(){ for ( var i=0; i<this.x.length; i++ ){ emit( this.x[i] , 1 ); } }";
 	private String reduceFunction = "function(key,values){ var sum=0; for( var i=0; i<values.length; i++ ) sum += values[i]; return sum;}";
 
-	@Autowired
-	MongoTemplate template;
-	@Autowired
-	MongoDbFactory factory;
+	@Autowired MongoTemplate template;
+	@Autowired MongoDbFactory factory;
 
 	MongoTemplate mongoTemplate;
 
@@ -71,7 +71,8 @@ public class MapReduceTests {
 		mappingContext.setInitialEntitySet(new HashSet<Class<?>>(Arrays.asList(ValueObject.class)));
 		mappingContext.initialize();
 
-		MappingMongoConverter mappingConverter = new MappingMongoConverter(factory, mappingContext);
+		DbRefResolver dbRefResolver = new DefaultDbRefResolver(factory);
+		MappingMongoConverter mappingConverter = new MappingMongoConverter(dbRefResolver, mappingContext);
 		mappingConverter.afterPropertiesSet();
 		this.mongoTemplate = new MongoTemplate(factory, mappingConverter);
 	}

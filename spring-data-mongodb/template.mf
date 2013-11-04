@@ -17,6 +17,7 @@ Import-Template:
  javax.validation.*;version="${validation:[=.=.=.=,+1.0.0)}";resolution:=optional,
  org.aopalliance.*;version="[1.0.0, 2.0.0)";resolution:=optional,
  org.bson.*;version="0",
+ org.objenesis.*;version="${objenesis:[=.=.=, +1.0.0)}";resolution:=optional,
  org.slf4j.*;version="${slf4j:[=.=.=,+1.0.0)}",
  org.springframework.*;version="${spring:[=.=.=.=,+1.0.0)}",
  org.springframework.data.*;version="${springdata.commons:[=.=.=.=,+1.0.0)}",

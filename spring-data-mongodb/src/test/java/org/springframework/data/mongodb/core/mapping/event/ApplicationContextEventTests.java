@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.core.mapping.event;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.net.UnknownHostException;
 
@@ -31,6 +31,7 @@ import org.springframework.data.mongodb.core.mapping.PersonPojoStringId;
 import com.mongodb.DB;
 import com.mongodb.DBObject;
 import com.mongodb.Mongo;
+import com.mongodb.MongoClient;
 import com.mongodb.WriteConcern;
 
 /**
@@ -59,7 +60,7 @@ public class ApplicationContextEventTests {
 	}
 
 	private void cleanDb() throws UnknownHostException {
-		Mongo mongo = new Mongo();
+		Mongo mongo = new MongoClient();
 		DB db = mongo.getDB("database");
 		for (String coll : collectionsToDrop) {
 			db.getCollection(coll).drop();

@@ -17,6 +17,7 @@
 
 	<properties>
 		<validation>1.0.0.GA</validation>
+		<objenesis>1.3</objenesis>
 	</properties>
 
 	<dependencies>
@@ -117,6 +118,13 @@
 			<groupId>javax.validation</groupId>
 			<artifactId>validation-api</artifactId>
 			<version>${validation}</version>
+			<optional>true</optional>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.objenesis</groupId>
+			<artifactId>objenesis</artifactId>
+			<version>${objenesis}</version>
 			<optional>true</optional>
 		</dependency>
 

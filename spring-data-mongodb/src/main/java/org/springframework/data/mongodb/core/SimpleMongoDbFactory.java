@@ -19,6 +19,7 @@ import java.net.UnknownHostException;
 
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.dao.DataAccessException;
+import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.authentication.UserCredentials;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.util.Assert;
@@ -42,8 +43,8 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 	private final String databaseName;
 	private final boolean mongoInstanceCreated;
 	private final UserCredentials credentials;
+	private final PersistenceExceptionTranslator exceptionTranslator;
 	private WriteConcern writeConcern;
-	private final MongoExceptionTranslator exceptionTranslator = new MongoExceptionTranslator();
 
 	/**
 	 * Create an instance of {@link SimpleMongoDbFactory} given the {@link Mongo} instance and database name.
@@ -74,6 +75,7 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 	 * @throws UnknownHostException
 	 * @see MongoURI
 	 */
+	@SuppressWarnings("deprecation")
 	public SimpleMongoDbFactory(MongoURI uri) throws MongoException, UnknownHostException {
 		this(new Mongo(uri), uri.getDatabase(), new UserCredentials(uri.getUsername(), parseChars(uri.getPassword())), true);
 	}
@@ -90,6 +92,7 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 		this.databaseName = databaseName;
 		this.mongoInstanceCreated = mongoInstanceCreated;
 		this.credentials = credentials == null ? UserCredentials.NO_CREDENTIALS : credentials;
+		this.exceptionTranslator = new MongoExceptionTranslator();
 	}
 
 	/**
@@ -141,11 +144,12 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 		return chars == null ? null : String.valueOf(chars);
 	}
 
-	/* (non-Javadoc)
+	/* 
+	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.MongoDbFactory#getExceptionTranslator()
 	 */
 	@Override
-	public MongoExceptionTranslator getExceptionTranslator() {
+	public PersistenceExceptionTranslator getExceptionTranslator() {
 		return this.exceptionTranslator;
 	}
 }

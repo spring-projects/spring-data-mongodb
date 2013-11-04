@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2010 the original author or authors.
+ * Copyright 2002-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,23 +17,27 @@ package org.springframework.data.mongodb.core;
 
 import java.util.List;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.context.support.AbstractApplicationContext;
 
+/**
+ * @author Jon Brisbin
+ * @author Oliver Gierke
+ */
 public class PersonExample {
 
-	private static final Log log = LogFactory.getLog(PersonExample.class);
-	@Autowired
-	private MongoOperations mongoOps;
+	private static final Logger LOGGER = LoggerFactory.getLogger(PersonExample.class);
+
+	@Autowired private MongoOperations mongoOps;
 
 	public static void main(String[] args) {
-		ApplicationContext applicationContext = new AnnotationConfigApplicationContext(PersonExampleAppConfig.class);
+		AbstractApplicationContext applicationContext = new AnnotationConfigApplicationContext(PersonExampleAppConfig.class);
 		PersonExample example = applicationContext.getBean(PersonExample.class);
 		example.doWork();
+		applicationContext.close();
 	}
 
 	public void doWork() {
@@ -51,23 +55,23 @@ public class PersonExample {
 
 		mongoOps.save(p2);
 
-		log.debug("Saved: " + p);
+		LOGGER.debug("Saved: " + p);
 
 		p = mongoOps.findById(p.getId(), PersonWithIdPropertyOfTypeString.class);
 
-		log.debug("Found: " + p);
+		LOGGER.debug("Found: " + p);
 
 		// mongoOps.updateFirst(new Query(where("firstName").is("Sven")), new Update().set("age", 24));
 
 		// mongoOps.updateFirst(new Query(where("firstName").is("Sven")), update("age", 24));
 
 		p = mongoOps.findById(p.getId(), PersonWithIdPropertyOfTypeString.class);
-		log.debug("Updated: " + p);
+		LOGGER.debug("Updated: " + p);
 
 		List<PersonWithIdPropertyOfTypeString> folks = mongoOps.findAll(PersonWithIdPropertyOfTypeString.class);
-		log.debug("Querying for all people...");
+		LOGGER.debug("Querying for all people...");
 		for (PersonWithIdPropertyOfTypeString element : folks) {
-			log.debug(element);
+			LOGGER.debug(element.toString());
 		}
 
 		// mongoOps.remove( query(whereId().is(p.getId())), p.getClass());
@@ -76,10 +80,7 @@ public class PersonExample {
 
 		List<PersonWithIdPropertyOfTypeString> people = mongoOps.findAll(PersonWithIdPropertyOfTypeString.class);
 
-		// PersonWithIdPropertyOfTypeString p2 = mongoOps.findOne(query(whereId().is(p.getId())),
-		// PersonWithIdPropertyOfTypeString.class);
-
-		log.debug("Number of people = : " + people.size());
+		LOGGER.debug("Number of people = : " + people.size());
 
 	}
 

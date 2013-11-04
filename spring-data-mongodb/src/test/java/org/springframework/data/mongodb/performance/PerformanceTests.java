@@ -39,6 +39,7 @@ import org.springframework.core.Constants;
 import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
+import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
@@ -56,6 +57,7 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.Mongo;
+import com.mongodb.MongoClient;
 import com.mongodb.WriteConcern;
 
 /**
@@ -83,7 +85,7 @@ public class PerformanceTests {
 	@Before
 	public void setUp() throws Exception {
 
-		this.mongo = new Mongo();
+		this.mongo = new MongoClient();
 
 		SimpleMongoDbFactory mongoDbFactory = new SimpleMongoDbFactory(this.mongo, DATABASE_NAME);
 
@@ -91,7 +93,7 @@ public class PerformanceTests {
 		context.setInitialEntitySet(Collections.singleton(Person.class));
 		context.afterPropertiesSet();
 
-		this.converter = new MappingMongoConverter(mongoDbFactory, context);
+		this.converter = new MappingMongoConverter(new DefaultDbRefResolver(mongoDbFactory), context);
 		this.operations = new MongoTemplate(new SimpleMongoDbFactory(this.mongo, DATABASE_NAME), converter);
 
 		MongoRepositoryFactoryBean<PersonRepository, Person, ObjectId> factory = new MongoRepositoryFactoryBean<PersonRepository, Person, ObjectId>();
