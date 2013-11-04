@@ -77,6 +77,16 @@ public class SimpleMongoDbFactoryUnitTests {
 		assertThat(ReflectionTestUtils.getField(mongoDbFactory, "databaseName").toString(), is("myDatabase"));
 	}
 
+	/**
+	 * @see DATAMONGO-789
+	 */
+	@Test
+	public void defaultsAuthenticationDatabaseToDatabase() {
+
+		SimpleMongoDbFactory factory = new SimpleMongoDbFactory(mongo, "foo");
+		assertThat(ReflectionTestUtils.getField(factory, "authenticationDatabaseName"), is((Object) "foo"));
+	}
+
 	private void rejectsDatabaseName(String databaseName) {
 
 		try {

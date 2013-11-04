@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 the original author or authors.
+ * Copyright 2012-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,9 +39,11 @@ import com.mongodb.MongoException;
  * Integration tests for {@link MongoDbUtils}.
  * 
  * @author Oliver Gierke
+ * @author Thomas Darimont
  */
 public class MongoDbUtilsIntegrationTests {
 
+	static final String AUTHENTICATION_DATABASE_NAME = "admin";
 	static final String DATABASE_NAME = "dbAuthTests";
 	static final UserCredentials CREDENTIALS = new UserCredentials("admin", "admin");
 
@@ -57,14 +59,6 @@ public class MongoDbUtilsIntegrationTests {
 
 		mongo = new MongoClient();
 		template = new MongoTemplate(mongo, DATABASE_NAME);
-
-		// Create sample user
-		template.execute(new DbCallback<Void>() {
-			public Void doInDB(DB db) throws MongoException, DataAccessException {
-				db.addUser("admin", "admin".toCharArray());
-				return null;
-			}
-		});
 
 		factory = new ThreadPoolExecutorFactoryBean();
 		factory.setCorePoolSize(2);
@@ -96,11 +90,60 @@ public class MongoDbUtilsIntegrationTests {
 	@Test
 	public void authenticatesCorrectlyInMultithreadedEnvironment() throws Exception {
 
+		// Create sample user
+		template.execute(new DbCallback<Void>() {
+			public Void doInDB(DB db) throws MongoException, DataAccessException {
+				db.addUser("admin", "admin".toCharArray());
+				return null;
+			}
+		});
+
 		Callable<Void> callable = new Callable<Void>() {
 			public Void call() throws Exception {
 
 				try {
 					DB db = MongoDbUtils.getDB(mongo, DATABASE_NAME, CREDENTIALS);
+					assertThat(db, is(notNullValue()));
+				} catch (Exception o_O) {
+					MongoDbUtilsIntegrationTests.this.exception = o_O;
+				}
+
+				return null;
+			}
+		};
+
+		List<Callable<Void>> callables = new ArrayList<Callable<Void>>();
+
+		for (int i = 0; i < 10; i++) {
+			callables.add(callable);
+		}
+
+		service.invokeAll(callables);
+
+		if (exception != null) {
+			fail("Exception occurred!" + exception);
+		}
+	}
+
+	/**
+	 * @see DATAMONGO-789
+	 */
+	@Test
+	public void authenticatesCorrectlyWithAuthenticationDB() throws Exception {
+
+		// Create sample user
+		template.execute(new DbCallback<Void>() {
+			public Void doInDB(DB db) throws MongoException, DataAccessException {
+				db.getSisterDB("admin").addUser("admin", "admin".toCharArray());
+				return null;
+			}
+		});
+
+		Callable<Void> callable = new Callable<Void>() {
+			public Void call() throws Exception {
+
+				try {
+					DB db = MongoDbUtils.getDB(mongo, DATABASE_NAME, CREDENTIALS, AUTHENTICATION_DATABASE_NAME);
 					assertThat(db, is(notNullValue()));
 				} catch (Exception o_O) {
 					MongoDbUtilsIntegrationTests.this.exception = o_O;

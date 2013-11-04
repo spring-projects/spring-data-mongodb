@@ -136,6 +136,14 @@ public class AbstractMongoConfigurationUnitTests {
 		context.close();
 	}
 
+	/**
+	 * @see DATAMONGO-789
+	 */
+	@Test
+	public void authenticationDatabaseShouldDefaultToNull() {
+		assertThat(new SampleMongoConfiguration().getAuthenticationDatabaseName(), is(nullValue()));
+	}
+
 	private static void assertScanningDisabled(final String value) throws ClassNotFoundException {
 
 		AbstractMongoConfiguration configuration = new SampleMongoConfiguration() {

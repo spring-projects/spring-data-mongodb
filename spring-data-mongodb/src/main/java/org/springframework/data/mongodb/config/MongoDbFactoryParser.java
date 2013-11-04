@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2012 by the original author(s).
+ * Copyright 2011-2013 by the original author(s).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,6 +41,7 @@ import com.mongodb.MongoURI;
  * 
  * @author Jon Brisbin
  * @author Oliver Gierke
+ * @author Thomas Darimont
  */
 public class MongoDbFactoryParser extends AbstractBeanDefinitionParser {
 
@@ -70,6 +71,7 @@ public class MongoDbFactoryParser extends AbstractBeanDefinitionParser {
 		String uri = element.getAttribute("uri");
 		String mongoRef = element.getAttribute("mongo-ref");
 		String dbname = element.getAttribute("dbname");
+
 		BeanDefinition userCredentials = getUserCredentialsBeanDefinition(element, parserContext);
 
 		// Common setup
@@ -92,12 +94,9 @@ public class MongoDbFactoryParser extends AbstractBeanDefinitionParser {
 			dbFactoryBuilder.addConstructorArgValue(registerMongoBeanDefinition(element, parserContext));
 		}
 
-		dbname = StringUtils.hasText(dbname) ? dbname : "db";
-		dbFactoryBuilder.addConstructorArgValue(dbname);
-
-		if (userCredentials != null) {
-			dbFactoryBuilder.addConstructorArgValue(userCredentials);
-		}
+		dbFactoryBuilder.addConstructorArgValue(StringUtils.hasText(dbname) ? dbname : "db");
+		dbFactoryBuilder.addConstructorArgValue(userCredentials);
+		dbFactoryBuilder.addConstructorArgValue(element.getAttribute("authentication-dbname"));
 
 		BeanDefinitionBuilder writeConcernPropertyEditorBuilder = getWriteConcernPropertyEditorBuilder();
 
