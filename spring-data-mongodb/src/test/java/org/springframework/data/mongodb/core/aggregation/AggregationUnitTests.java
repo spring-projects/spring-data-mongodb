@@ -17,15 +17,16 @@ package org.springframework.data.mongodb.core.aggregation;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
+import static org.springframework.data.mongodb.core.DBObjectTestUtils.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.springframework.data.mongodb.core.DBObjectTestUtils;
 
 import com.mongodb.DBObject;
 
@@ -116,7 +117,47 @@ public class AggregationUnitTests {
 
 		@SuppressWarnings("unchecked")
 		DBObject secondProjection = ((List<DBObject>) agg.get("pipeline")).get(2);
-		DBObject fields = DBObjectTestUtils.getAsDBObject(secondProjection, "$project");
+		DBObject fields = getAsDBObject(secondProjection, "$project");
+		assertThat(fields.get("aCnt"), is((Object) 1));
+		assertThat(fields.get("a"), is((Object) "$_id.a"));
+	}
+
+	/**
+	 * @see DATAMONGO-791
+	 */
+	@Test
+	public void allowAggregationOperationsToBePassedAsIterable() {
+
+		List<AggregationOperation> ops = new ArrayList<AggregationOperation>();
+		ops.add(project("a"));
+		ops.add(group("a").count().as("aCnt"));
+		ops.add(project("aCnt", "a"));
+
+		DBObject agg = newAggregation(ops).toDbObject("foo", Aggregation.DEFAULT_CONTEXT);
+
+		@SuppressWarnings("unchecked")
+		DBObject secondProjection = ((List<DBObject>) agg.get("pipeline")).get(2);
+		DBObject fields = getAsDBObject(secondProjection, "$project");
+		assertThat(fields.get("aCnt"), is((Object) 1));
+		assertThat(fields.get("a"), is((Object) "$_id.a"));
+	}
+
+	/**
+	 * @see DATAMONGO-791
+	 */
+	@Test
+	public void allowTypedAggregationOperationsToBePassedAsIterable() {
+
+		List<AggregationOperation> ops = new ArrayList<AggregationOperation>();
+		ops.add(project("a"));
+		ops.add(group("a").count().as("aCnt"));
+		ops.add(project("aCnt", "a"));
+
+		DBObject agg = newAggregation(DBObject.class, ops).toDbObject("foo", Aggregation.DEFAULT_CONTEXT);
+
+		@SuppressWarnings("unchecked")
+		DBObject secondProjection = ((List<DBObject>) agg.get("pipeline")).get(2);
+		DBObject fields = getAsDBObject(secondProjection, "$project");
 		assertThat(fields.get("aCnt"), is((Object) 1));
 		assertThat(fields.get("a"), is((Object) "$_id.a"));
 	}
