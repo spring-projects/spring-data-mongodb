@@ -53,8 +53,27 @@ public class Aggregation {
 	 * 
 	 * @param operations must not be {@literal null} or empty.
 	 */
+	public static Aggregation newAggregation(List<? extends AggregationOperation> operations) {
+		return newAggregation(operations.toArray(new AggregationOperation[operations.size()]));
+	}
+
+	/**
+	 * Creates a new {@link Aggregation} from the given {@link AggregationOperation}s.
+	 * 
+	 * @param operations must not be {@literal null} or empty.
+	 */
 	public static Aggregation newAggregation(AggregationOperation... operations) {
 		return new Aggregation(operations);
+	}
+
+	/**
+	 * Creates a new {@link TypedAggregation} for the given type and {@link AggregationOperation}s.
+	 * 
+	 * @param type must not be {@literal null}.
+	 * @param operations must not be {@literal null} or empty.
+	 */
+	public static <T> TypedAggregation<T> newAggregation(Class<T> type, List<? extends AggregationOperation> operations) {
+		return newAggregation(type, operations.toArray(new AggregationOperation[operations.size()]));
 	}
 
 	/**
