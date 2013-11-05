@@ -13,7 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.repository;
+package org.springframework.data.mongodb.repository.config.lazy;
+
+import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.User;
 
 /**
  * @see DATAMONGO-780
@@ -21,5 +24,5 @@ package org.springframework.data.mongodb.repository;
  */
 public class ClassWithNestedRepository {
 
-	public static interface NestedUserRepository extends MongoRepository<User, Integer> {}
+	interface NestedUserRepository extends MongoRepository<User, Integer> {}
 }

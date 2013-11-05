@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.repository.config;
+package org.springframework.data.mongodb.repository.config.lazy;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
@@ -23,8 +23,8 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.ImportResource;
-import org.springframework.data.mongodb.repository.ClassWithNestedRepository.NestedUserRepository;
-import org.springframework.data.mongodb.repository.PersonRepository;
+import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
+import org.springframework.data.mongodb.repository.config.lazy.ClassWithNestedRepository.NestedUserRepository;
 import org.springframework.data.repository.support.Repositories;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -39,7 +39,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 public class NestedMongoRepositoriesJavaConfigTests {
 
 	@Configuration
-	@EnableMongoRepositories(basePackageClasses = PersonRepository.class, considerNestedRepositories = true)
+	@EnableMongoRepositories(considerNestedRepositories = true)
 	@ImportResource("classpath:infrastructure.xml")
 	static class Config {}
 

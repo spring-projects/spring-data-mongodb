@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2012 the original author or authors.
+ * Copyright 2011-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,15 +39,9 @@ import org.springframework.test.util.ReflectionTestUtils;
 @RunWith(MockitoJUnitRunner.class)
 public class MongoRepositoryFactoryBeanUnitTests {
 
-	@Mock
-	MongoOperations operations;
-
-	@Mock
-	MongoConverter converter;
-
-	@Mock
-	@SuppressWarnings("rawtypes")
-	MappingContext context;
+	@Mock MongoOperations operations;
+	@Mock MongoConverter converter;
+	@Mock @SuppressWarnings("rawtypes") MappingContext context;
 
 	@Test
 	@SuppressWarnings("rawtypes")
@@ -75,6 +69,7 @@ public class MongoRepositoryFactoryBeanUnitTests {
 		when(operations.getConverter()).thenReturn(converter);
 		when(converter.getMappingContext()).thenReturn(context);
 
+		factoryBean.setLazyInit(true);
 		factoryBean.setMongoOperations(operations);
 		factoryBean.afterPropertiesSet();
 

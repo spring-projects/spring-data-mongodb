@@ -11,5 +11,6 @@
 
 	<import resource="classpath:infrastructure.xml"/>
 	
-	<mongo:repositories base-package="org.springframework.data.mongodb.repository" consider-nested-repositories="true"/>
+	<mongo:repositories base-package="org.springframework.data.mongodb.repository.config.lazy" 
+		consider-nested-repositories="true"/>
 </beans>
