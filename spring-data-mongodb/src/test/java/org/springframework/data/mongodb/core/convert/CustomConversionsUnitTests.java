@@ -12,6 +12,7 @@ import java.util.UUID;
 
 import org.bson.types.Binary;
 import org.bson.types.ObjectId;
+import org.joda.time.DateTime;
 import org.junit.Test;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.DefaultConversionService;
@@ -171,6 +172,17 @@ public class CustomConversionsUnitTests {
 		assertThat(conversions.hasCustomReadTarget(String.class, URL.class), is(true));
 	}
 
+	/**
+	 * @see DATAMONGO-795
+	 */
+	@Test
+	@SuppressWarnings("rawtypes")
+	public void favorsCustomConverterForIndeterminedTargetType() {
+
+		CustomConversions conversions = new CustomConversions(Arrays.asList(DateTimeToStringConverter.INSTANCE));
+		assertThat(conversions.getCustomWriteTarget(DateTime.class, null), is(equalTo((Class) String.class)));
+	}
+
 	enum FormatToStringConverter implements Converter<Format, String> {
 		INSTANCE;
 
@@ -204,6 +216,15 @@ public class CustomConversionsUnitTests {
 		INSTANCE;
 		public Integer convert(String source) {
 			return 0;
+		}
+	}
+
+	enum DateTimeToStringConverter implements Converter<DateTime, String> {
+		INSTANCE;
+
+		@Override
+		public String convert(DateTime source) {
+			return "";
 		}
 	}
 }
