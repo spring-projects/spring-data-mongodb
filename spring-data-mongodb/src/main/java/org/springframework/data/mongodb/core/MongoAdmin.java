@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2012 the original author or authors.
+ * Copyright 2011-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import com.mongodb.Mongo;
  * Mongo server administration exposed via JMX annotations
  * 
  * @author Mark Pollack
+ * @author Thomas Darimont
  */
 @ManagedResource(description = "Mongo Admin Operations")
 public class MongoAdmin implements MongoAdminOperations {
@@ -34,6 +35,7 @@ public class MongoAdmin implements MongoAdminOperations {
 	private final Mongo mongo;
 	private String username;
 	private String password;
+	private String authenticationDatabaseName;
 
 	public MongoAdmin(Mongo mongo) {
 		Assert.notNull(mongo);
@@ -82,7 +84,16 @@ public class MongoAdmin implements MongoAdminOperations {
 		this.password = password;
 	}
 
+	/**
+	 * Sets the authenticationDatabaseName to use to authenticate with the Mongo database.
+	 * 
+	 * @param authenticationDatabaseName The authenticationDatabaseName to use.
+	 */
+	public void setAuthenticationDatabaseName(String authenticationDatabaseName) {
+		this.authenticationDatabaseName = authenticationDatabaseName;
+	}
+
 	DB getDB(String databaseName) {
-		return MongoDbUtils.getDB(mongo, databaseName, new UserCredentials(username, password));
+		return MongoDbUtils.getDB(mongo, databaseName, new UserCredentials(username, password), authenticationDatabaseName);
 	}
 }

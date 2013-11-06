@@ -49,6 +49,7 @@ import com.mongodb.Mongo;
  * 
  * @author Mark Pollack
  * @author Oliver Gierke
+ * @author Thomas Darimont
  */
 @Configuration
 public abstract class AbstractMongoConfiguration {
@@ -59,6 +60,15 @@ public abstract class AbstractMongoConfiguration {
 	 * @return must not be {@literal null}.
 	 */
 	protected abstract String getDatabaseName();
+
+	/**
+	 * Return the name of the authentication database to use.
+	 * 
+	 * @return must not be {@literal null}.
+	 */
+	protected String getAuthenticationDatabaseName() {
+		return getDatabaseName();
+	}
 
 	/**
 	 * Return the {@link Mongo} instance to connect to. Annotate with {@link Bean} in case you want to expose a
@@ -97,7 +107,7 @@ public abstract class AbstractMongoConfiguration {
 		if (credentials == null) {
 			return new SimpleMongoDbFactory(mongo(), getDatabaseName());
 		} else {
-			return new SimpleMongoDbFactory(mongo(), getDatabaseName(), credentials);
+			return new SimpleMongoDbFactory(mongo(), getDatabaseName(), credentials, getAuthenticationDatabaseName());
 		}
 	}
 

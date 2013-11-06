@@ -115,6 +115,21 @@ public class MongoNamespaceTests {
 	}
 
 	/**
+	 * @see DATAMONGO-789
+	 */
+	@Test
+	public void testThirdMongoDbFactory() {
+		assertTrue(ctx.containsBean("thirdMongoDbFactory"));
+		MongoDbFactory dbf = (MongoDbFactory) ctx.getBean("thirdMongoDbFactory");
+		Mongo mongo = (Mongo) getField(dbf, "mongo");
+		assertEquals("localhost", mongo.getAddress().getHost());
+		assertEquals(27017, mongo.getAddress().getPort());
+		assertEquals(new UserCredentials("joe", "secret"), getField(dbf, "credentials"));
+		assertEquals("database", getField(dbf, "databaseName"));
+		assertEquals("admin", getField(dbf, "authenticationDatabaseName"));
+	}
+
+	/**
 	 * @see DATAMONGO-140
 	 */
 	@Test
