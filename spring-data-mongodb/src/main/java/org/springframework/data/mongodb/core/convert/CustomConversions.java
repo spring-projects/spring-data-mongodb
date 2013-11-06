@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -86,12 +87,13 @@ public class CustomConversions {
 
 		Assert.notNull(converters);
 
-		this.readingPairs = new HashSet<ConvertiblePair>();
-		this.writingPairs = new HashSet<ConvertiblePair>();
+		this.readingPairs = new LinkedHashSet<ConvertiblePair>();
+		this.writingPairs = new LinkedHashSet<ConvertiblePair>();
 		this.customSimpleTypes = new HashSet<Class<?>>();
 		this.cache = new HashMap<Class<?>, HashMap<Class<?>, CacheValue>>();
 
 		this.converters = new ArrayList<Object>();
+		this.converters.addAll(converters);
 		this.converters.add(CustomToStringConverter.INSTANCE);
 		this.converters.add(BigDecimalToStringConverter.INSTANCE);
 		this.converters.add(StringToBigDecimalConverter.INSTANCE);
@@ -101,7 +103,6 @@ public class CustomConversions {
 		this.converters.add(StringToURLConverter.INSTANCE);
 		this.converters.add(DBObjectToStringConverter.INSTANCE);
 		this.converters.addAll(JodaTimeConverters.getConvertersToRegister());
-		this.converters.addAll(converters);
 
 		for (Object c : this.converters) {
 			registerConversion(c);
@@ -239,6 +240,7 @@ public class CustomConversions {
 	 * @return
 	 */
 	public Class<?> getCustomWriteTarget(Class<?> source, Class<?> expectedTargetType) {
+
 		Assert.notNull(source);
 		return getCustomTarget(source, expectedTargetType, writingPairs);
 	}
