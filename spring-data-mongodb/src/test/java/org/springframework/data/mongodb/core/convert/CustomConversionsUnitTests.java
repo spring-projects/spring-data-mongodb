@@ -12,7 +12,10 @@ import java.util.UUID;
 
 import org.bson.types.Binary;
 import org.bson.types.ObjectId;
+import org.joda.time.DateTime;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.core.convert.support.GenericConversionService;
@@ -26,6 +29,9 @@ import com.mongodb.DBRef;
  * @author Oliver Gierke
  */
 public class CustomConversionsUnitTests {
+
+  @Rule
+  public ExpectedException expectedException = ExpectedException.none();
 
 	@Test
 	@SuppressWarnings("unchecked")
@@ -52,7 +58,15 @@ public class CustomConversionsUnitTests {
 		assertThat(conversions.hasCustomReadTarget(String.class, Long.class), is(true));
 	}
 
-	@Test
+  @Test
+  public void shouldNotAllowMultipleConverterWhenNullIsExpected() {
+    expectedException.expect(IllegalStateException.class);
+    CustomConversions conversions = new CustomConversions(Arrays.asList(DateTimeToStringConverter.INSTANCE));
+
+    conversions.getCustomWriteTarget(DateTime.class, null);
+  }
+
+  @Test
 	public void considersTypesWeRegisteredConvertersForAsSimple() {
 
 		CustomConversions conversions = new CustomConversions(Arrays.asList(FormatToStringConverter.INSTANCE));
@@ -206,4 +220,13 @@ public class CustomConversionsUnitTests {
 			return 0;
 		}
 	}
+
+  enum DateTimeToStringConverter implements Converter<DateTime, String> {
+    INSTANCE;
+
+    @Override
+    public String convert(DateTime source) {
+      return "";
+    }
+  }
 }
