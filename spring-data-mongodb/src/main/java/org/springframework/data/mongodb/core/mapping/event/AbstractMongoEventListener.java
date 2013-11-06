@@ -126,13 +126,13 @@ public abstract class AbstractMongoEventListener<E> implements ApplicationListen
 
 	public void onAfterDelete(DBObject dbo) {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("onAfterConvert({})", dbo);
+			LOG.debug("onAfterDelete({})", dbo);
 		}
 	}
 
 	public void onBeforeDelete(DBObject dbo) {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("onAfterConvert({})", dbo);
+			LOG.debug("onBeforeDelete({})", dbo);
 		}
 	}
 }
