@@ -64,6 +64,7 @@ public class CustomConversions {
 
 	private final Set<ConvertiblePair> readingPairs;
 	private final Set<ConvertiblePair> writingPairs;
+  private final Set<Class<?>> duplicateWritingPairs;
 	private final Set<Class<?>> customSimpleTypes;
 	private final SimpleTypeHolder simpleTypeHolder;
 	private final Map<Class<?>, HashMap<Class<?>, CacheValue>> cache;
@@ -88,6 +89,7 @@ public class CustomConversions {
 
 		this.readingPairs = new HashSet<ConvertiblePair>();
 		this.writingPairs = new HashSet<ConvertiblePair>();
+    this.duplicateWritingPairs = new HashSet<Class<?>>();
 		this.customSimpleTypes = new HashSet<Class<?>>();
 		this.cache = new HashMap<Class<?>, HashMap<Class<?>, CacheValue>>();
 
@@ -107,8 +109,21 @@ public class CustomConversions {
 			registerConversion(c);
 		}
 
+    registerDuplicateSourcePairs();
+
 		this.simpleTypeHolder = new SimpleTypeHolder(customSimpleTypes, MongoSimpleTypes.HOLDER);
 	}
+
+  private void registerDuplicateSourcePairs() {
+    List<Class<?>> duplicateList = new ArrayList<Class<?>>();
+    for (ConvertiblePair typePair : writingPairs) {
+      Class<?> sourceType = typePair.getSourceType();
+      if(duplicateList.contains(sourceType)){
+        duplicateWritingPairs.add(sourceType);
+      }
+      duplicateList.add(sourceType);
+    }
+  }
 
 	/**
 	 * Returns the underlying {@link SimpleTypeHolder}.
@@ -240,7 +255,10 @@ public class CustomConversions {
 	 */
 	public Class<?> getCustomWriteTarget(Class<?> source, Class<?> expectedTargetType) {
 		Assert.notNull(source);
-		return getCustomTarget(source, expectedTargetType, writingPairs);
+    if(expectedTargetType == null && duplicateWritingPairs.contains(source)){
+      throw new IllegalStateException("Multiple convertible pairs have been found for source " + source);
+    }
+    return getCustomTarget(source, expectedTargetType, writingPairs);
 	}
 
 	/**
@@ -295,19 +313,19 @@ public class CustomConversions {
 		Assert.notNull(source);
 		Assert.notNull(pairs);
 
-		for (ConvertiblePair typePair : pairs) {
-			if (typePair.getSourceType().isAssignableFrom(source)) {
-				Class<?> targetType = typePair.getTargetType();
+    for (ConvertiblePair typePair : pairs) {
+      if(typePair.getSourceType().isAssignableFrom(source)){
+        Class<?> targetType = typePair.getTargetType();
 				if (expectedTargetType == null || targetType.isAssignableFrom(expectedTargetType)) {
-					return targetType;
-				}
-			}
-		}
+          return targetType;
+        }
+      }
+    }
 
-		return null;
-	}
+    return null;
+  }
 
-	private Class<?> getCustomReadTarget(Class<?> source, Class<?> expectedTargetType) {
+  private Class<?> getCustomReadTarget(Class<?> source, Class<?> expectedTargetType) {
 
 		Class<?> type = expectedTargetType == null ? PlaceholderType.class : expectedTargetType;
 
