@@ -39,6 +39,7 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
+import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.DB;
@@ -198,18 +199,17 @@ public class DefaultDbRefResolver implements DbRefResolver {
 		 */
 		@Override
 		public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy) throws Throwable {
-
-			ensureResolved();
-
-			return method.invoke(result, args);
+			return ReflectionUtils.isObjectMethod(method) ? method.invoke(obj, args) : method.invoke(ensureResolved(), args);
 		}
 
-		private void ensureResolved() {
+		private Object ensureResolved() {
 
 			if (!resolved) {
 				this.result = resolve();
 				this.resolved = true;
 			}
+
+			return this.result;
 		}
 
 		private void writeObject(ObjectOutputStream out) throws IOException {
