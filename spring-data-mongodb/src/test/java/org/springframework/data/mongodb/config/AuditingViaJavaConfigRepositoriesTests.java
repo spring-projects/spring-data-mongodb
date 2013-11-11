@@ -53,7 +53,7 @@ public class AuditingViaJavaConfigRepositoriesTests {
 	AuditablePerson auditor;
 
 	@Configuration
-	@EnableMongoAuditing
+	@EnableMongoAuditing(auditorAwareRef = "auditorProvider")
 	@EnableMongoRepositories(basePackageClasses = AuditablePersonRepository.class, considerNestedRepositories = true)
 	static class Config {
 
