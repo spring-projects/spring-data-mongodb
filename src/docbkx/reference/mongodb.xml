@@ -571,6 +571,64 @@ public class MongoConfiguration {
     </section>
   </section>
 
+  <section id="mongo.auditing">
+    <title>General auditing configuration</title>
+
+    <para>Activating auditing functionality is just a matter of adding the
+    Spring Data Mongo <literal>auditing</literal> namespace element to your
+    configuration:</para>
+
+    <example>
+      <title>Activating auditing in the Spring configuration</title>
+
+      <programlisting language="xml">&lt;mongo:auditing mapping-context-ref="customMappingContext" auditor-aware-ref="yourAuditorAwareImpl"/&gt;</programlisting>
+    </example>
+
+    <example>
+      <title>Auditing via Java Config</title>
+
+      <para>Since Spring Data MongoDB 1.4 Auditing can be enabled by
+      annotating a configuration class with the
+      <classname>EnableMongoAuditing</classname> annotation.</para>
+
+      <programlisting language="java">@Configuration
+@EnableMongoAuditing(auditorAwareRef="myAuditorProvider")
+@EnableMongoRepositories
+class Config {
+
+    @Bean
+    public AuditorAware&lt;AuditableUser&gt; myAuditorProvider() {
+        return new AuditorAwareImpl();
+    }
+}</programlisting>
+
+      <para>Note that you have to provide a bean that implements the
+      <classname>AuditorAware</classname> interface. By default the Auditing
+      infrastructure requires such a bean with the name
+      <code>auditorProvider</code> to be present. The bean name can be
+      configured via the <code>auditorAwareRef</code> attribute of the
+      <classname>EnableMongoAuditing</classname> annotation.</para>
+    </example>
+
+    <para>As you can see you have to provide a bean that implements the
+    <interfacename>AuditorAware</interfacename> interface which looks as
+    follows:</para>
+
+    <example>
+      <title><interfacename>AuditorAware</interfacename> interface</title>
+
+      <programlisting language="java">public interface AuditorAware&lt;T, ID extends Serializable&gt; {
+
+    T getCurrentAuditor();
+}</programlisting>
+    </example>
+
+    <para>Usually you will have some kind of authentication component in your
+    application that tracks the user currently working with the system. This
+    component should be <interfacename>AuditorAware</interfacename> and thus
+    allow seamless tracking of the auditor.</para>
+  </section>
+
   <section id="mongo-template">
     <title>Introduction to MongoTemplate</title>
 
@@ -2465,8 +2523,8 @@ project("a","b").and("foo").as("bar") // will generate {$project: {a: 1, b: 1, b
 
         <para>In this introductory example we want to aggregate a list of tags
         to get the occurence count of a particular tag from a MongoDB
-        collection called <code>"tags"</code> sorted by the occurrence count in
-        descending order. This example demonstrates the usage of grouping,
+        collection called <code>"tags"</code> sorted by the occurrence count
+        in descending order. This example demonstrates the usage of grouping,
         sorting, projections (selection) and unwinding (result
         splitting).</para>
 
