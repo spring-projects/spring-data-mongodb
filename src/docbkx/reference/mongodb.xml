@@ -579,21 +579,20 @@ public class MongoConfiguration {
     configuration:</para>
 
     <example>
-      <title>Activating auditing in the Spring configuration</title>
+      <title>Activating auditing using XML configuration</title>
 
       <programlisting language="xml">&lt;mongo:auditing mapping-context-ref="customMappingContext" auditor-aware-ref="yourAuditorAwareImpl"/&gt;</programlisting>
     </example>
 
-    <example>
-      <title>Auditing via Java Config</title>
+    <para>Since Spring Data MongoDB 1.4 auditing can be enabled by annotating
+    a configuration class with the <classname>@EnableMongoAuditing</classname>
+    annotation.</para>
 
-      <para>Since Spring Data MongoDB 1.4 Auditing can be enabled by
-      annotating a configuration class with the
-      <classname>EnableMongoAuditing</classname> annotation.</para>
+    <example>
+      <title>Activating auditing using JavaConfig</title>
 
       <programlisting language="java">@Configuration
-@EnableMongoAuditing(auditorAwareRef="myAuditorProvider")
-@EnableMongoRepositories
+@EnableMongoAuditing
 class Config {
 
     @Bean
@@ -601,34 +600,17 @@ class Config {
         return new AuditorAwareImpl();
     }
 }</programlisting>
-
-      <para>Note that if you want to record information about the create-User
-      or modify-User, you can delcare a bean that implements the
-      <classname>AuditorAware</classname> interface. The bean name can also be
-      configured explicitly via the <code>auditorAwareRef</code> attribute of
-      the <classname>EnableMongoAuditing</classname> annotation, this can be
-      used to resolve an ambiguity. If no <code>auditorAwareRef</code> is
-      specified explicitly we try to discover and autowire an
-      <classname>AuditorAware</classname> implementation.</para>
     </example>
 
-    <para>As you can see you have to provide a bean that implements the
-    <interfacename>AuditorAware</interfacename> interface which looks as
-    follows:</para>
-
-    <example>
-      <title><interfacename>AuditorAware</interfacename> interface</title>
-
-      <programlisting language="java">public interface AuditorAware&lt;T, ID extends Serializable&gt; {
-
-    T getCurrentAuditor();
-}</programlisting>
-    </example>
-
-    <para>Usually you will have some kind of authentication component in your
-    application that tracks the user currently working with the system. This
-    component should be <interfacename>AuditorAware</interfacename> and thus
-    allow seamless tracking of the auditor.</para>
+    <para>If you expose a bean of type
+    <interfacename>AuditorAware</interfacename> to the
+    <interfacename>ApplicationContext</interfacename>, the auditing
+    infrastructure will pick it up automatically and use it to determine the
+    current user to be set on domain types. If you have multiple
+    implementations registered in the
+    <interfacename>ApplicationContext</interfacename>, you can select the one
+    to be used by explicitly setting the <code>auditorAwareRef</code>
+    attribute of <interfacename>@EnableJpaAuditing</interfacename>.</para>
   </section>
 
   <section id="mongo-template">

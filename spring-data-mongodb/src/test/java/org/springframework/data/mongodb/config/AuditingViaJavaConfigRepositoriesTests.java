@@ -43,6 +43,7 @@ import com.mongodb.MongoClient;
  * Integration tests for auditing via Java config.
  * 
  * @author Thomas Darimont
+ * @author Oliver Gierke
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration
@@ -68,6 +69,7 @@ public class AuditingViaJavaConfigRepositoriesTests {
 		}
 
 		@Bean
+		@SuppressWarnings("unchecked")
 		public AuditorAware<AuditablePerson> auditorProvider() {
 			return mock(AuditorAware.class);
 		}

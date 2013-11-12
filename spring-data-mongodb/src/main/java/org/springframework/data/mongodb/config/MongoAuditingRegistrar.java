@@ -34,10 +34,12 @@ import org.springframework.util.Assert;
  * {@link ImportBeanDefinitionRegistrar} to enable {@link EnableMongoAuditing} annotation.
  * 
  * @author Thomas Darimont
+ * @author Oliver Gierke
  */
 class MongoAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport {
 
-	/* (non-Javadoc)
+	/* 
+	 * (non-Javadoc)
 	 * @see org.springframework.data.auditing.config.AuditingBeanDefinitionRegistrarSupport#getAnnotation()
 	 */
 	@Override
@@ -45,41 +47,44 @@ class MongoAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport {
 		return EnableMongoAuditing.class;
 	}
 
-	/* (non-Javadoc)
+	/* 
+	 * (non-Javadoc)
 	 * @see org.springframework.data.auditing.config.AuditingBeanDefinitionRegistrarSupport#registerBeanDefinitions(org.springframework.core.type.AnnotationMetadata, org.springframework.beans.factory.support.BeanDefinitionRegistry)
 	 */
 	@Override
 	public void registerBeanDefinitions(AnnotationMetadata annotationMetadata, BeanDefinitionRegistry registry) {
 
-		Assert.notNull(annotationMetadata, "annotationMetadata must not be null!");
-		Assert.notNull(annotationMetadata, "registry must not be null!");
+		Assert.notNull(annotationMetadata, "AnnotationMetadata must not be null!");
+		Assert.notNull(registry, "BeanDefinitionRegistry must not be null!");
 
 		registerIsNewStrategyFactoryIfNecessary(registry);
 		super.registerBeanDefinitions(annotationMetadata, registry);
 	}
 
-	/* (non-Javadoc)
+	/* 
+	 * (non-Javadoc)
 	 * @see org.springframework.data.auditing.config.AuditingBeanDefinitionRegistrarSupport#getAuditHandlerBeanDefinitionBuilder(org.springframework.data.auditing.config.AnnotationAuditingConfiguration)
 	 */
 	@Override
 	protected BeanDefinitionBuilder getAuditHandlerBeanDefinitionBuilder(AnnotationAuditingConfiguration configuration) {
 
-		Assert.notNull(configuration, "configuration must not be null!");
+		Assert.notNull(configuration, "AnnotationAuditingConfiguration must not be null!");
 
 		return configureDefaultAuditHandlerAttributes(configuration,
 				BeanDefinitionBuilder.rootBeanDefinition(IsNewAwareAuditingHandler.class)).addConstructorArgReference(
 				BeanNames.IS_NEW_STRATEGY_FACTORY);
 	}
 
-	/* (non-Javadoc)
+	/* 
+	 * (non-Javadoc)
 	 * @see org.springframework.data.auditing.config.AuditingBeanDefinitionRegistrarSupport#registerAuditListener(org.springframework.beans.factory.config.BeanDefinition, org.springframework.beans.factory.support.BeanDefinitionRegistry)
 	 */
 	@Override
 	protected void registerAuditListenerBeanDefinition(BeanDefinition auditingHandlerDefinition,
 			BeanDefinitionRegistry registry) {
 
-		Assert.notNull(auditingHandlerDefinition, "auditingHandlerDefinition must not be null!");
-		Assert.notNull(registry, "registry must not be null!");
+		Assert.notNull(auditingHandlerDefinition, "BeanDefinition must not be null!");
+		Assert.notNull(registry, "BeanDefinitionRegistry must not be null!");
 
 		registerInfrastructureBeanWithId(BeanDefinitionBuilder.rootBeanDefinition(AuditingEventListener.class)
 				.addConstructorArgValue(auditingHandlerDefinition).getRawBeanDefinition(),
