@@ -35,7 +35,7 @@ import org.springframework.data.mongodb.core.mapping.event.BeforeConvertEvent;
 public class AuditingIntegrationTests {
 
 	@Test
-	public void enablesAuditingAndSetsPropertiesAccordingly() {
+	public void enablesAuditingAndSetsPropertiesAccordingly() throws Exception {
 
 		ApplicationContext context = new ClassPathXmlApplicationContext("auditing.xml", getClass());
 
@@ -46,6 +46,7 @@ public class AuditingIntegrationTests {
 		assertThat(entity.created, is(notNullValue()));
 		assertThat(entity.modified, is(entity.created));
 
+		Thread.sleep(10);
 		entity.id = 1L;
 		event = new BeforeConvertEvent<Entity>(entity);
 		context.publishEvent(event);
