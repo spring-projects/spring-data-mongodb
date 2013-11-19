@@ -1,6 +1,68 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 1.4.0.M1 (2013-11-19)
+---------------------------------------------
+** Bug
+    * [DATAMONGO-534] - The GridFs query execution does not return sorted resources, when the sorting fields are defined in the query definition
+    * [DATAMONGO-630] - Add support of $setOnInsert modifier for upsert
+    * [DATAMONGO-746] - IndexInfo cannot be read for indices created via mongo shell
+    * [DATAMONGO-752] - QueryMapper prevents searching for values that start with a $ [dollarsign]
+    * [DATAMONGO-753] - Add support for nested field references in group operations
+    * [DATAMONGO-758] - Reject excludes other than _id in projection operations
+    * [DATAMONGO-759] - Render group operation without non synthetic fields correctly.
+    * [DATAMONGO-761] - ClassCastException in SpringDataMongodbSerializer.getKeyForPath
+    * [DATAMONGO-768] - Improve documentation of how to use @PersistenceConstructor
+    * [DATAMONGO-788] - Projection operations do not render synthetic fields properly.
+    * [DATAMONGO-789] - Support login via different (e.g. admin) authentication database
+    * [DATAMONGO-795] - When adding custom converters to the mongo template it is possible to get unpredictable behaviour
+** Improvement
+    * [DATAMONGO-757] - Projections should follow mongodb conventions more precisely.
+    * [DATAMONGO-764] - Add support for SSL connections to Mongo
+    * [DATAMONGO-766] - Allow nested field references on properties through e.g. @Field("a.b")
+    * [DATAMONGO-769] - Support arithmetic operators for properties
+    * [DATAMONGO-770] - Repository - findBy<Field>IgnoreCase doesnt work
+    * [DATAMONGO-771] - Saving raw JSON through MongoTemplate.insert(…) fails
+    * [DATAMONGO-774] - Support SpEL expressions to define arithmetical projection operations in the aggregation framework
+    * [DATAMONGO-776] - TypeBasedAggregationOperationContext should use MappingContext.getPersistentPropertyPath(String, Class<?>)
+    * [DATAMONGO-780] - Add support for nested repositories
+    * [DATAMONGO-782] - Typo in reference documentation
+    * [DATAMONGO-785] - Add support for geospatial 2Dsphere and geohaystack index types
+    * [DATAMONGO-787] - Upgrade to Spring 3.2.4
+    * [DATAMONGO-791] - make newAggregation() method to accept list
+    * [DATAMONGO-793] - Adapt to changes in Spring Data Commons triggered by repository initialization changes
+    * [DATAMONGO-800] - AuditingIntegrationTests fail on fast machines
+** New Feature
+    * [DATAMONGO-348] - Lazy Load for DbRef
+    * [DATAMONGO-653] - Support for index operations in GridFsOperations
+    * [DATAMONGO-760] - Add support for custom findAll Queries
+    * [DATAMONGO-792] - Add support to configure Auditing via JavaConfig.
+** Task
+    * [DATAMONGO-777] - Upgrade to Mongo Java Driver in 2.11
+
+Changes in version 1.3.2.RELEASE (2013-10-25)
+---------------------------------------------
+** Bug
+    * [DATAMONGO-746] IndexInfo cannot be read for indices created via mongo shell
+    * [DATAMONGO-752] QueryMapper prevents searching for values that start with a $ [dollarsign]
+    * [DATAMONGO-753] Add support for nested field references in group operations
+    * [DATAMONGO-758] Reject excludes other than _id in projection operations
+    * [DATAMONGO-759] Render group operation without non synthetic fields correctly.
+    * [DATAMONGO-761] ClassCastException in SpringDataMongodbSerializer.getKeyForPath
+    * [DATAMONGO-768] Improve documentation of how to use @PersistenceConstructor
+
+** Improvement
+    * [DATAMONGO-757] - Projections should follow mongodb conventions more precisely.
+    * [DATAMONGO-769] - Support arithmetic operators for properties
+    * [DATAMONGO-771] - Saving raw JSON through MongoTemplate.insert(…) fails
+** Task
+    * [DATAMONGO-772] - Release 1.3.2
+
+Changes in version 1.3.1.RELEASE (2013-09-09)
+---------------------------------------------
+** Task
+    * [DATAMONGO-751] Upgraded to Spring Data Commons 1.6.1.
+
 Changes in version 1.3.0.RELEASE (2013-09-09)
 ---------------------------------------------
 ** Bug

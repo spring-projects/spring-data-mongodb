@@ -15,7 +15,7 @@
 	<parent>
 		<groupId>org.springframework.data.build</groupId>
 		<artifactId>spring-data-parent</artifactId>
-		<version>1.3.0.BUILD-SNAPSHOT</version>
+		<version>1.3.0.M1</version>
 		<relativePath>../spring-data-build/parent/pom.xml</relativePath>
 	</parent>
 	
@@ -29,7 +29,7 @@
 	<properties>
 		<project.type>multi</project.type>
 		<dist.id>spring-data-mongodb</dist.id>
-		<springdata.commons>1.7.0.BUILD-SNAPSHOT</springdata.commons>
+		<springdata.commons>1.7.0.M1</springdata.commons>
 		<mongo>2.11.3</mongo>
 	</properties>
 	
@@ -37,11 +37,11 @@
 		<developer>
 			<id>ogierke</id>
 			<name>Oliver Gierke</name>
-			<email>ogierke at vmware.com</email>
-			<organization>SpringSource</organization>
-			<organizationUrl>http://www.springsource.com</organizationUrl>
+			<email>ogierke at gopivotal.com</email>
+			<organization>Pivotal</organization>
+			<organizationUrl>http://www.gopivotal.com</organizationUrl>
 			<roles>
-				<role>Project Lean</role>
+				<role>Project Lead</role>
 			</roles>
 			<timezone>+1</timezone>
 		</developer>
@@ -49,8 +49,8 @@
 			<id>trisberg</id>
 			<name>Thomas Risberg</name>
 			<email>trisberg at vmware.com</email>
-			<organization>SpringSource</organization>
-			<organizationUrl>http://www.springsource.com</organizationUrl>
+			<organization>Pivotal</organization>
+			<organizationUrl>http://www.gopivotal.com</organizationUrl>
 			<roles>
 				<role>Developer</role>
 			</roles>
@@ -59,9 +59,9 @@
 		<developer>
 			<id>mpollack</id>
 			<name>Mark Pollack</name>
-			<email>mpollack at vmware.com</email>
-			<organization>SpringSource</organization>
-			<organizationUrl>http://www.springsource.com</organizationUrl>
+			<email>mpollack at gopivotal.com</email>
+			<organization>Pivotal</organization>
+			<organizationUrl>http://www.gopivotal.com</organizationUrl>
 			<roles>
 				<role>Developer</role>
 			</roles>
@@ -70,13 +70,24 @@
 		<developer>
 			<id>jbrisbin</id>
 			<name>Jon Brisbin</name>
-			<email>jbrisbin at vmware.com</email>
-			<organization>SpringSource</organization>
-			<organizationUrl>http://www.springsource.com</organizationUrl>
+			<email>jbrisbin at gopivotal.com</email>
+			<organization>Pivotal</organization>
+			<organizationUrl>http://www.gopivotal.com</organizationUrl>
 			<roles>
 				<role>Developer</role>
 			</roles>
 			<timezone>-6</timezone>
+		</developer>
+		<developer>
+			<id>tdarimont</id>
+			<name>Thomas Darimont</name>
+			<email>tdarimont at gopivotal.com</email>
+			<organization>Pivotal</organization>
+			<organizationUrl>http://www.gopivotal.com</organizationUrl>
+			<roles>
+				<role>Developer</role>
+			</roles>
+			<timezone>+1</timezone>
 		</developer>
 	</developers>
 
@@ -91,8 +102,8 @@
 	
 	<repositories>
 		<repository>
-			<id>spring-lib-snapshot</id>
-			<url>http://repo.springsource.org/libs-snapshot-local</url>
+			<id>spring-libs-milestone</id>
+			<url>http://repo.springsource.org/libs-milestone-local</url>
 		</repository>
 	</repositories>
 
