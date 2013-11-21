@@ -213,6 +213,7 @@ public class MongoTemplateTests {
 
 	/**
 	 * @see DATAMONGO-480
+	 * @see DATAMONGO-799
 	 */
 	@Test
 	public void throwsExceptionForUpdateWithInvalidPushOperator() {
@@ -228,8 +229,10 @@ public class MongoTemplateTests {
 
 		thrown.expect(DataIntegrityViolationException.class);
 		thrown.expectMessage("Execution");
-		thrown.expectMessage("$push");
+		thrown.expectMessage("UPDATE");
+		thrown.expectMessage("array");
 		thrown.expectMessage("firstName");
+		thrown.expectMessage("failed");
 
 		Query query = new Query(Criteria.where("firstName").is("Amol"));
 		Update upd = new Update().push("age", 29);
