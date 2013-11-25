@@ -60,6 +60,7 @@ public class GridFsIndexOperationsTests {
 
 	@Before
 	public void setUp() {
+
 		MongoTemplate mongoTemplate = new MongoTemplate(factory);
 		mongoTemplate.dropCollection(BUCKET.concat(".files"));
 		mongoTemplate.dropCollection(BUCKET.concat(".chunks"));
@@ -69,6 +70,7 @@ public class GridFsIndexOperationsTests {
 
 	@Test
 	public void testEnsureIndex() throws IOException {
+
 		// when
 		operations.indexOps().ensureIndex(new Index().on("md5", Direction.ASC).unique());
 
@@ -90,6 +92,7 @@ public class GridFsIndexOperationsTests {
 
 	@Test
 	public void testEnsureIndexOnMetadata() throws IOException {
+
 		// when
 		operations.indexOps().ensureIndex(new Index().on("metadata.key", Direction.ASC));
 
@@ -108,6 +111,7 @@ public class GridFsIndexOperationsTests {
 
 	@Test
 	public void testDropIndex() throws IOException {
+
 		// given
 		operations.indexOps().ensureIndex(new Index().on("md5", Direction.ASC).unique());
 

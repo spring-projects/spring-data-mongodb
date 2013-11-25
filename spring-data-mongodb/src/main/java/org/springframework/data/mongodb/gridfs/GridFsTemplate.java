@@ -163,6 +163,7 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#execute(org.springframework.data.mongodb.core.CollectionCallback)
 	 */
 	public <T> T execute(CollectionCallback<T> callback) {
+
 		Assert.notNull(callback);
 		try {
 			DBCollection collection = getFilesCollection();
@@ -215,6 +216,7 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#getFilesCollection()
 	 */
 	public DBCollection getFilesCollection() {
+
 		try {
 			DB db = getGridFs().getDB();
 			String fsCollection = bucket == null ? "fs.files" : bucket.concat(".files");
@@ -289,6 +291,7 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 	 * @return translated {@link DataAccessException} or {@link RuntimeException} if translation fails
 	 */
 	private RuntimeException potentiallyConvertRuntimeException(RuntimeException ex) {
+
 		RuntimeException resolved = this.exceptionTranslator.translateExceptionIfPossible(ex);
 		return resolved == null ? ex : resolved;
 	}

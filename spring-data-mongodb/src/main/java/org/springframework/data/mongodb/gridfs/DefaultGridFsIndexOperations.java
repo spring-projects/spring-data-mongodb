@@ -48,9 +48,11 @@ public class DefaultGridFsIndexOperations implements GridFsIndexOperations {
 	 */
 	@Override
 	public void ensureIndex(final IndexDefinition indexDefinition) {
+
 		gridFsOperations.execute(new CollectionCallback<Object>() {
 			@Override
 			public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
+
 				DBObject indexOptions = indexDefinition.getIndexOptions();
 				if (indexOptions != null) {
 					collection.ensureIndex(indexDefinition.getIndexKeys(), indexOptions);
@@ -67,9 +69,11 @@ public class DefaultGridFsIndexOperations implements GridFsIndexOperations {
 	 */
 	@Override
 	public void dropIndex(final String name) {
+
 		gridFsOperations.execute(new CollectionCallback<Void>() {
 			@Override
 			public Void doInCollection(DBCollection collection) throws MongoException, DataAccessException {
+
 				collection.dropIndex(name);
 				return null;
 			}

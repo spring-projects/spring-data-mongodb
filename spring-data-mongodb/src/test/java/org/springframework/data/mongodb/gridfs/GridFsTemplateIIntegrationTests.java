@@ -171,6 +171,7 @@ public class GridFsTemplateIIntegrationTests {
 	 */
 	@Test
 	public void testEnsureIndex() {
+
 		// when
 		operations.indexOps().ensureIndex(new Index().on("md5", Direction.ASC).unique());
 
@@ -195,6 +196,7 @@ public class GridFsTemplateIIntegrationTests {
 	 */
 	@Test
 	public void testDropIndex() {
+
 		// given
 		operations.indexOps().ensureIndex(new Index().on("md5", Direction.ASC).unique());
 
