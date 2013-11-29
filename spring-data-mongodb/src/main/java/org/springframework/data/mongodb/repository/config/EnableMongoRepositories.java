@@ -81,7 +81,7 @@ public @interface EnableMongoRepositories {
 	 * 
 	 * @return
 	 */
-	String repositoryImplementationPostfix() default "";
+	String repositoryImplementationPostfix() default "Impl";
 
 	/**
 	 * Configures the location of where to find the Spring Data named queries properties file. Will default to
