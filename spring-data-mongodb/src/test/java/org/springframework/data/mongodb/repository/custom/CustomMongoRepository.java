@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 the original author or authors.
+ * Copyright 2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,22 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.repository;
+package org.springframework.data.mongodb.repository.custom;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
+import java.util.List;
 
-@Document
-public class User {
+import org.springframework.data.mongodb.repository.User;
+import org.springframework.data.repository.Repository;
 
-	@Id String id;
-	String username;
+/**
+ * @author Thomas Darimont
+ */
+public interface CustomMongoRepository extends Repository<User, String> {
 
-	public String getUsername() {
-		return username;
-	}
-
-	public void setUsername(String username) {
-		this.username = username;
-	}
+	List<User> findByUsernameCustom(String username);
 }
