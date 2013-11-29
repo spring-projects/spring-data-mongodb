@@ -2054,6 +2054,36 @@ public class MongoTemplateTests {
 		assertThat(result.get(0).id, is(id));
 		assertThat(result.get(0).field, is(value));
 	}
+	
+	/**
+	 * @see DATAMONGO-795
+	 */
+	@Test
+	public void ensureCustomConverterTakesPriorityOverDefault() {
+		
+		CustomConversions conversions = new CustomConversions( Arrays.asList( 
+				new Converter<Date,DateTime>()
+				{
+					@Override
+					public DateTime convert( Date source )
+					{
+						return new DateTime(source, DateTimeZone.forID("Asia/Yekaterinburg"));
+					}
+				} ) );
+		
+		MongoMappingContext mappingContext = new MongoMappingContext();
+		mappingContext.setSimpleTypeHolder(conversions.getSimpleTypeHolder());
+		mappingContext.initialize();
+
+		MappingMongoConverter mappingConverter = new MappingMongoConverter(factory, mappingContext);
+		mappingConverter.setCustomConversions(conversions);
+		mappingConverter.afterPropertiesSet();
+
+		MongoTemplate mappingTemplate = new MongoTemplate(factory, mappingConverter);
+		DateTime dateTime = mappingTemplate.getConverter().getConversionService().convert( new Date(), DateTime.class );
+		
+		assertThat(dateTime.getZone(), is(DateTimeZone.forID( "Asia/Yekaterinburg" )));
+	}
 
 	static interface Model {
 		String value();
