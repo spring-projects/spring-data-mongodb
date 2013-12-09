@@ -88,15 +88,17 @@ public class TypeBasedAggregationOperationContext implements AggregationOperatio
 	 */
 	@Override
 	public FieldReference getReference(String name) {
-		PropertyPath path = PropertyPath.from(name, type);
-
-		PersistentPropertyPath<MongoPersistentProperty> propertyPath = mappingContext.getPersistentPropertyPath(path);
-
-		return getReferenceFor(field(path.getLeafProperty().getSegment(),
-				propertyPath.toDotPath(MongoPersistentProperty.PropertyToFieldNameConverter.INSTANCE)));
+		return getReferenceFor(field(name));
 	}
 
 	private FieldReference getReferenceFor(Field field) {
-		return new FieldReference(new ExposedField(field, true));
+
+		PropertyPath path = PropertyPath.from(field.getTarget(), type);
+
+		PersistentPropertyPath<MongoPersistentProperty> propertyPath = mappingContext.getPersistentPropertyPath(path);
+		Field mappedField = field(propertyPath.getLeafProperty().getName(),
+				propertyPath.toDotPath(MongoPersistentProperty.PropertyToFieldNameConverter.INSTANCE));
+
+		return new FieldReference(new ExposedField(mappedField, true));
 	}
 }

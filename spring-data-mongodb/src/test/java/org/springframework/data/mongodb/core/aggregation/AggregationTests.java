@@ -23,10 +23,12 @@ import static org.springframework.data.mongodb.core.query.Criteria.*;
 
 import java.io.BufferedInputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Scanner;
 
+import org.joda.time.LocalDateTime;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -36,6 +38,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.dao.DataAccessException;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.CollectionCallback;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
@@ -551,6 +554,40 @@ public class AggregationTests {
 		assertThat((Integer) items.get(1).get("y"), is(1));
 	}
 
+	/**
+	 * @see DATAMONGO-806
+	 */
+	@Test
+	public void shouldAllowGroupByIdFields() {
+
+		mongoTemplate.dropCollection(User.class);
+
+		LocalDateTime now = new LocalDateTime();
+
+		User user1 = new User("u1", new PushMessage("1", "aaa", now.toDate()));
+		User user2 = new User("u2", new PushMessage("2", "bbb", now.minusDays(2).toDate()));
+		User user3 = new User("u3", new PushMessage("3", "ccc", now.minusDays(1).toDate()));
+
+		mongoTemplate.save(user1);
+		mongoTemplate.save(user2);
+		mongoTemplate.save(user3);
+
+		Aggregation agg = newAggregation( //
+				project("id", "msgs"), //
+				unwind("msgs"), //
+				match(where("msgs.createDate").gt(now.minusDays(1).toDate())), //
+				group("id").push("msgs").as("msgs") //
+		);
+
+		AggregationResults<DBObject> results = mongoTemplate.aggregate(agg, User.class, DBObject.class);
+
+		List<DBObject> mappedResults = results.getMappedResults();
+
+		DBObject firstItem = mappedResults.get(0);
+		assertThat(firstItem.get("_id"), is(notNullValue()));
+		assertThat(String.valueOf(firstItem.get("_id")), is("u1"));
+	}
+
 	private void assertLikeStats(LikeStats like, String id, long count) {
 
 		assertThat(like, is(notNullValue()));
@@ -634,4 +671,37 @@ public class AggregationTests {
 		}
 	}
 
+	/**
+	 * @see DATAMONGO-806
+	 */
+	static class User {
+
+		@Id String id;
+		List<PushMessage> msgs;
+
+		public User() {}
+
+		public User(String id, PushMessage... msgs) {
+			this.id = id;
+			this.msgs = Arrays.asList(msgs);
+		}
+	}
+
+	/**
+	 * @see DATAMONGO-806
+	 */
+	static class PushMessage {
+
+		@Id String id;
+		String content;
+		Date createDate;
+
+		public PushMessage() {}
+
+		public PushMessage(String id, String content, Date createDate) {
+			this.id = id;
+			this.content = content;
+			this.createDate = createDate;
+		}
+	}
 }
