@@ -23,7 +23,10 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mapping.model.MappingException;
+import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
+import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
@@ -76,12 +79,23 @@ public class TypeBasedAggregationOperationContextUnitTests {
 		assertThat(context.getReference(field), is(context.getReference("bar.name")));
 	}
 
+	/**
+	 * @see DATAMONGO-806
+	 */
+	@Test
+	public void aliasesIdFieldCorrectly() {
+
+		AggregationOperationContext context = getContext(Foo.class);
+		assertThat(context.getReference("id"), is(new FieldReference(new ExposedField(Fields.field("id", "_id"), true))));
+	}
+
 	private TypeBasedAggregationOperationContext getContext(Class<?> type) {
 		return new TypeBasedAggregationOperationContext(type, context, mapper);
 	}
 
 	static class Foo {
 
+		@Id String id;
 		Bar bar;
 	}
 

@@ -34,7 +34,6 @@ import java.util.Scanner;
 import org.joda.time.LocalDateTime;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -749,39 +748,10 @@ public class AggregationTests {
 		assertThat((Integer) items.get(1).get("y"), is(1));
 	}
 
-	static class User {
-
-		@Id String id;
-		List<PushMessage> msgs;
-
-		public User() {}
-
-		public User(String id, PushMessage... msgs) {
-			this.id = id;
-			this.msgs = Arrays.asList(msgs);
-		}
-	}
-
-	static class PushMessage {
-
-		@Id String id;
-		String content;
-		Date createDate;
-
-		public PushMessage() {}
-
-		public PushMessage(String id, String content, Date createDate) {
-			this.id = id;
-			this.content = content;
-			this.createDate = createDate;
-		}
-	}
-
 	/**
 	 * @see DATAMONGO-806
 	 */
 	@Test
-	@Ignore
 	public void shouldAllowGroupByIdFields() {
 
 		mongoTemplate.dropCollection(User.class);
@@ -806,7 +776,6 @@ public class AggregationTests {
 		AggregationResults<DBObject> results = mongoTemplate.aggregate(agg, User.class, DBObject.class);
 
 		List<DBObject> mappedResults = results.getMappedResults();
-		System.out.println(mappedResults);
 
 		DBObject firstItem = mappedResults.get(0);
 		assertThat(firstItem.get("_id"), is(notNullValue()));
@@ -896,4 +865,37 @@ public class AggregationTests {
 		}
 	}
 
+	/**
+	 * @see DATAMONGO-806
+	 */
+	static class User {
+
+		@Id String id;
+		List<PushMessage> msgs;
+
+		public User() {}
+
+		public User(String id, PushMessage... msgs) {
+			this.id = id;
+			this.msgs = Arrays.asList(msgs);
+		}
+	}
+
+	/**
+	 * @see DATAMONGO-806
+	 */
+	static class PushMessage {
+
+		@Id String id;
+		String content;
+		Date createDate;
+
+		public PushMessage() {}
+
+		public PushMessage(String id, String content, Date createDate) {
+			this.id = id;
+			this.content = content;
+			this.createDate = createDate;
+		}
+	}
 }

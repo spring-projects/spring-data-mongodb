@@ -21,7 +21,6 @@ import java.util.Collections;
 import java.util.List;
 
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
-import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
 import org.springframework.data.mongodb.core.aggregation.ProjectionOperation.ProjectionOperationBuilder.FieldProjection;
 import org.springframework.util.Assert;
 
@@ -626,8 +625,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 				if (value == null || Boolean.TRUE.equals(value)) {
 
 					// check whether referenced field exists in the context
-					FieldReference reference = context.getReference(field.getTarget());
-					return reference.isSynthetic() && !field.isAliased() ? 1 : reference.toString();
+					return context.getReference(field).getReferenceValue();
 
 				} else if (Boolean.FALSE.equals(value)) {
 
