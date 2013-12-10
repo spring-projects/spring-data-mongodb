@@ -47,6 +47,7 @@ import com.mongodb.DBRef;
  */
 public class QueryMapper {
 
+	private static final Integer EXCLUDED_PROPERTY_MARKER = Integer.valueOf(0);
 	private static final List<String> DEFAULT_ID_NAMES = Arrays.asList("id", "_id");
 
 	private final ConversionService conversionService;
@@ -200,7 +201,7 @@ public class QueryMapper {
 			return getMappedKeyword(new Keyword((DBObject) value), null);
 		}
 
-		if (documentField.isAssociation()) {
+		if (documentField.isAssociation() && !EXCLUDED_PROPERTY_MARKER.equals(value)) {
 			return convertAssociation(value, documentField.getProperty());
 		}
 
@@ -248,7 +249,7 @@ public class QueryMapper {
 	 */
 	private Object convertAssociation(Object source, MongoPersistentProperty property) {
 
-		if (property == null || !property.isAssociation()) {
+		if (property == null || !property.isAssociation() || source == null || source instanceof DBRef) {
 			return source;
 		}
 
@@ -270,7 +271,7 @@ public class QueryMapper {
 			return result;
 		}
 
-		return source == null || source instanceof DBRef ? source : converter.toDBRef(source, property);
+		return property.isEntity() ? converter.toDBRef(source, property) : source;
 	}
 
 	/**
