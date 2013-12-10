@@ -200,11 +200,26 @@ public class QueryMapper {
 			return getMappedKeyword(new Keyword((DBObject) value), null);
 		}
 
-		if (documentField.isAssociation()) {
+		if (isAssociationConversionNecessary(documentField, value)) {
 			return convertAssociation(value, documentField.getProperty());
 		}
 
 		return convertSimpleOrDBObject(value, documentField.getPropertyEntity());
+	}
+
+	/**
+	 * Returns whether the given {@link Field} represents an association reference that together with the given value
+	 * requires conversion to a {@link org.springframework.data.mongodb.core.mapping.DBRef} object. We check whether the
+	 * type of the given value is compatible with the type of the given document field in order to deal with potential
+	 * query field exclusions, since MongoDB uses the {@code int} {@literal 0} as an indicator for an excluded field.
+	 * 
+	 * @param documentField
+	 * @param value
+	 * @return
+	 */
+	private boolean isAssociationConversionNecessary(Field documentField, Object value) {
+		return documentField.isAssociation() && value != null
+				&& documentField.getProperty().getActualType().isAssignableFrom(value.getClass());
 	}
 
 	/**
@@ -248,7 +263,8 @@ public class QueryMapper {
 	 */
 	private Object convertAssociation(Object source, MongoPersistentProperty property) {
 
-		if (property == null || !property.isAssociation()) {
+		if (property == null || !property.isAssociation() || source == null || source instanceof DBRef
+				|| !property.isEntity()) {
 			return source;
 		}
 
@@ -270,7 +286,7 @@ public class QueryMapper {
 			return result;
 		}
 
-		return source == null || source instanceof DBRef ? source : converter.toDBRef(source, property);
+		return converter.toDBRef(source, property);
 	}
 
 	/**
