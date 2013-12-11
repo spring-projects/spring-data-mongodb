@@ -56,7 +56,7 @@
     <xi:include href="introduction/why-sd-doc.xml"/>
     <xi:include href="introduction/requirements.xml"/>
     <xi:include href="introduction/getting-started.xml"/>
-    <xi:include href="https://raw.github.com/SpringSource/spring-data-commons/1.6.2.RELEASE/src/docbkx/repositories.xml">
+    <xi:include href="https://raw.github.com/SpringSource/spring-data-commons/1.6.3.RELEASE/src/docbkx/repositories.xml">
       <xi:fallback href="../../../spring-data-commons/src/docbkx/repositories.xml" />
     </xi:include>
   </part>
@@ -76,10 +76,10 @@
   <part id="appendix">
     <title>Appendix</title>
 
-    <xi:include href="https://raw.github.com/SpringSource/spring-data-commons/1.6.2.RELEASE/src/docbkx/repository-namespace-reference.xml">
+    <xi:include href="https://raw.github.com/SpringSource/spring-data-commons/1.6.3.RELEASE/src/docbkx/repository-namespace-reference.xml">
     	<xi:fallback href="../../../spring-data-commons/src/docbkx/repository-namespace-reference.xml" />
     </xi:include>
-    <xi:include href="https://raw.github.com/SpringSource/spring-data-commons/1.6.2.RELEASE/src/docbkx/repository-query-keywords-reference.xml">
+    <xi:include href="https://raw.github.com/SpringSource/spring-data-commons/1.6.3.RELEASE/src/docbkx/repository-query-keywords-reference.xml">
     	<xi:fallback href="../../../spring-data-commons/src/docbkx/repository-query-keywords-reference.xml" />
     </xi:include>
   </part>
