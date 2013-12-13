@@ -56,6 +56,7 @@ import com.mongodb.QueryBuilder;
  * 
  * @author Oliver Gierke
  * @author Patryk Wasik
+ * @author Thomas Darimont
  */
 @RunWith(MockitoJUnitRunner.class)
 public class QueryMapperUnitTests {
@@ -464,6 +465,23 @@ public class QueryMapperUnitTests {
 
 		assertThat(result.keySet(), hasSize(1));
 		assertThat(result.get("myvalue"), is((Object) "$center"));
+	}
+
+	/**
+	 * @DATAMONGO-805
+	 */
+	@Test
+	public void shouldExcludeDBRefAssociation() {
+
+		Query query = query(where("someString").is("foo"));
+		query.fields().exclude("reference");
+
+		BasicMongoPersistentEntity<?> entity = context.getPersistentEntity(WithDBRef.class);
+		DBObject queryResult = mapper.getMappedObject(query.getQueryObject(), entity);
+		DBObject fieldsResult = mapper.getMappedObject(query.getFieldsObject(), entity);
+
+		assertThat(queryResult.get("someString"), is((Object) "foo"));
+		assertThat(fieldsResult.get("reference"), is((Object) 0));
 	}
 
 	class IdWrapper {
