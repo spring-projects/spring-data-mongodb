@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2012 the original author or authors.
+ * Copyright 2011-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,15 +42,15 @@ import com.mongodb.gridfs.GridFSFile;
  * 
  * @author Oliver Gierke
  * @author Philipp Schneider
+ * @author Thomas Darimont
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:gridfs/gridfs.xml")
-public class GridFsTemplateIIntegrationTests {
+public class GridFsTemplateIntegrationTests {
 
 	Resource resource = new ClassPathResource("gridfs/gridfs.xml");
 
-	@Autowired
-	GridFsOperations operations;
+	@Autowired GridFsOperations operations;
 
 	@Before
 	public void setUp() {
@@ -125,6 +125,14 @@ public class GridFsTemplateIIntegrationTests {
 		assertThat(resources[0].getId(), is(reference.getId()));
 		assertThat(resources[0].contentLength(), is(reference.getLength()));
 		assertThat(resources[0].getContentType(), is(reference.getContentType()));
+	}
+
+	/**
+	 * @see DATAMONGO-813
+	 */
+	@Test
+	public void getResourceShouldReturnNullForNonExistingResource() {
+		assertThat(operations.getResource("doesnotexist"), is(nullValue()));
 	}
 
 	private static void assertSame(GridFSFile left, GridFSFile right) {
