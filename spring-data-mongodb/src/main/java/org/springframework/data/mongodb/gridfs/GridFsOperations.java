@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2012 the original author or authors.
+ * Copyright 2011-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,6 +31,7 @@ import com.mongodb.gridfs.GridFSFile;
  * 
  * @author Oliver Gierke
  * @author Philipp Schneider
+ * @author Thomas Darimont
  */
 public interface GridFsOperations extends ResourcePatternResolver {
 
@@ -126,7 +127,7 @@ public interface GridFsOperations extends ResourcePatternResolver {
 	 * Returns all {@link GridFsResource} with the given file name.
 	 * 
 	 * @param filename
-	 * @return
+	 * @return the resource if it exists or {@literal null}.
 	 * @see ResourcePatternResolver#getResource(String)
 	 */
 	GridFsResource getResource(String filename);
