@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2013 the original author or authors.
+ * Copyright 2011-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -72,6 +72,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.util.StringUtils;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
@@ -163,6 +164,7 @@ public class MongoTemplateTests {
 		template.dropCollection(ObjectWith3AliasedFields.class);
 		template.dropCollection(ObjectWith3AliasedFieldsAndNestedAddress.class);
 		template.dropCollection(BaseDoc.class);
+		template.dropCollection(ObjectWithEnumValue.class);
 	}
 
 	@Test
@@ -2058,6 +2060,33 @@ public class MongoTemplateTests {
 		assertThat(result.get(0).field, is(value));
 	}
 
+	/**
+	 * @see DATAMONGO-816
+	 */
+	@Test
+	public void shouldExecuteQueryShouldMapQueryBeforeQueryExecution() {
+
+		ObjectWithEnumValue o = new ObjectWithEnumValue();
+		o.value = EnumValue.VALUE2;
+		template.save(o);
+
+		Query q = Query.query(Criteria.where("value").in(EnumValue.VALUE2));
+
+		template.executeQuery(q, StringUtils.uncapitalize(ObjectWithEnumValue.class.getSimpleName()),
+				new DocumentCallbackHandler() {
+
+					@Override
+					public void processDocument(DBObject dbObject) throws MongoException, DataAccessException {
+
+						assertThat(dbObject, is(notNullValue()));
+
+						ObjectWithEnumValue result = template.getConverter().read(ObjectWithEnumValue.class, dbObject);
+
+						assertThat(result.value, is(EnumValue.VALUE2));
+					}
+				});
+	}
+
 	static interface Model {
 		String value();
 
@@ -2182,5 +2211,15 @@ public class MongoTemplateTests {
 
 	static class ObjectWith3AliasedFieldsAndNestedAddress extends ObjectWith3AliasedFields {
 		@Field("adr") Address address;
+	}
+
+	static enum EnumValue {
+		VALUE1, VALUE2, VALUE3
+	}
+
+	static class ObjectWithEnumValue {
+
+		@Id String id;
+		EnumValue value;
 	}
 }
