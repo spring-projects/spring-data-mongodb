@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 the original author or authors.
+ * Copyright 2012-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,14 +28,14 @@ import org.springframework.util.Assert;
  */
 public class AuditingEventListener implements ApplicationListener<BeforeConvertEvent<Object>> {
 
-	private final IsNewAwareAuditingHandler<Object> auditingHandler;
+	private final IsNewAwareAuditingHandler auditingHandler;
 
 	/**
 	 * Creates a new {@link AuditingEventListener} using the given {@link MappingContext} and {@link AuditingHandler}.
 	 * 
 	 * @param auditingHandler must not be {@literal null}.
 	 */
-	public AuditingEventListener(IsNewAwareAuditingHandler<Object> auditingHandler) {
+	public AuditingEventListener(IsNewAwareAuditingHandler auditingHandler) {
 
 		Assert.notNull(auditingHandler, "IsNewAwareAuditingHandler must not be null!");
 		this.auditingHandler = auditingHandler;

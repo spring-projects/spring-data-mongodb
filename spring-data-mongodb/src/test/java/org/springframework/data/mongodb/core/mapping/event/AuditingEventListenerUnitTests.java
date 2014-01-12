@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 the original author or authors.
+ * Copyright 2012-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ import org.springframework.data.support.IsNewStrategyFactory;
 @RunWith(MockitoJUnitRunner.class)
 public class AuditingEventListenerUnitTests {
 
-	IsNewAwareAuditingHandler<Object> handler;
+	IsNewAwareAuditingHandler handler;
 
 	IsNewStrategyFactory factory;
 	AuditingEventListener listener;
@@ -48,7 +48,7 @@ public class AuditingEventListenerUnitTests {
 		MongoMappingContext mappingContext = new MongoMappingContext();
 		factory = new MappingContextIsNewStrategyFactory(mappingContext);
 
-		handler = spy(new IsNewAwareAuditingHandler<Object>(factory));
+		handler = spy(new IsNewAwareAuditingHandler(factory));
 		doNothing().when(handler).markCreated(Mockito.any(Object.class));
 		doNothing().when(handler).markModified(Mockito.any(Object.class));
 
@@ -83,7 +83,6 @@ public class AuditingEventListenerUnitTests {
 
 	static class Sample {
 
-		@Id
-		String id;
+		@Id String id;
 	}
 }
