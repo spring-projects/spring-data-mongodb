@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core.index;
 
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
@@ -25,6 +26,7 @@ import com.mongodb.DBObject;
  * 
  * @author Jon Brisbin
  * @author Oliver Gierke
+ * @author Laurent Canet
  */
 public class GeospatialIndex implements IndexDefinition {
 
@@ -33,6 +35,9 @@ public class GeospatialIndex implements IndexDefinition {
 	private Integer min = null;
 	private Integer max = null;
 	private Integer bits = null;
+	private GeospatialIndexType type = GeospatialIndexType.GEO_2D;
+	private Double bucketSize = 1.0;
+	private String additionalField = null;
 
 	/**
 	 * Creates a new {@link GeospatialIndex} for the given field.
@@ -64,28 +69,68 @@ public class GeospatialIndex implements IndexDefinition {
 		return this;
 	}
 
+	public GeospatialIndex typed(GeospatialIndexType type) {
+		this.type = type;
+		return this;
+	}
+
+	public GeospatialIndex withBucketSize(double bucketSize) {
+		this.bucketSize = bucketSize;
+		return this;
+	}
+
+	public GeospatialIndex withAdditionalField(String fieldName) {
+		this.additionalField = fieldName;
+		return this;
+	}
+
 	public DBObject getIndexKeys() {
 		DBObject dbo = new BasicDBObject();
-		dbo.put(field, "2d");
+		switch (type) {
+			case GEO_2D:
+				dbo.put(field, "2d");
+				break;
+			case GEO_2DSPHERE:
+				dbo.put(field, "2dsphere");
+				break;
+			case GEO_HAYSTACK:
+				dbo.put(field, "geoHaystack");
+				if (!StringUtils.hasText(additionalField)) {
+					throw new IllegalArgumentException("When defining geoHaystack index, an additionnal field must be defined");
+				}
+				dbo.put(additionalField, 1);
+				break;
+			default:
+				throw new IllegalArgumentException("Unsupported geospatial index " + type);
+		}
 		return dbo;
 	}
 
 	public DBObject getIndexOptions() {
-		if (name == null && min == null && max == null) {
+		if (name == null && min == null && max == null && bucketSize == null) {
 			return null;
 		}
 		DBObject dbo = new BasicDBObject();
 		if (name != null) {
 			dbo.put("name", name);
 		}
-		if (min != null) {
-			dbo.put("min", min);
-		}
-		if (max != null) {
-			dbo.put("max", max);
-		}
-		if (bits != null) {
-			dbo.put("bits", bits);
+		switch (type) {
+			case GEO_2D:
+				if (min != null) {
+					dbo.put("min", min);
+				}
+				if (max != null) {
+					dbo.put("max", max);
+				}
+				if (bits != null) {
+					dbo.put("bits", bits);
+				}
+				break;
+			case GEO_HAYSTACK:
+				if (bucketSize != null) {
+					dbo.put("bucketSize", bucketSize);
+				}
+				break;
 		}
 		return dbo;
 	}

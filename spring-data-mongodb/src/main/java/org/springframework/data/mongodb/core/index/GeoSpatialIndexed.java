@@ -25,6 +25,7 @@ import java.lang.annotation.Target;
  * Mark a field to be indexed using MongoDB's geospatial indexing feature.
  * 
  * @author Jon Brisbin <jbrisbin@vmware.com>
+ * @author Laurent Canet
  */
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
@@ -64,5 +65,26 @@ public @interface GeoSpatialIndexed {
 	 * @return
 	 */
 	int bits() default 26;
+
+	/**
+	 * The type of the geospatial index. Default is {@link GeospatialIndexType#GEO_2D}
+	 * 
+	 * @return
+	 */
+	GeospatialIndexType type() default GeospatialIndexType.GEO_2D;
+
+	/**
+	 * The bucket size for {@link GeospatialIndexType#GEO_HAYSTACK} indexes, in coordinate units.
+	 * 
+	 * @return
+	 */
+	double bucketSize() default 1.0;
+
+	/**
+	 * The name of the additional field to use for {@link GeospatialIndexType#GEO_HAYSTACK} indexes
+	 * 
+	 * @return
+	 */
+	String additionalField() default "";
 
 }
