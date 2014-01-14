@@ -24,6 +24,7 @@ import static org.springframework.data.mongodb.core.query.Update.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -55,6 +56,7 @@ import com.mongodb.MongoException;
 /**
  * @author Jon Brisbin
  * @author Oliver Gierke
+ * @author Thomas Darimont
  */
 public class MappingTests {
 
@@ -512,28 +514,96 @@ public class MappingTests {
 		assertThat(result.items.get(0).id, is(items.id));
 	}
 
+	/**
+	 * @see DATAMONGO-805
+	 */
+	@Test
+	public void supportExcludeDbRefAssociation() {
+
+		template.dropCollection(Item.class);
+		template.dropCollection(Container.class);
+
+		Item item = new Item();
+		template.insert(item);
+
+		Container container = new Container("foo");
+		container.item = item;
+
+		template.insert(container);
+
+		Query query = new Query(Criteria.where("id").is("foo"));
+		query.fields().exclude("item");
+		Container result = template.findOne(query, Container.class);
+
+		assertThat(result, is(notNullValue()));
+		assertThat(result.item, is(nullValue()));
+	}
+
+	/**
+	 * @see DATAMONGO-805
+	 */
+	@Test
+	public void shouldMapFieldsOfIterableEntity() {
+
+		template.dropCollection(IterableItem.class);
+		template.dropCollection(Container.class);
+
+		Item item = new IterableItem();
+		item.value = "bar";
+		template.insert(item);
+
+		Container container = new Container("foo");
+		container.item = item;
+
+		template.insert(container);
+
+		Query query = new Query(Criteria.where("id").is("foo"));
+		Container result = template.findOne(query, Container.class);
+
+		assertThat(result, is(notNullValue()));
+		assertThat(result.item, is(notNullValue()));
+		assertThat(result.item.value, is("bar"));
+	}
+
 	static class Container {
 
-		@Id
-		final String id;
+		@Id final String id;
 
 		public Container() {
 			id = new ObjectId().toString();
 		}
 
-		@DBRef
-		Item item;
-		@DBRef
-		List<Item> items;
+		public Container(String id) {
+			this.id = id;
+		}
+
+		@DBRef Item item;
+		@DBRef List<Item> items;
 	}
 
 	static class Item {
 
-		@Id
-		final String id;
+		@Id final String id;
+		String value;
 
 		public Item() {
 			this.id = new ObjectId().toString();
 		}
+	}
+
+	static class IterableItem extends Item implements Iterable<ItemData> {
+
+		List<ItemData> data = new ArrayList<MappingTests.ItemData>();
+
+		@Override
+		public Iterator<ItemData> iterator() {
+			return data.iterator();
+		}
+	}
+
+	static class ItemData {
+
+		String id;
+		String value;
 	}
 }
