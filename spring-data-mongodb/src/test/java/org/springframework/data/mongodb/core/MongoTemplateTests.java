@@ -94,6 +94,7 @@ import com.mongodb.WriteResult;
  * @author Patryk Wasik
  * @author Thomas Darimont
  * @author Komi Innocent
+ * @author Christoph Strobl
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:infrastructure.xml")
@@ -2085,6 +2086,79 @@ public class MongoTemplateTests {
 						assertThat(result.value, is(EnumValue.VALUE2));
 					}
 				});
+	}
+
+	/**
+	 * @see DATAMONGO-811
+	 */
+	@Test
+	public void updateFirstShouldIncreaseVersionForVersionedEntity() {
+
+		VersionedPerson person = new VersionedPerson();
+		person.firstname = "Dave";
+		person.lastname = "Matthews";
+		template.save(person);
+		assertThat(person.id, is(notNullValue()));
+
+		Query qry = query(where("id").is(person.id));
+		VersionedPerson personAfterFirstSave = template.findOne(qry, VersionedPerson.class);
+		assertThat(personAfterFirstSave.version, is(0L));
+
+		template.updateFirst(qry, Update.update("lastname", "Bubu"), VersionedPerson.class);
+
+		VersionedPerson personAfterUpdateFirst = template.findOne(qry, VersionedPerson.class);
+		assertThat(personAfterUpdateFirst.version, is(1L));
+		assertThat(personAfterUpdateFirst.lastname, is("Bubu"));
+	}
+
+	/**
+	 * @see DATAMONGO-811
+	 */
+	@Test
+	public void updateFirstShouldIncreaseVersionOnlyForFirstMatchingEntity() {
+
+		VersionedPerson person1 = new VersionedPerson();
+		person1.firstname = "Dave";
+
+		VersionedPerson person2 = new VersionedPerson();
+		person2.firstname = "Dave";
+
+		template.save(person1);
+		template.save(person2);
+		Query q = query(where("id").in(person1.id, person2.id));
+
+		template.updateFirst(q, Update.update("lastname", "Metthews"), VersionedPerson.class);
+
+		for (VersionedPerson p : template.find(q, VersionedPerson.class)) {
+			if ("Metthews".equals(p.lastname)) {
+				assertThat(p.version, equalTo(Long.valueOf(1)));
+			} else {
+				assertThat(p.version, equalTo(Long.valueOf(0)));
+			}
+		}
+	}
+
+	/**
+	 * @see DATAMONGO-811
+	 */
+	@Test
+	public void updateMultiShouldIncreaseVersionOfAllUpdatedEntities() {
+
+		VersionedPerson person1 = new VersionedPerson();
+		person1.firstname = "Dave";
+
+		VersionedPerson person2 = new VersionedPerson();
+		person2.firstname = "Dave";
+
+		template.save(person1);
+		template.save(person2);
+
+		Query q = query(where("id").in(person1.id, person2.id));
+		template.updateMulti(q, Update.update("lastname", "Metthews"), VersionedPerson.class);
+
+		for (VersionedPerson p : template.find(q, VersionedPerson.class)) {
+			assertThat(p.version, equalTo(Long.valueOf(1)));
+		}
 	}
 
 	static interface Model {
