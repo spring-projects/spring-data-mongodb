@@ -124,6 +124,7 @@ import com.mongodb.util.JSONParseException;
  * @author Sebastian Herold
  * @author Thomas Darimont
  * @author Chuong Ngo
+ * @author Christoph Strobl
  */
 public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
@@ -992,6 +993,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 				MongoPersistentEntity<?> entity = entityClass == null ? null : getPersistentEntity(entityClass);
 
+				increaseVersionForUpdateIfNecessary(entity, update);
+
 				DBObject queryObj = query == null ? new BasicDBObject() : queryMapper.getMappedObject(query.getQueryObject(),
 						entity);
 				DBObject updateObj = update == null ? new BasicDBObject() : updateMapper.getMappedObject(
@@ -1019,6 +1022,17 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				return writeResult;
 			}
 		});
+	}
+
+	private void increaseVersionForUpdateIfNecessary(MongoPersistentEntity<?> persistentEntity, Update update) {
+
+		if (persistentEntity != null && persistentEntity.hasVersionProperty()) {
+
+			String versionPropertyField = persistentEntity.getVersionProperty().getFieldName();
+			if (!update.getUpdateObject().containsField(versionPropertyField)) {
+				update.inc(versionPropertyField, 1L);
+			}
+		}
 	}
 
 	public void remove(Object object) {
