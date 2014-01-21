@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2013 the original author or authors.
+ * Copyright 2011-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,6 +44,7 @@ import com.mongodb.DBRef;
  * @author Jon Brisbin
  * @author Oliver Gierke
  * @author Patryk Wasik
+ * @author Thomas Darimont
  */
 public class QueryMapper {
 
@@ -176,20 +177,22 @@ public class QueryMapper {
 
 			if (value instanceof DBObject) {
 				DBObject valueDbo = (DBObject) value;
+				DBObject resultDbo = new BasicDBObject(valueDbo.toMap());
+
 				if (valueDbo.containsField("$in") || valueDbo.containsField("$nin")) {
 					String inKey = valueDbo.containsField("$in") ? "$in" : "$nin";
 					List<Object> ids = new ArrayList<Object>();
 					for (Object id : (Iterable<?>) valueDbo.get(inKey)) {
 						ids.add(convertId(id));
 					}
-					valueDbo.put(inKey, ids.toArray(new Object[ids.size()]));
+					resultDbo.put(inKey, ids.toArray(new Object[ids.size()]));
 				} else if (valueDbo.containsField("$ne")) {
-					valueDbo.put("$ne", convertId(valueDbo.get("$ne")));
+					resultDbo.put("$ne", convertId(valueDbo.get("$ne")));
 				} else {
-					return getMappedObject((DBObject) value, null);
+					return getMappedObject(resultDbo, null);
 				}
 
-				return valueDbo;
+				return resultDbo;
 
 			} else {
 				return convertId(value);
