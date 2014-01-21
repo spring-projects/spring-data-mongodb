@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2013 the original author or authors.
+ * Copyright 2011-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -482,6 +482,23 @@ public class QueryMapperUnitTests {
 
 		assertThat(queryResult.get("someString"), is((Object) "foo"));
 		assertThat(fieldsResult.get("reference"), is((Object) 0));
+	}
+
+	/**
+	 * @see DATAMONGO-686
+	 */
+	@Test
+	public void queryMapperShouldNotChangeStateInGivenQueryObjectWhenIdConstrainedByInList() {
+
+		BasicMongoPersistentEntity<?> persistentEntity = context.getPersistentEntity(Sample.class);
+		String idPropertyName = persistentEntity.getIdProperty().getName();
+		DBObject queryObject = query(where(idPropertyName).in("42")).getQueryObject();
+
+		Object idValuesBefore = getAsDBObject(queryObject, idPropertyName).get("$in");
+		mapper.getMappedObject(queryObject, persistentEntity);
+		Object idValuesAfter = getAsDBObject(queryObject, idPropertyName).get("$in");
+
+		assertThat(idValuesAfter, is(idValuesBefore));
 	}
 
 	class IdWrapper {

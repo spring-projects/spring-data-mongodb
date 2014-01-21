@@ -51,6 +51,7 @@ import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.annotation.Version;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mapping.model.MappingException;
@@ -2156,6 +2157,29 @@ public class MongoTemplateTests {
 		for (VersionedPerson p : template.find(q, VersionedPerson.class)) {
 			assertThat(p.version, equalTo(Long.valueOf(1)));
 		}
+	}
+
+	/**
+	 * @see DATAMONGO-686
+	 */
+	@Test
+	public void itShouldBePossibleToReuseAnExistingQuery() {
+
+		Sample sample = new Sample();
+		sample.id = "42";
+		sample.field = "A";
+
+		template.save(sample);
+
+		Query query = new Query();
+		query.addCriteria(where("_id").in("42", "43"));
+
+		assertThat(template.count(query, Sample.class), is(1L));
+
+		query.with(new PageRequest(0, 10));
+		query.with(new Sort("field"));
+
+		assertThat(template.find(query, Sample.class), is(not(empty())));
 	}
 
 	static interface Model {
