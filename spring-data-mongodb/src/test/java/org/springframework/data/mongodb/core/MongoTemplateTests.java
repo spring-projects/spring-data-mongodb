@@ -1803,12 +1803,12 @@ public class MongoTemplateTests {
 
 		Document doc = new Document();
 		doc.id = "4711";
-		doc.model = new ModelA().withValue("foo");
+		doc.model = new ModelA("foo");
 		template.insert(doc);
 
 		Query query = new Query(Criteria.where("id").is(doc.id));
 		String newModelValue = "bar";
-		Update update = Update.update("model", new ModelA().withValue(newModelValue));
+		Update update = Update.update("model", new ModelA(newModelValue));
 		template.updateFirst(query, update, Document.class);
 
 		Document result = template.findOne(query, Document.class);
@@ -2185,26 +2185,43 @@ public class MongoTemplateTests {
 		assertThat(template.find(query, Sample.class), is(not(empty())));
 	}
 
+	/**
+	 * @see DATAMONGO-807
+	 */
+	@Test
+	public void findAndModifyShouldRetrainTypeInformationWithinUpdatedType() {
+
+		Document document = new Document();
+		document.model = new ModelA("value1");
+
+		template.save(document);
+
+		Query query = query(where("id").is(document.id));
+		Update update = Update.update("model", new ModelA("value2"));
+		template.findAndModify(query, update, Document.class);
+
+		Document retrieved = template.findOne(query, Document.class);
+		Assert.assertThat(retrieved.model, instanceOf(ModelA.class));
+		Assert.assertThat(retrieved.model.value(), equalTo("value2"));
+	}
+
 	static interface Model {
 		String value();
-
-		Model withValue(String value);
 	}
 
 	static class ModelA implements Model {
 
 		private String value;
 
+		ModelA(String value) {
+			this.value = value;
+		}
+
 		@Override
 		public String value() {
 			return this.value;
 		}
 
-		@Override
-		public Model withValue(String value) {
-			this.value = value;
-			return this;
-		}
 	}
 
 	static class Document {
