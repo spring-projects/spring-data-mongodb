@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,6 +36,7 @@ import com.mongodb.DBObject;
  * Unit tests for {@link UpdateMapper}.
  * 
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 @RunWith(MockitoJUnitRunner.class)
 public class UpdateMapperUnitTests {
@@ -67,6 +68,71 @@ public class UpdateMapperUnitTests {
 		DBObject list = DBObjectTestUtils.getAsDBObject(push, "list");
 
 		assertThat(list.get("_class"), is((Object) ConcreteChildClass.class.getName()));
+	}
+
+	/**
+	 * @see DATAMONGO-807
+	 */
+	@Test
+	public void updateMapperShouldRetainTypeInformationForNestedEntities() {
+
+		Update update = Update.update("model", new ModelImpl(1));
+		UpdateMapper mapper = new UpdateMapper(converter);
+
+		DBObject mappedObject = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(ModelWrapper.class));
+
+		DBObject set = DBObjectTestUtils.getAsDBObject(mappedObject, "$set");
+		DBObject modelDbObject = (DBObject) set.get("model");
+		assertThat(modelDbObject.get("_class"), not(nullValue()));
+	}
+
+	/**
+	 * @see DATAMONGO-807
+	 */
+	@Test
+	public void updateMapperShouldNotPersistTypeInformationForKnownSimpleTypes() {
+
+		Update update = Update.update("model.value", 1);
+		UpdateMapper mapper = new UpdateMapper(converter);
+
+		DBObject mappedObject = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(ModelWrapper.class));
+
+		DBObject set = DBObjectTestUtils.getAsDBObject(mappedObject, "$set");
+		assertThat(set.get("_class"), nullValue());
+	}
+
+	/**
+	 * @see DATAMONGO-807
+	 */
+	@Test
+	public void updateMapperShouldNotPersistTypeInformationForNullValues() {
+
+		Update update = Update.update("model", null);
+		UpdateMapper mapper = new UpdateMapper(converter);
+
+		DBObject mappedObject = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(ModelWrapper.class));
+
+		DBObject set = DBObjectTestUtils.getAsDBObject(mappedObject, "$set");
+		assertThat(set.get("_class"), nullValue());
+	}
+
+	static interface Model {
+
+	}
+
+	static class ModelImpl implements Model {
+		public int value;
+
+		public ModelImpl(int value) {
+			this.value = value;
+		}
+	}
+
+	public class ModelWrapper {
+		Model model;
 	}
 
 	static class ParentClass {
