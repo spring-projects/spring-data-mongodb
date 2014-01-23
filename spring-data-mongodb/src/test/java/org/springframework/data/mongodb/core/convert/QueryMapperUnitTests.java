@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CountDownLatch;
 
 import org.bson.types.ObjectId;
 import org.junit.Before;
@@ -488,66 +487,18 @@ public class QueryMapperUnitTests {
 	/**
 	 * @see DATAMONGO-686
 	 */
-	@SuppressWarnings("serial")
 	@Test
-	public void thereShouldBeNoRaceConditionWhenReusingQueryFromMultipleThreads() throws Exception {
+	public void queryMapperShouldNotChangeStateInGivenQueryObjectWhenIdConstrainedByInList() {
 
-		Query query = new Query().addCriteria(where("_id").in("42"));
+		BasicMongoPersistentEntity<?> persistentEntity = context.getPersistentEntity(Sample.class);
+		String idPropertyName = persistentEntity.getIdProperty().getName();
+		DBObject queryObject = query(where(idPropertyName).in("42")).getQueryObject();
 
-		final CountDownLatch latch = new CountDownLatch(1);
-		final List<Object> observedValues = new ArrayList<Object>();
+		Object idValuesBefore = getAsDBObject(queryObject, idPropertyName).get("$in");
+		mapper.getMappedObject(queryObject, persistentEntity);
+		Object idValuesAfter = getAsDBObject(queryObject, idPropertyName).get("$in");
 
-		final DBObject queryObject = query.getQueryObject();
-		queryObject.put("_id", new BasicDBObject(((DBObject) queryObject.get("_id")).toMap()) {
-			@Override
-			public Object get(String key) {
-
-				if (key.endsWith("$in") && Thread.currentThread().getName().equals("t2")) {
-					// provokes the race-condition in
-					// org.springframework.data.mongodb.core.convert.QueryMapper.getMappedValue(Field, Object)
-					try {
-						latch.await();
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-				}
-
-				Object result = super.get(key);
-				observedValues.add(result);
-				return result;
-			}
-		});
-
-		final List<Exception> exceptions = new ArrayList<Exception>();
-
-		Runnable code = new Runnable() {
-
-			@Override
-			public void run() {
-				try {
-					mapper.getMappedObject(queryObject, context.getPersistentEntity(Sample.class));
-				} catch (Exception ex) {
-					exceptions.add(ex);
-				}
-				latch.countDown();
-			}
-		};
-
-		Thread t1 = new Thread(code, "t1");
-		Thread t2 = new Thread(code, "t2");
-
-		t1.start();
-		t2.start();
-
-		t1.join();
-		t2.join();
-
-		assertThat(observedValues, is(not(empty())));
-		assertThat(observedValues.size(), is(2));
-		assertThat("Both observed values should be of the same type! But was: "
-				+ observedValues.get(0).getClass().getName() + " and " + observedValues.get(1).getClass().getName(),
-				observedValues.get(0).getClass().equals(observedValues.get(1).getClass()), is(true));
-		assertThat(exceptions.toString(), exceptions, is(empty()));
+		assertThat(idValuesAfter, is(idValuesBefore));
 	}
 
 	class IdWrapper {
