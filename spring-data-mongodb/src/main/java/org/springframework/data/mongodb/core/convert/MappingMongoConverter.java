@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -798,10 +799,13 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		collectionType = Collection.class.isAssignableFrom(collectionType) ? collectionType : List.class;
 
-		Collection<Object> items = targetType.getType().isArray() ? new ArrayList<Object>() : CollectionFactory
-				.createCollection(collectionType, sourceValue.size());
 		TypeInformation<?> componentType = targetType.getComponentType();
 		Class<?> rawComponentType = componentType == null ? null : componentType.getType();
+
+		Collection<Object> items = targetType.getType().isArray() ? new ArrayList<Object>() :
+				EnumSet.class.isAssignableFrom(collectionType) ?
+						EnumSet.noneOf(rawComponentType.asSubclass(Enum.class)) :
+						CollectionFactory.createCollection(collectionType, sourceValue.size());
 
 		for (int i = 0; i < sourceValue.size(); i++) {
 
