@@ -47,6 +47,7 @@ import com.mongodb.DBRef;
  * @author Oliver Gierke
  * @author Patryk Wasik
  * @author Thomas Darimont
+ * @author Christoph Strobl
  */
 public class QueryMapper {
 
@@ -109,15 +110,27 @@ public class QueryMapper {
 			Object rawValue = query.get(key);
 			String newKey = field.getMappedKey();
 
-			if (isNestedKeyword(rawValue) && !field.isIdField()) {
-				Keyword keyword = new Keyword((DBObject) rawValue);
-				result.put(newKey, getMappedKeyword(field, keyword));
-			} else {
-				result.put(newKey, getMappedValue(field, rawValue));
-			}
+			result.put(newKey, getMappedObjectForField(field, rawValue));
 		}
 
 		return result;
+	}
+
+	/**
+	 * Extracts the mapped object value for given field out of rawValue taking nested {@link Keyword}s into account
+	 * 
+	 * @param field
+	 * @param rawValue
+	 * @return
+	 */
+	protected Object getMappedObjectForField(Field field, Object rawValue) {
+
+		if (isNestedKeyword(rawValue) && !field.isIdField()) {
+			Keyword keyword = new Keyword((DBObject) rawValue);
+			return getMappedKeyword(field, keyword);
+		}
+
+		return getMappedValue(field, rawValue);
 	}
 
 	/**
@@ -138,7 +151,7 @@ public class QueryMapper {
 	 * @param entity
 	 * @return
 	 */
-	private DBObject getMappedKeyword(Keyword keyword, MongoPersistentEntity<?> entity) {
+	protected DBObject getMappedKeyword(Keyword keyword, MongoPersistentEntity<?> entity) {
 
 		// $or/$nor
 		if (keyword.isOrOrNor() || keyword.hasIterableValue()) {
@@ -164,7 +177,7 @@ public class QueryMapper {
 	 * @param keyword
 	 * @return
 	 */
-	private DBObject getMappedKeyword(Field property, Keyword keyword) {
+	protected DBObject getMappedKeyword(Field property, Keyword keyword) {
 
 		boolean needsAssociationConversion = property.isAssociation() && !keyword.isExists();
 		Object value = keyword.getValue();
@@ -184,7 +197,7 @@ public class QueryMapper {
 	 * @param newKey the key the value will be bound to eventually
 	 * @return
 	 */
-	private Object getMappedValue(Field documentField, Object value) {
+	protected Object getMappedValue(Field documentField, Object value) {
 
 		if (documentField.isIdField()) {
 
@@ -360,7 +373,7 @@ public class QueryMapper {
 	 * 
 	 * @author Oliver Gierke
 	 */
-	private static class Keyword {
+	static class Keyword {
 
 		private static final String N_OR_PATTERN = "\\$.*or";
 
