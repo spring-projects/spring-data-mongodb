@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2013 the original author or authors.
+ * Copyright 2011-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core.convert;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
+import static org.springframework.data.mongodb.core.DBObjectTestUtils.*;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -72,6 +73,7 @@ import com.mongodb.util.JSON;
  * 
  * @author Oliver Gierke
  * @author Patrik Wasik
+ * @author Christoph Strobl
  */
 @RunWith(MockitoJUnitRunner.class)
 public class MappingMongoConverterUnitTests {
@@ -1026,7 +1028,7 @@ public class MappingMongoConverterUnitTests {
 
 		Set<?> readResult = converter.read(Set.class, (BasicDBList) result);
 		assertThat(readResult.size(), is(1));
-		assertThat(readResult.iterator().next(), is(instanceOf(Map.class)));
+		assertThat(readResult.iterator().next(), is(instanceOf(Address.class)));
 	}
 
 	/**
@@ -1379,6 +1381,62 @@ public class MappingMongoConverterUnitTests {
 		DBObject aValue = DBObjectTestUtils.getAsDBObject(result, "a");
 		assertThat(aValue.get("b"), is((Object) "bar"));
 		assertThat(aValue.get("c"), is((Object) "C"));
+	}
+
+	@Test
+	public void convertsListToBasicDBListAndRetainsTypeInformationForComplexObjects() {
+
+		Address address = new Address();
+		address.city = "London";
+		address.street = "Foo";
+
+		Object result = converter.convertToMongoType(Collections.singletonList(address));
+
+		assertThat(result, is(instanceOf(BasicDBList.class)));
+
+		BasicDBList dbList = (BasicDBList) result;
+		assertThat(dbList, hasSize(1));
+		assertThat(getTypedValue(getAsDBObject(dbList, 0), ("_class"), String.class), equalTo(Address.class.getName()));
+	}
+
+	@Test
+	public void convertsListToBasicDBListWithoutTypeInformationForSimpleTypes() {
+
+		Object result = converter.convertToMongoType(Collections.singletonList("foo"));
+
+		assertThat(result, is(instanceOf(BasicDBList.class)));
+
+		BasicDBList dbList = (BasicDBList) result;
+		assertThat(dbList, hasSize(1));
+		assertThat(dbList.get(0), instanceOf(String.class));
+	}
+
+	@Test
+	public void convertsArrayToBasicDBListAndRetainsTypeInformationForComplexObjects() {
+
+		Address address = new Address();
+		address.city = "London";
+		address.street = "Foo";
+
+		Object result = converter.convertToMongoType(new Address[] { address });
+
+		assertThat(result, is(instanceOf(BasicDBList.class)));
+
+		BasicDBList dbList = (BasicDBList) result;
+		assertThat(dbList, hasSize(1));
+		assertThat(getTypedValue(getAsDBObject(dbList, 0), ("_class"), String.class), equalTo(Address.class.getName()));
+	}
+
+	@Test
+	public void convertsArrayToBasicDBListWithoutTypeInformationForSimpleTypes() {
+
+		Object result = converter.convertToMongoType(new String[] { "foo" });
+
+		assertThat(result, is(instanceOf(BasicDBList.class)));
+
+		BasicDBList dbList = (BasicDBList) result;
+		assertThat(dbList, hasSize(1));
+		assertThat(dbList.get(0), instanceOf(String.class));
 	}
 
 	static class GenericType<T> {
