@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -57,6 +57,7 @@ class GridFsTemplateParser extends AbstractBeanDefinitionParser {
 
 		String converterRef = element.getAttribute("converter-ref");
 		String dbFactoryRef = element.getAttribute("db-factory-ref");
+		String bucket = element.getAttribute("bucket");
 
 		BeanDefinitionBuilder gridFsTemplateBuilder = BeanDefinitionBuilder.genericBeanDefinition(GridFsTemplate.class);
 
@@ -71,6 +72,11 @@ class GridFsTemplateParser extends AbstractBeanDefinitionParser {
 		} else {
 			gridFsTemplateBuilder.addConstructorArgReference(BeanNames.DEFAULT_CONVERTER_BEAN_NAME);
 		}
+		
+		if (StringUtils.hasText(bucket)){
+			gridFsTemplateBuilder.addConstructorArgValue(bucket);
+		}
+
 
 		return (AbstractBeanDefinition) helper.getComponentIdButFallback(gridFsTemplateBuilder, BeanNames.GRID_FS_TEMPLATE)
 				.getBeanDefinition();

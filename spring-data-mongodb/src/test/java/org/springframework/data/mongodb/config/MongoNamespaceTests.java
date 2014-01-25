@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 the original author or authors.
+ * Copyright 2010-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -176,10 +176,25 @@ public class MongoNamespaceTests {
 	 */
 	@Test
 	public void testSecondGridFsTemplateFactory() {
-		assertTrue(ctx.containsBean("antoherGridFsTemplate"));
-		GridFsOperations operations = (GridFsOperations) ctx.getBean("antoherGridFsTemplate");
+		assertTrue(ctx.containsBean("secondGridFsTemplate"));
+		GridFsOperations operations = (GridFsOperations) ctx.getBean("secondGridFsTemplate");
 		MongoDbFactory dbf = (MongoDbFactory) getField(operations, "dbFactory");
 		assertEquals("database", getField(dbf, "databaseName"));
+		assertEquals(null, getField(operations, "bucket"));
+		MongoConverter converter = (MongoConverter) getField(operations, "converter");
+		assertNotNull(converter);
+	}
+	
+	/**
+	 * @see DATAMONGO-823
+	 */
+	@Test
+	public void testThirdGridFsTemplateFactory() {
+		assertTrue(ctx.containsBean("thirdGridFsTemplate"));
+		GridFsOperations operations = (GridFsOperations) ctx.getBean("thirdGridFsTemplate");
+		MongoDbFactory dbf = (MongoDbFactory) getField(operations, "dbFactory");
+		assertEquals("database", getField(dbf, "databaseName"));
+		assertEquals("bucketString", getField(operations, "bucket"));
 		MongoConverter converter = (MongoConverter) getField(operations, "converter");
 		assertNotNull(converter);
 	}

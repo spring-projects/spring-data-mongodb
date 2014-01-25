@@ -76,6 +76,7 @@
 	<mongo:template id="anotherMongoTemplate" db-factory-ref="mongoDbFactory" write-concern="SAFE" />
 	
 	<mongo:gridFsTemplate/>
-	<mongo:gridFsTemplate id="antoherGridFsTemplate" db-factory-ref="mongoDbFactory" converter-ref="mappingConverter"/>
+	<mongo:gridFsTemplate id="secondGridFsTemplate" db-factory-ref="mongoDbFactory" converter-ref="mappingConverter"/>
+	<mongo:gridFsTemplate id="thirdGridFsTemplate" db-factory-ref="mongoDbFactory" converter-ref="mappingConverter" bucket="bucketString"/>
 	
 </beans>
