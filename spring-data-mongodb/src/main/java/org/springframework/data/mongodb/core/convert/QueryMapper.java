@@ -23,6 +23,7 @@ import java.util.Set;
 import org.bson.types.ObjectId;
 import org.springframework.core.convert.ConversionException;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PropertyPath;
 import org.springframework.data.mapping.PropertyReferenceException;
@@ -30,6 +31,7 @@ import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.context.PersistentPropertyPath;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty.PropertyToFieldNameConverter;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.util.Assert;
 
@@ -102,7 +104,7 @@ public class QueryMapper {
 				continue;
 			}
 
-			Field field = entity == null ? new Field(key) : new MetadataBackedField(key, entity, mappingContext);
+			Field field = createPropertyField(entity, key, mappingContext);
 
 			Object rawValue = query.get(key);
 			String newKey = field.getMappedKey();
@@ -116,6 +118,17 @@ public class QueryMapper {
 		}
 
 		return result;
+	}
+
+	/**
+	 * @param entity
+	 * @param key
+	 * @param mappingContext
+	 * @return
+	 */
+	protected Field createPropertyField(MongoPersistentEntity<?> entity, String key,
+			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
+		return entity == null ? new Field(key) : new MetadataBackedField(key, entity, mappingContext);
 	}
 
 	/**
@@ -400,7 +413,7 @@ public class QueryMapper {
 	 * 
 	 * @author Oliver Gierke
 	 */
-	private static class Field {
+	protected static class Field {
 
 		private static final String ID_KEY = "_id";
 
@@ -477,12 +490,14 @@ public class QueryMapper {
 	 * Extension of {@link DocumentField} to be backed with mapping metadata.
 	 * 
 	 * @author Oliver Gierke
+	 * @author Thomas Darimont
 	 */
-	private static class MetadataBackedField extends Field {
+	protected static class MetadataBackedField extends Field {
 
 		private final MongoPersistentEntity<?> entity;
 		private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 		private final MongoPersistentProperty property;
+		private final PersistentPropertyPath<MongoPersistentProperty> path;
 
 		/**
 		 * Creates a new {@link MetadataBackedField} with the given name, {@link MongoPersistentEntity} and
@@ -502,7 +517,7 @@ public class QueryMapper {
 			this.entity = entity;
 			this.mappingContext = context;
 
-			PersistentPropertyPath<MongoPersistentProperty> path = getPath(name);
+			this.path = getPath(name);
 			this.property = path == null ? null : path.getLeafProperty();
 		}
 
@@ -567,19 +582,33 @@ public class QueryMapper {
 		 */
 		@Override
 		public String getMappedKey() {
-
-			PersistentPropertyPath<MongoPersistentProperty> path = getPath(name);
-			return path == null ? name : path.toDotPath(MongoPersistentProperty.PropertyToFieldNameConverter.INSTANCE);
+			return path == null ? name : path.toDotPath(getPropertyConverter());
 		}
 
-		private PersistentPropertyPath<MongoPersistentProperty> getPath(String name) {
+		/**
+		 * Returns the {@link PersistentPropertyPath} for the given <code>pathExpression</code>.
+		 * 
+		 * @param pathExpression
+		 * @return
+		 */
+		private PersistentPropertyPath<MongoPersistentProperty> getPath(String pathExpression) {
 
 			try {
-				PropertyPath path = PropertyPath.from(name, entity.getTypeInformation());
+				PropertyPath path = PropertyPath.from(pathExpression, entity.getTypeInformation());
 				return mappingContext.getPersistentPropertyPath(path);
 			} catch (PropertyReferenceException e) {
 				return null;
 			}
+		}
+
+		/**
+		 * Return the {@link Converter} to be used to created the mapped key. Default implementation will use
+		 * {@link PropertyToFieldNameConverter}.
+		 * 
+		 * @return
+		 */
+		protected Converter<MongoPersistentProperty, String> getPropertyConverter() {
+			return PropertyToFieldNameConverter.INSTANCE;
 		}
 	}
 }

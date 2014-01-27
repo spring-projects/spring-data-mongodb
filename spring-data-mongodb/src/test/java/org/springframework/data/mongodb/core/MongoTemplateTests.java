@@ -167,6 +167,7 @@ public class MongoTemplateTests {
 		template.dropCollection(ObjectWith3AliasedFieldsAndNestedAddress.class);
 		template.dropCollection(BaseDoc.class);
 		template.dropCollection(ObjectWithEnumValue.class);
+		template.dropCollection(DocumentWithCollection.class);
 	}
 
 	@Test
@@ -2205,6 +2206,40 @@ public class MongoTemplateTests {
 		Assert.assertThat(retrieved.model.value(), equalTo("value2"));
 	}
 
+	/**
+	 * @see DATAMONGO-407
+	 */
+	@Test
+	public void updatesShouldRetainTypeInformationEvenForCollections() {
+
+		DocumentWithCollection doc = new DocumentWithCollection();
+		doc.id = "4711";
+		doc.model = new ArrayList<Model>();
+		doc.model.add(new ModelA("foo"));
+		template.insert(doc);
+
+		Query query = new Query(Criteria.where("id").is(doc.id));
+		query.addCriteria(where("model.value").is("foo"));
+		String newModelValue = "bar";
+		Update update = Update.update("model.$", new ModelA(newModelValue));
+		template.updateFirst(query, update, DocumentWithCollection.class);
+
+		Query findQuery = new Query(Criteria.where("id").is(doc.id));
+		DocumentWithCollection result = template.findOne(findQuery, DocumentWithCollection.class);
+
+		assertThat(result, is(notNullValue()));
+		assertThat(result.id, is(doc.id));
+		assertThat(result.model, is(notNullValue()));
+		assertThat(result.model, hasSize(1));
+		assertThat(result.model.get(0).value(), is(newModelValue));
+	}
+
+	static class DocumentWithCollection {
+
+		@Id public String id;
+		public List<Model> model;
+	}
+
 	static interface Model {
 		String value();
 	}
@@ -2221,7 +2256,6 @@ public class MongoTemplateTests {
 		public String value() {
 			return this.value;
 		}
-
 	}
 
 	static class Document {

@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core.convert;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
+import static org.springframework.data.mongodb.core.DBObjectTestUtils.*;
 
 import java.util.List;
 
@@ -26,7 +27,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.mongodb.MongoDbFactory;
-import org.springframework.data.mongodb.core.DBObjectTestUtils;
+import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.Update;
 
@@ -64,8 +65,8 @@ public class UpdateMapperUnitTests {
 		DBObject mappedObject = mapper.getMappedObject(update.getUpdateObject(),
 				context.getPersistentEntity(ParentClass.class));
 
-		DBObject push = DBObjectTestUtils.getAsDBObject(mappedObject, "$push");
-		DBObject list = DBObjectTestUtils.getAsDBObject(push, "list");
+		DBObject push = getAsDBObject(mappedObject, "$push");
+		DBObject list = getAsDBObject(push, "aliased");
 
 		assertThat(list.get("_class"), is((Object) ConcreteChildClass.class.getName()));
 	}
@@ -82,7 +83,7 @@ public class UpdateMapperUnitTests {
 		DBObject mappedObject = mapper.getMappedObject(update.getUpdateObject(),
 				context.getPersistentEntity(ModelWrapper.class));
 
-		DBObject set = DBObjectTestUtils.getAsDBObject(mappedObject, "$set");
+		DBObject set = getAsDBObject(mappedObject, "$set");
 		DBObject modelDbObject = (DBObject) set.get("model");
 		assertThat(modelDbObject.get("_class"), not(nullValue()));
 	}
@@ -99,7 +100,7 @@ public class UpdateMapperUnitTests {
 		DBObject mappedObject = mapper.getMappedObject(update.getUpdateObject(),
 				context.getPersistentEntity(ModelWrapper.class));
 
-		DBObject set = DBObjectTestUtils.getAsDBObject(mappedObject, "$set");
+		DBObject set = getAsDBObject(mappedObject, "$set");
 		assertThat(set.get("_class"), nullValue());
 	}
 
@@ -115,13 +116,66 @@ public class UpdateMapperUnitTests {
 		DBObject mappedObject = mapper.getMappedObject(update.getUpdateObject(),
 				context.getPersistentEntity(ModelWrapper.class));
 
-		DBObject set = DBObjectTestUtils.getAsDBObject(mappedObject, "$set");
+		DBObject set = getAsDBObject(mappedObject, "$set");
 		assertThat(set.get("_class"), nullValue());
 	}
 
-	static interface Model {
+	/**
+	 * @see DATAMONGO-407
+	 */
+	@Test
+	public void updateMapperShouldRetainTypeInformationForNestedCollectionElements() {
 
+		Update update = Update.update("list.$", new ConcreteChildClass("42", "bubu"));
+
+		UpdateMapper mapper = new UpdateMapper(converter);
+		DBObject mappedObject = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(ParentClass.class));
+
+		DBObject set = getAsDBObject(mappedObject, "$set");
+		DBObject modelDbObject = getAsDBObject(set, "aliased.$");
+		assertThat(modelDbObject.get("_class"), is((Object) ConcreteChildClass.class.getName()));
 	}
+
+	/**
+	 * @see DATAMONGO-407
+	 */
+	@Test
+	public void updateMapperShouldSupportNestedCollectionElementUpdates() {
+
+		Update update = Update.update("list.$.value", "foo").set("list.$.otherValue", "bar");
+
+		UpdateMapper mapper = new UpdateMapper(converter);
+		DBObject mappedObject = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(ParentClass.class));
+
+		DBObject set = getAsDBObject(mappedObject, "$set");
+		assertThat(set.get("aliased.$.value"), is((Object) "foo"));
+		assertThat(set.get("aliased.$.otherValue"), is((Object) "bar"));
+	}
+
+	/**
+	 * @see DATAMONGO-407
+	 */
+	@Test
+	public void updateMapperShouldWriteTypeInformationForComplexNestedCollectionElementUpdates() {
+
+		Update update = Update.update("list.$.value", "foo").set("list.$.someObject", new ConcreteChildClass("42", "bubu"));
+
+		UpdateMapper mapper = new UpdateMapper(converter);
+		DBObject mappedObject = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(ParentClass.class));
+
+		DBObject dbo = getAsDBObject(mappedObject, "$set");
+		assertThat(dbo.get("aliased.$.value"), is((Object) "foo"));
+
+		DBObject someObject = getAsDBObject(dbo, "aliased.$.someObject");
+		assertThat(someObject, is(notNullValue()));
+		assertThat(someObject.get("_class"), is((Object) ConcreteChildClass.class.getName()));
+		assertThat(someObject.get("value"), is((Object) "bubu"));
+	}
+
+	static interface Model {}
 
 	static class ModelImpl implements Model {
 		public int value;
@@ -138,6 +192,8 @@ public class UpdateMapperUnitTests {
 	static class ParentClass {
 
 		String id;
+
+		@Field("aliased")//
 		List<? extends AbstractChildClass> list;
 
 		public ParentClass(String id, List<? extends AbstractChildClass> list) {
@@ -151,10 +207,13 @@ public class UpdateMapperUnitTests {
 
 		String id;
 		String value;
+		String otherValue;
+		AbstractChildClass someObject;
 
 		public AbstractChildClass(String id, String value) {
 			this.id = id;
 			this.value = value;
+			this.otherValue = "other_" + value;
 		}
 	}
 
