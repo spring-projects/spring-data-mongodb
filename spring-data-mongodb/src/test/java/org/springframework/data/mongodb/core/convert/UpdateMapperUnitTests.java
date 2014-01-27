@@ -69,6 +69,38 @@ public class UpdateMapperUnitTests {
 		assertThat(list.get("_class"), is((Object) ConcreteChildClass.class.getName()));
 	}
 
+	/**
+	 * @see DATAMONGO-407
+	 */
+	@Test
+	public void updateMapperShouldRetainTypeInformationForNestedEntities() {
+
+		Update update = Update.update("model", new ModelImpl(1));
+		UpdateMapper mapper = new UpdateMapper(converter);
+
+		DBObject mappedObject = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(ModelWrapper.class));
+
+		DBObject set = DBObjectTestUtils.getAsDBObject(mappedObject, "$set");
+		DBObject modelDbObject = (DBObject) set.get("model");
+		assertThat(modelDbObject.get("_class"), not(nullValue()));
+		assertThat(modelDbObject.get("_class"), is((Object) ModelImpl.class.getName()));
+	}
+
+	static interface Model {}
+
+	static class ModelImpl implements Model {
+		public int value;
+
+		public ModelImpl(int value) {
+			this.value = value;
+		}
+	}
+
+	public class ModelWrapper {
+		Model model;
+	}
+
 	static class ParentClass {
 
 		String id;

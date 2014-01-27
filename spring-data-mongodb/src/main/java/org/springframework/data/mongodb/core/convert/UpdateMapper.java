@@ -15,7 +15,10 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
+import org.springframework.data.mapping.context.MappingContext;
+import org.springframework.data.mapping.context.PersistentPropertyPath;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 
 /**
  * A subclass of {@link QueryMapper} that retains type information on the mongo types.
@@ -48,5 +51,64 @@ public class UpdateMapper extends QueryMapper {
 	protected Object delegateConvertToMongoType(Object source, MongoPersistentEntity<?> entity) {
 		return entity == null ? super.delegateConvertToMongoType(source, null) : converter.convertToMongoType(source,
 				entity.getTypeInformation());
+	}
+
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.convert.QueryMapper#createPropertyField(org.springframework.data.mongodb.core.mapping.MongoPersistentEntity, java.lang.String, org.springframework.data.mapping.context.MappingContext)
+	 */
+	@Override
+	protected Field createPropertyField(MongoPersistentEntity<?> entity, String key,
+			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
+
+		if (entity == null) {
+			return super.createPropertyField(entity, key, mappingContext);
+		}
+
+		return new UpdateMetadataBackedField(entity, key, mappingContext);
+	}
+
+	/**
+	 * Extension of {@link MetadataBackedField} to be backed with mapping metadata.
+	 * 
+	 * @author Thomas Darimont
+	 */
+	private static class UpdateMetadataBackedField extends MetadataBackedField {
+
+		/**
+		 * Holds the {@link PersistentPropertyPath} build from the given field key without collection wildcard elements.
+		 * E.g.
+		 * 
+		 * <pre>
+		 * root.list.$.value -> root.list.value
+		 * 
+		 * <pre>
+		 */
+		private final PersistentPropertyPath<MongoPersistentProperty> linearStrippedCollectionElementPath;
+
+		/**
+		 * Creates a new {@link MetadataBackedField} with the given name, {@link MongoPersistentEntity} and
+		 * {@link MappingContext}.
+		 * 
+		 * @param entity
+		 * @param key
+		 * @param mappingContext
+		 */
+		public UpdateMetadataBackedField(MongoPersistentEntity<?> entity, String key,
+				MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
+
+			super(key, entity, mappingContext);
+			this.linearStrippedCollectionElementPath = getPath(key, true);
+		}
+
+		/* 
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.convert.QueryMapper.MetadataBackedField#getProperty()
+		 */
+		@Override
+		public MongoPersistentProperty getProperty() {
+			return this.linearStrippedCollectionElementPath == null ? null : this.linearStrippedCollectionElementPath
+					.getLeafProperty();
+		}
 	}
 }

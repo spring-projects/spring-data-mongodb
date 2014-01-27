@@ -167,6 +167,7 @@ public class MongoTemplateTests {
 		template.dropCollection(ObjectWith3AliasedFieldsAndNestedAddress.class);
 		template.dropCollection(BaseDoc.class);
 		template.dropCollection(ObjectWithEnumValue.class);
+		template.dropCollection(DocumentWithCollection.class);
 	}
 
 	@Test
@@ -2183,6 +2184,60 @@ public class MongoTemplateTests {
 		query.with(new Sort("field"));
 
 		assertThat(template.find(query, Sample.class), is(not(empty())));
+	}
+
+	/**
+	 * @see DATAMONGO-407
+	 */
+	@Test
+	public void updatesShouldRetainTypeInformationEvenForCollections() {
+
+		DocumentWithCollection doc = new DocumentWithCollection();
+		doc.id = "4711";
+		doc.model = new ArrayList<Model>();
+		doc.model.add(new ModelA().withValue("foo"));
+		template.insert(doc);
+
+		Query query = new Query(Criteria.where("id").is(doc.id));
+		query.addCriteria(where("model.value").is("foo"));
+		String newModelValue = "bar";
+		Update update = Update.update("model.$", new ModelA().withValue(newModelValue));
+		template.updateFirst(query, update, DocumentWithCollection.class);
+
+		Query findQuery = new Query(Criteria.where("id").is(doc.id));
+		DocumentWithCollection result = template.findOne(findQuery, DocumentWithCollection.class);
+
+		assertThat(result, is(notNullValue()));
+		assertThat(result.id, is(doc.id));
+		assertThat(result.model, is(notNullValue()));
+		assertThat(result.model, hasSize(1));
+		assertThat(result.model.get(0).value(), is(newModelValue));
+	}
+
+	/**
+	 * @see DATAMONGO-807
+	 */
+	@Test
+	public void findAndModifyShouldRetainTypeInformationWithinUpdatedType() {
+
+		Document document = new Document();
+		document.model = new ModelA().withValue("value1");
+
+		template.save(document);
+
+		Query query = query(where("id").is(document.id));
+		Update update = Update.update("model", new ModelA().withValue("value2"));
+		template.findAndModify(query, update, Document.class);
+
+		Document retrieved = template.findOne(query, Document.class);
+		Assert.assertThat(retrieved.model, instanceOf(ModelA.class));
+		Assert.assertThat(retrieved.model.value(), equalTo("value2"));
+	}
+
+	static class DocumentWithCollection {
+
+		@Id public String id;
+		public List<Model> model;
 	}
 
 	static interface Model {
