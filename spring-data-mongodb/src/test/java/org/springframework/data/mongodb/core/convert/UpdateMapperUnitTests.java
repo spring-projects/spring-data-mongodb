@@ -69,6 +69,93 @@ public class UpdateMapperUnitTests {
 		assertThat(list.get("_class"), is((Object) ConcreteChildClass.class.getName()));
 	}
 
+	/**
+	 * @see DATAMONGO-407
+	 */
+	@Test
+	public void updateMapperShouldRetainTypeInformationForNestedEntities() {
+
+		Update update = Update.update("model", new ModelImpl(1));
+		UpdateMapper mapper = new UpdateMapper(converter);
+
+		DBObject mappedObject = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(ModelWrapper.class));
+
+		DBObject set = DBObjectTestUtils.getAsDBObject(mappedObject, "$set");
+		DBObject modelDbObject = (DBObject) set.get("model");
+		assertThat(modelDbObject.get("_class"), not(nullValue()));
+		assertThat(modelDbObject.get("_class"), is((Object) ModelImpl.class.getName()));
+	}
+
+	/**
+	 * @see DATAMONGO-407
+	 */
+	@Test
+	public void updateMapperShouldRetainTypeInformationForNestedCollectionElements() {
+
+		Update update = Update.update("list.$", new ConcreteChildClass("42", "bubu"));
+
+		UpdateMapper mapper = new UpdateMapper(converter);
+		DBObject mappedObject = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(ParentClass.class));
+
+		DBObject set = DBObjectTestUtils.getAsDBObject(mappedObject, "$set");
+		DBObject modelDbObject = (DBObject) set.get("list.$");
+		assertThat(modelDbObject.get("_class"), is((Object) ConcreteChildClass.class.getName()));
+	}
+
+	/**
+	 * @see DATAMONGO-407
+	 */
+	@Test
+	public void updateMapperShouldSupportNestedCollectionElementUpdates() {
+
+		Update update = Update.update("list.$.value", "foo").set("list.$.otherValue", "bar");
+
+		UpdateMapper mapper = new UpdateMapper(converter);
+		DBObject mappedObject = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(ParentClass.class));
+
+		DBObject set = DBObjectTestUtils.getAsDBObject(mappedObject, "$set");
+		assertThat(set.get("list.$.value"), is((Object) "foo"));
+		assertThat(set.get("list.$.otherValue"), is((Object) "bar"));
+	}
+
+	/**
+	 * @see DATAMONGO-407
+	 */
+	@Test
+	public void updateMapperShouldWriteTypeInformationForComplexNestedCollectionElementUpdates() {
+
+		Update update = Update.update("list.$.value", "foo").set("list.$.someObject", new ConcreteChildClass("42", "bubu"));
+
+		UpdateMapper mapper = new UpdateMapper(converter);
+		DBObject mappedObject = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(ParentClass.class));
+
+		DBObject dbo = DBObjectTestUtils.getAsDBObject(mappedObject, "$set");
+		assertThat(dbo.get("list.$.value"), is((Object) "foo"));
+
+		DBObject someObject = (DBObject) dbo.get("list.$.someObject");
+		assertThat(someObject, is(notNullValue()));
+		assertThat(someObject.get("_class"), is((Object) ConcreteChildClass.class.getName()));
+		assertThat(someObject.get("value"), is((Object) "bubu"));
+	}
+
+	static interface Model {}
+
+	static class ModelImpl implements Model {
+		public int value;
+
+		public ModelImpl(int value) {
+			this.value = value;
+		}
+	}
+
+	public class ModelWrapper {
+		Model model;
+	}
+
 	static class ParentClass {
 
 		String id;
@@ -85,10 +172,13 @@ public class UpdateMapperUnitTests {
 
 		String id;
 		String value;
+		String otherValue;
+		AbstractChildClass someObject;
 
 		public AbstractChildClass(String id, String value) {
 			this.id = id;
 			this.value = value;
+			this.otherValue = "other_" + value;
 		}
 	}
 

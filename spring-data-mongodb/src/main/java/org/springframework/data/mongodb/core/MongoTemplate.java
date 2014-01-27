@@ -1565,7 +1565,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
 
-		DBObject mappedUpdate = queryMapper.getMappedObject(update.getUpdateObject(), entity);
+		DBObject mappedUpdate = updateMapper.getMappedObject(update.getUpdateObject(), entity);
 		DBObject mappedQuery = queryMapper.getMappedObject(query, entity);
 
 		if (LOGGER.isDebugEnabled()) {

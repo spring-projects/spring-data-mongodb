@@ -102,20 +102,52 @@ public class QueryMapper {
 				continue;
 			}
 
-			Field field = entity == null ? new Field(key) : new MetadataBackedField(key, entity, mappingContext);
+			Field field = createPropertyField(entity, key, mappingContext);
 
 			Object rawValue = query.get(key);
 			String newKey = field.getMappedKey();
 
 			if (isNestedKeyword(rawValue) && !field.isIdField()) {
-				Keyword keyword = new Keyword((DBObject) rawValue);
-				result.put(newKey, getMappedKeyword(field, keyword));
+				addMappedKeyword(result, field, rawValue, newKey);
 			} else {
-				result.put(newKey, getMappedValue(field, rawValue));
+				addMappedValue(result, field, rawValue, newKey);
 			}
 		}
 
 		return result;
+	}
+
+	/**
+	 * @param entity
+	 * @param key
+	 * @param mappingContext
+	 * @return
+	 */
+	protected Field createPropertyField(MongoPersistentEntity<?> entity, String key,
+			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
+		return entity == null ? new Field(key) : new MetadataBackedField(key, entity, mappingContext);
+	}
+
+	/**
+	 * @param result
+	 * @param field
+	 * @param rawValue
+	 * @param newKey
+	 */
+	protected void addMappedKeyword(DBObject result, Field field, Object rawValue, String newKey) {
+
+		Keyword keyword = new Keyword((DBObject) rawValue);
+		result.put(newKey, getMappedKeyword(field, keyword));
+	}
+
+	/**
+	 * @param result
+	 * @param field
+	 * @param rawValue
+	 * @param newKey
+	 */
+	protected void addMappedValue(DBObject result, Field field, Object rawValue, String newKey) {
+		result.put(newKey, getMappedValue(field, rawValue));
 	}
 
 	/**
@@ -400,7 +432,7 @@ public class QueryMapper {
 	 * 
 	 * @author Oliver Gierke
 	 */
-	private static class Field {
+	protected static class Field {
 
 		private static final String ID_KEY = "_id";
 
@@ -477,12 +509,14 @@ public class QueryMapper {
 	 * Extension of {@link DocumentField} to be backed with mapping metadata.
 	 * 
 	 * @author Oliver Gierke
+	 * @author Thomas Darimont
 	 */
-	private static class MetadataBackedField extends Field {
+	protected static class MetadataBackedField extends Field {
 
-		private final MongoPersistentEntity<?> entity;
-		private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
+		protected final MongoPersistentEntity<?> entity;
+		protected final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 		private final MongoPersistentProperty property;
+		protected final PersistentPropertyPath<MongoPersistentProperty> path;
 
 		/**
 		 * Creates a new {@link MetadataBackedField} with the given name, {@link MongoPersistentEntity} and
@@ -502,7 +536,7 @@ public class QueryMapper {
 			this.entity = entity;
 			this.mappingContext = context;
 
-			PersistentPropertyPath<MongoPersistentProperty> path = getPath(name);
+			this.path = getPath(name, false);
 			this.property = path == null ? null : path.getLeafProperty();
 		}
 
@@ -568,14 +602,25 @@ public class QueryMapper {
 		@Override
 		public String getMappedKey() {
 
-			PersistentPropertyPath<MongoPersistentProperty> path = getPath(name);
+			PersistentPropertyPath<MongoPersistentProperty> path = getPath(name, false);
 			return path == null ? name : path.toDotPath(MongoPersistentProperty.PropertyToFieldNameConverter.INSTANCE);
 		}
 
-		private PersistentPropertyPath<MongoPersistentProperty> getPath(String name) {
+		/**
+		 * Returns the {@link PersistentPropertyPath} for the given <code>pathExpression</code>.
+		 * 
+		 * @param pathExpression
+		 * @param removeCollectionWildcardExpressionParts
+		 * @return
+		 */
+		protected PersistentPropertyPath<MongoPersistentProperty> getPath(String pathExpression,
+				boolean removeCollectionWildcardExpressionParts) {
 
 			try {
-				PropertyPath path = PropertyPath.from(name, entity.getTypeInformation());
+				String potentiallyCleanedPathExpression = removeCollectionWildcardExpressionParts ? pathExpression.replaceAll(
+						"\\.\\$", "") : pathExpression;
+				PropertyPath path = PropertyPath.from(potentiallyCleanedPathExpression, entity.getTypeInformation());
+
 				return mappingContext.getPersistentPropertyPath(path);
 			} catch (PropertyReferenceException e) {
 				return null;
