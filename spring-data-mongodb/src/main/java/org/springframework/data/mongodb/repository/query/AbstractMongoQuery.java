@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 the original author or authors.
+ * Copyright 2010-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -153,7 +153,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	 * 
 	 * @author Oliver Gierke
 	 */
-	class CollectionExecution extends Execution {
+	final class CollectionExecution extends Execution {
 
 		private final Pageable pageable;
 
@@ -176,7 +176,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	 * 
 	 * @author Oliver Gierke
 	 */
-	class PagedExecution extends Execution {
+	final class PagedExecution extends Execution {
 
 		private final Pageable pageable;
 
@@ -213,7 +213,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	 * 
 	 * @author Oliver Gierke
 	 */
-	class SingleEntityExecution extends Execution {
+	final class SingleEntityExecution extends Execution {
 
 		private final boolean countProjection;
 
@@ -239,7 +239,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	 * 
 	 * @author Oliver Gierke
 	 */
-	class GeoNearExecution extends Execution {
+	final class GeoNearExecution extends Execution {
 
 		private final MongoParameterAccessor accessor;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2013 the original author or authors.
+ * Copyright 2011-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,7 +50,7 @@ import com.mongodb.util.JSON;
 public class MongoPersistentEntityIndexCreator implements
 		ApplicationListener<MappingContextEvent<MongoPersistentEntity<?>, MongoPersistentProperty>> {
 
-	private static final Logger log = LoggerFactory.getLogger(MongoPersistentEntityIndexCreator.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(MongoPersistentEntityIndexCreator.class);
 
 	private final Map<Class<?>, Boolean> classesSeen = new ConcurrentHashMap<Class<?>, Boolean>();
 	private final MongoDbFactory mongoDbFactory;
@@ -97,8 +97,8 @@ public class MongoPersistentEntityIndexCreator implements
 	protected void checkForIndexes(final MongoPersistentEntity<?> entity) {
 		final Class<?> type = entity.getType();
 		if (!classesSeen.containsKey(type)) {
-			if (log.isDebugEnabled()) {
-				log.debug("Analyzing class " + type + " for index information.");
+			if (LOGGER.isDebugEnabled()) {
+				LOGGER.debug("Analyzing class " + type + " for index information.");
 			}
 
 			// Make sure indexes get created
@@ -112,8 +112,8 @@ public class MongoPersistentEntityIndexCreator implements
 					ensureIndex(indexColl, index.name(), definition, index.unique(), index.dropDups(), index.sparse(),
 							index.background(), index.expireAfterSeconds());
 
-					if (log.isDebugEnabled()) {
-						log.debug("Created compound index " + index);
+					if (LOGGER.isDebugEnabled()) {
+						LOGGER.debug("Created compound index " + index);
 					}
 				}
 			}
@@ -133,8 +133,8 @@ public class MongoPersistentEntityIndexCreator implements
 						} else {
 							if (!name.equals(field.getName()) && index.unique() && !index.sparse()) {
 								// Names don't match, and sparse is not true. This situation will generate an error on the server.
-								if (log.isWarnEnabled()) {
-									log.warn("The index name " + name + " doesn't match this property name: " + field.getName()
+								if (LOGGER.isWarnEnabled()) {
+									LOGGER.warn("The index name " + name + " doesn't match this property name: " + field.getName()
 											+ ". Setting sparse=true on this index will prevent errors when inserting documents.");
 								}
 							}
@@ -147,8 +147,8 @@ public class MongoPersistentEntityIndexCreator implements
 						ensureIndex(collection, name, definition, index.unique(), index.dropDups(), index.sparse(),
 								index.background(), index.expireAfterSeconds());
 
-						if (log.isDebugEnabled()) {
-							log.debug("Created property index " + index);
+						if (LOGGER.isDebugEnabled()) {
+							LOGGER.debug("Created property index " + index);
 						}
 
 					} else if (field.isAnnotationPresent(GeoSpatialIndexed.class)) {
@@ -165,8 +165,8 @@ public class MongoPersistentEntityIndexCreator implements
 						mongoDbFactory.getDb().getCollection(collection)
 								.ensureIndex(indexObject.getIndexKeys(), indexObject.getIndexOptions());
 
-						if (log.isDebugEnabled()) {
-							log.debug(String.format("Created %s for entity %s in collection %s! ", indexObject, entity.getType(),
+						if (LOGGER.isDebugEnabled()) {
+							LOGGER.debug(String.format("Created %s for entity %s in collection %s! ", indexObject, entity.getType(),
 									collection));
 						}
 					}

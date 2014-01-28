@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,13 +32,13 @@ import org.springframework.util.StringUtils;
  * @author Oliver Gierke
  * @since 1.3
  */
-public class Fields implements Iterable<Field> {
+public final class Fields implements Iterable<Field> {
 
 	private static final String AMBIGUOUS_EXCEPTION = "Found two fields both using '%s' as name: %s and %s! Please "
 			+ "customize your field definitions to get to unique field names!";
 
-	public static String UNDERSCORE_ID = "_id";
-	public static String UNDERSCORE_ID_REF = "$_id";
+	public static final String UNDERSCORE_ID = "_id";
+	public static final String UNDERSCORE_ID_REF = "$_id";
 
 	private final List<Field> fields;
 
@@ -203,7 +203,7 @@ public class Fields implements Iterable<Field> {
 			Assert.hasText(nameToSet, "AggregationField name must not be null or empty!");
 
 			if (target == null && name.contains(".")) {
-				this.name = nameToSet.substring(nameToSet.indexOf(".") + 1);
+				this.name = nameToSet.substring(nameToSet.indexOf('.') + 1);
 				this.target = nameToSet;
 			} else {
 				this.name = nameToSet;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2013 by the original author(s).
+ * Copyright 2011-2014 by the original author(s).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -74,7 +74,7 @@ import com.mongodb.DBRef;
  */
 public class MappingMongoConverter extends AbstractMongoConverter implements ApplicationContextAware {
 
-	protected static final Logger log = LoggerFactory.getLogger(MappingMongoConverter.class);
+	protected static final Logger LOGGER = LoggerFactory.getLogger(MappingMongoConverter.class);
 
 	protected final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 	protected final SpelExpressionParser spelExpressionParser = new SpelExpressionParser();
@@ -668,7 +668,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 */
 	protected void addCustomTypeKeyIfNecessary(TypeInformation<?> type, Object value, DBObject dbObject) {
 
-		TypeInformation<?> actualType = type != null ? type.getActualType() : type;
+		TypeInformation<?> actualType = type != null ? type.getActualType() : null;
 		Class<?> reference = actualType == null ? Object.class : actualType.getType();
 
 		boolean notTheSameClass = !value.getClass().equals(reference);

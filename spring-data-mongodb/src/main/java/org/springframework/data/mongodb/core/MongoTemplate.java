@@ -375,7 +375,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		DBObject fieldsObject = query.getFieldsObject();
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug(String.format("Executing query: %s sort: %s fields: %s in collection: $s",
+			LOGGER.debug(String.format("Executing query: %s sort: %s fields: %s in collection: %s",
 					serializeToJsonSafely(queryObject), sortObject, fieldsObject, collectionName));
 		}
 
@@ -1181,6 +1181,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 	public <T> MapReduceResults<T> mapReduce(Query query, String inputCollectionName, String mapFunction,
 			String reduceFunction, MapReduceOptions mapReduceOptions, Class<T> entityClass) {
+
 		String mapFunc = replaceWithResourceIfNecessary(mapFunction);
 		String reduceFunc = replaceWithResourceIfNecessary(reduceFunction);
 		DBCollection inputCollection = getCollection(inputCollectionName);
@@ -1205,12 +1206,12 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		MapReduceOutput mapReduceOutput = new MapReduceOutput(inputCollection, commandObject, commandResult);
 		List<T> mappedResults = new ArrayList<T>();
 		DbObjectCallback<T> callback = new ReadDbObjectCallback<T>(mongoConverter, entityClass);
+
 		for (DBObject dbObject : mapReduceOutput.results()) {
 			mappedResults.add(callback.doWith(dbObject));
 		}
 
-		MapReduceResults<T> mapReduceResult = new MapReduceResults<T>(mappedResults, commandResult);
-		return mapReduceResult;
+		return new MapReduceResults<T>(mappedResults, commandResult);
 	}
 
 	public <T> GroupByResults<T> group(String inputCollectionName, GroupBy groupBy, Class<T> entityClass) {
@@ -1264,15 +1265,14 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 		@SuppressWarnings("unchecked")
 		Iterable<DBObject> resultSet = (Iterable<DBObject>) commandResult.get("retval");
-
 		List<T> mappedResults = new ArrayList<T>();
 		DbObjectCallback<T> callback = new ReadDbObjectCallback<T>(mongoConverter, entityClass);
+
 		for (DBObject dbObject : resultSet) {
 			mappedResults.add(callback.doWith(dbObject));
 		}
-		GroupByResults<T> groupByResult = new GroupByResults<T>(mappedResults, commandResult);
-		return groupByResult;
 
+		return new GroupByResults<T>(mappedResults, commandResult);
 	}
 
 	@Override

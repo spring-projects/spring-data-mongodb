@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2013 the original author or authors.
+ * Copyright 2011-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -75,7 +75,7 @@ import org.w3c.dom.Element;
 public class MappingMongoConverterParser implements BeanDefinitionParser {
 
 	private static final String BASE_PACKAGE = "base-package";
-	private static final boolean jsr303Present = ClassUtils.isPresent("javax.validation.Validator",
+	private static final boolean JSR_303_PRESENT = ClassUtils.isPresent("javax.validation.Validator",
 			MappingMongoConverterParser.class.getClassLoader());
 
 	/* (non-Javadoc)
@@ -166,7 +166,7 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 
 	private RuntimeBeanReference getValidator(Object source, ParserContext parserContext) {
 
-		if (!jsr303Present) {
+		if (!JSR_303_PRESENT) {
 			return null;
 		}
 
@@ -195,7 +195,8 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 		BeanDefinitionBuilder mappingContextBuilder = BeanDefinitionBuilder
 				.genericBeanDefinition(MongoMappingContext.class);
 
-		Set<String> classesToAdd = getInititalEntityClasses(element, mappingContextBuilder);
+		Set<String> classesToAdd = getInititalEntityClasses(element);
+
 		if (classesToAdd != null) {
 			mappingContextBuilder.addPropertyValue("initialEntitySet", classesToAdd);
 		}
@@ -262,7 +263,7 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 		return null;
 	}
 
-	private static Set<String> getInititalEntityClasses(Element element, BeanDefinitionBuilder builder) {
+	private static Set<String> getInititalEntityClasses(Element element) {
 
 		String basePackage = element.getAttribute(BASE_PACKAGE);
 

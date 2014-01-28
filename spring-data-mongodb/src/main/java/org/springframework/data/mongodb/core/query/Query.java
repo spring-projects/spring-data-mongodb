@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 the original author or authors.
+ * Copyright 2010-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.springframework.data.domain.Pageable;
@@ -41,10 +42,10 @@ import com.mongodb.DBObject;
  */
 public class Query {
 
-	private final static String RESTRICTED_TYPES_KEY = "_$RESTRICTED_TYPES";
+	private static final String RESTRICTED_TYPES_KEY = "_$RESTRICTED_TYPES";
 
 	private final Set<Class<?>> restrictedTypes = new HashSet<Class<?>>();
-	private LinkedHashMap<String, Criteria> criteria = new LinkedHashMap<String, Criteria>();
+	private final Map<String, Criteria> criteria = new LinkedHashMap<String, Criteria>();
 	private Field fieldSpec;
 	private Sort sort;
 	private int skip;
@@ -197,6 +198,7 @@ public class Query {
 	public DBObject getQueryObject() {
 
 		DBObject dbo = new BasicDBObject();
+
 		for (String k : criteria.keySet()) {
 			CriteriaDefinition c = criteria.get(k);
 			DBObject cl = c.getCriteriaObject();
@@ -211,24 +213,19 @@ public class Query {
 	}
 
 	public DBObject getFieldsObject() {
-		if (this.fieldSpec == null) {
-			return null;
-		}
-		return fieldSpec.getFieldsObject();
+		return this.fieldSpec == null ? null : fieldSpec.getFieldsObject();
 	}
 
 	public DBObject getSortObject() {
 
-		if (this.sort == null && this.sort == null) {
+		if (this.sort == null) {
 			return null;
 		}
 
 		DBObject dbo = new BasicDBObject();
 
-		if (this.sort != null) {
-			for (org.springframework.data.domain.Sort.Order order : this.sort) {
-				dbo.put(order.getProperty(), order.isAscending() ? 1 : -1);
-			}
+		for (org.springframework.data.domain.Sort.Order order : this.sort) {
+			dbo.put(order.getProperty(), order.isAscending() ? 1 : -1);
 		}
 
 		return dbo;

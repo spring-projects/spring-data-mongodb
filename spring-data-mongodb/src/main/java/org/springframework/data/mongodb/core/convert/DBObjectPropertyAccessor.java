@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 the original author or authors.
+ * Copyright 2012-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,18 +31,30 @@ import com.mongodb.DBObject;
  */
 class DBObjectPropertyAccessor extends MapAccessor {
 
-	static MapAccessor INSTANCE = new DBObjectPropertyAccessor();
+	static final MapAccessor INSTANCE = new DBObjectPropertyAccessor();
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.context.expression.MapAccessor#getSpecificTargetClasses()
+	 */
 	@Override
 	public Class<?>[] getSpecificTargetClasses() {
 		return new Class[] { DBObject.class };
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.context.expression.MapAccessor#canRead(org.springframework.expression.EvaluationContext, java.lang.Object, java.lang.String)
+	 */
 	@Override
 	public boolean canRead(EvaluationContext context, Object target, String name) {
 		return true;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.context.expression.MapAccessor#read(org.springframework.expression.EvaluationContext, java.lang.Object, java.lang.String)
+	 */
 	@Override
 	@SuppressWarnings("unchecked")
 	public TypedValue read(EvaluationContext context, Object target, String name) {

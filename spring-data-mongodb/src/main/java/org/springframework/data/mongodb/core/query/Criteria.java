@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 the original author or authors.
+ * Copyright 2010-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,11 +52,8 @@ public class Criteria implements CriteriaDefinition {
 	private static final Object NOT_SET = new Object();
 
 	private String key;
-
 	private List<Criteria> criteriaChain;
-
 	private LinkedHashMap<String, Object> criteria = new LinkedHashMap<String, Object>();
-
 	private Object isValue = NOT_SET;
 
 	public Criteria() {
@@ -101,13 +98,16 @@ public class Criteria implements CriteriaDefinition {
 	 * @return
 	 */
 	public Criteria is(Object o) {
-		if (isValue != NOT_SET) {
+
+		if (!isValue.equals(NOT_SET)) {
 			throw new InvalidMongoDbApiUsageException(
 					"Multiple 'is' values declared. You need to use 'and' with multiple criteria");
 		}
+
 		if (lastOperatorWasNot()) {
 			throw new InvalidMongoDbApiUsageException("Invalid query: 'not' can't be used with 'is' - use 'ne' instead.");
 		}
+
 		this.isValue = o;
 		return this;
 	}
@@ -475,8 +475,10 @@ public class Criteria implements CriteriaDefinition {
 	}
 
 	protected DBObject getSingleCriteriaObject() {
+
 		DBObject dbo = new BasicDBObject();
 		boolean not = false;
+
 		for (String k : this.criteria.keySet()) {
 			Object value = this.criteria.get(k);
 			if (not) {
@@ -494,12 +496,14 @@ public class Criteria implements CriteriaDefinition {
 		}
 
 		DBObject queryCriteria = new BasicDBObject();
-		if (isValue != NOT_SET) {
+
+		if (!NOT_SET.equals(isValue)) {
 			queryCriteria.put(this.key, this.isValue);
 			queryCriteria.putAll(dbo);
 		} else {
 			queryCriteria.put(this.key, dbo);
 		}
+
 		return queryCriteria;
 	}
 
