@@ -248,7 +248,7 @@ public class MongoApp {
     <title>Examples Repository</title>
 
     <para>There is an <ulink
-    url="https://github.com/SpringSource/spring-data-document-examples">github
+    url="https://github.com/spring-projects/spring-data-document-examples">github
     repository with several examples</ulink> that you can download and play
     around with to get a feel for how the library works.</para>
   </section>
@@ -264,9 +264,9 @@ public class MongoApp {
         <para>For those not familiar with how to configure the Spring
         container using Java based bean metadata instead of XML based metadata
         see the high level introduction in the reference docs <ulink
-        url="http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/html/new-in-3.html#new-java-configuration"
+        url="http://docs.spring.io/spring/docs/3.2.x/spring-framework-reference/html/new-in-3.0.html#new-java-configuration"
         userlevel="">here </ulink> as well as the detailed documentation<ulink
-        url="http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/html/beans.html#beans-java-instantiating-container">
+        url="http://docs.spring.io/spring/docs/3.2.x/spring-framework-reference/html/beans.html#beans-java-instantiating-container">
         here</ulink>.</para>
       </note></para>
 

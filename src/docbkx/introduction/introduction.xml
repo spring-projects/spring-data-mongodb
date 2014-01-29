@@ -12,17 +12,17 @@
       <title>Knowing Spring</title>
 
       <para>Spring Data uses Spring framework's <ulink
-      url="http://static.springframework.org/spring/docs/3.0.x/reference/html/spring-core.html">core</ulink>
+      url="http://docs.spring.io/spring/docs/3.2.x/spring-framework-reference/html/spring-core.html">core</ulink>
       functionality, such as the <ulink
-      url="http://static.springframework.org/spring/docs/3.0.x/reference/html/beans.html">IoC</ulink>
+      url="http://docs.spring.io/spring/docs/3.2.x/spring-framework-reference/html/beans.html">IoC</ulink>
       container, <ulink
-      url="http://static.springsource.org/spring/docs/3.0.x/reference/html/validation.html#core-convert">type
+      url="http://docs.spring.io/spring/docs/3.2.x/spring-framework-reference/html/validation.html#core-convert">type
       conversion system</ulink>, <ulink
-      url="http://static.springsource.org/spring/docs/3.0.x/reference/html/expressions.html">expression
+      url="http://docs.spring.io/spring/docs/3.2.x/spring-framework-reference/html/expressions.html">expression
       language</ulink>, <ulink
-      url="http://static.springsource.org/spring/docs/3.0.x/reference/html/jmx.html">JMX
+      url="http://docs.spring.io/spring/docs/3.2.x/spring-framework-reference/html/jmx.html">JMX
       integration</ulink>, and portable <ulink
-      url="http://static.springsource.org/spring/docs/3.0.x/reference/html/dao.html#dao-exceptions">DAO
+      url="http://docs.spring.io/spring/docs/3.2.x/spring-framework-reference/html/dao.html#dao-exceptions">DAO
       exception hierarchy</ulink>. While it is not important to know the
       Spring APIs, understanding the concepts behind them is. At a minimum,
       the idea behind IoC should be familiar for whatever IoC container you
@@ -40,7 +40,7 @@
       (and sometimes disarming) documentation that explains in detail the
       Spring Framework. There are a lot of articles, blog entries and books on
       the matter - take a look at the Spring framework <ulink
-      url="http://www.springsource.org/documentation">home page </ulink> for
+      url="https://spring.io/docs">home page </ulink> for
       more information.</para>
     </section><section id="get-started:first-steps:nosql">
       <title>Knowing NoSQL and Document databases</title>

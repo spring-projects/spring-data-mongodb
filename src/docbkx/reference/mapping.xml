@@ -638,7 +638,7 @@ public class Person {
         <para>Spring 3.0 introduced a core.convert package that provides a
         general type conversion system. This is described in detail in the
         Spring reference documentation section entitled <ulink
-        url="http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/html/validation.html#core-convert">Spring
+        url="http://docs.spring.io/spring/docs/3.2.x/spring-framework-reference/html/validation.html#core-convert">Spring
         3 Type Conversion</ulink>.</para>
       </note>
 
