@@ -262,7 +262,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		@Override
 		public ProjectionOperation as(String alias) {
 
-			Field expressionField = Fields.field(alias, "expr");
+			Field expressionField = Fields.field(alias, alias);
 			return this.operation.and(new ExpressionProjection(expressionField, this.value.toString(), params));
 		}
 
