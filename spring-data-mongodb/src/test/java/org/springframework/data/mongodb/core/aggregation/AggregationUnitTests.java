@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
 /**
@@ -160,5 +161,22 @@ public class AggregationUnitTests {
 		DBObject fields = getAsDBObject(secondProjection, "$project");
 		assertThat(fields.get("aCnt"), is((Object) 1));
 		assertThat(fields.get("a"), is((Object) "$_id.a"));
+	}
+
+	/**
+	 * @see DATAMONGO-838
+	 */
+	@Test
+	public void expressionBasedFieldsShouldBeReferencableInFollowingOperations() {
+
+		DBObject agg = newAggregation( //
+				project("a").andExpression("b+c").as("foo"), //
+				group("a").sum("foo").as("foosum") //
+		).toDbObject("foo", Aggregation.DEFAULT_CONTEXT);
+
+		@SuppressWarnings("unchecked")
+		DBObject secondProjection = ((List<DBObject>) agg.get("pipeline")).get(1);
+		DBObject fields = getAsDBObject(secondProjection, "$group");
+		assertThat(fields.get("foosum"), is((Object) new BasicDBObject("$sum", "$foo")));
 	}
 }
