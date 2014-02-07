@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.springframework.data.mongodb.core.Person;
 
 /**
  * Unit tests for {@link SpelExpressionTransformer}.
@@ -172,6 +173,26 @@ public class SpelExpressionTransformerUnitTests {
 		assertThat(
 				transform("((1 + [0].primitiveLongValue) + [0].primitiveDoubleValue) * [0].doubleValue.longValue()", data),
 				is("{ \"$multiply\" : [ { \"$add\" : [ 1 , 42 , 1.2345]} , 23]}"));
+	}
+
+	/**
+	 * @see DATAMONGO-840
+	 */
+	@Test
+	public void shouldRenderCompoundExpressionsWithIndexerAndFieldReference() {
+
+		Person person = new Person();
+		person.setAge(10);
+		assertThat(transform("[0].age + a.c", person), is("{ \"$add\" : [ 10 , \"$a.c\"]}"));
+	}
+
+	/**
+	 * @see DATAMONGO-840
+	 */
+	@Test
+	public void shouldRenderCompoundExpressionsWithOnlyFieldReferences() {
+
+		assertThat(transform("a.b + a.c"), is("{ \"$add\" : [ \"$a.b\" , \"$a.c\"]}"));
 	}
 
 	@Test

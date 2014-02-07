@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -495,7 +495,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 
 			if (currentNode.hasfirstChildNotOfType(Indexer.class)) {
 				// we have a property path expression like: foo.bar -> render as reference
-				return context.getFieldReference().toString();
+				return context.addToPreviousOrReturn(context.getFieldReference().toString());
 			}
 
 			return context.addToPreviousOrReturn(currentNode.getValue());
