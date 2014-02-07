@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2013 the original author or authors.
+ * Copyright 2011-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,6 +45,7 @@ import com.mongodb.gridfs.GridFSFile;
  * 
  * @author Oliver Gierke
  * @author Philipp Schneider
+ * @author Martin Baumgartner
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:gridfs/gridfs.xml")
@@ -57,6 +58,29 @@ public class GridFsTemplateIIntegrationTests {
 	@Before
 	public void setUp() {
 		operations.delete(null);
+	}
+
+	@Test
+	public void storesAndFindsSimpleDocumentWithMetadataDBObject() throws IOException {
+
+		DBObject metadata = new BasicDBObject("key", "value");
+		GridFSFile reference = operations.store(resource.getInputStream(), metadata);
+		
+		List<GridFSDBFile> result = operations.find(query(whereMetaData("key").is("value")));
+		assertThat(result.size(), is(1));
+		assertSame(result.get(0), reference);
+	}
+
+	@Test
+	public void storesAndFindsSimpleDocumentWithMetadataObject() throws IOException {
+
+		Metadata metadata = new Metadata();
+		metadata.version = "1.0";
+		GridFSFile reference = operations.store(resource.getInputStream(), metadata);
+		
+		List<GridFSDBFile> result = operations.find(query(whereMetaData("version").is("1.0")));
+		assertThat(result.size(), is(1));
+		assertSame(result.get(0), reference);
 	}
 
 	@Test
