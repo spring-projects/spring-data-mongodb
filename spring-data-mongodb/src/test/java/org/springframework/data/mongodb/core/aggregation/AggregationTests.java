@@ -782,6 +782,46 @@ public class AggregationTests {
 		assertThat(String.valueOf(firstItem.get("_id")), is("u1"));
 	}
 
+	/**
+	 * @see DATAMONGO-840
+	 */
+	@Test
+	public void shouldAggregateOrderDataToAnInvoice() {
+
+		mongoTemplate.dropCollection(Order.class);
+
+		double taxRate = 0.19;
+
+		LineItem product1 = new LineItem("1", "p1", 1.23);
+		LineItem product2 = new LineItem("2", "p2", 0.87, 2);
+		LineItem product3 = new LineItem("3", "p3", 5.33);
+
+		Order order = new Order("o4711", "c42", new Date()).addItem(product1).addItem(product2).addItem(product3);
+
+		mongoTemplate.save(order);
+
+		AggregationResults<Invoice> results = mongoTemplate.aggregate(newAggregation(Order.class, //
+				match(where("id").is(order.getId())), unwind("items"), //
+				project("id", "customerId", "items") //
+						.andExpression("items.price * items.quantity").as("lineTotal"), //
+				group("id") //
+						.sum("lineTotal").as("netAmount") //
+						.addToSet("items").as("items"), //
+				project("id", "items", "netAmount") //
+						.and("orderId").previousOperation() //
+						.andExpression("netAmount * [0]", taxRate).as("taxAmount") //
+						.andExpression("netAmount * (1 + [0])", taxRate).as("totalAmount") //
+				), Invoice.class);
+
+		Invoice invoice = results.getUniqueMappedResult();
+
+		assertThat(invoice, is(notNullValue()));
+		assertThat(invoice.getOrderId(), is(order.getId()));
+		assertThat(invoice.getNetAmount(), is(closeTo(8.3, 000001)));
+		assertThat(invoice.getTaxAmount(), is(closeTo(1.577, 000001)));
+		assertThat(invoice.getTotalAmount(), is(closeTo(9.877, 000001)));
+	}
+
 	private void assertLikeStats(LikeStats like, String id, long count) {
 
 		assertThat(like, is(notNullValue()));
