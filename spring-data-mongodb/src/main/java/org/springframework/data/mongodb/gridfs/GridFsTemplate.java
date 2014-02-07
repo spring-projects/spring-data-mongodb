@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2013 the original author or authors.
+ * Copyright 2011-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,6 +44,7 @@ import com.mongodb.gridfs.GridFSInputFile;
  * @author Oliver Gierke
  * @author Philipp Schneider
  * @author Thomas Darimont
+ * @author Martin Baumgartner
  */
 public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver {
 
@@ -91,6 +92,25 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 
 	/*
 	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#store(java.io.InputStream, java.lang.Object)
+	 */
+
+	@Override
+	public GridFSFile store(InputStream content, Object metadata) {
+		return store(content, null, metadata);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#store(java.io.InputStream, com.mongodb.DBObject)
+	 */
+	@Override
+	public GridFSFile store(InputStream content, DBObject metadata) {
+		return store(content, null, metadata);
+	}
+
+	/*
+	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#store(java.io.InputStream, java.lang.String, java.lang.String)
 	 */
 	public GridFSFile store(InputStream content, String filename, String contentType) {
@@ -102,7 +122,6 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#store(java.io.InputStream, java.lang.String, java.lang.Object)
 	 */
 	public GridFSFile store(InputStream content, String filename, Object metadata) {
-
 		return store(content, filename, null, metadata);
 	}
 
@@ -137,10 +156,12 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 	public GridFSFile store(InputStream content, String filename, String contentType, DBObject metadata) {
 
 		Assert.notNull(content);
-		Assert.hasText(filename);
 
 		GridFSInputFile file = getGridFs().createFile(content);
-		file.setFilename(filename);
+
+		if (filename != null) {
+			file.setFilename(filename);
+		}
 
 		if (metadata != null) {
 			file.setMetaData(metadata);
