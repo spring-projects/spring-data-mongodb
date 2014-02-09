@@ -116,11 +116,6 @@
 			<id>spring-libs-snapshot</id>
 			<url>http://repo.spring.io/libs-snapshot</url>
 		</repository>
-		
-		<repository>
-			<id>spring-libs-milestone</id>
-			<url>http://repo.springsource.org/libs-milestone-local</url>
-		</repository>
 	</repositories>
 	
 	<pluginRepositories>
