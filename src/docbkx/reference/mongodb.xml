@@ -3390,8 +3390,8 @@ mongoTemplate.dropCollection("MyNewCollection");        </programlisting>
 &lt;/beans&gt;</programlisting>
     </example>
 
-    <para>You can no get the template injected and perform storing and
-    retrieving operations to it.</para>
+    <para>The template can now be injected and used to perform storage and
+    retrieval operations.</para>
 
     <example>
       <title>Using GridFsTemplate to store files</title>
