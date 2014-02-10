@@ -1016,7 +1016,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 						: collection.update(queryObj, updateObj, upsert, multi, writeConcernToUse);
 
 				if (entity != null && entity.hasVersionProperty() && !multi) {
-					if (writeResult.getN() == 0) {
+					if (writeResult.getN() == 0 && dbObjectContainsVersionProperty(queryObj, entity)) {
 						throw new OptimisticLockingFailureException("Optimistic lock exception on saving entity: "
 								+ updateObj.toMap().toString() + " to collection " + collectionName);
 					}
@@ -1031,12 +1031,19 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	private void increaseVersionForUpdateIfNecessary(MongoPersistentEntity<?> persistentEntity, Update update) {
 
 		if (persistentEntity != null && persistentEntity.hasVersionProperty()) {
-
-			String versionPropertyField = persistentEntity.getVersionProperty().getFieldName();
-			if (!update.getUpdateObject().containsField(versionPropertyField)) {
-				update.inc(versionPropertyField, 1L);
+			if (!dbObjectContainsVersionProperty(update.getUpdateObject(), persistentEntity)) {
+				update.inc(persistentEntity.getVersionProperty().getFieldName(), 1L);
 			}
 		}
+	}
+
+	private boolean dbObjectContainsVersionProperty(DBObject dbObject, MongoPersistentEntity<?> persistentEntity) {
+
+		if (persistentEntity == null || !persistentEntity.hasVersionProperty()) {
+			return false;
+		}
+
+		return dbObject.containsField(persistentEntity.getVersionProperty().getFieldName());
 	}
 
 	public void remove(Object object) {
