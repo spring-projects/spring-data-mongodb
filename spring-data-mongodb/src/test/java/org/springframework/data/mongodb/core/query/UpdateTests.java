@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 the original author or authors.
+ * Copyright 2010-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ import org.junit.Test;
  * @author Oliver Gierke
  * @author Thomas Risberg
  * @author Becca Gaspard
+ * @author Christoph Strobl
  */
 public class UpdateTests {
 
@@ -92,6 +93,23 @@ public class UpdateTests {
 		Update u = new Update().pushAll("authors", new Object[] { m1, m2 });
 		assertThat(u.getUpdateObject().toString(),
 				is("{ \"$pushAll\" : { \"authors\" : [ { \"name\" : \"Sven\"} , { \"name\" : \"Maria\"}]}}"));
+	}
+
+	/**
+	 * @see DATAMONGO-354
+	 */
+	@Test
+	public void testMultiplePushAllShouldBePossibleWhenUsingDifferentFields() {
+
+		Map<String, String> m1 = Collections.singletonMap("name", "Sven");
+		Map<String, String> m2 = Collections.singletonMap("name", "Maria");
+
+		Update u = new Update().pushAll("authors", new Object[] { m1, m2 });
+		u.pushAll("books", new Object[] { "Spring in Action" });
+
+		assertThat(
+				u.getUpdateObject().toString(),
+				is("{ \"$pushAll\" : { \"authors\" : [ { \"name\" : \"Sven\"} , { \"name\" : \"Maria\"}] , \"books\" : [ \"Spring in Action\"]}}"));
 	}
 
 	@Test

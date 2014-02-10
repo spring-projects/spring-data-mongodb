@@ -184,6 +184,7 @@ public class MongoTemplateTests {
 		template.dropCollection(ObjectWithEnumValue.class);
 		template.dropCollection(DocumentWithCollection.class);
 		template.dropCollection(DocumentWithCollectionOfSimpleType.class);
+		template.dropCollection(DocumentWithMultipleCollections.class);
 	}
 
 	@Test
@@ -2302,6 +2303,30 @@ public class MongoTemplateTests {
 		assertThat(template.findOne(q, VersionedPerson.class), nullValue());
 	}
 
+	/**
+	 * @see DATAMONGO-354
+	 */
+	@Test
+	public void testUpdateShouldAllowMultiplePushAll() {
+
+		DocumentWithMultipleCollections doc = new DocumentWithMultipleCollections();
+		doc.id = "1234";
+		doc.string1 = Arrays.asList("spring");
+		doc.string2 = Arrays.asList("one");
+
+		template.save(doc);
+
+		Update update = new Update().pushAll("string1", new Object[] { "data", "mongodb" });
+		update.pushAll("string2", new String[] { "two", "three" });
+
+		Query findQuery = new Query(Criteria.where("id").is(doc.id));
+		template.updateFirst(findQuery, update, DocumentWithMultipleCollections.class);
+
+		DocumentWithMultipleCollections result = template.findOne(findQuery, DocumentWithMultipleCollections.class);
+		assertThat(result.string1, hasItems("spring", "data", "mongodb"));
+		assertThat(result.string2, hasItems("one", "two", "three"));
+	}
+
 	static class DocumentWithCollection {
 
 		@Id String id;
@@ -2316,6 +2341,12 @@ public class MongoTemplateTests {
 
 		@Id String id;
 		List<String> values;
+	}
+
+	static class DocumentWithMultipleCollections {
+		@Id String id;
+		List<String> string1;
+		List<String> string2;
 	}
 
 	static interface Model {
