@@ -297,8 +297,13 @@ public class QueryMapper {
 	 */
 	private Object convertAssociation(Object source, MongoPersistentProperty property) {
 
-		if (property == null || !property.isAssociation() || source == null || source instanceof DBRef
-				|| !property.isEntity()) {
+		if (property == null || source == null || source instanceof DBRef) {
+			return source;
+		}
+
+		if (!property.isAssociation()
+				|| !(property.isEntity() || property
+						.isAnnotationPresent(org.springframework.data.mongodb.core.mapping.DBRef.class))) {
 			return source;
 		}
 

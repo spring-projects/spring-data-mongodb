@@ -76,7 +76,8 @@ public class UpdateMapper extends QueryMapper {
 	protected Entry<String, Object> getMappedObjectForField(Field field, Object rawValue) {
 
 		if (!isUpdateModifier(rawValue)) {
-			return super.getMappedObjectForField(field, rawValue);
+			Object value = getMappedValue(field, rawValue);
+			return super.getMappedObjectForField(field, value);
 		}
 
 		Object value = null;
