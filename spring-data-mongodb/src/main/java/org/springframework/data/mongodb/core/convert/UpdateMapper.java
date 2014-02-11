@@ -23,17 +23,23 @@ import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty.PropertyToFieldNameConverter;
+import org.springframework.data.mongodb.core.query.Update.Modifier;
+import org.springframework.data.mongodb.core.query.Update.Modifiers;
 import org.springframework.util.Assert;
+
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
 
 /**
  * A subclass of {@link QueryMapper} that retains type information on the mongo types.
  * 
  * @author Thomas Darimont
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 public class UpdateMapper extends QueryMapper {
 
-	private final MongoWriter<?> converter;
+	private final MongoConverter converter;
 
 	/**
 	 * Creates a new {@link UpdateMapper} using the given {@link MongoConverter}.
@@ -57,6 +63,40 @@ public class UpdateMapper extends QueryMapper {
 	protected Object delegateConvertToMongoType(Object source, MongoPersistentEntity<?> entity) {
 		return entity == null ? super.delegateConvertToMongoType(source, null) : converter.convertToMongoType(source,
 				entity.getTypeInformation());
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.convert.QueryMapper#getMappedObjectForField(org.springframework.data.mongodb.core.convert.QueryMapper.Field, java.lang.Object)
+	 */
+	@Override
+	protected Object getMappedObjectForField(Field field, Object rawValue) {
+
+		if (!isUpdateModifier(rawValue)) {
+			return super.getMappedObjectForField(field, rawValue);
+		}
+
+		if (rawValue instanceof Modifier) {
+			return getMappedValue((Modifier) rawValue);
+		} else if (rawValue instanceof Modifiers) {
+
+			DBObject modificationOperations = new BasicDBObject();
+			for (Modifier modifier : ((Modifiers) rawValue).getModifiers()) {
+				modificationOperations.putAll(getMappedValue(modifier).toMap());
+			}
+
+			return modificationOperations;
+		}
+
+		throw new IllegalArgumentException(String.format("Unable to map value of type '%s'!", rawValue.getClass()));
+	}
+
+	private boolean isUpdateModifier(Object value) {
+		return (value instanceof Modifier || value instanceof Modifiers);
+	}
+
+	private DBObject getMappedValue(Modifier modifier) {
+		return new BasicDBObject(modifier.getKey(), this.converter.convertToMongoType(modifier.getValue()));
 	}
 
 	/* 

@@ -56,6 +56,7 @@ import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.util.Assert;
+import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
 
 import com.mongodb.BasicDBList;
@@ -71,6 +72,7 @@ import com.mongodb.DBRef;
  * @author Jon Brisbin
  * @author Patrik Wasik
  * @author Thomas Darimont
+ * @author Christoph Strobl
  */
 public class MappingMongoConverter extends AbstractMongoConverter implements ApplicationContextAware {
 
@@ -942,11 +944,22 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	}
 
 	public BasicDBList maybeConvertList(Iterable<?> source) {
+
 		BasicDBList newDbl = new BasicDBList();
 		for (Object element : source) {
-			newDbl.add(convertToMongoType(element));
+			Object convertedTypeDdo = convertToMongoType(element);
+			if (!isSimpleOrCollectionType(element.getClass())) {
+				this.getTypeMapper().writeType(element.getClass(), (DBObject) convertedTypeDdo);
+			}
+			newDbl.add(convertedTypeDdo);
 		}
+
 		return newDbl;
+	}
+
+	private boolean isSimpleOrCollectionType(Class<?> type) {
+		return this.conversions.isSimpleType(type) || type.getClass().isArray()
+				|| ClassUtils.isAssignable(Collection.class, type);
 	}
 
 	/**

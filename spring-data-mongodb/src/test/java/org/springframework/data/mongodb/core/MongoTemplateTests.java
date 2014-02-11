@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
+import static org.junit.Assume.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
@@ -35,7 +36,6 @@ import org.bson.types.ObjectId;
 import org.hamcrest.CoreMatchers;
 import org.joda.time.DateTime;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -168,6 +168,7 @@ public class MongoTemplateTests {
 		template.dropCollection(BaseDoc.class);
 		template.dropCollection(ObjectWithEnumValue.class);
 		template.dropCollection(DocumentWithCollection.class);
+		template.dropCollection(DocumentWithCollectionOfSimpleType.class);
 	}
 
 	@Test
@@ -887,7 +888,7 @@ public class MongoTemplateTests {
 			l2.add(31);
 			Query q3 = new Query(Criteria.where("age").in(l1, l2));
 			template.find(q3, PersonWithIdPropertyOfTypeObjectId.class);
-			Assert.fail("Should have trown an InvalidDocumentStoreApiUsageException");
+			fail("Should have trown an InvalidDocumentStoreApiUsageException");
 		} catch (InvalidMongoDbApiUsageException e) {}
 	}
 
@@ -2202,8 +2203,8 @@ public class MongoTemplateTests {
 		template.findAndModify(query, update, Document.class);
 
 		Document retrieved = template.findOne(query, Document.class);
-		Assert.assertThat(retrieved.model, instanceOf(ModelA.class));
-		Assert.assertThat(retrieved.model.value(), equalTo("value2"));
+		assertThat(retrieved.model, instanceOf(ModelA.class));
+		assertThat(retrieved.model.value(), equalTo("value2"));
 	}
 
 	/**
@@ -2234,10 +2235,56 @@ public class MongoTemplateTests {
 		assertThat(result.model.get(0).value(), is(newModelValue));
 	}
 
+	/**
+	 * @see DATAMONGO-812
+	 */
+	@Test
+	public void updateMultiShouldAddValuesCorrectlyWhenUsingPushEachWithComplexTypes() {
+
+		DocumentWithCollection document = new DocumentWithCollection(new ModelA("model-a"));
+		template.save(document);
+		Query query = query(where("id").is(document.id));
+		assumeThat(template.findOne(query, DocumentWithCollection.class).model, hasSize(1));
+
+		Update update = new Update().push("model").each(new ModelA("model-b"), new ModelA("model-c"));
+		template.updateMulti(query, update, DocumentWithCollection.class);
+
+		assertThat(template.findOne(query, DocumentWithCollection.class).model, hasSize(3));
+	}
+
+	/**
+	 * @see DATAMONGO-812
+	 */
+	@Test
+	public void updateMultiShouldAddValuesCorrectlyWhenUsingPushEachWithSimpleTypes() {
+
+		DocumentWithCollectionOfSimpleType document = new DocumentWithCollectionOfSimpleType();
+		document.values = Arrays.asList("spring");
+		template.save(document);
+
+		Query query = query(where("id").is(document.id));
+		assumeThat(template.findOne(query, DocumentWithCollectionOfSimpleType.class).values, hasSize(1));
+
+		Update update = new Update().push("values").each("data", "mongodb");
+		template.updateMulti(query, update, DocumentWithCollectionOfSimpleType.class);
+
+		assertThat(template.findOne(query, DocumentWithCollectionOfSimpleType.class).values, hasSize(3));
+	}
+
 	static class DocumentWithCollection {
 
 		@Id public String id;
 		public List<Model> model;
+
+		DocumentWithCollection(Model... models) {
+			this.model = Arrays.asList(models);
+		}
+	}
+
+	static class DocumentWithCollectionOfSimpleType {
+
+		@Id String id;
+		List<String> values;
 	}
 
 	static interface Model {

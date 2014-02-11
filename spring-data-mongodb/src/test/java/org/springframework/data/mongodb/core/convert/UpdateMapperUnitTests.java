@@ -16,11 +16,14 @@
 package org.springframework.data.mongodb.core.convert;
 
 import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.collection.IsMapContaining.*;
 import static org.junit.Assert.*;
 import static org.springframework.data.mongodb.core.DBObjectTestUtils.*;
 
+import java.util.Arrays;
 import java.util.List;
 
+import org.hamcrest.Matcher;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -31,6 +34,7 @@ import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.Update;
 
+import com.mongodb.BasicDBList;
 import com.mongodb.DBObject;
 
 /**
@@ -38,6 +42,7 @@ import com.mongodb.DBObject;
  * 
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Thomas Darimont
  */
 @RunWith(MockitoJUnitRunner.class)
 public class UpdateMapperUnitTests {
@@ -45,12 +50,14 @@ public class UpdateMapperUnitTests {
 	@Mock MongoDbFactory factory;
 	MappingMongoConverter converter;
 	MongoMappingContext context;
+	UpdateMapper mapper;
 
 	@Before
 	public void setUp() {
 
 		this.context = new MongoMappingContext();
 		this.converter = new MappingMongoConverter(new DefaultDbRefResolver(factory), context);
+		this.mapper = new UpdateMapper(converter);
 	}
 
 	/**
@@ -60,7 +67,6 @@ public class UpdateMapperUnitTests {
 	public void updateMapperRetainsTypeInformationForCollectionField() {
 
 		Update update = new Update().push("list", new ConcreteChildClass("2", "BAR"));
-		UpdateMapper mapper = new UpdateMapper(converter);
 
 		DBObject mappedObject = mapper.getMappedObject(update.getUpdateObject(),
 				context.getPersistentEntity(ParentClass.class));
@@ -175,6 +181,91 @@ public class UpdateMapperUnitTests {
 		assertThat(someObject.get("value"), is((Object) "bubu"));
 	}
 
+	/**
+	 * @see DATAMONGO-812
+	 */
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Test
+	public void updateMapperShouldConvertPushCorrectlyWhenCalledWithEachUsingSimpleTypes() {
+
+		Update update = new Update().push("values").each("spring", "data", "mongodb");
+		DBObject mappedObject = mapper.getMappedObject(update.getUpdateObject(), context.getPersistentEntity(Model.class));
+
+		DBObject push = getAsDBObject(mappedObject, "$push");
+		DBObject values = getAsDBObject(push, "values");
+		BasicDBList each = getAsDBList(values, "$each");
+
+		assertThat(push.get("_class"), nullValue());
+		assertThat(values.get("_class"), nullValue());
+
+		assertThat(each.toMap(), (Matcher) allOf(hasValue("spring"), hasValue("data"), hasValue("mongodb")));
+	}
+
+	/**
+	 * @see DATAMONGO-812
+	 */
+	@Test
+	public void updateMapperShouldConvertPushWhithoutAddingClassInformationWhenUsedWithEvery() {
+
+		Update update = new Update().push("values").each("spring", "data", "mongodb");
+
+		DBObject mappedObject = mapper.getMappedObject(update.getUpdateObject(), context.getPersistentEntity(Model.class));
+		DBObject push = getAsDBObject(mappedObject, "$push");
+		DBObject values = getAsDBObject(push, "values");
+
+		assertThat(push.get("_class"), nullValue());
+		assertThat(values.get("_class"), nullValue());
+	}
+
+	/**
+	 * @see DATAMONGO-812
+	 */
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Test
+	public void updateMapperShouldConvertPushCorrectlyWhenCalledWithEachUsingCustomTypes() {
+
+		Update update = new Update().push("models").each(new ListModel("spring", "data", "mongodb"));
+		DBObject mappedObject = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(ModelWrapper.class));
+
+		DBObject push = getAsDBObject(mappedObject, "$push");
+		DBObject model = getAsDBObject(push, "models");
+		BasicDBList each = getAsDBList(model, "$each");
+		BasicDBList values = getAsDBList((DBObject) each.get(0), "values");
+
+		assertThat(values.toMap(), (Matcher) allOf(hasValue("spring"), hasValue("data"), hasValue("mongodb")));
+	}
+
+	/**
+	 * @see DATAMONGO-812
+	 */
+	@Test
+	public void updateMapperShouldRetainClassInformationForPushCorrectlyWhenCalledWithEachUsingCustomTypes() {
+
+		Update update = new Update().push("models").each(new ListModel("spring", "data", "mongodb"));
+		DBObject mappedObject = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(ModelWrapper.class));
+
+		DBObject push = getAsDBObject(mappedObject, "$push");
+		DBObject model = getAsDBObject(push, "models");
+		BasicDBList each = getAsDBList(model, "$each");
+
+		assertThat(((DBObject) each.get(0)).get("_class").toString(), equalTo(ListModel.class.getName()));
+	}
+
+	/**
+	 * @see DATAMONGO-812
+	 */
+	@Test
+	public void testUpdateShouldAllowMultiplePushEachForDifferentFields() {
+		Update update = new Update().push("category").each("spring", "data").push("type").each("mongodb");
+		DBObject mappedObject = mapper.getMappedObject(update.getUpdateObject(), context.getPersistentEntity(Object.class));
+
+		DBObject push = getAsDBObject(mappedObject, "$push");
+		assertThat(getAsDBObject(push, "category").containsField("$each"), is(true));
+		assertThat(getAsDBObject(push, "type").containsField("$each"), is(true));
+	}
+
 	static interface Model {}
 
 	static class ModelImpl implements Model {
@@ -187,6 +278,20 @@ public class UpdateMapperUnitTests {
 
 	public class ModelWrapper {
 		Model model;
+	}
+
+	static class ListModelWrapper {
+
+		List<Model> models;
+	}
+
+	static class ListModel {
+
+		List<String> values;
+
+		public ListModel(String... values) {
+			this.values = Arrays.asList(values);
+		}
 	}
 
 	static class ParentClass {
