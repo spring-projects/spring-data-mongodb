@@ -77,6 +77,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.BasicDBObject;
+import com.mongodb.CommandResult;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
@@ -102,10 +103,14 @@ import com.mongodb.WriteResult;
 @ContextConfiguration("classpath:infrastructure.xml")
 public class MongoTemplateTests {
 
+	private static final org.springframework.data.util.Version TWO_DOT_FOUR = org.springframework.data.util.Version
+			.parse("2.4");
+
 	@Autowired MongoTemplate template;
 	@Autowired MongoDbFactory factory;
 
 	MongoTemplate mappingTemplate;
+	org.springframework.data.util.Version mongoVersion;
 
 	@Rule public ExpectedException thrown = ExpectedException.none();
 
@@ -136,11 +141,20 @@ public class MongoTemplateTests {
 	@Before
 	public void setUp() {
 		cleanDb();
+		queryMongoVersionIfNecessary();
 	}
 
 	@After
 	public void cleanUp() {
 		cleanDb();
+	}
+
+	private void queryMongoVersionIfNecessary() {
+
+		if (mongoVersion == null) {
+			CommandResult result = template.executeCommand("{ buildInfo: 1 }");
+			mongoVersion = org.springframework.data.util.Version.parse(result.get("version").toString());
+		}
 	}
 
 	protected void cleanDb() {
@@ -2242,6 +2256,8 @@ public class MongoTemplateTests {
 	@Test
 	public void updateMultiShouldAddValuesCorrectlyWhenUsingPushEachWithComplexTypes() {
 
+		assumeThat(mongoVersion.isGreaterThanOrEqualTo(TWO_DOT_FOUR), is(true));
+
 		DocumentWithCollection document = new DocumentWithCollection(Collections.<Model> emptyList());
 		template.save(document);
 		Query query = query(where("id").is(document.id));
@@ -2258,6 +2274,8 @@ public class MongoTemplateTests {
 	 */
 	@Test
 	public void updateMultiShouldAddValuesCorrectlyWhenUsingPushEachWithSimpleTypes() {
+
+		assumeThat(mongoVersion.isGreaterThanOrEqualTo(TWO_DOT_FOUR), is(true));
 
 		DocumentWithCollectionOfSimpleType document = new DocumentWithCollectionOfSimpleType();
 		document.values = Arrays.asList("spring");
