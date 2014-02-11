@@ -16,7 +16,9 @@
 package org.springframework.data.mongodb.core.convert;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
+import java.util.Map.Entry;
 
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.mapping.context.MappingContext;
@@ -25,6 +27,7 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty.PropertyToFieldNameConverter;
 import org.springframework.data.mongodb.core.query.Update.Modifier;
 import org.springframework.data.mongodb.core.query.Update.Modifiers;
+import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.util.Assert;
 
 import com.mongodb.BasicDBObject;
@@ -70,33 +73,43 @@ public class UpdateMapper extends QueryMapper {
 	 * @see org.springframework.data.mongodb.core.convert.QueryMapper#getMappedObjectForField(org.springframework.data.mongodb.core.convert.QueryMapper.Field, java.lang.Object)
 	 */
 	@Override
-	protected Object getMappedObjectForField(Field field, Object rawValue) {
+	protected Entry<String, Object> getMappedObjectForField(Field field, Object rawValue) {
 
 		if (!isUpdateModifier(rawValue)) {
 			return super.getMappedObjectForField(field, rawValue);
 		}
 
+		Object value = null;
+
 		if (rawValue instanceof Modifier) {
-			return getMappedValue((Modifier) rawValue);
+
+			value = getMappedValue((Modifier) rawValue);
+
 		} else if (rawValue instanceof Modifiers) {
 
 			DBObject modificationOperations = new BasicDBObject();
+
 			for (Modifier modifier : ((Modifiers) rawValue).getModifiers()) {
 				modificationOperations.putAll(getMappedValue(modifier).toMap());
 			}
 
-			return modificationOperations;
+			value = modificationOperations;
+		} else {
+
+			throw new IllegalArgumentException(String.format("Unable to map value of type '%s'!", rawValue.getClass()));
 		}
 
-		throw new IllegalArgumentException(String.format("Unable to map value of type '%s'!", rawValue.getClass()));
+		return Collections.singletonMap(field.getMappedKey(), value).entrySet().iterator().next();
 	}
 
 	private boolean isUpdateModifier(Object value) {
-		return (value instanceof Modifier || value instanceof Modifiers);
+		return value instanceof Modifier || value instanceof Modifiers;
 	}
 
 	private DBObject getMappedValue(Modifier modifier) {
-		return new BasicDBObject(modifier.getKey(), this.converter.convertToMongoType(modifier.getValue()));
+
+		Object value = converter.convertToMongoType(modifier.getValue(), ClassTypeInformation.OBJECT);
+		return new BasicDBObject(modifier.getKey(), value);
 	}
 
 	/* 

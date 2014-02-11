@@ -258,6 +258,7 @@ public class UpdateMapperUnitTests {
 	 */
 	@Test
 	public void testUpdateShouldAllowMultiplePushEachForDifferentFields() {
+
 		Update update = new Update().push("category").each("spring", "data").push("type").each("mongodb");
 		DBObject mappedObject = mapper.getMappedObject(update.getUpdateObject(), context.getPersistentEntity(Object.class));
 

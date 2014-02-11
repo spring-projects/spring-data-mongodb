@@ -59,6 +59,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.PersonPojoStringId;
+import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.mongodb.BasicDBList;
@@ -1023,7 +1024,7 @@ public class MappingMongoConverterUnitTests {
 		address.city = "London";
 		address.street = "Foo";
 
-		Object result = converter.convertToMongoType(Collections.singleton(address));
+		Object result = converter.convertToMongoType(Collections.singleton(address), ClassTypeInformation.OBJECT);
 		assertThat(result, is(instanceOf(BasicDBList.class)));
 
 		Set<?> readResult = converter.read(Set.class, (BasicDBList) result);
@@ -1383,6 +1384,9 @@ public class MappingMongoConverterUnitTests {
 		assertThat(aValue.get("c"), is((Object) "C"));
 	}
 
+	/**
+	 * @see DATAMONGO-812
+	 */
 	@Test
 	public void convertsListToBasicDBListAndRetainsTypeInformationForComplexObjects() {
 
@@ -1390,15 +1394,19 @@ public class MappingMongoConverterUnitTests {
 		address.city = "London";
 		address.street = "Foo";
 
-		Object result = converter.convertToMongoType(Collections.singletonList(address));
+		Object result = converter.convertToMongoType(Collections.singletonList(address),
+				ClassTypeInformation.from(Address.class));
 
 		assertThat(result, is(instanceOf(BasicDBList.class)));
 
 		BasicDBList dbList = (BasicDBList) result;
 		assertThat(dbList, hasSize(1));
-		assertThat(getTypedValue(getAsDBObject(dbList, 0), ("_class"), String.class), equalTo(Address.class.getName()));
+		assertThat(getTypedValue(getAsDBObject(dbList, 0), "_class", String.class), equalTo(Address.class.getName()));
 	}
 
+	/**
+	 * @see DATAMONGO-812
+	 */
 	@Test
 	public void convertsListToBasicDBListWithoutTypeInformationForSimpleTypes() {
 
@@ -1411,6 +1419,9 @@ public class MappingMongoConverterUnitTests {
 		assertThat(dbList.get(0), instanceOf(String.class));
 	}
 
+	/**
+	 * @see DATAMONGO-812
+	 */
 	@Test
 	public void convertsArrayToBasicDBListAndRetainsTypeInformationForComplexObjects() {
 
@@ -1418,15 +1429,18 @@ public class MappingMongoConverterUnitTests {
 		address.city = "London";
 		address.street = "Foo";
 
-		Object result = converter.convertToMongoType(new Address[] { address });
+		Object result = converter.convertToMongoType(new Address[] { address }, ClassTypeInformation.OBJECT);
 
 		assertThat(result, is(instanceOf(BasicDBList.class)));
 
 		BasicDBList dbList = (BasicDBList) result;
 		assertThat(dbList, hasSize(1));
-		assertThat(getTypedValue(getAsDBObject(dbList, 0), ("_class"), String.class), equalTo(Address.class.getName()));
+		assertThat(getTypedValue(getAsDBObject(dbList, 0), "_class", String.class), equalTo(Address.class.getName()));
 	}
 
+	/**
+	 * @see DATAMONGO-812
+	 */
 	@Test
 	public void convertsArrayToBasicDBListWithoutTypeInformationForSimpleTypes() {
 

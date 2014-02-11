@@ -26,6 +26,7 @@ import static org.springframework.data.mongodb.core.query.Update.*;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -2213,16 +2214,16 @@ public class MongoTemplateTests {
 	@Test
 	public void updatesShouldRetainTypeInformationEvenForCollections() {
 
-		DocumentWithCollection doc = new DocumentWithCollection();
+		List<Model> models = Arrays.<Model> asList(new ModelA("foo"));
+
+		DocumentWithCollection doc = new DocumentWithCollection(models);
 		doc.id = "4711";
-		doc.model = new ArrayList<Model>();
-		doc.model.add(new ModelA("foo"));
 		template.insert(doc);
 
 		Query query = new Query(Criteria.where("id").is(doc.id));
-		query.addCriteria(where("model.value").is("foo"));
+		query.addCriteria(where("models.value").is("foo"));
 		String newModelValue = "bar";
-		Update update = Update.update("model.$", new ModelA(newModelValue));
+		Update update = Update.update("models.$", new ModelA(newModelValue));
 		template.updateFirst(query, update, DocumentWithCollection.class);
 
 		Query findQuery = new Query(Criteria.where("id").is(doc.id));
@@ -2230,9 +2231,9 @@ public class MongoTemplateTests {
 
 		assertThat(result, is(notNullValue()));
 		assertThat(result.id, is(doc.id));
-		assertThat(result.model, is(notNullValue()));
-		assertThat(result.model, hasSize(1));
-		assertThat(result.model.get(0).value(), is(newModelValue));
+		assertThat(result.models, is(notNullValue()));
+		assertThat(result.models, hasSize(1));
+		assertThat(result.models.get(0).value(), is(newModelValue));
 	}
 
 	/**
@@ -2241,15 +2242,15 @@ public class MongoTemplateTests {
 	@Test
 	public void updateMultiShouldAddValuesCorrectlyWhenUsingPushEachWithComplexTypes() {
 
-		DocumentWithCollection document = new DocumentWithCollection(new ModelA("model-a"));
+		DocumentWithCollection document = new DocumentWithCollection(Collections.<Model> emptyList());
 		template.save(document);
 		Query query = query(where("id").is(document.id));
-		assumeThat(template.findOne(query, DocumentWithCollection.class).model, hasSize(1));
+		assumeThat(template.findOne(query, DocumentWithCollection.class).models, hasSize(1));
 
-		Update update = new Update().push("model").each(new ModelA("model-b"), new ModelA("model-c"));
+		Update update = new Update().push("models").each(new ModelA("model-b"), new ModelA("model-c"));
 		template.updateMulti(query, update, DocumentWithCollection.class);
 
-		assertThat(template.findOne(query, DocumentWithCollection.class).model, hasSize(3));
+		assertThat(template.findOne(query, DocumentWithCollection.class).models, hasSize(3));
 	}
 
 	/**
@@ -2273,11 +2274,11 @@ public class MongoTemplateTests {
 
 	static class DocumentWithCollection {
 
-		@Id public String id;
-		public List<Model> model;
+		@Id String id;
+		List<Model> models;
 
-		DocumentWithCollection(Model... models) {
-			this.model = Arrays.asList(models);
+		DocumentWithCollection(List<Model> models) {
+			this.models = models;
 		}
 	}
 

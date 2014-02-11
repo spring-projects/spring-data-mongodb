@@ -56,7 +56,6 @@ import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.util.Assert;
-import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
 
 import com.mongodb.BasicDBList;
@@ -904,15 +903,17 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			return getPotentiallyConvertedSimpleWrite(obj);
 		}
 
+		TypeInformation<?> typeHint = typeInformation == null ? null : ClassTypeInformation.OBJECT;
+
 		if (obj instanceof BasicDBList) {
-			return maybeConvertList((BasicDBList) obj);
+			return maybeConvertList((BasicDBList) obj, typeHint);
 		}
 
 		if (obj instanceof DBObject) {
 			DBObject newValueDbo = new BasicDBObject();
 			for (String vk : ((DBObject) obj).keySet()) {
 				Object o = ((DBObject) obj).get(vk);
-				newValueDbo.put(vk, convertToMongoType(o));
+				newValueDbo.put(vk, convertToMongoType(o, typeHint));
 			}
 			return newValueDbo;
 		}
@@ -920,17 +921,17 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		if (obj instanceof Map) {
 			DBObject result = new BasicDBObject();
 			for (Map.Entry<Object, Object> entry : ((Map<Object, Object>) obj).entrySet()) {
-				result.put(entry.getKey().toString(), convertToMongoType(entry.getValue()));
+				result.put(entry.getKey().toString(), convertToMongoType(entry.getValue(), typeHint));
 			}
 			return result;
 		}
 
 		if (obj.getClass().isArray()) {
-			return maybeConvertList(Arrays.asList((Object[]) obj));
+			return maybeConvertList(Arrays.asList((Object[]) obj), typeHint);
 		}
 
 		if (obj instanceof Collection) {
-			return maybeConvertList((Collection<?>) obj);
+			return maybeConvertList((Collection<?>) obj, typeHint);
 		}
 
 		DBObject newDbo = new BasicDBObject();
@@ -943,23 +944,14 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		return !obj.getClass().equals(typeInformation.getType()) ? newDbo : removeTypeInfoRecursively(newDbo);
 	}
 
-	public BasicDBList maybeConvertList(Iterable<?> source) {
+	public BasicDBList maybeConvertList(Iterable<?> source, TypeInformation<?> typeInformation) {
 
 		BasicDBList newDbl = new BasicDBList();
 		for (Object element : source) {
-			Object convertedTypeDdo = convertToMongoType(element);
-			if (!isSimpleOrCollectionType(element.getClass())) {
-				this.getTypeMapper().writeType(element.getClass(), (DBObject) convertedTypeDdo);
-			}
-			newDbl.add(convertedTypeDdo);
+			newDbl.add(convertToMongoType(element, typeInformation));
 		}
 
 		return newDbl;
-	}
-
-	private boolean isSimpleOrCollectionType(Class<?> type) {
-		return this.conversions.isSimpleType(type) || type.getClass().isArray()
-				|| ClassUtils.isAssignable(Collection.class, type);
 	}
 
 	/**

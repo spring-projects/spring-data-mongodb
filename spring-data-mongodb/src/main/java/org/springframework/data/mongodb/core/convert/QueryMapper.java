@@ -17,7 +17,9 @@ package org.springframework.data.mongodb.core.convert;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.bson.types.ObjectId;
@@ -106,11 +108,9 @@ public class QueryMapper {
 			}
 
 			Field field = createPropertyField(entity, key, mappingContext);
+			Entry<String, Object> entry = getMappedObjectForField(field, query.get(key));
 
-			Object rawValue = query.get(key);
-			String newKey = field.getMappedKey();
-
-			result.put(newKey, getMappedObjectForField(field, rawValue));
+			result.put(entry.getKey(), entry.getValue());
 		}
 
 		return result;
@@ -123,14 +123,19 @@ public class QueryMapper {
 	 * @param rawValue
 	 * @return
 	 */
-	protected Object getMappedObjectForField(Field field, Object rawValue) {
+	protected Entry<String, Object> getMappedObjectForField(Field field, Object rawValue) {
+
+		String key = field.getMappedKey();
+		Object value;
 
 		if (isNestedKeyword(rawValue) && !field.isIdField()) {
 			Keyword keyword = new Keyword((DBObject) rawValue);
-			return getMappedKeyword(field, keyword);
+			value = getMappedKeyword(field, keyword);
+		} else {
+			value = getMappedValue(field, rawValue);
 		}
 
-		return getMappedValue(field, rawValue);
+		return Collections.singletonMap(key, value).entrySet().iterator().next();
 	}
 
 	/**
