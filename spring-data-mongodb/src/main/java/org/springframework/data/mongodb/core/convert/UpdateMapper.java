@@ -72,12 +72,12 @@ public class UpdateMapper extends QueryMapper {
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.convert.QueryMapper#getMappedObjectForField(org.springframework.data.mongodb.core.convert.QueryMapper.Field, java.lang.Object)
 	 */
+	@SuppressWarnings("unchecked")
 	@Override
 	protected Entry<String, Object> getMappedObjectForField(Field field, Object rawValue) {
 
 		if (!isUpdateModifier(rawValue)) {
-			Object value = getMappedValue(field, rawValue);
-			return super.getMappedObjectForField(field, value);
+			return super.getMappedObjectForField(field, getMappedValue(field, rawValue));
 		}
 
 		Object value = null;

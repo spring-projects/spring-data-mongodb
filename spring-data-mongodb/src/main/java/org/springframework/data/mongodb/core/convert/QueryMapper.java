@@ -253,7 +253,8 @@ public class QueryMapper {
 	 */
 	private boolean isAssociationConversionNecessary(Field documentField, Object value) {
 		return documentField.isAssociation() && value != null
-				&& documentField.getProperty().getActualType().isAssignableFrom(value.getClass());
+				&& (documentField.getProperty().getActualType().isAssignableFrom(value.getClass()) //
+				|| documentField.getPropertyEntity().getIdProperty().getActualType().isAssignableFrom(value.getClass()));
 	}
 
 	/**
@@ -301,16 +302,10 @@ public class QueryMapper {
 			return source;
 		}
 
-		if (!property.isAssociation()
-				|| !(property.isEntity() || property
-						.isAnnotationPresent(org.springframework.data.mongodb.core.mapping.DBRef.class))) {
-			return source;
-		}
-
 		if (source instanceof Iterable) {
 			BasicDBList result = new BasicDBList();
 			for (Object element : (Iterable<?>) source) {
-				result.add(element instanceof DBRef ? element : converter.toDBRef(element, property));
+				result.add(createDbRefFor(element, property));
 			}
 			return result;
 		}
@@ -319,10 +314,26 @@ public class QueryMapper {
 			BasicDBObject result = new BasicDBObject();
 			DBObject dbObject = (DBObject) source;
 			for (String key : dbObject.keySet()) {
-				Object o = dbObject.get(key);
-				result.put(key, o instanceof DBRef ? o : converter.toDBRef(o, property));
+				result.put(key, createDbRefFor(dbObject.get(key), property));
 			}
 			return result;
+		}
+
+		return createDbRefFor(source, property);
+	}
+
+	private DBRef createDbRefFor(Object source, MongoPersistentProperty property) {
+
+		if (source instanceof DBRef) {
+			return (DBRef) source;
+		}
+
+		if (property.isCollectionLike() && property.getComponentType() != null) {
+
+			MongoPersistentEntity<?> componentTypeEntity = mappingContext.getPersistentEntity(property.getComponentType());
+			if (componentTypeEntity.getIdProperty().getActualType().isAssignableFrom(source.getClass())) {
+				return new DBRef(null, componentTypeEntity.getCollection(), source);
+			}
 		}
 
 		return converter.toDBRef(source, property);
