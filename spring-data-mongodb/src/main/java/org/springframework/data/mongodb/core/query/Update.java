@@ -169,13 +169,12 @@ public class Update {
 	 * @return
 	 */
 	public Update pushAll(String key, Object[] values) {
+
 		Object[] convertedValues = new Object[values.length];
 		for (int i = 0; i < values.length; i++) {
 			convertedValues[i] = values[i];
 		}
-		DBObject keyValue = new BasicDBObject();
-		keyValue.put(key, convertedValues);
-		modifierOps.put("$pushAll", keyValue);
+		addMultiFieldOperation("$pushAll", key, convertedValues);
 		return this;
 	}
 
