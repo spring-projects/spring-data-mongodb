@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core.convert;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.collection.IsMapContaining.*;
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.DBObjectTestUtils.*;
 
 import java.util.Arrays;
@@ -28,13 +29,17 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.Update;
 
 import com.mongodb.BasicDBList;
+import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
 /**
@@ -52,11 +57,23 @@ public class UpdateMapperUnitTests {
 	MongoMappingContext context;
 	UpdateMapper mapper;
 
+	private Converter<NestedEntity, DBObject> writingConverterSpy;
+
+	@SuppressWarnings("unchecked")
 	@Before
 	public void setUp() {
 
+		this.writingConverterSpy = Mockito.spy(new NestedEntityWriteConverter());
+		CustomConversions conversions = new CustomConversions(Arrays.asList(writingConverterSpy));
+
 		this.context = new MongoMappingContext();
+		this.context.setSimpleTypeHolder(conversions.getSimpleTypeHolder());
+		this.context.initialize();
+
 		this.converter = new MappingMongoConverter(new DefaultDbRefResolver(factory), context);
+		this.converter.setCustomConversions(conversions);
+		this.converter.afterPropertiesSet();
+
 		this.mapper = new UpdateMapper(converter);
 	}
 
@@ -267,6 +284,22 @@ public class UpdateMapperUnitTests {
 		assertThat(getAsDBObject(push, "type").containsField("$each"), is(true));
 	}
 
+	/**
+	 * @see DATAMONGO-410
+	 */
+	@Test
+	public void testUpdateMapperShouldConsiderCustomWriteTarget() {
+
+		List<NestedEntity> someValues = Arrays.asList(new NestedEntity("spring"), new NestedEntity("data"),
+				new NestedEntity("mongodb"));
+		NestedEntity[] array = new NestedEntity[someValues.size()];
+
+		Update update = new Update().pushAll("collectionOfNestedEntities", someValues.toArray(array));
+		mapper.getMappedObject(update.getUpdateObject(), context.getPersistentEntity(DomainEntity.class));
+
+		verify(writingConverterSpy, times(3)).convert(Mockito.any(NestedEntity.class));
+	}
+
 	static interface Model {}
 
 	static class ModelImpl implements Model {
@@ -327,6 +360,29 @@ public class UpdateMapperUnitTests {
 
 		public ConcreteChildClass(String id, String value) {
 			super(id, value);
+		}
+	}
+
+	static class DomainEntity {
+		List<NestedEntity> collectionOfNestedEntities;
+	}
+
+	static class NestedEntity {
+		String name;
+
+		public NestedEntity(String name) {
+			super();
+			this.name = name;
+		}
+
+	}
+
+	@WritingConverter
+	static class NestedEntityWriteConverter implements Converter<NestedEntity, DBObject> {
+
+		@Override
+		public DBObject convert(NestedEntity source) {
+			return new BasicDBObject();
 		}
 	}
 }
