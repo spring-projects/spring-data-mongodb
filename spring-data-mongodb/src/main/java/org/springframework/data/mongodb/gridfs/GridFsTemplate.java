@@ -232,7 +232,7 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 	}
 
 	private DBObject getMappedQuery(Query query) {
-		return query == null ? null : getMappedQuery(query.getQueryObject());
+		return query == null ? new Query().getQueryObject() : getMappedQuery(query.getQueryObject());
 	}
 
 	private DBObject getMappedQuery(DBObject query) {

@@ -60,6 +60,11 @@ public class MongoExceptionTranslator implements PersistenceExceptionTranslator 
 			return new DataAccessResourceFailureException(ex.getMessage(), ex);
 		}
 
+		// Driver 2.12 throws this to indicate connection problems. String comparison to avoid hard dependency
+		if (ex.getClass().getName().equals("com.mongodb.MongoServerSelectionException")) {
+			return new DataAccessResourceFailureException(ex.getMessage(), ex);
+		}
+
 		if (ex instanceof MongoInternalException) {
 			return new InvalidDataAccessResourceUsageException(ex.getMessage(), ex);
 		}

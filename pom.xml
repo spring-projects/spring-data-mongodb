@@ -31,6 +31,7 @@
 		<dist.id>spring-data-mongodb</dist.id>
 		<springdata.commons>1.7.0.RC1</springdata.commons>
 		<mongo>2.11.4</mongo>
+		<mongo-osgi>${mongo}</mongo-osgi>
 	</properties>
 	
 	<developers>
@@ -101,6 +102,16 @@
 			<timezone>+1</timezone>
 		</developer>
 	</developers>
+
+	<profiles>
+		<profile>
+			<id>mongo-next</id>
+			<properties>
+				<mongo>2.12.0-rc0</mongo>
+				<mongo-osgi>2.12.0</mongo-osgi>
+			</properties>
+		</profile>
+	</profiles>
 
 	<dependencies>
 		<!-- MongoDB -->

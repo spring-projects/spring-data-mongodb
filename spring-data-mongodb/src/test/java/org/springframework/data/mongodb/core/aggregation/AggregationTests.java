@@ -189,7 +189,7 @@ public class AggregationTests {
 		AggregationResults<TagCount> results = mongoTemplate.aggregate(agg, INPUT_COLLECTION, TagCount.class);
 
 		assertThat(results, is(notNullValue()));
-		assertThat(results.getServerUsed(), is("/127.0.0.1:27017"));
+		assertThat(results.getServerUsed(), endsWith("127.0.0.1:27017"));
 
 		List<TagCount> tagCount = results.getMappedResults();
 
@@ -217,7 +217,7 @@ public class AggregationTests {
 		AggregationResults<TagCount> results = mongoTemplate.aggregate(aggregation, INPUT_COLLECTION, TagCount.class);
 
 		assertThat(results, is(notNullValue()));
-		assertThat(results.getServerUsed(), is("/127.0.0.1:27017"));
+		assertThat(results.getServerUsed(), endsWith("127.0.0.1:27017"));
 
 		List<TagCount> tagCount = results.getMappedResults();
 
@@ -241,7 +241,7 @@ public class AggregationTests {
 		AggregationResults<TagCount> results = mongoTemplate.aggregate(aggregation, INPUT_COLLECTION, TagCount.class);
 
 		assertThat(results, is(notNullValue()));
-		assertThat(results.getServerUsed(), is("/127.0.0.1:27017"));
+		assertThat(results.getServerUsed(), endsWith("127.0.0.1:27017"));
 
 		List<TagCount> tagCount = results.getMappedResults();
 
