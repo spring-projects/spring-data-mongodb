@@ -42,7 +42,7 @@ If you'd rather like the latest snapshots of the upcoming major version, use our
 <repository>
   <id>spring-libs-snapshot</id>
   <name>Spring Snapshot Repository</name>
-  <url>http://repo.springsource.org/libs-snapshot</url>
+  <url>http://repo.spring.io/libs-snapshot</url>
 </repository>
 ```
 
@@ -81,7 +81,7 @@ class ApplicationConfig extends AbstractMongoConfiguration {
 
   @Override
   public Mongo mongo() throws Exception {
-    return new Mongo();
+    return new MongoClient();
   }
 
   @Override
@@ -94,9 +94,9 @@ class ApplicationConfig extends AbstractMongoConfiguration {
 This sets up a connection to a local MongoDB instance and enables the detection of Spring Data repositories (through `@EnableMongoRepositories`). The same configuration would look like this in XML:
 
 ```xml
-<bean id="template" class="org.springframework.data.document.mongodb.MongoTemplate">
+<bean id="template" class="org.springframework.data.mongodb.core.MongoTemplate">
   <constructor-arg>
-    <bean class="com.mongodb.Mongo">
+    <bean class="com.mongodb.MongoClient">
        <constructor-arg value="localhost" />
        <constructor-arg value="27017" />
     </bean>
