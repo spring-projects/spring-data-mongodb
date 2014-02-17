@@ -1,6 +1,55 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 1.3.4.RELEASE (2014-02-17)
+---------------------------------------------
+** Bug
+    * [DATAMONGO-407] - Collection with generics losing element type after $set update
+    * [DATAMONGO-410] - Update with pushAll doesnt recognize defined Converter
+    * [DATAMONGO-686] - ClassCastException while reusing Query object
+    * [DATAMONGO-805] - Excluding DBRef field in a query causes a MappingException
+    * [DATAMONGO-807] - using findAndModify removes the _class field of encapsulated classes, causing MappingInstantiationException
+    * [DATAMONGO-808] - Spring data mongoDB not working with IPv6 address directly
+    * [DATAMONGO-811] - updateFirst methods do not increment @Version field
+    * [DATAMONGO-816] - Unable to execute query with DocumentCallbackHandler when query contains Criteria with enums.
+    * [DATAMONGO-828] - UpdateFirst throws OptimisticLockingFailureException when updating document that does not exist
+    * [DATAMONGO-830] - NPE during cache warmup in CustomConversions
+    * [DATAMONGO-842] - Documentation error in GRIDFS section
+** Improvement
+    * [DATAMONGO-813] - GridFsTemplate.getResource(location) throws NPE if don't find file
+** Task
+    * [DATAMONGO-824] - Add contribution guidelines
+    * [DATAMONGO-846] - Release 1.3.4
+
+Changes in version 1.4.0.RC1 (2014-01-29)
+-----------------------------------------
+** Bug
+    * [DATAMONGO-407] - Collection with generics losing element type after $set update
+    * [DATAMONGO-686] - ClassCastException while reusing Query object
+    * [DATAMONGO-726] - References to non existing classes in namespace XSD
+    * [DATAMONGO-804] - EnableMongoRepositories repositoryImplementationPostfix() default is empty String instead of "Impl"
+    * [DATAMONGO-805] - Excluding DBRef field in a query causes a MappingException
+    * [DATAMONGO-806] - Spring Data MongoDB - Aggregation Framework - No property _id found for type com.entity.User
+    * [DATAMONGO-807] - using findAndModify removes the _class field of encapsulated classes, causing MappingInstantiationException
+    * [DATAMONGO-808] - Spring data mongoDB not working with IPv6 address directly
+    * [DATAMONGO-811] - updateFirst methods do not increment @Version field
+    * [DATAMONGO-816] - Unable to execute query with DocumentCallbackHandler when query contains Criteria with enums.
+** Improvement
+    * [DATAMONGO-778] - Create geospatial index of type other than 2d with @GeoSpatialIndexed
+    * [DATAMONGO-785] - Add support for geospatial 2Dsphere and geohaystack index types
+    * [DATAMONGO-787] - Guard against SpEL issue in Spring 3.2.4
+    * [DATAMONGO-799] - Fix failing test in MongoTemplateTests on Mongo 2.5.x
+    * [DATAMONGO-802] - Change AbstractMongoConfiguration.mongoDbFactory() to return MongoDbFactory
+    * [DATAMONGO-813] - GridFsTemplate.getResource(location) throws NPE if don't find file
+    * [DATAMONGO-822] - Add support for eager CDI repository instantiation
+    * [DATAMONGO-823] - Add bucket attribute to <mongo:gridFsTemplate />
+    * [DATAMONGO-837] - Upgrade mongodb java driver to 2.11.4
+** Task
+    * [DATAMONGO-790] - Ensure compatibility with Spring Framework 4.0
+    * [DATAMONGO-824] - Add contribution guidelines
+    * [DATAMONGO-826] - Release Spring Data MongoDB 1.4.0.RC1
+    * [DATAMONGO-835] - Code cleanups
+
 Changes in version 1.3.3.RELEASE (2013-12-11)
 ---------------------------------------------
 ** Bug
@@ -19,7 +68,7 @@ Changes in version 1.3.3.RELEASE (2013-12-11)
     * [DATAMONGO-810] - Release 1.3.3
 
 Changes in version 1.4.0.M1 (2013-11-19)
----------------------------------------------
+----------------------------------------
 ** Bug
     * [DATAMONGO-534] - The GridFs query execution does not return sorted resources, when the sorting fields are defined in the query definition
     * [DATAMONGO-630] - Add support of $setOnInsert modifier for upsert

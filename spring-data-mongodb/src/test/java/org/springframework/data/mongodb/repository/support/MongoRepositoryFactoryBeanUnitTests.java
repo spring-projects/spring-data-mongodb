@@ -28,6 +28,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.repository.PersonRepository;
 import org.springframework.data.repository.core.support.RepositoryFactorySupport;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -39,15 +40,11 @@ import org.springframework.test.util.ReflectionTestUtils;
 @RunWith(MockitoJUnitRunner.class)
 public class MongoRepositoryFactoryBeanUnitTests {
 
-	@Mock
-	MongoOperations operations;
+	@Mock MongoOperations operations;
 
-	@Mock
-	MongoConverter converter;
+	@Mock MongoConverter converter;
 
-	@Mock
-	@SuppressWarnings("rawtypes")
-	MappingContext context;
+	@Mock @SuppressWarnings("rawtypes") MappingContext context;
 
 	@Test
 	@SuppressWarnings("rawtypes")
@@ -75,6 +72,7 @@ public class MongoRepositoryFactoryBeanUnitTests {
 		when(operations.getConverter()).thenReturn(converter);
 		when(converter.getMappingContext()).thenReturn(context);
 
+		factoryBean.setRepositoryInterface(PersonRepository.class);
 		factoryBean.setMongoOperations(operations);
 		factoryBean.afterPropertiesSet();
 
