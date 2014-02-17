@@ -26,7 +26,7 @@ Add the Maven dependency:
 <dependency>
   <groupId>org.springframework.data</groupId>
   <artifactId>spring-data-mongodb</artifactId>
-  <version>1.3.2.RELEASE</version>
+  <version>1.3.4.RELEASE</version>
 </dependency>
 ```
 
