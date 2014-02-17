@@ -2302,6 +2302,18 @@ public class MongoTemplateTests {
 		assertThat(template.findOne(q, VersionedPerson.class), nullValue());
 	}
 
+	/**
+	 * @see DATAMONOGO-828
+	 */
+	@Test
+	public void updateFirstShouldDoNothingWhenCalledForEntitiesThatDoNotExist() {
+
+		Query q = query(where("id").is(Long.MIN_VALUE));
+
+		template.updateFirst(q, Update.update("lastname", "supercalifragilisticexpialidocious"), VersionedPerson.class);
+		assertThat(template.findOne(q, VersionedPerson.class), nullValue());
+	}
+
 	static class DocumentWithCollection {
 
 		@Id String id;

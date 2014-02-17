@@ -1035,6 +1035,19 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				update.inc(persistentEntity.getVersionProperty().getFieldName(), 1L);
 			}
 		}
+
+	}
+
+	private boolean dbObjectContainsVersionProperty(DBObject dbObject, MongoPersistentEntity<?> persistentEntity) {
+
+		if (persistentEntity == null || !persistentEntity.hasVersionProperty()) {
+			return false;
+		}
+		return dbObjectContainsProperty(dbObject, persistentEntity.getVersionProperty());
+	}
+
+	private boolean dbObjectContainsProperty(DBObject dbObject, MongoPersistentProperty persistentProperty) {
+		return dbObject.containsField(persistentProperty.getFieldName());
 	}
 
 	private boolean dbObjectContainsVersionProperty(DBObject dbObject, MongoPersistentEntity<?> persistentEntity) {
