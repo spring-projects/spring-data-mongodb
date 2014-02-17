@@ -2385,7 +2385,7 @@ public class MongoTemplateTests {
 				);
 		template.save(doc);
 
-		Update update = new Update().pull("dbRefAnnotatedList", "2");
+		Update update = new Update().pull("dbRefAnnotatedList.id", "2");
 
 		Query qry = query(where("id").is("1"));
 		template.updateFirst(qry, update, DocumentWithDBRefCollection.class);

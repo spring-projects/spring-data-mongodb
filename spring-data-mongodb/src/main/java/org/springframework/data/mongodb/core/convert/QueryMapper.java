@@ -26,6 +26,7 @@ import org.bson.types.ObjectId;
 import org.springframework.core.convert.ConversionException;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PropertyPath;
 import org.springframework.data.mapping.PropertyReferenceException;
@@ -187,8 +188,8 @@ public class QueryMapper {
 		boolean needsAssociationConversion = property.isAssociation() && !keyword.isExists();
 		Object value = keyword.getValue();
 
-		Object convertedValue = needsAssociationConversion ? convertAssociation(value, property.getProperty())
-				: getMappedValue(property.with(keyword.getKey()), value);
+		Object convertedValue = needsAssociationConversion ? convertAssociation(value, property) : getMappedValue(
+				property.with(keyword.getKey()), value);
 
 		return new BasicDBObject(keyword.key, convertedValue);
 	}
@@ -235,7 +236,7 @@ public class QueryMapper {
 		}
 
 		if (isAssociationConversionNecessary(documentField, value)) {
-			return convertAssociation(value, documentField.getProperty());
+			return convertAssociation(value, documentField);
 		}
 
 		return convertSimpleOrDBObject(value, documentField.getPropertyEntity());
@@ -251,7 +252,7 @@ public class QueryMapper {
 	 * @param value
 	 * @return
 	 */
-	private boolean isAssociationConversionNecessary(Field documentField, Object value) {
+	protected boolean isAssociationConversionNecessary(Field documentField, Object value) {
 		return documentField.isAssociation() && value != null
 				&& (documentField.getProperty().getActualType().isAssignableFrom(value.getClass()) //
 				|| documentField.getPropertyEntity().getIdProperty().getActualType().isAssignableFrom(value.getClass()));
@@ -287,6 +288,10 @@ public class QueryMapper {
 	 */
 	protected Object delegateConvertToMongoType(Object source, MongoPersistentEntity<?> entity) {
 		return converter.convertToMongoType(source);
+	}
+
+	protected Object convertAssociation(Object source, Field field) {
+		return convertAssociation(source, field.getProperty());
 	}
 
 	/**
@@ -326,14 +331,6 @@ public class QueryMapper {
 
 		if (source instanceof DBRef) {
 			return (DBRef) source;
-		}
-
-		if (property.isCollectionLike() && property.getComponentType() != null) {
-
-			MongoPersistentEntity<?> componentTypeEntity = mappingContext.getPersistentEntity(property.getComponentType());
-			if (componentTypeEntity.getIdProperty().getActualType().isAssignableFrom(source.getClass())) {
-				return new DBRef(null, componentTypeEntity.getCollection(), source);
-			}
 		}
 
 		return converter.toDBRef(source, property);
@@ -518,6 +515,24 @@ public class QueryMapper {
 		public String getMappedKey() {
 			return isIdField() ? ID_KEY : name;
 		}
+
+		/**
+		 * Checks if property is part of database reference.
+		 * 
+		 * @return
+		 */
+		public boolean isPartOfAssociation() {
+			return false;
+		}
+
+		/**
+		 * Get {@link Association} pointing to property
+		 * 
+		 * @return null if not available
+		 */
+		public Association<MongoPersistentProperty> findAssociation() {
+			return null;
+		}
 	}
 
 	/**
@@ -608,6 +623,34 @@ public class QueryMapper {
 
 			MongoPersistentProperty property = getProperty();
 			return property == null ? false : property.isAssociation();
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.convert.QueryMapper.Field#isPartOfAssociation()
+		 */
+		@Override
+		public boolean isPartOfAssociation() {
+			return findAssociation() != null;
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.convert.QueryMapper.Field#findAssociation()
+		 */
+		@Override
+		public Association<MongoPersistentProperty> findAssociation() {
+			if (isAssociation()) {
+				return property.getAssociation();
+			}
+			if (this.path != null) {
+				for (MongoPersistentProperty p : this.path) {
+					if (p != null && p.isAssociation()) {
+						return p.getAssociation();
+					}
+				}
+			}
+			return null;
 		}
 
 		/*

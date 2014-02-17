@@ -21,6 +21,8 @@ import java.util.Iterator;
 import java.util.Map.Entry;
 
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.mapping.Association;
+import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
@@ -32,6 +34,7 @@ import org.springframework.util.Assert;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
+import com.mongodb.DBRef;
 
 /**
  * A subclass of {@link QueryMapper} that retains type information on the mongo types.
@@ -72,7 +75,6 @@ public class UpdateMapper extends QueryMapper {
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.convert.QueryMapper#getMappedObjectForField(org.springframework.data.mongodb.core.convert.QueryMapper.Field, java.lang.Object)
 	 */
-	@SuppressWarnings("unchecked")
 	@Override
 	protected Entry<String, Object> getMappedObjectForField(Field field, Object rawValue) {
 
@@ -101,6 +103,27 @@ public class UpdateMapper extends QueryMapper {
 		}
 
 		return Collections.singletonMap(field.getMappedKey(), value).entrySet().iterator().next();
+	}
+
+	@Override
+	protected Object convertAssociation(Object source, Field field) {
+
+		if (source instanceof DBRef || field.isAssociation() || !field.isPartOfAssociation()) {
+			return super.convertAssociation(source, field);
+		}
+
+		MongoPersistentProperty property = field.getProperty();
+		PersistentEntity<?, MongoPersistentProperty> owner = property.getOwner();
+		if (owner instanceof MongoPersistentEntity) {
+			return new DBRef(null, ((MongoPersistentEntity<?>) owner).getCollection(), source);
+		}
+
+		throw new IllegalArgumentException(String.format("Expected MongoPeristentEntity but found '%s'.", owner.getClass()));
+	}
+
+	@Override
+	protected boolean isAssociationConversionNecessary(Field documentField, Object value) {
+		return super.isAssociationConversionNecessary(documentField, value) || documentField.isPartOfAssociation();
 	}
 
 	private boolean isUpdateModifier(Object value) {
@@ -160,7 +183,39 @@ public class UpdateMapper extends QueryMapper {
 		 */
 		@Override
 		protected Converter<MongoPersistentProperty, String> getPropertyConverter() {
+
+			if (this.isPartOfAssociation()) {
+				return new AssociationPropertyConverter(key, this.findAssociation());
+			}
 			return new UpdatePropertyConverter(key);
+		}
+
+		@Override
+		public String getMappedKey() {
+
+			if (isPartOfAssociation()) {
+				return getPropertyConverter().convert(null);
+			}
+			return super.getMappedKey();
+		}
+
+		private static class AssociationPropertyConverter implements Converter<MongoPersistentProperty, String> {
+
+			Association<MongoPersistentProperty> association;
+			String key;
+
+			public AssociationPropertyConverter(String key, Association<MongoPersistentProperty> field) {
+				this.key = key;
+				this.association = field;
+			}
+
+			@Override
+			public String convert(MongoPersistentProperty source) {
+				String fieldName = association.getInverse().getFieldName();
+				String newKey = key.substring(0, key.indexOf(fieldName) + fieldName.length());
+				return newKey;
+			}
+
 		}
 
 		/**
