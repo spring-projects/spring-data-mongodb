@@ -2292,6 +2292,8 @@ public class MongoTemplateTests {
 	}
 
 	/**
+	 * <<<<<<< HEAD
+	 * 
 	 * @see DATAMONOGO-828
 	 */
 	@Test
@@ -2325,6 +2327,83 @@ public class MongoTemplateTests {
 		DocumentWithMultipleCollections result = template.findOne(findQuery, DocumentWithMultipleCollections.class);
 		assertThat(result.string1, hasItems("spring", "data", "mongodb"));
 		assertThat(result.string2, hasItems("one", "two", "three"));
+
+	}
+
+	/**
+	 * @see DATAMONGO-404
+	 */
+	@Test
+	public void updateWithPullShouldRemoveNestedItemFromDbRefAnnotatedCollection() {
+
+		template.dropCollection(DocumentWithDBRefCollection.class);
+
+		Sample sample1 = new Sample("1", "A");
+		Sample sample2 = new Sample("2", "B");
+		template.save(sample1);
+		template.save(sample2);
+
+		DocumentWithDBRefCollection doc = new DocumentWithDBRefCollection();
+		doc.id = "1";
+		doc.dbRefAnnotatedList = Arrays.asList( //
+				sample1, //
+				sample2 //
+				);
+		template.save(doc);
+
+		Update update = new Update().pull("dbRefAnnotatedList", doc.dbRefAnnotatedList.get(1));
+
+		Query qry = query(where("id").is("1"));
+		template.updateFirst(qry, update, DocumentWithDBRefCollection.class);
+
+		DocumentWithDBRefCollection result = template.findOne(qry, DocumentWithDBRefCollection.class);
+
+		assertThat(result, is(notNullValue()));
+		assertThat(result.dbRefAnnotatedList, hasSize(1));
+		assertThat(result.dbRefAnnotatedList.get(0), is(notNullValue()));
+		assertThat(result.dbRefAnnotatedList.get(0).id, is((Object) "1"));
+	}
+
+	/**
+	 * @see DATAMONGO-404
+	 */
+	@Test
+	public void updateWithPullShouldRemoveNestedItemFromDbRefAnnotatedCollectionWhenGivenAnIdValueOfComponentTypeEntity() {
+
+		template.dropCollection(DocumentWithDBRefCollection.class);
+
+		Sample sample1 = new Sample("1", "A");
+		Sample sample2 = new Sample("2", "B");
+		template.save(sample1);
+		template.save(sample2);
+
+		DocumentWithDBRefCollection doc = new DocumentWithDBRefCollection();
+		doc.id = "1";
+		doc.dbRefAnnotatedList = Arrays.asList( //
+				sample1, //
+				sample2 //
+				);
+		template.save(doc);
+
+		Update update = new Update().pull("dbRefAnnotatedList.id", "2");
+
+		Query qry = query(where("id").is("1"));
+		template.updateFirst(qry, update, DocumentWithDBRefCollection.class);
+
+		DocumentWithDBRefCollection result = template.findOne(qry, DocumentWithDBRefCollection.class);
+
+		assertThat(result, is(notNullValue()));
+		assertThat(result.dbRefAnnotatedList, hasSize(1));
+		assertThat(result.dbRefAnnotatedList.get(0), is(notNullValue()));
+		assertThat(result.dbRefAnnotatedList.get(0).id, is((Object) "1"));
+	}
+
+	static class DocumentWithDBRefCollection {
+
+		@Id public String id;
+
+		@org.springframework.data.mongodb.core.mapping.DBRef//
+		public List<Sample> dbRefAnnotatedList;
 	}
 
 	static class DocumentWithCollection {
@@ -2388,6 +2467,13 @@ public class MongoTemplateTests {
 
 		@Id String id;
 		String field;
+
+		public Sample() {}
+
+		public Sample(String id, String field) {
+			this.id = id;
+			this.field = field;
+		}
 	}
 
 	static class TestClass {
