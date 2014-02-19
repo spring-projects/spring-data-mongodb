@@ -28,6 +28,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.repository.ContactRepository;
 import org.springframework.data.repository.core.support.RepositoryFactorySupport;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -71,6 +72,7 @@ public class MongoRepositoryFactoryBeanUnitTests {
 
 		factoryBean.setLazyInit(true);
 		factoryBean.setMongoOperations(operations);
+		factoryBean.setRepositoryInterface(ContactRepository.class);
 		factoryBean.afterPropertiesSet();
 
 		RepositoryFactorySupport factory = factoryBean.createRepositoryFactory();
