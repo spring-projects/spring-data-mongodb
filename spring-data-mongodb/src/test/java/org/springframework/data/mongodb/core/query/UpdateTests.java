@@ -260,4 +260,28 @@ public class UpdateTests {
 
 		assertThat(clone.modifies("oof"), is(false));
 	}
+
+	/**
+	 * @see DATAMONGO-853
+	 */
+	@Test(expected = IllegalArgumentException.class)
+	public void testAddingMultiFieldOperationThrowsExceptionWhenCalledWithNullKey() {
+		new Update().addMultiFieldOperation("$op", null, "exprected to throw IllegalArgumentException.");
+	}
+
+	/**
+	 * @see DATAMONGO-853
+	 */
+	@Test(expected = IllegalArgumentException.class)
+	public void testAddingSingleFieldOperationThrowsExceptionWhenCalledWithNullKey() {
+		new Update().addFieldOperation("$op", null, "exprected to throw IllegalArgumentException.");
+	}
+
+	/**
+	 * @see DATAMONGO-853
+	 */
+	@Test(expected = IllegalArgumentException.class)
+	public void testCreatingUpdateWithNullKeyThrowsException() {
+		Update.update(null, "value");
+	}
 }
