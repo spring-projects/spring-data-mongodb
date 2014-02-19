@@ -2398,6 +2398,29 @@ public class MongoTemplateTests {
 		assertThat(result.dbRefAnnotatedList.get(0).id, is((Object) "1"));
 	}
 
+	/**
+	 * @see DATAMONGO-852
+	 */
+	@Test
+	public void updateShouldNotBumpVersionNumberIfVersionPropertyIncludedInUpdate() {
+
+		VersionedPerson person = new VersionedPerson();
+		person.firstname = "Dave";
+		person.lastname = "Matthews";
+		template.save(person);
+		assertThat(person.id, is(notNullValue()));
+
+		Query qry = query(where("id").is(person.id));
+		VersionedPerson personAfterFirstSave = template.findOne(qry, VersionedPerson.class);
+		assertThat(personAfterFirstSave.version, is(0L));
+
+		template.updateFirst(qry, Update.update("lastname", "Bubu").set("version", 100L), VersionedPerson.class);
+
+		VersionedPerson personAfterUpdateFirst = template.findOne(qry, VersionedPerson.class);
+		assertThat(personAfterUpdateFirst.version, is(100L));
+		assertThat(personAfterUpdateFirst.lastname, is("Bubu"));
+	}
+
 	static class DocumentWithDBRefCollection {
 
 		@Id public String id;

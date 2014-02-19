@@ -19,11 +19,14 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.springframework.dao.InvalidDataAccessApiUsageException;
+import org.springframework.util.StringUtils;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
@@ -43,6 +46,7 @@ public class Update {
 		LAST, FIRST
 	}
 
+	private Set<String> keysToUpdate = new HashSet<String>();
 	private Map<String, Object> modifierOps = new LinkedHashMap<String, Object>();
 	private Map<String, PushOperatorBuilder> pushCommandBuilders = new LinkedHashMap<String, PushOperatorBuilder>(1);
 
@@ -78,7 +82,13 @@ public class Update {
 				continue;
 			}
 
-			update.modifierOps.put(key, object.get(key));
+			Object value = object.get(key);
+			update.modifierOps.put(key, value);
+			if (isKeyword(key) && value instanceof DBObject) {
+				update.keysToUpdate.addAll(((DBObject) value).keySet());
+			} else {
+				update.keysToUpdate.add(key);
+			}
 		}
 
 		return update;
@@ -222,13 +232,12 @@ public class Update {
 	 * @return
 	 */
 	public Update pullAll(String key, Object[] values) {
+
 		Object[] convertedValues = new Object[values.length];
 		for (int i = 0; i < values.length; i++) {
 			convertedValues[i] = values[i];
 		}
-		DBObject keyValue = new BasicDBObject();
-		keyValue.put(key, convertedValues);
-		modifierOps.put("$pullAll", keyValue);
+		addFieldOperation("$pullAll", key, convertedValues);
 		return this;
 	}
 
@@ -252,6 +261,12 @@ public class Update {
 		return dbo;
 	}
 
+	protected void addFieldOperation(String operator, String key, Object value) {
+
+		modifierOps.put(operator, new BasicDBObject(key, value));
+		this.keysToUpdate.add(key);
+	}
+
 	protected void addMultiFieldOperation(String operator, String key, Object value) {
 
 		Object existingValue = this.modifierOps.get(operator);
@@ -270,6 +285,27 @@ public class Update {
 		}
 
 		keyValueMap.put(key, value);
+		this.keysToUpdate.add(key);
+	}
+
+	/**
+	 * Determine if a given {@code key} will be touched on execution.
+	 * 
+	 * @param key
+	 * @return
+	 */
+	public boolean modifies(String key) {
+		return this.keysToUpdate.contains(key);
+	}
+
+	/**
+	 * Inspects given {@code key} for '$'.
+	 * 
+	 * @param key
+	 * @return
+	 */
+	private static boolean isKeyword(String key) {
+		return StringUtils.startsWithIgnoreCase(key, "$");
 	}
 
 	/**
