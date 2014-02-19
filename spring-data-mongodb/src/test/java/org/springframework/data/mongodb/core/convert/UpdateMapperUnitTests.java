@@ -32,7 +32,9 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.convert.WritingConverter;
+import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
@@ -41,6 +43,7 @@ import org.springframework.data.mongodb.core.query.Update;
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
+import com.mongodb.DBRef;
 
 /**
  * Unit tests for {@link UpdateMapper}.
@@ -300,6 +303,62 @@ public class UpdateMapperUnitTests {
 		verify(writingConverterSpy, times(3)).convert(Mockito.any(NestedEntity.class));
 	}
 
+	/**
+	 * @see DATAMONGO-404
+	 */
+	@Test
+	public void createsDbRefForEntityIdOnPulls() {
+
+		Update update = new Update().pull("dbRefAnnotatedList.id", "2");
+
+		DBObject mappedObject = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(DocumentWithDBRefCollection.class));
+
+		DBObject pullClause = getAsDBObject(mappedObject, "$pull");
+		assertThat(pullClause.get("dbRefAnnotatedList"), is((Object) new DBRef(null, "entity", "2")));
+	}
+
+	/**
+	 * @see DATAMONGO-404
+	 */
+	@Test
+	public void createsDbRefForEntityOnPulls() {
+
+		Entity entity = new Entity();
+		entity.id = "5";
+
+		Update update = new Update().pull("dbRefAnnotatedList", entity);
+		DBObject mappedObject = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(DocumentWithDBRefCollection.class));
+
+		DBObject pullClause = getAsDBObject(mappedObject, "$pull");
+		assertThat(pullClause.get("dbRefAnnotatedList"), is((Object) new DBRef(null, "entity", entity.id)));
+	}
+
+	/**
+	 * @see DATAMONGO-404
+	 */
+	@Test(expected = MappingException.class)
+	public void rejectsInvalidFieldReferenceForDbRef() {
+
+		Update update = new Update().pull("dbRefAnnotatedList.name", "NAME");
+		mapper.getMappedObject(update.getUpdateObject(), context.getPersistentEntity(DocumentWithDBRefCollection.class));
+	}
+
+	/**
+	 * @see DATAMONGO-404
+	 */
+	@Test
+	public void rendersNestedDbRefCorrectly() {
+
+		Update update = new Update().pull("nested.dbRefAnnotatedList.id", "2");
+		DBObject mappedObject = mapper
+				.getMappedObject(update.getUpdateObject(), context.getPersistentEntity(Wrapper.class));
+
+		DBObject pullClause = getAsDBObject(mappedObject, "$pull");
+		assertThat(pullClause.containsField("mapped.dbRefAnnotatedList"), is(true));
+	}
+
 	static interface Model {}
 
 	static class ModelImpl implements Model {
@@ -384,5 +443,24 @@ public class UpdateMapperUnitTests {
 		public DBObject convert(NestedEntity source) {
 			return new BasicDBObject();
 		}
+	}
+
+	static class DocumentWithDBRefCollection {
+
+		@Id public String id;
+
+		@org.springframework.data.mongodb.core.mapping.DBRef//
+		public List<Entity> dbRefAnnotatedList;
+	}
+
+	static class Entity {
+
+		@Id public String id;
+		String name;
+	}
+
+	static class Wrapper {
+
+		@Field("mapped") DocumentWithDBRefCollection nested;
 	}
 }

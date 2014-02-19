@@ -22,7 +22,6 @@ import java.util.Map.Entry;
 
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.mapping.Association;
-import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
@@ -34,7 +33,6 @@ import org.springframework.util.Assert;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
-import com.mongodb.DBRef;
 
 /**
  * A subclass of {@link QueryMapper} that retains type information on the mongo types.
@@ -105,25 +103,13 @@ public class UpdateMapper extends QueryMapper {
 		return Collections.singletonMap(field.getMappedKey(), value).entrySet().iterator().next();
 	}
 
-	@Override
-	protected Object convertAssociation(Object source, Field field) {
-
-		if (source instanceof DBRef || field.isAssociation() || !field.isPartOfAssociation()) {
-			return super.convertAssociation(source, field);
-		}
-
-		MongoPersistentProperty property = field.getProperty();
-		PersistentEntity<?, MongoPersistentProperty> owner = property.getOwner();
-		if (owner instanceof MongoPersistentEntity) {
-			return new DBRef(null, ((MongoPersistentEntity<?>) owner).getCollection(), source);
-		}
-
-		throw new IllegalArgumentException(String.format("Expected MongoPeristentEntity but found '%s'.", owner.getClass()));
-	}
-
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.convert.QueryMapper#isAssociationConversionNecessary(org.springframework.data.mongodb.core.convert.QueryMapper.Field, java.lang.Object)
+	 */
 	@Override
 	protected boolean isAssociationConversionNecessary(Field documentField, Object value) {
-		return super.isAssociationConversionNecessary(documentField, value) || documentField.isPartOfAssociation();
+		return super.isAssociationConversionNecessary(documentField, value) || documentField.containsAssociation();
 	}
 
 	private boolean isUpdateModifier(Object value) {
@@ -183,39 +169,47 @@ public class UpdateMapper extends QueryMapper {
 		 */
 		@Override
 		protected Converter<MongoPersistentProperty, String> getPropertyConverter() {
-
-			if (this.isPartOfAssociation()) {
-				return new AssociationPropertyConverter(key, this.findAssociation());
-			}
-			return new UpdatePropertyConverter(key);
+			return isAssociation() ? new AssociationConverter(getAssociation()) : new UpdatePropertyConverter(key);
 		}
 
-		@Override
-		public String getMappedKey() {
+		/**
+		 * Converter to skip all properties after an association property was rendered.
+		 * 
+		 * @author Oliver Gierke
+		 */
+		private static class AssociationConverter implements Converter<MongoPersistentProperty, String> {
 
-			if (isPartOfAssociation()) {
-				return getPropertyConverter().convert(null);
+			private final MongoPersistentProperty property;
+			private boolean associationFound;
+
+			/**
+			 * Creates a new {@link AssociationConverter} for the given {@link Association}.
+			 * 
+			 * @param association must not be {@literal null}.
+			 */
+			public AssociationConverter(Association<MongoPersistentProperty> association) {
+
+				Assert.notNull(association, "Association must not be null!");
+				this.property = association.getInverse();
 			}
-			return super.getMappedKey();
-		}
 
-		private static class AssociationPropertyConverter implements Converter<MongoPersistentProperty, String> {
-
-			Association<MongoPersistentProperty> association;
-			String key;
-
-			public AssociationPropertyConverter(String key, Association<MongoPersistentProperty> field) {
-				this.key = key;
-				this.association = field;
-			}
-
+			/* 
+			 * (non-Javadoc)
+			 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
+			 */
 			@Override
 			public String convert(MongoPersistentProperty source) {
-				String fieldName = association.getInverse().getFieldName();
-				String newKey = key.substring(0, key.indexOf(fieldName) + fieldName.length());
-				return newKey;
-			}
 
+				if (associationFound) {
+					return null;
+				}
+
+				if (property.equals(source)) {
+					associationFound = true;
+				}
+
+				return source.getFieldName();
+			}
 		}
 
 		/**

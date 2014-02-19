@@ -58,6 +58,7 @@ import org.springframework.data.mongodb.core.convert.DBObjectAccessorUnitTests.P
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.PersonPojoStringId;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -1243,9 +1244,9 @@ public class MappingMongoConverterUnitTests {
 		DB db = mock(DB.class);
 		DBRef dbRef = new DBRef(db, "collection", "id");
 
-		org.springframework.data.mongodb.core.mapping.DBRef annotation = mock(org.springframework.data.mongodb.core.mapping.DBRef.class);
+		MongoPersistentProperty property = mock(MongoPersistentProperty.class);
 
-		assertThat(converter.createDBRef(dbRef, annotation), is(dbRef));
+		assertThat(converter.createDBRef(dbRef, property), is(dbRef));
 	}
 
 	/**

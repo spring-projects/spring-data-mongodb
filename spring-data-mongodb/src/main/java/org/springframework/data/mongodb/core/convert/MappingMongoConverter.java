@@ -304,7 +304,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			Assert.isTrue(annotation != null, "The referenced property has to be mapped with @DBRef!");
 		}
 
-		return createDBRef(object, annotation);
+		return createDBRef(object, referingProperty);
 	}
 
 	/**
@@ -447,7 +447,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		if (prop.isDbReference()) {
-			DBRef dbRefObj = createDBRef(obj, prop.getDBRef());
+			DBRef dbRefObj = createDBRef(obj, prop);
 			if (null != dbRefObj) {
 				accessor.put(prop, dbRefObj);
 				return;
@@ -516,7 +516,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				continue;
 			}
 
-			DBRef dbRef = createDBRef(element, property.getDBRef());
+			DBRef dbRef = createDBRef(element, property);
 			dbList.add(dbRef);
 		}
 
@@ -549,7 +549,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			if (conversions.isSimpleType(key.getClass())) {
 
 				String simpleKey = potentiallyEscapeMapKey(key.toString());
-				dbObject.put(simpleKey, value != null ? createDBRef(value, property.getDBRef()) : null);
+				dbObject.put(simpleKey, value != null ? createDBRef(value, property) : null);
 
 			} else {
 				throw new MappingException("Cannot use a complex object as a key value.");
@@ -742,7 +742,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		return target.isAssignableFrom(value.getClass()) ? value : conversionService.convert(value, target);
 	}
 
-	protected DBRef createDBRef(Object target, org.springframework.data.mongodb.core.mapping.DBRef dbref) {
+	protected DBRef createDBRef(Object target, MongoPersistentProperty property) {
 
 		Assert.notNull(target);
 
@@ -751,6 +751,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		MongoPersistentEntity<?> targetEntity = mappingContext.getPersistentEntity(target.getClass());
+		targetEntity = targetEntity == null ? targetEntity = mappingContext.getPersistentEntity(property) : targetEntity;
 
 		if (null == targetEntity) {
 			throw new MappingException("No mapping metadata found for " + target.getClass());
@@ -762,14 +763,21 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			throw new MappingException("No id property found on class " + targetEntity.getType());
 		}
 
-		BeanWrapper<MongoPersistentEntity<Object>, Object> wrapper = BeanWrapper.create(target, conversionService);
-		Object id = wrapper.getProperty(idProperty, Object.class, useFieldAccessOnly);
+		Object id = null;
+
+		if (target.getClass().equals(idProperty.getType())) {
+			id = target;
+		} else {
+			BeanWrapper<MongoPersistentEntity<Object>, Object> wrapper = BeanWrapper.create(target, conversionService);
+			id = wrapper.getProperty(idProperty, Object.class, useFieldAccessOnly);
+		}
 
 		if (null == id) {
 			throw new MappingException("Cannot create a reference to an object with a NULL id.");
 		}
 
-		return dbRefResolver.createDbRef(dbref, targetEntity, idMapper.convertId(id));
+		return dbRefResolver.createDbRef(property == null ? null : property.getDBRef(), targetEntity,
+				idMapper.convertId(id));
 	}
 
 	protected Object getValueInternal(MongoPersistentProperty prop, DBObject dbo, SpELExpressionEvaluator eval,

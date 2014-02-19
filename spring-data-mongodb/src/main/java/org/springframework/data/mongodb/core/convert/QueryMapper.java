@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core.convert;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -32,6 +33,7 @@ import org.springframework.data.mapping.PropertyPath;
 import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.context.PersistentPropertyPath;
+import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty.PropertyToFieldNameConverter;
@@ -301,7 +303,7 @@ public class QueryMapper {
 	 * @param property
 	 * @return
 	 */
-	private Object convertAssociation(Object source, MongoPersistentProperty property) {
+	protected Object convertAssociation(Object source, MongoPersistentProperty property) {
 
 		if (property == null || source == null || source instanceof DBRef) {
 			return source;
@@ -481,7 +483,9 @@ public class QueryMapper {
 		}
 
 		/**
-		 * Returns the underlying {@link MongoPersistentProperty} backing the field.
+		 * Returns the underlying {@link MongoPersistentProperty} backing the field. For path traversals this will be the
+		 * property that represents the value to handle. This means it'll be the leaf property for plain paths or the
+		 * association property in case we refer to an association somewhere in the path.
 		 * 
 		 * @return
 		 */
@@ -517,20 +521,15 @@ public class QueryMapper {
 		}
 
 		/**
-		 * Checks if property is part of database reference.
+		 * Returns whether the field references an association in case it refers to a nested field.
 		 * 
 		 * @return
 		 */
-		public boolean isPartOfAssociation() {
+		public boolean containsAssociation() {
 			return false;
 		}
 
-		/**
-		 * Get {@link Association} pointing to property
-		 * 
-		 * @return null if not available
-		 */
-		public Association<MongoPersistentProperty> findAssociation() {
+		public Association<MongoPersistentProperty> getAssociation() {
 			return null;
 		}
 	}
@@ -543,10 +542,13 @@ public class QueryMapper {
 	 */
 	protected static class MetadataBackedField extends Field {
 
+		private static final String INVALID_ASSOCIATION_REFERENCE = "Invalid path reference %s! Associations can only be pointed to directly or via their id property!";
+
 		private final MongoPersistentEntity<?> entity;
 		private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 		private final MongoPersistentProperty property;
 		private final PersistentPropertyPath<MongoPersistentProperty> path;
+		private final Association<MongoPersistentProperty> association;
 
 		/**
 		 * Creates a new {@link MetadataBackedField} with the given name, {@link MongoPersistentEntity} and
@@ -568,6 +570,7 @@ public class QueryMapper {
 
 			this.path = getPath(name);
 			this.property = path == null ? null : path.getLeafProperty();
+			this.association = findAssociation();
 		}
 
 		/*
@@ -601,7 +604,7 @@ public class QueryMapper {
 		 */
 		@Override
 		public MongoPersistentProperty getProperty() {
-			return property;
+			return association == null ? property : association.getInverse();
 		}
 
 		/* 
@@ -620,36 +623,33 @@ public class QueryMapper {
 		 */
 		@Override
 		public boolean isAssociation() {
-
-			MongoPersistentProperty property = getProperty();
-			return property == null ? false : property.isAssociation();
+			return association != null;
 		}
 
-		/*
+		/* 
 		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.convert.QueryMapper.Field#isPartOfAssociation()
+		 * @see org.springframework.data.mongodb.core.convert.QueryMapper.Field#getAssociation()
 		 */
 		@Override
-		public boolean isPartOfAssociation() {
-			return findAssociation() != null;
+		public Association<MongoPersistentProperty> getAssociation() {
+			return association;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.convert.QueryMapper.Field#findAssociation()
+		/**
+		 * Finds the association property in the {@link PersistentPropertyPath}.
+		 * 
+		 * @return
 		 */
-		@Override
-		public Association<MongoPersistentProperty> findAssociation() {
-			if (isAssociation()) {
-				return property.getAssociation();
-			}
+		private final Association<MongoPersistentProperty> findAssociation() {
+
 			if (this.path != null) {
 				for (MongoPersistentProperty p : this.path) {
-					if (p != null && p.isAssociation()) {
+					if (p.isAssociation()) {
 						return p.getAssociation();
 					}
 				}
 			}
+
 			return null;
 		}
 
@@ -662,6 +662,10 @@ public class QueryMapper {
 			return path == null ? name : path.toDotPath(getPropertyConverter());
 		}
 
+		protected PersistentPropertyPath<MongoPersistentProperty> getPath() {
+			return path;
+		}
+
 		/**
 		 * Returns the {@link PersistentPropertyPath} for the given <code>pathExpression</code>.
 		 * 
@@ -671,8 +675,28 @@ public class QueryMapper {
 		private PersistentPropertyPath<MongoPersistentProperty> getPath(String pathExpression) {
 
 			try {
+
 				PropertyPath path = PropertyPath.from(pathExpression, entity.getTypeInformation());
-				return mappingContext.getPersistentPropertyPath(path);
+				PersistentPropertyPath<MongoPersistentProperty> propertyPath = mappingContext.getPersistentPropertyPath(path);
+
+				Iterator<MongoPersistentProperty> iterator = propertyPath.iterator();
+				boolean associationDetected = false;
+
+				while (iterator.hasNext()) {
+
+					MongoPersistentProperty property = iterator.next();
+
+					if (property.isAssociation()) {
+						associationDetected = true;
+						continue;
+					}
+
+					if (associationDetected && !property.isIdProperty()) {
+						throw new MappingException(String.format(INVALID_ASSOCIATION_REFERENCE, pathExpression));
+					}
+				}
+
+				return propertyPath;
 			} catch (PropertyReferenceException e) {
 				return null;
 			}
