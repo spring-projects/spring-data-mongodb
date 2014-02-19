@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.springframework.dao.InvalidDataAccessApiUsageException;
+import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.BasicDBObject;
@@ -263,12 +264,14 @@ public class Update {
 
 	protected void addFieldOperation(String operator, String key, Object value) {
 
+		Assert.hasText(key, "Key/Path for update must not be null or blank.");
 		modifierOps.put(operator, new BasicDBObject(key, value));
 		this.keysToUpdate.add(key);
 	}
 
 	protected void addMultiFieldOperation(String operator, String key, Object value) {
 
+		Assert.hasText(key, "Key/Path for update must not be null or blank.");
 		Object existingValue = this.modifierOps.get(operator);
 		DBObject keyValueMap;
 
