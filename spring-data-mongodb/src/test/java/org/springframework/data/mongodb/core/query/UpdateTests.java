@@ -188,4 +188,76 @@ public class UpdateTests {
 		Update u = new Update().setOnInsert("size", 1).setOnInsert("count", 1);
 		assertThat(u.getUpdateObject().toString(), is("{ \"$setOnInsert\" : { \"size\" : 1 , \"count\" : 1}}"));
 	}
+
+	/**
+	 * @see DATAMONGO-852
+	 */
+	@Test
+	public void testUpdateAffectsFieldShouldReturnTrueWhenMultiFieldOperationAddedForField() {
+
+		Update update = new Update().set("foo", "bar");
+		assertThat(update.modifies("foo"), is(true));
+	}
+
+	/**
+	 * @see DATAMONGO-852
+	 */
+	@Test
+	public void testUpdateAffectsFieldShouldReturnFalseWhenMultiFieldOperationAddedForField() {
+
+		Update update = new Update().set("foo", "bar");
+		assertThat(update.modifies("oof"), is(false));
+	}
+
+	/**
+	 * @see DATAMONGO-852
+	 */
+	@Test
+	public void testUpdateAffectsFieldShouldReturnTrueWhenSingleFieldOperationAddedForField() {
+
+		Update update = new Update().pullAll("foo", new Object[] { "bar" });
+		assertThat(update.modifies("foo"), is(true));
+	}
+
+	/**
+	 * @see DATAMONGO-852
+	 */
+	@Test
+	public void testUpdateAffectsFieldShouldReturnFalseWhenSingleFieldOperationAddedForField() {
+
+		Update update = new Update().pullAll("foo", new Object[] { "bar" });
+		assertThat(update.modifies("oof"), is(false));
+	}
+
+	/**
+	 * @see DATAMONGO-852
+	 */
+	@Test
+	public void testUpdateAffectsFieldShouldReturnFalseWhenCalledOnEmptyUpdate() {
+		assertThat(new Update().modifies("foo"), is(false));
+	}
+
+	/**
+	 * @see DATAMONGO-852
+	 */
+	@Test
+	public void testUpdateAffectsFieldShouldReturnTrueWhenUpdateWithKeyCreatedFromDbObject() {
+
+		Update update = new Update().set("foo", "bar");
+		Update clone = Update.fromDBObject(update.getUpdateObject());
+
+		assertThat(clone.modifies("foo"), is(true));
+	}
+
+	/**
+	 * @see DATAMONGO-852
+	 */
+	@Test
+	public void testUpdateAffectsFieldShouldReturnFalseWhenUpdateWithoutKeyCreatedFromDbObject() {
+
+		Update update = new Update().set("foo", "bar");
+		Update clone = Update.fromDBObject(update.getUpdateObject());
+
+		assertThat(clone.modifies("oof"), is(false));
+	}
 }

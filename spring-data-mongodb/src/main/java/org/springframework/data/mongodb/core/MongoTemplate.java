@@ -1031,8 +1031,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	private void increaseVersionForUpdateIfNecessary(MongoPersistentEntity<?> persistentEntity, Update update) {
 
 		if (persistentEntity != null && persistentEntity.hasVersionProperty()) {
-			if (!dbObjectContainsVersionProperty(update.getUpdateObject(), persistentEntity)) {
-				update.inc(persistentEntity.getVersionProperty().getFieldName(), 1L);
+			String versionFieldName = persistentEntity.getVersionProperty().getFieldName();
+			if (!update.modifies(versionFieldName)) {
+				update.inc(versionFieldName, 1L);
 			}
 		}
 	}
