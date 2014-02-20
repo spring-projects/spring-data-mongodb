@@ -185,6 +185,7 @@ public class MongoTemplateTests {
 		template.dropCollection(DocumentWithCollection.class);
 		template.dropCollection(DocumentWithCollectionOfSimpleType.class);
 		template.dropCollection(DocumentWithMultipleCollections.class);
+		template.dropCollection(DocumentWithDBRefCollection.class);
 	}
 
 	@Test
@@ -2336,8 +2337,6 @@ public class MongoTemplateTests {
 	@Test
 	public void updateWithPullShouldRemoveNestedItemFromDbRefAnnotatedCollection() {
 
-		template.dropCollection(DocumentWithDBRefCollection.class);
-
 		Sample sample1 = new Sample("1", "A");
 		Sample sample2 = new Sample("2", "B");
 		template.save(sample1);
@@ -2370,8 +2369,6 @@ public class MongoTemplateTests {
 	@Test
 	public void updateWithPullShouldRemoveNestedItemFromDbRefAnnotatedCollectionWhenGivenAnIdValueOfComponentTypeEntity() {
 
-		template.dropCollection(DocumentWithDBRefCollection.class);
-
 		Sample sample1 = new Sample("1", "A");
 		Sample sample2 = new Sample("2", "B");
 		template.save(sample1);
@@ -2397,7 +2394,7 @@ public class MongoTemplateTests {
 		assertThat(result.dbRefAnnotatedList.get(0), is(notNullValue()));
 		assertThat(result.dbRefAnnotatedList.get(0).id, is((Object) "1"));
 	}
-
+	
 	/**
 	 * @see DATAMONGO-852
 	 */
@@ -2421,12 +2418,44 @@ public class MongoTemplateTests {
 		assertThat(personAfterUpdateFirst.lastname, is("Bubu"));
 	}
 
+	/**
+	 * @see DATAMONGO-468
+	 */
+	@Test
+	public void shouldBeAbleToUpdateDbRefPropertyWithDomainObject(){
+
+		Sample sample1 = new Sample("1", "A");
+		Sample sample2 = new Sample("2", "B");
+		template.save(sample1);
+		template.save(sample2);
+
+		DocumentWithDBRefCollection doc = new DocumentWithDBRefCollection();
+		doc.id = "1";
+		doc.dbRefProperty = sample1;
+		template.save(doc);
+
+		Update update = new Update().set("dbRefProperty",sample2);
+
+		Query qry = query(where("id").is("1"));
+		template.updateFirst(qry, update, DocumentWithDBRefCollection.class);
+
+		DocumentWithDBRefCollection updatedDoc = template.findOne(qry, DocumentWithDBRefCollection.class);
+
+		assertThat(updatedDoc,is(notNullValue()));
+		assertThat(updatedDoc.dbRefProperty,is(notNullValue()));
+		assertThat(updatedDoc.dbRefProperty.id,is(sample2.id));
+		assertThat(updatedDoc.dbRefProperty.field,is(sample2.field));
+	}
+
 	static class DocumentWithDBRefCollection {
 
 		@Id public String id;
 
 		@org.springframework.data.mongodb.core.mapping.DBRef//
 		public List<Sample> dbRefAnnotatedList;
+
+		@org.springframework.data.mongodb.core.mapping.DBRef
+		public Sample dbRefProperty;
 	}
 
 	static class DocumentWithCollection {
