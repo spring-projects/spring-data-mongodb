@@ -359,6 +359,23 @@ public class UpdateMapperUnitTests {
 		assertThat(pullClause.containsField("mapped.dbRefAnnotatedList"), is(true));
 	}
 
+	/**
+	 * @see DATAMONGO-468
+	 */
+	@Test
+	public void rendersUpdateOfDbRefPropertyWithDomainObjectCorrectly() {
+
+		Entity entity = new Entity();
+		entity.id = "5";
+
+		Update update = new Update().set("dbRefProperty", entity);
+		DBObject mappedObject = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(DocumentWithDBRefCollection.class));
+
+		DBObject setClause = getAsDBObject(mappedObject, "$set");
+		assertThat(setClause.get("dbRefProperty"), is((Object) new DBRef(null, "entity", entity.id)));
+	}
+
 	static interface Model {}
 
 	static class ModelImpl implements Model {
@@ -451,6 +468,9 @@ public class UpdateMapperUnitTests {
 
 		@org.springframework.data.mongodb.core.mapping.DBRef//
 		public List<Entity> dbRefAnnotatedList;
+
+		@org.springframework.data.mongodb.core.mapping.DBRef//
+		public Entity dbRefProperty;
 	}
 
 	static class Entity {
