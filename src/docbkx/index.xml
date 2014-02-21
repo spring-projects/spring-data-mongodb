@@ -8,45 +8,31 @@
     <releaseinfo>&version;</releaseinfo>
 
     <authorgroup>
-      <author>
-        <firstname>Mark</firstname>
-        <surname>Pollack</surname>
-      </author>
-
-      <author>
-        <firstname>Thomas</firstname>
-        <surname>Risberg</surname>
-      </author>
-
-      <author>
-        <firstname>Oliver</firstname>
-        <surname>Gierke</surname>
-      </author>
-      <author>
-        <firstname>Costin</firstname>
-        <surname>Leau</surname>
-      </author>
-      <author>
-        <firstname>Jon</firstname>
-        <surname>Brisbin</surname>
-      </author>
-      <author>
-        <firstname>Thomas</firstname>
-        <surname>Darimont</surname>
-      </author>
-      <author>
-      	<firstname>Christoph</firstname>
-      	<lastname>Strobl</lastname>
-      </author>
+      <author>Mark Pollack</author>
+      <author>Thomas Risberg</author>
+      <author>Oliver Gierke</author>
+      <author>Costin Leau</author>
+      <author>Jon Brisbin</author>
+      <author>Thomas Darimont</author>
+      <author>Christoph Strobl</author>
     </authorgroup>
 
     <legalnotice>
       <para>Copies of this document may be made for your own use and for
-        distribution to others, provided that you do not charge any fee for such
-        copies and further provided that each copy contains this Copyright
-        Notice, whether distributed in print or electronically.
-      </para>
+      distribution to others, provided that you do not charge any fee for such
+      copies and further provided that each copy contains this Copyright
+      Notice, whether distributed in print or electronically.</para>
     </legalnotice>
+
+    <pubdate />
+
+    <copyright>
+      <year>2008-2014</year>
+
+      <holder> The original authors.</holder>
+    </copyright>
+    
+    <productname>Spring Data MongoDB - Reference Documentation</productname>
   </bookinfo>
 
   <toc/>
