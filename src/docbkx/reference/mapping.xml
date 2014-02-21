@@ -60,9 +60,9 @@
       <listitem>
         <para>You can have a single non-zero argument constructor whose
         constructor argument names match top level field names of document,
-        that constructor will be used. Otherwise the zero arg constructor
-        will be used. if there is more than one non-zero argument constructor
-        an exception will be thrown.</para>
+        that constructor will be used. Otherwise the zero arg constructor will
+        be used. if there is more than one non-zero argument constructor an
+        exception will be thrown.</para>
       </listitem>
     </itemizedlist>
 
@@ -644,12 +644,11 @@ public class Person {
         3 Type Conversion</ulink>.</para>
       </note>
 
-	  The method
-      <methodname>customConversions</methodname> in
+      <para>The method <methodname>customConversions</methodname> in
       <classname>AbstractMongoConfiguration</classname> can be used to
       configure Converters. The examples <link
-      linkend="mapping-configuration">here</link> at the begining of this chapter show how to
-      perform the configuration using Java and XML.</para>
+      linkend="mapping-configuration">here</link> at the begining of this
+      chapter show how to perform the configuration using Java and XML.</para>
 
       <para>Below is an example of a Spring Converter implementation that
       converts from a DBObject to a Person POJO.</para>
@@ -680,8 +679,6 @@ public class PersonWriteConverter implements Converter&lt;Person, DBObject&gt; {
   }
 
 }</programlisting>
-
-      <para/>
     </section>
   </section>
 </chapter>
