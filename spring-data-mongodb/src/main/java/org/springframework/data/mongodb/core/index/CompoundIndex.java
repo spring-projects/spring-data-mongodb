@@ -51,10 +51,24 @@ public @interface CompoundIndex {
 	@Deprecated
 	IndexDirection direction() default IndexDirection.ASCENDING;
 
+	/**
+	 * @see http://docs.mongodb.org/manual/core/index-unique/
+	 * @return
+	 */
 	boolean unique() default false;
 
+	/**
+	 * If set to true index will skip over any document that is missing the indexed field.
+	 * 
+	 * @see http://docs.mongodb.org/manual/core/index-sparse/
+	 * @return
+	 */
 	boolean sparse() default false;
 
+	/**
+	 * @see http://docs.mongodb.org/manual/core/index-creation/#index-creation-duplicate-dropping
+	 * @return
+	 */
 	boolean dropDups() default false;
 
 	/**

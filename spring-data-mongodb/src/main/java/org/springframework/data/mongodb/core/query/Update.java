@@ -85,8 +85,9 @@ public class Update {
 	}
 
 	/**
-	 * Update using the $set update modifier
+	 * Update using the {@literal $set} update modifier
 	 * 
+	 * @see http://docs.mongodb.org/manual/reference/operator/update/set/
 	 * @param key
 	 * @param value
 	 * @return
@@ -97,8 +98,9 @@ public class Update {
 	}
 
 	/**
-	 * Update using the $setOnInsert update modifier
+	 * Update using the {@literal $setOnInsert} update modifier
 	 * 
+	 * @see http://docs.mongodb.org/manual/reference/operator/update/setOnInsert/
 	 * @param key
 	 * @param value
 	 * @return
@@ -109,8 +111,9 @@ public class Update {
 	}
 
 	/**
-	 * Update using the $unset update modifier
+	 * Update using the {@literal $unset} update modifier
 	 * 
+	 * @see http://docs.mongodb.org/manual/reference/operator/update/unset/
 	 * @param key
 	 * @return
 	 */
@@ -120,8 +123,9 @@ public class Update {
 	}
 
 	/**
-	 * Update using the $inc update modifier
+	 * Update using the {@literal $inc} update modifier
 	 * 
+	 * @see http://docs.mongodb.org/manual/reference/operator/update/inc/
 	 * @param key
 	 * @param inc
 	 * @return
@@ -132,8 +136,9 @@ public class Update {
 	}
 
 	/**
-	 * Update using the $push update modifier
+	 * Update using the {@literal $push} update modifier
 	 * 
+	 * @see http://docs.mongodb.org/manual/reference/operator/update/push/
 	 * @param key
 	 * @param value
 	 * @return
@@ -147,6 +152,8 @@ public class Update {
 	 * Update using {@code $push} modifier. <br/>
 	 * Allows creation of {@code $push} command for single or multiple (using {@code $each}) values.
 	 * 
+	 * @see http://docs.mongodb.org/manual/reference/operator/update/push/
+	 * @see http://docs.mongodb.org/manual/reference/operator/update/each/
 	 * @param key
 	 * @return {@link PushOperatorBuilder} for given key
 	 */
@@ -179,8 +186,9 @@ public class Update {
 	}
 
 	/**
-	 * Update using the $addToSet update modifier
+	 * Update using the {@literal $addToSet} update modifier
 	 * 
+	 * @see http://docs.mongodb.org/manual/reference/operator/update/addToSet/
 	 * @param key
 	 * @param value
 	 * @return
@@ -191,8 +199,9 @@ public class Update {
 	}
 
 	/**
-	 * Update using the $pop update modifier
+	 * Update using the {@literal $pop} update modifier
 	 * 
+	 * @see http://docs.mongodb.org/manual/reference/operator/update/pop/
 	 * @param key
 	 * @param pos
 	 * @return
@@ -203,8 +212,9 @@ public class Update {
 	}
 
 	/**
-	 * Update using the $pull update modifier
+	 * Update using the {@literal $pull} update modifier
 	 * 
+	 * @see http://docs.mongodb.org/manual/reference/operator/update/pull/
 	 * @param key
 	 * @param value
 	 * @return
@@ -215,8 +225,9 @@ public class Update {
 	}
 
 	/**
-	 * Update using the $pullAll update modifier
+	 * Update using the {@literal $pullAll} update modifier
 	 * 
+	 * @see http://docs.mongodb.org/manual/reference/operator/update/pullAll/
 	 * @param key
 	 * @param values
 	 * @return
@@ -233,8 +244,9 @@ public class Update {
 	}
 
 	/**
-	 * Update using the $rename update modifier
+	 * Update using the {@literal $rename} update modifier
 	 * 
+	 * @see http://docs.mongodb.org/manual/reference/operator/update/rename/
 	 * @param oldName
 	 * @param newName
 	 * @return

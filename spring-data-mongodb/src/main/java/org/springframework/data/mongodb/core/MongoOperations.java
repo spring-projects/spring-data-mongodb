@@ -468,10 +468,32 @@ public interface MongoOperations {
 	 */
 	<T> T findOne(Query query, Class<T> entityClass, String collectionName);
 
+	/**
+	 * Determine result of given {@link Query} contains at least one element.
+	 * 
+	 * @param query the {@link Query} class that specifies the criteria used to find a record.
+	 * @param collectionName name of the collection to check for objects.
+	 * @return
+	 */
 	boolean exists(Query query, String collectionName);
 
+	/**
+	 * Determine result of given {@link Query} contains at least one element.
+	 * 
+	 * @param query the {@link Query} class that specifies the criteria used to find a record.
+	 * @param entityClass the parameterized type.
+	 * @return
+	 */
 	boolean exists(Query query, Class<?> entityClass);
 
+	/**
+	 * Determine result of given {@link Query} contains at least one element.
+	 * 
+	 * @param query the {@link Query} class that specifies the criteria used to find a record.
+	 * @param entityClass the parameterized type.
+	 * @param collectionName name of the collection to check for objects.
+	 * @return
+	 */
 	boolean exists(Query query, Class<?> entityClass, String collectionName);
 
 	/**
@@ -529,12 +551,58 @@ public interface MongoOperations {
 	 */
 	<T> T findById(Object id, Class<T> entityClass, String collectionName);
 
+	/**
+	 * Triggers <a href="http://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify<a/>
+	 * to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query}.
+	 * 
+	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
+	 *          fields specification.
+	 * @param update the {@link Update} to apply on matching documents.
+	 * @param entityClass the parameterized type.
+	 * @return
+	 */
 	<T> T findAndModify(Query query, Update update, Class<T> entityClass);
 
+	/**
+	 * Triggers <a href="http://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify<a/>
+	 * to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query}.
+	 * 
+	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
+	 *          fields specification.
+	 * @param update the {@link Update} to apply on matching documents.
+	 * @param entityClass the parameterized type.
+	 * @param collectionName the collection to query.
+	 * @return
+	 */
 	<T> T findAndModify(Query query, Update update, Class<T> entityClass, String collectionName);
 
+	/**
+	 * Triggers <a href="http://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify<a/>
+	 * to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query} taking
+	 * {@link FindAndModifyOptions} into account.
+	 * 
+	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
+	 *          fields specification.
+	 * @param update the {@link Update} to apply on matching documents.
+	 * @param options the {@link FindAndModifyOptions} holding additional information.
+	 * @param entityClass the parameterized type.
+	 * @return
+	 */
 	<T> T findAndModify(Query query, Update update, FindAndModifyOptions options, Class<T> entityClass);
 
+	/**
+	 * Triggers <a href="http://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify<a/>
+	 * to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query} taking
+	 * {@link FindAndModifyOptions} into account.
+	 * 
+	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
+	 *          fields specification.
+	 * @param update the {@link Update} to apply on matching documents.
+	 * @param options the {@link FindAndModifyOptions} holding additional information.
+	 * @param entityClass the parameterized type.
+	 * @param collectionName the collection to query.
+	 * @return
+	 */
 	<T> T findAndModify(Query query, Update update, FindAndModifyOptions options, Class<T> entityClass,
 			String collectionName);
 
@@ -814,6 +882,14 @@ public interface MongoOperations {
 	 */
 	void remove(Query query, Class<?> entityClass);
 
+	/**
+	 * Remove all documents that match the provided query document criteria from the the collection used to store the
+	 * entityClass. The Class parameter is also used to help convert the Id of the object if it is present in the query.
+	 * 
+	 * @param query
+	 * @param entityClass
+	 * @param collectionName
+	 */
 	void remove(Query query, Class<?> entityClass, String collectionName);
 
 	/**

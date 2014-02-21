@@ -99,11 +99,23 @@ public class Query {
 		return this.fieldSpec;
 	}
 
+	/**
+	 * Set number of documents to skip before returning results.
+	 * 
+	 * @param skip
+	 * @return
+	 */
 	public Query skip(int skip) {
 		this.skip = skip;
 		return this;
 	}
 
+	/**
+	 * Limit the number of returned documents to {@code limit}.
+	 * 
+	 * @param limit
+	 * @return
+	 */
 	public Query limit(int limit) {
 		this.limit = limit;
 		return this;
@@ -231,14 +243,27 @@ public class Query {
 		return dbo;
 	}
 
+	/**
+	 * Get the number of documents to skip.
+	 * 
+	 * @return
+	 */
 	public int getSkip() {
 		return this.skip;
 	}
 
+	/**
+	 * Get the maximum number of documents to be return.
+	 * 
+	 * @return
+	 */
 	public int getLimit() {
 		return this.limit;
 	}
 
+	/**
+	 * @return
+	 */
 	public String getHint() {
 		return hint;
 	}
