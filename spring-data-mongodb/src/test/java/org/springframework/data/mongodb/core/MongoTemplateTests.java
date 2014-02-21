@@ -2447,6 +2447,35 @@ public class MongoTemplateTests {
 		assertThat(updatedDoc.dbRefProperty.field,is(sample2.field));
 	}
 
+	/**
+	 * @see DATAMONGO-468
+	 */
+	@Test
+	public void shouldBeAbleToUpdateDbRefPropertyWithDomainObject(){
+
+		Sample sample1 = new Sample("1", "A");
+		Sample sample2 = new Sample("2", "B");
+		template.save(sample1);
+		template.save(sample2);
+
+		DocumentWithDBRefCollection doc = new DocumentWithDBRefCollection();
+		doc.id = "1";
+		doc.dbRefProperty = sample1;
+		template.save(doc);
+
+		Update update = new Update().set("dbRefProperty",sample2);
+
+		Query qry = query(where("id").is("1"));
+		template.updateFirst(qry, update, DocumentWithDBRefCollection.class);
+
+		DocumentWithDBRefCollection updatedDoc = template.findOne(qry, DocumentWithDBRefCollection.class);
+
+		assertThat(updatedDoc,is(notNullValue()));
+		assertThat(updatedDoc.dbRefProperty,is(notNullValue()));
+		assertThat(updatedDoc.dbRefProperty.id,is(sample2.id));
+		assertThat(updatedDoc.dbRefProperty.field,is(sample2.field));
+	}
+
 	static class DocumentWithDBRefCollection {
 
 		@Id public String id;
