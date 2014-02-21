@@ -1,6 +1,6 @@
 Bundle-SymbolicName: org.springframework.data.mongodb.log4j
 Bundle-Name: Spring Data Mongo DB Log4J Appender
-Bundle-Vendor: SpringSource
+Bundle-Vendor: Pivotal Software, Inc.
 Bundle-ManifestVersion: 2
 Import-Package:
  sun.reflect;version="0";resolution:=optional

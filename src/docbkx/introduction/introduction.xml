@@ -62,21 +62,21 @@
 
       <itemizedlist>
         <listitem>
-          <para>The <ulink url="http://www.mongodb.org/#">online shell</ulink>
+          <para>The <ulink url="http://try.mongodb.org/">online shell</ulink>
           provides a convenient way to interact with a MongoDB instance in
           combination with the online <ulink type=""
-          url="http://www.mongodb.org/display/DOCS/Tutorial">tutorial.</ulink></para>
+          url="http://docs.mongodb.org/manual/tutorial/getting-started/">tutorial.</ulink></para>
         </listitem>
 
         <listitem>
           <para>MongoDB <ulink
-          url="http://www.mongodb.org/display/DOCS/Java+Language+Center">Java
+          url="http://docs.mongodb.org/ecosystem/drivers/java/">Java
           Language Center</ulink></para>
         </listitem>
 
         <listitem>
           <para>Several <ulink
-          url="http://www.mongodb.org/display/DOCS/Books">books</ulink>
+          url="http://www.mongodb.org/books">books</ulink>
           available for purchase</para>
         </listitem>
 

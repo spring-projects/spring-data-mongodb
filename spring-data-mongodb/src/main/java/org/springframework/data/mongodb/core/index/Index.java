@@ -41,8 +41,7 @@ public class Index implements IndexDefinition {
 
 	private boolean sparse = false;
 
-	public Index() {
-	}
+	public Index() {}
 
 	public Index(String key, Direction direction) {
 		fieldSpec.put(key, direction);
@@ -83,16 +82,33 @@ public class Index implements IndexDefinition {
 		return this;
 	}
 
+	/**
+	 * Reject all documents that contain a duplicate value for the indexed field.
+	 * 
+	 * @see http://docs.mongodb.org/manual/core/index-unique/
+	 * @return
+	 */
 	public Index unique() {
 		this.unique = true;
 		return this;
 	}
 
+	/**
+	 * Skip over any document that is missing the indexed field.
+	 * 
+	 * @see http://docs.mongodb.org/manual/core/index-sparse/
+	 * @return
+	 */
 	public Index sparse() {
 		this.sparse = true;
 		return this;
 	}
 
+	/**
+	 * @see http://docs.mongodb.org/manual/core/index-creation/#index-creation-duplicate-dropping
+	 * @param duplicates
+	 * @return
+	 */
 	public Index unique(Duplicates duplicates) {
 		if (duplicates == Duplicates.DROP) {
 			this.dropDuplicates = true;

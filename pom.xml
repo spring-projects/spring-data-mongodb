@@ -10,7 +10,7 @@
 
 	<name>Spring Data MongoDB</name>
 	<description>MongoDB support for Spring Data</description>
-	<url>http://www.springsource.org/spring-data/mongodb</url>
+	<url>http://projects.spring.io/spring-data-mongodb</url>
 
 	<parent>
 		<groupId>org.springframework.data.build</groupId>

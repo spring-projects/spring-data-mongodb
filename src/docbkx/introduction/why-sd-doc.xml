@@ -20,7 +20,7 @@
   provide an extension to the Spring programming model that supports writing
   applications that use Document databases. The Spring framework has always
   promoted a POJO programming model with a strong emphasis on portability and
-  productivity. These values are caried over into Spring Data Document.
+  productivity. These values are carried over into Spring Data Document.
   </para>
 
   <para>Notable features that are used in Spring Data Document from the Spring
@@ -28,7 +28,7 @@
   framework that are used are the Conversion Service, JMX Exporters, portable
   Data Access Exception hierarchy, Spring Expression Language, and Java based
   IoC container configuration. The programming model follows the familiar
-  Spring 'template' style, so if you are familar with Spring template classes
+  Spring 'template' style, so if you are familiar with Spring template classes
   such as JdbcTemplate, JmsTemplate, RestTemplate, you will feel right at
   home. For example, MongoTemplate removes much of the boilerplate code you
   would have to write when using the MongoDB driver to save POJOs as well as a

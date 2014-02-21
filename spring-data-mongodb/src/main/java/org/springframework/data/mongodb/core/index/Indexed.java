@@ -32,16 +32,42 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Indexed {
 
+	/**
+	 * If set to true reject all documents that contain a duplicate value for the indexed field.
+	 * 
+	 * @see http://docs.mongodb.org/manual/core/index-unique/
+	 * @return
+	 */
 	boolean unique() default false;
 
 	IndexDirection direction() default IndexDirection.ASCENDING;
 
+	/**
+	 * If set to true index will skip over any document that is missing the indexed field.
+	 * 
+	 * @see http://docs.mongodb.org/manual/core/index-sparse/
+	 * @return
+	 */
 	boolean sparse() default false;
 
+	/**
+	 * @see http://docs.mongodb.org/manual/core/index-creation/#index-creation-duplicate-dropping
+	 * @return
+	 */
 	boolean dropDups() default false;
 
+	/**
+	 * Index name.
+	 * 
+	 * @return
+	 */
 	String name() default "";
 
+	/**
+	 * Colleciton name for index to be created on.
+	 * 
+	 * @return
+	 */
 	String collection() default "";
 
 	/**
