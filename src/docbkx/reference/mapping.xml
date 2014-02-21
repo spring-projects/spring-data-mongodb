@@ -679,8 +679,6 @@ public class PersonWriteConverter implements Converter&lt;Person, DBObject&gt; {
   }
 
 }</programlisting>
-
-      <para/>
     </section>
   </section>
 </chapter>

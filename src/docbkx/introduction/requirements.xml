@@ -1,7 +1,7 @@
 <chapter id="requirements">
   <title>Requirements</title>
 
-  <para>Spring Data Document 1.x binaries requires JDK level 6.0 and above,
+  <para>Spring Data MongoDB 1.x binaries requires JDK level 6.0 and above,
     and
     <ulink url="https://spring.io/docs">Spring Framework</ulink>
     3.2.x and above.
@@ -9,9 +9,6 @@
   <para>
     In terms of document stores,
     <ulink url="http://www.mongodb.org/">MongoDB</ulink>
-    preferably version 2.4
-    or later or
-    <ulink url="http://couchdb.apache.org/">CouchDB</ulink>
-    1.0.1 or later are required.
+    preferably version 2.4.
   </para>
 </chapter>

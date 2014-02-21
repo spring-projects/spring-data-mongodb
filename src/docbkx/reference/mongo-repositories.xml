@@ -224,7 +224,7 @@ public class PersonRepositoryTests {
 
               <entry><code>{"age" : {"$gt" : age}}</code></entry>
             </row>
-            
+
             <row>
               <entry><literal>GreaterThanEqual</literal></entry>
 
@@ -242,7 +242,7 @@ public class PersonRepositoryTests {
 
               <entry><code>{"age" : {"$lt" : age}}</code></entry>
             </row>
-            
+
             <row>
               <entry><literal>LessThanEqual</literal></entry>
 
@@ -260,7 +260,7 @@ public class PersonRepositoryTests {
 
               <entry><code>{"age" : {"$gt" : from, "$lt" : to}}</code></entry>
             </row>
-            
+
             <row>
               <entry><literal>In</literal></entry>
 
@@ -269,7 +269,7 @@ public class PersonRepositoryTests {
 
               <entry><code>{"age" : {"$in" : [ages...]}}</code></entry>
             </row>
-            
+
             <row>
               <entry><literal>NotIn</literal></entry>
 
@@ -565,7 +565,7 @@ Page&lt;Person&gt; page = repository.findAll(person.lastname.contains("a"),
 </programlisting>
 
       <para>To use this in your repository implementation, simply inherit from
-      it in additiion to other repository interfaces. This is shown
+      it in addition to other repository interfaces. This is shown
       below</para>
 
       <programlisting lang="" language="java">public interface PersonRepository extends MongoRepository&lt;Person, String&gt;, QueryDslPredicateExecutor&lt;Person&gt; {

@@ -62,6 +62,11 @@
 
       <itemizedlist>
         <listitem>
+        	<para>The <ulink url="http://docs.mongodb.org/manual/">manual</ulink> introduces MongoDB and contains links to
+        	getting started guides, reference documentation and tutorials.</para>
+        </listitem>
+      
+        <listitem>
           <para>The <ulink url="http://try.mongodb.org/">online shell</ulink>
           provides a convenient way to interact with a MongoDB instance in
           combination with the online <ulink type=""
