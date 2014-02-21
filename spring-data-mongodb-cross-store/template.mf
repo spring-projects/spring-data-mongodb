@@ -1,6 +1,6 @@
 Bundle-SymbolicName: org.springframework.data.mongodb.crossstore
 Bundle-Name: Spring Data MongoDB Cross Store Support
-Bundle-Vendor: SpringSource
+Bundle-Vendor: Pivotal Software, Inc.
 Bundle-ManifestVersion: 2
 Import-Package: 
  sun.reflect;version="0";resolution:=optional

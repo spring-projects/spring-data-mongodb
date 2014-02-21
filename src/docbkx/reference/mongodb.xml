@@ -84,10 +84,10 @@
     or higher. The latest production release (2.0.x as of this writing) is
     recommended. An easy way to bootstrap setting up a working environment is
     to create a Spring based project in <ulink
-    url="http://www.springsource.com/developer/sts">STS</ulink>.</para>
+    url="http://spring.io/tools/sts">STS</ulink>.</para>
 
     <para>First you need to set up a running Mongodb server. Refer to the
-    <ulink url="http://www.mongodb.org/display/DOCS/Quickstart">Mongodb Quick
+    <ulink url="http://docs.mongodb.org/manual/core/introduction/">Mongodb Quick
     Start guide</ulink> for an explanation on how to startup a MongoDB
     instance. Once installed starting MongoDB is typically a matter of
     executing the following command:
@@ -115,6 +115,7 @@
     <para>Also change the version of Spring in the pom.xml to be</para>
 
     <programlisting lang="" language="xml">&lt;spring.framework.version&gt;3.1.2.RELEASE&lt;/spring.framework.version&gt;</programlisting>
+    <programlisting lang="" language="xml">&lt;spring.framework.version&gt;3.2.8.RELEASE&lt;/spring.framework.version&gt;</programlisting>
 
     <para>You will also need to add the location of the Spring Milestone
     repository for maven to your pom.xml which is at the same level of your
@@ -124,7 +125,7 @@
   &lt;repository&gt;
     &lt;id&gt;spring-milestone&lt;/id&gt;
     &lt;name&gt;Spring Maven MILESTONE Repository&lt;/name&gt;
-    &lt;url&gt;http://repo.springsource.org/libs-milestone&lt;/url&gt;
+    &lt;url&gt;http://repo.spring.io/libs-milestone&lt;/url&gt;
   &lt;/repository&gt;
 &lt;/repositories&gt;</programlisting>
 
@@ -310,7 +311,7 @@ public class AppConfig {
       classes annoated with the <literal>@Repository</literal> annotation.
       This hierarchy and use of <literal>@Repository</literal> is described in
       <ulink
-      url="http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/html/dao.html">Spring's
+      url="http://docs.spring.io/spring/docs/current/spring-framework-reference/html/dao.html">Spring's
       DAO support features</ulink>.</para>
 
       <para>An example of a Java based bean metadata that supports exception
@@ -1459,7 +1460,7 @@ import static org.springframework.data.mongodb.core.query.Update;
       <programlisting>template.upsert(query(where("ssn").is(1111).and("firstName").is("Joe").and("Fraizer").is("Update")), update("address", addr), Person.class);</programlisting>
     </section>
 
-    <section>
+    <section id="mongo-template.find-and-upsert">
       <title>Finding and Upserting documents in a collection</title>
 
       <para>The <methodname>findAndModify(…)</methodname> method on
@@ -2029,7 +2030,7 @@ GeoResults&lt;Restaurant&gt; = operations.geoNear(query, Restaurant.class);</pro
     methods on MongoOperations to simplify the creation and execution of
     Map-Reduce operations. It can convert the results of a Map-Reduce
     operation to a POJO also integrates with Spring's <ulink
-    url="http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/html/resources.html">Resource
+    url="http://docs.spring.io/spring/docs/current/spring-framework-reference/html/resources.html">Resource
     abstraction</ulink> abstraction. This will let you place your JavaScript
     files on the file system, classpath, http server or any other Spring
     Resource implementation and then reference the JavaScript resources via an
@@ -2143,7 +2144,7 @@ MapReduceResults&lt;ValueObject&gt; results = mongoOperations.mapReduce(query, "
     providing methods on MongoOperations to simplify the creation and
     execution of group operations. It can convert the results of the group
     operation to a POJO and also integrates with Spring's <ulink
-    url="http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/html/resources.html">Resource
+    url="http://docs.spring.io/spring/docs/current/spring-framework-reference/html/resources.html">Resource
     abstraction</ulink> abstraction. This will let you place your JavaScript
     files on the file system, classpath, http server or any other Spring
     Resource implementation and then reference the JavaScript resources via an
@@ -2885,7 +2886,7 @@ List&lt;DBObject&gt; resultList = result.getMappedResults();</programlisting>
     <note>
       <para>For more information on the Spring type conversion service see the
       reference docs <ulink
-      url="http://static.springsource.org/spring/docs/3.0.x/reference/validation.html#core-convert">here</ulink>.</para>
+      url="http://docs.spring.io/spring/docs/current/spring-framework-reference/html/validation.html#core-convert">here</ulink>.</para>
     </note>
 
     <section id="mongo.custom-converters.writer">
@@ -2968,7 +2969,7 @@ public class PersonWriteConverter implements Converter&lt;Person, DBObject&gt; {
 &lt;/mongo:mapping-converter&gt;</programlisting>
     </section>
 
-    <section>
+    <section id="mongo.converter-disambiguation">
       <title>Converter disambiguation</title>
 
       <para>Generally we inspect the <interfacename>Converter</interfacename>
@@ -3244,11 +3245,11 @@ mongoTemplate.dropCollection("MyNewCollection");        </programlisting>
     interface.</para>
 
     <para>The motivation behind mapping to Spring's <ulink
-    url="http://static.springsource.org/spring/docs/3.0.x/reference/dao.html#dao-exceptions">consistent
+    url="http://docs.spring.io/spring/docs/current/spring-framework-reference/html/dao.html#dao-exceptions">consistent
     data access exception hierarchy</ulink> is that you are then able to write
     portable and descriptive exception handling code without resorting to
     coding against <ulink
-    url="http://www.mongodb.org/display/DOCS/Error+Codes">MongoDB error
+    url="http://www.mongodb.org/about/contributors/error-codes/">MongoDB error
     codes</ulink>. All of Spring's data access exceptions are inherited from
     the root <classname>DataAccessException</classname> class so you can be
     sure that you will be able to catch all database related exception within

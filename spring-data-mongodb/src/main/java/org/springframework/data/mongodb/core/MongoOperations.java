@@ -1,6 +1,6 @@
 /*
- * Copyright 2010-2013 the original author or authors.
- *
+ * Copyright 2011-2014 the original author or authors.
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -598,9 +598,9 @@ public interface MongoOperations {
 	 * <p/>
 	 * If you object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
 	 * String then MongoDB ObjectId will be used to populate that string. Otherwise, the conversion from ObjectId to your
-	 * property type will be handled by Spring's BeanWrapper class that leverages Spring 3.0's new Type Conversion API.
-	 * See <a href="http://static.springsource.org/spring/docs/3.0.x/reference/validation.html#core-convert">Spring 3 Type
-	 * Conversion"</a> for more details.
+	 * property type will be handled by Spring's BeanWrapper class that leverages Type Conversion API. See <a
+	 * href="http://docs.spring.io/spring/docs/current/spring-framework-reference/html/validation.html#core-convert"
+	 * >Spring's Type Conversion"</a> for more details.
 	 * <p/>
 	 * <p/>
 	 * Insert is used to initially store the object into the database. To update an existing object use the save method.
@@ -655,9 +655,9 @@ public interface MongoOperations {
 	 * <p/>
 	 * If you object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
 	 * String then MongoDB ObjectId will be used to populate that string. Otherwise, the conversion from ObjectId to your
-	 * property type will be handled by Spring's BeanWrapper class that leverages Spring 3.0's new Type Conversion API.
-	 * See <a href="http://static.springsource.org/spring/docs/3.0.x/reference/validation.html#core-convert">Spring 3 Type
-	 * Conversion"</a> for more details.
+	 * property type will be handled by Spring's BeanWrapper class that leverages Type Conversion API. See <a
+	 * href="http://docs.spring.io/spring/docs/current/spring-framework-reference/html/validation.html#core-convert"
+	 * >Spring's Type Conversion"</a> for more details.
 	 * 
 	 * @param objectToSave the object to store in the collection
 	 */
@@ -672,9 +672,9 @@ public interface MongoOperations {
 	 * <p/>
 	 * If you object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
 	 * String then MongoDB ObjectId will be used to populate that string. Otherwise, the conversion from ObjectId to your
-	 * property type will be handled by Spring's BeanWrapper class that leverages Spring 3.0's new Type Cobnversion API.
-	 * See <a href="http://static.springsource.org/spring/docs/3.0.x/reference/validation.html#core-convert">Spring 3 Type
-	 * Conversion"</a> for more details.
+	 * property type will be handled by Spring's BeanWrapper class that leverages Type Cobnversion API. See <a
+	 * http://docs.spring.io/spring/docs/current/spring-framework-reference/html/validation.html#core-convert">Spring's
+	 * Type Conversion"</a> for more details.
 	 * 
 	 * @param objectToSave the object to store in the collection
 	 * @param collectionName name of the collection to store the object in
