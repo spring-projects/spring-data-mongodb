@@ -469,7 +469,7 @@ public interface MongoOperations {
 	<T> T findOne(Query query, Class<T> entityClass, String collectionName);
 
 	/**
-	 * Determine result of given {@link Query} contains at least one element.
+	 * Returns whether result of given {@link Query} has at least one element.
 	 * 
 	 * @param query the {@link Query} class that specifies the criteria used to find a record.
 	 * @param collectionName name of the collection to check for objects.
@@ -478,7 +478,7 @@ public interface MongoOperations {
 	boolean exists(Query query, String collectionName);
 
 	/**
-	 * Determine result of given {@link Query} contains at least one element.
+	 * Returns whether result of given {@link Query} has at least one element.
 	 * 
 	 * @param query the {@link Query} class that specifies the criteria used to find a record.
 	 * @param entityClass the parameterized type.
@@ -487,7 +487,7 @@ public interface MongoOperations {
 	boolean exists(Query query, Class<?> entityClass);
 
 	/**
-	 * Determine result of given {@link Query} contains at least one element.
+	 * Returns whether result of given {@link Query} has at least one element.
 	 * 
 	 * @param query the {@link Query} class that specifies the criteria used to find a record.
 	 * @param entityClass the parameterized type.
@@ -552,8 +552,7 @@ public interface MongoOperations {
 	<T> T findById(Object id, Class<T> entityClass, String collectionName);
 
 	/**
-	 * Triggers <a href="http://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify<a/>
-	 * to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query}.
+	 * Modifies all documents matching given {@link Query} according to {@link Update}.
 	 * 
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
 	 *          fields specification.
@@ -564,8 +563,7 @@ public interface MongoOperations {
 	<T> T findAndModify(Query query, Update update, Class<T> entityClass);
 
 	/**
-	 * Triggers <a href="http://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify<a/>
-	 * to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query}.
+	 * Modifies all documents matching given {@link Query} according to {@link Update}.
 	 * 
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
 	 *          fields specification.
@@ -577,9 +575,8 @@ public interface MongoOperations {
 	<T> T findAndModify(Query query, Update update, Class<T> entityClass, String collectionName);
 
 	/**
-	 * Triggers <a href="http://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify<a/>
-	 * to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query} taking
-	 * {@link FindAndModifyOptions} into account.
+	 * Modifies all documents matching given {@link Query} according to {@link Update} taking {@link FindAndModifyOptions}
+	 * into account.
 	 * 
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
 	 *          fields specification.
@@ -591,9 +588,8 @@ public interface MongoOperations {
 	<T> T findAndModify(Query query, Update update, FindAndModifyOptions options, Class<T> entityClass);
 
 	/**
-	 * Triggers <a href="http://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify<a/>
-	 * to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query} taking
-	 * {@link FindAndModifyOptions} into account.
+	 * Modifies all documents matching given {@link Query} according to {@link Update} taking {@link FindAndModifyOptions}
+	 * into account.
 	 * 
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
 	 *          fields specification.

@@ -653,8 +653,7 @@ public class Person {
       <para>Below is an example of a Spring Converter implementation that
       converts from a DBObject to a Person POJO.</para>
 
-      <programlisting language="java">@ReadingConverter
- public class PersonReadConverter implements Converter&lt;DBObject, Person&gt; {
+      <programlisting language="java">public class PersonReadConverter implements Converter&lt;DBObject, Person&gt; {
 
   public Person convert(DBObject source) {
     Person p = new Person((ObjectId) source.get("_id"), (String) source.get("name"));
@@ -667,8 +666,7 @@ public class Person {
       <para>Here is an example that converts from a Person to a
       DBObject.</para>
 
-      <programlisting language="java">@WritingConverter
-public class PersonWriteConverter implements Converter&lt;Person, DBObject&gt; {
+      <programlisting language="java">public class PersonWriteConverter implements Converter&lt;Person, DBObject&gt; {
 
   public DBObject convert(Person source) {
     DBObject dbo = new BasicDBObject();

@@ -64,7 +64,7 @@ public @interface Indexed {
 	String name() default "";
 
 	/**
-	 * Colleciton name for index to be created on.
+	 * Collection name for index to be created on.
 	 * 
 	 * @return
 	 */
