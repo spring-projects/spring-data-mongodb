@@ -4,7 +4,7 @@
 <chapter id="mapping-chapter">
   <title>Mapping</title>
 
-  <para>Rich maping support is provided by the
+  <para>Rich mapping support is provided by the
   <classname>MongoMappingConverter</classname>.
   <classname>MongoMappingConverter</classname> has a rich metadata model that
   provides a full feature set of functionality to map domain objects to
@@ -60,13 +60,13 @@
       <listitem>
         <para>You can have a single non-zero argument constructor whose
         constructor argument names match top level field names of document,
-        that constructor will be used. Otherewise the zero arg constructor
-        will be used. if there is more than one non-zero argument constructor
-        an exception will be thrown.</para>
+        that constructor will be used. Otherwise the zero arg constructor will
+        be used. if there is more than one non-zero argument constructor an
+        exception will be thrown.</para>
       </listitem>
     </itemizedlist>
 
-    <section>
+    <section id="mapping.conventions.id-field">
       <title>How the '_id' field is handled in the mapping layer</title>
 
       <para>MongoDB requires that you have an '_id' field for all documents.
@@ -104,7 +104,7 @@
           the Java class it will be converted to and stored as an ObjectId if
           possible. ObjectId as a field type is also valid. If you specify a
           value for 'id' in your application, the conversion to an ObjectId is
-          delected to the MongoDBdriver. If the specified 'id' value cannot be
+          detected to the MongoDBdriver. If the specified 'id' value cannot be
           converted to an ObjectId, then the value will be stored as is in the
           document's _id field.</para>
         </listitem>
@@ -172,12 +172,14 @@ public class GeoSpatialAppConfig extends AbstractMongoConfiguration {
 
   // the following are optional
 
+
+  @Bean
   @Override
-  protected void afterMappingMongoConverterCreation(MappingMongoConverter converter) {
-    Set&lt;Converter&lt;?, ?&gt;&gt; converterList = new HashSet&lt;Converter&lt;?, ?&gt;&gt;();
+  public CustomConversions customConversions() throws Exception {
+    List&lt;Converter&lt;?, ?&gt;&gt; converterList = new ArrayList&lt;Converter&lt;?, ?&gt;&gt;();
     converterList.add(new org.springframework.data.mongodb.test.PersonReadConverter());
     converterList.add(new org.springframework.data.mongodb.test.PersonWriteConverter());
-    converter.setCustomConverters(converterList);
+    return new CustomConversions(converterList);
   }
 
   @Bean
@@ -454,7 +456,7 @@ public class Person&lt;T extends Address&gt; {
     <section id="mapping-custom-object-construction">
       <title>Customized Object Construction</title>
 
-      <para>The Mapping Subsystem allows the customization of the object
+      <para>The mapping subsystem allows the customization of the object
       construction by annotating a constructor with the
       <literal>@PersistenceConstructor</literal> annotation. The values to be
       used for the constructor parameters are resolved in the following
@@ -487,9 +489,9 @@ public class Person&lt;T extends Address&gt; {
 
       <programlisting language="java">class OrderItem {
   
-  @Id String id;
-  int quantity;
-  double unitPrice;
+  private @Id String id;
+  private int quantity;
+  private double unitPrice;
 
   OrderItem(String id, @Value("#root.qty ?: 0") int quantity, double unitPrice) {
     this.id = id;
@@ -642,15 +644,11 @@ public class Person {
         3 Type Conversion</ulink>.</para>
       </note>
 
-      <para>The <methodname>setConverters</methodname> method on
-      <classname>SimpleMongoConverter</classname> and
-      <classname>MappingMongoConverter</classname> should be used for this
-      purpose. The method
-      <methodname>afterMappingMongoConverterCreation</methodname> in
-      <classname>AbstractMongoConfiguration</classname> can be overriden to
-      configure a MappingMongoConverter. The examples <link
-      linkend="???">here</link> at the begining of this chapter show how to
-      perform the configuration using Java and XML.</para>
+      <para>The method <methodname>customConversions</methodname> in
+      <classname>AbstractMongoConfiguration</classname> can be used to
+      configure Converters. The examples <link
+      linkend="mapping-configuration">here</link> at the begining of this
+      chapter show how to perform the configuration using Java and XML.</para>
 
       <para>Below is an example of a Spring Converter implementation that
       converts from a DBObject to a Person POJO.</para>
@@ -679,8 +677,6 @@ public class Person {
   }
 
 }</programlisting>
-
-      <para/>
     </section>
   </section>
 </chapter>

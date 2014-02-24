@@ -43,6 +43,7 @@ import com.mongodb.DBObject;
  * @author Thomas Risberg
  * @author Oliver Gierke
  * @author Thomas Darimont
+ * @author Christoph Strobl
  */
 public class Criteria implements CriteriaDefinition {
 
@@ -117,8 +118,9 @@ public class Criteria implements CriteriaDefinition {
 	}
 
 	/**
-	 * Creates a criterion using the $ne operator
+	 * Creates a criterion using the {@literal $ne} operator.
 	 * 
+	 * @see http://docs.mongodb.org/manual/reference/operator/query/ne/
 	 * @param o
 	 * @return
 	 */
@@ -128,8 +130,9 @@ public class Criteria implements CriteriaDefinition {
 	}
 
 	/**
-	 * Creates a criterion using the $lt operator
+	 * Creates a criterion using the {@literal $lt} operator.
 	 * 
+	 * @see http://docs.mongodb.org/manual/reference/operator/query/lt/
 	 * @param o
 	 * @return
 	 */
@@ -139,8 +142,9 @@ public class Criteria implements CriteriaDefinition {
 	}
 
 	/**
-	 * Creates a criterion using the $lte operator
+	 * Creates a criterion using the {@literal $lte} operator.
 	 * 
+	 * @see http://docs.mongodb.org/manual/reference/operator/query/lte/
 	 * @param o
 	 * @return
 	 */
@@ -150,8 +154,9 @@ public class Criteria implements CriteriaDefinition {
 	}
 
 	/**
-	 * Creates a criterion using the $gt operator
+	 * Creates a criterion using the {@literal $gt} operator.
 	 * 
+	 * @see http://docs.mongodb.org/manual/reference/operator/query/gt/
 	 * @param o
 	 * @return
 	 */
@@ -161,8 +166,9 @@ public class Criteria implements CriteriaDefinition {
 	}
 
 	/**
-	 * Creates a criterion using the $gte operator
+	 * Creates a criterion using the {@literal $gte} operator.
 	 * 
+	 * @see http://docs.mongodb.org/manual/reference/operator/query/gte/
 	 * @param o
 	 * @return
 	 */
@@ -172,8 +178,9 @@ public class Criteria implements CriteriaDefinition {
 	}
 
 	/**
-	 * Creates a criterion using the $in operator
+	 * Creates a criterion using the {@literal $in} operator.
 	 * 
+	 * @see http://docs.mongodb.org/manual/reference/operator/query/in/
 	 * @param o the values to match against
 	 * @return
 	 */
@@ -187,8 +194,9 @@ public class Criteria implements CriteriaDefinition {
 	}
 
 	/**
-	 * Creates a criterion using the $in operator
+	 * Creates a criterion using the {@literal $in} operator.
 	 * 
+	 * @see http://docs.mongodb.org/manual/reference/operator/query/in/
 	 * @param c the collection containing the values to match against
 	 * @return
 	 */
@@ -198,8 +206,9 @@ public class Criteria implements CriteriaDefinition {
 	}
 
 	/**
-	 * Creates a criterion using the $nin operator
+	 * Creates a criterion using the {@literal $nin} operator.
 	 * 
+	 * @see http://docs.mongodb.org/manual/reference/operator/query/nin/
 	 * @param o
 	 * @return
 	 */
@@ -207,14 +216,22 @@ public class Criteria implements CriteriaDefinition {
 		return nin(Arrays.asList(o));
 	}
 
+	/**
+	 * Creates a criterion using the {@literal $nin} operator.
+	 * 
+	 * @see http://docs.mongodb.org/manual/reference/operator/query/nin/
+	 * @param o
+	 * @return
+	 */
 	public Criteria nin(Collection<?> o) {
 		criteria.put("$nin", o);
 		return this;
 	}
 
 	/**
-	 * Creates a criterion using the $mod operator
+	 * Creates a criterion using the {@literal $mod} operator.
 	 * 
+	 * @see http://docs.mongodb.org/manual/reference/operator/query/mod/
 	 * @param value
 	 * @param remainder
 	 * @return
@@ -228,8 +245,9 @@ public class Criteria implements CriteriaDefinition {
 	}
 
 	/**
-	 * Creates a criterion using the $all operator
+	 * Creates a criterion using the {@literal $all} operator.
 	 * 
+	 * @see http://docs.mongodb.org/manual/reference/operator/query/all/
 	 * @param o
 	 * @return
 	 */
@@ -237,14 +255,22 @@ public class Criteria implements CriteriaDefinition {
 		return all(Arrays.asList(o));
 	}
 
+	/**
+	 * Creates a criterion using the {@literal $all} operator.
+	 * 
+	 * @see http://docs.mongodb.org/manual/reference/operator/query/all/
+	 * @param o
+	 * @return
+	 */
 	public Criteria all(Collection<?> o) {
 		criteria.put("$all", o);
 		return this;
 	}
 
 	/**
-	 * Creates a criterion using the $size operator
+	 * Creates a criterion using the {@literal $size} operator.
 	 * 
+	 * @see http://docs.mongodb.org/manual/reference/operator/query/size/
 	 * @param s
 	 * @return
 	 */
@@ -254,8 +280,9 @@ public class Criteria implements CriteriaDefinition {
 	}
 
 	/**
-	 * Creates a criterion using the $exists operator
+	 * Creates a criterion using the {@literal $exists} operator.
 	 * 
+	 * @see http://docs.mongodb.org/manual/reference/operator/query/exists/
 	 * @param b
 	 * @return
 	 */
@@ -265,8 +292,9 @@ public class Criteria implements CriteriaDefinition {
 	}
 
 	/**
-	 * Creates a criterion using the $type operator
+	 * Creates a criterion using the {@literal $type} operator.
 	 * 
+	 * @see http://docs.mongodb.org/manual/reference/operator/query/type/
 	 * @param t
 	 * @return
 	 */
@@ -276,22 +304,31 @@ public class Criteria implements CriteriaDefinition {
 	}
 
 	/**
-	 * Creates a criterion using the $not meta operator which affects the clause directly following
+	 * Creates a criterion using the {@literal $not} meta operator which affects the clause directly following
 	 * 
+	 * @see http://docs.mongodb.org/manual/reference/operator/query/not/
 	 * @return
 	 */
 	public Criteria not() {
 		return not(null);
 	}
 
+	/**
+	 * Creates a criterion using the {@literal $not} operator.
+	 * 
+	 * @see http://docs.mongodb.org/manual/reference/operator/query/not/
+	 * @param value
+	 * @return
+	 */
 	private Criteria not(Object value) {
 		criteria.put("$not", value);
 		return this;
 	}
 
 	/**
-	 * Creates a criterion using a $regex
+	 * Creates a criterion using a {@literal $regex} operator.
 	 * 
+	 * @see http://docs.mongodb.org/manual/reference/operator/query/regex/
 	 * @param re
 	 * @return
 	 */
@@ -300,8 +337,10 @@ public class Criteria implements CriteriaDefinition {
 	}
 
 	/**
-	 * Creates a criterion using a $regex and $options
+	 * Creates a criterion using a {@literal $regex} and {@literal $options} operator.
 	 * 
+	 * @see http://docs.mongodb.org/manual/reference/operator/query/regex/
+	 * @see http://docs.mongodb.org/manual/reference/operator/query/regex/#op._S_options
 	 * @param re
 	 * @param options
 	 * @return
@@ -334,8 +373,11 @@ public class Criteria implements CriteriaDefinition {
 	}
 
 	/**
-	 * Creates a geospatial criterion using a $within $center operation. This is only available for Mongo 1.7 and higher.
+	 * Creates a geospatial criterion using a {@literal $within $centerSphere} operation. This is only available for Mongo
+	 * 1.7 and higher.
 	 * 
+	 * @see http://docs.mongodb.org/manual/reference/operator/query/geoWithin/
+	 * @see http://docs.mongodb.org/manual/reference/operator/query/centerSphere/
 	 * @param circle must not be {@literal null}
 	 * @return
 	 */
@@ -345,6 +387,13 @@ public class Criteria implements CriteriaDefinition {
 		return this;
 	}
 
+	/**
+	 * Creates a geospatial criterion using a {@literal $within} operation.
+	 * 
+	 * @see http://docs.mongodb.org/manual/reference/operator/query/geoWithin/
+	 * @param shape
+	 * @return
+	 */
 	public Criteria within(Shape shape) {
 
 		Assert.notNull(shape);
@@ -353,8 +402,9 @@ public class Criteria implements CriteriaDefinition {
 	}
 
 	/**
-	 * Creates a geospatial criterion using a $near operation
+	 * Creates a geospatial criterion using a {@literal $near} operation.
 	 * 
+	 * @see http://docs.mongodb.org/manual/reference/operator/query/near/
 	 * @param point must not be {@literal null}
 	 * @return
 	 */
@@ -365,8 +415,10 @@ public class Criteria implements CriteriaDefinition {
 	}
 
 	/**
-	 * Creates a geospatial criterion using a $nearSphere operation. This is only available for Mongo 1.7 and higher.
+	 * Creates a geospatial criterion using a {@literal $nearSphere} operation. This is only available for Mongo 1.7 and
+	 * higher.
 	 * 
+	 * @see http://docs.mongodb.org/manual/reference/operator/query/nearSphere/
 	 * @param point must not be {@literal null}
 	 * @return
 	 */
@@ -377,8 +429,9 @@ public class Criteria implements CriteriaDefinition {
 	}
 
 	/**
-	 * Creates a geospatical criterion using a $maxDistance operation, for use with $near
+	 * Creates a geospatical criterion using a {@literal $maxDistance} operation, for use with $near
 	 * 
+	 * @see http://docs.mongodb.org/manual/reference/operator/query/maxDistance/
 	 * @param maxDistance
 	 * @return
 	 */
@@ -388,8 +441,9 @@ public class Criteria implements CriteriaDefinition {
 	}
 
 	/**
-	 * Creates a criterion using the $elemMatch operator
+	 * Creates a criterion using the {@literal $elemMatch} operator
 	 * 
+	 * @see http://docs.mongodb.org/manual/reference/operator/query/elemMatch/
 	 * @param c
 	 * @return
 	 */
