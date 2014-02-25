@@ -28,6 +28,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -265,6 +266,23 @@ public class MappingMongoConverterUnitTests {
 		assertThat(result.enums, is(instanceOf(List.class)));
 		assertThat(result.enums.size(), is(1));
 		assertThat(result.enums, hasItem(SampleEnum.FIRST));
+	}
+
+	/**
+	 * @see DATAMONGO-833
+	 */
+	@Test
+	public void readsEnumSetCorrectly() {
+
+		BasicDBList enumSet = new BasicDBList();
+		enumSet.add("SECOND");
+		DBObject dbObject = new BasicDBObject("enumSet", enumSet);
+
+		ClassWithEnumProperty result = converter.read(ClassWithEnumProperty.class, dbObject);
+
+		assertThat(result.enumSet, is(instanceOf(EnumSet.class)));
+		assertThat(result.enumSet.size(), is(1));
+		assertThat(result.enumSet, hasItem(SampleEnum.SECOND));
 	}
 
 	/**
@@ -1462,6 +1480,7 @@ public class MappingMongoConverterUnitTests {
 
 		SampleEnum sampleEnum;
 		List<SampleEnum> enums;
+		EnumSet<SampleEnum> enumSet;
 	}
 
 	static enum SampleEnum {
