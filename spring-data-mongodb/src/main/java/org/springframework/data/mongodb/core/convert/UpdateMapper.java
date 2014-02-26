@@ -163,6 +163,15 @@ public class UpdateMapper extends QueryMapper {
 			this.key = key;
 		}
 
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.convert.QueryMapper.MetadataBackedField#getMappedKey()
+		 */
+		@Override
+		public String getMappedKey() {
+			return this.getPath() == null ? key : super.getMappedKey();
+		}
+
 		/* 
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.convert.QueryMapper.MetadataBackedField#getPropertyConverter()
