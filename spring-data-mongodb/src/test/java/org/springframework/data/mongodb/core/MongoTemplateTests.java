@@ -2293,8 +2293,6 @@ public class MongoTemplateTests {
 	}
 
 	/**
-	 * <<<<<<< HEAD
-	 * 
 	 * @see DATAMONOGO-828
 	 */
 	@Test
@@ -2394,7 +2392,7 @@ public class MongoTemplateTests {
 		assertThat(result.dbRefAnnotatedList.get(0), is(notNullValue()));
 		assertThat(result.dbRefAnnotatedList.get(0).id, is((Object) "1"));
 	}
-	
+
 	/**
 	 * @see DATAMONGO-852
 	 */
@@ -2422,7 +2420,7 @@ public class MongoTemplateTests {
 	 * @see DATAMONGO-468
 	 */
 	@Test
-	public void shouldBeAbleToUpdateDbRefPropertyWithDomainObject(){
+	public void shouldBeAbleToUpdateDbRefPropertyWithDomainObject() {
 
 		Sample sample1 = new Sample("1", "A");
 		Sample sample2 = new Sample("2", "B");
@@ -2434,17 +2432,36 @@ public class MongoTemplateTests {
 		doc.dbRefProperty = sample1;
 		template.save(doc);
 
-		Update update = new Update().set("dbRefProperty",sample2);
+		Update update = new Update().set("dbRefProperty", sample2);
 
 		Query qry = query(where("id").is("1"));
 		template.updateFirst(qry, update, DocumentWithDBRefCollection.class);
 
 		DocumentWithDBRefCollection updatedDoc = template.findOne(qry, DocumentWithDBRefCollection.class);
 
-		assertThat(updatedDoc,is(notNullValue()));
-		assertThat(updatedDoc.dbRefProperty,is(notNullValue()));
-		assertThat(updatedDoc.dbRefProperty.id,is(sample2.id));
-		assertThat(updatedDoc.dbRefProperty.field,is(sample2.field));
+		assertThat(updatedDoc, is(notNullValue()));
+		assertThat(updatedDoc.dbRefProperty, is(notNullValue()));
+		assertThat(updatedDoc.dbRefProperty.id, is(sample2.id));
+		assertThat(updatedDoc.dbRefProperty.field, is(sample2.field));
+	}
+
+	/**
+	 * @see DATAMONGO-862
+	 */
+	@Test
+	public void testUpdateShouldWorkForPathsOnInterfaceMethods() {
+
+		DocumentWithCollection document = new DocumentWithCollection(Arrays.<Model> asList(new ModelA("spring"),
+				new ModelA("data")));
+
+		template.save(document);
+
+		Query query = query(where("id").is(document.id).and("models._id").exists(true));
+		Update update = new Update().set("models.$.value", "mongodb");
+		template.findAndModify(query, update, DocumentWithCollection.class);
+
+		DocumentWithCollection result = template.findOne(query(where("id").is(document.id)), DocumentWithCollection.class);
+		assertThat(result.models.get(0).value(), is("mongodb"));
 	}
 
 	static class DocumentWithDBRefCollection {
@@ -2454,7 +2471,7 @@ public class MongoTemplateTests {
 		@org.springframework.data.mongodb.core.mapping.DBRef//
 		public List<Sample> dbRefAnnotatedList;
 
-		@org.springframework.data.mongodb.core.mapping.DBRef
+		@org.springframework.data.mongodb.core.mapping.DBRef//
 		public Sample dbRefProperty;
 	}
 
@@ -2482,10 +2499,13 @@ public class MongoTemplateTests {
 
 	static interface Model {
 		String value();
+
+		String id();
 	}
 
 	static class ModelA implements Model {
 
+		@Id String id;
 		private String value;
 
 		ModelA(String value) {
@@ -2495,6 +2515,11 @@ public class MongoTemplateTests {
 		@Override
 		public String value() {
 			return this.value;
+		}
+
+		@Override
+		public String id() {
+			return id;
 		}
 	}
 
