@@ -19,6 +19,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -794,7 +796,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * @param sourceValue must not be {@literal null}.
 	 * @return the converted {@link Collection} or array, will never be {@literal null}.
 	 */
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "null" })
 	private Object readCollectionOrArray(TypeInformation<?> targetType, BasicDBList sourceValue, Object parent) {
 
 		Assert.notNull(targetType);
@@ -807,10 +809,19 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		collectionType = Collection.class.isAssignableFrom(collectionType) ? collectionType : List.class;
 
-		Collection<Object> items = targetType.getType().isArray() ? new ArrayList<Object>() : CollectionFactory
-				.createCollection(collectionType, sourceValue.size());
 		TypeInformation<?> componentType = targetType.getComponentType();
 		Class<?> rawComponentType = componentType == null ? null : componentType.getType();
+
+		Collection<Object> items;
+
+		if (targetType.getType().isArray()) {
+			items = new ArrayList<Object>();
+		} else if (EnumSet.class.isAssignableFrom(collectionType)) {
+			Assert.notNull(rawComponentType, "Component type must not be null for enum sets!");
+			items = EnumSet.noneOf(rawComponentType.asSubclass(Enum.class));
+		} else {
+			items = CollectionFactory.createCollection(collectionType, sourceValue.size());
+		}
 
 		for (int i = 0; i < sourceValue.size(); i++) {
 
@@ -836,31 +847,43 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * @param dbObject
 	 * @return
 	 */
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "null", "rawtypes" })
 	protected Map<Object, Object> readMap(TypeInformation<?> type, DBObject dbObject, Object parent) {
 
 		Assert.notNull(dbObject);
 
 		Class<?> mapType = typeMapper.readType(dbObject, type).getType();
-		Map<Object, Object> map = CollectionFactory.createMap(mapType, dbObject.keySet().size());
+
+		TypeInformation<?> keyType = type.getComponentType();
+		Class<?> rawKeyType = keyType == null ? null : keyType.getType();
+
+		TypeInformation<?> valueType = type.getMapValueType();
+		Class<?> rawValueType = valueType == null ? null : valueType.getType();
+
+		Map<Object, Object> map;
+
+		if (EnumMap.class.isAssignableFrom(mapType)) {
+			Assert.notNull(keyType, "Key type must nut be null for enum maps!");
+			map = new EnumMap(rawKeyType.asSubclass(Enum.class));
+		} else {
+			map = CollectionFactory.createMap(mapType, dbObject.keySet().size());
+		}
+
 		Map<String, Object> sourceMap = dbObject.toMap();
 
 		for (Entry<String, Object> entry : sourceMap.entrySet()) {
+
 			if (typeMapper.isTypeKey(entry.getKey())) {
 				continue;
 			}
 
 			Object key = potentiallyUnescapeMapKey(entry.getKey());
 
-			TypeInformation<?> keyTypeInformation = type.getComponentType();
-			if (keyTypeInformation != null) {
-				Class<?> keyType = keyTypeInformation.getType();
-				key = conversionService.convert(key, keyType);
+			if (rawKeyType != null) {
+				key = conversionService.convert(key, rawKeyType);
 			}
 
 			Object value = entry.getValue();
-			TypeInformation<?> valueType = type.getMapValueType();
-			Class<?> rawValueType = valueType == null ? null : valueType.getType();
 
 			if (value instanceof DBObject) {
 				map.put(key, read(valueType, (DBObject) value, parent));
