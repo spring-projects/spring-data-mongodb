@@ -16,15 +16,13 @@
 
 package org.springframework.data.mongodb.core.mapping;
 
-import org.springframework.data.mongodb.core.mapping.DBRef;
 
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
  */
 public class PersonWithDbRef extends BasePerson {
 
-	@DBRef
-	private GeoLocation home;
+	@DBRef private GeoLocation home;
 
 	public PersonWithDbRef(Integer ssn, String firstName, String lastName, GeoLocation home) {
 		super(ssn, firstName, lastName);

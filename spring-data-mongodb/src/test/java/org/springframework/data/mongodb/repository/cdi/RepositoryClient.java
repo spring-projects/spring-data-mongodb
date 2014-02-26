@@ -22,8 +22,7 @@ import javax.inject.Inject;
  */
 class RepositoryClient {
 
-	@Inject
-	CdiPersonRepository repository;
+	@Inject CdiPersonRepository repository;
 
 	/**
 	 * @return the repository

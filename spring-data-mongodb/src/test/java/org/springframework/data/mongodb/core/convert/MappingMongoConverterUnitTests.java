@@ -53,11 +53,17 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.annotation.TypeAlias;
+import org.springframework.data.geo.Box;
+import org.springframework.data.geo.Circle;
+import org.springframework.data.geo.Point;
+import org.springframework.data.geo.Polygon;
+import org.springframework.data.geo.Shape;
 import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mapping.model.MappingInstantiationException;
 import org.springframework.data.mongodb.core.DBObjectTestUtils;
 import org.springframework.data.mongodb.core.convert.DBObjectAccessorUnitTests.NestedType;
 import org.springframework.data.mongodb.core.convert.DBObjectAccessorUnitTests.ProjectingType;
+import org.springframework.data.mongodb.core.geo.Sphere;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
@@ -1485,7 +1491,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(result.enumMap.size(), is(1));
 		assertThat(result.enumMap.get(SampleEnum.FIRST), is("Dave"));
 	}
-
+	
 	/**
 	 * @see DATAMONGO-887
 	 */
@@ -1523,6 +1529,226 @@ public class MappingMongoConverterUnitTests {
 		DBObject map = getAsDBObject(result, "treeMapOfPersons");
 		DBObject entry = getAsDBObject(map, "key");
 		assertThat(entry.get("foo"), is((Object) "Dave"));
+	}
+	
+	
+	/**
+	 * @DATAMONGO-858
+	 */
+	@Test
+	public void shouldWriteEntityWithGeoBoxCorrectly() {
+
+		ClassWithGeoBox object = new ClassWithGeoBox();
+		object.box = new Box(new Point(1, 2), new Point(3, 4));
+
+		DBObject dbo = new BasicDBObject();
+		converter.write(object, dbo);
+
+		assertThat(dbo, is(notNullValue()));
+		assertThat(dbo.get("box"), is(instanceOf(List.class)));
+		assertThat(dbo.get("box"), is((Object) Arrays.asList(
+				org.springframework.data.mongodb.core.geo.Point.asList(object.box.getFirst()),
+				org.springframework.data.mongodb.core.geo.Point.asList(object.box.getSecond()))));
+	}
+
+	/**
+	 * @DATAMONGO-858
+	 */
+	@Test
+	public void shouldReadEntityWithGeoBoxCorrectly() {
+
+		ClassWithGeoBox object = new ClassWithGeoBox();
+		object.box = new Box(new Point(1, 2), new Point(3, 4));
+
+		DBObject dbo = new BasicDBObject();
+		converter.write(object, dbo);
+
+		ClassWithGeoBox result = converter.read(ClassWithGeoBox.class, dbo);
+
+		assertThat(result, is(notNullValue()));
+		assertThat(result.box, is(object.box));
+	}
+
+	/**
+	 * @DATAMONGO-858
+	 */
+	@Test
+	public void shouldWriteEntityWithGeoPolygonCorrectly() {
+
+		ClassWithGeoPolygon object = new ClassWithGeoPolygon();
+		object.polygon = new Polygon(new Point(1, 2), new Point(3, 4), new Point(4, 5));
+
+		DBObject dbo = new BasicDBObject();
+		converter.write(object, dbo);
+
+		assertThat(dbo, is(notNullValue()));
+		assertThat(dbo.get("polygon"), is(instanceOf(List.class)));
+		assertThat(dbo.get("polygon"),
+				is((Object) org.springframework.data.mongodb.core.geo.Polygon.asList(object.polygon)));
+	}
+
+	/**
+	 * @DATAMONGO-858
+	 */
+	@Test
+	public void shouldReadEntityWithGeoPolygonCorrectly() {
+
+		ClassWithGeoPolygon object = new ClassWithGeoPolygon();
+		object.polygon = new Polygon(new Point(1, 2), new Point(3, 4), new Point(4, 5));
+
+		DBObject dbo = new BasicDBObject();
+		converter.write(object, dbo);
+
+		ClassWithGeoPolygon result = converter.read(ClassWithGeoPolygon.class, dbo);
+
+		assertThat(result, is(notNullValue()));
+		assertThat(result.polygon, is(object.polygon));
+	}
+
+	/**
+	 * @DATAMONGO-858
+	 */
+	@Test
+	public void shouldWriteEntityWithGeoCircleCorrectly() {
+
+		ClassWithGeoCircle object = new ClassWithGeoCircle();
+		object.circle = new Circle(new Point(1, 2), 3);
+
+		DBObject dbo = new BasicDBObject();
+		converter.write(object, dbo);
+
+		assertThat(dbo, is(notNullValue()));
+		assertThat(dbo.get("circle"), is(instanceOf(List.class)));
+		assertThat(dbo.get("circle"), is((Object) Arrays.asList(org.springframework.data.mongodb.core.geo.Point
+				.asList(object.circle.getCenter()), object.circle.getRadius().getNormalizedValue())));
+	}
+
+	/**
+	 * @DATAMONGO-858
+	 */
+	@Test
+	public void shouldReadEntityWithGeoCircleCorrectly() {
+
+		ClassWithGeoCircle object = new ClassWithGeoCircle();
+		object.circle = new Circle(new Point(1, 2), 3);
+
+		DBObject dbo = new BasicDBObject();
+		converter.write(object, dbo);
+
+		ClassWithGeoCircle result = converter.read(ClassWithGeoCircle.class, dbo);
+
+		assertThat(result, is(notNullValue()));
+		assertThat(result.circle, is(result.circle));
+	}
+
+	/**
+	 * @DATAMONGO-858
+	 */
+	@Test
+	public void shouldWriteEntityWithGeoLegacyCircleCorrectly() {
+
+		ClassWithGeoLegacyCircle object = new ClassWithGeoLegacyCircle();
+		object.circle = new org.springframework.data.mongodb.core.geo.Circle(new Point(1, 2), 3);
+
+		DBObject dbo = new BasicDBObject();
+		converter.write(object, dbo);
+
+		assertThat(dbo, is(notNullValue()));
+		assertThat(dbo.get("circle"), is(instanceOf(List.class)));
+		assertThat(dbo.get("circle"), is((Object) Arrays.asList(
+				org.springframework.data.mongodb.core.geo.Point.asList(object.circle.getCenter()), object.circle.getRadius())));
+	}
+
+	/**
+	 * @DATAMONGO-858
+	 */
+	@Test
+	public void shouldReadEntityWithGeoLegacyCircleCorrectly() {
+
+		ClassWithGeoLegacyCircle object = new ClassWithGeoLegacyCircle();
+		object.circle = new org.springframework.data.mongodb.core.geo.Circle(new Point(1, 2), 3);
+
+		DBObject dbo = new BasicDBObject();
+		converter.write(object, dbo);
+
+		ClassWithGeoLegacyCircle result = converter.read(ClassWithGeoLegacyCircle.class, dbo);
+
+		assertThat(result, is(notNullValue()));
+		assertThat(result.circle, is(result.circle));
+	}
+
+	/**
+	 * @DATAMONGO-858
+	 */
+	@Test
+	public void shouldWriteEntityWithGeoSphereCorrectly() {
+
+		ClassWithGeoSphere object = new ClassWithGeoSphere();
+		object.sphere = new Sphere(new Point(1, 2), 3);
+
+		DBObject dbo = new BasicDBObject();
+		converter.write(object, dbo);
+
+		assertThat(dbo, is(notNullValue()));
+		assertThat(dbo.get("sphere"), is(instanceOf(List.class)));
+		assertThat(dbo.get("sphere"), is((Object) Arrays.asList(org.springframework.data.mongodb.core.geo.Point
+				.asList(object.sphere.getCenter()), object.sphere.getRadius().getNormalizedValue())));
+	}
+
+	/**
+	 * @DATAMONGO-858
+	 */
+	@Test
+	public void shouldReadEntityWithGeoSphereCorrectly() {
+
+		ClassWithGeoSphere object = new ClassWithGeoSphere();
+		object.sphere = new Sphere(new Point(1, 2), 3);
+
+		DBObject dbo = new BasicDBObject();
+		converter.write(object, dbo);
+
+		ClassWithGeoSphere result = converter.read(ClassWithGeoSphere.class, dbo);
+
+		assertThat(result, is(notNullValue()));
+		assertThat(result.sphere, is(object.sphere));
+	}
+
+	/**
+	 * @DATAMONGO-858
+	 */
+	@Test
+	public void shouldWriteEntityWithGeoShapeCorrectly() {
+
+		ClassWithGeoShape object = new ClassWithGeoShape();
+		Sphere sphere = new Sphere(new Point(1, 2), 3);
+		object.shape = sphere;
+
+		DBObject dbo = new BasicDBObject();
+		converter.write(object, dbo);
+
+		assertThat(dbo, is(notNullValue()));
+		assertThat(dbo.get("shape"), is(instanceOf(List.class)));
+		assertThat(dbo.get("shape"), is((Object) Arrays.asList(org.springframework.data.mongodb.core.geo.Point
+				.asList(sphere.getCenter()), sphere.getRadius().getNormalizedValue())));
+	}
+
+	/**
+	 * @DATAMONGO-858
+	 */
+	@Test
+	public void shouldReadEntityWithGeoShapeCorrectly() {
+
+		ClassWithGeoShape object = new ClassWithGeoShape();
+		Sphere sphere = new Sphere(new Point(1, 2), 3);
+		object.shape = sphere;
+
+		DBObject dbo = new BasicDBObject();
+		converter.write(object, dbo);
+
+		ClassWithGeoShape result = converter.read(ClassWithGeoShape.class, dbo);
+
+		assertThat(result, is(notNullValue()));
+		assertThat(result.shape, is((Shape) sphere));
 	}
 
 	static class GenericType<T> {
@@ -1739,5 +1965,35 @@ public class MappingMongoConverterUnitTests {
 		public PrimitiveContainer property() {
 			return m_property;
 		}
+	}
+
+	class ClassWithGeoBox {
+
+		Box box;
+	}
+
+	class ClassWithGeoCircle {
+
+		Circle circle;
+	}
+
+	class ClassWithGeoLegacyCircle {
+
+		org.springframework.data.mongodb.core.geo.Circle circle;
+	}
+
+	class ClassWithGeoSphere {
+
+		Sphere sphere;
+	}
+
+	class ClassWithGeoPolygon {
+
+		Polygon polygon;
+	}
+
+	class ClassWithGeoShape {
+
+		Shape shape;
 	}
 }

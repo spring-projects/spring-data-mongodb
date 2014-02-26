@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 the original author or authors.
+ * Copyright 2010-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,18 +16,31 @@
 package org.springframework.data.mongodb.core.geo;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.springframework.data.annotation.PersistenceConstructor;
+import org.springframework.data.geo.Distance;
+import org.springframework.data.geo.Metrics;
+import org.springframework.data.geo.Point;
 import org.springframework.util.Assert;
 
 /**
- * Represents a geospatial circle value
+ * Represents a geospatial circle value.
+ * <p>
+ * Note: We deliberately do not extend org.springframework.data.geo.Circle because introducing it's distance concept
+ * would break the clients that use the old Circle API.
  * 
  * @author Mark Pollack
  * @author Oliver Gierke
+ * @author Thomas Darimont
+ * @deprecated As of release 1.5, replaced by {@link org.springframework.data.geo.Circle}. This class is scheduled to be
+ *             removed in the next major release.
  */
+@Deprecated
 public class Circle implements Shape {
+
+	public static final String COMMAND = "$center";
 
 	private final Point center;
 	private final double radius;
@@ -49,7 +62,8 @@ public class Circle implements Shape {
 	}
 
 	/**
-	 * Creates a new {@link Circle} from the given coordinates and radius.
+	 * Creates a new {@link Circle} from the given coordinates and radius as {@link Distance} with a
+	 * {@link Metrics#NEUTRAL}.
 	 * 
 	 * @param centerX
 	 * @param centerY
@@ -82,9 +96,11 @@ public class Circle implements Shape {
 	 * @see org.springframework.data.mongodb.core.geo.Shape#asList()
 	 */
 	public List<Object> asList() {
+
 		List<Object> result = new ArrayList<Object>();
-		result.add(getCenter().asList());
+		result.add(Arrays.asList(getCenter().getX(), getCenter().getY()));
 		result.add(getRadius());
+
 		return result;
 	}
 
@@ -93,7 +109,7 @@ public class Circle implements Shape {
 	 * @see org.springframework.data.mongodb.core.geo.Shape#getCommand()
 	 */
 	public String getCommand() {
-		return "$center";
+		return COMMAND;
 	}
 
 	/*

@@ -24,8 +24,7 @@ import org.springframework.data.annotation.PersistenceConstructor;
  */
 public class PersonCustomIdName extends BasePerson {
 
-	@Id
-	private String lastName;
+	@Id private String lastName;
 
 	public PersonCustomIdName(Integer ssn, String firstName) {
 		this.ssn = ssn;

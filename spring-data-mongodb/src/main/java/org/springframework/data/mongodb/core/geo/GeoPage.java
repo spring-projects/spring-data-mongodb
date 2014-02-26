@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2011-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,19 +16,21 @@
 package org.springframework.data.mongodb.core.geo;
 
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
 /**
  * Custom {@link Page} to carry the average distance retrieved from the {@link GeoResults} the {@link GeoPage} is set up
  * from.
  * 
+ * @deprecated As of release 1.5, replaced by {@link org.springframework.data.geo.GeoPage}. This class is scheduled to
+ *             be removed in the next major release.
  * @author Oliver Gierke
+ * @author Thomas Darimont
  */
-public class GeoPage<T> extends PageImpl<GeoResult<T>> {
+@Deprecated
+public class GeoPage<T> extends org.springframework.data.geo.GeoPage<T> {
 
 	private static final long serialVersionUID = 23421312312412L;
-	private final Distance averageDistance;
 
 	/**
 	 * Creates a new {@link GeoPage} from the given {@link GeoResults}.
@@ -36,8 +38,7 @@ public class GeoPage<T> extends PageImpl<GeoResult<T>> {
 	 * @param content must not be {@literal null}.
 	 */
 	public GeoPage(GeoResults<T> results) {
-		super(results.getContent());
-		this.averageDistance = results.getAverageDistance();
+		super(results);
 	}
 
 	/**
@@ -48,16 +49,6 @@ public class GeoPage<T> extends PageImpl<GeoResult<T>> {
 	 * @param total
 	 */
 	public GeoPage(GeoResults<T> results, Pageable pageable, long total) {
-		super(results.getContent(), pageable, total);
-		this.averageDistance = results.getAverageDistance();
-	}
-
-	/**
-	 * Returns the average distance of the underlying results.
-	 * 
-	 * @return the averageDistance
-	 */
-	public Distance getAverageDistance() {
-		return averageDistance;
+		super(results, pageable, total);
 	}
 }

@@ -23,8 +23,7 @@ public class PersonWithVersionPropertyOfTypeLong {
 	String firstName;
 	int age;
 
-	@Version
-	Long version;
+	@Version Long version;
 
 	@Override
 	public String toString() {
