@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2011-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,8 +21,10 @@ import java.util.List;
  * Common interface for all shapes. Allows building MongoDB representations of them.
  * 
  * @author Oliver Gierke
+ * @author Thomas Darimont
  */
-public interface Shape {
+@Deprecated
+public interface Shape extends org.springframework.data.geo.Shape {
 
 	/**
 	 * Returns the {@link Shape} as a list of usually {@link Double} or {@link List}s of {@link Double}s. Wildcard bound

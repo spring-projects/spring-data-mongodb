@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,10 +19,10 @@ package org.springframework.data.mongodb.core.geo;
  * Value object to create custom {@link Metric}s on the fly.
  * 
  * @author Oliver Gierke
+ * @author Thomas Darimont
  */
-public class CustomMetric implements Metric {
-
-	private final double multiplier;
+@Deprecated
+public class CustomMetric extends org.springframework.data.geo.CustomMetric implements Metric {
 
 	/**
 	 * Creates a custom {@link Metric} using the given multiplier.
@@ -30,14 +30,6 @@ public class CustomMetric implements Metric {
 	 * @param multiplier
 	 */
 	public CustomMetric(double multiplier) {
-		this.multiplier = multiplier;
-	}
-
-	/* 
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.geo.Metric#getMultiplier()
-	 */
-	public double getMultiplier() {
-		return multiplier;
+		super(multiplier);
 	}
 }

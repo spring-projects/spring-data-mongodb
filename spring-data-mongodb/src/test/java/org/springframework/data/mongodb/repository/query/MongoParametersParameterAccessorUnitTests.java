@@ -22,8 +22,8 @@ import java.lang.reflect.Method;
 import java.util.List;
 
 import org.junit.Test;
+import org.springframework.data.geo.Metrics;
 import org.springframework.data.mongodb.core.geo.Distance;
-import org.springframework.data.mongodb.core.geo.Metrics;
 import org.springframework.data.mongodb.core.geo.Point;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.repository.Person;

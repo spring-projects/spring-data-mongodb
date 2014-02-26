@@ -42,6 +42,9 @@ import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.mongodb.core.convert.MongoConverters.BigDecimalToStringConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.BigIntegerToStringConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.DBObjectToStringConverter;
+import org.springframework.data.mongodb.core.convert.MongoConverters.DboObjectToShapeConverter;
+import org.springframework.data.mongodb.core.convert.MongoConverters.ListToPointConverter;
+import org.springframework.data.mongodb.core.convert.MongoConverters.ShapeToDbObjectConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.StringToBigDecimalConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.StringToBigIntegerConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.StringToURLConverter;
@@ -96,6 +99,7 @@ public class CustomConversions {
 
 		List<Object> toRegister = new ArrayList<Object>();
 
+		// Add user provided converters to make sure they can override the defaults
 		toRegister.addAll(converters);
 		toRegister.add(CustomToStringConverter.INSTANCE);
 		toRegister.add(BigDecimalToStringConverter.INSTANCE);
@@ -107,7 +111,9 @@ public class CustomConversions {
 		toRegister.add(DBObjectToStringConverter.INSTANCE);
 		toRegister.addAll(JodaTimeConverters.getConvertersToRegister());
 
-		// Add user provided converters to make sure they can override the defaults
+		toRegister.add(ShapeToDbObjectConverter.INSTANCE);
+		toRegister.add(DboObjectToShapeConverter.INSTANCE);
+		toRegister.add(ListToPointConverter.INSTANCE);
 
 		for (Object c : toRegister) {
 			registerConversion(c);

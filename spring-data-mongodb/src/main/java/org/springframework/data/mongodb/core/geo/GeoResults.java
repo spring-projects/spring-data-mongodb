@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2011-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,23 +15,21 @@
  */
 package org.springframework.data.mongodb.core.geo;
 
-import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 
 import org.springframework.data.annotation.PersistenceConstructor;
-import org.springframework.util.Assert;
-import org.springframework.util.StringUtils;
+import org.springframework.data.geo.Distance;
+import org.springframework.data.geo.GeoResult;
+import org.springframework.data.geo.Metric;
 
 /**
  * Value object to capture {@link GeoResult}s as well as the average distance they have.
  * 
  * @author Oliver Gierke
+ * @author Thomas Darimont
  */
-public class GeoResults<T> implements Iterable<GeoResult<T>> {
-
-	private final List<GeoResult<T>> results;
-	private final Distance averageDistance;
+@Deprecated
+public class GeoResults<T> extends org.springframework.data.geo.GeoResults<T> {
 
 	/**
 	 * Creates a new {@link GeoResults} instance manually calculating the average distance from the distance values of the
@@ -39,12 +37,12 @@ public class GeoResults<T> implements Iterable<GeoResult<T>> {
 	 * 
 	 * @param results must not be {@literal null}.
 	 */
-	public GeoResults(List<GeoResult<T>> results) {
-		this(results, (Metric) null);
+	public GeoResults(List<? extends GeoResult<T>> results) {
+		super(results);
 	}
 
-	public GeoResults(List<GeoResult<T>> results, Metric metric) {
-		this(results, calculateAverageDistance(results, metric));
+	public GeoResults(List<? extends GeoResult<T>> results, Metric metric) {
+		super(results, metric);
 	}
 
 	/**
@@ -54,92 +52,7 @@ public class GeoResults<T> implements Iterable<GeoResult<T>> {
 	 * @param averageDistance
 	 */
 	@PersistenceConstructor
-	public GeoResults(List<GeoResult<T>> results, Distance averageDistance) {
-		Assert.notNull(results);
-		this.results = results;
-		this.averageDistance = averageDistance;
-	}
-
-	/**
-	 * Returns the average distance of all {@link GeoResult}s in this list.
-	 * 
-	 * @return the averageDistance
-	 */
-	public Distance getAverageDistance() {
-		return averageDistance;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see java.lang.Iterable#iterator()
-	 */
-	public Iterator<GeoResult<T>> iterator() {
-		return results.iterator();
-	}
-
-	/**
-	 * Returns the actual
-	 * 
-	 * @return
-	 */
-	public List<GeoResult<T>> getContent() {
-		return Collections.unmodifiableList(results);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
-	@Override
-	public boolean equals(Object obj) {
-
-		if (this == obj) {
-			return true;
-		}
-
-		if (obj == null || !getClass().equals(obj.getClass())) {
-			return false;
-		}
-
-		GeoResults<?> that = (GeoResults<?>) obj;
-
-		return this.results.equals(that.results) && this.averageDistance == that.averageDistance;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see java.lang.Object#hashCode()
-	 */
-	@Override
-	public int hashCode() {
-		int result = 17;
-		result += 31 * results.hashCode();
-		result += 31 * averageDistance.hashCode();
-		return result;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
-	@Override
-	public String toString() {
-		return String.format("GeoResults: [averageDistance: %s, results: %s]", averageDistance.toString(),
-				StringUtils.collectionToCommaDelimitedString(results));
-	}
-
-	private static Distance calculateAverageDistance(List<? extends GeoResult<?>> results, Metric metric) {
-
-		if (results.isEmpty()) {
-			return new Distance(0, metric);
-		}
-
-		double averageDistance = 0;
-
-		for (GeoResult<?> result : results) {
-			averageDistance += result.getDistance().getValue();
-		}
-
-		return new Distance(averageDistance / results.size(), metric);
+	public GeoResults(List<? extends GeoResult<T>> results, Distance averageDistance) {
+		super(results, averageDistance);
 	}
 }

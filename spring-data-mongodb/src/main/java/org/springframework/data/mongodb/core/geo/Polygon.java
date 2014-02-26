@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2011-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,19 +17,18 @@ package org.springframework.data.mongodb.core.geo;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 
-import org.springframework.util.Assert;
+import org.springframework.data.geo.Point;
 
 /**
  * Simple value object to represent a {@link Polygon}.
  * 
  * @author Oliver Gierke
+ * @author Thomas Darimont
  */
-public class Polygon implements Shape, Iterable<Point> {
-
-	private final List<Point> points;
+@Deprecated
+public class Polygon extends org.springframework.data.geo.Polygon implements Shape {
 
 	/**
 	 * Creates a new {@link Polygon} for the given Points.
@@ -39,31 +38,17 @@ public class Polygon implements Shape, Iterable<Point> {
 	 * @param z
 	 * @param others
 	 */
-	public Polygon(Point x, Point y, Point z, Point... others) {
-
-		Assert.notNull(x);
-		Assert.notNull(y);
-		Assert.notNull(z);
-		Assert.notNull(others);
-
-		this.points = new ArrayList<Point>(3 + others.length);
-		this.points.addAll(Arrays.asList(x, y, z));
-		this.points.addAll(Arrays.asList(others));
+	public <P extends Point> Polygon(P x, P y, P z, P... others) {
+		super(x, y, z, others);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.geo.Shape#asList()
+	/**
+	 * Creates a new {@link Polygon} for the given Points.
+	 * 
+	 * @param points
 	 */
-	public List<List<Double>> asList() {
-
-		List<List<Double>> result = new ArrayList<List<Double>>();
-
-		for (Point point : points) {
-			result.add(point.asList());
-		}
-
-		return result;
+	public <P extends Point> Polygon(List<P> points) {
+		super(points);
 	}
 
 	/*
@@ -74,40 +59,20 @@ public class Polygon implements Shape, Iterable<Point> {
 		return "$polygon";
 	}
 
-	/*
+	/* 
 	 * (non-Javadoc)
-	 * @see java.lang.Iterable#iterator()
-	 */
-	public Iterator<Point> iterator() {
-		return this.points.iterator();
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see java.lang.Object#equals(java.lang.Object)
+	 * @see org.springframework.data.mongodb.core.geo.Shape#asList()
 	 */
 	@Override
-	public boolean equals(Object obj) {
+	public List<? extends Object> asList() {
 
-		if (this == obj) {
-			return true;
+		List<Point> points = getPoints();
+		List<List<Double>> tuples = new ArrayList<List<Double>>(points.size());
+
+		for (Point point : points) {
+			tuples.add(Arrays.asList(point.getX(), point.getY()));
 		}
 
-		if (obj == null || !getClass().equals(obj.getClass())) {
-			return false;
-		}
-
-		Polygon that = (Polygon) obj;
-
-		return this.points.equals(that.points);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see java.lang.Object#hashCode()
-	 */
-	@Override
-	public int hashCode() {
-		return points.hashCode();
+		return tuples;
 	}
 }

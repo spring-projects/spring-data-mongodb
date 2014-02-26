@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 the original author or authors.
+ * Copyright 2010-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,21 +16,21 @@
 package org.springframework.data.mongodb.core.geo;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.springframework.data.annotation.PersistenceConstructor;
-import org.springframework.util.Assert;
+import org.springframework.data.geo.Point;
 
 /**
  * Represents a geospatial circle value
  * 
  * @author Mark Pollack
  * @author Oliver Gierke
+ * @author Thomas Darimont
  */
-public class Circle implements Shape {
-
-	private final Point center;
-	private final double radius;
+@Deprecated
+public class Circle extends org.springframework.data.geo.Circle implements Shape {
 
 	/**
 	 * Creates a new {@link Circle} from the given {@link Point} and radius.
@@ -40,12 +40,7 @@ public class Circle implements Shape {
 	 */
 	@PersistenceConstructor
 	public Circle(Point center, double radius) {
-
-		Assert.notNull(center);
-		Assert.isTrue(radius >= 0, "Radius must not be negative!");
-
-		this.center = center;
-		this.radius = radius;
+		super(center, radius);
 	}
 
 	/**
@@ -59,32 +54,16 @@ public class Circle implements Shape {
 		this(new Point(centerX, centerY), radius);
 	}
 
-	/**
-	 * Returns the center of the {@link Circle}.
-	 * 
-	 * @return will never be {@literal null}.
-	 */
-	public Point getCenter() {
-		return center;
-	}
-
-	/**
-	 * Returns the radius of the {@link Circle}.
-	 * 
-	 * @return
-	 */
-	public double getRadius() {
-		return radius;
-	}
-
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.geo.Shape#asList()
 	 */
 	public List<Object> asList() {
+
 		List<Object> result = new ArrayList<Object>();
-		result.add(getCenter().asList());
+		result.add(Arrays.asList(getCenter().getX(), getCenter().getY()));
 		result.add(getRadius());
+
 		return result;
 	}
 
@@ -94,45 +73,5 @@ public class Circle implements Shape {
 	 */
 	public String getCommand() {
 		return "$center";
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
-	@Override
-	public String toString() {
-		return String.format("Circle [center=%s, radius=%f]", center, radius);
-	}
-
-	/* (non-Javadoc)
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
-	@Override
-	public boolean equals(Object obj) {
-
-		if (this == obj) {
-			return true;
-		}
-
-		if (obj == null || !getClass().equals(obj.getClass())) {
-			return false;
-		}
-
-		Circle that = (Circle) obj;
-
-		return this.center.equals(that.center) && this.radius == that.radius;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see java.lang.Object#hashCode()
-	 */
-	@Override
-	public int hashCode() {
-		int result = 17;
-		result += 31 * center.hashCode();
-		result += 31 * radius;
-		return result;
 	}
 }

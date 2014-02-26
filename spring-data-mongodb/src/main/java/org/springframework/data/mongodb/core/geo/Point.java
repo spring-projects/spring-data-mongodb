@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 the original author or authors.
+ * Copyright 2010-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,89 +15,24 @@
  */
 package org.springframework.data.mongodb.core.geo;
 
-import java.util.Arrays;
-import java.util.List;
-
 import org.springframework.data.annotation.PersistenceConstructor;
-import org.springframework.data.mongodb.core.mapping.Field;
-import org.springframework.util.Assert;
 
 /**
  * Represents a geospatial point value.
  * 
  * @author Mark Pollack
  * @author Oliver Gierke
+ * @author Thomas Darimont
  */
-public class Point {
-
-	@Field(order = 10)
-	private final double x;
-	@Field(order = 20)
-	private final double y;
+@Deprecated
+public class Point extends org.springframework.data.geo.Point {
 
 	@PersistenceConstructor
 	public Point(double x, double y) {
-		this.x = x;
-		this.y = y;
+		super(x, y);
 	}
 
 	public Point(Point point) {
-		Assert.notNull(point);
-		this.x = point.x;
-		this.y = point.y;
-	}
-
-	public double getX() {
-		return x;
-	}
-
-	public double getY() {
-		return y;
-	}
-
-	public double[] asArray() {
-		return new double[] { x, y };
-	}
-
-	public List<Double> asList() {
-		return Arrays.asList(x, y);
-	}
-
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		long temp;
-		temp = Double.doubleToLongBits(x);
-		result = prime * result + (int) (temp ^ (temp >>> 32));
-		temp = Double.doubleToLongBits(y);
-		result = prime * result + (int) (temp ^ (temp >>> 32));
-		return result;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
-			return true;
-		}
-		if (obj == null) {
-			return false;
-		}
-		if (getClass() != obj.getClass()) {
-			return false;
-		}
-		Point other = (Point) obj;
-		if (Double.doubleToLongBits(x) != Double.doubleToLongBits(other.x)) {
-			return false;
-		}
-		if (Double.doubleToLongBits(y) != Double.doubleToLongBits(other.y)) {
-			return false;
-		}
-		return true;
-	}
-
-	@Override
-	public String toString() {
-		return String.format("Point [latitude=%f, longitude=%f]", x, y);
+		super(point);
 	}
 }

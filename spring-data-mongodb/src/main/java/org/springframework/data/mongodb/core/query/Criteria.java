@@ -25,10 +25,10 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import org.bson.BSON;
+import org.springframework.data.geo.Circle;
+import org.springframework.data.geo.Point;
+import org.springframework.data.geo.Shape;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
-import org.springframework.data.mongodb.core.geo.Circle;
-import org.springframework.data.mongodb.core.geo.Point;
-import org.springframework.data.mongodb.core.geo.Shape;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 
@@ -383,7 +383,10 @@ public class Criteria implements CriteriaDefinition {
 	 */
 	public Criteria withinSphere(Circle circle) {
 		Assert.notNull(circle);
-		criteria.put("$within", new BasicDBObject("$centerSphere", circle.asList()));
+		criteria.put(
+				"$within",
+				new BasicDBObject("$centerSphere", Arrays.<Object> asList(Arrays.asList(circle.getCenter().getX(), circle
+						.getCenter().getY()), circle.getRadius().getNormalizedValue())));
 		return this;
 	}
 
@@ -397,7 +400,7 @@ public class Criteria implements CriteriaDefinition {
 	public Criteria within(Shape shape) {
 
 		Assert.notNull(shape);
-		criteria.put("$within", new BasicDBObject(shape.getCommand(), shape.asList()));
+		criteria.put("$within", shape);
 		return this;
 	}
 
@@ -410,7 +413,7 @@ public class Criteria implements CriteriaDefinition {
 	 */
 	public Criteria near(Point point) {
 		Assert.notNull(point);
-		criteria.put("$near", point.asList());
+		criteria.put("$near", point);
 		return this;
 	}
 
@@ -424,7 +427,7 @@ public class Criteria implements CriteriaDefinition {
 	 */
 	public Criteria nearSphere(Point point) {
 		Assert.notNull(point);
-		criteria.put("$nearSphere", point.asList());
+		criteria.put("$nearSphere", point);
 		return this;
 	}
 
