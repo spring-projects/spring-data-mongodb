@@ -29,10 +29,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
-import org.springframework.core.CollectionFactory;
 import org.springframework.core.convert.ConversionException;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.support.ConversionServiceFactory;
+import org.springframework.data.convert.CollectionFactory;
 import org.springframework.data.convert.EntityInstantiator;
 import org.springframework.data.convert.TypeMapper;
 import org.springframework.data.mapping.Association;
@@ -794,7 +794,6 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * @param sourceValue must not be {@literal null}.
 	 * @return the converted {@link Collection} or array, will never be {@literal null}.
 	 */
-	@SuppressWarnings("unchecked")
 	private Object readCollectionOrArray(TypeInformation<?> targetType, BasicDBList sourceValue, Object parent) {
 
 		Assert.notNull(targetType);
@@ -805,12 +804,12 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			return getPotentiallyConvertedSimpleRead(new HashSet<Object>(), collectionType);
 		}
 
-		collectionType = Collection.class.isAssignableFrom(collectionType) ? collectionType : List.class;
-
-		Collection<Object> items = targetType.getType().isArray() ? new ArrayList<Object>() : CollectionFactory
-				.createCollection(collectionType, sourceValue.size());
 		TypeInformation<?> componentType = targetType.getComponentType();
 		Class<?> rawComponentType = componentType == null ? null : componentType.getType();
+
+		collectionType = Collection.class.isAssignableFrom(collectionType) ? collectionType : List.class;
+		Collection<Object> items = targetType.getType().isArray() ? new ArrayList<Object>() : CollectionFactory
+				.createCollection(collectionType, rawComponentType, sourceValue.size());
 
 		for (int i = 0; i < sourceValue.size(); i++) {
 
@@ -842,7 +841,14 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		Assert.notNull(dbObject);
 
 		Class<?> mapType = typeMapper.readType(dbObject, type).getType();
-		Map<Object, Object> map = CollectionFactory.createMap(mapType, dbObject.keySet().size());
+
+		TypeInformation<?> keyType = type.getComponentType();
+		Class<?> rawKeyType = keyType == null ? null : keyType.getType();
+
+		TypeInformation<?> valueType = type.getMapValueType();
+		Class<?> rawValueType = valueType == null ? null : valueType.getType();
+
+		Map<Object, Object> map = CollectionFactory.createMap(mapType, rawKeyType, dbObject.keySet().size());
 		Map<String, Object> sourceMap = dbObject.toMap();
 
 		for (Entry<String, Object> entry : sourceMap.entrySet()) {
@@ -852,15 +858,11 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 			Object key = potentiallyUnescapeMapKey(entry.getKey());
 
-			TypeInformation<?> keyTypeInformation = type.getComponentType();
-			if (keyTypeInformation != null) {
-				Class<?> keyType = keyTypeInformation.getType();
-				key = conversionService.convert(key, keyType);
+			if (rawKeyType != null) {
+				key = conversionService.convert(key, rawKeyType);
 			}
 
 			Object value = entry.getValue();
-			TypeInformation<?> valueType = type.getMapValueType();
-			Class<?> rawValueType = valueType == null ? null : valueType.getType();
 
 			if (value instanceof DBObject) {
 				map.put(key, read(valueType, (DBObject) value, parent));

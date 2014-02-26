@@ -28,6 +28,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -648,9 +650,7 @@ public class MappingMongoConverterUnitTests {
 	public void readsMapListNestedValuesCorrectly() {
 
 		BasicDBList list = new BasicDBList();
-		BasicDBObject nested = new BasicDBObject();
-		nested.append("Hello", "World");
-		list.add(nested);
+		list.add(new BasicDBObject("Hello", "World"));
 		DBObject source = new BasicDBObject("mapOfObjects", new BasicDBObject("Foo", list));
 
 		ClassWithMapProperty result = converter.read(ClassWithMapProperty.class, source);
@@ -1454,6 +1454,37 @@ public class MappingMongoConverterUnitTests {
 		assertThat(dbList.get(0), instanceOf(String.class));
 	}
 
+	/**
+	 * @see DATAMONGO-833
+	 */
+	@Test
+	public void readsEnumSetCorrectly() {
+
+		BasicDBList enumSet = new BasicDBList();
+		enumSet.add("SECOND");
+		DBObject dbObject = new BasicDBObject("enumSet", enumSet);
+
+		ClassWithEnumProperty result = converter.read(ClassWithEnumProperty.class, dbObject);
+
+		assertThat(result.enumSet, is(instanceOf(EnumSet.class)));
+		assertThat(result.enumSet.size(), is(1));
+		assertThat(result.enumSet, hasItem(SampleEnum.SECOND));
+	}
+
+	/**
+	 * @see DATAMONGO-833
+	 */
+	@Test
+	public void readsEnumMapCorrectly() {
+
+		BasicDBObject enumMap = new BasicDBObject("FIRST", "Dave");
+		ClassWithEnumProperty result = converter.read(ClassWithEnumProperty.class, new BasicDBObject("enumMap", enumMap));
+
+		assertThat(result.enumMap, is(instanceOf(EnumMap.class)));
+		assertThat(result.enumMap.size(), is(1));
+		assertThat(result.enumMap.get(SampleEnum.FIRST), is("Dave"));
+	}
+
 	static class GenericType<T> {
 		T content;
 	}
@@ -1462,6 +1493,8 @@ public class MappingMongoConverterUnitTests {
 
 		SampleEnum sampleEnum;
 		List<SampleEnum> enums;
+		EnumSet<SampleEnum> enumSet;
+		EnumMap<SampleEnum, String> enumMap;
 	}
 
 	static enum SampleEnum {
