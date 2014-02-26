@@ -376,6 +376,20 @@ public class UpdateMapperUnitTests {
 		assertThat(setClause.get("dbRefProperty"), is((Object) new DBRef(null, "entity", entity.id)));
 	}
 
+	/**
+	 * @see DATAMONGO-862
+	 */
+	@Test
+	public void rendersUpdateAndPreservesKeyForPathsNotPointingToProperty() {
+
+		Update update = new Update().set("listOfInterface.$.value", "expected-value");
+		DBObject mappedObject = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(ParentClass.class));
+
+		DBObject setClause = getAsDBObject(mappedObject, "$set");
+		assertThat(setClause.containsField("listOfInterface.$.value"), is(true));
+	}
+
 	static interface Model {}
 
 	static class ModelImpl implements Model {
@@ -384,6 +398,7 @@ public class UpdateMapperUnitTests {
 		public ModelImpl(int value) {
 			this.value = value;
 		}
+
 	}
 
 	public class ModelWrapper {
@@ -410,6 +425,9 @@ public class UpdateMapperUnitTests {
 
 		@Field("aliased")//
 		List<? extends AbstractChildClass> list;
+
+		@Field//
+		List<Model> listOfInterface;
 
 		public ParentClass(String id, List<? extends AbstractChildClass> list) {
 			this.id = id;
