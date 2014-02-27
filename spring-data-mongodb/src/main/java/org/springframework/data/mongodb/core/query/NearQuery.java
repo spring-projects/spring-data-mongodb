@@ -31,6 +31,7 @@ import com.mongodb.DBObject;
  * 
  * @author Oliver Gierke
  * @author Thomas Darimont
+ * @author Christoph Strobl
  */
 public final class NearQuery {
 
@@ -143,10 +144,12 @@ public final class NearQuery {
 	/**
 	 * Configures the {@link Pageable} to use.
 	 * 
-	 * @param pageable
+	 * @param pageable must not be {@literal null}
 	 * @return
 	 */
 	public NearQuery with(Pageable pageable) {
+
+		Assert.notNull(pageable, "Pageable must not be 'null'.");
 		this.num = pageable.getOffset() + pageable.getPageSize();
 		this.skip = pageable.getOffset();
 		return this;
@@ -311,13 +314,18 @@ public final class NearQuery {
 	/**
 	 * Adds an actual query to the {@link NearQuery} to restrict the objects considered for the actual near operation.
 	 * 
-	 * @param query
+	 * @param query must not be {@literal null}.
 	 * @return
 	 */
 	public NearQuery query(Query query) {
+
+		Assert.notNull(query, "Cannot apply 'null' query on NearQuery.");
 		this.query = query;
 		this.skip = query.getSkip();
-		this.num = query.getLimit();
+
+		if (query.getLimit() != 0) {
+			this.num = query.getLimit();
+		}
 		return this;
 	}
 
