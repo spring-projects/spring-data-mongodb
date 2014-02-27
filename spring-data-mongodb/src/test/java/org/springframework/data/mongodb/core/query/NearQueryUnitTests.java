@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2013 the original author or authors.
+ * Copyright 2011-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import static org.junit.Assert.*;
 import org.junit.Test;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.DBObjectTestUtils;
 import org.springframework.data.mongodb.core.geo.Distance;
 import org.springframework.data.mongodb.core.geo.Metric;
 import org.springframework.data.mongodb.core.geo.Metrics;
@@ -31,6 +32,7 @@ import org.springframework.data.mongodb.core.geo.Point;
  * 
  * @author Oliver Gierke
  * @author Thomas Darimont
+ * @author Christoph Strobl
  */
 public class NearQueryUnitTests {
 
@@ -122,5 +124,37 @@ public class NearQueryUnitTests {
 
 		assertThat(query.getSkip(), is(pageable.getPageNumber() * pageable.getPageSize()));
 		assertThat((Integer) query.toDBObject().get("num"), is((pageable.getPageNumber() + 1) * pageable.getPageSize()));
+	}
+
+	/**
+	 * @see DATAMONGO-829
+	 */
+	@Test
+	public void nearQueryShouldInoreZeroLimitFromQuery() {
+
+		NearQuery query = NearQuery.near(new Point(1, 2)).query(Query.query(Criteria.where("foo").is("bar")));
+		assertThat(query.toDBObject().get("num"), nullValue());
+	}
+
+	/**
+	 * @see DATAMONOGO-829
+	 */
+	@Test(expected = IllegalArgumentException.class)
+	public void nearQueryShouldThrowExceptionWhenGivenANullQuery() {
+		NearQuery.near(new Point(1, 2)).query(null);
+	}
+
+	/**
+	 * @see DATAMONGO-829
+	 */
+	@Test
+	public void numShouldNotBeAlteredByQueryWithoutPageable() {
+
+		int num = 100;
+		NearQuery query = NearQuery.near(new Point(1, 2));
+		query.num(num);
+		query.query(Query.query(Criteria.where("foo").is("bar")));
+
+		assertThat(DBObjectTestUtils.getTypedValue(query.toDBObject(), "num", Integer.class), is(num));
 	}
 }
