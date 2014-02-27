@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2013 the original author or authors.
+ * Copyright 2011-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,10 +21,11 @@ package org.springframework.data.mongodb.config;
  * @author Jon Brisbin
  * @author Oliver Gierke
  * @author Martin Baumgartner
+ * @author Thomas Darimont
  */
 public abstract class BeanNames {
 
-	static final String MAPPING_CONTEXT = "mappingContext";
+	static final String MAPPING_CONTEXT = "mongoMappingContext";
 	static final String INDEX_HELPER = "indexCreationHelper";
 	static final String MONGO = "mongo";
 	static final String DB_FACTORY = "mongoDbFactory";
