@@ -70,7 +70,7 @@ public abstract class DBObjectUtils {
 	}
 
 	@SuppressWarnings("unchecked")
-	private static <T> T getTypedValue(DBObject source, String key, Class<T> type) {
+	public static <T> T getTypedValue(DBObject source, String key, Class<T> type) {
 
 		Object value = source.get(key);
 		assertThat(value, is(notNullValue()));
