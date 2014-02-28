@@ -18,7 +18,10 @@ package org.springframework.data.mongodb.config;
 import java.lang.annotation.Annotation;
 
 import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.beans.factory.config.ObjectFactoryCreatingFactoryBean;
+import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
+import org.springframework.beans.factory.support.BeanDefinitionReaderUtils;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.context.annotation.ImportBeanDefinitionRegistrar;
 import org.springframework.core.type.AnnotationMetadata;
@@ -97,9 +100,28 @@ class MongoAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport {
 	private void registerIsNewStrategyFactoryIfNecessary(BeanDefinitionRegistry registry) {
 
 		if (!registry.containsBeanDefinition(BeanNames.IS_NEW_STRATEGY_FACTORY)) {
+
+			/*
+			 * We set an intermediate ObjectFactory as a constructor argument in order to break the reference cycle:
+			 * 
+			 * mappingContext -> AuditingEventListener -> MappingContextIsNewStrategyFactory -> mappingContext
+			 * 
+			 * The AuditingEventListener is eagerly initialized from the event multicasting of the afterPropertiesSet() in AbstractMappingContext 
+			 * that triggers the dependency cycle which leads to BeanCurrentlyInCreationException's 
+			 * "Requested bean is currently in creation: Is there an unresolvable circular reference?"
+			 */
+			AbstractBeanDefinition mappingContextObjectFactoryBeanDefinition = BeanDefinitionBuilder
+					.rootBeanDefinition(ObjectFactoryCreatingFactoryBean.class)
+					.addPropertyValue("targetBeanName", BeanNames.MAPPING_CONTEXT).getBeanDefinition();
+
+			String mcofbdName = BeanDefinitionReaderUtils.generateBeanName(mappingContextObjectFactoryBeanDefinition,
+					registry);
+
+			registry.registerBeanDefinition(mcofbdName, mappingContextObjectFactoryBeanDefinition);
+
 			registry.registerBeanDefinition(BeanNames.IS_NEW_STRATEGY_FACTORY,
 					BeanDefinitionBuilder.rootBeanDefinition(MappingContextIsNewStrategyFactory.class)
-							.addConstructorArgReference(BeanNames.MAPPING_CONTEXT).getBeanDefinition());
+							.addConstructorArgReference(mcofbdName).getBeanDefinition());
 		}
 	}
 }
