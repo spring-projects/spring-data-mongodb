@@ -591,7 +591,7 @@ public class MappingTests extends AbstractIntegrationTests {
 		
 		ItemContainer container = new ItemContainer("bar");
 		
-		container.lactions = Arrays.asList(location);
+		container.locations = Arrays.asList(location);
 		
 		template.insert(container);
 		
@@ -600,9 +600,9 @@ public class MappingTests extends AbstractIntegrationTests {
 		ItemContainer one = template.findOne(query, ItemContainer.class);
 		
 		assertThat(one, is(notNullValue()));
-		assertThat(one.lactions, is(notNullValue()));
-		assertThat(one.lactions.size(), is(1));
-		assertThat(one.lactions.get(0).latlon, arrayContaining(10.4d, 9.49d));
+		assertThat(one.locations, is(notNullValue()));
+		assertThat(one.locations.size(), is(1));
+		assertThat(one.locations.get(0).latlon, arrayContaining(10.4d, 9.49d));
 	}
 
 	static class ItemContainer {
@@ -614,7 +614,7 @@ public class MappingTests extends AbstractIntegrationTests {
 		}
 		
 		@DBRef ItemLocation location;
-		@DBRef List<ItemLocation> lactions;
+		@DBRef List<ItemLocation> locations;
 	}
 	
 	static class ItemLocation {
