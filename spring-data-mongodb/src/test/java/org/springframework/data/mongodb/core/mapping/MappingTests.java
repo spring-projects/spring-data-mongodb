@@ -1,5 +1,6 @@
 /*
  * Copyright 2011-2013 the original author or authors.
+ * Copyright 2011-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,11 +16,19 @@
  */
 package org.springframework.data.mongodb.core.mapping;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
-import static org.springframework.data.mongodb.core.query.Criteria.*;
-import static org.springframework.data.mongodb.core.query.Query.*;
-import static org.springframework.data.mongodb.core.query.Update.*;
+import static org.hamcrest.Matchers.arrayContaining;
+import static org.hamcrest.Matchers.arrayWithSize;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.springframework.data.mongodb.core.query.Query.query;
+import static org.springframework.data.mongodb.core.query.Update.update;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -517,7 +526,108 @@ public class MappingTests extends AbstractIntegrationTests {
 		assertThat(result.item, is(notNullValue()));
 		assertThat(result.item.value, is("bar"));
 	}
+	
+	/**
+	 * @see DATAMONGO-783
+	 */
+	@Test
+	public void testMappItemLocationWithArrayOfDouble(){
+		
+		ItemLocation location = new ItemLocation("foo");
+		Double[] latlon = {10.4d, 9.49d}; 
+		location.latlon = latlon;
+		
+		template.insert(location);
+		
+		Query query = new Query(Criteria.where("id").is("foo"));
+		
+		ItemLocation one = template.findOne(query, ItemLocation.class);
+		
+		assertThat(one, is(notNullValue()));
+		assertThat(one.latlon, is(notNullValue()));
+		assertThat(one.latlon, arrayWithSize(2));
+		assertThat(one.latlon, arrayContaining(10.4d, 9.49d));
+	}
+	
+	/**
+	 * @see DATAMONGO-783
+	 */
+	@Test
+	public void testMappItemContainerWithItemLocation(){
+		
+		ItemLocation location = new ItemLocation("foo");
+		Double[] latlon = {10.4d, 9.49d}; 
+		location.latlon = latlon;
+		
+		template.insert(location);
+		
+		ItemContainer container = new ItemContainer("bar");
+		
+		container.location = location;
+		
+		template.insert(container);
+		
+		Query query = new Query(Criteria.where("id").is("bar"));
+		
+		ItemContainer one = template.findOne(query, ItemContainer.class);
+		
+		assertThat(one, is(notNullValue()));
+		assertThat(one.location, is(notNullValue()));
+		assertThat(one.location.latlon, arrayWithSize(2));
+		assertThat(one.location.latlon, arrayContaining(10.4d, 9.49d));
+	}
+	
+	/**
+	 * @see DATAMONGO-783
+	 */
+	@Test
+	public void testMappItemContainerWithItemsLocation(){
+		
+		ItemLocation location = new ItemLocation("foo");
+		Double[] latlon = {10.4d, 9.49d}; 
+		location.latlon = latlon;
+		
+		template.insert(location);
+		
+		ItemContainer container = new ItemContainer("bar");
+		
+		container.lactions = Arrays.asList(location);
+		
+		template.insert(container);
+		
+		Query query = new Query(Criteria.where("id").is("bar"));
+		
+		ItemContainer one = template.findOne(query, ItemContainer.class);
+		
+		assertThat(one, is(notNullValue()));
+		assertThat(one.lactions, is(notNullValue()));
+		assertThat(one.lactions.size(), is(1));
+		assertThat(one.lactions.get(0).latlon, arrayContaining(10.4d, 9.49d));
+	}
 
+	static class ItemContainer {
+		
+		@Id final String id;
+		
+		public ItemContainer(String id) {
+			this.id = id;
+		}
+		
+		@DBRef ItemLocation location;
+		@DBRef List<ItemLocation> lactions;
+	}
+	
+	static class ItemLocation {
+		
+		@Id final String id;
+		
+		public ItemLocation(String id) {
+			this.id = id;
+		}
+		
+		@Field("latlon") private Double[] latlon;
+	}
+	
 	static class Container {
 
 		@Id final String id;

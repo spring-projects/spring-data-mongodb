@@ -15,8 +15,8 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.springframework.data.mongodb.core.query.Criteria.*;
-import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.springframework.data.mongodb.core.query.SerializationUtils.serializeToJsonSafely;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -801,13 +801,14 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			maybeEmitEvent(new BeforeSaveEvent<T>(o, dbDoc));
 			dbObjectList.add(dbDoc);
 		}
+		
 		List<ObjectId> ids = insertDBObjectList(collectionName, dbObjectList);
+		
 		int i = 0;
+		
 		for (T obj : batchToSave) {
-			if (i < ids.size()) {
-				populateIdIfNecessary(obj, ids.get(i));
-				maybeEmitEvent(new AfterSaveEvent<T>(obj, dbObjectList.get(i)));
-			}
+			populateIdIfNecessary(obj, ids.get(i));
+			maybeEmitEvent(new AfterSaveEvent<T>(obj, dbObjectList.get(i)));
 			i++;
 		}
 	}
