@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2013 the original author or authors.
+ * Copyright 2011-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,9 @@ import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.mapping.CamelCaseAbbreviatingFieldNamingStrategy;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.FieldNamingStrategy;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.mapping.PropertyNameFieldNamingStrategy;
 import org.springframework.data.support.CachingIsNewStrategyFactory;
 import org.springframework.data.support.IsNewStrategyFactory;
 import org.springframework.util.ClassUtils;
@@ -51,6 +53,7 @@ import com.mongodb.Mongo;
  * @author Mark Pollack
  * @author Oliver Gierke
  * @author Thomas Darimont
+ * @author Ryan Tenney
  */
 @Configuration
 public abstract class AbstractMongoConfiguration {
@@ -144,10 +147,7 @@ public abstract class AbstractMongoConfiguration {
 		MongoMappingContext mappingContext = new MongoMappingContext();
 		mappingContext.setInitialEntitySet(getInitialEntitySet());
 		mappingContext.setSimpleTypeHolder(customConversions().getSimpleTypeHolder());
-
-		if (abbreviateFieldNames()) {
-			mappingContext.setFieldNamingStrategy(new CamelCaseAbbreviatingFieldNamingStrategy());
-		}
+		mappingContext.setFieldNamingStrategy(fieldNamingStrategy());
 
 		return mappingContext;
 	}
@@ -231,5 +231,15 @@ public abstract class AbstractMongoConfiguration {
 	 */
 	protected boolean abbreviateFieldNames() {
 		return false;
+	}
+
+	/**
+	 * Configures a {@link FieldNamingStrategy} on the {@link MongoMappingContext} instance created.
+	 * 
+	 * @return
+	 */
+	protected FieldNamingStrategy fieldNamingStrategy() {
+		return abbreviateFieldNames() ? new CamelCaseAbbreviatingFieldNamingStrategy()
+				: PropertyNameFieldNamingStrategy.INSTANCE;
 	}
 }

@@ -210,9 +210,16 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 		}
 
 		String abbreviateFieldNames = element.getAttribute("abbreviate-field-names");
+
 		if ("true".equals(abbreviateFieldNames)) {
 			mappingContextBuilder.addPropertyValue("fieldNamingStrategy", new RootBeanDefinition(
 					CamelCaseAbbreviatingFieldNamingStrategy.class));
+		}
+
+		String fieldNamingStrategy = element.getAttribute("field-naming-strategy-ref");
+
+		if (StringUtils.hasText(fieldNamingStrategy)) {
+			mappingContextBuilder.addPropertyValue("fieldNamingStrategy", new RuntimeBeanReference(fieldNamingStrategy));
 		}
 
 		ctxRef = converterId == null || DEFAULT_CONVERTER_BEAN_NAME.equals(converterId) ? MAPPING_CONTEXT_BEAN_NAME
