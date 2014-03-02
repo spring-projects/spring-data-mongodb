@@ -21,6 +21,7 @@ package org.springframework.data.mongodb.core.mapping;
  * @see DocumentField
  * @see PropertyNameFieldNamingStrategy
  * @see CamelCaseAbbreviatingFieldNamingStrategy
+ * @see LowerCaseWithUnderscoresFieldNamingStrategy
  * @since 1.3
  * @author Oliver Gierke
  */

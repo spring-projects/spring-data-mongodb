@@ -215,6 +215,11 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 					CamelCaseAbbreviatingFieldNamingStrategy.class));
 		}
 
+		String fieldNamingStrategy = element.getAttribute("field-naming-strategy-ref");
+		if (StringUtils.hasText(fieldNamingStrategy)) {
+			mappingContextBuilder.addPropertyValue("fieldNamingStrategy", new RuntimeBeanReference(fieldNamingStrategy));
+		}
+
 		ctxRef = converterId + "." + MAPPING_CONTEXT;
 
 		parserContext.registerBeanComponent(componentDefinitionBuilder.getComponent(mappingContextBuilder, ctxRef));
