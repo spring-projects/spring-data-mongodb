@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.hamcrest.Matcher;
+import org.hamcrest.collection.IsIterableContainingInOrder;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -388,6 +389,26 @@ public class UpdateMapperUnitTests {
 
 		DBObject setClause = getAsDBObject(mappedObject, "$set");
 		assertThat(setClause.containsField("listOfInterface.$.value"), is(true));
+	}
+
+	/**
+	 * @see DATAMONGO-863
+	 */
+	@Test
+	public void leavesDBObjectsUntouched() {
+
+		Update update = new Update();
+		update.pull("options",
+				new BasicDBObject("_id", new BasicDBObject("$in", converter.convertToMongoType(Arrays.asList(1L, 2L)))));
+
+		DBObject mappedObject = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(ParentClass.class));
+
+		DBObject setClause = getAsDBObject(mappedObject, "$pull");
+		DBObject options = getAsDBObject(setClause, "options");
+		DBObject idClause = getAsDBObject(options, "_id");
+		BasicDBList inClause = getAsDBList(idClause, "$in");
+		assertThat(inClause, IsIterableContainingInOrder.<Object> contains(1L, 2L));
 	}
 
 	static interface Model {}

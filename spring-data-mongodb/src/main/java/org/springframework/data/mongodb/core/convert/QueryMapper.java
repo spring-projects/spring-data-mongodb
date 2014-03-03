@@ -138,7 +138,7 @@ public class QueryMapper {
 			value = getMappedValue(field, rawValue);
 		}
 
-		return Collections.singletonMap(key, value).entrySet().iterator().next();
+		return createMapEntry(key, value);
 	}
 
 	/**
@@ -168,7 +168,7 @@ public class QueryMapper {
 			BasicDBList newConditions = new BasicDBList();
 
 			for (Object condition : conditions) {
-				newConditions.add(condition instanceof DBObject ? getMappedObject((DBObject) condition, entity)
+				newConditions.add(isDBObject(condition) ? getMappedObject((DBObject) condition, entity)
 						: convertSimpleOrDBObject(condition, entity));
 			}
 
@@ -209,7 +209,7 @@ public class QueryMapper {
 
 		if (documentField.isIdField()) {
 
-			if (value instanceof DBObject) {
+			if (isDBObject(value)) {
 				DBObject valueDbo = (DBObject) value;
 				DBObject resultDbo = new BasicDBObject(valueDbo.toMap());
 
@@ -267,13 +267,13 @@ public class QueryMapper {
 	 * @param entity
 	 * @return
 	 */
-	private Object convertSimpleOrDBObject(Object source, MongoPersistentEntity<?> entity) {
+	protected Object convertSimpleOrDBObject(Object source, MongoPersistentEntity<?> entity) {
 
 		if (source instanceof BasicDBList) {
 			return delegateConvertToMongoType(source, entity);
 		}
 
-		if (source instanceof DBObject) {
+		if (isDBObject(source)) {
 			return getMappedObject((DBObject) source, entity);
 		}
 
@@ -327,6 +327,18 @@ public class QueryMapper {
 		}
 
 		return createDbRefFor(source, property);
+	}
+
+	protected boolean isDBObject(Object value) {
+		return value instanceof DBObject;
+	}
+
+	protected Entry<String, Object> createMapEntry(Field field, Object value) {
+		return createMapEntry(field.getMappedKey(), value);
+	}
+
+	private Entry<String, Object> createMapEntry(String key, Object value) {
+		return Collections.singletonMap(key, value).entrySet().iterator().next();
 	}
 
 	private DBRef createDbRefFor(Object source, MongoPersistentProperty property) {
