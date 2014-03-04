@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2013 the original author or authors.
+ * Copyright 2011-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -57,6 +57,9 @@ public class MappingMongoConverterParserIntegrationTests {
 		reader.loadBeanDefinitions(new ClassPathResource("namespace/converter.xml"));
 	}
 
+	/**
+	 * @see DATAMONGO-243
+	 */
 	@Test
 	public void allowsDbFactoryRefAttribute() {
 
@@ -64,6 +67,9 @@ public class MappingMongoConverterParserIntegrationTests {
 		factory.getBean("converter");
 	}
 
+	/**
+	 * @see DATAMONGO-725
+	 */
 	@Test
 	public void hasCustomTypeMapper() {
 
@@ -73,6 +79,9 @@ public class MappingMongoConverterParserIntegrationTests {
 		assertThat(converter.getTypeMapper(), is(customMongoTypeMapper));
 	}
 
+	/**
+	 * @see DATAMONGO-301
+	 */
 	@Test
 	public void scansForConverterAndSetsUpCustomConversionsAccordingly() {
 
@@ -87,7 +96,7 @@ public class MappingMongoConverterParserIntegrationTests {
 	@Test
 	public void activatesAbbreviatingPropertiesCorrectly() {
 
-		BeanDefinition definition = factory.getBeanDefinition("abbreviatingConverter.mappingContext");
+		BeanDefinition definition = factory.getBeanDefinition("abbreviatingConverter.mongoMappingContext");
 		Object value = definition.getPropertyValues().getPropertyValue("fieldNamingStrategy").getValue();
 
 		assertThat(value, is(instanceOf(BeanDefinition.class)));

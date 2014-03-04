@@ -86,7 +86,7 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 		BeanDefinitionRegistry registry = parserContext.getRegistry();
 
 		String id = element.getAttribute(AbstractBeanDefinitionParser.ID_ATTRIBUTE);
-		id = StringUtils.hasText(id) ? id : "mappingConverter";
+		id = StringUtils.hasText(id) ? id : DEFAULT_CONVERTER_BEAN_NAME;
 
 		parserContext.pushContainingComponent(new CompositeComponentDefinition("Mapping Mongo Converter", element));
 
@@ -98,7 +98,7 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 		// Need a reference to a Mongo instance
 		String dbFactoryRef = element.getAttribute("db-factory-ref");
 		if (!StringUtils.hasText(dbFactoryRef)) {
-			dbFactoryRef = DB_FACTORY;
+			dbFactoryRef = DB_FACTORY_BEAN_NAME;
 		}
 
 		// Converter
@@ -116,10 +116,10 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 		}
 
 		try {
-			registry.getBeanDefinition(INDEX_HELPER);
+			registry.getBeanDefinition(INDEX_HELPER_BEAN_NAME);
 		} catch (NoSuchBeanDefinitionException ignored) {
 			if (!StringUtils.hasText(dbFactoryRef)) {
-				dbFactoryRef = DB_FACTORY;
+				dbFactoryRef = DB_FACTORY_BEAN_NAME;
 			}
 			BeanDefinitionBuilder indexHelperBuilder = BeanDefinitionBuilder
 					.genericBeanDefinition(MongoPersistentEntityIndexCreator.class);
@@ -128,14 +128,14 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 			indexHelperBuilder.addDependsOn(ctxRef);
 
 			parserContext.registerBeanComponent(new BeanComponentDefinition(indexHelperBuilder.getBeanDefinition(),
-					INDEX_HELPER));
+					INDEX_HELPER_BEAN_NAME));
 		}
 
 		BeanDefinition validatingMongoEventListener = potentiallyCreateValidatingMongoEventListener(element, parserContext);
 
 		if (validatingMongoEventListener != null) {
 			parserContext.registerBeanComponent(new BeanComponentDefinition(validatingMongoEventListener,
-					VALIDATING_EVENT_LISTENER));
+					VALIDATING_EVENT_LISTENER_BEAN_NAME));
 		}
 
 		parserContext.registerBeanComponent(new BeanComponentDefinition(converterBuilder.getBeanDefinition(), id));
@@ -180,7 +180,7 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 		return new RuntimeBeanReference(validatorName);
 	}
 
-	static String potentiallyCreateMappingContext(Element element, ParserContext parserContext,
+	public static String potentiallyCreateMappingContext(Element element, ParserContext parserContext,
 			BeanDefinition conversionsDefinition, String converterId) {
 
 		String ctxRef = element.getAttribute("mapping-context-ref");
@@ -215,7 +215,8 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 					CamelCaseAbbreviatingFieldNamingStrategy.class));
 		}
 
-		ctxRef = converterId + "." + MAPPING_CONTEXT;
+		ctxRef = converterId == null || DEFAULT_CONVERTER_BEAN_NAME.equals(converterId) ? MAPPING_CONTEXT_BEAN_NAME
+				: converterId + "." + MAPPING_CONTEXT_BEAN_NAME;
 
 		parserContext.registerBeanComponent(componentDefinitionBuilder.getComponent(mappingContextBuilder, ctxRef));
 		return ctxRef;
@@ -310,9 +311,10 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 		mappingContextStrategyFactoryBuilder.addConstructorArgReference(mappingContextRef);
 
 		BeanComponentDefinitionBuilder builder = new BeanComponentDefinitionBuilder(element, context);
-		context.registerBeanComponent(builder.getComponent(mappingContextStrategyFactoryBuilder, IS_NEW_STRATEGY_FACTORY));
+		context.registerBeanComponent(builder.getComponent(mappingContextStrategyFactoryBuilder,
+				IS_NEW_STRATEGY_FACTORY_BEAN_NAME));
 
-		return IS_NEW_STRATEGY_FACTORY;
+		return IS_NEW_STRATEGY_FACTORY_BEAN_NAME;
 	}
 
 	/**

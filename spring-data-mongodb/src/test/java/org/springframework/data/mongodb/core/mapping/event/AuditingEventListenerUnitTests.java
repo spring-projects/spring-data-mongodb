@@ -23,6 +23,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.auditing.IsNewAwareAuditingHandler;
 import org.springframework.data.mapping.context.MappingContextIsNewStrategyFactory;
@@ -33,6 +35,7 @@ import org.springframework.data.support.IsNewStrategyFactory;
  * Unit tests for {@link AuditingEventListener}.
  * 
  * @author Oliver Gierke
+ * @author Thomas Darimont
  */
 @RunWith(MockitoJUnitRunner.class)
 public class AuditingEventListenerUnitTests {
@@ -52,14 +55,26 @@ public class AuditingEventListenerUnitTests {
 		doNothing().when(handler).markCreated(Mockito.any(Object.class));
 		doNothing().when(handler).markModified(Mockito.any(Object.class));
 
-		listener = new AuditingEventListener(handler);
+		listener = new AuditingEventListener(new ObjectFactory<IsNewAwareAuditingHandler>() {
+
+			@Override
+			public IsNewAwareAuditingHandler getObject() throws BeansException {
+				return handler;
+			}
+		});
 	}
 
+	/**
+	 * @see DATAMONGO-577
+	 */
 	@Test(expected = IllegalArgumentException.class)
 	public void rejectsNullAuditingHandler() {
 		new AuditingEventListener(null);
 	}
 
+	/**
+	 * @see DATAMONGO-577
+	 */
 	@Test
 	public void triggersCreationMarkForObjectWithEmptyId() {
 
@@ -70,6 +85,9 @@ public class AuditingEventListenerUnitTests {
 		verify(handler, times(0)).markModified(any(Sample.class));
 	}
 
+	/**
+	 * @see DATAMONGO-577
+	 */
 	@Test
 	public void triggersModificationMarkForObjectWithSetId() {
 

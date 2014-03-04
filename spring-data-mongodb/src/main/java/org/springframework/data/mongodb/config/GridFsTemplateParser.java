@@ -43,7 +43,7 @@ class GridFsTemplateParser extends AbstractBeanDefinitionParser {
 			throws BeanDefinitionStoreException {
 
 		String id = super.resolveId(element, definition, parserContext);
-		return StringUtils.hasText(id) ? id : BeanNames.GRID_FS_TEMPLATE;
+		return StringUtils.hasText(id) ? id : BeanNames.GRID_FS_TEMPLATE_BEAN_NAME;
 	}
 
 	/*
@@ -64,7 +64,7 @@ class GridFsTemplateParser extends AbstractBeanDefinitionParser {
 		if (StringUtils.hasText(dbFactoryRef)) {
 			gridFsTemplateBuilder.addConstructorArgReference(dbFactoryRef);
 		} else {
-			gridFsTemplateBuilder.addConstructorArgReference(BeanNames.DB_FACTORY);
+			gridFsTemplateBuilder.addConstructorArgReference(BeanNames.DB_FACTORY_BEAN_NAME);
 		}
 
 		if (StringUtils.hasText(converterRef)) {
@@ -77,7 +77,7 @@ class GridFsTemplateParser extends AbstractBeanDefinitionParser {
 			gridFsTemplateBuilder.addConstructorArgValue(bucket);
 		}
 
-		return (AbstractBeanDefinition) helper.getComponentIdButFallback(gridFsTemplateBuilder, BeanNames.GRID_FS_TEMPLATE)
+		return (AbstractBeanDefinition) helper.getComponentIdButFallback(gridFsTemplateBuilder, BeanNames.GRID_FS_TEMPLATE_BEAN_NAME)
 				.getBeanDefinition();
 	}
 }

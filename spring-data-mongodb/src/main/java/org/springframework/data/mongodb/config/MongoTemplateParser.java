@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2013 the original author or authors.
+ * Copyright 2011-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,6 +35,7 @@ import org.w3c.dom.Element;
  * {@link BeanDefinitionParser} to parse {@code template} elements into {@link BeanDefinition}s.
  * 
  * @author Martin Baumgartner
+ * @author Oliver Gierke
  */
 class MongoTemplateParser extends AbstractBeanDefinitionParser {
 
@@ -47,7 +48,7 @@ class MongoTemplateParser extends AbstractBeanDefinitionParser {
 			throws BeanDefinitionStoreException {
 
 		String id = super.resolveId(element, definition, parserContext);
-		return StringUtils.hasText(id) ? id : BeanNames.MONGO_TEMPLATE;
+		return StringUtils.hasText(id) ? id : BeanNames.MONGO_TEMPLATE_BEAN_NAME;
 	}
 
 	/*
@@ -68,7 +69,7 @@ class MongoTemplateParser extends AbstractBeanDefinitionParser {
 		if (StringUtils.hasText(dbFactoryRef)) {
 			mongoTemplateBuilder.addConstructorArgReference(dbFactoryRef);
 		} else {
-			mongoTemplateBuilder.addConstructorArgReference(BeanNames.DB_FACTORY);
+			mongoTemplateBuilder.addConstructorArgReference(BeanNames.DB_FACTORY_BEAN_NAME);
 		}
 
 		if (StringUtils.hasText(converterRef)) {
@@ -80,7 +81,7 @@ class MongoTemplateParser extends AbstractBeanDefinitionParser {
 		BeanComponentDefinition component = helper.getComponent(writeConcernPropertyEditorBuilder);
 		parserContext.registerBeanComponent(component);
 
-		return (AbstractBeanDefinition) helper.getComponentIdButFallback(mongoTemplateBuilder, BeanNames.MONGO_TEMPLATE)
-				.getBeanDefinition();
+		return (AbstractBeanDefinition) helper.getComponentIdButFallback(mongoTemplateBuilder,
+				BeanNames.MONGO_TEMPLATE_BEAN_NAME).getBeanDefinition();
 	}
 }
