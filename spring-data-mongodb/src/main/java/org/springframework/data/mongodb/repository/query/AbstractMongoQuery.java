@@ -20,7 +20,10 @@ import java.util.List;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.SliceImpl;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.geo.Distance;
 import org.springframework.data.mongodb.core.geo.GeoPage;
@@ -87,6 +90,8 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 			return new GeoNearExecution(accessor).execute(query, countQuery);
 		} else if (method.isGeoNearQuery()) {
 			return new GeoNearExecution(accessor).execute(query);
+		} else if (method.isSliceQuery()) {
+			return new SlicedExecution(accessor.getPageable()).execute(query);
 		} else if (method.isCollectionQuery()) {
 			return new CollectionExecution(accessor.getPageable()).execute(query);
 		} else if (method.isPageQuery()) {
@@ -168,6 +173,41 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 		@Override
 		public Object execute(Query query) {
 			return readCollection(query.with(pageable));
+		}
+	}
+
+	/**
+	 * {@link Execution} for {@link Slice} query methods.
+	 * 
+	 * @author Oliver Gierke
+	 * @since 1.5
+	 */
+
+	final class SlicedExecution extends Execution {
+
+		private final Pageable pageable;
+
+		SlicedExecution(Pageable pageable) {
+			this.pageable = pageable;
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery.Execution#execute(org.springframework.data.mongodb.core.query.Query)
+		 */
+		@Override
+		@SuppressWarnings({ "unchecked", "rawtypes" })
+		Object execute(Query query) {
+
+			MongoEntityMetadata<?> metadata = method.getEntityInformation();
+			int pageSize = pageable.getPageSize();
+			Pageable slicePageable = new PageRequest(pageable.getPageNumber(), pageSize + 1, pageable.getSort());
+
+			List result = operations.find(query.with(slicePageable), metadata.getJavaType(), metadata.getCollectionName());
+
+			boolean hasNext = result.size() > pageSize;
+
+			return new SliceImpl<Object>(hasNext ? result.subList(0, pageSize) : result, pageable, hasNext);
 		}
 	}
 

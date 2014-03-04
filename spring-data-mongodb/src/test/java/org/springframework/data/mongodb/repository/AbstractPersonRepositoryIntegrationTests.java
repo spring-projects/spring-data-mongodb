@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2013 the original author or authors.
+ * Copyright 2011-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.MongoOperations;
@@ -155,8 +156,8 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	public void findsPagedPersons() throws Exception {
 
 		Page<Person> result = repository.findAll(new PageRequest(1, 2, Direction.ASC, "lastname", "firstname"));
-		assertThat(result.isFirstPage(), is(false));
-		assertThat(result.isLastPage(), is(false));
+		assertThat(result.isFirst(), is(false));
+		assertThat(result.isLast(), is(false));
 		assertThat(result, hasItems(dave, stefan));
 	}
 
@@ -165,8 +166,8 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 
 		Page<Person> page = repository.findByLastnameLike("*a*", new PageRequest(0, 2, Direction.ASC, "lastname",
 				"firstname"));
-		assertThat(page.isFirstPage(), is(true));
-		assertThat(page.isLastPage(), is(false));
+		assertThat(page.isFirst(), is(true));
+		assertThat(page.isLast(), is(false));
 		assertThat(page.getNumberOfElements(), is(2));
 		assertThat(page, hasItems(carter, stefan));
 	}
@@ -176,8 +177,8 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 
 		Page<Person> page = repository.findByLastnameLikeWithPageable(".*a.*", new PageRequest(0, 2, Direction.ASC,
 				"lastname", "firstname"));
-		assertThat(page.isFirstPage(), is(true));
-		assertThat(page.isLastPage(), is(false));
+		assertThat(page.isFirst(), is(true));
+		assertThat(page.isLast(), is(false));
 		assertThat(page.getNumberOfElements(), is(2));
 		assertThat(page, hasItems(carter, stefan));
 	}
@@ -301,8 +302,8 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 
 		Page<Person> page = repository.findAll(person.lastname.contains("a"), new PageRequest(0, 2, Direction.ASC,
 				"lastname"));
-		assertThat(page.isFirstPage(), is(true));
-		assertThat(page.isLastPage(), is(false));
+		assertThat(page.isFirst(), is(true));
+		assertThat(page.isLast(), is(false));
 		assertThat(page.getNumberOfElements(), is(2));
 		assertThat(page, hasItems(carter, stefan));
 	}
@@ -737,5 +738,16 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		List<Person> result = repository.findByFirstnameContainingIgnoreCase("AV");
 		assertThat(result.size(), is(1));
 		assertThat(result.get(0), is(dave));
+	}
+
+	/**
+	 * @see DATAMONGO-870
+	 */
+	@Test
+	public void findsSliceOfPersons() {
+
+		Slice<Person> result = repository.findByAgeGreaterThan(40, new PageRequest(0, 2, Direction.DESC, "firstname"));
+
+		assertThat(result.hasNext(), is(true));
 	}
 }

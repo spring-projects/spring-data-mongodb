@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 the original author or authors.
+ * Copyright 2010-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.geo.Box;
 import org.springframework.data.mongodb.core.geo.Circle;
@@ -245,4 +246,8 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	 */
 	List<Person> findByFirstnameContainingIgnoreCase(String firstName);
 
+	/**
+	 * @see DATAMONGO-870
+	 */
+	Slice<Person> findByAgeGreaterThan(int age, Pageable pageable);
 }
