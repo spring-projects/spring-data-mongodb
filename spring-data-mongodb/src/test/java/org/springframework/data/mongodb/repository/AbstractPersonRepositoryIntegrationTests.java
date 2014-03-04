@@ -54,9 +54,11 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 @RunWith(SpringJUnit4ClassRunner.class)
 public abstract class AbstractPersonRepositoryIntegrationTests {
 
-	@Autowired protected PersonRepository repository;
+	@Autowired
+	protected PersonRepository repository;
 
-	@Autowired MongoOperations operations;
+	@Autowired
+	MongoOperations operations;
 
 	Person dave, oliver, carter, boyd, stefan, leroi, alicia;
 	QPerson person;
@@ -141,6 +143,15 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result.size(), is(1));
 		assertThat(result, hasItem(leroi));
 		assertThat(result.get(0).getAge(), is(nullValue()));
+	}
+
+	@Test
+	public void findsPersonsByFirstnameAsArray() {
+
+		Person[] result = repository.findByThePersonsFirstnameAsArray("Leroi");
+		assertThat(result.length, is(1));
+		assertThat(Arrays.asList(result), hasItem(leroi));
+		assertThat(result[0].getAge(), is(nullValue()));
 	}
 
 	@Test
