@@ -38,6 +38,7 @@ import org.springframework.data.querydsl.QueryDslPredicateExecutor;
  * 
  * @author Oliver Gierke
  * @author Thomas Darimont
+ * @author Christoph Strobl
  */
 public interface PersonRepository extends MongoRepository<Person, String>, QueryDslPredicateExecutor<Person> {
 
@@ -256,4 +257,10 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	 * @see DATAMONGO-870
 	 */
 	Slice<Person> findByAgeGreaterThan(int age, Pageable pageable);
+	
+	/**
+	 * @see DATAMONGO-821
+	 */
+	@Query("{ creator : { $exists : true } }")
+	Page<Person> findByHavingCreator(Pageable page);
 }

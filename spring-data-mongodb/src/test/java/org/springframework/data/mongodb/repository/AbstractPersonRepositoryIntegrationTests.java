@@ -51,6 +51,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * 
  * @author Oliver Gierke
  * @author Thomas Darimont
+ * @author Christoph Strobl
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 public abstract class AbstractPersonRepositoryIntegrationTests {
@@ -761,5 +762,26 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 
 		assertThat(result, is(arrayWithSize(1)));
 		assertThat(result, is(arrayContaining(leroi)));
+	}
+	
+	
+	/**
+	 * @see DATAMONGO-821
+	 */
+	@Test
+	public void findUsingAnnotatedQueryOnDBRef() {
+
+		operations.remove(new org.springframework.data.mongodb.core.query.Query(), User.class);
+
+		User user = new User();
+		user.username = "Terria";
+		operations.save(user);
+
+		alicia.creator = user;
+		repository.save(alicia);
+
+		Page<Person> result = repository.findByHavingCreator(new PageRequest(0, 100));
+		assertThat(result.getNumberOfElements(), is(1));
+		assertThat(result.getContent().get(0), is(alicia));
 	}
 }
