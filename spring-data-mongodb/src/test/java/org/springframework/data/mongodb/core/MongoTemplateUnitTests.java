@@ -25,10 +25,14 @@ import java.util.Collections;
 import java.util.regex.Pattern;
 
 import org.bson.types.ObjectId;
+import org.hamcrest.core.Is;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatcher;
+import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
@@ -37,6 +41,7 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.convert.CustomConversions;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
@@ -48,6 +53,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
@@ -58,6 +64,7 @@ import com.mongodb.MongoException;
  * Unit tests for {@link MongoTemplate}.
  * 
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 @RunWith(MockitoJUnitRunner.class)
 public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
@@ -206,6 +213,46 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	/**
+	 * @see DATAMONGO-868
+	 */
+	@Test
+	public void findAndModifyShouldBumpVersionByOneWhenVersionFieldNotIncludedInUpdate() {
+
+		VersionedEntity v = new VersionedEntity();
+		v.id = 1;
+		v.version = 0;
+
+		ArgumentCaptor<DBObject> captor = ArgumentCaptor.forClass(DBObject.class);
+
+		template.findAndModify(new Query(), new Update().set("id", "10"), VersionedEntity.class);
+		verify(collection, times(1)).findAndModify(Matchers.any(DBObject.class),
+				org.mockito.Matchers.isNull(DBObject.class), org.mockito.Matchers.isNull(DBObject.class), eq(false),
+				captor.capture(), eq(false), eq(false));
+
+		Assert.assertThat(captor.getValue().get("$inc"), Is.<Object> is(new BasicDBObject("version", 1)));
+	}
+
+	/**
+	 * @see DATAMONGO-868
+	 */
+	@Test
+	public void findAndModifyShouldNotBumpVersionByOneWhenVersionFieldAlreadyIncludedInUpdate() {
+
+		VersionedEntity v = new VersionedEntity();
+		v.id = 1;
+		v.version = 0;
+
+		ArgumentCaptor<DBObject> captor = ArgumentCaptor.forClass(DBObject.class);
+
+		template.findAndModify(new Query(), new Update().set("version", 100), VersionedEntity.class);
+		verify(collection, times(1)).findAndModify(Matchers.any(DBObject.class), isNull(DBObject.class),
+				isNull(DBObject.class), eq(false), captor.capture(), eq(false), eq(false));
+
+		Assert.assertThat(captor.getValue().get("$set"), Is.<Object> is(new BasicDBObject("version", 100)));
+		Assert.assertThat(captor.getValue().get("$inc"), nullValue());
+	}
+
+	/**
 	 * @see DATAMONGO-533
 	 */
 	@Test
@@ -247,6 +294,12 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		public Pattern getId() {
 			return Pattern.compile(".");
 		}
+	}
+
+	static class VersionedEntity {
+
+		@Id Integer id;
+		@Version Integer version;
 	}
 
 	enum MyConverter implements Converter<AutogenerateableId, String> {
