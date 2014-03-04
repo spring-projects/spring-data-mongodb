@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2013 the original author or authors.
+ * Copyright 2011-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,6 +45,7 @@ import com.mongodb.DBObject;
  * Unit tests for {@link StringBasedMongoQuery}.
  * 
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 @RunWith(MockitoJUnitRunner.class)
 public class StringBasedMongoQueryUnitTests {
@@ -126,6 +127,19 @@ public class StringBasedMongoQueryUnitTests {
 		assertThat(query.getQueryObject().get("address"), is(nullValue()));
 	}
 
+	/**
+	 * @see DATAMONGO-821
+	 */
+	@Test
+	public void bindsDbrefCorrectly() throws Exception {
+
+		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByHavingSizeFansNotZero");
+		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, new Object[] {});
+
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
+		assertThat(query.getQueryObject(), is(new BasicQuery("{ fans : { $not : { $size : 0 } } }").getQueryObject()));
+	}
+
 	private StringBasedMongoQuery createQueryForMethod(String name, Class<?>... parameters) throws Exception {
 
 		Method method = SampleRepository.class.getMethod(name, parameters);
@@ -143,5 +157,9 @@ public class StringBasedMongoQueryUnitTests {
 
 		@Query("{ 'lastname' : ?0, 'address' : ?1 }")
 		Person findByLastnameAndAddress(String lastname, Address address);
+
+		@Query("{ fans : { $not : { $size : 0 } } }")
+		Person findByHavingSizeFansNotZero();
+
 	}
 }
