@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2013 the original author or authors.
+ * Copyright 2011-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,6 +50,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * 
  * @author Oliver Gierke
  * @author Thomas Darimont
+ * @author Christoph Strobl
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 public abstract class AbstractPersonRepositoryIntegrationTests {
@@ -737,5 +738,25 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		List<Person> result = repository.findByFirstnameContainingIgnoreCase("AV");
 		assertThat(result.size(), is(1));
 		assertThat(result.get(0), is(dave));
+	}
+
+	/**
+	 * @see DATAMONGO-821
+	 */
+	@Test
+	public void findUsingAnnotatedQueryOnDBRef() {
+
+		operations.remove(new org.springframework.data.mongodb.core.query.Query(), User.class);
+
+		User user = new User();
+		user.username = "Terria";
+		operations.save(user);
+
+		alicia.creator = user;
+		repository.save(alicia);
+
+		Page<Person> result = repository.findByHavingCreator(new PageRequest(0, 100));
+		assertThat(result.getNumberOfElements(), is(1));
+		assertThat(result.getContent().get(0), is(alicia));
 	}
 }

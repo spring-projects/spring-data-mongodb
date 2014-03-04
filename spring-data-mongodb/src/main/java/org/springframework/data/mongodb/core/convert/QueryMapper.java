@@ -305,7 +305,7 @@ public class QueryMapper {
 	 */
 	protected Object convertAssociation(Object source, MongoPersistentProperty property) {
 
-		if (property == null || source == null || source instanceof DBRef) {
+		if (property == null || source == null || source instanceof DBRef || source instanceof DBObject) {
 			return source;
 		}
 
