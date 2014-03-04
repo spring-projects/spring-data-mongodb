@@ -15,17 +15,16 @@ import org.springframework.data.mongodb.core.query.Query;
  * @author Joao Bortolozzo
  * see DATAMONGO-867
  */
-public class BatchInsertTest extends AbstractBatchConfiguration{
+public class BatchInsertTests extends AbstractBatchConfiguration{
 
-	@Autowired
-	BatchInsertOperations batchPerson;
+	@Autowired BatchInsertOperations batch;
 	
 	@Test
 	public void testAddPersonWithoutFillBatchSize(){
 		
 		Person person = new Person("Joao");
 		
-		batchPerson.insert(person);
+		batch.insert(person);
 		
 		assertSizeOfPersonCollection(0);
 	}
@@ -38,7 +37,7 @@ public class BatchInsertTest extends AbstractBatchConfiguration{
 	}
 	
 	@Test
-	public void testAddPersonFillingBatchSize(){
+	public void testAddPeopleFillingBatchSize(){
 		
 		List<Person> people = super.populateCollection(1000);
 		

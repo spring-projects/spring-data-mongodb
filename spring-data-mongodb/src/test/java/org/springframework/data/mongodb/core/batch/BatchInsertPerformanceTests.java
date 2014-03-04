@@ -22,7 +22,7 @@ import org.springframework.util.StopWatch.TaskInfo;
  * @author Joao Bortolozzo
  * see DATAMONGO-867
  */
-public class BatchInsertPerformance extends AbstractBatchConfiguration{
+public class BatchInsertPerformanceTests extends AbstractBatchConfiguration{
 	
 	private final StopWatch watcher = new StopWatch();
 	private static final String BATCH_INSERT_NAME = "BATCH INSERT"; 
@@ -30,13 +30,13 @@ public class BatchInsertPerformance extends AbstractBatchConfiguration{
 	private static final String LIST_INSERT_NAME = "LIST INSERT"; 
 	private static final int RANGE = 10000;
 	private static final int BUCKET = 10;
-	private static final int ELEMENTS_SHUFFLE = 10;
+	private static final int ELEMENTS_SHUFFLE = 30;
 	
 	@Autowired BatchInsertOperations batch;
 	@Autowired MongoOperations template;
 	
 	@Test
-	public void testBatchCollectionOfPerson(){
+	public void testBatchCollectionOfPeople(){
 		
 		Statistics statistics = new Statistics();
 		
@@ -73,15 +73,15 @@ public class BatchInsertPerformance extends AbstractBatchConfiguration{
 		ExecuteTask batchInsert = new ExecuteTask(){
 			public void execute(int range, int bucketSize) {
 				
-				Map<Integer, List<Person>> people = new HashMap<Integer, List<Person>>();
+				List<List<Person>> people = new ArrayList<List<Person>>();
 				
 				for(int index = 0; index < bucketSize; index++)
-					people.put(index, populateCollection(range/bucketSize));
+					people.add(populateCollection(range/bucketSize));
 				
 				watcher.start(BATCH_INSERT_NAME);
 				
-				for (Integer index : people.keySet())
-					batch.insertAll(people.get(index));
+				for (List<Person> index : people)
+					batch.insertAll(index);
 				
 				batch.flush();
 				watcher.stop();

@@ -49,7 +49,7 @@ public class AbstractBatchConfiguration {
 		
 		@Bean
 		public BatchInsertOperations batchInsertOperation(){
-			return new BatchInsert(1000) {};
+			return new BatchInsert(1000);
 		}
 	}
 	
