@@ -82,23 +82,25 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 		MongoParameterAccessor accessor = new MongoParametersParameterAccessor(method, parameters);
 		Query query = createQuery(new ConvertingParameterAccessor(operations.getConverter(), accessor));
 
+		Object result = null;
+
 		if (method.isGeoNearQuery() && method.isPageQuery()) {
 
 			MongoParameterAccessor countAccessor = new MongoParametersParameterAccessor(method, parameters);
 			Query countQuery = createCountQuery(new ConvertingParameterAccessor(operations.getConverter(), countAccessor));
 
-			return new GeoNearExecution(accessor).execute(query, countQuery);
+			result = new GeoNearExecution(accessor).execute(query, countQuery);
 		} else if (method.isGeoNearQuery()) {
-			return new GeoNearExecution(accessor).execute(query);
+			result = new GeoNearExecution(accessor).execute(query);
 		} else if (method.isSliceQuery()) {
-			return new SlicedExecution(accessor.getPageable()).execute(query);
+			result = new SlicedExecution(accessor.getPageable()).execute(query);
 		} else if (method.isCollectionQuery()) {
-			return new CollectionExecution(accessor.getPageable()).execute(query);
+			result = new CollectionExecution(accessor.getPageable()).execute(query);
 		} else if (method.isPageQuery()) {
-			return new PagedExecution(accessor.getPageable()).execute(query);
+			result = new PagedExecution(accessor.getPageable()).execute(query);
+		} else {
+			result = new SingleEntityExecution(isCountQuery()).execute(query);
 		}
-
-		Object result = new SingleEntityExecution(isCountQuery()).execute(query);
 
 		if (result == null) {
 			return result;

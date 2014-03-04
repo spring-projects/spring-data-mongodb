@@ -750,4 +750,16 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 
 		assertThat(result.hasNext(), is(true));
 	}
+
+	/**
+	 * @see DATAMONGO-871
+	 */
+	@Test
+	public void findsPersonsByFirstnameAsArray() {
+
+		Person[] result = repository.findByThePersonsFirstnameAsArray("Leroi");
+
+		assertThat(result, is(arrayWithSize(1)));
+		assertThat(result, is(arrayContaining(leroi)));
+	}
 }

@@ -72,6 +72,12 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	List<Person> findByThePersonsFirstname(String firstname);
 
 	/**
+	 * @see DATAMONGO-871
+	 */
+	@Query(value = "{ 'firstname' : ?0 }")
+	Person[] findByThePersonsFirstnameAsArray(String firstname);
+
+	/**
 	 * Returns all {@link Person}s with a firstname matching the given one (*-wildcard supported).
 	 * 
 	 * @param firstname
