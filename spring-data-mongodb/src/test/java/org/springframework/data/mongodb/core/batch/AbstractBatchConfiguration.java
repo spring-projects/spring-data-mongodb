@@ -48,17 +48,20 @@ public class AbstractBatchConfiguration {
 		}
 		
 		@Bean
-		public BatchInsertOperation<Person> batchInsertOperation(){
-			return new BatchInsertPerson();
+		public BatchInsertOperations<Person> batchInsertOperation(){
+			return new BatchInsert<Person>(1000) {};
 		}
 	}
 	
 	@Autowired MongoOperations operations;
+	@Autowired BatchInsertOperations<Person> batch;
 
 	@Before
 	@After
 	public void cleanUp() {
-
+		
+		batch.clear();
+		
 		for (String collectionName : operations.getCollectionNames()) {
 			if (!collectionName.startsWith("system")) {
 				operations.execute(collectionName, new CollectionCallback<Void>() {
@@ -77,10 +80,8 @@ public class AbstractBatchConfiguration {
 		
 		List<Person> people = new ArrayList<Person>();
 		
-		for(int index = 0; index < quantity; index++){
-			Person person = new Person("Joao");
-			people.add(person);
-		}
+		for(int index = 0; index < quantity; index++)
+			people.add(new Person("Joao"));
 		
 		return people;
 	}

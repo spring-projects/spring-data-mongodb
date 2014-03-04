@@ -30,9 +30,9 @@ public class BatchInsertPerformance extends AbstractBatchConfiguration{
 	private static final String LIST_INSERT_NAME = "LIST INSERT"; 
 	private static final int RANGE = 10000;
 	private static final int BUCKET = 10;
-	private static final int ELEMENTS_SHUFFLE = 30;
+	private static final int ELEMENTS_SHUFFLE = 10;
 	
-	@Autowired BatchInsertOperation<Person> batch;
+	@Autowired BatchInsertOperations<Person> batch;
 	@Autowired MongoOperations template;
 	
 	@Test

@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
  * see DATAMONGO-867
  */
 @Repository
-public interface BatchInsertOperation<T> {
+public interface BatchInsertOperations<T> {
 
 	public void insert(T element);
 	

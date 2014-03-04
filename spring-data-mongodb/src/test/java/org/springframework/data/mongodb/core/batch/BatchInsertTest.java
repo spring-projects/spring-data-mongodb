@@ -1,11 +1,15 @@
 package org.springframework.data.mongodb.core.batch;
 
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+
 import java.util.List;
 
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.Person;
-import org.springframework.util.Assert;
+import org.springframework.data.mongodb.core.query.Query;
 
 /**
  * @author Joao Bortolozzo
@@ -13,65 +17,34 @@ import org.springframework.util.Assert;
  */
 public class BatchInsertTest extends AbstractBatchConfiguration{
 
-	@Autowired BatchInsertOperation<Person> batch;
+	@Autowired BatchInsertOperations<Person> batch;
 	
 	@Test
-	public void testAddPerson(){
+	public void testAddPersonWithoutFillBatchSize(){
 		
 		Person person = new Person("Joao");
 		
 		batch.insert(person);
 		
-		Assert.notNull(batch);
+		assertSizeOfPersonCollection(0);
+	}
+
+	private void assertSizeOfPersonCollection(int size) {
+		
+		Long count = operations.count(new Query(where("firstName").is("Joao")), Person.class);
+		
+		assertThat(count.intValue(), is(size));
 	}
 	
 	@Test
-	public void testAddOnlyOnePerson(){
+	public void testAddPersonWithoutFillingBatchSize(){
 		
-		Person person = new Person("Joao");
-		
-		batch.insert(person);
-		
-		Assert.notNull(batch);
-	}
-	
-	@Test
-	public void testCollectionTwoPeople(){
-		
-		List<Person> people = populateCollection(2);
+		List<Person> people = super.populateCollection(1000);
 		
 		batch.insert(people);
 		
-		Assert.notNull(batch);
+		assertSizeOfPersonCollection(1000);
 	}
 	
-	@Test
-	public void testCollectionFourPeople(){
-		
-		List<Person> people = populateCollection(4);
-		
-		batch.insert(people);
-		
-		Assert.notNull(batch);
-	}
 	
-	@Test
-	public void testCollectionFourtyPeople(){
-		
-		List<Person> people = populateCollection(40);
-		
-		batch.insert(people);
-		
-		Assert.notNull(batch);
-	}
-	
-	@Test
-	public void testCollectionFourHundredPeople(){
-		
-		List<Person> people = populateCollection(400);
-		
-		batch.insert(people);
-		
-		Assert.notNull(batch);
-	}
 }
