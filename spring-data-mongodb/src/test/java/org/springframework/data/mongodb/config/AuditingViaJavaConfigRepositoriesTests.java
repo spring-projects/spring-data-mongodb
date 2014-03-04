@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,16 +27,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.AuditorAware;
 import org.springframework.data.mongodb.core.AuditablePerson;
-import org.springframework.data.mongodb.core.MongoOperations;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
-import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 import org.springframework.stereotype.Repository;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import com.mongodb.Mongo;
 import com.mongodb.MongoClient;
 
 /**
@@ -56,22 +53,22 @@ public class AuditingViaJavaConfigRepositoriesTests {
 	@Configuration
 	@EnableMongoAuditing(auditorAwareRef = "auditorProvider")
 	@EnableMongoRepositories(basePackageClasses = AuditablePersonRepository.class, considerNestedRepositories = true)
-	static class Config {
+	static class Config extends AbstractMongoConfiguration {
 
-		@Bean
-		public MongoOperations mongoTemplate() throws Exception {
-			return new MongoTemplate(new SimpleMongoDbFactory(new MongoClient(), "database"));
-		}
-
-		@Bean
-		public MongoMappingContext mappingContext() {
-			return new MongoMappingContext();
+		@Override
+		protected String getDatabaseName() {
+			return "database";
 		}
 
 		@Bean
 		@SuppressWarnings("unchecked")
 		public AuditorAware<AuditablePerson> auditorProvider() {
 			return mock(AuditorAware.class);
+		}
+
+		@Override
+		public Mongo mongo() throws Exception {
+			return new MongoClient();
 		}
 	}
 
