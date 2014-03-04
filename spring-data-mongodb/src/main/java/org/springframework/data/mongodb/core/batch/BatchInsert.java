@@ -10,11 +10,11 @@ import org.springframework.data.mongodb.core.MongoOperations;
  * @author Joao Bortolozzo
  * see DATAMONGO-867
  */
-abstract class BatchInsert<T> implements BatchInsertOperations<T>{
+abstract class BatchInsert implements BatchInsertOperations{
 	
 	@Autowired private MongoOperations template;
 	
-	private List<T> batchContent = new ArrayList<T>();
+	private List<Object> batchContent = new ArrayList<Object>();
 	
 	private Integer batchSize = 0;
 
@@ -38,13 +38,13 @@ abstract class BatchInsert<T> implements BatchInsertOperations<T>{
 	}
 	
 	@Override
-	public void insert(T element){
+	public void insert(Object element){
 		batchContent.add(element);
 		if(mustFlush()) flush();
 	}
 	
 	@Override
-	public void insert(List<T> elements){
+	public void insertAll(List<? extends Object> elements){
 		batchContent.addAll(elements);
 		if(mustFlush()) flush();
 	}

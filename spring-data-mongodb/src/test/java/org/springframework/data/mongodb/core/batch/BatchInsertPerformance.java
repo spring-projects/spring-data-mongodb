@@ -32,7 +32,7 @@ public class BatchInsertPerformance extends AbstractBatchConfiguration{
 	private static final int BUCKET = 10;
 	private static final int ELEMENTS_SHUFFLE = 10;
 	
-	@Autowired BatchInsertOperations<Person> batch;
+	@Autowired BatchInsertOperations batch;
 	@Autowired MongoOperations template;
 	
 	@Test
@@ -81,7 +81,7 @@ public class BatchInsertPerformance extends AbstractBatchConfiguration{
 				watcher.start(BATCH_INSERT_NAME);
 				
 				for (Integer index : people.keySet())
-					batch.insert(people.get(index));
+					batch.insertAll(people.get(index));
 				
 				batch.flush();
 				watcher.stop();

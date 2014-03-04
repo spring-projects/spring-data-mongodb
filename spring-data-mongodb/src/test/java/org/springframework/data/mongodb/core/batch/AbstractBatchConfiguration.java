@@ -48,13 +48,13 @@ public class AbstractBatchConfiguration {
 		}
 		
 		@Bean
-		public BatchInsertOperations<Person> batchInsertOperation(){
-			return new BatchInsert<Person>(1000) {};
+		public BatchInsertOperations batchInsertOperation(){
+			return new BatchInsert(1000) {};
 		}
 	}
 	
 	@Autowired MongoOperations operations;
-	@Autowired BatchInsertOperations<Person> batch;
+	@Autowired BatchInsertOperations batch;
 
 	@Before
 	@After

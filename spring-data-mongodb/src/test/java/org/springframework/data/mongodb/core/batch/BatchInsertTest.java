@@ -17,14 +17,15 @@ import org.springframework.data.mongodb.core.query.Query;
  */
 public class BatchInsertTest extends AbstractBatchConfiguration{
 
-	@Autowired BatchInsertOperations<Person> batch;
+	@Autowired
+	BatchInsertOperations batchPerson;
 	
 	@Test
 	public void testAddPersonWithoutFillBatchSize(){
 		
 		Person person = new Person("Joao");
 		
-		batch.insert(person);
+		batchPerson.insert(person);
 		
 		assertSizeOfPersonCollection(0);
 	}
@@ -37,14 +38,12 @@ public class BatchInsertTest extends AbstractBatchConfiguration{
 	}
 	
 	@Test
-	public void testAddPersonWithoutFillingBatchSize(){
+	public void testAddPersonFillingBatchSize(){
 		
 		List<Person> people = super.populateCollection(1000);
 		
-		batch.insert(people);
+		batch.insertAll(people);
 		
 		assertSizeOfPersonCollection(1000);
 	}
-	
-	
 }
