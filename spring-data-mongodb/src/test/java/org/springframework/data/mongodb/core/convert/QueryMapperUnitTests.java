@@ -553,6 +553,21 @@ public class QueryMapperUnitTests {
 		assertThat(inObject.get(0), is(instanceOf(com.mongodb.DBRef.class)));
 	}
 
+	/**
+	 * @see DATAMONGO-773
+	 */
+	@Test
+	public void queryMapperShouldBeAbleToProcessQueriesThatIncludeDbRefFields() {
+
+		BasicMongoPersistentEntity<?> persistentEntity = context.getPersistentEntity(WithDBRef.class);
+
+		Query qry = query(where("someString").is("abc"));
+		qry.fields().include("reference");
+
+		DBObject mappedFields = mapper.getMappedObject(qry.getFieldsObject(), persistentEntity);
+		assertThat(mappedFields, is(notNullValue()));
+	}
+
 	class IdWrapper {
 		Object id;
 	}
