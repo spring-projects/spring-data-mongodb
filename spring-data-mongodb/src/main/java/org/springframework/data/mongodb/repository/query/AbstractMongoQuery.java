@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 the original author or authors.
+ * Copyright 2010-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -79,21 +79,23 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 		MongoParameterAccessor accessor = new MongoParametersParameterAccessor(method, parameters);
 		Query query = createQuery(new ConvertingParameterAccessor(operations.getConverter(), accessor));
 
+		Object result = null;
+
 		if (method.isGeoNearQuery() && method.isPageQuery()) {
 
 			MongoParameterAccessor countAccessor = new MongoParametersParameterAccessor(method, parameters);
 			Query countQuery = createCountQuery(new ConvertingParameterAccessor(operations.getConverter(), countAccessor));
 
-			return new GeoNearExecution(accessor).execute(query, countQuery);
+			result = new GeoNearExecution(accessor).execute(query, countQuery);
 		} else if (method.isGeoNearQuery()) {
 			return new GeoNearExecution(accessor).execute(query);
 		} else if (method.isCollectionQuery()) {
-			return new CollectionExecution(accessor.getPageable()).execute(query);
+			result = new CollectionExecution(accessor.getPageable()).execute(query);
 		} else if (method.isPageQuery()) {
-			return new PagedExecution(accessor.getPageable()).execute(query);
+			result = new PagedExecution(accessor.getPageable()).execute(query);
+		} else {
+			result = new SingleEntityExecution(isCountQuery()).execute(query);
 		}
-
-		Object result = new SingleEntityExecution(isCountQuery()).execute(query);
 
 		if (result == null) {
 			return result;

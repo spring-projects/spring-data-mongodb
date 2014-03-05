@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 the original author or authors.
+ * Copyright 2010-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -68,6 +68,12 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	 */
 	@Query(value = "{ 'firstname' : ?0 }", fields = "{ 'firstname': 1, 'lastname': 1}")
 	List<Person> findByThePersonsFirstname(String firstname);
+
+	/**
+	 * @see DATAMONGO-871
+	 */
+	@Query(value = "{ 'firstname' : ?0 }")
+	Person[] findByThePersonsFirstnameAsArray(String firstname);
 
 	/**
 	 * Returns all {@link Person}s with a firstname matching the given one (*-wildcard supported).
