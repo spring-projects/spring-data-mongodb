@@ -16,7 +16,6 @@
 package org.springframework.data.mongodb.core.convert;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map.Entry;
 
@@ -76,6 +75,10 @@ public class UpdateMapper extends QueryMapper {
 	@Override
 	protected Entry<String, Object> getMappedObjectForField(Field field, Object rawValue) {
 
+		if (isDBObject(rawValue)) {
+			return createMapEntry(field, convertSimpleOrDBObject(rawValue, field.getPropertyEntity()));
+		}
+
 		if (!isUpdateModifier(rawValue)) {
 			return super.getMappedObjectForField(field, getMappedValue(field, rawValue));
 		}
@@ -100,7 +103,7 @@ public class UpdateMapper extends QueryMapper {
 			throw new IllegalArgumentException(String.format("Unable to map value of type '%s'!", rawValue.getClass()));
 		}
 
-		return Collections.singletonMap(field.getMappedKey(), value).entrySet().iterator().next();
+		return createMapEntry(field, value);
 	}
 
 	/*
