@@ -18,6 +18,8 @@ package org.springframework.data.mongodb.core.geo;
 /**
  * Interface for {@link Metric}s that can be applied to a base scale.
  * 
+ * @deprecated As of release 1.5, replaced by {@link org.springframework.data.geo.Metric}. This class is scheduled to be
+ *             removed in the next major release.
  * @author Oliver Gierke
  * @author Thomas Darimont
  */

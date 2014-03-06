@@ -14,14 +14,16 @@
  * limitations under the License.
  */
 package org.springframework.data.mongodb.core.geo;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-
 
 /**
  * Custom {@link Page} to carry the average distance retrieved from the {@link GeoResults} the {@link GeoPage} is set up
  * from.
  * 
+ * @deprecated As of release 1.5, replaced by {@link org.springframework.data.geo.GeoPage}. This class is scheduled to
+ *             be removed in the next major release.
  * @author Oliver Gierke
  * @author Thomas Darimont
  */

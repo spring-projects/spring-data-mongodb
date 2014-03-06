@@ -15,11 +15,16 @@
  */
 package org.springframework.data.mongodb.core.geo;
 
+import java.util.Arrays;
+import java.util.List;
+
 import org.springframework.data.annotation.PersistenceConstructor;
 
 /**
  * Represents a geospatial point value.
  * 
+ * @deprecated As of release 1.5, replaced by {@link org.springframework.data.geo.Point}. This class is scheduled to be
+ *             removed in the next major release.
  * @author Mark Pollack
  * @author Oliver Gierke
  * @author Thomas Darimont
@@ -32,7 +37,19 @@ public class Point extends org.springframework.data.geo.Point {
 		super(x, y);
 	}
 
-	public Point(Point point) {
+	public Point(org.springframework.data.geo.Point point) {
 		super(point);
+	}
+
+	public double[] asArray() {
+		return new double[] { getX(), getY() };
+	}
+
+	public List<Double> asList() {
+		return asList(this);
+	}
+
+	public static List<Double> asList(org.springframework.data.geo.Point point) {
+		return Arrays.asList(point.getX(), point.getY());
 	}
 }

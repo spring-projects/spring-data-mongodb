@@ -29,6 +29,7 @@ import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Shape;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
+import org.springframework.data.mongodb.core.geo.Sphere;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 
@@ -383,10 +384,21 @@ public class Criteria implements CriteriaDefinition {
 	 */
 	public Criteria withinSphere(Circle circle) {
 		Assert.notNull(circle);
-		criteria.put(
-				"$within",
-				new BasicDBObject("$centerSphere", Arrays.<Object> asList(Arrays.asList(circle.getCenter().getX(), circle
-						.getCenter().getY()), circle.getRadius().getNormalizedValue())));
+		criteria.put("$within", new Sphere(circle));
+		return this;
+	}
+
+	/**
+	 * @see Criteria#withinSphere(Circle)
+	 * @param circle
+	 * @return
+	 * @deprecated As of 1.5, Use {@link #withinSphere(Circle)}. This method is scheduled to be removed in the next major
+	 *             release.
+	 */
+	@Deprecated
+	public Criteria withinSphere(org.springframework.data.mongodb.core.geo.Circle circle) {
+		Assert.notNull(circle);
+		criteria.put("$within", new Sphere(circle));
 		return this;
 	}
 

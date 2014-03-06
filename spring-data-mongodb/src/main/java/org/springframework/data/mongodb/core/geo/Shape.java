@@ -20,6 +20,8 @@ import java.util.List;
 /**
  * Common interface for all shapes. Allows building MongoDB representations of them.
  * 
+ * @deprecated As of release 1.5, replaced by {@link org.springframework.data.geo.Shape}. This class is scheduled to be
+ *             removed in the next major release.
  * @author Oliver Gierke
  * @author Thomas Darimont
  */

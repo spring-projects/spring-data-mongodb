@@ -42,9 +42,6 @@ import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.mongodb.core.convert.MongoConverters.BigDecimalToStringConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.BigIntegerToStringConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.DBObjectToStringConverter;
-import org.springframework.data.mongodb.core.convert.MongoConverters.DboObjectToShapeConverter;
-import org.springframework.data.mongodb.core.convert.MongoConverters.ListToPointConverter;
-import org.springframework.data.mongodb.core.convert.MongoConverters.ShapeToDbObjectConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.StringToBigDecimalConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.StringToBigIntegerConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.StringToURLConverter;
@@ -97,6 +94,7 @@ public class CustomConversions {
 		this.customSimpleTypes = new HashSet<Class<?>>();
 		this.customReadTargetTypes = new ConcurrentHashMap<GenericConverter.ConvertiblePair, CacheValue>();
 
+<<<<<<< HEAD
 		List<Object> toRegister = new ArrayList<Object>();
 
 		// Add user provided converters to make sure they can override the defaults
@@ -116,6 +114,37 @@ public class CustomConversions {
 		toRegister.add(ListToPointConverter.INSTANCE);
 
 		for (Object c : toRegister) {
+=======
+		this.converters = new ArrayList<Object>();
+		this.converters.addAll(converters);
+		this.converters.add(CustomToStringConverter.INSTANCE);
+		this.converters.add(BigDecimalToStringConverter.INSTANCE);
+		this.converters.add(StringToBigDecimalConverter.INSTANCE);
+		this.converters.add(BigIntegerToStringConverter.INSTANCE);
+		this.converters.add(StringToBigIntegerConverter.INSTANCE);
+		this.converters.add(URLToStringConverter.INSTANCE);
+		this.converters.add(StringToURLConverter.INSTANCE);
+		this.converters.add(DBObjectToStringConverter.INSTANCE);
+
+		this.converters.add(GeoConverters.BoxToDbObjectConverter.INSTANCE);
+		this.converters.add(GeoConverters.PolygonToDbObjectConverter.INSTANCE);
+		this.converters.add(GeoConverters.CircleToDbObjectConverter.INSTANCE);
+		this.converters.add(GeoConverters.LegacyCircleToDbObjectConverter.INSTANCE);
+		this.converters.add(GeoConverters.SphereToDbObjectConverter.INSTANCE);
+
+		this.converters.add(GeoConverters.DbObjectToBoxConverter.INSTANCE);
+		this.converters.add(GeoConverters.DbObjectToPolygonConverter.INSTANCE);
+		this.converters.add(GeoConverters.DbObjectToCircleConverter.INSTANCE);
+		this.converters.add(GeoConverters.DbObjectToLegacyCircleConverter.INSTANCE);
+		this.converters.add(GeoConverters.DbObjectToSphereConverter.INSTANCE);
+
+		this.converters.add(GeoConverters.ListToPointConverter.INSTANCE);
+		this.converters.add(GeoConverters.PointToListConverter.INSTANCE);
+
+		this.converters.addAll(JodaTimeConverters.getConvertersToRegister());
+
+		for (Object c : this.converters) {
+>>>>>>> DATAMONGO-858 - Add support for common geospatial structures.
 			registerConversion(c);
 		}
 

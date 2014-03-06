@@ -22,14 +22,18 @@ import java.util.List;
 import org.springframework.data.geo.Point;
 
 /**
- * Represents a geospatial box value
+ * Represents a geospatial box value.
  * 
+ * @deprecated As of release 1.5, replaced by {@link org.springframework.data.geo.Box}. This class is scheduled to be
+ *             removed in the next major release.
  * @author Mark Pollack
  * @author Oliver Gierke
  * @author Thomas Darimont
  */
 @Deprecated
 public class Box extends org.springframework.data.geo.Box implements Shape {
+
+	public static final String COMMAND = "$box";
 
 	public Box(Point lowerLeft, Point upperRight) {
 		super(lowerLeft, upperRight);
@@ -53,11 +57,19 @@ public class Box extends org.springframework.data.geo.Box implements Shape {
 		return list;
 	}
 
+	public org.springframework.data.mongodb.core.geo.Point getLowerLeft() {
+		return new org.springframework.data.mongodb.core.geo.Point(getFirst());
+	}
+
+	public org.springframework.data.mongodb.core.geo.Point getUpperRight() {
+		return new org.springframework.data.mongodb.core.geo.Point(getSecond());
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.geo.Shape#getCommand()
 	 */
 	public String getCommand() {
-		return "$box";
+		return COMMAND;
 	}
 }

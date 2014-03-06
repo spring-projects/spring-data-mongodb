@@ -18,6 +18,8 @@ package org.springframework.data.mongodb.core.geo;
 /**
  * Calue object capturing some arbitrary object plus a distance.
  * 
+ * @deprecated As of release 1.5, replaced by {@link org.springframework.data.geo.GeoResult}. This class is scheduled to
+ *             be removed in the next major release.
  * @author Oliver Gierke
  * @author Thomas Darimont
  */

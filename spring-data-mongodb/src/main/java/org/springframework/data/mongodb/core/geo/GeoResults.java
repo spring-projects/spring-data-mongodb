@@ -25,6 +25,8 @@ import org.springframework.data.geo.Metric;
 /**
  * Value object to capture {@link GeoResult}s as well as the average distance they have.
  * 
+ * @deprecated As of release 1.5, replaced by {@link org.springframework.data.geo.GeoResults}. This class is scheduled
+ *             to be removed in the next major release.
  * @author Oliver Gierke
  * @author Thomas Darimont
  */

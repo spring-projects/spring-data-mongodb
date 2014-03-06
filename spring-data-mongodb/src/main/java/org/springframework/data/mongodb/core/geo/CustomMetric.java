@@ -18,6 +18,8 @@ package org.springframework.data.mongodb.core.geo;
 /**
  * Value object to create custom {@link Metric}s on the fly.
  * 
+ * @deprecated As of release 1.5, replaced by {@link org.springframework.data.geo.Metric}. This class is scheduled to be
+ *             removed in the next major release.
  * @author Oliver Gierke
  * @author Thomas Darimont
  */

@@ -364,6 +364,7 @@ public final class NearQuery {
 		}
 
 		dbObject.put("near", Arrays.asList(point.getX(), point.getY()));
+
 		dbObject.put("spherical", spherical);
 
 		return dbObject;

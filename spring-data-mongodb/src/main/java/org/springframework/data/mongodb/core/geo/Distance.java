@@ -21,6 +21,8 @@ import org.springframework.data.geo.Metrics;
 /**
  * Value object to represent distances in a given metric.
  * 
+ * @deprecated As of release 1.5, replaced by {@link org.springframework.data.geo.Distance}. This class is scheduled to
+ *             be removed in the next major release.
  * @author Oliver Gierke
  * @author Thomas Darimont
  */
