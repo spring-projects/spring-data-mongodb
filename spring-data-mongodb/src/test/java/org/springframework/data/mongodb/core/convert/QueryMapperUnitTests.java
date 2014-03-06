@@ -57,6 +57,7 @@ import com.mongodb.QueryBuilder;
  * @author Oliver Gierke
  * @author Patryk Wasik
  * @author Thomas Darimont
+ * @author Christoph Strobl
  */
 @RunWith(MockitoJUnitRunner.class)
 public class QueryMapperUnitTests {
@@ -501,6 +502,57 @@ public class QueryMapperUnitTests {
 		assertThat(idValuesAfter, is(idValuesBefore));
 	}
 
+	/**
+	 * @see DATAMONGO-821
+	 */
+	@Test
+	public void queryMapperShouldNotTryToMapDBRefListPropertyIfNestedInsideDBObjectWithinDBObject() {
+
+		DBObject queryObject = query(
+				where("referenceList").is(new BasicDBObject("$nested", new BasicDBObject("$keys", 0L)))).getQueryObject();
+
+		DBObject mappedObject = mapper.getMappedObject(queryObject, context.getPersistentEntity(WithDBRefList.class));
+		DBObject referenceObject = getAsDBObject(mappedObject, "referenceList");
+		DBObject nestedObject = getAsDBObject(referenceObject, "$nested");
+
+		assertThat(nestedObject, is((DBObject) new BasicDBObject("$keys", 0L)));
+	}
+
+	/**
+	 * @see DATAMONGO-821
+	 */
+	@Test
+	public void queryMapperShouldNotTryToMapDBRefPropertyIfNestedInsideDBObjectWithinDBObject() {
+
+		DBObject queryObject = query(where("reference").is(new BasicDBObject("$nested", new BasicDBObject("$keys", 0L))))
+				.getQueryObject();
+
+		DBObject mappedObject = mapper.getMappedObject(queryObject, context.getPersistentEntity(WithDBRef.class));
+		DBObject referenceObject = getAsDBObject(mappedObject, "reference");
+		DBObject nestedObject = getAsDBObject(referenceObject, "$nested");
+
+		assertThat(nestedObject, is((DBObject) new BasicDBObject("$keys", 0L)));
+	}
+
+	/**
+	 * @see DATAMONGO-821
+	 */
+	@Test
+	public void queryMapperShouldMapDBRefPropertyIfNestedInDBObject() {
+
+		Reference sample = new Reference();
+		sample.id = 321L;
+		DBObject queryObject = query(where("reference").is(new BasicDBObject("$in", Arrays.asList(sample))))
+				.getQueryObject();
+
+		DBObject mappedObject = mapper.getMappedObject(queryObject, context.getPersistentEntity(WithDBRef.class));
+
+		DBObject referenceObject = getAsDBObject(mappedObject, "reference");
+		BasicDBList inObject = getAsDBList(referenceObject, "$in");
+
+		assertThat(inObject.get(0), is(instanceOf(com.mongodb.DBRef.class)));
+	}
+
 	class IdWrapper {
 		Object id;
 	}
@@ -539,6 +591,12 @@ public class QueryMapperUnitTests {
 
 		String someString;
 		@DBRef Reference reference;
+	}
+
+	class WithDBRefList {
+
+		String someString;
+		@DBRef List<Reference> referenceList;
 	}
 
 	class Reference {
