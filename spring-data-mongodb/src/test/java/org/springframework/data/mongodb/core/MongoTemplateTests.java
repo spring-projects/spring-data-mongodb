@@ -2243,6 +2243,44 @@ public class MongoTemplateTests {
 		assertThat(template.findOne(q, VersionedPerson.class), nullValue());
 	}
 
+	/**
+	 * @see DATAMONGO-773
+	 */
+	@Test
+	public void testShouldSupportQueryWithIncludedDbRefField() {
+
+		Sample sample = new Sample("47111", "foo");
+		template.save(sample);
+
+		DocumentWithDBRefCollection doc = new DocumentWithDBRefCollection();
+		doc.id = "4711";
+		doc.dbRefProperty = sample;
+
+		template.save(doc);
+
+		Query qry = query(where("id").is(doc.id));
+		qry.fields().include("dbRefProperty");
+
+		List<DocumentWithDBRefCollection> result = template.find(qry, DocumentWithDBRefCollection.class);
+
+		assertThat(result, is(notNullValue()));
+		assertThat(result, hasSize(1));
+		assertThat(result.get(0), is(notNullValue()));
+		assertThat(result.get(0).dbRefProperty, is(notNullValue()));
+		assertThat(result.get(0).dbRefProperty.field, is(sample.field));
+	}
+
+	static class DocumentWithDBRefCollection {
+
+		@Id public String id;
+
+		@org.springframework.data.mongodb.core.mapping.DBRef//
+		public List<Sample> dbRefAnnotatedList;
+
+		@org.springframework.data.mongodb.core.mapping.DBRef//
+		public Sample dbRefProperty;
+	}
+
 	static class DocumentWithCollection {
 
 		@Id public String id;
@@ -2288,6 +2326,13 @@ public class MongoTemplateTests {
 
 		@Id String id;
 		String field;
+
+		public Sample() {}
+
+		public Sample(String id, String field) {
+			this.id = id;
+			this.field = field;
+		}
 	}
 
 	static class TestClass {
