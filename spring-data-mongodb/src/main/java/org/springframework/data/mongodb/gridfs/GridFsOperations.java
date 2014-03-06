@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2013 the original author or authors.
+ * Copyright 2011-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,6 +32,7 @@ import com.mongodb.gridfs.GridFSFile;
  * @author Oliver Gierke
  * @author Philipp Schneider
  * @author Thomas Darimont
+ * @author Martin Baumgartner
  */
 public interface GridFsOperations extends ResourcePatternResolver {
 
@@ -43,7 +44,25 @@ public interface GridFsOperations extends ResourcePatternResolver {
 	 * @return the {@link GridFSFile} just created
 	 */
 	GridFSFile store(InputStream content, String filename);
+	
+	/**
+	 * Stores the given content into a file with the given name.
+	 * 
+	 * @param content must not be {@literal null}.
+	 * @param metadata can be {@literal null}.
+	 * @return the {@link GridFSFile} just created
+	 */
+	GridFSFile store(InputStream content, Object metadata);
 
+	/**
+	 * Stores the given content into a file with the given name.
+	 * 
+	 * @param content must not be {@literal null}.
+	 * @param metadata can be {@literal null}.
+	 * @return the {@link GridFSFile} just created
+	 */
+	GridFSFile store(InputStream content, DBObject metadata);
+	
 	/**
 	 * Stores the given content into a file with the given name and content type.
 	 * 
