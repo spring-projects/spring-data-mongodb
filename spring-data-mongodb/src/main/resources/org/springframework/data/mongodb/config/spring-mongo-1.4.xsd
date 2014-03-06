@@ -17,7 +17,7 @@
 
 	<xsd:element name="mongo" type="mongoType">
 		<xsd:annotation>
-			<xsd:documentation source="org.springframework.data.mongodb.core.core.MongoFactoryBean"><![CDATA[
+			<xsd:documentation source="org.springframework.data.mongodb.core.MongoFactoryBean"><![CDATA[
 Defines a Mongo instance used for accessing MongoDB'.
 			]]></xsd:documentation>
 			<xsd:appinfo>
@@ -283,7 +283,7 @@ The name of the Mongo object that determines what server to monitor. (by default
 		<xsd:annotation>
 			<xsd:appinfo>
 				<tool:annotation kind="ref">
-					<tool:assignable-to type="org.springframework.data.mongodb.core.core.MongoTemplate"/>
+					<tool:assignable-to type="org.springframework.data.mongodb.core.MongoTemplate"/>
 				</tool:annotation>
 			</xsd:appinfo>
 		</xsd:annotation>
@@ -294,7 +294,7 @@ The name of the Mongo object that determines what server to monitor. (by default
 		<xsd:annotation>
 			<xsd:appinfo>
 				<tool:annotation kind="ref">
-					<tool:assignable-to type="org.springframework.data.mongodb.core.core.MongoFactoryBean"/>
+					<tool:assignable-to type="org.springframework.data.mongodb.core.MongoFactoryBean"/>
 				</tool:annotation>
 			</xsd:appinfo>
 		</xsd:annotation>
@@ -626,6 +626,12 @@ The reference to a Mongoconverter instance.
 							<tool:assignable-to type="org.springframework.data.mongodb.MongoDbFactory" />
 						</tool:annotation>
 					</xsd:appinfo>
+				</xsd:annotation>
+			</xsd:attribute>
+			<xsd:attribute name="bucket" type="xsd:string" use="optional">
+				<xsd:annotation>
+					<xsd:documentation><![CDATA[
+The GridFs bucket string.]]></xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
 		</xsd:complexType>

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 the original author or authors.
+ * Copyright 2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,17 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.core;
-
-import org.springframework.transaction.support.ResourceHolder;
-import org.springframework.transaction.support.ResourceHolderSynchronization;
+package org.springframework.data.mongodb.core.index;
 
 /**
+ * Geoposatial index type.
+ * 
+ * @author Laurent Canet
  * @author Oliver Gierke
+ * @since 1.4
  */
-class MongoSynchronization extends ResourceHolderSynchronization<ResourceHolder, Object> {
+public enum GeoSpatialIndexType {
 
-	public MongoSynchronization(ResourceHolder resourceHolder, Object resourceKey) {
-		super(resourceHolder, resourceKey);
-	}
+	/**
+	 * Simple 2-Dimensional index for legacy-format points.
+	 */
+	GEO_2D,
+
+	/**
+	 * 2D Index for GeoJSON-formatted data over a sphere. Only available in Mongo 2.4.
+	 */
+	GEO_2DSPHERE,
+
+	/**
+	 * An haystack index for grouping results over small results.
+	 */
+	GEO_HAYSTACK
 }

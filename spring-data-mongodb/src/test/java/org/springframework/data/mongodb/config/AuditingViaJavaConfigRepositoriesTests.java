@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,24 +19,26 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
+import java.net.UnknownHostException;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.AuditorAware;
 import org.springframework.data.mongodb.core.AuditablePerson;
-import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
-import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 import org.springframework.stereotype.Repository;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import com.mongodb.Mongo;
 import com.mongodb.MongoClient;
 
 /**
@@ -56,16 +58,16 @@ public class AuditingViaJavaConfigRepositoriesTests {
 	@Configuration
 	@EnableMongoAuditing(auditorAwareRef = "auditorProvider")
 	@EnableMongoRepositories(basePackageClasses = AuditablePersonRepository.class, considerNestedRepositories = true)
-	static class Config {
+	static class Config extends AbstractMongoConfiguration {
 
-		@Bean
-		public MongoOperations mongoTemplate() throws Exception {
-			return new MongoTemplate(new SimpleMongoDbFactory(new MongoClient(), "database"));
+		@Override
+		protected String getDatabaseName() {
+			return "database";
 		}
 
-		@Bean
-		public MongoMappingContext mappingContext() {
-			return new MongoMappingContext();
+		@Override
+		public Mongo mongo() throws Exception {
+			return new MongoClient();
 		}
 
 		@Bean
@@ -81,6 +83,9 @@ public class AuditingViaJavaConfigRepositoriesTests {
 		this.auditor = auditablePersonRepository.save(new AuditablePerson("auditor"));
 	}
 
+	/**
+	 * @DATAMONGO-792
+	 */
 	@Test
 	public void basicAuditing() {
 
@@ -89,13 +94,51 @@ public class AuditingViaJavaConfigRepositoriesTests {
 		AuditablePerson user = new AuditablePerson("user");
 
 		AuditablePerson savedUser = auditablePersonRepository.save(user);
-		System.out.println(savedUser);
 
 		AuditablePerson createdBy = savedUser.getCreatedBy();
 		assertThat(createdBy, is(notNullValue()));
 		assertThat(createdBy.getFirstname(), is(this.auditor.getFirstname()));
 	}
 
+	/**
+	 * @see DATAMONGO-843
+	 */
+	@Test
+	@SuppressWarnings("resource")
+	public void auditingUsesFallbackMappingContextIfNoneConfiguredWithRepositories() {
+		new AnnotationConfigApplicationContext(SimpleConfigWithRepositories.class);
+	}
+
+	/**
+	 * @see DATAMONGO-843
+	 */
+	@Test
+	@SuppressWarnings("resource")
+	public void auditingUsesFallbackMappingContextIfNoneConfigured() {
+		new AnnotationConfigApplicationContext(SimpleConfig.class);
+	}
+
 	@Repository
 	static interface AuditablePersonRepository extends MongoRepository<AuditablePerson, String> {}
+
+	@Configuration
+	@EnableMongoRepositories
+	@EnableMongoAuditing
+	static class SimpleConfigWithRepositories {
+
+		@Bean
+		public MongoTemplate mongoTemplate() throws UnknownHostException {
+			return new MongoTemplate(new SimpleMongoDbFactory(new MongoClient(), "database"));
+		}
+	}
+
+	@Configuration
+	@EnableMongoAuditing
+	static class SimpleConfig {
+
+		@Bean
+		public MongoTemplate mongoTemplate() throws UnknownHostException {
+			return new MongoTemplate(new SimpleMongoDbFactory(new MongoClient(), "database"));
+		}
+	}
 }

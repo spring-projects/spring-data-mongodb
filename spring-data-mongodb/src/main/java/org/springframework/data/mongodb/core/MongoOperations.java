@@ -1,6 +1,6 @@
 /*
- * Copyright 2010-2013 the original author or authors.
- *
+ * Copyright 2011-2014 the original author or authors.
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -468,10 +468,32 @@ public interface MongoOperations {
 	 */
 	<T> T findOne(Query query, Class<T> entityClass, String collectionName);
 
+	/**
+	 * Determine result of given {@link Query} contains at least one element.
+	 * 
+	 * @param query the {@link Query} class that specifies the criteria used to find a record.
+	 * @param collectionName name of the collection to check for objects.
+	 * @return
+	 */
 	boolean exists(Query query, String collectionName);
 
+	/**
+	 * Determine result of given {@link Query} contains at least one element.
+	 * 
+	 * @param query the {@link Query} class that specifies the criteria used to find a record.
+	 * @param entityClass the parameterized type.
+	 * @return
+	 */
 	boolean exists(Query query, Class<?> entityClass);
 
+	/**
+	 * Determine result of given {@link Query} contains at least one element.
+	 * 
+	 * @param query the {@link Query} class that specifies the criteria used to find a record.
+	 * @param entityClass the parameterized type.
+	 * @param collectionName name of the collection to check for objects.
+	 * @return
+	 */
 	boolean exists(Query query, Class<?> entityClass, String collectionName);
 
 	/**
@@ -529,12 +551,58 @@ public interface MongoOperations {
 	 */
 	<T> T findById(Object id, Class<T> entityClass, String collectionName);
 
+	/**
+	 * Triggers <a href="http://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify<a/>
+	 * to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query}.
+	 * 
+	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
+	 *          fields specification.
+	 * @param update the {@link Update} to apply on matching documents.
+	 * @param entityClass the parameterized type.
+	 * @return
+	 */
 	<T> T findAndModify(Query query, Update update, Class<T> entityClass);
 
+	/**
+	 * Triggers <a href="http://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify<a/>
+	 * to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query}.
+	 * 
+	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
+	 *          fields specification.
+	 * @param update the {@link Update} to apply on matching documents.
+	 * @param entityClass the parameterized type.
+	 * @param collectionName the collection to query.
+	 * @return
+	 */
 	<T> T findAndModify(Query query, Update update, Class<T> entityClass, String collectionName);
 
+	/**
+	 * Triggers <a href="http://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify<a/>
+	 * to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query} taking
+	 * {@link FindAndModifyOptions} into account.
+	 * 
+	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
+	 *          fields specification.
+	 * @param update the {@link Update} to apply on matching documents.
+	 * @param options the {@link FindAndModifyOptions} holding additional information.
+	 * @param entityClass the parameterized type.
+	 * @return
+	 */
 	<T> T findAndModify(Query query, Update update, FindAndModifyOptions options, Class<T> entityClass);
 
+	/**
+	 * Triggers <a href="http://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify<a/>
+	 * to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query} taking
+	 * {@link FindAndModifyOptions} into account.
+	 * 
+	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
+	 *          fields specification.
+	 * @param update the {@link Update} to apply on matching documents.
+	 * @param options the {@link FindAndModifyOptions} holding additional information.
+	 * @param entityClass the parameterized type.
+	 * @param collectionName the collection to query.
+	 * @return
+	 */
 	<T> T findAndModify(Query query, Update update, FindAndModifyOptions options, Class<T> entityClass,
 			String collectionName);
 
@@ -598,9 +666,9 @@ public interface MongoOperations {
 	 * <p/>
 	 * If you object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
 	 * String then MongoDB ObjectId will be used to populate that string. Otherwise, the conversion from ObjectId to your
-	 * property type will be handled by Spring's BeanWrapper class that leverages Spring 3.0's new Type Conversion API.
-	 * See <a href="http://static.springsource.org/spring/docs/3.0.x/reference/validation.html#core-convert">Spring 3 Type
-	 * Conversion"</a> for more details.
+	 * property type will be handled by Spring's BeanWrapper class that leverages Type Conversion API. See <a
+	 * href="http://docs.spring.io/spring/docs/current/spring-framework-reference/html/validation.html#core-convert"
+	 * >Spring's Type Conversion"</a> for more details.
 	 * <p/>
 	 * <p/>
 	 * Insert is used to initially store the object into the database. To update an existing object use the save method.
@@ -655,9 +723,9 @@ public interface MongoOperations {
 	 * <p/>
 	 * If you object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
 	 * String then MongoDB ObjectId will be used to populate that string. Otherwise, the conversion from ObjectId to your
-	 * property type will be handled by Spring's BeanWrapper class that leverages Spring 3.0's new Type Conversion API.
-	 * See <a href="http://static.springsource.org/spring/docs/3.0.x/reference/validation.html#core-convert">Spring 3 Type
-	 * Conversion"</a> for more details.
+	 * property type will be handled by Spring's BeanWrapper class that leverages Type Conversion API. See <a
+	 * href="http://docs.spring.io/spring/docs/current/spring-framework-reference/html/validation.html#core-convert"
+	 * >Spring's Type Conversion"</a> for more details.
 	 * 
 	 * @param objectToSave the object to store in the collection
 	 */
@@ -672,9 +740,9 @@ public interface MongoOperations {
 	 * <p/>
 	 * If you object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
 	 * String then MongoDB ObjectId will be used to populate that string. Otherwise, the conversion from ObjectId to your
-	 * property type will be handled by Spring's BeanWrapper class that leverages Spring 3.0's new Type Cobnversion API.
-	 * See <a href="http://static.springsource.org/spring/docs/3.0.x/reference/validation.html#core-convert">Spring 3 Type
-	 * Conversion"</a> for more details.
+	 * property type will be handled by Spring's BeanWrapper class that leverages Type Cobnversion API. See <a
+	 * http://docs.spring.io/spring/docs/current/spring-framework-reference/html/validation.html#core-convert">Spring's
+	 * Type Conversion"</a> for more details.
 	 * 
 	 * @param objectToSave the object to store in the collection
 	 * @param collectionName name of the collection to store the object in
@@ -814,6 +882,14 @@ public interface MongoOperations {
 	 */
 	void remove(Query query, Class<?> entityClass);
 
+	/**
+	 * Remove all documents that match the provided query document criteria from the the collection used to store the
+	 * entityClass. The Class parameter is also used to help convert the Id of the object if it is present in the query.
+	 * 
+	 * @param query
+	 * @param entityClass
+	 * @param collectionName
+	 */
 	void remove(Query query, Class<?> entityClass, String collectionName);
 
 	/**

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 the original author or authors.
+ * Copyright 2012-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,10 @@
  */
 package org.springframework.data.mongodb.config;
 
-import org.springframework.beans.factory.config.BeanDefinition;
+import static org.springframework.data.config.ParsingUtils.*;
+import static org.springframework.data.mongodb.config.BeanNames.*;
+import static org.springframework.data.mongodb.config.MappingMongoConverterParser.*;
+
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.xml.AbstractSingleBeanDefinitionParser;
@@ -60,21 +63,23 @@ public class MongoAuditingBeanDefinitionParser extends AbstractSingleBeanDefinit
 
 		BeanDefinitionRegistry registry = parserContext.getRegistry();
 
-		if (!registry.containsBeanDefinition(BeanNames.IS_NEW_STRATEGY_FACTORY)) {
+		String isNewStrategyFactoryName = IS_NEW_STRATEGY_FACTORY_BEAN_NAME;
+		String mappingContextName = MAPPING_CONTEXT_BEAN_NAME;
 
-			String mappingContextName = BeanNames.MAPPING_CONTEXT;
+		if (!registry.containsBeanDefinition(isNewStrategyFactoryName)) {
 
-			if (!registry.containsBeanDefinition(BeanNames.MAPPING_CONTEXT)) {
-				mappingContextName = MappingMongoConverterParser.potentiallyCreateMappingContext(element, parserContext, null,
-						BeanNames.DEFAULT_CONVERTER_BEAN_NAME);
+			if (!registry.containsBeanDefinition(mappingContextName)) {
+				mappingContextName = potentiallyCreateMappingContext(element, parserContext, null, null);
 			}
 
-			MappingMongoConverterParser.createIsNewStrategyFactoryBeanDefinition(mappingContextName, parserContext, element);
+			isNewStrategyFactoryName = createIsNewStrategyFactoryBeanDefinition(mappingContextName, parserContext, element);
 		}
 
-		BeanDefinitionParser parser = new IsNewAwareAuditingHandlerBeanDefinitionParser(BeanNames.IS_NEW_STRATEGY_FACTORY);
-		BeanDefinition handlerBeanDefinition = parser.parse(element, parserContext);
+		IsNewAwareAuditingHandlerBeanDefinitionParser parser = new IsNewAwareAuditingHandlerBeanDefinitionParser(
+				isNewStrategyFactoryName);
+		parser.parse(element, parserContext);
 
-		builder.addConstructorArgValue(handlerBeanDefinition);
+		builder.addConstructorArgValue(getObjectFactoryBeanDefinition(parser.getResolvedBeanName(),
+				parserContext.extractSource(element)));
 	}
 }

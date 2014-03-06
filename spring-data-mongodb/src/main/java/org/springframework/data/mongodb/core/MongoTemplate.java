@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 the original author or authors.
+ * Copyright 2010-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -127,6 +127,7 @@ import com.mongodb.util.JSONParseException;
  * @author Sebastian Herold
  * @author Thomas Darimont
  * @author Chuong Ngo
+ * @author Christoph Strobl
  */
 public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
@@ -369,12 +370,12 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 		Assert.notNull(query);
 
-		DBObject queryObject = query.getQueryObject();
+		DBObject queryObject = queryMapper.getMappedObject(query.getQueryObject(), null);
 		DBObject sortObject = query.getSortObject();
 		DBObject fieldsObject = query.getFieldsObject();
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug(String.format("Executing query: %s sort: %s fields: %s in collection: $s",
+			LOGGER.debug(String.format("Executing query: %s sort: %s fields: %s in collection: %s",
 					serializeToJsonSafely(queryObject), sortObject, fieldsObject, collectionName));
 		}
 
@@ -996,6 +997,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 				MongoPersistentEntity<?> entity = entityClass == null ? null : getPersistentEntity(entityClass);
 
+				increaseVersionForUpdateIfNecessary(entity, update);
+
 				DBObject queryObj = query == null ? new BasicDBObject() : queryMapper.getMappedObject(query.getQueryObject(),
 						entity);
 				DBObject updateObj = update == null ? new BasicDBObject() : updateMapper.getMappedObject(
@@ -1013,7 +1016,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 						: collection.update(queryObj, updateObj, upsert, multi, writeConcernToUse);
 
 				if (entity != null && entity.hasVersionProperty() && !multi) {
-					if (writeResult.getN() == 0) {
+					if (writeResult.getN() == 0 && dbObjectContainsVersionProperty(queryObj, entity)) {
 						throw new OptimisticLockingFailureException("Optimistic lock exception on saving entity: "
 								+ updateObj.toMap().toString() + " to collection " + collectionName);
 					}
@@ -1023,6 +1026,25 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				return writeResult;
 			}
 		});
+	}
+
+	private void increaseVersionForUpdateIfNecessary(MongoPersistentEntity<?> persistentEntity, Update update) {
+
+		if (persistentEntity != null && persistentEntity.hasVersionProperty()) {
+			String versionFieldName = persistentEntity.getVersionProperty().getFieldName();
+			if (!update.modifies(versionFieldName)) {
+				update.inc(versionFieldName, 1L);
+			}
+		}
+	}
+
+	private boolean dbObjectContainsVersionProperty(DBObject dbObject, MongoPersistentEntity<?> persistentEntity) {
+
+		if (persistentEntity == null || !persistentEntity.hasVersionProperty()) {
+			return false;
+		}
+
+		return dbObject.containsField(persistentEntity.getVersionProperty().getFieldName());
 	}
 
 	public void remove(Object object) {
@@ -1167,6 +1189,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 	public <T> MapReduceResults<T> mapReduce(Query query, String inputCollectionName, String mapFunction,
 			String reduceFunction, MapReduceOptions mapReduceOptions, Class<T> entityClass) {
+
 		String mapFunc = replaceWithResourceIfNecessary(mapFunction);
 		String reduceFunc = replaceWithResourceIfNecessary(reduceFunction);
 		DBCollection inputCollection = getCollection(inputCollectionName);
@@ -1191,12 +1214,12 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		MapReduceOutput mapReduceOutput = new MapReduceOutput(inputCollection, commandObject, commandResult);
 		List<T> mappedResults = new ArrayList<T>();
 		DbObjectCallback<T> callback = new ReadDbObjectCallback<T>(mongoConverter, entityClass);
+
 		for (DBObject dbObject : mapReduceOutput.results()) {
 			mappedResults.add(callback.doWith(dbObject));
 		}
 
-		MapReduceResults<T> mapReduceResult = new MapReduceResults<T>(mappedResults, commandResult);
-		return mapReduceResult;
+		return new MapReduceResults<T>(mappedResults, commandResult);
 	}
 
 	public <T> GroupByResults<T> group(String inputCollectionName, GroupBy groupBy, Class<T> entityClass) {
@@ -1250,15 +1273,14 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 		@SuppressWarnings("unchecked")
 		Iterable<DBObject> resultSet = (Iterable<DBObject>) commandResult.get("retval");
-
 		List<T> mappedResults = new ArrayList<T>();
 		DbObjectCallback<T> callback = new ReadDbObjectCallback<T>(mongoConverter, entityClass);
+
 		for (DBObject dbObject : resultSet) {
 			mappedResults.add(callback.doWith(dbObject));
 		}
-		GroupByResults<T> groupByResult = new GroupByResults<T>(mappedResults, commandResult);
-		return groupByResult;
 
+		return new GroupByResults<T>(mappedResults, commandResult);
 	}
 
 	@Override
@@ -1551,8 +1573,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
 
-		DBObject mappedUpdate = queryMapper.getMappedObject(update.getUpdateObject(), entity);
+		increaseVersionForUpdateIfNecessary(entity, update);
+
 		DBObject mappedQuery = queryMapper.getMappedObject(query, entity);
+		DBObject mappedUpdate = updateMapper.getMappedObject(update.getUpdateObject(), entity);
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug("findAndModify using query: " + mappedQuery + " fields: " + fields + " sort: " + sort

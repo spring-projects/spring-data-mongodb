@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2013 the original author or authors.
+ * Copyright 2011-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,13 +17,13 @@ package org.springframework.data.mongodb.core.convert;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,6 +56,7 @@ import org.springframework.util.Assert;
  * .
  * 
  * @author Oliver Gierke
+ * @author Thomas Darimont
  */
 public class CustomConversions {
 
@@ -67,7 +68,7 @@ public class CustomConversions {
 	private final Set<ConvertiblePair> writingPairs;
 	private final Set<Class<?>> customSimpleTypes;
 	private final SimpleTypeHolder simpleTypeHolder;
-	private final Map<Class<?>, HashMap<Class<?>, CacheValue>> cache;
+	private final ConcurrentMap<ConvertiblePair, CacheValue> customReadTargetTypes;
 
 	private final List<Object> converters;
 
@@ -90,7 +91,7 @@ public class CustomConversions {
 		this.readingPairs = new LinkedHashSet<ConvertiblePair>();
 		this.writingPairs = new LinkedHashSet<ConvertiblePair>();
 		this.customSimpleTypes = new HashSet<Class<?>>();
-		this.cache = new HashMap<Class<?>, HashMap<Class<?>, CacheValue>>();
+		this.customReadTargetTypes = new ConcurrentHashMap<GenericConverter.ConvertiblePair, CacheValue>();
 
 		this.converters = new ArrayList<Object>();
 		this.converters.addAll(converters);
@@ -195,25 +196,25 @@ public class CustomConversions {
 	 * 
 	 * @param pair
 	 */
-	private void register(ConverterRegistration context) {
+	private void register(ConverterRegistration converterRegistration) {
 
-		ConvertiblePair pair = context.getConvertiblePair();
+		ConvertiblePair pair = converterRegistration.getConvertiblePair();
 
-		if (context.isReading()) {
+		if (converterRegistration.isReading()) {
 
 			readingPairs.add(pair);
 
-			if (LOG.isWarnEnabled() && !context.isSimpleSourceType()) {
+			if (LOG.isWarnEnabled() && !converterRegistration.isSimpleSourceType()) {
 				LOG.warn(String.format(READ_CONVERTER_NOT_SIMPLE, pair.getSourceType(), pair.getTargetType()));
 			}
 		}
 
-		if (context.isWriting()) {
+		if (converterRegistration.isWriting()) {
 
 			writingPairs.add(pair);
 			customSimpleTypes.add(pair.getSourceType());
 
-			if (LOG.isWarnEnabled() && !context.isSimpleTargetType()) {
+			if (LOG.isWarnEnabled() && !converterRegistration.isSimpleTargetType()) {
 				LOG.warn(String.format(WRITE_CONVERTER_NOT_SIMPLE, pair.getSourceType(), pair.getTargetType()));
 			}
 		}
@@ -223,11 +224,11 @@ public class CustomConversions {
 	 * Returns the target type to convert to in case we have a custom conversion registered to convert the given source
 	 * type into a Mongo native one.
 	 * 
-	 * @param source must not be {@literal null}
+	 * @param sourceType must not be {@literal null}
 	 * @return
 	 */
-	public Class<?> getCustomWriteTarget(Class<?> source) {
-		return getCustomWriteTarget(source, null);
+	public Class<?> getCustomWriteTarget(Class<?> sourceType) {
+		return getCustomWriteTarget(sourceType, null);
 	}
 
 	/**
@@ -235,72 +236,78 @@ public class CustomConversions {
 	 * oth the given expected type though. If {@code expectedTargetType} is {@literal null} we will simply return the
 	 * first target type matching or {@literal null} if no conversion can be found.
 	 * 
-	 * @param source must not be {@literal null}
-	 * @param expectedTargetType
+	 * @param sourceType must not be {@literal null}
+	 * @param requestedTargetType
 	 * @return
 	 */
-	public Class<?> getCustomWriteTarget(Class<?> source, Class<?> expectedTargetType) {
+	public Class<?> getCustomWriteTarget(Class<?> sourceType, Class<?> requestedTargetType) {
 
-		Assert.notNull(source);
-		return getCustomTarget(source, expectedTargetType, writingPairs);
+		Assert.notNull(sourceType);
+
+		return getCustomTarget(sourceType, requestedTargetType, writingPairs);
 	}
 
 	/**
 	 * Returns whether we have a custom conversion registered to write into a Mongo native type. The returned type might
-	 * be a subclass oth the given expected type though.
+	 * be a subclass of the given expected type though.
 	 * 
-	 * @param source must not be {@literal null}
+	 * @param sourceType must not be {@literal null}
 	 * @return
 	 */
-	public boolean hasCustomWriteTarget(Class<?> source) {
-		return hasCustomWriteTarget(source, null);
+	public boolean hasCustomWriteTarget(Class<?> sourceType) {
+
+		Assert.notNull(sourceType);
+		return hasCustomWriteTarget(sourceType, null);
 	}
 
 	/**
 	 * Returns whether we have a custom conversion registered to write an object of the given source type into an object
 	 * of the given Mongo native target type.
 	 * 
-	 * @param source must not be {@literal null}.
-	 * @param expectedTargetType
+	 * @param sourceType must not be {@literal null}.
+	 * @param requestedTargetType
 	 * @return
 	 */
-	public boolean hasCustomWriteTarget(Class<?> source, Class<?> expectedTargetType) {
-		return getCustomWriteTarget(source, expectedTargetType) != null;
+	public boolean hasCustomWriteTarget(Class<?> sourceType, Class<?> requestedTargetType) {
+
+		Assert.notNull(sourceType);
+		return getCustomWriteTarget(sourceType, requestedTargetType) != null;
 	}
 
 	/**
 	 * Returns whether we have a custom conversion registered to read the given source into the given target type.
 	 * 
-	 * @param source must not be {@literal null}
-	 * @param expectedTargetType must not be {@literal null}
+	 * @param sourceType must not be {@literal null}
+	 * @param requestedTargetType must not be {@literal null}
 	 * @return
 	 */
-	public boolean hasCustomReadTarget(Class<?> source, Class<?> expectedTargetType) {
+	public boolean hasCustomReadTarget(Class<?> sourceType, Class<?> requestedTargetType) {
 
-		Assert.notNull(source);
-		Assert.notNull(expectedTargetType);
+		Assert.notNull(sourceType);
+		Assert.notNull(requestedTargetType);
 
-		return getCustomReadTarget(source, expectedTargetType) != null;
+		return getCustomReadTarget(sourceType, requestedTargetType) != null;
 	}
 
 	/**
 	 * Inspects the given {@link ConvertiblePair} for ones that have a source compatible type as source. Additionally
-	 * checks assignabilty of the target type if one is given.
+	 * checks assignability of the target type if one is given.
 	 * 
-	 * @param source must not be {@literal null}
-	 * @param expectedTargetType
-	 * @param pairs must not be {@literal null}
+	 * @param sourceType must not be {@literal null}.
+	 * @param requestedTargetType can be {@literal null}.
+	 * @param pairs must not be {@literal null}.
 	 * @return
 	 */
-	private static Class<?> getCustomTarget(Class<?> source, Class<?> expectedTargetType, Iterable<ConvertiblePair> pairs) {
+	private static Class<?> getCustomTarget(Class<?> sourceType, Class<?> requestedTargetType,
+			Iterable<ConvertiblePair> pairs) {
 
-		Assert.notNull(source);
+		Assert.notNull(sourceType);
 		Assert.notNull(pairs);
 
 		for (ConvertiblePair typePair : pairs) {
-			if (typePair.getSourceType().isAssignableFrom(source)) {
+			if (typePair.getSourceType().isAssignableFrom(sourceType)) {
 				Class<?> targetType = typePair.getTargetType();
-				if (expectedTargetType == null || targetType.isAssignableFrom(expectedTargetType)) {
+				if (requestedTargetType == null || targetType.isAssignableFrom(requestedTargetType)) {
 					return targetType;
 				}
 			}
@@ -309,27 +316,33 @@ public class CustomConversions {
 		return null;
 	}
 
-	private Class<?> getCustomReadTarget(Class<?> source, Class<?> expectedTargetType) {
+	/**
+	 * Returns the actual target type for the given {@code sourceType} and {@code requestedTargetType}. Note that the
+	 * returned {@link Class} could be an assignable type to the given {@code requestedTargetType}.
+	 * 
+	 * @param sourceType must not be {@literal null}.
+	 * @param requestedTargetType can be {@literal null}.
+	 * @return
+	 */
+	private Class<?> getCustomReadTarget(Class<?> sourceType, Class<?> requestedTargetType) {
 
-		Class<?> type = expectedTargetType == null ? PlaceholderType.class : expectedTargetType;
+		Assert.notNull(sourceType);
 
-		Map<Class<?>, CacheValue> map;
-		CacheValue toReturn;
-
-		if ((map = cache.get(source)) == null || (toReturn = map.get(type)) == null) {
-
-			Class<?> target = getCustomTarget(source, type, readingPairs);
-
-			if (cache.get(source) == null) {
-				cache.put(source, new HashMap<Class<?>, CacheValue>());
-			}
-
-			Map<Class<?>, CacheValue> value = cache.get(source);
-			toReturn = target == null ? CacheValue.NULL : new CacheValue(target);
-			value.put(type, toReturn);
+		if (requestedTargetType == null) {
+			return null;
 		}
 
-		return toReturn.clazz;
+		ConvertiblePair lookupKey = new ConvertiblePair(sourceType, requestedTargetType);
+		CacheValue readTargetTypeValue = customReadTargetTypes.get(lookupKey);
+
+		if (readTargetTypeValue != null) {
+			return readTargetTypeValue.getType();
+		}
+
+		readTargetTypeValue = CacheValue.of(getCustomTarget(sourceType, requestedTargetType, readingPairs));
+		CacheValue cacheValue = customReadTargetTypes.putIfAbsent(lookupKey, readTargetTypeValue);
+
+		return cacheValue != null ? cacheValue.getType() : readTargetTypeValue.getType();
 	}
 
 	@WritingConverter
@@ -338,8 +351,10 @@ public class CustomConversions {
 		INSTANCE;
 
 		public Set<ConvertiblePair> getConvertibleTypes() {
+
 			ConvertiblePair localeToString = new ConvertiblePair(Locale.class, String.class);
 			ConvertiblePair booleanToString = new ConvertiblePair(Character.class, String.class);
+
 			return new HashSet<ConvertiblePair>(Arrays.asList(localeToString, booleanToString));
 		}
 
@@ -349,28 +364,28 @@ public class CustomConversions {
 	}
 
 	/**
-	 * Placeholder type to allow registering not-found values in the converter cache.
-	 * 
-	 * @author Patryk Wasik
-	 * @author Oliver Gierke
-	 */
-	private static class PlaceholderType {
-
-	}
-
-	/**
 	 * Wrapper to safely store {@literal null} values in the type cache.
 	 * 
 	 * @author Patryk Wasik
 	 * @author Oliver Gierke
+	 * @author Thomas Darimont
 	 */
 	private static class CacheValue {
 
-		public static final CacheValue NULL = new CacheValue(null);
-		private final Class<?> clazz;
+		private static final CacheValue ABSENT = new CacheValue(null);
 
-		public CacheValue(Class<?> clazz) {
-			this.clazz = clazz;
+		private final Class<?> type;
+
+		public CacheValue(Class<?> type) {
+			this.type = type;
+		}
+
+		public Class<?> getType() {
+			return type;
+		}
+
+		static CacheValue of(Class<?> type) {
+			return type == null ? ABSENT : new CacheValue(type);
 		}
 	}
 }

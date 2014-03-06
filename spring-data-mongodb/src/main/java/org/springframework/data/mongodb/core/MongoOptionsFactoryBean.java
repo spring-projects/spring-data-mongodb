@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 the original author or authors.
+ * Copyright 2010-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,26 +30,27 @@ import com.mongodb.MongoOptions;
  * @author Mike Saavedra
  * @author Thomas Darimont
  */
+@SuppressWarnings("deprecation")
 public class MongoOptionsFactoryBean implements FactoryBean<MongoOptions>, InitializingBean {
 
-	@SuppressWarnings("deprecation")//
-	private final MongoOptions MONGO_OPTIONS = new MongoOptions();
+	private static final MongoOptions DEFAULT_MONGO_OPTIONS = new MongoOptions();
 
-	private int connectionsPerHost = MONGO_OPTIONS.connectionsPerHost;
-
-	private int threadsAllowedToBlockForConnectionMultiplier = MONGO_OPTIONS.threadsAllowedToBlockForConnectionMultiplier;
-	private int maxWaitTime = MONGO_OPTIONS.maxWaitTime;
-	private int connectTimeout = MONGO_OPTIONS.connectTimeout;
-	private int socketTimeout = MONGO_OPTIONS.socketTimeout;
-	private boolean socketKeepAlive = MONGO_OPTIONS.socketKeepAlive;
-	private boolean autoConnectRetry = MONGO_OPTIONS.autoConnectRetry;
-	private long maxAutoConnectRetryTime = MONGO_OPTIONS.maxAutoConnectRetryTime;
-	private int writeNumber;
-	private int writeTimeout;
-	private boolean writeFsync;
-	@SuppressWarnings("deprecation") private boolean slaveOk = MONGO_OPTIONS.slaveOk;
+	private int connectionsPerHost = DEFAULT_MONGO_OPTIONS.connectionsPerHost;
+	private int threadsAllowedToBlockForConnectionMultiplier = DEFAULT_MONGO_OPTIONS.threadsAllowedToBlockForConnectionMultiplier;
+	private int maxWaitTime = DEFAULT_MONGO_OPTIONS.maxWaitTime;
+	private int connectTimeout = DEFAULT_MONGO_OPTIONS.connectTimeout;
+	private int socketTimeout = DEFAULT_MONGO_OPTIONS.socketTimeout;
+	private boolean socketKeepAlive = DEFAULT_MONGO_OPTIONS.socketKeepAlive;
+	private boolean autoConnectRetry = DEFAULT_MONGO_OPTIONS.autoConnectRetry;
+	private long maxAutoConnectRetryTime = DEFAULT_MONGO_OPTIONS.maxAutoConnectRetryTime;
+	private int writeNumber = DEFAULT_MONGO_OPTIONS.w;
+	private int writeTimeout = DEFAULT_MONGO_OPTIONS.wtimeout;
+	private boolean writeFsync = DEFAULT_MONGO_OPTIONS.fsync;
+	private boolean slaveOk = DEFAULT_MONGO_OPTIONS.slaveOk;
 	private boolean ssl;
 	private SSLSocketFactory sslSocketFactory;
+
+	private MongoOptions options;
 
 	/**
 	 * Configures the maximum number of connections allowed per host until we will block.
@@ -197,24 +198,28 @@ public class MongoOptionsFactoryBean implements FactoryBean<MongoOptions>, Initi
 	 * (non-Javadoc)
 	 * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
 	 */
-	@SuppressWarnings("deprecation")
 	public void afterPropertiesSet() {
 
-		MONGO_OPTIONS.connectionsPerHost = connectionsPerHost;
-		MONGO_OPTIONS.threadsAllowedToBlockForConnectionMultiplier = threadsAllowedToBlockForConnectionMultiplier;
-		MONGO_OPTIONS.maxWaitTime = maxWaitTime;
-		MONGO_OPTIONS.connectTimeout = connectTimeout;
-		MONGO_OPTIONS.socketTimeout = socketTimeout;
-		MONGO_OPTIONS.socketKeepAlive = socketKeepAlive;
-		MONGO_OPTIONS.autoConnectRetry = autoConnectRetry;
-		MONGO_OPTIONS.maxAutoConnectRetryTime = maxAutoConnectRetryTime;
-		MONGO_OPTIONS.slaveOk = slaveOk;
-		MONGO_OPTIONS.w = writeNumber;
-		MONGO_OPTIONS.wtimeout = writeTimeout;
-		MONGO_OPTIONS.fsync = writeFsync;
+		MongoOptions options = new MongoOptions();
+
+		options.connectionsPerHost = connectionsPerHost;
+		options.threadsAllowedToBlockForConnectionMultiplier = threadsAllowedToBlockForConnectionMultiplier;
+		options.maxWaitTime = maxWaitTime;
+		options.connectTimeout = connectTimeout;
+		options.socketTimeout = socketTimeout;
+		options.socketKeepAlive = socketKeepAlive;
+		options.autoConnectRetry = autoConnectRetry;
+		options.maxAutoConnectRetryTime = maxAutoConnectRetryTime;
+		options.slaveOk = slaveOk;
+		options.w = writeNumber;
+		options.wtimeout = writeTimeout;
+		options.fsync = writeFsync;
+
 		if (ssl) {
-			MONGO_OPTIONS.setSocketFactory(sslSocketFactory != null ? sslSocketFactory : SSLSocketFactory.getDefault());
+			options.setSocketFactory(sslSocketFactory != null ? sslSocketFactory : SSLSocketFactory.getDefault());
 		}
+
+		this.options = options;
 	}
 
 	/*
@@ -222,7 +227,7 @@ public class MongoOptionsFactoryBean implements FactoryBean<MongoOptions>, Initi
 	 * @see org.springframework.beans.factory.FactoryBean#getObject()
 	 */
 	public MongoOptions getObject() {
-		return MONGO_OPTIONS;
+		return this.options;
 	}
 
 	/*

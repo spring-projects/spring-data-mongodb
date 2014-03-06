@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ import org.springframework.util.CompositeIterator;
  * @author Thomas Darimont
  * @since 1.3
  */
-public class ExposedFields implements Iterable<ExposedField> {
+public final class ExposedFields implements Iterable<ExposedField> {
 
 	private static final List<ExposedField> NO_FIELDS = Collections.emptyList();
 	private static final ExposedFields EMPTY = new ExposedFields(NO_FIELDS, NO_FIELDS);
@@ -344,13 +344,6 @@ public class ExposedFields implements Iterable<ExposedField> {
 		}
 
 		/**
-		 * @return
-		 */
-		public boolean isSynthetic() {
-			return field.synthetic;
-		}
-
-		/**
 		 * Returns the raw, unqualified reference, i.e. the field reference without a {@literal $} prefix.
 		 * 
 		 * @return
@@ -359,6 +352,16 @@ public class ExposedFields implements Iterable<ExposedField> {
 
 			String target = field.getTarget();
 			return field.synthetic ? target : String.format("%s.%s", Fields.UNDERSCORE_ID, target);
+		}
+
+		/**
+		 * Returns the referenve value for the given field reference. Will return 1 for a synthetic, unaliased field or the
+		 * raw rendering of the reference otherwise.
+		 * 
+		 * @return
+		 */
+		public Object getReferenceValue() {
+			return field.synthetic && !field.isAliased() ? 1 : toString();
 		}
 
 		/*

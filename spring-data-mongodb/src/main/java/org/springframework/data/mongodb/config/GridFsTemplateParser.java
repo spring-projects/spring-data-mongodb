@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,7 +43,7 @@ class GridFsTemplateParser extends AbstractBeanDefinitionParser {
 			throws BeanDefinitionStoreException {
 
 		String id = super.resolveId(element, definition, parserContext);
-		return StringUtils.hasText(id) ? id : BeanNames.GRID_FS_TEMPLATE;
+		return StringUtils.hasText(id) ? id : BeanNames.GRID_FS_TEMPLATE_BEAN_NAME;
 	}
 
 	/*
@@ -57,13 +57,14 @@ class GridFsTemplateParser extends AbstractBeanDefinitionParser {
 
 		String converterRef = element.getAttribute("converter-ref");
 		String dbFactoryRef = element.getAttribute("db-factory-ref");
+		String bucket = element.getAttribute("bucket");
 
 		BeanDefinitionBuilder gridFsTemplateBuilder = BeanDefinitionBuilder.genericBeanDefinition(GridFsTemplate.class);
 
 		if (StringUtils.hasText(dbFactoryRef)) {
 			gridFsTemplateBuilder.addConstructorArgReference(dbFactoryRef);
 		} else {
-			gridFsTemplateBuilder.addConstructorArgReference(BeanNames.DB_FACTORY);
+			gridFsTemplateBuilder.addConstructorArgReference(BeanNames.DB_FACTORY_BEAN_NAME);
 		}
 
 		if (StringUtils.hasText(converterRef)) {
@@ -72,7 +73,11 @@ class GridFsTemplateParser extends AbstractBeanDefinitionParser {
 			gridFsTemplateBuilder.addConstructorArgReference(BeanNames.DEFAULT_CONVERTER_BEAN_NAME);
 		}
 
-		return (AbstractBeanDefinition) helper.getComponentIdButFallback(gridFsTemplateBuilder, BeanNames.GRID_FS_TEMPLATE)
+		if (StringUtils.hasText(bucket)) {
+			gridFsTemplateBuilder.addConstructorArgValue(bucket);
+		}
+
+		return (AbstractBeanDefinition) helper.getComponentIdButFallback(gridFsTemplateBuilder, BeanNames.GRID_FS_TEMPLATE_BEAN_NAME)
 				.getBeanDefinition();
 	}
 }

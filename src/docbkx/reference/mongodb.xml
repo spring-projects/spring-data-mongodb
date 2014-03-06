@@ -44,8 +44,8 @@
     </listitem>
 
     <listitem>
-      <para>Automatic implementatin of Repository interfaces including support
-      for custom finder methods.</para>
+      <para>Automatic implementation of Repository interfaces including
+      support for custom finder methods.</para>
     </listitem>
 
     <listitem>
@@ -81,20 +81,20 @@
     <title>Getting Started</title>
 
     <para>Spring MongoDB support requires MongoDB 1.4 or higher and Java SE 5
-    or higher. The latest production release (2.0.x as of this writing) is
+    or higher. The latest production release (2.4.9 as of this writing) is
     recommended. An easy way to bootstrap setting up a working environment is
     to create a Spring based project in <ulink
-    url="http://www.springsource.com/developer/sts">STS</ulink>.</para>
+    url="http://spring.io/tools/sts">STS</ulink>.</para>
 
     <para>First you need to set up a running Mongodb server. Refer to the
-    <ulink url="http://www.mongodb.org/display/DOCS/Quickstart">Mongodb Quick
-    Start guide</ulink> for an explanation on how to startup a MongoDB
+    <ulink url="http://docs.mongodb.org/manual/core/introduction/">Mongodb
+    Quick Start guide</ulink> for an explanation on how to startup a MongoDB
     instance. Once installed starting MongoDB is typically a matter of
     executing the following command:
     <literal>MONGO_HOME/bin/mongod</literal></para>
 
     <para>To create a Spring project in STS go to File -&gt; New -&gt; Spring
-    Template Project -&gt; Simple Spring Utility Project --&gt; press Yes when
+    Template Project -&gt; Simple Spring Utility Project -&gt; press Yes when
     prompted. Then enter a project and a package name such as
     org.spring.mongodb.example.</para>
 
@@ -107,14 +107,14 @@
   &lt;dependency&gt;
     &lt;groupId&gt;org.springframework.data&lt;/groupId&gt;
     &lt;artifactId&gt;spring-data-mongodb&lt;/artifactId&gt;
-    &lt;version&gt;1.1.0.RELEASE&lt;/version&gt;
+    &lt;version&gt;1.3.4.RELEASE&lt;/version&gt;
   &lt;/dependency&gt;
 
 &lt;/dependencies&gt;</programlisting>
 
     <para>Also change the version of Spring in the pom.xml to be</para>
 
-    <programlisting lang="" language="xml">&lt;spring.framework.version&gt;3.1.2.RELEASE&lt;/spring.framework.version&gt;</programlisting>
+    <programlisting lang="" language="xml">&lt;spring.framework.version&gt;3.2.8.RELEASE&lt;/spring.framework.version&gt;</programlisting>
 
     <para>You will also need to add the location of the Spring Milestone
     repository for maven to your pom.xml which is at the same level of your
@@ -124,7 +124,7 @@
   &lt;repository&gt;
     &lt;id&gt;spring-milestone&lt;/id&gt;
     &lt;name&gt;Spring Maven MILESTONE Repository&lt;/name&gt;
-    &lt;url&gt;http://repo.springsource.org/libs-milestone&lt;/url&gt;
+    &lt;url&gt;http://repo.spring.io/libs-milestone&lt;/url&gt;
   &lt;/repository&gt;
 &lt;/repositories&gt;</programlisting>
 
@@ -248,7 +248,7 @@ public class MongoApp {
     <title>Examples Repository</title>
 
     <para>There is an <ulink
-    url="https://github.com/SpringSource/spring-data-document-examples">github
+    url="https://github.com/spring-projects/spring-data-document-examples">github
     repository with several examples</ulink> that you can download and play
     around with to get a feel for how the library works.</para>
   </section>
@@ -264,9 +264,9 @@ public class MongoApp {
         <para>For those not familiar with how to configure the Spring
         container using Java based bean metadata instead of XML based metadata
         see the high level introduction in the reference docs <ulink
-        url="http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/html/new-in-3.html#new-java-configuration"
+        url="http://docs.spring.io/spring/docs/3.2.x/spring-framework-reference/html/new-in-3.0.html#new-java-configuration"
         userlevel="">here </ulink> as well as the detailed documentation<ulink
-        url="http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/html/beans.html#beans-java-instantiating-container">
+        url="http://docs.spring.io/spring/docs/3.2.x/spring-framework-reference/html/beans.html#beans-java-instantiating-container">
         here</ulink>.</para>
       </note></para>
 
@@ -310,7 +310,7 @@ public class AppConfig {
       classes annoated with the <literal>@Repository</literal> annotation.
       This hierarchy and use of <literal>@Repository</literal> is described in
       <ulink
-      url="http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/html/dao.html">Spring's
+      url="http://docs.spring.io/spring/docs/current/spring-framework-reference/html/dao.html">Spring's
       DAO support features</ulink>.</para>
 
       <para>An example of a Java based bean metadata that supports exception
@@ -434,7 +434,7 @@ public class AppConfig {
   DB getDb(String dbName) throws DataAccessException;
 }</programlisting>
 
-      <para>The following sections show how you can use the contiainer with
+      <para>The following sections show how you can use the container with
       either Java or the XML based metadata to configure an instance of the
       <classname>MongoDbFactory</classname> interface. In turn, you can use
       the <classname>MongoDbFactory</classname> instance to configure
@@ -970,7 +970,7 @@ DEBUG work.data.mongodb.core.MongoTemplate: 376 - Dropped collection [database.p
       functionality</para>
     </note>
 
-    <para>The query stynax used in the example is explained in more detail in
+    <para>The query syntax used in the example is explained in more detail in
     the section <link linkend="mongo.query">Querying Documents</link>.</para>
 
     <section id="mongo-template.id-handling">
@@ -1079,7 +1079,7 @@ mongoTemplate.save(sample);
       </example>
 
       <para>As you can see we store the type information for the actual root
-      class persistet as well as for the nested type as it is complex and a
+      class persistent as well as for the nested type as it is complex and a
       subtype of <classname>Contact</classname>. So if you're now using
       <methodname>mongoTemplate.findAll(Object.class, "sample")</methodname>
       we are able to find out that the document stored shall be a
@@ -1197,8 +1197,8 @@ class SampleMongoConfiguration extends AbstractMongoConfiguration {
       overriden using mapping metadata.</para>
 
       <para>When inserting or saving, if the Id property is not set, the
-      assumption is that its value will be autogenerated by the database. As
-      such, for autogeneration of an ObjectId to succeed the type of the Id
+      assumption is that its value will be auto-generated by the database. As
+      such, for auto-generation of an ObjectId to succeed the type of the Id
       property/field in your class must be either a
       <classname>String</classname>, <classname>ObjectId</classname>, or
       <classname>BigInteger</classname>.</para>
@@ -1284,14 +1284,14 @@ Person qp = mongoTemplate.findOne(query(where("age").is(33)), Person.class);    
             <listitem>
               <para><emphasis role="bold">insertAll</emphasis> Takes a
               <literal>Collection </literal>of objects as the first parameter.
-              This method ispects each object and inserts it to the
+              This method inspects each object and inserts it to the
               appropriate collection based on the rules specified
               above.</para>
             </listitem>
 
             <listitem>
               <para><emphasis role="bold">save</emphasis> Save the object
-              ovewriting any object that might exist with the same id.</para>
+              overwriting any object that might exist with the same id.</para>
             </listitem>
           </itemizedlist></para>
       </section>
@@ -1371,7 +1371,7 @@ import static org.springframework.data.mongodb.core.query.Update;
         <title>Methods for the Update class</title>
 
         <para>The Update class can be used with a little 'syntax sugar' as its
-        methods are meant to be chained together and you can kickstart the
+        methods are meant to be chained together and you can kick-start the
         creation of a new Update instance via the static method
         <literal>public static Update update(String key, Object
         value)</literal> and using static imports.</para>
@@ -1450,7 +1450,7 @@ import static org.springframework.data.mongodb.core.query.Update;
     <section id="mongo-template.upserts">
       <title>Upserting documents in a collection</title>
 
-      <para>Related to perfomring an <methodname>updateFirst</methodname>
+      <para>Related to performing an <methodname>updateFirst</methodname>
       operations, you can also perform an upsert operation which will perform
       an insert if no document is found that matches the query. The document
       that is inserted is a combination of the query document and the update
@@ -1459,7 +1459,7 @@ import static org.springframework.data.mongodb.core.query.Update;
       <programlisting>template.upsert(query(where("ssn").is(1111).and("firstName").is("Joe").and("Fraizer").is("Update")), update("address", addr), Person.class);</programlisting>
     </section>
 
-    <section>
+    <section id="mongo-template.find-and-upsert">
       <title>Finding and Upserting documents in a collection</title>
 
       <para>The <methodname>findAndModify(…)</methodname> method on
@@ -1617,7 +1617,7 @@ List&lt;Person&gt; result = mongoTemplate.find(query(where("age").lt(50)
               </emphasis> <literal>(String key) </literal>Adds a chained
               <classname>Criteria</classname> with the specified
               <literal>key</literal> to the current
-              <classname>Criteria</classname> and retuns the newly created
+              <classname>Criteria</classname> and returns the newly created
               one</para>
             </listitem>
 
@@ -2029,7 +2029,7 @@ GeoResults&lt;Restaurant&gt; = operations.geoNear(query, Restaurant.class);</pro
     methods on MongoOperations to simplify the creation and execution of
     Map-Reduce operations. It can convert the results of a Map-Reduce
     operation to a POJO also integrates with Spring's <ulink
-    url="http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/html/resources.html">Resource
+    url="http://docs.spring.io/spring/docs/current/spring-framework-reference/html/resources.html">Resource
     abstraction</ulink> abstraction. This will let you place your JavaScript
     files on the file system, classpath, http server or any other Spring
     Resource implementation and then reference the JavaScript resources via an
@@ -2143,7 +2143,7 @@ MapReduceResults&lt;ValueObject&gt; results = mongoOperations.mapReduce(query, "
     providing methods on MongoOperations to simplify the creation and
     execution of group operations. It can convert the results of the group
     operation to a POJO and also integrates with Spring's <ulink
-    url="http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/html/resources.html">Resource
+    url="http://docs.spring.io/spring/docs/current/spring-framework-reference/html/resources.html">Resource
     abstraction</ulink> abstraction. This will let you place your JavaScript
     files on the file system, classpath, http server or any other Spring
     Resource implementation and then reference the JavaScript resources via an
@@ -2156,7 +2156,7 @@ MapReduceResults&lt;ValueObject&gt; results = mongoOperations.mapReduce(query, "
       <title>Example Usage</title>
 
       <para>In order to understand how group operations work the following
-      example is used, which is somewhat artifical. For a more realistic
+      example is used, which is somewhat artificial. For a more realistic
       example consult the book 'MongoDB - The definitive guide'. A collection
       named "group_test_collection" created with the following rows.</para>
 
@@ -2232,7 +2232,7 @@ MapReduceResults&lt;ValueObject&gt; results = mongoOperations.mapReduce(query, "
   }
 }</programlisting>
 
-      <para>You can also obtain tha raw result as a
+      <para>You can also obtain the raw result as a
       <classname>DbObject</classname> by calling the method
       <methodname>getRawResults</methodname> on the
       <classname>GroupByResults</classname> class.</para>
@@ -2318,9 +2318,9 @@ GroupByResults&lt;XObject&gt; results = mongoTemplate.group(where("x").gt(0),
 
           <para><classname>AggregationResults</classname> is the container for
           the result of an aggregate operation. It provides access to the raw
-          aggreation result in the form of an <classname>DBObject</classname>,
-          to the mapped objects and information which performed the
-          aggregation.</para>
+          aggregation result in the form of an
+          <classname>DBObject</classname>, to the mapped objects and
+          information which performed the aggregation.</para>
         </listitem>
       </itemizedlist>
 
@@ -2344,8 +2344,8 @@ List&lt;OutputType&gt; mappedResult = results.getMappedResults();
       <classname>MongoTemplate</classname> will derive the name of the input
       collection from this class. Otherwise if you don't not specify an input
       class you must provide the name of the input collection explicitly. If
-      an input-class and an explicity input-collection is provided the latter
-      takes precedence.</para>
+      an input-class and an input-collection is provided the latter takes
+      precedence.</para>
     </section>
 
     <section id="mongo.aggregation.supported-aggregation-operations">
@@ -2460,7 +2460,7 @@ project("a","b").and("foo").as("bar") // will generate {$project: {a: 1, b: 1, b
       documentation.</para>
 
       <section id="mongo.aggregation.projection.expressions">
-        <title>Spring Expresison Support in Projection Expressions</title>
+        <title>Spring Expression Support in Projection Expressions</title>
 
         <para>As of Version 1.4.0 we support the use of SpEL expression in
         projection expressions via the <methodname>andExpression</methodname>
@@ -2471,7 +2471,7 @@ project("a","b").and("foo").as("bar") // will generate {$project: {a: 1, b: 1, b
         calculations.</para>
 
         <example>
-          <title>Complex calulations with SpEL expressions</title>
+          <title>Complex calculations with SpEL expressions</title>
 
           <para>The following SpEL expression:</para>
 
@@ -2499,14 +2499,14 @@ project("a","b").and("foo").as("bar") // will generate {$project: {a: 1, b: 1, b
     <section id="mongo.aggregation.examples">
       <title>Aggregation Framework Examples</title>
 
-      <para>The follwing examples demonstrate the usage patterns for the
+      <para>The following examples demonstrate the usage patterns for the
       MongoDB Aggregation Framework with Spring Data MongoDB.</para>
 
       <example id="mongo.aggregation.examples.example1">
         <title>Aggregation Framework Example 1</title>
 
         <para>In this introductory example we want to aggregate a list of tags
-        to get the occurence count of a particular tag from a MongoDB
+        to get the occurrence count of a particular tag from a MongoDB
         collection called <code>"tags"</code> sorted by the occurrence count
         in descending order. This example demonstrates the usage of grouping,
         sorting, projections (selection) and unwinding (result
@@ -2555,7 +2555,7 @@ List&lt;TagCount&gt; tagCount = results.getMappedResults();</programlisting>
         <listitem>
           <para>In the forth step we use the <methodname>group</methodname>
           operation to define a group for each <code>"tags"</code>-value for
-          which we aggregate the occurence count via the
+          which we aggregate the occurrence count via the
           <methodname>count</methodname> aggregation operator and collect the
           result in a new field called <code>"n"</code>.</para>
         </listitem>
@@ -2569,7 +2569,7 @@ List&lt;TagCount&gt; tagCount = results.getMappedResults();</programlisting>
 
         <listitem>
           <para>As the sixth step we sort the resulting list of tags by their
-          occurence count in descending order via the
+          occurrence count in descending order via the
           <methodname>sort</methodname> operation.</para>
         </listitem>
 
@@ -2687,7 +2687,7 @@ ZipInfoStats firstZipInfoStats = result.getMappedResults().get(0);
           <para>As the forth step we select the <code>"state"</code> field
           from the previous <methodname>group</methodname> operation. Note
           that <code>"state"</code> again implicitly references an group-id
-          field. As we do not want an implict generated id to appear, we
+          field. As we do not want an implicit generated id to appear, we
           exclude the id from the previous operation via
           <code>and(previousOperation()).exclude()</code>. As we want to
           populate the nested <classname>City</classname> structures in our
@@ -2885,7 +2885,7 @@ List&lt;DBObject&gt; resultList = result.getMappedResults();</programlisting>
     <note>
       <para>For more information on the Spring type conversion service see the
       reference docs <ulink
-      url="http://static.springsource.org/spring/docs/3.0.x/reference/validation.html#core-convert">here</ulink>.</para>
+      url="http://docs.spring.io/spring/docs/current/spring-framework-reference/html/validation.html#core-convert">here</ulink>.</para>
     </note>
 
     <section id="mongo.custom-converters.writer">
@@ -2916,7 +2916,7 @@ public class PersonWriteConverter implements Converter&lt;Person, DBObject&gt; {
     <section id="mongo.custom-converters.reader">
       <title>Reading using a Spring Converter</title>
 
-      <para>An example implemention of a Converter that converts from a
+      <para>An example implementation of a Converter that converts from a
       DBObject ot a Person object is shownn below</para>
 
       <programlisting language="java">public class PersonReadConverter implements Converter&lt;DBObject, Person&gt; {
@@ -2968,7 +2968,7 @@ public class PersonWriteConverter implements Converter&lt;Person, DBObject&gt; {
 &lt;/mongo:mapping-converter&gt;</programlisting>
     </section>
 
-    <section>
+    <section id="mongo.converter-disambiguation">
       <title>Converter disambiguation</title>
 
       <para>Generally we inspect the <interfacename>Converter</interfacename>
@@ -2999,12 +2999,12 @@ class MyConverter implements Converter&lt;String, Person&gt; { … }</programlis
   </section>
 
   <section id="mongo-template.index-and-collections">
-    <title>Index and Collection managment</title>
+    <title>Index and Collection management</title>
 
     <para><classname>MongoTemplate</classname> provides a few methods for
     managing indexes and collections. These are collected into a helper
     interface called <interfacename>IndexOperations</interfacename>. You
-    access these operations by calilng the method
+    access these operations by calling the method
     <methodname>indexOps</methodname> and pass in either the collection name
     or the <literal>java.lang.Class</literal> of your entity (the collection
     name will be derived from the .class either by name or via annotation
@@ -3244,11 +3244,11 @@ mongoTemplate.dropCollection("MyNewCollection");        </programlisting>
     interface.</para>
 
     <para>The motivation behind mapping to Spring's <ulink
-    url="http://static.springsource.org/spring/docs/3.0.x/reference/dao.html#dao-exceptions">consistent
+    url="http://docs.spring.io/spring/docs/current/spring-framework-reference/html/dao.html#dao-exceptions">consistent
     data access exception hierarchy</ulink> is that you are then able to write
     portable and descriptive exception handling code without resorting to
     coding against <ulink
-    url="http://www.mongodb.org/display/DOCS/Error+Codes">MongoDB error
+    url="http://www.mongodb.org/about/contributors/error-codes/">MongoDB error
     codes</ulink>. All of Spring's data access exceptions are inherited from
     the root <classname>DataAccessException</classname> class so you can be
     sure that you will be able to catch all database related exception within
@@ -3390,8 +3390,8 @@ mongoTemplate.dropCollection("MyNewCollection");        </programlisting>
 &lt;/beans&gt;</programlisting>
     </example>
 
-    <para>You can no get the template injected and perform storing and
-    retrieving operations to it.</para>
+    <para>The template can now be injected and used to perform storage and
+    retrieval operations.</para>
 
     <example>
       <title>Using GridFsTemplate to store files</title>

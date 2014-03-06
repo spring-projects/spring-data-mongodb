@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2013 the original author or authors.
+ * Copyright 2011-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -56,6 +56,8 @@ import com.mongodb.QueryBuilder;
  * 
  * @author Oliver Gierke
  * @author Patryk Wasik
+ * @author Thomas Darimont
+ * @author Christoph Strobl
  */
 @RunWith(MockitoJUnitRunner.class)
 public class QueryMapperUnitTests {
@@ -466,6 +468,106 @@ public class QueryMapperUnitTests {
 		assertThat(result.get("myvalue"), is((Object) "$center"));
 	}
 
+	/**
+	 * @DATAMONGO-805
+	 */
+	@Test
+	public void shouldExcludeDBRefAssociation() {
+
+		Query query = query(where("someString").is("foo"));
+		query.fields().exclude("reference");
+
+		BasicMongoPersistentEntity<?> entity = context.getPersistentEntity(WithDBRef.class);
+		DBObject queryResult = mapper.getMappedObject(query.getQueryObject(), entity);
+		DBObject fieldsResult = mapper.getMappedObject(query.getFieldsObject(), entity);
+
+		assertThat(queryResult.get("someString"), is((Object) "foo"));
+		assertThat(fieldsResult.get("reference"), is((Object) 0));
+	}
+
+	/**
+	 * @see DATAMONGO-686
+	 */
+	@Test
+	public void queryMapperShouldNotChangeStateInGivenQueryObjectWhenIdConstrainedByInList() {
+
+		BasicMongoPersistentEntity<?> persistentEntity = context.getPersistentEntity(Sample.class);
+		String idPropertyName = persistentEntity.getIdProperty().getName();
+		DBObject queryObject = query(where(idPropertyName).in("42")).getQueryObject();
+
+		Object idValuesBefore = getAsDBObject(queryObject, idPropertyName).get("$in");
+		mapper.getMappedObject(queryObject, persistentEntity);
+		Object idValuesAfter = getAsDBObject(queryObject, idPropertyName).get("$in");
+
+		assertThat(idValuesAfter, is(idValuesBefore));
+	}
+
+	/**
+	 * @see DATAMONGO-821
+	 */
+	@Test
+	public void queryMapperShouldNotTryToMapDBRefListPropertyIfNestedInsideDBObjectWithinDBObject() {
+
+		DBObject queryObject = query(
+				where("referenceList").is(new BasicDBObject("$nested", new BasicDBObject("$keys", 0L)))).getQueryObject();
+
+		DBObject mappedObject = mapper.getMappedObject(queryObject, context.getPersistentEntity(WithDBRefList.class));
+		DBObject referenceObject = getAsDBObject(mappedObject, "referenceList");
+		DBObject nestedObject = getAsDBObject(referenceObject, "$nested");
+
+		assertThat(nestedObject, is((DBObject) new BasicDBObject("$keys", 0L)));
+	}
+
+	/**
+	 * @see DATAMONGO-821
+	 */
+	@Test
+	public void queryMapperShouldNotTryToMapDBRefPropertyIfNestedInsideDBObjectWithinDBObject() {
+
+		DBObject queryObject = query(where("reference").is(new BasicDBObject("$nested", new BasicDBObject("$keys", 0L))))
+				.getQueryObject();
+
+		DBObject mappedObject = mapper.getMappedObject(queryObject, context.getPersistentEntity(WithDBRef.class));
+		DBObject referenceObject = getAsDBObject(mappedObject, "reference");
+		DBObject nestedObject = getAsDBObject(referenceObject, "$nested");
+
+		assertThat(nestedObject, is((DBObject) new BasicDBObject("$keys", 0L)));
+	}
+
+	/**
+	 * @see DATAMONGO-821
+	 */
+	@Test
+	public void queryMapperShouldMapDBRefPropertyIfNestedInDBObject() {
+
+		Reference sample = new Reference();
+		sample.id = 321L;
+		DBObject queryObject = query(where("reference").is(new BasicDBObject("$in", Arrays.asList(sample))))
+				.getQueryObject();
+
+		DBObject mappedObject = mapper.getMappedObject(queryObject, context.getPersistentEntity(WithDBRef.class));
+
+		DBObject referenceObject = getAsDBObject(mappedObject, "reference");
+		BasicDBList inObject = getAsDBList(referenceObject, "$in");
+
+		assertThat(inObject.get(0), is(instanceOf(com.mongodb.DBRef.class)));
+	}
+
+	/**
+	 * @see DATAMONGO-773
+	 */
+	@Test
+	public void queryMapperShouldBeAbleToProcessQueriesThatIncludeDbRefFields() {
+
+		BasicMongoPersistentEntity<?> persistentEntity = context.getPersistentEntity(WithDBRef.class);
+
+		Query qry = query(where("someString").is("abc"));
+		qry.fields().include("reference");
+
+		DBObject mappedFields = mapper.getMappedObject(qry.getFieldsObject(), persistentEntity);
+		assertThat(mappedFields, is(notNullValue()));
+	}
+
 	class IdWrapper {
 		Object id;
 	}
@@ -504,6 +606,12 @@ public class QueryMapperUnitTests {
 
 		String someString;
 		@DBRef Reference reference;
+	}
+
+	class WithDBRefList {
+
+		String someString;
+		@DBRef List<Reference> referenceList;
 	}
 
 	class Reference {

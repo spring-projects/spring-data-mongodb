@@ -226,6 +226,15 @@ public class PersonRepositoryTests {
             </row>
 
             <row>
+              <entry><literal>GreaterThanEqual</literal></entry>
+
+              <entry><methodname>findByAgeGreaterThanEqual(int
+              age)</methodname></entry>
+
+              <entry><code>{"age" : {"$gte" : age}}</code></entry>
+            </row>
+
+            <row>
               <entry><literal>LessThan</literal></entry>
 
               <entry><methodname>findByAgeLessThan(int
@@ -235,12 +244,39 @@ public class PersonRepositoryTests {
             </row>
 
             <row>
+              <entry><literal>LessThanEqual</literal></entry>
+
+              <entry><methodname>findByAgeLessThanEqual(int
+              age)</methodname></entry>
+
+              <entry><code>{"age" : {"$lte" : age}}</code></entry>
+            </row>
+
+            <row>
               <entry><literal>Between</literal></entry>
 
               <entry><methodname>findByAgeBetween(int from, int
               to)</methodname></entry>
 
               <entry><code>{"age" : {"$gt" : from, "$lt" : to}}</code></entry>
+            </row>
+
+            <row>
+              <entry><literal>In</literal></entry>
+
+              <entry><methodname>findByAgeIn(Collection ages)
+              </methodname></entry>
+
+              <entry><code>{"age" : {"$in" : [ages...]}}</code></entry>
+            </row>
+
+            <row>
+              <entry><literal>NotIn</literal></entry>
+
+              <entry><methodname>findByAgeNotIn(Collection ages)
+              </methodname></entry>
+
+              <entry><code>{"age" : {"$nin" : [ages...]}}</code></entry>
             </row>
 
             <row>
@@ -358,7 +394,7 @@ public class PersonRepositoryTests {
         </tgroup>
       </table></para>
 
-    <section>
+    <section id="mongodb.repositories.queries.geo-spatial">
       <title>Geo-spatial repository queries</title>
 
       <para>As you've just seen there are a few keywords triggering
@@ -418,7 +454,7 @@ Distance distance = new Distance(200, Metrics.KILOMETERS);
       </simplesect>
     </section>
 
-    <section>
+    <section id="mongodb.repositories.queries.json-based">
       <title>MongoDB JSON based query methods and field restriction</title>
 
       <para>By adding the annotation
@@ -452,7 +488,7 @@ Distance distance = new Distance(200, Metrics.KILOMETERS);
       set and its value will therefore be null.</para>
     </section>
 
-    <section>
+    <section id="mongodb.repositories.queries.type-safe">
       <title>Type-safe Query methods</title>
 
       <para>MongoDB repository support integrates with the <ulink
@@ -529,7 +565,7 @@ Page&lt;Person&gt; page = repository.findAll(person.lastname.contains("a"),
 </programlisting>
 
       <para>To use this in your repository implementation, simply inherit from
-      it in additiion to other repository interfaces. This is shown
+      it in addition to other repository interfaces. This is shown
       below</para>
 
       <programlisting lang="" language="java">public interface PersonRepository extends MongoRepository&lt;Person, String&gt;, QueryDslPredicateExecutor&lt;Person&gt; {
@@ -543,12 +579,12 @@ Page&lt;Person&gt; page = repository.findAll(person.lastname.contains("a"),
     </section>
   </section>
 
-  <section>
+  <section id="mongodb.repositories.misc">
     <title>Miscellaneous</title>
 
     <para/>
 
-    <section>
+    <section id="mongodb.repositories.misc.cdi-integration">
       <title>CDI Integration</title>
 
       <para>Instances of the repository interfaces are usually created by a

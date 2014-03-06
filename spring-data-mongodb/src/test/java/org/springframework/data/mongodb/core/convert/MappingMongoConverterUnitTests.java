@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2013 the original author or authors.
+ * Copyright 2011-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core.convert;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
+import static org.springframework.data.mongodb.core.DBObjectTestUtils.*;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -27,6 +28,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -57,7 +60,9 @@ import org.springframework.data.mongodb.core.convert.DBObjectAccessorUnitTests.P
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.PersonPojoStringId;
+import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.mongodb.BasicDBList;
@@ -72,6 +77,7 @@ import com.mongodb.util.JSON;
  * 
  * @author Oliver Gierke
  * @author Patrik Wasik
+ * @author Christoph Strobl
  */
 @RunWith(MockitoJUnitRunner.class)
 public class MappingMongoConverterUnitTests {
@@ -644,9 +650,7 @@ public class MappingMongoConverterUnitTests {
 	public void readsMapListNestedValuesCorrectly() {
 
 		BasicDBList list = new BasicDBList();
-		BasicDBObject nested = new BasicDBObject();
-		nested.append("Hello", "World");
-		list.add(nested);
+		list.add(new BasicDBObject("Hello", "World"));
 		DBObject source = new BasicDBObject("mapOfObjects", new BasicDBObject("Foo", list));
 
 		ClassWithMapProperty result = converter.read(ClassWithMapProperty.class, source);
@@ -1021,12 +1025,12 @@ public class MappingMongoConverterUnitTests {
 		address.city = "London";
 		address.street = "Foo";
 
-		Object result = converter.convertToMongoType(Collections.singleton(address));
+		Object result = converter.convertToMongoType(Collections.singleton(address), ClassTypeInformation.OBJECT);
 		assertThat(result, is(instanceOf(BasicDBList.class)));
 
 		Set<?> readResult = converter.read(Set.class, (BasicDBList) result);
 		assertThat(readResult.size(), is(1));
-		assertThat(readResult.iterator().next(), is(instanceOf(Map.class)));
+		assertThat(readResult.iterator().next(), is(instanceOf(Address.class)));
 	}
 
 	/**
@@ -1240,9 +1244,9 @@ public class MappingMongoConverterUnitTests {
 		DB db = mock(DB.class);
 		DBRef dbRef = new DBRef(db, "collection", "id");
 
-		org.springframework.data.mongodb.core.mapping.DBRef annotation = mock(org.springframework.data.mongodb.core.mapping.DBRef.class);
+		MongoPersistentProperty property = mock(MongoPersistentProperty.class);
 
-		assertThat(converter.createDBRef(dbRef, annotation), is(dbRef));
+		assertThat(converter.createDBRef(dbRef, property), is(dbRef));
 	}
 
 	/**
@@ -1381,6 +1385,106 @@ public class MappingMongoConverterUnitTests {
 		assertThat(aValue.get("c"), is((Object) "C"));
 	}
 
+	/**
+	 * @see DATAMONGO-812
+	 */
+	@Test
+	public void convertsListToBasicDBListAndRetainsTypeInformationForComplexObjects() {
+
+		Address address = new Address();
+		address.city = "London";
+		address.street = "Foo";
+
+		Object result = converter.convertToMongoType(Collections.singletonList(address),
+				ClassTypeInformation.from(Address.class));
+
+		assertThat(result, is(instanceOf(BasicDBList.class)));
+
+		BasicDBList dbList = (BasicDBList) result;
+		assertThat(dbList, hasSize(1));
+		assertThat(getTypedValue(getAsDBObject(dbList, 0), "_class", String.class), equalTo(Address.class.getName()));
+	}
+
+	/**
+	 * @see DATAMONGO-812
+	 */
+	@Test
+	public void convertsListToBasicDBListWithoutTypeInformationForSimpleTypes() {
+
+		Object result = converter.convertToMongoType(Collections.singletonList("foo"));
+
+		assertThat(result, is(instanceOf(BasicDBList.class)));
+
+		BasicDBList dbList = (BasicDBList) result;
+		assertThat(dbList, hasSize(1));
+		assertThat(dbList.get(0), instanceOf(String.class));
+	}
+
+	/**
+	 * @see DATAMONGO-812
+	 */
+	@Test
+	public void convertsArrayToBasicDBListAndRetainsTypeInformationForComplexObjects() {
+
+		Address address = new Address();
+		address.city = "London";
+		address.street = "Foo";
+
+		Object result = converter.convertToMongoType(new Address[] { address }, ClassTypeInformation.OBJECT);
+
+		assertThat(result, is(instanceOf(BasicDBList.class)));
+
+		BasicDBList dbList = (BasicDBList) result;
+		assertThat(dbList, hasSize(1));
+		assertThat(getTypedValue(getAsDBObject(dbList, 0), "_class", String.class), equalTo(Address.class.getName()));
+	}
+
+	/**
+	 * @see DATAMONGO-812
+	 */
+	@Test
+	public void convertsArrayToBasicDBListWithoutTypeInformationForSimpleTypes() {
+
+		Object result = converter.convertToMongoType(new String[] { "foo" });
+
+		assertThat(result, is(instanceOf(BasicDBList.class)));
+
+		BasicDBList dbList = (BasicDBList) result;
+		assertThat(dbList, hasSize(1));
+		assertThat(dbList.get(0), instanceOf(String.class));
+	}
+
+	/**
+	 * @see DATAMONGO-833
+	 */
+	@Test
+	public void readsEnumSetCorrectly() {
+
+		BasicDBList enumSet = new BasicDBList();
+		enumSet.add("SECOND");
+		DBObject dbObject = new BasicDBObject("enumSet", enumSet);
+
+		ClassWithEnumProperty result = converter.read(ClassWithEnumProperty.class, dbObject);
+
+		assertThat(result.enumSet, is(instanceOf(EnumSet.class)));
+		assertThat(result.enumSet.size(), is(1));
+		assertThat(result.enumSet, hasItem(SampleEnum.SECOND));
+	}
+
+	/**
+	 * @see DATAMONGO-833
+	 */
+	@Test
+	public void readsEnumMapCorrectly() {
+
+		BasicDBObject enumMap = new BasicDBObject("FIRST", "Dave");
+		ClassWithEnumProperty result = converter.read(ClassWithEnumProperty.class, new BasicDBObject("enumMap", enumMap));
+
+		assertThat(result.enumMap, is(instanceOf(EnumMap.class)));
+		assertThat(result.enumMap.size(), is(1));
+		assertThat(result.enumMap.get(SampleEnum.FIRST), is("Dave"));
+	}
+
 	static class GenericType<T> {
 		T content;
 	}
@@ -1389,6 +1493,8 @@ public class MappingMongoConverterUnitTests {
 
 		SampleEnum sampleEnum;
 		List<SampleEnum> enums;
+		EnumSet<SampleEnum> enumSet;
+		EnumMap<SampleEnum, String> enumMap;
 	}
 
 	static enum SampleEnum {

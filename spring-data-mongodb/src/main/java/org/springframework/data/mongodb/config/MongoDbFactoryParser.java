@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2013 by the original author(s).
+ * Copyright 2011-2014 by the original author(s).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,7 +54,7 @@ public class MongoDbFactoryParser extends AbstractBeanDefinitionParser {
 			throws BeanDefinitionStoreException {
 
 		String id = super.resolveId(element, definition, parserContext);
-		return StringUtils.hasText(id) ? id : BeanNames.DB_FACTORY;
+		return StringUtils.hasText(id) ? id : BeanNames.DB_FACTORY_BEAN_NAME;
 	}
 
 	/* 
@@ -103,7 +103,7 @@ public class MongoDbFactoryParser extends AbstractBeanDefinitionParser {
 		BeanComponentDefinition component = helper.getComponent(writeConcernPropertyEditorBuilder);
 		parserContext.registerBeanComponent(component);
 
-		return (AbstractBeanDefinition) helper.getComponentIdButFallback(dbFactoryBuilder, BeanNames.DB_FACTORY)
+		return (AbstractBeanDefinition) helper.getComponentIdButFallback(dbFactoryBuilder, BeanNames.DB_FACTORY_BEAN_NAME)
 				.getBeanDefinition();
 	}
 

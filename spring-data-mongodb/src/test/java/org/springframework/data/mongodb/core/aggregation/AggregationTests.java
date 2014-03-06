@@ -26,10 +26,12 @@ import java.io.BufferedInputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Scanner;
 
+import org.joda.time.LocalDateTime;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -41,6 +43,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.dao.DataAccessException;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mongodb.core.CollectionCallback;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -107,6 +110,7 @@ public class AggregationTests {
 		mongoTemplate.dropCollection(DATAMONGO753.class);
 		mongoTemplate.dropCollection(Data.class);
 		mongoTemplate.dropCollection(DATAMONGO788.class);
+		mongoTemplate.dropCollection(User.class);
 	}
 
 	/**
@@ -185,7 +189,7 @@ public class AggregationTests {
 		AggregationResults<TagCount> results = mongoTemplate.aggregate(agg, INPUT_COLLECTION, TagCount.class);
 
 		assertThat(results, is(notNullValue()));
-		assertThat(results.getServerUsed(), is("/127.0.0.1:27017"));
+		assertThat(results.getServerUsed(), endsWith("127.0.0.1:27017"));
 
 		List<TagCount> tagCount = results.getMappedResults();
 
@@ -213,7 +217,7 @@ public class AggregationTests {
 		AggregationResults<TagCount> results = mongoTemplate.aggregate(aggregation, INPUT_COLLECTION, TagCount.class);
 
 		assertThat(results, is(notNullValue()));
-		assertThat(results.getServerUsed(), is("/127.0.0.1:27017"));
+		assertThat(results.getServerUsed(), endsWith("127.0.0.1:27017"));
 
 		List<TagCount> tagCount = results.getMappedResults();
 
@@ -237,7 +241,7 @@ public class AggregationTests {
 		AggregationResults<TagCount> results = mongoTemplate.aggregate(aggregation, INPUT_COLLECTION, TagCount.class);
 
 		assertThat(results, is(notNullValue()));
-		assertThat(results.getServerUsed(), is("/127.0.0.1:27017"));
+		assertThat(results.getServerUsed(), endsWith("127.0.0.1:27017"));
 
 		List<TagCount> tagCount = results.getMappedResults();
 
@@ -744,6 +748,80 @@ public class AggregationTests {
 		assertThat((Integer) items.get(1).get("y"), is(1));
 	}
 
+	/**
+	 * @see DATAMONGO-806
+	 */
+	@Test
+	public void shouldAllowGroupByIdFields() {
+
+		mongoTemplate.dropCollection(User.class);
+
+		LocalDateTime now = new LocalDateTime();
+
+		User user1 = new User("u1", new PushMessage("1", "aaa", now.toDate()));
+		User user2 = new User("u2", new PushMessage("2", "bbb", now.minusDays(2).toDate()));
+		User user3 = new User("u3", new PushMessage("3", "ccc", now.minusDays(1).toDate()));
+
+		mongoTemplate.save(user1);
+		mongoTemplate.save(user2);
+		mongoTemplate.save(user3);
+
+		Aggregation agg = newAggregation( //
+				project("id", "msgs"), //
+				unwind("msgs"), //
+				match(where("msgs.createDate").gt(now.minusDays(1).toDate())), //
+				group("id").push("msgs").as("msgs") //
+		);
+
+		AggregationResults<DBObject> results = mongoTemplate.aggregate(agg, User.class, DBObject.class);
+
+		List<DBObject> mappedResults = results.getMappedResults();
+
+		DBObject firstItem = mappedResults.get(0);
+		assertThat(firstItem.get("_id"), is(notNullValue()));
+		assertThat(String.valueOf(firstItem.get("_id")), is("u1"));
+	}
+
+	/**
+	 * @see DATAMONGO-840
+	 */
+	@Test
+	public void shouldAggregateOrderDataToAnInvoice() {
+
+		mongoTemplate.dropCollection(Order.class);
+
+		double taxRate = 0.19;
+
+		LineItem product1 = new LineItem("1", "p1", 1.23);
+		LineItem product2 = new LineItem("2", "p2", 0.87, 2);
+		LineItem product3 = new LineItem("3", "p3", 5.33);
+
+		Order order = new Order("o4711", "c42", new Date()).addItem(product1).addItem(product2).addItem(product3);
+
+		mongoTemplate.save(order);
+
+		AggregationResults<Invoice> results = mongoTemplate.aggregate(newAggregation(Order.class, //
+				match(where("id").is(order.getId())), unwind("items"), //
+				project("id", "customerId", "items") //
+						.andExpression("items.price * items.quantity").as("lineTotal"), //
+				group("id") //
+						.sum("lineTotal").as("netAmount") //
+						.addToSet("items").as("items"), //
+				project("id", "items", "netAmount") //
+						.and("orderId").previousOperation() //
+						.andExpression("netAmount * [0]", taxRate).as("taxAmount") //
+						.andExpression("netAmount * (1 + [0])", taxRate).as("totalAmount") //
+				), Invoice.class);
+
+		Invoice invoice = results.getUniqueMappedResult();
+
+		assertThat(invoice, is(notNullValue()));
+		assertThat(invoice.getOrderId(), is(order.getId()));
+		assertThat(invoice.getNetAmount(), is(closeTo(8.3, 000001)));
+		assertThat(invoice.getTaxAmount(), is(closeTo(1.577, 000001)));
+		assertThat(invoice.getTotalAmount(), is(closeTo(9.877, 000001)));
+	}
+
 	private void assertLikeStats(LikeStats like, String id, long count) {
 
 		assertThat(like, is(notNullValue()));
@@ -827,4 +905,37 @@ public class AggregationTests {
 		}
 	}
 
+	/**
+	 * @see DATAMONGO-806
+	 */
+	static class User {
+
+		@Id String id;
+		List<PushMessage> msgs;
+
+		public User() {}
+
+		public User(String id, PushMessage... msgs) {
+			this.id = id;
+			this.msgs = Arrays.asList(msgs);
+		}
+	}
+
+	/**
+	 * @see DATAMONGO-806
+	 */
+	static class PushMessage {
+
+		@Id String id;
+		String content;
+		Date createDate;
+
+		public PushMessage() {}
+
+		public PushMessage(String id, String content, Date createDate) {
+			this.id = id;
+			this.content = content;
+			this.createDate = createDate;
+		}
+	}
 }

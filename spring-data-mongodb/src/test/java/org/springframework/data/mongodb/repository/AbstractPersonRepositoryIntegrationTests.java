@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2013 the original author or authors.
+ * Copyright 2011-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.MongoOperations;
@@ -50,6 +51,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * 
  * @author Oliver Gierke
  * @author Thomas Darimont
+ * @author Christoph Strobl
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 public abstract class AbstractPersonRepositoryIntegrationTests {
@@ -155,8 +157,8 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	public void findsPagedPersons() throws Exception {
 
 		Page<Person> result = repository.findAll(new PageRequest(1, 2, Direction.ASC, "lastname", "firstname"));
-		assertThat(result.isFirstPage(), is(false));
-		assertThat(result.isLastPage(), is(false));
+		assertThat(result.isFirst(), is(false));
+		assertThat(result.isLast(), is(false));
 		assertThat(result, hasItems(dave, stefan));
 	}
 
@@ -165,8 +167,8 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 
 		Page<Person> page = repository.findByLastnameLike("*a*", new PageRequest(0, 2, Direction.ASC, "lastname",
 				"firstname"));
-		assertThat(page.isFirstPage(), is(true));
-		assertThat(page.isLastPage(), is(false));
+		assertThat(page.isFirst(), is(true));
+		assertThat(page.isLast(), is(false));
 		assertThat(page.getNumberOfElements(), is(2));
 		assertThat(page, hasItems(carter, stefan));
 	}
@@ -176,8 +178,8 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 
 		Page<Person> page = repository.findByLastnameLikeWithPageable(".*a.*", new PageRequest(0, 2, Direction.ASC,
 				"lastname", "firstname"));
-		assertThat(page.isFirstPage(), is(true));
-		assertThat(page.isLastPage(), is(false));
+		assertThat(page.isFirst(), is(true));
+		assertThat(page.isLast(), is(false));
 		assertThat(page.getNumberOfElements(), is(2));
 		assertThat(page, hasItems(carter, stefan));
 	}
@@ -301,8 +303,8 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 
 		Page<Person> page = repository.findAll(person.lastname.contains("a"), new PageRequest(0, 2, Direction.ASC,
 				"lastname"));
-		assertThat(page.isFirstPage(), is(true));
-		assertThat(page.isLastPage(), is(false));
+		assertThat(page.isFirst(), is(true));
+		assertThat(page.isLast(), is(false));
 		assertThat(page.getNumberOfElements(), is(2));
 		assertThat(page, hasItems(carter, stefan));
 	}
@@ -737,5 +739,49 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		List<Person> result = repository.findByFirstnameContainingIgnoreCase("AV");
 		assertThat(result.size(), is(1));
 		assertThat(result.get(0), is(dave));
+	}
+
+	/**
+	 * @see DATAMONGO-870
+	 */
+	@Test
+	public void findsSliceOfPersons() {
+
+		Slice<Person> result = repository.findByAgeGreaterThan(40, new PageRequest(0, 2, Direction.DESC, "firstname"));
+
+		assertThat(result.hasNext(), is(true));
+	}
+
+	/**
+	 * @see DATAMONGO-871
+	 */
+	@Test
+	public void findsPersonsByFirstnameAsArray() {
+
+		Person[] result = repository.findByThePersonsFirstnameAsArray("Leroi");
+
+		assertThat(result, is(arrayWithSize(1)));
+		assertThat(result, is(arrayContaining(leroi)));
+	}
+	
+	
+	/**
+	 * @see DATAMONGO-821
+	 */
+	@Test
+	public void findUsingAnnotatedQueryOnDBRef() {
+
+		operations.remove(new org.springframework.data.mongodb.core.query.Query(), User.class);
+
+		User user = new User();
+		user.username = "Terria";
+		operations.save(user);
+
+		alicia.creator = user;
+		repository.save(alicia);
+
+		Page<Person> result = repository.findByHavingCreator(new PageRequest(0, 100));
+		assertThat(result.getNumberOfElements(), is(1));
+		assertThat(result.getContent().get(0), is(alicia));
 	}
 }

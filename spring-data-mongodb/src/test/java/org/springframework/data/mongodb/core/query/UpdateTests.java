@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 the original author or authors.
+ * Copyright 2010-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ import org.junit.Test;
  * @author Oliver Gierke
  * @author Thomas Risberg
  * @author Becca Gaspard
+ * @author Christoph Strobl
  */
 public class UpdateTests {
 
@@ -92,6 +93,23 @@ public class UpdateTests {
 		Update u = new Update().pushAll("authors", new Object[] { m1, m2 });
 		assertThat(u.getUpdateObject().toString(),
 				is("{ \"$pushAll\" : { \"authors\" : [ { \"name\" : \"Sven\"} , { \"name\" : \"Maria\"}]}}"));
+	}
+
+	/**
+	 * @see DATAMONGO-354
+	 */
+	@Test
+	public void testMultiplePushAllShouldBePossibleWhenUsingDifferentFields() {
+
+		Map<String, String> m1 = Collections.singletonMap("name", "Sven");
+		Map<String, String> m2 = Collections.singletonMap("name", "Maria");
+
+		Update u = new Update().pushAll("authors", new Object[] { m1, m2 });
+		u.pushAll("books", new Object[] { "Spring in Action" });
+
+		assertThat(
+				u.getUpdateObject().toString(),
+				is("{ \"$pushAll\" : { \"authors\" : [ { \"name\" : \"Sven\"} , { \"name\" : \"Maria\"}] , \"books\" : [ \"Spring in Action\"]}}"));
 	}
 
 	@Test
@@ -169,5 +187,101 @@ public class UpdateTests {
 
 		Update u = new Update().setOnInsert("size", 1).setOnInsert("count", 1);
 		assertThat(u.getUpdateObject().toString(), is("{ \"$setOnInsert\" : { \"size\" : 1 , \"count\" : 1}}"));
+	}
+
+	/**
+	 * @see DATAMONGO-852
+	 */
+	@Test
+	public void testUpdateAffectsFieldShouldReturnTrueWhenMultiFieldOperationAddedForField() {
+
+		Update update = new Update().set("foo", "bar");
+		assertThat(update.modifies("foo"), is(true));
+	}
+
+	/**
+	 * @see DATAMONGO-852
+	 */
+	@Test
+	public void testUpdateAffectsFieldShouldReturnFalseWhenMultiFieldOperationAddedForField() {
+
+		Update update = new Update().set("foo", "bar");
+		assertThat(update.modifies("oof"), is(false));
+	}
+
+	/**
+	 * @see DATAMONGO-852
+	 */
+	@Test
+	public void testUpdateAffectsFieldShouldReturnTrueWhenSingleFieldOperationAddedForField() {
+
+		Update update = new Update().pullAll("foo", new Object[] { "bar" });
+		assertThat(update.modifies("foo"), is(true));
+	}
+
+	/**
+	 * @see DATAMONGO-852
+	 */
+	@Test
+	public void testUpdateAffectsFieldShouldReturnFalseWhenSingleFieldOperationAddedForField() {
+
+		Update update = new Update().pullAll("foo", new Object[] { "bar" });
+		assertThat(update.modifies("oof"), is(false));
+	}
+
+	/**
+	 * @see DATAMONGO-852
+	 */
+	@Test
+	public void testUpdateAffectsFieldShouldReturnFalseWhenCalledOnEmptyUpdate() {
+		assertThat(new Update().modifies("foo"), is(false));
+	}
+
+	/**
+	 * @see DATAMONGO-852
+	 */
+	@Test
+	public void testUpdateAffectsFieldShouldReturnTrueWhenUpdateWithKeyCreatedFromDbObject() {
+
+		Update update = new Update().set("foo", "bar");
+		Update clone = Update.fromDBObject(update.getUpdateObject());
+
+		assertThat(clone.modifies("foo"), is(true));
+	}
+
+	/**
+	 * @see DATAMONGO-852
+	 */
+	@Test
+	public void testUpdateAffectsFieldShouldReturnFalseWhenUpdateWithoutKeyCreatedFromDbObject() {
+
+		Update update = new Update().set("foo", "bar");
+		Update clone = Update.fromDBObject(update.getUpdateObject());
+
+		assertThat(clone.modifies("oof"), is(false));
+	}
+
+	/**
+	 * @see DATAMONGO-853
+	 */
+	@Test(expected = IllegalArgumentException.class)
+	public void testAddingMultiFieldOperationThrowsExceptionWhenCalledWithNullKey() {
+		new Update().addMultiFieldOperation("$op", null, "exprected to throw IllegalArgumentException.");
+	}
+
+	/**
+	 * @see DATAMONGO-853
+	 */
+	@Test(expected = IllegalArgumentException.class)
+	public void testAddingSingleFieldOperationThrowsExceptionWhenCalledWithNullKey() {
+		new Update().addFieldOperation("$op", null, "exprected to throw IllegalArgumentException.");
+	}
+
+	/**
+	 * @see DATAMONGO-853
+	 */
+	@Test(expected = IllegalArgumentException.class)
+	public void testCreatingUpdateWithNullKeyThrowsException() {
+		Update.update(null, "value");
 	}
 }

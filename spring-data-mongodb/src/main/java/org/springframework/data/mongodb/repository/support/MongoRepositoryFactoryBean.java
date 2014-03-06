@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.repository.support;
 
 import java.io.Serializable;
 
+import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.repository.Repository;
@@ -34,6 +35,7 @@ public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID exten
 
 	private MongoOperations operations;
 	private boolean createIndexesForQueryMethods = false;
+	private boolean mappingContextConfigured = false;
 
 	/**
 	 * Configures the {@link MongoOperations} to be used.
@@ -42,7 +44,6 @@ public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID exten
 	 */
 	public void setMongoOperations(MongoOperations operations) {
 		this.operations = operations;
-		setMappingContext(operations.getConverter().getMappingContext());
 	}
 
 	/**
@@ -52,6 +53,17 @@ public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID exten
 	 */
 	public void setCreateIndexesForQueryMethods(boolean createIndexesForQueryMethods) {
 		this.createIndexesForQueryMethods = createIndexesForQueryMethods;
+	}
+
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.core.support.RepositoryFactoryBeanSupport#setMappingContext(org.springframework.data.mapping.context.MappingContext)
+	 */
+	@Override
+	protected void setMappingContext(MappingContext<?, ?> mappingContext) {
+
+		super.setMappingContext(mappingContext);
+		this.mappingContextConfigured = true;
 	}
 
 	/*
@@ -95,5 +107,9 @@ public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID exten
 
 		super.afterPropertiesSet();
 		Assert.notNull(operations, "MongoTemplate must not be null!");
+
+		if (!mappingContextConfigured) {
+			setMappingContext(operations.getConverter().getMappingContext());
+		}
 	}
 }

@@ -15,13 +15,19 @@
  */
 package org.springframework.data.mongodb.repository.config;
 
+import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
+import org.springframework.beans.factory.support.BeanDefinitionRegistry;
+import org.springframework.beans.factory.support.RootBeanDefinition;
 import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.data.config.ParsingUtils;
+import org.springframework.data.mongodb.config.BeanNames;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.repository.support.MongoRepositoryFactoryBean;
 import org.springframework.data.repository.config.AnnotationRepositoryConfigurationSource;
 import org.springframework.data.repository.config.RepositoryConfigurationExtension;
 import org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport;
+import org.springframework.data.repository.config.RepositoryConfigurationSource;
 import org.springframework.data.repository.config.XmlRepositoryConfigurationSource;
 import org.w3c.dom.Element;
 
@@ -34,6 +40,8 @@ public class MongoRepositoryConfigurationExtension extends RepositoryConfigurati
 
 	private static final String MONGO_TEMPLATE_REF = "mongo-template-ref";
 	private static final String CREATE_QUERY_INDEXES = "create-query-indexes";
+
+	private boolean fallbackMappingContextCreated = false;
 
 	/* 
 	 * (non-Javadoc)
@@ -50,6 +58,18 @@ public class MongoRepositoryConfigurationExtension extends RepositoryConfigurati
 	 */
 	public String getRepositoryFactoryClassName() {
 		return MongoRepositoryFactoryBean.class.getName();
+	}
+
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport#postProcess(org.springframework.beans.factory.support.BeanDefinitionBuilder, org.springframework.data.repository.config.RepositoryConfigurationSource)
+	 */
+	@Override
+	public void postProcess(BeanDefinitionBuilder builder, RepositoryConfigurationSource source) {
+
+		if (fallbackMappingContextCreated) {
+			builder.addPropertyReference("mappingContext", BeanNames.MAPPING_CONTEXT_BEAN_NAME);
+		}
 	}
 
 	/* 
@@ -76,5 +96,22 @@ public class MongoRepositoryConfigurationExtension extends RepositoryConfigurati
 
 		builder.addPropertyReference("mongoOperations", attributes.getString("mongoTemplateRef"));
 		builder.addPropertyValue("createIndexesForQueryMethods", attributes.getBoolean("createIndexesForQueryMethods"));
+	}
+
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport#registerBeansForRoot(org.springframework.beans.factory.support.BeanDefinitionRegistry, org.springframework.data.repository.config.RepositoryConfigurationSource)
+	 */
+	@Override
+	public void registerBeansForRoot(BeanDefinitionRegistry registry, RepositoryConfigurationSource configurationSource) {
+
+		if (!registry.containsBeanDefinition(BeanNames.MAPPING_CONTEXT_BEAN_NAME)) {
+
+			RootBeanDefinition definition = new RootBeanDefinition(MongoMappingContext.class);
+			definition.setRole(AbstractBeanDefinition.ROLE_INFRASTRUCTURE);
+			definition.setSource(configurationSource.getSource());
+
+			registry.registerBeanDefinition(BeanNames.MAPPING_CONTEXT_BEAN_NAME, definition);
+		}
 	}
 }

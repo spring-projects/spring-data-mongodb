@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 the original author or authors.
+ * Copyright 2012-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core.mapping.event;
 
+import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.context.ApplicationListener;
 import org.springframework.data.auditing.AuditingHandler;
 import org.springframework.data.auditing.IsNewAwareAuditingHandler;
@@ -25,20 +26,22 @@ import org.springframework.util.Assert;
  * Event listener to populate auditing related fields on an entity about to be saved.
  * 
  * @author Oliver Gierke
+ * @author Thomas Darimont
  */
 public class AuditingEventListener implements ApplicationListener<BeforeConvertEvent<Object>> {
 
-	private final IsNewAwareAuditingHandler<Object> auditingHandler;
+	private final ObjectFactory<IsNewAwareAuditingHandler> auditingHandlerFactory;
 
 	/**
-	 * Creates a new {@link AuditingEventListener} using the given {@link MappingContext} and {@link AuditingHandler}.
+	 * Creates a new {@link AuditingEventListener} using the given {@link MappingContext} and {@link AuditingHandler}
+	 * provided by the given {@link ObjectFactory}.
 	 * 
-	 * @param auditingHandler must not be {@literal null}.
+	 * @param auditingHandlerFactory must not be {@literal null}.
 	 */
-	public AuditingEventListener(IsNewAwareAuditingHandler<Object> auditingHandler) {
+	public AuditingEventListener(ObjectFactory<IsNewAwareAuditingHandler> auditingHandlerFactory) {
 
-		Assert.notNull(auditingHandler, "IsNewAwareAuditingHandler must not be null!");
-		this.auditingHandler = auditingHandler;
+		Assert.notNull(auditingHandlerFactory, "IsNewAwareAuditingHandler must not be null!");
+		this.auditingHandlerFactory = auditingHandlerFactory;
 	}
 
 	/* 
@@ -48,6 +51,6 @@ public class AuditingEventListener implements ApplicationListener<BeforeConvertE
 	public void onApplicationEvent(BeforeConvertEvent<Object> event) {
 
 		Object entity = event.getSource();
-		auditingHandler.markAudited(entity);
+		auditingHandlerFactory.getObject().markAudited(entity);
 	}
 }

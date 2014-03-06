@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2011-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,6 +33,7 @@ import javax.enterprise.inject.spi.ProcessBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.repository.cdi.CdiRepositoryBean;
 import org.springframework.data.repository.cdi.CdiRepositoryExtensionSupport;
 
 /**
@@ -76,26 +77,29 @@ public class MongoRepositoryExtension extends CdiRepositoryExtensionSupport {
 			Set<Annotation> qualifiers = entry.getValue();
 
 			// Create the bean representing the repository.
-			Bean<?> repositoryBean = createRepositoryBean(repositoryType, qualifiers, beanManager);
+			CdiRepositoryBean<?> repositoryBean = createRepositoryBean(repositoryType, qualifiers, beanManager);
 
 			if (LOG.isInfoEnabled()) {
 				LOG.info(String.format("Registering bean for %s with qualifiers %s.", repositoryType.getName(), qualifiers));
 			}
 
 			// Register the bean to the container.
+			registerBean(repositoryBean);
 			afterBeanDiscovery.addBean(repositoryBean);
 		}
 	}
 
 	/**
-	 * Creates a {@link Bean}.
+	 * Creates a {@link CdiRepositoryBean} for the repository of the given type.
 	 * 
-	 * @param <T> The type of the repository.
-	 * @param repositoryType The class representing the repository.
-	 * @param beanManager The BeanManager instance.
-	 * @return The bean.
+	 * @param <T> the type of the repository.
+	 * @param repositoryType the class representing the repository.
+	 * @param qualifiers the qualifiers to be applied to the bean.
+	 * @param beanManager the BeanManager instance.
+	 * @return
 	 */
-	private <T> Bean<T> createRepositoryBean(Class<T> repositoryType, Set<Annotation> qualifiers, BeanManager beanManager) {
+	private <T> CdiRepositoryBean<T> createRepositoryBean(Class<T> repositoryType, Set<Annotation> qualifiers,
+			BeanManager beanManager) {
 
 		// Determine the MongoOperations bean which matches the qualifiers of the repository.
 		Bean<MongoOperations> mongoOperations = this.mongoOperations.get(qualifiers);

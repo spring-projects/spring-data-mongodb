@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,6 @@ import java.util.Collections;
 import java.util.List;
 
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
-import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
 import org.springframework.data.mongodb.core.aggregation.ProjectionOperation.ProjectionOperationBuilder.FieldProjection;
 import org.springframework.util.Assert;
 
@@ -253,7 +252,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		public ExpressionProjectionOperationBuilder(Object value, ProjectionOperation operation, Object[] parameters) {
 
 			super(value, operation);
-			this.params = parameters;
+			this.params = parameters.clone();
 		}
 
 		/*
@@ -263,7 +262,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		@Override
 		public ProjectionOperation as(String alias) {
 
-			Field expressionField = Fields.field(alias, "expr");
+			Field expressionField = Fields.field(alias, alias);
 			return this.operation.and(new ExpressionProjection(expressionField, this.value.toString(), params));
 		}
 
@@ -295,7 +294,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 				Assert.notNull(parameters, "Parameters must not be null!");
 
 				this.expression = expression;
-				this.params = parameters;
+				this.params = parameters.clone();
 			}
 
 			/* 
@@ -316,6 +315,9 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 	 * @author Thomas Darimont
 	 */
 	public static class ProjectionOperationBuilder extends AbstractProjectionOperationBuilder {
+
+		private static final String NUMBER_NOT_NULL = "Number must not be null!";
+		private static final String FIELD_REFERENCE_NOT_NULL = "Field reference must not be null!";
 
 		private final String name;
 		private final ProjectionOperation operation;
@@ -383,7 +385,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 */
 		public ProjectionOperationBuilder plus(Number number) {
 
-			Assert.notNull(number, "Number must not be null!");
+			Assert.notNull(number, NUMBER_NOT_NULL);
 			return project("add", number);
 		}
 
@@ -420,7 +422,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 */
 		public ProjectionOperationBuilder minus(String fieldReference) {
 
-			Assert.notNull(fieldReference, "Field reference must not be null!");
+			Assert.notNull(fieldReference, FIELD_REFERENCE_NOT_NULL);
 			return project("subtract", Fields.field(fieldReference));
 		}
 
@@ -432,7 +434,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 */
 		public ProjectionOperationBuilder multiply(Number number) {
 
-			Assert.notNull(number, "Number must not be null!");
+			Assert.notNull(number, NUMBER_NOT_NULL);
 			return project("multiply", number);
 		}
 
@@ -445,7 +447,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 */
 		public ProjectionOperationBuilder multiply(String fieldReference) {
 
-			Assert.notNull(fieldReference, "Field reference must not be null!");
+			Assert.notNull(fieldReference, FIELD_REFERENCE_NOT_NULL);
 			return project("multiply", Fields.field(fieldReference));
 		}
 
@@ -457,7 +459,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 */
 		public ProjectionOperationBuilder divide(Number number) {
 
-			Assert.notNull(number, "Number must not be null!");
+			Assert.notNull(number, FIELD_REFERENCE_NOT_NULL);
 			Assert.isTrue(Math.abs(number.intValue()) != 0, "Number must not be zero!");
 			return project("divide", number);
 		}
@@ -471,7 +473,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 */
 		public ProjectionOperationBuilder divide(String fieldReference) {
 
-			Assert.notNull(fieldReference, "Field reference must not be null!");
+			Assert.notNull(fieldReference, FIELD_REFERENCE_NOT_NULL);
 			return project("divide", Fields.field(fieldReference));
 		}
 
@@ -484,7 +486,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 */
 		public ProjectionOperationBuilder mod(Number number) {
 
-			Assert.notNull(number, "Number must not be null!");
+			Assert.notNull(number, NUMBER_NOT_NULL);
 			Assert.isTrue(Math.abs(number.intValue()) != 0, "Number must not be zero!");
 			return project("mod", number);
 		}
@@ -498,7 +500,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 */
 		public ProjectionOperationBuilder mod(String fieldReference) {
 
-			Assert.notNull(fieldReference, "Field reference must not be null!");
+			Assert.notNull(fieldReference, FIELD_REFERENCE_NOT_NULL);
 			return project("mod", Fields.field(fieldReference));
 		}
 
@@ -626,8 +628,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 				if (value == null || Boolean.TRUE.equals(value)) {
 
 					// check whether referenced field exists in the context
-					FieldReference reference = context.getReference(field.getTarget());
-					return reference.isSynthetic() && !field.isAliased() ? 1 : reference.toString();
+					return context.getReference(field).getReferenceValue();
 
 				} else if (Boolean.FALSE.equals(value)) {
 

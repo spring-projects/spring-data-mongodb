@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 the original author or authors.
+ * Copyright 2010-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,10 @@ import java.util.List;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.SliceImpl;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.geo.Distance;
 import org.springframework.data.mongodb.core.geo.GeoPage;
@@ -79,21 +82,25 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 		MongoParameterAccessor accessor = new MongoParametersParameterAccessor(method, parameters);
 		Query query = createQuery(new ConvertingParameterAccessor(operations.getConverter(), accessor));
 
+		Object result = null;
+
 		if (method.isGeoNearQuery() && method.isPageQuery()) {
 
 			MongoParameterAccessor countAccessor = new MongoParametersParameterAccessor(method, parameters);
 			Query countQuery = createCountQuery(new ConvertingParameterAccessor(operations.getConverter(), countAccessor));
 
-			return new GeoNearExecution(accessor).execute(query, countQuery);
+			result = new GeoNearExecution(accessor).execute(query, countQuery);
 		} else if (method.isGeoNearQuery()) {
-			return new GeoNearExecution(accessor).execute(query);
+			result = new GeoNearExecution(accessor).execute(query);
+		} else if (method.isSliceQuery()) {
+			result = new SlicedExecution(accessor.getPageable()).execute(query);
 		} else if (method.isCollectionQuery()) {
-			return new CollectionExecution(accessor.getPageable()).execute(query);
+			result = new CollectionExecution(accessor.getPageable()).execute(query);
 		} else if (method.isPageQuery()) {
-			return new PagedExecution(accessor.getPageable()).execute(query);
+			result = new PagedExecution(accessor.getPageable()).execute(query);
+		} else {
+			result = new SingleEntityExecution(isCountQuery()).execute(query);
 		}
-
-		Object result = new SingleEntityExecution(isCountQuery()).execute(query);
 
 		if (result == null) {
 			return result;
@@ -153,7 +160,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	 * 
 	 * @author Oliver Gierke
 	 */
-	class CollectionExecution extends Execution {
+	final class CollectionExecution extends Execution {
 
 		private final Pageable pageable;
 
@@ -172,11 +179,46 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	}
 
 	/**
+	 * {@link Execution} for {@link Slice} query methods.
+	 * 
+	 * @author Oliver Gierke
+	 * @since 1.5
+	 */
+
+	final class SlicedExecution extends Execution {
+
+		private final Pageable pageable;
+
+		SlicedExecution(Pageable pageable) {
+			this.pageable = pageable;
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery.Execution#execute(org.springframework.data.mongodb.core.query.Query)
+		 */
+		@Override
+		@SuppressWarnings({ "unchecked", "rawtypes" })
+		Object execute(Query query) {
+
+			MongoEntityMetadata<?> metadata = method.getEntityInformation();
+			int pageSize = pageable.getPageSize();
+			Pageable slicePageable = new PageRequest(pageable.getPageNumber(), pageSize + 1, pageable.getSort());
+
+			List result = operations.find(query.with(slicePageable), metadata.getJavaType(), metadata.getCollectionName());
+
+			boolean hasNext = result.size() > pageSize;
+
+			return new SliceImpl<Object>(hasNext ? result.subList(0, pageSize) : result, pageable, hasNext);
+		}
+	}
+
+	/**
 	 * {@link Execution} for pagination queries.
 	 * 
 	 * @author Oliver Gierke
 	 */
-	class PagedExecution extends Execution {
+	final class PagedExecution extends Execution {
 
 		private final Pageable pageable;
 
@@ -213,7 +255,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	 * 
 	 * @author Oliver Gierke
 	 */
-	class SingleEntityExecution extends Execution {
+	final class SingleEntityExecution extends Execution {
 
 		private final boolean countProjection;
 
@@ -239,7 +281,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	 * 
 	 * @author Oliver Gierke
 	 */
-	class GeoNearExecution extends Execution {
+	final class GeoNearExecution extends Execution {
 
 		private final MongoParameterAccessor accessor;
 

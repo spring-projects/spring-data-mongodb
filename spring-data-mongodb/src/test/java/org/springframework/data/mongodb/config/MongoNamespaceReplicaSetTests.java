@@ -19,6 +19,7 @@ package org.springframework.data.mongodb.config;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
+import java.net.InetAddress;
 import java.util.List;
 
 import org.junit.Ignore;
@@ -40,8 +41,7 @@ import com.mongodb.ServerAddress;
 @ContextConfiguration
 public class MongoNamespaceReplicaSetTests {
 
-	@Autowired
-	private ApplicationContext ctx;
+	@Autowired private ApplicationContext ctx;
 
 	@Test
 	@SuppressWarnings("unchecked")
@@ -53,7 +53,10 @@ public class MongoNamespaceReplicaSetTests {
 		List<ServerAddress> replicaSetSeeds = (List<ServerAddress>) ReflectionTestUtils.getField(mfb, "replicaSetSeeds");
 
 		assertThat(replicaSetSeeds, is(notNullValue()));
-		assertThat(replicaSetSeeds, hasItems(new ServerAddress("127.0.0.1", 10001), new ServerAddress("localhost", 10002)));
+		assertThat(
+				replicaSetSeeds,
+				hasItems(new ServerAddress(InetAddress.getByName("127.0.0.1"), 10001),
+						new ServerAddress(InetAddress.getByName("localhost"), 10002)));
 	}
 
 	@Test

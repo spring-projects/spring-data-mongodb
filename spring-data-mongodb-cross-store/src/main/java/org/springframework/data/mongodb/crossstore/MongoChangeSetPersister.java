@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2013 the original author or authors.
+ * Copyright 2011-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,17 +41,13 @@ import com.mongodb.MongoException;
 public class MongoChangeSetPersister implements ChangeSetPersister<Object> {
 
 	private static final String ENTITY_CLASS = "_entity_class";
-
 	private static final String ENTITY_ID = "_entity_id";
-
 	private static final String ENTITY_FIELD_NAME = "_entity_field_name";
-
 	private static final String ENTITY_FIELD_CLASS = "_entity_field_class";
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
 	private MongoTemplate mongoTemplate;
-
 	private EntityManagerFactory entityManagerFactory;
 
 	public void setMongoTemplate(MongoTemplate mongoTemplate) {
@@ -113,12 +109,14 @@ public class MongoChangeSetPersister implements ChangeSetPersister<Object> {
 	 * @see org.springframework.data.crossstore.ChangeSetPersister#getPersistentId(org.springframework.data.crossstore.ChangeSetBacked, org.springframework.data.crossstore.ChangeSet)
 	 */
 	public Object getPersistentId(ChangeSetBacked entity, ChangeSet cs) throws DataAccessException {
+
 		log.debug("getPersistentId called on " + entity);
+
 		if (entityManagerFactory == null) {
 			throw new DataAccessResourceFailureException("EntityManagerFactory cannot be null");
 		}
-		Object o = entityManagerFactory.getPersistenceUnitUtil().getIdentifier(entity);
-		return o;
+
+		return entityManagerFactory.getPersistenceUnitUtil().getIdentifier(entity);
 	}
 
 	/*
