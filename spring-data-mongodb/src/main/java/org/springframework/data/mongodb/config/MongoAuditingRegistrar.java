@@ -15,6 +15,9 @@
  */
 package org.springframework.data.mongodb.config;
 
+import static org.springframework.beans.factory.config.BeanDefinition.*;
+import static org.springframework.data.mongodb.config.BeanNames.*;
+
 import java.lang.annotation.Annotation;
 
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -22,12 +25,15 @@ import org.springframework.beans.factory.config.ObjectFactoryCreatingFactoryBean
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
+import org.springframework.beans.factory.support.RootBeanDefinition;
 import org.springframework.context.annotation.ImportBeanDefinitionRegistrar;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.data.auditing.IsNewAwareAuditingHandler;
 import org.springframework.data.auditing.config.AuditingBeanDefinitionRegistrarSupport;
 import org.springframework.data.auditing.config.AuditingConfiguration;
+import org.springframework.data.config.ParsingUtils;
 import org.springframework.data.mapping.context.MappingContextIsNewStrategyFactory;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.event.AuditingEventListener;
 import org.springframework.data.support.IsNewStrategyFactory;
 import org.springframework.util.Assert;
@@ -68,7 +74,7 @@ class MongoAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport {
 		Assert.notNull(annotationMetadata, "AnnotationMetadata must not be null!");
 		Assert.notNull(registry, "BeanDefinitionRegistry must not be null!");
 
-		registerIsNewStrategyFactoryIfNecessary(registry);
+		defaultDependenciesIfNecessary(registry, annotationMetadata);
 		super.registerBeanDefinitions(annotationMetadata, registry);
 	}
 
@@ -99,7 +105,7 @@ class MongoAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport {
 
 		BeanDefinitionBuilder builder = BeanDefinitionBuilder.rootBeanDefinition(ObjectFactoryCreatingFactoryBean.class);
 		builder.addPropertyValue("targetBeanName", getAuditingHandlerBeanName());
-		builder.setRole(AbstractBeanDefinition.ROLE_INFRASTRUCTURE);
+		builder.setRole(ROLE_INFRASTRUCTURE);
 
 		BeanDefinitionBuilder listenerBeanDefinitionBuilder = BeanDefinitionBuilder
 				.rootBeanDefinition(AuditingEventListener.class);
@@ -110,14 +116,33 @@ class MongoAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport {
 	}
 
 	/**
-	 * @param registry, the {@link BeanDefinitionRegistry} to use to register an {@link IsNewStrategyFactory} to.
+	 * Register default bean definitions for a {@link MongoMappingContext} and an {@link IsNewStrategyFactory} in case we
+	 * don't find beans with the assumed names in the registry.
+	 * 
+	 * @param registry the {@link BeanDefinitionRegistry} to use to register the components into.
+	 * @param source the source which the registered components shall be registered with
 	 */
-	private void registerIsNewStrategyFactoryIfNecessary(BeanDefinitionRegistry registry) {
+	private void defaultDependenciesIfNecessary(BeanDefinitionRegistry registry, Object source) {
+
+		if (!registry.containsBeanDefinition(MAPPING_CONTEXT_BEAN_NAME)) {
+
+			RootBeanDefinition definition = new RootBeanDefinition(MongoMappingContext.class);
+			definition.setRole(ROLE_INFRASTRUCTURE);
+			definition.setSource(source);
+
+			registry.registerBeanDefinition(MAPPING_CONTEXT_BEAN_NAME, definition);
+		}
 
 		if (!registry.containsBeanDefinition(BeanNames.IS_NEW_STRATEGY_FACTORY_BEAN_NAME)) {
-			registry.registerBeanDefinition(BeanNames.IS_NEW_STRATEGY_FACTORY_BEAN_NAME,
-					BeanDefinitionBuilder.rootBeanDefinition(MappingContextIsNewStrategyFactory.class)
-							.addConstructorArgReference(BeanNames.MAPPING_CONTEXT_BEAN_NAME).getBeanDefinition());
+
+			BeanDefinitionBuilder builder = BeanDefinitionBuilder
+					.rootBeanDefinition(MappingContextIsNewStrategyFactory.class);
+			builder.addConstructorArgReference(MAPPING_CONTEXT_BEAN_NAME);
+
+			AbstractBeanDefinition definition = ParsingUtils.getSourceBeanDefinition(builder, source);
+			definition.setRole(ROLE_INFRASTRUCTURE);
+
+			registry.registerBeanDefinition(IS_NEW_STRATEGY_FACTORY_BEAN_NAME, definition);
 		}
 	}
 }

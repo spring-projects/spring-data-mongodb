@@ -105,6 +105,15 @@ public class AuditingViaJavaConfigRepositoriesTests {
 	 */
 	@Test
 	@SuppressWarnings("resource")
+	public void auditingUsesFallbackMappingContextIfNoneConfiguredWithRepositories() {
+		new AnnotationConfigApplicationContext(SimpleConfigWithRepositories.class);
+	}
+
+	/**
+	 * @see DATAMONGO-843
+	 */
+	@Test
+	@SuppressWarnings("resource")
 	public void auditingUsesFallbackMappingContextIfNoneConfigured() {
 		new AnnotationConfigApplicationContext(SimpleConfig.class);
 	}
@@ -114,6 +123,16 @@ public class AuditingViaJavaConfigRepositoriesTests {
 
 	@Configuration
 	@EnableMongoRepositories
+	@EnableMongoAuditing
+	static class SimpleConfigWithRepositories {
+
+		@Bean
+		public MongoTemplate mongoTemplate() throws UnknownHostException {
+			return new MongoTemplate(new SimpleMongoDbFactory(new MongoClient(), "database"));
+		}
+	}
+
+	@Configuration
 	@EnableMongoAuditing
 	static class SimpleConfig {
 
