@@ -23,6 +23,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.AuditorAware;
@@ -96,6 +97,21 @@ public class AuditingViaJavaConfigRepositoriesTests {
 		assertThat(createdBy.getFirstname(), is(this.auditor.getFirstname()));
 	}
 
+	/**
+	 * @see DATAMONGO-843
+	 */
+	@Test
+	@SuppressWarnings("resource")
+	public void defaultsMappingContextIfNoneConfigured() {
+		new AnnotationConfigApplicationContext(SampleConfig.class);
+	}
+
 	@Repository
 	static interface AuditablePersonRepository extends MongoRepository<AuditablePerson, String> {}
+
+	@Configuration
+	@EnableMongoAuditing
+	static class SampleConfig {
+
+	}
 }
