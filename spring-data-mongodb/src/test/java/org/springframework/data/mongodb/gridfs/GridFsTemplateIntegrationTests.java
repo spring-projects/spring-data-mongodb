@@ -61,6 +61,9 @@ public class GridFsTemplateIntegrationTests {
 		operations.delete(null);
 	}
 
+	/**
+	 * @see DATAMONGO-6
+	 */
 	@Test
 	public void storesAndFindsSimpleDocument() throws IOException {
 
@@ -71,6 +74,9 @@ public class GridFsTemplateIntegrationTests {
 		assertSame(result.get(0), reference);
 	}
 
+	/**
+	 * @see DATAMONGO-6
+	 */
 	@Test
 	public void writesMetadataCorrectly() throws IOException {
 
@@ -80,6 +86,51 @@ public class GridFsTemplateIntegrationTests {
 		List<GridFSDBFile> result = operations.find(query(whereMetaData("key").is("value")));
 		assertThat(result.size(), is(1));
 		assertSame(result.get(0), reference);
+	}
+
+	/**
+	 * @see DATAMONGO-6
+	 */
+	@Test
+	public void marshalsComplexMetadata() throws IOException {
+
+		Metadata metadata = new Metadata();
+		metadata.version = "1.0";
+
+		GridFSFile reference = operations.store(resource.getInputStream(), "foo.xml", metadata);
+		List<GridFSDBFile> result = operations.find(query(whereFilename().is("foo.xml")));
+		assertThat(result.size(), is(1));
+		assertSame(result.get(0), reference);
+	}
+
+	/**
+	 * @see DATAMONGO-6
+	 */
+	@Test
+	public void findsFilesByResourcePattern() throws IOException {
+
+		GridFSFile reference = operations.store(resource.getInputStream(), "foo.xml");
+
+		GridFsResource[] resources = operations.getResources("*.xml");
+		assertThat(resources.length, is(1));
+		assertThat(resources[0].getId(), is(reference.getId()));
+		assertThat(resources[0].contentLength(), is(reference.getLength()));
+		assertThat(resources[0].getContentType(), is(reference.getContentType()));
+	}
+
+	/**
+	 * @see DATAMONGO-6
+	 */
+	@Test
+	public void findsFilesByResourceLocation() throws IOException {
+
+		GridFSFile reference = operations.store(resource.getInputStream(), "foo.xml");
+
+		GridFsResource[] resources = operations.getResources("foo.xml");
+		assertThat(resources.length, is(1));
+		assertThat(resources[0].getId(), is(reference.getId()));
+		assertThat(resources[0].contentLength(), is(reference.getLength()));
+		assertThat(resources[0].getContentType(), is(reference.getContentType()));
 	}
 
 	/**
@@ -93,42 +144,6 @@ public class GridFsTemplateIntegrationTests {
 		List<GridFSDBFile> result = operations.find(query(whereContentType().is("application/xml")));
 		assertThat(result.size(), is(1));
 		assertSame(result.get(0), reference);
-	}
-
-	@Test
-	public void marshalsComplexMetadata() throws IOException {
-
-		Metadata metadata = new Metadata();
-		metadata.version = "1.0";
-
-		GridFSFile reference = operations.store(resource.getInputStream(), "foo.xml", metadata);
-		List<GridFSDBFile> result = operations.find(query(whereFilename().is("foo.xml")));
-		assertThat(result.size(), is(1));
-		assertSame(result.get(0), reference);
-	}
-
-	@Test
-	public void findsFilesByResourcePattern() throws IOException {
-
-		GridFSFile reference = operations.store(resource.getInputStream(), "foo.xml");
-
-		GridFsResource[] resources = operations.getResources("*.xml");
-		assertThat(resources.length, is(1));
-		assertThat(resources[0].getId(), is(reference.getId()));
-		assertThat(resources[0].contentLength(), is(reference.getLength()));
-		assertThat(resources[0].getContentType(), is(reference.getContentType()));
-	}
-
-	@Test
-	public void findsFilesByResourceLocation() throws IOException {
-
-		GridFSFile reference = operations.store(resource.getInputStream(), "foo.xml");
-
-		GridFsResource[] resources = operations.getResources("foo.xml");
-		assertThat(resources.length, is(1));
-		assertThat(resources[0].getId(), is(reference.getId()));
-		assertThat(resources[0].contentLength(), is(reference.getLength()));
-		assertThat(resources[0].getContentType(), is(reference.getContentType()));
 	}
 
 	/**
