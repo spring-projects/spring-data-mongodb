@@ -82,7 +82,6 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	protected final QueryMapper idMapper;
 	protected final DbRefResolver dbRefResolver;
 	protected ApplicationContext applicationContext;
-	protected boolean useFieldAccessOnly = true;
 	protected MongoTypeMapper typeMapper;
 	protected String mapKeyDotReplacement = null;
 
@@ -164,17 +163,6 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 */
 	public MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> getMappingContext() {
 		return mappingContext;
-	}
-
-	/**
-	 * Configures whether to use field access only for entity mapping. Setting this to true will force the
-	 * {@link MongoConverter} to not go through getters or setters even if they are present for getting and setting
-	 * property values.
-	 * 
-	 * @param useFieldAccessOnly
-	 */
-	public void setUseFieldAccessOnly(boolean useFieldAccessOnly) {
-		this.useFieldAccessOnly = useFieldAccessOnly;
 	}
 
 	/*
@@ -266,7 +254,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				}
 
 				Object obj = getValueInternal(prop, dbo, evaluator, result);
-				wrapper.setProperty(prop, obj, useFieldAccessOnly);
+				wrapper.setProperty(prop, obj);
 			}
 		});
 
@@ -380,10 +368,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		if (!dbo.containsField("_id") && null != idProperty) {
 
-			boolean fieldAccessOnly = idProperty.usePropertyAccess() ? false : useFieldAccessOnly;
-
 			try {
-				Object id = wrapper.getProperty(idProperty, Object.class, fieldAccessOnly);
+				Object id = wrapper.getProperty(idProperty, Object.class);
 				dbo.put("_id", idMapper.convertId(id));
 			} catch (ConversionException ignored) {}
 		}
@@ -396,9 +382,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 					return;
 				}
 
-				boolean fieldAccessOnly = prop.usePropertyAccess() ? false : useFieldAccessOnly;
-
-				Object propertyObj = wrapper.getProperty(prop, prop.getType(), fieldAccessOnly);
+				Object propertyObj = wrapper.getProperty(prop);
 
 				if (null != propertyObj) {
 					if (!conversions.isSimpleType(propertyObj.getClass())) {
@@ -414,7 +398,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			public void doWithAssociation(Association<MongoPersistentProperty> association) {
 				MongoPersistentProperty inverseProp = association.getInverse();
 				Class<?> type = inverseProp.getType();
-				Object propertyObj = wrapper.getProperty(inverseProp, type, useFieldAccessOnly);
+				Object propertyObj = wrapper.getProperty(inverseProp, type);
 				if (null != propertyObj) {
 					writePropertyInternal(propertyObj, dbo, inverseProp);
 				}
@@ -769,7 +753,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			id = target;
 		} else {
 			BeanWrapper<MongoPersistentEntity<Object>, Object> wrapper = BeanWrapper.create(target, conversionService);
-			id = wrapper.getProperty(idProperty, Object.class, useFieldAccessOnly);
+			id = wrapper.getProperty(idProperty, Object.class);
 		}
 
 		if (null == id) {

@@ -15,7 +15,6 @@
  */
 package org.springframework.data.mongodb.core.index;
 
-import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -119,22 +118,20 @@ public class MongoPersistentEntityIndexCreator implements
 			}
 
 			entity.doWithProperties(new PropertyHandler<MongoPersistentProperty>() {
-				public void doWithPersistentProperty(MongoPersistentProperty persistentProperty) {
+				public void doWithPersistentProperty(MongoPersistentProperty property) {
 
-					Field field = persistentProperty.getField();
+					if (property.isAnnotationPresent(Indexed.class)) {
 
-					if (field.isAnnotationPresent(Indexed.class)) {
-
-						Indexed index = field.getAnnotation(Indexed.class);
+						Indexed index = property.findAnnotation(Indexed.class);
 						String name = index.name();
 
 						if (!StringUtils.hasText(name)) {
-							name = persistentProperty.getFieldName();
+							name = property.getFieldName();
 						} else {
-							if (!name.equals(field.getName()) && index.unique() && !index.sparse()) {
+							if (!name.equals(property.getName()) && index.unique() && !index.sparse()) {
 								// Names don't match, and sparse is not true. This situation will generate an error on the server.
 								if (LOGGER.isWarnEnabled()) {
-									LOGGER.warn("The index name " + name + " doesn't match this property name: " + field.getName()
+									LOGGER.warn("The index name " + name + " doesn't match this property name: " + property.getName()
 											+ ". Setting sparse=true on this index will prevent errors when inserting documents.");
 								}
 							}
@@ -142,7 +139,7 @@ public class MongoPersistentEntityIndexCreator implements
 
 						String collection = StringUtils.hasText(index.collection()) ? index.collection() : entity.getCollection();
 						int direction = index.direction() == IndexDirection.ASCENDING ? 1 : -1;
-						DBObject definition = new BasicDBObject(persistentProperty.getFieldName(), direction);
+						DBObject definition = new BasicDBObject(property.getFieldName(), direction);
 
 						ensureIndex(collection, name, definition, index.unique(), index.dropDups(), index.sparse(),
 								index.background(), index.expireAfterSeconds());
@@ -151,13 +148,13 @@ public class MongoPersistentEntityIndexCreator implements
 							LOGGER.debug("Created property index " + index);
 						}
 
-					} else if (field.isAnnotationPresent(GeoSpatialIndexed.class)) {
+					} else if (property.isAnnotationPresent(GeoSpatialIndexed.class)) {
 
-						GeoSpatialIndexed index = field.getAnnotation(GeoSpatialIndexed.class);
+						GeoSpatialIndexed index = property.findAnnotation(GeoSpatialIndexed.class);
 
-						GeospatialIndex indexObject = new GeospatialIndex(persistentProperty.getFieldName());
+						GeospatialIndex indexObject = new GeospatialIndex(property.getFieldName());
 						indexObject.withMin(index.min()).withMax(index.max());
-						indexObject.named(StringUtils.hasText(index.name()) ? index.name() : field.getName());
+						indexObject.named(StringUtils.hasText(index.name()) ? index.name() : property.getName());
 						indexObject.typed(index.type()).withBucketSize(index.bucketSize())
 								.withAdditionalField(index.additionalField());
 

@@ -29,7 +29,6 @@ import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.model.AnnotationBasedPersistentProperty;
 import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
-import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.DBObject;
@@ -50,17 +49,14 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 	private static final Set<Class<?>> SUPPORTED_ID_TYPES = new HashSet<Class<?>>();
 	private static final Set<String> SUPPORTED_ID_PROPERTY_NAMES = new HashSet<String>();
 
-	private static final Field CAUSE_FIELD;
-
 	static {
+
 		SUPPORTED_ID_TYPES.add(ObjectId.class);
 		SUPPORTED_ID_TYPES.add(String.class);
 		SUPPORTED_ID_TYPES.add(BigInteger.class);
 
 		SUPPORTED_ID_PROPERTY_NAMES.add("id");
 		SUPPORTED_ID_PROPERTY_NAMES.add("_id");
-
-		CAUSE_FIELD = ReflectionUtils.findField(Throwable.class, "cause");
 	}
 
 	private final FieldNamingStrategy fieldNamingStrategy;
@@ -86,14 +82,6 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.springframework.data.mapping.FooBasicPersistentProperty#isAssociation()
-	 */
-	@Override
-	public boolean isAssociation() {
-		return field.isAnnotationPresent(DBRef.class) || super.isAssociation();
-	}
-
 	/**
 	 * Also considers fields as id that are of supported id type and name.
 	 * 
@@ -108,7 +96,7 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 		}
 
 		// We need to support a wider range of ID types than just the ones that can be converted to an ObjectId
-		return SUPPORTED_ID_PROPERTY_NAMES.contains(field.getName());
+		return SUPPORTED_ID_PROPERTY_NAMES.contains(getName());
 	}
 
 	/*
@@ -163,8 +151,7 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentProperty#getFieldOrder()
 	 */
 	public int getFieldOrder() {
-		org.springframework.data.mongodb.core.mapping.Field annotation = getField().getAnnotation(
-				org.springframework.data.mongodb.core.mapping.Field.class);
+		org.springframework.data.mongodb.core.mapping.Field annotation = findAnnotation(org.springframework.data.mongodb.core.mapping.Field.class);
 		return annotation != null ? annotation.order() : Integer.MAX_VALUE;
 	}
 
@@ -182,7 +169,7 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentProperty#isDbReference()
 	 */
 	public boolean isDbReference() {
-		return getField().isAnnotationPresent(DBRef.class);
+		return isAnnotationPresent(DBRef.class);
 	}
 
 	/*
@@ -190,14 +177,6 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentProperty#getDBRef()
 	 */
 	public DBRef getDBRef() {
-		return getField().getAnnotation(DBRef.class);
-	}
-
-	/* 
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentProperty#usePropertyAccess()
-	 */
-	public boolean usePropertyAccess() {
-		return CAUSE_FIELD.equals(getField());
+		return findAnnotation(DBRef.class);
 	}
 }
