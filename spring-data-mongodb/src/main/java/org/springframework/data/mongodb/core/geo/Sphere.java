@@ -106,7 +106,7 @@ public class Sphere implements Shape {
 	 */
 	@Override
 	public String toString() {
-		return String.format("Sphere [center=%s, radius=%f]", center, radius);
+		return String.format("Sphere [center=%s, radius=%s]", center, radius);
 	}
 
 	/* (non-Javadoc)

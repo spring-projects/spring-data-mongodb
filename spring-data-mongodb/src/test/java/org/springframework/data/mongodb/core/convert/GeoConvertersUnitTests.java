@@ -39,7 +39,7 @@ import org.springframework.data.mongodb.core.convert.GeoConverters.PolygonToDbOb
 import org.springframework.data.mongodb.core.convert.GeoConverters.SphereToDbObjectConverter;
 import org.springframework.data.mongodb.core.geo.Sphere;
 
-import com.mongodb.DBObject;
+import com.mongodb.BasicDBList;
 
 /**
  * @author Thomas Darimont
@@ -55,7 +55,7 @@ public class GeoConvertersUnitTests {
 
 		Box box = new Box(new Point(1, 2), new Point(3, 4));
 
-		DBObject dbo = BoxToDbObjectConverter.INSTANCE.convert(box);
+		BasicDBList dbo = BoxToDbObjectConverter.INSTANCE.convert(box);
 		Box result = DbObjectToBoxConverter.INSTANCE.convert(dbo);
 
 		assertThat(result, is(box));
@@ -70,7 +70,7 @@ public class GeoConvertersUnitTests {
 
 		Circle circle = new Circle(new Point(1, 2), 3);
 
-		DBObject dbo = CircleToDbObjectConverter.INSTANCE.convert(circle);
+		BasicDBList dbo = CircleToDbObjectConverter.INSTANCE.convert(circle);
 		Circle result = DbObjectToCircleConverter.INSTANCE.convert(dbo);
 
 		assertThat(result, is(circle));
@@ -85,7 +85,7 @@ public class GeoConvertersUnitTests {
 		org.springframework.data.mongodb.core.geo.Circle circle = new org.springframework.data.mongodb.core.geo.Circle(
 				new Point(1, 2), 3);
 
-		DBObject dbo = LegacyCircleToDbObjectConverter.INSTANCE.convert(circle);
+		BasicDBList dbo = LegacyCircleToDbObjectConverter.INSTANCE.convert(circle);
 		org.springframework.data.mongodb.core.geo.Circle result = DbObjectToLegacyCircleConverter.INSTANCE.convert(dbo);
 
 		assertThat(result, is(circle));
@@ -99,7 +99,7 @@ public class GeoConvertersUnitTests {
 
 		Polygon polygon = new Polygon(new Point(1, 2), new Point(2, 3), new Point(3, 4), new Point(5, 6));
 
-		DBObject dbo = PolygonToDbObjectConverter.INSTANCE.convert(polygon);
+		BasicDBList dbo = PolygonToDbObjectConverter.INSTANCE.convert(polygon);
 		Polygon result = DbObjectToPolygonConverter.INSTANCE.convert(dbo);
 
 		assertThat(result, is(polygon));
@@ -114,7 +114,7 @@ public class GeoConvertersUnitTests {
 
 		Sphere sphere = new Sphere(new Point(1, 2), 3);
 
-		DBObject dbo = SphereToDbObjectConverter.INSTANCE.convert(sphere);
+		BasicDBList dbo = SphereToDbObjectConverter.INSTANCE.convert(sphere);
 		Sphere result = DbObjectToSphereConverter.INSTANCE.convert(dbo);
 
 		assertThat(result, is(sphere));

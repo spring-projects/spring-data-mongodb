@@ -32,6 +32,8 @@ import org.springframework.data.geo.Point;
 @Deprecated
 public class Polygon extends org.springframework.data.geo.Polygon implements Shape {
 
+	public static final String COMMAND = "$polygon";
+
 	/**
 	 * Creates a new {@link Polygon} for the given Points.
 	 * 
@@ -58,7 +60,7 @@ public class Polygon extends org.springframework.data.geo.Polygon implements Sha
 	 * @see org.springframework.data.mongodb.core.geo.Shape#getCommand()
 	 */
 	public String getCommand() {
-		return "$polygon";
+		return COMMAND;
 	}
 
 	/* 
@@ -67,8 +69,18 @@ public class Polygon extends org.springframework.data.geo.Polygon implements Sha
 	 */
 	@Override
 	public List<? extends Object> asList() {
+		return asList(this);
+	}
 
-		List<Point> points = getPoints();
+	/**
+	 * Returns a {@link List} of x,y-coordinate tuples of {@link Point}s from the given {@link Polygon}.
+	 * 
+	 * @param polygon
+	 * @return
+	 */
+	public static List<? extends Object> asList(org.springframework.data.geo.Polygon polygon) {
+
+		List<Point> points = polygon.getPoints();
 		List<List<Double>> tuples = new ArrayList<List<Double>>(points.size());
 
 		for (Point point : points) {

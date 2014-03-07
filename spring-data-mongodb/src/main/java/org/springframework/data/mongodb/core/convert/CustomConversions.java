@@ -126,20 +126,7 @@ public class CustomConversions {
 		this.converters.add(StringToURLConverter.INSTANCE);
 		this.converters.add(DBObjectToStringConverter.INSTANCE);
 
-		this.converters.add(GeoConverters.BoxToDbObjectConverter.INSTANCE);
-		this.converters.add(GeoConverters.PolygonToDbObjectConverter.INSTANCE);
-		this.converters.add(GeoConverters.CircleToDbObjectConverter.INSTANCE);
-		this.converters.add(GeoConverters.LegacyCircleToDbObjectConverter.INSTANCE);
-		this.converters.add(GeoConverters.SphereToDbObjectConverter.INSTANCE);
-
-		this.converters.add(GeoConverters.DbObjectToBoxConverter.INSTANCE);
-		this.converters.add(GeoConverters.DbObjectToPolygonConverter.INSTANCE);
-		this.converters.add(GeoConverters.DbObjectToCircleConverter.INSTANCE);
-		this.converters.add(GeoConverters.DbObjectToLegacyCircleConverter.INSTANCE);
-		this.converters.add(GeoConverters.DbObjectToSphereConverter.INSTANCE);
-
-		this.converters.add(GeoConverters.ListToPointConverter.INSTANCE);
-		this.converters.add(GeoConverters.PointToListConverter.INSTANCE);
+		this.converters.addAll(GeoConverters.getConvertersToRegister());
 
 		this.converters.addAll(JodaTimeConverters.getConvertersToRegister());
 

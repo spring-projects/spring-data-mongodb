@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core.convert;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import org.springframework.core.convert.converter.Converter;
@@ -29,8 +30,7 @@ import org.springframework.data.geo.Polygon;
 import org.springframework.data.mongodb.core.geo.Sphere;
 import org.springframework.util.Assert;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
+import com.mongodb.BasicDBList;
 
 /**
  * Wrapper class to contain useful geo structure converters for the usage with Mongo.
@@ -83,128 +83,127 @@ abstract class GeoConverters {
 	}
 
 	/**
-	 * Converts a {@link Box} into a {@link DBObject}.
+	 * Converts a {@link Box} into a {@link BasicDBList}.
 	 * 
 	 * @author Thomas Darimont
 	 * @since 1.5
 	 */
 	@WritingConverter
-	public static enum BoxToDbObjectConverter implements Converter<Box, DBObject> {
+	public static enum BoxToDbObjectConverter implements Converter<Box, BasicDBList> {
 
 		INSTANCE;
 
 		@Override
-		@SuppressWarnings({ "unchecked", "deprecation" })
-		public DBObject convert(Box source) {
+		public BasicDBList convert(Box source) {
 
 			if (source == null) {
 				return null;
 			}
 
-			return new BasicDBObject(org.springframework.data.mongodb.core.geo.Box.COMMAND, Arrays.asList(
-					toList(source.getFirst()), toList(source.getSecond())));
+			BasicDBList result = new BasicDBList();
+			result.add(toList(source.getFirst()));
+			result.add(toList(source.getSecond()));
+			return result;
 		}
 	}
 
 	/**
-	 * Converts a {@link DBObject} into a {@link org.springframework.data.mongodb.core.geo.Box}.
+	 * Converts a {@link BasicDBList} into a {@link org.springframework.data.mongodb.core.geo.Box}.
 	 * 
 	 * @author Thomas Darimont
 	 * @since 1.5
 	 */
 	@ReadingConverter
-	public static enum DbObjectToBoxConverter implements Converter<DBObject, Box> {
+	public static enum DbObjectToBoxConverter implements Converter<BasicDBList, Box> {
 
 		INSTANCE;
 
 		@SuppressWarnings("deprecation")
 		@Override
-		public Box convert(DBObject source) {
+		public Box convert(BasicDBList source) {
 
 			if (source == null) {
 				return null;
 			}
 
-			List<?> list = (List<?>) source.get(org.springframework.data.mongodb.core.geo.Box.COMMAND);
-
-			return new org.springframework.data.mongodb.core.geo.Box(toPoint(list.get(0)), toPoint(list.get(1)));
+			return new org.springframework.data.mongodb.core.geo.Box(toPoint(source.get(0)), toPoint(source.get(1)));
 		}
 	}
 
 	/**
-	 * Converts a {@link Circle} into a {@link DBObject}.
+	 * Converts a {@link Circle} into a {@link BasicDBList}.
 	 * 
 	 * @author Thomas Darimont
 	 * @since 1.5
 	 */
-	public static enum CircleToDbObjectConverter implements Converter<Circle, DBObject> {
+	public static enum CircleToDbObjectConverter implements Converter<Circle, BasicDBList> {
 
 		INSTANCE;
 
-		@SuppressWarnings("deprecation")
 		@Override
-		public DBObject convert(Circle source) {
+		public BasicDBList convert(Circle source) {
 
 			if (source == null) {
 				return null;
 			}
 
-			return new BasicDBObject(org.springframework.data.mongodb.core.geo.Circle.COMMAND, Arrays.asList(
-					toList(source.getCenter()), source.getRadius().getNormalizedValue()));
+			BasicDBList result = new BasicDBList();
+			result.add(toList(source.getCenter()));
+			result.add(source.getRadius().getNormalizedValue());
+			return result;
 		}
 	}
 
 	/**
-	 * Converts a {@link DBObject} into a {@link org.springframework.data.mongodb.core.geo.Circle}.
+	 * Converts a {@link BasicDBList} into a {@link org.springframework.data.mongodb.core.geo.Circle}.
 	 * 
 	 * @author Thomas Darimont
 	 * @since 1.5
 	 */
 	@ReadingConverter
-	public static enum DbObjectToCircleConverter implements Converter<DBObject, Circle> {
+	public static enum DbObjectToCircleConverter implements Converter<BasicDBList, Circle> {
 
 		INSTANCE;
 
-		@SuppressWarnings("deprecation")
 		@Override
-		public Circle convert(DBObject source) {
+		public Circle convert(BasicDBList source) {
 
 			if (source == null) {
 				return null;
 			}
 
-			List<?> list = (List<?>) source.get(org.springframework.data.mongodb.core.geo.Circle.COMMAND);
-
-			return new Circle(toPoint(list.get(0)), (Double) list.get(1));
+			return new Circle(toPoint(source.get(0)), (Double) source.get(1));
 		}
 	}
 
 	/**
-	 * Converts a {@link Circle} into a {@link DBObject}.
+	 * Converts a {@link Circle} into a {@link BasicDBList}.
 	 * 
 	 * @author Thomas Darimont
 	 * @since 1.5
 	 */
 	@SuppressWarnings("deprecation")
 	public static enum LegacyCircleToDbObjectConverter implements
-			Converter<org.springframework.data.mongodb.core.geo.Circle, DBObject> {
+			Converter<org.springframework.data.mongodb.core.geo.Circle, BasicDBList> {
 
 		INSTANCE;
 
 		@Override
-		public DBObject convert(org.springframework.data.mongodb.core.geo.Circle source) {
+		public BasicDBList convert(org.springframework.data.mongodb.core.geo.Circle source) {
 
 			if (source == null) {
 				return null;
 			}
 
-			return new BasicDBObject(org.springframework.data.mongodb.core.geo.Circle.COMMAND, Arrays.asList(
-					toList(source.getCenter()), source.getRadius()));
+			BasicDBList result = new BasicDBList();
+			result.add(toList(source.getCenter()));
+			result.add(source.getRadius());
+			return result;
 		}
 	}
 
 	/**
-	 * Converts a {@link DBObject} into a {@link org.springframework.data.mongodb.core.geo.Circle}.
+	 * Converts a {@link BasicDBList} into a {@link org.springframework.data.mongodb.core.geo.Circle}.
 	 * 
 	 * @author Thomas Darimont
 	 * @since 1.5
@@ -212,81 +211,79 @@ abstract class GeoConverters {
 	@ReadingConverter
 	@SuppressWarnings("deprecation")
 	public static enum DbObjectToLegacyCircleConverter implements
-			Converter<DBObject, org.springframework.data.mongodb.core.geo.Circle> {
+			Converter<BasicDBList, org.springframework.data.mongodb.core.geo.Circle> {
 
 		INSTANCE;
 
 		@Override
-		public org.springframework.data.mongodb.core.geo.Circle convert(DBObject source) {
+		public org.springframework.data.mongodb.core.geo.Circle convert(BasicDBList source) {
 
 			if (source == null) {
 				return null;
 			}
 
-			List<?> list = (List<?>) source.get(org.springframework.data.mongodb.core.geo.Circle.COMMAND);
-
-			return new org.springframework.data.mongodb.core.geo.Circle(toPoint(list.get(0)), (Double) list.get(1));
+			return new org.springframework.data.mongodb.core.geo.Circle(toPoint(source.get(0)), (Double) source.get(1));
 		}
 	}
 
 	/**
-	 * Converts a {@link Sphere} into a {@link DBObject}.
+	 * Converts a {@link Sphere} into a {@link BasicDBList}.
 	 * 
 	 * @author Thomas Darimont
 	 * @since 1.5
 	 */
-	public static enum SphereToDbObjectConverter implements Converter<Sphere, DBObject> {
+	public static enum SphereToDbObjectConverter implements Converter<Sphere, BasicDBList> {
 
 		INSTANCE;
 
 		@Override
-		public DBObject convert(Sphere source) {
+		public BasicDBList convert(Sphere source) {
 
 			if (source == null) {
 				return null;
 			}
 
-			return new BasicDBObject(Sphere.COMMAND, Arrays.asList(toList(source.getCenter()), source.getRadius()
-					.getNormalizedValue()));
+			BasicDBList result = new BasicDBList();
+			result.add(toList(source.getCenter()));
+			result.add(source.getRadius().getNormalizedValue());
+			return result;
 		}
 	}
 
 	/**
-	 * Converts a {@link DBObject} into a {@link Sphere}.
+	 * Converts a {@link BasicDBList} into a {@link Sphere}.
 	 * 
 	 * @author Thomas Darimont
 	 * @since 1.5
 	 */
 	@ReadingConverter
-	public static enum DbObjectToSphereConverter implements Converter<DBObject, Sphere> {
+	public static enum DbObjectToSphereConverter implements Converter<BasicDBList, Sphere> {
 
 		INSTANCE;
 
 		@Override
-		public Sphere convert(DBObject source) {
+		public Sphere convert(BasicDBList source) {
 
 			if (source == null) {
 				return null;
 			}
 
-			List<?> list = (List<?>) source.get(Sphere.COMMAND);
-
-			return new Sphere(toPoint(list.get(0)), (Double) list.get(1));
+			return new Sphere(toPoint(source.get(0)), (Double) source.get(1));
 		}
 	}
 
 	/**
-	 * Converts a {@link Polygon} into a {@link DBObject}.
+	 * Converts a {@link Polygon} into a {@link BasicDBList}.
 	 * 
 	 * @author Thomas Darimont
 	 * @since 1.5
 	 */
-	public static enum PolygonToDbObjectConverter implements Converter<Polygon, DBObject> {
+	public static enum PolygonToDbObjectConverter implements Converter<Polygon, BasicDBList> {
 
 		INSTANCE;
 
 		@Override
-		public DBObject convert(Polygon source) {
+		public BasicDBList convert(Polygon source) {
 
 			if (source == null) {
 				return null;
@@ -298,33 +295,33 @@ abstract class GeoConverters {
 				pointTuples.add(toList(point));
 			}
 
-			return new BasicDBObject("$polygon", pointTuples);
+			BasicDBList result = new BasicDBList();
+			result.addAll(pointTuples);
+			return result;
 		}
 	}
 
 	/**
-	 * Converts a {@link DBObject} into a {@link org.springframework.data.mongodb.core.geo.Polygon}.
+	 * Converts a {@link BasicDBList} into a {@link org.springframework.data.mongodb.core.geo.Polygon}.
 	 * 
 	 * @author Thomas Darimont
 	 * @since 1.5
 	 */
 	@ReadingConverter
-	public static enum DbObjectToPolygonConverter implements Converter<DBObject, Polygon> {
+	public static enum DbObjectToPolygonConverter implements Converter<BasicDBList, Polygon> {
 
 		INSTANCE;
 
 		@SuppressWarnings("deprecation")
 		@Override
-		public Polygon convert(DBObject source) {
+		public Polygon convert(BasicDBList source) {
 
 			if (source == null) {
 				return null;
 			}
 
-			List<?> list = (List<?>) source.get("$polygon");
-
-			List<Point> points = new ArrayList<Point>(list.size());
-			for (Object element : list) {
+			List<Point> points = new ArrayList<Point>(source.size());
+			for (Object element : source) {
 
 				Assert.notNull(element, "point elements of polygon must not be null!");
 
@@ -357,5 +354,28 @@ abstract class GeoConverters {
 	 */
 	private static List<Double> toList(Point point) {
 		return PointToListConverter.INSTANCE.convert(point);
+	}
+
+	/**
+	 * Returns the geo converters to be registered.
+	 * 
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public static Collection<? extends Object> getConvertersToRegister() {
+		return Arrays.asList( //
+				BoxToDbObjectConverter.INSTANCE //
+				, PolygonToDbObjectConverter.INSTANCE //
+				, CircleToDbObjectConverter.INSTANCE //
+				, LegacyCircleToDbObjectConverter.INSTANCE //
+				, SphereToDbObjectConverter.INSTANCE //
+				, DbObjectToBoxConverter.INSTANCE //
+				, DbObjectToPolygonConverter.INSTANCE //
+				, DbObjectToCircleConverter.INSTANCE //
+				, DbObjectToLegacyCircleConverter.INSTANCE //
+				, DbObjectToSphereConverter.INSTANCE //
+				, ListToPointConverter.INSTANCE //
+				, PointToListConverter.INSTANCE //
+				);
 	}
 }
