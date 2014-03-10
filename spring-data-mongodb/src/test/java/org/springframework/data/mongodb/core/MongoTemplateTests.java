@@ -2491,6 +2491,29 @@ public class MongoTemplateTests {
 		assertThat(result.get(0).dbRefProperty.field, is(sample.field));
 	}
 
+	/**
+	 * @see DATAMONGO-566
+	 */
+	@Test
+	public void testFindAllAndRemoveFullyReturnsAndRemovesDocuments() {
+
+		Sample spring = new Sample("100", "spring");
+		Sample data = new Sample("200", "data");
+		Sample mongodb = new Sample("300", "mongodb");
+		template.insert(Arrays.asList(spring, data, mongodb), Sample.class);
+
+		Query qry = query(where("field").in("spring", "mongodb"));
+		List<Sample> result = template.findAllAndRemove(qry, Sample.class);
+
+		assertThat(result, hasSize(2));
+
+		assertThat(
+				template.getDb().getCollection("sample")
+						.find(new BasicDBObject("field", new BasicDBObject("$in", Arrays.asList("spring", "mongodb")))).count(),
+				is(0));
+		assertThat(template.getDb().getCollection("sample").find(new BasicDBObject("field", "data")).count(), is(1));
+	}
+
 	static class DocumentWithDBRefCollection {
 
 		@Id public String id;

@@ -27,6 +27,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Scanner;
 import java.util.Set;
 
@@ -47,6 +48,7 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.authentication.UserCredentials;
 import org.springframework.data.convert.EntityReader;
 import org.springframework.data.mapping.PersistentEntity;
@@ -95,6 +97,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.jca.cci.core.ConnectionCallback;
 import org.springframework.util.Assert;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.ResourceUtils;
 import org.springframework.util.StringUtils;
 
@@ -1047,24 +1050,48 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		return dbObject.containsField(persistentEntity.getVersionProperty().getFieldName());
 	}
 
-	public void remove(Object object) {
+	public WriteResult remove(Object object) {
 
 		if (object == null) {
-			return;
+			return null;
 		}
 
-		remove(getIdQueryFor(object), object.getClass());
+		return remove(getIdQueryFor(object), object.getClass());
 	}
 
-	public void remove(Object object, String collection) {
+	public WriteResult remove(Object object, String collection) {
 
 		Assert.hasText(collection);
 
 		if (object == null) {
-			return;
+			return null;
 		}
 
-		doRemove(collection, getIdQueryFor(object), object.getClass());
+		return doRemove(collection, getIdQueryFor(object), object.getClass());
+	}
+
+	/**
+	 * Returns {@link Entry} containing the {@link MongoPersistentProperty} defining the {@literal id} as
+	 * {@link Entry#getKey()} and the {@link Id}s property value as its {@link Entry#getValue()}.
+	 * 
+	 * @param object
+	 * @return
+	 */
+	private Map.Entry<MongoPersistentProperty, Object> extractIdPropertyAndValue(Object object) {
+
+		Assert.notNull(object, "Id cannot be extracted from 'null'.");
+
+		Class<?> objectType = object.getClass();
+		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(objectType);
+		MongoPersistentProperty idProp = entity == null ? null : entity.getIdProperty();
+
+		if (idProp == null) {
+			throw new MappingException("No id property found for object of type " + objectType);
+		}
+
+		Object idValue = BeanWrapper.create(object, mongoConverter.getConversionService())
+				.getProperty(idProp, Object.class);
+		return Collections.singletonMap(idProp, idValue).entrySet().iterator().next();
 	}
 
 	/**
@@ -1075,21 +1102,31 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 */
 	private Query getIdQueryFor(Object object) {
 
-		Assert.notNull(object);
+		Map.Entry<MongoPersistentProperty, Object> id = extractIdPropertyAndValue(object);
+		return new Query(where(id.getKey().getFieldName()).is(id.getValue()));
+	}
 
-		Class<?> objectType = object.getClass();
-		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(objectType);
-		MongoPersistentProperty idProp = entity == null ? null : entity.getIdProperty();
+	/**
+	 * Returns a {@link Query} for the given entities by their ids.
+	 * 
+	 * @param objects must not be {@literal null} or {@literal empty}.
+	 * @return
+	 */
+	private Query getIdInQueryFor(Collection<?> objects) {
 
-		if (idProp == null) {
-			throw new MappingException("No id property found for object of type " + objectType);
+		Assert.notEmpty(objects, "Cannot create Query for empty collection.");
+
+		Iterator<?> it = objects.iterator();
+		Map.Entry<MongoPersistentProperty, Object> firstEntry = extractIdPropertyAndValue(it.next());
+
+		ArrayList<Object> ids = new ArrayList<Object>(objects.size());
+		ids.add(firstEntry.getValue());
+
+		while (it.hasNext()) {
+			ids.add(extractIdPropertyAndValue(it.next()).getValue());
 		}
 
-		ConversionService service = mongoConverter.getConversionService();
-		Object idProperty = null;
-
-		idProperty = BeanWrapper.create(object, service).getProperty(idProp, Object.class);
-		return new Query(where(idProp.getFieldName()).is(idProperty));
+		return new Query(where(firstEntry.getKey().getFieldName()).in(ids));
 	}
 
 	private void assertUpdateableIdIfNotSet(Object entity) {
@@ -1111,19 +1148,19 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		}
 	}
 
-	public void remove(Query query, String collectionName) {
-		remove(query, null, collectionName);
+	public WriteResult remove(Query query, String collectionName) {
+		return remove(query, null, collectionName);
 	}
 
-	public void remove(Query query, Class<?> entityClass) {
-		remove(query, entityClass, determineCollectionName(entityClass));
+	public WriteResult remove(Query query, Class<?> entityClass) {
+		return remove(query, entityClass, determineCollectionName(entityClass));
 	}
 
-	public void remove(Query query, Class<?> entityClass, String collectionName) {
-		doRemove(collectionName, query, entityClass);
+	public WriteResult remove(Query query, Class<?> entityClass, String collectionName) {
+		return doRemove(collectionName, query, entityClass);
 	}
 
-	protected <T> void doRemove(final String collectionName, final Query query, final Class<T> entityClass) {
+	protected <T> WriteResult doRemove(final String collectionName, final Query query, final Class<T> entityClass) {
 
 		if (query == null) {
 			throw new InvalidDataAccessApiUsageException("Query passed in to remove can't be null!");
@@ -1134,8 +1171,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		final DBObject queryObject = query.getQueryObject();
 		final MongoPersistentEntity<?> entity = getPersistentEntity(entityClass);
 
-		execute(collectionName, new CollectionCallback<Void>() {
-			public Void doInCollection(DBCollection collection) throws MongoException, DataAccessException {
+		return execute(collectionName, new CollectionCallback<WriteResult>() {
+			public WriteResult doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 
 				maybeEmitEvent(new BeforeDeleteEvent<T>(queryObject, entityClass));
 
@@ -1151,11 +1188,12 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 				WriteResult wr = writeConcernToUse == null ? collection.remove(dboq) : collection.remove(dboq,
 						writeConcernToUse);
+
 				handleAnyWriteResultErrors(wr, dboq, MongoActionOperation.REMOVE);
 
 				maybeEmitEvent(new AfterDeleteEvent<T>(queryObject, entityClass));
 
-				return null;
+				return wr;
 			}
 		});
 	}
@@ -1309,6 +1347,54 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	@Override
 	public <O> AggregationResults<O> aggregate(Aggregation aggregation, String collectionName, Class<O> outputType) {
 		return aggregate(aggregation, collectionName, outputType, null);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.MongoOperations#findAllAndRemove(org.springframework.data.mongodb.core.query.Query, java.lang.String)
+	 */
+	@Override
+	public <T> List<T> findAllAndRemove(Query query, String collectionName) {
+		return findAndRemove(query, null, collectionName);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.MongoOperations#findAllAndRemove(org.springframework.data.mongodb.core.query.Query, java.lang.Class)
+	 */
+	@Override
+	public <T> List<T> findAllAndRemove(Query query, Class<T> entityClass) {
+		return findAllAndRemove(query, entityClass, determineCollectionName(entityClass));
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.MongoOperations#findAllAndRemove(org.springframework.data.mongodb.core.query.Query, java.lang.Class, java.lang.String)
+	 */
+	@Override
+	public <T> List<T> findAllAndRemove(Query query, Class<T> entityClass, String collectionName) {
+		return doFindAndDelete(collectionName, query, entityClass);
+	}
+
+	/**
+	 * Retrieve and remove all documents matching the given {@code query} by calling {@link #find(Query, Class, String)}
+	 * and {@link #remove(Query, Class, String)}, whereas the {@link Query} for {@link #remove(Query, Class, String)} is
+	 * constructed out of the find result.
+	 * 
+	 * @param collectionName
+	 * @param query
+	 * @param entityClass
+	 * @return
+	 */
+	protected <T> List<T> doFindAndDelete(String collectionName, Query query, Class<T> entityClass) {
+
+		List<T> result = find(query, entityClass, collectionName);
+
+		if (!CollectionUtils.isEmpty(result)) {
+			remove(getIdInQueryFor(result), entityClass, collectionName);
+		}
+
+		return result;
 	}
 
 	protected <O> AggregationResults<O> aggregate(Aggregation aggregation, String collectionName, Class<O> outputType,
