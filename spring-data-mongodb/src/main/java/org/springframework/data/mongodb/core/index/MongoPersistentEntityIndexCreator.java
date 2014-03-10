@@ -45,6 +45,7 @@ import com.mongodb.util.JSON;
  * @author Philipp Schneider
  * @author Johno Crawford
  * @author Laurent Canet
+ * @author Thomas Darimont
  */
 public class MongoPersistentEntityIndexCreator implements
 		ApplicationListener<MappingContextEvent<MongoPersistentEntity<?>, MongoPersistentProperty>> {
@@ -108,8 +109,8 @@ public class MongoPersistentEntityIndexCreator implements
 					String indexColl = StringUtils.hasText(index.collection()) ? index.collection() : entity.getCollection();
 					DBObject definition = (DBObject) JSON.parse(index.def());
 
-					ensureIndex(indexColl, index.name(), definition, index.unique(), index.dropDups(), index.sparse(),
-							index.background(), index.expireAfterSeconds());
+					ensureIndex(indexColl, index.useGeneratedName() ? null : index.name(), definition, index.unique(),
+							index.dropDups(), index.sparse(), index.background(), index.expireAfterSeconds());
 
 					if (LOGGER.isDebugEnabled()) {
 						LOGGER.debug("Created compound index " + index);
@@ -125,7 +126,9 @@ public class MongoPersistentEntityIndexCreator implements
 						Indexed index = property.findAnnotation(Indexed.class);
 						String name = index.name();
 
-						if (!StringUtils.hasText(name)) {
+						if (index.useGeneratedName()) {
+							name = null;
+						} else if (!StringUtils.hasText(name)) {
 							name = property.getFieldName();
 						} else {
 							if (!name.equals(property.getName()) && index.unique() && !index.sparse()) {
@@ -154,7 +157,8 @@ public class MongoPersistentEntityIndexCreator implements
 
 						GeospatialIndex indexObject = new GeospatialIndex(property.getFieldName());
 						indexObject.withMin(index.min()).withMax(index.max());
-						indexObject.named(StringUtils.hasText(index.name()) ? index.name() : property.getName());
+						indexObject.named(index.useGeneratedName() ? null : StringUtils.hasText(index.name()) ? index.name()
+								: property.getName());
 						indexObject.typed(index.type()).withBucketSize(index.bucketSize())
 								.withAdditionalField(index.additionalField());
 
@@ -200,7 +204,10 @@ public class MongoPersistentEntityIndexCreator implements
 			boolean dropDups, boolean sparse, boolean background, int expireAfterSeconds) {
 
 		DBObject opts = new BasicDBObject();
-		opts.put("name", name);
+		if (name != null) {
+			// name is optional, if not specified MongoDB generates a name.
+			opts.put("name", name);
+		}
 		opts.put("dropDups", dropDups);
 		opts.put("sparse", sparse);
 		opts.put("unique", unique);

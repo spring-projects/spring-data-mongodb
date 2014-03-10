@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 the original author or authors.
+ * Copyright 2012-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.mongodb.core.IndexOperations;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -34,18 +35,15 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * Integration tests for {@link MongoPersistentEntityIndexCreator}.
  * 
  * @author Oliver Gierke
+ * @author Thomas Darimont
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration
 public class MongoPersistentEntityIndexCreatorIntegrationTests {
 
-	@Autowired
-	@Qualifier("mongo1")
-	MongoOperations templateOne;
+	@Autowired @Qualifier("mongo1") MongoOperations templateOne;
 
-	@Autowired
-	@Qualifier("mongo2")
-	MongoOperations templateTwo;
+	@Autowired @Qualifier("mongo2") MongoOperations templateTwo;
 
 	@After
 	public void cleanUp() {
@@ -62,5 +60,23 @@ public class MongoPersistentEntityIndexCreatorIntegrationTests {
 
 		indexInfo = templateTwo.indexOps("sampleEntity").getIndexInfo();
 		assertThat(indexInfo, hasSize(0));
+	}
+
+	/**
+	 * @see DATAMONGO-827
+	 */
+	@Test
+	public void shouldGenerateIndexNameOfRequested() {
+
+		try {
+			IndexOperations indexOps = templateOne.indexOps(EntityWithGeneratedIndexName.class);
+			List<IndexInfo> indexInfo = indexOps.getIndexInfo();
+
+			assertThat(indexInfo, hasSize(2));
+			assertThat(indexInfo.get(1), is(notNullValue()));
+			assertThat(indexInfo.get(1).getName(), is("lastname_1"));
+		} finally {
+			templateOne.dropCollection(EntityWithGeneratedIndexName.class);
+		}
 	}
 }

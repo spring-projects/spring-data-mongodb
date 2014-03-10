@@ -15,9 +15,10 @@
  */
 package org.springframework.data.mongodb.core.geo;
 
-import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
+import java.util.List;
 import java.util.Map;
 
 import org.junit.Before;
@@ -27,10 +28,12 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.config.AbstractIntegrationTests;
 import org.springframework.data.mongodb.core.CollectionCallback;
+import org.springframework.data.mongodb.core.IndexOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.WriteResultChecking;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexed;
+import org.springframework.data.mongodb.core.index.IndexInfo;
 
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
@@ -98,6 +101,29 @@ public class GeoSpatialIndexTests extends AbstractIntegrationTests {
 	}
 
 	/**
+	 * @see DATAMONGO-827
+	 */
+	@Test
+	public void useGeneratedNameShouldGenerateAnIndexName() {
+
+		try {
+
+			GeoSpatialEntity2dWithGeneratedIndex geo = new GeoSpatialEntity2dWithGeneratedIndex(45.2, 4.6);
+			template.save(geo);
+
+			IndexOperations indexOps = template.indexOps(GeoSpatialEntity2dWithGeneratedIndex.class);
+			List<IndexInfo> indexInfo = indexOps.getIndexInfo();
+
+			assertThat(indexInfo, hasSize(2));
+			assertThat(indexInfo.get(1), is(notNullValue()));
+			assertThat(indexInfo.get(1).getName(), is("location_2d"));
+
+		} finally {
+			template.dropCollection(GeoSpatialEntity2D.class);
+		}
+	}
+
+	/**
 	 * Returns whether an index with the given name exists for the given entity type.
 	 * 
 	 * @param indexName
@@ -161,6 +187,16 @@ public class GeoSpatialIndexTests extends AbstractIntegrationTests {
 		public GeoSpatialEntity2DSphere(double x, double y) {
 			this.location = new GeoJsonPoint();
 			this.location.coordinates = new double[] { x, y };
+		}
+	}
+
+	static class GeoSpatialEntity2dWithGeneratedIndex {
+
+		public String id;
+		@GeoSpatialIndexed(type = GeoSpatialIndexType.GEO_2D, useGeneratedName = true) public Point location;
+
+		public GeoSpatialEntity2dWithGeneratedIndex(double x, double y) {
+			this.location = new Point(x, y);
 		}
 	}
 }

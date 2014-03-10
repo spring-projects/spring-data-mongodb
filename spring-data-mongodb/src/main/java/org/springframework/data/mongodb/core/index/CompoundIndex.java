@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2013 the original author or authors.
+ * Copyright 2011-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ import java.lang.annotation.Target;
  * @author Oliver Gierke
  * @author Philipp Schneider
  * @author Johno Crawford
+ * @author Thomas Darimont
  */
 @Target({ ElementType.TYPE })
 @Documented
@@ -77,6 +78,14 @@ public @interface CompoundIndex {
 	 * @return
 	 */
 	String name() default "";
+
+	/**
+	 * If {@literal true} then MongoDB will ignore the given index name and instead generate a new name. Defaults to
+	 * {@literal false}.
+	 * 
+	 * @return
+	 */
+	boolean useGeneratedName() default false;
 
 	/**
 	 * The collection the index will be created in. Will default to the collection the annotated domain class will be

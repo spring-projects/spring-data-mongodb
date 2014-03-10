@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 the original author or authors.
+ * Copyright 2010-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import java.lang.annotation.Target;
  * 
  * @author Jon Brisbin
  * @author Laurent Canet
+ * @author Thomas Darimont
  */
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
@@ -36,6 +37,14 @@ public @interface GeoSpatialIndexed {
 	 * @return
 	 */
 	String name() default "";
+
+	/**
+	 * If {@literal true} then MongoDB will ignore the given index name and instead generate a new name. Defaults to
+	 * {@literal false}.
+	 * 
+	 * @return
+	 */
+	boolean useGeneratedName() default false;
 
 	/**
 	 * Name of the collection in which to create the index.

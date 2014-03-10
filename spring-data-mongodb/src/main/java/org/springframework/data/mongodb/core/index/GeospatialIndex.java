@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 the original author or authors.
+ * Copyright 2010-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import com.mongodb.DBObject;
  * @author Jon Brisbin
  * @author Oliver Gierke
  * @author Laurent Canet
+ * @author Thomas Darimont
  */
 public class GeospatialIndex implements IndexDefinition {
 
@@ -52,12 +53,10 @@ public class GeospatialIndex implements IndexDefinition {
 	}
 
 	/**
-	 * @param name must not be {@literal null} or empty.
+	 * @param name.
 	 * @return
 	 */
 	public GeospatialIndex named(String name) {
-
-		Assert.hasText(name, "Name must have text!");
 
 		this.name = name;
 		return this;
