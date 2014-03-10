@@ -10,7 +10,7 @@
   you perform administrative operations such as drop or create a database. The
   JMX features build upon the JMX feature set available in the Spring
   Framework. See <ulink
-  url="http://static.springsource.org/spring/docs/3.0.x/reference/jmx.html">here
+  url="http://docs.spring.io/spring/docs/3.0.x/reference/jmx.html">here
   </ulink> for more details.</para>
 
   <section id="mongodb:jmx-configuration">

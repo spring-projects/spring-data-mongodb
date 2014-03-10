@@ -3,7 +3,7 @@
 
   <para>Spring Data Document 1.x binaries requires JDK level 6.0 and above,
     and
-    <ulink url="http://www.springsource.org/documentation">Spring Framework</ulink>
+    <ulink url="http://spring.io/docs">Spring Framework</ulink>
     3.0.x and above.
   </para>
   <para>
