@@ -5,17 +5,17 @@
 	
 	<groupId>org.springframework.data</groupId>
 	<artifactId>spring-data-mongodb-parent</artifactId>
-	<version>1.3.5.BUILD-SNAPSHOT</version>
+	<version>1.3.5.DATAMONGO-873-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<name>Spring Data MongoDB</name>
 	<description>MongoDB support for Spring Data</description>
-	<url>http://www.springsource.org/spring-data/mongodb</url>
+	<url>http://projects.spring.io/spring-data-mongodb</url>
 
 	<parent>
 		<groupId>org.springframework.data.build</groupId>
 		<artifactId>spring-data-parent</artifactId>
-		<version>1.2.1.RELEASE</version>
+		<version>1.2.2.RELEASE</version>
 		<relativePath>../spring-data-build/parent/pom.xml</relativePath>
 	</parent>
 	
@@ -29,7 +29,7 @@
 	<properties>
 		<project.type>multi</project.type>
 		<dist.id>spring-data-mongodb</dist.id>
-		<springdata.commons>1.6.5.BUILD-SNAPSHOT</springdata.commons>
+		<springdata.commons>1.6.5.RELEASE</springdata.commons>
 		<mongo>2.10.1</mongo>
 	</properties>
 	
@@ -38,7 +38,7 @@
 			<id>ogierke</id>
 			<name>Oliver Gierke</name>
 			<email>ogierke at gopivotal.com</email>
-			<organization>Pivotal Inc.</organization>
+			<organization>Pivotal Software, Inc.</organization>
 			<organizationUrl>http://www.gopivotal.com</organizationUrl>
 			<roles>
 				<role>Project Lean</role>
@@ -49,7 +49,7 @@
 			<id>trisberg</id>
 			<name>Thomas Risberg</name>
 			<email>trisberg at gopivotal.com</email>
-			<organization>Pivotal Inc.</organization>
+			<organization>Pivotal Software, Inc.</organization>
 			<organizationUrl>http://www.gopivotal.com</organizationUrl>
 			<roles>
 				<role>Developer</role>
@@ -60,7 +60,7 @@
 			<id>mpollack</id>
 			<name>Mark Pollack</name>
 			<email>mpollack at gopivotal.com</email>
-			<organization>Pivotal Inc.</organization>
+			<organization>Pivotal Software, Inc.</organization>
 			<organizationUrl>http://www.gopivotal.com</organizationUrl>
 			<roles>
 				<role>Developer</role>
@@ -71,7 +71,7 @@
 			<id>jbrisbin</id>
 			<name>Jon Brisbin</name>
 			<email>jbrisbin at gopivotal.com</email>
-			<organization>Pivotal Inc.</organization>
+			<organization>Pivotal Software, Inc.</organization>
 			<organizationUrl>http://www.gopivotal.com</organizationUrl>
 			<roles>
 				<role>Developer</role>
@@ -82,7 +82,7 @@
 			<id>tdarimont</id>
 			<name>Thomas Darimont</name>
 			<email>tdarimont at gopivotal.com</email>
-			<organization>Pivotal Inc.</organization>
+			<organization>Pivotal Software, Inc.</organization>
 			<organizationUrl>http://www.gopivotal.com</organizationUrl>
 			<roles>
 				<role>Developer</role>
@@ -93,7 +93,7 @@
 			<id>cstrobl</id>
 			<name>Christoph Strobl</name>
 			<email>cstrobl at gopivotal.com</email>
-			<organization>Pivotal Inc.</organization>
+			<organization>Pivotal Software, Inc.</organization>
 			<organizationUrl>http://www.gopivotal.com</organizationUrl>
 			<roles>
 				<role>Developer</role>

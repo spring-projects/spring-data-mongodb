@@ -19,7 +19,7 @@
       <title>Community Forum</title>
 
       <para>The Spring Data <ulink
-      url="http://forum.springframework.org/forumdisplay.php?f=80">forum
+      url="http://forum.spring.io/forum/spring-projects/data/nosql">forum
       </ulink> is a message board for all Spring Data (not just Document)
       users to share information and help each other. Note that registration
       is needed <emphasis>only</emphasis> for posting.</para>
@@ -30,7 +30,7 @@
 
       <para>Professional, from-the-source support, with guaranteed response
       time, is available from <ulink
-      url="http://www.springsource.com">SpringSource</ulink>, the company
+      url="http://www.gopivotal.com/">Pivotal Software, Inc.</ulink>, the company
       behind Spring Data and Spring.</para>
     </section>
   </section>
@@ -40,12 +40,12 @@
 
     <para>For information on the Spring Data Mongo source code repository,
     nightly builds and snapshot artifacts please see the <ulink
-    url="http://www.springsource.org/spring-data/mongodb">Spring Data Mongo
+    url="http://projects.spring.io/spring-data-mongodb">Spring Data Mongo
     homepage</ulink>.</para>
 
     <para>You can help make Spring Data best serve the needs of the Spring
     community by interacting with developers through the Spring Community
-    <ulink url="http://forum.springsource.org">forums</ulink>. To follow
+    <ulink url="http://forum.spring.io">forums</ulink>. To follow
     developer activity look for the mailing list information on the Spring
     Data Mongo homepage.</para>
 
@@ -55,10 +55,10 @@
 
     <para>To stay up to date with the latest news and announcements in the
     Spring eco system, subscribe to the Spring Community <ulink
-    url="http://www.springframework.org/">Portal</ulink>.</para>
+    url="http://spring.io">Portal</ulink>.</para>
 
     <para>Lastly, you can follow the SpringSource Data <ulink
-    url="http://blog.springsource.com/category/data-access/">blog </ulink>or
+    url="http://spring.io/blog/">blog </ulink>or
     the project team on Twitter (<ulink
     url="http://twitter.com/SpringData">SpringData</ulink>)</para>
   </section>
