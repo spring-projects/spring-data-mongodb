@@ -28,6 +28,7 @@ import org.springframework.data.geo.Metric;
  * @author Oliver Gierke
  * @author Thomas Darimont
  */
+@SuppressWarnings("deprecation")
 public class DistanceUnitTests {
 
 	@Test

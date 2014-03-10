@@ -20,10 +20,10 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.data.geo.GeoPage;
+import org.springframework.data.geo.GeoResult;
+import org.springframework.data.geo.GeoResults;
 import org.springframework.data.mapping.context.MappingContext;
-import org.springframework.data.mongodb.core.geo.GeoPage;
-import org.springframework.data.mongodb.core.geo.GeoResult;
-import org.springframework.data.mongodb.core.geo.GeoResults;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.repository.Query;
@@ -152,11 +152,15 @@ public class MongoQueryMethod extends QueryMethod {
 
 	private boolean isGeoNearQuery(Method method) {
 
-		if (GEO_NEAR_RESULTS.contains(method.getReturnType())) {
-			return true;
+		Class<?> returnType = method.getReturnType();
+
+		for (Class<?> type : GEO_NEAR_RESULTS) {
+			if (type.isAssignableFrom(returnType)) {
+				return true;
+			}
 		}
 
-		if (Iterable.class.isAssignableFrom(method.getReturnType())) {
+		if (Iterable.class.isAssignableFrom(returnType)) {
 			TypeInformation<?> from = ClassTypeInformation.fromReturnTypeOf(method);
 			return GeoResult.class.equals(from.getComponentType().getType());
 		}

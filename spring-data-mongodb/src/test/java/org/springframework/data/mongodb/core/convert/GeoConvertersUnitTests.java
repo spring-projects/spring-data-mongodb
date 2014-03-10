@@ -42,9 +42,12 @@ import org.springframework.data.mongodb.core.geo.Sphere;
 import com.mongodb.BasicDBList;
 
 /**
+ * Unit tests for {@link GeoConverters}.
+ * 
  * @author Thomas Darimont
  * @since 1.5
  */
+@SuppressWarnings("deprecation")
 public class GeoConvertersUnitTests {
 
 	/**
@@ -132,7 +135,7 @@ public class GeoConvertersUnitTests {
 		List<Double> list = PointToListConverter.INSTANCE.convert(point);
 		Point result = ListToPointConverter.INSTANCE.convert(list);
 
-		assertThat(result, is((Point) point));
+		assertThat(result, is(point));
 		assertThat(result.getClass().equals(org.springframework.data.mongodb.core.geo.Point.class), is(true));
 	}
 }

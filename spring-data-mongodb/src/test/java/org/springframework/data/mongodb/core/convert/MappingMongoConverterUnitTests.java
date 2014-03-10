@@ -40,8 +40,10 @@ import java.util.SortedMap;
 
 import org.bson.types.ObjectId;
 import org.hamcrest.Matcher;
+import org.hamcrest.Matchers;
 import org.joda.time.LocalDate;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -1495,6 +1497,7 @@ public class MappingMongoConverterUnitTests {
 	 * @DATAMONGO-858
 	 */
 	@Test
+	@SuppressWarnings({ "deprecation", "unchecked" })
 	public void shouldWriteEntityWithGeoBoxCorrectly() {
 
 		ClassWithGeoBox object = new ClassWithGeoBox();
@@ -1541,9 +1544,11 @@ public class MappingMongoConverterUnitTests {
 		converter.write(object, dbo);
 
 		assertThat(dbo, is(notNullValue()));
-		assertThat(dbo.get("polygon"), is(instanceOf(List.class)));
-		assertThat(dbo.get("polygon"),
-				is((Object) org.springframework.data.mongodb.core.geo.Polygon.asList(object.polygon)));
+
+		BasicDBList polygon = getAsDBList(dbo, "polygon");
+
+		assertThat(polygon, hasSize(3));
+		assertThat(polygon, Matchers.<Object> hasItems(Arrays.asList(1d, 2d), Arrays.asList(3d, 4d), Arrays.asList(4d, 5d)));
 	}
 
 	/**
@@ -1568,6 +1573,7 @@ public class MappingMongoConverterUnitTests {
 	 * @DATAMONGO-858
 	 */
 	@Test
+	@SuppressWarnings("deprecation")
 	public void shouldWriteEntityWithGeoCircleCorrectly() {
 
 		ClassWithGeoCircle object = new ClassWithGeoCircle();
@@ -1604,6 +1610,7 @@ public class MappingMongoConverterUnitTests {
 	 * @DATAMONGO-858
 	 */
 	@Test
+	@SuppressWarnings("deprecation")
 	public void shouldWriteEntityWithGeoLegacyCircleCorrectly() {
 
 		ClassWithGeoLegacyCircle object = new ClassWithGeoLegacyCircle();
@@ -1622,6 +1629,7 @@ public class MappingMongoConverterUnitTests {
 	 * @DATAMONGO-858
 	 */
 	@Test
+	@SuppressWarnings("deprecation")
 	public void shouldReadEntityWithGeoLegacyCircleCorrectly() {
 
 		ClassWithGeoLegacyCircle object = new ClassWithGeoLegacyCircle();
@@ -1640,6 +1648,7 @@ public class MappingMongoConverterUnitTests {
 	 * @DATAMONGO-858
 	 */
 	@Test
+	@SuppressWarnings("deprecation")
 	public void shouldWriteEntityWithGeoSphereCorrectly() {
 
 		ClassWithGeoSphere object = new ClassWithGeoSphere();
@@ -1676,6 +1685,7 @@ public class MappingMongoConverterUnitTests {
 	 * @DATAMONGO-858
 	 */
 	@Test
+	@SuppressWarnings("deprecation")
 	public void shouldWriteEntityWithGeoShapeCorrectly() {
 
 		ClassWithGeoShape object = new ClassWithGeoShape();
@@ -1695,6 +1705,7 @@ public class MappingMongoConverterUnitTests {
 	 * @DATAMONGO-858
 	 */
 	@Test
+	@Ignore
 	public void shouldReadEntityWithGeoShapeCorrectly() {
 
 		ClassWithGeoShape object = new ClassWithGeoShape();
@@ -1935,6 +1946,7 @@ public class MappingMongoConverterUnitTests {
 		Circle circle;
 	}
 
+	@SuppressWarnings("deprecation")
 	class ClassWithGeoLegacyCircle {
 
 		org.springframework.data.mongodb.core.geo.Circle circle;

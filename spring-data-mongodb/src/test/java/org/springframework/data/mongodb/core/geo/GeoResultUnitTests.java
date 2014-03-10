@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2011-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,9 @@
  */
 package org.springframework.data.mongodb.core.geo;
 
-import static org.junit.Assert.*;
 import static org.hamcrest.CoreMatchers.*;
+import static org.junit.Assert.*;
+
 import org.junit.Test;
 
 /**
@@ -24,6 +25,7 @@ import org.junit.Test;
  * 
  * @author Oliver Gierke
  */
+@SuppressWarnings("deprecation")
 public class GeoResultUnitTests {
 
 	GeoResult<String> first = new GeoResult<String>("Foo", new Distance(2.5));
