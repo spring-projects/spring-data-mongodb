@@ -52,6 +52,7 @@ import com.mongodb.WriteResult;
  * @author Christoph Strobl
  * @author Thomas Darimont
  */
+@SuppressWarnings("deprecation")
 public interface MongoOperations {
 
 	/**
@@ -414,7 +415,7 @@ public interface MongoOperations {
 			MapReduceOptions mapReduceOptions, Class<T> entityClass);
 
 	/**
-	 * Returns {@link GeoResult} for all entities matching the given {@link NearQuery}. Will consider entity mapping
+	 * Returns {@link GeoResults} for all entities matching the given {@link NearQuery}. Will consider entity mapping
 	 * information to determine the collection the query is ran against.
 	 * 
 	 * @param near must not be {@literal null}.
@@ -424,7 +425,7 @@ public interface MongoOperations {
 	<T> GeoResults<T> geoNear(NearQuery near, Class<T> entityClass);
 
 	/**
-	 * Returns {@link GeoResult} for all entities matching the given {@link NearQuery}.
+	 * Returns {@link GeoResults} for all entities matching the given {@link NearQuery}.
 	 * 
 	 * @param near must not be {@literal null}.
 	 * @param entityClass must not be {@literal null}.

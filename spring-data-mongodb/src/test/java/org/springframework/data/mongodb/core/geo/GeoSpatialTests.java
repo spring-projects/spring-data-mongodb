@@ -98,6 +98,7 @@ public class GeoSpatialTests extends AbstractIntegrationTests {
 	}
 
 	@Test
+	@SuppressWarnings("deprecation")
 	public void geoNear() {
 
 		NearQuery geoNear = NearQuery.near(-73, 40, Metrics.KILOMETERS).num(10).maxDistance(150);
@@ -105,7 +106,7 @@ public class GeoSpatialTests extends AbstractIntegrationTests {
 		GeoResults<Venue> result = template.geoNear(geoNear, Venue.class);
 
 		assertThat(result.getContent().size(), is(not(0)));
-		assertThat((Metric) result.getAverageDistance().getMetric(), is((Metric) Metrics.KILOMETERS));
+		assertThat(result.getAverageDistance().getMetric(), is((Metric) Metrics.KILOMETERS));
 	}
 
 	@Test

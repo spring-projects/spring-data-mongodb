@@ -106,8 +106,8 @@ public class CustomConversions {
 		toRegister.add(URLToStringConverter.INSTANCE);
 		toRegister.add(StringToURLConverter.INSTANCE);
 		toRegister.add(DBObjectToStringConverter.INSTANCE);
+		
 		toRegister.addAll(JodaTimeConverters.getConvertersToRegister());
-
 		toRegister.addAll(GeoConverters.getConvertersToRegister());
 
 		for (Object c : toRegister) {

@@ -30,6 +30,7 @@ import org.springframework.util.Assert;
  * @author Thomas Darimont
  * @since 1.5
  */
+@SuppressWarnings("deprecation")
 public class Sphere implements Shape {
 
 	public static final String COMMAND = "$centerSphere";

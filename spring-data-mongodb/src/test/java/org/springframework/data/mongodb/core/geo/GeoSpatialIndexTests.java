@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.core.geo;
+package org.springframework.data.mongodb.core.index;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
@@ -24,12 +24,11 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
+import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.config.AbstractIntegrationTests;
 import org.springframework.data.mongodb.core.CollectionCallback;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.WriteResultChecking;
-import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
-import org.springframework.data.mongodb.core.index.GeoSpatialIndexed;
 
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
@@ -129,10 +128,10 @@ public class GeoSpatialIndexTests extends AbstractIntegrationTests {
 
 	static class GeoSpatialEntity2D {
 		public String id;
-		@GeoSpatialIndexed(type = GeoSpatialIndexType.GEO_2D) public Point location;
+		@GeoSpatialIndexed(type = GeoSpatialIndexType.GEO_2D) public org.springframework.data.geo.Point location;
 
 		public GeoSpatialEntity2D(double x, double y) {
-			this.location = new Point(x, y);
+			this.location = new org.springframework.data.geo.Point(x, y);
 		}
 	}
 

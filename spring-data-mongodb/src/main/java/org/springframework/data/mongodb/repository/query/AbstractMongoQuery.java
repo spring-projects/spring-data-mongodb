@@ -24,12 +24,11 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.SliceImpl;
+import org.springframework.data.geo.Distance;
+import org.springframework.data.geo.GeoResult;
+import org.springframework.data.geo.GeoResults;
+import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.MongoOperations;
-import org.springframework.data.mongodb.core.geo.Distance;
-import org.springframework.data.mongodb.core.geo.GeoPage;
-import org.springframework.data.mongodb.core.geo.GeoResult;
-import org.springframework.data.mongodb.core.geo.GeoResults;
-import org.springframework.data.mongodb.core.geo.Point;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.repository.query.ParameterAccessor;
@@ -294,6 +293,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	 * 
 	 * @author Oliver Gierke
 	 */
+	@SuppressWarnings("deprecation")
 	final class GeoNearExecution extends Execution {
 
 		private final MongoParameterAccessor accessor;
@@ -325,11 +325,12 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 			MongoEntityMetadata<?> metadata = method.getEntityInformation();
 			long count = operations.count(countQuery, metadata.getCollectionName());
 
-			return new GeoPage<Object>(doExecuteQuery(query), accessor.getPageable(), count);
+			return new org.springframework.data.mongodb.core.geo.GeoPage<Object>(doExecuteQuery(query),
+					accessor.getPageable(), count);
 		}
 
 		@SuppressWarnings("unchecked")
-		private GeoResults<Object> doExecuteQuery(Query query) {
+		private org.springframework.data.mongodb.core.geo.GeoResults<Object> doExecuteQuery(Query query) {
 
 			Point nearLocation = accessor.getGeoNearLocation();
 			NearQuery nearQuery = NearQuery.near(nearLocation);
@@ -349,7 +350,8 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 			}
 
 			MongoEntityMetadata<?> metadata = method.getEntityInformation();
-			return (GeoResults<Object>) operations.geoNear(nearQuery, metadata.getJavaType(), metadata.getCollectionName());
+			return (org.springframework.data.mongodb.core.geo.GeoResults<Object>) operations.geoNear(nearQuery,
+					metadata.getJavaType(), metadata.getCollectionName());
 		}
 
 		private boolean isListOfGeoResult() {

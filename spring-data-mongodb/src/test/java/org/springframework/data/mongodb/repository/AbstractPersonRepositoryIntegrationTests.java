@@ -33,17 +33,16 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.geo.Box;
+import org.springframework.data.geo.Circle;
+import org.springframework.data.geo.Distance;
+import org.springframework.data.geo.GeoPage;
+import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Metric;
 import org.springframework.data.geo.Metrics;
+import org.springframework.data.geo.Point;
+import org.springframework.data.geo.Polygon;
 import org.springframework.data.mongodb.core.MongoOperations;
-import org.springframework.data.mongodb.core.geo.Box;
-import org.springframework.data.mongodb.core.geo.Circle;
-import org.springframework.data.mongodb.core.geo.Distance;
-import org.springframework.data.mongodb.core.geo.GeoPage;
-import org.springframework.data.mongodb.core.geo.GeoResults;
-import org.springframework.data.mongodb.core.geo.Point;
-import org.springframework.data.mongodb.core.geo.Polygon;
-import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.repository.Person.Sex;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -406,7 +405,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(results.getContent().isEmpty(), is(false));
 
 		// DATAMONGO-607
-		assertThat((Metric) results.getAverageDistance().getMetric(), is((Metric) Metrics.KILOMETERS));
+		assertThat(results.getAverageDistance().getMetric(), is((Metric) Metrics.KILOMETERS));
 	}
 
 	/**
@@ -619,7 +618,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(results.getNumberOfElements(), is(2));
 		assertThat(results.isFirstPage(), is(false));
 		assertThat(results.isLastPage(), is(false));
-		assertThat((Metric) results.getAverageDistance().getMetric(), is((Metric) Metrics.KILOMETERS));
+		assertThat(results.getAverageDistance().getMetric(), is((Metric) Metrics.KILOMETERS));
 		assertThat(results.getAverageDistance().getNormalizedValue(), is(0.0));
 	}
 
@@ -643,7 +642,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(results.getNumberOfElements(), is(1));
 		assertThat(results.isFirstPage(), is(false));
 		assertThat(results.isLastPage(), is(true));
-		assertThat((Metric) results.getAverageDistance().getMetric(), is((Metric) Metrics.KILOMETERS));
+		assertThat(results.getAverageDistance().getMetric(), is((Metric) Metrics.KILOMETERS));
 	}
 
 	/**
@@ -663,7 +662,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(results.getNumberOfElements(), is(1));
 		assertThat(results.isFirstPage(), is(true));
 		assertThat(results.isLastPage(), is(true));
-		assertThat((Metric) results.getAverageDistance().getMetric(), is((Metric) Metrics.KILOMETERS));
+		assertThat(results.getAverageDistance().getMetric(), is((Metric) Metrics.KILOMETERS));
 	}
 
 	/**
@@ -682,7 +681,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(results.getNumberOfElements(), is(0));
 		assertThat(results.isFirstPage(), is(false));
 		assertThat(results.isLastPage(), is(true));
-		assertThat((Metric) results.getAverageDistance().getMetric(), is((Metric) Metrics.KILOMETERS));
+		assertThat(results.getAverageDistance().getMetric(), is((Metric) Metrics.KILOMETERS));
 	}
 
 	/**
@@ -764,7 +763,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result, is(arrayWithSize(1)));
 		assertThat(result, is(arrayContaining(leroi)));
 	}
-
+	
 	/**
 	 * @see DATAMONGO-821
 	 */

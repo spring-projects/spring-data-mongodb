@@ -343,6 +343,7 @@ public final class NearQuery {
 	 * 
 	 * @return
 	 */
+	@SuppressWarnings("deprecation")
 	public DBObject toDBObject() {
 
 		BasicDBObject dbObject = new BasicDBObject();

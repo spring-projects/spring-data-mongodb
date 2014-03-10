@@ -130,6 +130,7 @@ import com.mongodb.util.JSONParseException;
  * @author Chuong Ngo
  * @author Christoph Strobl
  */
+@SuppressWarnings("deprecation")
 public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(MongoTemplate.class);

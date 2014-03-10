@@ -28,6 +28,7 @@ import org.junit.Test;
  * @author Oliver Gierke
  * @author Thomas Darimont
  */
+@SuppressWarnings("deprecation")
 public class GeoResultsUnitTests {
 
 	@Test

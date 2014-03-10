@@ -20,8 +20,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.springframework.core.MethodParameter;
-import org.springframework.data.mongodb.core.geo.Distance;
-import org.springframework.data.mongodb.core.geo.Point;
+import org.springframework.data.geo.Distance;
+import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.repository.Near;
 import org.springframework.data.mongodb.repository.query.MongoParameters.MongoParameter;
 import org.springframework.data.repository.query.Parameter;
@@ -64,10 +64,11 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 		this.nearIndex = nearIndex;
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "deprecation" })
 	private final int getNearIndex(List<Class<?>> parameterTypes) {
 
-		for (Class<?> reference : Arrays.asList(Point.class, double[].class)) {
+		for (Class<?> reference : Arrays.asList(Point.class, org.springframework.data.mongodb.core.geo.Point.class,
+				double[].class)) {
 
 			int nearIndex = parameterTypes.indexOf(reference);
 
@@ -161,7 +162,7 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 		 */
 		@Override
 		public boolean isSpecialParameter() {
-			return super.isSpecialParameter() || getType().equals(Distance.class) || isNearParameter();
+			return super.isSpecialParameter() || Distance.class.isAssignableFrom(getType()) || isNearParameter();
 		}
 
 		private boolean isNearParameter() {
@@ -174,7 +175,7 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 		}
 
 		private boolean isPoint() {
-			return getType().equals(Point.class) || getType().equals(double[].class);
+			return Point.class.isAssignableFrom(getType()) || getType().equals(double[].class);
 		}
 
 		private boolean hasNearAnnotation() {

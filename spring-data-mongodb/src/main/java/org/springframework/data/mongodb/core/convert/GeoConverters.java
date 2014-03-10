@@ -291,6 +291,7 @@ abstract class GeoConverters {
 
 			List<Point> points = source.getPoints();
 			List<List<Double>> pointTuples = new ArrayList<List<Double>>(points.size());
+
 			for (Point point : points) {
 				pointTuples.add(toList(point));
 			}

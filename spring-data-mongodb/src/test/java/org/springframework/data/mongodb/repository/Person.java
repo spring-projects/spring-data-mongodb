@@ -20,7 +20,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
-import org.springframework.data.mongodb.core.geo.Point;
+import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexed;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.DBRef;
