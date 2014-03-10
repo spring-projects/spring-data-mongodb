@@ -43,6 +43,7 @@ import org.springframework.data.mongodb.core.geo.Metric;
 import org.springframework.data.mongodb.core.geo.Metrics;
 import org.springframework.data.mongodb.core.geo.Point;
 import org.springframework.data.mongodb.core.geo.Polygon;
+import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.repository.Person.Sex;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -763,8 +764,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result, is(arrayWithSize(1)));
 		assertThat(result, is(arrayContaining(leroi)));
 	}
-	
-	
+
 	/**
 	 * @see DATAMONGO-821
 	 */
@@ -784,4 +784,79 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result.getNumberOfElements(), is(1));
 		assertThat(result.getContent().get(0), is(alicia));
 	}
+
+	/**
+	 * @see DATAMONGO-566
+	 */
+	@Test
+	public void deleteByShouldReturnListOfDeletedElementsWhenRetunTypeIsCollectionLike() {
+
+		List<Person> result = repository.deleteByLastname("Beauford");
+		assertThat(result, hasItem(carter));
+		assertThat(result, hasSize(1));
+	}
+
+	/**
+	 * @see DATAMONGO-566
+	 */
+	@Test
+	public void deleteByShouldRemoveElementsMatchingDerivedQuery() {
+
+		repository.deleteByLastname("Beauford");
+		assertThat(operations.count(new BasicQuery("{'lastname':'Beauford'}"), Person.class), is(0L));
+	}
+
+	/**
+	 * @see DATAMONGO-566
+	 */
+	@Test
+	public void deleteByShouldReturnNumberOfDocumentsRemovedIfReturnTypeIsLong() {
+		assertThat(repository.deletePersonByLastname("Beauford"), is(1L));
+	}
+
+	/**
+	 * @see DATAMONGO-566
+	 */
+	@Test
+	public void deleteByShouldReturnZeroInCaseNoDocumentHasBeenRemovedAndReturnTypeIsNumber() {
+		assertThat(repository.deletePersonByLastname("dorfuaeB"), is(0L));
+	}
+
+	/**
+	 * @see DATAMONGO-566
+	 */
+	@Test
+	public void deleteByShouldReturnEmptyListInCaseNoDocumentHasBeenRemovedAndReturnTypeIsCollectionLike() {
+		assertThat(repository.deleteByLastname("dorfuaeB"), empty());
+	}
+
+	/**
+	 * @see DATAMONGO-566
+	 */
+	@Test
+	public void deleteByUsingAnnotatedQueryShouldReturnListOfDeletedElementsWhenRetunTypeIsCollectionLike() {
+
+		List<Person> result = repository.removeByLastnameUsingAnnotatedQuery("Beauford");
+		assertThat(result, hasItem(carter));
+		assertThat(result, hasSize(1));
+	}
+
+	/**
+	 * @see DATAMONGO-566
+	 */
+	@Test
+	public void deleteByUsingAnnotatedQueryShouldRemoveElementsMatchingDerivedQuery() {
+
+		repository.removeByLastnameUsingAnnotatedQuery("Beauford");
+		assertThat(operations.count(new BasicQuery("{'lastname':'Beauford'}"), Person.class), is(0L));
+	}
+
+	/**
+	 * @see DATAMONGO-566
+	 */
+	@Test
+	public void deleteByUsingAnnotatedQueryShouldReturnNumberOfDocumentsRemovedIfReturnTypeIsLong() {
+		assertThat(repository.removePersonByLastnameUsingAnnotatedQuery("Beauford"), is(1L));
+	}
+
 }

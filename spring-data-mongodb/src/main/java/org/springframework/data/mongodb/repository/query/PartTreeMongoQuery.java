@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2013 the original author or authors.
+ * Copyright 2002-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ import org.springframework.data.repository.query.parser.PartTree;
  * {@link RepositoryQuery} implementation for Mongo.
  * 
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 public class PartTreeMongoQuery extends AbstractMongoQuery {
 
@@ -85,5 +86,14 @@ public class PartTreeMongoQuery extends AbstractMongoQuery {
 	@Override
 	protected boolean isCountQuery() {
 		return tree.isCountProjection();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery#isDeleteQuery()
+	 */
+	@Override
+	protected boolean isDeleteQuery() {
+		return tree.isDelete();
 	}
 }

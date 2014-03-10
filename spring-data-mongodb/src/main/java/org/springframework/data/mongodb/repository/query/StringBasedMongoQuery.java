@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2013 the original author or authors.
+ * Copyright 2011-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ import com.mongodb.util.JSON;
  * Query to use a plain JSON String to create the {@link Query} to actually execute.
  * 
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 public class StringBasedMongoQuery extends AbstractMongoQuery {
 
@@ -39,6 +40,7 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 	private final String query;
 	private final String fieldSpec;
 	private final boolean isCountQuery;
+	private final boolean isDeleteQuery;
 
 	/**
 	 * Creates a new {@link StringBasedMongoQuery}.
@@ -53,6 +55,7 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 		this.query = query;
 		this.fieldSpec = method.getFieldSpecification();
 		this.isCountQuery = method.hasAnnotatedQuery() ? method.getQueryAnnotation().count() : false;
+		this.isDeleteQuery = method.hasAnnotatedQuery() ? method.getQueryAnnotation().delete() : false;
 	}
 
 	public StringBasedMongoQuery(MongoQueryMethod method, MongoOperations mongoOperations) {
@@ -93,6 +96,11 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 	@Override
 	protected boolean isCountQuery() {
 		return isCountQuery;
+	}
+
+	@Override
+	protected boolean isDeleteQuery() {
+		return this.isDeleteQuery;
 	}
 
 	private String replacePlaceholders(String input, ConvertingParameterAccessor accessor) {

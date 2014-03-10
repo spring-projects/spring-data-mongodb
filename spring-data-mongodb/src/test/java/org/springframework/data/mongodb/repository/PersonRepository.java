@@ -257,10 +257,33 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	 * @see DATAMONGO-870
 	 */
 	Slice<Person> findByAgeGreaterThan(int age, Pageable pageable);
-	
+
 	/**
 	 * @see DATAMONGO-821
 	 */
 	@Query("{ creator : { $exists : true } }")
 	Page<Person> findByHavingCreator(Pageable page);
+
+	/**
+	 * @see DATAMONGO-566
+	 */
+	List<Person> deleteByLastname(String lastname);
+
+	/**
+	 * @see DATAMONGO-566
+	 */
+	Long deletePersonByLastname(String lastname);
+
+	/**
+	 * @see DATAMONGO-566
+	 */
+	@Query(value = "{ 'lastname' : ?0 }", delete = true)
+	List<Person> removeByLastnameUsingAnnotatedQuery(String lastname);
+
+	/**
+	 * @see DATAMONGO-566
+	 */
+	@Query(value = "{ 'lastname' : ?0 }", delete = true)
+	Long removePersonByLastnameUsingAnnotatedQuery(String lastname);
+
 }

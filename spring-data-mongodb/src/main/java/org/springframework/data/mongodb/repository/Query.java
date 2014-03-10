@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2013 the original author or authors.
+ * Copyright 2011-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ import org.springframework.data.annotation.QueryAnnotation;
  * 
  * @author Oliver Gierke
  * @author Thomas Darimont
+ * @author Christoph Strobl
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
@@ -59,4 +60,12 @@ public @interface Query {
 	 * @return
 	 */
 	boolean count() default false;
+
+	/**
+	 * Returns whether the query should delete matching documents.
+	 * 
+	 * @since 1.5
+	 * @return
+	 */
+	boolean delete() default false;
 }

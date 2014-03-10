@@ -140,6 +140,16 @@ public class StringBasedMongoQueryUnitTests {
 		assertThat(query.getQueryObject(), is(new BasicQuery("{ fans : { $not : { $size : 0 } } }").getQueryObject()));
 	}
 
+	/**
+	 * @see DATAMONGO-566
+	 */
+	@Test
+	public void constructsDeleteQueryCorrectly() throws Exception {
+
+		StringBasedMongoQuery mongoQuery = createQueryForMethod("removeByLastname", String.class);
+		assertThat(mongoQuery.isDeleteQuery(), is(true));
+	}
+
 	private StringBasedMongoQuery createQueryForMethod(String name, Class<?>... parameters) throws Exception {
 
 		Method method = SampleRepository.class.getMethod(name, parameters);
@@ -160,6 +170,9 @@ public class StringBasedMongoQueryUnitTests {
 
 		@Query("{ fans : { $not : { $size : 0 } } }")
 		Person findByHavingSizeFansNotZero();
+
+		@Query(value = "{ 'lastname' : ?0 }", delete = true)
+		void removeByLastname(String lastname);
 
 	}
 }
