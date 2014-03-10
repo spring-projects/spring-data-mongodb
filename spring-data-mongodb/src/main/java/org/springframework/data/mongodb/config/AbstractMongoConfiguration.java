@@ -116,7 +116,9 @@ public abstract class AbstractMongoConfiguration {
 	 *         entities.
 	 */
 	protected String getMappingBasePackage() {
-		return getClass().getPackage().getName();
+
+		Package mappingBasePackage = getClass().getPackage();
+		return mappingBasePackage == null ? null : mappingBasePackage.getName();
 	}
 
 	/**
