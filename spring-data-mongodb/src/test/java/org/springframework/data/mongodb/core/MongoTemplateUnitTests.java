@@ -49,6 +49,7 @@ import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexCreator;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -56,6 +57,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.Mongo;
 import com.mongodb.MongoException;
@@ -75,6 +77,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Mock Mongo mongo;
 	@Mock DB db;
 	@Mock DBCollection collection;
+	@Mock DBCursor cursor;
 
 	MongoExceptionTranslator exceptionTranslator = new MongoExceptionTranslator();
 	MappingMongoConverter converter;
@@ -86,11 +89,14 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		when(factory.getDb()).thenReturn(db);
 		when(factory.getExceptionTranslator()).thenReturn(exceptionTranslator);
 		when(db.getCollection(Mockito.any(String.class))).thenReturn(collection);
+		when(collection.find(Mockito.any(DBObject.class))).thenReturn(cursor);
+		when(cursor.limit(anyInt())).thenReturn(cursor);
+		when(cursor.sort(Mockito.any(DBObject.class))).thenReturn(cursor);
+		when(cursor.hint(anyString())).thenReturn(cursor);
 
 		this.mappingContext = new MongoMappingContext();
 		this.converter = new MappingMongoConverter(new DefaultDbRefResolver(factory), mappingContext);
 		this.template = new MongoTemplate(factory, converter);
-
 	}
 
 	@Test(expected = IllegalArgumentException.class)
@@ -280,6 +286,44 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 				return ((MongoPersistentEntityIndexCreator) argument).isIndexCreatorFor(mappingContext);
 			}
 		}));
+	}
+
+	/**
+	 * @see DATAMONGO-566
+	 */
+	@Test
+	public void findAllAndRemoveShouldRetrieveMatchingDocumentsPriorToRemoval() {
+
+		BasicQuery query = new BasicQuery("{'foo':'bar'}");
+		template.findAllAndRemove(query, VersionedEntity.class);
+		verify(collection, times(1)).find(Matchers.eq(query.getQueryObject()));
+	}
+
+	/**
+	 * @see DATAMONGO-566
+	 */
+	@Test
+	public void findAllAndRemoveShouldRemoveDocumentsReturedByFindQuery() {
+
+		Mockito.when(cursor.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
+		Mockito.when(cursor.next()).thenReturn(new BasicDBObject("_id", Integer.valueOf(0)))
+				.thenReturn(new BasicDBObject("_id", Integer.valueOf(1)));
+
+		ArgumentCaptor<DBObject> queryCaptor = ArgumentCaptor.forClass(DBObject.class);
+		BasicQuery query = new BasicQuery("{'foo':'bar'}");
+		template.findAllAndRemove(query, VersionedEntity.class);
+
+		verify(collection, times(1)).remove(queryCaptor.capture());
+
+		DBObject idField = DBObjectTestUtils.getAsDBObject(queryCaptor.getValue(), "_id");
+		assertThat((Object[]) idField.get("$in"), is(new Object[] { Integer.valueOf(0), Integer.valueOf(1) }));
+	}
+
+	@Test
+	public void findAllAndRemoveShouldNotTriggerRemoveIfFindResultIsEmpty() {
+
+		template.findAllAndRemove(new BasicQuery("{'foo':'bar'}"), VersionedEntity.class);
+		verify(collection, never()).remove(Mockito.any(DBObject.class));
 	}
 
 	class AutogenerateableId {

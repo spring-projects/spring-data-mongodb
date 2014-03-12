@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2013 the original author or authors.
+ * Copyright 2011-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -58,6 +58,7 @@ import org.springframework.data.util.TypeInformation;
  * 
  * @author Oliver Gierke
  * @author Thomas Darimont
+ * @author Christoph Strobl
  */
 @RunWith(MockitoJUnitRunner.class)
 public class MongoQueryCreatorUnitTests {
@@ -404,6 +405,36 @@ public class MongoQueryCreatorUnitTests {
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "dave", 42), context);
 
 		Query query = creator.createQuery();
+		assertThat(query, is(query(where("firstName").regex("^dave$", "i").and("age").is(42))));
+	}
+
+	/**
+	 * @see DATAMONGO-566
+	 */
+	@Test
+	public void shouldCreateDeleteByQueryCorrectly() {
+
+		PartTree tree = new PartTree("deleteByFirstName", Person.class);
+		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "dave", 42), context);
+
+		Query query = creator.createQuery();
+
+		assertThat(tree.isDelete(), is(true));
+		assertThat(query, is(query(where("firstName").is("dave"))));
+	}
+
+	/**
+	 * @see DATAMONGO-566
+	 */
+	@Test
+	public void shouldCreateDeleteByQueryCorrectlyForMultipleCriteriaAndCaseExpressions() {
+
+		PartTree tree = new PartTree("deleteByFirstNameAndAgeAllIgnoreCase", Person.class);
+		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "dave", 42), context);
+
+		Query query = creator.createQuery();
+
+		assertThat(tree.isDelete(), is(true));
 		assertThat(query, is(query(where("firstName").regex("^dave$", "i").and("age").is(42))));
 	}
 

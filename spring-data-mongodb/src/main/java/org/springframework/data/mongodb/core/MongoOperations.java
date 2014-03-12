@@ -50,6 +50,7 @@ import com.mongodb.WriteResult;
  * @author Oliver Gierke
  * @author Tobias Trelle
  * @author Chuong Ngo
+ * @author Christoph Strobl
  */
 public interface MongoOperations {
 
@@ -863,7 +864,7 @@ public interface MongoOperations {
 	 * 
 	 * @param object
 	 */
-	void remove(Object object);
+	WriteResult remove(Object object);
 
 	/**
 	 * Removes the given object from the given collection.
@@ -871,7 +872,7 @@ public interface MongoOperations {
 	 * @param object
 	 * @param collection must not be {@literal null} or empty.
 	 */
-	void remove(Object object, String collection);
+	WriteResult remove(Object object, String collection);
 
 	/**
 	 * Remove all documents that match the provided query document criteria from the the collection used to store the
@@ -880,7 +881,7 @@ public interface MongoOperations {
 	 * @param query
 	 * @param entityClass
 	 */
-	void remove(Query query, Class<?> entityClass);
+	WriteResult remove(Query query, Class<?> entityClass);
 
 	/**
 	 * Remove all documents that match the provided query document criteria from the the collection used to store the
@@ -890,7 +891,7 @@ public interface MongoOperations {
 	 * @param entityClass
 	 * @param collectionName
 	 */
-	void remove(Query query, Class<?> entityClass, String collectionName);
+	WriteResult remove(Query query, Class<?> entityClass, String collectionName);
 
 	/**
 	 * Remove all documents from the specified collection that match the provided query document criteria. There is no
@@ -899,7 +900,40 @@ public interface MongoOperations {
 	 * @param query the query document that specifies the criteria used to remove a record
 	 * @param collectionName name of the collection where the objects will removed
 	 */
-	void remove(Query query, String collectionName);
+	WriteResult remove(Query query, String collectionName);
+
+	/**
+	 * Returns and removes all documents form the specified collection that match the provided query.
+	 * 
+	 * @param query
+	 * @param collectionName
+	 * @return
+	 * @since 1.5
+	 */
+	<T> List<T> findAllAndRemove(Query query, String collectionName);
+
+	/**
+	 * Returns and removes all documents matching the given query form the collection used to store the entityClass.
+	 * 
+	 * @param query
+	 * @param entityClass
+	 * @return
+	 * @since 1.5
+	 */
+	<T> List<T> findAllAndRemove(Query query, Class<T> entityClass);
+
+	/**
+	 * Returns and removes all documents that match the provided query document criteria from the the collection used to
+	 * store the entityClass. The Class parameter is also used to help convert the Id of the object if it is present in
+	 * the query.
+	 * 
+	 * @param query
+	 * @param entityClass
+	 * @param collectionName
+	 * @return
+	 * @since 1.5
+	 */
+	<T> List<T> findAllAndRemove(Query query, Class<T> entityClass, String collectionName);
 
 	/**
 	 * Returns the underlying {@link MongoConverter}.

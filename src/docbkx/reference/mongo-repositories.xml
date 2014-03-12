@@ -394,6 +394,29 @@ public class PersonRepositoryTests {
         </tgroup>
       </table></para>
 
+    <section id="mongodb.repositories.queries.delete">
+      <title>Repository delete queries</title>
+
+      <para>The above keywords can be used in conjunciton with
+      <code>delete…By</code> or <code>remove…By</code> to create queries
+      deleting matching documents.</para>
+
+      <example>
+        <title><code>Delete…By</code> Query</title>
+
+        <programlisting language="java">public interface PersonRepository extends MongoRepository&lt;Person, String&gt; {
+  List &lt;Person&gt; deleteByLastname(String lastname);
+  
+  Long deletePersonByLastname(String lastname);  		
+}</programlisting>
+      </example>
+
+      <para>Using return type <interfacename>List</interfacename> will
+      retrieve and return all matching documents before actually deleting
+      them. A numeric return type directly removes the matching documents
+      returning the total number of documents removed.</para>
+    </section>
+
     <section id="mongodb.repositories.queries.geo-spatial">
       <title>Geo-spatial repository queries</title>
 

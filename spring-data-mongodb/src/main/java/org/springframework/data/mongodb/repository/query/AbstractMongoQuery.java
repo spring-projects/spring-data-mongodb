@@ -37,11 +37,14 @@ import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
 
+import com.mongodb.WriteResult;
+
 /**
  * Base class for {@link RepositoryQuery} implementations for Mongo.
  * 
  * @author Oliver Gierke
  * @author Thomas Darimont
+ * @author Christoph Strobl
  */
 public abstract class AbstractMongoQuery implements RepositoryQuery {
 
@@ -84,7 +87,9 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 
 		Object result = null;
 
-		if (method.isGeoNearQuery() && method.isPageQuery()) {
+		if (isDeleteQuery()) {
+			result = new DeleteExecution().execute(query);
+		} else if (method.isGeoNearQuery() && method.isPageQuery()) {
 
 			MongoParameterAccessor countAccessor = new MongoParametersParameterAccessor(method, parameters);
 			Query countQuery = createCountQuery(new ConvertingParameterAccessor(operations.getConverter(), countAccessor));
@@ -141,6 +146,14 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	 * @return
 	 */
 	protected abstract boolean isCountQuery();
+
+	/**
+	 * Return weather the query should delete matching documents.
+	 * 
+	 * @return
+	 * @since 1.5
+	 */
+	protected abstract boolean isDeleteQuery();
 
 	private abstract class Execution {
 
@@ -351,4 +364,38 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 			return componentType == null ? false : GeoResult.class.equals(componentType.getType());
 		}
 	}
+
+	/**
+	 * {@link Execution} removing documents matching the query.
+	 * 
+	 * @since 1.5
+	 */
+	final class DeleteExecution extends Execution {
+
+		@Override
+		Object execute(Query query) {
+
+			MongoEntityMetadata<?> metadata = method.getEntityInformation();
+			return deleteAndConvertResult(query, metadata);
+		}
+
+		private Object deleteAndConvertResult(Query query, MongoEntityMetadata<?> metadata) {
+
+			if (method.isCollectionQuery()) {
+				return findAndRemove(query, metadata);
+			}
+
+			WriteResult writeResult = remove(query, metadata);
+			return writeResult != null ? writeResult.getN() : 0L;
+		}
+
+		private List<?> findAndRemove(Query query, MongoEntityMetadata<?> metadata) {
+			return operations.findAllAndRemove(query, metadata.getJavaType());
+		}
+
+		private WriteResult remove(Query query, MongoEntityMetadata<?> metadata) {
+			return operations.remove(query, metadata.getCollectionName());
+		}
+	}
+
 }
