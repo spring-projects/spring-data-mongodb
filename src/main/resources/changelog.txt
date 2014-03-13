@@ -1,6 +1,33 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 1.4.1.RELEASE (2014-03-13)
+---------------------------------------------
+** Fix
+    * [DATAMONGO-773] - Verify that @DBRef fields can be included in query.
+    * [DATAMONGO-821] - Fixed handling of keyword expressions for DBRefs.
+    * [DATAMONGO-829] - NearQuery should not default 'num' to zero.
+    * [DATAMONGO-833] - Support for EnumSet and EnumMap in MappingMongoConverter.
+    * [DATAMONGO-843] - Back-port of defaulting of the MappingContext for auditing.
+    * [DATAMONGO-862] - Fixed handling of unmapped paths for updates.
+    * [DATAMONGO-863] - UpdateMapper doesn't convert raw DBObjects anymore.
+    * [DATAMONGO-868] - MongoTemplate.findAndModify(…) increases version if not handled manually.
+    * [DATAMONGO-871] - Add support for arrays as query method return types.
+    * [DATAMONGO-877] - Added guard against null-package in AbstractMappingConfiguration.
+
+** Improvement
+    * [DATAMONGO-865] - Adjust test dependencies to avoid ClassNotFoundException during test runs.
+
+Changes in version 1.3.5.RELEASE (2014-03-10)
+---------------------------------------------
+** Fix
+    * [DATAMONGO-829] - NearQuery, when used in conjunction with a Query, no longer sets num=0, unless Query specifies otherwise.
+    * [DATAMONGO-871] - Repository queries support array return type.
+    
+** Improvement
+    * [DATAMONGO-865] - Avoid ClassNotFoundException during test runs.
+
+
 Changes in version 1.4.0.RELEASE (2014-02-24)
 ---------------------------------------------
 
