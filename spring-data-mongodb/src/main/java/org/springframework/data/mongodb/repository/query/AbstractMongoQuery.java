@@ -372,6 +372,10 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	 */
 	final class DeleteExecution extends Execution {
 
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery.Execution#execute(org.springframework.data.mongodb.core.query.Query)
+		 */
 		@Override
 		Object execute(Query query) {
 
@@ -382,20 +386,11 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 		private Object deleteAndConvertResult(Query query, MongoEntityMetadata<?> metadata) {
 
 			if (method.isCollectionQuery()) {
-				return findAndRemove(query, metadata);
+				return operations.findAllAndRemove(query, metadata.getJavaType());
 			}
 
-			WriteResult writeResult = remove(query, metadata);
+			WriteResult writeResult = operations.remove(query, metadata.getCollectionName());
 			return writeResult != null ? writeResult.getN() : 0L;
 		}
-
-		private List<?> findAndRemove(Query query, MongoEntityMetadata<?> metadata) {
-			return operations.findAllAndRemove(query, metadata.getJavaType());
-		}
-
-		private WriteResult remove(Query query, MongoEntityMetadata<?> metadata) {
-			return operations.remove(query, metadata.getCollectionName());
-		}
 	}
-
 }

@@ -34,6 +34,7 @@ import com.mongodb.util.JSON;
  */
 public class StringBasedMongoQuery extends AbstractMongoQuery {
 
+	private static final String COUND_AND_DELETE = "Manually defined query for %s cannot be both a count and delete query at the same time!";
 	private static final Pattern PLACEHOLDER = Pattern.compile("\\?(\\d+)");
 	private static final Logger LOG = LoggerFactory.getLogger(StringBasedMongoQuery.class);
 
@@ -43,7 +44,18 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 	private final boolean isDeleteQuery;
 
 	/**
-	 * Creates a new {@link StringBasedMongoQuery}.
+	 * Creates a new {@link StringBasedMongoQuery} for the given {@link MongoQueryMethod} and {@link MongoOperations}.
+	 * 
+	 * @param method must not be {@literal null}.
+	 * @param mongoOperations must not be {@literal null}.
+	 */
+	public StringBasedMongoQuery(MongoQueryMethod method, MongoOperations mongoOperations) {
+		this(method.getAnnotatedQuery(), method, mongoOperations);
+	}
+
+	/**
+	 * Creates a new {@link StringBasedMongoQuery} for the given {@link String}, {@link MongoQueryMethod} and
+	 * {@link MongoOperations}.
 	 * 
 	 * @param method must not be {@literal null}.
 	 * @param template must not be {@literal null}.
@@ -56,10 +68,10 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 		this.fieldSpec = method.getFieldSpecification();
 		this.isCountQuery = method.hasAnnotatedQuery() ? method.getQueryAnnotation().count() : false;
 		this.isDeleteQuery = method.hasAnnotatedQuery() ? method.getQueryAnnotation().delete() : false;
-	}
 
-	public StringBasedMongoQuery(MongoQueryMethod method, MongoOperations mongoOperations) {
-		this(method.getAnnotatedQuery(), method, mongoOperations);
+		if (isCountQuery && isDeleteQuery) {
+			throw new IllegalArgumentException(String.format(COUND_AND_DELETE, method));
+		}
 	}
 
 	/*
@@ -98,6 +110,10 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 		return isCountQuery;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery#isDeleteQuery()
+	 */
 	@Override
 	protected boolean isDeleteQuery() {
 		return this.isDeleteQuery;

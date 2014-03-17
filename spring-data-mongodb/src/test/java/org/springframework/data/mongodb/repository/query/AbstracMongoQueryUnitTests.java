@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
+import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
@@ -47,33 +48,30 @@ import org.springframework.data.repository.core.RepositoryMetadata;
 import com.mongodb.WriteResult;
 
 /**
+ * Unit tests for {@link AbstractMongoQuery}.
+ * 
  * @author Christoph Strobl
+ * @author Oliver Gierke
  */
 @RunWith(MockitoJUnitRunner.class)
-public class MongoQueryExecutionUnitTests {
+public class AbstracMongoQueryUnitTests {
 
-	private @Mock RepositoryMetadata metadataMock;
+	@Mock RepositoryMetadata metadataMock;
+	@Mock MongoOperations mongoOperationsMock;
+	@Mock @SuppressWarnings("rawtypes") BasicMongoPersistentEntity persitentEntityMock;
+	@Mock MongoMappingContext mappingContextMock;
+	@Mock WriteResult writeResultMock;
 
-	private @Mock MongoOperations mongoOperationsMock;
-
-	@SuppressWarnings("rawtypes")//
-	private @Mock BasicMongoPersistentEntity persitentEntityMock;
-
-	private @Mock MongoMappingContext mappingContextMock;
-
-	private @Mock WriteResult writeResultMock;
-
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Before
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public void setUp() {
 
 		when(metadataMock.getDomainType()).thenReturn((Class) Person.class);
 		when(metadataMock.getReturnedDomainClass(Matchers.any(Method.class))).thenReturn((Class) Person.class);
 		when(persitentEntityMock.getCollection()).thenReturn("persons");
-
 		when(mappingContextMock.getPersistentEntity(Matchers.any(Class.class))).thenReturn(persitentEntityMock);
-
 		when(persitentEntityMock.getType()).thenReturn(Person.class);
+
 		DbRefResolver dbRefResolver = new DefaultDbRefResolver(mock(MongoDbFactory.class));
 		MappingMongoConverter converter = new MappingMongoConverter(dbRefResolver, mappingContextMock);
 		converter.afterPropertiesSet();
@@ -89,6 +87,7 @@ public class MongoQueryExecutionUnitTests {
 	public void testDeleteExecutionCallsRemoveCorreclty() {
 
 		createQueryForMethod("deletePersonByLastname", String.class).setDeleteQuery(true).execute(new Object[] { "booh" });
+
 		verify(this.mongoOperationsMock, times(1)).remove(Matchers.any(Query.class), Matchers.eq("persons"));
 		verify(this.mongoOperationsMock, times(0)).find(Matchers.any(Query.class), Matchers.any(Class.class),
 				Matchers.anyString());
@@ -134,14 +133,19 @@ public class MongoQueryExecutionUnitTests {
 		MongoQueryFake query = createQueryForMethod("deletePersonByLastname", String.class);
 		query.setDeleteQuery(true);
 
-		assertThat(query.execute(new Object[] { "fake" }), Is.<Object> is(100L));
-
+		assertThat(query.execute(new Object[] { "fake" }), is((Object) 100L));
 		verify(this.mongoOperationsMock, times(1)).remove(Matchers.any(Query.class), Matchers.eq("persons"));
 	}
 
 	private MongoQueryFake createQueryForMethod(String methodName, Class<?>... paramTypes) {
+
 		try {
-			return this.createQueryForMethod(Repo.class.getMethod(methodName, paramTypes));
+
+			Method method = Repo.class.getMethod(methodName, paramTypes);
+			MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadataMock, mappingContextMock);
+
+			return new MongoQueryFake(queryMethod, mongoOperationsMock);
+
 		} catch (NoSuchMethodException e) {
 			throw new IllegalArgumentException(e.getMessage(), e);
 		} catch (SecurityException e) {
@@ -149,22 +153,14 @@ public class MongoQueryExecutionUnitTests {
 		}
 	}
 
-	private MongoQueryFake createQueryForMethod(Method method) {
-		return new MongoQueryFake(createMongoQueryMethodFrom(method), this.mongoOperationsMock);
-	}
+	private static class MongoQueryFake extends AbstractMongoQuery {
 
-	private MongoQueryMethod createMongoQueryMethodFrom(Method method) {
-		return new MongoQueryMethod(method, metadataMock, this.mappingContextMock);
-	}
-
-	class MongoQueryFake extends AbstractMongoQuery {
+		private boolean isCountQuery;
+		private boolean isDeleteQuery;
 
 		public MongoQueryFake(MongoQueryMethod method, MongoOperations operations) {
 			super(method, operations);
 		}
-
-		private boolean isCountQuery;
-		private boolean isDeleteQuery;
 
 		@Override
 		protected Query createQuery(ConvertingParameterAccessor accessor) {
@@ -181,11 +177,6 @@ public class MongoQueryExecutionUnitTests {
 			return isDeleteQuery;
 		}
 
-		public MongoQueryFake setCountQuery(boolean isCountQuery) {
-			this.isCountQuery = isCountQuery;
-			return this;
-		}
-
 		public MongoQueryFake setDeleteQuery(boolean isDeleteQuery) {
 			this.isDeleteQuery = isDeleteQuery;
 			return this;
@@ -198,5 +189,4 @@ public class MongoQueryExecutionUnitTests {
 
 		Long deletePersonByLastname(String lastname);
 	}
-
 }

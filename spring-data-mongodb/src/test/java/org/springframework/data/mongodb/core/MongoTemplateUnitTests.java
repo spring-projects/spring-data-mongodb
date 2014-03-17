@@ -319,6 +319,9 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		assertThat((Object[]) idField.get("$in"), is(new Object[] { Integer.valueOf(0), Integer.valueOf(1) }));
 	}
 
+	/**
+	 * @see DATAMONGO-566
+	 */
 	@Test
 	public void findAllAndRemoveShouldNotTriggerRemoveIfFindResultIsEmpty() {
 

@@ -150,6 +150,14 @@ public class StringBasedMongoQueryUnitTests {
 		assertThat(mongoQuery.isDeleteQuery(), is(true));
 	}
 
+	/**
+	 * @see DATAMONGO-566
+	 */
+	@Test(expected = IllegalArgumentException.class)
+	public void preventsDeleteAndCountFlagAtTheSameTime() throws Exception {
+		createQueryForMethod("invalidMethod", String.class);
+	}
+
 	private StringBasedMongoQuery createQueryForMethod(String name, Class<?>... parameters) throws Exception {
 
 		Method method = SampleRepository.class.getMethod(name, parameters);
@@ -174,5 +182,7 @@ public class StringBasedMongoQueryUnitTests {
 		@Query(value = "{ 'lastname' : ?0 }", delete = true)
 		void removeByLastname(String lastname);
 
+		@Query(value = "{ 'lastname' : ?0 }", delete = true, count = true)
+		void invalidMethod(String lastname);
 	}
 }

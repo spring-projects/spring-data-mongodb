@@ -781,6 +781,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		repository.save(alicia);
 
 		Page<Person> result = repository.findByHavingCreator(new PageRequest(0, 100));
+
 		assertThat(result.getNumberOfElements(), is(1));
 		assertThat(result.getContent().get(0), is(alicia));
 	}
@@ -792,6 +793,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	public void deleteByShouldReturnListOfDeletedElementsWhenRetunTypeIsCollectionLike() {
 
 		List<Person> result = repository.deleteByLastname("Beauford");
+
 		assertThat(result, hasItem(carter));
 		assertThat(result, hasSize(1));
 	}
@@ -803,6 +805,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	public void deleteByShouldRemoveElementsMatchingDerivedQuery() {
 
 		repository.deleteByLastname("Beauford");
+
 		assertThat(operations.count(new BasicQuery("{'lastname':'Beauford'}"), Person.class), is(0L));
 	}
 
@@ -837,6 +840,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	public void deleteByUsingAnnotatedQueryShouldReturnListOfDeletedElementsWhenRetunTypeIsCollectionLike() {
 
 		List<Person> result = repository.removeByLastnameUsingAnnotatedQuery("Beauford");
+
 		assertThat(result, hasItem(carter));
 		assertThat(result, hasSize(1));
 	}
@@ -848,6 +852,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	public void deleteByUsingAnnotatedQueryShouldRemoveElementsMatchingDerivedQuery() {
 
 		repository.removeByLastnameUsingAnnotatedQuery("Beauford");
+
 		assertThat(operations.count(new BasicQuery("{'lastname':'Beauford'}"), Person.class), is(0L));
 	}
 
@@ -858,5 +863,4 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	public void deleteByUsingAnnotatedQueryShouldReturnNumberOfDocumentsRemovedIfReturnTypeIsLong() {
 		assertThat(repository.removePersonByLastnameUsingAnnotatedQuery("Beauford"), is(1L));
 	}
-
 }
