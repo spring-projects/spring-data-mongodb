@@ -2545,7 +2545,9 @@ public class MongoTemplateTests {
 		template.save(message);
 
 		SomeMessage savedMessage = template.findById(message.id, SomeMessage.class);
+
 		assertThat(savedMessage.dbrefContent.text, is(content.text));
+		assertThat(savedMessage.normalContent.text, is(content.text));
 	}
 
 	static class DocumentWithDBRefCollection {

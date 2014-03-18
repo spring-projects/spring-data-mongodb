@@ -23,6 +23,7 @@ import com.mongodb.DBRef;
  * Allows direct interaction with the underlying {@link LazyLoadingInterceptor}.
  * 
  * @author Thomas Darimont
+ * @since 1.5
  */
 public interface LazyLoadingProxy {
 
@@ -30,6 +31,7 @@ public interface LazyLoadingProxy {
 	 * Initializes the proxy and returns the wrapped value.
 	 * 
 	 * @return
+	 * @since 1.5
 	 */
 	Object initialize();
 
@@ -37,6 +39,7 @@ public interface LazyLoadingProxy {
 	 * Returns the {@link DBRef} represented by this {@link LazyLoadingProxy}, may be null.
 	 * 
 	 * @return
+	 * @since 1.5
 	 */
 	DBRef toDBRef();
 }
