@@ -7,6 +7,7 @@ import java.net.URL;
 import java.text.DateFormat;
 import java.text.Format;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Locale;
 import java.util.UUID;
 
@@ -183,6 +184,19 @@ public class CustomConversionsUnitTests {
 		assertThat(conversions.getCustomWriteTarget(DateTime.class, null), is(equalTo((Class) String.class)));
 	}
 
+	/**
+	 * @see DATAMONGO-881
+	 */
+	@Test
+	public void customConverterOverridesDefault() {
+
+		CustomConversions conversions = new CustomConversions(Arrays.asList(CustomDateTimeConverter.INSTANCE));
+		GenericConversionService conversionService = new DefaultConversionService();
+		conversions.registerConvertersIn(conversionService);
+
+		assertThat(conversionService.convert(new DateTime(), Date.class), is(new Date(0)));
+	}
+
 	enum FormatToStringConverter implements Converter<Format, String> {
 		INSTANCE;
 
@@ -225,6 +239,16 @@ public class CustomConversionsUnitTests {
 		@Override
 		public String convert(DateTime source) {
 			return "";
+		}
+	}
+
+	enum CustomDateTimeConverter implements Converter<DateTime, Date> {
+
+		INSTANCE;
+
+		@Override
+		public Date convert(DateTime source) {
+			return new Date(0);
 		}
 	}
 }
