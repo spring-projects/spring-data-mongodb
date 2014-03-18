@@ -51,7 +51,6 @@ import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.authentication.UserCredentials;
 import org.springframework.data.convert.EntityReader;
-import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.BeanWrapper;
 import org.springframework.data.mapping.model.MappingException;
@@ -744,8 +743,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		MongoPersistentEntity<?> mongoPersistentEntity = getPersistentEntity(entity.getClass());
 
 		if (mongoPersistentEntity != null && mongoPersistentEntity.hasVersionProperty()) {
-			BeanWrapper<PersistentEntity<Object, ?>, Object> wrapper = BeanWrapper.create(entity,
-					this.mongoConverter.getConversionService());
+			BeanWrapper<Object> wrapper = BeanWrapper.create(entity, this.mongoConverter.getConversionService());
 			wrapper.setProperty(mongoPersistentEntity.getVersionProperty(), 0);
 		}
 	}
@@ -839,8 +837,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 	private <T> void doSaveVersioned(T objectToSave, MongoPersistentEntity<?> entity, String collectionName) {
 
-		BeanWrapper<PersistentEntity<T, ?>, T> beanWrapper = BeanWrapper.create(objectToSave,
-				this.mongoConverter.getConversionService());
+		BeanWrapper<T> beanWrapper = BeanWrapper.create(objectToSave, this.mongoConverter.getConversionService());
 		MongoPersistentProperty idProperty = entity.getIdProperty();
 		MongoPersistentProperty versionProperty = entity.getVersionProperty();
 
@@ -1698,7 +1695,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		}
 
 		ConversionService conversionService = mongoConverter.getConversionService();
-		BeanWrapper<PersistentEntity<Object, ?>, Object> wrapper = BeanWrapper.create(savedObject, conversionService);
+		BeanWrapper<Object> wrapper = BeanWrapper.create(savedObject, conversionService);
 
 		Object idValue = wrapper.getProperty(idProp, idProp.getType());
 

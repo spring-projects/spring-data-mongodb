@@ -242,7 +242,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		EntityInstantiator instantiator = instantiators.getInstantiatorFor(entity);
 		S instance = instantiator.createInstance(entity, provider);
 
-		final BeanWrapper<MongoPersistentEntity<S>, S> wrapper = BeanWrapper.create(instance, conversionService);
+		final BeanWrapper<S> wrapper = BeanWrapper.create(instance, conversionService);
 		final S result = wrapper.getBean();
 
 		// Set properties not already set in the constructor
@@ -363,7 +363,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			throw new MappingException("No mapping metadata found for entity of type " + obj.getClass().getName());
 		}
 
-		final BeanWrapper<MongoPersistentEntity<Object>, Object> wrapper = BeanWrapper.create(obj, conversionService);
+		final BeanWrapper<Object> wrapper = BeanWrapper.create(obj, conversionService);
 		final MongoPersistentProperty idProperty = entity.getIdProperty();
 
 		if (!dbo.containsField("_id") && null != idProperty) {
@@ -752,7 +752,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		if (target.getClass().equals(idProperty.getType())) {
 			id = target;
 		} else {
-			BeanWrapper<MongoPersistentEntity<Object>, Object> wrapper = BeanWrapper.create(target, conversionService);
+			BeanWrapper<Object> wrapper = BeanWrapper.create(target, conversionService);
 			id = wrapper.getProperty(idProperty, Object.class);
 		}
 
