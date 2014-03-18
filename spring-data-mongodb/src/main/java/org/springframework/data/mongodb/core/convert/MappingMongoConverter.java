@@ -278,7 +278,9 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 				MongoPersistentProperty inverseProp = association.getInverse();
 
-				Object obj = dbRefResolver.resolveDbRef(inverseProp, new DbRefResolverCallback() {
+				Object value = dbo.get(inverseProp.getName());
+				DBRef dbref = value instanceof DBRef ? (DBRef) value : null;
+				Object obj = dbRefResolver.resolveDbRef(inverseProp, dbref, new DbRefResolverCallback() {
 
 					@Override
 					public Object resolve(MongoPersistentProperty property) {
@@ -403,6 +405,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				Object propertyObj = wrapper.getProperty(prop, prop.getType(), fieldAccessOnly);
 
 				if (null != propertyObj) {
+
 					if (!conversions.isSimpleType(propertyObj.getClass())) {
 						writePropertyInternal(propertyObj, dbo, prop);
 					} else {
@@ -449,11 +452,29 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		if (prop.isDbReference()) {
-			DBRef dbRefObj = createDBRef(obj, prop);
+
+			DBRef dbRefObj = null;
+
+			/*
+			 * If we already have a LazyLoadingProxy, we use it's cached DBRef value instead of 
+			 * unnecessarily initializing it only to convert it to a DBRef a few instructions later.
+			 */
+			if (obj instanceof LazyLoadingProxy) {
+				dbRefObj = ((LazyLoadingProxy) obj).toDBRef();
+			}
+
+			dbRefObj = dbRefObj != null ? dbRefObj : createDBRef(obj, prop);
 			if (null != dbRefObj) {
 				accessor.put(prop, dbRefObj);
 				return;
 			}
+		}
+
+		/*
+		 * If we have a LazyLoadingProxy we make sure it is initialized first.
+		 */
+		if (obj instanceof LazyLoadingProxy) {
+			obj = ((LazyLoadingProxy) obj).initialize();
 		}
 
 		// Lookup potential custom target type

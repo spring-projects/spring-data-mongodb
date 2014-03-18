@@ -2491,6 +2491,42 @@ public class MongoTemplateTests {
 		assertThat(result.get(0).dbRefProperty.field, is(sample.field));
 	}
 
+	/**
+	 * @see DATAMONGO-880
+	 */
+	@Test
+	public void savingAndReassigningLazyLoadingProxies() {
+
+		template.dropCollection(SomeTemplate.class);
+		template.dropCollection(SomeMessage.class);
+		template.dropCollection(SomeContent.class);
+
+		SomeContent content = new SomeContent();
+		content.id = "C1";
+		content.text = "BUBU";
+		template.save(content);
+
+		SomeTemplate tmpl = new SomeTemplate();
+		tmpl.id = "T1";
+		tmpl.content = content; // @DBRef(lazy=true) tmpl.content
+
+		template.save(tmpl);
+
+		SomeTemplate savedTmpl = template.findById(tmpl.id, SomeTemplate.class);
+
+		SomeMessage message = new SomeMessage();
+		message.id = "M1";
+		message.dbrefContent = savedTmpl.content; // @DBRef message.dbrefContent
+		message.normalContent = savedTmpl.content;
+
+		template.save(message);
+
+		SomeMessage savedMessage = template.findById(message.id, SomeMessage.class);
+
+		assertThat(savedMessage.dbrefContent.text, is(content.text));
+		assertThat(savedMessage.normalContent.text, is(content.text));
+	}
+
 	static class DocumentWithDBRefCollection {
 
 		@Id public String id;
@@ -2669,5 +2705,27 @@ public class MongoTemplateTests {
 
 		@Id String id;
 		EnumValue value;
+	}
+
+	static class SomeTemplate {
+
+		String id;
+		@org.springframework.data.mongodb.core.mapping.DBRef(lazy = true) SomeContent content;
+
+		public SomeContent getContent() {
+			return content;
+		}
+	}
+
+	static class SomeContent {
+
+		String id;
+		String text;
+	}
+
+	static class SomeMessage {
+		String id;
+		@org.springframework.data.mongodb.core.mapping.DBRef SomeContent dbrefContent;
+		SomeContent normalContent;
 	}
 }
