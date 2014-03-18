@@ -21,8 +21,6 @@ import static org.springframework.data.mongodb.config.BeanNames.*;
 import java.lang.annotation.Annotation;
 
 import org.springframework.beans.factory.config.BeanDefinition;
-import org.springframework.beans.factory.config.ObjectFactoryCreatingFactoryBean;
-import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.RootBeanDefinition;
@@ -32,7 +30,6 @@ import org.springframework.data.auditing.IsNewAwareAuditingHandler;
 import org.springframework.data.auditing.config.AuditingBeanDefinitionRegistrarSupport;
 import org.springframework.data.auditing.config.AuditingConfiguration;
 import org.springframework.data.config.ParsingUtils;
-import org.springframework.data.mapping.context.MappingContextIsNewStrategyFactory;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.event.AuditingEventListener;
 import org.springframework.data.support.IsNewStrategyFactory;
@@ -88,7 +85,7 @@ class MongoAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport {
 		Assert.notNull(configuration, "AuditingConfiguration must not be null!");
 
 		BeanDefinitionBuilder builder = BeanDefinitionBuilder.rootBeanDefinition(IsNewAwareAuditingHandler.class);
-		builder.addConstructorArgReference(BeanNames.IS_NEW_STRATEGY_FACTORY_BEAN_NAME);
+		builder.addConstructorArgReference(MAPPING_CONTEXT_BEAN_NAME);
 		return configureDefaultAuditHandlerAttributes(configuration, builder);
 	}
 
@@ -103,13 +100,10 @@ class MongoAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport {
 		Assert.notNull(auditingHandlerDefinition, "BeanDefinition must not be null!");
 		Assert.notNull(registry, "BeanDefinitionRegistry must not be null!");
 
-		BeanDefinitionBuilder builder = BeanDefinitionBuilder.rootBeanDefinition(ObjectFactoryCreatingFactoryBean.class);
-		builder.addPropertyValue("targetBeanName", getAuditingHandlerBeanName());
-		builder.setRole(ROLE_INFRASTRUCTURE);
-
 		BeanDefinitionBuilder listenerBeanDefinitionBuilder = BeanDefinitionBuilder
 				.rootBeanDefinition(AuditingEventListener.class);
-		listenerBeanDefinitionBuilder.addConstructorArgValue(builder.getBeanDefinition());
+		listenerBeanDefinitionBuilder.addConstructorArgValue(ParsingUtils.getObjectFactoryBeanDefinition(
+				getAuditingHandlerBeanName(), registry));
 
 		registerInfrastructureBeanWithId(listenerBeanDefinitionBuilder.getBeanDefinition(),
 				AuditingEventListener.class.getName(), registry);
@@ -131,18 +125,6 @@ class MongoAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport {
 			definition.setSource(source);
 
 			registry.registerBeanDefinition(MAPPING_CONTEXT_BEAN_NAME, definition);
-		}
-
-		if (!registry.containsBeanDefinition(BeanNames.IS_NEW_STRATEGY_FACTORY_BEAN_NAME)) {
-
-			BeanDefinitionBuilder builder = BeanDefinitionBuilder
-					.rootBeanDefinition(MappingContextIsNewStrategyFactory.class);
-			builder.addConstructorArgReference(MAPPING_CONTEXT_BEAN_NAME);
-
-			AbstractBeanDefinition definition = ParsingUtils.getSourceBeanDefinition(builder, source);
-			definition.setRole(ROLE_INFRASTRUCTURE);
-
-			registry.registerBeanDefinition(IS_NEW_STRATEGY_FACTORY_BEAN_NAME, definition);
 		}
 	}
 }

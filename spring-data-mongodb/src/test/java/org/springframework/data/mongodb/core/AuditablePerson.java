@@ -15,7 +15,10 @@
  */
 package org.springframework.data.mongodb.core;
 
+import java.util.Date;
+
 import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 
@@ -26,9 +29,10 @@ import org.springframework.data.mongodb.core.mapping.DBRef;
  */
 public class AuditablePerson {
 
-	@Id private String id;
+	private @Id String id;
 	private String firstname;
-	@DBRef @CreatedBy private AuditablePerson createdBy;
+	private @DBRef @CreatedBy AuditablePerson createdBy;
+	private @CreatedDate Date createdAt;
 
 	public AuditablePerson() {}
 
@@ -58,5 +62,9 @@ public class AuditablePerson {
 
 	public void setCreatedBy(AuditablePerson createdBy) {
 		this.createdBy = createdBy;
+	}
+
+	public Date getCreatedAt() {
+		return createdAt;
 	}
 }

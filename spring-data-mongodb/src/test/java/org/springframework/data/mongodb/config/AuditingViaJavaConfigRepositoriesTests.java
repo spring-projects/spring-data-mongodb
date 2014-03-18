@@ -84,20 +84,20 @@ public class AuditingViaJavaConfigRepositoriesTests {
 	}
 
 	/**
-	 * @DATAMONGO-792
+	 * @see DATAMONGO-792, DATAMONGO-883
 	 */
 	@Test
 	public void basicAuditing() {
 
 		doReturn(this.auditor).when(this.auditorAware).getCurrentAuditor();
 
-		AuditablePerson user = new AuditablePerson("user");
-
-		AuditablePerson savedUser = auditablePersonRepository.save(user);
+		AuditablePerson savedUser = auditablePersonRepository.save(new AuditablePerson("user"));
 
 		AuditablePerson createdBy = savedUser.getCreatedBy();
+
 		assertThat(createdBy, is(notNullValue()));
 		assertThat(createdBy.getFirstname(), is(this.auditor.getFirstname()));
+		assertThat(savedUser.getCreatedAt(), is(notNullValue()));
 	}
 
 	/**

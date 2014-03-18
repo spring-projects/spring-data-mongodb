@@ -17,15 +17,17 @@ package org.springframework.data.mongodb.config;
 
 import static org.springframework.data.config.ParsingUtils.*;
 import static org.springframework.data.mongodb.config.BeanNames.*;
-import static org.springframework.data.mongodb.config.MappingMongoConverterParser.*;
 
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
+import org.springframework.beans.factory.support.RootBeanDefinition;
 import org.springframework.beans.factory.xml.AbstractSingleBeanDefinitionParser;
 import org.springframework.beans.factory.xml.BeanDefinitionParser;
 import org.springframework.beans.factory.xml.ParserContext;
-import org.springframework.data.config.IsNewAwareAuditingHandlerBeanDefinitionParser;
+import org.springframework.data.auditing.config.IsNewAwareAuditingHandlerBeanDefinitionParser;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.event.AuditingEventListener;
+import org.springframework.util.StringUtils;
 import org.w3c.dom.Element;
 
 /**
@@ -61,22 +63,21 @@ public class MongoAuditingBeanDefinitionParser extends AbstractSingleBeanDefinit
 	@Override
 	protected void doParse(Element element, ParserContext parserContext, BeanDefinitionBuilder builder) {
 
-		BeanDefinitionRegistry registry = parserContext.getRegistry();
+		String mappingContextRef = element.getAttribute("mapping-context-ref");
 
-		String isNewStrategyFactoryName = IS_NEW_STRATEGY_FACTORY_BEAN_NAME;
-		String mappingContextName = MAPPING_CONTEXT_BEAN_NAME;
+		if (!StringUtils.hasText(mappingContextRef)) {
 
-		if (!registry.containsBeanDefinition(isNewStrategyFactoryName)) {
+			BeanDefinitionRegistry registry = parserContext.getRegistry();
 
-			if (!registry.containsBeanDefinition(mappingContextName)) {
-				mappingContextName = potentiallyCreateMappingContext(element, parserContext, null, null);
+			if (!registry.containsBeanDefinition(MAPPING_CONTEXT_BEAN_NAME)) {
+				registry.registerBeanDefinition(MAPPING_CONTEXT_BEAN_NAME, new RootBeanDefinition(MongoMappingContext.class));
 			}
 
-			isNewStrategyFactoryName = createIsNewStrategyFactoryBeanDefinition(mappingContextName, parserContext, element);
+			mappingContextRef = MAPPING_CONTEXT_BEAN_NAME;
 		}
 
 		IsNewAwareAuditingHandlerBeanDefinitionParser parser = new IsNewAwareAuditingHandlerBeanDefinitionParser(
-				isNewStrategyFactoryName);
+				mappingContextRef);
 		parser.parse(element, parserContext);
 
 		builder.addConstructorArgValue(getObjectFactoryBeanDefinition(parser.getResolvedBeanName(),

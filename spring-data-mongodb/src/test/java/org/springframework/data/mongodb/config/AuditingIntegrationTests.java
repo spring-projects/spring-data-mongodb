@@ -34,6 +34,9 @@ import org.springframework.data.mongodb.core.mapping.event.BeforeConvertEvent;
  */
 public class AuditingIntegrationTests {
 
+	/**
+	 * @see DATAMONGO-577, DATAMONGO-800, DATAMONGO-883
+	 */
 	@Test
 	public void enablesAuditingAndSetsPropertiesAccordingly() throws Exception {
 
@@ -58,8 +61,13 @@ public class AuditingIntegrationTests {
 
 	class Entity {
 
-		@CreatedDate DateTime created;
-		@LastModifiedDate DateTime modified;
 		@Id Long id;
+		@CreatedDate DateTime created;
+		DateTime modified;
+
+		@LastModifiedDate
+		public DateTime getModified() {
+			return modified;
+		}
 	}
 }
