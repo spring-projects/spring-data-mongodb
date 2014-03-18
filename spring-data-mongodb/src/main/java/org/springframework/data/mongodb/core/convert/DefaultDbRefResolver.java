@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -78,13 +78,13 @@ public class DefaultDbRefResolver implements DbRefResolver {
 	 * @see org.springframework.data.mongodb.core.convert.DbRefResolver#resolveDbRef(org.springframework.data.mongodb.core.mapping.MongoPersistentProperty, org.springframework.data.mongodb.core.convert.DbRefResolverCallback)
 	 */
 	@Override
-	public Object resolveDbRef(MongoPersistentProperty property, DbRefResolverCallback callback) {
+	public Object resolveDbRef(MongoPersistentProperty property, DBRef dbref, DbRefResolverCallback callback) {
 
 		Assert.notNull(property, "Property must not be null!");
 		Assert.notNull(callback, "Callback must not be null!");
 
 		if (isLazyDbRef(property)) {
-			return createLazyLoadingProxy(property, callback);
+			return createLazyLoadingProxy(property, dbref, callback);
 		}
 
 		return callback.resolve(property);
@@ -109,10 +109,11 @@ public class DefaultDbRefResolver implements DbRefResolver {
 	 * eventually resolve the value of the property.
 	 * 
 	 * @param property must not be {@literal null}.
+	 * @param dbref
 	 * @param callback must not be {@literal null}.
 	 * @return
 	 */
-	private Object createLazyLoadingProxy(MongoPersistentProperty property, DbRefResolverCallback callback) {
+	private Object createLazyLoadingProxy(MongoPersistentProperty property, DBRef dbref, DbRefResolverCallback callback) {
 
 		ProxyFactory proxyFactory = new ProxyFactory();
 		Class<?> propertyType = property.getType();
@@ -121,7 +122,9 @@ public class DefaultDbRefResolver implements DbRefResolver {
 			proxyFactory.addInterface(type);
 		}
 
-		LazyLoadingInterceptor interceptor = new LazyLoadingInterceptor(property, exceptionTranslator, callback);
+		LazyLoadingInterceptor interceptor = new LazyLoadingInterceptor(property, dbref, exceptionTranslator, callback);
+
+		proxyFactory.addInterface(LazyLoadingProxy.class);
 
 		if (propertyType.isInterface()) {
 			proxyFactory.addInterface(propertyType);
@@ -158,27 +161,42 @@ public class DefaultDbRefResolver implements DbRefResolver {
 	static class LazyLoadingInterceptor implements MethodInterceptor, org.springframework.cglib.proxy.MethodInterceptor,
 			Serializable {
 
+		private static final Method initializeMethod;
+		private static final Method toDBRefMethod;
+
 		private final DbRefResolverCallback callback;
 		private final MongoPersistentProperty property;
 		private final PersistenceExceptionTranslator exceptionTranslator;
 
 		private volatile boolean resolved;
 		private Object result;
+		private DBRef dbref;
+
+		static {
+			try {
+				initializeMethod = LazyLoadingProxy.class.getMethod("initialize");
+				toDBRefMethod = LazyLoadingProxy.class.getMethod("toDBRef");
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+		}
 
 		/**
 		 * Creates a new {@link LazyLoadingInterceptor} for the given {@link MongoPersistentProperty},
 		 * {@link PersistenceExceptionTranslator} and {@link DbRefResolverCallback}.
 		 * 
 		 * @param property must not be {@literal null}.
+		 * @param dbref
 		 * @param callback must not be {@literal null}.
 		 */
-		public LazyLoadingInterceptor(MongoPersistentProperty property, PersistenceExceptionTranslator exceptionTranslator,
-				DbRefResolverCallback callback) {
+		public LazyLoadingInterceptor(MongoPersistentProperty property, DBRef dbref,
+				PersistenceExceptionTranslator exceptionTranslator, DbRefResolverCallback callback) {
 
 			Assert.notNull(property, "Property must not be null!");
 			Assert.notNull(exceptionTranslator, "Exception translator must not be null!");
 			Assert.notNull(callback, "Callback must not be null!");
 
+			this.dbref = dbref;
 			this.callback = callback;
 			this.exceptionTranslator = exceptionTranslator;
 			this.property = property;
@@ -190,6 +208,15 @@ public class DefaultDbRefResolver implements DbRefResolver {
 		 */
 		@Override
 		public Object invoke(MethodInvocation invocation) throws Throwable {
+
+			if (invocation.getMethod().equals(initializeMethod)) {
+				return ensureResolved();
+			}
+
+			if (invocation.getMethod().equals(toDBRefMethod)) {
+				return this.dbref;
+			}
+
 			return intercept(invocation.getThis(), invocation.getMethod(), invocation.getArguments(), null);
 		}
 
@@ -199,6 +226,15 @@ public class DefaultDbRefResolver implements DbRefResolver {
 		 */
 		@Override
 		public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy) throws Throwable {
+
+			if (method.equals(initializeMethod)) {
+				return ensureResolved();
+			}
+
+			if (method.equals(toDBRefMethod)) {
+				return this.dbref;
+			}
+
 			return ReflectionUtils.isObjectMethod(method) ? method.invoke(obj, args) : method.invoke(ensureResolved(), args);
 		}
 
@@ -273,6 +309,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 			Enhancer enhancer = new Enhancer();
 			enhancer.setSuperclass(type);
 			enhancer.setCallbackType(org.springframework.cglib.proxy.MethodInterceptor.class);
+			enhancer.setInterfaces(new Class[] { LazyLoadingProxy.class });
 
 			Factory factory = (Factory) OBJENESIS.newInstance(enhancer.createClass());
 			factory.setCallbacks(new Callback[] { interceptor });

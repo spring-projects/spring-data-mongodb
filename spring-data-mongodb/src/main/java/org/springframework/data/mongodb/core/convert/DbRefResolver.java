@@ -29,10 +29,11 @@ public interface DbRefResolver {
 
 	/**
 	 * @param property will never be {@literal null}.
+	 * @param dbref the {@link DBRef} to resolve.
 	 * @param callback will never be {@literal null}.
 	 * @return
 	 */
-	Object resolveDbRef(MongoPersistentProperty property, DbRefResolverCallback callback);
+	Object resolveDbRef(MongoPersistentProperty property, DBRef dbref, DbRefResolverCallback callback);
 
 	/**
 	 * Creates a {@link DBRef} instance for the given {@link org.springframework.data.mongodb.core.mapping.DBRef}
