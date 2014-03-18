@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core.convert;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -93,22 +94,28 @@ public class CustomConversions {
 		this.customSimpleTypes = new HashSet<Class<?>>();
 		this.customReadTargetTypes = new ConcurrentHashMap<GenericConverter.ConvertiblePair, CacheValue>();
 
-		this.converters = new ArrayList<Object>();
-		this.converters.addAll(converters);
-		this.converters.add(CustomToStringConverter.INSTANCE);
-		this.converters.add(BigDecimalToStringConverter.INSTANCE);
-		this.converters.add(StringToBigDecimalConverter.INSTANCE);
-		this.converters.add(BigIntegerToStringConverter.INSTANCE);
-		this.converters.add(StringToBigIntegerConverter.INSTANCE);
-		this.converters.add(URLToStringConverter.INSTANCE);
-		this.converters.add(StringToURLConverter.INSTANCE);
-		this.converters.add(DBObjectToStringConverter.INSTANCE);
-		this.converters.addAll(JodaTimeConverters.getConvertersToRegister());
+		List<Object> toRegister = new ArrayList<Object>();
 
-		for (Object c : this.converters) {
+		toRegister.addAll(converters);
+		toRegister.add(CustomToStringConverter.INSTANCE);
+		toRegister.add(BigDecimalToStringConverter.INSTANCE);
+		toRegister.add(StringToBigDecimalConverter.INSTANCE);
+		toRegister.add(BigIntegerToStringConverter.INSTANCE);
+		toRegister.add(StringToBigIntegerConverter.INSTANCE);
+		toRegister.add(URLToStringConverter.INSTANCE);
+		toRegister.add(StringToURLConverter.INSTANCE);
+		toRegister.add(DBObjectToStringConverter.INSTANCE);
+		toRegister.addAll(JodaTimeConverters.getConvertersToRegister());
+
+		// Add user provided converters to make sure they can override the defaults
+
+		for (Object c : toRegister) {
 			registerConversion(c);
 		}
 
+		Collections.reverse(toRegister);
+
+		this.converters = Collections.unmodifiableList(toRegister);
 		this.simpleTypeHolder = new SimpleTypeHolder(customSimpleTypes, MongoSimpleTypes.HOLDER);
 	}
 
