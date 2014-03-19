@@ -53,6 +53,7 @@ import com.mongodb.DBRef;
  * Unit tests dor {@link DbRefMappingMongoConverterUnitTests}.
  * 
  * @author Oliver Gierke
+ * @author Thomas Darimont
  */
 @RunWith(MockitoJUnitRunner.class)
 public class DbRefMappingMongoConverterUnitTests {
@@ -285,6 +286,62 @@ public class DbRefMappingMongoConverterUnitTests {
 		assertThat(deserializedResult.dbRefToSerializableTarget.getValue(), is(value));
 	}
 
+	/**
+	 * @see DATAMONGO-884
+	 */
+	@Test
+	public void lazyLoadingProxyForToStringObjectMethodOverridingDbref() {
+
+		String id = "42";
+		String value = "bubu";
+		MappingMongoConverter converterSpy = spy(converter);
+		doReturn(new BasicDBObject("_id", id).append("value", value)).when(converterSpy).readRef((DBRef) any());
+
+		BasicDBObject dbo = new BasicDBObject();
+		WithObjectMethodOverrideLazyDbRefs lazyDbRefs = new WithObjectMethodOverrideLazyDbRefs();
+		lazyDbRefs.dbRefToToStringObjectMethodOverride = new ToStringObjectMethodOverrideLazyDbRefTarget(id, value);
+		converterSpy.write(lazyDbRefs, dbo);
+
+		WithObjectMethodOverrideLazyDbRefs result = converterSpy.read(WithObjectMethodOverrideLazyDbRefs.class, dbo);
+
+		assertThat(result.dbRefToToStringObjectMethodOverride, is(notNullValue()));
+		assertProxyIsResolved(result.dbRefToToStringObjectMethodOverride, false);
+		assertThat(result.dbRefToToStringObjectMethodOverride.toString(), is(id + ":" + value));
+		assertProxyIsResolved(result.dbRefToToStringObjectMethodOverride, true);
+	}
+
+	/**
+	 * @see DATAMONGO-884
+	 */
+	@Test
+	public void lazyLoadingProxyForEqualsAndHashcodeObjectMethodOverridingDbref() {
+
+		String id = "42";
+		String value = "bubu";
+		MappingMongoConverter converterSpy = spy(converter);
+		doReturn(new BasicDBObject("_id", id).append("value", value)).when(converterSpy).readRef((DBRef) any());
+
+		BasicDBObject dbo = new BasicDBObject();
+		WithObjectMethodOverrideLazyDbRefs lazyDbRefs = new WithObjectMethodOverrideLazyDbRefs();
+		lazyDbRefs.dbRefEqualsAndHashcodeObjectMethodOverride1 = new EqualsAndHashCodeObjectMethodOverrideLazyDbRefTarget(
+				id, value);
+		lazyDbRefs.dbRefEqualsAndHashcodeObjectMethodOverride2 = new EqualsAndHashCodeObjectMethodOverrideLazyDbRefTarget(
+				id, value);
+		converterSpy.write(lazyDbRefs, dbo);
+
+		WithObjectMethodOverrideLazyDbRefs result = converterSpy.read(WithObjectMethodOverrideLazyDbRefs.class, dbo);
+
+		assertProxyIsResolved(result.dbRefEqualsAndHashcodeObjectMethodOverride1, false);
+		assertThat(result.dbRefEqualsAndHashcodeObjectMethodOverride1, is(notNullValue()));
+		result.dbRefEqualsAndHashcodeObjectMethodOverride1.equals(null);
+		assertProxyIsResolved(result.dbRefEqualsAndHashcodeObjectMethodOverride1, true);
+
+		assertProxyIsResolved(result.dbRefEqualsAndHashcodeObjectMethodOverride2, false);
+		assertThat(result.dbRefEqualsAndHashcodeObjectMethodOverride2, is(notNullValue()));
+		result.dbRefEqualsAndHashcodeObjectMethodOverride2.hashCode();
+		assertProxyIsResolved(result.dbRefEqualsAndHashcodeObjectMethodOverride2, true);
+	}
+
 	private Object transport(Object result) {
 		return SerializationUtils.deserialize(SerializationUtils.serialize(result));
 	}
@@ -390,5 +447,74 @@ public class DbRefMappingMongoConverterUnitTests {
 		}
 
 		private static final long serialVersionUID = 1L;
+	}
+
+	static class ToStringObjectMethodOverrideLazyDbRefTarget extends LazyDbRefTarget {
+
+		private static final long serialVersionUID = 1L;
+
+		public ToStringObjectMethodOverrideLazyDbRefTarget() {}
+
+		public ToStringObjectMethodOverrideLazyDbRefTarget(String id, String value) {
+			super(id, value);
+		}
+
+		/* 
+		 * (non-Javadoc)
+		 * @see java.lang.Object#toString()
+		 */
+		@Override
+		public String toString() {
+			return this.id + ":" + this.value;
+		}
+	}
+
+	static class EqualsAndHashCodeObjectMethodOverrideLazyDbRefTarget extends LazyDbRefTarget {
+
+		private static final long serialVersionUID = 1L;
+
+		public EqualsAndHashCodeObjectMethodOverrideLazyDbRefTarget() {}
+
+		public EqualsAndHashCodeObjectMethodOverrideLazyDbRefTarget(String id, String value) {
+			super(id, value);
+		}
+
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + ((id == null) ? 0 : id.hashCode());
+			result = prime * result + ((value == null) ? 0 : value.hashCode());
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			EqualsAndHashCodeObjectMethodOverrideLazyDbRefTarget other = (EqualsAndHashCodeObjectMethodOverrideLazyDbRefTarget) obj;
+			if (id == null) {
+				if (other.id != null)
+					return false;
+			} else if (!id.equals(other.id))
+				return false;
+			if (value == null) {
+				if (other.value != null)
+					return false;
+			} else if (!value.equals(other.value))
+				return false;
+			return true;
+		}
+	}
+
+	static class WithObjectMethodOverrideLazyDbRefs {
+
+		@org.springframework.data.mongodb.core.mapping.DBRef(lazy = true) ToStringObjectMethodOverrideLazyDbRefTarget dbRefToToStringObjectMethodOverride;
+		@org.springframework.data.mongodb.core.mapping.DBRef(lazy = true) EqualsAndHashCodeObjectMethodOverrideLazyDbRefTarget dbRefEqualsAndHashcodeObjectMethodOverride2;
+		@org.springframework.data.mongodb.core.mapping.DBRef(lazy = true) EqualsAndHashCodeObjectMethodOverrideLazyDbRefTarget dbRefEqualsAndHashcodeObjectMethodOverride1;
 	}
 }

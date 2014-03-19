@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
+import static org.springframework.util.ReflectionUtils.*;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -39,7 +41,6 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
-import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.DB;
@@ -211,15 +212,6 @@ public class DefaultDbRefResolver implements DbRefResolver {
 		 */
 		@Override
 		public Object invoke(MethodInvocation invocation) throws Throwable {
-
-			if (invocation.getMethod().equals(INITIALIZE_METHOD)) {
-				return ensureResolved();
-			}
-
-			if (invocation.getMethod().equals(TO_DBREF_METHOD)) {
-				return this.dbref;
-			}
-
 			return intercept(invocation.getThis(), invocation.getMethod(), invocation.getArguments(), null);
 		}
 
@@ -238,7 +230,10 @@ public class DefaultDbRefResolver implements DbRefResolver {
 				return this.dbref;
 			}
 
-			return ReflectionUtils.isObjectMethod(method) ? method.invoke(obj, args) : method.invoke(ensureResolved(), args);
+			Object target = isObjectMethod(method) && Object.class.equals(method.getDeclaringClass()) ? obj
+					: ensureResolved();
+
+			return method.invoke(target, args);
 		}
 
 		/**
