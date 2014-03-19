@@ -61,6 +61,7 @@ import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.convert.CustomConversions;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
+import org.springframework.data.mongodb.core.convert.LazyLoadingProxy;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.index.Index.Duplicates;
@@ -2527,6 +2528,35 @@ public class MongoTemplateTests {
 		assertThat(savedMessage.normalContent.text, is(content.text));
 	}
 
+	/**
+	 * @see DATAMONGO-884
+	 */
+	@Test
+	public void callingNonObjectMethodsOnLazyLoadingProxyShouldReturnNullIfUnderlyingDbrefWasDeletedInbetween() {
+
+		template.dropCollection(SomeTemplate.class);
+		template.dropCollection(SomeContent.class);
+
+		SomeContent content = new SomeContent();
+		content.id = "C1";
+		content.text = "BUBU";
+		template.save(content);
+
+		SomeTemplate tmpl = new SomeTemplate();
+		tmpl.id = "T1";
+		tmpl.content = content; // @DBRef(lazy=true) tmpl.content
+
+		template.save(tmpl);
+
+		SomeTemplate savedTmpl = template.findById(tmpl.id, SomeTemplate.class);
+
+		template.remove(content);
+
+		assertThat(savedTmpl.getContent().toString(), is("someContent:C1$LazyLoadingProxy"));
+		assertThat(savedTmpl.getContent(), is(instanceOf(LazyLoadingProxy.class)));
+		assertThat(savedTmpl.getContent().getText(), is(nullValue()));
+	}
+
 	static class DocumentWithDBRefCollection {
 
 		@Id public String id;
@@ -2707,7 +2737,7 @@ public class MongoTemplateTests {
 		EnumValue value;
 	}
 
-	static class SomeTemplate {
+	public static class SomeTemplate {
 
 		String id;
 		@org.springframework.data.mongodb.core.mapping.DBRef(lazy = true) SomeContent content;
@@ -2717,10 +2747,14 @@ public class MongoTemplateTests {
 		}
 	}
 
-	static class SomeContent {
+	public static class SomeContent {
 
 		String id;
 		String text;
+
+		public String getText() {
+			return text;
+		}
 	}
 
 	static class SomeMessage {
