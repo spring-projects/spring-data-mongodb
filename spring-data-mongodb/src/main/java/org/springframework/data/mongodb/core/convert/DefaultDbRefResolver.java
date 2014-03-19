@@ -230,8 +230,15 @@ public class DefaultDbRefResolver implements DbRefResolver {
 				return this.dbref;
 			}
 
-			Object target = isObjectMethod(method) && Object.class.equals(method.getDeclaringClass()) ? obj
-					: ensureResolved();
+			if (isObjectMethod(method) && Object.class.equals(method.getDeclaringClass())) {
+				return method.invoke(proxy, args);
+			}
+
+			Object target = ensureResolved();
+
+			if (target == null) {
+				return null;
+			}
 
 			return method.invoke(target, args);
 		}
