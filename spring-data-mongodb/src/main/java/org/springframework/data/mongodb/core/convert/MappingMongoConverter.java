@@ -262,11 +262,11 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		entity.doWithAssociations(new AssociationHandler<MongoPersistentProperty>() {
 			public void doWithAssociation(Association<MongoPersistentProperty> association) {
 
-				MongoPersistentProperty inverseProp = association.getInverse();
+				MongoPersistentProperty property = association.getInverse();
 
-				Object value = dbo.get(inverseProp.getName());
+				Object value = dbo.get(property.getName());
 				DBRef dbref = value instanceof DBRef ? (DBRef) value : null;
-				Object obj = dbRefResolver.resolveDbRef(inverseProp, dbref, new DbRefResolverCallback() {
+				Object obj = dbRefResolver.resolveDbRef(property, dbref, new DbRefResolverCallback() {
 
 					@Override
 					public Object resolve(MongoPersistentProperty property) {
@@ -274,7 +274,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 					}
 				});
 
-				wrapper.setProperty(inverseProp, obj);
+				wrapper.setProperty(property, obj);
 			}
 		});
 
@@ -446,6 +446,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			}
 
 			dbRefObj = dbRefObj != null ? dbRefObj : createDBRef(obj, prop);
+
 			if (null != dbRefObj) {
 				accessor.put(prop, dbRefObj);
 				return;

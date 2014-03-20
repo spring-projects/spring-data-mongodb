@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,10 +24,16 @@ import com.mongodb.DBRef;
  * Used to resolve associations annotated with {@link org.springframework.data.mongodb.core.mapping.DBRef}.
  * 
  * @author Thomas Darimont
+ * @author Oliver Gierke
+ * @since 1.4
  */
 public interface DbRefResolver {
 
 	/**
+	 * Resolves the given {@link DBRef} into an object of the given {@link MongoPersistentProperty}'s type. The method
+	 * might return a proxy object for the {@link DBRef} or resolve it immediately. In both cases the
+	 * {@link DbRefResolverCallback} will be used to obtain the actual backing object.
+	 * 
 	 * @param property will never be {@literal null}.
 	 * @param dbref the {@link DBRef} to resolve.
 	 * @param callback will never be {@literal null}.
