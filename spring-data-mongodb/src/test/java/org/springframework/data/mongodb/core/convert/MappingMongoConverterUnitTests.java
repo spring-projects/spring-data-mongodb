@@ -57,6 +57,8 @@ import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Circle;
+import org.springframework.data.geo.Distance;
+import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
 import org.springframework.data.geo.Shape;
@@ -1493,7 +1495,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(result.enumMap.size(), is(1));
 		assertThat(result.enumMap.get(SampleEnum.FIRST), is("Dave"));
 	}
-	
+
 	/**
 	 * @see DATAMONGO-887
 	 */
@@ -1532,13 +1534,11 @@ public class MappingMongoConverterUnitTests {
 		DBObject entry = getAsDBObject(map, "key");
 		assertThat(entry.get("foo"), is((Object) "Dave"));
 	}
-	
-	
+
 	/**
 	 * @DATAMONGO-858
 	 */
 	@Test
-	@SuppressWarnings({ "deprecation", "unchecked" })
 	public void shouldWriteEntityWithGeoBoxCorrectly() {
 
 		ClassWithGeoBox object = new ClassWithGeoBox();
@@ -1548,10 +1548,13 @@ public class MappingMongoConverterUnitTests {
 		converter.write(object, dbo);
 
 		assertThat(dbo, is(notNullValue()));
-		assertThat(dbo.get("box"), is(instanceOf(List.class)));
-		assertThat(dbo.get("box"), is((Object) Arrays.asList(
-				org.springframework.data.mongodb.core.geo.Point.asList(object.box.getFirst()),
-				org.springframework.data.mongodb.core.geo.Point.asList(object.box.getSecond()))));
+		assertThat(dbo.get("box"), is(instanceOf(DBObject.class)));
+		assertThat(dbo.get("box"), is((Object) new BasicDBObject().append("first", toDbObject(object.box.getFirst()))
+				.append("second", toDbObject(object.box.getSecond()))));
+	}
+
+	private static DBObject toDbObject(Point point) {
+		return new BasicDBObject("x", point.getX()).append("y", point.getY());
 	}
 
 	/**
@@ -1586,10 +1589,15 @@ public class MappingMongoConverterUnitTests {
 
 		assertThat(dbo, is(notNullValue()));
 
-		BasicDBList polygon = getAsDBList(dbo, "polygon");
+		assertThat(dbo.get("polygon"), is(instanceOf(DBObject.class)));
+		DBObject polygonDbo = (DBObject) dbo.get("polygon");
 
-		assertThat(polygon, hasSize(3));
-		assertThat(polygon, Matchers.<Object> hasItems(Arrays.asList(1d, 2d), Arrays.asList(3d, 4d), Arrays.asList(4d, 5d)));
+		@SuppressWarnings("unchecked")
+		List<DBObject> points = (List<DBObject>) polygonDbo.get("points");
+
+		assertThat(points, hasSize(3));
+		assertThat(points, Matchers.<DBObject> hasItems(toDbObject(object.polygon.getPoints().get(0)),
+				toDbObject(object.polygon.getPoints().get(1)), toDbObject(object.polygon.getPoints().get(2))));
 	}
 
 	/**
@@ -1614,19 +1622,23 @@ public class MappingMongoConverterUnitTests {
 	 * @DATAMONGO-858
 	 */
 	@Test
-	@SuppressWarnings("deprecation")
 	public void shouldWriteEntityWithGeoCircleCorrectly() {
 
 		ClassWithGeoCircle object = new ClassWithGeoCircle();
-		object.circle = new Circle(new Point(1, 2), 3);
+		Circle circle = new Circle(new Point(1, 2), 3);
+		Distance radius = circle.getRadius();
+		object.circle = circle;
 
 		DBObject dbo = new BasicDBObject();
 		converter.write(object, dbo);
 
 		assertThat(dbo, is(notNullValue()));
-		assertThat(dbo.get("circle"), is(instanceOf(List.class)));
-		assertThat(dbo.get("circle"), is((Object) Arrays.asList(org.springframework.data.mongodb.core.geo.Point
-				.asList(object.circle.getCenter()), object.circle.getRadius().getNormalizedValue())));
+		assertThat(dbo.get("circle"), is(instanceOf(DBObject.class)));
+		assertThat(
+				dbo.get("circle"),
+				is((Object) new BasicDBObject("center", new BasicDBObject("x", circle.getCenter().getX()).append("y", circle
+						.getCenter().getY())).append("radius", radius.getNormalizedValue()).append("metric",
+						radius.getMetric().toString())));
 	}
 
 	/**
@@ -1655,15 +1667,17 @@ public class MappingMongoConverterUnitTests {
 	public void shouldWriteEntityWithGeoLegacyCircleCorrectly() {
 
 		ClassWithGeoLegacyCircle object = new ClassWithGeoLegacyCircle();
-		object.circle = new org.springframework.data.mongodb.core.geo.Circle(new Point(1, 2), 3);
+		org.springframework.data.mongodb.core.geo.Circle circle = new org.springframework.data.mongodb.core.geo.Circle(
+				new Point(1, 2), 3);
+		object.circle = circle;
 
 		DBObject dbo = new BasicDBObject();
 		converter.write(object, dbo);
 
 		assertThat(dbo, is(notNullValue()));
-		assertThat(dbo.get("circle"), is(instanceOf(List.class)));
-		assertThat(dbo.get("circle"), is((Object) Arrays.asList(
-				org.springframework.data.mongodb.core.geo.Point.asList(object.circle.getCenter()), object.circle.getRadius())));
+		assertThat(dbo.get("circle"), is(instanceOf(DBObject.class)));
+		assertThat(dbo.get("circle"), is((Object) new BasicDBObject("center", new BasicDBObject("x", circle.getCenter()
+				.getX()).append("y", circle.getCenter().getY())).append("radius", circle.getRadius())));
 	}
 
 	/**
@@ -1689,19 +1703,46 @@ public class MappingMongoConverterUnitTests {
 	 * @DATAMONGO-858
 	 */
 	@Test
-	@SuppressWarnings("deprecation")
 	public void shouldWriteEntityWithGeoSphereCorrectly() {
 
 		ClassWithGeoSphere object = new ClassWithGeoSphere();
-		object.sphere = new Sphere(new Point(1, 2), 3);
+		Sphere sphere = new Sphere(new Point(1, 2), 3);
+		Distance radius = sphere.getRadius();
+		object.sphere = sphere;
 
 		DBObject dbo = new BasicDBObject();
 		converter.write(object, dbo);
 
 		assertThat(dbo, is(notNullValue()));
-		assertThat(dbo.get("sphere"), is(instanceOf(List.class)));
-		assertThat(dbo.get("sphere"), is((Object) Arrays.asList(org.springframework.data.mongodb.core.geo.Point
-				.asList(object.sphere.getCenter()), object.sphere.getRadius().getNormalizedValue())));
+		assertThat(dbo.get("sphere"), is(instanceOf(DBObject.class)));
+		assertThat(
+				dbo.get("sphere"),
+				is((Object) new BasicDBObject("center", new BasicDBObject("x", sphere.getCenter().getX()).append("y", sphere
+						.getCenter().getY())).append("radius", radius.getNormalizedValue()).append("metric",
+						radius.getMetric().toString())));
+	}
+
+	/**
+	 * @DATAMONGO-858
+	 */
+	@Test
+	public void shouldWriteEntityWithGeoSphereWithMetricDistanceCorrectly() {
+
+		ClassWithGeoSphere object = new ClassWithGeoSphere();
+		Sphere sphere = new Sphere(new Point(1, 2), new Distance(3, Metrics.KILOMETERS));
+		Distance radius = sphere.getRadius();
+		object.sphere = sphere;
+
+		DBObject dbo = new BasicDBObject();
+		converter.write(object, dbo);
+
+		assertThat(dbo, is(notNullValue()));
+		assertThat(dbo.get("sphere"), is(instanceOf(DBObject.class)));
+		assertThat(
+				dbo.get("sphere"),
+				is((Object) new BasicDBObject("center", new BasicDBObject("x", sphere.getCenter().getX()).append("y", sphere
+						.getCenter().getY())).append("radius", radius.getNormalizedValue()).append("metric",
+						radius.getMetric().toString())));
 	}
 
 	/**
@@ -1726,20 +1767,23 @@ public class MappingMongoConverterUnitTests {
 	 * @DATAMONGO-858
 	 */
 	@Test
-	@SuppressWarnings("deprecation")
 	public void shouldWriteEntityWithGeoShapeCorrectly() {
 
 		ClassWithGeoShape object = new ClassWithGeoShape();
 		Sphere sphere = new Sphere(new Point(1, 2), 3);
+		Distance radius = sphere.getRadius();
 		object.shape = sphere;
 
 		DBObject dbo = new BasicDBObject();
 		converter.write(object, dbo);
 
 		assertThat(dbo, is(notNullValue()));
-		assertThat(dbo.get("shape"), is(instanceOf(List.class)));
-		assertThat(dbo.get("shape"), is((Object) Arrays.asList(org.springframework.data.mongodb.core.geo.Point
-				.asList(sphere.getCenter()), sphere.getRadius().getNormalizedValue())));
+		assertThat(dbo.get("shape"), is(instanceOf(DBObject.class)));
+		assertThat(
+				dbo.get("shape"),
+				is((Object) new BasicDBObject("center", new BasicDBObject("x", sphere.getCenter().getX()).append("y", sphere
+						.getCenter().getY())).append("radius", radius.getNormalizedValue()).append("metric",
+						radius.getMetric().toString())));
 	}
 
 	/**

@@ -25,10 +25,8 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import org.bson.BSON;
-import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Point;
-import org.springframework.data.geo.Polygon;
 import org.springframework.data.geo.Shape;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.data.mongodb.core.geo.Sphere;
@@ -386,7 +384,7 @@ public class Criteria implements CriteriaDefinition {
 	 */
 	public Criteria withinSphere(Circle circle) {
 		Assert.notNull(circle);
-		criteria.put("$within", wrapInCommand(new Sphere(circle)));
+		criteria.put("$within", new GeoCommand(new Sphere(circle)));
 		return this;
 	}
 
@@ -400,7 +398,7 @@ public class Criteria implements CriteriaDefinition {
 	@Deprecated
 	public Criteria withinSphere(org.springframework.data.mongodb.core.geo.Circle circle) {
 		Assert.notNull(circle);
-		criteria.put("$within", wrapInCommand(new Sphere(circle)));
+		criteria.put("$within", new GeoCommand(new Sphere(circle)));
 		return this;
 	}
 
@@ -414,7 +412,7 @@ public class Criteria implements CriteriaDefinition {
 	public Criteria within(Shape shape) {
 
 		Assert.notNull(shape);
-		criteria.put("$within", wrapInCommand(shape));
+		criteria.put("$within", new GeoCommand(shape));
 		return this;
 	}
 
@@ -658,43 +656,6 @@ public class Criteria implements CriteriaDefinition {
 		}
 
 		return ObjectUtils.nullSafeEquals(left, right);
-	}
-
-	/**
-	 * Wraps the given {@link Shape} in an appropriate MongoDB command.
-	 * 
-	 * @param shape must not be {@literal null}.
-	 * @return
-	 */
-	private DBObject wrapInCommand(Shape shape) {
-
-		Assert.notNull(shape, "Shape must not be null!");
-
-		return new BasicDBObject(getCommand(shape), shape);
-	}
-
-	/**
-	 * Returns the MongoDB command for the given {@link Shape}.
-	 * 
-	 * @param shape must not be {@literal null}.
-	 * @return
-	 */
-	@SuppressWarnings("deprecation")
-	private String getCommand(Shape shape) {
-
-		Assert.notNull(shape, "Shape must not be null!");
-
-		if (shape instanceof Box) {
-			return org.springframework.data.mongodb.core.geo.Box.COMMAND;
-		} else if (shape instanceof Circle || shape instanceof org.springframework.data.mongodb.core.geo.Circle) {
-			return org.springframework.data.mongodb.core.geo.Circle.COMMAND;
-		} else if (shape instanceof Polygon) {
-			return org.springframework.data.mongodb.core.geo.Polygon.COMMAND;
-		} else if (shape instanceof Sphere) {
-			return org.springframework.data.mongodb.core.geo.Sphere.COMMAND;
-		}
-
-		throw new IllegalArgumentException("Unknown shape: " + shape);
 	}
 
 	/* 
