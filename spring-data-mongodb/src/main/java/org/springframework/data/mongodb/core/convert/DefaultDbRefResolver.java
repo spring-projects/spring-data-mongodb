@@ -199,7 +199,8 @@ public class DefaultDbRefResolver implements DbRefResolver {
 		 */
 		@Override
 		public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy) throws Throwable {
-			return method.invoke(ensureResolved(), args);
+			return ReflectionUtils.isObjectMethod(method) && method.getDeclaringClass() == Object.class ? method.invoke(obj,
+					args) : method.invoke(ensureResolved(), args);
 		}
 
 		private Object ensureResolved() {
