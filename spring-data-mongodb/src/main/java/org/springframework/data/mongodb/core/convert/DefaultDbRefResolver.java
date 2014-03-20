@@ -51,6 +51,7 @@ import com.mongodb.DBRef;
  * 
  * @author Thomas Darimont
  * @author Oliver Gierke
+ * @since 1.4
  */
 public class DefaultDbRefResolver implements DbRefResolver {
 
@@ -109,7 +110,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 	 * eventually resolve the value of the property.
 	 * 
 	 * @param property must not be {@literal null}.
-	 * @param dbref
+	 * @param dbref can be {@literal null}.
 	 * @param callback must not be {@literal null}.
 	 * @return
 	 */
@@ -144,7 +145,9 @@ public class DefaultDbRefResolver implements DbRefResolver {
 	}
 
 	/**
-	 * @param property
+	 * Returns whether the property shall be resolved lazily.
+	 * 
+	 * @param property must not be {@literal null}.
 	 * @return
 	 */
 	private boolean isLazyDbRef(MongoPersistentProperty property) {
@@ -157,12 +160,12 @@ public class DefaultDbRefResolver implements DbRefResolver {
 	 * guaranteed to be performed only once.
 	 * 
 	 * @author Thomas Darimont
+	 * @author Oliver Gierke
 	 */
 	static class LazyLoadingInterceptor implements MethodInterceptor, org.springframework.cglib.proxy.MethodInterceptor,
 			Serializable {
 
-		private static final Method initializeMethod;
-		private static final Method toDBRefMethod;
+		private static final Method INITIALIZE_METHOD, TO_DBREF_METHOD;
 
 		private final DbRefResolverCallback callback;
 		private final MongoPersistentProperty property;
@@ -174,8 +177,8 @@ public class DefaultDbRefResolver implements DbRefResolver {
 
 		static {
 			try {
-				initializeMethod = LazyLoadingProxy.class.getMethod("initialize");
-				toDBRefMethod = LazyLoadingProxy.class.getMethod("toDBRef");
+				INITIALIZE_METHOD = LazyLoadingProxy.class.getMethod("initialize");
+				TO_DBREF_METHOD = LazyLoadingProxy.class.getMethod("toDBRef");
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}
@@ -186,7 +189,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 		 * {@link PersistenceExceptionTranslator} and {@link DbRefResolverCallback}.
 		 * 
 		 * @param property must not be {@literal null}.
-		 * @param dbref
+		 * @param dbref can be {@literal null}.
 		 * @param callback must not be {@literal null}.
 		 */
 		public LazyLoadingInterceptor(MongoPersistentProperty property, DBRef dbref,
@@ -209,11 +212,11 @@ public class DefaultDbRefResolver implements DbRefResolver {
 		@Override
 		public Object invoke(MethodInvocation invocation) throws Throwable {
 
-			if (invocation.getMethod().equals(initializeMethod)) {
+			if (invocation.getMethod().equals(INITIALIZE_METHOD)) {
 				return ensureResolved();
 			}
 
-			if (invocation.getMethod().equals(toDBRefMethod)) {
+			if (invocation.getMethod().equals(TO_DBREF_METHOD)) {
 				return this.dbref;
 			}
 
@@ -227,17 +230,22 @@ public class DefaultDbRefResolver implements DbRefResolver {
 		@Override
 		public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy) throws Throwable {
 
-			if (method.equals(initializeMethod)) {
+			if (INITIALIZE_METHOD.equals(method)) {
 				return ensureResolved();
 			}
 
-			if (method.equals(toDBRefMethod)) {
+			if (TO_DBREF_METHOD.equals(method)) {
 				return this.dbref;
 			}
 
 			return ReflectionUtils.isObjectMethod(method) ? method.invoke(obj, args) : method.invoke(ensureResolved(), args);
 		}
 
+		/**
+		 * Will trigger the resolution if the proxy is not resolved already or return a previously resolved result.
+		 * 
+		 * @return
+		 */
 		private Object ensureResolved() {
 
 			if (!resolved) {
@@ -248,16 +256,28 @@ public class DefaultDbRefResolver implements DbRefResolver {
 			return this.result;
 		}
 
+		/**
+		 * Callback method for serialization.
+		 * 
+		 * @param out
+		 * @throws IOException
+		 */
 		private void writeObject(ObjectOutputStream out) throws IOException {
 
 			ensureResolved();
 			out.writeObject(this.result);
 		}
 
+		/**
+		 * Callback method for deserialization.
+		 * 
+		 * @param in
+		 * @throws IOException
+		 */
 		private void readObject(ObjectInputStream in) throws IOException {
 
 			try {
-				this.resolved = true; // Object is guaranteed to be resolved after serializations
+				this.resolved = true;
 				this.result = in.readObject();
 			} catch (ClassNotFoundException e) {
 				throw new LazyLoadingException("Could not deserialize result", e);
@@ -265,6 +285,8 @@ public class DefaultDbRefResolver implements DbRefResolver {
 		}
 
 		/**
+		 * Resolves the proxy into its backing object.
+		 * 
 		 * @return
 		 */
 		private synchronized Object resolve() {
@@ -282,14 +304,6 @@ public class DefaultDbRefResolver implements DbRefResolver {
 				}
 			}
 
-			return result;
-		}
-
-		public boolean isResolved() {
-			return resolved;
-		}
-
-		public Object getResult() {
 			return result;
 		}
 	}

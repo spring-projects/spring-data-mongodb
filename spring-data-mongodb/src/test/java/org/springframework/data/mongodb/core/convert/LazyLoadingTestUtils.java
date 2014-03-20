@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import static org.junit.Assert.*;
 import org.springframework.aop.framework.Advised;
 import org.springframework.cglib.proxy.Factory;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver.LazyLoadingInterceptor;
+import org.springframework.test.util.ReflectionTestUtils;
 
 /**
  * Utility class to test proxy handling for lazy loading.
@@ -39,8 +40,8 @@ public class LazyLoadingTestUtils {
 	public static void assertProxyIsResolved(Object target, boolean expected) {
 
 		LazyLoadingInterceptor interceptor = extractInterceptor(target);
-		assertThat(interceptor.isResolved(), is(expected));
-		assertThat(interceptor.getResult(), is(expected ? notNullValue() : nullValue()));
+		assertThat(ReflectionTestUtils.getField(interceptor, "resolved"), is((Object) expected));
+		assertThat(ReflectionTestUtils.getField(interceptor, "result"), is(expected ? notNullValue() : nullValue()));
 	}
 
 	private static LazyLoadingInterceptor extractInterceptor(Object proxy) {
