@@ -94,7 +94,6 @@ public class CustomConversions {
 		this.customSimpleTypes = new HashSet<Class<?>>();
 		this.customReadTargetTypes = new ConcurrentHashMap<GenericConverter.ConvertiblePair, CacheValue>();
 
-<<<<<<< HEAD
 		List<Object> toRegister = new ArrayList<Object>();
 
 		// Add user provided converters to make sure they can override the defaults
@@ -109,29 +108,9 @@ public class CustomConversions {
 		toRegister.add(DBObjectToStringConverter.INSTANCE);
 		toRegister.addAll(JodaTimeConverters.getConvertersToRegister());
 
-		toRegister.add(ShapeToDbObjectConverter.INSTANCE);
-		toRegister.add(DboObjectToShapeConverter.INSTANCE);
-		toRegister.add(ListToPointConverter.INSTANCE);
+		toRegister.addAll(GeoConverters.getConvertersToRegister());
 
 		for (Object c : toRegister) {
-=======
-		this.converters = new ArrayList<Object>();
-		this.converters.addAll(converters);
-		this.converters.add(CustomToStringConverter.INSTANCE);
-		this.converters.add(BigDecimalToStringConverter.INSTANCE);
-		this.converters.add(StringToBigDecimalConverter.INSTANCE);
-		this.converters.add(BigIntegerToStringConverter.INSTANCE);
-		this.converters.add(StringToBigIntegerConverter.INSTANCE);
-		this.converters.add(URLToStringConverter.INSTANCE);
-		this.converters.add(StringToURLConverter.INSTANCE);
-		this.converters.add(DBObjectToStringConverter.INSTANCE);
-
-		this.converters.addAll(GeoConverters.getConvertersToRegister());
-
-		this.converters.addAll(JodaTimeConverters.getConvertersToRegister());
-
-		for (Object c : this.converters) {
->>>>>>> DATAMONGO-858 - Add support for common geospatial structures.
 			registerConversion(c);
 		}
 
