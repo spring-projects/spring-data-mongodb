@@ -19,7 +19,6 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 import org.junit.Test;
 import org.springframework.data.geo.Box;
@@ -31,7 +30,7 @@ import org.springframework.data.mongodb.core.convert.MongoConverters.BigDecimalT
 import org.springframework.data.mongodb.core.convert.MongoConverters.StringToBigDecimalConverter;
 import org.springframework.data.mongodb.core.geo.Sphere;
 
-import com.mongodb.BasicDBList;
+import com.mongodb.DBObject;
 
 /**
  * Unit tests for {@link MongoConverters}.
@@ -60,7 +59,7 @@ public class MongoConvertersUnitTests {
 
 		Box box = new Box(new Point(1, 2), new Point(3, 4));
 
-		BasicDBList dbo = GeoConverters.BoxToDbObjectConverter.INSTANCE.convert(box);
+		DBObject dbo = GeoConverters.BoxToDbObjectConverter.INSTANCE.convert(box);
 		Shape shape = GeoConverters.DbObjectToBoxConverter.INSTANCE.convert(dbo);
 
 		assertThat(shape, is((org.springframework.data.geo.Shape) box));
@@ -74,7 +73,7 @@ public class MongoConvertersUnitTests {
 
 		Circle circle = new Circle(new Point(1, 2), 3);
 
-		BasicDBList dbo = GeoConverters.CircleToDbObjectConverter.INSTANCE.convert(circle);
+		DBObject dbo = GeoConverters.CircleToDbObjectConverter.INSTANCE.convert(circle);
 		Shape shape = GeoConverters.DbObjectToCircleConverter.INSTANCE.convert(dbo);
 
 		assertThat(shape, is((org.springframework.data.geo.Shape) circle));
@@ -88,7 +87,7 @@ public class MongoConvertersUnitTests {
 
 		Polygon polygon = new Polygon(new Point(1, 2), new Point(2, 3), new Point(3, 4), new Point(5, 6));
 
-		BasicDBList dbo = GeoConverters.PolygonToDbObjectConverter.INSTANCE.convert(polygon);
+		DBObject dbo = GeoConverters.PolygonToDbObjectConverter.INSTANCE.convert(polygon);
 		Shape shape = GeoConverters.DbObjectToPolygonConverter.INSTANCE.convert(dbo);
 
 		assertThat(shape, is((org.springframework.data.geo.Shape) polygon));
@@ -102,7 +101,7 @@ public class MongoConvertersUnitTests {
 
 		Sphere sphere = new Sphere(new Point(1, 2), 3);
 
-		BasicDBList dbo = GeoConverters.SphereToDbObjectConverter.INSTANCE.convert(sphere);
+		DBObject dbo = GeoConverters.SphereToDbObjectConverter.INSTANCE.convert(sphere);
 		org.springframework.data.geo.Shape shape = GeoConverters.DbObjectToSphereConverter.INSTANCE.convert(dbo);
 
 		assertThat(shape, is((org.springframework.data.geo.Shape) sphere));
@@ -116,8 +115,8 @@ public class MongoConvertersUnitTests {
 
 		Point point = new Point(1, 2);
 
-		List<Double> list = GeoConverters.PointToListConverter.INSTANCE.convert(point);
-		org.springframework.data.geo.Point converted = GeoConverters.ListToPointConverter.INSTANCE.convert(list);
+		DBObject dbo = GeoConverters.PointToDbObjectConverter.INSTANCE.convert(point);
+		org.springframework.data.geo.Point converted = GeoConverters.DbObjectToPointConverter.INSTANCE.convert(dbo);
 
 		assertThat(converted, is((org.springframework.data.geo.Point) point));
 	}

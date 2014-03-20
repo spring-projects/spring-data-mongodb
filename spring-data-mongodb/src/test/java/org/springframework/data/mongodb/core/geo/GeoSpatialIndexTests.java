@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.core.index;
+package org.springframework.data.mongodb.core.geo;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
@@ -29,6 +29,8 @@ import org.springframework.data.mongodb.config.AbstractIntegrationTests;
 import org.springframework.data.mongodb.core.CollectionCallback;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.WriteResultChecking;
+import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
+import org.springframework.data.mongodb.core.index.GeoSpatialIndexed;
 
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
@@ -40,6 +42,7 @@ import com.mongodb.WriteConcern;
  * 
  * @author Laurent Canet
  * @author Oliver Gierke
+ * @author Thomas Darimont
  */
 public class GeoSpatialIndexTests extends AbstractIntegrationTests {
 
