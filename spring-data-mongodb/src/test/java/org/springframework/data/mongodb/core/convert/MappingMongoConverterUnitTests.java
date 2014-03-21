@@ -56,6 +56,8 @@ import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Circle;
+import org.springframework.data.geo.Distance;
+import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
 import org.springframework.data.geo.Shape;
@@ -1585,6 +1587,7 @@ public class MappingMongoConverterUnitTests {
 
 		ClassWithGeoCircle object = new ClassWithGeoCircle();
 		Circle circle = new Circle(new Point(1, 2), 3);
+		Distance radius = circle.getRadius();
 		object.circle = circle;
 
 		DBObject dbo = new BasicDBObject();
@@ -1592,8 +1595,11 @@ public class MappingMongoConverterUnitTests {
 
 		assertThat(dbo, is(notNullValue()));
 		assertThat(dbo.get("circle"), is(instanceOf(DBObject.class)));
-		assertThat(dbo.get("circle"), is((Object) new BasicDBObject("center", new BasicDBObject("x", circle.getCenter()
-				.getX()).append("y", circle.getCenter().getY())).append("radius", circle.getRadius().getNormalizedValue())));
+		assertThat(
+				dbo.get("circle"),
+				is((Object) new BasicDBObject("center", new BasicDBObject("x", circle.getCenter().getX()).append("y", circle
+						.getCenter().getY())).append("radius", radius.getNormalizedValue()).append("metric",
+						radius.getMetric().toString())));
 	}
 
 	/**
@@ -1662,6 +1668,7 @@ public class MappingMongoConverterUnitTests {
 
 		ClassWithGeoSphere object = new ClassWithGeoSphere();
 		Sphere sphere = new Sphere(new Point(1, 2), 3);
+		Distance radius = sphere.getRadius();
 		object.sphere = sphere;
 
 		DBObject dbo = new BasicDBObject();
@@ -1669,8 +1676,34 @@ public class MappingMongoConverterUnitTests {
 
 		assertThat(dbo, is(notNullValue()));
 		assertThat(dbo.get("sphere"), is(instanceOf(DBObject.class)));
-		assertThat(dbo.get("sphere"), is((Object) new BasicDBObject("center", new BasicDBObject("x", sphere.getCenter()
-				.getX()).append("y", sphere.getCenter().getY())).append("radius", sphere.getRadius().getNormalizedValue())));
+		assertThat(
+				dbo.get("sphere"),
+				is((Object) new BasicDBObject("center", new BasicDBObject("x", sphere.getCenter().getX()).append("y", sphere
+						.getCenter().getY())).append("radius", radius.getNormalizedValue()).append("metric",
+						radius.getMetric().toString())));
+	}
+
+	/**
+	 * @DATAMONGO-858
+	 */
+	@Test
+	public void shouldWriteEntityWithGeoSphereWithMetricDistanceCorrectly() {
+
+		ClassWithGeoSphere object = new ClassWithGeoSphere();
+		Sphere sphere = new Sphere(new Point(1, 2), new Distance(3, Metrics.KILOMETERS));
+		Distance radius = sphere.getRadius();
+		object.sphere = sphere;
+
+		DBObject dbo = new BasicDBObject();
+		converter.write(object, dbo);
+
+		assertThat(dbo, is(notNullValue()));
+		assertThat(dbo.get("sphere"), is(instanceOf(DBObject.class)));
+		assertThat(
+				dbo.get("sphere"),
+				is((Object) new BasicDBObject("center", new BasicDBObject("x", sphere.getCenter().getX()).append("y", sphere
+						.getCenter().getY())).append("radius", radius.getNormalizedValue()).append("metric",
+						radius.getMetric().toString())));
 	}
 
 	/**
@@ -1699,6 +1732,7 @@ public class MappingMongoConverterUnitTests {
 
 		ClassWithGeoShape object = new ClassWithGeoShape();
 		Sphere sphere = new Sphere(new Point(1, 2), 3);
+		Distance radius = sphere.getRadius();
 		object.shape = sphere;
 
 		DBObject dbo = new BasicDBObject();
@@ -1706,8 +1740,11 @@ public class MappingMongoConverterUnitTests {
 
 		assertThat(dbo, is(notNullValue()));
 		assertThat(dbo.get("shape"), is(instanceOf(DBObject.class)));
-		assertThat(dbo.get("shape"), is((Object) new BasicDBObject("center", new BasicDBObject("x", sphere.getCenter()
-				.getX()).append("y", sphere.getCenter().getY())).append("radius", sphere.getRadius().getNormalizedValue())));
+		assertThat(
+				dbo.get("shape"),
+				is((Object) new BasicDBObject("center", new BasicDBObject("x", sphere.getCenter().getX()).append("y", sphere
+						.getCenter().getY())).append("radius", radius.getNormalizedValue()).append("metric",
+						radius.getMetric().toString())));
 	}
 
 	/**

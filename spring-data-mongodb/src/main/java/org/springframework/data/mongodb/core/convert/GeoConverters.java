@@ -25,6 +25,8 @@ import org.springframework.data.convert.ReadingConverter;
 import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Circle;
+import org.springframework.data.geo.Distance;
+import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
 import org.springframework.data.geo.Shape;
@@ -155,6 +157,7 @@ abstract class GeoConverters {
 			DBObject result = new BasicDBObject();
 			result.put("center", toDbObject(source.getCenter()));
 			result.put("radius", source.getRadius().getNormalizedValue());
+			result.put("metric", source.getRadius().getMetric().toString());
 			return result;
 		}
 	}
@@ -180,10 +183,20 @@ abstract class GeoConverters {
 			DBObject center = (DBObject) source.get("center");
 			Double radius = (Double) source.get("radius");
 
+			Distance distance = new Distance(radius);
+
+			if (source.containsField("metric")) {
+
+				String metricString = (String) source.get("metric");
+				Assert.notNull(metricString, "Metric must not be null!");
+
+				distance = distance.in(Metrics.valueOf(metricString));
+			}
+
 			Assert.notNull(center, "Center must not be null!");
 			Assert.notNull(radius, "Radius must not be null!");
 
-			return new Circle(toPoint(center), radius);
+			return new Circle(toPoint(center), distance);
 		}
 	}
 
@@ -263,6 +276,7 @@ abstract class GeoConverters {
 			DBObject result = new BasicDBObject();
 			result.put("center", toDbObject(source.getCenter()));
 			result.put("radius", source.getRadius().getNormalizedValue());
+			result.put("metric", source.getRadius().getMetric().toString());
 			return result;
 		}
 	}
@@ -288,10 +302,20 @@ abstract class GeoConverters {
 			DBObject center = (DBObject) source.get("center");
 			Double radius = (Double) source.get("radius");
 
+			Distance distance = new Distance(radius);
+
+			if (source.containsField("metric")) {
+
+				String metricString = (String) source.get("metric");
+				Assert.notNull(metricString, "Metric must not be null!");
+
+				distance = distance.in(Metrics.valueOf(metricString));
+			}
+
 			Assert.notNull(center, "Center must not be null!");
 			Assert.notNull(radius, "Radius must not be null!");
 
-			return new Sphere(toPoint(center), radius);
+			return new Sphere(toPoint(center), distance);
 		}
 	}
 

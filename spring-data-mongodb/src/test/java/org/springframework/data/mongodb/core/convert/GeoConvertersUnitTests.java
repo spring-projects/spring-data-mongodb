@@ -23,6 +23,8 @@ import java.util.Arrays;
 import org.junit.Test;
 import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Circle;
+import org.springframework.data.geo.Distance;
+import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
 import org.springframework.data.mongodb.core.convert.GeoConverters.BoxToDbObjectConverter;
@@ -71,7 +73,7 @@ public class GeoConvertersUnitTests {
 	 * @see DATAMONGO-858
 	 */
 	@Test
-	public void convertsCircleToDbObjectAndBackCorrectly() {
+	public void convertsCircleToDbObjectAndBackCorrectlyNeutralDistance() {
 
 		Circle circle = new Circle(new Point(1, 2), 3);
 
@@ -79,6 +81,22 @@ public class GeoConvertersUnitTests {
 		Circle result = DbObjectToCircleConverter.INSTANCE.convert(dbo);
 
 		assertThat(result, is(circle));
+	}
+
+	/**
+	 * @see DATAMONGO-858
+	 */
+	@Test
+	public void convertsCircleToDbObjectAndBackCorrectlyMilesDistance() {
+
+		Distance radius = new Distance(3, Metrics.MILES);
+		Circle circle = new Circle(new Point(1, 2), radius);
+
+		DBObject dbo = CircleToDbObjectConverter.INSTANCE.convert(circle);
+		Circle result = DbObjectToCircleConverter.INSTANCE.convert(dbo);
+
+		assertThat(result, is(circle));
+		assertThat(result.getRadius(), is(radius));
 	}
 
 	/**
@@ -115,7 +133,7 @@ public class GeoConvertersUnitTests {
 	 * @see DATAMONGO-858
 	 */
 	@Test
-	public void convertsSphereToDbObjectAndBackCorrectly() {
+	public void convertsSphereToDbObjectAndBackCorrectlyWithNeutralDistance() {
 
 		Sphere sphere = new Sphere(new Point(1, 2), 3);
 
@@ -123,6 +141,23 @@ public class GeoConvertersUnitTests {
 		Sphere result = DbObjectToSphereConverter.INSTANCE.convert(dbo);
 
 		assertThat(result, is(sphere));
+		assertThat(result.getClass().equals(org.springframework.data.mongodb.core.geo.Sphere.class), is(true));
+	}
+
+	/**
+	 * @see DATAMONGO-858
+	 */
+	@Test
+	public void convertsSphereToDbObjectAndBackCorrectlyWithKilometerDistance() {
+
+		Distance radius = new Distance(3, Metrics.KILOMETERS);
+		Sphere sphere = new Sphere(new Point(1, 2), radius);
+
+		DBObject dbo = SphereToDbObjectConverter.INSTANCE.convert(sphere);
+		Sphere result = DbObjectToSphereConverter.INSTANCE.convert(dbo);
+
+		assertThat(result, is(sphere));
+		assertThat(result.getRadius(), is(radius));
 		assertThat(result.getClass().equals(org.springframework.data.mongodb.core.geo.Sphere.class), is(true));
 	}
 
