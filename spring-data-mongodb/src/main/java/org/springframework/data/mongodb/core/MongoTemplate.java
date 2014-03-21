@@ -51,6 +51,9 @@ import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.authentication.UserCredentials;
 import org.springframework.data.convert.EntityReader;
+import org.springframework.data.geo.Distance;
+import org.springframework.data.geo.GeoResult;
+import org.springframework.data.geo.Metric;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.BeanWrapper;
 import org.springframework.data.mapping.model.MappingException;
@@ -68,10 +71,7 @@ import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoWriter;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.convert.UpdateMapper;
-import org.springframework.data.mongodb.core.geo.Distance;
-import org.springframework.data.mongodb.core.geo.GeoResult;
 import org.springframework.data.mongodb.core.geo.GeoResults;
-import org.springframework.data.mongodb.core.geo.Metric;
 import org.springframework.data.mongodb.core.index.MongoMappingEventPublisher;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexCreator;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
@@ -115,7 +115,6 @@ import com.mongodb.WriteConcern;
 import com.mongodb.WriteResult;
 import com.mongodb.util.JSON;
 import com.mongodb.util.JSONParseException;
-
 /**
  * Primary implementation of {@link MongoOperations}.
  * 
@@ -131,6 +130,7 @@ import com.mongodb.util.JSONParseException;
  * @author Chuong Ngo
  * @author Christoph Strobl
  */
+@SuppressWarnings("deprecation")
 public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(MongoTemplate.class);

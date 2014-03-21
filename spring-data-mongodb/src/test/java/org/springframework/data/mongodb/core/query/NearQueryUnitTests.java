@@ -21,11 +21,11 @@ import static org.junit.Assert.*;
 import org.junit.Test;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.geo.Distance;
+import org.springframework.data.geo.Metric;
+import org.springframework.data.geo.Metrics;
+import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.DBObjectTestUtils;
-import org.springframework.data.mongodb.core.geo.Distance;
-import org.springframework.data.mongodb.core.geo.Metric;
-import org.springframework.data.mongodb.core.geo.Metrics;
-import org.springframework.data.mongodb.core.geo.Point;
 
 /**
  * Unit tests for {@link NearQuery}.
@@ -59,6 +59,7 @@ public class NearQueryUnitTests {
 		NearQuery query = NearQuery.near(2.5, 2.5, Metrics.KILOMETERS).maxDistance(150);
 
 		query.inMiles();
+
 		assertThat(query.getMetric(), is((Metric) Metrics.MILES));
 	}
 

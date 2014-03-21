@@ -5,15 +5,6 @@
             <element type="IncludeTypePattern" name="org.springframework.data.mongodb.**"/>
         </element>
         <architecture>
-            <element type="Layer" name="Config">
-                <element type="TypeFilter" name="Assignment">
-                    <element type="WeakTypePattern" name="**.config.**"/>
-                </element>
-                <dependency toName="Project|spring-data-mongodb::Layer|Core" type="AllowedDependency"/>
-                <dependency toName="Project|spring-data-mongodb::Layer|GridFS" type="AllowedDependency"/>
-                <dependency toName="Project|spring-data-mongodb::Layer|Monitoring" type="AllowedDependency"/>
-                <dependency toName="Project|spring-data-mongodb::Layer|Repositories" type="AllowedDependency"/>
-            </element>
             <element type="Layer" name="Repositories">
                 <element type="TypeFilter" name="Assignment">
                     <element type="IncludeTypePattern" name="**.repository.**"/>
@@ -40,9 +31,19 @@
                     <element type="TypeFilter" name="Assignment">
                         <element type="IncludeTypePattern" name="**.config.**"/>
                     </element>
+                    <dependency toName="Project|spring-data-mongodb::Layer|Core::Subsystem|Mapping" type="AllowedDependency"/>
                     <dependency toName="Project|spring-data-mongodb::Layer|Repositories::Subsystem|Implementation" type="AllowedDependency"/>
                 </element>
+                <dependency toName="Project|spring-data-mongodb::Layer|Config" type="AllowedDependency"/>
                 <dependency toName="Project|spring-data-mongodb::Layer|Core" type="AllowedDependency"/>
+            </element>
+            <element type="Layer" name="Config">
+                <element type="TypeFilter" name="Assignment">
+                    <element type="WeakTypePattern" name="**.config.**"/>
+                </element>
+                <dependency toName="Project|spring-data-mongodb::Layer|Core" type="AllowedDependency"/>
+                <dependency toName="Project|spring-data-mongodb::Layer|GridFS" type="AllowedDependency"/>
+                <dependency toName="Project|spring-data-mongodb::Layer|Monitoring" type="AllowedDependency"/>
             </element>
             <element type="Layer" name="Monitoring">
                 <element type="TypeFilter" name="Assignment">
@@ -57,41 +58,39 @@
                 <dependency toName="Project|spring-data-mongodb::Layer|Core" type="AllowedDependency"/>
             </element>
             <element type="Layer" name="Core">
-                <element type="TypeFilter" name="Assignment">
-                    <element type="IncludeTypePattern" name="**.core.**"/>
-                </element>
+                <element type="TypeFilter" name="Assignment"/>
                 <element type="Subsystem" name="Mapping">
                     <element type="TypeFilter" name="Assignment">
-                        <element type="IncludeTypePattern" name="**.mapping.**"/>
+                        <element type="IncludeTypePattern" name="**.core.mapping.**"/>
                     </element>
                 </element>
                 <element type="Subsystem" name="Geospatial">
                     <element type="TypeFilter" name="Assignment">
-                        <element type="IncludeTypePattern" name="**.geo.**"/>
+                        <element type="IncludeTypePattern" name="**.core.geo.**"/>
                     </element>
-                    <dependency toName="Project|spring-data-mongodb::Layer|Core::Subsystem|Mapping" type="AllowedDependency"/>
                 </element>
                 <element type="Subsystem" name="Query">
                     <element type="TypeFilter" name="Assignment">
-                        <element type="IncludeTypePattern" name="**.query.**"/>
+                        <element type="IncludeTypePattern" name="**.core.query.**"/>
                     </element>
                     <dependency toName="Project|spring-data-mongodb::Layer|Core::Subsystem|Geospatial" type="AllowedDependency"/>
                 </element>
                 <element type="Subsystem" name="Conversion">
                     <element type="TypeFilter" name="Assignment">
-                        <element type="IncludeTypePattern" name="**.convert.**"/>
+                        <element type="IncludeTypePattern" name="**.core.convert.**"/>
                     </element>
+                    <dependency toName="Project|spring-data-mongodb::Layer|Core::Subsystem|Geospatial" type="AllowedDependency"/>
                     <dependency toName="Project|spring-data-mongodb::Layer|Core::Subsystem|Mapping" type="AllowedDependency"/>
                     <dependency toName="Project|spring-data-mongodb::Layer|Core::Subsystem|Query" type="AllowedDependency"/>
                 </element>
                 <element type="Subsystem" name="SpEL">
                     <element type="TypeFilter" name="Assignment">
-                        <element type="IncludeTypePattern" name="**.spel.**"/>
+                        <element type="IncludeTypePattern" name="**.core.spel.**"/>
                     </element>
                 </element>
                 <element type="Subsystem" name="Aggregation">
                     <element type="TypeFilter" name="Assignment">
-                        <element type="IncludeTypePattern" name="**.aggregation.**"/>
+                        <element type="IncludeTypePattern" name="**.core.aggregation.**"/>
                     </element>
                     <dependency toName="Project|spring-data-mongodb::Layer|Core::Subsystem|Conversion" type="AllowedDependency"/>
                     <dependency toName="Project|spring-data-mongodb::Layer|Core::Subsystem|Mapping" type="AllowedDependency"/>
@@ -100,7 +99,7 @@
                 </element>
                 <element type="Subsystem" name="Index">
                     <element type="TypeFilter" name="Assignment">
-                        <element type="IncludeTypePattern" name="**.index.**"/>
+                        <element type="IncludeTypePattern" name="**.core.index.**"/>
                     </element>
                     <dependency toName="Project|spring-data-mongodb::Layer|Core::Subsystem|Mapping" type="AllowedDependency"/>
                     <dependency toName="Project|spring-data-mongodb::Layer|Core::Subsystem|Query" type="AllowedDependency"/>
@@ -115,6 +114,13 @@
                     <dependency toName="Project|spring-data-mongodb::Layer|Core::Subsystem|Index" type="AllowedDependency"/>
                     <dependency toName="Project|spring-data-mongodb::Layer|Core::Subsystem|Mapping" type="AllowedDependency"/>
                     <dependency toName="Project|spring-data-mongodb::Layer|Core::Subsystem|Query" type="AllowedDependency"/>
+                </element>
+                <element type="Subsystem" name="Util">
+                    <element type="TypeFilter" name="Assignment">
+                        <element type="IncludeTypePattern" name="**.util.**"/>
+                    </element>
+                    <stereotype name="Unrestricted"/>
+                    <stereotype name="Public"/>
                 </element>
             </element>
             <element type="Subsystem" name="API">

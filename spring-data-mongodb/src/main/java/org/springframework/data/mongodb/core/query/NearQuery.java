@@ -15,12 +15,14 @@
  */
 package org.springframework.data.mongodb.core.query;
 
+import java.util.Arrays;
+
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.mongodb.core.geo.CustomMetric;
-import org.springframework.data.mongodb.core.geo.Distance;
-import org.springframework.data.mongodb.core.geo.Metric;
-import org.springframework.data.mongodb.core.geo.Metrics;
-import org.springframework.data.mongodb.core.geo.Point;
+import org.springframework.data.geo.CustomMetric;
+import org.springframework.data.geo.Distance;
+import org.springframework.data.geo.Metric;
+import org.springframework.data.geo.Metrics;
+import org.springframework.data.geo.Point;
 import org.springframework.util.Assert;
 
 import com.mongodb.BasicDBObject;
@@ -341,6 +343,7 @@ public final class NearQuery {
 	 * 
 	 * @return
 	 */
+	@SuppressWarnings("deprecation")
 	public DBObject toDBObject() {
 
 		BasicDBObject dbObject = new BasicDBObject();
@@ -361,7 +364,8 @@ public final class NearQuery {
 			dbObject.put("num", num);
 		}
 
-		dbObject.put("near", point.asList());
+		dbObject.put("near", Arrays.asList(point.getX(), point.getY()));
+
 		dbObject.put("spherical", spherical);
 
 		return dbObject;

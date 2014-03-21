@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2011-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,17 +15,16 @@
  */
 package org.springframework.data.mongodb.core.geo;
 
-import org.springframework.util.Assert;
-
 /**
  * Calue object capturing some arbitrary object plus a distance.
  * 
+ * @deprecated As of release 1.5, replaced by {@link org.springframework.data.geo.GeoResult}. This class is scheduled to
+ *             be removed in the next major release.
  * @author Oliver Gierke
+ * @author Thomas Darimont
  */
-public class GeoResult<T> {
-
-	private final T content;
-	private final Distance distance;
+@Deprecated
+public class GeoResult<T> extends org.springframework.data.geo.GeoResult<T> {
 
 	/**
 	 * Creates a new {@link GeoResult} for the given content and distance.
@@ -34,69 +33,6 @@ public class GeoResult<T> {
 	 * @param distance must not be {@literal null}.
 	 */
 	public GeoResult(T content, Distance distance) {
-		Assert.notNull(content);
-		Assert.notNull(distance);
-		this.content = content;
-		this.distance = distance;
-	}
-
-	/**
-	 * Returns the actual content object.
-	 * 
-	 * @return the content
-	 */
-	public T getContent() {
-		return content;
-	}
-
-	/**
-	 * Returns the distance the actual content object has from the origin.
-	 * 
-	 * @return the distance
-	 */
-	public Distance getDistance() {
-		return distance;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
-	@Override
-	public boolean equals(Object obj) {
-
-		if (this == obj) {
-			return true;
-		}
-
-		if (obj == null || !getClass().equals(obj.getClass())) {
-			return false;
-		}
-
-		GeoResult<?> that = (GeoResult<?>) obj;
-
-		return this.content.equals(that.content) && this.distance.equals(that.distance);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see java.lang.Object#hashCode()
-	 */
-	@Override
-	public int hashCode() {
-
-		int result = 17;
-		result += 31 * distance.hashCode();
-		result += 31 * content.hashCode();
-		return result;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
-	@Override
-	public String toString() {
-		return String.format("GeoResult [content: %s, distance: %s, ]", content.toString(), distance.toString());
+		super(content, distance);
 	}
 }

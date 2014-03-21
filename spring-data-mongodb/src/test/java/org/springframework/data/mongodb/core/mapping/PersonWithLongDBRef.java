@@ -5,8 +5,7 @@ package org.springframework.data.mongodb.core.mapping;
  */
 public class PersonWithLongDBRef extends BasePerson {
 
-	@DBRef
-	private PersonPojoLongId personPojoLongId;
+	@DBRef private PersonPojoLongId personPojoLongId;
 
 	public PersonWithLongDBRef(Integer ssn, String firstName, String lastName, PersonPojoLongId personPojoLongId) {
 		super(ssn, firstName, lastName);

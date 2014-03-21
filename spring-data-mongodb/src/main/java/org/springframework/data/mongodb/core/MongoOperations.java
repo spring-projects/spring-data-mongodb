@@ -23,7 +23,6 @@ import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
-import org.springframework.data.mongodb.core.geo.GeoResult;
 import org.springframework.data.mongodb.core.geo.GeoResults;
 import org.springframework.data.mongodb.core.mapreduce.GroupBy;
 import org.springframework.data.mongodb.core.mapreduce.GroupByResults;
@@ -51,7 +50,9 @@ import com.mongodb.WriteResult;
  * @author Tobias Trelle
  * @author Chuong Ngo
  * @author Christoph Strobl
+ * @author Thomas Darimont
  */
+@SuppressWarnings("deprecation")
 public interface MongoOperations {
 
 	/**
@@ -414,7 +415,7 @@ public interface MongoOperations {
 			MapReduceOptions mapReduceOptions, Class<T> entityClass);
 
 	/**
-	 * Returns {@link GeoResult} for all entities matching the given {@link NearQuery}. Will consider entity mapping
+	 * Returns {@link GeoResults} for all entities matching the given {@link NearQuery}. Will consider entity mapping
 	 * information to determine the collection the query is ran against.
 	 * 
 	 * @param near must not be {@literal null}.
@@ -424,7 +425,7 @@ public interface MongoOperations {
 	<T> GeoResults<T> geoNear(NearQuery near, Class<T> entityClass);
 
 	/**
-	 * Returns {@link GeoResult} for all entities matching the given {@link NearQuery}.
+	 * Returns {@link GeoResults} for all entities matching the given {@link NearQuery}.
 	 * 
 	 * @param near must not be {@literal null}.
 	 * @param entityClass must not be {@literal null}.

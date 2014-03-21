@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2011-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,9 @@ import org.junit.Test;
  * Unit tests for {@link GeoResults}.
  * 
  * @author Oliver Gierke
+ * @author Thomas Darimont
  */
+@SuppressWarnings("deprecation")
 public class GeoResultsUnitTests {
 
 	@Test
@@ -37,6 +39,6 @@ public class GeoResultsUnitTests {
 		GeoResult<Object> second = new GeoResult<Object>(new Object(), new Distance(5));
 		GeoResults<Object> geoResults = new GeoResults<Object>(Arrays.asList(first, second));
 
-		assertThat(geoResults.getAverageDistance(), is(new Distance(3.5)));
+		assertThat(geoResults.getAverageDistance(), is(new org.springframework.data.geo.Distance(3.5)));
 	}
 }

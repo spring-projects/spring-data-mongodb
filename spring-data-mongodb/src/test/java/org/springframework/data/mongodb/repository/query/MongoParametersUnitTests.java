@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2011-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,13 +25,11 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.springframework.data.mongodb.core.geo.Distance;
-import org.springframework.data.mongodb.core.geo.GeoResults;
-import org.springframework.data.mongodb.core.geo.Point;
+import org.springframework.data.geo.Distance;
+import org.springframework.data.geo.GeoResults;
+import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.repository.Near;
 import org.springframework.data.mongodb.repository.Person;
-import org.springframework.data.mongodb.repository.query.MongoParameters;
-import org.springframework.data.mongodb.repository.query.MongoQueryMethod;
 import org.springframework.data.repository.query.Parameter;
 
 /**
@@ -42,8 +40,7 @@ import org.springframework.data.repository.query.Parameter;
 @RunWith(MockitoJUnitRunner.class)
 public class MongoParametersUnitTests {
 
-	@Mock
-	MongoQueryMethod queryMethod;
+	@Mock MongoQueryMethod queryMethod;
 
 	@Test
 	public void discoversDistanceParameter() throws NoSuchMethodException, SecurityException {
