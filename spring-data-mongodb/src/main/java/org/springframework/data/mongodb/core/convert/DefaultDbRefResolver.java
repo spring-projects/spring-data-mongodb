@@ -155,7 +155,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 	 * 
 	 * @author Thomas Darimont
 	 */
-	static class LazyLoadingInterceptor implements MethodInterceptor, org.springframework.cglib.proxy.MethodInterceptor,
+	public static class LazyLoadingInterceptor implements MethodInterceptor, org.springframework.cglib.proxy.MethodInterceptor,
 			Serializable {
 
 		private final DbRefResolverCallback callback;
@@ -199,11 +199,15 @@ public class DefaultDbRefResolver implements DbRefResolver {
 		 */
 		@Override
 		public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy) throws Throwable {
-			return ReflectionUtils.isObjectMethod(method) && method.getDeclaringClass() == Object.class ? method.invoke(obj,
-					args) : method.invoke(ensureResolved(), args);
+			if(obj!=null && ReflectionUtils.isObjectMethod(method) && method.getDeclaringClass() == Object.class)
+				return method.invoke(obj, args);
+			Object ensuredResult=ensureResolved();
+			if(ensuredResult==null)
+				return null;
+			return method.invoke(ensureResolved(), args);
 		}
 
-		private Object ensureResolved() {
+		public Object ensureResolved() {
 
 			if (!resolved) {
 				this.result = resolve();
