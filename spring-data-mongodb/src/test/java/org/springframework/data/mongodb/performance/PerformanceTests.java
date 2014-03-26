@@ -15,8 +15,8 @@
  */
 package org.springframework.data.mongodb.performance;
 
-import static org.springframework.data.mongodb.core.query.Criteria.*;
-import static org.springframework.data.mongodb.core.query.Query.*;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.springframework.data.mongodb.core.query.Query.query;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;

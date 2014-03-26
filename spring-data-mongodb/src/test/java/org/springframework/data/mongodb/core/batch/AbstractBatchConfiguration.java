@@ -1,31 +1,22 @@
-/*
- * Copyright 2013 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-package org.springframework.data.mongodb.config;
+package org.springframework.data.mongodb.core.batch;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.dao.DataAccessException;
+import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
 import org.springframework.data.mongodb.core.CollectionCallback;
 import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.Person;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -36,14 +27,15 @@ import com.mongodb.MongoClient;
 import com.mongodb.MongoException;
 
 /**
- * @author Oliver Gierke
+ * @author Joao Bortolozzo
+ * see DATAMONGO-867
  */
-@RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration
-public abstract class AbstractIntegrationTests {
-
+@RunWith(SpringJUnit4ClassRunner.class)
+public class AbstractBatchConfiguration {
+	
 	@Configuration
-	static class TestConfig extends AbstractMongoConfiguration {
+	static class Config extends AbstractMongoConfiguration {
 
 		@Override
 		protected String getDatabaseName() {
@@ -54,14 +46,22 @@ public abstract class AbstractIntegrationTests {
 		public Mongo mongo() throws Exception {
 			return new MongoClient();
 		}
+		
+		@Bean
+		public BatchInsertOperations batchInsertOperation(){
+			return new BatchInsert(1000);
+		}
 	}
-
+	
 	@Autowired MongoOperations operations;
+	@Autowired BatchInsertOperations batch;
 
 	@Before
 	@After
 	public void cleanUp() {
-
+		
+		batch.clear();
+		
 		for (String collectionName : operations.getCollectionNames()) {
 			if (!collectionName.startsWith("system")) {
 				operations.execute(collectionName, new CollectionCallback<Void>() {
@@ -74,5 +74,15 @@ public abstract class AbstractIntegrationTests {
 				});
 			}
 		}
+	}
+	
+	protected List<Person> populateCollection(int quantity){
+		
+		List<Person> people = new ArrayList<Person>();
+		
+		for(int index = 0; index < quantity; index++)
+			people.add(new Person("Joao"));
+		
+		return people;
 	}
 }
