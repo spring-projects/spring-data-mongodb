@@ -37,6 +37,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
+import java.util.TreeMap;
 
 import org.bson.types.ObjectId;
 import org.hamcrest.Matcher;
@@ -1485,6 +1486,45 @@ public class MappingMongoConverterUnitTests {
 		assertThat(result.enumMap.get(SampleEnum.FIRST), is("Dave"));
 	}
 
+	/**
+	 * @see DATAMONGO-887
+	 */
+	@Test
+	public void readsTreeMapCorrectly() {
+
+		DBObject person = new BasicDBObject("foo", "Dave");
+		DBObject treeMapOfPerson = new BasicDBObject("key", person);
+		DBObject document = new BasicDBObject("treeMapOfPersons", treeMapOfPerson);
+
+		ClassWithMapProperty result = converter.read(ClassWithMapProperty.class, document);
+
+		assertThat(result.treeMapOfPersons, is(notNullValue()));
+		assertThat(result.treeMapOfPersons.get("key"), is(notNullValue()));
+		assertThat(result.treeMapOfPersons.get("key").firstname, is("Dave"));
+	}
+
+	/**
+	 * @see DATAMONGO-887
+	 */
+	@Test
+	public void writesTreeMapCorrectly() {
+
+		Person person = new Person();
+		person.firstname = "Dave";
+
+		ClassWithMapProperty source = new ClassWithMapProperty();
+		source.treeMapOfPersons = new TreeMap<String, Person>();
+		source.treeMapOfPersons.put("key", person);
+
+		DBObject result = new BasicDBObject();
+
+		converter.write(source, result);
+
+		DBObject map = getAsDBObject(result, "treeMapOfPersons");
+		DBObject entry = getAsDBObject(map, "key");
+		assertThat(entry.get("foo"), is((Object) "Dave"));
+	}
+
 	static class GenericType<T> {
 		T content;
 	}
@@ -1552,6 +1592,7 @@ public class MappingMongoConverterUnitTests {
 		Map<String, Object> mapOfObjects;
 		Map<String, String[]> mapOfStrings;
 		Map<String, Person> mapOfPersons;
+		TreeMap<String, Person> treeMapOfPersons;
 	}
 
 	static class ClassWithNestedMaps {
