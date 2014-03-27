@@ -17,6 +17,7 @@ import org.springframework.data.annotation.Id;
 
 /**
  * @author Guto Bortolozzo
+ * see DATAMONGO-887
  */
 @Configuration
 public class PagingAndSortingTreeSetTest extends PagingAndSortingTreeSetConfiguration{

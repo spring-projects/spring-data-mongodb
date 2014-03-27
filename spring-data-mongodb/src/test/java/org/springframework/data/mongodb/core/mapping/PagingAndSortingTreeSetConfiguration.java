@@ -13,6 +13,10 @@ import org.springframework.data.mongodb.core.mapping.PagingAndSortingTreeSetTest
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.test.context.ContextConfiguration;
 
+/**
+ * @author Guto Bortolozzo
+ * see DATAMONGO-887
+ */
 @ContextConfiguration
 abstract class PagingAndSortingTreeSetConfiguration extends AbstractIntegrationTests{
 	
