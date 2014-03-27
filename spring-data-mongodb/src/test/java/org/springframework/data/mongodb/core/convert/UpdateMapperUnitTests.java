@@ -412,6 +412,46 @@ public class UpdateMapperUnitTests {
 		assertThat(inClause, IsIterableContainingInOrder.<Object> contains(1L, 2L));
 	}
 
+	/**
+	 * @see DATAMONG0-471
+	 */
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Test
+	public void testUpdateShouldApply$addToSetCorrectlyWhenUsedWith$each() {
+
+		Update update = new Update().addToSet("values").each("spring", "data", "mongodb");
+		DBObject mappedObject = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(ListModel.class));
+
+		DBObject addToSet = getAsDBObject(mappedObject, "$addToSet");
+		DBObject values = getAsDBObject(addToSet, "values");
+		BasicDBList each = getAsDBList(values, "$each");
+
+		assertThat(each.toMap(), (Matcher) allOf(hasValue("spring"), hasValue("data"), hasValue("mongodb")));
+	}
+
+	/**
+	 * @see DATAMONG0-471
+	 */
+	@Test
+	public void testUpdateShouldRetainClassTypeInformationWhenUsing$addToSetWith$eachForCustomTypes() {
+
+		Update update = new Update().addToSet("models").each(new ModelImpl(2014), new ModelImpl(1), new ModelImpl(28));
+		DBObject mappedObject = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(ModelWrapper.class));
+
+		DBObject addToSet = getAsDBObject(mappedObject, "$addToSet");
+
+		DBObject values = getAsDBObject(addToSet, "models");
+		BasicDBList each = getAsDBList(values, "$each");
+
+		for (Object updateValue : each) {
+			assertThat(((DBObject) updateValue).get("_class").toString(),
+					equalTo("org.springframework.data.mongodb.core.convert.UpdateMapperUnitTests$ModelImpl"));
+		}
+
+	}
+
 	static interface Model {}
 
 	static class ModelImpl implements Model {
@@ -425,6 +465,12 @@ public class UpdateMapperUnitTests {
 
 	public class ModelWrapper {
 		Model model;
+
+		public ModelWrapper() {}
+
+		public ModelWrapper(Model model) {
+			this.model = model;
+		}
 	}
 
 	static class ListModelWrapper {

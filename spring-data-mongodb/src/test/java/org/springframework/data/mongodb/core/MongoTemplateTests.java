@@ -2580,6 +2580,25 @@ public class MongoTemplateTests {
 		assertThat(savedTmpl.getContent().getText(), is(nullValue()));
 	}
 
+	/**
+	 * @see DATAMONGO-471
+	 */
+	@Test
+	public void updateMultiShouldAddValuesCorrectlyWhenUsingAddToSetWithEach() {
+
+		DocumentWithCollectionOfSimpleType document = new DocumentWithCollectionOfSimpleType();
+		document.values = Arrays.asList("spring");
+		template.save(document);
+
+		Query query = query(where("id").is(document.id));
+		assumeThat(template.findOne(query, DocumentWithCollectionOfSimpleType.class).values, hasSize(1));
+
+		Update update = new Update().addToSet("values").each("data", "mongodb");
+		template.updateMulti(query, update, DocumentWithCollectionOfSimpleType.class);
+
+		assertThat(template.findOne(query, DocumentWithCollectionOfSimpleType.class).values, hasSize(3));
+	}
+
 	static class DocumentWithDBRefCollection {
 
 		@Id public String id;
