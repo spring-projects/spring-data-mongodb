@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 the original author or authors.
+ * Copyright 2010-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,10 +30,8 @@ import org.springframework.util.Assert;
  */
 public class Point {
 
-	@Field(order = 10)
-	private final double x;
-	@Field(order = 20)
-	private final double y;
+	@Field(order = 10) private final double x;
+	@Field(order = 20) private final double y;
 
 	@PersistenceConstructor
 	public Point(double x, double y) {
@@ -69,9 +67,9 @@ public class Point {
 		int result = 1;
 		long temp;
 		temp = Double.doubleToLongBits(x);
-		result = prime * result + (int) (temp ^ (temp >>> 32));
+		result = prime * result + (int) (temp ^ temp >>> 32);
 		temp = Double.doubleToLongBits(y);
-		result = prime * result + (int) (temp ^ (temp >>> 32));
+		result = prime * result + (int) (temp ^ temp >>> 32);
 		return result;
 	}
 
@@ -98,6 +96,6 @@ public class Point {
 
 	@Override
 	public String toString() {
-		return String.format("Point [latitude=%f, longitude=%f]", x, y);
+		return String.format("Point [x=%f, y=%f]", x, y);
 	}
 }
