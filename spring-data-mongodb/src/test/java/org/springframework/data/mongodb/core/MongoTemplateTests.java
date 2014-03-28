@@ -316,7 +316,7 @@ public class MongoTemplateTests {
 			assertThat(
 					e.getMessage(),
 					CoreMatchers
-							.startsWith("Insert list failed: E11000 duplicate key error index: database.person.$_id_  dup key: { : ObjectId"));
+							.containsString("E11000 duplicate key error index: database.person.$_id_  dup key: { : ObjectId"));
 		}
 	}
 
