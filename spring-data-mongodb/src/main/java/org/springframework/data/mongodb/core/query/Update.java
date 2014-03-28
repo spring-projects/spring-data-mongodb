@@ -197,6 +197,18 @@ public class Update {
 	}
 
 	/**
+	 * Update using {@code $addToSet} modifier. <br/>
+	 * Allows creation of {@code $push} command for single or multiple (using {@code $each}) values
+	 * 
+	 * @param key
+	 * @return
+	 * @since 1.5
+	 */
+	public AddToSetBuilder addToSet(String key) {
+		return new AddToSetBuilder(key);
+	}
+
+	/**
 	 * Update using the {@literal $addToSet} update modifier
 	 * 
 	 * @see http://docs.mongodb.org/manual/reference/operator/update/addToSet/
@@ -408,7 +420,7 @@ public class Update {
 	/**
 	 * Builder for creating {@code $push} modifiers
 	 * 
-	 * @author Christop Strobl
+	 * @author Christoph Strobl
 	 */
 	public class PushOperatorBuilder {
 
@@ -442,4 +454,41 @@ public class Update {
 			return Update.this.push(key, value);
 		}
 	}
+
+	/**
+	 * Builder for creating {@code $addToSet} modifier.
+	 * 
+	 * @author Christoph Strobl
+	 * @since 1.5
+	 */
+	public class AddToSetBuilder {
+
+		private final String key;
+
+		public AddToSetBuilder(String key) {
+			this.key = key;
+		}
+
+		/**
+		 * Propagates {@code $each} to {@code $addToSet}
+		 * 
+		 * @param values
+		 * @return
+		 */
+		public Update each(Object... values) {
+			return Update.this.addToSet(this.key, new Each(values));
+		}
+
+		/**
+		 * Propagates {@link #value(Object)} to {@code $addToSet}
+		 * 
+		 * @param values
+		 * @return
+		 */
+		public Update value(Object value) {
+			return Update.this.addToSet(this.key, value);
+		}
+
+	}
+
 }
