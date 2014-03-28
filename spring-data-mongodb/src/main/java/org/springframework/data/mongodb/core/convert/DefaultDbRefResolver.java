@@ -41,6 +41,7 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
+import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.DB;
@@ -231,7 +232,18 @@ public class DefaultDbRefResolver implements DbRefResolver {
 			}
 
 			if (isObjectMethod(method) && Object.class.equals(method.getDeclaringClass())) {
-				return method.invoke(proxy, args);
+
+				if (ReflectionUtils.isToStringMethod(method)) {
+					return proxyToString(proxy);
+				}
+
+				if (ReflectionUtils.isEqualsMethod(method)) {
+					return proxyEquals(proxy, args[0]);
+				}
+
+				if (ReflectionUtils.isHashCodeMethod(method)) {
+					return proxyHashCode(proxy);
+				}
 			}
 
 			Object target = ensureResolved();
@@ -241,6 +253,57 @@ public class DefaultDbRefResolver implements DbRefResolver {
 			}
 
 			return method.invoke(target, args);
+		}
+
+		/**
+		 * Returns a to string representation for the given {@code proxy}.
+		 * 
+		 * @param proxy
+		 * @return
+		 */
+		private String proxyToString(Object proxy) {
+
+			StringBuilder description = new StringBuilder();
+			if (dbref != null) {
+				description.append(dbref.getRef());
+				description.append(":");
+				description.append(dbref.getId());
+			} else {
+				description.append(System.identityHashCode(proxy));
+			}
+			description.append("$").append(LazyLoadingProxy.class.getSimpleName());
+
+			return description.toString();
+		}
+
+		/**
+		 * Returns the hashcode for the given {@code proxy}.
+		 * 
+		 * @param proxy
+		 * @return
+		 */
+		private int proxyHashCode(Object proxy) {
+			return proxyToString(proxy).hashCode();
+		}
+
+		/**
+		 * Performs an equality check for the given {@code proxy}.
+		 * 
+		 * @param proxy
+		 * @param that
+		 * @return
+		 */
+		private boolean proxyEquals(Object proxy, Object that) {
+
+			if (!(that instanceof LazyLoadingProxy)) {
+				return false;
+			}
+
+			if (that == proxy) {
+				return true;
+			}
+
+			return proxyToString(proxy).equals(that.toString());
 		}
 
 		/**

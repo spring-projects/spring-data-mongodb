@@ -314,6 +314,93 @@ public class DbRefMappingMongoConverterUnitTests {
 	 * @see DATAMONGO-884
 	 */
 	@Test
+	public void callingToStringObjectMethodOnLazyLoadingDbrefShouldNotInitializeProxy() {
+
+		String id = "42";
+		String value = "bubu";
+		MappingMongoConverter converterSpy = spy(converter);
+		doReturn(new BasicDBObject("_id", id).append("value", value)).when(converterSpy).readRef((DBRef) any());
+
+		BasicDBObject dbo = new BasicDBObject();
+		WithObjectMethodOverrideLazyDbRefs lazyDbRefs = new WithObjectMethodOverrideLazyDbRefs();
+		lazyDbRefs.dbRefToPlainObject = new LazyDbRefTarget(id, value);
+		converterSpy.write(lazyDbRefs, dbo);
+
+		WithObjectMethodOverrideLazyDbRefs result = converterSpy.read(WithObjectMethodOverrideLazyDbRefs.class, dbo);
+
+		assertThat(result.dbRefToPlainObject, is(notNullValue()));
+		assertProxyIsResolved(result.dbRefToPlainObject, false);
+
+		// calling Object#toString does not initialize the proxy.
+		String proxyString = result.dbRefToPlainObject.toString();
+		assertThat(proxyString, is("lazyDbRefTarget" + ":" + id + "$LazyLoadingProxy"));
+		assertProxyIsResolved(result.dbRefToPlainObject, false);
+
+		// calling another method not declared on object triggers proxy initialization.
+		assertThat(result.dbRefToPlainObject.getValue(), is(value));
+		assertProxyIsResolved(result.dbRefToPlainObject, true);
+	}
+
+	/**
+	 * @see DATAMONGO-884
+	 */
+	@Test
+	public void equalsObjectMethodOnLazyLoadingDbrefShouldNotInitializeProxy() {
+
+		String id = "42";
+		String value = "bubu";
+		MappingMongoConverter converterSpy = spy(converter);
+		doReturn(new BasicDBObject("_id", id).append("value", value)).when(converterSpy).readRef((DBRef) any());
+
+		BasicDBObject dbo = new BasicDBObject();
+		WithObjectMethodOverrideLazyDbRefs lazyDbRefs = new WithObjectMethodOverrideLazyDbRefs();
+		lazyDbRefs.dbRefToPlainObject = new LazyDbRefTarget(id, value);
+		lazyDbRefs.dbRefToToStringObjectMethodOverride = new ToStringObjectMethodOverrideLazyDbRefTarget(id, value);
+		converterSpy.write(lazyDbRefs, dbo);
+
+		WithObjectMethodOverrideLazyDbRefs result = converterSpy.read(WithObjectMethodOverrideLazyDbRefs.class, dbo);
+
+		assertThat(result.dbRefToPlainObject, is(notNullValue()));
+		assertProxyIsResolved(result.dbRefToPlainObject, false);
+
+		assertThat(result.dbRefToPlainObject, is(equalTo(result.dbRefToPlainObject)));
+		assertThat(result.dbRefToPlainObject, is(not(equalTo(null))));
+		assertThat(result.dbRefToPlainObject, is(not(equalTo((Object) lazyDbRefs.dbRefToToStringObjectMethodOverride))));
+
+		assertProxyIsResolved(result.dbRefToPlainObject, false);
+	}
+
+	/**
+	 * @see DATAMONGO-884
+	 */
+	@Test
+	public void hashcodeObjectMethodOnLazyLoadingDbrefShouldNotInitializeProxy() {
+
+		String id = "42";
+		String value = "bubu";
+		MappingMongoConverter converterSpy = spy(converter);
+		doReturn(new BasicDBObject("_id", id).append("value", value)).when(converterSpy).readRef((DBRef) any());
+
+		BasicDBObject dbo = new BasicDBObject();
+		WithObjectMethodOverrideLazyDbRefs lazyDbRefs = new WithObjectMethodOverrideLazyDbRefs();
+		lazyDbRefs.dbRefToPlainObject = new LazyDbRefTarget(id, value);
+		lazyDbRefs.dbRefToToStringObjectMethodOverride = new ToStringObjectMethodOverrideLazyDbRefTarget(id, value);
+		converterSpy.write(lazyDbRefs, dbo);
+
+		WithObjectMethodOverrideLazyDbRefs result = converterSpy.read(WithObjectMethodOverrideLazyDbRefs.class, dbo);
+
+		assertThat(result.dbRefToPlainObject, is(notNullValue()));
+		assertProxyIsResolved(result.dbRefToPlainObject, false);
+
+		assertThat(result.dbRefToPlainObject.hashCode(), is(311365444));
+
+		assertProxyIsResolved(result.dbRefToPlainObject, false);
+	}
+
+	/**
+	 * @see DATAMONGO-884
+	 */
+	@Test
 	public void lazyLoadingProxyForEqualsAndHashcodeObjectMethodOverridingDbref() {
 
 		String id = "42";
@@ -513,6 +600,7 @@ public class DbRefMappingMongoConverterUnitTests {
 
 	static class WithObjectMethodOverrideLazyDbRefs {
 
+		@org.springframework.data.mongodb.core.mapping.DBRef(lazy = true) LazyDbRefTarget dbRefToPlainObject;
 		@org.springframework.data.mongodb.core.mapping.DBRef(lazy = true) ToStringObjectMethodOverrideLazyDbRefTarget dbRefToToStringObjectMethodOverride;
 		@org.springframework.data.mongodb.core.mapping.DBRef(lazy = true) EqualsAndHashCodeObjectMethodOverrideLazyDbRefTarget dbRefEqualsAndHashcodeObjectMethodOverride2;
 		@org.springframework.data.mongodb.core.mapping.DBRef(lazy = true) EqualsAndHashCodeObjectMethodOverrideLazyDbRefTarget dbRefEqualsAndHashcodeObjectMethodOverride1;
