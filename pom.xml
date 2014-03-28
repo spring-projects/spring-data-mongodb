@@ -107,7 +107,7 @@
 		<profile>
 			<id>mongo-next</id>
 			<properties>
-				<mongo>2.12.0-rc0</mongo>
+				<mongo>2.12.0-rc3</mongo>
 				<mongo-osgi>2.12.0</mongo-osgi>
 			</properties>
 		</profile>
