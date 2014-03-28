@@ -229,7 +229,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 				org.mockito.Matchers.isNull(DBObject.class), org.mockito.Matchers.isNull(DBObject.class), eq(false),
 				captor.capture(), eq(false), eq(false));
 
-		Assert.assertThat(captor.getValue().get("$inc"), Is.<Object> is(new BasicDBObject("version", 1)));
+		Assert.assertThat(captor.getValue().get("$inc"), Is.<Object> is(new BasicDBObject("version", 1L)));
 	}
 
 	/**
