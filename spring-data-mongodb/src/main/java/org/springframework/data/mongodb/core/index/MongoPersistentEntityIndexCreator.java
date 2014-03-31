@@ -157,8 +157,11 @@ public class MongoPersistentEntityIndexCreator implements
 
 						GeospatialIndex indexObject = new GeospatialIndex(property.getFieldName());
 						indexObject.withMin(index.min()).withMax(index.max());
-						indexObject.named(index.useGeneratedName() ? null : StringUtils.hasText(index.name()) ? index.name()
-								: property.getName());
+
+						if (!index.useGeneratedName()) {
+							indexObject.named(StringUtils.hasText(index.name()) ? index.name() : property.getName());
+						}
+
 						indexObject.typed(index.type()).withBucketSize(index.bucketSize())
 								.withAdditionalField(index.additionalField());
 

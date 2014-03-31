@@ -39,8 +39,8 @@ public @interface GeoSpatialIndexed {
 	String name() default "";
 
 	/**
-	 * If {@literal true} then MongoDB will ignore the given index name and instead generate a new name. Defaults to
-	 * {@literal false}.
+	 * If set to {@literal true} then MongoDB will ignore the given index name and instead generate a new name. Defaults
+	 * to {@literal false}.
 	 * 
 	 * @return
 	 */

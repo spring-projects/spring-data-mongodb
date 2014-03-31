@@ -53,10 +53,12 @@ public class GeospatialIndex implements IndexDefinition {
 	}
 
 	/**
-	 * @param name.
+	 * @param name must not be empty or {@literal null}.
 	 * @return
 	 */
 	public GeospatialIndex named(String name) {
+
+		Assert.hasText(name, "Name must have text!");
 
 		this.name = name;
 		return this;

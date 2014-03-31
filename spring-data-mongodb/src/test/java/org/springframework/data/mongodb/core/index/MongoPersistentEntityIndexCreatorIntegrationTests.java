@@ -66,7 +66,7 @@ public class MongoPersistentEntityIndexCreatorIntegrationTests {
 	 * @see DATAMONGO-827
 	 */
 	@Test
-	public void shouldGenerateIndexNameOfRequested() {
+	public void useGeneratedNameShouldIgnoreGivenIndexName() {
 
 		try {
 			IndexOperations indexOps = templateOne.indexOps(EntityWithGeneratedIndexName.class);
@@ -74,6 +74,7 @@ public class MongoPersistentEntityIndexCreatorIntegrationTests {
 
 			assertThat(indexInfo, hasSize(2));
 			assertThat(indexInfo.get(1), is(notNullValue()));
+			assertThat(indexInfo.get(1).getName(), is(not("ignored")));
 			assertThat(indexInfo.get(1).getName(), is("lastname_1"));
 		} finally {
 			templateOne.dropCollection(EntityWithGeneratedIndexName.class);
