@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
+import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
@@ -41,8 +42,8 @@ import org.springframework.util.StringUtils;
  */
 public class MongoQueryMethod extends QueryMethod {
 
-	@SuppressWarnings("unchecked") private static final List<Class<?>> GEO_NEAR_RESULTS = Arrays.asList(GeoResult.class,
-			GeoResults.class, GeoPage.class);
+	@SuppressWarnings("unchecked") private static final List<Class<? extends Serializable>> GEO_NEAR_RESULTS = Arrays
+			.asList(GeoResult.class, GeoResults.class, GeoPage.class);
 
 	private final Method method;
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
