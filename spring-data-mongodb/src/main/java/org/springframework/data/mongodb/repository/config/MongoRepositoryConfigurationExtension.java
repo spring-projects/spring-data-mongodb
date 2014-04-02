@@ -105,6 +105,8 @@ public class MongoRepositoryConfigurationExtension extends RepositoryConfigurati
 	@Override
 	public void registerBeansForRoot(BeanDefinitionRegistry registry, RepositoryConfigurationSource configurationSource) {
 
+		super.registerBeansForRoot(registry, configurationSource);
+
 		if (!registry.containsBeanDefinition(BeanNames.MAPPING_CONTEXT_BEAN_NAME)) {
 
 			RootBeanDefinition definition = new RootBeanDefinition(MongoMappingContext.class);

@@ -15,9 +15,12 @@
  */
 package org.springframework.data.mongodb.repository.config;
 
+import static org.junit.Assert.*;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.core.MongoOperations;
@@ -49,9 +52,25 @@ public class MongoRepositoriesRegistrarIntegrationTests {
 	}
 
 	@Autowired PersonRepository personRepository;
+	@Autowired ApplicationContext context;
 
 	@Test
 	public void testConfiguration() {
 
+	}
+
+	/**
+	 * @see DATAMONGO-901
+	 */
+	@Test
+	public void registersTypePredictingPostProcessor() {
+
+		for (String name : context.getBeanDefinitionNames()) {
+			if (name.startsWith("org.springframework.data.repository.core.support.RepositoryInterfaceAwareBeanPostProcessor")) {
+				return;
+			}
+		}
+
+		fail("Expected to find a bean with name starting with RepositoryInterfaceAwareBeanPostProcessor");
 	}
 }
