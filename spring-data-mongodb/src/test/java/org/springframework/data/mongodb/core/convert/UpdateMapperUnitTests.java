@@ -26,6 +26,7 @@ import java.util.List;
 
 import org.hamcrest.Matcher;
 import org.hamcrest.collection.IsIterableContainingInOrder;
+import org.hamcrest.core.IsEqual;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -37,6 +38,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.core.DBObjectTestUtils;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.Update;
@@ -448,6 +450,81 @@ public class UpdateMapperUnitTests {
 		for (Object updateValue : each) {
 			assertThat(((DBObject) updateValue).get("_class").toString(),
 					equalTo("org.springframework.data.mongodb.core.convert.UpdateMapperUnitTests$ModelImpl"));
+		}
+
+	}
+
+	/**
+	 * @see DATAMONGO-897
+	 */
+	@Test
+	public void updateOnDbrefPropertyOfInterfaceTypeWithoutExplicitGetterForIdShouldBeMappedCorrectly() {
+
+		Update update = new Update().set("referencedDocument", new InterfaceDocumentDefinitionImpl("1", "Foo"));
+		DBObject mappedObject = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(DocumentWithReferenceToInterfaceImpl.class));
+
+		DBObject $set = DBObjectTestUtils.getAsDBObject(mappedObject, "$set");
+		Object model = $set.get("referencedDocument");
+
+		DBRef expectedDBRef = new DBRef(factory.getDb(), "interfaceDocumentDefinitionImpl", "1");
+		assertThat(model, allOf(instanceOf(DBRef.class), IsEqual.<Object> equalTo(expectedDBRef)));
+	}
+
+	@org.springframework.data.mongodb.core.mapping.Document(collection = "DocumentWithReferenceToInterface")
+	static interface DocumentWithReferenceToInterface {
+
+		String getId();
+
+		InterfaceDocumentDefinitionWithoutId getReferencedDocument();
+
+	}
+
+	static interface InterfaceDocumentDefinitionWithoutId {
+
+		String getValue();
+	}
+
+	static class InterfaceDocumentDefinitionImpl implements InterfaceDocumentDefinitionWithoutId {
+
+		@Id String id;
+		String value;
+
+		public InterfaceDocumentDefinitionImpl(String id, String value) {
+
+			this.id = id;
+			this.value = value;
+		}
+
+		@Override
+		public String getValue() {
+			return this.value;
+		}
+
+	}
+
+	static class DocumentWithReferenceToInterfaceImpl implements DocumentWithReferenceToInterface {
+
+		private @Id String id;
+
+		@org.springframework.data.mongodb.core.mapping.DBRef//
+		private InterfaceDocumentDefinitionWithoutId referencedDocument;
+
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public void setModel(InterfaceDocumentDefinitionWithoutId referencedDocument) {
+			this.referencedDocument = referencedDocument;
+		}
+
+		@Override
+		public InterfaceDocumentDefinitionWithoutId getReferencedDocument() {
+			return this.referencedDocument;
 		}
 
 	}

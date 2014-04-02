@@ -250,14 +250,31 @@ public class QueryMapper {
 	 * type of the given value is compatible with the type of the given document field in order to deal with potential
 	 * query field exclusions, since MongoDB uses the {@code int} {@literal 0} as an indicator for an excluded field.
 	 * 
-	 * @param documentField
+	 * @param documentField must not be {@literal null}.
 	 * @param value
 	 * @return
 	 */
 	protected boolean isAssociationConversionNecessary(Field documentField, Object value) {
-		return documentField.isAssociation() && value != null
-				&& (documentField.getProperty().getActualType().isAssignableFrom(value.getClass()) //
-				|| documentField.getPropertyEntity().getIdProperty().getActualType().isAssignableFrom(value.getClass()));
+
+		Assert.notNull(documentField, "Document field must not be null!");
+
+		if (value == null) {
+			return false;
+		}
+
+		if (!documentField.isAssociation()) {
+			return false;
+		}
+
+		Class<? extends Object> type = value.getClass();
+		MongoPersistentProperty property = documentField.getProperty();
+
+		if (property.getActualType().isAssignableFrom(type)) {
+			return true;
+		}
+
+		MongoPersistentEntity<?> entity = documentField.getPropertyEntity();
+		return entity.hasIdProperty() && entity.getIdProperty().getActualType().isAssignableFrom(type);
 	}
 
 	/**
