@@ -257,7 +257,11 @@ public class QueryMapper {
 	protected boolean isAssociationConversionNecessary(Field documentField, Object value) {
 		return documentField.isAssociation() && value != null
 				&& (documentField.getProperty().getActualType().isAssignableFrom(value.getClass()) //
-				|| documentField.getPropertyEntity().getIdProperty().getActualType().isAssignableFrom(value.getClass()));
+				|| isTypePotentiallyAssignableToIdPropertyOfEntity(documentField.getPropertyEntity(), value.getClass()));
+	}
+
+	private boolean isTypePotentiallyAssignableToIdPropertyOfEntity(MongoPersistentEntity<?> entity, Class<?> type) {
+		return entity.hasIdProperty() && entity.getIdProperty().getActualType().isAssignableFrom(type);
 	}
 
 	/**
