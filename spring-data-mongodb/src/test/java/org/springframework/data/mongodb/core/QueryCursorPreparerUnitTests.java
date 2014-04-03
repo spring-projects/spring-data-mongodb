@@ -25,7 +25,6 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.MongoTemplate.QueryCursorPreparer;
-import org.springframework.data.mongodb.core.convert.SortConverter;
 import org.springframework.data.mongodb.core.query.Query;
 
 import com.mongodb.DBCursor;
@@ -50,7 +49,7 @@ public class QueryCursorPreparerUnitTests {
 
 		Query query = query(where("foo").is("bar")).withHint("hint");
 
-		CursorPreparer preparer = new MongoTemplate(factory).new QueryCursorPreparer(query, new SortConverter());
+		CursorPreparer preparer = new MongoTemplate(factory).new QueryCursorPreparer(query, null);
 		preparer.prepare(cursor);
 
 		verify(cursor).hint("hint");

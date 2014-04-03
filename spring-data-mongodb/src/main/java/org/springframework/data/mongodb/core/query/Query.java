@@ -39,7 +39,6 @@ import com.mongodb.DBObject;
  * @author Thomas Risberg
  * @author Oliver Gierke
  * @author Thomas Darimont
- * @author Christoph Strobl
  */
 public class Query {
 
@@ -229,12 +228,6 @@ public class Query {
 		return this.fieldSpec == null ? null : fieldSpec.getFieldsObject();
 	}
 
-	/**
-	 * @return
-	 * @deprecated in 1.4.2. Use {@link org.springframework.data.mongodb.core.convert.SortConverter} and
-	 *             {@link #getSort()}.
-	 */
-	@Deprecated
 	public DBObject getSortObject() {
 
 		if (this.sort == null) {
@@ -248,14 +241,6 @@ public class Query {
 		}
 
 		return dbo;
-	}
-
-	/**
-	 * @return
-	 * @since 1.4.2
-	 */
-	public Sort getSort() {
-		return this.sort;
 	}
 
 	/**
