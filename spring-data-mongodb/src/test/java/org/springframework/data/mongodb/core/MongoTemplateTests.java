@@ -2593,6 +2593,95 @@ public class MongoTemplateTests {
 		assertThat(template.findOne(query, DocumentWithCollectionOfSimpleType.class).values, hasSize(3));
 	}
 
+	/**
+	 * @see DATAMONGO-888
+	 */
+	@Test
+	public void sortOnIdFieldPropertyShouldBeMappedCorrectly() {
+
+		DoucmentWithNamedIdField one = new DoucmentWithNamedIdField();
+		one.someIdKey = "1";
+		one.value = "a";
+
+		DoucmentWithNamedIdField two = new DoucmentWithNamedIdField();
+		two.someIdKey = "2";
+		two.value = "b";
+
+		template.save(one);
+		template.save(two);
+
+		Query query = query(where("_id").in("1", "2")).with(new Sort(Direction.DESC, "someIdKey"));
+		assertThat(template.find(query, DoucmentWithNamedIdField.class), contains(two, one));
+	}
+
+	/**
+	 * @see DATAMONGO-888
+	 */
+	@Test
+	public void sortOnAnnotatedFieldPropertyShouldBeMappedCorrectly() {
+
+		DoucmentWithNamedIdField one = new DoucmentWithNamedIdField();
+		one.someIdKey = "1";
+		one.value = "a";
+
+		DoucmentWithNamedIdField two = new DoucmentWithNamedIdField();
+		two.someIdKey = "2";
+		two.value = "b";
+
+		template.save(one);
+		template.save(two);
+
+		Query query = query(where("_id").in("1", "2")).with(new Sort(Direction.DESC, "value"));
+		assertThat(template.find(query, DoucmentWithNamedIdField.class), contains(two, one));
+	}
+
+	static class DoucmentWithNamedIdField {
+
+		@Id String someIdKey;
+
+		@Field(value = "val")//
+		String value;
+
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + (someIdKey == null ? 0 : someIdKey.hashCode());
+			result = prime * result + (value == null ? 0 : value.hashCode());
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj) {
+				return true;
+			}
+			if (obj == null) {
+				return false;
+			}
+			if (!(obj instanceof DoucmentWithNamedIdField)) {
+				return false;
+			}
+			DoucmentWithNamedIdField other = (DoucmentWithNamedIdField) obj;
+			if (someIdKey == null) {
+				if (other.someIdKey != null) {
+					return false;
+				}
+			} else if (!someIdKey.equals(other.someIdKey)) {
+				return false;
+			}
+			if (value == null) {
+				if (other.value != null) {
+					return false;
+				}
+			} else if (!value.equals(other.value)) {
+				return false;
+			}
+			return true;
+		}
+
+	}
+
 	static class DocumentWithDBRefCollection {
 
 		@Id public String id;

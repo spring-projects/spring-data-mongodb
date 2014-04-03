@@ -115,6 +115,7 @@ import com.mongodb.WriteConcern;
 import com.mongodb.WriteResult;
 import com.mongodb.util.JSON;
 import com.mongodb.util.JSONParseException;
+
 /**
  * Primary implementation of {@link MongoOperations}.
  * 
@@ -354,7 +355,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	}
 
 	public void executeQuery(Query query, String collectionName, DocumentCallbackHandler dch) {
-		executeQuery(query, collectionName, dch, new QueryCursorPreparer(query));
+		executeQuery(query, collectionName, dch, new QueryCursorPreparer(query, null));
 	}
 
 	/**
@@ -532,7 +533,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		}
 
 		return doFind(collectionName, query.getQueryObject(), query.getFieldsObject(), entityClass,
-				new QueryCursorPreparer(query));
+				new QueryCursorPreparer(query, entityClass));
 	}
 
 	public <T> T findById(Object id, Class<T> entityClass) {
@@ -614,8 +615,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 	public <T> T findAndModify(Query query, Update update, FindAndModifyOptions options, Class<T> entityClass,
 			String collectionName) {
-		return doFindAndModify(collectionName, query.getQueryObject(), query.getFieldsObject(), query.getSortObject(),
-				entityClass, update, options);
+		return doFindAndModify(collectionName, query.getQueryObject(), query.getFieldsObject(),
+				getMappedSortObject(query, entityClass), entityClass, update, options);
 	}
 
 	// Find methods that take a Query to express the query and that return a single object that is also removed from the
@@ -626,8 +627,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	}
 
 	public <T> T findAndRemove(Query query, Class<T> entityClass, String collectionName) {
-		return doFindAndRemove(collectionName, query.getQueryObject(), query.getFieldsObject(), query.getSortObject(),
-				entityClass);
+
+		return doFindAndRemove(collectionName, query.getQueryObject(), query.getFieldsObject(),
+				getMappedSortObject(query, entityClass), entityClass);
 	}
 
 	public long count(Query query, Class<?> entityClass) {
@@ -1941,6 +1943,16 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		return converter;
 	}
 
+	private DBObject getMappedSortObject(Query query, Class<?> type) {
+
+		if (query == null || query.getSortObject() == null) {
+			return null;
+		}
+
+		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(type);
+		return queryMapper.getMappedObject(query.getSortObject(), entity);
+	}
+
 	// Callback implementations
 
 	/**
@@ -2134,9 +2146,12 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	class QueryCursorPreparer implements CursorPreparer {
 
 		private final Query query;
+		private final Class<?> type;
 
-		public QueryCursorPreparer(Query query) {
+		public QueryCursorPreparer(Query query, Class<?> type) {
+
 			this.query = query;
+			this.type = type;
 		}
 
 		/*
@@ -2164,7 +2179,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 					cursorToUse = cursorToUse.limit(query.getLimit());
 				}
 				if (query.getSortObject() != null) {
-					cursorToUse = cursorToUse.sort(query.getSortObject());
+					cursorToUse = cursorToUse.sort(getMappedSortObject(query, type));
 				}
 				if (StringUtils.hasText(query.getHint())) {
 					cursorToUse = cursorToUse.hint(query.getHint());
