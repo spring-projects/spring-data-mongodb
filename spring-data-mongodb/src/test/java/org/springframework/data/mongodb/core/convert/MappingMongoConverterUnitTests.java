@@ -1398,6 +1398,7 @@ public class MappingMongoConverterUnitTests {
 
 	/**
 	 * @see DATAMONGO-812
+	 * @see DATAMONGO-893
 	 */
 	@Test
 	public void convertsListToBasicDBListAndRetainsTypeInformationForComplexObjects() {
@@ -1407,7 +1408,7 @@ public class MappingMongoConverterUnitTests {
 		address.street = "Foo";
 
 		Object result = converter.convertToMongoType(Collections.singletonList(address),
-				ClassTypeInformation.from(Address.class));
+				ClassTypeInformation.from(InterfaceType.class));
 
 		assertThat(result, is(instanceOf(BasicDBList.class)));
 
@@ -1833,7 +1834,11 @@ public class MappingMongoConverterUnitTests {
 		abstract void method();
 	}
 
-	static class Address {
+	static interface InterfaceType {
+
+	}
+
+	static class Address implements InterfaceType {
 		String street;
 		String city;
 	}
