@@ -251,10 +251,15 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	 * @see DATAMONGO-770
 	 */
 	List<Person> findByFirstnameContainingIgnoreCase(String firstName);
-	
+
 	/**
 	 * @see DATAMONGO-821
 	 */
 	@Query("{ creator : { $exists : true } }")
 	Page<Person> findByHavingCreator(Pageable page);
+
+	/**
+	 * @see DATAMONGO-893
+	 */
+	Page<Person> findByAddressIn(List<Address> address, Pageable page);
 }

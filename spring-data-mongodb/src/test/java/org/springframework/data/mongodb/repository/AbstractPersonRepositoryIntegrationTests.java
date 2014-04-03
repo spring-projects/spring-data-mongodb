@@ -739,7 +739,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result.size(), is(1));
 		assertThat(result.get(0), is(dave));
 	}
-	
+
 	/**
 	 * @see DATAMONGO-871
 	 */
@@ -751,8 +751,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result, is(arrayWithSize(1)));
 		assertThat(result, is(arrayContaining(leroi)));
 	}
-	
-	
+
 	/**
 	 * @see DATAMONGO-821
 	 */
@@ -771,5 +770,22 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		Page<Person> result = repository.findByHavingCreator(new PageRequest(0, 100));
 		assertThat(result.getNumberOfElements(), is(1));
 		assertThat(result.getContent().get(0), is(alicia));
+	}
+	
+	/**
+	 * @see DATAMONGO-893
+	 */
+	@Test
+	public void findByNestedPropertyInCollectionShouldFindMatchingDocuments() {
+
+		Person p = new Person("Mary", "Poppins");
+		Address adr = new Address("some", "2", "where");
+		p.setAddress(adr);
+
+		repository.save(p);
+
+		Page<Person> result = repository.findByAddressIn(Arrays.asList(adr), new PageRequest(0, 10));
+
+		assertThat(result.getContent(), hasSize(1));
 	}
 }
