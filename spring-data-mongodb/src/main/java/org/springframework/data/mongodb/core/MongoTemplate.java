@@ -66,10 +66,12 @@ import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOpe
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
+import org.springframework.data.mongodb.core.convert.EntityBackedSortConverter;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoWriter;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
+import org.springframework.data.mongodb.core.convert.SortConverter;
 import org.springframework.data.mongodb.core.convert.UpdateMapper;
 import org.springframework.data.mongodb.core.geo.GeoResults;
 import org.springframework.data.mongodb.core.index.MongoMappingEventPublisher;
@@ -115,6 +117,7 @@ import com.mongodb.WriteConcern;
 import com.mongodb.WriteResult;
 import com.mongodb.util.JSON;
 import com.mongodb.util.JSONParseException;
+
 /**
  * Primary implementation of {@link MongoOperations}.
  * 
@@ -354,7 +357,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	}
 
 	public void executeQuery(Query query, String collectionName, DocumentCallbackHandler dch) {
-		executeQuery(query, collectionName, dch, new QueryCursorPreparer(query));
+		executeQuery(query, collectionName, dch, new QueryCursorPreparer(query, new SortConverter()));
 	}
 
 	/**
@@ -532,7 +535,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		}
 
 		return doFind(collectionName, query.getQueryObject(), query.getFieldsObject(), entityClass,
-				new QueryCursorPreparer(query));
+				new QueryCursorPreparer(query, new EntityBackedSortConverter(mappingContext.getPersistentEntity(entityClass))));
 	}
 
 	public <T> T findById(Object id, Class<T> entityClass) {
@@ -614,7 +617,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 	public <T> T findAndModify(Query query, Update update, FindAndModifyOptions options, Class<T> entityClass,
 			String collectionName) {
-		return doFindAndModify(collectionName, query.getQueryObject(), query.getFieldsObject(), query.getSortObject(),
+		return doFindAndModify(collectionName, query.getQueryObject(), query.getFieldsObject(),
+				new EntityBackedSortConverter(mappingContext.getPersistentEntity(entityClass)).convert(query.getSort()),
 				entityClass, update, options);
 	}
 
@@ -626,7 +630,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	}
 
 	public <T> T findAndRemove(Query query, Class<T> entityClass, String collectionName) {
-		return doFindAndRemove(collectionName, query.getQueryObject(), query.getFieldsObject(), query.getSortObject(),
+
+		return doFindAndRemove(collectionName, query.getQueryObject(), query.getFieldsObject(),
+				new EntityBackedSortConverter(mappingContext.getPersistentEntity(entityClass)).convert(query.getSort()),
 				entityClass);
 	}
 
@@ -2134,9 +2140,13 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	class QueryCursorPreparer implements CursorPreparer {
 
 		private final Query query;
+		private final SortConverter sortConverter;
 
-		public QueryCursorPreparer(Query query) {
+		public QueryCursorPreparer(Query query, SortConverter sortConverter) {
+
+			Assert.notNull(sortConverter, "SortConverter must not be null");
 			this.query = query;
+			this.sortConverter = sortConverter;
 		}
 
 		/*
@@ -2163,8 +2173,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				if (query.getLimit() > 0) {
 					cursorToUse = cursorToUse.limit(query.getLimit());
 				}
-				if (query.getSortObject() != null) {
-					cursorToUse = cursorToUse.sort(query.getSortObject());
+				if (query.getSort() != null) {
+					cursorToUse = cursorToUse.sort(sortConverter.convert(query.getSort()));
 				}
 				if (StringUtils.hasText(query.getHint())) {
 					cursorToUse = cursorToUse.hint(query.getHint());

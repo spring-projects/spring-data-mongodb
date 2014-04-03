@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2011-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,9 +15,9 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.springframework.data.mongodb.core.query.Query.*;
-import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.mockito.Mockito.*;
+import static org.springframework.data.mongodb.core.query.Criteria.*;
+import static org.springframework.data.mongodb.core.query.Query.*;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -25,6 +25,7 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.MongoTemplate.QueryCursorPreparer;
+import org.springframework.data.mongodb.core.convert.SortConverter;
 import org.springframework.data.mongodb.core.query.Query;
 
 import com.mongodb.DBCursor;
@@ -33,14 +34,13 @@ import com.mongodb.DBCursor;
  * Unit tests for {@link QueryCursorPreparer}.
  * 
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 @RunWith(MockitoJUnitRunner.class)
 public class QueryCursorPreparerUnitTests {
 
-	@Mock
-	MongoDbFactory factory;
-	@Mock
-	DBCursor cursor;
+	@Mock MongoDbFactory factory;
+	@Mock DBCursor cursor;
 
 	/**
 	 * @see DATAMONGO-185
@@ -50,7 +50,7 @@ public class QueryCursorPreparerUnitTests {
 
 		Query query = query(where("foo").is("bar")).withHint("hint");
 
-		CursorPreparer preparer = new MongoTemplate(factory).new QueryCursorPreparer(query);
+		CursorPreparer preparer = new MongoTemplate(factory).new QueryCursorPreparer(query, new SortConverter());
 		preparer.prepare(cursor);
 
 		verify(cursor).hint("hint");
