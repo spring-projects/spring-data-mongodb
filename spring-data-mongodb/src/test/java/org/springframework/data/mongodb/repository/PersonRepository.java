@@ -286,4 +286,8 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	@Query(value = "{ 'lastname' : ?0 }", delete = true)
 	Long removePersonByLastnameUsingAnnotatedQuery(String lastname);
 
+	/**
+	 * @see DATAMONGO-893
+	 */
+	Page<Person> findByAddressIn(List<Address> address, Pageable page);
 }

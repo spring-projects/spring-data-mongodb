@@ -39,6 +39,7 @@ import org.springframework.data.mongodb.core.DBObjectTestUtils;
 import org.springframework.data.mongodb.core.Person;
 import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.DBRef;
+import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
@@ -568,8 +569,40 @@ public class QueryMapperUnitTests {
 		assertThat(mappedFields, is(notNullValue()));
 	}
 
+	/**
+	 * @see DATAMONGO-893
+	 */
+	@Test
+	public void classInformationShouldNotBePresentInDBObjectUsedInFinderMethods() {
+
+		EmbeddedClass embedded = new EmbeddedClass();
+		embedded.id = "1";
+
+		EmbeddedClass embedded2 = new EmbeddedClass();
+		embedded2.id = "2";
+		Query query = query(where("embedded").in(Arrays.asList(embedded, embedded2)));
+
+		DBObject dbo = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(Foo.class));
+		assertThat(dbo.toString(), equalTo("{ \"embedded\" : { \"$in\" : [ { \"_id\" : \"1\"} , { \"_id\" : \"2\"}]}}"));
+	}
+
+	@Document
+	public class Foo {
+		@Id private ObjectId id;
+		EmbeddedClass embedded;
+	}
+
+	public class EmbeddedClass {
+		public String id;
+	}
+
 	class IdWrapper {
 		Object id;
+	}
+
+	class ClassWithEmbedded {
+		@Id String id;
+		Sample sample;
 	}
 
 	class ClassWithDefaultId {

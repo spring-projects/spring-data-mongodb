@@ -863,4 +863,21 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	public void deleteByUsingAnnotatedQueryShouldReturnNumberOfDocumentsRemovedIfReturnTypeIsLong() {
 		assertThat(repository.removePersonByLastnameUsingAnnotatedQuery("Beauford"), is(1L));
 	}
+
+	/**
+	 * @see DATAMONGO-893
+	 */
+	@Test
+	public void findByNestedPropertyInCollectionShouldFindMatchingDocuments() {
+
+		Person p = new Person("Mary", "Poppins");
+		Address adr = new Address("some", "2", "where");
+		p.setAddress(adr);
+
+		repository.save(p);
+
+		Page<Person> result = repository.findByAddressIn(Arrays.asList(adr), new PageRequest(0, 10));
+
+		assertThat(result.getContent(), hasSize(1));
+	}
 }

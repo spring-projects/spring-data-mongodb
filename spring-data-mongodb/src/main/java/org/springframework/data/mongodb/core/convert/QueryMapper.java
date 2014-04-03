@@ -306,7 +306,7 @@ public class QueryMapper {
 	 * @return the converted mongo type or null if source is null
 	 */
 	protected Object delegateConvertToMongoType(Object source, MongoPersistentEntity<?> entity) {
-		return converter.convertToMongoType(source);
+		return converter.convertToMongoType(source, entity == null ? null : entity.getTypeInformation());
 	}
 
 	protected Object convertAssociation(Object source, Field field) {
@@ -611,6 +611,21 @@ public class QueryMapper {
 		 */
 		public MetadataBackedField(String name, MongoPersistentEntity<?> entity,
 				MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> context) {
+			this(name, entity, context, null);
+		}
+
+		/**
+		 * Creates a new {@link MetadataBackedField} with the given name, {@link MongoPersistentEntity} and
+		 * {@link MappingContext} with the given {@link MongoPersistentProperty}.
+		 * 
+		 * @param name must not be {@literal null} or empty.
+		 * @param entity must not be {@literal null}.
+		 * @param context must not be {@literal null}.
+		 * @param property may be {@literal null}.
+		 */
+		public MetadataBackedField(String name, MongoPersistentEntity<?> entity,
+				MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> context,
+				MongoPersistentProperty property) {
 
 			super(name);
 
@@ -620,7 +635,7 @@ public class QueryMapper {
 			this.mappingContext = context;
 
 			this.path = getPath(name);
-			this.property = path == null ? null : path.getLeafProperty();
+			this.property = path == null ? property : path.getLeafProperty();
 			this.association = findAssociation();
 		}
 
@@ -630,7 +645,7 @@ public class QueryMapper {
 		 */
 		@Override
 		public MetadataBackedField with(String name) {
-			return new MetadataBackedField(name, entity, mappingContext);
+			return new MetadataBackedField(name, entity, mappingContext, property);
 		}
 
 		/*
