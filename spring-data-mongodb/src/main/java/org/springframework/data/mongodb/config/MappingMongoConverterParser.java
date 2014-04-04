@@ -72,6 +72,7 @@ import org.w3c.dom.Element;
  * @author Oliver Gierke
  * @author Maciej Walkowiak
  * @author Thomas Darimont
+ * @author Christoph Strobl
  */
 public class MappingMongoConverterParser implements BeanDefinitionParser {
 
@@ -84,8 +85,11 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 	 */
 	public BeanDefinition parse(Element element, ParserContext parserContext) {
 
-		BeanDefinitionRegistry registry = parserContext.getRegistry();
+		if (parserContext.isNested()) {
+			parserContext.getReaderContext().error("Mongo Converter must not be defined as nested bean.", element);
+		}
 
+		BeanDefinitionRegistry registry = parserContext.getRegistry();
 		String id = element.getAttribute(AbstractBeanDefinitionParser.ID_ATTRIBUTE);
 		id = StringUtils.hasText(id) ? id : DEFAULT_CONVERTER_BEAN_NAME;
 
