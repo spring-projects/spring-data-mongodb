@@ -21,9 +21,11 @@ import static org.junit.Assert.*;
 import java.util.Collections;
 import java.util.Set;
 
-import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.beans.factory.parsing.BeanDefinitionParsingException;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.core.convert.TypeDescriptor;
@@ -45,37 +47,45 @@ import com.mongodb.DBObject;
  * 
  * @author Oliver Gierke
  * @author Thomas Darimont
+ * @author Christoph Strobl
  */
 public class MappingMongoConverterParserIntegrationTests {
 
+	@Rule public ExpectedException exception = ExpectedException.none();
+
 	DefaultListableBeanFactory factory;
 
-	@Before
-	public void setUp() {
-		factory = new DefaultListableBeanFactory();
-		XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(factory);
-		reader.loadBeanDefinitions(new ClassPathResource("namespace/converter.xml"));
-	}
-
+	/**
+	 * @see DATAMONGO-243
+	 */
 	@Test
 	public void allowsDbFactoryRefAttribute() {
 
+		loadValidConfiguration();
 		factory.getBeanDefinition("converter");
 		factory.getBean("converter");
 	}
 
+	/**
+	 * @see DATAMONGO-725
+	 */
 	@Test
 	public void hasCustomTypeMapper() {
 
+		loadValidConfiguration();
 		MappingMongoConverter converter = factory.getBean("converter", MappingMongoConverter.class);
 		MongoTypeMapper customMongoTypeMapper = factory.getBean(CustomMongoTypeMapper.class);
 
 		assertThat(converter.getTypeMapper(), is(customMongoTypeMapper));
 	}
 
+	/**
+	 * @see DATAMONGO-301
+	 */
 	@Test
 	public void scansForConverterAndSetsUpCustomConversionsAccordingly() {
 
+		loadValidConfiguration();
 		CustomConversions conversions = factory.getBean(CustomConversions.class);
 		assertThat(conversions.hasCustomWriteTarget(Person.class), is(true));
 		assertThat(conversions.hasCustomWriteTarget(Account.class), is(true));
@@ -87,12 +97,39 @@ public class MappingMongoConverterParserIntegrationTests {
 	@Test
 	public void activatesAbbreviatingPropertiesCorrectly() {
 
+		loadValidConfiguration();
 		BeanDefinition definition = factory.getBeanDefinition("abbreviatingConverter.mappingContext");
 		Object value = definition.getPropertyValues().getPropertyValue("fieldNamingStrategy").getValue();
 
 		assertThat(value, is(instanceOf(BeanDefinition.class)));
 		BeanDefinition strategy = (BeanDefinition) value;
 		assertThat(strategy.getBeanClassName(), is(CamelCaseAbbreviatingFieldNamingStrategy.class.getName()));
+	}
+
+	/**
+	 * @see DATAMONGO-892
+	 */
+	@Test
+	public void shouldThrowBeanDefinitionParsingExceptionIfConverterDefinedAsNestedBean() {
+
+		exception.expect(BeanDefinitionParsingException.class);
+		exception.expectMessage("Mongo Converter must not be defined as nested bean.");
+
+		loadNestedBeanConfiguration();
+	}
+
+	private void loadValidConfiguration() {
+		this.loadConfiguration("namespace/converter.xml");
+	}
+
+	private void loadNestedBeanConfiguration() {
+		this.loadConfiguration("namespace/converter-nested-bean-definition.xml");
+	}
+
+	private void loadConfiguration(String configLocation) {
+		factory = new DefaultListableBeanFactory();
+		XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(factory);
+		reader.loadBeanDefinitions(new ClassPathResource(configLocation));
 	}
 
 	@Component
