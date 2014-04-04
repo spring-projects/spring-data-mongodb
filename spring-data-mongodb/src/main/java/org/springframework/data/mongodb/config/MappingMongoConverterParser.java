@@ -71,6 +71,7 @@ import org.w3c.dom.Element;
  * @author Oliver Gierke
  * @author Maciej Walkowiak
  * @author Thomas Darimont
+ * @author Christoph Strobl
  */
 public class MappingMongoConverterParser implements BeanDefinitionParser {
 
@@ -84,13 +85,12 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 	public BeanDefinition parse(Element element, ParserContext parserContext) {
 
 		BeanDefinitionRegistry registry = parserContext.getRegistry();
-
-		String id = element.getAttribute(AbstractBeanDefinitionParser.ID_ATTRIBUTE);
-		id = StringUtils.hasText(id) ? id : DEFAULT_CONVERTER_BEAN_NAME;
+		String id = resolveMongoConverterBeanId(element, parserContext);
 
 		parserContext.pushContainingComponent(new CompositeComponentDefinition("Mapping Mongo Converter", element));
-
 		BeanDefinition conversionsDefinition = getCustomConversions(element, parserContext);
+
+		// should we use a nested bean definition instead of context reference in case parserContext.isNested() ?
 		String ctxRef = potentiallyCreateMappingContext(element, parserContext, conversionsDefinition, id);
 
 		createIsNewStrategyFactoryBeanDefinition(ctxRef, parserContext, element);
@@ -138,9 +138,28 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 					VALIDATING_EVENT_LISTENER_BEAN_NAME));
 		}
 
-		parserContext.registerBeanComponent(new BeanComponentDefinition(converterBuilder.getBeanDefinition(), id));
+		BeanComponentDefinition definition = new BeanComponentDefinition(converterBuilder.getBeanDefinition(), id);
+		parserContext.registerBeanComponent(definition);
 		parserContext.popAndRegisterContainingComponent();
-		return null;
+		return definition.getBeanDefinition();
+	}
+
+	/**
+	 * Create valid mongo converter bean id using given {@literal id} or default converter bean name.
+	 * 
+	 * @param element
+	 * @param parserContext
+	 * @return
+	 */
+	private String resolveMongoConverterBeanId(Element element, ParserContext parserContext) {
+
+		String id = element.getAttribute(AbstractBeanDefinitionParser.ID_ATTRIBUTE);
+		if (!parserContext.isNested()) {
+			id = StringUtils.hasText(id) ? id : DEFAULT_CONVERTER_BEAN_NAME;
+		} else {
+			id = parserContext.getContainingBeanDefinition().getBeanClassName() + ":" + DEFAULT_CONVERTER_BEAN_NAME;
+		}
+		return id;
 	}
 
 	private BeanDefinition potentiallyCreateValidatingMongoEventListener(Element element, ParserContext parserContext) {
@@ -248,6 +267,19 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 				for (BeanDefinition candidate : provider.findCandidateComponents(packageToScan)) {
 					converterBeans.add(candidate);
 				}
+			}
+
+			// in case of nested definition register customConversions as nested component
+			if (parserContext.isNested()) {
+
+				BeanDefinitionBuilder conversionsBuilder = BeanDefinitionBuilder.genericBeanDefinition(CustomConversions.class);
+				conversionsBuilder.addConstructorArgValue(converterBeans);
+
+				AbstractBeanDefinition conversionsBean = conversionsBuilder.getBeanDefinition();
+				parserContext.getContainingComponent().addNestedComponent(
+						new BeanComponentDefinition(conversionsBean, "customConversions"));
+
+				return conversionsBean;
 			}
 
 			BeanDefinitionBuilder conversionsBuilder = BeanDefinitionBuilder.rootBeanDefinition(CustomConversions.class);

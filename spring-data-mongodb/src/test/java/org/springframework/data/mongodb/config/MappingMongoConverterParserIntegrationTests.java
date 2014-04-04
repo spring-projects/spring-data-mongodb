@@ -45,6 +45,7 @@ import com.mongodb.DBObject;
  * 
  * @author Oliver Gierke
  * @author Thomas Darimont
+ * @author Christoph Strobl
  */
 public class MappingMongoConverterParserIntegrationTests {
 
@@ -102,6 +103,17 @@ public class MappingMongoConverterParserIntegrationTests {
 		assertThat(value, is(instanceOf(BeanDefinition.class)));
 		BeanDefinition strategy = (BeanDefinition) value;
 		assertThat(strategy.getBeanClassName(), is(CamelCaseAbbreviatingFieldNamingStrategy.class.getName()));
+	}
+
+	/**
+	 * @see DATAMONGO-892
+	 */
+	@Test
+	public void registersNesedConverterBeanDefinitionCorrectly() {
+
+		NestedMongoConverterWrapper configWrapper = factory.getBean(NestedMongoConverterWrapper.class);
+		assertThat(configWrapper.getConverter().convertToMongoType(new Person()), nullValue());
+		assertThat(configWrapper.getConverter().convertToMongoType(new Account()), notNullValue());
 	}
 
 	@Component
