@@ -21,9 +21,11 @@ import static org.junit.Assert.*;
 import java.util.Collections;
 import java.util.Set;
 
-import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.beans.factory.parsing.BeanDefinitionParsingException;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.core.convert.TypeDescriptor;
@@ -49,13 +51,22 @@ import com.mongodb.DBObject;
  */
 public class MappingMongoConverterParserIntegrationTests {
 
+	@Rule public ExpectedException expcetedException = ExpectedException.none();
+
 	DefaultListableBeanFactory factory;
 
-	@Before
-	public void setUp() {
+	private void loadValidConfiguration() {
+		this.loadConfiguration("namespace/converter.xml");
+	}
+
+	private void loadNestedBeanConfiguration() {
+		this.loadConfiguration("namespace/converter-nested-bean-definition.xml");
+	}
+
+	private void loadConfiguration(String configLocation) {
 		factory = new DefaultListableBeanFactory();
 		XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(factory);
-		reader.loadBeanDefinitions(new ClassPathResource("namespace/converter.xml"));
+		reader.loadBeanDefinitions(new ClassPathResource(configLocation));
 	}
 
 	/**
@@ -64,6 +75,7 @@ public class MappingMongoConverterParserIntegrationTests {
 	@Test
 	public void allowsDbFactoryRefAttribute() {
 
+		loadValidConfiguration();
 		factory.getBeanDefinition("converter");
 		factory.getBean("converter");
 	}
@@ -74,6 +86,7 @@ public class MappingMongoConverterParserIntegrationTests {
 	@Test
 	public void hasCustomTypeMapper() {
 
+		loadValidConfiguration();
 		MappingMongoConverter converter = factory.getBean("converter", MappingMongoConverter.class);
 		MongoTypeMapper customMongoTypeMapper = factory.getBean(CustomMongoTypeMapper.class);
 
@@ -86,6 +99,7 @@ public class MappingMongoConverterParserIntegrationTests {
 	@Test
 	public void scansForConverterAndSetsUpCustomConversionsAccordingly() {
 
+		loadValidConfiguration();
 		CustomConversions conversions = factory.getBean(CustomConversions.class);
 		assertThat(conversions.hasCustomWriteTarget(Person.class), is(true));
 		assertThat(conversions.hasCustomWriteTarget(Account.class), is(true));
@@ -97,6 +111,7 @@ public class MappingMongoConverterParserIntegrationTests {
 	@Test
 	public void activatesAbbreviatingPropertiesCorrectly() {
 
+		loadValidConfiguration();
 		BeanDefinition definition = factory.getBeanDefinition("abbreviatingConverter.mongoMappingContext");
 		Object value = definition.getPropertyValues().getPropertyValue("fieldNamingStrategy").getValue();
 
@@ -109,11 +124,12 @@ public class MappingMongoConverterParserIntegrationTests {
 	 * @see DATAMONGO-892
 	 */
 	@Test
-	public void registersNesedConverterBeanDefinitionCorrectly() {
+	public void shouldThrowBeanDefinitionParsingExceptionIfConverterDefinedAsNestedBean() {
 
-		NestedMongoConverterWrapper configWrapper = factory.getBean(NestedMongoConverterWrapper.class);
-		assertThat(configWrapper.getConverter().convertToMongoType(new Person()), nullValue());
-		assertThat(configWrapper.getConverter().convertToMongoType(new Account()), notNullValue());
+		expcetedException.expect(BeanDefinitionParsingException.class);
+		expcetedException.expectMessage("Mongo Converter must not be defined as nested bean.");
+
+		loadNestedBeanConfiguration();
 	}
 
 	@Component
