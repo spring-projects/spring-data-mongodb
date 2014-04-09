@@ -5,7 +5,7 @@
 	
 	<groupId>org.springframework.data</groupId>
 	<artifactId>spring-data-mongodb-parent</artifactId>
-	<version>1.5.0.BUILD-SNAPSHOT</version>
+	<version>1.5.0.DATAMONGO-896-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<name>Spring Data MongoDB</name>
@@ -107,7 +107,7 @@
 		<profile>
 			<id>mongo-next</id>
 			<properties>
-				<mongo>2.12.0-rc0</mongo>
+				<mongo>2.12.0-rc3</mongo>
 				<mongo-osgi>2.12.0</mongo-osgi>
 			</properties>
 		</profile>
