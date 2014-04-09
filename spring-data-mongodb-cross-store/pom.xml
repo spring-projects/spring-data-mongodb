@@ -56,17 +56,13 @@
 			<artifactId>aspectjrt</artifactId>
 			<version>${aspectj}</version>
 		</dependency>
-		<dependency>
-			<groupId>cglib</groupId>
-			<artifactId>cglib</artifactId>
-			<version>2.2</version>
-		</dependency>
 
 		<!-- JPA -->
 		<dependency>
 			<groupId>org.hibernate.javax.persistence</groupId>
 			<artifactId>hibernate-jpa-2.0-api</artifactId>
 			<version>${jpa}</version>
+			<optional>true</optional>
 		</dependency>
 
 		<!-- For Tests -->
