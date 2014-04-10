@@ -179,4 +179,25 @@ public class AggregationUnitTests {
 		DBObject fields = getAsDBObject(secondProjection, "$group");
 		assertThat(fields.get("foosum"), is((Object) new BasicDBObject("$sum", "$foo")));
 	}
+
+	/**
+	 * @see DATAMONGO-908
+	 */
+	@Test
+	public void shouldSupportReferingToNestedPropertiesInGroupOperation() {
+
+		DBObject agg = newAggregation( //
+				project("cmsParameterId", "rules"), //
+				unwind("rules"), //
+				group("cmsParameterId", "rules.ruleType").count().as("totol") //
+		).toDbObject("foo", Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg, is(notNullValue()));
+
+		DBObject group = ((List<DBObject>) agg.get("pipeline")).get(2);
+		DBObject fields = getAsDBObject(group, "$group");
+		DBObject id = getAsDBObject(fields, "_id");
+
+		assertThat(id.get("ruleType"), is((Object) "$rules.ruleType"));
+	}
 }
