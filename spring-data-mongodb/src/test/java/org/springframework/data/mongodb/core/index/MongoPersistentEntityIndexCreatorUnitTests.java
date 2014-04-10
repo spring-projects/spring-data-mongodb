@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2013 the original author or authors.
+ * Copyright 2012-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,18 +21,27 @@ import static org.junit.Assert.*;
 import java.util.Collections;
 import java.util.Date;
 
+import org.hamcrest.core.IsEqual;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.context.ApplicationContext;
+import org.springframework.data.geo.Point;
 import org.springframework.data.mapping.context.MappingContextEvent;
 import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 
+import com.mongodb.BasicDBObjectBuilder;
+import com.mongodb.DB;
+import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 
 /**
@@ -41,24 +50,45 @@ import com.mongodb.DBObject;
  * @author Oliver Gierke
  * @author Philipp Schneider
  * @author Johno Crawford
+ * @author Christoph Strobl
  */
 @RunWith(MockitoJUnitRunner.class)
 public class MongoPersistentEntityIndexCreatorUnitTests {
 
-	@Mock MongoDbFactory factory;
-	@Mock ApplicationContext context;
+	private @Mock MongoDbFactory factory;
+	private @Mock ApplicationContext context;
+	private @Mock DB db;
+	private @Mock DBCollection collection;
+
+	ArgumentCaptor<DBObject> keysCaptor;
+	ArgumentCaptor<DBObject> optionsCaptor;
+	ArgumentCaptor<String> collectionCaptor;
+
+	@Before
+	public void setUp() {
+
+		keysCaptor = ArgumentCaptor.forClass(DBObject.class);
+		optionsCaptor = ArgumentCaptor.forClass(DBObject.class);
+		collectionCaptor = ArgumentCaptor.forClass(String.class);
+
+		Mockito.when(factory.getDb()).thenReturn(db);
+		Mockito.when(db.getCollection(collectionCaptor.capture())).thenReturn(collection);
+
+		Mockito.doNothing().when(collection).ensureIndex(keysCaptor.capture(), optionsCaptor.capture());
+	}
 
 	@Test
 	public void buildsIndexDefinitionUsingFieldName() {
 
 		MongoMappingContext mappingContext = prepareMappingContext(Person.class);
-		DummyMongoPersistentEntityIndexCreator creator = new DummyMongoPersistentEntityIndexCreator(mappingContext, factory);
 
-		assertThat(creator.indexDefinition, is(notNullValue()));
-		assertThat(creator.indexDefinition.keySet(), hasItem("fieldname"));
-		assertThat(creator.name, is("indexName"));
-		assertThat(creator.background, is(false));
-		assertThat(creator.expireAfterSeconds, is(-1));
+		new MongoPersistentEntityIndexCreator(mappingContext, factory);
+
+		assertThat(keysCaptor.getValue(), is(notNullValue()));
+		assertThat(keysCaptor.getValue().keySet(), hasItem("fieldname"));
+		assertThat(optionsCaptor.getValue().get("name").toString(), is("indexName"));
+		assertThat(optionsCaptor.getValue().get("background"), nullValue());
+		assertThat(optionsCaptor.getValue().get("expireAfterSeconds"), nullValue());
 	}
 
 	@Test
@@ -67,7 +97,7 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 		MongoMappingContext mappingContext = new MongoMappingContext();
 		MongoMappingContext personMappingContext = prepareMappingContext(Person.class);
 
-		DummyMongoPersistentEntityIndexCreator creator = new DummyMongoPersistentEntityIndexCreator(mappingContext, factory);
+		MongoPersistentEntityIndexCreator creator = new MongoPersistentEntityIndexCreator(mappingContext, factory);
 
 		MongoPersistentEntity<?> entity = personMappingContext.getPersistentEntity(Person.class);
 		MappingContextEvent<MongoPersistentEntity<?>, MongoPersistentProperty> event = new MappingContextEvent<MongoPersistentEntity<?>, MongoPersistentProperty>(
@@ -75,7 +105,7 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 
 		creator.onApplicationEvent(event);
 
-		assertThat(creator.indexDefinition, is(nullValue()));
+		Mockito.verifyZeroInteractions(collection);
 	}
 
 	/**
@@ -87,7 +117,7 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 		MongoMappingContext mappingContext = new MongoMappingContext();
 		mappingContext.initialize();
 
-		MongoPersistentEntityIndexCreator creator = new DummyMongoPersistentEntityIndexCreator(mappingContext, factory);
+		MongoPersistentEntityIndexCreator creator = new MongoPersistentEntityIndexCreator(mappingContext, factory);
 		assertThat(creator.isIndexCreatorFor(mappingContext), is(true));
 		assertThat(creator.isIndexCreatorFor(new MongoMappingContext()), is(false));
 	}
@@ -99,12 +129,13 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 	public void triggersBackgroundIndexingIfConfigured() {
 
 		MongoMappingContext mappingContext = prepareMappingContext(AnotherPerson.class);
-		DummyMongoPersistentEntityIndexCreator creator = new DummyMongoPersistentEntityIndexCreator(mappingContext, factory);
+		new MongoPersistentEntityIndexCreator(mappingContext, factory);
 
-		assertThat(creator.indexDefinition, is(notNullValue()));
-		assertThat(creator.indexDefinition.keySet(), hasItem("lastname"));
-		assertThat(creator.name, is("lastname"));
-		assertThat(creator.background, is(true));
+		assertThat(keysCaptor.getValue(), is(notNullValue()));
+		assertThat(keysCaptor.getValue().keySet(), hasItem("lastname"));
+		assertThat(optionsCaptor.getValue().get("name").toString(), is("lastname"));
+		assertThat(optionsCaptor.getValue().get("background"), IsEqual.<Object> equalTo(true));
+		assertThat(optionsCaptor.getValue().get("expireAfterSeconds"), nullValue());
 	}
 
 	/**
@@ -114,11 +145,25 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 	public void expireAfterSecondsIfConfigured() {
 
 		MongoMappingContext mappingContext = prepareMappingContext(Milk.class);
-		DummyMongoPersistentEntityIndexCreator creator = new DummyMongoPersistentEntityIndexCreator(mappingContext, factory);
+		new MongoPersistentEntityIndexCreator(mappingContext, factory);
 
-		assertThat(creator.indexDefinition, is(notNullValue()));
-		assertThat(creator.indexDefinition.keySet(), hasItem("expiry"));
-		assertThat(creator.expireAfterSeconds, is(60));
+		assertThat(keysCaptor.getValue(), is(notNullValue()));
+		assertThat(keysCaptor.getValue().keySet(), hasItem("expiry"));
+		assertThat(optionsCaptor.getValue().get("expireAfterSeconds"), IsEqual.<Object> equalTo(60L));
+	}
+
+	/**
+	 * @see DATAMONGO-899
+	 */
+	@Test
+	public void createsNotNestedGeoSpatialIndexCorrectly() {
+
+		MongoMappingContext mappingContext = prepareMappingContext(Wrapper.class);
+		new MongoPersistentEntityIndexCreator(mappingContext, factory);
+
+		assertThat(keysCaptor.getValue(), equalTo(new BasicDBObjectBuilder().add("company.address.location", "2d").get()));
+		assertThat(optionsCaptor.getValue(), equalTo(new BasicDBObjectBuilder().add("name", "location").add("min", -180)
+				.add("max", 180).add("bits", 26).get()));
 	}
 
 	private static MongoMappingContext prepareMappingContext(Class<?> type) {
@@ -130,41 +175,46 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 		return mappingContext;
 	}
 
+	@Document
 	static class Person {
 
-		@Indexed(name = "indexName") @Field("fieldname") String field;
+		@Indexed(name = "indexName")//
+		@Field("fieldname")//
+		String field;
 
 	}
 
+	@Document
 	static class AnotherPerson {
 
 		@Indexed(background = true) String lastname;
 	}
 
+	@Document
 	static class Milk {
 
 		@Indexed(expireAfterSeconds = 60) Date expiry;
 	}
 
-	static class DummyMongoPersistentEntityIndexCreator extends MongoPersistentEntityIndexCreator {
+	@Document
+	static class Wrapper {
 
-		DBObject indexDefinition;
+		String id;
+		Company company;
+
+	}
+
+	static class Company {
+
 		String name;
-		boolean background;
-		int expireAfterSeconds;
+		Address address;
+	}
 
-		public DummyMongoPersistentEntityIndexCreator(MongoMappingContext mappingContext, MongoDbFactory mongoDbFactory) {
-			super(mappingContext, mongoDbFactory);
-		}
+	static class Address {
 
-		@Override
-		protected void ensureIndex(String collection, String name, DBObject indexDefinition, boolean unique,
-				boolean dropDups, boolean sparse, boolean background, int expireAfterSeconds) {
+		String street;
+		String city;
 
-			this.name = name;
-			this.indexDefinition = indexDefinition;
-			this.background = background;
-			this.expireAfterSeconds = expireAfterSeconds;
-		}
+		@GeoSpatialIndexed Point location;
 	}
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 the original author or authors.
+ * Copyright 2010-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import com.mongodb.DBObject;
  * @author Jon Brisbin
  * @author Oliver Gierke
  * @author Laurent Canet
+ * @author Christoph Strobl
  */
 public class GeospatialIndex implements IndexDefinition {
 
@@ -38,6 +39,7 @@ public class GeospatialIndex implements IndexDefinition {
 	private GeoSpatialIndexType type = GeoSpatialIndexType.GEO_2D;
 	private Double bucketSize = 1.0;
 	private String additionalField;
+	private String collection;
 
 	/**
 	 * Creates a new {@link GeospatialIndex} for the given field.
@@ -118,6 +120,23 @@ public class GeospatialIndex implements IndexDefinition {
 	public GeospatialIndex withAdditionalField(String fieldName) {
 		this.additionalField = fieldName;
 		return this;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.index.IndexDefinition#getCollection()
+	 */
+	@Override
+	public String getCollection() {
+		return collection;
+	}
+
+	/**
+	 * @param collection
+	 * @since 1.5
+	 */
+	public void setCollection(String collection) {
+		this.collection = collection;
 	}
 
 	public DBObject getIndexKeys() {
