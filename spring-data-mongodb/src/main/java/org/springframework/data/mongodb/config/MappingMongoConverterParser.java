@@ -30,6 +30,7 @@ import org.springframework.beans.factory.config.BeanDefinitionHolder;
 import org.springframework.beans.factory.config.RuntimeBeanReference;
 import org.springframework.beans.factory.parsing.BeanComponentDefinition;
 import org.springframework.beans.factory.parsing.CompositeComponentDefinition;
+import org.springframework.beans.factory.parsing.ReaderContext;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
@@ -209,24 +210,39 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 			mappingContextBuilder.addPropertyValue("simpleTypeHolder", simpleTypesDefinition);
 		}
 
-		String abbreviateFieldNames = element.getAttribute("abbreviate-field-names");
-
-		if ("true".equals(abbreviateFieldNames)) {
-			mappingContextBuilder.addPropertyValue("fieldNamingStrategy", new RootBeanDefinition(
-					CamelCaseAbbreviatingFieldNamingStrategy.class));
-		}
-
-		String fieldNamingStrategy = element.getAttribute("field-naming-strategy-ref");
-
-		if (StringUtils.hasText(fieldNamingStrategy)) {
-			mappingContextBuilder.addPropertyValue("fieldNamingStrategy", new RuntimeBeanReference(fieldNamingStrategy));
-		}
+		parseFieldNamingStrategy(element, parserContext.getReaderContext(), mappingContextBuilder);
 
 		ctxRef = converterId == null || DEFAULT_CONVERTER_BEAN_NAME.equals(converterId) ? MAPPING_CONTEXT_BEAN_NAME
 				: converterId + "." + MAPPING_CONTEXT_BEAN_NAME;
 
 		parserContext.registerBeanComponent(componentDefinitionBuilder.getComponent(mappingContextBuilder, ctxRef));
 		return ctxRef;
+	}
+
+	private static void parseFieldNamingStrategy(Element element, ReaderContext context, BeanDefinitionBuilder builder) {
+
+		String abbreviateFieldNames = element.getAttribute("abbreviate-field-names");
+		String fieldNamingStrategy = element.getAttribute("field-naming-strategy-ref");
+
+		if (StringUtils.hasText(fieldNamingStrategy) && StringUtils.hasText(abbreviateFieldNames)) {
+
+			context
+					.error("Only one of the attributes abbreviate-field-names and field-naming-strategy-ref can be configured!",
+							element);
+			return;
+		}
+
+		Object value = null;
+
+		if ("true".equals(abbreviateFieldNames)) {
+			value = new RootBeanDefinition(CamelCaseAbbreviatingFieldNamingStrategy.class);
+		} else if (StringUtils.hasText(fieldNamingStrategy)) {
+			value = new RuntimeBeanReference(fieldNamingStrategy);
+		}
+
+		if (value != null) {
+			builder.addPropertyValue("fieldNamingStrategy", value);
+		}
 	}
 
 	private BeanDefinition getCustomConversions(Element element, ParserContext parserContext) {

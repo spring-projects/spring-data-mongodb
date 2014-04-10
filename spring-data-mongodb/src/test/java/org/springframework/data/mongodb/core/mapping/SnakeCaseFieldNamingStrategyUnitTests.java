@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,19 +25,23 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
 /**
- * Unit tests for {@link LowerCaseWithUnderscoresFieldNamingStrategy}.
+ * Unit tests for {@link SnakeCaseFieldNamingStrategy}.
  * 
  * @author Ryan Tenney
+ * @author Oliver Gierke
  */
 @RunWith(MockitoJUnitRunner.class)
-public class LowerCaseWithUnderscoresFieldNamingStrategyUnitTests {
+public class SnakeCaseFieldNamingStrategyUnitTests {
 
-	FieldNamingStrategy strategy = new LowerCaseWithUnderscoresFieldNamingStrategy();
+	FieldNamingStrategy strategy = new SnakeCaseFieldNamingStrategy();
 
 	@Mock MongoPersistentProperty property;
 
+	/**
+	 * @see DATAMONGO-866
+	 */
 	@Test
-	public void foo() {
+	public void rendersSnakeCaseFieldNames() {
 
 		assertFieldNameForPropertyName("fooBar", "foo_bar");
 		assertFieldNameForPropertyName("FooBar", "foo_bar");

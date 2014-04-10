@@ -16,24 +16,19 @@
 package org.springframework.data.mongodb.core.mapping;
 
 /**
- * {@link FieldNamingStrategy} that abbreviates field names by using the very first letter of the camel case parts of
- * the {@link MongoPersistentProperty}'s name.
+ * {@link FieldNamingStrategy} that translates typical camel case Java property names to lower case JSON element names,
+ * separated by underscores.
  * 
- * @since 1.3
+ * @since 1.5
+ * @author Ryan Tenney
  * @author Oliver Gierke
  */
-public class CamelCaseAbbreviatingFieldNamingStrategy extends CamelCaseSplittingFieldNamingStrategy {
+public class SnakeCaseFieldNamingStrategy extends CamelCaseSplittingFieldNamingStrategy {
 
-	public CamelCaseAbbreviatingFieldNamingStrategy() {
-		super("");
-	}
-
-	/* 
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.mapping.CamelCaseSplittingFieldNamingStrategy#preparePart(java.lang.String)
+	/**
+	 * Creates a new {@link SnakeCaseFieldNamingStrategy}.
 	 */
-	@Override
-	protected String preparePart(String part) {
-		return part.substring(0, 1);
+	public SnakeCaseFieldNamingStrategy() {
+		super("_");
 	}
 }

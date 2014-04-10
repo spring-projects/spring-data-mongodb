@@ -237,6 +237,7 @@ public abstract class AbstractMongoConfiguration {
 	 * Configures a {@link FieldNamingStrategy} on the {@link MongoMappingContext} instance created.
 	 * 
 	 * @return
+	 * @since 1.5
 	 */
 	protected FieldNamingStrategy fieldNamingStrategy() {
 		return abbreviateFieldNames() ? new CamelCaseAbbreviatingFieldNamingStrategy()

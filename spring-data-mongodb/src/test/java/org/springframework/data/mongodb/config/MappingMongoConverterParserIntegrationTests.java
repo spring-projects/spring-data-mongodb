@@ -22,8 +22,12 @@ import java.util.Collections;
 import java.util.Set;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.beans.factory.parsing.BeanDefinitionParsingException;
+import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.core.convert.TypeDescriptor;
@@ -49,6 +53,7 @@ import com.mongodb.DBObject;
 public class MappingMongoConverterParserIntegrationTests {
 
 	DefaultListableBeanFactory factory;
+	public @Rule ExpectedException exception = ExpectedException.none();
 
 	@Before
 	public void setUp() {
@@ -102,6 +107,21 @@ public class MappingMongoConverterParserIntegrationTests {
 		assertThat(value, is(instanceOf(BeanDefinition.class)));
 		BeanDefinition strategy = (BeanDefinition) value;
 		assertThat(strategy.getBeanClassName(), is(CamelCaseAbbreviatingFieldNamingStrategy.class.getName()));
+	}
+
+	/**
+	 * @see DATAMONGO-866
+	 */
+	@Test
+	public void rejectsInvalidFieldNamingStrategyConfiguration() {
+
+		exception.expect(BeanDefinitionParsingException.class);
+		exception.expectMessage("abbreviate-field-names");
+		exception.expectMessage("field-naming-strategy-ref");
+
+		BeanDefinitionRegistry factory = new DefaultListableBeanFactory();
+		XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(factory);
+		reader.loadBeanDefinitions(new ClassPathResource("namespace/converter-invalid.xml"));
 	}
 
 	@Component
