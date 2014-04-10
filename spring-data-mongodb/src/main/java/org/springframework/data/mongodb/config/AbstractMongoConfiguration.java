@@ -37,7 +37,9 @@ import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.mapping.CamelCaseAbbreviatingFieldNamingStrategy;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.FieldNamingStrategy;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.mapping.PropertyNameFieldNamingStrategy;
 import org.springframework.data.support.CachingIsNewStrategyFactory;
 import org.springframework.data.support.IsNewStrategyFactory;
 import org.springframework.util.ClassUtils;
@@ -144,10 +146,7 @@ public abstract class AbstractMongoConfiguration {
 		MongoMappingContext mappingContext = new MongoMappingContext();
 		mappingContext.setInitialEntitySet(getInitialEntitySet());
 		mappingContext.setSimpleTypeHolder(customConversions().getSimpleTypeHolder());
-
-		if (abbreviateFieldNames()) {
-			mappingContext.setFieldNamingStrategy(new CamelCaseAbbreviatingFieldNamingStrategy());
-		}
+		mappingContext.setFieldNamingStrategy(fieldNamingStrategy());
 
 		return mappingContext;
 	}
@@ -232,4 +231,14 @@ public abstract class AbstractMongoConfiguration {
 	protected boolean abbreviateFieldNames() {
 		return false;
 	}
+
+	/**
+	 * Configures a {@link FieldNamingStrategy} on the {@link MongoMappingContext} instance created.
+	 * 
+	 * @return
+	 */
+	protected FieldNamingStrategy fieldNamingStrategy() {
+		return abbreviateFieldNames() ? new CamelCaseAbbreviatingFieldNamingStrategy() : PropertyNameFieldNamingStrategy.INSTANCE;
+	}
+
 }
