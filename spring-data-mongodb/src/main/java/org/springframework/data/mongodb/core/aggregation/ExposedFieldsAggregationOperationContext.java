@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -69,10 +69,24 @@ class ExposedFieldsAggregationOperationContext implements AggregationOperationCo
 	@Override
 	public FieldReference getReference(String name) {
 
+		Assert.notNull(name, "Name must not be null!");
+
 		ExposedField field = exposedFields.getField(name);
 
 		if (field != null) {
 			return new FieldReference(field);
+		}
+
+		if (name.contains(".")) {
+
+			// for nested field references we only check that the root field exists.
+			ExposedField rootField = exposedFields.getField(name.split("\\.")[0]);
+
+			if (rootField != null) {
+
+				// We have to synthetic to true, in order to render the field-name as is.
+				return new FieldReference(new ExposedField(name, true));
+			}
 		}
 
 		throw new IllegalArgumentException(String.format("Invalid reference '%s'!", name));
