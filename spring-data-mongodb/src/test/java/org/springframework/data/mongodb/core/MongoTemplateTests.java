@@ -34,7 +34,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.bson.types.ObjectId;
-import org.hamcrest.CoreMatchers;
 import org.joda.time.DateTime;
 import org.junit.After;
 import org.junit.Before;
@@ -299,6 +298,9 @@ public class MongoTemplateTests {
 	@Test
 	public void rejectsDuplicateIdInInsertAll() {
 
+		thrown.expect(DataIntegrityViolationException.class);
+		thrown.expectMessage("E11000 duplicate key error index: database.person.$_id_");
+
 		MongoTemplate template = new MongoTemplate(factory);
 		template.setWriteResultChecking(WriteResultChecking.EXCEPTION);
 
@@ -310,15 +312,7 @@ public class MongoTemplateTests {
 		records.add(person);
 		records.add(person);
 
-		try {
-			template.insertAll(records);
-			fail("Expected DataIntegrityViolationException!");
-		} catch (DataIntegrityViolationException e) {
-			assertThat(
-					e.getMessage(),
-					CoreMatchers
-							.startsWith("Insert list failed: E11000 duplicate key error index: database.person.$_id_  dup key: { : ObjectId"));
-		}
+		template.insertAll(records);
 	}
 
 	@Test
