@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 the original author or authors.
+ * Copyright 2010-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,13 +17,19 @@ package org.springframework.data.mongodb.core.index;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.query.Order;
+import org.springframework.util.Assert;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
+/**
+ * @author Oliver Gierke
+ * @author Christoph Strobl
+ */
 @SuppressWarnings("deprecation")
 public class Index implements IndexDefinition {
 
@@ -40,6 +46,12 @@ public class Index implements IndexDefinition {
 	private boolean dropDuplicates = false;
 
 	private boolean sparse = false;
+
+	private boolean background = false;
+
+	private long expire = -1;
+
+	private String collection;
 
 	public Index() {}
 
@@ -105,6 +117,61 @@ public class Index implements IndexDefinition {
 	}
 
 	/**
+	 * Build the index in background (non blocking).
+	 * 
+	 * @return
+	 * @since 1.5
+	 */
+	public Index background() {
+
+		this.background = true;
+		return this;
+	}
+
+	/**
+	 * Specifies TTL in seconds.
+	 * 
+	 * @param value
+	 * @return
+	 * @since 1.5
+	 */
+	public Index expire(long value) {
+		return expire(value, TimeUnit.SECONDS);
+	}
+
+	/**
+	 * Specifies TTL with given {@link TimeUnit}.
+	 * 
+	 * @param value
+	 * @param unit
+	 * @return
+	 * @since 1.5
+	 */
+	public Index expire(long value, TimeUnit unit) {
+
+		Assert.notNull(unit, "TimeUnit for expiration must not be null.");
+		this.expire = unit.toSeconds(value);
+		return this;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.index.IndexDefinition#getCollection()
+	 */
+	@Override
+	public String getCollection() {
+		return collection;
+	}
+
+	/**
+	 * @param collection
+	 * @since 1.5
+	 */
+	public void setCollection(String collection) {
+		this.collection = collection;
+	}
+
+	/**
 	 * @see http://docs.mongodb.org/manual/core/index-creation/#index-creation-duplicate-dropping
 	 * @param duplicates
 	 * @return
@@ -125,9 +192,11 @@ public class Index implements IndexDefinition {
 	}
 
 	public DBObject getIndexOptions() {
+
 		if (name == null && !unique) {
 			return null;
 		}
+
 		DBObject dbo = new BasicDBObject();
 		if (name != null) {
 			dbo.put("name", name);
@@ -140,6 +209,12 @@ public class Index implements IndexDefinition {
 		}
 		if (sparse) {
 			dbo.put("sparse", true);
+		}
+		if (background) {
+			dbo.put("background", true);
+		}
+		if (expire >= 0) {
+			dbo.put("expireAfterSeconds", expire);
 		}
 		return dbo;
 	}

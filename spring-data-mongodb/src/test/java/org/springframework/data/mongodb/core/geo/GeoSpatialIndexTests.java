@@ -31,6 +31,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.WriteResultChecking;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexed;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
@@ -43,6 +44,7 @@ import com.mongodb.WriteConcern;
  * @author Laurent Canet
  * @author Oliver Gierke
  * @author Thomas Darimont
+ * @author Christoph Strobl
  */
 public class GeoSpatialIndexTests extends AbstractIntegrationTests {
 
@@ -129,6 +131,7 @@ public class GeoSpatialIndexTests extends AbstractIntegrationTests {
 		});
 	}
 
+	@Document
 	static class GeoSpatialEntity2D {
 		public String id;
 		@GeoSpatialIndexed(type = GeoSpatialIndexType.GEO_2D) public org.springframework.data.geo.Point location;
@@ -138,6 +141,7 @@ public class GeoSpatialIndexTests extends AbstractIntegrationTests {
 		}
 	}
 
+	@Document
 	static class GeoSpatialEntityHaystack {
 		public String id;
 		public String name;
@@ -154,6 +158,7 @@ public class GeoSpatialIndexTests extends AbstractIntegrationTests {
 		double coordinates[];
 	}
 
+	@Document
 	static class GeoSpatialEntity2DSphere {
 		public String id;
 		@GeoSpatialIndexed(type = GeoSpatialIndexType.GEO_2DSPHERE) public GeoJsonPoint location;
