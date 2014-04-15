@@ -1,6 +1,67 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 1.4.2.RELEASE (2014-04-15)
+---------------------------------------------
+
+** Fix
+    * [DATAMONGO-880] - Improved handling of persistence of lazy-loaded DBRefs.
+    * [DATAMONGO-884] - Improved handling for Object methods in LazyLoadingInterceptor.
+    * [DATAMONGO-887] - Added unit tests to verify TreeMaps can be converted.
+    * [DATAMONGO-888] - Sorting now considers mapping information.
+    * [DATAMONGO-890] - Fixed Point.toString().
+    * [DATAMONGO-892] - Reject nested MappingMongoConverter declarations in XML.
+    * [DATAMONGO-893] - Converter must not write "_class" information for know types.
+    * [DATAMONGO-897] - Fixed potential NullPointerException in QueryMapper.
+    * [DATAMONGO-908] - Support for nested field references in group operations.
+
+** Improvement
+    * [DATAMONGO-881] - Allow custom conversions to override default conversions.
+
+** Task
+    * [DATAMONGO-895] - Use most specific type for checks against values in DBObjects.
+    * [DATAMONGO-896] - Assert compatibility with latest MongoDB Java driver.
+    * [DATAMONGO-905] - Removed obsolete dependency to CGLib from cross-store support.
+    * [DATAMONGO-907] - Assert compatibility with mongodb 2.6.
+    * [DATAMONGO-911] - Release 1.4.2
+
+
+Changes in version 1.5.0.M1 (2014-03-31)
+----------------------------------------
+** Fix
+    * [DATAMONGO-471] - Update operation $addToSet does not support adding a list with $each.
+    * [DATAMONGO-773] - Spring Data MongoDB projection search on @DBref fields.
+    * [DATAMONGO-821] - MappingException for $size queries on subcollections containing dbrefs.
+    * [DATAMONGO-829] - NearQuery, when used in conjunction with a Query, it sets num=0, unless Query specifies otherwise.
+    * [DATAMONGO-833] - EnumSet is not handled correctly.
+    * [DATAMONGO-843] - Unable to use @EnableMongoAuditing annotation in Java config.
+    * [DATAMONGO-862] - Update Array Field Using Positional Operator ($) Does Not Work.
+    * [DATAMONGO-863] - QueryMapper.getMappedValue Fails To Handle Arrays Mapped To $in.
+    * [DATAMONGO-868] - findAndModify method does not increment @Version field.
+    * [DATAMONGO-871] - Declarative query method with array return type causes NPE.
+    * [DATAMONGO-877] - AbstractMongoConfiguration.getMappingBasePackage() throws NullPointerException if config class resides in default package.
+    * [DATAMONGO-880] - Error when trying to persist an object containing a DBRef which was lazy loaded.
+    * [DATAMONGO-884] - Potential NullPointerException for lazy DBRefs.
+    * [DATAMONGO-887] - Repository not instantiated when entity contains field of type TreeMap.
+    * [DATAMONGO-890] - Point class toString method is confusing.
+
+** Improvement
+    * [DATAMONGO-809] - Make filename optional in GridFsOperations doc and GridFsTemplate implementation.
+    * [DATAMONGO-858] - Add support for common geospatial structures.
+    * [DATAMONGO-865] - Adjust test dependencies to avoid ClassNotFoundException during test runs.
+    * [DATAMONGO-881] - Cannot override default converters in CustomConversions.
+    * [DATAMONGO-882] - Adapt to removal of obsolete generics in BeanWrapper.
+
+** New Feature
+    * [DATAMONGO-566] - Provide support for removeBy… / deleteBy… methods like for findBy… on repository interfaces.
+    * [DATAMONGO-870] - Add support for sliced query method execution.
+
+** Task
+    * [DATAMONGO-876] - Adapt to changes introduced for property access configuration.
+    * [DATAMONGO-883] - Update auditing configuration to enable auditing annotations on accessors.
+    * [DATAMONGO-859] - Release 1.5 M1.
+
+
 Changes in version 1.4.1.RELEASE (2014-03-13)
 ---------------------------------------------
 ** Fix

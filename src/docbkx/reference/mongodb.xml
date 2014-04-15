@@ -107,7 +107,7 @@
   &lt;dependency&gt;
     &lt;groupId&gt;org.springframework.data&lt;/groupId&gt;
     &lt;artifactId&gt;spring-data-mongodb&lt;/artifactId&gt;
-    &lt;version&gt;1.4.1.RELEASE&lt;/version&gt;
+    &lt;version&gt;1.4.2.RELEASE&lt;/version&gt;
   &lt;/dependency&gt;
 
 &lt;/dependencies&gt;</programlisting>
