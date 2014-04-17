@@ -28,6 +28,7 @@ import org.aopalliance.intercept.MethodInvocation;
 import org.objenesis.Objenesis;
 import org.objenesis.ObjenesisStd;
 import org.springframework.aop.framework.ProxyFactory;
+import org.springframework.beans.BeanUtils;
 import org.springframework.cglib.proxy.Callback;
 import org.springframework.cglib.proxy.Enhancer;
 import org.springframework.cglib.proxy.Factory;
@@ -57,7 +58,6 @@ import com.mongodb.DBRef;
  */
 public class DefaultDbRefResolver implements DbRefResolver {
 
-	private static final boolean IS_SPRING_4_OR_BETTER = SpringVersion.getVersion().startsWith("4");
 	private static final boolean OBJENESIS_PRESENT = ClassUtils.isPresent("org.objenesis.Objenesis", null);
 
 	private final MongoDbFactory mongoDbFactory;
@@ -138,7 +138,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 		proxyFactory.setProxyTargetClass(true);
 		proxyFactory.setTargetClass(propertyType);
 
-		if (IS_SPRING_4_OR_BETTER || !OBJENESIS_PRESENT) {
+		if (!OBJENESIS_PRESENT) {
 			proxyFactory.addAdvice(interceptor);
 			return proxyFactory.getProxy();
 		}
@@ -374,13 +374,86 @@ public class DefaultDbRefResolver implements DbRefResolver {
 	}
 
 	/**
-	 * Static class to accomodate optional dependency on Objenesis.
+	 * Static class to accommodate optional dependency on Objenesis.
 	 * 
 	 * @author Oliver Gierke
+	 * @author Thomas Darimont
+	 * @since 1.4
 	 */
 	private static class ObjenesisProxyEnhancer {
 
-		private static final Objenesis OBJENESIS = new ObjenesisStd(true);
+		private static final boolean IS_SPRING_4_OR_BETTER = SpringVersion.getVersion().startsWith("4");
+
+		/**
+		 * Strategy for constructing new instances of a given {@link Class}.
+		 *
+		 * @author Thomas Darimont
+		 */
+		static interface InstanceCreatorStrategy {
+			Object newInstance(Class<?> clazz);
+		}
+
+		/**
+		 * An {@link InstanceCreatorStrategy} that uses Objenesis from the classpath.
+		 *
+		 * @author Thomas Darimont
+		 */
+		static class DefaultObjenesisInstanceCreatorStrategy implements InstanceCreatorStrategy {
+
+			private static final Objenesis OBJENESIS = new ObjenesisStd(true);
+
+			@Override
+			public Object newInstance(Class<?> clazz) {
+				return OBJENESIS.newInstance(clazz);
+			}
+		}
+
+		/**
+		 * An {@link InstanceCreatorStrategy} that uses a repackaged version of Objenesis from Spring 4.
+		 *
+		 * @author Thomas Darimont
+		 */
+		static class Spring4ObjenesisInstanceCreatorStrategy implements InstanceCreatorStrategy {
+
+			private static final String SPRING4_OBJENESIS_CLASS_NAME = "org.springframework.objenesis.ObjenesisStd";
+			private static final Object OBJENESIS;
+			private static final Method NEW_INSTANCE_METHOD;
+
+			static {
+
+				try {
+					Class<?> objenesisClass = ClassUtils.forName(SPRING4_OBJENESIS_CLASS_NAME,
+							ObjenesisProxyEnhancer.class.getClassLoader());
+
+					OBJENESIS = BeanUtils.instantiateClass(objenesisClass.getConstructor(boolean.class), true);
+					NEW_INSTANCE_METHOD = objenesisClass.getMethod("newInstance", Class.class);
+
+				} catch (Exception e) {
+					throw new RuntimeException("Could not setup Objenesis Infrastructure with Spring 4 ", e);
+				}
+			}
+
+			@Override
+			public Object newInstance(Class<?> clazz) {
+
+				try {
+					return NEW_INSTANCE_METHOD.invoke(OBJENESIS, clazz);
+				} catch (Exception e) {
+					throw new RuntimeException("Could not created instance for " + clazz, e);
+				}
+			}
+		}
+
+		private static final InstanceCreatorStrategy INSTANCE_CREATOR;
+
+		static {
+
+			if (IS_SPRING_4_OR_BETTER) {
+				INSTANCE_CREATOR = new Spring4ObjenesisInstanceCreatorStrategy();
+			} else {
+				INSTANCE_CREATOR = new DefaultObjenesisInstanceCreatorStrategy();
+			}
+		}
 
 		public static Object enhanceAndGet(ProxyFactory proxyFactory, Class<?> type,
 				org.springframework.cglib.proxy.MethodInterceptor interceptor) {
@@ -390,7 +463,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 			enhancer.setCallbackType(org.springframework.cglib.proxy.MethodInterceptor.class);
 			enhancer.setInterfaces(new Class[] { LazyLoadingProxy.class });
 
-			Factory factory = (Factory) OBJENESIS.newInstance(enhancer.createClass());
+			Factory factory = (Factory) INSTANCE_CREATOR.newInstance(enhancer.createClass());
 			factory.setCallbacks(new Callback[] { interceptor });
 			return factory;
 		}
