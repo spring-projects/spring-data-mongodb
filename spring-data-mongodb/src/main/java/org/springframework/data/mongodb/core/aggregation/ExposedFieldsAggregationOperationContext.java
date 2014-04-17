@@ -32,16 +32,22 @@ import com.mongodb.DBObject;
 class ExposedFieldsAggregationOperationContext implements AggregationOperationContext {
 
 	private final ExposedFields exposedFields;
+	private final AggregationOperationContext rootContext;
 
 	/**
-	 * Creates a new {@link ExposedFieldsAggregationOperationContext} from the given {@link ExposedFields}.
+	 * Creates a new {@link ExposedFieldsAggregationOperationContext} from the given {@link ExposedFields}. Uses the given
+	 * {@link AggregationOperationContext} to perform a mapping to mongo types if necessary.
 	 * 
 	 * @param exposedFields must not be {@literal null}.
+	 * @param rootContext must not be {@literal null}.
 	 */
-	public ExposedFieldsAggregationOperationContext(ExposedFields exposedFields) {
+	public ExposedFieldsAggregationOperationContext(ExposedFields exposedFields, AggregationOperationContext rootContext) {
 
 		Assert.notNull(exposedFields, "ExposedFields must not be null!");
+		Assert.notNull(rootContext, "RootContext must not be null!");
+
 		this.exposedFields = exposedFields;
+		this.rootContext = rootContext;
 	}
 
 	/* 
@@ -50,7 +56,7 @@ class ExposedFieldsAggregationOperationContext implements AggregationOperationCo
 	 */
 	@Override
 	public DBObject getMappedObject(DBObject dbObject) {
-		return dbObject;
+		return rootContext.getMappedObject(dbObject);
 	}
 
 	/* 
