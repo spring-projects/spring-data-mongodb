@@ -186,6 +186,8 @@ public class MongoTemplateTests {
 		template.dropCollection(DocumentWithCollectionOfSimpleType.class);
 		template.dropCollection(DocumentWithMultipleCollections.class);
 		template.dropCollection(DocumentWithDBRefCollection.class);
+		template.dropCollection(SomeContent.class);
+		template.dropCollection(SomeTemplate.class);
 	}
 
 	@Test
@@ -2593,6 +2595,62 @@ public class MongoTemplateTests {
 		assertThat(template.find(query, DoucmentWithNamedIdField.class), contains(two, one));
 	}
 
+	/**
+	 * @see DATAMONGO-913
+	 */
+	@Test
+	public void shouldRetrieveInitializedValueFromDbRefAssociationAfterLoad() {
+
+		SomeContent content = new SomeContent();
+		content.id = "content-1";
+		content.name = "Content 1";
+		content.text = "Some text";
+
+		template.save(content);
+
+		SomeTemplate tmpl = new SomeTemplate();
+		tmpl.id = "template-1";
+		tmpl.content = content;
+
+		template.save(tmpl);
+
+		SomeTemplate result = template.findOne(query(where("content").is(tmpl.getContent())), SomeTemplate.class);
+
+		assertThat(result, is(notNullValue()));
+		assertThat(result.getContent(), is(notNullValue()));
+		assertThat(result.getContent().getId(), is(notNullValue()));
+		assertThat(result.getContent().getName(), is(notNullValue()));
+		assertThat(result.getContent().getText(), is(content.getText()));
+	}
+
+	/**
+	 * @see DATAMONGO-913
+	 */
+	@Test
+	public void shouldReuseExistingDBRefInQueryFromDbRefAssociationAfterLoad() {
+
+		SomeContent content = new SomeContent();
+		content.id = "content-1";
+		content.name = "Content 1";
+		content.text = "Some text";
+
+		template.save(content);
+
+		SomeTemplate tmpl = new SomeTemplate();
+		tmpl.id = "template-1";
+		tmpl.content = content;
+
+		template.save(tmpl);
+
+		SomeTemplate result = template.findOne(query(where("content").is(tmpl.getContent())), SomeTemplate.class);
+
+		// Use lazy-loading-proxy in query
+		result = template.findOne(query(where("content").is(result.getContent())), SomeTemplate.class);
+
+		assertNotNull(result.getContent().getName());
+		assertThat(result.getContent().getName(), is(content.getName()));
+	}
+
 	static class DoucmentWithNamedIdField {
 
 		@Id String someIdKey;
@@ -2834,6 +2892,15 @@ public class MongoTemplateTests {
 
 		String id;
 		String text;
+		String name;
+
+		public String getName() {
+			return name;
+		}
+
+		public String getId() {
+			return id;
+		}
 
 		public String getText() {
 			return text;
