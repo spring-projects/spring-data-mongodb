@@ -33,7 +33,6 @@ import org.springframework.cglib.proxy.Callback;
 import org.springframework.cglib.proxy.Enhancer;
 import org.springframework.cglib.proxy.Factory;
 import org.springframework.cglib.proxy.MethodProxy;
-import org.springframework.core.SpringVersion;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mongodb.LazyLoadingException;
@@ -382,7 +381,9 @@ public class DefaultDbRefResolver implements DbRefResolver {
 	 */
 	private static class ObjenesisProxyEnhancer {
 
-		private static final boolean IS_SPRING_4_OR_BETTER = SpringVersion.getVersion().startsWith("4");
+		private static final boolean IS_SPRING_4_OR_BETTER = ClassUtils.isPresent(
+				"org.springframework.core.DefaultParameterNameDiscoverer", null);
+
 		private static final InstanceCreatorStrategy INSTANCE_CREATOR;
 
 		static {
