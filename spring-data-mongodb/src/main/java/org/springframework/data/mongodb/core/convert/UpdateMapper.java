@@ -25,6 +25,7 @@ import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty.PropertyToFieldNameConverter;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update.Modifier;
 import org.springframework.data.mongodb.core.query.Update.Modifiers;
 import org.springframework.data.util.ClassTypeInformation;
@@ -79,10 +80,19 @@ public class UpdateMapper extends QueryMapper {
 			return createMapEntry(field, convertSimpleOrDBObject(rawValue, field.getPropertyEntity()));
 		}
 
-		if (!isUpdateModifier(rawValue)) {
-			return super.getMappedObjectForField(field, getMappedValue(field, rawValue));
+		if (isQuery(rawValue)) {
+			return createMapEntry(field,
+					super.getMappedObject(((Query) rawValue).getQueryObject(), field.getPropertyEntity()));
 		}
 
+		if (isUpdateModifier(rawValue)) {
+			return getMappedUpdateModifier(field, rawValue);
+		}
+
+		return super.getMappedObjectForField(field, getMappedValue(field, rawValue));
+	}
+
+	private Entry<String, Object> getMappedUpdateModifier(Field field, Object rawValue) {
 		Object value = null;
 
 		if (rawValue instanceof Modifier) {
@@ -99,7 +109,6 @@ public class UpdateMapper extends QueryMapper {
 
 			value = modificationOperations;
 		} else {
-
 			throw new IllegalArgumentException(String.format("Unable to map value of type '%s'!", rawValue.getClass()));
 		}
 
@@ -117,6 +126,10 @@ public class UpdateMapper extends QueryMapper {
 
 	private boolean isUpdateModifier(Object value) {
 		return value instanceof Modifier || value instanceof Modifiers;
+	}
+
+	private boolean isQuery(Object value) {
+		return value instanceof Query;
 	}
 
 	private DBObject getMappedValue(Modifier modifier) {
