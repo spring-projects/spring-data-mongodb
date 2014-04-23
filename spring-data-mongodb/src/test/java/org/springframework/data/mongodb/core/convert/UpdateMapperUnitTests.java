@@ -41,10 +41,13 @@ import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.DBObjectTestUtils;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
+import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DBObject;
 import com.mongodb.DBRef;
 
@@ -430,6 +433,40 @@ public class UpdateMapperUnitTests {
 
 		DBRef expectedDBRef = new DBRef(factory.getDb(), "interfaceDocumentDefinitionImpl", "1");
 		assertThat(model, allOf(instanceOf(DBRef.class), IsEqual.<Object> equalTo(expectedDBRef)));
+	}
+
+	/**
+	 * @see DATAMONGO-847
+	 */
+	@Test
+	public void updateMapperConvertsNestedQueryCorrectly() {
+
+		Update update = new Update().pull("list", Query.query(Criteria.where("value").in("foo", "bar")));
+		DBObject mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(ParentClass.class));
+
+		DBObject $pull = DBObjectTestUtils.getAsDBObject(mappedUpdate, "$pull");
+		DBObject list = DBObjectTestUtils.getAsDBObject($pull, "aliased");
+		DBObject value = DBObjectTestUtils.getAsDBObject(list, "value");
+		BasicDBList $in = DBObjectTestUtils.getAsDBList(value, "$in");
+
+		assertThat($in, IsIterableContainingInOrder.<Object> contains("foo", "bar"));
+	}
+
+	/**
+	 * @see DATAMONGO-847
+	 */
+	@Test
+	public void updateMapperConvertsPullWithNestedQuerfyOnDBRefCorrectly() {
+
+		Update update = new Update().pull("dbRefAnnotatedList", Query.query(Criteria.where("id").is("1")));
+		DBObject mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(DocumentWithDBRefCollection.class));
+
+		DBObject $pull = DBObjectTestUtils.getAsDBObject(mappedUpdate, "$pull");
+		DBObject list = DBObjectTestUtils.getAsDBObject($pull, "dbRefAnnotatedList");
+
+		assertThat(list, equalTo(new BasicDBObjectBuilder().add("_id", "1").get()));
 	}
 
 	@org.springframework.data.mongodb.core.mapping.Document(collection = "DocumentWithReferenceToInterface")
