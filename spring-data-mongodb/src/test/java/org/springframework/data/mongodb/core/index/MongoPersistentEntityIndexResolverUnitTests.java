@@ -295,10 +295,29 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			assertThat(indexDefinition.getIndexKeys(), equalTo(new BasicDBObjectBuilder().add("foo", 1).add("bar", -1).get()));
 		}
 
+		/**
+		 * @see DATAMONGO-909
+		 */
+		@Test
+		public void compoundIndexOnSuperClassResolvedCorrectly() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(IndexDefinedOnSuperClass.class);
+
+			IndexDefinition indexDefinition = indexDefinitions.get(0).getIndexDefinition();
+			assertThat(indexDefinition.getIndexOptions(),
+					equalTo(new BasicDBObjectBuilder().add("name", "compound_index").add("unique", true).add("dropDups", true)
+							.add("sparse", true).add("background", true).add("expireAfterSeconds", 10L).get()));
+			assertThat(indexDefinition.getIndexKeys(), equalTo(new BasicDBObjectBuilder().add("foo", 1).add("bar", -1).get()));
+		}
+
 		@Document(collection = "CompoundIndexOnLevelZero")
 		@CompoundIndexes({ @CompoundIndex(name = "compound_index", def = "{'foo': 1, 'bar': -1}", background = true,
 				dropDups = true, expireAfterSeconds = 10, sparse = true, unique = true) })
 		static class CompoundIndexOnLevelZero {}
+
+		static class IndexDefinedOnSuperClass extends CompoundIndexOnLevelZero {
+
+		}
 	}
 
 	public static class MixedIndexResolutionTests {
