@@ -74,7 +74,7 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 		Mockito.when(factory.getDb()).thenReturn(db);
 		Mockito.when(db.getCollection(collectionCaptor.capture())).thenReturn(collection);
 
-		Mockito.doNothing().when(collection).ensureIndex(keysCaptor.capture(), optionsCaptor.capture());
+		Mockito.doNothing().when(collection).createIndex(keysCaptor.capture(), optionsCaptor.capture());
 	}
 
 	@Test

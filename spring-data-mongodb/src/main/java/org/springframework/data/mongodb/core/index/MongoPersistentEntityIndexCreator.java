@@ -25,6 +25,7 @@ import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.context.MappingContextEvent;
 import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolver.IndexDefinitionHolder;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
@@ -106,7 +107,9 @@ public class MongoPersistentEntityIndexCreator implements
 	}
 
 	private void checkForIndexes(final MongoPersistentEntity<?> entity) {
-		final Class<?> type = entity.getType();
+
+		Class<?> type = entity.getType();
+
 		if (!classesSeen.containsKey(type)) {
 
 			this.classesSeen.put(type, Boolean.TRUE);
@@ -119,18 +122,18 @@ public class MongoPersistentEntityIndexCreator implements
 		}
 	}
 
-	protected void checkForAndCreateIndexes(MongoPersistentEntity<?> entity) {
+	private void checkForAndCreateIndexes(MongoPersistentEntity<?> entity) {
 
 		if (entity.findAnnotation(Document.class) != null) {
-			for (IndexDefinition indexToCreate : indexResolver.resolveIndexForClass(entity.getType())) {
+			for (IndexDefinitionHolder indexToCreate : indexResolver.resolveIndexForClass(entity.getType())) {
 				createIndex(indexToCreate);
 			}
 		}
 	}
 
-	protected void createIndex(IndexDefinition indexDefinition) {
+	private void createIndex(IndexDefinitionHolder indexDefinition) {
 		mongoDbFactory.getDb().getCollection(indexDefinition.getCollection())
-				.ensureIndex(indexDefinition.getIndexKeys(), indexDefinition.getIndexOptions());
+				.createIndex(indexDefinition.getIndexKeys(), indexDefinition.getIndexOptions());
 	}
 
 	/**
@@ -142,5 +145,4 @@ public class MongoPersistentEntityIndexCreator implements
 	public boolean isIndexCreatorFor(MappingContext<?, ?> context) {
 		return this.mappingContext.equals(context);
 	}
-
 }

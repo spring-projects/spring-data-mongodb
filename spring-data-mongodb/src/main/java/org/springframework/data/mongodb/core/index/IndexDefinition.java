@@ -27,12 +27,4 @@ public interface IndexDefinition {
 	DBObject getIndexKeys();
 
 	DBObject getIndexOptions();
-
-	/**
-	 * Get the collection name for the index.
-	 * 
-	 * @return
-	 * @since 1.5
-	 */
-	String getCollection();
 }

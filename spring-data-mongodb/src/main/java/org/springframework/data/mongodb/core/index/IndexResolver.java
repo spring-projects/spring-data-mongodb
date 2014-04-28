@@ -15,13 +15,15 @@
  */
 package org.springframework.data.mongodb.core.index;
 
+import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolver.IndexDefinitionHolder;
+
 /**
  * {@link IndexResolver} finds those {@link IndexDefinition}s to be created for a given class.
  * 
  * @author Christoph Strobl
  * @since 1.5
  */
-public interface IndexResolver {
+interface IndexResolver {
 
 	/**
 	 * Find and create {@link IndexDefinition}s for properties of given {@code type}. {@link IndexDefinition}s are created
@@ -30,6 +32,6 @@ public interface IndexResolver {
 	 * @param type
 	 * @return Empty {@link Iterable} in case no {@link IndexDefinition} could be resolved for type.
 	 */
-	Iterable<? extends IndexDefinition> resolveIndexForClass(Class<?> type);
+	Iterable<? extends IndexDefinitionHolder> resolveIndexForClass(Class<?> type);
 
 }

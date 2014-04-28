@@ -39,7 +39,6 @@ public class GeospatialIndex implements IndexDefinition {
 	private GeoSpatialIndexType type = GeoSpatialIndexType.GEO_2D;
 	private Double bucketSize = 1.0;
 	private String additionalField;
-	private String collection;
 
 	/**
 	 * Creates a new {@link GeospatialIndex} for the given field.
@@ -120,23 +119,6 @@ public class GeospatialIndex implements IndexDefinition {
 	public GeospatialIndex withAdditionalField(String fieldName) {
 		this.additionalField = fieldName;
 		return this;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.index.IndexDefinition#getCollection()
-	 */
-	@Override
-	public String getCollection() {
-		return collection;
-	}
-
-	/**
-	 * @param collection
-	 * @since 1.5
-	 */
-	public void setCollection(String collection) {
-		this.collection = collection;
 	}
 
 	public DBObject getIndexKeys() {

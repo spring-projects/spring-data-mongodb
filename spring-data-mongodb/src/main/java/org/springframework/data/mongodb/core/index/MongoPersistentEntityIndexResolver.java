@@ -126,7 +126,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			@Override
 			public void doWithPersistentProperty(MongoPersistentProperty persistentProperty) {
 
-				String propertyDotPath = (StringUtils.hasText(path) ? (path + ".") : "") + persistentProperty.getFieldName();
+				String propertyDotPath = (StringUtils.hasText(path) ? path + "." : "") + persistentProperty.getFieldName();
 
 				if (persistentProperty.isEntity()) {
 					indexInformation.addAll(resolveIndexForClass(persistentProperty.getActualType(), propertyDotPath, collection));
@@ -169,11 +169,12 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	 * Create {@link IndexDefinition} wrapped in {@link IndexDefinitionHolder} for {@link CompoundIndexes} of given type.
 	 * 
 	 * @param dotPath The properties {@literal "dot"} path representation from its document root.
-	 * @param collection
+	 * @param fallbackCollection
 	 * @param type
 	 * @return
 	 */
-	protected List<IndexDefinitionHolder> createCompoundIndexDefinitions(String dotPath, String collection, Class<?> type) {
+	protected List<IndexDefinitionHolder> createCompoundIndexDefinitions(String dotPath, String fallbackCollection,
+			Class<?> type) {
 
 		CompoundIndexes indexes = AnnotationUtils.findAnnotation(type, CompoundIndexes.class);
 		List<IndexDefinitionHolder> indexDefinitions = new ArrayList<MongoPersistentEntityIndexResolver.IndexDefinitionHolder>(
@@ -181,12 +182,11 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 		for (CompoundIndex index : indexes.value()) {
 
-			IndexDefinitionHolder holder = new IndexDefinitionHolder(StringUtils.hasText(index.name()) ? index.name()
-					: dotPath);
+			String path = StringUtils.hasText(index.name()) ? index.name() : dotPath;
+			String collection = StringUtils.hasText(index.collection()) ? index.collection() : fallbackCollection;
 
 			CompoundIndexDefinition indexDefinition = new CompoundIndexDefinition((DBObject) JSON.parse(index.def()));
 			indexDefinition.named(index.name());
-			indexDefinition.setCollection(StringUtils.hasText(index.collection()) ? index.collection() : collection);
 			if (index.unique()) {
 				indexDefinition.unique(index.dropDups() ? Duplicates.DROP : Duplicates.RETAIN);
 			}
@@ -200,8 +200,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 				indexDefinition.expire(index.expireAfterSeconds(), TimeUnit.SECONDS);
 			}
 
-			holder.setIndexDefinition(indexDefinition);
-			indexDefinitions.add(holder);
+			indexDefinitions.add(new IndexDefinitionHolder(path, indexDefinition, collection));
 		}
 
 		return indexDefinitions;
@@ -216,15 +215,13 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	 * @param persitentProperty
 	 * @return
 	 */
-	protected IndexDefinitionHolder createIndexDefinition(String dotPath, String collection,
+	protected IndexDefinitionHolder createIndexDefinition(String dotPath, String fallbackCollection,
 			MongoPersistentProperty persitentProperty) {
 
 		Indexed index = persitentProperty.findAnnotation(Indexed.class);
-
-		IndexDefinitionHolder holder = new IndexDefinitionHolder(dotPath);
+		String collection = StringUtils.hasText(index.collection()) ? index.collection() : fallbackCollection;
 
 		Index indexDefinition = new Index();
-		indexDefinition.setCollection(StringUtils.hasText(index.collection()) ? index.collection() : collection);
 		indexDefinition.named(StringUtils.hasText(index.name()) ? index.name() : persitentProperty.getFieldName());
 		indexDefinition.on(persitentProperty.getFieldName(),
 				IndexDirection.ASCENDING.equals(index.direction()) ? Sort.Direction.ASC : Sort.Direction.DESC);
@@ -242,8 +239,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			indexDefinition.expire(index.expireAfterSeconds(), TimeUnit.SECONDS);
 		}
 
-		holder.setIndexDefinition(indexDefinition);
-		return holder;
+		return new IndexDefinitionHolder(dotPath, indexDefinition, collection);
 	}
 
 	/**
@@ -255,22 +251,19 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	 * @param persistentProperty
 	 * @return
 	 */
-	protected IndexDefinitionHolder createGeoSpatialIndexDefinition(String dotPath, String collection,
+	protected IndexDefinitionHolder createGeoSpatialIndexDefinition(String dotPath, String fallbackCollection,
 			MongoPersistentProperty persistentProperty) {
 
 		GeoSpatialIndexed index = persistentProperty.findAnnotation(GeoSpatialIndexed.class);
-
-		IndexDefinitionHolder holder = new IndexDefinitionHolder(dotPath);
+		String collection = StringUtils.hasText(index.collection()) ? index.collection() : fallbackCollection;
 
 		GeospatialIndex indexDefinition = new GeospatialIndex(dotPath);
-		indexDefinition.setCollection(StringUtils.hasText(index.collection()) ? index.collection() : collection);
 		indexDefinition.withBits(index.bits());
 		indexDefinition.withMin(index.min()).withMax(index.max());
 		indexDefinition.named(StringUtils.hasText(index.name()) ? index.name() : persistentProperty.getName());
 		indexDefinition.typed(index.type()).withBucketSize(index.bucketSize()).withAdditionalField(index.additionalField());
 
-		holder.setIndexDefinition(indexDefinition);
-		return holder;
+		return new IndexDefinitionHolder(dotPath, indexDefinition, collection);
 	}
 
 	/**
@@ -284,23 +277,22 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 		private String path;
 		private IndexDefinition indexDefinition;
+		private String collection;
 
 		/**
 		 * Create
 		 * 
 		 * @param path
 		 */
-		public IndexDefinitionHolder(String path) {
+		public IndexDefinitionHolder(String path, IndexDefinition definition, String collection) {
+
 			this.path = path;
+			this.indexDefinition = definition;
+			this.collection = collection;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.index.IndexDefinition#getCollection()
-		 */
-		@Override
 		public String getCollection() {
-			return indexDefinition != null ? indexDefinition.getCollection() : null;
+			return collection;
 		}
 
 		/**
@@ -319,15 +311,6 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		 */
 		public IndexDefinition getIndexDefinition() {
 			return indexDefinition;
-		}
-
-		/**
-		 * Set the {@literal raw} {@link IndexDefinition}.
-		 * 
-		 * @param indexDefinition
-		 */
-		public void setIndexDefinition(IndexDefinition indexDefinition) {
-			this.indexDefinition = indexDefinition;
 		}
 
 		/*

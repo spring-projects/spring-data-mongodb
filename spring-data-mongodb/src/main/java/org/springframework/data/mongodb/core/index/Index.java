@@ -51,8 +51,6 @@ public class Index implements IndexDefinition {
 
 	private long expire = -1;
 
-	private String collection;
-
 	public Index() {}
 
 	public Index(String key, Direction direction) {
@@ -152,23 +150,6 @@ public class Index implements IndexDefinition {
 		Assert.notNull(unit, "TimeUnit for expiration must not be null.");
 		this.expire = unit.toSeconds(value);
 		return this;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.index.IndexDefinition#getCollection()
-	 */
-	@Override
-	public String getCollection() {
-		return collection;
-	}
-
-	/**
-	 * @param collection
-	 * @since 1.5
-	 */
-	public void setCollection(String collection) {
-		this.collection = collection;
 	}
 
 	/**

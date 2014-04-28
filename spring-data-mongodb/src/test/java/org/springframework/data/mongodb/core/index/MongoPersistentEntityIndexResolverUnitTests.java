@@ -324,7 +324,6 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(Inner.class);
 			assertThat(indexDefinitions, hasSize(1));
-			assertThat(indexDefinitions.get(0).getIndexDefinition().getCollection(), equalTo("inner"));
 			assertThat(indexDefinitions.get(0).getIndexDefinition().getIndexKeys(),
 					equalTo(new BasicDBObjectBuilder().add("outer", 1).get()));
 		}
