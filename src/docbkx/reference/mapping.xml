@@ -312,6 +312,11 @@ public class Person {
       document, making searches faster.</para>
     </important>
 
+    <important>
+      <para>Automatic index creation is only done for types annotated with
+      <classname>@Document</classname>.</para>
+    </important>
+
     <section id="mapping-usage-annotations">
       <title>Mapping annotation overview</title>
 

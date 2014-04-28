@@ -79,6 +79,15 @@ public @interface CompoundIndex {
 	String name() default "";
 
 	/**
+	 * If set to {@literal true} then MongoDB will ignore the given index name and instead generate a new name. Defaults
+	 * to {@literal false}.
+	 * 
+	 * @return
+	 * @since 1.5
+	 */
+	boolean useGeneratedName() default false;
+
+	/**
 	 * The collection the index will be created in. Will default to the collection the annotated domain class will be
 	 * stored in.
 	 * 
