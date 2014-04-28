@@ -185,7 +185,9 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 					: dotPath);
 
 			CompoundIndexDefinition indexDefinition = new CompoundIndexDefinition((DBObject) JSON.parse(index.def()));
-			indexDefinition.named(index.name());
+			if (!index.useGeneratedName()) {
+				indexDefinition.named(index.name());
+			}
 			indexDefinition.setCollection(StringUtils.hasText(index.collection()) ? index.collection() : collection);
 			if (index.unique()) {
 				indexDefinition.unique(index.dropDups() ? Duplicates.DROP : Duplicates.RETAIN);
@@ -225,7 +227,11 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 		Index indexDefinition = new Index();
 		indexDefinition.setCollection(StringUtils.hasText(index.collection()) ? index.collection() : collection);
-		indexDefinition.named(StringUtils.hasText(index.name()) ? index.name() : persitentProperty.getFieldName());
+
+		if (!index.useGeneratedName()) {
+			indexDefinition.named(StringUtils.hasText(index.name()) ? index.name() : persitentProperty.getFieldName());
+		}
+
 		indexDefinition.on(persitentProperty.getFieldName(),
 				IndexDirection.ASCENDING.equals(index.direction()) ? Sort.Direction.ASC : Sort.Direction.DESC);
 
@@ -266,7 +272,11 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		indexDefinition.setCollection(StringUtils.hasText(index.collection()) ? index.collection() : collection);
 		indexDefinition.withBits(index.bits());
 		indexDefinition.withMin(index.min()).withMax(index.max());
-		indexDefinition.named(StringUtils.hasText(index.name()) ? index.name() : persistentProperty.getName());
+
+		if (!index.useGeneratedName()) {
+			indexDefinition.named(StringUtils.hasText(index.name()) ? index.name() : persistentProperty.getName());
+		}
+
 		indexDefinition.typed(index.type()).withBucketSize(index.bucketSize()).withAdditionalField(index.additionalField());
 
 		holder.setIndexDefinition(indexDefinition);
