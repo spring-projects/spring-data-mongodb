@@ -58,8 +58,6 @@ public class GeospatialIndex implements IndexDefinition {
 	 */
 	public GeospatialIndex named(String name) {
 
-		Assert.hasText(name, "Name must have text!");
-
 		this.name = name;
 		return this;
 	}
@@ -152,12 +150,12 @@ public class GeospatialIndex implements IndexDefinition {
 
 	public DBObject getIndexOptions() {
 
-		if (name == null && min == null && max == null && bucketSize == null) {
+		if (!StringUtils.hasText(name) && min == null && max == null && bucketSize == null) {
 			return null;
 		}
 
 		DBObject dbo = new BasicDBObject();
-		if (name != null) {
+		if (StringUtils.hasText(name)) {
 			dbo.put("name", name);
 		}
 
@@ -187,6 +185,7 @@ public class GeospatialIndex implements IndexDefinition {
 				}
 				break;
 		}
+
 		return dbo;
 	}
 

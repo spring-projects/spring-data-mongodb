@@ -186,7 +186,9 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			String collection = StringUtils.hasText(index.collection()) ? index.collection() : fallbackCollection;
 
 			CompoundIndexDefinition indexDefinition = new CompoundIndexDefinition((DBObject) JSON.parse(index.def()));
-			indexDefinition.named(index.name());
+			if (!index.useGeneratedName()) {
+				indexDefinition.named(index.name());
+			}
 			if (index.unique()) {
 				indexDefinition.unique(index.dropDups() ? Duplicates.DROP : Duplicates.RETAIN);
 			}
@@ -222,7 +224,11 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		String collection = StringUtils.hasText(index.collection()) ? index.collection() : fallbackCollection;
 
 		Index indexDefinition = new Index();
-		indexDefinition.named(StringUtils.hasText(index.name()) ? index.name() : persitentProperty.getFieldName());
+
+		if (!index.useGeneratedName()) {
+			indexDefinition.named(StringUtils.hasText(index.name()) ? index.name() : persitentProperty.getFieldName());
+		}
+
 		indexDefinition.on(persitentProperty.getFieldName(),
 				IndexDirection.ASCENDING.equals(index.direction()) ? Sort.Direction.ASC : Sort.Direction.DESC);
 
@@ -260,7 +266,11 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		GeospatialIndex indexDefinition = new GeospatialIndex(dotPath);
 		indexDefinition.withBits(index.bits());
 		indexDefinition.withMin(index.min()).withMax(index.max());
-		indexDefinition.named(StringUtils.hasText(index.name()) ? index.name() : persistentProperty.getName());
+
+		if (!index.useGeneratedName()) {
+			indexDefinition.named(StringUtils.hasText(index.name()) ? index.name() : persistentProperty.getName());
+		}
+
 		indexDefinition.typed(index.type()).withBucketSize(index.bucketSize()).withAdditionalField(index.additionalField());
 
 		return new IndexDefinitionHolder(dotPath, indexDefinition, collection);

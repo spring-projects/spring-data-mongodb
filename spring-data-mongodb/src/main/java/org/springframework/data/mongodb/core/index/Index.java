@@ -22,6 +22,7 @@ import java.util.concurrent.TimeUnit;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.query.Order;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
@@ -174,12 +175,8 @@ public class Index implements IndexDefinition {
 
 	public DBObject getIndexOptions() {
 
-		if (name == null && !unique) {
-			return null;
-		}
-
 		DBObject dbo = new BasicDBObject();
-		if (name != null) {
+		if (StringUtils.hasText(name)) {
 			dbo.put("name", name);
 		}
 		if (unique) {
@@ -197,6 +194,7 @@ public class Index implements IndexDefinition {
 		if (expire >= 0) {
 			dbo.put("expireAfterSeconds", expire);
 		}
+
 		return dbo;
 	}
 
