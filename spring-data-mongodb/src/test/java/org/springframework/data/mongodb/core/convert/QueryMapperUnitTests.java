@@ -586,6 +586,70 @@ public class QueryMapperUnitTests {
 		assertThat(dbo.toString(), equalTo("{ \"embedded\" : { \"$in\" : [ { \"_id\" : \"1\"} , { \"_id\" : \"2\"}]}}"));
 	}
 
+	/**
+	 * @see DATAMONGO-689
+	 */
+	@Test
+	public void handleANDWithORCorrectly() {
+
+		Query query = Query.query(where("name").is("test").orOperator(where("someEnum").is(SomeEnum.FOO),
+				where("number").lt(1)));
+
+		DBObject mappedObject = mapper.getMappedObject(query.getQueryObject(),
+				context.getPersistentEntity(SomeClassWithEnumAndFields.class));
+
+		assertNotNull(mappedObject);
+		assertThat(mappedObject.get("$or"), instanceOf(BasicDBList.class));
+		assertThat(((BasicDBList) mappedObject.get("$or")).get(0), instanceOf(DBObject.class));
+		assertThat(((DBObject) ((BasicDBList) mappedObject.get("$or")).get(0)).get("enum"), instanceOf(String.class));
+		assertThat(((DBObject) ((BasicDBList) mappedObject.get("$or")).get(0)).get("enum").toString(), is("FOO"));
+		assertThat(((DBObject) ((BasicDBList) mappedObject.get("$or")).get(1)).get("n"), instanceOf(BasicDBObject.class));
+		assertThat(
+				(Integer) ((BasicDBObject) ((DBObject) ((BasicDBList) mappedObject.get("$or")).get(1)).get("n")).get("$lt"),
+				is(1));
+	}
+
+	/**
+	 * @see DATAMONGO-689
+	 */
+	@Test
+	public void handleANDWithORDBRefCorrectly() {
+
+		Reference ref1 = new Reference();
+		ref1.id = 1L;
+
+		Reference ref2 = new Reference();
+		ref2.id = 2L;
+
+		Query query = Query.query(where("_id").is("123").orOperator(where("reference").is(ref1),
+				where("reference").is(ref2)));
+
+		DBObject mappedObject = mapper
+				.getMappedObject(query.getQueryObject(), context.getPersistentEntity(WithDBRef.class));
+
+		assertNotNull(mappedObject);
+		assertThat(mappedObject.get("$or"), instanceOf(BasicDBList.class));
+		assertThat(((BasicDBList) mappedObject.get("$or")).get(0), instanceOf(DBObject.class));
+		assertThat(((DBObject) ((BasicDBList) mappedObject.get("$or")).get(0)).get("reference"),
+				instanceOf(com.mongodb.DBRef.class));
+		com.mongodb.DBRef dbRef = new com.mongodb.DBRef(null, "reference", 1L);
+		assertThat((com.mongodb.DBRef) ((DBObject) ((BasicDBList) mappedObject.get("$or")).get(0)).get("reference"),
+				is(dbRef));
+	}
+
+	enum SomeEnum {
+		FOO, BAR
+	}
+
+	class SomeClassWithEnumAndFields {
+
+		String name;
+
+		@Field("enum") SomeEnum someEnum;
+
+		@Field("n") Integer number;
+	}
+
 	@Document
 	public class Foo {
 		@Id private ObjectId id;
