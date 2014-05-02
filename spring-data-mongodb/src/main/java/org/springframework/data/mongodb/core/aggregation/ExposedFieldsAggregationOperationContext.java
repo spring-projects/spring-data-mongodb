@@ -65,7 +65,7 @@ class ExposedFieldsAggregationOperationContext implements AggregationOperationCo
 	 */
 	@Override
 	public FieldReference getReference(Field field) {
-		return getReference(field.getTarget());
+		return getReference(field, field.getTarget());
 	}
 
 	/* 
@@ -74,13 +74,30 @@ class ExposedFieldsAggregationOperationContext implements AggregationOperationCo
 	 */
 	@Override
 	public FieldReference getReference(String name) {
+		return getReference(null, name);
+	}
+
+	/**
+	 * Returns a {@link FieldReference} to the given {@link Field} with the given {@code name}.
+	 * 
+	 * @param field may be {@literal null}
+	 * @param name must not be {@literal null}
+	 * @return
+	 */
+	private FieldReference getReference(Field field, String name) {
 
 		Assert.notNull(name, "Name must not be null!");
 
-		ExposedField field = exposedFields.getField(name);
+		ExposedField exposedField = exposedFields.getField(name);
 
-		if (field != null) {
-			return new FieldReference(field);
+		if (exposedField != null) {
+
+			if (field != null) {
+				// we return a FieldReference to the given field directly to make sure that we reference the proper alias here.
+				return new FieldReference(new ExposedField(field, exposedField.isSynthetic()));
+			}
+
+			return new FieldReference(exposedField);
 		}
 
 		if (name.contains(".")) {
