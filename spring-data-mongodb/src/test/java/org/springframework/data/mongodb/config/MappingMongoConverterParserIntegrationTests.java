@@ -25,6 +25,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.beans.factory.config.BeanReference;
 import org.springframework.beans.factory.parsing.BeanDefinitionParsingException;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
@@ -132,6 +133,25 @@ public class MappingMongoConverterParserIntegrationTests {
 		exception.expectMessage("Mongo Converter must not be defined as nested bean.");
 
 		loadNestedBeanConfiguration();
+	}
+
+	/**
+	 * @see DATAMONGO-925
+	 */
+	@Test
+	public void shouldSupportCustomFieldNamingStrategy() {
+
+		BeanDefinitionRegistry factory = new DefaultListableBeanFactory();
+		XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(factory);
+		reader.loadBeanDefinitions(new ClassPathResource("namespace/converter-custom-fieldnamingstrategy.xml"));
+
+		BeanDefinition definition = reader.getRegistry().getBeanDefinition(
+				"mappingConverterWithCustomFieldNamingStrategy.mongoMappingContext");
+
+		BeanReference value = (BeanReference) definition.getPropertyValues().getPropertyValue("fieldNamingStrategy")
+				.getValue();
+
+		assertThat(value.getBeanName(), is("customFieldNamingStrategy"));
 	}
 
 	private void loadValidConfiguration() {
