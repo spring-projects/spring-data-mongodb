@@ -47,6 +47,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mongodb.core.CollectionCallback;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.AggregationTests.CarDescriptor.Entry;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.util.Version;
 import org.springframework.test.context.ContextConfiguration;
@@ -822,6 +823,40 @@ public class AggregationTests {
 		assertThat(invoice.getTotalAmount(), is(closeTo(9.877, 000001)));
 	}
 
+	/**
+	 * @see DATAMONGO-924
+	 */
+	@Test
+	public void shouldAllowGroupingByAliasedFieldDefinedInFormerAggregationStage() {
+
+		mongoTemplate.dropCollection(CarPerson.class);
+
+		CarPerson person1 = new CarPerson("first1", "last1", new CarDescriptor.Entry("MAKE1", "MODEL1", 2000),
+				new CarDescriptor.Entry("MAKE1", "MODEL2", 2001), new CarDescriptor.Entry("MAKE2", "MODEL3", 2010),
+				new CarDescriptor.Entry("MAKE3", "MODEL4", 2014));
+
+		CarPerson person2 = new CarPerson("first2", "last2", new CarDescriptor.Entry("MAKE3", "MODEL4", 2014));
+
+		CarPerson person3 = new CarPerson("first3", "last3", new CarDescriptor.Entry("MAKE2", "MODEL5", 2011));
+
+		mongoTemplate.save(person1);
+		mongoTemplate.save(person2);
+		mongoTemplate.save(person3);
+
+		TypedAggregation<CarPerson> agg = Aggregation.newAggregation(CarPerson.class,
+				unwind("descriptors.carDescriptor.entries"), //
+				project() //
+						.and("descriptors.carDescriptor.entries.make").as("make") //
+						.and("descriptors.carDescriptor.entries.model").as("model") //
+						.and("firstName").as("firstName") //
+						.and("lastName").as("lastName"), //
+				group("make"));
+
+		AggregationResults<DBObject> result = mongoTemplate.aggregate(agg, DBObject.class);
+
+		assertThat(result.getMappedResults(), hasSize(3));
+	}
+
 	private void assertLikeStats(LikeStats like, String id, long count) {
 
 		assertThat(like, is(notNullValue()));
@@ -936,6 +971,54 @@ public class AggregationTests {
 			this.id = id;
 			this.content = content;
 			this.createDate = createDate;
+		}
+	}
+
+	@org.springframework.data.mongodb.core.mapping.Document
+	static class CarPerson {
+
+		@Id private String id;
+		private String firstName;
+		private String lastName;
+		private Descriptors descriptors;
+
+		public CarPerson(String firstname, String lastname, Entry... entries) {
+			this.firstName = firstname;
+			this.lastName = lastname;
+
+			this.descriptors = new Descriptors();
+
+			this.descriptors.carDescriptor = new CarDescriptor(entries);
+		}
+	}
+
+	static class Descriptors {
+		private CarDescriptor carDescriptor;
+	}
+
+	static class CarDescriptor {
+
+		private List<Entry> entries = new ArrayList<AggregationTests.CarDescriptor.Entry>();
+
+		public CarDescriptor(Entry... entries) {
+
+			for (Entry entry : entries) {
+				this.entries.add(entry);
+			}
+		}
+
+		static class Entry {
+			private String make;
+			private String model;
+			private int year;
+
+			public Entry() {}
+
+			public Entry(String make, String model, int year) {
+				this.make = make;
+				this.model = model;
+				this.year = year;
+			}
 		}
 	}
 }
