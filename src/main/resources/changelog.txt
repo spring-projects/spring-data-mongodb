@@ -1,6 +1,29 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 1.4.2.RELEASE (2014-04-15)
+---------------------------------------------
+** Fix
+    * [DATAMONGO-880] - Improved handling of persistence of lazy-loaded DBRefs.
+    * [DATAMONGO-884] - Improved handling for Object methods in LazyLoadingInterceptor.
+    * [DATAMONGO-887] - Added unit tests to verify TreeMaps can be converted.
+    * [DATAMONGO-888] - Sorting now considers mapping information.
+    * [DATAMONGO-890] - Fixed Point.toString().
+    * [DATAMONGO-892] - Reject nested MappingMongoConverter declarations in XML.
+    * [DATAMONGO-893] - Converter must not write "_class" information for know types.
+    * [DATAMONGO-897] - Fixed potential NullPointerException in QueryMapper.
+    * [DATAMONGO-908] - Support for nested field references in group operations.
+
+** Improvement
+    * [DATAMONGO-881] - Allow custom conversions to override default conversions.
+
+** Task
+    * [DATAMONGO-895] - Use most specific type for checks against values in DBObjects.
+    * [DATAMONGO-896] - Assert compatibility with latest MongoDB Java driver.
+    * [DATAMONGO-905] - Removed obsolete dependency to CGLib from cross-store support.
+    * [DATAMONGO-907] - Assert compatibility with mongodb 2.6.
+    * [DATAMONGO-911] - Release 1.4.2
+
 Changes in version 1.5.0.M1 (2014-03-31)
 ----------------------------------------
 ** Fix
@@ -30,7 +53,7 @@ Changes in version 1.5.0.M1 (2014-03-31)
 ** New Feature
     * [DATAMONGO-566] - Provide support for removeBy… / deleteBy… methods like for findBy… on repository interfaces.
     * [DATAMONGO-870] - Add support for sliced query method execution.
-    
+
 ** Task
     * [DATAMONGO-876] - Adapt to changes introduced for property access configuration.
     * [DATAMONGO-883] - Update auditing configuration to enable auditing annotations on accessors.
@@ -58,7 +81,7 @@ Changes in version 1.3.5.RELEASE (2014-03-10)
 ** Fix
     * [DATAMONGO-829] - NearQuery, when used in conjunction with a Query, no longer sets num=0, unless Query specifies otherwise.
     * [DATAMONGO-871] - Repository queries support array return type.
-    
+
 ** Improvement
     * [DATAMONGO-865] - Avoid ClassNotFoundException during test runs.
 
@@ -84,7 +107,7 @@ Changes in version 1.4.0.RELEASE (2014-02-24)
     * [DATAMONGO-848] - Ensure compatibility with Mongo Java driver 2.12.
     * [DATAMONGO-853] - Update no longer allows null keys.
     * [DATAMONGO-856] - Update documentation.
-    
+
 Changes in version 1.3.4.RELEASE (2014-02-17)
 ---------------------------------------------
 ** Bug
@@ -134,7 +157,7 @@ Changes in version 1.4.0.RC1 (2014-01-29)
     * [DATAMONGO-824] - Add contribution guidelines
     * [DATAMONGO-826] - Release Spring Data MongoDB 1.4.0.RC1
     * [DATAMONGO-835] - Code cleanups
-    
+
 Changes in version 1.3.3.RELEASE (2013-12-11)
 ---------------------------------------------
 ** Bug
@@ -352,7 +375,7 @@ Changes in version 1.3.0.M1 (2013-06-04)
     * [DATAMONGO-672] - Upgrade to latest Spring Data Build and Commons
     * [DATAMONGO-678] - Performance improvements in CustomConversions
     * [DATAMONGO-690] - Release 1.3 M1
-    
+
 Changes in version 1.2.1.GA (2013-04-17)
 ----------------------------------------
 ** Bug
@@ -378,7 +401,7 @@ Changes in version 1.2.1.GA (2013-04-17)
     * [DATAMONGO-637] - Typo in Query.query(…)
     * [DATAMONGO-651] - WriteResult not available from thrown Exception
     * [DATAMONGO-656] - Potential NullPointerException when debugging in MongoTemplate
-    
+
 ** Task
     * [DATAMONGO-597] - Website is severely out-of-date
     * [DATAMONGO-654] - Release 1.2.1
@@ -663,7 +686,7 @@ Changes in version 1.1.0.M1 (2012-05-07)
     * [DATAMONGO-396] - Release 1.1.0.M1.
     * [DATAMONGO-432] - Upgrade to Spring Data Commons 1.3.0.RC1
     * [DATAMONGO-439] - Add performance tests
-    
+
 Changes in version 1.0.1.RELEASE MongoDB (2012-02-11)
 -----------------------------------------------------
 
