@@ -1,6 +1,35 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 1.5.0.RC1 (2014-05-02)
+-----------------------------------------
+* DATAMONGO-924 - Aggregation not working with as() method in project() pipeline operator.
+* DATAMONGO-921 - Upgrade to MongoDB Java driver 2.12.1.
+* DATAMONGO-920 - Fix debug messages for delete events in AbstractMongoEventListener.
+* DATAMONGO-919 - Release 1.5 RC1.
+* DATAMONGO-917 - DefaultDbRefResolver throws NPE when bundled into an uberjar.
+* DATAMONGO-914 - Improve resolving of LazyLoading proxies for classes that override equals/hashcode.
+* DATAMONGO-913 - Can't query using lazy DBRef objects.
+* DATAMONGO-912 - Aggregation#project followed by Aggregation#match with custom converter causes IllegalArgumentException.
+* DATAMONGO-910 - Upgrade to latest MongoDB Java driver (2.12).
+* DATAMONGO-909 - @CompoundIndex on inherited entity classes.
+* DATAMONGO-908 - Nested field references in group operations broken.
+* DATAMONGO-907 - Assert compatibility with mongodb 2.6.0.
+* DATAMONGO-905 - Remove obsolete CGLib dependency from cross store module.
+* DATAMONGO-901 - MongoRepositoryConfigurationExtension fails to invoke super method.
+* DATAMONGO-899 - Overhaul automatic index creation.
+* DATAMONGO-898 - MapReduce seems not to work when javascript not being escaped.
+* DATAMONGO-897 - FindAndUpdate broken when using @DbRef and interface as target.
+* DATAMONGO-896 - Assert compatibility with latest MongoDB Java driver.
+* DATAMONGO-895 - Use most specific type for checks against values in DBObjects.
+* DATAMONGO-893 - Mapping Convertor does not remove "_class" property on collection of embedded objects.
+* DATAMONGO-892 - <mongo:mapping-converter> can't be configured as nested bean definition.
+* DATAMONGO-888 - Mapping is not applied to SortObject during queries.
+* DATAMONGO-866 - Add new field naming strategy and make it configurable through XML/Java config.
+* DATAMONGO-847 - Allow usage of Criteria within Update.
+* DATAMONGO-827 - @Indexed and @CompundIndex cannot be created without giving index name.
+
+
 Changes in version 1.4.2.RELEASE (2014-04-15)
 ---------------------------------------------
 
