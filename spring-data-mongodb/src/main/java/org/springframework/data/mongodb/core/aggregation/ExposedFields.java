@@ -269,13 +269,20 @@ public final class ExposedFields implements Iterable<ExposedField> {
 		}
 
 		/**
+		 * @return the synthetic
+		 */
+		public boolean isSynthetic() {
+			return synthetic;
+		}
+
+		/**
 		 * Returns whether the field can be referred to using the given name.
 		 * 
-		 * @param input
+		 * @param name
 		 * @return
 		 */
-		public boolean canBeReferredToBy(String input) {
-			return getTarget().equals(input);
+		public boolean canBeReferredToBy(String name) {
+			return getName().equals(name) || getTarget().equals(name);
 		}
 
 		/*
@@ -340,6 +347,7 @@ public final class ExposedFields implements Iterable<ExposedField> {
 		public FieldReference(ExposedField field) {
 
 			Assert.notNull(field, "ExposedField must not be null!");
+
 			this.field = field;
 		}
 

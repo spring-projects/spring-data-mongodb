@@ -200,4 +200,28 @@ public class AggregationUnitTests {
 
 		assertThat(id.get("ruleType"), is((Object) "$rules.ruleType"));
 	}
+
+	/**
+	 * @see DATAMONGO-924
+	 */
+	@Test
+	public void referencingProjectionAliasesFromPreviousStepShouldReferToTheSameFieldTarget() {
+
+		DBObject agg = newAggregation( //
+				project().and("foo.bar").as("ba") //
+				, project().and("ba").as("b") //
+		).toDbObject("foo", Aggregation.DEFAULT_CONTEXT);
+
+		DBObject projection0 = extractPipelineElement(agg, 0, "$project");
+		assertThat(projection0, is((DBObject) new BasicDBObject("ba", "$foo.bar")));
+
+		DBObject projection1 = extractPipelineElement(agg, 1, "$project");
+		assertThat(projection1, is((DBObject) new BasicDBObject("b", "$ba")));
+	}
+
+	private DBObject extractPipelineElement(DBObject agg, int index, String operation) {
+
+		List<DBObject> pipeline = (List<DBObject>) agg.get("pipeline");
+		return (DBObject) pipeline.get(index).get(operation);
+	}
 }
