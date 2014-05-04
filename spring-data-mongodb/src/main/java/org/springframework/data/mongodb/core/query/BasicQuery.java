@@ -20,11 +20,13 @@ import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
 
 /**
- * Custom {@link Query} implementation to setup a basic query from some arbitrary JSON query string.
- * 
+ * Custom {@link org.springframework.data.mongodb.core.query.Query} implementation to setup a basic query from some arbitrary JSON query string.
+ *
  * @author Thomas Risberg
  * @author Oliver Gierke
+ * @author Eugene Umputun
  */
+
 public class BasicQuery extends Query {
 
 	private final DBObject queryObject;
@@ -83,5 +85,29 @@ public class BasicQuery extends Query {
 
 	public void setSortObject(DBObject sortObject) {
 		this.sortObject = sortObject;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		if (!super.equals(o)) return false;
+
+		BasicQuery that = (BasicQuery) o;
+
+		if (fieldsObject != null ? !fieldsObject.equals(that.fieldsObject) : that.fieldsObject != null) return false;
+		if (queryObject != null ? !queryObject.equals(that.queryObject) : that.queryObject != null) return false;
+		if (sortObject != null ? !sortObject.equals(that.sortObject) : that.sortObject != null) return false;
+
+		return true;
+	}
+
+	@Override
+	public int hashCode() {
+		int result = super.hashCode();
+		result = 31 * result + (queryObject != null ? queryObject.hashCode() : 0);
+		result = 31 * result + (fieldsObject != null ? fieldsObject.hashCode() : 0);
+		result = 31 * result + (sortObject != null ? sortObject.hashCode() : 0);
+		return result;
 	}
 }
