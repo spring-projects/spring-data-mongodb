@@ -277,7 +277,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(CompoundIndexOnLevelZero.class);
 
 			assertThat(indexDefinitions, hasSize(1));
-			assertIndexPathAndCollection("compound_index", "CompoundIndexOnLevelZero", indexDefinitions.get(0));
+			assertIndexPathAndCollection(new String[] { "foo", "bar" }, "CompoundIndexOnLevelZero", indexDefinitions.get(0));
 		}
 
 		/**
@@ -324,13 +324,71 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 					equalTo(new BasicDBObjectBuilder().add("unique", true).add("dropDups", true).add("sparse", true)
 							.add("background", true).add("expireAfterSeconds", 10L).get()));
 			assertThat(indexDefinition.getIndexKeys(), equalTo(new BasicDBObjectBuilder().add("foo", 1).add("bar", -1).get()));
+		}
 
+		/**
+		 * @see DATAMONGO-929
+		 */
+		@Test
+		public void compoundIndexPathOnLevelOneIsResolvedCorrectly() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(CompoundIndexOnLevelOne.class);
+
+			assertThat(indexDefinitions, hasSize(1));
+			assertIndexPathAndCollection(new String[] { "zero.foo", "zero.bar" }, "CompoundIndexOnLevelOne",
+					indexDefinitions.get(0));
+		}
+
+		/**
+		 * @see DATAMONGO-929
+		 */
+		@Test
+		public void emptyCompoundIndexPathOnLevelOneIsResolvedCorrectly() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(CompoundIndexOnLevelOneWithEmptyIndexDefinition.class);
+
+			assertThat(indexDefinitions, hasSize(1));
+			assertIndexPathAndCollection(new String[] { "zero" }, "CompoundIndexOnLevelZeroWithEmptyIndexDef",
+					indexDefinitions.get(0));
+		}
+
+		/**
+		 * @see DATAMONGO-929
+		 */
+		@Test
+		public void singleCompoundIndexPathOnLevelZeroIsResolvedCorrectly() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(SingleCompoundIndex.class);
+
+			assertThat(indexDefinitions, hasSize(1));
+			assertIndexPathAndCollection(new String[] { "foo", "bar" }, "CompoundIndexOnLevelZero", indexDefinitions.get(0));
+		}
+
+		@Document(collection = "CompoundIndexOnLevelOne")
+		static class CompoundIndexOnLevelOne {
+
+			CompoundIndexOnLevelZero zero;
+		}
+
+		@Document(collection = "CompoundIndexOnLevelZeroWithEmptyIndexDef")
+		static class CompoundIndexOnLevelOneWithEmptyIndexDefinition {
+
+			CompoundIndexOnLevelZeroWithEmptyIndexDef zero;
 		}
 
 		@Document(collection = "CompoundIndexOnLevelZero")
 		@CompoundIndexes({ @CompoundIndex(name = "compound_index", def = "{'foo': 1, 'bar': -1}", background = true,
 				dropDups = true, expireAfterSeconds = 10, sparse = true, unique = true) })
 		static class CompoundIndexOnLevelZero {}
+
+		@CompoundIndexes({ @CompoundIndex(name = "compound_index", background = true, dropDups = true,
+				expireAfterSeconds = 10, sparse = true, unique = true) })
+		static class CompoundIndexOnLevelZeroWithEmptyIndexDef {}
+
+		@Document(collection = "CompoundIndexOnLevelZero")
+		@CompoundIndex(name = "compound_index", def = "{'foo': 1, 'bar': -1}", background = true, dropDups = true,
+				expireAfterSeconds = 10, sparse = true, unique = true)
+		static class SingleCompoundIndex {}
 
 		static class IndexDefinedOnSuperClass extends CompoundIndexOnLevelZero {
 
@@ -426,7 +484,15 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 	private static void assertIndexPathAndCollection(String expectedPath, String expectedCollection,
 			IndexDefinitionHolder holder) {
 
-		assertThat(holder.getPath(), equalTo(expectedPath));
+		assertIndexPathAndCollection(new String[] { expectedPath }, expectedCollection, holder);
+	}
+
+	private static void assertIndexPathAndCollection(String[] expectedPaths, String expectedCollection,
+			IndexDefinitionHolder holder) {
+
+		for (String expectedPath : expectedPaths) {
+			assertThat(holder.getIndexDefinition().getIndexKeys().containsField(expectedPath), equalTo(true));
+		}
 		assertThat(holder.getCollection(), equalTo(expectedCollection));
 	}
 }
