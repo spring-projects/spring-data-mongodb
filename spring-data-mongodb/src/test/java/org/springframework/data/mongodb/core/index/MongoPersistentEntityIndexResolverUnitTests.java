@@ -439,6 +439,55 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			assertThat(indexDefinitions, empty());
 		}
 
+		/**
+		 * @see DATAMONGO-926
+		 */
+		@Test
+		public void shouldNotRunIntoStackOverflow() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(CycleStartingInBetween.class);
+			assertThat(indexDefinitions, hasSize(1));
+		}
+
+		/**
+		 * @see DATAMONGO-926
+		 */
+		@Test
+		public void indexShouldBeFoundEvenForCyclePropertyReferenceOnLevelZero() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(CycleLevelZero.class);
+			assertIndexPathAndCollection("indexedProperty", "cycleLevelZero", indexDefinitions.get(0));
+			assertIndexPathAndCollection("cyclicReference.indexedProperty", "cycleLevelZero", indexDefinitions.get(1));
+			assertThat(indexDefinitions, hasSize(2));
+		}
+
+		/**
+		 * @see DATAMONGO-926
+		 */
+		@Test
+		public void indexShouldBeFoundEvenForCyclePropertyReferenceOnLevelOne() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(CycleOnLevelOne.class);
+			assertIndexPathAndCollection("reference.indexedProperty", "cycleOnLevelOne", indexDefinitions.get(0));
+			assertIndexPathAndCollection("reference.cyclicReference.reference.indexedProperty", "cycleOnLevelOne",
+					indexDefinitions.get(1));
+			assertThat(indexDefinitions, hasSize(2));
+		}
+
+		/**
+		 * @see DATAMONGO-926
+		 */
+		@Test
+		public void indexBeResolvedCorrectlyWhenPropertiesOfDifferentTypesAreNamedEqually() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(NoCycleButIdenticallyNamedProperties.class);
+			assertIndexPathAndCollection("foo", "noCycleButIdenticallyNamedProperties", indexDefinitions.get(0));
+			assertIndexPathAndCollection("reference.foo", "noCycleButIdenticallyNamedProperties", indexDefinitions.get(1));
+			assertIndexPathAndCollection("reference.deep.foo", "noCycleButIdenticallyNamedProperties",
+					indexDefinitions.get(2));
+			assertThat(indexDefinitions, hasSize(3));
+		}
+
 		@Document
 		static class MixedIndexRoot {
 
@@ -463,6 +512,48 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			@Indexed Outer outer;
 		}
 
+		@Document
+		static class CycleLevelZero {
+
+			@Indexed String indexedProperty;
+			CycleLevelZero cyclicReference;
+		}
+
+		@Document
+		static class CycleOnLevelOne {
+
+			CycleOnLevelOneReferenced reference;
+		}
+
+		static class CycleOnLevelOneReferenced {
+
+			@Indexed String indexedProperty;
+			CycleOnLevelOne cyclicReference;
+		}
+
+		@Document
+		public static class CycleStartingInBetween {
+
+			CycleOnLevelOne referenceToCycleStart;
+		}
+
+		@Document
+		static class NoCycleButIdenticallyNamedProperties {
+
+			@Indexed String foo;
+			NoCycleButIdenticallyNamedPropertiesNested reference;
+		}
+
+		static class NoCycleButIdenticallyNamedPropertiesNested {
+
+			@Indexed String foo;
+			NoCycleButIndenticallNamedPropertiesDeeplyNested deep;
+		}
+
+		static class NoCycleButIndenticallNamedPropertiesDeeplyNested {
+
+			@Indexed String foo;
+		}
 	}
 
 	private static List<IndexDefinitionHolder> prepareMappingContextAndResolveIndexForType(Class<?> type) {
