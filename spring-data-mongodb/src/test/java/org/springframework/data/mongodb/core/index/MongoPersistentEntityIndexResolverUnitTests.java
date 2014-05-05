@@ -381,6 +381,16 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			assertThat(indexDefinitions, empty());
 		}
 
+		/**
+		 * @see DATAMONGO-926
+		 */
+		@Test
+		public void shouldNotRunIntoStackOverflow() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(ProgramObject.class);
+			assertThat(indexDefinitions, hasSize(1));
+		}
+
 		@Document
 		static class MixedIndexRoot {
 
@@ -404,6 +414,80 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 			@Indexed Outer outer;
 		}
+
+		// --> DATAMONGO-926
+		@Document
+		static class ProgramObject {
+
+			final Descriptors descriptors;
+
+			public ProgramObject(Descriptors descriptors) {
+
+				super();
+				this.descriptors = descriptors;
+			}
+
+		}
+
+		static class Descriptors {
+
+			final NameLongDescriptor nameLongDescriptor;
+
+			public Descriptors(NameLongDescriptor nameLongDescriptor) {
+
+				super();
+				this.nameLongDescriptor = nameLongDescriptor;
+			}
+
+		}
+
+		static abstract class Descriptor {
+
+			final int tag;
+
+			public Descriptor(int tag) {
+				super();
+				this.tag = tag;
+			}
+
+		}
+
+		static class NameLongDescriptor extends Descriptor {
+
+			final NameLongBean[] entries;
+
+			public NameLongDescriptor(NameLongBean[] entries) {
+
+				super(0);
+				this.entries = entries;
+			}
+
+		}
+
+		static class NameLongBean {
+
+			final NameIndexBean[] beans;
+
+			public NameLongBean(NameIndexBean[] beans) {
+				super();
+				this.beans = beans;
+			}
+
+		}
+
+		static class NameIndexBean {
+
+			final String name;
+
+			final @Indexed int index;
+
+			public NameIndexBean(String name, int index) {
+				super();
+				this.name = name;
+				this.index = index;
+			}
+		}
+		// <-- DATAMONGO-926
 
 	}
 
