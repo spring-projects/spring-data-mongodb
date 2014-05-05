@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mapping.PropertyHandler;
 import org.springframework.data.mongodb.core.index.Index.Duplicates;
@@ -31,6 +32,8 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
+import com.mongodb.BasicDBObject;
+import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
 
@@ -158,7 +161,8 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	private List<IndexDefinitionHolder> potentiallyCreateCompoundIndexDefinitions(String dotPath, String collection,
 			Class<?> type) {
 
-		if (AnnotationUtils.findAnnotation(type, CompoundIndexes.class) == null) {
+		if (AnnotationUtils.findAnnotation(type, CompoundIndexes.class) == null
+				&& AnnotationUtils.findAnnotation(type, CompoundIndex.class) == null) {
 			return Collections.emptyList();
 		}
 
@@ -176,36 +180,70 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	protected List<IndexDefinitionHolder> createCompoundIndexDefinitions(String dotPath, String fallbackCollection,
 			Class<?> type) {
 
+		List<IndexDefinitionHolder> indexDefinitions = new ArrayList<MongoPersistentEntityIndexResolver.IndexDefinitionHolder>();
+
 		CompoundIndexes indexes = AnnotationUtils.findAnnotation(type, CompoundIndexes.class);
-		List<IndexDefinitionHolder> indexDefinitions = new ArrayList<MongoPersistentEntityIndexResolver.IndexDefinitionHolder>(
-				indexes.value().length);
+		if (indexes != null) {
+			for (CompoundIndex index : indexes.value()) {
+				indexDefinitions.add(createCompoundIndexDefinition(dotPath, fallbackCollection, index));
+			}
+		}
 
-		for (CompoundIndex index : indexes.value()) {
-
-			String path = StringUtils.hasText(index.name()) ? index.name() : dotPath;
-			String collection = StringUtils.hasText(index.collection()) ? index.collection() : fallbackCollection;
-
-			CompoundIndexDefinition indexDefinition = new CompoundIndexDefinition((DBObject) JSON.parse(index.def()));
-			if (!index.useGeneratedName()) {
-				indexDefinition.named(index.name());
-			}
-			if (index.unique()) {
-				indexDefinition.unique(index.dropDups() ? Duplicates.DROP : Duplicates.RETAIN);
-			}
-			if (index.sparse()) {
-				indexDefinition.sparse();
-			}
-			if (index.background()) {
-				indexDefinition.background();
-			}
-			if (index.expireAfterSeconds() >= 0) {
-				indexDefinition.expire(index.expireAfterSeconds(), TimeUnit.SECONDS);
-			}
-
-			indexDefinitions.add(new IndexDefinitionHolder(path, indexDefinition, collection));
+		CompoundIndex index = AnnotationUtils.findAnnotation(type, CompoundIndex.class);
+		if (index != null) {
+			indexDefinitions.add(createCompoundIndexDefinition(dotPath, fallbackCollection, index));
 		}
 
 		return indexDefinitions;
+	}
+
+	protected IndexDefinitionHolder createCompoundIndexDefinition(String dotPath, String fallbackCollection,
+			CompoundIndex index) {
+
+		CompoundIndexDefinition indexDefinition = new CompoundIndexDefinition(resolveCompoundIndexKeyFromStringDefinition(
+				dotPath, index.def()));
+
+		if (!index.useGeneratedName()) {
+			indexDefinition.named(index.name());
+		}
+		if (index.unique()) {
+			indexDefinition.unique(index.dropDups() ? Duplicates.DROP : Duplicates.RETAIN);
+		}
+		if (index.sparse()) {
+			indexDefinition.sparse();
+		}
+		if (index.background()) {
+			indexDefinition.background();
+		}
+		if (index.expireAfterSeconds() >= 0) {
+			indexDefinition.expire(index.expireAfterSeconds(), TimeUnit.SECONDS);
+		}
+
+		String collection = StringUtils.hasText(index.collection()) ? index.collection() : fallbackCollection;
+		return new IndexDefinitionHolder(dotPath, indexDefinition, collection);
+	}
+
+	private DBObject resolveCompoundIndexKeyFromStringDefinition(String dotPath, String keyDefinitionString) {
+
+		if (!StringUtils.hasText(dotPath) && !StringUtils.hasText(keyDefinitionString)) {
+			throw new InvalidDataAccessApiUsageException("Cannot create index on root level for empty keys.");
+		}
+
+		if (!StringUtils.hasText(keyDefinitionString)) {
+			return new BasicDBObject(dotPath, 1);
+		}
+
+		DBObject dbo = (DBObject) JSON.parse(keyDefinitionString);
+		if (!StringUtils.hasText(dotPath)) {
+			return dbo;
+		}
+
+		BasicDBObjectBuilder dboBuilder = new BasicDBObjectBuilder();
+
+		for (String key : dbo.keySet()) {
+			dboBuilder.add(dotPath + "." + key, dbo.get(key));
+		}
+		return dboBuilder.get();
 	}
 
 	/**
@@ -223,14 +261,12 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		Indexed index = persitentProperty.findAnnotation(Indexed.class);
 		String collection = StringUtils.hasText(index.collection()) ? index.collection() : fallbackCollection;
 
-		Index indexDefinition = new Index();
+		Index indexDefinition = new Index().on(dotPath,
+				IndexDirection.ASCENDING.equals(index.direction()) ? Sort.Direction.ASC : Sort.Direction.DESC);
 
 		if (!index.useGeneratedName()) {
-			indexDefinition.named(StringUtils.hasText(index.name()) ? index.name() : persitentProperty.getFieldName());
+			indexDefinition.named(StringUtils.hasText(index.name()) ? index.name() : dotPath);
 		}
-
-		indexDefinition.on(persitentProperty.getFieldName(),
-				IndexDirection.ASCENDING.equals(index.direction()) ? Sort.Direction.ASC : Sort.Direction.DESC);
 
 		if (index.unique()) {
 			indexDefinition.unique(index.dropDups() ? Duplicates.DROP : Duplicates.RETAIN);
@@ -306,7 +342,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		}
 
 		/**
-		 * Get the {@liteal "dot"} path used to create the index.
+		 * Get the {@literal "dot"} path used to create the index.
 		 * 
 		 * @return
 		 */

@@ -36,11 +36,12 @@ public @interface CompoundIndex {
 
 	/**
 	 * The actual index definition in JSON format. The keys of the JSON document are the fields to be indexed, the values
-	 * define the index direction (1 for ascending, -1 for descending).
+	 * define the index direction (1 for ascending, -1 for descending). <br />
+	 * If left empty on nested document, the whole document will be indexed.
 	 * 
 	 * @return
 	 */
-	String def();
+	String def() default "";
 
 	/**
 	 * It does not actually make sense to use that attribute as the direction has to be defined in the {@link #def()}
