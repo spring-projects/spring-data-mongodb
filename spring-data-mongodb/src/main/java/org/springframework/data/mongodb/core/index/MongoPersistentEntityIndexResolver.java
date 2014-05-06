@@ -17,9 +17,15 @@ package org.springframework.data.mongodb.core.index;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mapping.PropertyHandler;
@@ -44,6 +50,8 @@ import com.mongodb.util.JSON;
  * @since 1.5
  */
 public class MongoPersistentEntityIndexResolver implements IndexResolver {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(MongoPersistentEntityIndexResolver.class);
 
 	private final MongoMappingContext mappingContext;
 
@@ -85,6 +93,8 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		final List<IndexDefinitionHolder> indexInformation = new ArrayList<MongoPersistentEntityIndexResolver.IndexDefinitionHolder>();
 		indexInformation.addAll(potentiallyCreateCompoundIndexDefinitions("", root.getCollection(), root.getType()));
 
+		final CycleGuard guard = new CycleGuard();
+
 		root.doWithProperties(new PropertyHandler<MongoPersistentProperty>() {
 
 			@Override
@@ -92,7 +102,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 				if (persistentProperty.isEntity()) {
 					indexInformation.addAll(resolveIndexForClass(persistentProperty.getActualType(),
-							persistentProperty.getFieldName(), root.getCollection()));
+							persistentProperty.getFieldName(), root.getCollection(), guard));
 				}
 
 				IndexDefinitionHolder indexDefinitionHolder = createIndexDefinitionHolderForProperty(
@@ -115,7 +125,8 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	 * @return List of {@link IndexDefinitionHolder} representing indexes for given type and its referenced property
 	 *         types. Will never be {@code null}.
 	 */
-	private List<IndexDefinitionHolder> resolveIndexForClass(Class<?> type, final String path, final String collection) {
+	private List<IndexDefinitionHolder> resolveIndexForClass(final Class<?> type, final String path,
+			final String collection, final CycleGuard guard) {
 
 		final List<IndexDefinitionHolder> indexInformation = new ArrayList<MongoPersistentEntityIndexResolver.IndexDefinitionHolder>();
 		indexInformation.addAll(potentiallyCreateCompoundIndexDefinitions(path, collection, type));
@@ -127,9 +138,15 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			public void doWithPersistentProperty(MongoPersistentProperty persistentProperty) {
 
 				String propertyDotPath = (StringUtils.hasText(path) ? path + "." : "") + persistentProperty.getFieldName();
+				guard.protect(persistentProperty, path);
 
 				if (persistentProperty.isEntity()) {
-					indexInformation.addAll(resolveIndexForClass(persistentProperty.getActualType(), propertyDotPath, collection));
+					try {
+						indexInformation.addAll(resolveIndexForClass(persistentProperty.getActualType(), propertyDotPath,
+								collection, guard));
+					} catch (CyclicPropertyReferenceException e) {
+						LOGGER.warn(e.getMessage());
+					}
 				}
 
 				IndexDefinitionHolder indexDefinitionHolder = createIndexDefinitionHolderForProperty(propertyDotPath,
@@ -274,6 +291,111 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		indexDefinition.typed(index.type()).withBucketSize(index.bucketSize()).withAdditionalField(index.additionalField());
 
 		return new IndexDefinitionHolder(dotPath, indexDefinition, collection);
+	}
+
+	/**
+	 * {@link CycleGuard} holds information about properties and the paths for accessing those. This information is used
+	 * to detect potential cycles within the references.
+	 * 
+	 * @author Christoph Strobl
+	 */
+	private static class CycleGuard {
+
+		private final Map<String, List<Path>> propertyTypeMap;
+
+		CycleGuard() {
+			this.propertyTypeMap = new LinkedHashMap<String, List<Path>>();
+		}
+
+		/**
+		 * @param property The property to inspect
+		 * @param path The path under which the property can be reached.
+		 * @throws CyclicPropertyReferenceException in case a potential cycle is detected.
+		 */
+		void protect(MongoPersistentProperty property, String path) throws CyclicPropertyReferenceException {
+
+			String propertyTypeKey = createMapKey(property);
+			if (propertyTypeMap.containsKey(propertyTypeKey)) {
+
+				List<Path> paths = propertyTypeMap.get(propertyTypeKey);
+
+				for (Path existingPath : paths) {
+
+					if (existingPath.cycles(property)) {
+						paths.add(new Path(property, path));
+						throw new CyclicPropertyReferenceException(property.getFieldName(), property.getOwner().getType(),
+								existingPath.getPath());
+					}
+				}
+
+				paths.add(new Path(property, path));
+
+			} else {
+
+				ArrayList<Path> paths = new ArrayList<Path>();
+				paths.add(new Path(property, path));
+				propertyTypeMap.put(propertyTypeKey, paths);
+			}
+		}
+
+		private String createMapKey(MongoPersistentProperty property) {
+			return property.getOwner().getType().getSimpleName() + ":" + property.getFieldName();
+		}
+
+		private static class Path {
+
+			private MongoPersistentProperty property;
+			String path;
+
+			Path(MongoPersistentProperty property, String path) {
+
+				this.property = property;
+				this.path = path;
+			}
+
+			public String getPath() {
+				return path;
+			}
+
+			boolean cycles(MongoPersistentProperty property) {
+
+				Pattern pattern = Pattern.compile("\\p{Punct}?" + Pattern.quote(property.getFieldName()) + "(\\p{Punct}|\\w)?");
+				Matcher matcher = pattern.matcher(path);
+
+				int count = 0;
+				while (matcher.find()) {
+					count++;
+				}
+
+				return count >= 1 && property.getOwner().getType().equals(this.property.getOwner().getType());
+			}
+		}
+	}
+
+	/**
+	 * @author Christoph Strobl
+	 * @since 1.5
+	 */
+	public static class CyclicPropertyReferenceException extends RuntimeException {
+
+		private static final long serialVersionUID = -3762979307658772277L;
+
+		private String propertyName;
+		private Class<?> type;
+		private String dotPath;
+
+		public CyclicPropertyReferenceException(String propertyName, Class<?> type, String dotPath) {
+
+			this.propertyName = propertyName;
+			this.type = type;
+			this.dotPath = dotPath;
+		}
+
+		@Override
+		public String getMessage() {
+			return String.format("Found cycle for field '%s' in type '%s' for path '%s'", propertyName, type.getSimpleName(),
+					dotPath);
+		}
 	}
 
 	/**

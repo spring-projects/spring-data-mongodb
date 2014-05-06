@@ -387,8 +387,47 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		@Test
 		public void shouldNotRunIntoStackOverflow() {
 
-			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(ProgramObject.class);
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(CycleStartingInBetween.class);
 			assertThat(indexDefinitions, hasSize(1));
+		}
+
+		/**
+		 * @see DATAMONGO-926
+		 */
+		@Test
+		public void indexShouldBeFoundEvenForCyclePropertyReferenceOnLevelZero() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(CycleLevelZero.class);
+			assertIndexPathAndCollection("indexedProperty", "cycleLevelZero", indexDefinitions.get(0));
+			assertIndexPathAndCollection("cyclicReference.indexedProperty", "cycleLevelZero", indexDefinitions.get(1));
+			assertThat(indexDefinitions, hasSize(2));
+		}
+
+		/**
+		 * @see DATAMONGO-926
+		 */
+		@Test
+		public void indexShouldBeFoundEvenForCyclePropertyReferenceOnLevelOne() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(CycleOnLevelOne.class);
+			assertIndexPathAndCollection("reference.indexedProperty", "cycleOnLevelOne", indexDefinitions.get(0));
+			assertIndexPathAndCollection("reference.cyclicReference.reference.indexedProperty", "cycleOnLevelOne",
+					indexDefinitions.get(1));
+			assertThat(indexDefinitions, hasSize(2));
+		}
+
+		/**
+		 * @see DATAMONGO-926
+		 */
+		@Test
+		public void indexBeResolvedCorrectlyWhenPropertiesOfDifferentTypesAreNamedEqually() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(NoCycleButIdenticallyNamedProperties.class);
+			assertIndexPathAndCollection("foo", "noCycleButIdenticallyNamedProperties", indexDefinitions.get(0));
+			assertIndexPathAndCollection("reference.foo", "noCycleButIdenticallyNamedProperties", indexDefinitions.get(1));
+			assertIndexPathAndCollection("reference.deep.foo", "noCycleButIdenticallyNamedProperties",
+					indexDefinitions.get(2));
+			assertThat(indexDefinitions, hasSize(3));
 		}
 
 		@Document
@@ -415,80 +454,48 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			@Indexed Outer outer;
 		}
 
-		// --> DATAMONGO-926
 		@Document
-		static class ProgramObject {
+		static class CycleLevelZero {
 
-			final Descriptors descriptors;
-
-			public ProgramObject(Descriptors descriptors) {
-
-				super();
-				this.descriptors = descriptors;
-			}
-
+			@Indexed String indexedProperty;
+			CycleLevelZero cyclicReference;
 		}
 
-		static class Descriptors {
+		@Document
+		static class CycleOnLevelOne {
 
-			final NameLongDescriptor nameLongDescriptor;
-
-			public Descriptors(NameLongDescriptor nameLongDescriptor) {
-
-				super();
-				this.nameLongDescriptor = nameLongDescriptor;
-			}
-
+			CycleOnLevelOneReferenced reference;
 		}
 
-		static abstract class Descriptor {
+		static class CycleOnLevelOneReferenced {
 
-			final int tag;
-
-			public Descriptor(int tag) {
-				super();
-				this.tag = tag;
-			}
-
+			@Indexed String indexedProperty;
+			CycleOnLevelOne cyclicReference;
 		}
 
-		static class NameLongDescriptor extends Descriptor {
+		@Document
+		public static class CycleStartingInBetween {
 
-			final NameLongBean[] entries;
-
-			public NameLongDescriptor(NameLongBean[] entries) {
-
-				super(0);
-				this.entries = entries;
-			}
-
+			CycleOnLevelOne referenceToCycleStart;
 		}
 
-		static class NameLongBean {
+		@Document
+		static class NoCycleButIdenticallyNamedProperties {
 
-			final NameIndexBean[] beans;
-
-			public NameLongBean(NameIndexBean[] beans) {
-				super();
-				this.beans = beans;
-			}
-
+			@Indexed String foo;
+			NoCycleButIdenticallyNamedPropertiesNested reference;
 		}
 
-		static class NameIndexBean {
+		static class NoCycleButIdenticallyNamedPropertiesNested {
 
-			final String name;
-
-			final @Indexed int index;
-
-			public NameIndexBean(String name, int index) {
-				super();
-				this.name = name;
-				this.index = index;
-			}
+			@Indexed String foo;
+			NoCycleButIndenticallNamedPropertiesDeeplyNested deep;
 		}
-		// <-- DATAMONGO-926
 
+		static class NoCycleButIndenticallNamedPropertiesDeeplyNested {
+
+			@Indexed String foo;
+		}
 	}
 
 	private static List<IndexDefinitionHolder> prepareMappingContextAndResolveIndexForType(Class<?> type) {
