@@ -34,6 +34,8 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.DBObjectTestUtils;
 import org.springframework.data.mongodb.core.Person;
@@ -49,6 +51,7 @@ import org.springframework.data.mongodb.core.query.Query;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
+import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DBObject;
 import com.mongodb.QueryBuilder;
 
@@ -584,6 +587,17 @@ public class QueryMapperUnitTests {
 
 		DBObject dbo = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(Foo.class));
 		assertThat(dbo.toString(), equalTo("{ \"embedded\" : { \"$in\" : [ { \"_id\" : \"1\"} , { \"_id\" : \"2\"}]}}"));
+	}
+
+	/**
+	 * @see DATAMONGO-647
+	 */
+	@Test
+	public void customizedFieldNameShouldBeMappedCorrectlyWhenApplyingSort() {
+
+		Query query = query(where("field").is("bar")).with(new Sort(Direction.DESC, "field"));
+		DBObject dbo = mapper.getMappedObject(query.getSortObject(), context.getPersistentEntity(CustomizedField.class));
+		assertThat(dbo, equalTo(new BasicDBObjectBuilder().add("foo", -1).get()));
 	}
 
 	@Document
