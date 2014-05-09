@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core.index;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 import java.util.Collections;
 import java.util.Date;
@@ -27,7 +28,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.geo.Point;
@@ -72,10 +72,10 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 		optionsCaptor = ArgumentCaptor.forClass(DBObject.class);
 		collectionCaptor = ArgumentCaptor.forClass(String.class);
 
-		Mockito.when(factory.getDb()).thenReturn(db);
-		Mockito.when(db.getCollection(collectionCaptor.capture())).thenReturn(collection);
+		when(factory.getDb()).thenReturn(db);
+		when(db.getCollection(collectionCaptor.capture())).thenReturn(collection);
 
-		Mockito.doNothing().when(collection).createIndex(keysCaptor.capture(), optionsCaptor.capture());
+		doNothing().when(collection).createIndex(keysCaptor.capture(), optionsCaptor.capture());
 	}
 
 	@Test
@@ -106,7 +106,7 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 
 		creator.onApplicationEvent(event);
 
-		Mockito.verifyZeroInteractions(collection);
+		verifyZeroInteractions(collection);
 	}
 
 	/**
@@ -181,6 +181,36 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 		assertThat(optionsCaptor.getValue(), is(new BasicDBObjectBuilder().get()));
 	}
 
+	/**
+	 * @see DATAMONGO-367
+	 */
+	@Test
+	public void indexCreationShouldNotCreateNewCollectionForNestedGeoSpatialIndexStructures() {
+
+		MongoMappingContext mappingContext = prepareMappingContext(Wrapper.class);
+		new MongoPersistentEntityIndexCreator(mappingContext, factory);
+
+		ArgumentCaptor<String> collectionNameCapturer = ArgumentCaptor.forClass(String.class);
+
+		verify(db, times(1)).getCollection(collectionNameCapturer.capture());
+		assertThat(collectionNameCapturer.getValue(), equalTo("wrapper"));
+	}
+
+	/**
+	 * @see DATAMONGO-367
+	 */
+	@Test
+	public void indexCreationShouldNotCreateNewCollectionForNestedIndexStructures() {
+
+		MongoMappingContext mappingContext = prepareMappingContext(IndexedDocumentWrapper.class);
+		new MongoPersistentEntityIndexCreator(mappingContext, factory);
+
+		ArgumentCaptor<String> collectionNameCapturer = ArgumentCaptor.forClass(String.class);
+
+		verify(db, times(1)).getCollection(collectionNameCapturer.capture());
+		assertThat(collectionNameCapturer.getValue(), equalTo("indexedDocumentWrapper"));
+	}
+
 	private static MongoMappingContext prepareMappingContext(Class<?> type) {
 
 		MongoMappingContext mappingContext = new MongoMappingContext();
@@ -231,6 +261,17 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 		String city;
 
 		@GeoSpatialIndexed Point location;
+	}
+
+	@Document
+	static class IndexedDocumentWrapper {
+
+		IndexedDocument indexedDocument;
+	}
+
+	static class IndexedDocument {
+
+		@Indexed String indexedValue;
 	}
 
 	@Document
