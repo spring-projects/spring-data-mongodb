@@ -212,11 +212,11 @@ The base package in which to scan for entities annotated with @Document
 					<xsd:union memberTypes="xsd:boolean xsd:string"/>
 				</xsd:simpleType>
 			</xsd:attribute>
-			<xsd:attribute name="abbreviate-field-names" use="optional" default="false">
+			<xsd:attribute name="abbreviate-field-names" use="optional">
 				<xsd:annotation>
 					<xsd:documentation source="org.springframework.data.mongodb.core.mapping.CamelCaseAbbreviatingFieldNamingStrategy">
 						Enables abbreviating the field names for domain class properties to the
-						first character of their camel case names, e.g. fooBar -> fb.
+						first character of their camel case names, e.g. fooBar -> fb. Defaults to false.
 					</xsd:documentation>
 				</xsd:annotation>
 				<xsd:simpleType>
@@ -226,7 +226,7 @@ The base package in which to scan for entities annotated with @Document
 			<xsd:attribute name="field-naming-strategy-ref" type="fieldNamingStrategyRef" use="optional">
 				<xsd:annotation>
 					<xsd:documentation source="org.springframework.data.mongodb.core.mapping.FieldNamingStrategy">
-						The reference to a MappingContext. Will default to 'mappingContext'.
+						The reference to a FieldNamingStrategy.
 					</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
