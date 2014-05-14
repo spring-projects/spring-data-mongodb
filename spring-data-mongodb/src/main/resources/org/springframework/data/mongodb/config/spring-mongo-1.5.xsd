@@ -226,7 +226,7 @@ The base package in which to scan for entities annotated with @Document
 			<xsd:attribute name="field-naming-strategy-ref" type="fieldNamingStrategyRef" use="optional">
 				<xsd:annotation>
 					<xsd:documentation source="org.springframework.data.mongodb.core.mapping.FieldNamingStrategy">
-						The reference to a MappingContext. Will default to 'mappingContext'.
+						The reference to a FieldNamingStrategy.
 					</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
