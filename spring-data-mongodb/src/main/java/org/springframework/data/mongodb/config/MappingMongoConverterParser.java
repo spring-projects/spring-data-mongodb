@@ -228,7 +228,8 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 		String abbreviateFieldNames = element.getAttribute("abbreviate-field-names");
 		String fieldNamingStrategy = element.getAttribute("field-naming-strategy-ref");
 
-		if (StringUtils.hasText(fieldNamingStrategy) && StringUtils.hasText(abbreviateFieldNames)) {
+		if (StringUtils.hasText(fieldNamingStrategy)
+				&& (StringUtils.hasText(abbreviateFieldNames) && Boolean.valueOf(abbreviateFieldNames.trim()))) {
 
 			context
 					.error("Only one of the attributes abbreviate-field-names and field-naming-strategy-ref can be configured!",
