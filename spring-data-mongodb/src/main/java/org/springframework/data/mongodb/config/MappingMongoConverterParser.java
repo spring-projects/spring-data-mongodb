@@ -228,11 +228,13 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 		String abbreviateFieldNames = element.getAttribute("abbreviate-field-names");
 		String fieldNamingStrategy = element.getAttribute("field-naming-strategy-ref");
 
-		if (StringUtils.hasText(fieldNamingStrategy) && StringUtils.hasText(abbreviateFieldNames)) {
+		boolean fieldNamingStrategyReferenced = StringUtils.hasText(fieldNamingStrategy);
+		boolean abbreviationActivated = StringUtils.hasText(abbreviateFieldNames)
+				&& Boolean.parseBoolean(abbreviateFieldNames);
 
-			context
-					.error("Only one of the attributes abbreviate-field-names and field-naming-strategy-ref can be configured!",
-							element);
+		if (fieldNamingStrategyReferenced && abbreviationActivated) {
+			context.error("Field name abbreviation cannot be activated if a field-naming-strategy-ref is configured!",
+					element);
 			return;
 		}
 
@@ -240,7 +242,7 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 
 		if ("true".equals(abbreviateFieldNames)) {
 			value = new RootBeanDefinition(CamelCaseAbbreviatingFieldNamingStrategy.class);
-		} else if (StringUtils.hasText(fieldNamingStrategy)) {
+		} else if (fieldNamingStrategyReferenced) {
 			value = new RuntimeBeanReference(fieldNamingStrategy);
 		}
 

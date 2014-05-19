@@ -7,6 +7,9 @@
 
 	<mongo:mapping-converter id="mappingConverterWithCustomFieldNamingStrategy" field-naming-strategy-ref="customFieldNamingStrategy" />
 
+	<!-- Should work as well as long ass abbreviation is explicitly disabled -->
+	<mongo:mapping-converter id="mappingConverterWithCustomFieldNamingStrategyAndAbbreviationDisabled" field-naming-strategy-ref="customFieldNamingStrategy" abbreviate-field-names="false" />
+
 	<bean id="customFieldNamingStrategy" class="org.mockito.Mockito" factory-method="mock">
 	    <property name="type" value="org.springframework.data.mongodb.core.mapping.FieldNamingStrategy" />
 	</bean>

@@ -116,7 +116,7 @@ public class MappingMongoConverterParserIntegrationTests {
 	public void rejectsInvalidFieldNamingStrategyConfiguration() {
 
 		exception.expect(BeanDefinitionParsingException.class);
-		exception.expectMessage("abbreviate-field-names");
+		exception.expectMessage("abbreviation");
 		exception.expectMessage("field-naming-strategy-ref");
 
 		BeanDefinitionRegistry factory = new DefaultListableBeanFactory();
@@ -141,18 +141,15 @@ public class MappingMongoConverterParserIntegrationTests {
 	 */
 	@Test
 	public void shouldSupportCustomFieldNamingStrategy() {
+		assertStrategyReferenceSetFor("mappingConverterWithCustomFieldNamingStrategy");
+	}
 
-		BeanDefinitionRegistry factory = new DefaultListableBeanFactory();
-		XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(factory);
-		reader.loadBeanDefinitions(new ClassPathResource("namespace/converter-custom-fieldnamingstrategy.xml"));
-
-		BeanDefinition definition = reader.getRegistry().getBeanDefinition(
-				"mappingConverterWithCustomFieldNamingStrategy.mongoMappingContext");
-
-		BeanReference value = (BeanReference) definition.getPropertyValues().getPropertyValue("fieldNamingStrategy")
-				.getValue();
-
-		assertThat(value.getBeanName(), is("customFieldNamingStrategy"));
+	/**
+	 * @see DATAMONGO-925, DATAMONGO-928
+	 */
+	@Test
+	public void shouldNotFailLoadingConfigIfAbbreviationIsDisabledAndStrategySet() {
+		assertStrategyReferenceSetFor("mappingConverterWithCustomFieldNamingStrategyAndAbbreviationDisabled");
 	}
 
 	private void loadValidConfiguration() {
@@ -167,6 +164,19 @@ public class MappingMongoConverterParserIntegrationTests {
 		factory = new DefaultListableBeanFactory();
 		XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(factory);
 		reader.loadBeanDefinitions(new ClassPathResource(configLocation));
+	}
+
+	private static void assertStrategyReferenceSetFor(String beanId) {
+
+		BeanDefinitionRegistry factory = new DefaultListableBeanFactory();
+		XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(factory);
+		reader.loadBeanDefinitions(new ClassPathResource("namespace/converter-custom-fieldnamingstrategy.xml"));
+
+		BeanDefinition definition = reader.getRegistry().getBeanDefinition(beanId.concat(".mongoMappingContext"));
+		BeanReference value = (BeanReference) definition.getPropertyValues().getPropertyValue("fieldNamingStrategy")
+				.getValue();
+
+		assertThat(value.getBeanName(), is("customFieldNamingStrategy"));
 	}
 
 	@Component
