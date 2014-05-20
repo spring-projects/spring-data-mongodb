@@ -1,6 +1,17 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 1.5.0.RELEASE (2014-05-20)
+---------------------------------------------
+* DATAMONGO-936 - Release 1.5 GA.
+* DATAMONGO-929 - Index key should be the properties dot path when creating index using @Indexed / @CompoundIndex.
+* DATAMONGO-928 - Error when using field-naming-strategy-ref.
+* DATAMONGO-926 - Stack Overflow Error with 1.5.0.RC1 Release.
+* DATAMONGO-925 - MappingMongoConverterParser is incorrectly rejecting field-naming-strategy-ref XML configuration.
+* DATAMONGO-647 - Using "OrderBy" in "query by method name" ignores the @Field annotation for field alias.
+* DATAMONGO-367 - @Indexed field in embedded Object creates new collection.
+
+
 Changes in version 1.5.0.RC1 (2014-05-02)
 -----------------------------------------
 * DATAMONGO-924 - Aggregation not working with as() method in project() pipeline operator.
