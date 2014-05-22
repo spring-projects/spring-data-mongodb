@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2011-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,6 +32,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.geo.Box;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
@@ -50,6 +51,7 @@ import com.mongodb.Mongo;
  * Integration test for {@link MongoTemplate}'s Map-Reduce operations
  * 
  * @author Mark Pollack
+ * @author Thomas Darimont
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:infrastructure.xml")
@@ -274,6 +276,31 @@ public class MapReduceTests {
 		assertEquals(2, m.get("c").intValue());
 		assertEquals(1, m.get("d").intValue());
 
+	}
+
+	/**
+	 * @see DATAMONGO-938
+	 */
+	@Test
+	public void mapReduceShouldUseQueryMapper() {
+
+		DBCollection c = mongoTemplate.getDb().getCollection("jmrWithGeo");
+
+		c.save(new BasicDBObject("x", new String[] { "a", "b" }).append("loc", new double[] { 0, 0 }));
+		c.save(new BasicDBObject("x", new String[] { "b", "c" }).append("loc", new double[] { 0, 0 }));
+		c.save(new BasicDBObject("x", new String[] { "c", "d" }).append("loc", new double[] { 0, 0 }));
+
+		Query query = new Query(where("x").ne(new String[] { "a", "b" }).and("loc")
+				.within(new Box(new double[] { 0, 0 }, new double[] { 1, 1 })));
+
+		MapReduceResults<ValueObject> results = template.mapReduce(query, "jmrWithGeo", mapFunction, reduceFunction,
+				ValueObject.class);
+
+		Map<String, Float> m = copyToMap(results);
+		assertEquals(3, m.size());
+		assertEquals(1, m.get("b").intValue());
+		assertEquals(2, m.get("c").intValue());
+		assertEquals(1, m.get("d").intValue());
 	}
 
 	private void performMapReduce(boolean inline, boolean withQuery) {
