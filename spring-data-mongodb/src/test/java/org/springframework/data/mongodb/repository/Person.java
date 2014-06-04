@@ -261,6 +261,12 @@ public class Person extends Contact {
 		return this.getId().equals(that.getId());
 	}
 
+	public Person withAddress(Address address) {
+
+		this.address = address;
+		return this;
+	}
+
 	/*
 	* (non-Javadoc)
 	*
