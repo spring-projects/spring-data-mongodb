@@ -788,4 +788,42 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 
 		assertThat(result.getContent(), hasSize(1));
 	}
+
+	/**
+	 * @see DATAMONGO-745
+	 */
+	@Test
+	public void findByCustomQueryFirstnamesInListAndLastname() {
+
+		repository.save(new Person("foo", "bar"));
+		repository.save(new Person("bar", "bar"));
+		repository.save(new Person("fuu", "bar"));
+		repository.save(new Person("notfound", "bar"));
+
+		Page<Person> result = repository.findByCustomQueryFirstnamesAndLastname(Arrays.asList("bar", "foo", "fuu"), "bar",
+				new PageRequest(0, 2));
+
+		assertThat(result.getContent(), hasSize(2));
+		assertThat(result.getTotalPages(), is(2));
+		assertThat(result.getTotalElements(), is(3L));
+	}
+
+	/**
+	 * @see DATAMONGO-745
+	 */
+	@Test
+	public void findByCustomQueryLastnameAndStreetInList() {
+
+		repository.save(new Person("foo", "bar").withAddress(new Address("street1", "1", "SB")));
+		repository.save(new Person("bar", "bar").withAddress(new Address("street2", "1", "SB")));
+		repository.save(new Person("fuu", "bar").withAddress(new Address("street1", "2", "RGB")));
+		repository.save(new Person("notfound", "notfound"));
+
+		Page<Person> result = repository.findByCustomQueryLastnameAndAddressStreetInList("bar",
+				Arrays.asList("street1", "street2"), new PageRequest(0, 2));
+
+		assertThat(result.getContent(), hasSize(2));
+		assertThat(result.getTotalPages(), is(2));
+		assertThat(result.getTotalElements(), is(3L));
+	}
 }
