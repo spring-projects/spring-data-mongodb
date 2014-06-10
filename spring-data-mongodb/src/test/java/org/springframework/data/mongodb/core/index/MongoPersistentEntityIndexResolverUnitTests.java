@@ -446,7 +446,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		public void shouldNotRunIntoStackOverflow() {
 
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(CycleStartingInBetween.class);
-			assertThat(indexDefinitions, hasSize(1));
+			assertThat(indexDefinitions, hasSize(2));
 		}
 
 		/**
@@ -486,6 +486,17 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			assertIndexPathAndCollection("reference.deep.foo", "noCycleButIdenticallyNamedProperties",
 					indexDefinitions.get(2));
 			assertThat(indexDefinitions, hasSize(3));
+		}
+
+		/**
+		 * @see DATAMONGO-949
+		 */
+		@Test
+		public void shouldNotDetectCycleInSimilarlyNamedProperties() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(SimilarityHolingBean.class);
+			assertIndexPathAndCollection("norm", "similarityHolingBean", indexDefinitions.get(0));
+			assertThat(indexDefinitions, hasSize(1));
 		}
 
 		@Document
@@ -553,6 +564,17 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		static class NoCycleButIndenticallNamedPropertiesDeeplyNested {
 
 			@Indexed String foo;
+		}
+
+		@Document
+		static class SimilarityHolingBean {
+
+			@Indexed @Field("norm") String normalProperty;
+			@Field("similarityL") private List<SimilaritySibling> listOfSimilarilyNamedEntities = null;
+		}
+
+		static class SimilaritySibling {
+			@Field("similarity") private String similarThoughNotEqualNamedProperty;
 		}
 	}
 
