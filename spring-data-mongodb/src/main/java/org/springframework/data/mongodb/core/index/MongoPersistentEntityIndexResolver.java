@@ -403,7 +403,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 			boolean cycles(MongoPersistentProperty property) {
 
-				Pattern pattern = Pattern.compile("\\p{Punct}?" + Pattern.quote(property.getFieldName()) + "(\\p{Punct}|\\w)?");
+				Pattern pattern = Pattern.compile("\\b" + Pattern.quote(property.getFieldName()) + "\\b");
 				Matcher matcher = pattern.matcher(path);
 
 				int count = 0;
