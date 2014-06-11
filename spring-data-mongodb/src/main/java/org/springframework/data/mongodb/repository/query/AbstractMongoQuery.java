@@ -16,6 +16,8 @@
 package org.springframework.data.mongodb.repository.query;
 
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.support.DefaultConversionService;
@@ -37,6 +39,7 @@ import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
 
 import com.mongodb.WriteResult;
+import com.mongodb.util.JSON;
 
 /**
  * Base class for {@link RepositoryQuery} implementations for Mongo.
@@ -47,6 +50,7 @@ import com.mongodb.WriteResult;
  */
 public abstract class AbstractMongoQuery implements RepositoryQuery {
 
+	private static final Pattern PLACEHOLDER = Pattern.compile("\\?(\\d+)");
 	private static final ConversionService CONVERSION_SERVICE = new DefaultConversionService();
 
 	private final MongoQueryMethod method;
@@ -394,5 +398,23 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 			WriteResult writeResult = operations.remove(query, metadata.getCollectionName());
 			return writeResult != null ? writeResult.getN() : 0L;
 		}
+	}
+
+	protected String replacePlaceholders(String input, ConvertingParameterAccessor accessor) {
+
+		Matcher matcher = PLACEHOLDER.matcher(input);
+		String result = input;
+
+		while (matcher.find()) {
+			String group = matcher.group();
+			int index = Integer.parseInt(matcher.group(1));
+			result = result.replace(group, getParameterWithIndex(accessor, index));
+		}
+
+		return result;
+	}
+
+	private String getParameterWithIndex(ConvertingParameterAccessor accessor, int index) {
+		return JSON.serialize(accessor.getBindableValue(index));
 	}
 }

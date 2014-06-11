@@ -15,16 +15,11 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Query;
-
-import com.mongodb.util.JSON;
 
 /**
  * Query to use a plain JSON String to create the {@link Query} to actually execute.
@@ -35,7 +30,7 @@ import com.mongodb.util.JSON;
 public class StringBasedMongoQuery extends AbstractMongoQuery {
 
 	private static final String COUND_AND_DELETE = "Manually defined query for %s cannot be both a count and delete query at the same time!";
-	private static final Pattern PLACEHOLDER = Pattern.compile("\\?(\\d+)");
+
 	private static final Logger LOG = LoggerFactory.getLogger(StringBasedMongoQuery.class);
 
 	private final String query;
@@ -119,21 +114,4 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 		return this.isDeleteQuery;
 	}
 
-	private String replacePlaceholders(String input, ConvertingParameterAccessor accessor) {
-
-		Matcher matcher = PLACEHOLDER.matcher(input);
-		String result = input;
-
-		while (matcher.find()) {
-			String group = matcher.group();
-			int index = Integer.parseInt(matcher.group(1));
-			result = result.replace(group, getParameterWithIndex(accessor, index));
-		}
-
-		return result;
-	}
-
-	private String getParameterWithIndex(ConvertingParameterAccessor accessor, int index) {
-		return JSON.serialize(accessor.getBindableValue(index));
-	}
 }

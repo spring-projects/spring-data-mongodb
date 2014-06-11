@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
+import org.bson.BSONObject;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -23,6 +24,10 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.repository.query.QueryMethod;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.repository.query.parser.PartTree;
+import org.springframework.util.StringUtils;
+
+import com.mongodb.util.JSON;
+import com.mongodb.util.JSONParseException;
 
 /**
  * {@link RepositoryQuery} implementation for Mongo.
@@ -67,7 +72,41 @@ public class PartTreeMongoQuery extends AbstractMongoQuery {
 	protected Query createQuery(ConvertingParameterAccessor accessor) {
 
 		MongoQueryCreator creator = new MongoQueryCreator(tree, accessor, context, isGeoNearQuery);
-		return creator.createQuery();
+		Query query = creator.createQuery();
+
+		if (StringUtils.hasText(this.getQueryMethod().getFieldSpecification())) {
+			prepareAndAddFieldSpecification(query, accessor);
+		}
+
+		return query;
+	}
+
+	private void prepareAndAddFieldSpecification(Query query, ConvertingParameterAccessor accessor) {
+
+		String fieldString = replacePlaceholders(this.getQueryMethod().getFieldSpecification(), accessor);
+		Object fieldSpec = failsafeParseJson(fieldString);
+		if (fieldSpec instanceof BSONObject) {
+			BSONObject bson = (BSONObject) fieldSpec;
+			for (String key : bson.keySet()) {
+				if ("1".equals(bson.get(key).toString())) {
+					query.fields().include(key);
+				} else {
+					query.fields().exclude(key);
+				}
+			}
+		} else {
+			query.fields().include(fieldString);
+		}
+	}
+
+	private Object failsafeParseJson(String potentialJson) {
+
+		try {
+			return JSON.parse(potentialJson);
+		} catch (JSONParseException e) {
+			// just ignore invalid json
+		}
+		return potentialJson;
 	}
 
 	/* 
