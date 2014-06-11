@@ -19,10 +19,14 @@ import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.repository.query.QueryMethod;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.repository.query.parser.PartTree;
+import org.springframework.util.StringUtils;
+
+import com.mongodb.util.JSONParseException;
 
 /**
  * {@link RepositoryQuery} implementation for Mongo.
@@ -66,7 +70,24 @@ public class PartTreeMongoQuery extends AbstractMongoQuery {
 	protected Query createQuery(ConvertingParameterAccessor accessor) {
 
 		MongoQueryCreator creator = new MongoQueryCreator(tree, accessor, context, isGeoNearQuery);
-		return creator.createQuery();
+		Query query = creator.createQuery();
+
+		String fieldSpec = this.getQueryMethod().getFieldSpecification();
+
+		if (!StringUtils.hasText(fieldSpec)) {
+			return query;
+		}
+
+		try {
+
+			BasicQuery result = new BasicQuery(query.getQueryObject().toString(), fieldSpec);
+			result.setSortObject(query.getSortObject());
+			return result;
+
+		} catch (JSONParseException o_O) {
+			throw new IllegalStateException(String.format("Invalid query or field specification in %s!", getQueryMethod(),
+					o_O));
+		}
 	}
 
 	/* 
