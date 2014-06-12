@@ -42,6 +42,7 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.convert.CustomConversions;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
@@ -50,11 +51,13 @@ import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexCreator;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.BasicQuery;
+import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.mongodb.BasicDBObject;
+import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
@@ -327,6 +330,26 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 
 		template.findAllAndRemove(new BasicQuery("{'foo':'bar'}"), VersionedEntity.class);
 		verify(collection, never()).remove(Mockito.any(DBObject.class));
+	}
+
+	/**
+	 * @see DATAMONGO-948
+	 */
+	@Test
+	public void sortShouldBeTakenAsIsWhenExecutingQueryWithoutSpecificTypeInformation() {
+
+		Query query = Query.query(Criteria.where("foo").is("bar")).with(new Sort("foo"));
+		template.executeQuery(query, "collection1", new DocumentCallbackHandler() {
+
+			@Override
+			public void processDocument(DBObject dbObject) throws MongoException, DataAccessException {
+				// nothing to do - just a test
+			}
+		});
+
+		ArgumentCaptor<DBObject> captor = ArgumentCaptor.forClass(DBObject.class);
+		verify(cursor, times(1)).sort(captor.capture());
+		assertThat(captor.getValue(), equalTo(new BasicDBObjectBuilder().add("foo", 1).get()));
 	}
 
 	class AutogenerateableId {

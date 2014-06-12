@@ -2179,7 +2179,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 					cursorToUse = cursorToUse.limit(query.getLimit());
 				}
 				if (query.getSortObject() != null) {
-					cursorToUse = cursorToUse.sort(getMappedSortObject(query, type));
+					DBObject sortDbo = type != null ? getMappedSortObject(query, type) : query.getSortObject();
+					cursorToUse = cursorToUse.sort(sortDbo);
 				}
 				if (StringUtils.hasText(query.getHint())) {
 					cursorToUse = cursorToUse.hint(query.getHint());
