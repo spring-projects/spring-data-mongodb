@@ -15,10 +15,11 @@
  */
 package org.springframework.data.mongodb.core.query;
 
+import static org.springframework.util.ObjectUtils.*;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -40,6 +41,7 @@ import com.mongodb.DBObject;
  * @author Oliver Gierke
  * @author Becca Gaspard
  * @author Christoph Strobl
+ * @author Thomas Darimont
  */
 public class Update {
 
@@ -279,6 +281,7 @@ public class Update {
 	}
 
 	public DBObject getUpdateObject() {
+
 		DBObject dbo = new BasicDBObject();
 		for (String k : modifierOps.keySet()) {
 			dbo.put(k, modifierOps.get(k));
@@ -335,14 +338,46 @@ public class Update {
 		return StringUtils.startsWithIgnoreCase(key, "$");
 	}
 
+	/* (non-Javadoc)
+	 * @see java.lang.Object#hashCode()
+	 */
+	@Override
+	public int hashCode() {
+		return getUpdateObject().hashCode();
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#equals(java.lang.Object)
+	 */
+	@Override
+	public boolean equals(Object obj) {
+
+		if (this == obj) {
+			return true;
+		}
+		if (obj == null || getClass() != obj.getClass()) {
+			return false;
+		}
+
+		Update that = (Update) obj;
+
+		return this.getUpdateObject().equals(that.getUpdateObject());
+	}
+
+	@Override
+	public String toString() {
+		return getUpdateObject().toString();
+	}
+
 	/**
 	 * Modifiers holds a distinct collection of {@link Modifier}
 	 * 
 	 * @author Christoph Strobl
+	 * @author Thomas Darimont
 	 */
 	public static class Modifiers {
 
-		private HashMap<String, Modifier> modifiers;
+		private Map<String, Modifier> modifiers;
 
 		public Modifiers() {
 			this.modifiers = new LinkedHashMap<String, Modifier>(1);
@@ -354,6 +389,33 @@ public class Update {
 
 		public void addModifier(Modifier modifier) {
 			this.modifiers.put(modifier.getKey(), modifier);
+		}
+
+		/* (non-Javadoc)
+		 * @see java.lang.Object#hashCode()
+		 */
+		@Override
+		public int hashCode() {
+			return nullSafeHashCode(modifiers);
+		}
+
+		/* (non-Javadoc)
+		 * @see java.lang.Object#equals(java.lang.Object)
+		 */
+		@Override
+		public boolean equals(Object obj) {
+
+			if (this == obj) {
+				return true;
+			}
+
+			if (obj == null || getClass() != obj.getClass()) {
+				return false;
+			}
+
+			Modifiers that = (Modifiers) obj;
+
+			return this.modifiers.equals(that.modifiers);
 		}
 	}
 
@@ -379,6 +441,7 @@ public class Update {
 	 * Implementation of {@link Modifier} representing {@code $each}.
 	 * 
 	 * @author Christoph Strobl
+	 * @author Thomas Darimont
 	 */
 	private static class Each implements Modifier {
 
@@ -415,12 +478,38 @@ public class Update {
 		public Object getValue() {
 			return this.values;
 		}
+
+		/* (non-Javadoc)
+		 * @see java.lang.Object#hashCode()
+		 */
+		@Override
+		public int hashCode() {
+			return nullSafeHashCode(values);
+		}
+
+		/* (non-Javadoc)
+		 * @see java.lang.Object#equals(java.lang.Object)
+		 */
+		@Override
+		public boolean equals(Object that) {
+
+			if (this == that) {
+				return true;
+			}
+
+			if (that == null || getClass() != that.getClass()) {
+				return false;
+			}
+
+			return nullSafeEquals(values, ((Each) that).values);
+		}
 	}
 
 	/**
 	 * Builder for creating {@code $push} modifiers
 	 * 
 	 * @author Christoph Strobl
+	 * @author Thomas Darimont
 	 */
 	public class PushOperatorBuilder {
 
@@ -452,6 +541,47 @@ public class Update {
 		 */
 		public Update value(Object value) {
 			return Update.this.push(key, value);
+		}
+
+		/* (non-Javadoc)
+		 * @see java.lang.Object#hashCode()
+		 */
+		@Override
+		public int hashCode() {
+
+			int result = 17;
+
+			result += 31 * result + getOuterType().hashCode();
+			result += 31 * result + nullSafeHashCode(key);
+			result += 31 * result + nullSafeHashCode(modifiers);
+
+			return result;
+		}
+
+		/* (non-Javadoc)
+		 * @see java.lang.Object#equals(java.lang.Object)
+		 */
+		@Override
+		public boolean equals(Object obj) {
+
+			if (this == obj) {
+				return true;
+			}
+
+			if (obj == null || getClass() != obj.getClass()) {
+				return false;
+			}
+
+			PushOperatorBuilder that = (PushOperatorBuilder) obj;
+			if (!getOuterType().equals(that.getOuterType())) {
+				return false;
+			}
+
+			return nullSafeEquals(this.key, that.key) && nullSafeEquals(this.modifiers, that.modifiers);
+		}
+
+		private Update getOuterType() {
+			return Update.this;
 		}
 	}
 
@@ -488,7 +618,5 @@ public class Update {
 		public Update value(Object value) {
 			return Update.this.addToSet(this.key, value);
 		}
-
 	}
-
 }

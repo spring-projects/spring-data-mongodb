@@ -30,6 +30,7 @@ import org.junit.Test;
  * @author Thomas Risberg
  * @author Becca Gaspard
  * @author Christoph Strobl
+ * @author Thomas Darimont
  */
 public class UpdateTests {
 
@@ -283,5 +284,62 @@ public class UpdateTests {
 	@Test(expected = IllegalArgumentException.class)
 	public void testCreatingUpdateWithNullKeyThrowsException() {
 		Update.update(null, "value");
+	}
+
+	/**
+	 * @see DATAMONGO-953
+	 */
+	@Test
+	public void testEquality() {
+
+		Update actualUpdate = new Update() //
+				.inc("size", 1) //
+				.set("nl", null) //
+				.set("directory", "/Users/Test/Desktop") //
+				.push("authors", Collections.singletonMap("name", "Sven")) //
+				.pop("authors", Update.Position.FIRST) //
+				.set("foo", "bar");
+
+		Update expectedUpdate = new Update() //
+				.inc("size", 1) //
+				.set("nl", null) //
+				.set("directory", "/Users/Test/Desktop") //
+				.push("authors", Collections.singletonMap("name", "Sven")) //
+				.pop("authors", Update.Position.FIRST) //
+				.set("foo", "bar");
+
+		assertThat(actualUpdate, is(equalTo(actualUpdate)));
+		assertThat(actualUpdate.hashCode(), is(equalTo(actualUpdate.hashCode())));
+		assertThat(actualUpdate, is(equalTo(expectedUpdate)));
+		assertThat(actualUpdate.hashCode(), is(equalTo(expectedUpdate.hashCode())));
+	}
+
+	/**
+	 * @see DATAMONGO-953
+	 */
+	@Test
+	public void testToString() {
+
+		Update actualUpdate = new Update() //
+				.inc("size", 1) //
+				.set("nl", null) //
+				.set("directory", "/Users/Test/Desktop") //
+				.push("authors", Collections.singletonMap("name", "Sven")) //
+				.pop("authors", Update.Position.FIRST) //
+				.set("foo", "bar");
+
+		Update expectedUpdate = new Update() //
+				.inc("size", 1) //
+				.set("nl", null) //
+				.set("directory", "/Users/Test/Desktop") //
+				.push("authors", Collections.singletonMap("name", "Sven")) //
+				.pop("authors", Update.Position.FIRST) //
+				.set("foo", "bar");
+
+		assertThat(actualUpdate.toString(), is(equalTo(expectedUpdate.toString())));
+		assertThat(actualUpdate.toString(), is("{ \"$inc\" : { \"size\" : 1} ," //
+				+ " \"$set\" : { \"nl\" :  null  , \"directory\" : \"/Users/Test/Desktop\" , \"foo\" : \"bar\"} , " //
+				+ "\"$push\" : { \"authors\" : { \"name\" : \"Sven\"}} " //
+				+ ", \"$pop\" : { \"authors\" : -1}}")); //
 	}
 }
