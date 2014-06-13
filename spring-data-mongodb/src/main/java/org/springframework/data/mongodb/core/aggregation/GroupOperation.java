@@ -364,7 +364,16 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 		}
 
 		public Object getValue(AggregationOperationContext context) {
-			return reference == null ? value : context.getReference(reference).toString();
+
+			if (reference == null) {
+				return value;
+			}
+
+			if (Aggregation.SystemVariable.isReferingToSystemVariable(reference)) {
+				return reference;
+			}
+
+			return context.getReference(reference).toString();
 		}
 
 		@Override

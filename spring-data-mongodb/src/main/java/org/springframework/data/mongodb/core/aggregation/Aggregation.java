@@ -52,6 +52,18 @@ public class Aggregation {
 	private final AggregationOptions options;
 
 	/**
+	 * References the root document, i.e. the top-level document, currently being processed in the aggregation pipeline
+	 * stage.
+	 */
+	public static final String ROOT = SystemVariable.ROOT.getFieldReference();
+
+	/**
+	 * References the start of the field path being processed in the aggregation pipeline stage. Unless documented
+	 * otherwise, all stages start with CURRENT the same as ROOT.
+	 */
+	public static final String CURRENT = SystemVariable.CURRENT.getFieldReference();
+
+	/**
 	 * Creates a new {@link Aggregation} from the given {@link AggregationOperation}s.
 	 * 
 	 * @param operations must not be {@literal null} or empty.
@@ -361,6 +373,46 @@ public class Aggregation {
 		@Override
 		public FieldReference getReference(String name) {
 			return new FieldReference(new ExposedField(new AggregationField(name), true));
+		}
+	}
+
+	/**
+	 * Describes the System Variables available in MongoDB Aggregation framework pipeline expressions.
+	 * 
+	 * @author Thomas Darimont
+	 * @see http://docs.mongodb.org/manual/reference/aggregation-variables/#variable.ROOT
+	 */
+	enum SystemVariable {
+
+		ROOT, CURRENT, DESCEND, PRUNE, KEEP;
+
+		public String getFieldReference() {
+			return "$$" + name();
+		}
+
+		/**
+		 * Return {@literal true} if the given {@code fieldRef} denotes a well-known System Variable, {@literal false}
+		 * otherwise.
+		 * 
+		 * @param fieldRef may be {@literal null}
+		 * @return
+		 */
+		public static boolean isReferingToSystemVariable(String fieldRef) {
+
+			if (fieldRef == null || !fieldRef.startsWith("$$") || fieldRef.length() <= 2) {
+				return false;
+			}
+
+			int indexOfFirstDot = fieldRef.indexOf('.');
+			String varCandidate = fieldRef.substring(2, indexOfFirstDot == -1 ? fieldRef.length() : indexOfFirstDot);
+
+			for (SystemVariable variable : values()) {
+				if (variable.name().equals(varCandidate)) {
+					return true;
+				}
+			}
+
+			return false;
 		}
 	}
 }
