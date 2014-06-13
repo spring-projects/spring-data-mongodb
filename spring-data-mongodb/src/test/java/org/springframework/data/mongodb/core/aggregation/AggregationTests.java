@@ -44,11 +44,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mongodb.core.CollectionCallback;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.AggregationTests.CarDescriptor.Entry;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.repository.Person;
 import org.springframework.data.util.Version;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -113,6 +115,8 @@ public class AggregationTests {
 		mongoTemplate.dropCollection(Data.class);
 		mongoTemplate.dropCollection(DATAMONGO788.class);
 		mongoTemplate.dropCollection(User.class);
+		mongoTemplate.dropCollection(Person.class);
+		mongoTemplate.dropCollection(Reservation.class);
 	}
 
 	/**
@@ -903,6 +907,55 @@ public class AggregationTests {
 		assertThat(rawResult.containsField("stages"), is(true));
 	}
 
+	/**
+	 * @see DATAMONGO-954
+	 */
+	@Test
+	public void shouldSupportReturningCurrentAggregationRoot() {
+
+		mongoTemplate.save(new Person("p1_first", "p1_last", 25));
+		mongoTemplate.save(new Person("p2_first", "p2_last", 32));
+		mongoTemplate.save(new Person("p3_first", "p3_last", 25));
+		mongoTemplate.save(new Person("p4_first", "p4_last", 15));
+
+		List<DBObject> personsWithAge25 = mongoTemplate.find(Query.query(where("age").is(25)), DBObject.class,
+				mongoTemplate.getCollectionName(Person.class));
+
+		Aggregation agg = newAggregation(group("age").push(Aggregation.ROOT).as("users"));
+		AggregationResults<DBObject> result = mongoTemplate.aggregate(agg, Person.class, DBObject.class);
+
+		assertThat(result.getMappedResults(), hasSize(3));
+		DBObject o = (DBObject) result.getMappedResults().get(2);
+
+		assertThat(o.get("_id"), is((Object) 25));
+		assertThat((List<?>) o.get("users"), hasSize(2));
+		assertThat((List<?>) o.get("users"), is(contains(personsWithAge25.toArray())));
+	}
+
+	/**
+	 * @see DATAMONGO-954
+	 * @see http
+	 *      ://stackoverflow.com/questions/24185987/using-root-inside-spring-data-mongodb-for-retrieving-whole-document
+	 */
+	@Test
+	public void shouldSupportReturningCurrentAggregationRootInReference() {
+
+		mongoTemplate.save(new Reservation("0123", "42", 100));
+		mongoTemplate.save(new Reservation("0360", "43", 200));
+		mongoTemplate.save(new Reservation("0360", "44", 300));
+
+		Aggregation agg = newAggregation( //
+				match(where("hotelCode").is("0360")), //
+				sort(Direction.DESC, "confirmationNumber", "timestamp"), //
+				group("confirmationNumber") //
+						.first("timestamp").as("timestamp") //
+						.first(Aggregation.ROOT).as("reservationImage") //
+		);
+		AggregationResults<DBObject> result = mongoTemplate.aggregate(agg, Reservation.class, DBObject.class);
+
+		assertThat(result.getMappedResults(), hasSize(2));
+	}
+
 	private void assertLikeStats(LikeStats like, String id, long count) {
 
 		assertThat(like, is(notNullValue()));
@@ -1065,6 +1118,21 @@ public class AggregationTests {
 				this.model = model;
 				this.year = year;
 			}
+		}
+	}
+
+	static class Reservation {
+
+		String hotelCode;
+		String confirmationNumber;
+		int timestamp;
+
+		public Reservation() {}
+
+		public Reservation(String hotelCode, String confirmationNumber, int timestamp) {
+			this.hotelCode = hotelCode;
+			this.confirmationNumber = confirmationNumber;
+			this.timestamp = timestamp;
 		}
 	}
 }

@@ -30,6 +30,7 @@ import org.springframework.util.StringUtils;
  * Value object to capture a list of {@link Field} instances.
  * 
  * @author Oliver Gierke
+ * @author Thomas Darimont
  * @since 1.3
  */
 public final class Fields implements Iterable<Field> {
@@ -186,7 +187,7 @@ public final class Fields implements Iterable<Field> {
 		private final String target;
 
 		/**
-		 * Creates an aggregation fieldwith the given name. As no target is set explicitly, the name will be used as target
+		 * Creates an aggregation field with the given name. As no target is set explicitly, the name will be used as target
 		 * as well.
 		 * 
 		 * @param key
@@ -214,6 +215,10 @@ public final class Fields implements Iterable<Field> {
 		private static final String cleanUp(String source) {
 
 			if (source == null) {
+				return source;
+			}
+
+			if (Aggregation.SystemVariable.isReferingToSystemVariable(source)) {
 				return source;
 			}
 

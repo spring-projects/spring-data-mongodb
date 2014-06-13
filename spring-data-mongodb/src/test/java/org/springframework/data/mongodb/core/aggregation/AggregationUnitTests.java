@@ -27,6 +27,7 @@ import java.util.List;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.springframework.data.domain.Sort.Direction;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
@@ -254,6 +255,32 @@ public class AggregationUnitTests {
 				+ "\"explain\" : true , " //
 				+ "\"cursor\" : { \"foo\" : 1}}" //
 		));
+	}
+
+	/**
+	 * @see DATAMONGO-954
+	 */
+	@Test
+	public void shouldSupportReferencingSystemVariables() {
+
+		DBObject agg = newAggregation( //
+				project("someKey") //
+						.and("a").as("a1") //
+						.and(Aggregation.CURRENT + ".a").as("a2") //
+				, sort(Direction.DESC, "a") //
+				, group("someKey").first(Aggregation.ROOT).as("doc") //
+		).toDbObject("foo", Aggregation.DEFAULT_CONTEXT);
+
+		DBObject projection0 = extractPipelineElement(agg, 0, "$project");
+		assertThat(projection0, is((DBObject) new BasicDBObject("someKey", 1).append("a1", "$a")
+				.append("a2", "$$CURRENT.a")));
+
+		DBObject sort = extractPipelineElement(agg, 1, "$sort");
+		assertThat(sort, is((DBObject) new BasicDBObject("a", -1)));
+
+		DBObject group = extractPipelineElement(agg, 2, "$group");
+		assertThat(group,
+				is((DBObject) new BasicDBObject("_id", "$someKey").append("doc", new BasicDBObject("$first", "$$ROOT"))));
 	}
 
 	private DBObject extractPipelineElement(DBObject agg, int index, String operation) {

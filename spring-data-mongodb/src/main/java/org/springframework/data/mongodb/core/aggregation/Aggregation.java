@@ -44,11 +44,22 @@ import com.mongodb.DBObject;
  */
 public class Aggregation {
 
+	/**
+	 * References the root document, i.e. the top-level document, currently being processed in the aggregation pipeline
+	 * stage.
+	 */
+	public static final String ROOT = SystemVariable.ROOT.toString();
+
+	/**
+	 * References the start of the field path being processed in the aggregation pipeline stage. Unless documented
+	 * otherwise, all stages start with CURRENT the same as ROOT.
+	 */
+	public static final String CURRENT = SystemVariable.CURRENT.toString();
+
 	public static final AggregationOperationContext DEFAULT_CONTEXT = new NoOpAggregationOperationContext();
 	public static final AggregationOptions DEFAULT_OPTIONS = newAggregationOptions().build();
 
 	protected final List<AggregationOperation> operations;
-
 	private final AggregationOptions options;
 
 	/**
@@ -361,6 +372,53 @@ public class Aggregation {
 		@Override
 		public FieldReference getReference(String name) {
 			return new FieldReference(new ExposedField(new AggregationField(name), true));
+		}
+	}
+
+	/**
+	 * Describes the system variables available in MongoDB aggregation framework pipeline expressions.
+	 * 
+	 * @author Thomas Darimont
+	 * @see http://docs.mongodb.org/manual/reference/aggregation-variables
+	 */
+	enum SystemVariable {
+
+		ROOT, CURRENT;
+
+		private static final String PREFIX = "$$";
+
+		/**
+		 * Return {@literal true} if the given {@code fieldRef} denotes a well-known system variable, {@literal false}
+		 * otherwise.
+		 * 
+		 * @param fieldRef may be {@literal null}.
+		 * @return
+		 */
+		public static boolean isReferingToSystemVariable(String fieldRef) {
+
+			if (fieldRef == null || !fieldRef.startsWith(PREFIX) || fieldRef.length() <= 2) {
+				return false;
+			}
+
+			int indexOfFirstDot = fieldRef.indexOf('.');
+			String candidate = fieldRef.substring(2, indexOfFirstDot == -1 ? fieldRef.length() : indexOfFirstDot);
+
+			for (SystemVariable value : values()) {
+				if (value.name().equals(candidate)) {
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		/* 
+		 * (non-Javadoc)
+		 * @see java.lang.Enum#toString()
+		 */
+		@Override
+		public String toString() {
+			return PREFIX.concat(name());
 		}
 	}
 }
