@@ -73,6 +73,10 @@ public class PartTreeMongoQuery extends AbstractMongoQuery {
 		MongoQueryCreator creator = new MongoQueryCreator(tree, accessor, context, isGeoNearQuery);
 		Query query = creator.createQuery();
 
+		if (tree.isLimiting()) {
+			query.limit(tree.getMaxResults());
+		}
+
 		String fieldSpec = this.getQueryMethod().getFieldSpecification();
 
 		if (!StringUtils.hasText(fieldSpec)) {

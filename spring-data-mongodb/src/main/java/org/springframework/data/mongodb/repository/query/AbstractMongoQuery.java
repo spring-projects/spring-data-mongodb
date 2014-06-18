@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.springframework.core.convert.ConversionService;
@@ -254,10 +255,26 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 		Object execute(Query query) {
 
 			MongoEntityMetadata<?> metadata = method.getEntityInformation();
+
+			int overallLimit = query.getLimit();
 			long count = operations.count(query, metadata.getCollectionName());
+			count = overallLimit != 0 ? Math.min(count, query.getLimit()) : count;
 
-			List<?> result = operations.find(query.with(pageable), metadata.getJavaType(), metadata.getCollectionName());
+			boolean pageableOutOfScope = pageable.getOffset() > query.getLimit();
 
+			if (pageableOutOfScope) {
+				return new PageImpl<Object>(Collections.emptyList(), pageable, count);
+			}
+
+			// Apply raw pagination
+			query = query.with(pageable);
+
+			// Adjust limit if page would exceed the overall limit
+			if (overallLimit != 0 && pageable.getOffset() + pageable.getPageSize() > overallLimit) {
+				query.limit(overallLimit - pageable.getOffset());
+			}
+
+			List<?> result = operations.find(query, metadata.getJavaType(), metadata.getCollectionName());
 			return new PageImpl(result, pageable, count);
 		}
 	}

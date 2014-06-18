@@ -917,5 +917,54 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result.getContent(), hasSize(2));
 		assertThat(result.getTotalPages(), is(2));
 		assertThat(result.getTotalElements(), is(3L));
+
+	}
+
+	/**
+	 * @see DATAMONGO-950
+	 */
+	@Test
+	public void shouldLimitCollectionQueryToMaxResultsWhenPresent() {
+
+		repository.save(Arrays.asList(new Person("Bob-1", "Dylan"), new Person("Bob-2", "Dylan"), new Person("Bob-3",
+				"Dylan"), new Person("Bob-4", "Dylan"), new Person("Bob-5", "Dylan")));
+		List<Person> result = repository.findTop3ByLastnameStartingWith("Dylan");
+		assertThat(result.size(), is(3));
+	}
+
+	/**
+	 * @see DATAMONGO-950
+	 */
+	@Test
+	public void shouldNotLimitPagedQueryWhenPageRequestWithinBounds() {
+
+		repository.save(Arrays.asList(new Person("Bob-1", "Dylan"), new Person("Bob-2", "Dylan"), new Person("Bob-3",
+				"Dylan"), new Person("Bob-4", "Dylan"), new Person("Bob-5", "Dylan")));
+		Page<Person> result = repository.findTop3ByLastnameStartingWith("Dylan", new PageRequest(0, 2));
+		assertThat(result.getContent().size(), is(2));
+	}
+
+	/**
+	 * @see DATAMONGO-950
+	 */
+	@Test
+	public void shouldLimitPagedQueryWhenPageRequestExceedsUpperBoundary() {
+
+		repository.save(Arrays.asList(new Person("Bob-1", "Dylan"), new Person("Bob-2", "Dylan"), new Person("Bob-3",
+				"Dylan"), new Person("Bob-4", "Dylan"), new Person("Bob-5", "Dylan")));
+		Page<Person> result = repository.findTop3ByLastnameStartingWith("Dylan", new PageRequest(1, 2));
+		assertThat(result.getContent().size(), is(1));
+	}
+
+	/**
+	 * @see DATAMONGO-950
+	 */
+	@Test
+	public void shouldReturnEmptyWhenPageRequestedPageIsTotallyOutOfScopeForLimit() {
+
+		repository.save(Arrays.asList(new Person("Bob-1", "Dylan"), new Person("Bob-2", "Dylan"), new Person("Bob-3",
+				"Dylan"), new Person("Bob-4", "Dylan"), new Person("Bob-5", "Dylan")));
+		Page<Person> result = repository.findTop3ByLastnameStartingWith("Dylan", new PageRequest(2, 2));
+		assertThat(result.getContent().size(), is(0));
 	}
 }
