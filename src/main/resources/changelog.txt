@@ -1,6 +1,25 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 1.4.3.RELEASE (2014-06-18)
+---------------------------------------------
+* DATAMONGO-955 - Release 1.4.3.
+* DATAMONGO-953 - Update object should have a proper equals/hashcode/toString.
+* DATAMONGO-952 - @Query annotation does not work with only field restrictions.
+* DATAMONGO-948 - Assertion error in MongoTemplate.getMappedSortObject.
+* DATAMONGO-938 - Exception when creating geo within Criteria using MapReduce.
+* DATAMONGO-924 - Aggregation not working with as() method in project() pipeline operator.
+* DATAMONGO-920 - Fix debug messages for delete events in AbstractMongoEventListener.
+* DATAMONGO-917 - DefaultDbRefResolver throws NPE when bundled into an uberjar.
+* DATAMONGO-914 - Improve resolving of LazyLoading proxies for classes that override equals/hashcode.
+* DATAMONGO-913 - Can't query using lazy DBRef objects.
+* DATAMONGO-912 - Aggregation#project followed by Aggregation#match with custom converter causes IllegalArgumentException.
+* DATAMONGO-898 - MapReduce seems not to work when javascript not being escaped.
+* DATAMONGO-847 - Allow usage of Criteria within Update.
+* DATAMONGO-745 - @Query($in) and Pageable in result Page total = 0.
+* DATAMONGO-647 - Using "OrderBy" in "query by method name" ignores the @Field annotation for field alias.
+
+
 Changes in version 1.5.0.RELEASE (2014-05-20)
 ---------------------------------------------
 * DATAMONGO-936 - Release 1.5 GA.
