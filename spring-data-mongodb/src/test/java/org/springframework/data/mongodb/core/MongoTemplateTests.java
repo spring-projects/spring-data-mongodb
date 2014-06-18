@@ -78,6 +78,7 @@ import org.springframework.util.StringUtils;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.CommandResult;
+import com.mongodb.Cursor;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
@@ -1236,8 +1237,8 @@ public class MongoTemplateTests {
 			}
 		}, new CursorPreparer() {
 
-			public DBCursor prepare(DBCursor cursor) {
-				cursor.limit(1);
+			public Cursor prepare(Cursor cursor) {
+				((DBCursor) cursor).limit(1);
 				return cursor;
 			}
 

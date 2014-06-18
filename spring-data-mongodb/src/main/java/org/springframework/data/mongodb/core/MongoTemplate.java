@@ -102,6 +102,7 @@ import org.springframework.util.StringUtils;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.CommandResult;
+import com.mongodb.Cursor;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
@@ -111,6 +112,7 @@ import com.mongodb.MapReduceOutput;
 import com.mongodb.Mongo;
 import com.mongodb.MongoException;
 import com.mongodb.ReadPreference;
+import com.mongodb.ServerAddress;
 import com.mongodb.WriteConcern;
 import com.mongodb.WriteResult;
 import com.mongodb.util.JSON;
@@ -1767,7 +1769,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 		try {
 
-			DBCursor cursor = null;
+			Cursor cursor = null;
 
 			try {
 
@@ -1802,7 +1804,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 		try {
 
-			DBCursor cursor = null;
+			Cursor cursor = null;
 
 			try {
 				cursor = collectionCallback.doInCollection(getAndPrepareCollection(getDb(), collectionName));
@@ -2158,18 +2160,18 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.CursorPreparer#prepare(com.mongodb.DBCursor)
 		 */
-		public DBCursor prepare(DBCursor cursor) {
+		public Cursor prepare(final Cursor cursor) {
 
-			if (query == null) {
+			if (query == null || !(cursor instanceof DBCursor)) {
 				return cursor;
 			}
 
 			if (query.getSkip() <= 0 && query.getLimit() <= 0 && query.getSortObject() == null
-					&& !StringUtils.hasText(query.getHint())) {
+					&& !StringUtils.hasText(query.getHint()) && query.getMaxResults() <= 0) {
 				return cursor;
 			}
 
-			DBCursor cursorToUse = cursor;
+			DBCursor cursorToUse = (DBCursor) cursor;
 
 			try {
 				if (query.getSkip() > 0) {
@@ -2184,6 +2186,51 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				}
 				if (StringUtils.hasText(query.getHint())) {
 					cursorToUse = cursorToUse.hint(query.getHint());
+				}
+
+				if (query.isLimited()) {
+
+					if (query.getSkip() > query.getMaxResults()) {
+
+						return new Cursor() {
+
+							@Override
+							public boolean hasNext() {
+								return false;
+							}
+
+							@Override
+							public DBObject next() {
+								return null;
+							}
+
+							@Override
+							public void remove() {
+								throw new UnsupportedOperationException();
+							}
+
+							@Override
+							public long getCursorId() {
+								return cursor.getCursorId();
+							}
+
+							@Override
+							public ServerAddress getServerAddress() {
+								return cursor.getServerAddress();
+							}
+
+							@Override
+							public void close() {
+								cursor.close();
+							}
+						};
+
+					} else if (query.getSkip() + query.getLimit() > query.getMaxResults()) {
+						cursorToUse = cursorToUse.limit(query.getMaxResults() - query.getSkip());
+					} else if (query.getLimit() <= 0) {
+						cursorToUse = cursorToUse.limit(query.getMaxResults());
+					}
+
 				}
 			} catch (RuntimeException e) {
 				throw potentiallyConvertRuntimeException(e);

@@ -39,9 +39,11 @@ import com.mongodb.DBObject;
  * @author Thomas Risberg
  * @author Oliver Gierke
  * @author Thomas Darimont
+ * @author Christoph Strobl
  */
 public class Query {
 
+	private static final int MAX_RESULTS_DEFAULT = -1;
 	private static final String RESTRICTED_TYPES_KEY = "_$RESTRICTED_TYPES";
 
 	private final Set<Class<?>> restrictedTypes = new HashSet<Class<?>>();
@@ -51,6 +53,7 @@ public class Query {
 	private int skip;
 	private int limit;
 	private String hint;
+	private int maxResults = MAX_RESULTS_DEFAULT;
 
 	/**
 	 * Static factory method to create a {@link Query} using the provided {@link Criteria}.
@@ -268,6 +271,34 @@ public class Query {
 		return hint;
 	}
 
+	/**
+	 * Set the maximum total limit for results.
+	 * 
+	 * @param maxResults
+	 * @return
+	 * @since 1.6
+	 */
+	public Query maxResults(int maxResults) {
+		this.maxResults = maxResults;
+		return this;
+	}
+
+	/**
+	 * @return
+	 * @since 1.6
+	 */
+	public int getMaxResults() {
+		return maxResults;
+	}
+
+	/**
+	 * @return true if {@link #maxResults(int)} is set to positive number.
+	 * @since 1.6
+	 */
+	public boolean isLimited() {
+		return maxResults > 0;
+	}
+
 	protected List<Criteria> getCriteria() {
 		return new ArrayList<Criteria>(this.criteria.values());
 	}
@@ -305,8 +336,9 @@ public class Query {
 		boolean hintEqual = this.hint == null ? that.hint == null : this.hint.equals(that.hint);
 		boolean skipEqual = this.skip == that.skip;
 		boolean limitEqual = this.limit == that.limit;
+		boolean maxResultsEqual = this.maxResults == that.maxResults;
 
-		return criteriaEqual && fieldsEqual && sortEqual && hintEqual && skipEqual && limitEqual;
+		return criteriaEqual && fieldsEqual && sortEqual && hintEqual && skipEqual && limitEqual && maxResultsEqual;
 	}
 
 	/* 
@@ -324,6 +356,7 @@ public class Query {
 		result += 31 * nullSafeHashCode(hint);
 		result += 31 * skip;
 		result += 31 * limit;
+		result += 31 * maxResults;
 
 		return result;
 	}

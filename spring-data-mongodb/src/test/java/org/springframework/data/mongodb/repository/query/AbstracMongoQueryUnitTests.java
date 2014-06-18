@@ -157,6 +157,7 @@ public class AbstracMongoQueryUnitTests {
 
 		private boolean isCountQuery;
 		private boolean isDeleteQuery;
+		private boolean isLimitingQuery;
 
 		public MongoQueryFake(MongoQueryMethod method, MongoOperations operations) {
 			super(method, operations);
@@ -179,6 +180,16 @@ public class AbstracMongoQueryUnitTests {
 
 		public MongoQueryFake setDeleteQuery(boolean isDeleteQuery) {
 			this.isDeleteQuery = isDeleteQuery;
+			return this;
+		}
+
+		@Override
+		protected boolean isLimiting() {
+			return isLimitingQuery;
+		}
+
+		public MongoQueryFake setLimitingQuery(boolean isLimitingQuery) {
+			this.isLimitingQuery = isLimitingQuery;
 			return this;
 		}
 	}

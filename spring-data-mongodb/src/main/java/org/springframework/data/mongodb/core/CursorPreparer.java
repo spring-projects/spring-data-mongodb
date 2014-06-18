@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2010 the original author or authors.
+ * Copyright 2002-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,19 +15,20 @@
  */
 package org.springframework.data.mongodb.core;
 
-import com.mongodb.DBCursor;
+import com.mongodb.Cursor;
 
 /**
- * Simple callback interface to allow customization of a {@link DBCursor}.
+ * Simple callback interface to allow customization of a {@link com.mongodb.Cursor}.
  * 
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 interface CursorPreparer {
 
 	/**
-	 * Prepare the given cursor (apply limits, skips and so on). Returns th eprepared cursor.
+	 * Prepare the given cursor (apply limits, skips and so on). Returns the prepared cursor.
 	 * 
 	 * @param cursor
 	 */
-	DBCursor prepare(DBCursor cursor);
+	Cursor prepare(Cursor cursor);
 }

@@ -67,7 +67,12 @@ public class PartTreeMongoQuery extends AbstractMongoQuery {
 	protected Query createQuery(ConvertingParameterAccessor accessor) {
 
 		MongoQueryCreator creator = new MongoQueryCreator(tree, accessor, context, isGeoNearQuery);
-		return creator.createQuery();
+
+		Query query = creator.createQuery();
+		if (isLimiting()) {
+			query.maxResults(tree.getMaxResults());
+		}
+		return query;
 	}
 
 	/* 
@@ -95,5 +100,14 @@ public class PartTreeMongoQuery extends AbstractMongoQuery {
 	@Override
 	protected boolean isDeleteQuery() {
 		return tree.isDelete();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery#isLimiting()
+	 */
+	@Override
+	protected boolean isLimiting() {
+		return tree.isLimiting();
 	}
 }

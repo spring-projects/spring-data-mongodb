@@ -15,10 +15,16 @@
  */
 package org.springframework.data.mongodb.core;
 
+import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
+import org.hamcrest.core.Is;
+import org.hamcrest.core.IsEqual;
+import org.hamcrest.core.IsNot;
+import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -27,6 +33,7 @@ import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.MongoTemplate.QueryCursorPreparer;
 import org.springframework.data.mongodb.core.query.Query;
 
+import com.mongodb.Cursor;
 import com.mongodb.DBCursor;
 
 /**
@@ -41,6 +48,13 @@ public class QueryCursorPreparerUnitTests {
 	@Mock MongoDbFactory factory;
 	@Mock DBCursor cursor;
 
+	@Before
+	public void setUp() {
+
+		when(cursor.limit(anyInt())).thenReturn(cursor);
+		when(cursor.skip(anyInt())).thenReturn(cursor);
+	}
+
 	/**
 	 * @see DATAMONGO-185
 	 */
@@ -49,9 +63,77 @@ public class QueryCursorPreparerUnitTests {
 
 		Query query = query(where("foo").is("bar")).withHint("hint");
 
-		CursorPreparer preparer = new MongoTemplate(factory).new QueryCursorPreparer(query, null);
-		preparer.prepare(cursor);
+		prepareCursor(query);
 
 		verify(cursor).hint("hint");
+	}
+
+	/**
+	 * @see DATAMONGO-950
+	 */
+	@Test
+	public void shouldLimitCursorCorrectlyWhenMaxResultsSetAndNoLimitDefined() {
+
+		Query query = query(where("foo").is("bar")).maxResults(100);
+
+		prepareCursor(query);
+
+		verify(cursor).limit(eq(100));
+	}
+
+	/**
+	 * @see DATAMONGO-950
+	 */
+	@Test
+	public void shouldLimitCursorCorrectlyWhenLimitLessThanMaxResults() {
+
+		Query query = query(where("foo").is("bar")).limit(10).maxResults(100);
+
+		prepareCursor(query);
+
+		verify(cursor).limit(eq(10));
+	}
+
+	/**
+	 * @see DATAMONGO-950
+	 */
+	@Test
+	public void shouldLimitCursorCorrectlyWhenLimitAndOffsetGreaterThanMaxResults() {
+
+		Query query = query(where("foo").is("bar")).limit(10).skip(95).maxResults(100);
+
+		prepareCursor(query);
+
+		verify(cursor).limit(eq(5));
+	}
+
+	/**
+	 * @see DATAMONGO-950
+	 */
+	@Test
+	public void shouldReturnEmptyCursorWhenOffsetExceedsMaxResults() {
+
+		Cursor referenceCursor = cursor;
+		Cursor cursorToUse = prepareCursor(query(where("foo").is("bar")).skip(101).maxResults(100));
+
+		verify(cursor, never()).limit(anyInt());
+		Assert.assertThat(cursorToUse, IsNot.not(IsEqual.equalTo(referenceCursor)));
+		Assert.assertThat(cursorToUse.hasNext(), Is.is(false));
+
+	}
+
+	/**
+	 * @see DATAMONGO-950
+	 */
+	@Test
+	public void shouldNotLimitCursorWhenNoMaxResultSet() {
+
+		prepareCursor(query(where("foo").is("bar")));
+		verify(cursor, never()).limit(anyInt());
+	}
+
+	private Cursor prepareCursor(Query query) {
+		CursorPreparer preparer = new MongoTemplate(factory).new QueryCursorPreparer(query, null);
+		return preparer.prepare(cursor);
 	}
 }

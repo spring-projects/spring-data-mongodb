@@ -119,6 +119,15 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 		return this.isDeleteQuery;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery#isLimiting()
+	 */
+	@Override
+	protected boolean isLimiting() {
+		return false;
+	}
+
 	private String replacePlaceholders(String input, ConvertingParameterAccessor accessor) {
 
 		Matcher matcher = PLACEHOLDER.matcher(input);

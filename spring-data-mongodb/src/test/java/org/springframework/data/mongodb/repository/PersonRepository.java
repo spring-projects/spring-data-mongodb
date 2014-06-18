@@ -302,4 +302,15 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	 */
 	@Query("{lastname:?0, address.street:{$in:?1}}")
 	Page<Person> findByCustomQueryLastnameAndAddressStreetInList(String lastname, List<String> streetNames, Pageable page);
+
+	/**
+	 * @see DATAMONGO-950
+	 */
+	List<Person> findTop3ByLastnameStartingWith(String lastname);
+
+	/**
+	 * @see DATAMONGO-950
+	 */
+	Page<Person> findTop3ByLastnameStartingWith(String lastname, Pageable pageRequest);
+
 }

@@ -154,6 +154,14 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	 */
 	protected abstract boolean isDeleteQuery();
 
+	/**
+	 * Return whether the query should limit result to a certain amount of documents.
+	 * 
+	 * @return
+	 * @since 1.6
+	 */
+	protected abstract boolean isLimiting();
+
 	private abstract class Execution {
 
 		abstract Object execute(Query query);
