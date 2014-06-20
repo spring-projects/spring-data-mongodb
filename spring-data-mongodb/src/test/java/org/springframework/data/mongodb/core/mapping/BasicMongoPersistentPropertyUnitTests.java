@@ -26,7 +26,10 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mapping.PersistentProperty;
+import org.springframework.data.mapping.model.FieldNamingStrategy;
 import org.springframework.data.mapping.model.MappingException;
+import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.util.ReflectionUtils;
@@ -40,8 +43,7 @@ public class BasicMongoPersistentPropertyUnitTests {
 
 	MongoPersistentEntity<Person> entity;
 
-	@Rule
-	public ExpectedException exception = ExpectedException.none();
+	@Rule public ExpectedException exception = ExpectedException.none();
 
 	@Before
 	public void setup() {
@@ -128,22 +130,19 @@ public class BasicMongoPersistentPropertyUnitTests {
 
 	class Person {
 
-		@Id
-		String id;
+		@Id String id;
 
-		@org.springframework.data.mongodb.core.mapping.Field("foo")
-		String firstname;
+		@org.springframework.data.mongodb.core.mapping.Field("foo") String firstname;
 		String lastname;
 
-		@org.springframework.data.mongodb.core.mapping.Field(order = -20)
-		String ssn;
+		@org.springframework.data.mongodb.core.mapping.Field(order = -20) String ssn;
 	}
 
 	enum UppercaseFieldNamingStrategy implements FieldNamingStrategy {
 
 		INSTANCE;
 
-		public String getFieldName(MongoPersistentProperty property) {
+		public String getFieldName(PersistentProperty<?> property) {
 			return property.getName().toUpperCase(Locale.US);
 		}
 	}
@@ -152,7 +151,7 @@ public class BasicMongoPersistentPropertyUnitTests {
 
 		INSTANCE;
 
-		public String getFieldName(MongoPersistentProperty property) {
+		public String getFieldName(PersistentProperty<?> property) {
 			return null;
 		}
 	}
