@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2013 by the original author(s).
+ * Copyright 2011-2014 by the original author(s).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,12 +30,12 @@ import org.springframework.data.util.ClassTypeInformation;
  * Unit tests for {@link BasicMongoPersistentEntity}.
  * 
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 @RunWith(MockitoJUnitRunner.class)
 public class BasicMongoPersistentEntityUnitTests {
 
-	@Mock
-	ApplicationContext context;
+	@Mock ApplicationContext context;
 
 	@Test
 	public void subclassInheritsAtDocumentAnnotation() {
@@ -69,6 +69,17 @@ public class BasicMongoPersistentEntityUnitTests {
 		assertThat(entity.getCollection(), is("reference"));
 	}
 
+	/**
+	 * @see DATAMONGO-937
+	 */
+	@Test
+	public void shouldDetectLanguageCorrectly() {
+
+		BasicMongoPersistentEntity<DocumentWithLanguage> entity = new BasicMongoPersistentEntity<DocumentWithLanguage>(
+				ClassTypeInformation.from(DocumentWithLanguage.class));
+		assertThat(entity.getLanguage(), is("spanish"));
+	}
+
 	@Document(collection = "contacts")
 	class Contact {
 
@@ -94,5 +105,10 @@ public class BasicMongoPersistentEntityUnitTests {
 		public String getCollectionName() {
 			return collectionName;
 		}
+	}
+
+	@Document(language = "spanish")
+	static class DocumentWithLanguage {
+
 	}
 }

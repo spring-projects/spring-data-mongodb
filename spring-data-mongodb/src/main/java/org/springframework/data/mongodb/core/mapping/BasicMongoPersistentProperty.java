@@ -41,6 +41,7 @@ import com.mongodb.DBObject;
  * @author Oliver Gierke
  * @author Patryk Wasik
  * @author Thomas Darimont
+ * @author Christoph Strobl
  */
 public class BasicMongoPersistentProperty extends AnnotationBasedPersistentProperty<MongoPersistentProperty> implements
 		MongoPersistentProperty {
@@ -48,6 +49,7 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 	private static final Logger LOG = LoggerFactory.getLogger(BasicMongoPersistentProperty.class);
 
 	private static final String ID_FIELD_NAME = "_id";
+	private static final String LANGUAGE_FIELD_NAME = "language";
 	private static final Set<Class<?>> SUPPORTED_ID_TYPES = new HashSet<Class<?>>();
 	private static final Set<String> SUPPORTED_ID_PROPERTY_NAMES = new HashSet<String>();
 
@@ -180,5 +182,14 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 	 */
 	public DBRef getDBRef() {
 		return findAnnotation(DBRef.class);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentProperty#isLanguageProperty()
+	 */
+	@Override
+	public boolean isLanguageProperty() {
+		return getFieldName().equals(LANGUAGE_FIELD_NAME) || isAnnotationPresent(Language.class);
 	}
 }

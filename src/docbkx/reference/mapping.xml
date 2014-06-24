@@ -358,6 +358,16 @@ public class Person {
         </listitem>
 
         <listitem>
+          <para><literal>@TextIndexed</literal> - applied at the field level
+          to mark the field to be included in the text index.</para>
+        </listitem>
+
+        <listitem>
+          <para><literal>@Language</literal> - applied at the field level to
+          set the language override property for text index.</para>
+        </listitem>
+
+        <listitem>
           <para><literal>@Transient</literal> - by default all private fields
           are mapped to the document, this annotation excludes the field where
           it is applied from being stored in the database</para>
@@ -526,7 +536,7 @@ OrderItem item = converter.read(OrderItem.class, input);</programlisting>
       test suite.</para>
     </section>
 
-    <section id="mapping-usage-indexes">
+    <section id="mapping-usage-indexes.compound-index">
       <title>Compound Indexes</title>
 
       <para>Compound indexes are also supported. They are defined at the class
@@ -559,6 +569,51 @@ public class Person {
 }
           </programlisting>
         </example></para>
+    </section>
+
+    <section id="mapping-usage-indexes.text-index">
+      <title>Text Indexes</title>
+
+      <note>
+        <para>The text index feature is disabled by default for mongodb
+        v.2.4.</para>
+      </note>
+
+      <para>Creating a text index allows to accumulate several fields into a
+      searchable full text index. It is only possible to have one text index
+      per collection so all fields marked with
+      <interfacename>@TextIndexed</interfacename> are combined into this
+      index. Properties can be weighted to influence document score for
+      ranking results. The default language for the text index is english, to
+      change the default language set
+      <interfacename>@Document(language="spanish")</interfacename> to any
+      language you want. Using a property called <literal>language</literal>
+      or <interfacename>@Language</interfacename> allows to define a language
+      override on a per document base.</para>
+
+      <example>
+        <title>Example Text Index Usage</title>
+
+        <programlisting language="java">@Document(language = "spanish")
+class SomeEntity {
+     
+    @TextIndexed String foo;
+ 
+    @Language String lang;
+ 
+    Nested nested;
+ 
+ 
+}
+ 
+class Nested {
+     
+    @TextIndexed(weight=5) String bar;
+ 
+    String roo;
+}
+    </programlisting>
+      </example>
     </section>
 
     <section id="mapping-usage-references">

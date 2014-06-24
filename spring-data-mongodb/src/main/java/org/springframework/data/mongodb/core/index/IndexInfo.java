@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2011 the original author or authors.
+ * Copyright 2002-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,11 @@ import java.util.List;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 
+/**
+ * @author Mark Pollack
+ * @author Oliver Gierke
+ * @author Christoph Strobl
+ */
 public class IndexInfo {
 
 	private final List<IndexField> indexFields;
@@ -31,14 +36,30 @@ public class IndexInfo {
 	private final boolean unique;
 	private final boolean dropDuplicates;
 	private final boolean sparse;
+	private final String language;
 
+	/**
+	 * @deprecated Will be removed in 1.7. Please use {@link #IndexInfo(List, String, boolean, boolean, boolean, String)}
+	 * @param indexFields
+	 * @param name
+	 * @param unique
+	 * @param dropDuplicates
+	 * @param sparse
+	 */
+	@Deprecated
 	public IndexInfo(List<IndexField> indexFields, String name, boolean unique, boolean dropDuplicates, boolean sparse) {
+		this(indexFields, name, unique, dropDuplicates, sparse, "");
+	}
+
+	public IndexInfo(List<IndexField> indexFields, String name, boolean unique, boolean dropDuplicates, boolean sparse,
+			String language) {
 
 		this.indexFields = Collections.unmodifiableList(indexFields);
 		this.name = name;
 		this.unique = unique;
 		this.dropDuplicates = dropDuplicates;
 		this.sparse = sparse;
+		this.language = language;
 	}
 
 	/**
@@ -84,14 +105,23 @@ public class IndexInfo {
 		return sparse;
 	}
 
+	/**
+	 * @return
+	 * @since 1.6
+	 */
+	public String getLanguage() {
+		return language;
+	}
+
 	@Override
 	public String toString() {
 		return "IndexInfo [indexFields=" + indexFields + ", name=" + name + ", unique=" + unique + ", dropDuplicates="
-				+ dropDuplicates + ", sparse=" + sparse + "]";
+				+ dropDuplicates + ", sparse=" + sparse + ", language=" + language + "]";
 	}
 
 	@Override
 	public int hashCode() {
+
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + (dropDuplicates ? 1231 : 1237);
@@ -99,6 +129,7 @@ public class IndexInfo {
 		result = prime * result + ((name == null) ? 0 : name.hashCode());
 		result = prime * result + (sparse ? 1231 : 1237);
 		result = prime * result + (unique ? 1231 : 1237);
+		result = prime * result + ObjectUtils.nullSafeHashCode(language);
 		return result;
 	}
 
@@ -135,6 +166,9 @@ public class IndexInfo {
 			return false;
 		}
 		if (unique != other.unique) {
+			return false;
+		}
+		if (!ObjectUtils.nullSafeEquals(language, other.language)) {
 			return false;
 		}
 		return true;

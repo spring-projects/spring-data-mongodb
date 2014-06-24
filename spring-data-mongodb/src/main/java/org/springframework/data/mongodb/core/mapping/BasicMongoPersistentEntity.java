@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2013 the original author or authors.
+ * Copyright 2011-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,12 +47,14 @@ import org.springframework.util.StringUtils;
  * @author Jon Brisbin
  * @author Oliver Gierke
  * @author Thomas Darimont
+ * @author Christoph Strobl
  */
 public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, MongoPersistentProperty> implements
 		MongoPersistentEntity<T>, ApplicationContextAware {
 
 	private static final String AMBIGUOUS_FIELD_MAPPING = "Ambiguous field mapping detected! Both %s and %s map to the same field name %s! Disambiguate using @DocumentField annotation!";
 	private final String collection;
+	private final String language;
 	private final SpelExpressionParser parser;
 	private final StandardEvaluationContext context;
 
@@ -75,8 +77,10 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 		if (rawType.isAnnotationPresent(Document.class)) {
 			Document d = rawType.getAnnotation(Document.class);
 			this.collection = StringUtils.hasText(d.collection()) ? d.collection() : fallback;
+			this.language = StringUtils.hasText(d.language()) ? d.language() : "";
 		} else {
 			this.collection = fallback;
+			this.language = "";
 		}
 	}
 
@@ -98,6 +102,15 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 	public String getCollection() {
 		Expression expression = parser.parseExpression(collection, ParserContext.TEMPLATE_EXPRESSION);
 		return expression.getValue(context, String.class);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentEntity#getLanguage()
+	 */
+	@Override
+	public String getLanguage() {
+		return this.language;
 	}
 
 	/* 
@@ -226,4 +239,5 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 			properties.put(fieldName, property);
 		}
 	}
+
 }
