@@ -3046,11 +3046,12 @@ class MyConverter implements Converter&lt;String, Person&gt; { … }</programlis
           </listitem>
         </itemizedlist></para>
 
-      <para>You can create both standard indexes and geospatial indexes using
-      the classes <classname>IndexDefinition</classname> and
-      <classname>GeoSpatialIndex</classname> respectfully. For example, given
-      the Venue class defined in a previous section, you would declare a
-      geospatial query as shown below</para>
+      <para>You can create standard, geospatial and text indexes using the
+      classes <classname>IndexDefinition</classname>,
+      <classname>GeoSpatialIndex</classname> and
+      <classname>TextIndexDefinition</classname>. For example, given the Venue
+      class defined in a previous section, you would declare a geospatial
+      query as shown below.</para>
 
       <programlisting language="java">mongoTemplate.indexOps(Venue.class).ensureIndex(new GeospatialIndex("location"));</programlisting>
     </section>

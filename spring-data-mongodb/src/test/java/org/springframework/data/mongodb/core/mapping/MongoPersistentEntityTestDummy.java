@@ -209,4 +209,9 @@ public class MongoPersistentEntityTestDummy<T> implements MongoPersistentEntity<
 		}
 
 	}
+
+	@Override
+	public String getLanguage() {
+		return null;
+	}
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 the original author or authors.
+ * Copyright 2012-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,10 +20,13 @@ import static org.junit.Assert.*;
 
 import javax.validation.ConstraintViolationException;
 
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.test.util.MongoVersionRule;
+import org.springframework.data.util.Version;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -33,13 +36,15 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * @see DATAMONGO-36
  * @author Maciej Walkowiak
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration
 public class ValidatingMongoEventListenerTests {
 
-	@Autowired
-	MongoTemplate mongoTemplate;
+	public static @ClassRule MongoVersionRule version = MongoVersionRule.atLeast(new Version(2, 6));
+
+	@Autowired MongoTemplate mongoTemplate;
 
 	@Test
 	public void shouldThrowConstraintViolationException() {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2013 by the original author(s).
+ * Copyright 2011-2014 by the original author(s).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,6 +38,7 @@ import org.springframework.util.ReflectionUtils;
  * Unit test for {@link BasicMongoPersistentProperty}.
  * 
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 public class BasicMongoPersistentPropertyUnitTests {
 
@@ -123,8 +124,42 @@ public class BasicMongoPersistentPropertyUnitTests {
 		property.getFieldName();
 	}
 
+	/**
+	 * @see DATAMONGO-937
+	 */
+	@Test
+	public void shouldDetectAnnotatedLanguagePropertyCorrectly() {
+
+		BasicMongoPersistentEntity<DocumentWithLanguageProperty> persistentEntity = new BasicMongoPersistentEntity<DocumentWithLanguageProperty>(
+				ClassTypeInformation.from(DocumentWithLanguageProperty.class));
+
+		MongoPersistentProperty property = getPropertyFor(persistentEntity, "lang");
+		assertThat(property.isLanguageProperty(), is(true));
+	}
+
+	/**
+	 * @see DATAMONGO-937
+	 */
+	@Test
+	public void shouldDetectIplicitLanguagePropertyCorrectly() {
+
+		BasicMongoPersistentEntity<DocumentWithImplicitLanguageProperty> persistentEntity = new BasicMongoPersistentEntity<DocumentWithImplicitLanguageProperty>(
+				ClassTypeInformation.from(DocumentWithImplicitLanguageProperty.class));
+
+		MongoPersistentProperty property = getPropertyFor(persistentEntity, "language");
+		assertThat(property.isLanguageProperty(), is(true));
+	}
+
 	private MongoPersistentProperty getPropertyFor(Field field) {
-		return new BasicMongoPersistentProperty(field, null, entity, new SimpleTypeHolder(),
+		return getPropertyFor(entity, field);
+	}
+
+	private MongoPersistentProperty getPropertyFor(MongoPersistentEntity<?> persistentEntity, String fieldname) {
+		return getPropertyFor(persistentEntity, ReflectionUtils.findField(persistentEntity.getType(), fieldname));
+	}
+
+	private MongoPersistentProperty getPropertyFor(MongoPersistentEntity<?> persistentEntity, Field field) {
+		return new BasicMongoPersistentProperty(field, null, persistentEntity, new SimpleTypeHolder(),
 				PropertyNameFieldNamingStrategy.INSTANCE);
 	}
 
@@ -154,5 +189,15 @@ public class BasicMongoPersistentPropertyUnitTests {
 		public String getFieldName(PersistentProperty<?> property) {
 			return null;
 		}
+	}
+
+	static class DocumentWithLanguageProperty {
+
+		@Language String lang;
+	}
+
+	static class DocumentWithImplicitLanguageProperty {
+
+		String language;
 	}
 }
