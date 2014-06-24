@@ -1413,17 +1413,32 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		CommandResult commandResult = executeCommand(command);
 		handleCommandError(commandResult, command);
 
-		// map results
+		return new AggregationResults<O>(returnPotentiallyMappedResults(outputType, commandResult), commandResult);
+	}
+
+	/**
+	 * Returns the potentially mapped results of the given {@commandResult} contained some.
+	 * 
+	 * @param outputType
+	 * @param commandResult
+	 * @return
+	 */
+	private <O> List<O> returnPotentiallyMappedResults(Class<O> outputType, CommandResult commandResult) {
+
 		@SuppressWarnings("unchecked")
 		Iterable<DBObject> resultSet = (Iterable<DBObject>) commandResult.get("result");
-		List<O> mappedResults = new ArrayList<O>();
+		if (resultSet == null) {
+			return Collections.emptyList();
+		}
+
 		DbObjectCallback<O> callback = new UnwrapAndReadDbObjectCallback<O>(mongoConverter, outputType);
 
+		List<O> mappedResults = new ArrayList<O>();
 		for (DBObject dbObject : resultSet) {
 			mappedResults.add(callback.doWith(dbObject));
 		}
 
-		return new AggregationResults<O>(mappedResults, commandResult);
+		return mappedResults;
 	}
 
 	protected String replaceWithResourceIfNecessary(String function) {

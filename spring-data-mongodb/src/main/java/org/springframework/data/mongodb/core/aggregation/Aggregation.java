@@ -45,8 +45,11 @@ import com.mongodb.DBObject;
 public class Aggregation {
 
 	public static final AggregationOperationContext DEFAULT_CONTEXT = new NoOpAggregationOperationContext();
+	public static final AggregationOptions DEFAULT_OPTIONS = newAggregationOptions().build();
 
-	private final List<AggregationOperation> operations;
+	protected final List<AggregationOperation> operations;
+
+	private final AggregationOptions options;
 
 	/**
 	 * Creates a new {@link Aggregation} from the given {@link AggregationOperation}s.
@@ -64,6 +67,20 @@ public class Aggregation {
 	 */
 	public static Aggregation newAggregation(AggregationOperation... operations) {
 		return new Aggregation(operations);
+	}
+
+	/**
+	 * Returns a copy of this {@link Aggregation} with the given {@link AggregationOptions} set. Note that options are
+	 * supported in MongoDB version 2.6+.
+	 * 
+	 * @param options must not be {@literal null}.
+	 * @return
+	 * @since 1.6
+	 */
+	public Aggregation withOptions(AggregationOptions options) {
+
+		Assert.notNull(options, "AggregationOptions must not be null.");
+		return new Aggregation(this.operations, options);
 	}
 
 	/**
@@ -92,11 +109,43 @@ public class Aggregation {
 	 * @param aggregationOperations must not be {@literal null} or empty.
 	 */
 	protected Aggregation(AggregationOperation... aggregationOperations) {
+		this(asAggregationList(aggregationOperations));
+	}
+
+	/**
+	 * @param aggregationOperations must not be {@literal null} or empty.
+	 * @return
+	 */
+	protected static List<AggregationOperation> asAggregationList(AggregationOperation... aggregationOperations) {
+
+		Assert.notEmpty(aggregationOperations, "AggregationOperations must not be null or empty!");
+
+		return Arrays.asList(aggregationOperations);
+	}
+
+	/**
+	 * Creates a new {@link Aggregation} from the given {@link AggregationOperation}s.
+	 * 
+	 * @param aggregationOperations must not be {@literal null} or empty.
+	 */
+	protected Aggregation(List<AggregationOperation> aggregationOperations) {
+		this(aggregationOperations, DEFAULT_OPTIONS);
+	}
+
+	/**
+	 * Creates a new {@link Aggregation} from the given {@link AggregationOperation}s.
+	 * 
+	 * @param aggregationOperations must not be {@literal null} or empty.
+	 * @param options must not be {@literal null} or empty.
+	 */
+	protected Aggregation(List<AggregationOperation> aggregationOperations, AggregationOptions options) {
 
 		Assert.notNull(aggregationOperations, "AggregationOperations must not be null!");
-		Assert.isTrue(aggregationOperations.length > 0, "At least one AggregationOperation has to be provided");
+		Assert.isTrue(aggregationOperations.size() > 0, "At least one AggregationOperation has to be provided");
+		Assert.notNull(options, "AggregationOptions must not be null!");
 
-		this.operations = Arrays.asList(aggregationOperations);
+		this.operations = aggregationOperations;
+		this.options = options;
 	}
 
 	/**
@@ -232,6 +281,16 @@ public class Aggregation {
 	}
 
 	/**
+	 * Returns a new {@link AggregationOptions.Builder}.
+	 * 
+	 * @return
+	 * @since 1.6
+	 */
+	public static AggregationOptions.Builder newAggregationOptions() {
+		return new AggregationOptions.Builder();
+	}
+
+	/**
 	 * Converts this {@link Aggregation} specification to a {@link DBObject}.
 	 * 
 	 * @param inputCollectionName the name of the input collection
@@ -254,6 +313,8 @@ public class Aggregation {
 
 		DBObject command = new BasicDBObject("aggregate", inputCollectionName);
 		command.put("pipeline", operationDocuments);
+
+		command = options.applyAndReturnPotentiallyChangedCommand(command);
 
 		return command;
 	}

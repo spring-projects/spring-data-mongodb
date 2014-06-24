@@ -219,6 +219,43 @@ public class AggregationUnitTests {
 		assertThat(projection1, is((DBObject) new BasicDBObject("b", "$ba")));
 	}
 
+	/**
+	 * @see DATAMONGO-960
+	 */
+	@Test
+	public void shouldRenderAggregationWithDefaultOptionsCorrectly() {
+
+		DBObject agg = newAggregation( //
+				project().and("a").as("aa") //
+		).toDbObject("foo", Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg.toString(),
+				is("{ \"aggregate\" : \"foo\" , \"pipeline\" : [ { \"$project\" : { \"aa\" : \"$a\"}}]}"));
+	}
+
+	/**
+	 * @see DATAMONGO-960
+	 */
+	@Test
+	public void shouldRenderAggregationWithCustomOptionsCorrectly() {
+
+		AggregationOptions aggregationOptions = newAggregationOptions().explain(true).cursor(new BasicDBObject("foo", 1))
+				.allowDiskUse(true).build();
+
+		DBObject agg = newAggregation( //
+				project().and("a").as("aa") //
+		) //
+		.withOptions(aggregationOptions) //
+				.toDbObject("foo", Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg.toString(), is("{ \"aggregate\" : \"foo\" , " //
+				+ "\"pipeline\" : [ { \"$project\" : { \"aa\" : \"$a\"}}] , " //
+				+ "\"allowDiskUse\" : true , " //
+				+ "\"explain\" : true , " //
+				+ "\"cursor\" : { \"foo\" : 1}}" //
+		));
+	}
+
 	private DBObject extractPipelineElement(DBObject agg, int index, String operation) {
 
 		List<DBObject> pipeline = (List<DBObject>) agg.get("pipeline");

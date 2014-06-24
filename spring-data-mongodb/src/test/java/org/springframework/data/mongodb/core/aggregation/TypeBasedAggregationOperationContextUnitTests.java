@@ -146,6 +146,29 @@ public class TypeBasedAggregationOperationContextUnitTests {
 		assertThat(age, is((DBObject) new BasicDBObject("v", 10)));
 	}
 
+	/**
+	 * @see DATAMONGO-960
+	 */
+	@Test
+	public void rendersAggregationOptionsInTypedAggregationContextCorrectly() {
+
+		AggregationOperationContext context = getContext(FooPerson.class);
+		TypedAggregation<FooPerson> agg = newAggregation(FooPerson.class, project("name", "age")) //
+				.withOptions(
+						newAggregationOptions().allowDiskUse(true).explain(true).cursor(new BasicDBObject("foo", 1)).build());
+
+		DBObject dbo = agg.toDbObject("person", context);
+
+		DBObject projection = getPipelineElementFromAggregationAt(dbo, 0);
+		assertThat(projection.containsField("$project"), is(true));
+
+		assertThat(projection.get("$project"), is((Object) new BasicDBObject("name", 1).append("age", 1)));
+
+		assertThat(dbo.get("allowDiskUse"), is((Object) true));
+		assertThat(dbo.get("explain"), is((Object) true));
+		assertThat(dbo.get("cursor"), is((Object) new BasicDBObject("foo", 1)));
+	}
+
 	@Document(collection = "person")
 	public static class FooPerson {
 

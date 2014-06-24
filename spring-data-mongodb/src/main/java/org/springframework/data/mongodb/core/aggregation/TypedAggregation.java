@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 package org.springframework.data.mongodb.core.aggregation;
+
+import java.util.List;
 
 import org.springframework.util.Assert;
 
@@ -30,11 +32,34 @@ public class TypedAggregation<I> extends Aggregation {
 	/**
 	 * Creates a new {@link TypedAggregation} from the given {@link AggregationOperation}s.
 	 * 
+	 * @param inputType must not be {@literal null}.
 	 * @param operations must not be {@literal null} or empty.
 	 */
 	public TypedAggregation(Class<I> inputType, AggregationOperation... operations) {
+		this(inputType, asAggregationList(operations));
+	}
 
-		super(operations);
+	/**
+	 * Creates a new {@link TypedAggregation} from the given {@link AggregationOperation}s.
+	 * 
+	 * @param inputType must not be {@literal null}.
+	 * @param operations must not be {@literal null} or empty.
+	 */
+	public TypedAggregation(Class<I> inputType, List<AggregationOperation> operations) {
+		this(inputType, operations, DEFAULT_OPTIONS);
+	}
+
+	/**
+	 * Creates a new {@link TypedAggregation} from the given {@link AggregationOperation}s and the given
+	 * {@link AggregationOptions}.
+	 * 
+	 * @param inputType must not be {@literal null}.
+	 * @param operations must not be {@literal null} or empty.
+	 * @param options must not be {@literal null}.
+	 */
+	public TypedAggregation(Class<I> inputType, List<AggregationOperation> operations, AggregationOptions options) {
+
+		super(operations, options);
 
 		Assert.notNull(inputType, "Input type must not be null!");
 		this.inputType = inputType;
@@ -47,5 +72,15 @@ public class TypedAggregation<I> extends Aggregation {
 	 */
 	public Class<I> getInputType() {
 		return inputType;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.Aggregation#withOptions(org.springframework.data.mongodb.core.aggregation.AggregationOptions)
+	 */
+	public TypedAggregation<I> withOptions(AggregationOptions options) {
+
+		Assert.notNull(options, "AggregationOptions must not be null.");
+		return new TypedAggregation<I>(inputType, operations, options);
 	}
 }
