@@ -75,6 +75,7 @@ public class AggregationTests {
 	private static final String INPUT_COLLECTION = "aggregation_test_collection";
 	private static final Logger LOGGER = LoggerFactory.getLogger(AggregationTests.class);
 	private static final Version TWO_DOT_FOUR = new Version(2, 4);
+	private static final Version TWO_DOT_SIX = new Version(2, 6);
 
 	private static boolean initialized = false;
 
@@ -414,23 +415,7 @@ public class AggregationTests {
 
 		createUserWithLikesDocuments();
 
-		/*
-		 ...
-		  $group: {
-				      _id:"$like",
-				      number:{ $sum:1}
-		 			 }
-		  ...
-		 
-		 */
-
-		TypedAggregation<UserWithLikes> agg = newAggregation(UserWithLikes.class, //
-				unwind("likes"), //
-				group("likes").count().as("number"), //
-				sort(DESC, "number"), //
-				limit(5), //
-				sort(ASC, previousOperation()) //
-		);
+		TypedAggregation<UserWithLikes> agg = createUsersWithCommonLikesAggregation();
 
 		assertThat(agg, is(notNullValue()));
 		assertThat(agg.toString(), is(notNullValue()));
@@ -445,6 +430,16 @@ public class AggregationTests {
 		assertLikeStats(result.getMappedResults().get(2), "c", 4);
 		assertLikeStats(result.getMappedResults().get(3), "d", 2);
 		assertLikeStats(result.getMappedResults().get(4), "e", 3);
+	}
+
+	protected TypedAggregation<UserWithLikes> createUsersWithCommonLikesAggregation() {
+		return newAggregation(UserWithLikes.class, //
+				unwind("likes"), //
+				group("likes").count().as("number"), //
+				sort(DESC, "number"), //
+				limit(5), //
+				sort(ASC, previousOperation()) //
+		);
 	}
 
 	@Test
@@ -855,6 +850,57 @@ public class AggregationTests {
 		AggregationResults<DBObject> result = mongoTemplate.aggregate(agg, DBObject.class);
 
 		assertThat(result.getMappedResults(), hasSize(3));
+	}
+
+	/**
+	 * @see DATAMONGO-960
+	 */
+	@Test
+	public void returnFiveMostCommonLikesAggregationFrameworkExampleWithSortOnDiskOptionEnabled() {
+
+		assumeTrue(mongoVersion.isGreaterThanOrEqualTo(TWO_DOT_SIX));
+
+		createUserWithLikesDocuments();
+
+		TypedAggregation<UserWithLikes> agg = createUsersWithCommonLikesAggregation() //
+				.withOptions(newAggregationOptions().allowDiskUse(true).build());
+
+		assertThat(agg, is(notNullValue()));
+		assertThat(agg.toString(), is(notNullValue()));
+
+		AggregationResults<LikeStats> result = mongoTemplate.aggregate(agg, LikeStats.class);
+		assertThat(result, is(notNullValue()));
+		assertThat(result.getMappedResults(), is(notNullValue()));
+		assertThat(result.getMappedResults().size(), is(5));
+
+		assertLikeStats(result.getMappedResults().get(0), "a", 4);
+		assertLikeStats(result.getMappedResults().get(1), "b", 2);
+		assertLikeStats(result.getMappedResults().get(2), "c", 4);
+		assertLikeStats(result.getMappedResults().get(3), "d", 2);
+		assertLikeStats(result.getMappedResults().get(4), "e", 3);
+	}
+
+	/**
+	 * @see DATAMONGO-960
+	 */
+	@Test
+	public void returnFiveMostCommonLikesShouldReturnStageExecutionInformationWithExplainOptionEnabled() {
+
+		assumeTrue(mongoVersion.isGreaterThanOrEqualTo(TWO_DOT_SIX));
+
+		createUserWithLikesDocuments();
+
+		TypedAggregation<UserWithLikes> agg = createUsersWithCommonLikesAggregation() //
+				.withOptions(newAggregationOptions().explain(true).build());
+
+		AggregationResults<LikeStats> result = mongoTemplate.aggregate(agg, LikeStats.class);
+
+		assertThat(result.getMappedResults(), is(empty()));
+
+		DBObject rawResult = result.getRawResults();
+
+		assertThat(rawResult, is(notNullValue()));
+		assertThat(rawResult.containsField("stages"), is(true));
 	}
 
 	private void assertLikeStats(LikeStats like, String id, long count) {

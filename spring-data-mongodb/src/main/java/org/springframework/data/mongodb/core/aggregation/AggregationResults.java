@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ import com.mongodb.DBObject;
  * 
  * @author Tobias Trelle
  * @author Oliver Gierke
+ * @author Thomas Darimont
  * @param <T> The class in which the results are mapped onto.
  * @since 1.3
  */
@@ -88,6 +89,16 @@ public class AggregationResults<T> implements Iterable<T> {
 	 */
 	public String getServerUsed() {
 		return serverUsed;
+	}
+
+	/**
+	 * Returns the raw result that was returned by the server.
+	 * 
+	 * @return
+	 * @since 1.6
+	 */
+	public DBObject getRawResults() {
+		return rawResults;
 	}
 
 	private String parseServerUsed() {
