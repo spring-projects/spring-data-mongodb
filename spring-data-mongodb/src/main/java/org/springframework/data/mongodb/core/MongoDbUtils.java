@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 the original author or authors.
+ * Copyright 2010-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -94,7 +94,9 @@ public abstract class MongoDbUtils {
 			// DB found but not yet synchronized
 			if (db != null && !dbHolder.isSynchronizedWithTransaction()) {
 
-				LOGGER.debug("Registering Spring transaction synchronization for existing MongoDB {}.", databaseName);
+				if (LOGGER.isDebugEnabled()) {
+					LOGGER.debug("Registering Spring transaction synchronization for existing MongoDB {}.", databaseName);
+				}
 
 				TransactionSynchronizationManager.registerSynchronization(new MongoSynchronization(dbHolder, mongo));
 				dbHolder.setSynchronizedWithTransaction(true);
@@ -106,7 +108,9 @@ public abstract class MongoDbUtils {
 		}
 
 		// Lookup fresh database instance
-		LOGGER.debug("Getting Mongo Database name=[{}]", databaseName);
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("Getting Mongo Database name=[{}]", databaseName);
+		}
 
 		DB db = mongo.getDB(databaseName);
 		boolean credentialsGiven = credentials.hasUsername() && credentials.hasPassword();
@@ -130,7 +134,9 @@ public abstract class MongoDbUtils {
 		// TX sync active, bind new database to thread
 		if (TransactionSynchronizationManager.isSynchronizationActive()) {
 
-			LOGGER.debug("Registering Spring transaction synchronization for MongoDB instance {}.", databaseName);
+			if (LOGGER.isDebugEnabled()) {
+				LOGGER.debug("Registering Spring transaction synchronization for MongoDB instance {}.", databaseName);
+			}
 
 			DbHolder holderToUse = dbHolder;
 
@@ -185,11 +191,15 @@ public abstract class MongoDbUtils {
 	public static void closeDB(DB db) {
 
 		if (db != null) {
-			LOGGER.debug("Closing Mongo DB object");
+			if (LOGGER.isDebugEnabled()) {
+				LOGGER.debug("Closing Mongo DB object");
+			}
 			try {
 				db.requestDone();
 			} catch (Throwable ex) {
-				LOGGER.debug("Unexpected exception on closing Mongo DB object", ex);
+				if (LOGGER.isDebugEnabled()) {
+					LOGGER.debug("Unexpected exception on closing Mongo DB object", ex);
+				}
 			}
 		}
 	}
