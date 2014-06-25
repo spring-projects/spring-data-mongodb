@@ -627,9 +627,12 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 				// implicit reference or explicit include?
 				if (value == null || Boolean.TRUE.equals(value)) {
 
+					if (Aggregation.SystemVariable.isReferingToSystemVariable(field.getTarget())) {
+						return field.getTarget();
+					}
+
 					// check whether referenced field exists in the context
 					return context.getReference(field).getReferenceValue();
-
 				} else if (Boolean.FALSE.equals(value)) {
 
 					// render field as excluded
