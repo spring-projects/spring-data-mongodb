@@ -238,7 +238,13 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		}
 
 		if (index.expireAfterSeconds() >= 0) {
-			indexDefinition.expire(index.expireAfterSeconds(), TimeUnit.SECONDS);
+			if (indexDefinition.getIndexKeys().keySet().size() > 1) {
+				LOGGER.warn(String.format(
+						"TTL is not supported for compound index with more than one key. TTL=%s will be ignored.",
+						index.expireAfterSeconds()));
+			} else {
+				indexDefinition.expire(index.expireAfterSeconds(), TimeUnit.SECONDS);
+			}
 		}
 
 		String collection = StringUtils.hasText(index.collection()) ? index.collection() : fallbackCollection;
