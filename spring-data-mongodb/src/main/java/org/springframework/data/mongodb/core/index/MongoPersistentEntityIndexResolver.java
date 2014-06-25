@@ -215,6 +215,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		return indexDefinitions;
 	}
 
+	@SuppressWarnings("deprecation")
 	protected IndexDefinitionHolder createCompoundIndexDefinition(String dotPath, String fallbackCollection,
 			CompoundIndex index) {
 
@@ -237,8 +238,14 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			indexDefinition.background();
 		}
 
-		if (index.expireAfterSeconds() >= 0) {
-			indexDefinition.expire(index.expireAfterSeconds(), TimeUnit.SECONDS);
+		int ttl = index.expireAfterSeconds();
+
+		if (ttl >= 0) {
+			if (indexDefinition.getIndexKeys().keySet().size() > 1) {
+				LOGGER.warn("TTL is not supported for compound index with more than one key. TTL={} will be ignored.", ttl);
+			} else {
+				indexDefinition.expire(ttl, TimeUnit.SECONDS);
+			}
 		}
 
 		String collection = StringUtils.hasText(index.collection()) ? index.collection() : fallbackCollection;

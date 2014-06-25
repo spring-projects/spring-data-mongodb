@@ -107,8 +107,11 @@ public @interface CompoundIndex {
 	/**
 	 * Configures the number of seconds after which the collection should expire. Defaults to -1 for no expiry.
 	 * 
+	 * @deprecated TTL cannot be defined for {@link CompoundIndex} having more than one field as key. Will be removed in
+	 *             1.6.
 	 * @see http://docs.mongodb.org/manual/tutorial/expire-data/
 	 * @return
 	 */
+	@Deprecated
 	int expireAfterSeconds() default -1;
 }
