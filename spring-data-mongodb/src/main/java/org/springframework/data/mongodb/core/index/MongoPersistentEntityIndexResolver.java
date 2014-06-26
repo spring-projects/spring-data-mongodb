@@ -103,15 +103,19 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			@Override
 			public void doWithPersistentProperty(MongoPersistentProperty persistentProperty) {
 
-				if (persistentProperty.isEntity()) {
-					indexInformation.addAll(resolveIndexForClass(persistentProperty.getActualType(),
-							persistentProperty.getFieldName(), root.getCollection(), guard));
-				}
+				try {
+					if (persistentProperty.isEntity()) {
+						indexInformation.addAll(resolveIndexForClass(persistentProperty.getActualType(),
+								persistentProperty.getFieldName(), root.getCollection(), guard));
+					}
 
-				IndexDefinitionHolder indexDefinitionHolder = createIndexDefinitionHolderForProperty(
-						persistentProperty.getFieldName(), root.getCollection(), persistentProperty);
-				if (indexDefinitionHolder != null) {
-					indexInformation.add(indexDefinitionHolder);
+					IndexDefinitionHolder indexDefinitionHolder = createIndexDefinitionHolderForProperty(
+							persistentProperty.getFieldName(), root.getCollection(), persistentProperty);
+					if (indexDefinitionHolder != null) {
+						indexInformation.add(indexDefinitionHolder);
+					}
+				} catch (CyclicPropertyReferenceException e) {
+					LOGGER.warn(e.getMessage());
 				}
 			}
 		});
@@ -372,7 +376,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 				for (Path existingPath : paths) {
 
-					if (existingPath.cycles(property)) {
+					if (existingPath.cycles(property, path)) {
 						paths.add(new Path(property, path));
 						throw new CyclicPropertyReferenceException(property.getFieldName(), property.getOwner().getType(),
 								existingPath.getPath());
@@ -408,7 +412,11 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 				return path;
 			}
 
-			boolean cycles(MongoPersistentProperty property) {
+			boolean cycles(MongoPersistentProperty property, String path) {
+
+				if (!property.getOwner().getType().equals(this.property.getOwner().getType())) {
+					return false;
+				}
 
 				Pattern pattern = Pattern.compile("\\b" + Pattern.quote(property.getFieldName()) + "\\b");
 				Matcher matcher = pattern.matcher(path);
@@ -418,7 +426,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 					count++;
 				}
 
-				return count >= 1 && property.getOwner().getType().equals(this.property.getOwner().getType());
+				return count >= 1 && path.contains(this.path);
 			}
 		}
 	}
@@ -448,8 +456,8 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		 */
 		@Override
 		public String getMessage() {
-			return String.format("Found cycle for field '%s' in type '%s' for path '%s'", propertyName, type.getSimpleName(),
-					dotPath);
+			return String.format("Found cycle for field '%s' in type '%s' for path '%s'", propertyName,
+					type != null ? type.getSimpleName() : "unknown", dotPath);
 		}
 	}
 
