@@ -20,10 +20,13 @@ import static org.hamcrest.collection.IsEmptyCollection.*;
 import static org.hamcrest.core.IsEqual.*;
 import static org.hamcrest.core.IsInstanceOf.*;
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
+import java.lang.annotation.Annotation;
 import java.util.Collections;
 import java.util.List;
 
+import org.hamcrest.collection.IsEmptyCollection;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
@@ -38,6 +41,9 @@ import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentEntityTestDummy.MongoPersistentEntityDummyBuilder;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 
 import com.mongodb.BasicDBObjectBuilder;
 
@@ -467,7 +473,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		public void shouldNotRunIntoStackOverflow() {
 
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(CycleStartingInBetween.class);
-			assertThat(indexDefinitions, hasSize(2));
+			assertThat(indexDefinitions, hasSize(1));
 		}
 
 		/**
@@ -490,9 +496,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(CycleOnLevelOne.class);
 			assertIndexPathAndCollection("reference.indexedProperty", "cycleOnLevelOne", indexDefinitions.get(0));
-			assertIndexPathAndCollection("reference.cyclicReference.reference.indexedProperty", "cycleOnLevelOne",
-					indexDefinitions.get(1));
-			assertThat(indexDefinitions, hasSize(2));
+			assertThat(indexDefinitions, hasSize(1));
 		}
 
 		/**
@@ -518,6 +522,58 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(SimilarityHolingBean.class);
 			assertIndexPathAndCollection("norm", "similarityHolingBean", indexDefinitions.get(0));
 			assertThat(indexDefinitions, hasSize(1));
+		}
+
+		/**
+		 * @see DATAMONGO-962
+		 */
+		@Test
+		public void shouldDetectSelfCycleViaCollectionTypeCorrectly() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(SelfCyclingViaCollectionType.class);
+			assertThat(indexDefinitions, IsEmptyCollection.empty());
+		}
+
+		/**
+		 * @see DATAMONGO-962
+		 */
+		@Test
+		public void shouldNotDetectCycleWhenTypeIsUsedMoreThanOnce() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(MultipleObjectsOfSameType.class);
+			assertThat(indexDefinitions, IsEmptyCollection.empty());
+		}
+
+		/**
+		 * @see DATAMONGO-962
+		 */
+		@Test
+		public void shouldCatchCyclicReferenceExceptionOnRoot() {
+
+			Document documentDummy = new Document() {
+
+				@Override
+				public Class<? extends Annotation> annotationType() {
+					return Document.class;
+				}
+
+				@Override
+				public String collection() {
+					return null;
+				}
+			};
+
+			MongoPersistentProperty propertyMock = mock(MongoPersistentProperty.class);
+			when(propertyMock.isEntity()).thenReturn(true);
+			when(propertyMock.getActualType()).thenThrow(
+					new MongoPersistentEntityIndexResolver.CyclicPropertyReferenceException("foo", Object.class, "bar"));
+
+			MongoPersistentEntity<SelfCyclingViaCollectionType> dummy = MongoPersistentEntityDummyBuilder
+					.forClass(SelfCyclingViaCollectionType.class).withCollection("foo").and(propertyMock)
+					.and(documentDummy).build();
+
+			new MongoPersistentEntityIndexResolver(prepareMappingContext(SelfCyclingViaCollectionType.class))
+					.resolveIndexForEntity(dummy);
 		}
 
 		@Document
@@ -597,6 +653,21 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		static class SimilaritySibling {
 			@Field("similarity") private String similarThoughNotEqualNamedProperty;
 		}
+
+		@Document
+		static class MultipleObjectsOfSameType {
+
+			SelfCyclingViaCollectionType cycleOne;
+
+			SelfCyclingViaCollectionType cycleTwo;
+		}
+
+		@Document
+		static class SelfCyclingViaCollectionType {
+
+			List<SelfCyclingViaCollectionType> cyclic;
+
+		}
 	}
 
 	private static List<IndexDefinitionHolder> prepareMappingContextAndResolveIndexForType(Class<?> type) {
@@ -629,4 +700,5 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		}
 		assertThat(holder.getCollection(), equalTo(expectedCollection));
 	}
+
 }
