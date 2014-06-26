@@ -2016,6 +2016,67 @@ GeoResults&lt;Restaurant&gt; = operations.geoNear(query, Restaurant.class);</pro
         origin.</para>
       </section>
     </section>
+
+    <section id="mongo.textsearch">
+      <title>Full Text Queries</title>
+
+      <para>Since mongodb 2.6 full text queries can be excuted using the
+      <literal>$text</literal> operator. Methods and operations specific for
+      full text queries are available in <classname>TextQuery</classname> and
+      <classname>TextCriteria</classname>. When doing full text search please
+      refer to the <ulink
+      url="http://docs.mongodb.org/manual/reference/operator/query/text/#behavior">mongodb
+      reference</ulink> for its behavior and limitations.</para>
+
+      <example>
+        <title>Full Text Search</title>
+
+        <para>Bevore we are actually able to use full text search we have to
+        ensure to set up the search index correctly. Please refer to section
+        <link linkend="mapping-usage-indexes.text-index">Text Index</link> for
+        creating index structures.</para>
+
+        <programlisting language="javascript">db.foo.ensureIndex(
+{
+  title : "text",
+  content : "text"
+},
+{
+  weights : {
+              title : 3
+            }
+}
+)
+</programlisting>
+
+        <para>A query searching for <literal>coffee cake</literal>, sorted by
+        relevance according to the <literal>weights</literal> can be defined
+        and executed as:</para>
+
+        <programlisting language="java">Query query = TextQuery.searching(new TextCriteria().matchingAny("coffee", "cake")).sortByScore();
+List&lt;Document&gt; page = template.find(query, Document.class);
+</programlisting>
+
+        <para>Exclusion of search terms can directly be done by prefixing the
+        term with <literal>-</literal> or using
+        <literal>notMatching</literal></para>
+
+        <programlisting language="java">// search for 'coffee' and not 'cake'
+TextQuery.searching(new TextCriteria().matching("coffee").matching("-cake"));
+TextQuery.searching(new TextCriteria().matching("coffee").notMatching("cake"));
+</programlisting>
+
+        <para>As <classname>TextCriteria.matching</classname> takes the
+        provided term as is. Therefore phrases can be defined by putting them
+        between double quotes (eg. <literal>\"coffee cake\")</literal> or
+        using <classname>TextCriteria.phrase.</classname></para>
+
+        <programlisting language="java">// search for phrase 'coffee cake'
+TextQuery.searching(new TextCriteria().matching("\"coffee cake\""));
+TextQuery.searching(new TextCriteria().phrase("coffee cake"));
+</programlisting>
+      </example>
+    </section>
   </section>
 
   <section id="mongo.mapreduce">
