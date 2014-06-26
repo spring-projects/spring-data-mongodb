@@ -913,6 +913,8 @@ public class AggregationTests {
 	@Test
 	public void shouldSupportReturningCurrentAggregationRoot() {
 
+		assumeTrue(mongoVersion.isGreaterThanOrEqualTo(TWO_DOT_SIX));
+
 		mongoTemplate.save(new Person("p1_first", "p1_last", 25));
 		mongoTemplate.save(new Person("p2_first", "p2_last", 32));
 		mongoTemplate.save(new Person("p3_first", "p3_last", 25));
@@ -939,6 +941,8 @@ public class AggregationTests {
 	 */
 	@Test
 	public void shouldSupportReturningCurrentAggregationRootInReference() {
+
+		assumeTrue(mongoVersion.isGreaterThanOrEqualTo(TWO_DOT_SIX));
 
 		mongoTemplate.save(new Reservation("0123", "42", 100));
 		mongoTemplate.save(new Reservation("0360", "43", 200));
