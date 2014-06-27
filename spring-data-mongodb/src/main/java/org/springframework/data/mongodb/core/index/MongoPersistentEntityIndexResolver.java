@@ -352,7 +352,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	 * 
 	 * @author Christoph Strobl
 	 */
-	private static class CycleGuard {
+	static class CycleGuard {
 
 		private final Map<String, List<Path>> propertyTypeMap;
 
@@ -418,7 +418,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		 * 
 		 * @author Christoph Strobl
 		 */
-		private static class Path {
+		static class Path {
 
 			private final MongoPersistentProperty property;
 			private final String path;
