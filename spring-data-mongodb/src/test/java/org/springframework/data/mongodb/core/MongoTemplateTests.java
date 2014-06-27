@@ -2693,6 +2693,22 @@ public class MongoTemplateTests {
 		assertThat(result.getContent().getName(), is(content.getName()));
 	}
 
+	/**
+	 * @see DATAMONGO-970
+	 */
+	@Test
+	public void insertsAndRemovesBasicDbObjectCorrectly() {
+
+		BasicDBObject object = new BasicDBObject("key", "value");
+		template.insert(object, "collection");
+
+		assertThat(object.get("_id"), is(notNullValue()));
+		assertThat(template.findAll(DBObject.class, "collection"), hasSize(1));
+
+		template.remove(object, "collection");
+		assertThat(template.findAll(DBObject.class, "collection"), hasSize(0));
+	}
+
 	static class DoucmentWithNamedIdField {
 
 		@Id String someIdKey;
