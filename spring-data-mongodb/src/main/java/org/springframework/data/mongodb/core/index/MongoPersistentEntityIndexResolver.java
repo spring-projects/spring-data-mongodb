@@ -21,8 +21,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -366,6 +364,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		 * @param property The property to inspect
 		 * @param path The path under which the property can be reached.
 		 * @throws CyclicPropertyReferenceException in case a potential cycle is detected.
+		 * @see Path#cycles(MongoPersistentProperty, String)
 		 */
 		void protect(MongoPersistentProperty property, String path) throws CyclicPropertyReferenceException {
 
@@ -384,7 +383,6 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 				}
 
 				paths.add(new Path(property, path));
-
 			} else {
 
 				ArrayList<Path> paths = new ArrayList<Path>();
@@ -397,6 +395,29 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			return property.getOwner().getType().getSimpleName() + ":" + property.getFieldName();
 		}
 
+		/**
+		 * Path defines the property and its full path from the document root. <br />
+		 * A {@link Path} with {@literal spring.data.mongodb} would be created for the property {@code Three.mongodb}.
+		 * 
+		 * <pre>
+		 * <code>
+		 * &#64;Document
+		 * class One {
+		 *   Two spring;
+		 * }
+		 * 
+		 * class Two {
+		 *   Three data;
+		 * }
+		 * 
+		 * class Three {
+		 *   String mongodb;
+		 * }
+		 * </code>
+		 * </pre>
+		 * 
+		 * @author Christoph Strobl
+		 */
 		private static class Path {
 
 			private final MongoPersistentProperty property;
@@ -412,21 +433,22 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 				return path;
 			}
 
+			/**
+			 * Checks whether the given property is owned by the same entity and if it has been already visited by a subset of
+			 * the current path. Given {@literal foo.bar.bar} cycles if {@literal foo.bar} has already been visited and
+			 * {@code class Bar} contains a property of type {@code Bar}. The previously mentioned path would not cycle if
+			 * {@code class Bar} contained a property of type {@code SomeEntity} named {@literal bar}.
+			 * 
+			 * @param property
+			 * @param path
+			 * @return
+			 */
 			boolean cycles(MongoPersistentProperty property, String path) {
 
 				if (!property.getOwner().getType().equals(this.property.getOwner().getType())) {
 					return false;
 				}
-
-				Pattern pattern = Pattern.compile("\\b" + Pattern.quote(property.getFieldName()) + "\\b");
-				Matcher matcher = pattern.matcher(path);
-
-				int count = 0;
-				while (matcher.find()) {
-					count++;
-				}
-
-				return count >= 1 && path.contains(this.path);
+				return path.contains(this.path);
 			}
 		}
 	}
