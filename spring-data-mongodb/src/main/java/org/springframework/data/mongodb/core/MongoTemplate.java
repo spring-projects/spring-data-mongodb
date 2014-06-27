@@ -1070,17 +1070,22 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	}
 
 	/**
-	 * Returns {@link Entry} containing the {@link MongoPersistentProperty} defining the {@literal id} as
-	 * {@link Entry#getKey()} and the {@link Id}s property value as its {@link Entry#getValue()}.
+	 * Returns {@link Entry} containing the field name of the id property as {@link Entry#getKey()} and the {@link Id}s
+	 * property value as its {@link Entry#getValue()}.
 	 * 
 	 * @param object
 	 * @return
 	 */
-	private Map.Entry<MongoPersistentProperty, Object> extractIdPropertyAndValue(Object object) {
+	private Entry<String, Object> extractIdPropertyAndValue(Object object) {
 
 		Assert.notNull(object, "Id cannot be extracted from 'null'.");
 
 		Class<?> objectType = object.getClass();
+
+		if (object instanceof DBObject) {
+			return Collections.singletonMap(ID_FIELD, ((DBObject) object).get(ID_FIELD)).entrySet().iterator().next();
+		}
+
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(objectType);
 		MongoPersistentProperty idProp = entity == null ? null : entity.getIdProperty();
 
@@ -1090,7 +1095,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 		Object idValue = BeanWrapper.create(object, mongoConverter.getConversionService())
 				.getProperty(idProp, Object.class);
-		return Collections.singletonMap(idProp, idValue).entrySet().iterator().next();
+		return Collections.singletonMap(idProp.getFieldName(), idValue).entrySet().iterator().next();
 	}
 
 	/**
@@ -1101,8 +1106,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 */
 	private Query getIdQueryFor(Object object) {
 
-		Map.Entry<MongoPersistentProperty, Object> id = extractIdPropertyAndValue(object);
-		return new Query(where(id.getKey().getFieldName()).is(id.getValue()));
+		Entry<String, Object> id = extractIdPropertyAndValue(object);
+		return new Query(where(id.getKey()).is(id.getValue()));
 	}
 
 	/**
@@ -1116,7 +1121,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		Assert.notEmpty(objects, "Cannot create Query for empty collection.");
 
 		Iterator<?> it = objects.iterator();
-		Map.Entry<MongoPersistentProperty, Object> firstEntry = extractIdPropertyAndValue(it.next());
+		Entry<String, Object> firstEntry = extractIdPropertyAndValue(it.next());
 
 		ArrayList<Object> ids = new ArrayList<Object>(objects.size());
 		ids.add(firstEntry.getValue());
@@ -1125,7 +1130,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			ids.add(extractIdPropertyAndValue(it.next()).getValue());
 		}
 
-		return new Query(where(firstEntry.getKey().getFieldName()).in(ids));
+		return new Query(where(firstEntry.getKey()).in(ids));
 	}
 
 	private void assertUpdateableIdIfNotSet(Object entity) {
