@@ -11,7 +11,7 @@
 	<parent>
 		<groupId>org.springframework.data</groupId>
 		<artifactId>spring-data-mongodb-parent</artifactId>
-		<version>1.6.0.BUILD-SNAPSHOT</version>
+		<version>1.6.0.TEXTSEARCH-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
