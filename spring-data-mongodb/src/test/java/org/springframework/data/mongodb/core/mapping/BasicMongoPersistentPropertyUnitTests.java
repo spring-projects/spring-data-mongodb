@@ -150,6 +150,32 @@ public class BasicMongoPersistentPropertyUnitTests {
 		assertThat(property.isLanguageProperty(), is(true));
 	}
 
+	/**
+	 * @see DATAMONGO-976
+	 */
+	@Test
+	public void shouldDetectTextScorePropertyCorrectly() {
+
+		BasicMongoPersistentEntity<DocumentWithTextScoreProperty> persistentEntity = new BasicMongoPersistentEntity<DocumentWithTextScoreProperty>(
+				ClassTypeInformation.from(DocumentWithTextScoreProperty.class));
+
+		MongoPersistentProperty property = getPropertyFor(persistentEntity, "score");
+		assertThat(property.isTextScoreProperty(), is(true));
+	}
+
+	/**
+	 * @see DATAMONGO-976
+	 */
+	@Test
+	public void shouldDetectTextScoreAsCalculatedProperty() {
+
+		BasicMongoPersistentEntity<DocumentWithTextScoreProperty> persistentEntity = new BasicMongoPersistentEntity<DocumentWithTextScoreProperty>(
+				ClassTypeInformation.from(DocumentWithTextScoreProperty.class));
+
+		MongoPersistentProperty property = getPropertyFor(persistentEntity, "score");
+		assertThat(property.isCalculatedProperty(), is(true));
+	}
+
 	private MongoPersistentProperty getPropertyFor(Field field) {
 		return getPropertyFor(entity, field);
 	}
@@ -199,5 +225,9 @@ public class BasicMongoPersistentPropertyUnitTests {
 	static class DocumentWithImplicitLanguageProperty {
 
 		String language;
+	}
+
+	static class DocumentWithTextScoreProperty {
+		@TextScore Float score;
 	}
 }

@@ -385,7 +385,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		entity.doWithProperties(new PropertyHandler<MongoPersistentProperty>() {
 			public void doWithPersistentProperty(MongoPersistentProperty prop) {
 
-				if (prop.equals(idProperty)) {
+				if (prop.equals(idProperty) || prop.isCalculatedProperty()) {
 					return;
 				}
 

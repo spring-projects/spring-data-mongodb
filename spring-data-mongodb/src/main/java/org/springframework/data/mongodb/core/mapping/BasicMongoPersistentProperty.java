@@ -192,4 +192,22 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 	public boolean isLanguageProperty() {
 		return getFieldName().equals(LANGUAGE_FIELD_NAME) || isAnnotationPresent(Language.class);
 	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentProperty#isTextScoreProperty()
+	 */
+	@Override
+	public boolean isTextScoreProperty() {
+		return isAnnotationPresent(TextScore.class);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentProperty#isCalculatedProperty()
+	 */
+	@Override
+	public boolean isCalculatedProperty() {
+		return isAnnotationPresent(Calculated.class);
+	}
 }

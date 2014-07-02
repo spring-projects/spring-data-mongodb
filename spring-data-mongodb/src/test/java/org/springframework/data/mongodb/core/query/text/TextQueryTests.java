@@ -39,6 +39,7 @@ import org.springframework.data.mongodb.core.index.IndexDefinition;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.Language;
+import org.springframework.data.mongodb.core.mapping.TextScore;
 import org.springframework.data.mongodb.core.query.text.TextQueryTests.FullTextDoc.FullTextDocBuilder;
 import org.springframework.data.mongodb.test.util.MongoVersionRule;
 import org.springframework.data.util.Version;
@@ -183,18 +184,18 @@ public class TextQueryTests extends AbstractIntegrationTests {
 	}
 
 	/**
-	 * @see DATAMONGO-850
+	 * @see DATAMONGO-976
 	 */
 	@Test
 	public void shouldInlcudeScoreCorreclty() {
 
 		initWithDefaultDocuments();
 
-		List<FullTextDocWithScore> result = template.find(new TextQuery("bake coffee -cake").includeScore().sortByScore(),
-				FullTextDocWithScore.class);
+		List<FullTextDoc> result = template.find(new TextQuery("bake coffee -cake").includeScore().sortByScore(),
+				FullTextDoc.class);
 
 		assertThat(result, hasSize(2));
-		for (FullTextDocWithScore scoredDoc : result) {
+		for (FullTextDoc scoredDoc : result) {
 			assertTrue(scoredDoc.score > 0F);
 		}
 	}
@@ -259,12 +260,6 @@ public class TextQueryTests extends AbstractIntegrationTests {
 		this.template.save(MILK_AND_SUGAR);
 	}
 
-	static class FullTextDocWithScore extends FullTextDoc {
-
-		public Float score;
-
-	}
-
 	@Document(collection = "fullTextDoc")
 	static class FullTextDoc {
 
@@ -275,6 +270,8 @@ public class TextQueryTests extends AbstractIntegrationTests {
 		private String headline;
 		private String subheadline;
 		private String body;
+
+		private @TextScore Float score;
 
 		@Override
 		public int hashCode() {
