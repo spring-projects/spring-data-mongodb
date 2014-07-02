@@ -38,6 +38,7 @@ import org.springframework.expression.ParserContext;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.util.Assert;
+import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -120,10 +121,20 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 	@Override
 	public void verify() {
 
+		verifyFieldUniqueness();
+		verifyFieldTypes();
+	}
+
+	private void verifyFieldUniqueness() {
+
 		AssertFieldNameUniquenessHandler handler = new AssertFieldNameUniquenessHandler();
 
 		doWithProperties(handler);
 		doWithAssociations(handler);
+	}
+
+	private void verifyFieldTypes() {
+		doWithProperties(new PropertyTypeAssertionHandler());
 	}
 
 	/**
@@ -237,6 +248,47 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 			}
 
 			properties.put(fieldName, property);
+		}
+	}
+
+	/**
+	 * @author Christoph Strobl
+	 * @since 1.6
+	 */
+	private static class PropertyTypeAssertionHandler implements PropertyHandler<MongoPersistentProperty> {
+
+		@Override
+		public void doWithPersistentProperty(MongoPersistentProperty persistentProperty) {
+
+			potentiallyAssertTextScoreType(persistentProperty);
+			potentiallyAssertLanguageType(persistentProperty);
+		}
+
+		private void potentiallyAssertLanguageType(MongoPersistentProperty persistentProperty) {
+
+			if (persistentProperty.isLanguageProperty()) {
+				assertPropertyType(persistentProperty, String.class);
+			}
+		}
+
+		private void potentiallyAssertTextScoreType(MongoPersistentProperty persistentProperty) {
+
+			if (persistentProperty.isTextScoreProperty()) {
+				assertPropertyType(persistentProperty, Float.class, Double.class);
+			}
+		}
+
+		private void assertPropertyType(MongoPersistentProperty persistentProperty, Class<?>... validMatches) {
+
+			for (Class<?> potentialMatch : validMatches) {
+				if (ClassUtils.isAssignable(potentialMatch, persistentProperty.getActualType())) {
+					return;
+				}
+			}
+
+			throw new MappingException(String.format("Missmatching types for %s. Found %s expected one of %s.",
+					persistentProperty.getField(), persistentProperty.getActualType(),
+					StringUtils.arrayToCommaDelimitedString(validMatches)));
 		}
 	}
 
