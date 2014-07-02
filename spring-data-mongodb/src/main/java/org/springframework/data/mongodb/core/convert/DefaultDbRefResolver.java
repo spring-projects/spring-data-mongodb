@@ -25,10 +25,7 @@ import java.lang.reflect.Method;
 
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
-import org.objenesis.Objenesis;
-import org.objenesis.ObjenesisStd;
 import org.springframework.aop.framework.ProxyFactory;
-import org.springframework.beans.BeanUtils;
 import org.springframework.cglib.proxy.Callback;
 import org.springframework.cglib.proxy.Enhancer;
 import org.springframework.cglib.proxy.Factory;
@@ -39,8 +36,8 @@ import org.springframework.data.mongodb.LazyLoadingException;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.objenesis.ObjenesisStd;
 import org.springframework.util.Assert;
-import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
@@ -57,10 +54,9 @@ import com.mongodb.DBRef;
  */
 public class DefaultDbRefResolver implements DbRefResolver {
 
-	private static final boolean OBJENESIS_PRESENT = ClassUtils.isPresent("org.objenesis.Objenesis", null);
-
 	private final MongoDbFactory mongoDbFactory;
 	private final PersistenceExceptionTranslator exceptionTranslator;
+	private final ObjenesisStd objenesis;
 
 	/**
 	 * Creates a new {@link DefaultDbRefResolver} with the given {@link MongoDbFactory}.
@@ -73,6 +69,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 
 		this.mongoDbFactory = mongoDbFactory;
 		this.exceptionTranslator = mongoDbFactory.getExceptionTranslator();
+		this.objenesis = new ObjenesisStd(true);
 	}
 
 	/*
@@ -117,32 +114,44 @@ public class DefaultDbRefResolver implements DbRefResolver {
 	 */
 	private Object createLazyLoadingProxy(MongoPersistentProperty property, DBRef dbref, DbRefResolverCallback callback) {
 
-		ProxyFactory proxyFactory = new ProxyFactory();
 		Class<?> propertyType = property.getType();
+		LazyLoadingInterceptor interceptor = new LazyLoadingInterceptor(property, dbref, exceptionTranslator, callback);
+
+		if (!propertyType.isInterface()) {
+
+			Factory factory = (Factory) objenesis.newInstance(getEnhancedTypeFor(propertyType));
+			factory.setCallbacks(new Callback[] { interceptor });
+
+			return factory;
+		}
+
+		ProxyFactory proxyFactory = new ProxyFactory();
 
 		for (Class<?> type : propertyType.getInterfaces()) {
 			proxyFactory.addInterface(type);
 		}
 
-		LazyLoadingInterceptor interceptor = new LazyLoadingInterceptor(property, dbref, exceptionTranslator, callback);
-
 		proxyFactory.addInterface(LazyLoadingProxy.class);
+		proxyFactory.addInterface(propertyType);
+		proxyFactory.addAdvice(interceptor);
 
-		if (propertyType.isInterface()) {
-			proxyFactory.addInterface(propertyType);
-			proxyFactory.addAdvice(interceptor);
-			return proxyFactory.getProxy();
-		}
+		return proxyFactory.getProxy();
+	}
 
-		proxyFactory.setProxyTargetClass(true);
-		proxyFactory.setTargetClass(propertyType);
+	/**
+	 * Returns the CGLib enhanced type for the given source type.
+	 * 
+	 * @param type
+	 * @return
+	 */
+	private Class<?> getEnhancedTypeFor(Class<?> type) {
 
-		if (!OBJENESIS_PRESENT) {
-			proxyFactory.addAdvice(interceptor);
-			return proxyFactory.getProxy();
-		}
+		Enhancer enhancer = new Enhancer();
+		enhancer.setSuperclass(type);
+		enhancer.setCallbackType(org.springframework.cglib.proxy.MethodInterceptor.class);
+		enhancer.setInterfaces(new Class[] { LazyLoadingProxy.class });
 
-		return ObjenesisProxyEnhancer.enhanceAndGet(proxyFactory, propertyType, interceptor);
+		return enhancer.createClass();
 	}
 
 	/**
@@ -369,111 +378,6 @@ public class DefaultDbRefResolver implements DbRefResolver {
 			}
 
 			return result;
-		}
-	}
-
-	/**
-	 * Static class to accommodate optional dependency on Objenesis.
-	 * 
-	 * @author Oliver Gierke
-	 * @author Thomas Darimont
-	 * @since 1.4
-	 */
-	private static class ObjenesisProxyEnhancer {
-
-		private static final boolean IS_SPRING_4_OR_BETTER = ClassUtils.isPresent(
-				"org.springframework.core.DefaultParameterNameDiscoverer", null);
-
-		private static final InstanceCreatorStrategy INSTANCE_CREATOR;
-
-		static {
-
-			if (IS_SPRING_4_OR_BETTER) {
-				INSTANCE_CREATOR = new Spring4ObjenesisInstanceCreatorStrategy();
-			} else {
-				INSTANCE_CREATOR = new DefaultObjenesisInstanceCreatorStrategy();
-			}
-		}
-
-		public static Object enhanceAndGet(ProxyFactory proxyFactory, Class<?> type,
-				org.springframework.cglib.proxy.MethodInterceptor interceptor) {
-
-			Enhancer enhancer = new Enhancer();
-			enhancer.setSuperclass(type);
-			enhancer.setCallbackType(org.springframework.cglib.proxy.MethodInterceptor.class);
-			enhancer.setInterfaces(new Class[] { LazyLoadingProxy.class });
-
-			Factory factory = (Factory) INSTANCE_CREATOR.newInstance(enhancer.createClass());
-			factory.setCallbacks(new Callback[] { interceptor });
-			return factory;
-		}
-
-		/**
-		 * Strategy for constructing new instances of a given {@link Class}.
-		 * 
-		 * @author Thomas Darimont
-		 */
-		interface InstanceCreatorStrategy {
-			Object newInstance(Class<?> clazz);
-		}
-
-		/**
-		 * An {@link InstanceCreatorStrategy} that uses Objenesis from the classpath.
-		 * 
-		 * @author Thomas Darimont
-		 */
-		private static class DefaultObjenesisInstanceCreatorStrategy implements InstanceCreatorStrategy {
-
-			private static final Objenesis OBJENESIS = new ObjenesisStd(true);
-
-			/*
-			 * (non-Javadoc)
-			 * @see org.springframework.data.mongodb.core.convert.DefaultDbRefResolver.ObjenesisProxyEnhancer.InstanceCreatorStrategy#newInstance(java.lang.Class)
-			 */
-			@Override
-			public Object newInstance(Class<?> clazz) {
-				return OBJENESIS.newInstance(clazz);
-			}
-		}
-
-		/**
-		 * An {@link InstanceCreatorStrategy} that uses a repackaged version of Objenesis from Spring 4.
-		 * 
-		 * @author Thomas Darimont
-		 */
-		private static class Spring4ObjenesisInstanceCreatorStrategy implements InstanceCreatorStrategy {
-
-			private static final String SPRING4_OBJENESIS_CLASS_NAME = "org.springframework.objenesis.ObjenesisStd";
-			private static final Object OBJENESIS;
-			private static final Method NEW_INSTANCE_METHOD;
-
-			static {
-
-				try {
-					Class<?> objenesisClass = ClassUtils.forName(SPRING4_OBJENESIS_CLASS_NAME,
-							ObjenesisProxyEnhancer.class.getClassLoader());
-
-					OBJENESIS = BeanUtils.instantiateClass(objenesisClass.getConstructor(boolean.class), true);
-					NEW_INSTANCE_METHOD = objenesisClass.getMethod("newInstance", Class.class);
-
-				} catch (Exception e) {
-					throw new RuntimeException("Could not setup Objenesis infrastructure with Spring 4 ", e);
-				}
-			}
-
-			/*
-			 * (non-Javadoc)
-			 * @see org.springframework.data.mongodb.core.convert.DefaultDbRefResolver.ObjenesisProxyEnhancer.InstanceCreatorStrategy#newInstance(java.lang.Class)
-			 */
-			@Override
-			public Object newInstance(Class<?> clazz) {
-
-				try {
-					return NEW_INSTANCE_METHOD.invoke(OBJENESIS, clazz);
-				} catch (Exception e) {
-					throw new RuntimeException("Could not created instance for " + clazz, e);
-				}
-			}
 		}
 	}
 }
