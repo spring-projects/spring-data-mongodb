@@ -54,7 +54,7 @@ import com.mongodb.WriteResult;
  * @author Oliver Gierke
  */
 @RunWith(MockitoJUnitRunner.class)
-public class AbstracMongoQueryUnitTests {
+public class AbstractMongoQueryUnitTests {
 
 	@Mock RepositoryMetadata metadataMock;
 	@Mock MongoOperations mongoOperationsMock;
@@ -88,7 +88,8 @@ public class AbstracMongoQueryUnitTests {
 
 		createQueryForMethod("deletePersonByLastname", String.class).setDeleteQuery(true).execute(new Object[] { "booh" });
 
-		verify(this.mongoOperationsMock, times(1)).remove(Matchers.any(Query.class), Matchers.eq("persons"));
+		verify(this.mongoOperationsMock, times(1)).remove(Matchers.any(Query.class), Matchers.eq(Person.class),
+				Matchers.eq("persons"));
 		verify(this.mongoOperationsMock, times(0)).find(Matchers.any(Query.class), Matchers.any(Class.class),
 				Matchers.anyString());
 	}
@@ -122,19 +123,21 @@ public class AbstracMongoQueryUnitTests {
 
 	/**
 	 * @see DATAMONGO-566
+	 * @see DATAMONGO-978
 	 */
 	@Test
 	public void testDeleteExecutionReturnsNrDocumentsDeletedFromWriteResult() {
 
 		when(writeResultMock.getN()).thenReturn(100);
-		when(this.mongoOperationsMock.remove(Matchers.any(Query.class), Matchers.eq("persons")))
+		when(this.mongoOperationsMock.remove(Matchers.any(Query.class), Matchers.eq(Person.class), Matchers.eq("persons")))
 				.thenReturn(writeResultMock);
 
 		MongoQueryFake query = createQueryForMethod("deletePersonByLastname", String.class);
 		query.setDeleteQuery(true);
 
 		assertThat(query.execute(new Object[] { "fake" }), is((Object) 100L));
-		verify(this.mongoOperationsMock, times(1)).remove(Matchers.any(Query.class), Matchers.eq("persons"));
+		verify(this.mongoOperationsMock, times(1)).remove(Matchers.any(Query.class), Matchers.eq(Person.class),
+				Matchers.eq("persons"));
 	}
 
 	private MongoQueryFake createQueryForMethod(String methodName, Class<?>... paramTypes) {
