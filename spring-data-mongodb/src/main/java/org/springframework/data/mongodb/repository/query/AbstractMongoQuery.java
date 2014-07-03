@@ -391,7 +391,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 				return operations.findAllAndRemove(query, metadata.getJavaType());
 			}
 
-			WriteResult writeResult = operations.remove(query, metadata.getCollectionName());
+			WriteResult writeResult = operations.remove(query, metadata.getJavaType(), metadata.getCollectionName());
 			return writeResult != null ? writeResult.getN() : 0L;
 		}
 	}
