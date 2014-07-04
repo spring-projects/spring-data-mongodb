@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2013 the original author or authors.
+ * Copyright 2011-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import java.util.List;
 import org.springframework.core.MethodParameter;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Point;
+import org.springframework.data.mongodb.core.query.TextCriteria;
 import org.springframework.data.mongodb.repository.Near;
 import org.springframework.data.mongodb.repository.query.MongoParameters.MongoParameter;
 import org.springframework.data.repository.query.Parameter;
@@ -31,10 +32,13 @@ import org.springframework.data.repository.query.Parameters;
  * Custom extension of {@link Parameters} discovering additional
  * 
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 public class MongoParameters extends Parameters<MongoParameters, MongoParameter> {
 
 	private final Integer distanceIndex;
+	private final Integer fullTextIndex;
+
 	private Integer nearIndex;
 
 	/**
@@ -48,6 +52,7 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 		super(method);
 		List<Class<?>> parameterTypes = Arrays.asList(method.getParameterTypes());
 		this.distanceIndex = parameterTypes.indexOf(Distance.class);
+		this.fullTextIndex = parameterTypes.indexOf(TextCriteria.class);
 
 		if (this.nearIndex == null && isGeoNearMethod) {
 			this.nearIndex = getNearIndex(parameterTypes);
@@ -56,12 +61,14 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 		}
 	}
 
-	private MongoParameters(List<MongoParameter> parameters, Integer distanceIndex, Integer nearIndex) {
+	private MongoParameters(List<MongoParameter> parameters, Integer distanceIndex, Integer nearIndex,
+			Integer fullTextIndex) {
 
 		super(parameters);
 
 		this.distanceIndex = distanceIndex;
 		this.nearIndex = nearIndex;
+		this.fullTextIndex = fullTextIndex;
 	}
 
 	@SuppressWarnings({ "unchecked", "deprecation" })
@@ -124,13 +131,31 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 		return nearIndex;
 	}
 
+	/**
+	 * Returns ths inde of the parameter to be used as a textquery param
+	 * 
+	 * @return
+	 * @since 1.6
+	 */
+	public int getFullTextParameterIndex() {
+		return fullTextIndex != null ? fullTextIndex.intValue() : -1;
+	}
+
+	/**
+	 * @return
+	 * @since 1.6
+	 */
+	public boolean hasFullTextParameter() {
+		return this.fullTextIndex != null && this.fullTextIndex.intValue() >= 0;
+	}
+
 	/* 
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.query.Parameters#createFrom(java.util.List)
 	 */
 	@Override
 	protected MongoParameters createFrom(List<MongoParameter> parameters) {
-		return new MongoParameters(parameters, this.distanceIndex, this.nearIndex);
+		return new MongoParameters(parameters, this.distanceIndex, this.nearIndex, this.fullTextIndex);
 	}
 
 	/**
@@ -162,7 +187,8 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 		 */
 		@Override
 		public boolean isSpecialParameter() {
-			return super.isSpecialParameter() || Distance.class.isAssignableFrom(getType()) || isNearParameter();
+			return super.isSpecialParameter() || Distance.class.isAssignableFrom(getType()) || isNearParameter()
+					|| TextCriteria.class.isAssignableFrom(getType());
 		}
 
 		private boolean isNearParameter() {
@@ -181,5 +207,7 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 		private boolean hasNearAnnotation() {
 			return parameter.getParameterAnnotation(Near.class) != null;
 		}
+
 	}
+
 }

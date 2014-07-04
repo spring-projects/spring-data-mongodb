@@ -39,13 +39,14 @@ import com.mongodb.DBObject;
  * @author Thomas Risberg
  * @author Oliver Gierke
  * @author Thomas Darimont
+ * @author Christoph Strobl
  */
 public class Query {
 
 	private static final String RESTRICTED_TYPES_KEY = "_$RESTRICTED_TYPES";
 
 	private final Set<Class<?>> restrictedTypes = new HashSet<Class<?>>();
-	private final Map<String, Criteria> criteria = new LinkedHashMap<String, Criteria>();
+	private final Map<String, CriteriaDefinition> criteria = new LinkedHashMap<String, CriteriaDefinition>();
 	private Field fieldSpec;
 	private Sort sort;
 	private int skip;
@@ -53,42 +54,48 @@ public class Query {
 	private String hint;
 
 	/**
-	 * Static factory method to create a {@link Query} using the provided {@link Criteria}.
+	 * Static factory method to create a {@link Query} using the provided {@link CriteriaDefinition}.
 	 * 
-	 * @param criteria must not be {@literal null}.
+	 * @param criteriaDefinition must not be {@literal null}.
 	 * @return
+	 * @since 1.6
 	 */
-	public static Query query(Criteria criteria) {
-		return new Query(criteria);
+	public static Query query(CriteriaDefinition criteriaDefinition) {
+		return new Query(criteriaDefinition);
 	}
 
 	public Query() {}
 
 	/**
-	 * Creates a new {@link Query} using the given {@link Criteria}.
+	 * Creates a new {@link Query} using the given {@link CriteriaDefinition}.
 	 * 
-	 * @param criteria must not be {@literal null}.
+	 * @param criteriaDefinition must not be {@literal null}.
+	 * @since 1.6
 	 */
-	public Query(Criteria criteria) {
-		addCriteria(criteria);
+	public Query(CriteriaDefinition criteriaDefinition) {
+		addCriteria(criteriaDefinition);
 	}
 
 	/**
-	 * Adds the given {@link Criteria} to the current {@link Query}.
+	 * Adds the given {@link CriteriaDefinition} to the current {@link Query}.
 	 * 
-	 * @param criteria must not be {@literal null}.
+	 * @param criteriaDefinition must not be {@literal null}.
 	 * @return
+	 * @since 1.6
 	 */
-	public Query addCriteria(Criteria criteria) {
-		CriteriaDefinition existing = this.criteria.get(criteria.getKey());
-		String key = criteria.getKey();
+	public Query addCriteria(CriteriaDefinition criteriaDefinition) {
+
+		CriteriaDefinition existing = this.criteria.get(criteriaDefinition.getKey());
+		String key = criteriaDefinition.getKey();
+
 		if (existing == null) {
-			this.criteria.put(key, criteria);
+			this.criteria.put(key, criteriaDefinition);
 		} else {
 			throw new InvalidMongoDbApiUsageException("Due to limitations of the com.mongodb.BasicDBObject, "
 					+ "you can't add a second '" + key + "' criteria. " + "Query already contains '"
 					+ existing.getCriteriaObject() + "'.");
 		}
+
 		return this;
 	}
 
@@ -268,8 +275,8 @@ public class Query {
 		return hint;
 	}
 
-	protected List<Criteria> getCriteria() {
-		return new ArrayList<Criteria>(this.criteria.values());
+	protected List<CriteriaDefinition> getCriteria() {
+		return new ArrayList<CriteriaDefinition>(this.criteria.values());
 	}
 
 	/*

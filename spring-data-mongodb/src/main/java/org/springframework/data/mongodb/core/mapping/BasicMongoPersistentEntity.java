@@ -114,6 +114,24 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 		return this.language;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentEntity#getTextScoreProperty()
+	 */
+	@Override
+	public MongoPersistentProperty getTextScoreProperty() {
+		return getPersistentProperty(TextScore.class);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentEntity#hasTextScoreProperty()
+	 */
+	@Override
+	public boolean hasTextScoreProperty() {
+		return getTextScoreProperty() != null;
+	}
+
 	/* 
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mapping.model.BasicPersistentEntity#verify()

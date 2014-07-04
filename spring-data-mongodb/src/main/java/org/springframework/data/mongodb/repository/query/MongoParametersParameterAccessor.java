@@ -17,12 +17,17 @@ package org.springframework.data.mongodb.repository.query;
 
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Point;
+import org.springframework.data.mongodb.core.query.Term;
+import org.springframework.data.mongodb.core.query.TextCriteria;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
+import org.springframework.util.Assert;
+import org.springframework.util.ClassUtils;
 
 /**
  * Mongo-specific {@link ParametersParameterAccessor} to allow access to the {@link Distance} parameter.
  * 
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 public class MongoParametersParameterAccessor extends ParametersParameterAccessor implements MongoParameterAccessor {
 
@@ -76,5 +81,36 @@ public class MongoParametersParameterAccessor extends ParametersParameterAccesso
 		}
 
 		return (Point) value;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.query.MongoParameterAccessor#getFullText()
+	 */
+	@Override
+	public TextCriteria getFullText() {
+		int index = method.getParameters().getFullTextParameterIndex();
+		return index >= 0 ? potentiallyConvertFullText(getValue(index)) : null;
+	}
+
+	protected TextCriteria potentiallyConvertFullText(Object fullText) {
+
+		Assert.notNull(fullText, "Fulltext parameter must not be 'null'.");
+
+		if (fullText instanceof String) {
+			return TextCriteria.forDefaultLanguage().matching((String) fullText);
+		}
+
+		if (fullText instanceof Term) {
+			return TextCriteria.forDefaultLanguage().matching((Term) fullText);
+		}
+
+		if (fullText instanceof TextCriteria) {
+			return ((TextCriteria) fullText);
+		}
+
+		throw new IllegalArgumentException(String.format(
+				"Expected full text parameter to be one of String, Term or TextCriteria but found %s.",
+				ClassUtils.getShortName(fullText.getClass())));
 	}
 }

@@ -214,4 +214,14 @@ public class MongoPersistentEntityTestDummy<T> implements MongoPersistentEntity<
 	public String getLanguage() {
 		return null;
 	}
+
+	@Override
+	public MongoPersistentProperty getTextScoreProperty() {
+		return null;
+	}
+
+	@Override
+	public boolean hasTextScoreProperty() {
+		return false;
+	}
 }

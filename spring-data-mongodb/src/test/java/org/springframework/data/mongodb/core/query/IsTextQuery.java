@@ -13,10 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.core.query.text;
+package org.springframework.data.mongodb.core.query;
 
 import org.hamcrest.TypeSafeMatcher;
-import org.springframework.data.mongodb.core.query.IsQuery;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.TextQuery;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.BasicDBObject;
@@ -28,7 +30,7 @@ import com.mongodb.DBObject;
  * @author Christoph Strobl
  * @param <T>
  */
-public class IsTextQuery<T extends TextQuery> extends IsQuery<T> {
+public class IsTextQuery<T extends Query> extends IsQuery<T> {
 
 	private final String SCORE_DEFAULT_FIELDNAME = "score";
 	private final DBObject META_TEXT_SCORE = new BasicDBObject("$meta", "textScore");
@@ -39,7 +41,7 @@ public class IsTextQuery<T extends TextQuery> extends IsQuery<T> {
 		super();
 	}
 
-	public static <T extends TextQuery> IsTextQuery<T> isTextQuery() {
+	public static <T extends Query> IsTextQuery<T> isTextQuery() {
 		return new IsTextQuery<T>();
 	}
 
@@ -74,6 +76,41 @@ public class IsTextQuery<T extends TextQuery> extends IsQuery<T> {
 
 		sort.put(scoreFieldName, META_TEXT_SCORE);
 
+		return this;
+	}
+
+	@Override
+	public IsTextQuery<T> where(Criteria criteria) {
+
+		super.where(criteria);
+		return this;
+	}
+
+	@Override
+	public IsTextQuery<T> excludingField(String fieldname) {
+
+		super.excludingField(fieldname);
+		return this;
+	}
+
+	@Override
+	public IsTextQuery<T> includingField(String fieldname) {
+
+		super.includingField(fieldname);
+		return this;
+	}
+
+	@Override
+	public IsTextQuery<T> limitingTo(int limit) {
+
+		super.limitingTo(limit);
+		return this;
+	}
+
+	@Override
+	public IsQuery<T> skippig(int skip) {
+
+		super.skippig(skip);
 		return this;
 	}
 

@@ -45,6 +45,7 @@ import org.springframework.data.mongodb.core.convert.MongoConverters.DBObjectToS
 import org.springframework.data.mongodb.core.convert.MongoConverters.StringToBigDecimalConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.StringToBigIntegerConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.StringToURLConverter;
+import org.springframework.data.mongodb.core.convert.MongoConverters.TermToStringConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.URLToStringConverter;
 import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
 import org.springframework.util.Assert;
@@ -58,6 +59,7 @@ import org.springframework.util.Assert;
  * 
  * @author Oliver Gierke
  * @author Thomas Darimont
+ * @author Christoph Strobl
  */
 public class CustomConversions {
 
@@ -106,7 +108,8 @@ public class CustomConversions {
 		toRegister.add(URLToStringConverter.INSTANCE);
 		toRegister.add(StringToURLConverter.INSTANCE);
 		toRegister.add(DBObjectToStringConverter.INSTANCE);
-		
+		toRegister.add(TermToStringConverter.INSTANCE);
+
 		toRegister.addAll(JodaTimeConverters.getConvertersToRegister());
 		toRegister.addAll(GeoConverters.getConvertersToRegister());
 

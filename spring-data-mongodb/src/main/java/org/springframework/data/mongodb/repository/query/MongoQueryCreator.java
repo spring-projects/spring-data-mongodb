@@ -146,11 +146,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 	@Override
 	protected Query complete(Criteria criteria, Sort sort) {
 
-		if (criteria == null) {
-			return null;
-		}
-
-		Query query = new Query(criteria).with(sort);
+		Query query = (criteria == null ? new Query() : new Query(criteria)).with(sort);
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("Created query " + query);

@@ -45,6 +45,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
+import org.springframework.data.mongodb.core.mapping.TextScore;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -600,6 +601,63 @@ public class QueryMapperUnitTests {
 		assertThat(dbo, equalTo(new BasicDBObjectBuilder().add("foo", -1).get()));
 	}
 
+	/**
+	 * @see DATAMONGO-973
+	 */
+	@Test
+	public void getMappedFieldsAppendsTextScoreFieldProperlyCorrectlyWhenNotPresent() {
+
+		Query query = new Query();
+
+		DBObject dbo = mapper.getMappedFields(query.getFieldsObject(),
+				context.getPersistentEntity(WithTextScoreProperty.class));
+
+		assertThat(dbo, equalTo(new BasicDBObjectBuilder().add("score", new BasicDBObject("$meta", "textScore")).get()));
+	}
+
+	/**
+	 * @see DATAMONGO-973
+	 */
+	@Test
+	public void getMappedFieldsReplacesTextScoreFieldProperlyCorrectlyWhenPresent() {
+
+		Query query = new Query();
+		query.fields().include("textScore");
+
+		DBObject dbo = mapper.getMappedFields(query.getFieldsObject(),
+				context.getPersistentEntity(WithTextScoreProperty.class));
+
+		assertThat(dbo, equalTo(new BasicDBObjectBuilder().add("score", new BasicDBObject("$meta", "textScore")).get()));
+	}
+
+	/**
+	 * @see DATAMONGO-973
+	 */
+	@Test
+	public void getMappedSortAppendsTextScoreProperlyWhenSortedByScore() {
+
+		Query query = new Query().with(new Sort("textScore"));
+
+		DBObject dbo = mapper
+				.getMappedSort(query.getSortObject(), context.getPersistentEntity(WithTextScoreProperty.class));
+
+		assertThat(dbo, equalTo(new BasicDBObjectBuilder().add("score", new BasicDBObject("$meta", "textScore")).get()));
+	}
+
+	/**
+	 * @see DATAMONGO-973
+	 */
+	@Test
+	public void getMappedSortIgnoresTextScoreWhenNotSortedByScore() {
+
+		Query query = new Query().with(new Sort("id"));
+
+		DBObject dbo = mapper
+				.getMappedSort(query.getSortObject(), context.getPersistentEntity(WithTextScoreProperty.class));
+
+		assertThat(dbo, equalTo(new BasicDBObjectBuilder().add("_id", 1).get()));
+	}
+
 	@Document
 	public class Foo {
 		@Id private ObjectId id;
@@ -674,5 +732,11 @@ public class QueryMapperUnitTests {
 	class WithMapDBRef {
 
 		@DBRef Map<String, Sample> mapWithDBRef;
+	}
+
+	class WithTextScoreProperty {
+
+		@Id String id;
+		@TextScore @Field("score") Float textScore;
 	}
 }

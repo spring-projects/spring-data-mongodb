@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.repository.query;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
+import static org.springframework.data.mongodb.core.query.IsTextQuery.*;
 
 import java.lang.reflect.Method;
 
@@ -36,6 +37,8 @@ import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.TextCriteria;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Person;
 import org.springframework.data.mongodb.repository.Query;
@@ -120,6 +123,18 @@ public class PartTreeMongoQueryUnitTests {
 		assertThat(query.getFieldsObject(), is(new BasicDBObjectBuilder().add("firstname", 0).add("lastname", 0).get()));
 	}
 
+	/**
+	 * @see DATAMOGO-973
+	 */
+	@Test
+	public void shouldAddFullTextParamCorrectlyToDerivedQuery() {
+
+		org.springframework.data.mongodb.core.query.Query query = deriveQueryFromMethod("findPersonByFirstname",
+				new Object[] { "text", TextCriteria.forDefaultLanguage().matching("search") });
+
+		assertThat(query, isTextQuery().searchingFor("search").where(new Criteria("firstname").is("text")));
+	}
+
 	private org.springframework.data.mongodb.core.query.Query deriveQueryFromMethod(String method, Object[] args) {
 
 		Class<?>[] types = new Class<?>[args.length];
@@ -162,5 +177,7 @@ public class PartTreeMongoQueryUnitTests {
 
 		@Query(fields = "{ 'firstname' : 0, 'lastname' : 0 }")
 		Person findPersonByFirstnameAndLastname(String firstname, String lastname);
+
+		Person findPersonByFirstname(String firstname, TextCriteria fullText);
 	}
 }

@@ -42,6 +42,7 @@ import org.springframework.data.repository.core.support.DefaultRepositoryMetadat
  * Unit test for {@link MongoQueryMethod}.
  * 
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 public class MongoQueryMethodUnitTests {
 

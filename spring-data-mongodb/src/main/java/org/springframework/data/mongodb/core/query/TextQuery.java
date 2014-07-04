@@ -13,11 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.core.query.text;
+package org.springframework.data.mongodb.core.query;
 
 import java.util.Locale;
-
-import org.springframework.data.mongodb.core.query.Query;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
@@ -147,6 +145,10 @@ public class TextQuery extends Query {
 		return scoreFieldName;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.query.Query#getFieldsObject()
+	 */
 	@Override
 	public DBObject getFieldsObject() {
 
@@ -155,24 +157,32 @@ public class TextQuery extends Query {
 		}
 
 		DBObject fields = super.getFieldsObject();
+
 		if (fields == null) {
 			fields = new BasicDBObject();
 		}
+
 		fields.put(getScoreFieldName(), META_TEXT_SCORE);
 		return fields;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.query.Query#getSortObject()
+	 */
 	@Override
 	public DBObject getSortObject() {
 
 		DBObject sort = new BasicDBObject();
+
 		if (this.sortByScore) {
 			sort.put(getScoreFieldName(), META_TEXT_SCORE);
 		}
+
 		if (super.getSortObject() != null) {
 			sort.putAll(super.getSortObject());
 		}
+
 		return sort;
 	}
-
 }

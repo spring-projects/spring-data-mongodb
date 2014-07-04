@@ -57,6 +57,11 @@ import com.mongodb.DBRef;
 public class QueryMapper {
 
 	private static final List<String> DEFAULT_ID_NAMES = Arrays.asList("id", "_id");
+	private static final DBObject META_TEXT_SCORE = new BasicDBObject("$meta", "textScore");
+
+	private enum MetaMapping {
+		FORCE, WHEN_PRESENT, IGNORE;
+	}
 
 	private final ConversionService conversionService;
 	private final MongoConverter converter;
@@ -117,6 +122,61 @@ public class QueryMapper {
 		}
 
 		return result;
+	}
+
+	/**
+	 * Maps fields used for sorting to the {@link MongoPersistentEntity}s properties. <br />
+	 * Also converts properties to their {@code $meta} representation if present.
+	 * 
+	 * @param sortObject
+	 * @param entity
+	 * @return
+	 * @since 1.6
+	 */
+	public DBObject getMappedSort(DBObject sortObject, MongoPersistentEntity<?> entity) {
+
+		if (sortObject == null) {
+			return null;
+		}
+
+		DBObject mappedSort = getMappedObject(sortObject, entity);
+		mapMetaAttributes(mappedSort, entity, MetaMapping.WHEN_PRESENT);
+		return mappedSort;
+	}
+
+	/**
+	 * Maps fields to retrieve to the {@link MongoPersistentEntity}s properties. <br />
+	 * Also onverts and potentially adds missing property {@code $meta} representation.
+	 * 
+	 * @param fieldsObject
+	 * @param entity
+	 * @return
+	 * @since 1.6
+	 */
+	public DBObject getMappedFields(DBObject fieldsObject, MongoPersistentEntity<?> entity) {
+
+		DBObject mappedFields = fieldsObject != null ? getMappedObject(fieldsObject, entity) : new BasicDBObject();
+		mapMetaAttributes(mappedFields, entity, MetaMapping.FORCE);
+		return mappedFields.keySet().isEmpty() ? null : mappedFields;
+	}
+
+	private void mapMetaAttributes(DBObject source, MongoPersistentEntity<?> entity, MetaMapping metaMapping) {
+
+		if (entity == null || source == null) {
+			return;
+		}
+
+		if (entity.hasTextScoreProperty() && !MetaMapping.IGNORE.equals(metaMapping)) {
+			MongoPersistentProperty textScoreProperty = entity.getTextScoreProperty();
+			if (MetaMapping.FORCE.equals(metaMapping)
+					|| (MetaMapping.WHEN_PRESENT.equals(metaMapping) && source.containsField(textScoreProperty.getFieldName()))) {
+				source.putAll(getMappedTextScoreField(textScoreProperty));
+			}
+		}
+	}
+
+	private DBObject getMappedTextScoreField(MongoPersistentProperty property) {
+		return new BasicDBObject(property.getFieldName(), META_TEXT_SCORE);
 	}
 
 	/**

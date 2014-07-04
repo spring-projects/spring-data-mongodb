@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.core.query.text;
+package org.springframework.data.mongodb.core.query;
 
 import org.hamcrest.core.IsEqual;
 import org.junit.Assert;
@@ -25,6 +25,8 @@ import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
 
 /**
+ * Unit tests for {@link TextCriteria}.
+ * 
  * @author Christoph Strobl
  */
 public class TextCriteriaUnitTests {

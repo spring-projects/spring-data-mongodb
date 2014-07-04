@@ -23,6 +23,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.convert.MongoWriter;
+import org.springframework.data.mongodb.core.query.TextCriteria;
 import org.springframework.data.repository.query.ParameterAccessor;
 
 /**
@@ -103,6 +104,15 @@ class StubParameterAccessor implements MongoParameterAccessor {
 	 * @see org.springframework.data.mongodb.repository.MongoParameterAccessor#getGeoNearLocation()
 	 */
 	public Point getGeoNearLocation() {
+		return null;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.query.MongoParameterAccessor#getFullText()
+	 */
+	@Override
+	public TextCriteria getFullText() {
 		return null;
 	}
 }

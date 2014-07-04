@@ -17,12 +17,14 @@ package org.springframework.data.mongodb.repository.query;
 
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Point;
+import org.springframework.data.mongodb.core.query.TextCriteria;
 import org.springframework.data.repository.query.ParameterAccessor;
 
 /**
  * Mongo-specific {@link ParameterAccessor} exposing a maximum distance parameter.
  * 
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 public interface MongoParameterAccessor extends ParameterAccessor {
 
@@ -40,4 +42,12 @@ public interface MongoParameterAccessor extends ParameterAccessor {
 	 * @return
 	 */
 	Point getGeoNearLocation();
+
+	/**
+	 * Returns the {@link TextCriteria} to be used for full text query.
+	 * 
+	 * @return null if not set.
+	 * @since 1.6
+	 */
+	TextCriteria getFullText();
 }

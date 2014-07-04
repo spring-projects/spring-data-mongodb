@@ -91,6 +91,12 @@ public class IsQuery<T extends Query> extends TypeSafeMatcher<T> {
 		return this;
 	}
 
+	public IsQuery<T> where(Criteria criteria) {
+
+		this.query.putAll(criteria.getCriteriaObject());
+		return this;
+	}
+
 	@Override
 	public void describeTo(Description description) {
 
@@ -117,8 +123,10 @@ public class IsQuery<T extends Query> extends TypeSafeMatcher<T> {
 			return false;
 		}
 
-		if (!new IsEqual<DBObject>(sort).matches(item.getSortObject())) {
-			return false;
+		if (item.getSortObject() == null && !sort.toMap().isEmpty()) {
+			if (!new IsEqual<DBObject>(sort).matches(item.getSortObject())) {
+				return false;
+			}
 		}
 
 		if (!new IsEqual<DBObject>(fields).matches(item.getFieldsObject())) {

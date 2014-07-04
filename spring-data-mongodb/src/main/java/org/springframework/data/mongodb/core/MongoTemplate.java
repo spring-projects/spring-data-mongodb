@@ -1616,7 +1616,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			CursorPreparer preparer, DbObjectCallback<T> objectCallback) {
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
-		DBObject mappedFields = fields == null ? null : queryMapper.getMappedObject(fields, entity);
+
+		DBObject mappedFields = queryMapper.getMappedFields(fields, entity);
 		DBObject mappedQuery = queryMapper.getMappedObject(query, entity);
 
 		if (LOGGER.isDebugEnabled()) {
@@ -1969,8 +1970,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			return null;
 		}
 
-		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(type);
-		return queryMapper.getMappedObject(query.getSortObject(), entity);
+		return queryMapper.getMappedSort(query.getSortObject(), mappingContext.getPersistentEntity(type));
 	}
 
 	// Callback implementations
@@ -2030,7 +2030,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		}
 
 		public DBCursor doInCollection(DBCollection collection) throws MongoException, DataAccessException {
-			if (fields == null) {
+			if (fields == null || fields.toMap().isEmpty()) {
 				return collection.find(query);
 			} else {
 				return collection.find(query, fields);

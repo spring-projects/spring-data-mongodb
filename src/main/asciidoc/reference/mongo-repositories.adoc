@@ -296,6 +296,45 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 
 We think you will find this an extremely powerful tool for writing MongoDB queries.
 
+[[mongodb.repositories.queries.full-text]]
+=== Full-text search queries
+MongoDBs full text search feature is very store specic and therefore can rather be found on `MongoRepository` than on the more general `CrudRepository`. What we need is a document with a full-text index defined for (Please see section <<mapping-usage-indexes.text-index>> for creating).
+
+Additional methods on `MongoRepository` take `TextCriteria` as input parameter. In addition to those explicit methods, it is also possible to add a `TextCriteria` derived repository method. The criteria will added as an additional `AND` criteria. Once the entity contains a `@TextScore` annotated property the documents full-text score will be retrieved. Furthermore the `@TextScore` annotated property will also make it possible to sort by the documents score.
+
+[source, java]
+----
+@Document
+class FullTextDocument {
+
+  @Id String id;
+  @TextIndexed String title;
+  @TextIndexed String content;
+  @TextScore Float score;
+}
+
+interface FullTextRepository extends Repository<FullTextDocument, String> {
+
+  // Execute a full-text search and define sorting dynamically
+  List<FullTextDocument> findAllBy(TextCriteria criteria, Sort sort);
+
+  // Paginate over a full-text search result
+  Page<FullTextDocument> findAllBy(TextCriteria criteria, Pageable pageable);
+
+  // Combine a derived query with a full-text search
+  List<FullTextDocument> findByTitleOrderByScoreDesc(String title, TextCriteria criteria);
+}
+
+
+Sort sort = new Sort("score");
+TextCriteria criteria = TextCriteria.forDefaultLanguage().matchingAny("spring", "data");
+List<FullTextDocument> result = repository.findAllBy(criteria, sort);
+
+criteria = TextCriteria.forDefaultLanguage().matching("film");
+Page<FullTextDocument> page = repository.findAllBy(criteria, new PageRequest(1, 1, sort));
+List<FullTextDocument> result = repository.findByTitleOrderByScoreDesc("mongodb", criteria);
+----
+
 [[mongodb.repositories.misc]]
 == Miscellaneous
 

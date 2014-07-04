@@ -13,17 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.core.query.text;
+package org.springframework.data.mongodb.core.query;
 
 import static org.junit.Assert.*;
-import static org.springframework.data.mongodb.core.query.text.IsTextQuery.*;
+import static org.springframework.data.mongodb.core.query.IsTextQuery.*;
 
 import org.junit.Test;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
-import org.springframework.data.mongodb.core.query.Query;
 
 /**
+ * Unit tests for {@link TextQuery}.
+ * 
  * @author Christoph Strobl
  */
 public class TextQueryUnitTests {

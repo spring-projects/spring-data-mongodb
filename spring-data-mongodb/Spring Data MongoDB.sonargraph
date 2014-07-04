@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<context version="7.1.9.205">
+<context version="7.1.10.209">
     <scope type="Project" name="spring-data-mongodb">
         <element type="TypeFilterReferenceOverridden" name="Filter">
             <element type="IncludeTypePattern" name="org.springframework.data.mongodb.**"/>
@@ -32,6 +32,7 @@
                         <element type="IncludeTypePattern" name="**.config.**"/>
                     </element>
                     <dependency toName="Project|spring-data-mongodb::Layer|Core::Subsystem|Mapping" type="AllowedDependency"/>
+                    <dependency toName="Project|spring-data-mongodb::Layer|Repositories::Subsystem|API" type="AllowedDependency"/>
                     <dependency toName="Project|spring-data-mongodb::Layer|Repositories::Subsystem|Implementation" type="AllowedDependency"/>
                 </element>
                 <dependency toName="Project|spring-data-mongodb::Layer|Config" type="AllowedDependency"/>
