@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2013 the original author or authors.
+ * Copyright 2011-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,6 +39,7 @@ import org.springframework.util.StringUtils;
  * Mongo specific implementation of {@link QueryMethod}.
  * 
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 public class MongoQueryMethod extends QueryMethod {
 
@@ -143,7 +144,7 @@ public class MongoQueryMethod extends QueryMethod {
 	}
 
 	/**
-	 * Returns whether te query is a geo near query.
+	 * Returns whether the query is a geo near query.
 	 * 
 	 * @return
 	 */
@@ -167,6 +168,14 @@ public class MongoQueryMethod extends QueryMethod {
 		}
 
 		return false;
+	}
+
+	/**
+	 * @return true if parameters contain full text param.
+	 * @since 1.6
+	 */
+	public boolean isFullTextQuery() {
+		return getParameters().hasFullTextParameter();
 	}
 
 	/**

@@ -17,12 +17,14 @@ package org.springframework.data.mongodb.repository.query;
 
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Point;
+import org.springframework.data.mongodb.core.text.Term;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
 
 /**
  * Mongo-specific {@link ParametersParameterAccessor} to allow access to the {@link Distance} parameter.
  * 
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 public class MongoParametersParameterAccessor extends ParametersParameterAccessor implements MongoParameterAccessor {
 
@@ -77,4 +79,28 @@ public class MongoParametersParameterAccessor extends ParametersParameterAccesso
 
 		return (Point) value;
 	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.query.MongoParameterAccessor#getFullText()
+	 */
+	@Override
+	public String getFullText() {
+		int index = method.getParameters().getFullTextParameterIndex();
+		return index >= 0 ? potentiallyConvertFullText(getValue(index)) : null;
+	}
+
+	protected String potentiallyConvertFullText(Object fullText) {
+
+		if (fullText instanceof String) {
+			return (String) fullText;
+		}
+
+		if (fullText instanceof Term) {
+			return ((Term) fullText).getFormatted();
+		}
+
+		return fullText.toString();
+	}
+
 }

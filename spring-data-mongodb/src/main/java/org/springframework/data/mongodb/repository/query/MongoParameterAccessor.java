@@ -23,6 +23,7 @@ import org.springframework.data.repository.query.ParameterAccessor;
  * Mongo-specific {@link ParameterAccessor} exposing a maximum distance parameter.
  * 
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 public interface MongoParameterAccessor extends ParameterAccessor {
 
@@ -40,4 +41,12 @@ public interface MongoParameterAccessor extends ParameterAccessor {
 	 * @return
 	 */
 	Point getGeoNearLocation();
+
+	/**
+	 * Returns the textual representation to be used for Mongo full text queries.
+	 * 
+	 * @return null if not set.
+	 * @since 1.6
+	 */
+	String getFullText();
 }

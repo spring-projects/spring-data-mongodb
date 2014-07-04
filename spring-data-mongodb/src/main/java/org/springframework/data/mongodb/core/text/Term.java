@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.core.query.text;
+package org.springframework.data.mongodb.core.text;
 
 /**
  * A {@link Term} defines one or multiple words {@link Type#WORD} or phrases {@link Type#PHRASE} to be used in the
@@ -24,7 +24,7 @@ package org.springframework.data.mongodb.core.query.text;
  */
 public class Term {
 
-	enum Type {
+	public enum Type {
 		WORD, PHRASE;
 	}
 

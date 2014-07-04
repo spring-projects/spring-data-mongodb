@@ -21,11 +21,13 @@ import static org.junit.Assert.*;
 import java.lang.reflect.Method;
 import java.util.List;
 
+import org.hamcrest.core.IsNull;
 import org.junit.Test;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.text.FullTextPram;
 import org.springframework.data.mongodb.repository.Person;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.RepositoryMetadata;
@@ -35,6 +37,7 @@ import org.springframework.data.repository.core.support.DefaultRepositoryMetadat
  * Unit tests for {@link MongoParametersParameterAccessor}.
  * 
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 public class MongoParametersParameterAccessorUnitTests {
 
@@ -64,10 +67,40 @@ public class MongoParametersParameterAccessorUnitTests {
 		assertThat(accessor.getMaxDistance(), is(DISTANCE));
 	}
 
+	/**
+	 * @see DATAMONGO-973
+	 */
+	@Test
+	public void shouldReturnAsFullTextStringWhenNoneDefinedForMethod() throws NoSuchMethodException, SecurityException {
+
+		Method method = PersonRepository.class.getMethod("findByLocationNear", Point.class, Distance.class);
+		MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, context);
+
+		MongoParameterAccessor accessor = new MongoParametersParameterAccessor(queryMethod, new Object[] {
+				new Point(10, 20), DISTANCE });
+		assertThat(accessor.getFullText(), IsNull.nullValue());
+	}
+
+	/**
+	 * @see DATAMONGO-973
+	 */
+	@Test
+	public void shouldReturnAsFullTextStringWhenAvailable() throws NoSuchMethodException, SecurityException {
+
+		Method method = PersonRepository.class.getMethod("findByFirstname", String.class, String.class);
+		MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, context);
+
+		MongoParameterAccessor accessor = new MongoParametersParameterAccessor(queryMethod,
+				new Object[] { "spring", "data" });
+		assertThat(accessor.getFullText(), equalTo("data"));
+	}
+
 	interface PersonRepository extends Repository<Person, Long> {
 
 		List<Person> findByLocationNear(Point point);
 
 		List<Person> findByLocationNear(Point point, Distance distance);
+
+		List<Person> findByFirstname(String firstname, @FullTextPram String fullText);
 	}
 }

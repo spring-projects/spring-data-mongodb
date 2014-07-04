@@ -25,6 +25,8 @@ import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.ReadingConverter;
+import org.springframework.data.convert.WritingConverter;
+import org.springframework.data.mongodb.core.text.Term;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.DBObject;
@@ -34,6 +36,7 @@ import com.mongodb.DBObject;
  * 
  * @author Oliver Gierke
  * @author Thomas Darimont
+ * @author Christoph Strobl
  */
 abstract class MongoConverters {
 
@@ -159,5 +162,21 @@ abstract class MongoConverters {
 		public String convert(DBObject source) {
 			return source == null ? null : source.toString();
 		}
+	}
+
+	/**
+	 * @author Christoph Strobl
+	 * @since 1.6
+	 */
+	@WritingConverter
+	public static enum TermToStringConverter implements Converter<Term, String> {
+
+		INSTANCE;
+
+		@Override
+		public String convert(Term source) {
+			return source == null ? null : source.getFormatted();
+		}
+
 	}
 }

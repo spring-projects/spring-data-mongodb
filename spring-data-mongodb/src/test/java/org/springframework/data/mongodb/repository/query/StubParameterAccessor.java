@@ -105,4 +105,13 @@ class StubParameterAccessor implements MongoParameterAccessor {
 	public Point getGeoNearLocation() {
 		return null;
 	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.query.MongoParameterAccessor#getFullText()
+	 */
+	@Override
+	public String getFullText() {
+		return null;
+	}
 }

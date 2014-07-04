@@ -32,6 +32,7 @@ import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.User;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.text.FullTextPram;
 import org.springframework.data.mongodb.repository.Address;
 import org.springframework.data.mongodb.repository.Contact;
 import org.springframework.data.mongodb.repository.Person;
@@ -42,6 +43,7 @@ import org.springframework.data.repository.core.support.DefaultRepositoryMetadat
  * Unit test for {@link MongoQueryMethod}.
  * 
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 public class MongoQueryMethodUnitTests {
 
@@ -120,6 +122,16 @@ public class MongoQueryMethodUnitTests {
 		new MongoQueryMethod(method, new DefaultRepositoryMetadata(SampleRepository2.class), context);
 	}
 
+	/**
+	 * @see DATAMONGO-973
+	 */
+	@Test
+	public void shouldMarkQueryAsFullTextQueryWhenParametersContainFullTextParam() throws Exception {
+
+		MongoQueryMethod method = queryMethod("findByFirstname", String.class, String.class);
+		assertThat(method.isFullTextQuery(), is(true));
+	}
+
 	private MongoQueryMethod queryMethod(String name, Class<?>... parameters) throws Exception {
 		Method method = PersonRepository.class.getMethod(name, parameters);
 		return new MongoQueryMethod(method, new DefaultRepositoryMetadata(PersonRepository.class), context);
@@ -137,6 +149,8 @@ public class MongoQueryMethodUnitTests {
 		GeoResults<User> findByFirstname(String firstname, Point location);
 
 		Collection<GeoResult<User>> findByLastname(String lastname, Point location);
+
+		List<User> findByFirstname(String firstname, @FullTextPram String fullText);
 	}
 
 	interface SampleRepository extends Repository<Contact, Long> {

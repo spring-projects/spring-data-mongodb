@@ -21,6 +21,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.text.TextCriteria;
 import org.springframework.data.repository.query.QueryMethod;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.repository.query.parser.PartTree;
@@ -77,6 +78,10 @@ public class PartTreeMongoQuery extends AbstractMongoQuery {
 			query.limit(tree.getMaxResults());
 		}
 
+		if (StringUtils.hasText(accessor.getFullText())) {
+			query.addCriteria(TextCriteria.forDefaultLanguage().matching(accessor.getFullText()));
+		}
+
 		String fieldSpec = this.getQueryMethod().getFieldSpecification();
 
 		if (!StringUtils.hasText(fieldSpec)) {
@@ -87,6 +92,7 @@ public class PartTreeMongoQuery extends AbstractMongoQuery {
 
 			BasicQuery result = new BasicQuery(query.getQueryObject().toString(), fieldSpec);
 			result.setSortObject(query.getSortObject());
+
 			return result;
 
 		} catch (JSONParseException o_O) {
