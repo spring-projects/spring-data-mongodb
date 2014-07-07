@@ -23,6 +23,9 @@ import java.util.Map;
 
 import org.junit.Test;
 
+import com.mongodb.BasicDBObject;
+import com.mongodb.BasicDBObjectBuilder;
+
 /**
  * Test cases for {@link Update}.
  * 
@@ -341,5 +344,69 @@ public class UpdateTests {
 				+ " \"$set\" : { \"nl\" :  null  , \"directory\" : \"/Users/Test/Desktop\" , \"foo\" : \"bar\"} , " //
 				+ "\"$push\" : { \"authors\" : { \"name\" : \"Sven\"}} " //
 				+ ", \"$pop\" : { \"authors\" : -1}}")); //
+	}
+
+	/**
+	 * @see DATAMONGO-944
+	 */
+	@Test
+	public void getUpdateObjectShouldReturnCurrentDateCorrectlyForSingleFieldWhenUsingDate() {
+
+		Update update = new Update().currentDate("foo");
+		assertThat(update.getUpdateObject(),
+				equalTo(new BasicDBObjectBuilder().add("$currentDate", new BasicDBObject("foo", true)).get()));
+	}
+
+	/**
+	 * @see DATAMONGO-944
+	 */
+	@Test
+	public void getUpdateObjectShouldReturnCurrentDateCorrectlyForMultipleFieldsWhenUsingDate() {
+
+		Update update = new Update().currentDate("foo").currentDate("bar");
+		assertThat(update.getUpdateObject(),
+				equalTo(new BasicDBObjectBuilder().add("$currentDate", new BasicDBObject("foo", true).append("bar", true))
+						.get()));
+	}
+
+	/**
+	 * @see DATAMONGO-944
+	 */
+	@Test
+	public void getUpdateObjectShouldReturnCurrentDateCorrectlyForSingleFieldWhenUsingTimestamp() {
+
+		Update update = new Update().currentTimestamp("foo");
+		assertThat(
+				update.getUpdateObject(),
+				equalTo(new BasicDBObjectBuilder().add("$currentDate",
+						new BasicDBObject("foo", new BasicDBObject("$type", "timestamp"))).get()));
+	}
+
+	/**
+	 * @see DATAMONGO-944
+	 */
+	@Test
+	public void getUpdateObjectShouldReturnCurrentDateCorrectlyForMultipleFieldsWhenUsingTimestamp() {
+
+		Update update = new Update().currentTimestamp("foo").currentTimestamp("bar");
+		assertThat(
+				update.getUpdateObject(),
+				equalTo(new BasicDBObjectBuilder().add(
+						"$currentDate",
+						new BasicDBObject("foo", new BasicDBObject("$type", "timestamp")).append("bar", new BasicDBObject("$type",
+								"timestamp"))).get()));
+	}
+
+	/**
+	 * @see DATAMONGO-944
+	 */
+	@Test
+	public void getUpdateObjectShouldReturnCurrentDateCorrectlyWhenUsingMixedDateAndTimestamp() {
+
+		Update update = new Update().currentDate("foo").currentTimestamp("bar");
+		assertThat(
+				update.getUpdateObject(),
+				equalTo(new BasicDBObjectBuilder().add("$currentDate",
+						new BasicDBObject("foo", true).append("bar", new BasicDBObject("$type", "timestamp"))).get()));
 	}
 }
