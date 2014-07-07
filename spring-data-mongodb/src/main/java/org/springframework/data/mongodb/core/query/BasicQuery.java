@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 the original author or authors.
+ * Copyright 2010-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,11 +24,12 @@ import com.mongodb.util.JSON;
  * 
  * @author Thomas Risberg
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 public class BasicQuery extends Query {
 
 	private final DBObject queryObject;
-	private final DBObject fieldsObject;
+	private DBObject fieldsObject;
 	private DBObject sortObject;
 
 	public BasicQuery(String query) {
@@ -83,5 +84,13 @@ public class BasicQuery extends Query {
 
 	public void setSortObject(DBObject sortObject) {
 		this.sortObject = sortObject;
+	}
+
+	/**
+	 * @since 1.6
+	 * @param fieldsObject
+	 */
+	protected void setFieldsObject(DBObject fieldsObject) {
+		this.fieldsObject = fieldsObject;
 	}
 }

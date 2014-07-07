@@ -27,32 +27,38 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hamcrest.collection.IsEmptyCollection;
+import org.hamcrest.core.IsEqual;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 import org.springframework.data.geo.Point;
+import org.springframework.data.mapping.PersistentEntity;
+import org.springframework.data.mongodb.core.DBObjectTestUtils;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolver.IndexDefinitionHolder;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolverUnitTests.CompoundIndexResolutionTests;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolverUnitTests.GeoSpatialIndexResolutionTests;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolverUnitTests.IndexResolutionTests;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolverUnitTests.MixedIndexResolutionTests;
+import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolverUnitTests.TextIndexedResolutionTests;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.mapping.Language;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntityTestDummy.MongoPersistentEntityDummyBuilder;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 
 import com.mongodb.BasicDBObjectBuilder;
+import com.mongodb.DBObject;
 
 /**
  * @author Christoph Strobl
  */
 @RunWith(Suite.class)
 @SuiteClasses({ IndexResolutionTests.class, GeoSpatialIndexResolutionTests.class, CompoundIndexResolutionTests.class,
-		MixedIndexResolutionTests.class })
+		TextIndexedResolutionTests.class, MixedIndexResolutionTests.class })
 public class MongoPersistentEntityIndexResolverUnitTests {
 
 	/**
@@ -429,6 +435,161 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		}
 	}
 
+	public static class TextIndexedResolutionTests {
+
+		/**
+		 * @see DATAMONGO-937
+		 */
+		@Test
+		public void shouldResolveSingleFieldTextIndexCorrectly() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(TextIndexOnSinglePropertyInRoot.class);
+			assertThat(indexDefinitions.size(), equalTo(1));
+			assertIndexPathAndCollection("bar", "textIndexOnSinglePropertyInRoot", indexDefinitions.get(0));
+		}
+
+		/**
+		 * @see DATAMONGO-937
+		 */
+		@Test
+		public void shouldResolveMultiFieldTextIndexCorrectly() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(TextIndexOnMutiplePropertiesInRoot.class);
+			assertThat(indexDefinitions.size(), equalTo(1));
+			assertIndexPathAndCollection(new String[] { "foo", "bar" }, "textIndexOnMutiplePropertiesInRoot",
+					indexDefinitions.get(0));
+		}
+
+		/**
+		 * @see DATAMONGO-937
+		 */
+		@Test
+		public void shouldResolveTextIndexOnElementCorrectly() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(TextIndexOnNestedRoot.class);
+			assertThat(indexDefinitions.size(), equalTo(1));
+			assertIndexPathAndCollection(new String[] { "nested.foo" }, "textIndexOnNestedRoot", indexDefinitions.get(0));
+		}
+
+		/**
+		 * @see DATAMONGO-937
+		 */
+		@Test
+		public void shouldResolveTextIndexOnElementWithWeightCorrectly() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(TextIndexOnNestedWithWeightRoot.class);
+			assertThat(indexDefinitions.size(), equalTo(1));
+			assertIndexPathAndCollection(new String[] { "nested.foo" }, "textIndexOnNestedWithWeightRoot",
+					indexDefinitions.get(0));
+
+			DBObject weights = DBObjectTestUtils.getAsDBObject(indexDefinitions.get(0).getIndexOptions(), "weights");
+			assertThat(weights.get("nested.foo"), IsEqual.<Object> equalTo(5F));
+		}
+
+		/**
+		 * @see DATAMONGO-937
+		 */
+		@Test
+		public void shouldResolveTextIndexOnElementWithMostSpecificWeightCorrectly() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(TextIndexOnNestedWithMostSpecificValueRoot.class);
+			assertThat(indexDefinitions.size(), equalTo(1));
+			assertIndexPathAndCollection(new String[] { "nested.foo", "nested.bar" },
+					"textIndexOnNestedWithMostSpecificValueRoot", indexDefinitions.get(0));
+
+			DBObject weights = DBObjectTestUtils.getAsDBObject(indexDefinitions.get(0).getIndexOptions(), "weights");
+			assertThat(weights.get("nested.foo"), IsEqual.<Object> equalTo(5F));
+			assertThat(weights.get("nested.bar"), IsEqual.<Object> equalTo(10F));
+		}
+
+		/**
+		 * @see DATAMONGO-937
+		 */
+		@Test
+		public void shouldSetDefaultLanguageCorrectly() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(DocumentWithDefaultLanguage.class);
+			assertThat(indexDefinitions.get(0).getIndexOptions().get("default_language"), IsEqual.<Object> equalTo("spanish"));
+		}
+
+		/**
+		 * @see DATAMONGO-937
+		 */
+		@Test
+		public void shouldResolveTextIndexLanguageOverrideCorrectly() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(DocumentWithLanguageOverrideOnNestedElementRoot.class);
+			assertThat(indexDefinitions.get(0).getIndexOptions().get("language_override"), IsEqual.<Object> equalTo("lang"));
+		}
+
+		@Document
+		static class TextIndexOnSinglePropertyInRoot {
+
+			String foo;
+
+			@TextIndexed String bar;
+		}
+
+		@Document
+		static class TextIndexOnMutiplePropertiesInRoot {
+
+			@TextIndexed String foo;
+
+			@TextIndexed(weight = 5) String bar;
+		}
+
+		@Document
+		static class TextIndexOnNestedRoot {
+
+			String bar;
+
+			@TextIndexed TextIndexOnNested nested;
+		}
+
+		static class TextIndexOnNested {
+
+			String foo;
+
+		}
+
+		@Document
+		static class TextIndexOnNestedWithWeightRoot {
+
+			@TextIndexed(weight = 5) TextIndexOnNested nested;
+
+		}
+
+		@Document
+		static class TextIndexOnNestedWithMostSpecificValueRoot {
+			@TextIndexed(weight = 5) TextIndexOnNestedWithMostSpecificValue nested;
+		}
+
+		static class TextIndexOnNestedWithMostSpecificValue {
+
+			String foo;
+			@TextIndexed(weight = 10) String bar;
+		}
+
+		@Document(language = "spanish")
+		static class DocumentWithDefaultLanguage {
+			@TextIndexed String foo;
+		}
+
+		@Document
+		static class DocumentWithLanguageOverrideOnNestedElementRoot {
+
+			DocumentWithLanguageOverrideOnNestedElement nested;
+		}
+
+		static class DocumentWithLanguageOverrideOnNestedElement {
+
+			@TextIndexed String foo;
+
+			@Language String lang;
+		}
+
+	}
+
 	public static class MixedIndexResolutionTests {
 
 		/**
@@ -561,16 +722,23 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 				public String collection() {
 					return null;
 				}
+
+				@Override
+				public String language() {
+					return null;
+				}
 			};
 
 			MongoPersistentProperty propertyMock = mock(MongoPersistentProperty.class);
 			when(propertyMock.isEntity()).thenReturn(true);
+			when(propertyMock.getOwner()).thenReturn(
+					(PersistentEntity) MongoPersistentEntityDummyBuilder.forClass(Object.class).build());
 			when(propertyMock.getActualType()).thenThrow(
 					new MongoPersistentEntityIndexResolver.CyclicPropertyReferenceException("foo", Object.class, "bar"));
 
 			MongoPersistentEntity<SelfCyclingViaCollectionType> dummy = MongoPersistentEntityDummyBuilder
-					.forClass(SelfCyclingViaCollectionType.class).withCollection("foo").and(propertyMock)
-					.and(documentDummy).build();
+					.forClass(SelfCyclingViaCollectionType.class).withCollection("foo").and(propertyMock).and(documentDummy)
+					.build();
 
 			new MongoPersistentEntityIndexResolver(prepareMappingContext(SelfCyclingViaCollectionType.class))
 					.resolveIndexForEntity(dummy);

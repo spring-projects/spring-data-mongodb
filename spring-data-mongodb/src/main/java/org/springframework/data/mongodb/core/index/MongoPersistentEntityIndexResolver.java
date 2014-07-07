@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core.index;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -29,6 +30,9 @@ import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mapping.PropertyHandler;
 import org.springframework.data.mongodb.core.index.Index.Duplicates;
+import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolver.TextIndexIncludeOptions.IncludeStrategy;
+import org.springframework.data.mongodb.core.index.TextIndexDefinition.TextIndexDefinitionBuilder;
+import org.springframework.data.mongodb.core.index.TextIndexDefinition.TextIndexedFieldSpec;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
@@ -93,6 +97,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 		final List<IndexDefinitionHolder> indexInformation = new ArrayList<MongoPersistentEntityIndexResolver.IndexDefinitionHolder>();
 		indexInformation.addAll(potentiallyCreateCompoundIndexDefinitions("", root.getCollection(), root.getType()));
+		indexInformation.addAll(potentiallyCreateTextIndexDefinition(root));
 
 		final CycleGuard guard = new CycleGuard();
 
@@ -186,6 +191,82 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		}
 
 		return createCompoundIndexDefinitions(dotPath, collection, type);
+	}
+
+	private Collection<? extends IndexDefinitionHolder> potentiallyCreateTextIndexDefinition(MongoPersistentEntity<?> root) {
+
+		TextIndexDefinitionBuilder indexDefinitionBuilder = new TextIndexDefinitionBuilder().named(root.getType()
+				.getSimpleName() + "_TextIndex");
+
+		if (StringUtils.hasText(root.getLanguage())) {
+			indexDefinitionBuilder.withDefaultLanguage(root.getLanguage());
+		}
+
+		try {
+			appendTextIndexInformation("", indexDefinitionBuilder, root,
+					new TextIndexIncludeOptions(IncludeStrategy.DEFAULT), new CycleGuard());
+		} catch (CyclicPropertyReferenceException e) {
+			LOGGER.warn(e.getMessage());
+		}
+
+		TextIndexDefinition indexDefinition = indexDefinitionBuilder.build();
+
+		if (!indexDefinition.hasFieldSpec()) {
+			return Collections.emptyList();
+		}
+
+		IndexDefinitionHolder holder = new IndexDefinitionHolder("", indexDefinition, root.getCollection());
+		return Collections.singletonList(holder);
+
+	}
+
+	private void appendTextIndexInformation(final String dotPath,
+			final TextIndexDefinitionBuilder indexDefinitionBuilder, MongoPersistentEntity<?> entity,
+			final TextIndexIncludeOptions includeOptions, final CycleGuard guard) {
+
+		entity.doWithProperties(new PropertyHandler<MongoPersistentProperty>() {
+
+			@Override
+			public void doWithPersistentProperty(MongoPersistentProperty persistentProperty) {
+
+				guard.protect(persistentProperty, dotPath);
+
+				if (persistentProperty.isLanguageProperty()) {
+					indexDefinitionBuilder.withLanguageOverride(persistentProperty.getFieldName());
+				}
+
+				TextIndexed indexed = persistentProperty.findAnnotation(TextIndexed.class);
+
+				if (includeOptions.isForce() || indexed != null || persistentProperty.isEntity()) {
+
+					String propertyDotPath = (StringUtils.hasText(dotPath) ? dotPath + "." : "")
+							+ persistentProperty.getFieldName();
+
+					Float weight = indexed != null ? indexed.weight()
+							: (includeOptions.getParentFieldSpec() != null ? includeOptions.getParentFieldSpec().getWeight() : 1.0F);
+
+					if (persistentProperty.isEntity()) {
+
+						TextIndexIncludeOptions optionsForNestedType = includeOptions;
+						if (!IncludeStrategy.FORCE.equals(includeOptions.getStrategy()) && indexed != null) {
+							optionsForNestedType = new TextIndexIncludeOptions(IncludeStrategy.FORCE, new TextIndexedFieldSpec(
+									propertyDotPath, weight));
+						}
+
+						try {
+							appendTextIndexInformation(propertyDotPath, indexDefinitionBuilder,
+									mappingContext.getPersistentEntity(persistentProperty.getActualType()), optionsForNestedType, guard);
+						} catch (CyclicPropertyReferenceException e) {
+							LOGGER.warn(e.getMessage(), e);
+						}
+					} else if (includeOptions.isForce() || indexed != null) {
+						indexDefinitionBuilder.onField(propertyDotPath, weight);
+					}
+				}
+
+			}
+		});
+
 	}
 
 	/**
@@ -548,5 +629,42 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		public DBObject getIndexOptions() {
 			return indexDefinition.getIndexOptions();
 		}
+	}
+
+	/**
+	 * @author Christoph Strobl
+	 * @since 1.6
+	 */
+	static class TextIndexIncludeOptions {
+
+		enum IncludeStrategy {
+			FORCE, DEFAULT;
+		}
+
+		private final IncludeStrategy strategy;
+
+		private final TextIndexedFieldSpec parentFieldSpec;
+
+		public TextIndexIncludeOptions(IncludeStrategy strategy, TextIndexedFieldSpec parentFieldSpec) {
+			this.strategy = strategy;
+			this.parentFieldSpec = parentFieldSpec;
+		}
+
+		public TextIndexIncludeOptions(IncludeStrategy strategy) {
+			this(strategy, null);
+		}
+
+		public IncludeStrategy getStrategy() {
+			return strategy;
+		}
+
+		public TextIndexedFieldSpec getParentFieldSpec() {
+			return parentFieldSpec;
+		}
+
+		public boolean isForce() {
+			return IncludeStrategy.FORCE.equals(strategy);
+		}
+
 	}
 }

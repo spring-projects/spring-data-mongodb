@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2013 the original author or authors.
+ * Copyright 2011-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,6 +38,7 @@ import org.springframework.expression.ParserContext;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.util.Assert;
+import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -47,12 +48,14 @@ import org.springframework.util.StringUtils;
  * @author Jon Brisbin
  * @author Oliver Gierke
  * @author Thomas Darimont
+ * @author Christoph Strobl
  */
 public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, MongoPersistentProperty> implements
 		MongoPersistentEntity<T>, ApplicationContextAware {
 
 	private static final String AMBIGUOUS_FIELD_MAPPING = "Ambiguous field mapping detected! Both %s and %s map to the same field name %s! Disambiguate using @DocumentField annotation!";
 	private final String collection;
+	private final String language;
 	private final SpelExpressionParser parser;
 	private final StandardEvaluationContext context;
 
@@ -75,8 +78,10 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 		if (rawType.isAnnotationPresent(Document.class)) {
 			Document d = rawType.getAnnotation(Document.class);
 			this.collection = StringUtils.hasText(d.collection()) ? d.collection() : fallback;
+			this.language = StringUtils.hasText(d.language()) ? d.language() : "";
 		} else {
 			this.collection = fallback;
+			this.language = "";
 		}
 	}
 
@@ -100,6 +105,15 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 		return expression.getValue(context, String.class);
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentEntity#getLanguage()
+	 */
+	@Override
+	public String getLanguage() {
+		return this.language;
+	}
+
 	/* 
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mapping.model.BasicPersistentEntity#verify()
@@ -107,10 +121,20 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 	@Override
 	public void verify() {
 
+		verifyFieldUniqueness();
+		verifyFieldTypes();
+	}
+
+	private void verifyFieldUniqueness() {
+
 		AssertFieldNameUniquenessHandler handler = new AssertFieldNameUniquenessHandler();
 
 		doWithProperties(handler);
 		doWithAssociations(handler);
+	}
+
+	private void verifyFieldTypes() {
+		doWithProperties(new PropertyTypeAssertionHandler());
 	}
 
 	/**
@@ -226,4 +250,46 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 			properties.put(fieldName, property);
 		}
 	}
+
+	/**
+	 * @author Christoph Strobl
+	 * @since 1.6
+	 */
+	private static class PropertyTypeAssertionHandler implements PropertyHandler<MongoPersistentProperty> {
+
+		@Override
+		public void doWithPersistentProperty(MongoPersistentProperty persistentProperty) {
+
+			potentiallyAssertTextScoreType(persistentProperty);
+			potentiallyAssertLanguageType(persistentProperty);
+		}
+
+		private void potentiallyAssertLanguageType(MongoPersistentProperty persistentProperty) {
+
+			if (persistentProperty.isLanguageProperty()) {
+				assertPropertyType(persistentProperty, String.class);
+			}
+		}
+
+		private void potentiallyAssertTextScoreType(MongoPersistentProperty persistentProperty) {
+
+			if (persistentProperty.isTextScoreProperty()) {
+				assertPropertyType(persistentProperty, Float.class, Double.class);
+			}
+		}
+
+		private void assertPropertyType(MongoPersistentProperty persistentProperty, Class<?>... validMatches) {
+
+			for (Class<?> potentialMatch : validMatches) {
+				if (ClassUtils.isAssignable(potentialMatch, persistentProperty.getActualType())) {
+					return;
+				}
+			}
+
+			throw new MappingException(String.format("Missmatching types for %s. Found %s expected one of %s.",
+					persistentProperty.getField(), persistentProperty.getActualType(),
+					StringUtils.arrayToCommaDelimitedString(validMatches)));
+		}
+	}
+
 }

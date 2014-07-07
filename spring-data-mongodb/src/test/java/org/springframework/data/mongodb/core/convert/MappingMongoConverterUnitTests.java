@@ -73,6 +73,7 @@ import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.PersonPojoStringId;
+import org.springframework.data.mongodb.core.mapping.TextScore;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -1807,6 +1808,32 @@ public class MappingMongoConverterUnitTests {
 		assertThat(result.shape, is((Shape) sphere));
 	}
 
+	/**
+	 * @see DATAMONGO-976
+	 */
+	@Test
+	public void shouldIgnoreTextScorePropertyWhenWriting() {
+
+		ClassWithTextScoreProperty source = new ClassWithTextScoreProperty();
+		source.score = Float.MAX_VALUE;
+
+		BasicDBObject dbo = new BasicDBObject();
+		converter.write(source, dbo);
+
+		assertThat(dbo.get("score"), nullValue());
+	}
+
+	/**
+	 * @see DATAMONGO-976
+	 */
+	@Test
+	public void shouldIncludeTextScorePropertyWhenReading() {
+
+		ClassWithTextScoreProperty entity = converter
+				.read(ClassWithTextScoreProperty.class, new BasicDBObject("score", 5F));
+		assertThat(entity.score, equalTo(5F));
+	}
+
 	static class GenericType<T> {
 		T content;
 	}
@@ -2056,5 +2083,10 @@ public class MappingMongoConverterUnitTests {
 	class ClassWithGeoShape {
 
 		Shape shape;
+	}
+
+	class ClassWithTextScoreProperty {
+
+		@TextScore Float score;
 	}
 }
