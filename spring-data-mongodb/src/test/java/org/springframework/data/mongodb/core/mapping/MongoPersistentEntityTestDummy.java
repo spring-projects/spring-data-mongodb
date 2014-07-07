@@ -214,4 +214,14 @@ public class MongoPersistentEntityTestDummy<T> implements MongoPersistentEntity<
 	public String getLanguage() {
 		return null;
 	}
+
+	@Override
+	public void doWithWritingProperties(PropertyHandler<MongoPersistentProperty> handler) {
+		doWithProperties(handler);
+	}
+
+	@Override
+	public void doWithReadingProperties(PropertyHandler<MongoPersistentProperty> handler) {
+		doWithProperties(handler);
+	}
 }

@@ -79,15 +79,6 @@ public interface MongoPersistentProperty extends PersistentProperty<MongoPersist
 	boolean isTextScoreProperty();
 
 	/**
-	 * Returns wheter the property is calculated eiter internally or on the server and therefore must not be written when
-	 * saved.
-	 * 
-	 * @return
-	 * @since 1.6
-	 */
-	boolean isCalculatedProperty();
-
-	/**
 	 * Returns the {@link DBRef} if the property is a reference.
 	 * 
 	 * @see #isDbReference()
