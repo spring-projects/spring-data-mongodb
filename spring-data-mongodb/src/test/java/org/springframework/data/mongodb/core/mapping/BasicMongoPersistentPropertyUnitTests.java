@@ -167,13 +167,13 @@ public class BasicMongoPersistentPropertyUnitTests {
 	 * @see DATAMONGO-976
 	 */
 	@Test
-	public void shouldDetectTextScoreAsCalculatedProperty() {
+	public void shouldDetectTextScoreAsReadOnlyProperty() {
 
 		BasicMongoPersistentEntity<DocumentWithTextScoreProperty> persistentEntity = new BasicMongoPersistentEntity<DocumentWithTextScoreProperty>(
 				ClassTypeInformation.from(DocumentWithTextScoreProperty.class));
 
 		MongoPersistentProperty property = getPropertyFor(persistentEntity, "score");
-		assertThat(property.isCalculatedProperty(), is(true));
+		assertThat(property.isWritable(), is(false));
 	}
 
 	private MongoPersistentProperty getPropertyFor(Field field) {

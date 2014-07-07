@@ -21,6 +21,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import org.springframework.data.annotation.ReadOnlyProperty;
+
 /**
  * {@link TextScore} marks the property to be considered as the on server calculated {@literal textScore} when doing
  * full text search. <br />
@@ -29,7 +31,7 @@ import java.lang.annotation.Target;
  * @author Christoph Strobl
  * @since 1.6
  */
-@Calculated
+@ReadOnlyProperty
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)

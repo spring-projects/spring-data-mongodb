@@ -201,13 +201,4 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 	public boolean isTextScoreProperty() {
 		return isAnnotationPresent(TextScore.class);
 	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentProperty#isCalculatedProperty()
-	 */
-	@Override
-	public boolean isCalculatedProperty() {
-		return isAnnotationPresent(Calculated.class);
-	}
 }
