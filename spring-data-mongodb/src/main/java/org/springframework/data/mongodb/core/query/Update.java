@@ -280,6 +280,34 @@ public class Update {
 		return this;
 	}
 
+	/**
+	 * Update given key to current date using {@literal $currentDate} modifier.
+	 * 
+	 * @see http://docs.mongodb.org/manual/reference/operator/update/currentDate/
+	 * @param key
+	 * @return
+	 * @since 1.6
+	 */
+	public Update currentDate(String key) {
+
+		addMultiFieldOperation("$currentDate", key, true);
+		return this;
+	}
+
+	/**
+	 * Update given key to current date using {@literal $currentDate : &#123; $type : "timestamp" &#125;} modifier.
+	 * 
+	 * @see http://docs.mongodb.org/manual/reference/operator/update/currentDate/
+	 * @param key
+	 * @return
+	 * @since 1.6
+	 */
+	public Update currentTimestamp(String key) {
+
+		addMultiFieldOperation("$currentDate", key, new BasicDBObject("$type", "timestamp"));
+		return this;
+	}
+
 	public DBObject getUpdateObject() {
 
 		DBObject dbo = new BasicDBObject();
