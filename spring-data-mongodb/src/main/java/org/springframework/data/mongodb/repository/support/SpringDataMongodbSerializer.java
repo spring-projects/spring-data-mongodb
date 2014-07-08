@@ -41,6 +41,8 @@ import com.mysema.query.types.PathType;
  */
 class SpringDataMongodbSerializer extends MongodbSerializer {
 
+	private final String ID_KEY = "_id";
+
 	private final MongoConverter converter;
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 	private final QueryMapper mapper;
@@ -84,8 +86,8 @@ class SpringDataMongodbSerializer extends MongodbSerializer {
 	@Override
 	protected DBObject asDBObject(String key, Object value) {
 
-		if ("_id".equals(key)) {
-			return super.asDBObject(key, mapper.convertId(value));
+		if (ID_KEY.equals(key)) {
+			return mapper.getMappedObject(super.asDBObject(key, value), null);
 		}
 
 		return super.asDBObject(key, value instanceof Pattern ? value : converter.convertToMongoType(value));
