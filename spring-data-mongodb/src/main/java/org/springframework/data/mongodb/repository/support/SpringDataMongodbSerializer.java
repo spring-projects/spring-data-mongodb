@@ -24,6 +24,8 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.util.Assert;
 
+import com.mongodb.BasicDBList;
+import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mysema.query.mongodb.MongodbSerializer;
 import com.mysema.query.types.Path;
@@ -81,9 +83,49 @@ class SpringDataMongodbSerializer extends MongodbSerializer {
 	protected DBObject asDBObject(String key, Object value) {
 
 		if ("_id".equals(key)) {
-			return super.asDBObject(key, mapper.convertId(value));
+			return super.asDBObject(key, potentiallyConvertNestedValuesToObjectId(value));
 		}
 
 		return super.asDBObject(key, value instanceof Pattern ? value : converter.convertToMongoType(value));
+	}
+
+	protected Object potentiallyConvertNestedValuesToObjectId(Object source) {
+
+		if (source instanceof DBObject) {
+			return potentiallyConvertNestedValuesToObjectId((DBObject) source);
+		}
+		return mapper.convertId(source);
+	}
+
+	@SuppressWarnings("rawtypes")
+	protected DBObject potentiallyConvertNestedValuesToObjectId(DBObject source) {
+
+		DBObject target = new BasicDBObject();
+
+		for (String key : source.keySet()) {
+
+			Object value = source.get(key);
+
+			if (key.startsWith("$")) {
+
+				Object convertedValue = null;
+				if (value instanceof Iterable) {
+
+					BasicDBList dbList = new BasicDBList();
+					for (Object o : (Iterable) value) {
+						dbList.add(potentiallyConvertNestedValuesToObjectId(o));
+					}
+					convertedValue = dbList;
+				} else {
+					convertedValue = mapper.convertId(value);
+				}
+				target.put(key, convertedValue);
+			} else {
+				target.put(key, mapper.convertId(value));
+			}
+		}
+
+		return target;
+
 	}
 }

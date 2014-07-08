@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2013 the original author or authors.
+ * Copyright 2011-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,11 +19,13 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
 import org.bson.types.ObjectId;
+import org.hamcrest.collection.IsIterableContainingInAnyOrder;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.data.mongodb.core.DBObjectTestUtils;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
@@ -32,6 +34,7 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.repository.QAddress;
 import org.springframework.data.mongodb.repository.QPerson;
 
+import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mysema.query.types.expr.BooleanOperation;
@@ -43,6 +46,7 @@ import com.mysema.query.types.path.StringPath;
  * Unit tests for {@link SpringDataMongodbSerializer}.
  * 
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 @RunWith(MockitoJUnitRunner.class)
 public class SpringDataMongodbSerializerUnitTests {
@@ -130,6 +134,39 @@ public class SpringDataMongodbSerializerUnitTests {
 		String path = serializer.getKeyForPath(firstElementPath, firstElementPath.getMetadata());
 
 		assertThat(path, is("0"));
+	}
+
+	/**
+	 * @see DATAMONGO-969
+	 */
+	@Test
+	public void shouldConvertObjectIdEvenWhenNestedInOperatorDbObject() {
+
+		BasicDBObject source = new BasicDBObject("$ne", "53bb9fd14438765b29c2d56e");
+		DBObject serialized = serializer.asDBObject("_id", source);
+
+		DBObject _id = DBObjectTestUtils.getAsDBObject(serialized, "_id");
+		ObjectId $ne = DBObjectTestUtils.getTypedValue(_id, "$ne", ObjectId.class);
+		assertThat($ne.toHexString(), equalTo("53bb9fd14438765b29c2d56e"));
+	}
+
+	/**
+	 * @see DATAMONGO-969
+	 */
+	@Test
+	public void shouldConvertCollectionOfObjectIdEvenWhenNestedInOperatorDbObject() {
+
+		BasicDBList objectIds = new BasicDBList();
+		objectIds.add("53bb9fd14438765b29c2d56e");
+		objectIds.add("53bb9fda4438765b29c2d56f");
+		BasicDBObject source = new BasicDBObject("$in", objectIds);
+
+		DBObject serialized = serializer.asDBObject("_id", source);
+
+		DBObject _id = DBObjectTestUtils.getAsDBObject(serialized, "_id");
+		BasicDBList $in = DBObjectTestUtils.getAsDBList(_id, "$in");
+		assertThat($in, IsIterableContainingInAnyOrder.<Object> containsInAnyOrder(
+				new ObjectId("53bb9fd14438765b29c2d56e"), new ObjectId("53bb9fda4438765b29c2d56f")));
 	}
 
 	class Address {

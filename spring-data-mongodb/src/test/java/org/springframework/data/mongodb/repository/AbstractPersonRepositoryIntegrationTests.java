@@ -967,4 +967,12 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		Page<Person> result = repository.findTop3ByLastnameStartingWith("Dylan", new PageRequest(2, 2));
 		assertThat(result.getContent().size(), is(0));
 	}
+
+	/**
+	 * @see DATAMONGO-969
+	 */
+	@Test
+	public void shouldFindPersonsWhenUsingQueryDslPerdicatedOnIdProperty() {
+		assertThat(repository.findAll(person.id.in(Arrays.asList(dave.id, carter.id))), containsInAnyOrder(dave, carter));
+	}
 }
