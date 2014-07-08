@@ -941,4 +941,12 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 
 		assertThat(repository.findOne(QPerson.person.creator.eq(user)), is(dave));
 	}
+	
+	/**
+	 * @see DATAMONGO-969
+	 */
+	@Test
+	public void shouldFindPersonsWhenUsingQueryDslPerdicatedOnIdProperty() {
+		assertThat(repository.findAll(person.id.in(Arrays.asList(dave.id, carter.id))), containsInAnyOrder(dave, carter));
+	}
 }
