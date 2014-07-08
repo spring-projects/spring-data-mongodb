@@ -382,10 +382,10 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		// Write the properties
-		entity.doWithWritingProperties(new PropertyHandler<MongoPersistentProperty>() {
+		entity.doWithProperties(new PropertyHandler<MongoPersistentProperty>() {
 			public void doWithPersistentProperty(MongoPersistentProperty prop) {
 
-				if (prop.equals(idProperty)) {
+				if (prop.equals(idProperty) || !prop.shallBePersisted()) {
 					return;
 				}
 

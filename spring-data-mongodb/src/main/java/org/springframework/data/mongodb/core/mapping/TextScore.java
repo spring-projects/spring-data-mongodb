@@ -21,7 +21,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import org.springframework.data.annotation.ReadingProperty;
+import org.springframework.data.annotation.ReadOnlyProperty;
 
 /**
  * {@link TextScore} marks the property to be considered as the on server calculated {@literal textScore} when doing
@@ -31,7 +31,7 @@ import org.springframework.data.annotation.ReadingProperty;
  * @author Christoph Strobl
  * @since 1.6
  */
-@ReadingProperty
+@ReadOnlyProperty
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)

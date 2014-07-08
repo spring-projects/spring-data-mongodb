@@ -173,7 +173,7 @@ public class BasicMongoPersistentPropertyUnitTests {
 				ClassTypeInformation.from(DocumentWithTextScoreProperty.class));
 
 		MongoPersistentProperty property = getPropertyFor(persistentEntity, "score");
-		assertThat(property.isReading(), is(true));
+		assertThat(property.isReadOnly(), is(true));
 	}
 
 	private MongoPersistentProperty getPropertyFor(Field field) {

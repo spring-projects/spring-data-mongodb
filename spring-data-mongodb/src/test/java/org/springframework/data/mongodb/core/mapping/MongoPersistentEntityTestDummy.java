@@ -220,8 +220,4 @@ public class MongoPersistentEntityTestDummy<T> implements MongoPersistentEntity<
 		doWithProperties(handler);
 	}
 
-	@Override
-	public void doWithReadingProperties(PropertyHandler<MongoPersistentProperty> handler) {
-		doWithProperties(handler);
-	}
 }
