@@ -23,11 +23,15 @@ import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mongodb.UncategorizedMongoDbException;
 
+import com.mongodb.MongoCursorNotFoundException;
 import com.mongodb.MongoException;
 import com.mongodb.MongoException.CursorNotFound;
 import com.mongodb.MongoException.DuplicateKey;
 import com.mongodb.MongoException.Network;
 import com.mongodb.MongoInternalException;
+import com.mongodb.MongoServerSelectionException;
+import com.mongodb.MongoSocketException;
+import com.mongodb.MongoTimeoutException;
 
 /**
  * Simple {@link PersistenceExceptionTranslator} for Mongo. Convert the given runtime exception to an appropriate
@@ -47,21 +51,23 @@ public class MongoExceptionTranslator implements PersistenceExceptionTranslator 
 
 		// Check for well-known MongoException subclasses.
 
-		// All other MongoExceptions
-		if (ex instanceof DuplicateKey) {
+		if (ex instanceof DuplicateKey || ex instanceof DuplicateKeyException) {
 			return new DuplicateKeyException(ex.getMessage(), ex);
 		}
 
-		if (ex instanceof Network) {
+		if (ex instanceof Network || ex instanceof MongoSocketException) {
 			return new DataAccessResourceFailureException(ex.getMessage(), ex);
 		}
 
-		if (ex instanceof CursorNotFound) {
+		if (ex instanceof CursorNotFound || ex instanceof MongoCursorNotFoundException) {
 			return new DataAccessResourceFailureException(ex.getMessage(), ex);
 		}
 
-		// Driver 2.12 throws this to indicate connection problems. String comparison to avoid hard dependency
-		if (ex.getClass().getName().equals("com.mongodb.MongoServerSelectionException")) {
+		if (ex instanceof MongoServerSelectionException) {
+			return new DataAccessResourceFailureException(ex.getMessage(), ex);
+		}
+
+		if (ex instanceof MongoTimeoutException) {
 			return new DataAccessResourceFailureException(ex.getMessage(), ex);
 		}
 
@@ -69,6 +75,7 @@ public class MongoExceptionTranslator implements PersistenceExceptionTranslator 
 			return new InvalidDataAccessResourceUsageException(ex.getMessage(), ex);
 		}
 
+		// All other MongoExceptions
 		if (ex instanceof MongoException) {
 
 			int code = ((MongoException) ex).getCode();

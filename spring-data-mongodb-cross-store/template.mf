@@ -7,7 +7,7 @@ Import-Package:
 Export-Template:
  org.springframework.data.mongodb.crossstore.*;version="${project.version}"
 Import-Template:
- com.mongodb.*;version="${mongo:[=.=.=,+1.0.0)}",
+ com.mongodb.*;version="${mongo.osgi:[=.=.=,+1.0.0)}",
  javax.persistence.*;version="${jpa:[=.=.=,+1.0.0)}",
  org.aspectj.*;version="${aspectj:[1.0.0, 2.0.0)}",
  org.bson.*;version="0",
