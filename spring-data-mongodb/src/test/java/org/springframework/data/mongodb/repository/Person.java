@@ -267,6 +267,10 @@ public class Person extends Contact {
 		return this;
 	}
 
+	public void setCreator(User creator) {
+		this.creator = creator;
+	}
+
 	/*
 	* (non-Javadoc)
 	*
