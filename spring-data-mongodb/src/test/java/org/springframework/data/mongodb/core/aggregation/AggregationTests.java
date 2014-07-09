@@ -51,6 +51,7 @@ import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mongodb.core.CollectionCallback;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.AggregationTests.CarDescriptor.Entry;
+import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.Person;
 import org.springframework.data.util.Version;
@@ -991,6 +992,7 @@ public class AggregationTests {
 				.and("dateValue").extractDayOfMonth().as("dayOfMonth") //
 				.and("dateValue").extractDayOfWeek().as("dayOfWeek") //
 				.andExpression("dateValue + 86400000").extractDayOfYear().as("dayOfYearPlus1Day") //
+				.andExpression("dateValue + 86400000").project("dayOfYear").as("dayOfYearPlus1DayManually") //
 		;
 
 		Aggregation agg = newAggregation(dateProjection);
@@ -1013,6 +1015,7 @@ public class AggregationTests {
 		// dateTime.getDayOfWeek()
 		assertThat(dbo.get("dayOfWeek"), is((Object) 6));
 		assertThat(dbo.get("dayOfYearPlus1Day"), is((Object) dateTime.plusDays(1).getDayOfYear()));
+		assertThat(dbo.get("dayOfYearPlus1DayManually"), is((Object) dateTime.plusDays(1).getDayOfYear()));
 	}
 
 	private void assertLikeStats(LikeStats like, String id, long count) {

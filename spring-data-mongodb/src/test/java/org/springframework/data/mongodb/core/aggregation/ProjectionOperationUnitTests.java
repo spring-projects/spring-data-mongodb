@@ -20,12 +20,12 @@ import static org.junit.Assert.*;
 import static org.springframework.data.mongodb.util.DBObjectUtils.*;
 
 import java.util.Arrays;
+import java.util.List;
 
 import org.junit.Test;
 import org.springframework.data.mongodb.core.DBObjectTestUtils;
 import org.springframework.data.mongodb.core.aggregation.ProjectionOperation.ProjectionOperationBuilder;
 
-import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
@@ -91,7 +91,7 @@ public class ProjectionOperationUnitTests {
 		DBObject dbObject = operation.and("foo").plus(41).as("bar").toDBObject(Aggregation.DEFAULT_CONTEXT);
 		DBObject projectClause = DBObjectTestUtils.getAsDBObject(dbObject, PROJECT);
 		DBObject barClause = DBObjectTestUtils.getAsDBObject(projectClause, "bar");
-		BasicDBList addClause = DBObjectTestUtils.getAsDBList(barClause, "$add");
+		List<Object> addClause = (List<Object>) barClause.get("$add");
 
 		assertThat(addClause, hasSize(2));
 		assertThat(addClause.get(0), is((Object) "$foo"));
