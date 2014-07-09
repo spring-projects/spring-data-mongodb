@@ -20,12 +20,12 @@ import static org.junit.Assert.*;
 import static org.springframework.data.mongodb.util.DBObjectUtils.*;
 
 import java.util.Arrays;
+import java.util.List;
 
 import org.junit.Test;
 import org.springframework.data.mongodb.core.DBObjectTestUtils;
 import org.springframework.data.mongodb.core.aggregation.ProjectionOperation.ProjectionOperationBuilder;
 
-import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
@@ -91,7 +91,7 @@ public class ProjectionOperationUnitTests {
 		DBObject dbObject = operation.and("foo").plus(41).as("bar").toDBObject(Aggregation.DEFAULT_CONTEXT);
 		DBObject projectClause = DBObjectTestUtils.getAsDBObject(dbObject, PROJECT);
 		DBObject barClause = DBObjectTestUtils.getAsDBObject(projectClause, "bar");
-		BasicDBList addClause = DBObjectTestUtils.getAsDBList(barClause, "$add");
+		List<Object> addClause = (List<Object>) barClause.get("$add");
 
 		assertThat(addClause, hasSize(2));
 		assertThat(addClause.get(0), is((Object) "$foo"));
@@ -274,6 +274,64 @@ public class ProjectionOperationUnitTests {
 		assertThat(
 				dbObject.toString(),
 				is("{ \"$project\" : { \"grossSalesPrice\" : { \"$multiply\" : [ { \"$add\" : [ \"$netPrice\" , \"$surCharge\"]} , \"$taxrate\" , 2]} , \"bar\" : \"$foo\"}}"));
+	}
+
+	/**
+	 * @see DATAMONGO-975
+	 */
+	@Test
+	public void shouldRenderDateTimeFragmentExtractionsForSimpleFieldProjectionsCorrectly() {
+
+		ProjectionOperation operation = Aggregation.project() //
+				.and("date").extractHour().as("hour") //
+				.and("date").extractMinute().as("min") //
+				.and("date").extractSecond().as("second") //
+				.and("date").extractMillisecond().as("millis") //
+				.and("date").extractYear().as("year") //
+				.and("date").extractMonth().as("month") //
+				.and("date").extractWeek().as("week") //
+				.and("date").extractDayOfYear().as("dayOfYear") //
+				.and("date").extractDayOfMonth().as("dayOfMonth") //
+				.and("date").extractDayOfWeek().as("dayOfWeek") //
+		;
+
+		DBObject dbObject = operation.toDBObject(Aggregation.DEFAULT_CONTEXT);
+		assertThat(dbObject, is(notNullValue()));
+
+		DBObject projected = exctractOperation("$project", dbObject);
+
+		assertThat(projected.get("hour"), is((Object) new BasicDBObject("$hour", Arrays.asList("$date"))));
+		assertThat(projected.get("min"), is((Object) new BasicDBObject("$minute", Arrays.asList("$date"))));
+		assertThat(projected.get("second"), is((Object) new BasicDBObject("$second", Arrays.asList("$date"))));
+		assertThat(projected.get("millis"), is((Object) new BasicDBObject("$millisecond", Arrays.asList("$date"))));
+		assertThat(projected.get("year"), is((Object) new BasicDBObject("$year", Arrays.asList("$date"))));
+		assertThat(projected.get("month"), is((Object) new BasicDBObject("$month", Arrays.asList("$date"))));
+		assertThat(projected.get("week"), is((Object) new BasicDBObject("$week", Arrays.asList("$date"))));
+		assertThat(projected.get("dayOfYear"), is((Object) new BasicDBObject("$dayOfYear", Arrays.asList("$date"))));
+		assertThat(projected.get("dayOfMonth"), is((Object) new BasicDBObject("$dayOfMonth", Arrays.asList("$date"))));
+		assertThat(projected.get("dayOfWeek"), is((Object) new BasicDBObject("$dayOfWeek", Arrays.asList("$date"))));
+	}
+
+	/**
+	 * @see DATAMONGO-975
+	 */
+	@Test
+	public void shouldRenderDateTimeFragmentExtractionsForExpressionProjectionsCorrectly() throws Exception {
+
+		ProjectionOperation operation = Aggregation.project() //
+				.andExpression("date + 86400000") //
+				.extractDayOfYear() //
+				.as("dayOfYearPlus1Day") //
+		;
+
+		DBObject dbObject = operation.toDBObject(Aggregation.DEFAULT_CONTEXT);
+		assertThat(dbObject, is(notNullValue()));
+
+		DBObject projected = exctractOperation("$project", dbObject);
+		assertThat(
+				projected.get("dayOfYearPlus1Day"),
+				is((Object) new BasicDBObject("$dayOfYear", Arrays.asList(new BasicDBObject("$add", Arrays.<Object> asList(
+						"$date", 86400000))))));
 	}
 
 	private static DBObject exctractOperation(String field, DBObject fromProjectClause) {
