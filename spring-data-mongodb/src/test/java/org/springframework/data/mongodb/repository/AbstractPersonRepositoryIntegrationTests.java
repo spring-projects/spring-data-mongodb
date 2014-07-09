@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -966,5 +967,27 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 				"Dylan"), new Person("Bob-4", "Dylan"), new Person("Bob-5", "Dylan")));
 		Page<Person> result = repository.findTop3ByLastnameStartingWith("Dylan", new PageRequest(2, 2));
 		assertThat(result.getContent().size(), is(0));
+	}
+
+	/**
+	 * Ignored for now as this requires Querydsl 3.4.1 to succeed.
+	 * 
+	 * @see DATAMONGO-972
+	 */
+	@Test
+	@Ignore
+	public void shouldExecuteFindOnDbRefCorrectly() {
+
+		operations.remove(new org.springframework.data.mongodb.core.query.Query(), User.class);
+
+		User user = new User();
+		user.setUsername("Valerie Matthews");
+
+		operations.save(user);
+
+		dave.setCreator(user);
+		operations.save(dave);
+
+		assertThat(repository.findOne(QPerson.person.creator.eq(user)), is(dave));
 	}
 }
