@@ -11,7 +11,7 @@ For a comprehensive treatment of all the Spring Data MongoDB features, please re
 * the [User Guide](http://docs.spring.io/spring-data/mongodb/docs/current/reference/html/)
 * the [JavaDocs](http://docs.spring.io/spring-data/mongodb/docs/current/api/) have extensive comments in them as well.
 * the home page of [Spring Data MongoDB](http://projects.spring.io/spring-data-mongodb) contains links to articles and other resources.
-* for more detailed questions, use the [forum](http://forum.spring.io/forum/spring-projects/data/nosql).
+* for more detailed questions, use [Spring Data Mongodb on Stackoverflow]http://stackoverflow.com/questions/tagged/spring-data-mongodb).
 
 If you are new to Spring as well as to Spring Data, look for information about [Spring projects](http://projects.spring.io/).
 
@@ -139,7 +139,7 @@ public class MyService {
 
 Here are some ways for you to get involved in the community:
 
-* Get involved with the Spring community on the Spring Community Forums.  Please help out on the [forum](http://forum.spring.io/forum/spring-projects/data/nosql) by responding to questions and joining the debate.
+* Get involved with the Spring community on Stackoverflow and help out on the [spring-data-mongodb](http://stackoverflow.com/questions/tagged/spring-data-mongodb) tag by responding to questions and joining the debate.
 * Create [JIRA](https://jira.springframework.org/browse/DATADOC) tickets for bugs and new features and comment and vote on the ones that you are interested in.  
 * Github is for social coding: if you want to write code, we encourage contributions through pull requests from [forks of this repository](http://help.github.com/forking/). If you want to contribute code this way, please reference a JIRA ticket as well covering the specific issue you are addressing.
 * Watch for upcoming articles on Spring by [subscribing](http://spring.io/blog) to spring.io.
