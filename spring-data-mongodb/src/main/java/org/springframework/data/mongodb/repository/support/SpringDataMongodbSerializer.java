@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2012 the original author or authors.
+ * Copyright 2011-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,8 @@ package org.springframework.data.mongodb.repository.support;
 
 import java.util.regex.Pattern;
 
+import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.data.annotation.Reference;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
@@ -25,7 +27,10 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.util.Assert;
 
 import com.mongodb.DBObject;
+import com.mongodb.DBRef;
 import com.mysema.query.mongodb.MongodbSerializer;
+import com.mysema.query.types.Constant;
+import com.mysema.query.types.Operation;
 import com.mysema.query.types.Path;
 import com.mysema.query.types.PathMetadata;
 import com.mysema.query.types.PathType;
@@ -34,6 +39,7 @@ import com.mysema.query.types.PathType;
  * Custom {@link MongodbSerializer} to take mapping information into account when building keys for constraints.
  * 
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 class SpringDataMongodbSerializer extends MongodbSerializer {
 
@@ -85,5 +91,46 @@ class SpringDataMongodbSerializer extends MongodbSerializer {
 		}
 
 		return super.asDBObject(key, value instanceof Pattern ? value : converter.convertToMongoType(value));
+	}
+
+	@Override
+	protected boolean isReference(Path<?> arg) {
+		return AnnotationUtils.getAnnotation(arg.getAnnotatedElement(), Reference.class) != null;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see com.mysema.query.mongodb.MongodbSerializer#asReference(java.lang.Object)
+	 */
+	@Override
+	protected DBRef asReference(Object constant) {
+		return converter.toDBRef(constant, null);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see com.mysema.query.mongodb.MongodbSerializer#asReference(com.mysema.query.types.Operation, int)
+	 */
+	@Override
+	protected DBRef asReference(Operation<?> expr, int constIndex) {
+
+		for (Object arg : expr.getArgs()) {
+			if (arg instanceof Path) {
+				return convertToDBRef(((Constant<?>) expr.getArg(constIndex)).getConstant(), (Path<?>) arg);
+			}
+		}
+
+		return super.asReference(expr, constIndex);
+	}
+
+	private DBRef convertToDBRef(Object source, Path<?> path) {
+
+		MongoPersistentProperty property = null;
+		if (path.getMetadata().getParent() != null) {
+			MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(path.getMetadata().getParent().getType());
+			property = entity != null ? entity.getPersistentProperty(path.getMetadata().getName()) : null;
+		}
+
+		return converter.toDBRef(source, property);
 	}
 }
