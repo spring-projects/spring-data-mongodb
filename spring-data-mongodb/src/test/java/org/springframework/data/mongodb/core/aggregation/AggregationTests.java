@@ -31,6 +31,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Scanner;
 
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDateTime;
 import org.junit.After;
 import org.junit.Before;
@@ -960,6 +962,59 @@ public class AggregationTests {
 		assertThat(result.getMappedResults(), hasSize(2));
 	}
 
+	/**
+	 * @see DATAMONGO-975
+	 */
+	@Test
+	public void shouldRetrieveDateTimeFragementsCorrectly() throws Exception {
+
+		mongoTemplate.dropCollection(ObjectWithDate.class);
+
+		DateTime dateTime = new DateTime() //
+				.withYear(2014) //
+				.withMonthOfYear(2) //
+				.withDayOfMonth(7) //
+				.withTime(3, 4, 5, 6).toDateTime(DateTimeZone.UTC).toDateTimeISO();
+
+		ObjectWithDate owd = new ObjectWithDate(dateTime.toDate());
+		mongoTemplate.insert(owd);
+
+		ProjectionOperation dateProjection = Aggregation.project() //
+				.and("dateValue").extractHour().as("hour") //
+				.and("dateValue").extractMinute().as("min") //
+				.and("dateValue").extractSecond().as("second") //
+				.and("dateValue").extractMillisecond().as("millis") //
+				.and("dateValue").extractYear().as("year") //
+				.and("dateValue").extractMonth().as("month") //
+				.and("dateValue").extractWeek().as("week") //
+				.and("dateValue").extractDayOfYear().as("dayOfYear") //
+				.and("dateValue").extractDayOfMonth().as("dayOfMonth") //
+				.and("dateValue").extractDayOfWeek().as("dayOfWeek") //
+				.andExpression("dateValue + 86400000").extractDayOfYear().as("dayOfYearPlus1Day") //
+		;
+
+		Aggregation agg = newAggregation(dateProjection);
+		AggregationResults<DBObject> result = mongoTemplate.aggregate(agg, ObjectWithDate.class, DBObject.class);
+
+		assertThat(result.getMappedResults(), hasSize(1));
+		DBObject dbo = result.getMappedResults().get(0);
+
+		assertThat(dbo.get("hour"), is((Object) dateTime.getHourOfDay()));
+		assertThat(dbo.get("min"), is((Object) dateTime.getMinuteOfHour()));
+		assertThat(dbo.get("second"), is((Object) dateTime.getSecondOfMinute()));
+		assertThat(dbo.get("millis"), is((Object) dateTime.getMillisOfSecond()));
+		assertThat(dbo.get("year"), is((Object) dateTime.getYear()));
+		assertThat(dbo.get("month"), is((Object) dateTime.getMonthOfYear()));
+		// dateTime.getWeekOfWeekyear()) returns 6 since for MongoDB the week starts on sunday and not on monday.
+		assertThat(dbo.get("week"), is((Object) 5));
+		assertThat(dbo.get("dayOfYear"), is((Object) dateTime.getDayOfYear()));
+		assertThat(dbo.get("dayOfMonth"), is((Object) dateTime.getDayOfMonth()));
+
+		// dateTime.getDayOfWeek()
+		assertThat(dbo.get("dayOfWeek"), is((Object) 6));
+		assertThat(dbo.get("dayOfYearPlus1Day"), is((Object) dateTime.plusDays(1).getDayOfYear()));
+	}
+
 	private void assertLikeStats(LikeStats like, String id, long count) {
 
 		assertThat(like, is(notNullValue()));
@@ -1095,6 +1150,7 @@ public class AggregationTests {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	static class Descriptors {
 		private CarDescriptor carDescriptor;
 	}
@@ -1110,6 +1166,7 @@ public class AggregationTests {
 			}
 		}
 
+		@SuppressWarnings("unused")
 		static class Entry {
 			private String make;
 			private String model;
@@ -1137,6 +1194,15 @@ public class AggregationTests {
 			this.hotelCode = hotelCode;
 			this.confirmationNumber = confirmationNumber;
 			this.timestamp = timestamp;
+		}
+	}
+
+	static class ObjectWithDate {
+
+		Date dateValue;
+
+		public ObjectWithDate(Date dateValue) {
+			this.dateValue = dateValue;
 		}
 	}
 }

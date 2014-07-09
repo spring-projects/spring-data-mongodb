@@ -237,22 +237,40 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 	/**
 	 * @author Thomas Darimont
 	 */
-	public static class ExpressionProjectionOperationBuilder extends AbstractProjectionOperationBuilder {
+	public static class ExpressionProjectionOperationBuilder extends ProjectionOperationBuilder {
 
 		private final Object[] params;
+		private final String expression;
 
 		/**
 		 * Creates a new {@link ExpressionProjectionOperationBuilder} for the given value, {@link ProjectionOperation} and
 		 * parameters.
 		 * 
-		 * @param value must not be {@literal null}.
+		 * @param expression must not be {@literal null}.
 		 * @param operation must not be {@literal null}.
 		 * @param parameters
 		 */
-		public ExpressionProjectionOperationBuilder(Object value, ProjectionOperation operation, Object[] parameters) {
+		public ExpressionProjectionOperationBuilder(String expression, ProjectionOperation operation, Object[] parameters) {
 
-			super(value, operation);
+			super(expression, operation, null);
+			this.expression = expression;
 			this.params = parameters.clone();
+		}
+
+		@Override
+		public ProjectionOperationBuilder project(String operation, Object... values) {
+
+			OperationProjection operationProjection = new OperationProjection(Fields.field(value.toString()), operation,
+					values) {
+				@Override
+				protected List<Object> getOperationArguments(AggregationOperationContext context) {
+
+					return Collections.singletonList(ExpressionProjection.toMongoExpression(context,
+							ExpressionProjectionOperationBuilder.this.expression, ExpressionProjectionOperationBuilder.this.params));
+				}
+			};
+
+			return new ProjectionOperationBuilder(value, this.operation.and(operationProjection), operationProjection);
 		}
 
 		/*
@@ -303,7 +321,11 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 			 */
 			@Override
 			public DBObject toDBObject(AggregationOperationContext context) {
-				return new BasicDBObject(getExposedField().getName(), TRANSFORMER.transform(expression, context, params));
+				return new BasicDBObject(getExposedField().getName(), toMongoExpression(context, expression, params));
+			}
+
+			protected static Object toMongoExpression(AggregationOperationContext context, String expression, Object[] params) {
+				return TRANSFORMER.transform(expression, context, params);
 			}
 		}
 	}
@@ -320,7 +342,6 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		private static final String FIELD_REFERENCE_NOT_NULL = "Field reference must not be null!";
 
 		private final String name;
-		private final ProjectionOperation operation;
 		private final OperationProjection previousProjection;
 
 		/**
@@ -335,7 +356,20 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 			super(name, operation);
 
 			this.name = name;
-			this.operation = operation;
+			this.previousProjection = previousProjection;
+		}
+
+		/**
+		 * @param value
+		 * @param operation
+		 * @param previousProjection
+		 */
+		protected ProjectionOperationBuilder(Object value, ProjectionOperation operation,
+				OperationProjection previousProjection) {
+
+			super(value, operation);
+
+			this.name = null;
 			this.previousProjection = previousProjection;
 		}
 
@@ -521,8 +555,9 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 * @return
 		 */
 		public ProjectionOperationBuilder project(String operation, Object... values) {
-			OperationProjection projectionOperation = new OperationProjection(Fields.field(name), operation, values);
-			return new ProjectionOperationBuilder(name, this.operation.and(projectionOperation), projectionOperation);
+			OperationProjection operationProjection = new OperationProjection(Fields.field(value.toString()), operation,
+					values);
+			return new ProjectionOperationBuilder(value, this.operation.and(operationProjection), operationProjection);
 		}
 
 		/**
@@ -677,14 +712,14 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 			public DBObject toDBObject(AggregationOperationContext context) {
 
 				BasicDBList values = new BasicDBList();
-				values.addAll(buildReferences(context));
+				values.addAll(getOperationArguments(context));
 
 				DBObject inner = new BasicDBObject("$" + operation, values);
 
 				return new BasicDBObject(this.field.getName(), inner);
 			}
 
-			private List<Object> buildReferences(AggregationOperationContext context) {
+			protected List<Object> getOperationArguments(AggregationOperationContext context) {
 
 				List<Object> result = new ArrayList<Object>(values.size());
 				result.add(context.getReference(field.getTarget()).toString());
@@ -703,7 +738,18 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 			 * @return
 			 */
 			public OperationProjection withAlias(String alias) {
-				return new OperationProjection(Fields.field(alias, this.field.getName()), operation, values.toArray());
+
+				return new OperationProjection(Fields.field(alias, this.field.getName()), operation, values.toArray()) {
+
+					@Override
+					protected List<Object> getOperationArguments(AggregationOperationContext context) {
+
+						// We have to make sure that we use the arguments from the "previous" OperationProjection that we replace
+						// with this new instance.
+
+						return OperationProjection.this.getOperationArguments(context);
+					}
+				};
 			}
 		}
 
@@ -734,6 +780,96 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 				return new BasicDBObject(name, nestedObject);
 			}
+		}
+
+		/**
+		 * Extracts the minute from a date expression.
+		 * 
+		 * @return
+		 */
+		public ProjectionOperationBuilder extractMinute() {
+			return project("minute");
+		}
+
+		/**
+		 * Extracts the hour from a date expression.
+		 * 
+		 * @return
+		 */
+		public ProjectionOperationBuilder extractHour() {
+			return project("hour");
+		}
+
+		/**
+		 * Extracts the second from a date expression.
+		 * 
+		 * @return
+		 */
+		public ProjectionOperationBuilder extractSecond() {
+			return project("second");
+		}
+
+		/**
+		 * Extracts the millisecond from a date expression.
+		 * 
+		 * @return
+		 */
+		public ProjectionOperationBuilder extractMillisecond() {
+			return project("millisecond");
+		}
+
+		/**
+		 * Extracts the year from a date expression.
+		 * 
+		 * @return
+		 */
+		public ProjectionOperationBuilder extractYear() {
+			return project("year");
+		}
+
+		/**
+		 * Extracts the month from a date expression.
+		 * 
+		 * @return
+		 */
+		public ProjectionOperationBuilder extractMonth() {
+			return project("month");
+		}
+
+		/**
+		 * Extracts the week from a date expression.
+		 * 
+		 * @return
+		 */
+		public ProjectionOperationBuilder extractWeek() {
+			return project("week");
+		}
+
+		/**
+		 * Extracts the dayOfYear from a date expression.
+		 * 
+		 * @return
+		 */
+		public ProjectionOperationBuilder extractDayOfYear() {
+			return project("dayOfYear");
+		}
+
+		/**
+		 * Extracts the dayOfMonth from a date expression.
+		 * 
+		 * @return
+		 */
+		public ProjectionOperationBuilder extractDayOfMonth() {
+			return project("dayOfMonth");
+		}
+
+		/**
+		 * Extracts the dayOfWeek from a date expression.
+		 * 
+		 * @return
+		 */
+		public ProjectionOperationBuilder extractDayOfWeek() {
+			return project("dayOfWeek");
 		}
 	}
 
@@ -775,5 +911,4 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 */
 		public abstract DBObject toDBObject(AggregationOperationContext context);
 	}
-
 }
