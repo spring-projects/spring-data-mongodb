@@ -15,6 +15,10 @@
  */
 package org.springframework.data.mongodb.repository;
 
+import static org.hamcrest.core.Is.*;
+import static org.junit.Assert.*;
+
+import org.junit.Test;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
@@ -24,4 +28,30 @@ import org.springframework.test.context.ContextConfiguration;
  * @author Thomas Darimont
  */
 @ContextConfiguration
-public class PersonRepositoryIntegrationTests extends AbstractPersonRepositoryIntegrationTests {}
+public class PersonRepositoryIntegrationTests extends AbstractPersonRepositoryIntegrationTests {
+
+	/**
+	 * <strong>ATTENTION</strong>: <br/>
+	 * Test requires {@literal com.mysema.querydsl:querydsl-mongodb:3.4.1} to run!<br />
+	 * Run with: {@code mvn -Dquerydsl=3.4.1 clean install}. <br />
+	 * <br />
+	 * TODO: move this one to AbstractPersonRepositoryIntegrationTests.
+	 * 
+	 * @see DATAMONGO-972
+	 */
+	@Test
+	public void shouldExecuteFindOnDbRefCorrectly() {
+
+		operations.remove(new org.springframework.data.mongodb.core.query.Query(), User.class);
+
+		User user = new User();
+		user.setUsername("Valerie Matthews");
+
+		operations.save(user);
+
+		dave.setCreator(user);
+		operations.save(dave);
+
+		assertThat(repository.findOne(QPerson.person.creator.eq(user)), is(dave));
+	}
+}
