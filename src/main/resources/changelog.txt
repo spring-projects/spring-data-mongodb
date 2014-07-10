@@ -1,6 +1,38 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 1.6.0.M1 (2014-07-10)
+----------------------------------------
+* DATAMONGO-983 - Remove links to forum.spring.io.
+* DATAMONGO-982 - Assure compatibility with upcoming MongoDB driver versions.
+* DATAMONGO-981 - Release 1.6 M1.
+* DATAMONGO-980 - Use meta annotations from spring data commons for @Score.
+* DATAMONGO-978 - deleteBy/removeBy repository methods don't set type information in Before/AfterDeleteEvent.
+* DATAMONGO-977 - Adapt to Spring 4 upgrade.
+* DATAMONGO-976 - Add support for reading $meta projection on textScore into document.
+* DATAMONGO-975 - Add support for date/time operators in aggregation framework.
+* DATAMONGO-973 - Add support for deriving full text queries.
+* DATAMONGO-972 - References are not handled properly in Querydsl integration.
+* DATAMONGO-970 - Id query cannot be created if object to remove is DBObject.
+* DATAMONGO-969 - String @id field is not mapped to ObjectId when using QueryDSL .id.in(Collection<String>).
+* DATAMONGO-968 - Add support for $meta projections and sorting for textScore metadata.
+* DATAMONGO-963 - Compound index with expireAfterSeconds causes repeating error on mongodb server.
+* DATAMONGO-962 - “Cycle found” with Spring Data Mongo 1.5.
+* DATAMONGO-960 - Allow to pass options to the Aggregation Pipeline.
+* DATAMONGO-958 - Move to FieldNamingStrategy SPI in Spring Data Commons.
+* DATAMONGO-954 - Add support for System Variables in Aggregations.
+* DATAMONGO-953 - Update object should have a proper equals/hashcode/toString.
+* DATAMONGO-952 - @Query annotation does not work with only field restrictions.
+* DATAMONGO-950 - Add support for limiting the query result in the query derivation mechanism.
+* DATAMONGO-949 - CyclicPropertyReferenceException in versions 1.5.0 + for MongoDB.
+* DATAMONGO-948 - Assertion error in MongoTemplate.getMappedSortObject.
+* DATAMONGO-944 - Add support $currentDate to Update.
+* DATAMONGO-938 - Exception when creating geo within Criteria using MapReduce.
+* DATAMONGO-937 - Add support for creating text index.
+* DATAMONGO-850 - Add support for text search using $text.
+* DATAMONGO-745 - @Query($in) and Pageable in result Page total = 0.
+
+
 Changes in version 1.4.3.RELEASE (2014-06-18)
 ---------------------------------------------
 * DATAMONGO-955 - Release 1.4.3.
