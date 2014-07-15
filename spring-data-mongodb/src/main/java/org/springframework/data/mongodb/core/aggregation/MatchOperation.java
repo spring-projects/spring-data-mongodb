@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core.aggregation;
 
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.util.Assert;
 
 import com.mongodb.BasicDBObject;
@@ -32,7 +33,7 @@ import com.mongodb.DBObject;
  */
 public class MatchOperation implements AggregationOperation {
 
-	private final Criteria criteria;
+	private final CriteriaDefinition criteriaDefinition;
 
 	/**
 	 * Creates a new {@link MatchOperation} for the given {@link Criteria}.
@@ -40,9 +41,18 @@ public class MatchOperation implements AggregationOperation {
 	 * @param criteria must not be {@literal null}.
 	 */
 	public MatchOperation(Criteria criteria) {
+		this((CriteriaDefinition) criteria);
+	}
 
-		Assert.notNull(criteria, "Criteria must not be null!");
-		this.criteria = criteria;
+	/**
+	 * Creates a new {@link MatchOperation} for the given {@link CriteriaDefinition}.
+	 * 
+	 * @param criteriaDefinition must not be {@literal null}.
+	 */
+	public MatchOperation(CriteriaDefinition criteriaDefinition) {
+
+		Assert.notNull(criteriaDefinition, "Criteria must not be null!");
+		this.criteriaDefinition = criteriaDefinition;
 	}
 
 	/* 
@@ -51,6 +61,6 @@ public class MatchOperation implements AggregationOperation {
 	 */
 	@Override
 	public DBObject toDBObject(AggregationOperationContext context) {
-		return new BasicDBObject("$match", context.getMappedObject(criteria.getCriteriaObject()));
+		return new BasicDBObject("$match", context.getMappedObject(criteriaDefinition.getCriteriaObject()));
 	}
 }
