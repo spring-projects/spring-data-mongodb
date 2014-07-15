@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core.aggregation;
 
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.util.Assert;
 
 import com.mongodb.BasicDBObject;
@@ -32,17 +33,29 @@ import com.mongodb.DBObject;
  */
 public class MatchOperation implements AggregationOperation {
 
-	private final Criteria criteria;
+	private final CriteriaDefinition criteriaDefinition;
 
 	/**
 	 * Creates a new {@link MatchOperation} for the given {@link Criteria}.
 	 * 
 	 * @param criteria must not be {@literal null}.
+	 * @deprecated Use {@link MatchOperation#MatchOperation(CriteriaDefinition)} instead. This constructor is scheduled
+	 *             for removal in the next versions.
 	 */
+	@Deprecated
 	public MatchOperation(Criteria criteria) {
+		this((CriteriaDefinition) criteria);
+	}
 
-		Assert.notNull(criteria, "Criteria must not be null!");
-		this.criteria = criteria;
+	/**
+	 * Creates a new {@link MatchOperation} for the given {@link CriteriaDefinition}.
+	 * 
+	 * @param criteriaDefinition must not be {@literal null}.
+	 */
+	public MatchOperation(CriteriaDefinition criteriaDefinition) {
+
+		Assert.notNull(criteriaDefinition, "Criteria must not be null!");
+		this.criteriaDefinition = criteriaDefinition;
 	}
 
 	/* 
@@ -51,6 +64,6 @@ public class MatchOperation implements AggregationOperation {
 	 */
 	@Override
 	public DBObject toDBObject(AggregationOperationContext context) {
-		return new BasicDBObject("$match", context.getMappedObject(criteria.getCriteriaObject()));
+		return new BasicDBObject("$match", context.getMappedObject(criteriaDefinition.getCriteriaObject()));
 	}
 }
