@@ -20,6 +20,9 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 import java.lang.reflect.Method;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -46,6 +49,7 @@ import com.mongodb.DBObject;
  * 
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Thomas Darimont
  */
 @RunWith(MockitoJUnitRunner.class)
 public class StringBasedMongoQueryUnitTests {
@@ -158,6 +162,38 @@ public class StringBasedMongoQueryUnitTests {
 		createQueryForMethod("invalidMethod", String.class);
 	}
 
+	/**
+	 * @see DATAMONGO-420
+	 */
+	@Test
+	public void shouldSupportFindByParameterizedCriteriaAndFields() throws Exception {
+
+		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, new Object[] {
+				new BasicDBObject("firstname", "first").append("lastname", "last"), Collections.singletonMap("lastname", 1) });
+
+		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByParameterizedCriteriaAndFields", DBObject.class,
+				Map.class);
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
+
+		assertThat(query.getQueryObject(),
+				is(new BasicQuery("{ \"firstname\": \"first\", \"lastname\": \"last\"}").getQueryObject()));
+		assertThat(query.getFieldsObject(), is(new BasicQuery(null, "{ \"lastname\": 1}").getFieldsObject()));
+	}
+
+	/**
+	 * @see DATAMONGO-420
+	 */
+	@Test
+	public void shouldSupportRespectExistingQuotingInFindByTitleBeginsWithExplicitQuoting() throws Exception {
+
+		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, new Object[] { "fun" });
+
+		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByTitleBeginsWithExplicitQuoting", String.class);
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
+
+		assertThat(query.getQueryObject(), is(new BasicQuery("{title: {$regex: '^fun', $options: 'i'}}").getQueryObject()));
+	}
+
 	private StringBasedMongoQuery createQueryForMethod(String name, Class<?>... parameters) throws Exception {
 
 		Method method = SampleRepository.class.getMethod(name, parameters);
@@ -184,5 +220,11 @@ public class StringBasedMongoQueryUnitTests {
 
 		@Query(value = "{ 'lastname' : ?0 }", delete = true, count = true)
 		void invalidMethod(String lastname);
+
+		@Query(value = "?0", fields = "?1")
+		DBObject findByParameterizedCriteriaAndFields(DBObject criteria, Map<String, Integer> fields);
+
+		@Query("{'title': { $regex : '^?0', $options : 'i'}}")
+		List<DBObject> findByTitleBeginsWithExplicitQuoting(String title);
 	}
 }

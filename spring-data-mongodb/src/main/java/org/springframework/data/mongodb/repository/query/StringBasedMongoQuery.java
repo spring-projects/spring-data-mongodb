@@ -15,6 +15,11 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
+import static java.util.regex.Pattern.*;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -23,6 +28,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.util.StringUtils;
 
 import com.mongodb.util.JSON;
 
@@ -31,17 +37,20 @@ import com.mongodb.util.JSON;
  * 
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Thomas Darimont
  */
 public class StringBasedMongoQuery extends AbstractMongoQuery {
 
 	private static final String COUND_AND_DELETE = "Manually defined query for %s cannot be both a count and delete query at the same time!";
-	private static final Pattern PLACEHOLDER = Pattern.compile("\\?(\\d+)");
 	private static final Logger LOG = LoggerFactory.getLogger(StringBasedMongoQuery.class);
+	private static final ParameterBindingParser PARSER = ParameterBindingParser.INSTANCE;
 
 	private final String query;
 	private final String fieldSpec;
 	private final boolean isCountQuery;
 	private final boolean isDeleteQuery;
+	private final List<ParameterBinding> queryParameterBindings;
+	private final List<ParameterBinding> fieldSpecParameterBindings;
 
 	/**
 	 * Creates a new {@link StringBasedMongoQuery} for the given {@link MongoQueryMethod} and {@link MongoOperations}.
@@ -65,7 +74,11 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 		super(method, mongoOperations);
 
 		this.query = query;
+		this.queryParameterBindings = PARSER.parseParameterBindingsFrom(query);
+
 		this.fieldSpec = method.getFieldSpecification();
+		this.fieldSpecParameterBindings = PARSER.parseParameterBindingsFrom(method.getFieldSpecification());
+
 		this.isCountQuery = method.hasAnnotatedQuery() ? method.getQueryAnnotation().count() : false;
 		this.isDeleteQuery = method.hasAnnotatedQuery() ? method.getQueryAnnotation().delete() : false;
 
@@ -81,12 +94,12 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 	@Override
 	protected Query createQuery(ConvertingParameterAccessor accessor) {
 
-		String queryString = replacePlaceholders(query, accessor);
+		String queryString = replacePlaceholders(query, accessor, queryParameterBindings);
 
 		Query query = null;
 
 		if (fieldSpec != null) {
-			String fieldString = replacePlaceholders(fieldSpec, accessor);
+			String fieldString = replacePlaceholders(fieldSpec, accessor, fieldSpecParameterBindings);
 			query = new BasicQuery(queryString, fieldString);
 		} else {
 			query = new BasicQuery(queryString);
@@ -119,21 +132,139 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 		return this.isDeleteQuery;
 	}
 
-	private String replacePlaceholders(String input, ConvertingParameterAccessor accessor) {
+	/**
+	 * Replaced the parameter place-holders with the actual parameter values from the given {@link ParameterBinding}s.
+	 * 
+	 * @param input
+	 * @param accessor
+	 * @param bindings
+	 * @return
+	 */
+	private String replacePlaceholders(String input, ConvertingParameterAccessor accessor, List<ParameterBinding> bindings) {
 
-		Matcher matcher = PLACEHOLDER.matcher(input);
-		String result = input;
-
-		while (matcher.find()) {
-			String group = matcher.group();
-			int index = Integer.parseInt(matcher.group(1));
-			result = result.replace(group, getParameterWithIndex(accessor, index));
+		if (bindings.isEmpty()) {
+			return input;
 		}
 
-		return result;
+		StringBuilder result = new StringBuilder(input);
+
+		for (ParameterBinding binding : bindings) {
+
+			String parameter = binding.getParameter();
+			int idx = result.indexOf(parameter);
+
+			if (idx != -1) {
+				result.replace(idx, idx + parameter.length(), getParameterValueForBinding(accessor, binding));
+			}
+		}
+
+		return result.toString();
 	}
 
-	private String getParameterWithIndex(ConvertingParameterAccessor accessor, int index) {
-		return JSON.serialize(accessor.getBindableValue(index));
+	/**
+	 * Returns the serialized value to be used for the given {@link ParameterBinding}.
+	 * 
+	 * @param accessor
+	 * @param binding
+	 * @return
+	 */
+	private String getParameterValueForBinding(ConvertingParameterAccessor accessor, ParameterBinding binding) {
+
+		Object value = accessor.getBindableValue(binding.getParameterIndex());
+
+		if (value instanceof String && binding.isQuoted()) {
+			return (String) value;
+		}
+
+		return JSON.serialize(value);
+	}
+
+	/**
+	 * A parser that extracts the parameter bindings from a given query string.
+	 * 
+	 * @author Thomas Darimont
+	 */
+	private static enum ParameterBindingParser {
+
+		INSTANCE;
+
+		private static final Pattern PARAMETER_BINDING_PATTERN;
+
+		private final static int PARAMETER_INDEX_GROUP = 1;
+
+		static {
+
+			StringBuilder builder = new StringBuilder();
+			builder.append("\\?(\\d+)"); // position parameter and parameter index
+			builder.append("[^,'\"]*"); // followed by non quotes, non field separators
+			builder.append("[,\"'}]?");
+
+			PARAMETER_BINDING_PATTERN = Pattern.compile(builder.toString(), CASE_INSENSITIVE);
+		}
+
+		/**
+		 * Returns a list of {@link ParameterBinding}s found in the given {@code input} or an
+		 * {@link Collections#emptyList()}.
+		 * 
+		 * @param input
+		 * @return
+		 */
+		public List<ParameterBinding> parseParameterBindingsFrom(String input) {
+
+			if (!StringUtils.hasText(input)) {
+				return Collections.emptyList();
+			}
+
+			List<ParameterBinding> bindings = new ArrayList<ParameterBinding>();
+
+			Matcher matcher = PARAMETER_BINDING_PATTERN.matcher(input);
+
+			while (matcher.find()) {
+
+				String group = matcher.group();
+
+				boolean parameterIsQuoted = group.endsWith("'") || group.endsWith("\"");
+				int parameterIndex = Integer.parseInt(matcher.group(PARAMETER_INDEX_GROUP));
+
+				bindings.add(new ParameterBinding(parameterIndex, parameterIsQuoted));
+			}
+
+			return bindings;
+		}
+	}
+
+	/**
+	 * A generic parameter binding with name or position information.
+	 * 
+	 * @author Thomas Darimont
+	 */
+	private static class ParameterBinding {
+
+		private final int parameterIndex;
+		private final boolean quoted;
+
+		/**
+		 * Creates a new {@link ParameterBinding} with the given {@code parameterIndex} and {@code quoted} information.
+		 * 
+		 * @param parameterIndex
+		 * @param quoted whether or not the parameter is already quoted.
+		 */
+		public ParameterBinding(int parameterIndex, boolean quoted) {
+
+			this.parameterIndex = parameterIndex;
+			this.quoted = quoted;
+		}
+
+		public boolean isQuoted() {
+			return quoted;
+		}
+
+		public int getParameterIndex() {
+			return parameterIndex;
+		}
+
+		public String getParameter() {
+			return "?" + parameterIndex;
+		}
 	}
 }
