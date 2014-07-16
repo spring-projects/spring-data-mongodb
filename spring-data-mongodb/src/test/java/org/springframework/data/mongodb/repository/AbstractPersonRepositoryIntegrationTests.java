@@ -618,8 +618,8 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 
 		assertThat(results.getContent().isEmpty(), is(false));
 		assertThat(results.getNumberOfElements(), is(2));
-		assertThat(results.isFirstPage(), is(false));
-		assertThat(results.isLastPage(), is(false));
+		assertThat(results.isFirst(), is(false));
+		assertThat(results.isLast(), is(false));
 		assertThat(results.getAverageDistance().getMetric(), is((Metric) Metrics.KILOMETERS));
 		assertThat(results.getAverageDistance().getNormalizedValue(), is(0.0));
 	}
@@ -642,8 +642,8 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 				Metrics.KILOMETERS), new PageRequest(1, 2));
 		assertThat(results.getContent().isEmpty(), is(false));
 		assertThat(results.getNumberOfElements(), is(1));
-		assertThat(results.isFirstPage(), is(false));
-		assertThat(results.isLastPage(), is(true));
+		assertThat(results.isFirst(), is(false));
+		assertThat(results.isLast(), is(true));
 		assertThat(results.getAverageDistance().getMetric(), is((Metric) Metrics.KILOMETERS));
 	}
 
@@ -662,8 +662,8 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 
 		assertThat(results.getContent().isEmpty(), is(false));
 		assertThat(results.getNumberOfElements(), is(1));
-		assertThat(results.isFirstPage(), is(true));
-		assertThat(results.isLastPage(), is(true));
+		assertThat(results.isFirst(), is(true));
+		assertThat(results.isLast(), is(true));
 		assertThat(results.getAverageDistance().getMetric(), is((Metric) Metrics.KILOMETERS));
 	}
 
@@ -681,8 +681,8 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 
 		assertThat(results.getContent().isEmpty(), is(true));
 		assertThat(results.getNumberOfElements(), is(0));
-		assertThat(results.isFirstPage(), is(false));
-		assertThat(results.isLastPage(), is(true));
+		assertThat(results.isFirst(), is(false));
+		assertThat(results.isLast(), is(true));
 		assertThat(results.getAverageDistance().getMetric(), is((Metric) Metrics.KILOMETERS));
 	}
 
@@ -990,7 +990,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 
 		assertThat(repository.findOne(QPerson.person.creator.eq(user)), is(dave));
 	}
-	
+
 	/**
 	 * @see DATAMONGO-969
 	 */

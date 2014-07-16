@@ -27,9 +27,7 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.auditing.IsNewAwareAuditingHandler;
-import org.springframework.data.mapping.context.MappingContextIsNewStrategyFactory;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
-import org.springframework.data.support.IsNewStrategyFactory;
 
 /**
  * Unit tests for {@link AuditingEventListener}.
@@ -42,16 +40,14 @@ public class AuditingEventListenerUnitTests {
 
 	IsNewAwareAuditingHandler handler;
 
-	IsNewStrategyFactory factory;
 	AuditingEventListener listener;
 
 	@Before
 	public void setUp() {
 
 		MongoMappingContext mappingContext = new MongoMappingContext();
-		factory = new MappingContextIsNewStrategyFactory(mappingContext);
 
-		handler = spy(new IsNewAwareAuditingHandler(factory));
+		handler = spy(new IsNewAwareAuditingHandler(mappingContext));
 		doNothing().when(handler).markCreated(Mockito.any(Object.class));
 		doNothing().when(handler).markModified(Mockito.any(Object.class));
 
