@@ -173,6 +173,7 @@ public class StringBasedMongoQueryUnitTests {
 
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByParameterizedCriteriaAndFields", DBObject.class,
 				Map.class);
+
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
 
 		assertThat(query.getQueryObject(),
@@ -189,6 +190,7 @@ public class StringBasedMongoQueryUnitTests {
 		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, new Object[] { "fun" });
 
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByTitleBeginsWithExplicitQuoting", String.class);
+
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
 
 		assertThat(query.getQueryObject(), is(new BasicQuery("{title: {$regex: '^fun', $options: 'i'}}").getQueryObject()));
