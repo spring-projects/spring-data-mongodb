@@ -170,9 +170,9 @@ public class StringBasedMongoQueryUnitTests {
 
 		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, new Object[] {
 				new BasicDBObject("firstname", "first").append("lastname", "last"), Collections.singletonMap("lastname", 1) });
-
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByParameterizedCriteriaAndFields", DBObject.class,
 				Map.class);
+
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
 
 		assertThat(query.getQueryObject(),
@@ -187,11 +187,72 @@ public class StringBasedMongoQueryUnitTests {
 	public void shouldSupportRespectExistingQuotingInFindByTitleBeginsWithExplicitQuoting() throws Exception {
 
 		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, new Object[] { "fun" });
-
 		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByTitleBeginsWithExplicitQuoting", String.class);
+
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
 
 		assertThat(query.getQueryObject(), is(new BasicQuery("{title: {$regex: '^fun', $options: 'i'}}").getQueryObject()));
+	}
+
+	/**
+	 * @see DATAMONGO-995, DATAMONGO-420
+	 */
+	@Test
+	public void shouldParseQueryWithParametersInExpression() throws Exception {
+
+		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, new Object[] { 1, 2, 3, 4 });
+		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByQueryWithParametersInExpression", int.class,
+				int.class, int.class, int.class);
+
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
+
+		assertThat(query.getQueryObject(), is(new BasicQuery(
+				"{$where: 'return this.date.getUTCMonth() == 3 && this.date.getUTCDay() == 4;'}").getQueryObject()));
+	}
+
+	/**
+	 * @see DATAMONGO-995, DATAMONGO-420
+	 */
+	@Test
+	public void bindsSimplePropertyAlreadyQuotedCorrectly() throws Exception {
+
+		ConvertingParameterAccessor accesor = StubParameterAccessor.getAccessor(converter, "Matthews");
+		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByLastnameQuoted", String.class);
+
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor);
+		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery("{'lastname' : 'Matthews'}");
+
+		assertThat(query.getQueryObject(), is(reference.getQueryObject()));
+	}
+
+	/**
+	 * @see DATAMONGO-995, DATAMONGO-420
+	 */
+	@Test
+	public void bindsSimplePropertyAlreadyQuotedWithRegexCorrectly() throws Exception {
+
+		ConvertingParameterAccessor accesor = StubParameterAccessor.getAccessor(converter, "^Mat.*");
+		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByLastnameQuoted", String.class);
+
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor);
+		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery("{'lastname' : '^Mat.*'}");
+
+		assertThat(query.getQueryObject(), is(reference.getQueryObject()));
+	}
+
+	/**
+	 * @see DATAMONGO-995, DATAMONGO-420
+	 */
+	@Test
+	public void bindsSimplePropertyWithRegexCorrectly() throws Exception {
+
+		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByLastname", String.class);
+		ConvertingParameterAccessor accesor = StubParameterAccessor.getAccessor(converter, "^Mat.*");
+
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor);
+		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery("{'lastname' : '^Mat.*'}");
+
+		assertThat(query.getQueryObject(), is(reference.getQueryObject()));
 	}
 
 	private StringBasedMongoQuery createQueryForMethod(String name, Class<?>... parameters) throws Exception {
@@ -205,6 +266,9 @@ public class StringBasedMongoQueryUnitTests {
 
 		@Query("{ 'lastname' : ?0 }")
 		Person findByLastname(String lastname);
+
+		@Query("{ 'lastname' : '?0' }")
+		Person findByLastnameQuoted(String lastname);
 
 		@Query("{ 'address' : ?0 }")
 		Person findByAddress(Address address);
@@ -226,5 +290,8 @@ public class StringBasedMongoQueryUnitTests {
 
 		@Query("{'title': { $regex : '^?0', $options : 'i'}}")
 		List<DBObject> findByTitleBeginsWithExplicitQuoting(String title);
+
+		@Query(value = "{$where: 'return this.date.getUTCMonth() == ?2 && this.date.getUTCDay() == ?3;'}")
+		List<DBObject> findByQueryWithParametersInExpression(int param1, int param2, int param3, int param4);
 	}
 }
