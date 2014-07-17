@@ -429,6 +429,27 @@ public class DbRefMappingMongoConverterUnitTests {
 		assertProxyIsResolved(result.dbRefEqualsAndHashcodeObjectMethodOverride2, true);
 	}
 
+	/**
+	 * @see DATAMONGO-987
+	 */
+	@Test
+	public void shouldNotGenerateLazyLoadingProxyForNullValues() {
+
+		DBObject dbo = new BasicDBObject();
+		ClassWithLazyDbRefs lazyDbRefs = new ClassWithLazyDbRefs();
+		lazyDbRefs.id = "42";
+		converter.write(lazyDbRefs, dbo);
+
+		ClassWithLazyDbRefs result = converter.read(ClassWithLazyDbRefs.class, dbo);
+
+		assertThat(result.id, is(lazyDbRefs.id));
+		assertThat(result.dbRefToInterface, is(nullValue()));
+		assertThat(result.dbRefToConcreteCollection, is(nullValue()));
+		assertThat(result.dbRefToConcreteType, is(nullValue()));
+		assertThat(result.dbRefToConcreteTypeWithPersistenceConstructor, is(nullValue()));
+		assertThat(result.dbRefToConcreteTypeWithPersistenceConstructorWithoutDefaultConstructor, is(nullValue()));
+	}
+
 	private Object transport(Object result) {
 		return SerializationUtils.deserialize(SerializationUtils.serialize(result));
 	}
