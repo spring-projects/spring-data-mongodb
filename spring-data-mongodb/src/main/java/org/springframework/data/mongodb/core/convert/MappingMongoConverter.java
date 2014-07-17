@@ -265,6 +265,11 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				MongoPersistentProperty property = association.getInverse();
 
 				Object value = dbo.get(property.getName());
+
+				if (value == null) {
+					return;
+				}
+
 				DBRef dbref = value instanceof DBRef ? (DBRef) value : null;
 				Object obj = dbRefResolver.resolveDbRef(property, dbref, new DbRefResolverCallback() {
 
