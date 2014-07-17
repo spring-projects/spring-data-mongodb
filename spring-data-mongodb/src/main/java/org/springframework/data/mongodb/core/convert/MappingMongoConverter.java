@@ -253,8 +253,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 					return;
 				}
 
-				Object obj = getValueInternal(prop, dbo, evaluator, result);
-				wrapper.setProperty(prop, obj);
+				wrapper.setProperty(prop, getValueInternal(prop, dbo, evaluator, result));
 			}
 		});
 
@@ -263,7 +262,6 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			public void doWithAssociation(Association<MongoPersistentProperty> association) {
 
 				MongoPersistentProperty property = association.getInverse();
-
 				Object value = dbo.get(property.getName());
 
 				if (value == null) {
@@ -271,15 +269,13 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				}
 
 				DBRef dbref = value instanceof DBRef ? (DBRef) value : null;
-				Object obj = dbRefResolver.resolveDbRef(property, dbref, new DbRefResolverCallback() {
+				wrapper.setProperty(property, dbRefResolver.resolveDbRef(property, dbref, new DbRefResolverCallback() {
 
 					@Override
 					public Object resolve(MongoPersistentProperty property) {
 						return getValueInternal(property, dbo, evaluator, parent);
 					}
-				});
-
-				wrapper.setProperty(property, obj);
+				}));
 			}
 		});
 
@@ -796,11 +792,10 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				idMapper.convertId(id));
 	}
 
-	protected Object getValueInternal(MongoPersistentProperty prop, DBObject dbo, SpELExpressionEvaluator eval,
+	protected Object getValueInternal(MongoPersistentProperty prop, DBObject dbo, SpELExpressionEvaluator evaluator,
 			Object parent) {
 
-		MongoDbPropertyValueProvider provider = new MongoDbPropertyValueProvider(dbo, spELContext, parent);
-		return provider.getPropertyValue(prop);
+		return new MongoDbPropertyValueProvider(dbo, evaluator, parent).getPropertyValue(prop);
 	}
 
 	/**
@@ -1017,17 +1012,27 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		return dbObject;
 	}
 
+	/**
+	 * {@link PropertyValueProvider} to evaluate a SpEL expression if present on the property or simply accesses the field
+	 * of the configured source {@link DBObject}.
+	 *
+	 * @author Oliver Gierke
+	 */
 	private class MongoDbPropertyValueProvider implements PropertyValueProvider<MongoPersistentProperty> {
 
 		private final DBObjectAccessor source;
 		private final SpELExpressionEvaluator evaluator;
 		private final Object parent;
 
-		public MongoDbPropertyValueProvider(DBObject source, SpELContext factory, Object parent) {
-			this(source, new DefaultSpELExpressionEvaluator(source, factory), parent);
-		}
-
-		public MongoDbPropertyValueProvider(DBObject source, DefaultSpELExpressionEvaluator evaluator, Object parent) {
+		/**
+		 * Creates a new {@link MongoDbPropertyValueProvider} for the given source, {@link SpELExpressionEvaluator} and
+		 * parent object.
+		 * 
+		 * @param source must not be {@literal null}.
+		 * @param evaluator must not be {@literal null}.
+		 * @param parent can be {@literal null}.
+		 */
+		public MongoDbPropertyValueProvider(DBObject source, SpELExpressionEvaluator evaluator, Object parent) {
 
 			Assert.notNull(source);
 			Assert.notNull(evaluator);
