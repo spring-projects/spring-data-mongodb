@@ -970,6 +970,19 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	}
 
 	/**
+	 * @see DATAMONGO-996, DATAMONGO-950
+	 */
+	@Test
+	public void gettingNonFirstPageWorksWithoutLimitBeingSet() {
+
+		Page<Person> slice = repository.findByLastnameLike("Matthews", new PageRequest(1, 1));
+
+		assertThat(slice.getContent(), hasSize(1));
+		assertThat(slice.hasPrevious(), is(true));
+		assertThat(slice.hasNext(), is(false));
+	}
+
+	/**
 	 * Ignored for now as this requires Querydsl 3.4.1 to succeed.
 	 * 
 	 * @see DATAMONGO-972

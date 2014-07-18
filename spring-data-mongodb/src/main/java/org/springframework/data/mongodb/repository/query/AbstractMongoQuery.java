@@ -260,7 +260,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 			long count = operations.count(query, metadata.getCollectionName());
 			count = overallLimit != 0 ? Math.min(count, query.getLimit()) : count;
 
-			boolean pageableOutOfScope = pageable.getOffset() > query.getLimit();
+			boolean pageableOutOfScope = pageable.getOffset() > count;
 
 			if (pageableOutOfScope) {
 				return new PageImpl<Object>(Collections.emptyList(), pageable, count);
