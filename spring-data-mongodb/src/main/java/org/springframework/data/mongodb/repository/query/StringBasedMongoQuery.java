@@ -15,8 +15,6 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import static java.util.regex.Pattern.*;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -30,6 +28,7 @@ import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.util.StringUtils;
 
+import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
 
 /**
@@ -188,19 +187,12 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 
 		INSTANCE;
 
-		private static final Pattern PARAMETER_BINDING_PATTERN;
+		private static final String PARAMETER_PREFIX = "_param_";
+		private static final String PARSEABLE_PARAMETER = "\"" + PARAMETER_PREFIX + "$1\"";
+		private static final Pattern PARAMETER_BINDING_PATTERN = Pattern.compile("\\?(\\d+)");
+		private static final Pattern PARSEABLE_BINDING_PATTERN = Pattern.compile("\"?" + PARAMETER_PREFIX + "(\\d+)\"?");
 
 		private final static int PARAMETER_INDEX_GROUP = 1;
-
-		static {
-
-			StringBuilder builder = new StringBuilder();
-			builder.append("\\?(\\d+)"); // position parameter and parameter index
-			builder.append("[^,'\"]*"); // followed by non quotes, non field separators
-			builder.append("[,\"'}]?");
-
-			PARAMETER_BINDING_PATTERN = Pattern.compile(builder.toString(), CASE_INSENSITIVE);
-		}
 
 		/**
 		 * Returns a list of {@link ParameterBinding}s found in the given {@code input} or an
@@ -217,19 +209,60 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 
 			List<ParameterBinding> bindings = new ArrayList<ParameterBinding>();
 
-			Matcher matcher = PARAMETER_BINDING_PATTERN.matcher(input);
+			String parseableInput = makeParameterReferencesParseable(input);
 
-			while (matcher.find()) {
-
-				String group = matcher.group();
-
-				boolean parameterIsQuoted = group.endsWith("'") || group.endsWith("\"");
-				int parameterIndex = Integer.parseInt(matcher.group(PARAMETER_INDEX_GROUP));
-
-				bindings.add(new ParameterBinding(parameterIndex, parameterIsQuoted));
-			}
+			collectParameterReferencesIntoBindings(bindings, JSON.parse(parseableInput));
 
 			return bindings;
+		}
+
+		private String makeParameterReferencesParseable(String input) {
+
+			Matcher matcher = PARAMETER_BINDING_PATTERN.matcher(input);
+			String parseableInput = matcher.replaceAll(PARSEABLE_PARAMETER);
+
+			return parseableInput;
+		}
+
+		private void collectParameterReferencesIntoBindings(List<ParameterBinding> bindings, Object value) {
+
+			if (value instanceof String) {
+
+				String string = ((String) value).trim();
+
+				Matcher valueMatcher = PARSEABLE_BINDING_PATTERN.matcher(string);
+				while (valueMatcher.find()) {
+					int paramIndex = Integer.parseInt(valueMatcher.group(PARAMETER_INDEX_GROUP));
+					boolean quoted = (string.startsWith("'") && string.endsWith("'"))
+							|| (string.startsWith("\"") && string.endsWith("\""));
+					bindings.add(new ParameterBinding(paramIndex, quoted));
+				}
+
+			} else if (value instanceof Pattern) {
+
+				String string = ((Pattern) value).toString().trim();
+
+				Matcher valueMatcher = PARSEABLE_BINDING_PATTERN.matcher(string);
+				while (valueMatcher.find()) {
+					int paramIndex = Integer.parseInt(valueMatcher.group(PARAMETER_INDEX_GROUP));
+
+					/*
+					 * The pattern is used as a direct parameter replacement, e.g. 'field': ?1, 
+					 * therefore we treat it as not quoted to remain backwards compatible.
+					 */
+					boolean quoted = !string.equals(PARAMETER_PREFIX + paramIndex);
+
+					bindings.add(new ParameterBinding(paramIndex, quoted));
+				}
+
+			} else if (value instanceof DBObject) {
+
+				DBObject dbo = (DBObject) value;
+
+				for (String field : dbo.keySet()) {
+					collectParameterReferencesIntoBindings(bindings, dbo.get(field));
+				}
+			}
 		}
 	}
 

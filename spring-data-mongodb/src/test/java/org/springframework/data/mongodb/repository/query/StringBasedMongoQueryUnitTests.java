@@ -196,6 +196,75 @@ public class StringBasedMongoQueryUnitTests {
 		assertThat(query.getQueryObject(), is(new BasicQuery("{title: {$regex: '^fun', $options: 'i'}}").getQueryObject()));
 	}
 
+	/**
+	 * @see DATAMONGO-420
+	 * @see DATAMONGO-995
+	 */
+	@Test
+	public void shouldParseQueryWithParametersInExpression() throws Exception {
+
+		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter, new Object[] { 1, 2, 3, 4 });
+
+		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByQueryWithParametersInExpression", int.class,
+				int.class, int.class, int.class);
+
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
+
+		assertThat(query.getQueryObject(), is(new BasicQuery(
+				"{$where: 'return this.date.getUTCMonth() == 3 && this.date.getUTCDay() == 4;'}").getQueryObject()));
+	}
+
+	/**
+	 * @see DATAMONGO-420
+	 */
+	@Test
+	public void bindsSimplePropertyAlreadyQuotedCorrectly() throws Exception {
+
+		Method method = SampleRepository.class.getMethod("findByLastnameQuoted", String.class);
+		MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, converter.getMappingContext());
+		StringBasedMongoQuery mongoQuery = new StringBasedMongoQuery(queryMethod, operations);
+		ConvertingParameterAccessor accesor = StubParameterAccessor.getAccessor(converter, "Matthews");
+
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor);
+		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery("{'lastname' : 'Matthews'}");
+
+		assertThat(query.getQueryObject(), is(reference.getQueryObject()));
+	}
+
+	/**
+	 * @see DATAMONGO-420
+	 */
+	@Test
+	public void bindsSimplePropertyAlreadyQuotedWithRegexCorrectly() throws Exception {
+
+		Method method = SampleRepository.class.getMethod("findByLastnameQuoted", String.class);
+		MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, converter.getMappingContext());
+		StringBasedMongoQuery mongoQuery = new StringBasedMongoQuery(queryMethod, operations);
+		ConvertingParameterAccessor accesor = StubParameterAccessor.getAccessor(converter, "^Mat.*");
+
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor);
+		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery("{'lastname' : '^Mat.*'}");
+
+		assertThat(query.getQueryObject(), is(reference.getQueryObject()));
+	}
+
+	/**
+	 * @see DATAMONGO-420
+	 */
+	@Test
+	public void bindsSimplePropertyWithRegexCorrectly() throws Exception {
+
+		Method method = SampleRepository.class.getMethod("findByLastname", String.class);
+		MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, converter.getMappingContext());
+		StringBasedMongoQuery mongoQuery = new StringBasedMongoQuery(queryMethod, operations);
+		ConvertingParameterAccessor accesor = StubParameterAccessor.getAccessor(converter, "^Mat.*");
+
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor);
+		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery("{'lastname' : '^Mat.*'}");
+
+		assertThat(query.getQueryObject(), is(reference.getQueryObject()));
+	}
+
 	private StringBasedMongoQuery createQueryForMethod(String name, Class<?>... parameters) throws Exception {
 
 		Method method = SampleRepository.class.getMethod(name, parameters);
@@ -207,6 +276,9 @@ public class StringBasedMongoQueryUnitTests {
 
 		@Query("{ 'lastname' : ?0 }")
 		Person findByLastname(String lastname);
+
+		@Query("{ 'lastname' : '?0' }")
+		Person findByLastnameQuoted(String lastname);
 
 		@Query("{ 'address' : ?0 }")
 		Person findByAddress(Address address);
@@ -228,5 +300,8 @@ public class StringBasedMongoQueryUnitTests {
 
 		@Query("{'title': { $regex : '^?0', $options : 'i'}}")
 		List<DBObject> findByTitleBeginsWithExplicitQuoting(String title);
+
+		@Query(value = "{$where: 'return this.date.getUTCMonth() == ?2 && this.date.getUTCDay() == ?3;'}")
+		List<DBObject> findByQueryWithParametersInExpression(int param1, int param2, int param3, int param4);
 	}
 }
