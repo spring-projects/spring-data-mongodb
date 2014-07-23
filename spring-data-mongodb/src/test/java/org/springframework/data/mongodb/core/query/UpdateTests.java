@@ -21,6 +21,7 @@ import static org.junit.Assert.*;
 import java.util.Collections;
 import java.util.Map;
 
+import org.joda.time.DateTime;
 import org.junit.Test;
 
 import com.mongodb.BasicDBObject;
@@ -408,5 +409,15 @@ public class UpdateTests {
 				update.getUpdateObject(),
 				equalTo(new BasicDBObjectBuilder().add("$currentDate",
 						new BasicDBObject("foo", true).append("bar", new BasicDBObject("$type", "timestamp"))).get()));
+	}
+
+	/**
+	 * @see DATAMONGO-1002
+	 */
+	@Test
+	public void toStringWorksForUpdateWithComplexObject() {
+
+		Update update = new Update().addToSet("key", new DateTime());
+		assertThat(update.toString(), is(notNullValue()));
 	}
 }
