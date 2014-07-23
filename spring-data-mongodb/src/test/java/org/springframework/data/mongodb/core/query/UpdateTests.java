@@ -21,6 +21,7 @@ import static org.junit.Assert.*;
 import java.util.Collections;
 import java.util.Map;
 
+import org.joda.time.DateTime;
 import org.junit.Test;
 
 /**
@@ -341,5 +342,15 @@ public class UpdateTests {
 				+ " \"$set\" : { \"nl\" :  null  , \"directory\" : \"/Users/Test/Desktop\" , \"foo\" : \"bar\"} , " //
 				+ "\"$push\" : { \"authors\" : { \"name\" : \"Sven\"}} " //
 				+ ", \"$pop\" : { \"authors\" : -1}}")); //
+	}
+
+	/**
+	 * @see DATAMONGO-1002
+	 */
+	@Test
+	public void toStringWorksForUpdateWithComplexObject() {
+
+		Update update = new Update().addToSet("key", new DateTime());
+		assertThat(update.toString(), is(notNullValue()));
 	}
 }

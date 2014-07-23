@@ -372,7 +372,7 @@ public class Update {
 	 */
 	@Override
 	public String toString() {
-		return getUpdateObject().toString();
+		return SerializationUtils.serializeToJsonSafely(getUpdateObject());
 	}
 
 	/**
