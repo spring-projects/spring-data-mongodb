@@ -56,6 +56,7 @@ import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.util.Assert;
+import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
 
 import com.mongodb.BasicDBList;
@@ -315,14 +316,17 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			return;
 		}
 
-		boolean handledByCustomConverter = conversions.getCustomWriteTarget(obj.getClass(), DBObject.class) != null;
-		TypeInformation<? extends Object> type = ClassTypeInformation.from(obj.getClass());
+		Class<?> entityType = obj.getClass();
+		boolean handledByCustomConverter = conversions.getCustomWriteTarget(entityType, DBObject.class) != null;
+		TypeInformation<? extends Object> type = ClassTypeInformation.from(entityType);
 
 		if (!handledByCustomConverter && !(dbo instanceof BasicDBList)) {
 			typeMapper.writeType(type, dbo);
 		}
 
-		writeInternal(obj, dbo, type);
+		Object target = obj instanceof LazyLoadingProxy ? ((LazyLoadingProxy) obj).initialize() : obj;
+
+		writeInternal(target, dbo, type);
 	}
 
 	/**
@@ -338,7 +342,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			return;
 		}
 
-		Class<?> customTarget = conversions.getCustomWriteTarget(obj.getClass(), DBObject.class);
+		Class<?> entityType = obj.getClass();
+		Class<?> customTarget = conversions.getCustomWriteTarget(entityType, DBObject.class);
 
 		if (customTarget != null) {
 			DBObject result = conversionService.convert(obj, DBObject.class);
@@ -346,17 +351,17 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			return;
 		}
 
-		if (Map.class.isAssignableFrom(obj.getClass())) {
+		if (Map.class.isAssignableFrom(entityType)) {
 			writeMapInternal((Map<Object, Object>) obj, dbo, ClassTypeInformation.MAP);
 			return;
 		}
 
-		if (Collection.class.isAssignableFrom(obj.getClass())) {
+		if (Collection.class.isAssignableFrom(entityType)) {
 			writeCollectionInternal((Collection<?>) obj, ClassTypeInformation.LIST, (BasicDBList) dbo);
 			return;
 		}
 
-		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(obj.getClass());
+		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityType);
 		writeInternal(obj, dbo, entity);
 		addCustomTypeKeyIfNecessary(typeHint, obj, dbo);
 	}
@@ -683,10 +688,11 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		TypeInformation<?> actualType = type != null ? type.getActualType() : null;
 		Class<?> reference = actualType == null ? Object.class : actualType.getType();
+		Class<?> valueType = ClassUtils.getUserClass(value.getClass());
 
-		boolean notTheSameClass = !value.getClass().equals(reference);
+		boolean notTheSameClass = !valueType.equals(reference);
 		if (notTheSameClass) {
-			typeMapper.writeType(value.getClass(), dbObject);
+			typeMapper.writeType(valueType, dbObject);
 		}
 	}
 
