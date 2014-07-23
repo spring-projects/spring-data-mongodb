@@ -2512,6 +2512,37 @@ public class MongoTemplateTests {
 	}
 
 	/**
+	 * @see DATAMONGO-1001
+	 */
+	@Test
+	public void shouldAllowSavingOfLazyLoadedDbRefs() {
+
+		template.dropCollection(SomeTemplate.class);
+		template.dropCollection(SomeMessage.class);
+		template.dropCollection(SomeContent.class);
+
+		SomeContent content = new SomeContent();
+		content.id = "content-1";
+		content.text = "spring";
+		template.save(content);
+
+		SomeTemplate tmpl = new SomeTemplate();
+		tmpl.id = "template-1";
+		tmpl.content = content; // @DBRef(lazy=true) tmpl.content
+
+		template.save(tmpl);
+
+		SomeTemplate savedTmpl = template.findById(tmpl.id, SomeTemplate.class);
+
+		SomeContent loadedContent = savedTmpl.getContent();
+		loadedContent.setText("data");
+		template.save(loadedContent);
+
+		assertThat(template.findById(content.id, SomeContent.class).getText(), is("data"));
+
+	}
+
+	/**
 	 * @see DATAMONGO-880
 	 */
 	@Test
@@ -2954,6 +2985,11 @@ public class MongoTemplateTests {
 
 		public String getName() {
 			return name;
+		}
+
+		public void setText(String text) {
+			this.text = text;
+
 		}
 
 		public String getId() {

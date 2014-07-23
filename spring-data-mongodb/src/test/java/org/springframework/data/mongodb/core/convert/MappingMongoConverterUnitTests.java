@@ -49,6 +49,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.convert.converter.Converter;
@@ -1832,6 +1833,37 @@ public class MappingMongoConverterUnitTests {
 		ClassWithTextScoreProperty entity = converter
 				.read(ClassWithTextScoreProperty.class, new BasicDBObject("score", 5F));
 		assertThat(entity.score, equalTo(5F));
+	}
+
+	/**
+	 * @see DATAMONGO-1001
+	 */
+	@Test
+	public void shouldWriteCglibProxiedClassTypeInformationCorrectly() {
+
+		ProxyFactory factory = new ProxyFactory();
+		factory.setTargetClass(GenericType.class);
+		factory.setProxyTargetClass(true);
+
+		GenericType<?> proxied = (GenericType<?>) factory.getProxy();
+		BasicDBObject dbo = new BasicDBObject();
+		converter.write(proxied, dbo);
+
+		assertThat(dbo.get("_class"), is((Object) GenericType.class.getName()));
+	}
+
+	/**
+	 * @see DATAMONGO-1001
+	 */
+	@Test
+	public void shouldUseTargetObjectOfLazyLoadingProxyWhenWriting() {
+
+		LazyLoadingProxy mock = mock(LazyLoadingProxy.class);
+
+		BasicDBObject dbo = new BasicDBObject();
+		converter.write(mock, dbo);
+
+		verify(mock, times(1)).getTarget();
 	}
 
 	static class GenericType<T> {
