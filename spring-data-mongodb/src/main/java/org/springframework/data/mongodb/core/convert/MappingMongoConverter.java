@@ -20,6 +20,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -195,6 +196,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			return null;
 		}
 
+		Object parentObject = ObjectPath.unwrapCurrentFromPotentialPath(parent);
+
 		TypeInformation<? extends S> typeToUse = typeMapper.readType(dbo, type);
 		Class<? extends S> rawType = typeToUse.getType();
 
@@ -207,11 +210,11 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		if (typeToUse.isCollectionLike() && dbo instanceof BasicDBList) {
-			return (S) readCollectionOrArray(typeToUse, (BasicDBList) dbo, parent);
+			return (S) readCollectionOrArray(typeToUse, (BasicDBList) dbo, parentObject);
 		}
 
 		if (typeToUse.isMap()) {
-			return (S) readMap(typeToUse, dbo, parent);
+			return (S) readMap(typeToUse, dbo, parentObject);
 		}
 
 		// Retrieve persistent entity info
@@ -239,22 +242,37 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		final DefaultSpELExpressionEvaluator evaluator = new DefaultSpELExpressionEvaluator(dbo, spELContext);
 
-		ParameterValueProvider<MongoPersistentProperty> provider = getParameterProvider(entity, dbo, evaluator, parent);
+		final ObjectPath parentPath = ObjectPath.toPath(parent);
+
+		ParameterValueProvider<MongoPersistentProperty> provider = getParameterProvider(entity, dbo, evaluator,
+				parentPath.getCurrentObject());
 		EntityInstantiator instantiator = instantiators.getInstantiatorFor(entity);
 		S instance = instantiator.createInstance(entity, provider);
 
 		final BeanWrapper<S> wrapper = BeanWrapper.create(instance, conversionService);
 		final S result = wrapper.getBean();
 
+		// make sure id property is set before all other properties
+		if (entity.getIdProperty() != null) {
+			wrapper.setProperty(entity.getIdProperty(), getValueInternal(entity.getIdProperty(), dbo, evaluator, result));
+		}
+
+		final ObjectPath currentPath = parentPath.push(result);
+
 		// Set properties not already set in the constructor
 		entity.doWithProperties(new PropertyHandler<MongoPersistentProperty>() {
 			public void doWithPersistentProperty(MongoPersistentProperty prop) {
+
+				// we skip the id property since it was already set
+				if (entity.getIdProperty() != null && entity.getIdProperty().equals(prop)) {
+					return;
+				}
 
 				if (!dbo.containsField(prop.getFieldName()) || entity.isConstructorArgument(prop)) {
 					return;
 				}
 
-				wrapper.setProperty(prop, getValueInternal(prop, dbo, evaluator, result));
+				wrapper.setProperty(prop, getValueInternal(prop, dbo, evaluator, currentPath.getCurrentObject()));
 			}
 		});
 
@@ -274,7 +292,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 					@Override
 					public Object resolve(MongoPersistentProperty property) {
-						return getValueInternal(property, dbo, evaluator, parent);
+						return getValueInternal(property, dbo, evaluator, currentPath);
 					}
 				}));
 			}
@@ -1103,19 +1121,73 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	@SuppressWarnings("unchecked")
 	private <T> T readValue(Object value, TypeInformation<?> type, Object parent) {
 
+		ObjectPath objectStack = ObjectPath.toPath(parent);
+
 		Class<?> rawType = type.getType();
 
 		if (conversions.hasCustomReadTarget(value.getClass(), rawType)) {
 			return (T) conversionService.convert(value, rawType);
 		} else if (value instanceof DBRef) {
-			return (T) (rawType.equals(DBRef.class) ? value : read(type, readRef((DBRef) value), parent));
+			return potentiallyReadOrResolveDbRef((DBRef) value, type, objectStack, rawType);
 		} else if (value instanceof BasicDBList) {
-			return (T) readCollectionOrArray(type, (BasicDBList) value, parent);
+			return (T) readCollectionOrArray(type, (BasicDBList) value, objectStack.getCurrentObject());
 		} else if (value instanceof DBObject) {
-			return (T) read(type, (DBObject) value, parent);
+			return (T) read(type, (DBObject) value, objectStack.getCurrentObject());
 		} else {
 			return (T) getPotentiallyConvertedSimpleRead(value, rawType);
 		}
+	}
+
+	@SuppressWarnings("unchecked")
+	private <T> T potentiallyReadOrResolveDbRef(DBRef dbref, TypeInformation<?> type, ObjectPath path, Class<?> rawType) {
+
+		if (rawType.equals(DBRef.class)) {
+			return (T) dbref;
+		}
+
+		Object object = getObjectFromPathForRefOrNull(path, dbref);
+
+		if (object != null) {
+			return (T) object;
+		}
+
+		return (T) (object != null ? object : read(type, readRef(dbref), path.getCurrentObject()));
+	}
+
+	/**
+	 * Returns the object from the given {@link ObjectPath} iff the given {@link DBRef} points to it or {@literal null}.
+	 * 
+	 * @param path
+	 * @param dbref
+	 * @return
+	 */
+	private Object getObjectFromPathForRefOrNull(ObjectPath path, DBRef dbref) {
+
+		if (path == null || dbref == null) {
+			return null;
+		}
+
+		for (Object object : path) {
+
+			if (object == null) {
+				continue;
+			}
+
+			MongoPersistentEntity<?> pe = getMappingContext().getPersistentEntity(object.getClass());
+
+			if (pe == null || pe.getIdProperty() == null) {
+				continue;
+			}
+
+			BeanWrapper<Object> parentBeanWrapper = BeanWrapper.create(object, conversionService);
+			Object parentId = parentBeanWrapper.getProperty(pe.getIdProperty());
+
+			if (dbref.getRef().equals(pe.getCollection()) && dbref.getId().equals(parentId)) {
+				return object;
+			}
+		}
+
+		return null;
 	}
 
 	/**
@@ -1126,5 +1198,71 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 */
 	DBObject readRef(DBRef ref) {
 		return ref.fetch();
+	}
+
+	/**
+	 * An immutable ordered set of target objects for {@link DBObject} to {@link Object} conversions. Object paths can be
+	 * constructed by the {@link #toPath(Object)} method and extended via {@link #push(Object)}.
+	 * 
+	 * @author Thomas Darimont
+	 * @since 1.6
+	 */
+	static class ObjectPath implements Iterable<Object> {
+
+		private final List<Object> stack;
+
+		private ObjectPath(Object current) {
+			this(null, current);
+		}
+
+		private ObjectPath(ObjectPath parent, Object current) {
+
+			if (parent == null) {
+				this.stack = Collections.singletonList(current);
+			} else {
+				List<Object> list = new ArrayList<Object>(parent.stack);
+				list.add(current);
+				this.stack = list;
+			}
+		}
+
+		/**
+		 * Returns a copy of the {@link ObjectPath} with the given {@link Object} as current object.
+		 * 
+		 * @param o
+		 * @return
+		 */
+		public ObjectPath push(Object o) {
+			return new ObjectPath(this, o);
+		}
+
+		public Object getRootObject() {
+			return stack.get(0);
+		}
+
+		public Object getCurrentObject() {
+			return stack.get(stack.size() - 1);
+		}
+
+		@Override
+		public Iterator<Object> iterator() {
+			return stack.iterator();
+		}
+
+		/**
+		 * Returns the {@link ObjectPath} represented by the given {@link Object} or creates a new {@link ObjectPath}
+		 * wrapping the given {@link Object}.
+		 * 
+		 * @param object
+		 * @return
+		 */
+		public static ObjectPath toPath(Object object) {
+			return object instanceof ObjectPath ? ((ObjectPath) object) : new ObjectPath(object);
+		}
+
+		public static Object unwrapCurrentFromPotentialPath(Object potentialObjectPath) {
+			return potentialObjectPath instanceof ObjectPath ? ((ObjectPath) potentialObjectPath).getCurrentObject()
+					: potentialObjectPath;
+		}
 	}
 }
