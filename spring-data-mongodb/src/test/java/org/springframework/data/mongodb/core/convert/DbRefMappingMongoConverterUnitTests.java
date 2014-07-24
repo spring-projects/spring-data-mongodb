@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
@@ -450,6 +450,47 @@ public class DbRefMappingMongoConverterUnitTests {
 		assertThat(result.dbRefToConcreteTypeWithPersistenceConstructorWithoutDefaultConstructor, is(nullValue()));
 	}
 
+	/**
+	 * @see DATAMONGO-1005
+	 */
+	@Test
+	public void shouldBeAbleToStoreDirectReferencesToSelf() {
+
+		DBObject dbo = new BasicDBObject();
+
+		ClassWithDbRefField o = new ClassWithDbRefField();
+		o.id = "123";
+		o.reference = o;
+		converter.write(o, dbo);
+
+		ClassWithDbRefField found = converter.read(ClassWithDbRefField.class, dbo);
+
+		assertThat(found, is(notNullValue()));
+		assertThat(found.reference, is(found));
+	}
+
+	/**
+	 * @see DATAMONGO-1005
+	 */
+	@Test
+	public void shouldBeAbleToStoreNestedReferencesToSelf() {
+
+		DBObject dbo = new BasicDBObject();
+
+		ClassWithNestedDbRefField o = new ClassWithNestedDbRefField();
+		o.id = "123";
+		o.nested = new NestedReferenceHolder();
+		o.nested.reference = o;
+
+		converter.write(o, dbo);
+
+		ClassWithNestedDbRefField found = converter.read(ClassWithNestedDbRefField.class, dbo);
+
+		assertThat(found, is(notNullValue()));
+		assertThat(found.nested, is(notNullValue()));
+		assertThat(found.nested.reference, is(found));
+	}
+
 	private Object transport(Object result) {
 		return SerializationUtils.deserialize(SerializationUtils.serialize(result));
 	}
@@ -625,5 +666,23 @@ public class DbRefMappingMongoConverterUnitTests {
 		@org.springframework.data.mongodb.core.mapping.DBRef(lazy = true) ToStringObjectMethodOverrideLazyDbRefTarget dbRefToToStringObjectMethodOverride;
 		@org.springframework.data.mongodb.core.mapping.DBRef(lazy = true) EqualsAndHashCodeObjectMethodOverrideLazyDbRefTarget dbRefEqualsAndHashcodeObjectMethodOverride2;
 		@org.springframework.data.mongodb.core.mapping.DBRef(lazy = true) EqualsAndHashCodeObjectMethodOverrideLazyDbRefTarget dbRefEqualsAndHashcodeObjectMethodOverride1;
+	}
+
+	class ClassWithDbRefField {
+
+		String id;
+		@org.springframework.data.mongodb.core.mapping.DBRef ClassWithDbRefField reference;
+	}
+
+	static class NestedReferenceHolder {
+
+		String id;
+		@org.springframework.data.mongodb.core.mapping.DBRef ClassWithNestedDbRefField reference;
+	}
+
+	static class ClassWithNestedDbRefField {
+
+		String id;
+		NestedReferenceHolder nested;
 	}
 }
