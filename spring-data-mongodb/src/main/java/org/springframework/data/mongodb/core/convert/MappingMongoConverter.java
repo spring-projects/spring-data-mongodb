@@ -326,7 +326,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		Object target = obj;
 		if (obj instanceof LazyLoadingProxy) {
-			target = ((LazyLoadingProxy) obj).initialize();
+			target = ((LazyLoadingProxy) obj).getTarget();
 		}
 
 		writeInternal(target, dbo, type);
@@ -471,7 +471,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		 * If we have a LazyLoadingProxy we make sure it is initialized first.
 		 */
 		if (obj instanceof LazyLoadingProxy) {
-			obj = ((LazyLoadingProxy) obj).initialize();
+			obj = ((LazyLoadingProxy) obj).getTarget();
 		}
 
 		// Lookup potential custom target type

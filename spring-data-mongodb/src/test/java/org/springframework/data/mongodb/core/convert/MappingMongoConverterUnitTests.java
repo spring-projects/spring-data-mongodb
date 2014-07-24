@@ -1863,7 +1863,7 @@ public class MappingMongoConverterUnitTests {
 
 		BasicDBObject dbo = new BasicDBObject();
 		converter.write(mock, dbo);
-		verify(mock, times(1)).initialize();
+		verify(mock, times(1)).getTarget();
 	}
 
 	static class GenericType<T> {

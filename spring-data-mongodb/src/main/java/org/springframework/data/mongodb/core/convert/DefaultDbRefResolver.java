@@ -171,6 +171,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 	 * 
 	 * @author Thomas Darimont
 	 * @author Oliver Gierke
+	 * @author Christoph Strobl
 	 */
 	static class LazyLoadingInterceptor implements MethodInterceptor, org.springframework.cglib.proxy.MethodInterceptor,
 			Serializable {
@@ -187,7 +188,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 
 		static {
 			try {
-				INITIALIZE_METHOD = LazyLoadingProxy.class.getMethod("initialize");
+				INITIALIZE_METHOD = LazyLoadingProxy.class.getMethod("getTarget");
 				TO_DBREF_METHOD = LazyLoadingProxy.class.getMethod("toDBRef");
 			} catch (Exception e) {
 				throw new RuntimeException(e);
