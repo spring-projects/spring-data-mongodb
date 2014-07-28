@@ -15,6 +15,10 @@
  */
 package org.springframework.data.mongodb.repository.config;
 
+import java.lang.annotation.Annotation;
+import java.util.Collection;
+import java.util.Collections;
+
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
@@ -22,6 +26,7 @@ import org.springframework.beans.factory.support.RootBeanDefinition;
 import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.data.config.ParsingUtils;
 import org.springframework.data.mongodb.config.BeanNames;
+import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.repository.support.MongoRepositoryFactoryBean;
 import org.springframework.data.repository.config.AnnotationRepositoryConfigurationSource;
@@ -45,6 +50,15 @@ public class MongoRepositoryConfigurationExtension extends RepositoryConfigurati
 
 	/* 
 	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport#getModuleName()
+	 */
+	@Override
+	public String getModuleName() {
+		return "MongoDB";
+	}
+
+	/* 
+	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport#getModulePrefix()
 	 */
 	@Override
@@ -58,6 +72,15 @@ public class MongoRepositoryConfigurationExtension extends RepositoryConfigurati
 	 */
 	public String getRepositoryFactoryClassName() {
 		return MongoRepositoryFactoryBean.class.getName();
+	}
+
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport#getIdentifyingAnnotations()
+	 */
+	@Override
+	protected Collection<Class<? extends Annotation>> getIdentifyingAnnotations() {
+		return Collections.<Class<? extends Annotation>> singleton(Document.class);
 	}
 
 	/* 
