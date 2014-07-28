@@ -1,6 +1,24 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 1.5.2.RELEASE (2014-07-28)
+---------------------------------------------
+* DATAMONGO-1007 - Release 1.5.2.
+* DATAMONGO-1002 - Update.toString(…) might throw exception.
+* DATAMONGO-1001 - Can't save/update lazy load object.
+* DATAMONGO-999 - Multiple Mongo Instances always have the same MongoOption Reference - MongoOptionsFactoryBean has a static instance of MongoOptions.
+* DATAMONGO-995 - Parameter binding in String-based query does not bind all parameters.
+* DATAMONGO-992 - Entity can't be deserialized if @TypeAlias is used.
+* DATAMONGO-989 - MatchOperation should accept CriteriaDefinition.
+* DATAMONGO-987 - Problem with lazy loading in @DBRef when getting data using MongoTemplate.
+* DATAMONGO-983 - Remove links to forum.spring.io.
+* DATAMONGO-982 - Assure compatibility with upcoming MongoDB driver versions.
+* DATAMONGO-978 - deleteBy/removeBy repository methods don't set type information in Before/AfterDeleteEvent.
+* DATAMONGO-972 - References are not handled properly in Querydsl integration.
+* DATAMONGO-969 - String @id field is not mapped to ObjectId when using QueryDSL .id.in(Collection<String>).
+* DATAMONGO-420 - Extra quotes being added to @Query values and fields.
+
+
 Changes in version 1.6.0.M1 (2014-07-10)
 ----------------------------------------
 * DATAMONGO-983 - Remove links to forum.spring.io.
