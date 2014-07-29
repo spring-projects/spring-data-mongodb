@@ -25,6 +25,7 @@ import org.springframework.data.mongodb.core.index.IndexDefinition;
 import org.springframework.data.mongodb.core.index.IndexField;
 import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.util.Assert;
+import org.springframework.util.ObjectUtils;
 
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
@@ -141,7 +142,7 @@ public class DefaultIndexOperations implements IndexOperations {
 
 						Object value = keyDbObject.get(key);
 
-						if ("2d".equals(value)) {
+						if (isGeoIndex(value)) {
 							indexFields.add(IndexField.geo(key));
 						} else if ("text".equals(value)) {
 
@@ -174,5 +175,9 @@ public class DefaultIndexOperations implements IndexOperations {
 				return indexInfoList;
 			}
 		});
+	}
+
+	private boolean isGeoIndex(Object indexType) {
+		return ObjectUtils.nullSafeEquals("2d", indexType) || ObjectUtils.nullSafeEquals("2dsphere", indexType);
 	}
 }
