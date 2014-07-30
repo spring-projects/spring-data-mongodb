@@ -31,7 +31,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.convert.ConversionException;
 import org.springframework.core.convert.ConversionService;
-import org.springframework.core.convert.support.ConversionServiceFactory;
+import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.data.convert.CollectionFactory;
 import org.springframework.data.convert.EntityInstantiator;
 import org.springframework.data.convert.TypeMapper;
@@ -74,7 +74,7 @@ import com.mongodb.DBRef;
  * @author Thomas Darimont
  * @author Christoph Strobl
  */
-public class MappingMongoConverter extends AbstractMongoConverter implements ApplicationContextAware {
+public class MappingMongoConverter extends AbstractMongoConverter implements ApplicationContextAware, ValueResolver {
 
 	protected static final Logger LOGGER = LoggerFactory.getLogger(MappingMongoConverter.class);
 
@@ -82,6 +82,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	protected final SpelExpressionParser spelExpressionParser = new SpelExpressionParser();
 	protected final QueryMapper idMapper;
 	protected final DbRefResolver dbRefResolver;
+
 	protected ApplicationContext applicationContext;
 	protected MongoTypeMapper typeMapper;
 	protected String mapKeyDotReplacement = null;
@@ -94,11 +95,10 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * @param mongoDbFactory must not be {@literal null}.
 	 * @param mappingContext must not be {@literal null}.
 	 */
-	@SuppressWarnings("deprecation")
 	public MappingMongoConverter(DbRefResolver dbRefResolver,
 			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
 
-		super(ConversionServiceFactory.createDefaultConversionService());
+		super(new DefaultConversionService());
 
 		Assert.notNull(dbRefResolver, "DbRefResolver must not be null!");
 		Assert.notNull(mappingContext, "MappingContext must not be null!");
@@ -262,7 +262,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		entity.doWithAssociations(new AssociationHandler<MongoPersistentProperty>() {
 			public void doWithAssociation(Association<MongoPersistentProperty> association) {
 
-				MongoPersistentProperty property = association.getInverse();
+				final MongoPersistentProperty property = association.getInverse();
 				Object value = dbo.get(property.getName());
 
 				if (value == null) {
@@ -270,13 +270,13 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				}
 
 				DBRef dbref = value instanceof DBRef ? (DBRef) value : null;
-				wrapper.setProperty(property, dbRefResolver.resolveDbRef(property, dbref, new DbRefResolverCallback() {
 
-					@Override
-					public Object resolve(MongoPersistentProperty property) {
-						return getValueInternal(property, dbo, evaluator, parent);
-					}
-				}));
+				DbRefProxyHandler handler = new DefaultDbRefProxyHandler(spELContext, mappingContext,
+						MappingMongoConverter.this);
+				DbRefResolverCallback callback = new DefaultDbRefResolverCallback(dbo, parent, MappingMongoConverter.this,
+						evaluator);
+
+				wrapper.setProperty(property, dbRefResolver.resolveDbRef(property, dbref, callback, handler));
 			}
 		});
 
@@ -798,9 +798,13 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				idMapper.convertId(id));
 	}
 
-	protected Object getValueInternal(MongoPersistentProperty prop, DBObject dbo, SpELExpressionEvaluator evaluator,
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.convert.ValueResolver#getValueInternal(org.springframework.data.mongodb.core.mapping.MongoPersistentProperty, com.mongodb.DBObject, org.springframework.data.mapping.model.SpELExpressionEvaluator, java.lang.Object)
+	 */
+	@Override
+	public Object getValueInternal(MongoPersistentProperty prop, DBObject dbo, SpELExpressionEvaluator evaluator,
 			Object parent) {
-
 		return new MongoDbPropertyValueProvider(dbo, evaluator, parent).getPropertyValue(prop);
 	}
 
