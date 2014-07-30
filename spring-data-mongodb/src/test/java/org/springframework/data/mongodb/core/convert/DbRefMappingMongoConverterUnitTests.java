@@ -30,6 +30,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -38,10 +39,12 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.mapping.PropertyPath;
+import org.springframework.data.mapping.model.BeanWrapper;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.MongoExceptionTranslator;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverterUnitTests.Person;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.util.SerializationUtils;
 
@@ -489,6 +492,24 @@ public class DbRefMappingMongoConverterUnitTests {
 		assertThat(found, is(notNullValue()));
 		assertThat(found.nested, is(notNullValue()));
 		assertThat(found.nested.reference, is(found));
+	}
+
+	@Test
+	public void testname() {
+
+		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(ClassWithLazyDbRefs.class);
+		MongoPersistentProperty property = entity.getPersistentProperty("dbRefToConcreteType");
+
+		Object dbRef = converter.toDBRef(new LazyDbRefTarget(new ObjectId().toString()), property);
+
+		DBObject object = new BasicDBObject("dbRefToConcreteType", dbRef);
+
+		ClassWithLazyDbRefs result = converter.read(ClassWithLazyDbRefs.class, object);
+
+		BeanWrapper<LazyDbRefTarget> wrapper = BeanWrapper.create(result.dbRefToConcreteType, null);
+		MongoPersistentProperty idProperty = mappingContext.getPersistentEntity(LazyDbRefTarget.class).getIdProperty();
+
+		assertThat(wrapper.getProperty(idProperty), is(notNullValue()));
 	}
 
 	private Object transport(Object result) {

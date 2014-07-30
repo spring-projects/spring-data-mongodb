@@ -77,13 +77,14 @@ public class DefaultDbRefResolver implements DbRefResolver {
 	 * @see org.springframework.data.mongodb.core.convert.DbRefResolver#resolveDbRef(org.springframework.data.mongodb.core.mapping.MongoPersistentProperty, org.springframework.data.mongodb.core.convert.DbRefResolverCallback)
 	 */
 	@Override
-	public Object resolveDbRef(MongoPersistentProperty property, DBRef dbref, DbRefResolverCallback callback) {
+	public Object resolveDbRef(MongoPersistentProperty property, DBRef dbref, DbRefResolverCallback callback,
+			DbRefProxyHandler handler) {
 
 		Assert.notNull(property, "Property must not be null!");
 		Assert.notNull(callback, "Callback must not be null!");
 
 		if (isLazyDbRef(property)) {
-			return createLazyLoadingProxy(property, dbref, callback);
+			return createLazyLoadingProxy(property, dbref, callback, handler);
 		}
 
 		return callback.resolve(property);
@@ -112,7 +113,8 @@ public class DefaultDbRefResolver implements DbRefResolver {
 	 * @param callback must not be {@literal null}.
 	 * @return
 	 */
-	private Object createLazyLoadingProxy(MongoPersistentProperty property, DBRef dbref, DbRefResolverCallback callback) {
+	private Object createLazyLoadingProxy(MongoPersistentProperty property, DBRef dbref, DbRefResolverCallback callback,
+			DbRefProxyHandler handler) {
 
 		Class<?> propertyType = property.getType();
 		LazyLoadingInterceptor interceptor = new LazyLoadingInterceptor(property, dbref, exceptionTranslator, callback);
@@ -122,7 +124,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 			Factory factory = (Factory) objenesis.newInstance(getEnhancedTypeFor(propertyType));
 			factory.setCallbacks(new Callback[] { interceptor });
 
-			return factory;
+			return handler.populateId(property, dbref, factory);
 		}
 
 		ProxyFactory proxyFactory = new ProxyFactory();
@@ -135,7 +137,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 		proxyFactory.addInterface(propertyType);
 		proxyFactory.addAdvice(interceptor);
 
-		return proxyFactory.getProxy();
+		return handler.populateId(property, dbref, proxyFactory.getProxy());
 	}
 
 	/**
