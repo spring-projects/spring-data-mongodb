@@ -16,10 +16,9 @@
 package org.springframework.data.mongodb.core.query.text;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
-import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.data.mongodb.core.text.Term;
 import org.springframework.util.Assert;
@@ -31,12 +30,12 @@ import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DBObject;
 
 /**
- * Implementation of {@link CriteriaDefinition} to be used for full text search .
+ * Implementation of {@link CriteriaDefinition} to be used for full text search.
  * 
  * @author Christoph Strobl
  * @since 1.6
  */
-public class TextCriteria extends Criteria {
+public class TextCriteria implements CriteriaDefinition {
 
 	private String language;
 	private List<Term> terms;
@@ -59,7 +58,7 @@ public class TextCriteria extends Criteria {
 		}
 
 		if (!CollectionUtils.isEmpty(terms)) {
-			builder.add("$search", join(terms.iterator()));
+			builder.add("$search", join(terms));
 		}
 
 		return new BasicDBObject("$text", builder.get());
@@ -174,27 +173,28 @@ public class TextCriteria extends Criteria {
 		return new TextCriteriaBuilder().withLanguage(language).build();
 	}
 
-	private static String join(Iterator<Term> iterator) {
+	private String join(Iterable<Term> iterable) {
 
-		Term first = iterator.next();
-		if (!iterator.hasNext()) {
-			return first.getFormatted();
-		}
+		return collectionToDelimitedString(iterable, new Converter<Term, String>() {
 
-		StringBuilder buf = new StringBuilder(256);
-		if (first != null) {
-			buf.append(first);
-		}
+			@Override
+			public String convert(Term source) {
 
-		while (iterator.hasNext()) {
-			buf.append(' ');
-			Term obj = iterator.next();
-			if (obj != null) {
-				buf.append(obj.getFormatted());
+				if (source == null) {
+					return null;
+				}
+				return source.getFormatted();
 			}
-		}
+		});
+	}
 
-		return buf.toString();
+	private <T> String collectionToDelimitedString(Iterable<T> iterable, Converter<T, String> converter) {
+
+		List<String> values = new ArrayList<String>();
+		for (T item : iterable) {
+			values.add(converter.convert(item));
+		}
+		return StringUtils.collectionToDelimitedString(values, " ");
 	}
 
 	public static class TextCriteriaBuilder {

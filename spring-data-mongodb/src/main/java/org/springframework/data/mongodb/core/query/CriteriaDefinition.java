@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 the original author or authors.
+ * Copyright 2010-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,8 +17,25 @@ package org.springframework.data.mongodb.core.query;
 
 import com.mongodb.DBObject;
 
+/**
+ * @author Oliver Gierke
+ * @author Christoph Strobl
+ */
 public interface CriteriaDefinition {
 
+	/**
+	 * Get {@link DBObject} representation.
+	 * 
+	 * @return
+	 */
 	DBObject getCriteriaObject();
+
+	/**
+	 * Get the identifying {@literal key}.
+	 * 
+	 * @return
+	 * @since 1.6
+	 */
+	String getKey();
 
 }

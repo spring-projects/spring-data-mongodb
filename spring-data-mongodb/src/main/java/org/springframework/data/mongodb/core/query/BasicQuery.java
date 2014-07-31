@@ -50,8 +50,22 @@ public class BasicQuery extends Query {
 		this.fieldsObject = fieldsObject;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.query.Query#addCriteria(org.springframework.data.mongodb.core.query.Criteria)
+	 */
+	@Deprecated
 	@Override
 	public Query addCriteria(Criteria criteria) {
+		return addCriteria((CriteriaDefinition) criteria);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.query.Query#addCriteria(org.springframework.data.mongodb.core.query.CriteriaDefinition)
+	 */
+	@Override
+	public Query addCriteria(CriteriaDefinition criteria) {
 		this.queryObject.putAll(criteria.getCriteriaObject());
 		return this;
 	}
