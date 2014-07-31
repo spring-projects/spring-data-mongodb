@@ -81,10 +81,11 @@ public class TextCriteria implements CriteriaDefinition {
 	 * 
 	 * @param term must not be null.
 	 */
-	public void matching(Term term) {
+	public TextCriteria matching(Term term) {
 
 		Assert.notNull(term, "Term to add must not be null.");
 		this.terms.add(term);
+		return this;
 	}
 
 	private void notMatching(Term term) {

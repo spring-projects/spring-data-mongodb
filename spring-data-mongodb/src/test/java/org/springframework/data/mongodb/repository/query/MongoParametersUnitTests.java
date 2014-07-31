@@ -28,7 +28,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Point;
-import org.springframework.data.mongodb.core.text.FullTextPram;
+import org.springframework.data.mongodb.core.query.text.TextCriteria;
 import org.springframework.data.mongodb.repository.Near;
 import org.springframework.data.mongodb.repository.Person;
 import org.springframework.data.repository.query.Parameter;
@@ -103,9 +103,9 @@ public class MongoParametersUnitTests {
 	 * @see DATAMONGO-973
 	 */
 	@Test
-	public void shouldFindFullTextParamAnnotationAtItsIndex() throws SecurityException, NoSuchMethodException {
+	public void shouldFindTextCriteriaAtItsIndex() throws SecurityException, NoSuchMethodException {
 
-		Method method = PersonRepository.class.getMethod("findByNameAndText", String.class, String.class);
+		Method method = PersonRepository.class.getMethod("findByNameAndText", String.class, TextCriteria.class);
 		MongoParameters parameters = new MongoParameters(method, false);
 		assertThat(parameters.getFullTextParameterIndex(), is(1));
 	}
@@ -114,9 +114,9 @@ public class MongoParametersUnitTests {
 	 * @see DATAMONGO-973
 	 */
 	@Test
-	public void shouldTreatFullTextAnnotatedParameterAsSpecialParameter() throws SecurityException, NoSuchMethodException {
+	public void shouldTreatTextCriteriaParameterAsSpecialParameter() throws SecurityException, NoSuchMethodException {
 
-		Method method = PersonRepository.class.getMethod("findByNameAndText", String.class, String.class);
+		Method method = PersonRepository.class.getMethod("findByNameAndText", String.class, TextCriteria.class);
 		MongoParameters parameters = new MongoParameters(method, false);
 		assertThat(parameters.getParameter(parameters.getFullTextParameterIndex()).isSpecialParameter(), is(true));
 	}
@@ -135,7 +135,6 @@ public class MongoParametersUnitTests {
 
 		GeoResults<Person> validDoubleArrays(double[] first, @Near double[] second);
 
-		List<Person> findByNameAndText(String name, @FullTextPram String text);
-
+		List<Person> findByNameAndText(String name, TextCriteria text);
 	}
 }

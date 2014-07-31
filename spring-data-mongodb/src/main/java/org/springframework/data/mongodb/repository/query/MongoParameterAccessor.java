@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.repository.query;
 
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Point;
+import org.springframework.data.mongodb.core.query.text.TextCriteria;
 import org.springframework.data.repository.query.ParameterAccessor;
 
 /**
@@ -43,10 +44,10 @@ public interface MongoParameterAccessor extends ParameterAccessor {
 	Point getGeoNearLocation();
 
 	/**
-	 * Returns the textual representation to be used for Mongo full text queries.
+	 * Returns the {@link TextCriteria} to be used for full text query.
 	 * 
 	 * @return null if not set.
 	 * @since 1.6
 	 */
-	String getFullText();
+	TextCriteria getFullText();
 }

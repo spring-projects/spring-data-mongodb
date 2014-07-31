@@ -27,7 +27,7 @@ import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
-import org.springframework.data.mongodb.core.text.FullTextPram;
+import org.springframework.data.mongodb.core.query.text.TextCriteria;
 import org.springframework.data.mongodb.repository.Person;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.RepositoryMetadata;
@@ -85,14 +85,15 @@ public class MongoParametersParameterAccessorUnitTests {
 	 * @see DATAMONGO-973
 	 */
 	@Test
-	public void shouldReturnAsFullTextStringWhenAvailable() throws NoSuchMethodException, SecurityException {
+	public void shouldProperlyConvertTextCriteria() throws NoSuchMethodException, SecurityException {
 
-		Method method = PersonRepository.class.getMethod("findByFirstname", String.class, String.class);
+		Method method = PersonRepository.class.getMethod("findByFirstname", String.class, TextCriteria.class);
 		MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, context);
 
-		MongoParameterAccessor accessor = new MongoParametersParameterAccessor(queryMethod,
-				new Object[] { "spring", "data" });
-		assertThat(accessor.getFullText(), equalTo("data"));
+		MongoParameterAccessor accessor = new MongoParametersParameterAccessor(queryMethod, new Object[] { "spring",
+				TextCriteria.forDefaultLanguage().matching("data") });
+		assertThat(accessor.getFullText().getCriteriaObject().toString(),
+				equalTo("{ \"$text\" : { \"$search\" : \"data\"}}"));
 	}
 
 	interface PersonRepository extends Repository<Person, Long> {
@@ -101,6 +102,6 @@ public class MongoParametersParameterAccessorUnitTests {
 
 		List<Person> findByLocationNear(Point point, Distance distance);
 
-		List<Person> findByFirstname(String firstname, @FullTextPram String fullText);
+		List<Person> findByFirstname(String firstname, TextCriteria fullText);
 	}
 }

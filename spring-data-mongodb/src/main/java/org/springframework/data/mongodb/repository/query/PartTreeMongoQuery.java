@@ -78,8 +78,9 @@ public class PartTreeMongoQuery extends AbstractMongoQuery {
 			query.limit(tree.getMaxResults());
 		}
 
-		if (StringUtils.hasText(accessor.getFullText())) {
-			query.addCriteria(TextCriteria.forDefaultLanguage().matching(accessor.getFullText()));
+		TextCriteria textCriteria = accessor.getFullText();
+		if (textCriteria != null) {
+			query.addCriteria(textCriteria);
 		}
 
 		String fieldSpec = this.getQueryMethod().getFieldSpecification();

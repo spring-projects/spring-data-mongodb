@@ -22,7 +22,7 @@ import java.util.List;
 import org.springframework.core.MethodParameter;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Point;
-import org.springframework.data.mongodb.core.text.FullTextPram;
+import org.springframework.data.mongodb.core.query.text.TextCriteria;
 import org.springframework.data.mongodb.repository.Near;
 import org.springframework.data.mongodb.repository.query.MongoParameters.MongoParameter;
 import org.springframework.data.repository.query.Parameter;
@@ -51,6 +51,7 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 		super(method);
 		List<Class<?>> parameterTypes = Arrays.asList(method.getParameterTypes());
 		this.distanceIndex = parameterTypes.indexOf(Distance.class);
+		this.fullTextIndex = parameterTypes.indexOf(TextCriteria.class);
 
 		if (this.nearIndex == null && isGeoNearMethod) {
 			this.nearIndex = getNearIndex(parameterTypes);
@@ -59,19 +60,14 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 		}
 	}
 
-	private MongoParameters(List<MongoParameter> parameters, Integer distanceIndex, Integer nearIndex) {
+	private MongoParameters(List<MongoParameter> parameters, Integer distanceIndex, Integer nearIndex,
+			Integer fullTextIndex) {
 
 		super(parameters);
 
 		this.distanceIndex = distanceIndex;
 		this.nearIndex = nearIndex;
-
-		for (MongoParameter param : parameters) {
-			if (param.hasFullTextAnnotation()) {
-				this.fullTextIndex = param.getIndex();
-				break;
-			}
-		}
+		this.fullTextIndex = fullTextIndex;
 	}
 
 	@SuppressWarnings({ "unchecked", "deprecation" })
@@ -105,9 +101,6 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 
 		MongoParameter mongoParameter = new MongoParameter(parameter);
 
-		if (this.fullTextIndex == null && mongoParameter.hasFullTextAnnotation()) {
-			this.fullTextIndex = mongoParameter.getIndex();
-		}
 		// Detect manually annotated @Near Point and reject multiple annotated ones
 		if (this.nearIndex == null && mongoParameter.isManuallyAnnotatedNearParameter()) {
 			this.nearIndex = mongoParameter.getIndex();
@@ -161,7 +154,7 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 	 */
 	@Override
 	protected MongoParameters createFrom(List<MongoParameter> parameters) {
-		return new MongoParameters(parameters, this.distanceIndex, this.nearIndex);
+		return new MongoParameters(parameters, this.distanceIndex, this.nearIndex, this.fullTextIndex);
 	}
 
 	/**
@@ -194,7 +187,7 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 		@Override
 		public boolean isSpecialParameter() {
 			return super.isSpecialParameter() || Distance.class.isAssignableFrom(getType()) || isNearParameter()
-					|| hasFullTextAnnotation();
+					|| TextCriteria.class.isAssignableFrom(getType());
 		}
 
 		private boolean isNearParameter() {
@@ -214,9 +207,6 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 			return parameter.getParameterAnnotation(Near.class) != null;
 		}
 
-		private boolean hasFullTextAnnotation() {
-			return parameter.getParameterAnnotation(FullTextPram.class) != null;
-		}
 	}
 
 }

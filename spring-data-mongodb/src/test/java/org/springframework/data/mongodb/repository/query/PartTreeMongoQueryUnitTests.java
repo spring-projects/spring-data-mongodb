@@ -38,9 +38,7 @@ import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.text.FullTextPram;
-import org.springframework.data.mongodb.core.text.Term;
-import org.springframework.data.mongodb.core.text.Term.Type;
+import org.springframework.data.mongodb.core.query.text.TextCriteria;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Person;
 import org.springframework.data.mongodb.repository.Query;
@@ -132,22 +130,9 @@ public class PartTreeMongoQueryUnitTests {
 	public void shouldAddFullTextParamCorrectlyToDerivedQuery() {
 
 		org.springframework.data.mongodb.core.query.Query query = deriveQueryFromMethod("findPersonByFirstname",
-				new Object[] { "text", "search" });
+				new Object[] { "text", TextCriteria.forDefaultLanguage().matching("search") });
 
 		assertThat(query, isTextQuery().searchingFor("search").where(new Criteria("firstname").is("text")));
-	}
-
-	/**
-	 * @see DATAMONGO-973
-	 */
-	@Test
-	public void shouldFindAndConvertFullTextParamTermAnnotationAtItsIndex() throws SecurityException,
-			NoSuchMethodException {
-
-		org.springframework.data.mongodb.core.query.Query query = deriveQueryFromMethod("findPersonByLastname",
-				new Object[] { "text", new Term("full text", Type.PHRASE) });
-
-		assertThat(query, isTextQuery().searchingFor("\"full text\"").where(new Criteria("lastname").is("text")));
 	}
 
 	private org.springframework.data.mongodb.core.query.Query deriveQueryFromMethod(String method, Object[] args) {
@@ -193,9 +178,7 @@ public class PartTreeMongoQueryUnitTests {
 		@Query(fields = "{ 'firstname' : 0, 'lastname' : 0 }")
 		Person findPersonByFirstnameAndLastname(String firstname, String lastname);
 
-		Person findPersonByFirstname(String firstname, @FullTextPram String fullText);
-
-		Person findPersonByLastname(String firstname, @FullTextPram Term fullText);
+		Person findPersonByFirstname(String firstname, TextCriteria fullText);
 
 	}
 }

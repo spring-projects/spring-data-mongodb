@@ -23,6 +23,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.convert.MongoWriter;
+import org.springframework.data.mongodb.core.query.text.TextCriteria;
 import org.springframework.data.repository.query.ParameterAccessor;
 
 /**
@@ -111,7 +112,7 @@ class StubParameterAccessor implements MongoParameterAccessor {
 	 * @see org.springframework.data.mongodb.repository.query.MongoParameterAccessor#getFullText()
 	 */
 	@Override
-	public String getFullText() {
+	public TextCriteria getFullText() {
 		return null;
 	}
 }

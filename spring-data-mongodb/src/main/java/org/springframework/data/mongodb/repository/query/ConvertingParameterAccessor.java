@@ -27,6 +27,7 @@ import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.convert.MongoWriter;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.mongodb.core.query.text.TextCriteria;
 import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
@@ -115,7 +116,7 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.repository.query.MongoParameterAccessor#getFullText()
 	 */
-	public String getFullText() {
+	public TextCriteria getFullText() {
 		return delegate.getFullText();
 	}
 
