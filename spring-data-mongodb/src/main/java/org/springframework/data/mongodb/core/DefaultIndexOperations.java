@@ -18,6 +18,8 @@ package org.springframework.data.mongodb.core;
 import static org.springframework.data.domain.Sort.Direction.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import org.springframework.dao.DataAccessException;
@@ -25,7 +27,6 @@ import org.springframework.data.mongodb.core.index.IndexDefinition;
 import org.springframework.data.mongodb.core.index.IndexField;
 import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.util.Assert;
-import org.springframework.util.ObjectUtils;
 
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
@@ -43,6 +44,7 @@ public class DefaultIndexOperations implements IndexOperations {
 
 	private static final Double ONE = Double.valueOf(1);
 	private static final Double MINUS_ONE = Double.valueOf(-1);
+	private static final Collection<String> TWO_D_IDENTIFIERS = Arrays.asList("2d", "2dsphere");
 
 	private final MongoOperations mongoOperations;
 	private final String collectionName;
@@ -142,7 +144,7 @@ public class DefaultIndexOperations implements IndexOperations {
 
 						Object value = keyDbObject.get(key);
 
-						if (isGeoIndex(value)) {
+						if (TWO_D_IDENTIFIERS.contains(value)) {
 							indexFields.add(IndexField.geo(key));
 						} else if ("text".equals(value)) {
 
@@ -175,9 +177,5 @@ public class DefaultIndexOperations implements IndexOperations {
 				return indexInfoList;
 			}
 		});
-	}
-
-	private boolean isGeoIndex(Object indexType) {
-		return ObjectUtils.nullSafeEquals("2d", indexType) || ObjectUtils.nullSafeEquals("2dsphere", indexType);
 	}
 }

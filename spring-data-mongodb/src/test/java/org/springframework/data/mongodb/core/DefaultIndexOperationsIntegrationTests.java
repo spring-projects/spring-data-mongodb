@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.hamcrest.core.Is.*;
+import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
 import org.junit.Before;
@@ -25,7 +25,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
 
 import com.mongodb.BasicDBObject;
@@ -33,26 +32,30 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 
 /**
+ * Integration tests for {@link DefaultIndexOperations}.
+ * 
  * @author Christoph Strobl
+ * @author Oliver Gierke
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:infrastructure.xml")
-public class DefaultIndexOperationTests {
+public class DefaultIndexOperationsIntegrationTests {
 
-	private static final String COLLECTION_NAME = ClassUtils.getShortNameAsProperty(DefaultIndexOperationTests.class);
-	private static final DBObject GEO_SPHERE_2D = new BasicDBObject("loaction", "2dsphere");
+	static final DBObject GEO_SPHERE_2D = new BasicDBObject("loaction", "2dsphere");
 
 	@Autowired MongoTemplate template;
-	private DefaultIndexOperations indexOps;
-	private DBCollection collection;
+	DefaultIndexOperations indexOps;
+	DBCollection collection;
 
 	@Before
 	public void setUp() {
 
-		this.collection = this.template.getDb().getCollection(COLLECTION_NAME);
-		dropAllIndexes();
+		String collectionName = this.template.getCollectionName(DefaultIndexOperationsIntegrationTestsSample.class);
 
-		indexOps = new DefaultIndexOperations(template, COLLECTION_NAME);
+		this.collection = this.template.getDb().getCollection(collectionName);
+		this.collection.dropIndexes();
+
+		this.indexOps = new DefaultIndexOperations(template, collectionName);
 	}
 
 	/**
@@ -61,7 +64,7 @@ public class DefaultIndexOperationTests {
 	@Test
 	public void getIndexInfoShouldBeAbleToRead2dsphereIndex() {
 
-		createIndex(GEO_SPHERE_2D);
+		collection.createIndex(GEO_SPHERE_2D);
 
 		IndexInfo info = findAndReturnIndexInfo(GEO_SPHERE_2D);
 		assertThat(info.getIndexFields().get(0).isGeo(), is(true));
@@ -72,11 +75,11 @@ public class DefaultIndexOperationTests {
 	}
 
 	@SuppressWarnings("deprecation")
-	private IndexInfo findAndReturnIndexInfo(Iterable<IndexInfo> candidates, DBObject keys) {
+	private static IndexInfo findAndReturnIndexInfo(Iterable<IndexInfo> candidates, DBObject keys) {
 		return findAndReturnIndexInfo(candidates, DBCollection.genIndexName(keys));
 	}
 
-	private IndexInfo findAndReturnIndexInfo(Iterable<IndexInfo> candidates, String name) {
+	private static IndexInfo findAndReturnIndexInfo(Iterable<IndexInfo> candidates, String name) {
 
 		for (IndexInfo info : candidates) {
 			if (ObjectUtils.nullSafeEquals(name, info.getName())) {
@@ -86,12 +89,5 @@ public class DefaultIndexOperationTests {
 		throw new AssertionError(String.format("Index with %s was not found", name));
 	}
 
-	private void createIndex(DBObject keys) {
-		template.getDb().getCollection(COLLECTION_NAME).createIndex(keys);
-	}
-
-	private void dropAllIndexes() {
-		this.collection.dropIndexes();
-	}
-
+	static class DefaultIndexOperationsIntegrationTestsSample {}
 }
