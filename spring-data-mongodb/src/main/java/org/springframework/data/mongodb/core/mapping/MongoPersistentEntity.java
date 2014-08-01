@@ -40,4 +40,19 @@ public interface MongoPersistentEntity<T> extends PersistentEntity<T, MongoPersi
 	 */
 	String getLanguage();
 
+	/**
+	 * Returns the property holding text score value.
+	 * 
+	 * @since 1.6
+	 * @see #hasTextScoreProperty()
+	 * @return {@literal null} if not present.
+	 */
+	MongoPersistentProperty getTextScoreProperty();
+
+	/**
+	 * @since 1.6
+	 * @return true if property annotated with {@link TextScore} is present.
+	 */
+	boolean hasTextScoreProperty();
+
 }

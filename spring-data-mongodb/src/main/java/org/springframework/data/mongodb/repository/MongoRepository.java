@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2012 the original author or authors.
+ * Copyright 2010-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,10 @@ package org.springframework.data.mongodb.repository;
 import java.io.Serializable;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.query.text.TextCriteria;
 import org.springframework.data.repository.NoRepositoryBean;
 import org.springframework.data.repository.PagingAndSortingRepository;
 
@@ -26,6 +29,7 @@ import org.springframework.data.repository.PagingAndSortingRepository;
  * Mongo specific {@link org.springframework.data.repository.Repository} interface.
  * 
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 @NoRepositoryBean
 public interface MongoRepository<T, ID extends Serializable> extends PagingAndSortingRepository<T, ID> {
@@ -47,4 +51,33 @@ public interface MongoRepository<T, ID extends Serializable> extends PagingAndSo
 	 * @see org.springframework.data.repository.PagingAndSortingRepository#findAll(org.springframework.data.domain.Sort)
 	 */
 	List<T> findAll(Sort sort);
+
+	/**
+	 * Retrieve all documents matching given criteria.
+	 * 
+	 * @param textCriteria
+	 * @return
+	 * @since 1.6
+	 */
+	List<T> findAllBy(TextCriteria textCriteria);
+
+	/**
+	 * Retrieve sorted list of documents matching given criteria.
+	 * 
+	 * @param textCriteria
+	 * @param sort
+	 * @return
+	 * @since 1.6
+	 */
+	List<T> findAllBy(TextCriteria textCriteria, Sort sort);
+
+	/**
+	 * Retrieve all documents matching given criteria in range of page.
+	 * 
+	 * @param textCriteria
+	 * @param pageable
+	 * @return
+	 * @since 1.6
+	 */
+	Page<T> findBy(TextCriteria textCriteria, Pageable pageable);
 }

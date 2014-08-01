@@ -276,7 +276,7 @@ public class TextIndexDefinition implements IndexDefinition {
 		 * @return
 		 */
 		public TextIndexDefinitionBuilder onField(String fieldname) {
-			return onField(fieldname, Float.NaN);
+			return onField(fieldname, 1F);
 		}
 
 		/**

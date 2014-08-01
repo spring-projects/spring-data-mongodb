@@ -171,14 +171,6 @@ public class MongoQueryMethod extends QueryMethod {
 	}
 
 	/**
-	 * @return true if parameters contain full text param.
-	 * @since 1.6
-	 */
-	public boolean isFullTextQuery() {
-		return getParameters().hasFullTextParameter();
-	}
-
-	/**
 	 * Returns the {@link Query} annotation that is applied to the method or {@code null} if none available.
 	 * 
 	 * @return

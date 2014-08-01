@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2012 the original author or authors.
+ * Copyright 2010-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,6 +32,7 @@ import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.text.TextCriteria;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
 import org.springframework.util.Assert;
@@ -40,6 +41,7 @@ import org.springframework.util.Assert;
  * Repository base implementation for Mongo.
  * 
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 public class SimpleMongoRepository<T, ID extends Serializable> implements MongoRepository<T, ID> {
 
@@ -208,6 +210,36 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 		return findAll(new Query().with(sort));
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.MongoRepository#findAllBy(org.springframework.data.mongodb.core.query.text.TextCriteria)
+	 */
+	@Override
+	public List<T> findAllBy(TextCriteria textCriteria) {
+		return findAllBy(textCriteria, (Sort) null);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.MongoRepository#findAllBy(org.springframework.data.mongodb.core.query.text.TextCriteria, org.springframework.data.domain.Sort)
+	 */
+	@Override
+	public List<T> findAllBy(TextCriteria textCriteria, Sort sort) {
+		return findAll(new Query(textCriteria).with(sort));
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.MongoRepository#findBy(org.springframework.data.mongodb.core.query.text.TextCriteria, org.springframework.data.domain.Pageable)
+	 */
+	@Override
+	public Page<T> findBy(TextCriteria textCriteria, Pageable pageable) {
+
+		Query query = new Query(textCriteria);
+		long count = mongoOperations.count(query, entityInformation.getJavaType());
+		return new PageImpl<T>(findAll(query.with(pageable)), pageable, count);
+	}
+
 	private List<T> findAll(Query query) {
 
 		if (query == null) {
@@ -232,4 +264,5 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 	protected MongoEntityInformation<T, ID> getEntityInformation() {
 		return entityInformation;
 	}
+
 }
