@@ -1,0 +1,33 @@
+[[mongo.logging]]
+= Logging support
+
+An appender for Log4j is provided in the maven module "spring-data-mongodb-log4j". Note, there is no dependency on other Spring Mongo modules, only the MongoDB driver.
+
+[[mongodb:logging-configuration]]
+== MongoDB Log4j Configuration
+
+Here is an example configuration
+
+[source]
+----
+log4j.rootCategory=INFO, stdout
+
+log4j.appender.stdout=org.springframework.data.document.mongodb.log4j.MongoLog4jAppender
+log4j.appender.stdout.layout=org.apache.log4j.PatternLayout
+log4j.appender.stdout.layout.ConversionPattern=%d %p [%c] - <%m>%n
+log4j.appender.stdout.host = localhost
+log4j.appender.stdout.port = 27017
+log4j.appender.stdout.database = logs
+log4j.appender.stdout.collectionPattern = %X{year}%X{month}
+log4j.appender.stdout.applicationId = my.application
+log4j.appender.stdout.warnOrHigherWriteConcern = FSYNC_SAFE
+
+log4j.category.org.apache.activemq=ERROR
+log4j.category.org.springframework.batch=DEBUG
+log4j.category.org.springframework.data.document.mongodb=DEBUG
+log4j.category.org.springframework.transaction=INFO
+----
+
+The important configuration to look at aside from host and port is the database and collectionPattern. The variables year, month, day and hour are available for you to use in forming a collection name. This is to support the common convention of grouping log information in a collection that corresponds to a specific time period, for example a collection per day.
+
+There is also an applicationId which is put into the stored message. The document stored from logging as the following keys: level, name, applicationId, timestamp, properties, traceback, and message.

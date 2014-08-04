@@ -1,0 +1,38 @@
+= Spring Data MongoDB - Reference Documentation
+Mark Pollack, Thomas Risberg, Oliver Gierke, Costin Leau, Jon Brisbin, Thomas Darimont, Christoph Strobl
+:toc:
+:spring-data-commons-docs: https://raw.githubusercontent.com/spring-projects/spring-data-commons/issue/DATACMNS-551/src/main/asciidoc
+{version}
+
+NOTE: _Copies of this document may be made for your own use and for distribution to others, provided that you do not charge any fee for such copies and further provided that each copy contains this Copyright Notice, whether distributed in print or electronically._
+
+include::preface.adoc[]
+include::introduction/introduction.adoc[]
+
+:leveloffset: 1
+include::introduction/requirements.adoc[]
+include::introduction/getting-started.adoc[]
+include::{spring-data-commons-docs}/repositories.adoc[]
+
+:leveloffset: 0
+[[reference]]
+= Reference Documentation
+
+:leveloffset: 1
+include::reference/introduction.adoc[]
+include::reference/mongodb.adoc[]
+include::reference/mongo-repositories.adoc[]
+include::{spring-data-commons-docs}/auditing.adoc[]
+include::reference/mapping.adoc[]
+include::reference/cross-store.adoc[]
+include::reference/logging.adoc[]
+include::reference/jmx.adoc[]
+
+:leveloffset: 0
+= Appendix
+
+:numbered!:
+:leveloffset: 1
+include::{spring-data-commons-docs}/repository-namespace-reference.adoc[]
+include::{spring-data-commons-docs}/repository-namespace-reference.adoc[]
+include::{spring-data-commons-docs}/repository-query-keywords-reference.adoc[]
