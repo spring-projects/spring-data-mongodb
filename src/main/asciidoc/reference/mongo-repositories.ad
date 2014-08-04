@@ -1,0 +1,336 @@
+[[mongo.repositories]]
+= MongoDB repositories
+
+[[mongo-repo-intro]]
+== Introduction
+
+This chapter will point out the specialties for repository support for MongoDB. This builds on the core repository support explained in <<repositories>>. So make sure you've got a sound understanding of the basic concepts explained there.
+
+[[mongo-repo-usage]]
+== Usage
+
+To access domain entities stored in a MongoDB you can leverage our sophisticated repository support that eases implementing those quite significantly. To do so, simply create an interface for your repository:
+
+=== Sample Person entity
+
+[source,java]
+----
+public class Person {
+
+  @Id
+  private String id;
+  private String firstname;
+  private String lastname;
+  private Address address;
+
+  // … getters and setters omitted
+}
+----
+
+We have a quite simple domain object here. Note that it has a property named `id` of type`ObjectId`. The default serialization mechanism used in `MongoTemplate` (which is backing the repository support) regards properties named id as document id. Currently we support`String`, `ObjectId` and `BigInteger` as id-types.
+
+=== Basic repository interface to persist Person entities
+
+[source]
+----
+public interface PersonRepository extends PagingAndSortingRepository<Person, Long> {
+
+  // additional custom finder methods go here
+}    
+----
+
+Right now this interface simply serves typing purposes but we will add additional methods to it later. In your Spring configuration simply add
+
+=== General MongoDB repository Spring configuration
+
+[source,xml]
+----
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:mongo="http://www.springframework.org/schema/data/mongo"
+  xsi:schemaLocation="http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+    http://www.springframework.org/schema/data/mongo
+    http://www.springframework.org/schema/data/mongo/spring-mongo-1.0.xsd">
+
+  <mongo:mongo id="mongo" />
+  
+  <bean id="mongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate">
+    <constructor-arg ref="mongo" />
+    <constructor-arg value="databaseName" />
+  </bean>
+
+  <mongo:repositories base-package="com.acme.*.repositories" />
+
+</beans>
+----
+
+This namespace element will cause the base packages to be scanned for interfaces extending `MongoRepository` and create Spring beans for each of them found. By default the repositories will get a `MongoTemplate` Spring bean wired that is called `mongoTemplate`, so you only need to configure `mongo-template-ref` explicitly if you deviate from this convention.
+
+If you'd rather like to go with JavaConfig use the `@EnableMongoRepositories` annotation. The annotation carries the very same attributes like the namespace element. If no base package is configured the infrastructure will scan the package of the annotated configuration class.
+
+=== JavaConfig for repositories
+
+[source,java]
+----
+@Configuration
+@EnableMongoRepositories
+class ApplicationConfig extends AbstractMongoConfiguration {
+
+  @Override
+  protected String getDatabaseName() {
+    return "e-store";
+  }
+
+  @Override
+  public Mongo mongo() throws Exception {
+    return new Mongo();
+  }
+
+  @Override
+  protected String getMappingBasePackage() {
+    return "com.oreilly.springdata.mongodb"
+  }
+}
+----
+
+As our domain repository extends `PagingAndSortingRepository` it provides you with CRUD operations as well as methods for paginated and sorted access to the entities. Working with the repository instance is just a matter of dependency injecting it into a client. So accessing the second page of `Person`s at a page size of 10 would simply look something like this:
+
+=== Paging access to Person entities
+
+[source,java]
+----
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration
+public class PersonRepositoryTests {
+
+    @Autowired PersonRepository repository;
+
+    @Test
+    public void readsFirstPageCorrectly() {
+
+      Page<Person> persons = repository.findAll(new PageRequest(0, 10));
+      assertThat(persons.isFirstPage(), is(true));
+    }
+}    
+----
+
+The sample creates an application context with Spring's unit test support which will perform annotation based dependency injection into test cases. Inside the test method we simply use the repository to query the datastore. We hand the repository a `PageRequest` instance that requests the first page of persons at a page size of 10.
+
+[[mongodb.repositories.queries]]
+== Query methods
+
+Most of the data access operations you usually trigger on a repository result a query being executed against the MongoDB databases. Defining such a query is just a matter of declaring a method on the repository interface
+
+=== PersonRepository with query methods
+
+[source,java]
+----
+public interface PersonRepository extends PagingAndSortingRepository<Person, String> {
+
+    List<Person> findByLastname(String lastname);
+
+    Page<Person> findByFirstname(String firstname, Pageable pageable);
+
+    Person findByShippingAddresses(Address address);
+
+}     
+----
+
+The first method shows a query for all people with the given lastname. The query will be derived parsing the method name for constraints which can be concatenated with `And` and `Or`. Thus the method name will result in a query expression of`{"lastname" : lastname}`. The second example shows how pagination is applied to a query. Just equip your method signature with a `Pageable` parameter and let the method return a `Page` instance and we will automatically page the query accordingly. The third examples shows that you can query based on properties which are not a primitive type.
+
+NOTE: Note that for version 1.0 we currently don't support referring to parameters that are mapped as `DBRef` in the domain class.
+
+[[mongodb.repositories.queries.delete]]
+=== Repository delete queries
+
+The above keywords can be used in conjunciton with `delete…By` or `remove…By` to create queries deleting matching documents.
+
+==== `Delete…By` Query
+
+[source,java]
+----
+public interface PersonRepository extends MongoRepository<Person, String> {
+  List <Person> deleteByLastname(String lastname);
+  
+  Long deletePersonByLastname(String lastname);  		
+}
+----
+
+Using return type `List` will retrieve and return all matching documents before actually deleting them. A numeric return type directly removes the matching documents returning the total number of documents removed.
+
+[[mongodb.repositories.queries.geo-spatial]]
+=== Geo-spatial repository queries
+
+As you've just seen there are a few keywords triggering geo-spatial operations within a MongoDB query. The `Near` keyword allows some further modification. Let's have look at some examples:
+
+==== Advanced `Near` queries
+
+[source,java]
+----
+public interface PersonRepository extends MongoRepository<Person, String>
+
+  // { 'location' : { '$near' : [point.x, point.y], '$maxDistance' : distance}}
+  List<Person> findByLocationNear(Point location, Distance distance);
+}
+----
+
+Adding a `Distance` parameter to the query method allows restricting results to those within the given distance. If the `Distance` was set up containing a `Metric` we will transparently use `$nearSphere` instead of $code.
+
+==== Using `Distance` with `Metrics`
+
+[source,java]
+----
+Point point = new Point(43.7, 48.8);
+Distance distance = new Distance(200, Metrics.KILOMETERS);
+… = repository.findByLocationNear(point, distance);
+// {'location' : {'$nearSphere' : [43.7, 48.8], '$maxDistance' : 0.03135711885774796}}
+----
+
+As you can see using a `Distance` equipped with a `Metric` causes `$nearSphere` clause to be added instead of a plain `$near`. Beyond that the actual distance gets calculated according to the `Metrics` used.
+
+==== Geo-near queries
+
+[source,java]
+----
+public interface PersonRepository extends MongoRepository<Person, String>
+
+  // {'geoNear' : 'location', 'near' : [x, y] }
+  GeoResults<Person> findByLocationNear(Point location);
+
+  // No metric: {'geoNear' : 'person', 'near' : [x, y], maxDistance : distance }
+  // Metric: {'geoNear' : 'person', 'near' : [x, y], 'maxDistance' : distance, 
+  //          'distanceMultiplier' : metric.multiplier, 'spherical' : true }
+  GeoResults<Person> findByLocationNear(Point location, Distance distance);
+
+  // {'geoNear' : 'location', 'near' : [x, y] }
+  GeoResults<Person> findByLocationNear(Point location);
+}
+----
+
+[[mongodb.repositories.queries.json-based]]
+=== MongoDB JSON based query methods and field restriction
+
+By adding the annotation `org.springframework.data.mongodb.repository.Query` repository finder methods you can specify a MongoDB JSON query string to use instead of having the query derived from the method name. For example
+
+[source,java]
+----
+public interface PersonRepository extends MongoRepository<Person, String>
+
+  @Query("{ 'firstname' : ?0 }")
+  List<Person> findByThePersonsFirstname(String firstname);
+
+}
+----
+
+The placeholder ?0 lets you substitute the value from the method arguments into the JSON query string.
+
+You can also use the filter property to restrict the set of properties that will be mapped into the Java object. For example,
+
+[source,java]
+----
+public interface PersonRepository extends MongoRepository<Person, String>
+
+  @Query(value="{ 'firstname' : ?0 }", fields="{ 'firstname' : 1, 'lastname' : 1}")
+  List<Person> findByThePersonsFirstname(String firstname);
+
+}
+----
+
+This will return only the firstname, lastname and Id properties of the Person objects. The age property, a java.lang.Integer, will not be set and its value will therefore be null.
+
+[[mongodb.repositories.queries.type-safe]]
+=== Type-safe Query methods
+
+MongoDB repository support integrates with the http://www.querydsl.com/[QueryDSL] project which provides a means to perform type-safe queries in Java. To quote from the project description, "Instead of writing queries as inline strings or externalizing them into XML files they are constructed via a fluent API." It provides the following features
+
+* Code completion in IDE (all properties, methods and operations can be expanded in your favorite Java IDE)
+* Almost no syntactically invalid queries allowed (type-safe on all levels)
+* Domain types and properties can be referenced safely (no Strings involved!)
+* Adopts better to refactoring changes in domain types
+* Incremental query definition is easier
+
+Please refer to the QueryDSL documentation which describes how to bootstrap your environment for APT based code generation http://source.mysema.com/static/querydsl/2.1.2/reference/html/ch02.html#d0e112[using Maven] or http://source.mysema.com/static/querydsl/2.1.2/reference/html/ch02.html#d0e131[using Ant].
+
+Using QueryDSL you will be able to write queries as shown below
+
+[source,java]
+----
+QPerson person = new QPerson("person");
+List<Person> result = repository.findAll(person.address.zipCode.eq("C0123"));
+
+Page<Person> page = repository.findAll(person.lastname.contains("a"), 
+                                       new PageRequest(0, 2, Direction.ASC, "lastname"));
+----
+
+`QPerson` is a class that is generated (via the Java annotation post processing tool) which is a `Predicate` that allows you to write type safe queries. Notice that there are no strings in the query other than the value "C0123".
+
+You can use the generated `Predicate` class via the interface `QueryDslPredicateExecutor` which is shown below
+
+[source,java]
+----
+public interface QueryDslPredicateExecutor<T> {
+
+  T findOne(Predicate predicate);
+
+  List<T> findAll(Predicate predicate);
+
+  List<T> findAll(Predicate predicate, OrderSpecifier<?>... orders);
+
+  Page<T> findAll(Predicate predicate, Pageable pageable);
+
+  Long count(Predicate predicate);
+}
+----
+
+To use this in your repository implementation, simply inherit from it in addition to other repository interfaces. This is shown below
+
+[source,java]
+----
+public interface PersonRepository extends MongoRepository<Person, String>, QueryDslPredicateExecutor<Person> {
+
+   // additional finder methods go here
+
+}
+----
+
+We think you will find this an extremely powerful tool for writing MongoDB queries.
+
+[[mongodb.repositories.misc]]
+== Miscellaneous
+
+[[mongodb.repositories.misc.cdi-integration]]
+=== CDI Integration
+
+Instances of the repository interfaces are usually created by a container, which Spring is the most natural choice when working with Spring Data. As of version 1.3.0 Spring Data MongoDB ships with a custom CDI extension that allows using the repository abstraction in CDI environments. The extension is part of the JAR so all you need to do to activate it is dropping the Spring Data MongoDB JAR into your classpath. You can now set up the infrastructure by implementing a CDI Producer for the `MongoTemplate`:
+
+[source,java]
+----
+class MongoTemplateProducer {
+
+    @Produces
+    @ApplicationScoped
+    public MongoOperations createMongoTemplate() throws UnknownHostException, MongoException {
+
+        MongoDbFactory factory = new SimpleMongoDbFactory(new Mongo(), "database");
+        return new MongoTemplate(factory);
+    }
+}
+----
+
+The Spring Data MongoDB CDI extension will pick up the `MongoTemplate` available as CDI bean and create a proxy for a Spring Data repository whenever an bean of a repository type is requested by the container. Thus obtaining an instance of a Spring Data repository is a matter of declaring an `@Inject`-ed property:
+
+[source,java]
+----
+class RepositoryClient {
+
+  @Inject
+  PersonRepository repository;
+
+  public void businessMethod() {
+
+    List<Person> people = repository.findAll();
+  }
+}
+----

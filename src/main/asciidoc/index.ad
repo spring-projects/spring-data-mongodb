@@ -1,0 +1,64 @@
+= Spring Data MongoDB - Reference Documentation
+Mark Pollack, Thomas Risberg, Oliver Gierke, Costin Leau, Jon Brisbin, Thomas Darimont, Christoph Strobl
+:year: 2008-2014
+:releaseinfo: 
+:toc:
+:toclevels: 4
+:source-highlighter: prettify
+:idprefix:
+:spring_data_commons: https://raw.githubusercontent.com/spring-projects/spring-data-commons/issue/DATACMNS-551/src/main/asciidoc
+
+{version}
+
+(C) 2008-2014 Original authors
+
+NOTE: _Copies of this document may be made for your own use and for distribution to others, provided that you do not charge any fee for such copies and further provided that each copy contains this Copyright Notice, whether distributed in print or electronically._
+
+:numbered!:
+:leveloffset: 1
+include::preface.ad[]
+
+:numbered:
+:leveloffset: 0
+[[introduction]]
+== Introduction
+
+:leveloffset: 1
+include::introduction/introduction.ad[]
+
+include::introduction/requirements.ad[]
+
+:leveloffset: 2
+include::introduction/getting-started.ad[]
+
+include::{spring_data_commons}/repositories.adoc[]
+
+:leveloffset: 0
+[[reference]]
+== Reference Documentation
+
+:leveloffset: 2
+include::reference/introduction.ad[]
+
+include::reference/mongodb.ad[]
+
+include::reference/mongo-repositories.ad[]
+
+include::reference/mapping.ad[]
+
+include::reference/cross-store.ad[]
+
+include::reference/logging.ad[]
+
+include::reference/jmx.ad[]
+
+:leveloffset: 0
+[[appendix]]
+== Appendix
+
+:numbered!:
+
+:leveloffset: 1
+include::{spring_data_commons}/repository-namespace-reference.adoc[]
+
+include::{spring_data_commons}/repository-query-keywords-reference.adoc[]

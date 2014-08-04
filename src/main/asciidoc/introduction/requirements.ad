@@ -1,0 +1,9 @@
+[[requirements]]
+== Requirements
+
+Spring Data MongoDB 1.x binaries requires JDK level 6.0 and above, and http://spring.io/docs[Spring Framework] 3.2.x and above. 
+
+
+ In terms of document stores, http://www.mongodb.org/[MongoDB] preferably version 2.4. 
+
+
