@@ -32,6 +32,7 @@ import org.springframework.data.repository.query.ParameterAccessor;
  * 
  * @author Oliver Gierke
  * @author Christoh Strobl
+ * @author Thomas Darimont
  */
 class StubParameterAccessor implements MongoParameterAccessor {
 
@@ -128,5 +129,13 @@ class StubParameterAccessor implements MongoParameterAccessor {
 	@Override
 	public TextCriteria getFullText() {
 		return null;
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.query.MongoParameterAccessor#getValues()
+	 */
+	@Override
+	public Object[] getValues() {
+		return this.values;
 	}
 }

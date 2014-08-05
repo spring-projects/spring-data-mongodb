@@ -15,9 +15,10 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
+import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Method;
 import java.util.Collections;
@@ -41,6 +42,8 @@ import org.springframework.data.mongodb.repository.Address;
 import org.springframework.data.mongodb.repository.Person;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.repository.core.RepositoryMetadata;
+import org.springframework.data.repository.query.DefaultEvaluationContextProvider;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.BasicDBObjectBuilder;
@@ -57,6 +60,8 @@ import com.mongodb.DBRef;
 @RunWith(MockitoJUnitRunner.class)
 public class StringBasedMongoQueryUnitTests {
 
+	SpelExpressionParser PARSER = new SpelExpressionParser();
+	
 	@Mock MongoOperations operations;
 	@Mock RepositoryMetadata metadata;
 	@Mock DbRefResolver factory;
@@ -76,7 +81,8 @@ public class StringBasedMongoQueryUnitTests {
 
 		Method method = SampleRepository.class.getMethod("findByLastname", String.class);
 		MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, converter.getMappingContext());
-		StringBasedMongoQuery mongoQuery = new StringBasedMongoQuery(queryMethod, operations);
+		StringBasedMongoQuery mongoQuery = new StringBasedMongoQuery(queryMethod, operations,
+				DefaultEvaluationContextProvider.INSTANCE, PARSER);
 		ConvertingParameterAccessor accesor = StubParameterAccessor.getAccessor(converter, "Matthews");
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor);
@@ -259,6 +265,21 @@ public class StringBasedMongoQueryUnitTests {
 	}
 
 	/**
+	 * @see DATAMONGO-990
+	 */
+	@Test
+	public void shouldSupportExpressionsInCustomQueries() throws Exception {
+
+		ConvertingParameterAccessor accesor = StubParameterAccessor.getAccessor(converter, "Matthews");
+		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByQueryWithExpression", String.class);
+
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor);
+		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery("{'lastname' : 'Matthews'}");
+
+		assertThat(query.getQueryObject(), is(reference.getQueryObject()));
+	}
+
+	/**
 	 * @see DATAMONGO-1070
 	 */
 	@Test
@@ -293,7 +314,7 @@ public class StringBasedMongoQueryUnitTests {
 
 		Method method = SampleRepository.class.getMethod(name, parameters);
 		MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, converter.getMappingContext());
-		return new StringBasedMongoQuery(queryMethod, operations);
+		return new StringBasedMongoQuery(queryMethod, operations, DefaultEvaluationContextProvider.INSTANCE, PARSER);
 	}
 
 	private interface SampleRepository {
@@ -334,5 +355,7 @@ public class StringBasedMongoQueryUnitTests {
 		@Query("{ ?0 : ?1}")
 		Object methodWithPlaceholderInKeyOfJsonStructure(String keyReplacement, String valueReplacement);
 
+		@Query(value = "{'lastname': ?#{[0]} }")
+		List<Person> findByQueryWithExpression(String param0);
 	}
 }

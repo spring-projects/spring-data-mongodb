@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2012 the original author or authors.
+ * Copyright 2010-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.repository.support;
 
-import static org.springframework.data.querydsl.QueryDslUtils.*;
+import static org.springframework.data.querydsl.QueryDslUtils.QUERY_DSL_PRESENT;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
@@ -34,18 +34,23 @@ import org.springframework.data.querydsl.QueryDslPredicateExecutor;
 import org.springframework.data.repository.core.NamedQueries;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.core.support.RepositoryFactorySupport;
+import org.springframework.data.repository.query.EvaluationContextProvider;
 import org.springframework.data.repository.query.QueryLookupStrategy;
 import org.springframework.data.repository.query.QueryLookupStrategy.Key;
 import org.springframework.data.repository.query.RepositoryQuery;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.util.Assert;
 
 /**
  * Factory to create {@link MongoRepository} instances.
  * 
  * @author Oliver Gierke
+ * @author Thomas Darimont
  */
 public class MongoRepositoryFactory extends RepositoryFactorySupport {
 
+	private static final SpelExpressionParser EXPRESSION_PARSER = new SpelExpressionParser();
+	
 	private final MongoOperations mongoOperations;
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 
@@ -94,21 +99,28 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 		return QUERY_DSL_PRESENT && QueryDslPredicateExecutor.class.isAssignableFrom(repositoryInterface);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.core.support.RepositoryFactorySupport#getQueryLookupStrategy(org.springframework.data.repository.query.QueryLookupStrategy.Key)
+	
+	/* (non-Javadoc)
+	 * @see org.springframework.data.repository.core.support.RepositoryFactorySupport#getQueryLookupStrategy(org.springframework.data.repository.query.QueryLookupStrategy.Key, org.springframework.data.repository.query.EvaluationContextProvider)
 	 */
 	@Override
-	protected QueryLookupStrategy getQueryLookupStrategy(Key key) {
-		return new MongoQueryLookupStrategy();
+	protected QueryLookupStrategy getQueryLookupStrategy(Key key, EvaluationContextProvider evaluationContextProvider) {
+		return new MongoQueryLookupStrategy(evaluationContextProvider);
 	}
 
 	/**
 	 * {@link QueryLookupStrategy} to create {@link PartTreeMongoQuery} instances.
 	 * 
 	 * @author Oliver Gierke
+	 * @author Thomas Darimont
 	 */
 	private class MongoQueryLookupStrategy implements QueryLookupStrategy {
+
+		private final EvaluationContextProvider evaluationContextProvider;
+
+		public MongoQueryLookupStrategy(EvaluationContextProvider evaluationContextProvider) {
+			this.evaluationContextProvider = evaluationContextProvider;
+		}
 
 		/*
 		 * (non-Javadoc)
@@ -121,11 +133,11 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 
 			if (namedQueries.hasQuery(namedQueryName)) {
 				String namedQuery = namedQueries.getQuery(namedQueryName);
-				return new StringBasedMongoQuery(namedQuery, queryMethod, mongoOperations);
+				return new StringBasedMongoQuery(namedQuery, queryMethod, mongoOperations, evaluationContextProvider, EXPRESSION_PARSER);
 			} else if (queryMethod.hasAnnotatedQuery()) {
-				return new StringBasedMongoQuery(queryMethod, mongoOperations);
+				return new StringBasedMongoQuery(queryMethod, mongoOperations, evaluationContextProvider, EXPRESSION_PARSER);
 			} else {
-				return new PartTreeMongoQuery(queryMethod, mongoOperations);
+				return new PartTreeMongoQuery(queryMethod, mongoOperations, evaluationContextProvider);
 			}
 		}
 	}
