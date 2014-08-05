@@ -41,6 +41,7 @@ import com.mongodb.DBRef;
  * 
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Thomas Darimont
  */
 public class ConvertingParameterAccessor implements MongoParameterAccessor {
 
@@ -238,6 +239,14 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 		}
 
 		return source.getClass().isArray() ? CollectionUtils.arrayToList(source) : Collections.singleton(source);
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.query.MongoParameterAccessor#getValues()
+	 */
+	@Override
+	public Object[] getValues() {
+		return delegate.getValues();
 	}
 
 	/**

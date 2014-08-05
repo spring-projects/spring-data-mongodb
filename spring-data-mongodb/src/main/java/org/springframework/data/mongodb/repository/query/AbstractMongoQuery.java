@@ -31,6 +31,7 @@ import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.repository.query.EvaluationContextProvider;
 import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.util.CloseableIterator;
@@ -51,20 +52,25 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 
 	private final MongoQueryMethod method;
 	private final MongoOperations operations;
+	private final EvaluationContextProvider evaluationContextProvider;
 
 	/**
 	 * Creates a new {@link AbstractMongoQuery} from the given {@link MongoQueryMethod} and {@link MongoOperations}.
 	 * 
 	 * @param method must not be {@literal null}.
 	 * @param operations must not be {@literal null}.
+	 * @param evaluationContextProvider must not be {@literal null}.
 	 */
-	public AbstractMongoQuery(MongoQueryMethod method, MongoOperations operations) {
+	public AbstractMongoQuery(MongoQueryMethod method, MongoOperations operations,
+			EvaluationContextProvider evaluationContextProvider) {
 
 		Assert.notNull(operations);
 		Assert.notNull(method);
+		Assert.notNull(evaluationContextProvider, "ExpressionEvaluationContextProvider must not be null!");
 
 		this.method = method;
 		this.operations = operations;
+		this.evaluationContextProvider = evaluationContextProvider;
 	}
 
 	/* 
@@ -157,6 +163,10 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	 * @since 1.5
 	 */
 	protected abstract boolean isDeleteQuery();
+
+	public EvaluationContextProvider getEvaluationContextProvider() {
+		return evaluationContextProvider;
+	}
 
 	private abstract class Execution {
 

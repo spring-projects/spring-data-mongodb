@@ -15,10 +15,11 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
-import static org.springframework.data.mongodb.core.query.IsTextQuery.*;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import static org.springframework.data.mongodb.core.query.IsTextQuery.isTextQuery;
 
 import java.lang.reflect.Method;
 
@@ -43,6 +44,7 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Person;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.repository.core.RepositoryMetadata;
+import org.springframework.data.repository.query.DefaultEvaluationContextProvider;
 
 import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.util.JSONParseException;
@@ -52,6 +54,7 @@ import com.mongodb.util.JSONParseException;
  * 
  * @author Christoph Strobl
  * @author Oliver Gierke
+ * @author Thomas Darimont
  */
 @RunWith(MockitoJUnitRunner.class)
 public class PartTreeMongoQueryUnitTests {
@@ -169,7 +172,7 @@ public class PartTreeMongoQueryUnitTests {
 			Method method = Repo.class.getMethod(methodName, paramTypes);
 			MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadataMock, mappingContext);
 
-			return new PartTreeMongoQuery(queryMethod, mongoOperationsMock);
+			return new PartTreeMongoQuery(queryMethod, mongoOperationsMock, DefaultEvaluationContextProvider.INSTANCE);
 		} catch (NoSuchMethodException e) {
 			throw new IllegalArgumentException(e.getMessage(), e);
 		} catch (SecurityException e) {

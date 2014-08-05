@@ -29,20 +29,23 @@ import org.springframework.util.ClassUtils;
  * 
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Thomas Darimont
  */
 public class MongoParametersParameterAccessor extends ParametersParameterAccessor implements MongoParameterAccessor {
 
 	private final MongoQueryMethod method;
+	private final Object[] values;
 
 	/**
 	 * Creates a new {@link MongoParametersParameterAccessor}.
 	 * 
 	 * @param method must not be {@literal null}.
-	 * @param values must not be {@@iteral null}.
+	 * @param values must not be {@literal null}.
 	 */
 	public MongoParametersParameterAccessor(MongoQueryMethod method, Object[] values) {
 		super(method.getParameters(), values);
 		this.method = method;
+		this.values = values;
 	}
 
 	public Range<Distance> getDistanceRange() {
@@ -120,5 +123,13 @@ public class MongoParametersParameterAccessor extends ParametersParameterAccesso
 		throw new IllegalArgumentException(String.format(
 				"Expected full text parameter to be one of String, Term or TextCriteria but found %s.",
 				ClassUtils.getShortName(fullText.getClass())));
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.query.MongoParameterAccessor#getValues()
+	 */
+	@Override
+	public Object[] getValues() {
+		return values;
 	}
 }

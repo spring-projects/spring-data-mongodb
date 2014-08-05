@@ -26,6 +26,7 @@ import org.springframework.data.repository.query.ParameterAccessor;
  * 
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Thomas Darimont
  */
 public interface MongoParameterAccessor extends ParameterAccessor {
 
@@ -51,4 +52,12 @@ public interface MongoParameterAccessor extends ParameterAccessor {
 	 * @since 1.6
 	 */
 	TextCriteria getFullText();
+
+	/**
+	 * Returns the raw parameter values of the underlying query method.
+	 * 
+	 * @return
+	 * @since 1.8
+	 */
+	Object[] getValues();
 }
