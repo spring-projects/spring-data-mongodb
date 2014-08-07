@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 the original author or authors.
+ * Copyright 2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,26 +15,13 @@
  */
 package org.springframework.data.mongodb.repository.cdi;
 
-import javax.inject.Inject;
+import org.springframework.data.mongodb.core.Person;
+import org.springframework.data.repository.Repository;
 
 /**
- * @author Oliver Gierke
+ * @author Mark Paluch
+ * @see DATAMONGO-1017
  */
-class RepositoryClient {
-
-	@Inject CdiPersonRepository repository;
-
-	@Inject SamplePersonRepository samplePersonRepository;
-
-	/**
-	 * @return the repository
-	 */
-	public CdiPersonRepository getRepository() {
-		return repository;
-	}
-
-	public SamplePersonRepository getSamplePersonRepository() {
-		return samplePersonRepository;
-	}
+public interface SamplePersonRepository extends Repository<Person, Long>, SamplePersonRepositoryCustom {
 
 }
