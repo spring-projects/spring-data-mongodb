@@ -10,8 +10,8 @@ Assuming that you have a working JPA application and would like to add some cros
 
 First of all you need to add a dependency on the  module. Using Maven this is done by adding a dependency to your pom:
 
-=== Example Maven pom.xml with spring-data-mongodb-cross-store dependency
-
+.Example Maven pom.xml with spring-data-mongodb-cross-store dependency
+====
 [source,xml]
 ----
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -31,11 +31,12 @@ First of all you need to add a dependency on the  module. Using Maven this is do
 
 </project>
 ----
+====
 
 Once this is done we need to enable AspectJ for the project. The cross-store support is implemented using AspectJ aspects so by enabling compile time AspectJ support the cross-store features will become available to your project. In Maven you would add an additional plugin to the <build> section of the pom:
 
-=== Example Maven pom.xml with AspectJ plugin enabled
-
+.Example Maven pom.xml with AspectJ plugin enabled
+====
 [source,xml]
 ----
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -100,11 +101,12 @@ Once this is done we need to enable AspectJ for the project. The cross-store sup
 
 </project>
 ----
+====
 
 Finally, you need to configure your project to use MongoDB and also configure the aspects that are used. The following XML snippet should be added to your application context:
 
-=== Example application context with MongoDB and cross-store aspect support
-
+.Example application context with MongoDB and cross-store aspect support
+====
 [source,xml]
 ----
 <?xml version="1.0" encoding="UTF-8"?>
@@ -150,14 +152,15 @@ Finally, you need to configure your project to use MongoDB and also configure th
 
 </beans>
 ----
+====
 
 [[mongodb_cross-store-application]]
 == Writing the Cross Store Application
 
 We are assuming that you have a working JPA application so we will only cover the additional steps needed to persist part of your Entity in your Mongo database. First you need to identify the field you want persisted. It should be a domain class and follow the general rules for the Mongo mapping support covered in previous chapters. The field you want persisted in MongoDB should be annotated using the `@RelatedDocument` annotation. That is really all you need to do!. The cross-store aspects take care of the rest. This includes marking the field with `@Transient` so it won't be persisted using JPA, keeping track of any changes made to the field value and writing them to the database on successful transaction completion, loading the document from MongoDB the first time the value is used in your application. Here is an example of a simple Entity that has a field annotated with `@RelatedEntity`.
 
-=== Example of Entity with @RelatedDocument
-
+.Example of Entity with @RelatedDocument
+====
 [source,java]
 ----
 @Entity
@@ -177,9 +180,10 @@ public class Customer {
   // getters and setters omitted
 }
 ----
+====
 
-=== Example of domain class to be stored as document
-
+.Example of domain class to be stored as document
+====
 [source,java]
 ----
 public class SurveyInfo {
@@ -208,11 +212,12 @@ public class SurveyInfo {
   }
 }
 ----
+====
 
 Once the SurveyInfo has been set on the Customer object above the MongoTemplate that was configured above is used to save the SurveyInfo along with some metadata about the JPA Entity is stored in a MongoDB collection named after the fully qualified name of the JPA Entity class. The following code:
 
-=== Example of code using the JPA Entity configured for cross-store persistence
-
+.Example of code using the JPA Entity configured for cross-store persistence
+====
 [source,java]
 ----
 Customer customer = new Customer();
@@ -225,11 +230,12 @@ SurveyInfo surveyInfo = new SurveyInfo()
 customer.setSurveyInfo(surveyInfo);
 customerRepository.save(customer);
 ----
+====
 
 Executing the code above results in the following JSON document stored in MongoDB.
 
-=== Example of JSON document stored in MongoDB
-
+.Example of JSON document stored in MongoDB
+====
 [source,javascript]
 ----
 { "_id" : ObjectId( "4d9e8b6e3c55287f87d4b79e" ),
@@ -241,3 +247,4 @@ Executing the code above results in the following JSON document stored in MongoD
     "citizenship" : "Norwegian" },
   "_entity_field_class" : "org.springframework.data.mongodb.examples.custsvc.domain.SurveyInfo" }
 ----
+====

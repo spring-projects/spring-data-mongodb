@@ -8,8 +8,8 @@ The JMX support for MongoDB exposes the results of executing the 'serverStatus' 
 
 Spring's Mongo namespace enables you to easily enable JMX functionality
 
-=== XML schema to configure MongoDB
-
+.XML schema to configure MongoDB
+====
 [source,xml]
 ----
 <?xml version="1.0" encoding="UTF-8"?>
@@ -45,6 +45,7 @@ Spring's Mongo namespace enables you to easily enable JMX functionality
 
 </beans>
 ----
+====
 
 This will expose several MBeans
 

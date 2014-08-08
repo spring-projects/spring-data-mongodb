@@ -43,8 +43,8 @@ Unless explicitly configured, an instance of `MongoMappingConverter` is created 
 
 You can configure the `MongoMappingConverter` as well as `com.mongodb.Mongo` and MongoTemplate either using Java or XML based metadata. Here is an example using Spring's Java based configuration
 
-=== @Configuration class to configure MongoDB mapping support
-
+.@Configuration class to configure MongoDB mapping support
+====
 [source,java]
 ----
 @Configuration
@@ -83,6 +83,7 @@ public class GeoSpatialAppConfig extends AbstractMongoConfiguration {
   }
 }
 ----
+====
 
 `AbstractMongoConfiguration` requires you to implement methods that define a `com.mongodb.Mongo` as well as provide a database name. `AbstractMongoConfiguration` also has a method you can override named '`getMappingBasePackage`' which tells the converter where to scan for classes annotated with the `@org.springframework.data.mongodb.core.mapping.Document` annotation.
 
@@ -94,8 +95,8 @@ You can also override the method `UserCredentials getUserCredentials()` to provi
 
 Spring's MongoDB namespace enables you to easily enable mapping functionality in XML
 
-=== XML schema to configure MongoDB mapping support
-
+.XML schema to configure MongoDB mapping support
+====
 [source,xml]
 ----
 <?xml version="1.0" encoding="UTF-8"?>
@@ -134,6 +135,7 @@ Spring's MongoDB namespace enables you to easily enable mapping functionality in
 
 </beans>
 ----
+====
 
 The `base-package` property tells it where to scan for classes annotated with the `@org.springframework.data.mongodb.core.mapping.Document` annotation.
 
@@ -142,8 +144,8 @@ The `base-package` property tells it where to scan for classes annotated with th
 
 To take full advantage of the object mapping functionality inside the Spring Data/MongoDB support, you should annotate your mapped objects with the `@org.springframework.data.mongodb.core.mapping.Document` annotation. Although it is not necessary for the mapping framework to have this annotation (your POJOs will be mapped correctly, even without any annotations), it allows the classpath scanner to find and pre-process your domain objects to extract the necessary metadata. If you don't use this annotation, your application will take a slight performance hit the first time you store a domain object because the mapping framework needs to build up its internal metadata model so it knows about the properties of your domain object and how to persist them.
 
-=== Example domain object
-
+.Example domain object
+====
 [source,java]
 ----
 package com.mycompany.domain;
@@ -163,17 +165,18 @@ public class Person {
   private String lastName;
 }
 ----
+====
 
-The `@Id` annotation tells the mapper which property you want to use for the MongoDB `_id` property and the `@Indexed` annotation tells the mapping framework to call `ensureIndex` on that property of your document, making searches faster.
+IMPORTANT: The `@Id` annotation tells the mapper which property you want to use for the MongoDB `_id` property and the `@Indexed` annotation tells the mapping framework to call `ensureIndex` on that property of your document, making searches faster.
 
-Automatic index creation is only done for types annotated with `@Document`.
+IMPORTANT: Automatic index creation is only done for types annotated with `@Document`.
 
 [[mapping-usage-annotations]]
 === Mapping annotation overview
 
 The MappingMongoConverter can use metadata to drive the mapping of objects to documents. An overview of the annotations is provided below
 
-* `@Id `- applied at the field level to mark the field used for identiy purpose.
+* `@Id` - applied at the field level to mark the field used for identiy purpose.
 * `@Document` - applied at the class level to indicate this class is a candidate for mapping to the database. You can specify the name of the collection where the database will be stored.
 * `@DBRef` - applied at the field to indicate it is to be stored using a com.mongodb.DBRef.
 * `@Indexed` - applied at the field level to describe how to index the field.
@@ -292,8 +295,8 @@ NOTE: Compound indexes are very important to improve the performance of queries 
 
 Here's an example that creates a compound index of `lastName` in ascending order and `age` in descending order:
 
-==== Example Compound Index Usage
-
+.Example Compound Index Usage
+====
 [source,java]
 ----
 package com.mycompany.domain;
@@ -312,6 +315,7 @@ public class Person {
 
 }
 ----
+====
 
 [[mapping-usage-indexes.text-index]]
 === Text Indexes
@@ -320,8 +324,8 @@ NOTE: The text index feature is disabled by default for mongodb v.2.4.
 
 Creating a text index allows to accumulate several fields into a searchable full text index. It is only possible to have one text index per collection so all fields marked with `@TextIndexed` are combined into this index. Properties can be weighted to influence document score for ranking results. The default language for the text index is english, to change the default language set `@Document(language="spanish")` to any language you want. Using a property called `language` or `@Language` allows to define a language override on a per document base.
 
-==== Example Text Index Usage
-
+.Example Text Index Usage
+====
 [source,java]
 ----
 @Document(language = "spanish")
@@ -340,6 +344,7 @@ class Nested {
     String roo;
 }
 ----
+====
 
 [[mapping-usage-references]]
 === Using DBRefs
@@ -348,6 +353,7 @@ The mapping framework doesn't have to store child objects embedded within the do
 
 Here's an example of using a DBRef to refer to a specific document that exists independently of the object in which it is referenced (both classes are shown in-line for brevity's sake):
 
+====
 [source,java]
 ----
 @Document
@@ -369,10 +375,11 @@ public class Person {
   private List<Account> accounts;
 }
 ----
+====
 
 There's no need to use something like `@OneToMany` because the mapping framework sees that you're wanting a one-to-many relationship because there is a List of objects. When the object is stored in MongoDB, there will be a list of DBRefs rather than the `Account` objects themselves.
 
-The mapping framework does not handle cascading saves. If you change an `Account` object that is referenced by a `Person` object, you must save the Account object separately. Calling `save` on the `Person` object will not automatically save the `Account` objects in the property `accounts`.
+IMPORTANT: The mapping framework does not handle cascading saves. If you change an `Account` object that is referenced by a `Person` object, you must save the Account object separately. Calling `save` on the `Person` object will not automatically save the `Account` objects in the property `accounts`.
 
 [[mapping-usage-events]]
 === Mapping Framework Events
