@@ -11,8 +11,8 @@ This chapter will point out the specialties for repository support for MongoDB. 
 
 To access domain entities stored in a MongoDB you can leverage our sophisticated repository support that eases implementing those quite significantly. To do so, simply create an interface for your repository:
 
-=== Sample Person entity
-
+.Sample Person entity
+====
 [source,java]
 ----
 public class Person {
@@ -26,11 +26,12 @@ public class Person {
   // … getters and setters omitted
 }
 ----
+====
 
 We have a quite simple domain object here. Note that it has a property named `id` of type`ObjectId`. The default serialization mechanism used in `MongoTemplate` (which is backing the repository support) regards properties named id as document id. Currently we support`String`, `ObjectId` and `BigInteger` as id-types.
 
-=== Basic repository interface to persist Person entities
-
+.Basic repository interface to persist Person entities
+====
 [source]
 ----
 public interface PersonRepository extends PagingAndSortingRepository<Person, Long> {
@@ -38,11 +39,12 @@ public interface PersonRepository extends PagingAndSortingRepository<Person, Lon
   // additional custom finder methods go here
 }
 ----
+====
 
 Right now this interface simply serves typing purposes but we will add additional methods to it later. In your Spring configuration simply add
 
-=== General MongoDB repository Spring configuration
-
+.General MongoDB repository Spring configuration
+====
 [source,xml]
 ----
 <?xml version="1.0" encoding="UTF-8"?>
@@ -65,13 +67,14 @@ Right now this interface simply serves typing purposes but we will add additiona
 
 </beans>
 ----
+====
 
 This namespace element will cause the base packages to be scanned for interfaces extending `MongoRepository` and create Spring beans for each of them found. By default the repositories will get a `MongoTemplate` Spring bean wired that is called `mongoTemplate`, so you only need to configure `mongo-template-ref` explicitly if you deviate from this convention.
 
 If you'd rather like to go with JavaConfig use the `@EnableMongoRepositories` annotation. The annotation carries the very same attributes like the namespace element. If no base package is configured the infrastructure will scan the package of the annotated configuration class.
 
-=== JavaConfig for repositories
-
+.JavaConfig for repositories
+====
 [source,java]
 ----
 @Configuration
@@ -94,11 +97,12 @@ class ApplicationConfig extends AbstractMongoConfiguration {
   }
 }
 ----
+====
 
 As our domain repository extends `PagingAndSortingRepository` it provides you with CRUD operations as well as methods for paginated and sorted access to the entities. Working with the repository instance is just a matter of dependency injecting it into a client. So accessing the second page of `Person`s at a page size of 10 would simply look something like this:
 
-=== Paging access to Person entities
-
+.Paging access to Person entities
+====
 [source,java]
 ----
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -115,6 +119,7 @@ public class PersonRepositoryTests {
     }
 }
 ----
+====
 
 The sample creates an application context with Spring's unit test support which will perform annotation based dependency injection into test cases. Inside the test method we simply use the repository to query the datastore. We hand the repository a `PageRequest` instance that requests the first page of persons at a page size of 10.
 
@@ -123,8 +128,8 @@ The sample creates an application context with Spring's unit test support which 
 
 Most of the data access operations you usually trigger on a repository result a query being executed against the MongoDB databases. Defining such a query is just a matter of declaring a method on the repository interface
 
-=== PersonRepository with query methods
-
+.PersonRepository with query methods
+====
 [source,java]
 ----
 public interface PersonRepository extends PagingAndSortingRepository<Person, String> {
@@ -136,18 +141,103 @@ public interface PersonRepository extends PagingAndSortingRepository<Person, Str
     Person findByShippingAddresses(Address address);
 }
 ----
+====
 
 The first method shows a query for all people with the given lastname. The query will be derived parsing the method name for constraints which can be concatenated with `And` and `Or`. Thus the method name will result in a query expression of`{"lastname" : lastname}`. The second example shows how pagination is applied to a query. Just equip your method signature with a `Pageable` parameter and let the method return a `Page` instance and we will automatically page the query accordingly. The third examples shows that you can query based on properties which are not a primitive type.
 
 NOTE: Note that for version 1.0 we currently don't support referring to parameters that are mapped as `DBRef` in the domain class.
+
+[cols="1,2,3", options="header"] 
+.Supported keywords for query methods
+|===
+| Keyword
+| Sample	
+| Logical result
+
+| `GreaterThan`	
+| `findByAgeGreaterThan(int age)`	
+| `{"age" : {"$gt" : age}}`
+
+| `GreaterThanEqual`	
+| `findByAgeGreaterThanEqual(int age)`	
+| `{"age" : {"$gte" : age}}`
+
+| `LessThan`	
+| `findByAgeLessThan(int age)`	
+| `{"age" : {"$lt" : age}}`
+
+| `LessThanEqual`	
+| `findByAgeLessThanEqual(int age)`	
+| `{"age" : {"$lte" : age}}`
+
+| `Between`	
+| `findByAgeBetween(int from, int to)`	
+| `{"age" : {"$gt" : from, "$lt" : to}}`
+
+| `In`	
+| `findByAgeIn(Collection ages)`
+| `{"age" : {"$in" : [ages...]}}`
+
+| `NotIn`	
+| `findByAgeNotIn(Collection ages)`	
+| `{"age" : {"$nin" : [ages...]}}`
+
+| `IsNotNull, NotNull`	
+| `findByFirstnameNotNull()`	
+| `{"age" : {"$ne" : null}}`
+
+| `IsNull, Null`	
+| `findByFirstnameNull()`	
+| `{"age" : null}`
+
+| `Like`	
+| `findByFirstnameLike(String name)`
+| `{"age" : age} ( age as regex)`
+
+| `Regex`	
+| `findByFirstnameRegex(String firstname)`	
+| `{"firstname" : {"$regex" : firstname }}`
+
+| `(No keyword)`	
+| `findByFirstname(String name)`
+| `{"age" : name}`
+
+| `Not`	
+| `findByFirstnameNot(String name)`	
+| `{"age" : {"$ne" : name}}`
+
+| `Near`	
+| `findByLocationNear(Point point)`	
+| `{"location" : {"$near" : [x,y]}}`
+
+| `Within`	
+| `findByLocationWithin(Circle circle)`	
+| `{"location" : {"$within" : {"$center" : [ [x, y], distance]}}}`
+
+| `Within`	
+| `findByLocationWithin(Box box)`	
+| `{"location" : {"$within" : {"$box" : [ [x1, y1], x2, y2]}}}True`
+
+| `IsTrue, True`	
+| `findByActiveIsTrue()`	
+| `{"active" : true}`
+
+| `IsFalse, False`	
+| `findByActiveIsFalse()`	
+| `{"active" : false}`
+
+| `Exists`	
+| `findByLocationExists(boolean exists)`	
+| `{"location" : {"$exists" : exists }}`
+|===
 
 [[mongodb.repositories.queries.delete]]
 === Repository delete queries
 
 The above keywords can be used in conjunciton with `delete…By` or `remove…By` to create queries deleting matching documents.
 
-==== `Delete…By` Query
-
+.`Delete…By` Query
+====
 [source,java]
 ----
 public interface PersonRepository extends MongoRepository<Person, String> {
@@ -157,6 +247,7 @@ public interface PersonRepository extends MongoRepository<Person, String> {
   Long deletePersonByLastname(String lastname);
 }
 ----
+====
 
 Using return type `List` will retrieve and return all matching documents before actually deleting them. A numeric return type directly removes the matching documents returning the total number of documents removed.
 
@@ -165,8 +256,8 @@ Using return type `List` will retrieve and return all matching documents before 
 
 As you've just seen there are a few keywords triggering geo-spatial operations within a MongoDB query. The `Near` keyword allows some further modification. Let's have look at some examples:
 
-==== Advanced `Near` queries
-
+.Advanced `Near` queries
+====
 [source,java]
 ----
 public interface PersonRepository extends MongoRepository<Person, String>
@@ -175,11 +266,12 @@ public interface PersonRepository extends MongoRepository<Person, String>
   List<Person> findByLocationNear(Point location, Distance distance);
 }
 ----
+====
 
 Adding a `Distance` parameter to the query method allows restricting results to those within the given distance. If the `Distance` was set up containing a `Metric` we will transparently use `$nearSphere` instead of $code.
 
-==== Using `Distance` with `Metrics`
-
+.Using `Distance` with `Metrics`
+====
 [source,java]
 ----
 Point point = new Point(43.7, 48.8);
@@ -187,6 +279,7 @@ Distance distance = new Distance(200, Metrics.KILOMETERS);
 … = repository.findByLocationNear(point, distance);
 // {'location' : {'$nearSphere' : [43.7, 48.8], '$maxDistance' : 0.03135711885774796}}
 ----
+====
 
 As you can see using a `Distance` equipped with a `Metric` causes `$nearSphere` clause to be added instead of a plain `$near`. Beyond that the actual distance gets calculated according to the `Metrics` used.
 
