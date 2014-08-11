@@ -25,6 +25,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -52,6 +53,8 @@ public class Query {
 	private int skip;
 	private int limit;
 	private String hint;
+
+	private Meta meta = new Meta();
 
 	/**
 	 * Static factory method to create a {@link Query} using the provided {@link CriteriaDefinition}.
@@ -275,6 +278,84 @@ public class Query {
 		return hint;
 	}
 
+	/**
+	 * @param maxTimeMsec
+	 * @return
+	 * @see Meta#setMaxTimeMsec(long)
+	 * @since 1.6
+	 */
+	public Query maxTimeMsec(long maxTimeMsec) {
+
+		meta.setMaxTimeMsec(maxTimeMsec);
+		return this;
+	}
+
+	/**
+	 * @param timeout
+	 * @param timeUnit
+	 * @return
+	 * @see Meta#setMaxTime(long, TimeUnit)
+	 * @since 1.6
+	 */
+	public Query maxTime(long timeout, TimeUnit timeUnit) {
+
+		meta.setMaxTime(timeout, timeUnit);
+		return this;
+	}
+
+	/**
+	 * @param maxScan
+	 * @return
+	 * @see Meta#setMaxScan(long)
+	 * @since 1.6
+	 */
+	public Query maxScan(long maxScan) {
+
+		meta.setMaxScan(maxScan);
+		return this;
+	}
+
+	/**
+	 * @param comment
+	 * @return
+	 * @see Meta#setComment(String)
+	 * @since 1.6
+	 */
+	public Query comment(String comment) {
+
+		meta.setComment(comment);
+		return this;
+	}
+
+	/**
+	 * @return
+	 * @see Meta#setSnapshot(boolean)
+	 * @since 1.6
+	 */
+	public Query useSnapshot() {
+
+		meta.setSnapshot(true);
+		return this;
+	}
+
+	/**
+	 * @return never {@literal null}.
+	 * @since 1.6
+	 */
+	public Meta getMeta() {
+		return meta;
+	}
+
+	/**
+	 * @param meta must not be {@literal null}.
+	 * @since 1.6
+	 */
+	public void setMeta(Meta meta) {
+
+		Assert.notNull(meta, "Query meta might be empty but must not be null.");
+		this.meta = meta;
+	}
+
 	protected List<CriteriaDefinition> getCriteria() {
 		return new ArrayList<CriteriaDefinition>(this.criteria.values());
 	}
@@ -312,8 +393,9 @@ public class Query {
 		boolean hintEqual = this.hint == null ? that.hint == null : this.hint.equals(that.hint);
 		boolean skipEqual = this.skip == that.skip;
 		boolean limitEqual = this.limit == that.limit;
+		boolean metaEqual = nullSafeEquals(this.meta, that.meta);
 
-		return criteriaEqual && fieldsEqual && sortEqual && hintEqual && skipEqual && limitEqual;
+		return criteriaEqual && fieldsEqual && sortEqual && hintEqual && skipEqual && limitEqual && metaEqual;
 	}
 
 	/* 
@@ -331,6 +413,7 @@ public class Query {
 		result += 31 * nullSafeHashCode(hint);
 		result += 31 * skip;
 		result += 31 * limit;
+		result += 31 * nullSafeHashCode(meta);
 
 		return result;
 	}

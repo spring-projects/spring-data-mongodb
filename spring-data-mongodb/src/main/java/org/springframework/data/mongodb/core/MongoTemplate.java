@@ -2030,6 +2030,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		}
 
 		public DBCursor doInCollection(DBCollection collection) throws MongoException, DataAccessException {
+
 			if (fields == null || fields.toMap().isEmpty()) {
 				return collection.find(query);
 			} else {
@@ -2185,7 +2186,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			}
 
 			if (query.getSkip() <= 0 && query.getLimit() <= 0 && query.getSortObject() == null
-					&& !StringUtils.hasText(query.getHint())) {
+					&& !StringUtils.hasText(query.getHint()) && !query.getMeta().hasValues()) {
 				return cursor;
 			}
 
@@ -2205,6 +2206,12 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				if (StringUtils.hasText(query.getHint())) {
 					cursorToUse = cursorToUse.hint(query.getHint());
 				}
+				if (query.getMeta().hasValues()) {
+					for (Entry<String, Object> entry : query.getMeta().values()) {
+						cursorToUse = cursorToUse.addSpecial(entry.getKey(), entry.getValue());
+					}
+				}
+
 			} catch (RuntimeException e) {
 				throw potentiallyConvertRuntimeException(e);
 			}

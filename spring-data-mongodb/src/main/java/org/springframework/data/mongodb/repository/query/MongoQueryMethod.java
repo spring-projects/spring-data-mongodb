@@ -27,6 +27,7 @@ import org.springframework.data.geo.GeoResults;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.mongodb.repository.Meta;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.query.QueryMethod;
@@ -181,5 +182,56 @@ public class MongoQueryMethod extends QueryMethod {
 
 	TypeInformation<?> getReturnType() {
 		return ClassTypeInformation.fromReturnTypeOf(method);
+	}
+
+	/**
+	 * @return return true if {@link Meta} annotation is available.
+	 * @since 1.6
+	 */
+	public boolean hasQueryMetaAttributes() {
+		return getMetaAnnotation() != null;
+	}
+
+	/**
+	 * Returns the {@link Meta} annotation that is applied to the method or {@code null} if not available.
+	 * 
+	 * @return
+	 * @since 1.6
+	 */
+	Meta getMetaAnnotation() {
+		return method.getAnnotation(Meta.class);
+	}
+
+	/**
+	 * Returns the {@link org.springframework.data.mongodb.core.query.Meta} attributes to be applied.
+	 * 
+	 * @return never {@literal null}.
+	 * @since 1.6
+	 */
+	public org.springframework.data.mongodb.core.query.Meta getQueryMetaAttributes() {
+
+		Meta meta = getMetaAnnotation();
+		if (meta == null) {
+			return new org.springframework.data.mongodb.core.query.Meta();
+		}
+
+		org.springframework.data.mongodb.core.query.Meta metaAttributes = new org.springframework.data.mongodb.core.query.Meta();
+		if (meta.maxExcecutionTime() > 0) {
+			metaAttributes.setMaxTimeMsec(meta.maxExcecutionTime());
+		}
+
+		if (meta.maxScanDocuments() > 0) {
+			metaAttributes.setMaxScan(meta.maxScanDocuments());
+		}
+
+		if (StringUtils.hasText(meta.comment())) {
+			metaAttributes.setComment(meta.comment());
+		}
+
+		if (meta.snapshot()) {
+			metaAttributes.setSnapshot(meta.snapshot());
+		}
+
+		return metaAttributes;
 	}
 }

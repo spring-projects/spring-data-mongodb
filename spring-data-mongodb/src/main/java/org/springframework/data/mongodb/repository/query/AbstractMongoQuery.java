@@ -129,7 +129,14 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	 * @return
 	 */
 	protected Query createCountQuery(ConvertingParameterAccessor accessor) {
-		return createQuery(accessor);
+
+		Query query = createQuery(accessor);
+
+		if (method.hasQueryMetaAttributes()) {
+			query.setMeta(method.getQueryMetaAttributes());
+		}
+
+		return query;
 	}
 
 	/**

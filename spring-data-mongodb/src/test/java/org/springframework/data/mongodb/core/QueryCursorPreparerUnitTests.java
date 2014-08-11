@@ -15,9 +15,12 @@
  */
 package org.springframework.data.mongodb.core;
 
+import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
+
+import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -25,6 +28,7 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.MongoTemplate.QueryCursorPreparer;
+import org.springframework.data.mongodb.core.query.Meta;
 import org.springframework.data.mongodb.core.query.Query;
 
 import com.mongodb.DBCursor;
@@ -49,9 +53,80 @@ public class QueryCursorPreparerUnitTests {
 
 		Query query = query(where("foo").is("bar")).withHint("hint");
 
-		CursorPreparer preparer = new MongoTemplate(factory).new QueryCursorPreparer(query, null);
-		preparer.prepare(cursor);
+		pepare(query);
 
 		verify(cursor).hint("hint");
+	}
+
+	/**
+	 * @see DATAMONGO-957
+	 */
+	@Test
+	public void doesNotApplyMetaWhenEmpty() {
+
+		Query query = query(where("foo").is("bar"));
+		query.setMeta(new Meta());
+
+		pepare(query);
+
+		verify(cursor, never()).addSpecial(any(String.class), anyObject());
+	}
+
+	/**
+	 * @see DATAMONGO-957
+	 */
+	@Test
+	public void appliesMaxScanCorrectly() {
+
+		Query query = query(where("foo").is("bar")).maxScan(100);
+
+		pepare(query);
+
+		verify(cursor).addSpecial(eq("$maxScan"), eq(100L));
+	}
+
+	/**
+	 * @see DATAMONGO-957
+	 */
+	@Test
+	public void appliesMaxTimeCorrectly() {
+
+		Query query = query(where("foo").is("bar")).maxTime(1, TimeUnit.SECONDS);
+
+		pepare(query);
+
+		verify(cursor).addSpecial(eq("$maxTimeMS"), eq(1000L));
+	}
+
+	/**
+	 * @see DATAMONGO-957
+	 */
+	@Test
+	public void appliesCommentCorrectly() {
+
+		Query query = query(where("foo").is("bar")).comment("spring data");
+
+		pepare(query);
+
+		verify(cursor).addSpecial(eq("$comment"), eq("spring data"));
+	}
+
+	/**
+	 * @see DATAMONGO-957
+	 */
+	@Test
+	public void appliesSnapshotCorrectly() {
+
+		Query query = query(where("foo").is("bar")).useSnapshot();
+
+		pepare(query);
+
+		verify(cursor).addSpecial(eq("$snapshot"), eq(true));
+	}
+
+	private DBCursor pepare(Query query) {
+
+		CursorPreparer preparer = new MongoTemplate(factory).new QueryCursorPreparer(query, null);
+		return preparer.prepare(cursor);
 	}
 }
