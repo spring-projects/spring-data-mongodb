@@ -29,9 +29,13 @@ import org.hamcrest.core.Is;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.Person;
@@ -42,6 +46,7 @@ import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.repository.Meta;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.repository.core.RepositoryMetadata;
 
@@ -140,6 +145,70 @@ public class AbstractMongoQueryUnitTests {
 				Matchers.eq("persons"));
 	}
 
+	/**
+	 * @see DATAMONGO-957
+	 */
+	@Test
+	public void metadataShouldNotBeAddedToQueryWhenNotPresent() {
+
+		MongoQueryFake query = createQueryForMethod("findByFirstname", String.class);
+		query.execute(new Object[] { "fake" });
+
+		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
+
+		verify(this.mongoOperationsMock, times(1))
+				.find(captor.capture(), Matchers.eq(Person.class), Matchers.eq("persons"));
+
+		assertThat(captor.getValue().getMeta().getComment(), nullValue());
+	}
+
+	/**
+	 * @see DATAMONGO-957
+	 */
+	@Test
+	public void metadataShouldBeAddedToQueryCorrectly() {
+
+		MongoQueryFake query = createQueryForMethod("findByFirstname", String.class, Pageable.class);
+		query.execute(new Object[] { "fake", new PageRequest(0, 10) });
+
+		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
+
+		verify(this.mongoOperationsMock, times(1))
+				.find(captor.capture(), Matchers.eq(Person.class), Matchers.eq("persons"));
+		assertThat(captor.getValue().getMeta().getComment(), is("comment"));
+	}
+
+	/**
+	 * @see DATAMONGO-957
+	 */
+	@Test
+	public void metadataShouldBeAddedToCountQueryCorrectly() {
+
+		MongoQueryFake query = createQueryForMethod("findByFirstname", String.class, Pageable.class);
+		query.execute(new Object[] { "fake", new PageRequest(0, 10) });
+
+		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
+
+		verify(this.mongoOperationsMock, times(1)).count(captor.capture(), Matchers.eq("persons"));
+		assertThat(captor.getValue().getMeta().getComment(), is("comment"));
+	}
+
+	/**
+	 * @see DATAMONGO-957
+	 */
+	@Test
+	public void metadataShouldBeAddedToStringBasedQueryCorrectly() {
+
+		MongoQueryFake query = createQueryForMethod("findByAnnotatedQuery", String.class, Pageable.class);
+		query.execute(new Object[] { "fake", new PageRequest(0, 10) });
+
+		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
+
+		verify(this.mongoOperationsMock, times(1))
+				.find(captor.capture(), Matchers.eq(Person.class), Matchers.eq("persons"));
+		assertThat(captor.getValue().getMeta().getComment(), is("comment"));
+	}
+
 	private MongoQueryFake createQueryForMethod(String methodName, Class<?>... paramTypes) {
 
 		try {
@@ -191,5 +260,15 @@ public class AbstractMongoQueryUnitTests {
 		List<Person> deleteByLastname(String lastname);
 
 		Long deletePersonByLastname(String lastname);
+
+		List<Person> findByFirstname(String firstname);
+
+		@Meta(comment = "comment")
+		Page<Person> findByFirstname(String firstnanme, Pageable pageable);
+
+		@Meta(comment = "comment")
+		@org.springframework.data.mongodb.repository.Query("{}")
+		Page<Person> findByAnnotatedQuery(String firstnanme, Pageable pageable);
+
 	}
 }

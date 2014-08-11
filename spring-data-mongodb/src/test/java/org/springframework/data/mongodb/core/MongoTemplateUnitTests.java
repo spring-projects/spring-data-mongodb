@@ -89,6 +89,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Before
 	public void setUp() {
 
+		when(cursor.copy()).thenReturn(cursor);
 		when(factory.getDb()).thenReturn(db);
 		when(factory.getExceptionTranslator()).thenReturn(exceptionTranslator);
 		when(db.getCollection(Mockito.any(String.class))).thenReturn(collection);
