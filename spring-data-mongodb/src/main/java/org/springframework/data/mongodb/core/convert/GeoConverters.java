@@ -57,18 +57,15 @@ abstract class GeoConverters {
 	 * 
 	 * @return
 	 */
-	@SuppressWarnings("unchecked")
 	public static Collection<? extends Object> getConvertersToRegister() {
 		return Arrays.asList( //
 				BoxToDbObjectConverter.INSTANCE //
 				, PolygonToDbObjectConverter.INSTANCE //
 				, CircleToDbObjectConverter.INSTANCE //
-				, LegacyCircleToDbObjectConverter.INSTANCE //
 				, SphereToDbObjectConverter.INSTANCE //
 				, DbObjectToBoxConverter.INSTANCE //
 				, DbObjectToPolygonConverter.INSTANCE //
 				, DbObjectToCircleConverter.INSTANCE //
-				, DbObjectToLegacyCircleConverter.INSTANCE //
 				, DbObjectToSphereConverter.INSTANCE //
 				, DbObjectToPointConverter.INSTANCE //
 				, PointToDbObjectConverter.INSTANCE //
@@ -91,13 +88,11 @@ abstract class GeoConverters {
 		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
 		 */
 		@Override
-		@SuppressWarnings("deprecation")
 		public Point convert(DBObject source) {
 
 			Assert.isTrue(source.keySet().size() == 2, "Source must contain 2 elements");
 
-			return source == null ? null : new org.springframework.data.mongodb.core.geo.Point((Double) source.get("x"),
-					(Double) source.get("y"));
+			return source == null ? null : new Point((Double) source.get("x"), (Double) source.get("y"));
 		}
 	}
 
@@ -151,7 +146,7 @@ abstract class GeoConverters {
 	}
 
 	/**
-	 * Converts a {@link BasicDBList} into a {@link org.springframework.data.mongodb.core.geo.Box}.
+	 * Converts a {@link BasicDBList} into a {@link Box}.
 	 * 
 	 * @author Thomas Darimont
 	 * @since 1.5
@@ -166,7 +161,6 @@ abstract class GeoConverters {
 		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
 		 */
 		@Override
-		@SuppressWarnings("deprecation")
 		public Box convert(DBObject source) {
 
 			if (source == null) {
@@ -176,7 +170,7 @@ abstract class GeoConverters {
 			Point first = DbObjectToPointConverter.INSTANCE.convert((DBObject) source.get("first"));
 			Point second = DbObjectToPointConverter.INSTANCE.convert((DBObject) source.get("second"));
 
-			return new org.springframework.data.mongodb.core.geo.Box(first, second);
+			return new Box(first, second);
 		}
 	}
 
@@ -210,7 +204,7 @@ abstract class GeoConverters {
 	}
 
 	/**
-	 * Converts a {@link DBObject} into a {@link org.springframework.data.mongodb.core.geo.Circle}.
+	 * Converts a {@link DBObject} into a {@link Circle}.
 	 * 
 	 * @author Thomas Darimont
 	 * @since 1.5
@@ -248,71 +242,6 @@ abstract class GeoConverters {
 			Assert.notNull(radius, "Radius must not be null!");
 
 			return new Circle(DbObjectToPointConverter.INSTANCE.convert(center), distance);
-		}
-	}
-
-	/**
-	 * Converts a {@link Circle} into a {@link BasicDBList}.
-	 * 
-	 * @author Thomas Darimont
-	 * @since 1.5
-	 */
-	@SuppressWarnings("deprecation")
-	public static enum LegacyCircleToDbObjectConverter implements
-			Converter<org.springframework.data.mongodb.core.geo.Circle, DBObject> {
-
-		INSTANCE;
-
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
-		 */
-		@Override
-		public DBObject convert(org.springframework.data.mongodb.core.geo.Circle source) {
-
-			if (source == null) {
-				return null;
-			}
-
-			DBObject result = new BasicDBObject();
-			result.put("center", PointToDbObjectConverter.INSTANCE.convert(source.getCenter()));
-			result.put("radius", source.getRadius());
-			return result;
-		}
-	}
-
-	/**
-	 * Converts a {@link BasicDBList} into a {@link org.springframework.data.mongodb.core.geo.Circle}.
-	 * 
-	 * @author Thomas Darimont
-	 * @since 1.5
-	 */
-	@ReadingConverter
-	@SuppressWarnings("deprecation")
-	public static enum DbObjectToLegacyCircleConverter implements
-			Converter<DBObject, org.springframework.data.mongodb.core.geo.Circle> {
-
-		INSTANCE;
-
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
-		 */
-		@Override
-		public org.springframework.data.mongodb.core.geo.Circle convert(DBObject source) {
-
-			if (source == null) {
-				return null;
-			}
-
-			DBObject centerSource = (DBObject) source.get("center");
-			Double radius = (Double) source.get("radius");
-
-			Assert.notNull(centerSource, "Center must not be null!");
-			Assert.notNull(radius, "Radius must not be null!");
-
-			Point center = DbObjectToPointConverter.INSTANCE.convert(centerSource);
-			return new org.springframework.data.mongodb.core.geo.Circle(center, radius);
 		}
 	}
 
@@ -422,7 +351,7 @@ abstract class GeoConverters {
 	}
 
 	/**
-	 * Converts a {@link BasicDBList} into a {@link org.springframework.data.mongodb.core.geo.Polygon}.
+	 * Converts a {@link BasicDBList} into a {@link Polygon}.
 	 * 
 	 * @author Thomas Darimont
 	 * @since 1.5
@@ -437,7 +366,7 @@ abstract class GeoConverters {
 		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
 		 */
 		@Override
-		@SuppressWarnings({ "deprecation", "unchecked" })
+		@SuppressWarnings({ "unchecked" })
 		public Polygon convert(DBObject source) {
 
 			if (source == null) {
@@ -453,7 +382,7 @@ abstract class GeoConverters {
 				newPoints.add(DbObjectToPointConverter.INSTANCE.convert(element));
 			}
 
-			return new org.springframework.data.mongodb.core.geo.Polygon(newPoints);
+			return new Polygon(newPoints);
 		}
 	}
 
@@ -472,7 +401,6 @@ abstract class GeoConverters {
 		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
 		 */
 		@Override
-		@SuppressWarnings("deprecation")
 		public DBObject convert(GeoCommand source) {
 
 			if (source == null) {
@@ -493,10 +421,10 @@ abstract class GeoConverters {
 				argument.add(toList(((Circle) shape).getCenter()));
 				argument.add(((Circle) shape).getRadius().getNormalizedValue());
 
-			} else if (shape instanceof org.springframework.data.mongodb.core.geo.Circle) {
+			} else if (shape instanceof Circle) {
 
-				argument.add(toList(((org.springframework.data.mongodb.core.geo.Circle) shape).getCenter()));
-				argument.add(((org.springframework.data.mongodb.core.geo.Circle) shape).getRadius());
+				argument.add(toList(((Circle) shape).getCenter()));
+				argument.add(((Circle) shape).getRadius());
 
 			} else if (shape instanceof Polygon) {
 

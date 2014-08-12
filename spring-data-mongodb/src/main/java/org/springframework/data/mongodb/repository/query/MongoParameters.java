@@ -71,11 +71,9 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 		this.fullTextIndex = fullTextIndex;
 	}
 
-	@SuppressWarnings({ "unchecked", "deprecation" })
 	private final int getNearIndex(List<Class<?>> parameterTypes) {
 
-		for (Class<?> reference : Arrays.asList(Point.class, org.springframework.data.mongodb.core.geo.Point.class,
-				double[].class)) {
+		for (Class<?> reference : Arrays.asList(Point.class, double[].class)) {
 
 			int nearIndex = parameterTypes.indexOf(reference);
 

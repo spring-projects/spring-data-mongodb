@@ -31,12 +31,10 @@ import org.springframework.data.mongodb.core.convert.GeoConverters.BoxToDbObject
 import org.springframework.data.mongodb.core.convert.GeoConverters.CircleToDbObjectConverter;
 import org.springframework.data.mongodb.core.convert.GeoConverters.DbObjectToBoxConverter;
 import org.springframework.data.mongodb.core.convert.GeoConverters.DbObjectToCircleConverter;
-import org.springframework.data.mongodb.core.convert.GeoConverters.DbObjectToLegacyCircleConverter;
 import org.springframework.data.mongodb.core.convert.GeoConverters.DbObjectToPointConverter;
 import org.springframework.data.mongodb.core.convert.GeoConverters.DbObjectToPolygonConverter;
 import org.springframework.data.mongodb.core.convert.GeoConverters.DbObjectToSphereConverter;
 import org.springframework.data.mongodb.core.convert.GeoConverters.GeoCommandToDbObjectConverter;
-import org.springframework.data.mongodb.core.convert.GeoConverters.LegacyCircleToDbObjectConverter;
 import org.springframework.data.mongodb.core.convert.GeoConverters.PointToDbObjectConverter;
 import org.springframework.data.mongodb.core.convert.GeoConverters.PolygonToDbObjectConverter;
 import org.springframework.data.mongodb.core.convert.GeoConverters.SphereToDbObjectConverter;
@@ -52,7 +50,6 @@ import com.mongodb.DBObject;
  * @author Oliver Gierke
  * @since 1.5
  */
-@SuppressWarnings("deprecation")
 public class GeoConvertersUnitTests {
 
 	/**
@@ -67,7 +64,7 @@ public class GeoConvertersUnitTests {
 		Box result = DbObjectToBoxConverter.INSTANCE.convert(dbo);
 
 		assertThat(result, is(box));
-		assertThat(result.getClass().equals(org.springframework.data.mongodb.core.geo.Box.class), is(true));
+		assertThat(result.getClass().equals(Box.class), is(true));
 	}
 
 	/**
@@ -104,21 +101,6 @@ public class GeoConvertersUnitTests {
 	 * @see DATAMONGO-858
 	 */
 	@Test
-	public void convertsLegacyCircleToDbObjectAndBackCorrectly() {
-
-		org.springframework.data.mongodb.core.geo.Circle circle = new org.springframework.data.mongodb.core.geo.Circle(
-				new Point(1, 2), 3);
-
-		DBObject dbo = LegacyCircleToDbObjectConverter.INSTANCE.convert(circle);
-		org.springframework.data.mongodb.core.geo.Circle result = DbObjectToLegacyCircleConverter.INSTANCE.convert(dbo);
-
-		assertThat(result, is(circle));
-	}
-
-	/**
-	 * @see DATAMONGO-858
-	 */
-	@Test
 	public void convertsPolygonToDbObjectAndBackCorrectly() {
 
 		Polygon polygon = new Polygon(new Point(1, 2), new Point(2, 3), new Point(3, 4), new Point(5, 6));
@@ -127,7 +109,7 @@ public class GeoConvertersUnitTests {
 		Polygon result = DbObjectToPolygonConverter.INSTANCE.convert(dbo);
 
 		assertThat(result, is(polygon));
-		assertThat(result.getClass().equals(org.springframework.data.mongodb.core.geo.Polygon.class), is(true));
+		assertThat(result.getClass().equals(Polygon.class), is(true));
 	}
 
 	/**
@@ -142,7 +124,7 @@ public class GeoConvertersUnitTests {
 		Sphere result = DbObjectToSphereConverter.INSTANCE.convert(dbo);
 
 		assertThat(result, is(sphere));
-		assertThat(result.getClass().equals(org.springframework.data.mongodb.core.geo.Sphere.class), is(true));
+		assertThat(result.getClass().equals(Sphere.class), is(true));
 	}
 
 	/**
@@ -174,14 +156,13 @@ public class GeoConvertersUnitTests {
 		Point result = DbObjectToPointConverter.INSTANCE.convert(dbo);
 
 		assertThat(result, is(point));
-		assertThat(result.getClass().equals(org.springframework.data.mongodb.core.geo.Point.class), is(true));
+		assertThat(result.getClass().equals(Point.class), is(true));
 	}
 
 	/**
 	 * @see DATAMONGO-858
 	 */
 	@Test
-	@SuppressWarnings("unchecked")
 	public void convertsGeoCommandToDbObjectCorrectly() {
 
 		Box box = new Box(new double[] { 1, 2 }, new double[] { 3, 4 });
