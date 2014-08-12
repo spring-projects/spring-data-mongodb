@@ -1666,46 +1666,6 @@ public class MappingMongoConverterUnitTests {
 	 * @DATAMONGO-858
 	 */
 	@Test
-	@SuppressWarnings("deprecation")
-	public void shouldWriteEntityWithGeoLegacyCircleCorrectly() {
-
-		ClassWithGeoLegacyCircle object = new ClassWithGeoLegacyCircle();
-		org.springframework.data.mongodb.core.geo.Circle circle = new org.springframework.data.mongodb.core.geo.Circle(
-				new Point(1, 2), 3);
-		object.circle = circle;
-
-		DBObject dbo = new BasicDBObject();
-		converter.write(object, dbo);
-
-		assertThat(dbo, is(notNullValue()));
-		assertThat(dbo.get("circle"), is(instanceOf(DBObject.class)));
-		assertThat(dbo.get("circle"), is((Object) new BasicDBObject("center", new BasicDBObject("x", circle.getCenter()
-				.getX()).append("y", circle.getCenter().getY())).append("radius", circle.getRadius())));
-	}
-
-	/**
-	 * @DATAMONGO-858
-	 */
-	@Test
-	@SuppressWarnings("deprecation")
-	public void shouldReadEntityWithGeoLegacyCircleCorrectly() {
-
-		ClassWithGeoLegacyCircle object = new ClassWithGeoLegacyCircle();
-		object.circle = new org.springframework.data.mongodb.core.geo.Circle(new Point(1, 2), 3);
-
-		DBObject dbo = new BasicDBObject();
-		converter.write(object, dbo);
-
-		ClassWithGeoLegacyCircle result = converter.read(ClassWithGeoLegacyCircle.class, dbo);
-
-		assertThat(result, is(notNullValue()));
-		assertThat(result.circle, is(result.circle));
-	}
-
-	/**
-	 * @DATAMONGO-858
-	 */
-	@Test
 	public void shouldWriteEntityWithGeoSphereCorrectly() {
 
 		ClassWithGeoSphere object = new ClassWithGeoSphere();
@@ -2094,12 +2054,6 @@ public class MappingMongoConverterUnitTests {
 	class ClassWithGeoCircle {
 
 		Circle circle;
-	}
-
-	@SuppressWarnings("deprecation")
-	class ClassWithGeoLegacyCircle {
-
-		org.springframework.data.mongodb.core.geo.Circle circle;
 	}
 
 	class ClassWithGeoSphere {

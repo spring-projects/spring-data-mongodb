@@ -22,6 +22,7 @@ import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Point;
+import org.springframework.data.geo.Shape;
 import org.springframework.util.Assert;
 
 /**
@@ -30,7 +31,6 @@ import org.springframework.util.Assert;
  * @author Thomas Darimont
  * @since 1.5
  */
-@SuppressWarnings("deprecation")
 public class Sphere implements Shape {
 
 	public static final String COMMAND = "$centerSphere";
@@ -74,22 +74,12 @@ public class Sphere implements Shape {
 	}
 
 	/**
-	 * Creates a Sphere from the given {@link Circle}.
-	 * 
-	 * @param circle
-	 */
-	@Deprecated
-	public Sphere(org.springframework.data.mongodb.core.geo.Circle circle) {
-		this(circle.getCenter(), circle.getRadius());
-	}
-
-	/**
 	 * Returns the center of the {@link Circle}.
 	 * 
 	 * @return will never be {@literal null}.
 	 */
-	public org.springframework.data.mongodb.core.geo.Point getCenter() {
-		return new org.springframework.data.mongodb.core.geo.Point(this.center);
+	public Point getCenter() {
+		return new Point(this.center);
 	}
 
 	/**
@@ -141,20 +131,21 @@ public class Sphere implements Shape {
 		return result;
 	}
 
-	/* 
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.geo.Shape#asList()
+	/**
+	 * Returns the {@link Shape} as a list of usually {@link Double} or {@link List}s of {@link Double}s. Wildcard bound
+	 * to allow implementations to return a more concrete element type.
+	 * 
+	 * @return
 	 */
-	@Override
 	public List<? extends Object> asList() {
 		return Arrays.asList(Arrays.asList(center.getX(), center.getY()), this.radius.getValue());
 	}
 
-	/* 
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.geo.Shape#getCommand()
+	/**
+	 * Returns the command to be used to create the {@literal $within} criterion.
+	 * 
+	 * @return
 	 */
-	@Override
 	public String getCommand() {
 		return COMMAND;
 	}

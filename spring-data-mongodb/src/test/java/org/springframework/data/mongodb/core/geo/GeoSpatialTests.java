@@ -33,6 +33,7 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Circle;
+import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Metric;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
@@ -98,7 +99,6 @@ public class GeoSpatialTests extends AbstractIntegrationTests {
 	}
 
 	@Test
-	@SuppressWarnings("deprecation")
 	public void geoNear() {
 
 		NearQuery geoNear = NearQuery.near(-73, 40, Metrics.KILOMETERS).num(10).maxDistance(150);

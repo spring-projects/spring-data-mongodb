@@ -66,17 +66,16 @@ public class GeoCommand {
 	 * @param shape must not be {@literal null}.
 	 * @return
 	 */
-	@SuppressWarnings("deprecation")
 	private String getCommand(Shape shape) {
 
 		Assert.notNull(shape, "Shape must not be null!");
 
 		if (shape instanceof Box) {
-			return org.springframework.data.mongodb.core.geo.Box.COMMAND;
-		} else if (shape instanceof Circle || shape instanceof org.springframework.data.mongodb.core.geo.Circle) {
-			return org.springframework.data.mongodb.core.geo.Circle.COMMAND;
+			return "$box";
+		} else if (shape instanceof Circle) {
+			return "$center";
 		} else if (shape instanceof Polygon) {
-			return org.springframework.data.mongodb.core.geo.Polygon.COMMAND;
+			return "$polygon";
 		} else if (shape instanceof Sphere) {
 			return org.springframework.data.mongodb.core.geo.Sphere.COMMAND;
 		}

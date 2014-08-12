@@ -389,20 +389,6 @@ public class Criteria implements CriteriaDefinition {
 	}
 
 	/**
-	 * @see Criteria#withinSphere(Circle)
-	 * @param circle
-	 * @return
-	 * @deprecated As of 1.5, Use {@link #withinSphere(Circle)}. This method is scheduled to be removed in the next major
-	 *             release.
-	 */
-	@Deprecated
-	public Criteria withinSphere(org.springframework.data.mongodb.core.geo.Circle circle) {
-		Assert.notNull(circle);
-		criteria.put("$within", new GeoCommand(new Sphere(circle)));
-		return this;
-	}
-
-	/**
 	 * Creates a geospatial criterion using a {@literal $within} operation.
 	 * 
 	 * @see http://docs.mongodb.org/manual/reference/operator/query/geoWithin/
