@@ -22,6 +22,7 @@ import static org.springframework.data.mongodb.core.query.Query.*;
 
 import java.util.concurrent.TimeUnit;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -45,6 +46,13 @@ public class QueryCursorPreparerUnitTests {
 	@Mock MongoDbFactory factory;
 	@Mock DBCursor cursor;
 
+	@Mock DBCursor cursorToUse;
+
+	@Before
+	public void setUp() {
+		when(cursor.copy()).thenReturn(cursorToUse);
+	}
+
 	/**
 	 * @see DATAMONGO-185
 	 */
@@ -55,7 +63,7 @@ public class QueryCursorPreparerUnitTests {
 
 		pepare(query);
 
-		verify(cursor).hint("hint");
+		verify(cursorToUse).hint("hint");
 	}
 
 	/**
@@ -69,7 +77,8 @@ public class QueryCursorPreparerUnitTests {
 
 		pepare(query);
 
-		verify(cursor, never()).addSpecial(any(String.class), anyObject());
+		verify(cursor, never()).copy();
+		verify(cursorToUse, never()).addSpecial(any(String.class), anyObject());
 	}
 
 	/**
@@ -82,7 +91,7 @@ public class QueryCursorPreparerUnitTests {
 
 		pepare(query);
 
-		verify(cursor).addSpecial(eq("$maxScan"), eq(100L));
+		verify(cursorToUse).addSpecial(eq("$maxScan"), eq(100L));
 	}
 
 	/**
@@ -95,7 +104,7 @@ public class QueryCursorPreparerUnitTests {
 
 		pepare(query);
 
-		verify(cursor).addSpecial(eq("$maxTimeMS"), eq(1000L));
+		verify(cursorToUse).addSpecial(eq("$maxTimeMS"), eq(1000L));
 	}
 
 	/**
@@ -108,7 +117,7 @@ public class QueryCursorPreparerUnitTests {
 
 		pepare(query);
 
-		verify(cursor).addSpecial(eq("$comment"), eq("spring data"));
+		verify(cursorToUse).addSpecial(eq("$comment"), eq("spring data"));
 	}
 
 	/**
@@ -121,7 +130,7 @@ public class QueryCursorPreparerUnitTests {
 
 		pepare(query);
 
-		verify(cursor).addSpecial(eq("$snapshot"), eq(true));
+		verify(cursorToUse).addSpecial(eq("$snapshot"), eq(true));
 	}
 
 	private DBCursor pepare(Query query) {

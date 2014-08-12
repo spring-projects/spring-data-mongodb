@@ -2190,7 +2190,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				return cursor;
 			}
 
-			DBCursor cursorToUse = cursor;
+			DBCursor cursorToUse = cursor.copy();
 
 			try {
 				if (query.getSkip() > 0) {
