@@ -85,6 +85,8 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 		MongoParameterAccessor accessor = new MongoParametersParameterAccessor(method, parameters);
 		Query query = createQuery(new ConvertingParameterAccessor(operations.getConverter(), accessor));
 
+		applyQueryMetaAttributesWhenPresent(query);
+
 		Object result = null;
 
 		if (isDeleteQuery()) {
@@ -120,6 +122,14 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 		return CONVERSION_SERVICE.convert(result, expectedReturnType);
 	}
 
+	private Query applyQueryMetaAttributesWhenPresent(Query query) {
+
+		if (method.hasQueryMetaAttributes()) {
+			query.setMeta(method.getQueryMetaAttributes());
+		}
+		return query;
+	}
+
 	/**
 	 * Creates a {@link Query} instance using the given {@link ConvertingParameterAccessor}. Will delegate to
 	 * {@link #createQuery(ConvertingParameterAccessor)} by default but allows customization of the count query to be
@@ -132,9 +142,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 
 		Query query = createQuery(accessor);
 
-		if (method.hasQueryMetaAttributes()) {
-			query.setMeta(method.getQueryMetaAttributes());
-		}
+		applyQueryMetaAttributesWhenPresent(query);
 
 		return query;
 	}
