@@ -29,9 +29,9 @@
 	<properties>
 		<project.type>multi</project.type>
 		<dist.id>spring-data-mongodb</dist.id>
-		<springdata.commons>1.9.0.BUILD-SNAPSHOT</springdata.commons>
-		<mongo>2.12.1</mongo>
-		<mongo.osgi>2.12.1</mongo.osgi>
+		<springdata.commons>1.9.0.RC1</springdata.commons>
+		<mongo>2.12.3</mongo>
+		<mongo.osgi>2.12.3</mongo.osgi>
 	</properties>
 
 	<developers>
@@ -108,7 +108,7 @@
 
 			<id>mongo-next</id>
 			<properties>
-				<mongo>2.12.3-SNAPSHOT</mongo>
+				<mongo>2.12.5-SNAPSHOT</mongo>
 			</properties>
 
 			<repositories>
