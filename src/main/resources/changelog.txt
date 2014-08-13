@@ -1,6 +1,35 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 1.6.0.RC1 (2014-08-13)
+-----------------------------------------
+* DATAMONGO-1024 - Upgrade to Java driver 2.12.3.
+* DATAMONGO-1021 - Release 1.6 RC1.
+* DATAMONGO-1020 - LimitOperator should be a public class.
+* DATAMONGO-1019 - Correct examples in reference documentation.
+* DATAMONGO-1017 - Add support for custom implementations in CDI repositories.
+* DATAMONGO-1016 - Remove deprecations in geospatial area.
+* DATAMONGO-1015 - Move to Asciidoctor for reference documentation.
+* DATAMONGO-1012 - Proxies for lazy DBRefs with field access should have their id values resolved eagerly.
+* DATAMONGO-1009 - Adapt to new multi-store configuration detection.
+* DATAMONGO-1008 - IndexOperations fail, when "2dsphere" index is present.
+* DATAMONGO-1005 - Improve cycle-detection for DbRef's.
+* DATAMONGO-1002 - Update.toString(…) might throw exception.
+* DATAMONGO-1001 - Can't save/update lazy load object.
+* DATAMONGO-999 - Multiple Mongo Instances always have the same MongoOption Reference - MongoOptionsFactoryBean has a static instance of MongoOptions.
+* DATAMONGO-996 - Pagination broken after introduction of the support for top/first.
+* DATAMONGO-995 - Parameter binding in String-based query does not bind all parameters.
+* DATAMONGO-993 - The system variables $$CURRENT and $$ROOT not handled correctly.
+* DATAMONGO-992 - Entity can't be deserialized if @TypeAlias is used.
+* DATAMONGO-991 - Adapt to deprecation removals in Spring Data Commons.
+* DATAMONGO-989 - MatchOperation should accept CriteriaDefinition.
+* DATAMONGO-987 - Problem with lazy loading in @DBRef when getting data using MongoTemplate.
+* DATAMONGO-974 - synthetic field target's name is returned instead of the alias name.
+* DATAMONGO-973 - Add support for deriving full text queries.
+* DATAMONGO-957 - Add support for query modifiers.
+* DATAMONGO-420 - Extra quotes being added to @Query values and fields.
+
+
 Changes in version 1.5.2.RELEASE (2014-07-28)
 ---------------------------------------------
 * DATAMONGO-1007 - Release 1.5.2.
@@ -430,7 +459,7 @@ Changes in version 1.2.2.GA (2013-07-19)
 Changes in version 1.3.0.M1 (2013-06-04)
 ----------------------------------------
 ** Bug
-    * [DATAMONGO-571] - Spring Data for MongoDb doesn't save null values when @Version is added to domain class 
+    * [DATAMONGO-571] - Spring Data for MongoDb doesn't save null values when @Version is added to domain class
     * [DATAMONGO-612] - Fix PDF reference documentation name
     * [DATAMONGO-613] - Images missing from reference documentation
     * [DATAMONGO-617] - NullPointerException in MongoTemplate.initializeVersionProperty(…)
@@ -466,7 +495,7 @@ Changes in version 1.3.0.M1 (2013-06-04)
     * [DATAMONGO-637] - Typo in Query.query(…)
     * [DATAMONGO-651] - WriteResult not available from thrown Exception
     * [DATAMONGO-652] - Add support for elemMatch and positional operator projections
-    * [DATAMONGO-656] - Potential NullPointerException when debugging in MongoTemplate 
+    * [DATAMONGO-656] - Potential NullPointerException when debugging in MongoTemplate
     * [DATAMONGO-657] - Allow to write Map value as DBRef
     * [DATAMONGO-666] - Fix architecture inconsistency created by MongoDataIntegrityViolationException
     * [DATAMONGO-680] - SimpleMongoRepository.exists(ID) improvement
@@ -488,7 +517,7 @@ Changes in version 1.3.0.M1 (2013-06-04)
 Changes in version 1.2.1.GA (2013-04-17)
 ----------------------------------------
 ** Bug
-    * [DATAMONGO-571] - Spring Data for MongoDb doesn't save null values when @Version is added to domain class 
+    * [DATAMONGO-571] - Spring Data for MongoDb doesn't save null values when @Version is added to domain class
     * [DATAMONGO-612] - Fix PDF reference documentation name
     * [DATAMONGO-613] - Images missing from reference documentation
     * [DATAMONGO-617] - NullPointerException in MongoTemplate.initializeVersionProperty(…)
@@ -585,7 +614,7 @@ Changes in version 1.1.1.GA (2012-10-17)
 Changes in version 1.1.0.GA (2012-10-10)
 ----------------------------------------
 ** Bug
-    * [DATAMONGO-523] - @TypeAlias annotation not used with AbstractMongoConfiguration 
+    * [DATAMONGO-523] - @TypeAlias annotation not used with AbstractMongoConfiguration
     * [DATAMONGO-527] - Criteria.equals(…) broken for complex criterias
     * [DATAMONGO-530] - MongoMappingContext.setApplicationContext(…) does not invoke superclass method
     * [DATAMONGO-531] - StackOverflowError when persisting Groovy beans
@@ -662,16 +691,16 @@ Changes in version 1.1.0.M2 (2012-24-07)
     * [DATAMONGO-446] - Pageable query methods returning List are broken
     * [DATAMONGO-447] - Removal of Documents fails in in debug mode for Documents with complex ids
     * [DATAMONGO-450] - enabling DEBUG causes RuntimeException
-    * [DATAMONGO-454] - ServerAddressPropertyEditor fails if a hostname is unresolvable 
+    * [DATAMONGO-454] - ServerAddressPropertyEditor fails if a hostname is unresolvable
     * [DATAMONGO-458] - When reading back empty collections unmodifiable instances of Collections.emptyList/Set is returned.
     * [DATAMONGO-462] - findAll() fails with NPE - discovering the root cause
-    * [DATAMONGO-465] - Mongo inserts document with "_id" as an integer but saves with "_id" as a string. 
+    * [DATAMONGO-465] - Mongo inserts document with "_id" as an integer but saves with "_id" as a string.
     * [DATAMONGO-467] - String @id field is not mapped to ObjectId when using QueryDSL ".id" path
     * [DATAMONGO-469] - Query creation from method names using AND criteria does not work anymore
     * [DATAMONGO-474] - Wrong property is used for Id mapping
     * [DATAMONGO-475] - 'group' operation fails where query references non primitive property
     * [DATAMONGO-480] - The WriteResultChecking is not used in case of insert or save of documents.
-    * [DATAMONGO-483] - @Indexed(unique=true, name="foo") puts name's value to the 'key' in the MongoDB 
+    * [DATAMONGO-483] - @Indexed(unique=true, name="foo") puts name's value to the 'key' in the MongoDB
     * [DATAMONGO-489] - ClassCastException when loading Map<String, String[]>
 
 ** Improvement
@@ -681,7 +710,7 @@ Changes in version 1.1.0.M2 (2012-24-07)
     * [DATAMONGO-466] - QueryMapper shouldn't map id properties of nested classes
     * [DATAMONGO-470] - Criteria and Query should have proper equals(…) and hashCode() method.
     * [DATAMONGO-477] - Change upper bound of Google Guava package import to 13
-    * [DATAMONGO-482] - typo in documentation - 2 i's in usiing 
+    * [DATAMONGO-482] - typo in documentation - 2 i's in usiing
     * [DATAMONGO-486] - Polish namspace implementation
     * [DATAMONGO-491] - Release 1.1.0.M2
 
@@ -701,13 +730,13 @@ Changes in version 1.0.3.RELEASE (2012-24-07)
     * [DATAMONGO-474] - Wrong property is used for Id mapping
     * [DATAMONGO-475] - 'group' operation fails where query references non primitive property
     * [DATAMONGO-480] - The WriteResultChecking is not used in case of insert or save of documents.
-    * [DATAMONGO-483] - @Indexed(unique=true, name="foo") puts name's value to the 'key' in the MongoDB 
+    * [DATAMONGO-483] - @Indexed(unique=true, name="foo") puts name's value to the 'key' in the MongoDB
     * [DATAMONGO-489] - ClassCastException when loading Map<String, String[]>
 
 ** Improvement
     * [DATAMONGO-466] - QueryMapper shouldn't map id properties of nested classes
     * [DATAMONGO-470] - Criteria and Query should have proper equals(…) and hashCode() method.
-    * [DATAMONGO-482] - typo in documentation - 2 i's in usiing 
+    * [DATAMONGO-482] - typo in documentation - 2 i's in usiing
 
 ** Task
     * [DATAMONGO-492] - Release 1.0.3
@@ -731,7 +760,7 @@ Changes in version 1.0.2.RELEASE (2012-06-20)
     * [DATAMONGO-446] - Pageable query methods returning List are broken
     * [DATAMONGO-447] - Removal of Documents fails in in debug mode for Documents with complex ids
     * [DATAMONGO-450] - enabling DEBUG causes RuntimeException
-    * [DATAMONGO-454] - ServerAddressPropertyEditor fails if a hostname is unresolvable 
+    * [DATAMONGO-454] - ServerAddressPropertyEditor fails if a hostname is unresolvable
     * [DATAMONGO-461] - MappedConstructor potentially throws NullPointerException
     * [DATAMONGO-462] - findAll() fails with NPE - discovering the root cause
 
@@ -912,7 +941,7 @@ Changes in version 1.0.0.M5 MongoDB (2011-10-24)
     * [DATAMONGO-282] - Cannot create a "range" query
     * [DATAMONGO-284] - Execution of Querydsl query maps id incorrectly
     * [DATAMONGO-285] - NPE in MappingMongoConverter.writeMapInternal when saving a Map<String,Object> with val instance of Collection
-    * [DATAMONGO-288] - querying same property multiple times produces incorrect query 
+    * [DATAMONGO-288] - querying same property multiple times produces incorrect query
     * [DATAMONGO-289] - AbstractMongoEventListener will never call onAfterLoad
     * [DATAMONGO-294] - List elements nested in Map lose their type when persisted
 
@@ -941,7 +970,7 @@ Changes in version 1.0.0.M5 MongoDB (2011-10-24)
     * [DATAMONGO-274] - Split up repository package according to the structure in Spring Data JPA
 
 ** Task
-    * [DATAMONGO-264] - Ensure Data Document examples work 
+    * [DATAMONGO-264] - Ensure Data Document examples work
     * [DATAMONGO-265] - Create new github repository for mongodb
     * [DATAMONGO-266] - Create new github repository for CouchDB
     * [DATAMONGO-297] - Prune project directory
@@ -974,7 +1003,7 @@ Changes in version 1.0.0.M4 MongoDB (2011-09-01)
     * [DATADOC-228] - NullPointerException when persiting Map with null values
     * [DATADOC-229] - When a parameterized List is used in the PersistentConstructor, conversion fail
     * [DATADOC-231] - spring-data-mongodb does not work in an OSGi server because of unresolved dependencies
-    * [DATADOC-232] - mongodb allow to $inc many fields in one query, but Updat().inc(firs).inc(last)  do only last inc 
+    * [DATADOC-232] - mongodb allow to $inc many fields in one query, but Updat().inc(firs).inc(last)  do only last inc
     * [DATADOC-235] - Unable to map unstructured data
     * [DATADOC-236] - Repository queries do not honour order defined in method name
     * [DATADOC-237] - @Indexed annotation doesn't honor field name from @Field annotation
@@ -988,7 +1017,7 @@ Changes in version 1.0.0.M4 MongoDB (2011-09-01)
 
 ** Improvement
     * [DATADOC-32] - SimpleMongoConverter could support identifying Spring EL expressions in keys
-    * [DATADOC-63] - Converters to support use of a 'typeId' strategy to determine class to marshall/unmarshal from Mongo 
+    * [DATADOC-63] - Converters to support use of a 'typeId' strategy to determine class to marshall/unmarshal from Mongo
     * [DATADOC-166] - Check for null if various template CRUD methods
     * [DATADOC-169] - Registering custom converters for a type requires treating the type as simple in mapping context
     * [DATADOC-171] - IllegalArgumentException when persisting entity with BigDecimal field
@@ -1071,7 +1100,7 @@ Querying / Updating
 * [DATADOC-146] - Advanced Regexp Queries
 
 Mapping
-* [DATADOC-95] - Can not save an object that has not had any of its properties set 
+* [DATADOC-95] - Can not save an object that has not had any of its properties set
 * [DATADOC-97] - ID replacement not working correctly when using updateFirst/updateMulti
 * [DATADOC-98] - Collection<Collection> or Object[][] doesn't save correctly
 * [DATADOC-109] - Add MappingContext to MongoConverter interface
@@ -1122,10 +1151,10 @@ Mapping
 * [DATADOC-33] - Introduce annotation to demarcate id field in a domain object
 
 Repository
-* [DATADOC-47, DATACMNS-17] - Adapted new metamodel API 
+* [DATADOC-47, DATACMNS-17] - Adapted new metamodel API
 * [DATADOC-46] - Added support for 'In' and 'NotIn' keyword
 * [DATADOC-49] - Fixed 'And' and 'Or' keywords
-* [DATADOC-41] - Added support for executing QueryDsl predicates 
+* [DATADOC-41] - Added support for executing QueryDsl predicates
 * [DATADOC-69] - Let repository namespace pickup the default mapping context bean and allow configuration
 * [DATADOC-24] - Allow use of @Query annotation to define queries
 * [DATADOC-34] - Create indexes for columns that are mentioned in query methods
