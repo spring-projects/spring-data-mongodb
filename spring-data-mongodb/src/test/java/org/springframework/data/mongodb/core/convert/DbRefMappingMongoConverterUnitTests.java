@@ -36,6 +36,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.data.annotation.AccessType;
+import org.springframework.data.annotation.AccessType.Type;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.mapping.PropertyPath;
@@ -46,6 +48,7 @@ import org.springframework.data.mongodb.core.convert.MappingMongoConverterUnitTe
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.util.SerializationUtils;
 
 import com.mongodb.BasicDBObject;
@@ -453,13 +456,17 @@ public class DbRefMappingMongoConverterUnitTests {
 		assertThat(result.dbRefToConcreteTypeWithPersistenceConstructorWithoutDefaultConstructor, is(nullValue()));
 	}
 
+	/**
+	 * @see DATAMONGO-1012
+	 */
 	@Test
-	public void testname() {
+	public void shouldEagerlyResolveIdPropertyWithFieldAccess() {
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(ClassWithLazyDbRefs.class);
 		MongoPersistentProperty property = entity.getPersistentProperty("dbRefToConcreteType");
 
-		Object dbRef = converter.toDBRef(new LazyDbRefTarget(new ObjectId().toString()), property);
+		String idValue = new ObjectId().toString();
+		DBRef dbRef = converter.toDBRef(new LazyDbRefTarget(idValue), property);
 
 		DBObject object = new BasicDBObject("dbRefToConcreteType", dbRef);
 
@@ -469,6 +476,28 @@ public class DbRefMappingMongoConverterUnitTests {
 		MongoPersistentProperty idProperty = mappingContext.getPersistentEntity(LazyDbRefTarget.class).getIdProperty();
 
 		assertThat(wrapper.getProperty(idProperty), is(notNullValue()));
+		assertProxyIsResolved(result.dbRefToConcreteType, false);
+	}
+
+	/**
+	 * @see DATAMONGO-1012
+	 */
+	@Test
+	public void shouldNotEagerlyResolveIdPropertyWithPropertyAccess() {
+
+		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(ClassWithLazyDbRefs.class);
+		MongoPersistentProperty property = entity.getPersistentProperty("dbRefToConcreteTypeWithPropertyAccess");
+
+		String idValue = new ObjectId().toString();
+		DBRef dbRef = converter.toDBRef(new LazyDbRefTargetPropertyAccess(idValue), property);
+
+		DBObject object = new BasicDBObject("dbRefToConcreteTypeWithPropertyAccess", dbRef);
+
+		ClassWithLazyDbRefs result = converter.read(ClassWithLazyDbRefs.class, object);
+
+		LazyDbRefTargetPropertyAccess proxy = result.dbRefToConcreteTypeWithPropertyAccess;
+		assertThat(ReflectionTestUtils.getField(proxy, "id"), is(nullValue()));
+		assertProxyIsResolved(proxy, false);
 	}
 
 	private Object transport(Object result) {
@@ -493,6 +522,7 @@ public class DbRefMappingMongoConverterUnitTests {
 		@org.springframework.data.mongodb.core.mapping.DBRef(lazy = true) List<LazyDbRefTarget> dbRefToInterface;
 		@org.springframework.data.mongodb.core.mapping.DBRef(lazy = true) ArrayList<LazyDbRefTarget> dbRefToConcreteCollection;
 		@org.springframework.data.mongodb.core.mapping.DBRef(lazy = true) LazyDbRefTarget dbRefToConcreteType;
+		@org.springframework.data.mongodb.core.mapping.DBRef(lazy = true) LazyDbRefTargetPropertyAccess dbRefToConcreteTypeWithPropertyAccess;
 		@org.springframework.data.mongodb.core.mapping.DBRef(lazy = true) LazyDbRefTargetWithPeristenceConstructor dbRefToConcreteTypeWithPersistenceConstructor;
 		@org.springframework.data.mongodb.core.mapping.DBRef(lazy = true) LazyDbRefTargetWithPeristenceConstructorWithoutDefaultConstructor dbRefToConcreteTypeWithPersistenceConstructorWithoutDefaultConstructor;
 	}
@@ -530,6 +560,21 @@ public class DbRefMappingMongoConverterUnitTests {
 
 		public String getValue() {
 			return value;
+		}
+	}
+
+	static class LazyDbRefTargetPropertyAccess implements Serializable {
+
+		private static final long serialVersionUID = 1L;
+
+		@Id @AccessType(Type.PROPERTY) String id;
+
+		public LazyDbRefTargetPropertyAccess(String id) {
+			this.id = id;
+		}
+
+		public String getId() {
+			return id;
 		}
 	}
 
