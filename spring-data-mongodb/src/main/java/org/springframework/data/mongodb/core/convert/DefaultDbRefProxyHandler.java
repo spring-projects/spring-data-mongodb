@@ -62,14 +62,14 @@ class DefaultDbRefProxyHandler implements DbRefProxyHandler {
 
 		MongoPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(property);
 		MongoPersistentProperty idProperty = persistentEntity.getIdProperty();
-
-		if (idProperty.usePropertyAccess()) {
+		
+		if(idProperty.usePropertyAccess()) {
 			return proxy;
 		}
-
+		
 		SpELExpressionEvaluator evaluator = new DefaultSpELExpressionEvaluator(proxy, spELContext);
 		BeanWrapper<Object> proxyWrapper = BeanWrapper.create(proxy, null);
-
+		
 		DBObject object = new BasicDBObject(idProperty.getFieldName(), source.getId());
 		ObjectPath objectPath = ObjectPath.ROOT.push(proxy, persistentEntity, null);
 		proxyWrapper.setProperty(idProperty, resolver.getValueInternal(idProperty, object, evaluator, objectPath));
