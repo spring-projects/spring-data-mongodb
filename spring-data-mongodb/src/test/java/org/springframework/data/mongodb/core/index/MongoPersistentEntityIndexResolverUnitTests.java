@@ -576,6 +576,60 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 					.resolveIndexForEntity(dummy);
 		}
 
+		/**
+		 * @see DATAMONGO-1025
+		 */
+		@Test
+		public void shouldUsePathIndexAsIndexNameForDocumentsHavingNamedNestedCompoundIndexFixedOnCollection() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(DocumentWithNestedDocumentHavingNamedCompoundIndex.class);
+			assertThat((String) indexDefinitions.get(0).getIndexOptions().get("name"),
+					equalTo("propertyOfTypeHavingNamedCompoundIndex.c_index"));
+		}
+
+		/**
+		 * @see DATAMONGO-1025
+		 */
+		@Test
+		public void shouldUseIndexNameForNestedTypesWithNamedCompoundIndexDefinition() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(DocumentWithNestedTypeHavingNamedCompoundIndex.class);
+			assertThat((String) indexDefinitions.get(0).getIndexOptions().get("name"),
+					equalTo("propertyOfTypeHavingNamedCompoundIndex.c_index"));
+		}
+
+		/**
+		 * @see DATAMONGO-1025
+		 */
+		@Test
+		public void shouldUsePathIndexAsIndexNameForDocumentsHavingNamedNestedIndexFixedOnCollection() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(DocumentWithNestedDocumentHavingNamedIndex.class);
+			assertThat((String) indexDefinitions.get(0).getIndexOptions().get("name"),
+					equalTo("propertyOfTypeHavingNamedIndex.property_index"));
+		}
+
+		/**
+		 * @see DATAMONGO-1025
+		 */
+		@Test
+		public void shouldUseIndexNameForNestedTypesWithNamedIndexDefinition() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(DocumentWithNestedTypeHavingNamedIndex.class);
+			assertThat((String) indexDefinitions.get(0).getIndexOptions().get("name"),
+					equalTo("propertyOfTypeHavingNamedIndex.property_index"));
+		}
+
+		/**
+		 * @see DATAMONGO-1025
+		 */
+		@Test
+		public void shouldUseIndexNameOnRootLevel() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(DocumentWithNamedIndex.class);
+			assertThat((String) indexDefinitions.get(0).getIndexOptions().get("name"), equalTo("property_index"));
+		}
+
 		@Document
 		static class MixedIndexRoot {
 
@@ -668,6 +722,54 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			List<SelfCyclingViaCollectionType> cyclic;
 
 		}
+
+		@Document
+		@CompoundIndex(name = "c_index", def = "{ foo:1, bar:1 }")
+		static class DocumentWithNamedCompoundIndex {
+
+			String property;
+		}
+
+		@Document
+		static class DocumentWithNamedIndex {
+
+			@Indexed(name = "property_index") String property;
+		}
+
+		static class TypeWithNamedIndex {
+
+			@Indexed(name = "property_index") String property;
+		}
+
+		@Document
+		static class DocumentWithNestedDocumentHavingNamedCompoundIndex {
+
+			DocumentWithNamedCompoundIndex propertyOfTypeHavingNamedCompoundIndex;
+		}
+
+		@CompoundIndex(name = "c_index", def = "{ foo:1, bar:1 }")
+		static class TypeWithNamedCompoundIndex {
+			String property;
+		}
+
+		@Document
+		static class DocumentWithNestedTypeHavingNamedCompoundIndex {
+
+			TypeWithNamedCompoundIndex propertyOfTypeHavingNamedCompoundIndex;
+		}
+
+		@Document
+		static class DocumentWithNestedDocumentHavingNamedIndex {
+
+			DocumentWithNamedIndex propertyOfTypeHavingNamedIndex;
+		}
+
+		@Document
+		static class DocumentWithNestedTypeHavingNamedIndex {
+
+			TypeWithNamedIndex propertyOfTypeHavingNamedIndex;
+		}
+
 	}
 
 	private static List<IndexDefinitionHolder> prepareMappingContextAndResolveIndexForType(Class<?> type) {
