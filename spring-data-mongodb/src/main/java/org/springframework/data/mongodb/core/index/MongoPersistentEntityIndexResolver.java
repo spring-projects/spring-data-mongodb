@@ -25,7 +25,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mapping.PropertyHandler;
@@ -96,7 +95,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		Assert.notNull(document, "Given entity is not collection root.");
 
 		final List<IndexDefinitionHolder> indexInformation = new ArrayList<MongoPersistentEntityIndexResolver.IndexDefinitionHolder>();
-		indexInformation.addAll(potentiallyCreateCompoundIndexDefinitions("", root.getCollection(), root.getType()));
+		indexInformation.addAll(potentiallyCreateCompoundIndexDefinitions("", root.getCollection(), root));
 		indexInformation.addAll(potentiallyCreateTextIndexDefinition(root));
 
 		final CycleGuard guard = new CycleGuard();
@@ -138,10 +137,11 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	private List<IndexDefinitionHolder> resolveIndexForClass(final Class<?> type, final String path,
 			final String collection, final CycleGuard guard) {
 
-		final List<IndexDefinitionHolder> indexInformation = new ArrayList<MongoPersistentEntityIndexResolver.IndexDefinitionHolder>();
-		indexInformation.addAll(potentiallyCreateCompoundIndexDefinitions(path, collection, type));
-
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(type);
+
+		final List<IndexDefinitionHolder> indexInformation = new ArrayList<MongoPersistentEntityIndexResolver.IndexDefinitionHolder>();
+		indexInformation.addAll(potentiallyCreateCompoundIndexDefinitions(path, collection, entity));
+
 		entity.doWithProperties(new PropertyHandler<MongoPersistentProperty>() {
 
 			@Override
@@ -183,14 +183,13 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	}
 
 	private List<IndexDefinitionHolder> potentiallyCreateCompoundIndexDefinitions(String dotPath, String collection,
-			Class<?> type) {
+			MongoPersistentEntity<?> entity) {
 
-		if (AnnotationUtils.findAnnotation(type, CompoundIndexes.class) == null
-				&& AnnotationUtils.findAnnotation(type, CompoundIndex.class) == null) {
+		if (entity.findAnnotation(CompoundIndexes.class) == null && entity.findAnnotation(CompoundIndex.class) == null) {
 			return Collections.emptyList();
 		}
 
-		return createCompoundIndexDefinitions(dotPath, collection, type);
+		return createCompoundIndexDefinitions(dotPath, collection, entity);
 	}
 
 	private Collection<? extends IndexDefinitionHolder> potentiallyCreateTextIndexDefinition(MongoPersistentEntity<?> root) {
@@ -278,21 +277,21 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	 * @return
 	 */
 	protected List<IndexDefinitionHolder> createCompoundIndexDefinitions(String dotPath, String fallbackCollection,
-			Class<?> type) {
+			MongoPersistentEntity<?> entity) {
 
 		List<IndexDefinitionHolder> indexDefinitions = new ArrayList<MongoPersistentEntityIndexResolver.IndexDefinitionHolder>();
-		CompoundIndexes indexes = AnnotationUtils.findAnnotation(type, CompoundIndexes.class);
+		CompoundIndexes indexes = entity.findAnnotation(CompoundIndexes.class);
 
 		if (indexes != null) {
 			for (CompoundIndex index : indexes.value()) {
-				indexDefinitions.add(createCompoundIndexDefinition(dotPath, fallbackCollection, index));
+				indexDefinitions.add(createCompoundIndexDefinition(dotPath, fallbackCollection, index, entity));
 			}
 		}
 
-		CompoundIndex index = AnnotationUtils.findAnnotation(type, CompoundIndex.class);
+		CompoundIndex index = entity.findAnnotation(CompoundIndex.class);
 
 		if (index != null) {
-			indexDefinitions.add(createCompoundIndexDefinition(dotPath, fallbackCollection, index));
+			indexDefinitions.add(createCompoundIndexDefinition(dotPath, fallbackCollection, index, entity));
 		}
 
 		return indexDefinitions;
@@ -300,13 +299,13 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 	@SuppressWarnings("deprecation")
 	protected IndexDefinitionHolder createCompoundIndexDefinition(String dotPath, String fallbackCollection,
-			CompoundIndex index) {
+			CompoundIndex index, MongoPersistentEntity<?> entity) {
 
 		CompoundIndexDefinition indexDefinition = new CompoundIndexDefinition(resolveCompoundIndexKeyFromStringDefinition(
 				dotPath, index.def()));
 
 		if (!index.useGeneratedName()) {
-			indexDefinition.named(index.name());
+			indexDefinition.named(pathAwareIndexName(index.name(), dotPath, null));
 		}
 
 		if (index.unique()) {
@@ -377,7 +376,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 				IndexDirection.ASCENDING.equals(index.direction()) ? Sort.Direction.ASC : Sort.Direction.DESC);
 
 		if (!index.useGeneratedName()) {
-			indexDefinition.named(StringUtils.hasText(index.name()) ? index.name() : dotPath);
+			indexDefinition.named(pathAwareIndexName(index.name(), dotPath, persitentProperty));
 		}
 
 		if (index.unique()) {
@@ -419,12 +418,29 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		indexDefinition.withMin(index.min()).withMax(index.max());
 
 		if (!index.useGeneratedName()) {
-			indexDefinition.named(StringUtils.hasText(index.name()) ? index.name() : persistentProperty.getName());
+			indexDefinition.named(pathAwareIndexName(index.name(), dotPath, persistentProperty));
 		}
 
 		indexDefinition.typed(index.type()).withBucketSize(index.bucketSize()).withAdditionalField(index.additionalField());
 
 		return new IndexDefinitionHolder(dotPath, indexDefinition, collection);
+	}
+
+	private String pathAwareIndexName(String indexName, String dotPath, MongoPersistentProperty property) {
+
+		String nameToUse = StringUtils.hasText(indexName) ? indexName : "";
+
+		if (!StringUtils.hasText(dotPath) || (property != null && dotPath.equals(property.getFieldName()))) {
+			return StringUtils.hasText(nameToUse) ? nameToUse : dotPath;
+		}
+
+		if (StringUtils.hasText(dotPath)) {
+
+			nameToUse = StringUtils.hasText(nameToUse) ? (property != null ? dotPath.replace("." + property.getFieldName(),
+					"") : dotPath) + "." + nameToUse : dotPath;
+		}
+		return nameToUse;
+
 	}
 
 	/**

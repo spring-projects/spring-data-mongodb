@@ -32,7 +32,41 @@ import java.lang.annotation.Target;
 public @interface GeoSpatialIndexed {
 
 	/**
-	 * Name of the property in the document that contains the [x, y] or radial coordinates to index.
+	 * Index name. <br />
+	 * <br />
+	 * The name will only be applied as is when defined on root level. For usage on nested or embedded structures the
+	 * provided name will be prefixed with the path leading to the entity. <br />
+	 * <br />
+	 * The structure below
+	 * 
+	 * <pre>
+	 * <code>
+	 * &#64;Document
+	 * class Root {
+	 *   Hybrid hybrid;
+	 *   Nested nested;
+	 * }
+	 * 
+	 * &#64;Document
+	 * class Hybrid {
+	 *   &#64;GeoSpatialIndexed(name="index") Point h1;
+	 * }
+	 * 
+	 * class Nested {
+	 *   &#64;GeoSpatialIndexed(name="index") Point n1;
+	 * }
+	 * </code>
+	 * </pre>
+	 * 
+	 * resolves in the following index structures
+	 * 
+	 * <pre>
+	 * <code>
+	 * db.root.ensureIndex( { hybrid.h1: "2d" } , { name: "hybrid.index" } )
+	 * db.root.ensureIndex( { nested.n1: "2d" } , { name: "nested.index" } )
+	 * db.hybrid.ensureIndex( { h1: "2d" } , { name: "index" } )
+	 * </code>
+	 * </pre>
 	 * 
 	 * @return
 	 */
