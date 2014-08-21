@@ -58,7 +58,41 @@ public @interface Indexed {
 	boolean dropDups() default false;
 
 	/**
-	 * Index name.
+	 * Index name. <br />
+	 * <br />
+	 * The name will only be applied as is when defined on root level. For usage on nested or embedded structures the
+	 * provided name will be prefixed with the path leading to the entity. <br />
+	 * <br />
+	 * The structure below
+	 * 
+	 * <pre>
+	 * <code>
+	 * &#64;Document
+	 * class Root {
+	 *   Hybrid hybrid;
+	 *   Nested nested;
+	 * }
+	 * 
+	 * &#64;Document
+	 * class Hybrid {
+	 *   &#64;Indexed(name="index") String h1;
+	 * }
+	 * 
+	 * class Nested {
+	 *   &#64;Indexed(name="index") String n1;
+	 * }
+	 * </code>
+	 * </pre>
+	 * 
+	 * resolves in the following index structures
+	 * 
+	 * <pre>
+	 * <code>
+	 * db.root.ensureIndex( { hybrid.h1: 1 } , { name: "hybrid.index" } )
+	 * db.root.ensureIndex( { nested.n1: 1 } , { name: "nested.index" } )
+	 * db.hybrid.ensureIndex( { h1: 1} , { name: "index" } )
+	 * </code>
+	 * </pre>
 	 * 
 	 * @return
 	 */

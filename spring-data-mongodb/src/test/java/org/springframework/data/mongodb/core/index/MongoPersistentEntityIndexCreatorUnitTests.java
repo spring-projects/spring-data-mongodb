@@ -163,8 +163,8 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 		new MongoPersistentEntityIndexCreator(mappingContext, factory);
 
 		assertThat(keysCaptor.getValue(), equalTo(new BasicDBObjectBuilder().add("company.address.location", "2d").get()));
-		assertThat(optionsCaptor.getValue(), equalTo(new BasicDBObjectBuilder().add("name", "location").add("min", -180)
-				.add("max", 180).add("bits", 26).get()));
+		assertThat(optionsCaptor.getValue(), equalTo(new BasicDBObjectBuilder().add("name", "company.address.location")
+				.add("min", -180).add("max", 180).add("bits", 26).get()));
 	}
 
 	/**

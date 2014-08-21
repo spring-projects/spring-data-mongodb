@@ -73,7 +73,43 @@ public @interface CompoundIndex {
 	boolean dropDups() default false;
 
 	/**
-	 * The name of the index to be created.
+	 * The name of the index to be created. <br />
+	 * <br />
+	 * The name will only be applied as is when defined on root level. For usage on nested or embedded structures the
+	 * provided name will be prefixed with the path leading to the entity. <br />
+	 * <br />
+	 * The structure below
+	 * 
+	 * <pre>
+	 * <code>
+	 * &#64;Document
+	 * class Root {
+	 *   Hybrid hybrid;
+	 *   Nested nested;
+	 * }
+	 * 
+	 * &#64;Document
+	 * &#64;CompoundIndex(name = "compound_index", def = "{'h1': 1, 'h2': 1}")
+	 * class Hybrid {
+	 *   String h1, h2;
+	 * }
+	 * 
+	 * &#64;CompoundIndex(name = "compound_index", def = "{'n1': 1, 'n2': 1}")
+	 * class Nested {
+	 *   String n1, n2;
+	 * }
+	 * </code>
+	 * </pre>
+	 * 
+	 * resolves in the following index structures
+	 * 
+	 * <pre>
+	 * <code>
+	 * db.root.ensureIndex( { hybrid.h1: 1, hybrid.h2: 1 } , { name: "hybrid.compound_index" } )
+	 * db.root.ensureIndex( { nested.n1: 1, nested.n2: 1 } , { name: "nested.compound_index" } )
+	 * db.hybrid.ensureIndex( { h1: 1, h2: 1 } , { name: "compound_index" } )
+	 * </code>
+	 * </pre>
 	 * 
 	 * @return
 	 */
