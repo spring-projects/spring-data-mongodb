@@ -129,7 +129,10 @@ public @interface CompoundIndex {
 	 * stored in.
 	 * 
 	 * @return
+	 * @deprecated The collection name is derived from the domain type. Fixing the collection via this attribute might
+	 *             result in broken definitions. Will be removed in 1.7.
 	 */
+	@Deprecated
 	String collection() default "";
 
 	/**
@@ -140,14 +143,4 @@ public @interface CompoundIndex {
 	 */
 	boolean background() default false;
 
-	/**
-	 * Configures the number of seconds after which the collection should expire. Defaults to -1 for no expiry.
-	 * 
-	 * @deprecated TTL cannot be defined for {@link CompoundIndex} having more than one field as key. Will be removed in
-	 *             1.6.
-	 * @see http://docs.mongodb.org/manual/tutorial/expire-data/
-	 * @return
-	 */
-	@Deprecated
-	int expireAfterSeconds() default -1;
 }

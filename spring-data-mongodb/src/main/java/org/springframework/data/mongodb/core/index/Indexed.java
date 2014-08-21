@@ -108,10 +108,13 @@ public @interface Indexed {
 	boolean useGeneratedName() default false;
 
 	/**
-	 * Colleciton name for index to be created on.
+	 * Collection name for index to be created on.
 	 * 
 	 * @return
+	 * @deprecated The collection name is derived from the domain type. Fixing the collection via this attribute might
+	 *             result in broken definitions. Will be removed in 1.7.
 	 */
+	@Deprecated
 	String collection() default "";
 
 	/**
