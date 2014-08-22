@@ -1,27 +1,27 @@
 = Spring Data MongoDB - Reference Documentation
-Mark Pollack, Thomas Risberg, Oliver Gierke, Costin Leau, Jon Brisbin, Thomas Darimont, Christoph Strobl
+Mark Pollack; Thomas Risberg; Oliver Gierke; Costin Leau; Jon Brisbin; Thomas Darimont; Christoph Strobl
+:revnumber: {version}
+:revdate: {localdate}
 :toc:
+:toc-placement!:
 :spring-data-commons-docs: https://raw.githubusercontent.com/spring-projects/spring-data-commons/master/src/main/asciidoc
 
-{version}
-
-© 2008-2014 The original authors.
+(C) 2008-2014 The original authors.
 
 NOTE: _Copies of this document may be made for your own use and for distribution to others, provided that you do not charge any fee for such copies and further provided that each copy contains this Copyright Notice, whether distributed in print or electronically._
 
+toc::[]
+
 include::preface.adoc[]
-include::introduction/introduction.adoc[]
 
-:leveloffset: 1
-include::introduction/requirements.adoc[]
-include::introduction/getting-started.adoc[]
+:leveloffset: +1
 include::{spring-data-commons-docs}/repositories.adoc[]
+:leveloffset: -1
 
-:leveloffset: 0
 [[reference]]
 = Reference Documentation
 
-:leveloffset: 1
+:leveloffset: +1
 include::reference/introduction.adoc[]
 include::reference/mongodb.adoc[]
 include::reference/mongo-repositories.adoc[]
@@ -30,12 +30,14 @@ include::reference/mapping.adoc[]
 include::reference/cross-store.adoc[]
 include::reference/logging.adoc[]
 include::reference/jmx.adoc[]
+:leveloffset: -1
 
-:leveloffset: 0
+[[appendix]]
 = Appendix
 
 :numbered!:
-:leveloffset: 1
+:leveloffset: +1
 include::{spring-data-commons-docs}/repository-namespace-reference.adoc[]
-include::{spring-data-commons-docs}/repository-namespace-reference.adoc[]
+include::{spring-data-commons-docs}/repository-populator-namespace-reference.adoc[]
 include::{spring-data-commons-docs}/repository-query-keywords-reference.adoc[]
+:leveloffset: -1
