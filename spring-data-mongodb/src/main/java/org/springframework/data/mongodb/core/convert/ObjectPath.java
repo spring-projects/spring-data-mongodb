@@ -21,6 +21,7 @@ import java.util.List;
 
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 import com.mongodb.DBObject;
 
@@ -118,6 +119,26 @@ class ObjectPath {
 	 */
 	public Object getCurrentObject() {
 		return items.isEmpty() ? null : items.get(items.size() - 1).getObject();
+	}
+
+	/* 
+	 * (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+
+		if (items.isEmpty()) {
+			return "[empty]";
+		}
+
+		List<String> strings = new ArrayList<String>(items.size());
+
+		for (ObjectPathItem item : items) {
+			strings.add(item.object.toString());
+		}
+
+		return StringUtils.collectionToDelimitedString(strings, " -> ");
 	}
 
 	/**

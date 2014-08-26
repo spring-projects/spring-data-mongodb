@@ -45,7 +45,9 @@ import org.hamcrest.Matchers;
 import org.joda.time.LocalDate;
 import org.junit.Before;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
@@ -99,6 +101,8 @@ public class MappingMongoConverterUnitTests {
 	MongoMappingContext mappingContext;
 	@Mock ApplicationContext context;
 	@Mock DbRefResolver resolver;
+
+	public @Rule ExpectedException exception = ExpectedException.none();
 
 	@Before
 	public void setUp() {
@@ -1824,6 +1828,29 @@ public class MappingMongoConverterUnitTests {
 		converter.write(mock, dbo);
 
 		verify(mock, times(1)).getTarget();
+	}
+
+	/**
+	 * @see DATAMONGO-1034
+	 */
+	@Test
+	public void rejectsBasicDbListToBeConvertedIntoComplexType() {
+
+		BasicDBList inner = new BasicDBList();
+		inner.add("key");
+		inner.add("value");
+
+		BasicDBList outer = new BasicDBList();
+		outer.add(inner);
+		outer.add(inner);
+
+		BasicDBObject source = new BasicDBObject("attributes", outer);
+
+		exception.expect(MappingException.class);
+		exception.expectMessage(Item.class.getName());
+		exception.expectMessage(BasicDBList.class.getName());
+
+		converter.read(Item.class, source);
 	}
 
 	static class GenericType<T> {
