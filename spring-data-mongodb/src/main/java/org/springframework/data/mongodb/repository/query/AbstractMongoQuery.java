@@ -284,7 +284,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 
 			MongoEntityMetadata<?> metadata = method.getEntityInformation();
 			return countProjection ? operations.count(query, metadata.getJavaType()) : operations.findOne(query,
-					metadata.getJavaType());
+					metadata.getJavaType(), metadata.getCollectionName());
 		}
 	}
 
