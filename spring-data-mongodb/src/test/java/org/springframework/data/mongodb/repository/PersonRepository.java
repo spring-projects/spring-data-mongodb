@@ -313,4 +313,8 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	 */
 	Page<Person> findTop3ByLastnameStartingWith(String lastname, Pageable pageRequest);
 
+	/**
+	 * @see DATAMONGO-1030
+	 */
+	PersonSummary findSummaryByLastname(String lastname);
 }

@@ -1011,4 +1011,18 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	public void shouldFindPersonsWhenUsingQueryDslPerdicatedOnIdProperty() {
 		assertThat(repository.findAll(person.id.in(Arrays.asList(dave.id, carter.id))), containsInAnyOrder(dave, carter));
 	}
+
+	/**
+	 * @see DATAMONGO-1030
+	 */
+	@Test
+	public void executesSingleEntityQueryWithProjectionCorrectly() {
+
+		PersonSummary result = repository.findSummaryByLastname("Beauford");
+
+		assertThat(result, is(notNullValue()));
+		assertThat(result.firstname, is("Carter"));
+		assertThat(result.lastname, is("Beauford"));
+
+	}
 }
