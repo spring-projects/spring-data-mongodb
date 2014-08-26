@@ -76,6 +76,8 @@ import com.mongodb.DBRef;
  */
 public class MappingMongoConverter extends AbstractMongoConverter implements ApplicationContextAware {
 
+	private static final String INCOMPATIBLE_TYPES = "Cannot convert %1$s of type %2$s into an instance of %3$s! Implement a custom Converter<%2$s, %3$s> and register it with the CustomConversions. Parent object was: %4$s";
+
 	protected static final Logger LOGGER = LoggerFactory.getLogger(MappingMongoConverter.class);
 
 	protected final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
@@ -212,6 +214,10 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		if (typeToUse.isMap()) {
 			return (S) readMap(typeToUse, dbo, parent);
+		}
+
+		if (dbo instanceof BasicDBList) {
+			throw new MappingException(String.format(INCOMPATIBLE_TYPES, dbo, BasicDBList.class, typeToUse.getType(), parent));
 		}
 
 		// Retrieve persistent entity info
