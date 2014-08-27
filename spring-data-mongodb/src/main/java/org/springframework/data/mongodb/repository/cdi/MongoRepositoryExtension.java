@@ -110,10 +110,8 @@ public class MongoRepositoryExtension extends CdiRepositoryExtensionSupport {
 					MongoOperations.class.getName(), qualifiers));
 		}
 
-		Bean<?> customImplementationBean = getCustomImplementationBean(repositoryType, beanManager, qualifiers);
-
 		// Construct and return the repository bean.
 		return new MongoRepositoryBean<T>(mongoOperations, qualifiers, repositoryType, beanManager,
-				customImplementationBean);
+				getCustomImplementationDetector());
 	}
 }
