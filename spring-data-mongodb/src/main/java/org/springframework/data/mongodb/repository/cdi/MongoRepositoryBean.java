@@ -45,8 +45,8 @@ public class MongoRepositoryBean<T> extends CdiRepositoryBean<T> {
 	 * @param qualifiers must not be {@literal null}.
 	 * @param repositoryType must not be {@literal null}.
 	 * @param beanManager must not be {@literal null}.
-	 * @param detector detector for the custom repository implementations
- 	 *          {@link CustomRepositoryImplementationDetector}, can be {@literal null}.
+	 * @param detector detector for the custom {@link org.springframework.data.repository.Repository} implementations
+  	 *          {@link CustomRepositoryImplementationDetector}, can be {@literal null}.
 	 */
 	public MongoRepositoryBean(Bean<MongoOperations> operations, Set<Annotation> qualifiers, Class<T> repositoryType,
 			BeanManager beanManager, CustomRepositoryImplementationDetector detector) {
