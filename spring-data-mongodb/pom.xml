@@ -2,7 +2,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
 	<modelVersion>4.0.0</modelVersion>
-	
+
 	<artifactId>spring-data-mongodb</artifactId>
 
 	<name>Spring Data MongoDB - Core</name>
@@ -21,7 +21,7 @@
 	</properties>
 
 	<dependencies>
-		
+
 		<!--  Spring -->
 		<dependency>
 			<groupId>org.springframework</groupId>
@@ -77,7 +77,7 @@
 			<version>1.0</version>
 			<optional>true</optional>
 		</dependency>
-		
+
 		<!-- CDI -->
 		<dependency>
 			<groupId>javax.enterprise</groupId>
@@ -86,21 +86,21 @@
 			<scope>provided</scope>
 			<optional>true</optional>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>javax.el</groupId>
 			<artifactId>el-api</artifactId>
 			<version>${cdi}</version>
 			<scope>test</scope>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>org.apache.openwebbeans.test</groupId>
 			<artifactId>cditest-owb</artifactId>
 			<version>${webbeans}</version>
 			<scope>test</scope>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>javax.servlet</groupId>
 			<artifactId>servlet-api</artifactId>
@@ -115,7 +115,7 @@
 			<version>${validation}</version>
 			<optional>true</optional>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>org.objenesis</groupId>
 			<artifactId>objenesis</artifactId>
@@ -129,23 +129,23 @@
 			<version>4.2.0.Final</version>
 			<scope>test</scope>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>joda-time</groupId>
 			<artifactId>joda-time</artifactId>
 			<version>${jodatime}</version>
 			<scope>test</scope>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>jul-to-slf4j</artifactId>
 			<version>${slf4j}</version>
 			<scope>test</scope>
 		</dependency>
-		
+
 	</dependencies>
-	
+
 	<build>
 		<plugins>
 
@@ -189,9 +189,14 @@
 					<systemPropertyVariables>
 						<java.util.logging.config.file>src/test/resources/logging.properties</java.util.logging.config.file>
 					</systemPropertyVariables>
+					<properties>
+						<property>
+							<name>listener</name>
+							<value>org.springframework.data.mongodb.test.util.CleanMongoDBJunitRunListener</value>
+						</property>
+					</properties>
 				</configuration>
 			</plugin>
 		</plugins>
 	</build>
-
 </project>
