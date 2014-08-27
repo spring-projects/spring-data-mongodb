@@ -25,6 +25,7 @@ import javax.enterprise.inject.spi.BeanManager;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.repository.support.MongoRepositoryFactory;
 import org.springframework.data.repository.cdi.CdiRepositoryBean;
+import org.springframework.data.repository.config.CustomRepositoryImplementationDetector;
 import org.springframework.util.Assert;
 
 /**
@@ -44,13 +45,13 @@ public class MongoRepositoryBean<T> extends CdiRepositoryBean<T> {
 	 * @param qualifiers must not be {@literal null}.
 	 * @param repositoryType must not be {@literal null}.
 	 * @param beanManager must not be {@literal null}.
-	 * @param customImplementationBean the bean for the custom implementation of the
-	 *          {@link org.springframework.data.repository.Repository}, can be {@literal null}.
+	 * @param detector detector for the custom repository implementations
+ 	 *          {@link CustomRepositoryImplementationDetector}, can be {@literal null}.
 	 */
 	public MongoRepositoryBean(Bean<MongoOperations> operations, Set<Annotation> qualifiers, Class<T> repositoryType,
-			BeanManager beanManager, Bean<?> customImplementationBean) {
+			BeanManager beanManager, CustomRepositoryImplementationDetector detector) {
 
-		super(qualifiers, repositoryType, beanManager, customImplementationBean);
+		super(qualifiers, repositoryType, beanManager, detector);
 
 		Assert.notNull(operations);
 		this.operations = operations;
