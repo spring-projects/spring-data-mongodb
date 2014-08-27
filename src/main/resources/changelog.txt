@@ -1,6 +1,18 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 1.5.4.RELEASE (2014-08-27)
+---------------------------------------------
+* DATAMONGO-1038 - Assert Mongo instances cleand up properly after test runs.
+* DATAMONGO-1034 - Improve error message when trying to convert incompatible types.
+* DATAMONGO-1033 - Release 1.5.4.
+* DATAMONGO-1030 - Query methods retuning a single entity does not work with projecting types.
+* DATAMONGO-1027 - Collection inherits complex index from embedded class/object.
+* DATAMONGO-1025 - Duplicate index creation on embedded documents.
+* DATAMONGO-1020 - LimitOperator should be a public class.
+* DATAMONGO-1008 - IndexOperations fail, when "2dsphere" index is present.
+
+
 Changes in version 1.6.0.RC1 (2014-08-13)
 -----------------------------------------
 * DATAMONGO-1024 - Upgrade to Java driver 2.12.3.
