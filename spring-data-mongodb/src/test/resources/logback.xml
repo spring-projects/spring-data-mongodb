@@ -12,6 +12,8 @@
 	 -->
 	 
 	 <logger name="org.springframework.data.mongodb.core.aggregation" level="debug" />
+	 
+	 <logger name="org.springframework.data.mongodb.test.util.CleanMongoDB" level="debug" />
 
 	<root level="error">
 		<appender-ref ref="console" />

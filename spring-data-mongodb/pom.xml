@@ -189,9 +189,14 @@
 					<systemPropertyVariables>
 						<java.util.logging.config.file>src/test/resources/logging.properties</java.util.logging.config.file>
 					</systemPropertyVariables>
+					<properties>
+				      <property>
+				        <name>listener</name>
+				        <value>org.springframework.data.mongodb.test.util.CleanMongoDBJunitRunListener</value>
+				      </property>
+				    </properties>
 				</configuration>
 			</plugin>
 		</plugins>
 	</build>
-
 </project>
