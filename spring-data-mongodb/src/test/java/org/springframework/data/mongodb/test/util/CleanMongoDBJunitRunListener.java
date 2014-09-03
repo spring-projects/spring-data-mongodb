@@ -17,21 +17,24 @@ package org.springframework.data.mongodb.test.util;
 
 import org.junit.runner.Result;
 import org.junit.runner.notification.RunListener;
-import org.springframework.data.mongodb.test.util.CleanMongoDB.Types;
+import org.springframework.data.mongodb.test.util.CleanMongoDB.Struct;
 
 /**
+ * {@link RunListener} implementation to be used for wiping MongoDB index structures after all test runs have finished.
+ * 
  * @author Christoph Strobl
+ * @since 1.6
  */
 public class CleanMongoDBJunitRunListener extends RunListener {
 
 	@Override
 	public void testRunFinished(Result result) throws Exception {
+
 		super.testRunFinished(result);
 		try {
-			new CleanMongoDB().clean(Types.INDEX).apply().evaluate();
+			new CleanMongoDB().clean(Struct.INDEX).apply().evaluate();
 		} catch (Throwable e) {
 			e.printStackTrace();
 		}
 	}
-
 }
