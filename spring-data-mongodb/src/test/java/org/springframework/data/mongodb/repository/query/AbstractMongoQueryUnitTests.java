@@ -101,6 +101,7 @@ public class AbstractMongoQueryUnitTests {
 
 	/**
 	 * @see DATAMONGO-566
+	 * @see DATAMONGO-1040
 	 */
 	@SuppressWarnings("unchecked")
 	@Test
@@ -111,7 +112,8 @@ public class AbstractMongoQueryUnitTests {
 
 		createQueryForMethod("deleteByLastname", String.class).setDeleteQuery(true).execute(new Object[] { "booh" });
 
-		verify(this.mongoOperationsMock, times(1)).findAllAndRemove(Matchers.any(Query.class), Matchers.eq(Person.class));
+		verify(this.mongoOperationsMock, times(1)).findAllAndRemove(Matchers.any(Query.class), Matchers.eq(Person.class),
+				Matchers.eq("persons"));
 	}
 
 	/**
