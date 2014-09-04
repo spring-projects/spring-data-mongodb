@@ -388,7 +388,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 		private Object deleteAndConvertResult(Query query, MongoEntityMetadata<?> metadata) {
 
 			if (method.isCollectionQuery()) {
-				return operations.findAllAndRemove(query, metadata.getJavaType());
+				return operations.findAllAndRemove(query, metadata.getJavaType(), metadata.getCollectionName());
 			}
 
 			WriteResult writeResult = operations.remove(query, metadata.getJavaType(), metadata.getCollectionName());
