@@ -2,22 +2,22 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
 	<modelVersion>4.0.0</modelVersion>
-	
+
 	<parent>
 		<groupId>org.springframework.data</groupId>
 		<artifactId>spring-data-mongodb-parent</artifactId>
 		<version>1.5.5.BUILD-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
-	
+
 	<artifactId>spring-data-mongodb-cross-store</artifactId>
 	<name>Spring Data MongoDB - Cross-Store Support</name>
-	
+
 	<properties>
 		<jpa>1.0.0.Final</jpa>
 		<hibernate>3.6.10.Final</hibernate>
 	</properties>
-	
+
 	<dependencies>
 
 		<!-- Spring -->
@@ -126,10 +126,11 @@
 							<groupId>org.springframework</groupId>
 							<artifactId>spring-aspects</artifactId>
 						</aspectLibrary>
-					</aspectLibraries> 
+					</aspectLibraries>
 					<complianceLevel>${source.level}</complianceLevel>
 					<source>${source.level}</source>
 					<target>${source.level}</target>
+					<xmlConfigured>aop.xml</xmlConfigured>
 				</configuration>
 			</plugin>
 		</plugins>
