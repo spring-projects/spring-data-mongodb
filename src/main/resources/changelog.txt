@@ -1,6 +1,21 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 1.6.0.RELEASE (2014-09-05)
+---------------------------------------------
+* DATAMONGO-1046 - Release 1.6 GA.
+* DATAMONGO-1045 - Make sure Spring Data MongoDB can build against Spring 4.1.
+* DATAMONGO-1040 - deleteAll repository query don't use EntityMetadata collection name.
+* DATAMONGO-1039 - Polish implementation for cleaning up after tests.
+* DATAMONGO-1038 - Assert Mongo instances cleand up properly after test runs.
+* DATAMONGO-1036 - Custom repository implementations are not picked up when using CDI.
+* DATAMONGO-1034 - Improve error message when trying to convert incompatible types.
+* DATAMONGO-1032 - Polish Asciidoctor documentation.
+* DATAMONGO-1030 - Query methods retuning a single entity does not work with projecting types.
+* DATAMONGO-1027 - Collection inherits complex index from embedded class/object.
+* DATAMONGO-1025 - Duplicate index creation on embedded documents.
+
+
 Changes in version 1.5.4.RELEASE (2014-08-27)
 ---------------------------------------------
 * DATAMONGO-1038 - Assert Mongo instances cleand up properly after test runs.
