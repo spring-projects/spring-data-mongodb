@@ -220,7 +220,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	}
 
 	private void appendTextIndexInformation(final String dotPath,
-			final TextIndexDefinitionBuilder indexDefinitionBuilder, MongoPersistentEntity<?> entity,
+			final TextIndexDefinitionBuilder indexDefinitionBuilder, final MongoPersistentEntity<?> entity,
 			final TextIndexIncludeOptions includeOptions, final CycleGuard guard) {
 
 		entity.doWithProperties(new PropertyHandler<MongoPersistentProperty>() {
@@ -230,7 +230,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 				guard.protect(persistentProperty, dotPath);
 
-				if (persistentProperty.isLanguageProperty()) {
+				if (persistentProperty.isExplicitLanguageProperty() && !StringUtils.hasText(dotPath)) {
 					indexDefinitionBuilder.withLanguageOverride(persistentProperty.getFieldName());
 				}
 
@@ -257,6 +257,10 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 									mappingContext.getPersistentEntity(persistentProperty.getActualType()), optionsForNestedType, guard);
 						} catch (CyclicPropertyReferenceException e) {
 							LOGGER.warn(e.getMessage(), e);
+						} catch (InvalidDataAccessApiUsageException e) {
+							LOGGER.warn(
+									String.format("Potentially invald index structure discovered. Breaking operation for %s.",
+											entity.getName()), e);
 						}
 					} else if (includeOptions.isForce() || indexed != null) {
 						indexDefinitionBuilder.onField(propertyDotPath, weight);

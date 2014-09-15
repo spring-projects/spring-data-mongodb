@@ -15,10 +15,7 @@
  */
 package org.springframework.data.mongodb.core.index;
 
-import static org.hamcrest.collection.IsCollectionWithSize.*;
-import static org.hamcrest.collection.IsEmptyCollection.*;
-import static org.hamcrest.core.IsEqual.*;
-import static org.hamcrest.core.IsInstanceOf.*;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
@@ -26,8 +23,6 @@ import java.lang.annotation.Annotation;
 import java.util.Collections;
 import java.util.List;
 
-import org.hamcrest.collection.IsEmptyCollection;
-import org.hamcrest.core.IsEqual;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
@@ -461,7 +456,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 					indexDefinitions.get(0));
 
 			DBObject weights = DBObjectTestUtils.getAsDBObject(indexDefinitions.get(0).getIndexOptions(), "weights");
-			assertThat(weights.get("nested.foo"), IsEqual.<Object> equalTo(5F));
+			assertThat(weights.get("nested.foo"), is((Object) 5F));
 		}
 
 		/**
@@ -476,8 +471,8 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 					"textIndexOnNestedWithMostSpecificValueRoot", indexDefinitions.get(0));
 
 			DBObject weights = DBObjectTestUtils.getAsDBObject(indexDefinitions.get(0).getIndexOptions(), "weights");
-			assertThat(weights.get("nested.foo"), IsEqual.<Object> equalTo(5F));
-			assertThat(weights.get("nested.bar"), IsEqual.<Object> equalTo(10F));
+			assertThat(weights.get("nested.foo"), is((Object) 5F));
+			assertThat(weights.get("nested.bar"), is((Object) 10F));
 		}
 
 		/**
@@ -487,17 +482,57 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		public void shouldSetDefaultLanguageCorrectly() {
 
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(DocumentWithDefaultLanguage.class);
-			assertThat(indexDefinitions.get(0).getIndexOptions().get("default_language"), IsEqual.<Object> equalTo("spanish"));
+			assertThat(indexDefinitions.get(0).getIndexOptions().get("default_language"), is((Object) "spanish"));
 		}
 
 		/**
-		 * @see DATAMONGO-937
+		 * @see DATAMONGO-937, DATAMONGO-1049
 		 */
 		@Test
 		public void shouldResolveTextIndexLanguageOverrideCorrectly() {
 
-			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(DocumentWithLanguageOverrideOnNestedElementRoot.class);
-			assertThat(indexDefinitions.get(0).getIndexOptions().get("language_override"), IsEqual.<Object> equalTo("lang"));
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(DocumentWithLanguageOverride.class);
+			assertThat(indexDefinitions.get(0).getIndexOptions().get("language_override"), is((Object) "lang"));
+		}
+
+		/**
+		 * @see DATAMONGO-1049
+		 */
+		@Test
+		public void shouldIgnoreTextIndexLanguageOverrideOnNestedElements() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(DocumentWithLanguageOverrideOnNestedElement.class);
+			assertThat(indexDefinitions.get(0).getIndexOptions().get("language_override"), is(nullValue()));
+		}
+
+		/**
+		 * @see DATAMONGO-1049
+		 */
+		@Test
+		public void shouldNotCreateIndexDefinitionWhenOnlyLanguageButNoTextIndexPresent() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(DocumentWithNoTextIndexPropertyButReservedFieldLanguage.class);
+			assertThat(indexDefinitions, is(empty()));
+		}
+
+		/**
+		 * @see DATAMONGO-1049
+		 */
+		@Test
+		public void shouldNotCreateIndexDefinitionWhenOnlyAnnotatedLanguageButNoTextIndexPresent() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(DocumentWithNoTextIndexPropertyButReservedFieldLanguageAnnotated.class);
+			assertThat(indexDefinitions, is(empty()));
+		}
+
+		/**
+		 * @see DATAMONGO-1049
+		 */
+		@Test
+		public void shouldPreferExplicitlyAnnotatedLanguageProperty() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(DocumentWithOverlappingLanguageProps.class);
+			assertThat(indexDefinitions.get(0).getIndexOptions().get("language_override"), is((Object) "lang"));
 		}
 
 		@Document
@@ -527,14 +562,12 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		static class TextIndexOnNested {
 
 			String foo;
-
 		}
 
 		@Document
 		static class TextIndexOnNestedWithWeightRoot {
 
 			@TextIndexed(weight = 5) TextIndexOnNested nested;
-
 		}
 
 		@Document
@@ -554,15 +587,36 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		}
 
 		@Document
-		static class DocumentWithLanguageOverrideOnNestedElementRoot {
+		static class DocumentWithLanguageOverrideOnNestedElement {
 
-			DocumentWithLanguageOverrideOnNestedElement nested;
+			DocumentWithLanguageOverride nested;
 		}
 
-		static class DocumentWithLanguageOverrideOnNestedElement {
+		@Document
+		static class DocumentWithLanguageOverride {
 
 			@TextIndexed String foo;
 
+			@Language String lang;
+		}
+
+		@Document
+		static class DocumentWithNoTextIndexPropertyButReservedFieldLanguage {
+
+			String language;
+		}
+
+		@Document
+		static class DocumentWithNoTextIndexPropertyButReservedFieldLanguageAnnotated {
+
+			@Field("language") String lang;
+		}
+
+		@Document
+		static class DocumentWithOverlappingLanguageProps {
+
+			@TextIndexed String foo;
+			String language;
 			@Language String lang;
 		}
 
@@ -670,7 +724,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		public void shouldDetectSelfCycleViaCollectionTypeCorrectly() {
 
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(SelfCyclingViaCollectionType.class);
-			assertThat(indexDefinitions, IsEmptyCollection.empty());
+			assertThat(indexDefinitions, empty());
 		}
 
 		/**
@@ -680,7 +734,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		public void shouldNotDetectCycleWhenTypeIsUsedMoreThanOnce() {
 
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(MultipleObjectsOfSameType.class);
-			assertThat(indexDefinitions, IsEmptyCollection.empty());
+			assertThat(indexDefinitions, empty());
 		}
 
 		/**
