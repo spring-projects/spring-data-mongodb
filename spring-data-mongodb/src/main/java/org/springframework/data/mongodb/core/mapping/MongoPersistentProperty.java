@@ -61,13 +61,21 @@ public interface MongoPersistentProperty extends PersistentProperty<MongoPersist
 	boolean isExplicitIdProperty();
 
 	/**
-	 * Returns whether the property indicates the documents language either by having a {@link #getFieldName()} equal to
-	 * {@literal language} or being annotated with {@link Language}.
+	 * Returns true whether the property indicates the documents language either by having a {@link #getFieldName()} equal
+	 * to {@literal language} or being annotated with {@link Language}.
 	 * 
 	 * @return
 	 * @since 1.6
 	 */
 	boolean isLanguageProperty();
+
+	/**
+	 * Returns true when property being annotated with {@link Language}.
+	 * 
+	 * @return
+	 * @since 1.6.1
+	 */
+	boolean isExplicitLanguageProperty();
 
 	/**
 	 * Returns whether the property holds the documents score calculated by text search. <br/>

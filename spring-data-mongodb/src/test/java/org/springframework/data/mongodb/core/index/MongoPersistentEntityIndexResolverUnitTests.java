@@ -26,8 +26,8 @@ import java.lang.annotation.Annotation;
 import java.util.Collections;
 import java.util.List;
 
-import org.hamcrest.collection.IsEmptyCollection;
 import org.hamcrest.core.IsEqual;
+import org.hamcrest.core.IsNull;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
@@ -491,12 +491,52 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		}
 
 		/**
-		 * @see DATAMONGO-937
+		 * @see DATAMONGO-937, DATAMONGO-1049
 		 */
 		@Test
 		public void shouldResolveTextIndexLanguageOverrideCorrectly() {
 
-			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(DocumentWithLanguageOverrideOnNestedElementRoot.class);
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(DocumentWithLanguageOverride.class);
+			assertThat(indexDefinitions.get(0).getIndexOptions().get("language_override"), IsEqual.<Object> equalTo("lang"));
+		}
+
+		/**
+		 * @see DATAMONGO-1049
+		 */
+		@Test
+		public void shouldIgnoreTextIndexLanguageOverrideOnNestedElements() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(DocumentWithLanguageOverrideOnNestedElement.class);
+			assertThat(indexDefinitions.get(0).getIndexOptions().get("language_override"), IsNull.nullValue());
+		}
+
+		/**
+		 * @see DATAMONGO-1049
+		 */
+		@Test
+		public void shouldNotCreateIndexDefinitionWhenOnlyLanguageButNoTextIndexPresent() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(DocumentWithNoTextIndexPropertyButReservedFieldLanguage.class);
+			assertThat(indexDefinitions, empty());
+		}
+
+		/**
+		 * @see DATAMONGO-1049
+		 */
+		@Test
+		public void shouldNotCreateIndexDefinitionWhenOnlyAnnotatedLanguageButNoTextIndexPresent() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(DocumentWithNoTextIndexPropertyButReservedFieldLanguageAnnotated.class);
+			assertThat(indexDefinitions, empty());
+		}
+
+		/**
+		 * @see DATAMONGO-1049
+		 */
+		@Test
+		public void shouldPreferExplicitlyAnnotatedLanguageProperty() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(DocumentWithOverlappingLanguageProps.class);
 			assertThat(indexDefinitions.get(0).getIndexOptions().get("language_override"), IsEqual.<Object> equalTo("lang"));
 		}
 
@@ -527,14 +567,12 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		static class TextIndexOnNested {
 
 			String foo;
-
 		}
 
 		@Document
 		static class TextIndexOnNestedWithWeightRoot {
 
 			@TextIndexed(weight = 5) TextIndexOnNested nested;
-
 		}
 
 		@Document
@@ -554,15 +592,36 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		}
 
 		@Document
-		static class DocumentWithLanguageOverrideOnNestedElementRoot {
+		static class DocumentWithLanguageOverrideOnNestedElement {
 
-			DocumentWithLanguageOverrideOnNestedElement nested;
+			DocumentWithLanguageOverride nested;
 		}
 
-		static class DocumentWithLanguageOverrideOnNestedElement {
+		@Document
+		static class DocumentWithLanguageOverride {
 
 			@TextIndexed String foo;
 
+			@Language String lang;
+		}
+
+		@Document
+		static class DocumentWithNoTextIndexPropertyButReservedFieldLanguage {
+
+			String language;
+		}
+
+		@Document
+		static class DocumentWithNoTextIndexPropertyButReservedFieldLanguageAnnotated {
+
+			@Field("language") String lang;
+		}
+
+		@Document
+		static class DocumentWithOverlappingLanguageProps {
+
+			@TextIndexed String foo;
+			String language;
 			@Language String lang;
 		}
 
@@ -670,7 +729,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		public void shouldDetectSelfCycleViaCollectionTypeCorrectly() {
 
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(SelfCyclingViaCollectionType.class);
-			assertThat(indexDefinitions, IsEmptyCollection.empty());
+			assertThat(indexDefinitions, empty());
 		}
 
 		/**
@@ -680,7 +739,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		public void shouldNotDetectCycleWhenTypeIsUsedMoreThanOnce() {
 
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(MultipleObjectsOfSameType.class);
-			assertThat(indexDefinitions, IsEmptyCollection.empty());
+			assertThat(indexDefinitions, empty());
 		}
 
 		/**
