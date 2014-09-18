@@ -674,6 +674,34 @@ public class QueryMapperUnitTests {
 		assertThat(reference.getId(), is(instanceOf(ObjectId.class)));
 	}
 
+	/**
+	 * @see DATAMONGO-1050
+	 */
+	@Test
+	public void shouldUseExplicitlySetFieldnameForIdPropertyCandidates() {
+
+		Query query = query(where("nested.id").is("bar"));
+
+		DBObject dbo = mapper.getMappedObject(query.getQueryObject(),
+				context.getPersistentEntity(RootForClassWithExplicitlyRenamedIdField.class));
+
+		assertThat(dbo, equalTo(new BasicDBObjectBuilder().add("nested.id", "bar").get()));
+	}
+
+	/**
+	 * @see DATAMONGO-1050
+	 */
+	@Test
+	public void shouldUseExplicitlySetFieldnameForIdPropertyCandidatesUsedInSortClause() {
+
+		Query query = new Query().with(new Sort("nested.id"));
+
+		DBObject dbo = mapper.getMappedSort(query.getSortObject(),
+				context.getPersistentEntity(RootForClassWithExplicitlyRenamedIdField.class));
+
+		assertThat(dbo, equalTo(new BasicDBObjectBuilder().add("nested.id", 1).get()));
+	}
+
 	@Document
 	public class Foo {
 		@Id private ObjectId id;
@@ -754,5 +782,16 @@ public class QueryMapperUnitTests {
 
 		@Id String id;
 		@TextScore @Field("score") Float textScore;
+	}
+
+	static class RootForClassWithExplicitlyRenamedIdField {
+
+		@Id String id;
+		ClassWithExplicitlyRenamedField nested;
+	}
+
+	static class ClassWithExplicitlyRenamedField {
+
+		@Field("id") String id;
 	}
 }
