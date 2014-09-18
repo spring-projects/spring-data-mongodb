@@ -15,10 +15,26 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
-import static org.springframework.data.mongodb.core.DBObjectTestUtils.*;
+import static org.hamcrest.Matchers.arrayWithSize;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasItems;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.springframework.data.mongodb.core.DBObjectTestUtils.getAsDBObject;
+import static org.springframework.data.mongodb.core.DBObjectTestUtils.getTypedValue;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -83,6 +99,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
+import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DB;
 import com.mongodb.DBObject;
 import com.mongodb.DBRef;
@@ -1869,6 +1886,81 @@ public class MappingMongoConverterUnitTests {
 				Mockito.any(DbRefResolverCallback.class), Mockito.any(DbRefProxyHandler.class));
 	}
 
+	/**
+	 * @see DATAMONGO-1050
+	 */
+	@Test
+	public void writeShouldUseExplicitFieldnameForIdPropertyWhenAnnotated() {
+
+		RootForClassWithExplicitlyRenamedIdField source = new RootForClassWithExplicitlyRenamedIdField();
+		source.id = "rootId";
+		source.nested = new ClassWithExplicitlyRenamedField();
+		source.nested.id = "nestedId";
+
+		DBObject sink = new BasicDBObject();
+		converter.write(source, sink);
+
+		assertThat((String) sink.get("_id"), is("rootId"));
+		assertThat((DBObject) sink.get("nested"), is(new BasicDBObjectBuilder().add("id", "nestedId").get()));
+	}
+
+	/**
+	 * @see DATAMONGO-1050
+	 */
+	@Test
+	public void readShouldUseExplicitFieldnameForIdPropertyWhenAnnotated() {
+
+		DBObject source = new BasicDBObjectBuilder().add("_id", "rootId")
+				.add("nested", new BasicDBObject("id", "nestedId")).get();
+
+		RootForClassWithExplicitlyRenamedIdField sink = converter.read(RootForClassWithExplicitlyRenamedIdField.class,
+				source);
+
+		assertThat(sink.id, is("rootId"));
+		assertThat(sink.nested, notNullValue());
+		assertThat(sink.nested.id, is("nestedId"));
+	}
+
+	/**
+	 * @see DATAMONGO-1050
+	 */
+	@Test
+	public void namedIdFieldShouldExtractValueFromUnderscoreIdField() {
+
+		DBObject dbo = new BasicDBObjectBuilder().add("_id", "A").add("id", "B").get();
+
+		ClassWithNamedIdField withNamedIdField = converter.read(ClassWithNamedIdField.class, dbo);
+
+		assertThat(withNamedIdField.id, is("A"));
+	}
+	
+	/**
+	 * @see DATAMONGO-1050
+	 */
+	@Test
+	public void explicitlyRenamedIfFieldShouldExtractValueFromIdField() {
+
+		DBObject dbo = new BasicDBObjectBuilder().add("_id", "A").add("id", "B").get();
+
+		ClassWithExplicitlyRenamedField withExplicitlyRenamedField = converter.read(ClassWithExplicitlyRenamedField.class,
+				dbo);
+
+		assertThat(withExplicitlyRenamedField.id, is("B"));
+	}
+	
+	/**
+	 * @see DATAMONGO-1050
+	 */
+	@Test
+	public void annotatedIdFieldShouldExtractValueFromUnderscoreIdField() {
+
+		DBObject dbo = new BasicDBObjectBuilder().add("_id", "A").add("id", "B").get();
+
+		ClassWithAnnotatedIdField withAnnotatedIdField = converter.read(ClassWithAnnotatedIdField.class, dbo);
+
+		assertThat(withAnnotatedIdField.key, is("A"));
+	}
+
 	static class GenericType<T> {
 		T content;
 	}
@@ -2128,6 +2220,32 @@ public class MappingMongoConverterUnitTests {
 		public ClassWithIntId getDbRefProperty() {
 			return dbRefProperty;
 		}
+	}
 
+	static class RootForClassWithExplicitlyRenamedIdField {
+
+		@Id String id;
+		ClassWithExplicitlyRenamedField nested;
+	}
+
+	static class ClassWithExplicitlyRenamedField {
+
+		@Field("id") String id;
+	}
+
+	static class RootForClassWithNamedIdField {
+
+		String id;
+		ClassWithNamedIdField nested;
+	}
+
+	static class ClassWithNamedIdField {
+
+		String id;
+	}
+
+	static class ClassWithAnnotatedIdField {
+
+		@Id String key;
 	}
 }

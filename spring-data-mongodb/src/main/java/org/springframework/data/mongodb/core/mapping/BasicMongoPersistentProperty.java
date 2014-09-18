@@ -100,7 +100,8 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 		}
 
 		// We need to support a wider range of ID types than just the ones that can be converted to an ObjectId
-		return SUPPORTED_ID_PROPERTY_NAMES.contains(getName());
+		// but still we need to check if there happens to be an explicit name set
+		return SUPPORTED_ID_PROPERTY_NAMES.contains(getName()) && !hasExplicitFieldName();
 	}
 
 	/*
@@ -134,10 +135,8 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 			}
 		}
 
-		org.springframework.data.mongodb.core.mapping.Field annotation = findAnnotation(org.springframework.data.mongodb.core.mapping.Field.class);
-
-		if (annotation != null && StringUtils.hasText(annotation.value())) {
-			return annotation.value();
+		if (hasExplicitFieldName()) {
+			return getAnnotatedFieldName();
 		}
 
 		String fieldName = fieldNamingStrategy.getFieldName(this);
@@ -148,6 +147,26 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 		}
 
 		return fieldName;
+	}
+
+	/**
+	 * @return true if {@link org.springframework.data.mongodb.core.mapping.Field} having non blank
+	 *         {@link org.springframework.data.mongodb.core.mapping.Field#value()} present.
+	 * @since 1.7
+	 */
+	protected boolean hasExplicitFieldName() {
+		return StringUtils.hasText(getAnnotatedFieldName());
+	}
+
+	private String getAnnotatedFieldName() {
+
+		org.springframework.data.mongodb.core.mapping.Field annotation = findAnnotation(org.springframework.data.mongodb.core.mapping.Field.class);
+
+		if (annotation != null && StringUtils.hasText(annotation.value())) {
+			return annotation.value();
+		}
+
+		return null;
 	}
 
 	/*

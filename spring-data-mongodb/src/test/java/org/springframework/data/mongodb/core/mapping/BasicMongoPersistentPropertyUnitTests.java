@@ -130,10 +130,7 @@ public class BasicMongoPersistentPropertyUnitTests {
 	@Test
 	public void shouldDetectAnnotatedLanguagePropertyCorrectly() {
 
-		BasicMongoPersistentEntity<DocumentWithLanguageProperty> persistentEntity = new BasicMongoPersistentEntity<DocumentWithLanguageProperty>(
-				ClassTypeInformation.from(DocumentWithLanguageProperty.class));
-
-		MongoPersistentProperty property = getPropertyFor(persistentEntity, "lang");
+		MongoPersistentProperty property = getPropertyFor(DocumentWithLanguageProperty.class, "lang");
 		assertThat(property.isLanguageProperty(), is(true));
 	}
 
@@ -143,10 +140,7 @@ public class BasicMongoPersistentPropertyUnitTests {
 	@Test
 	public void shouldDetectIplicitLanguagePropertyCorrectly() {
 
-		BasicMongoPersistentEntity<DocumentWithImplicitLanguageProperty> persistentEntity = new BasicMongoPersistentEntity<DocumentWithImplicitLanguageProperty>(
-				ClassTypeInformation.from(DocumentWithImplicitLanguageProperty.class));
-
-		MongoPersistentProperty property = getPropertyFor(persistentEntity, "language");
+		MongoPersistentProperty property = getPropertyFor(DocumentWithImplicitLanguageProperty.class, "language");
 		assertThat(property.isLanguageProperty(), is(true));
 	}
 
@@ -156,10 +150,7 @@ public class BasicMongoPersistentPropertyUnitTests {
 	@Test
 	public void shouldDetectTextScorePropertyCorrectly() {
 
-		BasicMongoPersistentEntity<DocumentWithTextScoreProperty> persistentEntity = new BasicMongoPersistentEntity<DocumentWithTextScoreProperty>(
-				ClassTypeInformation.from(DocumentWithTextScoreProperty.class));
-
-		MongoPersistentProperty property = getPropertyFor(persistentEntity, "score");
+		MongoPersistentProperty property = getPropertyFor(DocumentWithTextScoreProperty.class, "score");
 		assertThat(property.isTextScoreProperty(), is(true));
 	}
 
@@ -169,15 +160,37 @@ public class BasicMongoPersistentPropertyUnitTests {
 	@Test
 	public void shouldDetectTextScoreAsReadOnlyProperty() {
 
-		BasicMongoPersistentEntity<DocumentWithTextScoreProperty> persistentEntity = new BasicMongoPersistentEntity<DocumentWithTextScoreProperty>(
-				ClassTypeInformation.from(DocumentWithTextScoreProperty.class));
-
-		MongoPersistentProperty property = getPropertyFor(persistentEntity, "score");
+		MongoPersistentProperty property = getPropertyFor(DocumentWithTextScoreProperty.class, "score");
 		assertThat(property.isWritable(), is(false));
+	}
+
+	/**
+	 * @see DATAMONGO-1050
+	 */
+	@Test
+	public void shouldNotConsiderExplicitlyNameFieldAsIdProperty() {
+
+		MongoPersistentProperty property = getPropertyFor(DocumentWithExplicitlyRenamedIdProperty.class, "id");
+		assertThat(property.isIdProperty(), is(false));
+	}
+
+	/**
+	 * @see DATAMONGO-1050
+	 */
+	@Test
+	public void shouldConsiderPropertyAsIdWhenExplicitlyAnnotatedWithIdEvenWhenExplicitlyNamePresent() {
+
+		MongoPersistentProperty property = getPropertyFor(DocumentWithExplicitlyRenamedIdPropertyHavingIdAnnotation.class,
+				"id");
+		assertThat(property.isIdProperty(), is(true));
 	}
 
 	private MongoPersistentProperty getPropertyFor(Field field) {
 		return getPropertyFor(entity, field);
+	}
+
+	private <T> MongoPersistentProperty getPropertyFor(Class<T> type, String fieldname) {
+		return getPropertyFor(new BasicMongoPersistentEntity<T>(ClassTypeInformation.from(type)), fieldname);
 	}
 
 	private MongoPersistentProperty getPropertyFor(MongoPersistentEntity<?> persistentEntity, String fieldname) {
@@ -229,5 +242,15 @@ public class BasicMongoPersistentPropertyUnitTests {
 
 	static class DocumentWithTextScoreProperty {
 		@TextScore Float score;
+	}
+
+	static class DocumentWithExplicitlyRenamedIdProperty {
+
+		@org.springframework.data.mongodb.core.mapping.Field("id") String id;
+	}
+
+	static class DocumentWithExplicitlyRenamedIdPropertyHavingIdAnnotation {
+
+		@Id @org.springframework.data.mongodb.core.mapping.Field("id") String id;
 	}
 }
