@@ -21,7 +21,6 @@ import java.util.List;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.SliceImpl;
@@ -211,6 +210,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	 * {@link Execution} for {@link Slice} query methods.
 	 * 
 	 * @author Oliver Gierke
+	 * @author Christoph Strobl
 	 * @since 1.5
 	 */
 
@@ -232,9 +232,9 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 
 			MongoEntityMetadata<?> metadata = method.getEntityInformation();
 			int pageSize = pageable.getPageSize();
-			Pageable slicePageable = new PageRequest(pageable.getPageNumber(), pageSize + 1, pageable.getSort());
 
-			List result = operations.find(query.with(slicePageable), metadata.getJavaType(), metadata.getCollectionName());
+			List result = operations.find(query.skip(pageable.getOffset()).limit(pageSize + 1).with(pageable.getSort()),
+					metadata.getJavaType(), metadata.getCollectionName());
 
 			boolean hasNext = result.size() > pageSize;
 
