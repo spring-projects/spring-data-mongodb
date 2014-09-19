@@ -19,6 +19,7 @@ import static java.util.Arrays.*;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -1023,6 +1024,28 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result, is(notNullValue()));
 		assertThat(result.firstname, is("Carter"));
 		assertThat(result.lastname, is("Beauford"));
+	}
 
+	/**
+	 * @see DATAMONGO-1057
+	 */
+	@Test
+	public void sliceShouldTraverseElementsWithoutSkippingOnes() {
+
+		repository.deleteAll();
+
+		List<Person> persons = new ArrayList<Person>(100);
+		for (int i = 0; i < 100; i++) {
+			// format firstname to assert sorting retains proper order
+			persons.add(new Person(String.format("%03d", i), "ln" + 1, 100));
+		}
+
+		repository.save(persons);
+
+		Slice<Person> slice = repository.findByAgeGreaterThan(50, new PageRequest(0, 20, Direction.ASC, "firstname"));
+		assertThat(slice, contains(persons.subList(0, 20).toArray()));
+
+		slice = repository.findByAgeGreaterThan(50, slice.nextPageable());
+		assertThat(slice, contains(persons.subList(20, 40).toArray()));
 	}
 }

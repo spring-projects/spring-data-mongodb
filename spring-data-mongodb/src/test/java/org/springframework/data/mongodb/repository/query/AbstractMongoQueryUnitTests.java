@@ -36,6 +36,8 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.Person;
@@ -50,6 +52,8 @@ import org.springframework.data.mongodb.repository.Meta;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.repository.core.RepositoryMetadata;
 
+import com.mongodb.BasicDBObjectBuilder;
+import com.mongodb.DBObject;
 import com.mongodb.WriteResult;
 
 /**
@@ -211,6 +215,73 @@ public class AbstractMongoQueryUnitTests {
 		assertThat(captor.getValue().getMeta().getComment(), is("comment"));
 	}
 
+	/**
+	 * @see DATAMONGO-1057
+	 */
+	@Test
+	public void slicedExecutionShouldRetainNrOfElementsToSkip() {
+
+		MongoQueryFake query = createQueryForMethod("findByLastname", String.class, Pageable.class);
+		Pageable page1 = new PageRequest(0, 10);
+		Pageable page2 = page1.next();
+
+		query.execute(new Object[] { "fake", page1 });
+		query.execute(new Object[] { "fake", page2 });
+
+		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
+
+		verify(this.mongoOperationsMock, times(2))
+				.find(captor.capture(), Matchers.eq(Person.class), Matchers.eq("persons"));
+
+		assertThat(captor.getAllValues().get(0).getSkip(), is(0));
+		assertThat(captor.getAllValues().get(1).getSkip(), is(10));
+	}
+
+	/**
+	 * @see DATAMONGO-1057
+	 */
+	@Test
+	public void slicedExecutionShouldIncrementLimitByOne() {
+
+		MongoQueryFake query = createQueryForMethod("findByLastname", String.class, Pageable.class);
+		Pageable page1 = new PageRequest(0, 10);
+		Pageable page2 = page1.next();
+
+		query.execute(new Object[] { "fake", page1 });
+		query.execute(new Object[] { "fake", page2 });
+
+		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
+
+		verify(this.mongoOperationsMock, times(2))
+				.find(captor.capture(), Matchers.eq(Person.class), Matchers.eq("persons"));
+
+		assertThat(captor.getAllValues().get(0).getLimit(), is(11));
+		assertThat(captor.getAllValues().get(1).getLimit(), is(11));
+	}
+
+	/**
+	 * @see DATAMONGO-1057
+	 */
+	@Test
+	public void slicedExecutionShouldRetainSort() {
+
+		MongoQueryFake query = createQueryForMethod("findByLastname", String.class, Pageable.class);
+		Pageable page1 = new PageRequest(0, 10, Sort.Direction.DESC, "bar");
+		Pageable page2 = page1.next();
+
+		query.execute(new Object[] { "fake", page1 });
+		query.execute(new Object[] { "fake", page2 });
+
+		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
+
+		verify(this.mongoOperationsMock, times(2))
+				.find(captor.capture(), Matchers.eq(Person.class), Matchers.eq("persons"));
+
+		DBObject expectedSortObject = new BasicDBObjectBuilder().add("bar", -1).get();
+		assertThat(captor.getAllValues().get(0).getSortObject(), is(expectedSortObject));
+		assertThat(captor.getAllValues().get(1).getSortObject(), is(expectedSortObject));
+	}
+
 	private MongoQueryFake createQueryForMethod(String methodName, Class<?>... paramTypes) {
 
 		try {
@@ -271,6 +342,9 @@ public class AbstractMongoQueryUnitTests {
 		@Meta(comment = "comment")
 		@org.springframework.data.mongodb.repository.Query("{}")
 		Page<Person> findByAnnotatedQuery(String firstnanme, Pageable pageable);
+
+		/** @see DATAMONGO-1057 */
+		Slice<Person> findByLastname(String lastname, Pageable page);
 
 	}
 }
