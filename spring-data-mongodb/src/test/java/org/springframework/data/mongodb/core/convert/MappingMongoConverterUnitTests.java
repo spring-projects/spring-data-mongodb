@@ -15,10 +15,26 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
-import static org.springframework.data.mongodb.core.DBObjectTestUtils.*;
+import static org.hamcrest.Matchers.arrayWithSize;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasItems;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.springframework.data.mongodb.core.DBObjectTestUtils.getAsDBObject;
+import static org.springframework.data.mongodb.core.DBObjectTestUtils.getTypedValue;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -50,6 +66,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -1866,6 +1883,21 @@ public class MappingMongoConverterUnitTests {
 		converter.read(Item.class, source);
 	}
 
+	/**
+	 * @see DATAMONGO-1058
+	 */
+	@Test
+	public void readShouldRespectExplicitFieldNameForDbRef() {
+
+		BasicDBObject source = new BasicDBObject();
+		source.append("explict-name-for-db-ref", new DBRef(mock(DB.class), "foo", "1"));
+
+		converter.read(ClassWithExplicitlyNamedDBRefProperty.class, source);
+
+		verify(resolver, times(1)).resolveDbRef(Mockito.any(MongoPersistentProperty.class), Mockito.any(DBRef.class),
+				Mockito.any(DbRefResolverCallback.class));
+	}
+
 	static class GenericType<T> {
 		T content;
 	}
@@ -2115,5 +2147,17 @@ public class MappingMongoConverterUnitTests {
 	class ClassWithGeoShape {
 
 		Shape shape;
+	}
+
+	class ClassWithExplicitlyNamedDBRefProperty {
+
+		@Field("explict-name-for-db-ref")//
+		@org.springframework.data.mongodb.core.mapping.DBRef//
+		ClassWithIntId dbRefProperty;
+
+		public ClassWithIntId getDbRefProperty() {
+			return dbRefProperty;
+		}
+
 	}
 }

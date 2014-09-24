@@ -268,8 +268,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		entity.doWithAssociations(new AssociationHandler<MongoPersistentProperty>() {
 			public void doWithAssociation(Association<MongoPersistentProperty> association) {
 
-				MongoPersistentProperty property = association.getInverse();
-				Object value = dbo.get(property.getName());
+				final MongoPersistentProperty property = association.getInverse();
+				Object value = dbo.get(property.getFieldName());
 
 				if (value == null) {
 					return;
