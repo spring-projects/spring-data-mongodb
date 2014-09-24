@@ -2791,6 +2791,7 @@ public class MongoTemplateTests {
 
 		@Id public String id;
 
+		@Field("db_ref_list")/** @see DATAMONGO-1058 */
 		@org.springframework.data.mongodb.core.mapping.DBRef//
 		public List<Sample> dbRefAnnotatedList;
 
