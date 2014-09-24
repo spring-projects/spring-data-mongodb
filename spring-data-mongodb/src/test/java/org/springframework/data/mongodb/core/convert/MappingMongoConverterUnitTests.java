@@ -50,6 +50,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -1853,6 +1854,21 @@ public class MappingMongoConverterUnitTests {
 		converter.read(Item.class, source);
 	}
 
+	/**
+	 * @see DATAMONGO-1058
+	 */
+	@Test
+	public void readShouldRespectExplicitFieldNameForDbRef() {
+
+		BasicDBObject source = new BasicDBObject();
+		source.append("explict-name-for-db-ref", new DBRef(mock(DB.class), "foo", "1"));
+
+		converter.read(ClassWithExplicitlyNamedDBRefProperty.class, source);
+
+		verify(resolver, times(1)).resolveDbRef(Mockito.any(MongoPersistentProperty.class), Mockito.any(DBRef.class),
+				Mockito.any(DbRefResolverCallback.class), Mockito.any(DbRefProxyHandler.class));
+	}
+
 	static class GenericType<T> {
 		T content;
 	}
@@ -2101,5 +2117,17 @@ public class MappingMongoConverterUnitTests {
 	class ClassWithTextScoreProperty {
 
 		@TextScore Float score;
+	}
+
+	class ClassWithExplicitlyNamedDBRefProperty {
+
+		@Field("explict-name-for-db-ref")//
+		@org.springframework.data.mongodb.core.mapping.DBRef//
+		ClassWithIntId dbRefProperty;
+
+		public ClassWithIntId getDbRefProperty() {
+			return dbRefProperty;
+		}
+
 	}
 }
