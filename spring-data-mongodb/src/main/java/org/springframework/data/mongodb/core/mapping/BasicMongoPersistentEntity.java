@@ -284,7 +284,7 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 
 		private void potentiallyAssertLanguageType(MongoPersistentProperty persistentProperty) {
 
-			if (persistentProperty.isLanguageProperty()) {
+			if (persistentProperty.isExplicitLanguageProperty()) {
 				assertPropertyType(persistentProperty, String.class);
 			}
 		}
