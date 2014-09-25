@@ -24,6 +24,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.context.ApplicationContext;
+import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.util.ClassTypeInformation;
 
 /**
@@ -36,6 +37,7 @@ import org.springframework.data.util.ClassTypeInformation;
 public class BasicMongoPersistentEntityUnitTests {
 
 	@Mock ApplicationContext context;
+	@Mock MongoPersistentProperty propertyMock;
 
 	@Test
 	public void subclassInheritsAtDocumentAnnotation() {
@@ -80,6 +82,61 @@ public class BasicMongoPersistentEntityUnitTests {
 		assertThat(entity.getLanguage(), is("spanish"));
 	}
 
+	/**
+	 * @see DATAMONGO-1053
+	 */
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Test(expected = MappingException.class)
+	public void verifyShouldThrowExceptionForInvalidTypeOfExplicitLanguageProperty() {
+
+		BasicMongoPersistentEntity<AnyDocument> entity = new BasicMongoPersistentEntity<AnyDocument>(
+				ClassTypeInformation.from(AnyDocument.class));
+
+		when(propertyMock.isExplicitLanguageProperty()).thenReturn(true);
+		when(propertyMock.getActualType()).thenReturn((Class) Number.class);
+
+		entity.addPersistentProperty(propertyMock);
+		entity.verify();
+	}
+
+	/**
+	 * @see DATAMONGO-1053
+	 */
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Test
+	public void verifyShouldPassForStringAsExplicitLanguageProperty() {
+
+		BasicMongoPersistentEntity<AnyDocument> entity = new BasicMongoPersistentEntity<AnyDocument>(
+				ClassTypeInformation.from(AnyDocument.class));
+		when(propertyMock.isExplicitLanguageProperty()).thenReturn(true);
+		when(propertyMock.getActualType()).thenReturn((Class) String.class);
+		entity.addPersistentProperty(propertyMock);
+
+		entity.verify();
+
+		verify(propertyMock, times(1)).isExplicitLanguageProperty();
+		verify(propertyMock, times(1)).getActualType();
+	}
+
+	/**
+	 * @see DATAMONGO-1053
+	 */
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Test
+	public void verifyShouldIgnoreNonExplicitLanguageProperty() {
+
+		BasicMongoPersistentEntity<AnyDocument> entity = new BasicMongoPersistentEntity<AnyDocument>(
+				ClassTypeInformation.from(AnyDocument.class));
+		when(propertyMock.isExplicitLanguageProperty()).thenReturn(false);
+		when(propertyMock.getActualType()).thenReturn((Class) Number.class);
+		entity.addPersistentProperty(propertyMock);
+
+		entity.verify();
+
+		verify(propertyMock, times(1)).isExplicitLanguageProperty();
+		verify(propertyMock, never()).getActualType();
+	}
+
 	@Document(collection = "contacts")
 	class Contact {
 
@@ -109,6 +166,10 @@ public class BasicMongoPersistentEntityUnitTests {
 
 	@Document(language = "spanish")
 	static class DocumentWithLanguage {
+
+	}
+
+	static class AnyDocument {
 
 	}
 }
