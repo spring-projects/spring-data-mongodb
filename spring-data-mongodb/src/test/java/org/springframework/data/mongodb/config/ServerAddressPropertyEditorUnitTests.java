@@ -15,14 +15,19 @@
  */
 package org.springframework.data.mongodb.config;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.Collection;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -49,11 +54,17 @@ public class ServerAddressPropertyEditorUnitTests {
 
 	/**
 	 * @see DATAMONGO-454
+	 * @see DATAMONGO-1062
 	 */
 	@Test(expected = IllegalArgumentException.class)
-	public void rejectsAddressConfigWithoutASingleParsableServerAddress() {
+	public void rejectsAddressConfigWithoutASingleParsableAndResolvableServerAddress() {
 
-		editor.setAsText("foo, bar");
+		String unknownHost1 = "gugu.nonexistant.example.org";
+		String unknownHost2 = "gaga.nonexistant.example.org";
+
+		assertUnresolveableHostnames(unknownHost1, unknownHost2);
+
+		editor.setAsText(unknownHost1 + "," + unknownHost2);
 	}
 
 	/**
@@ -191,6 +202,18 @@ public class ServerAddressPropertyEditorUnitTests {
 			assertThat(addresses, hasItem(new ServerAddress(InetAddress.getByName(hostAddress))));
 		} else {
 			assertThat(addresses, hasItem(new ServerAddress(InetAddress.getByName(hostAddress), port)));
+		}
+	}
+
+	private void assertUnresolveableHostnames(String... hostnames) {
+
+		for (String hostname : hostnames) {
+			try {
+				InetAddress.getByName(hostname);
+				Assert.fail("Supposedly unresolveable hostname '" + hostname + "' can be resolved.");
+			} catch (UnknownHostException expected) {
+				// ok
+			}
 		}
 	}
 }
