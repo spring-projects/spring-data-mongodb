@@ -46,6 +46,8 @@ public class Person extends Contact {
 	@SuppressWarnings("unused") private Sex sex;
 	Date createdAt;
 
+	List<String> skills;
+
 	@GeoSpatialIndexed private Point location;
 
 	private Address address;
@@ -269,6 +271,14 @@ public class Person extends Contact {
 
 	public void setCreator(User creator) {
 		this.creator = creator;
+	}
+
+	public void setSkills(List<String> skills) {
+		this.skills = skills;
+	}
+
+	public List<String> getSkills() {
+		return skills;
 	}
 
 	/*

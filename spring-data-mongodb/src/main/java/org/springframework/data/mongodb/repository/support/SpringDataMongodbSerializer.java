@@ -15,6 +15,9 @@
  */
 package org.springframework.data.mongodb.repository.support;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.springframework.data.mapping.context.MappingContext;
@@ -41,7 +44,9 @@ import com.mysema.query.types.PathType;
  */
 class SpringDataMongodbSerializer extends MongodbSerializer {
 
-	private final String ID_KEY = "_id";
+	private static final String ID_KEY = "_id";
+	private static final Set<PathType> PATH_TYPES = new HashSet<PathType>(Arrays.asList(PathType.VARIABLE,
+			PathType.PROPERTY));
 
 	private final MongoConverter converter;
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
@@ -138,7 +143,7 @@ class SpringDataMongodbSerializer extends MongodbSerializer {
 
 		Path<?> parent = path.getMetadata().getParent();
 
-		if (parent == null) {
+		if (parent == null || !PATH_TYPES.contains(path.getMetadata().getPathType())) {
 			return null;
 		}
 
