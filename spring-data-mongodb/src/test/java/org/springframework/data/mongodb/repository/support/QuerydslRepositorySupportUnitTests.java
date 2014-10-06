@@ -18,6 +18,8 @@ package org.springframework.data.mongodb.repository.support;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
+import java.util.Arrays;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -40,8 +42,7 @@ import com.mysema.query.mongodb.MongodbQuery;
 @ContextConfiguration("classpath:infrastructure.xml")
 public class QuerydslRepositorySupportUnitTests {
 
-	@Autowired
-	MongoOperations operations;
+	@Autowired MongoOperations operations;
 	Person person;
 
 	@Before
@@ -54,9 +55,26 @@ public class QuerydslRepositorySupportUnitTests {
 	@Test
 	public void providesMongoQuery() {
 		QPerson p = QPerson.person;
-		QuerydslRepositorySupport support = new QuerydslRepositorySupport(operations) {
-		};
+		QuerydslRepositorySupport support = new QuerydslRepositorySupport(operations) {};
 		MongodbQuery<Person> query = support.from(p).where(p.lastname.eq("Matthews"));
+		assertThat(query.uniqueResult(), is(person));
+	}
+
+	/**
+	 * @see DATAMONGO-1063
+	 */
+	@Test
+	public void shouldAllowAny() {
+
+		person.setSkills(Arrays.asList("vocalist", "songwriter", "guitarist"));
+
+		operations.save(person);
+
+		QPerson p = QPerson.person;
+		QuerydslRepositorySupport support = new QuerydslRepositorySupport(operations) {};
+
+		MongodbQuery<Person> query = support.from(p).where(p.skills.any().in("guitarist"));
+
 		assertThat(query.uniqueResult(), is(person));
 	}
 }
