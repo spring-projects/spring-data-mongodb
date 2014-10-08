@@ -233,8 +233,10 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 			MongoEntityMetadata<?> metadata = method.getEntityInformation();
 			int pageSize = pageable.getPageSize();
 
-			List result = operations.find(query.skip(pageable.getOffset()).limit(pageSize + 1).with(pageable.getSort()),
-					metadata.getJavaType(), metadata.getCollectionName());
+			// Apply Pageable but tweak limit to peek into next page
+			Query modifiedQuery = query.with(pageable).limit(pageSize + 1);
+
+			List result = operations.find(modifiedQuery, metadata.getJavaType(), metadata.getCollectionName());
 
 			boolean hasNext = result.size() > pageSize;
 
