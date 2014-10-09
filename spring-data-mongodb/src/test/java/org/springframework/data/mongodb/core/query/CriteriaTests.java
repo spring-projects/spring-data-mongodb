@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 the original author or authors.
+ * Copyright 2010-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,11 +22,13 @@ import org.junit.Test;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 
 import com.mongodb.BasicDBObject;
+import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DBObject;
 
 /**
  * @author Oliver Gierke
  * @author Thomas Darimont
+ * @author Christoph Strobl
  */
 public class CriteriaTests {
 
@@ -117,5 +119,49 @@ public class CriteriaTests {
 
 		assertThat(co, is(notNullValue()));
 		assertThat(co.toString(), is("{ \"age\" : { \"$not\" : { \"$gt\" : 18}} , \"status\" : \"student\"}"));
+	}
+
+	/**
+	 * @see DATAMONGO-1068
+	 */
+	@Test
+	public void getCriteriaObjectShouldReturnEmptyDBOWhenNoCriteriaSpecified() {
+
+		DBObject dbo = new Criteria().getCriteriaObject();
+
+		assertThat(dbo, equalTo(new BasicDBObjectBuilder().get()));
+	}
+
+	/**
+	 * @see DATAMONGO-1068
+	 */
+	@Test
+	public void getCriteriaObjectShouldUseCritieraValuesWhenNoKeyIsPresent() {
+
+		DBObject dbo = new Criteria().lt("foo").getCriteriaObject();
+
+		assertThat(dbo, equalTo(new BasicDBObjectBuilder().add("$lt", "foo").get()));
+	}
+
+	/**
+	 * @see DATAMONGO-1068
+	 */
+	@Test
+	public void getCriteriaObjectShouldUseCritieraValuesWhenNoKeyIsPresentButMultipleCriteriasPresent() {
+
+		DBObject dbo = new Criteria().lt("foo").gt("bar").getCriteriaObject();
+
+		assertThat(dbo, equalTo(new BasicDBObjectBuilder().add("$lt", "foo").add("$gt", "bar").get()));
+	}
+
+	/**
+	 * @see DATAMONGO-1068
+	 */
+	@Test
+	public void getCriteriaObjectShouldRespectNotWhenNoKeyPresent() {
+
+		DBObject dbo = new Criteria().lt("foo").not().getCriteriaObject();
+
+		assertThat(dbo, equalTo(new BasicDBObjectBuilder().add("$not", new BasicDBObject("$lt", "foo")).get()));
 	}
 }

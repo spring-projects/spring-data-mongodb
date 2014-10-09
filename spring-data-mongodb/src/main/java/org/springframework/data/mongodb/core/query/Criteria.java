@@ -31,7 +31,9 @@ import org.springframework.data.geo.Shape;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.data.mongodb.core.geo.Sphere;
 import org.springframework.util.Assert;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
@@ -515,8 +517,11 @@ public class Criteria implements CriteriaDefinition {
 	 * @see org.springframework.data.mongodb.core.query.CriteriaDefinition#getCriteriaObject()
 	 */
 	public DBObject getCriteriaObject() {
+
 		if (this.criteriaChain.size() == 1) {
 			return criteriaChain.get(0).getSingleCriteriaObject();
+		} else if (CollectionUtils.isEmpty(this.criteriaChain) && !CollectionUtils.isEmpty(this.criteria)) {
+			return getSingleCriteriaObject();
 		} else {
 			DBObject criteriaObject = new BasicDBObject();
 			for (Criteria c : this.criteriaChain) {
@@ -548,6 +553,13 @@ public class Criteria implements CriteriaDefinition {
 					dbo.put(k, value);
 				}
 			}
+		}
+
+		if (!StringUtils.hasText(this.key)) {
+			if (not) {
+				return new BasicDBObject("$not", dbo);
+			}
+			return dbo;
 		}
 
 		DBObject queryCriteria = new BasicDBObject();
