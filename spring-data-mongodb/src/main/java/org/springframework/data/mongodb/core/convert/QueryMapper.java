@@ -334,7 +334,8 @@ public class QueryMapper {
 		}
 
 		MongoPersistentEntity<?> entity = documentField.getPropertyEntity();
-		return entity.hasIdProperty() && entity.getIdProperty().getActualType().isAssignableFrom(type);
+		return entity.hasIdProperty()
+				&& (type.equals(DBRef.class) || entity.getIdProperty().getActualType().isAssignableFrom(type));
 	}
 
 	/**
@@ -382,8 +383,14 @@ public class QueryMapper {
 	 */
 	protected Object convertAssociation(Object source, MongoPersistentProperty property) {
 
-		if (property == null || source == null || source instanceof DBRef || source instanceof DBObject) {
+		if (property == null || source == null || source instanceof DBObject) {
 			return source;
+		}
+
+		if (source instanceof DBRef) {
+
+			DBRef ref = (DBRef) source;
+			return new DBRef(ref.getDB(), ref.getRef(), convertId(ref.getId()));
 		}
 
 		if (source instanceof Iterable) {
@@ -785,7 +792,8 @@ public class QueryMapper {
 		 */
 		@Override
 		public String getMappedKey() {
-			return path == null ? name : path.toDotPath(getPropertyConverter());
+			return path == null ? name : path.toDotPath(isAssociation() ? new AssociationConverter(getAssociation())
+					: getPropertyConverter());
 		}
 
 		protected PersistentPropertyPath<MongoPersistentProperty> getPath() {
@@ -836,6 +844,46 @@ public class QueryMapper {
 		 */
 		protected Converter<MongoPersistentProperty, String> getPropertyConverter() {
 			return PropertyToFieldNameConverter.INSTANCE;
+		}
+	}
+
+	/**
+	 * Converter to skip all properties after an association property was rendered.
+	 * 
+	 * @author Oliver Gierke
+	 */
+	protected static class AssociationConverter implements Converter<MongoPersistentProperty, String> {
+
+		private final MongoPersistentProperty property;
+		private boolean associationFound;
+
+		/**
+		 * Creates a new {@link AssociationConverter} for the given {@link Association}.
+		 * 
+		 * @param association must not be {@literal null}.
+		 */
+		public AssociationConverter(Association<MongoPersistentProperty> association) {
+
+			Assert.notNull(association, "Association must not be null!");
+			this.property = association.getInverse();
+		}
+
+		/* 
+		 * (non-Javadoc)
+		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
+		 */
+		@Override
+		public String convert(MongoPersistentProperty source) {
+
+			if (associationFound) {
+				return null;
+			}
+
+			if (property.equals(source)) {
+				associationFound = true;
+			}
+
+			return source.getFieldName();
 		}
 	}
 }

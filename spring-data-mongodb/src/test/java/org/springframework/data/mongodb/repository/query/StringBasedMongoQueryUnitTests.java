@@ -29,6 +29,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.data.mongodb.core.DBObjectTestUtils;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.DefaultMongoTypeMapper;
@@ -43,6 +44,7 @@ import org.springframework.data.repository.core.RepositoryMetadata;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
+import com.mongodb.DBRef;
 
 /**
  * Unit tests for {@link StringBasedMongoQuery}.
@@ -255,6 +257,22 @@ public class StringBasedMongoQueryUnitTests {
 		assertThat(query.getQueryObject(), is(reference.getQueryObject()));
 	}
 
+	/**
+	 * @see DATAMONGO-1070
+	 */
+	@Test
+	public void parsesDbRefDeclarationsCorrectly() throws Exception {
+
+		StringBasedMongoQuery mongoQuery = createQueryForMethod("methodWithManuallyDefinedDbRef", String.class);
+		ConvertingParameterAccessor parameterAccessor = StubParameterAccessor.getAccessor(converter, "myid");
+
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(parameterAccessor);
+
+		DBRef dbRef = DBObjectTestUtils.getTypedValue(query.getQueryObject(), "reference", DBRef.class);
+		assertThat(dbRef.getId(), is((Object) "myid"));
+		assertThat(dbRef.getRef(), is("reference"));
+	}
+
 	private StringBasedMongoQuery createQueryForMethod(String name, Class<?>... parameters) throws Exception {
 
 		Method method = SampleRepository.class.getMethod(name, parameters);
@@ -291,7 +309,10 @@ public class StringBasedMongoQueryUnitTests {
 		@Query("{'title': { $regex : '^?0', $options : 'i'}}")
 		List<DBObject> findByTitleBeginsWithExplicitQuoting(String title);
 
-		@Query(value = "{$where: 'return this.date.getUTCMonth() == ?2 && this.date.getUTCDay() == ?3;'}")
+		@Query("{$where: 'return this.date.getUTCMonth() == ?2 && this.date.getUTCDay() == ?3;'}")
 		List<DBObject> findByQueryWithParametersInExpression(int param1, int param2, int param3, int param4);
+
+		@Query("{ 'reference' : { $ref : 'reference', $id : ?0 }}")
+		Object methodWithManuallyDefinedDbRef(String id);
 	}
 }

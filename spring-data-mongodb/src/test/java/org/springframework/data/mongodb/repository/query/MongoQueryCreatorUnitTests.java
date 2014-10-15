@@ -168,19 +168,6 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	/**
-	 * @see DATAMONGO-291
-	 */
-	@Test
-	public void honoursMappingInformationForPropertyPaths() {
-
-		PartTree partTree = new PartTree("findByUsername", User.class);
-
-		MongoQueryCreator creator = new MongoQueryCreator(partTree, getAccessor(converter, "Oliver"), context);
-		Query reference = query(where("foo").is("Oliver"));
-		assertThat(creator.createQuery(), is(reference));
-	}
-
-	/**
 	 * @see DATAMONGO-338
 	 */
 	@Test
@@ -268,7 +255,7 @@ public class MongoQueryCreatorUnitTests {
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "Matt"), context);
 		Query query = creator.createQuery();
 
-		assertThat(query, is(query(where("foo").regex("^Matt"))));
+		assertThat(query, is(query(where("username").regex("^Matt"))));
 	}
 
 	/**
@@ -281,7 +268,7 @@ public class MongoQueryCreatorUnitTests {
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "ews"), context);
 		Query query = creator.createQuery();
 
-		assertThat(query, is(query(where("foo").regex("ews$"))));
+		assertThat(query, is(query(where("username").regex("ews$"))));
 	}
 
 	/**
@@ -294,7 +281,7 @@ public class MongoQueryCreatorUnitTests {
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "thew"), context);
 		Query query = creator.createQuery();
 
-		assertThat(query, is(query(where("foo").regex(".*thew.*"))));
+		assertThat(query, is(query(where("username").regex(".*thew.*"))));
 	}
 
 	private void assertBindsDistanceToQuery(Point point, Distance distance, Query reference) throws Exception {
