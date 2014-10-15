@@ -20,7 +20,6 @@ import java.util.Iterator;
 import java.util.Map.Entry;
 
 import org.springframework.core.convert.converter.Converter;
-import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
@@ -195,46 +194,6 @@ public class UpdateMapper extends QueryMapper {
 		@Override
 		protected Converter<MongoPersistentProperty, String> getPropertyConverter() {
 			return isAssociation() ? new AssociationConverter(getAssociation()) : new UpdatePropertyConverter(key);
-		}
-
-		/**
-		 * Converter to skip all properties after an association property was rendered.
-		 * 
-		 * @author Oliver Gierke
-		 */
-		private static class AssociationConverter implements Converter<MongoPersistentProperty, String> {
-
-			private final MongoPersistentProperty property;
-			private boolean associationFound;
-
-			/**
-			 * Creates a new {@link AssociationConverter} for the given {@link Association}.
-			 * 
-			 * @param association must not be {@literal null}.
-			 */
-			public AssociationConverter(Association<MongoPersistentProperty> association) {
-
-				Assert.notNull(association, "Association must not be null!");
-				this.property = association.getInverse();
-			}
-
-			/* 
-			 * (non-Javadoc)
-			 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
-			 */
-			@Override
-			public String convert(MongoPersistentProperty source) {
-
-				if (associationFound) {
-					return null;
-				}
-
-				if (property.equals(source)) {
-					associationFound = true;
-				}
-
-				return source.getFieldName();
-			}
 		}
 
 		/**

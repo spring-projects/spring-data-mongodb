@@ -102,9 +102,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 
 		PersistentPropertyPath<MongoPersistentProperty> path = context.getPersistentPropertyPath(part.getProperty());
 		MongoPersistentProperty property = path.getLeafProperty();
-		Criteria criteria = from(part, property,
-				where(path.toDotPath(MongoPersistentProperty.PropertyToFieldNameConverter.INSTANCE)),
-				(PotentiallyConvertingIterator) iterator);
+		Criteria criteria = from(part, property, where(path.toDotPath()), (PotentiallyConvertingIterator) iterator);
 
 		return criteria;
 	}
@@ -123,9 +121,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 		PersistentPropertyPath<MongoPersistentProperty> path = context.getPersistentPropertyPath(part.getProperty());
 		MongoPersistentProperty property = path.getLeafProperty();
 
-		return from(part, property,
-				base.and(path.toDotPath(MongoPersistentProperty.PropertyToFieldNameConverter.INSTANCE)),
-				(PotentiallyConvertingIterator) iterator);
+		return from(part, property, base.and(path.toDotPath()), (PotentiallyConvertingIterator) iterator);
 	}
 
 	/*

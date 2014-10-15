@@ -658,6 +658,22 @@ public class QueryMapperUnitTests {
 		assertThat(dbo, equalTo(new BasicDBObjectBuilder().add("_id", 1).get()));
 	}
 
+	/**
+	 * @see DATAMONGO-1070
+	 */
+	@Test
+	public void mapsIdReferenceToDBRefCorrectly() {
+
+		ObjectId id = new ObjectId();
+
+		DBObject query = new BasicDBObject("reference.id", new com.mongodb.DBRef(null, "reference", id.toString()));
+		DBObject result = mapper.getMappedObject(query, context.getPersistentEntity(WithDBRef.class));
+
+		assertThat(result.containsField("reference"), is(true));
+		com.mongodb.DBRef reference = getTypedValue(result, "reference", com.mongodb.DBRef.class);
+		assertThat(reference.getId(), is(instanceOf(ObjectId.class)));
+	}
+
 	@Document
 	public class Foo {
 		@Id private ObjectId id;

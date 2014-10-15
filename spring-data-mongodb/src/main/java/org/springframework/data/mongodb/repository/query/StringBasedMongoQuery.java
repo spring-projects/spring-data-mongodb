@@ -29,6 +29,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.DBObject;
+import com.mongodb.DBRef;
 import com.mongodb.util.JSON;
 
 /**
@@ -199,6 +200,7 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 		 * {@link Collections#emptyList()}.
 		 * 
 		 * @param input
+		 * @param conversionService must not be {@literal null}.
 		 * @return
 		 */
 		public List<ParameterBinding> parseParameterBindingsFrom(String input) {
@@ -229,14 +231,7 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 			if (value instanceof String) {
 
 				String string = ((String) value).trim();
-
-				Matcher valueMatcher = PARSEABLE_BINDING_PATTERN.matcher(string);
-				while (valueMatcher.find()) {
-					int paramIndex = Integer.parseInt(valueMatcher.group(PARAMETER_INDEX_GROUP));
-					boolean quoted = (string.startsWith("'") && string.endsWith("'"))
-							|| (string.startsWith("\"") && string.endsWith("\""));
-					bindings.add(new ParameterBinding(paramIndex, quoted));
-				}
+				potentiallyAddBinding(string, bindings);
 
 			} else if (value instanceof Pattern) {
 
@@ -255,6 +250,13 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 					bindings.add(new ParameterBinding(paramIndex, quoted));
 				}
 
+			} else if (value instanceof DBRef) {
+
+				DBRef dbref = (DBRef) value;
+
+				potentiallyAddBinding(dbref.getRef(), bindings);
+				potentiallyAddBinding(dbref.getId().toString(), bindings);
+
 			} else if (value instanceof DBObject) {
 
 				DBObject dbo = (DBObject) value;
@@ -262,6 +264,20 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 				for (String field : dbo.keySet()) {
 					collectParameterReferencesIntoBindings(bindings, dbo.get(field));
 				}
+			}
+		}
+
+		private void potentiallyAddBinding(String source, List<ParameterBinding> bindings) {
+
+			Matcher valueMatcher = PARSEABLE_BINDING_PATTERN.matcher(source);
+
+			while (valueMatcher.find()) {
+
+				int paramIndex = Integer.parseInt(valueMatcher.group(PARAMETER_INDEX_GROUP));
+				boolean quoted = (source.startsWith("'") && source.endsWith("'"))
+						|| (source.startsWith("\"") && source.endsWith("\""));
+
+				bindings.add(new ParameterBinding(paramIndex, quoted));
 			}
 		}
 	}
