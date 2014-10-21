@@ -94,6 +94,7 @@ import com.mongodb.util.JSON;
  * @author Oliver Gierke
  * @author Patrik Wasik
  * @author Christoph Strobl
+ * @author Thomas Darimont
  */
 @RunWith(MockitoJUnitRunner.class)
 public class MappingMongoConverterUnitTests {
@@ -1867,6 +1868,19 @@ public class MappingMongoConverterUnitTests {
 
 		verify(resolver, times(1)).resolveDbRef(Mockito.any(MongoPersistentProperty.class), Mockito.any(DBRef.class),
 				Mockito.any(DbRefResolverCallback.class), Mockito.any(DbRefProxyHandler.class));
+	}
+
+	/**
+	 * @see DATAMONGO-1066
+	 */
+	@Test
+	public void shouldReturnArrayListForEmptyDbList() {
+
+		BasicDBObject source = new BasicDBObject("enums", new BasicDBList());
+
+		ClassWithEnumProperty read = converter.read(ClassWithEnumProperty.class, source);
+
+		assertThat(read.enums, is(instanceOf(List.class)));
 	}
 
 	static class GenericType<T> {

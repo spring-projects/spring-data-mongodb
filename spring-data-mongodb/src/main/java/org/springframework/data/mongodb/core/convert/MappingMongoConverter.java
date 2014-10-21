@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -845,7 +844,9 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		Class<?> collectionType = targetType.getType();
 
 		if (sourceValue.isEmpty()) {
-			return getPotentiallyConvertedSimpleRead(new HashSet<Object>(), collectionType);
+			return getPotentiallyConvertedSimpleRead(
+					CollectionFactory.createCollection(collectionType, targetType.getComponentType().getType(), 0),
+					collectionType);
 		}
 
 		TypeInformation<?> componentType = targetType.getComponentType();
