@@ -43,6 +43,7 @@ import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.repository.core.RepositoryMetadata;
 
 import com.mongodb.BasicDBObject;
+import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DBObject;
 import com.mongodb.DBRef;
 
@@ -273,6 +274,21 @@ public class StringBasedMongoQueryUnitTests {
 		assertThat(dbRef.getRef(), is("reference"));
 	}
 
+	/**
+	 * @see DATAMONGO-1072
+	 */
+	@Test
+	public void shouldParseJsonKeyReplacementCorrectly() throws Exception {
+
+		StringBasedMongoQuery mongoQuery = createQueryForMethod("methodWithPlaceholderInKeyOfJsonStructure", String.class,
+				String.class);
+		ConvertingParameterAccessor parameterAccessor = StubParameterAccessor.getAccessor(converter, "key", "value");
+
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(parameterAccessor);
+
+		assertThat(query.getQueryObject(), is(new BasicDBObjectBuilder().add("key", "value").get()));
+	}
+
 	private StringBasedMongoQuery createQueryForMethod(String name, Class<?>... parameters) throws Exception {
 
 		Method method = SampleRepository.class.getMethod(name, parameters);
@@ -314,5 +330,9 @@ public class StringBasedMongoQueryUnitTests {
 
 		@Query("{ 'reference' : { $ref : 'reference', $id : ?0 }}")
 		Object methodWithManuallyDefinedDbRef(String id);
+
+		@Query("{ ?0 : ?1}")
+		Object methodWithPlaceholderInKeyOfJsonStructure(String keyReplacement, String valueReplacement);
+
 	}
 }
