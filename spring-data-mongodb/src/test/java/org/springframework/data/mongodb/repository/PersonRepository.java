@@ -317,4 +317,7 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	 * @see DATAMONGO-1030
 	 */
 	PersonSummary findSummaryByLastname(String lastname);
+
+	@Query("{ ?0 : ?1 }")
+	List<Person> findByKeyValue(String key, String value);
 }

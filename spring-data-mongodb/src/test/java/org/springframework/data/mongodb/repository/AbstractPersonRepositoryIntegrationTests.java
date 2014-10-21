@@ -1048,4 +1048,16 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		slice = repository.findByAgeGreaterThan(50, slice.nextPageable());
 		assertThat(slice, contains(persons.subList(20, 40).toArray()));
 	}
+
+	/**
+	 * @see DATAMONGO-1072
+	 */
+	@Test
+	public void shouldBindPlaceholdersUsedAsKeysCorrectly() {
+
+		List<Person> persons = repository.findByKeyValue("firstname", alicia.getFirstname());
+
+		assertThat(persons, hasSize(1));
+		assertThat(persons, hasItem(alicia));
+	}
 }
