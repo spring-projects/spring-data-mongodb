@@ -42,6 +42,7 @@ import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.repository.core.RepositoryMetadata;
 
 import com.mongodb.BasicDBObject;
+import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DBObject;
 
 /**
@@ -255,6 +256,21 @@ public class StringBasedMongoQueryUnitTests {
 		assertThat(query.getQueryObject(), is(reference.getQueryObject()));
 	}
 
+	/**
+	 * @see DATAMONGO-1072
+	 */
+	@Test
+	public void shouldParseJsonKeyReplacementCorrectly() throws Exception {
+
+		StringBasedMongoQuery mongoQuery = createQueryForMethod("methodWithPlaceholderInKeyOfJsonStructure", String.class,
+				String.class);
+		ConvertingParameterAccessor parameterAccessor = StubParameterAccessor.getAccessor(converter, "key", "value");
+
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(parameterAccessor);
+
+		assertThat(query.getQueryObject(), is(new BasicDBObjectBuilder().add("key", "value").get()));
+	}
+
 	private StringBasedMongoQuery createQueryForMethod(String name, Class<?>... parameters) throws Exception {
 
 		Method method = SampleRepository.class.getMethod(name, parameters);
@@ -293,5 +309,8 @@ public class StringBasedMongoQueryUnitTests {
 
 		@Query(value = "{$where: 'return this.date.getUTCMonth() == ?2 && this.date.getUTCDay() == ?3;'}")
 		List<DBObject> findByQueryWithParametersInExpression(int param1, int param2, int param3, int param4);
+
+		@Query("{ ?0 : ?1}")
+		Object methodWithPlaceholderInKeyOfJsonStructure(String keyReplacement, String valueReplacement);
 	}
 }

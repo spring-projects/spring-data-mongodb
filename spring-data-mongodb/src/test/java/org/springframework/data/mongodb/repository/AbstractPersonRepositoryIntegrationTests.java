@@ -963,4 +963,16 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result.lastname, is("Beauford"));
 
 	}
+
+	/**
+	 * @see DATAMONGO-1072
+	 */
+	@Test
+	public void shouldBindPlaceholdersUsedAsKeysCorrectly() {
+
+		List<Person> persons = repository.findByKeyValue("firstname", alicia.getFirstname());
+
+		assertThat(persons, hasSize(1));
+		assertThat(persons, hasItem(alicia));
+	}
 }

@@ -260,6 +260,7 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 				DBObject dbo = (DBObject) value;
 
 				for (String field : dbo.keySet()) {
+					collectParameterReferencesIntoBindings(bindings, field);
 					collectParameterReferencesIntoBindings(bindings, dbo.get(field));
 				}
 			}
