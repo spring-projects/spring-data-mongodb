@@ -22,6 +22,7 @@ import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.convert.LazyLoadingTestUtils.*;
 
 import java.io.Serializable;
+import java.lang.reflect.Method;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -49,6 +50,7 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.util.ReflectionUtils;
 import org.springframework.util.SerializationUtils;
 
 import com.mongodb.BasicDBObject;
@@ -539,6 +541,28 @@ public class DbRefMappingMongoConverterUnitTests {
 		LazyDbRefTargetPropertyAccess proxy = result.dbRefToConcreteTypeWithPropertyAccess;
 		assertThat(ReflectionTestUtils.getField(proxy, "id"), is(nullValue()));
 		assertProxyIsResolved(proxy, false);
+	}
+
+	/**
+	 * @see DATAMONGO-1076
+	 */
+	@Test
+	public void shouldNotTriggerResolvingOfLazyLoadedProxyWhenFinalizeMethodIsInvoked() throws Exception {
+
+		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(WithObjectMethodOverrideLazyDbRefs.class);
+		MongoPersistentProperty property = entity.getPersistentProperty("dbRefToConcreteTypeWithPropertyAccess");
+
+		String idValue = new ObjectId().toString();
+		DBRef dbRef = converter.toDBRef(new LazyDbRefTargetPropertyAccess(idValue), property);
+
+		WithObjectMethodOverrideLazyDbRefs result = converter.read(WithObjectMethodOverrideLazyDbRefs.class,
+				new BasicDBObject("dbRefToPlainObject", dbRef));
+
+		Method finalize = Object.class.getDeclaredMethod("finalize");
+		ReflectionUtils.makeAccessible(finalize);
+		ReflectionUtils.invokeMethod(finalize, result.dbRefToPlainObject);
+
+		assertProxyIsResolved(result.dbRefToPlainObject, false);
 	}
 
 	private Object transport(Object result) {
