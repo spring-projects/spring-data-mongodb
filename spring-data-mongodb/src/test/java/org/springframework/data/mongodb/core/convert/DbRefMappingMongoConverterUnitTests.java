@@ -541,6 +541,26 @@ public class DbRefMappingMongoConverterUnitTests {
 		assertProxyIsResolved(proxy, false);
 	}
 
+	/**
+	 * @see DATAMONGO-1076
+	 */
+	@Test
+	public void shouldNotTriggerResolvingOfLazyLoadedProxyWhenFinalizeMethodIsInvoked() throws Exception {
+
+		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(WithObjectMethodOverrideLazyDbRefs.class);
+		MongoPersistentProperty property = entity.getPersistentProperty("dbRefToConcreteTypeWithPropertyAccess");
+
+		String idValue = new ObjectId().toString();
+		DBRef dbRef = converter.toDBRef(new LazyDbRefTargetPropertyAccess(idValue), property);
+
+		WithObjectMethodOverrideLazyDbRefs result = converter.read(WithObjectMethodOverrideLazyDbRefs.class,
+				new BasicDBObject("dbRefToPlainObject", dbRef));
+
+		ReflectionTestUtils.invokeMethod(result.dbRefToPlainObject, "finalize");
+
+		assertProxyIsResolved(result.dbRefToPlainObject, false);
+	}
+
 	private Object transport(Object result) {
 		return SerializationUtils.deserialize(SerializationUtils.serialize(result));
 	}

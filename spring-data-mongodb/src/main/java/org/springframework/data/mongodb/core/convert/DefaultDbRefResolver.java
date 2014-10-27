@@ -178,7 +178,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 	static class LazyLoadingInterceptor implements MethodInterceptor, org.springframework.cglib.proxy.MethodInterceptor,
 			Serializable {
 
-		private static final Method INITIALIZE_METHOD, TO_DBREF_METHOD;
+		private static final Method INITIALIZE_METHOD, TO_DBREF_METHOD, FINALIZE_METHOD;
 
 		private final DbRefResolverCallback callback;
 		private final MongoPersistentProperty property;
@@ -192,6 +192,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 			try {
 				INITIALIZE_METHOD = LazyLoadingProxy.class.getMethod("getTarget");
 				TO_DBREF_METHOD = LazyLoadingProxy.class.getMethod("toDBRef");
+				FINALIZE_METHOD = Object.class.getDeclaredMethod("finalize");
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}
@@ -254,6 +255,11 @@ public class DefaultDbRefResolver implements DbRefResolver {
 
 				if (ReflectionUtils.isHashCodeMethod(method)) {
 					return proxyHashCode(proxy);
+				}
+
+				// DATAMONGO-1076 - finalize methods should not trigger proxy initialization
+				if (FINALIZE_METHOD.equals(method)) {
+					return null;
 				}
 			}
 
