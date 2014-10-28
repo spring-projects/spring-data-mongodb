@@ -1606,7 +1606,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug(String.format("find using query: %s fields: %s for class: %s in collection: %s",
-					serializeToJsonSafely(query), mappedFields, entityClass, collectionName));
+					serializeToJsonSafely(mappedQuery), mappedFields, entityClass, collectionName));
 		}
 
 		return executeFindMultiInternal(new FindCallback(mappedQuery, mappedFields), preparer, objectCallback,
