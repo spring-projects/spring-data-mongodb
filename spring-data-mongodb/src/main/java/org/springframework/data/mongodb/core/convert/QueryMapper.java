@@ -792,8 +792,7 @@ public class QueryMapper {
 		 */
 		@Override
 		public String getMappedKey() {
-			return path == null ? name : path.toDotPath(isAssociation() ? new AssociationConverter(getAssociation())
-					: getPropertyConverter());
+			return path == null ? name : path.toDotPath(isAssociation() ? getAssociationConverter() : getPropertyConverter());
 		}
 
 		protected PersistentPropertyPath<MongoPersistentProperty> getPath() {
@@ -844,6 +843,17 @@ public class QueryMapper {
 		 */
 		protected Converter<MongoPersistentProperty, String> getPropertyConverter() {
 			return PropertyToFieldNameConverter.INSTANCE;
+		}
+
+		/**
+		 * Return the {@link Converter} to use for creating the mapped key of an association. Default implementation is
+		 * {@link AssociationConverter}.
+		 * 
+		 * @return
+		 * @since 1.7
+		 */
+		protected Converter<MongoPersistentProperty, String> getAssociationConverter() {
+			return new AssociationConverter(getAssociation());
 		}
 	}
 
