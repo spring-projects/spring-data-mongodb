@@ -20,6 +20,7 @@ import java.util.Iterator;
 import java.util.Map.Entry;
 
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
@@ -193,7 +194,48 @@ public class UpdateMapper extends QueryMapper {
 		 */
 		@Override
 		protected Converter<MongoPersistentProperty, String> getPropertyConverter() {
-			return isAssociation() ? new AssociationConverter(getAssociation()) : new UpdatePropertyConverter(key);
+			return new UpdatePropertyConverter(key);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.convert.QueryMapper.MetadataBackedField#getAssociationConverter()
+		 */
+		@Override
+		protected Converter<MongoPersistentProperty, String> getAssociationConverter() {
+			return new UpdateAssociationConverter(getAssociation(), key);
+		}
+
+		/**
+		 * Special mapper handling positional parameter {@literal $} within property names.
+		 * 
+		 * @author Christoph Strobl
+		 * @since 1.7
+		 */
+		private static class UpdateKeyMapper {
+
+			private final Iterator<String> iterator;
+
+			protected UpdateKeyMapper(String rawKey) {
+
+				Assert.hasText(rawKey, "Key must not be null or empty!");
+
+				this.iterator = Arrays.asList(rawKey.split("\\.")).iterator();
+				this.iterator.next();
+			}
+
+			/**
+			 * Maps the property name while retaining potential positional operator {@literal $}.
+			 * 
+			 * @param property
+			 * @return
+			 */
+			protected String mapPropertyName(MongoPersistentProperty property) {
+
+				String mappedName = PropertyToFieldNameConverter.INSTANCE.convert(property);
+				return iterator.hasNext() && iterator.next().equals("$") ? String.format("%s.$", mappedName) : mappedName;
+			}
+
 		}
 
 		/**
@@ -201,10 +243,11 @@ public class UpdateMapper extends QueryMapper {
 		 * contained in the source update key.
 		 * 
 		 * @author Oliver Gierke
+		 * @author Christoph Strobl
 		 */
 		private static class UpdatePropertyConverter implements Converter<MongoPersistentProperty, String> {
 
-			private final Iterator<String> iterator;
+			private final UpdateKeyMapper mapper;
 
 			/**
 			 * Creates a new {@link UpdatePropertyConverter} with the given update key.
@@ -215,8 +258,7 @@ public class UpdateMapper extends QueryMapper {
 
 				Assert.hasText(updateKey, "Update key must not be null or empty!");
 
-				this.iterator = Arrays.asList(updateKey.split("\\.")).iterator();
-				this.iterator.next();
+				this.mapper = new UpdateKeyMapper(updateKey);
 			}
 
 			/* 
@@ -225,9 +267,37 @@ public class UpdateMapper extends QueryMapper {
 			 */
 			@Override
 			public String convert(MongoPersistentProperty property) {
+				return mapper.mapPropertyName(property);
+			}
+		}
 
-				String mappedName = PropertyToFieldNameConverter.INSTANCE.convert(property);
-				return iterator.hasNext() && iterator.next().equals("$") ? String.format("%s.$", mappedName) : mappedName;
+		/**
+		 * {@link Converter} retaining positional parameter {@literal $} for {@link Association}s.
+		 * 
+		 * @author Christoph Strobl
+		 */
+		protected static class UpdateAssociationConverter extends AssociationConverter {
+
+			private final UpdateKeyMapper mapper;
+
+			/**
+			 * Creates a new {@link AssociationConverter} for the given {@link Association}.
+			 * 
+			 * @param association must not be {@literal null}.
+			 */
+			public UpdateAssociationConverter(Association<MongoPersistentProperty> association, String key) {
+
+				super(association);
+				this.mapper = new UpdateKeyMapper(key);
+			}
+
+			/* 
+			 * (non-Javadoc)
+			 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
+			 */
+			@Override
+			public String convert(MongoPersistentProperty source) {
+				return super.convert(source) == null ? null : mapper.mapPropertyName(source);
 			}
 		}
 	}
