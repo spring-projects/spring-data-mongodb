@@ -508,6 +508,23 @@ public class UpdateMapperUnitTests {
 		assertThat(list, equalTo(new BasicDBObjectBuilder().add("_id", "1").get()));
 	}
 
+	/**
+	 * @see DATAMONGO-1077
+	 */
+	@Test
+	public void shouldNotRemovePositionalParameter() {
+
+		Update update = new Update();
+		update.unset("dbRefAnnotatedList.$");
+
+		DBObject mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(DocumentWithDBRefCollection.class));
+
+		DBObject $unset = DBObjectTestUtils.getAsDBObject(mappedUpdate, "$unset");
+
+		assertThat($unset, equalTo(new BasicDBObjectBuilder().add("dbRefAnnotatedList.$", 1).get()));
+	}
+
 	@org.springframework.data.mongodb.core.mapping.Document(collection = "DocumentWithReferenceToInterface")
 	static interface DocumentWithReferenceToInterface {
 
