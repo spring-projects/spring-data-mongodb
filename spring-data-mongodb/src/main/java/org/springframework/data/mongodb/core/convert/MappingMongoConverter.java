@@ -944,7 +944,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			return getPotentiallyConvertedSimpleWrite(obj);
 		}
 
-		TypeInformation<?> typeHint = typeInformation == null ? ClassTypeInformation.OBJECT : typeInformation;
+		TypeInformation<?> typeHint = typeInformation;
 
 		if (obj instanceof BasicDBList) {
 			return maybeConvertList((BasicDBList) obj, typeHint);
