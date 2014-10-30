@@ -87,39 +87,25 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 
 		applyQueryMetaAttributesWhenPresent(query);
 
-		Object result = null;
-
 		if (isDeleteQuery()) {
-			result = new DeleteExecution().execute(query);
+			return new DeleteExecution().execute(query);
 		} else if (method.isGeoNearQuery() && method.isPageQuery()) {
 
 			MongoParameterAccessor countAccessor = new MongoParametersParameterAccessor(method, parameters);
 			Query countQuery = createCountQuery(new ConvertingParameterAccessor(operations.getConverter(), countAccessor));
 
-			result = new GeoNearExecution(accessor).execute(query, countQuery);
+			return new GeoNearExecution(accessor).execute(query, countQuery);
 		} else if (method.isGeoNearQuery()) {
-			result = new GeoNearExecution(accessor).execute(query);
+			return new GeoNearExecution(accessor).execute(query);
 		} else if (method.isSliceQuery()) {
-			result = new SlicedExecution(accessor.getPageable()).execute(query);
+			return new SlicedExecution(accessor.getPageable()).execute(query);
 		} else if (method.isCollectionQuery()) {
-			result = new CollectionExecution(accessor.getPageable()).execute(query);
+			return new CollectionExecution(accessor.getPageable()).execute(query);
 		} else if (method.isPageQuery()) {
-			result = new PagedExecution(accessor.getPageable()).execute(query);
+			return new PagedExecution(accessor.getPageable()).execute(query);
 		} else {
-			result = new SingleEntityExecution(isCountQuery()).execute(query);
+			return new SingleEntityExecution(isCountQuery()).execute(query);
 		}
-
-		if (result == null) {
-			return result;
-		}
-
-		Class<?> expectedReturnType = method.getReturnType().getType();
-
-		if (expectedReturnType.isAssignableFrom(result.getClass())) {
-			return result;
-		}
-
-		return CONVERSION_SERVICE.convert(result, expectedReturnType);
 	}
 
 	private Query applyQueryMetaAttributesWhenPresent(Query query) {

@@ -17,12 +17,14 @@ package org.springframework.data.mongodb.repository.query;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 import org.bson.types.ObjectId;
 import org.hamcrest.core.Is;
@@ -32,6 +34,7 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Matchers;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -282,6 +285,21 @@ public class AbstractMongoQueryUnitTests {
 		assertThat(captor.getAllValues().get(1).getSortObject(), is(expectedSortObject));
 	}
 
+	/**
+	 * @see DATAMONGO-1080
+	 */
+	@Test
+	public void doesNotTryToPostProcessQueryResultIntoWrapperType() {
+
+		Person reference = new Person();
+		when(mongoOperationsMock.findOne(Mockito.any(Query.class), eq(Person.class), eq("persons"))).//
+				thenReturn(reference);
+
+		AbstractMongoQuery query = createQueryForMethod("findByLastname", String.class);
+
+		assertThat(query.execute(new Object[] { "lastname" }), is((Object) reference));
+	}
+
 	private MongoQueryFake createQueryForMethod(String methodName, Class<?>... paramTypes) {
 
 		try {
@@ -346,5 +364,6 @@ public class AbstractMongoQueryUnitTests {
 		/** @see DATAMONGO-1057 */
 		Slice<Person> findByLastname(String lastname, Pageable page);
 
+		Optional<Person> findByLastname(String lastname);
 	}
 }
