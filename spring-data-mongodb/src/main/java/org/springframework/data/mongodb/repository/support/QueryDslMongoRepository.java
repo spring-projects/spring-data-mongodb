@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2012 the original author or authors.
+ * Copyright 2011-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
 import org.springframework.data.querydsl.EntityPathResolver;
+import org.springframework.data.querydsl.QSort;
 import org.springframework.data.querydsl.QueryDslPredicateExecutor;
 import org.springframework.data.querydsl.SimpleEntityPathResolver;
 import org.springframework.data.repository.core.EntityInformation;
@@ -44,6 +45,7 @@ import com.mysema.query.types.path.PathBuilder;
  * Special QueryDsl based repository implementation that allows execution {@link Predicate}s in various forms.
  * 
  * @author Oliver Gierke
+ * @author Thomas Darimont
  */
 public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleMongoRepository<T, ID> implements
 		QueryDslPredicateExecutor<T> {
@@ -105,7 +107,6 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 	 * @see org.springframework.data.querydsl.QueryDslPredicateExecutor#findAll(com.mysema.query.types.Predicate, com.mysema.query.types.OrderSpecifier<?>[])
 	 */
 	public List<T> findAll(Predicate predicate, OrderSpecifier<?>... orders) {
-
 		return createQueryFor(predicate).orderBy(orders).list();
 	}
 
@@ -123,6 +124,28 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 
 	/*
 	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.support.SimpleMongoRepository#findAll(org.springframework.data.domain.Pageable)
+	 */
+	@Override
+	public Page<T> findAll(Pageable pageable) {
+
+		MongodbQuery<T> countQuery = createQuery();
+		MongodbQuery<T> query = createQuery();
+
+		return new PageImpl<T>(applyPagination(query, pageable).list(), pageable, countQuery.count());
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.support.SimpleMongoRepository#findAll(org.springframework.data.domain.Sort)
+	 */
+	@Override
+	public List<T> findAll(Sort sort) {
+		return applySorting(createQuery(), sort).list();
+	}
+
+	/*
+	 * (non-Javadoc)
 	 * @see org.springframework.data.querydsl.QueryDslPredicateExecutor#count(com.mysema.query.types.Predicate)
 	 */
 	public long count(Predicate predicate) {
@@ -136,11 +159,16 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 	 * @return
 	 */
 	private MongodbQuery<T> createQueryFor(Predicate predicate) {
+		return createQuery().where(predicate);
+	}
 
-		Class<T> domainType = entityInformation.getJavaType();
-
-		MongodbQuery<T> query = new SpringDataMongodbQuery<T>(mongoOperations, domainType);
-		return query.where(predicate);
+	/**
+	 * Creates a {@link MongodbQuery}.
+	 * 
+	 * @return
+	 */
+	private MongodbQuery<T> createQuery() {
+		return new SpringDataMongodbQuery<T>(mongoOperations, entityInformation.getJavaType());
 	}
 
 	/**
@@ -170,6 +198,15 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 	private MongodbQuery<T> applySorting(MongodbQuery<T> query, Sort sort) {
 
 		if (sort == null) {
+			return query;
+		}
+
+		// TODO: find better solution than instanceof check
+		if (sort instanceof QSort) {
+
+			List<OrderSpecifier<?>> orderSpecifiers = ((QSort) sort).getOrderSpecifiers();
+			query.orderBy(orderSpecifiers.toArray(new OrderSpecifier<?>[orderSpecifiers.size()]));
+
 			return query;
 		}
 

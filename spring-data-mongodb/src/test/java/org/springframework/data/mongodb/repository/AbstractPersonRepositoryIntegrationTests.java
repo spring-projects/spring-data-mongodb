@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -47,6 +48,7 @@ import org.springframework.data.geo.Polygon;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.repository.Person.Sex;
+import org.springframework.data.querydsl.QSort;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 /**
@@ -1059,5 +1061,80 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 
 		assertThat(persons, hasSize(1));
 		assertThat(persons, hasItem(alicia));
+	}
+
+	/**
+	 * @see DATAMONGO-1085
+	 */
+	@Test
+	public void shouldSupportSortingByQueryDslOrderSpecifier() {
+
+		repository.deleteAll();
+
+		List<Person> persons = new ArrayList<Person>();
+
+		for (int i = 0; i < 3; i++) {
+			Person person = new Person(String.format("Siggi %s", i), "Bar", 30);
+			person.setAddress(new Address(String.format("Street %s", i), "12345", "SinCity"));
+			persons.add(person);
+		}
+
+		repository.save(persons);
+
+		QPerson person = QPerson.person;
+
+		Iterable<Person> result = repository.findAll(person.firstname.isNotNull(), person.address.street.desc());
+
+		assertThat(result, is(Matchers.<Person> iterableWithSize(persons.size())));
+		assertThat(result.iterator().next().getFirstname(), is(persons.get(2).getFirstname()));
+	}
+
+	/**
+	 * @see DATAMONGO-1085
+	 */
+	@Test
+	public void shouldSupportSortingWithQSortByQueryDslOrderSpecifier() throws Exception {
+
+		repository.deleteAll();
+
+		List<Person> persons = new ArrayList<Person>();
+
+		for (int i = 0; i < 3; i++) {
+			Person person = new Person(String.format("Siggi %s", i), "Bar", 30);
+			person.setAddress(new Address(String.format("Street %s", i), "12345", "SinCity"));
+			persons.add(person);
+		}
+
+		repository.save(persons);
+
+		PageRequest pageRequest = new PageRequest(0, 2, new QSort(person.address.street.desc()));
+		Iterable<Person> result = repository.findAll(pageRequest);
+
+		assertThat(result, is(Matchers.<Person> iterableWithSize(2)));
+		assertThat(result.iterator().next().getFirstname(), is("Siggi 2"));
+	}
+
+	/**
+	 * @see DATAMONGO-1085
+	 */
+	@Test
+	public void shouldSupportSortingWithQSort() throws Exception {
+
+		repository.deleteAll();
+
+		List<Person> persons = new ArrayList<Person>();
+
+		for (int i = 0; i < 3; i++) {
+			Person person = new Person(String.format("Siggi %s", i), "Bar", 30);
+			person.setAddress(new Address(String.format("Street %s", i), "12345", "SinCity"));
+			persons.add(person);
+		}
+
+		repository.save(persons);
+
+		Iterable<Person> result = repository.findAll(new QSort(person.address.street.desc()));
+
+		assertThat(result, is(Matchers.<Person> iterableWithSize(persons.size())));
+		assertThat(result.iterator().next().getFirstname(), is("Siggi 2"));
 	}
 }
