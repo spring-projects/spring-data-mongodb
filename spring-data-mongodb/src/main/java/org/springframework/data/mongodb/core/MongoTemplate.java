@@ -1969,11 +1969,16 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 	private DBObject getMappedSortObject(Query query, Class<?> type) {
 
-		if (query == null || query.getSortObject() == null) {
+		if (query == null) {
 			return null;
 		}
 
-		return queryMapper.getMappedSort(query.getSortObject(), mappingContext.getPersistentEntity(type));
+		DBObject sortObject = query.getSortObject();
+		if (sortObject == null) {
+			return null;
+		}
+
+		return queryMapper.getMappedSort(sortObject, mappingContext.getPersistentEntity(type));
 	}
 
 	// Callback implementations
