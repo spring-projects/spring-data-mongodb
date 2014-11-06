@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
+import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.util.Assert;
 
 /**
@@ -25,7 +26,9 @@ import org.springframework.util.Assert;
 class SimpleMongoEntityMetadata<T> implements MongoEntityMetadata<T> {
 
 	private final Class<T> type;
+    // One of both won't be null
 	private final String collectionName;
+    private final MongoPersistentEntity<T> persistentEntityRef;
 
 	/**
 	 * Creates a new {@link SimpleMongoEntityMetadata} using the given type and collection name.
@@ -33,6 +36,7 @@ class SimpleMongoEntityMetadata<T> implements MongoEntityMetadata<T> {
 	 * @param type must not be {@literal null}.
 	 * @param collectionName must not be {@literal null} or empty.
 	 */
+    @Deprecated
 	public SimpleMongoEntityMetadata(Class<T> type, String collectionName) {
 
 		Assert.notNull(type, "Type must not be null!");
@@ -40,7 +44,30 @@ class SimpleMongoEntityMetadata<T> implements MongoEntityMetadata<T> {
 
 		this.type = type;
 		this.collectionName = collectionName;
+        this.persistentEntityRef = null;
 	}
+    
+    /**
+     * <p>
+     * NEW way of getting collectionName, due to improvements in performance done in SpEL
+     * it seems to me a plausible solution to DATAMONGO-1043
+     * http://docs.spring.io/spring-framework/docs/current/spring-framework-reference/html/expressions.html#expressions-compiler-configuration
+	 * </p>
+     * Creates a new {@link SimpleMongoEntityMetadata} using the given type and collection persistent entity 
+     * reference in order to retrieve the collection name at runtime(this allows us to
+     * customize at runtime the collection based on a thread local variable for instance)
+	 * 
+	 * @param type must not be {@literal null}.
+	 * @param persistentEntityRef must not be {@literal null}
+	 */
+    public SimpleMongoEntityMetadata(Class<T> type, MongoPersistentEntity<T> persistentEntityRef) {
+        Assert.notNull(type, "Type must not be null!");
+        Assert.notNull(persistentEntityRef, "PersistentEntityRef must not be null!");
+
+        this.type = type;
+		this.collectionName = null;
+        this.persistentEntityRef = persistentEntityRef;
+    }
 
 	/* 
 	 * (non-Javadoc)
@@ -55,6 +82,7 @@ class SimpleMongoEntityMetadata<T> implements MongoEntityMetadata<T> {
 	 * @see org.springframework.data.mongodb.repository.query.MongoEntityMetadata#getCollectionName()
 	 */
 	public String getCollectionName() {
-		return collectionName;
+		return this.persistentEntityRef != null ? this.persistentEntityRef.getCollection() : 
+                                                  collectionName;
 	}
 }

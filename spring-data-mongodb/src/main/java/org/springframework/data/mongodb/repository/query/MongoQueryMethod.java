@@ -129,7 +129,7 @@ public class MongoQueryMethod extends QueryMethod {
 					: managedEntity;
 
 			this.metadata = new SimpleMongoEntityMetadata<Object>((Class<Object>) returnedEntity.getType(),
-					collectionEntity.getCollection());
+						(MongoPersistentEntity<Object>)collectionEntity); /*collectionEntity.getCollection());*/
 		}
 
 		return this.metadata;
