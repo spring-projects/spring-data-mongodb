@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.repository;
 
+import com.google.common.collect.Lists;
 import static java.util.Arrays.*;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
@@ -1060,4 +1061,46 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(persons, hasSize(1));
 		assertThat(persons, hasItem(alicia));
 	}
+    
+     /**
+	 * @see DATAMONGO-1085
+	 */
+	@Test
+	public void shouldSupportSortingByQueryDslOrderSpecifier() {
+
+		repository.deleteAll();
+
+		List<Person> persons = new ArrayList<Person>();
+		for (int i = 0; i < 3; i++) {
+
+			Person pers = new Person(String.format("Siggi %s", i), "Bar", 30);
+			pers.setAddress(new Address(String.format("Street %s", i), "12345", "SinCity"));
+
+			persons.add(pers);
+		}
+
+		repository.save(persons);
+
+		QPerson person = QPerson.person;
+
+		List<Person> result = Lists.newArrayList(repository.findAll(person.firstname.isNotNull(),
+				person.address.street.desc()));
+//        result.forEach(p -> System.out.println("ok->"+p.getAddress()));
+		assertThat(result, hasSize(persons.size()));
+		assertThat(result.get(0).getFirstname(), is(persons.get(2).getFirstname()));
+        
+        //Added by jllachf, as said in the jira this method signature 
+        //public Page<T> findAll(Predicate predicate, Pageable pageable) is not supported
+        //by the undelying code. wrongResults are returned in the inserted order, but not in descending one
+        Sort sort = new Sort(Direction.DESC, person.address.street.toString());
+        PageRequest pageable = new PageRequest(0, 10, sort);
+        List<Person> wrongResults = Lists.newArrayList(repository.findAll(person.firstname.isNotNull(), pageable));
+//        wrongResults.forEach(p -> System.out.println("ko->"+p.getAddress()));
+        
+        assertThat(wrongResults.get(0).getAddress().getStreet(), equalTo(result.get(0).getAddress().getStreet()));
+        assertThat(wrongResults.get(1).getAddress().getStreet(), equalTo(result.get(1).getAddress().getStreet()));
+        assertThat(wrongResults.get(2).getAddress().getStreet(), equalTo(result.get(2).getAddress().getStreet()));
+	}
+
+
 }
