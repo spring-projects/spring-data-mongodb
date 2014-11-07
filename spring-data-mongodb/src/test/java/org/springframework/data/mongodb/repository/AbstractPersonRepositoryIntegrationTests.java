@@ -48,6 +48,7 @@ import org.springframework.data.geo.Polygon;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.repository.Person.Sex;
+import org.springframework.data.querydsl.QSort;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 /**
@@ -1092,11 +1093,10 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
         //Added by jllachf, as said in the jira this method signature 
         //public Page<T> findAll(Predicate predicate, Pageable pageable) is not supported
         //by the undelying code. wrongResults are returned in the inserted order, but not in descending one
-        Sort sort = new Sort(Direction.DESC, person.address.street.toString());
-        PageRequest pageable = new PageRequest(0, 10, sort);
+        QSort sorter = new QSort(person.address.street.desc());
+        PageRequest pageable = new PageRequest(0, 10, sorter);
         List<Person> wrongResults = Lists.newArrayList(repository.findAll(person.firstname.isNotNull(), pageable));
-//        wrongResults.forEach(p -> System.out.println("ko->"+p.getAddress()));
-        
+//        wrongResults.forEach(p -> System.out.println("ok->"+p.getAddress()));
         assertThat(wrongResults.get(0).getAddress().getStreet(), equalTo(result.get(0).getAddress().getStreet()));
         assertThat(wrongResults.get(1).getAddress().getStreet(), equalTo(result.get(1).getAddress().getStreet()));
         assertThat(wrongResults.get(2).getAddress().getStreet(), equalTo(result.get(2).getAddress().getStreet()));
