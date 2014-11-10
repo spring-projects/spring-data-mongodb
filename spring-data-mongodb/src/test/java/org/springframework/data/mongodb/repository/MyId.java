@@ -17,50 +17,43 @@ package org.springframework.data.mongodb.repository;
 
 import java.io.Serializable;
 
+import org.springframework.util.ObjectUtils;
+
 /**
  * @author Christoph Strobl
+ * @author Oliver Gierke
  */
 public class MyId implements Serializable {
+
+	private static final long serialVersionUID = -7129201311241750831L;
 
 	String val1;
 	String val2;
 
 	@Override
 	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((val1 == null) ? 0 : val1.hashCode());
-		result = prime * result + ((val2 == null) ? 0 : val2.hashCode());
+
+		int result = 31;
+
+		result += 17 * ObjectUtils.nullSafeHashCode(val1);
+		result += 17 * ObjectUtils.nullSafeHashCode(val2);
+
 		return result;
 	}
 
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj) {
+
+		if (obj == this) {
 			return true;
 		}
-		if (obj == null) {
-			return false;
-		}
+
 		if (!(obj instanceof MyId)) {
 			return false;
 		}
-		MyId other = (MyId) obj;
-		if (val1 == null) {
-			if (other.val1 != null) {
-				return false;
-			}
-		} else if (!val1.equals(other.val1)) {
-			return false;
-		}
-		if (val2 == null) {
-			if (other.val2 != null) {
-				return false;
-			}
-		} else if (!val2.equals(other.val2)) {
-			return false;
-		}
-		return true;
-	}
 
+		MyId that = (MyId) obj;
+
+		return ObjectUtils.nullSafeEquals(this.val1, that.val1) && ObjectUtils.nullSafeEquals(this.val2, that.val2);
+	}
 }
