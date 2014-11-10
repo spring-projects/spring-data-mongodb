@@ -15,14 +15,13 @@
  */
 package org.springframework.data.mongodb.repository;
 
-import static org.hamcrest.collection.IsCollectionWithSize.*;
-import static org.hamcrest.collection.IsIterableContainingInOrder.*;
-import static org.hamcrest.core.IsEqual.*;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
 import java.util.Collections;
 import java.util.List;
 
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -39,6 +38,7 @@ import com.mongodb.MongoClient;
 
 /**
  * @author Christoph Strobl
+ * @author Oliver Gierke
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration
@@ -61,14 +61,14 @@ public class ComplexIdRepositoryIntegrationTests {
 	}
 
 	@Autowired UserWithComplexIdRepository repo;
-
 	@Autowired MongoTemplate template;
 
-	private MyId id;
-	private UserWithComplexId userWithId;
+	MyId id;
+	UserWithComplexId userWithId;
 
 	@Before
 	public void setUp() {
+
 		repo.deleteAll();
 
 		id = new MyId();
@@ -88,9 +88,7 @@ public class ComplexIdRepositoryIntegrationTests {
 
 		repo.save(userWithId);
 
-		UserWithComplexId loaded = repo.getUserByComplexId(id);
-
-		assertThat(loaded, equalTo(userWithId));
+		assertThat(repo.getUserByComplexId(id), is(userWithId));
 	}
 
 	/**
@@ -115,9 +113,7 @@ public class ComplexIdRepositoryIntegrationTests {
 
 		repo.save(userWithId);
 
-		UserWithComplexId loaded = repo.findOne(id);
-
-		assertThat(loaded, equalTo(userWithId));
+		assertThat(repo.findOne(id), is(userWithId));
 	}
 
 	/**
@@ -128,10 +124,9 @@ public class ComplexIdRepositoryIntegrationTests {
 
 		repo.save(userWithId);
 
-		List<UserWithComplexId> loaded = (List<UserWithComplexId>) repo.findAll(Collections.singleton(id));
+		Iterable<UserWithComplexId> loaded = repo.findAll(Collections.singleton(id));
 
-		assertThat(loaded, hasSize(1));
+		assertThat(loaded, is(Matchers.<UserWithComplexId> iterableWithSize(1)));
 		assertThat(loaded, contains(userWithId));
 	}
-
 }
