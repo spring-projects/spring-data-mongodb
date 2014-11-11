@@ -540,7 +540,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 					return false;
 				}
 
-				return path.contains(this.path);
+				return path.equals(this.path) || path.contains(this.path + ".") || path.contains("." + this.path);
 			}
 		}
 	}
