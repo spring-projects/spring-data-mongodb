@@ -630,6 +630,32 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			assertThat((String) indexDefinitions.get(0).getIndexOptions().get("name"), equalTo("property_index"));
 		}
 
+		/**
+		 * @see DATAMONGO-1087
+		 */
+		@Test
+		public void shouldAllowMultiplePropertiesOfSameTypeWithMatchingStartLettersOnRoot() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(MultiplePropertiesOfSameTypeWithMatchingStartLetters.class);
+
+			assertThat(indexDefinitions, hasSize(2));
+			assertThat((String) indexDefinitions.get(0).getIndexOptions().get("name"), equalTo("name.component"));
+			assertThat((String) indexDefinitions.get(1).getIndexOptions().get("name"), equalTo("nameLast.component"));
+		}
+
+		/**
+		 * @see DATAMONGO-1087
+		 */
+		@Test
+		public void shouldAllowMultiplePropertiesOfSameTypeWithMatchingStartLettersOnNestedProperty() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(MultiplePropertiesOfSameTypeWithMatchingStartLettersOnNestedProperty.class);
+
+			assertThat(indexDefinitions, hasSize(2));
+			assertThat((String) indexDefinitions.get(0).getIndexOptions().get("name"), equalTo("component.nameLast"));
+			assertThat((String) indexDefinitions.get(1).getIndexOptions().get("name"), equalTo("component.name"));
+		}
+
 		@Document
 		static class MixedIndexRoot {
 
@@ -768,6 +794,30 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		static class DocumentWithNestedTypeHavingNamedIndex {
 
 			TypeWithNamedIndex propertyOfTypeHavingNamedIndex;
+		}
+
+		@Document
+		public class MultiplePropertiesOfSameTypeWithMatchingStartLetters {
+
+			public class NameComponent {
+
+				@Indexed String component;
+			}
+
+			NameComponent name;
+			NameComponent nameLast;
+		}
+
+		@Document
+		public class MultiplePropertiesOfSameTypeWithMatchingStartLettersOnNestedProperty {
+
+			public class NameComponent {
+
+				@Indexed String nameLast;
+				@Indexed String name;
+			}
+
+			NameComponent component;
 		}
 
 	}
