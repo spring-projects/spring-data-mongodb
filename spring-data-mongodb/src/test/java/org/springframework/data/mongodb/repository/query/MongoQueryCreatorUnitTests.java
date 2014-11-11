@@ -425,6 +425,47 @@ public class MongoQueryCreatorUnitTests {
 		assertThat(query, is(query(where("firstName").regex("^dave$", "i").and("age").is(42))));
 	}
 
+	/**
+	 * @see DATAMONGO-1075
+	 */
+	@Test
+	public void shouldCreateInClauseWhenUsingContainsOnCollectionLikeProperty() {
+
+		PartTree tree = new PartTree("findByEmailAddressesContaining", User.class);
+		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "dave"), context);
+
+		Query query = creator.createQuery();
+
+		assertThat(query, is(query(where("emailAddresses").in("dave"))));
+	}
+
+	/**
+	 * @see DATAMONGO-1075
+	 */
+	@Test
+	public void shouldCreateInClauseWhenUsingNotContainsOnCollectionLikeProperty() {
+
+		PartTree tree = new PartTree("findByEmailAddressesNotContaining", User.class);
+		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "dave"), context);
+
+		Query query = creator.createQuery();
+
+		assertThat(query, is(query(where("emailAddresses").not().in("dave"))));
+	}
+
+	/**
+	 * @see DATAMONGO-1075
+	 */
+	@Test
+	public void shouldCreateRegexWhenUsingNotContainsOnStringProperty() {
+
+		PartTree tree = new PartTree("findByUsernameNotContaining", User.class);
+		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "thew"), context);
+		Query query = creator.createQuery();
+
+		assertThat(query, is(query(where("username").regex(".*thew.*").not())));
+	}
+
 	interface PersonRepository extends Repository<Person, Long> {
 
 		List<Person> findByLocationNearAndFirstname(Point location, Distance maxDistance, String firstname);
@@ -435,5 +476,7 @@ public class MongoQueryCreatorUnitTests {
 		@Field("foo") String username;
 
 		@DBRef User creator;
+
+		List<String> emailAddresses;
 	}
 }

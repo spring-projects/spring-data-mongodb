@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 the original author or authors.
+ * Copyright 2010-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,6 +46,7 @@ import org.springframework.util.Assert;
  * 
  * @author Oliver Gierke
  * @author Thomas Darimont
+ * @author Christoph Strobl
  */
 class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 
@@ -190,7 +191,9 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 			case STARTING_WITH:
 			case ENDING_WITH:
 			case CONTAINING:
-				return addAppropriateLikeRegexTo(criteria, part, parameters.next().toString());
+				return createContainingCriteria(part, property, criteria, parameters);
+			case NOT_CONTAINING:
+				return createContainingCriteria(part, property, criteria, parameters).not();
 			case REGEX:
 				return criteria.regex(parameters.next().toString());
 			case EXISTS:
@@ -285,6 +288,27 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 	}
 
 	/**
+	 * If the target property of the comparison is of type String, then the operator checks for match using regular
+	 * expression. If the target property of the comparison is a {@link Collection} then the operator evaluates to true if
+	 * it finds an exact match within any member of the {@link Collection}.
+	 * 
+	 * @param part
+	 * @param property
+	 * @param criteria
+	 * @param parameters
+	 * @return
+	 */
+	private Criteria createContainingCriteria(Part part, MongoPersistentProperty property, Criteria criteria,
+			PotentiallyConvertingIterator parameters) {
+
+		if (property.isCollectionLike()) {
+			return criteria.in(nextAsArray(parameters, property));
+		}
+
+		return addAppropriateLikeRegexTo(criteria, part, parameters.next().toString());
+	}
+
+	/**
 	 * Creates an appropriate like-regex and appends it to the given criteria.
 	 * 
 	 * @param criteria
@@ -357,6 +381,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 				source = source + "$";
 				break;
 			case CONTAINING:
+			case NOT_CONTAINING:
 				source = "*" + source + "*";
 				break;
 			case SIMPLE_PROPERTY:
