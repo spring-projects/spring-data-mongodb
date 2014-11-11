@@ -72,7 +72,6 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 
 	@Before
 	public void setUp() throws InterruptedException {
-
 		repository.deleteAll();
 
 		dave = new Person("Dave", "Matthews", 42);
@@ -1062,13 +1061,12 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(persons, hasSize(1));
 		assertThat(persons, hasItem(alicia));
 	}
-    
-     /**
+
+	/**
 	 * @see DATAMONGO-1085
 	 */
 	@Test
 	public void shouldSupportSortingByQueryDslOrderSpecifier() {
-
 		repository.deleteAll();
 
 		List<Person> persons = new ArrayList<Person>();
@@ -1086,21 +1084,19 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 
 		List<Person> result = Lists.newArrayList(repository.findAll(person.firstname.isNotNull(),
 				person.address.street.desc()));
-//        result.forEach(p -> System.out.println("ok->"+p.getAddress()));
+		// result.forEach(p -> System.out.println("ok->"+p.getAddress()));
 		assertThat(result, hasSize(persons.size()));
 		assertThat(result.get(0).getFirstname(), is(persons.get(2).getFirstname()));
-        
-        //Added by jllachf, as said in the jira this method signature 
-        //public Page<T> findAll(Predicate predicate, Pageable pageable) is not supported
-        //by the undelying code. wrongResults are returned in the inserted order, but not in descending one
-        QSort sorter = new QSort(person.address.street.desc());
-        PageRequest pageable = new PageRequest(0, 10, sorter);
-        List<Person> wrongResults = Lists.newArrayList(repository.findAll(person.firstname.isNotNull(), pageable));
-//        wrongResults.forEach(p -> System.out.println("ok->"+p.getAddress()));
-        assertThat(wrongResults.get(0).getAddress().getStreet(), equalTo(result.get(0).getAddress().getStreet()));
-        assertThat(wrongResults.get(1).getAddress().getStreet(), equalTo(result.get(1).getAddress().getStreet()));
-        assertThat(wrongResults.get(2).getAddress().getStreet(), equalTo(result.get(2).getAddress().getStreet()));
-	}
 
+		// Added by jllachf
+			//desc
+		QSort sorter = new QSort(person.address.street.desc());
+		PageRequest pageable = new PageRequest(0, 10, sorter);
+		List<Person> wrongResults = Lists.newArrayList(repository.findAll(person.firstname.isNotNull(), pageable));
+		// wrongResults.forEach(p -> System.out.println("ok->"+p.getAddress()));
+		assertThat(wrongResults.get(0).getAddress().getStreet(), equalTo(result.get(0).getAddress().getStreet()));
+		assertThat(wrongResults.get(1).getAddress().getStreet(), equalTo(result.get(1).getAddress().getStreet()));
+		assertThat(wrongResults.get(2).getAddress().getStreet(), equalTo(result.get(2).getAddress().getStreet()));
+	}
 
 }
