@@ -1945,6 +1945,31 @@ public class MappingMongoConverterUnitTests {
 		assertThat(withAnnotatedIdField.key, is("A"));
 	}
 
+	/**
+	 * @see DATAMONGO-1086
+	 */
+	@Test
+	public void shouldIncludeClassIdentifierForGenericAbstractTypesInCollections() {
+
+		ConcreteRoot root = new ConcreteRoot();
+		ConcreteSub sub = new ConcreteSub();
+		sub.abstractType = new Concrete();
+		sub.abstractType.content = "foo";
+		root.listOfGenericSub = Collections.singletonList(sub);
+
+		DBObject dbo = new BasicDBObject();
+		converter.write(root, dbo);
+
+		BasicDBList genericSubType = DBObjectTestUtils.getAsDBList(dbo, "listOfGenericSub");
+		assertThat((String) dbo.get("_class"), is(ConcreteRoot.class.getName()));
+
+		DBObject item0 = DBObjectTestUtils.getAsDBObject(genericSubType, 0);
+		assertThat(item0.get("_class"), nullValue());
+
+		DBObject abstractType = DBObjectTestUtils.getAsDBObject(item0, "abstractType");
+		assertThat((String) abstractType.get("_class"), is(Concrete.class.getName()));
+	}
+
 	static class GenericType<T> {
 		T content;
 	}
@@ -2231,5 +2256,29 @@ public class MappingMongoConverterUnitTests {
 	static class ClassWithAnnotatedIdField {
 
 		@Id String key;
+	}
+
+	static abstract class AbstractGenericRoot<T extends GenericSub<?>> {
+		List<T> listOfGenericSub;
+	}
+
+	static class ConcreteRoot extends AbstractGenericRoot<ConcreteSub> {
+
+	}
+
+	static abstract class GenericSub<T extends AbstractRoot> {
+		T abstractType;
+	}
+
+	static class ConcreteSub extends GenericSub<Concrete> {
+
+	}
+
+	static abstract class AbstractRoot {
+
+	}
+
+	static class Concrete extends AbstractRoot {
+		String content;
 	}
 }

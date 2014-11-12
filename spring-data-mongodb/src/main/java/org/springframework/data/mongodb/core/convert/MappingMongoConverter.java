@@ -503,7 +503,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		Object existingValue = accessor.get(prop);
 		BasicDBObject propDbObj = existingValue instanceof BasicDBObject ? (BasicDBObject) existingValue
 				: new BasicDBObject();
-		addCustomTypeKeyIfNecessary(type, obj, propDbObj);
+		addCustomTypeKeyIfNecessary(ClassTypeInformation.from(prop.getRawType()), obj, propDbObj);
 
 		MongoPersistentEntity<?> entity = isSubtype(prop.getType(), obj.getClass()) ? mappingContext
 				.getPersistentEntity(obj.getClass()) : mappingContext.getPersistentEntity(type);
@@ -700,7 +700,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	/**
 	 * Adds custom type information to the given {@link DBObject} if necessary. That is if the value is not the same as
 	 * the one given. This is usually the case if you store a subtype of the actual declared type of the property.
-	 * 
+	 *
 	 * @param type
 	 * @param value must not be {@literal null}.
 	 * @param dbObject must not be {@literal null}.
