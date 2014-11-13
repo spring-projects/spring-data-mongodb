@@ -23,14 +23,17 @@ import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.core.query.Update.*;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.bson.types.ObjectId;
@@ -90,7 +93,7 @@ import com.mongodb.WriteResult;
 
 /**
  * Integration test for {@link MongoTemplate}.
- * 
+ *
  * @author Oliver Gierke
  * @author Thomas Risberg
  * @author Amol Nayak
@@ -2740,6 +2743,65 @@ public class MongoTemplateTests {
 		assertThat(template.findAll(DBObject.class, "collection"), hasSize(0));
 	}
 
+	/**
+	 * @see DATAMONGO-941
+	 */
+	@Test
+	public void updatesDateValueCorrectlyWhenUsingMinOperator() {
+
+		Calendar cal = Calendar.getInstance(Locale.US);
+		cal.set(2013, 10, 13, 0, 0, 0);
+
+		TypeWithDate twd = new TypeWithDate();
+		twd.date = new Date();
+		template.save(twd);
+		template.updateFirst(query(where("id").is(twd.id)), new Update().min("date", cal.getTime()), TypeWithDate.class);
+
+		TypeWithDate loaded = template.find(query(where("id").is(twd.id)), TypeWithDate.class).get(0);
+		assertThat(loaded.date, equalTo(cal.getTime()));
+	}
+
+	/**
+	 * @see DATAMONGO-941
+	 */
+	@Test
+	public void updatesNumericValueCorrectlyWhenUsingMinOperator() {
+
+		TypeWithNumbers twn = new TypeWithNumbers();
+		twn.byteVal = 100;
+		twn.doubleVal = 200D;
+		twn.floatVal = 300F;
+		twn.intVal = 400;
+		twn.longVal = 500L;
+
+		// Note that $min operator is not supported for BigInteger and BigDecimal types.
+		// twn.bigIntegerVal = new BigInteger("600");
+		// twn.bigDeciamVal = new BigDecimal("700.0");
+
+		template.save(twn);
+
+		byte byteVal = 90;
+		Update update = new Update()//
+				.min("byteVal", byteVal) //
+				.min("doubleVal", 190D) //
+				.min("floatVal", 290F) //
+				.min("intVal", 390) //
+				.min("longVal", 490) //
+		// Not supported
+		// .min("bigIntegerVal", new BigInteger("590")) //
+		// .min("bigDeciamVal", new BigDecimal("690")) //
+		;
+
+		template.updateFirst(query(where("id").is(twn.id)), update, TypeWithNumbers.class);
+
+		TypeWithNumbers loaded = template.find(query(where("id").is(twn.id)), TypeWithNumbers.class).get(0);
+		assertThat(loaded.byteVal, equalTo(byteVal));
+		assertThat(loaded.doubleVal, equalTo(190D));
+		assertThat(loaded.floatVal, equalTo(290F));
+		assertThat(loaded.intVal, equalTo(390));
+		assertThat(loaded.longVal, equalTo(490L));
+	}
+
 	static class DoucmentWithNamedIdField {
 
 		@Id String someIdKey;
@@ -3006,5 +3068,17 @@ public class MongoTemplateTests {
 		String id;
 		@org.springframework.data.mongodb.core.mapping.DBRef SomeContent dbrefContent;
 		SomeContent normalContent;
+	}
+
+	static class TypeWithNumbers {
+
+		@Id String id;
+		Integer intVal;
+		Float floatVal;
+		Long longVal;
+		Double doubleVal;
+		BigDecimal bigDeciamVal;
+		BigInteger bigIntegerVal;
+		Byte byteVal;
 	}
 }

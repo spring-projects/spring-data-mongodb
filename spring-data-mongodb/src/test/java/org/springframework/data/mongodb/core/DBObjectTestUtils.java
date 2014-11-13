@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 the original author or authors.
+ * Copyright 2012 - 2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,10 @@ package org.springframework.data.mongodb.core;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+
 import com.mongodb.BasicDBList;
 import com.mongodb.DBObject;
 
@@ -25,11 +29,57 @@ import com.mongodb.DBObject;
  * Helper classes to ease assertions on {@link DBObject}s.
  * 
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 public abstract class DBObjectTestUtils {
 
 	private DBObjectTestUtils() {
 
+	}
+
+	/**
+	 * Extracts value for a given path within the dbo. Indexes in arrays can be addressed via {@code []}.
+	 * 
+	 * @param source
+	 * @param path
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public static <T> T getValue(DBObject source, String path) {
+
+		String[] fragments = path.split("\\.");
+		if (fragments.length == 1) {
+			return (T) source.get(path);
+		}
+
+		Iterator<String> it = Arrays.asList(fragments).iterator();
+
+		DBObject dbo = source;
+		while (it.hasNext()) {
+
+			String key = it.next();
+
+			if (key.startsWith("[")) {
+				String indexNumber = key.substring(1, key.indexOf("]"));
+				dbo = getAsDBObject((BasicDBList) dbo, Integer.parseInt(indexNumber));
+			} else {
+
+				if (!it.hasNext()) {
+					return (T) dbo.get(key);
+				}
+
+				Object value = dbo.get(key);
+				if (value instanceof DBObject) {
+					dbo = (DBObject) value;
+				} else {
+					if (it.next().startsWith("$")) {
+						return (T) value;
+					}
+				}
+			}
+		}
+
+		throw new NoSuchElementException(String.format("Unable to find '%s' in %s.", path, source));
 	}
 
 	/**

@@ -21,6 +21,8 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.DBObjectTestUtils.*;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
 
@@ -28,12 +30,15 @@ import org.hamcrest.Matcher;
 import org.hamcrest.collection.IsIterableContainingInOrder;
 import org.hamcrest.core.IsEqual;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.mapping.model.MappingException;
@@ -61,6 +66,8 @@ import com.mongodb.DBRef;
 @RunWith(MockitoJUnitRunner.class)
 public class UpdateMapperUnitTests {
 
+	public @Rule ExpectedException exception = ExpectedException.none();
+
 	@Mock MongoDbFactory factory;
 	MappingMongoConverter converter;
 	MongoMappingContext context;
@@ -68,7 +75,6 @@ public class UpdateMapperUnitTests {
 
 	private Converter<NestedEntity, DBObject> writingConverterSpy;
 
-	@SuppressWarnings("unchecked")
 	@Before
 	public void setUp() {
 
@@ -525,6 +531,120 @@ public class UpdateMapperUnitTests {
 		assertThat($unset, equalTo(new BasicDBObjectBuilder().add("dbRefAnnotatedList.$", 1).get()));
 	}
 
+	/**
+	 * @see DATAMONGO-941
+	 */
+	@Test
+	public void shouldMapMinCorrectlyWhenGivenDouble() {
+
+		Update update = new Update().min("doubleVal", 10D);
+
+		DBObject mapped = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(DocumentWithNumbers.class));
+
+		assertThat(DBObjectTestUtils.<Double> getValue(mapped, "$min.doubleVal"), equalTo(10D));
+	}
+
+	/**
+	 * @see DATAMONGO-941
+	 */
+	@Test
+	public void shouldMapMinCorrectlyWhenReferencingNonExistingProperty() {
+
+		Update update = new Update().min("xyz", 10D);
+
+		DBObject mapped = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(DocumentWithNumbers.class));
+
+		assertThat(DBObjectTestUtils.<Double> getValue(mapped, "$min.xyz"), equalTo(10D));
+	}
+
+	/**
+	 * @see DATAMONGO-941
+	 */
+	@Test
+	public void shouldThrowErrorWhenMappingMinWithBigDecimal() {
+
+		exception.expect(InvalidDataAccessApiUsageException.class);
+		exception.expectMessage(BigDecimal.class.getName() + " is not supported for $min");
+
+		Update update = new Update().min("bigDeciamVal", new BigDecimal(100));
+
+		mapper.getMappedObject(update.getUpdateObject(), context.getPersistentEntity(DocumentWithNumbers.class));
+	}
+
+	/**
+	 * @see DATAMONGO-941
+	 */
+	@Test
+	public void shouldThrowErrorWhenMappingMinToPropertyThatIsBigDecimal() {
+
+		exception.expect(InvalidDataAccessApiUsageException.class);
+		exception.expectMessage(BigDecimal.class.getName() + " is not supported for $min");
+
+		Update update = new Update().min("bigDeciamVal", 10);
+
+		mapper.getMappedObject(update.getUpdateObject(), context.getPersistentEntity(DocumentWithNumbers.class));
+	}
+
+	/**
+	 * @see DATAMONGO-941
+	 */
+	@Test
+	public void shouldMapMinCorrectlyWhenMappingMinToPropertyThatIsPrimitiveValue() {
+
+		Update update = new Update().min("primitiveIntVal", 10);
+
+		DBObject mapped = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(DocumentWithNumbers.class));
+
+		assertThat(DBObjectTestUtils.<Integer> getValue(mapped, "$min.primitiveIntVal"), equalTo(10));
+	}
+
+	/**
+	 * @see DATAMONGO-941
+	 */
+	@Test
+	public void shouldMapMinOnNestedPropertyCorrectly() {
+
+		Update update = new Update().min("nested.primitiveIntVal", 10);
+
+		DBObject mapped = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(DocumentWithNumbersWrapper.class));
+
+		DBObject $min = DBObjectTestUtils.getValue(mapped, "$min");
+		assertThat((Integer) $min.get("nested.primitiveIntVal"), is(10));
+	}
+
+	/**
+	 * @see DATAMONGO-941
+	 */
+	@Test
+	public void shouldThrowErrorWhenMappingMinToNestedPropertyThatIsBigDecimal() {
+
+		exception.expect(InvalidDataAccessApiUsageException.class);
+		exception.expectMessage(BigDecimal.class.getName() + " is not supported for $min");
+
+		Update update = new Update().min("nested.bigDeciamVal", 10);
+
+		mapper.getMappedObject(update.getUpdateObject(), context.getPersistentEntity(DocumentWithNumbersWrapper.class));
+	}
+
+	/**
+	 * @see DATAMONGO-941
+	 */
+	@Test
+	public void shouldMapMinOnNestedPropertyThatDoesNotExistCorrectly() {
+
+		Update update = new Update().min("nested.xyz", 10);
+
+		DBObject mapped = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(DocumentWithNumbersWrapper.class));
+
+		DBObject $min = DBObjectTestUtils.getValue(mapped, "$min");
+		assertThat((Integer) $min.get("nested.xyz"), is(10));
+	}
+
 	@org.springframework.data.mongodb.core.mapping.Document(collection = "DocumentWithReferenceToInterface")
 	static interface DocumentWithReferenceToInterface {
 
@@ -699,5 +819,26 @@ public class UpdateMapperUnitTests {
 	static class Wrapper {
 
 		@Field("mapped") DocumentWithDBRefCollection nested;
+	}
+
+	static class DocumentWithNumbersWrapper {
+		DocumentWithNumbers nested;
+	}
+
+	static class DocumentWithNumbers {
+
+		BigInteger bigIntVal;
+		BigDecimal bigDeciamVal;
+		Byte byteVal;
+		Double doubleVal;
+		Float floatVal;
+		Integer intVal;
+		Long longVal;
+
+		byte primitiveByteVal;
+		double primitiveDoubleVal;
+		float primitiveFloatVal;
+		int primitiveIntVal;
+		long primitiveLongVal;
 	}
 }
