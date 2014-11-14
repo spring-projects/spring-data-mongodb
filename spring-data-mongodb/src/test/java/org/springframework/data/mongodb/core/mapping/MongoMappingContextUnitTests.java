@@ -106,6 +106,7 @@ public class MongoMappingContextUnitTests {
 		exception.expectMessage("firstname");
 		exception.expectMessage("lastname");
 		exception.expectMessage("foo");
+		exception.expectMessage("@Field");
 
 		MongoMappingContext context = new MongoMappingContext();
 		context.setApplicationContext(applicationContext);
