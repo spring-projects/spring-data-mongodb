@@ -35,7 +35,17 @@ import com.mongodb.DBObject;
 public class Index implements IndexDefinition {
 
 	public enum Duplicates {
-		RETAIN, DROP
+		RETAIN, //
+
+		/**
+		 * Dropping Duplicates was removed in MongoDB Server 2.8.0-rc0.
+		 * <p>
+		 * See https://jira.mongodb.org/browse/SERVER-14710
+		 * 
+		 * @deprecated since 1.7.
+		 */
+		@Deprecated//
+		DROP
 	}
 
 	private final Map<String, Direction> fieldSpec = new LinkedHashMap<String, Direction>();

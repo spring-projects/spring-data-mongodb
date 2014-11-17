@@ -49,6 +49,7 @@ import com.mongodb.Mongo;
  * 
  * @author Mark Pollack
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:infrastructure.xml")
@@ -60,7 +61,6 @@ public class GroupByTests {
 	MongoTemplate mongoTemplate;
 
 	@Autowired
-	@SuppressWarnings("unchecked")
 	public void setMongo(Mongo mongo) throws Exception {
 
 		MongoMappingContext mappingContext = new MongoMappingContext();
@@ -116,7 +116,7 @@ public class GroupByTests {
 	}
 
 	@Test
-	public void SimpleGroup() {
+	public void simpleGroupFunction() {
 
 		createGroupByData();
 		GroupByResults<XObject> results = mongoTemplate.group(
@@ -128,7 +128,7 @@ public class GroupByTests {
 	}
 
 	@Test
-	public void SimpleGroupWithKeyFunction() {
+	public void simpleGroupWithKeyFunction() {
 
 		createGroupByData();
 		GroupByResults<XObject> results = mongoTemplate.group(
@@ -140,7 +140,7 @@ public class GroupByTests {
 	}
 
 	@Test
-	public void SimpleGroupWithFunctionsAsResources() {
+	public void simpleGroupWithFunctionsAsResources() {
 
 		createGroupByData();
 		GroupByResults<XObject> results = mongoTemplate.group(
@@ -152,7 +152,7 @@ public class GroupByTests {
 	}
 
 	@Test
-	public void SimpleGroupWithQueryAndFunctionsAsResources() {
+	public void simpleGroupWithQueryAndFunctionsAsResources() {
 
 		createGroupByData();
 		GroupByResults<XObject> results = mongoTemplate.group(

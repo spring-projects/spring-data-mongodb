@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2011 - 2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,8 @@ import com.mongodb.DBObject;
  * Collects the results of executing a group operation.
  * 
  * @author Mark Pollack
- * @param <T> The class in which the results are mapped onto, accessible via an interator.
+ * @author Christoph Strobl
+ * @param <T> The class in which the results are mapped onto, accessible via an {@link Iterator}.
  */
 public class GroupByResults<T> implements Iterable<T> {
 
@@ -38,6 +39,7 @@ public class GroupByResults<T> implements Iterable<T> {
 	private String serverUsed;
 
 	public GroupByResults(List<T> mappedResults, DBObject rawResults) {
+
 		Assert.notNull(mappedResults);
 		Assert.notNull(rawResults);
 		this.mappedResults = mappedResults;
@@ -68,21 +70,24 @@ public class GroupByResults<T> implements Iterable<T> {
 	}
 
 	private void parseCount() {
+
 		Object object = rawResults.get("count");
-		if (object instanceof Double) {
-			count = (Double) object;
+		if (object instanceof Number) {
+			count = ((Number) object).doubleValue();
 		}
 
 	}
 
 	private void parseKeys() {
+
 		Object object = rawResults.get("keys");
-		if (object instanceof Integer) {
-			keys = (Integer) object;
+		if (object instanceof Number) {
+			keys = ((Number) object).intValue();
 		}
 	}
 
 	private void parseServerUsed() {
+
 		// "serverUsed" : "127.0.0.1:27017"
 		Object object = rawResults.get("serverUsed");
 		if (object instanceof String) {
