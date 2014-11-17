@@ -1011,8 +1011,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 						update.getUpdateObject(), entity);
 
 				if (LOGGER.isDebugEnabled()) {
-					LOGGER.debug("Calling update using query: " + queryObj + " and update: " + updateObj + " in collection: "
-							+ collectionName);
+					LOGGER.debug(String.format("Calling update using query: %s and update: %s in collection: %s",
+						serializeToJsonSafely(queryObj), serializeToJsonSafely(updateObj), collectionName));
 				}
 
 				MongoAction mongoAction = new MongoAction(writeConcern, MongoActionOperation.UPDATE, collectionName,
@@ -1189,7 +1189,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				WriteConcern writeConcernToUse = prepareWriteConcern(mongoAction);
 
 				if (LOGGER.isDebugEnabled()) {
-					LOGGER.debug("Remove using query: {} in collection: {}.", new Object[] { dboq, collection.getName() });
+					LOGGER.debug("Remove using query: {} in collection: {}.",
+						new Object[] { serializeToJsonSafely(dboq), collection.getName() });
 				}
 
 				WriteResult wr = writeConcernToUse == null ? collection.remove(dboq) : collection.remove(dboq,
@@ -1662,8 +1663,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			Class<T> entityClass) {
 		EntityReader<? super T, DBObject> readerToUse = this.mongoConverter;
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("findAndRemove using query: " + query + " fields: " + fields + " sort: " + sort + " for class: "
-					+ entityClass + " in collection: " + collectionName);
+			LOGGER.debug(String.format("findAndRemove using query: %s fields: %s sort: %s for class: %s in collection: %s",
+				serializeToJsonSafely(query), fields, sort, entityClass, collectionName));
 		}
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
 		return executeFindOneInternal(new FindAndRemoveCallback(queryMapper.getMappedObject(query, entity), fields, sort),
@@ -1687,8 +1688,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		DBObject mappedUpdate = updateMapper.getMappedObject(update.getUpdateObject(), entity);
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("findAndModify using query: " + mappedQuery + " fields: " + fields + " sort: " + sort
-					+ " for class: " + entityClass + " and update: " + mappedUpdate + " in collection: " + collectionName);
+			LOGGER.debug(String.format("findAndModify using query: %s fields: %s sort: %s for class: %s and update: %s " +
+				"in collection: %s", serializeToJsonSafely(mappedQuery), fields, sort, entityClass,
+				serializeToJsonSafely(mappedUpdate), collectionName));
 		}
 
 		return executeFindOneInternal(new FindAndModifyCallback(mappedQuery, fields, sort, mappedUpdate, options),
@@ -1996,13 +1998,14 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		public DBObject doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 			if (fields == null) {
 				if (LOGGER.isDebugEnabled()) {
-					LOGGER.debug("findOne using query: " + query + " in db.collection: " + collection.getFullName());
+					LOGGER.debug(String.format("findOne using query: %s in db.collection: %s",
+						serializeToJsonSafely(query), collection.getFullName()));
 				}
 				return collection.findOne(query);
 			} else {
 				if (LOGGER.isDebugEnabled()) {
-					LOGGER.debug("findOne using query: " + query + " fields: " + fields + " in db.collection: "
-							+ collection.getFullName());
+					LOGGER.debug(String.format("findOne using query: %s fields: %s in db.collection: %s",
+						serializeToJsonSafely(query), fields, collection.getFullName()));
 				}
 				return collection.findOne(query, fields);
 			}
