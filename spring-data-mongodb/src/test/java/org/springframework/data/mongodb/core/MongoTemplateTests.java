@@ -105,6 +105,8 @@ public class MongoTemplateTests {
 
 	private static final org.springframework.data.util.Version TWO_DOT_FOUR = org.springframework.data.util.Version
 			.parse("2.4");
+	private static final org.springframework.data.util.Version TWO_DOT_EIGHT = org.springframework.data.util.Version
+			.parse("2.8");
 
 	@Autowired MongoTemplate template;
 	@Autowired MongoDbFactory factory;
@@ -115,7 +117,6 @@ public class MongoTemplateTests {
 	@Rule public ExpectedException thrown = ExpectedException.none();
 
 	@Autowired
-	@SuppressWarnings("unchecked")
 	public void setMongo(Mongo mongo) throws Exception {
 
 		CustomConversions conversions = new CustomConversions(Arrays.asList(DateToDateTimeConverter.INSTANCE,
@@ -235,7 +236,7 @@ public class MongoTemplateTests {
 			template.insert(person);
 			fail("Expected DataIntegrityViolationException!");
 		} catch (DataIntegrityViolationException e) {
-			assertThat(e.getMessage(), containsString("E11000 duplicate key error index: database.person.$_id_  dup key:"));
+			assertThat(e.getMessage(), containsString("E11000 duplicate key error index: database.person.$_id_"));
 		}
 	}
 
@@ -289,8 +290,7 @@ public class MongoTemplateTests {
 			template.save(person);
 			fail("Expected DataIntegrityViolationException!");
 		} catch (DataIntegrityViolationException e) {
-			assertThat(e.getMessage(),
-					containsString("E11000 duplicate key error index: database.person.$firstName_-1  dup key:"));
+			assertThat(e.getMessage(), containsString("E11000 duplicate key error index: database.person.$firstName_-1"));
 		}
 	}
 
@@ -318,6 +318,7 @@ public class MongoTemplateTests {
 	}
 
 	@Test
+	@SuppressWarnings("deprecation")
 	public void testEnsureIndex() throws Exception {
 
 		Person p1 = new Person("Oliver");
@@ -339,19 +340,29 @@ public class MongoTemplateTests {
 			if ("age_-1".equals(ix.get("name"))) {
 				indexKey = ix.get("key").toString();
 				unique = (Boolean) ix.get("unique");
-				dropDupes = (Boolean) ix.get("dropDups");
+				if (mongoVersion.isLessThan(TWO_DOT_EIGHT)) {
+					dropDupes = (Boolean) ix.get("dropDups");
+					assertThat(dropDupes, is(true));
+				} else {
+					assertThat(ix.get("dropDups"), is(nullValue()));
+				}
 			}
 		}
 		assertThat(indexKey, is("{ \"age\" : -1}"));
 		assertThat(unique, is(true));
-		assertThat(dropDupes, is(true));
 
 		List<IndexInfo> indexInfoList = template.indexOps(Person.class).getIndexInfo();
 
 		assertThat(indexInfoList.size(), is(2));
 		IndexInfo ii = indexInfoList.get(1);
 		assertThat(ii.isUnique(), is(true));
-		assertThat(ii.isDropDuplicates(), is(true));
+
+		if (mongoVersion.isLessThan(TWO_DOT_EIGHT)) {
+			assertThat(ii.isDropDuplicates(), is(true));
+		} else {
+			assertThat(ii.isDropDuplicates(), is(false));
+		}
+
 		assertThat(ii.isSparse(), is(false));
 
 		List<IndexField> indexFields = ii.getIndexFields();
@@ -677,8 +688,8 @@ public class MongoTemplateTests {
 		Query q = new Query(Criteria.where("text").regex("^Hello.*"));
 		Message found1 = template.findAndRemove(q, Message.class);
 		Message found2 = template.findAndRemove(q, Message.class);
-		// Message notFound = template.findAndRemove(q, Message.class);
-		DBObject notFound = template.getCollection("").findAndRemove(q.getQueryObject());
+
+		Message notFound = template.findAndRemove(q, Message.class);
 		assertThat(found1, notNullValue());
 		assertThat(found2, notNullValue());
 		assertThat(notFound, nullValue());
