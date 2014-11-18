@@ -420,4 +420,24 @@ public class UpdateTests {
 		Update update = new Update().addToSet("key", new DateTime());
 		assertThat(update.toString(), is(notNullValue()));
 	}
+
+	/**
+	 * @see DATAMONGO-1097
+	 */
+	@Test(expected = IllegalArgumentException.class)
+	public void multiplyShouldThrowExceptionForNullMultiplier() {
+		new Update().multiply("key", null);
+	}
+
+	/**
+	 * @see DATAMONGO-1097
+	 */
+	@Test
+	public void multiplyShouldAddMultiplierAsItsDoubleValue() {
+
+		Update update = new Update().multiply("key", 10);
+
+		assertThat(update.getUpdateObject(), equalTo(new BasicDBObjectBuilder().add("$mul", new BasicDBObject("key", 10D))
+				.get()));
+	}
 }

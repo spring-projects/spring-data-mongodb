@@ -308,6 +308,22 @@ public class Update {
 		return this;
 	}
 
+	/**
+	 * Multiply the value of given key by the given number.
+	 * 
+	 * @see http://docs.mongodb.org/manual/reference/operator/update/mul/
+	 * @param key must not be {@literal null}.
+	 * @param multiplier must not be {@literal null}.
+	 * @return
+	 * @since 1.7
+	 */
+	public Update multiply(String key, Number multiplier) {
+
+		Assert.notNull(multiplier, "Multiplier must not be 'null'.");
+		addMultiFieldOperation("$mul", key, multiplier.doubleValue());
+		return this;
+	}
+
 	public DBObject getUpdateObject() {
 
 		DBObject dbo = new BasicDBObject();
