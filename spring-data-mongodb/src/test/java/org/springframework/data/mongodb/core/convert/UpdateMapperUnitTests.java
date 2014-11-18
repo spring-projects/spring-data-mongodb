@@ -44,6 +44,7 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.core.query.Update.Position;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
@@ -291,6 +292,76 @@ public class UpdateMapperUnitTests {
 		DBObject push = getAsDBObject(mappedObject, "$push");
 		assertThat(getAsDBObject(push, "category").containsField("$each"), is(true));
 		assertThat(getAsDBObject(push, "type").containsField("$each"), is(true));
+	}
+
+	/**
+	 * @see DATAMONGO-943
+	 */
+	@Test
+	public void updatePushEachAtPositionWorksCorrectlyWhenGivenPositiveIndexParameter() {
+
+		Update update = new Update().push("key").atPosition(2).each(Arrays.asList("Arya", "Arry", "Weasel"));
+
+		DBObject mappedObject = mapper.getMappedObject(update.getUpdateObject(), context.getPersistentEntity(Object.class));
+
+		DBObject push = getAsDBObject(mappedObject, "$push");
+		DBObject key = getAsDBObject(push, "key");
+
+		assertThat(key.containsField("$position"), is(true));
+		assertThat((Integer) key.get("$position"), is(2));
+		assertThat(getAsDBObject(push, "key").containsField("$each"), is(true));
+	}
+
+	/**
+	 * @see DATAMONGO-943
+	 */
+	@Test
+	public void updatePushEachAtPositionWorksCorrectlyWhenGivenPositionFirst() {
+
+		Update update = new Update().push("key").atPosition(Position.FIRST).each(Arrays.asList("Arya", "Arry", "Weasel"));
+
+		DBObject mappedObject = mapper.getMappedObject(update.getUpdateObject(), context.getPersistentEntity(Object.class));
+
+		DBObject push = getAsDBObject(mappedObject, "$push");
+		DBObject key = getAsDBObject(push, "key");
+
+		assertThat(key.containsField("$position"), is(true));
+		assertThat((Integer) key.get("$position"), is(0));
+		assertThat(getAsDBObject(push, "key").containsField("$each"), is(true));
+	}
+
+	/**
+	 * @see DATAMONGO-943
+	 */
+	@Test
+	public void updatePushEachAtPositionWorksCorrectlyWhenGivenPositionLast() {
+
+		Update update = new Update().push("key").atPosition(Position.LAST).each(Arrays.asList("Arya", "Arry", "Weasel"));
+
+		DBObject mappedObject = mapper.getMappedObject(update.getUpdateObject(), context.getPersistentEntity(Object.class));
+
+		DBObject push = getAsDBObject(mappedObject, "$push");
+		DBObject key = getAsDBObject(push, "key");
+
+		assertThat(key.containsField("$position"), is(false));
+		assertThat(getAsDBObject(push, "key").containsField("$each"), is(true));
+	}
+
+	/**
+	 * @see DATAMONGO-943
+	 */
+	@Test
+	public void updatePushEachAtPositionWorksCorrectlyWhenGivenPositionNull() {
+
+		Update update = new Update().push("key").atPosition(null).each(Arrays.asList("Arya", "Arry", "Weasel"));
+
+		DBObject mappedObject = mapper.getMappedObject(update.getUpdateObject(), context.getPersistentEntity(Object.class));
+
+		DBObject push = getAsDBObject(mappedObject, "$push");
+		DBObject key = getAsDBObject(push, "key");
+
+		assertThat(key.containsField("$position"), is(false));
+		assertThat(getAsDBObject(push, "key").containsField("$each"), is(true));
 	}
 
 	/**
