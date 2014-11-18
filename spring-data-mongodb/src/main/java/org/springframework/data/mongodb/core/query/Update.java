@@ -163,7 +163,8 @@ public class Update {
 
 	/**
 	 * Update using {@code $push} modifier. <br/>
-	 * Allows creation of {@code $push} command for single or multiple (using {@code $each}) values.
+	 * Allows creation of {@code $push} command for single or multiple (using {@code $each}) values as well as using
+	 * {@code $position}.
 	 * 
 	 * @see http://docs.mongodb.org/manual/reference/operator/update/push/
 	 * @see http://docs.mongodb.org/manual/reference/operator/update/each/
@@ -578,6 +579,31 @@ public class Update {
 	}
 
 	/**
+	 * {@link Modifier} implementation used to propagate {@code $position}.
+	 * 
+	 * @author Christoph Strobl
+	 * @since 1.7
+	 */
+	private static class PositionModifier implements Modifier {
+
+		private final int position;
+
+		public PositionModifier(int position) {
+			this.position = position;
+		}
+
+		@Override
+		public String getKey() {
+			return "$position";
+		}
+
+		@Override
+		public Object getValue() {
+			return position;
+		}
+	}
+
+	/**
 	 * Builder for creating {@code $push} modifiers
 	 * 
 	 * @author Christoph Strobl
@@ -603,6 +629,42 @@ public class Update {
 
 			this.modifiers.addModifier(new Each(values));
 			return Update.this.push(key, this.modifiers);
+		}
+
+		/**
+		 * Forces values to be added at the given {@literal position}.
+		 * 
+		 * @param position needs to be greater than or equal to zero.
+		 * @return
+		 * @since 1.7
+		 */
+		public PushOperatorBuilder atPosition(int position) {
+
+			if (position < 0) {
+				throw new IllegalArgumentException("Position must be greater than or equal to zero.");
+			}
+
+			this.modifiers.addModifier(new PositionModifier(position));
+
+			return this;
+		}
+
+		/**
+		 * Forces values to be added at given {@literal position}.
+		 * 
+		 * @param position can be {@literal null} which will be appended at the last position.
+		 * @return
+		 * @since 1.7
+		 */
+		public PushOperatorBuilder atPosition(Position position) {
+
+			if (position == null || Position.LAST.equals(position)) {
+				return this;
+			}
+
+			this.modifiers.addModifier(new PositionModifier(0));
+
+			return this;
 		}
 
 		/**

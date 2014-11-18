@@ -422,6 +422,8 @@ public class UpdateTests {
 	}
 
 	/**
+	 * <<<<<<< HEAD
+	 * 
 	 * @see DATAMONGO-1097
 	 */
 	@Test(expected = IllegalArgumentException.class)
@@ -475,5 +477,13 @@ public class UpdateTests {
 
 		assertThat(update.getUpdateObject(),
 				equalTo(new BasicDBObjectBuilder().add("$bit", new BasicDBObject("key", new BasicDBObject("xor", 10L))).get()));
+	}
+
+	/**
+	 * @see DATAMONGO-943
+	 */
+	@Test(expected = IllegalArgumentException.class)
+	public void pushShouldThrowExceptionWhenGivenNegativePosition() {
+		new Update().push("foo").atPosition(-1).each("booh");
 	}
 }
