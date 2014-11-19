@@ -37,10 +37,11 @@ import org.springframework.data.convert.EntityInstantiator;
 import org.springframework.data.convert.TypeMapper;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.AssociationHandler;
+import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.PreferredConstructor.Parameter;
 import org.springframework.data.mapping.PropertyHandler;
 import org.springframework.data.mapping.context.MappingContext;
-import org.springframework.data.mapping.model.BeanWrapper;
+import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
 import org.springframework.data.mapping.model.DefaultSpELExpressionEvaluator;
 import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mapping.model.ParameterValueProvider;
@@ -248,16 +249,18 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		EntityInstantiator instantiator = instantiators.getInstantiatorFor(entity);
 		S instance = instantiator.createInstance(entity, provider);
 
-		final BeanWrapper<S> wrapper = BeanWrapper.create(instance, conversionService);
+		final PersistentPropertyAccessor accessor = new ConvertingPropertyAccessor(entity.getPropertyAccessor(instance),
+				conversionService);
+
 		final MongoPersistentProperty idProperty = entity.getIdProperty();
-		final S result = wrapper.getBean();
+		final S result = instance;
 
 		// make sure id property is set before all other properties
 		Object idValue = null;
 
 		if (idProperty != null) {
 			idValue = getValueInternal(idProperty, dbo, evaluator, path);
-			wrapper.setProperty(idProperty, idValue);
+			accessor.setProperty(idProperty, idValue);
 		}
 
 		final ObjectPath currentPath = path.push(result, entity, idValue);
@@ -275,7 +278,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 					return;
 				}
 
-				wrapper.setProperty(prop, getValueInternal(prop, dbo, evaluator, currentPath));
+				accessor.setProperty(prop, getValueInternal(prop, dbo, evaluator, currentPath));
 			}
 		});
 
@@ -297,7 +300,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				DbRefResolverCallback callback = new DefaultDbRefResolverCallback(dbo, currentPath, evaluator,
 						MappingMongoConverter.this);
 
-				wrapper.setProperty(property, dbRefResolver.resolveDbRef(property, dbref, callback, handler));
+				accessor.setProperty(property, dbRefResolver.resolveDbRef(property, dbref, callback, handler));
 			}
 		});
 
@@ -397,13 +400,13 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			throw new MappingException("No mapping metadata found for entity of type " + obj.getClass().getName());
 		}
 
-		final BeanWrapper<Object> wrapper = BeanWrapper.create(obj, conversionService);
+		final PersistentPropertyAccessor accessor = entity.getPropertyAccessor(obj);
 		final MongoPersistentProperty idProperty = entity.getIdProperty();
 
 		if (!dbo.containsField("_id") && null != idProperty) {
 
 			try {
-				Object id = wrapper.getProperty(idProperty, Object.class);
+				Object id = accessor.getProperty(idProperty);
 				dbo.put("_id", idMapper.convertId(id));
 			} catch (ConversionException ignored) {}
 		}
@@ -416,7 +419,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 					return;
 				}
 
-				Object propertyObj = wrapper.getProperty(prop);
+				Object propertyObj = accessor.getProperty(prop);
 
 				if (null != propertyObj) {
 
@@ -430,10 +433,12 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		});
 
 		entity.doWithAssociations(new AssociationHandler<MongoPersistentProperty>() {
+
 			public void doWithAssociation(Association<MongoPersistentProperty> association) {
+
 				MongoPersistentProperty inverseProp = association.getInverse();
-				Class<?> type = inverseProp.getType();
-				Object propertyObj = wrapper.getProperty(inverseProp, type);
+				Object propertyObj = accessor.getProperty(inverseProp);
+
 				if (null != propertyObj) {
 					writePropertyInternal(propertyObj, dbo, inverseProp);
 				}
@@ -807,8 +812,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		if (target.getClass().equals(idProperty.getType())) {
 			id = target;
 		} else {
-			BeanWrapper<Object> wrapper = BeanWrapper.create(target, conversionService);
-			id = wrapper.getProperty(idProperty, Object.class);
+			PersistentPropertyAccessor accessor = targetEntity.getPropertyAccessor(target);
+			id = accessor.getProperty(idProperty);
 		}
 
 		if (null == id) {

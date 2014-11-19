@@ -15,8 +15,8 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
+import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.context.MappingContext;
-import org.springframework.data.mapping.model.BeanWrapper;
 import org.springframework.data.mapping.model.DefaultSpELExpressionEvaluator;
 import org.springframework.data.mapping.model.SpELContext;
 import org.springframework.data.mapping.model.SpELExpressionEvaluator;
@@ -60,19 +60,19 @@ class DefaultDbRefProxyHandler implements DbRefProxyHandler {
 			return proxy;
 		}
 
-		MongoPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(property);
-		MongoPersistentProperty idProperty = persistentEntity.getIdProperty();
-		
-		if(idProperty.usePropertyAccess()) {
+		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(property);
+		MongoPersistentProperty idProperty = entity.getIdProperty();
+
+		if (idProperty.usePropertyAccess()) {
 			return proxy;
 		}
-		
+
 		SpELExpressionEvaluator evaluator = new DefaultSpELExpressionEvaluator(proxy, spELContext);
-		BeanWrapper<Object> proxyWrapper = BeanWrapper.create(proxy, null);
-		
+		PersistentPropertyAccessor accessor = entity.getPropertyAccessor(proxy);
+
 		DBObject object = new BasicDBObject(idProperty.getFieldName(), source.getId());
-		ObjectPath objectPath = ObjectPath.ROOT.push(proxy, persistentEntity, null);
-		proxyWrapper.setProperty(idProperty, resolver.getValueInternal(idProperty, object, evaluator, objectPath));
+		ObjectPath objectPath = ObjectPath.ROOT.push(proxy, entity, null);
+		accessor.setProperty(idProperty, resolver.getValueInternal(idProperty, object, evaluator, objectPath));
 
 		return proxy;
 	}

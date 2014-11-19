@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 by the original author(s).
+ * Copyright 2011-2014 by the original author(s).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,23 +36,31 @@ import org.springframework.data.mongodb.repository.support.MappingMongoEntityInf
 @RunWith(MockitoJUnitRunner.class)
 public class MappingMongoEntityInformationUnitTests {
 
-	@Mock
-	MongoPersistentEntity<Person> info;
+	@Mock MongoPersistentEntity<Person> info;
 
 	@Before
 	public void setUp() {
+
 		when(info.getType()).thenReturn(Person.class);
 		when(info.getCollection()).thenReturn("Person");
 	}
 
+	/**
+	 * @see DATAMONGO-248
+	 */
 	@Test
 	public void usesEntityCollectionIfNoCustomOneGiven() {
+
 		MongoEntityInformation<Person, Long> information = new MappingMongoEntityInformation<Person, Long>(info);
 		assertThat(information.getCollectionName(), is("Person"));
 	}
 
+	/**
+	 * @see DATAMONGO-248
+	 */
 	@Test
 	public void usesCustomCollectionIfGiven() {
+
 		MongoEntityInformation<Person, Long> information = new MappingMongoEntityInformation<Person, Long>(info, "foobar");
 		assertThat(information.getCollectionName(), is("foobar"));
 	}

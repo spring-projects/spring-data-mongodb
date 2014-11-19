@@ -40,8 +40,8 @@ import org.springframework.data.annotation.AccessType;
 import org.springframework.data.annotation.AccessType.Type;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.PersistenceConstructor;
+import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.PropertyPath;
-import org.springframework.data.mapping.model.BeanWrapper;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.MongoExceptionTranslator;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverterUnitTests.Person;
@@ -505,6 +505,7 @@ public class DbRefMappingMongoConverterUnitTests {
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(ClassWithLazyDbRefs.class);
 		MongoPersistentProperty property = entity.getPersistentProperty("dbRefToConcreteType");
+		MongoPersistentEntity<?> propertyEntity = mappingContext.getPersistentEntity(property);
 
 		String idValue = new ObjectId().toString();
 		DBRef dbRef = converter.toDBRef(new LazyDbRefTarget(idValue), property);
@@ -513,10 +514,10 @@ public class DbRefMappingMongoConverterUnitTests {
 
 		ClassWithLazyDbRefs result = converter.read(ClassWithLazyDbRefs.class, object);
 
-		BeanWrapper<LazyDbRefTarget> wrapper = BeanWrapper.create(result.dbRefToConcreteType, null);
+		PersistentPropertyAccessor accessor = propertyEntity.getPropertyAccessor(result.dbRefToConcreteType);
 		MongoPersistentProperty idProperty = mappingContext.getPersistentEntity(LazyDbRefTarget.class).getIdProperty();
 
-		assertThat(wrapper.getProperty(idProperty), is(notNullValue()));
+		assertThat(accessor.getProperty(idProperty), is(notNullValue()));
 		assertProxyIsResolved(result.dbRefToConcreteType, false);
 	}
 

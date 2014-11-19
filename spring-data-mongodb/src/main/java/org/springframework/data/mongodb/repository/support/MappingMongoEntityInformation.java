@@ -17,11 +17,9 @@ package org.springframework.data.mongodb.repository.support;
 
 import java.io.Serializable;
 
-import org.springframework.data.mapping.model.BeanWrapper;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
-import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
-import org.springframework.data.repository.core.support.AbstractEntityInformation;
+import org.springframework.data.repository.core.support.PersistentEntityInformation;
 
 /**
  * {@link MongoEntityInformation} implementation using a {@link MongoPersistentEntity} instance to lookup the necessary
@@ -30,7 +28,7 @@ import org.springframework.data.repository.core.support.AbstractEntityInformatio
  * 
  * @author Oliver Gierke
  */
-public class MappingMongoEntityInformation<T, ID extends Serializable> extends AbstractEntityInformation<T, ID>
+public class MappingMongoEntityInformation<T, ID extends Serializable> extends PersistentEntityInformation<T, ID>
 		implements MongoEntityInformation<T, ID> {
 
 	private final MongoPersistentEntity<T> entityMetadata;
@@ -50,40 +48,14 @@ public class MappingMongoEntityInformation<T, ID extends Serializable> extends A
 	 * collection name.
 	 * 
 	 * @param entity must not be {@literal null}.
-	 * @param customCollectionName
+	 * @param customCollectionName can be {@literal null}.
 	 */
 	public MappingMongoEntityInformation(MongoPersistentEntity<T> entity, String customCollectionName) {
-		super(entity.getType());
+
+		super(entity);
+
 		this.entityMetadata = entity;
 		this.customCollectionName = customCollectionName;
-	}
-
-	/* 
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.support.EntityInformation#getId(java.lang.Object)
-	 */
-	@SuppressWarnings("unchecked")
-	public ID getId(T entity) {
-
-		MongoPersistentProperty idProperty = entityMetadata.getIdProperty();
-
-		if (idProperty == null) {
-			return null;
-		}
-
-		try {
-			return (ID) BeanWrapper.create(entity, null).getProperty(idProperty);
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	/* (non-Javadoc)
-	 * @see org.springframework.data.repository.support.EntityInformation#getIdType()
-	 */
-	@SuppressWarnings("unchecked")
-	public Class<ID> getIdType() {
-		return (Class<ID>) entityMetadata.getIdProperty().getType();
 	}
 
 	/* (non-Javadoc)

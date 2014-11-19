@@ -19,7 +19,6 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
-import java.lang.annotation.Annotation;
 import java.util.Collections;
 import java.util.List;
 
@@ -28,7 +27,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 import org.springframework.data.geo.Point;
-import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mongodb.core.DBObjectTestUtils;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolver.IndexDefinitionHolder;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolverUnitTests.CompoundIndexResolutionTests;
@@ -36,14 +34,15 @@ import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexRes
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolverUnitTests.IndexResolutionTests;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolverUnitTests.MixedIndexResolutionTests;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolverUnitTests.TextIndexedResolutionTests;
+import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.Language;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
-import org.springframework.data.mongodb.core.mapping.MongoPersistentEntityTestDummy.MongoPersistentEntityDummyBuilder;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.util.ClassTypeInformation;
 
 import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DBObject;
@@ -741,39 +740,22 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		 * @see DATAMONGO-962
 		 */
 		@Test
+		@SuppressWarnings({ "rawtypes", "unchecked" })
 		public void shouldCatchCyclicReferenceExceptionOnRoot() {
 
-			Document documentDummy = new Document() {
-
-				@Override
-				public Class<? extends Annotation> annotationType() {
-					return Document.class;
-				}
-
-				@Override
-				public String collection() {
-					return null;
-				}
-
-				@Override
-				public String language() {
-					return null;
-				}
-			};
+			MongoPersistentEntity entity = new BasicMongoPersistentEntity<Object>(ClassTypeInformation.from(Object.class));
 
 			MongoPersistentProperty propertyMock = mock(MongoPersistentProperty.class);
 			when(propertyMock.isEntity()).thenReturn(true);
-			when(propertyMock.getOwner()).thenReturn(
-					(PersistentEntity) MongoPersistentEntityDummyBuilder.forClass(Object.class).build());
+			when(propertyMock.getOwner()).thenReturn(entity);
 			when(propertyMock.getActualType()).thenThrow(
 					new MongoPersistentEntityIndexResolver.CyclicPropertyReferenceException("foo", Object.class, "bar"));
 
-			MongoPersistentEntity<SelfCyclingViaCollectionType> dummy = MongoPersistentEntityDummyBuilder
-					.forClass(SelfCyclingViaCollectionType.class).withCollection("foo").and(propertyMock).and(documentDummy)
-					.build();
+			MongoPersistentEntity<SelfCyclingViaCollectionType> selfCyclingEntity = new BasicMongoPersistentEntity<SelfCyclingViaCollectionType>(
+					ClassTypeInformation.from(SelfCyclingViaCollectionType.class));
 
 			new MongoPersistentEntityIndexResolver(prepareMappingContext(SelfCyclingViaCollectionType.class))
-					.resolveIndexForEntity(dummy);
+					.resolveIndexForEntity(selfCyclingEntity);
 		}
 
 		/**
