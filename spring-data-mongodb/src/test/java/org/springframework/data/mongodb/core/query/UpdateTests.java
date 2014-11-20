@@ -440,4 +440,40 @@ public class UpdateTests {
 		assertThat(update.getUpdateObject(), equalTo(new BasicDBObjectBuilder().add("$mul", new BasicDBObject("key", 10D))
 				.get()));
 	}
+
+	/**
+	 * @see DATAMONGO-1101
+	 */
+	@Test
+	public void getUpdateObjectShouldReturnCorrectRepresentationForBitwiseAnd() {
+
+		Update update = new Update().bitwise("key").and(10L);
+
+		assertThat(update.getUpdateObject(),
+				equalTo(new BasicDBObjectBuilder().add("$bit", new BasicDBObject("key", new BasicDBObject("and", 10L))).get()));
+	}
+
+	/**
+	 * @see DATAMONGO-1101
+	 */
+	@Test
+	public void getUpdateObjectShouldReturnCorrectRepresentationForBitwiseOr() {
+
+		Update update = new Update().bitwise("key").or(10L);
+
+		assertThat(update.getUpdateObject(),
+				equalTo(new BasicDBObjectBuilder().add("$bit", new BasicDBObject("key", new BasicDBObject("or", 10L))).get()));
+	}
+
+	/**
+	 * @see DATAMONGO-1101
+	 */
+	@Test
+	public void getUpdateObjectShouldReturnCorrectRepresentationForBitwiseXor() {
+
+		Update update = new Update().bitwise("key").xor(10L);
+
+		assertThat(update.getUpdateObject(),
+				equalTo(new BasicDBObjectBuilder().add("$bit", new BasicDBObject("key", new BasicDBObject("xor", 10L))).get()));
+	}
 }

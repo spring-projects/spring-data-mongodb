@@ -324,6 +324,17 @@ public class Update {
 		return this;
 	}
 
+	/**
+	 * The operator supports bitwise {@code and}, bitwise {@code or}, and bitwise {@code xor} operations.
+	 * 
+	 * @param key
+	 * @return
+	 * @since 1.7
+	 */
+	public BitwiseOperatorBuilder bitwise(String key) {
+		return new BitwiseOperatorBuilder(this, key);
+	}
+
 	public DBObject getUpdateObject() {
 
 		DBObject dbo = new BasicDBObject();
@@ -681,6 +692,81 @@ public class Update {
 		 */
 		public Update value(Object value) {
 			return Update.this.addToSet(this.key, value);
+		}
+	}
+
+	/**
+	 * @author Christoph Strobl
+	 * @since 1.7
+	 */
+	public static class BitwiseOperatorBuilder {
+
+		private final String key;
+		private final Update reference;
+		private static final String BIT_OPERATOR = "$bit";
+
+		private enum BitwiseOperator {
+			AND, OR, XOR;
+
+			@Override
+			public String toString() {
+				return super.toString().toLowerCase();
+			};
+		}
+
+		/**
+		 * Creates a new {@link BitwiseOperatorBuilder}.
+		 * 
+		 * @param reference must not be {@literal null}
+		 * @param key must not be {@literal null}
+		 */
+		protected BitwiseOperatorBuilder(Update reference, String key) {
+
+			Assert.notNull(reference, "Reference must not be null!");
+			Assert.notNull(key, "Key must not be null!");
+
+			this.reference = reference;
+			this.key = key;
+		}
+
+		/**
+		 * Updates to the result of a bitwise and operation between the current value and the given one.
+		 * 
+		 * @param value
+		 * @return
+		 */
+		public Update and(long value) {
+
+			addFieldOperation(BitwiseOperator.AND, value);
+			return reference;
+		}
+
+		/**
+		 * Updates to the result of a bitwise or operation between the current value and the given one.
+		 * 
+		 * @param value
+		 * @return
+		 */
+		public Update or(long value) {
+
+			addFieldOperation(BitwiseOperator.OR, value);
+			return reference;
+		}
+
+		/**
+		 * Updates to the result of a bitwise xor operation between the current value and the given one.
+		 * 
+		 * @param value
+		 * @return
+		 */
+		public Update xor(long value) {
+
+			addFieldOperation(BitwiseOperator.XOR, value);
+			return reference;
+		}
+
+		private void addFieldOperation(BitwiseOperator operator, Number value) {
+			reference.addMultiFieldOperation(BIT_OPERATOR, key, new BasicDBObject(operator.toString(), value));
 		}
 	}
 }
