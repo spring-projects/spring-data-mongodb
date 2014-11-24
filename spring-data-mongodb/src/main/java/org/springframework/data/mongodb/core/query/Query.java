@@ -385,12 +385,21 @@ public class Query {
 			return false;
 		}
 
-		Query that = (Query) obj;
+		return querySettingsEquals((Query) obj);
+	}
+
+	/**
+	 * Tests whether the settings of the given {@link Query} are equal to this query.
+	 * 
+	 * @param that
+	 * @return
+	 */
+	protected boolean querySettingsEquals(Query that) {
 
 		boolean criteriaEqual = this.criteria.equals(that.criteria);
-		boolean fieldsEqual = this.fieldSpec == null ? that.fieldSpec == null : this.fieldSpec.equals(that.fieldSpec);
-		boolean sortEqual = this.sort == null ? that.sort == null : this.sort.equals(that.sort);
-		boolean hintEqual = this.hint == null ? that.hint == null : this.hint.equals(that.hint);
+		boolean fieldsEqual = nullSafeEquals(this.fieldSpec, that.fieldSpec);
+		boolean sortEqual = nullSafeEquals(this.sort, that.sort);
+		boolean hintEqual = nullSafeEquals(this.hint, that.hint);
 		boolean skipEqual = this.skip == that.skip;
 		boolean limitEqual = this.limit == that.limit;
 		boolean metaEqual = nullSafeEquals(this.meta, that.meta);
