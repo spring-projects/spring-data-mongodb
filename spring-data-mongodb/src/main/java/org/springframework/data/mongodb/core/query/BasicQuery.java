@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.core.query;
 
+import static org.springframework.util.ObjectUtils.*;
+
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
@@ -25,6 +27,7 @@ import com.mongodb.util.JSON;
  * @author Thomas Risberg
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Thomas Darimont
  */
 public class BasicQuery extends Query {
 
@@ -96,5 +99,48 @@ public class BasicQuery extends Query {
 	 */
 	protected void setFieldsObject(DBObject fieldsObject) {
 		this.fieldsObject = fieldsObject;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+
+		if (this == o) {
+			return true;
+		}
+
+		if (!(o instanceof BasicQuery)) {
+			return false;
+		}
+
+		BasicQuery that = (BasicQuery) o;
+
+		if (!querySettingsEquals(that)) {
+			return false;
+		}
+
+		if (!nullSafeEquals(fieldsObject, that.fieldsObject)) {
+			return false;
+		}
+
+		if (!nullSafeEquals(queryObject, that.queryObject)) {
+			return false;
+		}
+
+		if (!nullSafeEquals(sortObject, that.sortObject)) {
+			return false;
+		}
+
+		return true;
+	}
+
+	@Override
+	public int hashCode() {
+
+		int result = super.hashCode();
+		result = 31 * result + nullSafeHashCode(queryObject);
+		result = 31 * result + nullSafeHashCode(fieldsObject);
+		result = 31 * result + nullSafeHashCode(sortObject);
+
+		return result;
 	}
 }
