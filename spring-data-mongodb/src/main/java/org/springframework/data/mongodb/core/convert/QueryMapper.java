@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
+import static org.springframework.data.mongodb.core.convert.QueryMapper.KeywordFactory.*;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -45,6 +47,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 import org.springframework.validation.Errors;
 import org.springframework.validation.MapBindingResult;
 import org.springframework.validation.ObjectError;
@@ -103,7 +106,7 @@ public class QueryMapper {
 	public DBObject getMappedObject(DBObject query, MongoPersistentEntity<?> entity) {
 
 		if (isNestedKeyword(query)) {
-			return getMappedKeyword(KeywordFactory.forDbo(query, entity, mappingContext), entity);
+			return getMappedKeyword(keywordFor(query, entity, mappingContext), entity);
 		}
 
 		DBObject result = new BasicDBObject();
@@ -121,7 +124,8 @@ public class QueryMapper {
 			}
 
 			if (isKeyword(key)) {
-				result.putAll(getMappedKeyword(new Keyword(query, key), entity));
+				result.putAll(getMappedKeyword(new Keyword(query, key, new KeywordContext(null, entity, mappingContext)),
+						entity));
 				continue;
 			}
 
@@ -202,7 +206,7 @@ public class QueryMapper {
 		Object value;
 
 		if (isNestedKeyword(rawValue) && !field.isIdField()) {
-			Keyword keyword = KeywordFactory.forDbo((DBObject) rawValue, field.getProperty(), mappingContext);
+			Keyword keyword = keywordFor((DBObject) rawValue, field.getProperty(), mappingContext);
 			value = getMappedKeyword(field, keyword);
 		} else {
 			value = getMappedValue(field, rawValue);
@@ -306,8 +310,7 @@ public class QueryMapper {
 		}
 
 		if (isNestedKeyword(value)) {
-			return getMappedKeyword(KeywordFactory.forDbo((DBObject) value, documentField.getProperty(), mappingContext),
-					null);
+			return getMappedKeyword(keywordFor((DBObject) value, documentField.getProperty(), mappingContext), null);
 		}
 
 		if (isAssociationConversionNecessary(documentField, value)) {
@@ -529,22 +532,40 @@ public class QueryMapper {
 
 		private static final String N_OR_PATTERN = "\\$.*or";
 		private List<Validator> validators;
-		private KeywordContext context = new KeywordContext();
-
 		private final String key;
+		private final Object value;
+		private final KeywordContext context;
 
-		public Keyword(DBObject source, String key) {
-			this.key = key;
-			this.context.setValue(source.get(key));
+		private static final Validator MIN_OPERATOR_VALIDATOR = KeywordParameterTypeValidator.whitelist(Byte.class,
+				Short.class, Integer.class, Long.class, Float.class, Double.class, Date.class);
+
+		public Keyword(DBObject dbo, KeywordContext context) {
+			this(dbo, assertAndReturnOnlySingleKey(dbo), context);
 		}
 
-		public Keyword(DBObject dbObject) {
+		public Keyword(DBObject dbo, String key, KeywordContext context) {
 
-			Set<String> keys = dbObject.keySet();
+			this.key = key;
+			this.value = dbo.get(key);
+			this.context = context;
+			this.validators = createValidators(key);
+		}
+
+		private List<Validator> createValidators(String key) {
+
+			if (key.equalsIgnoreCase("$min")) {
+				return Arrays.asList(MIN_OPERATOR_VALIDATOR);
+			}
+
+			return Collections.<Validator> emptyList();
+		}
+
+		static String assertAndReturnOnlySingleKey(DBObject dbo) {
+
+			Set<String> keys = dbo.keySet();
 			Assert.isTrue(keys.size() == 1, "Can only use a single value DBObject!");
 
-			this.key = keys.iterator().next();
-			this.context.setValue(dbObject.get(key));
+			return keys.iterator().next();
 		}
 
 		/**
@@ -561,7 +582,11 @@ public class QueryMapper {
 		}
 
 		public boolean hasIterableValue() {
-			return context.isIterableValue();
+			return value instanceof Iterable;
+		}
+
+		boolean isDBObjectValue() {
+			return value instanceof DBObject;
 		}
 
 		public String getKey() {
@@ -570,7 +595,11 @@ public class QueryMapper {
 
 		@SuppressWarnings("unchecked")
 		public <T> T getValue() {
-			return (T) context.getValue();
+			return (T) this.value;
+		}
+
+		public KeywordContext getContext() {
+			return context;
 		}
 
 		/**
@@ -587,29 +616,30 @@ public class QueryMapper {
 
 			MapBindingResult validationResult = new MapBindingResult(new LinkedHashMap(), this.key);
 			for (Validator validator : validators) {
-				if (validator.supports(KeywordContext.class)) {
+
+				if (validator.supports(Keyword.class)) {
+					validator.validate(this, validationResult);
+				}
+
+				if (this.value == null) {
+					continue;
+				}
+
+				if (validator.supports(this.value.getClass())) {
 					validator.validate(context, validationResult);
 				}
-				if (context.getValue() != null && validator.supports(context.getValue().getClass())) {
-					validator.validate(context, validationResult);
-				}
 			}
 
-			if (validationResult.hasErrors()) {
-				StringBuilder sb = new StringBuilder();
-				for (ObjectError error : validationResult.getAllErrors()) {
-					sb.append(error.getDefaultMessage() + "\r\n");
-				}
-				throw new InvalidDataAccessApiUsageException(sb.toString());
+			if (!validationResult.hasErrors()) {
+				return;
 			}
-		}
 
-		public void registerValidator(Validator validator) {
-
-			if (this.validators == null) {
-				this.validators = new ArrayList<Validator>(1);
+			StringBuilder sb = new StringBuilder();
+			for (ObjectError error : validationResult.getAllErrors()) {
+				sb.append(error.getDefaultMessage() + "\r\n");
 			}
-			this.validators.add(validator);
+
+			throw new InvalidDataAccessApiUsageException(sb.toString());
 		}
 	}
 
@@ -621,52 +651,28 @@ public class QueryMapper {
 	 */
 	static class KeywordContext {
 
-		private MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
-		private MongoPersistentEntity<?> entity;
-		private MongoPersistentProperty property;
-		private Object value;
+		private final MongoPersistentProperty property;
+		private final MongoPersistentEntity<?> entity;
+		private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 
-		boolean isIterableValue() {
-			return value instanceof Iterable;
+		public KeywordContext(MongoPersistentProperty property, MongoPersistentEntity<?> entity,
+				MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
+			this.property = property;
+			this.entity = entity;
+			this.mappingContext = mappingContext;
 		}
 
 		public MongoPersistentEntity<?> getEntity() {
 			return entity;
 		}
 
-		void setEntity(MongoPersistentEntity<?> entity) {
-			this.entity = entity;
-		}
-
 		public MongoPersistentProperty getProperty() {
 			return property;
-		}
-
-		void setProperty(MongoPersistentProperty property) {
-			this.property = property;
-		}
-
-		public Object getValue() {
-			return value;
-		}
-
-		void setValue(Object value) {
-			this.value = value;
-		}
-
-		boolean isDBObjectValue() {
-			return value instanceof DBObject;
 		}
 
 		public MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> getMappingContext() {
 			return mappingContext;
 		}
-
-		public void setMappingContext(
-				MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
-			this.mappingContext = mappingContext;
-		}
-
 	}
 
 	/**
@@ -678,40 +684,22 @@ public class QueryMapper {
 	 */
 	static class KeywordFactory {
 
-		static Keyword forDbo(DBObject source,
+		static Keyword keywordFor(DBObject source,
 				MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
-			return forDbo(source, (MongoPersistentEntity<?>) null, mappingContext);
+			return keywordFor(source, (MongoPersistentEntity<?>) null, mappingContext);
 		}
 
-		static Keyword forDbo(DBObject source, MongoPersistentEntity<?> entity,
+		static Keyword keywordFor(DBObject source, MongoPersistentEntity<?> entity,
 				MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
-
-			Keyword keyword = new Keyword(source);
-			keyword.context.setEntity(entity);
-			keyword.context.setMappingContext(mappingContext);
-			registerValidator(keyword);
-			return keyword;
+			return new Keyword(source, new KeywordContext(null, entity, mappingContext));
 		}
 
-		static Keyword forDbo(DBObject source, MongoPersistentProperty property,
+		static Keyword keywordFor(DBObject source, MongoPersistentProperty property,
 				MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
 
-			Keyword keyword = new Keyword(source);
-			keyword.context.setProperty(property);
-			keyword.context.setMappingContext(mappingContext);
-			if (property != null) {
-				keyword.context.setEntity((MongoPersistentEntity<?>) property.getOwner());
-			}
-			registerValidator(keyword);
-			return keyword;
-		}
-
-		private static void registerValidator(Keyword keyword) {
-
-			if (keyword.getKey().equalsIgnoreCase("$min")) {
-				keyword.registerValidator(KeywordContextParameterTypeValidator.whitelist(Byte.class, Short.class,
-						Integer.class, Long.class, Float.class, Double.class, Date.class));
-			}
+			KeywordContext context = new KeywordContext(property, property == null ? null
+					: (MongoPersistentEntity<?>) property.getOwner(), mappingContext);
+			return new Keyword(source, context);
 		}
 	}
 
@@ -723,14 +711,14 @@ public class QueryMapper {
 
 		@Override
 		public boolean supports(Class<?> clazz) {
-			return ClassUtils.isAssignable(KeywordContext.class, clazz);
+			return ClassUtils.isAssignable(Keyword.class, clazz);
 		}
 
 		public void validate(Object target, Errors errors) {
-			validate((KeywordContext) target, errors);
+			validate((Keyword) target, errors);
 		}
 
-		public abstract void validate(KeywordContext context, Errors errors);
+		public abstract void validate(Keyword keyword, Errors errors);
 
 	}
 
@@ -742,24 +730,23 @@ public class QueryMapper {
 	 * @author Christoph Strobl
 	 * @since 1.7
 	 */
-	static class KeywordContextParameterTypeValidator extends KeywordValidator {
+	static class KeywordParameterTypeValidator extends KeywordValidator {
 
-		Set<Class<?>> types;
-		boolean invert = false;
+		private final Set<Class<?>> types;
+		private final boolean invert;
 
-		private KeywordContextParameterTypeValidator(Class<?>... supportedTypes) {
+		private KeywordParameterTypeValidator(boolean invert, Class<?>... supportedTypes) {
+
+			this.invert = invert;
 			this.types = new HashSet<Class<?>>(Arrays.asList(supportedTypes));
 		}
 
-		public static KeywordContextParameterTypeValidator whitelist(Class<?>... supportedTypes) {
-			return new KeywordContextParameterTypeValidator(supportedTypes);
+		public static KeywordParameterTypeValidator whitelist(Class<?>... supportedTypes) {
+			return new KeywordParameterTypeValidator(false, supportedTypes);
 		}
 
-		public static KeywordContextParameterTypeValidator blacklist(Class<?>... unsupportedTypes) {
-
-			KeywordContextParameterTypeValidator validator = new KeywordContextParameterTypeValidator(unsupportedTypes);
-			validator.invert = true;
-			return validator;
+		public static KeywordParameterTypeValidator blacklist(Class<?>... unsupportedTypes) {
+			return new KeywordParameterTypeValidator(true, unsupportedTypes);
 		}
 
 		private void doValidate(Object candidate, Errors errors) {
@@ -775,6 +762,7 @@ public class QueryMapper {
 				while (it.hasNext()) {
 					doValidate(value.get(it.next().toString()), errors);
 				}
+
 				return;
 			}
 
@@ -797,7 +785,7 @@ public class QueryMapper {
 		 * @see org.springframework.data.mongodb.core.convert.QueryMapper.KeywordValidator#validate(org.springframework.data.mongodb.core.convert.QueryMapper.KeywordContext, org.springframework.validation.Errors)
 		 */
 		@Override
-		public void validate(KeywordContext target, Errors errors) {
+		public void validate(Keyword target, Errors errors) {
 
 			if (types.isEmpty() || target == null) {
 				return;
@@ -811,38 +799,44 @@ public class QueryMapper {
 				while (keysIterator.hasNext()) {
 
 					String propertyName = keysIterator.next().toString();
-					String[] parts = propertyName.split("\\.");
-					if (parts.length == 1) {
-						doValidate(target.getEntity().getPersistentProperty(propertyName), errors);
-					} else {
 
-						MongoPersistentEntity<?> propertyScope = target.getEntity();
+					if (StringUtils.countOccurrencesOf(propertyName, ".") == 0) {
+						doValidate(target.getContext().getEntity().getPersistentProperty(propertyName), errors);
+						continue;
+					}
 
-						Iterator<String> partsIterator = Arrays.asList(parts).iterator();
-						while (partsIterator.hasNext()) {
+					MongoPersistentEntity<?> propertyScope = target.getContext().getEntity();
 
-							MongoPersistentProperty property = (MongoPersistentProperty) propertyScope
-									.getPersistentProperty(partsIterator.next());
+					Iterator<String> partsIterator = Arrays.asList(propertyName.split("\\.")).iterator();
+					while (partsIterator.hasNext()) {
 
-							if (!partsIterator.hasNext()) {
-								doValidate(property, errors);
-							} else if (property != null && property.isEntity() && partsIterator.hasNext()) {
+						MongoPersistentProperty property = (MongoPersistentProperty) propertyScope
+								.getPersistentProperty(partsIterator.next());
 
-								propertyScope = target.getMappingContext().getPersistentEntity(property.getActualType());
-								if (propertyScope == null) {
-									break;
-								}
+						if (!partsIterator.hasNext()) {
+							doValidate(property, errors);
+							continue;
+						}
+
+						if (property != null && property.isEntity() && partsIterator.hasNext()) {
+
+							propertyScope = target.getContext().getMappingContext().getPersistentEntity(property.getActualType());
+
+							if (propertyScope == null) {
+								break;
 							}
 						}
 					}
+
 				}
 			} else {
 
-				MongoPersistentProperty propertyToUse = target.getProperty();
+				MongoPersistentProperty propertyToUse = target.getContext().getProperty();
 
-				if (propertyToUse == null && target.getEntity() != null) {
-					propertyToUse = target.getEntity().getPersistentProperty(errors.getObjectName());
+				if (propertyToUse == null && target.getContext().getEntity() != null) {
+					propertyToUse = target.getContext().getEntity().getPersistentProperty(errors.getObjectName());
 				}
+
 				doValidate(propertyToUse, errors);
 			}
 		}
