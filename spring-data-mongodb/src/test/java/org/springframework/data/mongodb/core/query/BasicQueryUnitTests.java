@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2012 the original author or authors.
+ * Copyright 2011-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,8 @@ package org.springframework.data.mongodb.core.query;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
+import nl.jqno.equalsverifier.EqualsVerifier;
+import nl.jqno.equalsverifier.Warning;
 
 import org.junit.Test;
 import org.springframework.data.domain.Sort.Direction;
@@ -29,6 +31,7 @@ import com.mongodb.DBObject;
  * Unit tests for {@link BasicQuery}.
  * 
  * @author Oliver Gierke
+ * @author Thomas Darimont
  */
 public class BasicQueryUnitTests {
 
@@ -57,5 +60,81 @@ public class BasicQueryUnitTests {
 		DBObject sortReference = new BasicDBObject("name", -1);
 		sortReference.put("lastname", 1);
 		assertThat(query.getSortObject(), is(sortReference));
+	}
+
+	/**
+	 * @see DATAMONGO-1093
+	 */
+	@Test
+	public void equalsContract() {
+
+		BasicQuery query1 = new BasicQuery("{ \"name\" : \"Thomas\"}", "{\"name\":1, \"age\":1}");
+		query1.setSortObject(new BasicDBObject("name", -1));
+
+		BasicQuery query2 = new BasicQuery("{ \"name\" : \"Oliver\"}", "{\"name\":1, \"address\":1}");
+		query2.setSortObject(new BasicDBObject("name", 1));
+
+		EqualsVerifier.forExamples(query1, query2) //
+				.withRedefinedSuperclass() //
+				.suppress(Warning.NONFINAL_FIELDS, Warning.NULL_FIELDS, Warning.STRICT_INHERITANCE) //
+				.verify();
+	}
+
+	/**
+	 * @see DATAMONGO-1093
+	 */
+	@Test
+	public void handlesEqualsAndHashCodeCorrectlyForExactCopies() {
+
+		String qry = "{ \"name\" : \"Thomas\"}";
+		String fields = "{\"name\":1, \"age\":1}";
+
+		BasicQuery query1 = new BasicQuery(qry, fields);
+		query1.setSortObject(new BasicDBObject("name", -1));
+
+		BasicQuery query2 = new BasicQuery(qry, fields);
+		query2.setSortObject(new BasicDBObject("name", -1));
+
+		assertThat(query1, is(equalTo(query1)));
+		assertThat(query1, is(equalTo(query2)));
+		assertThat(query1.hashCode(), is(query2.hashCode()));
+	}
+
+	/**
+	 * @see DATAMONGO-1093
+	 */
+	@Test
+	public void handlesEqualsAndHashCodeCorrectlyWhenBasicQuerySettingsDiffer() {
+
+		String qry = "{ \"name\" : \"Thomas\"}";
+		String fields = "{\"name\":1, \"age\":1}";
+
+		BasicQuery query1 = new BasicQuery(qry, fields);
+		query1.setSortObject(new BasicDBObject("name", -1));
+
+		BasicQuery query2 = new BasicQuery(qry, fields);
+		query2.setSortObject(new BasicDBObject("name", 1));
+
+		assertThat(query1, is(not(equalTo(query2))));
+		assertThat(query1.hashCode(), is(not(query2.hashCode())));
+	}
+
+	/**
+	 * @see DATAMONGO-1093
+	 */
+	@Test
+	public void handlesEqualsAndHashCodeCorrectlyWhenQuerySettingsDiffer() {
+
+		String qry = "{ \"name\" : \"Thomas\"}";
+		String fields = "{\"name\":1, \"age\":1}";
+
+		BasicQuery query1 = new BasicQuery(qry, fields);
+		query1.getMeta().setComment("foo");
+
+		BasicQuery query2 = new BasicQuery(qry, fields);
+		query2.getMeta().setComment("bar");
+
+		assertThat(query1, is(not(equalTo(query2))));
+		assertThat(query1.hashCode(), is(not(query2.hashCode())));
 	}
 }
