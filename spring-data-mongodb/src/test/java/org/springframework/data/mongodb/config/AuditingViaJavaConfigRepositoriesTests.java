@@ -122,7 +122,7 @@ public class AuditingViaJavaConfigRepositoriesTests {
 	static interface AuditablePersonRepository extends MongoRepository<AuditablePerson, String> {}
 
 	@Configuration
-	@EnableMongoRepositories
+	@EnableMongoRepositories(basePackageClasses = AuditablePersonRepository.class, considerNestedRepositories = true)
 	@EnableMongoAuditing
 	static class SimpleConfigWithRepositories {
 
