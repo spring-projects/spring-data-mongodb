@@ -23,6 +23,7 @@ import static org.springframework.data.mongodb.core.DBObjectTestUtils.*;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URL;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -1945,6 +1946,22 @@ public class MappingMongoConverterUnitTests {
 		assertThat(withAnnotatedIdField.key, is("A"));
 	}
 
+	/**
+	 * @see DATAMONGO-1102
+	 */
+	@Test
+	public void convertsJava8DateTimeTypesToDateAndBack() {
+
+		TypeWithLocalDateTime source = new TypeWithLocalDateTime();
+		LocalDateTime reference = source.date;
+		BasicDBObject result = new BasicDBObject();
+
+		converter.write(source, result);
+
+		assertThat(result.get("date"), is(instanceOf(Date.class)));
+		assertThat(converter.read(TypeWithLocalDateTime.class, result).date, is(reference));
+	}
+
 	static class GenericType<T> {
 		T content;
 	}
@@ -2231,5 +2248,14 @@ public class MappingMongoConverterUnitTests {
 	static class ClassWithAnnotatedIdField {
 
 		@Id String key;
+	}
+
+	static class TypeWithLocalDateTime {
+
+		LocalDateTime date;
+
+		TypeWithLocalDateTime() {
+			this.date = LocalDateTime.now();
+		}
 	}
 }

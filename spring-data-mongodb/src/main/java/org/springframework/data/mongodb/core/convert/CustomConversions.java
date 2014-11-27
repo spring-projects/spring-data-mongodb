@@ -36,6 +36,7 @@ import org.springframework.core.convert.converter.GenericConverter;
 import org.springframework.core.convert.converter.GenericConverter.ConvertiblePair;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.convert.JodaTimeConverters;
+import org.springframework.data.convert.Jsr310Converters;
 import org.springframework.data.convert.ReadingConverter;
 import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
@@ -112,6 +113,7 @@ public class CustomConversions {
 
 		toRegister.addAll(JodaTimeConverters.getConvertersToRegister());
 		toRegister.addAll(GeoConverters.getConvertersToRegister());
+		toRegister.addAll(Jsr310Converters.getConvertersToRegister());
 
 		for (Object c : toRegister) {
 			registerConversion(c);
