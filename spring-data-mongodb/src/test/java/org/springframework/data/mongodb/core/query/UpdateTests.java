@@ -422,6 +422,8 @@ public class UpdateTests {
 	}
 
 	/**
+	 * <<<<<<< HEAD
+	 * 
 	 * @see DATAMONGO-1097
 	 */
 	@Test(expected = IllegalArgumentException.class)
