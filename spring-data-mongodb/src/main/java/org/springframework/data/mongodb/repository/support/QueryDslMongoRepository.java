@@ -102,6 +102,15 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 		return createQueryFor(predicate).orderBy(orders).list();
 	}
 
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.querydsl.QueryDslPredicateExecutor#findAll(com.mysema.query.types.OrderSpecifier[])
+	 */
+	@Override
+	public Iterable<T> findAll(OrderSpecifier<?>... orders) {
+		return createQueryFor(new Predicate[0]).orderBy(orders).list();
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.querydsl.QueryDslPredicateExecutor#findAll(com.mysema.query.types.Predicate, org.springframework.data.domain.Pageable)
@@ -128,7 +137,7 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 	 * @param predicate
 	 * @return
 	 */
-	private MongodbQuery<T> createQueryFor(Predicate predicate) {
+	private MongodbQuery<T> createQueryFor(Predicate... predicate) {
 
 		Class<T> domainType = getEntityInformation().getJavaType();
 

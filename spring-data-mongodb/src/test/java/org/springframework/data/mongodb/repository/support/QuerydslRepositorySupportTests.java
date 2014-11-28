@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2011-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,16 +37,18 @@ import com.mysema.query.mongodb.MongodbQuery;
  * Unit tests for {@link QuerydslRepositorySupport}.
  * 
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:infrastructure.xml")
-public class QuerydslRepositorySupportUnitTests {
+public class QuerydslRepositorySupportTests {
 
 	@Autowired MongoOperations operations;
 	Person person;
 
 	@Before
 	public void setUp() {
+
 		operations.remove(new Query(), Person.class);
 		person = new Person("Dave", "Matthews");
 		operations.save(person);
@@ -54,6 +56,7 @@ public class QuerydslRepositorySupportUnitTests {
 
 	@Test
 	public void providesMongoQuery() {
+
 		QPerson p = QPerson.person;
 		QuerydslRepositorySupport support = new QuerydslRepositorySupport(operations) {};
 		MongodbQuery<Person> query = support.from(p).where(p.lastname.eq("Matthews"));

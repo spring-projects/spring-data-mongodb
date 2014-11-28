@@ -1060,4 +1060,15 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(persons, hasSize(1));
 		assertThat(persons, hasItem(alicia));
 	}
+
+	/**
+	 * @see DATAMONGO-1105
+	 */
+	@Test
+	public void returnsOrderedResultsForQuerydslOrderSpecifier() {
+
+		Iterable<Person> result = repository.findAll(person.firstname.asc());
+
+		assertThat(result, contains(alicia, boyd, carter, dave, leroi, oliver, stefan));
+	}
 }
