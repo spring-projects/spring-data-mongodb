@@ -128,8 +128,7 @@ public class MongoQueryMethod extends QueryMethod {
 			MongoPersistentEntity<?> collectionEntity = domainClass.isAssignableFrom(returnedObjectType) ? returnedEntity
 					: managedEntity;
 
-			this.metadata = new SimpleMongoEntityMetadata<Object>((Class<Object>) returnedEntity.getType(),
-					collectionEntity.getCollection());
+			this.metadata = new SimpleMongoEntityMetadata<Object>((Class<Object>) returnedEntity.getType(), collectionEntity);
 		}
 
 		return this.metadata;
