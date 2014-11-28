@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
+import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.util.Assert;
 
 /**
@@ -25,21 +26,22 @@ import org.springframework.util.Assert;
 class SimpleMongoEntityMetadata<T> implements MongoEntityMetadata<T> {
 
 	private final Class<T> type;
-	private final String collectionName;
+	private final MongoPersistentEntity<?> collectionEntity;
 
 	/**
-	 * Creates a new {@link SimpleMongoEntityMetadata} using the given type and collection name.
+	 * Creates a new {@link SimpleMongoEntityMetadata} using the given type and {@link MongoPersistentEntity} to use for
+	 * collection lookups.
 	 * 
 	 * @param type must not be {@literal null}.
-	 * @param collectionName must not be {@literal null} or empty.
+	 * @param collectionEntity must not be {@literal null} or empty.
 	 */
-	public SimpleMongoEntityMetadata(Class<T> type, String collectionName) {
+	public SimpleMongoEntityMetadata(Class<T> type, MongoPersistentEntity<?> collectionEntity) {
 
 		Assert.notNull(type, "Type must not be null!");
-		Assert.hasText(collectionName, "Collection name must not be null or empty!");
+		Assert.notNull(collectionEntity, "Collection entity must not be null or empty!");
 
 		this.type = type;
-		this.collectionName = collectionName;
+		this.collectionEntity = collectionEntity;
 	}
 
 	/* 
@@ -55,6 +57,6 @@ class SimpleMongoEntityMetadata<T> implements MongoEntityMetadata<T> {
 	 * @see org.springframework.data.mongodb.repository.query.MongoEntityMetadata#getCollectionName()
 	 */
 	public String getCollectionName() {
-		return collectionName;
+		return collectionEntity.getCollection();
 	}
 }
