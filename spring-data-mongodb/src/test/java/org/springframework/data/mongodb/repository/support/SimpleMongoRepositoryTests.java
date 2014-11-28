@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2012 the original author or authors.
+ * Copyright 2010-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,16 @@
 package org.springframework.data.mongodb.repository.support;
 
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -34,13 +40,13 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 /**
  * @author <a href="mailto:kowsercse@gmail.com">A. B. M. Kowser</a>
+ * @author Thomas Darimont
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:infrastructure.xml")
 public class SimpleMongoRepositoryTests {
 
-	@Autowired
-	private MongoTemplate template;
+	@Autowired private MongoTemplate template;
 
 	private Person oliver, dave, carter, boyd, stefan, leroi, alicia;
 	private List<Person> all;
@@ -69,7 +75,7 @@ public class SimpleMongoRepositoryTests {
 		List<Person> result = repository.findAll();
 		assertThat(result, hasSize(all.size()));
 	}
-	
+
 	@Test
 	public void findOneFromCustomCollectionName() {
 		Person result = repository.findOne(dave.getId());
@@ -92,6 +98,76 @@ public class SimpleMongoRepositoryTests {
 
 		assertThat(result, hasSize(all.size() - 1));
 		assertThat(result, not(hasItem(dave)));
+	}
+
+	/**
+	 * @see DATAMONGO-1054
+	 */
+	@Test
+	public void shouldInsertSingle() {
+
+		String randomId = UUID.randomUUID().toString();
+
+		Person person1 = new Person("First1" + randomId, "Last2" + randomId, 42);
+		person1 = repository.insert(person1);
+
+		Person saved = repository.findOne(person1.getId());
+
+		assertThat(saved, is(equalTo(person1)));
+	}
+
+	/**
+	 * @see DATAMONGO-1054
+	 */
+	@Test
+	public void shouldInsertMutlipleFromList() {
+
+		String randomId = UUID.randomUUID().toString();
+
+		Map<String, Person> idToPerson = new HashMap<String, Person>();
+		List<Person> persons = new ArrayList<Person>();
+		for (int i = 0; i < 10; i++) {
+			Person person = new Person("First" + i + randomId, "Last" + randomId + i, 42 + i);
+			idToPerson.put(person.getId(), person);
+			persons.add(person);
+		}
+
+		List<Person> saved = repository.insert(persons);
+
+		assertThat(saved, hasSize(persons.size()));
+
+		assertThatAllReferencePersonsWereStoredCorrectly(idToPerson, saved);
+	}
+
+	/**
+	 * @see DATAMONGO-1054
+	 */
+	@Test
+	public void shouldInsertMutlipleFromSet() {
+
+		String randomId = UUID.randomUUID().toString();
+
+		Map<String, Person> idToPerson = new HashMap<String, Person>();
+		Set<Person> persons = new HashSet<Person>();
+		for (int i = 0; i < 10; i++) {
+			Person person = new Person("First" + i + randomId, "Last" + i + randomId, 42 + i);
+			idToPerson.put(person.getId(), person);
+			persons.add(person);
+		}
+
+		List<Person> saved = repository.insert(persons);
+
+		assertThat(saved, hasSize(persons.size()));
+
+		assertThatAllReferencePersonsWereStoredCorrectly(idToPerson, saved);
+	}
+
+	private void assertThatAllReferencePersonsWereStoredCorrectly(Map<String, Person> references, List<Person> saved) {
+
+		for (Person person : saved) {
+			Person reference = references.get(person.getId());
+			assertThat(person, is(equalTo(reference)));
+		}
 	}
 
 	private static class CustomizedPersonInformation implements MongoEntityInformation<Person, String> {
