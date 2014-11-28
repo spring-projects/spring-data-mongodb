@@ -123,9 +123,9 @@ public class SimpleMongoRepositoryTests {
 	public void shouldInsertMutlipleFromList() {
 
 		String randomId = UUID.randomUUID().toString();
-
 		Map<String, Person> idToPerson = new HashMap<String, Person>();
 		List<Person> persons = new ArrayList<Person>();
+
 		for (int i = 0; i < 10; i++) {
 			Person person = new Person("First" + i + randomId, "Last" + randomId + i, 42 + i);
 			idToPerson.put(person.getId(), person);
@@ -135,7 +135,6 @@ public class SimpleMongoRepositoryTests {
 		List<Person> saved = repository.insert(persons);
 
 		assertThat(saved, hasSize(persons.size()));
-
 		assertThatAllReferencePersonsWereStoredCorrectly(idToPerson, saved);
 	}
 
@@ -146,9 +145,9 @@ public class SimpleMongoRepositoryTests {
 	public void shouldInsertMutlipleFromSet() {
 
 		String randomId = UUID.randomUUID().toString();
-
 		Map<String, Person> idToPerson = new HashMap<String, Person>();
 		Set<Person> persons = new HashSet<Person>();
+
 		for (int i = 0; i < 10; i++) {
 			Person person = new Person("First" + i + randomId, "Last" + i + randomId, 42 + i);
 			idToPerson.put(person.getId(), person);
@@ -158,7 +157,6 @@ public class SimpleMongoRepositoryTests {
 		List<Person> saved = repository.insert(persons);
 
 		assertThat(saved, hasSize(persons.size()));
-
 		assertThatAllReferencePersonsWereStoredCorrectly(idToPerson, saved);
 	}
 

@@ -72,7 +72,12 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 
 		Assert.notNull(entity, "Entity must not be null!");
 
-		mongoOperations.save(entity, entityInformation.getCollectionName());
+		if (entityInformation.isNew(entity)) {
+			mongoOperations.insert(entity, entityInformation.getCollectionName());
+		} else {
+			mongoOperations.save(entity, entityInformation.getCollectionName());
+		}
+
 		return entity;
 	}
 
@@ -84,11 +89,22 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 
 		Assert.notNull(entities, "The given Iterable of entities not be null!");
 
-		List<S> result = new ArrayList<S>(tryDetermineRealSizeOrReturn(entities, 10));
+		List<S> result = convertIterableToList(entities);
+		boolean allNew = true;
 
 		for (S entity : entities) {
-			save(entity);
-			result.add(entity);
+			if (allNew && !entityInformation.isNew(entity)) {
+				allNew = false;
+			}
+		}
+
+		if (allNew) {
+			mongoOperations.insertAll(result);
+		} else {
+
+			for (S entity : result) {
+				save(entity);
+			}
 		}
 
 		return result;
@@ -211,32 +227,8 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 		return findAll(new Query().with(sort));
 	}
 
-	private List<T> findAll(Query query) {
-
-		if (query == null) {
-			return Collections.emptyList();
-		}
-
-		return mongoOperations.find(query, entityInformation.getJavaType(), entityInformation.getCollectionName());
-	}
-
-	/**
-	 * Returns the underlying {@link MongoOperations} instance.
-	 * 
-	 * @return
-	 */
-	protected MongoOperations getMongoOperations() {
-		return this.mongoOperations;
-	}
-
-	/**
-	 * @return the entityInformation
-	 */
-	protected MongoEntityInformation<T, ID> getEntityInformation() {
-		return entityInformation;
-	}
-
-	/* (non-Javadoc)
+	/* 
+	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.repository.MongoRepository#insert(java.lang.Object)
 	 */
 	@Override
@@ -248,7 +240,8 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 		return entity;
 	}
 
-	/* (non-Javadoc)
+	/* 
+	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.repository.MongoRepository#insert(java.lang.Iterable)
 	 */
 	@Override
@@ -266,27 +259,36 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 		return list;
 	}
 
-	private <S extends T> List<S> convertIterableToList(Iterable<S> entities) {
+	private List<T> findAll(Query query) {
+
+		if (query == null) {
+			return Collections.emptyList();
+		}
+
+		return mongoOperations.find(query, entityInformation.getJavaType(), entityInformation.getCollectionName());
+	}
+
+	private static <T> List<T> convertIterableToList(Iterable<T> entities) {
 
 		if (entities instanceof List) {
-			return (List<S>) entities;
+			return (List<T>) entities;
 		}
 
 		int capacity = tryDetermineRealSizeOrReturn(entities, 10);
 
 		if (capacity == 0 || entities == null) {
-			return Collections.<S> emptyList();
+			return Collections.<T> emptyList();
 		}
 
-		List<S> list = new ArrayList<S>(capacity);
-		for (S entity : entities) {
+		List<T> list = new ArrayList<T>(capacity);
+		for (T entity : entities) {
 			list.add(entity);
 		}
 
 		return list;
 	}
 
-	private int tryDetermineRealSizeOrReturn(Iterable<?> iterable, int defaultSize) {
+	private static int tryDetermineRealSizeOrReturn(Iterable<?> iterable, int defaultSize) {
 		return iterable == null ? 0 : (iterable instanceof Collection) ? ((Collection<?>) iterable).size() : defaultSize;
 	}
 }

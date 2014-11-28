@@ -29,6 +29,7 @@ import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
 import org.springframework.data.querydsl.EntityPathResolver;
 import org.springframework.data.querydsl.QueryDslPredicateExecutor;
 import org.springframework.data.querydsl.SimpleEntityPathResolver;
+import org.springframework.data.repository.core.EntityInformation;
 import org.springframework.data.repository.core.EntityMetadata;
 import org.springframework.util.Assert;
 
@@ -48,13 +49,15 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 		QueryDslPredicateExecutor<T> {
 
 	private final PathBuilder<T> builder;
+	private final EntityInformation<T, ID> entityInformation;
+	private final MongoOperations mongoOperations;
 
 	/**
 	 * Creates a new {@link QueryDslMongoRepository} for the given {@link EntityMetadata} and {@link MongoTemplate}. Uses
 	 * the {@link SimpleEntityPathResolver} to create an {@link EntityPath} for the given domain class.
 	 * 
-	 * @param entityInformation
-	 * @param template
+	 * @param entityInformation must not be {@literal null}.
+	 * @param mongoOperations must not be {@literal null}.
 	 */
 	public QueryDslMongoRepository(MongoEntityInformation<T, ID> entityInformation, MongoOperations mongoOperations) {
 		this(entityInformation, mongoOperations, SimpleEntityPathResolver.INSTANCE);
@@ -64,17 +67,21 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 	 * Creates a new {@link QueryDslMongoRepository} for the given {@link MongoEntityInformation}, {@link MongoTemplate}
 	 * and {@link EntityPathResolver}.
 	 * 
-	 * @param entityInformation
-	 * @param mongoOperations
-	 * @param resolver
+	 * @param entityInformation must not be {@literal null}.
+	 * @param mongoOperations must not be {@literal null}.
+	 * @param resolver must not be {@literal null}.
 	 */
 	public QueryDslMongoRepository(MongoEntityInformation<T, ID> entityInformation, MongoOperations mongoOperations,
 			EntityPathResolver resolver) {
 
 		super(entityInformation, mongoOperations);
+
 		Assert.notNull(resolver);
 		EntityPath<T> path = resolver.createPath(entityInformation.getJavaType());
+
 		this.builder = new PathBuilder<T>(path.getType(), path.getMetadata());
+		this.entityInformation = entityInformation;
+		this.mongoOperations = mongoOperations;
 	}
 
 	/*
@@ -139,9 +146,9 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 	 */
 	private MongodbQuery<T> createQueryFor(Predicate... predicate) {
 
-		Class<T> domainType = getEntityInformation().getJavaType();
+		Class<T> domainType = entityInformation.getJavaType();
 
-		MongodbQuery<T> query = new SpringDataMongodbQuery<T>(getMongoOperations(), domainType);
+		MongodbQuery<T> query = new SpringDataMongodbQuery<T>(mongoOperations, domainType);
 		return query.where(predicate);
 	}
 
