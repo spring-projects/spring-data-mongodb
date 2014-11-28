@@ -35,6 +35,7 @@ import org.springframework.data.mongodb.MongoCollectionUtils;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.Expression;
 import org.springframework.expression.ParserContext;
+import org.springframework.expression.common.LiteralExpression;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.util.Assert;
@@ -54,31 +55,36 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 		MongoPersistentEntity<T>, ApplicationContextAware {
 
 	private static final String AMBIGUOUS_FIELD_MAPPING = "Ambiguous field mapping detected! Both %s and %s map to the same field name %s! Disambiguate using @Field annotation!";
+	private static final SpelExpressionParser PARSER = new SpelExpressionParser();
+
 	private final String collection;
 	private final String language;
-	private final SpelExpressionParser parser;
+
 	private final StandardEvaluationContext context;
+	private final Expression expression;
 
 	/**
 	 * Creates a new {@link BasicMongoPersistentEntity} with the given {@link TypeInformation}. Will default the
 	 * collection name to the entities simple type name.
 	 * 
-	 * @param typeInformation
+	 * @param typeInformation must not be {@literal null}.
 	 */
 	public BasicMongoPersistentEntity(TypeInformation<T> typeInformation) {
 
 		super(typeInformation, MongoPersistentPropertyComparator.INSTANCE);
 
-		this.parser = new SpelExpressionParser();
-		this.context = new StandardEvaluationContext();
-
 		Class<?> rawType = typeInformation.getType();
 		String fallback = MongoCollectionUtils.getPreferredCollectionName(rawType);
 
-		if (rawType.isAnnotationPresent(Document.class)) {
-			Document d = rawType.getAnnotation(Document.class);
-			this.collection = StringUtils.hasText(d.collection()) ? d.collection() : fallback;
-			this.language = StringUtils.hasText(d.language()) ? d.language() : "";
+		Document document = rawType.getAnnotation(Document.class);
+
+		this.expression = detectExpression(document);
+		this.context = new StandardEvaluationContext();
+
+		if (document != null) {
+
+			this.collection = StringUtils.hasText(document.collection()) ? document.collection() : fallback;
+			this.language = StringUtils.hasText(document.language()) ? document.language() : "";
 		} else {
 			this.collection = fallback;
 			this.language = "";
@@ -101,8 +107,7 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentEntity#getCollection()
 	 */
 	public String getCollection() {
-		Expression expression = parser.parseExpression(collection, ParserContext.TEMPLATE_EXPRESSION);
-		return expression.getValue(context, String.class);
+		return expression == null ? collection : expression.getValue(context, String.class);
 	}
 
 	/*
@@ -234,6 +239,31 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 		}
 
 		return null;
+	}
+
+	/**
+	 * Returns a SpEL {@link Expression} frór the collection String expressed in the given {@link Document} annotation if
+	 * present or {@literal null} otherwise. Will also return {@literal null} it the collection {@link String} evaluates
+	 * to a {@link LiteralExpression} (indicating that no subsequent evaluation is necessary).
+	 * 
+	 * @param document can be {@literal null}
+	 * @return
+	 */
+	private static Expression detectExpression(Document document) {
+
+		if (document == null) {
+			return null;
+		}
+
+		String collection = document.collection();
+
+		if (!StringUtils.hasText(collection)) {
+			return null;
+		}
+
+		Expression expression = PARSER.parseExpression(document.collection(), ParserContext.TEMPLATE_EXPRESSION);
+
+		return expression instanceof LiteralExpression ? null : expression;
 	}
 
 	/**
