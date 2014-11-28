@@ -84,7 +84,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 
 		Assert.notNull(entities, "The given Iterable of entities not be null!");
 
-		List<S> result = new ArrayList<S>();
+		List<S> result = new ArrayList<S>(tryDetermineRealSizeOrReturn(entities, 10));
 
 		for (S entity : entities) {
 			save(entity);
@@ -183,7 +183,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 	 */
 	public Iterable<T> findAll(Iterable<ID> ids) {
 
-		Set<ID> parameters = new HashSet<ID>();
+		Set<ID> parameters = new HashSet<ID>(tryDetermineRealSizeOrReturn(ids, 10));
 		for (ID id : ids) {
 			parameters.add(id);
 		}
@@ -272,7 +272,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 			return (List<S>) entities;
 		}
 
-		int capacity = (entities instanceof Collection) ? ((Collection<?>) entities).size() : 10;
+		int capacity = tryDetermineRealSizeOrReturn(entities, 10);
 
 		if (capacity == 0 || entities == null) {
 			return Collections.<S> emptyList();
@@ -284,5 +284,9 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 		}
 
 		return list;
+	}
+
+	private int tryDetermineRealSizeOrReturn(Iterable<?> iterable, int defaultSize) {
+		return iterable == null ? 0 : (iterable instanceof Collection) ? ((Collection<?>) iterable).size() : defaultSize;
 	}
 }
