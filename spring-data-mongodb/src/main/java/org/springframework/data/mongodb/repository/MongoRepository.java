@@ -51,28 +51,24 @@ public interface MongoRepository<T, ID extends Serializable> extends PagingAndSo
 	List<T> findAll(Sort sort);
 
 	/**
-	 * Saves a given entity. Use the returned instance for further operations as the save operation might have changed the
-	 * entity instance completely.
-	 * <p>
-	 * This uses {@link org.springframework.data.mongodb.core.MongoTemplate#insert(Object)} for storing the given entity.
-	 * <p>
-	 * Note that this method does neither fire any save events nor performs any id population or version checking.
+	 * Inserts the given a given entity. Assumes the instance to be new to be able to apply insertion optimizations. Use
+	 * the returned instance for further operations as the save operation might have changed the entity instance
+	 * completely. Prefer using {@link #save(Object)} instead to avoid the usage of store-specific API.
 	 * 
-	 * @param entity
+	 * @param entity must not be {@literal null}.
 	 * @return the saved entity
+	 * @since 1.7
 	 */
 	<S extends T> S insert(S entity);
 
 	/**
-	 * Saves all given entities.
-	 * <p>
-	 * This uses {@link org.springframework.data.mongodb.core.MongoTemplate#insert(Object)} for storing the given entity.
-	 * <p>
-	 * Note that this method does neither fire any save events nor nor performs any id population or version checking.
+	 * Inserts the given entities. Assumes the given entities to have not been persisted yet and thus will optimize the
+	 * insert over a call to {@link #save(Iterable)}. Prefer using {@link #save(Iterable)} to avoid the usage of store
+	 * specific API.
 	 * 
-	 * @param entities
+	 * @param entities must not be {@literal null}.
 	 * @return the saved entities
-	 * @throws IllegalArgumentException in case the given entity is (@literal null}.
+	 * @since 1.7
 	 */
 	<S extends T> List<S> insert(Iterable<S> entities);
 }
