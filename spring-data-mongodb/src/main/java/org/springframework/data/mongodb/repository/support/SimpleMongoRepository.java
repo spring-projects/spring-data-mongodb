@@ -19,6 +19,7 @@ import static org.springframework.data.mongodb.core.query.Criteria.*;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -41,6 +42,7 @@ import org.springframework.util.Assert;
  * 
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Thomas Darimont
  */
 public class SimpleMongoRepository<T, ID extends Serializable> implements MongoRepository<T, ID> {
 
@@ -48,7 +50,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 	private final MongoEntityInformation<T, ID> entityInformation;
 
 	/**
-	 * Creates a ew {@link SimpleMongoRepository} for the given {@link MongoEntityInformation} and {@link MongoTemplate}.
+	 * Creates a new {@link SimpleMongoRepository} for the given {@link MongoEntityInformation} and {@link MongoTemplate}.
 	 * 
 	 * @param metadata must not be {@literal null}.
 	 * @param template must not be {@literal null}.
@@ -82,7 +84,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 
 		Assert.notNull(entities, "The given Iterable of entities not be null!");
 
-		List<S> result = new ArrayList<S>();
+		List<S> result = new ArrayList<S>(tryDetermineRealSizeOrReturn(entities, 10));
 
 		for (S entity : entities) {
 			save(entity);
@@ -181,7 +183,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 	 */
 	public Iterable<T> findAll(Iterable<ID> ids) {
 
-		Set<ID> parameters = new HashSet<ID>();
+		Set<ID> parameters = new HashSet<ID>(tryDetermineRealSizeOrReturn(ids, 10));
 		for (ID id : ids) {
 			parameters.add(id);
 		}
@@ -234,4 +236,57 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 		return entityInformation;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.MongoRepository#insert(java.lang.Object)
+	 */
+	@Override
+	public <S extends T> S insert(S entity) {
+
+		Assert.notNull(entity, "Entity must not be null!");
+
+		mongoOperations.insert(entity, entityInformation.getCollectionName());
+		return entity;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.MongoRepository#insert(java.lang.Iterable)
+	 */
+	@Override
+	public <S extends T> List<S> insert(Iterable<S> entities) {
+
+		Assert.notNull(entities, "The given Iterable of entities not be null!");
+
+		List<S> list = convertIterableToList(entities);
+
+		if (list.isEmpty()) {
+			return list;
+		}
+
+		mongoOperations.insertAll(list);
+		return list;
+	}
+
+	private <S extends T> List<S> convertIterableToList(Iterable<S> entities) {
+
+		if (entities instanceof List) {
+			return (List<S>) entities;
+		}
+
+		int capacity = tryDetermineRealSizeOrReturn(entities, 10);
+
+		if (capacity == 0 || entities == null) {
+			return Collections.<S> emptyList();
+		}
+
+		List<S> list = new ArrayList<S>(capacity);
+		for (S entity : entities) {
+			list.add(entity);
+		}
+
+		return list;
+	}
+
+	private int tryDetermineRealSizeOrReturn(Iterable<?> iterable, int defaultSize) {
+		return iterable == null ? 0 : (iterable instanceof Collection) ? ((Collection<?>) iterable).size() : defaultSize;
+	}
 }

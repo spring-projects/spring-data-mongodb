@@ -27,6 +27,7 @@ import org.springframework.data.repository.PagingAndSortingRepository;
  * 
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Thomas Darimont
  */
 @NoRepositoryBean
 public interface MongoRepository<T, ID extends Serializable> extends PagingAndSortingRepository<T, ID> {
@@ -48,4 +49,30 @@ public interface MongoRepository<T, ID extends Serializable> extends PagingAndSo
 	 * @see org.springframework.data.repository.PagingAndSortingRepository#findAll(org.springframework.data.domain.Sort)
 	 */
 	List<T> findAll(Sort sort);
+
+	/**
+	 * Saves a given entity. Use the returned instance for further operations as the save operation might have changed the
+	 * entity instance completely.
+	 * <p>
+	 * This uses {@link org.springframework.data.mongodb.core.MongoTemplate#insert(Object)} for storing the given entity.
+	 * <p>
+	 * Note that this method does neither fire any save events nor performs any id population or version checking.
+	 * 
+	 * @param entity
+	 * @return the saved entity
+	 */
+	<S extends T> S insert(S entity);
+
+	/**
+	 * Saves all given entities.
+	 * <p>
+	 * This uses {@link org.springframework.data.mongodb.core.MongoTemplate#insert(Object)} for storing the given entity.
+	 * <p>
+	 * Note that this method does neither fire any save events nor nor performs any id population or version checking.
+	 * 
+	 * @param entities
+	 * @return the saved entities
+	 * @throws IllegalArgumentException in case the given entity is (@literal null}.
+	 */
+	<S extends T> List<S> insert(Iterable<S> entities);
 }
