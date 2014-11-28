@@ -55,6 +55,9 @@ public class BasicMongoPersistentEntityUnitTests {
 		assertThat(entity.getCollection(), is("35"));
 	}
 
+	/**
+	 * @see DATAMONGO-65, DATAMONGO-1108
+	 */
 	@Test
 	public void collectionAllowsReferencingSpringBean() {
 
@@ -69,6 +72,9 @@ public class BasicMongoPersistentEntityUnitTests {
 		entity.setApplicationContext(context);
 
 		assertThat(entity.getCollection(), is("reference"));
+
+		provider.collectionName = "otherReference";
+		assertThat(entity.getCollection(), is("otherReference"));
 	}
 
 	/**
