@@ -27,8 +27,11 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.ReadingConverter;
 import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.mongodb.core.query.Term;
+import org.springframework.data.mongodb.core.script.CallableMongoScript;
 import org.springframework.util.StringUtils;
 
+import com.mongodb.BasicDBObject;
+import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DBObject;
 
 /**
@@ -176,6 +179,60 @@ abstract class MongoConverters {
 		@Override
 		public String convert(Term source) {
 			return source == null ? null : source.getFormatted();
+		}
+	}
+
+	/**
+	 * @author Christoph Strobl
+	 * @since 1.7
+	 */
+	@ReadingConverter
+	public static enum DBObjectToCallableMongoScriptCoverter implements Converter<DBObject, CallableMongoScript> {
+
+		INSTANCE;
+
+		@Override
+		public CallableMongoScript convert(DBObject source) {
+
+			if (source == null) {
+				return null;
+			}
+
+			String id = source.get("_id").toString();
+			Object rawValue = source.get("value");
+
+			if (rawValue != null) {
+				return new CallableMongoScript(id, rawValue.toString());
+			}
+
+			return new CallableMongoScript(id);
+		}
+	}
+
+	/**
+	 * @author Christoph Strobl
+	 * @since 1.7
+	 */
+	@WritingConverter
+	public static enum CallableMongoScriptToDBObjectConverter implements Converter<CallableMongoScript, DBObject> {
+
+		INSTANCE;
+
+		@Override
+		public DBObject convert(CallableMongoScript source) {
+
+			if (source == null) {
+				return new BasicDBObject();
+			}
+
+			BasicDBObjectBuilder builder = new BasicDBObjectBuilder();
+
+			builder.append("_id", source.getName());
+			if (source.getCode() != null) {
+				builder.append("value", source.getCode());
+			}
+
+			return builder.get();
 		}
 	}
 }

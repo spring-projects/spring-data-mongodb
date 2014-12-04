@@ -269,6 +269,14 @@ public interface MongoOperations {
 	IndexOperations indexOps(Class<?> entityClass);
 
 	/**
+	 * Returns the {@link ScriptOperations} that can be performed on {@link com.mongodb.DB} level.
+	 * 
+	 * @return
+	 * @since 1.7
+	 */
+	ScriptOperations scriptOps();
+
+	/**
 	 * Query for a list of objects of type T from the collection used by the entity class.
 	 * <p/>
 	 * The object is converted from the MongoDB native representation using an instance of {@see MongoConverter}. Unless
@@ -978,4 +986,5 @@ public interface MongoOperations {
 	 * @return
 	 */
 	MongoConverter getConverter();
+
 }

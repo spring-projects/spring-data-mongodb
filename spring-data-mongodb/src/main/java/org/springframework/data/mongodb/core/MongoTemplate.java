@@ -513,6 +513,15 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		return new DefaultIndexOperations(this, determineCollectionName(entityClass));
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.MongoOperations#scriptOps()
+	 */
+	@Override
+	public ScriptOperations scriptOps() {
+		return new DefaultScriptOperations(this);
+	}
+
 	// Find methods that take a Query to express the query and that return a single object.
 
 	public <T> T findOne(Query query, Class<T> entityClass) {
