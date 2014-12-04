@@ -1325,6 +1325,25 @@ MapReduceResults<ValueObject> results = mongoOperations.mapReduce(query, "jmr1",
 
 Note that you can specify additional limit and sort values as well on the query but not skip values.
 
+[[mongo.server-side-scripts]]
+== Script Operations
+
+MongoDB allows to execute JavaScript functions on the server by either directly sending the script or calling a stored one. `ScriptOperations` can be accessed via `MongoTemplate` and provides basic abstraction for `JavaScript` usage.
+
+=== Example Usage
+
+[source,java]
+----
+ScriptOperations scriptOps = template.scriptOps();
+
+ServerSideJavaScript echoScript = new ExecutableMongoScript("function(x) { return x; }");
+scriptOps.execute(echoScript, "directly execute script");
+
+scriptOps.register(new CallableMongoScript("echo", echoScript));
+scriptOps.call("echo", "execute script via name");
+----
+
+
 [[mongo.group]]
 == Group Operations
 
