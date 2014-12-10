@@ -26,9 +26,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.dao.DataAccessException;
-import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.script.CallableMongoScript;
 import org.springframework.data.mongodb.core.script.ExecutableMongoScript;
@@ -47,16 +47,18 @@ import com.mongodb.MongoClient;
 public class DefaultScriptOperationsTests {
 
 	@Configuration
-	static class Config extends AbstractMongoConfiguration {
+	static class Config {
 
-		@Override
-		protected String getDatabaseName() {
-			return "script-tests";
-		}
+		private static final String DB_NAME = "script-tests";
 
-		@Override
+		@Bean
 		public Mongo mongo() throws Exception {
 			return new MongoClient();
+		}
+
+		@Bean
+		public MongoTemplate template() throws Exception {
+			return new MongoTemplate(mongo(), DB_NAME);
 		}
 
 	}
