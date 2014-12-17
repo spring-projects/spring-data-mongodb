@@ -189,12 +189,7 @@ public class Update {
 	 * @return
 	 */
 	public Update pushAll(String key, Object[] values) {
-
-		Object[] convertedValues = new Object[values.length];
-		for (int i = 0; i < values.length; i++) {
-			convertedValues[i] = values[i];
-		}
-		addMultiFieldOperation("$pushAll", key, convertedValues);
+		addMultiFieldOperation("$pushAll", key, Arrays.copyOf(values, values.length));
 		return this;
 	}
 
@@ -258,12 +253,7 @@ public class Update {
 	 * @return
 	 */
 	public Update pullAll(String key, Object[] values) {
-
-		Object[] convertedValues = new Object[values.length];
-		for (int i = 0; i < values.length; i++) {
-			convertedValues[i] = values[i];
-		}
-		addFieldOperation("$pullAll", key, convertedValues);
+		addFieldOperation("$pullAll", key, Arrays.copyOf(values, values.length));
 		return this;
 	}
 
@@ -467,13 +457,7 @@ public class Update {
 				return ((Collection<?>) values[0]).toArray();
 			}
 
-			Object[] convertedValues = new Object[values.length];
-
-			for (int i = 0; i < values.length; i++) {
-				convertedValues[i] = values[i];
-			}
-
-			return convertedValues;
+			return Arrays.copyOf(values, values.length);
 		}
 
 		/*
