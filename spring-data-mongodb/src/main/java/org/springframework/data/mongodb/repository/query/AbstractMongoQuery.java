@@ -259,9 +259,11 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 		Object execute(Query query) {
 
 			MongoEntityMetadata<?> metadata = method.getEntityInformation();
+			String collectionName = metadata.getCollectionName();
+			Class<?> type = metadata.getJavaType();
 
 			int overallLimit = query.getLimit();
-			long count = operations.count(query, metadata.getCollectionName());
+			long count = operations.count(query, type, collectionName);
 			count = overallLimit != 0 ? Math.min(count, query.getLimit()) : count;
 
 			boolean pageableOutOfScope = pageable.getOffset() > count;
@@ -278,7 +280,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 				query.limit(overallLimit - pageable.getOffset());
 			}
 
-			List<?> result = operations.find(query, metadata.getJavaType(), metadata.getCollectionName());
+			List<?> result = operations.find(query, type, collectionName);
 			return new PageImpl(result, pageable, count);
 		}
 	}

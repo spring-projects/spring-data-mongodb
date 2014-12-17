@@ -25,6 +25,7 @@ import org.springframework.data.mongodb.core.index.GeoSpatialIndexed;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
 
 /**
  * Sample domain class.
@@ -50,7 +51,7 @@ public class Person extends Contact {
 
 	@GeoSpatialIndexed private Point location;
 
-	private Address address;
+	private @Field("add") Address address;
 	private Set<Address> shippingAddresses;
 
 	@DBRef User creator;

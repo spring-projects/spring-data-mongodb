@@ -652,13 +652,27 @@ public interface MongoOperations {
 	long count(Query query, Class<?> entityClass);
 
 	/**
-	 * Returns the number of documents for the given {@link Query} querying the given collection.
+	 * Returns the number of documents for the given {@link Query} querying the given collection. The given {@link Query}
+	 * must solely consist of document field references as we lack type information to map potential property references
+	 * onto document fields. TO make sure the query gets mapped, use {@link #count(Query, Class, String)}.
 	 * 
 	 * @param query
 	 * @param collectionName must not be {@literal null} or empty.
 	 * @return
+	 * @see #count(Query, Class, String)
 	 */
 	long count(Query query, String collectionName);
+
+	/**
+	 * Returns the number of documents for the given {@link Query} by querying the given collection using the given entity
+	 * class to map the given {@link Query}.
+	 * 
+	 * @param query
+	 * @param entityClass must not be {@literal null}.
+	 * @param collectionName must not be {@literal null} or empty.
+	 * @return
+	 */
+	long count(Query query, Class<?> entityClass, String collectionName);
 
 	/**
 	 * Insert the object into the collection for the entity type of the object to save.

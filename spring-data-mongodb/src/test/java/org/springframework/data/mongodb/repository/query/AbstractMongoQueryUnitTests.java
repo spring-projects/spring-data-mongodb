@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
@@ -100,8 +100,7 @@ public class AbstractMongoQueryUnitTests {
 
 		createQueryForMethod("deletePersonByLastname", String.class).setDeleteQuery(true).execute(new Object[] { "booh" });
 
-		verify(this.mongoOperationsMock, times(1)).remove(Matchers.any(Query.class), Matchers.eq(Person.class),
-				Matchers.eq("persons"));
+		verify(this.mongoOperationsMock, times(1)).remove(Matchers.any(Query.class), eq(Person.class), eq("persons"));
 		verify(this.mongoOperationsMock, times(0)).find(Matchers.any(Query.class), Matchers.any(Class.class),
 				Matchers.anyString());
 	}
@@ -119,8 +118,8 @@ public class AbstractMongoQueryUnitTests {
 
 		createQueryForMethod("deleteByLastname", String.class).setDeleteQuery(true).execute(new Object[] { "booh" });
 
-		verify(this.mongoOperationsMock, times(1)).findAllAndRemove(Matchers.any(Query.class), Matchers.eq(Person.class),
-				Matchers.eq("persons"));
+		verify(this.mongoOperationsMock, times(1)).findAllAndRemove(Matchers.any(Query.class), eq(Person.class),
+				eq("persons"));
 	}
 
 	/**
@@ -143,15 +142,14 @@ public class AbstractMongoQueryUnitTests {
 	public void testDeleteExecutionReturnsNrDocumentsDeletedFromWriteResult() {
 
 		when(writeResultMock.getN()).thenReturn(100);
-		when(this.mongoOperationsMock.remove(Matchers.any(Query.class), Matchers.eq(Person.class), Matchers.eq("persons")))
-				.thenReturn(writeResultMock);
+		when(this.mongoOperationsMock.remove(Matchers.any(Query.class), eq(Person.class), eq("persons"))).thenReturn(
+				writeResultMock);
 
 		MongoQueryFake query = createQueryForMethod("deletePersonByLastname", String.class);
 		query.setDeleteQuery(true);
 
 		assertThat(query.execute(new Object[] { "fake" }), is((Object) 100L));
-		verify(this.mongoOperationsMock, times(1)).remove(Matchers.any(Query.class), Matchers.eq(Person.class),
-				Matchers.eq("persons"));
+		verify(this.mongoOperationsMock, times(1)).remove(Matchers.any(Query.class), eq(Person.class), eq("persons"));
 	}
 
 	/**
@@ -165,8 +163,7 @@ public class AbstractMongoQueryUnitTests {
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 
-		verify(this.mongoOperationsMock, times(1))
-				.find(captor.capture(), Matchers.eq(Person.class), Matchers.eq("persons"));
+		verify(this.mongoOperationsMock, times(1)).find(captor.capture(), eq(Person.class), eq("persons"));
 
 		assertThat(captor.getValue().getMeta().getComment(), nullValue());
 	}
@@ -182,8 +179,7 @@ public class AbstractMongoQueryUnitTests {
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 
-		verify(this.mongoOperationsMock, times(1))
-				.find(captor.capture(), Matchers.eq(Person.class), Matchers.eq("persons"));
+		verify(this.mongoOperationsMock, times(1)).find(captor.capture(), eq(Person.class), eq("persons"));
 		assertThat(captor.getValue().getMeta().getComment(), is("comment"));
 	}
 
@@ -198,7 +194,7 @@ public class AbstractMongoQueryUnitTests {
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 
-		verify(this.mongoOperationsMock, times(1)).count(captor.capture(), Matchers.eq("persons"));
+		verify(this.mongoOperationsMock, times(1)).count(captor.capture(), eq(Person.class), eq("persons"));
 		assertThat(captor.getValue().getMeta().getComment(), is("comment"));
 	}
 
@@ -213,8 +209,7 @@ public class AbstractMongoQueryUnitTests {
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 
-		verify(this.mongoOperationsMock, times(1))
-				.find(captor.capture(), Matchers.eq(Person.class), Matchers.eq("persons"));
+		verify(this.mongoOperationsMock, times(1)).find(captor.capture(), eq(Person.class), eq("persons"));
 		assertThat(captor.getValue().getMeta().getComment(), is("comment"));
 	}
 
@@ -233,8 +228,7 @@ public class AbstractMongoQueryUnitTests {
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 
-		verify(this.mongoOperationsMock, times(2))
-				.find(captor.capture(), Matchers.eq(Person.class), Matchers.eq("persons"));
+		verify(this.mongoOperationsMock, times(2)).find(captor.capture(), eq(Person.class), eq("persons"));
 
 		assertThat(captor.getAllValues().get(0).getSkip(), is(0));
 		assertThat(captor.getAllValues().get(1).getSkip(), is(10));
@@ -255,8 +249,7 @@ public class AbstractMongoQueryUnitTests {
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 
-		verify(this.mongoOperationsMock, times(2))
-				.find(captor.capture(), Matchers.eq(Person.class), Matchers.eq("persons"));
+		verify(this.mongoOperationsMock, times(2)).find(captor.capture(), eq(Person.class), eq("persons"));
 
 		assertThat(captor.getAllValues().get(0).getLimit(), is(11));
 		assertThat(captor.getAllValues().get(1).getLimit(), is(11));
@@ -277,8 +270,7 @@ public class AbstractMongoQueryUnitTests {
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 
-		verify(this.mongoOperationsMock, times(2))
-				.find(captor.capture(), Matchers.eq(Person.class), Matchers.eq("persons"));
+		verify(this.mongoOperationsMock, times(2)).find(captor.capture(), eq(Person.class), eq("persons"));
 
 		DBObject expectedSortObject = new BasicDBObjectBuilder().add("bar", -1).get();
 		assertThat(captor.getAllValues().get(0).getSortObject(), is(expectedSortObject));
