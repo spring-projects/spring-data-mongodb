@@ -17,17 +17,16 @@ package org.springframework.data.mongodb.util;
 
 import com.mongodb.BasicDBList;
 
+import java.util.Collections;
+
 /**
  * @author Thomas Darimont
  */
 public class DBObjectUtils {
 
 	public static BasicDBList dbList(Object... items) {
-
 		BasicDBList list = new BasicDBList();
-		for (Object item : items) {
-			list.add(item);
-		}
+		Collections.addAll(list, items);
 		return list;
 	}
 }
