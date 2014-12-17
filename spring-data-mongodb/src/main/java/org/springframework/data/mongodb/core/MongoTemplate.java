@@ -642,7 +642,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		return count(query, null, collectionName);
 	}
 
-	private long count(Query query, Class<?> entityClass, String collectionName) {
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.MongoOperations#count(org.springframework.data.mongodb.core.query.Query, java.lang.Class, java.lang.String)
+	 */
+	public long count(Query query, Class<?> entityClass, String collectionName) {
 
 		Assert.hasText(collectionName);
 		final DBObject dbObject = query == null ? null : queryMapper.getMappedObject(query.getQueryObject(),
