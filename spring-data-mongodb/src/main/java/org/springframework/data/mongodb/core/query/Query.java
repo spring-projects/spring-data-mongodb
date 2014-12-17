@@ -210,9 +210,7 @@ public class Query {
 		Assert.notNull(additionalTypes, "AdditionalTypes must not be null");
 
 		restrictedTypes.add(type);
-		for (Class<?> additionalType : additionalTypes) {
-			restrictedTypes.add(additionalType);
-		}
+		Collections.addAll(restrictedTypes, additionalTypes);
 
 		return this;
 	}
