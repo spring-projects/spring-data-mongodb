@@ -97,8 +97,9 @@ public class PartTreeMongoQuery extends AbstractMongoQuery {
 			return result;
 
 		} catch (JSONParseException o_O) {
-			throw new IllegalStateException(String.format("Invalid query or field specification in %s!", getQueryMethod(),
-					o_O));
+			throw new IllegalStateException(
+					String.format("Invalid query or field specification in %s!", getQueryMethod()),
+					o_O);
 		}
 	}
 
