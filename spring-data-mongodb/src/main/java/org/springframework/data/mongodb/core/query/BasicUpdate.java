@@ -87,12 +87,8 @@ public class BasicUpdate extends Update {
 
 	@Override
 	public Update pullAll(String key, Object[] values) {
-		Object[] convertedValues = new Object[values.length];
-		for (int i = 0; i < values.length; i++) {
-			convertedValues[i] = values[i];
-		}
 		DBObject keyValue = new BasicDBObject();
-		keyValue.put(key, convertedValues);
+		keyValue.put(key, convertValues(values));
 		updateObject.put("$pullAll", keyValue);
 		return this;
 	}

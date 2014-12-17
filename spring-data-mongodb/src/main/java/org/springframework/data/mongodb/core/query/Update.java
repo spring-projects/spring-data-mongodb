@@ -190,12 +190,7 @@ public class Update {
 	 * @return
 	 */
 	public Update pushAll(String key, Object[] values) {
-
-		Object[] convertedValues = new Object[values.length];
-		for (int i = 0; i < values.length; i++) {
-			convertedValues[i] = values[i];
-		}
-		addMultiFieldOperation("$pushAll", key, convertedValues);
+		addMultiFieldOperation("$pushAll", key, convertValues(values));
 		return this;
 	}
 
@@ -259,12 +254,7 @@ public class Update {
 	 * @return
 	 */
 	public Update pullAll(String key, Object[] values) {
-
-		Object[] convertedValues = new Object[values.length];
-		for (int i = 0; i < values.length; i++) {
-			convertedValues[i] = values[i];
-		}
-		addFieldOperation("$pullAll", key, convertedValues);
+		addFieldOperation("$pullAll", key, convertValues(values));
 		return this;
 	}
 
@@ -432,6 +422,19 @@ public class Update {
 	}
 
 	/**
+	 * Method implemented to remove some code duplicates
+	 * Manual coping replaced for System.arraycopy()
+	 * @param values array to be copied
+	 * @return copy of an array
+	 */
+
+	protected static Object[] convertValues(Object[] values) {
+		Object[] convertedValues = new Object[values.length];
+		System.arraycopy(values, 0, convertedValues, 0, values.length);
+		return convertedValues;
+	}
+
+	/**
 	 * Modifiers holds a distinct collection of {@link Modifier}
 	 * 
 	 * @author Christoph Strobl
@@ -523,13 +526,7 @@ public class Update {
 				return ((Collection<?>) values[0]).toArray();
 			}
 
-			Object[] convertedValues = new Object[values.length];
-
-			for (int i = 0; i < values.length; i++) {
-				convertedValues[i] = values[i];
-			}
-
-			return convertedValues;
+			return Update.convertValues(values);
 		}
 
 		/*
