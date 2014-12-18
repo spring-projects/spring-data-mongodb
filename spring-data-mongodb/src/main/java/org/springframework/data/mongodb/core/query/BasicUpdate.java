@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core.query;
 
+import java.util.Arrays;
 import java.util.Collections;
 
 import com.mongodb.BasicDBObject;
@@ -88,7 +89,7 @@ public class BasicUpdate extends Update {
 	@Override
 	public Update pullAll(String key, Object[] values) {
 		DBObject keyValue = new BasicDBObject();
-		keyValue.put(key, convertValues(values));
+		keyValue.put(key, Arrays.copyOf(values, values.length));
 		updateObject.put("$pullAll", keyValue);
 		return this;
 	}

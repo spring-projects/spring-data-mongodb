@@ -190,7 +190,7 @@ public class Update {
 	 * @return
 	 */
 	public Update pushAll(String key, Object[] values) {
-		addMultiFieldOperation("$pushAll", key, convertValues(values));
+		addMultiFieldOperation("$pushAll", key, Arrays.copyOf(values, values.length));
 		return this;
 	}
 
@@ -254,7 +254,7 @@ public class Update {
 	 * @return
 	 */
 	public Update pullAll(String key, Object[] values) {
-		addFieldOperation("$pullAll", key, convertValues(values));
+		addFieldOperation("$pullAll", key, Arrays.copyOf(values, values.length));
 		return this;
 	}
 
@@ -422,19 +422,6 @@ public class Update {
 	}
 
 	/**
-	 * Method implemented to remove some code duplicates
-	 * Manual coping replaced for System.arraycopy()
-	 * @param values array to be copied
-	 * @return copy of an array
-	 */
-
-	protected static Object[] convertValues(Object[] values) {
-		Object[] convertedValues = new Object[values.length];
-		System.arraycopy(values, 0, convertedValues, 0, values.length);
-		return convertedValues;
-	}
-
-	/**
 	 * Modifiers holds a distinct collection of {@link Modifier}
 	 * 
 	 * @author Christoph Strobl
@@ -526,7 +513,7 @@ public class Update {
 				return ((Collection<?>) values[0]).toArray();
 			}
 
-			return Update.convertValues(values);
+			return Arrays.copyOf(values, values.length);
 		}
 
 		/*
