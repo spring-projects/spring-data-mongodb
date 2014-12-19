@@ -53,12 +53,15 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.aop.framework.ProxyFactory;
+import org.springframework.beans.ConversionNotSupportedException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.annotation.TypeAlias;
+import org.springframework.data.convert.ReadingConverter;
+import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Distance;
@@ -1869,6 +1872,68 @@ public class MappingMongoConverterUnitTests {
 				Mockito.any(DbRefResolverCallback.class), Mockito.any(DbRefProxyHandler.class));
 	}
 
+	/**
+	 * @see DATAMONGO-1118
+	 */
+	@Test
+	public void convertsMapKeyUsingCustomConverterForAndBackwards() {
+
+		MappingMongoConverter converter = new MappingMongoConverter(resolver, mappingContext);
+		converter.setCustomConversions(new CustomConversions(Arrays.asList(new FooBarEnumToStringConverter(),
+				new StringToFooNumConverter())));
+		converter.afterPropertiesSet();
+
+		ClassWithMapUsingEnumAsKey source = new ClassWithMapUsingEnumAsKey();
+		source.map = new HashMap<MappingMongoConverterUnitTests.FooBarEnum, String>();
+		source.map.put(FooBarEnum.FOO, "wohoo");
+
+		DBObject target = new BasicDBObject();
+		converter.write(source, target);
+
+		assertThat(converter.read(ClassWithMapUsingEnumAsKey.class, target).map, equalTo(source.map));
+	}
+
+	/**
+	 * @see DATAMONGO-1118
+	 */
+	@Test
+	public void writesMapKeyUsingCustomConverter() {
+
+		MappingMongoConverter converter = new MappingMongoConverter(resolver, mappingContext);
+		converter.setCustomConversions(new CustomConversions(Arrays.asList(new FooBarEnumToStringConverter())));
+		converter.afterPropertiesSet();
+
+		ClassWithMapUsingEnumAsKey source = new ClassWithMapUsingEnumAsKey();
+		source.map = new HashMap<MappingMongoConverterUnitTests.FooBarEnum, String>();
+		source.map.put(FooBarEnum.FOO, "spring");
+		source.map.put(FooBarEnum.BAR, "data");
+
+		DBObject target = new BasicDBObject();
+		converter.write(source, target);
+
+		DBObject map = DBObjectTestUtils.getAsDBObject(target, "map");
+
+		assertThat(map.containsField("foo-enum-value"), is(true));
+		assertThat(map.containsField("bar-enum-value"), is(true));
+	}
+
+	/**
+	 * @see DATAMONGO-1118
+	 */
+	@Test
+	public void readsMapKeyUsingCustomConverter() {
+
+		MappingMongoConverter converter = new MappingMongoConverter(resolver, mappingContext);
+		converter.setCustomConversions(new CustomConversions(Arrays.asList(new StringToFooNumConverter())));
+		converter.afterPropertiesSet();
+
+		DBObject source = new BasicDBObject("map", new BasicDBObject("foo-enum-value", "spring"));
+
+		ClassWithMapUsingEnumAsKey target = converter.read(ClassWithMapUsingEnumAsKey.class, source);
+
+		assertThat(target.map.get(FooBarEnum.FOO), is("spring"));
+	}
+
 	static class GenericType<T> {
 		T content;
 	}
@@ -2130,4 +2195,50 @@ public class MappingMongoConverterUnitTests {
 		}
 
 	}
+
+	static enum FooBarEnum {
+		FOO, BAR;
+	}
+
+	static class ClassWithMapUsingEnumAsKey {
+		Map<FooBarEnum, String> map;
+	}
+
+	@WritingConverter
+	static class FooBarEnumToStringConverter implements Converter<FooBarEnum, String> {
+
+		@Override
+		public String convert(FooBarEnum source) {
+			if (source == null) {
+				return null;
+			}
+
+			return FooBarEnum.FOO.equals(source) ? "foo-enum-value" : "bar-enum-value";
+		}
+
+	}
+
+	@ReadingConverter
+	static class StringToFooNumConverter implements Converter<String, FooBarEnum> {
+
+		@Override
+		public FooBarEnum convert(String source) {
+
+			if (source == null) {
+				return null;
+			}
+
+			if (source.equals("foo-enum-value")) {
+				return FooBarEnum.FOO;
+			}
+			if (source.equals("bar-enum-value")) {
+				return FooBarEnum.BAR;
+			}
+
+			throw new ConversionNotSupportedException(source, String.class, null);
+		}
+
+	}
+
+
 }
