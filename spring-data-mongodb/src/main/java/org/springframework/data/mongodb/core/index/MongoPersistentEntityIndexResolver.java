@@ -117,7 +117,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 						indexInformation.add(indexDefinitionHolder);
 					}
 				} catch (CyclicPropertyReferenceException e) {
-					LOGGER.warn(e.getMessage());
+					LOGGER.info(e.getMessage());
 				}
 			}
 		});
@@ -155,7 +155,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 						indexInformation.addAll(resolveIndexForClass(persistentProperty.getActualType(), propertyDotPath,
 								collection, guard));
 					} catch (CyclicPropertyReferenceException e) {
-						LOGGER.warn(e.getMessage());
+						LOGGER.info(e.getMessage());
 					}
 				}
 
@@ -205,7 +205,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			appendTextIndexInformation("", indexDefinitionBuilder, root,
 					new TextIndexIncludeOptions(IncludeStrategy.DEFAULT), new CycleGuard());
 		} catch (CyclicPropertyReferenceException e) {
-			LOGGER.warn(e.getMessage());
+			LOGGER.info(e.getMessage());
 		}
 
 		TextIndexDefinition indexDefinition = indexDefinitionBuilder.build();
@@ -256,9 +256,9 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 							appendTextIndexInformation(propertyDotPath, indexDefinitionBuilder,
 									mappingContext.getPersistentEntity(persistentProperty.getActualType()), optionsForNestedType, guard);
 						} catch (CyclicPropertyReferenceException e) {
-							LOGGER.warn(e.getMessage(), e);
+							LOGGER.info(e.getMessage(), e);
 						} catch (InvalidDataAccessApiUsageException e) {
-							LOGGER.warn(
+							LOGGER.info(
 									String.format("Potentially invald index structure discovered. Breaking operation for %s.",
 											entity.getName()), e);
 						}
