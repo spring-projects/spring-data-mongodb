@@ -626,9 +626,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			Object key = entry.getKey();
 			Object val = entry.getValue();
 			if (conversions.isSimpleType(key.getClass())) {
-				// Don't use conversion service here as removal of ObjectToString converter results in some primitive types not
-				// being convertable
-				String simpleKey = potentiallyEscapeMapKey(key.toString());
+
+				String simpleKey = potentiallyConvertMapKey(key);
 				if (val == null || conversions.isSimpleType(val.getClass())) {
 					writeSimpleInternal(val, dbo, simpleKey);
 				} else if (val instanceof Collection || val.getClass().isArray()) {
@@ -647,6 +646,20 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		return dbo;
+	}
+
+	private String potentiallyConvertMapKey(Object key) {
+
+		String stringKey = null;
+		if (key instanceof String
+				|| !(conversions.hasCustomWriteTarget(key.getClass()) && conversions.getCustomWriteTarget(key.getClass())
+						.equals(String.class))) {
+			stringKey = key.toString();
+		} else {
+			stringKey = (String) getPotentiallyConvertedSimpleWrite(key);
+		}
+
+		return potentiallyEscapeMapKey(stringKey);
 	}
 
 	/**
