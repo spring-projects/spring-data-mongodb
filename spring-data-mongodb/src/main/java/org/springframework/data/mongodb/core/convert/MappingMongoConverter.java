@@ -647,7 +647,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			Object val = entry.getValue();
 			if (conversions.isSimpleType(key.getClass())) {
 
-				String simpleKey = potentiallyConvertMapKey(key);
+				String simpleKey = potentiallyEscapeMapKey(potentiallyConvertMapKey(key));
 				if (val == null || conversions.isSimpleType(val.getClass())) {
 					writeSimpleInternal(val, dbo, simpleKey);
 				} else if (val instanceof Collection || val.getClass().isArray()) {
@@ -670,16 +670,15 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	private String potentiallyConvertMapKey(Object key) {
 
-		String stringKey = null;
-		if (key instanceof String
-				|| !(conversions.hasCustomWriteTarget(key.getClass()) && conversions.getCustomWriteTarget(key.getClass())
-						.equals(String.class))) {
-			stringKey = key.toString();
-		} else {
-			stringKey = (String) getPotentiallyConvertedSimpleWrite(key);
+		if (key instanceof String) {
+			return (String) key;
 		}
 
-		return potentiallyEscapeMapKey(stringKey);
+		if (conversions.hasCustomWriteTarget(key.getClass(), String.class)) {
+			return (String) getPotentiallyConvertedSimpleWrite(key);
+		}
+
+		return key.toString();
 	}
 
 	/**
