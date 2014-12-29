@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,23 +22,30 @@ import org.junit.Test;
 import org.springframework.data.mongodb.core.DBObjectTestUtils;
 import org.springframework.data.mongodb.core.query.NearQuery;
 
+import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
 /**
  * Unit tests for {@link GeoNearOperation}.
  * 
  * @author Oliver Gierke
+ * @author Thomas Darimont
  */
 public class GeoNearOperationUnitTests {
 
+	/**
+	 * @see DATAMONGO-1127
+	 */
 	@Test
 	public void rendersNearQueryAsAggregationOperation() {
 
 		NearQuery query = NearQuery.near(10.0, 10.0);
-		GeoNearOperation operation = new GeoNearOperation(query);
+		GeoNearOperation operation = new GeoNearOperation(query, "distance");
 		DBObject dbObject = operation.toDBObject(Aggregation.DEFAULT_CONTEXT);
 
 		DBObject nearClause = DBObjectTestUtils.getAsDBObject(dbObject, "$geoNear");
-		assertThat(nearClause, is(query.toDBObject()));
+
+		DBObject expected = (DBObject) new BasicDBObject(query.toDBObject().toMap()).append("distanceField", "distance");
+		assertThat(nearClause, is(expected));
 	}
 }
