@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 the original author or authors.
+ * Copyright 2013-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedFi
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
 import org.springframework.data.mongodb.core.aggregation.Fields.AggregationField;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.SerializationUtils;
 import org.springframework.util.Assert;
 
@@ -289,6 +290,19 @@ public class Aggregation {
 	 */
 	public static Fields bind(String name, String target) {
 		return Fields.from(field(name, target));
+	}
+
+	/**
+	 * Creates a new {@link GeoNearOperation} instance from the given {@link NearQuery} and the{@code distanceField}. The
+	 * {@code distanceField} defines output field that contains the calculated distance.
+	 * 
+	 * @param query must not be {@literal null}.
+	 * @param distanceField must not be {@literal null} or empty.
+	 * @return
+	 * @since 1.7
+	 */
+	public static GeoNearOperation geoNear(NearQuery query, String distanceField) {
+		return new GeoNearOperation(query, distanceField);
 	}
 
 	/**

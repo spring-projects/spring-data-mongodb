@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,17 +22,33 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
 /**
+ * Represents a {@code geoNear} aggregation operation.
+ * <p>
+ * We recommend to use the static factory method {@link Aggregation#geoNear(NearQuery, String)} instead of creating
+ * instances of this class directly.
+ * 
  * @author Thomas Darimont
  * @since 1.3
  */
 public class GeoNearOperation implements AggregationOperation {
 
 	private final NearQuery nearQuery;
+	private final String distanceField;
 
-	public GeoNearOperation(NearQuery nearQuery) {
+	/**
+	 * Creates a new {@link GeoNearOperation} from the given {@link NearQuery} and the given distance field. The
+	 * {@code distanceField} defines output field that contains the calculated distance.
+	 * 
+	 * @param query must not be {@literal null}.
+	 * @param distanceField must not be {@literal null}.
+	 */
+	public GeoNearOperation(NearQuery nearQuery, String distanceField) {
 
-		Assert.notNull(nearQuery);
+		Assert.notNull(nearQuery, "NearQuery must not be null.");
+		Assert.hasLength(distanceField, "Distance field must not be null or empty.");
+
 		this.nearQuery = nearQuery;
+		this.distanceField = distanceField;
 	}
 
 	/* 
@@ -41,6 +57,10 @@ public class GeoNearOperation implements AggregationOperation {
 	 */
 	@Override
 	public DBObject toDBObject(AggregationOperationContext context) {
-		return new BasicDBObject("$geoNear", context.getMappedObject(nearQuery.toDBObject()));
+
+		BasicDBObject command = (BasicDBObject) context.getMappedObject(nearQuery.toDBObject());
+		command.put("distanceField", distanceField);
+
+		return new BasicDBObject("$geoNear", command);
 	}
 }
