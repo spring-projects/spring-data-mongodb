@@ -32,6 +32,8 @@ public class GeoNearOperation implements AggregationOperation {
 	public GeoNearOperation(NearQuery nearQuery) {
 
 		Assert.notNull(nearQuery);
+		Assert.notNull(nearQuery.getDistanceField(), "distanceField must be configured in NearQuery.");
+
 		this.nearQuery = nearQuery;
 	}
 

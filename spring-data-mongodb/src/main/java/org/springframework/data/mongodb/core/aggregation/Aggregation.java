@@ -27,6 +27,7 @@ import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedFi
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
 import org.springframework.data.mongodb.core.aggregation.Fields.AggregationField;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.SerializationUtils;
 import org.springframework.util.Assert;
 
@@ -289,6 +290,17 @@ public class Aggregation {
 	 */
 	public static Fields bind(String name, String target) {
 		return Fields.from(field(name, target));
+	}
+
+	/**
+	 * Creates a new {@link GeoNearOperation} instance from the given {@link NearQuery}.
+	 * 
+	 * @param query
+	 * @return
+	 * @since 1.7
+	 */
+	public static GeoNearOperation geoNear(NearQuery query) {
+		return new GeoNearOperation(query);
 	}
 
 	/**

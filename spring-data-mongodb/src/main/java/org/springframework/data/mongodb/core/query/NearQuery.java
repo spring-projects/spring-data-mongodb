@@ -44,6 +44,7 @@ public final class NearQuery {
 	private boolean spherical;
 	private Integer num;
 	private Integer skip;
+	private String distanceField;
 
 	/**
 	 * Creates a new {@link NearQuery}.
@@ -154,6 +155,21 @@ public final class NearQuery {
 		Assert.notNull(pageable, "Pageable must not be 'null'.");
 		this.num = pageable.getOffset() + pageable.getPageSize();
 		this.skip = pageable.getOffset();
+		return this;
+	}
+
+	/**
+	 * Configures the name of the distanceField.
+	 * 
+	 * @param distanceField
+	 * @return
+	 */
+	public NearQuery withDistanceField(String distanceField) {
+
+		Assert.hasText(distanceField, "distanceField must not be empty.");
+
+		this.distanceField = distanceField;
+
 		return this;
 	}
 
@@ -339,6 +355,13 @@ public final class NearQuery {
 	}
 
 	/**
+	 * @return the name of the distanceField.
+	 */
+	public String getDistanceField() {
+		return distanceField;
+	}
+
+	/**
 	 * Returns the {@link DBObject} built by the {@link NearQuery}.
 	 * 
 	 * @return
@@ -366,6 +389,10 @@ public final class NearQuery {
 		dbObject.put("near", Arrays.asList(point.getX(), point.getY()));
 
 		dbObject.put("spherical", spherical);
+
+		if (distanceField != null) {
+			dbObject.put("distanceField", distanceField);
+		}
 
 		return dbObject;
 	}

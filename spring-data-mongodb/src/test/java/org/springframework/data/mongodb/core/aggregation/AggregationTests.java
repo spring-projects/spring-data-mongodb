@@ -47,11 +47,14 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.geo.Metrics;
 import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mongodb.core.CollectionCallback;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.Venue;
 import org.springframework.data.mongodb.core.aggregation.AggregationTests.CarDescriptor.Entry;
-import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.index.GeospatialIndex;
+import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.Person;
 import org.springframework.data.util.Version;
@@ -1016,6 +1019,33 @@ public class AggregationTests {
 		assertThat(dbo.get("dayOfWeek"), is((Object) 6));
 		assertThat(dbo.get("dayOfYearPlus1Day"), is((Object) dateTime.plusDays(1).getDayOfYear()));
 		assertThat(dbo.get("dayOfYearPlus1DayManually"), is((Object) dateTime.plusDays(1).getDayOfYear()));
+	}
+
+	/**
+	 * @see DATAMONGO-1127
+	 */
+	@Test
+	public void shouldSupportGeoNearQueriesForAggregation() {
+
+		mongoTemplate.dropCollection(Venue.class);
+
+		mongoTemplate.insert(new Venue("Penn Station", -73.99408, 40.75057));
+		mongoTemplate.insert(new Venue("10gen Office", -73.99171, 40.738868));
+		mongoTemplate.insert(new Venue("Flatiron Building", -73.988135, 40.741404));
+
+		mongoTemplate.indexOps(Venue.class).ensureIndex(new GeospatialIndex("location"));
+
+		NearQuery geoNear = NearQuery.near(-73, 40, Metrics.KILOMETERS).num(10).maxDistance(150)
+				.withDistanceField("distance");
+
+		Aggregation agg = newAggregation(Aggregation.geoNear(geoNear));
+		AggregationResults<DBObject> result = mongoTemplate.aggregate(agg, Venue.class, DBObject.class);
+
+		assertThat(result.getMappedResults(), hasSize(3));
+
+		DBObject firstResult = result.getMappedResults().get(0);
+		assertThat(firstResult.containsField("distance"), is(true));
+		assertThat(firstResult.get("distance"), is((Object) 117.620092203928));
 	}
 
 	private void assertLikeStats(LikeStats like, String id, long count) {
