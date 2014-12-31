@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
+import static java.time.ZoneId.*;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
@@ -36,6 +37,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -1962,6 +1964,43 @@ public class MappingMongoConverterUnitTests {
 		assertThat(converter.read(TypeWithLocalDateTime.class, result).date, is(reference));
 	}
 
+	/**
+	 * @see DATAMONGO-1128
+	 */
+	@Test
+	public void writesOptionalsCorrectly() {
+
+		TypeWithOptional type = new TypeWithOptional();
+		type.localDateTime = Optional.of(LocalDateTime.now());
+
+		DBObject result = new BasicDBObject();
+
+		converter.write(type, result);
+
+		assertThat(getAsDBObject(result, "string"), is((DBObject) new BasicDBObject()));
+
+		DBObject localDateTime = getAsDBObject(result, "localDateTime");
+		assertThat(localDateTime.get("value"), is(instanceOf(Date.class)));
+	}
+
+	/**
+	 * @see DATAMONGO-1128
+	 */
+	@Test
+	public void readsOptionalsCorrectly() {
+
+		LocalDateTime now = LocalDateTime.now();
+		Date reference = Date.from(now.atZone(systemDefault()).toInstant());
+
+		BasicDBObject optionalOfLocalDateTime = new BasicDBObject("value", reference);
+		DBObject result = new BasicDBObject("localDateTime", optionalOfLocalDateTime);
+
+		TypeWithOptional read = converter.read(TypeWithOptional.class, result);
+
+		assertThat(read.string, is(Optional.<String> empty()));
+		assertThat(read.localDateTime, is(Optional.of(now)));
+	}
+
 	static class GenericType<T> {
 		T content;
 	}
@@ -2257,5 +2296,11 @@ public class MappingMongoConverterUnitTests {
 		TypeWithLocalDateTime() {
 			this.date = LocalDateTime.now();
 		}
+	}
+
+	static class TypeWithOptional {
+
+		Optional<String> string = Optional.empty();
+		Optional<LocalDateTime> localDateTime = Optional.empty();
 	}
 }
