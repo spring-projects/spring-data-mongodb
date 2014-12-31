@@ -1,0 +1,22 @@
+language: java
+
+jdk:
+  - oraclejdk8
+
+services:
+  - mongodb
+
+env:
+  matrix:
+    - PROFILE=ci
+    - PROFILE=mongo-next
+
+sudo: false
+
+cache:
+  directories:
+    - $HOME/.m2
+
+install: true
+
+script: "mvn clean dependency:list test -P${PROFILE} -Dsort"
