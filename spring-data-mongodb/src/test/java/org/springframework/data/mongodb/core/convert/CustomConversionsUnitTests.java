@@ -35,6 +35,7 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.mongodb.core.convert.MongoConverters.StringToBigIntegerConverter;
+import org.threeten.bp.LocalDateTime;
 
 import com.mongodb.DBRef;
 
@@ -232,6 +233,28 @@ public class CustomConversionsUnitTests {
 
 		CustomConversions conversions = new CustomConversions(Arrays.asList(CustomObjectToStringConverter.INSTANCE));
 		assertThat(conversions.hasCustomReadTarget(createProxyTypeFor(Object.class), String.class), is(true));
+	}
+
+	/**
+	 * @see DATAMONGO-1131
+	 */
+	@Test
+	public void registersConvertersForJsr310() {
+
+		CustomConversions customConversions = new CustomConversions();
+
+		assertThat(customConversions.hasCustomWriteTarget(java.time.LocalDateTime.class), is(true));
+	}
+
+	/**
+	 * @see DATAMONGO-1131
+	 */
+	@Test
+	public void registersConvertersForThreeTenBackPort() {
+
+		CustomConversions customConversions = new CustomConversions();
+
+		assertThat(customConversions.hasCustomWriteTarget(LocalDateTime.class), is(true));
 	}
 
 	private static Class<?> createProxyTypeFor(Class<?> type) {
