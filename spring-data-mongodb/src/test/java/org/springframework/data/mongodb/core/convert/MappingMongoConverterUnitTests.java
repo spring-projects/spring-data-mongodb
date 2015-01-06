@@ -77,6 +77,7 @@ import org.springframework.data.mapping.model.MappingInstantiationException;
 import org.springframework.data.mongodb.core.DBObjectTestUtils;
 import org.springframework.data.mongodb.core.convert.DBObjectAccessorUnitTests.NestedType;
 import org.springframework.data.mongodb.core.convert.DBObjectAccessorUnitTests.ProjectingType;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverterUnitTests.ClassWithMapUsingEnumAsKey.FooBarEnum;
 import org.springframework.data.mongodb.core.geo.Sphere;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -1967,7 +1968,6 @@ public class MappingMongoConverterUnitTests {
 		assertThat(converter.read(TypeWithLocalDateTime.class, result).date, is(reference));
 	}
 
-
 	/**
 	 * @see DATAMONGO-1128
 	 */
@@ -2009,6 +2009,7 @@ public class MappingMongoConverterUnitTests {
 	 * @see DATAMONGO-1118
 	 */
 	@Test
+	@SuppressWarnings("unchecked")
 	public void convertsMapKeyUsingCustomConverterForAndBackwards() {
 
 		MappingMongoConverter converter = new MappingMongoConverter(resolver, mappingContext);
@@ -2017,13 +2018,13 @@ public class MappingMongoConverterUnitTests {
 		converter.afterPropertiesSet();
 
 		ClassWithMapUsingEnumAsKey source = new ClassWithMapUsingEnumAsKey();
-		source.map = new HashMap<MappingMongoConverterUnitTests.FooBarEnum, String>();
+		source.map = new HashMap<FooBarEnum, String>();
 		source.map.put(FooBarEnum.FOO, "wohoo");
 
 		DBObject target = new BasicDBObject();
 		converter.write(source, target);
 
-		assertThat(converter.read(ClassWithMapUsingEnumAsKey.class, target).map, equalTo(source.map));
+		assertThat(converter.read(ClassWithMapUsingEnumAsKey.class, target).map, is(source.map));
 	}
 
 	/**
@@ -2037,7 +2038,7 @@ public class MappingMongoConverterUnitTests {
 		converter.afterPropertiesSet();
 
 		ClassWithMapUsingEnumAsKey source = new ClassWithMapUsingEnumAsKey();
-		source.map = new HashMap<MappingMongoConverterUnitTests.FooBarEnum, String>();
+		source.map = new HashMap<FooBarEnum, String>();
 		source.map.put(FooBarEnum.FOO, "spring");
 		source.map.put(FooBarEnum.BAR, "data");
 
@@ -2370,11 +2371,12 @@ public class MappingMongoConverterUnitTests {
 		Optional<LocalDateTime> localDateTime = Optional.empty();
 	}
 
-	static enum FooBarEnum {
-		FOO, BAR;
-	}
-
 	static class ClassWithMapUsingEnumAsKey {
+
+		static enum FooBarEnum {
+			FOO, BAR;
+		}
+
 		Map<FooBarEnum, String> map;
 	}
 
@@ -2383,13 +2385,13 @@ public class MappingMongoConverterUnitTests {
 
 		@Override
 		public String convert(FooBarEnum source) {
+
 			if (source == null) {
 				return null;
 			}
 
 			return FooBarEnum.FOO.equals(source) ? "foo-enum-value" : "bar-enum-value";
 		}
-
 	}
 
 	@ReadingConverter
@@ -2411,8 +2413,5 @@ public class MappingMongoConverterUnitTests {
 
 			throw new ConversionNotSupportedException(source, String.class, null);
 		}
-
 	}
-
-
 }
