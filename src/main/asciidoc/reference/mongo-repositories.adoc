@@ -147,87 +147,87 @@ The first method shows a query for all people with the given lastname. The query
 
 NOTE: Note that for version 1.0 we currently don't support referring to parameters that are mapped as `DBRef` in the domain class.
 
-[cols="1,2,3", options="header"] 
+[cols="1,2,3", options="header"]
 .Supported keywords for query methods
 |===
 | Keyword
-| Sample	
+| Sample
 | Logical result
 
-| `GreaterThan`	
-| `findByAgeGreaterThan(int age)`	
+| `GreaterThan`
+| `findByAgeGreaterThan(int age)`
 | `{"age" : {"$gt" : age}}`
 
-| `GreaterThanEqual`	
-| `findByAgeGreaterThanEqual(int age)`	
+| `GreaterThanEqual`
+| `findByAgeGreaterThanEqual(int age)`
 | `{"age" : {"$gte" : age}}`
 
-| `LessThan`	
-| `findByAgeLessThan(int age)`	
+| `LessThan`
+| `findByAgeLessThan(int age)`
 | `{"age" : {"$lt" : age}}`
 
-| `LessThanEqual`	
-| `findByAgeLessThanEqual(int age)`	
+| `LessThanEqual`
+| `findByAgeLessThanEqual(int age)`
 | `{"age" : {"$lte" : age}}`
 
-| `Between`	
-| `findByAgeBetween(int from, int to)`	
+| `Between`
+| `findByAgeBetween(int from, int to)`
 | `{"age" : {"$gt" : from, "$lt" : to}}`
 
-| `In`	
+| `In`
 | `findByAgeIn(Collection ages)`
 | `{"age" : {"$in" : [ages...]}}`
 
-| `NotIn`	
-| `findByAgeNotIn(Collection ages)`	
+| `NotIn`
+| `findByAgeNotIn(Collection ages)`
 | `{"age" : {"$nin" : [ages...]}}`
 
-| `IsNotNull, NotNull`	
-| `findByFirstnameNotNull()`	
-| `{"age" : {"$ne" : null}}`
+| `IsNotNull, NotNull`
+| `findByFirstnameNotNull()`
+| `{"firstname" : {"$ne" : null}}`
 
-| `IsNull, Null`	
-| `findByFirstnameNull()`	
-| `{"age" : null}`
+| `IsNull, Null`
+| `findByFirstnameNull()`
+| `{"firstname" : null}`
 
-| `Like`	
+| `Like`
 | `findByFirstnameLike(String name)`
-| `{"age" : age} ( age as regex)`
+| `{"firstname" : name} ( name as regex)`
 
-| `Regex`	
-| `findByFirstnameRegex(String firstname)`	
+| `Regex`
+| `findByFirstnameRegex(String firstname)`
 | `{"firstname" : {"$regex" : firstname }}`
 
-| `(No keyword)`	
+| `(No keyword)`
 | `findByFirstname(String name)`
-| `{"age" : name}`
+| `{"firstname" : name}`
 
 | `Not`	
-| `findByFirstnameNot(String name)`	
-| `{"age" : {"$ne" : name}}`
+| `findByFirstnameNot(String name)`
+| `{"firstname" : {"$ne" : name}}`
 
-| `Near`	
-| `findByLocationNear(Point point)`	
+| `Near`
+| `findByLocationNear(Point point)`
 | `{"location" : {"$near" : [x,y]}}`
 
-| `Within`	
-| `findByLocationWithin(Circle circle)`	
+| `Within`
+| `findByLocationWithin(Circle circle)`
 | `{"location" : {"$within" : {"$center" : [ [x, y], distance]}}}`
 
-| `Within`	
-| `findByLocationWithin(Box box)`	
+| `Within`
+| `findByLocationWithin(Box box)`
 | `{"location" : {"$within" : {"$box" : [ [x1, y1], x2, y2]}}}True`
 
-| `IsTrue, True`	
-| `findByActiveIsTrue()`	
+| `IsTrue, True`
+| `findByActiveIsTrue()`
 | `{"active" : true}`
 
-| `IsFalse, False`	
-| `findByActiveIsFalse()`	
+| `IsFalse, False`
+| `findByActiveIsFalse()`
 | `{"active" : false}`
 
-| `Exists`	
-| `findByLocationExists(boolean exists)`	
+| `Exists`
+| `findByLocationExists(boolean exists)`
 | `{"location" : {"$exists" : exists }}`
 |===
 
