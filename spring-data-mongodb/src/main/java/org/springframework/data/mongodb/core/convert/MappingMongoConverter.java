@@ -586,7 +586,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 			if (conversions.isSimpleType(key.getClass())) {
 
-				String simpleKey = potentiallyEscapeMapKey(key.toString());
+				String simpleKey = prepareMapKey(key.toString());
 				dbObject.put(simpleKey, value != null ? createDBRef(value, property) : null);
 
 			} else {
@@ -638,11 +638,13 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	protected DBObject writeMapInternal(Map<Object, Object> obj, DBObject dbo, TypeInformation<?> propertyType) {
 
 		for (Map.Entry<Object, Object> entry : obj.entrySet()) {
+
 			Object key = entry.getKey();
 			Object val = entry.getValue();
+
 			if (conversions.isSimpleType(key.getClass())) {
 
-				String simpleKey = potentiallyEscapeMapKey(potentiallyConvertMapKey(key));
+				String simpleKey = prepareMapKey(key);
 				if (val == null || conversions.isSimpleType(val.getClass())) {
 					writeSimpleInternal(val, dbo, simpleKey);
 				} else if (val instanceof Collection || val.getClass().isArray()) {
@@ -663,17 +665,19 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		return dbo;
 	}
 
-	private String potentiallyConvertMapKey(Object key) {
+	/**
+	 * Prepares the given {@link Map} key to be converted into a {@link String}. Will invoke potentially registered custom
+	 * conversions and escape dots from the result as they're not supported as {@link Map} key in MongoDB.
+	 * 
+	 * @param key must not be {@literal null}.
+	 * @return
+	 */
+	private String prepareMapKey(Object key) {
 
-		if (key instanceof String) {
-			return (String) key;
-		}
+		Assert.notNull(key, "Map key must not be null!");
 
-		if (conversions.hasCustomWriteTarget(key.getClass(), String.class)) {
-			return (String) getPotentiallyConvertedSimpleWrite(key);
-		}
-
-		return key.toString();
+		String convertedKey = potentiallyConvertMapKey(key);
+		return potentiallyEscapeMapKey(convertedKey);
 	}
 
 	/**
@@ -696,6 +700,22 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		return source.replaceAll("\\.", mapKeyDotReplacement);
+	}
+
+	/**
+	 * Returns a {@link String} representation of the given {@link Map} key
+	 * 
+	 * @param key
+	 * @return
+	 */
+	private String potentiallyConvertMapKey(Object key) {
+
+		if (key instanceof String) {
+			return (String) key;
+		}
+
+		return conversions.hasCustomWriteTarget(key.getClass(), String.class) ? (String) getPotentiallyConvertedSimpleWrite(key)
+				: key.toString();
 	}
 
 	/**
