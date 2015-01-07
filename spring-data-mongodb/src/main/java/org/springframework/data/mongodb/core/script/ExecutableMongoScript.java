@@ -15,28 +15,27 @@
  */
 package org.springframework.data.mongodb.core.script;
 
-import org.bson.types.Code;
 import org.springframework.util.Assert;
 
 /**
- * {@link MongoScript} implementation that can be saved or directly executed.
+ * {@link ServerSideJavaScript} implementation that can be saved or directly executed.
  * 
  * @author Christoph Strobl
  * @since 1.7
  */
-public class ExecutableMongoScript implements MongoScript {
+public class ExecutableMongoScript implements ServerSideJavaScript {
 
-	private final String rawScript;
+	private final String code;
 
 	/**
 	 * Creates new {@link ExecutableMongoScript}.
 	 * 
-	 * @param rawScript must not be {@literal null} or {@literal empty}.
+	 * @param code must not be {@literal null} or {@literal empty}.
 	 */
-	public ExecutableMongoScript(String rawScript) {
+	public ExecutableMongoScript(String code) {
 
-		Assert.hasText(rawScript, "RawScript must not be null or empty!");
-		this.rawScript = rawScript;
+		Assert.hasText(code, "Code must not be null or empty!");
+		this.code = code;
 	}
 
 	/*
@@ -44,8 +43,8 @@ public class ExecutableMongoScript implements MongoScript {
 	 * @see org.springframework.data.mongodb.core.script.MongoScript#getCode()
 	 */
 	@Override
-	public Code getCode() {
-		return new Code(this.rawScript);
+	public String getCode() {
+		return this.code;
 	}
 
 }

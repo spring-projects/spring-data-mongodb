@@ -19,14 +19,18 @@ import static java.util.UUID.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
-import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
+import org.bson.types.ObjectId;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.mongodb.core.script.CallableMongoScript;
-import org.springframework.data.mongodb.core.script.MongoScript;
+import org.springframework.data.mongodb.core.script.ServerSideJavaScript;
 import org.springframework.util.Assert;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
@@ -34,7 +38,7 @@ import com.mongodb.DB;
 import com.mongodb.MongoException;
 
 /**
- * Default implementation of {@link ScriptOperations} capable of saving and executing simple {@link MongoScript}.
+ * Default implementation of {@link ScriptOperations} capable of saving and executing {@link ServerSideJavaScript}.
  * 
  * @author Christoph Strobl
  * @since 1.7
@@ -53,6 +57,7 @@ public class DefaultScriptOperations implements ScriptOperations {
 	public DefaultScriptOperations(MongoOperations mongoOperations) {
 
 		Assert.notNull(mongoOperations, "MongoOperations must not be null!");
+
 		this.mongoOperations = mongoOperations;
 	}
 
@@ -61,17 +66,12 @@ public class DefaultScriptOperations implements ScriptOperations {
 	 * @see org.springframework.data.mongodb.core.ScriptOperations#save(org.springframework.data.mongodb.core.script.MongoScript)
 	 */
 	@Override
-	public CallableMongoScript save(MongoScript script) {
+	public CallableMongoScript register(ServerSideJavaScript script) {
 
 		Assert.notNull(script, "Script must not be null!");
-		CallableMongoScript callableScript = null;
 
-		if (script instanceof CallableMongoScript) {
-			callableScript = (CallableMongoScript) script;
-		} else {
-			callableScript = new CallableMongoScript(generateScriptName(), script);
-		}
-
+		CallableMongoScript callableScript = (script instanceof CallableMongoScript) ? (CallableMongoScript) script
+				: new CallableMongoScript(generateScriptName(), script);
 		mongoOperations.save(callableScript, SCRIPT_COLLECTION_NAME);
 		return callableScript;
 	}
@@ -81,41 +81,83 @@ public class DefaultScriptOperations implements ScriptOperations {
 	 * @see org.springframework.data.mongodb.core.ScriptOperations#execute(org.springframework.data.mongodb.core.script.MongoScript, java.lang.Object[])
 	 */
 	@Override
-	public Object execute(final MongoScript script, final Object... args) {
+	public Object execute(final ServerSideJavaScript script, final Object... args) {
 
 		Assert.notNull(script, "Script must not be null!");
+
+		if (script instanceof CallableMongoScript) {
+			return call(((CallableMongoScript) script).getName(), args);
+		}
+
 		return mongoOperations.execute(new DbCallback<Object>() {
 
 			@Override
 			public Object doInDB(DB db) throws MongoException, DataAccessException {
 
-				if (script instanceof CallableMongoScript) {
-
-					String evalString = ((CallableMongoScript) script).getName() + "(" + convertAndJoinScriptArgs(args) + ")";
-					return db.eval(evalString);
-				}
-
 				Assert.notNull(script.getCode(), "Script.code must not be null!");
-				return db.eval(script.getCode().toString(), convertScriptArgs(args));
+
+				return db.eval(script.getCode(), convertScriptArgs(args));
 			}
 		});
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ScriptOperations#load(java.io.Serializable)
+	 * @see org.springframework.data.mongodb.core.ScriptOperations#call(java.lang.String, java.lang.Object[])
 	 */
 	@Override
-	public CallableMongoScript load(Serializable name) {
+	public Object call(final String scriptName, final Object... args) {
 
-		Assert.notNull(name, "Name must not be null!");
-		return mongoOperations.findOne(query(where("name").is(name)), CallableMongoScript.class, SCRIPT_COLLECTION_NAME);
+		Assert.hasText(scriptName, "ScriptName must not be null or empty!");
+
+		return mongoOperations.execute(new DbCallback<Object>() {
+
+			@Override
+			public Object doInDB(DB db) throws MongoException, DataAccessException {
+
+				String evalString = scriptName + "(" + convertAndJoinScriptArgs(args) + ")";
+				return db.eval(evalString);
+			}
+		});
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.ScriptOperations#exists(java.lang.String)
+	 */
+	@Override
+	public Boolean exists(String scriptName) {
+
+		Assert.hasText(scriptName, "ScriptName must not be null or empty!");
+
+		return mongoOperations.exists(query(where("name").is(scriptName)), CallableMongoScript.class,
+				SCRIPT_COLLECTION_NAME);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.ScriptOperations#scriptNames()
+	 */
+	@Override
+	public Set<String> scriptNames() {
+
+		List<CallableMongoScript> scripts = (mongoOperations.findAll(CallableMongoScript.class, SCRIPT_COLLECTION_NAME));
+
+		if (CollectionUtils.isEmpty(scripts)) {
+			return Collections.emptySet();
+		}
+
+		Set<String> scriptNames = new HashSet<String>();
+		for (CallableMongoScript script : scripts) {
+			scriptNames.add(script.getName());
+		}
+		return scriptNames;
 	}
 
 	/**
-	 * Generate a valid name for the script. MongoDB requires a script id of type String. Calling scripts having ObjectId
-	 * as id fails. Therefore we create a random UUID without {@code -} (as this won't work) an prefix the result with
-	 * {@link #SCRIPT_NAME_PREFIX}.
+	 * Generate a valid name for the {@literal JavaScript}. MongoDB requires an id of type String for scripts. Calling
+	 * scripts having {@link ObjectId} as id fails. Therefore we create a random UUID without {@code -} (as this won't
+	 * work) an prefix the result with {@link #SCRIPT_NAME_PREFIX}.
 	 * 
 	 * @return
 	 */

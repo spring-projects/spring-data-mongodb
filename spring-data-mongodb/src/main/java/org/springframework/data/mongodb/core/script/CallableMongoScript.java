@@ -15,37 +15,27 @@
  */
 package org.springframework.data.mongodb.core.script;
 
-import org.bson.types.Code;
 import org.springframework.data.annotation.Id;
 import org.springframework.util.Assert;
 
 /**
- * A {@link MongoScript} implementation that allows calling the function by its {@literal id} once it has been saved to
- * the {@link com.mongodb.DB} instance.
+ * A {@link ServerSideJavaScript} implementation that allows calling the function by its {@literal name} once it has
+ * been saved to the {@link com.mongodb.DB} instance.
  * 
  * @author Christoph Strobl
  * @since 1.7
  */
-public class CallableMongoScript implements MongoScript {
+public class CallableMongoScript implements ServerSideJavaScript {
 
 	private final @Id String name;
-	private final MongoScript script;
-
-	/**
-	 * Creates new {@link CallableMongoScript} that uses the given {@literal id} to call the function on the server.
-	 * 
-	 * @param name must not be {@literal null} or {@literal empty}.
-	 */
-	public CallableMongoScript(String name) {
-		this(name, (MongoScript) null);
-	}
+	private final ServerSideJavaScript script;
 
 	/**
 	 * Creates new {@link CallableMongoScript} that can be saved to the {@link com.mongodb.DB} instance.
 	 * 
 	 * @param name must not be {@literal null} or {@literal empty}.
-	 * @param rawScript the {@link String} representation of the javascript function. Must not be {@literal null} or
-	 *          {@literal empty}.
+	 * @param rawScript the {@link String} representation of the {@literal JavaScript} function. Must not be
+	 *          {@literal null} or {@literal empty}.
 	 */
 	public CallableMongoScript(String name, String rawScript) {
 		this(name, new ExecutableMongoScript(rawScript));
@@ -57,7 +47,7 @@ public class CallableMongoScript implements MongoScript {
 	 * @param name must not be {@literal null} or {@literal empty}.
 	 * @param script can be {@literal null}.
 	 */
-	public CallableMongoScript(String name, MongoScript script) {
+	public CallableMongoScript(String name, ServerSideJavaScript script) {
 
 		Assert.hasText(name, "Name must not be null or empty!");
 		this.name = name;
@@ -69,7 +59,7 @@ public class CallableMongoScript implements MongoScript {
 	 * @see org.springframework.data.mongodb.core.script.MongoScript#getCode()
 	 */
 	@Override
-	public Code getCode() {
+	public String getCode() {
 
 		if (script == null) {
 			return null;
@@ -79,7 +69,7 @@ public class CallableMongoScript implements MongoScript {
 	}
 
 	/**
-	 * Get the id of the callable script.
+	 * Get the name of the {@link CallableMongoScript} script.
 	 * 
 	 * @return
 	 */

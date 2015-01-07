@@ -15,18 +15,16 @@
  */
 package org.springframework.data.mongodb.core.script;
 
-import org.bson.types.Code;
-
 /**
  * @author Christoph Strobl
  * @since 1.7
  */
-public interface MongoScript {
+public interface ServerSideJavaScript {
 
 	/**
-	 * Get the {@link Code} representation.
+	 * Get the {@link String} representation of the JavaScript code.
 	 * 
 	 * @return {@literal null} when no code available.
 	 */
-	Code getCode();
+	String getCode();
 }

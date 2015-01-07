@@ -15,7 +15,9 @@
  */
 package org.springframework.data.mongodb.core;
 
+import static org.hamcrest.collection.IsEmptyCollection.*;
 import static org.hamcrest.core.Is.*;
+import static org.hamcrest.core.IsCollectionContaining.*;
 import static org.junit.Assert.*;
 import static org.junit.Assume.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
@@ -29,6 +31,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.dao.DataAccessException;
+import org.springframework.dao.UncategorizedDataAccessException;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.script.CallableMongoScript;
 import org.springframework.data.mongodb.core.script.ExecutableMongoScript;
@@ -63,6 +66,7 @@ public class DefaultScriptOperationsTests {
 
 	}
 
+	static final String JAVASCRIPT_COLLECTION_NAME = "system.js";
 	static final String SCRIPT_NAME = "echo";
 	static final String JS_FUNCTION = "function(x) { return x; }";
 	static final ExecutableMongoScript EXECUTABLE_SCRIPT = new ExecutableMongoScript(JS_FUNCTION);
@@ -74,7 +78,7 @@ public class DefaultScriptOperationsTests {
 	@Before
 	public void setUp() {
 
-		template.getCollection("system.js").remove(new BasicDBObject());
+		template.getCollection(JAVASCRIPT_COLLECTION_NAME).remove(new BasicDBObject());
 		this.scriptOps = new DefaultScriptOperations(template);
 	}
 
@@ -104,11 +108,11 @@ public class DefaultScriptOperationsTests {
 	public void saveShouldStoreCallableScriptCorrectly() {
 
 		Query query = query(where("_id").is(SCRIPT_NAME));
-		assumeThat(template.exists(query, "system.js"), is(false));
+		assumeThat(template.exists(query, JAVASCRIPT_COLLECTION_NAME), is(false));
 
-		scriptOps.save(CALLABLE_SCRIPT);
+		scriptOps.register(CALLABLE_SCRIPT);
 
-		assumeThat(template.exists(query, "system.js"), is(true));
+		assumeThat(template.exists(query, JAVASCRIPT_COLLECTION_NAME), is(true));
 	}
 
 	/**
@@ -117,10 +121,10 @@ public class DefaultScriptOperationsTests {
 	@Test
 	public void saveShouldStoreExecutableScriptCorrectly() {
 
-		CallableMongoScript script = scriptOps.save(EXECUTABLE_SCRIPT);
+		CallableMongoScript script = scriptOps.register(EXECUTABLE_SCRIPT);
 
 		Query query = query(where("_id").is(script.getName()));
-		assumeThat(template.exists(query, "system.js"), is(true));
+		assumeThat(template.exists(query, JAVASCRIPT_COLLECTION_NAME), is(true));
 	}
 
 	/**
@@ -129,10 +133,10 @@ public class DefaultScriptOperationsTests {
 	@Test
 	public void executeShouldRunCallableScriptThatHasBeenSavedBefore() {
 
-		scriptOps.save(CALLABLE_SCRIPT);
+		scriptOps.register(CALLABLE_SCRIPT);
 
 		Query query = query(where("_id").is(SCRIPT_NAME));
-		assumeThat(template.exists(query, "system.js"), is(true));
+		assumeThat(template.exists(query, JAVASCRIPT_COLLECTION_NAME), is(true));
 
 		Object result = scriptOps.execute(CALLABLE_SCRIPT, 10);
 
@@ -143,13 +147,58 @@ public class DefaultScriptOperationsTests {
 	 * @see DATAMONGO-479
 	 */
 	@Test
-	public void loadShouldFindScriptByItsName() {
+	public void existsShouldReturnTrueIfScriptAvailableOnServer() {
 
-		scriptOps.save(CALLABLE_SCRIPT);
+		scriptOps.register(CALLABLE_SCRIPT);
 
-		CallableMongoScript loaded = scriptOps.load(SCRIPT_NAME);
+		assertThat(scriptOps.exists(SCRIPT_NAME), is(true));
+	}
 
-		assertThat(loaded.getName(), is(CALLABLE_SCRIPT.getName()));
-		assertThat(loaded.getCode(), is(CALLABLE_SCRIPT.getCode()));
+	/**
+	 * @see DATAMONGO-479
+	 */
+	@Test
+	public void existsShouldReturnFalseIfScriptNotAvailableOnServer() {
+		assertThat(scriptOps.exists(SCRIPT_NAME), is(false));
+	}
+
+	/**
+	 * @see DATAMONGO-479
+	 */
+	@Test
+	public void callShouldExecuteExistingScript() {
+
+		scriptOps.register(CALLABLE_SCRIPT);
+
+		Object result = scriptOps.call(SCRIPT_NAME, 10);
+
+		assertThat(result, Is.<Object> is(10D));
+	}
+
+	/**
+	 * @see DATAMONGO-479
+	 */
+	@Test(expected = UncategorizedDataAccessException.class)
+	public void callShouldThrowExceptionWhenCallingScriptThatDoesNotExist() {
+		scriptOps.call(SCRIPT_NAME, 10);
+	}
+
+	/**
+	 * @see DATAMONGO-479
+	 */
+	@Test
+	public void scriptNamesShouldContainNameOfRegisteredScript() {
+
+		scriptOps.register(CALLABLE_SCRIPT);
+
+		assertThat(scriptOps.scriptNames(), hasItems("echo"));
+	}
+
+	/**
+	 * @see DATAMONGO-479
+	 */
+	@Test
+	public void scriptNamesShouldReturnEmptySetWhenNoScriptRegistered() {
+		assertThat(scriptOps.scriptNames(), empty());
 	}
 }

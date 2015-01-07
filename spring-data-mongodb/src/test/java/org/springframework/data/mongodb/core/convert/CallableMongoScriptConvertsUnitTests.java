@@ -15,7 +15,6 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import static org.hamcrest.core.Is.*;
 import static org.hamcrest.core.IsEqual.*;
 import static org.hamcrest.core.IsInstanceOf.*;
 import static org.hamcrest.core.IsNull.*;
@@ -88,17 +87,6 @@ public class CallableMongoScriptConvertsUnitTests {
 			Object code = dbo.get("value");
 			assertThat(code, instanceOf(Code.class));
 			assertThat(code.toString(), equalTo(JS_FUNCTION));
-		}
-
-		/**
-		 * @see DATAMONGO-479
-		 */
-		@Test
-		public void convertShouldNotAddValueWhenCodeIsNull() {
-
-			DBObject dbo = converter.convert(new CallableMongoScript("named"));
-
-			assertThat(dbo.containsField("value"), is(false));
 		}
 	}
 

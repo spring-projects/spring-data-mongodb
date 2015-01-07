@@ -20,6 +20,7 @@ import java.math.BigInteger;
 import java.net.MalformedURLException;
 import java.net.URL;
 
+import org.bson.types.Code;
 import org.bson.types.ObjectId;
 import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.core.convert.TypeDescriptor;
@@ -201,11 +202,7 @@ abstract class MongoConverters {
 			String id = source.get("_id").toString();
 			Object rawValue = source.get("value");
 
-			if (rawValue != null) {
-				return new CallableMongoScript(id, rawValue.toString());
-			}
-
-			return new CallableMongoScript(id);
+			return new CallableMongoScript(id, rawValue.toString());
 		}
 	}
 
@@ -229,7 +226,7 @@ abstract class MongoConverters {
 
 			builder.append("_id", source.getName());
 			if (source.getCode() != null) {
-				builder.append("value", source.getCode());
+				builder.append("value", new Code(source.getCode()));
 			}
 
 			return builder.get();

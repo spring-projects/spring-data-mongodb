@@ -15,13 +15,16 @@
  */
 package org.springframework.data.mongodb.core;
 
-import java.io.Serializable;
+import java.util.Set;
 
 import org.springframework.data.mongodb.core.script.CallableMongoScript;
-import org.springframework.data.mongodb.core.script.MongoScript;
+import org.springframework.data.mongodb.core.script.ServerSideJavaScript;
+
+import com.mongodb.DB;
 
 /**
- * Script operations on {@link com.mongodb.DB} level.
+ * Script operations on {@link com.mongodb.DB} level. Allows interaction with server side {@literal JavaScript}
+ * functions.
  * 
  * @author Christoph Strobl
  * @since 1.7
@@ -29,29 +32,45 @@ import org.springframework.data.mongodb.core.script.MongoScript;
 public interface ScriptOperations {
 
 	/**
-	 * Saves given {@literal script} to currently used {@link com.mongodb.DB}.
+	 * Store given {@literal script} to {@link com.mongodb.DB} so it can be called via its name.
 	 * 
 	 * @param script must not be {@literal null}.
-	 * @return
+	 * @return {@link CallableMongoScript} with name under which the {@literal JavaScript} function can be called.
 	 */
-	CallableMongoScript save(MongoScript script);
+	CallableMongoScript register(ServerSideJavaScript script);
 
 	/**
-	 * Executes the {@literal script} by either calling it via its {@literal _id} or directly sending it.
+	 * Executes the {@literal script} by either calling it via its {@literal name} or directly sending it.
 	 * 
 	 * @param script must not be {@literal null}.
 	 * @param args arguments to pass on for script execution.
 	 * @return the script evaluation result.
 	 * @throws org.springframework.dao.DataAccessException
 	 */
-	Object execute(MongoScript script, Object... args);
+	Object execute(ServerSideJavaScript script, Object... args);
 
 	/**
-	 * Retrieves the {@link CallableMongoScript} by its {@literal id}.
+	 * Call the {@literal JavaScript} by its name.
 	 * 
-	 * @param name
-	 * @return {@literal null} if not found.
+	 * @param scriptName must not be {@literal null} or empty.
+	 * @param args
+	 * @return
 	 */
-	CallableMongoScript load(Serializable name);
+	Object call(String scriptName, Object... args);
+
+	/**
+	 * Checks {@link DB} for existence of {@link ServerSideJavaScript} with given name.
+	 * 
+	 * @param scriptName must not be {@literal null} or empty.
+	 * @return false if no {@link ServerSideJavaScript} with given name exists.
+	 */
+	Boolean exists(String scriptName);
+
+	/**
+	 * Returns names of {@literal JavaScript} functions that can be called.
+	 * 
+	 * @return empty {@link Set} if no scripts found.
+	 */
+	Set<String> scriptNames();
 
 }

@@ -16,7 +16,6 @@
 package org.springframework.data.mongodb.core.script;
 
 import static org.hamcrest.core.IsEqual.*;
-import static org.hamcrest.core.IsNull.*;
 import static org.junit.Assert.*;
 
 import org.junit.Test;
@@ -31,7 +30,7 @@ public class CallableMongoScriptUnitTests {
 	 */
 	@Test(expected = IllegalArgumentException.class)
 	public void shouldThrowExceptionWhenScriptNameIsNull() {
-		new CallableMongoScript(null);
+		new CallableMongoScript(null, "return 1;");
 	}
 
 	/**
@@ -39,7 +38,7 @@ public class CallableMongoScriptUnitTests {
 	 */
 	@Test(expected = IllegalArgumentException.class)
 	public void shouldThrowExceptionWhenScriptNameIsEmptyString() {
-		new CallableMongoScript("");
+		new CallableMongoScript("", "return 1");
 	}
 
 	/**
@@ -60,8 +59,7 @@ public class CallableMongoScriptUnitTests {
 
 		CallableMongoScript script = new CallableMongoScript("echo", jsFunction);
 
-		assertThat(script.getCode(), notNullValue());
-		assertThat(script.getCode().toString(), equalTo(jsFunction));
+		assertThat(script.getCode(), equalTo(jsFunction));
 	}
 
 }
