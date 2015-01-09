@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2014 the original author or authors.
+ * Copyright 2011-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,6 +39,8 @@ import org.mockito.stubbing.Answer;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
+import org.springframework.data.geo.Polygon;
+import org.springframework.data.geo.Shape;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.Person;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
@@ -466,6 +468,24 @@ public class MongoQueryCreatorUnitTests {
 		assertThat(query, is(query(where("username").regex(".*thew.*").not())));
 	}
 
+	/**
+	 * @see DATAMONGO-1136
+	 */
+	@Test
+	public void shouldCreateWithinQueryCorrectly() {
+
+		Point first = new Point(1, 1);
+		Point second = new Point(2, 2);
+		Point third = new Point(3, 3);
+		Shape shape = new Polygon(first, second, third);
+
+		PartTree tree = new PartTree("findByAddress_GeoWithin", User.class);
+		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, shape), context);
+		Query query = creator.createQuery();
+
+		assertThat(query, is(query(where("address.geo").within(shape))));
+	}
+
 	interface PersonRepository extends Repository<Person, Long> {
 
 		List<Person> findByLocationNearAndFirstname(Point location, Distance maxDistance, String firstname);
@@ -478,5 +498,13 @@ public class MongoQueryCreatorUnitTests {
 		@DBRef User creator;
 
 		List<String> emailAddresses;
+
+		Address address;
+	}
+
+	static class Address {
+
+		String street;
+		Point geo;
 	}
 }

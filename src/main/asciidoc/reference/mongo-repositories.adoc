@@ -212,11 +212,11 @@ NOTE: Note that for version 1.0 we currently don't support referring to paramete
 
 | `Within`
 | `findByLocationWithin(Circle circle)`
-| `{"location" : {"$within" : {"$center" : [ [x, y], distance]}}}`
+| `{"location" : {"$geoWithin" : {"$center" : [ [x, y], distance]}}}`
 
 | `Within`
 | `findByLocationWithin(Box box)`
-| `{"location" : {"$within" : {"$box" : [ [x1, y1], x2, y2]}}}True`
+| `{"location" : {"$geoWithin" : {"$box" : [ [x1, y1], x2, y2]}}}`
 
 | `IsTrue, True`
 | `findByActiveIsTrue()`
