@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 the original author or authors.
+ * Copyright 2014-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,11 +21,13 @@ import org.springframework.data.geo.Polygon;
 import org.springframework.data.geo.Shape;
 import org.springframework.data.mongodb.core.geo.Sphere;
 import org.springframework.util.Assert;
+import org.springframework.util.ObjectUtils;
 
 /**
  * Wrapper around a {@link Shape} to allow appropriate query rendering.
  * 
  * @author Thomas Darimont
+ * @author Christoph Strobl
  * @since 1.5
  */
 public class GeoCommand {
@@ -82,4 +84,41 @@ public class GeoCommand {
 
 		throw new IllegalArgumentException("Unknown shape: " + shape);
 	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see java.lang.Object#hashCode()
+	 */
+	@Override
+	public int hashCode() {
+		int result = 0;
+		result += ObjectUtils.nullSafeHashCode(this.command);
+		result += ObjectUtils.nullSafeHashCode(this.shape);
+		return result;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see java.lang.Object#equals(java.lang.Object)
+	 */
+	@Override
+	public boolean equals(Object obj) {
+
+		if (this == obj) {
+			return true;
+		}
+		if (obj == null) {
+			return false;
+		}
+		if (!(obj instanceof GeoCommand)) {
+			return false;
+		}
+
+		GeoCommand that = (GeoCommand) obj;
+		if (!ObjectUtils.nullSafeEquals(this.command, that.command)) {
+			return false;
+		}
+		return ObjectUtils.nullSafeEquals(this.shape, that.shape);
+	}
+
 }

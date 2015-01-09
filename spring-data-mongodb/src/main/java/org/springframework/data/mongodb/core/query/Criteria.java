@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2014 the original author or authors.
+ * Copyright 2010-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -376,8 +376,8 @@ public class Criteria implements CriteriaDefinition {
 	}
 
 	/**
-	 * Creates a geospatial criterion using a {@literal $within $centerSphere} operation. This is only available for Mongo
-	 * 1.7 and higher.
+	 * Creates a geospatial criterion using a {@literal $geoWithin $centerSphere} operation. This is only available for
+	 * Mongo 2.4 and higher.
 	 * 
 	 * @see http://docs.mongodb.org/manual/reference/operator/query/geoWithin/
 	 * @see http://docs.mongodb.org/manual/reference/operator/query/centerSphere/
@@ -386,12 +386,12 @@ public class Criteria implements CriteriaDefinition {
 	 */
 	public Criteria withinSphere(Circle circle) {
 		Assert.notNull(circle);
-		criteria.put("$within", new GeoCommand(new Sphere(circle)));
+		criteria.put("$geoWithin", new GeoCommand(new Sphere(circle)));
 		return this;
 	}
 
 	/**
-	 * Creates a geospatial criterion using a {@literal $within} operation.
+	 * Creates a geospatial criterion using a {@literal $geoWithin} operation.
 	 * 
 	 * @see http://docs.mongodb.org/manual/reference/operator/query/geoWithin/
 	 * @param shape
@@ -400,7 +400,7 @@ public class Criteria implements CriteriaDefinition {
 	public Criteria within(Shape shape) {
 
 		Assert.notNull(shape);
-		criteria.put("$within", new GeoCommand(shape));
+		criteria.put("$geoWithin", new GeoCommand(shape));
 		return this;
 	}
 

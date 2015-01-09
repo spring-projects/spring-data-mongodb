@@ -32,7 +32,7 @@ The jumping off ground for learning about MongoDB is http://www.mongodb.org/[www
 
 Spring Data MongoDB 1.x binaries requires JDK level 6.0 and above, and http://spring.io/docs[Spring Framework] 3.2.x and above.
 
-In terms of document stores, http://www.mongodb.org/[MongoDB] preferably version 2.4.
+In terms of document stores, http://www.mongodb.org/[MongoDB] at least 2.4, preferably version 2.6.
 
 == Additional Help Resources
 

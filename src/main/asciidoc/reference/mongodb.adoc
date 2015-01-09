@@ -1041,9 +1041,9 @@ As you can see most methods return the `Criteria` object to provide a fluent sty
 
 There are also methods on the Criteria class for geospatial queries. Here is a listing but look at the section on <<mongo.geospatial,GeoSpatial Queries>> to see them in action.
 
-* `Criteria` *withinCenter* `(Circle circle)` Creates a geospatial criterion using `$within $center` operators
-* `Criteria` *withinCenterSphere* `(Circle circle)` Creates a geospatial criterion using `$within $center` operators. This is only available for MongoDB 1.7 and higher.
-* `Criteria` *withinBox* `(Box box)` Creates a geospatial criterion using a `$within $box` operation ``
+* `Criteria` *within* `(Circle circle)` Creates a geospatial criterion using `$geoWithin $center` operators.
+* `Criteria` *within* `(Box box)` Creates a geospatial criterion using a `$geoWithin $box` operation.
+* `Criteria` *withinSphere* `(Circle circle)` Creates a geospatial criterion using `$geoWithin $center` operators.
 * `Criteria` *near* `(Point point)` Creates a geospatial criterion using a `$near `operation
 * `Criteria` *nearSphere* `(Point point)` Creates a geospatial criterion using `$nearSphere$center` operations. This is only available for MongoDB 1.7 and higher.
 * `Criteria` *maxDistance* `(double maxDistance)` Creates a geospatial criterion using the `$maxDistance` operation, for use with $near.
@@ -1073,7 +1073,7 @@ The query methods need to specify the target type T that will be returned and th
 [[mongo.geospatial]]
 === GeoSpatial Queries
 
-MongoDB supports GeoSpatial queries through the use of operators such as `$near`, `$within`, and `$nearSphere`. Methods specific to geospatial queries are available on the `Criteria` class. There are also a few shape classes, `Box`, `Circle`, and `Point` that are used in conjunction with geospatial related `Criteria` methods.
+MongoDB supports GeoSpatial queries through the use of operators such as `$near`, `$within`, `geoWithin` and `$nearSphere`. Methods specific to geospatial queries are available on the `Criteria` class. There are also a few shape classes, `Box`, `Circle`, and `Point` that are used in conjunction with geospatial related `Criteria` methods.
 
 To understand how to perform GeoSpatial queries we will use the following Venue class taken from the integration tests.which relies on using the rich `MappingMongoConverter`.
 
@@ -1122,7 +1122,7 @@ To find locations within a `Circle`, the following query can be used.
 ----
 Circle circle = new Circle(-73.99171, 40.738868, 0.01);
 List<Venue> venues =
-    template.find(new Query(Criteria.where("location").withinCenter(circle)), Venue.class);
+    template.find(new Query(Criteria.where("location").within(circle)), Venue.class);
 ----
 
 To find venues within a `Circle` using spherical coordinates the following query can be used
@@ -1131,7 +1131,7 @@ To find venues within a `Circle` using spherical coordinates the following query
 ----
 Circle circle = new Circle(-73.99171, 40.738868, 0.003712240453784);
 List<Venue> venues =
-    template.find(new Query(Criteria.where("location").withinCenterSphere(circle)), Venue.class);
+    template.find(new Query(Criteria.where("location").withinSphere(circle)), Venue.class);
 ----
 
 To find venues within a `Box` the following query can be used
@@ -1141,7 +1141,7 @@ To find venues within a `Box` the following query can be used
 //lower-left then upper-right
 Box box = new Box(new Point(-73.99756, 40.73083), new Point(-73.988135, 40.741404));
 List<Venue> venues =
-    template.find(new Query(Criteria.where("location").withinBox(box)), Venue.class);
+    template.find(new Query(Criteria.where("location").within(box)), Venue.class);
 ----
 
 To find venues near a `Point`, the following query can be used
