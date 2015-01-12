@@ -25,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.geo.Distance;
+import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Shape;
 import org.springframework.data.mapping.context.MappingContext;
@@ -217,7 +218,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 				if (distance == null) {
 					return criteria.near(point);
 				} else {
-					if (distance.getMetric() != null) {
+					if (!Metrics.NEUTRAL.equals(distance.getMetric())) {
 						criteria.nearSphere(point);
 					} else {
 						criteria.near(point);
