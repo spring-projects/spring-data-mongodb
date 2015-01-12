@@ -15,13 +15,14 @@
  */
 package org.springframework.data.mongodb.core.query;
 
+import static org.springframework.util.ObjectUtils.*;
+
 import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Polygon;
 import org.springframework.data.geo.Shape;
 import org.springframework.data.mongodb.core.geo.Sphere;
 import org.springframework.util.Assert;
-import org.springframework.util.ObjectUtils;
 
 /**
  * Wrapper around a {@link Shape} to allow appropriate query rendering.
@@ -30,7 +31,7 @@ import org.springframework.util.ObjectUtils;
  * @author Christoph Strobl
  * @since 1.5
  */
-public class GeoCommand {
+public final class GeoCommand {
 
 	private final Shape shape;
 	private final String command;
@@ -91,9 +92,12 @@ public class GeoCommand {
 	 */
 	@Override
 	public int hashCode() {
-		int result = 0;
-		result += ObjectUtils.nullSafeHashCode(this.command);
-		result += ObjectUtils.nullSafeHashCode(this.shape);
+
+		int result = 31;
+
+		result += 17 * nullSafeHashCode(this.command);
+		result += 17 * nullSafeHashCode(this.shape);
+
 		return result;
 	}
 
@@ -107,18 +111,13 @@ public class GeoCommand {
 		if (this == obj) {
 			return true;
 		}
-		if (obj == null) {
-			return false;
-		}
+
 		if (!(obj instanceof GeoCommand)) {
 			return false;
 		}
 
 		GeoCommand that = (GeoCommand) obj;
-		if (!ObjectUtils.nullSafeEquals(this.command, that.command)) {
-			return false;
-		}
-		return ObjectUtils.nullSafeEquals(this.shape, that.shape);
-	}
 
+		return nullSafeEquals(this.command, that.command) && nullSafeEquals(this.shape, that.shape);
+	}
 }
