@@ -41,6 +41,7 @@ import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.Person;
+import org.springframework.data.mongodb.core.Venue;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -464,6 +465,22 @@ public class MongoQueryCreatorUnitTests {
 		Query query = creator.createQuery();
 
 		assertThat(query, is(query(where("username").regex(".*thew.*").not())));
+	}
+
+	/**
+	 * @see DATAMONGO-1139
+	 */
+	@Test
+	public void createsNonShericalNearForDistanceWithDefaultMetric() {
+
+		Point point = new Point(1.0, 1.0);
+		Distance distance = new Distance(1.0);
+
+		PartTree tree = new PartTree("findByLocationNear", Venue.class);
+		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, point, distance), context);
+		Query query = creator.createQuery();
+
+		assertThat(query, is(query(where("location").near(point).maxDistance(1.0))));
 	}
 
 	interface PersonRepository extends Repository<Person, Long> {

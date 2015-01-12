@@ -34,6 +34,7 @@ import org.springframework.data.repository.query.ParameterAccessor;
 class StubParameterAccessor implements MongoParameterAccessor {
 
 	private final Object[] values;
+	private Distance distance;
 
 	/**
 	 * Creates a new {@link ConvertingParameterAccessor} backed by a {@link StubParameterAccessor} simply returning the
@@ -48,7 +49,14 @@ class StubParameterAccessor implements MongoParameterAccessor {
 	}
 
 	public StubParameterAccessor(Object... values) {
+
 		this.values = values;
+
+		for (Object value : values) {
+			if (value instanceof Distance) {
+				this.distance = (Distance) value;
+			}
+		}
 	}
 
 	/*
@@ -88,7 +96,7 @@ class StubParameterAccessor implements MongoParameterAccessor {
 	 * @see org.springframework.data.mongodb.repository.MongoParameterAccessor#getMaxDistance()
 	 */
 	public Distance getMaxDistance() {
-		return null;
+		return distance;
 	}
 
 	/*
