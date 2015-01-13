@@ -25,12 +25,16 @@ import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.geo.Point;
+import org.springframework.data.geo.Shape;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.model.AnnotationBasedPersistentProperty;
 import org.springframework.data.mapping.model.FieldNamingStrategy;
 import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
+import org.springframework.data.mongodb.core.geo.GeoJson;
+import org.springframework.data.mongodb.core.index.GeoSpatialIndexed;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.DBObject;
@@ -53,6 +57,8 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 	private static final Set<Class<?>> SUPPORTED_ID_TYPES = new HashSet<Class<?>>();
 	private static final Set<String> SUPPORTED_ID_PROPERTY_NAMES = new HashSet<String>();
 
+	private static final Set<Class<?>> GEO_TYPES = new HashSet<Class<?>>();
+
 	static {
 
 		SUPPORTED_ID_TYPES.add(ObjectId.class);
@@ -61,6 +67,10 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 
 		SUPPORTED_ID_PROPERTY_NAMES.add("id");
 		SUPPORTED_ID_PROPERTY_NAMES.add("_id");
+
+		GEO_TYPES.add(Point.class);
+		GEO_TYPES.add(Shape.class);
+		GEO_TYPES.add(GeoJson.class);
 	}
 
 	private final FieldNamingStrategy fieldNamingStrategy;
@@ -228,5 +238,19 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 	@Override
 	public boolean isTextScoreProperty() {
 		return isAnnotationPresent(TextScore.class);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentProperty#isGeometry()
+	 */
+	@Override
+	public boolean isGeometry() {
+
+		if (isAnnotationPresent(GeoSpatialIndexed.class)) {
+			return true;
+		}
+
+		return GEO_TYPES.contains(rawType);
 	}
 }

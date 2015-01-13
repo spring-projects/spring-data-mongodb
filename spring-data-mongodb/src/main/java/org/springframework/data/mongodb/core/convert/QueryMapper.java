@@ -18,11 +18,13 @@ package org.springframework.data.mongodb.core.convert;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.bson.BSONObject;
 import org.bson.types.ObjectId;
 import org.springframework.core.convert.ConversionException;
 import org.springframework.core.convert.ConversionService;
@@ -34,9 +36,14 @@ import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.context.PersistentPropertyPath;
 import org.springframework.data.mapping.model.MappingException;
+import org.springframework.data.mongodb.core.geo.GeoJson;
+import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
+import org.springframework.data.mongodb.core.index.GeoSpatialIndexed;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty.PropertyToFieldNameConverter;
+import org.springframework.data.mongodb.core.query.GeoCommand;
+import org.springframework.data.mongodb.core.query.NearCommand;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.util.Assert;
 
@@ -89,11 +96,24 @@ public class QueryMapper {
 	 * @param entity can be {@literal null}.
 	 * @return
 	 */
-	@SuppressWarnings("deprecation")
 	public DBObject getMappedObject(DBObject query, MongoPersistentEntity<?> entity) {
+		return getMappedObject(query, entity, null);
+	}
+
+	/**
+	 * Replaces the property keys used in the given {@link DBObject} with the appropriate keys by using the
+	 * {@link PersistentEntity} metadata.
+	 * 
+	 * @param query must not be {@literal null}.
+	 * @param entity can be {@literal null}.
+	 * @param documentField can be {@literal null}.
+	 * @return
+	 */
+	@SuppressWarnings("deprecation")
+	public DBObject getMappedObject(DBObject query, MongoPersistentEntity<?> entity, Field documentField) {
 
 		if (isNestedKeyword(query)) {
-			return getMappedKeyword(new Keyword(query), entity);
+			return getMappedKeyword(new Keyword(query), entity, documentField);
 		}
 
 		DBObject result = new BasicDBObject();
@@ -111,7 +131,7 @@ public class QueryMapper {
 			}
 
 			if (isKeyword(key)) {
-				result.putAll(getMappedKeyword(new Keyword(query, key), entity));
+				result.putAll(getMappedKeyword(new Keyword(query, key), entity, documentField));
 				continue;
 			}
 
@@ -219,7 +239,7 @@ public class QueryMapper {
 	 * @param entity
 	 * @return
 	 */
-	protected DBObject getMappedKeyword(Keyword keyword, MongoPersistentEntity<?> entity) {
+	protected DBObject getMappedKeyword(Keyword keyword, MongoPersistentEntity<?> entity, Field documentField) {
 
 		// $or/$nor
 		if (keyword.isOrOrNor() || keyword.hasIterableValue()) {
@@ -229,13 +249,22 @@ public class QueryMapper {
 
 			for (Object condition : conditions) {
 				newConditions.add(isDBObject(condition) ? getMappedObject((DBObject) condition, entity)
-						: convertSimpleOrDBObject(condition, entity));
+						: convertSimpleOrDBObject(condition, entity, null));
 			}
 
 			return new BasicDBObject(keyword.getKey(), newConditions);
 		}
 
-		return new BasicDBObject(keyword.getKey(), convertSimpleOrDBObject(keyword.getValue(), entity));
+		if (keyword.isGeoSpatial()) {
+
+			Object geoValue = convertSimpleOrDBObject(keyword.getValue(), entity, documentField);
+			if (geoValue instanceof DBObject) {
+				return (DBObject) geoValue;
+			}
+			return new BasicDBObject(keyword.getKey(), geoValue);
+		}
+
+		return new BasicDBObject(keyword.getKey(), convertSimpleOrDBObject(keyword.getValue(), entity, documentField));
 	}
 
 	/**
@@ -252,6 +281,10 @@ public class QueryMapper {
 
 		Object convertedValue = needsAssociationConversion ? convertAssociation(value, property) : getMappedValue(
 				property.with(keyword.getKey()), value);
+
+		if (keyword.isGeoSpatial()) {
+			return (DBObject) convertedValue;
+		}
 
 		return new BasicDBObject(keyword.key, convertedValue);
 	}
@@ -294,14 +327,14 @@ public class QueryMapper {
 		}
 
 		if (isNestedKeyword(value)) {
-			return getMappedKeyword(new Keyword((DBObject) value), null);
+			return getMappedKeyword(new Keyword((DBObject) value), documentField.getPropertyEntity(), documentField);
 		}
 
 		if (isAssociationConversionNecessary(documentField, value)) {
 			return convertAssociation(value, documentField);
 		}
 
-		return convertSimpleOrDBObject(value, documentField.getPropertyEntity());
+		return convertSimpleOrDBObject(value, documentField.getPropertyEntity(), documentField);
 	}
 
 	/**
@@ -345,17 +378,17 @@ public class QueryMapper {
 	 * @param entity
 	 * @return
 	 */
-	protected Object convertSimpleOrDBObject(Object source, MongoPersistentEntity<?> entity) {
+	protected Object convertSimpleOrDBObject(Object source, MongoPersistentEntity<?> entity, Field documentField) {
 
 		if (source instanceof BasicDBList) {
-			return delegateConvertToMongoType(source, entity);
+			return delegateConvertToMongoType(source, entity, documentField);
 		}
 
 		if (isDBObject(source)) {
-			return getMappedObject((DBObject) source, entity);
+			return getMappedObject((DBObject) source, entity, documentField);
 		}
 
-		return delegateConvertToMongoType(source, entity);
+		return delegateConvertToMongoType(source, entity, documentField);
 	}
 
 	/**
@@ -366,7 +399,44 @@ public class QueryMapper {
 	 * @param entity
 	 * @return the converted mongo type or null if source is null
 	 */
-	protected Object delegateConvertToMongoType(Object source, MongoPersistentEntity<?> entity) {
+	protected Object delegateConvertToMongoType(Object source, MongoPersistentEntity<?> entity, Field documentField) {
+
+		if (source instanceof GeoCommand) {
+
+			if (documentField != null && !documentField.requiresLegacyCoordinates()) {
+				return new BasicDBObject(documentField.name, converter.convertToMongoType(new GeoJson<Object>(
+						((GeoCommand) source).getShape()), entity == null ? null : entity.getTypeInformation()));
+			}
+
+			return new BasicDBObject(documentField.name, converter.convertToMongoType(source,
+					entity == null ? null : entity.getTypeInformation()));
+
+		} else if (source instanceof NearCommand) {
+
+			NearCommand near = (NearCommand) source;
+			BasicDBObject dbo = new BasicDBObject();
+
+			if (documentField != null && !documentField.requiresLegacyCoordinates()) {
+
+				Object point = converter.convertToMongoType(new GeoJson<Object>(near.getCoordinates()), entity == null ? null
+						: entity.getTypeInformation());
+				dbo.putAll((BSONObject) point);
+				dbo.put("$maxDistance",
+						converter.convertToMongoType(near.getMaxDistance(), entity == null ? null : entity.getTypeInformation()));
+				return new BasicDBObject(documentField.name, dbo);
+			}
+
+			dbo.put(documentField.name,
+					converter.convertToMongoType(near.getCoordinates(), entity == null ? null : entity.getTypeInformation()));
+			dbo.put("$maxDistance",
+					converter.convertToMongoType(near.getMaxDistance(), entity == null ? null : entity.getTypeInformation()));
+			return dbo;
+
+		} else if (source instanceof GeoJson) {
+			return new BasicDBObject(documentField.name, converter.convertToMongoType(source,
+					entity == null ? null : entity.getTypeInformation()));
+		}
+
 		return converter.convertToMongoType(source, entity == null ? null : entity.getTypeInformation());
 	}
 
@@ -474,9 +544,9 @@ public class QueryMapper {
 
 		try {
 			return conversionService.canConvert(id.getClass(), ObjectId.class) ? conversionService
-					.convert(id, ObjectId.class) : delegateConvertToMongoType(id, null);
+					.convert(id, ObjectId.class) : delegateConvertToMongoType(id, null, null);
 		} catch (ConversionException o_O) {
-			return delegateConvertToMongoType(id, null);
+			return delegateConvertToMongoType(id, null, null);
 		}
 	}
 
@@ -517,10 +587,13 @@ public class QueryMapper {
 	 * Value object to capture a query keyword representation.
 	 * 
 	 * @author Oliver Gierke
+	 * @author Christoph Strobl
 	 */
 	static class Keyword {
 
 		private static final String N_OR_PATTERN = "\\$.*or";
+		private static final Set<String> GEO_KEYWORDS = new HashSet<String>(Arrays.asList("$near", "$geoNear", "$within",
+				"$geoWithin", "$nearSphere"));
 
 		private final String key;
 		private final Object value;
@@ -560,6 +633,13 @@ public class QueryMapper {
 			return key;
 		}
 
+		/**
+		 * @since 1.7
+		 */
+		public boolean isGeoSpatial() {
+			return GEO_KEYWORDS.contains(key);
+		}
+
 		@SuppressWarnings("unchecked")
 		public <T> T getValue() {
 			return (T) value;
@@ -570,6 +650,7 @@ public class QueryMapper {
 	 * Value object to represent a field and its meta-information.
 	 * 
 	 * @author Oliver Gierke
+	 * @author Christoph Strobl
 	 */
 	protected static class Field {
 
@@ -656,6 +737,16 @@ public class QueryMapper {
 
 		public Association<MongoPersistentProperty> getAssociation() {
 			return null;
+		}
+
+		/**
+		 * Returns whether the referenced field uses legacy coordinate system.
+		 * 
+		 * @return
+		 * @since 1.7
+		 */
+		public boolean requiresLegacyCoordinates() {
+			return true;
 		}
 	}
 
@@ -804,6 +895,26 @@ public class QueryMapper {
 
 		protected PersistentPropertyPath<MongoPersistentProperty> getPath() {
 			return path;
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.convert.QueryMapper.Field#requiresLegacyCoordinates()
+		 */
+		@Override
+		public boolean requiresLegacyCoordinates() {
+
+			if (this.getProperty() == null) {
+				return super.requiresLegacyCoordinates();
+			}
+
+			if (this.getProperty().isGeometry()) {
+				GeoSpatialIndexed indexed = this.getProperty().findAnnotation(GeoSpatialIndexed.class);
+				if (indexed != null && indexed.type().equals(GeoSpatialIndexType.GEO_2DSPHERE)) {
+					return false;
+				}
+			}
+			return true;
 		}
 
 		/**

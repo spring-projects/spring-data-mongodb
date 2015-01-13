@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2014 the original author or authors.
+ * Copyright 2011-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -119,4 +119,14 @@ public interface MongoPersistentProperty extends PersistentProperty<MongoPersist
 	 * @return
 	 */
 	boolean usePropertyAccess();
+
+	/**
+	 * Returns whether the property refers to a geometry structure such as {@link org.springframework.data.geo.Shape} or
+	 * is {@link org.springframework.data.mongodb.core.index.GeoSpatialIndexed}.
+	 * 
+	 * @return
+	 * @since 1.7
+	 */
+	boolean isGeometry();
+
 }

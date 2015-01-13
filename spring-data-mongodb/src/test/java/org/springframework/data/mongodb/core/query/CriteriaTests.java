@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2014 the original author or authors.
+ * Copyright 2010-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,8 +17,10 @@ package org.springframework.data.mongodb.core.query;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
+import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
 
 import org.junit.Test;
+import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 
 import com.mongodb.BasicDBObject;
@@ -163,5 +165,29 @@ public class CriteriaTests {
 		DBObject dbo = new Criteria().lt("foo").not().getCriteriaObject();
 
 		assertThat(dbo, equalTo(new BasicDBObjectBuilder().add("$not", new BasicDBObject("$lt", "foo")).get()));
+	}
+
+	/**
+	 * @see DATAMONGO-1135
+	 */
+	@Test
+	@SuppressWarnings("deprecation")
+	public void nearShouldUseSpecialTypeWhenMaxDistanceIsPresent() {
+
+		DBObject dbo = Criteria.where("foo").near(new Point(100, 100)).maxDistance(10).getCriteriaObject();
+
+		assertThat(dbo, isBsonObject().containing("foo.$near", new NearCommand(new Point(100, 100), 10)));
+	}
+
+	/**
+	 * @see DATAMONGO-1135
+	 */
+	@Test
+	@SuppressWarnings("deprecation")
+	public void nearSphereShouldUseSpecialTypeWhenMaxDistanceIsPresent() {
+
+		DBObject dbo = Criteria.where("foo").nearSphere(new Point(100, 100)).maxDistance(10).getCriteriaObject();
+
+		assertThat(dbo, isBsonObject().containing("foo.$nearSphere", new NearCommand(new Point(100, 100), 10)));
 	}
 }

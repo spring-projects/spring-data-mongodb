@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2014 by the original author(s).
+ * Copyright 2011-2015 by the original author(s).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,11 +26,15 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.geo.Point;
+import org.springframework.data.geo.Shape;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.model.FieldNamingStrategy;
 import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
+import org.springframework.data.mongodb.core.geo.GeoJson;
+import org.springframework.data.mongodb.core.index.GeoSpatialIndexed;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.util.ReflectionUtils;
 
@@ -185,6 +189,61 @@ public class BasicMongoPersistentPropertyUnitTests {
 		assertThat(property.isIdProperty(), is(true));
 	}
 
+	/**
+	 * @see DATAMONGO-1135
+	 */
+	@Test
+	public void shouldConsiderPointAsGeoProperty() {
+
+		MongoPersistentProperty property = getPropertyFor(DocumentWithGeoStructures.class, "point");
+
+		assertThat(property.isGeometry(), is(true));
+	}
+
+	/**
+	 * @see DATAMONGO-1135
+	 */
+	@Test
+	public void shouldConsiderShapeAsGeoProperty() {
+
+		MongoPersistentProperty property = getPropertyFor(DocumentWithGeoStructures.class, "shape");
+
+		assertThat(property.isGeometry(), is(true));
+	}
+
+	/**
+	 * @see DATAMONGO-1135
+	 */
+	@Test
+	public void shouldConsiderGeoJsonAsGeoProperty() {
+
+		MongoPersistentProperty property = getPropertyFor(DocumentWithGeoStructures.class, "geoJson");
+
+		assertThat(property.isGeometry(), is(true));
+	}
+
+	/**
+	 * @see DATAMONGO-1135
+	 */
+	@Test
+	public void shouldConsiderGeoSpatialIndexedPropertyAsGeoProperty() {
+
+		MongoPersistentProperty property = getPropertyFor(DocumentWithGeoStructures.class, "geoIndexed");
+
+		assertThat(property.isGeometry(), is(true));
+	}
+
+	/**
+	 * @see DATAMONGO-1135
+	 */
+	@Test
+	public void shouldNotConsiderArbitraryPropertyAsGeoType() {
+
+		MongoPersistentProperty property = getPropertyFor(DocumentWithGeoStructures.class, "justAnArray");
+
+		assertThat(property.isGeometry(), is(false));
+	}
+
 	private MongoPersistentProperty getPropertyFor(Field field) {
 		return getPropertyFor(entity, field);
 	}
@@ -252,5 +311,16 @@ public class BasicMongoPersistentPropertyUnitTests {
 	static class DocumentWithExplicitlyRenamedIdPropertyHavingIdAnnotation {
 
 		@Id @org.springframework.data.mongodb.core.mapping.Field("id") String id;
+	}
+
+	static class DocumentWithGeoStructures {
+
+		double[] justAnArray;
+
+		Point point;
+		Shape shape;
+		GeoJson<double[]> geoJson;
+
+		@GeoSpatialIndexed double[] geoIndexed;
 	}
 }
