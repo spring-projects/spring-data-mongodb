@@ -67,8 +67,7 @@ public class GeoJsonToDbObjectConverterUnitTests {
 		BasicDBList values = new BasicDBList();
 		values.add(new double[] { SINGLE_POINT.getX(), SINGLE_POINT.getY() });
 
-		assertThat(point,
-				isBsonObject().containing("$geometry.coordinates", Arrays.asList(SINGLE_POINT.getX(), SINGLE_POINT.getY())));
+		assertThat(point, isBsonObject().containing("coordinates", Arrays.asList(SINGLE_POINT.getX(), SINGLE_POINT.getY())));
 	}
 
 	/**
@@ -107,10 +106,9 @@ public class GeoJsonToDbObjectConverterUnitTests {
 	@SuppressWarnings("unchecked")
 	void validatePolygon(DBObject dbo, Point... expectedCoordinates) {
 
-		DBObject $geometry = DBObjectTestUtils.getAsDBObject(dbo, "$geometry");
-		assertThat(DBObjectTestUtils.getTypedValue($geometry, "type", String.class), equalTo("Polygon"));
+		assertThat(DBObjectTestUtils.getTypedValue(dbo, "type", String.class), equalTo("Polygon"));
 
-		BasicDBList coordinates = DBObjectTestUtils.getAsDBList($geometry, "coordinates");
+		BasicDBList coordinates = DBObjectTestUtils.getAsDBList(dbo, "coordinates");
 		BasicDBList values = (BasicDBList) coordinates.get(0);
 
 		for (int i = 0; i < values.size(); i++) {

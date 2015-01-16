@@ -469,12 +469,12 @@ abstract class GeoConverters {
 
 			Object geometry = source.getGeometry();
 
-			DBObject $geometry = new BasicDBObject();
+			DBObject geometryDbo = new BasicDBObject();
 
 			if (geometry instanceof Point) {
 
-				$geometry.put("type", "Point");
-				$geometry.put("coordinates", toList((Point) geometry));
+				geometryDbo.put("type", "Point");
+				geometryDbo.put("coordinates", toList((Point) geometry));
 			}
 
 			else if (geometry instanceof double[]) {
@@ -484,13 +484,13 @@ abstract class GeoConverters {
 					throw new IllegalArgumentException("Point coordinates need to have x and y value.");
 				}
 
-				$geometry.put("type", "Point");
-				$geometry.put("coordinates", toList(new Point(values[0], values[1])));
+				geometryDbo.put("type", "Point");
+				geometryDbo.put("coordinates", toList(new Point(values[0], values[1])));
 			}
 
 			else if (geometry instanceof Box) {
 
-				$geometry.put("type", "Polygon");
+				geometryDbo.put("type", "Polygon");
 
 				Point p1 = ((Box) geometry).getFirst();
 				Point p3 = ((Box) geometry).getSecond();
@@ -500,12 +500,12 @@ abstract class GeoConverters {
 
 				Point p5 = ((Box) geometry).getFirst();
 
-				$geometry.put("coordinates", toCoordinates(p1, p2, p3, p4, p5));
+				geometryDbo.put("coordinates", toCoordinates(p1, p2, p3, p4, p5));
 			}
 
 			else if (geometry instanceof Polygon) {
 
-				$geometry.put("type", "Polygon");
+				geometryDbo.put("type", "Polygon");
 
 				List<Point> points = new ArrayList<Point>(((Polygon) geometry).getPoints());
 
@@ -516,7 +516,7 @@ abstract class GeoConverters {
 					points.add(first);
 				}
 
-				$geometry.put("coordinates", toCoordinates(points));
+				geometryDbo.put("coordinates", toCoordinates(points));
 			}
 
 			else if (geometry instanceof Circle) {
@@ -543,7 +543,7 @@ abstract class GeoConverters {
 				throw new InvalidDataAccessApiUsageException(String.format("Unknown GeoJson type %s!", geometry.getClass()));
 			}
 
-			return new BasicDBObject("$geometry", $geometry);
+			return geometryDbo;
 		}
 	}
 

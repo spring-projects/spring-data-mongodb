@@ -56,8 +56,11 @@ public class IsBsonObject<T extends BSONObject> extends TypeSafeMatcher<T> {
 
 			if (expectation.not) {
 				description.appendText(String.format("Path %s should not be present.", expectation.path));
+			} else if (expectation.value == null) {
+				description.appendText(String.format("Expected to find path %s.", expectation.path));
+			} else {
+				description.appendText(String.format("Expected to find %s for path %s.", expectation.value, expectation.path));
 			}
-			description.appendText(String.format("Expected to find %s for path %s.", expectation.value, expectation.path));
 		}
 
 	}

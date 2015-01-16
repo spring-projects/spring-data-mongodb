@@ -404,8 +404,14 @@ public class QueryMapper {
 		if (source instanceof GeoCommand) {
 
 			if (documentField != null && !documentField.requiresLegacyCoordinates()) {
-				return new BasicDBObject(documentField.name, converter.convertToMongoType(new GeoJson<Object>(
-						((GeoCommand) source).getShape()), entity == null ? null : entity.getTypeInformation()));
+
+				Object geometry = converter.convertToMongoType(new GeoJson<Object>(((GeoCommand) source).getShape()),
+						entity == null ? null : entity.getTypeInformation());
+
+				if (geometry instanceof DBObject && ((DBObject) geometry).containsField("type")) {
+					return new BasicDBObject(documentField.name, new BasicDBObject("$geometry", geometry));
+				}
+				return new BasicDBObject(documentField.name, geometry);
 			}
 
 			return new BasicDBObject(documentField.name, converter.convertToMongoType(source,
@@ -418,8 +424,8 @@ public class QueryMapper {
 
 			if (documentField != null && !documentField.requiresLegacyCoordinates()) {
 
-				Object point = converter.convertToMongoType(new GeoJson<Object>(near.getCoordinates()), entity == null ? null
-						: entity.getTypeInformation());
+				Object point = new BasicDBObject("$geometry", converter.convertToMongoType(
+						new GeoJson<Object>(near.getCoordinates()), entity == null ? null : entity.getTypeInformation()));
 				dbo.putAll((BSONObject) point);
 				dbo.put("$maxDistance",
 						converter.convertToMongoType(near.getMaxDistance(), entity == null ? null : entity.getTypeInformation()));
@@ -433,8 +439,8 @@ public class QueryMapper {
 			return dbo;
 
 		} else if (source instanceof GeoJson) {
-			return new BasicDBObject(documentField.name, converter.convertToMongoType(source,
-					entity == null ? null : entity.getTypeInformation()));
+			return new BasicDBObject(documentField.name, new BasicDBObject("$geometry", converter.convertToMongoType(source,
+					entity == null ? null : entity.getTypeInformation())));
 		}
 
 		return converter.convertToMongoType(source, entity == null ? null : entity.getTypeInformation());
