@@ -1960,7 +1960,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
 		if (entity == null) {
-			throw new InvalidDataAccessApiUsageException("No Persitent Entity information found for the class "
+			throw new InvalidDataAccessApiUsageException("No Persistent Entity information found for the class "
 					+ entityClass.getName());
 		}
 		return entity.getCollection();
