@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 the original author or authors.
+ * Copyright 2014-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -391,8 +391,9 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 				for (Path existingPath : paths) {
 
-					if (existingPath.cycles(property, path)) {
+					if (existingPath.cycles(property, path) && property.isEntity()) {
 						paths.add(new Path(property, path));
+
 						throw new CyclicPropertyReferenceException(property.getFieldName(), property.getOwner().getType(),
 								existingPath.getPath());
 					}

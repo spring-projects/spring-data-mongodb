@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 the original author or authors.
+ * Copyright 2014-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -656,6 +656,21 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			assertThat((String) indexDefinitions.get(1).getIndexOptions().get("name"), equalTo("component.name"));
 		}
 
+		/**
+		 * @see DATAMONGO-1121
+		 */
+		@Test
+		public void shouldOnlyConsiderEntitiesAsPotentialCycleCandidates() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(OuterDocumentReferingToIndexedPropertyViaDifferentNonCyclingPaths.class);
+
+			assertThat(indexDefinitions, hasSize(2));
+			assertThat((String) indexDefinitions.get(0).getIndexOptions().get("name"), equalTo("path1.foo"));
+			assertThat((String) indexDefinitions.get(1).getIndexOptions().get("name"),
+					equalTo("path2.propertyWithIndexedStructure.foo"));
+
+		}
+
 		@Document
 		static class MixedIndexRoot {
 
@@ -818,6 +833,17 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			}
 
 			NameComponent component;
+		}
+
+		@Document
+		public static class OuterDocumentReferingToIndexedPropertyViaDifferentNonCyclingPaths {
+
+			NoCycleButIndenticallNamedPropertiesDeeplyNested path1;
+			AlternatePathToNoCycleButIndenticallNamedPropertiesDeeplyNestedDocument path2;
+		}
+
+		public static class AlternatePathToNoCycleButIndenticallNamedPropertiesDeeplyNestedDocument {
+			NoCycleButIndenticallNamedPropertiesDeeplyNested propertyWithIndexedStructure;
 		}
 
 	}
