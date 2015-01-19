@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2014 the original author or authors.
+ * Copyright 2010-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -131,6 +131,7 @@ import com.mongodb.util.JSONParseException;
  * @author Thomas Darimont
  * @author Chuong Ngo
  * @author Christoph Strobl
+ * @author Mateusz Rasiñski
  */
 @SuppressWarnings("deprecation")
 public class MongoTemplate implements MongoOperations, ApplicationContextAware {
@@ -1809,7 +1810,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 				while (cursor.hasNext()) {
 					DBObject object = cursor.next();
-					result.add(objectCallback.doWith(object));
+					T instantiatedObject = objectCallback.doWith(object);
+					if (instantiatedObject != null) {
+						result.add(instantiatedObject);
+					}
 				}
 
 				return result;

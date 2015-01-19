@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2014 by the original author(s).
+ * Copyright 2011-2015 by the original author(s).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -74,6 +74,7 @@ import com.mongodb.DBRef;
  * @author Patrik Wasik
  * @author Thomas Darimont
  * @author Christoph Strobl
+ * @author Mateusz Rasiñski
  */
 public class MappingMongoConverter extends AbstractMongoConverter implements ApplicationContextAware, ValueResolver {
 
@@ -221,6 +222,10 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			throw new MappingException(String.format(INCOMPATIBLE_TYPES, dbo, BasicDBList.class, typeToUse.getType(), path));
 		}
 
+		if (isTypeSubclassOfDbo(type.getType(), dbo)) {
+			return null;
+		}
+
 		// Retrieve persistent entity info
 		MongoPersistentEntity<S> persistentEntity = (MongoPersistentEntity<S>) mappingContext
 				.getPersistentEntity(typeToUse);
@@ -229,6 +234,22 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		return read(persistentEntity, dbo, path);
+	}
+
+	private boolean isTypeSubclassOfDbo(Class<?> type, DBObject object) {
+		TypeInformation<?> typeInformation = typeMapper.readType(object);
+		if (typeInformation == null) {
+			return false;
+		}
+		Class<?> objectType = typeInformation.getType();
+		if (objectType == null) {
+			return false;
+		}
+		return isSubclass(type, objectType);
+	}
+
+	private boolean isSubclass(Class<?> testedClass, Class<?> possibleSuperclass) {
+		return !possibleSuperclass.equals(testedClass) && possibleSuperclass.isAssignableFrom(testedClass);
 	}
 
 	private ParameterValueProvider<MongoPersistentProperty> getParameterProvider(MongoPersistentEntity<?> entity,

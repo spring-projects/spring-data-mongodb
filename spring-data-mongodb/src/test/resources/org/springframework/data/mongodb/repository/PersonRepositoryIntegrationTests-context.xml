@@ -8,7 +8,7 @@
 		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
 
 	<mongo:db-factory dbname="repositories" />
-	
+
 	<bean id="mongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate">
 		<constructor-arg ref="mongoDbFactory" />
 		<property name="writeConcern">
@@ -26,6 +26,11 @@
 				</constructor-arg>
 			</bean>
 		</property>
+	</bean>
+
+	<bean class="org.springframework.data.mongodb.repository.support.MongoRepositoryFactoryBean">
+		<property name="mongoOperations" ref="mongoTemplate"/>
+		<property name="repositoryInterface" value="org.springframework.data.mongodb.repository.CandidateRepository"/>
 	</bean>
 
 </beans>
