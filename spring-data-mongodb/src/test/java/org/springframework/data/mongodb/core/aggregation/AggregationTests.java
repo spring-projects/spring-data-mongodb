@@ -1043,7 +1043,7 @@ public class AggregationTests {
 
 		DBObject firstResult = result.getMappedResults().get(0);
 		assertThat(firstResult.containsField("distance"), is(true));
-		assertThat(firstResult.get("distance"), is((Object) 117.620092203928));
+		assertThat((Double) firstResult.get("distance"), closeTo(117.620092203928, 0.00001));
 	}
 
 	private void assertLikeStats(LikeStats like, String id, long count) {
