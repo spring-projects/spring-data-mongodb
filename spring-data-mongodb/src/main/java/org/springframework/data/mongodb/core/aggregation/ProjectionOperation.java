@@ -28,10 +28,13 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
 /**
- * Encapsulates the aggregation framework {@code $project}-operation. Projection of field to be used in an
- * {@link Aggregation}. A projection is similar to a {@link Field} inclusion/exclusion but more powerful. It can
- * generate new fields, change values of given field etc.
+ * Encapsulates the aggregation framework {@code $project}-operation.
  * <p>
+ * Projection of field to be used in an {@link Aggregation}. A projection is similar to a {@link Field}
+ * inclusion/exclusion but more powerful. It can generate new fields, change values of given field etc.
+ * <p>
+ * We recommend to use the static factory method {@link Aggregation#project(Fields)} instead of creating instances of
+ * this class directly.
  * 
  * @see http://docs.mongodb.org/manual/reference/aggregation/project/
  * @author Tobias Trelle

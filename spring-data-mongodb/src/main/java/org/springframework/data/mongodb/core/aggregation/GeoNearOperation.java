@@ -22,6 +22,11 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
 /**
+ * Represents a {@code geoNear} aggregation operation.
+ * <p>
+ * We recommend to use the static factory method {@link Aggregation#geoNear(NearQuery, String)} instead of creating
+ * instances of this class directly.
+ * 
  * @author Thomas Darimont
  * @since 1.3
  */
@@ -30,10 +35,17 @@ public class GeoNearOperation implements AggregationOperation {
 	private final NearQuery nearQuery;
 	private final String distanceField;
 
+	/**
+	 * Creates a new {@link GeoNearOperation} from the given {@link NearQuery} and the given {@code distanceField}. The
+	 * {@code distanceField} defines output field that contains the calculated distance.
+	 * 
+	 * @param query must not be {@literal null}.
+	 * @param distanceField must not be {@literal null}.
+	 */
 	public GeoNearOperation(NearQuery nearQuery, String distanceField) {
 
-		Assert.notNull(nearQuery);
-		Assert.notNull(distanceField, "DistanceField must not be null.");
+		Assert.notNull(nearQuery, "NearQuery must not be null.");
+		Assert.hasLength(distanceField, "DistanceField must not be null or empty.");
 
 		this.nearQuery = nearQuery;
 		this.distanceField = distanceField;

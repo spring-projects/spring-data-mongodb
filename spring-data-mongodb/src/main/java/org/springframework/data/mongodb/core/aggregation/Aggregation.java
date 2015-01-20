@@ -293,7 +293,7 @@ public class Aggregation {
 	}
 
 	/**
-	 * Creates a new {@link GeoNearOperation} instance from the given {@link NearQuery} and the distanceField. The
+	 * Creates a new {@link GeoNearOperation} instance from the given {@link NearQuery} and the{@code distanceField}. The
 	 * {@code distanceField} defines output field that contains the calculated distance.
 	 * 
 	 * @param query must not be {@literal null}.

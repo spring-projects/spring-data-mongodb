@@ -123,6 +123,7 @@ public class AggregationTests {
 		mongoTemplate.dropCollection(User.class);
 		mongoTemplate.dropCollection(Person.class);
 		mongoTemplate.dropCollection(Reservation.class);
+		mongoTemplate.dropCollection(Venue.class);
 	}
 
 	/**
@@ -1025,9 +1026,7 @@ public class AggregationTests {
 	 * @see DATAMONGO-1127
 	 */
 	@Test
-	public void shouldSupportGeoNearQueriesForAggregation() {
-
-		mongoTemplate.dropCollection(Venue.class);
+	public void shouldSupportGeoNearQueriesForAggregationWithDistanceField() {
 
 		mongoTemplate.insert(new Venue("Penn Station", -73.99408, 40.75057));
 		mongoTemplate.insert(new Venue("10gen Office", -73.99171, 40.738868));
@@ -1045,8 +1044,6 @@ public class AggregationTests {
 		DBObject firstResult = result.getMappedResults().get(0);
 		assertThat(firstResult.containsField("distance"), is(true));
 		assertThat(firstResult.get("distance"), is((Object) 117.620092203928));
-
-		mongoTemplate.dropCollection(Venue.class);
 	}
 
 	private void assertLikeStats(LikeStats like, String id, long count) {
