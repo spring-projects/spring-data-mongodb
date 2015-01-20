@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 the original author or authors.
+ * Copyright 2013-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -84,6 +84,15 @@ public final class Fields implements Iterable<Field> {
 		return new AggregationField(name);
 	}
 
+	/**
+	 * Creates a {@link Field} with the given {@code name} and {@code target}.
+	 * <p>
+	 * The {@code target} is the name of the backing document field that will be aliased with {@code name}.
+	 *
+	 * @param name
+	 * @param target must not be {@literal null} or empty
+	 * @return
+	 */
 	public static Field field(String name, String target) {
 		Assert.hasText(target, "Target must not be null or empty!");
 		return new AggregationField(name, target);
@@ -187,15 +196,24 @@ public final class Fields implements Iterable<Field> {
 		private final String target;
 
 		/**
-		 * Creates an aggregation field with the given name. As no target is set explicitly, the name will be used as target
-		 * as well.
+		 * Creates an aggregation field with the given {@code name}.
 		 * 
-		 * @param key
+		 * @see AggregationField#AggregationField(String, String).
+		 * @param name must not be {@literal null} or empty
 		 */
-		public AggregationField(String key) {
-			this(key, null);
+		public AggregationField(String name) {
+			this(name, null);
 		}
 
+		/**
+		 * Creates an aggregation field with the given {@code name} and {@code target}.
+		 * <p>
+		 * The {@code name} serves as an alias for the actual backing document field denoted by {@code target}. If no target
+		 * is set explicitly, the name will be used as target.
+		 * 
+		 * @param name must not be {@literal null} or empty
+		 * @param target
+		 */
 		public AggregationField(String name, String target) {
 
 			String nameToSet = cleanUp(name);
