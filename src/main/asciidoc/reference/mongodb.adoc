@@ -1538,7 +1538,8 @@ Note that the aggregation operations not listed here are currently not supported
 [[mongo.aggregation.projection]]
 === Projection Expressions
 
-Projection expressions are used to define the fields that are the outcome of a particular aggregation step. Projection expressions can be defined via the `project` method of the `Aggregate` class.
+Projection expressions are used to define the fields that are the outcome of a particular aggregation step. Projection expressions can be defined via the `project` method of the `Aggregate` class either by passing a list of `String`s or an aggregation framework `Fields` object. The projection can be extended with additional fields through a fluent API via the `and(String)` method and aliased via the `as(String)` method.   
+Note that one can also define fields with aliases via the static factory method `Fields.field` of the aggregation framework that can then be used to construct a new `Fields` instance.
 
 .Projection expression examples
 ====
