@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,13 +28,15 @@ import com.mongodb.DBObject;
 public class GeoNearOperation implements AggregationOperation {
 
 	private final NearQuery nearQuery;
+	private final String distanceField;
 
-	public GeoNearOperation(NearQuery nearQuery) {
+	public GeoNearOperation(NearQuery nearQuery, String distanceField) {
 
 		Assert.notNull(nearQuery);
-		Assert.notNull(nearQuery.getDistanceField(), "distanceField must be configured in NearQuery.");
+		Assert.notNull(distanceField, "DistanceField must not be null.");
 
 		this.nearQuery = nearQuery;
+		this.distanceField = distanceField;
 	}
 
 	/* 
@@ -43,6 +45,10 @@ public class GeoNearOperation implements AggregationOperation {
 	 */
 	@Override
 	public DBObject toDBObject(AggregationOperationContext context) {
-		return new BasicDBObject("$geoNear", context.getMappedObject(nearQuery.toDBObject()));
+
+		BasicDBObject command = (BasicDBObject) context.getMappedObject(nearQuery.toDBObject());
+		command.put("distanceField", distanceField);
+
+		return new BasicDBObject("$geoNear", command);
 	}
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1035,10 +1035,9 @@ public class AggregationTests {
 
 		mongoTemplate.indexOps(Venue.class).ensureIndex(new GeospatialIndex("location"));
 
-		NearQuery geoNear = NearQuery.near(-73, 40, Metrics.KILOMETERS).num(10).maxDistance(150)
-				.withDistanceField("distance");
+		NearQuery geoNear = NearQuery.near(-73, 40, Metrics.KILOMETERS).num(10).maxDistance(150);
 
-		Aggregation agg = newAggregation(Aggregation.geoNear(geoNear));
+		Aggregation agg = newAggregation(Aggregation.geoNear(geoNear, "distance"));
 		AggregationResults<DBObject> result = mongoTemplate.aggregate(agg, Venue.class, DBObject.class);
 
 		assertThat(result.getMappedResults(), hasSize(3));
@@ -1046,6 +1045,8 @@ public class AggregationTests {
 		DBObject firstResult = result.getMappedResults().get(0);
 		assertThat(firstResult.containsField("distance"), is(true));
 		assertThat(firstResult.get("distance"), is((Object) 117.620092203928));
+
+		mongoTemplate.dropCollection(Venue.class);
 	}
 
 	private void assertLikeStats(LikeStats like, String id, long count) {

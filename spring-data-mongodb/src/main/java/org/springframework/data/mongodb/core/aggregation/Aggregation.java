@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 the original author or authors.
+ * Copyright 2013-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -293,14 +293,16 @@ public class Aggregation {
 	}
 
 	/**
-	 * Creates a new {@link GeoNearOperation} instance from the given {@link NearQuery}.
+	 * Creates a new {@link GeoNearOperation} instance from the given {@link NearQuery} and the distanceField. The
+	 * {@code distanceField} defines output field that contains the calculated distance.
 	 * 
-	 * @param query
+	 * @param query must not be {@literal null}.
+	 * @param distanceField must not be {@literal null} or empty.
 	 * @return
 	 * @since 1.7
 	 */
-	public static GeoNearOperation geoNear(NearQuery query) {
-		return new GeoNearOperation(query);
+	public static GeoNearOperation geoNear(NearQuery query, String distanceField) {
+		return new GeoNearOperation(query, distanceField);
 	}
 
 	/**
