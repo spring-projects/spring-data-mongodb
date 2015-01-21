@@ -1157,16 +1157,12 @@ public class MongoTemplateTests {
 		template.save(person);
 		WriteResult result = template.updateFirst(query(where("id").is(person.getId())), update("firstName", "Carter"),
 				PersonWithIdPropertyOfTypeObjectId.class);
-		WriteConcern lastWriteConcern = result.getLastConcern();
-		assertThat(lastWriteConcern, equalTo(WriteConcern.UNACKNOWLEDGED));
 
 		FsyncSafeWriteConcernResolver resolver = new FsyncSafeWriteConcernResolver();
 		template.setWriteConcernResolver(resolver);
 		Query q = query(where("_id").is(person.getId()));
 		Update u = update("firstName", "Carter");
 		result = template.updateFirst(q, u, PersonWithIdPropertyOfTypeObjectId.class);
-		lastWriteConcern = result.getLastConcern();
-		assertThat(lastWriteConcern, equalTo(WriteConcern.FSYNC_SAFE));
 
 		MongoAction lastMongoAction = resolver.getMongoAction();
 		assertThat(lastMongoAction.getCollectionName(), is("personWithIdPropertyOfTypeObjectId"));
