@@ -1923,39 +1923,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * @param operation
 	 */
 	protected void handleAnyWriteResultErrors(WriteResult writeResult, DBObject query, MongoActionOperation operation) {
-
-		if (writeResultChecking == WriteResultChecking.NONE) {
-			return;
-		}
-
-		String error = writeResult.getError();
-
-		if (error == null) {
-			return;
-		}
-
-		String message;
-
-		switch (operation) {
-
-			case INSERT:
-			case SAVE:
-				message = String.format("Insert/Save for %s failed: %s", query, error);
-				break;
-			case INSERT_LIST:
-				message = String.format("Insert list failed: %s", error);
-				break;
-			default:
-				message = String.format("Execution of %s%s failed: %s", operation,
-						query == null ? "" : " using query " + query.toString(), error);
-		}
-
-		if (writeResultChecking == WriteResultChecking.EXCEPTION) {
-			throw new MongoDataIntegrityViolationException(message, writeResult, operation);
-		} else {
-			LOGGER.error(message);
-			return;
-		}
 	}
 
 	/**
