@@ -1198,8 +1198,8 @@ public class MongoTemplateTests {
 	@Test
 	public void updatesDBRefsCorrectly() {
 
-		DBRef first = new DBRef(factory.getDb(), "foo", new ObjectId());
-		DBRef second = new DBRef(factory.getDb(), "bar", new ObjectId());
+		DBRef first = new DBRef("foo", new ObjectId());
+		DBRef second = new DBRef("bar", new ObjectId());
 
 		template.updateFirst(null, update("dbRefs", Arrays.asList(first, second)), ClassWithDBRefs.class);
 	}
