@@ -102,6 +102,7 @@ import org.springframework.util.ResourceUtils;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.BasicDBObject;
+import com.mongodb.Bytes;
 import com.mongodb.CommandResult;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
@@ -414,15 +415,19 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		}
 	}
 
+	/**
+	 * Execute in a "request".
+	 *
+	 * @param action callback that specified the MongoDB actions to perform on the DB instance
+	 * @param <T> the action tuype
+	 * @return the result of the action
+	 * @deprecated sessions are no longer supported.  This method no longer executed the callback in a "request"
+	 */
+	@Deprecated
 	public <T> T executeInSession(final DbCallback<T> action) {
 		return execute(new DbCallback<T>() {
 			public T doInDB(DB db) throws MongoException, DataAccessException {
-				try {
-					db.requestStart();
-					return action.doInDB(db);
-				} finally {
-					db.requestDone();
-				}
+				return action.doInDB(db);
 			}
 		});
 	}
