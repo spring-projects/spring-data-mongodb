@@ -1712,29 +1712,6 @@ public class MongoTemplateTests {
 	}
 
 	/**
-	 * @see DATAMONGO-651
-	 */
-	@Test
-	public void throwsMongoSpecificExceptionForDataIntegrityViolations() {
-
-		WriteResult result = mock(WriteResult.class);
-		when(result.getError()).thenReturn("ERROR");
-
-		MongoActionOperation operation = MongoActionOperation.INSERT;
-
-		MongoTemplate mongoTemplate = new MongoTemplate(factory);
-		mongoTemplate.setWriteResultChecking(WriteResultChecking.EXCEPTION);
-
-		try {
-			mongoTemplate.handleAnyWriteResultErrors(result, null, operation);
-			fail("Expected MonogoDataIntegrityViolationException!");
-		} catch (MongoDataIntegrityViolationException o_O) {
-			assertThat(o_O.getActionOperation(), is(operation));
-			assertThat(o_O.getWriteResult(), is(result));
-		}
-	}
-
-	/**
 	 * @see DATAMONGO-679
 	 */
 	@Test
