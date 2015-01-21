@@ -1526,11 +1526,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		if (mapReduceOptions.getJavaScriptMode() != null) {
 			command.setJsMode(true);
 		}
-		if (!mapReduceOptions.getExtraOptions().isEmpty()) {
-			for (Map.Entry<String, Object> entry : mapReduceOptions.getExtraOptions().entrySet()) {
-				command.addExtraOption(entry.getKey(), entry.getValue());
-			}
-		}
+//		if (!mapReduceOptions.getExtraOptions().isEmpty()) {
+//			for (Map.Entry<String, Object> entry : mapReduceOptions.getExtraOptions().entrySet()) {
+//				command.addExtraOption(entry.getKey(), entry.getValue());
+//			}
+//		}
 		if (mapReduceOptions.getFinalizeFunction() != null) {
 			command.setFinalize(this.replaceWithResourceIfNecessary(mapReduceOptions.getFinalizeFunction()));
 		}
