@@ -8,7 +8,6 @@
 	<mongo:db-factory id="first" mongo-ref="mongo" write-concern="SAFE" />
 
 	<mongo:mongo id="mongo">
-		<mongo:options max-auto-connect-retry-time="27" />
 	</mongo:mongo>
 	
 	<!-- now part of the namespace

@@ -74,12 +74,9 @@ abstract class MongoParsingUtils {
 		setPropertyValue(optionsDefBuilder, optionsElement, "connect-timeout", "connectTimeout");
 		setPropertyValue(optionsDefBuilder, optionsElement, "socket-timeout", "socketTimeout");
 		setPropertyValue(optionsDefBuilder, optionsElement, "socket-keep-alive", "socketKeepAlive");
-		setPropertyValue(optionsDefBuilder, optionsElement, "auto-connect-retry", "autoConnectRetry");
-		setPropertyValue(optionsDefBuilder, optionsElement, "max-auto-connect-retry-time", "maxAutoConnectRetryTime");
 		setPropertyValue(optionsDefBuilder, optionsElement, "write-number", "writeNumber");
 		setPropertyValue(optionsDefBuilder, optionsElement, "write-timeout", "writeTimeout");
 		setPropertyValue(optionsDefBuilder, optionsElement, "write-fsync", "writeFsync");
-		setPropertyValue(optionsDefBuilder, optionsElement, "slave-ok", "slaveOk");
 		setPropertyValue(optionsDefBuilder, optionsElement, "ssl", "ssl");
 		setPropertyReference(optionsDefBuilder, optionsElement, "ssl-socket-factory-ref", "sslSocketFactory");
 

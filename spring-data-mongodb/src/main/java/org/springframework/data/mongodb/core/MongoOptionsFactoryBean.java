@@ -41,12 +41,9 @@ public class MongoOptionsFactoryBean implements FactoryBean<MongoOptions>, Initi
 	private int connectTimeout = DEFAULT_MONGO_OPTIONS.connectTimeout;
 	private int socketTimeout = DEFAULT_MONGO_OPTIONS.socketTimeout;
 	private boolean socketKeepAlive = DEFAULT_MONGO_OPTIONS.socketKeepAlive;
-	private boolean autoConnectRetry = DEFAULT_MONGO_OPTIONS.autoConnectRetry;
-	private long maxAutoConnectRetryTime = DEFAULT_MONGO_OPTIONS.maxAutoConnectRetryTime;
 	private int writeNumber = DEFAULT_MONGO_OPTIONS.w;
 	private int writeTimeout = DEFAULT_MONGO_OPTIONS.wtimeout;
 	private boolean writeFsync = DEFAULT_MONGO_OPTIONS.fsync;
-	private boolean slaveOk = DEFAULT_MONGO_OPTIONS.slaveOk;
 	private boolean ssl;
 	private SSLSocketFactory sslSocketFactory;
 
@@ -143,32 +140,6 @@ public class MongoOptionsFactoryBean implements FactoryBean<MongoOptions>, Initi
 	}
 
 	/**
-	 * Configures whether or not the system retries automatically on a failed connect. This defaults to {@literal false}.
-	 */
-	public void setAutoConnectRetry(boolean autoConnectRetry) {
-		this.autoConnectRetry = autoConnectRetry;
-	}
-
-	/**
-	 * Configures the maximum amount of time in millisecons to spend retrying to open connection to the same server. This
-	 * defaults to {@literal 0}, which means to use the default {@literal 15s} if {@link #autoConnectRetry} is on.
-	 * 
-	 * @param maxAutoConnectRetryTime the maxAutoConnectRetryTime to set
-	 */
-	public void setMaxAutoConnectRetryTime(long maxAutoConnectRetryTime) {
-		this.maxAutoConnectRetryTime = maxAutoConnectRetryTime;
-	}
-
-	/**
-	 * Specifies if the driver is allowed to read from secondaries or slaves. Defaults to {@literal false}.
-	 * 
-	 * @param slaveOk true if the driver should read from secondaries or slaves.
-	 */
-	public void setSlaveOk(boolean slaveOk) {
-		this.slaveOk = slaveOk;
-	}
-
-	/**
 	 * Specifies if the driver should use an SSL connection to Mongo. This defaults to {@literal false}. By default
 	 * {@link SSLSocketFactory#getDefault()} will be used. See {@link #setSslSocketFactory(SSLSocketFactory)} if you want
 	 * to configure a custom factory.
@@ -208,9 +179,6 @@ public class MongoOptionsFactoryBean implements FactoryBean<MongoOptions>, Initi
 		options.connectTimeout = connectTimeout;
 		options.socketTimeout = socketTimeout;
 		options.socketKeepAlive = socketKeepAlive;
-		options.autoConnectRetry = autoConnectRetry;
-		options.maxAutoConnectRetryTime = maxAutoConnectRetryTime;
-		options.slaveOk = slaveOk;
 		options.w = writeNumber;
 		options.wtimeout = writeTimeout;
 		options.fsync = writeFsync;

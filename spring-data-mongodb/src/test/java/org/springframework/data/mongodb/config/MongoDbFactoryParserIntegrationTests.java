@@ -127,17 +127,6 @@ public class MongoDbFactoryParserIntegrationTests {
 	}
 
 	/**
-	 * @see DATADOC-280
-	 */
-	@Test
-	public void parsesMaxAutoConnectRetryTimeCorrectly() {
-
-		reader.loadBeanDefinitions(new ClassPathResource("namespace/db-factory-bean.xml"));
-		Mongo mongo = factory.getBean(Mongo.class);
-		assertThat(mongo.getMongoOptions().maxAutoConnectRetryTime, is(27L));
-	}
-
-	/**
 	 * @see DATADOC-295
 	 */
 	@Test

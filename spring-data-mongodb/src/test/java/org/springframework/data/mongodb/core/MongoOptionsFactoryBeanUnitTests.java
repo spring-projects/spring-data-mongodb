@@ -33,20 +33,6 @@ import com.mongodb.MongoOptions;
 public class MongoOptionsFactoryBeanUnitTests {
 
 	/**
-	 * @see DATADOC-280
-	 */
-	@Test
-	public void setsMaxConnectRetryTime() {
-
-		MongoOptionsFactoryBean bean = new MongoOptionsFactoryBean();
-		bean.setMaxAutoConnectRetryTime(27);
-		bean.afterPropertiesSet();
-
-		MongoOptions options = bean.getObject();
-		assertThat(options.maxAutoConnectRetryTime, is(27L));
-	}
-
-	/**
 	 * @see DATAMONGO-764
 	 */
 	@Test
