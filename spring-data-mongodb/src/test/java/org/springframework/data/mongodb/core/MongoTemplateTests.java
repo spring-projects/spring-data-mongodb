@@ -1153,12 +1153,12 @@ public class MongoTemplateTests {
 		person.setId(new ObjectId());
 		person.setFirstName("Dave");
 
-		template.setWriteConcern(WriteConcern.NONE);
+		template.setWriteConcern(WriteConcern.UNACKNOWLEDGED);
 		template.save(person);
 		WriteResult result = template.updateFirst(query(where("id").is(person.getId())), update("firstName", "Carter"),
 				PersonWithIdPropertyOfTypeObjectId.class);
 		WriteConcern lastWriteConcern = result.getLastConcern();
-		assertThat(lastWriteConcern, equalTo(WriteConcern.NONE));
+		assertThat(lastWriteConcern, equalTo(WriteConcern.UNACKNOWLEDGED));
 
 		FsyncSafeWriteConcernResolver resolver = new FsyncSafeWriteConcernResolver();
 		template.setWriteConcernResolver(resolver);
@@ -1170,7 +1170,7 @@ public class MongoTemplateTests {
 
 		MongoAction lastMongoAction = resolver.getMongoAction();
 		assertThat(lastMongoAction.getCollectionName(), is("personWithIdPropertyOfTypeObjectId"));
-		assertThat(lastMongoAction.getDefaultWriteConcern(), equalTo(WriteConcern.NONE));
+		assertThat(lastMongoAction.getDefaultWriteConcern(), equalTo(WriteConcern.UNACKNOWLEDGED));
 		assertThat(lastMongoAction.getDocument(), notNullValue());
 		assertThat(lastMongoAction.getEntityType().toString(), is(PersonWithIdPropertyOfTypeObjectId.class.toString()));
 		assertThat(lastMongoAction.getMongoActionOperation(), is(MongoActionOperation.UPDATE));
