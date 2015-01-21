@@ -50,7 +50,7 @@ public class ServerInfo extends AbstractMonitor {
 		 * UnknownHostException is not necessary anymore, but clients could have
 		 * called this method in a try..catch(UnknownHostException) already
 		 */
-		return getServerStatus().getServerUsed().getHost();
+		return mongo.getAddress().getHost();
 	}
 
 	@ManagedMetric(displayName = "Uptime Estimate")
