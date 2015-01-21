@@ -1176,7 +1176,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			return (T) dbref;
 		}
 
-		Object object = dbref == null ? null : path.getPathItem(dbref.getId(), dbref.getRef());
+		Object object = dbref == null ? null : path.getPathItem(dbref.getId(), dbref.getCollectionName());
 
 		if (object != null) {
 			return (T) object;
@@ -1192,6 +1192,10 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * @return
 	 */
 	DBObject readRef(DBRef ref) {
-		return ref.fetch();
+		// WARNING: Temporary hack here
+		if (dbRefResolver instanceof DefaultDbRefResolver) {
+			return ((DefaultDbRefResolver) dbRefResolver).resolveDBRef(ref);
+		}
+		throw new UnsupportedOperationException();
 	}
 }

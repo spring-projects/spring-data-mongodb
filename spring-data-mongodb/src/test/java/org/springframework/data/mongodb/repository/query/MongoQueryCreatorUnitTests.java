@@ -238,7 +238,7 @@ public class MongoQueryCreatorUnitTests {
 	public void createsQueryReferencingADBRefCorrectly() {
 
 		User user = new User();
-		com.mongodb.DBRef dbref = new com.mongodb.DBRef(null, "user", "id");
+		com.mongodb.DBRef dbref = new com.mongodb.DBRef("user", "id");
 		when(converter.toDBRef(eq(user), Mockito.any(MongoPersistentProperty.class))).thenReturn(dbref);
 
 		PartTree tree = new PartTree("findByCreator", User.class);

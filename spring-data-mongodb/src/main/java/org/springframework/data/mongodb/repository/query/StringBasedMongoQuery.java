@@ -254,7 +254,7 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 
 				DBRef dbref = (DBRef) value;
 
-				potentiallyAddBinding(dbref.getRef(), bindings);
+				potentiallyAddBinding(dbref.getCollectionName(), bindings);
 				potentiallyAddBinding(dbref.getId().toString(), bindings);
 
 			} else if (value instanceof DBObject) {

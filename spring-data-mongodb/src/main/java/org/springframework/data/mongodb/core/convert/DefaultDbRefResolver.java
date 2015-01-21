@@ -23,6 +23,8 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.springframework.aop.framework.ProxyFactory;
@@ -72,6 +74,11 @@ public class DefaultDbRefResolver implements DbRefResolver {
 		this.objenesis = new ObjenesisStd(true);
 	}
 
+	// WARNING: temporary hack
+	public DBObject resolveDBRef(DBRef dbref) {
+		return mongoDbFactory.getDb().getCollection(dbref.getCollectionName()).findOne(new BasicDBObject("_id", dbref.getId()));
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.convert.DbRefResolver#resolveDbRef(org.springframework.data.mongodb.core.mapping.MongoPersistentProperty, org.springframework.data.mongodb.core.convert.DbRefResolverCallback)
@@ -101,7 +108,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 		DB db = mongoDbFactory.getDb();
 		db = annotation != null && StringUtils.hasText(annotation.db()) ? mongoDbFactory.getDb(annotation.db()) : db;
 
-		return new DBRef(db, entity.getCollection(), id);
+		return new DBRef(entity.getCollection(), id);
 	}
 
 	/**
@@ -282,7 +289,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 
 			StringBuilder description = new StringBuilder();
 			if (dbref != null) {
-				description.append(dbref.getRef());
+				description.append(dbref.getCollectionName());
 				description.append(":");
 				description.append(dbref.getId());
 			} else {

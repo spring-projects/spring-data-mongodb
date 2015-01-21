@@ -390,7 +390,7 @@ public class QueryMapper {
 		if (source instanceof DBRef) {
 
 			DBRef ref = (DBRef) source;
-			return new DBRef(ref.getDB(), ref.getRef(), convertId(ref.getId()));
+			return new DBRef(ref.getCollectionName(), convertId(ref.getId()));
 		}
 
 		if (source instanceof Iterable) {

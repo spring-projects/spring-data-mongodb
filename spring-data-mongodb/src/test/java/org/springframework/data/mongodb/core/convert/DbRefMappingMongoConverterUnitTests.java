@@ -89,7 +89,7 @@ public class DbRefMappingMongoConverterUnitTests {
 
 		DBRef dbRef = converter.toDBRef(person, null);
 		assertThat(dbRef.getId(), is((Object) "foo"));
-		assertThat(dbRef.getRef(), is("person"));
+		assertThat(dbRef.getCollectionName(), is("person"));
 	}
 
 	/**
@@ -114,18 +114,6 @@ public class DbRefMappingMongoConverterUnitTests {
 		DBObject map = (DBObject) dbObject.get("map");
 
 		assertThat(map.get("test"), instanceOf(DBRef.class));
-
-		DBObject mapValDBObject = new BasicDBObject();
-		mapValDBObject.put("_id", BigInteger.ONE);
-
-		DBRef dbRef = mock(DBRef.class);
-		when(dbRef.fetch()).thenReturn(mapValDBObject);
-
-		((DBObject) dbObject.get("map")).put("test", dbRef);
-
-		MapDBRef read = converter.read(MapDBRef.class, dbObject);
-
-		assertThat(read.map.get("test").id, is(BigInteger.ONE));
 	}
 
 	/**
@@ -142,7 +130,7 @@ public class DbRefMappingMongoConverterUnitTests {
 
 		DBRef dbRef = converter.toDBRef(person, property);
 		assertThat(dbRef.getId(), is((Object) "foo"));
-		assertThat(dbRef.getRef(), is("person"));
+		assertThat(dbRef.getCollectionName(), is("person"));
 	}
 
 	/**

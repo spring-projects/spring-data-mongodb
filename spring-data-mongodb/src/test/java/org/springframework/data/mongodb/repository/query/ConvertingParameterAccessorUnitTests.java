@@ -105,7 +105,7 @@ public class ConvertingParameterAccessorUnitTests {
 
 		assertThat(result, is(instanceOf(com.mongodb.DBRef.class)));
 		com.mongodb.DBRef dbRef = (com.mongodb.DBRef) result;
-		assertThat(dbRef.getRef(), is("property"));
+		assertThat(dbRef.getCollectionName(), is("property"));
 		assertThat(dbRef.getId(), is((Object) 5L));
 	}
 
@@ -128,7 +128,7 @@ public class ConvertingParameterAccessorUnitTests {
 
 		assertThat(element, is(instanceOf(com.mongodb.DBRef.class)));
 		com.mongodb.DBRef dbRef = (com.mongodb.DBRef) element;
-		assertThat(dbRef.getRef(), is("property"));
+		assertThat(dbRef.getCollectionName(), is("property"));
 		assertThat(dbRef.getId(), is((Object) 5L));
 	}
 
