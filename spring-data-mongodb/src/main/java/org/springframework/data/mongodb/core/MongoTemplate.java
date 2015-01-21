@@ -658,7 +658,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	public <T> T findAndRemove(Query query, Class<T> entityClass, String collectionName) {
 
 		return doFindAndRemove(collectionName, query.getQueryObject(), query.getFieldsObject(),
-				getMappedSortObject(query, entityClass), entityClass);
+							   getMappedSortObject(query, entityClass), entityClass);
 	}
 
 	public long count(Query query, Class<?> entityClass) {
@@ -981,10 +981,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		return execute(collectionName, new CollectionCallback<Object>() {
 			public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 				MongoAction mongoAction = new MongoAction(writeConcern, MongoActionOperation.SAVE, collectionName, entityClass,
-						dbDoc, null);
+														  dbDoc, null);
 				WriteConcern writeConcernToUse = prepareWriteConcern(mongoAction);
 				WriteResult writeResult = writeConcernToUse == null ? collection.save(dbDoc) : collection.save(dbDoc,
-						writeConcernToUse);
+																											   writeConcernToUse);
 				handleAnyWriteResultErrors(writeResult, dbDoc, MongoActionOperation.SAVE);
 				return dbDoc.get(ID_FIELD);
 			}
@@ -1217,16 +1217,16 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				DBObject dboq = queryMapper.getMappedObject(queryObject, entity);
 
 				MongoAction mongoAction = new MongoAction(writeConcern, MongoActionOperation.REMOVE, collectionName,
-						entityClass, null, queryObject);
+														  entityClass, null, queryObject);
 				WriteConcern writeConcernToUse = prepareWriteConcern(mongoAction);
 
 				if (LOGGER.isDebugEnabled()) {
-					LOGGER.debug("Remove using query: {} in collection: {}.", new Object[] { serializeToJsonSafely(dboq),
-							collection.getName() });
+					LOGGER.debug("Remove using query: {} in collection: {}.", new Object[]{serializeToJsonSafely(dboq),
+																						   collection.getName()});
 				}
 
 				WriteResult wr = writeConcernToUse == null ? collection.remove(dboq) : collection.remove(dboq,
-						writeConcernToUse);
+																										 writeConcernToUse);
 
 				handleAnyWriteResultErrors(wr, dboq, MongoActionOperation.REMOVE);
 
@@ -1244,7 +1244,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 	public <T> List<T> findAll(Class<T> entityClass, String collectionName) {
 		return executeFindMultiInternal(new FindCallback(null), null, new ReadDbObjectCallback<T>(mongoConverter,
-				entityClass), collectionName);
+																								  entityClass), collectionName);
 	}
 
 	public <T> MapReduceResults<T> mapReduce(String inputCollectionName, String mapFunction, String reduceFunction,
@@ -1265,30 +1265,30 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	}
 
 	public <T> MapReduceResults<T> mapReduce(Query query, String inputCollectionName, String mapFunction,
-			String reduceFunction, MapReduceOptions mapReduceOptions, Class<T> entityClass) {
+											 String reduceFunction, MapReduceOptions mapReduceOptions, Class<T> entityClass) {
 
 		String mapFunc = replaceWithResourceIfNecessary(mapFunction);
 		String reduceFunc = replaceWithResourceIfNecessary(reduceFunction);
 		DBCollection inputCollection = getCollection(inputCollectionName);
 		MapReduceCommand command = new MapReduceCommand(inputCollection, mapFunc, reduceFunc,
-				mapReduceOptions.getOutputCollection(), mapReduceOptions.getOutputType(), null);
+				mapReduceOptions.getOutputCollection(), mapReduceOptions.getOutputType(),
+				query == null || query.getQueryObject() == null ? null : queryMapper.getMappedObject(query.getQueryObject(), null));
 
-		DBObject commandObject = copyQuery(query, copyMapReduceOptions(mapReduceOptions, command));
+		copyQuery(query, command);
+		copyMapReduceOptions(mapReduceOptions, command);
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug("Executing MapReduce on collection [" + command.getInput() + "], mapFunction [" + mapFunc
 					+ "], reduceFunction [" + reduceFunc + "]");
 		}
 
-		CommandResult commandResult = command.getOutputType() == MapReduceCommand.OutputType.INLINE ? executeCommand(
-				commandObject, getDb().getOptions()) : executeCommand(commandObject);
-		handleCommandError(commandResult, commandObject);
+		MapReduceOutput mapReduceOutput = inputCollection.mapReduce(command);
 
-		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("MapReduce command result = [{}]", serializeToJsonSafely(commandObject));
-		}
+		// Figure out a new way to log this
+//		if (LOGGER.isDebugEnabled()) {
+//			LOGGER.debug("MapReduce command result = [{}]", serializeToJsonSafely(commandObject));
+//		}
 
-		MapReduceOutput mapReduceOutput = new MapReduceOutput(inputCollection, commandObject, commandResult);
 		List<T> mappedResults = new ArrayList<T>();
 		DbObjectCallback<T> callback = new ReadDbObjectCallback<T>(mongoConverter, entityClass);
 
@@ -1296,7 +1296,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			mappedResults.add(callback.doWith(dbObject));
 		}
 
-		return new MapReduceResults<T>(mappedResults, commandResult);
+		return new MapReduceResults<T>(mappedResults, mapReduceOutput);
 	}
 
 	public <T> GroupByResults<T> group(String inputCollectionName, GroupBy groupBy, Class<T> entityClass) {
@@ -1503,23 +1503,19 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		return func;
 	}
 
-	private DBObject copyQuery(Query query, DBObject copyMapReduceOptions) {
+	private void copyQuery(Query query, MapReduceCommand mapReduceCommand) {
 		if (query != null) {
 			if (query.getSkip() != 0 || query.getFieldsObject() != null) {
 				throw new InvalidDataAccessApiUsageException(
-						"Can not use skip or field specification with map reduce operations");
-			}
-			if (query.getQueryObject() != null) {
-				copyMapReduceOptions.put("query", queryMapper.getMappedObject(query.getQueryObject(), null));
+															"Can not use skip or field specification with map reduce operations");
 			}
 			if (query.getLimit() > 0) {
-				copyMapReduceOptions.put("limit", query.getLimit());
+				mapReduceCommand.setLimit(query.getLimit());
 			}
 			if (query.getSortObject() != null) {
-				copyMapReduceOptions.put("sort", queryMapper.getMappedObject(query.getSortObject(), null));
+				mapReduceCommand.setSort(queryMapper.getMappedObject(query.getSortObject(), null));
 			}
 		}
-		return copyMapReduceOptions;
 	}
 
 	private DBObject copyMapReduceOptions(MapReduceOptions mapReduceOptions, MapReduceCommand command) {
