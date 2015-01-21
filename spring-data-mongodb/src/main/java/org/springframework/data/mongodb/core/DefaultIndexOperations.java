@@ -73,9 +73,9 @@ public class DefaultIndexOperations implements IndexOperations {
 			public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 				DBObject indexOptions = indexDefinition.getIndexOptions();
 				if (indexOptions != null) {
-					collection.ensureIndex(indexDefinition.getIndexKeys(), indexOptions);
+					collection.createIndex(indexDefinition.getIndexKeys(), indexOptions);
 				} else {
-					collection.ensureIndex(indexDefinition.getIndexKeys());
+					collection.createIndex(indexDefinition.getIndexKeys());
 				}
 				return null;
 			}
@@ -109,12 +109,7 @@ public class DefaultIndexOperations implements IndexOperations {
 	 * @see org.springframework.data.mongodb.core.IndexOperations#resetIndexCache()
 	 */
 	public void resetIndexCache() {
-		mongoOperations.execute(collectionName, new CollectionCallback<Void>() {
-			public Void doInCollection(DBCollection collection) throws MongoException, DataAccessException {
-				collection.resetIndexCache();
-				return null;
-			}
-		});
+		// there is no more index cache
 	}
 
 	/*
