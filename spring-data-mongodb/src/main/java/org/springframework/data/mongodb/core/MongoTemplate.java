@@ -333,11 +333,34 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		return result;
 	}
 
+	/**
+	 * Executes the command with the given options.  Note that only the {@link com.mongodb.Bytes#QUERYOPTION_SLAVEOK} options is relevant
+	 * when running a command.
+	 *
+	 * @param command a MongoDB command
+	 * @param options query options to use
+	 * @return the command result
+	 * @deprecated Use {@link #executeCommand(com.mongodb.DBObject, com.mongodb.ReadPreference)} instead
+	 */
+	@Deprecated
 	public CommandResult executeCommand(final DBObject command, final int options) {
+
+		return executeCommand(command, (options & Bytes.QUERYOPTION_SLAVEOK) != 0 ?
+									   ReadPreference.secondaryPreferred() : ReadPreference.primary());
+	}
+
+	/**
+	 * Executes the command with the given read preference.
+	 *
+	 * @param command a MongoDB command
+	 * @param readPreference the read preference to use
+	 * @return the command result
+	 */
+	public CommandResult executeCommand(final DBObject command, final ReadPreference readPreference) {
 
 		CommandResult result = execute(new DbCallback<CommandResult>() {
 			public CommandResult doInDB(DB db) throws MongoException, DataAccessException {
-				return db.command(command, options);
+				return db.command(command, readPreference);
 			}
 		});
 
