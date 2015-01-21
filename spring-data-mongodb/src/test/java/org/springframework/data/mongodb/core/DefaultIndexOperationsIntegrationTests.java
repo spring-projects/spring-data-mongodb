@@ -76,7 +76,16 @@ public class DefaultIndexOperationsIntegrationTests {
 
 	@SuppressWarnings("deprecation")
 	private static IndexInfo findAndReturnIndexInfo(Iterable<IndexInfo> candidates, DBObject keys) {
-		return findAndReturnIndexInfo(candidates, DBCollection.genIndexName(keys));
+		StringBuilder name = new StringBuilder();
+		for ( String s : keys.keySet() ){
+			if ( name.length() > 0 )
+				name.append( '_' );
+			name.append( s ).append( '_' );
+			Object val = keys.get( s );
+			if ( val instanceof Number || val instanceof String )
+				name.append( val.toString().replace( ' ', '_' ) );
+		}
+		return findAndReturnIndexInfo(candidates, name.toString());
 	}
 
 	private static IndexInfo findAndReturnIndexInfo(Iterable<IndexInfo> candidates, String name) {
