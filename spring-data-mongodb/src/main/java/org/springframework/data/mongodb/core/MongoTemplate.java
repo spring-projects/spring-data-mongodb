@@ -1524,7 +1524,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 	private DBObject copyMapReduceOptions(MapReduceOptions mapReduceOptions, MapReduceCommand command) {
 		if (mapReduceOptions.getJavaScriptMode() != null) {
-			command.addExtraOption("jsMode", true);
+			command.setJsMode(true);
 		}
 		if (!mapReduceOptions.getExtraOptions().isEmpty()) {
 			for (Map.Entry<String, Object> entry : mapReduceOptions.getExtraOptions().entrySet()) {
