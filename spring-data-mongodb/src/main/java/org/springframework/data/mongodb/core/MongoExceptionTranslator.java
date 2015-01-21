@@ -15,6 +15,11 @@
  */
 package org.springframework.data.mongodb.core;
 
+import com.mongodb.MongoCursorNotFoundException;
+import com.mongodb.MongoException;
+import com.mongodb.MongoInternalException;
+import com.mongodb.MongoSocketException;
+import com.mongodb.MongoTimeoutException;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.dao.DuplicateKeyException;
@@ -22,16 +27,6 @@ import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mongodb.UncategorizedMongoDbException;
-
-import com.mongodb.MongoCursorNotFoundException;
-import com.mongodb.MongoException;
-import com.mongodb.MongoException.CursorNotFound;
-import com.mongodb.MongoException.DuplicateKey;
-import com.mongodb.MongoException.Network;
-import com.mongodb.MongoInternalException;
-import com.mongodb.MongoServerSelectionException;
-import com.mongodb.MongoSocketException;
-import com.mongodb.MongoTimeoutException;
 
 /**
  * Simple {@link PersistenceExceptionTranslator} for Mongo. Convert the given runtime exception to an appropriate
@@ -51,19 +46,15 @@ public class MongoExceptionTranslator implements PersistenceExceptionTranslator 
 
 		// Check for well-known MongoException subclasses.
 
-		if (ex instanceof DuplicateKey || ex instanceof DuplicateKeyException) {
+		if (ex instanceof com.mongodb.DuplicateKeyException || ex instanceof DuplicateKeyException) {
 			return new DuplicateKeyException(ex.getMessage(), ex);
 		}
 
-		if (ex instanceof Network || ex instanceof MongoSocketException) {
+		if (ex instanceof MongoSocketException || ex instanceof MongoSocketException) {
 			return new DataAccessResourceFailureException(ex.getMessage(), ex);
 		}
 
-		if (ex instanceof CursorNotFound || ex instanceof MongoCursorNotFoundException) {
-			return new DataAccessResourceFailureException(ex.getMessage(), ex);
-		}
-
-		if (ex instanceof MongoServerSelectionException) {
+		if (ex instanceof MongoCursorNotFoundException || ex instanceof MongoCursorNotFoundException) {
 			return new DataAccessResourceFailureException(ex.getMessage(), ex);
 		}
 

@@ -15,12 +15,11 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
-
-import java.io.IOException;
-import java.net.UnknownHostException;
-
+import com.mongodb.MongoCursorNotFoundException;
+import com.mongodb.MongoException;
+import com.mongodb.MongoInternalException;
+import com.mongodb.MongoSocketException;
+import com.mongodb.ServerAddress;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -34,11 +33,15 @@ import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.data.mongodb.UncategorizedMongoDbException;
 
-import com.mongodb.MongoException;
-import com.mongodb.MongoException.DuplicateKey;
-import com.mongodb.MongoException.Network;
-import com.mongodb.MongoInternalException;
-import com.mongodb.ServerAddress;
+import java.net.UnknownHostException;
+
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 
 /**
  * Unit tests for {@link MongoExceptionTranslator}.
@@ -51,7 +54,8 @@ public class MongoExceptionTranslatorUnitTests {
 
 	MongoExceptionTranslator translator;
 
-	@Mock DuplicateKey exception;
+	@Mock
+	com.mongodb.DuplicateKeyException exception;
 
 	@Before
 	public void setUp() {
@@ -68,7 +72,7 @@ public class MongoExceptionTranslatorUnitTests {
 	@Test
 	public void translateNetwork() {
 
-		Network exception = new Network("IOException", new IOException("IOException"));
+		MongoSocketException exception = new MongoSocketException("IOException", new ServerAddress());
 		DataAccessException translatedException = translator.translateExceptionIfPossible(exception);
 
 		expectExceptionWithCauseMessage(translatedException, DataAccessResourceFailureException.class, "IOException");
@@ -78,7 +82,7 @@ public class MongoExceptionTranslatorUnitTests {
 	@Test
 	public void translateCursorNotFound() throws UnknownHostException {
 
-		MongoException.CursorNotFound exception = new MongoException.CursorNotFound(1, new ServerAddress());
+		MongoCursorNotFoundException exception = new MongoCursorNotFoundException(1, new ServerAddress());
 		DataAccessException translatedException = translator.translateExceptionIfPossible(exception);
 
 		expectExceptionWithCauseMessage(translatedException, DataAccessResourceFailureException.class);
