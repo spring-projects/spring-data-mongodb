@@ -1107,10 +1107,10 @@ public class MongoTemplateTests {
 			}
 		});
 		MongoTemplate slaveTemplate = new MongoTemplate(factory);
-		slaveTemplate.setReadPreference(ReadPreference.SECONDARY);
+		slaveTemplate.setReadPreference(ReadPreference.secondary());
 		slaveTemplate.execute("readPref", new CollectionCallback<Object>() {
 			public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
-				assertThat(collection.getReadPreference(), is(ReadPreference.SECONDARY));
+				assertThat(collection.getReadPreference(), is(ReadPreference.secondary()));
 				assertThat(collection.getDB().getOptions(), is(0));
 				return null;
 			}
