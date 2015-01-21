@@ -270,8 +270,8 @@ public class PerformanceTests {
 			DBCollection collection = db.getCollection(collectionName);
 			collection.drop();
 			collection.getDB().command(getCreateCollectionCommand(collectionName));
-			collection.ensureIndex(new BasicDBObject("firstname", -1));
-			collection.ensureIndex(new BasicDBObject("lastname", -1));
+			collection.createIndex(new BasicDBObject("firstname", -1));
+			collection.createIndex(new BasicDBObject("lastname", -1));
 		}
 	}
 
