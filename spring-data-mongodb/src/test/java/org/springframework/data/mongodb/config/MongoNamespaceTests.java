@@ -242,7 +242,7 @@ public class MongoNamespaceTests {
 		assertEquals(1500, mongoOpts.socketTimeout);
 		assertEquals(4, mongoOpts.threadsAllowedToBlockForConnectionMultiplier);
 		assertEquals(true, mongoOpts.socketKeepAlive);
-		assertEquals(true, mongoOpts.fsync);
+		assertEquals(true, mongoOpts.getWriteConcern().getFsync());
 		assertEquals(1, mongoOpts.getWriteConcern().getW());
 		assertEquals(0, mongoOpts.getWriteConcern().getWtimeout());
 		assertEquals(true, mongoOpts.getWriteConcern().fsync());
