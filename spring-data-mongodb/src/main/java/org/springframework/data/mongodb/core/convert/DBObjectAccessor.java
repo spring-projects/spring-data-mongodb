@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ import com.mongodb.DBObject;
  */
 class DBObjectAccessor {
 
-	private final DBObject dbObject;
+	private final BasicDBObject dbObject;
 
 	/**
 	 * Creates a new {@link DBObjectAccessor} for the given {@link DBObject}.
@@ -46,7 +46,7 @@ class DBObjectAccessor {
 		Assert.notNull(dbObject, "DBObject must not be null!");
 		Assert.isInstanceOf(BasicDBObject.class, dbObject, "Given DBObject must be a BasicDBObject!");
 
-		this.dbObject = dbObject;
+		this.dbObject = (BasicDBObject) dbObject;
 	}
 
 	/**
@@ -61,6 +61,11 @@ class DBObjectAccessor {
 
 		Assert.notNull(prop, "MongoPersistentProperty must not be null!");
 		String fieldName = prop.getFieldName();
+
+		if (!fieldName.contains(".")) {
+			dbObject.put(fieldName, value);
+			return;
+		}
 
 		Iterator<String> parts = Arrays.asList(fieldName.split("\\.")).iterator();
 		DBObject dbObject = this.dbObject;
@@ -87,12 +92,16 @@ class DBObjectAccessor {
 	 * @param property must not be {@literal null}.
 	 * @return
 	 */
-	@SuppressWarnings("unchecked")
 	public Object get(MongoPersistentProperty property) {
 
 		String fieldName = property.getFieldName();
+
+		if (!fieldName.contains(".")) {
+			return this.dbObject.get(fieldName);
+		}
+
 		Iterator<String> parts = Arrays.asList(fieldName.split("\\.")).iterator();
-		Map<Object, Object> source = this.dbObject.toMap();
+		Map<String, Object> source = this.dbObject;
 		Object result = null;
 
 		while (source != null && parts.hasNext()) {
@@ -108,14 +117,14 @@ class DBObjectAccessor {
 	}
 
 	@SuppressWarnings("unchecked")
-	private Map<Object, Object> getAsMap(Object source) {
+	private Map<String, Object> getAsMap(Object source) {
 
 		if (source instanceof BasicDBObject) {
-			return ((DBObject) source).toMap();
+			return (BasicDBObject) source;
 		}
 
 		if (source instanceof Map) {
-			return (Map<Object, Object>) source;
+			return (Map<String, Object>) source;
 		}
 
 		return null;
