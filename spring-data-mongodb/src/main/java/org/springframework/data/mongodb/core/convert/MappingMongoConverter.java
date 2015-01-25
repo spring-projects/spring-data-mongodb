@@ -783,7 +783,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private Object getPotentiallyConvertedSimpleRead(Object value, Class<?> target) {
 
-		if (value == null || target == null) {
+		if (value == null || target == null || target.isAssignableFrom(value.getClass())) {
 			return value;
 		}
 
@@ -795,7 +795,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			return Enum.valueOf((Class<Enum>) target, value.toString());
 		}
 
-		return target.isAssignableFrom(value.getClass()) ? value : conversionService.convert(value, target);
+		return conversionService.convert(value, target);
 	}
 
 	protected DBRef createDBRef(Object target, MongoPersistentProperty property) {

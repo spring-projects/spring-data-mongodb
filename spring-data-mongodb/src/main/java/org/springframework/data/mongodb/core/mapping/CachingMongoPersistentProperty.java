@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2013 the original author or authors.
+ * Copyright 2011-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,8 @@ public class CachingMongoPersistentProperty extends BasicMongoPersistentProperty
 	private Boolean isIdProperty;
 	private Boolean isAssociation;
 	private String fieldName;
+	private Boolean usePropertyAccess;
+	private Boolean isTransient;
 
 	/**
 	 * Creates a new {@link CachingMongoPersistentProperty}.
@@ -83,5 +85,33 @@ public class CachingMongoPersistentProperty extends BasicMongoPersistentProperty
 		}
 
 		return this.fieldName;
+	}
+
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mapping.model.AnnotationBasedPersistentProperty#usePropertyAccess()
+	 */
+	@Override
+	public boolean usePropertyAccess() {
+
+		if (this.usePropertyAccess == null) {
+			this.usePropertyAccess = super.usePropertyAccess();
+		}
+
+		return this.usePropertyAccess;
+	}
+
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mapping.model.AnnotationBasedPersistentProperty#isTransient()
+	 */
+	@Override
+	public boolean isTransient() {
+
+		if (this.isTransient == null) {
+			this.isTransient = super.isTransient();
+		}
+
+		return this.isTransient;
 	}
 }

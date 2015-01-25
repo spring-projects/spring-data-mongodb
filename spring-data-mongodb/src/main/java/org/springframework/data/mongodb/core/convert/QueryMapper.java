@@ -397,13 +397,20 @@ public class QueryMapper {
 	 */
 	public Object convertId(Object id) {
 
-		try {
-			return conversionService.convert(id, ObjectId.class);
-		} catch (ConversionException e) {
-			// Ignore
+		if (id == null) {
+			return null;
 		}
 
-		return delegateConvertToMongoType(id, null);
+		if (id instanceof String) {
+			return ObjectId.isValid(id.toString()) ? conversionService.convert(id, ObjectId.class) : id;
+		}
+
+		try {
+			return conversionService.canConvert(id.getClass(), ObjectId.class) ? conversionService
+					.convert(id, ObjectId.class) : delegateConvertToMongoType(id, null);
+		} catch (ConversionException o_O) {
+			return delegateConvertToMongoType(id, null);
+		}
 	}
 
 	/**
