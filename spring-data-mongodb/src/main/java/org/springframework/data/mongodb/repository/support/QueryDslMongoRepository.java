@@ -90,6 +90,7 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 	 * (non-Javadoc)
 	 * @see org.springframework.data.querydsl.QueryDslPredicateExecutor#findOne(com.mysema.query.types.Predicate)
 	 */
+	@Override
 	public T findOne(Predicate predicate) {
 		return createQueryFor(predicate).uniqueResult();
 	}
@@ -98,6 +99,7 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 	 * (non-Javadoc)
 	 * @see org.springframework.data.querydsl.QueryDslPredicateExecutor#findAll(com.mysema.query.types.Predicate)
 	 */
+	@Override
 	public List<T> findAll(Predicate predicate) {
 		return createQueryFor(predicate).list();
 	}
@@ -106,6 +108,7 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 	 * (non-Javadoc)
 	 * @see org.springframework.data.querydsl.QueryDslPredicateExecutor#findAll(com.mysema.query.types.Predicate, com.mysema.query.types.OrderSpecifier<?>[])
 	 */
+	@Override
 	public List<T> findAll(Predicate predicate, OrderSpecifier<?>... orders) {
 		return createQueryFor(predicate).orderBy(orders).list();
 	}
@@ -123,6 +126,7 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 	 * (non-Javadoc)
 	 * @see org.springframework.data.querydsl.QueryDslPredicateExecutor#findAll(com.mysema.query.types.Predicate, org.springframework.data.domain.Pageable)
 	 */
+	@Override
 	public Page<T> findAll(Predicate predicate, Pageable pageable) {
 
 		MongodbQuery<T> countQuery = createQueryFor(predicate);
@@ -157,6 +161,7 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 	 * (non-Javadoc)
 	 * @see org.springframework.data.querydsl.QueryDslPredicateExecutor#count(com.mysema.query.types.Predicate)
 	 */
+	@Override
 	public long count(Predicate predicate) {
 		return createQueryFor(predicate).count();
 	}
@@ -165,6 +170,7 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 	 * (non-Javadoc)
 	 * @see org.springframework.data.querydsl.QueryDslPredicateExecutor#exists(com.mysema.query.types.Predicate)
 	 */
+	@Override
 	public boolean exists(Predicate predicate) {
 		return createQueryFor(predicate).exists();
 	}
