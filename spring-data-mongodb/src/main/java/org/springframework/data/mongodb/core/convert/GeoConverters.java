@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 the original author or authors.
+ * Copyright 2014-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 package org.springframework.data.mongodb.core.convert;
+
+import static org.springframework.util.Assert.*;
+import static org.springframework.util.ObjectUtils.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,9 +33,16 @@ import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
 import org.springframework.data.geo.Shape;
+import org.springframework.data.mongodb.core.geo.GeoJson;
+import org.springframework.data.mongodb.core.geo.GeoJsonGeometryCollection;
+import org.springframework.data.mongodb.core.geo.GeoJsonLineString;
+import org.springframework.data.mongodb.core.geo.GeoJsonMultiLineString;
+import org.springframework.data.mongodb.core.geo.GeoJsonMultiPoint;
+import org.springframework.data.mongodb.core.geo.GeoJsonMultiPolygon;
+import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
+import org.springframework.data.mongodb.core.geo.GeoJsonPolygon;
 import org.springframework.data.mongodb.core.geo.Sphere;
 import org.springframework.data.mongodb.core.query.GeoCommand;
-import org.springframework.util.Assert;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
@@ -43,6 +53,7 @@ import com.mongodb.DBObject;
  * 
  * @author Thomas Darimont
  * @author Oliver Gierke
+ * @author Christoph Strobl
  * @since 1.5
  */
 abstract class GeoConverters {
@@ -69,7 +80,17 @@ abstract class GeoConverters {
 				, DbObjectToSphereConverter.INSTANCE //
 				, DbObjectToPointConverter.INSTANCE //
 				, PointToDbObjectConverter.INSTANCE //
-				, GeoCommandToDbObjectConverter.INSTANCE);
+				, GeoCommandToDbObjectConverter.INSTANCE //
+				, GeoJsonToDbObjectConverter.INSTANCE //
+				, GeoJsonPointToDbObjectConverter.INSTNANCE //
+				, GeoJsonPolygonToDbObjectConverter.INSTNANCE //
+				, DbObjectToGeoJsonPointConverter.INSTANCE //
+				, DbObjectToGeoJsonPolygonConverter.INSTANCE //
+				, DbObjectToGeoJsonLineStringConverter.INSTANCE //
+				, DbObjectToGeoJsonMultiLineStringConverter.INSTANCE //
+				, DbObjectToGeoJsonMultiPointConverter.INSTANCE //
+				, DbObjectToGeoJsonMultiPolygonConverter.INSTANCE //
+				, DbObjectToGeoJsonGeometryCollectionConverter.INSTANCE);
 	}
 
 	/**
@@ -90,7 +111,7 @@ abstract class GeoConverters {
 		@Override
 		public Point convert(DBObject source) {
 
-			Assert.isTrue(source.keySet().size() == 2, "Source must contain 2 elements");
+			isTrue(source.keySet().size() == 2, "Source must contain 2 elements");
 
 			return source == null ? null : new Point((Double) source.get("x"), (Double) source.get("y"));
 		}
@@ -233,13 +254,13 @@ abstract class GeoConverters {
 			if (source.containsField("metric")) {
 
 				String metricString = (String) source.get("metric");
-				Assert.notNull(metricString, "Metric must not be null!");
+				notNull(metricString, "Metric must not be null!");
 
 				distance = distance.in(Metrics.valueOf(metricString));
 			}
 
-			Assert.notNull(center, "Center must not be null!");
-			Assert.notNull(radius, "Radius must not be null!");
+			notNull(center, "Center must not be null!");
+			notNull(radius, "Radius must not be null!");
 
 			return new Circle(DbObjectToPointConverter.INSTANCE.convert(center), distance);
 		}
@@ -304,13 +325,13 @@ abstract class GeoConverters {
 			if (source.containsField("metric")) {
 
 				String metricString = (String) source.get("metric");
-				Assert.notNull(metricString, "Metric must not be null!");
+				notNull(metricString, "Metric must not be null!");
 
 				distance = distance.in(Metrics.valueOf(metricString));
 			}
 
-			Assert.notNull(center, "Center must not be null!");
-			Assert.notNull(radius, "Radius must not be null!");
+			notNull(center, "Center must not be null!");
+			notNull(radius, "Radius must not be null!");
 
 			return new Sphere(DbObjectToPointConverter.INSTANCE.convert(center), distance);
 		}
@@ -378,7 +399,7 @@ abstract class GeoConverters {
 
 			for (DBObject element : points) {
 
-				Assert.notNull(element, "Point elements of polygon must not be null!");
+				notNull(element, "Point elements of polygon must not be null!");
 				newPoints.add(DbObjectToPointConverter.INSTANCE.convert(element));
 			}
 
@@ -411,6 +432,10 @@ abstract class GeoConverters {
 
 			Shape shape = source.getShape();
 
+			if (shape instanceof GeoJson) {
+				return GeoJsonToDbObjectConverter.INSTANCE.convert((GeoJson) shape);
+			}
+
 			if (shape instanceof Box) {
 
 				argument.add(toList(((Box) shape).getFirst()));
@@ -442,7 +467,318 @@ abstract class GeoConverters {
 		}
 	}
 
+	/**
+	 * @author Christoph Strobl
+	 * @since 1.7
+	 */
+	@SuppressWarnings("rawtypes")
+	static enum GeoJsonToDbObjectConverter implements Converter<GeoJson, DBObject> {
+		INSTANCE;
+
+		@Override
+		public DBObject convert(GeoJson source) {
+
+			if (source == null) {
+				return null;
+			}
+
+			DBObject dbo = new BasicDBObject("type", source.getType());
+
+			if (source instanceof GeoJsonGeometryCollection) {
+				BasicDBList dbl = new BasicDBList();
+				for (GeoJson geometry : ((GeoJsonGeometryCollection) source).getCoordinates()) {
+					dbl.add(convert(geometry));
+				}
+				dbo.put("geometries", dbl);
+			} else {
+				dbo.put("coordinates", convertIfNecessarry(source.getCoordinates()));
+			}
+
+			return dbo;
+		}
+
+		private Object convertIfNecessarry(Object candidate) {
+
+			if (candidate instanceof GeoJson) {
+				return convertIfNecessarry(((GeoJson) candidate).getCoordinates());
+			}
+
+			if (candidate instanceof Iterable) {
+				BasicDBList dbl = new BasicDBList();
+				for (Object element : (Iterable) candidate) {
+					dbl.add(convertIfNecessarry(element));
+				}
+				return dbl;
+			}
+
+			if (candidate instanceof Point) {
+				return toList((Point) candidate);
+			}
+
+			return candidate;
+		}
+	}
+
+	/**
+	 * @author Christoph Strobl
+	 * @since 1.7
+	 */
+	public static enum GeoJsonPointToDbObjectConverter implements Converter<GeoJsonPoint, DBObject> {
+		INSTNANCE;
+
+		@Override
+		public DBObject convert(GeoJsonPoint source) {
+			return GeoJsonToDbObjectConverter.INSTANCE.convert(source);
+		}
+	}
+
+	/**
+	 * @author Christoph Strobl
+	 * @since 1.7
+	 */
+	public static enum GeoJsonPolygonToDbObjectConverter implements Converter<GeoJsonPolygon, DBObject> {
+		INSTNANCE;
+
+		@Override
+		public DBObject convert(GeoJsonPolygon source) {
+			return GeoJsonToDbObjectConverter.INSTANCE.convert(source);
+		}
+
+	}
+
+	/**
+	 * @author Christoph Strobl
+	 * @since 1.7
+	 */
+	public static enum DbObjectToGeoJsonPointConverter implements Converter<DBObject, GeoJsonPoint> {
+		INSTANCE;
+
+		@Override
+		public GeoJsonPoint convert(DBObject source) {
+
+			if (source == null) {
+				return null;
+			}
+
+			isTrue(nullSafeEquals(source.get("type"), "Point"),
+					String.format("Cannot convert type '%s' to Point.", source.get("type")));
+
+			List<Double> dbl = (List<Double>) source.get("coordinates");
+			return new GeoJsonPoint(dbl.get(0).doubleValue(), dbl.get(1).doubleValue());
+		}
+	}
+
+	/**
+	 * @author Christoph Strobl
+	 * @since 1.7
+	 */
+	public static enum DbObjectToGeoJsonPolygonConverter implements Converter<DBObject, GeoJsonPolygon> {
+		INSTANCE;
+
+		@SuppressWarnings("rawtypes")
+		@Override
+		public GeoJsonPolygon convert(DBObject source) {
+
+			if (source == null) {
+				return null;
+			}
+
+			isTrue(nullSafeEquals(source.get("type"), "Polygon"),
+					String.format("Cannot convert type '%s' to Polygon.", source.get("type")));
+
+			return toGeoJsonPolygon((BasicDBList) source.get("coordinates"));
+		}
+	}
+
+	/**
+	 * @author Christoph Strobl
+	 * @since 1.7
+	 */
+	public static enum DbObjectToGeoJsonMultiPolygonConverter implements Converter<DBObject, GeoJsonMultiPolygon> {
+		INSTANCE;
+
+		@Override
+		public GeoJsonMultiPolygon convert(DBObject source) {
+
+			if (source == null) {
+				return null;
+			}
+
+			isTrue(nullSafeEquals(source.get("type"), "MultiPolygon"),
+					String.format("Cannot convert type '%s' to MultiPolygon.", source.get("type")));
+
+			BasicDBList dbl = (BasicDBList) source.get("coordinates");
+			List<GeoJsonPolygon> polygones = new ArrayList<GeoJsonPolygon>();
+			for (Object polygon : dbl) {
+				polygones.add(toGeoJsonPolygon((BasicDBList) polygon));
+			}
+			return new GeoJsonMultiPolygon(polygones);
+
+		}
+	}
+
+	/**
+	 * @author Christoph Strobl
+	 * @since 1.7
+	 */
+	public static enum DbObjectToGeoJsonLineStringConverter implements Converter<DBObject, GeoJsonLineString> {
+		INSTANCE;
+
+		@Override
+		public GeoJsonLineString convert(DBObject source) {
+
+			if (source == null) {
+				return null;
+			}
+
+			isTrue(nullSafeEquals(source.get("type"), "LineString"),
+					String.format("Cannot convert type '%s' to LineString.", source.get("type")));
+
+			BasicDBList cords = (BasicDBList) source.get("coordinates");
+			return new GeoJsonLineString(toListOfPoint(cords));
+		}
+	}
+
+	/**
+	 * @author Christoph Strobl
+	 * @since 1.7
+	 */
+	public static enum DbObjectToGeoJsonMultiPointConverter implements Converter<DBObject, GeoJsonMultiPoint> {
+		INSTANCE;
+
+		@Override
+		public GeoJsonMultiPoint convert(DBObject source) {
+
+			if (source == null) {
+				return null;
+			}
+
+			isTrue(nullSafeEquals(source.get("type"), "MultiPoint"),
+					String.format("Cannot convert type '%s' to MultiPoint.", source.get("type")));
+
+			BasicDBList cords = (BasicDBList) source.get("coordinates");
+			return new GeoJsonMultiPoint(toListOfPoint(cords));
+		}
+	}
+
+	/**
+	 * @author Christoph Strobl
+	 * @since 1.7
+	 */
+	public static enum DbObjectToGeoJsonMultiLineStringConverter implements Converter<DBObject, GeoJsonMultiLineString> {
+		INSTANCE;
+
+		@Override
+		public GeoJsonMultiLineString convert(DBObject source) {
+
+			if (source == null) {
+				return null;
+			}
+
+			isTrue(nullSafeEquals(source.get("type"), "MultiLineString"),
+					String.format("Cannot convert type '%s' to MultiLineString.", source.get("type")));
+
+			List<GeoJsonLineString> lines = new ArrayList<GeoJsonLineString>();
+			BasicDBList cords = (BasicDBList) source.get("coordinates");
+			for (Object line : cords) {
+				lines.add(new GeoJsonLineString(toListOfPoint((BasicDBList) line)));
+			}
+			return new GeoJsonMultiLineString(lines);
+		}
+	}
+
+	/**
+	 * @author Christoph Strobl
+	 * @since 1.7
+	 */
+	public static enum DbObjectToGeoJsonGeometryCollectionConverter implements
+			Converter<DBObject, GeoJsonGeometryCollection> {
+		INSTANCE;
+
+		@Override
+		public GeoJsonGeometryCollection convert(DBObject source) {
+
+			if (source == null) {
+				return null;
+			}
+
+			isTrue(nullSafeEquals(source.get("type"), "GeometryCollection"),
+					String.format("Cannot convert type '%s' to GeometryCollection.", source.get("type")));
+
+			List<GeoJson<?>> geometries = new ArrayList<GeoJson<?>>();
+			for (Object o : (List) source.get("geometries")) {
+				geometries.add(convertGeometries((DBObject) o));
+			}
+			return new GeoJsonGeometryCollection(geometries);
+
+		}
+
+		private GeoJson<?> convertGeometries(DBObject source) {
+
+			Object type = source.get("type");
+			if (nullSafeEquals(type, "Point")) {
+				return DbObjectToGeoJsonPointConverter.INSTANCE.convert(source);
+			}
+
+			if (nullSafeEquals(source, "MultiPoint")) {
+				return DbObjectToGeoJsonMultiPointConverter.INSTANCE.convert(source);
+			}
+
+			if (nullSafeEquals(type, "LineString")) {
+				return DbObjectToGeoJsonLineStringConverter.INSTANCE.convert(source);
+			}
+
+			if (nullSafeEquals(type, "MultiLineString")) {
+				return DbObjectToGeoJsonMultiLineStringConverter.INSTANCE.convert(source);
+			}
+
+			if (nullSafeEquals(type, "Polygon")) {
+				return DbObjectToGeoJsonPolygonConverter.INSTANCE.convert(source);
+			}
+			if (nullSafeEquals(type, "MultiPolygon")) {
+				return DbObjectToGeoJsonMultiPolygonConverter.INSTANCE.convert(source);
+			}
+
+			throw new IllegalArgumentException(String.format("Cannot convert unknown GeoJson type %s", type));
+		}
+	}
+
 	static List<Double> toList(Point point) {
 		return Arrays.asList(point.getX(), point.getY());
+	}
+
+	/**
+	 * Converts a coordinate pairs nested in in {@link BasicDBList} into {@link GeoJsonPoint}s.
+	 * 
+	 * @param listOfCoordinatePairs
+	 * @return
+	 * @since 1.7
+	 */
+	@SuppressWarnings("unchecked")
+	static List<Point> toListOfPoint(BasicDBList listOfCoordinatePairs) {
+
+		List<Point> points = new ArrayList<Point>();
+		for (Object point : listOfCoordinatePairs) {
+
+			isInstanceOf(List.class, point);
+
+			List<Double> coordinatesList = (List<Double>) point;
+			points.add(new GeoJsonPoint(coordinatesList.get(0).doubleValue(), coordinatesList.get(1).doubleValue()));
+		}
+		return points;
+	}
+
+	/**
+	 * Converts a coordinate pairs nested in in {@link BasicDBList} into {@link GeoJsonPolygon}.
+	 * 
+	 * @param dbl
+	 * @return
+	 * @since 1.7
+	 */
+	static GeoJsonPolygon toGeoJsonPolygon(BasicDBList dbl) {
+
+		List<Point> outer = toListOfPoint((BasicDBList) dbl.get(0));
+
+		return new GeoJsonPolygon(outer);
 	}
 }
