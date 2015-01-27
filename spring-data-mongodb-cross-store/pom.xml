@@ -14,7 +14,7 @@
 	<name>Spring Data MongoDB - Cross-Store Support</name>
 
 	<properties>
-		<jpa>1.0.0.Final</jpa>
+		<jpa>2.0.0</jpa>
 		<hibernate>3.6.10.Final</hibernate>
 	</properties>
 
@@ -59,8 +59,8 @@
 
 		<!-- JPA -->
 		<dependency>
-			<groupId>org.hibernate.javax.persistence</groupId>
-			<artifactId>hibernate-jpa-2.0-api</artifactId>
+			<groupId>org.eclipse.persistence</groupId>
+			<artifactId>javax.persistence</artifactId>
 			<version>${jpa}</version>
 			<optional>true</optional>
 		</dependency>
