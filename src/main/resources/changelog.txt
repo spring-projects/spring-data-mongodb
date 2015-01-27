@@ -1,6 +1,32 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 1.5.5.RELEASE (2015-01-27)
+---------------------------------------------
+* DATAMONGO-1148 - Use EclipseLink provided JPA API JAR.
+* DATAMONGO-1147 - Remove manual array copy.
+* DATAMONGO-1143 - Release 1.5.5.
+* DATAMONGO-1139 - MongoQueryCreator must not create $nearSphere query for neutral Distance.
+* DATAMONGO-1123 - geoNear, does not return all matching elements, it returns only a max of 100 documents.
+* DATAMONGO-1121 - "Cycle found" false positive.
+* DATAMONGO-1118 - Custom converters not used for map keys.
+* DATAMONGO-1096 - RuntimeExceptions during debug query printing in MongoTemplate.
+* DATAMONGO-1094 - Wrong reference to @DocumentField in error message.
+* DATAMONGO-1087 - Incorrect warning for MongoPersistentEntityIndexResolver$CyclicPropertyReferenceException: Found cycle for field...
+* DATAMONGO-1078 - @Query annotated repository query fails to map complex Id structure.
+* DATAMONGO-1075 - Correctly evaluate CONTAINS keyword on collection properties.
+* DATAMONGO-1072 - Query placeholders in keys no longer correctly substituted.
+* DATAMONGO-1068 - elemMatch of Class Criteria fails to build special cirteria.
+* DATAMONGO-1063 - IllegalStateException using any().in().
+* DATAMONGO-1062 - Fix failing test in ServerAddressPropertyEditorUnitTests.
+* DATAMONGO-1058 - Using @Field("foo") with @Dbref breaking behavior.
+* DATAMONGO-1045 - Make sure Spring Data MongoDB can build against Spring 4.1.
+* DATAMONGO-1043 - SpEL Expressions in @Document annotations are not re-evaluated for query executions.
+* DATAMONGO-1040 - deleteAll repository query don't use EntityMetadata collection name.
+* DATAMONGO-1039 - Polish implementation for cleaning up after tests.
+* DATAMONGO-712 - Another round of potential performance improvements.
+
+
 Changes in version 1.7.0.M1 (2014-12-01)
 ----------------------------------------
 * DATAMONGO-1108 - BasicMongoPersistentEntity doesn't need to parse expression on every invocation.
