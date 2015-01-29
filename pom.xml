@@ -30,8 +30,8 @@
 		<project.type>multi</project.type>
 		<dist.id>spring-data-mongodb</dist.id>
 		<springdata.commons>1.10.0.BUILD-SNAPSHOT</springdata.commons>
-		<mongo>2.12.4</mongo>
-		<mongo.osgi>2.12.4</mongo.osgi>
+		<mongo>2.13.0</mongo>
+		<mongo.osgi>2.13.0</mongo.osgi>
 	</properties>
 
 	<developers>
