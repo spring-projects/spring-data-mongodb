@@ -108,15 +108,8 @@
 
 			<id>mongo-next</id>
 			<properties>
-				<mongo>2.12.5-SNAPSHOT</mongo>
+				<mongo>2.13.0</mongo>
 			</properties>
-
-			<repositories>
-				<repository>
-					<id>mongo-snapshots</id>
-					<url>https://oss.sonatype.org/content/repositories/snapshots</url>
-				</repository>
-			</repositories>
 
 		</profile>
 
