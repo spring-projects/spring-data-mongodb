@@ -1,0 +1,33 @@
+[[mongo.auditing]]
+== General auditing configuration
+
+Activating auditing functionality is just a matter of adding the Spring Data Mongo `auditing` namespace element to your configuration:
+
+.Activating auditing using XML configuration
+====
+[source,xml]
+----
+<mongo:auditing mapping-context-ref="customMappingContext" auditor-aware-ref="yourAuditorAwareImpl"/>
+----
+====
+
+Since Spring Data MongoDB 1.4 auditing can be enabled by annotating a configuration class with the `@EnableMongoAuditing` annotation.
+
+.Activating auditing using JavaConfig
+====
+[source,java]
+----
+@Configuration
+@EnableMongoAuditing
+class Config {
+
+  @Bean
+  public AuditorAware<AuditableUser> myAuditorProvider() {
+      return new AuditorAwareImpl();
+  }
+}
+----
+====
+
+If you expose a bean of type `AuditorAware` to the `ApplicationContext`, the auditing infrastructure will pick it up automatically and use it to determine the current user to be set on domain types. If you have multiple implementations registered in the `ApplicationContext`, you can select the one to be used by explicitly setting the `auditorAwareRef` attribute of `@EnableJpaAuditing`.
+
