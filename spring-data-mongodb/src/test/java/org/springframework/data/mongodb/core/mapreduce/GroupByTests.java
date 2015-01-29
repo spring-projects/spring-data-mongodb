@@ -168,9 +168,6 @@ public class GroupByTests {
 
 		DBObject dboRawResults = results.getRawResults();
 
-		assertThat(dboRawResults.containsField("serverUsed"), is(true));
-		assertThat(dboRawResults.get("serverUsed").toString(), endsWith("127.0.0.1:27017"));
-
 		int numResults = 0;
 		for (XObject xObject : results) {
 			if (xObject.getX() == 1) {

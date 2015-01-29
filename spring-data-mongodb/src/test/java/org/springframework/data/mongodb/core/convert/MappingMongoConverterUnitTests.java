@@ -1092,7 +1092,7 @@ public class MappingMongoConverterUnitTests {
 	@Test
 	public void readsPlainDBRefObject() {
 
-		DBRef dbRef = new DBRef(mock(DB.class), "foo", 2);
+		DBRef dbRef = new DBRef("foo", 2);
 		DBObject dbObject = new BasicDBObject("ref", dbRef);
 
 		DBRefWrapper result = converter.read(DBRefWrapper.class, dbObject);
@@ -1105,7 +1105,7 @@ public class MappingMongoConverterUnitTests {
 	@Test
 	public void readsCollectionOfDBRefs() {
 
-		DBRef dbRef = new DBRef(mock(DB.class), "foo", 2);
+		DBRef dbRef = new DBRef("foo", 2);
 		BasicDBList refs = new BasicDBList();
 		refs.add(dbRef);
 
@@ -1130,27 +1130,6 @@ public class MappingMongoConverterUnitTests {
 
 		assertThat(result.refMap.entrySet(), hasSize(1));
 		assertThat(result.refMap.values(), hasItem(dbRef));
-	}
-
-	/**
-	 * @see DATAMONGO-424
-	 */
-	@Test
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public void resolvesDBRefMapValue() {
-
-		DBRef dbRef = mock(DBRef.class);
-		when(dbRef.fetch()).thenReturn(new BasicDBObject());
-
-		BasicDBObject refMap = new BasicDBObject("foo", dbRef);
-		DBObject dbObject = new BasicDBObject("personMap", refMap);
-
-		DBRefWrapper result = converter.read(DBRefWrapper.class, dbObject);
-
-		Matcher isPerson = instanceOf(Person.class);
-
-		assertThat(result.personMap.entrySet(), hasSize(1));
-		assertThat(result.personMap.values(), hasItem(isPerson));
 	}
 
 	/**
@@ -1268,7 +1247,7 @@ public class MappingMongoConverterUnitTests {
 	public void eagerlyReturnsDBRefObjectIfTargetAlreadyIsOne() {
 
 		DB db = mock(DB.class);
-		DBRef dbRef = new DBRef(db, "collection", "id");
+		DBRef dbRef = new DBRef("collection", "id");
 
 		MongoPersistentProperty property = mock(MongoPersistentProperty.class);
 
@@ -1869,7 +1848,7 @@ public class MappingMongoConverterUnitTests {
 	public void readShouldRespectExplicitFieldNameForDbRef() {
 
 		BasicDBObject source = new BasicDBObject();
-		source.append("explict-name-for-db-ref", new DBRef(mock(DB.class), "foo", "1"));
+		source.append("explict-name-for-db-ref", new DBRef("foo", "1"));
 
 		converter.read(ClassWithExplicitlyNamedDBRefProperty.class, source);
 

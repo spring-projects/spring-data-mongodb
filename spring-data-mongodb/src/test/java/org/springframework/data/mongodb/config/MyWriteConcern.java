@@ -6,7 +6,6 @@ public class MyWriteConcern {
 
 	public MyWriteConcern(WriteConcern wc) {
 		this._w = wc.getWObject();
-		this._continueOnErrorForInsert = wc.getContinueOnErrorForInsert();
 		this._fsync = wc.getFsync();
 		this._j = wc.getJ();
 		this._wtimeout = wc.getWtimeout();
@@ -16,13 +15,11 @@ public class MyWriteConcern {
 	int _wtimeout = 0;
 	boolean _fsync = false;
 	boolean _j = false;
-	boolean _continueOnErrorForInsert = false;
 
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + (_continueOnErrorForInsert ? 1231 : 1237);
 		result = prime * result + (_fsync ? 1231 : 1237);
 		result = prime * result + (_j ? 1231 : 1237);
 		result = prime * result + ((_w == null) ? 0 : _w.hashCode());
@@ -39,8 +36,6 @@ public class MyWriteConcern {
 		if (getClass() != obj.getClass())
 			return false;
 		MyWriteConcern other = (MyWriteConcern) obj;
-		if (_continueOnErrorForInsert != other._continueOnErrorForInsert)
-			return false;
 		if (_fsync != other._fsync)
 			return false;
 		if (_j != other._j)

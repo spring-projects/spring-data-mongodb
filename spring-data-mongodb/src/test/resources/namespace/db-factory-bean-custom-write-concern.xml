@@ -8,7 +8,6 @@
 	<mongo:db-factory id="first" mongo-ref="mongo" write-concern="rack1" />
 
 	<mongo:mongo id="mongo">
-		<mongo:options max-auto-connect-retry-time="27" />
 	</mongo:mongo>
 	
 	<mongo:db-factory id="second" write-concern="REPLICAS_SAFE" />

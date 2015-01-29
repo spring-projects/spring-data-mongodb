@@ -271,7 +271,7 @@ public class StringBasedMongoQueryUnitTests {
 
 		DBRef dbRef = DBObjectTestUtils.getTypedValue(query.getQueryObject(), "reference", DBRef.class);
 		assertThat(dbRef.getId(), is((Object) "myid"));
-		assertThat(dbRef.getRef(), is("reference"));
+		assertThat(dbRef.getCollectionName(), is("reference"));
 	}
 
 	/**

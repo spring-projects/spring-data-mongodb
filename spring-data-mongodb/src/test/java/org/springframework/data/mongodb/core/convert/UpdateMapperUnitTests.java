@@ -392,7 +392,7 @@ public class UpdateMapperUnitTests {
 				context.getPersistentEntity(DocumentWithDBRefCollection.class));
 
 		DBObject pullClause = getAsDBObject(mappedObject, "$pull");
-		assertThat(pullClause.get("dbRefAnnotatedList"), is((Object) new DBRef(null, "entity", "2")));
+		assertThat(pullClause.get("dbRefAnnotatedList"), is((Object) new DBRef("entity", "2")));
 	}
 
 	/**
@@ -409,7 +409,7 @@ public class UpdateMapperUnitTests {
 				context.getPersistentEntity(DocumentWithDBRefCollection.class));
 
 		DBObject pullClause = getAsDBObject(mappedObject, "$pull");
-		assertThat(pullClause.get("dbRefAnnotatedList"), is((Object) new DBRef(null, "entity", entity.id)));
+		assertThat(pullClause.get("dbRefAnnotatedList"), is((Object) new DBRef("entity", entity.id)));
 	}
 
 	/**
@@ -450,7 +450,7 @@ public class UpdateMapperUnitTests {
 				context.getPersistentEntity(DocumentWithDBRefCollection.class));
 
 		DBObject setClause = getAsDBObject(mappedObject, "$set");
-		assertThat(setClause.get("dbRefProperty"), is((Object) new DBRef(null, "entity", entity.id)));
+		assertThat(setClause.get("dbRefProperty"), is((Object) new DBRef("entity", entity.id)));
 	}
 
 	/**
@@ -541,7 +541,7 @@ public class UpdateMapperUnitTests {
 		DBObject $set = DBObjectTestUtils.getAsDBObject(mappedObject, "$set");
 		Object model = $set.get("referencedDocument");
 
-		DBRef expectedDBRef = new DBRef(factory.getDb(), "interfaceDocumentDefinitionImpl", "1");
+		DBRef expectedDBRef = new DBRef( "interfaceDocumentDefinitionImpl", "1");
 		assertThat(model, allOf(instanceOf(DBRef.class), IsEqual.<Object> equalTo(expectedDBRef)));
 	}
 

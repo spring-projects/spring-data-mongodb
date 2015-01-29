@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core.mapreduce;
 import java.util.Iterator;
 import java.util.List;
 
+import com.mongodb.MapReduceOutput;
 import org.springframework.util.Assert;
 
 import com.mongodb.DBObject;
@@ -53,6 +54,19 @@ public class MapReduceResults<T> implements Iterable<T> {
 		this.mapReduceTiming = parseTiming(rawResults);
 		this.mapReduceCounts = parseCounts(rawResults);
 		this.outputCollection = parseOutputCollection(rawResults);
+	}
+
+	public MapReduceResults(final List<T> mappedResults, final MapReduceOutput mapReduceOutput) {
+
+		Assert.notNull(mappedResults);
+		Assert.notNull(mapReduceOutput);
+
+		this.mappedResults = mappedResults;
+		this.rawResults = null;
+		this.mapReduceTiming = parseTiming(mapReduceOutput);
+		this.mapReduceCounts = parseCounts(mapReduceOutput);
+		this.outputCollection = parseOutputCollection(mapReduceOutput);
+
 	}
 
 	/*
@@ -95,13 +109,17 @@ public class MapReduceResults<T> implements Iterable<T> {
 		return new MapReduceTiming(-1, -1, -1);
 	}
 
-	/**
-	 * Returns the value of the source's field with the given key as {@link Long}.
-	 * 
-	 * @param source
-	 * @param key
-	 * @return
-	 */
+	private MapReduceTiming parseTiming(MapReduceOutput mapReduceOutput) {
+		return new MapReduceTiming(-1, -1, -1);
+	}
+
+		/**
+         * Returns the value of the source's field with the given key as {@link Long}.
+         *
+         * @param source
+         * @param key
+         * @return
+         */
 	private Long getAsLong(DBObject source, String key) {
 		Object raw = source.get(key);
 		return raw instanceof Long ? (Long) raw : (Integer) raw;
@@ -128,6 +146,10 @@ public class MapReduceResults<T> implements Iterable<T> {
 		return MapReduceCounts.NONE;
 	}
 
+	private MapReduceCounts parseCounts(final MapReduceOutput mapReduceOutput) {
+		return new MapReduceCounts(mapReduceOutput.getInputCount(), mapReduceOutput.getEmitCount(), mapReduceOutput.getOutputCount());
+	}
+
 	/**
 	 * Parses the output collection from the raw {@link DBObject} result.
 	 * 
@@ -144,5 +166,9 @@ public class MapReduceResults<T> implements Iterable<T> {
 
 		return resultField instanceof DBObject ? ((DBObject) resultField).get("collection").toString() : resultField
 				.toString();
+	}
+
+	private String parseOutputCollection(final MapReduceOutput mapReduceOutput) {
+		return mapReduceOutput.getCollectionName();
 	}
 }
