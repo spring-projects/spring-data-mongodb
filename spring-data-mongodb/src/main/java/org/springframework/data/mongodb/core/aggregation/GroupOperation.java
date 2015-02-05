@@ -193,6 +193,10 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 		return newBuilder(GroupOps.LAST, reference, null);
 	}
 
+	public GroupOperationBuilder last(Expression expr) {
+		return newBuilder(GroupOps.LAST, null, expr);
+	}
+
 	/**
 	 * Generates an {@link GroupOperationBuilder} for a {@code $first}-expression for the given field-reference.
 	 * 
@@ -203,6 +207,10 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 		return newBuilder(GroupOps.FIRST, reference, null);
 	}
 
+	public GroupOperationBuilder first(Expression expr) {
+		return newBuilder(GroupOps.FIRST, null, expr);
+	}
+
 	/**
 	 * Generates an {@link GroupOperationBuilder} for an {@code $avg}-expression for the given field-reference.
 	 * 
@@ -211,6 +219,10 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 	 */
 	public GroupOperationBuilder avg(String reference) {
 		return newBuilder(GroupOps.AVG, reference, null);
+	}
+
+	public GroupOperationBuilder avg(Expression expr) {
+		return newBuilder(GroupOps.AVG, null, expr);
 	}
 
 	/**
@@ -247,6 +259,10 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 		return newBuilder(GroupOps.MIN, reference, null);
 	}
 
+	public GroupOperationBuilder min(Expression expr) {
+		return newBuilder(GroupOps.MIN, null, expr);
+	}
+
 	/**
 	 * Generates an {@link GroupOperationBuilder} for an {@code $max}-expression that for the given field-reference.
 	 * 
@@ -255,6 +271,10 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 	 */
 	public GroupOperationBuilder max(String reference) {
 		return newBuilder(GroupOps.MAX, reference, null);
+	}
+
+	public GroupOperationBuilder max(Expression expr) {
+		return newBuilder(GroupOps.MAX, null, expr);
 	}
 
 	private GroupOperationBuilder newBuilder(Keyword keyword, String reference, Object value) {
@@ -369,6 +389,11 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 		public Object getValue(AggregationOperationContext context) {
 
 			if (reference == null) {
+
+				if (value instanceof Expression) {
+					return ((Expression) value).toDbObject(context);
+				}
+
 				return value;
 			}
 
