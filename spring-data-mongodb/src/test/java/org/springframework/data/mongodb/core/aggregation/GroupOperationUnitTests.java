@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,10 @@ package org.springframework.data.mongodb.core.aggregation;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
+import static org.springframework.data.mongodb.core.aggregation.AggregationFunctionExpressions.*;
 import static org.springframework.data.mongodb.core.aggregation.Fields.*;
+
+import java.util.Arrays;
 
 import org.junit.Test;
 import org.springframework.data.mongodb.core.DBObjectTestUtils;
@@ -29,6 +32,7 @@ import com.mongodb.DBObject;
  * Unit tests for {@link GroupOperation}.
  * 
  * @author Oliver Gierke
+ * @author Thomas Darimont
  */
 public class GroupOperationUnitTests {
 
@@ -181,6 +185,23 @@ public class GroupOperationUnitTests {
 		DBObject push = DBObjectTestUtils.getAsDBObject(groupClause, "x");
 
 		assertThat(push, is((DBObject) new BasicDBObject("$addToSet", 42)));
+	}
+
+	/**
+	 * @see DATAMONGO-979
+	 */
+	@Test
+	public void shouldRenderSizeExpressionInGroup() {
+
+		GroupOperation groupOperation = Aggregation //
+				.group("username") //
+				.first(SIZE.of(field("tags"))) //
+				.as("tags_count");
+
+		DBObject groupClause = extractDbObjectFromGroupOperation(groupOperation);
+		DBObject tagsCount = DBObjectTestUtils.getAsDBObject(groupClause, "tags_count");
+
+		assertThat(tagsCount.get("$first"), is((Object) new BasicDBObject("$size", Arrays.asList("$tags"))));
 	}
 
 	private DBObject extractDbObjectFromGroupOperation(GroupOperation groupOperation) {

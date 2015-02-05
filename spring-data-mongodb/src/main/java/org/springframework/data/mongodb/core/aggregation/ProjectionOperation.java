@@ -121,6 +121,10 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		return new ExpressionProjectionOperationBuilder(expression, this, params);
 	}
 
+	public ProjectionOperationBuilder and(AggregationExpression expression) {
+		return new ProjectionOperationBuilder(expression, this, null);
+	}
+
 	/**
 	 * Excludes the given fields from the projection.
 	 * 
@@ -420,9 +424,13 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 			if (this.previousProjection != null) {
 				return this.operation.andReplaceLastOneWith(this.previousProjection.withAlias(alias));
-			} else {
-				return this.operation.and(new FieldProjection(Fields.field(alias, name), null));
 			}
+
+			if (value instanceof AggregationExpression) {
+				return this.operation.and(new ExpressionProjection(Fields.field(alias), (AggregationExpression) value));
+			}
+
+			return this.operation.and(new FieldProjection(Fields.field(alias, name), null));
 		}
 
 		/**
@@ -550,6 +558,10 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 			Assert.notNull(fieldReference, FIELD_REFERENCE_NOT_NULL);
 			return project("mod", Fields.field(fieldReference));
+		}
+
+		public ProjectionOperationBuilder size() {
+			return project("size");
 		}
 
 		/* 
@@ -939,5 +951,32 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 * @return
 		 */
 		public abstract DBObject toDBObject(AggregationOperationContext context);
+	}
+
+	/**
+	 * @author Thomas Darimont
+	 */
+	static class ExpressionProjection extends Projection {
+
+		private final AggregationExpression expression;
+		private final Field field;
+
+		/**
+		 * Creates a new {@link ExpressionProjection}.
+		 * 
+		 * @param field
+		 * @param expression
+		 */
+		public ExpressionProjection(Field field, AggregationExpression expression) {
+
+			super(field);
+			this.field = field;
+			this.expression = expression;
+		}
+
+		@Override
+		public DBObject toDBObject(AggregationOperationContext context) {
+			return new BasicDBObject(field.getName(), expression.toDbObject(context));
+		}
 	}
 }

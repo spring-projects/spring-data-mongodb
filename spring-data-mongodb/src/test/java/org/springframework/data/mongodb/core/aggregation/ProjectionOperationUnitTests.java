@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,8 @@ package org.springframework.data.mongodb.core.aggregation;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
+import static org.springframework.data.mongodb.core.aggregation.AggregationFunctionExpressions.*;
+import static org.springframework.data.mongodb.core.aggregation.Fields.*;
 import static org.springframework.data.mongodb.util.DBObjectUtils.*;
 
 import java.util.Arrays;
@@ -332,6 +334,41 @@ public class ProjectionOperationUnitTests {
 				projected.get("dayOfYearPlus1Day"),
 				is((Object) new BasicDBObject("$dayOfYear", Arrays.asList(new BasicDBObject("$add", Arrays.<Object> asList(
 						"$date", 86400000))))));
+	}
+
+	/**
+	 * @see DATAMONGO-979
+	 */
+	@Test
+	public void shouldRenderSizeExpressionInProjection() {
+
+		ProjectionOperation operation = Aggregation //
+				.project() //
+				.and("tags") //
+				.size()//
+				.as("tags_count");
+
+		DBObject dbObject = operation.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		DBObject projected = exctractOperation("$project", dbObject);
+		assertThat(projected.get("tags_count"), is((Object) new BasicDBObject("$size", Arrays.asList("$tags"))));
+	}
+
+	/**
+	 * @see DATAMONGO-979
+	 */
+	@Test
+	public void shouldRenderGenericSizeExpressionInProjection() {
+
+		ProjectionOperation operation = Aggregation //
+				.project() //
+				.and(SIZE.of(field("tags"))) //
+				.as("tags_count");
+
+		DBObject dbObject = operation.toDBObject(Aggregation.DEFAULT_CONTEXT);
+
+		DBObject projected = exctractOperation("$project", dbObject);
+		assertThat(projected.get("tags_count"), is((Object) new BasicDBObject("$size", Arrays.asList("$tags"))));
 	}
 
 	private static DBObject exctractOperation(String field, DBObject fromProjectClause) {
