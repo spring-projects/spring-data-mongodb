@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2013 the original author or authors.
+ * Copyright 2012-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.event.BeforeConvertEvent;
 
 /**
@@ -41,6 +42,9 @@ public class AuditingIntegrationTests {
 	public void enablesAuditingAndSetsPropertiesAccordingly() throws Exception {
 
 		AbstractApplicationContext context = new ClassPathXmlApplicationContext("auditing.xml", getClass());
+
+		MongoMappingContext mappingContext = context.getBean(MongoMappingContext.class);
+		mappingContext.getPersistentEntity(Entity.class);
 
 		Entity entity = new Entity();
 		BeforeConvertEvent<Entity> event = new BeforeConvertEvent<Entity>(entity);

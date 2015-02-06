@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 the original author or authors.
+ * Copyright 2012-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,8 @@ package org.springframework.data.mongodb.core.mapping.event;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
+import java.util.Arrays;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -27,6 +29,7 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.auditing.IsNewAwareAuditingHandler;
+import org.springframework.data.mapping.context.PersistentEntities;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 
 /**
@@ -39,15 +42,15 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 public class AuditingEventListenerUnitTests {
 
 	IsNewAwareAuditingHandler handler;
-
 	AuditingEventListener listener;
 
 	@Before
 	public void setUp() {
 
 		MongoMappingContext mappingContext = new MongoMappingContext();
+		mappingContext.getPersistentEntity(Sample.class);
 
-		handler = spy(new IsNewAwareAuditingHandler(mappingContext));
+		handler = spy(new IsNewAwareAuditingHandler(new PersistentEntities(Arrays.asList(mappingContext))));
 		doNothing().when(handler).markCreated(Mockito.any(Object.class));
 		doNothing().when(handler).markModified(Mockito.any(Object.class));
 
