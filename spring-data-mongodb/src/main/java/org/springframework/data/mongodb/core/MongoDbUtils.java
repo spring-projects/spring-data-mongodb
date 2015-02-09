@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 the original author or authors.
+ * Copyright 2010-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,12 +18,13 @@ package org.springframework.data.mongodb.core;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.authentication.UserCredentials;
-import org.springframework.data.mongodb.CannotGetMongoDbConnectionException;
+import org.springframework.data.mongodb.MongoClientVersion;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.util.Assert;
 
 import com.mongodb.DB;
 import com.mongodb.Mongo;
+import com.mongodb.MongoClient;
 
 /**
  * Helper class featuring helper methods for internal MongoDb classes. Mainly intended for internal use within the
@@ -34,6 +35,7 @@ import com.mongodb.Mongo;
  * @author Oliver Gierke
  * @author Randy Watler
  * @author Thomas Darimont
+ * @author Christoph Strobl
  * @since 1.0
  */
 public abstract class MongoDbUtils {
@@ -65,11 +67,24 @@ public abstract class MongoDbUtils {
 	 * @param databaseName the database name, must not be {@literal null} or empty.
 	 * @param credentials the credentials to use, must not be {@literal null}.
 	 * @return the {@link DB} connection
+	 * @deprecated since 1.7. The {@link MongoClient} itself should hold credentials within
+	 *             {@link MongoClient#getCredentialsList()}.
 	 */
+	@Deprecated
 	public static DB getDB(Mongo mongo, String databaseName, UserCredentials credentials) {
 		return getDB(mongo, databaseName, credentials, databaseName);
 	}
 
+	/**
+	 * @param mongo
+	 * @param databaseName
+	 * @param credentials
+	 * @param authenticationDatabaseName
+	 * @return
+	 * @deprecated since 1.7. The {@link MongoClient} itself should hold credentials within
+	 *             {@link MongoClient#getCredentialsList()}.
+	 */
+	@Deprecated
 	public static DB getDB(Mongo mongo, String databaseName, UserCredentials credentials,
 			String authenticationDatabaseName) {
 
@@ -109,22 +124,9 @@ public abstract class MongoDbUtils {
 		LOGGER.debug("Getting Mongo Database name=[{}]", databaseName);
 
 		DB db = mongo.getDB(databaseName);
-		boolean credentialsGiven = credentials.hasUsername() && credentials.hasPassword();
 
-		DB authDb = databaseName.equals(authenticationDatabaseName) ? db : mongo.getDB(authenticationDatabaseName);
-
-		synchronized (authDb) {
-
-			if (credentialsGiven && !authDb.isAuthenticated()) {
-
-				String username = credentials.getUsername();
-				String password = credentials.hasPassword() ? credentials.getPassword() : null;
-
-				if (!authDb.authenticate(username, password == null ? null : password.toCharArray())) {
-					throw new CannotGetMongoDbConnectionException("Failed to authenticate to database [" + databaseName + "], "
-							+ credentials.toString(), databaseName, credentials);
-				}
-			}
+		if (requiresAuthDbAuthentication(credentials)) {
+			ReflectiveDbInvoker.authenticate(mongo, db, credentials, authenticationDatabaseName);
 		}
 
 		// TX sync active, bind new database to thread
@@ -181,16 +183,37 @@ public abstract class MongoDbUtils {
 	 * Perform actual closing of the Mongo DB object, catching and logging any cleanup exceptions thrown.
 	 * 
 	 * @param db the DB to close (may be <code>null</code>)
+	 * @deprecated since 1.7. The main use case for this method is to ensure that applications can read their own
+	 *             unacknowledged writes, but this is no longer so prevalent since the mongo-java-driver version 3 started
+	 *             defaulting to acknowledged writes.
 	 */
+	@Deprecated
 	public static void closeDB(DB db) {
 
 		if (db != null) {
 			LOGGER.debug("Closing Mongo DB object");
 			try {
-				db.requestDone();
+				ReflectiveDbInvoker.requestDone(db);
 			} catch (Throwable ex) {
 				LOGGER.debug("Unexpected exception on closing Mongo DB object", ex);
 			}
 		}
 	}
+
+	/**
+	 * Check if credentials present. In case we're using a monog-java-driver version 3 or above we do not have the need
+	 * for authentication as the auth data has to be provied within the MongoClient
+	 * 
+	 * @param credentials
+	 * @return
+	 */
+	private static boolean requiresAuthDbAuthentication(UserCredentials credentials) {
+
+		if (credentials == null || !credentials.hasUsername()) {
+			return false;
+		}
+
+		return !MongoClientVersion.isMongo3Driver();
+	}
+
 }

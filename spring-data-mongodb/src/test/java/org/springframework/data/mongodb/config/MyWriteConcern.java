@@ -6,7 +6,6 @@ public class MyWriteConcern {
 
 	public MyWriteConcern(WriteConcern wc) {
 		this._w = wc.getWObject();
-		this._continueOnErrorForInsert = wc.getContinueOnErrorForInsert();
 		this._fsync = wc.getFsync();
 		this._j = wc.getJ();
 		this._wtimeout = wc.getWtimeout();

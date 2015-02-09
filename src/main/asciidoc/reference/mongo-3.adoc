@@ -1,0 +1,93 @@
+[[mongo.mongo-3]]
+= MongoDB 3.0 Support
+
+Spring Data MongoDB allows usage of both _mongo-java-driver_ generations 2 and 3 when connecting to a MongoDB 2.6/3.0 server running _MMap.v1_ or a MongoDB server 3.0 using _MMap.v1_ or the _WiredTiger_ storage engine. 
+
+NOTE: Please refer to the driver and database specific documentation for major differences between those.
+ 
+NOTE: Operations that are no longer valid using a 3.x mongo-java-driver have been deprecated within Spring Data and will be removed in a subsequent release.
+
+[[mongodb:mongo-3-configuration]]
+== Using Spring Data MongoDB with MongoDB 3.0
+
+=== Configuration Options
+
+Some of the configuration options have been changed / removed for the _mongo-java-driver_. The following options will be ignored using the generation 3 driver:
+
+ * autoConnectRetry
+ * maxAutoConnectRetryTime
+ * slaveOk
+ 
+Generally it is recommended to use the `<mongo:mongo-client ... />` and `<mongo:client-options ... />` elements instead of `<mongo:mongo ... />` when doing XML based configuration, since those elements will only provide you with attributes valid for the 3 generation java driver.
+
+[source,xml]
+----
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:mongo="http://www.springframework.org/schema/data/mongo"
+	xsi:schemaLocation="http://www.springframework.org/schema/data/mongo http://www.springframework.org/schema/data/mongo/spring-mongo.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+		
+  <mongo:mongo-client host="127.0.0.1" port="27017">
+    <mongo:client-options write-concern="NORMAL" />
+  </mongo:mongo-client>
+
+</beans>
+----
+
+=== WriteConcern and WriteConcernChecking
+
+The `WriteConcern.NONE`, which had been used as default by Spring Data MongoDB, was removed in 3.0. Therefore in a MongoDB 3 environment the `WriteConcern` will be defaulted to `WriteConcern.UNACKNOWLEGED`. In case `WriteResultChecking.EXCEPTION` is enabled the `WriteConcern` will be altered to `WriteConcern.ACKNOWLEDGED` for write operations, as otherwise errors during execution would not be throw correctly, since simply not raised by the driver. 
+
+=== Authentication
+
+MongoDB Server generation 3 changed the authentication model when connecting to the DB. Therefore some of the configuration options available for authentication are no longer valid. Please use the `MongoClient` specific options for setting credentials via `MongoCredential` to provide authentication data.
+
+[source,java]
+----
+@Configuration
+public class ApplicationContextEventTestsAppConfig extends AbstractMongoConfiguration {
+
+  @Override
+  public String getDatabaseName() {
+    return "database";
+  }
+
+  @Override
+  @Bean
+  public Mongo mongo() throws Exception {
+    return new MongoClient(singletonList(new ServerAddress("127.0.0.1", 27017)),
+      singletonList(MongoCredential.createCredential("name", "db", "pwd".toCharArray())));
+  }
+}
+----
+
+In order to use authentication with XML configuration use the `credentials` attribue on `<mongo-client>`. 
+
+[source,xml]
+----
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:mongo="http://www.springframework.org/schema/data/mongo"
+	xsi:schemaLocation="http://www.springframework.org/schema/data/mongo http://www.springframework.org/schema/data/mongo/spring-mongo.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+		
+  <mongo:mongo-client credentials="user:password@database" />
+
+</beans>
+----
+
+=== Other things to be aware of
+
+This section covers additional things to keep in mind when using the 3.0 driver.
+
+* `IndexOperations.resetIndexCache()` is no longer supported.
+* Any `MapReduceOptions.extraOption` is silently ignored.
+* `WriteResult` does not longer hold error informations but throws an Exception.
+* `MongoOperations.executeInSession()` no longer calls `requestStart` / `requestDone`.
+* Index name generation has become a driver internal operations, still we use the 2.x schema to generate names.
+* Some Exception messages differ between the generation 2 and 3 servers as well as between _MMap.v1_ and _WiredTiger_ storage engine.
+ 
+

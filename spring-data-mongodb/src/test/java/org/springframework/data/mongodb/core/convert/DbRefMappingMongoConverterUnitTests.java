@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 the original author or authors.
+ * Copyright 2013-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,6 +42,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.PropertyPath;
+import org.springframework.data.mongodb.MongoClientVersion;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.MongoExceptionTranslator;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverterUnitTests.Person;
@@ -52,14 +53,17 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.util.SerializationUtils;
 
 import com.mongodb.BasicDBObject;
+import com.mongodb.DB;
+import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.DBRef;
 
 /**
- * Unit tests dor {@link DbRefMappingMongoConverterUnitTests}.
+ * Unit tests for {@link DbRefMappingMongoConverter}.
  * 
  * @author Oliver Gierke
  * @author Thomas Darimont
+ * @author Christoph Strobl
  */
 @RunWith(MockitoJUnitRunner.class)
 public class DbRefMappingMongoConverterUnitTests {
@@ -68,14 +72,16 @@ public class DbRefMappingMongoConverterUnitTests {
 	MongoMappingContext mappingContext;
 
 	@Mock MongoDbFactory dbFactory;
+	DefaultDbRefResolver dbRefResolver;
 
 	@Before
 	public void setUp() {
 
 		when(dbFactory.getExceptionTranslator()).thenReturn(new MongoExceptionTranslator());
 
+		this.dbRefResolver = spy(new DefaultDbRefResolver(dbFactory));
 		this.mappingContext = new MongoMappingContext();
-		this.converter = new MappingMongoConverter(new DefaultDbRefResolver(dbFactory), mappingContext);
+		this.converter = new MappingMongoConverter(dbRefResolver, mappingContext);
 	}
 
 	/**
@@ -89,7 +95,7 @@ public class DbRefMappingMongoConverterUnitTests {
 
 		DBRef dbRef = converter.toDBRef(person, null);
 		assertThat(dbRef.getId(), is((Object) "foo"));
-		assertThat(dbRef.getRef(), is("person"));
+		assertThat(dbRef.getCollectionName(), is("person"));
 	}
 
 	/**
@@ -97,6 +103,21 @@ public class DbRefMappingMongoConverterUnitTests {
 	 */
 	@Test
 	public void convertDocumentWithMapDBRef() {
+
+		DBObject mapValDBObject = new BasicDBObject();
+		mapValDBObject.put("_id", BigInteger.ONE);
+
+		DBRef dbRef = mock(DBRef.class);
+
+		if (MongoClientVersion.isMongo3Driver()) {
+			DB dbMock = mock(DB.class);
+			DBCollection collectionMock = mock(DBCollection.class);
+			when(dbFactory.getDb()).thenReturn(dbMock);
+			when(dbMock.getCollection(anyString())).thenReturn(collectionMock);
+			when(collectionMock.findOne(anyObject())).thenReturn(mapValDBObject);
+		} else {
+			when(dbRefResolver.fetch(dbRef)).thenReturn(mapValDBObject);
+		}
 
 		MapDBRef mapDBRef = new MapDBRef();
 
@@ -114,12 +135,6 @@ public class DbRefMappingMongoConverterUnitTests {
 		DBObject map = (DBObject) dbObject.get("map");
 
 		assertThat(map.get("test"), instanceOf(DBRef.class));
-
-		DBObject mapValDBObject = new BasicDBObject();
-		mapValDBObject.put("_id", BigInteger.ONE);
-
-		DBRef dbRef = mock(DBRef.class);
-		when(dbRef.fetch()).thenReturn(mapValDBObject);
 
 		((DBObject) dbObject.get("map")).put("test", dbRef);
 
@@ -142,7 +157,7 @@ public class DbRefMappingMongoConverterUnitTests {
 
 		DBRef dbRef = converter.toDBRef(person, property);
 		assertThat(dbRef.getId(), is((Object) "foo"));
-		assertThat(dbRef.getRef(), is("person"));
+		assertThat(dbRef.getCollectionName(), is("person"));
 	}
 
 	/**

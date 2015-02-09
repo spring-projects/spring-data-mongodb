@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:mongo="http://www.springframework.org/schema/data/mongo"
+	xsi:schemaLocation="http://www.springframework.org/schema/data/mongo http://www.springframework.org/schema/data/mongo/spring-mongo.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+	<mongo:mongo-client id="mongo-client-with-host-and-port" host="localhost" port="42" />
+	
+	<mongo:mongo-client id="mongo-client-with-options-for-write-concern-and-read-preference">
+		<mongo:client-options write-concern="NORMAL" read-preference="SECONDARY" />
+	</mongo:mongo-client>
+	
+	<mongo:mongo-client id="mongo-client-with-credentials" credentials="jon:warg@snow?uri.authMechanism=PLAIN" />
+	
+	<mongo:mongo-client />
+
+</beans>

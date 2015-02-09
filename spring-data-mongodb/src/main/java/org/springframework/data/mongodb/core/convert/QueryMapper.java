@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2014 the original author or authors.
+ * Copyright 2011-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -390,7 +390,7 @@ public class QueryMapper {
 		if (source instanceof DBRef) {
 
 			DBRef ref = (DBRef) source;
-			return new DBRef(ref.getDB(), ref.getRef(), convertId(ref.getId()));
+			return new DBRef(ref.getCollectionName(), convertId(ref.getId()));
 		}
 
 		if (source instanceof Iterable) {

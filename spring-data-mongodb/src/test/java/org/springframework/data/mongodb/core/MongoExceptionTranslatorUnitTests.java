@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2013-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
@@ -34,10 +35,10 @@ import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.data.mongodb.UncategorizedMongoDbException;
 
+import com.mongodb.MongoCursorNotFoundException;
 import com.mongodb.MongoException;
-import com.mongodb.MongoException.DuplicateKey;
-import com.mongodb.MongoException.Network;
 import com.mongodb.MongoInternalException;
+import com.mongodb.MongoSocketException;
 import com.mongodb.ServerAddress;
 
 /**
@@ -45,13 +46,16 @@ import com.mongodb.ServerAddress;
  * 
  * @author Michal Vich
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 @RunWith(MockitoJUnitRunner.class)
 public class MongoExceptionTranslatorUnitTests {
 
 	MongoExceptionTranslator translator;
 
-	@Mock DuplicateKey exception;
+	@Mock com.mongodb.DuplicateKeyException exception;
+	@Mock MongoSocketException socketException;
+	@Mock MongoCursorNotFoundException cursorNotFoundException;
 
 	@Before
 	public void setUp() {
@@ -66,10 +70,11 @@ public class MongoExceptionTranslatorUnitTests {
 	}
 
 	@Test
-	public void translateNetwork() {
+	public void translateSocketException() {
 
-		Network exception = new Network("IOException", new IOException("IOException"));
-		DataAccessException translatedException = translator.translateExceptionIfPossible(exception);
+		when(socketException.getMessage()).thenReturn("IOException");
+		when(socketException.getCause()).thenReturn(new IOException("IOException"));
+		DataAccessException translatedException = translator.translateExceptionIfPossible(socketException);
 
 		expectExceptionWithCauseMessage(translatedException, DataAccessResourceFailureException.class, "IOException");
 
@@ -78,8 +83,10 @@ public class MongoExceptionTranslatorUnitTests {
 	@Test
 	public void translateCursorNotFound() throws UnknownHostException {
 
-		MongoException.CursorNotFound exception = new MongoException.CursorNotFound(1, new ServerAddress());
-		DataAccessException translatedException = translator.translateExceptionIfPossible(exception);
+		when(cursorNotFoundException.getCode()).thenReturn(1);
+		when(cursorNotFoundException.getServerAddress()).thenReturn(new ServerAddress());
+
+		DataAccessException translatedException = translator.translateExceptionIfPossible(cursorNotFoundException);
 
 		expectExceptionWithCauseMessage(translatedException, DataAccessResourceFailureException.class);
 	}

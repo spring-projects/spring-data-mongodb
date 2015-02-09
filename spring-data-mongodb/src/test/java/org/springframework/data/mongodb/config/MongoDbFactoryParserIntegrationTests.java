@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2013 the original author or authors.
+ * Copyright 2011-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,8 +17,11 @@ package org.springframework.data.mongodb.config;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
+import static org.junit.Assume.*;
+import static org.springframework.data.mongodb.MongoClientVersion.*;
 
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.ConstructorArgumentValues;
@@ -31,6 +34,7 @@ import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.core.ReflectiveMongoOptionsInvokerTestUtil;
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -44,11 +48,17 @@ import com.mongodb.WriteConcern;
  * Integration tests for {@link MongoDbFactoryParser}.
  * 
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 public class MongoDbFactoryParserIntegrationTests {
 
 	DefaultListableBeanFactory factory;
 	BeanDefinitionReader reader;
+
+	@BeforeClass
+	public static void validateMongoDriver() {
+		assumeFalse(isMongo3Driver());
+	}
 
 	@Before
 	public void setUp() {
@@ -134,7 +144,7 @@ public class MongoDbFactoryParserIntegrationTests {
 
 		reader.loadBeanDefinitions(new ClassPathResource("namespace/db-factory-bean.xml"));
 		Mongo mongo = factory.getBean(Mongo.class);
-		assertThat(mongo.getMongoOptions().maxAutoConnectRetryTime, is(27L));
+		assertThat(ReflectiveMongoOptionsInvokerTestUtil.getMaxAutoConnectRetryTime(mongo.getMongoOptions()), is(27L));
 	}
 
 	/**

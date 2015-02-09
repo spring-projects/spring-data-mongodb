@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2014 the original author or authors.
+ * Copyright 2011-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -91,7 +91,6 @@ import org.springframework.test.util.ReflectionTestUtils;
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.BasicDBObjectBuilder;
-import com.mongodb.DB;
 import com.mongodb.DBObject;
 import com.mongodb.DBRef;
 import com.mongodb.util.JSON;
@@ -1092,7 +1091,7 @@ public class MappingMongoConverterUnitTests {
 	@Test
 	public void readsPlainDBRefObject() {
 
-		DBRef dbRef = new DBRef(mock(DB.class), "foo", 2);
+		DBRef dbRef = new DBRef("foo", 2);
 		DBObject dbObject = new BasicDBObject("ref", dbRef);
 
 		DBRefWrapper result = converter.read(DBRefWrapper.class, dbObject);
@@ -1105,7 +1104,7 @@ public class MappingMongoConverterUnitTests {
 	@Test
 	public void readsCollectionOfDBRefs() {
 
-		DBRef dbRef = new DBRef(mock(DB.class), "foo", 2);
+		DBRef dbRef = new DBRef("foo", 2);
 		BasicDBList refs = new BasicDBList();
 		refs.add(dbRef);
 
@@ -1139,8 +1138,8 @@ public class MappingMongoConverterUnitTests {
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public void resolvesDBRefMapValue() {
 
+		when(resolver.fetch(Mockito.any(DBRef.class))).thenReturn(new BasicDBObject());
 		DBRef dbRef = mock(DBRef.class);
-		when(dbRef.fetch()).thenReturn(new BasicDBObject());
 
 		BasicDBObject refMap = new BasicDBObject("foo", dbRef);
 		DBObject dbObject = new BasicDBObject("personMap", refMap);
@@ -1267,8 +1266,7 @@ public class MappingMongoConverterUnitTests {
 	@Test
 	public void eagerlyReturnsDBRefObjectIfTargetAlreadyIsOne() {
 
-		DB db = mock(DB.class);
-		DBRef dbRef = new DBRef(db, "collection", "id");
+		DBRef dbRef = new DBRef("collection", "id");
 
 		MongoPersistentProperty property = mock(MongoPersistentProperty.class);
 
@@ -1869,7 +1867,7 @@ public class MappingMongoConverterUnitTests {
 	public void readShouldRespectExplicitFieldNameForDbRef() {
 
 		BasicDBObject source = new BasicDBObject();
-		source.append("explict-name-for-db-ref", new DBRef(mock(DB.class), "foo", "1"));
+		source.append("explict-name-for-db-ref", new DBRef("foo", "1"));
 
 		converter.read(ClassWithExplicitlyNamedDBRefProperty.class, source);
 

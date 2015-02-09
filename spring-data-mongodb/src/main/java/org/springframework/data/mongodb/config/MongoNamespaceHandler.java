@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2014 the original author or authors.
+ * Copyright 2011-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import org.springframework.beans.factory.xml.NamespaceHandlerSupport;
  * 
  * @author Oliver Gierke
  * @author Martin Baumgartner
+ * @author Christoph Strobl
  */
 public class MongoNamespaceHandler extends NamespaceHandlerSupport {
 
@@ -33,6 +34,7 @@ public class MongoNamespaceHandler extends NamespaceHandlerSupport {
 
 		registerBeanDefinitionParser("mapping-converter", new MappingMongoConverterParser());
 		registerBeanDefinitionParser("mongo", new MongoParser());
+		registerBeanDefinitionParser("mongo-client", new MongoClientParser());
 		registerBeanDefinitionParser("db-factory", new MongoDbFactoryParser());
 		registerBeanDefinitionParser("jmx", new MongoJmxParser());
 		registerBeanDefinitionParser("auditing", new MongoAuditingBeanDefinitionParser());

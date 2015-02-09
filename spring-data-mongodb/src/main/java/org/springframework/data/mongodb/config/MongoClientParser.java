@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2015 the original author or authors.
+ * Copyright 2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,18 +23,17 @@ import org.springframework.beans.factory.xml.BeanDefinitionParser;
 import org.springframework.beans.factory.xml.ParserContext;
 import org.springframework.data.config.BeanComponentDefinitionBuilder;
 import org.springframework.data.config.ParsingUtils;
-import org.springframework.data.mongodb.core.MongoFactoryBean;
+import org.springframework.data.mongodb.core.MongoClientFactoryBean;
 import org.springframework.util.StringUtils;
 import org.w3c.dom.Element;
 
 /**
- * Parser for &lt;mongo;gt; definitions.
+ * Parser for {@code mongo-client} definitions.
  * 
- * @author Mark Pollack
- * @author Oliver Gierke
  * @author Christoph Strobl
+ * @since 1.7
  */
-public class MongoParser implements BeanDefinitionParser {
+public class MongoClientParser implements BeanDefinitionParser {
 
 	/* 
 	 * (non-Javadoc)
@@ -47,12 +46,13 @@ public class MongoParser implements BeanDefinitionParser {
 
 		BeanComponentDefinitionBuilder helper = new BeanComponentDefinitionBuilder(element, parserContext);
 
-		BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(MongoFactoryBean.class);
+		BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(MongoClientFactoryBean.class);
+
 		ParsingUtils.setPropertyValue(builder, element, "port", "port");
 		ParsingUtils.setPropertyValue(builder, element, "host", "host");
-		ParsingUtils.setPropertyValue(builder, element, "write-concern", "writeConcern");
+		ParsingUtils.setPropertyValue(builder, element, "credentials", "credentials");
 
-		MongoParsingUtils.parseMongoOptions(element, builder);
+		MongoParsingUtils.parseMongoClientOptions(element, builder);
 		MongoParsingUtils.parseReplicaSet(element, builder);
 
 		String defaultedId = StringUtils.hasText(id) ? id : BeanNames.MONGO_BEAN_NAME;
@@ -61,12 +61,22 @@ public class MongoParser implements BeanDefinitionParser {
 
 		BeanComponentDefinition mongoComponent = helper.getComponent(builder, defaultedId);
 		parserContext.registerBeanComponent(mongoComponent);
+
 		BeanComponentDefinition serverAddressPropertyEditor = helper.getComponent(MongoParsingUtils
 				.getServerAddressPropertyEditorBuilder());
 		parserContext.registerBeanComponent(serverAddressPropertyEditor);
-		BeanComponentDefinition writeConcernPropertyEditor = helper.getComponent(MongoParsingUtils
+
+		BeanComponentDefinition writeConcernEditor = helper.getComponent(MongoParsingUtils
 				.getWriteConcernPropertyEditorBuilder());
-		parserContext.registerBeanComponent(writeConcernPropertyEditor);
+		parserContext.registerBeanComponent(writeConcernEditor);
+
+		BeanComponentDefinition readPreferenceEditor = helper.getComponent(MongoParsingUtils
+				.getReadPreferencePropertyEditorBuilder());
+		parserContext.registerBeanComponent(readPreferenceEditor);
+
+		BeanComponentDefinition credentialsEditor = helper.getComponent(MongoParsingUtils
+				.getMongoCredentialPropertyEditor());
+		parserContext.registerBeanComponent(credentialsEditor);
 
 		parserContext.popAndRegisterContainingComponent();
 

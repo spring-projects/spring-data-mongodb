@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2014 the original author or authors.
+ * Copyright 2011-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -165,11 +165,6 @@ public class GroupByTests {
 	}
 
 	private void assertMapReduceResults(GroupByResults<XObject> results) {
-
-		DBObject dboRawResults = results.getRawResults();
-
-		assertThat(dboRawResults.containsField("serverUsed"), is(true));
-		assertThat(dboRawResults.get("serverUsed").toString(), endsWith("127.0.0.1:27017"));
 
 		int numResults = 0;
 		for (XObject xObject : results) {

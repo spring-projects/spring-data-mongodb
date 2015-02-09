@@ -4,4 +4,5 @@ http\://www.springframework.org/schema/data/mongo/spring-mongo-1.2.xsd=org/sprin
 http\://www.springframework.org/schema/data/mongo/spring-mongo-1.3.xsd=org/springframework/data/mongodb/config/spring-mongo-1.3.xsd
 http\://www.springframework.org/schema/data/mongo/spring-mongo-1.4.xsd=org/springframework/data/mongodb/config/spring-mongo-1.4.xsd
 http\://www.springframework.org/schema/data/mongo/spring-mongo-1.5.xsd=org/springframework/data/mongodb/config/spring-mongo-1.5.xsd
-http\://www.springframework.org/schema/data/mongo/spring-mongo.xsd=org/springframework/data/mongodb/config/spring-mongo-1.5.xsd
+http\://www.springframework.org/schema/data/mongo/spring-mongo-1.7.xsd=org/springframework/data/mongodb/config/spring-mongo-1.7.xsd
+http\://www.springframework.org/schema/data/mongo/spring-mongo.xsd=org/springframework/data/mongodb/config/spring-mongo-1.7.xsd
