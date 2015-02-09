@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2013 the original author or authors.
+ * Copyright 2012-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,8 @@ package org.springframework.data.mongodb.core;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
+import static org.junit.Assume.*;
+import static org.springframework.data.mongodb.MongoClientVersion.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,6 +30,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.authentication.UserCredentials;
+import org.springframework.data.mongodb.ReflectiveDbInvoker;
 import org.springframework.scheduling.concurrent.ThreadPoolExecutorFactoryBean;
 
 import com.mongodb.DB;
@@ -40,6 +43,7 @@ import com.mongodb.MongoException;
  * 
  * @author Oliver Gierke
  * @author Thomas Darimont
+ * @author Christoph Strobl
  */
 public class MongoDbUtilsIntegrationTests {
 
@@ -67,6 +71,8 @@ public class MongoDbUtilsIntegrationTests {
 		factory.afterPropertiesSet();
 
 		service = factory.getObject();
+
+		assumeFalse(isMongo3Driver());
 	}
 
 	@AfterClass
@@ -93,7 +99,8 @@ public class MongoDbUtilsIntegrationTests {
 		// Create sample user
 		template.execute(new DbCallback<Void>() {
 			public Void doInDB(DB db) throws MongoException, DataAccessException {
-				db.addUser("admin", "admin".toCharArray());
+
+				ReflectiveDbInvoker.addUser(db, "admin", "admin".toCharArray());
 				return null;
 			}
 		});
@@ -134,7 +141,8 @@ public class MongoDbUtilsIntegrationTests {
 		// Create sample user
 		template.execute(new DbCallback<Void>() {
 			public Void doInDB(DB db) throws MongoException, DataAccessException {
-				db.getSisterDB("admin").addUser("admin", "admin".toCharArray());
+
+				ReflectiveDbInvoker.addUser(db.getSisterDB("admin"), "admin", "admin".toCharArray());
 				return null;
 			}
 		});

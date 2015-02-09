@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2014 the original author or authors.
+ * Copyright 2011-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.springframework.dao.DataAccessException;
+import org.springframework.data.mongodb.ReflectiveDBCollectionInvoker;
 import org.springframework.data.mongodb.core.index.IndexDefinition;
 import org.springframework.data.mongodb.core.index.IndexField;
 import org.springframework.data.mongodb.core.index.IndexInfo;
@@ -73,9 +74,9 @@ public class DefaultIndexOperations implements IndexOperations {
 			public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 				DBObject indexOptions = indexDefinition.getIndexOptions();
 				if (indexOptions != null) {
-					collection.ensureIndex(indexDefinition.getIndexKeys(), indexOptions);
+					collection.createIndex(indexDefinition.getIndexKeys(), indexOptions);
 				} else {
-					collection.ensureIndex(indexDefinition.getIndexKeys());
+					collection.createIndex(indexDefinition.getIndexKeys());
 				}
 				return null;
 			}
@@ -108,10 +109,12 @@ public class DefaultIndexOperations implements IndexOperations {
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.IndexOperations#resetIndexCache()
 	 */
+	@Deprecated
 	public void resetIndexCache() {
 		mongoOperations.execute(collectionName, new CollectionCallback<Void>() {
 			public Void doInCollection(DBCollection collection) throws MongoException, DataAccessException {
-				collection.resetIndexCache();
+
+				ReflectiveDBCollectionInvoker.resetIndexCache(collection);
 				return null;
 			}
 		});

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2014 the original author or authors.
+ * Copyright 2010-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,10 @@
  */
 package org.springframework.data.mongodb.core;
 
+import static com.mongodb.ReadPreference.*;
+import static org.springframework.data.mongodb.ReflectiveDbInvoker.*;
+import static org.springframework.data.mongodb.ReflectiveMapReduceInvoker.*;
+import static org.springframework.data.mongodb.ReflectiveWriteResultInvoker.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
 
@@ -102,6 +106,7 @@ import org.springframework.util.ResourceUtils;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.BasicDBObject;
+import com.mongodb.Bytes;
 import com.mongodb.CommandResult;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
@@ -332,11 +337,24 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		return result;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.MongoOperations#executeCommand(com.mongodb.DBObject, int)
+	 */
+	@Deprecated
 	public CommandResult executeCommand(final DBObject command, final int options) {
+		return executeCommand(command, (options & Bytes.QUERYOPTION_SLAVEOK) != 0 ? secondaryPreferred() : primary());
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.MongoOperations#executeCommand(com.mongodb.DBObject, com.mongodb.ReadPreference)
+	 */
+	public CommandResult executeCommand(final DBObject command, final ReadPreference readPreference) {
 
 		CommandResult result = execute(new DbCallback<CommandResult>() {
 			public CommandResult doInDB(DB db) throws MongoException, DataAccessException {
-				return db.command(command, options);
+				return db.command(command, readPreference);
 			}
 		});
 
@@ -414,14 +432,20 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		}
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.MongoOperations#executeInSession(org.springframework.data.mongodb.core.DbCallback)
+	 */
+	@Deprecated
 	public <T> T executeInSession(final DbCallback<T> action) {
+
 		return execute(new DbCallback<T>() {
 			public T doInDB(DB db) throws MongoException, DataAccessException {
 				try {
-					db.requestStart();
+					requestStart(db);
 					return action.doInDB(db);
 				} finally {
-					db.requestDone();
+					requestDone(db);
 				}
 			}
 		});
@@ -1026,7 +1050,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 						: collection.update(queryObj, updateObj, upsert, multi, writeConcernToUse);
 
 				if (entity != null && entity.hasVersionProperty() && !multi) {
-					if (writeResult.getN() == 0 && dbObjectContainsVersionProperty(queryObj, entity)) {
+					if (wasAcknowledged(writeResult) && writeResult.getN() == 0
+							&& dbObjectContainsVersionProperty(queryObj, entity)) {
 						throw new OptimisticLockingFailureException("Optimistic lock exception on saving entity: "
 								+ updateObj.toMap().toString() + " to collection " + collectionName);
 					}
@@ -1242,25 +1267,24 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		String mapFunc = replaceWithResourceIfNecessary(mapFunction);
 		String reduceFunc = replaceWithResourceIfNecessary(reduceFunction);
 		DBCollection inputCollection = getCollection(inputCollectionName);
-		MapReduceCommand command = new MapReduceCommand(inputCollection, mapFunc, reduceFunc,
-				mapReduceOptions.getOutputCollection(), mapReduceOptions.getOutputType(), null);
 
-		DBObject commandObject = copyQuery(query, copyMapReduceOptions(mapReduceOptions, command));
+		MapReduceCommand command = new MapReduceCommand(inputCollection, mapFunc, reduceFunc,
+				mapReduceOptions.getOutputCollection(), mapReduceOptions.getOutputType(), query == null
+						|| query.getQueryObject() == null ? null : queryMapper.getMappedObject(query.getQueryObject(), null));
+
+		copyMapReduceOptionsToCommand(query, mapReduceOptions, command);
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug("Executing MapReduce on collection [" + command.getInput() + "], mapFunction [" + mapFunc
 					+ "], reduceFunction [" + reduceFunc + "]");
 		}
 
-		CommandResult commandResult = command.getOutputType() == MapReduceCommand.OutputType.INLINE ? executeCommand(
-				commandObject, getDb().getOptions()) : executeCommand(commandObject);
-		handleCommandError(commandResult, commandObject);
+		MapReduceOutput mapReduceOutput = inputCollection.mapReduce(command);
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("MapReduce command result = [{}]", serializeToJsonSafely(commandObject));
+			LOGGER.debug("MapReduce command result = [{}]", serializeToJsonSafely(mapReduceOutput.results()));
 		}
 
-		MapReduceOutput mapReduceOutput = new MapReduceOutput(inputCollection, commandObject, commandResult);
 		List<T> mappedResults = new ArrayList<T>();
 		DbObjectCallback<T> callback = new ReadDbObjectCallback<T>(mongoConverter, entityClass);
 
@@ -1268,7 +1292,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			mappedResults.add(callback.doWith(dbObject));
 		}
 
-		return new MapReduceResults<T>(mappedResults, commandResult);
+		return new MapReduceResults<T>(mappedResults, mapReduceOutput);
 	}
 
 	public <T> GroupByResults<T> group(String inputCollectionName, GroupBy groupBy, Class<T> entityClass) {
@@ -1475,51 +1499,40 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		return func;
 	}
 
-	private DBObject copyQuery(Query query, DBObject copyMapReduceOptions) {
+	private void copyMapReduceOptionsToCommand(Query query, MapReduceOptions mapReduceOptions,
+			MapReduceCommand mapReduceCommand) {
+
 		if (query != null) {
 			if (query.getSkip() != 0 || query.getFieldsObject() != null) {
 				throw new InvalidDataAccessApiUsageException(
 						"Can not use skip or field specification with map reduce operations");
 			}
-			if (query.getQueryObject() != null) {
-				copyMapReduceOptions.put("query", queryMapper.getMappedObject(query.getQueryObject(), null));
-			}
+
 			if (query.getLimit() > 0) {
-				copyMapReduceOptions.put("limit", query.getLimit());
+				mapReduceCommand.setLimit(query.getLimit());
 			}
 			if (query.getSortObject() != null) {
-				copyMapReduceOptions.put("sort", queryMapper.getMappedObject(query.getSortObject(), null));
+				mapReduceCommand.setSort(queryMapper.getMappedObject(query.getSortObject(), null));
 			}
 		}
-		return copyMapReduceOptions;
-	}
 
-	private DBObject copyMapReduceOptions(MapReduceOptions mapReduceOptions, MapReduceCommand command) {
 		if (mapReduceOptions.getJavaScriptMode() != null) {
-			command.addExtraOption("jsMode", true);
+			mapReduceCommand.setJsMode(true);
 		}
 		if (!mapReduceOptions.getExtraOptions().isEmpty()) {
 			for (Map.Entry<String, Object> entry : mapReduceOptions.getExtraOptions().entrySet()) {
-				command.addExtraOption(entry.getKey(), entry.getValue());
+				addExtraOption(mapReduceCommand, entry.getKey(), entry.getValue());
 			}
 		}
 		if (mapReduceOptions.getFinalizeFunction() != null) {
-			command.setFinalize(this.replaceWithResourceIfNecessary(mapReduceOptions.getFinalizeFunction()));
+			mapReduceCommand.setFinalize(this.replaceWithResourceIfNecessary(mapReduceOptions.getFinalizeFunction()));
 		}
 		if (mapReduceOptions.getOutputDatabase() != null) {
-			command.setOutputDB(mapReduceOptions.getOutputDatabase());
+			mapReduceCommand.setOutputDB(mapReduceOptions.getOutputDatabase());
 		}
 		if (!mapReduceOptions.getScopeVariables().isEmpty()) {
-			command.setScope(mapReduceOptions.getScopeVariables());
+			mapReduceCommand.setScope(mapReduceOptions.getScopeVariables());
 		}
-
-		DBObject commandObject = command.toDBObject();
-		DBObject outObject = (DBObject) commandObject.get("out");
-
-		if (mapReduceOptions.getOutputSharded() != null) {
-			outObject.put("sharded", mapReduceOptions.getOutputSharded());
-		}
-		return commandObject;
 	}
 
 	public Set<String> getCollectionNames() {
@@ -1900,7 +1913,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			return;
 		}
 
-		String error = writeResult.getError();
+		String error = getError(writeResult);
 
 		if (error == null) {
 			return;

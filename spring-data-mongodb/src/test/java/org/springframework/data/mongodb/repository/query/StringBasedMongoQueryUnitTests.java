@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2014 the original author or authors.
+ * Copyright 2011-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -271,7 +271,7 @@ public class StringBasedMongoQueryUnitTests {
 
 		DBRef dbRef = DBObjectTestUtils.getTypedValue(query.getQueryObject(), "reference", DBRef.class);
 		assertThat(dbRef.getId(), is((Object) "myid"));
-		assertThat(dbRef.getRef(), is("reference"));
+		assertThat(dbRef.getCollectionName(), is("reference"));
 	}
 
 	/**

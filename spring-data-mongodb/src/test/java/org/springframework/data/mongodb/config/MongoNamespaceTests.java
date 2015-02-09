@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2014 the original author or authors.
+ * Copyright 2010-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.config;
 
 import static org.junit.Assert.*;
+import static org.springframework.data.mongodb.MongoClientVersion.*;
 import static org.springframework.test.util.ReflectionTestUtils.*;
 
 import javax.net.ssl.SSLSocketFactory;
@@ -26,6 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.authentication.UserCredentials;
 import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.ReflectiveMongoOptionsInvoker;
 import org.springframework.data.mongodb.core.MongoFactoryBean;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
@@ -44,6 +46,7 @@ import com.mongodb.WriteConcern;
  * @author Oliver Gierke
  * @author Martin Baumgartner
  * @author Thomas Darimont
+ * @author Christoph Strobl
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration
@@ -239,14 +242,21 @@ public class MongoNamespaceTests {
 		assertEquals(8, mongoOpts.connectionsPerHost);
 		assertEquals(1000, mongoOpts.connectTimeout);
 		assertEquals(1500, mongoOpts.maxWaitTime);
-		assertEquals(true, mongoOpts.autoConnectRetry);
+
 		assertEquals(1500, mongoOpts.socketTimeout);
 		assertEquals(4, mongoOpts.threadsAllowedToBlockForConnectionMultiplier);
 		assertEquals(true, mongoOpts.socketKeepAlive);
-		assertEquals(true, mongoOpts.fsync);
-		assertEquals(true, mongoOpts.slaveOk);
+
 		assertEquals(1, mongoOpts.getWriteConcern().getW());
 		assertEquals(0, mongoOpts.getWriteConcern().getWtimeout());
 		assertEquals(true, mongoOpts.getWriteConcern().fsync());
+
+		if (!isMongo3Driver()) {
+			assertEquals(true, mongoOpts.fsync);
+			assertEquals(true, ReflectiveMongoOptionsInvoker.getAutoConnectRetry(mongoOpts));
+			assertEquals(true, ReflectiveMongoOptionsInvoker.getSlaveOk(mongoOpts));
+		} else {
+			assertEquals(false, mongoOpts.fsync);
+		}
 	}
 }

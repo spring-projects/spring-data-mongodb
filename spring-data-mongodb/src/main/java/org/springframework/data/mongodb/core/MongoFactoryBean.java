@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 the original author or authors.
+ * Copyright 2010-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core;
 
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -29,6 +30,9 @@ import org.springframework.data.mongodb.CannotGetMongoDbConnectionException;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.Mongo;
+import com.mongodb.MongoClient;
+import com.mongodb.MongoClientOptions;
+import com.mongodb.MongoCredential;
 import com.mongodb.MongoOptions;
 import com.mongodb.ServerAddress;
 import com.mongodb.WriteConcern;
@@ -40,6 +44,7 @@ import com.mongodb.WriteConcern;
  * @author Graeme Rocher
  * @author Oliver Gierke
  * @author Thomas Darimont
+ * @author Christoph Strobl
  * @since 1.0
  */
 public class MongoFactoryBean implements FactoryBean<Mongo>, InitializingBean, DisposableBean,
@@ -48,16 +53,44 @@ public class MongoFactoryBean implements FactoryBean<Mongo>, InitializingBean, D
 	private Mongo mongo;
 
 	private MongoOptions mongoOptions;
+	private MongoClientOptions mongoClientOptions;
+
 	private String host;
 	private Integer port;
 	private WriteConcern writeConcern;
 	private List<ServerAddress> replicaSetSeeds;
 	private List<ServerAddress> replicaPair;
+	private List<MongoCredential> credentials;
 
 	private PersistenceExceptionTranslator exceptionTranslator = new MongoExceptionTranslator();
 
+	/**
+	 * @param mongoOptions
+	 * @deprecated since 1.7. Please use {@link #setMongoClientOptions(MongoClientOptions)}
+	 */
+	@Deprecated
 	public void setMongoOptions(MongoOptions mongoOptions) {
 		this.mongoOptions = mongoOptions;
+	}
+
+	/**
+	 * Set the {@link MongoClientOptions} to be used when creating {@link MongoClient}.
+	 * 
+	 * @param mongoClientOptions
+	 * @since 1.7
+	 */
+	public void setMongoClientOptions(MongoClientOptions mongoClientOptions) {
+		this.mongoClientOptions = mongoClientOptions;
+	}
+
+	/**
+	 * Set the list of credentials to be used when creating {@link MongoClient}.
+	 * 
+	 * @param credentials can be {@literal null}.
+	 * @since 1.7
+	 */
+	public void setCredentials(List<MongoCredential> credentials) {
+		this.credentials = credentials;
 	}
 
 	public void setReplicaSetSeeds(ServerAddress[] replicaSetSeeds) {
@@ -66,7 +99,6 @@ public class MongoFactoryBean implements FactoryBean<Mongo>, InitializingBean, D
 
 	/**
 	 * @deprecated use {@link #setReplicaSetSeeds(ServerAddress[])} instead
-	 * 
 	 * @param replicaPair
 	 */
 	@Deprecated
@@ -148,8 +180,21 @@ public class MongoFactoryBean implements FactoryBean<Mongo>, InitializingBean, D
 	 * (non-Javadoc)
 	 * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
 	 */
-	@SuppressWarnings("deprecation")
 	public void afterPropertiesSet() throws Exception {
+		this.mongo = mongoClientOptions != null ? createMongoClient() : createMongo();
+	}
+
+	private MongoClient createMongoClient() {
+
+		if (!isNullOrEmpty(replicaPair)) {
+			throw new CannotGetMongoDbConnectionException(
+					"Cannot create MongoClient with replicaPair please use replicaSetSeeds.");
+		}
+		return new MongoClient(replicaSetSeeds, credentials, mongoClientOptions);
+	}
+
+	@SuppressWarnings("deprecation")
+	private Mongo createMongo() throws UnknownHostException {
 
 		Mongo mongo;
 		ServerAddress defaultOptions = new ServerAddress();
@@ -175,7 +220,7 @@ public class MongoFactoryBean implements FactoryBean<Mongo>, InitializingBean, D
 			mongo.setWriteConcern(writeConcern);
 		}
 
-		this.mongo = mongo;
+		return mongo;
 	}
 
 	private boolean isNullOrEmpty(Collection<?> elements) {

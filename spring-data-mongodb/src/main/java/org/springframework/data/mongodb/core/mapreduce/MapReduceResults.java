@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2012 the original author or authors.
+ * Copyright 2011-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,18 +15,20 @@
  */
 package org.springframework.data.mongodb.core.mapreduce;
 
+import static org.springframework.util.Assert.*;
+
 import java.util.Iterator;
 import java.util.List;
 
-import org.springframework.util.Assert;
-
 import com.mongodb.DBObject;
+import com.mongodb.MapReduceOutput;
 
 /**
  * Collects the results of performing a MapReduce operations.
  * 
  * @author Mark Pollack
  * @author Oliver Gierke
+ * @author Christoph Strobl
  * @param <T> The class in which the results are mapped onto, accessible via an iterator.
  */
 public class MapReduceResults<T> implements Iterable<T> {
@@ -42,17 +44,38 @@ public class MapReduceResults<T> implements Iterable<T> {
 	 * 
 	 * @param mappedResults must not be {@literal null}.
 	 * @param rawResults must not be {@literal null}.
+	 * @deprecated since 1.7. Please use {@link #MapReduceResults(List, MapReduceOutput)}
 	 */
+	@Deprecated
 	public MapReduceResults(List<T> mappedResults, DBObject rawResults) {
 
-		Assert.notNull(mappedResults);
-		Assert.notNull(rawResults);
+		notNull(mappedResults);
+		notNull(rawResults);
 
 		this.mappedResults = mappedResults;
 		this.rawResults = rawResults;
 		this.mapReduceTiming = parseTiming(rawResults);
 		this.mapReduceCounts = parseCounts(rawResults);
 		this.outputCollection = parseOutputCollection(rawResults);
+	}
+
+	/**
+	 * Creates a new {@link MapReduceResults} from the given mapped results and the {@link MapReduceOutput}.
+	 * 
+	 * @param mappedResults must not be {@literal null}.
+	 * @param mapReduceOutput must not be {@literal null}.
+	 * @since 1.7
+	 */
+	public MapReduceResults(List<T> mappedResults, MapReduceOutput mapReduceOutput) {
+
+		notNull(mappedResults, "MappedResults must not be null!");
+		notNull(mapReduceOutput, "MapReduceOutput must not be null!");
+
+		this.mappedResults = mappedResults;
+		this.rawResults = null;
+		this.mapReduceTiming = parseTiming(mapReduceOutput);
+		this.mapReduceCounts = parseCounts(mapReduceOutput);
+		this.outputCollection = parseOutputCollection(mapReduceOutput);
 	}
 
 	/*
@@ -144,5 +167,18 @@ public class MapReduceResults<T> implements Iterable<T> {
 
 		return resultField instanceof DBObject ? ((DBObject) resultField).get("collection").toString() : resultField
 				.toString();
+	}
+
+	private MapReduceCounts parseCounts(final MapReduceOutput mapReduceOutput) {
+		return new MapReduceCounts(mapReduceOutput.getInputCount(), mapReduceOutput.getEmitCount(),
+				mapReduceOutput.getOutputCount());
+	}
+
+	private String parseOutputCollection(final MapReduceOutput mapReduceOutput) {
+		return mapReduceOutput.getCollectionName();
+	}
+
+	private MapReduceTiming parseTiming(MapReduceOutput mapReduceOutput) {
+		return new MapReduceTiming(-1, -1, mapReduceOutput.getDuration());
 	}
 }

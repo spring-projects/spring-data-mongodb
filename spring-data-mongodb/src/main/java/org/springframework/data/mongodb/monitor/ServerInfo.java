@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2013 the original author or authors.
+ * Copyright 2012-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ import com.mongodb.Mongo;
  * 
  * @author Mark Pollack
  * @author Thomas Darimont
+ * @author Christoph Strobl
  */
 @ManagedResource(description = "Server Information")
 public class ServerInfo extends AbstractMonitor {
@@ -50,7 +51,7 @@ public class ServerInfo extends AbstractMonitor {
 		 * UnknownHostException is not necessary anymore, but clients could have
 		 * called this method in a try..catch(UnknownHostException) already
 		 */
-		return getServerStatus().getServerUsed().getHost();
+		return mongo.getAddress().getHost();
 	}
 
 	@ManagedMetric(displayName = "Uptime Estimate")

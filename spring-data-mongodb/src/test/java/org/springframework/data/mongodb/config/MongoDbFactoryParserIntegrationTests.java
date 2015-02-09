@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2013 the original author or authors.
+ * Copyright 2011-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,9 @@ package org.springframework.data.mongodb.config;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
+import static org.junit.Assume.*;
+import static org.springframework.data.mongodb.MongoClientVersion.*;
+import static org.springframework.data.mongodb.ReflectiveMongoOptionsInvoker.*;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -44,6 +47,7 @@ import com.mongodb.WriteConcern;
  * Integration tests for {@link MongoDbFactoryParser}.
  * 
  * @author Oliver Gierke
+ * @auhtor Christoph Strobl
  */
 public class MongoDbFactoryParserIntegrationTests {
 
@@ -132,9 +136,11 @@ public class MongoDbFactoryParserIntegrationTests {
 	@Test
 	public void parsesMaxAutoConnectRetryTimeCorrectly() {
 
+		assumeFalse(isMongo3Driver());
+
 		reader.loadBeanDefinitions(new ClassPathResource("namespace/db-factory-bean.xml"));
 		Mongo mongo = factory.getBean(Mongo.class);
-		assertThat(mongo.getMongoOptions().maxAutoConnectRetryTime, is(27L));
+		assertThat(getMaxAutoConnectRetryTime(mongo.getMongoOptions()), is(27L));
 	}
 
 	/**

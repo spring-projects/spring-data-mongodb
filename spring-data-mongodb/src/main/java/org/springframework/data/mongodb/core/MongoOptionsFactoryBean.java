@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2014 the original author or authors.
+ * Copyright 2010-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,38 +15,47 @@
  */
 package org.springframework.data.mongodb.core;
 
+import static org.springframework.data.mongodb.MongoClientVersion.*;
+import static org.springframework.data.mongodb.ReflectiveMongoOptionsInvoker.*;
+
 import javax.net.ssl.SSLSocketFactory;
 
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.data.mongodb.ReflectiveMongoOptionsInvoker;
 
 import com.mongodb.MongoOptions;
 
 /**
- * A factory bean for construction of a {@link MongoOptions} instance.
+ * A factory bean for construction of a {@link MongoOptions} instance. In case used with mongo-java-driver version 3
+ * porperties not suppprted by the driver will be ignored.
  * 
  * @author Graeme Rocher
  * @author Mark Pollack
  * @author Mike Saavedra
  * @author Thomas Darimont
+ * @author Christoph Strobl
  */
 @SuppressWarnings("deprecation")
 public class MongoOptionsFactoryBean implements FactoryBean<MongoOptions>, InitializingBean {
 
 	private static final MongoOptions DEFAULT_MONGO_OPTIONS = new MongoOptions();
 
-	private int connectionsPerHost = DEFAULT_MONGO_OPTIONS.connectionsPerHost;
-	private int threadsAllowedToBlockForConnectionMultiplier = DEFAULT_MONGO_OPTIONS.threadsAllowedToBlockForConnectionMultiplier;
-	private int maxWaitTime = DEFAULT_MONGO_OPTIONS.maxWaitTime;
-	private int connectTimeout = DEFAULT_MONGO_OPTIONS.connectTimeout;
-	private int socketTimeout = DEFAULT_MONGO_OPTIONS.socketTimeout;
-	private boolean socketKeepAlive = DEFAULT_MONGO_OPTIONS.socketKeepAlive;
-	private boolean autoConnectRetry = DEFAULT_MONGO_OPTIONS.autoConnectRetry;
-	private long maxAutoConnectRetryTime = DEFAULT_MONGO_OPTIONS.maxAutoConnectRetryTime;
-	private int writeNumber = DEFAULT_MONGO_OPTIONS.w;
-	private int writeTimeout = DEFAULT_MONGO_OPTIONS.wtimeout;
-	private boolean writeFsync = DEFAULT_MONGO_OPTIONS.fsync;
-	private boolean slaveOk = DEFAULT_MONGO_OPTIONS.slaveOk;
+	private int connectionsPerHost = DEFAULT_MONGO_OPTIONS.getConnectionsPerHost();
+	private int threadsAllowedToBlockForConnectionMultiplier = DEFAULT_MONGO_OPTIONS
+			.getThreadsAllowedToBlockForConnectionMultiplier();
+	private int maxWaitTime = DEFAULT_MONGO_OPTIONS.getMaxWaitTime();
+	private int connectTimeout = DEFAULT_MONGO_OPTIONS.getConnectTimeout();
+	private int socketTimeout = DEFAULT_MONGO_OPTIONS.getSocketTimeout();
+	private boolean socketKeepAlive = DEFAULT_MONGO_OPTIONS.isSocketKeepAlive();
+	private int writeNumber = DEFAULT_MONGO_OPTIONS.getW();
+	private int writeTimeout = DEFAULT_MONGO_OPTIONS.getWtimeout();
+	private boolean writeFsync = DEFAULT_MONGO_OPTIONS.isFsync();
+
+	private boolean autoConnectRetry = !isMongo3Driver() ? getAutoConnectRetry(DEFAULT_MONGO_OPTIONS) : false;
+	private long maxAutoConnectRetryTime = !isMongo3Driver() ? getMaxAutoConnectRetryTime(DEFAULT_MONGO_OPTIONS) : -1;
+	private boolean slaveOk = !isMongo3Driver() ? getSlaveOk(DEFAULT_MONGO_OPTIONS) : false;
+
 	private boolean ssl;
 	private SSLSocketFactory sslSocketFactory;
 
@@ -144,7 +153,10 @@ public class MongoOptionsFactoryBean implements FactoryBean<MongoOptions>, Initi
 
 	/**
 	 * Configures whether or not the system retries automatically on a failed connect. This defaults to {@literal false}.
+	 * 
+	 * @deprecated since 1.7.
 	 */
+	@Deprecated
 	public void setAutoConnectRetry(boolean autoConnectRetry) {
 		this.autoConnectRetry = autoConnectRetry;
 	}
@@ -154,7 +166,9 @@ public class MongoOptionsFactoryBean implements FactoryBean<MongoOptions>, Initi
 	 * defaults to {@literal 0}, which means to use the default {@literal 15s} if {@link #autoConnectRetry} is on.
 	 * 
 	 * @param maxAutoConnectRetryTime the maxAutoConnectRetryTime to set
+	 * @deprecated since 1.7
 	 */
+	@Deprecated
 	public void setMaxAutoConnectRetryTime(long maxAutoConnectRetryTime) {
 		this.maxAutoConnectRetryTime = maxAutoConnectRetryTime;
 	}
@@ -163,7 +177,9 @@ public class MongoOptionsFactoryBean implements FactoryBean<MongoOptions>, Initi
 	 * Specifies if the driver is allowed to read from secondaries or slaves. Defaults to {@literal false}.
 	 * 
 	 * @param slaveOk true if the driver should read from secondaries or slaves.
+	 * @deprecated since 1.7
 	 */
+	@Deprecated
 	public void setSlaveOk(boolean slaveOk) {
 		this.slaveOk = slaveOk;
 	}
@@ -202,21 +218,26 @@ public class MongoOptionsFactoryBean implements FactoryBean<MongoOptions>, Initi
 
 		MongoOptions options = new MongoOptions();
 
-		options.connectionsPerHost = connectionsPerHost;
-		options.threadsAllowedToBlockForConnectionMultiplier = threadsAllowedToBlockForConnectionMultiplier;
-		options.maxWaitTime = maxWaitTime;
-		options.connectTimeout = connectTimeout;
-		options.socketTimeout = socketTimeout;
-		options.socketKeepAlive = socketKeepAlive;
-		options.autoConnectRetry = autoConnectRetry;
-		options.maxAutoConnectRetryTime = maxAutoConnectRetryTime;
-		options.slaveOk = slaveOk;
-		options.w = writeNumber;
-		options.wtimeout = writeTimeout;
-		options.fsync = writeFsync;
+		options.setConnectionsPerHost(connectionsPerHost);
+		options.setThreadsAllowedToBlockForConnectionMultiplier(threadsAllowedToBlockForConnectionMultiplier);
+		options.setMaxWaitTime(maxWaitTime);
+		options.setConnectTimeout(connectTimeout);
+		options.setSocketTimeout(socketTimeout);
+		options.setSocketKeepAlive(socketKeepAlive);
+
+		options.setW(writeNumber);
+		options.setWtimeout(writeTimeout);
+		options.setFsync(writeFsync);
 
 		if (ssl) {
 			options.setSocketFactory(sslSocketFactory != null ? sslSocketFactory : SSLSocketFactory.getDefault());
+		}
+
+		if (!isMongo3Driver()) {
+
+			ReflectiveMongoOptionsInvoker.setAutoConnectRetry(options, autoConnectRetry);
+			ReflectiveMongoOptionsInvoker.setMaxAutoConnectRetryTime(options, maxAutoConnectRetryTime);
+			ReflectiveMongoOptionsInvoker.setSlaveOk(options, slaveOk);
 		}
 
 		this.options = options;

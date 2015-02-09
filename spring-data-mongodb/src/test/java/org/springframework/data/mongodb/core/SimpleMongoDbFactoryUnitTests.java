@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2011-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,8 @@ package org.springframework.data.mongodb.core;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.util.ReflectionTestUtils.*;
 
 import java.net.UnknownHostException;
 
@@ -26,15 +28,17 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.authentication.UserCredentials;
 import org.springframework.data.mongodb.MongoDbFactory;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import com.mongodb.Mongo;
+import com.mongodb.MongoClient;
+import com.mongodb.MongoClientURI;
 import com.mongodb.MongoURI;
 
 /**
  * Unit tests for {@link SimpleMongoDbFactory}.
  * 
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 @RunWith(MockitoJUnitRunner.class)
 public class SimpleMongoDbFactoryUnitTests {
@@ -54,6 +58,7 @@ public class SimpleMongoDbFactoryUnitTests {
 	 * @see DATADOC-254
 	 */
 	@Test
+	@SuppressWarnings("deprecation")
 	public void allowsDatabaseNames() {
 		new SimpleMongoDbFactory(mongo, "foo-bar");
 		new SimpleMongoDbFactory(mongo, "foo_bar");
@@ -71,22 +76,46 @@ public class SimpleMongoDbFactoryUnitTests {
 		MongoURI mongoURI = new MongoURI("mongodb://myUsername:myPassword@localhost/myDatabase.myCollection");
 		MongoDbFactory mongoDbFactory = new SimpleMongoDbFactory(mongoURI);
 
-		assertThat(ReflectionTestUtils.getField(mongoDbFactory, "credentials"), is((Object) new UserCredentials(
-				"myUsername", "myPassword")));
-		assertThat(ReflectionTestUtils.getField(mongoDbFactory, "databaseName").toString(), is("myDatabase"));
-		assertThat(ReflectionTestUtils.getField(mongoDbFactory, "databaseName").toString(), is("myDatabase"));
+		assertThat(getField(mongoDbFactory, "credentials"), is((Object) new UserCredentials("myUsername", "myPassword")));
+		assertThat(getField(mongoDbFactory, "databaseName").toString(), is("myDatabase"));
 	}
 
 	/**
 	 * @see DATAMONGO-789
 	 */
 	@Test
+	@SuppressWarnings("deprecation")
 	public void defaultsAuthenticationDatabaseToDatabase() {
 
 		SimpleMongoDbFactory factory = new SimpleMongoDbFactory(mongo, "foo");
-		assertThat(ReflectionTestUtils.getField(factory, "authenticationDatabaseName"), is((Object) "foo"));
+		assertThat(getField(factory, "authenticationDatabaseName"), is((Object) "foo"));
 	}
 
+	/**
+	 * @see DATAMONGO-1158
+	 */
+	@Test
+	public void constructsMongoClientAccordingToMongoUri() throws UnknownHostException {
+
+		MongoClientURI uri = new MongoClientURI("mongodb://myUserName:myPassWord@127.0.0.1:27017/myDataBase.myCollection");
+		SimpleMongoDbFactory factory = new SimpleMongoDbFactory(uri);
+
+		assertThat(getField(factory, "databaseName").toString(), is("myDataBase"));
+	}
+
+	/**
+	 * @see DATAMONGO-1158
+	 */
+	@Test
+	public void shouldDefaultAuthenticationDbNameToDbNameWhenUsingMongoClient() throws UnknownHostException {
+
+		MongoClient clientMock = mock(MongoClient.class);
+		SimpleMongoDbFactory factory = new SimpleMongoDbFactory(clientMock, "FooBar");
+
+		assertThat(getField(factory, "authenticationDatabaseName").toString(), is("FooBar"));
+	}
+
+	@SuppressWarnings("deprecation")
 	private void rejectsDatabaseName(String databaseName) {
 
 		try {

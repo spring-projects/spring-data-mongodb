@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2013 the original author or authors.
+ * Copyright 2011-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ import java.lang.annotation.Target;
  * @author Oliver Gierke
  * @author Philipp Schneider
  * @author Johno Crawford
+ * @author Christoph Strobl
  */
 @Target({ ElementType.TYPE })
 @Documented
@@ -105,9 +106,9 @@ public @interface CompoundIndex {
 	 * 
 	 * <pre>
 	 * <code>
-	 * db.root.ensureIndex( { hybrid.h1: 1, hybrid.h2: 1 } , { name: "hybrid.compound_index" } )
-	 * db.root.ensureIndex( { nested.n1: 1, nested.n2: 1 } , { name: "nested.compound_index" } )
-	 * db.hybrid.ensureIndex( { h1: 1, h2: 1 } , { name: "compound_index" } )
+	 * db.root.createIndex( { hybrid.h1: 1, hybrid.h2: 1 } , { name: "hybrid.compound_index" } )
+	 * db.root.createIndex( { nested.n1: 1, nested.n2: 1 } , { name: "nested.compound_index" } )
+	 * db.hybrid.createIndex( { h1: 1, h2: 1 } , { name: "compound_index" } )
 	 * </code>
 	 * </pre>
 	 * 
