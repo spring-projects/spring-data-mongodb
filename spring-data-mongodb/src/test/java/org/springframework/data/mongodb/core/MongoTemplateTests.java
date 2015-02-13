@@ -18,7 +18,6 @@ package org.springframework.data.mongodb.core;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 import static org.junit.Assume.*;
-import static org.springframework.data.mongodb.MongoClientVersion.*;
 import static org.springframework.data.mongodb.ReflectiveWriteConcernInvoker.*;
 import static org.springframework.data.mongodb.ReflectiveWriteResultInvoker.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
@@ -227,11 +226,7 @@ public class MongoTemplateTests {
 	public void throwsExceptionForDuplicateIds() {
 
 		MongoTemplate template = new MongoTemplate(factory);
-		if (isMongo3Driver()) {
-			template.setWriteConcern(WriteConcern.ACKNOWLEDGED);
-		} else {
-			template.setWriteResultChecking(WriteResultChecking.EXCEPTION);
-		}
+		template.setWriteResultChecking(WriteResultChecking.EXCEPTION);
 
 		Person person = new Person(new ObjectId(), "Amol");
 		person.setAge(28);
@@ -254,11 +249,7 @@ public class MongoTemplateTests {
 	public void throwsExceptionForUpdateWithInvalidPushOperator() {
 
 		MongoTemplate template = new MongoTemplate(factory);
-		if (isMongo3Driver()) {
-			template.setWriteConcern(WriteConcern.ACKNOWLEDGED);
-		} else {
-			template.setWriteResultChecking(WriteResultChecking.EXCEPTION);
-		}
+		template.setWriteResultChecking(WriteResultChecking.EXCEPTION);
 
 		ObjectId id = new ObjectId();
 		Person person = new Person(id, "Amol");
@@ -283,11 +274,7 @@ public class MongoTemplateTests {
 	public void throwsExceptionForIndexViolationIfConfigured() {
 
 		MongoTemplate template = new MongoTemplate(factory);
-		if (isMongo3Driver()) {
-			template.setWriteConcern(WriteConcern.ACKNOWLEDGED);
-		} else {
-			template.setWriteResultChecking(WriteResultChecking.EXCEPTION);
-		}
+		template.setWriteResultChecking(WriteResultChecking.EXCEPTION);
 		template.indexOps(Person.class).ensureIndex(new Index().on("firstName", Direction.DESC).unique());
 
 		Person person = new Person(new ObjectId(), "Amol");
@@ -316,11 +303,7 @@ public class MongoTemplateTests {
 		thrown.expectMessage("E11000 duplicate key error index: database.person.$_id_");
 
 		MongoTemplate template = new MongoTemplate(factory);
-		if (isMongo3Driver()) {
-			template.setWriteConcern(WriteConcern.ACKNOWLEDGED);
-		} else {
-			template.setWriteResultChecking(WriteResultChecking.EXCEPTION);
-		}
+		template.setWriteResultChecking(WriteResultChecking.EXCEPTION);
 
 		ObjectId id = new ObjectId();
 		Person person = new Person(id, "Amol");

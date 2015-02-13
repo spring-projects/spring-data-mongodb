@@ -16,11 +16,13 @@
 package org.springframework.data.mongodb.core;
 
 import static com.mongodb.ReadPreference.*;
+import static org.springframework.data.mongodb.MongoClientVersion.*;
 import static org.springframework.data.mongodb.ReflectiveDbInvoker.*;
 import static org.springframework.data.mongodb.ReflectiveMapReduceInvoker.*;
 import static org.springframework.data.mongodb.ReflectiveWriteResultInvoker.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
+import static org.springframework.util.ObjectUtils.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -723,13 +725,22 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 	/**
 	 * Prepare the WriteConcern before any processing is done using it. This allows a convenient way to apply custom
-	 * settings in sub-classes.
+	 * settings in sub-classes. <br />
+	 * In case of using mongo-java-driver version 3 the returned {@link WriteConcern} will be defaulted to
+	 * {@link WriteConcern#ACKNOWLEDGED} when {@link WriteResultChecking} is set to {@link WriteResultChecking#EXCEPTION}.
 	 * 
 	 * @param writeConcern any WriteConcern already configured or null
 	 * @return The prepared WriteConcern or null
 	 */
 	protected WriteConcern prepareWriteConcern(MongoAction mongoAction) {
-		return writeConcernResolver.resolve(mongoAction);
+
+		WriteConcern wc = writeConcernResolver.resolve(mongoAction);
+
+		if (isMongo3Driver() && nullSafeEquals(WriteResultChecking.EXCEPTION, writeResultChecking)
+				&& (wc == null || wc.getW() < 1)) {
+			return WriteConcern.ACKNOWLEDGED;
+		}
+		return wc;
 	}
 
 	protected <T> void doInsert(String collectionName, T objectToSave, MongoWriter<T> writer) {
