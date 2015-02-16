@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 the original author or authors.
+ * Copyright 2013-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -167,6 +167,24 @@ public class TypeBasedAggregationOperationContextUnitTests {
 		assertThat(dbo.get("allowDiskUse"), is((Object) true));
 		assertThat(dbo.get("explain"), is((Object) true));
 		assertThat(dbo.get("cursor"), is((Object) new BasicDBObject("foo", 1)));
+	}
+
+	/**
+	 * @see DATAMONGO-1133
+	 */
+	@Test
+	public void shouldHonorAliasedFieldsInGroupExpressions() {
+
+		TypeBasedAggregationOperationContext context = getContext(MeterData.class);
+		TypedAggregation<MeterData> agg = newAggregation(MeterData.class,
+				group("counterName").sum("counterVolume").as("totalCounterVolume"));
+
+		DBObject dbo = agg.toDbObject("meterData", context);
+		DBObject group = getPipelineElementFromAggregationAt(dbo, 0);
+
+		DBObject definition = (DBObject) group.get("$group");
+
+		assertThat(definition.get("_id"), is(equalTo((Object) "$counter_name")));
 	}
 
 	@Document(collection = "person")

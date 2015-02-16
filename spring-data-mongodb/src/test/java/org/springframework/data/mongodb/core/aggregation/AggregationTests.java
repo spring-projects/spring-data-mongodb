@@ -124,6 +124,7 @@ public class AggregationTests {
 		mongoTemplate.dropCollection(Person.class);
 		mongoTemplate.dropCollection(Reservation.class);
 		mongoTemplate.dropCollection(Venue.class);
+		mongoTemplate.dropCollection(MeterData.class);
 	}
 
 	/**
@@ -1044,6 +1045,30 @@ public class AggregationTests {
 		DBObject firstResult = result.getMappedResults().get(0);
 		assertThat(firstResult.containsField("distance"), is(true));
 		assertThat((Double) firstResult.get("distance"), closeTo(117.620092203928, 0.00001));
+	}
+
+	/**
+	 * @see DATAMONGO-1133
+	 */
+	@Test
+	public void shouldHonorFieldAliasesForFieldReferences() {
+
+		mongoTemplate.insert(new MeterData("m1", "counter1", 42));
+		mongoTemplate.insert(new MeterData("m1", "counter1", 13));
+		mongoTemplate.insert(new MeterData("m1", "counter1", 45));
+
+		TypedAggregation<MeterData> agg = newAggregation(MeterData.class, //
+				match(where("resourceId").is("m1")), //
+				group("counterName").sum("counterVolume").as("totalValue") //
+		);
+
+		AggregationResults<DBObject> results = mongoTemplate.aggregate(agg, DBObject.class);
+
+		assertThat(results.getMappedResults(), hasSize(1));
+		DBObject result = results.getMappedResults().get(0);
+
+		assertThat(result.get("_id"), is(equalTo((Object) "counter1")));
+		assertThat(result.get("totalValue"), is(equalTo((Object) 42.0)));
 	}
 
 	private void assertLikeStats(LikeStats like, String id, long count) {
