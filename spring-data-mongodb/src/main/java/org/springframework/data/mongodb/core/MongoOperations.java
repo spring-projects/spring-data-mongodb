@@ -33,6 +33,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.util.CloseableIterator;
 
 import com.mongodb.CommandResult;
 import com.mongodb.DBCollection;
@@ -959,4 +960,6 @@ public interface MongoOperations {
 	 * @return
 	 */
 	MongoConverter getConverter();
+
+	CloseableIterator<Object> getStreamingMappingCursor(Query query, Class<?> entityType);
 }

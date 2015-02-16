@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 the original author or authors.
+ * Copyright 2010-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,11 @@
  */
 package org.springframework.data.mongodb.repository;
 
+import java.util.Arrays;
+import java.util.List;
+
+import org.junit.Test;
+import org.springframework.data.mongodb.util.AutoCloseableIterator;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
@@ -24,4 +29,25 @@ import org.springframework.test.context.ContextConfiguration;
  * @author Thomas Darimont
  */
 @ContextConfiguration
-public class PersonRepositoryIntegrationTests extends AbstractPersonRepositoryIntegrationTests {}
+public class PersonRepositoryIntegrationTests extends AbstractPersonRepositoryIntegrationTests {
+
+	@Test
+	public void findsAllMusiciansWithCursor() throws Exception {
+
+		repository.save(new Person("foo", "bar"));
+		repository.save(new Person("bar", "bar"));
+		repository.save(new Person("fuu", "bar"));
+		repository.save(new Person("notfound", "bar"));
+
+		List<String> firstNames = Arrays.asList("bar", "foo", "fuu");
+		AutoCloseableIterator<Person> result = repository.findByCustomQueryWithCursorByFirstnames(firstNames);
+
+		try {
+			for (Person person : result) {
+				System.out.printf("%s%n", person);
+			}
+		} finally {
+			result.close();
+		}
+	}
+}

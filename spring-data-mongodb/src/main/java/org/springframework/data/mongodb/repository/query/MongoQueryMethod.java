@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2014 the original author or authors.
+ * Copyright 2011-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.repository.Meta;
 import org.springframework.data.mongodb.repository.Query;
+import org.springframework.data.mongodb.util.CloseableIterator;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.query.QueryMethod;
 import org.springframework.data.util.ClassTypeInformation;
@@ -232,5 +233,11 @@ public class MongoQueryMethod extends QueryMethod {
 		}
 
 		return metaAttributes;
+	}
+
+	public boolean isStreamQuery() {
+
+		Class<?> returnType = method.getReturnType();
+		return org.springframework.util.ClassUtils.isAssignable(CloseableIterator.class, returnType);
 	}
 }

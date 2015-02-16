@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2014 the original author or authors.
+ * Copyright 2010-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,6 @@ package org.springframework.data.mongodb.repository.query;
 import java.util.Collections;
 import java.util.List;
 
-import org.springframework.core.convert.ConversionService;
-import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -32,10 +30,12 @@ import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.util.CloseableIterator;
 import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
+import org.springframework.util.ClassUtils;
 
 import com.mongodb.WriteResult;
 
@@ -47,8 +47,6 @@ import com.mongodb.WriteResult;
  * @author Christoph Strobl
  */
 public abstract class AbstractMongoQuery implements RepositoryQuery {
-
-	private static final ConversionService CONVERSION_SERVICE = new DefaultConversionService();
 
 	private final MongoQueryMethod method;
 	private final MongoOperations operations;
@@ -86,6 +84,10 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 		Query query = createQuery(new ConvertingParameterAccessor(operations.getConverter(), accessor));
 
 		applyQueryMetaAttributesWhenPresent(query);
+
+		if (method.isStreamQuery()) {
+			return new StreamExecution().execute(query);
+		}
 
 		if (isDeleteQuery()) {
 			return new DeleteExecution().execute(query);
@@ -413,6 +415,24 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 
 			WriteResult writeResult = operations.remove(query, metadata.getJavaType(), metadata.getCollectionName());
 			return writeResult != null ? writeResult.getN() : 0L;
+		}
+	}
+
+	final class StreamExecution extends Execution {
+
+		private final boolean IS_JAVA_7 = ClassUtils.isPresent("java.lang.AutoCloseable",
+				StreamExecution.class.getClassLoader());
+
+		@Override
+		Object execute(Query query) {
+
+			Class<?> entityType = getQueryMethod().getEntityInformation().getJavaType();
+			CloseableIterator<Object> result = operations.getStreamingMappingCursor(query, entityType);
+			return IS_JAVA_7 ? wrapInAutoCloseableIterator(result) : result;
+		}
+
+		private CloseableIterator<Object> wrapInAutoCloseableIterator(CloseableIterator<Object> iter) {
+			return new ForwardingAutoCloseableIterator<Object>(iter);
 		}
 	}
 }
