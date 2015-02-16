@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2014 the original author or authors.
+ * Copyright 2010-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,9 +17,10 @@ package org.springframework.data.mongodb.repository.query;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Spliterator;
+import java.util.Spliterators;
+import java.util.stream.StreamSupport;
 
-import org.springframework.core.convert.ConversionService;
-import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -34,6 +35,8 @@ import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.repository.query.RepositoryQuery;
+import org.springframework.data.util.CloseableIterator;
+import org.springframework.data.util.CloseableIteratorDisposingRunnable;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
 
@@ -47,8 +50,6 @@ import com.mongodb.WriteResult;
  * @author Christoph Strobl
  */
 public abstract class AbstractMongoQuery implements RepositoryQuery {
-
-	private static final ConversionService CONVERSION_SERVICE = new DefaultConversionService();
 
 	private final MongoQueryMethod method;
 	private final MongoOperations operations;
@@ -87,7 +88,9 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 
 		applyQueryMetaAttributesWhenPresent(query);
 
-		if (isDeleteQuery()) {
+		if (method.isStreamQuery()) {
+			return new StreamExecution().execute(query);
+		} else if (isDeleteQuery()) {
 			return new DeleteExecution().execute(query);
 		} else if (method.isGeoNearQuery() && method.isPageQuery()) {
 
@@ -413,6 +416,28 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 
 			WriteResult writeResult = operations.remove(query, metadata.getJavaType(), metadata.getCollectionName());
 			return writeResult != null ? writeResult.getN() : 0L;
+		}
+	}
+
+	/**
+	 * @author Thomas Darimont
+	 * @since 1.7
+	 */
+	final class StreamExecution extends Execution {
+
+		/* (non-Javadoc)
+		 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery.Execution#execute(org.springframework.data.mongodb.core.query.Query)
+		 */
+		@Override
+		Object execute(Query query) {
+
+			Class<?> entityType = getQueryMethod().getEntityInformation().getJavaType();
+
+			@SuppressWarnings("unchecked")
+			CloseableIterator<Object> result = (CloseableIterator<Object>) operations.executeAsStream(query, entityType);
+			Spliterator<Object> spliterator = Spliterators.spliteratorUnknownSize(result, Spliterator.NONNULL);
+
+			return StreamSupport.stream(spliterator, false).onClose(new CloseableIteratorDisposingRunnable(result));
 		}
 	}
 }

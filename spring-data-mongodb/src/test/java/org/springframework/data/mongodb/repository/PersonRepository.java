@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2014 the original author or authors.
+ * Copyright 2010-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.repository;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -320,4 +321,10 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 
 	@Query("{ ?0 : ?1 }")
 	List<Person> findByKeyValue(String key, String value);
+
+	/**
+	 * @see DATAMONGO-1165
+	 */
+	@Query("{firstname:{$in:?0}}")
+	Stream<Person> findByCustomQueryWithStreamingCursorByFirstnames(List<String> firstnames);
 }

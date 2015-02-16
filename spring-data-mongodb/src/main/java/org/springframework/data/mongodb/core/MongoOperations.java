@@ -33,8 +33,10 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.util.CloseableIterator;
 
 import com.mongodb.CommandResult;
+import com.mongodb.Cursor;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
@@ -164,6 +166,20 @@ public interface MongoOperations {
 	 */
 	@Deprecated
 	<T> T executeInSession(DbCallback<T> action);
+
+	/**
+	 * Executes the given {@link Query} on the entity collection of the specified {@code entityType} backed by a Mongo DB
+	 * {@link Cursor}.
+	 * <p>
+	 * Returns a {@link CloseableIterator} that wraps the a Mongo DB {@link Cursor} that needs to be closed.
+	 * 
+	 * @param <T> element return type
+	 * @param query
+	 * @param entityType
+	 * @return
+	 * @since 1.7
+	 */
+	<T> CloseableIterator<T> executeAsStream(Query query, Class<T> entityType);
 
 	/**
 	 * Create an uncapped collection with a name based on the provided entity class.

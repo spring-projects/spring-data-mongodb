@@ -95,6 +95,8 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.util.CloseableIterator;
+import org.springframework.data.mongodb.util.CloseableIterator;
 import org.springframework.data.mongodb.util.MongoClientVersion;
 import org.springframework.jca.cci.core.ConnectionCallback;
 import org.springframework.util.Assert;
@@ -106,6 +108,7 @@ import org.springframework.util.StringUtils;
 import com.mongodb.BasicDBObject;
 import com.mongodb.Bytes;
 import com.mongodb.CommandResult;
+import com.mongodb.Cursor;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
@@ -313,6 +316,31 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 */
 	public MongoConverter getConverter() {
 		return this.mongoConverter;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.MongoOperations#executeAsStream(org.springframework.data.mongodb.core.query.Query, java.lang.Class)
+	 */
+	@Override
+	public <T> CloseableIterator<T> executeAsStream(final Query query, final Class<T> entityType) {
+
+		return execute(entityType, new CollectionCallback<CloseableIterator<T>>() {
+
+			@Override
+			public CloseableIterator<T> doInCollection(DBCollection collection) throws MongoException, DataAccessException {
+
+				MongoPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(entityType);
+
+				DBObject mappedFields = queryMapper.getMappedFields(query.getFieldsObject(), persistentEntity);
+				DBObject mappedQuery = queryMapper.getMappedObject(query.getQueryObject(), persistentEntity);
+
+				DBCursor cursor = collection.find(mappedQuery, mappedFields);
+				ReadDbObjectCallback<T> readCallback = new ReadDbObjectCallback<T>(mongoConverter, entityType);
+
+				return new CloseableIterableCusorAdapter<T>(cursor, exceptionTranslator, readCallback);
+			}
+		});
+
 	}
 
 	public String getCollectionName(Class<?> entityClass) {
@@ -2122,9 +2150,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * Simple internal callback to allow operations on a {@link DBObject}.
 	 * 
 	 * @author Oliver Gierke
+	 * @author Thomas Darimont
 	 */
 
-	private interface DbObjectCallback<T> {
+	static interface DbObjectCallback<T> {
 
 		T doWith(DBObject object);
 	}
@@ -2287,4 +2316,76 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		}
 	}
 
+	/**
+	 * A {@link CloseableIterator} that is backed by a MongoDB {@link Cursor}.
+	 * 
+	 * @since 1.7
+	 * @author Thomas Darimont
+	 */
+	static class CloseableIterableCusorAdapter<T> implements CloseableIterator<T> {
+
+		private volatile Cursor cursor;
+		private PersistenceExceptionTranslator exceptionTranslator;
+		private DbObjectCallback<T> objectReadCallback;
+
+		/**
+		 * Creates a new {@link CloseableIterableCusorAdapter} backed by the given {@link Cursor}.
+		 * 
+		 * @param cursor
+		 * @param exceptionTranslator
+		 * @param objectReadCallback
+		 */
+		public CloseableIterableCusorAdapter(Cursor cursor, PersistenceExceptionTranslator exceptionTranslator,
+				DbObjectCallback<T> objectReadCallback) {
+
+			this.cursor = cursor;
+			this.exceptionTranslator = exceptionTranslator;
+			this.objectReadCallback = objectReadCallback;
+		}
+
+		@Override
+		public boolean hasNext() {
+
+			if (cursor == null) {
+				return false;
+			}
+
+			try {
+				return cursor.hasNext();
+			} catch (RuntimeException ex) {
+				throw exceptionTranslator.translateExceptionIfPossible(ex);
+			}
+		}
+
+		@Override
+		public T next() {
+
+			if (cursor == null) {
+				return null;
+			}
+
+			try {
+				DBObject item = cursor.next();
+				T converted = objectReadCallback.doWith(item);
+				return converted;
+			} catch (RuntimeException ex) {
+				throw exceptionTranslator.translateExceptionIfPossible(ex);
+			}
+		}
+
+		@Override
+		public void close() {
+
+			Cursor c = cursor;
+			try {
+				c.close();
+			} catch (RuntimeException ex) {
+				throw exceptionTranslator.translateExceptionIfPossible(ex);
+			} finally {
+				cursor = null;
+				exceptionTranslator = null;
+				objectReadCallback = null;
+			}
+		}
+	}
 }
