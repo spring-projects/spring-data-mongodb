@@ -1057,8 +1057,7 @@ public class AggregationTests {
 
 		TypedAggregation<MeterData> agg = newAggregation(MeterData.class, //
 				match(where("resourceId").is("m1")), //
-				group("counterName").sum("counterVolume").as("totalValue") //
-		);
+				group("counterName").sum("counterVolume").as("totalValue"));
 
 		AggregationResults<DBObject> results = mongoTemplate.aggregate(agg, DBObject.class);
 
@@ -1066,7 +1065,7 @@ public class AggregationTests {
 		DBObject result = results.getMappedResults().get(0);
 
 		assertThat(result.get("_id"), is(equalTo((Object) "counter1")));
-		assertThat(result.get("totalValue"), is(equalTo((Object) 42.0)));
+		assertThat(result.get("totalValue"), is(equalTo((Object) 100.0)));
 	}
 
 	private void assertLikeStats(LikeStats like, String id, long count) {
