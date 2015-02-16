@@ -23,11 +23,10 @@ import org.springframework.data.mongodb.core.mapping.Field;
  */
 public class MeterData {
 
-	@Id String resourceId;
+	@Id String id;
+	String resourceId;
 	@Field("counter_name") String counterName;
 	double counterVolume;
-
-	public MeterData() {}
 
 	public MeterData(String resourceId, String counterName, double counterVolume) {
 
