@@ -237,7 +237,7 @@ public class MongoTemplateTests {
 			template.insert(person);
 			fail("Expected DataIntegrityViolationException!");
 		} catch (DataIntegrityViolationException e) {
-			assertThat(e.getMessage(), containsString("E11000 duplicate key error index: database.person.$_id_"));
+			assertThat(e.getMessage(), containsString("E11000 duplicate key error"));
 		}
 	}
 
@@ -289,7 +289,7 @@ public class MongoTemplateTests {
 			template.save(person);
 			fail("Expected DataIntegrityViolationException!");
 		} catch (DataIntegrityViolationException e) {
-			assertThat(e.getMessage(), containsString("E11000 duplicate key error index: database.person.$firstName_-1"));
+			assertThat(e.getMessage(), containsString("E11000 duplicate key error"));
 		}
 	}
 
@@ -300,7 +300,7 @@ public class MongoTemplateTests {
 	public void rejectsDuplicateIdInInsertAll() {
 
 		thrown.expect(DataIntegrityViolationException.class);
-		thrown.expectMessage("E11000 duplicate key error index: database.person.$_id_");
+		thrown.expectMessage("E11000 duplicate key error");
 
 		MongoTemplate template = new MongoTemplate(factory);
 		template.setWriteResultChecking(WriteResultChecking.EXCEPTION);
