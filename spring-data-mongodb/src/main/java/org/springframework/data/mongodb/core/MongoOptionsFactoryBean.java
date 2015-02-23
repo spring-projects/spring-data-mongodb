@@ -15,14 +15,11 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.springframework.data.mongodb.MongoClientVersion.*;
-import static org.springframework.data.mongodb.ReflectiveMongoOptionsInvoker.*;
-
 import javax.net.ssl.SSLSocketFactory;
 
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.data.mongodb.ReflectiveMongoOptionsInvoker;
+import org.springframework.data.mongodb.MongoClientVersion;
 
 import com.mongodb.MongoOptions;
 
@@ -52,9 +49,12 @@ public class MongoOptionsFactoryBean implements FactoryBean<MongoOptions>, Initi
 	private int writeTimeout = DEFAULT_MONGO_OPTIONS.getWtimeout();
 	private boolean writeFsync = DEFAULT_MONGO_OPTIONS.isFsync();
 
-	private boolean autoConnectRetry = !isMongo3Driver() ? getAutoConnectRetry(DEFAULT_MONGO_OPTIONS) : false;
-	private long maxAutoConnectRetryTime = !isMongo3Driver() ? getMaxAutoConnectRetryTime(DEFAULT_MONGO_OPTIONS) : -1;
-	private boolean slaveOk = !isMongo3Driver() ? getSlaveOk(DEFAULT_MONGO_OPTIONS) : false;
+	private boolean autoConnectRetry = !MongoClientVersion.isMongo3Driver() ? ReflectiveMongoOptionsInvoker
+			.getAutoConnectRetry(DEFAULT_MONGO_OPTIONS) : false;
+	private long maxAutoConnectRetryTime = !MongoClientVersion.isMongo3Driver() ? ReflectiveMongoOptionsInvoker
+			.getMaxAutoConnectRetryTime(DEFAULT_MONGO_OPTIONS) : -1;
+	private boolean slaveOk = !MongoClientVersion.isMongo3Driver() ? ReflectiveMongoOptionsInvoker
+			.getSlaveOk(DEFAULT_MONGO_OPTIONS) : false;
 
 	private boolean ssl;
 	private SSLSocketFactory sslSocketFactory;
@@ -233,7 +233,7 @@ public class MongoOptionsFactoryBean implements FactoryBean<MongoOptions>, Initi
 			options.setSocketFactory(sslSocketFactory != null ? sslSocketFactory : SSLSocketFactory.getDefault());
 		}
 
-		if (!isMongo3Driver()) {
+		if (!MongoClientVersion.isMongo3Driver()) {
 
 			ReflectiveMongoOptionsInvoker.setAutoConnectRetry(options, autoConnectRetry);
 			ReflectiveMongoOptionsInvoker.setMaxAutoConnectRetryTime(options, maxAutoConnectRetryTime);

@@ -15,14 +15,8 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static com.mongodb.ReadPreference.*;
-import static org.springframework.data.mongodb.MongoClientVersion.*;
-import static org.springframework.data.mongodb.ReflectiveDbInvoker.*;
-import static org.springframework.data.mongodb.ReflectiveMapReduceInvoker.*;
-import static org.springframework.data.mongodb.ReflectiveWriteResultInvoker.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
-import static org.springframework.util.ObjectUtils.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -65,6 +59,7 @@ import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
 import org.springframework.data.mapping.model.MappingException;
+import org.springframework.data.mongodb.MongoClientVersion;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
@@ -104,6 +99,7 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.jca.cci.core.ConnectionCallback;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.ResourceUtils;
 import org.springframework.util.StringUtils;
 
@@ -345,7 +341,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 */
 	@Deprecated
 	public CommandResult executeCommand(final DBObject command, final int options) {
-		return executeCommand(command, (options & Bytes.QUERYOPTION_SLAVEOK) != 0 ? secondaryPreferred() : primary());
+		return executeCommand(command, (options & Bytes.QUERYOPTION_SLAVEOK) != 0 ? ReadPreference.secondaryPreferred()
+				: ReadPreference.primary());
 	}
 
 	/*
@@ -444,10 +441,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		return execute(new DbCallback<T>() {
 			public T doInDB(DB db) throws MongoException, DataAccessException {
 				try {
-					requestStart(db);
+					ReflectiveDbInvoker.requestStart(db);
 					return action.doInDB(db);
 				} finally {
-					requestDone(db);
+					ReflectiveDbInvoker.requestDone(db);
 				}
 			}
 		});
@@ -736,7 +733,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 		WriteConcern wc = writeConcernResolver.resolve(mongoAction);
 
-		if (isMongo3Driver() && nullSafeEquals(WriteResultChecking.EXCEPTION, writeResultChecking)
+		if (MongoClientVersion.isMongo3Driver()
+				&& ObjectUtils.nullSafeEquals(WriteResultChecking.EXCEPTION, writeResultChecking)
 				&& (wc == null || wc.getW() < 1)) {
 			return WriteConcern.ACKNOWLEDGED;
 		}
@@ -1061,7 +1059,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 						: collection.update(queryObj, updateObj, upsert, multi, writeConcernToUse);
 
 				if (entity != null && entity.hasVersionProperty() && !multi) {
-					if (wasAcknowledged(writeResult) && writeResult.getN() == 0
+					if (ReflectiveWriteResultInvoker.wasAcknowledged(writeResult) && writeResult.getN() == 0
 							&& dbObjectContainsVersionProperty(queryObj, entity)) {
 						throw new OptimisticLockingFailureException("Optimistic lock exception on saving entity: "
 								+ updateObj.toMap().toString() + " to collection " + collectionName);
@@ -1532,7 +1530,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		}
 		if (!mapReduceOptions.getExtraOptions().isEmpty()) {
 			for (Map.Entry<String, Object> entry : mapReduceOptions.getExtraOptions().entrySet()) {
-				addExtraOption(mapReduceCommand, entry.getKey(), entry.getValue());
+				ReflectiveMapReduceInvoker.addExtraOption(mapReduceCommand, entry.getKey(), entry.getValue());
 			}
 		}
 		if (mapReduceOptions.getFinalizeFunction() != null) {
@@ -1924,7 +1922,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			return;
 		}
 
-		String error = getError(writeResult);
+		String error = ReflectiveWriteResultInvoker.getError(writeResult);
 
 		if (error == null) {
 			return;

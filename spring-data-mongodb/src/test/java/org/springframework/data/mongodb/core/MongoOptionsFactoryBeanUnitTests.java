@@ -19,7 +19,7 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 import static org.junit.Assume.*;
 import static org.springframework.data.mongodb.MongoClientVersion.*;
-import static org.springframework.data.mongodb.ReflectiveMongoOptionsInvoker.*;
+import static org.springframework.data.mongodb.core.ReflectiveMongoOptionsInvoker.*;
 
 import javax.net.ssl.SSLSocketFactory;
 

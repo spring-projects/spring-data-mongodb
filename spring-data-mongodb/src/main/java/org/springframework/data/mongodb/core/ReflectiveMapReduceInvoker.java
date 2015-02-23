@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb;
-
-import static org.springframework.data.mongodb.MongoClientVersion.*;
-import static org.springframework.util.Assert.*;
-import static org.springframework.util.ReflectionUtils.*;
+package org.springframework.data.mongodb.core;
 
 import java.lang.reflect.Method;
+
+import org.springframework.data.mongodb.MongoClientVersion;
+import org.springframework.util.Assert;
+import org.springframework.util.ReflectionUtils;
 
 import com.mongodb.MapReduceCommand;
 
@@ -30,13 +30,14 @@ import com.mongodb.MapReduceCommand;
  * @author Christoph Strobl
  * @since 1.7
  */
-public final class ReflectiveMapReduceInvoker {
+final class ReflectiveMapReduceInvoker {
 
 	private static final Method ADD_EXTRA_OPTION_METHOD;
 
 	static {
 
-		ADD_EXTRA_OPTION_METHOD = findMethod(MapReduceCommand.class, "addExtraOption", String.class, Object.class);
+		ADD_EXTRA_OPTION_METHOD = ReflectionUtils.findMethod(MapReduceCommand.class, "addExtraOption", String.class,
+				Object.class);
 	}
 
 	private ReflectiveMapReduceInvoker() {}
@@ -50,12 +51,12 @@ public final class ReflectiveMapReduceInvoker {
 	 */
 	public static void addExtraOption(MapReduceCommand cmd, String key, Object value) {
 
-		if (isMongo3Driver()) {
+		if (MongoClientVersion.isMongo3Driver()) {
 			return;
 		}
 
-		notNull(cmd, "MapReduceCommand must not be null!");
-		invokeMethod(ADD_EXTRA_OPTION_METHOD, cmd, key, value);
+		Assert.notNull(cmd, "MapReduceCommand must not be null!");
+		ReflectionUtils.invokeMethod(ADD_EXTRA_OPTION_METHOD, cmd, key, value);
 	}
 
 }

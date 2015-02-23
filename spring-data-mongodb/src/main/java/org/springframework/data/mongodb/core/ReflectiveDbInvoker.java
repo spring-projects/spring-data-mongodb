@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb;
-
-import static org.springframework.data.mongodb.MongoClientVersion.*;
-import static org.springframework.util.ReflectionUtils.*;
+package org.springframework.data.mongodb.core;
 
 import java.lang.reflect.Method;
 
 import org.springframework.data.authentication.UserCredentials;
+import org.springframework.data.mongodb.CannotGetMongoDbConnectionException;
+import org.springframework.data.mongodb.MongoClientVersion;
+import org.springframework.util.ReflectionUtils;
 
 import com.mongodb.DB;
 import com.mongodb.Mongo;
@@ -32,7 +32,7 @@ import com.mongodb.Mongo;
  * @author Christoph Strobl
  * @since 1.7
  */
-public final class ReflectiveDbInvoker {
+final class ReflectiveDbInvoker {
 
 	private static final Method DB_IS_AUTHENTICATED_METHOD;
 	private static final Method DB_AUTHENTICATE_METHOD;
@@ -42,11 +42,11 @@ public final class ReflectiveDbInvoker {
 
 	static {
 
-		DB_IS_AUTHENTICATED_METHOD = findMethod(DB.class, "isAuthenticated");
-		DB_AUTHENTICATE_METHOD = findMethod(DB.class, "authenticate", String.class, char[].class);
-		DB_REQUEST_DONE_METHOD = findMethod(DB.class, "requestDone");
-		DB_ADD_USER_METHOD = findMethod(DB.class, "addUser", String.class, char[].class);
-		DB_REQUEST_START_METHOD = findMethod(DB.class, "requestStart");
+		DB_IS_AUTHENTICATED_METHOD = ReflectionUtils.findMethod(DB.class, "isAuthenticated");
+		DB_AUTHENTICATE_METHOD = ReflectionUtils.findMethod(DB.class, "authenticate", String.class, char[].class);
+		DB_REQUEST_DONE_METHOD = ReflectionUtils.findMethod(DB.class, "requestDone");
+		DB_ADD_USER_METHOD = ReflectionUtils.findMethod(DB.class, "addUser", String.class, char[].class);
+		DB_REQUEST_START_METHOD = ReflectionUtils.findMethod(DB.class, "requestStart");
 	}
 
 	private ReflectiveDbInvoker() {}
@@ -67,13 +67,13 @@ public final class ReflectiveDbInvoker {
 
 		synchronized (authDb) {
 
-			Boolean isAuthenticated = (Boolean) invokeMethod(DB_IS_AUTHENTICATED_METHOD, authDb);
+			Boolean isAuthenticated = (Boolean) ReflectionUtils.invokeMethod(DB_IS_AUTHENTICATED_METHOD, authDb);
 			if (!isAuthenticated) {
 
 				String username = credentials.getUsername();
 				String password = credentials.hasPassword() ? credentials.getPassword() : null;
 
-				Boolean authenticated = (Boolean) invokeMethod(DB_AUTHENTICATE_METHOD, authDb, username,
+				Boolean authenticated = (Boolean) ReflectionUtils.invokeMethod(DB_AUTHENTICATE_METHOD, authDb, username,
 						password == null ? null : password.toCharArray());
 				if (!authenticated) {
 					throw new CannotGetMongoDbConnectionException("Failed to authenticate to database [" + databaseName + "], "
@@ -91,11 +91,11 @@ public final class ReflectiveDbInvoker {
 	 */
 	public static void requestStart(DB db) {
 
-		if (isMongo3Driver()) {
+		if (MongoClientVersion.isMongo3Driver()) {
 			return;
 		}
 
-		invokeMethod(DB_REQUEST_START_METHOD, db);
+		ReflectionUtils.invokeMethod(DB_REQUEST_START_METHOD, db);
 	}
 
 	/**
@@ -106,11 +106,11 @@ public final class ReflectiveDbInvoker {
 	 */
 	public static void requestDone(DB db) {
 
-		if (isMongo3Driver()) {
+		if (MongoClientVersion.isMongo3Driver()) {
 			return;
 		}
 
-		invokeMethod(DB_REQUEST_DONE_METHOD, db);
+		ReflectionUtils.invokeMethod(DB_REQUEST_DONE_METHOD, db);
 	}
 
 	/**
@@ -125,7 +125,7 @@ public final class ReflectiveDbInvoker {
 			throw new UnsupportedOperationException("Please DB.command to call either the createUser or updateUser command");
 		}
 
-		invokeMethod(DB_ADD_USER_METHOD, db, username, password);
+		ReflectionUtils.invokeMethod(DB_ADD_USER_METHOD, db, username, password);
 	}
 
 }

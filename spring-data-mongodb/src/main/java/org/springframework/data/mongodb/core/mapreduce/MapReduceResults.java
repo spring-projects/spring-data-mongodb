@@ -15,10 +15,10 @@
  */
 package org.springframework.data.mongodb.core.mapreduce;
 
-import static org.springframework.util.Assert.*;
-
 import java.util.Iterator;
 import java.util.List;
+
+import org.springframework.util.Assert;
 
 import com.mongodb.DBObject;
 import com.mongodb.MapReduceOutput;
@@ -49,8 +49,8 @@ public class MapReduceResults<T> implements Iterable<T> {
 	@Deprecated
 	public MapReduceResults(List<T> mappedResults, DBObject rawResults) {
 
-		notNull(mappedResults);
-		notNull(rawResults);
+		Assert.notNull(mappedResults);
+		Assert.notNull(rawResults);
 
 		this.mappedResults = mappedResults;
 		this.rawResults = rawResults;
@@ -68,8 +68,8 @@ public class MapReduceResults<T> implements Iterable<T> {
 	 */
 	public MapReduceResults(List<T> mappedResults, MapReduceOutput mapReduceOutput) {
 
-		notNull(mappedResults, "MappedResults must not be null!");
-		notNull(mapReduceOutput, "MapReduceOutput must not be null!");
+		Assert.notNull(mappedResults, "MappedResults must not be null!");
+		Assert.notNull(mapReduceOutput, "MapReduceOutput must not be null!");
 
 		this.mappedResults = mappedResults;
 		this.rawResults = null;

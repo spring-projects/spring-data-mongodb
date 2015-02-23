@@ -30,7 +30,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.authentication.UserCredentials;
-import org.springframework.data.mongodb.ReflectiveDbInvoker;
 import org.springframework.scheduling.concurrent.ThreadPoolExecutorFactoryBean;
 
 import com.mongodb.DB;

@@ -27,9 +27,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.authentication.UserCredentials;
 import org.springframework.data.mongodb.MongoDbFactory;
-import org.springframework.data.mongodb.ReflectiveMongoOptionsInvoker;
 import org.springframework.data.mongodb.core.MongoFactoryBean;
 import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.ReflectiveMongoOptionsInvokerTestUtil;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.gridfs.GridFsOperations;
 import org.springframework.test.context.ContextConfiguration;
@@ -253,8 +253,8 @@ public class MongoNamespaceTests {
 
 		if (!isMongo3Driver()) {
 			assertEquals(true, mongoOpts.fsync);
-			assertEquals(true, ReflectiveMongoOptionsInvoker.getAutoConnectRetry(mongoOpts));
-			assertEquals(true, ReflectiveMongoOptionsInvoker.getSlaveOk(mongoOpts));
+			assertEquals(true, ReflectiveMongoOptionsInvokerTestUtil.getAutoConnectRetry(mongoOpts));
+			assertEquals(true, ReflectiveMongoOptionsInvokerTestUtil.getSlaveOk(mongoOpts));
 		} else {
 			assertEquals(false, mongoOpts.fsync);
 		}

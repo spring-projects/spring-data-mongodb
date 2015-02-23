@@ -13,12 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb;
+package org.springframework.data.mongodb.core;
 
 import static org.springframework.data.mongodb.MongoClientVersion.*;
 import static org.springframework.util.ReflectionUtils.*;
 
 import java.lang.reflect.Method;
+
+import org.springframework.data.mongodb.MongoClientVersion;
 
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
@@ -30,7 +32,7 @@ import com.mongodb.DBObject;
  * @author Christoph Strobl
  * @since 1.7
  */
-public class ReflectiveDBCollectionInvoker {
+class ReflectiveDBCollectionInvoker {
 
 	private static final Method GEN_INDEX_NAME_METHOD;
 	private static final Method RESET_INDEX_CHACHE_METHOD;

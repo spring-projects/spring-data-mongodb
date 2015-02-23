@@ -15,8 +15,6 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.springframework.util.Assert.*;
-
 import java.net.UnknownHostException;
 
 import org.springframework.beans.factory.DisposableBean;
@@ -24,6 +22,7 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.authentication.UserCredentials;
 import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.DB;
@@ -133,9 +132,10 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 	private SimpleMongoDbFactory(Mongo mongo, String databaseName, UserCredentials credentials,
 			boolean mongoInstanceCreated, String authenticationDatabaseName) {
 
-		notNull(mongo, "Mongo must not be null");
-		hasText(databaseName, "Database name must not be empty");
-		isTrue(databaseName.matches("[\\w-]+"), "Database name must only contain letters, numbers, underscores and dashes!");
+		Assert.notNull(mongo, "Mongo must not be null");
+		Assert.hasText(databaseName, "Database name must not be empty");
+		Assert.isTrue(databaseName.matches("[\\w-]+"),
+				"Database name must only contain letters, numbers, underscores and dashes!");
 
 		this.mongo = mongo;
 		this.databaseName = databaseName;
@@ -145,7 +145,7 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 		this.authenticationDatabaseName = StringUtils.hasText(authenticationDatabaseName) ? authenticationDatabaseName
 				: databaseName;
 
-		isTrue(this.authenticationDatabaseName.matches("[\\w-]+"),
+		Assert.isTrue(this.authenticationDatabaseName.matches("[\\w-]+"),
 				"Authentication database name must only contain letters, numbers, underscores and dashes!");
 	}
 
@@ -157,8 +157,8 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 	 */
 	private SimpleMongoDbFactory(MongoClient client, String databaseName, boolean mongoInstanceCreated) {
 
-		notNull(client, "MongoClient must not be null!");
-		hasText(databaseName, "Database name must not be empty!");
+		Assert.notNull(client, "MongoClient must not be null!");
+		Assert.hasText(databaseName, "Database name must not be empty!");
 
 		this.mongo = client;
 		this.databaseName = databaseName;
@@ -191,7 +191,7 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 	 */
 	public DB getDb(String dbName) throws DataAccessException {
 
-		hasText(dbName, "Database name must not be empty.");
+		Assert.hasText(dbName, "Database name must not be empty.");
 
 		DB db = MongoDbUtils.getDB(mongo, dbName, credentials, authenticationDatabaseName);
 

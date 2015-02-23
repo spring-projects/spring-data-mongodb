@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb;
 
-import static org.springframework.util.ClassUtils.*;
+import org.springframework.util.ClassUtils;
 
 /**
  * {@link MongoClientVersion} holds information about the used mongo-java client and is used to distinguish between
@@ -26,9 +26,9 @@ import static org.springframework.util.ClassUtils.*;
  */
 public class MongoClientVersion {
 
-	private static final boolean IS_MONGO_30 = isPresent("com.mongodb.binding.SingleServerBinding",
+	private static final boolean IS_MONGO_30 = ClassUtils.isPresent("com.mongodb.binding.SingleServerBinding",
 			MongoClientVersion.class.getClassLoader());
-	private static final boolean IS_ASYNC_CLIENT = isPresent("com.mongodb.async.client.MongoClient",
+	private static final boolean IS_ASYNC_CLIENT = ClassUtils.isPresent("com.mongodb.async.client.MongoClient",
 			MongoClientVersion.class.getClassLoader());
 
 	/**

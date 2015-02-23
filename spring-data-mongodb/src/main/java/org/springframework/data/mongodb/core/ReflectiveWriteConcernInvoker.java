@@ -13,11 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb;
-
-import static org.springframework.data.mongodb.MongoClientVersion.*;
+package org.springframework.data.mongodb.core;
 
 import org.springframework.beans.DirectFieldAccessor;
+import org.springframework.data.mongodb.MongoClientVersion;
 
 import com.mongodb.WriteConcern;
 
@@ -28,14 +27,14 @@ import com.mongodb.WriteConcern;
  * @author Christoph Strobl
  * @since 1.7
  */
-public class ReflectiveWriteConcernInvoker {
+class ReflectiveWriteConcernInvoker {
 
 	private static final WriteConcern NONE_OR_UNACKNOWLEDGED;
 
 	static {
 
-		NONE_OR_UNACKNOWLEDGED = isMongo3Driver() ? WriteConcern.UNACKNOWLEDGED : (WriteConcern) new DirectFieldAccessor(
-				new WriteConcern()).getPropertyValue("NONE");
+		NONE_OR_UNACKNOWLEDGED = MongoClientVersion.isMongo3Driver() ? WriteConcern.UNACKNOWLEDGED
+				: (WriteConcern) new DirectFieldAccessor(new WriteConcern()).getPropertyValue("NONE");
 	}
 
 	/**

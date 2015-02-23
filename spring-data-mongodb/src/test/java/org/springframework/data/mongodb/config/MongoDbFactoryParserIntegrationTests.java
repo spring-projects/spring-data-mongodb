@@ -19,7 +19,6 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 import static org.junit.Assume.*;
 import static org.springframework.data.mongodb.MongoClientVersion.*;
-import static org.springframework.data.mongodb.ReflectiveMongoOptionsInvoker.*;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -34,6 +33,7 @@ import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.core.ReflectiveMongoOptionsInvokerTestUtil;
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -140,7 +140,7 @@ public class MongoDbFactoryParserIntegrationTests {
 
 		reader.loadBeanDefinitions(new ClassPathResource("namespace/db-factory-bean.xml"));
 		Mongo mongo = factory.getBean(Mongo.class);
-		assertThat(getMaxAutoConnectRetryTime(mongo.getMongoOptions()), is(27L));
+		assertThat(ReflectiveMongoOptionsInvokerTestUtil.getMaxAutoConnectRetryTime(mongo.getMongoOptions()), is(27L));
 	}
 
 	/**

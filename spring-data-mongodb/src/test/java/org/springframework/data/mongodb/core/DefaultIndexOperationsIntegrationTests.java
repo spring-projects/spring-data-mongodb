@@ -17,7 +17,7 @@ package org.springframework.data.mongodb.core;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
-import static org.springframework.data.mongodb.ReflectiveDBCollectionInvoker.*;
+import static org.springframework.data.mongodb.core.ReflectiveDBCollectionInvoker.*;
 
 import org.junit.Before;
 import org.junit.Test;

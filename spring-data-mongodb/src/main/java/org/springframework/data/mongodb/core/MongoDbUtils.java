@@ -15,14 +15,12 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.springframework.data.mongodb.MongoClientVersion.*;
-import static org.springframework.data.mongodb.ReflectiveDbInvoker.*;
-import static org.springframework.util.Assert.*;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.authentication.UserCredentials;
+import org.springframework.data.mongodb.MongoClientVersion;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.util.Assert;
 
 import com.mongodb.DB;
 import com.mongodb.Mongo;
@@ -90,10 +88,10 @@ public abstract class MongoDbUtils {
 	public static DB getDB(Mongo mongo, String databaseName, UserCredentials credentials,
 			String authenticationDatabaseName) {
 
-		notNull(mongo, "No Mongo instance specified!");
-		hasText(databaseName, "Database name must be given!");
-		notNull(credentials, "Credentials must not be null, use UserCredentials.NO_CREDENTIALS!");
-		hasText(authenticationDatabaseName, "Authentication database name must not be null or empty!");
+		Assert.notNull(mongo, "No Mongo instance specified!");
+		Assert.hasText(databaseName, "Database name must be given!");
+		Assert.notNull(credentials, "Credentials must not be null, use UserCredentials.NO_CREDENTIALS!");
+		Assert.hasText(authenticationDatabaseName, "Authentication database name must not be null or empty!");
 
 		return doGetDB(mongo, databaseName, credentials, true, authenticationDatabaseName);
 	}
@@ -128,7 +126,7 @@ public abstract class MongoDbUtils {
 		DB db = mongo.getDB(databaseName);
 
 		if (requiresAuthDbAuthentication(credentials)) {
-			authenticate(mongo, db, credentials, authenticationDatabaseName);
+			ReflectiveDbInvoker.authenticate(mongo, db, credentials, authenticationDatabaseName);
 		}
 
 		// TX sync active, bind new database to thread
@@ -195,7 +193,7 @@ public abstract class MongoDbUtils {
 		if (db != null) {
 			LOGGER.debug("Closing Mongo DB object");
 			try {
-				requestDone(db);
+				ReflectiveDbInvoker.requestDone(db);
 			} catch (Throwable ex) {
 				LOGGER.debug("Unexpected exception on closing Mongo DB object", ex);
 			}
@@ -215,7 +213,7 @@ public abstract class MongoDbUtils {
 			return false;
 		}
 
-		return isMongo3Driver() ? false : true;
+		return !MongoClientVersion.isMongo3Driver();
 	}
 
 }

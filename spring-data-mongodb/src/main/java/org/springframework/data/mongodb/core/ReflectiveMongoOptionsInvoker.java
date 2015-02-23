@@ -13,14 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb;
-
-import static org.springframework.data.mongodb.MongoClientVersion.*;
-import static org.springframework.util.ReflectionUtils.*;
+package org.springframework.data.mongodb.core;
 
 import java.lang.reflect.Method;
 
 import org.springframework.beans.DirectFieldAccessor;
+import org.springframework.data.mongodb.MongoClientVersion;
+import org.springframework.util.ReflectionUtils;
 
 import com.mongodb.MongoOptions;
 
@@ -31,7 +30,7 @@ import com.mongodb.MongoOptions;
  * @author Christoph Strobl
  * @since 1.7
  */
-public class ReflectiveMongoOptionsInvoker {
+class ReflectiveMongoOptionsInvoker {
 
 	private static final Method GET_AUTO_CONNECT_RETRY_METHOD;
 	private static final Method SET_AUTO_CONNECT_RETRY_METHOD;
@@ -40,10 +39,13 @@ public class ReflectiveMongoOptionsInvoker {
 
 	static {
 
-		SET_AUTO_CONNECT_RETRY_METHOD = findMethod(MongoOptions.class, "setAutoConnectRetry", boolean.class);
-		GET_AUTO_CONNECT_RETRY_METHOD = findMethod(MongoOptions.class, "isAutoConnectRetry");
-		SET_MAX_AUTO_CONNECT_RETRY_TIME_METHOD = findMethod(MongoOptions.class, "setMaxAutoConnectRetryTime", long.class);
-		GET_MAX_AUTO_CONNECT_RETRY_TIME_METHOD = findMethod(MongoOptions.class, "getMaxAutoConnectRetryTime");
+		SET_AUTO_CONNECT_RETRY_METHOD = ReflectionUtils
+				.findMethod(MongoOptions.class, "setAutoConnectRetry", boolean.class);
+		GET_AUTO_CONNECT_RETRY_METHOD = ReflectionUtils.findMethod(MongoOptions.class, "isAutoConnectRetry");
+		SET_MAX_AUTO_CONNECT_RETRY_TIME_METHOD = ReflectionUtils.findMethod(MongoOptions.class,
+				"setMaxAutoConnectRetryTime", long.class);
+		GET_MAX_AUTO_CONNECT_RETRY_TIME_METHOD = ReflectionUtils.findMethod(MongoOptions.class,
+				"getMaxAutoConnectRetryTime");
 	}
 
 	private ReflectiveMongoOptionsInvoker() {}
@@ -57,10 +59,10 @@ public class ReflectiveMongoOptionsInvoker {
 	 */
 	public static void setAutoConnectRetry(MongoOptions options, boolean autoConnectRetry) {
 
-		if (isMongo3Driver()) {
+		if (MongoClientVersion.isMongo3Driver()) {
 			return;
 		}
-		invokeMethod(SET_AUTO_CONNECT_RETRY_METHOD, options, autoConnectRetry);
+		ReflectionUtils.invokeMethod(SET_AUTO_CONNECT_RETRY_METHOD, options, autoConnectRetry);
 	}
 
 	/**
@@ -72,10 +74,10 @@ public class ReflectiveMongoOptionsInvoker {
 	 */
 	public static void setMaxAutoConnectRetryTime(MongoOptions options, long maxAutoConnectRetryTime) {
 
-		if (isMongo3Driver()) {
+		if (MongoClientVersion.isMongo3Driver()) {
 			return;
 		}
-		invokeMethod(SET_MAX_AUTO_CONNECT_RETRY_TIME_METHOD, options, maxAutoConnectRetryTime);
+		ReflectionUtils.invokeMethod(SET_MAX_AUTO_CONNECT_RETRY_TIME_METHOD, options, maxAutoConnectRetryTime);
 	}
 
 	/**
@@ -87,7 +89,7 @@ public class ReflectiveMongoOptionsInvoker {
 	 */
 	public static void setSlaveOk(MongoOptions options, boolean slaveOk) {
 
-		if (isMongo3Driver()) {
+		if (MongoClientVersion.isMongo3Driver()) {
 			return;
 		}
 		new DirectFieldAccessor(options).setPropertyValue("slaveOk", slaveOk);
@@ -103,7 +105,7 @@ public class ReflectiveMongoOptionsInvoker {
 	 */
 	public static boolean getSlaveOk(MongoOptions options) {
 
-		if (isMongo3Driver()) {
+		if (MongoClientVersion.isMongo3Driver()) {
 			throw new UnsupportedOperationException(
 					"Cannot get value for autoConnectRetry which has been removed in mongo-java-driver version 3.");
 		}
@@ -120,11 +122,11 @@ public class ReflectiveMongoOptionsInvoker {
 	 */
 	public static boolean getAutoConnectRetry(MongoOptions options) {
 
-		if (isMongo3Driver()) {
+		if (MongoClientVersion.isMongo3Driver()) {
 			throw new UnsupportedOperationException(
 					"Cannot get value for autoConnectRetry which has been removed in mongo-java-driver version 3.");
 		}
-		return ((Boolean) invokeMethod(GET_AUTO_CONNECT_RETRY_METHOD, options)).booleanValue();
+		return ((Boolean) ReflectionUtils.invokeMethod(GET_AUTO_CONNECT_RETRY_METHOD, options)).booleanValue();
 	}
 
 	/**
@@ -137,11 +139,11 @@ public class ReflectiveMongoOptionsInvoker {
 	 */
 	public static long getMaxAutoConnectRetryTime(MongoOptions options) {
 
-		if (isMongo3Driver()) {
+		if (MongoClientVersion.isMongo3Driver()) {
 			throw new UnsupportedOperationException(
 					"Cannot get value for maxAutoConnectRetryTime which has been removed in mongo-java-driver version 3.");
 		}
 
-		return ((Long) invokeMethod(GET_MAX_AUTO_CONNECT_RETRY_TIME_METHOD, options)).longValue();
+		return ((Long) ReflectionUtils.invokeMethod(GET_MAX_AUTO_CONNECT_RETRY_TIME_METHOD, options)).longValue();
 	}
 }

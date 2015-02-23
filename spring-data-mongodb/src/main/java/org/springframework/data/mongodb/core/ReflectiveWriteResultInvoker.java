@@ -13,12 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb;
+package org.springframework.data.mongodb.core;
 
-import static org.springframework.data.mongodb.MongoClientVersion.*;
 import static org.springframework.util.ReflectionUtils.*;
 
 import java.lang.reflect.Method;
+
+import org.springframework.data.mongodb.MongoClientVersion;
+import org.springframework.util.ReflectionUtils;
 
 import com.mongodb.MongoException;
 import com.mongodb.WriteResult;
@@ -30,7 +32,7 @@ import com.mongodb.WriteResult;
  * @author Christoph Strobl
  * @since 1.7
  */
-public final class ReflectiveWriteResultInvoker {
+final class ReflectiveWriteResultInvoker {
 
 	private static final Method GET_ERROR_METHOD;
 	private static final Method WAS_ACKNOWLEDGED_METHOD;
@@ -49,7 +51,7 @@ public final class ReflectiveWriteResultInvoker {
 	 */
 	public static String getError(WriteResult writeResult) {
 
-		if (isMongo3Driver()) {
+		if (MongoClientVersion.isMongo3Driver()) {
 			return null;
 		}
 
@@ -61,7 +63,8 @@ public final class ReflectiveWriteResultInvoker {
 	 * @return return in case of mongo-java-driver version 2.
 	 */
 	public static boolean wasAcknowledged(WriteResult writeResult) {
-		return isMongo3Driver() ? ((Boolean) invokeMethod(WAS_ACKNOWLEDGED_METHOD, writeResult)).booleanValue() : true;
+		return MongoClientVersion.isMongo3Driver() ? ((Boolean) ReflectionUtils.invokeMethod(WAS_ACKNOWLEDGED_METHOD,
+				writeResult)).booleanValue() : true;
 	}
 
 }

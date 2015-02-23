@@ -13,12 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb;
+package org.springframework.data.mongodb.core.convert;
 
-import static org.springframework.util.Assert.*;
 import static org.springframework.util.ReflectionUtils.*;
 
 import java.lang.reflect.Method;
+
+import org.springframework.data.mongodb.MongoClientVersion;
+import org.springframework.util.Assert;
+import org.springframework.util.ReflectionUtils;
 
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
@@ -32,7 +35,7 @@ import com.mongodb.DBRef;
  * @author Christoph Strobl
  * @since 1.7
  */
-public class ReflectiveDBRefResolver {
+class ReflectiveDBRefResolver {
 
 	private static final Method FETCH_METHOD;
 
@@ -51,13 +54,13 @@ public class ReflectiveDBRefResolver {
 	 */
 	public static DBObject fetch(DB db, DBRef ref) {
 
-		notNull(ref, "DBRef to fetch must not be null!");
+		Assert.notNull(ref, "DBRef to fetch must not be null!");
 
 		if (MongoClientVersion.isMongo3Driver()) {
 			return db.getCollection(ref.getCollectionName()).findOne(ref.getId());
 		}
 
-		return (DBObject) invokeMethod(FETCH_METHOD, ref);
+		return (DBObject) ReflectionUtils.invokeMethod(FETCH_METHOD, ref);
 	}
 
 }

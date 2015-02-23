@@ -15,9 +15,7 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static java.util.Arrays.*;
-import static org.springframework.util.ClassUtils.*;
-
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -29,6 +27,7 @@ import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mongodb.UncategorizedMongoDbException;
+import org.springframework.util.ClassUtils;
 
 import com.mongodb.MongoException;
 
@@ -43,16 +42,18 @@ import com.mongodb.MongoException;
  */
 public class MongoExceptionTranslator implements PersistenceExceptionTranslator {
 
-	private static final Set<String> DULICATE_KEY_EXCEPTIONS = new HashSet<String>(asList("MongoException.DuplicateKey",
-			"DuplicateKeyException"));
+	private static final Set<String> DULICATE_KEY_EXCEPTIONS = new HashSet<String>(Arrays.asList(
+			"MongoException.DuplicateKey", "DuplicateKeyException"));
 
-	private static final Set<String> RESOURCE_FAILURE_EXCEPTIONS = new HashSet<String>(asList("MongoException.Network",
-			"MongoSocketException", "MongoException.CursorNotFound", "MongoCursorNotFoundException",
-			"MongoServerSelectionException", "MongoTimeoutException"));
+	private static final Set<String> RESOURCE_FAILURE_EXCEPTIONS = new HashSet<String>(Arrays.asList(
+			"MongoException.Network", "MongoSocketException", "MongoException.CursorNotFound",
+			"MongoCursorNotFoundException", "MongoServerSelectionException", "MongoTimeoutException"));
 
-	private static final Set<String> RESOURCE_USAGE_EXCEPTIONS = new HashSet<String>(asList("MongoInternalException"));
+	private static final Set<String> RESOURCE_USAGE_EXCEPTIONS = new HashSet<String>(
+			Arrays.asList("MongoInternalException"));
 
-	private static final Set<String> DATA_INTEGRETY_EXCEPTIONS = new HashSet<String>(asList("WriteConcernException"));
+	private static final Set<String> DATA_INTEGRETY_EXCEPTIONS = new HashSet<String>(
+			Arrays.asList("WriteConcernException"));
 
 	/*
 	 * (non-Javadoc)
@@ -62,7 +63,7 @@ public class MongoExceptionTranslator implements PersistenceExceptionTranslator 
 
 		// Check for well-known MongoException subclasses.
 
-		String exception = getShortName(getUserClass(ex.getClass()));
+		String exception = ClassUtils.getShortName(ClassUtils.getUserClass(ex.getClass()));
 
 		if (DULICATE_KEY_EXCEPTIONS.contains(exception)) {
 			return new DuplicateKeyException(ex.getMessage(), ex);
