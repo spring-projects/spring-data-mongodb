@@ -19,11 +19,14 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
 import java.util.Arrays;
+import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.repository.Person;
 import org.springframework.data.mongodb.repository.QPerson;
@@ -76,5 +79,19 @@ public class QueryDslMongoRepositoryIntegrationTests {
 		assertThat(repository.exists(person.firstname.eq("Dave")), is(true));
 		assertThat(repository.exists(person.firstname.eq("Unknown")), is(false));
 		assertThat(repository.exists((Predicate) null), is(true));
+	}
+
+	/**
+	 * @see DATAMONGO-1167
+	 */
+	@Test
+	public void shouldSupportFindAllWithPredicateAndSort() {
+
+		List<Person> users = repository.findAll(person.lastname.isNotNull(), new Sort(Direction.ASC, "firstname"));
+
+		assertThat(users, hasSize(3));
+		assertThat(users.get(0).getFirstname(), is(carter.getFirstname()));
+		assertThat(users.get(2).getFirstname(), is(oliver.getFirstname()));
+		assertThat(users, hasItems(carter, dave, oliver));
 	}
 }
