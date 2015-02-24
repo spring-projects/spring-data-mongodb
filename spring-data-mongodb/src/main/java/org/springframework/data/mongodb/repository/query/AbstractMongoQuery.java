@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.repository.query;
 import java.util.Collections;
 import java.util.List;
 
+import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -27,16 +28,21 @@ import org.springframework.data.geo.GeoPage;
 import org.springframework.data.geo.GeoResult;
 import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Point;
+import org.springframework.data.mongodb.core.CollectionCallback;
 import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.util.CloseableIterator;
+import org.springframework.data.mongodb.util.CloseableIterableCusorAdapter;
 import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.repository.query.RepositoryQuery;
+import org.springframework.data.util.CloseableIterator;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
-import org.springframework.util.ClassUtils;
 
+import com.mongodb.DBCollection;
+import com.mongodb.DBObject;
+import com.mongodb.MongoException;
 import com.mongodb.WriteResult;
 
 /**
@@ -420,19 +426,28 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 
 	final class StreamExecution extends Execution {
 
-		private final boolean IS_JAVA_7 = ClassUtils.isPresent("java.lang.AutoCloseable",
-				StreamExecution.class.getClassLoader());
-
 		@Override
-		Object execute(Query query) {
+		Object execute(final Query query) {
 
-			Class<?> entityType = getQueryMethod().getEntityInformation().getJavaType();
-			CloseableIterator<Object> result = operations.getStreamingMappingCursor(query, entityType);
-			return IS_JAVA_7 ? wrapInAutoCloseableIterator(result) : result;
-		}
+			final Class<?> entityType = getQueryMethod().getEntityInformation().getJavaType();
+			final QueryMapper queryMapper = operations.getQueryMapper();
 
-		private CloseableIterator<Object> wrapInAutoCloseableIterator(CloseableIterator<Object> iter) {
-			return new ForwardingAutoCloseableIterator<Object>(iter);
+			@SuppressWarnings("unchecked")
+			CloseableIterator<Object> result = (CloseableIterator<Object>) operations.execute(entityType,
+					new CollectionCallback<Object>() {
+
+						@Override
+						public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
+
+							DBObject mappedFields = queryMapper.getMappedFields(query.getFieldsObject(), entityType);
+							DBObject mappedQuery = queryMapper.getMappedObject(query.getQueryObject(), entityType);
+
+							return new CloseableIterableCusorAdapter<Object>(collection.find(mappedQuery, mappedFields), operations
+									.getConverter(), entityType);
+						}
+					});
+
+			return result;
 		}
 	}
 }

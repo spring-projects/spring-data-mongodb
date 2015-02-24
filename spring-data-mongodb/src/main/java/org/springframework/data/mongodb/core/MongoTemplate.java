@@ -95,7 +95,6 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
-import org.springframework.data.mongodb.util.CloseableIterator;
 import org.springframework.jca.cci.core.ConnectionCallback;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
@@ -104,7 +103,6 @@ import org.springframework.util.StringUtils;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.CommandResult;
-import com.mongodb.Cursor;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
@@ -312,6 +310,14 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 */
 	public MongoConverter getConverter() {
 		return this.mongoConverter;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.MongoOperations#getQueryMapper()
+	 */
+	@Override
+	public QueryMapper getQueryMapper() {
+		return queryMapper;
 	}
 
 	public String getCollectionName(Class<?> entityClass) {
@@ -2261,84 +2267,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			T doWith = delegate.doWith(content);
 
 			return new GeoResult<T>(doWith, new Distance(distance, metric));
-		}
-	}
-
-	@Override
-	public CloseableIterator<Object> getStreamingMappingCursor(Query query, Class<?> entityClass) {
-
-		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
-
-		DBCollection collection = getCollection(getCollectionName(entityClass));
-
-		DBObject mappedFields = queryMapper.getMappedFields(query.getFieldsObject(), entity);
-		DBObject mappedQuery = queryMapper.getMappedObject(query.getQueryObject(), entity);
-
-		return new CloseableIterableCusorAdapter(collection.find(mappedQuery, mappedFields), mongoConverter, entityClass);
-	}
-
-	static class CloseableIterableCusorAdapter implements CloseableIterator<Object> {
-
-		private volatile Cursor cursor;
-		private MongoConverter converter;
-		private Class<?> entityClass;
-
-		public CloseableIterableCusorAdapter(Cursor cursor, MongoConverter converter, Class<?> entityClass) {
-
-			this.cursor = cursor;
-			this.converter = converter;
-			this.entityClass = entityClass;
-		}
-
-		@Override
-		public boolean hasNext() {
-
-			if (cursor == null) {
-				return false;
-			}
-
-			try {
-				return cursor.hasNext();
-			} catch (Exception ex) {
-				throw new RuntimeException("error on hasNext");
-			}
-		}
-
-		@Override
-		public Object next() {
-
-			if (cursor == null) {
-				return null;
-			}
-
-			try {
-
-				DBObject item = cursor.next();
-				Object converted = converter.read(entityClass, item);
-
-				return converted;
-			} catch (Exception ex) {
-				throw new RuntimeException("error on next");
-			}
-		}
-
-		@Override
-		public void close() throws IOException {
-
-			Cursor c = cursor;
-			try {
-				c.close();
-			} finally {
-
-				cursor = null;
-				converter = null;
-				entityClass = null;
-			}
-		}
-
-		@Override
-		public Iterator<Object> iterator() {
-			return this;
 		}
 	}
 }

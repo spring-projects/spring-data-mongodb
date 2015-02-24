@@ -24,6 +24,7 @@ import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.mapreduce.GroupBy;
 import org.springframework.data.mongodb.core.mapreduce.GroupByResults;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
@@ -33,7 +34,6 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
-import org.springframework.data.mongodb.util.CloseableIterator;
 
 import com.mongodb.CommandResult;
 import com.mongodb.DBCollection;
@@ -961,5 +961,10 @@ public interface MongoOperations {
 	 */
 	MongoConverter getConverter();
 
-	CloseableIterator<Object> getStreamingMappingCursor(Query query, Class<?> entityType);
+	/**
+	 * Returns the underlying {@link QueryMapper}.
+	 * 
+	 * @return
+	 */
+	QueryMapper getQueryMapper();
 }

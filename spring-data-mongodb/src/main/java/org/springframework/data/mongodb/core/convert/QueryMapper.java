@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2014 the original author or authors.
+ * Copyright 2011-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -83,6 +83,23 @@ public class QueryMapper {
 
 	/**
 	 * Replaces the property keys used in the given {@link DBObject} with the appropriate keys by using the
+	 * {@link PersistentEntity} metadata linked with the given {@code entityClass}.
+	 * 
+	 * @see #getMappedObject(DBObject, MongoPersistentEntity)
+	 * @param query must not be {@literal null}.
+	 * @param entityClass must not be {@literal null}.
+	 * @return
+	 * @since 1.7
+	 */
+	public DBObject getMappedObject(DBObject query, Class<?> entityClass) {
+
+		Assert.notNull(entityClass, "Entity class must not be null!");
+
+		return getMappedObject(query, mappingContext.getPersistentEntity(entityClass));
+	}
+
+	/**
+	 * Replaces the property keys used in the given {@link DBObject} with the appropriate keys by using the
 	 * {@link PersistentEntity} metadata.
 	 * 
 	 * @param query must not be {@literal null}.
@@ -145,8 +162,25 @@ public class QueryMapper {
 	}
 
 	/**
+	 * Maps fields to retrieve to the {@link MongoPersistentEntity}s properties linked to the given {@code entityClass}.
+	 * <p>
+	 * 
+	 * @see QueryMapper#getMappedFields(DBObject, MongoPersistentEntity)
+	 * @param fieldsObject
+	 * @param entityClass must not be {@literal null}
+	 * @return
+	 * @since 1.7
+	 */
+	public DBObject getMappedFields(DBObject fieldsObject, Class<?> entityClass) {
+
+		Assert.notNull(entityClass, "Entity class must not be null!");
+
+		return getMappedFields(fieldsObject, mappingContext.getPersistentEntity(entityClass));
+	}
+
+	/**
 	 * Maps fields to retrieve to the {@link MongoPersistentEntity}s properties. <br />
-	 * Also onverts and potentially adds missing property {@code $meta} representation.
+	 * Also converts and potentially adds missing property {@code $meta} representation.
 	 * 
 	 * @param fieldsObject
 	 * @param entity
@@ -283,7 +317,7 @@ public class QueryMapper {
 				} else if (valueDbo.containsField("$ne")) {
 					resultDbo.put("$ne", convertId(valueDbo.get("$ne")));
 				} else {
-					return getMappedObject(resultDbo, null);
+					return getMappedObject(resultDbo, (MongoPersistentEntity<?>) null);
 				}
 
 				return resultDbo;
