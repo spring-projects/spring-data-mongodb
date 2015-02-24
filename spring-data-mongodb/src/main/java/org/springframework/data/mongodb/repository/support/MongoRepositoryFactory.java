@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2012 the original author or authors.
+ * Copyright 2010-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,6 +32,7 @@ import org.springframework.data.mongodb.repository.query.PartTreeMongoQuery;
 import org.springframework.data.mongodb.repository.query.StringBasedMongoQuery;
 import org.springframework.data.querydsl.QueryDslPredicateExecutor;
 import org.springframework.data.repository.core.NamedQueries;
+import org.springframework.data.repository.core.RepositoryInformation;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.core.support.RepositoryFactorySupport;
 import org.springframework.data.repository.query.QueryLookupStrategy;
@@ -52,11 +53,12 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 	/**
 	 * Creates a new {@link MongoRepositoryFactory} with the given {@link MongoOperations}.
 	 * 
-	 * @param mongoOperations must not be {@literal null}
+	 * @param mongoOperations must not be {@literal null}.
 	 */
 	public MongoRepositoryFactory(MongoOperations mongoOperations) {
 
 		Assert.notNull(mongoOperations);
+
 		this.mongoOperations = mongoOperations;
 		this.mappingContext = mongoOperations.getConverter().getMappingContext();
 	}
@@ -67,31 +69,22 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 	 */
 	@Override
 	protected Class<?> getRepositoryBaseClass(RepositoryMetadata metadata) {
-		return isQueryDslRepository(metadata.getRepositoryInterface()) ? QueryDslMongoRepository.class
-				: SimpleMongoRepository.class;
+
+		boolean isQueryDslRepository = QUERY_DSL_PRESENT
+				&& QueryDslPredicateExecutor.class.isAssignableFrom(metadata.getRepositoryInterface());
+
+		return isQueryDslRepository ? QueryDslMongoRepository.class : SimpleMongoRepository.class;
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.core.support.RepositoryFactorySupport#getTargetRepository(org.springframework.data.repository.core.RepositoryMetadata)
+	 * @see org.springframework.data.repository.core.support.RepositoryFactorySupport#getTargetRepository(org.springframework.data.repository.core.RepositoryInformation)
 	 */
 	@Override
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	protected Object getTargetRepository(RepositoryMetadata metadata) {
+	protected Object getTargetRepository(RepositoryInformation information) {
 
-		Class<?> repositoryInterface = metadata.getRepositoryInterface();
-		MongoEntityInformation<?, Serializable> entityInformation = getEntityInformation(metadata.getDomainType());
-
-		if (isQueryDslRepository(repositoryInterface)) {
-			return new QueryDslMongoRepository(entityInformation, mongoOperations);
-		} else {
-			return new SimpleMongoRepository(entityInformation, mongoOperations);
-		}
-	}
-
-	private static boolean isQueryDslRepository(Class<?> repositoryInterface) {
-
-		return QUERY_DSL_PRESENT && QueryDslPredicateExecutor.class.isAssignableFrom(repositoryInterface);
+		MongoEntityInformation<?, Serializable> entityInformation = getEntityInformation(information.getDomainType());
+		return getTargetRepositoryViaReflection(information, entityInformation, mongoOperations);
 	}
 
 	/*
@@ -101,6 +94,24 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 	@Override
 	protected QueryLookupStrategy getQueryLookupStrategy(Key key) {
 		return new MongoQueryLookupStrategy();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.core.support.RepositoryFactorySupport#getEntityInformation(java.lang.Class)
+	 */
+	@Override
+	@SuppressWarnings("unchecked")
+	public <T, ID extends Serializable> MongoEntityInformation<T, ID> getEntityInformation(Class<T> domainClass) {
+
+		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(domainClass);
+
+		if (entity == null) {
+			throw new MappingException(String.format("Could not lookup mapping metadata for domain class %s!",
+					domainClass.getName()));
+		}
+
+		return new MappingMongoEntityInformation<T, ID>((MongoPersistentEntity<T>) entity);
 	}
 
 	/**
@@ -128,23 +139,5 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 				return new PartTreeMongoQuery(queryMethod, mongoOperations);
 			}
 		}
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.core.support.RepositoryFactorySupport#getEntityInformation(java.lang.Class)
-	 */
-	@Override
-	@SuppressWarnings("unchecked")
-	public <T, ID extends Serializable> MongoEntityInformation<T, ID> getEntityInformation(Class<T> domainClass) {
-
-		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(domainClass);
-
-		if (entity == null) {
-			throw new MappingException(String.format("Could not lookup mapping metadata for domain class %s!",
-					domainClass.getName()));
-		}
-
-		return new MappingMongoEntityInformation<T, ID>((MongoPersistentEntity<T>) entity);
 	}
 }
