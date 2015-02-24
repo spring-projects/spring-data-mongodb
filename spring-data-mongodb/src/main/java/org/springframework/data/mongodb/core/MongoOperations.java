@@ -20,11 +20,14 @@ import java.util.List;
 import java.util.Set;
 
 import org.springframework.data.geo.GeoResults;
+import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapreduce.GroupBy;
 import org.springframework.data.mongodb.core.mapreduce.GroupByResults;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
@@ -967,4 +970,12 @@ public interface MongoOperations {
 	 * @return
 	 */
 	QueryMapper getQueryMapper();
+
+	/**
+	 * Returns the underlying {@link MappingContext}.
+	 * 
+	 * @return
+	 * @since 1.7
+	 */
+	MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> getMappingContext();
 }

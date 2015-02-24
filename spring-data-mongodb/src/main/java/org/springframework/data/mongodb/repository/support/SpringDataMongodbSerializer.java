@@ -100,7 +100,7 @@ class SpringDataMongodbSerializer extends MongodbSerializer {
 	protected DBObject asDBObject(String key, Object value) {
 
 		if (ID_KEY.equals(key)) {
-			return mapper.getMappedObject(super.asDBObject(key, value), (MongoPersistentEntity<?>) null);
+			return mapper.getMappedObject(super.asDBObject(key, value), null);
 		}
 
 		return super.asDBObject(key, value instanceof Pattern ? value : converter.convertToMongoType(value));

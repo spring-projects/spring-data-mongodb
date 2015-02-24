@@ -17,6 +17,9 @@ package org.springframework.data.mongodb.repository.query;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Spliterator;
+import java.util.Spliterators;
+import java.util.stream.StreamSupport;
 
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.PageImpl;
@@ -31,16 +34,19 @@ import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.CollectionCallback;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.util.CloseableIterableCusorAdapter;
 import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.util.CloseableIterator;
+import org.springframework.data.util.CloseableIteratorDisposingRunnable;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
 
 import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.MongoException;
 import com.mongodb.WriteResult;
@@ -91,11 +97,11 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 
 		applyQueryMetaAttributesWhenPresent(query);
 
-		if (method.isStreamQuery()) {
+		if (method.isCloseableIteratorQuery()) {
+			return new CursorBackedExecution().execute(query);
+		} else if (method.isStreamQuery()) {
 			return new StreamExecution().execute(query);
-		}
-
-		if (isDeleteQuery()) {
+		} else if (isDeleteQuery()) {
 			return new DeleteExecution().execute(query);
 		} else if (method.isGeoNearQuery() && method.isPageQuery()) {
 
@@ -424,30 +430,54 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 		}
 	}
 
-	final class StreamExecution extends Execution {
+	/**
+	 * @author Thomas Darimont
+	 */
+	private class CursorBackedExecution extends Execution {
 
 		@Override
 		Object execute(final Query query) {
 
-			final Class<?> entityType = getQueryMethod().getEntityInformation().getJavaType();
-			final QueryMapper queryMapper = operations.getQueryMapper();
+			Class<?> javaType = getQueryMethod().getEntityInformation().getJavaType();
+			QueryMapper queryMapper = operations.getQueryMapper();
 
-			@SuppressWarnings("unchecked")
-			CloseableIterator<Object> result = (CloseableIterator<Object>) operations.execute(entityType,
-					new CollectionCallback<Object>() {
+			return createCursorAndWrapInCloseableIterator(query, javaType, queryMapper);
+		}
 
-						@Override
-						public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
+		@SuppressWarnings("unchecked")
+		private CloseableIterator<Object> createCursorAndWrapInCloseableIterator(final Query query,
+				final Class<?> entityType, final QueryMapper queryMapper) {
 
-							DBObject mappedFields = queryMapper.getMappedFields(query.getFieldsObject(), entityType);
-							DBObject mappedQuery = queryMapper.getMappedObject(query.getQueryObject(), entityType);
+			final MongoPersistentEntity<?> persistentEntity = operations.getMappingContext().getPersistentEntity(entityType);
 
-							return new CloseableIterableCusorAdapter<Object>(collection.find(mappedQuery, mappedFields), operations
-									.getConverter(), entityType);
-						}
-					});
+			return (CloseableIterator<Object>) operations.execute(entityType, new CollectionCallback<Object>() {
 
-			return result;
+				@Override
+				public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
+
+					DBObject mappedFields = queryMapper.getMappedFields(query.getFieldsObject(), persistentEntity);
+					DBObject mappedQuery = queryMapper.getMappedObject(query.getQueryObject(), persistentEntity);
+
+					DBCursor cursor = collection.find(mappedQuery, mappedFields);
+
+					return new CloseableIterableCusorAdapter<Object>(cursor, operations.getConverter(), entityType);
+				}
+			});
+		}
+	}
+
+	/**
+	 * @author Thomas Darimont
+	 */
+	final class StreamExecution extends CursorBackedExecution {
+
+		@Override
+		Object execute(Query query) {
+
+			CloseableIterator<Object> result = (CloseableIterator<Object>) super.execute(query);
+			Spliterator<Object> spliterator = Spliterators.spliteratorUnknownSize(result, Spliterator.NONNULL);
+
+			return StreamSupport.stream(spliterator, false).onClose(new CloseableIteratorDisposingRunnable(result));
 		}
 	}
 }

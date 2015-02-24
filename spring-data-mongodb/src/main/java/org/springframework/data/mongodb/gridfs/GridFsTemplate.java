@@ -26,7 +26,6 @@ import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
-import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -258,7 +257,7 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 	}
 
 	private DBObject getMappedQuery(DBObject query) {
-		return query == null ? null : queryMapper.getMappedObject(query, (MongoPersistentEntity<?>) null);
+		return query == null ? null : queryMapper.getMappedObject(query, null);
 	}
 
 	private GridFS getGridFs() {

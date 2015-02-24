@@ -320,6 +320,14 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		return queryMapper;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.MongoOperations#getMappingContext()
+	 */
+	@Override
+	public MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> getMappingContext() {
+		return mappingContext;
+	}
+
 	public String getCollectionName(Class<?> entityClass) {
 		return this.determineCollectionName(entityClass);
 	}

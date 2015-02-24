@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.repository;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -31,8 +32,8 @@ import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
 import org.springframework.data.mongodb.repository.Person.Sex;
-import org.springframework.data.mongodb.util.AutoCloseableIterator;
 import org.springframework.data.querydsl.QueryDslPredicateExecutor;
+import org.springframework.data.util.CloseableIterator;
 
 /**
  * Sample repository managing {@link Person} entities.
@@ -323,5 +324,8 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	List<Person> findByKeyValue(String key, String value);
 
 	@Query("{firstname:{$in:?0}}")
-	AutoCloseableIterator<Person> findByCustomQueryWithCursorByFirstnames(List<String> firstnames);
+	CloseableIterator<Person> findByCustomQueryWithCursorByFirstnames(List<String> firstnames);
+
+	@Query("{firstname:{$in:?0}}")
+	Stream<Person> findByCustomQueryWithStreamingCursorByFirstnames(List<String> firstnames);
 }

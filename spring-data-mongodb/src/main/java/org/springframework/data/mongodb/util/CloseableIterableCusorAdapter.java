@@ -15,10 +15,10 @@
  */
 package org.springframework.data.mongodb.util;
 
-import java.io.IOException;
 import java.util.Iterator;
 
 import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.util.CloseableIterator;
 
 import com.mongodb.Cursor;
 import com.mongodb.DBObject;
@@ -72,7 +72,7 @@ public class CloseableIterableCusorAdapter<T> implements CloseableIterator<T> {
 	}
 
 	@Override
-	public void close() throws IOException {
+	public void close() {
 
 		Cursor c = cursor;
 		try {

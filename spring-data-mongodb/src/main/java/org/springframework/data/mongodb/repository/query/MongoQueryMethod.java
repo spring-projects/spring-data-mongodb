@@ -32,7 +32,6 @@ import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.query.QueryMethod;
 import org.springframework.data.util.ClassTypeInformation;
-import org.springframework.data.util.CloseableIterator;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -233,11 +232,5 @@ public class MongoQueryMethod extends QueryMethod {
 		}
 
 		return metaAttributes;
-	}
-
-	public boolean isStreamQuery() {
-
-		Class<?> returnType = method.getReturnType();
-		return org.springframework.util.ClassUtils.isAssignable(CloseableIterator.class, returnType);
 	}
 }
