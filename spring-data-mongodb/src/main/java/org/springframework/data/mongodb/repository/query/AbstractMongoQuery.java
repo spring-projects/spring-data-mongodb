@@ -21,7 +21,6 @@ import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.stream.StreamSupport;
 
-import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -31,13 +30,9 @@ import org.springframework.data.geo.GeoPage;
 import org.springframework.data.geo.GeoResult;
 import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Point;
-import org.springframework.data.mongodb.core.CollectionCallback;
 import org.springframework.data.mongodb.core.MongoOperations;
-import org.springframework.data.mongodb.core.convert.QueryMapper;
-import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.util.CloseableIterableCusorAdapter;
 import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.util.CloseableIterator;
@@ -45,10 +40,6 @@ import org.springframework.data.util.CloseableIteratorDisposingRunnable;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
 
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
-import com.mongodb.MongoException;
 import com.mongodb.WriteResult;
 
 /**
@@ -437,33 +428,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 
 		@Override
 		Object execute(final Query query) {
-
-			Class<?> javaType = getQueryMethod().getEntityInformation().getJavaType();
-			QueryMapper queryMapper = operations.getQueryMapper();
-
-			return createCursorAndWrapInCloseableIterator(query, javaType, queryMapper);
-		}
-
-		@SuppressWarnings("unchecked")
-		private CloseableIterator<Object> createCursorAndWrapInCloseableIterator(final Query query,
-				final Class<?> entityType, final QueryMapper queryMapper) {
-
-			final MongoPersistentEntity<?> persistentEntity = operations.getMappingContext().getPersistentEntity(entityType);
-
-			return (CloseableIterator<Object>) operations.execute(entityType, new CollectionCallback<Object>() {
-
-				@Override
-				public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
-
-					DBObject mappedFields = queryMapper.getMappedFields(query.getFieldsObject(), persistentEntity);
-					DBObject mappedQuery = queryMapper.getMappedObject(query.getQueryObject(), persistentEntity);
-
-					DBCursor cursor = collection.find(mappedQuery, mappedFields);
-
-					return new CloseableIterableCusorAdapter<Object>(cursor, operations.getConverter(), operations
-							.getExceptionTranslator(), entityType);
-				}
-			});
+			return operations.executeAsStream(query, getQueryMethod().getEntityInformation().getJavaType());
 		}
 	}
 

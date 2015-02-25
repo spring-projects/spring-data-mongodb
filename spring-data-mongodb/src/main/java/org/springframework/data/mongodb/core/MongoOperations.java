@@ -19,16 +19,11 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.geo.GeoResults;
-import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
-import org.springframework.data.mongodb.core.convert.QueryMapper;
-import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
-import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapreduce.GroupBy;
 import org.springframework.data.mongodb.core.mapreduce.GroupByResults;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
@@ -38,8 +33,10 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.util.CloseableIterator;
 
 import com.mongodb.CommandResult;
+import com.mongodb.Cursor;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.WriteResult;
@@ -150,6 +147,20 @@ public interface MongoOperations {
 	 * @return a result object returned by the action or <tt>null</tt>
 	 */
 	<T> T executeInSession(DbCallback<T> action);
+
+	/**
+	 * Executes the given {@link Query} on the entity collection of the specified {@code entityType} backed by a Mongo DB
+	 * {@link Cursor}.
+	 * <p>
+	 * Returns a {@link CloseableIterator} that wraps the a Mongo DB {@link Cursor} that needs to be closed.
+	 * 
+	 * @param <T> element return type
+	 * @param query
+	 * @param entity
+	 * @return
+	 * @since 1.7
+	 */
+	<T> CloseableIterator<T> executeAsStream(Query query, Class<?> entityType);
 
 	/**
 	 * Create an uncapped collection with a name based on the provided entity class.
@@ -964,25 +975,4 @@ public interface MongoOperations {
 	 * @return
 	 */
 	MongoConverter getConverter();
-
-	/**
-	 * Returns the underlying {@link QueryMapper}.
-	 * 
-	 * @return
-	 */
-	QueryMapper getQueryMapper();
-
-	/**
-	 * Returns the underlying {@link MappingContext}.
-	 * 
-	 * @return
-	 * @since 1.7
-	 */
-	MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> getMappingContext();
-
-	/**
-	 * @return
-	 * @since 1.7
-	 */
-	PersistenceExceptionTranslator getExceptionTranslator();
 }

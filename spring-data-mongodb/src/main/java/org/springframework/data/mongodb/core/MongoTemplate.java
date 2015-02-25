@@ -95,6 +95,8 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.util.CloseableIterableCusorAdapter;
+import org.springframework.data.util.CloseableIterator;
 import org.springframework.jca.cci.core.ConnectionCallback;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
@@ -313,27 +315,27 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	}
 
 	/* (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.MongoOperations#getQueryMapper()
+	 * @see org.springframework.data.mongodb.core.MongoOperations#executeAsStream(org.springframework.data.mongodb.core.query.Query, java.lang.Class)
 	 */
 	@Override
-	public QueryMapper getQueryMapper() {
-		return queryMapper;
-	}
+	public <T> CloseableIterator<T> executeAsStream(final Query query, final Class<?> entityType) {
 
-	/* (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.MongoOperations#getMappingContext()
-	 */
-	@Override
-	public MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> getMappingContext() {
-		return mappingContext;
-	}
+		return execute(entityType, new CollectionCallback<CloseableIterator<T>>() {
 
-	/* (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.MongoOperations#getExceptionTranslator()
-	 */
-	@Override
-	public PersistenceExceptionTranslator getExceptionTranslator() {
-		return exceptionTranslator;
+			@Override
+			public CloseableIterator<T> doInCollection(DBCollection collection) throws MongoException, DataAccessException {
+
+				MongoPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(entityType);
+
+				DBObject mappedFields = queryMapper.getMappedFields(query.getFieldsObject(), persistentEntity);
+				DBObject mappedQuery = queryMapper.getMappedObject(query.getQueryObject(), persistentEntity);
+
+				DBCursor cursor = collection.find(mappedQuery, mappedFields);
+
+				return new CloseableIterableCusorAdapter<T>(cursor, mongoConverter, exceptionTranslator, entityType);
+			}
+		});
+
 	}
 
 	public String getCollectionName(Class<?> entityClass) {
