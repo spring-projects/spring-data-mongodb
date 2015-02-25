@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2013 the original author or authors.
+ * Copyright 2011-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import org.springframework.beans.factory.config.CustomEditorConfigurer;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.ManagedMap;
 import org.springframework.beans.factory.xml.BeanDefinitionParser;
+import org.springframework.data.mongodb.core.MongoClientOptionsFactoryBean;
 import org.springframework.data.mongodb.core.MongoOptionsFactoryBean;
 import org.springframework.util.xml.DomUtils;
 import org.w3c.dom.Element;
@@ -34,6 +35,7 @@ import org.w3c.dom.Element;
  * @author Mark Pollack
  * @author Oliver Gierke
  * @author Thomas Darimont
+ * @author Christoph Strobl
  */
 abstract class MongoParsingUtils {
 
@@ -88,6 +90,47 @@ abstract class MongoParsingUtils {
 	}
 
 	/**
+	 * @param element
+	 * @param mongoClientBuilder
+	 * @return
+	 * @since 1.7
+	 */
+	public static boolean parseMongoClientOptions(Element element, BeanDefinitionBuilder mongoClientBuilder) {
+
+		Element optionsElement = DomUtils.getChildElementByTagName(element, "client-options");
+		if (optionsElement == null) {
+			return false;
+		}
+
+		BeanDefinitionBuilder clientOptionsDefBuilder = BeanDefinitionBuilder
+				.genericBeanDefinition(MongoClientOptionsFactoryBean.class);
+
+		setPropertyValue(clientOptionsDefBuilder, optionsElement, "description", "description");
+		setPropertyValue(clientOptionsDefBuilder, optionsElement, "min-connections-per-host", "minConnectionsPerHost");
+		setPropertyValue(clientOptionsDefBuilder, optionsElement, "connections-per-host", "connectionsPerHost");
+		setPropertyValue(clientOptionsDefBuilder, optionsElement, "threads-allowed-to-block-for-connection-multiplier",
+				"threadsAllowedToBlockForConnectionMultiplier");
+		setPropertyValue(clientOptionsDefBuilder, optionsElement, "max-wait-time", "maxWaitTime");
+		setPropertyValue(clientOptionsDefBuilder, optionsElement, "max-connection-idle-time", "maxConnectionIdleTime");
+		setPropertyValue(clientOptionsDefBuilder, optionsElement, "max-connection-life-time", "maxConnectionLifeTime");
+		setPropertyValue(clientOptionsDefBuilder, optionsElement, "connect-timeout", "connectTimeout");
+		setPropertyValue(clientOptionsDefBuilder, optionsElement, "socket-timeout", "socketTimeout");
+		setPropertyValue(clientOptionsDefBuilder, optionsElement, "socket-keep-alive", "socketKeepAlive");
+		setPropertyValue(clientOptionsDefBuilder, optionsElement, "read-preference", "readPreference");
+		setPropertyValue(clientOptionsDefBuilder, optionsElement, "write-concern", "writeConcern");
+		setPropertyValue(clientOptionsDefBuilder, optionsElement, "heartbeat-frequency", "heartbeatFrequency");
+		setPropertyValue(clientOptionsDefBuilder, optionsElement, "min-heartbeat-frequency", "minHeartbeatFrequency");
+		setPropertyValue(clientOptionsDefBuilder, optionsElement, "heartbeat-connect-timeout", "heartbeatConnectTimeout");
+		setPropertyValue(clientOptionsDefBuilder, optionsElement, "heartbeat-socket-timeout", "heartbeatSocketTimeout");
+		setPropertyValue(clientOptionsDefBuilder, optionsElement, "ssl", "ssl");
+		setPropertyReference(clientOptionsDefBuilder, optionsElement, "ssl-socket-factory-ref", "sslSocketFactory");
+
+		mongoClientBuilder.addPropertyValue("mongoClientOptions", clientOptionsDefBuilder.getBeanDefinition());
+
+		return true;
+	}
+
+	/**
 	 * Returns the {@link BeanDefinitionBuilder} to build a {@link BeanDefinition} for a
 	 * {@link WriteConcernPropertyEditor}.
 	 * 
@@ -101,6 +144,40 @@ abstract class MongoParsingUtils {
 		BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(CustomEditorConfigurer.class);
 		builder.addPropertyValue("customEditors", customEditors);
 
+		return builder;
+	}
+
+	/**
+	 * Returns the {@link BeanDefinitionBuilder} to build a {@link BeanDefinition} for a
+	 * {@link ReadPreferencePropertyEditor}.
+	 * 
+	 * @return
+	 * @since 1.7
+	 */
+	static BeanDefinitionBuilder getReadPreferencePropertyEditorBuilder() {
+
+		Map<String, Class<?>> customEditors = new ManagedMap<String, Class<?>>();
+		customEditors.put("com.mongodb.ReadPreference", ReadPreferencePropertyEditor.class);
+
+		BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(CustomEditorConfigurer.class);
+		builder.addPropertyValue("customEditors", customEditors);
+
+		return builder;
+	}
+
+	/**
+	 * One should only register one bean definition but want to have the convenience of using
+	 * AbstractSingleBeanDefinitionParser but have the side effect of registering a 'default' property editor with the
+	 * container.
+	 */
+	static BeanDefinitionBuilder getServerAddressPropertyEditorBuilder() {
+
+		Map<String, String> customEditors = new ManagedMap<String, String>();
+		customEditors.put("com.mongodb.ServerAddress[]",
+				"org.springframework.data.mongodb.config.ServerAddressPropertyEditor");
+
+		BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(CustomEditorConfigurer.class);
+		builder.addPropertyValue("customEditors", customEditors);
 		return builder;
 	}
 }

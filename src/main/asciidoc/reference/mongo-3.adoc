@@ -18,6 +18,25 @@ Some of the configuration options have been changed / removed for the _mongo-jav
  * maxAutoConnectRetryTime
  * slaveOk
  
+Generally it is recommended to use the `<mongo:mongo-client ... />` and `<mongo:client-options ... />` elements instead of `<mongo:mongo ... />` when doing XML based configuration, since those elements will only provide you with attributes valid for the 3 generation java driver.
+
+[source,xml]
+----
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:mongo="http://www.springframework.org/schema/data/mongo"
+	xsi:schemaLocation="http://www.springframework.org/schema/data/mongo http://www.springframework.org/schema/data/mongo/spring-mongo.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+		
+  <mongo:mongo-client host="127.0.0.1" port="27017">
+    <mongo:client-options write-concern="NORMAL" />
+  </mongo:mongo-client>
+
+</beans>
+----
+
+ 
 === WriteConcern and WriteConcernChecking
 
 The `WriteConcern.NONE`, which had been used as default by Spring Data MongoDB, was removed in 3.0. Therefore in a MongoDB 3 environment the `WriteConcern` will be defaulted to `WriteConcern.UNACKNOWLEGED`. In case `WriteResultChecking.EXCEPTION` is enabled the `WriteConcern` will be altered to `WriteConcern.ACKNOWLEDGED` for write operations, as otherwise errors during execution would not be throw correctly, since simply not raised by the driver. 
