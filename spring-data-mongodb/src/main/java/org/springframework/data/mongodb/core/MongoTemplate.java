@@ -328,6 +328,14 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		return mappingContext;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.MongoOperations#getExceptionTranslator()
+	 */
+	@Override
+	public PersistenceExceptionTranslator getExceptionTranslator() {
+		return exceptionTranslator;
+	}
+
 	public String getCollectionName(Class<?> entityClass) {
 		return this.determineCollectionName(entityClass);
 	}

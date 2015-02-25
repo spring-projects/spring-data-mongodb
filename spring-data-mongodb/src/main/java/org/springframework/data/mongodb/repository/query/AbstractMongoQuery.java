@@ -460,7 +460,8 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 
 					DBCursor cursor = collection.find(mappedQuery, mappedFields);
 
-					return new CloseableIterableCusorAdapter<Object>(cursor, operations.getConverter(), entityType);
+					return new CloseableIterableCusorAdapter<Object>(cursor, operations.getConverter(), operations
+							.getExceptionTranslator(), entityType);
 				}
 			});
 		}

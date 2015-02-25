@@ -19,6 +19,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
+import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.geo.GeoResults;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
@@ -978,4 +979,10 @@ public interface MongoOperations {
 	 * @since 1.7
 	 */
 	MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> getMappingContext();
+
+	/**
+	 * @return
+	 * @since 1.7
+	 */
+	PersistenceExceptionTranslator getExceptionTranslator();
 }

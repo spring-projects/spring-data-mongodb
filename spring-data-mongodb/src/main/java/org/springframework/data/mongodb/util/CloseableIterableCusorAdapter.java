@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.util;
 
 import java.util.Iterator;
 
+import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.util.CloseableIterator;
 
@@ -31,12 +32,15 @@ public class CloseableIterableCusorAdapter<T> implements CloseableIterator<T> {
 	private volatile Cursor cursor;
 	private MongoConverter converter;
 	private Class<?> entityClass;
+	private PersistenceExceptionTranslator exceptionTranslator;
 
-	public CloseableIterableCusorAdapter(Cursor cursor, MongoConverter converter, Class<?> entityClass) {
+	public CloseableIterableCusorAdapter(Cursor cursor, MongoConverter converter,
+			PersistenceExceptionTranslator exceptionTranslator, Class<?> entityClass) {
 
 		this.cursor = cursor;
 		this.converter = converter;
 		this.entityClass = entityClass;
+		this.exceptionTranslator = exceptionTranslator;
 	}
 
 	@Override
@@ -48,8 +52,8 @@ public class CloseableIterableCusorAdapter<T> implements CloseableIterator<T> {
 
 		try {
 			return cursor.hasNext();
-		} catch (Exception ex) {
-			throw new RuntimeException("error on hasNext");
+		} catch (RuntimeException ex) {
+			throw exceptionTranslator.translateExceptionIfPossible(ex);
 		}
 	}
 
@@ -66,8 +70,8 @@ public class CloseableIterableCusorAdapter<T> implements CloseableIterator<T> {
 			Object converted = converter.read(entityClass, item);
 
 			return (T) converted;
-		} catch (Exception ex) {
-			throw new RuntimeException("error on next");
+		} catch (RuntimeException ex) {
+			throw exceptionTranslator.translateExceptionIfPossible(ex);
 		}
 	}
 
@@ -76,12 +80,17 @@ public class CloseableIterableCusorAdapter<T> implements CloseableIterator<T> {
 
 		Cursor c = cursor;
 		try {
+
 			c.close();
+		} catch (RuntimeException ex) {
+
+			throw exceptionTranslator.translateExceptionIfPossible(ex);
 		} finally {
 
 			cursor = null;
 			converter = null;
 			entityClass = null;
+			exceptionTranslator = null;
 		}
 	}
 
