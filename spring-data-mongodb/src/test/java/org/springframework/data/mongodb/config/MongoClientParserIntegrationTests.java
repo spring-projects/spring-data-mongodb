@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.config;
 
+import static org.hamcrest.collection.IsIterableContainingInOrder.*;
 import static org.hamcrest.core.Is.*;
 import static org.hamcrest.core.IsInstanceOf.*;
 import static org.junit.Assert.*;
@@ -29,6 +30,7 @@ import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.io.ClassPathResource;
 
 import com.mongodb.MongoClient;
+import com.mongodb.MongoCredential;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
 
@@ -98,6 +100,27 @@ public class MongoClientParserIntegrationTests {
 
 			assertThat(client.getAddress().getHost(), is("127.0.0.1"));
 			assertThat(client.getAddress().getPort(), is(27017));
+		} finally {
+			context.close();
+		}
+	}
+
+	/**
+	 * @see DATAMONGO-1158
+	 */
+	@Test
+	public void createsMongoClientWithCredentialsCorrectly() {
+
+		reader.loadBeanDefinitions(new ClassPathResource("namespace/mongoClient-bean.xml"));
+
+		AbstractApplicationContext context = new GenericApplicationContext(factory);
+		context.refresh();
+
+		try {
+			MongoClient client = context.getBean("mongo-client-with-credentials", MongoClient.class);
+
+			assertThat(client.getCredentialsList(),
+					contains(MongoCredential.createPlainCredential("jon", "snow", "warg".toCharArray())));
 		} finally {
 			context.close();
 		}

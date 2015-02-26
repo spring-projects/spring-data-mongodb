@@ -30,7 +30,6 @@ import org.springframework.data.mongodb.CannotGetMongoDbConnectionException;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.Mongo;
-import com.mongodb.MongoCredential;
 import com.mongodb.MongoOptions;
 import com.mongodb.ServerAddress;
 import com.mongodb.WriteConcern;
@@ -59,7 +58,6 @@ public class MongoFactoryBean implements FactoryBean<Mongo>, InitializingBean, D
 	private WriteConcern writeConcern;
 	private List<ServerAddress> replicaSetSeeds;
 	private List<ServerAddress> replicaPair;
-	private List<MongoCredential> credentials;
 
 	private PersistenceExceptionTranslator exceptionTranslator = new MongoExceptionTranslator();
 

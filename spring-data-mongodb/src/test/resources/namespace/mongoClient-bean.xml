@@ -11,6 +11,8 @@
 		<mongo:client-options write-concern="NORMAL" read-preference="SECONDARY" />
 	</mongo:mongo-client>
 	
+	<mongo:mongo-client id="mongo-client-with-credentials" credentials="jon:warg@snow?uri.authMechanism=PLAIN" />
+	
 	<mongo:mongo-client />
 
 </beans>

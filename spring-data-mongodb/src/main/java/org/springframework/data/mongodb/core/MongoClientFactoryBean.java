@@ -68,8 +68,8 @@ public class MongoClientFactoryBean implements FactoryBean<Mongo>, InitializingB
 	 * 
 	 * @param credentials can be {@literal null}.
 	 */
-	public void setCredentials(List<MongoCredential> credentials) {
-		this.credentials = credentials;
+	public void setCredentials(MongoCredential[] credentials) {
+		this.credentials = filterNonNullElementsAsList(credentials);
 	}
 
 	public void setReplicaSetSeeds(ServerAddress[] replicaSetSeeds) {

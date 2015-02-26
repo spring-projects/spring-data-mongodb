@@ -148,6 +148,22 @@ abstract class MongoParsingUtils {
 	}
 
 	/**
+	 * One should only register one bean definition but want to have the convenience of using
+	 * AbstractSingleBeanDefinitionParser but have the side effect of registering a 'default' property editor with the
+	 * container.
+	 */
+	static BeanDefinitionBuilder getServerAddressPropertyEditorBuilder() {
+
+		Map<String, String> customEditors = new ManagedMap<String, String>();
+		customEditors.put("com.mongodb.ServerAddress[]",
+				"org.springframework.data.mongodb.config.ServerAddressPropertyEditor");
+
+		BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(CustomEditorConfigurer.class);
+		builder.addPropertyValue("customEditors", customEditors);
+		return builder;
+	}
+
+	/**
 	 * Returns the {@link BeanDefinitionBuilder} to build a {@link BeanDefinition} for a
 	 * {@link ReadPreferencePropertyEditor}.
 	 * 
@@ -166,18 +182,20 @@ abstract class MongoParsingUtils {
 	}
 
 	/**
-	 * One should only register one bean definition but want to have the convenience of using
-	 * AbstractSingleBeanDefinitionParser but have the side effect of registering a 'default' property editor with the
-	 * container.
+	 * Returns the {@link BeanDefinitionBuilder} to build a {@link BeanDefinition} for a
+	 * {@link MongoCredentialPropertyEditor}.
+	 * 
+	 * @return
+	 * @since 1.7
 	 */
-	static BeanDefinitionBuilder getServerAddressPropertyEditorBuilder() {
+	static BeanDefinitionBuilder getMongoCredentialPropertyEditor() {
 
-		Map<String, String> customEditors = new ManagedMap<String, String>();
-		customEditors.put("com.mongodb.ServerAddress[]",
-				"org.springframework.data.mongodb.config.ServerAddressPropertyEditor");
+		Map<String, Class<?>> customEditors = new ManagedMap<String, Class<?>>();
+		customEditors.put("com.mongodb.MongoCredential[]", MongoCredentialPropertyEditor.class);
 
 		BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(CustomEditorConfigurer.class);
 		builder.addPropertyValue("customEditors", customEditors);
+
 		return builder;
 	}
 }

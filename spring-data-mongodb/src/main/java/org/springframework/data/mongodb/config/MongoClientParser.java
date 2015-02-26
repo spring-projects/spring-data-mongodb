@@ -50,6 +50,7 @@ public class MongoClientParser implements BeanDefinitionParser {
 
 		ParsingUtils.setPropertyValue(builder, element, "port", "port");
 		ParsingUtils.setPropertyValue(builder, element, "host", "host");
+		ParsingUtils.setPropertyValue(builder, element, "credentials", "credentials");
 
 		MongoParsingUtils.parseMongoClientOptions(element, builder);
 		MongoParsingUtils.parseReplicaSet(element, builder);
@@ -72,6 +73,10 @@ public class MongoClientParser implements BeanDefinitionParser {
 		BeanComponentDefinition readPreferenceEditor = helper.getComponent(MongoParsingUtils
 				.getReadPreferencePropertyEditorBuilder());
 		parserContext.registerBeanComponent(readPreferenceEditor);
+
+		BeanComponentDefinition credentialsEditor = helper.getComponent(MongoParsingUtils
+				.getMongoCredentialPropertyEditor());
+		parserContext.registerBeanComponent(credentialsEditor);
 
 		parserContext.popAndRegisterContainingComponent();
 
