@@ -26,7 +26,30 @@ MongoDB requires that you have an '_id' field for all documents. If you don't pr
 The following outlines what field will be mapped to the '_id' document field:
 
 * A field annotated with `@Id` (`org.springframework.data.annotation.Id`) will be mapped to the '_id' field.
-* A field without an annotation but named `id` will be mapped to the '_id' field.
+* A field without an annotation but named 'id' will be mapped to the '_id' field.
+* The default field name for identifiers is '_id' and can be customized via the `@Field` annotation.
+
+[cols="1,2", options="header"]
+.Examples for the translation of '_id'-field definitions
+|===
+| Field definition
+| Resulting Id-Fieldname in MongoDB
+
+| `String` id
+| `_id`
+
+| `@Field` `String` id
+| `_id`
+
+| `@Field('x')` `String` id
+| `x`
+
+| `@Id` `String` x
+| `_id`
+
+| `@Field('x')` `@Id` `String` x
+| `_id`
+|===
 
 The following outlines what type conversion, if any, will be done on the property mapped to the _id document field.
 
