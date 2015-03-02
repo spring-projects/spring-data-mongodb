@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2014 the original author or authors.
+ * Copyright 2011-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,6 +46,7 @@ import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.Mongo;
+import com.mongodb.MongoClient;
 
 /**
  * Base class for Spring Data MongoDB configuration using JavaConfig.
@@ -54,6 +55,7 @@ import com.mongodb.Mongo;
  * @author Oliver Gierke
  * @author Thomas Darimont
  * @author Ryan Tenney
+ * @author Christoph Strobl
  */
 @Configuration
 public abstract class AbstractMongoConfiguration {
@@ -70,7 +72,10 @@ public abstract class AbstractMongoConfiguration {
 	 * returned by {@link #getDatabaseName()} later on effectively.
 	 * 
 	 * @return
+	 * @deprecated since 1.7. {@link MongoClient} should hold authentication data within
+	 *             {@link MongoClient#getCredentialsList()}
 	 */
+	@Deprecated
 	protected String getAuthenticationDatabaseName() {
 		return null;
 	}
@@ -129,7 +134,10 @@ public abstract class AbstractMongoConfiguration {
 	 * be used.
 	 * 
 	 * @return
+	 * @deprecated since 1.7. {@link MongoClient} should hold authentication data within
+	 *             {@link MongoClient#getCredentialsList()}
 	 */
+	@Deprecated
 	protected UserCredentials getUserCredentials() {
 		return null;
 	}

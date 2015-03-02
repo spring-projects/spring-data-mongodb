@@ -75,6 +75,7 @@ import com.mongodb.util.JSON;
  * @author Tobias Trelle
  * @author Thomas Darimont
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:infrastructure.xml")
@@ -202,7 +203,6 @@ public class AggregationTests {
 		AggregationResults<TagCount> results = mongoTemplate.aggregate(agg, INPUT_COLLECTION, TagCount.class);
 
 		assertThat(results, is(notNullValue()));
-		assertThat(results.getServerUsed(), endsWith("127.0.0.1:27017"));
 
 		List<TagCount> tagCount = results.getMappedResults();
 
@@ -230,7 +230,6 @@ public class AggregationTests {
 		AggregationResults<TagCount> results = mongoTemplate.aggregate(aggregation, INPUT_COLLECTION, TagCount.class);
 
 		assertThat(results, is(notNullValue()));
-		assertThat(results.getServerUsed(), endsWith("127.0.0.1:27017"));
 
 		List<TagCount> tagCount = results.getMappedResults();
 
@@ -254,7 +253,6 @@ public class AggregationTests {
 		AggregationResults<TagCount> results = mongoTemplate.aggregate(aggregation, INPUT_COLLECTION, TagCount.class);
 
 		assertThat(results, is(notNullValue()));
-		assertThat(results.getServerUsed(), endsWith("127.0.0.1:27017"));
 
 		List<TagCount> tagCount = results.getMappedResults();
 

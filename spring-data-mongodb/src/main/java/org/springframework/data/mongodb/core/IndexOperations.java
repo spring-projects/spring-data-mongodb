@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2011-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,12 +20,12 @@ import java.util.List;
 import org.springframework.data.mongodb.core.index.IndexDefinition;
 import org.springframework.data.mongodb.core.index.IndexInfo;
 
-
 /**
  * Index operations on a collection.
  * 
  * @author Mark Pollack
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 public interface IndexOperations {
 
@@ -51,7 +51,11 @@ public interface IndexOperations {
 
 	/**
 	 * Clears all indices that have not yet been applied to this collection.
+	 * 
+	 * @deprecated since 1.7. The mongo-java-driver version 3 does no longer support reseting the index cache.
+	 * @throws {@link UnsupportedOperationException} when used with mongo-java-driver version 3.
 	 */
+	@Deprecated
 	void resetIndexCache();
 
 	/**

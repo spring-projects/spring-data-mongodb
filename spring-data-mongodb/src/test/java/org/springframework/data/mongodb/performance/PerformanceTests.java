@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 the original author or authors.
+ * Copyright 2012-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.performance;
 
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
+import static org.springframework.util.Assert.*;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -46,7 +47,6 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.support.MongoRepositoryFactoryBean;
-import org.springframework.util.Assert;
 import org.springframework.util.StopWatch;
 import org.springframework.util.StringUtils;
 
@@ -65,6 +65,7 @@ import com.mongodb.WriteConcern;
  * abstraction.
  * 
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 public class PerformanceTests {
 
@@ -270,8 +271,8 @@ public class PerformanceTests {
 			DBCollection collection = db.getCollection(collectionName);
 			collection.drop();
 			collection.getDB().command(getCreateCollectionCommand(collectionName));
-			collection.ensureIndex(new BasicDBObject("firstname", -1));
-			collection.ensureIndex(new BasicDBObject("lastname", -1));
+			collection.createIndex(new BasicDBObject("firstname", -1));
+			collection.createIndex(new BasicDBObject("lastname", -1));
 		}
 	}
 
@@ -621,7 +622,7 @@ public class PerformanceTests {
 
 	private static <T> List<T> pickRandomNumerOfItemsFrom(List<T> source) {
 
-		Assert.isTrue(!source.isEmpty());
+		isTrue(!source.isEmpty());
 
 		Random random = new Random();
 		int numberOfItems = random.nextInt(source.size());

@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2013 the original author or authors.
+ * Copyright 2011-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,6 +43,7 @@ import com.mongodb.BasicDBList;
  * Unit tests for {@link ConvertingParameterAccessor}.
  * 
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 @RunWith(MockitoJUnitRunner.class)
 public class ConvertingParameterAccessorUnitTests {
@@ -105,7 +106,7 @@ public class ConvertingParameterAccessorUnitTests {
 
 		assertThat(result, is(instanceOf(com.mongodb.DBRef.class)));
 		com.mongodb.DBRef dbRef = (com.mongodb.DBRef) result;
-		assertThat(dbRef.getRef(), is("property"));
+		assertThat(dbRef.getCollectionName(), is("property"));
 		assertThat(dbRef.getId(), is((Object) 5L));
 	}
 
@@ -128,7 +129,7 @@ public class ConvertingParameterAccessorUnitTests {
 
 		assertThat(element, is(instanceOf(com.mongodb.DBRef.class)));
 		com.mongodb.DBRef dbRef = (com.mongodb.DBRef) element;
-		assertThat(dbRef.getRef(), is("property"));
+		assertThat(dbRef.getCollectionName(), is("property"));
 		assertThat(dbRef.getId(), is((Object) 5L));
 	}
 

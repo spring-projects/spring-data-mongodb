@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2014 the original author or authors.
+ * Copyright 2011-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -383,7 +383,7 @@ public class QueryMapperUnitTests {
 	public void handleMapWithDBRefCorrectly() {
 
 		DBObject mapDbObject = new BasicDBObject();
-		mapDbObject.put("test", new com.mongodb.DBRef(null, "test", "test"));
+		mapDbObject.put("test", new com.mongodb.DBRef("test", "test"));
 		DBObject dbObject = new BasicDBObject();
 		dbObject.put("mapWithDBRef", mapDbObject);
 
@@ -666,7 +666,7 @@ public class QueryMapperUnitTests {
 
 		ObjectId id = new ObjectId();
 
-		DBObject query = new BasicDBObject("reference.id", new com.mongodb.DBRef(null, "reference", id.toString()));
+		DBObject query = new BasicDBObject("reference.id", new com.mongodb.DBRef("reference", id.toString()));
 		DBObject result = mapper.getMappedObject(query, context.getPersistentEntity(WithDBRef.class));
 
 		assertThat(result.containsField("reference"), is(true));

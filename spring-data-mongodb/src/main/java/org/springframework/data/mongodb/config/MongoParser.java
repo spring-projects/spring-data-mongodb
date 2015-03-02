@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2014 the original author or authors.
+ * Copyright 2011-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,14 +15,10 @@
  */
 package org.springframework.data.mongodb.config;
 
-import java.util.Map;
-
 import org.springframework.beans.factory.config.BeanDefinition;
-import org.springframework.beans.factory.config.CustomEditorConfigurer;
 import org.springframework.beans.factory.parsing.BeanComponentDefinition;
 import org.springframework.beans.factory.parsing.CompositeComponentDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
-import org.springframework.beans.factory.support.ManagedMap;
 import org.springframework.beans.factory.xml.BeanDefinitionParser;
 import org.springframework.beans.factory.xml.ParserContext;
 import org.springframework.data.config.BeanComponentDefinitionBuilder;
@@ -36,6 +32,7 @@ import org.w3c.dom.Element;
  * 
  * @author Mark Pollack
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 public class MongoParser implements BeanDefinitionParser {
 
@@ -64,7 +61,8 @@ public class MongoParser implements BeanDefinitionParser {
 
 		BeanComponentDefinition mongoComponent = helper.getComponent(builder, defaultedId);
 		parserContext.registerBeanComponent(mongoComponent);
-		BeanComponentDefinition serverAddressPropertyEditor = helper.getComponent(registerServerAddressPropertyEditor());
+		BeanComponentDefinition serverAddressPropertyEditor = helper.getComponent(MongoParsingUtils
+				.getServerAddressPropertyEditorBuilder());
 		parserContext.registerBeanComponent(serverAddressPropertyEditor);
 		BeanComponentDefinition writeConcernPropertyEditor = helper.getComponent(MongoParsingUtils
 				.getWriteConcernPropertyEditorBuilder());
@@ -75,19 +73,4 @@ public class MongoParser implements BeanDefinitionParser {
 		return mongoComponent.getBeanDefinition();
 	}
 
-	/**
-	 * One should only register one bean definition but want to have the convenience of using
-	 * AbstractSingleBeanDefinitionParser but have the side effect of registering a 'default' property editor with the
-	 * container.
-	 */
-	private BeanDefinitionBuilder registerServerAddressPropertyEditor() {
-
-		Map<String, String> customEditors = new ManagedMap<String, String>();
-		customEditors.put("com.mongodb.ServerAddress[]",
-				"org.springframework.data.mongodb.config.ServerAddressPropertyEditor");
-
-		BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(CustomEditorConfigurer.class);
-		builder.addPropertyValue("customEditors", customEditors);
-		return builder;
-	}
 }

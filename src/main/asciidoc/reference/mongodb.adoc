@@ -1159,7 +1159,7 @@ Before we are actually able to use full text search we have to ensure to set up 
 
 [source,javascript]
 ----
-db.foo.ensureIndex(
+db.foo.createIndex(
 {
   title : "text",
   content : "text"

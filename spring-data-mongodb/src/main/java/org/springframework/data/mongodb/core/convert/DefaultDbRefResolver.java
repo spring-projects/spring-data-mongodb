@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 the original author or authors.
+ * Copyright 2013-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,9 +39,8 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.objenesis.ObjenesisStd;
 import org.springframework.util.Assert;
 import org.springframework.util.ReflectionUtils;
-import org.springframework.util.StringUtils;
 
-import com.mongodb.DB;
+import com.mongodb.DBObject;
 import com.mongodb.DBRef;
 
 /**
@@ -50,6 +49,7 @@ import com.mongodb.DBRef;
  * 
  * @author Thomas Darimont
  * @author Oliver Gierke
+ * @author Christoph Strobl
  * @since 1.4
  */
 public class DefaultDbRefResolver implements DbRefResolver {
@@ -97,11 +97,16 @@ public class DefaultDbRefResolver implements DbRefResolver {
 	@Override
 	public DBRef createDbRef(org.springframework.data.mongodb.core.mapping.DBRef annotation,
 			MongoPersistentEntity<?> entity, Object id) {
+		return new DBRef(entity.getCollection(), id);
+	}
 
-		DB db = mongoDbFactory.getDb();
-		db = annotation != null && StringUtils.hasText(annotation.db()) ? mongoDbFactory.getDb(annotation.db()) : db;
-
-		return new DBRef(db, entity.getCollection(), id);
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.convert.DbRefResolver#fetch(com.mongodb.DBRef)
+	 */
+	@Override
+	public DBObject fetch(DBRef dbRef) {
+		return ReflectiveDBRefResolver.fetch(mongoDbFactory.getDb(), dbRef);
 	}
 
 	/**
@@ -282,7 +287,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 
 			StringBuilder description = new StringBuilder();
 			if (dbref != null) {
-				description.append(dbref.getRef());
+				description.append(dbref.getCollectionName());
 				description.append(":");
 				description.append(dbref.getId());
 			} else {

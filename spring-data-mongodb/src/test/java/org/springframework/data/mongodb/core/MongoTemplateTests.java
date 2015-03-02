@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2014 the original author or authors.
+ * Copyright 2011-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,8 @@ package org.springframework.data.mongodb.core;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 import static org.junit.Assume.*;
-import static org.mockito.Mockito.*;
+import static org.springframework.data.mongodb.core.ReflectiveWriteConcernInvoker.*;
+import static org.springframework.data.mongodb.core.ReflectiveWriteResultInvoker.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.core.query.Update.*;
@@ -236,7 +237,7 @@ public class MongoTemplateTests {
 			template.insert(person);
 			fail("Expected DataIntegrityViolationException!");
 		} catch (DataIntegrityViolationException e) {
-			assertThat(e.getMessage(), containsString("E11000 duplicate key error index: database.person.$_id_"));
+			assertThat(e.getMessage(), containsString("E11000 duplicate key error"));
 		}
 	}
 
@@ -257,10 +258,8 @@ public class MongoTemplateTests {
 		template.insert(person);
 
 		thrown.expect(DataIntegrityViolationException.class);
-		thrown.expectMessage("Execution");
-		thrown.expectMessage("UPDATE");
 		thrown.expectMessage("array");
-		thrown.expectMessage("firstName");
+		thrown.expectMessage("age");
 		thrown.expectMessage("failed");
 
 		Query query = new Query(Criteria.where("firstName").is("Amol"));
@@ -290,7 +289,7 @@ public class MongoTemplateTests {
 			template.save(person);
 			fail("Expected DataIntegrityViolationException!");
 		} catch (DataIntegrityViolationException e) {
-			assertThat(e.getMessage(), containsString("E11000 duplicate key error index: database.person.$firstName_-1"));
+			assertThat(e.getMessage(), containsString("E11000 duplicate key error"));
 		}
 	}
 
@@ -301,7 +300,7 @@ public class MongoTemplateTests {
 	public void rejectsDuplicateIdInInsertAll() {
 
 		thrown.expect(DataIntegrityViolationException.class);
-		thrown.expectMessage("E11000 duplicate key error index: database.person.$_id_");
+		thrown.expectMessage("E11000 duplicate key error");
 
 		MongoTemplate template = new MongoTemplate(factory);
 		template.setWriteResultChecking(WriteResultChecking.EXCEPTION);
@@ -378,7 +377,7 @@ public class MongoTemplateTests {
 	public void testReadIndexInfoForIndicesCreatedViaMongoShellCommands() throws Exception {
 
 		String command = "db." + template.getCollectionName(Person.class)
-				+ ".ensureIndex({'age':-1}, {'unique':true, 'sparse':true})";
+				+ ".createIndex({'age':-1}, {'unique':true, 'sparse':true})";
 		template.indexOps(Person.class).dropAllIndexes();
 
 		assertThat(template.indexOps(Person.class).getIndexInfo().isEmpty(), is(true));
@@ -995,7 +994,9 @@ public class MongoTemplateTests {
 
 		WriteResult wr = template.updateMulti(new Query(), u, PersonWithIdPropertyOfTypeObjectId.class);
 
-		assertThat(wr.getN(), is(2));
+		if (wasAcknowledged(wr)) {
+			assertThat(wr.getN(), is(2));
+		}
 
 		Query q1 = new Query(Criteria.where("age").in(11, 21));
 		List<PersonWithIdPropertyOfTypeObjectId> r1 = template.find(q1, PersonWithIdPropertyOfTypeObjectId.class);
@@ -1097,7 +1098,6 @@ public class MongoTemplateTests {
 	}
 
 	@Test
-	@SuppressWarnings("deprecation")
 	public void testUsingReadPreference() throws Exception {
 		this.template.execute("readPref", new CollectionCallback<Object>() {
 			public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
@@ -1107,10 +1107,10 @@ public class MongoTemplateTests {
 			}
 		});
 		MongoTemplate slaveTemplate = new MongoTemplate(factory);
-		slaveTemplate.setReadPreference(ReadPreference.SECONDARY);
+		slaveTemplate.setReadPreference(ReadPreference.secondary());
 		slaveTemplate.execute("readPref", new CollectionCallback<Object>() {
 			public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
-				assertThat(collection.getReadPreference(), is(ReadPreference.SECONDARY));
+				assertThat(collection.getReadPreference(), is(ReadPreference.secondary()));
 				assertThat(collection.getDB().getOptions(), is(0));
 				return null;
 			}
@@ -1153,29 +1153,24 @@ public class MongoTemplateTests {
 		person.setId(new ObjectId());
 		person.setFirstName("Dave");
 
-		template.setWriteConcern(WriteConcern.NONE);
+		template.setWriteConcern(noneOrUnacknowledged());
 		template.save(person);
 		WriteResult result = template.updateFirst(query(where("id").is(person.getId())), update("firstName", "Carter"),
 				PersonWithIdPropertyOfTypeObjectId.class);
-		WriteConcern lastWriteConcern = result.getLastConcern();
-		assertThat(lastWriteConcern, equalTo(WriteConcern.NONE));
 
 		FsyncSafeWriteConcernResolver resolver = new FsyncSafeWriteConcernResolver();
 		template.setWriteConcernResolver(resolver);
 		Query q = query(where("_id").is(person.getId()));
 		Update u = update("firstName", "Carter");
 		result = template.updateFirst(q, u, PersonWithIdPropertyOfTypeObjectId.class);
-		lastWriteConcern = result.getLastConcern();
-		assertThat(lastWriteConcern, equalTo(WriteConcern.FSYNC_SAFE));
 
 		MongoAction lastMongoAction = resolver.getMongoAction();
 		assertThat(lastMongoAction.getCollectionName(), is("personWithIdPropertyOfTypeObjectId"));
-		assertThat(lastMongoAction.getDefaultWriteConcern(), equalTo(WriteConcern.NONE));
+		assertThat(lastMongoAction.getDefaultWriteConcern(), equalTo(noneOrUnacknowledged()));
 		assertThat(lastMongoAction.getDocument(), notNullValue());
 		assertThat(lastMongoAction.getEntityType().toString(), is(PersonWithIdPropertyOfTypeObjectId.class.toString()));
 		assertThat(lastMongoAction.getMongoActionOperation(), is(MongoActionOperation.UPDATE));
 		assertThat(lastMongoAction.getQuery(), equalTo(q.getQueryObject()));
-
 	}
 
 	private class FsyncSafeWriteConcernResolver implements WriteConcernResolver {
@@ -1198,8 +1193,8 @@ public class MongoTemplateTests {
 	@Test
 	public void updatesDBRefsCorrectly() {
 
-		DBRef first = new DBRef(factory.getDb(), "foo", new ObjectId());
-		DBRef second = new DBRef(factory.getDb(), "bar", new ObjectId());
+		DBRef first = new DBRef("foo", new ObjectId());
+		DBRef second = new DBRef("bar", new ObjectId());
 
 		template.updateFirst(null, update("dbRefs", Arrays.asList(first, second)), ClassWithDBRefs.class);
 	}
@@ -1713,29 +1708,6 @@ public class MongoTemplateTests {
 
 		person = template.findOne(query(where("id").is(person.getId())), Person.class);
 		assertThat(person.getFirstName(), is(nullValue()));
-	}
-
-	/**
-	 * @see DATAMONGO-651
-	 */
-	@Test
-	public void throwsMongoSpecificExceptionForDataIntegrityViolations() {
-
-		WriteResult result = mock(WriteResult.class);
-		when(result.getError()).thenReturn("ERROR");
-
-		MongoActionOperation operation = MongoActionOperation.INSERT;
-
-		MongoTemplate mongoTemplate = new MongoTemplate(factory);
-		mongoTemplate.setWriteResultChecking(WriteResultChecking.EXCEPTION);
-
-		try {
-			mongoTemplate.handleAnyWriteResultErrors(result, null, operation);
-			fail("Expected MonogoDataIntegrityViolationException!");
-		} catch (MongoDataIntegrityViolationException o_O) {
-			assertThat(o_O.getActionOperation(), is(operation));
-			assertThat(o_O.getWriteResult(), is(result));
-		}
 	}
 
 	/**

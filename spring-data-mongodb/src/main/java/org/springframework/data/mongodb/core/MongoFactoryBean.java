@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 the original author or authors.
+ * Copyright 2010-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core;
 
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -40,14 +41,18 @@ import com.mongodb.WriteConcern;
  * @author Graeme Rocher
  * @author Oliver Gierke
  * @author Thomas Darimont
+ * @author Christoph Strobl
  * @since 1.0
+ * @deprecated since 1.7. Please use {@link MongoClientFactoryBean} instead.
  */
+@Deprecated
 public class MongoFactoryBean implements FactoryBean<Mongo>, InitializingBean, DisposableBean,
 		PersistenceExceptionTranslator {
 
 	private Mongo mongo;
 
 	private MongoOptions mongoOptions;
+
 	private String host;
 	private Integer port;
 	private WriteConcern writeConcern;
@@ -56,6 +61,9 @@ public class MongoFactoryBean implements FactoryBean<Mongo>, InitializingBean, D
 
 	private PersistenceExceptionTranslator exceptionTranslator = new MongoExceptionTranslator();
 
+	/**
+	 * @param mongoOptions
+	 */
 	public void setMongoOptions(MongoOptions mongoOptions) {
 		this.mongoOptions = mongoOptions;
 	}
@@ -66,7 +74,6 @@ public class MongoFactoryBean implements FactoryBean<Mongo>, InitializingBean, D
 
 	/**
 	 * @deprecated use {@link #setReplicaSetSeeds(ServerAddress[])} instead
-	 * 
 	 * @param replicaPair
 	 */
 	@Deprecated
@@ -148,8 +155,11 @@ public class MongoFactoryBean implements FactoryBean<Mongo>, InitializingBean, D
 	 * (non-Javadoc)
 	 * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
 	 */
-	@SuppressWarnings("deprecation")
 	public void afterPropertiesSet() throws Exception {
+		this.mongo = createMongo();
+	}
+
+	private Mongo createMongo() throws UnknownHostException {
 
 		Mongo mongo;
 		ServerAddress defaultOptions = new ServerAddress();
@@ -175,7 +185,7 @@ public class MongoFactoryBean implements FactoryBean<Mongo>, InitializingBean, D
 			mongo.setWriteConcern(writeConcern);
 		}
 
-		this.mongo = mongo;
+		return mongo;
 	}
 
 	private boolean isNullOrEmpty(Collection<?> elements) {

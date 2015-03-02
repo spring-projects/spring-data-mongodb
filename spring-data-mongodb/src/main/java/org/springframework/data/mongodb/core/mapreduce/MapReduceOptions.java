@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 the original author or authors.
+ * Copyright 2010-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,11 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.MapReduceCommand;
 
+/**
+ * @author Mark Pollack
+ * @author Oliver Gierke
+ * @author Christoph Strobl
+ */
 public class MapReduceOptions {
 
 	private String outputCollection;
@@ -197,12 +202,19 @@ public class MapReduceOptions {
 	 * @param key The key option
 	 * @param value The value of the option
 	 * @return MapReduceOptions so that methods can be chained in a fluent API style
+	 * @deprecated since 1.7.
 	 */
+	@Deprecated
 	public MapReduceOptions extraOption(String key, Object value) {
 		extraOptions.put(key, value);
 		return this;
 	}
 
+	/**
+	 * @return
+	 * @deprecated since 1.7
+	 */
+	@Deprecated
 	public Map<String, Object> getExtraOptions() {
 		return extraOptions;
 	}
@@ -263,18 +275,18 @@ public class MapReduceOptions {
 		BasicDBObject out = new BasicDBObject();
 
 		switch (outputType) {
-		case INLINE:
-			out.put("inline", 1);
-			break;
-		case REPLACE:
-			out.put("replace", outputCollection);
-			break;
-		case MERGE:
-			out.put("merge", outputCollection);
-			break;
-		case REDUCE:
-			out.put("reduce", outputCollection);
-			break;
+			case INLINE:
+				out.put("inline", 1);
+				break;
+			case REPLACE:
+				out.put("replace", outputCollection);
+				break;
+			case MERGE:
+				out.put("merge", outputCollection);
+				break;
+			case REDUCE:
+				out.put("reduce", outputCollection);
+				break;
 		}
 
 		if (outputDatabase != null) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2013 the original author or authors.
+ * Copyright 2011-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,9 +17,13 @@ package org.springframework.data.mongodb.core;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
+import static org.junit.Assume.*;
+import static org.springframework.data.mongodb.MongoClientVersion.*;
+import static org.springframework.data.mongodb.core.ReflectiveMongoOptionsInvoker.*;
 
 import javax.net.ssl.SSLSocketFactory;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.mongodb.MongoOptions;
@@ -29,8 +33,14 @@ import com.mongodb.MongoOptions;
  * 
  * @author Oliver Gierke
  * @author Mike Saavedra
+ * @author Christoph Strobl
  */
 public class MongoOptionsFactoryBeanUnitTests {
+
+	@BeforeClass
+	public static void validateMongoDriver() {
+		assumeFalse(isMongo3Driver());
+	}
 
 	/**
 	 * @see DATADOC-280
@@ -43,7 +53,7 @@ public class MongoOptionsFactoryBeanUnitTests {
 		bean.afterPropertiesSet();
 
 		MongoOptions options = bean.getObject();
-		assertThat(options.maxAutoConnectRetryTime, is(27L));
+		assertThat(getMaxAutoConnectRetryTime(options), is(27L));
 	}
 
 	/**

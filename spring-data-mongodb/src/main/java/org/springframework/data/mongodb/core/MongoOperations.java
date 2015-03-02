@@ -35,8 +35,10 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
 import com.mongodb.CommandResult;
+import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
+import com.mongodb.ReadPreference;
 import com.mongodb.WriteResult;
 
 /**
@@ -85,8 +87,22 @@ public interface MongoOperations {
 	 * 
 	 * @param command a MongoDB command
 	 * @param options query options to use
+	 * @deprecated since 1.7. Please use {@link #executeCommand(DBObject, ReadPreference)}, as the mongo-java-driver
+	 *             version 3 no longer supports this operation.
 	 */
+	@Deprecated
 	CommandResult executeCommand(DBObject command, int options);
+
+	/**
+	 * Execute a MongoDB command. Any errors that result from executing this command will be converted into Spring's DAO
+	 * exception hierarchy.
+	 * 
+	 * @param command a MongoDB command.
+	 * @param readPreference read preferences to use.
+	 * @return
+	 * @since 1.7
+	 */
+	CommandResult executeCommand(DBObject command, ReadPreference readPreference);
 
 	/**
 	 * Execute a MongoDB query and iterate over the query results on a per-document basis with a DocumentCallbackHandler.
@@ -143,7 +159,10 @@ public interface MongoOperations {
 	 * @param <T> return type
 	 * @param action callback that specified the MongoDB actions to perform on the DB instance
 	 * @return a result object returned by the action or <tt>null</tt>
+	 * @deprecated since 1.7 as the mongo-java-driver version 3 does not longer support request boundaries via
+	 *             {@link DB#requestStart()} and {@link DB#requestDone()}.
 	 */
+	@Deprecated
 	<T> T executeInSession(DbCallback<T> action);
 
 	/**
