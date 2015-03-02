@@ -33,7 +33,6 @@ import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
 import org.springframework.data.mongodb.repository.Person.Sex;
 import org.springframework.data.querydsl.QueryDslPredicateExecutor;
-import org.springframework.data.util.CloseableIterator;
 
 /**
  * Sample repository managing {@link Person} entities.
@@ -323,9 +322,9 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	@Query("{ ?0 : ?1 }")
 	List<Person> findByKeyValue(String key, String value);
 
-	@Query("{firstname:{$in:?0}}")
-	CloseableIterator<Person> findByCustomQueryWithCursorByFirstnames(List<String> firstnames);
-
+	/**
+	 * @see DATAMONGO-1165
+	 */
 	@Query("{firstname:{$in:?0}}")
 	Stream<Person> findByCustomQueryWithStreamingCursorByFirstnames(List<String> firstnames);
 }

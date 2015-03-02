@@ -88,9 +88,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 
 		applyQueryMetaAttributesWhenPresent(query);
 
-		if (method.isCloseableIteratorQuery()) {
-			return new CursorBackedExecution().execute(query);
-		} else if (method.isStreamQuery()) {
+		if (method.isStreamQuery()) {
 			return new StreamExecution().execute(query);
 		} else if (isDeleteQuery()) {
 			return new DeleteExecution().execute(query);
@@ -423,24 +421,20 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 
 	/**
 	 * @author Thomas Darimont
+	 * @since 1.7
 	 */
-	private class CursorBackedExecution extends Execution {
+	final class StreamExecution extends Execution {
 
-		@Override
-		Object execute(final Query query) {
-			return operations.executeAsStream(query, getQueryMethod().getEntityInformation().getJavaType());
-		}
-	}
-
-	/**
-	 * @author Thomas Darimont
-	 */
-	final class StreamExecution extends CursorBackedExecution {
-
+		/* (non-Javadoc)
+		 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery.Execution#execute(org.springframework.data.mongodb.core.query.Query)
+		 */
 		@Override
 		Object execute(Query query) {
 
-			CloseableIterator<Object> result = (CloseableIterator<Object>) super.execute(query);
+			Class<?> entityType = getQueryMethod().getEntityInformation().getJavaType();
+
+			@SuppressWarnings("unchecked")
+			CloseableIterator<Object> result = (CloseableIterator<Object>) operations.executeAsStream(query, entityType);
 			Spliterator<Object> spliterator = Spliterators.spliteratorUnknownSize(result, Spliterator.NONNULL);
 
 			return StreamSupport.stream(spliterator, false).onClose(new CloseableIteratorDisposingRunnable(result));

@@ -18,14 +18,12 @@ package org.springframework.data.mongodb.repository;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.junit.Test;
-import org.springframework.data.util.CloseableIterator;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
@@ -36,26 +34,6 @@ import org.springframework.test.context.ContextConfiguration;
  */
 @ContextConfiguration
 public class PersonRepositoryIntegrationTests extends AbstractPersonRepositoryIntegrationTests {
-
-	/**
-	 * @see DATAMONGO-1165
-	 */
-	@Test
-	public void shouldAllowReturningCloseableIteratorInCustomQuery() throws Exception {
-
-		CloseableIterator<Person> result = repository.findByCustomQueryWithCursorByFirstnames(Arrays.asList("Dave"));
-
-		List<Person> readPersons = new ArrayList<Person>();
-		try {
-			for (Person person : result) {
-				readPersons.add(person);
-			}
-		} finally {
-			result.close();
-		}
-
-		assertThat(readPersons, hasItems(dave));
-	}
 
 	/**
 	 * @see DATAMONGO-1165
