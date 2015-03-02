@@ -16,11 +16,13 @@
 package org.springframework.data.mongodb.config;
 
 import static org.junit.Assert.*;
+import static org.junit.Assume.*;
 import static org.springframework.data.mongodb.MongoClientVersion.*;
 import static org.springframework.test.util.ReflectionTestUtils.*;
 
 import javax.net.ssl.SSLSocketFactory;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,6 +55,11 @@ import com.mongodb.WriteConcern;
 public class MongoNamespaceTests {
 
 	@Autowired ApplicationContext ctx;
+
+	@BeforeClass
+	public static void validateMongoDriver() {
+		assumeFalse(isMongo3Driver());
+	}
 
 	@Test
 	public void testMongoSingleton() throws Exception {
@@ -251,12 +258,8 @@ public class MongoNamespaceTests {
 		assertEquals(0, mongoOpts.getWriteConcern().getWtimeout());
 		assertEquals(true, mongoOpts.getWriteConcern().fsync());
 
-		if (!isMongo3Driver()) {
-			assertEquals(true, mongoOpts.fsync);
-			assertEquals(true, ReflectiveMongoOptionsInvokerTestUtil.getAutoConnectRetry(mongoOpts));
-			assertEquals(true, ReflectiveMongoOptionsInvokerTestUtil.getSlaveOk(mongoOpts));
-		} else {
-			assertEquals(false, mongoOpts.fsync);
-		}
+		assertEquals(true, mongoOpts.fsync);
+		assertEquals(true, ReflectiveMongoOptionsInvokerTestUtil.getAutoConnectRetry(mongoOpts));
+		assertEquals(true, ReflectiveMongoOptionsInvokerTestUtil.getSlaveOk(mongoOpts));
 	}
 }

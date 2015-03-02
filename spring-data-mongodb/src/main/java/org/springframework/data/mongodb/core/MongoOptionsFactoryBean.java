@@ -32,8 +32,9 @@ import com.mongodb.MongoOptions;
  * @author Mike Saavedra
  * @author Thomas Darimont
  * @author Christoph Strobl
+ * @deprecated since 1.7. Please use {@link MongoClientOptionsFactoryBean} instead.
  */
-@SuppressWarnings("deprecation")
+@Deprecated
 public class MongoOptionsFactoryBean implements FactoryBean<MongoOptions>, InitializingBean {
 
 	private static final MongoOptions DEFAULT_MONGO_OPTIONS = new MongoOptions();
@@ -216,6 +217,12 @@ public class MongoOptionsFactoryBean implements FactoryBean<MongoOptions>, Initi
 	 */
 	public void afterPropertiesSet() {
 
+		if (MongoClientVersion.isMongo3Driver()) {
+			throw new IllegalArgumentException(
+					String
+							.format("Usage of 'mongo-options' is no longer supported for mongo-java-driver version 3 and above. Please use 'mongo-client-options' and refer to chapter 'MongoDB 3.0 Support' for details."));
+		}
+
 		MongoOptions options = new MongoOptions();
 
 		options.setConnectionsPerHost(connectionsPerHost);
@@ -233,12 +240,9 @@ public class MongoOptionsFactoryBean implements FactoryBean<MongoOptions>, Initi
 			options.setSocketFactory(sslSocketFactory != null ? sslSocketFactory : SSLSocketFactory.getDefault());
 		}
 
-		if (!MongoClientVersion.isMongo3Driver()) {
-
-			ReflectiveMongoOptionsInvoker.setAutoConnectRetry(options, autoConnectRetry);
-			ReflectiveMongoOptionsInvoker.setMaxAutoConnectRetryTime(options, maxAutoConnectRetryTime);
-			ReflectiveMongoOptionsInvoker.setSlaveOk(options, slaveOk);
-		}
+		ReflectiveMongoOptionsInvoker.setAutoConnectRetry(options, autoConnectRetry);
+		ReflectiveMongoOptionsInvoker.setMaxAutoConnectRetryTime(options, maxAutoConnectRetryTime);
+		ReflectiveMongoOptionsInvoker.setSlaveOk(options, slaveOk);
 
 		this.options = options;
 	}
@@ -266,4 +270,5 @@ public class MongoOptionsFactoryBean implements FactoryBean<MongoOptions>, Initi
 	public boolean isSingleton() {
 		return true;
 	}
+
 }

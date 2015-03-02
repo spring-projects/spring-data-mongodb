@@ -23,6 +23,7 @@ import static org.springframework.data.mongodb.core.ReflectiveMongoOptionsInvoke
 
 import javax.net.ssl.SSLSocketFactory;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.mongodb.MongoOptions;
@@ -36,13 +37,16 @@ import com.mongodb.MongoOptions;
  */
 public class MongoOptionsFactoryBeanUnitTests {
 
+	@BeforeClass
+	public static void validateMongoDriver() {
+		assumeFalse(isMongo3Driver());
+	}
+
 	/**
 	 * @see DATADOC-280
 	 */
 	@Test
 	public void setsMaxConnectRetryTime() {
-
-		assumeFalse(isMongo3Driver());
 
 		MongoOptionsFactoryBean bean = new MongoOptionsFactoryBean();
 		bean.setMaxAutoConnectRetryTime(27);

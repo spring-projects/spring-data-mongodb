@@ -21,6 +21,7 @@ import static org.junit.Assume.*;
 import static org.springframework.data.mongodb.MongoClientVersion.*;
 
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.ConstructorArgumentValues;
@@ -47,12 +48,17 @@ import com.mongodb.WriteConcern;
  * Integration tests for {@link MongoDbFactoryParser}.
  * 
  * @author Oliver Gierke
- * @auhtor Christoph Strobl
+ * @author Christoph Strobl
  */
 public class MongoDbFactoryParserIntegrationTests {
 
 	DefaultListableBeanFactory factory;
 	BeanDefinitionReader reader;
+
+	@BeforeClass
+	public static void validateMongoDriver() {
+		assumeFalse(isMongo3Driver());
+	}
 
 	@Before
 	public void setUp() {
@@ -135,8 +141,6 @@ public class MongoDbFactoryParserIntegrationTests {
 	 */
 	@Test
 	public void parsesMaxAutoConnectRetryTimeCorrectly() {
-
-		assumeFalse(isMongo3Driver());
 
 		reader.loadBeanDefinitions(new ClassPathResource("namespace/db-factory-bean.xml"));
 		Mongo mongo = factory.getBean(Mongo.class);
