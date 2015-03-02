@@ -18,8 +18,8 @@ package org.springframework.data.mongodb.core;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 import static org.junit.Assume.*;
-import static org.springframework.data.mongodb.MongoClientVersion.*;
 import static org.springframework.data.mongodb.core.ReflectiveMongoOptionsInvoker.*;
+import static org.springframework.data.mongodb.util.MongoClientVersion.*;
 
 import javax.net.ssl.SSLSocketFactory;
 
@@ -35,6 +35,7 @@ import com.mongodb.MongoOptions;
  * @author Mike Saavedra
  * @author Christoph Strobl
  */
+@SuppressWarnings("deprecation")
 public class MongoOptionsFactoryBeanUnitTests {
 
 	@BeforeClass
@@ -43,10 +44,11 @@ public class MongoOptionsFactoryBeanUnitTests {
 	}
 
 	/**
+	 * @throws Exception
 	 * @see DATADOC-280
 	 */
 	@Test
-	public void setsMaxConnectRetryTime() {
+	public void setsMaxConnectRetryTime() throws Exception {
 
 		MongoOptionsFactoryBean bean = new MongoOptionsFactoryBean();
 		bean.setMaxAutoConnectRetryTime(27);
@@ -57,10 +59,11 @@ public class MongoOptionsFactoryBeanUnitTests {
 	}
 
 	/**
+	 * @throws Exception
 	 * @see DATAMONGO-764
 	 */
 	@Test
-	public void testSslConnection() {
+	public void testSslConnection() throws Exception {
 
 		MongoOptionsFactoryBean bean = new MongoOptionsFactoryBean();
 		bean.setSsl(true);

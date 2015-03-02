@@ -27,6 +27,8 @@ import org.springframework.test.util.ReflectionTestUtils;
 import com.mongodb.ReadPreference;
 
 /**
+ * Integration tests for {@link MongoClientOptionsFactoryBean}.
+ * 
  * @author Christoph Strobl
  */
 public class MongoClientOptionsFactoryBeanIntegrationTests {
@@ -48,5 +50,4 @@ public class MongoClientOptionsFactoryBeanIntegrationTests {
 		MongoClientOptionsFactoryBean bean = factory.getBean("&factory", MongoClientOptionsFactoryBean.class);
 		assertThat(ReflectionTestUtils.getField(bean, "readPreference"), is((Object) ReadPreference.nearest()));
 	}
-
 }

@@ -15,12 +15,14 @@
  */
 package org.springframework.data.mongodb.core;
 
+import static org.springframework.data.mongodb.util.MongoClientVersion.*;
+import static org.springframework.util.ReflectionUtils.*;
+
 import java.lang.reflect.Method;
 
 import org.springframework.data.authentication.UserCredentials;
 import org.springframework.data.mongodb.CannotGetMongoDbConnectionException;
-import org.springframework.data.mongodb.MongoClientVersion;
-import org.springframework.util.ReflectionUtils;
+import org.springframework.data.mongodb.util.MongoClientVersion;
 
 import com.mongodb.DB;
 import com.mongodb.Mongo;
@@ -28,8 +30,9 @@ import com.mongodb.Mongo;
 /**
  * {@link ReflectiveDbInvoker} provides reflective access to {@link DB} API that is not consistently available for
  * various driver versions.
- * 
+ *
  * @author Christoph Strobl
+ * @author Oliver Gierke
  * @since 1.7
  */
 final class ReflectiveDbInvoker {
@@ -42,18 +45,18 @@ final class ReflectiveDbInvoker {
 
 	static {
 
-		DB_IS_AUTHENTICATED_METHOD = ReflectionUtils.findMethod(DB.class, "isAuthenticated");
-		DB_AUTHENTICATE_METHOD = ReflectionUtils.findMethod(DB.class, "authenticate", String.class, char[].class);
-		DB_REQUEST_DONE_METHOD = ReflectionUtils.findMethod(DB.class, "requestDone");
-		DB_ADD_USER_METHOD = ReflectionUtils.findMethod(DB.class, "addUser", String.class, char[].class);
-		DB_REQUEST_START_METHOD = ReflectionUtils.findMethod(DB.class, "requestStart");
+		DB_IS_AUTHENTICATED_METHOD = findMethod(DB.class, "isAuthenticated");
+		DB_AUTHENTICATE_METHOD = findMethod(DB.class, "authenticate", String.class, char[].class);
+		DB_REQUEST_DONE_METHOD = findMethod(DB.class, "requestDone");
+		DB_ADD_USER_METHOD = findMethod(DB.class, "addUser", String.class, char[].class);
+		DB_REQUEST_START_METHOD = findMethod(DB.class, "requestStart");
 	}
 
 	private ReflectiveDbInvoker() {}
 
 	/**
-	 * Authenticate against database using provided credentials in case of a mongo-java-driver version 2.
-	 * 
+	 * Authenticate against database using provided credentials in case of a MongoDB Java driver version 2.
+	 *
 	 * @param mongo must not be {@literal null}.
 	 * @param db must not be {@literal null}.
 	 * @param credentials must not be {@literal null}.
@@ -67,13 +70,13 @@ final class ReflectiveDbInvoker {
 
 		synchronized (authDb) {
 
-			Boolean isAuthenticated = (Boolean) ReflectionUtils.invokeMethod(DB_IS_AUTHENTICATED_METHOD, authDb);
+			Boolean isAuthenticated = (Boolean) invokeMethod(DB_IS_AUTHENTICATED_METHOD, authDb);
 			if (!isAuthenticated) {
 
 				String username = credentials.getUsername();
 				String password = credentials.hasPassword() ? credentials.getPassword() : null;
 
-				Boolean authenticated = (Boolean) ReflectionUtils.invokeMethod(DB_AUTHENTICATE_METHOD, authDb, username,
+				Boolean authenticated = (Boolean) invokeMethod(DB_AUTHENTICATE_METHOD, authDb, username,
 						password == null ? null : password.toCharArray());
 				if (!authenticated) {
 					throw new CannotGetMongoDbConnectionException("Failed to authenticate to database [" + databaseName + "], "
@@ -84,24 +87,24 @@ final class ReflectiveDbInvoker {
 	}
 
 	/**
-	 * Starts a new 'consistent request' in case of mongo-java-driver version 2. Will do nothing for mongo-java-driver
+	 * Starts a new 'consistent request' in case of MongoDB Java driver version 2. Will do nothing for MongoDB Java driver
 	 * version 3 since the operation is no longer available.
-	 * 
+	 *
 	 * @param db
 	 */
 	public static void requestStart(DB db) {
 
-		if (MongoClientVersion.isMongo3Driver()) {
+		if (isMongo3Driver()) {
 			return;
 		}
 
-		ReflectionUtils.invokeMethod(DB_REQUEST_START_METHOD, db);
+		invokeMethod(DB_REQUEST_START_METHOD, db);
 	}
 
 	/**
-	 * Ends the current 'consistent request'. a new 'consistent request' in case of mongo-java-driver version 2. Will do
-	 * nothing for mongo-java-driver version 3 since the operation is no longer available
-	 * 
+	 * Ends the current 'consistent request'. a new 'consistent request' in case of MongoDB Java driver version 2. Will do
+	 * nothing for MongoDB Java driver version 3 since the operation is no longer available
+	 *
 	 * @param db
 	 */
 	public static void requestDone(DB db) {
@@ -110,7 +113,7 @@ final class ReflectiveDbInvoker {
 			return;
 		}
 
-		ReflectionUtils.invokeMethod(DB_REQUEST_DONE_METHOD, db);
+		invokeMethod(DB_REQUEST_DONE_METHOD, db);
 	}
 
 	/**
@@ -121,11 +124,11 @@ final class ReflectiveDbInvoker {
 	 */
 	public static void addUser(DB db, String username, char[] password) {
 
-		if (MongoClientVersion.isMongo3Driver()) {
-			throw new UnsupportedOperationException("Please DB.command to call either the createUser or updateUser command");
+		if (isMongo3Driver()) {
+			throw new UnsupportedOperationException(
+					"Please use DB.command(…) to call either the createUser or updateUser command!");
 		}
 
-		ReflectionUtils.invokeMethod(DB_ADD_USER_METHOD, db, username, password);
+		invokeMethod(DB_ADD_USER_METHOD, db, username, password);
 	}
-
 }

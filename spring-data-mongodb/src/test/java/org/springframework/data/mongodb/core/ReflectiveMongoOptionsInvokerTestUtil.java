@@ -23,6 +23,7 @@ import com.mongodb.MongoOptions;
  * 
  * @author Christoph Strobl
  */
+@SuppressWarnings("deprecation")
 public class ReflectiveMongoOptionsInvokerTestUtil {
 
 	public static void setAutoConnectRetry(MongoOptions options, boolean autoConnectRetry) {
@@ -48,5 +49,4 @@ public class ReflectiveMongoOptionsInvokerTestUtil {
 	public static long getMaxAutoConnectRetryTime(MongoOptions options) {
 		return ReflectiveMongoOptionsInvoker.getMaxAutoConnectRetryTime(options);
 	}
-
 }

@@ -29,6 +29,8 @@ import org.springframework.util.StringUtils;
 import com.mongodb.MongoCredential;
 
 /**
+ * Unit tests for {@link MongoCredentialPropertyEditor}.
+ * 
  * @author Christoph Strobl
  */
 public class MongoCredentialPropertyEditorUnitTests {

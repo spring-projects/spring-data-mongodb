@@ -190,7 +190,7 @@ public class Person {
 ----
 ====
 
-IMPORTANT: The `@Id` annotation tells the mapper which property you want to use for the MongoDB `_id` property and the `@Indexed` annotation tells the mapping framework to call `createIndex` on that property of your document, making searches faster.
+IMPORTANT: The `@Id` annotation tells the mapper which property you want to use for the MongoDB `_id` property and the `@Indexed` annotation tells the mapping framework to call `createIndex(…)` on that property of your document, making searches faster.
 
 IMPORTANT: Automatic index creation is only done for types annotated with `@Document`.
 

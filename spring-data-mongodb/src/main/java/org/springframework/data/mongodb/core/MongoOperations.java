@@ -87,18 +87,18 @@ public interface MongoOperations {
 	 * 
 	 * @param command a MongoDB command
 	 * @param options query options to use
-	 * @deprecated since 1.7. Please use {@link #executeCommand(DBObject, ReadPreference)}, as the mongo-java-driver
+	 * @deprecated since 1.7. Please use {@link #executeCommand(DBObject, ReadPreference)}, as the MongoDB Java driver
 	 *             version 3 no longer supports this operation.
 	 */
 	@Deprecated
 	CommandResult executeCommand(DBObject command, int options);
 
 	/**
-	 * Execute a MongoDB command. Any errors that result from executing this command will be converted into Spring's DAO
-	 * exception hierarchy.
+	 * Execute a MongoDB command. Any errors that result from executing this command will be converted into Spring's data
+	 * access exception hierarchy.
 	 * 
-	 * @param command a MongoDB command.
-	 * @param readPreference read preferences to use.
+	 * @param command a MongoDB command, must not be {@literal null}.
+	 * @param readPreference read preferences to use, can be {@literal null}.
 	 * @return
 	 * @since 1.7
 	 */
@@ -159,7 +159,7 @@ public interface MongoOperations {
 	 * @param <T> return type
 	 * @param action callback that specified the MongoDB actions to perform on the DB instance
 	 * @return a result object returned by the action or <tt>null</tt>
-	 * @deprecated since 1.7 as the mongo-java-driver version 3 does not longer support request boundaries via
+	 * @deprecated since 1.7 as the MongoDB Java driver version 3 does not longer support request boundaries via
 	 *             {@link DB#requestStart()} and {@link DB#requestDone()}.
 	 */
 	@Deprecated

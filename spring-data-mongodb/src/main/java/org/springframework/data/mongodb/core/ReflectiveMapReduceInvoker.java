@@ -15,11 +15,12 @@
  */
 package org.springframework.data.mongodb.core;
 
+import static org.springframework.data.mongodb.util.MongoClientVersion.*;
+import static org.springframework.util.ReflectionUtils.*;
+
 import java.lang.reflect.Method;
 
-import org.springframework.data.mongodb.MongoClientVersion;
 import org.springframework.util.Assert;
-import org.springframework.util.ReflectionUtils;
 
 import com.mongodb.MapReduceCommand;
 
@@ -28,6 +29,7 @@ import com.mongodb.MapReduceCommand;
  * consistently available for various driver versions.
  * 
  * @author Christoph Strobl
+ * @author Oliver Gierke
  * @since 1.7
  */
 final class ReflectiveMapReduceInvoker {
@@ -36,27 +38,25 @@ final class ReflectiveMapReduceInvoker {
 
 	static {
 
-		ADD_EXTRA_OPTION_METHOD = ReflectionUtils.findMethod(MapReduceCommand.class, "addExtraOption", String.class,
-				Object.class);
+		ADD_EXTRA_OPTION_METHOD = findMethod(MapReduceCommand.class, "addExtraOption", String.class, Object.class);
 	}
 
 	private ReflectiveMapReduceInvoker() {}
 
 	/**
-	 * Sets the extra option for mongo-java-driver version 2. Will do nothing for mongo-java-driver version 2.
+	 * Sets the extra option for MongoDB Java driver version 2. Will do nothing for MongoDB Java driver version 2.
 	 * 
-	 * @param cmd can be {@literal null} for mongo-java-driver version 2.
+	 * @param cmd can be {@literal null} for MongoDB Java driver version 2.
 	 * @param key
 	 * @param value
 	 */
 	public static void addExtraOption(MapReduceCommand cmd, String key, Object value) {
 
-		if (MongoClientVersion.isMongo3Driver()) {
+		if (isMongo3Driver()) {
 			return;
 		}
 
 		Assert.notNull(cmd, "MapReduceCommand must not be null!");
-		ReflectionUtils.invokeMethod(ADD_EXTRA_OPTION_METHOD, cmd, key, value);
+		invokeMethod(ADD_EXTRA_OPTION_METHOD, cmd, key, value);
 	}
-
 }

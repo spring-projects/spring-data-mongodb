@@ -15,8 +15,9 @@
  */
 package org.springframework.data.mongodb.core;
 
+import static org.springframework.data.mongodb.util.MongoClientVersion.*;
+
 import org.springframework.beans.DirectFieldAccessor;
-import org.springframework.data.mongodb.MongoClientVersion;
 
 import com.mongodb.WriteConcern;
 
@@ -25,6 +26,7 @@ import com.mongodb.WriteConcern;
  * available for various driver versions.
  * 
  * @author Christoph Strobl
+ * @author Oliver Gierke
  * @since 1.7
  */
 class ReflectiveWriteConcernInvoker {
@@ -33,12 +35,12 @@ class ReflectiveWriteConcernInvoker {
 
 	static {
 
-		NONE_OR_UNACKNOWLEDGED = MongoClientVersion.isMongo3Driver() ? WriteConcern.UNACKNOWLEDGED
-				: (WriteConcern) new DirectFieldAccessor(new WriteConcern()).getPropertyValue("NONE");
+		NONE_OR_UNACKNOWLEDGED = isMongo3Driver() ? WriteConcern.UNACKNOWLEDGED : (WriteConcern) new DirectFieldAccessor(
+				new WriteConcern()).getPropertyValue("NONE");
 	}
 
 	/**
-	 * @return {@link WriteConcern#NONE} for mongo-java-driver version 2, otherwise {@link WriteConcern#UNACKNOWLEDGED}.
+	 * @return {@link WriteConcern#NONE} for MongoDB Java driver version 2, otherwise {@link WriteConcern#UNACKNOWLEDGED}.
 	 */
 	public static WriteConcern noneOrUnacknowledged() {
 		return NONE_OR_UNACKNOWLEDGED;

@@ -18,7 +18,7 @@ package org.springframework.data.mongodb.core;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.authentication.UserCredentials;
-import org.springframework.data.mongodb.MongoClientVersion;
+import org.springframework.data.mongodb.util.MongoClientVersion;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.util.Assert;
 
@@ -45,9 +45,7 @@ public abstract class MongoDbUtils {
 	/**
 	 * Private constructor to prevent instantiation.
 	 */
-	private MongoDbUtils() {
-
-	}
+	private MongoDbUtils() {}
 
 	/**
 	 * Obtains a {@link DB} connection for the given {@link Mongo} instance and database name
@@ -184,8 +182,8 @@ public abstract class MongoDbUtils {
 	 * 
 	 * @param db the DB to close (may be <code>null</code>)
 	 * @deprecated since 1.7. The main use case for this method is to ensure that applications can read their own
-	 *             unacknowledged writes, but this is no longer so prevalent since the mongo-java-driver version 3 started
-	 *             defaulting to acknowledged writes.
+	 *             unacknowledged writes, but this is no longer so prevalent since the MongoDB Java driver version 3
+	 *             started defaulting to acknowledged writes.
 	 */
 	@Deprecated
 	public static void closeDB(DB db) {
@@ -215,5 +213,4 @@ public abstract class MongoDbUtils {
 
 		return !MongoClientVersion.isMongo3Driver();
 	}
-
 }

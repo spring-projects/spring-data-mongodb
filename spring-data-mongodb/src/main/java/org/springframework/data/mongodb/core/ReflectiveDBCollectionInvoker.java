@@ -15,12 +15,12 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.springframework.data.mongodb.MongoClientVersion.*;
+import static org.springframework.data.mongodb.util.MongoClientVersion.*;
 import static org.springframework.util.ReflectionUtils.*;
 
 import java.lang.reflect.Method;
 
-import org.springframework.data.mongodb.MongoClientVersion;
+import org.springframework.data.mongodb.util.MongoClientVersion;
 
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
@@ -30,6 +30,7 @@ import com.mongodb.DBObject;
  * available for various driver versions.
  * 
  * @author Christoph Strobl
+ * @author Oliver Gierke
  * @since 1.7
  */
 class ReflectiveDBCollectionInvoker {
@@ -46,9 +47,8 @@ class ReflectiveDBCollectionInvoker {
 	private ReflectiveDBCollectionInvoker() {}
 
 	/**
-	 * Convenience method to generate an index name from the set of fields it is over. Will fall back to a
-	 * mongo-java-driver version 2 compatible way of generating index name in case of
-	 * {@link MongoClientVersion#isMongo3Driver()}.
+	 * Convenience method to generate an index name from the set of fields it is over. Will fall back to a MongoDB Java
+	 * driver version 2 compatible way of generating index name in case of {@link MongoClientVersion#isMongo3Driver()}.
 	 * 
 	 * @param keys the names of the fields used in this index
 	 * @return
@@ -62,8 +62,8 @@ class ReflectiveDBCollectionInvoker {
 	}
 
 	/**
-	 * In case of mongo-java-driver version 2 all indices that have not yet been applied to this collection will be
-	 * cleared. Since this method is not available for the mongo-java-driver version 3 the operation will throw
+	 * In case of MongoDB Java driver version 2 all indices that have not yet been applied to this collection will be
+	 * cleared. Since this method is not available for the MongoDB Java driver version 3 the operation will throw
 	 * {@link UnsupportedOperationException}.
 	 * 
 	 * @param dbCollection
@@ -79,7 +79,7 @@ class ReflectiveDBCollectionInvoker {
 	}
 
 	/**
-	 * Borrowed from mongo-java-driver version 2. See <a
+	 * Borrowed from MongoDB Java driver version 2. See <a
 	 * href="http://github.com/mongodb/mongo-java-driver/blob/r2.13.0/src/main/com/mongodb/DBCollection.java#L754"
 	 * >http://github.com/mongodb/mongo-java-driver/blob/r2.13.0/src/main/com/mongodb/DBCollection.java#L754</a>
 	 * 
@@ -89,14 +89,21 @@ class ReflectiveDBCollectionInvoker {
 	private static String genIndexName(DBObject keys) {
 
 		StringBuilder name = new StringBuilder();
+
 		for (String s : keys.keySet()) {
-			if (name.length() > 0)
+
+			if (name.length() > 0) {
 				name.append('_');
+			}
+
 			name.append(s).append('_');
 			Object val = keys.get(s);
-			if (val instanceof Number || val instanceof String)
+
+			if (val instanceof Number || val instanceof String) {
 				name.append(val.toString().replace(' ', '_'));
+			}
 		}
+
 		return name.toString();
 	}
 }

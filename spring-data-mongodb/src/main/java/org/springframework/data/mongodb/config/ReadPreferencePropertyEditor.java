@@ -27,6 +27,10 @@ import com.mongodb.ReadPreference;
  */
 public class ReadPreferencePropertyEditor extends PropertyEditorSupport {
 
+	/*
+	 * (non-Javadoc)
+	 * @see java.beans.PropertyEditorSupport#setAsText(java.lang.String)
+	 */
 	@Override
 	public void setAsText(String readPreferenceString) throws IllegalArgumentException {
 
@@ -35,6 +39,7 @@ public class ReadPreferencePropertyEditor extends PropertyEditorSupport {
 		}
 
 		ReadPreference preference = null;
+
 		try {
 			preference = ReadPreference.valueOf(readPreferenceString);
 		} catch (IllegalArgumentException ex) {

@@ -17,16 +17,15 @@ package org.springframework.data.mongodb.core;
 
 import javax.net.ssl.SSLSocketFactory;
 
-import org.springframework.beans.factory.FactoryBean;
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.data.mongodb.MongoClientVersion;
+import org.springframework.beans.factory.config.AbstractFactoryBean;
+import org.springframework.data.mongodb.util.MongoClientVersion;
 
 import com.mongodb.MongoOptions;
 
 /**
- * A factory bean for construction of a {@link MongoOptions} instance. In case used with mongo-java-driver version 3
+ * A factory bean for construction of a {@link MongoOptions} instance. In case used with MongoDB Java driver version 3
  * porperties not suppprted by the driver will be ignored.
- * 
+ *
  * @author Graeme Rocher
  * @author Mark Pollack
  * @author Mike Saavedra
@@ -35,7 +34,7 @@ import com.mongodb.MongoOptions;
  * @deprecated since 1.7. Please use {@link MongoClientOptionsFactoryBean} instead.
  */
 @Deprecated
-public class MongoOptionsFactoryBean implements FactoryBean<MongoOptions>, InitializingBean {
+public class MongoOptionsFactoryBean extends AbstractFactoryBean<MongoOptions> {
 
 	private static final MongoOptions DEFAULT_MONGO_OPTIONS = new MongoOptions();
 
@@ -59,8 +58,6 @@ public class MongoOptionsFactoryBean implements FactoryBean<MongoOptions>, Initi
 
 	private boolean ssl;
 	private SSLSocketFactory sslSocketFactory;
-
-	private MongoOptions options;
 
 	/**
 	 * Configures the maximum number of connections allowed per host until we will block.
@@ -211,16 +208,17 @@ public class MongoOptionsFactoryBean implements FactoryBean<MongoOptions>, Initi
 		this.sslSocketFactory = sslSocketFactory;
 	}
 
-	/*
+	/* 
 	 * (non-Javadoc)
-	 * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
+	 * @see org.springframework.beans.factory.config.AbstractFactoryBean#createInstance()
 	 */
-	public void afterPropertiesSet() {
+	@Override
+	protected MongoOptions createInstance() throws Exception {
 
 		if (MongoClientVersion.isMongo3Driver()) {
 			throw new IllegalArgumentException(
 					String
-							.format("Usage of 'mongo-options' is no longer supported for mongo-java-driver version 3 and above. Please use 'mongo-client-options' and refer to chapter 'MongoDB 3.0 Support' for details."));
+							.format("Usage of 'mongo-options' is no longer supported for MongoDB Java driver version 3 and above. Please use 'mongo-client-options' and refer to chapter 'MongoDB 3.0 Support' for details."));
 		}
 
 		MongoOptions options = new MongoOptions();
@@ -244,15 +242,7 @@ public class MongoOptionsFactoryBean implements FactoryBean<MongoOptions>, Initi
 		ReflectiveMongoOptionsInvoker.setMaxAutoConnectRetryTime(options, maxAutoConnectRetryTime);
 		ReflectiveMongoOptionsInvoker.setSlaveOk(options, slaveOk);
 
-		this.options = options;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.beans.factory.FactoryBean#getObject()
-	 */
-	public MongoOptions getObject() {
-		return this.options;
+		return options;
 	}
 
 	/*
@@ -262,13 +252,4 @@ public class MongoOptionsFactoryBean implements FactoryBean<MongoOptions>, Initi
 	public Class<?> getObjectType() {
 		return MongoOptions.class;
 	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.beans.factory.FactoryBean#isSingleton()
-	 */
-	public boolean isSingleton() {
-		return true;
-	}
-
 }

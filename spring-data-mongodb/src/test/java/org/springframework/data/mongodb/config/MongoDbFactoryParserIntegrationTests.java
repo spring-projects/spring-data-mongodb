@@ -18,7 +18,7 @@ package org.springframework.data.mongodb.config;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 import static org.junit.Assume.*;
-import static org.springframework.data.mongodb.MongoClientVersion.*;
+import static org.springframework.data.mongodb.util.MongoClientVersion.*;
 
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -104,22 +104,6 @@ public class MongoDbFactoryParserIntegrationTests {
 		ctx.close();
 	}
 
-	private void assertWriteConcern(ClassPathXmlApplicationContext ctx, WriteConcern expectedWriteConcern) {
-		SimpleMongoDbFactory dbFactory = ctx.getBean("first", SimpleMongoDbFactory.class);
-		DB db = dbFactory.getDb();
-		assertThat(db.getName(), is("db"));
-
-		WriteConcern configuredConcern = (WriteConcern) ReflectionTestUtils.getField(dbFactory, "writeConcern");
-
-		MyWriteConcern myDbFactoryWriteConcern = new MyWriteConcern(configuredConcern);
-		MyWriteConcern myDbWriteConcern = new MyWriteConcern(db.getWriteConcern());
-		MyWriteConcern myExpectedWriteConcern = new MyWriteConcern(expectedWriteConcern);
-
-		assertThat(myDbFactoryWriteConcern, is(myExpectedWriteConcern));
-		assertThat(myDbWriteConcern, is(myExpectedWriteConcern));
-		assertThat(myDbWriteConcern, is(myDbFactoryWriteConcern));
-	}
-
 	// This test will fail since equals in WriteConcern uses == for _w and not .equals
 	public void testWriteConcernEquality() {
 		String s1 = new String("rack1");
@@ -137,9 +121,10 @@ public class MongoDbFactoryParserIntegrationTests {
 	}
 
 	/**
-	 * @see DATADOC-280
+	 * @see DATAMONGO-280
 	 */
 	@Test
+	@SuppressWarnings("deprecation")
 	public void parsesMaxAutoConnectRetryTimeCorrectly() {
 
 		reader.loadBeanDefinitions(new ClassPathResource("namespace/db-factory-bean.xml"));
@@ -148,7 +133,7 @@ public class MongoDbFactoryParserIntegrationTests {
 	}
 
 	/**
-	 * @see DATADOC-295
+	 * @see DATAMONGO-295
 	 */
 	@Test
 	public void setsUpMongoDbFactoryUsingAMongoUri() {
@@ -163,7 +148,7 @@ public class MongoDbFactoryParserIntegrationTests {
 	}
 
 	/**
-	 * @see DATADOC-306
+	 * @see DATAMONGO-306
 	 */
 	@Test
 	public void setsUpMongoDbFactoryUsingAMongoUriWithoutCredentials() {
@@ -182,10 +167,27 @@ public class MongoDbFactoryParserIntegrationTests {
 	}
 
 	/**
-	 * @see DATADOC-295
+	 * @see DATAMONGO-295
 	 */
 	@Test(expected = BeanDefinitionParsingException.class)
 	public void rejectsUriPlusDetailedConfiguration() {
 		reader.loadBeanDefinitions(new ClassPathResource("namespace/mongo-uri-and-details.xml"));
+	}
+
+	private static void assertWriteConcern(ClassPathXmlApplicationContext ctx, WriteConcern expectedWriteConcern) {
+
+		SimpleMongoDbFactory dbFactory = ctx.getBean("first", SimpleMongoDbFactory.class);
+		DB db = dbFactory.getDb();
+		assertThat(db.getName(), is("db"));
+
+		WriteConcern configuredConcern = (WriteConcern) ReflectionTestUtils.getField(dbFactory, "writeConcern");
+
+		MyWriteConcern myDbFactoryWriteConcern = new MyWriteConcern(configuredConcern);
+		MyWriteConcern myDbWriteConcern = new MyWriteConcern(db.getWriteConcern());
+		MyWriteConcern myExpectedWriteConcern = new MyWriteConcern(expectedWriteConcern);
+
+		assertThat(myDbFactoryWriteConcern, is(myExpectedWriteConcern));
+		assertThat(myDbWriteConcern, is(myExpectedWriteConcern));
+		assertThat(myDbWriteConcern, is(myDbFactoryWriteConcern));
 	}
 }

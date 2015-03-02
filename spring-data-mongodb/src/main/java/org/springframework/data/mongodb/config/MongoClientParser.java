@@ -82,5 +82,4 @@ public class MongoClientParser implements BeanDefinitionParser {
 
 		return mongoComponent.getBeanDefinition();
 	}
-
 }

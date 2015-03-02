@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb;
+package org.springframework.data.mongodb.util;
 
 import org.springframework.util.ClassUtils;
 
@@ -32,14 +32,14 @@ public class MongoClientVersion {
 			MongoClientVersion.class.getClassLoader());
 
 	/**
-	 * @return true if mongo-java-driver version 3 or later is on classpath.
+	 * @return |literal true} if MongoDB Java driver version 3.0 or later is on classpath.
 	 */
 	public static boolean isMongo3Driver() {
 		return IS_MONGO_30;
 	}
 
 	/**
-	 * @return true if mongodb-driver-async is on classpath.
+	 * @return {lliteral true} if MongoDB Java driver is on classpath.
 	 */
 	public static boolean isAsyncClient() {
 		return IS_ASYNC_CLIENT;

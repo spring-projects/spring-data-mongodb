@@ -39,7 +39,7 @@ public class ServerInfo extends AbstractMonitor {
 	}
 
 	/**
-	 * Returns the hostname of the used server reported by mongo.
+	 * Returns the hostname of the used server reported by MongoDB.
 	 * 
 	 * @return the reported hostname can also be an IP address.
 	 * @throws UnknownHostException
@@ -73,5 +73,4 @@ public class ServerInfo extends AbstractMonitor {
 	public double getUptime() {
 		return (Double) getServerStatus().get("uptime");
 	}
-
 }

@@ -15,12 +15,10 @@
  */
 package org.springframework.data.mongodb.core;
 
+import static org.springframework.data.mongodb.util.MongoClientVersion.*;
 import static org.springframework.util.ReflectionUtils.*;
 
 import java.lang.reflect.Method;
-
-import org.springframework.data.mongodb.MongoClientVersion;
-import org.springframework.util.ReflectionUtils;
 
 import com.mongodb.MongoException;
 import com.mongodb.WriteResult;
@@ -30,6 +28,7 @@ import com.mongodb.WriteResult;
  * available for various driver versions.
  * 
  * @author Christoph Strobl
+ * @author Oliver Gierke
  * @since 1.7
  */
 final class ReflectiveWriteResultInvoker {
@@ -46,12 +45,12 @@ final class ReflectiveWriteResultInvoker {
 	}
 
 	/**
-	 * @param writeResult can be {@literal null} for mongo-java-driver version 3.
-	 * @return null in case of mongo-java-driver version 3 since errors are thrown as {@link MongoException}.
+	 * @param writeResult can be {@literal null} for MongoDB Java driver version 3.
+	 * @return null in case of MongoDB Java driver version 3 since errors are thrown as {@link MongoException}.
 	 */
 	public static String getError(WriteResult writeResult) {
 
-		if (MongoClientVersion.isMongo3Driver()) {
+		if (isMongo3Driver()) {
 			return null;
 		}
 
@@ -60,11 +59,9 @@ final class ReflectiveWriteResultInvoker {
 
 	/**
 	 * @param writeResult
-	 * @return return in case of mongo-java-driver version 2.
+	 * @return return in case of MongoDB Java driver version 2.
 	 */
 	public static boolean wasAcknowledged(WriteResult writeResult) {
-		return MongoClientVersion.isMongo3Driver() ? ((Boolean) ReflectionUtils.invokeMethod(WAS_ACKNOWLEDGED_METHOD,
-				writeResult)).booleanValue() : true;
+		return isMongo3Driver() ? ((Boolean) invokeMethod(WAS_ACKNOWLEDGED_METHOD, writeResult)).booleanValue() : true;
 	}
-
 }

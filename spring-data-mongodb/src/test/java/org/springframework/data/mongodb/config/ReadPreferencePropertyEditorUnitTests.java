@@ -15,8 +15,9 @@
  */
 package org.springframework.data.mongodb.config;
 
-import org.hamcrest.core.Is;
-import org.junit.Assert;
+import static org.hamcrest.CoreMatchers.*;
+import static org.junit.Assert.*;
+
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -25,6 +26,8 @@ import org.junit.rules.ExpectedException;
 import com.mongodb.ReadPreference;
 
 /**
+ * Unit tests for {@link ReadPreferencePropertyEditor}.
+ * 
  * @author Christoph Strobl
  */
 public class ReadPreferencePropertyEditorUnitTests {
@@ -59,7 +62,7 @@ public class ReadPreferencePropertyEditorUnitTests {
 
 		editor.setAsText("secondary");
 
-		Assert.assertThat(editor.getValue(), Is.<Object> is(ReadPreference.secondary()));
+		assertThat(editor.getValue(), is((Object) ReadPreference.secondary()));
 	}
 
 	/**
@@ -70,6 +73,6 @@ public class ReadPreferencePropertyEditorUnitTests {
 
 		editor.setAsText("NEAREST");
 
-		Assert.assertThat(editor.getValue(), Is.<Object> is(ReadPreference.nearest()));
+		assertThat(editor.getValue(), is((Object) ReadPreference.nearest()));
 	}
 }

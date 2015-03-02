@@ -102,7 +102,7 @@ public class MapReduceResults<T> implements Iterable<T> {
 		return rawResults;
 	}
 
-	private MapReduceTiming parseTiming(DBObject rawResults) {
+	private static MapReduceTiming parseTiming(DBObject rawResults) {
 
 		DBObject timing = (DBObject) rawResults.get("timing");
 
@@ -125,8 +125,10 @@ public class MapReduceResults<T> implements Iterable<T> {
 	 * @param key
 	 * @return
 	 */
-	private Long getAsLong(DBObject source, String key) {
+	private static Long getAsLong(DBObject source, String key) {
+
 		Object raw = source.get(key);
+
 		return raw instanceof Long ? (Long) raw : (Integer) raw;
 	}
 
@@ -136,7 +138,7 @@ public class MapReduceResults<T> implements Iterable<T> {
 	 * @param rawResults
 	 * @return
 	 */
-	private MapReduceCounts parseCounts(DBObject rawResults) {
+	private static MapReduceCounts parseCounts(DBObject rawResults) {
 
 		DBObject counts = (DBObject) rawResults.get("counts");
 
@@ -157,7 +159,7 @@ public class MapReduceResults<T> implements Iterable<T> {
 	 * @param rawResults
 	 * @return
 	 */
-	private String parseOutputCollection(DBObject rawResults) {
+	private static String parseOutputCollection(DBObject rawResults) {
 
 		Object resultField = rawResults.get("result");
 
@@ -169,16 +171,16 @@ public class MapReduceResults<T> implements Iterable<T> {
 				.toString();
 	}
 
-	private MapReduceCounts parseCounts(final MapReduceOutput mapReduceOutput) {
+	private static MapReduceCounts parseCounts(final MapReduceOutput mapReduceOutput) {
 		return new MapReduceCounts(mapReduceOutput.getInputCount(), mapReduceOutput.getEmitCount(),
 				mapReduceOutput.getOutputCount());
 	}
 
-	private String parseOutputCollection(final MapReduceOutput mapReduceOutput) {
+	private static String parseOutputCollection(final MapReduceOutput mapReduceOutput) {
 		return mapReduceOutput.getCollectionName();
 	}
 
-	private MapReduceTiming parseTiming(MapReduceOutput mapReduceOutput) {
+	private static MapReduceTiming parseTiming(MapReduceOutput mapReduceOutput) {
 		return new MapReduceTiming(-1, -1, mapReduceOutput.getDuration());
 	}
 }

@@ -122,7 +122,16 @@
 
 		<profile>
 
-			<id>mongo-3-next</id>
+			<id>mongo3</id>
+			<properties>
+				<mongo>3.0.0-beta3</mongo>
+			</properties>
+
+		</profile>
+
+		<profile>
+
+			<id>mongo3-next</id>
 			<properties>
 				<mongo>3.0.0-SNAPSHOT</mongo>
 			</properties>

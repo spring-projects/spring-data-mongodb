@@ -59,7 +59,6 @@ import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
 import org.springframework.data.mapping.model.MappingException;
-import org.springframework.data.mongodb.MongoClientVersion;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
@@ -96,6 +95,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.util.MongoClientVersion;
 import org.springframework.jca.cci.core.ConnectionCallback;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
@@ -351,6 +351,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 */
 	public CommandResult executeCommand(final DBObject command, final ReadPreference readPreference) {
 
+		Assert.notNull(command, "Command must not be null!");
+
 		CommandResult result = execute(new DbCallback<CommandResult>() {
 			public CommandResult doInDB(DB db) throws MongoException, DataAccessException {
 				return db.command(command, readPreference);
@@ -358,6 +360,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		});
 
 		logCommandExecutionError(command, result);
+
 		return result;
 	}
 
@@ -723,7 +726,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	/**
 	 * Prepare the WriteConcern before any processing is done using it. This allows a convenient way to apply custom
 	 * settings in sub-classes. <br />
-	 * In case of using mongo-java-driver version 3 the returned {@link WriteConcern} will be defaulted to
+	 * In case of using MongoDB Java driver version 3 the returned {@link WriteConcern} will be defaulted to
 	 * {@link WriteConcern#ACKNOWLEDGED} when {@link WriteResultChecking} is set to {@link WriteResultChecking#EXCEPTION}.
 	 * 
 	 * @param writeConcern any WriteConcern already configured or null

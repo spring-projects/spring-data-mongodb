@@ -20,9 +20,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.springframework.beans.factory.DisposableBean;
-import org.springframework.beans.factory.FactoryBean;
-import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.config.AbstractFactoryBean;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.util.CollectionUtils;
@@ -40,19 +38,17 @@ import com.mongodb.ServerAddress;
  * @author Christoph Strobl
  * @since 1.7
  */
-public class MongoClientFactoryBean implements FactoryBean<Mongo>, InitializingBean, DisposableBean,
-		PersistenceExceptionTranslator {
+public class MongoClientFactoryBean extends AbstractFactoryBean<Mongo> implements PersistenceExceptionTranslator {
 
-	private MongoClient mongo;
+	private static final PersistenceExceptionTranslator DEFAULT_EXCEPTION_TRANSLATOR = new MongoExceptionTranslator();
 
 	private MongoClientOptions mongoClientOptions;
-
 	private String host;
 	private Integer port;
 	private List<ServerAddress> replicaSetSeeds;
 	private List<MongoCredential> credentials;
 
-	private PersistenceExceptionTranslator exceptionTranslator = new MongoExceptionTranslator();
+	private PersistenceExceptionTranslator exceptionTranslator = DEFAULT_EXCEPTION_TRANSLATOR;
 
 	/**
 	 * Set the {@link MongoClientOptions} to be used when creating {@link MongoClient}.
@@ -72,52 +68,40 @@ public class MongoClientFactoryBean implements FactoryBean<Mongo>, InitializingB
 		this.credentials = filterNonNullElementsAsList(credentials);
 	}
 
+	/**
+	 * Set the list of {@link ServerAddress} to build up a replica set for.
+	 * 
+	 * @param replicaSetSeeds can be {@literal null}.
+	 */
 	public void setReplicaSetSeeds(ServerAddress[] replicaSetSeeds) {
 		this.replicaSetSeeds = filterNonNullElementsAsList(replicaSetSeeds);
 	}
 
 	/**
-	 * @param elements the elements to filter <T>
-	 * @return a new unmodifiable {@link List#} from the given elements without nulls
+	 * Configures the host to connect to.
+	 * 
+	 * @param host
 	 */
-	private <T> List<T> filterNonNullElementsAsList(T[] elements) {
-
-		if (elements == null) {
-			return Collections.emptyList();
-		}
-
-		List<T> candidateElements = new ArrayList<T>();
-
-		for (T element : elements) {
-			if (element != null) {
-				candidateElements.add(element);
-			}
-		}
-
-		return Collections.unmodifiableList(candidateElements);
-	}
-
 	public void setHost(String host) {
 		this.host = host;
 	}
 
+	/**
+	 * Configures the port to connect to.
+	 * 
+	 * @param port
+	 */
 	public void setPort(int port) {
 		this.port = port;
 	}
 
 	/**
+	 * Configures the {@link PersistenceExceptionTranslator} to use.
+	 * 
 	 * @param exceptionTranslator
 	 */
 	public void setExceptionTranslator(PersistenceExceptionTranslator exceptionTranslator) {
-		this.exceptionTranslator = exceptionTranslator;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.beans.factory.FactoryBean#getObject()
-	 */
-	public Mongo getObject() throws Exception {
-		return mongo;
+		this.exceptionTranslator = exceptionTranslator == null ? DEFAULT_EXCEPTION_TRANSLATOR : exceptionTranslator;
 	}
 
 	/*
@@ -130,14 +114,6 @@ public class MongoClientFactoryBean implements FactoryBean<Mongo>, InitializingB
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.beans.factory.FactoryBean#isSingleton()
-	 */
-	public boolean isSingleton() {
-		return true;
-	}
-
-	/*
-	 * (non-Javadoc)
 	 * @see org.springframework.dao.support.PersistenceExceptionTranslator#translateExceptionIfPossible(java.lang.RuntimeException)
 	 */
 	public DataAccessException translateExceptionIfPossible(RuntimeException ex) {
@@ -146,18 +122,29 @@ public class MongoClientFactoryBean implements FactoryBean<Mongo>, InitializingB
 
 	/* 
 	 * (non-Javadoc)
-	 * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
+	 * @see org.springframework.beans.factory.config.AbstractFactoryBean#createInstance()
 	 */
-	public void afterPropertiesSet() throws Exception {
+	@Override
+	protected Mongo createInstance() throws Exception {
 
 		if (mongoClientOptions == null) {
 			mongoClientOptions = MongoClientOptions.builder().build();
 		}
+
 		if (credentials == null) {
 			credentials = Collections.emptyList();
 		}
 
-		this.mongo = createMongoClient();
+		return createMongoClient();
+	}
+
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.beans.factory.config.AbstractFactoryBean#destroyInstance(java.lang.Object)
+	 */
+	@Override
+	protected void destroyInstance(Mongo instance) throws Exception {
+		instance.close();
 	}
 
 	private MongoClient createMongoClient() throws UnknownHostException {
@@ -172,15 +159,31 @@ public class MongoClientFactoryBean implements FactoryBean<Mongo>, InitializingB
 	private ServerAddress createConfiguredOrDefaultServerAddress() throws UnknownHostException {
 
 		ServerAddress defaultAddress = new ServerAddress();
+
 		return new ServerAddress(StringUtils.hasText(host) ? host : defaultAddress.getHost(),
 				port != null ? port.intValue() : defaultAddress.getPort());
 	}
 
-	/* 
-	 * (non-Javadoc)
-	 * @see org.springframework.beans.factory.DisposableBean#destroy()
+	/**
+	 * Returns the given array as {@link List} with all {@literal null} elements removed.
+	 * 
+	 * @param elements the elements to filter <T>, can be {@literal null}.
+	 * @return a new unmodifiable {@link List#} from the given elements without {@literal null}s.
 	 */
-	public void destroy() throws Exception {
-		this.mongo.close();
+	private static <T> List<T> filterNonNullElementsAsList(T[] elements) {
+
+		if (elements == null) {
+			return Collections.emptyList();
+		}
+
+		List<T> candidateElements = new ArrayList<T>();
+
+		for (T element : elements) {
+			if (element != null) {
+				candidateElements.add(element);
+			}
+		}
+
+		return Collections.unmodifiableList(candidateElements);
 	}
 }

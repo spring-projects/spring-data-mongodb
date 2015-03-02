@@ -38,6 +38,10 @@ public class MongoCredentialPropertyEditor extends PropertyEditorSupport {
 	private static final String OPTIONS_DELIMINATOR = "?";
 	private static final String OPTION_VALUE_DELIMINATOR = "&";
 
+	/*
+	 * (non-Javadoc)
+	 * @see java.beans.PropertyEditorSupport#setAsText(java.lang.String)
+	 */
 	@Override
 	public void setAsText(String text) throws IllegalArgumentException {
 
@@ -46,6 +50,7 @@ public class MongoCredentialPropertyEditor extends PropertyEditorSupport {
 		}
 
 		List<MongoCredential> credentials = new ArrayList<MongoCredential>();
+
 		for (String credentialString : text.split(",")) {
 
 			if (!text.contains(USERNAME_PASSWORD_DELIMINATOR) || !text.contains(DATABASE_DELIMINATOR)) {
@@ -57,8 +62,11 @@ public class MongoCredentialPropertyEditor extends PropertyEditorSupport {
 			Properties options = extractOptions(credentialString);
 
 			if (!options.isEmpty()) {
+
 				if (options.containsKey(AUTH_MECHANISM_KEY)) {
+
 					String authMechanism = options.getProperty(AUTH_MECHANISM_KEY);
+
 					if (MongoCredential.GSSAPI_MECHANISM.equals(authMechanism)) {
 						credentials.add(MongoCredential.createGSSAPICredential(userNameAndPassword[0]));
 					} else if (MongoCredential.MONGODB_CR_MECHANISM.equals(authMechanism)) {
@@ -86,14 +94,14 @@ public class MongoCredentialPropertyEditor extends PropertyEditorSupport {
 		setValue(credentials);
 	}
 
-	private String[] extractUserNameAndPassword(String text) {
+	private static String[] extractUserNameAndPassword(String text) {
 
 		int dbSeperationIndex = text.lastIndexOf(DATABASE_DELIMINATOR);
 		String userNameAndPassword = text.substring(0, dbSeperationIndex);
 		return userNameAndPassword.split(USERNAME_PASSWORD_DELIMINATOR);
 	}
 
-	private String extractDB(String text) {
+	private static String extractDB(String text) {
 
 		int dbSeperationIndex = text.lastIndexOf(DATABASE_DELIMINATOR);
 
@@ -103,7 +111,7 @@ public class MongoCredentialPropertyEditor extends PropertyEditorSupport {
 		return optionsSeperationIndex > -1 ? tmp.substring(0, optionsSeperationIndex) : tmp;
 	}
 
-	private Properties extractOptions(String text) {
+	private static Properties extractOptions(String text) {
 
 		int optionsSeperationIndex = text.lastIndexOf(OPTIONS_DELIMINATOR);
 		int dbSeperationIndex = text.lastIndexOf(OPTIONS_DELIMINATOR);

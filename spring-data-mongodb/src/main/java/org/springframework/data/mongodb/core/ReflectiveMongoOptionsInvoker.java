@@ -15,10 +15,12 @@
  */
 package org.springframework.data.mongodb.core;
 
+import static org.springframework.data.mongodb.util.MongoClientVersion.*;
+import static org.springframework.util.ReflectionUtils.*;
+
 import java.lang.reflect.Method;
 
 import org.springframework.beans.DirectFieldAccessor;
-import org.springframework.data.mongodb.MongoClientVersion;
 import org.springframework.util.ReflectionUtils;
 
 import com.mongodb.MongoOptions;
@@ -28,8 +30,10 @@ import com.mongodb.MongoOptions;
  * available for various driver versions.
  * 
  * @author Christoph Strobl
+ * @author Oliver Gierke
  * @since 1.7
  */
+@SuppressWarnings("deprecation")
 class ReflectiveMongoOptionsInvoker {
 
 	private static final Method GET_AUTO_CONNECT_RETRY_METHOD;
@@ -51,99 +55,104 @@ class ReflectiveMongoOptionsInvoker {
 	private ReflectiveMongoOptionsInvoker() {}
 
 	/**
-	 * Sets the retry connection flag for mongo-java-driver version 2. Will do nothing for mongo-java-driver version 3
+	 * Sets the retry connection flag for MongoDB Java driver version 2. Will do nothing for MongoDB Java driver version 3
 	 * since the method has been removed.
 	 * 
-	 * @param options can be {@literal null} for mongo-java-driver version 3.
+	 * @param options can be {@literal null} for MongoDB Java driver version 3.
 	 * @param autoConnectRetry
 	 */
 	public static void setAutoConnectRetry(MongoOptions options, boolean autoConnectRetry) {
 
-		if (MongoClientVersion.isMongo3Driver()) {
+		if (isMongo3Driver()) {
 			return;
 		}
-		ReflectionUtils.invokeMethod(SET_AUTO_CONNECT_RETRY_METHOD, options, autoConnectRetry);
+
+		invokeMethod(SET_AUTO_CONNECT_RETRY_METHOD, options, autoConnectRetry);
 	}
 
 	/**
-	 * Sets the maxAutoConnectRetryTime attribute for mongo-java-driver version 2. Will do nothing for mongo-java-driver
-	 * version 3 since the method has been removed.
+	 * Sets the maxAutoConnectRetryTime attribute for MongoDB Java driver version 2. Will do nothing for MongoDB Java
+	 * driver version 3 since the method has been removed.
 	 * 
-	 * @param options can be {@literal null} for mongo-java-driver version 3.
+	 * @param options can be {@literal null} for MongoDB Java driver version 3.
 	 * @param maxAutoConnectRetryTime
 	 */
 	public static void setMaxAutoConnectRetryTime(MongoOptions options, long maxAutoConnectRetryTime) {
 
-		if (MongoClientVersion.isMongo3Driver()) {
+		if (isMongo3Driver()) {
 			return;
 		}
-		ReflectionUtils.invokeMethod(SET_MAX_AUTO_CONNECT_RETRY_TIME_METHOD, options, maxAutoConnectRetryTime);
+
+		invokeMethod(SET_MAX_AUTO_CONNECT_RETRY_TIME_METHOD, options, maxAutoConnectRetryTime);
 	}
 
 	/**
-	 * Sets the slaveOk attribute for mongo-java-driver version 2. Will do nothing for mongo-java-driver version 3 since
-	 * the method has been removed.
+	 * Sets the slaveOk attribute for MongoDB Java driver version 2. Will do nothing for MongoDB Java driver version 3
+	 * since the method has been removed.
 	 * 
-	 * @param options can be {@literal null} for mongo-java-driver version 3.
+	 * @param options can be {@literal null} for MongoDB Java driver version 3.
 	 * @param slaveOk
 	 */
 	public static void setSlaveOk(MongoOptions options, boolean slaveOk) {
 
-		if (MongoClientVersion.isMongo3Driver()) {
+		if (isMongo3Driver()) {
 			return;
 		}
+
 		new DirectFieldAccessor(options).setPropertyValue("slaveOk", slaveOk);
 	}
 
 	/**
-	 * Gets the slaveOk attribute for mongo-java-driver version 2. Throws {@link UnsupportedOperationException} for
-	 * mongo-java-driver version 3 since the method has been removed.
+	 * Gets the slaveOk attribute for MongoDB Java driver version 2. Throws {@link UnsupportedOperationException} for
+	 * MongoDB Java driver version 3 since the method has been removed.
 	 * 
-	 * @param options can be {@literal null} for mongo-java-driver version 3.
+	 * @param options can be {@literal null} for MongoDB Java driver version 3.
 	 * @return
 	 * @throws UnsupportedOperationException
 	 */
 	public static boolean getSlaveOk(MongoOptions options) {
 
-		if (MongoClientVersion.isMongo3Driver()) {
+		if (isMongo3Driver()) {
 			throw new UnsupportedOperationException(
-					"Cannot get value for autoConnectRetry which has been removed in mongo-java-driver version 3.");
+					"Cannot get value for autoConnectRetry which has been removed in MongoDB Java driver version 3.");
 		}
+
 		return ((Boolean) new DirectFieldAccessor(options).getPropertyValue("slaveOk")).booleanValue();
 	}
 
 	/**
-	 * Gets the autoConnectRetry attribute for mongo-java-driver version 2. Throws {@link UnsupportedOperationException}
-	 * for mongo-java-driver version 3 since the method has been removed.
+	 * Gets the autoConnectRetry attribute for MongoDB Java driver version 2. Throws {@link UnsupportedOperationException}
+	 * for MongoDB Java driver version 3 since the method has been removed.
 	 * 
-	 * @param options can be {@literal null} for mongo-java-driver version 3.
+	 * @param options can be {@literal null} for MongoDB Java driver version 3.
 	 * @return
 	 * @throws UnsupportedOperationException
 	 */
 	public static boolean getAutoConnectRetry(MongoOptions options) {
 
-		if (MongoClientVersion.isMongo3Driver()) {
+		if (isMongo3Driver()) {
 			throw new UnsupportedOperationException(
-					"Cannot get value for autoConnectRetry which has been removed in mongo-java-driver version 3.");
+					"Cannot get value for autoConnectRetry which has been removed in MongoDB Java driver version 3.");
 		}
-		return ((Boolean) ReflectionUtils.invokeMethod(GET_AUTO_CONNECT_RETRY_METHOD, options)).booleanValue();
+
+		return ((Boolean) invokeMethod(GET_AUTO_CONNECT_RETRY_METHOD, options)).booleanValue();
 	}
 
 	/**
-	 * Gets the maxAutoConnectRetryTime attribute for mongo-java-driver version 2. Throws
-	 * {@link UnsupportedOperationException} for mongo-java-driver version 3 since the method has been removed.
+	 * Gets the maxAutoConnectRetryTime attribute for MongoDB Java driver version 2. Throws
+	 * {@link UnsupportedOperationException} for MongoDB Java driver version 3 since the method has been removed.
 	 * 
-	 * @param options can be {@literal null} for mongo-java-driver version 3.
+	 * @param options can be {@literal null} for MongoDB Java driver version 3.
 	 * @return
 	 * @throws UnsupportedOperationException
 	 */
 	public static long getMaxAutoConnectRetryTime(MongoOptions options) {
 
-		if (MongoClientVersion.isMongo3Driver()) {
+		if (isMongo3Driver()) {
 			throw new UnsupportedOperationException(
-					"Cannot get value for maxAutoConnectRetryTime which has been removed in mongo-java-driver version 3.");
+					"Cannot get value for maxAutoConnectRetryTime which has been removed in MongoDB Java driver version 3.");
 		}
 
-		return ((Long) ReflectionUtils.invokeMethod(GET_MAX_AUTO_CONNECT_RETRY_TIME_METHOD, options)).longValue();
+		return ((Long) invokeMethod(GET_MAX_AUTO_CONNECT_RETRY_TIME_METHOD, options)).longValue();
 	}
 }

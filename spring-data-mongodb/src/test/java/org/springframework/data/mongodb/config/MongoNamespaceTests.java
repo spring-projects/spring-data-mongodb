@@ -17,7 +17,7 @@ package org.springframework.data.mongodb.config;
 
 import static org.junit.Assert.*;
 import static org.junit.Assume.*;
-import static org.springframework.data.mongodb.MongoClientVersion.*;
+import static org.springframework.data.mongodb.util.MongoClientVersion.*;
 import static org.springframework.test.util.ReflectionTestUtils.*;
 
 import javax.net.ssl.SSLSocketFactory;

@@ -15,13 +15,12 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
+import static org.springframework.data.mongodb.util.MongoClientVersion.*;
 import static org.springframework.util.ReflectionUtils.*;
 
 import java.lang.reflect.Method;
 
-import org.springframework.data.mongodb.MongoClientVersion;
 import org.springframework.util.Assert;
-import org.springframework.util.ReflectionUtils;
 
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
@@ -33,6 +32,7 @@ import com.mongodb.DBRef;
  * for various driver versions.
  * 
  * @author Christoph Strobl
+ * @author Oliver Gierke
  * @since 1.7
  */
 class ReflectiveDBRefResolver {
@@ -40,7 +40,6 @@ class ReflectiveDBRefResolver {
 	private static final Method FETCH_METHOD;
 
 	static {
-
 		FETCH_METHOD = findMethod(DBRef.class, "fetch");
 	}
 
@@ -48,7 +47,7 @@ class ReflectiveDBRefResolver {
 	 * Fetches the object referenced from the database either be directly calling {@link DBRef#fetch()} or
 	 * {@link DBCollection#findOne(Object)}.
 	 *
-	 * @param db can be {@literal null} when using mongo-java-driver version 2.
+	 * @param db can be {@literal null} when using MongoDB Java driver in version 2.x.
 	 * @param ref must not be {@literal null}.
 	 * @return the document that this references.
 	 */
@@ -56,11 +55,10 @@ class ReflectiveDBRefResolver {
 
 		Assert.notNull(ref, "DBRef to fetch must not be null!");
 
-		if (MongoClientVersion.isMongo3Driver()) {
+		if (isMongo3Driver()) {
 			return db.getCollection(ref.getCollectionName()).findOne(ref.getId());
 		}
 
-		return (DBObject) ReflectionUtils.invokeMethod(FETCH_METHOD, ref);
+		return (DBObject) invokeMethod(FETCH_METHOD, ref);
 	}
-
 }

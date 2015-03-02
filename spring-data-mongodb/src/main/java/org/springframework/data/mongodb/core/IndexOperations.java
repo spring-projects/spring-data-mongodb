@@ -52,8 +52,8 @@ public interface IndexOperations {
 	/**
 	 * Clears all indices that have not yet been applied to this collection.
 	 * 
-	 * @deprecated since 1.7. The mongo-java-driver version 3 does no longer support reseting the index cache.
-	 * @throws {@link UnsupportedOperationException} when used with mongo-java-driver version 3.
+	 * @deprecated since 1.7. The MongoDB Java driver version 3.0 does no longer support reseting the index cache.
+	 * @throws {@link UnsupportedOperationException} when used with MongoDB Java driver version 3.0.
 	 */
 	@Deprecated
 	void resetIndexCache();

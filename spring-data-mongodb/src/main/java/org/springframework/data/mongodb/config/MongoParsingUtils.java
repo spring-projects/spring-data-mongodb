@@ -37,11 +37,10 @@ import org.w3c.dom.Element;
  * @author Thomas Darimont
  * @author Christoph Strobl
  */
+@SuppressWarnings("deprecation")
 abstract class MongoParsingUtils {
 
-	private MongoParsingUtils() {
-
-	}
+	private MongoParsingUtils() {}
 
 	/**
 	 * Parses the mongo replica-set element.
@@ -56,12 +55,14 @@ abstract class MongoParsingUtils {
 	}
 
 	/**
-	 * Parses the mongo:options sub-element. Populates the given attribute factory with the proper attributes.
+	 * Parses the {@code mongo:options} sub-element. Populates the given attribute factory with the proper attributes.
 	 * 
-	 * @return true if parsing actually occured, false otherwise
+	 * @return true if parsing actually occured, {@literal false} otherwise
 	 */
 	static boolean parseMongoOptions(Element element, BeanDefinitionBuilder mongoBuilder) {
+
 		Element optionsElement = DomUtils.getChildElementByTagName(element, "options");
+
 		if (optionsElement == null) {
 			return false;
 		}
@@ -90,14 +91,18 @@ abstract class MongoParsingUtils {
 	}
 
 	/**
-	 * @param element
-	 * @param mongoClientBuilder
+	 * Parses the {@code mongo:client-options} sub-element. Populates the given attribute factory with the proper
+	 * attributes.
+	 * 
+	 * @param element must not be {@literal null}.
+	 * @param mongoClientBuilder must not be {@literal null}.
 	 * @return
 	 * @since 1.7
 	 */
 	public static boolean parseMongoClientOptions(Element element, BeanDefinitionBuilder mongoClientBuilder) {
 
 		Element optionsElement = DomUtils.getChildElementByTagName(element, "client-options");
+
 		if (optionsElement == null) {
 			return false;
 		}

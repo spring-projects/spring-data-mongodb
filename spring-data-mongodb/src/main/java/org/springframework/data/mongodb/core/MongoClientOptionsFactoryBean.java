@@ -18,12 +18,12 @@ package org.springframework.data.mongodb.core;
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLSocketFactory;
 
-import org.springframework.beans.factory.FactoryBean;
-import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.config.AbstractFactoryBean;
 import org.springframework.data.mongodb.MongoDbFactory;
 
 import com.mongodb.DBDecoderFactory;
 import com.mongodb.DBEncoderFactory;
+import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
@@ -32,9 +32,10 @@ import com.mongodb.WriteConcern;
  * A factory bean for construction of a {@link MongoClientOptions} instance.
  * 
  * @author Christoph Strobl
+ * @author Oliver Gierke
  * @since 1.7
  */
-public class MongoClientOptionsFactoryBean implements FactoryBean<MongoClientOptions>, InitializingBean {
+public class MongoClientOptionsFactoryBean extends AbstractFactoryBean<MongoClientOptions> {
 
 	private static final MongoClientOptions DEFAULT_MONGO_OPTIONS = MongoClientOptions.builder().build();
 
@@ -65,10 +66,8 @@ public class MongoClientOptionsFactoryBean implements FactoryBean<MongoClientOpt
 	private boolean ssl;
 	private SSLSocketFactory sslSocketFactory;
 
-	private MongoClientOptions clientOptions;
-
 	/**
-	 * Set the MongoClient description.
+	 * Set the {@link MongoClient} description.
 	 * 
 	 * @param description
 	 */
@@ -224,6 +223,8 @@ public class MongoClientOptionsFactoryBean implements FactoryBean<MongoClientOpt
 	}
 
 	/**
+	 * Configures the name of the replica set.
+	 * 
 	 * @param requiredReplicaSetName
 	 */
 	public void setRequiredReplicaSetName(String requiredReplicaSetName) {
@@ -231,7 +232,7 @@ public class MongoClientOptionsFactoryBean implements FactoryBean<MongoClientOpt
 	}
 
 	/**
-	 * This controls if the driver should us an SSL connection. Defaults to false.
+	 * This controls if the driver should us an SSL connection. Defaults to |@literal false}.
 	 * 
 	 * @param ssl
 	 */
@@ -249,16 +250,17 @@ public class MongoClientOptionsFactoryBean implements FactoryBean<MongoClientOpt
 		this.sslSocketFactory = sslSocketFactory;
 	}
 
-	/*
+	/* 
 	 * (non-Javadoc)
-	 * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
+	 * @see org.springframework.beans.factory.config.AbstractFactoryBean#createInstance()
 	 */
-	public void afterPropertiesSet() {
+	@Override
+	protected MongoClientOptions createInstance() throws Exception {
 
 		SocketFactory socketFactoryToUse = ssl ? (sslSocketFactory != null ? sslSocketFactory : SSLSocketFactory
 				.getDefault()) : this.socketFactory;
 
-		this.clientOptions = MongoClientOptions.builder() //
+		return MongoClientOptions.builder() //
 				.alwaysUseMBeans(this.alwaysUseMBeans) //
 				.connectionsPerHost(this.connectionsPerHost) //
 				.connectTimeout(connectTimeout) //
@@ -285,25 +287,9 @@ public class MongoClientOptionsFactoryBean implements FactoryBean<MongoClientOpt
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.beans.factory.FactoryBean#getObject()
-	 */
-	public MongoClientOptions getObject() {
-		return this.clientOptions;
-	}
-
-	/*
-	 * (non-Javadoc)
 	 * @see org.springframework.beans.factory.FactoryBean#getObjectType()
 	 */
 	public Class<?> getObjectType() {
 		return MongoClientOptions.class;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.beans.factory.FactoryBean#isSingleton()
-	 */
-	public boolean isSingleton() {
-		return true;
 	}
 }
