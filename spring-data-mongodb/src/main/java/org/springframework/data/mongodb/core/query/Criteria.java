@@ -441,11 +441,31 @@ public class Criteria implements CriteriaDefinition {
 	 */
 	public Criteria maxDistance(double maxDistance) {
 
-		if (createNearCriteriaForCommand("$near", maxDistance) || createNearCriteriaForCommand("$nearSphere", maxDistance)) {
+		if (createNearCriteriaForCommand("$near", "$maxDistance", maxDistance)
+				|| createNearCriteriaForCommand("$nearSphere", "$maxDistance", maxDistance)) {
 			return this;
 		}
 
 		criteria.put("$maxDistance", maxDistance);
+		return this;
+	}
+
+	/**
+	 * Creates a geospatial criterion using a {@literal $minDistance} operation, for use with {@literal $near} or
+	 * {@literal $nearSphere}.
+	 * 
+	 * @param minDistance
+	 * @return
+	 * @since 1.7
+	 */
+	public Criteria minDistance(double minDistance) {
+
+		if (createNearCriteriaForCommand("$near", "$minDistance", minDistance)
+				|| createNearCriteriaForCommand("$nearSphere", "$minDistance", minDistance)) {
+			return this;
+		}
+
+		criteria.put("$minDistance", minDistance);
 		return this;
 	}
 
@@ -605,7 +625,7 @@ public class Criteria implements CriteriaDefinition {
 		}
 	}
 
-	private boolean createNearCriteriaForCommand(String command, double maxDistance) {
+	private boolean createNearCriteriaForCommand(String command, String operation, double maxDistance) {
 
 		if (!criteria.containsKey(command)) {
 			return false;
@@ -615,14 +635,13 @@ public class Criteria implements CriteriaDefinition {
 
 		if (existingNearOperationValue instanceof DBObject) {
 
-			((DBObject) existingNearOperationValue).put("$maxDistance", maxDistance);
+			((DBObject) existingNearOperationValue).put(operation, maxDistance);
 
 			return true;
 
 		} else if (existingNearOperationValue instanceof GeoJson) {
 
-			BasicDBObject dbo = new BasicDBObject("$geometry", existingNearOperationValue)
-					.append("$maxDistance", maxDistance);
+			BasicDBObject dbo = new BasicDBObject("$geometry", existingNearOperationValue).append(operation, maxDistance);
 			criteria.put(command, dbo);
 
 			return true;

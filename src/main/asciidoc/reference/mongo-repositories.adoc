@@ -210,6 +210,14 @@ NOTE: Note that for version 1.0 we currently don't support referring to paramete
 | `findByLocationNear(Point point)`
 | `{"location" : {"$near" : [x,y]}}`
 
+| `Near`
+| `findByLocationNear(Point point, Distance max)`
+| `{"location" : {"$near" : [x,y], "$maxDistance" : max}}`
+
+| `Near`
+| `findByLocationNear(Point point, Distance min, Distance max)`
+| `{"location" : {"$near" : [x,y], "$minDistance" : min, "$maxDistance" : max}}`
+
 | `Within`
 | `findByLocationWithin(Circle circle)`
 | `{"location" : {"$geoWithin" : {"$center" : [ [x, y], distance]}}}`
@@ -283,6 +291,8 @@ Distance distance = new Distance(200, Metrics.KILOMETERS);
 
 As you can see using a `Distance` equipped with a `Metric` causes `$nearSphere` clause to be added instead of a plain `$near`. Beyond that the actual distance gets calculated according to the `Metrics` used.
 
+NOTE: Using `@GeoSpatialIndexed(type = GeoSpatialIndexType.GEO_2DSPHERE)` on the target property forces usage of `$nearSphere` operator.
+
 ==== Geo-near queries
 
 [source,java]
@@ -296,6 +306,11 @@ public interface PersonRepository extends MongoRepository<Person, String>
   // Metric: {'geoNear' : 'person', 'near' : [x, y], 'maxDistance' : distance,
   //          'distanceMultiplier' : metric.multiplier, 'spherical' : true }
   GeoResults<Person> findByLocationNear(Point location, Distance distance);
+  
+  // Metric: {'geoNear' : 'person', 'near' : [x, y], 'minDistance' : min,
+  //          'maxDistance' : max, 'distanceMultiplier' : metric.multiplier,
+  //          'spherical' : true }
+  GeoResults<Person> findByLocationNear(Point location, Distance min, Distance max);
 
   // {'geoNear' : 'location', 'near' : [x, y] }
   GeoResults<Person> findByLocationNear(Point location);

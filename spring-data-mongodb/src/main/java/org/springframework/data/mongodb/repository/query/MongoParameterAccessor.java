@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2014 the original author or authors.
+ * Copyright 2011-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,4 +50,12 @@ public interface MongoParameterAccessor extends ParameterAccessor {
 	 * @since 1.6
 	 */
 	TextCriteria getFullText();
+
+	/**
+	 * Returns a {@link Distance} to be applied to {@literal $minDistance} for MongoDB geo queries.
+	 * 
+	 * @return
+	 * @since 1.7
+	 */
+	Distance getMinDistance();
 }

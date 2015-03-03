@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2014 the original author or authors.
+ * Copyright 2011-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,6 +50,16 @@ public class MongoParametersParameterAccessor extends ParametersParameterAccesso
 	 */
 	public Distance getMaxDistance() {
 		int index = method.getParameters().getDistanceIndex();
+		return index == -1 ? null : (Distance) getValue(index);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.query.MongoParameterAccessor#getMinDistance()
+	 */
+	@Override
+	public Distance getMinDistance() {
+		int index = method.getParameters().getMinDistanceParameterIndex();
 		return index == -1 ? null : (Distance) getValue(index);
 	}
 

@@ -1013,6 +1013,7 @@ There are also methods on the Criteria class for geospatial queries. Here is a l
 * `Criteria` *withinSphere* `(Circle circle)` Creates a geospatial criterion using `$geoWithin $center` operators.
 * `Criteria` *near* `(Point point)` Creates a geospatial criterion using a `$near `operation
 * `Criteria` *nearSphere* `(Point point)` Creates a geospatial criterion using `$nearSphere$center` operations. This is only available for MongoDB 1.7 and higher.
+* `Criteria` *minDistance* `(double minDistance)` Creates a geospatial criterion using the `$minDistance` operation, for use with $near.
 * `Criteria` *maxDistance* `(double maxDistance)` Creates a geospatial criterion using the `$maxDistance` operation, for use with $near.
 
 The `Query` class has some additional methods used to provide options for the query.
@@ -1111,13 +1112,20 @@ List<Venue> venues =
     template.find(new Query(Criteria.where("location").within(box)), Venue.class);
 ----
 
-To find venues near a `Point`, the following query can be used
+To find venues near a `Point`, the following queries can be used
 
 [source,java]
 ----
 Point point = new Point(-73.99171, 40.738868);
 List<Venue> venues =
     template.find(new Query(Criteria.where("location").near(point).maxDistance(0.01)), Venue.class);
+----
+
+[source,java]
+----
+Point point = new Point(-73.99171, 40.738868);
+List<Venue> venues =
+    template.find(new Query(Criteria.where("location").near(point).minDistance(0.01).maxDistance(100)), Venue.class);
 ----
 
 To find venues near a `Point` using spherical coordines the following query can be used

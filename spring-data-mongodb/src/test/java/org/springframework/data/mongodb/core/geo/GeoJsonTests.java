@@ -278,6 +278,45 @@ public class GeoJsonTests {
 		assertThat(result.geoJsonGeometryCollection, equalTo(obj.geoJsonGeometryCollection));
 	}
 
+	/**
+	 * @see DATAMONGO-1110
+	 */
+	@Test
+	public void nearWithMinDistance() {
+
+		Point point = new GeoJsonPoint(-73.99171, 40.738868);
+		List<Venue2DSphere> venues = template.find(query(where("location").near(point).minDistance(0.01)),
+				Venue2DSphere.class);
+
+		assertThat(venues.size(), is(11));
+	}
+
+	/**
+	 * @see DATAMONGO-1110
+	 */
+	@Test
+	public void nearSphereWithMinDistance() {
+
+		Point point = new GeoJsonPoint(-73.99171, 40.738868);
+		List<Venue2DSphere> venues = template.find(query(where("location").nearSphere(point).minDistance(0.01)),
+				Venue2DSphere.class);
+
+		assertThat(venues.size(), is(11));
+	}
+
+	/**
+	 * @see DATAMONGO-1135
+	 */
+	@Test
+	public void nearWithMinAndMaxDistance() {
+
+		GeoJsonPoint point = new GeoJsonPoint(-73.99171, 40.738868);
+
+		Query query = query(where("location").near(point).minDistance(0.01).maxDistance(100));
+		List<Venue2DSphere> venues = template.find(query, Venue2DSphere.class);
+		assertThat(venues.size(), is(2));
+	}
+
 	private void addVenues() {
 
 		template.insert(new Venue2DSphere("Penn Station", -73.99408, 40.75057));

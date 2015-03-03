@@ -45,6 +45,8 @@ import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.Person;
 import org.springframework.data.mongodb.core.Venue;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
+import org.springframework.data.mongodb.core.index.GeoSpatialIndexed;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
@@ -503,6 +505,54 @@ public class MongoQueryCreatorUnitTests {
 		assertThat(query, is(query(where("address.geo").within(shape))));
 	}
 
+	/**
+	 * @see DATAMONGO-1110
+	 */
+	@Test
+	public void shouldCreateNearSphereQueryForSphericalProperty() {
+
+		Point point = new Point(10, 20);
+
+		PartTree tree = new PartTree("findByAddress2dSphere_GeoNear", User.class);
+		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, point), context);
+		Query query = creator.createQuery();
+
+		assertThat(query, is(query(where("address2dSphere.geo").nearSphere(point))));
+	}
+
+	/**
+	 * @see DATAMONGO-1110
+	 */
+	@Test
+	public void shouldCreateNearSphereQueryForSphericalPropertyHavingDistanceWithDefaultMetric() {
+
+		Point point = new Point(1.0, 1.0);
+		Distance distance = new Distance(1.0);
+
+		PartTree tree = new PartTree("findByAddress2dSphere_GeoNear", User.class);
+		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, point, distance), context);
+		Query query = creator.createQuery();
+
+		assertThat(query, is(query(where("address2dSphere.geo").nearSphere(point).maxDistance(1.0))));
+	}
+
+	/**
+	 * @see DATAMONGO-1110
+	 */
+	@Test
+	public void shouldCreateNearQueryForMinMaxDistance() {
+
+		Point point = new Point(10, 20);
+		Distance min = new Distance(10);
+		Distance max = new Distance(20);
+
+		PartTree tree = new PartTree("findByAddress_GeoNear", User.class);
+		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, point, min, max), context);
+		Query query = creator.createQuery();
+
+		assertThat(query, is(query(where("address.geo").near(point).minDistance(10D).maxDistance(20D))));
+	}
+
 	interface PersonRepository extends Repository<Person, Long> {
 
 		List<Person> findByLocationNearAndFirstname(Point location, Distance maxDistance, String firstname);
@@ -517,11 +567,18 @@ public class MongoQueryCreatorUnitTests {
 		List<String> emailAddresses;
 
 		Address address;
+
+		Address2dSphere address2dSphere;
 	}
 
 	static class Address {
 
 		String street;
 		Point geo;
+	}
+
+	static class Address2dSphere {
+		String street;
+		@GeoSpatialIndexed(type = GeoSpatialIndexType.GEO_2DSPHERE) Point geo;
 	}
 }

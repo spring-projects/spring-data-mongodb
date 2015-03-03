@@ -70,6 +70,16 @@ public class GeoSpatial2DTests extends AbstractGeoSpatialTests {
 		assertThat(fields, hasItem(IndexField.geo("location")));
 	}
 
+	/**
+	 * @see DATAMONGO-1110
+	 */
+	@Test
+	public void nearPointWithMinDistance() {
+		Point point = new Point(-73.99171, 40.738868);
+		List<Venue> venues = template.find(query(where("location").near(point).minDistance(0.01)), Venue.class);
+		assertThat(venues.size(), is(5));
+	}
+
 	@Override
 	protected void createIndex() {
 		template.indexOps(Venue.class).ensureIndex(new GeospatialIndex("location").typed(GeoSpatialIndexType.GEO_2D));

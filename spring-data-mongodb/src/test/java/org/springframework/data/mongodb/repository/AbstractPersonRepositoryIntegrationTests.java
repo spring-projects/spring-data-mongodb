@@ -1165,4 +1165,19 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 			result.close();
 		}
 	}
+
+	/**
+	 * @see DATAMONGO-1110
+	 */
+	@Test
+	public void executesGeoNearQueryForResultsCorrectlyWhenGivenMinAndMaxDistance() {
+
+		Point point = new Point(-73.99171, 40.738868);
+		dave.setLocation(point);
+		repository.save(dave);
+
+		GeoResults<Person> results = repository.findPersonByLocationNear(new Point(-73.99, 40.73), new Distance(0.01,
+				Metrics.KILOMETERS), new Distance(2000, Metrics.KILOMETERS));
+		assertThat(results.getContent().isEmpty(), is(false));
+	}
 }
