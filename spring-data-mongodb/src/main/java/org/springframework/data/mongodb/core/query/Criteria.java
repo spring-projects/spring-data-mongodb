@@ -450,6 +450,19 @@ public class Criteria implements CriteriaDefinition {
 	}
 
 	/**
+	 * Creates a geospatial criterion using a {@literal $minDistance} operation, for use with {@literal $near} or
+	 * {@literal $nearSphere}.
+	 * 
+	 * @param minDistance
+	 * @return
+	 * @since 1.7
+	 */
+	public Criteria minDistance(double minDistance) {
+		criteria.put("$minDistance", minDistance);
+		return this;
+	}
+
+	/**
 	 * Creates a criterion using the {@literal $elemMatch} operator
 	 * 
 	 * @see http://docs.mongodb.org/manual/reference/operator/query/elemMatch/

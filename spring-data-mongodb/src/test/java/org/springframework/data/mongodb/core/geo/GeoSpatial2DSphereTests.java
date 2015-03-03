@@ -18,17 +18,24 @@ package org.springframework.data.mongodb.core.geo;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
+import static org.springframework.data.mongodb.core.query.Criteria.*;
+import static org.springframework.data.mongodb.core.query.Query.*;
 
 import java.util.List;
 
 import org.junit.Test;
 import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.geo.GeoResults;
+import org.springframework.data.geo.Metric;
+import org.springframework.data.geo.Metrics;
+import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.IndexOperations;
 import org.springframework.data.mongodb.core.Venue;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
 import org.springframework.data.mongodb.core.index.GeospatialIndex;
 import org.springframework.data.mongodb.core.index.IndexField;
 import org.springframework.data.mongodb.core.index.IndexInfo;
+import org.springframework.data.mongodb.core.query.NearQuery;
 
 /**
  * @author Christoph Strobl
@@ -55,6 +62,30 @@ public class GeoSpatial2DSphereTests extends AbstractGeoSpatialTests {
 		assertThat(fields, hasItem(IndexField.geo("location")));
 	}
 
+	/**
+	 * @see DATAMONGO-1110
+	 */
+	@Test
+	public void geoNearWithMinDistance() {
+
+		NearQuery geoNear = NearQuery.near(-73, 40, Metrics.KILOMETERS).num(10).minDistance(1);
+
+		GeoResults<Venue> result = template.geoNear(geoNear, Venue.class);
+
+		assertThat(result.getContent().size(), is(not(0)));
+		assertThat(result.getAverageDistance().getMetric(), is((Metric) Metrics.KILOMETERS));
+	}
+
+	/**
+	 * @see DATAMONGO-1110
+	 */
+	@Test
+	public void nearSphereWithMinDistance() {
+		Point point = new Point(-73.99171, 40.738868);
+		List<Venue> venues = template.find(query(where("location").nearSphere(point).minDistance(0.01)), Venue.class);
+		assertThat(venues.size(), is(1));
+	}
+
 	@Override
 	protected void createIndex() {
 		template.indexOps(Venue.class).ensureIndex(new GeospatialIndex("location").typed(GeoSpatialIndexType.GEO_2DSPHERE));
@@ -64,5 +95,4 @@ public class GeoSpatial2DSphereTests extends AbstractGeoSpatialTests {
 	protected void dropIndex() {
 		template.indexOps(Venue.class).dropIndex("location_2dsphere");
 	}
-
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2014 the original author or authors.
+ * Copyright 2011-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,6 +40,7 @@ public final class NearQuery {
 	private final Point point;
 	private Query query;
 	private Distance maxDistance;
+	private Distance minDistance;
 	private Metric metric;
 	private boolean spherical;
 	private Integer num;
@@ -212,12 +213,79 @@ public final class NearQuery {
 	}
 
 	/**
+	 * Sets the minimum distance results shall have from the configured origin. If a {@link Metric} was set before the
+	 * given value will be interpreted as being a value in that metric. E.g.
+	 * 
+	 * <pre>
+	 * NearQuery query = near(10.0, 20.0, Metrics.KILOMETERS).minDistance(150);
+	 * </pre>
+	 * 
+	 * Will set the minimum distance to 150 kilometers.
+	 * 
+	 * @param minDistance
+	 * @return
+	 * @since 1.7
+	 */
+	public NearQuery minDistance(double minDistance) {
+		return minDistance(new Distance(minDistance, getMetric()));
+	}
+
+	/**
+	 * Sets the minimum distance supplied in a given metric. Will normalize the distance but not reconfigure the query's
+	 * result {@link Metric} if one was configured before.
+	 * 
+	 * @param minDistance
+	 * @param metric must not be {@literal null}.
+	 * @return
+	 * @since 1.7
+	 */
+	public NearQuery minDistance(double minDistance, Metric metric) {
+
+		Assert.notNull(metric);
+		return minDistance(new Distance(minDistance, metric));
+	}
+
+	/**
+	 * Sets the minimum distance to the given {@link Distance}. Will set the returned {@link Metric} to be the one of the
+	 * given {@link Distance} if no {@link Metric} was set before.
+	 * 
+	 * @param distance must not be {@literal null}.
+	 * @return
+	 * @since 1.7
+	 */
+	public NearQuery minDistance(Distance distance) {
+
+		Assert.notNull(distance);
+
+		if (distance.getMetric() != Metrics.NEUTRAL) {
+			this.spherical(true);
+		}
+
+		if (this.metric == null) {
+			in(distance.getMetric());
+		}
+
+		this.minDistance = distance;
+		return this;
+	}
+
+	/**
 	 * Returns the maximum {@link Distance}.
 	 * 
 	 * @return
 	 */
 	public Distance getMaxDistance() {
 		return this.maxDistance;
+	}
+
+	/**
+	 * Returns the maximum {@link Distance}.
+	 * 
+	 * @return
+	 * @since 1.7
+	 */
+	public Distance getMinDistance() {
+		return this.minDistance;
 	}
 
 	/**
@@ -352,7 +420,11 @@ public final class NearQuery {
 		}
 
 		if (maxDistance != null) {
-			dbObject.put("maxDistance", this.maxDistance.getNormalizedValue());
+			dbObject.put("maxDistance", maxDistance.getNormalizedValue());
+		}
+
+		if (minDistance != null) {
+			dbObject.put("minDistance", minDistance.getNormalizedValue());
 		}
 
 		if (metric != null) {
