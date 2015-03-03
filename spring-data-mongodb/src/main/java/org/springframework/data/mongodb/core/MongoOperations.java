@@ -179,7 +179,7 @@ public interface MongoOperations {
 	 * @return
 	 * @since 1.7
 	 */
-	<T> CloseableIterator<T> executeAsStream(Query query, Class<T> entityType);
+	<T> CloseableIterator<T> stream(Query query, Class<T> entityType);
 
 	/**
 	 * Create an uncapped collection with a name based on the provided entity class.

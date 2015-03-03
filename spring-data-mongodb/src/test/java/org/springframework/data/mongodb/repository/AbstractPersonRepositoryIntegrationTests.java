@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -65,7 +67,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 
 	@Autowired MongoOperations operations;
 
-	protected Person dave, oliver, carter, boyd, stefan, leroi, alicia;
+	Person dave, oliver, carter, boyd, stefan, leroi, alicia;
 	QPerson person;
 
 	List<Person> all;
@@ -1147,5 +1149,20 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 
 		assertThat(result, is(Matchers.<Person> iterableWithSize(persons.size())));
 		assertThat(result.iterator().next().getFirstname(), is("Siggi 2"));
+	}
+
+	/**
+	 * @see DATAMONGO-1165
+	 */
+	@Test
+	public void shouldAllowReturningJava8StreamInCustomQuery() throws Exception {
+
+		Stream<Person> result = repository.findByCustomQueryWithStreamingCursorByFirstnames(Arrays.asList("Dave"));
+
+		try {
+			assertThat(result.collect(Collectors.<Person> toList()), hasItems(dave));
+		} finally {
+			result.close();
+		}
 	}
 }

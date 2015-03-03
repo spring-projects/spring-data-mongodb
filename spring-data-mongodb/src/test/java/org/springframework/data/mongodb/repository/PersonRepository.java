@@ -325,6 +325,6 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	/**
 	 * @see DATAMONGO-1165
 	 */
-	@Query("{firstname:{$in:?0}}")
+	@Query("{ firstname : { $in : ?0 }}")
 	Stream<Person> findByCustomQueryWithStreamingCursorByFirstnames(List<String> firstnames);
 }

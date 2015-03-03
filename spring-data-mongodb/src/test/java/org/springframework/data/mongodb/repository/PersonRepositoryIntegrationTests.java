@@ -15,15 +15,6 @@
  */
 package org.springframework.data.mongodb.repository;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import org.junit.Test;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
@@ -33,21 +24,4 @@ import org.springframework.test.context.ContextConfiguration;
  * @author Thomas Darimont
  */
 @ContextConfiguration
-public class PersonRepositoryIntegrationTests extends AbstractPersonRepositoryIntegrationTests {
-
-	/**
-	 * @see DATAMONGO-1165
-	 */
-	@Test
-	public void shouldAllowReturningJava8StreamInCustomQuery() throws Exception {
-
-		Stream<Person> result = repository.findByCustomQueryWithStreamingCursorByFirstnames(Arrays.asList("Dave"));
-
-		try {
-			List<Person> readPersons = result.collect(Collectors.<Person> toList());
-			assertThat(readPersons, hasItems(dave));
-		} finally {
-			result.close();
-		}
-	}
-}
+public class PersonRepositoryIntegrationTests extends AbstractPersonRepositoryIntegrationTests {}

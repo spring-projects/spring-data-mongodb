@@ -95,9 +95,8 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
-import org.springframework.data.util.CloseableIterator;
-import org.springframework.data.mongodb.util.CloseableIterator;
 import org.springframework.data.mongodb.util.MongoClientVersion;
+import org.springframework.data.util.CloseableIterator;
 import org.springframework.jca.cci.core.ConnectionCallback;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
@@ -318,11 +317,12 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		return this.mongoConverter;
 	}
 
-	/* (non-Javadoc)
+	/* 
+	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.MongoOperations#executeAsStream(org.springframework.data.mongodb.core.query.Query, java.lang.Class)
 	 */
 	@Override
-	public <T> CloseableIterator<T> executeAsStream(final Query query, final Class<T> entityType) {
+	public <T> CloseableIterator<T> stream(final Query query, final Class<T> entityType) {
 
 		return execute(entityType, new CollectionCallback<CloseableIterator<T>>() {
 
@@ -340,7 +340,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				return new CloseableIterableCusorAdapter<T>(cursor, exceptionTranslator, readCallback);
 			}
 		});
-
 	}
 
 	public String getCollectionName(Class<?> entityClass) {
