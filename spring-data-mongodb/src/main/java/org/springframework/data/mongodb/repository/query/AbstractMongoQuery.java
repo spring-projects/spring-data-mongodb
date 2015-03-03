@@ -17,9 +17,6 @@ package org.springframework.data.mongodb.repository.query;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Spliterator;
-import java.util.Spliterators;
-import java.util.stream.StreamSupport;
 
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -35,8 +32,7 @@ import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.repository.query.RepositoryQuery;
-import org.springframework.data.util.CloseableIterator;
-import org.springframework.data.util.CloseableIteratorDisposingRunnable;
+import org.springframework.data.util.Java8StreamUtils;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
 
@@ -433,11 +429,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 
 			Class<?> entityType = getQueryMethod().getEntityInformation().getJavaType();
 
-			@SuppressWarnings("unchecked")
-			CloseableIterator<Object> result = (CloseableIterator<Object>) operations.executeAsStream(query, entityType);
-			Spliterator<Object> spliterator = Spliterators.spliteratorUnknownSize(result, Spliterator.NONNULL);
-
-			return StreamSupport.stream(spliterator, false).onClose(new CloseableIteratorDisposingRunnable(result));
+			return Java8StreamUtils.createStreamFromIterator(operations.executeAsStream(query, entityType));
 		}
 	}
 }
