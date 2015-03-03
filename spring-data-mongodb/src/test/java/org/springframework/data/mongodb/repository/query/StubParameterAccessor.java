@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2014 the original author or authors.
+ * Copyright 2011-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,11 +30,13 @@ import org.springframework.data.repository.query.ParameterAccessor;
  * Simple {@link ParameterAccessor} that returns the given parameters unfiltered.
  * 
  * @author Oliver Gierke
+ * @author Christoh Strobl
  */
 class StubParameterAccessor implements MongoParameterAccessor {
 
 	private final Object[] values;
 	private Distance distance;
+	private Distance minDistance;
 
 	/**
 	 * Creates a new {@link ConvertingParameterAccessor} backed by a {@link StubParameterAccessor} simply returning the
@@ -54,7 +56,12 @@ class StubParameterAccessor implements MongoParameterAccessor {
 
 		for (Object value : values) {
 			if (value instanceof Distance) {
-				this.distance = (Distance) value;
+				if (this.distance == null) {
+					this.distance = (Distance) value;
+				} else {
+					this.minDistance = this.distance;
+					this.distance = (Distance) value;
+				}
 			}
 		}
 	}
@@ -97,6 +104,11 @@ class StubParameterAccessor implements MongoParameterAccessor {
 	 */
 	public Distance getMaxDistance() {
 		return distance;
+	}
+
+	@Override
+	public Distance getMinDistance() {
+		return minDistance;
 	}
 
 	/*

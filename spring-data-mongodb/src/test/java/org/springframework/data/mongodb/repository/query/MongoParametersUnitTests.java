@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2014 the original author or authors.
+ * Copyright 2011-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,7 +50,7 @@ public class MongoParametersUnitTests {
 		MongoParameters parameters = new MongoParameters(method, false);
 
 		assertThat(parameters.getNumberOfParameters(), is(2));
-		assertThat(parameters.getDistanceIndex(), is(1));
+		assertThat(parameters.getMaxDistanceParameterIndex(), is(1));
 		assertThat(parameters.getBindableParameters().getNumberOfParameters(), is(1));
 
 		Parameter parameter = parameters.getParameter(1);
@@ -121,6 +121,33 @@ public class MongoParametersUnitTests {
 		assertThat(parameters.getParameter(parameters.getFullTextParameterIndex()).isSpecialParameter(), is(true));
 	}
 
+	/**
+	 * @see DATAMONGO-1110
+	 */
+	@Test
+	public void shouldFindMinAndMaxDistanceParameters() throws NoSuchMethodException, SecurityException {
+
+		Method method = PersonRepository.class.getMethod("findByLocationNear", Point.class, Distance.class, Distance.class);
+		MongoParameters parameters = new MongoParameters(method, false);
+
+		assertThat(parameters.getMinDistanceParameterIndex(), is(1));
+		assertThat(parameters.getMaxDistanceParameterIndex(), is(2));
+	}
+
+	/**
+	 * @see DATAMONGO-1110
+	 */
+	@Test
+	public void shouldNotHaveMinDistanceIfOnlyOneDistanceParameterPresent() throws NoSuchMethodException,
+			SecurityException {
+
+		Method method = PersonRepository.class.getMethod("findByLocationNear", Point.class, Distance.class);
+		MongoParameters parameters = new MongoParameters(method, false);
+
+		assertThat(parameters.getMinDistanceParameterIndex(), is(-1));
+		assertThat(parameters.getMaxDistanceParameterIndex(), is(1));
+	}
+
 	interface PersonRepository {
 
 		List<Person> findByLocationNear(Point point, Distance distance);
@@ -136,5 +163,7 @@ public class MongoParametersUnitTests {
 		GeoResults<Person> validDoubleArrays(double[] first, @Near double[] second);
 
 		List<Person> findByNameAndText(String name, TextCriteria text);
+
+		List<Person> findByLocationNear(Point point, Distance min, Distance max);
 	}
 }

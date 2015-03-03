@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 the original author or authors.
+ * Copyright 2010-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.springframework.data.geo.Point;
+import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexed;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.DBRef;
@@ -32,6 +33,7 @@ import org.springframework.data.mongodb.core.mapping.Field;
  * 
  * @author Oliver Gierke
  * @author Thomas Darimont
+ * @author Christoph Strobl
  */
 @Document
 public class Person extends Contact {
@@ -49,7 +51,7 @@ public class Person extends Contact {
 
 	List<String> skills;
 
-	@GeoSpatialIndexed private Point location;
+	@GeoSpatialIndexed(type = GeoSpatialIndexType.GEO_2DSPHERE) private Point location;
 
 	private @Field("add") Address address;
 	private Set<Address> shippingAddresses;

@@ -366,6 +366,11 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 				nearQuery.maxDistance(maxDistance).in(maxDistance.getMetric());
 			}
 
+			Distance minDistance = accessor.getMinDistance();
+			if (minDistance != null) {
+				nearQuery.minDistance(minDistance).in(minDistance.getMetric());
+			}
+
 			Pageable pageable = accessor.getPageable();
 			if (pageable != null) {
 				nearQuery.with(pageable);

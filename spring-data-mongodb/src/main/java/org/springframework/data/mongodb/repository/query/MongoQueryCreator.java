@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2014 the original author or authors.
+ * Copyright 2010-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,8 @@ import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Shape;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.context.PersistentPropertyPath;
+import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
+import org.springframework.data.mongodb.core.index.GeoSpatialIndexed;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
@@ -206,18 +208,24 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 			case NEAR:
 
 				Distance distance = accessor.getMaxDistance();
+				Distance minDistance = accessor.getMinDistance();
 				Point point = accessor.getGeoNearLocation();
 				point = point == null ? nextAs(parameters, Point.class) : point;
 
+				boolean isSpherical = isSpherical(property);
+
 				if (distance == null) {
-					return criteria.near(point);
+					return isSpherical ? criteria.nearSphere(point) : criteria.near(point);
 				} else {
-					if (!Metrics.NEUTRAL.equals(distance.getMetric())) {
+					if (isSpherical || !Metrics.NEUTRAL.equals(distance.getMetric())) {
 						criteria.nearSphere(point);
 					} else {
 						criteria.near(point);
 					}
 					criteria.maxDistance(distance.getNormalizedValue());
+					if (minDistance != null) {
+						criteria.minDistance(minDistance.getNormalizedValue());
+					}
 				}
 				return criteria;
 			case WITHIN:
@@ -392,5 +400,11 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 		}
 
 		return source.replaceAll("\\*", ".*");
+	}
+
+	private boolean isSpherical(MongoPersistentProperty property) {
+
+		GeoSpatialIndexed index = property.findAnnotation(GeoSpatialIndexed.class);
+		return index != null && index.type().equals(GeoSpatialIndexType.GEO_2DSPHERE);
 	}
 }

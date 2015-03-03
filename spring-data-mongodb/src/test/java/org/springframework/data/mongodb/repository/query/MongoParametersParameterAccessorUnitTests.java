@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2014 the original author or authors.
+ * Copyright 2011-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -96,11 +96,32 @@ public class MongoParametersParameterAccessorUnitTests {
 				equalTo("{ \"$text\" : { \"$search\" : \"data\"}}"));
 	}
 
+	/**
+	 * @see DATAMONGO-1110
+	 */
+	@Test
+	public void shouldDetectMinAndMaxDistance() throws NoSuchMethodException, SecurityException {
+
+		Method method = PersonRepository.class.getMethod("findByLocationNear", Point.class, Distance.class, Distance.class);
+		MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, context);
+
+		Distance min = new Distance(10, Metrics.KILOMETERS);
+		Distance max = new Distance(20, Metrics.KILOMETERS);
+
+		MongoParameterAccessor accessor = new MongoParametersParameterAccessor(queryMethod, new Object[] {
+				new Point(10, 20), min, max });
+
+		assertThat(accessor.getMinDistance(), is(min));
+		assertThat(accessor.getMaxDistance(), is(max));
+	}
+
 	interface PersonRepository extends Repository<Person, Long> {
 
 		List<Person> findByLocationNear(Point point);
 
 		List<Person> findByLocationNear(Point point, Distance distance);
+
+		List<Person> findByLocationNear(Point point, Distance minDistance, Distance maxDistance);
 
 		List<Person> findByFirstname(String firstname, TextCriteria fullText);
 	}
