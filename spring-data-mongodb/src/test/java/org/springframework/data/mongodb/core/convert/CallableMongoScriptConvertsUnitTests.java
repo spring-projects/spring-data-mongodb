@@ -27,6 +27,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 import org.springframework.data.mongodb.core.convert.CallableMongoScriptConvertsUnitTests.CallableMongoScriptToDboConverterUnitTests;
+import org.springframework.data.mongodb.core.convert.CallableMongoScriptConvertsUnitTests.DboToCallableMongoScriptConverterUnitTests;
 import org.springframework.data.mongodb.core.convert.MongoConverters.CallableMongoScriptToDBObjectConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.DBObjectToCallableMongoScriptCoverter;
 import org.springframework.data.mongodb.core.script.CallableMongoScript;
@@ -39,7 +40,7 @@ import com.mongodb.DBObject;
  * @author Christoph Strobl
  */
 @RunWith(Suite.class)
-@SuiteClasses({ CallableMongoScriptToDboConverterUnitTests.class })
+@SuiteClasses({ CallableMongoScriptToDboConverterUnitTests.class, DboToCallableMongoScriptConverterUnitTests.class })
 public class CallableMongoScriptConvertsUnitTests {
 
 	static final String FUNCTION_NAME = "echo";
@@ -86,7 +87,7 @@ public class CallableMongoScriptConvertsUnitTests {
 
 			Object code = dbo.get("value");
 			assertThat(code, instanceOf(Code.class));
-			assertThat(code.toString(), equalTo(JS_FUNCTION));
+			assertThat(code, equalTo((Object) new Code(JS_FUNCTION)));
 		}
 	}
 
@@ -125,7 +126,7 @@ public class CallableMongoScriptConvertsUnitTests {
 			CallableMongoScript script = converter.convert(FUNCTION);
 
 			assertThat(script.getCode(), notNullValue());
-			assertThat(script.getCode().toString(), equalTo(JS_FUNCTION));
+			assertThat(script.getCode(), equalTo(JS_FUNCTION));
 		}
 	}
 

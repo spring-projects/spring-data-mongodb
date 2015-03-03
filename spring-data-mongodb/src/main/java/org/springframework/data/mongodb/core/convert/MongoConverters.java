@@ -202,7 +202,7 @@ abstract class MongoConverters {
 			String id = source.get("_id").toString();
 			Object rawValue = source.get("value");
 
-			return new CallableMongoScript(id, rawValue.toString());
+			return new CallableMongoScript(id, ((Code) rawValue).getCode());
 		}
 	}
 
