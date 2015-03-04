@@ -20,6 +20,7 @@ import java.util.List;
 
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.SliceImpl;
 import org.springframework.data.geo.Distance;
@@ -361,12 +362,15 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 				nearQuery.query(query);
 			}
 
-			Distance maxDistance = accessor.getMaxDistance();
+			Range<Distance> distances = accessor.getDistanceRange();
+			Distance maxDistance = distances.getUpperBound();
+
 			if (maxDistance != null) {
 				nearQuery.maxDistance(maxDistance).in(maxDistance.getMetric());
 			}
 
-			Distance minDistance = accessor.getMinDistance();
+			Distance minDistance = distances.getLowerBound();
+
 			if (minDistance != null) {
 				nearQuery.minDistance(minDistance).in(minDistance.getMetric());
 			}

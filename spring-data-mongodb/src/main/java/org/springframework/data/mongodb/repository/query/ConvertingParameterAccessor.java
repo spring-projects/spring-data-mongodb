@@ -22,6 +22,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Point;
@@ -96,21 +97,13 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 		return getConvertedValue(delegate.getBindableValue(index), null);
 	}
 
-	/*
+	/* 
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.MongoParameterAccessor#getMaxDistance()
-	 */
-	public Distance getMaxDistance() {
-		return delegate.getMaxDistance();
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.query.MongoParameterAccessor#getMinDistance()
+	 * @see org.springframework.data.mongodb.repository.query.MongoParameterAccessor#getDistanceRange()
 	 */
 	@Override
-	public Distance getMinDistance() {
-		return delegate.getMinDistance();
+	public Range<Distance> getDistanceRange() {
+		return delegate.getDistanceRange();
 	}
 
 	/* 

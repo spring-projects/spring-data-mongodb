@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
+import org.springframework.data.domain.Range;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.query.TextCriteria;
@@ -34,7 +35,7 @@ public interface MongoParameterAccessor extends ParameterAccessor {
 	 * @return the maximum distance to apply to the geo query or {@literal null} if there's no {@link Distance} parameter
 	 *         at all or the given value for it was {@literal null}.
 	 */
-	Distance getMaxDistance();
+	Range<Distance> getDistanceRange();
 
 	/**
 	 * Returns the {@link Point} to use for a geo-near query.
@@ -50,12 +51,4 @@ public interface MongoParameterAccessor extends ParameterAccessor {
 	 * @since 1.6
 	 */
 	TextCriteria getFullText();
-
-	/**
-	 * Returns a {@link Distance} to be applied to {@literal $minDistance} for MongoDB geo queries.
-	 * 
-	 * @return
-	 * @since 1.7
-	 */
-	Distance getMinDistance();
 }

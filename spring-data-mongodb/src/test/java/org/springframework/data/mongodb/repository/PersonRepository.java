@@ -22,6 +22,7 @@ import java.util.stream.Stream;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.geo.Box;
@@ -169,8 +170,10 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 
 	GeoResults<Person> findByLocationNear(Point point, Distance maxDistance);
 
-	/** @see DATAMONGO-1110 */
-	GeoResults<Person> findPersonByLocationNear(Point point, Distance maxDistance, Distance minDistance);
+	/**
+	 * @see DATAMONGO-1110
+	 */
+	GeoResults<Person> findPersonByLocationNear(Point point, Range<Distance> distance);
 
 	GeoPage<Person> findByLocationNear(Point point, Distance maxDistance, Pageable pageable);
 

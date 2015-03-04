@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
+import org.springframework.data.domain.Range;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.query.Term;
@@ -44,23 +45,20 @@ public class MongoParametersParameterAccessor extends ParametersParameterAccesso
 		this.method = method;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.MongoParameterAccessor#getMaxDistance()
-	 */
-	public Distance getMaxDistance() {
-		int index = method.getParameters().getDistanceIndex();
-		return index == -1 ? null : (Distance) getValue(index);
-	}
+	public Range<Distance> getDistanceRange() {
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.query.MongoParameterAccessor#getMinDistance()
-	 */
-	@Override
-	public Distance getMinDistance() {
-		int index = method.getParameters().getMinDistanceParameterIndex();
-		return index == -1 ? null : (Distance) getValue(index);
+		MongoParameters mongoParameters = method.getParameters();
+
+		int rangeIndex = mongoParameters.getRangeIndex();
+
+		if (rangeIndex != -1) {
+			return getValue(rangeIndex);
+		}
+
+		int maxDistanceIndex = mongoParameters.getMaxDistanceIndex();
+		Distance maxDistance = maxDistanceIndex == -1 ? null : (Distance) getValue(maxDistanceIndex);
+
+		return new Range<Distance>(null, maxDistance);
 	}
 
 	/*

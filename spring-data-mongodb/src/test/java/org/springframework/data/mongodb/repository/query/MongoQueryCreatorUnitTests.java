@@ -36,6 +36,7 @@ import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
+import org.springframework.data.domain.Range;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
@@ -543,11 +544,10 @@ public class MongoQueryCreatorUnitTests {
 	public void shouldCreateNearQueryForMinMaxDistance() {
 
 		Point point = new Point(10, 20);
-		Distance min = new Distance(10);
-		Distance max = new Distance(20);
+		Range<Distance> range = Distance.between(new Distance(10), new Distance(20));
 
 		PartTree tree = new PartTree("findByAddress_GeoNear", User.class);
-		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, point, min, max), context);
+		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, point, range), context);
 		Query query = creator.createQuery();
 
 		assertThat(query, is(query(where("address.geo").near(point).minDistance(10D).maxDistance(20D))));

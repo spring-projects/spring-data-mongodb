@@ -19,6 +19,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Point;
@@ -35,8 +36,7 @@ import org.springframework.data.repository.query.ParameterAccessor;
 class StubParameterAccessor implements MongoParameterAccessor {
 
 	private final Object[] values;
-	private Distance distance;
-	private Distance minDistance;
+	private Range<Distance> range = new Range<Distance>(null, null);
 
 	/**
 	 * Creates a new {@link ConvertingParameterAccessor} backed by a {@link StubParameterAccessor} simply returning the
@@ -50,18 +50,16 @@ class StubParameterAccessor implements MongoParameterAccessor {
 		return new ConvertingParameterAccessor(converter, new StubParameterAccessor(parameters));
 	}
 
+	@SuppressWarnings("unchecked")
 	public StubParameterAccessor(Object... values) {
 
 		this.values = values;
 
 		for (Object value : values) {
-			if (value instanceof Distance) {
-				if (this.distance == null) {
-					this.distance = (Distance) value;
-				} else {
-					this.minDistance = this.distance;
-					this.distance = (Distance) value;
-				}
+			if (value instanceof Range) {
+				this.range = (Range<Distance>) value;
+			} else if (value instanceof Distance) {
+				this.range = new Range<Distance>(null, (Distance) value);
 			}
 		}
 	}
@@ -98,17 +96,13 @@ class StubParameterAccessor implements MongoParameterAccessor {
 		return null;
 	}
 
-	/*
+	/* 
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.MongoParameterAccessor#getMaxDistance()
+	 * @see org.springframework.data.mongodb.repository.query.MongoParameterAccessor#getDistanceRange()
 	 */
-	public Distance getMaxDistance() {
-		return distance;
-	}
-
 	@Override
-	public Distance getMinDistance() {
-		return minDistance;
+	public Range<Distance> getDistanceRange() {
+		return range;
 	}
 
 	/*

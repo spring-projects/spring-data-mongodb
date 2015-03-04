@@ -23,6 +23,7 @@ import java.util.Iterator;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Metrics;
@@ -207,8 +208,10 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 				return criteria.is(false);
 			case NEAR:
 
-				Distance distance = accessor.getMaxDistance();
-				Distance minDistance = accessor.getMinDistance();
+				Range<Distance> range = accessor.getDistanceRange();
+				Distance distance = range.getUpperBound();
+				Distance minDistance = range.getLowerBound();
+
 				Point point = accessor.getGeoNearLocation();
 				point = point == null ? nextAs(parameters, Point.class) : point;
 

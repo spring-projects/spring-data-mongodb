@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.repository;
 import static java.util.Arrays.*;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
+import static org.springframework.data.geo.Metrics.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,6 +36,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
@@ -1176,8 +1178,9 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		dave.setLocation(point);
 		repository.save(dave);
 
-		GeoResults<Person> results = repository.findPersonByLocationNear(new Point(-73.99, 40.73), new Distance(0.01,
-				Metrics.KILOMETERS), new Distance(2000, Metrics.KILOMETERS));
+		Range<Distance> range = Distance.between(new Distance(0.01, KILOMETERS), new Distance(2000, KILOMETERS));
+
+		GeoResults<Person> results = repository.findPersonByLocationNear(new Point(-73.99, 40.73), range);
 		assertThat(results.getContent().isEmpty(), is(false));
 	}
 }
