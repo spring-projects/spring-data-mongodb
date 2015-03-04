@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 the original author or authors.
+ * Copyright 2014-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,27 +17,36 @@ package org.springframework.data.mongodb.core;
 
 import java.util.Set;
 
-import org.springframework.data.mongodb.core.script.CallableMongoScript;
-import org.springframework.data.mongodb.core.script.ServerSideJavaScript;
+import org.springframework.data.mongodb.core.script.ExecutableMongoScript;
+import org.springframework.data.mongodb.core.script.NamedMongoScript;
 
 import com.mongodb.DB;
 
 /**
- * Script operations on {@link com.mongodb.DB} level. Allows interaction with server side {@literal JavaScript}
- * functions.
+ * Script operations on {@link com.mongodb.DB} level. Allows interaction with server side JavaScript functions.
  * 
  * @author Christoph Strobl
+ * @author Oliver Gierke
  * @since 1.7
  */
 public interface ScriptOperations {
 
 	/**
-	 * Store given {@literal script} to {@link com.mongodb.DB} so it can be called via its name.
+	 * Store given {@link ExecutableMongoScript} generating a syntheitcal name so that it can be called by it
+	 * subsequently.
 	 * 
 	 * @param script must not be {@literal null}.
-	 * @return {@link CallableMongoScript} with name under which the {@literal JavaScript} function can be called.
+	 * @return {@link NamedMongoScript} with name under which the {@code JavaScript} function can be called.
 	 */
-	CallableMongoScript register(ServerSideJavaScript script);
+	NamedMongoScript register(ExecutableMongoScript script);
+
+	/**
+	 * Registers the given {@link NamedMongoScript} in the database.
+	 * 
+	 * @param script the {@link NamedMongoScript} to be registered.
+	 * @return
+	 */
+	NamedMongoScript register(NamedMongoScript script);
 
 	/**
 	 * Executes the {@literal script} by either calling it via its {@literal name} or directly sending it.
@@ -47,7 +56,7 @@ public interface ScriptOperations {
 	 * @return the script evaluation result.
 	 * @throws org.springframework.dao.DataAccessException
 	 */
-	Object execute(ServerSideJavaScript script, Object... args);
+	Object execute(ExecutableMongoScript script, Object... args);
 
 	/**
 	 * Call the {@literal JavaScript} by its name.
@@ -64,13 +73,12 @@ public interface ScriptOperations {
 	 * @param scriptName must not be {@literal null} or empty.
 	 * @return false if no {@link ServerSideJavaScript} with given name exists.
 	 */
-	Boolean exists(String scriptName);
+	boolean exists(String scriptName);
 
 	/**
 	 * Returns names of {@literal JavaScript} functions that can be called.
 	 * 
 	 * @return empty {@link Set} if no scripts found.
 	 */
-	Set<String> scriptNames();
-
+	Set<String> getScriptNames();
 }

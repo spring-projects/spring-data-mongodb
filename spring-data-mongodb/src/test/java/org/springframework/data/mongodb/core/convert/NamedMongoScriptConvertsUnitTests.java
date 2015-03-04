@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 the original author or authors.
+ * Copyright 2014-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,53 +15,55 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import static org.hamcrest.core.IsEqual.*;
-import static org.hamcrest.core.IsInstanceOf.*;
-import static org.hamcrest.core.IsNull.*;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
 import org.bson.types.Code;
-import org.hamcrest.core.IsEqual;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
-import org.springframework.data.mongodb.core.convert.CallableMongoScriptConvertsUnitTests.CallableMongoScriptToDboConverterUnitTests;
-import org.springframework.data.mongodb.core.convert.CallableMongoScriptConvertsUnitTests.DboToCallableMongoScriptConverterUnitTests;
-import org.springframework.data.mongodb.core.convert.MongoConverters.CallableMongoScriptToDBObjectConverter;
-import org.springframework.data.mongodb.core.convert.MongoConverters.DBObjectToCallableMongoScriptCoverter;
-import org.springframework.data.mongodb.core.script.CallableMongoScript;
+import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.mongodb.core.convert.MongoConverters.DBObjectToNamedMongoScriptCoverter;
+import org.springframework.data.mongodb.core.convert.MongoConverters.NamedMongoScriptToDBObjectConverter;
+import org.springframework.data.mongodb.core.convert.NamedMongoScriptConvertsUnitTests.DboToNamedMongoScriptConverterUnitTests;
+import org.springframework.data.mongodb.core.convert.NamedMongoScriptConvertsUnitTests.NamedMongoScriptToDboConverterUnitTests;
+import org.springframework.data.mongodb.core.script.NamedMongoScript;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DBObject;
 
 /**
+ * Unit tests for {@link Converter} implementations for {@link NamedMongoScript}.
+ * 
  * @author Christoph Strobl
+ * @author Oliver Gierke
+ * @since 1.7
  */
 @RunWith(Suite.class)
-@SuiteClasses({ CallableMongoScriptToDboConverterUnitTests.class, DboToCallableMongoScriptConverterUnitTests.class })
-public class CallableMongoScriptConvertsUnitTests {
+@SuiteClasses({ NamedMongoScriptToDboConverterUnitTests.class, DboToNamedMongoScriptConverterUnitTests.class })
+public class NamedMongoScriptConvertsUnitTests {
 
 	static final String FUNCTION_NAME = "echo";
 	static final String JS_FUNCTION = "function(x) { return x; }";
-	static final CallableMongoScript ECHO_SCRIPT = new CallableMongoScript(FUNCTION_NAME, JS_FUNCTION);
+	static final NamedMongoScript ECHO_SCRIPT = new NamedMongoScript(FUNCTION_NAME, JS_FUNCTION);
 	static final DBObject FUNCTION = new BasicDBObjectBuilder().add("_id", FUNCTION_NAME)
 			.add("value", new Code(JS_FUNCTION)).get();
 
 	/**
 	 * @author Christoph Strobl
 	 */
-	public static class CallableMongoScriptToDboConverterUnitTests {
+	public static class NamedMongoScriptToDboConverterUnitTests {
 
-		CallableMongoScriptToDBObjectConverter converter = CallableMongoScriptToDBObjectConverter.INSTANCE;
+		NamedMongoScriptToDBObjectConverter converter = NamedMongoScriptToDBObjectConverter.INSTANCE;
 
 		/**
 		 * @see DATAMONGO-479
 		 */
 		@Test
 		public void convertShouldReturnEmptyDboWhenScriptIsNull() {
-			assertThat(converter.convert(null), IsEqual.<DBObject> equalTo(new BasicDBObject()));
+			assertThat(converter.convert(null), is((DBObject) new BasicDBObject()));
 		}
 
 		/**
@@ -73,8 +75,8 @@ public class CallableMongoScriptConvertsUnitTests {
 			DBObject dbo = converter.convert(ECHO_SCRIPT);
 
 			Object id = dbo.get("_id");
-			assertThat(id, instanceOf(String.class));
-			assertThat(id, IsEqual.<Object> equalTo(FUNCTION_NAME));
+			assertThat(id, is(instanceOf(String.class)));
+			assertThat(id, is((Object) FUNCTION_NAME));
 		}
 
 		/**
@@ -86,24 +88,24 @@ public class CallableMongoScriptConvertsUnitTests {
 			DBObject dbo = converter.convert(ECHO_SCRIPT);
 
 			Object code = dbo.get("value");
-			assertThat(code, instanceOf(Code.class));
-			assertThat(code, equalTo((Object) new Code(JS_FUNCTION)));
+			assertThat(code, is(instanceOf(Code.class)));
+			assertThat(code, is((Object) new Code(JS_FUNCTION)));
 		}
 	}
 
 	/**
 	 * @author Christoph Strobl
 	 */
-	public static class DboToCallableMongoScriptConverterUnitTests {
+	public static class DboToNamedMongoScriptConverterUnitTests {
 
-		DBObjectToCallableMongoScriptCoverter converter = DBObjectToCallableMongoScriptCoverter.INSTANCE;
+		DBObjectToNamedMongoScriptCoverter converter = DBObjectToNamedMongoScriptCoverter.INSTANCE;
 
 		/**
 		 * @see DATAMONGO-479
 		 */
 		@Test
 		public void convertShouldReturnNullIfSourceIsNull() {
-			assertThat(converter.convert(null), nullValue());
+			assertThat(converter.convert(null), is(nullValue()));
 		}
 
 		/**
@@ -112,9 +114,9 @@ public class CallableMongoScriptConvertsUnitTests {
 		@Test
 		public void convertShouldConvertIdCorreclty() {
 
-			CallableMongoScript script = converter.convert(FUNCTION);
+			NamedMongoScript script = converter.convert(FUNCTION);
 
-			assertThat(script.getName(), equalTo(FUNCTION_NAME));
+			assertThat(script.getName(), is(FUNCTION_NAME));
 		}
 
 		/**
@@ -123,10 +125,10 @@ public class CallableMongoScriptConvertsUnitTests {
 		@Test
 		public void convertShouldConvertScriptValueCorreclty() {
 
-			CallableMongoScript script = converter.convert(FUNCTION);
+			NamedMongoScript script = converter.convert(FUNCTION);
 
-			assertThat(script.getCode(), notNullValue());
-			assertThat(script.getCode(), equalTo(JS_FUNCTION));
+			assertThat(script.getCode(), is(notNullValue()));
+			assertThat(script.getCode(), is(JS_FUNCTION));
 		}
 	}
 

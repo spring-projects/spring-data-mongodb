@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2014 the original author or authors.
+ * Copyright 2011-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.ReadingConverter;
 import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.mongodb.core.query.Term;
-import org.springframework.data.mongodb.core.script.CallableMongoScript;
+import org.springframework.data.mongodb.core.script.NamedMongoScript;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.BasicDBObject;
@@ -187,13 +187,12 @@ abstract class MongoConverters {
 	 * @author Christoph Strobl
 	 * @since 1.7
 	 */
-	@ReadingConverter
-	public static enum DBObjectToCallableMongoScriptCoverter implements Converter<DBObject, CallableMongoScript> {
+	public static enum DBObjectToNamedMongoScriptCoverter implements Converter<DBObject, NamedMongoScript> {
 
 		INSTANCE;
 
 		@Override
-		public CallableMongoScript convert(DBObject source) {
+		public NamedMongoScript convert(DBObject source) {
 
 			if (source == null) {
 				return null;
@@ -202,7 +201,7 @@ abstract class MongoConverters {
 			String id = source.get("_id").toString();
 			Object rawValue = source.get("value");
 
-			return new CallableMongoScript(id, ((Code) rawValue).getCode());
+			return new NamedMongoScript(id, ((Code) rawValue).getCode());
 		}
 	}
 
@@ -210,13 +209,12 @@ abstract class MongoConverters {
 	 * @author Christoph Strobl
 	 * @since 1.7
 	 */
-	@WritingConverter
-	public static enum CallableMongoScriptToDBObjectConverter implements Converter<CallableMongoScript, DBObject> {
+	public static enum NamedMongoScriptToDBObjectConverter implements Converter<NamedMongoScript, DBObject> {
 
 		INSTANCE;
 
 		@Override
-		public DBObject convert(CallableMongoScript source) {
+		public DBObject convert(NamedMongoScript source) {
 
 			if (source == null) {
 				return new BasicDBObject();
@@ -225,9 +223,7 @@ abstract class MongoConverters {
 			BasicDBObjectBuilder builder = new BasicDBObjectBuilder();
 
 			builder.append("_id", source.getName());
-			if (source.getCode() != null) {
-				builder.append("value", new Code(source.getCode()));
-			}
+			builder.append("value", new Code(source.getCode()));
 
 			return builder.get();
 		}

@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 the original author or authors.
+ * Copyright 2014-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,19 +18,20 @@ package org.springframework.data.mongodb.core.script;
 import org.springframework.util.Assert;
 
 /**
- * {@link ServerSideJavaScript} implementation that can be saved or directly executed.
+ * Value object for MongoDB JavaScript functions implementation that can be saved or directly executed.
  * 
  * @author Christoph Strobl
+ * @author Oliver Gierke
  * @since 1.7
  */
-public class ExecutableMongoScript implements ServerSideJavaScript {
+public class ExecutableMongoScript {
 
 	private final String code;
 
 	/**
 	 * Creates new {@link ExecutableMongoScript}.
 	 * 
-	 * @param code must not be {@literal null} or {@literal empty}.
+	 * @param code must not be {@literal null} or empty.
 	 */
 	public ExecutableMongoScript(String code) {
 
@@ -38,13 +39,12 @@ public class ExecutableMongoScript implements ServerSideJavaScript {
 		this.code = code;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.script.MongoScript#getCode()
+	/**
+	 * Returns the actual script code.
+	 * 
+	 * @return will never be {@literal null} or empty.
 	 */
-	@Override
 	public String getCode() {
 		return this.code;
 	}
-
 }

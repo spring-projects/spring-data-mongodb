@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 the original author or authors.
+ * Copyright 2014-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,22 +15,26 @@
  */
 package org.springframework.data.mongodb.core.script;
 
-import static org.hamcrest.core.IsEqual.*;
+import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
 import org.junit.Test;
 
 /**
+ * Unit tests for {@link NamedMongoScript}.
+ * 
  * @author Christoph Strobl
+ * @author Oliver Gierke
+ * @since 1.7
  */
-public class CallableMongoScriptUnitTests {
+public class NamedMongoScriptUnitTests {
 
 	/**
 	 * @see DATAMONGO-479
 	 */
 	@Test(expected = IllegalArgumentException.class)
 	public void shouldThrowExceptionWhenScriptNameIsNull() {
-		new CallableMongoScript(null, "return 1;");
+		new NamedMongoScript(null, "return 1;");
 	}
 
 	/**
@@ -38,7 +42,7 @@ public class CallableMongoScriptUnitTests {
 	 */
 	@Test(expected = IllegalArgumentException.class)
 	public void shouldThrowExceptionWhenScriptNameIsEmptyString() {
-		new CallableMongoScript("", "return 1");
+		new NamedMongoScript("", "return 1");
 	}
 
 	/**
@@ -46,7 +50,7 @@ public class CallableMongoScriptUnitTests {
 	 */
 	@Test(expected = IllegalArgumentException.class)
 	public void shouldThrowExceptionWhenRawScriptIsEmptyString() {
-		new CallableMongoScript("foo", "");
+		new NamedMongoScript("foo", "");
 	}
 
 	/**
@@ -57,9 +61,6 @@ public class CallableMongoScriptUnitTests {
 
 		String jsFunction = "function(x) { return x; }";
 
-		CallableMongoScript script = new CallableMongoScript("echo", jsFunction);
-
-		assertThat(script.getCode(), equalTo(jsFunction));
+		assertThat(new NamedMongoScript("echo", jsFunction).getCode(), is(jsFunction));
 	}
-
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 the original author or authors.
+ * Copyright 2014-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,30 +26,41 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.springframework.data.mongodb.core.script.CallableMongoScript;
 import org.springframework.data.mongodb.core.script.ExecutableMongoScript;
+import org.springframework.data.mongodb.core.script.NamedMongoScript;
 
 /**
+ * Unit tests for {@link DefaultScriptOperations}.
+ * 
  * @author Christoph Strobl
+ * @author Oliver Gierke
  * @since 1.7
  */
 @RunWith(MockitoJUnitRunner.class)
 public class DefaultScriptOperationsUnitTests {
 
 	DefaultScriptOperations scriptOps;
-	@Mock MongoOperations mongoOperationsMock;
+	@Mock MongoOperations mongoOperations;
 
 	@Before
 	public void setUp() {
-		this.scriptOps = new DefaultScriptOperations(mongoOperationsMock);
+		this.scriptOps = new DefaultScriptOperations(mongoOperations);
 	}
 
 	/**
 	 * @see DATAMONGO-479
 	 */
 	@Test(expected = IllegalArgumentException.class)
-	public void saveShouldThrowExceptionWhenCalledWithNullValue() {
-		scriptOps.register(null);
+	public void rejectsNullExecutableMongoScript() {
+		scriptOps.register((ExecutableMongoScript) null);
+	}
+
+	/**
+	 * @see DATAMONGO-479
+	 */
+	@Test(expected = IllegalArgumentException.class)
+	public void rejectsNullNamedMongoScript() {
+		scriptOps.register((NamedMongoScript) null);
 	}
 
 	/**
@@ -58,9 +69,9 @@ public class DefaultScriptOperationsUnitTests {
 	@Test
 	public void saveShouldUseCorrectCollectionName() {
 
-		scriptOps.register(new CallableMongoScript("foo", "function..."));
+		scriptOps.register(new NamedMongoScript("foo", "function..."));
 
-		verify(mongoOperationsMock, times(1)).save(any(CallableMongoScript.class), eq("system.js"));
+		verify(mongoOperations, times(1)).save(any(NamedMongoScript.class), eq("system.js"));
 	}
 
 	/**
@@ -71,9 +82,9 @@ public class DefaultScriptOperationsUnitTests {
 
 		scriptOps.register(new ExecutableMongoScript("function..."));
 
-		ArgumentCaptor<CallableMongoScript> captor = ArgumentCaptor.forClass(CallableMongoScript.class);
+		ArgumentCaptor<NamedMongoScript> captor = ArgumentCaptor.forClass(NamedMongoScript.class);
 
-		verify(mongoOperationsMock, times(1)).save(captor.capture(), eq("system.js"));
+		verify(mongoOperations, times(1)).save(captor.capture(), eq("system.js"));
 		Assert.assertThat(captor.getValue().getName(), notNullValue());
 	}
 
@@ -116,5 +127,4 @@ public class DefaultScriptOperationsUnitTests {
 	public void callShouldThrowExceptionWhenScriptNameIsEmpty() {
 		scriptOps.call("");
 	}
-
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 the original author or authors.
+ * Copyright 2014-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,8 +27,8 @@ import java.util.Set;
 
 import org.bson.types.ObjectId;
 import org.springframework.dao.DataAccessException;
-import org.springframework.data.mongodb.core.script.CallableMongoScript;
-import org.springframework.data.mongodb.core.script.ServerSideJavaScript;
+import org.springframework.data.mongodb.core.script.ExecutableMongoScript;
+import org.springframework.data.mongodb.core.script.NamedMongoScript;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
@@ -41,12 +41,14 @@ import com.mongodb.MongoException;
  * Default implementation of {@link ScriptOperations} capable of saving and executing {@link ServerSideJavaScript}.
  * 
  * @author Christoph Strobl
+ * @author Oliver Gierke
  * @since 1.7
  */
-public class DefaultScriptOperations implements ScriptOperations {
+class DefaultScriptOperations implements ScriptOperations {
 
 	private static final String SCRIPT_COLLECTION_NAME = "system.js";
 	private static final String SCRIPT_NAME_PREFIX = "func_";
+
 	private final MongoOperations mongoOperations;
 
 	/**
@@ -63,39 +65,39 @@ public class DefaultScriptOperations implements ScriptOperations {
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ScriptOperations#save(org.springframework.data.mongodb.core.script.MongoScript)
+	 * @see org.springframework.data.mongodb.core.ScriptOperations#register(org.springframework.data.mongodb.core.script.ExecutableMongoScript)
 	 */
 	@Override
-	public CallableMongoScript register(ServerSideJavaScript script) {
-
-		Assert.notNull(script, "Script must not be null!");
-
-		CallableMongoScript callableScript = (script instanceof CallableMongoScript) ? (CallableMongoScript) script
-				: new CallableMongoScript(generateScriptName(), script);
-		mongoOperations.save(callableScript, SCRIPT_COLLECTION_NAME);
-		return callableScript;
+	public NamedMongoScript register(ExecutableMongoScript script) {
+		return register(new NamedMongoScript(generateScriptName(), script));
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ScriptOperations#execute(org.springframework.data.mongodb.core.script.MongoScript, java.lang.Object[])
+	 * @see org.springframework.data.mongodb.core.ScriptOperations#register(org.springframework.data.mongodb.core.script.NamedMongoScript)
 	 */
 	@Override
-	public Object execute(final ServerSideJavaScript script, final Object... args) {
+	public NamedMongoScript register(NamedMongoScript script) {
 
 		Assert.notNull(script, "Script must not be null!");
 
-		if (script instanceof CallableMongoScript) {
-			return call(((CallableMongoScript) script).getName(), args);
-		}
+		mongoOperations.save(script, SCRIPT_COLLECTION_NAME);
+		return script;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.ScriptOperations#execute(org.springframework.data.mongodb.core.script.ExecutableMongoScript, java.lang.Object[])
+	 */
+	@Override
+	public Object execute(final ExecutableMongoScript script, final Object... args) {
+
+		Assert.notNull(script, "Script must not be null!");
 
 		return mongoOperations.execute(new DbCallback<Object>() {
 
 			@Override
 			public Object doInDB(DB db) throws MongoException, DataAccessException {
-
-				Assert.notNull(script.getCode(), "Script.code must not be null!");
-
 				return db.eval(script.getCode(), convertScriptArgs(args));
 			}
 		});
@@ -114,9 +116,7 @@ public class DefaultScriptOperations implements ScriptOperations {
 
 			@Override
 			public Object doInDB(DB db) throws MongoException, DataAccessException {
-
-				String evalString = scriptName + "(" + convertAndJoinScriptArgs(args) + ")";
-				return db.eval(evalString);
+				return db.eval(String.format("%s(%s)", scriptName, convertAndJoinScriptArgs(args)));
 			}
 		});
 	}
@@ -126,43 +126,33 @@ public class DefaultScriptOperations implements ScriptOperations {
 	 * @see org.springframework.data.mongodb.core.ScriptOperations#exists(java.lang.String)
 	 */
 	@Override
-	public Boolean exists(String scriptName) {
+	public boolean exists(String scriptName) {
 
 		Assert.hasText(scriptName, "ScriptName must not be null or empty!");
 
-		return mongoOperations.exists(query(where("name").is(scriptName)), CallableMongoScript.class,
-				SCRIPT_COLLECTION_NAME);
+		return mongoOperations.exists(query(where("name").is(scriptName)), NamedMongoScript.class, SCRIPT_COLLECTION_NAME);
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ScriptOperations#scriptNames()
+	 * @see org.springframework.data.mongodb.core.ScriptOperations#getScriptNames()
 	 */
 	@Override
-	public Set<String> scriptNames() {
+	public Set<String> getScriptNames() {
 
-		List<CallableMongoScript> scripts = (mongoOperations.findAll(CallableMongoScript.class, SCRIPT_COLLECTION_NAME));
+		List<NamedMongoScript> scripts = mongoOperations.findAll(NamedMongoScript.class, SCRIPT_COLLECTION_NAME);
 
 		if (CollectionUtils.isEmpty(scripts)) {
 			return Collections.emptySet();
 		}
 
 		Set<String> scriptNames = new HashSet<String>();
-		for (CallableMongoScript script : scripts) {
+
+		for (NamedMongoScript script : scripts) {
 			scriptNames.add(script.getName());
 		}
-		return scriptNames;
-	}
 
-	/**
-	 * Generate a valid name for the {@literal JavaScript}. MongoDB requires an id of type String for scripts. Calling
-	 * scripts having {@link ObjectId} as id fails. Therefore we create a random UUID without {@code -} (as this won't
-	 * work) an prefix the result with {@link #SCRIPT_NAME_PREFIX}.
-	 * 
-	 * @return
-	 */
-	private String generateScriptName() {
-		return SCRIPT_NAME_PREFIX + randomUUID().toString().replaceAll("-", "");
+		return scriptNames;
 	}
 
 	private Object[] convertScriptArgs(Object... args) {
@@ -172,23 +162,27 @@ public class DefaultScriptOperations implements ScriptOperations {
 		}
 
 		List<Object> convertedValues = new ArrayList<Object>(args.length);
+
 		for (Object arg : args) {
-			if (arg instanceof String) {
-				convertedValues.add("'" + arg + "'");
-			} else {
-				convertedValues.add(this.mongoOperations.getConverter().convertToMongoType(arg));
-			}
+			convertedValues.add(arg instanceof String ? String.format("'%s'", arg) : this.mongoOperations.getConverter()
+					.convertToMongoType(arg));
 		}
+
 		return convertedValues.toArray();
 	}
 
 	private String convertAndJoinScriptArgs(Object... args) {
-
-		if (ObjectUtils.isEmpty(args)) {
-			return "";
-		}
-
-		return StringUtils.arrayToCommaDelimitedString(convertScriptArgs(args));
+		return ObjectUtils.isEmpty(args) ? "" : StringUtils.arrayToCommaDelimitedString(convertScriptArgs(args));
 	}
 
+	/**
+	 * Generate a valid name for the {@literal JavaScript}. MongoDB requires an id of type String for scripts. Calling
+	 * scripts having {@link ObjectId} as id fails. Therefore we create a random UUID without {@code -} (as this won't
+	 * work) an prefix the result with {@link #SCRIPT_NAME_PREFIX}.
+	 * 
+	 * @return
+	 */
+	private static String generateScriptName() {
+		return SCRIPT_NAME_PREFIX + randomUUID().toString().replaceAll("-", "");
+	}
 }
