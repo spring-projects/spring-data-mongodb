@@ -413,7 +413,25 @@ public class Criteria implements CriteriaDefinition {
 	 */
 	public Criteria near(Point point) {
 		Assert.notNull(point);
+
 		criteria.put("$near", point);
+		return this;
+	}
+
+	/**
+	 * Creates a geospatial criterion using a {@literal $near} operation.
+	 * 
+	 * @see http://docs.mongodb.org/manual/reference/operator/query/near/
+	 * @param point must not be {@literal null}.
+	 * @param maxDistance defines maximum distance from given {@link Point}.
+	 * @return
+	 * @since 1.7
+	 */
+	public Criteria near(Point point, double maxDistance) {
+
+		Assert.notNull(point, "Point for near must not be null!");
+
+		criteria.put("$near", new NearCommand(point, maxDistance));
 		return this;
 	}
 
@@ -426,21 +444,65 @@ public class Criteria implements CriteriaDefinition {
 	 * @return
 	 */
 	public Criteria nearSphere(Point point) {
+
 		Assert.notNull(point);
 		criteria.put("$nearSphere", point);
 		return this;
 	}
 
 	/**
-	 * Creates a geospatical criterion using a {@literal $maxDistance} operation, for use with $near
+	 * Creates a geospatial criterion using a {@literal $nearSphere} operation. This is only available for Mongo 1.7 and
+	 * higher.
+	 * 
+	 * @see http://docs.mongodb.org/manual/reference/operator/query/nearSphere/
+	 * @param point must not be {@literal null}
+	 * @param maxDistance defines maximum distance from given {@link Point}.
+	 * @return
+	 * @since 1.7
+	 */
+	public Criteria nearSphere(Point point, double maxDistance) {
+
+		Assert.notNull(point, "Point for nearSphere must not be null!");
+
+		criteria.put("$nearSphere", new NearCommand(point, maxDistance));
+		return this;
+	}
+
+	/**
+	 * Creates a geospatical criterion using a {@literal $maxDistance} operation, for use with {@literal $near}.
 	 * 
 	 * @see http://docs.mongodb.org/manual/reference/operator/query/maxDistance/
 	 * @param maxDistance
 	 * @return
+	 * @deprecated since 1.7. Please use {@link #near(Point, double)} or {@link #nearSphere(Point, double)}.
 	 */
+	@Deprecated
 	public Criteria maxDistance(double maxDistance) {
-		criteria.put("$maxDistance", maxDistance);
+
+		boolean useNearCommand = createNearCommandForMaxDistance("$near", maxDistance);
+		if (!useNearCommand) {
+			useNearCommand = createNearCommandForMaxDistance("$nearSphere", maxDistance);
+		}
+		if (!useNearCommand) {
+			criteria.put("$maxDistance", maxDistance);
+		}
 		return this;
+	}
+
+	private boolean createNearCommandForMaxDistance(String command, double maxDistance) {
+
+		if (!criteria.containsKey(command)) {
+			return false;
+		}
+
+		Object existingNearOperationValue = criteria.get(command);
+		if (existingNearOperationValue instanceof NearCommand) {
+			((NearCommand) existingNearOperationValue).setMaxDistance(maxDistance);
+		}
+		if (existingNearOperationValue instanceof Point) {
+			criteria.put(command, new NearCommand((Point) existingNearOperationValue, maxDistance));
+		}
+		return true;
 	}
 
 	/**

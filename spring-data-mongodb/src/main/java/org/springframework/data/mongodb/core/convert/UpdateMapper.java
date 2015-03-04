@@ -64,9 +64,9 @@ public class UpdateMapper extends QueryMapper {
 	 *      org.springframework.data.mongodb.core.mapping.MongoPersistentEntity)
 	 */
 	@Override
-	protected Object delegateConvertToMongoType(Object source, MongoPersistentEntity<?> entity) {
-		return entity == null ? super.delegateConvertToMongoType(source, null) : converter.convertToMongoType(source,
-				entity.getTypeInformation());
+	protected Object delegateConvertToMongoType(Object source, MongoPersistentEntity<?> entity, Field documentField) {
+		return entity == null ? super.delegateConvertToMongoType(source, null, documentField) : converter
+				.convertToMongoType(source, entity.getTypeInformation());
 	}
 
 	/*
@@ -77,7 +77,7 @@ public class UpdateMapper extends QueryMapper {
 	protected Entry<String, Object> getMappedObjectForField(Field field, Object rawValue) {
 
 		if (isDBObject(rawValue)) {
-			return createMapEntry(field, convertSimpleOrDBObject(rawValue, field.getPropertyEntity()));
+			return createMapEntry(field, convertSimpleOrDBObject(rawValue, field.getPropertyEntity(), field));
 		}
 
 		if (isQuery(rawValue)) {

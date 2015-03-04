@@ -24,8 +24,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document(collection = "newyork")
 public class Venue {
 
-	@Id
-	private String id;
+	@Id private String id;
 	private String name;
 	private double[] location;
 

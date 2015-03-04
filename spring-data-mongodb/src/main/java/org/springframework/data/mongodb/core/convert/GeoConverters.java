@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 the original author or authors.
+ * Copyright 2014-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,9 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
+import org.bson.BSONObject;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.convert.ReadingConverter;
 import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.geo.Box;
@@ -29,7 +31,7 @@ import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
-import org.springframework.data.geo.Shape;
+import org.springframework.data.mongodb.core.geo.GeoJson;
 import org.springframework.data.mongodb.core.geo.Sphere;
 import org.springframework.data.mongodb.core.query.GeoCommand;
 import org.springframework.util.Assert;
@@ -43,6 +45,7 @@ import com.mongodb.DBObject;
  * 
  * @author Thomas Darimont
  * @author Oliver Gierke
+ * @author Christoph Strobl
  * @since 1.5
  */
 abstract class GeoConverters {
@@ -69,7 +72,8 @@ abstract class GeoConverters {
 				, DbObjectToSphereConverter.INSTANCE //
 				, DbObjectToPointConverter.INSTANCE //
 				, PointToDbObjectConverter.INSTANCE //
-				, GeoCommandToDbObjectConverter.INSTANCE);
+				, GeoCommandToDbObjectConverter.INSTANCE //
+				, GeoJsonToDbObjectConverter.INSTANCE);
 	}
 
 	/**
@@ -409,7 +413,7 @@ abstract class GeoConverters {
 
 			BasicDBList argument = new BasicDBList();
 
-			Shape shape = source.getShape();
+			Object shape = source.getShape();
 
 			if (shape instanceof Box) {
 
@@ -442,7 +446,125 @@ abstract class GeoConverters {
 		}
 	}
 
+	/**
+	 * Converts a {@link GeoJson} into a {@link DBObject}.
+	 * 
+	 * @author Christoph Strobl
+	 * @since 1.7
+	 */
+	public static enum GeoJsonToDbObjectConverter implements Converter<GeoJson<?>, DBObject> {
+
+		INSTANCE;
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
+		 */
+		@Override
+		public DBObject convert(GeoJson<?> source) {
+
+			if (source == null) {
+				return null;
+			}
+
+			Object geometry = source.getGeometry();
+
+			DBObject geometryDbo = new BasicDBObject();
+
+			if (geometry instanceof Point) {
+
+				geometryDbo.put("type", "Point");
+				geometryDbo.put("coordinates", toList((Point) geometry));
+			}
+
+			else if (geometry instanceof double[]) {
+
+				double[] values = (double[]) geometry;
+				if (values.length != 2) {
+					throw new IllegalArgumentException("Point coordinates need to have x and y value.");
+				}
+
+				geometryDbo.put("type", "Point");
+				geometryDbo.put("coordinates", toList(new Point(values[0], values[1])));
+			}
+
+			else if (geometry instanceof Box) {
+
+				geometryDbo.put("type", "Polygon");
+
+				Point p1 = ((Box) geometry).getFirst();
+				Point p3 = ((Box) geometry).getSecond();
+
+				Point p2 = new Point(p1.getX(), p3.getY());
+				Point p4 = new Point(p3.getX(), p1.getY());
+
+				Point p5 = ((Box) geometry).getFirst();
+
+				geometryDbo.put("coordinates", toCoordinates(p1, p2, p3, p4, p5));
+			}
+
+			else if (geometry instanceof Polygon) {
+
+				geometryDbo.put("type", "Polygon");
+
+				List<Point> points = new ArrayList<Point>(((Polygon) geometry).getPoints());
+
+				Point first = points.get(0);
+				Point last = points.get(points.size() - 1);
+
+				if (!first.equals(last)) {
+					points.add(first);
+				}
+
+				geometryDbo.put("coordinates", toCoordinates(points));
+			}
+
+			else if (geometry instanceof Circle) {
+
+				Circle circle = (Circle) geometry;
+
+				BasicDBList argument = new BasicDBList();
+				argument.add(toList(circle.getCenter()));
+				argument.add(circle.getRadius().getNormalizedValue());
+
+				return new BasicDBObject("$center", argument);
+			}
+
+			else if (geometry instanceof Sphere) {
+
+				Sphere sphere = (Sphere) geometry;
+
+				BasicDBList argument = new BasicDBList();
+				argument.add(toList(sphere.getCenter()));
+				argument.add(sphere.getRadius().getNormalizedValue());
+
+				return new BasicDBObject("$centerSphere", argument);
+			} else {
+				throw new InvalidDataAccessApiUsageException(String.format("Unknown GeoJson type %s!", geometry.getClass()));
+			}
+
+			return geometryDbo;
+		}
+	}
+
 	static List<Double> toList(Point point) {
 		return Arrays.asList(point.getX(), point.getY());
+	}
+
+	static BSONObject toCoordinates(Point... points) {
+		return toCoordinates(Arrays.asList(points));
+	}
+
+	static BSONObject toCoordinates(List<Point> points) {
+
+		BasicDBList pointList = new BasicDBList();
+		for (Point point : points) {
+			pointList.add(toList(point));
+		}
+
+		BasicDBList coordinates = new BasicDBList();
+		coordinates.add(pointList);
+
+		return coordinates;
 	}
 }

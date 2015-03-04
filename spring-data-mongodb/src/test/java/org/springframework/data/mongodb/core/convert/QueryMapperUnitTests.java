@@ -20,6 +20,7 @@ import static org.junit.Assert.*;
 import static org.springframework.data.mongodb.core.DBObjectTestUtils.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
+import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -36,9 +37,17 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.geo.Box;
+import org.springframework.data.geo.Circle;
+import org.springframework.data.geo.Point;
+import org.springframework.data.geo.Polygon;
+import org.springframework.data.geo.Shape;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.DBObjectTestUtils;
 import org.springframework.data.mongodb.core.Person;
+import org.springframework.data.mongodb.core.geo.Sphere;
+import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
+import org.springframework.data.mongodb.core.index.GeoSpatialIndexed;
 import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -702,6 +711,166 @@ public class QueryMapperUnitTests {
 		assertThat(dbo, equalTo(new BasicDBObjectBuilder().add("nested.id", 1).get()));
 	}
 
+	/**
+	 * @see DATAMONGO-1135
+	 */
+	@Test
+	public void nearShouldUseGeoJsonWhenMappedOnSphericalIndex() {
+
+		Query query = query(where("point2dSphere").near(new Point(100, 50), 10));
+
+		DBObject dbo = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(ClassWithGeoTypes.class));
+
+		assertThat(dbo, isBsonObject().containing("point2dSphere.$near.$geometry.type", "Point"));
+		assertThat(dbo, isBsonObject().containing("point2dSphere.$near.$maxDistance", 10D));
+	}
+
+	@Test
+	public void nearSphereShouldUseGeoJsonWhenMappedOnSphericalIndex() {
+
+		Query query = query(where("point2dSphere").nearSphere(new Point(100, 50), 10));
+
+		DBObject dbo = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(ClassWithGeoTypes.class));
+
+		assertThat(dbo, isBsonObject().containing("point2dSphere.$nearSphere.$geometry.type", "Point"));
+		assertThat(dbo, isBsonObject().containing("point2dSphere.$nearSphere.$maxDistance", 10D));
+	}
+
+	/**
+	 * @see DATAMONGO-1135
+	 */
+	@Test
+	public void nearShouldUseLegacyFormatWhenMappedOnFlatIndex() {
+
+		Query query = query(where("point2d").near(new Point(100, 50), 10));
+
+		DBObject dbo = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(ClassWithGeoTypes.class));
+
+		assertThat(dbo, isBsonObject().containing("point2d.$near.x", 100D));
+		assertThat(dbo, isBsonObject().containing("point2d.$near.y", 50D));
+		assertThat(dbo, isBsonObject().containing("point2d.$maxDistance", 10D));
+	}
+
+	/**
+	 * @see DATAMONGO-1135
+	 */
+	@Test
+	public void nearSphereShouldUseLegacyFormatWhenMappedOnFlatIndex() {
+
+		Query query = query(where("point2d").nearSphere(new Point(100, 50), 10));
+
+		DBObject dbo = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(ClassWithGeoTypes.class));
+
+		assertThat(dbo, isBsonObject().containing("point2d.$nearSphere.x", 100D));
+		assertThat(dbo, isBsonObject().containing("point2d.$nearSphere.y", 50D));
+		assertThat(dbo, isBsonObject().containing("point2d.$maxDistance", 10D));
+	}
+
+	/**
+	 * @see DATAMONGO-1135
+	 */
+	@Test
+	public void withinShouldUseGeoJsonPolygonWhenMappingBoxOn2DSphereIndex() {
+
+		Query query = query(where("point2dSphere").within(new Box(new Point(0, 0), new Point(100, 100))));
+
+		DBObject dbo = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(ClassWithGeoTypes.class));
+
+		assertThat(dbo, isBsonObject().containing("point2dSphere.$geoWithin.$geometry.type", "Polygon"));
+	}
+
+	/**
+	 * @see DATAMONGO-1135
+	 */
+	@Test
+	public void withinShouldUseGeoJsonPolygonWhenMappingPolygonOn2DSphereIndex() {
+
+		Query query = query(where("point2dSphere").within(
+				new Polygon(new Point(0, 0), new Point(100, 100), new Point(100, 0))));
+
+		DBObject dbo = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(ClassWithGeoTypes.class));
+
+		assertThat(dbo, isBsonObject().containing("point2dSphere.$geoWithin.$geometry.type", "Polygon"));
+	}
+
+	/**
+	 * @see DATAMONGO-1135
+	 */
+	@Test
+	public void withinShouldUseBoxCommandWhenMappingPolygonOnFlatIndex() {
+
+		Query query = query(where("point2d").within(new Box(new Point(0, 0), new Point(100, 100))));
+
+		DBObject dbo = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(ClassWithGeoTypes.class));
+
+		assertThat(dbo, isBsonObject().containing("point2d.$geoWithin.$box"));
+	}
+
+	/**
+	 * @see DATAMONGO-1135
+	 */
+	@Test
+	public void withinShouldUsePolygonCommandWhenMappingPolygonOnFlatIndex() {
+
+		Query query = query(where("point2d").within(new Polygon(new Point(0, 0), new Point(100, 100), new Point(100, 0))));
+
+		DBObject dbo = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(ClassWithGeoTypes.class));
+
+		assertThat(dbo, isBsonObject().containing("point2d.$geoWithin.$polygon"));
+	}
+
+	/**
+	 * @see DATAMONGO-1135
+	 */
+	@Test
+	public void withinShouldUseCenterCommandWhenMappingCircleOn2DSphereIndex() {
+
+		Query query = query(where("point2dSphere").within(new Circle(new Point(100, 50), 10)));
+
+		DBObject dbo = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(ClassWithGeoTypes.class));
+
+		assertThat(dbo, isBsonObject().containing("point2dSphere.$geoWithin.$center"));
+	}
+
+	/**
+	 * @see DATAMONGO-1135
+	 */
+	@Test
+	public void withinShouldUseCenterCommandWhenMappingCircleOnFlatIndex() {
+
+		Query query = query(where("point2d").within(new Circle(new Point(100, 50), 10)));
+
+		DBObject dbo = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(ClassWithGeoTypes.class));
+
+		assertThat(dbo, isBsonObject().containing("point2d.$geoWithin.$center"));
+	}
+
+	/**
+	 * @see DATAMONGO-1135
+	 */
+	@Test
+	public void withinShouldUseCenterSphereCommandWhenMappingSphereOn2DSphereIndex() {
+
+		Query query = query(where("point2dSphere").within(new Sphere(new Point(100, 50), 10)));
+
+		DBObject dbo = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(ClassWithGeoTypes.class));
+
+		assertThat(dbo, isBsonObject().containing("point2dSphere.$geoWithin.$centerSphere"));
+	}
+
+	/**
+	 * @see DATAMONGO-1135
+	 */
+	@Test
+	public void withinShouldUseCenterSphereCommandWhenMappingSphereOnFlatIndex() {
+
+		Query query = query(where("point2d").within(new Sphere(new Point(100, 50), 10)));
+
+		DBObject dbo = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(ClassWithGeoTypes.class));
+
+		assertThat(dbo, isBsonObject().containing("point2d.$geoWithin.$centerSphere"));
+	}
+
 	@Document
 	public class Foo {
 		@Id private ObjectId id;
@@ -793,5 +962,14 @@ public class QueryMapperUnitTests {
 	static class ClassWithExplicitlyRenamedField {
 
 		@Field("id") String id;
+	}
+
+	static class ClassWithGeoTypes {
+
+		double[] justAnArray;
+		Shape shape;
+		@GeoSpatialIndexed(type = GeoSpatialIndexType.GEO_2D) Point point2d;
+		@GeoSpatialIndexed(type = GeoSpatialIndexType.GEO_2DSPHERE) Point point2dSphere;
+
 	}
 }

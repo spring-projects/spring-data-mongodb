@@ -95,6 +95,7 @@ public class MapReduceTests {
 		template.dropCollection("jmr2_out");
 		template.dropCollection("jmr1_out");
 		template.dropCollection("jmr1");
+		template.dropCollection("jmrWithGeo");
 	}
 
 	@Test
