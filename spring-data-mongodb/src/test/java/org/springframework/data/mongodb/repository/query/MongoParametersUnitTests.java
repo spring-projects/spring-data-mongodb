@@ -25,6 +25,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.data.domain.Range;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Point;
@@ -50,7 +51,7 @@ public class MongoParametersUnitTests {
 		MongoParameters parameters = new MongoParameters(method, false);
 
 		assertThat(parameters.getNumberOfParameters(), is(2));
-		assertThat(parameters.getMaxDistanceParameterIndex(), is(1));
+		assertThat(parameters.getMaxDistanceIndex(), is(1));
 		assertThat(parameters.getBindableParameters().getNumberOfParameters(), is(1));
 
 		Parameter parameter = parameters.getParameter(1);
@@ -127,11 +128,11 @@ public class MongoParametersUnitTests {
 	@Test
 	public void shouldFindMinAndMaxDistanceParameters() throws NoSuchMethodException, SecurityException {
 
-		Method method = PersonRepository.class.getMethod("findByLocationNear", Point.class, Distance.class, Distance.class);
+		Method method = PersonRepository.class.getMethod("findByLocationNear", Point.class, Range.class);
 		MongoParameters parameters = new MongoParameters(method, false);
 
-		assertThat(parameters.getMinDistanceParameterIndex(), is(1));
-		assertThat(parameters.getMaxDistanceParameterIndex(), is(2));
+		assertThat(parameters.getRangeIndex(), is(1));
+		assertThat(parameters.getMaxDistanceIndex(), is(-1));
 	}
 
 	/**
@@ -144,8 +145,8 @@ public class MongoParametersUnitTests {
 		Method method = PersonRepository.class.getMethod("findByLocationNear", Point.class, Distance.class);
 		MongoParameters parameters = new MongoParameters(method, false);
 
-		assertThat(parameters.getMinDistanceParameterIndex(), is(-1));
-		assertThat(parameters.getMaxDistanceParameterIndex(), is(1));
+		assertThat(parameters.getRangeIndex(), is(-1));
+		assertThat(parameters.getMaxDistanceIndex(), is(1));
 	}
 
 	interface PersonRepository {
@@ -164,6 +165,6 @@ public class MongoParametersUnitTests {
 
 		List<Person> findByNameAndText(String name, TextCriteria text);
 
-		List<Person> findByLocationNear(Point point, Distance min, Distance max);
+		List<Person> findByLocationNear(Point point, Range<Distance> range);
 	}
 }

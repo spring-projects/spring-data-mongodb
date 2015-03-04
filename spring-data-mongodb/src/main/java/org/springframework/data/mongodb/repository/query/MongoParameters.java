@@ -20,6 +20,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.springframework.core.MethodParameter;
+import org.springframework.data.domain.Range;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.query.TextCriteria;
@@ -27,6 +28,8 @@ import org.springframework.data.mongodb.repository.Near;
 import org.springframework.data.mongodb.repository.query.MongoParameters.MongoParameter;
 import org.springframework.data.repository.query.Parameter;
 import org.springframework.data.repository.query.Parameters;
+import org.springframework.data.util.ClassTypeInformation;
+import org.springframework.data.util.TypeInformation;
 
 /**
  * Custom extension of {@link Parameters} discovering additional
@@ -36,8 +39,8 @@ import org.springframework.data.repository.query.Parameters;
  */
 public class MongoParameters extends Parameters<MongoParameters, MongoParameter> {
 
-	private final Integer minDistanceIndex;
-	private final Integer maxDistanceIndex;
+	private final int rangeIndex;
+	private final int maxDistanceIndex;
 	private final Integer fullTextIndex;
 
 	private Integer nearIndex;
@@ -55,9 +58,11 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 
 		this.fullTextIndex = parameterTypes.indexOf(TextCriteria.class);
 
-		int[] distances = distances(parameterTypes);
-		this.minDistanceIndex = distances[0];
-		this.maxDistanceIndex = distances[1];
+		ClassTypeInformation<?> declaringClassInfo = ClassTypeInformation.from(method.getDeclaringClass());
+		List<TypeInformation<?>> parameterTypeInfo = declaringClassInfo.getParameterTypes(method);
+
+		this.rangeIndex = getTypeIndex(parameterTypeInfo, Range.class, Distance.class);
+		this.maxDistanceIndex = this.rangeIndex == -1 ? getTypeIndex(parameterTypeInfo, Distance.class, null) : -1;
 
 		if (this.nearIndex == null && isGeoNearMethod) {
 			this.nearIndex = getNearIndex(parameterTypes);
@@ -66,15 +71,15 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 		}
 	}
 
-	private MongoParameters(List<MongoParameter> parameters, Integer distanceIndex, Integer nearIndex,
-			Integer fullTextIndex, Integer minDistanceIndex) {
+	private MongoParameters(List<MongoParameter> parameters, int maxDistanceIndex, Integer nearIndex,
+			Integer fullTextIndex, int rangeIndex) {
 
 		super(parameters);
 
-		this.maxDistanceIndex = distanceIndex;
 		this.nearIndex = nearIndex;
 		this.fullTextIndex = fullTextIndex;
-		this.minDistanceIndex = minDistanceIndex;
+		this.maxDistanceIndex = maxDistanceIndex;
+		this.rangeIndex = rangeIndex;
 	}
 
 	private final int getNearIndex(List<Class<?>> parameterTypes) {
@@ -117,15 +122,19 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 		return mongoParameter;
 	}
 
+	public int getDistanceRangeIndex() {
+		return -1;
+	}
+
 	/**
 	 * Returns the index of a {@link Distance} parameter to be used for geo queries.
 	 * 
 	 * @return
-	 * @deprecated since 1.7. Please use {@link #getMaxDistanceParameterIndex()} instead.
+	 * @deprecated since 1.7. Please use {@link #getMaxDistanceIndex()} instead.
 	 */
 	@Deprecated
 	public int getDistanceIndex() {
-		return getMaxDistanceParameterIndex();
+		return getMaxDistanceIndex();
 	}
 
 	/**
@@ -134,7 +143,7 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 	 * @return
 	 * @since 1.7
 	 */
-	public int getMaxDistanceParameterIndex() {
+	public int getMaxDistanceIndex() {
 		return maxDistanceIndex;
 	}
 
@@ -169,16 +178,8 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 	 * @return
 	 * @since 1.7
 	 */
-	public boolean hasMinDistanceParameter() {
-		return minDistanceIndex != null && minDistanceIndex.intValue() >= 0;
-	}
-
-	/**
-	 * @return
-	 * @since 1.7
-	 */
-	public int getMinDistanceParameterIndex() {
-		return minDistanceIndex != null ? minDistanceIndex.intValue() : -1;
+	public int getRangeIndex() {
+		return rangeIndex;
 	}
 
 	/* 
@@ -187,23 +188,26 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 	 */
 	@Override
 	protected MongoParameters createFrom(List<MongoParameter> parameters) {
-		return new MongoParameters(parameters, this.maxDistanceIndex, this.nearIndex, this.fullTextIndex,
-				this.minDistanceIndex);
+		return new MongoParameters(parameters, this.maxDistanceIndex, this.nearIndex, this.fullTextIndex, this.rangeIndex);
 	}
 
-	private int[] distances(List<Class<?>> paramTypes) {
+	private int getTypeIndex(List<TypeInformation<?>> parameterTypes, Class<?> type, Class<?> componentType) {
 
-		int maxDistance = paramTypes.lastIndexOf(Distance.class);
-		if (maxDistance == -1) {
-			return new int[] { -1, -1 };
+		for (int i = 0; i < parameterTypes.size(); i++) {
+
+			TypeInformation<?> candidate = parameterTypes.get(i);
+
+			if (candidate.getType().equals(type)) {
+
+				if (componentType == null) {
+					return i;
+				} else if (componentType.equals(candidate.getComponentType().getType())) {
+					return i;
+				}
+			}
 		}
 
-		int minDistance = paramTypes.indexOf(Distance.class);
-		if (minDistance == maxDistance) {
-			return new int[] { -1, maxDistance };
-		}
-
-		return new int[] { minDistance, maxDistance };
+		return -1;
 	}
 
 	/**

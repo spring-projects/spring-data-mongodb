@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.hamcrest.core.IsNull;
 import org.junit.Test;
+import org.springframework.data.domain.Range;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
@@ -53,7 +54,7 @@ public class MongoParametersParameterAccessorUnitTests {
 
 		MongoParameterAccessor accessor = new MongoParametersParameterAccessor(queryMethod,
 				new Object[] { new Point(10, 20) });
-		assertThat(accessor.getMaxDistance(), is(nullValue()));
+		assertThat(accessor.getDistanceRange().getUpperBound(), is(nullValue()));
 	}
 
 	@Test
@@ -64,7 +65,7 @@ public class MongoParametersParameterAccessorUnitTests {
 
 		MongoParameterAccessor accessor = new MongoParametersParameterAccessor(queryMethod, new Object[] {
 				new Point(10, 20), DISTANCE });
-		assertThat(accessor.getMaxDistance(), is(DISTANCE));
+		assertThat(accessor.getDistanceRange().getUpperBound(), is(DISTANCE));
 	}
 
 	/**
@@ -102,17 +103,19 @@ public class MongoParametersParameterAccessorUnitTests {
 	@Test
 	public void shouldDetectMinAndMaxDistance() throws NoSuchMethodException, SecurityException {
 
-		Method method = PersonRepository.class.getMethod("findByLocationNear", Point.class, Distance.class, Distance.class);
+		Method method = PersonRepository.class.getMethod("findByLocationNear", Point.class, Range.class);
 		MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, context);
 
 		Distance min = new Distance(10, Metrics.KILOMETERS);
 		Distance max = new Distance(20, Metrics.KILOMETERS);
 
 		MongoParameterAccessor accessor = new MongoParametersParameterAccessor(queryMethod, new Object[] {
-				new Point(10, 20), min, max });
+				new Point(10, 20), Distance.between(min, max) });
 
-		assertThat(accessor.getMinDistance(), is(min));
-		assertThat(accessor.getMaxDistance(), is(max));
+		Range<Distance> range = accessor.getDistanceRange();
+
+		assertThat(range.getLowerBound(), is(min));
+		assertThat(range.getUpperBound(), is(max));
 	}
 
 	interface PersonRepository extends Repository<Person, Long> {
@@ -121,7 +124,7 @@ public class MongoParametersParameterAccessorUnitTests {
 
 		List<Person> findByLocationNear(Point point, Distance distance);
 
-		List<Person> findByLocationNear(Point point, Distance minDistance, Distance maxDistance);
+		List<Person> findByLocationNear(Point point, Range<Distance> distances);
 
 		List<Person> findByFirstname(String firstname, TextCriteria fullText);
 	}
