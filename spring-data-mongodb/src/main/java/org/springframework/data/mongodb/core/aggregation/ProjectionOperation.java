@@ -121,7 +121,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		return new ExpressionProjectionOperationBuilder(expression, this, params);
 	}
 
-	public ProjectionOperationBuilder andExpression(Expression expression) {
+	public ProjectionOperationBuilder and(AggregationExpression expression) {
 		return new ProjectionOperationBuilder(expression, this, null);
 	}
 
@@ -426,8 +426,8 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 				return this.operation.andReplaceLastOneWith(this.previousProjection.withAlias(alias));
 			}
 
-			if (value instanceof Expression) {
-				return this.operation.and(new ExpressionProjection(Fields.field(alias), (Expression) value));
+			if (value instanceof AggregationExpression) {
+				return this.operation.and(new ExpressionProjection(Fields.field(alias), (AggregationExpression) value));
 			}
 
 			return this.operation.and(new FieldProjection(Fields.field(alias, name), null));
@@ -958,7 +958,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 	 */
 	static class ExpressionProjection extends Projection {
 
-		private final Expression expression;
+		private final AggregationExpression expression;
 		private final Field field;
 
 		/**
@@ -967,7 +967,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		 * @param field
 		 * @param expression
 		 */
-		public ExpressionProjection(Field field, Expression expression) {
+		public ExpressionProjection(Field field, AggregationExpression expression) {
 
 			super(field);
 			this.field = field;

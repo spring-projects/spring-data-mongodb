@@ -17,7 +17,7 @@ package org.springframework.data.mongodb.core.aggregation;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
-import static org.springframework.data.mongodb.core.aggregation.Expressions.*;
+import static org.springframework.data.mongodb.core.aggregation.AggregationFunctionExpressions.*;
 import static org.springframework.data.mongodb.core.aggregation.Fields.*;
 
 import java.util.Arrays;
@@ -195,7 +195,7 @@ public class GroupOperationUnitTests {
 
 		GroupOperation groupOperation = Aggregation //
 				.group("username") //
-				.first(expression("size", field("tags"))) //
+				.first(SIZE.of(field("tags"))) //
 				.as("tags_count");
 
 		DBObject groupClause = extractDbObjectFromGroupOperation(groupOperation);

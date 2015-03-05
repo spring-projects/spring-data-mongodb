@@ -24,18 +24,35 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
 /**
+ * An enum of supported {@link AggregationExpression}s in aggregation pipeline stages.
+ * 
  * @author Thomas Darimont
+ * @since 1.10
  */
-public class Expressions {
+public enum AggregationFunctionExpressions {
 
-	public static Expression expression(String name, Object... values) {
-		return new FunctionExpression(name, values);
+	SIZE;
+
+	/**
+	 * Returns an {@link AggregationExpression} build from the current {@link Enum} name and the given {@code params}.
+	 * 
+	 * @param params must not be {@literal null}
+	 * @return
+	 */
+	public AggregationExpression of(Object... params) {
+
+		Assert.notNull(params, "Params must not be null!");
+
+		return new FunctionExpression(name().toLowerCase(), params);
 	}
 
 	/**
+	 * An {@link AggregationExpression} representing a function call.
+	 * 
 	 * @author Thomas Darimont
+	 * @since 1.10
 	 */
-	static class FunctionExpression implements Expression {
+	static class FunctionExpression implements AggregationExpression {
 
 		private final String name;
 		private final Object[] values;
@@ -65,8 +82,8 @@ public class Expressions {
 
 		private Object unpack(Object value, AggregationOperationContext context) {
 
-			if (value instanceof Expression) {
-				return ((Expression) value).toDbObject(context);
+			if (value instanceof AggregationExpression) {
+				return ((AggregationExpression) value).toDbObject(context);
 			}
 
 			if (value instanceof Field) {

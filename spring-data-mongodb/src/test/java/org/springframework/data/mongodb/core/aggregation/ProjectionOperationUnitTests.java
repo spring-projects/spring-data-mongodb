@@ -17,7 +17,7 @@ package org.springframework.data.mongodb.core.aggregation;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
-import static org.springframework.data.mongodb.core.aggregation.Expressions.*;
+import static org.springframework.data.mongodb.core.aggregation.AggregationFunctionExpressions.*;
 import static org.springframework.data.mongodb.core.aggregation.Fields.*;
 import static org.springframework.data.mongodb.util.DBObjectUtils.*;
 
@@ -362,7 +362,7 @@ public class ProjectionOperationUnitTests {
 
 		ProjectionOperation operation = Aggregation //
 				.project() //
-				.andExpression(expression("size", field("tags"))) //
+				.and(SIZE.of(field("tags"))) //
 				.as("tags_count");
 
 		DBObject dbObject = operation.toDBObject(Aggregation.DEFAULT_CONTEXT);

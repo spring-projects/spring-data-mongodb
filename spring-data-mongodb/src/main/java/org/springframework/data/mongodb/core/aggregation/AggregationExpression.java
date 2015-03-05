@@ -18,9 +18,12 @@ package org.springframework.data.mongodb.core.aggregation;
 import com.mongodb.DBObject;
 
 /**
+ * An {@link AggregationExpression} can be used with field expressions in aggregation pipeline stages like {@code project} and
+ * {@code group}.
+ * 
  * @author Thomas Darimont
  */
-public interface Expression {
+public interface AggregationExpression {
 
 	/**
 	 * @param context
