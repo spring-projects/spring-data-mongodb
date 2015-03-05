@@ -20,6 +20,7 @@ import static org.junit.Assert.*;
 import static org.springframework.data.mongodb.core.DBObjectTestUtils.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
+import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -36,9 +37,12 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.DBObjectTestUtils;
 import org.springframework.data.mongodb.core.Person;
+import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
+import org.springframework.data.mongodb.core.geo.GeoJsonPolygon;
 import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -702,6 +706,75 @@ public class QueryMapperUnitTests {
 		assertThat(dbo, equalTo(new BasicDBObjectBuilder().add("nested.id", 1).get()));
 	}
 
+	/**
+	 * @see DATAMONGO-1135
+	 */
+	@Test
+	public void nearShouldUseGeoJsonRepresentationOnUnmappedProperty() {
+
+		Query query = query(where("foo").near(new GeoJsonPoint(100, 50)));
+
+		DBObject dbo = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(ClassWithGeoTypes.class));
+
+		assertThat(dbo, isBsonObject().containing("foo.$near.$geometry.type", "Point"));
+		assertThat(dbo, isBsonObject().containing("foo.$near.$geometry.coordinates.[0]", 100D));
+		assertThat(dbo, isBsonObject().containing("foo.$near.$geometry.coordinates.[1]", 50D));
+	}
+
+	/**
+	 * @see DATAMONGO-1135
+	 */
+	@Test
+	public void nearShouldUseGeoJsonRepresentationWhenMappingToGoJsonType() {
+
+		Query query = query(where("geoJsonPoint").near(new GeoJsonPoint(100, 50)));
+
+		DBObject dbo = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(ClassWithGeoTypes.class));
+
+		assertThat(dbo, isBsonObject().containing("geoJsonPoint.$near.$geometry.type", "Point"));
+	}
+
+	/**
+	 * @see DATAMONGO-1135
+	 */
+	@Test
+	public void nearSphereShouldUseGeoJsonRepresentationWhenMappingToGoJsonType() {
+
+		Query query = query(where("geoJsonPoint").nearSphere(new GeoJsonPoint(100, 50)));
+
+		DBObject dbo = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(ClassWithGeoTypes.class));
+
+		assertThat(dbo, isBsonObject().containing("geoJsonPoint.$nearSphere.$geometry.type", "Point"));
+	}
+
+	/**
+	 * @see DATAMONGO-1135
+	 */
+	@Test
+	public void shouldMapNameCorrectlyForGeoJsonType() {
+
+		Query query = query(where("namedGeoJsonPoint").nearSphere(new GeoJsonPoint(100, 50)));
+
+		DBObject dbo = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(ClassWithGeoTypes.class));
+
+		assertThat(dbo,
+				isBsonObject().containing("geoJsonPointWithNameViaFieldAnnotation.$nearSphere.$geometry.type", "Point"));
+	}
+
+	/**
+	 * @see DATAMONGO-1135
+	 */
+	@Test
+	public void withinShouldUseGeoJsonPolygonWhenMappingPolygonOn2DSphereIndex() {
+
+		Query query = query(where("geoJsonPoint").within(
+				new GeoJsonPolygon(new Point(0, 0), new Point(100, 100), new Point(100, 0), new Point(0, 0))));
+
+		DBObject dbo = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(ClassWithGeoTypes.class));
+
+		assertThat(dbo, isBsonObject().containing("geoJsonPoint.$geoWithin.$geometry.type", "Polygon"));
+	}
+
 	@Document
 	public class Foo {
 		@Id private ObjectId id;
@@ -793,5 +866,13 @@ public class QueryMapperUnitTests {
 	static class ClassWithExplicitlyRenamedField {
 
 		@Field("id") String id;
+	}
+
+	static class ClassWithGeoTypes {
+
+		double[] justAnArray;
+		Point legacyPoint;
+		GeoJsonPoint geoJsonPoint;
+		@Field("geoJsonPointWithNameViaFieldAnnotation") GeoJsonPoint namedGeoJsonPoint;
 	}
 }

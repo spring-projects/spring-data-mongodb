@@ -19,7 +19,10 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
 import org.junit.Test;
+import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
+import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
+import org.springframework.data.mongodb.test.util.IsBsonObject;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.BasicDBObjectBuilder;
@@ -163,5 +166,49 @@ public class CriteriaTests {
 		DBObject dbo = new Criteria().lt("foo").not().getCriteriaObject();
 
 		assertThat(dbo, equalTo(new BasicDBObjectBuilder().add("$not", new BasicDBObject("$lt", "foo")).get()));
+	}
+
+	/**
+	 * @see DATAMONGO-1135
+	 */
+	@Test
+	public void geoJsonTypesShouldBeWrappedInGeometry() {
+
+		DBObject dbo = new Criteria("foo").near(new GeoJsonPoint(100, 200)).getCriteriaObject();
+
+		assertThat(dbo, IsBsonObject.isBsonObject().containing("foo.$near.$geometry", new GeoJsonPoint(100, 200)));
+	}
+
+	/**
+	 * @see DATAMONGO-1135
+	 */
+	@Test
+	public void legacyCoordinateTypesShouldNotBeWrappedInGeometry() {
+
+		DBObject dbo = new Criteria("foo").near(new Point(100, 200)).getCriteriaObject();
+
+		assertThat(dbo, IsBsonObject.isBsonObject().notContaining("foo.$near.$geometry"));
+	}
+
+	/**
+	 * @see DATAMONGO-1135
+	 */
+	@Test
+	public void maxDistanceShouldBeMappedInsideNearWhenUsedAlongWithGeoJsonType() {
+
+		DBObject dbo = new Criteria("foo").near(new GeoJsonPoint(100, 200)).maxDistance(50D).getCriteriaObject();
+
+		assertThat(dbo, IsBsonObject.isBsonObject().containing("foo.$near.$maxDistance", 50D));
+	}
+
+	/**
+	 * @see DATAMONGO-1135
+	 */
+	@Test
+	public void maxDistanceShouldBeMappedInsideNearSphereWhenUsedAlongWithGeoJsonType() {
+
+		DBObject dbo = new Criteria("foo").nearSphere(new GeoJsonPoint(100, 200)).maxDistance(50D).getCriteriaObject();
+
+		assertThat(dbo, IsBsonObject.isBsonObject().containing("foo.$nearSphere.$maxDistance", 50D));
 	}
 }

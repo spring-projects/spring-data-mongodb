@@ -29,6 +29,7 @@ import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Shape;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
+import org.springframework.data.mongodb.core.geo.GeoJson;
 import org.springframework.data.mongodb.core.geo.Sphere;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
@@ -439,6 +440,11 @@ public class Criteria implements CriteriaDefinition {
 	 * @return
 	 */
 	public Criteria maxDistance(double maxDistance) {
+
+		if (createNearCriteriaForCommand("$near", maxDistance) || createNearCriteriaForCommand("$nearSphere", maxDistance)) {
+			return this;
+		}
+
 		criteria.put("$maxDistance", maxDistance);
 		return this;
 	}
@@ -540,7 +546,13 @@ public class Criteria implements CriteriaDefinition {
 		boolean not = false;
 
 		for (String k : this.criteria.keySet()) {
+
 			Object value = this.criteria.get(k);
+
+			if (requiresGeoJsonFormat(value)) {
+				value = new BasicDBObject("$geometry", value);
+			}
+
 			if (not) {
 				DBObject notDbo = new BasicDBObject();
 				notDbo.put(k, value);
@@ -591,6 +603,31 @@ public class Criteria implements CriteriaDefinition {
 					+ "you can't add a second '" + key + "' expression specified as '" + key + " : " + value + "'. "
 					+ "Criteria already contains '" + key + " : " + existing + "'.");
 		}
+	}
+
+	private boolean requiresGeoJsonFormat(Object value) {
+		return value instanceof GeoJson
+				|| (value instanceof GeoCommand && ((GeoCommand) value).getShape() instanceof GeoJson);
+	}
+
+	private boolean createNearCriteriaForCommand(String command, double maxDistance) {
+
+		if (!criteria.containsKey(command)) {
+			return false;
+		}
+
+		Object existingNearOperationValue = criteria.get(command);
+		if (existingNearOperationValue instanceof DBObject) {
+			((DBObject) existingNearOperationValue).put("$maxDistance", maxDistance);
+			return true;
+		} else if (existingNearOperationValue instanceof GeoJson) {
+
+			BasicDBObject dbo = new BasicDBObject("$geometry", existingNearOperationValue);
+			dbo.put("$maxDistance", maxDistance);
+			criteria.put(command, dbo);
+			return true;
+		}
+		return false;
 	}
 
 	/* 
