@@ -211,4 +211,40 @@ public class CriteriaTests {
 
 		assertThat(dbo, IsBsonObject.isBsonObject().containing("foo.$nearSphere.$maxDistance", 50D));
 	}
+
+	/**
+	 * @see DATAMONGO-1110
+	 */
+	@Test
+	public void minDistanceShouldBeMappedInsideNearWhenUsedAlongWithGeoJsonType() {
+
+		DBObject dbo = new Criteria("foo").near(new GeoJsonPoint(100, 200)).minDistance(50D).getCriteriaObject();
+
+		assertThat(dbo, IsBsonObject.isBsonObject().containing("foo.$near.$minDistance", 50D));
+	}
+
+	/**
+	 * @see DATAMONGO-1110
+	 */
+	@Test
+	public void minDistanceShouldBeMappedInsideNearSphereWhenUsedAlongWithGeoJsonType() {
+
+		DBObject dbo = new Criteria("foo").nearSphere(new GeoJsonPoint(100, 200)).minDistance(50D).getCriteriaObject();
+
+		assertThat(dbo, IsBsonObject.isBsonObject().containing("foo.$nearSphere.$minDistance", 50D));
+	}
+
+	/**
+	 * @see DATAMONGO-1110
+	 */
+	@Test
+	public void minAndMaxDistanceShouldBeMappedInsideNearSphereWhenUsedAlongWithGeoJsonType() {
+
+		DBObject dbo = new Criteria("foo").nearSphere(new GeoJsonPoint(100, 200)).minDistance(50D).maxDistance(100D)
+				.getCriteriaObject();
+
+		assertThat(dbo, IsBsonObject.isBsonObject().containing("foo.$nearSphere.$minDistance", 50D));
+		assertThat(dbo, IsBsonObject.isBsonObject().containing("foo.$nearSphere.$maxDistance", 100D));
+	}
+
 }
