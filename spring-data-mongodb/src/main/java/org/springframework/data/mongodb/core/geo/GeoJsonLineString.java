@@ -31,6 +31,8 @@ public class GeoJsonLineString extends GeoJsonMultiPoint {
 	private static final String TYPE = "LineString";
 
 	/**
+	 * Creates a new {@link GeoJsonLineString} for the given {@link Point}s.
+	 * 
 	 * @param points must not be {@literal null} and have at least 2 entries.
 	 */
 	public GeoJsonLineString(List<Point> points) {
@@ -38,12 +40,14 @@ public class GeoJsonLineString extends GeoJsonMultiPoint {
 	}
 
 	/**
-	 * @param p0 must not be {@literal null}
-	 * @param p1 must not be {@literal null}
+	 * Creates a new {@link GeoJsonLineString} for the given {@link Point}s.
+	 * 
+	 * @param first must not be {@literal null}
+	 * @param second must not be {@literal null}
 	 * @param others can be {@literal null}
 	 */
-	public GeoJsonLineString(Point p0, Point p1, Point... others) {
-		super(p0, p1, others);
+	public GeoJsonLineString(Point first, Point second, Point... others) {
+		super(first, second, others);
 	}
 
 	/*
@@ -54,5 +58,4 @@ public class GeoJsonLineString extends GeoJsonMultiPoint {
 	public String getType() {
 		return TYPE;
 	}
-
 }

@@ -22,7 +22,6 @@ import java.util.List;
 
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
-import org.springframework.util.ObjectUtils;
 
 /**
  * {@link GeoJson} representation of {@link Polygon}. Unlike {@link Polygon} the {@link GeoJsonPolygon} requires a
@@ -36,34 +35,24 @@ public class GeoJsonPolygon extends Polygon implements GeoJson<List<GeoJsonLineS
 
 	private static final long serialVersionUID = 3936163018187247185L;
 	private static final String TYPE = "Polygon";
+
 	private List<GeoJsonLineString> coordinates = new ArrayList<GeoJsonLineString>();
 
 	/**
-	 * Creates new {@link GeoJsonPolygon}.
+	 * Creates new {@link GeoJsonPolygon} from the given {@link Point}s.
 	 * 
-	 * @param p0 must not be {@literal null}.
-	 * @param p1 must not be {@literal null}.
-	 * @param p2 must not be {@literal null}.
-	 * @param p3 must not be {@literal null}.
+	 * @param first must not be {@literal null}.
+	 * @param second must not be {@literal null}.
+	 * @param third must not be {@literal null}.
+	 * @param fourth must not be {@literal null}.
 	 * @param others can be {@literal null}.
 	 */
-	public GeoJsonPolygon(Point p0, Point p1, Point p2, Point p3, final Point... others) {
-
-		this(new ArrayList<Point>(Arrays.asList(p0, p1, p2, p3)) {
-			private static final long serialVersionUID = 3143657022446395361L;
-
-			{
-				if (!ObjectUtils.isEmpty(others)) {
-					for (Point p : others) {
-						add(p);
-					}
-				}
-			}
-		});
+	public GeoJsonPolygon(Point first, Point second, Point third, Point fourth, final Point... others) {
+		this(asList(first, second, third, fourth, others));
 	}
 
 	/**
-	 * Creates new {@link GeoJsonPolygon}.
+	 * Creates new {@link GeoJsonPolygon} from the given {@link Point}s.
 	 * 
 	 * @param points must not be {@literal null}.
 	 */
@@ -89,5 +78,18 @@ public class GeoJsonPolygon extends Polygon implements GeoJson<List<GeoJsonLineS
 	@Override
 	public List<GeoJsonLineString> getCoordinates() {
 		return Collections.unmodifiableList(this.coordinates);
+	}
+
+	private static List<Point> asList(Point first, Point second, Point third, Point fourth, final Point... others) {
+
+		ArrayList<Point> result = new ArrayList<Point>(3 + others.length);
+
+		result.add(first);
+		result.add(second);
+		result.add(third);
+		result.add(fourth);
+		result.addAll(Arrays.asList(others));
+
+		return result;
 	}
 }

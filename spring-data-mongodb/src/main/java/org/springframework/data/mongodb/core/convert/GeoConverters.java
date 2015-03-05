@@ -67,6 +67,7 @@ abstract class GeoConverters {
 	 * 
 	 * @return
 	 */
+	@SuppressWarnings("unchecked")
 	public static Collection<? extends Object> getConvertersToRegister() {
 		return Arrays.asList( //
 				BoxToDbObjectConverter.INSTANCE //
@@ -421,6 +422,7 @@ abstract class GeoConverters {
 		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
 		 */
 		@Override
+		@SuppressWarnings("rawtypes")
 		public DBObject convert(GeoCommand source) {
 
 			if (source == null) {
@@ -472,8 +474,13 @@ abstract class GeoConverters {
 	 */
 	@SuppressWarnings("rawtypes")
 	static enum GeoJsonToDbObjectConverter implements Converter<GeoJson, DBObject> {
+
 		INSTANCE;
 
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
+		 */
 		@Override
 		public DBObject convert(GeoJson source) {
 
@@ -484,11 +491,15 @@ abstract class GeoConverters {
 			DBObject dbo = new BasicDBObject("type", source.getType());
 
 			if (source instanceof GeoJsonGeometryCollection) {
+
 				BasicDBList dbl = new BasicDBList();
+
 				for (GeoJson geometry : ((GeoJsonGeometryCollection) source).getCoordinates()) {
 					dbl.add(convert(geometry));
 				}
+
 				dbo.put("geometries", dbl);
+
 			} else {
 				dbo.put("coordinates", convertIfNecessarry(source.getCoordinates()));
 			}
@@ -503,10 +514,13 @@ abstract class GeoConverters {
 			}
 
 			if (candidate instanceof Iterable) {
+
 				BasicDBList dbl = new BasicDBList();
+
 				for (Object element : (Iterable) candidate) {
 					dbl.add(convertIfNecessarry(element));
 				}
+
 				return dbl;
 			}
 
@@ -523,8 +537,13 @@ abstract class GeoConverters {
 	 * @since 1.7
 	 */
 	static enum GeoJsonPointToDbObjectConverter implements Converter<GeoJsonPoint, DBObject> {
+
 		INSTANCE;
 
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
+		 */
 		@Override
 		public DBObject convert(GeoJsonPoint source) {
 			return GeoJsonToDbObjectConverter.INSTANCE.convert(source);
@@ -536,13 +555,17 @@ abstract class GeoConverters {
 	 * @since 1.7
 	 */
 	static enum GeoJsonPolygonToDbObjectConverter implements Converter<GeoJsonPolygon, DBObject> {
+
 		INSTANCE;
 
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
+		 */
 		@Override
 		public DBObject convert(GeoJsonPolygon source) {
 			return GeoJsonToDbObjectConverter.INSTANCE.convert(source);
 		}
-
 	}
 
 	/**
@@ -550,9 +573,15 @@ abstract class GeoConverters {
 	 * @since 1.7
 	 */
 	static enum DbObjectToGeoJsonPointConverter implements Converter<DBObject, GeoJsonPoint> {
+
 		INSTANCE;
 
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
+		 */
 		@Override
+		@SuppressWarnings("unchecked")
 		public GeoJsonPoint convert(DBObject source) {
 
 			if (source == null) {
@@ -572,9 +601,13 @@ abstract class GeoConverters {
 	 * @since 1.7
 	 */
 	static enum DbObjectToGeoJsonPolygonConverter implements Converter<DBObject, GeoJsonPolygon> {
+
 		INSTANCE;
 
-		@SuppressWarnings("rawtypes")
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
+		 */
 		@Override
 		public GeoJsonPolygon convert(DBObject source) {
 
@@ -594,8 +627,13 @@ abstract class GeoConverters {
 	 * @since 1.7
 	 */
 	static enum DbObjectToGeoJsonMultiPolygonConverter implements Converter<DBObject, GeoJsonMultiPolygon> {
+
 		INSTANCE;
 
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
+		 */
 		@Override
 		public GeoJsonMultiPolygon convert(DBObject source) {
 
@@ -608,11 +646,12 @@ abstract class GeoConverters {
 
 			BasicDBList dbl = (BasicDBList) source.get("coordinates");
 			List<GeoJsonPolygon> polygones = new ArrayList<GeoJsonPolygon>();
+
 			for (Object polygon : dbl) {
 				polygones.add(toGeoJsonPolygon((BasicDBList) polygon));
 			}
-			return new GeoJsonMultiPolygon(polygones);
 
+			return new GeoJsonMultiPolygon(polygones);
 		}
 	}
 
@@ -621,8 +660,13 @@ abstract class GeoConverters {
 	 * @since 1.7
 	 */
 	static enum DbObjectToGeoJsonLineStringConverter implements Converter<DBObject, GeoJsonLineString> {
+
 		INSTANCE;
 
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
+		 */
 		@Override
 		public GeoJsonLineString convert(DBObject source) {
 
@@ -634,6 +678,7 @@ abstract class GeoConverters {
 					String.format("Cannot convert type '%s' to LineString.", source.get("type")));
 
 			BasicDBList cords = (BasicDBList) source.get("coordinates");
+
 			return new GeoJsonLineString(toListOfPoint(cords));
 		}
 	}
@@ -643,8 +688,13 @@ abstract class GeoConverters {
 	 * @since 1.7
 	 */
 	static enum DbObjectToGeoJsonMultiPointConverter implements Converter<DBObject, GeoJsonMultiPoint> {
+
 		INSTANCE;
 
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
+		 */
 		@Override
 		public GeoJsonMultiPoint convert(DBObject source) {
 
@@ -656,6 +706,7 @@ abstract class GeoConverters {
 					String.format("Cannot convert type '%s' to MultiPoint.", source.get("type")));
 
 			BasicDBList cords = (BasicDBList) source.get("coordinates");
+
 			return new GeoJsonMultiPoint(toListOfPoint(cords));
 		}
 	}
@@ -665,8 +716,13 @@ abstract class GeoConverters {
 	 * @since 1.7
 	 */
 	static enum DbObjectToGeoJsonMultiLineStringConverter implements Converter<DBObject, GeoJsonMultiLineString> {
+
 		INSTANCE;
 
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
+		 */
 		@Override
 		public GeoJsonMultiLineString convert(DBObject source) {
 
@@ -679,6 +735,7 @@ abstract class GeoConverters {
 
 			List<GeoJsonLineString> lines = new ArrayList<GeoJsonLineString>();
 			BasicDBList cords = (BasicDBList) source.get("coordinates");
+
 			for (Object line : cords) {
 				lines.add(new GeoJsonLineString(toListOfPoint((BasicDBList) line)));
 			}
@@ -691,8 +748,14 @@ abstract class GeoConverters {
 	 * @since 1.7
 	 */
 	static enum DbObjectToGeoJsonGeometryCollectionConverter implements Converter<DBObject, GeoJsonGeometryCollection> {
+
 		INSTANCE;
 
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
+		 */
+		@SuppressWarnings("rawtypes")
 		@Override
 		public GeoJsonGeometryCollection convert(DBObject source) {
 
@@ -711,7 +774,7 @@ abstract class GeoConverters {
 
 		}
 
-		private GeoJson<?> convertGeometries(DBObject source) {
+		private static GeoJson<?> convertGeometries(DBObject source) {
 
 			Object type = source.get("type");
 			if (ObjectUtils.nullSafeEquals(type, "Point")) {
@@ -756,11 +819,13 @@ abstract class GeoConverters {
 	static List<Point> toListOfPoint(BasicDBList listOfCoordinatePairs) {
 
 		List<Point> points = new ArrayList<Point>();
+
 		for (Object point : listOfCoordinatePairs) {
 
 			Assert.isInstanceOf(List.class, point);
 
 			List<Double> coordinatesList = (List<Double>) point;
+
 			points.add(new GeoJsonPoint(coordinatesList.get(0).doubleValue(), coordinatesList.get(1).doubleValue()));
 		}
 		return points;
@@ -769,14 +834,11 @@ abstract class GeoConverters {
 	/**
 	 * Converts a coordinate pairs nested in in {@link BasicDBList} into {@link GeoJsonPolygon}.
 	 * 
-	 * @param dbl
+	 * @param dbList
 	 * @return
 	 * @since 1.7
 	 */
-	static GeoJsonPolygon toGeoJsonPolygon(BasicDBList dbl) {
-
-		List<Point> outer = toListOfPoint((BasicDBList) dbl.get(0));
-
-		return new GeoJsonPolygon(outer);
+	static GeoJsonPolygon toGeoJsonPolygon(BasicDBList dbList) {
+		return new GeoJsonPolygon(toListOfPoint((BasicDBList) dbList.get(0)));
 	}
 }

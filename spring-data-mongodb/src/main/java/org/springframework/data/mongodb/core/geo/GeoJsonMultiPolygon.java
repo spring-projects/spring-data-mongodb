@@ -31,14 +31,18 @@ import org.springframework.util.ObjectUtils;
 public class GeoJsonMultiPolygon implements GeoJson<Iterable<GeoJsonPolygon>> {
 
 	private static final String TYPE = "MultiPolygon";
+
 	private List<GeoJsonPolygon> coordinates = new ArrayList<GeoJsonPolygon>();
 
 	/**
+	 * Creates a new {@link GeoJsonMultiPolygon} for the given {@link GeoJsonPolygon}s.
+	 * 
 	 * @param polygons must not be {@literal null}.
 	 */
 	public GeoJsonMultiPolygon(List<GeoJsonPolygon> polygons) {
 
 		Assert.notNull(polygons, "Polygons for MultiPolygon must not be null!");
+
 		this.coordinates.addAll(polygons);
 	}
 
@@ -75,16 +79,15 @@ public class GeoJsonMultiPolygon implements GeoJson<Iterable<GeoJsonPolygon>> {
 	 */
 	@Override
 	public boolean equals(Object obj) {
+
 		if (this == obj) {
 			return true;
 		}
-		if (obj == null) {
-			return false;
-		}
+
 		if (!(obj instanceof GeoJsonMultiPolygon)) {
 			return false;
 		}
+
 		return ObjectUtils.nullSafeEquals(this.coordinates, ((GeoJsonMultiPolygon) obj).coordinates);
 	}
-
 }

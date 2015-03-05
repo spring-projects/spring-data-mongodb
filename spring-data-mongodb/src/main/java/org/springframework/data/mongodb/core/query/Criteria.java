@@ -605,11 +605,6 @@ public class Criteria implements CriteriaDefinition {
 		}
 	}
 
-	private boolean requiresGeoJsonFormat(Object value) {
-		return value instanceof GeoJson
-				|| (value instanceof GeoCommand && ((GeoCommand) value).getShape() instanceof GeoJson);
-	}
-
 	private boolean createNearCriteriaForCommand(String command, double maxDistance) {
 
 		if (!criteria.containsKey(command)) {
@@ -617,16 +612,22 @@ public class Criteria implements CriteriaDefinition {
 		}
 
 		Object existingNearOperationValue = criteria.get(command);
+
 		if (existingNearOperationValue instanceof DBObject) {
+
 			((DBObject) existingNearOperationValue).put("$maxDistance", maxDistance);
+
 			return true;
+
 		} else if (existingNearOperationValue instanceof GeoJson) {
 
-			BasicDBObject dbo = new BasicDBObject("$geometry", existingNearOperationValue);
-			dbo.put("$maxDistance", maxDistance);
+			BasicDBObject dbo = new BasicDBObject("$geometry", existingNearOperationValue)
+					.append("$maxDistance", maxDistance);
 			criteria.put(command, dbo);
+
 			return true;
 		}
+
 		return false;
 	}
 
@@ -707,5 +708,10 @@ public class Criteria implements CriteriaDefinition {
 		result += nullSafeHashCode(isValue);
 
 		return result;
+	}
+
+	private static boolean requiresGeoJsonFormat(Object value) {
+		return value instanceof GeoJson
+				|| (value instanceof GeoCommand && ((GeoCommand) value).getShape() instanceof GeoJson);
 	}
 }

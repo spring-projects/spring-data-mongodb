@@ -32,14 +32,18 @@ import org.springframework.util.ObjectUtils;
 public class GeoJsonGeometryCollection implements GeoJson<Iterable<GeoJson<?>>> {
 
 	private static final String TYPE = "GeometryCollection";
+
 	private final List<GeoJson<?>> geometries = new ArrayList<GeoJson<?>>();
 
 	/**
+	 * Creates a new {@link GeoJsonGeometryCollection} for the given {@link GeoJson} instances.
+	 * 
 	 * @param geometries
 	 */
 	public GeoJsonGeometryCollection(List<GeoJson<?>> geometries) {
 
-		Assert.notNull(geometries);
+		Assert.notNull(geometries, "Geometries must not be null!");
+
 		this.geometries.addAll(geometries);
 	}
 
@@ -76,17 +80,17 @@ public class GeoJsonGeometryCollection implements GeoJson<Iterable<GeoJson<?>>> 
 	 */
 	@Override
 	public boolean equals(Object obj) {
+
 		if (this == obj) {
 			return true;
 		}
-		if (obj == null) {
-			return false;
-		}
+
 		if (!(obj instanceof GeoJsonGeometryCollection)) {
 			return false;
 		}
+
 		GeoJsonGeometryCollection other = (GeoJsonGeometryCollection) obj;
+
 		return ObjectUtils.nullSafeEquals(this.geometries, other.geometries);
 	}
-
 }

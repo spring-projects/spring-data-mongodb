@@ -34,9 +34,12 @@ import org.springframework.util.ObjectUtils;
 public class GeoJsonMultiPoint implements GeoJson<Iterable<Point>> {
 
 	private static final String TYPE = "MultiPoint";
+
 	private final List<Point> points;
 
 	/**
+	 * Creates a new {@link GeoJsonMultiPoint} for the given {@link Point}s.
+	 * 
 	 * @param points points must not be {@literal null} and have at least 2 entries.
 	 */
 	public GeoJsonMultiPoint(List<Point> points) {
@@ -47,14 +50,23 @@ public class GeoJsonMultiPoint implements GeoJson<Iterable<Point>> {
 		this.points = new ArrayList<Point>(points);
 	}
 
-	public GeoJsonMultiPoint(Point p0, Point p1, Point... others) {
+	/**
+	 * Creates a new {@link GeoJsonMultiPoint} for the given {@link Point}s.
+	 * 
+	 * @param first must not be {@literal null}.
+	 * @param second must not be {@literal null}.
+	 * @param others must not be {@literal null}.
+	 */
+	public GeoJsonMultiPoint(Point first, Point second, Point... others) {
+
+		Assert.notNull(first, "First point must not be null!");
+		Assert.notNull(second, "Second point must not be null!");
+		Assert.notNull(others, "Additional points must not be null!");
 
 		this.points = new ArrayList<Point>();
-		this.points.add(p0);
-		this.points.add(p1);
-		if (!ObjectUtils.isEmpty(others)) {
-			this.points.addAll(Arrays.asList(others));
-		}
+		this.points.add(first);
+		this.points.add(second);
+		this.points.addAll(Arrays.asList(others));
 	}
 
 	/*
@@ -90,16 +102,15 @@ public class GeoJsonMultiPoint implements GeoJson<Iterable<Point>> {
 	 */
 	@Override
 	public boolean equals(Object obj) {
+
 		if (this == obj) {
 			return true;
 		}
-		if (obj == null) {
-			return false;
-		}
+
 		if (!(obj instanceof GeoJsonMultiPoint)) {
 			return false;
 		}
+
 		return ObjectUtils.nullSafeEquals(this.points, ((GeoJsonMultiPoint) obj).points);
 	}
-
 }

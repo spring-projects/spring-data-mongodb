@@ -33,28 +33,32 @@ import org.springframework.util.ObjectUtils;
 public class GeoJsonMultiLineString implements GeoJson<Iterable<GeoJsonLineString>> {
 
 	private static final String TYPE = "MultiLineString";
+
 	private List<GeoJsonLineString> coordinates = new ArrayList<GeoJsonLineString>();
 
 	/**
-	 * Creates new {@link GeoJsonMultiLineString}.
+	 * Creates new {@link GeoJsonMultiLineString} for the given {@link Point}s.
 	 * 
 	 * @param lines must not be {@literal null}.
 	 */
-	@SuppressWarnings("unchecked")
 	public GeoJsonMultiLineString(List<Point>... lines) {
 
-		Assert.notEmpty(lines, "Lines for MultiLineString must not be null!");
+		Assert.notEmpty(lines, "Points for MultiLineString must not be null!");
+
 		for (List<Point> line : lines) {
 			this.coordinates.add(new GeoJsonLineString(line));
 		}
 	}
 
 	/**
+	 * Creates new {@link GeoJsonMultiLineString} for the given {@link GeoJsonLineString}s.
+	 * 
 	 * @param lines must not be {@literal null}.
 	 */
 	public GeoJsonMultiLineString(List<GeoJsonLineString> lines) {
 
 		Assert.notNull(lines, "Lines for MultiLineString must not be null!");
+
 		this.coordinates.addAll(lines);
 	}
 
@@ -91,16 +95,15 @@ public class GeoJsonMultiLineString implements GeoJson<Iterable<GeoJsonLineStrin
 	 */
 	@Override
 	public boolean equals(Object obj) {
+
 		if (this == obj) {
 			return true;
 		}
-		if (obj == null) {
-			return false;
-		}
+
 		if (!(obj instanceof GeoJsonMultiLineString)) {
 			return false;
 		}
+
 		return ObjectUtils.nullSafeEquals(this.coordinates, ((GeoJsonMultiLineString) obj).coordinates);
 	}
-
 }

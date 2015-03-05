@@ -30,6 +30,7 @@ import org.springframework.data.geo.Point;
 public class GeoJsonPoint extends Point implements GeoJson<List<Double>> {
 
 	private static final long serialVersionUID = -8026303425147474002L;
+
 	private static final String TYPE = "Point";
 
 	/**
@@ -68,5 +69,4 @@ public class GeoJsonPoint extends Point implements GeoJson<List<Double>> {
 	public List<Double> getCoordinates() {
 		return Arrays.asList(Double.valueOf(getX()), Double.valueOf(getY()));
 	}
-
 }

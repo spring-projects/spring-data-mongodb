@@ -26,7 +26,7 @@ public interface GeoJson<T extends Iterable<?>> {
 	/**
 	 * String value representing the type of the {@link GeoJson} object.
 	 * 
-	 * @return never {@literal null}.
+	 * @return will never be {@literal null}.
 	 * @see http://geojson.org/geojson-spec.html#geojson-objects
 	 */
 	String getType();
@@ -35,7 +35,7 @@ public interface GeoJson<T extends Iterable<?>> {
 	 * The value of the coordinates member is always an {@link Iterable}. The structure for the elements within is
 	 * determined by {@link #getType()} of geometry.
 	 * 
-	 * @return never {@literal null}.
+	 * @return will never be {@literal null}.
 	 * @see http://geojson.org/geojson-spec.html#geometry-objects
 	 */
 	T getCoordinates();
