@@ -1,6 +1,38 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 1.7.0.RC1 (2015-03-05)
+-----------------------------------------
+* DATAMONGO-1173 - Release 1.7 RC1.
+* DATAMONGO-1167 - Add 'findAll' method to QueryDslMongoRepository which accepts a querydsl Predicate and a Sort.
+* DATAMONGO-1165 - Add support for Java 8 Stream as return type in repositories.
+* DATAMONGO-1162 - Adapt test cases to semantic changes in Spring Data Commons AuditingHandler API.
+* DATAMONGO-1158 - Assert compatibility with MongoDB 3.0.
+* DATAMONGO-1154 - Upgrade to MongoDB Java driver 2.13.0.
+* DATAMONGO-1153 - Fix documentation build.
+* DATAMONGO-1148 - Use EclipseLink provided JPA API JAR.
+* DATAMONGO-1147 - Remove manual array copy.
+* DATAMONGO-1146 - Add 'exists' method to QueryDslMongoRepository which accepts a querydsl Predicate.
+* DATAMONGO-1145 - Upgrade MongoDB Java driver to 2.12.5.
+* DATAMONGO-1139 - MongoQueryCreator must not create $nearSphere query for neutral Distance.
+* DATAMONGO-1136 - Use $geoWithin instead of $within for geo queries.
+* DATAMONGO-1135 - Add support for $geometry to support GeoJSON queries.
+* DATAMONGO-1132 - The sample does not match the logical result in the MongoDB repositories section of the documentation.
+* DATAMONGO-1131 - Register converters for ThreeTen back port by default.
+* DATAMONGO-1129 - Upgrade to latest MongoDB Java driver.
+* DATAMONGO-1127 - Add support for geoNear queries with distance information.
+* DATAMONGO-1126 - Repository keyword query findByInId with pageable not returning correctly.
+* DATAMONGO-1123 - geoNear, does not return all matching elements, it returns only a max of 100 documents.
+* DATAMONGO-1121 - "Cycle found" false positive.
+* DATAMONGO-1120 - Pageable queries timeout or return incorrect counts.
+* DATAMONGO-1118 - Custom converters not used for map keys.
+* DATAMONGO-1110 - Add support for $minDistance to NearQuery.
+* DATAMONGO-1082 - Improve JavaDoc and reference documentation on alias usage in aggregation framework support.
+* DATAMONGO-1081 - Improve documentation on field mapping semantics.
+* DATAMONGO-712 - Another round of potential performance improvements.
+* DATAMONGO-479 - Support calling of MongoDB stored javascripts.
+
+
 Changes in version 1.6.2.RELEASE (2015-01-28)
 ---------------------------------------------
 * DATAMONGO-1148 - Use EclipseLink provided JPA API JAR.
