@@ -21,7 +21,7 @@ For most tasks you will find yourself using `MongoTemplate` or the Repository su
 [[mongodb-getting-started]]
 == Getting Started
 
-Spring MongoDB support requires MongoDB 1.4 or higher and Java SE 5 or higher. The latest production release (2.4.9 as of this writing) is recommended. An easy way to bootstrap setting up a working environment is to create a Spring based project in http://spring.io/tools/sts[STS].
+Spring MongoDB support requires MongoDB 2.6 or higher and Java SE 6 or higher. An easy way to bootstrap setting up a working environment is to create a Spring based project in http://spring.io/tools/sts[STS].
 
 First you need to set up a running Mongodb server. Refer to the http://docs.mongodb.org/manual/core/introduction/[Mongodb Quick Start guide] for an explanation on how to startup a MongoDB instance. Once installed starting MongoDB is typically a matter of executing the following command: `MONGO_HOME/bin/mongod`
 
@@ -38,7 +38,7 @@ Then add the following to pom.xml dependencies section.
   <dependency>
     <groupId>org.springframework.data</groupId>
     <artifactId>spring-data-mongodb</artifactId>
-    <version>1.4.1.RELEASE</version>
+    <version>1.7.0.RELEASE</version>
   </dependency>
 
 </dependencies>
@@ -48,7 +48,7 @@ Also change the version of Spring in the pom.xml to be
 
 [source,xml]
 ----
-<spring.framework.version>3.2.8.RELEASE</spring.framework.version>
+<spring.framework.version>4.0.9.RELEASE</spring.framework.version>
 ----
 
 You will also need to add the location of the Spring Milestone repository for maven to your pom.xml which is at the same level of your <dependencies/> element
@@ -162,7 +162,7 @@ Even in this simple example, there are few things to take notice of
 [[mongo.examples-repo]]
 == Examples Repository
 
-There is an https://github.com/spring-projects/spring-data-document-examples[github repository with several examples] that you can download and play around with to get a feel for how the library works.
+There is an https://github.com/spring-projects/spring-data-examples[github repository with several examples] that you can download and play around with to get a feel for how the library works.
 
 [[mongodb-connectors]]
 == Connecting to MongoDB with Spring
@@ -1156,6 +1156,96 @@ As you can see we use the `NearQuery` builder API to set up a query to return al
 
 The geo near operations return a `GeoResults` wrapper object that encapsulates `GeoResult` instances. The wrapping `GeoResults` allows to access the average distance of all results. A single `GeoResult` object simply carries the entity found plus its distance from the origin.
 
+[[mongo.geo-json]]
+=== GeoJSON Support
+
+MongoDB supports http://geojeson.org/[GeoJSON] and simple (legacy) coordinate pairs for geospatial data. Those formats can both be used for storing as well as querying data. 
+
+NOTE: Please refer to the http://docs.mongodb.org/manual/core/2dsphere/#geospatial-indexes-store-geojson/[MongoDB manual on GeoJSON support] to learn about requirements and restrictions.
+
+==== GeoJSON types in domain classes
+
+Usage of http://geojeson.org/[GeoJSON] types in domain classes is straight forward. The `org.springframework.data.mongodb.core.geo` package contains types like `GeoJsonPoint`, `GeoJsonPolygon` and others. Those are extensions to the existing `org.springframework.data.geo` types. 
+
+====
+[source,java]
+----
+public class Store {
+
+	String id;
+	
+	/**
+	 * location is stored in GeoJSON format.
+	 * {
+	 *   "type" : "Point",
+	 *   "coordinates" : [ x, y ]
+	 * }
+	 */
+	GeoJsonPoint location;
+}
+----
+====
+
+==== GeoJSON types in repository query methods
+
+Using GeoJSON types as repository query parameters forces usage of the `$geometry` operator when creating the query.
+
+====
+[source,java]
+----
+public interface StoreRepository extends CrudRepository<Store, String> {
+
+	List<Store> findByLocationWithin(Polygon polygon);  <1>
+
+}
+
+/* 
+ * { 
+ *   "location": {
+ *     "$geoWithin": {
+ *       "$geometry": {
+ *         "type": "Polygon",
+ *         "coordinates": [
+ *           [
+ *             [-73.992514,40.758934],
+ *             [-73.961138,40.760348],
+ *             [-73.991658,40.730006],
+ *             [-73.992514,40.758934]
+ *           ]
+ *         ]
+ *       }
+ *     }
+ *   }
+ * }
+ */
+repo.findByLocationWithin(                              <2>
+  new GeoJsonPolygon(
+    new Point(-73.992514, 40.758934), 
+    new Point(-73.961138, 40.760348), 
+    new Point(-73.991658, 40.730006), 
+    new Point(-73.992514, 40.758934)));                 <3>
+    
+/*
+ * { 
+ *   "location" : { 
+ *     "$geoWithin" : {
+ *        "$polygon" : [ [-73.992514,40.758934] , [-73.961138,40.760348] , [-73.991658,40.730006] ]
+ *     }
+ *   }
+ * }
+ */
+repo.findByLocationWithin(                              <4>
+  new Polygon(
+    new Point(-73.992514, 40.758934), 
+    new Point(-73.961138, 40.760348), 
+    new Point(-73.991658, 40.730006)); 
+----
+<1> Repository method definition using the commons type allows calling it with both GeoJSON and legacy format.
+<2> Use GeoJSON type the make use of `$geometry` operator.
+<3> Plase note that GeoJSON polygons need the define a closed ring.
+<4> Use legacy format `$polygon` operator.
+====
+
 [[mongo.textsearch]]
 === Full Text Queries
 
@@ -1340,17 +1430,21 @@ MongoDB allows to execute JavaScript functions on the server by either directly 
 
 === Example Usage
 
+====
 [source,java]
 ----
 ScriptOperations scriptOps = template.scriptOps();
 
-ServerSideJavaScript echoScript = new ExecutableMongoScript("function(x) { return x; }");
-scriptOps.execute(echoScript, "directly execute script");
+ExecutableMongoScript echoScript = new ExecutableMongoScript("function(x) { return x; }");
+scriptOps.execute(echoScript, "directly execute script");     <1>
 
-scriptOps.register(new CallableMongoScript("echo", echoScript));
-scriptOps.call("echo", "execute script via name");
+scriptOps.register(new NamedMongoScript("echo", echoScript)); <2>
+scriptOps.call("echo", "execute script via name");            <3>
 ----
-
+<1> Execute the script directly without storing the function on server side.
+<2> Store the script using 'echo' as its name. The given name identifies the script and allows calling it later.
+<3> Execute the script with name 'echo' using the provided parameters.
+====
 
 [[mongo.group]]
 == Group Operations
