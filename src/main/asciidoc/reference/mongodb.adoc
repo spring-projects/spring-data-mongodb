@@ -1159,13 +1159,13 @@ The geo near operations return a `GeoResults` wrapper object that encapsulates `
 [[mongo.geo-json]]
 === GeoJSON Support
 
-MongoDB supports http://geojeson.org/[GeoJSON] and simple (legacy) coordinate pairs for geospatial data. Those formats can both be used for storing as well as querying data. 
+MongoDB supports http://geojeson.org/[GeoJSON] and simple (legacy) coordinate pairs for geospatial data. Those formats can both be used for storing as well as querying data.
 
 NOTE: Please refer to the http://docs.mongodb.org/manual/core/2dsphere/#geospatial-indexes-store-geojson/[MongoDB manual on GeoJSON support] to learn about requirements and restrictions.
 
 ==== GeoJSON types in domain classes
 
-Usage of http://geojeson.org/[GeoJSON] types in domain classes is straight forward. The `org.springframework.data.mongodb.core.geo` package contains types like `GeoJsonPoint`, `GeoJsonPolygon` and others. Those are extensions to the existing `org.springframework.data.geo` types. 
+Usage of http://geojeson.org/[GeoJSON] types in domain classes is straight forward. The `org.springframework.data.mongodb.core.geo` package contains types like `GeoJsonPoint`, `GeoJsonPolygon` and others. Those are extensions to the existing `org.springframework.data.geo` types.
 
 ====
 [source,java]
@@ -1173,7 +1173,7 @@ Usage of http://geojeson.org/[GeoJSON] types in domain classes is straight forwa
 public class Store {
 
 	String id;
-	
+
 	/**
 	 * location is stored in GeoJSON format.
 	 * {
@@ -1199,8 +1199,8 @@ public interface StoreRepository extends CrudRepository<Store, String> {
 
 }
 
-/* 
- * { 
+/*
+ * {
  *   "location": {
  *     "$geoWithin": {
  *       "$geometry": {
@@ -1220,14 +1220,14 @@ public interface StoreRepository extends CrudRepository<Store, String> {
  */
 repo.findByLocationWithin(                              <2>
   new GeoJsonPolygon(
-    new Point(-73.992514, 40.758934), 
-    new Point(-73.961138, 40.760348), 
-    new Point(-73.991658, 40.730006), 
+    new Point(-73.992514, 40.758934),
+    new Point(-73.961138, 40.760348),
+    new Point(-73.991658, 40.730006),
     new Point(-73.992514, 40.758934)));                 <3>
-    
+
 /*
- * { 
- *   "location" : { 
+ * {
+ *   "location" : {
  *     "$geoWithin" : {
  *        "$polygon" : [ [-73.992514,40.758934] , [-73.961138,40.760348] , [-73.991658,40.730006] ]
  *     }
@@ -1236,9 +1236,9 @@ repo.findByLocationWithin(                              <2>
  */
 repo.findByLocationWithin(                              <4>
   new Polygon(
-    new Point(-73.992514, 40.758934), 
-    new Point(-73.961138, 40.760348), 
-    new Point(-73.991658, 40.730006)); 
+    new Point(-73.992514, 40.758934),
+    new Point(-73.961138, 40.760348),
+    new Point(-73.991658, 40.730006));
 ----
 <1> Repository method definition using the commons type allows calling it with both GeoJSON and legacy format.
 <2> Use GeoJSON type the make use of `$geometry` operator.
