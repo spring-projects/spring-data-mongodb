@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 the original author or authors.
+ * Copyright 2014-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,6 +45,7 @@ import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.repository.core.RepositoryMetadata;
 
 import com.mongodb.BasicDBObjectBuilder;
+import com.mongodb.util.JSONParseException;
 
 /**
  * Unit tests for {@link PartTreeMongoQuery}.
@@ -135,6 +136,18 @@ public class PartTreeMongoQueryUnitTests {
 		assertThat(query, isTextQuery().searchingFor("search").where(new Criteria("firstname").is("text")));
 	}
 
+	/**
+	 * @see DATAMONGO-1180
+	 */
+	@Test
+	public void propagatesRootExceptionForInvalidQuery() {
+
+		exception.expect(IllegalStateException.class);
+		exception.expectCause(is(org.hamcrest.Matchers.<Throwable> instanceOf(JSONParseException.class)));
+
+		deriveQueryFromMethod("findByAge", new Object[] { 1 });
+	}
+
 	private org.springframework.data.mongodb.core.query.Query deriveQueryFromMethod(String method, Object[] args) {
 
 		Class<?>[] types = new Class<?>[args.length];
@@ -179,5 +192,8 @@ public class PartTreeMongoQueryUnitTests {
 		Person findPersonByFirstnameAndLastname(String firstname, String lastname);
 
 		Person findPersonByFirstname(String firstname, TextCriteria fullText);
+
+		@Query(fields = "{ 'firstname }")
+		Person findByAge(Integer age);
 	}
 }
