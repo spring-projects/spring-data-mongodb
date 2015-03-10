@@ -134,16 +134,22 @@ Most of the data access operations you usually trigger on a repository result a 
 ----
 public interface PersonRepository extends PagingAndSortingRepository<Person, String> {
 
-    List<Person> findByLastname(String lastname);
+    List<Person> findByLastname(String lastname);                      <1>
 
-    Page<Person> findByFirstname(String firstname, Pageable pageable);
+    Page<Person> findByFirstname(String firstname, Pageable pageable); <2>
 
-    Person findByShippingAddresses(Address address);
+    Person findByShippingAddresses(Address address);                   <3>
+    
+    Stream<Person> findAllBy();                                        <4>
 }
 ----
+<1> The method shows a query for all people with the given lastname. The query will be derived parsing the method name for constraints which can be concatenated with `And` and `Or`. Thus the method name will result in a query expression of `{"lastname" : lastname}`.
+<2> Applies pagination to a query. Just equip your method signature with a `Pageable` parameter and let the method return a `Page` instance and we will automatically page the query accordingly.
+<3> Shows that you can query based on properties which are not a primitive type. 
+<4> Uses a Java 8 `Stream` which reads and converts individual elements while iterating the stream.
 ====
 
-The first method shows a query for all people with the given lastname. The query will be derived parsing the method name for constraints which can be concatenated with `And` and `Or`. Thus the method name will result in a query expression of`{"lastname" : lastname}`. The second example shows how pagination is applied to a query. Just equip your method signature with a `Pageable` parameter and let the method return a `Page` instance and we will automatically page the query accordingly. The third examples shows that you can query based on properties which are not a primitive type.
+ 
 
 NOTE: Note that for version 1.0 we currently don't support referring to parameters that are mapped as `DBRef` in the domain class.
 
@@ -154,6 +160,10 @@ NOTE: Note that for version 1.0 we currently don't support referring to paramete
 | Sample
 | Logical result
 
+| `After`
+| `findByBirthdateAfter(Date date)`
+| `{"birthdate" : {"$gt" : date}}`
+
 | `GreaterThan`
 | `findByAgeGreaterThan(int age)`
 | `{"age" : {"$gt" : age}}`
@@ -161,6 +171,10 @@ NOTE: Note that for version 1.0 we currently don't support referring to paramete
 | `GreaterThanEqual`
 | `findByAgeGreaterThanEqual(int age)`
 | `{"age" : {"$gte" : age}}`
+
+| `Before`
+| `findByBirthdateBefore(Date date)`
+| `{"birthdate" : {"$lt" : date}}`
 
 | `LessThan`
 | `findByAgeLessThan(int age)`
@@ -190,9 +204,17 @@ NOTE: Note that for version 1.0 we currently don't support referring to paramete
 | `findByFirstnameNull()`
 | `{"firstname" : null}`
 
-| `Like`
+| `Like`, `StartingWith`, `EndingWith`
 | `findByFirstnameLike(String name)`
 | `{"firstname" : name} ( name as regex)`
+
+| `Containing` on String
+| `findByFirstnameContaining(String name)`
+| `{"firstname" : name} (name as regex)`
+
+| `Containing` on Collection
+| `findByAddressesContaining(Address address)`
+| `{"addresses" : { "$in" : address}}`
 
 | `Regex`
 | `findByFirstnameRegex(String firstname)`

@@ -1,0 +1,15 @@
+[[new-features]]
+= New Features
+
+[[new-in-1-7-0]]
+== New in Spring Data MongoDB 1.7 
+
+* Assert compatibility with MongoDB 3.0 and MongoDB Java Driver 3-beta3 (see: <<mongo.mongo-3>>).
+* Support JSR-310 and ThreeTen back-port date/time types.
+* Allow `Stream` as query method return type (see: <<mongodb.repositories.queries>>).
+* Added http://geojson.org/[GeoJSON] support in both domain types and queries (see: <<mongo.geo-json>>).
+* `QueryDslPredicateExcecutor` now supports `findAll(OrderSpecifier<?>... orders)`.
+* Support calling JavaScript functions via <<mongo.server-side-scripts>>.
+* Improve support for `CONTAINS` keyword on collection like properties.
+* Add `$bit`, `$mul` and `$position` operators to `Update`.
+
