@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.springframework.data.geo.GeoModule;
 import org.springframework.data.geo.Point;
 
 import com.fasterxml.jackson.core.JsonParser;
@@ -28,16 +27,23 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.Module;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 
 /**
+ * A Jackson {@link Module} to register custom {@link JsonSerializer} and {@link JsonDeserializer}s for GeoJSON types.
+ * 
  * @author Christoph Strobl
+ * @author Oliver Gierke
  * @since 1.7
  */
-public class GeoJsonModule extends GeoModule {
+public class GeoJsonModule extends SimpleModule {
+
+	private static final long serialVersionUID = -8723016728655643720L;
 
 	public GeoJsonModule() {
-		super();
 
 		addDeserializer(GeoJsonPoint.class, new GeoJsonPointDeserializer());
 		addDeserializer(GeoJsonMultiPoint.class, new GeoJsonMultiPointDeserializer());
@@ -51,7 +57,7 @@ public class GeoJsonModule extends GeoModule {
 	 * @author Christoph Strobl
 	 * @since 1.7
 	 */
-	static abstract class GeoJsonDeserializer<T extends GeoJson<?>> extends JsonDeserializer<T> {
+	private static abstract class GeoJsonDeserializer<T extends GeoJson<?>> extends JsonDeserializer<T> {
 
 		/*
 		 * (non-Javadoc)
@@ -148,7 +154,7 @@ public class GeoJsonModule extends GeoModule {
 	 * @author Christoph Strobl
 	 * @since 1.7
 	 */
-	static class GeoJsonPointDeserializer extends GeoJsonDeserializer<GeoJsonPoint> {
+	private static class GeoJsonPointDeserializer extends GeoJsonDeserializer<GeoJsonPoint> {
 
 		/*
 		 * (non-Javadoc)
@@ -177,7 +183,7 @@ public class GeoJsonModule extends GeoModule {
 	 * @author Christoph Strobl
 	 * @since 1.7
 	 */
-	static class GeoJsonLineStringDeserializer extends GeoJsonDeserializer<GeoJsonLineString> {
+	private static class GeoJsonLineStringDeserializer extends GeoJsonDeserializer<GeoJsonLineString> {
 
 		/*
 		 * (non-Javadoc)
@@ -206,7 +212,7 @@ public class GeoJsonModule extends GeoModule {
 	 * @author Christoph Strobl
 	 * @since 1.7
 	 */
-	static class GeoJsonMultiPointDeserializer extends GeoJsonDeserializer<GeoJsonMultiPoint> {
+	private static class GeoJsonMultiPointDeserializer extends GeoJsonDeserializer<GeoJsonMultiPoint> {
 
 		/*
 		 * (non-Javadoc)
@@ -236,7 +242,7 @@ public class GeoJsonModule extends GeoModule {
 	 * @author Christoph Strobl
 	 * @since 1.7
 	 */
-	static class GeoJsonMultiLineStringDeserializer extends GeoJsonDeserializer<GeoJsonMultiLineString> {
+	private static class GeoJsonMultiLineStringDeserializer extends GeoJsonDeserializer<GeoJsonMultiLineString> {
 
 		/*
 		 * (non-Javadoc)
@@ -248,7 +254,6 @@ public class GeoJsonModule extends GeoModule {
 			List<GeoJsonLineString> lines = new ArrayList<GeoJsonLineString>(coordinates.size());
 
 			for (JsonNode lineString : coordinates) {
-
 				if (lineString.isArray()) {
 					lines.add(toLineString((ArrayNode) lineString));
 				}
@@ -275,7 +280,7 @@ public class GeoJsonModule extends GeoModule {
 	 * @author Christoph Strobl
 	 * @since 1.7
 	 */
-	static class GeoJsonPolygonDeserializer extends GeoJsonDeserializer<GeoJsonPolygon> {
+	private static class GeoJsonPolygonDeserializer extends GeoJsonDeserializer<GeoJsonPolygon> {
 
 		/*
 		 * (non-Javadoc)
@@ -287,9 +292,9 @@ public class GeoJsonModule extends GeoModule {
 			for (JsonNode ring : coordinates) {
 
 				// currently we do not support holes in polygons.
-				GeoJsonPolygon polygon = new GeoJsonPolygon(toPoints((ArrayNode) ring));
-				return polygon;
+				return new GeoJsonPolygon(toPoints((ArrayNode) ring));
 			}
+
 			return null;
 		}
 	}
@@ -313,7 +318,7 @@ public class GeoJsonModule extends GeoModule {
 	 * @author Christoph Strobl
 	 * @since 1.7
 	 */
-	static class GeoJsonMultiPolygonDeserializer extends GeoJsonDeserializer<GeoJsonMultiPolygon> {
+	private static class GeoJsonMultiPolygonDeserializer extends GeoJsonDeserializer<GeoJsonMultiPolygon> {
 
 		/*
 		 * (non-Javadoc)
