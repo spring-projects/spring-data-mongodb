@@ -17,12 +17,14 @@ package org.springframework.data.mongodb.repository.query;
 
 import org.bson.Document;
 import org.bson.codecs.configuration.CodecRegistry;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.mapping.model.SpELExpressionEvaluator;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.ExecutableFind;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.FindWithQuery;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.TerminatingFind;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.repository.query.MongoQueryExecution.DeleteExecution;
 import org.springframework.data.mongodb.repository.query.MongoQueryExecution.GeoNearExecution;
 import org.springframework.data.mongodb.repository.query.MongoQueryExecution.PagedExecution;
@@ -137,6 +139,11 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 		} else if (method.isStreamQuery()) {
 			return q -> operation.matching(q).stream();
 		} else if (method.isCollectionQuery()) {
+
+			if (method.isModifyingQuery()) {
+				return q -> new UpdatingCollectionExecution(accessor.getPageable(), accessor.getUpdate()).execute(q);
+			}
+
 			return q -> operation.matching(q.with(accessor.getPageable()).with(accessor.getSort())).all();
 		} else if (method.isPageQuery()) {
 			return new PagedExecution(operation, accessor.getPageable());
@@ -146,6 +153,10 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 			return q -> operation.matching(q).exists();
 		} else {
 			return q -> {
+
+				if (method.isModifyingQuery()) {
+					return new UpdatingSingleEntityExecution(accessor.getUpdate()).execute(q);
+				}
 
 				TerminatingFind<?> find = operation.matching(q);
 				return isLimiting() ? find.firstValue() : find.oneValue();
@@ -267,4 +278,53 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	 * @since 2.0.4
 	 */
 	protected abstract boolean isLimiting();
+
+	/**
+	 * {@link MongoQueryExecution} for collection returning find and update queries.
+	 *
+	 * @author Thomas Darimont
+	 */
+	final class UpdatingCollectionExecution implements MongoQueryExecution {
+
+		private final Pageable pageable;
+		private final Update update;
+
+		UpdatingCollectionExecution(Pageable pageable, Update update) {
+			this.pageable = pageable;
+			this.update = update;
+		}
+
+		@Override
+		public Object execute(Query query) {
+
+			MongoEntityMetadata<?> metadata = method.getEntityInformation();
+			return operations.findAndModify(query.with(pageable), update, metadata.getJavaType(),
+					metadata.getCollectionName());
+		}
+	}
+
+	/**
+	 * {@link MongoQueryExecution} to return a single entity with update.
+	 *
+	 * @author Thomas Darimont
+	 */
+	final class UpdatingSingleEntityExecution implements MongoQueryExecution {
+
+		private final Update update;
+
+		private UpdatingSingleEntityExecution(Update update) {
+			this.update = update;
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.repository.AbstractMongoQuery.Execution#execute(org.springframework.data.mongodb.core.core.query.Query)
+		 */
+		@Override
+		public Object execute(Query query) {
+
+			MongoEntityMetadata<?> metadata = method.getEntityInformation();
+			return operations.findAndModify(query.limit(1), update, metadata.getJavaType(), metadata.getCollectionName());
+		}
+	}
 }

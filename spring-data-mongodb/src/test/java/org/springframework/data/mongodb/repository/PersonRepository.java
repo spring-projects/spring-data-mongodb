@@ -36,6 +36,7 @@ import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.repository.Person.Sex;
 import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 import org.springframework.data.repository.query.Param;
@@ -418,6 +419,10 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	List<Person> findByUnwrappedUserUsername(String username);
 
 	List<Person> findByUnwrappedUser(User user);
+
+	List<Person> findAndModifyByFirstname(String firstname, Update update);
+
+	Person findOneAndModifyByFirstname(String firstname, Update update);
 
 	@Query("{ 'age' : null }")
 	Person findByQueryWithNullEqualityCheck();
