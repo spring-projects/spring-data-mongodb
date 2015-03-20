@@ -336,4 +336,6 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	Stream<Person> findByCustomQueryWithStreamingCursorByFirstnames(List<String> firstnames);
 
 	List<Person> findAndModifyByFirstname(String firstname, Update update);
+
+	Person findOneAndModifyByFirstname(String firstname, Update update);
 }

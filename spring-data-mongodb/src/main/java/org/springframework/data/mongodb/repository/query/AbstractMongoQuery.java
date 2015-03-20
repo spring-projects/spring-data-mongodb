@@ -111,6 +111,11 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 		} else if (method.isPageQuery()) {
 			return new PagedExecution(accessor.getPageable()).execute(query);
 		} else {
+
+			if (method.isModifyingQuery()) {
+				return new UpdatingSingleEntityExecution(accessor.getUpdate()).execute(query);
+			}
+
 			return new SingleEntityExecution(isCountQuery()).execute(query);
 		}
 	}
@@ -340,6 +345,31 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 			MongoEntityMetadata<?> metadata = method.getEntityInformation();
 			return countProjection ? operations.count(query, metadata.getJavaType()) : operations.findOne(query,
 					metadata.getJavaType(), metadata.getCollectionName());
+		}
+	}
+
+	/**
+	 * {@link Execution} to return a single entity with update.
+	 * 
+	 * @author Thomas Darimont
+	 */
+	final class UpdatingSingleEntityExecution extends Execution {
+
+		private final Update update;
+
+		private UpdatingSingleEntityExecution(Update update) {
+			this.update = update;
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.repository.AbstractMongoQuery.Execution#execute(org.springframework.data.mongodb.core.core.query.Query)
+		 */
+		@Override
+		Object execute(Query query) {
+
+			MongoEntityMetadata<?> metadata = method.getEntityInformation();
+			return operations.findAndModify(query.limit(1), update, metadata.getJavaType(), metadata.getCollectionName());
 		}
 	}
 
