@@ -78,6 +78,8 @@ public class Person extends Contact {
 	@DocumentReference
 	User spiritAnimal;
 
+	int visits;
+
 	public Person() {
 
 		this(null, null);
@@ -263,6 +265,14 @@ public class Person extends Contact {
 	 */
 	public void setCoworker(User coworker) {
 		this.coworker = coworker;
+	}
+
+	public int getVisits() {
+		return visits;
+	}
+
+	public void setVisits(int visits) {
+		this.visits = visits;
 	}
 
 	/*

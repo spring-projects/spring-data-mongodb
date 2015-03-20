@@ -28,6 +28,7 @@ import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.convert.MongoWriter;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.TextCriteria;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.lang.Nullable;
 
@@ -170,6 +171,11 @@ class StubParameterAccessor implements MongoParameterAccessor {
 	 */
 	@Override
 	public Class<?> findDynamicProjection() {
+		return null;
+	}
+
+	@Override
+	public Update getUpdate() {
 		return null;
 	}
 }

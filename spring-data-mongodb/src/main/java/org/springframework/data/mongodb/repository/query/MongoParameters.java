@@ -25,6 +25,7 @@ import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.TextCriteria;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.repository.Near;
 import org.springframework.data.mongodb.repository.query.MongoParameters.MongoParameter;
 import org.springframework.data.repository.query.Parameter;
@@ -39,6 +40,7 @@ import org.springframework.lang.Nullable;
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Thomas Darimont
  */
 public class MongoParameters extends Parameters<MongoParameters, MongoParameter> {
 
@@ -47,6 +49,7 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 	private final @Nullable Integer fullTextIndex;
 	private final @Nullable Integer nearIndex;
 	private final @Nullable Integer collationIndex;
+	private final int updateIndex;
 
 	/**
 	 * Creates a new {@link MongoParameters} instance from the given {@link Method} and {@link MongoQueryMethod}.
@@ -67,6 +70,7 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 		this.rangeIndex = getTypeIndex(parameterTypeInfo, Range.class, Distance.class);
 		this.maxDistanceIndex = this.rangeIndex == -1 ? getTypeIndex(parameterTypeInfo, Distance.class, null) : -1;
 		this.collationIndex = getTypeIndex(parameterTypeInfo, Collation.class, null);
+		this.updateIndex = parameterTypes.indexOf(Update.class);
 
 		int index = findNearIndexInParameters(method);
 		if (index == -1 && isGeoNearMethod) {
@@ -77,7 +81,7 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 	}
 
 	private MongoParameters(List<MongoParameter> parameters, int maxDistanceIndex, @Nullable Integer nearIndex,
-			@Nullable Integer fullTextIndex, int rangeIndex, @Nullable Integer collationIndex) {
+			@Nullable Integer fullTextIndex, int rangeIndex, @Nullable Integer collationIndex, int updateIndex) {
 
 		super(parameters);
 
@@ -86,6 +90,7 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 		this.maxDistanceIndex = maxDistanceIndex;
 		this.rangeIndex = rangeIndex;
 		this.collationIndex = collationIndex;
+		this.updateIndex = updateIndex;
 	}
 
 	private final int getNearIndex(List<Class<?>> parameterTypes) {
@@ -202,7 +207,7 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 	@Override
 	protected MongoParameters createFrom(List<MongoParameter> parameters) {
 		return new MongoParameters(parameters, this.maxDistanceIndex, this.nearIndex, this.fullTextIndex, this.rangeIndex,
-				this.collationIndex);
+				this.collationIndex, this.updateIndex);
 	}
 
 	private int getTypeIndex(List<TypeInformation<?>> parameterTypes, Class<?> type, @Nullable Class<?> componentType) {
@@ -273,7 +278,9 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 		private boolean hasNearAnnotation() {
 			return parameter.getParameterAnnotation(Near.class) != null;
 		}
-
 	}
 
+	public int getUpdateIndex() {
+		return updateIndex;
+	}
 }

@@ -30,6 +30,7 @@ import org.springframework.data.geo.GeoResults;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.Meta;
 import org.springframework.data.mongodb.repository.Query;
@@ -397,5 +398,12 @@ public class MongoQueryMethod extends QueryMethod {
 
 		return (Optional<A>) this.annotationCache.computeIfAbsent(annotationType,
 				it -> Optional.ofNullable(AnnotatedElementUtils.findMergedAnnotation(method, it)));
+	}
+
+	@Override
+	public boolean isModifyingQuery() {
+
+		Class<?>[] parameterTypes = this.method.getParameterTypes();
+		return parameterTypes.length > 0 && parameterTypes[parameterTypes.length - 1] == Update.class;
 	}
 }
