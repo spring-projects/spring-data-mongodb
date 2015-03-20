@@ -27,6 +27,7 @@ import org.springframework.data.geo.GeoResults;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.repository.Meta;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.repository.core.RepositoryMetadata;
@@ -232,5 +233,12 @@ public class MongoQueryMethod extends QueryMethod {
 		}
 
 		return metaAttributes;
+	}
+
+	@Override
+	public boolean isModifyingQuery() {
+
+		Class<?>[] parameterTypes = this.method.getParameterTypes();
+		return parameterTypes.length > 0 && parameterTypes[parameterTypes.length - 1] == Update.class;
 	}
 }

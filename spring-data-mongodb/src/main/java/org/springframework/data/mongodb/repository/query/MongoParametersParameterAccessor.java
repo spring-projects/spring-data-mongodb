@@ -20,6 +20,7 @@ import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.query.Term;
 import org.springframework.data.mongodb.core.query.TextCriteria;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
@@ -29,6 +30,7 @@ import org.springframework.util.ClassUtils;
  * 
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Thomas Darimont
  */
 public class MongoParametersParameterAccessor extends ParametersParameterAccessor implements MongoParameterAccessor {
 
@@ -120,5 +122,12 @@ public class MongoParametersParameterAccessor extends ParametersParameterAccesso
 		throw new IllegalArgumentException(String.format(
 				"Expected full text parameter to be one of String, Term or TextCriteria but found %s.",
 				ClassUtils.getShortName(fullText.getClass())));
+	}
+
+	@Override
+	public Update getUpdate() {
+
+		int updateIndex = method.getParameters().getUpdateIndex();
+		return updateIndex == -1 ? null : (Update) getValue(updateIndex);
 	}
 }

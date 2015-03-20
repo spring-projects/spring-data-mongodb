@@ -31,6 +31,7 @@ import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.util.CloseableIterator;
@@ -101,6 +102,11 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 		} else if (method.isSliceQuery()) {
 			return new SlicedExecution(accessor.getPageable()).execute(query);
 		} else if (method.isCollectionQuery()) {
+
+			if (method.isModifyingQuery()) {
+				return new UpdatingCollectionExecution(accessor.getPageable(), accessor.getUpdate()).execute(query);
+			}
+
 			return new CollectionExecution(accessor.getPageable()).execute(query);
 		} else if (method.isPageQuery()) {
 			return new PagedExecution(accessor.getPageable()).execute(query);
@@ -191,6 +197,30 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 		@Override
 		public Object execute(Query query) {
 			return readCollection(query.with(pageable));
+		}
+	}
+
+	/**
+	 * {@link Execution} for collection returning find and update queries.
+	 * 
+	 * @author Thomas Darimont
+	 */
+	final class UpdatingCollectionExecution extends Execution {
+
+		private final Pageable pageable;
+		private final Update update;
+
+		UpdatingCollectionExecution(Pageable pageable, Update update) {
+			this.pageable = pageable;
+			this.update = update;
+		}
+
+		@Override
+		Object execute(Query query) {
+
+			MongoEntityMetadata<?> metadata = method.getEntityInformation();
+			return operations.findAndModify(query.with(pageable), update, metadata.getJavaType(),
+					metadata.getCollectionName());
 		}
 	}
 

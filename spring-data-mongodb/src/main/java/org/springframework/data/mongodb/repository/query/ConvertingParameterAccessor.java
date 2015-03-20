@@ -29,6 +29,7 @@ import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.convert.MongoWriter;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.query.TextCriteria;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
@@ -255,4 +256,11 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 		Object nextConverted(MongoPersistentProperty property);
 	}
 
+	/* (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.query.MongoParameterAccessor#getUpdate()
+	 */
+	@Override
+	public Update getUpdate() {
+		return delegate.getUpdate();
+	}
 }

@@ -24,6 +24,7 @@ import org.springframework.data.domain.Range;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.query.TextCriteria;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.repository.Near;
 import org.springframework.data.mongodb.repository.query.MongoParameters.MongoParameter;
 import org.springframework.data.repository.query.Parameter;
@@ -36,12 +37,14 @@ import org.springframework.data.util.TypeInformation;
  * 
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Thomas Darimont
  */
 public class MongoParameters extends Parameters<MongoParameters, MongoParameter> {
 
 	private final int rangeIndex;
 	private final int maxDistanceIndex;
 	private final Integer fullTextIndex;
+	private final int updateIndex;
 
 	private Integer nearIndex;
 
@@ -63,6 +66,7 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 
 		this.rangeIndex = getTypeIndex(parameterTypeInfo, Range.class, Distance.class);
 		this.maxDistanceIndex = this.rangeIndex == -1 ? getTypeIndex(parameterTypeInfo, Distance.class, null) : -1;
+		this.updateIndex = parameterTypes.indexOf(Update.class);
 
 		if (this.nearIndex == null && isGeoNearMethod) {
 			this.nearIndex = getNearIndex(parameterTypes);
@@ -72,7 +76,7 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 	}
 
 	private MongoParameters(List<MongoParameter> parameters, int maxDistanceIndex, Integer nearIndex,
-			Integer fullTextIndex, int rangeIndex) {
+			Integer fullTextIndex, int rangeIndex, int updateIndex) {
 
 		super(parameters);
 
@@ -80,6 +84,7 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 		this.fullTextIndex = fullTextIndex;
 		this.maxDistanceIndex = maxDistanceIndex;
 		this.rangeIndex = rangeIndex;
+		this.updateIndex = updateIndex;
 	}
 
 	private final int getNearIndex(List<Class<?>> parameterTypes) {
@@ -188,7 +193,8 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 	 */
 	@Override
 	protected MongoParameters createFrom(List<MongoParameter> parameters) {
-		return new MongoParameters(parameters, this.maxDistanceIndex, this.nearIndex, this.fullTextIndex, this.rangeIndex);
+		return new MongoParameters(parameters, this.maxDistanceIndex, this.nearIndex, this.fullTextIndex, this.rangeIndex,
+				this.updateIndex);
 	}
 
 	private int getTypeIndex(List<TypeInformation<?>> parameterTypes, Class<?> type, Class<?> componentType) {
@@ -259,7 +265,9 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 		private boolean hasNearAnnotation() {
 			return parameter.getParameterAnnotation(Near.class) != null;
 		}
-
 	}
 
+	public int getUpdateIndex() {
+		return updateIndex;
+	}
 }

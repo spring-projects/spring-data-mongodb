@@ -32,6 +32,7 @@ import org.springframework.data.geo.GeoPage;
 import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.repository.Person.Sex;
 import org.springframework.data.querydsl.QueryDslPredicateExecutor;
 
@@ -333,4 +334,6 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	 */
 	@Query("{ firstname : { $in : ?0 }}")
 	Stream<Person> findByCustomQueryWithStreamingCursorByFirstnames(List<String> firstnames);
+
+	List<Person> findAndModifyByFirstname(String firstname, Update update);
 }

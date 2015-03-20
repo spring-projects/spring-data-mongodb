@@ -19,6 +19,7 @@ import org.springframework.data.domain.Range;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.query.TextCriteria;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.repository.query.ParameterAccessor;
 
 /**
@@ -26,6 +27,7 @@ import org.springframework.data.repository.query.ParameterAccessor;
  * 
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Thomas Darimont
  */
 public interface MongoParameterAccessor extends ParameterAccessor {
 
@@ -51,4 +53,12 @@ public interface MongoParameterAccessor extends ParameterAccessor {
 	 * @since 1.6
 	 */
 	TextCriteria getFullText();
+
+	/**
+	 * Returns the {@link Update} to be used for findAndUpdate query.
+	 * 
+	 * @return
+	 * @since 1.7
+	 */
+	Update getUpdate();
 }

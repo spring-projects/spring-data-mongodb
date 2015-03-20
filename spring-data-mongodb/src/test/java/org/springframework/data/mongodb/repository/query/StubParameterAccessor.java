@@ -25,6 +25,7 @@ import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.convert.MongoWriter;
 import org.springframework.data.mongodb.core.query.TextCriteria;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.repository.query.ParameterAccessor;
 
 /**
@@ -32,6 +33,7 @@ import org.springframework.data.repository.query.ParameterAccessor;
  * 
  * @author Oliver Gierke
  * @author Christoh Strobl
+ * @author Thomas Darimont
  */
 class StubParameterAccessor implements MongoParameterAccessor {
 
@@ -127,6 +129,11 @@ class StubParameterAccessor implements MongoParameterAccessor {
 	 */
 	@Override
 	public TextCriteria getFullText() {
+		return null;
+	}
+
+	@Override
+	public Update getUpdate() {
 		return null;
 	}
 }
