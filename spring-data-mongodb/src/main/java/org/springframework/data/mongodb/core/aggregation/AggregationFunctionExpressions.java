@@ -27,6 +27,7 @@ import com.mongodb.DBObject;
  * An enum of supported {@link AggregationExpression}s in aggregation pipeline stages.
  * 
  * @author Thomas Darimont
+ * @author Oliver Gierke
  * @since 1.10
  */
 public enum AggregationFunctionExpressions {
@@ -34,22 +35,22 @@ public enum AggregationFunctionExpressions {
 	SIZE;
 
 	/**
-	 * Returns an {@link AggregationExpression} build from the current {@link Enum} name and the given {@code params}.
+	 * Returns an {@link AggregationExpression} build from the current {@link Enum} name and the given parameters.
 	 * 
-	 * @param params must not be {@literal null}
+	 * @param parameters must not be {@literal null}
 	 * @return
 	 */
-	public AggregationExpression of(Object... params) {
+	public AggregationExpression of(Object... parameters) {
 
-		Assert.notNull(params, "Params must not be null!");
-
-		return new FunctionExpression(name().toLowerCase(), params);
+		Assert.notNull(parameters, "Parameters must not be null!");
+		return new FunctionExpression(name().toLowerCase(), parameters);
 	}
 
 	/**
 	 * An {@link AggregationExpression} representing a function call.
 	 * 
 	 * @author Thomas Darimont
+	 * @author Oliver Gierke
 	 * @since 1.10
 	 */
 	static class FunctionExpression implements AggregationExpression {
@@ -57,6 +58,12 @@ public enum AggregationFunctionExpressions {
 		private final String name;
 		private final Object[] values;
 
+		/**
+		 * Creates a new {@link FunctionExpression} for the given name and values.
+		 * 
+		 * @param name must not be {@literal null} or empty.
+		 * @param values must not be {@literal null}.
+		 */
 		public FunctionExpression(String name, Object[] values) {
 
 			Assert.hasText(name, "Name must not be null!");
@@ -66,13 +73,15 @@ public enum AggregationFunctionExpressions {
 			this.values = values;
 		}
 
-		/* (non-Javadoc)
+		/*
+		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.aggregation.Expression#toDbObject(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
 		 */
 		@Override
 		public DBObject toDbObject(AggregationOperationContext context) {
 
 			List<Object> args = new ArrayList<Object>(values.length);
+
 			for (int i = 0; i < values.length; i++) {
 				args.add(unpack(values[i], context));
 			}
@@ -80,7 +89,7 @@ public enum AggregationFunctionExpressions {
 			return new BasicDBObject("$" + name, args);
 		}
 
-		private Object unpack(Object value, AggregationOperationContext context) {
+		private static Object unpack(Object value, AggregationOperationContext context) {
 
 			if (value instanceof AggregationExpression) {
 				return ((AggregationExpression) value).toDbObject(context);
