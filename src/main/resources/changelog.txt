@@ -1,6 +1,16 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 1.7.0.RELEASE (2015-03-23)
+---------------------------------------------
+* DATAMONGO-1189 - Release 1.7 GA.
+* DATAMONGO-1181 - Add Jackson Module for GeoJSON types.
+* DATAMONGO-1180 - Incorrect exception message creation in PartTreeMongoQuery.
+* DATAMONGO-1179 - Update reference documentation.
+* DATAMONGO-1124 - Switch log level for cyclic reference index warnings from WARN to INFO.
+* DATAMONGO-979 - Add support for $size expression in project and group aggregation pipeline.
+
+
 Changes in version 1.7.0.RC1 (2015-03-05)
 -----------------------------------------
 * DATAMONGO-1173 - Release 1.7 RC1.
