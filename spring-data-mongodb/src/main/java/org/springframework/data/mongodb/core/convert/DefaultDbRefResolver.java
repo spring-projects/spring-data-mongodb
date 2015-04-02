@@ -106,7 +106,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 	 */
 	@Override
 	public DBObject fetch(DBRef dbRef) {
-		return ReflectiveDBRefResolver.fetch(mongoDbFactory.getDb(), dbRef);
+		return ReflectiveDBRefResolver.fetch(mongoDbFactory, dbRef);
 	}
 
 	/**
