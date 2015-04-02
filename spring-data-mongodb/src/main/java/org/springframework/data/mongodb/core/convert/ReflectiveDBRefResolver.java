@@ -20,9 +20,9 @@ import static org.springframework.util.ReflectionUtils.*;
 
 import java.lang.reflect.Method;
 
+import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.util.Assert;
 
-import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.DBRef;
@@ -51,12 +51,14 @@ class ReflectiveDBRefResolver {
 	 * @param ref must not be {@literal null}.
 	 * @return the document that this references.
 	 */
-	public static DBObject fetch(DB db, DBRef ref) {
+	public static DBObject fetch(MongoDbFactory factory, DBRef ref) {
 
 		Assert.notNull(ref, "DBRef to fetch must not be null!");
 
 		if (isMongo3Driver()) {
-			return db.getCollection(ref.getCollectionName()).findOne(ref.getId());
+
+			Assert.notNull(factory, "DbFactory to fetch DB from must not be null!");
+			return factory.getDb().getCollection(ref.getCollectionName()).findOne(ref.getId());
 		}
 
 		return (DBObject) invokeMethod(FETCH_METHOD, ref);
