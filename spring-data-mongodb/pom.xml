@@ -123,6 +123,14 @@
 			<version>${objenesis}</version>
 			<optional>true</optional>
 		</dependency>
+		
+		<dependency>
+			<groupId>io.reactivex</groupId>
+			<artifactId>rxjava</artifactId>
+			<optional>true</optional>
+			<version>1.0.8</version>
+		</dependency>
+		
 
 		<dependency>
 			<groupId>org.hibernate</groupId>

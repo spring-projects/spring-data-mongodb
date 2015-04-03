@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.repository.query;
 
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 import org.springframework.data.domain.PageImpl;
@@ -37,6 +38,9 @@ import org.springframework.data.util.CloseableIterator;
 import org.springframework.data.util.StreamUtils;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
+
+import rx.Observable;
+import rx.functions.Action0;
 
 import com.mongodb.WriteResult;
 
@@ -88,6 +92,8 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 
 		if (method.isStreamQuery()) {
 			return new StreamExecution().execute(query);
+		} else if (method.isObservableQuery()) {
+			return new ObservableExecution().execute(query);
 		} else if (isDeleteQuery()) {
 			return new DeleteExecution().execute(query);
 		} else if (method.isGeoNearQuery() && method.isPageQuery()) {
@@ -443,6 +449,39 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 			Class<?> entityType = getQueryMethod().getEntityInformation().getJavaType();
 
 			return StreamUtils.createStreamFromIterator((CloseableIterator<Object>) operations.stream(query, entityType));
+		}
+	}
+
+	/**
+	 * @author Thomas Darimont
+	 * @since 1.8
+	 */
+	final class ObservableExecution extends Execution {
+
+		/* 
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery.Execution#execute(org.springframework.data.mongodb.core.query.Query)
+		 */
+		@Override
+		@SuppressWarnings("unchecked")
+		Object execute(Query query) {
+
+			Class<?> entityType = getQueryMethod().getEntityInformation().getJavaType();
+			final CloseableIterator<Object> iter = (CloseableIterator<Object>) operations.stream(query, entityType);
+
+			return Observable.<Object> from(new Iterable<Object>() {
+
+				@Override
+				public Iterator<Object> iterator() {
+					return iter;
+				}
+			}).doOnTerminate(new Action0() {
+
+				@Override
+				public void call() {
+					iter.close();
+				}
+			});
 		}
 	}
 }

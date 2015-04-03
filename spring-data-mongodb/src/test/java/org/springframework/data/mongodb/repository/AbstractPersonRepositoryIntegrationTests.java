@@ -55,6 +55,8 @@ import org.springframework.data.mongodb.repository.Person.Sex;
 import org.springframework.data.querydsl.QSort;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import rx.Observable;
+
 /**
  * Base class for tests for {@link PersonRepository}.
  * 
@@ -1182,5 +1184,16 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 
 		GeoResults<Person> results = repository.findPersonByLocationNear(new Point(-73.99, 40.73), range);
 		assertThat(results.getContent().isEmpty(), is(false));
+	}
+	
+	/**
+	 * @see DATAMONGO-1197
+	 */
+	@Test
+	public void shouldSupportRxObservableForRepositoryFinderMethodsWithCustomQuery() {
+		
+		Observable<Person> result = repository.streamAllViaObservable();
+
+		assertThat(result.toList().toBlocking().single(), hasItems(all.toArray(new Person[all.size()])));
 	}
 }
