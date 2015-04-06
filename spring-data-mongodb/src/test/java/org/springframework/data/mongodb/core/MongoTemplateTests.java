@@ -188,6 +188,9 @@ public class MongoTemplateTests {
 		template.dropCollection(DocumentWithCollection.class);
 		template.dropCollection(DocumentWithCollectionOfSimpleType.class);
 		template.dropCollection(DocumentWithMultipleCollections.class);
+		template.dropCollection(DocumentWithNestedCollection.class);
+		template.dropCollection(DocumentWithEmbeddedDocumentWithCollection.class);
+		template.dropCollection(DocumentWithNestedList.class);
 		template.dropCollection(DocumentWithDBRefCollection.class);
 		template.dropCollection(SomeContent.class);
 		template.dropCollection(SomeTemplate.class);
@@ -2207,6 +2210,226 @@ public class MongoTemplateTests {
 		assertThat(retrieved.model.value(), equalTo("value2"));
 	}
 
+	// Rewrite the whole collection
+	// Passes in 1.6.0+, but changes order position of type hint _class
+	@Test
+	public void findAndModifyShouldRetainTypeInformationWithinUpdatedTypeOnDocumentWithNestedCollection()
+	{
+		DocumentWithNestedCollection doc = new DocumentWithNestedCollection();
+
+		Map<String, Model> entry = new HashMap<String, Model>();
+		entry.put("key1", new ModelA("value1"));
+		doc.models.add(entry);
+
+		template.save(doc);
+
+		entry.put("key2", new ModelA("value2"));
+
+		Query query = query(where("id").is(doc.id));
+		Update update = Update.update("models", Collections.singletonList(entry));
+
+		assertThat(template.findOne(query, DocumentWithNestedCollection.class), notNullValue());
+
+		template.findAndModify(query, update, DocumentWithNestedCollection.class);
+
+		DocumentWithNestedCollection retrieved = template.findOne(query, DocumentWithNestedCollection.class);
+
+		assertThat(retrieved, is(notNullValue()));
+		assertThat(retrieved.id, is(doc.id));
+
+		assertThat(retrieved.models.get(0).entrySet(), hasSize(2));
+
+		assertThat(retrieved.models.get(0).get("key1"), instanceOf(ModelA.class));
+		assertThat(retrieved.models.get(0).get("key1").value(), equalTo("value1"));
+
+		assertThat(retrieved.models.get(0).get("key2"), instanceOf(ModelA.class));
+		assertThat(retrieved.models.get(0).get("key2").value(), equalTo("value2"));
+	}
+
+
+	// Update first list element
+	// Fails in 1.6.2+
+	@Test
+	public void findAndModifyShouldRetainTypeInformationWithinUpdatedTypeOnDocumentWithNestedCollection2()
+	{
+		DocumentWithNestedCollection doc = new DocumentWithNestedCollection();
+
+		Map<String, Model> entry = new HashMap<String, Model>();
+		entry.put("key1", new ModelA("value1"));
+		doc.models.add(entry);
+
+		template.save(doc);
+
+		entry.put("key2", new ModelA("value2"));
+
+		Query query = query(where("id").is(doc.id));
+		Update update = Update.update("models.0", entry);
+
+		assertThat(template.findOne(query, DocumentWithNestedCollection.class), notNullValue());
+
+		template.findAndModify(query, update, DocumentWithNestedCollection.class);
+
+		DocumentWithNestedCollection retrieved = template.findOne(query, DocumentWithNestedCollection.class);
+
+		assertThat(retrieved, is(notNullValue()));
+		assertThat(retrieved.id, is(doc.id));
+
+		assertThat(retrieved.models.get(0).entrySet(), hasSize(2));
+
+		assertThat(retrieved.models.get(0).get("key1"), instanceOf(ModelA.class));
+		assertThat(retrieved.models.get(0).get("key1").value(), equalTo("value1"));
+
+		assertThat(retrieved.models.get(0).get("key2"), instanceOf(ModelA.class));
+		assertThat(retrieved.models.get(0).get("key2").value(), equalTo("value2"));
+	}
+
+	// Add second list element
+	// Fails in 1.6.2+
+	@Test
+	public void findAndModifyShouldAddTypeInformationOnDocumentWithNestedCollection2()
+	{
+		DocumentWithNestedCollection doc = new DocumentWithNestedCollection();
+
+		Map<String, Model> entry = new HashMap<String, Model>();
+		entry.put("key1", new ModelA("value1"));
+		doc.models.add(entry);
+
+		template.save(doc);
+
+		Query query = query(where("id").is(doc.id));
+		Update update = Update.update("models.1", Collections.singletonMap("key2", new ModelA("value2")));
+
+		assertThat(template.findOne(query, DocumentWithNestedCollection.class), notNullValue());
+
+		template.findAndModify(query, update, DocumentWithNestedCollection.class);
+
+		DocumentWithNestedCollection retrieved = template.findOne(query, DocumentWithNestedCollection.class);
+
+		assertThat(retrieved, is(notNullValue()));
+		assertThat(retrieved.id, is(doc.id));
+
+		assertThat(retrieved.models.get(0).entrySet(), hasSize(1));
+		assertThat(retrieved.models.get(1).entrySet(), hasSize(1));
+
+		assertThat(retrieved.models.get(0).get("key1"), instanceOf(ModelA.class));
+		assertThat(retrieved.models.get(0).get("key1").value(), equalTo("value1"));
+
+		assertThat(retrieved.models.get(1).get("key2"), instanceOf(ModelA.class));
+		assertThat(retrieved.models.get(1).get("key2").value(), equalTo("value2"));
+	}
+
+	// Update the collection of the embedded document
+	// Fails in 1.6.0+
+	@Test
+	public void findAndModifyShouldRetainTypeInformationWithinUpdatedTypeOnEmbeddedDocumentWithCollection() throws Exception
+	{
+		List<Model> models = new ArrayList<Model>();
+		models.add(new ModelA("value1"));
+
+		DocumentWithEmbeddedDocumentWithCollection doc = new DocumentWithEmbeddedDocumentWithCollection(new DocumentWithCollection(models));
+
+		template.save(doc);
+
+		Query query = query(where("id").is(doc.id));
+		Update update = Update.update("embeddedDocument.models.0", new ModelA("value2"));
+
+		assertThat(template.findOne(query, DocumentWithEmbeddedDocumentWithCollection.class), notNullValue());
+
+		template.findAndModify(query, update, DocumentWithEmbeddedDocumentWithCollection.class);
+
+		DocumentWithEmbeddedDocumentWithCollection retrieved = template.findOne(query, DocumentWithEmbeddedDocumentWithCollection.class);
+
+		assertThat(retrieved, notNullValue());
+		assertThat(retrieved.embeddedDocument.models, hasSize(1));
+		assertThat(retrieved.embeddedDocument.models.get(0).value(), is("value2"));
+	}
+
+	// Update the collection of the embedded document
+	// Fails in 1.6.0+
+	@Test
+	public void findAndModifyShouldAddTypeInformationWithinUpdatedTypeOnEmbeddedDocumentWithCollection2() throws Exception
+	{
+		List<Model> models = new ArrayList<Model>();
+		models.add(new ModelA("value1"));
+
+		DocumentWithEmbeddedDocumentWithCollection doc = new DocumentWithEmbeddedDocumentWithCollection(new DocumentWithCollection(models));
+
+		template.save(doc);
+
+		Query query = query(where("id").is(doc.id));
+		Update update = Update.update("embeddedDocument.models.1", new ModelA("value2"));
+
+		assertThat(template.findOne(query, DocumentWithEmbeddedDocumentWithCollection.class), notNullValue());
+
+		template.findAndModify(query, update, DocumentWithEmbeddedDocumentWithCollection.class);
+
+		DocumentWithEmbeddedDocumentWithCollection retrieved = template.findOne(query, DocumentWithEmbeddedDocumentWithCollection.class);
+
+		assertThat(retrieved, notNullValue());
+		assertThat(retrieved.embeddedDocument.models, hasSize(2));
+		assertThat(retrieved.embeddedDocument.models.get(0).value(), is("value1"));
+		assertThat(retrieved.embeddedDocument.models.get(1).value(), is("value2"));
+	}
+
+	// Rewrite the embedded document
+	// Fails in 1.6.0+
+	@Test
+	public void findAndModifyShouldAddTypeInformationWithinUpdatedTypeOnEmbeddedDocumentWithCollection3() throws Exception
+	{
+		List<Model> models = Arrays.<Model>asList(new ModelA("value1"));
+
+		DocumentWithEmbeddedDocumentWithCollection doc = new DocumentWithEmbeddedDocumentWithCollection(new DocumentWithCollection(models));
+
+		template.save(doc);
+
+		Query query = query(where("id").is(doc.id));
+		Update update = Update.update("embeddedDocument", new DocumentWithCollection(Arrays.<Model>asList(new ModelA("value2"))));
+
+		assertThat(template.findOne(query, DocumentWithEmbeddedDocumentWithCollection.class), notNullValue());
+
+		template.findAndModify(query, update, DocumentWithEmbeddedDocumentWithCollection.class);
+
+		DocumentWithEmbeddedDocumentWithCollection retrieved = template.findOne(query, DocumentWithEmbeddedDocumentWithCollection.class);
+
+		assertThat(retrieved, notNullValue());
+		assertThat(retrieved.embeddedDocument.models, hasSize(1));
+		assertThat(retrieved.embeddedDocument.models.get(0).value(), is("value2"));
+	}
+
+	// Fails in 1.6.0+
+	@Test
+	public void findAndModifyShouldAddTypeInformationWithinUpdatedTypeOnDocumentWithNestedLists()
+	{
+		DocumentWithNestedList doc = new DocumentWithNestedList();
+
+		List<Model> entry = new ArrayList<Model>();
+		entry.add(new ModelA("value1"));
+		doc.models.add(entry);
+
+		template.save(doc);
+
+		Query query = query(where("id").is(doc.id));
+
+		assertThat(template.findOne(query, DocumentWithNestedList.class), notNullValue());
+
+		Update update = Update.update("models.0.1", new ModelA("value2"));
+
+		template.findAndModify(query, update, DocumentWithNestedList.class);
+
+		DocumentWithNestedList retrieved = template.findOne(query, DocumentWithNestedList.class);
+
+		assertThat(retrieved, is(notNullValue()));
+		assertThat(retrieved.id, is(doc.id));
+
+		assertThat(retrieved.models.get(0), hasSize(2));
+
+		assertThat(retrieved.models.get(0).get(0), instanceOf(ModelA.class));
+		assertThat(retrieved.models.get(0).get(0).value(), equalTo("value1"));
+
+		assertThat(retrieved.models.get(0).get(1), instanceOf(ModelA.class));
+		assertThat(retrieved.models.get(0).get(1).value(), equalTo("value2"));
+	}
+
 	/**
 	 * @see DATAMONGO-407
 	 */
@@ -2854,6 +3077,29 @@ public class MongoTemplateTests {
 		@Id String id;
 		List<String> string1;
 		List<String> string2;
+	}
+
+	static class DocumentWithNestedCollection
+	{
+		@Id String id;
+		List<Map<String, Model>> models = new ArrayList<Map<String, Model>>();
+	}
+
+	static class DocumentWithNestedList
+	{
+		@Id String id;
+		List<List<Model>> models = new ArrayList<List<Model>>();
+    }
+
+	static class DocumentWithEmbeddedDocumentWithCollection
+	{
+		@Id String id;
+		DocumentWithCollection embeddedDocument;
+
+		DocumentWithEmbeddedDocumentWithCollection(DocumentWithCollection embeddedDocument)
+		{
+			this.embeddedDocument = embeddedDocument;
+		}
 	}
 
 	static interface Model {
