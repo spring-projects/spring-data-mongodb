@@ -344,13 +344,13 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		boolean handledByCustomConverter = conversions.getCustomWriteTarget(entityType, DBObject.class) != null;
 		TypeInformation<? extends Object> type = ClassTypeInformation.from(entityType);
 
-		if (!handledByCustomConverter && !(dbo instanceof BasicDBList)) {
-			typeMapper.writeType(type, dbo);
-		}
-
 		Object target = obj instanceof LazyLoadingProxy ? ((LazyLoadingProxy) obj).getTarget() : obj;
 
 		writeInternal(target, dbo, type);
+
+		if (!handledByCustomConverter && !(dbo instanceof BasicDBList)) {
+			typeMapper.writeType(type, dbo);
+		}
 	}
 
 	/**

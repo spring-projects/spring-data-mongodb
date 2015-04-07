@@ -2297,8 +2297,8 @@ public class MongoTemplateTests {
 
 		template.save(doc);
 
-		Update update = new Update().pushAll("string1", new Object[] { "data", "mongodb" });
-		update.pushAll("string2", new String[] { "two", "three" });
+		Update update = new Update().pushAll("string1", new Object[]{"data", "mongodb"});
+		update.pushAll("string2", new String[]{"two", "three"});
 
 		Query findQuery = new Query(Criteria.where("id").is(doc.id));
 		template.updateFirst(findQuery, update, DocumentWithMultipleCollections.class);
@@ -2721,6 +2721,28 @@ public class MongoTemplateTests {
 
 		template.remove(object, "collection");
 		assertThat(template.findAll(DBObject.class, "collection"), hasSize(0));
+	}
+
+	@Test
+	public void findAndModifyAddToSetWithEachShouldNotAddDuplicatesForComplexObjects() {
+		DocumentWithCollection doc = new DocumentWithCollection(Arrays.<Model>asList(new ModelA("value1")));
+
+		template.save(doc);
+
+		Query query = query(where("id").is(doc.id));
+
+		assertThat(template.findOne(query, DocumentWithCollection.class), notNullValue());
+
+		Update update = new Update().addToSet("models").each(Arrays.asList(new ModelA("value2"), new ModelA("value1")));
+
+		template.findAndModify(query, update, DocumentWithCollection.class);
+
+		DocumentWithCollection retrieved = template.findOne(query, DocumentWithCollection.class);
+
+		assertThat(retrieved, notNullValue());
+		assertThat(retrieved.models, hasSize(2));
+		assertThat(retrieved.models.get(0).value(), is("value1"));
+		assertThat(retrieved.models.get(1).value(), is("value2"));
 	}
 
 	static class DoucmentWithNamedIdField {
