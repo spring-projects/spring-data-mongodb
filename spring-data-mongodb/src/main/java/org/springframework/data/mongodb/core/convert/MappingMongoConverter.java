@@ -508,12 +508,12 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		Object existingValue = accessor.get(prop);
 		BasicDBObject propDbObj = existingValue instanceof BasicDBObject ? (BasicDBObject) existingValue
 				: new BasicDBObject();
-		addCustomTypeKeyIfNecessary(ClassTypeInformation.from(prop.getRawType()), obj, propDbObj);
 
 		MongoPersistentEntity<?> entity = isSubtype(prop.getType(), obj.getClass()) ? mappingContext
 				.getPersistentEntity(obj.getClass()) : mappingContext.getPersistentEntity(type);
 
 		writeInternal(obj, propDbObj, entity);
+		addCustomTypeKeyIfNecessary(ClassTypeInformation.from(prop.getRawType()), obj, propDbObj);
 		accessor.put(prop, propDbObj);
 	}
 
