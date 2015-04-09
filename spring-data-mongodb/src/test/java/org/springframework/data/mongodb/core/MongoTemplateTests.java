@@ -2297,8 +2297,8 @@ public class MongoTemplateTests {
 
 		template.save(doc);
 
-		Update update = new Update().pushAll("string1", new Object[]{"data", "mongodb"});
-		update.pushAll("string2", new String[]{"two", "three"});
+		Update update = new Update().pushAll("string1", new Object[] { "data", "mongodb" });
+		update.pushAll("string2", new String[] { "two", "three" });
 
 		Query findQuery = new Query(Criteria.where("id").is(doc.id));
 		template.updateFirst(findQuery, update, DocumentWithMultipleCollections.class);

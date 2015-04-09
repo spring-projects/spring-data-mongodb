@@ -344,23 +344,25 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		boolean handledByCustomConverter = conversions.getCustomWriteTarget(entityType, DBObject.class) != null;
 		TypeInformation<? extends Object> type = ClassTypeInformation.from(entityType);
 
+		TypeInformation<?> fallbackType = null;
+		if (!handledByCustomConverter && !(dbo instanceof BasicDBList)) {
+			fallbackType = type;
+		}
+
 		Object target = obj instanceof LazyLoadingProxy ? ((LazyLoadingProxy) obj).getTarget() : obj;
 
-		writeInternal(target, dbo, type);
-
-		if (!handledByCustomConverter && !(dbo instanceof BasicDBList)) {
-			typeMapper.writeType(type, dbo);
-		}
+		writeInternal(target, dbo, type, fallbackType);
 	}
 
 	/**
 	 * Internal write conversion method which should be used for nested invocations.
-	 * 
+	 *
 	 * @param obj
 	 * @param dbo
+	 * @param fallbackTypeHint the type that should be used if no other custum type can be derived. May be {@literal null}.
 	 */
 	@SuppressWarnings("unchecked")
-	protected void writeInternal(final Object obj, final DBObject dbo, final TypeInformation<?> typeHint) {
+	protected void writeInternal(final Object obj, final DBObject dbo, final TypeInformation<?> typeHint, TypeInformation<?> fallbackTypeHint) {
 
 		if (null == obj) {
 			return;
@@ -387,7 +389,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityType);
 		writeInternal(obj, dbo, entity);
-		addCustomTypeKeyIfNecessary(typeHint, obj, dbo);
+		addCustomTypeKeyIfNecessary(typeHint, obj, dbo, fallbackTypeHint);
 	}
 
 	protected void writeInternal(Object obj, final DBObject dbo, MongoPersistentEntity<?> entity) {
@@ -513,7 +515,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				.getPersistentEntity(obj.getClass()) : mappingContext.getPersistentEntity(type);
 
 		writeInternal(obj, propDbObj, entity);
-		addCustomTypeKeyIfNecessary(ClassTypeInformation.from(prop.getRawType()), obj, propDbObj);
+		addCustomTypeKeyIfNecessary(ClassTypeInformation.from(prop.getRawType()), obj, propDbObj, null);
 		accessor.put(prop, propDbObj);
 	}
 
@@ -624,7 +626,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				sink.add(writeCollectionInternal(asCollection(element), componentType, new BasicDBList()));
 			} else {
 				BasicDBObject propDbObj = new BasicDBObject();
-				writeInternal(element, propDbObj, componentType);
+				writeInternal(element, propDbObj, componentType, null);
 				sink.add(propDbObj);
 			}
 		}
@@ -659,7 +661,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 					DBObject newDbo = new BasicDBObject();
 					TypeInformation<?> valueTypeInfo = propertyType.isMap() ? propertyType.getMapValueType()
 							: ClassTypeInformation.OBJECT;
-					writeInternal(val, newDbo, valueTypeInfo);
+					writeInternal(val, newDbo, valueTypeInfo, null);
 					dbo.put(simpleKey, newDbo);
 				}
 			} else {
@@ -737,12 +739,12 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	/**
 	 * Adds custom type information to the given {@link DBObject} if necessary. That is if the value is not the same as
 	 * the one given. This is usually the case if you store a subtype of the actual declared type of the property.
-	 *
-	 * @param type
+	 *  @param type
 	 * @param value must not be {@literal null}.
 	 * @param dbObject must not be {@literal null}.
+	 * @param fallbackType optional type that will be used if no custom type can be derived. May be {@literal null}.
 	 */
-	protected void addCustomTypeKeyIfNecessary(TypeInformation<?> type, Object value, DBObject dbObject) {
+	protected void addCustomTypeKeyIfNecessary(TypeInformation<?> type, Object value, DBObject dbObject, TypeInformation<?> fallbackType) {
 
 		TypeInformation<?> actualType = type != null ? type.getActualType() : null;
 		Class<?> reference = actualType == null ? Object.class : actualType.getType();
@@ -751,6 +753,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		boolean notTheSameClass = !valueType.equals(reference);
 		if (notTheSameClass) {
 			typeMapper.writeType(valueType, dbObject);
+		}else if (fallbackType != null) {
+			typeMapper.writeType(fallbackType, dbObject);
 		}
 	}
 
