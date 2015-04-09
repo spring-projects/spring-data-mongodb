@@ -128,7 +128,7 @@
 			<groupId>io.reactivex</groupId>
 			<artifactId>rxjava</artifactId>
 			<optional>true</optional>
-			<version>1.0.8</version>
+			<version>${rxjava}</version>
 		</dependency>
 		
 
