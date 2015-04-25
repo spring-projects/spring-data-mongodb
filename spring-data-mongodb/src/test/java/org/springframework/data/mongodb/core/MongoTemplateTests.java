@@ -2609,6 +2609,29 @@ public class MongoTemplateTests {
 		assertThat(template.findOne(query, DocumentWithCollectionOfSimpleType.class).values, hasSize(3));
 	}
 
+	@Test
+	public void findAndModifyAddToSetWithEachShouldNotAddDuplicatesNorTypeHintForSimpleDocuments() {
+		DocumentWithCollectionOfSamples doc = new DocumentWithCollectionOfSamples();
+		doc.samples = Arrays.asList(new Sample(null, "sample1"));
+
+		template.save(doc);
+
+		Query query = query(where("id").is(doc.id));
+
+		assertThat(template.findOne(query, DocumentWithCollectionOfSamples.class), notNullValue());
+
+		Update update = new Update().addToSet("samples").each(Arrays.asList(new Sample(null, "sample2"), new Sample(null, "sample1")));
+
+		template.findAndModify(query, update, DocumentWithCollectionOfSamples.class);
+
+		DocumentWithCollectionOfSamples retrieved = template.findOne(query, DocumentWithCollectionOfSamples.class);
+
+		assertThat(retrieved, notNullValue());
+		assertThat(retrieved.samples, hasSize(2));
+		assertThat(retrieved.samples.get(0).field, is("sample1"));
+		assertThat(retrieved.samples.get(1).field, is("sample2"));
+	}
+
 	/**
 	 * @see DATAMONGO-888
 	 */
@@ -2796,6 +2819,12 @@ public class MongoTemplateTests {
 
 		@Id String id;
 		List<String> values;
+	}
+
+	static class DocumentWithCollectionOfSamples
+	{
+		@Id String id;
+		List<Sample> samples;
 	}
 
 	static class DocumentWithMultipleCollections {
