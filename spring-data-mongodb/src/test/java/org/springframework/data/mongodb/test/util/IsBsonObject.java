@@ -90,6 +90,10 @@ public class IsBsonObject<T extends BSONObject> extends TypeSafeMatcher<T> {
 				return false;
 			}
 
+			if (o != null && expectation.not) {
+				return false;
+			}
+
 		}
 		return true;
 	}
