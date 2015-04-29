@@ -20,6 +20,7 @@ import static org.hamcrest.collection.IsMapContaining.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.DBObjectTestUtils.*;
+import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
 
 import java.util.Arrays;
 import java.util.List;
@@ -524,7 +525,6 @@ public class UpdateMapperUnitTests {
 			assertThat(((DBObject) updateValue).get("_class").toString(),
 					equalTo("org.springframework.data.mongodb.core.convert.UpdateMapperUnitTests$ModelImpl"));
 		}
-
 	}
 
 	/**
@@ -593,6 +593,55 @@ public class UpdateMapperUnitTests {
 		DBObject $unset = DBObjectTestUtils.getAsDBObject(mappedUpdate, "$unset");
 
 		assertThat($unset, equalTo(new BasicDBObjectBuilder().add("dbRefAnnotatedList.$", 1).get()));
+	}
+
+	/**
+	 * @see DATAMONGO-1210
+	 */
+	@Test
+	public void mappingEachOperatorShouldNotAddTypeInfoForNonInterfaceNonAbstractTypes() {
+
+		Update update = new Update().addToSet("nestedDocs").each(new NestedDocument("nested-1"),
+				new NestedDocument("nested-2"));
+
+		DBObject mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(DocumentWithNestedCollection.class));
+
+		assertThat(mappedUpdate, isBsonObject().notContaining("$addToSet.nestedDocs.$each.[0]._class"));
+		assertThat(mappedUpdate, isBsonObject().notContaining("$addToSet.nestedDocs.$each.[1]._class"));
+	}
+
+	/**
+	 * @see DATAMONGO-1210
+	 */
+	@Test
+	public void mappingEachOperatorShouldAddTypeHintForInterfaceTypes() {
+
+		Update update = new Update().addToSet("models").each(new ModelImpl(1), new ModelImpl(2));
+
+		DBObject mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(ListModelWrapper.class));
+
+		assertThat(mappedUpdate, isBsonObject().containing("$addToSet.models.$each.[0]._class", ModelImpl.class.getName()));
+		assertThat(mappedUpdate, isBsonObject().containing("$addToSet.models.$each.[1]._class", ModelImpl.class.getName()));
+	}
+
+	/**
+	 * @see DATAMONGO-1210
+	 */
+	@Test
+	public void mappingEachOperatorShouldAddTypeHintForAbstractTypes() {
+
+		Update update = new Update().addToSet("list").each(new ConcreteChildClass("foo", "one"),
+				new ConcreteChildClass("bar", "two"));
+
+		DBObject mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(ParentClass.class));
+
+		assertThat(mappedUpdate,
+				isBsonObject().containing("$addToSet.aliased.$each.[0]._class", ConcreteChildClass.class.getName()));
+		assertThat(mappedUpdate,
+				isBsonObject().containing("$addToSet.aliased.$each.[1]._class", ConcreteChildClass.class.getName()));
 	}
 
 	@org.springframework.data.mongodb.core.mapping.Document(collection = "DocumentWithReferenceToInterface")
@@ -728,6 +777,10 @@ public class UpdateMapperUnitTests {
 
 	static class DomainEntity {
 		List<NestedEntity> collectionOfNestedEntities;
+
+		public List<NestedEntity> getCollectionOfNestedEntities() {
+			return collectionOfNestedEntities;
+		}
 	}
 
 	static class NestedEntity {
@@ -770,4 +823,19 @@ public class UpdateMapperUnitTests {
 
 		@Field("mapped") DocumentWithDBRefCollection nested;
 	}
+
+	static class DocumentWithNestedCollection {
+		List<NestedDocument> nestedDocs;
+	}
+
+	static class NestedDocument {
+		String name;
+
+		public NestedDocument(String name) {
+			super();
+			this.name = name;
+		}
+
+	}
+
 }

@@ -97,14 +97,14 @@ public class UpdateMapper extends QueryMapper {
 
 		if (rawValue instanceof Modifier) {
 
-			value = getMappedValue((Modifier) rawValue);
+			value = getMappedValue(field, (Modifier) rawValue);
 
 		} else if (rawValue instanceof Modifiers) {
 
 			DBObject modificationOperations = new BasicDBObject();
 
 			for (Modifier modifier : ((Modifiers) rawValue).getModifiers()) {
-				modificationOperations.putAll(getMappedValue(modifier).toMap());
+				modificationOperations.putAll(getMappedValue(field, modifier).toMap());
 			}
 
 			value = modificationOperations;
@@ -132,10 +132,21 @@ public class UpdateMapper extends QueryMapper {
 		return value instanceof Query;
 	}
 
-	private DBObject getMappedValue(Modifier modifier) {
+	private DBObject getMappedValue(Field field, Modifier modifier) {
 
-		Object value = converter.convertToMongoType(modifier.getValue(), ClassTypeInformation.OBJECT);
+		Object value = converter.convertToMongoType(modifier.getValue(),
+				requiresTypeHint(field) ? ClassTypeInformation.OBJECT : null);
 		return new BasicDBObject(modifier.getKey(), value);
+	}
+
+	private boolean requiresTypeHint(Field field) {
+
+		if (field == null || field.getProperty() == null) {
+			return true;
+		}
+
+		return field.getProperty().getActualType().isInterface()
+				|| java.lang.reflect.Modifier.isAbstract(field.getProperty().getActualType().getModifiers());
 	}
 
 	/* 
