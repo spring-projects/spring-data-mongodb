@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 the original author or authors.
+ * Copyright 2013-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import java.util.Map.Entry;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.context.MappingContext;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter.NestedDocument;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty.PropertyToFieldNameConverter;
@@ -29,6 +30,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update.Modifier;
 import org.springframework.data.mongodb.core.query.Update.Modifiers;
 import org.springframework.data.util.ClassTypeInformation;
+import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
 
 import com.mongodb.BasicDBObject;
@@ -43,6 +45,7 @@ import com.mongodb.DBObject;
  */
 public class UpdateMapper extends QueryMapper {
 
+	private static final ClassTypeInformation<?> NESTED_DOCUMENT = ClassTypeInformation.from(NestedDocument.class);
 	private final MongoConverter converter;
 
 	/**
@@ -66,7 +69,7 @@ public class UpdateMapper extends QueryMapper {
 	@Override
 	protected Object delegateConvertToMongoType(Object source, MongoPersistentEntity<?> entity) {
 		return entity == null ? super.delegateConvertToMongoType(source, null) : converter.convertToMongoType(source,
-				entity.getTypeInformation());
+				getTypeHintForEntity(entity));
 	}
 
 	/*
@@ -97,14 +100,14 @@ public class UpdateMapper extends QueryMapper {
 
 		if (rawValue instanceof Modifier) {
 
-			value = getMappedValue((Modifier) rawValue);
+			value = getMappedValue(field, (Modifier) rawValue);
 
 		} else if (rawValue instanceof Modifiers) {
 
 			DBObject modificationOperations = new BasicDBObject();
 
 			for (Modifier modifier : ((Modifiers) rawValue).getModifiers()) {
-				modificationOperations.putAll(getMappedValue(modifier).toMap());
+				modificationOperations.putAll(getMappedValue(field, modifier).toMap());
 			}
 
 			value = modificationOperations;
@@ -132,10 +135,38 @@ public class UpdateMapper extends QueryMapper {
 		return value instanceof Query;
 	}
 
-	private DBObject getMappedValue(Modifier modifier) {
+	private DBObject getMappedValue(Field field, Modifier modifier) {
 
-		Object value = converter.convertToMongoType(modifier.getValue(), ClassTypeInformation.OBJECT);
+		Object value = converter.convertToMongoType(modifier.getValue(), getTypeHintForField(field));
 		return new BasicDBObject(modifier.getKey(), value);
+	}
+
+	private TypeInformation<?> getTypeHintForField(Field field) {
+
+		if (field == null || field.getProperty() == null) {
+			return ClassTypeInformation.OBJECT;
+		}
+
+		if (field.getProperty().getActualType().isInterface()
+				|| java.lang.reflect.Modifier.isAbstract(field.getProperty().getActualType().getModifiers())) {
+			return ClassTypeInformation.OBJECT;
+		}
+
+		return NESTED_DOCUMENT;
+	}
+
+	private TypeInformation<?> getTypeHintForEntity(MongoPersistentEntity<?> entity) {
+		return processTypeHintForNestedDocuments(entity.getTypeInformation());
+	}
+
+	private TypeInformation<?> processTypeHintForNestedDocuments(TypeInformation<?> info) {
+
+		Class<?> type = info.getActualType().getType();
+		if (type.isInterface() || java.lang.reflect.Modifier.isAbstract(type.getModifiers())) {
+			return info;
+		}
+		return NESTED_DOCUMENT;
+
 	}
 
 	/* 
@@ -233,7 +264,35 @@ public class UpdateMapper extends QueryMapper {
 			protected String mapPropertyName(MongoPersistentProperty property) {
 
 				String mappedName = PropertyToFieldNameConverter.INSTANCE.convert(property);
-				return iterator.hasNext() && iterator.next().equals("$") ? String.format("%s.$", mappedName) : mappedName;
+
+				boolean inspect = iterator.hasNext();
+				while (inspect) {
+
+					String partial = iterator.next();
+
+					boolean isPositional = isPositionalParameter(partial);
+					if (isPositional) {
+						mappedName += "." + partial;
+					}
+
+					inspect = isPositional && iterator.hasNext();
+				}
+
+				return mappedName;
+			}
+
+			boolean isPositionalParameter(String partial) {
+
+				if (partial.equals("$")) {
+					return true;
+				}
+
+				try {
+					Long.valueOf(partial);
+					return true;
+				} catch (NumberFormatException e) {
+					return false;
+				}
 			}
 
 		}
