@@ -767,27 +767,33 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	}
 
 	protected <T> void doInsertAll(Collection<? extends T> listToSave, MongoWriter<T> writer) {
-		Map<String, List<T>> objs = new HashMap<String, List<T>>();
 
-		for (T o : listToSave) {
+		Map<String, List<T>> elementsByCollection = new HashMap<String, List<T>>();
 
-			MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(o.getClass());
+		for (T element : listToSave) {
+
+			if (element == null) {
+				continue;
+			}
+
+			MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(element.getClass());
+
 			if (entity == null) {
-				throw new InvalidDataAccessApiUsageException("No Persitent Entity information found for the class "
-						+ o.getClass().getName());
+				throw new InvalidDataAccessApiUsageException("No PersistentEntity information found for " + element.getClass());
 			}
+
 			String collection = entity.getCollection();
+			List<T> collectionElements = elementsByCollection.get(collection);
 
-			List<T> objList = objs.get(collection);
-			if (null == objList) {
-				objList = new ArrayList<T>();
-				objs.put(collection, objList);
+			if (null == collectionElements) {
+				collectionElements = new ArrayList<T>();
+				elementsByCollection.put(collection, collectionElements);
 			}
-			objList.add(o);
 
+			collectionElements.add(element);
 		}
 
-		for (Map.Entry<String, List<T>> entry : objs.entrySet()) {
+		for (Map.Entry<String, List<T>> entry : elementsByCollection.entrySet()) {
 			doInsertBatch(entry.getKey(), entry.getValue(), this.mongoConverter);
 		}
 	}
