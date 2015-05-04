@@ -136,6 +136,7 @@ import com.mongodb.util.JSONParseException;
  * @author Thomas Darimont
  * @author Chuong Ngo
  * @author Christoph Strobl
+ * @author Mateusz Rasiñski
  */
 @SuppressWarnings("deprecation")
 public class MongoTemplate implements MongoOperations, ApplicationContextAware {
@@ -1876,7 +1877,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 				while (cursor.hasNext()) {
 					DBObject object = cursor.next();
-					result.add(objectCallback.doWith(object));
+					T instantiatedObject = objectCallback.doWith(object);
+					if (instantiatedObject != null) {
+						result.add(instantiatedObject);
+					}
 				}
 
 				return result;
