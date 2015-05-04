@@ -16,6 +16,7 @@ include::preface.adoc[]
 
 :leveloffset: +1
 include::new-features.adoc[]
+include::{spring-data-commons-docs}/dependencies.adoc[]
 include::{spring-data-commons-docs}/repositories.adoc[]
 :leveloffset: -1
 
