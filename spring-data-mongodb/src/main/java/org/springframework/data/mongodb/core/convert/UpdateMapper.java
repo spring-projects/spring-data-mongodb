@@ -244,7 +244,35 @@ public class UpdateMapper extends QueryMapper {
 			protected String mapPropertyName(MongoPersistentProperty property) {
 
 				String mappedName = PropertyToFieldNameConverter.INSTANCE.convert(property);
-				return iterator.hasNext() && iterator.next().equals("$") ? String.format("%s.$", mappedName) : mappedName;
+
+				boolean inspect = iterator.hasNext();
+				while (inspect) {
+
+					String partial = iterator.next();
+
+					boolean isPositional = isPositionalParameter(partial);
+					if (isPositional) {
+						mappedName += "." + partial;
+					}
+
+					inspect = isPositional && iterator.hasNext();
+				}
+
+				return mappedName;
+			}
+
+			boolean isPositionalParameter(String partial) {
+
+				if (partial.equals("$")) {
+					return true;
+				}
+
+				try {
+					Long.valueOf(partial);
+					return true;
+				} catch (NumberFormatException e) {
+					return false;
+				}
 			}
 
 		}

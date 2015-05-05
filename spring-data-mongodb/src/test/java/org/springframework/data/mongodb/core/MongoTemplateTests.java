@@ -2210,11 +2210,12 @@ public class MongoTemplateTests {
 		assertThat(retrieved.model.value(), equalTo("value2"));
 	}
 
-	// Rewrite the whole collection
-	// Passes in 1.6.0+, but changes order position of type hint _class
+	/**
+	 * @see DATAMONGO-1210
+	 */
 	@Test
-	public void findAndModifyShouldRetainTypeInformationWithinUpdatedTypeOnDocumentWithNestedCollection()
-	{
+	public void findAndModifyShouldRetainTypeInformationWithinUpdatedTypeOnDocumentWithNestedCollectionWhenWholeCollectionIsReplaced() {
+
 		DocumentWithNestedCollection doc = new DocumentWithNestedCollection();
 
 		Map<String, Model> entry = new HashMap<String, Model>();
@@ -2246,12 +2247,12 @@ public class MongoTemplateTests {
 		assertThat(retrieved.models.get(0).get("key2").value(), equalTo("value2"));
 	}
 
-
-	// Update first list element
-	// Fails in 1.6.2+
+	/**
+	 * @see DATAMONGO-1210
+	 */
 	@Test
-	public void findAndModifyShouldRetainTypeInformationWithinUpdatedTypeOnDocumentWithNestedCollection2()
-	{
+	public void findAndModifyShouldRetainTypeInformationWithinUpdatedTypeOnDocumentWithNestedCollectionWhenFirstElementIsReplaced() {
+
 		DocumentWithNestedCollection doc = new DocumentWithNestedCollection();
 
 		Map<String, Model> entry = new HashMap<String, Model>();
@@ -2283,11 +2284,12 @@ public class MongoTemplateTests {
 		assertThat(retrieved.models.get(0).get("key2").value(), equalTo("value2"));
 	}
 
-	// Add second list element
-	// Fails in 1.6.2+
+	/**
+	 * @see DATAMONGO-1210
+	 */
 	@Test
-	public void findAndModifyShouldAddTypeInformationOnDocumentWithNestedCollection2()
-	{
+	public void findAndModifyShouldAddTypeInformationOnDocumentWithNestedCollectionObjectInsertedAtSecondIndex() {
+
 		DocumentWithNestedCollection doc = new DocumentWithNestedCollection();
 
 		Map<String, Model> entry = new HashMap<String, Model>();
@@ -2318,15 +2320,18 @@ public class MongoTemplateTests {
 		assertThat(retrieved.models.get(1).get("key2").value(), equalTo("value2"));
 	}
 
-	// Update the collection of the embedded document
-	// Fails in 1.6.0+
+	/**
+	 * @see DATAMONGO-1210
+	 */
 	@Test
-	public void findAndModifyShouldRetainTypeInformationWithinUpdatedTypeOnEmbeddedDocumentWithCollection() throws Exception
-	{
+	public void findAndModifyShouldRetainTypeInformationWithinUpdatedTypeOnEmbeddedDocumentWithCollectionWhenUpdatingPositionedElement()
+			throws Exception {
+
 		List<Model> models = new ArrayList<Model>();
 		models.add(new ModelA("value1"));
 
-		DocumentWithEmbeddedDocumentWithCollection doc = new DocumentWithEmbeddedDocumentWithCollection(new DocumentWithCollection(models));
+		DocumentWithEmbeddedDocumentWithCollection doc = new DocumentWithEmbeddedDocumentWithCollection(
+				new DocumentWithCollection(models));
 
 		template.save(doc);
 
@@ -2337,22 +2342,26 @@ public class MongoTemplateTests {
 
 		template.findAndModify(query, update, DocumentWithEmbeddedDocumentWithCollection.class);
 
-		DocumentWithEmbeddedDocumentWithCollection retrieved = template.findOne(query, DocumentWithEmbeddedDocumentWithCollection.class);
+		DocumentWithEmbeddedDocumentWithCollection retrieved = template.findOne(query,
+				DocumentWithEmbeddedDocumentWithCollection.class);
 
 		assertThat(retrieved, notNullValue());
 		assertThat(retrieved.embeddedDocument.models, hasSize(1));
 		assertThat(retrieved.embeddedDocument.models.get(0).value(), is("value2"));
 	}
 
-	// Update the collection of the embedded document
-	// Fails in 1.6.0+
+	/**
+	 * @see DATAMONGO-1210
+	 */
 	@Test
-	public void findAndModifyShouldAddTypeInformationWithinUpdatedTypeOnEmbeddedDocumentWithCollection2() throws Exception
-	{
+	public void findAndModifyShouldAddTypeInformationWithinUpdatedTypeOnEmbeddedDocumentWithCollectionWhenUpdatingSecondElement()
+			throws Exception {
+
 		List<Model> models = new ArrayList<Model>();
 		models.add(new ModelA("value1"));
 
-		DocumentWithEmbeddedDocumentWithCollection doc = new DocumentWithEmbeddedDocumentWithCollection(new DocumentWithCollection(models));
+		DocumentWithEmbeddedDocumentWithCollection doc = new DocumentWithEmbeddedDocumentWithCollection(
+				new DocumentWithCollection(models));
 
 		template.save(doc);
 
@@ -2363,7 +2372,8 @@ public class MongoTemplateTests {
 
 		template.findAndModify(query, update, DocumentWithEmbeddedDocumentWithCollection.class);
 
-		DocumentWithEmbeddedDocumentWithCollection retrieved = template.findOne(query, DocumentWithEmbeddedDocumentWithCollection.class);
+		DocumentWithEmbeddedDocumentWithCollection retrieved = template.findOne(query,
+				DocumentWithEmbeddedDocumentWithCollection.class);
 
 		assertThat(retrieved, notNullValue());
 		assertThat(retrieved.embeddedDocument.models, hasSize(2));
@@ -2371,35 +2381,42 @@ public class MongoTemplateTests {
 		assertThat(retrieved.embeddedDocument.models.get(1).value(), is("value2"));
 	}
 
-	// Rewrite the embedded document
-	// Fails in 1.6.0+
+	/**
+	 * @see DATAMONGO-1210
+	 */
 	@Test
-	public void findAndModifyShouldAddTypeInformationWithinUpdatedTypeOnEmbeddedDocumentWithCollection3() throws Exception
-	{
-		List<Model> models = Arrays.<Model>asList(new ModelA("value1"));
+	public void findAndModifyShouldAddTypeInformationWithinUpdatedTypeOnEmbeddedDocumentWithCollectionWhenRewriting()
+			throws Exception {
 
-		DocumentWithEmbeddedDocumentWithCollection doc = new DocumentWithEmbeddedDocumentWithCollection(new DocumentWithCollection(models));
+		List<Model> models = Arrays.<Model> asList(new ModelA("value1"));
+
+		DocumentWithEmbeddedDocumentWithCollection doc = new DocumentWithEmbeddedDocumentWithCollection(
+				new DocumentWithCollection(models));
 
 		template.save(doc);
 
 		Query query = query(where("id").is(doc.id));
-		Update update = Update.update("embeddedDocument", new DocumentWithCollection(Arrays.<Model>asList(new ModelA("value2"))));
+		Update update = Update.update("embeddedDocument",
+				new DocumentWithCollection(Arrays.<Model> asList(new ModelA("value2"))));
 
 		assertThat(template.findOne(query, DocumentWithEmbeddedDocumentWithCollection.class), notNullValue());
 
 		template.findAndModify(query, update, DocumentWithEmbeddedDocumentWithCollection.class);
 
-		DocumentWithEmbeddedDocumentWithCollection retrieved = template.findOne(query, DocumentWithEmbeddedDocumentWithCollection.class);
+		DocumentWithEmbeddedDocumentWithCollection retrieved = template.findOne(query,
+				DocumentWithEmbeddedDocumentWithCollection.class);
 
 		assertThat(retrieved, notNullValue());
 		assertThat(retrieved.embeddedDocument.models, hasSize(1));
 		assertThat(retrieved.embeddedDocument.models.get(0).value(), is("value2"));
 	}
 
-	// Fails in 1.6.0+
+	/**
+	 * @see DATAMONGO-1210
+	 */
 	@Test
-	public void findAndModifyShouldAddTypeInformationWithinUpdatedTypeOnDocumentWithNestedLists()
-	{
+	public void findAndModifyShouldAddTypeInformationWithinUpdatedTypeOnDocumentWithNestedLists() {
+
 		DocumentWithNestedList doc = new DocumentWithNestedList();
 
 		List<Model> entry = new ArrayList<Model>();
@@ -3079,25 +3096,21 @@ public class MongoTemplateTests {
 		List<String> string2;
 	}
 
-	static class DocumentWithNestedCollection
-	{
+	static class DocumentWithNestedCollection {
 		@Id String id;
 		List<Map<String, Model>> models = new ArrayList<Map<String, Model>>();
 	}
 
-	static class DocumentWithNestedList
-	{
+	static class DocumentWithNestedList {
 		@Id String id;
 		List<List<Model>> models = new ArrayList<List<Model>>();
-    }
+	}
 
-	static class DocumentWithEmbeddedDocumentWithCollection
-	{
+	static class DocumentWithEmbeddedDocumentWithCollection {
 		@Id String id;
 		DocumentWithCollection embeddedDocument;
 
-		DocumentWithEmbeddedDocumentWithCollection(DocumentWithCollection embeddedDocument)
-		{
+		DocumentWithEmbeddedDocumentWithCollection(DocumentWithCollection embeddedDocument) {
 			this.embeddedDocument = embeddedDocument;
 		}
 	}
