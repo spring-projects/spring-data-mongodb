@@ -23,6 +23,7 @@ import static org.springframework.data.mongodb.core.DBObjectTestUtils.*;
 import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.hamcrest.Matcher;
@@ -642,6 +643,60 @@ public class UpdateMapperUnitTests {
 				isBsonObject().containing("$addToSet.aliased.$each.[0]._class", ConcreteChildClass.class.getName()));
 		assertThat(mappedUpdate,
 				isBsonObject().containing("$addToSet.aliased.$each.[1]._class", ConcreteChildClass.class.getName()));
+	}
+
+	/**
+	 * @see DATAMONGO-1210
+	 */
+	@Test
+	public void mappingShouldOnlyRemoveTypeHintFromTopLevelTypeInCaseOfNestedDocument() {
+
+		WrapperAroundInterfaceType wait = new WrapperAroundInterfaceType();
+		wait.interfaceType = new ModelImpl(1);
+
+		Update update = new Update().addToSet("listHoldingConcretyTypeWithInterfaceTypeAttribute").each(wait);
+		DBObject mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(DomainTypeWithListOfConcreteTypesHavingSingleInterfaceTypeAttribute.class));
+
+		assertThat(mappedUpdate,
+				isBsonObject().notContaining("$addToSet.listHoldingConcretyTypeWithInterfaceTypeAttribute.$each.[0]._class"));
+		assertThat(
+				mappedUpdate,
+				isBsonObject().containing(
+						"$addToSet.listHoldingConcretyTypeWithInterfaceTypeAttribute.$each.[0].interfaceType._class",
+						ModelImpl.class.getName()));
+	}
+
+	/**
+	 * @see DATAMONGO-1210
+	 */
+	@Test
+	public void mappingShouldRetainTypeInformationOfNestedListWhenUpdatingConcreteyParentType() {
+
+		ListModelWrapper lmw = new ListModelWrapper();
+		lmw.models = Collections.<Model> singletonList(new ModelImpl(1));
+
+		Update update = new Update().set("concreteTypeWithListAttributeOfInterfaceType", lmw);
+		DBObject mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(DomainTypeWrappingConcreteyTypeHavingListOfInterfaceTypeAttributes.class));
+
+		assertThat(mappedUpdate, isBsonObject().notContaining("$set.concreteTypeWithListAttributeOfInterfaceType._class"));
+		assertThat(
+				mappedUpdate,
+				isBsonObject().containing("$set.concreteTypeWithListAttributeOfInterfaceType.models.[0]._class",
+						ModelImpl.class.getName()));
+	}
+
+	static class DomainTypeWrappingConcreteyTypeHavingListOfInterfaceTypeAttributes {
+		ListModelWrapper concreteTypeWithListAttributeOfInterfaceType;
+	}
+
+	static class DomainTypeWithListOfConcreteTypesHavingSingleInterfaceTypeAttribute {
+		List<WrapperAroundInterfaceType> listHoldingConcretyTypeWithInterfaceTypeAttribute;
+	}
+
+	static class WrapperAroundInterfaceType {
+		Model interfaceType;
 	}
 
 	@org.springframework.data.mongodb.core.mapping.Document(collection = "DocumentWithReferenceToInterface")

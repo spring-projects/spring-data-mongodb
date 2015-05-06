@@ -1019,6 +1019,10 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			return removeTypeInfoRecursively(newDbo);
 		}
 
+		if (typeInformation.getType().equals(NestedDocument.class)) {
+			return removeTypeInfo(newDbo);
+		}
+
 		return !obj.getClass().equals(typeInformation.getType()) ? newDbo : removeTypeInfoRecursively(newDbo);
 	}
 
@@ -1033,7 +1037,35 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	}
 
 	/**
-	 * Removes the type information from the conversion result.
+	 * Removes only the type information from the root document.
+	 * 
+	 * @param object
+	 * @return
+	 */
+	private Object removeTypeInfo(Object object) {
+
+		if (!(object instanceof DBObject)) {
+			return object;
+		}
+
+		DBObject dbObject = (DBObject) object;
+		String keyToRemove = null;
+		for (String key : dbObject.keySet()) {
+
+			if (typeMapper.isTypeKey(key)) {
+				keyToRemove = key;
+			}
+		}
+
+		if (keyToRemove != null) {
+			dbObject.removeField(keyToRemove);
+		}
+
+		return dbObject;
+	}
+
+	/**
+	 * Removes the type information from the entire conversion result.
 	 * 
 	 * @param object
 	 * @return
@@ -1193,5 +1225,16 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 */
 	DBObject readRef(DBRef ref) {
 		return dbRefResolver.fetch(ref);
+	}
+
+	/**
+	 * Marker class used to indicate we have a non root document object here that might be used within an update - so we
+	 * need to preserve type hints for potential nested elements but need to remove it on top level.
+	 * 
+	 * @author Christoph Strobl
+	 * @since 1.8
+	 */
+	static class NestedDocument {
+
 	}
 }

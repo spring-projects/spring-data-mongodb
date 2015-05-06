@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 the original author or authors.
+ * Copyright 2013-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import java.util.Map.Entry;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.context.MappingContext;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter.NestedDocument;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty.PropertyToFieldNameConverter;
@@ -29,6 +30,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update.Modifier;
 import org.springframework.data.mongodb.core.query.Update.Modifiers;
 import org.springframework.data.util.ClassTypeInformation;
+import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
 
 import com.mongodb.BasicDBObject;
@@ -43,6 +45,7 @@ import com.mongodb.DBObject;
  */
 public class UpdateMapper extends QueryMapper {
 
+	private static final ClassTypeInformation<?> NESTED_DOCUMENT = ClassTypeInformation.from(NestedDocument.class);
 	private final MongoConverter converter;
 
 	/**
@@ -66,7 +69,7 @@ public class UpdateMapper extends QueryMapper {
 	@Override
 	protected Object delegateConvertToMongoType(Object source, MongoPersistentEntity<?> entity) {
 		return entity == null ? super.delegateConvertToMongoType(source, null) : converter.convertToMongoType(source,
-				entity.getTypeInformation());
+				getTypeHintForEntity(entity));
 	}
 
 	/*
@@ -134,19 +137,36 @@ public class UpdateMapper extends QueryMapper {
 
 	private DBObject getMappedValue(Field field, Modifier modifier) {
 
-		Object value = converter.convertToMongoType(modifier.getValue(),
-				requiresTypeHint(field) ? ClassTypeInformation.OBJECT : null);
+		Object value = converter.convertToMongoType(modifier.getValue(), getTypeHintForField(field));
 		return new BasicDBObject(modifier.getKey(), value);
 	}
 
-	private boolean requiresTypeHint(Field field) {
+	private TypeInformation<?> getTypeHintForField(Field field) {
 
 		if (field == null || field.getProperty() == null) {
-			return true;
+			return ClassTypeInformation.OBJECT;
 		}
 
-		return field.getProperty().getActualType().isInterface()
-				|| java.lang.reflect.Modifier.isAbstract(field.getProperty().getActualType().getModifiers());
+		if (field.getProperty().getActualType().isInterface()
+				|| java.lang.reflect.Modifier.isAbstract(field.getProperty().getActualType().getModifiers())) {
+			return ClassTypeInformation.OBJECT;
+		}
+
+		return NESTED_DOCUMENT;
+	}
+
+	private TypeInformation<?> getTypeHintForEntity(MongoPersistentEntity<?> entity) {
+		return processTypeHintForNestedDocuments(entity.getTypeInformation());
+	}
+
+	private TypeInformation<?> processTypeHintForNestedDocuments(TypeInformation<?> info) {
+
+		Class<?> type = info.getActualType().getType();
+		if (type.isInterface() || java.lang.reflect.Modifier.isAbstract(type.getModifiers())) {
+			return info;
+		}
+		return NESTED_DOCUMENT;
+
 	}
 
 	/* 
