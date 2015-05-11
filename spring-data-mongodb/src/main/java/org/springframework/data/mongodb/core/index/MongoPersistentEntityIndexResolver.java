@@ -36,6 +36,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -51,6 +52,7 @@ import com.mongodb.util.JSON;
  * scanning related annotations.
  * 
  * @author Christoph Strobl
+ * @author Thomas Darimont
  * @since 1.5
  */
 public class MongoPersistentEntityIndexResolver implements IndexResolver {
@@ -70,13 +72,12 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		this.mappingContext = mappingContext;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.index.IndexResolver#resolveIndexForClass(java.lang.Class)
+	/* (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.index.IndexResolver#resolveIndexForClass(org.springframework.data.util.TypeInformation)
 	 */
 	@Override
-	public List<IndexDefinitionHolder> resolveIndexForClass(Class<?> type) {
-		return resolveIndexForEntity(mappingContext.getPersistentEntity(type));
+	public Iterable<? extends IndexDefinitionHolder> resolveIndexFor(TypeInformation<?> typeInformation) {
+		return resolveIndexForEntity(mappingContext.getPersistentEntity(typeInformation));
 	}
 
 	/**

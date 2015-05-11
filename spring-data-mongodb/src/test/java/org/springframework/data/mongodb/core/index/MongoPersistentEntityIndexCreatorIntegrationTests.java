@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 the original author or authors.
+ * Copyright 2012-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import java.util.List;
 
 import org.hamcrest.Matchers;
 import org.junit.After;
+import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -64,5 +65,17 @@ public class MongoPersistentEntityIndexCreatorIntegrationTests {
 
 		indexInfo = templateTwo.indexOps("sampleEntity").getIndexInfo();
 		assertThat(indexInfo, hasSize(0));
+	}
+
+	/**
+	 * @see DATAMONGO-1202
+	 */
+	@Test
+	public void shouldHonorIndexedPropertiesWithRecursiveMappings() {
+
+		List<IndexInfo> indexInfo = templateOne.indexOps(ConcreteCustomer.class).getIndexInfo();
+		
+		assertThat(indexInfo, hasSize(greaterThan(0)));
+		assertThat(indexInfo, Matchers.<IndexInfo> hasItem(hasProperty("name", is("firstName"))));
 	}
 }
