@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 the original author or authors.
+ * Copyright 2014-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,22 +16,24 @@
 package org.springframework.data.mongodb.core.index;
 
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolver.IndexDefinitionHolder;
+import org.springframework.data.util.TypeInformation;
 
 /**
  * {@link IndexResolver} finds those {@link IndexDefinition}s to be created for a given class.
  * 
  * @author Christoph Strobl
+ * @author Thomas Darimont
  * @since 1.5
  */
 interface IndexResolver {
 
 	/**
-	 * Find and create {@link IndexDefinition}s for properties of given {@code type}. {@link IndexDefinition}s are created
+	 * Find and create {@link IndexDefinition}s for properties of given {@link TypeInformation}. {@link IndexDefinition}s are created
 	 * for properties and types with {@link Indexed}, {@link CompoundIndexes} or {@link GeoSpatialIndexed}.
 	 * 
-	 * @param type
+	 * @param typeInformation
 	 * @return Empty {@link Iterable} in case no {@link IndexDefinition} could be resolved for type.
 	 */
-	Iterable<? extends IndexDefinitionHolder> resolveIndexForClass(Class<?> type);
+	Iterable<? extends IndexDefinitionHolder> resolveIndexFor(TypeInformation<?> typeInformation);
 
 }
