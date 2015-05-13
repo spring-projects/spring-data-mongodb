@@ -104,6 +104,18 @@ public class GridFsTemplateIntegrationTests {
 	}
 
 	/**
+	 * @see DATAMONGO-1220
+	 */
+	@Test
+	public void marshalsGivenId() throws IOException {
+
+		GridFSFile reference = operations.store(resource.getInputStream(), "foo.xml", null, "42", null);
+		List<GridFSDBFile> result = operations.find(query(whereFilename().is("foo.xml")));
+		assertThat(result.size(), is(1));
+		assertThat(result.get(0).getId().toString(), is("42"));
+	}
+
+	/**
 	 * @see DATAMONGO-6
 	 */
 	@Test

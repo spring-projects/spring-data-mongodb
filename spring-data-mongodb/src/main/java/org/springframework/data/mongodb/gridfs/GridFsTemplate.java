@@ -153,11 +153,23 @@ public class GridFsTemplate implements GridFsOperations, ResourcePatternResolver
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#store(java.io.InputStream, java.lang.String, com.mongodb.DBObject)
 	 */
-	public GridFSFile store(InputStream content, String filename, String contentType, DBObject metadata) {
+	 public GridFSFile store(InputStream content, String filename, String contentType, DBObject metadata) {
+		  return this.store(content, filename, contentType, null, metadata);
+	 }
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#store(java.io.InputStream, java.lang.String, java.lang.Object, com.mongodb.DBObject)
+	 */
+	public GridFSFile store(InputStream content, String filename, String contentType, Object id, DBObject metadata) {
 
 		Assert.notNull(content);
 
 		GridFSInputFile file = getGridFs().createFile(content);
+
+		if (id != null) {
+		   file.setId(id);
+		}
 
 		if (filename != null) {
 			file.setFilename(filename);

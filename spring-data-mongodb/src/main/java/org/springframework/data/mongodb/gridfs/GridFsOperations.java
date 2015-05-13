@@ -118,6 +118,18 @@ public interface GridFsOperations extends ResourcePatternResolver {
 	GridFSFile store(InputStream content, String filename, String contentType, DBObject metadata);
 
 	/**
+	 * Stores the given content into a file with the given name and content type using the given id and the given metadata.
+	 * 
+	 * @param content must not be {@literal null}.
+	 * @param filename must not be {@literal null} or empty.
+	 * @param contentType can be {@literal null}.
+	 * @param id can be {@literal null}.
+	 * @param metadata can be {@literal null}.
+	 * @return the {@link GridFSFile} just created
+	 */
+	GridFSFile store(InputStream content, String filename, String contentType, Object id, DBObject metadata);
+
+	/**
 	 * Returns all files matching the given query. Note, that currently {@link Sort} criterias defined at the
 	 * {@link Query} will not be regarded as MongoDB does not support ordering for GridFS file access.
 	 * 
