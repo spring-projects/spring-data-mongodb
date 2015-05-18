@@ -775,6 +775,21 @@ public class QueryMapperUnitTests {
 		assertThat(dbo, isBsonObject().containing("geoJsonPoint.$geoWithin.$geometry.type", "Polygon"));
 	}
 
+	/**
+	 * @see DATAMONGO-1134
+	 */
+	@Test
+	public void intersectsShouldUseGeoJsonRepresentationCorrectly() {
+
+		Query query = query(where("geoJsonPoint").intersects(
+				new GeoJsonPolygon(new Point(0, 0), new Point(100, 100), new Point(100, 0), new Point(0, 0))));
+
+		DBObject dbo = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(ClassWithGeoTypes.class));
+
+		assertThat(dbo, isBsonObject().containing("geoJsonPoint.$geoIntersects.$geometry.type", "Polygon"));
+		assertThat(dbo, isBsonObject().containing("geoJsonPoint.$geoIntersects.$geometry.coordinates"));
+	}
+
 	@Document
 	public class Foo {
 		@Id private ObjectId id;

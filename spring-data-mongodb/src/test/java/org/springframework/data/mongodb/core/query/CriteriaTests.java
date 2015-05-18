@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2014 the original author or authors.
+ * Copyright 2010-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,12 +17,13 @@ package org.springframework.data.mongodb.core.query;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
+import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
 
 import org.junit.Test;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
+import org.springframework.data.mongodb.core.geo.GeoJsonLineString;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
-import org.springframework.data.mongodb.test.util.IsBsonObject;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.BasicDBObjectBuilder;
@@ -176,7 +177,7 @@ public class CriteriaTests {
 
 		DBObject dbo = new Criteria("foo").near(new GeoJsonPoint(100, 200)).getCriteriaObject();
 
-		assertThat(dbo, IsBsonObject.isBsonObject().containing("foo.$near.$geometry", new GeoJsonPoint(100, 200)));
+		assertThat(dbo, isBsonObject().containing("foo.$near.$geometry", new GeoJsonPoint(100, 200)));
 	}
 
 	/**
@@ -187,7 +188,7 @@ public class CriteriaTests {
 
 		DBObject dbo = new Criteria("foo").near(new Point(100, 200)).getCriteriaObject();
 
-		assertThat(dbo, IsBsonObject.isBsonObject().notContaining("foo.$near.$geometry"));
+		assertThat(dbo, isBsonObject().notContaining("foo.$near.$geometry"));
 	}
 
 	/**
@@ -198,7 +199,7 @@ public class CriteriaTests {
 
 		DBObject dbo = new Criteria("foo").near(new GeoJsonPoint(100, 200)).maxDistance(50D).getCriteriaObject();
 
-		assertThat(dbo, IsBsonObject.isBsonObject().containing("foo.$near.$maxDistance", 50D));
+		assertThat(dbo, isBsonObject().containing("foo.$near.$maxDistance", 50D));
 	}
 
 	/**
@@ -209,7 +210,7 @@ public class CriteriaTests {
 
 		DBObject dbo = new Criteria("foo").nearSphere(new GeoJsonPoint(100, 200)).maxDistance(50D).getCriteriaObject();
 
-		assertThat(dbo, IsBsonObject.isBsonObject().containing("foo.$nearSphere.$maxDistance", 50D));
+		assertThat(dbo, isBsonObject().containing("foo.$nearSphere.$maxDistance", 50D));
 	}
 
 	/**
@@ -220,7 +221,7 @@ public class CriteriaTests {
 
 		DBObject dbo = new Criteria("foo").near(new GeoJsonPoint(100, 200)).minDistance(50D).getCriteriaObject();
 
-		assertThat(dbo, IsBsonObject.isBsonObject().containing("foo.$near.$minDistance", 50D));
+		assertThat(dbo, isBsonObject().containing("foo.$near.$minDistance", 50D));
 	}
 
 	/**
@@ -231,7 +232,7 @@ public class CriteriaTests {
 
 		DBObject dbo = new Criteria("foo").nearSphere(new GeoJsonPoint(100, 200)).minDistance(50D).getCriteriaObject();
 
-		assertThat(dbo, IsBsonObject.isBsonObject().containing("foo.$nearSphere.$minDistance", 50D));
+		assertThat(dbo, isBsonObject().containing("foo.$nearSphere.$minDistance", 50D));
 	}
 
 	/**
@@ -243,8 +244,28 @@ public class CriteriaTests {
 		DBObject dbo = new Criteria("foo").nearSphere(new GeoJsonPoint(100, 200)).minDistance(50D).maxDistance(100D)
 				.getCriteriaObject();
 
-		assertThat(dbo, IsBsonObject.isBsonObject().containing("foo.$nearSphere.$minDistance", 50D));
-		assertThat(dbo, IsBsonObject.isBsonObject().containing("foo.$nearSphere.$maxDistance", 100D));
+		assertThat(dbo, isBsonObject().containing("foo.$nearSphere.$minDistance", 50D));
+		assertThat(dbo, isBsonObject().containing("foo.$nearSphere.$maxDistance", 100D));
+	}
+
+	/**
+	 * @see DATAMONGO-1134
+	 */
+	@Test(expected = IllegalArgumentException.class)
+	public void intersectsShouldThrowExceptionWhenCalledWihtNullValue() {
+		new Criteria("foo").intersects(null);
+	}
+
+	/**
+	 * @see DATAMONGO-1134
+	 */
+	@Test
+	public void intersectsShouldWrapGeoJsonTypeInGeometryCorrectly() {
+
+		GeoJsonLineString lineString = new GeoJsonLineString(new Point(0, 0), new Point(10, 10));
+		DBObject dbo = new Criteria("foo").intersects(lineString).getCriteriaObject();
+
+		assertThat(dbo, isBsonObject().containing("foo.$geoIntersects.$geometry", lineString));
 	}
 
 }

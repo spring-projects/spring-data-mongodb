@@ -433,6 +433,23 @@ public class Criteria implements CriteriaDefinition {
 	}
 
 	/**
+	 * Creates criterion using {@code $geoIntersects} operator which matches intersections of the given {@literal geoJson}
+	 * structure and the documents one. <br />
+	 * Requires MongoDB 2.4 or better.
+	 * 
+	 * @param geoJson must not be {@literal null}.
+	 * @return
+	 * @since 1.8
+	 */
+	@SuppressWarnings("rawtypes")
+	public Criteria intersects(GeoJson geoJson) {
+
+		Assert.notNull(geoJson, "GeoJson must not be null!");
+		criteria.put("$geoIntersects", geoJson);
+		return this;
+	}
+
+	/**
 	 * Creates a geospatical criterion using a {@literal $maxDistance} operation, for use with $near
 	 * 
 	 * @see http://docs.mongodb.org/manual/reference/operator/query/maxDistance/
