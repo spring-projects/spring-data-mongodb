@@ -222,7 +222,7 @@ public class QueryMapper {
 	protected DBObject getMappedKeyword(Keyword keyword, MongoPersistentEntity<?> entity) {
 
 		// $or/$nor
-		if (keyword.isOrOrNor() || keyword.hasIterableValue()) {
+		if (keyword.isOrOrNor() || (keyword.hasIterableValue() && !keyword.isGeometry())) {
 
 			Iterable<?> conditions = keyword.getValue();
 			BasicDBList newConditions = new BasicDBList();
@@ -550,6 +550,16 @@ public class QueryMapper {
 
 		public boolean isOrOrNor() {
 			return key.matches(N_OR_PATTERN);
+		}
+
+		/**
+		 * Returns whether the current keyword is the {@code $geometry} keyword.
+		 * 
+		 * @return
+		 * @since 1.8
+		 */
+		public boolean isGeometry() {
+			return "$geometry".equalsIgnoreCase(key);
 		}
 
 		public boolean hasIterableValue() {

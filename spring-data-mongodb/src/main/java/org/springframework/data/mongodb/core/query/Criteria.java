@@ -190,8 +190,8 @@ public class Criteria implements CriteriaDefinition {
 	 */
 	public Criteria in(Object... o) {
 		if (o.length > 1 && o[1] instanceof Collection) {
-			throw new InvalidMongoDbApiUsageException("You can only pass in one argument of type "
-					+ o[1].getClass().getName());
+			throw new InvalidMongoDbApiUsageException(
+					"You can only pass in one argument of type " + o[1].getClass().getName());
 		}
 		criteria.put("$in", Arrays.asList(o));
 		return this;
@@ -433,7 +433,23 @@ public class Criteria implements CriteriaDefinition {
 	}
 
 	/**
-	 * Creates a geospatical criterion using a {@literal $maxDistance} operation, for use with $near
+	 * Creates criterion using {@code $geoIntersects} operator which matches intersections of the given {@code geoJson}
+	 * structure and the documents one. Requires MongoDB 2.4 or better.
+	 * 
+	 * @param geoJson must not be {@literal null}.
+	 * @return
+	 * @since 1.8
+	 */
+	@SuppressWarnings("rawtypes")
+	public Criteria intersects(GeoJson geoJson) {
+
+		Assert.notNull(geoJson, "GeoJson must not be null!");
+		criteria.put("$geoIntersects", geoJson);
+		return this;
+	}
+
+	/**
+	 * Creates a geo-spatial criterion using a {@literal $maxDistance} operation, for use with $near
 	 * 
 	 * @see http://docs.mongodb.org/manual/reference/operator/query/maxDistance/
 	 * @param maxDistance
@@ -526,8 +542,8 @@ public class Criteria implements CriteriaDefinition {
 	private Criteria registerCriteriaChainElement(Criteria criteria) {
 
 		if (lastOperatorWasNot()) {
-			throw new IllegalArgumentException("operator $not is not allowed around criteria chain element: "
-					+ criteria.getCriteriaObject());
+			throw new IllegalArgumentException(
+					"operator $not is not allowed around criteria chain element: " + criteria.getCriteriaObject());
 		} else {
 			criteriaChain.add(criteria);
 		}
