@@ -123,7 +123,7 @@ public abstract class MongoDbUtils {
 
 		DB db = mongo.getDB(databaseName);
 
-		if (requiresAuthDbAuthentication(credentials)) {
+		if (!(mongo instanceof MongoClient) && requiresAuthDbAuthentication(credentials)) {
 			ReflectiveDbInvoker.authenticate(mongo, db, credentials, authenticationDatabaseName);
 		}
 
