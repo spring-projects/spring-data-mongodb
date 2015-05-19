@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2013 the original author or authors.
+ * Copyright 2012-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
+import static org.junit.Assume.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
@@ -27,35 +28,37 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.mockito.stubbing.Answer;
+import org.springframework.data.authentication.UserCredentials;
+import org.springframework.data.mongodb.CannotGetMongoDbConnectionException;
+import org.springframework.data.mongodb.util.MongoClientVersion;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.transaction.support.TransactionSynchronizationUtils;
 
 import com.mongodb.DB;
 import com.mongodb.Mongo;
+import com.mongodb.MongoClient;
 
 /**
  * Unit tests for {@link MongoDbUtils}.
  * 
  * @author Oliver Gierke
  * @author Randy Watler
+ * @author Christoph Strobl
  */
 @RunWith(MockitoJUnitRunner.class)
 public class MongoDbUtilsUnitTests {
 
 	@Mock Mongo mongo;
+	@Mock MongoClient mongoClientMock;
+	@Mock DB dbMock;
 
 	@Before
 	public void setUp() throws Exception {
 
-		when(mongo.getDB(anyString())).then(new Answer<DB>() {
-			public DB answer(InvocationOnMock invocation) throws Throwable {
-				return mock(DB.class);
-			}
-		});
+		when(mongo.getDB(anyString())).thenReturn(dbMock).thenReturn(mock(DB.class));
+		when(mongoClientMock.getDB(anyString())).thenReturn(dbMock);
 
 		TransactionSynchronizationManager.initSynchronization();
 	}
@@ -149,6 +152,38 @@ public class MongoDbUtilsUnitTests {
 		// ensure transaction synchronization manager has no bound
 		// transaction resources at end of test
 		assertThat(TransactionSynchronizationManager.getResourceMap().isEmpty(), is(true));
+	}
+
+	/**
+	 * @see DATAMONGO-1218
+	 */
+	@Test
+	@SuppressWarnings("deprecation")
+	public void getDBDAuthenticateViaAuthDbWhenCalledWithMongoInstance() {
+
+		assumeThat(MongoClientVersion.isMongo3Driver(), is(false));
+
+		when(dbMock.getName()).thenReturn("db");
+
+		try {
+			MongoDbUtils.getDB(mongo, "db", new UserCredentials("shallan", "davar"), "authdb");
+		} catch (CannotGetMongoDbConnectionException e) {
+			// need to catch that one since we cannot answer the reflective call sufficiently
+		}
+
+		verify(mongo, times(1)).getDB("authdb");
+	}
+
+	/**
+	 * @see DATAMONGO-1218
+	 */
+	@Test
+	@SuppressWarnings("deprecation")
+	public void getDBDShouldSkipAuthenticationViaAuthDbWhenCalledWithMongoClientInstance() {
+
+		MongoDbUtils.getDB(mongoClientMock, "db", new UserCredentials("dalinar", "kholin"), "authdb");
+
+		verify(mongoClientMock, never()).getDB("authdb");
 	}
 
 	/**
