@@ -41,6 +41,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import com.mongodb.DB;
 import com.mongodb.Mongo;
 import com.mongodb.MongoClient;
+import com.mongodb.MongoClientURI;
 import com.mongodb.MongoURI;
 import com.mongodb.WriteConcern;
 
@@ -172,6 +173,29 @@ public class MongoDbFactoryParserIntegrationTests {
 	@Test(expected = BeanDefinitionParsingException.class)
 	public void rejectsUriPlusDetailedConfiguration() {
 		reader.loadBeanDefinitions(new ClassPathResource("namespace/mongo-uri-and-details.xml"));
+	}
+
+	/**
+	 * @see DATAMONGO-1218
+	 */
+	@Test
+	public void setsUpMongoDbFactoryUsingAMongoClientUri() {
+
+		reader.loadBeanDefinitions(new ClassPathResource("namespace/mongo-client-uri.xml"));
+		BeanDefinition definition = factory.getBeanDefinition("mongoDbFactory");
+		ConstructorArgumentValues constructorArguments = definition.getConstructorArgumentValues();
+
+		assertThat(constructorArguments.getArgumentCount(), is(1));
+		ValueHolder argument = constructorArguments.getArgumentValue(0, MongoClientURI.class);
+		assertThat(argument, is(notNullValue()));
+	}
+
+	/**
+	 * @see DATAMONGO-1218
+	 */
+	@Test(expected = BeanDefinitionParsingException.class)
+	public void rejectsClientUriPlusDetailedConfiguration() {
+		reader.loadBeanDefinitions(new ClassPathResource("namespace/mongo-client-uri-and-details.xml"));
 	}
 
 	private static void assertWriteConcern(ClassPathXmlApplicationContext ctx, WriteConcern expectedWriteConcern) {

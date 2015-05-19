@@ -107,7 +107,13 @@ Deprecated since 1.7 - Please use MongoClient internal authentication. The passw
 			<xsd:attribute name="uri" type="xsd:string" use="optional">
 				<xsd:annotation>
 					<xsd:documentation><![CDATA[
-The Mongo URI string.]]></xsd:documentation>
+Deprecated since 1.8 - Please use client-uri instead. The Mongo URI string.]]></xsd:documentation>
+				</xsd:annotation>
+			</xsd:attribute>
+			<xsd:attribute name="client-uri" type="xsd:string" use="optional">
+				<xsd:annotation>
+					<xsd:documentation><![CDATA[
+The MongoClientURI string.]]></xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
 			<xsd:attribute name="write-concern">
