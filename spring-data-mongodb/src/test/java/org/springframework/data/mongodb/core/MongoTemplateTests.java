@@ -73,6 +73,7 @@ import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.util.CloseableIterator;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.util.ObjectUtils;
@@ -2740,6 +2741,44 @@ public class MongoTemplateTests {
 
 		assertThat(result, hasSize(2));
 		assertThat(result, hasItems(newYork, washington));
+	}
+
+	/**
+	 * @see DATAMONGO-1208
+	 */
+	@Test
+	public void takesSortIntoAccountWhenStreaming() {
+
+		Person youngestPerson = new Person("John", 20);
+		Person oldestPerson = new Person("Jane", 42);
+
+		template.insertAll(Arrays.asList(oldestPerson, youngestPerson));
+
+		Query q = new Query();
+		q.with(new Sort(Direction.ASC, "age"));
+		CloseableIterator<Person> stream = template.stream(q, Person.class);
+
+		assertThat(stream.next().getAge(), is(youngestPerson.getAge()));
+		assertThat(stream.next().getAge(), is(oldestPerson.getAge()));
+	}
+
+	/**
+	 * @see DATAMONGO-1208
+	 */
+	@Test
+	public void takesLimitIntoAccountWhenStreaming() {
+		
+		Person youngestPerson = new Person("John", 20);
+		Person oldestPerson = new Person("Jane", 42);
+
+		template.insertAll(Arrays.asList(oldestPerson, youngestPerson));
+
+		Query q = new Query();
+		q.with(new PageRequest(0, 1, new Sort(Direction.ASC, "age")));
+		CloseableIterator<Person> stream = template.stream(q, Person.class);
+
+		assertThat(stream.next().getAge(), is(youngestPerson.getAge()));
+		assertThat(stream.hasNext(), is(false));
 	}
 
 	static class DoucmentWithNamedIdField {
