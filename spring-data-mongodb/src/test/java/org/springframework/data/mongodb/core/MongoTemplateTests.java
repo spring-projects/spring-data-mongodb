@@ -25,15 +25,9 @@ import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.core.query.Update.*;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
+import com.mongodb.*;
 import org.bson.types.ObjectId;
 import org.joda.time.DateTime;
 import org.junit.After;
@@ -44,11 +38,8 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.converter.Converter;
-import org.springframework.dao.DataAccessException;
-import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.*;
 import org.springframework.dao.DuplicateKeyException;
-import org.springframework.dao.InvalidDataAccessApiUsageException;
-import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.annotation.Version;
@@ -58,11 +49,7 @@ import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.data.mongodb.MongoDbFactory;
-import org.springframework.data.mongodb.core.convert.CustomConversions;
-import org.springframework.data.mongodb.core.convert.DbRefResolver;
-import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
-import org.springframework.data.mongodb.core.convert.LazyLoadingProxy;
-import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.*;
 import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.index.Index.Duplicates;
 import org.springframework.data.mongodb.core.index.IndexField;
@@ -73,26 +60,15 @@ import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.util.CloseableIterator;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.CommandResult;
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
-import com.mongodb.DBRef;
-import com.mongodb.Mongo;
-import com.mongodb.MongoException;
-import com.mongodb.ReadPreference;
-import com.mongodb.WriteConcern;
-import com.mongodb.WriteResult;
-
 /**
  * Integration test for {@link MongoTemplate}.
- * 
+ *
  * @author Oliver Gierke
  * @author Thomas Risberg
  * @author Amol Nayak
@@ -2740,6 +2716,42 @@ public class MongoTemplateTests {
 
 		assertThat(result, hasSize(2));
 		assertThat(result, hasItems(newYork, washington));
+	}
+
+	/**
+	 * @see DATAMONGO-1208
+	 */
+	@Test
+	public void takesSortIntoAccountWhenStreaming() {
+		Person youngestPerson = new Person("John", 20);
+		Person oldestPerson = new Person("Jane", 42);
+
+		template.insertAll(Arrays.asList(oldestPerson, youngestPerson));
+
+		Query q = new Query();
+		q.with(new Sort(Direction.ASC, "age"));
+		CloseableIterator<Person> stream = template.stream(q, Person.class);
+
+		assertThat(stream.next().getAge(), is(youngestPerson.getAge()));
+		assertThat(stream.next().getAge(), is(oldestPerson.getAge()));
+	}
+
+	/**
+	 * @see DATAMONGO-1208
+	 */
+	@Test
+	public void takesLimitIntoAccountWhenStreaming() {
+		Person youngestPerson = new Person("John", 20);
+		Person oldestPerson = new Person("Jane", 42);
+
+		template.insertAll(Arrays.asList(oldestPerson, youngestPerson));
+
+		Query q = new Query();
+		q.with(new PageRequest(0, 1, new Sort(Direction.ASC, "age")));
+		CloseableIterator<Person> stream = template.stream(q, Person.class);
+
+		assertThat(stream.next().getAge(), is(youngestPerson.getAge()));
+		assertThat(stream.hasNext(), is(false));
 	}
 
 	static class DoucmentWithNamedIdField {
