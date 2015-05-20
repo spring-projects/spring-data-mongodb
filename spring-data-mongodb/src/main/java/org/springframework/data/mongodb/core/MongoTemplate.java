@@ -136,6 +136,7 @@ import com.mongodb.util.JSONParseException;
  * @author Thomas Darimont
  * @author Chuong Ngo
  * @author Christoph Strobl
+ * @author Doménique Tilleuil
  */
 @SuppressWarnings("deprecation")
 public class MongoTemplate implements MongoOperations, ApplicationContextAware {
@@ -335,9 +336,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				DBObject mappedQuery = queryMapper.getMappedObject(query.getQueryObject(), persistentEntity);
 
 				DBCursor cursor = collection.find(mappedQuery, mappedFields);
+				QueryCursorPreparer cursorPreparer = new QueryCursorPreparer(query, entityType);
+
 				ReadDbObjectCallback<T> readCallback = new ReadDbObjectCallback<T>(mongoConverter, entityType);
 
-				return new CloseableIterableCusorAdapter<T>(cursor, exceptionTranslator, readCallback);
+				return new CloseableIterableCusorAdapter<T>(cursorPreparer.prepare(cursor), exceptionTranslator, readCallback);
 			}
 		});
 	}
