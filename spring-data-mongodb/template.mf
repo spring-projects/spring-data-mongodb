@@ -23,4 +23,5 @@ Import-Template:
  org.springframework.*;version="${spring:[=.=.=.=,+1.0.0)}",
  org.springframework.data.*;version="${springdata.commons:[=.=.=.=,+1.0.0)}",
  org.springframework.data.mongodb.*;version="${project.version:[=.=.=.=,+1.0.0)}",
- org.w3c.dom.*;version="0"
+ org.w3c.dom.*;version="0",
+ rx.*;version="0"

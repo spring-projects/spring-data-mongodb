@@ -35,6 +35,8 @@ import org.springframework.data.geo.Polygon;
 import org.springframework.data.mongodb.repository.Person.Sex;
 import org.springframework.data.querydsl.QueryDslPredicateExecutor;
 
+import rx.Observable;
+
 /**
  * Sample repository managing {@link Person} entities.
  * 
@@ -333,4 +335,10 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	 */
 	@Query("{ firstname : { $in : ?0 }}")
 	Stream<Person> findByCustomQueryWithStreamingCursorByFirstnames(List<String> firstnames);
+
+	/**
+	 * @see DATAMONGO-1197
+	 */
+	@Query("{}")
+	Observable<Person> streamAllViaObservable();
 }
