@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2014 the original author or authors.
+ * Copyright 2011-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,6 @@ import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexRes
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
-import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.util.Assert;
 
 /**
@@ -43,8 +42,7 @@ import org.springframework.util.Assert;
  * @author Laurent Canet
  * @author Christoph Strobl
  */
-public class MongoPersistentEntityIndexCreator implements
-		ApplicationListener<MappingContextEvent<MongoPersistentEntity<?>, MongoPersistentProperty>> {
+public class MongoPersistentEntityIndexCreator implements ApplicationListener<MappingContextEvent<?, ?>> {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(MongoPersistentEntityIndexCreator.class);
 
@@ -54,7 +52,7 @@ public class MongoPersistentEntityIndexCreator implements
 	private final IndexResolver indexResolver;
 
 	/**
-	 * Creats a new {@link MongoPersistentEntityIndexCreator} for the given {@link MongoMappingContext} and
+	 * Creates a new {@link MongoPersistentEntityIndexCreator} for the given {@link MongoMappingContext} and
 	 * {@link MongoDbFactory}.
 	 * 
 	 * @param mappingContext must not be {@literal null}.
@@ -65,7 +63,7 @@ public class MongoPersistentEntityIndexCreator implements
 	}
 
 	/**
-	 * Creats a new {@link MongoPersistentEntityIndexCreator} for the given {@link MongoMappingContext} and
+	 * Creates a new {@link MongoPersistentEntityIndexCreator} for the given {@link MongoMappingContext} and
 	 * {@link MongoDbFactory}.
 	 * 
 	 * @param mappingContext must not be {@literal null}.
@@ -92,7 +90,7 @@ public class MongoPersistentEntityIndexCreator implements
 	 * (non-Javadoc)
 	 * @see org.springframework.context.ApplicationListener#onApplicationEvent(org.springframework.context.ApplicationEvent)
 	 */
-	public void onApplicationEvent(MappingContextEvent<MongoPersistentEntity<?>, MongoPersistentProperty> event) {
+	public void onApplicationEvent(MappingContextEvent<?, ?> event) {
 
 		if (!event.wasEmittedBy(mappingContext)) {
 			return;
@@ -102,7 +100,7 @@ public class MongoPersistentEntityIndexCreator implements
 
 		// Double check type as Spring infrastructure does not consider nested generics
 		if (entity instanceof MongoPersistentEntity) {
-			checkForIndexes(event.getPersistentEntity());
+			checkForIndexes((MongoPersistentEntity<?>) entity);
 		}
 	}
 
@@ -132,8 +130,8 @@ public class MongoPersistentEntityIndexCreator implements
 	}
 
 	private void createIndex(IndexDefinitionHolder indexDefinition) {
-		mongoDbFactory.getDb().getCollection(indexDefinition.getCollection())
-				.createIndex(indexDefinition.getIndexKeys(), indexDefinition.getIndexOptions());
+		mongoDbFactory.getDb().getCollection(indexDefinition.getCollection()).createIndex(indexDefinition.getIndexKeys(),
+				indexDefinition.getIndexOptions());
 	}
 
 	/**
