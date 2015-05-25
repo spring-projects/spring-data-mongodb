@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2013 the original author or authors.
+ * Copyright 2011-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import java.math.BigInteger;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.convert.ConversionService;
-import org.springframework.core.convert.support.ConversionServiceFactory;
+import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.convert.EntityInstantiators;
 import org.springframework.data.mongodb.core.convert.MongoConverters.BigIntegerToObjectIdConverter;
@@ -46,10 +46,8 @@ public abstract class AbstractMongoConverter implements MongoConverter, Initiali
 	 * 
 	 * @param conversionService
 	 */
-	@SuppressWarnings("deprecation")
 	public AbstractMongoConverter(GenericConversionService conversionService) {
-		this.conversionService = conversionService == null ? ConversionServiceFactory.createDefaultConversionService()
-				: conversionService;
+		this.conversionService = conversionService == null ? new DefaultConversionService() : conversionService;
 	}
 
 	/**
