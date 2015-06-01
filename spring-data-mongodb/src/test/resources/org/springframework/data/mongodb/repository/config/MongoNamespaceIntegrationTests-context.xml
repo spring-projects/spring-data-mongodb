@@ -22,4 +22,6 @@
 		<repository:exclude-filter type="regex" expression=".*MongoRepository"/>
 	</mongo:repositories>
 
+	<bean class="org.springframework.data.mongodb.repository.SampleEvaluationContextExtension"/>
+
 </beans>

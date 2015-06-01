@@ -217,7 +217,7 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 	/**
 	 * Returns the given object as {@link Collection}. Will do a copy of it if it implements {@link Iterable} or is an
 	 * array. Will return an empty {@link Collection} in case {@literal null} is given. Will wrap all other types into a
-	 * single-element collction
+	 * single-element collection.
 	 * 
 	 * @param source
 	 * @return
@@ -240,8 +240,9 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 
 		return source.getClass().isArray() ? CollectionUtils.arrayToList(source) : Collections.singleton(source);
 	}
-	
-	/* (non-Javadoc)
+
+	/*
+	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.repository.query.MongoParameterAccessor#getValues()
 	 */
 	@Override

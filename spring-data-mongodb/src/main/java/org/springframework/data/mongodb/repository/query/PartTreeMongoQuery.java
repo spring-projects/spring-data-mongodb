@@ -22,7 +22,6 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.TextCriteria;
-import org.springframework.data.repository.query.EvaluationContextProvider;
 import org.springframework.data.repository.query.QueryMethod;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.repository.query.parser.PartTree;
@@ -48,12 +47,10 @@ public class PartTreeMongoQuery extends AbstractMongoQuery {
 	 * 
 	 * @param method must not be {@literal null}.
 	 * @param mongoOperations must not be {@literal null}.
-	 * @param evaluationContextProvider must not be {@literal null}.
 	 */
-	public PartTreeMongoQuery(MongoQueryMethod method, MongoOperations mongoOperations,
-			EvaluationContextProvider evaluationContextProvider) {
+	public PartTreeMongoQuery(MongoQueryMethod method, MongoOperations mongoOperations) {
 
-		super(method, mongoOperations, evaluationContextProvider);
+		super(method, mongoOperations);
 		this.tree = new PartTree(method.getName(), method.getEntityInformation().getJavaType());
 		this.isGeoNearQuery = method.isGeoNearQuery();
 		this.context = mongoOperations.getConverter().getMappingContext();

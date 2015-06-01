@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.repository.support;
 
-import static org.springframework.data.querydsl.QueryDslUtils.QUERY_DSL_PRESENT;
+import static org.springframework.data.querydsl.QueryDslUtils.*;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
@@ -51,7 +51,7 @@ import org.springframework.util.Assert;
 public class MongoRepositoryFactory extends RepositoryFactorySupport {
 
 	private static final SpelExpressionParser EXPRESSION_PARSER = new SpelExpressionParser();
-	
+
 	private final MongoOperations mongoOperations;
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 
@@ -92,8 +92,8 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 		return getTargetRepositoryViaReflection(information, entityInformation, mongoOperations);
 	}
 
-	
-	/* (non-Javadoc)
+	/* 
+	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.core.support.RepositoryFactorySupport#getQueryLookupStrategy(org.springframework.data.repository.query.QueryLookupStrategy.Key, org.springframework.data.repository.query.EvaluationContextProvider)
 	 */
 	@Override
@@ -112,8 +112,8 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(domainClass);
 
 		if (entity == null) {
-			throw new MappingException(String.format("Could not lookup mapping metadata for domain class %s!",
-					domainClass.getName()));
+			throw new MappingException(
+					String.format("Could not lookup mapping metadata for domain class %s!", domainClass.getName()));
 		}
 
 		return new MappingMongoEntityInformation<T, ID>((MongoPersistentEntity<T>) entity);
@@ -144,11 +144,12 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 
 			if (namedQueries.hasQuery(namedQueryName)) {
 				String namedQuery = namedQueries.getQuery(namedQueryName);
-				return new StringBasedMongoQuery(namedQuery, queryMethod, mongoOperations, evaluationContextProvider, EXPRESSION_PARSER);
+				return new StringBasedMongoQuery(namedQuery, queryMethod, mongoOperations, EXPRESSION_PARSER,
+						evaluationContextProvider);
 			} else if (queryMethod.hasAnnotatedQuery()) {
-				return new StringBasedMongoQuery(queryMethod, mongoOperations, evaluationContextProvider, EXPRESSION_PARSER);
+				return new StringBasedMongoQuery(queryMethod, mongoOperations, EXPRESSION_PARSER, evaluationContextProvider);
 			} else {
-				return new PartTreeMongoQuery(queryMethod, mongoOperations, evaluationContextProvider);
+				return new PartTreeMongoQuery(queryMethod, mongoOperations);
 			}
 		}
 	}

@@ -15,14 +15,6 @@
  */
 package org.springframework.data.mongodb.repository;
 
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
-
-import java.util.List;
-
-import org.junit.Test;
-import org.springframework.data.mongodb.repository.SampleEvaluationContextExtension.SampleSecurityContextHolder;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
@@ -32,43 +24,4 @@ import org.springframework.test.context.ContextConfiguration;
  * @author Thomas Darimont
  */
 @ContextConfiguration
-public class PersonRepositoryIntegrationTests extends AbstractPersonRepositoryIntegrationTests {
-
-	/**
-	 * @see DATAMONGO-990 
-	 */
-	@Test
-	public void shouldFindByFirstnameForSpELExpressionWithParameterIndexOnly() {
-
-		List<Person> users = repository.findWithSpelByFirstnameForSpELExpressionWithParameterIndexOnly("Dave");
-
-		assertThat(users, hasSize(1));
-		assertThat(users.get(0), is(dave));
-	}
-	
-	/**
-	 * @see DATAMONGO-990 
-	 */
-	@Test
-	public void shouldFindByFirstnameAndCurrentUserWithCustomQuery() {
-
-		SampleSecurityContextHolder.getCurrent().setPrincipal(dave);
-		List<Person> users = repository.findWithSpelByFirstnameAndCurrentUserWithCustomQuery("Dave");
-
-		assertThat(users, hasSize(1));
-		assertThat(users.get(0), is(dave));
-	}
-	
-	/**
-	 * @see DATAMONGO-990 
-	 */
-	@Test
-	public void shouldFindByFirstnameForSpELExpressionWithParameterVariableOnly() {
-
-		List<Person> users = repository.findWithSpelByFirstnameForSpELExpressionWithParameterVariableOnly("Dave");
-
-		assertThat(users, hasSize(1));
-		assertThat(users.get(0), is(dave));
-	}	
-
-}
+public class PersonRepositoryIntegrationTests extends AbstractPersonRepositoryIntegrationTests {}

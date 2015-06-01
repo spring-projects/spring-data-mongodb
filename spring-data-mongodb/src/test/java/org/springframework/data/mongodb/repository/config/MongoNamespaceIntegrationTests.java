@@ -45,8 +45,7 @@ public class MongoNamespaceIntegrationTests extends AbstractPersonRepositoryInte
 	DefaultListableBeanFactory factory;
 	BeanDefinitionReader reader;
 
-	@Autowired
-	ApplicationContext context;
+	@Autowired ApplicationContext context;
 
 	@Before
 	@Override

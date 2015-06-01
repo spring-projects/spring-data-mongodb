@@ -15,14 +15,10 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.nullValue;
-import static org.junit.Assert.assertThat;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -58,7 +54,6 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.Meta;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.repository.core.RepositoryMetadata;
-import org.springframework.data.repository.query.DefaultEvaluationContextProvider;
 
 import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DBObject;
@@ -148,8 +143,8 @@ public class AbstractMongoQueryUnitTests {
 	public void testDeleteExecutionReturnsNrDocumentsDeletedFromWriteResult() {
 
 		when(writeResultMock.getN()).thenReturn(100);
-		when(this.mongoOperationsMock.remove(Matchers.any(Query.class), eq(Person.class), eq("persons"))).thenReturn(
-				writeResultMock);
+		when(this.mongoOperationsMock.remove(Matchers.any(Query.class), eq(Person.class), eq("persons")))
+				.thenReturn(writeResultMock);
 
 		MongoQueryFake query = createQueryForMethod("deletePersonByLastname", String.class);
 		query.setDeleteQuery(true);
@@ -320,7 +315,7 @@ public class AbstractMongoQueryUnitTests {
 		private boolean isDeleteQuery;
 
 		public MongoQueryFake(MongoQueryMethod method, MongoOperations operations) {
-			super(method, operations, DefaultEvaluationContextProvider.INSTANCE);
+			super(method, operations);
 		}
 
 		@Override

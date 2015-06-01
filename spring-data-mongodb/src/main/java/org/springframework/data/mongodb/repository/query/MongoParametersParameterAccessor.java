@@ -120,12 +120,13 @@ public class MongoParametersParameterAccessor extends ParametersParameterAccesso
 			return ((TextCriteria) fullText);
 		}
 
-		throw new IllegalArgumentException(String.format(
-				"Expected full text parameter to be one of String, Term or TextCriteria but found %s.",
-				ClassUtils.getShortName(fullText.getClass())));
+		throw new IllegalArgumentException(
+				String.format("Expected full text parameter to be one of String, Term or TextCriteria but found %s.",
+						ClassUtils.getShortName(fullText.getClass())));
 	}
-	
-	/* (non-Javadoc)
+
+	/* 
+	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.repository.query.MongoParameterAccessor#getValues()
 	 */
 	@Override

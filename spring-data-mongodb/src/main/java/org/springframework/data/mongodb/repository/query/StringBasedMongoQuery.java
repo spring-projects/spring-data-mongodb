@@ -57,36 +57,40 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 	private final List<ParameterBinding> queryParameterBindings;
 	private final List<ParameterBinding> fieldSpecParameterBindings;
 	private final SpelExpressionParser expressionParser;
+	private final EvaluationContextProvider evaluationContextProvider;
 
 	/**
 	 * Creates a new {@link StringBasedMongoQuery} for the given {@link MongoQueryMethod} and {@link MongoOperations}.
 	 * 
 	 * @param method must not be {@literal null}.
 	 * @param mongoOperations must not be {@literal null}.
-	 * @param evaluationContextProvider must not be {@literal null}.
 	 * @param expressionParser must not be {@literal null}.
+	 * @param evaluationContextProvider must not be {@literal null}.
 	 */
 	public StringBasedMongoQuery(MongoQueryMethod method, MongoOperations mongoOperations,
-			EvaluationContextProvider evaluationContextProvider, SpelExpressionParser expressionParser) {
-		this(method.getAnnotatedQuery(), method, mongoOperations, evaluationContextProvider, expressionParser);
+			SpelExpressionParser expressionParser, EvaluationContextProvider evaluationContextProvider) {
+		this(method.getAnnotatedQuery(), method, mongoOperations, expressionParser, evaluationContextProvider);
 	}
 
 	/**
-	 * Creates a new {@link StringBasedMongoQuery} for the given {@link String}, {@link MongoQueryMethod} and
-	 * {@link MongoOperations}.
-	 * 
+	 * Creates a new {@link StringBasedMongoQuery} for the given {@link String}, {@link MongoQueryMethod},
+	 * {@link MongoOperations}, {@link SpelExpressionParser} and {@link EvaluationContextProvider}.
+	 *
+	 * @param query must not be {@literal null}.
 	 * @param method must not be {@literal null}.
+	 * @param mongoOperations must not be {@literal null}.
 	 * @param expressionParser must not be {@literal null}.
-	 * @param template must not be {@literal null}.
 	 */
 	public StringBasedMongoQuery(String query, MongoQueryMethod method, MongoOperations mongoOperations,
-			EvaluationContextProvider evaluationContextProvider, SpelExpressionParser expressionParser) {
+			SpelExpressionParser expressionParser, EvaluationContextProvider evaluationContextProvider) {
 
-		super(method, mongoOperations, evaluationContextProvider);
+		super(method, mongoOperations);
 
+		Assert.notNull(query, "Query must not be null!");
 		Assert.notNull(expressionParser, "SpelExpressionParser must not be null!");
 
 		this.expressionParser = expressionParser;
+		this.evaluationContextProvider = evaluationContextProvider;
 
 		this.queryParameterBindings = new ArrayList<ParameterBinding>();
 		this.query = BINDING_PARSER.parseAndCollectParameterBindingsFromQueryIntoBindings(query,
@@ -157,7 +161,8 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 	 * @param bindings
 	 * @return
 	 */
-	private String replacePlaceholders(String input, ConvertingParameterAccessor accessor, List<ParameterBinding> bindings) {
+	private String replacePlaceholders(String input, ConvertingParameterAccessor accessor,
+			List<ParameterBinding> bindings) {
 
 		if (bindings.isEmpty()) {
 			return input;
@@ -187,12 +192,8 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 	 */
 	private String getParameterValueForBinding(ConvertingParameterAccessor accessor, ParameterBinding binding) {
 
-		Object value = null;
-		if (binding.isExpression()) {
-			value = evaluateExpression(binding.getExpression(), accessor.getValues());
-		} else {
-			value = accessor.getBindableValue(binding.getParameterIndex());
-		}
+		Object value = binding.isExpression() ? evaluateExpression(binding.getExpression(), accessor.getValues())
+				: accessor.getBindableValue(binding.getParameterIndex());
 
 		if (value instanceof String && binding.isQuoted()) {
 			return (String) value;
@@ -210,8 +211,8 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 	 */
 	private Object evaluateExpression(String expressionString, Object[] parameterValues) {
 
-		EvaluationContext evaluationContext = getEvaluationContextProvider().getEvaluationContext(
-				getQueryMethod().getParameters(), parameterValues);
+		EvaluationContext evaluationContext = evaluationContextProvider
+				.getEvaluationContext(getQueryMethod().getParameters(), parameterValues);
 		Expression expression = expressionParser.parseExpression(expressionString);
 		return expression.getValue(evaluationContext, Object.class);
 	}
@@ -237,8 +238,8 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 		 * Returns a list of {@link ParameterBinding}s found in the given {@code input} or an
 		 * {@link Collections#emptyList()}.
 		 * 
-		 * @param input
-		 * @param bindings
+		 * @param input can be {@literal null} or empty.
+		 * @param bindings must not be {@literal null}.
 		 * @return
 		 */
 		public String parseAndCollectParameterBindingsFromQueryIntoBindings(String input, List<ParameterBinding> bindings) {
@@ -247,8 +248,9 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 				return input;
 			}
 
-			String transformedInput = transformQueryAndCollectExpressionParametersIntoBindings(bindings, input);
+			Assert.notNull(bindings, "Parameter bindings must not be null!");
 
+			String transformedInput = transformQueryAndCollectExpressionParametersIntoBindings(input, bindings);
 			String parseableInput = makeParameterReferencesParseable(transformedInput);
 
 			collectParameterReferencesIntoBindings(bindings, JSON.parse(parseableInput));
@@ -256,28 +258,26 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 			return transformedInput;
 		}
 
-		private String transformQueryAndCollectExpressionParametersIntoBindings(List<ParameterBinding> bindings,
-				String input) {
+		private String transformQueryAndCollectExpressionParametersIntoBindings(String input,
+				List<ParameterBinding> bindings) {
 
 			Matcher matcher = PARAMETER_EXPRESSION_PATTERN.matcher(input);
 
 			StringBuilder result = new StringBuilder();
 
 			int lastPos = 0;
-
 			int exprIndex = 0;
+
 			while (matcher.find()) {
 
 				int startOffSet = matcher.start();
+
 				result.append(input.subSequence(lastPos, startOffSet));
-
-				String expression = matcher.group(3);
-
 				result.append("'?expr").append(exprIndex).append("'");
 
 				lastPos = matcher.end();
 
-				bindings.add(new ParameterBinding(exprIndex, true, expression));
+				bindings.add(new ParameterBinding(exprIndex, true, matcher.group(3)));
 
 				exprIndex++;
 			}
@@ -305,9 +305,10 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 			} else if (value instanceof Pattern) {
 
 				String string = ((Pattern) value).toString().trim();
-
 				Matcher valueMatcher = PARSEABLE_BINDING_PATTERN.matcher(string);
+
 				while (valueMatcher.find()) {
+
 					int paramIndex = Integer.parseInt(valueMatcher.group(PARAMETER_INDEX_GROUP));
 
 					/*
