@@ -22,7 +22,6 @@ import java.util.Map.Entry;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.context.MappingContext;
-import org.springframework.data.mongodb.core.convert.MappingMongoConverter.NestedDocument;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty.PropertyToFieldNameConverter;
@@ -45,7 +44,6 @@ import com.mongodb.DBObject;
  */
 public class UpdateMapper extends QueryMapper {
 
-	private static final ClassTypeInformation<?> NESTED_DOCUMENT = ClassTypeInformation.from(NestedDocument.class);
 	private final MongoConverter converter;
 
 	/**
@@ -68,8 +66,8 @@ public class UpdateMapper extends QueryMapper {
 	 */
 	@Override
 	protected Object delegateConvertToMongoType(Object source, MongoPersistentEntity<?> entity) {
-		return entity == null ? super.delegateConvertToMongoType(source, null) : converter.convertToMongoType(source,
-				getTypeHintForEntity(entity));
+		return entity == null ? super.delegateConvertToMongoType(source, null)
+				: converter.convertToMongoType(source, getTypeHintForEntity(entity));
 	}
 
 	/*
@@ -137,22 +135,10 @@ public class UpdateMapper extends QueryMapper {
 
 	private DBObject getMappedValue(Field field, Modifier modifier) {
 
-		Object value = converter.convertToMongoType(modifier.getValue(), getTypeHintForField(field));
+		TypeInformation<?> typeHint = field == null ? ClassTypeInformation.OBJECT : field.getTypeHint();
+
+		Object value = converter.convertToMongoType(modifier.getValue(), typeHint);
 		return new BasicDBObject(modifier.getKey(), value);
-	}
-
-	private TypeInformation<?> getTypeHintForField(Field field) {
-
-		if (field == null || field.getProperty() == null) {
-			return ClassTypeInformation.OBJECT;
-		}
-
-		if (field.getProperty().getActualType().isInterface()
-				|| java.lang.reflect.Modifier.isAbstract(field.getProperty().getActualType().getModifiers())) {
-			return ClassTypeInformation.OBJECT;
-		}
-
-		return NESTED_DOCUMENT;
 	}
 
 	private TypeInformation<?> getTypeHintForEntity(MongoPersistentEntity<?> entity) {
@@ -177,8 +163,8 @@ public class UpdateMapper extends QueryMapper {
 	protected Field createPropertyField(MongoPersistentEntity<?> entity, String key,
 			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
 
-		return entity == null ? super.createPropertyField(entity, key, mappingContext) : //
-				new MetadataBackedUpdateField(entity, key, mappingContext);
+		return entity == null ? super.createPropertyField(entity, key, mappingContext)
+				: new MetadataBackedUpdateField(entity, key, mappingContext);
 	}
 
 	/**

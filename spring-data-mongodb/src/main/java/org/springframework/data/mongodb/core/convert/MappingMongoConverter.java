@@ -136,8 +136,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * @param typeMapper the typeMapper to set
 	 */
 	public void setTypeMapper(MongoTypeMapper typeMapper) {
-		this.typeMapper = typeMapper == null ? new DefaultMongoTypeMapper(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY,
-				mappingContext) : typeMapper;
+		this.typeMapper = typeMapper == null
+				? new DefaultMongoTypeMapper(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY, mappingContext) : typeMapper;
 	}
 
 	/*
@@ -238,7 +238,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		PersistentEntityParameterValueProvider<MongoPersistentProperty> parameterProvider = new PersistentEntityParameterValueProvider<MongoPersistentProperty>(
 				entity, provider, path.getCurrentObject());
 
-		return new ConverterAwareSpELExpressionParameterValueProvider(evaluator, conversionService, parameterProvider, path);
+		return new ConverterAwareSpELExpressionParameterValueProvider(evaluator, conversionService, parameterProvider,
+				path);
 	}
 
 	private <S extends Object> S read(final MongoPersistentEntity<S> entity, final DBObject dbo, final ObjectPath path) {
@@ -510,8 +511,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				: new BasicDBObject();
 		addCustomTypeKeyIfNecessary(ClassTypeInformation.from(prop.getRawType()), obj, propDbObj);
 
-		MongoPersistentEntity<?> entity = isSubtype(prop.getType(), obj.getClass()) ? mappingContext
-				.getPersistentEntity(obj.getClass()) : mappingContext.getPersistentEntity(type);
+		MongoPersistentEntity<?> entity = isSubtype(prop.getType(), obj.getClass())
+				? mappingContext.getPersistentEntity(obj.getClass()) : mappingContext.getPersistentEntity(type);
 
 		writeInternal(obj, propDbObj, entity);
 		accessor.put(prop, propDbObj);
@@ -700,8 +701,10 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		if (mapKeyDotReplacement == null) {
-			throw new MappingException(String.format("Map key %s contains dots but no replacement was configured! Make "
-					+ "sure map keys don't contain dots in the first place or configure an appropriate replacement!", source));
+			throw new MappingException(String.format(
+					"Map key %s contains dots but no replacement was configured! Make "
+							+ "sure map keys don't contain dots in the first place or configure an appropriate replacement!",
+					source));
 		}
 
 		return source.replaceAll("\\.", mapKeyDotReplacement);
@@ -719,8 +722,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			return (String) key;
 		}
 
-		return conversions.hasCustomWriteTarget(key.getClass(), String.class) ? (String) getPotentiallyConvertedSimpleWrite(key)
-				: key.toString();
+		return conversions.hasCustomWriteTarget(key.getClass(), String.class)
+				? (String) getPotentiallyConvertedSimpleWrite(key) : key.toString();
 	}
 
 	/**
@@ -889,16 +892,16 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		Class<?> rawComponentType = componentType == null ? null : componentType.getType();
 
 		collectionType = Collection.class.isAssignableFrom(collectionType) ? collectionType : List.class;
-		Collection<Object> items = targetType.getType().isArray() ? new ArrayList<Object>() : CollectionFactory
-				.createCollection(collectionType, rawComponentType, sourceValue.size());
+		Collection<Object> items = targetType.getType().isArray() ? new ArrayList<Object>()
+				: CollectionFactory.createCollection(collectionType, rawComponentType, sourceValue.size());
 
 		for (int i = 0; i < sourceValue.size(); i++) {
 
 			Object dbObjItem = sourceValue.get(i);
 
 			if (dbObjItem instanceof DBRef) {
-				items.add(DBRef.class.equals(rawComponentType) ? dbObjItem : read(componentType, readRef((DBRef) dbObjItem),
-						path));
+				items.add(
+						DBRef.class.equals(rawComponentType) ? dbObjItem : read(componentType, readRef((DBRef) dbObjItem), path));
 			} else if (dbObjItem instanceof DBObject) {
 				items.add(read(componentType, (DBObject) dbObjItem, path));
 			} else {
@@ -1016,14 +1019,14 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		this.write(obj, newDbo);
 
 		if (typeInformation == null) {
-			return removeTypeInfoRecursively(newDbo);
+			return removeTypeInfo(newDbo, true);
 		}
 
 		if (typeInformation.getType().equals(NestedDocument.class)) {
-			return removeTypeInfo(newDbo);
+			return removeTypeInfo(newDbo, false);
 		}
 
-		return !obj.getClass().equals(typeInformation.getType()) ? newDbo : removeTypeInfoRecursively(newDbo);
+		return !obj.getClass().equals(typeInformation.getType()) ? newDbo : removeTypeInfo(newDbo, true);
 	}
 
 	public BasicDBList maybeConvertList(Iterable<?> source, TypeInformation<?> typeInformation) {
@@ -1037,40 +1040,13 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	}
 
 	/**
-	 * Removes only the type information from the root document.
-	 * 
-	 * @param object
-	 * @return
-	 */
-	private Object removeTypeInfo(Object object) {
-
-		if (!(object instanceof DBObject)) {
-			return object;
-		}
-
-		DBObject dbObject = (DBObject) object;
-		String keyToRemove = null;
-		for (String key : dbObject.keySet()) {
-
-			if (typeMapper.isTypeKey(key)) {
-				keyToRemove = key;
-			}
-		}
-
-		if (keyToRemove != null) {
-			dbObject.removeField(keyToRemove);
-		}
-
-		return dbObject;
-	}
-
-	/**
 	 * Removes the type information from the entire conversion result.
 	 * 
 	 * @param object
+	 * @param recursively whether to apply the removal recursively
 	 * @return
 	 */
-	private Object removeTypeInfoRecursively(Object object) {
+	private Object removeTypeInfo(Object object, boolean recursively) {
 
 		if (!(object instanceof DBObject)) {
 			return object;
@@ -1078,19 +1054,29 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		DBObject dbObject = (DBObject) object;
 		String keyToRemove = null;
+
 		for (String key : dbObject.keySet()) {
 
-			if (typeMapper.isTypeKey(key)) {
-				keyToRemove = key;
+			if (recursively) {
+
+				Object value = dbObject.get(key);
+
+				if (value instanceof BasicDBList) {
+					for (Object element : (BasicDBList) value) {
+						removeTypeInfo(element, recursively);
+					}
+				} else {
+					removeTypeInfo(value, recursively);
+				}
 			}
 
-			Object value = dbObject.get(key);
-			if (value instanceof BasicDBList) {
-				for (Object element : (BasicDBList) value) {
-					removeTypeInfoRecursively(element);
+			if (typeMapper.isTypeKey(key)) {
+
+				keyToRemove = key;
+
+				if (!recursively) {
+					break;
 				}
-			} else {
-				removeTypeInfoRecursively(value);
 			}
 		}
 
@@ -1154,8 +1140,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * 
 	 * @author Oliver Gierke
 	 */
-	private class ConverterAwareSpELExpressionParameterValueProvider extends
-			SpELExpressionParameterValueProvider<MongoPersistentProperty> {
+	private class ConverterAwareSpELExpressionParameterValueProvider
+			extends SpELExpressionParameterValueProvider<MongoPersistentProperty> {
 
 		private final ObjectPath path;
 
@@ -1167,7 +1153,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		 * @param delegate must not be {@literal null}.
 		 */
 		public ConverterAwareSpELExpressionParameterValueProvider(SpELExpressionEvaluator evaluator,
-				ConversionService conversionService, ParameterValueProvider<MongoPersistentProperty> delegate, ObjectPath path) {
+				ConversionService conversionService, ParameterValueProvider<MongoPersistentProperty> delegate,
+				ObjectPath path) {
 
 			super(evaluator, conversionService, delegate);
 			this.path = path;

@@ -34,10 +34,13 @@ import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.context.PersistentPropertyPath;
 import org.springframework.data.mapping.model.MappingException;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter.NestedDocument;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty.PropertyToFieldNameConverter;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.util.ClassTypeInformation;
+import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
 
 import com.mongodb.BasicDBList;
@@ -58,6 +61,7 @@ public class QueryMapper {
 
 	private static final List<String> DEFAULT_ID_NAMES = Arrays.asList("id", "_id");
 	private static final DBObject META_TEXT_SCORE = new BasicDBObject("$meta", "textScore");
+	static final ClassTypeInformation<?> NESTED_DOCUMENT = ClassTypeInformation.from(NestedDocument.class);
 
 	private enum MetaMapping {
 		FORCE, WHEN_PRESENT, IGNORE;
@@ -250,8 +254,8 @@ public class QueryMapper {
 		boolean needsAssociationConversion = property.isAssociation() && !keyword.isExists();
 		Object value = keyword.getValue();
 
-		Object convertedValue = needsAssociationConversion ? convertAssociation(value, property) : getMappedValue(
-				property.with(keyword.getKey()), value);
+		Object convertedValue = needsAssociationConversion ? convertAssociation(value, property)
+				: getMappedValue(property.with(keyword.getKey()), value);
 
 		return new BasicDBObject(keyword.key, convertedValue);
 	}
@@ -473,8 +477,8 @@ public class QueryMapper {
 		}
 
 		try {
-			return conversionService.canConvert(id.getClass(), ObjectId.class) ? conversionService
-					.convert(id, ObjectId.class) : delegateConvertToMongoType(id, null);
+			return conversionService.canConvert(id.getClass(), ObjectId.class) ? conversionService.convert(id, ObjectId.class)
+					: delegateConvertToMongoType(id, null);
 		} catch (ConversionException o_O) {
 			return delegateConvertToMongoType(id, null);
 		}
@@ -666,6 +670,10 @@ public class QueryMapper {
 
 		public Association<MongoPersistentProperty> getAssociation() {
 			return null;
+		}
+
+		public TypeInformation<?> getTypeHint() {
+			return ClassTypeInformation.OBJECT;
 		}
 	}
 
@@ -871,6 +879,27 @@ public class QueryMapper {
 		 */
 		protected Converter<MongoPersistentProperty, String> getAssociationConverter() {
 			return new AssociationConverter(getAssociation());
+		}
+
+		/* 
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.convert.QueryMapper.Field#getTypeHint()
+		 */
+		@Override
+		public TypeInformation<?> getTypeHint() {
+
+			MongoPersistentProperty property = getProperty();
+
+			if (property == null) {
+				return super.getTypeHint();
+			}
+
+			if (property.getActualType().isInterface()
+					|| java.lang.reflect.Modifier.isAbstract(property.getActualType().getModifiers())) {
+				return ClassTypeInformation.OBJECT;
+			}
+
+			return NESTED_DOCUMENT;
 		}
 	}
 
