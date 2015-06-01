@@ -360,8 +360,8 @@ public class UpdateMapperUnitTests {
 	public void rendersNestedDbRefCorrectly() {
 
 		Update update = new Update().pull("nested.dbRefAnnotatedList.id", "2");
-		DBObject mappedObject = mapper
-				.getMappedObject(update.getUpdateObject(), context.getPersistentEntity(Wrapper.class));
+		DBObject mappedObject = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(Wrapper.class));
 
 		DBObject pullClause = getAsDBObject(mappedObject, "$pull");
 		assertThat(pullClause.containsField("mapped.dbRefAnnotatedList"), is(true));
@@ -590,8 +590,7 @@ public class UpdateMapperUnitTests {
 
 		assertThat(mappedUpdate,
 				isBsonObject().notContaining("$addToSet.listHoldingConcretyTypeWithInterfaceTypeAttribute.$each.[0]._class"));
-		assertThat(
-				mappedUpdate,
+		assertThat(mappedUpdate,
 				isBsonObject().containing(
 						"$addToSet.listHoldingConcretyTypeWithInterfaceTypeAttribute.$each.[0].interfaceType._class",
 						ModelImpl.class.getName()));
@@ -611,10 +610,8 @@ public class UpdateMapperUnitTests {
 				context.getPersistentEntity(DomainTypeWrappingConcreteyTypeHavingListOfInterfaceTypeAttributes.class));
 
 		assertThat(mappedUpdate, isBsonObject().notContaining("$set.concreteTypeWithListAttributeOfInterfaceType._class"));
-		assertThat(
-				mappedUpdate,
-				isBsonObject().containing("$set.concreteTypeWithListAttributeOfInterfaceType.models.[0]._class",
-						ModelImpl.class.getName()));
+		assertThat(mappedUpdate, isBsonObject()
+				.containing("$set.concreteTypeWithListAttributeOfInterfaceType.models.[0]._class", ModelImpl.class.getName()));
 	}
 
 	static class DomainTypeWrappingConcreteyTypeHavingListOfInterfaceTypeAttributes {
@@ -665,7 +662,7 @@ public class UpdateMapperUnitTests {
 
 		private @Id String id;
 
-		@org.springframework.data.mongodb.core.mapping.DBRef//
+		@org.springframework.data.mongodb.core.mapping.DBRef //
 		private InterfaceDocumentDefinitionWithoutId referencedDocument;
 
 		public String getId() {
@@ -726,10 +723,10 @@ public class UpdateMapperUnitTests {
 
 		String id;
 
-		@Field("aliased")//
+		@Field("aliased") //
 		List<? extends AbstractChildClass> list;
 
-		@Field//
+		@Field //
 		List<Model> listOfInterface;
 
 		public ParentClass(String id, List<? extends AbstractChildClass> list) {
@@ -791,10 +788,10 @@ public class UpdateMapperUnitTests {
 
 		@Id public String id;
 
-		@org.springframework.data.mongodb.core.mapping.DBRef//
+		@org.springframework.data.mongodb.core.mapping.DBRef //
 		public List<Entity> dbRefAnnotatedList;
 
-		@org.springframework.data.mongodb.core.mapping.DBRef//
+		@org.springframework.data.mongodb.core.mapping.DBRef //
 		public Entity dbRefProperty;
 	}
 
@@ -814,13 +811,12 @@ public class UpdateMapperUnitTests {
 	}
 
 	static class NestedDocument {
+
 		String name;
 
 		public NestedDocument(String name) {
 			super();
 			this.name = name;
 		}
-
 	}
-
 }
