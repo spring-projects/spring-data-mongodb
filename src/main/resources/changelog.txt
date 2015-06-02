@@ -1,6 +1,26 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 1.8.0.M1 (2015-06-02)
+----------------------------------------
+* DATAMONGO-1228 - Release 1.8 M1 (Gosling).
+* DATAMONGO-1224 - Assert Spring Framework 4.2 compatibility.
+* DATAMONGO-1221 - Remove relative reference to parent POM to make sure the right Spring version is picked up.
+* DATAMONGO-1218 - Deprecate non-MongoClient related configuration options in XML namespace.
+* DATAMONGO-1216 - Authentication mechanism PLAIN  changes to SCRAM-SHA-1.
+* DATAMONGO-1213 - Include new section on Spring Data and Spring Framework dependencies in reference documentation.
+* DATAMONGO-1211 - Adapt API changes in Spring Data Commons to simplify custom repository base class registration.
+* DATAMONGO-1210 - Inconsistent property order of _class type hint breaks document equality.
+* DATAMONGO-1208 - MongoTemplate.stream(…) does not consider limit, order, sort etc.
+* DATAMONGO-1207 - MongoTemplate#doInsertAll throws NullPointerException when passed Collection contains a null item.
+* DATAMONGO-1202 - Indexed annotation problems under generics.
+* DATAMONGO-1196 - Upgrade build profiles after MongoDB 3.0 Java driver release.
+* DATAMONGO-1193 - Prevent unnecessary database lookups when resolving DBRefs on 2.x driver.
+* DATAMONGO-1192 - Switch back to Spring 4.1's CollectionFactory.
+* DATAMONGO-1134 - Add support for $geoIntersects.
+* DATAMONGO-990 - Add support for SpEL expressions in @Query.
+
+
 Changes in version 1.7.0.RELEASE (2015-03-23)
 ---------------------------------------------
 * DATAMONGO-1189 - Release 1.7 GA.
