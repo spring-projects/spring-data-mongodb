@@ -35,8 +35,8 @@ import com.mysema.query.apt.Configuration;
 import com.mysema.query.apt.DefaultConfiguration;
 
 /**
- * Annotation processor to create Querydsl query types for QueryDsl annoated classes.
- * 
+ * Annotation processor to create Querydsl query types for QueryDsl annotated classes.
+ *
  * @author Oliver Gierke
  */
 @SupportedAnnotationTypes({ "com.mysema.query.annotations.*", "org.springframework.data.mongodb.core.mapping.*" })
