@@ -38,7 +38,7 @@ import org.springframework.data.annotation.QueryAnnotation;
 public @interface Query {
 
 	/**
-	 * Takes a MongoDB JSON string to define the actual query to be executed. This one will take precendece over the
+	 * Takes a MongoDB JSON string to define the actual query to be executed. This one will take precedence over the
 	 * method name then.
 	 * 
 	 * @return

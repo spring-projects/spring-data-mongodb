@@ -259,7 +259,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 							LOGGER.info(e.getMessage(), e);
 						} catch (InvalidDataAccessApiUsageException e) {
 							LOGGER.info(
-									String.format("Potentially invald index structure discovered. Breaking operation for %s.",
+									String.format("Potentially invalid index structure discovered. Breaking operation for %s.",
 											entity.getName()), e);
 						}
 					} else if (includeOptions.isForce() || indexed != null) {
