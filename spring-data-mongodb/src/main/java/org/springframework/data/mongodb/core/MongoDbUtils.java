@@ -199,8 +199,8 @@ public abstract class MongoDbUtils {
 	}
 
 	/**
-	 * Check if credentials present. In case we're using a monog-java-driver version 3 or above we do not have the need
-	 * for authentication as the auth data has to be provied within the MongoClient
+	 * Check if credentials present. In case we're using a mongo-java-driver version 3 or above we do not have the need
+	 * for authentication as the auth data has to be provided within the MongoClient
 	 * 
 	 * @param credentials
 	 * @return

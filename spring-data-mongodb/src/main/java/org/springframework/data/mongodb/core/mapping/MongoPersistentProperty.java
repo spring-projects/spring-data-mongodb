@@ -45,7 +45,7 @@ public interface MongoPersistentProperty extends PersistentProperty<MongoPersist
 	int getFieldOrder();
 
 	/**
-	 * Returns whether the propert is a {@link com.mongodb.DBRef}. If this returns {@literal true} you can expect
+	 * Returns whether the property is a {@link com.mongodb.DBRef}. If this returns {@literal true} you can expect
 	 * {@link #getDBRef()} to return an non-{@literal null} value.
 	 * 
 	 * @return

@@ -63,7 +63,7 @@ public class TextCriteria implements CriteriaDefinition {
 	}
 
 	/**
-	 * For a full list of supported languages see the mongdodb reference manual for <a
+	 * For a full list of supported languages see the mongodb reference manual for <a
 	 * href="http://docs.mongodb.org/manual/reference/text-search-languages/">Text Search Languages</a>.
 	 * 
 	 * @param language

@@ -176,7 +176,7 @@ public class Query {
 
 		for (Order order : sort) {
 			if (order.isIgnoreCase()) {
-				throw new IllegalArgumentException(String.format("Gven sort contained an Order for %s with ignore case! "
+				throw new IllegalArgumentException(String.format("Given sort contained an Order for %s with ignore case! "
 						+ "MongoDB does not support sorting ignoreing case currently!", order.getProperty()));
 			}
 		}
