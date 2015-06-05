@@ -29,7 +29,7 @@ import com.mongodb.MongoClient;
 /**
  * Helper class featuring helper methods for internal MongoDb classes. Mainly intended for internal use within the
  * framework.
- * 
+ *
  * @author Thomas Risberg
  * @author Graeme Rocher
  * @author Oliver Gierke
@@ -49,7 +49,7 @@ public abstract class MongoDbUtils {
 
 	/**
 	 * Obtains a {@link DB} connection for the given {@link Mongo} instance and database name
-	 * 
+	 *
 	 * @param mongo the {@link Mongo} instance, must not be {@literal null}.
 	 * @param databaseName the database name, must not be {@literal null} or empty.
 	 * @return the {@link DB} connection
@@ -60,7 +60,7 @@ public abstract class MongoDbUtils {
 
 	/**
 	 * Obtains a {@link DB} connection for the given {@link Mongo} instance and database name
-	 * 
+	 *
 	 * @param mongo the {@link Mongo} instance, must not be {@literal null}.
 	 * @param databaseName the database name, must not be {@literal null} or empty.
 	 * @param credentials the credentials to use, must not be {@literal null}.
@@ -163,7 +163,7 @@ public abstract class MongoDbUtils {
 	/**
 	 * Return whether the given DB instance is transactional, that is, bound to the current thread by Spring's transaction
 	 * facilities.
-	 * 
+	 *
 	 * @param db the DB to check
 	 * @param mongo the Mongo instance that the DB was created with (may be <code>null</code>)
 	 * @return whether the DB is transactional
@@ -179,7 +179,7 @@ public abstract class MongoDbUtils {
 
 	/**
 	 * Perform actual closing of the Mongo DB object, catching and logging any cleanup exceptions thrown.
-	 * 
+	 *
 	 * @param db the DB to close (may be <code>null</code>)
 	 * @deprecated since 1.7. The main use case for this method is to ensure that applications can read their own
 	 *             unacknowledged writes, but this is no longer so prevalent since the MongoDB Java driver version 3
@@ -199,9 +199,9 @@ public abstract class MongoDbUtils {
 	}
 
 	/**
-	 * Check if credentials present. In case we're using a monog-java-driver version 3 or above we do not have the need
-	 * for authentication as the auth data has to be provied within the MongoClient
-	 * 
+	 * Check if credentials present. In case we're using a mongo-java-driver version 3 or above we do not have the need
+	 * for authentication as the auth data has to be provided within the MongoClient
+	 *
 	 * @param credentials
 	 * @return
 	 */

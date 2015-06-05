@@ -27,7 +27,7 @@ import org.springframework.util.CompositeIterator;
 
 /**
  * Value object to capture the fields exposed by an {@link AggregationOperation}.
- * 
+ *
  * @author Oliver Gierke
  * @author Thomas Darimont
  * @since 1.3
@@ -42,7 +42,7 @@ public final class ExposedFields implements Iterable<ExposedField> {
 
 	/**
 	 * Creates a new {@link ExposedFields} instance from the given {@link ExposedField}s.
-	 * 
+	 *
 	 * @param fields must not be {@literal null}.
 	 * @return
 	 */
@@ -52,7 +52,7 @@ public final class ExposedFields implements Iterable<ExposedField> {
 
 	/**
 	 * Creates a new {@link ExposedFields} instance from the given {@link ExposedField}s.
-	 * 
+	 *
 	 * @param fields must not be {@literal null}.
 	 * @return
 	 */
@@ -69,7 +69,7 @@ public final class ExposedFields implements Iterable<ExposedField> {
 
 	/**
 	 * Creates synthetic {@link ExposedFields} from the given {@link Fields}.
-	 * 
+	 *
 	 * @param fields must not be {@literal null}.
 	 * @return
 	 */
@@ -79,7 +79,7 @@ public final class ExposedFields implements Iterable<ExposedField> {
 
 	/**
 	 * Creates non-synthetic {@link ExposedFields} from the given {@link Fields}.
-	 * 
+	 *
 	 * @param fields must not be {@literal null}.
 	 * @return
 	 */
@@ -88,8 +88,8 @@ public final class ExposedFields implements Iterable<ExposedField> {
 	}
 
 	/**
-	 * Creates a new {@link ExposedFields} instance for the given fields in either sythetic or non-synthetic way.
-	 * 
+	 * Creates a new {@link ExposedFields} instance for the given fields in either synthetic or non-synthetic way.
+	 *
 	 * @param fields must not be {@literal null}.
 	 * @param synthetic
 	 * @return
@@ -107,8 +107,8 @@ public final class ExposedFields implements Iterable<ExposedField> {
 	}
 
 	/**
-	 * Creates a new {@link ExposedFields} with the given orignals and synthetics.
-	 * 
+	 * Creates a new {@link ExposedFields} with the given originals and synthetics.
+	 *
 	 * @param originals must not be {@literal null}.
 	 * @param synthetic must not be {@literal null}.
 	 */
@@ -120,7 +120,7 @@ public final class ExposedFields implements Iterable<ExposedField> {
 
 	/**
 	 * Creates a new {@link ExposedFields} adding the given {@link ExposedField}.
-	 * 
+	 *
 	 * @param field must not be {@literal null}.
 	 * @return
 	 */
@@ -137,7 +137,7 @@ public final class ExposedFields implements Iterable<ExposedField> {
 
 	/**
 	 * Returns the field with the given name or {@literal null} if no field with the given name is available.
-	 * 
+	 *
 	 * @param name
 	 * @return
 	 */
@@ -154,7 +154,7 @@ public final class ExposedFields implements Iterable<ExposedField> {
 
 	/**
 	 * Returns whether the {@link ExposedFields} exposes no non-synthetic fields at all.
-	 * 
+	 *
 	 * @return
 	 */
 	boolean exposesNoNonSyntheticFields() {
@@ -163,7 +163,7 @@ public final class ExposedFields implements Iterable<ExposedField> {
 
 	/**
 	 * Returns whether the {@link ExposedFields} exposes a single non-synthetic field only.
-	 * 
+	 *
 	 * @return
 	 */
 	boolean exposesSingleNonSyntheticFieldOnly() {
@@ -172,7 +172,7 @@ public final class ExposedFields implements Iterable<ExposedField> {
 
 	/**
 	 * Returns whether the {@link ExposedFields} exposes no fields at all.
-	 * 
+	 *
 	 * @return
 	 */
 	boolean exposesNoFields() {
@@ -181,7 +181,7 @@ public final class ExposedFields implements Iterable<ExposedField> {
 
 	/**
 	 * Returns whether the {@link ExposedFields} exposes a single field only.
-	 * 
+	 *
 	 * @return
 	 */
 	boolean exposesSingleFieldOnly() {
@@ -195,7 +195,7 @@ public final class ExposedFields implements Iterable<ExposedField> {
 		return originalFields.size() + syntheticFields.size();
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see java.lang.Iterable#iterator()
 	 */
@@ -211,7 +211,7 @@ public final class ExposedFields implements Iterable<ExposedField> {
 
 	/**
 	 * A single exposed field.
-	 * 
+	 *
 	 * @author Oliver Gierke
 	 */
 	static class ExposedField implements Field {
@@ -221,7 +221,7 @@ public final class ExposedFields implements Iterable<ExposedField> {
 
 		/**
 		 * Creates a new {@link ExposedField} with the given key.
-		 * 
+		 *
 		 * @param key must not be {@literal null} or empty.
 		 * @param synthetic whether the exposed field is synthetic.
 		 */
@@ -231,7 +231,7 @@ public final class ExposedFields implements Iterable<ExposedField> {
 
 		/**
 		 * Creates a new {@link ExposedField} for the given {@link Field}.
-		 * 
+		 *
 		 * @param delegate must not be {@literal null}.
 		 * @param synthetic whether the exposed field is synthetic.
 		 */
@@ -241,7 +241,7 @@ public final class ExposedFields implements Iterable<ExposedField> {
 			this.synthetic = synthetic;
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.aggregation.Field#getKey()
 		 */
@@ -277,7 +277,7 @@ public final class ExposedFields implements Iterable<ExposedField> {
 
 		/**
 		 * Returns whether the field can be referred to using the given name.
-		 * 
+		 *
 		 * @param name
 		 * @return
 		 */
@@ -294,7 +294,7 @@ public final class ExposedFields implements Iterable<ExposedField> {
 			return String.format("AggregationField: %s, synthetic: %s", field, synthetic);
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see java.lang.Object#equals(java.lang.Object)
 		 */
@@ -332,7 +332,7 @@ public final class ExposedFields implements Iterable<ExposedField> {
 
 	/**
 	 * A reference to an {@link ExposedField}.
-	 * 
+	 *
 	 * @author Oliver Gierke
 	 */
 	static class FieldReference {
@@ -341,7 +341,7 @@ public final class ExposedFields implements Iterable<ExposedField> {
 
 		/**
 		 * Creates a new {@link FieldReference} for the given {@link ExposedField}.
-		 * 
+		 *
 		 * @param field must not be {@literal null}.
 		 */
 		public FieldReference(ExposedField field) {
@@ -353,7 +353,7 @@ public final class ExposedFields implements Iterable<ExposedField> {
 
 		/**
 		 * Returns the raw, unqualified reference, i.e. the field reference without a {@literal $} prefix.
-		 * 
+		 *
 		 * @return
 		 */
 		public String getRaw() {
@@ -363,9 +363,9 @@ public final class ExposedFields implements Iterable<ExposedField> {
 		}
 
 		/**
-		 * Returns the referenve value for the given field reference. Will return 1 for a synthetic, unaliased field or the
+		 * Returns the reference value for the given field reference. Will return 1 for a synthetic, unaliased field or the
 		 * raw rendering of the reference otherwise.
-		 * 
+		 *
 		 * @return
 		 */
 		public Object getReferenceValue() {
@@ -381,7 +381,7 @@ public final class ExposedFields implements Iterable<ExposedField> {
 			return String.format("$%s", getRaw());
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see java.lang.Object#equals(java.lang.Object)
 		 */
@@ -401,7 +401,7 @@ public final class ExposedFields implements Iterable<ExposedField> {
 			return this.field.equals(that.field);
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see java.lang.Object#hashCode()
 		 */

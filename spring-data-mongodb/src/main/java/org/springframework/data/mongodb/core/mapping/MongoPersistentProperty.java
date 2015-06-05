@@ -22,7 +22,7 @@ import org.springframework.data.mapping.PersistentProperty;
 
 /**
  * MongoDB specific {@link org.springframework.data.mapping.PersistentProperty} extension.
- * 
+ *
  * @author Oliver Gierke
  * @author Patryk Wasik
  * @author Thomas Darimont
@@ -32,22 +32,22 @@ public interface MongoPersistentProperty extends PersistentProperty<MongoPersist
 
 	/**
 	 * Returns the name of the field a property is persisted to.
-	 * 
+	 *
 	 * @return
 	 */
 	String getFieldName();
 
 	/**
 	 * Returns the order of the field if defined. Will return -1 if undefined.
-	 * 
+	 *
 	 * @return
 	 */
 	int getFieldOrder();
 
 	/**
-	 * Returns whether the propert is a {@link com.mongodb.DBRef}. If this returns {@literal true} you can expect
+	 * Returns whether the property is a {@link com.mongodb.DBRef}. If this returns {@literal true} you can expect
 	 * {@link #getDBRef()} to return an non-{@literal null} value.
-	 * 
+	 *
 	 * @return
 	 */
 	boolean isDbReference();
@@ -55,7 +55,7 @@ public interface MongoPersistentProperty extends PersistentProperty<MongoPersist
 	/**
 	 * Returns whether the property is explicitly marked as an identifier property of the owning {@link PersistentEntity}.
 	 * A property is an explicit id property if it is annotated with @see {@link Id}.
-	 * 
+	 *
 	 * @return
 	 */
 	boolean isExplicitIdProperty();
@@ -63,7 +63,7 @@ public interface MongoPersistentProperty extends PersistentProperty<MongoPersist
 	/**
 	 * Returns true whether the property indicates the documents language either by having a {@link #getFieldName()} equal
 	 * to {@literal language} or being annotated with {@link Language}.
-	 * 
+	 *
 	 * @return
 	 * @since 1.6
 	 */
@@ -71,7 +71,7 @@ public interface MongoPersistentProperty extends PersistentProperty<MongoPersist
 
 	/**
 	 * Returns true when property being annotated with {@link Language}.
-	 * 
+	 *
 	 * @return
 	 * @since 1.6.1
 	 */
@@ -80,7 +80,7 @@ public interface MongoPersistentProperty extends PersistentProperty<MongoPersist
 	/**
 	 * Returns whether the property holds the documents score calculated by text search. <br/>
 	 * It's marked with {@link TextScore}.
-	 * 
+	 *
 	 * @return
 	 * @since 1.6
 	 */
@@ -88,7 +88,7 @@ public interface MongoPersistentProperty extends PersistentProperty<MongoPersist
 
 	/**
 	 * Returns the {@link DBRef} if the property is a reference.
-	 * 
+	 *
 	 * @see #isDbReference()
 	 * @return
 	 */
@@ -96,7 +96,7 @@ public interface MongoPersistentProperty extends PersistentProperty<MongoPersist
 
 	/**
 	 * Simple {@link Converter} implementation to transform a {@link MongoPersistentProperty} into its field name.
-	 * 
+	 *
 	 * @author Oliver Gierke
 	 */
 	public enum PropertyToFieldNameConverter implements Converter<MongoPersistentProperty, String> {
@@ -115,7 +115,7 @@ public interface MongoPersistentProperty extends PersistentProperty<MongoPersist
 	/**
 	 * Returns whether property access shall be used for reading the property value. This means it will use the getter
 	 * instead of field access.
-	 * 
+	 *
 	 * @return
 	 */
 	boolean usePropertyAccess();

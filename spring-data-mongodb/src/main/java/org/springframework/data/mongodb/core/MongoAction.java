@@ -28,7 +28,7 @@ import com.mongodb.WriteConcern;
  * <li>REMOVE has null document</li>
  * <li>INSERT_LIST has null entityType, document, and query</li>
  * </ul>
- * 
+ *
  * @author Mark Pollack
  * @author Oliver Gierke
  */
@@ -43,13 +43,13 @@ public class MongoAction {
 
 	/**
 	 * Create an instance of a {@link MongoAction}.
-	 * 
+	 *
 	 * @param defaultWriteConcern the default write concern.
 	 * @param mongoActionOperation action being taken against the collection
 	 * @param collectionName the collection name, must not be {@literal null} or empty.
 	 * @param entityType the POJO that is being operated against
 	 * @param document the converted DBObject from the POJO or Spring Update object
-	 * @param query the converted DBOjbect from the Spring Query object
+	 * @param query the converted DBObject from the Spring Query object
 	 */
 	public MongoAction(WriteConcern defaultWriteConcern, MongoActionOperation mongoActionOperation,
 			String collectionName, Class<?> entityType, DBObject document, DBObject query) {
