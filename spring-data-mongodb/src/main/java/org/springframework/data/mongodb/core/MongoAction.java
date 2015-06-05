@@ -49,7 +49,7 @@ public class MongoAction {
 	 * @param collectionName the collection name, must not be {@literal null} or empty.
 	 * @param entityType the POJO that is being operated against
 	 * @param document the converted DBObject from the POJO or Spring Update object
-	 * @param query the converted DBOjbect from the Spring Query object
+	 * @param query the converted DBObject from the Spring Query object
 	 */
 	public MongoAction(WriteConcern defaultWriteConcern, MongoActionOperation mongoActionOperation,
 			String collectionName, Class<?> entityType, DBObject document, DBObject query) {
