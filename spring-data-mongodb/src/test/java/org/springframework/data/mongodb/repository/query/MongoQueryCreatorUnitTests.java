@@ -553,6 +553,18 @@ public class MongoQueryCreatorUnitTests {
 		assertThat(query, is(query(where("address.geo").near(point).minDistance(10D).maxDistance(20D))));
 	}
 
+	/**
+	 * @see DATAMONGO-1229
+	 */
+	@Test
+	public void appliesIgnoreCaseToLeafProperty() {
+
+		PartTree tree = new PartTree("findByAddressStreetIgnoreCase", User.class);
+		ConvertingParameterAccessor accessor = getAccessor(converter, "Street");
+
+		assertThat(new MongoQueryCreator(tree, accessor, context).createQuery(), is(notNullValue()));
+	}
+
 	interface PersonRepository extends Repository<Person, Long> {
 
 		List<Person> findByLocationNearAndFirstname(Point location, Distance maxDistance, String firstname);
