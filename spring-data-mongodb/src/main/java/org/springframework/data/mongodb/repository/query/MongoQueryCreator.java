@@ -29,6 +29,7 @@ import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Shape;
+import org.springframework.data.mapping.PropertyPath;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.context.PersistentPropertyPath;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
@@ -276,19 +277,23 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 	private Criteria createLikeRegexCriteriaOrThrow(Part part, MongoPersistentProperty property, Criteria criteria,
 			PotentiallyConvertingIterator parameters, boolean shouldNegateExpression) {
 
+		PropertyPath path = part.getProperty().getLeafProperty();
+
 		switch (part.shouldIgnoreCase()) {
 
 			case ALWAYS:
-				if (part.getProperty().getType() != String.class) {
-					throw new IllegalArgumentException(String.format("part %s must be of type String but was %s",
-							part.getProperty(), part.getType()));
+				if (path.getType() != String.class) {
+					throw new IllegalArgumentException(
+							String.format("Part %s must be of type String but was %s", path, path.getType()));
 				}
 				// fall-through
 
 			case WHEN_POSSIBLE:
+
 				if (shouldNegateExpression) {
 					criteria = criteria.not();
 				}
+
 				return addAppropriateLikeRegexTo(criteria, part, parameters.nextConverted(property).toString());
 
 			case NEVER:
@@ -365,8 +370,8 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 			return (T) parameter;
 		}
 
-		throw new IllegalArgumentException(String.format("Expected parameter type of %s but got %s!", type,
-				parameter.getClass()));
+		throw new IllegalArgumentException(
+				String.format("Expected parameter type of %s but got %s!", type, parameter.getClass()));
 	}
 
 	private Object[] nextAsArray(PotentiallyConvertingIterator iterator, MongoPersistentProperty property) {
