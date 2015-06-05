@@ -64,7 +64,7 @@ public class Update {
 	}
 
 	/**
-	 * Creates an {@link Update} instance from the given {@link DBObject}. Allows to explicitly exlude fields from making
+	 * Creates an {@link Update} instance from the given {@link DBObject}. Allows to explicitly exclude fields from making
 	 * it into the created {@link Update} object. Note, that this will set attributes directly and <em>not</em> use
 	 * {@literal $set}. This means fields not given in the {@link DBObject} will be nulled when executing the update. To
 	 * create an only-updating {@link Update} instance of a {@link DBObject}, call {@link #set(String, Object)} for each

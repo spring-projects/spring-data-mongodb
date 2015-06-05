@@ -20,7 +20,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 /**
- * Sample contactt domain class.
+ * Sample contact domain class.
  * 
  * @author Oliver Gierke
  */
