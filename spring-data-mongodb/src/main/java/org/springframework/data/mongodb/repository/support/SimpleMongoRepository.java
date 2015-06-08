@@ -215,6 +215,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 
 		Long count = count();
 		List<T> list = findAll(new Query().with(pageable));
+		count = Math.max(count, list.size()); // to handle a concurrent addition
 
 		return new PageImpl<T>(list, pageable, count);
 	}
