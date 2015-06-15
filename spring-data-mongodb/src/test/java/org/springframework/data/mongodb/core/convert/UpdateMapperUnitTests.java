@@ -25,6 +25,7 @@ import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import org.hamcrest.Matcher;
 import org.hamcrest.collection.IsIterableContainingInOrder;
@@ -610,8 +611,85 @@ public class UpdateMapperUnitTests {
 				context.getPersistentEntity(DomainTypeWrappingConcreteyTypeHavingListOfInterfaceTypeAttributes.class));
 
 		assertThat(mappedUpdate, isBsonObject().notContaining("$set.concreteTypeWithListAttributeOfInterfaceType._class"));
-		assertThat(mappedUpdate, isBsonObject()
-				.containing("$set.concreteTypeWithListAttributeOfInterfaceType.models.[0]._class", ModelImpl.class.getName()));
+		assertThat(
+				mappedUpdate,
+				isBsonObject().containing("$set.concreteTypeWithListAttributeOfInterfaceType.models.[0]._class",
+						ModelImpl.class.getName()));
+	}
+
+	/**
+	 * @see DATAMONGO-1236
+	 */
+	@Test
+	public void mappingShouldRetainTypeInformationForObjectValues() {
+
+		Update update = new Update().set("value", new NestedDocument("kaladin"));
+		DBObject mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(EntityWithObject.class));
+
+		assertThat(mappedUpdate, isBsonObject().containing("$set.value.name", "kaladin"));
+		assertThat(mappedUpdate, isBsonObject().containing("$set.value._class", NestedDocument.class.getName()));
+	}
+
+	/**
+	 * @see DATAMONGO-1236
+	 */
+	@Test
+	public void mappingShouldNotRetainTypeInformationForConcreteValues() {
+
+		Update update = new Update().set("concreteValue", new NestedDocument("shallan"));
+		DBObject mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(EntityWithObject.class));
+
+		assertThat(mappedUpdate, isBsonObject().containing("$set.concreteValue.name", "shallan"));
+		assertThat(mappedUpdate, isBsonObject().notContaining("$set.concreteValue._class"));
+	}
+
+	/**
+	 * @see DATAMONGO-1236
+	 */
+	@Test
+	public void mappingShouldRetainTypeInformationForObjectValuesWithAlias() {
+
+		Update update = new Update().set("value", new NestedDocument("adolin"));
+		DBObject mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(EntityWithAliasedObject.class));
+
+		assertThat(mappedUpdate, isBsonObject().containing("$set.renamed-value.name", "adolin"));
+		assertThat(mappedUpdate, isBsonObject().containing("$set.renamed-value._class", NestedDocument.class.getName()));
+	}
+
+	/**
+	 * @see DATAMONGO-1236
+	 */
+	@Test
+	public void mappingShouldRetrainTypeInformationWhenValueTypeOfMapDoesNotMatchItsDeclaration() {
+
+		Map<Object, Object> map = Collections.<Object, Object> singletonMap("szeth", new NestedDocument("son-son-vallano"));
+
+		Update update = new Update().set("map", map);
+		DBObject mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(EntityWithObjectMap.class));
+
+		assertThat(mappedUpdate, isBsonObject().containing("$set.map.szeth.name", "son-son-vallano"));
+		assertThat(mappedUpdate, isBsonObject().containing("$set.map.szeth._class", NestedDocument.class.getName()));
+	}
+
+	/**
+	 * @see DATAMONGO-1236
+	 */
+	@Test
+	public void mappingShouldNotContainTypeInformationWhenValueTypeOfMapMatchesDeclaration() {
+
+		Map<Object, NestedDocument> map = Collections.<Object, NestedDocument> singletonMap("jasnah", new NestedDocument(
+				"kholin"));
+
+		Update update = new Update().set("concreteMap", map);
+		DBObject mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(EntityWithObjectMap.class));
+
+		assertThat(mappedUpdate, isBsonObject().containing("$set.concreteMap.jasnah.name", "kholin"));
+		assertThat(mappedUpdate, isBsonObject().notContaining("$set.concreteMap.jasnah._class"));
 	}
 
 	static class DomainTypeWrappingConcreteyTypeHavingListOfInterfaceTypeAttributes {
@@ -818,5 +896,22 @@ public class UpdateMapperUnitTests {
 			super();
 			this.name = name;
 		}
+	}
+
+	static class EntityWithObject {
+
+		Object value;
+		NestedDocument concreteValue;
+	}
+
+	static class EntityWithAliasedObject {
+
+		@Field("renamed-value") Object value;
+	}
+
+	static class EntityWithObjectMap {
+
+		Map<Object, Object> map;
+		Map<Object, NestedDocument> concreteMap;
 	}
 }
