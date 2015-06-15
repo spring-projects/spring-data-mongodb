@@ -22,6 +22,7 @@ import java.util.Map.Entry;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.context.MappingContext;
+import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty.PropertyToFieldNameConverter;
@@ -66,8 +67,8 @@ public class UpdateMapper extends QueryMapper {
 	 */
 	@Override
 	protected Object delegateConvertToMongoType(Object source, MongoPersistentEntity<?> entity) {
-		return entity == null ? super.delegateConvertToMongoType(source, null)
-				: converter.convertToMongoType(source, getTypeHintForEntity(entity));
+		return entity == null ? super.delegateConvertToMongoType(source, null) : converter.convertToMongoType(source,
+				getTypeHintForEntity(source, entity));
 	}
 
 	/*
@@ -141,18 +142,21 @@ public class UpdateMapper extends QueryMapper {
 		return new BasicDBObject(modifier.getKey(), value);
 	}
 
-	private TypeInformation<?> getTypeHintForEntity(MongoPersistentEntity<?> entity) {
-		return processTypeHintForNestedDocuments(entity.getTypeInformation());
+	private TypeInformation<?> getTypeHintForEntity(Object source, MongoPersistentEntity<?> entity) {
+		return processTypeHintForNestedDocuments(source, entity.getTypeInformation());
 	}
 
-	private TypeInformation<?> processTypeHintForNestedDocuments(TypeInformation<?> info) {
+	private TypeInformation<?> processTypeHintForNestedDocuments(Object source, TypeInformation<?> info) {
 
 		Class<?> type = info.getActualType().getType();
 		if (type.isInterface() || java.lang.reflect.Modifier.isAbstract(type.getModifiers())) {
 			return info;
 		}
-		return NESTED_DOCUMENT;
 
+		if (!type.equals(source.getClass())) {
+			return info;
+		}
+		return NESTED_DOCUMENT;
 	}
 
 	/* 
@@ -194,6 +198,18 @@ public class UpdateMapper extends QueryMapper {
 
 			super(key.replaceAll("\\.\\$", ""), entity, mappingContext);
 			this.key = key;
+		}
+
+		@Override
+		@SuppressWarnings({ "rawtypes", "unchecked" })
+		public MongoPersistentEntity<?> getPropertyEntity() {
+
+			MongoPersistentEntity<?> entity = super.getPropertyEntity();
+			if (entity != null || getProperty() == null) {
+				return entity;
+			}
+
+			return new BasicMongoPersistentEntity(getProperty().getTypeInformation());
 		}
 
 		/*
