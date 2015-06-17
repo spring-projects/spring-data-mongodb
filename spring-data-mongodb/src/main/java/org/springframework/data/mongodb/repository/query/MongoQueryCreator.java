@@ -20,6 +20,7 @@ import static org.springframework.data.mongodb.core.query.Criteria.*;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,6 +46,7 @@ import org.springframework.data.repository.query.parser.Part.IgnoreCaseType;
 import org.springframework.data.repository.query.parser.Part.Type;
 import org.springframework.data.repository.query.parser.PartTree;
 import org.springframework.util.Assert;
+import org.springframework.util.ObjectUtils;
 
 /**
  * Custom query creator to create Mongo criterias.
@@ -56,6 +58,7 @@ import org.springframework.util.Assert;
 class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 
 	private static final Logger LOG = LoggerFactory.getLogger(MongoQueryCreator.class);
+	private static final Pattern PUNCTATION_PATTERN = Pattern.compile("\\p{Punct}");
 	private final MongoParameterAccessor accessor;
 	private final boolean isGeoNearQuery;
 
@@ -389,25 +392,59 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 	private String toLikeRegex(String source, Part part) {
 
 		Type type = part.getType();
+		String regex = prepareAndEscapeStringBeforeApplyingLikeRegex(source, part);
 
 		switch (type) {
 			case STARTING_WITH:
-				source = "^" + source;
+				regex = "^" + regex;
 				break;
 			case ENDING_WITH:
-				source = source + "$";
+				regex = regex + "$";
 				break;
 			case CONTAINING:
 			case NOT_CONTAINING:
-				source = "*" + source + "*";
+				regex = ".*" + regex + ".*";
 				break;
 			case SIMPLE_PROPERTY:
 			case NEGATING_SIMPLE_PROPERTY:
-				source = "^" + source + "$";
+				regex = "^" + regex + "$";
 			default:
 		}
 
-		return source.replaceAll("\\*", ".*");
+		return regex;
+	}
+
+	private String prepareAndEscapeStringBeforeApplyingLikeRegex(String source, Part qpart) {
+
+		if (!ObjectUtils.nullSafeEquals(Type.LIKE, qpart.getType())) {
+			return PUNCTATION_PATTERN.matcher(source).find() ? Pattern.quote(source) : source;
+		}
+
+		if (source.equals("*")) {
+			return ".*";
+		}
+
+		StringBuilder sb = new StringBuilder();
+
+		boolean leadingWildcard = source.startsWith("*");
+		boolean trailingWildcard = source.endsWith("*");
+
+		String valueToUse = source.substring(leadingWildcard ? 1 : 0,
+				trailingWildcard ? source.length() - 1 : source.length());
+
+		if (PUNCTATION_PATTERN.matcher(valueToUse).find()) {
+			valueToUse = Pattern.quote(valueToUse);
+		}
+
+		if (leadingWildcard) {
+			sb.append(".*");
+		}
+		sb.append(valueToUse);
+		if (trailingWildcard) {
+			sb.append(".*");
+		}
+
+		return sb.toString();
 	}
 
 	private boolean isSpherical(MongoPersistentProperty property) {
