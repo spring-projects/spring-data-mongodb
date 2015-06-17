@@ -468,6 +468,102 @@ public class MongoQueryCreatorUnitTests {
 		assertThat(new MongoQueryCreator(tree, accessor, context).createQuery(), is(notNullValue()));
 	}
 
+	/**
+	 * @see DATAMONGO-1232
+	 */
+	@Test
+	public void ignoreCaseShouldEscapeSource() {
+
+		PartTree tree = new PartTree("findByUsernameIgnoreCase", User.class);
+		ConvertingParameterAccessor accessor = getAccessor(converter, "con.flux+");
+
+		Query query = new MongoQueryCreator(tree, accessor, context).createQuery();
+
+		assertThat(query, is(query(where("username").regex("^\\Qcon.flux+\\E$", "i"))));
+	}
+
+	/**
+	 * @see DATAMONGO-1232
+	 */
+	@Test
+	public void ignoreCaseShouldEscapeSourceWhenUsedForStartingWith() {
+
+		PartTree tree = new PartTree("findByUsernameStartingWithIgnoreCase", User.class);
+		ConvertingParameterAccessor accessor = getAccessor(converter, "dawns.light+");
+
+		Query query = new MongoQueryCreator(tree, accessor, context).createQuery();
+
+		assertThat(query, is(query(where("username").regex("^\\Qdawns.light+\\E", "i"))));
+	}
+
+	/**
+	 * @see DATAMONGO-1232
+	 */
+	@Test
+	public void ignoreCaseShouldEscapeSourceWhenUsedForEndingWith() {
+
+		PartTree tree = new PartTree("findByUsernameEndingWithIgnoreCase", User.class);
+		ConvertingParameterAccessor accessor = getAccessor(converter, "new.ton+");
+
+		Query query = new MongoQueryCreator(tree, accessor, context).createQuery();
+
+		assertThat(query, is(query(where("username").regex("\\Qnew.ton+\\E$", "i"))));
+	}
+
+	/**
+	 * @see DATAMONGO-1232
+	 */
+	@Test
+	public void likeShouldEscapeSourceWhenUsedWithLeadingAndTrailingWildcard() {
+
+		PartTree tree = new PartTree("findByUsernameLike", User.class);
+		ConvertingParameterAccessor accessor = getAccessor(converter, "*fire.fight+*");
+
+		Query query = new MongoQueryCreator(tree, accessor, context).createQuery();
+
+		assertThat(query, is(query(where("username").regex(".*\\Qfire.fight+\\E.*"))));
+	}
+
+	/**
+	 * @see DATAMONGO-1232
+	 */
+	@Test
+	public void likeShouldEscapeSourceWhenUsedWithLeadingWildcard() {
+
+		PartTree tree = new PartTree("findByUsernameLike", User.class);
+		ConvertingParameterAccessor accessor = getAccessor(converter, "*steel.heart+");
+
+		Query query = new MongoQueryCreator(tree, accessor, context).createQuery();
+
+		assertThat(query, is(query(where("username").regex(".*\\Qsteel.heart+\\E"))));
+	}
+
+	/**
+	 * @see DATAMONGO-1232
+	 */
+	@Test
+	public void likeShouldEscapeSourceWhenUsedWithTrailingWildcard() {
+
+		PartTree tree = new PartTree("findByUsernameLike", User.class);
+		ConvertingParameterAccessor accessor = getAccessor(converter, "cala.mity+*");
+
+		Query query = new MongoQueryCreator(tree, accessor, context).createQuery();
+		assertThat(query, is(query(where("username").regex("\\Qcala.mity+\\E.*"))));
+	}
+
+	/**
+	 * @see DATAMONGO-1232
+	 */
+	@Test
+	public void likeShouldBeTreatedCorrectlyWhenUsedWithWildcardOnly() {
+
+		PartTree tree = new PartTree("findByUsernameLike", User.class);
+		ConvertingParameterAccessor accessor = getAccessor(converter, "*");
+
+		Query query = new MongoQueryCreator(tree, accessor, context).createQuery();
+		assertThat(query, is(query(where("username").regex(".*"))));
+	}
+
 	interface PersonRepository extends Repository<Person, Long> {
 
 		List<Person> findByLocationNearAndFirstname(Point location, Distance maxDistance, String firstname);
