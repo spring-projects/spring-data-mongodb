@@ -43,7 +43,9 @@ import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.convert.CustomConversions;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
@@ -52,18 +54,21 @@ import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexCre
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.BasicDBObjectBuilder;
+import com.mongodb.CommandResult;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.Mongo;
 import com.mongodb.MongoException;
+import com.mongodb.ReadPreference;
 
 /**
  * Unit tests for {@link MongoTemplate}.
@@ -350,6 +355,74 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		ArgumentCaptor<DBObject> captor = ArgumentCaptor.forClass(DBObject.class);
 		verify(cursor, times(1)).sort(captor.capture());
 		assertThat(captor.getValue(), equalTo(new BasicDBObjectBuilder().add("foo", 1).get()));
+	}
+
+	/**
+	 * @see DATAMONGO-1166
+	 */
+	@Test
+	public void aggregateShouldHonorReadPreferenceWhenSet() {
+
+		CommandResult result = mock(CommandResult.class);
+
+		when(result.get("result")).thenReturn(Collections.emptySet());
+		when(db.command(Mockito.any(DBObject.class), Mockito.any(ReadPreference.class))).thenReturn(result);
+		when(db.command(Mockito.any(DBObject.class))).thenReturn(result);
+		template.setReadPreference(ReadPreference.secondary());
+
+		template.aggregate(Aggregation.newAggregation(Aggregation.unwind("foo")), "collection-1", Wrapper.class);
+
+		verify(this.db, times(1)).command(Mockito.any(DBObject.class), eq(ReadPreference.secondary()));
+	}
+
+	/**
+	 * @see DATAMONGO-1166
+	 */
+	@Test
+	public void aggregateShouldIgnoreReadPreferenceWhenNotSet() {
+
+		CommandResult result = mock(CommandResult.class);
+
+		when(result.get("result")).thenReturn(Collections.emptySet());
+		when(db.command(Mockito.any(DBObject.class), Mockito.any(ReadPreference.class))).thenReturn(result);
+		when(db.command(Mockito.any(DBObject.class))).thenReturn(result);
+
+		template.aggregate(Aggregation.newAggregation(Aggregation.unwind("foo")), "collection-1", Wrapper.class);
+
+		verify(this.db, times(1)).command(Mockito.any(DBObject.class));
+	}
+
+	/**
+	 * @see DATAMONGO-1166
+	 */
+	@Test
+	public void geoNearShouldHonorReadPreferenceWhenSet() {
+
+		when(db.command(Mockito.any(DBObject.class), Mockito.any(ReadPreference.class)))
+				.thenReturn(mock(CommandResult.class));
+		when(db.command(Mockito.any(DBObject.class))).thenReturn(mock(CommandResult.class));
+		template.setReadPreference(ReadPreference.secondary());
+
+		NearQuery query = NearQuery.near(new Point(1, 1));
+		template.geoNear(query, Wrapper.class);
+
+		verify(this.db, times(1)).command(Mockito.any(DBObject.class), eq(ReadPreference.secondary()));
+	}
+
+	/**
+	 * @see DATAMONGO-1166
+	 */
+	@Test
+	public void geoNearShouldIgnoreReadPreferenceWhenNotSet() {
+
+		when(db.command(Mockito.any(DBObject.class), Mockito.any(ReadPreference.class)))
+				.thenReturn(mock(CommandResult.class));
+		when(db.command(Mockito.any(DBObject.class))).thenReturn(mock(CommandResult.class));
+
+		NearQuery query = NearQuery.near(new Point(1, 1));
+		template.geoNear(query, Wrapper.class);
+
+		verify(this.db, times(1)).command(Mockito.any(DBObject.class));
 	}
 
 	class AutogenerateableId {

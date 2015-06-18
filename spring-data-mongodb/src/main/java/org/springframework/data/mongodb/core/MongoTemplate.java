@@ -335,7 +335,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 		CommandResult result = execute(new DbCallback<CommandResult>() {
 			public CommandResult doInDB(DB db) throws MongoException, DataAccessException {
-				return db.command(command, options);
+				return readPreference != null ? db.command(command, readPreference) : db.command(command);
 			}
 		});
 
@@ -566,7 +566,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		BasicDBObject command = new BasicDBObject("geoNear", collection);
 		command.putAll(near.toDBObject());
 
-		CommandResult commandResult = executeCommand(command);
+		CommandResult commandResult = executeCommand(command, getDb().getOptions());
 		List<Object> results = (List<Object>) commandResult.get("results");
 		results = results == null ? Collections.emptyList() : results;
 
@@ -1422,7 +1422,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			LOGGER.debug("Executing aggregation: {}", serializeToJsonSafely(command));
 		}
 
-		CommandResult commandResult = executeCommand(command);
+		CommandResult commandResult = executeCommand(command, getDb().getOptions());
 		handleCommandError(commandResult, command);
 
 		// map results
