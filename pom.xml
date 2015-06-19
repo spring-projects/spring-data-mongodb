@@ -123,7 +123,7 @@
 
 			<id>mongo3</id>
 			<properties>
-				<mongo>3.0.0</mongo>
+				<mongo>3.0.2</mongo>
 			</properties>
 
 		</profile>
