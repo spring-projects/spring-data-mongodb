@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core.mapping;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
@@ -305,28 +306,44 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 	 */
 	private static class PropertyTypeAssertionHandler implements PropertyHandler<MongoPersistentProperty> {
 
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mapping.PropertyHandler#doWithPersistentProperty(org.springframework.data.mapping.PersistentProperty)
+		 */
 		@Override
 		public void doWithPersistentProperty(MongoPersistentProperty persistentProperty) {
 
 			potentiallyAssertTextScoreType(persistentProperty);
 			potentiallyAssertLanguageType(persistentProperty);
+			potentiallyAssertDBRefTargetType(persistentProperty);
 		}
 
-		private void potentiallyAssertLanguageType(MongoPersistentProperty persistentProperty) {
+		private static void potentiallyAssertLanguageType(MongoPersistentProperty persistentProperty) {
 
 			if (persistentProperty.isExplicitLanguageProperty()) {
 				assertPropertyType(persistentProperty, String.class);
 			}
 		}
 
-		private void potentiallyAssertTextScoreType(MongoPersistentProperty persistentProperty) {
+		private static void potentiallyAssertTextScoreType(MongoPersistentProperty persistentProperty) {
 
 			if (persistentProperty.isTextScoreProperty()) {
 				assertPropertyType(persistentProperty, Float.class, Double.class);
 			}
 		}
 
-		private void assertPropertyType(MongoPersistentProperty persistentProperty, Class<?>... validMatches) {
+		private static void potentiallyAssertDBRefTargetType(MongoPersistentProperty persistentProperty) {
+
+			if (persistentProperty.isDbReference() && persistentProperty.getDBRef().lazy()) {
+				if (persistentProperty.isArray() || Modifier.isFinal(persistentProperty.getActualType().getModifiers())) {
+					throw new MappingException(String.format(
+							"Invalid lazy DBRef property for %s. Found %s which must not be an array nor a final class.",
+							persistentProperty.getField(), persistentProperty.getActualType()));
+				}
+			}
+		}
+
+		private static void assertPropertyType(MongoPersistentProperty persistentProperty, Class<?>... validMatches) {
 
 			for (Class<?> potentialMatch : validMatches) {
 				if (ClassUtils.isAssignable(potentialMatch, persistentProperty.getActualType())) {
@@ -334,10 +351,9 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 				}
 			}
 
-			throw new MappingException(String.format("Missmatching types for %s. Found %s expected one of %s.",
-					persistentProperty.getField(), persistentProperty.getActualType(),
-					StringUtils.arrayToCommaDelimitedString(validMatches)));
+			throw new MappingException(
+					String.format("Missmatching types for %s. Found %s expected one of %s.", persistentProperty.getField(),
+							persistentProperty.getActualType(), StringUtils.arrayToCommaDelimitedString(validMatches)));
 		}
 	}
-
 }
