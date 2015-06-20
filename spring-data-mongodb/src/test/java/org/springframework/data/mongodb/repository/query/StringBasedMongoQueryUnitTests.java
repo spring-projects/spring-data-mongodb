@@ -310,6 +310,38 @@ public class StringBasedMongoQueryUnitTests {
 		assertThat(query.getQueryObject(), is(reference.getQueryObject()));
 	}
 
+	
+	/**
+	 * @see DATAMONGO-1244
+	 */
+	@Test
+	public void shouldSupportExpressionsInCustomQueriesWithNestedObject() throws Exception {
+
+		ConvertingParameterAccessor accesor = StubParameterAccessor.getAccessor(converter, true, "param1", "param2");
+		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByQueryWithExpressionAndNestedObject", boolean.class, String.class);
+
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor);
+		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery("{ \"id\" : { \"$exists\" : true}}");
+
+		assertThat(query.getQueryObject(), is(reference.getQueryObject()));
+	}
+
+	/**
+	 * @see DATAMONGO-1244
+	 */
+	@Test
+	public void shouldSupportExpressionsInCustomQueriesWithMultipleNestedObjects() throws Exception {
+
+		ConvertingParameterAccessor accesor = StubParameterAccessor.getAccessor(converter, true, "param1", "param2");
+		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByQueryWithExpressionAndMultipleNestedObjects", boolean.class, String.class, String.class);
+
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor);
+		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery("{ \"id\" : { \"$exists\" : true} , \"foo\" : 42 , \"bar\" : { \"$exists\" : false}}");
+
+		assertThat(query.getQueryObject(), is(reference.getQueryObject()));
+	}
+
+	
 	private StringBasedMongoQuery createQueryForMethod(String name, Class<?>... parameters) throws Exception {
 
 		Method method = SampleRepository.class.getMethod(name, parameters);
@@ -355,7 +387,13 @@ public class StringBasedMongoQueryUnitTests {
 		@Query("{ ?0 : ?1}")
 		Object methodWithPlaceholderInKeyOfJsonStructure(String keyReplacement, String valueReplacement);
 
-		@Query(value = "{'lastname': ?#{[0]} }")
+		@Query("{'lastname': ?#{[0]} }")
 		List<Person> findByQueryWithExpression(String param0);
+		
+		@Query("{'id':?#{ [0] ? { $exists :true} : [1] }}")
+		List<Person> findByQueryWithExpressionAndNestedObject(boolean param0, String param1);
+		
+		@Query("{'id':?#{ [0] ? { $exists :true} : [1] }, 'foo':42, 'bar': ?#{ [0] ? { $exists :false} : [1] }}")
+		List<Person> findByQueryWithExpressionAndMultipleNestedObjects(boolean param0, String param1, String param2); 
 	}
 }
