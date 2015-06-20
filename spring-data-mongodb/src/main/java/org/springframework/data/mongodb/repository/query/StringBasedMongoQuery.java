@@ -161,12 +161,13 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 	 * @param bindings
 	 * @return
 	 */
-	private String replacePlaceholders(String input, ConvertingParameterAccessor accessor,
-			List<ParameterBinding> bindings) {
+	private String replacePlaceholders(String input, ConvertingParameterAccessor accessor, List<ParameterBinding> bindings) {
 
 		if (bindings.isEmpty()) {
 			return input;
 		}
+
+		boolean isCompletlyParameterizedQuery = input.matches("^\\?\\d+$");
 
 		StringBuilder result = new StringBuilder(input);
 
@@ -176,7 +177,30 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 			int idx = result.indexOf(parameter);
 
 			if (idx != -1) {
-				result.replace(idx, idx + parameter.length(), getParameterValueForBinding(accessor, binding));
+				String valueForBinding = getParameterValueForBinding(accessor, binding);
+
+				// if the value to bind is an object literal we need to remove the quoting around
+				// the expression insertion point.
+				boolean shouldPotentiallyRemoveQuotes = valueForBinding.startsWith("{") && !isCompletlyParameterizedQuery;
+
+				int start = idx;
+				int end = idx + parameter.length();
+
+				if (shouldPotentiallyRemoveQuotes) {
+					
+					// is the insertion point actually surrounded by quotes?
+					char beforeStart = result.charAt(start - 1);
+					char afterEnd = result.charAt(end);
+					
+					if ((beforeStart == '\'' || beforeStart == '"') && (afterEnd == '\'' || afterEnd == '"')) {
+
+						// skip preceeding and following quote
+						start -= 1;
+						end += 1;
+					}
+				}
+
+				result.replace(start, end, valueForBinding);
 			}
 		}
 
@@ -211,8 +235,8 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 	 */
 	private Object evaluateExpression(String expressionString, Object[] parameterValues) {
 
-		EvaluationContext evaluationContext = evaluationContextProvider
-				.getEvaluationContext(getQueryMethod().getParameters(), parameterValues);
+		EvaluationContext evaluationContext = evaluationContextProvider.getEvaluationContext(getQueryMethod()
+				.getParameters(), parameterValues);
 		Expression expression = expressionParser.parseExpression(expressionString);
 		return expression.getValue(evaluationContext, Object.class);
 	}
@@ -226,11 +250,16 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 
 		INSTANCE;
 
+		private static final String EXPRESSION_PARAM_QUOTE = "'";
+		private static final String EXPRESSION_PARAM_PREFIX = "?expr";
+		private static final String INDEX_BASED_EXPRESSION_PARAM_START = "?#{";
+		private static final String NAME_BASED_EXPRESSION_PARAM_START = ":#{";
+		private static final char CURRLY_BRACE_OPEN = '{';
+		private static final char CURRLY_BRACE_CLOSE = '}';
 		private static final String PARAMETER_PREFIX = "_param_";
 		private static final String PARSEABLE_PARAMETER = "\"" + PARAMETER_PREFIX + "$1\"";
 		private static final Pattern PARAMETER_BINDING_PATTERN = Pattern.compile("\\?(\\d+)");
 		private static final Pattern PARSEABLE_BINDING_PATTERN = Pattern.compile("\"?" + PARAMETER_PREFIX + "(\\d+)\"?");
-		private static final Pattern PARAMETER_EXPRESSION_PATTERN = Pattern.compile("((:|\\?)#\\{([^}]+)\\})");
 
 		private final static int PARAMETER_INDEX_GROUP = 1;
 
@@ -261,28 +290,54 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 		private String transformQueryAndCollectExpressionParametersIntoBindings(String input,
 				List<ParameterBinding> bindings) {
 
-			Matcher matcher = PARAMETER_EXPRESSION_PATTERN.matcher(input);
-
 			StringBuilder result = new StringBuilder();
 
-			int lastPos = 0;
+			int startIndex = 0;
+			int currentPos = 0;
 			int exprIndex = 0;
 
-			while (matcher.find()) {
+			while (currentPos < input.length()) {
+				int indexOfExpressionParameter = input.indexOf(INDEX_BASED_EXPRESSION_PARAM_START, currentPos);
 
-				int startOffSet = matcher.start();
+				if (indexOfExpressionParameter < 0) {
+					indexOfExpressionParameter = input.indexOf(NAME_BASED_EXPRESSION_PARAM_START, currentPos);
+				}
 
-				result.append(input.subSequence(lastPos, startOffSet));
-				result.append("'?expr").append(exprIndex).append("'");
+				if (indexOfExpressionParameter < 0) {
+					// no expression parameter found
+					break;
+				}
 
-				lastPos = matcher.end();
+				int exprStart = indexOfExpressionParameter + 3;
+				currentPos = exprStart;
 
-				bindings.add(new ParameterBinding(exprIndex, true, matcher.group(3)));
+				// eat parameter expression
+				int curlyBraceOpenCnt = 1;
+				while (curlyBraceOpenCnt > 0) {
+					char c = input.charAt(currentPos++);
+					switch (c) {
+						case CURRLY_BRACE_OPEN:
+							curlyBraceOpenCnt++;
+							break;
+						case CURRLY_BRACE_CLOSE:
+							curlyBraceOpenCnt--;
+							break;
+						default:
+							;
+					}
+				}
+
+				result.append(input.subSequence(startIndex, indexOfExpressionParameter));
+				result.append(EXPRESSION_PARAM_QUOTE).append(EXPRESSION_PARAM_PREFIX).append(exprIndex)
+						.append(EXPRESSION_PARAM_QUOTE);
+				bindings.add(new ParameterBinding(exprIndex, true, input.substring(exprStart, currentPos - 1)));
+
+				startIndex = currentPos;
 
 				exprIndex++;
 			}
 
-			result.append(input.subSequence(lastPos, input.length()));
+			result.append(input.subSequence(currentPos, input.length()));
 
 			return result.toString();
 		}
