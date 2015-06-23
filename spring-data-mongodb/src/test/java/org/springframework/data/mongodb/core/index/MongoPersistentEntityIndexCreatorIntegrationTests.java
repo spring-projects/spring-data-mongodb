@@ -18,24 +18,36 @@ package org.springframework.data.mongodb.core.index;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
+import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.List;
 
 import org.hamcrest.Matchers;
+import org.hamcrest.core.IsInstanceOf;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.rules.RuleChain;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
+import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolver.IndexDefinitionHolder;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.test.util.CleanMongoDB;
 import org.springframework.data.mongodb.test.util.MongoVersionRule;
 import org.springframework.data.util.Version;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import com.mongodb.MongoClient;
+import com.mongodb.MongoCommandException;
 
 /**
  * Integration tests for {@link MongoPersistentEntityIndexCreator}.
@@ -53,6 +65,8 @@ public class MongoPersistentEntityIndexCreatorIntegrationTests {
 
 	public static @ClassRule RuleChain rules = RuleChain.outerRule(MongoVersionRule.atLeast(new Version(2, 6))).around(
 			CleanMongoDB.indexes(Arrays.asList(SAMPLE_TYPE_COLLECTION_NAME, RECURSIVE_TYPE_COLLECTION_NAME)));
+
+	public @Rule ExpectedException expectedException = ExpectedException.none();
 
 	@Autowired @Qualifier("mongo1") MongoOperations templateOne;
 
@@ -79,6 +93,28 @@ public class MongoPersistentEntityIndexCreatorIntegrationTests {
 
 		assertThat(indexInfo, hasSize(greaterThan(0)));
 		assertThat(indexInfo, Matchers.<IndexInfo> hasItem(hasProperty("name", is("firstName"))));
+	}
+
+	/**
+	 * @DATAMONGO-1125
+	 */
+	@Test
+	public void createIndexShouldThrowMeaningfulExceptionWhenIndexCreationFails() throws UnknownHostException {
+
+		expectedException.expect(DataIntegrityViolationException.class);
+		expectedException.expectMessage("collection 'datamongo-1125'");
+		expectedException.expectMessage("dalinar.kohlin");
+		expectedException.expectMessage("lastname");
+		expectedException.expectCause(IsInstanceOf.<Throwable> instanceOf(MongoCommandException.class));
+
+		MongoPersistentEntityIndexCreator indexCreator = new MongoPersistentEntityIndexCreator(new MongoMappingContext(),
+				new SimpleMongoDbFactory(new MongoClient(), "issue"));
+
+		indexCreator.createIndex(new IndexDefinitionHolder("dalinar.kohlin", new Index().named("stormlight")
+				.on("lastname", Direction.ASC).unique(), "datamongo-1125"));
+
+		indexCreator.createIndex(new IndexDefinitionHolder("dalinar.kohlin", new Index().named("stormlight")
+				.on("lastname", Direction.ASC).sparse(), "datamongo-1125"));
 	}
 
 	@Document(collection = RECURSIVE_TYPE_COLLECTION_NAME)
