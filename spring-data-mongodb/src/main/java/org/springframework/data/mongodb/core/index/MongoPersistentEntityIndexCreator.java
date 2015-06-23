@@ -21,15 +21,21 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationListener;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.context.MappingContextEvent;
 import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.core.MongoExceptionTranslator.MongoDbErrorCodes;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolver.IndexDefinitionHolder;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.util.Assert;
+import org.springframework.util.ObjectUtils;
+
+import com.mongodb.DBObject;
+import com.mongodb.MongoException;
 
 /**
  * Component that inspects {@link MongoPersistentEntity} instances contained in the given {@link MongoMappingContext}
@@ -129,9 +135,34 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 		}
 	}
 
-	private void createIndex(IndexDefinitionHolder indexDefinition) {
-		mongoDbFactory.getDb().getCollection(indexDefinition.getCollection()).createIndex(indexDefinition.getIndexKeys(),
-				indexDefinition.getIndexOptions());
+	void createIndex(IndexDefinitionHolder indexDefinition) {
+
+		try {
+
+			mongoDbFactory.getDb().getCollection(indexDefinition.getCollection()).createIndex(indexDefinition.getIndexKeys(),
+					indexDefinition.getIndexOptions());
+
+		} catch (MongoException ex) {
+
+			if (MongoDbErrorCodes.isDataIntegrityViolationCode(ex.getCode())) {
+
+				DBObject existingIndex = fetchIndexInformation(indexDefinition);
+				String message = "Cannot create index for '%s' in collection '%s' with keys '%s' and options '%s'.";
+
+				if (existingIndex != null) {
+					message += " Index already defined as '%s'.";
+				}
+
+				throw new DataIntegrityViolationException(
+						String.format(message, indexDefinition.getPath(), indexDefinition.getCollection(),
+								indexDefinition.getIndexKeys(), indexDefinition.getIndexOptions(), existingIndex),
+						ex);
+			}
+
+			RuntimeException exceptionToThrow = mongoDbFactory.getExceptionTranslator().translateExceptionIfPossible(ex);
+
+			throw exceptionToThrow != null ? exceptionToThrow : ex;
+		}
 	}
 
 	/**
@@ -142,5 +173,29 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 	 */
 	public boolean isIndexCreatorFor(MappingContext<?, ?> context) {
 		return this.mappingContext.equals(context);
+	}
+
+	private DBObject fetchIndexInformation(IndexDefinitionHolder indexDefinition) {
+
+		if (indexDefinition == null) {
+			return null;
+		}
+
+		try {
+
+			Object indexNameToLookUp = indexDefinition.getIndexOptions().get("name");
+
+			for (DBObject index : mongoDbFactory.getDb().getCollection(indexDefinition.getCollection()).getIndexInfo()) {
+				if (ObjectUtils.nullSafeEquals(indexNameToLookUp, index.get("name"))) {
+					return index;
+				}
+			}
+
+		} catch (Exception e) {
+			LOGGER.debug(
+					String.format("Failed to load index information for collection '%s'.", indexDefinition.getCollection()), e);
+		}
+
+		return null;
 	}
 }

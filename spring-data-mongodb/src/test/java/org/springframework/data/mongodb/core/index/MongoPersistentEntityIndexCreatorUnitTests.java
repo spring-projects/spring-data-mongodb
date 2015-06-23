@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 the original author or authors.
+ * Copyright 2012-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,11 +28,14 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.context.ApplicationContext;
+import org.springframework.dao.DataAccessException;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mapping.context.MappingContextEvent;
 import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.core.MongoExceptionTranslator;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
@@ -43,6 +46,7 @@ import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
+import com.mongodb.MongoException;
 
 /**
  * Unit tests for {@link MongoPersistentEntityIndexCreator}.
@@ -209,6 +213,36 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 
 		verify(db, times(1)).getCollection(collectionNameCapturer.capture());
 		assertThat(collectionNameCapturer.getValue(), equalTo("indexedDocumentWrapper"));
+	}
+
+	/**
+	 * @see DATAMONGO-1125
+	 */
+	@Test(expected = DataAccessException.class)
+	public void createIndexShouldUsePersistenceExceptionTranslatorForNonDataIntegrityConcerns() {
+
+		when(factory.getExceptionTranslator()).thenReturn(new MongoExceptionTranslator());
+		doThrow(new MongoException(6, "HostUnreachable")).when(collection).createIndex(Mockito.any(DBObject.class),
+				Mockito.any(DBObject.class));
+
+		MongoMappingContext mappingContext = prepareMappingContext(Person.class);
+
+		new MongoPersistentEntityIndexCreator(mappingContext, factory);
+	}
+
+	/**
+	 * @see DATAMONGO-1125
+	 */
+	@Test(expected = ClassCastException.class)
+	public void createIndexShouldNotConvertUnknownExceptionTypes() {
+
+		when(factory.getExceptionTranslator()).thenReturn(new MongoExceptionTranslator());
+		doThrow(new ClassCastException("o_O")).when(collection).createIndex(Mockito.any(DBObject.class),
+				Mockito.any(DBObject.class));
+
+		MongoMappingContext mappingContext = prepareMappingContext(Person.class);
+
+		new MongoPersistentEntityIndexCreator(mappingContext, factory);
 	}
 
 	private static MongoMappingContext prepareMappingContext(Class<?> type) {
