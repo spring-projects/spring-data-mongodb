@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.bson.types.ObjectId;
+import org.hamcrest.core.Is;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -791,6 +792,8 @@ public class QueryMapperUnitTests {
 	}
 
 	/**
+	 * <<<<<<< HEAD
+	 * 
 	 * @see DATAMONGO-1269
 	 */
 	@Test
@@ -816,6 +819,40 @@ public class QueryMapperUnitTests {
 				context.getPersistentEntity(EntityWithComplexValueTypeList.class));
 
 		assertThat(dbo.containsField("list.1.stringProperty"), is(true));
+	}
+
+	/**
+	 * @see DATAMONGO-1245
+	 */
+	@Test
+	public void exampleShouldBeMappedCorrectly() {
+
+		Foo probe = new Foo();
+		probe.embedded = new EmbeddedClass();
+		probe.embedded.id = "conflux";
+
+		Query query = query(byExample(probe));
+
+		DBObject dbo = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(Foo.class));
+
+		assertThat(dbo, is(new BasicDBObjectBuilder().add("embedded._id", "conflux").get()));
+	}
+
+	/**
+	 * @see DATAMONGO-1245
+	 */
+	@Test
+	public void exampleShouldBeMappedCorrectlyWhenContainingLegacyPoint() {
+
+		ClassWithGeoTypes probe = new ClassWithGeoTypes();
+		probe.legacyPoint = new Point(10D, 20D);
+
+		Query query = query(byExample(probe));
+
+		DBObject dbo = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(WithDBRef.class));
+
+		assertThat(dbo.get("legacyPoint.x"), Is.<Object> is(10D));
+		assertThat(dbo.get("legacyPoint.y"), Is.<Object> is(20D));
 	}
 
 	@Document

@@ -334,22 +334,23 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	 */
 	@Query("{ firstname : { $in : ?0 }}")
 	Stream<Person> findByCustomQueryWithStreamingCursorByFirstnames(List<String> firstnames);
-	
+
 	/**
 	 * @see DATAMONGO-990
 	 */
 	@Query("{ firstname : ?#{[0]}}")
 	List<Person> findWithSpelByFirstnameForSpELExpressionWithParameterIndexOnly(String firstname);
-	
+
 	/**
 	 * @see DATAMONGO-990
 	 */
 	@Query("{ firstname : ?#{[0]}, email: ?#{principal.email} }")
 	List<Person> findWithSpelByFirstnameAndCurrentUserWithCustomQuery(String firstname);
-	
+
 	/**
 	 * @see DATAMONGO-990
 	 */
 	@Query("{ firstname : :#{#firstname}}")
 	List<Person> findWithSpelByFirstnameForSpELExpressionWithParameterVariableOnly(@Param("firstname") String firstname);
+
 }

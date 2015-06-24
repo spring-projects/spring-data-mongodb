@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 the original author or authors.
+ * Copyright 2012-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,15 @@
 package org.springframework.data.mongodb.core.query;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import org.springframework.core.convert.converter.Converter;
 
+import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
 
@@ -29,11 +32,74 @@ import com.mongodb.util.JSON;
  * Utility methods for JSON serialization.
  * 
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 public abstract class SerializationUtils {
 
 	private SerializationUtils() {
 
+	}
+
+	/**
+	 * Flattens out a given {@link DBObject}.
+	 * 
+	 * <pre>
+	 * <code>
+	 * {
+	 *   _id : 1
+	 *   nested : { value : "conflux"}
+	 * }
+	 * </code>
+	 * will result in 
+	 * <code>
+	 * {
+	 *   _id : 1
+	 *   nested.value : "conflux"
+	 * }
+	 * </code>
+	 * </pre>
+	 * 
+	 * @param source can be {@literal null}.
+	 * @return {@link Collections#emptyMap()} when source is {@literal null}
+	 * @since 1.8
+	 */
+	public static Map<String, Object> flatMap(DBObject source) {
+
+		if (source == null) {
+			return Collections.emptyMap();
+		}
+
+		Map<String, Object> result = new HashMap<String, Object>();
+		toFlatMap("", source, result);
+		return result;
+	}
+
+	private static void toFlatMap(String currentPath, Object source, Map<String, Object> map) {
+
+		if (source instanceof BasicDBObject) {
+
+			BasicDBObject dbo = (BasicDBObject) source;
+			Iterator<Map.Entry<String, Object>> iter = dbo.entrySet().iterator();
+			String pathPrefix = currentPath.isEmpty() ? "" : currentPath + ".";
+
+			while (iter.hasNext()) {
+
+				Map.Entry<String, Object> entry = iter.next();
+
+				if (entry.getKey().startsWith("$")) {
+					if (map.containsKey(currentPath)) {
+						((BasicDBObject) map.get(currentPath)).put(entry.getKey(), entry.getValue());
+					} else {
+						map.put(currentPath, new BasicDBObject(entry.getKey(), entry.getValue()));
+					}
+				} else {
+
+					toFlatMap(pathPrefix + entry.getKey(), entry.getValue(), map);
+				}
+			}
+		} else {
+			map.put(currentPath, source);
+		}
 	}
 
 	/**

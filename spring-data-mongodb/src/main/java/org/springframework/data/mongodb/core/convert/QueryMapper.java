@@ -27,6 +27,7 @@ import org.bson.types.ObjectId;
 import org.springframework.core.convert.ConversionException;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.domain.Example;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PropertyPath;
@@ -70,6 +71,7 @@ public class QueryMapper {
 	private final ConversionService conversionService;
 	private final MongoConverter converter;
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
+	private final MongoExampleMapper exampleMapper;
 
 	/**
 	 * Creates a new {@link QueryMapper} with the given {@link MongoConverter}.
@@ -83,6 +85,7 @@ public class QueryMapper {
 		this.conversionService = converter.getConversionService();
 		this.converter = converter;
 		this.mappingContext = converter.getMappingContext();
+		this.exampleMapper = new MongoExampleMapper(converter);
 	}
 
 	/**
@@ -239,6 +242,10 @@ public class QueryMapper {
 			return new BasicDBObject(keyword.getKey(), newConditions);
 		}
 
+		if (keyword.isSample()) {
+			return exampleMapper.getMappedExample(keyword.<Example<?>> getValue(), entity);
+		}
+
 		return new BasicDBObject(keyword.getKey(), convertSimpleOrDBObject(keyword.getValue(), entity));
 	}
 
@@ -254,8 +261,8 @@ public class QueryMapper {
 		boolean needsAssociationConversion = property.isAssociation() && !keyword.isExists();
 		Object value = keyword.getValue();
 
-		Object convertedValue = needsAssociationConversion ? convertAssociation(value, property)
-				: getMappedValue(property.with(keyword.getKey()), value);
+		Object convertedValue = needsAssociationConversion ? convertAssociation(value, property) : getMappedValue(
+				property.with(keyword.getKey()), value);
 
 		return new BasicDBObject(keyword.key, convertedValue);
 	}
@@ -477,8 +484,8 @@ public class QueryMapper {
 		}
 
 		try {
-			return conversionService.canConvert(id.getClass(), ObjectId.class) ? conversionService.convert(id, ObjectId.class)
-					: delegateConvertToMongoType(id, null);
+			return conversionService.canConvert(id.getClass(), ObjectId.class) ? conversionService
+					.convert(id, ObjectId.class) : delegateConvertToMongoType(id, null);
 		} catch (ConversionException o_O) {
 			return delegateConvertToMongoType(id, null);
 		}
@@ -564,6 +571,16 @@ public class QueryMapper {
 		 */
 		public boolean isGeometry() {
 			return "$geometry".equalsIgnoreCase(key);
+		}
+
+		/**
+		 * Returns wheter the current keyword indicates a sample object.
+		 * 
+		 * @return
+		 * @since 1.8
+		 */
+		public boolean isSample() {
+			return "$sample".equalsIgnoreCase(key);
 		}
 
 		public boolean hasIterableValue() {

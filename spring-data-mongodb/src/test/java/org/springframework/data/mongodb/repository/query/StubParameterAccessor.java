@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.repository.query;
 import java.util.Arrays;
 import java.util.Iterator;
 
+import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Sort;
@@ -145,6 +146,15 @@ class StubParameterAccessor implements MongoParameterAccessor {
 	 */
 	@Override
 	public Class<?> getDynamicProjection() {
+		return null;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.query.MongoParameterAccessor#getSampleObject()
+	 */
+	@Override
+	public Example<?> getSampleObject() {
 		return null;
 	}
 }

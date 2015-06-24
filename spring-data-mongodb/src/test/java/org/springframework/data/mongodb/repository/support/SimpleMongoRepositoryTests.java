@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2014 the original author or authors.
+ * Copyright 2010-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,16 +31,26 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.repository.Address;
 import org.springframework.data.mongodb.repository.Person;
 import org.springframework.data.mongodb.repository.Person.Sex;
+import org.springframework.data.mongodb.repository.User;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.util.ReflectionTestUtils;
 
 /**
  * @author <a href="mailto:kowsercse@gmail.com">A. B. M. Kowser</a>
  * @author Thomas Darimont
+ * @author Christoph Strobl
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:infrastructure.xml")
@@ -160,11 +170,236 @@ public class SimpleMongoRepositoryTests {
 		assertThatAllReferencePersonsWereStoredCorrectly(idToPerson, saved);
 	}
 
+	/**
+	 * @see DATAMONGO-1245
+	 */
+	@Test
+	public void findByExampleShouldLookUpEntriesCorrectly() {
+
+		Person sample = new Person();
+		sample.setLastname("Matthews");
+		trimDomainType(sample, "id", "createdAt", "email");
+
+		Page<Person> result = repository.findAllByExample(new Example<Person>(sample), new PageRequest(0, 10));
+
+		assertThat(result.getContent(), hasItems(dave, oliver));
+		assertThat(result.getContent(), hasSize(2));
+	}
+
+	/**
+	 * @see DATAMONGO-1245
+	 */
+	@Test
+	public void findAllByExampleShouldLookUpEntriesCorrectly() {
+
+		Person sample = new Person();
+		sample.setLastname("Matthews");
+		trimDomainType(sample, "id", "createdAt", "email");
+
+		List<Person> result = repository.findAllByExample(new Example<Person>(sample));
+
+		assertThat(result, hasItems(dave, oliver));
+		assertThat(result, hasSize(2));
+	}
+
+	/**
+	 * @see DATAMONGO-1245
+	 */
+	@Test
+	public void findAllByExampleShouldLookUpEntriesCorrectlyWhenUsingNestedObject() {
+
+		dave.setAddress(new Address("1600 Pennsylvania Ave NW", "20500", "Washington"));
+		repository.save(dave);
+
+		oliver.setAddress(new Address("East Capitol St NE & First St SE", "20004", "Washington"));
+		repository.save(oliver);
+
+		Person sample = new Person();
+		sample.setAddress(dave.getAddress());
+		trimDomainType(sample, "id", "createdAt", "email");
+
+		List<Person> result = repository.findAllByExample(new Example<Person>(sample));
+
+		assertThat(result, hasItem(dave));
+		assertThat(result, hasSize(1));
+	}
+
+	/**
+	 * @see DATAMONGO-1245
+	 */
+	@Test
+	public void findAllByExampleShouldLookUpEntriesCorrectlyWhenUsingPartialNestedObject() {
+
+		dave.setAddress(new Address("1600 Pennsylvania Ave NW", "20500", "Washington"));
+		repository.save(dave);
+
+		oliver.setAddress(new Address("East Capitol St NE & First St SE", "20004", "Washington"));
+		repository.save(oliver);
+
+		Person sample = new Person();
+		sample.setAddress(new Address(null, null, "Washington"));
+		trimDomainType(sample, "id", "createdAt", "email");
+
+		List<Person> result = repository.findAllByExample(new Example<Person>(sample));
+
+		assertThat(result, hasItems(dave, oliver));
+		assertThat(result, hasSize(2));
+	}
+
+	/**
+	 * @see DATAMONGO-1245
+	 */
+	@Test
+	public void findAllByExampleShouldNotFindEntriesWhenUsingPartialNestedObjectInStrictMode() {
+
+		dave.setAddress(new Address("1600 Pennsylvania Ave NW", "20500", "Washington"));
+		repository.save(dave);
+
+		Person sample = new Person();
+		sample.setAddress(new Address(null, null, "Washington"));
+		trimDomainType(sample, "id", "createdAt", "email");
+
+		List<Person> result = repository.findAllByExample(Example.newExampleOf(sample).includeNullValues().get());
+
+		assertThat(result, empty());
+	}
+
+	/**
+	 * @see DATAMONGO-1245
+	 */
+	@Test
+	public void findAllByExampleShouldLookUpEntriesCorrectlyWhenUsingNestedObjectInStrictMode() {
+
+		dave.setAddress(new Address("1600 Pennsylvania Ave NW", "20500", "Washington"));
+		repository.save(dave);
+
+		Person sample = new Person();
+		sample.setAddress(dave.getAddress());
+		trimDomainType(sample, "id", "createdAt", "email");
+
+		List<Person> result = repository.findAllByExample(Example.newExampleOf(sample).includeNullValues().get());
+
+		assertThat(result, hasItem(dave));
+		assertThat(result, hasSize(1));
+	}
+
+	/**
+	 * @see DATAMONGO-1245
+	 */
+	@Test
+	public void findAllByExampleShouldRespectStringMatchMode() {
+
+		Person sample = new Person();
+		sample.setLastname("Mat");
+		trimDomainType(sample, "id", "createdAt", "email");
+
+		List<Person> result = repository.findAllByExample(Example.newExampleOf(sample).matchStringsStartingWith().get());
+
+		assertThat(result, hasItems(dave, oliver));
+		assertThat(result, hasSize(2));
+	}
+
+	/**
+	 * @see DATAMONGO-1245
+	 */
+	@Test
+	public void findAllByExampleShouldResolveDbRefCorrectly() {
+
+		User user = new User();
+		user.setId("c0nf1ux");
+		user.setUsername("conflux");
+		template.save(user);
+
+		Person megan = new Person("megan", "tarash");
+		megan.setCreator(user);
+
+		repository.save(megan);
+
+		Person sample = new Person();
+		sample.setCreator(user);
+		trimDomainType(sample, "id", "createdAt", "email");
+
+		List<Person> result = repository.findAllByExample(new Example<Person>(sample));
+
+		assertThat(result, hasItem(megan));
+		assertThat(result, hasSize(1));
+	}
+
+	/**
+	 * @see DATAMONGO-1245
+	 */
+	@Test
+	public void findAllByExampleShouldResolveLegacyCoordinatesCorrectly() {
+
+		Person megan = new Person("megan", "tarash");
+		megan.setLocation(new Point(41.85003D, -87.65005D));
+
+		repository.save(megan);
+
+		Person sample = new Person();
+		sample.setLocation(megan.getLocation());
+		trimDomainType(sample, "id", "createdAt", "email");
+
+		List<Person> result = repository.findAllByExample(new Example<Person>(sample));
+
+		assertThat(result, hasItem(megan));
+		assertThat(result, hasSize(1));
+	}
+
+	/**
+	 * @see DATAMONGO-1245
+	 */
+	@Test
+	public void findAllByExampleShouldResolveGeoJsonCoordinatesCorrectly() {
+
+		Person megan = new Person("megan", "tarash");
+		megan.setLocation(new GeoJsonPoint(41.85003D, -87.65005D));
+
+		repository.save(megan);
+
+		Person sample = new Person();
+		sample.setLocation(megan.getLocation());
+		trimDomainType(sample, "id", "createdAt", "email");
+
+		List<Person> result = repository.findAllByExample(new Example<Person>(sample));
+
+		assertThat(result, hasItem(megan));
+		assertThat(result, hasSize(1));
+	}
+
+	/**
+	 * @see DATAMONGO-1245
+	 */
+	@Test
+	public void findAllByExampleShouldProcessInheritanceCorrectly() {
+
+		PersonExtended sample = new PersonExtended() {};
+		sample.setLastname("Matthews");
+		trimDomainType(sample, "id", "createdAt", "email");
+
+		List<Person> result = repository.findAllByExample(new Example<PersonExtended>(sample));
+
+		assertThat(result, hasItems(dave, oliver));
+		assertThat(result, hasSize(2));
+	}
+
+	@Document(collection = "customizedPerson")
+	static class PersonExtended extends Person {
+
+	}
+
 	private void assertThatAllReferencePersonsWereStoredCorrectly(Map<String, Person> references, List<Person> saved) {
 
 		for (Person person : saved) {
 			Person reference = references.get(person.getId());
 			assertThat(person, is(equalTo(reference)));
+		}
+	}
+
+	private void trimDomainType(Object source, String... attributes) {
+
+		for (String attribute : attributes) {
+			ReflectionTestUtils.setField(source, attribute, null);
 		}
 	}
 

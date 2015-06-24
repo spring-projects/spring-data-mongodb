@@ -20,6 +20,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.springframework.core.MethodParameter;
+import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Range;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Point;
@@ -42,6 +43,7 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 	private final int rangeIndex;
 	private final int maxDistanceIndex;
 	private final Integer fullTextIndex;
+	private final int sampleObjectIndex;
 
 	private Integer nearIndex;
 
@@ -69,10 +71,12 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 		} else if (this.nearIndex == null) {
 			this.nearIndex = -1;
 		}
+
+		this.sampleObjectIndex = parameterTypes.indexOf(Example.class);
 	}
 
 	private MongoParameters(List<MongoParameter> parameters, int maxDistanceIndex, Integer nearIndex,
-			Integer fullTextIndex, int rangeIndex) {
+			Integer fullTextIndex, int rangeIndex, int sampleObjectIndex) {
 
 		super(parameters);
 
@@ -80,6 +84,7 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 		this.fullTextIndex = fullTextIndex;
 		this.maxDistanceIndex = maxDistanceIndex;
 		this.rangeIndex = rangeIndex;
+		this.sampleObjectIndex = sampleObjectIndex;
 	}
 
 	private final int getNearIndex(List<Class<?>> parameterTypes) {
@@ -182,13 +187,22 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 		return rangeIndex;
 	}
 
+	/**
+	 * @return
+	 * @since 1.8
+	 */
+	public int getSampleObjectParameterIndex() {
+		return sampleObjectIndex;
+	}
+
 	/* 
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.query.Parameters#createFrom(java.util.List)
 	 */
 	@Override
 	protected MongoParameters createFrom(List<MongoParameter> parameters) {
-		return new MongoParameters(parameters, this.maxDistanceIndex, this.nearIndex, this.fullTextIndex, this.rangeIndex);
+		return new MongoParameters(parameters, this.maxDistanceIndex, this.nearIndex, this.fullTextIndex, this.rangeIndex,
+				this.sampleObjectIndex);
 	}
 
 	private int getTypeIndex(List<TypeInformation<?>> parameterTypes, Class<?> type, Class<?> componentType) {
@@ -240,7 +254,7 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 		@Override
 		public boolean isSpecialParameter() {
 			return super.isSpecialParameter() || Distance.class.isAssignableFrom(getType()) || isNearParameter()
-					|| TextCriteria.class.isAssignableFrom(getType());
+					|| TextCriteria.class.isAssignableFrom(getType()) || isExample();
 		}
 
 		private boolean isNearParameter() {
@@ -258,6 +272,10 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 
 		private boolean hasNearAnnotation() {
 			return parameter.getParameterAnnotation(Near.class) != null;
+		}
+
+		private boolean isExample() {
+			return Example.class.isAssignableFrom(getType());
 		}
 
 	}
