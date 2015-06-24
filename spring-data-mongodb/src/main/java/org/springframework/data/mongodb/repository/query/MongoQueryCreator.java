@@ -151,7 +151,20 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 	@Override
 	protected Query complete(Criteria criteria, Sort sort) {
 
-		Query query = (criteria == null ? new Query() : new Query(criteria)).with(sort);
+		Criteria toUse = null;
+		if (accessor.getSampleObject() != null) {
+			toUse = new Criteria().alike(accessor.getSampleObject());
+		}
+
+		if (criteria != null) {
+			if (toUse == null) {
+				toUse = criteria;
+			} else {
+				toUse.andOperator(criteria);
+			}
+		}
+
+		Query query = (toUse == null ? new Query() : new Query(toUse)).with(sort);
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("Created query " + query);
@@ -286,8 +299,8 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 
 			case ALWAYS:
 				if (path.getType() != String.class) {
-					throw new IllegalArgumentException(
-							String.format("Part %s must be of type String but was %s", path, path.getType()));
+					throw new IllegalArgumentException(String.format("Part %s must be of type String but was %s", path,
+							path.getType()));
 				}
 				// fall-through
 
@@ -373,8 +386,8 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 			return (T) parameter;
 		}
 
-		throw new IllegalArgumentException(
-				String.format("Expected parameter type of %s but got %s!", type, parameter.getClass()));
+		throw new IllegalArgumentException(String.format("Expected parameter type of %s but got %s!", type,
+				parameter.getClass()));
 	}
 
 	private Object[] nextAsArray(PotentiallyConvertingIterator iterator, MongoPersistentProperty property) {

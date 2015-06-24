@@ -26,6 +26,7 @@ import java.util.Map.Entry;
 import java.util.regex.Pattern;
 
 import org.bson.BSON;
+import org.springframework.data.domain.Example;
 import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Shape;
@@ -86,6 +87,30 @@ public class Criteria implements CriteriaDefinition {
 	 */
 	public static Criteria where(String key) {
 		return new Criteria(key);
+	}
+
+	/**
+	 * Static factory method to create a {@link Criteria} matching an example object.
+	 * 
+	 * @param example must not be {@literal null}.
+	 * @return
+	 * @see Criteria#alike(Example)
+	 * @since 1.8
+	 */
+	public static Criteria byExample(Object example) {
+		return byExample(new Example<Object>(example));
+	}
+
+	/**
+	 * Static factory method to create a {@link Criteria} matching an example object.
+	 * 
+	 * @param example must not be {@literal null}.
+	 * @return
+	 * @see Criteria#alike(Example)
+	 * @since 1.8
+	 */
+	public static Criteria byExample(Example<?> example) {
+		return new Criteria().alike(example);
 	}
 
 	/**
@@ -191,8 +216,8 @@ public class Criteria implements CriteriaDefinition {
 	 */
 	public Criteria in(Object... o) {
 		if (o.length > 1 && o[1] instanceof Collection) {
-			throw new InvalidMongoDbApiUsageException(
-					"You can only pass in one argument of type " + o[1].getClass().getName());
+			throw new InvalidMongoDbApiUsageException("You can only pass in one argument of type "
+					+ o[1].getClass().getName());
 		}
 		criteria.put("$in", Arrays.asList(o));
 		return this;
@@ -499,6 +524,20 @@ public class Criteria implements CriteriaDefinition {
 	}
 
 	/**
+	 * Creates a criterion using the given object as a pattern.
+	 * 
+	 * @param sample
+	 * @return
+	 * @since 1.8
+	 */
+	public Criteria alike(Example<?> sample) {
+
+		criteria.put("$sample", sample);
+		this.criteriaChain.add(this);
+		return this;
+	}
+
+	/**
 	 * Creates an 'or' criteria using the $or operator for all of the provided criteria
 	 * <p>
 	 * Note that mongodb doesn't support an $or operator to be wrapped in a $not operator.
@@ -543,8 +582,8 @@ public class Criteria implements CriteriaDefinition {
 	private Criteria registerCriteriaChainElement(Criteria criteria) {
 
 		if (lastOperatorWasNot()) {
-			throw new IllegalArgumentException(
-					"operator $not is not allowed around criteria chain element: " + criteria.getCriteriaObject());
+			throw new IllegalArgumentException("operator $not is not allowed around criteria chain element: "
+					+ criteria.getCriteriaObject());
 		} else {
 			criteriaChain.add(criteria);
 		}

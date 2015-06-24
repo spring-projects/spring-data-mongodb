@@ -18,6 +18,9 @@ package org.springframework.data.mongodb.repository;
 import java.io.Serializable;
 import java.util.List;
 
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.repository.NoRepositoryBean;
 import org.springframework.data.repository.PagingAndSortingRepository;
@@ -71,4 +74,19 @@ public interface MongoRepository<T, ID extends Serializable> extends PagingAndSo
 	 * @since 1.7
 	 */
 	<S extends T> List<S> insert(Iterable<S> entities);
+
+	/**
+	 * @param example
+	 * @return
+	 * @since 1.8
+	 */
+	<S extends T> List<T> findAllByExample(Example<S> example);
+
+	/**
+	 * @param example
+	 * @param pageable
+	 * @return
+	 * @since 1.8
+	 */
+	<S extends T> Page<T> findByExample(Example<S> example, Pageable pageable);
 }

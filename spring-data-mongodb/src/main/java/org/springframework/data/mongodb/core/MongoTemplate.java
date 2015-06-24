@@ -51,6 +51,7 @@ import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.authentication.UserCredentials;
 import org.springframework.data.convert.EntityReader;
+import org.springframework.data.domain.Example;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.GeoResult;
 import org.springframework.data.geo.GeoResults;
@@ -636,6 +637,17 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		MongoPersistentProperty idProperty = persistentEntity == null ? null : persistentEntity.getIdProperty();
 		String idKey = idProperty == null ? ID_FIELD : idProperty.getName();
 		return doFindOne(collectionName, new BasicDBObject(idKey, id), null, entityClass);
+	}
+
+	public <S extends T, T> List<T> findByExample(S sample) {
+		return findByExample(new Example<S>(sample));
+	}
+
+	@SuppressWarnings("unchecked")
+	public <S extends T, T> List<T> findByExample(Example<S> sample) {
+
+		Assert.notNull(sample, "Sample object must not be null!");
+		return (List<T>) find(new Query(new Criteria().alike(sample)), sample.getProbeType());
 	}
 
 	public <T> GeoResults<T> geoNear(NearQuery near, Class<T> entityClass) {

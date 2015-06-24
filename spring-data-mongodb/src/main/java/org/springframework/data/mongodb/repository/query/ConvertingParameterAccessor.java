@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Sort;
@@ -130,6 +131,11 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 	 */
 	public TextCriteria getFullText() {
 		return delegate.getFullText();
+	}
+
+	@Override
+	public Example<?> getSampleObject() {
+		return delegate.getSampleObject();
 	}
 
 	/**
