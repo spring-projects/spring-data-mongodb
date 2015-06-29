@@ -20,18 +20,14 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 import org.bson.types.ObjectId;
 import org.springframework.core.convert.ConversionException;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.domain.Example;
-import org.springframework.data.domain.Example.ObjectMatchMode;
-import org.springframework.data.domain.Example.StringMatchMode;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PropertyPath;
@@ -44,11 +40,9 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty.PropertyToFieldNameConverter;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.SerializationUtils;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
-import org.springframework.util.ObjectUtils;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
@@ -77,6 +71,7 @@ public class QueryMapper {
 	private final ConversionService conversionService;
 	private final MongoConverter converter;
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
+	private final MongoExampleMapper exampleMapper;
 
 	/**
 	 * Creates a new {@link QueryMapper} with the given {@link MongoConverter}.
@@ -90,6 +85,7 @@ public class QueryMapper {
 		this.conversionService = converter.getConversionService();
 		this.converter = converter;
 		this.mappingContext = converter.getMappingContext();
+		this.exampleMapper = new MongoExampleMapper(converter);
 	}
 
 	/**
@@ -247,90 +243,10 @@ public class QueryMapper {
 		}
 
 		if (keyword.isSample()) {
-			return getMappedExample(keyword.<Example<?>> getValue(), entity);
+			return exampleMapper.getMappedExample(keyword.<Example<?>> getValue(), entity);
 		}
 
 		return new BasicDBObject(keyword.getKey(), convertSimpleOrDBObject(keyword.getValue(), entity));
-	}
-
-	/**
-	 * Returns the given {@link Example} as {@link DBObject} holding matching values extracted from
-	 * {@link Example#getProbe()}.
-	 * 
-	 * @param example
-	 * @param entity
-	 * @return
-	 * @since 1.8
-	 */
-	protected DBObject getMappedExample(Example<?> example, MongoPersistentEntity<?> entity) {
-
-		DBObject reference = (DBObject) converter.convertToMongoType(example.getProbe());
-
-		if (entity.hasIdProperty() && entity.getIdentifierAccessor(example.getProbe()).getIdentifier() == null) {
-			reference.removeField(entity.getIdProperty().getFieldName());
-		}
-
-		if (!ObjectUtils.nullSafeEquals(StringMatchMode.DEFAULT, example.getStringMatchMode())
-				|| example.isIngnoreCaseEnabled()) {
-			applyStringPattern(reference, example);
-		}
-
-		return ObjectUtils.nullSafeEquals(ObjectMatchMode.STRICT, example.getObjectMatchMode()) ? reference
-				: new BasicDBObject(SerializationUtils.flatMap(reference));
-	}
-
-	private void applyStringPattern(DBObject source, Example<?> example) {
-
-		if (!(source instanceof BasicDBObject)) {
-			return;
-		}
-		Iterator<Map.Entry<String, Object>> iter = ((BasicDBObject) source).entrySet().iterator();
-
-		while (iter.hasNext()) {
-
-			Map.Entry<String, Object> entry = iter.next();
-			if (entry.getValue() instanceof String) {
-
-				// TODO: extract common stuff from MongoQueryCreator
-				BasicDBObject dbo = new BasicDBObject();
-				switch (example.getStringMatchMode()) {
-
-					case REGEX:
-						dbo.put("$regex", entry.getValue());
-						entry.setValue(dbo);
-						break;
-					case DEFAULT:
-						dbo.put("$regex", Pattern.quote((String) entry.getValue()));
-						entry.setValue(dbo);
-						break;
-					case CONTAINING:
-						dbo.put("$regex", ".*" + entry.getValue() + ".*");
-						entry.setValue(dbo);
-						break;
-					case STARTING:
-						dbo.put("$regex", "^" + entry.getValue());
-						entry.setValue(dbo);
-						break;
-					case ENDING:
-						dbo.put("$regex", entry.getValue() + "$");
-						entry.setValue(dbo);
-						break;
-					case EXACT:
-						dbo.put("$regex", "^" + entry.getValue() + "$");
-						entry.setValue(dbo);
-						break;
-					default:
-				}
-
-				// sometimes order matters in MongoDB so make sure to add $options after $regex.
-				if (example.isIngnoreCaseEnabled()) {
-					dbo.put("$options", "i");
-				}
-
-			} else if (entry.getValue() instanceof BasicDBObject) {
-				applyStringPattern((BasicDBObject) entry.getValue(), example);
-			}
-		}
 	}
 
 	/**

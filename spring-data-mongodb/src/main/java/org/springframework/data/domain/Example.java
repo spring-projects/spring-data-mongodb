@@ -15,6 +15,9 @@
  */
 package org.springframework.data.domain;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
@@ -25,9 +28,13 @@ import org.springframework.util.ClassUtils;
 public class Example<T> {
 
 	private final T probe;
-	private ObjectMatchMode objectMatchMode = ObjectMatchMode.LENIENT;
-	private StringMatchMode stringMatchMode = StringMatchMode.DEFAULT;
-	private boolean ignoreCaseEnabled = false;
+
+	private NullHandling nullHandling = NullHandling.IGNORE_NULL;
+	private StringMatcher defaultStringMatcher = StringMatcher.DEFAULT;
+
+	private boolean ignoreCase = false;
+
+	private Map<String, PropertySpecifier> propertySpecifiers = new LinkedHashMap<String, PropertySpecifier>();
 
 	public <S extends T> Example(S probe) {
 
@@ -39,16 +46,28 @@ public class Example<T> {
 		return probe;
 	}
 
-	public ObjectMatchMode getObjectMatchMode() {
-		return objectMatchMode;
+	public NullHandling getNullHandling() {
+		return nullHandling;
 	}
 
-	public StringMatchMode getStringMatchMode() {
-		return stringMatchMode;
+	public StringMatcher getDefaultStringMatcher() {
+		return defaultStringMatcher;
 	}
 
 	public boolean isIngnoreCaseEnabled() {
-		return this.ignoreCaseEnabled;
+		return this.ignoreCase;
+	}
+
+	public boolean hasPropertySpecifier(String path) {
+		return propertySpecifiers.containsKey(path);
+	}
+
+	public PropertySpecifier getPropertySpecifier(String propertyPath) {
+		return this.propertySpecifiers.get(propertyPath);
+	}
+
+	public boolean hasPropertySpecifiers() {
+		return !this.propertySpecifiers.isEmpty();
 	}
 
 	@SuppressWarnings("unchecked")
@@ -56,34 +75,76 @@ public class Example<T> {
 		return (Class<? extends T>) ClassUtils.getUserClass(probe.getClass());
 	}
 
-	public static <S extends T, T> Example<T> example(S probe) {
+	public static <S extends T, T> Example<T> exampleOf(S probe) {
 		return new Example<T>(probe);
 	}
 
-	public static class ExampleBuilder<T> {
+	public static <S extends T, T> Example<T> exampleOf(S probe, String... ignoredProperties) {
+		return new Builder<T>(probe).ignore(ignoredProperties).get();
+	}
+
+	public static <S extends T, T> Builder<S> newExampleOf(S probe) {
+		return new Builder<S>(probe);
+	}
+
+	public static class Builder<T> {
 
 		private Example<T> example;
 
-		public ExampleBuilder(T probe) {
+		Builder(T probe) {
 			example = new Example<T>(probe);
 		}
 
-		public ExampleBuilder<T> objectMatchMode(ObjectMatchMode matchMode) {
+		public Builder<T> with(NullHandling nullHandling) {
+			return nullHandling(nullHandling);
+		}
 
-			example.objectMatchMode = matchMode == null ? ObjectMatchMode.LENIENT : matchMode;
+		public Builder<T> with(StringMatcher stringMatcher) {
+			return stringMatcher(stringMatcher);
+		}
+
+		public Builder<T> with(PropertySpecifier specifier) {
+			return specify(specifier);
+		}
+
+		public Builder<T> nullHandling(NullHandling nullHandling) {
+
+			example.nullHandling = nullHandling == null ? NullHandling.IGNORE_NULL : nullHandling;
 			return this;
 		}
 
-		public ExampleBuilder<T> stringMatchMode(StringMatchMode matchMode) {
+		public Builder<T> stringMatcher(StringMatcher stringMatcher) {
 
-			example.stringMatchMode = matchMode == null ? StringMatchMode.DEFAULT : matchMode;
+			example.defaultStringMatcher = stringMatcher == null ? StringMatcher.DEFAULT : stringMatcher;
 			return this;
 		}
 
-		public ExampleBuilder<T> stringMatchMode(StringMatchMode matchMode, boolean ignoreCase) {
+		public Builder<T> stringMatcher(StringMatcher stringMatching, boolean ignoreCase) {
 
-			example.stringMatchMode = matchMode == null ? StringMatchMode.DEFAULT : matchMode;
-			example.ignoreCaseEnabled = ignoreCase;
+			example.defaultStringMatcher = stringMatching == null ? StringMatcher.DEFAULT : stringMatching;
+			example.ignoreCase = ignoreCase;
+			return this;
+		}
+
+		public Builder<T> ignoreCase() {
+			example.ignoreCase = true;
+			return this;
+		}
+
+		public Builder<T> specify(PropertySpecifier... specifiers) {
+
+			for (PropertySpecifier specifier : specifiers) {
+				example.propertySpecifiers.put(specifier.getPath(), specifier);
+			}
+			return this;
+		}
+
+		public Builder<T> ignore(String... ignoredProperties) {
+
+			for (String ignoredProperty : ignoredProperties) {
+				specify(PropertySpecifier.newPropertySpecifier(ignoredProperty)
+						.valueTransformer(new ExcludingValueTransformer()).get());
+			}
 			return this;
 		}
 
@@ -97,15 +158,15 @@ public class Example<T> {
 	 * 
 	 * @author Christoph Strobl
 	 */
-	public static enum ObjectMatchMode {
+	public static enum NullHandling {
 		/**
 		 * Strict matching will use partially filled objects as reference.
 		 */
-		STRICT,
+		INCLUDE_NULL,
 		/**
 		 * Lenient matching will inspected nested objects and extract path if needed.
 		 */
-		LENIENT
+		IGNORE_NULL
 	}
 
 	/**
@@ -113,7 +174,7 @@ public class Example<T> {
 	 * 
 	 * @author Christoph Strobl
 	 */
-	public static enum StringMatchMode {
+	public static enum StringMatcher {
 
 		/**
 		 * Store specific default.
@@ -141,9 +202,12 @@ public class Example<T> {
 		REGEX
 	}
 
-	// TODO: add default null handling
-	// TODO: add default String handling
-	// TODO: add per field null handling
-	// TODO: add per field String handling
+	public static class ExcludingValueTransformer implements PropertyValueTransformer {
+
+		@Override
+		public Object tranform(Object source) {
+			return null;
+		}
+	}
 
 }

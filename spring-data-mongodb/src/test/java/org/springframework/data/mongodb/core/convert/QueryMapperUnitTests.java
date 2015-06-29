@@ -17,7 +17,6 @@ package org.springframework.data.mongodb.core.convert;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
-import static org.springframework.data.domain.Example.*;
 import static org.springframework.data.mongodb.core.DBObjectTestUtils.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
@@ -28,7 +27,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 import org.bson.types.ObjectId;
 import org.hamcrest.core.Is;
@@ -38,10 +36,6 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.domain.Example;
-import org.springframework.data.domain.Example.ExampleBuilder;
-import org.springframework.data.domain.Example.ObjectMatchMode;
-import org.springframework.data.domain.Example.StringMatchMode;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.geo.Point;
@@ -831,93 +825,7 @@ public class QueryMapperUnitTests {
 	 * @see DATAMONGO-1245
 	 */
 	@Test
-	public void exampleShouldBeMappedCorrectlyForFlatTypeWhenIdIsSet() {
-
-		FlatDocument probe = new FlatDocument();
-		probe.id = "steelheart";
-		Example<FlatDocument> sample = example(probe);
-
-		Query query = query(byExample(sample));
-
-		DBObject dbo = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(FlatDocument.class));
-
-		assertThat(dbo, is(new BasicDBObjectBuilder().add("_id", "steelheart").get()));
-	}
-
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
-	public void exampleShouldBeMappedCorrectlyForFlatTypeWhenMultipleValuesSet() {
-
-		FlatDocument probe = new FlatDocument();
-		probe.id = "steelheart";
-		probe.stringValue = "firefight";
-		probe.intValue = 100;
-
-		Query query = query(byExample(probe));
-
-		DBObject dbo = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(FlatDocument.class));
-
-		assertThat(dbo,
-				is(new BasicDBObjectBuilder().add("_id", "steelheart").add("stringValue", "firefight").add("intValue", 100)
-						.get()));
-	}
-
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
-	public void exampleShouldBeMappedCorrectlyForFlatTypeWhenIdIsNotSet() {
-
-		FlatDocument probe = new FlatDocument();
-		probe.stringValue = "firefight";
-		probe.intValue = 100;
-
-		Query query = query(byExample(probe));
-
-		DBObject dbo = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(FlatDocument.class));
-
-		assertThat(dbo, is(new BasicDBObjectBuilder().add("stringValue", "firefight").add("intValue", 100).get()));
-	}
-
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
-	public void exampleShouldBeMappedCorrectlyForFlatTypeWhenListHasValues() {
-
-		FlatDocument probe = new FlatDocument();
-		probe.listOfString = Arrays.asList("Prof", "Tia", "David");
-
-		Query query = query(byExample(probe));
-
-		DBObject dbo = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(FlatDocument.class));
-
-		assertThat(dbo, is(new BasicDBObjectBuilder().add("listOfString", Arrays.asList("Prof", "Tia", "David")).get()));
-	}
-
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
-	public void exampleShouldBeMappedCorrectlyForFlatTypeWhenFieldNameIsCustomized() {
-
-		FlatDocument probe = new FlatDocument();
-		probe.customNamedField = "Mitosis";
-
-		Query query = query(byExample(probe));
-
-		DBObject dbo = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(FlatDocument.class));
-
-		assertThat(dbo, is(new BasicDBObjectBuilder().add("custom_field_name", "Mitosis").get()));
-	}
-
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
-	public void exampleShouldBeMappedAsFlatMapWhenGivenNestedElementsWithLenienMatchMode() {
+	public void exampleShouldBeMappedCorrectly() {
 
 		Foo probe = new Foo();
 		probe.embedded = new EmbeddedClass();
@@ -928,144 +836,6 @@ public class QueryMapperUnitTests {
 		DBObject dbo = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(Foo.class));
 
 		assertThat(dbo, is(new BasicDBObjectBuilder().add("embedded._id", "conflux").get()));
-	}
-
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
-	public void exampleShouldBeMappedAsExactObjectWhenGivenNestedElementsWithStriktMatchMode() {
-
-		Foo probe = new Foo();
-		probe.embedded = new EmbeddedClass();
-		probe.embedded.id = "conflux";
-
-		Query query = query(byExample(new ExampleBuilder<Foo>(probe).objectMatchMode(ObjectMatchMode.STRICT).get()));
-
-		DBObject dbo = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(Foo.class));
-
-		assertThat(dbo, isBsonObject().containing("embedded._id", "conflux"));
-	}
-
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
-	public void exampleShouldBeMappedCorrectlyForFlatTypeWhenStringMatchModeIsStarting() {
-
-		FlatDocument probe = new FlatDocument();
-		probe.stringValue = "firefight";
-		probe.intValue = 100;
-
-		Query query = query(byExample(new Example.ExampleBuilder<FlatDocument>(probe).stringMatchMode(
-				StringMatchMode.STARTING).get()));
-
-		DBObject dbo = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(FlatDocument.class));
-
-		assertThat(dbo,
-				is(new BasicDBObjectBuilder().add("stringValue", new BasicDBObject("$regex", "^firefight"))
-						.add("intValue", 100).get()));
-	}
-
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
-	public void exampleShouldBeMappedCorrectlyForFlatTypeWhenStringMatchModeIsEnding() {
-
-		FlatDocument probe = new FlatDocument();
-		probe.stringValue = "firefight";
-		probe.intValue = 100;
-
-		Query query = query(byExample(new Example.ExampleBuilder<FlatDocument>(probe).stringMatchMode(
-				StringMatchMode.ENDING).get()));
-
-		DBObject dbo = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(FlatDocument.class));
-
-		assertThat(dbo,
-				is(new BasicDBObjectBuilder().add("stringValue", new BasicDBObject("$regex", "firefight$"))
-						.add("intValue", 100).get()));
-	}
-
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
-	public void exampleShouldBeMappedCorrectlyForFlatTypeWhenIgnoreCaseEnabledAndMatchModeSet() {
-
-		FlatDocument probe = new FlatDocument();
-		probe.stringValue = "firefight";
-		probe.intValue = 100;
-
-		Query query = query(byExample(new Example.ExampleBuilder<FlatDocument>(probe).stringMatchMode(
-				StringMatchMode.ENDING, true).get()));
-
-		DBObject dbo = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(FlatDocument.class));
-
-		assertThat(
-				dbo,
-				is(new BasicDBObjectBuilder()
-						.add("stringValue", new BasicDBObjectBuilder().add("$regex", "firefight$").add("$options", "i").get())
-						.add("intValue", 100).get()));
-	}
-
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
-	public void exampleShouldBeMappedCorrectlyForFlatTypeWhenIgnoreCaseEnabled() {
-
-		FlatDocument probe = new FlatDocument();
-		probe.stringValue = "firefight";
-		probe.intValue = 100;
-
-		Query query = query(byExample(new Example.ExampleBuilder<FlatDocument>(probe).stringMatchMode(
-				StringMatchMode.DEFAULT, true).get()));
-
-		DBObject dbo = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(FlatDocument.class));
-
-		assertThat(
-				dbo,
-				is(new BasicDBObjectBuilder()
-						.add("stringValue",
-								new BasicDBObjectBuilder().add("$regex", Pattern.quote("firefight")).add("$options", "i").get())
-						.add("intValue", 100).get()));
-	}
-
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
-	public void exampleShouldBeMappedWhenContainingDBRef() {
-
-		WithDBRef probe = new WithDBRef();
-		probe.someString = "steelheart";
-		probe.reference = new Reference();
-		probe.reference.id = 200L;
-
-		Query query = query(byExample(probe));
-
-		DBObject dbo = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(WithDBRef.class));
-		com.mongodb.DBRef reference = getTypedValue(dbo, "reference", com.mongodb.DBRef.class);
-
-		assertThat(reference.getId(), Is.<Object> is(200L));
-		assertThat(reference.getCollectionName(), is("reference"));
-	}
-
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
-	public void exampleShouldBeMappedWhenDBRefIsNull() {
-
-		WithDBRef probe = new WithDBRef();
-		probe.someString = "steelheart";
-
-		Query query = query(byExample(probe));
-
-		DBObject dbo = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(WithDBRef.class));
-
-		assertThat(dbo, is(new BasicDBObjectBuilder().add("someString", "steelheart").get()));
 	}
 
 	/**
@@ -1083,15 +853,6 @@ public class QueryMapperUnitTests {
 
 		assertThat(dbo.get("legacyPoint.x"), Is.<Object> is(10D));
 		assertThat(dbo.get("legacyPoint.y"), Is.<Object> is(20D));
-	}
-
-	static class FlatDocument {
-
-		@Id String id;
-		String stringValue;
-		Integer intValue;
-		List<String> listOfString;
-		@Field("custom_field_name") String customNamedField;
 	}
 
 	@Document
