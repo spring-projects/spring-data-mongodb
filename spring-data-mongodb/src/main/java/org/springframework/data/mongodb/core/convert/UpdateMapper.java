@@ -22,7 +22,6 @@ import java.util.Map.Entry;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.context.MappingContext;
-import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty.PropertyToFieldNameConverter;
@@ -67,8 +66,8 @@ public class UpdateMapper extends QueryMapper {
 	 */
 	@Override
 	protected Object delegateConvertToMongoType(Object source, MongoPersistentEntity<?> entity) {
-		return entity == null ? super.delegateConvertToMongoType(source, null) : converter.convertToMongoType(source,
-				getTypeHintForEntity(source, entity));
+		return converter.convertToMongoType(source,
+				entity == null ? ClassTypeInformation.OBJECT : getTypeHintForEntity(source, entity));
 	}
 
 	/*
@@ -198,18 +197,6 @@ public class UpdateMapper extends QueryMapper {
 
 			super(key.replaceAll("\\.\\$", ""), entity, mappingContext);
 			this.key = key;
-		}
-
-		@Override
-		@SuppressWarnings({ "rawtypes", "unchecked" })
-		public MongoPersistentEntity<?> getPropertyEntity() {
-
-			MongoPersistentEntity<?> entity = super.getPropertyEntity();
-			if (entity != null || getProperty() == null) {
-				return entity;
-			}
-
-			return new BasicMongoPersistentEntity(getProperty().getTypeInformation());
 		}
 
 		/*
