@@ -15,7 +15,7 @@
 	<parent>
 		<groupId>org.springframework.data.build</groupId>
 		<artifactId>spring-data-parent</artifactId>
-		<version>1.5.3.BUILD-SNAPSHOT</version>
+		<version>1.5.3.RELEASE</version>
 	</parent>
 
 	<modules>
@@ -28,7 +28,7 @@
 	<properties>
 		<project.type>multi</project.type>
 		<dist.id>spring-data-mongodb</dist.id>
-		<springdata.commons>1.9.3.BUILD-SNAPSHOT</springdata.commons>
+		<springdata.commons>1.9.3.RELEASE</springdata.commons>
 		<mongo>2.12.5</mongo>
 		<mongo.osgi>2.12.5</mongo.osgi>
 	</properties>
@@ -156,8 +156,8 @@
 
 	<repositories>
 		<repository>
-			<id>spring-libs-snapshot</id>
-			<url>http://repo.spring.io/libs-snapshot</url>
+			<id>spring-libs-release</id>
+			<url>https://repo.spring.io/libs-release</url>
 		</repository>
 	</repositories>
 
