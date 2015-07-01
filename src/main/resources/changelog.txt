@@ -1,6 +1,20 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 1.5.6.RELEASE (2015-07-01)
+---------------------------------------------
+* DATAMONGO-1246 - Release 1.5.6 (Dijkstra).
+* DATAMONGO-1234 - Fix typos in JavaDoc.
+* DATAMONGO-1232 - IgnoreCase should escape queries.
+* DATAMONGO-1229 - MongoQueryCreator incorrectly rejects ignoreCase on nested String path.
+* DATAMONGO-1224 - Assert Spring Framework 4.2 compatibility.
+* DATAMONGO-1221 - Remove relative reference to parent POM to make sure the right Spring version is picked up.
+* DATAMONGO-1207 - MongoTemplate#doInsertAll throws NullPointerException when passed Collection contains a null item.
+* DATAMONGO-1180 - Incorrect exception message creation in PartTreeMongoQuery.
+* DATAMONGO-1166 - ReadPreference not used for Aggregations.
+* DATAMONGO-1155 - Upgrade mongo-next build profiles to Java driver version 2.13.0.
+
+
 Changes in version 1.6.3.RELEASE (2015-07-01)
 ---------------------------------------------
 * DATAMONGO-1247 - Release 1.6.3 (Evans).
