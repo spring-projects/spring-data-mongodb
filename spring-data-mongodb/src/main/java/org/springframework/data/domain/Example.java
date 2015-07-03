@@ -18,10 +18,14 @@ package org.springframework.data.domain;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.springframework.data.repository.query.parser.Part;
+import org.springframework.data.repository.query.parser.Part.Type;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
 /**
+ * Support for query by example (QBE).
+ *
  * @author Christoph Strobl
  * @param <T>
  */
@@ -29,64 +33,127 @@ public class Example<T> {
 
 	private final T probe;
 
-	private NullHandling nullHandling = NullHandling.IGNORE_NULL;
+	private NullHandler nullHandler = NullHandler.IGNORE;
 	private StringMatcher defaultStringMatcher = StringMatcher.DEFAULT;
+	private PropertySpecifiers propertySpecifiers = new PropertySpecifiers();
 
 	private boolean ignoreCase = false;
 
-	private Map<String, PropertySpecifier> propertySpecifiers = new LinkedHashMap<String, PropertySpecifier>();
-
+	/**
+	 * Create a new {@link Example} including all non-null properties by default.
+	 * 
+	 * @param probe The example to use. Must not be {@literal null}.
+	 */
 	public <S extends T> Example(S probe) {
 
 		Assert.notNull(probe, "Probe must not be null!");
 		this.probe = probe;
 	}
 
+	/**
+	 * Get the example used.
+	 * 
+	 * @return never {@literal null}.
+	 */
 	public T getProbe() {
 		return probe;
 	}
 
-	public NullHandling getNullHandling() {
-		return nullHandling;
+	/**
+	 * Get defined null handling.
+	 * 
+	 * @return never {@literal null}
+	 */
+	public NullHandler getNullHandler() {
+		return nullHandler;
 	}
 
+	/**
+	 * Get defined {@link StringMatcher}.
+	 * 
+	 * @return never {@literal null}.
+	 */
 	public StringMatcher getDefaultStringMatcher() {
 		return defaultStringMatcher;
 	}
 
+	/**
+	 * @return {@literal true} if {@link String} should be matched with ignore case option.
+	 */
 	public boolean isIngnoreCaseEnabled() {
 		return this.ignoreCase;
 	}
 
+	/**
+	 * @param path Dot-Path to property.
+	 * @return {@literal true} in case {@link PropertySpecifier} defined for given path.
+	 */
 	public boolean hasPropertySpecifier(String path) {
-		return propertySpecifiers.containsKey(path);
+		return propertySpecifiers.hasSpecifierForPath(path);
 	}
 
-	public PropertySpecifier getPropertySpecifier(String propertyPath) {
-		return this.propertySpecifiers.get(propertyPath);
+	/**
+	 * @param path Dot-Path to property.
+	 * @return {@literal null} when no {@link PropertySpecifier} defined for path.
+	 */
+	public PropertySpecifier getPropertySpecifier(String path) {
+		return propertySpecifiers.getForPath(path);
 	}
 
+	/**
+	 * @return true if at least one {@link PropertySpecifier} defined.
+	 */
 	public boolean hasPropertySpecifiers() {
-		return !this.propertySpecifiers.isEmpty();
+		return this.propertySpecifiers.hasValues();
 	}
 
+	/**
+	 * Get the actual type for the example used.
+	 * 
+	 * @return
+	 */
 	@SuppressWarnings("unchecked")
 	public Class<? extends T> getProbeType() {
 		return (Class<? extends T>) ClassUtils.getUserClass(probe.getClass());
 	}
 
+	/**
+	 * Create a new {@link Example} including all non-null properties by default.
+	 * 
+	 * @param probe must not be {@literal null}.
+	 * @return
+	 */
 	public static <S extends T, T> Example<T> exampleOf(S probe) {
 		return new Example<T>(probe);
 	}
 
+	/**
+	 * Create a new {@link Example} including all non-null properties, excluding explicitly named properties to ignore.
+	 * 
+	 * @param probe must not be {@literal null}.
+	 * @return
+	 */
 	public static <S extends T, T> Example<T> exampleOf(S probe, String... ignoredProperties) {
 		return new Builder<T>(probe).ignore(ignoredProperties).get();
 	}
 
+	/**
+	 * Create new {@link Builder} for specifying {@link Example}.
+	 * 
+	 * @param probe must not be {@literal null}.
+	 * @return
+	 * @see Builder
+	 */
 	public static <S extends T, T> Builder<S> newExampleOf(S probe) {
 		return new Builder<S>(probe);
 	}
 
+	/**
+	 * Builder for specifying desired behavior of {@link Example}.
+	 * 
+	 * @author Christoph Strobl
+	 * @param <T>
+	 */
 	public static class Builder<T> {
 
 		private Example<T> example;
@@ -95,30 +162,68 @@ public class Example<T> {
 			example = new Example<T>(probe);
 		}
 
-		public Builder<T> with(NullHandling nullHandling) {
+		/**
+		 * Sets {@link NullHandler} used for {@link Example}.
+		 * 
+		 * @param nullHandling
+		 * @return
+		 * @see Builder#nullHandling(NullHandler)
+		 */
+		public Builder<T> with(NullHandler nullHandling) {
 			return nullHandling(nullHandling);
 		}
 
+		/**
+		 * Sets default {@link StringMatcher} used for {@link Example}.
+		 * 
+		 * @param stringMatcher
+		 * @return
+		 * @see Builder#stringMatcher(StringMatcher)
+		 */
 		public Builder<T> with(StringMatcher stringMatcher) {
 			return stringMatcher(stringMatcher);
 		}
 
-		public Builder<T> with(PropertySpecifier specifier) {
-			return specify(specifier);
+		/**
+		 * Adds {@link PropertySpecifier} used for {@link Example}.
+		 * 
+		 * @param specifier
+		 * @return
+		 * @see Builder#specify(PropertySpecifier...)
+		 */
+		public Builder<T> with(PropertySpecifier... specifiers) {
+			return specify(specifiers);
 		}
 
-		public Builder<T> nullHandling(NullHandling nullHandling) {
+		/**
+		 * Sets {@link NullHandler} used for {@link Example}.
+		 * 
+		 * @param nullHandling Defaulted to {@link NullHandler#INCLUDE} in case of {@literal null}.
+		 * @return
+		 */
+		public Builder<T> nullHandling(NullHandler nullHandling) {
 
-			example.nullHandling = nullHandling == null ? NullHandling.IGNORE_NULL : nullHandling;
+			example.nullHandler = nullHandling == null ? NullHandler.IGNORE : nullHandling;
 			return this;
 		}
 
+		/**
+		 * Sets the default {@link StringMatcher} used for {@link Example}.
+		 * 
+		 * @param stringMatcher Defaulted to {@link StringMatcher#DEFAULT} in case of {@literal null}.
+		 * @return
+		 */
 		public Builder<T> stringMatcher(StringMatcher stringMatcher) {
-
-			example.defaultStringMatcher = stringMatcher == null ? StringMatcher.DEFAULT : stringMatcher;
-			return this;
+			return stringMatcher(stringMatcher, example.ignoreCase);
 		}
 
+		/**
+		 * Sets the default {@link StringMatcher} used for {@link Example}.
+		 * 
+		 * @param stringMatcher Defaulted to {@link StringMatcher#DEFAULT} in case of {@literal null}.
+		 * @param ignoreCase
+		 * @return
+		 */
 		public Builder<T> stringMatcher(StringMatcher stringMatching, boolean ignoreCase) {
 
 			example.defaultStringMatcher = stringMatching == null ? StringMatcher.DEFAULT : stringMatching;
@@ -126,19 +231,34 @@ public class Example<T> {
 			return this;
 		}
 
+		/**
+		 * @return
+		 */
 		public Builder<T> ignoreCase() {
 			example.ignoreCase = true;
 			return this;
 		}
 
+		/**
+		 * Define specific property handling.
+		 * 
+		 * @param specifiers
+		 * @return
+		 */
 		public Builder<T> specify(PropertySpecifier... specifiers) {
 
 			for (PropertySpecifier specifier : specifiers) {
-				example.propertySpecifiers.put(specifier.getPath(), specifier);
+				example.propertySpecifiers.add(specifier);
 			}
 			return this;
 		}
 
+		/**
+		 * Ignore given properties.
+		 * 
+		 * @param ignoredProperties
+		 * @return
+		 */
 		public Builder<T> ignore(String... ignoredProperties) {
 
 			for (String ignoredProperty : ignoredProperties) {
@@ -148,29 +268,26 @@ public class Example<T> {
 			return this;
 		}
 
+		/**
+		 * @return {@link Example} as defined.
+		 */
 		public Example<T> get() {
 			return this.example;
 		}
 	}
 
 	/**
-	 * Match modes indicates inclusion of complex objects.
+	 * Null handling for creating criterion out of an {@link Example}.
 	 * 
 	 * @author Christoph Strobl
 	 */
-	public static enum NullHandling {
-		/**
-		 * Strict matching will use partially filled objects as reference.
-		 */
-		INCLUDE_NULL,
-		/**
-		 * Lenient matching will inspected nested objects and extract path if needed.
-		 */
-		IGNORE_NULL
+	public static enum NullHandler {
+
+		INCLUDE, IGNORE
 	}
 
 	/**
-	 * Match modes indicates treatment of {@link String} values.
+	 * Match modes for treatment of {@link String} values.
 	 * 
 	 * @author Christoph Strobl
 	 */
@@ -179,34 +296,73 @@ public class Example<T> {
 		/**
 		 * Store specific default.
 		 */
-		DEFAULT,
+		DEFAULT(null),
 		/**
 		 * Matches the exact string
 		 */
-		EXACT,
+		EXACT(Type.SIMPLE_PROPERTY),
 		/**
 		 * Matches string starting with pattern
 		 */
-		STARTING,
+		STARTING(Type.STARTING_WITH),
 		/**
 		 * Matches string ending with pattern
 		 */
-		ENDING,
+		ENDING(Type.ENDING_WITH),
 		/**
 		 * Matches string containing pattern
 		 */
-		CONTAINING,
+		CONTAINING(Type.CONTAINING),
 		/**
 		 * Treats strings as regular expression patterns
 		 */
-		REGEX
+		REGEX(Type.REGEX);
+
+		private Type type;
+
+		private StringMatcher(Type type) {
+			this.type = type;
+		}
+
+		/**
+		 * Get the according {@link Part.Type}.
+		 * 
+		 * @return {@literal null} for {@link StringMatcher#DEFAULT}.
+		 */
+		public Type getPartType() {
+			return type;
+		}
+
 	}
 
 	public static class ExcludingValueTransformer implements PropertyValueTransformer {
 
 		@Override
-		public Object tranform(Object source) {
+		public Object convert(Object source) {
 			return null;
+		}
+	}
+
+	static class PropertySpecifiers {
+
+		private Map<String, PropertySpecifier> propertySpecifiers = new LinkedHashMap<String, PropertySpecifier>();
+
+		public void add(PropertySpecifier specifier) {
+
+			Assert.notNull(specifier, "PropertySpecifier must not be null!");
+			propertySpecifiers.put(specifier.getPath(), specifier);
+		}
+
+		public boolean hasSpecifierForPath(String path) {
+			return propertySpecifiers.containsKey(path);
+		}
+
+		public PropertySpecifier getForPath(String path) {
+			return propertySpecifiers.get(path);
+		}
+
+		public boolean hasValues() {
+			return !propertySpecifiers.isEmpty();
 		}
 	}
 

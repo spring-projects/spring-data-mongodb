@@ -15,9 +15,11 @@
  */
 package org.springframework.data.domain;
 
+import org.springframework.core.convert.converter.Converter;
+
 /**
  * @author Christoph Strobl
  */
-public interface PropertyValueTransformer {
-	Object tranform(Object souce);
+public interface PropertyValueTransformer extends Converter<Object, Object> {
+	// TODO: should we use the converter interface directly or not at all?
 }

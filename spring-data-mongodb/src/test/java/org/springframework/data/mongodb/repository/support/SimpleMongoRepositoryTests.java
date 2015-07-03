@@ -32,7 +32,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
-import org.springframework.data.domain.Example.NullHandling;
+import org.springframework.data.domain.Example.NullHandler;
 import org.springframework.data.domain.Example.StringMatcher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -262,7 +262,7 @@ public class SimpleMongoRepositoryTests {
 		trimDomainType(sample, "id", "createdAt", "email");
 
 		List<Person> result = repository.findAllByExample(Example.newExampleOf(sample)
-				.nullHandling(NullHandling.INCLUDE_NULL).get());
+				.nullHandling(NullHandler.INCLUDE).get());
 
 		assertThat(result, empty());
 	}
@@ -281,7 +281,7 @@ public class SimpleMongoRepositoryTests {
 		trimDomainType(sample, "id", "createdAt", "email");
 
 		List<Person> result = repository.findAllByExample(Example.newExampleOf(sample)
-				.nullHandling(NullHandling.INCLUDE_NULL).get());
+				.nullHandling(NullHandler.INCLUDE).get());
 
 		assertThat(result, hasItem(dave));
 		assertThat(result, hasSize(1));

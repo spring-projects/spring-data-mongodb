@@ -24,13 +24,14 @@ import java.util.Stack;
 import java.util.regex.Pattern;
 
 import org.springframework.data.domain.Example;
-import org.springframework.data.domain.Example.NullHandling;
+import org.springframework.data.domain.Example.NullHandler;
 import org.springframework.data.domain.Example.StringMatcher;
 import org.springframework.data.domain.PropertySpecifier;
 import org.springframework.data.mapping.PropertyHandler;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.mongodb.core.query.MongoRegexCreator;
 import org.springframework.data.mongodb.core.query.SerializationUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -84,7 +85,7 @@ public class MongoExampleMapper {
 
 		applyPropertySpecs("", reference, example);
 
-		return ObjectUtils.nullSafeEquals(NullHandling.INCLUDE_NULL, example.getNullHandling()) ? reference
+		return ObjectUtils.nullSafeEquals(NullHandler.INCLUDE, example.getNullHandler()) ? reference
 				: new BasicDBObject(SerializationUtils.flatMap(reference));
 	}
 
@@ -158,6 +159,7 @@ public class MongoExampleMapper {
 			PropertySpecifier specifier = null;
 			StringMatcher stringMatcher = example.getDefaultStringMatcher();
 			Object value = entry.getValue();
+			boolean ignoreCase = example.isIngnoreCaseEnabled();
 
 			if (example.hasPropertySpecifiers()) {
 
@@ -165,11 +167,18 @@ public class MongoExampleMapper {
 						propertyPath, example);
 				specifier = example.getPropertySpecifier(mappedPropertyPath);
 
-				if (specifier != null && !specifier.getStringMatcher().equals(StringMatcher.DEFAULT)) {
-					stringMatcher = specifier.getStringMatcher();
+				if (specifier != null) {
+					if (specifier.hasStringMatcher()) {
+						stringMatcher = specifier.getStringMatcher();
+					}
+					if (specifier.getIgnoreCase() != null) {
+						ignoreCase = specifier.getIgnoreCase();
+					}
+
 				}
 			}
 
+			// TODO: should a PropertySpecifier outrule the later on string matching?
 			if (specifier != null) {
 
 				value = specifier.transformValue(value);
@@ -182,53 +191,33 @@ public class MongoExampleMapper {
 			}
 
 			if (entry.getValue() instanceof String) {
-				applyStringMatcher(example, stringMatcher, entry);
+				applyStringMatcher(entry, stringMatcher, ignoreCase);
 			} else if (entry.getValue() instanceof BasicDBObject) {
 				applyPropertySpecs(propertyPath, (BasicDBObject) entry.getValue(), example);
 			}
 		}
 	}
 
-	private void applyStringMatcher(Example<?> example, StringMatcher stringMatcher, Map.Entry<String, Object> entry) {
+	private void applyStringMatcher(Map.Entry<String, Object> entry, StringMatcher stringMatcher, boolean ignoreCase) {
 
-		// TODO: extract common stuff from MongoQueryCreator
 		BasicDBObject dbo = new BasicDBObject();
-		switch (stringMatcher) {
 
-			case REGEX:
-				dbo.put("$regex", entry.getValue());
-				entry.setValue(dbo);
-				break;
-			case DEFAULT:
+		if (ObjectUtils.nullSafeEquals(StringMatcher.DEFAULT, stringMatcher)) {
 
-				if (example.isIngnoreCaseEnabled()) {
-					dbo.put("$regex", Pattern.quote((String) entry.getValue()));
-					entry.setValue(dbo);
-				}
-				break;
-			case CONTAINING:
-				dbo.put("$regex", ".*" + entry.getValue() + ".*");
+			if (ignoreCase) {
+				dbo.put("$regex", Pattern.quote((String) entry.getValue()));
 				entry.setValue(dbo);
-				break;
-			case STARTING:
-				dbo.put("$regex", "^" + entry.getValue());
-				entry.setValue(dbo);
-				break;
-			case ENDING:
-				dbo.put("$regex", entry.getValue() + "$");
-				entry.setValue(dbo);
-				break;
-			case EXACT:
-				dbo.put("$regex", "^" + entry.getValue() + "$");
-				entry.setValue(dbo);
-				break;
-			default:
+			}
+		} else {
+
+			String expression = MongoRegexCreator.INSTANCE
+					.toRegularExpression((String) entry.getValue(), stringMatcher.getPartType());
+			dbo.put("$regex", expression);
+			entry.setValue(dbo);
 		}
 
-		// sometimes order matters in MongoDB so make sure to add $options after $regex.
-		if (example.isIngnoreCaseEnabled()) {
+		if (ignoreCase) {
 			dbo.put("$options", "i");
 		}
 	}
-
 }

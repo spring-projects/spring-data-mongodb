@@ -15,16 +15,7 @@
  */
 package org.springframework.data.mongodb.repository;
 
-import java.util.List;
-
-import org.hamcrest.core.Is;
-import org.junit.Assert;
-import org.junit.Test;
-import org.springframework.data.domain.Example;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.util.ReflectionTestUtils;
 
 /**
  * Integration test for {@link PersonRepository}.
@@ -33,41 +24,4 @@ import org.springframework.test.util.ReflectionTestUtils;
  * @author Thomas Darimont
  */
 @ContextConfiguration
-public class PersonRepositoryIntegrationTests extends AbstractPersonRepositoryIntegrationTests {
-
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
-	public void findByExampleShouldResolveStuffCorrectly() {
-
-		Person sample = new Person();
-		sample.setLastname("Matthews");
-
-		// needed to tweak stuff a bit since some field are automatically set - so we need to undo this
-		ReflectionTestUtils.setField(sample, "id", null);
-		ReflectionTestUtils.setField(sample, "createdAt", null);
-		ReflectionTestUtils.setField(sample, "email", null);
-
-		Page<Person> result = repository.findByExample(new Example<Person>(sample), new PageRequest(0, 10));
-		Assert.assertThat(result.getNumberOfElements(), Is.is(2));
-	}
-
-	/**
-	 * @see DATAMONGO-1245
-	 */
-	@Test
-	public void findAllByExampleShouldResolveStuffCorrectly() {
-
-		Person sample = new Person();
-		sample.setLastname("Matthews");
-
-		// needed to tweak stuff a bit since some field are automatically set - so we need to undo this
-		ReflectionTestUtils.setField(sample, "id", null);
-		ReflectionTestUtils.setField(sample, "createdAt", null);
-		ReflectionTestUtils.setField(sample, "email", null);
-
-		List<Person> result = repository.findAllByExample(new Example<Person>(sample));
-		Assert.assertThat(result.size(), Is.is(2));
-	}
-}
+public class PersonRepositoryIntegrationTests extends AbstractPersonRepositoryIntegrationTests {}

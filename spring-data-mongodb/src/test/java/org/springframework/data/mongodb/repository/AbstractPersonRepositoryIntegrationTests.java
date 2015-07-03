@@ -28,12 +28,15 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.hamcrest.Matchers;
+import org.hamcrest.core.Is;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Range;
@@ -55,6 +58,7 @@ import org.springframework.data.mongodb.repository.Person.Sex;
 import org.springframework.data.mongodb.repository.SampleEvaluationContextExtension.SampleSecurityContextHolder;
 import org.springframework.data.querydsl.QSort;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.util.ReflectionTestUtils;
 
 /**
  * Base class for tests for {@link PersonRepository}.
@@ -1220,6 +1224,42 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 
 		assertThat(users, hasSize(1));
 		assertThat(users.get(0), is(dave));
+	}
+
+	/**
+	 * @see DATAMONGO-1245
+	 */
+	@Test
+	public void findByExampleShouldResolveStuffCorrectly() {
+
+		Person sample = new Person();
+		sample.setLastname("Matthews");
+
+		// needed to tweak stuff a bit since some field are automatically set - so we need to undo this
+		ReflectionTestUtils.setField(sample, "id", null);
+		ReflectionTestUtils.setField(sample, "createdAt", null);
+		ReflectionTestUtils.setField(sample, "email", null);
+
+		Page<Person> result = repository.findByExample(new Example<Person>(sample), new PageRequest(0, 10));
+		Assert.assertThat(result.getNumberOfElements(), Is.is(2));
+	}
+
+	/**
+	 * @see DATAMONGO-1245
+	 */
+	@Test
+	public void findAllByExampleShouldResolveStuffCorrectly() {
+
+		Person sample = new Person();
+		sample.setLastname("Matthews");
+
+		// needed to tweak stuff a bit since some field are automatically set - so we need to undo this
+		ReflectionTestUtils.setField(sample, "id", null);
+		ReflectionTestUtils.setField(sample, "createdAt", null);
+		ReflectionTestUtils.setField(sample, "email", null);
+
+		List<Person> result = repository.findAllByExample(new Example<Person>(sample));
+		Assert.assertThat(result.size(), Is.is(2));
 	}
 
 }

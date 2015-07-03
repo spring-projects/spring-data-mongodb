@@ -18,7 +18,7 @@ package org.springframework.data.mongodb.core.convert;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 import static org.springframework.data.domain.Example.*;
-import static org.springframework.data.domain.Example.NullHandling.*;
+import static org.springframework.data.domain.Example.NullHandler.*;
 import static org.springframework.data.domain.Example.StringMatcher.*;
 import static org.springframework.data.domain.PropertySpecifier.*;
 import static org.springframework.data.mongodb.core.DBObjectTestUtils.*;
@@ -172,7 +172,7 @@ public class MongoExampleMapperUnitTests {
 		probe.flatDoc = new FlatDocument();
 		probe.flatDoc.stringValue = "conflux";
 
-		Example<?> example = newExampleOf(probe).nullHandling(INCLUDE_NULL).get();
+		Example<?> example = newExampleOf(probe).nullHandling(INCLUDE).get();
 
 		DBObject dbo = mapper.getMappedExample(example, context.getPersistentEntity(WrapperDocument.class));
 
@@ -402,6 +402,22 @@ public class MongoExampleMapperUnitTests {
 				dbo,
 				is(new BasicDBObjectBuilder().add("stringValue", new BasicDBObject("$regex", ".*firefight.*"))
 						.add("custom_field_name", "steelheart").get()));
+	}
+
+	/**
+	 * @see DATAMONGO-1245
+	 */
+	@Test
+	public void mappingShouldIncludePropertiesFromHierarchicalDocument() {
+
+		HierachicalDocument probe = new HierachicalDocument();
+		probe.stringValue = "firefight";
+		probe.customNamedField = "steelheart";
+		probe.anotherStringValue = "calamity";
+
+		DBObject dbo = mapper.getMappedExample(exampleOf(probe), context.getPersistentEntity(FlatDocument.class));
+
+		assertThat(dbo, isBsonObject().containing("anotherStringValue", "calamity"));
 	}
 
 	static class FlatDocument {
