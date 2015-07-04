@@ -90,7 +90,7 @@ public class UpdateMapper extends QueryMapper {
 			return getMappedUpdateModifier(field, rawValue);
 		}
 
-		return super.getMappedObjectForField(field, getMappedValue(field, rawValue));
+		return super.getMappedObjectForField(field, rawValue);
 	}
 
 	private Entry<String, Object> getMappedUpdateModifier(Field field, Object rawValue) {

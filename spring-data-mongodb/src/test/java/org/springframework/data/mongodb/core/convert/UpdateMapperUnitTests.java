@@ -42,6 +42,9 @@ import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.DBObjectTestUtils;
+import org.springframework.data.mongodb.core.convert.UpdateMapperUnitTests.ClassWithEnum.Allocation;
+import org.springframework.data.mongodb.core.convert.UpdateMapperUnitTests.ClassWithEnum.AllocationToStringConverter;
+import org.springframework.data.mongodb.core.convert.UpdateMapperUnitTests.ClassWithEnum.StringToAllocationConverter;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -692,6 +695,33 @@ public class UpdateMapperUnitTests {
 		assertThat(mappedUpdate, isBsonObject().notContaining("$set.concreteMap.jasnah._class"));
 	}
 
+	/**
+	 * @see DATAMONGO-1250
+	 */
+	@Test
+	@SuppressWarnings("unchecked")
+	public void mapsUpdateWithBothReadingAndWritingConverterRegistered() {
+
+		CustomConversions conversions = new CustomConversions(
+				Arrays.asList(AllocationToStringConverter.INSTANCE, StringToAllocationConverter.INSTANCE));
+
+		MongoMappingContext mappingContext = new MongoMappingContext();
+		mappingContext.setSimpleTypeHolder(conversions.getSimpleTypeHolder());
+		mappingContext.afterPropertiesSet();
+
+		MappingMongoConverter converter = new MappingMongoConverter(mock(DbRefResolver.class), mappingContext);
+		converter.setCustomConversions(conversions);
+		converter.afterPropertiesSet();
+
+		UpdateMapper mapper = new UpdateMapper(converter);
+
+		Update update = new Update().set("allocation", Allocation.AVAILABLE);
+		DBObject result = mapper.getMappedObject(update.getUpdateObject(),
+				mappingContext.getPersistentEntity(ClassWithEnum.class));
+
+		assertThat(result, isBsonObject().containing("$set.allocation", Allocation.AVAILABLE.code));
+	}
+
 	static class DomainTypeWrappingConcreteyTypeHavingListOfInterfaceTypeAttributes {
 		ListModelWrapper concreteTypeWithListAttributeOfInterfaceType;
 	}
@@ -913,5 +943,52 @@ public class UpdateMapperUnitTests {
 
 		Map<Object, Object> map;
 		Map<Object, NestedDocument> concreteMap;
+	}
+
+	static class ClassWithEnum {
+
+		Allocation allocation;
+
+		static enum Allocation {
+
+			AVAILABLE("V"), ALLOCATED("A");
+
+			String code;
+
+			private Allocation(String code) {
+				this.code = code;
+			}
+
+			public static Allocation of(String code) {
+
+				for (Allocation value : values()) {
+					if (value.code.equals(code)) {
+						return value;
+					}
+				}
+
+				throw new IllegalArgumentException();
+			}
+		}
+
+		static enum AllocationToStringConverter implements Converter<Allocation, String> {
+
+			INSTANCE;
+
+			@Override
+			public String convert(Allocation source) {
+				return source.code;
+			}
+		}
+
+		static enum StringToAllocationConverter implements Converter<String, Allocation> {
+
+			INSTANCE;
+
+			@Override
+			public Allocation convert(String source) {
+				return Allocation.of(source);
+			}
+		}
 	}
 }
