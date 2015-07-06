@@ -148,7 +148,7 @@ public class UpdateMapper extends QueryMapper {
 	private TypeInformation<?> processTypeHintForNestedDocuments(Object source, TypeInformation<?> info) {
 
 		Class<?> type = info.getActualType().getType();
-		if (type.isInterface() || java.lang.reflect.Modifier.isAbstract(type.getModifiers())) {
+		if (source == null || type.isInterface() || java.lang.reflect.Modifier.isAbstract(type.getModifiers())) {
 			return info;
 		}
 

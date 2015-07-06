@@ -22,6 +22,7 @@ import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.DBObjectTestUtils.*;
 import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
 
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -792,6 +793,70 @@ public class UpdateMapperUnitTests {
 		assertThat(result, isBsonObject().containing("$set.allocation", Allocation.AVAILABLE.code));
 	}
 
+	/**
+	 * see DATAMONGO-1251
+	 */
+	@Test
+	public void mapsNullValueCorrectlyForSimpleTypes() {
+
+		Update update = new Update().set("value", null);
+
+		DBObject mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(ConcreteChildClass.class));
+
+		DBObject $set = DBObjectTestUtils.getAsDBObject(mappedUpdate, "$set");
+		assertThat($set.containsField("value"), is(true));
+		assertThat($set.get("value"), nullValue());
+	}
+
+	/**
+	 * see DATAMONGO-1251
+	 */
+	@Test
+	public void mapsNullValueCorrectlyForJava8Date() {
+
+		Update update = new Update().set("date", null);
+
+		DBObject mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(ClassWithJava8Date.class));
+
+		DBObject $set = DBObjectTestUtils.getAsDBObject(mappedUpdate, "$set");
+		assertThat($set.containsField("date"), is(true));
+		assertThat($set.get("value"), nullValue());
+	}
+
+	/**
+	 * see DATAMONGO-1251
+	 */
+	@Test
+	public void mapsNullValueCorrectlyForCollectionTypes() {
+
+		Update update = new Update().set("values", null);
+
+		DBObject mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(ListModel.class));
+
+		DBObject $set = DBObjectTestUtils.getAsDBObject(mappedUpdate, "$set");
+		assertThat($set.containsField("values"), is(true));
+		assertThat($set.get("value"), nullValue());
+	}
+
+	/**
+	 * see DATAMONGO-1251
+	 */
+	@Test
+	public void mapsNullValueCorrectlyForPropertyOfNestedDocument() {
+
+		Update update = new Update().set("concreteValue.name", null);
+
+		DBObject mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(EntityWithObject.class));
+
+		DBObject $set = DBObjectTestUtils.getAsDBObject(mappedUpdate, "$set");
+		assertThat($set.containsField("concreteValue.name"), is(true));
+		assertThat($set.get("concreteValue.name"), nullValue());
+	}
+
 	static class DomainTypeWrappingConcreteyTypeHavingListOfInterfaceTypeAttributes {
 		ListModelWrapper concreteTypeWithListAttributeOfInterfaceType;
 	}
@@ -1060,5 +1125,10 @@ public class UpdateMapperUnitTests {
 				return Allocation.of(source);
 			}
 		}
+	}
+
+	static class ClassWithJava8Date {
+
+		LocalDate date;
 	}
 }
