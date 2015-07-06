@@ -142,19 +142,18 @@ public class UpdateMapper extends QueryMapper {
 	}
 
 	private TypeInformation<?> getTypeHintForEntity(Object source, MongoPersistentEntity<?> entity) {
-		return processTypeHintForNestedDocuments(source, entity.getTypeInformation());
-	}
 
-	private TypeInformation<?> processTypeHintForNestedDocuments(Object source, TypeInformation<?> info) {
-
+		TypeInformation<?> info = entity.getTypeInformation();
 		Class<?> type = info.getActualType().getType();
-		if (type.isInterface() || java.lang.reflect.Modifier.isAbstract(type.getModifiers())) {
+
+		if (source == null || type.isInterface() || java.lang.reflect.Modifier.isAbstract(type.getModifiers())) {
 			return info;
 		}
 
 		if (!type.equals(source.getClass())) {
 			return info;
 		}
+
 		return NESTED_DOCUMENT;
 	}
 
