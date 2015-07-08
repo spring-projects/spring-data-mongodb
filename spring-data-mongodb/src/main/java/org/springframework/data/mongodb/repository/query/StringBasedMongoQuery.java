@@ -161,7 +161,8 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 	 * @param bindings
 	 * @return
 	 */
-	private String replacePlaceholders(String input, ConvertingParameterAccessor accessor, List<ParameterBinding> bindings) {
+	private String replacePlaceholders(String input, ConvertingParameterAccessor accessor,
+			List<ParameterBinding> bindings) {
 
 		if (bindings.isEmpty()) {
 			return input;
@@ -187,11 +188,11 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 				int end = idx + parameter.length();
 
 				if (shouldPotentiallyRemoveQuotes) {
-					
+
 					// is the insertion point actually surrounded by quotes?
 					char beforeStart = result.charAt(start - 1);
 					char afterEnd = result.charAt(end);
-					
+
 					if ((beforeStart == '\'' || beforeStart == '"') && (afterEnd == '\'' || afterEnd == '"')) {
 
 						// skip preceeding and following quote
@@ -235,9 +236,10 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 	 */
 	private Object evaluateExpression(String expressionString, Object[] parameterValues) {
 
-		EvaluationContext evaluationContext = evaluationContextProvider.getEvaluationContext(getQueryMethod()
-				.getParameters(), parameterValues);
+		EvaluationContext evaluationContext = evaluationContextProvider
+				.getEvaluationContext(getQueryMethod().getParameters(), parameterValues);
 		Expression expression = expressionParser.parseExpression(expressionString);
+
 		return expression.getValue(evaluationContext, Object.class);
 	}
 
@@ -287,7 +289,7 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 			return transformedInput;
 		}
 
-		private String transformQueryAndCollectExpressionParametersIntoBindings(String input,
+		private static String transformQueryAndCollectExpressionParametersIntoBindings(String input,
 				List<ParameterBinding> bindings) {
 
 			StringBuilder result = new StringBuilder();
@@ -297,14 +299,11 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 			int exprIndex = 0;
 
 			while (currentPos < input.length()) {
-				int indexOfExpressionParameter = input.indexOf(INDEX_BASED_EXPRESSION_PARAM_START, currentPos);
 
-				if (indexOfExpressionParameter < 0) {
-					indexOfExpressionParameter = input.indexOf(NAME_BASED_EXPRESSION_PARAM_START, currentPos);
-				}
+				int indexOfExpressionParameter = getIndexOfExpressionParameter(input, currentPos);
 
+				// no expression parameter found
 				if (indexOfExpressionParameter < 0) {
-					// no expression parameter found
 					break;
 				}
 
@@ -313,9 +312,9 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 
 				// eat parameter expression
 				int curlyBraceOpenCnt = 1;
+
 				while (curlyBraceOpenCnt > 0) {
-					char c = input.charAt(currentPos++);
-					switch (c) {
+					switch (input.charAt(currentPos++)) {
 						case CURRLY_BRACE_OPEN:
 							curlyBraceOpenCnt++;
 							break;
@@ -323,13 +322,14 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 							curlyBraceOpenCnt--;
 							break;
 						default:
-							;
 					}
 				}
 
 				result.append(input.subSequence(startIndex, indexOfExpressionParameter));
-				result.append(EXPRESSION_PARAM_QUOTE).append(EXPRESSION_PARAM_PREFIX).append(exprIndex)
-						.append(EXPRESSION_PARAM_QUOTE);
+				result.append(EXPRESSION_PARAM_QUOTE).append(EXPRESSION_PARAM_PREFIX);
+				result.append(exprIndex);
+				result.append(EXPRESSION_PARAM_QUOTE);
+
 				bindings.add(new ParameterBinding(exprIndex, true, input.substring(exprStart, currentPos - 1)));
 
 				startIndex = currentPos;
@@ -337,20 +337,16 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 				exprIndex++;
 			}
 
-			result.append(input.subSequence(currentPos, input.length()));
-
-			return result.toString();
+			return result.append(input.subSequence(currentPos, input.length())).toString();
 		}
 
-		private String makeParameterReferencesParseable(String input) {
+		private static String makeParameterReferencesParseable(String input) {
 
 			Matcher matcher = PARAMETER_BINDING_PATTERN.matcher(input);
-			String parseableInput = matcher.replaceAll(PARSEABLE_PARAMETER);
-
-			return parseableInput;
+			return matcher.replaceAll(PARSEABLE_PARAMETER);
 		}
 
-		private void collectParameterReferencesIntoBindings(List<ParameterBinding> bindings, Object value) {
+		private static void collectParameterReferencesIntoBindings(List<ParameterBinding> bindings, Object value) {
 
 			if (value instanceof String) {
 
@@ -393,7 +389,7 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 			}
 		}
 
-		private void potentiallyAddBinding(String source, List<ParameterBinding> bindings) {
+		private static void potentiallyAddBinding(String source, List<ParameterBinding> bindings) {
 
 			Matcher valueMatcher = PARSEABLE_BINDING_PATTERN.matcher(source);
 
@@ -405,6 +401,14 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 
 				bindings.add(new ParameterBinding(paramIndex, quoted));
 			}
+		}
+
+		private static int getIndexOfExpressionParameter(String input, int position) {
+
+			int indexOfExpressionParameter = input.indexOf(INDEX_BASED_EXPRESSION_PARAM_START, position);
+
+			return indexOfExpressionParameter < 0 ? input.indexOf(NAME_BASED_EXPRESSION_PARAM_START, position)
+					: indexOfExpressionParameter;
 		}
 	}
 
