@@ -19,6 +19,7 @@ import java.net.UnknownHostException;
 
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.dao.DataAccessException;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.authentication.UserCredentials;
 import org.springframework.data.mongodb.MongoDbFactory;
@@ -131,6 +132,11 @@ public class SimpleMongoDbFactory implements DisposableBean, MongoDbFactory {
 
 	private SimpleMongoDbFactory(Mongo mongo, String databaseName, UserCredentials credentials,
 			boolean mongoInstanceCreated, String authenticationDatabaseName) {
+
+		if (mongo instanceof MongoClient && (credentials != null && !UserCredentials.NO_CREDENTIALS.equals(credentials))) {
+			throw new InvalidDataAccessApiUsageException(
+					"Usage of 'UserCredentials' with 'MongoClient' is no longer supported. Please use 'MongoCredential' for 'MongoClient' or just 'Mongo'.");
+		}
 
 		Assert.notNull(mongo, "Mongo must not be null");
 		Assert.hasText(databaseName, "Database name must not be empty");
