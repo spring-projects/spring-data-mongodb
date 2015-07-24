@@ -22,10 +22,13 @@ import static org.springframework.test.util.ReflectionTestUtils.*;
 
 import java.net.UnknownHostException;
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.authentication.UserCredentials;
 import org.springframework.data.mongodb.MongoDbFactory;
 
@@ -43,6 +46,7 @@ import com.mongodb.MongoURI;
 @RunWith(MockitoJUnitRunner.class)
 public class SimpleMongoDbFactoryUnitTests {
 
+	public @Rule ExpectedException expectedException = ExpectedException.none();
 	@Mock Mongo mongo;
 
 	/**
@@ -113,6 +117,46 @@ public class SimpleMongoDbFactoryUnitTests {
 		SimpleMongoDbFactory factory = new SimpleMongoDbFactory(clientMock, "FooBar");
 
 		assertThat(getField(factory, "authenticationDatabaseName").toString(), is("FooBar"));
+	}
+
+	/**
+	 * @see DATAMONGO-1260
+	 */
+	@Test
+	public void rejectsMongoClientWithUserCredentials() {
+
+		expectedException.expect(InvalidDataAccessApiUsageException.class);
+		expectedException.expectMessage("use 'MongoCredential' for 'MongoClient'");
+
+		new SimpleMongoDbFactory(mock(MongoClient.class), "cairhienin", new UserCredentials("moiraine", "sedai"));
+	}
+
+	/**
+	 * @see DATAMONGO-1260
+	 */
+	@Test
+	public void rejectsMongoClientWithUserCredentialsAndAuthDb() {
+
+		expectedException.expect(InvalidDataAccessApiUsageException.class);
+		expectedException.expectMessage("use 'MongoCredential' for 'MongoClient'");
+
+		new SimpleMongoDbFactory(mock(MongoClient.class), "malkieri", new UserCredentials("lan", "mandragoran"), "authdb");
+	}
+
+	/**
+	 * @see DATAMONGO-1260
+	 */
+	@Test
+	public void shouldNotRejectMongoClientWithNoCredentials() {
+		new SimpleMongoDbFactory(mock(MongoClient.class), "andoran", UserCredentials.NO_CREDENTIALS);
+	}
+
+	/**
+	 * @see DATAMONGO-1260
+	 */
+	@Test
+	public void shouldNotRejectMongoClientWithEmptyUserCredentials() {
+		new SimpleMongoDbFactory(mock(MongoClient.class), "shangtai", new UserCredentials("", ""));
 	}
 
 	@SuppressWarnings("deprecation")
