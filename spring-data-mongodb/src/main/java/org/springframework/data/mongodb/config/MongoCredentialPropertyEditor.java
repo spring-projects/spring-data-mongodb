@@ -31,6 +31,7 @@ import com.mongodb.MongoCredential;
  * Parse a {@link String} to a Collection of {@link MongoCredential}.
  * 
  * @author Christoph Strobl
+ * @author Oliver Gierke
  * @since 1.7
  */
 public class MongoCredentialPropertyEditor extends PropertyEditorSupport {
@@ -95,16 +96,16 @@ public class MongoCredentialPropertyEditor extends PropertyEditorSupport {
 						credentials.add(MongoCredential.createScramSha1Credential(userNameAndPassword[0], database,
 								userNameAndPassword[1].toCharArray()));
 					} else {
-						throw new IllegalArgumentException(String.format(
-								"Cannot create MongoCredentials for unknown auth mechanism '%s'!", authMechanism));
+						throw new IllegalArgumentException(
+								String.format("Cannot create MongoCredentials for unknown auth mechanism '%s'!", authMechanism));
 					}
 				}
 			} else {
 
 				verifyUsernameAndPasswordPresent(userNameAndPassword);
 				verifyDatabasePresent(database);
-				credentials.add(MongoCredential.createCredential(userNameAndPassword[0], database,
-						userNameAndPassword[1].toCharArray()));
+				credentials.add(
+						MongoCredential.createCredential(userNameAndPassword[0], database, userNameAndPassword[1].toCharArray()));
 			}
 		}
 
@@ -114,8 +115,8 @@ public class MongoCredentialPropertyEditor extends PropertyEditorSupport {
 	private List<String> extractCredentialsString(String source) {
 
 		Matcher matcher = GROUP_PATTERN.matcher(source);
-
 		List<String> list = new ArrayList<String>();
+
 		while (matcher.find()) {
 
 			String value = StringUtils.trimLeadingCharacter(matcher.group(), '\'');
@@ -125,6 +126,7 @@ public class MongoCredentialPropertyEditor extends PropertyEditorSupport {
 		if (!list.isEmpty()) {
 			return list;
 		}
+
 		return Arrays.asList(source.split(","));
 	}
 
@@ -132,14 +134,9 @@ public class MongoCredentialPropertyEditor extends PropertyEditorSupport {
 
 		int index = text.lastIndexOf(DATABASE_DELIMINATOR);
 
-		if (index == -1) {
-			index = text.lastIndexOf(OPTIONS_DELIMINATOR);
-		}
-		if (index == -1) {
-			return new String[] {};
-		}
-		String userNameAndPassword = text.substring(0, index);
-		return userNameAndPassword.split(USERNAME_PASSWORD_DELIMINATOR);
+		index = index != -1 ? index : text.lastIndexOf(OPTIONS_DELIMINATOR);
+
+		return index == -1 ? new String[] {} : text.substring(0, index).split(USERNAME_PASSWORD_DELIMINATOR);
 	}
 
 	private static String extractDB(String text) {
@@ -175,26 +172,27 @@ public class MongoCredentialPropertyEditor extends PropertyEditorSupport {
 		return properties;
 	}
 
-	private void verifyUserNamePresent(String[] source) {
-
-		if (source.length == 0 || !StringUtils.hasText(source[0])) {
-			throw new IllegalArgumentException("Credentials need to specify username!");
-		}
-	}
-
-	private void verifyUsernameAndPasswordPresent(String[] source) {
+	private static void verifyUsernameAndPasswordPresent(String[] source) {
 
 		verifyUserNamePresent(source);
+
 		if (source.length != 2) {
 			throw new IllegalArgumentException(
 					"Credentials need to specify username and password like in 'username:password@database'!");
 		}
 	}
 
-	private void verifyDatabasePresent(String source) {
+	private static void verifyDatabasePresent(String source) {
 
 		if (!StringUtils.hasText(source)) {
 			throw new IllegalArgumentException("Credentials need to specify database like in 'username:password@database'!");
+		}
+	}
+
+	private static void verifyUserNamePresent(String[] source) {
+
+		if (source.length == 0 || !StringUtils.hasText(source[0])) {
+			throw new IllegalArgumentException("Credentials need to specify username!");
 		}
 	}
 }
