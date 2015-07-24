@@ -43,12 +43,18 @@ public class MongoCredentialPropertyEditorUnitTests {
 	static final String USER_2_PWD = "warg";
 	static final String USER_2_DB = "snow";
 
+	static final String USER_3_NAME = "CN=myName,OU=myOrgUnit,O=myOrg,L=myLocality,ST=myState,C=myCountry";
+	static final String USER_3_DB = "stark";
+
 	static final String USER_1_AUTH_STRING = USER_1_NAME + ":" + USER_1_PWD + "@" + USER_1_DB;
 	static final String USER_1_AUTH_STRING_WITH_PLAIN_AUTH_MECHANISM = USER_1_AUTH_STRING + "?uri.authMechanism=PLAIN";
 
 	static final String USER_2_AUTH_STRING = USER_2_NAME + ":" + USER_2_PWD + "@" + USER_2_DB;
 	static final String USER_2_AUTH_STRING_WITH_MONGODB_CR_AUTH_MECHANISM = USER_2_AUTH_STRING
 			+ "?uri.authMechanism=MONGODB-CR";
+
+	static final String USER_3_AUTH_STRING_WITH_X509_AUTH_MECHANISM = "'" + USER_3_NAME + "@" + USER_3_DB
+			+ "?uri.authMechanism=MONGODB-X509'";
 
 	static final MongoCredential USER_1_CREDENTIALS = MongoCredential.createCredential(USER_1_NAME, USER_1_DB,
 			USER_1_PWD.toCharArray());
@@ -59,6 +65,8 @@ public class MongoCredentialPropertyEditorUnitTests {
 			USER_2_PWD.toCharArray());
 	static final MongoCredential USER_2_CREDENTIALS_CR_AUTH = MongoCredential.createMongoCRCredential(USER_2_NAME,
 			USER_2_DB, USER_2_PWD.toCharArray());
+
+	static final MongoCredential USER_3_CREDENTIALS_X509_AUTH = MongoCredential.createMongoX509Credential(USER_3_NAME);
 
 	MongoCredentialPropertyEditor editor;
 
@@ -167,5 +175,76 @@ public class MongoCredentialPropertyEditorUnitTests {
 				USER_1_AUTH_STRING_WITH_PLAIN_AUTH_MECHANISM, USER_2_AUTH_STRING)));
 
 		assertThat((List<MongoCredential>) editor.getValue(), contains(USER_1_CREDENTIALS_PLAIN_AUTH, USER_2_CREDENTIALS));
+	}
+
+	/**
+	 * @see DATAMONGO-1257
+	 */
+	@Test
+	@SuppressWarnings("unchecked")
+	public void shouldReturnCredentialsValueCorrectlyWhenGivenMultipleQuotedUserNamePasswordStringWithDatabaseAndNoOptions() {
+
+		editor.setAsText(StringUtils.collectionToCommaDelimitedString(Arrays.asList("'" + USER_1_AUTH_STRING + "'", "'"
+				+ USER_2_AUTH_STRING + "'")));
+
+		assertThat((List<MongoCredential>) editor.getValue(), contains(USER_1_CREDENTIALS, USER_2_CREDENTIALS));
+	}
+
+	/**
+	 * @see DATAMONGO-1257
+	 */
+	@Test
+	@SuppressWarnings("unchecked")
+	public void shouldReturnCredentialsValueCorrectlyWhenGivenSingleQuotedUserNamePasswordStringWithDatabaseAndNoOptions() {
+
+		editor.setAsText("'" + USER_1_AUTH_STRING + "'");
+
+		assertThat((List<MongoCredential>) editor.getValue(), contains(USER_1_CREDENTIALS));
+	}
+
+	/**
+	 * @see DATAMONGO-1257
+	 */
+	@Test
+	@SuppressWarnings("unchecked")
+	public void shouldReturnX509CredentialsCorrectly() {
+
+		editor.setAsText(USER_3_AUTH_STRING_WITH_X509_AUTH_MECHANISM);
+
+		assertThat((List<MongoCredential>) editor.getValue(), contains(USER_3_CREDENTIALS_X509_AUTH));
+	}
+
+	/**
+	 * @see DATAMONGO-1257
+	 */
+	@Test
+	@SuppressWarnings("unchecked")
+	public void shouldReturnX509CredentialsCorrectlyWhenNoDbSpecified() {
+
+		editor.setAsText("tyrion?uri.authMechanism=MONGODB-X509");
+
+		assertThat((List<MongoCredential>) editor.getValue(), contains(MongoCredential.createMongoX509Credential("tyrion")));
+	}
+
+	/**
+	 * @see DATAMONGO-1257
+	 */
+	@Test(expected = IllegalArgumentException.class)
+	public void shouldThrowExceptionWhenNoDbSpecifiedForMongodbCR() {
+
+		editor.setAsText("tyrion?uri.authMechanism=MONGODB-CR");
+
+		editor.getValue();
+	}
+
+	/**
+	 * @see DATAMONGO-1257
+	 */
+	@Test(expected = IllegalArgumentException.class)
+	public void shouldThrowExceptionWhenDbIsEmptyForMongodbCR() {
+
+		editor.setAsText("tyrion@?uri.authMechanism=MONGODB-CR");
+
+		editor.getValue();
 	}
 }
