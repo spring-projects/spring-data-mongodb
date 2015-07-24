@@ -17,8 +17,11 @@ package org.springframework.data.mongodb.config;
 
 import java.beans.PropertyEditorSupport;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.springframework.util.StringUtils;
 
@@ -31,6 +34,8 @@ import com.mongodb.MongoCredential;
  * @since 1.7
  */
 public class MongoCredentialPropertyEditor extends PropertyEditorSupport {
+
+	private static final Pattern GROUP_PATTERN = Pattern.compile("(\\\\?')(.*?)\\1");
 
 	private static final String AUTH_MECHANISM_KEY = "uri.authMechanism";
 	private static final String USERNAME_PASSWORD_DELIMINATOR = ":";
@@ -51,11 +56,7 @@ public class MongoCredentialPropertyEditor extends PropertyEditorSupport {
 
 		List<MongoCredential> credentials = new ArrayList<MongoCredential>();
 
-		for (String credentialString : text.split(",")) {
-
-			if (!text.contains(USERNAME_PASSWORD_DELIMINATOR) || !text.contains(DATABASE_DELIMINATOR)) {
-				throw new IllegalArgumentException("Credentials need to be in format 'username:password@database'!");
-			}
+		for (String credentialString : extractCredentialsString(text)) {
 
 			String[] userNameAndPassword = extractUserNameAndPassword(credentialString);
 			String database = extractDB(credentialString);
@@ -68,16 +69,29 @@ public class MongoCredentialPropertyEditor extends PropertyEditorSupport {
 					String authMechanism = options.getProperty(AUTH_MECHANISM_KEY);
 
 					if (MongoCredential.GSSAPI_MECHANISM.equals(authMechanism)) {
+
+						verifyUserNamePresent(userNameAndPassword);
 						credentials.add(MongoCredential.createGSSAPICredential(userNameAndPassword[0]));
 					} else if (MongoCredential.MONGODB_CR_MECHANISM.equals(authMechanism)) {
+
+						verifyUsernameAndPasswordPresent(userNameAndPassword);
+						verifyDatabasePresent(database);
 						credentials.add(MongoCredential.createMongoCRCredential(userNameAndPassword[0], database,
 								userNameAndPassword[1].toCharArray()));
 					} else if (MongoCredential.MONGODB_X509_MECHANISM.equals(authMechanism)) {
+
+						verifyUserNamePresent(userNameAndPassword);
 						credentials.add(MongoCredential.createMongoX509Credential(userNameAndPassword[0]));
 					} else if (MongoCredential.PLAIN_MECHANISM.equals(authMechanism)) {
+
+						verifyUsernameAndPasswordPresent(userNameAndPassword);
+						verifyDatabasePresent(database);
 						credentials.add(MongoCredential.createPlainCredential(userNameAndPassword[0], database,
 								userNameAndPassword[1].toCharArray()));
 					} else if (MongoCredential.SCRAM_SHA_1_MECHANISM.equals(authMechanism)) {
+
+						verifyUsernameAndPasswordPresent(userNameAndPassword);
+						verifyDatabasePresent(database);
 						credentials.add(MongoCredential.createScramSha1Credential(userNameAndPassword[0], database,
 								userNameAndPassword[1].toCharArray()));
 					} else {
@@ -86,6 +100,9 @@ public class MongoCredentialPropertyEditor extends PropertyEditorSupport {
 					}
 				}
 			} else {
+
+				verifyUsernameAndPasswordPresent(userNameAndPassword);
+				verifyDatabasePresent(database);
 				credentials.add(MongoCredential.createCredential(userNameAndPassword[0], database,
 						userNameAndPassword[1].toCharArray()));
 			}
@@ -94,16 +111,44 @@ public class MongoCredentialPropertyEditor extends PropertyEditorSupport {
 		setValue(credentials);
 	}
 
+	private List<String> extractCredentialsString(String source) {
+
+		Matcher matcher = GROUP_PATTERN.matcher(source);
+
+		List<String> list = new ArrayList<String>();
+		while (matcher.find()) {
+
+			String value = StringUtils.trimLeadingCharacter(matcher.group(), '\'');
+			list.add(StringUtils.trimTrailingCharacter(value, '\''));
+		}
+
+		if (!list.isEmpty()) {
+			return list;
+		}
+		return Arrays.asList(source.split(","));
+	}
+
 	private static String[] extractUserNameAndPassword(String text) {
 
-		int dbSeperationIndex = text.lastIndexOf(DATABASE_DELIMINATOR);
-		String userNameAndPassword = text.substring(0, dbSeperationIndex);
+		int index = text.lastIndexOf(DATABASE_DELIMINATOR);
+
+		if (index == -1) {
+			index = text.lastIndexOf(OPTIONS_DELIMINATOR);
+		}
+		if (index == -1) {
+			return new String[] {};
+		}
+		String userNameAndPassword = text.substring(0, index);
 		return userNameAndPassword.split(USERNAME_PASSWORD_DELIMINATOR);
 	}
 
 	private static String extractDB(String text) {
 
 		int dbSeperationIndex = text.lastIndexOf(DATABASE_DELIMINATOR);
+
+		if (dbSeperationIndex == -1) {
+			return "";
+		}
 
 		String tmp = text.substring(dbSeperationIndex + 1);
 		int optionsSeperationIndex = tmp.lastIndexOf(OPTIONS_DELIMINATOR);
@@ -128,5 +173,28 @@ public class MongoCredentialPropertyEditor extends PropertyEditorSupport {
 		}
 
 		return properties;
+	}
+
+	private void verifyUserNamePresent(String[] source) {
+
+		if (source.length == 0 || !StringUtils.hasText(source[0])) {
+			throw new IllegalArgumentException("Credentials need to specify username!");
+		}
+	}
+
+	private void verifyUsernameAndPasswordPresent(String[] source) {
+
+		verifyUserNamePresent(source);
+		if (source.length != 2) {
+			throw new IllegalArgumentException(
+					"Credentials need to specify username and password like in 'username:password@database'!");
+		}
+	}
+
+	private void verifyDatabasePresent(String source) {
+
+		if (!StringUtils.hasText(source)) {
+			throw new IllegalArgumentException("Credentials need to specify database like in 'username:password@database'!");
+		}
 	}
 }
