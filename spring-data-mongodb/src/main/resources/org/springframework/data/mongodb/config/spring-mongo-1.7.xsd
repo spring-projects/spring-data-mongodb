@@ -586,7 +586,7 @@ The comma delimited list of host:port entries to use for replica set/pairs.
 		<xsd:attribute name="credentials" type="xsd:string" use="optional">
 			<xsd:annotation>
 				<xsd:documentation><![CDATA[
-The comma delimited list of username:password@database entries to use for authentication. Appending ?uri.authMechanism allows to specify the authentication challenge mechanism.
+The comma delimited list of username:password@database entries to use for authentication. Appending ?uri.authMechanism allows to specify the authentication challenge mechanism. If the credential you're trying to pass contains a comma itself, quote it with single quotes: '…'.
 							]]></xsd:documentation>
 			</xsd:annotation>
 		</xsd:attribute>
