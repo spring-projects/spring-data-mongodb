@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 the original author or authors.
+ * Copyright 2013-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ import org.junit.rules.ExpectedException;
 import org.springframework.data.domain.Sort.Direction;
 
 import com.mongodb.BasicDBObject;
+import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DBObject;
 
 /**
@@ -37,6 +38,7 @@ import com.mongodb.DBObject;
  * 
  * @author Oliver Gierke
  * @author Thomas Darimont
+ * @author Christoph Strobl
  */
 public class AggregationUnitTests {
 
@@ -281,6 +283,40 @@ public class AggregationUnitTests {
 		DBObject group = extractPipelineElement(agg, 2, "$group");
 		assertThat(group,
 				is((DBObject) new BasicDBObject("_id", "$someKey").append("doc", new BasicDBObject("$first", "$$ROOT"))));
+	}
+
+	/**
+	 * @see DATAMONGO-1254
+	 */
+	@Test
+	public void shouldExposeAliasedFieldnameForProjectionsIncludingOperationsDownThePipeline() {
+
+		DBObject agg = Aggregation.newAggregation(//
+				project("date") //
+						.and("tags").minus(10).as("tags_count")//
+				, group("date")//
+						.sum("tags_count").as("count")//
+				).toDbObject("foo", Aggregation.DEFAULT_CONTEXT);
+
+		DBObject group = extractPipelineElement(agg, 1, "$group");
+		assertThat(getAsDBObject(group, "count"), is(new BasicDBObjectBuilder().add("$sum", "$tags_count").get()));
+	}
+
+	/**
+	 * @see DATAMONGO-1254
+	 */
+	@Test
+	public void shouldUseAliasedFieldnameForProjectionsIncludingOperationsDownThePipelineWhenUsingSpEL() {
+
+		DBObject agg = Aggregation.newAggregation(//
+				project("date") //
+						.andExpression("tags-10")//
+				, group("date")//
+						.sum("tags_count").as("count")//
+				).toDbObject("foo", Aggregation.DEFAULT_CONTEXT);
+
+		DBObject group = extractPipelineElement(agg, 1, "$group");
+		assertThat(getAsDBObject(group, "count"), is(new BasicDBObjectBuilder().add("$sum", "$tags_count").get()));
 	}
 
 	private DBObject extractPipelineElement(DBObject agg, int index, String operation) {

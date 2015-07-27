@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
+import org.springframework.data.mongodb.core.aggregation.Fields.AggregationField;
 import org.springframework.data.mongodb.core.aggregation.ProjectionOperation.ProjectionOperationBuilder.FieldProjection;
 import org.springframework.util.Assert;
 
@@ -40,6 +41,7 @@ import com.mongodb.DBObject;
  * @author Tobias Trelle
  * @author Thomas Darimont
  * @author Oliver Gierke
+ * @author Christoph Strobl
  * @since 1.3
  */
 public class ProjectionOperation implements FieldsExposingAggregationOperation {
@@ -761,6 +763,20 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 			 */
 			protected Field getField() {
 				return field;
+			}
+
+			/*
+			 * (non-Javadoc)
+			 * @see org.springframework.data.mongodb.core.aggregation.ProjectionOperation.Projection#getExposedField()
+			 */
+			@Override
+			public ExposedField getExposedField() {
+
+				if (!getField().isAliased()) {
+					return super.getExposedField();
+				}
+
+				return new ExposedField(new AggregationField(getField().getName()), true);
 			}
 
 			/**
