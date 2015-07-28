@@ -1,6 +1,16 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 1.7.2.RELEASE (2015-07-28)
+---------------------------------------------
+* DATAMONGO-1261 - Release 1.7.2 (Fowler).
+* DATAMONGO-1260 - Prevent accidental authentication misconfiguration on SimpleMongoDbFactory.
+* DATAMONGO-1257 - mongo:mongo-client namespace does not support usernames with a comma.
+* DATAMONGO-1254 - Group after Project in aggregation uses incorrect field name.
+* DATAMONGO-1251 - update / findAndModify throws NullPointerException.
+* DATAMONGO-1250 - Custom converter implementation not used in updates.
+
+
 Changes in version 1.5.6.RELEASE (2015-07-01)
 ---------------------------------------------
 * DATAMONGO-1246 - Release 1.5.6 (Dijkstra).
