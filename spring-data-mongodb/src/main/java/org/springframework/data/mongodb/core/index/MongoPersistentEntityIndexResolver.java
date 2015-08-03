@@ -108,7 +108,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 				try {
 					if (persistentProperty.isEntity()) {
-						indexInformation.addAll(resolveIndexForClass(persistentProperty.getActualType(),
+						indexInformation.addAll(resolveIndexForClass(persistentProperty.getTypeInformation().getActualType(),
 								persistentProperty.getFieldName(), root.getCollection(), guard));
 					}
 
@@ -135,7 +135,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	 * @return List of {@link IndexDefinitionHolder} representing indexes for given type and its referenced property
 	 *         types. Will never be {@code null}.
 	 */
-	private List<IndexDefinitionHolder> resolveIndexForClass(final Class<?> type, final String path,
+	private List<IndexDefinitionHolder> resolveIndexForClass(final TypeInformation<?> type, final String path,
 			final String collection, final CycleGuard guard) {
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(type);
@@ -153,8 +153,8 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 				if (persistentProperty.isEntity()) {
 					try {
-						indexInformation.addAll(resolveIndexForClass(persistentProperty.getActualType(), propertyDotPath,
-								collection, guard));
+						indexInformation.addAll(resolveIndexForClass(persistentProperty.getTypeInformation().getActualType(),
+								propertyDotPath, collection, guard));
 					} catch (CyclicPropertyReferenceException e) {
 						LOGGER.info(e.getMessage());
 					}
