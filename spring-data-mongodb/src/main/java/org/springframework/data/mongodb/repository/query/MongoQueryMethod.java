@@ -34,6 +34,7 @@ import org.springframework.data.repository.query.QueryMethod;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
+import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -122,13 +123,22 @@ public class MongoQueryMethod extends QueryMethod {
 			Class<?> returnedObjectType = getReturnedObjectType();
 			Class<?> domainClass = getDomainClass();
 
-			MongoPersistentEntity<?> returnedEntity = mappingContext.getPersistentEntity(getReturnedObjectType());
-			MongoPersistentEntity<?> managedEntity = mappingContext.getPersistentEntity(domainClass);
-			returnedEntity = returnedEntity == null ? managedEntity : returnedEntity;
-			MongoPersistentEntity<?> collectionEntity = domainClass.isAssignableFrom(returnedObjectType) ? returnedEntity
-					: managedEntity;
+			if (ClassUtils.isPrimitiveOrWrapper(returnedObjectType)) {
 
-			this.metadata = new SimpleMongoEntityMetadata<Object>((Class<Object>) returnedEntity.getType(), collectionEntity);
+				this.metadata = new SimpleMongoEntityMetadata<Object>((Class<Object>) domainClass,
+						mappingContext.getPersistentEntity(domainClass));
+
+			} else {
+
+				MongoPersistentEntity<?> returnedEntity = mappingContext.getPersistentEntity(returnedObjectType);
+				MongoPersistentEntity<?> managedEntity = mappingContext.getPersistentEntity(domainClass);
+				returnedEntity = returnedEntity == null ? managedEntity : returnedEntity;
+				MongoPersistentEntity<?> collectionEntity = domainClass.isAssignableFrom(returnedObjectType) ? returnedEntity
+						: managedEntity;
+
+				this.metadata = new SimpleMongoEntityMetadata<Object>((Class<Object>) returnedEntity.getType(),
+						collectionEntity);
+			}
 		}
 
 		return this.metadata;
