@@ -853,6 +853,19 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 		}
 
+		/**
+		 * @see DATAMONGO-1263
+		 */
+		@Test
+		public void shouldConsiderGenericTypeArgumentsOfCollectionElements() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(EntityWithGenericTypeWrapperAsElement.class);
+
+			assertThat(indexDefinitions, hasSize(1));
+			assertThat((String) indexDefinitions.get(0).getIndexOptions().get("name"),
+					equalTo("listWithGeneircTypeElement.entity.property_index"));
+		}
+
 		@Document
 		static class MixedIndexRoot {
 
@@ -1026,6 +1039,15 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 		public static class AlternatePathToNoCycleButIndenticallNamedPropertiesDeeplyNestedDocument {
 			NoCycleButIndenticallNamedPropertiesDeeplyNested propertyWithIndexedStructure;
+		}
+
+		static class GenericEntityWrapper<T> {
+			T entity;
+		}
+
+		@Document
+		static class EntityWithGenericTypeWrapperAsElement {
+			List<GenericEntityWrapper<DocumentWithNamedIndex>> listWithGeneircTypeElement;
 		}
 
 	}
