@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2014 the original author or authors.
+ * Copyright 2011-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -177,6 +177,17 @@ public class MongoQueryMethodUnitTests {
 		assertThat(method.getQueryMetaAttributes().getSnapshot(), is(true));
 	}
 
+	/**
+	 * @see DATAMONGO-1266
+	 */
+	@Test
+	public void fallsBackToRepositoryDomainTypeIfMethodDoesNotReturnADomainType() throws Exception {
+
+		MongoQueryMethod method = queryMethod("deleteByUserName", String.class);
+
+		assertThat(method.getEntityInformation().getJavaType(), is(typeCompatibleWith(User.class)));
+	}
+
 	private MongoQueryMethod queryMethod(String name, Class<?>... parameters) throws Exception {
 		Method method = PersonRepository.class.getMethod(name, parameters);
 		return new MongoQueryMethod(method, new DefaultRepositoryMetadata(PersonRepository.class), context);
@@ -210,6 +221,10 @@ public class MongoQueryMethodUnitTests {
 		@Meta(snapshot = true)
 		List<User> metaWithSnapshotUsage();
 
+		/**
+		 * @see DATAMONGO-1266
+		 */
+		void deleteByUserName(String userName);
 	}
 
 	interface SampleRepository extends Repository<Contact, Long> {
