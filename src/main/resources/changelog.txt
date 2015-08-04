@@ -1,6 +1,26 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 1.8.0.RC1 (2015-08-04)
+-----------------------------------------
+* DATAMONGO-1268 - Release 1.8 RC1 (Gosling).
+* DATAMONGO-1266 - Repository query methods returning a primitive do not detect domain type correctly.
+* DATAMONGO-1260 - Prevent accidental authentication misconfiguration on SimpleMongoDbFactory.
+* DATAMONGO-1257 - mongo:mongo-client namespace does not support usernames with a comma.
+* DATAMONGO-1254 - Group after Project in aggregation uses incorrect field name.
+* DATAMONGO-1251 - update / findAndModify throws NullPointerException.
+* DATAMONGO-1250 - Custom converter implementation not used in updates.
+* DATAMONGO-1244 - StringBasedMongoQuery handles complex expression parameters incorrectly.
+* DATAMONGO-1242 - Update mongo-java-driver to 3.0.2 in mongo3 profile.
+* DATAMONGO-1236 - MongoOperations findAndModify and updateFirst do not include the _class in Map values.
+* DATAMONGO-1234 - Fix typos in JavaDoc.
+* DATAMONGO-1232 - IgnoreCase should escape queries.
+* DATAMONGO-1229 - MongoQueryCreator incorrectly rejects ignoreCase on nested String path.
+* DATAMONGO-1166 - ReadPreference not used for Aggregations.
+* DATAMONGO-1157 - Throw meaningful exception when @DbRef is used with unsupported types.
+* DATAMONGO-1125 - Specify collection that triggers CommandFailureException.
+
+
 Changes in version 1.7.2.RELEASE (2015-07-28)
 ---------------------------------------------
 * DATAMONGO-1261 - Release 1.7.2 (Fowler).
