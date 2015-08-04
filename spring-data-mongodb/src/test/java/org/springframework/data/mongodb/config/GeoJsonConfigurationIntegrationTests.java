@@ -21,10 +21,13 @@ import static org.junit.Assert.*;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.data.mongodb.core.GeoJsonConfiguration;
 import org.springframework.data.mongodb.core.geo.GeoJsonModule;
 import org.springframework.data.web.config.EnableSpringDataWebSupport;
+import org.springframework.format.support.FormattingConversionService;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -39,7 +42,13 @@ public class GeoJsonConfigurationIntegrationTests {
 
 	@Configuration
 	@EnableSpringDataWebSupport
-	static class Config {}
+	static class Config {
+
+		@Bean
+		ConversionService mvcConversionService() {
+			return new FormattingConversionService();
+		}
+	}
 
 	@Autowired GeoJsonModule geoJsonModule;
 
