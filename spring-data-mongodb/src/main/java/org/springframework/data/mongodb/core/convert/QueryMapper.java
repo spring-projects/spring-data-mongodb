@@ -857,7 +857,7 @@ public class QueryMapper {
 		 * @return
 		 */
 		protected Converter<MongoPersistentProperty, String> getPropertyConverter() {
-			return PropertyToFieldNameConverter.INSTANCE;
+			return new PositionParameterRetainingPropertyKeyConverter(name);
 		}
 
 		/**
@@ -869,6 +869,24 @@ public class QueryMapper {
 		 */
 		protected Converter<MongoPersistentProperty, String> getAssociationConverter() {
 			return new AssociationConverter(getAssociation());
+		}
+
+		/**
+		 * @author Christoph Strobl
+		 * @since 1.8
+		 */
+		static class PositionParameterRetainingPropertyKeyConverter implements Converter<MongoPersistentProperty, String> {
+
+			private final KeyMapper keyMapper;
+
+			PositionParameterRetainingPropertyKeyConverter(String rawKey) {
+				this.keyMapper = new KeyMapper(rawKey);
+			}
+
+			@Override
+			public String convert(MongoPersistentProperty source) {
+				return keyMapper.mapPropertyName(source);
+			}
 		}
 
 		/* 
@@ -891,6 +909,63 @@ public class QueryMapper {
 
 			return NESTED_DOCUMENT;
 		}
+
+		/**
+		 * @author Christoph Strobl
+		 * @since 1.8
+		 */
+		static class KeyMapper {
+
+			Iterator<String> iterator;
+
+			public KeyMapper(String key) {
+
+				this.iterator = Arrays.asList(key.split("\\.")).iterator();
+				this.iterator.next();
+			}
+
+			/**
+			 * Maps the property name while retaining potential positional operator {@literal $}.
+			 * 
+			 * @param property
+			 * @return
+			 */
+			protected String mapPropertyName(MongoPersistentProperty property) {
+
+				String mappedName = PropertyToFieldNameConverter.INSTANCE.convert(property);
+
+				boolean inspect = iterator.hasNext();
+				while (inspect) {
+
+					String partial = iterator.next();
+
+					boolean isPositional = (isPositionalParameter(partial) && (property.isMap() || property.isCollectionLike() || property
+							.isArray()));
+					if (isPositional) {
+						mappedName += "." + partial;
+					}
+
+					inspect = isPositional && iterator.hasNext();
+				}
+
+				return mappedName;
+			}
+
+			boolean isPositionalParameter(String partial) {
+
+				if (partial.equals("$")) {
+					return true;
+				}
+
+				try {
+					Long.valueOf(partial);
+					return true;
+				} catch (NumberFormatException e) {
+					return false;
+				}
+			}
+		}
+
 	}
 
 	/**
