@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 by the original author(s).
+ * Copyright (c) 2011-2015 by the original author(s).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,14 +19,37 @@ package org.springframework.data.mongodb.core.mapping.event;
 import com.mongodb.DBObject;
 
 /**
+ * {@link MongoMappingEvent} triggered before save of a document.
+ * 
  * @author Jon Brisbin <jbrisbin@vmware.com>
+ * @author Christoph Strobl
  */
 public class BeforeSaveEvent<E> extends MongoMappingEvent<E> {
 
 	private static final long serialVersionUID = 1L;
 
+	/**
+	 * Creates new {@link BeforeSaveEvent}.
+	 * 
+	 * @param source must not be {@literal null}.
+	 * @param dbo can be {@literal null}.
+	 * @deprecated since 1.8. Please use {@link #BeforeSaveEvent(Object, DBObject, String)}.
+	 */
+	@Deprecated
 	public BeforeSaveEvent(E source, DBObject dbo) {
 		super(source, dbo);
+	}
+
+	/**
+	 * Creates new {@link BeforeSaveEvent}.
+	 * 
+	 * @param source must not be {@literal null}.
+	 * @param dbo can be {@literal null}.
+	 * @param collectionName can be {@literal null}.
+	 * @since 1.8
+	 */
+	public BeforeSaveEvent(E source, DBObject dbo, String collectionName) {
+		super(source, dbo, collectionName);
 	}
 
 }

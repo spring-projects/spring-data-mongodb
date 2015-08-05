@@ -47,7 +47,7 @@ public class AuditingIntegrationTests {
 		mappingContext.getPersistentEntity(Entity.class);
 
 		Entity entity = new Entity();
-		BeforeConvertEvent<Entity> event = new BeforeConvertEvent<Entity>(entity);
+		BeforeConvertEvent<Entity> event = new BeforeConvertEvent<Entity>(entity, "collection-1");
 		context.publishEvent(event);
 
 		assertThat(entity.created, is(notNullValue()));
@@ -55,7 +55,7 @@ public class AuditingIntegrationTests {
 
 		Thread.sleep(10);
 		entity.id = 1L;
-		event = new BeforeConvertEvent<Entity>(entity);
+		event = new BeforeConvertEvent<Entity>(entity, "collection-1");
 		context.publishEvent(event);
 
 		assertThat(entity.created, is(notNullValue()));

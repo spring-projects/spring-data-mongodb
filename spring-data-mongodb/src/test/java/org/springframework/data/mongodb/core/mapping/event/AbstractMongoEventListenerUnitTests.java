@@ -39,7 +39,7 @@ public class AbstractMongoEventListenerUnitTests {
 	@Test
 	public void invokesCallbackForEventForPerson() {
 
-		MongoMappingEvent<Person> event = new BeforeConvertEvent<Person>(new Person("Dave", "Matthews"));
+		MongoMappingEvent<Person> event = new BeforeConvertEvent<Person>(new Person("Dave", "Matthews"), "collection-1");
 		SamplePersonEventListener listener = new SamplePersonEventListener();
 		listener.onApplicationEvent(event);
 		assertThat(listener.invokedOnBeforeConvert, is(true));
@@ -54,11 +54,11 @@ public class AbstractMongoEventListenerUnitTests {
 		SamplePersonEventListener listener = new SamplePersonEventListener();
 		context.addApplicationListener(listener);
 
-		context.publishEvent(new BeforeConvertEvent<Person>(new Person("Dave", "Matthews")));
+		context.publishEvent(new BeforeConvertEvent<Person>(new Person("Dave", "Matthews"), "collection-1"));
 		assertThat(listener.invokedOnBeforeConvert, is(true));
 
 		listener.invokedOnBeforeConvert = false;
-		context.publishEvent(new BeforeConvertEvent<String>("Test"));
+		context.publishEvent(new BeforeConvertEvent<String>("Test", "collection-1"));
 		assertThat(listener.invokedOnBeforeConvert, is(false));
 
 		context.close();
@@ -71,7 +71,7 @@ public class AbstractMongoEventListenerUnitTests {
 	public void afterLoadEffectGetsHandledCorrectly() {
 
 		SamplePersonEventListener listener = new SamplePersonEventListener();
-		listener.onApplicationEvent(new AfterLoadEvent<Person>(new BasicDBObject(), Person.class));
+		listener.onApplicationEvent(new AfterLoadEvent<Person>(new BasicDBObject(), Person.class, "collection-1"));
 		assertThat(listener.invokedOnAfterLoad, is(true));
 	}
 
@@ -83,8 +83,8 @@ public class AbstractMongoEventListenerUnitTests {
 
 		SamplePersonEventListener personListener = new SamplePersonEventListener();
 		SampleAccountEventListener accountListener = new SampleAccountEventListener();
-		personListener.onApplicationEvent(new AfterLoadEvent<Person>(new BasicDBObject(), Person.class));
-		accountListener.onApplicationEvent(new AfterLoadEvent<Person>(new BasicDBObject(), Person.class));
+		personListener.onApplicationEvent(new AfterLoadEvent<Person>(new BasicDBObject(), Person.class, "collection-1"));
+		accountListener.onApplicationEvent(new AfterLoadEvent<Person>(new BasicDBObject(), Person.class, "collection-1"));
 
 		assertThat(personListener.invokedOnAfterLoad, is(true));
 		assertThat(accountListener.invokedOnAfterLoad, is(false));
@@ -98,8 +98,8 @@ public class AbstractMongoEventListenerUnitTests {
 
 		SamplePersonEventListener personListener = new SamplePersonEventListener();
 		SampleContactEventListener contactListener = new SampleContactEventListener();
-		personListener.onApplicationEvent(new AfterLoadEvent<Person>(new BasicDBObject(), Person.class));
-		contactListener.onApplicationEvent(new AfterLoadEvent<Person>(new BasicDBObject(), Person.class));
+		personListener.onApplicationEvent(new AfterLoadEvent<Person>(new BasicDBObject(), Person.class, "collection-1"));
+		contactListener.onApplicationEvent(new AfterLoadEvent<Person>(new BasicDBObject(), Person.class, "collection-1"));
 
 		assertThat(personListener.invokedOnAfterLoad, is(true));
 		assertThat(contactListener.invokedOnAfterLoad, is(true));
@@ -113,8 +113,8 @@ public class AbstractMongoEventListenerUnitTests {
 
 		SamplePersonEventListener personListener = new SamplePersonEventListener();
 		SampleContactEventListener contactListener = new SampleContactEventListener();
-		personListener.onApplicationEvent(new AfterLoadEvent<Contact>(new BasicDBObject(), Contact.class));
-		contactListener.onApplicationEvent(new AfterLoadEvent<Contact>(new BasicDBObject(), Contact.class));
+		personListener.onApplicationEvent(new AfterLoadEvent<Contact>(new BasicDBObject(), Contact.class, "collection-1"));
+		contactListener.onApplicationEvent(new AfterLoadEvent<Contact>(new BasicDBObject(), Contact.class, "collection-1"));
 
 		assertThat(personListener.invokedOnAfterLoad, is(false));
 		assertThat(contactListener.invokedOnAfterLoad, is(true));
@@ -137,7 +137,7 @@ public class AbstractMongoEventListenerUnitTests {
 	@Test
 	public void invokeContactCallbackForPersonEvent() {
 
-		MongoMappingEvent<DBObject> event = new BeforeDeleteEvent<Person>(new BasicDBObject(), Person.class);
+		MongoMappingEvent<DBObject> event = new BeforeDeleteEvent<Person>(new BasicDBObject(), Person.class, "collection-1");
 		SampleContactEventListener listener = new SampleContactEventListener();
 		listener.onApplicationEvent(event);
 
@@ -150,7 +150,7 @@ public class AbstractMongoEventListenerUnitTests {
 	@Test
 	public void invokePersonCallbackForPersonEvent() {
 
-		MongoMappingEvent<DBObject> event = new BeforeDeleteEvent<Person>(new BasicDBObject(), Person.class);
+		MongoMappingEvent<DBObject> event = new BeforeDeleteEvent<Person>(new BasicDBObject(), Person.class, "collection-1");
 		SamplePersonEventListener listener = new SamplePersonEventListener();
 		listener.onApplicationEvent(event);
 
@@ -163,7 +163,8 @@ public class AbstractMongoEventListenerUnitTests {
 	@Test
 	public void dontInvokePersonCallbackForAccountEvent() {
 
-		MongoMappingEvent<DBObject> event = new BeforeDeleteEvent<Account>(new BasicDBObject(), Account.class);
+		MongoMappingEvent<DBObject> event = new BeforeDeleteEvent<Account>(new BasicDBObject(), Account.class,
+				"collection-1");
 		SamplePersonEventListener listener = new SamplePersonEventListener();
 		listener.onApplicationEvent(event);
 
@@ -176,7 +177,7 @@ public class AbstractMongoEventListenerUnitTests {
 	@Test
 	public void donInvokePersonCallbackForUntypedEvent() {
 
-		MongoMappingEvent<DBObject> event = new BeforeDeleteEvent<Account>(new BasicDBObject(), null);
+		MongoMappingEvent<DBObject> event = new BeforeDeleteEvent<Account>(new BasicDBObject(), null, "collection-1");
 		SamplePersonEventListener listener = new SamplePersonEventListener();
 		listener.onApplicationEvent(event);
 

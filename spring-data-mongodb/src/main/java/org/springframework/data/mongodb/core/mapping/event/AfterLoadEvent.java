@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 by the original author(s).
+ * Copyright (c) 2011-2015 by the original author(s).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import com.mongodb.DBObject;
  * @author Oliver Gierke
  * @author Jon Brisbin
  * @author Christoph Leiter
+ * @author Christoph Strobl
  */
 public class AfterLoadEvent<T> extends MongoMappingEvent<DBObject> {
 
@@ -36,11 +37,25 @@ public class AfterLoadEvent<T> extends MongoMappingEvent<DBObject> {
 	 * Creates a new {@link AfterLoadEvent} for the given {@link DBObject} and type.
 	 * 
 	 * @param dbo must not be {@literal null}.
-	 * @param type must not be {@literal null}.
+	 * @param type can be {@literal null}.
+	 * @deprecated since 1.8. Please use {@link #AfterLoadEvent(DBObject, Class, String)}.
 	 */
+	@Deprecated
 	public AfterLoadEvent(DBObject dbo, Class<T> type) {
+		this(dbo, type, null);
+	}
 
-		super(dbo, dbo);
+	/**
+	 * Creates a new {@link AfterLoadEvent} for the given {@link DBObject}, type and collectionName.
+	 * 
+	 * @param dbo must not be {@literal null}.
+	 * @param type must not be {@literal null}.
+	 * @param collectionName can be {@literal null}.
+	 * @since 1.8
+	 */
+	public AfterLoadEvent(DBObject dbo, Class<T> type, String collectionName) {
+
+		super(dbo, dbo, collectionName);
 
 		Assert.notNull(type, "Type must not be null!");
 		this.type = type;

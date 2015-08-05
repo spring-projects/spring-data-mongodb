@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 by the original author(s).
+ * Copyright 2013-2015 by the original author(s).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import com.mongodb.DBObject;
  * Base class for delete events.
  * 
  * @author Martin Baumgartner
+ * @author Christoph Strobl
  */
 public abstract class AbstractDeleteEvent<T> extends MongoMappingEvent<DBObject> {
 
@@ -31,11 +32,25 @@ public abstract class AbstractDeleteEvent<T> extends MongoMappingEvent<DBObject>
 	 * Creates a new {@link AbstractDeleteEvent} for the given {@link DBObject} and type.
 	 * 
 	 * @param dbo must not be {@literal null}.
-	 * @param type , possibly be {@literal null}.
+	 * @param type can be {@literal null}.
+	 * @deprecated since 1.8. Please use {@link #AbstractDeleteEvent(DBObject, Class, String)}
 	 */
+	@Deprecated
 	public AbstractDeleteEvent(DBObject dbo, Class<T> type) {
+		this(dbo, type, null);
+	}
 
-		super(dbo, dbo);
+	/**
+	 * Creates a new {@link AbstractDeleteEvent} for the given {@link DBObject} and type.
+	 * 
+	 * @param dbo must not be {@literal null}.
+	 * @param type can be {@literal null}.
+	 * @param collectionName can be {@literal null}
+	 * @since 1.8
+	 */
+	public AbstractDeleteEvent(DBObject dbo, Class<T> type, String collectionName) {
+
+		super(dbo, dbo, collectionName);
 		this.type = type;
 	}
 
