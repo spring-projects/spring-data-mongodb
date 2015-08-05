@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 by the original author(s).
+ * Copyright (c) 2011-2015 by the original author(s).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,8 +17,12 @@ package org.springframework.data.mongodb.core.mapping.event;
 
 import java.util.ArrayList;
 
-import com.mongodb.DBObject;
-
+/**
+ * @author Mark Pollak
+ * @author Oliver Gierke
+ * @author Christoph Leiter
+ * @author Christoph Strobl
+ */
 public class SimpleMappingEventListener extends AbstractMongoEventListener<Object> {
 
 	public final ArrayList<BeforeConvertEvent<Object>> onBeforeConvertEvents = new ArrayList<BeforeConvertEvent<Object>>();
@@ -26,29 +30,41 @@ public class SimpleMappingEventListener extends AbstractMongoEventListener<Objec
 	public final ArrayList<AfterSaveEvent<Object>> onAfterSaveEvents = new ArrayList<AfterSaveEvent<Object>>();
 	public final ArrayList<AfterLoadEvent<Object>> onAfterLoadEvents = new ArrayList<AfterLoadEvent<Object>>();
 	public final ArrayList<AfterConvertEvent<Object>> onAfterConvertEvents = new ArrayList<AfterConvertEvent<Object>>();
+	public final ArrayList<BeforeDeleteEvent<Object>> onBeforeDeleteEvents = new ArrayList<BeforeDeleteEvent<Object>>();
+	public final ArrayList<AfterDeleteEvent<Object>> onAfterDeleteEvents = new ArrayList<AfterDeleteEvent<Object>>();
 
 	@Override
-	public void onBeforeConvert(Object source) {
-		onBeforeConvertEvents.add(new BeforeConvertEvent<Object>(source));
+	public void onBeforeConvert(BeforeConvertEvent<Object> event) {
+		onBeforeConvertEvents.add(event);
 	}
 
 	@Override
-	public void onBeforeSave(Object source, DBObject dbo) {
-		onBeforeSaveEvents.add(new BeforeSaveEvent<Object>(source, dbo));
+	public void onBeforeSave(BeforeSaveEvent<Object> event) {
+		onBeforeSaveEvents.add(event);
 	}
 
 	@Override
-	public void onAfterSave(Object source, DBObject dbo) {
-		onAfterSaveEvents.add(new AfterSaveEvent<Object>(source, dbo));
+	public void onAfterSave(AfterSaveEvent<Object> event) {
+		onAfterSaveEvents.add(event);
 	}
 
 	@Override
-	public void onAfterLoad(DBObject dbo) {
-		onAfterLoadEvents.add(new AfterLoadEvent<Object>(dbo, Object.class));
+	public void onAfterLoad(AfterLoadEvent<Object> event) {
+		onAfterLoadEvents.add(event);
 	}
 
 	@Override
-	public void onAfterConvert(DBObject dbo, Object source) {
-		onAfterConvertEvents.add(new AfterConvertEvent<Object>(dbo, source));
+	public void onAfterConvert(AfterConvertEvent<Object> event) {
+		onAfterConvertEvents.add(event);
+	}
+
+	@Override
+	public void onAfterDelete(AfterDeleteEvent<Object> event) {
+		onAfterDeleteEvents.add(event);
+	}
+
+	@Override
+	public void onBeforeDelete(BeforeDeleteEvent<Object> event) {
+		onBeforeDeleteEvents.add(event);
 	}
 }

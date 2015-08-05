@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2012 the original author or authors.
+ * Copyright 2011-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,12 +20,31 @@ package org.springframework.data.mongodb.core.mapping.event;
  * 
  * @author Jon Brisbin
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 public class BeforeConvertEvent<T> extends MongoMappingEvent<T> {
 
 	private static final long serialVersionUID = 252614269008845243L;
 
+	/**
+	 * Creates new {@link BeforeConvertEvent}.
+	 * 
+	 * @param source must not be {@literal null}.
+	 * @deprecated since 1.8. Please use {@link #BeforeConvertEvent(Object, String)}
+	 */
+	@Deprecated
 	public BeforeConvertEvent(T source) {
-		super(source, null);
+		this(source, null);
+	}
+
+	/**
+	 * Creates new {@link BeforeConvertEvent}.
+	 * 
+	 * @param source must not be {@literal null}.
+	 * @param collectionName can be {@literal null}.
+	 * @since 1.8
+	 */
+	public BeforeConvertEvent(T source, String collectionName) {
+		super(source, null, collectionName);
 	}
 }

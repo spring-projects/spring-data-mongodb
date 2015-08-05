@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2013 by the original author(s).
+ * Copyright 2011-2015 by the original author(s).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ import com.mongodb.DBObject;
  * @author Jon Brisbin
  * @author Oliver Gierke
  * @author Martin Baumgartner
+ * @author Christoph Strobl
  */
 public abstract class AbstractMongoEventListener<E> implements ApplicationListener<MongoMappingEvent<?>> {
 
@@ -46,14 +47,14 @@ public abstract class AbstractMongoEventListener<E> implements ApplicationListen
 	 * (non-Javadoc)
 	 * @see org.springframework.context.ApplicationListener#onApplicationEvent(org.springframework.context.ApplicationEvent)
 	 */
-	@SuppressWarnings("rawtypes")
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public void onApplicationEvent(MongoMappingEvent<?> event) {
 
 		if (event instanceof AfterLoadEvent) {
 			AfterLoadEvent<?> afterLoadEvent = (AfterLoadEvent<?>) event;
 
 			if (domainClass.isAssignableFrom(afterLoadEvent.getType())) {
-				onAfterLoad(event.getDBObject());
+				onAfterLoad((AfterLoadEvent<E>) event);
 			}
 
 			return;
@@ -65,74 +66,203 @@ public abstract class AbstractMongoEventListener<E> implements ApplicationListen
 
 			if (eventDomainType != null && domainClass.isAssignableFrom(eventDomainType)) {
 				if (event instanceof BeforeDeleteEvent) {
-					onBeforeDelete(event.getDBObject());
+					onBeforeDelete((BeforeDeleteEvent<E>) event);
 				}
 				if (event instanceof AfterDeleteEvent) {
-					onAfterDelete(event.getDBObject());
+					onAfterDelete((AfterDeleteEvent<E>) event);
 				}
 			}
 
 			return;
 		}
 
-		@SuppressWarnings("unchecked")
-		E source = (E) event.getSource();
-
 		// Check for matching domain type and invoke callbacks
-		if (source != null && !domainClass.isAssignableFrom(source.getClass())) {
+		if (event.getSource() != null && !domainClass.isAssignableFrom(event.getSource().getClass())) {
 			return;
 		}
 
+		E source = (E) event.getSource();
+
 		if (event instanceof BeforeConvertEvent) {
-			onBeforeConvert(source);
+			onBeforeConvert((BeforeConvertEvent<E>) event);
 		} else if (event instanceof BeforeSaveEvent) {
-			onBeforeSave(source, event.getDBObject());
+			onBeforeSave((BeforeSaveEvent<E>) event);
 		} else if (event instanceof AfterSaveEvent) {
-			onAfterSave(source, event.getDBObject());
+			onAfterSave((AfterSaveEvent<E>) event);
 		} else if (event instanceof AfterConvertEvent) {
-			onAfterConvert(event.getDBObject(), source);
+			onAfterConvert((AfterConvertEvent<E>) event);
 		}
 	}
 
+	/**
+	 * Captures source element before conversion.
+	 * 
+	 * @param source will never be {@literal null}.
+	 * @deprecated since 1.8. Please use {@link #onBeforeConvert(BeforeConvertEvent)}.
+	 */
+	@Deprecated
 	public void onBeforeConvert(E source) {
+
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("onBeforeConvert({})", source);
 		}
 	}
 
+	/**
+	 * Captures {@link BeforeConvertEvent}.
+	 * 
+	 * @param event never {@literal null}.
+	 * @since 1.8
+	 */
+	public void onBeforeConvert(BeforeConvertEvent<E> event) {
+		onBeforeConvert(event.getSource());
+	}
+
+	/**
+	 * Captures source element and {@link com.mongodb.DBObject} representation before save.
+	 * 
+	 * @param source will never be {@literal null}.
+	 * @param dbo can be {@literal null}.
+	 * @deprecated since 1.8. Please use {@link #onBeforeSave(BeforeSaveEvent)}.
+	 */
+	@Deprecated
 	public void onBeforeSave(E source, DBObject dbo) {
+
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("onBeforeSave({}, {})", source, dbo);
 		}
 	}
 
+	/**
+	 * Captures {@link BeforeSaveEvent}.
+	 * 
+	 * @param event will never be {@literal null}.
+	 * @since 1.8
+	 */
+	public void onBeforeSave(BeforeSaveEvent<E> event) {
+		onBeforeSave(event.getSource(), event.getDBObject());
+	}
+
+	/**
+	 * Captures source element and {@link com.mongodb.DBObject} representation after save.
+	 * 
+	 * @param source will never be {@literal null}.
+	 * @param dbo can be {@literal null}.
+	 * @deprecated since 1.8. Please use {@link #onAfterSave(AfterSaveEvent)}.
+	 */
+	@Deprecated
 	public void onAfterSave(E source, DBObject dbo) {
+
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("onAfterSave({}, {})", source, dbo);
 		}
 	}
 
+	/**
+	 * Captures {@link AfterSaveEvent}.
+	 * 
+	 * @param event will never be {@literal null}.
+	 * @since 1.8
+	 */
+	public void onAfterSave(AfterSaveEvent<E> event) {
+		onAfterSave(event.getSource(), event.getDBObject());
+	}
+
+	/**
+	 * Captures raw {@link com.mongodb.DBObject} when read from MongoDB.
+	 * 
+	 * @param dbo can be {@literal null}.
+	 * @deprecated since 1.8. Please use {@link #onAfterLoad(AfterLoadEvent)}.
+	 */
+	@Deprecated
 	public void onAfterLoad(DBObject dbo) {
+
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("onAfterLoad({})", dbo);
 		}
 	}
 
+	/**
+	 * Captures {@link AfterLoadEvent}.
+	 * 
+	 * @param event will never be {@literal null}.
+	 * @since 1.8
+	 */
+	public void onAfterLoad(AfterLoadEvent<E> event) {
+		onAfterLoad(event.getDBObject());
+	}
+
+	/**
+	 * Captures raw {@link com.mongodb.DBObject} and converted domain type after conversion.
+	 * 
+	 * @param dbo can be {@literal null}.
+	 * @param source will never be {@literal null}.
+	 * @deprecated since 1.8. Please use {@link #onAfterConvert(AfterConvertEvent)}.
+	 */
+	@Deprecated
 	public void onAfterConvert(DBObject dbo, E source) {
+
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("onAfterConvert({}, {})", dbo, source);
 		}
 	}
 
+	/**
+	 * Captures {@link AfterConvertEvent}.
+	 * 
+	 * @param event will never be {@literal null}.
+	 * @since 1.8
+	 */
+	public void onAfterConvert(AfterConvertEvent<E> event) {
+		onAfterConvert(event.getDBObject(), event.getSource());
+
+	}
+
+	/**
+	 * Captures {@link com.mongodb.DBObject} after delete.
+	 * 
+	 * @param dbo can be {@literal null}.
+	 * @deprecated since 1.8. Please use {@link #onAfterDelete(AfterDeleteEvent)}.
+	 */
+	@Deprecated
 	public void onAfterDelete(DBObject dbo) {
+
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("onAfterDelete({})", dbo);
 		}
 	}
 
+	/**
+	 * Captures {@link AfterDeleteEvent}.
+	 * 
+	 * @param event will never be {@literal null}.
+	 * @since 1.8
+	 */
+	public void onAfterDelete(AfterDeleteEvent<E> event) {
+		onAfterDelete(event.getDBObject());
+	}
+
+	/**
+	 * Capture {@link com.mongodb.DBObject} before delete.
+	 * 
+	 * @param dbo can be {@literal null}.
+	 * @deprecated since 1.8. Please use {@link #onBeforeDelete(BeforeDeleteEvent)}.
+	 */
+	@Deprecated
 	public void onBeforeDelete(DBObject dbo) {
+
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("onBeforeDelete({})", dbo);
 		}
+	}
+
+	/**
+	 * Capture {@link BeforeDeleteEvent}.
+	 * 
+	 * @param event will never be {@literal null}.
+	 * @since 1.8
+	 */
+	public void onBeforeDelete(BeforeDeleteEvent<E> event) {
+		onBeforeDelete(event.getDBObject());
 	}
 }

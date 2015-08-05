@@ -338,7 +338,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				DBCursor cursor = collection.find(mappedQuery, mappedFields);
 				QueryCursorPreparer cursorPreparer = new QueryCursorPreparer(query, entityType);
 
-				ReadDbObjectCallback<T> readCallback = new ReadDbObjectCallback<T>(mongoConverter, entityType);
+				ReadDbObjectCallback<T> readCallback = new ReadDbObjectCallback<T>(mongoConverter, entityType, collection
+						.getName());
 
 				return new CloseableIterableCusorAdapter<T>(cursorPreparer.prepare(cursor), exceptionTranslator, readCallback);
 			}
@@ -637,7 +638,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		results = results == null ? Collections.emptyList() : results;
 
 		DbObjectCallback<GeoResult<T>> callback = new GeoNearResultDbObjectCallback<T>(new ReadDbObjectCallback<T>(
-				mongoConverter, entityClass), near.getMetric());
+				mongoConverter, entityClass, collectionName), near.getMetric());
 		List<GeoResult<T>> result = new ArrayList<GeoResult<T>>(results.size());
 
 		int index = 0;
@@ -789,15 +790,15 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 		initializeVersionProperty(objectToSave);
 
-		maybeEmitEvent(new BeforeConvertEvent<T>(objectToSave));
+		maybeEmitEvent(new BeforeConvertEvent<T>(objectToSave, collectionName));
 
 		DBObject dbDoc = toDbObject(objectToSave, writer);
 
-		maybeEmitEvent(new BeforeSaveEvent<T>(objectToSave, dbDoc));
+		maybeEmitEvent(new BeforeSaveEvent<T>(objectToSave, dbDoc, collectionName));
 		Object id = insertDBObject(collectionName, dbDoc, objectToSave.getClass());
 
 		populateIdIfNecessary(objectToSave, id);
-		maybeEmitEvent(new AfterSaveEvent<T>(objectToSave, dbDoc));
+		maybeEmitEvent(new AfterSaveEvent<T>(objectToSave, dbDoc, collectionName));
 	}
 
 	/**
@@ -885,10 +886,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			initializeVersionProperty(o);
 			BasicDBObject dbDoc = new BasicDBObject();
 
-			maybeEmitEvent(new BeforeConvertEvent<T>(o));
+			maybeEmitEvent(new BeforeConvertEvent<T>(o, collectionName));
 			writer.write(o, dbDoc);
 
-			maybeEmitEvent(new BeforeSaveEvent<T>(o, dbDoc));
+			maybeEmitEvent(new BeforeSaveEvent<T>(o, dbDoc, collectionName));
 			dbObjectList.add(dbDoc);
 		}
 		List<ObjectId> ids = insertDBObjectList(collectionName, dbObjectList);
@@ -896,7 +897,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		for (T obj : batchToSave) {
 			if (i < ids.size()) {
 				populateIdIfNecessary(obj, ids.get(i));
-				maybeEmitEvent(new AfterSaveEvent<T>(obj, dbObjectList.get(i)));
+				maybeEmitEvent(new AfterSaveEvent<T>(obj, dbObjectList.get(i), collectionName));
 			}
 			i++;
 		}
@@ -951,14 +952,14 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 			BasicDBObject dbObject = new BasicDBObject();
 
-			maybeEmitEvent(new BeforeConvertEvent<T>(objectToSave));
+			maybeEmitEvent(new BeforeConvertEvent<T>(objectToSave, collectionName));
 			this.mongoConverter.write(objectToSave, dbObject);
 
-			maybeEmitEvent(new BeforeSaveEvent<T>(objectToSave, dbObject));
+			maybeEmitEvent(new BeforeSaveEvent<T>(objectToSave, dbObject, collectionName));
 			Update update = Update.fromDBObject(dbObject, ID_FIELD);
 
 			doUpdate(collectionName, query, update, objectToSave.getClass(), false, false);
-			maybeEmitEvent(new AfterSaveEvent<T>(objectToSave, dbObject));
+			maybeEmitEvent(new AfterSaveEvent<T>(objectToSave, dbObject, collectionName));
 		}
 	}
 
@@ -966,15 +967,15 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 		assertUpdateableIdIfNotSet(objectToSave);
 
-		maybeEmitEvent(new BeforeConvertEvent<T>(objectToSave));
+		maybeEmitEvent(new BeforeConvertEvent<T>(objectToSave, collectionName));
 
 		DBObject dbDoc = toDbObject(objectToSave, writer);
 
-		maybeEmitEvent(new BeforeSaveEvent<T>(objectToSave, dbDoc));
+		maybeEmitEvent(new BeforeSaveEvent<T>(objectToSave, dbDoc, collectionName));
 		Object id = saveDBObject(collectionName, dbDoc, objectToSave.getClass());
 
 		populateIdIfNecessary(objectToSave, id);
-		maybeEmitEvent(new AfterSaveEvent<T>(objectToSave, dbDoc));
+		maybeEmitEvent(new AfterSaveEvent<T>(objectToSave, dbDoc, collectionName));
 	}
 
 	protected Object insertDBObject(final String collectionName, final DBObject dbDoc, final Class<?> entityClass) {
@@ -1266,7 +1267,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		return execute(collectionName, new CollectionCallback<WriteResult>() {
 			public WriteResult doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 
-				maybeEmitEvent(new BeforeDeleteEvent<T>(queryObject, entityClass));
+				maybeEmitEvent(new BeforeDeleteEvent<T>(queryObject, entityClass, collectionName));
 
 				DBObject dboq = queryMapper.getMappedObject(queryObject, entity);
 
@@ -1284,7 +1285,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 				handleAnyWriteResultErrors(wr, dboq, MongoActionOperation.REMOVE);
 
-				maybeEmitEvent(new AfterDeleteEvent<T>(queryObject, entityClass));
+				maybeEmitEvent(new AfterDeleteEvent<T>(queryObject, entityClass, collectionName));
 
 				return wr;
 			}
@@ -1292,13 +1293,12 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	}
 
 	public <T> List<T> findAll(Class<T> entityClass) {
-		return executeFindMultiInternal(new FindCallback(null), null, new ReadDbObjectCallback<T>(mongoConverter,
-				entityClass), determineCollectionName(entityClass));
+		return findAll(entityClass, determineCollectionName(entityClass));
 	}
 
 	public <T> List<T> findAll(Class<T> entityClass, String collectionName) {
 		return executeFindMultiInternal(new FindCallback(null), null, new ReadDbObjectCallback<T>(mongoConverter,
-				entityClass), collectionName);
+				entityClass, collectionName), collectionName);
 	}
 
 	public <T> MapReduceResults<T> mapReduce(String inputCollectionName, String mapFunction, String reduceFunction,
@@ -1343,7 +1343,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		}
 
 		List<T> mappedResults = new ArrayList<T>();
-		DbObjectCallback<T> callback = new ReadDbObjectCallback<T>(mongoConverter, entityClass);
+		DbObjectCallback<T> callback = new ReadDbObjectCallback<T>(mongoConverter, entityClass, inputCollectionName);
 
 		for (DBObject dbObject : mapReduceOutput.results()) {
 			mappedResults.add(callback.doWith(dbObject));
@@ -1404,7 +1404,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		@SuppressWarnings("unchecked")
 		Iterable<DBObject> resultSet = (Iterable<DBObject>) commandResult.get("retval");
 		List<T> mappedResults = new ArrayList<T>();
-		DbObjectCallback<T> callback = new ReadDbObjectCallback<T>(mongoConverter, entityClass);
+		DbObjectCallback<T> callback = new ReadDbObjectCallback<T>(mongoConverter, entityClass, inputCollectionName);
 
 		for (DBObject dbObject : resultSet) {
 			mappedResults.add(callback.doWith(dbObject));
@@ -1506,7 +1506,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		CommandResult commandResult = executeCommand(command, this.readPreference);
 		handleCommandError(commandResult, command);
 
-		return new AggregationResults<O>(returnPotentiallyMappedResults(outputType, commandResult), commandResult);
+		return new AggregationResults<O>(returnPotentiallyMappedResults(outputType, commandResult, collectionName),
+				commandResult);
 	}
 
 	/**
@@ -1516,7 +1517,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * @param commandResult
 	 * @return
 	 */
-	private <O> List<O> returnPotentiallyMappedResults(Class<O> outputType, CommandResult commandResult) {
+	private <O> List<O> returnPotentiallyMappedResults(Class<O> outputType, CommandResult commandResult,
+			String collectionName) {
 
 		@SuppressWarnings("unchecked")
 		Iterable<DBObject> resultSet = (Iterable<DBObject>) commandResult.get("result");
@@ -1524,7 +1526,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			return Collections.emptyList();
 		}
 
-		DbObjectCallback<O> callback = new UnwrapAndReadDbObjectCallback<O>(mongoConverter, outputType);
+		DbObjectCallback<O> callback = new UnwrapAndReadDbObjectCallback<O>(mongoConverter, outputType, collectionName);
 
 		List<O> mappedResults = new ArrayList<O>();
 		for (DBObject dbObject : resultSet) {
@@ -1652,7 +1654,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		}
 
 		return executeFindOneInternal(new FindOneCallback(mappedQuery, mappedFields), new ReadDbObjectCallback<T>(
-				this.mongoConverter, entityClass), collectionName);
+				this.mongoConverter, entityClass, collectionName), collectionName);
 	}
 
 	/**
@@ -1667,7 +1669,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 */
 	protected <T> List<T> doFind(String collectionName, DBObject query, DBObject fields, Class<T> entityClass) {
 		return doFind(collectionName, query, fields, entityClass, null, new ReadDbObjectCallback<T>(this.mongoConverter,
-				entityClass));
+				entityClass, collectionName));
 	}
 
 	/**
@@ -1686,7 +1688,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	protected <T> List<T> doFind(String collectionName, DBObject query, DBObject fields, Class<T> entityClass,
 			CursorPreparer preparer) {
 		return doFind(collectionName, query, fields, entityClass, preparer, new ReadDbObjectCallback<T>(mongoConverter,
-				entityClass));
+				entityClass, collectionName));
 	}
 
 	protected <S, T> List<T> doFind(String collectionName, DBObject query, DBObject fields, Class<S> entityClass,
@@ -1742,7 +1744,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		}
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
 		return executeFindOneInternal(new FindAndRemoveCallback(queryMapper.getMappedObject(query, entity), fields, sort),
-				new ReadDbObjectCallback<T>(readerToUse, entityClass), collectionName);
+				new ReadDbObjectCallback<T>(readerToUse, entityClass, collectionName), collectionName);
 	}
 
 	protected <T> T doFindAndModify(String collectionName, DBObject query, DBObject fields, DBObject sort,
@@ -1768,7 +1770,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		}
 
 		return executeFindOneInternal(new FindAndModifyCallback(mappedQuery, fields, sort, mappedUpdate, options),
-				new ReadDbObjectCallback<T>(readerToUse, entityClass), collectionName);
+				new ReadDbObjectCallback<T>(readerToUse, entityClass, collectionName), collectionName);
 	}
 
 	/**
@@ -2180,26 +2182,30 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * {@link MongoReader}.
 	 * 
 	 * @author Oliver Gierke
+	 * @author Christoph Strobl
 	 */
 	private class ReadDbObjectCallback<T> implements DbObjectCallback<T> {
 
 		private final EntityReader<? super T, DBObject> reader;
 		private final Class<T> type;
+		private final String collectionName;
 
-		public ReadDbObjectCallback(EntityReader<? super T, DBObject> reader, Class<T> type) {
+		public ReadDbObjectCallback(EntityReader<? super T, DBObject> reader, Class<T> type, String collectionName) {
+
 			Assert.notNull(reader);
 			Assert.notNull(type);
 			this.reader = reader;
 			this.type = type;
+			this.collectionName = collectionName;
 		}
 
 		public T doWith(DBObject object) {
 			if (null != object) {
-				maybeEmitEvent(new AfterLoadEvent<T>(object, type));
+				maybeEmitEvent(new AfterLoadEvent<T>(object, type, collectionName));
 			}
 			T source = reader.read(type, object);
 			if (null != source) {
-				maybeEmitEvent(new AfterConvertEvent<T>(object, source));
+				maybeEmitEvent(new AfterConvertEvent<T>(object, source, collectionName));
 			}
 			return source;
 		}
@@ -2207,8 +2213,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 
 	class UnwrapAndReadDbObjectCallback<T> extends ReadDbObjectCallback<T> {
 
-		public UnwrapAndReadDbObjectCallback(EntityReader<? super T, DBObject> reader, Class<T> type) {
-			super(reader, type);
+		public UnwrapAndReadDbObjectCallback(EntityReader<? super T, DBObject> reader, Class<T> type, String collectionName) {
+			super(reader, type, collectionName);
 		}
 
 		@Override

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 by the original author(s).
+ * Copyright 2013-2015 by the original author(s).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import com.mongodb.DBObject;
  * will be the query document <em>after</am> it has been mapped onto the domain type handled.
  * 
  * @author Martin Baumgartner
+ * @author Christoph Strobl
  */
 public class AfterDeleteEvent<T> extends AbstractDeleteEvent<T> {
 
@@ -32,8 +33,22 @@ public class AfterDeleteEvent<T> extends AbstractDeleteEvent<T> {
 	 * 
 	 * @param dbo must not be {@literal null}.
 	 * @param type can be {@literal null}.
+	 * @deprecated since 1.8. Please use {@link #AfterDeleteEvent(DBObject, Class, String)}.
 	 */
+	@Deprecated
 	public AfterDeleteEvent(DBObject dbo, Class<T> type) {
-		super(dbo, type);
+		this(dbo, type, null);
+	}
+
+	/**
+	 * Creates a new {@link AfterDeleteEvent} for the given {@link DBObject}, type and collectionName.
+	 * 
+	 * @param dbo must not be {@literal null}.
+	 * @param type can be {@literal null}.
+	 * @param collectionName can be {@literal null}.
+	 * @since 1.8
+	 */
+	public AfterDeleteEvent(DBObject dbo, Class<T> type, String collectionName) {
+		super(dbo, type, collectionName);
 	}
 }

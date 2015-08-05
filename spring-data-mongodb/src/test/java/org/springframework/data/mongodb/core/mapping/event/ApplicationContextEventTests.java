@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 by the original author(s).
+ * Copyright (c) 2011-2015 by the original author(s).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,10 @@
  */
 package org.springframework.data.mongodb.core.mapping.event;
 
+import static org.hamcrest.core.Is.*;
 import static org.junit.Assert.*;
+import static org.springframework.data.mongodb.core.query.Criteria.*;
+import static org.springframework.data.mongodb.core.query.Query.*;
 
 import java.net.UnknownHostException;
 
@@ -26,6 +29,7 @@ import org.junit.Test;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.mapping.PersonPojoStringId;
 
 import com.mongodb.DB;
@@ -38,10 +42,13 @@ import com.mongodb.WriteConcern;
  * Integration test for Mapping Events.
  * 
  * @author Mark Pollack
+ * @author Christoph Strobl
  */
 public class ApplicationContextEventTests {
 
-	private final String[] collectionsToDrop = new String[] { "personPojoStringId" };
+	private static final String COLLECTION_NAME = "personPojoStringId";
+
+	private final String[] collectionsToDrop = new String[] { COLLECTION_NAME };
 
 	private ApplicationContext applicationContext;
 	private MongoTemplate template;
@@ -60,6 +67,7 @@ public class ApplicationContextEventTests {
 	}
 
 	private void cleanDb() throws UnknownHostException {
+
 		Mongo mongo = new MongoClient();
 		DB db = mongo.getDB("database");
 		for (String coll : collectionsToDrop) {
@@ -90,6 +98,9 @@ public class ApplicationContextEventTests {
 		assertEquals(1, simpleMappingEventListener.onBeforeSaveEvents.size());
 		assertEquals(1, simpleMappingEventListener.onAfterSaveEvents.size());
 
+		assertEquals(COLLECTION_NAME, simpleMappingEventListener.onBeforeSaveEvents.get(0).getCollectionName());
+		assertEquals(COLLECTION_NAME, simpleMappingEventListener.onAfterSaveEvents.get(0).getCollectionName());
+
 		Assert.assertTrue(personBeforeSaveListener.seenEvents.get(0) instanceof BeforeSaveEvent<?>);
 		Assert.assertTrue(afterSaveListener.seenEvents.get(0) instanceof AfterSaveEvent<?>);
 
@@ -106,7 +117,75 @@ public class ApplicationContextEventTests {
 		dbo = beforeSaveEvent.getDBObject();
 
 		comparePersonAndDbo(p, p2, dbo);
+	}
 
+	/**
+	 * @see DATAMONGO-1256
+	 */
+	@Test
+	public void loadAndConvertEvents() {
+
+		SimpleMappingEventListener simpleMappingEventListener = applicationContext
+				.getBean(SimpleMappingEventListener.class);
+
+		PersonPojoStringId entity = new PersonPojoStringId("1", "Text");
+		template.insert(entity);
+
+		template.findOne(query(where("id").is(entity.getId())), PersonPojoStringId.class);
+
+		assertThat(simpleMappingEventListener.onAfterLoadEvents.size(), is(1));
+		assertThat(simpleMappingEventListener.onAfterLoadEvents.get(0).getCollectionName(), is(COLLECTION_NAME));
+
+		assertThat(simpleMappingEventListener.onBeforeConvertEvents.size(), is(1));
+		assertThat(simpleMappingEventListener.onBeforeConvertEvents.get(0).getCollectionName(), is(COLLECTION_NAME));
+
+		assertThat(simpleMappingEventListener.onAfterConvertEvents.size(), is(1));
+		assertThat(simpleMappingEventListener.onAfterConvertEvents.get(0).getCollectionName(), is(COLLECTION_NAME));
+	}
+
+	/**
+	 * @see DATAMONGO-1256
+	 */
+	@Test
+	public void loadEventsOnAggregation() {
+
+		SimpleMappingEventListener simpleMappingEventListener = applicationContext
+				.getBean(SimpleMappingEventListener.class);
+
+		template.insert(new PersonPojoStringId("1", "Text"));
+
+		template.aggregate(Aggregation.newAggregation(Aggregation.project("text")), PersonPojoStringId.class,
+				PersonPojoStringId.class);
+
+		assertThat(simpleMappingEventListener.onAfterLoadEvents.size(), is(1));
+		assertThat(simpleMappingEventListener.onAfterLoadEvents.get(0).getCollectionName(), is(COLLECTION_NAME));
+
+		assertThat(simpleMappingEventListener.onBeforeConvertEvents.size(), is(1));
+		assertThat(simpleMappingEventListener.onBeforeConvertEvents.get(0).getCollectionName(), is(COLLECTION_NAME));
+
+		assertThat(simpleMappingEventListener.onAfterConvertEvents.size(), is(1));
+		assertThat(simpleMappingEventListener.onAfterConvertEvents.get(0).getCollectionName(), is(COLLECTION_NAME));
+	}
+
+	/**
+	 * @see DATAMONGO-1256
+	 */
+	@Test
+	public void deleteEvents() {
+
+		SimpleMappingEventListener simpleMappingEventListener = applicationContext
+				.getBean(SimpleMappingEventListener.class);
+
+		PersonPojoStringId entity = new PersonPojoStringId("1", "Text");
+		template.insert(entity);
+
+		template.remove(entity);
+
+		assertThat(simpleMappingEventListener.onBeforeDeleteEvents.size(), is(1));
+		assertThat(simpleMappingEventListener.onBeforeDeleteEvents.get(0).getCollectionName(), is(COLLECTION_NAME));
+
+		assertThat(simpleMappingEventListener.onAfterDeleteEvents.size(), is(1));
+		assertThat(simpleMappingEventListener.onAfterDeleteEvents.get(0).getCollectionName(), is(COLLECTION_NAME));
 	}
 
 	private void comparePersonAndDbo(PersonPojoStringId p, PersonPojoStringId p2, DBObject dbo) {

@@ -78,7 +78,7 @@ public class AuditingEventListenerUnitTests {
 	public void triggersCreationMarkForObjectWithEmptyId() {
 
 		Sample sample = new Sample();
-		listener.onApplicationEvent(new BeforeConvertEvent<Object>(sample));
+		listener.onApplicationEvent(new BeforeConvertEvent<Object>(sample, "collection-1"));
 
 		verify(handler, times(1)).markCreated(sample);
 		verify(handler, times(0)).markModified(any(Sample.class));
@@ -92,7 +92,7 @@ public class AuditingEventListenerUnitTests {
 
 		Sample sample = new Sample();
 		sample.id = "id";
-		listener.onApplicationEvent(new BeforeConvertEvent<Object>(sample));
+		listener.onApplicationEvent(new BeforeConvertEvent<Object>(sample, "collection-1"));
 
 		verify(handler, times(0)).markCreated(any(Sample.class));
 		verify(handler, times(1)).markModified(sample);

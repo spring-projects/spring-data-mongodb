@@ -50,7 +50,7 @@ public class UnwrapAndReadDbObjectCallbackUnitTests {
 		MappingMongoConverter converter = new MappingMongoConverter(new DefaultDbRefResolver(factory),
 				new MongoMappingContext());
 
-		this.callback = template.new UnwrapAndReadDbObjectCallback<Target>(converter, Target.class);
+		this.callback = template.new UnwrapAndReadDbObjectCallback<Target>(converter, Target.class, "collection-1");
 	}
 
 	@Test
