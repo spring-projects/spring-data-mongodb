@@ -790,6 +790,34 @@ public class QueryMapperUnitTests {
 		assertThat(dbo, isBsonObject().containing("geoJsonPoint.$geoIntersects.$geometry.coordinates"));
 	}
 
+	/**
+	 * @see DATAMONGO-1269
+	 */
+	@Test
+	public void mappingShouldRetainNumericMapKey() {
+
+		Query query = query(where("map.1.stringProperty").is("ba'alzamon"));
+
+		DBObject dbo = mapper.getMappedObject(query.getQueryObject(),
+				context.getPersistentEntity(EntityWithComplexValueTypeMap.class));
+
+		assertThat(dbo.containsField("map.1.stringProperty"), is(true));
+	}
+
+	/**
+	 * @see DATAMONGO-1269
+	 */
+	@Test
+	public void mappingShouldRetainNumericPositionInList() {
+
+		Query query = query(where("list.1.stringProperty").is("ba'alzamon"));
+
+		DBObject dbo = mapper.getMappedObject(query.getQueryObject(),
+				context.getPersistentEntity(EntityWithComplexValueTypeList.class));
+
+		assertThat(dbo.containsField("list.1.stringProperty"), is(true));
+	}
+
 	@Document
 	public class Foo {
 		@Id private ObjectId id;
@@ -889,5 +917,19 @@ public class QueryMapperUnitTests {
 		Point legacyPoint;
 		GeoJsonPoint geoJsonPoint;
 		@Field("geoJsonPointWithNameViaFieldAnnotation") GeoJsonPoint namedGeoJsonPoint;
+	}
+
+	static class SimpeEntityWithoutId {
+
+		String stringProperty;
+		Integer integerProperty;
+	}
+
+	static class EntityWithComplexValueTypeMap {
+		Map<Integer, SimpeEntityWithoutId> map;
+	}
+
+	static class EntityWithComplexValueTypeList {
+		List<SimpeEntityWithoutId> list;
 	}
 }
