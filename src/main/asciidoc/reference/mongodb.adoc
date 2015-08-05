@@ -195,11 +195,11 @@ public class AppConfig {
 
 This approach allows you to use the standard `com.mongodb.Mongo` API that you may already be used to using but also pollutes the code with the UnknownHostException checked exception. The use of the checked exception is not desirable as Java based bean metadata uses methods as a means to set object dependencies, making the calling code cluttered.
 
-An alternative is to register an instance of `com.mongodb.Mongo` instance with the container using Spring's` MongoFactoryBean`. As compared to instantiating a `com.mongodb.Mongo` instance directly, the FactoryBean approach does not throw a checked exception and has the added advantage of also providing the container with an ExceptionTranslator implementation that translates MongoDB exceptions to exceptions in Spring's portable `DataAccessException` hierarchy for data access classes annoated with the `@Repository` annotation. This hierarchy and use of `@Repository` is described in http://docs.spring.io/spring/docs/current/spring-framework-reference/html/dao.html[Spring's DAO support features].
+An alternative is to register an instance of `com.mongodb.Mongo` instance with the container using Spring's `MongoClientFactoryBean`. As compared to instantiating a `com.mongodb.Mongo` instance directly, the FactoryBean approach does not throw a checked exception and has the added advantage of also providing the container with an ExceptionTranslator implementation that translates MongoDB exceptions to exceptions in Spring's portable `DataAccessException` hierarchy for data access classes annoated with the `@Repository` annotation. This hierarchy and use of `@Repository` is described in http://docs.spring.io/spring/docs/current/spring-framework-reference/html/dao.html[Spring's DAO support features].
 
 An example of a Java based bean metadata that supports exception translation on `@Repository` annotated classes is shown below:
 
-.Registering a com.mongodb.Mongo object using Spring's MongoFactoryBean and enabling Spring's exception translation support
+.Registering a com.mongodb.Mongo object using Spring's MongoClientFactoryBean and enabling Spring's exception translation support
 ====
 [source,java]
 ----
@@ -209,8 +209,8 @@ public class AppConfig {
     /*
      * Factory bean that creates the com.mongodb.Mongo instance
      */
-     public @Bean MongoFactoryBean mongo() {
-          MongoFactoryBean mongo = new MongoFactoryBean();
+     public @Bean MongoClientFactoryBean mongo() {
+          MongoClientFactoryBean mongo = new MongoClientFactoryBean();
           mongo.setHost("localhost");
           return mongo;
      }
@@ -218,7 +218,7 @@ public class AppConfig {
 ----
 ====
 
-To access the `com.mongodb.Mongo` object created by the `MongoFactoryBean` in other `@Configuration` or your own classes, use a "`private @Autowired Mongo mongo;`" field.
+To access the `com.mongodb.Mongo` object created by the `MongoClientFactoryBean` in other `@Configuration` or your own classes, use a "`private @Autowired Mongo mongo;`" field.
 
 [[mongo.mongo-xml-config]]
 === Registering a Mongo instance using XML based metadata
