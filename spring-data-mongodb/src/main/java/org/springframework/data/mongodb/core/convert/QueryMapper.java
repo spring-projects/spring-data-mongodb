@@ -889,10 +889,14 @@ public class QueryMapper {
 
 			private final KeyMapper keyMapper;
 
-			PositionParameterRetainingPropertyKeyConverter(String rawKey) {
+			public PositionParameterRetainingPropertyKeyConverter(String rawKey) {
 				this.keyMapper = new KeyMapper(rawKey);
 			}
 
+			/*
+			 * (non-Javadoc)
+			 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
+			 */
 			@Override
 			public String convert(MongoPersistentProperty source) {
 				return keyMapper.mapPropertyName(source);
@@ -926,7 +930,7 @@ public class QueryMapper {
 		 */
 		static class KeyMapper {
 
-			Iterator<String> iterator;
+			private final Iterator<String> iterator;
 
 			public KeyMapper(String key) {
 
@@ -943,14 +947,13 @@ public class QueryMapper {
 			protected String mapPropertyName(MongoPersistentProperty property) {
 
 				String mappedName = PropertyToFieldNameConverter.INSTANCE.convert(property);
-
 				boolean inspect = iterator.hasNext();
+
 				while (inspect) {
 
 					String partial = iterator.next();
+					boolean isPositional = (isPositionalParameter(partial) && (property.isMap() || property.isCollectionLike()));
 
-					boolean isPositional = (isPositionalParameter(partial) && (property.isMap() || property.isCollectionLike() || property
-							.isArray()));
 					if (isPositional) {
 						mappedName += "." + partial;
 					}
@@ -961,7 +964,7 @@ public class QueryMapper {
 				return mappedName;
 			}
 
-			boolean isPositionalParameter(String partial) {
+			private static boolean isPositionalParameter(String partial) {
 
 				if (partial.equals("$")) {
 					return true;
@@ -975,7 +978,6 @@ public class QueryMapper {
 				}
 			}
 		}
-
 	}
 
 	/**
