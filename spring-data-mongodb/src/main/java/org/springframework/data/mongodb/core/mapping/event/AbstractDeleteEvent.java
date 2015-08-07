@@ -33,7 +33,7 @@ public abstract class AbstractDeleteEvent<T> extends MongoMappingEvent<DBObject>
 	 * 
 	 * @param dbo must not be {@literal null}.
 	 * @param type can be {@literal null}.
-	 * @deprecated since 1.8. Please use {@link #AbstractDeleteEvent(DBObject, Class, String)}
+	 * @deprecated since 1.8. Please use {@link #AbstractDeleteEvent(DBObject, Class, String)}.
 	 */
 	@Deprecated
 	public AbstractDeleteEvent(DBObject dbo, Class<T> type) {
@@ -45,7 +45,7 @@ public abstract class AbstractDeleteEvent<T> extends MongoMappingEvent<DBObject>
 	 * 
 	 * @param dbo must not be {@literal null}.
 	 * @param type can be {@literal null}.
-	 * @param collectionName can be {@literal null}
+	 * @param collectionName can be {@literal null}.
 	 * @since 1.8
 	 */
 	public AbstractDeleteEvent(DBObject dbo, Class<T> type, String collectionName) {

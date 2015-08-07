@@ -30,7 +30,7 @@ public class BeforeConvertEvent<T> extends MongoMappingEvent<T> {
 	 * Creates new {@link BeforeConvertEvent}.
 	 * 
 	 * @param source must not be {@literal null}.
-	 * @deprecated since 1.8. Please use {@link #BeforeConvertEvent(Object, String)}
+	 * @deprecated since 1.8. Please use {@link #BeforeConvertEvent(Object, String)}.
 	 */
 	@Deprecated
 	public BeforeConvertEvent(T source) {

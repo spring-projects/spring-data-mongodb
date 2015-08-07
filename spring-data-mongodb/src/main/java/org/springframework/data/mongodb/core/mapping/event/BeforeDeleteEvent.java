@@ -45,7 +45,7 @@ public class BeforeDeleteEvent<T> extends AbstractDeleteEvent<T> {
 	 * 
 	 * @param dbo must not be {@literal null}.
 	 * @param type can be {@literal null}.
-	 * @param collectionName can be {@literal null}
+	 * @param collectionName can be {@literal null}.
 	 * @since 1.8
 	 */
 	public BeforeDeleteEvent(DBObject dbo, Class<T> type, String collectionName) {

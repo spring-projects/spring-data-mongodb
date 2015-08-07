@@ -74,14 +74,15 @@ public abstract class AbstractMongoEventListener<E> implements ApplicationListen
 			}
 
 			return;
+
 		}
+
+		Object source = event.getSource();
 
 		// Check for matching domain type and invoke callbacks
-		if (event.getSource() != null && !domainClass.isAssignableFrom(event.getSource().getClass())) {
+		if (source != null && !domainClass.isAssignableFrom(source.getClass())) {
 			return;
 		}
-
-		E source = (E) event.getSource();
 
 		if (event instanceof BeforeConvertEvent) {
 			onBeforeConvert((BeforeConvertEvent<E>) event);
