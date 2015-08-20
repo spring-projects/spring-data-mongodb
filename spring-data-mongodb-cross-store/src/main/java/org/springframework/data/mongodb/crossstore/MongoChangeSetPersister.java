@@ -109,9 +109,9 @@ public class MongoChangeSetPersister implements ChangeSetPersister<Object> {
 	 * @see org.springframework.data.crossstore.ChangeSetPersister#getPersistentId(org.springframework.data.crossstore.ChangeSetBacked, org.springframework.data.crossstore.ChangeSet)
 	 */
 	public Object getPersistentId(ChangeSetBacked entity, ChangeSet cs) throws DataAccessException {
-
-		log.debug("getPersistentId called on " + entity);
-
+		if (log.isDebugEnabled()) {
+			log.debug("getPersistentId called on " + entity);
+		}
 		if (entityManagerFactory == null) {
 			throw new DataAccessResourceFailureException("EntityManagerFactory cannot be null");
 		}
