@@ -938,6 +938,40 @@ You can use several overloaded methods to remove an object from the database.
 
 * *remove* Remove the given document based on one of the following: a specific object instance, a query document criteria combined with a class or a query document criteria combined with a specific collection name.
 
+[[mongo-template.optimistic-locking]]
+=== Optimistic locking
+
+The `@Version` annotation provides a JPA similar semantic in the context of MongoDB and makes sure updates are only applied to documents with matching version. Therefore the actual value of the version property is added to the update query in a way that the update won't have any effect if another operation altered the document in between. In that case an `OptimisticLockingFailureException` is thrown.
+
+====
+[source,java]
+----
+@Document
+class Person {
+
+  @Id String id;
+  String firstname;
+  String lastname;
+  @Version Long version;
+}
+
+Person daenerys = template.insert(new Person("Daenerys"));                           <1>
+
+Person tmp = teplate.findOne(query(where("id").is(daenerys.getId())), Person.class); <2>
+
+daenerys.setLastname("Targaryen");
+template.save(daenerys);                                                             <3>
+
+template.save(tmp); // throws OptimisticLockingFailureException                      <4>
+----
+<1> Intially insert document. `version` is set to `0`.
+<2> Load the just inserted document `version` is still `0`.
+<3> Update document with `version = 0`. Set the `lastname` and bump `version` to `1`.
+<4> Try to update previously loaded document sill having `version = 0` fails with `OptimisticLockingFailureException` as the current `version` is `1`.
+====
+
+IMPORTANT: Using MongoDB driver version 3 requires to set the `WriteConcern` to `ACKNOWLEDGED`. Otherwise `OptimisticLockingFailureException` can be silently swallowed.
+
 [[mongo.query]]
 == Querying Documents
 
