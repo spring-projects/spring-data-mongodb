@@ -381,7 +381,7 @@ MongoDB repository support integrates with the http://www.querydsl.com/[QueryDSL
 * Adopts better to refactoring changes in domain types
 * Incremental query definition is easier
 
-Please refer to the QueryDSL documentation which describes how to bootstrap your environment for APT based code generation http://source.mysema.com/static/querydsl/2.1.2/reference/html/ch02.html#d0e112[using Maven] or http://source.mysema.com/static/querydsl/2.1.2/reference/html/ch02.html#d0e131[using Ant].
+Please refer to the http://www.querydsl.com/static/querydsl/latest/reference/html/[QueryDSL documentation] which describes how to bootstrap your environment for APT based code generation using Maven or Ant.
 
 Using QueryDSL you will be able to write queries as shown below
 
