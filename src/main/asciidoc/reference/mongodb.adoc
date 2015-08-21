@@ -64,7 +64,7 @@ You will also need to add the location of the Spring Milestone repository for ma
 </repositories>
 ----
 
-The repository is also http://shrub.appspot.com/maven.springframework.org/milestone/org/springframework/data/[browseable here].
+The repository is also http://repo.spring.io/milestone/org/springframework/data/[browseable here].
 
 You may also want to set the logging level to `DEBUG` to see some additional information, edit the log4j.properties file to have
 
@@ -1193,13 +1193,13 @@ The geo near operations return a `GeoResults` wrapper object that encapsulates `
 [[mongo.geo-json]]
 === GeoJSON Support
 
-MongoDB supports http://geojeson.org/[GeoJSON] and simple (legacy) coordinate pairs for geospatial data. Those formats can both be used for storing as well as querying data.
+MongoDB supports http://geojson.org/[GeoJSON] and simple (legacy) coordinate pairs for geospatial data. Those formats can both be used for storing as well as querying data.
 
 NOTE: Please refer to the http://docs.mongodb.org/manual/core/2dsphere/#geospatial-indexes-store-geojson/[MongoDB manual on GeoJSON support] to learn about requirements and restrictions.
 
 ==== GeoJSON types in domain classes
 
-Usage of http://geojeson.org/[GeoJSON] types in domain classes is straight forward. The `org.springframework.data.mongodb.core.geo` package contains types like `GeoJsonPoint`, `GeoJsonPolygon` and others. Those are extensions to the existing `org.springframework.data.geo` types.
+Usage of http://geojson.org/[GeoJSON] types in domain classes is straight forward. The `org.springframework.data.mongodb.core.geo` package contains types like `GeoJsonPoint`, `GeoJsonPolygon` and others. Those are extensions to the existing `org.springframework.data.geo` types.
 
 ====
 [source,java]
