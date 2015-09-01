@@ -1,6 +1,15 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 1.8.0.RELEASE (2015-09-01)
+---------------------------------------------
+* DATAMONGO-1282 - Release 1.8 GA (Gosling).
+* DATAMONGO-1280 - Add what's new section to refrence documentation.
+* DATAMONGO-1275 - Reference documentation should mention support for optimistic locking.
+* DATAMONGO-1269 - QueryMapper drops numeric keys in Maps.
+* DATAMONGO-1256 - Provide a collectionName in MongoMappingEvents.
+
+
 Changes in version 1.8.0.RC1 (2015-08-04)
 -----------------------------------------
 * DATAMONGO-1268 - Release 1.8 RC1 (Gosling).
