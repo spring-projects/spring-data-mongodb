@@ -1059,7 +1059,7 @@ The `Query` class has some additional methods used to provide options for the qu
 * `Field` *fields* `()` used to define fields to be included in the query results
 * `Query` *limit* `(int limit)` used to limit the size of the returned results to the provided limit (used for paging)
 * `Query` *skip* `(int skip)` used to skip the provided number of documents in the results (used for paging)
-* `Sort` *sort* `()` used to provide sort definition for the results
+* `Query` *with* `(Sort sort)` used to provide sort definition for the results
 
 [[mongo-template.querying]]
 === Methods for querying for documents
