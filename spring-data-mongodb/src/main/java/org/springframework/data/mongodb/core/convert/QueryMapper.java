@@ -251,7 +251,7 @@ public class QueryMapper {
 	 */
 	protected DBObject getMappedKeyword(Field property, Keyword keyword) {
 
-		boolean needsAssociationConversion = property.isAssociation() && !keyword.isExists();
+		boolean needsAssociationConversion = property.isAssociation() && !keyword.isExists() && !keyword.isSlice();
 		Object value = keyword.getValue();
 
 		Object convertedValue = needsAssociationConversion ? convertAssociation(value, property)
@@ -550,6 +550,15 @@ public class QueryMapper {
 		 */
 		public boolean isExists() {
 			return "$exists".equalsIgnoreCase(key);
+		}
+		
+		/**
+		 * Returns whether the current keyword is the {@code $slice} keyword.
+		 * 
+		 * @return
+		 */
+		public boolean isSlice() {
+			return "$slice".equalsIgnoreCase(key);
 		}
 
 		public boolean isOrOrNor() {
