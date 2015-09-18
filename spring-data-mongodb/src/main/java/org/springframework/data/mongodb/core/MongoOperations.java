@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.springframework.data.geo.GeoResults;
+import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
@@ -292,6 +293,26 @@ public interface MongoOperations {
 	 */
 	ScriptOperations scriptOps();
 
+	/**
+	 * Returns the bulk operations.
+	 * 
+	 * @param bulkMode Mode to use for bulk operations (ordered, unordered).
+	 * @param collectionsName Name of the collection to work on.
+v	 * 
+	 * @return index operations on the named collection
+	 */
+	BulkOperations bulkOps(BulkMode bulkMode, String collectionsName);
+	
+	/**
+	 * Returns the bulk operations.
+	 * 
+	 * @param bulkMode Mode to use for bulk operations (ordered, unordered).
+	 * @param entityClass Name of the entity class.
+   * 
+	 * @return index operations on the named collection associated with the given entity class
+	 */
+	BulkOperations bulkOps(BulkMode bulkMode, Class<?> entityClass);
+	
 	/**
 	 * Query for a list of objects of type T from the collection used by the entity class.
 	 * <p/>
