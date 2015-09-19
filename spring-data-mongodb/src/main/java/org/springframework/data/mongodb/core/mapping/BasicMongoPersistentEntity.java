@@ -26,6 +26,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.expression.BeanFactoryAccessor;
 import org.springframework.context.expression.BeanFactoryResolver;
+import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.AssociationHandler;
@@ -77,7 +78,7 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 		Class<?> rawType = typeInformation.getType();
 		String fallback = MongoCollectionUtils.getPreferredCollectionName(rawType);
 
-		Document document = rawType.getAnnotation(Document.class);
+		Document document = AnnotationUtils.findAnnotation(rawType, Document.class);
 
 		this.expression = detectExpression(document);
 		this.context = new StandardEvaluationContext();
@@ -96,6 +97,7 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 	 * (non-Javadoc)
 	 * @see org.springframework.context.ApplicationContextAware#setApplicationContext(org.springframework.context.ApplicationContext)
 	 */
+	@Override
 	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
 
 		context.addPropertyAccessor(new BeanFactoryAccessor());
@@ -107,6 +109,7 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentEntity#getCollection()
 	 */
+	@Override
 	public String getCollection() {
 		return expression == null ? collection : expression.getValue(context, String.class);
 	}
@@ -174,6 +177,7 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 		 * (non-Javadoc)
 		 * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
 		 */
+		@Override
 		public int compare(MongoPersistentProperty o1, MongoPersistentProperty o2) {
 
 			if (o1.getFieldOrder() == Integer.MAX_VALUE) {
@@ -278,10 +282,12 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 
 		private final Map<String, MongoPersistentProperty> properties = new HashMap<String, MongoPersistentProperty>();
 
+		@Override
 		public void doWithPersistentProperty(MongoPersistentProperty persistentProperty) {
 			assertUniqueness(persistentProperty);
 		}
 
+		@Override
 		public void doWithAssociation(Association<MongoPersistentProperty> association) {
 			assertUniqueness(association.getInverse());
 		}
@@ -351,9 +357,9 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 				}
 			}
 
-			throw new MappingException(
-					String.format("Missmatching types for %s. Found %s expected one of %s.", persistentProperty.getField(),
-							persistentProperty.getActualType(), StringUtils.arrayToCommaDelimitedString(validMatches)));
+			throw new MappingException(String.format("Missmatching types for %s. Found %s expected one of %s.",
+					persistentProperty.getField(), persistentProperty.getActualType(),
+					StringUtils.arrayToCommaDelimitedString(validMatches)));
 		}
 	}
 }
