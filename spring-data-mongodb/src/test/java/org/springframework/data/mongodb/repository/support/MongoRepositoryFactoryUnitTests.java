@@ -15,17 +15,18 @@
  */
 package org.springframework.data.mongodb.repository.support;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
-
 import java.io.Serializable;
-
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import static org.mockito.Mockito.when;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
@@ -44,7 +45,8 @@ public class MongoRepositoryFactoryUnitTests {
 
 	@Mock
 	MongoTemplate template;
-
+    @Mock
+    ApplicationEventPublisher eventPublisher;
 	@Mock
 	MongoConverter converter;
 
@@ -70,7 +72,7 @@ public class MongoRepositoryFactoryUnitTests {
 		when(mappingContext.getPersistentEntity(Person.class)).thenReturn(entity);
 		when(entity.getType()).thenReturn(Person.class);
 
-		MongoRepositoryFactory factory = new MongoRepositoryFactory(template);
+		MongoRepositoryFactory factory = new MongoRepositoryFactory(template, eventPublisher);
 		MongoEntityInformation<Person, Serializable> entityInformation = factory.getEntityInformation(Person.class);
 		assertTrue(entityInformation instanceof MappingMongoEntityInformation);
 	}
@@ -85,7 +87,7 @@ public class MongoRepositoryFactoryUnitTests {
 		when(mappingContext.getPersistentEntity(Person.class)).thenReturn(entity);
 		when(entity.getType()).thenReturn(Person.class);
 
-		MongoRepositoryFactory factory = new MongoRepositoryFactory(template);
+		MongoRepositoryFactory factory = new MongoRepositoryFactory(template, eventPublisher);
 		MyPersonRepository repository = factory.getRepository(MyPersonRepository.class);
 		assertThat(repository, is(notNullValue()));
 	}

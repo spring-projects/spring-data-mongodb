@@ -17,11 +17,10 @@ package org.springframework.data.mongodb.repository.cdi;
 
 import java.lang.annotation.Annotation;
 import java.util.Set;
-
 import javax.enterprise.context.spi.CreationalContext;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
-
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.repository.support.MongoRepositoryFactory;
 import org.springframework.data.repository.cdi.CdiRepositoryBean;
@@ -33,10 +32,12 @@ import org.springframework.util.Assert;
  * 
  * @author Oliver Gierke
  * @author Mark Paluch
+ * @author Jordi Llach
  */
 public class MongoRepositoryBean<T> extends CdiRepositoryBean<T> {
 
 	private final Bean<MongoOperations> operations;
+    private final ApplicationEventPublisher eventPublisher;
 
 	/**
 	 * Creates a new {@link MongoRepositoryBean}.
@@ -47,14 +48,18 @@ public class MongoRepositoryBean<T> extends CdiRepositoryBean<T> {
 	 * @param beanManager must not be {@literal null}.
 	 * @param detector detector for the custom {@link org.springframework.data.repository.Repository} implementations
 	 *          {@link CustomRepositoryImplementationDetector}, can be {@literal null}.
+     * @param eventPublisher must not be {@literal null}.
 	 */
 	public MongoRepositoryBean(Bean<MongoOperations> operations, Set<Annotation> qualifiers, Class<T> repositoryType,
-			BeanManager beanManager, CustomRepositoryImplementationDetector detector) {
+			BeanManager beanManager, CustomRepositoryImplementationDetector detector,
+            ApplicationEventPublisher eventPublisher) {
 
 		super(qualifiers, repositoryType, beanManager, detector);
 
 		Assert.notNull(operations);
+        Assert.notNull(eventPublisher);
 		this.operations = operations;
+        this.eventPublisher = eventPublisher;
 	}
 
 	/* 
@@ -65,7 +70,7 @@ public class MongoRepositoryBean<T> extends CdiRepositoryBean<T> {
 	protected T create(CreationalContext<T> creationalContext, Class<T> repositoryType, Object customImplementation) {
 
 		MongoOperations mongoOperations = getDependencyInstance(operations, MongoOperations.class);
-		MongoRepositoryFactory factory = new MongoRepositoryFactory(mongoOperations);
+		MongoRepositoryFactory factory = new MongoRepositoryFactory(mongoOperations, eventPublisher);
 
 		return factory.getRepository(repositoryType, customImplementation);
 	}

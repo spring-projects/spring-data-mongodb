@@ -16,7 +16,10 @@
 package org.springframework.data.mongodb.repository.support;
 
 import java.io.Serializable;
-
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.repository.MongoRepository;
@@ -29,13 +32,16 @@ import org.springframework.util.Assert;
  * {@link org.springframework.beans.factory.FactoryBean} to create {@link MongoRepository} instances.
  * 
  * @author Oliver Gierke
+ * @author Jordi Llach
  */
-public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID extends Serializable> extends
-		RepositoryFactoryBeanSupport<T, S, ID> {
+public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID extends Serializable> 
+extends      RepositoryFactoryBeanSupport<T, S, ID> 
+implements   ApplicationContextAware {
 
 	private MongoOperations operations;
 	private boolean createIndexesForQueryMethods = false;
 	private boolean mappingContextConfigured = false;
+    private ApplicationEventPublisher eventPublisher;
 
 	/**
 	 * Configures the {@link MongoOperations} to be used.
@@ -65,6 +71,15 @@ public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID exten
 		super.setMappingContext(mappingContext);
 		this.mappingContextConfigured = true;
 	}
+    
+    /*
+	 * (non-Javadoc)
+	 * @see org.springframework.context.ApplicationContextAware#setApplicationContext(org.springframework.context.ApplicationContext)
+	 */
+	@Override
+	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+		this.eventPublisher = applicationContext;
+	}
 
 	/*
 	 * (non-Javadoc)
@@ -92,7 +107,7 @@ public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID exten
 	 * @return
 	 */
 	protected RepositoryFactorySupport getFactoryInstance(MongoOperations operations) {
-		return new MongoRepositoryFactory(operations);
+		return new MongoRepositoryFactory(operations, eventPublisher);
 	}
 
 	/*
@@ -106,7 +121,8 @@ public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID exten
 	public void afterPropertiesSet() {
 
 		super.afterPropertiesSet();
-		Assert.notNull(operations, "MongoTemplate must not be null!");
+		Assert.notNull(operations,     "MongoTemplate must not be null!");
+        Assert.notNull(eventPublisher, "ApplicationContext must not be null");
 
 		if (!mappingContextConfigured) {
 			setMappingContext(operations.getConverter().getMappingContext());

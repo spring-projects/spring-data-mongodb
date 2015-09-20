@@ -15,8 +15,6 @@
  */
 package org.springframework.data.mongodb.repository.support;
 
-import static org.springframework.data.mongodb.core.query.Criteria.*;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -24,7 +22,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -32,6 +30,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
@@ -43,25 +42,30 @@ import org.springframework.util.Assert;
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @author Thomas Darimont
+ * @author Jordi Llach
  */
 public class SimpleMongoRepository<T, ID extends Serializable> implements MongoRepository<T, ID> {
 
 	private final MongoOperations mongoOperations;
 	private final MongoEntityInformation<T, ID> entityInformation;
+    final ApplicationEventPublisher eventPublisher;
 
 	/**
 	 * Creates a new {@link SimpleMongoRepository} for the given {@link MongoEntityInformation} and {@link MongoTemplate}.
 	 * 
 	 * @param metadata must not be {@literal null}.
-	 * @param template must not be {@literal null}.
+	 * @param mongoOperations must not be {@literal null}.
+     * @param eventPublisher  must not be {@literal null}.
 	 */
-	public SimpleMongoRepository(MongoEntityInformation<T, ID> metadata, MongoOperations mongoOperations) {
-
+	public SimpleMongoRepository(MongoEntityInformation<T, ID> metadata, MongoOperations mongoOperations,
+                                 ApplicationEventPublisher eventPublisher) {
 		Assert.notNull(mongoOperations);
 		Assert.notNull(metadata);
+        Assert.notNull(eventPublisher);
 
 		this.entityInformation = metadata;
 		this.mongoOperations = mongoOperations;
+        this.eventPublisher = eventPublisher;
 	}
 
 	/*

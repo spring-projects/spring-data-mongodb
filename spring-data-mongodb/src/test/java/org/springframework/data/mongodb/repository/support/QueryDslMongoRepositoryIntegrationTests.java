@@ -15,16 +15,18 @@
  */
 package org.springframework.data.mongodb.repository.support;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
-
+import com.mysema.query.types.Predicate;
 import java.util.Arrays;
 import java.util.List;
-
+import static org.hamcrest.Matchers.hasItems;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.MongoOperations;
@@ -33,8 +35,6 @@ import org.springframework.data.mongodb.repository.QPerson;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-
-import com.mysema.query.types.Predicate;
 
 /**
  * Integration test for {@link QueryDslMongoRepository}.
@@ -47,6 +47,7 @@ import com.mysema.query.types.Predicate;
 public class QueryDslMongoRepositoryIntegrationTests {
 
 	@Autowired MongoOperations operations;
+    @Autowired ApplicationContext eventPubliher;
 	QueryDslMongoRepository<Person, String> repository;
 
 	Person dave, oliver, carter;
@@ -55,9 +56,9 @@ public class QueryDslMongoRepositoryIntegrationTests {
 	@Before
 	public void setup() {
 
-		MongoRepositoryFactory factory = new MongoRepositoryFactory(operations);
+		MongoRepositoryFactory factory = new MongoRepositoryFactory(operations, eventPubliher);
 		MongoEntityInformation<Person, String> entityInformation = factory.getEntityInformation(Person.class);
-		repository = new QueryDslMongoRepository<Person, String>(entityInformation, operations);
+		repository = new QueryDslMongoRepository<Person, String>(entityInformation, operations, eventPubliher);
 
 		operations.dropCollection(Person.class);
 

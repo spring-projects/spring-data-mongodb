@@ -15,21 +15,22 @@
  */
 package org.springframework.data.mongodb.repository;
 
-import static org.hamcrest.collection.IsCollectionWithSize.*;
-import static org.hamcrest.core.Is.*;
-import static org.hamcrest.core.IsCollectionContaining.*;
-import static org.hamcrest.core.IsEqual.*;
-import static org.junit.Assert.*;
-
+import com.mongodb.Mongo;
+import com.mongodb.MongoClient;
 import java.util.Arrays;
 import java.util.List;
-
+import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
+import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsCollectionContaining.hasItems;
+import static org.hamcrest.core.IsEqual.equalTo;
 import org.junit.After;
+import static org.junit.Assert.assertThat;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -49,9 +50,6 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
-
-import com.mongodb.Mongo;
-import com.mongodb.MongoClient;
 
 /**
  * Integration tests for text searches on repository.
@@ -73,6 +71,7 @@ public class MongoRepositoryTextSearchIntegrationTests {
 			"Drop Zone is an action film featuring Wesley Snipes and Gary Busey.");
 
 	@Autowired MongoTemplate template;
+    @Autowired ApplicationContext eventPubliher;
 	FullTextRepository repo;
 
 	@Before
@@ -80,7 +79,7 @@ public class MongoRepositoryTextSearchIntegrationTests {
 
 		template.indexOps(FullTextDocument.class).ensureIndex(
 				new TextIndexDefinitionBuilder().onField("title").onField("content").build());
-		this.repo = new MongoRepositoryFactory(this.template).getRepository(FullTextRepository.class);
+		this.repo = new MongoRepositoryFactory(this.template, this.eventPubliher).getRepository(FullTextRepository.class);
 	}
 
 	@After
