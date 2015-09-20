@@ -44,6 +44,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 /**
  * @author <a href="mailto:kowsercse@gmail.com">A. B. M. Kowser</a>
  * @author Thomas Darimont
+ * @author Jordi Llach
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:infrastructure.xml")

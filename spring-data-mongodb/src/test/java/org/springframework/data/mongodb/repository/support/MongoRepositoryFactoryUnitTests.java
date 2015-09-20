@@ -39,6 +39,7 @@ import org.springframework.data.repository.Repository;
  * Unit test for {@link MongoRepositoryFactory}.
  * 
  * @author Oliver Gierke
+ * @author Jordi Llach
  */
 @RunWith(MockitoJUnitRunner.class)
 public class MongoRepositoryFactoryUnitTests {

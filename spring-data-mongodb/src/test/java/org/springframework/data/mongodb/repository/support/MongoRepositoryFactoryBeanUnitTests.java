@@ -37,6 +37,7 @@ import org.springframework.test.util.ReflectionTestUtils;
  * Unit tests for {@link MongoRepositoryFactoryBean}.
  * 
  * @author Oliver Gierke
+ * @author Jordi LLach
  */
 @RunWith(MockitoJUnitRunner.class)
 public class MongoRepositoryFactoryBeanUnitTests {

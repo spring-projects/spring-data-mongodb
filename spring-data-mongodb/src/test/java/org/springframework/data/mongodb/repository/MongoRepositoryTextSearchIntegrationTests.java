@@ -56,6 +56,7 @@ import org.springframework.util.ObjectUtils;
  * 
  * @author Christoph Strobl
  * @author Oliver Gierke
+ * @author Jordi Llach
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration

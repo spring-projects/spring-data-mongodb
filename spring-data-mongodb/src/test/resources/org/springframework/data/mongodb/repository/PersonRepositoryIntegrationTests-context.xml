@@ -34,5 +34,7 @@
 			<bean class="org.springframework.data.mongodb.repository.SampleEvaluationContextExtension"/>
 		</constructor-arg>
 	</bean>
+    
+    <bean id="eventListener" class="org.springframework.data.mongodb.core.mapping.event.SimpleMappingEventListener" />
 	
 </beans>
