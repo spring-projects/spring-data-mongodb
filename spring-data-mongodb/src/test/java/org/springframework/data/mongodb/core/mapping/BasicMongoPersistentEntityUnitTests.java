@@ -19,6 +19,11 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -226,6 +231,18 @@ public class BasicMongoPersistentEntityUnitTests {
 		verify(dbRefMock, times(1)).lazy();
 	}
 
+	/**
+	 * @see DATAMONGO-1291
+	 */
+	@Test
+	public void metaInformationShouldBeReadCorrectlyFromInheritedDocumentAnnotation() {
+
+		BasicMongoPersistentEntity<DocumentWithCustomAnnotation> entity = new BasicMongoPersistentEntity<DocumentWithCustomAnnotation>(
+				ClassTypeInformation.from(DocumentWithCustomAnnotation.class));
+
+		assertThat(entity.getCollection(), is("collection-1"));
+	}
+
 	@Document(collection = "contacts")
 	class Contact {
 
@@ -260,5 +277,16 @@ public class BasicMongoPersistentEntityUnitTests {
 
 	static class AnyDocument {
 
+	}
+
+	@CustomDocumentAnnotation
+	static class DocumentWithCustomAnnotation {
+
+	}
+
+	@Retention(RetentionPolicy.RUNTIME)
+	@Target({ ElementType.TYPE })
+	@Document(collection = "collection-1")
+	static @interface CustomDocumentAnnotation {
 	}
 }
