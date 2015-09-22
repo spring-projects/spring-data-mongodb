@@ -26,6 +26,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.expression.BeanFactoryAccessor;
 import org.springframework.context.expression.BeanFactoryResolver;
+import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.AssociationHandler;
@@ -77,7 +78,7 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 		Class<?> rawType = typeInformation.getType();
 		String fallback = MongoCollectionUtils.getPreferredCollectionName(rawType);
 
-		Document document = rawType.getAnnotation(Document.class);
+		Document document = AnnotationUtils.findAnnotation(rawType, Document.class);
 
 		this.expression = detectExpression(document);
 		this.context = new StandardEvaluationContext();
