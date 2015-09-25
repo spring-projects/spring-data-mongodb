@@ -60,6 +60,7 @@ import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
 import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
@@ -544,6 +545,14 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		return new DefaultIndexOperations(this, determineCollectionName(entityClass));
 	}
 
+	public BulkOperations bulkOps(BulkMode bulkMode, String collectionName) {
+		return new DefaultBulkOperations(this, bulkMode, collectionName, writeConcern);
+	}
+
+	public BulkOperations bulkOps(BulkMode bulkMode, Class<?> entityClass) {
+		return new DefaultBulkOperations(this, bulkMode, determineCollectionName(entityClass), writeConcern);
+	}
+	
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.MongoOperations#scriptOps()
