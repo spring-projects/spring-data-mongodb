@@ -44,6 +44,7 @@ import com.mongodb.MongoURI;
  * @author Oliver Gierke
  * @author Thomas Darimont
  * @author Christoph Strobl
+ * @author Viktor Khoroshko
  */
 public class MongoDbFactoryParser extends AbstractBeanDefinitionParser {
 
@@ -73,7 +74,10 @@ public class MongoDbFactoryParser extends AbstractBeanDefinitionParser {
 		BeanDefinition mongoUri = getMongoUri(element);
 
 		if (mongoUri != null) {
-			if (element.getAttributes().getLength() >= 2 && !element.hasAttribute("write-concern")) {
+			if (element.hasAttribute("mongo-ref") || element.hasAttribute("dbname")
+					|| element.hasAttribute("authentication-dbname")
+					|| element.hasAttribute("port") || element.hasAttribute("host")
+					|| element.hasAttribute("username") || element.hasAttribute("password")) {
 				parserContext.getReaderContext().error("Configure either Mongo URI or details individually!",
 						parserContext.extractSource(element));
 			}
