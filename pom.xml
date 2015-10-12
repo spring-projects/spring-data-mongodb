@@ -123,7 +123,7 @@
 
 			<id>mongo3</id>
 			<properties>
-				<mongo>3.0.2</mongo>
+				<mongo>3.0.4</mongo>
 			</properties>
 
 		</profile>
@@ -132,7 +132,7 @@
 
 			<id>mongo3-next</id>
 			<properties>
-				<mongo>3.0.0-SNAPSHOT</mongo>
+				<mongo>3.0.5-SNAPSHOT</mongo>
 			</properties>
 
 			<repositories>
@@ -143,6 +143,32 @@
 			</repositories>
 
 		</profile>
+
+		<profile>
+
+			<id>mongo31</id>
+			<properties>
+				<mongo>3.1.0</mongo>
+			</properties>
+
+		</profile>
+
+		<profile>
+
+			<id>mongo32-next</id>
+			<properties>
+				<mongo>3.2.0-SNAPSHOT</mongo>
+			</properties>
+
+			<repositories>
+				<repository>
+					<id>mongo-snapshots</id>
+					<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+				</repository>
+			</repositories>
+
+		</profile>
+
 	</profiles>
 
 	<dependencies>
