@@ -1,6 +1,11 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 1.6.4.RELEASE (2015-10-14)
+---------------------------------------------
+* DATAMONGO-1304 - Release 1.6.4 (Evans).
+
+
 Changes in version 1.8.0.RELEASE (2015-09-01)
 ---------------------------------------------
 * DATAMONGO-1282 - Release 1.8 GA (Gosling).
