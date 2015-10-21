@@ -341,7 +341,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				ReadDbObjectCallback<T> readCallback = new ReadDbObjectCallback<T>(mongoConverter, entityType, collection
 						.getName());
 
-				return new CloseableIterableCusorAdapter<T>(cursorPreparer.prepare(cursor), exceptionTranslator, readCallback);
+				return new CloseableIterableCursorAdapter<T>(cursorPreparer.prepare(cursor), exceptionTranslator, readCallback);
 			}
 		});
 	}
@@ -445,7 +445,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			DB db = this.getDb();
 			return action.doInDB(db);
 		} catch (RuntimeException e) {
-			throw potentiallyConvertRuntimeException(e);
+			throw potentiallyConvertRuntimeException(e, exceptionTranslator);
 		}
 	}
 
@@ -461,7 +461,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			DBCollection collection = getAndPrepareCollection(getDb(), collectionName);
 			return callback.doInCollection(collection);
 		} catch (RuntimeException e) {
-			throw potentiallyConvertRuntimeException(e);
+			throw potentiallyConvertRuntimeException(e, exceptionTranslator);
 		}
 	}
 
@@ -1548,10 +1548,17 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				throw new InvalidDataAccessApiUsageException(String.format("Resource %s not found!", function));
 			}
 
+			Scanner scanner = null;
+
 			try {
-				return new Scanner(functionResource.getInputStream()).useDelimiter("\\A").next();
+				scanner = new Scanner(functionResource.getInputStream());
+				return scanner.useDelimiter("\\A").next();
 			} catch (IOException e) {
 				throw new InvalidDataAccessApiUsageException(String.format("Cannot read map-reduce file %s!", function), e);
+			} finally {
+				if (scanner != null) {
+					scanner.close();
+				}
 			}
 		}
 
@@ -1814,7 +1821,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			prepareCollection(collection);
 			return collection;
 		} catch (RuntimeException e) {
-			throw potentiallyConvertRuntimeException(e);
+			throw potentiallyConvertRuntimeException(e, exceptionTranslator);
 		}
 	}
 
@@ -1840,7 +1847,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 					collectionName)));
 			return result;
 		} catch (RuntimeException e) {
-			throw potentiallyConvertRuntimeException(e);
+			throw potentiallyConvertRuntimeException(e, exceptionTranslator);
 		}
 	}
 
@@ -1893,7 +1900,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				}
 			}
 		} catch (RuntimeException e) {
-			throw potentiallyConvertRuntimeException(e);
+			throw potentiallyConvertRuntimeException(e, exceptionTranslator);
 		}
 	}
 
@@ -1923,7 +1930,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			}
 
 		} catch (RuntimeException e) {
-			throw potentiallyConvertRuntimeException(e);
+			throw potentiallyConvertRuntimeException(e, exceptionTranslator);
 		}
 	}
 
@@ -2003,18 +2010,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	}
 
 	/**
-	 * Tries to convert the given {@link RuntimeException} into a {@link DataAccessException} but returns the original
-	 * exception if the conversation failed. Thus allows safe rethrowing of the return value.
-	 * 
-	 * @param ex
-	 * @return
-	 */
-	private RuntimeException potentiallyConvertRuntimeException(RuntimeException ex) {
-		RuntimeException resolved = this.exceptionTranslator.translateExceptionIfPossible(ex);
-		return resolved == null ? ex : resolved;
-	}
-
-	/**
 	 * Inspects the given {@link CommandResult} for erros and potentially throws an
 	 * {@link InvalidDataAccessApiUsageException} for that error.
 	 * 
@@ -2050,6 +2045,20 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 		}
 
 		return queryMapper.getMappedSort(query.getSortObject(), mappingContext.getPersistentEntity(type));
+	}
+
+	/**
+	 * Tries to convert the given {@link RuntimeException} into a {@link DataAccessException} but returns the original
+	 * exception if the conversation failed. Thus allows safe re-throwing of the return value.
+	 * 
+	 * @param ex the exception to translate
+	 * @param exceptionTranslator the {@link PersistenceExceptionTranslator} to be used for translation
+	 * @return
+	 */
+	private static RuntimeException potentiallyConvertRuntimeException(RuntimeException ex,
+			PersistenceExceptionTranslator exceptionTranslator) {
+		RuntimeException resolved = exceptionTranslator.translateExceptionIfPossible(ex);
+		return resolved == null ? ex : resolved;
 	}
 
 	// Callback implementations
@@ -2298,7 +2307,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				}
 
 			} catch (RuntimeException e) {
-				throw potentiallyConvertRuntimeException(e);
+				throw potentiallyConvertRuntimeException(e, exceptionTranslator);
 			}
 
 			return cursorToUse;
@@ -2345,20 +2354,20 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * @since 1.7
 	 * @author Thomas Darimont
 	 */
-	static class CloseableIterableCusorAdapter<T> implements CloseableIterator<T> {
+	static class CloseableIterableCursorAdapter<T> implements CloseableIterator<T> {
 
 		private volatile Cursor cursor;
 		private PersistenceExceptionTranslator exceptionTranslator;
 		private DbObjectCallback<T> objectReadCallback;
 
 		/**
-		 * Creates a new {@link CloseableIterableCusorAdapter} backed by the given {@link Cursor}.
+		 * Creates a new {@link CloseableIterableCursorAdapter} backed by the given {@link Cursor}.
 		 * 
 		 * @param cursor
 		 * @param exceptionTranslator
 		 * @param objectReadCallback
 		 */
-		public CloseableIterableCusorAdapter(Cursor cursor, PersistenceExceptionTranslator exceptionTranslator,
+		public CloseableIterableCursorAdapter(Cursor cursor, PersistenceExceptionTranslator exceptionTranslator,
 				DbObjectCallback<T> objectReadCallback) {
 
 			this.cursor = cursor;
@@ -2376,7 +2385,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			try {
 				return cursor.hasNext();
 			} catch (RuntimeException ex) {
-				throw exceptionTranslator.translateExceptionIfPossible(ex);
+				throw potentiallyConvertRuntimeException(ex, exceptionTranslator);
 			}
 		}
 
@@ -2392,7 +2401,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				T converted = objectReadCallback.doWith(item);
 				return converted;
 			} catch (RuntimeException ex) {
-				throw exceptionTranslator.translateExceptionIfPossible(ex);
+				throw potentiallyConvertRuntimeException(ex, exceptionTranslator);
 			}
 		}
 
@@ -2403,7 +2412,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			try {
 				c.close();
 			} catch (RuntimeException ex) {
-				throw exceptionTranslator.translateExceptionIfPossible(ex);
+				throw potentiallyConvertRuntimeException(ex, exceptionTranslator);
 			} finally {
 				cursor = null;
 				exceptionTranslator = null;
