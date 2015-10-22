@@ -18,6 +18,10 @@ package org.springframework.data.mongodb.config;
 import static org.springframework.data.config.ParsingUtils.*;
 import static org.springframework.data.mongodb.config.MongoParsingUtils.*;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.springframework.beans.factory.BeanDefinitionStoreException;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.parsing.BeanComponentDefinition;
@@ -44,8 +48,18 @@ import com.mongodb.MongoURI;
  * @author Oliver Gierke
  * @author Thomas Darimont
  * @author Christoph Strobl
+ * @author Viktor Khoroshko
  */
 public class MongoDbFactoryParser extends AbstractBeanDefinitionParser {
+	private static final Set<String> MONGO_URI_ALLOWED_ADDITIONAL_ATTRIBUTES;
+
+	static {
+		Set<String> mongoUriAllowedAdditionalAttributes = new HashSet<String>();
+		mongoUriAllowedAdditionalAttributes.add("id");
+		mongoUriAllowedAdditionalAttributes.add("write-concern");
+
+		MONGO_URI_ALLOWED_ADDITIONAL_ATTRIBUTES = Collections.unmodifiableSet(mongoUriAllowedAdditionalAttributes);
+	}
 
 	/* 
 	 * (non-Javadoc)
@@ -73,7 +87,14 @@ public class MongoDbFactoryParser extends AbstractBeanDefinitionParser {
 		BeanDefinition mongoUri = getMongoUri(element);
 
 		if (mongoUri != null) {
-			if (element.getAttributes().getLength() >= 2 && !element.hasAttribute("write-concern")) {
+			int allowedAttributesCount = 1;
+			for (String attribute : MONGO_URI_ALLOWED_ADDITIONAL_ATTRIBUTES) {
+				if (element.hasAttribute(attribute)) {
+					allowedAttributesCount++;
+				}
+			}
+
+			if (element.getAttributes().getLength() > allowedAttributesCount) {
 				parserContext.getReaderContext().error("Configure either Mongo URI or details individually!",
 						parserContext.extractSource(element));
 			}

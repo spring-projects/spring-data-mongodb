@@ -50,6 +50,7 @@ import com.mongodb.WriteConcern;
  * 
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Viktor Khoroshko
  */
 public class MongoDbFactoryParserIntegrationTests {
 
@@ -196,6 +197,50 @@ public class MongoDbFactoryParserIntegrationTests {
 	@Test(expected = BeanDefinitionParsingException.class)
 	public void rejectsClientUriPlusDetailedConfiguration() {
 		reader.loadBeanDefinitions(new ClassPathResource("namespace/mongo-client-uri-and-details.xml"));
+	}
+
+	/**
+	 * @see DATAMONGO-1293
+	 */
+	@Test
+	public void setsUpClientUriWithId() {
+		reader.loadBeanDefinitions(new ClassPathResource("namespace/mongo-client-uri-and-id.xml"));
+		BeanDefinition definition = factory.getBeanDefinition("testMongo");
+		ConstructorArgumentValues constructorArguments = definition.getConstructorArgumentValues();
+
+		assertThat(constructorArguments.getArgumentCount(), is(1));
+		ValueHolder argument = constructorArguments.getArgumentValue(0, MongoClientURI.class);
+		assertThat(argument, is(notNullValue()));
+	}
+
+	/**
+	 * @see DATAMONGO-1293
+	 */
+	@Test
+	public void setsUpUriWithId() {
+		reader.loadBeanDefinitions(new ClassPathResource("namespace/mongo-uri-and-id.xml"));
+		BeanDefinition definition = factory.getBeanDefinition("testMongo");
+		ConstructorArgumentValues constructorArguments = definition.getConstructorArgumentValues();
+
+		assertThat(constructorArguments.getArgumentCount(), is(1));
+		ValueHolder argument = constructorArguments.getArgumentValue(0, MongoClientURI.class);
+		assertThat(argument, is(notNullValue()));
+	}
+
+	/**
+	 * @see DATAMONGO-1293
+	 */
+	@Test(expected = BeanDefinitionParsingException.class)
+	public void rejectsClientUriPlusDetailedConfigurationAndWriteConcern() {
+		reader.loadBeanDefinitions(new ClassPathResource("namespace/mongo-client-uri-write-concern-and-details.xml"));
+	}
+
+	/**
+	 * @see DATAMONGO-1293
+	 */
+	@Test(expected = BeanDefinitionParsingException.class)
+	public void rejectsUriPlusDetailedConfigurationAndWriteConcern() {
+		reader.loadBeanDefinitions(new ClassPathResource("namespace/mongo-client-uri-write-concern-and-details.xml"));
 	}
 
 	private static void assertWriteConcern(ClassPathXmlApplicationContext ctx, WriteConcern expectedWriteConcern) {
