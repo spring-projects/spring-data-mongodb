@@ -204,6 +204,7 @@ public class MongoDbFactoryParserIntegrationTests {
 	 */
 	@Test
 	public void setsUpClientUriWithId() {
+
 		reader.loadBeanDefinitions(new ClassPathResource("namespace/mongo-client-uri-and-id.xml"));
 		BeanDefinition definition = factory.getBeanDefinition("testMongo");
 		ConstructorArgumentValues constructorArguments = definition.getConstructorArgumentValues();
@@ -218,6 +219,7 @@ public class MongoDbFactoryParserIntegrationTests {
 	 */
 	@Test
 	public void setsUpUriWithId() {
+
 		reader.loadBeanDefinitions(new ClassPathResource("namespace/mongo-uri-and-id.xml"));
 		BeanDefinition definition = factory.getBeanDefinition("testMongo");
 		ConstructorArgumentValues constructorArguments = definition.getConstructorArgumentValues();
