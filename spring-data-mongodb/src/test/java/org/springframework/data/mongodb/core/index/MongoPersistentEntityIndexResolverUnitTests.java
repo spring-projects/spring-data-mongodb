@@ -26,6 +26,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.DBObjectTestUtils;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolver.IndexDefinitionHolder;
@@ -148,6 +149,34 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			assertThat(indexDefinitions.get(0).getCollection(), equalTo("CollectionOverride"));
 		}
 
+		/**
+		 * @see DATAMONGO-1297
+		 */
+		@Test
+		public void resolvesIndexOnDbrefWhenDefined() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(WithDbRef.class);
+
+			assertThat(indexDefinitions, hasSize(1));
+			assertThat(indexDefinitions.get(0).getCollection(), equalTo("withDbRef"));
+			assertThat(indexDefinitions.get(0).getIndexKeys(), equalTo(new BasicDBObjectBuilder().add("indexedDbRef", 1)
+					.get()));
+		}
+
+		/**
+		 * @see DATAMONGO-1297
+		 */
+		@Test
+		public void resolvesIndexOnDbrefWhenDefinedOnNestedElement() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(WrapperOfWithDbRef.class);
+
+			assertThat(indexDefinitions, hasSize(1));
+			assertThat(indexDefinitions.get(0).getCollection(), equalTo("wrapperOfWithDbRef"));
+			assertThat(indexDefinitions.get(0).getIndexKeys(),
+					equalTo(new BasicDBObjectBuilder().add("nested.indexedDbRef", 1).get()));
+		}
+
 		@Document(collection = "Zero")
 		static class IndexOnLevelZero {
 			@Indexed String indexedProperty;
@@ -180,6 +209,24 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		static class IndexOnLevelZeroWithExplicityNamedField {
 
 			@Indexed @Field("customFieldName") String namedProperty;
+		}
+
+		@Document
+		static class WrapperOfWithDbRef {
+			WithDbRef nested;
+		}
+
+		@Document
+		static class WithDbRef {
+
+			@Indexed//
+			@DBRef//
+			NoIndex indexedDbRef;
+		}
+
+		@Document(collection = "no-index")
+		static class NoIndex {
+			@Id String id;
 		}
 
 	}

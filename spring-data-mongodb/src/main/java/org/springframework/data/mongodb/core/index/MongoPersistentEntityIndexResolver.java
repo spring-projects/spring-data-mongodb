@@ -27,7 +27,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.mapping.Association;
+import org.springframework.data.mapping.AssociationHandler;
 import org.springframework.data.mapping.PropertyHandler;
+import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mongodb.core.index.Index.Duplicates;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolver.TextIndexIncludeOptions.IncludeStrategy;
 import org.springframework.data.mongodb.core.index.TextIndexDefinition.TextIndexDefinitionBuilder;
@@ -123,6 +126,8 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			}
 		});
 
+		indexInformation.addAll(resolveIndexesForDbrefs("", root.getCollection(), root));
+
 		return indexInformation;
 	}
 
@@ -168,6 +173,8 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			}
 		});
 
+		indexInformation.addAll(resolveIndexesForDbrefs(path, collection, entity));
+
 		return indexInformation;
 	}
 
@@ -193,18 +200,19 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		return createCompoundIndexDefinitions(dotPath, collection, entity);
 	}
 
-	private Collection<? extends IndexDefinitionHolder> potentiallyCreateTextIndexDefinition(MongoPersistentEntity<?> root) {
+	private Collection<? extends IndexDefinitionHolder> potentiallyCreateTextIndexDefinition(
+			MongoPersistentEntity<?> root) {
 
-		TextIndexDefinitionBuilder indexDefinitionBuilder = new TextIndexDefinitionBuilder().named(root.getType()
-				.getSimpleName() + "_TextIndex");
+		TextIndexDefinitionBuilder indexDefinitionBuilder = new TextIndexDefinitionBuilder()
+				.named(root.getType().getSimpleName() + "_TextIndex");
 
 		if (StringUtils.hasText(root.getLanguage())) {
 			indexDefinitionBuilder.withDefaultLanguage(root.getLanguage());
 		}
 
 		try {
-			appendTextIndexInformation("", indexDefinitionBuilder, root,
-					new TextIndexIncludeOptions(IncludeStrategy.DEFAULT), new CycleGuard());
+			appendTextIndexInformation("", indexDefinitionBuilder, root, new TextIndexIncludeOptions(IncludeStrategy.DEFAULT),
+					new CycleGuard());
 		} catch (CyclicPropertyReferenceException e) {
 			LOGGER.info(e.getMessage());
 		}
@@ -220,9 +228,8 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 	}
 
-	private void appendTextIndexInformation(final String dotPath,
-			final TextIndexDefinitionBuilder indexDefinitionBuilder, final MongoPersistentEntity<?> entity,
-			final TextIndexIncludeOptions includeOptions, final CycleGuard guard) {
+	private void appendTextIndexInformation(final String dotPath, final TextIndexDefinitionBuilder indexDefinitionBuilder,
+			final MongoPersistentEntity<?> entity, final TextIndexIncludeOptions includeOptions, final CycleGuard guard) {
 
 		entity.doWithProperties(new PropertyHandler<MongoPersistentProperty>() {
 
@@ -249,8 +256,8 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 						TextIndexIncludeOptions optionsForNestedType = includeOptions;
 						if (!IncludeStrategy.FORCE.equals(includeOptions.getStrategy()) && indexed != null) {
-							optionsForNestedType = new TextIndexIncludeOptions(IncludeStrategy.FORCE, new TextIndexedFieldSpec(
-									propertyDotPath, weight));
+							optionsForNestedType = new TextIndexIncludeOptions(IncludeStrategy.FORCE,
+									new TextIndexedFieldSpec(propertyDotPath, weight));
 						}
 
 						try {
@@ -259,9 +266,8 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 						} catch (CyclicPropertyReferenceException e) {
 							LOGGER.info(e.getMessage(), e);
 						} catch (InvalidDataAccessApiUsageException e) {
-							LOGGER.info(
-									String.format("Potentially invalid index structure discovered. Breaking operation for %s.",
-											entity.getName()), e);
+							LOGGER.info(String.format("Potentially invalid index structure discovered. Breaking operation for %s.",
+									entity.getName()), e);
 						}
 					} else if (includeOptions.isForce() || indexed != null) {
 						indexDefinitionBuilder.onField(propertyDotPath, weight);
@@ -306,8 +312,8 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	protected IndexDefinitionHolder createCompoundIndexDefinition(String dotPath, String fallbackCollection,
 			CompoundIndex index, MongoPersistentEntity<?> entity) {
 
-		CompoundIndexDefinition indexDefinition = new CompoundIndexDefinition(resolveCompoundIndexKeyFromStringDefinition(
-				dotPath, index.def()));
+		CompoundIndexDefinition indexDefinition = new CompoundIndexDefinition(
+				resolveCompoundIndexKeyFromStringDefinition(dotPath, index.def()));
 
 		if (!index.useGeneratedName()) {
 			indexDefinition.named(pathAwareIndexName(index.name(), dotPath, null));
@@ -431,11 +437,43 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 		if (StringUtils.hasText(dotPath)) {
 
-			nameToUse = StringUtils.hasText(nameToUse) ? (property != null ? dotPath.replace("." + property.getFieldName(),
-					"") : dotPath) + "." + nameToUse : dotPath;
+			nameToUse = StringUtils.hasText(nameToUse)
+					? (property != null ? dotPath.replace("." + property.getFieldName(), "") : dotPath) + "." + nameToUse
+					: dotPath;
 		}
 		return nameToUse;
 
+	}
+
+	private List<IndexDefinitionHolder> resolveIndexesForDbrefs(final String path, final String collection,
+			MongoPersistentEntity<?> entity) {
+
+		final List<IndexDefinitionHolder> indexes = new ArrayList<IndexDefinitionHolder>(0);
+		entity.doWithAssociations(new AssociationHandler<MongoPersistentProperty>() {
+
+			@Override
+			public void doWithAssociation(Association<MongoPersistentProperty> association) {
+
+				MongoPersistentProperty property = association.getInverse();
+
+				String propertyDotPath = (StringUtils.hasText(path) ? path + "." : "") + property.getFieldName();
+
+				if (property.isAnnotationPresent(GeoSpatialIndexed.class) || property.isAnnotationPresent(TextIndexed.class)) {
+					throw new MappingException(
+							String.format("Cannot create geospatial-/text- index on DBRef in collection '%s' for path '%s'.",
+									collection, propertyDotPath));
+				}
+
+				IndexDefinitionHolder indexDefinitionHolder = createIndexDefinitionHolderForProperty(propertyDotPath,
+						collection, property);
+
+				if (indexDefinitionHolder != null) {
+					indexes.add(indexDefinitionHolder);
+				}
+			}
+		});
+
+		return indexes;
 	}
 
 	/**
