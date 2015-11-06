@@ -27,6 +27,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.mapping.Association;
+import org.springframework.data.mapping.AssociationHandler;
 import org.springframework.data.mapping.PropertyHandler;
 import org.springframework.data.mongodb.core.index.Index.Duplicates;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolver.TextIndexIncludeOptions.IncludeStrategy;
@@ -123,6 +125,8 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			}
 		});
 
+		indexInformation.addAll(resolveIndexesForDbrefs("", root.getCollection(), root));
+
 		return indexInformation;
 	}
 
@@ -167,6 +171,8 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 				}
 			}
 		});
+
+		indexInformation.addAll(resolveIndexesForDbrefs(path, collection, entity));
 
 		return indexInformation;
 	}
@@ -436,6 +442,37 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		}
 		return nameToUse;
 
+	}
+
+	private List<IndexDefinitionHolder> resolveIndexesForDbrefs(final String path, final String collection,
+			MongoPersistentEntity<?> entity) {
+
+		final List<IndexDefinitionHolder> indexes = new ArrayList<IndexDefinitionHolder>(0);
+		entity.doWithAssociations(new AssociationHandler<MongoPersistentProperty>() {
+
+			@Override
+			public void doWithAssociation(Association<MongoPersistentProperty> association) {
+
+				MongoPersistentProperty property = association.getInverse();
+
+				String propertyDotPath = (StringUtils.hasText(path) ? path + "." : "") + property.getFieldName();
+
+				if (property.isAnnotationPresent(GeoSpatialIndexed.class) || property.isAnnotationPresent(TextIndexed.class)) {
+					throw new IllegalArgumentException(String.format(
+							"Cannot create geospatial-/text- index on DBRef in collection '%s' for path '%s'.", collection,
+							propertyDotPath));
+				}
+
+				IndexDefinitionHolder indexDefinitionHolder = createIndexDefinitionHolderForProperty(propertyDotPath,
+						collection, property);
+
+				if (indexDefinitionHolder != null) {
+					indexes.add(indexDefinitionHolder);
+				}
+			}
+		});
+
+		return indexes;
 	}
 
 	/**
