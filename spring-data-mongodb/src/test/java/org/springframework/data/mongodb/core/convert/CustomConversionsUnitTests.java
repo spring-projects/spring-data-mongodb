@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2014 the original author or authors.
+ * Copyright 2011-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,9 @@ import static org.junit.Assert.*;
 import java.net.URL;
 import java.text.DateFormat;
 import java.text.Format;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Locale;
 import java.util.UUID;
@@ -32,8 +34,10 @@ import org.joda.time.DateTime;
 import org.junit.Test;
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.core.convert.converter.ConverterFactory;
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.core.convert.support.GenericConversionService;
+import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.StringToBigIntegerConverter;
 import org.threeten.bp.LocalDateTime;
 
@@ -43,12 +47,11 @@ import com.mongodb.DBRef;
  * Unit tests for {@link CustomConversions}.
  * 
  * @author Oliver Gierke
- * @auhtor Christoph Strobl
+ * @author Christoph Strobl
  */
 public class CustomConversionsUnitTests {
 
 	@Test
-	@SuppressWarnings("unchecked")
 	public void findsBasicReadAndWriteConversions() {
 
 		CustomConversions conversions = new CustomConversions(Arrays.asList(FormatToStringConverter.INSTANCE,
@@ -62,7 +65,6 @@ public class CustomConversionsUnitTests {
 	}
 
 	@Test
-	@SuppressWarnings("unchecked")
 	public void considersSubtypesCorrectly() {
 
 		CustomConversions conversions = new CustomConversions(Arrays.asList(NumberToStringConverter.INSTANCE,
@@ -132,6 +134,7 @@ public class CustomConversionsUnitTests {
 	 */
 	@Test
 	public void doesNotConsiderTypeSimpleIfOnlyReadConverterIsRegistered() {
+
 		CustomConversions conversions = new CustomConversions(Arrays.asList(StringToFormatConverter.INSTANCE));
 		assertThat(conversions.isSimpleType(Format.class), is(false));
 	}
@@ -257,6 +260,17 @@ public class CustomConversionsUnitTests {
 		assertThat(customConversions.hasCustomWriteTarget(LocalDateTime.class), is(true));
 	}
 
+	/**
+	 * @see DATAMONGO-1302
+	 */
+	@Test
+	public void registersConverterFactoryCorrectly() {
+
+		CustomConversions customConversions = new CustomConversions(Collections.singletonList(new FormatConverterFactory()));
+
+		assertThat(customConversions.getCustomWriteTarget(String.class, SimpleDateFormat.class), notNullValue());
+	}
+
 	private static Class<?> createProxyTypeFor(Class<?> type) {
 
 		ProxyFactory factory = new ProxyFactory();
@@ -328,6 +342,39 @@ public class CustomConversionsUnitTests {
 		@Override
 		public String convert(Object source) {
 			return source != null ? source.toString() : null;
+		}
+
+	}
+
+	@WritingConverter
+	static class FormatConverterFactory implements ConverterFactory<String, Format> {
+
+		@Override
+		public <T extends Format> Converter<String, T> getConverter(Class<T> targetType) {
+			return new StringToFormat<T>(targetType);
+		}
+
+		private static final class StringToFormat<T extends Format> implements Converter<String, T> {
+
+			private final Class<T> targetType;
+
+			public StringToFormat(Class<T> targetType) {
+				this.targetType = targetType;
+			}
+
+			@Override
+			public T convert(String source) {
+
+				if (source.length() == 0) {
+					return null;
+				}
+
+				try {
+					return targetType.newInstance();
+				} catch (Exception e) {
+					throw new IllegalArgumentException(e.getMessage(), e);
+				}
+			}
 		}
 
 	}

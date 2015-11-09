@@ -44,9 +44,9 @@ import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.mongodb.core.convert.MongoConverters.BigDecimalToStringConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.BigIntegerToStringConverter;
-import org.springframework.data.mongodb.core.convert.MongoConverters.NamedMongoScriptToDBObjectConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.DBObjectToNamedMongoScriptCoverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.DBObjectToStringConverter;
+import org.springframework.data.mongodb.core.convert.MongoConverters.NamedMongoScriptToDBObjectConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.StringToBigDecimalConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.StringToBigIntegerConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.StringToURLConverter;
@@ -192,8 +192,8 @@ public class CustomConversions {
 	}
 
 	/**
-	 * Registers a conversion for the given converter. Inspects either generics or the {@link ConvertiblePair}s returned
-	 * by a {@link GenericConverter}.
+	 * Registers a conversion for the given converter. Inspects either generics of {@link Converter} and
+	 * {@link ConverterFactory} or the {@link ConvertiblePair}s returned by a {@link GenericConverter}.
 	 * 
 	 * @param converter
 	 */
@@ -208,6 +208,10 @@ public class CustomConversions {
 			for (ConvertiblePair pair : genericConverter.getConvertibleTypes()) {
 				register(new ConverterRegistration(pair, isReading, isWriting));
 			}
+		} else if (converter instanceof ConverterFactory) {
+
+			Class<?>[] arguments = GenericTypeResolver.resolveTypeArguments(converter.getClass(), ConverterFactory.class);
+			register(new ConverterRegistration(arguments[0], arguments[1], isReading, isWriting));
 		} else if (converter instanceof Converter) {
 			Class<?>[] arguments = GenericTypeResolver.resolveTypeArguments(converter.getClass(), Converter.class);
 			register(new ConverterRegistration(arguments[0], arguments[1], isReading, isWriting));
