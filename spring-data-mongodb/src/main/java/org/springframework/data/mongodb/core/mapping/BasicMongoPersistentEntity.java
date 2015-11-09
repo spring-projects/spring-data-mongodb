@@ -97,6 +97,7 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 	 * (non-Javadoc)
 	 * @see org.springframework.context.ApplicationContextAware#setApplicationContext(org.springframework.context.ApplicationContext)
 	 */
+	@Override
 	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
 
 		context.addPropertyAccessor(new BeanFactoryAccessor());
@@ -108,6 +109,7 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentEntity#getCollection()
 	 */
+	@Override
 	public String getCollection() {
 		return expression == null ? collection : expression.getValue(context, String.class);
 	}
@@ -175,6 +177,7 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 		 * (non-Javadoc)
 		 * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
 		 */
+		@Override
 		public int compare(MongoPersistentProperty o1, MongoPersistentProperty o2) {
 
 			if (o1.getFieldOrder() == Integer.MAX_VALUE) {
@@ -279,10 +282,12 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 
 		private final Map<String, MongoPersistentProperty> properties = new HashMap<String, MongoPersistentProperty>();
 
+		@Override
 		public void doWithPersistentProperty(MongoPersistentProperty persistentProperty) {
 			assertUniqueness(persistentProperty);
 		}
 
+		@Override
 		public void doWithAssociation(Association<MongoPersistentProperty> association) {
 			assertUniqueness(association.getInverse());
 		}
@@ -352,9 +357,9 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 				}
 			}
 
-			throw new MappingException(
-					String.format("Missmatching types for %s. Found %s expected one of %s.", persistentProperty.getField(),
-							persistentProperty.getActualType(), StringUtils.arrayToCommaDelimitedString(validMatches)));
+			throw new MappingException(String.format("Missmatching types for %s. Found %s expected one of %s.",
+					persistentProperty.getField(), persistentProperty.getActualType(),
+					StringUtils.arrayToCommaDelimitedString(validMatches)));
 		}
 	}
 }
