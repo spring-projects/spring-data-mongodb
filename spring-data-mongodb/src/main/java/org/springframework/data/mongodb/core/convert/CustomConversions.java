@@ -103,6 +103,7 @@ public class CustomConversions {
 		toRegister.addAll(converters);
 		toRegister.add(CustomToStringConverter.INSTANCE);
 		toRegister.addAll(MongoConverters.getConvertersToRegister());
+		toRegister.add(NumberToNumberConverterFactory.INSTANCE);
 
 		toRegister.addAll(JodaTimeConverters.getConvertersToRegister());
 		toRegister.addAll(GeoConverters.getConvertersToRegister());

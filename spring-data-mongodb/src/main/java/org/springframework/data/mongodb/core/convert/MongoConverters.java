@@ -21,6 +21,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.Currency;
 import java.util.List;
 
@@ -28,11 +30,14 @@ import org.bson.types.Code;
 import org.bson.types.ObjectId;
 import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.core.convert.TypeDescriptor;
+import org.springframework.core.convert.converter.ConditionalConverter;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.core.convert.converter.ConverterFactory;
 import org.springframework.data.convert.ReadingConverter;
 import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.mongodb.core.query.Term;
 import org.springframework.data.mongodb.core.script.NamedMongoScript;
+import org.springframework.util.NumberUtils;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.BasicDBObject;
@@ -259,7 +264,7 @@ abstract class MongoConverters {
 		}
 	}
 
-	/**
+/**
 	 * {@link Converter} implementation converting {@link Currency} into its ISO 4217 {@link String} representation.
 	 * 
 	 * @author Christoph Strobl
@@ -298,6 +303,52 @@ abstract class MongoConverters {
 		@Override
 		public Currency convert(String source) {
 			return StringUtils.hasText(source) ? Currency.getInstance(source) : null;
+		}
+	}
+
+	/**
+	 * {@link ConverterFactory} implementation using {@link NumberUtils} for number conversion and parsing. Additionally
+	 * deals with {@link AtomicInteger} and {@link AtomicLong} by calling {@code get()} before performing the actual
+	 * conversion.
+	 * 
+	 * @author Christoph Strobl
+	 * @since 1.9
+	 */
+	@WritingConverter
+	public static enum NumberToNumberConverterFactory implements ConverterFactory<Number, Number>, ConditionalConverter {
+
+		INSTANCE;
+
+		@Override
+		public <T extends Number> Converter<Number, T> getConverter(Class<T> targetType) {
+			return new NumberToNumber<T>(targetType);
+		}
+
+		@Override
+		public boolean matches(TypeDescriptor sourceType, TypeDescriptor targetType) {
+			return !sourceType.equals(targetType);
+		}
+
+		private final static class NumberToNumber<T extends Number> implements Converter<Number, T> {
+
+			private final Class<T> targetType;
+
+			public NumberToNumber(Class<T> targetType) {
+				this.targetType = targetType;
+			}
+
+			@Override
+			public T convert(Number source) {
+
+				if (source instanceof AtomicInteger) {
+					return NumberUtils.convertNumberToTargetClass(((AtomicInteger) source).get(), this.targetType);
+				}
+				if (source instanceof AtomicLong) {
+					return NumberUtils.convertNumberToTargetClass(((AtomicLong) source).get(), this.targetType);
+				}
+
+				return NumberUtils.convertNumberToTargetClass(source, this.targetType);
+			}
 		}
 	}
 }

@@ -27,9 +27,11 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.hamcrest.Matcher;
 import org.hamcrest.collection.IsIterableContainingInOrder;
+import org.hamcrest.core.Is;
 import org.hamcrest.core.IsEqual;
 import org.junit.Before;
 import org.junit.Test;
@@ -794,7 +796,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	/**
-	 * see DATAMONGO-1251
+	 * @see DATAMONGO-1251
 	 */
 	@Test
 	public void mapsNullValueCorrectlyForSimpleTypes() {
@@ -810,7 +812,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	/**
-	 * see DATAMONGO-1251
+	 * @see DATAMONGO-1251
 	 */
 	@Test
 	public void mapsNullValueCorrectlyForJava8Date() {
@@ -826,7 +828,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	/**
-	 * see DATAMONGO-1251
+	 * @see DATAMONGO-1251
 	 */
 	@Test
 	public void mapsNullValueCorrectlyForCollectionTypes() {
@@ -842,7 +844,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	/**
-	 * see DATAMONGO-1251
+	 * @see DATAMONGO-1251
 	 */
 	@Test
 	public void mapsNullValueCorrectlyForPropertyOfNestedDocument() {
@@ -855,6 +857,34 @@ public class UpdateMapperUnitTests {
 		DBObject $set = DBObjectTestUtils.getAsDBObject(mappedUpdate, "$set");
 		assertThat($set.containsField("concreteValue.name"), is(true));
 		assertThat($set.get("concreteValue.name"), nullValue());
+	}
+
+	/**
+	 * @see DATAMONGO-1288
+	 */
+	@Test
+	public void mapsAtomicIntegerToIntegerCorrectly() {
+
+		Update update = new Update().set("intValue", new AtomicInteger(10));
+		DBObject mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(SimpleValueHolder.class));
+
+		DBObject $set = DBObjectTestUtils.getAsDBObject(mappedUpdate, "$set");
+		assertThat($set.get("intValue"), Is.<Object> is(10));
+	}
+
+	/**
+	 * @see DATAMONGO-1288
+	 */
+	@Test
+	public void mapsAtomicIntegerToPrimitiveIntegerCorrectly() {
+
+		Update update = new Update().set("primIntValue", new AtomicInteger(10));
+		DBObject mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(SimpleValueHolder.class));
+
+		DBObject $set = DBObjectTestUtils.getAsDBObject(mappedUpdate, "$set");
+		assertThat($set.get("primIntValue"), Is.<Object> is(10));
 	}
 
 	static class DomainTypeWrappingConcreteyTypeHavingListOfInterfaceTypeAttributes {
@@ -1130,5 +1160,11 @@ public class UpdateMapperUnitTests {
 	static class ClassWithJava8Date {
 
 		LocalDate date;
+	}
+
+	static class SimpleValueHolder {
+
+		Integer intValue;
+		int primIntValue;
 	}
 }
