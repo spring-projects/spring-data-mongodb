@@ -47,6 +47,7 @@ import org.springframework.util.Assert;
  * 
  * @author Oliver Gierke
  * @author Thomas Darimont
+ * @author Christoph Strobl
  */
 public class MongoRepositoryFactory extends RepositoryFactorySupport {
 
@@ -88,7 +89,8 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 	@Override
 	protected Object getTargetRepository(RepositoryInformation information) {
 
-		MongoEntityInformation<?, Serializable> entityInformation = getEntityInformation(information.getDomainType());
+		MongoEntityInformation<?, Serializable> entityInformation = getEntityInformation(information.getDomainType(),
+				information);
 		return getTargetRepositoryViaReflection(information, entityInformation, mongoOperations);
 	}
 
@@ -105,18 +107,25 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.core.support.RepositoryFactorySupport#getEntityInformation(java.lang.Class)
 	 */
-	@Override
-	@SuppressWarnings("unchecked")
+	// TODO: would be worth discussing if we could alter RepositoryFactorySupport#getEntityInformation to be called with
+	// RepositoryMetadata instead of the acual domain type class.
 	public <T, ID extends Serializable> MongoEntityInformation<T, ID> getEntityInformation(Class<T> domainClass) {
+		return getEntityInformation(domainClass, null);
+	}
+
+	@SuppressWarnings("unchecked")
+	private <T, ID extends Serializable> MongoEntityInformation<T, ID> getEntityInformation(Class<T> domainClass,
+			RepositoryInformation information) {
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(domainClass);
 
 		if (entity == null) {
-			throw new MappingException(
-					String.format("Could not lookup mapping metadata for domain class %s!", domainClass.getName()));
+			throw new MappingException(String.format("Could not lookup mapping metadata for domain class %s!",
+					domainClass.getName()));
 		}
 
-		return new MappingMongoEntityInformation<T, ID>((MongoPersistentEntity<T>) entity);
+		return new MappingMongoEntityInformation<T, ID>((MongoPersistentEntity<T>) entity,
+				information != null ? (Class<ID>) information.getIdType() : null);
 	}
 
 	/**
