@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 by the original author(s).
+ * Copyright (c) 2011-2015 by the original author(s).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.repository.support;
 
 import java.io.Serializable;
 
+import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
 import org.springframework.data.repository.core.support.PersistentEntityInformation;
@@ -27,12 +28,14 @@ import org.springframework.data.repository.core.support.PersistentEntityInformat
  * {@link MongoPersistentEntity} if given.
  * 
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 public class MappingMongoEntityInformation<T, ID extends Serializable> extends PersistentEntityInformation<T, ID>
 		implements MongoEntityInformation<T, ID> {
 
 	private final MongoPersistentEntity<T> entityMetadata;
 	private final String customCollectionName;
+	private final Class<ID> fallbackIdType;
 
 	/**
 	 * Creates a new {@link MappingMongoEntityInformation} for the given {@link MongoPersistentEntity}.
@@ -40,7 +43,11 @@ public class MappingMongoEntityInformation<T, ID extends Serializable> extends P
 	 * @param entity must not be {@literal null}.
 	 */
 	public MappingMongoEntityInformation(MongoPersistentEntity<T> entity) {
-		this(entity, null);
+		this(entity, null, null);
+	}
+
+	public MappingMongoEntityInformation(MongoPersistentEntity<T> entity, Class<ID> fallbackIdType) {
+		this(entity, (String) null, fallbackIdType);
 	}
 
 	/**
@@ -51,11 +58,16 @@ public class MappingMongoEntityInformation<T, ID extends Serializable> extends P
 	 * @param customCollectionName can be {@literal null}.
 	 */
 	public MappingMongoEntityInformation(MongoPersistentEntity<T> entity, String customCollectionName) {
+		this(entity, customCollectionName, null);
+	}
+
+	public MappingMongoEntityInformation(MongoPersistentEntity<T> entity, String customCollectionName, Class<ID> idType) {
 
 		super(entity);
 
 		this.entityMetadata = entity;
 		this.customCollectionName = customCollectionName;
+		this.fallbackIdType = idType != null ? idType : (Class<ID>) ObjectId.class;
 	}
 
 	/* (non-Javadoc)
@@ -70,5 +82,20 @@ public class MappingMongoEntityInformation<T, ID extends Serializable> extends P
 	 */
 	public String getIdAttribute() {
 		return entityMetadata.getIdProperty().getName();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.core.support.PersistentEntityInformation#getIdType()
+	 */
+	@Override
+	@SuppressWarnings("unchecked")
+	public Class<ID> getIdType() {
+
+		if (this.entityMetadata.hasIdProperty()) {
+			return super.getIdType();
+		}
+
+		return fallbackIdType != null ? fallbackIdType : (Class<ID>) ObjectId.class;
 	}
 }
