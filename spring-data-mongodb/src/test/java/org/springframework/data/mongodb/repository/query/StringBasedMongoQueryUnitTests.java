@@ -24,6 +24,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import javax.xml.bind.DatatypeConverter;
+
+import org.bson.BSON;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -343,6 +346,23 @@ public class StringBasedMongoQueryUnitTests {
 		assertThat(query.getQueryObject(), is(reference.getQueryObject()));
 	}
 
+	/**
+	 * @see DATAMONGO-1290
+	 */
+	@Test
+	public void shouldSupportNonQuotedBinaryDataReplacement() throws Exception {
+
+		byte[] binaryData = "Matthews".getBytes("UTF-8");
+		ConvertingParameterAccessor accesor = StubParameterAccessor.getAccessor(converter, binaryData);
+		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByLastnameAsBinary", byte[].class);
+
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor);
+		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery("{'lastname' : { '$binary' : '"
+				+ DatatypeConverter.printBase64Binary(binaryData) + "', '$type' : " + BSON.B_GENERAL + "}}");
+
+		assertThat(query.getQueryObject(), is(reference.getQueryObject()));
+	}
+
 	private StringBasedMongoQuery createQueryForMethod(String name, Class<?>... parameters) throws Exception {
 
 		Method method = SampleRepository.class.getMethod(name, parameters);
@@ -354,6 +374,9 @@ public class StringBasedMongoQueryUnitTests {
 
 		@Query("{ 'lastname' : ?0 }")
 		Person findByLastname(String lastname);
+
+		@Query("{ 'lastname' : ?0 }")
+		Person findByLastnameAsBinary(byte[] lastname);
 
 		@Query("{ 'lastname' : '?0' }")
 		Person findByLastnameQuoted(String lastname);
