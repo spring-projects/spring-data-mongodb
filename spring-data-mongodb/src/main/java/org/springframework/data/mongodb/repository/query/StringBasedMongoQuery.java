@@ -21,6 +21,9 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.xml.bind.DatatypeConverter;
+
+import org.bson.BSON;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.mongodb.core.MongoOperations;
@@ -222,6 +225,15 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 
 		if (value instanceof String && binding.isQuoted()) {
 			return (String) value;
+		}
+
+		if (value instanceof byte[]) {
+
+			String base64representation = DatatypeConverter.printBase64Binary((byte[]) value);
+			if (!binding.isQuoted()) {
+				return "{ '$binary' : '" + base64representation + "', '$type' : " + BSON.B_GENERAL + "}";
+			}
+			return base64representation;
 		}
 
 		return JSON.serialize(value);
