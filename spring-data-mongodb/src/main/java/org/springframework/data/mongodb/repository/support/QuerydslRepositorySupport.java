@@ -15,35 +15,51 @@
  */
 package org.springframework.data.mongodb.repository.support;
 
+import com.mysema.query.mongodb.MongodbQuery;
+import com.mysema.query.types.EntityPath;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.util.Assert;
 
-import com.mysema.query.mongodb.MongodbQuery;
-import com.mysema.query.types.EntityPath;
-
 /**
  * Base class to create repository implementations based on Querydsl.
  * 
  * @author Oliver Gierke
+ * @author Jordi Llach
  */
 public abstract class QuerydslRepositorySupport {
 
 	private final MongoOperations template;
 	private final MappingContext<? extends MongoPersistentEntity<?>, ?> context;
+    private final ApplicationEventPublisher eventPublisher;
 
-	/**
-	 * Creates a new {@link QuerydslRepositorySupport} for the given {@link MongoOperations}.
-	 * 
-	 * @param operations must not be {@literal null}
-	 */
-	public QuerydslRepositorySupport(MongoOperations operations) {
-
-		Assert.notNull(operations);
+    // does not have support for DATAMONGO-1185
+    @Deprecated
+    public QuerydslRepositorySupport(MongoOperations operations){
+        Assert.notNull(operations);
 
 		this.template = operations;
 		this.context = operations.getConverter().getMappingContext();
+        this.eventPublisher = null;
+    }
+    
+	/**
+	 * Creates a new {@link QuerydslRepositorySupport} for the given {@link MongoOperations} and 
+     * {@link ApplicationEventPublisher}
+	 * 
+	 * @param operations must not be {@literal null}
+     * @param eventPublisher must not be {@literal null}
+	 */
+	public QuerydslRepositorySupport(MongoOperations operations, ApplicationEventPublisher eventPublisher) {
+
+		Assert.notNull(operations);
+        Assert.notNull(eventPublisher);
+
+		this.template = operations;
+		this.context = operations.getConverter().getMappingContext();
+        this.eventPublisher = eventPublisher;
 	}
 
 	/**
@@ -71,6 +87,6 @@ public abstract class QuerydslRepositorySupport {
 		Assert.notNull(path);
 		Assert.hasText(collection);
 
-		return new SpringDataMongodbQuery<T>(template, path.getType(), collection);
+		return new SpringDataMongodbQuery<T>(template, path.getType(), collection, eventPublisher);
 	}
 }

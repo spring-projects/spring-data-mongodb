@@ -22,16 +22,16 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.UnsatisfiedResolutionException;
 import javax.enterprise.inject.spi.AfterBeanDiscovery;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.ProcessBean;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEvent;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.repository.cdi.CdiRepositoryBean;
 import org.springframework.data.repository.cdi.CdiRepositoryExtensionSupport;
@@ -41,6 +41,7 @@ import org.springframework.data.repository.cdi.CdiRepositoryExtensionSupport;
  * 
  * @author Oliver Gierke
  * @author Mark Paluch
+ * @author Jordi Llach
  */
 public class MongoRepositoryExtension extends CdiRepositoryExtensionSupport {
 
@@ -112,6 +113,20 @@ public class MongoRepositoryExtension extends CdiRepositoryExtensionSupport {
 
 		// Construct and return the repository bean.
 		return new MongoRepositoryBean<T>(mongoOperations, qualifiers, repositoryType, beanManager,
-				getCustomImplementationDetector());
+                                          getCustomImplementationDetector(), 
+                                          new NullCdiApplicationEvenPublisher());
 	}
+    
+    
+    private final class NullCdiApplicationEvenPublisher
+    implements          ApplicationEventPublisher {
+
+        @Override
+        public void publishEvent(ApplicationEvent event) {
+            // NOTHING TO DO HERE ... as stated in ApplicationEventPublisher you need an ApplicationContext
+            // to enable the publishing of all persistence events such as {@link AfterLoadEvent}, {@link AfterSaveEvent}, etc.
+            // BUT it could be a good idea to check CDI Events
+        }
+        
+    }
 }

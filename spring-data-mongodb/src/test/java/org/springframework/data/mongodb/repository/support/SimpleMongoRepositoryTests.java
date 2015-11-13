@@ -15,9 +15,6 @@
  */
 package org.springframework.data.mongodb.repository.support;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -26,11 +23,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
+import static org.junit.Assert.assertThat;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.repository.Person;
 import org.springframework.data.mongodb.repository.Person.Sex;
@@ -41,12 +44,14 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 /**
  * @author <a href="mailto:kowsercse@gmail.com">A. B. M. Kowser</a>
  * @author Thomas Darimont
+ * @author Jordi Llach
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:infrastructure.xml")
 public class SimpleMongoRepositoryTests {
 
 	@Autowired private MongoTemplate template;
+    @Autowired private ApplicationContext eventPubliher;
 
 	private Person oliver, dave, carter, boyd, stefan, leroi, alicia;
 	private List<Person> all;
@@ -56,7 +61,7 @@ public class SimpleMongoRepositoryTests {
 
 	@Before
 	public void setUp() {
-		repository = new SimpleMongoRepository<Person, String>(personEntityInformation, template);
+		repository = new SimpleMongoRepository<Person, String>(personEntityInformation, template, eventPubliher);
 		repository.deleteAll();
 
 		oliver = new Person("Oliver August", "Matthews", 4);

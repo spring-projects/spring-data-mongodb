@@ -15,16 +15,17 @@
  */
 package org.springframework.data.mongodb.repository.support;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
-
 import java.util.List;
-
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import static org.mockito.Mockito.when;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.context.ApplicationContext;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
@@ -36,11 +37,13 @@ import org.springframework.test.util.ReflectionTestUtils;
  * Unit tests for {@link MongoRepositoryFactoryBean}.
  * 
  * @author Oliver Gierke
+ * @author Jordi LLach
  */
 @RunWith(MockitoJUnitRunner.class)
 public class MongoRepositoryFactoryBeanUnitTests {
 
 	@Mock MongoOperations operations;
+    @Mock ApplicationContext eventPublisher;
 	@Mock MongoConverter converter;
 	@Mock @SuppressWarnings("rawtypes") MappingContext context;
 
@@ -72,6 +75,7 @@ public class MongoRepositoryFactoryBeanUnitTests {
 
 		factoryBean.setLazyInit(true);
 		factoryBean.setMongoOperations(operations);
+        factoryBean.setApplicationContext(eventPublisher);
 		factoryBean.setRepositoryInterface(ContactRepository.class);
 		factoryBean.afterPropertiesSet();
 

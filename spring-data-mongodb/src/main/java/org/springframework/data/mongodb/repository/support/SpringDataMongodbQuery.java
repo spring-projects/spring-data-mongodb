@@ -15,17 +15,20 @@
  */
 package org.springframework.data.mongodb.repository.support;
 
-import org.springframework.data.mongodb.core.MongoOperations;
-
 import com.google.common.base.Function;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mysema.query.mongodb.MongodbQuery;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.mapping.event.AfterConvertEvent;
+import org.springframework.data.mongodb.core.mapping.event.AfterLoadEvent;
 
 /**
  * Spring Data specfic {@link MongodbQuery} implementation.
  * 
  * @author Oliver Gierke
+ * @author Jordi Llach
  */
 class SpringDataMongodbQuery<T> extends MongodbQuery<T> {
 
@@ -36,9 +39,11 @@ class SpringDataMongodbQuery<T> extends MongodbQuery<T> {
 	 * 
 	 * @param operations must not be {@literal null}.
 	 * @param type must not be {@literal null}.
+     * @param eventPublisher.
 	 */
-	public SpringDataMongodbQuery(final MongoOperations operations, final Class<? extends T> type) {
-		this(operations, type, operations.getCollectionName(type));
+	public SpringDataMongodbQuery(final MongoOperations operations, final Class<? extends T> type,
+                                 final ApplicationEventPublisher eventPublisher) {
+		this(operations, type, operations.getCollectionName(type), eventPublisher);
 	}
 
 	/**
@@ -47,12 +52,17 @@ class SpringDataMongodbQuery<T> extends MongodbQuery<T> {
 	 * @param operations must not be {@literal null}.
 	 * @param type must not be {@literal null}.
 	 * @param collectionName must not be {@literal null} or empty.
+     * @param eventPublisher.
 	 */
-	public SpringDataMongodbQuery(final MongoOperations operations, final Class<? extends T> type, String collectionName) {
+	public SpringDataMongodbQuery(final MongoOperations operations, final Class<? extends T> type, final String collectionName,
+                                  final ApplicationEventPublisher eventPublisher) {
 
 		super(operations.getCollection(collectionName), new Function<DBObject, T>() {
 			public T apply(DBObject input) {
-				return operations.getConverter().read(type, input);
+                if (eventPublisher != null) eventPublisher.publishEvent(new AfterLoadEvent<T>(input, (Class<T>)type, collectionName));
+				T read = operations.getConverter().read(type, input);
+                if (eventPublisher != null) eventPublisher.publishEvent(new AfterConvertEvent<T>(input, read, collectionName));
+                return read;
 			}
 		}, new SpringDataMongodbSerializer(operations.getConverter()));
 

@@ -15,9 +15,15 @@
  */
 package org.springframework.data.mongodb.repository.support;
 
+import com.mysema.query.mongodb.MongodbQuery;
+import com.mysema.query.types.EntityPath;
+import com.mysema.query.types.Expression;
+import com.mysema.query.types.OrderSpecifier;
+import com.mysema.query.types.Predicate;
+import com.mysema.query.types.path.PathBuilder;
 import java.io.Serializable;
 import java.util.List;
-
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -34,21 +40,16 @@ import org.springframework.data.repository.core.EntityInformation;
 import org.springframework.data.repository.core.EntityMetadata;
 import org.springframework.util.Assert;
 
-import com.mysema.query.mongodb.MongodbQuery;
-import com.mysema.query.types.EntityPath;
-import com.mysema.query.types.Expression;
-import com.mysema.query.types.OrderSpecifier;
-import com.mysema.query.types.Predicate;
-import com.mysema.query.types.path.PathBuilder;
-
 /**
  * Special QueryDsl based repository implementation that allows execution {@link Predicate}s in various forms.
  * 
  * @author Oliver Gierke
  * @author Thomas Darimont
+ * @author Jordi Llach
  */
-public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleMongoRepository<T, ID> implements
-		QueryDslPredicateExecutor<T> {
+public class QueryDslMongoRepository<T, ID extends Serializable> 
+extends      SimpleMongoRepository<T, ID> 
+implements   QueryDslPredicateExecutor<T> {
 
 	private final PathBuilder<T> builder;
 	private final EntityInformation<T, ID> entityInformation;
@@ -60,9 +61,11 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 	 * 
 	 * @param entityInformation must not be {@literal null}.
 	 * @param mongoOperations must not be {@literal null}.
+     * @param eventPublisher  must not be {@literal null}.
 	 */
-	public QueryDslMongoRepository(MongoEntityInformation<T, ID> entityInformation, MongoOperations mongoOperations) {
-		this(entityInformation, mongoOperations, SimpleEntityPathResolver.INSTANCE);
+	public QueryDslMongoRepository(MongoEntityInformation<T, ID> entityInformation, MongoOperations mongoOperations,
+                                   ApplicationEventPublisher eventPublisher) {
+		this(entityInformation, mongoOperations, SimpleEntityPathResolver.INSTANCE, eventPublisher);
 	}
 
 	/**
@@ -72,11 +75,12 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 	 * @param entityInformation must not be {@literal null}.
 	 * @param mongoOperations must not be {@literal null}.
 	 * @param resolver must not be {@literal null}.
+     * @param eventPublisher  must not be {@literal null}.
 	 */
 	public QueryDslMongoRepository(MongoEntityInformation<T, ID> entityInformation, MongoOperations mongoOperations,
-			EntityPathResolver resolver) {
+			EntityPathResolver resolver, ApplicationEventPublisher eventPublisher) {
 
-		super(entityInformation, mongoOperations);
+		super(entityInformation, mongoOperations, eventPublisher);
 
 		Assert.notNull(resolver);
 		EntityPath<T> path = resolver.createPath(entityInformation.getJavaType());
@@ -200,7 +204,7 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 	 * @return
 	 */
 	private MongodbQuery<T> createQuery() {
-		return new SpringDataMongodbQuery<T>(mongoOperations, entityInformation.getJavaType());
+		return new SpringDataMongodbQuery<T>(mongoOperations, entityInformation.getJavaType(), eventPublisher);
 	}
 
 	/**

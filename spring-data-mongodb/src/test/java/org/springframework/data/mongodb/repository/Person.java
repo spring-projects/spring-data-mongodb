@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
-
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexed;
@@ -34,6 +33,7 @@ import org.springframework.data.mongodb.core.mapping.Field;
  * @author Oliver Gierke
  * @author Thomas Darimont
  * @author Christoph Strobl
+ * @author Jordi Llach
  */
 @Document
 public class Person extends Contact {
@@ -275,6 +275,10 @@ public class Person extends Contact {
 	public void setCreator(User creator) {
 		this.creator = creator;
 	}
+    
+    public User getCreator() {
+        return this.creator;
+    }
 
 	public void setSkills(List<String> skills) {
 		this.skills = skills;

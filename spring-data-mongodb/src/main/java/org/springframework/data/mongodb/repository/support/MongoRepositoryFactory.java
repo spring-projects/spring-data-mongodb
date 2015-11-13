@@ -15,11 +15,9 @@
  */
 package org.springframework.data.mongodb.repository.support;
 
-import static org.springframework.data.querydsl.QueryDslUtils.*;
-
 import java.io.Serializable;
 import java.lang.reflect.Method;
-
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.MappingException;
 import org.springframework.data.mongodb.core.MongoOperations;
@@ -31,6 +29,7 @@ import org.springframework.data.mongodb.repository.query.MongoQueryMethod;
 import org.springframework.data.mongodb.repository.query.PartTreeMongoQuery;
 import org.springframework.data.mongodb.repository.query.StringBasedMongoQuery;
 import org.springframework.data.querydsl.QueryDslPredicateExecutor;
+import static org.springframework.data.querydsl.QueryDslUtils.QUERY_DSL_PRESENT;
 import org.springframework.data.repository.core.NamedQueries;
 import org.springframework.data.repository.core.RepositoryInformation;
 import org.springframework.data.repository.core.RepositoryMetadata;
@@ -47,6 +46,7 @@ import org.springframework.util.Assert;
  * 
  * @author Oliver Gierke
  * @author Thomas Darimont
+ * @author Jordi Llach
  */
 public class MongoRepositoryFactory extends RepositoryFactorySupport {
 
@@ -54,18 +54,21 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 
 	private final MongoOperations mongoOperations;
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
+    private final ApplicationEventPublisher eventPublisher;
 
 	/**
 	 * Creates a new {@link MongoRepositoryFactory} with the given {@link MongoOperations}.
 	 * 
 	 * @param mongoOperations must not be {@literal null}.
+     * @param eventPublisher must not be {@literal null}.
 	 */
-	public MongoRepositoryFactory(MongoOperations mongoOperations) {
-
+	public MongoRepositoryFactory(MongoOperations mongoOperations, ApplicationEventPublisher eventPublisher) {
 		Assert.notNull(mongoOperations);
+        Assert.notNull(eventPublisher);
 
 		this.mongoOperations = mongoOperations;
 		this.mappingContext = mongoOperations.getConverter().getMappingContext();
+        this.eventPublisher = eventPublisher;
 	}
 
 	/*
@@ -89,7 +92,7 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 	protected Object getTargetRepository(RepositoryInformation information) {
 
 		MongoEntityInformation<?, Serializable> entityInformation = getEntityInformation(information.getDomainType());
-		return getTargetRepositoryViaReflection(information, entityInformation, mongoOperations);
+		return getTargetRepositoryViaReflection(information, entityInformation, mongoOperations, eventPublisher);
 	}
 
 	/* 
