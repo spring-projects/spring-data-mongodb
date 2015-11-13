@@ -264,7 +264,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			accessor.setProperty(idProperty, idValue);
 		}
 
-		final ObjectPath currentPath = path.push(result, entity, idValue);
+		final ObjectPath currentPath = path.push(result, entity, idValue != null ? dbo.get(idProperty.getFieldName())
+				: null);
 
 		// Set properties not already set in the constructor
 		entity.doWithProperties(new PropertyHandler<MongoPersistentProperty>() {
