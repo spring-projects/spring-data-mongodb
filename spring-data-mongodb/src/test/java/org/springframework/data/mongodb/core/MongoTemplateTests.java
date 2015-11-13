@@ -3035,7 +3035,7 @@ public class MongoTemplateTests {
 	 */
 	@Test
 	public void takesLimitIntoAccountWhenStreaming() {
-		
+
 		Person youngestPerson = new Person("John", 20);
 		Person oldestPerson = new Person("Jane", 42);
 
@@ -3047,6 +3047,31 @@ public class MongoTemplateTests {
 
 		assertThat(stream.next().getAge(), is(youngestPerson.getAge()));
 		assertThat(stream.hasNext(), is(false));
+	}
+
+	/**
+	 * @see DATAMONGO-1204
+	 */
+	@Test
+	public void resolvesCyclicDBRefCorrectly() {
+
+		SomeMessage message = new SomeMessage();
+		SomeContent content = new SomeContent();
+
+		template.save(message);
+		template.save(content);
+
+		message.dbrefContent = content;
+		content.dbrefMessage = message;
+
+		template.save(message);
+		template.save(content);
+
+		SomeMessage messageLoaded = template.findOne(query(where("id").is(message.id)), SomeMessage.class);
+		SomeContent contentLoaded = template.findOne(query(where("id").is(content.id)), SomeContent.class);
+
+		assertThat(messageLoaded.dbrefContent.id, is(contentLoaded.id));
+		assertThat(contentLoaded.dbrefMessage.id, is(messageLoaded.id));
 	}
 
 	static class DoucmentWithNamedIdField {
@@ -3351,6 +3376,7 @@ public class MongoTemplateTests {
 		String id;
 		String text;
 		String name;
+		@org.springframework.data.mongodb.core.mapping.DBRef SomeMessage dbrefMessage;
 
 		public String getName() {
 			return name;
