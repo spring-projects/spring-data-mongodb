@@ -1,6 +1,16 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 1.8.1.RELEASE (2015-11-15)
+---------------------------------------------
+* DATAMONGO-1316 - Release 1.8.1 (Gosling).
+* DATAMONGO-1312 - Cannot convert generic sub-document fields.
+* DATAMONGO-1302 - CustomConversions should allow registration of ConverterFactory.
+* DATAMONGO-1297 - Unique Index on DBRef.
+* DATAMONGO-1293 - MongoDbFactoryParser should allow id attribute in addition to client-uri.
+* DATAMONGO-1276 - MongoTemplate.CloseableIterableCursorAdapter does not null check return values from PersistenceExceptionTranslator.
+
+
 Changes in version 1.6.4.RELEASE (2015-10-14)
 ---------------------------------------------
 * DATAMONGO-1304 - Release 1.6.4 (Evans).
