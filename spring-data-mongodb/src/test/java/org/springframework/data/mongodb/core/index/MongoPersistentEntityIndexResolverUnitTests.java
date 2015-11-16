@@ -19,6 +19,10 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.util.Collections;
 import java.util.List;
 
@@ -177,6 +181,19 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 					equalTo(new BasicDBObjectBuilder().add("nested.indexedDbRef", 1).get()));
 		}
 
+		/**
+		 * @see DATAMONGO-1163
+		 */
+		@Test
+		public void resolveIndexDefinitionInMetaAnnotatedFields() {
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
+					IndexOnMetaAnnotatedField.class);
+			assertThat(indexDefinitions, hasSize(1));
+			assertThat(indexDefinitions.get(0).getCollection(), equalTo("indexOnMetaAnnotatedField"));
+			assertThat(indexDefinitions.get(0).getIndexOptions(),
+					equalTo(new BasicDBObjectBuilder().add("name", "_name").get()));
+		}
+
 		@Document(collection = "Zero")
 		static class IndexOnLevelZero {
 			@Indexed String indexedProperty;
@@ -229,6 +246,18 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			@Id String id;
 		}
 
+	}
+
+	@Target({ ElementType.FIELD })
+	@Retention(RetentionPolicy.RUNTIME)
+	@Indexed
+	@interface IndexedFieldAnnotation {
+
+	}
+
+	@Document
+	static class IndexOnMetaAnnotatedField {
+		@Field("_name") @IndexedFieldAnnotation String lastname;
 	}
 
 	/**

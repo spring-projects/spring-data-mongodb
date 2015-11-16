@@ -29,8 +29,9 @@ import java.lang.annotation.Target;
  * @author Johno Crawford
  * @author Thomas Darimont
  * @author Christoph Strobl
+ * @author Jordi Llach
  */
-@Target(ElementType.FIELD)
+@Target({ElementType.ANNOTATION_TYPE, ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Indexed {
 

@@ -15,10 +15,16 @@
  */
 package org.springframework.data.mongodb.core.index;
 
+import com.mongodb.DBCollection;
+import com.mongodb.DBObject;
+import com.mongodb.MongoException;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
-
 import org.junit.After;
+import static org.junit.Assert.*;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,10 +35,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
-import com.mongodb.MongoException;
 
 /**
  * Integration tests for index handling.
@@ -45,26 +47,33 @@ import com.mongodb.MongoException;
 public class IndexingIntegrationTests {
 
 	@Autowired MongoOperations operations;
-
-	@After
+    
+    @After
 	public void tearDown() {
-		operations.dropCollection(IndexedPerson.class);
+        operations.dropCollection(IndexedPerson.class);
 	}
-
-	/**
+   
+    /**
 	 * @see DATADOC-237
+     * @see DATAMONGO-1163
 	 */
 	@Test
 	public void createsIndexWithFieldName() {
-
 		operations.save(new IndexedPerson());
 		assertThat(hasIndex("_firstname", IndexedPerson.class), is(true));
+        assertThat(hasIndex("_lastname", IndexedPerson.class), is(true));
 	}
 
+    @Target({ElementType.FIELD})
+    @Retention(RetentionPolicy.RUNTIME)
+    @Indexed
+    @interface IndexedFieldAnnotation {}
+    
 	@Document
 	class IndexedPerson {
 
 		@Field("_firstname") @Indexed String firstname;
+        @Field("_lastname")  @IndexedFieldAnnotation String lastname;
 	}
 
 	/**
