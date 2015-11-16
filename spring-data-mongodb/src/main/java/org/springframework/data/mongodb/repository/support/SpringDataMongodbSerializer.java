@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2014 the original author or authors.
+ * Copyright 2011-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,12 +29,10 @@ import org.springframework.util.Assert;
 
 import com.mongodb.DBObject;
 import com.mongodb.DBRef;
-import com.mysema.query.mongodb.MongodbSerializer;
-import com.mysema.query.types.Constant;
-import com.mysema.query.types.Operation;
-import com.mysema.query.types.Path;
-import com.mysema.query.types.PathMetadata;
-import com.mysema.query.types.PathType;
+import com.querydsl.core.types.Path;
+import com.querydsl.core.types.PathMetadata;
+import com.querydsl.core.types.PathType;
+import com.querydsl.mongodb.MongodbSerializer;
 
 /**
  * Custom {@link MongodbSerializer} to take mapping information into account when building keys for constraints.
@@ -76,10 +74,10 @@ class SpringDataMongodbSerializer extends MongodbSerializer {
 
 	/*
 	 * (non-Javadoc)
-	 * @see com.mysema.query.mongodb.MongodbSerializer#getKeyForPath(com.mysema.query.types.Path, com.mysema.query.types.PathMetadata)
+	 * @see com.querydsl.mongodb.MongodbSerializer#getKeyForPath(com.querydsl.core.types.Path, com.querydsl.core.types.PathMetadata)
 	 */
 	@Override
-	protected String getKeyForPath(Path<?> expr, PathMetadata<?> metadata) {
+	protected String getKeyForPath(Path<?> expr, PathMetadata metadata) {
 
 		if (!metadata.getPathType().equals(PathType.PROPERTY)) {
 			return super.getKeyForPath(expr, metadata);
@@ -94,7 +92,7 @@ class SpringDataMongodbSerializer extends MongodbSerializer {
 
 	/*
 	 * (non-Javadoc)
-	 * @see com.mysema.query.mongodb.MongodbSerializer#asDBObject(java.lang.String, java.lang.Object)
+	 * @see com.querydsl.mongodb.MongodbSerializer#asDBObject(java.lang.String, java.lang.Object)
 	 */
 	@Override
 	protected DBObject asDBObject(String key, Object value) {
@@ -108,7 +106,7 @@ class SpringDataMongodbSerializer extends MongodbSerializer {
 
 	/*
 	 * (non-Javadoc)
-	 * @see com.mysema.query.mongodb.MongodbSerializer#isReference(com.mysema.query.types.Path)
+	 * @see com.querydsl.mongodb.MongodbSerializer#isReference(com.querydsl.core.types.Path)
 	 */
 	@Override
 	protected boolean isReference(Path<?> path) {
@@ -119,32 +117,11 @@ class SpringDataMongodbSerializer extends MongodbSerializer {
 
 	/*
 	 * (non-Javadoc)
-	 * @see com.mysema.query.mongodb.MongodbSerializer#asReference(java.lang.Object)
+	 * @see com.querydsl.mongodb.MongodbSerializer#asReference(java.lang.Object)
 	 */
 	@Override
 	protected DBRef asReference(Object constant) {
 		return converter.toDBRef(constant, null);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see com.mysema.query.mongodb.MongodbSerializer#asReference(com.mysema.query.types.Operation, int)
-	 */
-	@Override
-	protected DBRef asReference(Operation<?> expr, int constIndex) {
-
-		for (Object arg : expr.getArgs()) {
-
-			if (arg instanceof Path) {
-
-				MongoPersistentProperty property = getPropertyFor((Path<?>) arg);
-				Object constant = ((Constant<?>) expr.getArg(constIndex)).getConstant();
-
-				return converter.toDBRef(constant, property);
-			}
-		}
-
-		return super.asReference(expr, constIndex);
 	}
 
 	private MongoPersistentProperty getPropertyFor(Path<?> path) {

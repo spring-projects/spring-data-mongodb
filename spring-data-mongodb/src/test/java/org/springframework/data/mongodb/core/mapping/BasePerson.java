@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 by the original author(s).
+ * Copyright 2011-2015 by the original author(s).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,15 @@
 
 package org.springframework.data.mongodb.core.mapping;
 
-import com.mysema.query.annotations.QuerySupertype;
+import com.querydsl.core.annotations.QuerySupertype;
 
 /**
  * {@link QuerySupertype} is necessary for Querydsl 2.2.0-beta4 to compile the query classes directly. Can be removed as
  * soon as {@link https://bugs.launchpad.net/querydsl/+bug/776219} is fixed.
  * 
  * @see https://bugs.launchpad.net/querydsl/+bug/776219
- * @author Jon Brisbin <jbrisbin@vmware.com>
+ * @author Jon Brisbin
+ * @author Oliver Gierke
  */
 @QuerySupertype
 public abstract class BasePerson {
@@ -32,8 +33,7 @@ public abstract class BasePerson {
 	protected String firstName;
 	protected String lastName;
 
-	public BasePerson() {
-	}
+	public BasePerson() {}
 
 	public BasePerson(Integer ssn, String firstName, String lastName) {
 		this.ssn = ssn;

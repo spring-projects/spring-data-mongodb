@@ -31,8 +31,6 @@ import org.springframework.data.mongodb.repository.QPerson;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.mysema.query.mongodb.MongodbQuery;
-
 /**
  * Unit tests for {@link QuerydslRepositorySupport}.
  * 
@@ -59,8 +57,8 @@ public class QuerydslRepositorySupportTests {
 
 		QPerson p = QPerson.person;
 		QuerydslRepositorySupport support = new QuerydslRepositorySupport(operations) {};
-		MongodbQuery<Person> query = support.from(p).where(p.lastname.eq("Matthews"));
-		assertThat(query.uniqueResult(), is(person));
+		SpringDataMongodbQuery<Person> query = support.from(p).where(p.lastname.eq("Matthews"));
+		assertThat(query.fetchOne(), is(person));
 	}
 
 	/**
@@ -76,8 +74,8 @@ public class QuerydslRepositorySupportTests {
 		QPerson p = QPerson.person;
 		QuerydslRepositorySupport support = new QuerydslRepositorySupport(operations) {};
 
-		MongodbQuery<Person> query = support.from(p).where(p.skills.any().in("guitarist"));
+		SpringDataMongodbQuery<Person> query = support.from(p).where(p.skills.any().in("guitarist"));
 
-		assertThat(query.uniqueResult(), is(person));
+		assertThat(query.fetchOne(), is(person));
 	}
 }

@@ -34,12 +34,12 @@ import org.springframework.data.repository.core.EntityInformation;
 import org.springframework.data.repository.core.EntityMetadata;
 import org.springframework.util.Assert;
 
-import com.mysema.query.mongodb.MongodbQuery;
-import com.mysema.query.types.EntityPath;
-import com.mysema.query.types.Expression;
-import com.mysema.query.types.OrderSpecifier;
-import com.mysema.query.types.Predicate;
-import com.mysema.query.types.path.PathBuilder;
+import com.querydsl.core.types.EntityPath;
+import com.querydsl.core.types.Expression;
+import com.querydsl.core.types.OrderSpecifier;
+import com.querydsl.core.types.Predicate;
+import com.querydsl.core.types.dsl.PathBuilder;
+import com.querydsl.mongodb.AbstractMongodbQuery;
 
 /**
  * Special QueryDsl based repository implementation that allows execution {@link Predicate}s in various forms.
@@ -47,8 +47,8 @@ import com.mysema.query.types.path.PathBuilder;
  * @author Oliver Gierke
  * @author Thomas Darimont
  */
-public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleMongoRepository<T, ID> implements
-		QueryDslPredicateExecutor<T> {
+public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleMongoRepository<T, ID>
+		implements QueryDslPredicateExecutor<T> {
 
 	private final PathBuilder<T> builder;
 	private final EntityInformation<T, ID> entityInformation;
@@ -92,7 +92,7 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 	 */
 	@Override
 	public T findOne(Predicate predicate) {
-		return createQueryFor(predicate).uniqueResult();
+		return createQueryFor(predicate).fetchOne();
 	}
 
 	/*
@@ -101,7 +101,7 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 	 */
 	@Override
 	public List<T> findAll(Predicate predicate) {
-		return createQueryFor(predicate).list();
+		return createQueryFor(predicate).fetchResults().getResults();
 	}
 
 	/*
@@ -110,7 +110,7 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 	 */
 	@Override
 	public List<T> findAll(Predicate predicate, OrderSpecifier<?>... orders) {
-		return createQueryFor(predicate).orderBy(orders).list();
+		return createQueryFor(predicate).orderBy(orders).fetchResults().getResults();
 	}
 
 	/*
@@ -119,7 +119,7 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 	 */
 	@Override
 	public List<T> findAll(Predicate predicate, Sort sort) {
-		return applySorting(createQueryFor(predicate), sort).list();
+		return applySorting(createQueryFor(predicate), sort).fetchResults().getResults();
 	}
 
 	/* 
@@ -128,7 +128,7 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 	 */
 	@Override
 	public Iterable<T> findAll(OrderSpecifier<?>... orders) {
-		return createQuery().orderBy(orders).list();
+		return createQuery().orderBy(orders).fetchResults().getResults();
 	}
 
 	/*
@@ -138,10 +138,11 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 	@Override
 	public Page<T> findAll(Predicate predicate, Pageable pageable) {
 
-		MongodbQuery<T> countQuery = createQueryFor(predicate);
-		MongodbQuery<T> query = createQueryFor(predicate);
+		AbstractMongodbQuery<T, SpringDataMongodbQuery<T>> countQuery = createQueryFor(predicate);
+		AbstractMongodbQuery<T, SpringDataMongodbQuery<T>> query = createQueryFor(predicate);
 
-		return new PageImpl<T>(applyPagination(query, pageable).list(), pageable, countQuery.count());
+		return new PageImpl<T>(applyPagination(query, pageable).fetchResults().getResults(), pageable,
+				countQuery.fetchCount());
 	}
 
 	/*
@@ -151,10 +152,11 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 	@Override
 	public Page<T> findAll(Pageable pageable) {
 
-		MongodbQuery<T> countQuery = createQuery();
-		MongodbQuery<T> query = createQuery();
+		AbstractMongodbQuery<T, SpringDataMongodbQuery<T>> countQuery = createQuery();
+		AbstractMongodbQuery<T, SpringDataMongodbQuery<T>> query = createQuery();
 
-		return new PageImpl<T>(applyPagination(query, pageable).list(), pageable, countQuery.count());
+		return new PageImpl<T>(applyPagination(query, pageable).fetchResults().getResults(), pageable,
+				countQuery.fetchCount());
 	}
 
 	/*
@@ -163,7 +165,7 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 	 */
 	@Override
 	public List<T> findAll(Sort sort) {
-		return applySorting(createQuery(), sort).list();
+		return applySorting(createQuery(), sort).fetchResults().getResults();
 	}
 
 	/*
@@ -172,7 +174,7 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 	 */
 	@Override
 	public long count(Predicate predicate) {
-		return createQueryFor(predicate).count();
+		return createQueryFor(predicate).fetchCount();
 	}
 
 	/* 
@@ -181,7 +183,7 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 	 */
 	@Override
 	public boolean exists(Predicate predicate) {
-		return createQueryFor(predicate).exists();
+		return createQueryFor(predicate).fetchCount() > 0;
 	}
 
 	/**
@@ -190,7 +192,7 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 	 * @param predicate
 	 * @return
 	 */
-	private MongodbQuery<T> createQueryFor(Predicate predicate) {
+	private AbstractMongodbQuery<T, SpringDataMongodbQuery<T>> createQueryFor(Predicate predicate) {
 		return createQuery().where(predicate);
 	}
 
@@ -199,7 +201,7 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 	 * 
 	 * @return
 	 */
-	private MongodbQuery<T> createQuery() {
+	private AbstractMongodbQuery<T, SpringDataMongodbQuery<T>> createQuery() {
 		return new SpringDataMongodbQuery<T>(mongoOperations, entityInformation.getJavaType());
 	}
 
@@ -210,7 +212,8 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 	 * @param pageable
 	 * @return
 	 */
-	private MongodbQuery<T> applyPagination(MongodbQuery<T> query, Pageable pageable) {
+	private AbstractMongodbQuery<T, SpringDataMongodbQuery<T>> applyPagination(
+			AbstractMongodbQuery<T, SpringDataMongodbQuery<T>> query, Pageable pageable) {
 
 		if (pageable == null) {
 			return query;
@@ -227,7 +230,8 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 	 * @param sort
 	 * @return
 	 */
-	private MongodbQuery<T> applySorting(MongodbQuery<T> query, Sort sort) {
+	private AbstractMongodbQuery<T, SpringDataMongodbQuery<T>> applySorting(
+			AbstractMongodbQuery<T, SpringDataMongodbQuery<T>> query, Sort sort) {
 
 		if (sort == null) {
 			return query;
@@ -260,7 +264,7 @@ public class QueryDslMongoRepository<T, ID extends Serializable> extends SimpleM
 
 		Expression<Object> property = builder.get(order.getProperty());
 
-		return new OrderSpecifier(order.isAscending() ? com.mysema.query.types.Order.ASC
-				: com.mysema.query.types.Order.DESC, property);
+		return new OrderSpecifier(
+				order.isAscending() ? com.querydsl.core.types.Order.ASC : com.querydsl.core.types.Order.DESC, property);
 	}
 }

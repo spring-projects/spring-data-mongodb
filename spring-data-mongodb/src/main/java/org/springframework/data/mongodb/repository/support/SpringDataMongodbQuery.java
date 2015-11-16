@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 the original author or authors.
+ * Copyright 2012-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,14 +20,14 @@ import org.springframework.data.mongodb.core.MongoOperations;
 import com.google.common.base.Function;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
-import com.mysema.query.mongodb.MongodbQuery;
+import com.querydsl.mongodb.AbstractMongodbQuery;
 
 /**
- * Spring Data specfic {@link MongodbQuery} implementation.
+ * Spring Data specific {@link MongodbQuery} implementation.
  * 
  * @author Oliver Gierke
  */
-class SpringDataMongodbQuery<T> extends MongodbQuery<T> {
+class SpringDataMongodbQuery<T> extends AbstractMongodbQuery<T, SpringDataMongodbQuery<T>> {
 
 	private final MongoOperations operations;
 
@@ -48,7 +48,8 @@ class SpringDataMongodbQuery<T> extends MongodbQuery<T> {
 	 * @param type must not be {@literal null}.
 	 * @param collectionName must not be {@literal null} or empty.
 	 */
-	public SpringDataMongodbQuery(final MongoOperations operations, final Class<? extends T> type, String collectionName) {
+	public SpringDataMongodbQuery(final MongoOperations operations, final Class<? extends T> type,
+			String collectionName) {
 
 		super(operations.getCollection(collectionName), new Function<DBObject, T>() {
 			public T apply(DBObject input) {
@@ -61,7 +62,7 @@ class SpringDataMongodbQuery<T> extends MongodbQuery<T> {
 
 	/*
 	 * (non-Javadoc)
-	 * @see com.mysema.query.mongodb.MongodbQuery#getCollection(java.lang.Class)
+	 * @see com.querydsl.mongodb.AbstractMongodbQuery#getCollection(java.lang.Class)
 	 */
 	@Override
 	protected DBCollection getCollection(Class<?> type) {

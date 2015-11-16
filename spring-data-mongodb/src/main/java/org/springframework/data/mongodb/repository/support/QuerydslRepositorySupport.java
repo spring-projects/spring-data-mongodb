@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2012 the original author or authors.
+ * Copyright 2011-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,8 +20,8 @@ import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.util.Assert;
 
-import com.mysema.query.mongodb.MongodbQuery;
-import com.mysema.query.types.EntityPath;
+import com.querydsl.core.types.EntityPath;
+import com.querydsl.mongodb.AbstractMongodbQuery;
 
 /**
  * Base class to create repository implementations based on Querydsl.
@@ -36,7 +36,7 @@ public abstract class QuerydslRepositorySupport {
 	/**
 	 * Creates a new {@link QuerydslRepositorySupport} for the given {@link MongoOperations}.
 	 * 
-	 * @param operations must not be {@literal null}
+	 * @param operations must not be {@literal null}.
 	 */
 	public QuerydslRepositorySupport(MongoOperations operations) {
 
@@ -53,7 +53,7 @@ public abstract class QuerydslRepositorySupport {
 	 * @param path
 	 * @return
 	 */
-	protected <T> MongodbQuery<T> from(final EntityPath<T> path) {
+	protected <T> AbstractMongodbQuery<T, SpringDataMongodbQuery<T>> from(final EntityPath<T> path) {
 		Assert.notNull(path);
 		MongoPersistentEntity<?> entity = context.getPersistentEntity(path.getType());
 		return from(path, entity.getCollection());
@@ -66,7 +66,7 @@ public abstract class QuerydslRepositorySupport {
 	 * @param collection must not be blank or {@literal null}
 	 * @return
 	 */
-	protected <T> MongodbQuery<T> from(final EntityPath<T> path, String collection) {
+	protected <T> AbstractMongodbQuery<T, SpringDataMongodbQuery<T>> from(final EntityPath<T> path, String collection) {
 
 		Assert.notNull(path);
 		Assert.hasText(collection);

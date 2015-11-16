@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2013 the original author or authors.
+ * Copyright 2011-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,14 +25,14 @@ import javax.tools.Diagnostic;
 
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import com.mysema.query.annotations.QueryEmbeddable;
-import com.mysema.query.annotations.QueryEmbedded;
-import com.mysema.query.annotations.QueryEntities;
-import com.mysema.query.annotations.QuerySupertype;
-import com.mysema.query.annotations.QueryTransient;
-import com.mysema.query.apt.AbstractQuerydslProcessor;
-import com.mysema.query.apt.Configuration;
-import com.mysema.query.apt.DefaultConfiguration;
+import com.querydsl.apt.AbstractQuerydslProcessor;
+import com.querydsl.apt.Configuration;
+import com.querydsl.apt.DefaultConfiguration;
+import com.querydsl.core.annotations.QueryEmbeddable;
+import com.querydsl.core.annotations.QueryEmbedded;
+import com.querydsl.core.annotations.QueryEntities;
+import com.querydsl.core.annotations.QuerySupertype;
+import com.querydsl.core.annotations.QueryTransient;
 
 /**
  * Annotation processor to create Querydsl query types for QueryDsl annotated classes.

@@ -10,7 +10,7 @@ Import-Template:
  com.fasterxml.jackson.*;version="${jackson:[=.=.=,+1.0.0)}";resolution:=optional,
  com.google.common.base.*;version="[11.0.0,14.0.0)";resolution:=optional,
  com.mongodb.*;version="${mongo.osgi:[=.=.=,+1.0.0)}",
- com.mysema.query.*;version="[2.1.1, 3.0.0)";resolution:=optional,
+ com.querydsl.*;version="${querydsl:[=.=.=,+1.0.0)}";resolution:=optional,
  javax.annotation.processing.*;version="0",
  javax.enterprise.*;version="${cdi:[=.=.=,+1.0.0)}";resolution:=optional,
  javax.tools.*;version="0",

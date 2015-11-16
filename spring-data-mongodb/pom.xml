@@ -59,14 +59,14 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.mysema.querydsl</groupId>
+			<groupId>com.querydsl</groupId>
 			<artifactId>querydsl-mongodb</artifactId>
 			<version>${querydsl}</version>
 			<optional>true</optional>
 		</dependency>
 
 		<dependency>
-			<groupId>com.mysema.querydsl</groupId>
+			<groupId>com.querydsl</groupId>
 			<artifactId>querydsl-apt</artifactId>
 			<version>${querydsl}</version>
 			<scope>provided</scope>
@@ -183,7 +183,7 @@
 				<version>${apt}</version>
 				<dependencies>
 					<dependency>
-						<groupId>com.mysema.querydsl</groupId>
+						<groupId>com.querydsl</groupId>
 						<artifactId>querydsl-apt</artifactId>
 						<version>${querydsl}</version>
 					</dependency>

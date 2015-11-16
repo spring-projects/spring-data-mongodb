@@ -34,7 +34,7 @@ import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.mysema.query.types.Predicate;
+import com.querydsl.core.types.Predicate;
 
 /**
  * Integration test for {@link QueryDslMongoRepository}.

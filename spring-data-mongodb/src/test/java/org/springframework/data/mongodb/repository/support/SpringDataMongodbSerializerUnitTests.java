@@ -37,10 +37,10 @@ import org.springframework.data.mongodb.repository.QPerson;
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
-import com.mysema.query.types.expr.BooleanOperation;
-import com.mysema.query.types.path.PathBuilder;
-import com.mysema.query.types.path.SimplePath;
-import com.mysema.query.types.path.StringPath;
+import com.querydsl.core.types.dsl.BooleanOperation;
+import com.querydsl.core.types.dsl.PathBuilder;
+import com.querydsl.core.types.dsl.SimplePath;
+import com.querydsl.core.types.dsl.StringPath;
 
 /**
  * Unit tests for {@link SpringDataMongodbSerializer}.
@@ -73,6 +73,7 @@ public class SpringDataMongodbSerializerUnitTests {
 
 	@Test
 	public void buildsNestedKeyCorrectly() {
+
 		StringPath path = QPerson.person.address.street;
 		assertThat(serializer.getKeyForPath(path, path.getMetadata()), is("street"));
 	}
