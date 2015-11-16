@@ -15,17 +15,21 @@
  */
 package org.springframework.data.mongodb.core.index;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
-
+import com.mongodb.BasicDBObjectBuilder;
+import com.mongodb.DBObject;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.util.Collections;
 import java.util.List;
-
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
+import static org.mockito.Mockito.*;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.DBObjectTestUtils;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolver.IndexDefinitionHolder;
@@ -43,9 +47,6 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.util.ClassTypeInformation;
-
-import com.mongodb.BasicDBObjectBuilder;
-import com.mongodb.DBObject;
 
 /**
  * @author Christoph Strobl
@@ -148,6 +149,17 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			assertThat(indexDefinitions.get(0).getCollection(), equalTo("CollectionOverride"));
 		}
 
+        /**
+         * @see DATAMONGO-1163
+         */
+        @Test
+        public void resolveIndexDefinitionInMetaAnnotatedFields() {
+            List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(IndexOnMetaAnnotatedField.class);
+			assertThat(indexDefinitions, hasSize(1));
+            assertThat(indexDefinitions.get(0).getCollection(), equalTo("indexOnMetaAnnotatedField"));
+            assertThat(indexDefinitions.get(0).getIndexOptions(), equalTo(new BasicDBObjectBuilder().add("name", "_name").get()));
+        }
+
 		@Document(collection = "Zero")
 		static class IndexOnLevelZero {
 			@Indexed String indexedProperty;
@@ -181,7 +193,18 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 			@Indexed @Field("customFieldName") String namedProperty;
 		}
+        
+        @Target({ElementType.FIELD})
+        @Retention(RetentionPolicy.RUNTIME)
+        @Indexed
+        @interface IndexedFieldAnnotation {
 
+        }
+
+        @Document
+        static class IndexOnMetaAnnotatedField {
+            @Field("_name") @IndexedFieldAnnotation String lastname;
+        }
 	}
 
 	/**
