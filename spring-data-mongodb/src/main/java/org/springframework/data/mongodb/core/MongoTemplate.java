@@ -774,11 +774,17 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	protected WriteConcern prepareWriteConcern(MongoAction mongoAction) {
 
 		WriteConcern wc = writeConcernResolver.resolve(mongoAction);
+		return potentiallyForceAcknowledgedWrite(wc);
+	}
 
-		if (MongoClientVersion.isMongo3Driver()
-				&& ObjectUtils.nullSafeEquals(WriteResultChecking.EXCEPTION, writeResultChecking)
-				&& (wc == null || wc.getW() < 1)) {
-			return WriteConcern.ACKNOWLEDGED;
+	private WriteConcern potentiallyForceAcknowledgedWrite(WriteConcern wc) {
+
+		if (ObjectUtils.nullSafeEquals(WriteResultChecking.EXCEPTION, writeResultChecking)
+				&& MongoClientVersion.isMongo3Driver()) {
+			if (wc == null || wc.getWObject() == null
+					|| (wc.getWObject() instanceof Number && ((Number) wc.getWObject()).intValue() < 1)) {
+				return WriteConcern.ACKNOWLEDGED;
+			}
 		}
 		return wc;
 	}
