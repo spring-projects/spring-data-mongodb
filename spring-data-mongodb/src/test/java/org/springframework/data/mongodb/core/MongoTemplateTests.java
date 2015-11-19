@@ -3074,6 +3074,75 @@ public class MongoTemplateTests {
 		assertThat(contentLoaded.dbrefMessage.id, is(messageLoaded.id));
 	}
 
+	/**
+	 * @see DATAMONGO-1287
+	 */
+	@Test
+	public void shouldReuseAlreadyResolvedLazyLoadedDBRefWhenUsedAsPersistenceConstrcutorArgument() {
+
+		Document docInCtor = new Document();
+		docInCtor.id = "doc-in-ctor";
+		template.save(docInCtor);
+
+		DocumentWithLazyDBrefUsedInPresistenceConstructor source = new DocumentWithLazyDBrefUsedInPresistenceConstructor(
+				docInCtor);
+
+		template.save(source);
+
+		DocumentWithLazyDBrefUsedInPresistenceConstructor loaded = template.findOne(query(where("id").is(source.id)),
+				DocumentWithLazyDBrefUsedInPresistenceConstructor.class);
+		assertThat(loaded.refToDocUsedInCtor, not(instanceOf(LazyLoadingProxy.class)));
+		assertThat(loaded.refToDocNotUsedInCtor, nullValue());
+	}
+
+	/**
+	 * @see DATAMONGO-1287
+	 */
+	@Test
+	public void shouldNotReuseLazyLoadedDBRefWhenTypeUsedInPersistenceConstrcutorButValueRefersToAnotherProperty() {
+
+		Document docNotUsedInCtor = new Document();
+		docNotUsedInCtor.id = "doc-but-not-used-in-ctor";
+		template.save(docNotUsedInCtor);
+
+		DocumentWithLazyDBrefUsedInPresistenceConstructor source = new DocumentWithLazyDBrefUsedInPresistenceConstructor(
+				null);
+		source.refToDocNotUsedInCtor = docNotUsedInCtor;
+
+		template.save(source);
+
+		DocumentWithLazyDBrefUsedInPresistenceConstructor loaded = template.findOne(query(where("id").is(source.id)),
+				DocumentWithLazyDBrefUsedInPresistenceConstructor.class);
+		assertThat(loaded.refToDocNotUsedInCtor, instanceOf(LazyLoadingProxy.class));
+		assertThat(loaded.refToDocUsedInCtor, nullValue());
+	}
+
+	/**
+	 * @see DATAMONGO-1287
+	 */
+	@Test
+	public void shouldRespectParamterValueWhenAttemptingToReuseLazyLoadedDBRefUsedInPersistenceConstrcutor() {
+
+		Document docInCtor = new Document();
+		docInCtor.id = "doc-in-ctor";
+		template.save(docInCtor);
+
+		Document docNotUsedInCtor = new Document();
+		docNotUsedInCtor.id = "doc-but-not-used-in-ctor";
+		template.save(docNotUsedInCtor);
+
+		DocumentWithLazyDBrefUsedInPresistenceConstructor source = new DocumentWithLazyDBrefUsedInPresistenceConstructor(
+				docInCtor);
+		source.refToDocNotUsedInCtor = docNotUsedInCtor;
+
+		template.save(source);
+
+		DocumentWithLazyDBrefUsedInPresistenceConstructor loaded = template.findOne(query(where("id").is(source.id)),
+				DocumentWithLazyDBrefUsedInPresistenceConstructor.class);
+		assertThat(loaded.refToDocUsedInCtor, not(instanceOf(LazyLoadingProxy.class)));
+		assertThat(loaded.refToDocNotUsedInCtor, instanceOf(LazyLoadingProxy.class));
+	}
+
 	static class DoucmentWithNamedIdField {
 
 		@Id String someIdKey;
@@ -3401,4 +3470,18 @@ public class MongoTemplateTests {
 		@org.springframework.data.mongodb.core.mapping.DBRef SomeContent dbrefContent;
 		SomeContent normalContent;
 	}
+
+	static class DocumentWithLazyDBrefUsedInPresistenceConstructor {
+
+		@Id String id;
+		@org.springframework.data.mongodb.core.mapping.DBRef(lazy = true) Document refToDocUsedInCtor;
+		@org.springframework.data.mongodb.core.mapping.DBRef(lazy = true) Document refToDocNotUsedInCtor;
+
+		@PersistenceConstructor
+		public DocumentWithLazyDBrefUsedInPresistenceConstructor(Document refToDocUsedInCtor) {
+			this.refToDocUsedInCtor = refToDocUsedInCtor;
+		}
+
+	}
+
 }
