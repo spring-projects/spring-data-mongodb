@@ -75,15 +75,13 @@ public abstract class AbstractMongoConverter implements MongoConverter, Initiali
 	 */
 	private void initializeConverters() {
 
-		if (!conversionService.canConvert(ObjectId.class, String.class)) {
-			conversionService.addConverter(ObjectIdToStringConverter.INSTANCE);
-		}
-		if (!conversionService.canConvert(String.class, ObjectId.class)) {
-			conversionService.addConverter(StringToObjectIdConverter.INSTANCE);
-		}
+		conversionService.addConverter(ObjectIdToStringConverter.INSTANCE);
+		conversionService.addConverter(StringToObjectIdConverter.INSTANCE);
+
 		if (!conversionService.canConvert(ObjectId.class, BigInteger.class)) {
 			conversionService.addConverter(ObjectIdToBigIntegerConverter.INSTANCE);
 		}
+
 		if (!conversionService.canConvert(BigInteger.class, ObjectId.class)) {
 			conversionService.addConverter(BigIntegerToObjectIdConverter.INSTANCE);
 		}
