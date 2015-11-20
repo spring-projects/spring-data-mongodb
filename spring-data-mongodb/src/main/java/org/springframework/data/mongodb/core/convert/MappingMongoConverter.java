@@ -30,7 +30,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.CollectionFactory;
 import org.springframework.core.convert.ConversionException;
 import org.springframework.core.convert.ConversionService;
@@ -57,6 +56,7 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.event.AfterConvertEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterLoadEvent;
+import org.springframework.data.mongodb.core.mapping.event.MongoMappingEvent;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
@@ -872,7 +872,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	@Override
 	public Object getValueInternal(MongoPersistentProperty prop, DBObject dbo, SpELExpressionEvaluator evaluator,
 			ObjectPath path) {
-		return new MongoDbPropertyValueProvider(dbo, evaluator, path, false).getPropertyValue(prop);
+		return new MongoDbPropertyValueProvider(dbo, evaluator, path).getPropertyValue(prop);
 	}
 
 	/**
@@ -1116,7 +1116,6 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		private final DBObjectAccessor source;
 		private final SpELExpressionEvaluator evaluator;
 		private final ObjectPath path;
-		private final boolean ignoreLazyDBRefProperties;
 
 		/**
 		 * Creates a new {@link MongoDbPropertyValueProvider} for the given source, {@link SpELExpressionEvaluator} and
@@ -1127,18 +1126,13 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		 * @param path can be {@literal null}.
 		 */
 		public MongoDbPropertyValueProvider(DBObject source, SpELExpressionEvaluator evaluator, ObjectPath path) {
-			this(source, evaluator, path, true); // ignoring by default
-		}
 
-		MongoDbPropertyValueProvider(DBObject source, SpELExpressionEvaluator evaluator, ObjectPath path,
-				boolean ignoreLazyDBRefProperties) {
 			Assert.notNull(source);
 			Assert.notNull(evaluator);
 
 			this.source = new DBObjectAccessor(source);
 			this.evaluator = evaluator;
 			this.path = path;
-			this.ignoreLazyDBRefProperties = ignoreLazyDBRefProperties;
 		}
 
 		/* 
@@ -1151,12 +1145,6 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			Object value = expression != null ? evaluator.evaluate(expression) : source.get(property);
 
 			if (value == null) {
-				return null;
-			}
-			if (this.ignoreLazyDBRefProperties && property.isDbReference() && property.getDBRef().lazy()) { // lazy DBRef,
-																																																			// BasicDBList are
-																																																			// resolved later
-																																																			// by default
 				return null;
 			}
 
@@ -1220,24 +1208,39 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	@SuppressWarnings("unchecked")
 	private <T> T potentiallyReadOrResolveDbRef(DBRef dbref, TypeInformation<?> type, ObjectPath path, Class<?> rawType) {
+
 		if (rawType.equals(DBRef.class)) {
 			return (T) dbref;
 		}
+
 		Object object = dbref == null ? null : path.getPathItem(dbref.getId(), dbref.getCollectionName());
 		return (T) (object != null ? object : readAndConvertDBRef(dbref, type, path, rawType));
 	}
 
-	private <T> T readAndConvertDBRef(DBRef dbref, TypeInformation<?> type, ObjectPath path, Class<?> rawType) {
-		DBObject readRef = readRef(dbref);
+	@SuppressWarnings("unchecked")
+	private <T> T readAndConvertDBRef(DBRef dbref, TypeInformation<?> type, ObjectPath path, final Class<?> rawType) {
+
+		final DBObject readRef = readRef(dbref);
 		final String collectionName = dbref.getCollectionName();
-		if (canPublishEvent())
-			((ApplicationEventPublisher) this.applicationContext)
-					.publishEvent(new AfterLoadEvent<T>(readRef, (Class<T>) rawType, collectionName));
-		T t = (T) read(type, readRef, path);
-		if (canPublishEvent())
-			((ApplicationEventPublisher) this.applicationContext)
-					.publishEvent(new AfterConvertEvent<T>(readRef, t, collectionName));
-		return t;
+
+		if (readRef != null) {
+			maybeEmitEvent(new AfterLoadEvent<T>(readRef, (Class<T>) rawType, collectionName));
+		}
+
+		final T target = (T) read(type, readRef, path);
+
+		if (target != null) {
+			maybeEmitEvent(new AfterConvertEvent<T>(readRef, target, collectionName));
+		}
+
+		return target;
+	}
+
+	private void maybeEmitEvent(MongoMappingEvent<?> event) {
+
+		if (canPublishEvent()) {
+			this.applicationContext.publishEvent(event);
+		}
 	}
 
 	private boolean canPublishEvent() {

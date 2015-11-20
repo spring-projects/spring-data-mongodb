@@ -50,9 +50,4 @@ public class ApplicationContextEventTestsAppConfig extends AbstractMongoConfigur
 	public SimpleMappingEventListener simpleMappingEventListener() {
 		return new SimpleMappingEventListener();
 	}
-
-    @Bean
-    public ParentMappingEventListener parentMappingEventListener() {
-        return new ParentMappingEventListener();
-    }
 }
