@@ -15,6 +15,10 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
+import com.mongodb.BasicDBList;
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
+import com.mongodb.DBRef;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -23,12 +27,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.CollectionFactory;
 import org.springframework.core.convert.ConversionException;
 import org.springframework.core.convert.ConversionService;
@@ -53,17 +57,14 @@ import org.springframework.data.mapping.model.SpELExpressionParameterValueProvid
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.mongodb.core.mapping.event.AfterConvertEvent;
+import org.springframework.data.mongodb.core.mapping.event.AfterLoadEvent;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
-
-import com.mongodb.BasicDBList;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
-import com.mongodb.DBRef;
 
 /**
  * {@link MongoConverter} that uses a {@link MappingContext} to do sophisticated mapping of domain objects to
@@ -74,6 +75,7 @@ import com.mongodb.DBRef;
  * @author Patrik Wasik
  * @author Thomas Darimont
  * @author Christoph Strobl
+ * @author Jordi Llach
  */
 public class MappingMongoConverter extends AbstractMongoConverter implements ApplicationContextAware, ValueResolver {
 
@@ -289,8 +291,11 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			public void doWithAssociation(Association<MongoPersistentProperty> association) {
 
 				final MongoPersistentProperty property = association.getInverse();
-				Object value = dbo.get(property.getFieldName());
-
+                // constructor properties that contain a DBRef(lazy=false) are already fetched, skip them
+                if (entity.isConstructorArgument(property) && property.isDbReference() && !property.getDBRef().lazy()) {
+                    return;
+                }
+                Object value = dbo.get(property.getFieldName());
 				if (value == null) {
 					return;
 				}
@@ -867,7 +872,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	@Override
 	public Object getValueInternal(MongoPersistentProperty prop, DBObject dbo, SpELExpressionEvaluator evaluator,
 			ObjectPath path) {
-		return new MongoDbPropertyValueProvider(dbo, evaluator, path).getPropertyValue(prop);
+		return new MongoDbPropertyValueProvider(dbo, evaluator, path, false).getPropertyValue(prop);
 	}
 
 	/**
@@ -901,8 +906,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			Object dbObjItem = sourceValue.get(i);
 
 			if (dbObjItem instanceof DBRef) {
-				items.add(
-						DBRef.class.equals(rawComponentType) ? dbObjItem : read(componentType, readRef((DBRef) dbObjItem), path));
+                items.add(DBRef.class.equals(rawComponentType) ? dbObjItem : readAndConvertDBRef((DBRef)dbObjItem, componentType, path, rawComponentType));
 			} else if (dbObjItem instanceof DBObject) {
 				items.add(read(componentType, (DBObject) dbObjItem, path));
 			} else {
@@ -954,7 +958,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			if (value instanceof DBObject) {
 				map.put(key, read(valueType, (DBObject) value, path));
 			} else if (value instanceof DBRef) {
-				map.put(key, DBRef.class.equals(rawValueType) ? value : read(valueType, readRef((DBRef) value)));
+				map.put(key, DBRef.class.equals(rawValueType) ? value : readAndConvertDBRef((DBRef) value, valueType, ObjectPath.ROOT, rawValueType));
 			} else {
 				Class<?> valueClass = valueType == null ? null : valueType.getType();
 				map.put(key, getPotentiallyConvertedSimpleRead(value, valueClass));
@@ -1099,7 +1103,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		private final DBObjectAccessor source;
 		private final SpELExpressionEvaluator evaluator;
 		private final ObjectPath path;
-
+        private final boolean ignoreLazyDBRefProperties;
+        
 		/**
 		 * Creates a new {@link MongoDbPropertyValueProvider} for the given source, {@link SpELExpressionEvaluator} and
 		 * {@link ObjectPath}.
@@ -1109,14 +1114,18 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		 * @param path can be {@literal null}.
 		 */
 		public MongoDbPropertyValueProvider(DBObject source, SpELExpressionEvaluator evaluator, ObjectPath path) {
-
-			Assert.notNull(source);
+			this(source, evaluator, path, true); // ignoring by default 
+		}
+        
+        MongoDbPropertyValueProvider(DBObject source, SpELExpressionEvaluator evaluator, ObjectPath path, boolean ignoreLazyDBRefProperties) {
+            Assert.notNull(source);
 			Assert.notNull(evaluator);
 
 			this.source = new DBObjectAccessor(source);
 			this.evaluator = evaluator;
 			this.path = path;
-		}
+            this.ignoreLazyDBRefProperties = ignoreLazyDBRefProperties;
+        }
 
 		/* 
 		 * (non-Javadoc)
@@ -1130,6 +1139,9 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			if (value == null) {
 				return null;
 			}
+            if (this.ignoreLazyDBRefProperties && property.isDbReference() &&  property.getDBRef().lazy()) { // lazy DBRef, BasicDBList are resolved later by default
+                return null;
+            }
 
 			return readValue(value, property.getTypeInformation(), path);
 		}
@@ -1191,19 +1203,25 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	@SuppressWarnings("unchecked")
 	private <T> T potentiallyReadOrResolveDbRef(DBRef dbref, TypeInformation<?> type, ObjectPath path, Class<?> rawType) {
-
 		if (rawType.equals(DBRef.class)) {
 			return (T) dbref;
 		}
-
 		Object object = dbref == null ? null : path.getPathItem(dbref.getId(), dbref.getCollectionName());
-
-		if (object != null) {
-			return (T) object;
-		}
-
-		return (T) (object != null ? object : read(type, readRef(dbref), path));
+		return (T) (object != null ? object : readAndConvertDBRef(dbref, type, path, rawType));
 	}
+
+    private <T> T readAndConvertDBRef(DBRef dbref, TypeInformation<?> type, ObjectPath path, Class<?> rawType) {
+        DBObject readRef = readRef(dbref);
+        final String collectionName = dbref.getCollectionName();
+        if (canPublishEvent()) ((ApplicationEventPublisher)this.applicationContext).publishEvent(new AfterLoadEvent<T>(readRef, (Class<T>)rawType, collectionName));
+        T t = (T) read(type, readRef, path);
+        if (canPublishEvent()) ((ApplicationEventPublisher)this.applicationContext).publishEvent(new AfterConvertEvent<T>(readRef, t, collectionName));
+        return t;
+    }
+    
+    private boolean canPublishEvent() {
+        return this.applicationContext != null;
+    }
 
 	/**
 	 * Performs the fetch operation for the given {@link DBRef}.
