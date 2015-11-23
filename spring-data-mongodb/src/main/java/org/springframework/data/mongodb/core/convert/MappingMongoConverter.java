@@ -291,7 +291,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				final MongoPersistentProperty property = association.getInverse();
 				Object value = dbo.get(property.getFieldName());
 
-				if (value == null || (entity.isConstructorArgument(property) && accessor.getProperty(property) != null)) {
+				if (value == null || entity.isConstructorArgument(property)) {
 					return;
 				}
 
