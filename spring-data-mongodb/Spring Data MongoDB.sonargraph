@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<context version="7.1.10.209">
+<context version="7.2.2.230">
     <scope type="Project" name="spring-data-mongodb">
         <element type="TypeFilterReferenceOverridden" name="Filter">
             <element type="IncludeTypePattern" name="org.springframework.data.mongodb.**"/>
@@ -34,6 +34,12 @@
                     <dependency toName="Project|spring-data-mongodb::Layer|Core::Subsystem|Mapping" type="AllowedDependency"/>
                     <dependency toName="Project|spring-data-mongodb::Layer|Repositories::Subsystem|API" type="AllowedDependency"/>
                     <dependency toName="Project|spring-data-mongodb::Layer|Repositories::Subsystem|Implementation" type="AllowedDependency"/>
+                </element>
+                <element type="Subsystem" name="CDI">
+                    <element type="TypeFilter" name="Assignment">
+                        <element type="IncludeTypePattern" name="**.cdi.**"/>
+                    </element>
+                    <stereotype name="Unrestricted"/>
                 </element>
                 <dependency toName="Project|spring-data-mongodb::Layer|Config" type="AllowedDependency"/>
                 <dependency toName="Project|spring-data-mongodb::Layer|Core" type="AllowedDependency"/>
@@ -76,6 +82,11 @@
                     </element>
                     <dependency toName="Project|spring-data-mongodb::Layer|Core::Subsystem|Geospatial" type="AllowedDependency"/>
                 </element>
+                <element type="Subsystem" name="Script">
+                    <element type="TypeFilter" name="Assignment">
+                        <element type="IncludeTypePattern" name="**.script.**"/>
+                    </element>
+                </element>
                 <element type="Subsystem" name="Conversion">
                     <element type="TypeFilter" name="Assignment">
                         <element type="IncludeTypePattern" name="**.core.convert.**"/>
@@ -83,6 +94,7 @@
                     <dependency toName="Project|spring-data-mongodb::Layer|Core::Subsystem|Geospatial" type="AllowedDependency"/>
                     <dependency toName="Project|spring-data-mongodb::Layer|Core::Subsystem|Mapping" type="AllowedDependency"/>
                     <dependency toName="Project|spring-data-mongodb::Layer|Core::Subsystem|Query" type="AllowedDependency"/>
+                    <dependency toName="Project|spring-data-mongodb::Layer|Core::Subsystem|Script" type="AllowedDependency"/>
                 </element>
                 <element type="Subsystem" name="SpEL">
                     <element type="TypeFilter" name="Assignment">
@@ -105,6 +117,11 @@
                     <dependency toName="Project|spring-data-mongodb::Layer|Core::Subsystem|Mapping" type="AllowedDependency"/>
                     <dependency toName="Project|spring-data-mongodb::Layer|Core::Subsystem|Query" type="AllowedDependency"/>
                 </element>
+                <element type="Subsystem" name="MapReduce">
+                    <element type="TypeFilter" name="Assignment">
+                        <element type="IncludeTypePattern" name="**.mapreduce.**"/>
+                    </element>
+                </element>
                 <element type="Subsystem" name="Core">
                     <element type="TypeFilter" name="Assignment">
                         <element type="WeakTypePattern" name="**.core.**"/>
@@ -113,8 +130,10 @@
                     <dependency toName="Project|spring-data-mongodb::Layer|Core::Subsystem|Conversion" type="AllowedDependency"/>
                     <dependency toName="Project|spring-data-mongodb::Layer|Core::Subsystem|Geospatial" type="AllowedDependency"/>
                     <dependency toName="Project|spring-data-mongodb::Layer|Core::Subsystem|Index" type="AllowedDependency"/>
+                    <dependency toName="Project|spring-data-mongodb::Layer|Core::Subsystem|MapReduce" type="AllowedDependency"/>
                     <dependency toName="Project|spring-data-mongodb::Layer|Core::Subsystem|Mapping" type="AllowedDependency"/>
                     <dependency toName="Project|spring-data-mongodb::Layer|Core::Subsystem|Query" type="AllowedDependency"/>
+                    <dependency toName="Project|spring-data-mongodb::Layer|Core::Subsystem|Script" type="AllowedDependency"/>
                 </element>
                 <element type="Subsystem" name="Util">
                     <element type="TypeFilter" name="Assignment">
@@ -169,7 +188,32 @@
             </element>
             <element type="Subsystem" name="Querydsl">
                 <element type="TypeFilter" name="Assignment">
-                    <element type="IncludeTypePattern" name="com.mysema.query.**"/>
+                    <element type="IncludeTypePattern" name="com.querydsl.**"/>
+                </element>
+            </element>
+            <element type="Subsystem" name="Slf4j">
+                <element type="TypeFilter" name="Assignment">
+                    <element type="IncludeTypePattern" name="org.slf4j.**"/>
+                </element>
+            </element>
+            <element type="Subsystem" name="Jackson">
+                <element type="TypeFilter" name="Assignment">
+                    <element type="IncludeTypePattern" name="com.fasterxml.jackson.**"/>
+                </element>
+            </element>
+            <element type="Subsystem" name="DOM">
+                <element type="TypeFilter" name="Assignment">
+                    <element type="IncludeTypePattern" name="org.w3c.dom.**"/>
+                </element>
+            </element>
+            <element type="Subsystem" name="AOP Alliance">
+                <element type="TypeFilter" name="Assignment">
+                    <element type="IncludeTypePattern" name="org.aopalliance.**"/>
+                </element>
+            </element>
+            <element type="Subsystem" name="Guava">
+                <element type="TypeFilter" name="Assignment">
+                    <element type="IncludeTypePattern" name="com.google.common.**"/>
                 </element>
             </element>
         </architecture>
