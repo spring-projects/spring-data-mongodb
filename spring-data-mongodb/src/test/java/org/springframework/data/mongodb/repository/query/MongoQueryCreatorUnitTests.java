@@ -661,6 +661,20 @@ public class MongoQueryCreatorUnitTests {
 		assertThat(query, is(query(where("username").regex(".*"))));
 	}
 
+	/**
+	 * @see DATAMONGO-1342
+	 */
+	@Test
+	public void bindsNullValueToContainsClause() {
+
+		PartTree partTree = new PartTree("emailAddressesContains", User.class);
+
+		ConvertingParameterAccessor accessor = getAccessor(converter, new Object[] { null });
+		Query query = new MongoQueryCreator(partTree, accessor, context).createQuery();
+
+		assertThat(query, is(query(where("emailAddresses").in((Object) null))));
+	}
+
 	interface PersonRepository extends Repository<Person, Long> {
 
 		List<Person> findByLocationNearAndFirstname(Point location, Distance maxDistance, String firstname);

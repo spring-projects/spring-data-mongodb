@@ -382,7 +382,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 
 		if (next instanceof Collection) {
 			return ((Collection<?>) next).toArray();
-		} else if (next.getClass().isArray()) {
+		} else if (next != null && next.getClass().isArray()) {
 			return (Object[]) next;
 		}
 
