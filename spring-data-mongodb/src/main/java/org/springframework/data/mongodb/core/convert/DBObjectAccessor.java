@@ -75,9 +75,7 @@ class DBObjectAccessor {
 			String part = parts.next();
 
 			if (parts.hasNext()) {
-				BasicDBObject nestedDbObject = new BasicDBObject();
-				dbObject.put(part, nestedDbObject);
-				dbObject = nestedDbObject;
+				dbObject = getOrCreateNestedDbObject(part, dbObject);
 			} else {
 				dbObject.put(part, value);
 			}
@@ -116,8 +114,14 @@ class DBObjectAccessor {
 		return result;
 	}
 
+	/**
+	 * Returns the given source object as map, i.e. {@link BasicDBObject}s and maps as is or {@literal null} otherwise.
+	 * 
+	 * @param source can be {@literal null}.
+	 * @return
+	 */
 	@SuppressWarnings("unchecked")
-	private Map<String, Object> getAsMap(Object source) {
+	private static Map<String, Object> getAsMap(Object source) {
 
 		if (source instanceof BasicDBObject) {
 			return (BasicDBObject) source;
@@ -128,5 +132,27 @@ class DBObjectAccessor {
 		}
 
 		return null;
+	}
+
+	/**
+	 * Returns the {@link DBObject} which either already exists in the given source under the given key, or creates a new
+	 * nested one, registers it with the source and returns it.
+	 * 
+	 * @param key must not be {@literal null} or empty.
+	 * @param source must not be {@literal null}.
+	 * @return
+	 */
+	private static DBObject getOrCreateNestedDbObject(String key, DBObject source) {
+
+		Object existing = source.get(key);
+
+		if (existing instanceof BasicDBObject) {
+			return (BasicDBObject) existing;
+		}
+
+		DBObject nested = new BasicDBObject();
+		source.put(key, nested);
+
+		return nested;
 	}
 }
