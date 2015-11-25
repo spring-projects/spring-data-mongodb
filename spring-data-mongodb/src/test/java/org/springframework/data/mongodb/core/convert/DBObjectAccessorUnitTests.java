@@ -79,6 +79,28 @@ public class DBObjectAccessorUnitTests {
 		new DBObjectAccessor(null);
 	}
 
+	/**
+	 * @see DATAMONGO-1335
+	 */
+	@Test
+	public void writesAllNestingsCorrectly() {
+
+		MongoPersistentEntity<?> entity = context.getPersistentEntity(TypeWithTwoNestings.class);
+
+		BasicDBObject target = new BasicDBObject();
+
+		DBObjectAccessor accessor = new DBObjectAccessor(target);
+		accessor.put(entity.getPersistentProperty("id"), "id");
+		accessor.put(entity.getPersistentProperty("b"), "b");
+		accessor.put(entity.getPersistentProperty("c"), "c");
+
+		DBObject nestedA = DBObjectTestUtils.getAsDBObject(target, "a");
+
+		assertThat(nestedA, is(notNullValue()));
+		assertThat(nestedA.get("b"), is((Object) "b"));
+		assertThat(nestedA.get("c"), is((Object) "c"));
+	}
+
 	static class ProjectingType {
 
 		String name;
@@ -91,4 +113,10 @@ public class DBObjectAccessorUnitTests {
 		String c;
 	}
 
+	static class TypeWithTwoNestings {
+
+		String id;
+		@Field("a.b") String b;
+		@Field("a.c") String c;
+	}
 }
