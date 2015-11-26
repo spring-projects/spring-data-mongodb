@@ -946,7 +946,7 @@ public class QueryMapper {
 			 */
 			protected String mapPropertyName(MongoPersistentProperty property) {
 
-				String mappedName = PropertyToFieldNameConverter.INSTANCE.convert(property);
+				StringBuilder mappedName = new StringBuilder(PropertyToFieldNameConverter.INSTANCE.convert(property));
 				boolean inspect = iterator.hasNext();
 
 				while (inspect) {
@@ -955,13 +955,13 @@ public class QueryMapper {
 					boolean isPositional = (isPositionalParameter(partial) && (property.isMap() || property.isCollectionLike()));
 
 					if (isPositional) {
-						mappedName += "." + partial;
+						mappedName.append(".").append(partial);
 					}
 
 					inspect = isPositional && iterator.hasNext();
 				}
 
-				return mappedName;
+				return mappedName.toString();
 			}
 
 			private static boolean isPositionalParameter(String partial) {

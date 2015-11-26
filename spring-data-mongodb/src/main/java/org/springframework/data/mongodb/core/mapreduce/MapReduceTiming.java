@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 the original author or authors.
+ * Copyright 2010-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,13 +17,10 @@ package org.springframework.data.mongodb.core.mapreduce;
 
 public class MapReduceTiming {
 
-	private long mapTime;
-
-	private long emitLoopTime;
-
-	private long totalTime;
+	private long mapTime, emitLoopTime, totalTime;
 
 	public MapReduceTiming(long mapTime, long emitLoopTime, long totalTime) {
+
 		this.mapTime = mapTime;
 		this.emitLoopTime = emitLoopTime;
 		this.totalTime = totalTime;
@@ -41,37 +38,52 @@ public class MapReduceTiming {
 		return totalTime;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
 	@Override
 	public String toString() {
 		return "MapReduceTiming [mapTime=" + mapTime + ", emitLoopTime=" + emitLoopTime + ", totalTime=" + totalTime + "]";
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see java.lang.Object#hashCode()
+	 */
 	@Override
 	public int hashCode() {
+
 		final int prime = 31;
 		int result = 1;
+
 		result = prime * result + (int) (emitLoopTime ^ (emitLoopTime >>> 32));
 		result = prime * result + (int) (mapTime ^ (mapTime >>> 32));
 		result = prime * result + (int) (totalTime ^ (totalTime >>> 32));
+
 		return result;
 	}
 
+	/*
+	 * 
+	 * (non-Javadoc)
+	 * @see java.lang.Object#equals(java.lang.Object)
+	 */
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		MapReduceTiming other = (MapReduceTiming) obj;
-		if (emitLoopTime != other.emitLoopTime)
-			return false;
-		if (mapTime != other.mapTime)
-			return false;
-		if (totalTime != other.totalTime)
-			return false;
-		return true;
-	}
 
+		if (this == obj) {
+			return true;
+		}
+
+		if (!(obj instanceof MapReduceTiming)) {
+			return false;
+		}
+
+		MapReduceTiming that = (MapReduceTiming) obj;
+
+		return this.emitLoopTime == that.emitLoopTime && //
+				this.mapTime == that.mapTime && //
+				this.totalTime == that.totalTime;
+	}
 }
