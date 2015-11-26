@@ -2402,10 +2402,10 @@ public class MappingMongoConverterUnitTests {
 				return null;
 			}
 
-			if (source.equals("foo-enum-value")) {
+			if ("foo-enum-value".equals(source)) {
 				return FooBarEnum.FOO;
 			}
-			if (source.equals("bar-enum-value")) {
+			if ("bar-enum-value".equals(source)) {
 				return FooBarEnum.BAR;
 			}
 

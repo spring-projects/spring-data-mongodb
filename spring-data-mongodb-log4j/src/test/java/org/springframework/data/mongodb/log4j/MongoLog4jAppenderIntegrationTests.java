@@ -39,7 +39,7 @@ public class MongoLog4jAppenderIntegrationTests {
 
 	static final String NAME = MongoLog4jAppenderIntegrationTests.class.getName();
 
-	Logger log = Logger.getLogger(NAME);
+	private static final Logger log = Logger.getLogger(NAME);
 	Mongo mongo;
 	DB db;
 	String collection;
