@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2014 the original author or authors.
+ * Copyright 2010-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -327,12 +327,7 @@ public class Update {
 	}
 
 	public DBObject getUpdateObject() {
-
-		DBObject dbo = new BasicDBObject();
-		for (String k : modifierOps.keySet()) {
-			dbo.put(k, modifierOps.get(k));
-		}
-		return dbo;
+		return new BasicDBObject(modifierOps);
 	}
 
 	protected void addFieldOperation(String operator, String key, Object value) {
@@ -355,8 +350,8 @@ public class Update {
 			if (existingValue instanceof BasicDBObject) {
 				keyValueMap = (BasicDBObject) existingValue;
 			} else {
-				throw new InvalidDataAccessApiUsageException("Modifier Operations should be a LinkedHashMap but was "
-						+ existingValue.getClass());
+				throw new InvalidDataAccessApiUsageException(
+						"Modifier Operations should be a LinkedHashMap but was " + existingValue.getClass());
 			}
 		}
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2014 the original author or authors.
+ * Copyright 2010-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -94,9 +94,9 @@ public class Query {
 		if (existing == null) {
 			this.criteria.put(key, criteriaDefinition);
 		} else {
-			throw new InvalidMongoDbApiUsageException("Due to limitations of the com.mongodb.BasicDBObject, "
-					+ "you can't add a second '" + key + "' criteria. " + "Query already contains '"
-					+ existing.getCriteriaObject() + "'.");
+			throw new InvalidMongoDbApiUsageException(
+					"Due to limitations of the com.mongodb.BasicDBObject, " + "you can't add a second '" + key + "' criteria. "
+							+ "Query already contains '" + existing.getCriteriaObject() + "'.");
 		}
 
 		return this;
@@ -221,10 +221,8 @@ public class Query {
 
 		DBObject dbo = new BasicDBObject();
 
-		for (String k : criteria.keySet()) {
-			CriteriaDefinition c = criteria.get(k);
-			DBObject cl = c.getCriteriaObject();
-			dbo.putAll(cl);
+		for (CriteriaDefinition definition : criteria.values()) {
+			dbo.putAll(definition.getCriteriaObject());
 		}
 
 		if (!restrictedTypes.isEmpty()) {

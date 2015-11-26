@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.regex.Pattern;
 
 import org.bson.BSON;
@@ -581,9 +582,10 @@ public class Criteria implements CriteriaDefinition {
 		DBObject dbo = new BasicDBObject();
 		boolean not = false;
 
-		for (String k : this.criteria.keySet()) {
+		for (Entry<String, Object> entry : criteria.entrySet()) {
 
-			Object value = this.criteria.get(k);
+			String key = entry.getKey();
+			Object value = entry.getValue();
 
 			if (requiresGeoJsonFormat(value)) {
 				value = new BasicDBObject("$geometry", value);
@@ -591,14 +593,14 @@ public class Criteria implements CriteriaDefinition {
 
 			if (not) {
 				DBObject notDbo = new BasicDBObject();
-				notDbo.put(k, value);
+				notDbo.put(key, value);
 				dbo.put("$not", notDbo);
 				not = false;
 			} else {
-				if ("$not".equals(k) && value == null) {
+				if ("$not".equals(key) && value == null) {
 					not = true;
 				} else {
-					dbo.put(k, value);
+					dbo.put(key, value);
 				}
 			}
 		}
