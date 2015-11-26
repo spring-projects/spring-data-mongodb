@@ -27,10 +27,12 @@ import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.dao.PermissionDeniedDataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
+import org.springframework.data.mongodb.BulkOperationException;
 import org.springframework.data.mongodb.UncategorizedMongoDbException;
 import org.springframework.data.mongodb.util.MongoDbErrorCodes;
 import org.springframework.util.ClassUtils;
 
+import com.mongodb.BulkWriteException;
 import com.mongodb.MongoException;
 
 /**
@@ -44,12 +46,12 @@ import com.mongodb.MongoException;
  */
 public class MongoExceptionTranslator implements PersistenceExceptionTranslator {
 
-	private static final Set<String> DULICATE_KEY_EXCEPTIONS = new HashSet<String>(Arrays.asList(
-			"MongoException.DuplicateKey", "DuplicateKeyException"));
+	private static final Set<String> DULICATE_KEY_EXCEPTIONS = new HashSet<String>(
+			Arrays.asList("MongoException.DuplicateKey", "DuplicateKeyException"));
 
-	private static final Set<String> RESOURCE_FAILURE_EXCEPTIONS = new HashSet<String>(Arrays.asList(
-			"MongoException.Network", "MongoSocketException", "MongoException.CursorNotFound",
-			"MongoCursorNotFoundException", "MongoServerSelectionException", "MongoTimeoutException"));
+	private static final Set<String> RESOURCE_FAILURE_EXCEPTIONS = new HashSet<String>(
+			Arrays.asList("MongoException.Network", "MongoSocketException", "MongoException.CursorNotFound",
+					"MongoCursorNotFoundException", "MongoServerSelectionException", "MongoTimeoutException"));
 
 	private static final Set<String> RESOURCE_USAGE_EXCEPTIONS = new HashSet<String>(
 			Arrays.asList("MongoInternalException"));
@@ -81,6 +83,10 @@ public class MongoExceptionTranslator implements PersistenceExceptionTranslator 
 
 		if (DATA_INTEGRETY_EXCEPTIONS.contains(exception)) {
 			return new DataIntegrityViolationException(ex.getMessage(), ex);
+		}
+
+		if (ex instanceof BulkWriteException) {
+			return new BulkOperationException(ex.getMessage(), (BulkWriteException) ex);
 		}
 
 		// All other MongoExceptions

@@ -27,16 +27,28 @@ import com.mongodb.BulkWriteResult;
  * Is thrown when errors occur during bulk operations.
  * 
  * @author Tobias Trelle
+ * @author Oliver Gierke
+ * @since 1.9
  */
 public class BulkOperationException extends DataAccessException {
+
 	private static final long serialVersionUID = 73929601661154421L;
+
 	private final List<BulkWriteError> errors;
 	private final BulkWriteResult result;
-	
-	public BulkOperationException(String msg, BulkWriteException e) {
-		super(msg, e);
-		this.errors = e.getWriteErrors();
-		this.result = e.getWriteResult();
+
+	/**
+	 * Creates a new {@link BulkOperationException} with the given message and source {@link BulkWriteException}.
+	 * 
+	 * @param message must not be {@literal null}.
+	 * @param source must not be {@literal null}.
+	 */
+	public BulkOperationException(String message, BulkWriteException source) {
+
+		super(message, source);
+
+		this.errors = source.getWriteErrors();
+		this.result = source.getWriteResult();
 	}
 
 	public List<BulkWriteError> getErrors() {
@@ -46,5 +58,4 @@ public class BulkOperationException extends DataAccessException {
 	public BulkWriteResult getResult() {
 		return result;
 	}
-	
 }

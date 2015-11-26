@@ -13,32 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.util;
+package org.springframework.data.mongodb.core;
+
+import com.mongodb.WriteConcern;
 
 /**
- * A tuple of things.
- * 
- * @author Tobias Trelle
+ * Default {@link WriteConcernResolver} resolving the {@link WriteConcern} from the given {@link MongoAction}.
  *
- * @param <T> Type of the first thing.
- * @param <S> Type of the second thing.
+ * @author Oliver Gierke
  */
-public class Tuple<T,S> {
-	
-	private T t;
-	private S s;
-	
-	public Tuple(T t, S s) {
-		this.t = t;
-		this.s = s;
+enum DefaultWriteConcernResolver implements WriteConcernResolver {
+
+	INSTANCE;
+
+	public WriteConcern resolve(MongoAction action) {
+		return action.getDefaultWriteConcern();
 	}
-	
-	public T getFirst() {
-		return t;
-	}
-	
-	public S getSecond() {
-		return s;
-	}
-	
 }
