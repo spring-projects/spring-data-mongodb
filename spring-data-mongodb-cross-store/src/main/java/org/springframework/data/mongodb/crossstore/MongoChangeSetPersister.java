@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2014 the original author or authors.
+ * Copyright 2011-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,7 +45,7 @@ public class MongoChangeSetPersister implements ChangeSetPersister<Object> {
 	private static final String ENTITY_FIELD_NAME = "_entity_field_name";
 	private static final String ENTITY_FIELD_CLASS = "_entity_field_class";
 
-	private static final Logger log = LoggerFactory.getLogger(getClass());
+	private final Logger log = LoggerFactory.getLogger(getClass());
 
 	private MongoTemplate mongoTemplate;
 	private EntityManagerFactory entityManagerFactory;
@@ -88,8 +88,8 @@ public class MongoChangeSetPersister implements ChangeSetPersister<Object> {
 					if (!changeSet.getValues().containsKey(key)) {
 						String className = (String) dbo.get(ENTITY_FIELD_CLASS);
 						if (className == null) {
-							throw new DataIntegrityViolationException("Unble to convert property " + key + ": Invalid metadata, "
-									+ ENTITY_FIELD_CLASS + " not available");
+							throw new DataIntegrityViolationException(
+									"Unble to convert property " + key + ": Invalid metadata, " + ENTITY_FIELD_CLASS + " not available");
 						}
 						Class<?> clazz = ClassUtils.resolveClassName(className, ClassUtils.getDefaultClassLoader());
 						Object value = mongoTemplate.getConverter().read(clazz, dbo);
