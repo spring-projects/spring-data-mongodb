@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2014 the original author or authors.
+ * Copyright 2010-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core.index;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.data.domain.Sort.Direction;
@@ -44,7 +45,7 @@ public class Index implements IndexDefinition {
 		 * 
 		 * @deprecated since 1.7.
 		 */
-		@Deprecated//
+		@Deprecated //
 		DROP
 	}
 
@@ -175,11 +176,18 @@ public class Index implements IndexDefinition {
 		return unique();
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.index.IndexDefinition#getIndexKeys()
+	 */
 	public DBObject getIndexKeys() {
+
 		DBObject dbo = new BasicDBObject();
-		for (String k : fieldSpec.keySet()) {
-			dbo.put(k, fieldSpec.get(k).equals(Direction.ASC) ? 1 : -1);
+
+		for (Entry<String, Direction> entry : fieldSpec.entrySet()) {
+			dbo.put(entry.getKey(), Direction.ASC.equals(entry.getValue()) ? 1 : -1);
 		}
+
 		return dbo;
 	}
 

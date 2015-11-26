@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core.aggregation;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.springframework.util.Assert;
@@ -56,7 +57,7 @@ public enum AggregationFunctionExpressions {
 	static class FunctionExpression implements AggregationExpression {
 
 		private final String name;
-		private final Object[] values;
+		private final List<Object> values;
 
 		/**
 		 * Creates a new {@link FunctionExpression} for the given name and values.
@@ -70,7 +71,7 @@ public enum AggregationFunctionExpressions {
 			Assert.notNull(values, "Values must not be null!");
 
 			this.name = name;
-			this.values = values;
+			this.values = Arrays.asList(values);
 		}
 
 		/*
@@ -80,10 +81,10 @@ public enum AggregationFunctionExpressions {
 		@Override
 		public DBObject toDbObject(AggregationOperationContext context) {
 
-			List<Object> args = new ArrayList<Object>(values.length);
+			List<Object> args = new ArrayList<Object>(values.size());
 
-			for (int i = 0; i < values.length; i++) {
-				args.add(unpack(values[i], context));
+			for (Object value : values) {
+				args.add(unpack(value, context));
 			}
 
 			return new BasicDBObject("$" + name, args);

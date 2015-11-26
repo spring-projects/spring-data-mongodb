@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 the original author or authors.
+ * Copyright 2010-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -83,14 +83,10 @@ public class Field {
 
 	public DBObject getFieldsObject() {
 
-		DBObject dbo = new BasicDBObject();
+		DBObject dbo = new BasicDBObject(criteria);
 
-		for (String k : criteria.keySet()) {
-			dbo.put(k, criteria.get(k));
-		}
-
-		for (String k : slices.keySet()) {
-			dbo.put(k, new BasicDBObject("$slice", slices.get(k)));
+		for (Entry<String, Object> entry : slices.entrySet()) {
+			dbo.put(entry.getKey(), new BasicDBObject("$slice", entry.getValue()));
 		}
 
 		for (Entry<String, Criteria> entry : elemMatchs.entrySet()) {
@@ -134,8 +130,8 @@ public class Field {
 			return false;
 		}
 
-		boolean samePositionKey = this.postionKey == null ? that.postionKey == null : this.postionKey
-				.equals(that.postionKey);
+		boolean samePositionKey = this.postionKey == null ? that.postionKey == null
+				: this.postionKey.equals(that.postionKey);
 		boolean samePositionValue = this.positionValue == that.positionValue;
 
 		return samePositionKey && samePositionValue;

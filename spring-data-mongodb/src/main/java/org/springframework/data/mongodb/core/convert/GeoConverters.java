@@ -111,9 +111,13 @@ abstract class GeoConverters {
 		@Override
 		public Point convert(DBObject source) {
 
+			if (source == null) {
+				return null;
+			}
+
 			Assert.isTrue(source.keySet().size() == 2, "Source must contain 2 elements");
 
-			return source == null ? null : new Point((Double) source.get("x"), (Double) source.get("y"));
+			return new Point((Double) source.get("x"), (Double) source.get("y"));
 		}
 	}
 

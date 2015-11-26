@@ -15,6 +15,9 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
+import java.util.Arrays;
+import java.util.List;
+
 import org.springframework.data.domain.Range;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Point;
@@ -41,7 +44,9 @@ public class MongoParametersParameterAccessor extends ParametersParameterAccesso
 	 * @param values must not be {@@iteral null}.
 	 */
 	public MongoParametersParameterAccessor(MongoQueryMethod method, Object[] values) {
+
 		super(method.getParameters(), values);
+
 		this.method = method;
 	}
 
