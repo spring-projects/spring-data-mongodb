@@ -153,7 +153,7 @@ public class Aggregation {
 	protected Aggregation(List<AggregationOperation> aggregationOperations, AggregationOptions options) {
 
 		Assert.notNull(aggregationOperations, "AggregationOperations must not be null!");
-		Assert.isTrue(aggregationOperations.size() > 0, "At least one AggregationOperation has to be provided");
+		Assert.isTrue(!aggregationOperations.isEmpty(), "At least one AggregationOperation has to be provided");
 		Assert.notNull(options, "AggregationOptions must not be null!");
 
 		this.operations = aggregationOperations;

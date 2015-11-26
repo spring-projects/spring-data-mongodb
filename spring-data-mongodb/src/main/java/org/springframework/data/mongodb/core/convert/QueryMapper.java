@@ -966,7 +966,7 @@ public class QueryMapper {
 
 			private static boolean isPositionalParameter(String partial) {
 
-				if (partial.equals("$")) {
+				if ("$".equals(partial)) {
 					return true;
 				}
 
