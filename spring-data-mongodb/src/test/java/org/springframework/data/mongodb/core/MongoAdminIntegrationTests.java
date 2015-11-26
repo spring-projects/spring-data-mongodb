@@ -36,7 +36,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 @ContextConfiguration("classpath:infrastructure.xml")
 public class MongoAdminIntegrationTests {
 
-	private static Log logger = LogFactory.getLog(MongoAdminIntegrationTests.class);
+	private static final Log logger = LogFactory.getLog(MongoAdminIntegrationTests.class);
 
 	@SuppressWarnings("unused")
 	private DB testAdminDb;

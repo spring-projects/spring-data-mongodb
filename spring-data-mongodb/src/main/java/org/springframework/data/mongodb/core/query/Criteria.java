@@ -118,7 +118,7 @@ public class Criteria implements CriteriaDefinition {
 	}
 
 	private boolean lastOperatorWasNot() {
-		return this.criteria.size() > 0 && "$not".equals(this.criteria.keySet().toArray()[this.criteria.size() - 1]);
+		return !this.criteria.isEmpty() && "$not".equals(this.criteria.keySet().toArray()[this.criteria.size() - 1]);
 	}
 
 	/**
