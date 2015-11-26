@@ -32,7 +32,7 @@ import com.mongodb.MongoException;
  */
 public abstract class AbstractMonitor {
 
-	private final Logger logger = LoggerFactory.getLogger(getClass());
+	private static final Logger logger = LoggerFactory.getLogger(getClass());
 
 	protected Mongo mongo;
 	private String username;
