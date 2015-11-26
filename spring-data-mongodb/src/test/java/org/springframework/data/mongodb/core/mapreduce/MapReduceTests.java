@@ -118,13 +118,13 @@ public class MapReduceTests {
 
 		int size = 0;
 		for (ContentAndVersion cv : results) {
-			if (cv.getId().equals("Resume")) {
+			if ("Resume".equals(cv.getId())) {
 				assertEquals(6, cv.getValue().longValue());
 			}
-			if (cv.getId().equals("Schema")) {
+			if ("Schema".equals(cv.getId())) {
 				assertEquals(2, cv.getValue().longValue());
 			}
-			if (cv.getId().equals("mongoDB How-To")) {
+			if ("mongoDB How-To".equals(cv.getId())) {
 				assertEquals(2, cv.getValue().longValue());
 			}
 			size++;
@@ -141,13 +141,13 @@ public class MapReduceTests {
 				new MapReduceOptions().outputCollection("jmr2_out"), NumberAndVersion.class);
 		int size = 0;
 		for (NumberAndVersion nv : results) {
-			if (nv.getId().equals("1")) {
+			if ("1".equals(nv.getId())) {
 				assertEquals(2, nv.getValue().longValue());
 			}
-			if (nv.getId().equals("2")) {
+			if ("2".equals(nv.getId())) {
 				assertEquals(6, nv.getValue().longValue());
 			}
-			if (nv.getId().equals("3")) {
+			if ("3".equals(nv.getId())) {
 				assertEquals(2, nv.getValue().longValue());
 			}
 			size++;

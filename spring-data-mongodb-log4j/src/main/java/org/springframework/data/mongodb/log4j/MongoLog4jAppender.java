@@ -160,7 +160,7 @@ public class MongoLog4jAppender extends AppenderSkeleton {
 
 		// Copy properties into document
 		Map<Object, Object> props = event.getProperties();
-		if (null != props && props.size() > 0) {
+		if (null != props && !props.isEmpty()) {
 			BasicDBObject propsDbo = new BasicDBObject();
 			for (Map.Entry<Object, Object> entry : props.entrySet()) {
 				propsDbo.put(entry.getKey().toString(), entry.getValue().toString());

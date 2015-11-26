@@ -45,7 +45,7 @@ public class MongoChangeSetPersister implements ChangeSetPersister<Object> {
 	private static final String ENTITY_FIELD_NAME = "_entity_field_name";
 	private static final String ENTITY_FIELD_CLASS = "_entity_field_class";
 
-	protected final Logger log = LoggerFactory.getLogger(getClass());
+	private static final Logger log = LoggerFactory.getLogger(getClass());
 
 	private MongoTemplate mongoTemplate;
 	private EntityManagerFactory entityManagerFactory;
