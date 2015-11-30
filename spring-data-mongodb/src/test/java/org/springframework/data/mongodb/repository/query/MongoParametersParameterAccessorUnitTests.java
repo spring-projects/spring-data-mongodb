@@ -30,6 +30,8 @@ import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.TextCriteria;
 import org.springframework.data.mongodb.repository.Person;
+import org.springframework.data.projection.ProjectionFactory;
+import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
@@ -42,15 +44,16 @@ import org.springframework.data.repository.core.support.DefaultRepositoryMetadat
  */
 public class MongoParametersParameterAccessorUnitTests {
 
-	private static final Distance DISTANCE = new Distance(2.5, Metrics.KILOMETERS);
-	private static final RepositoryMetadata metadata = new DefaultRepositoryMetadata(PersonRepository.class);
-	private static final MongoMappingContext context = new MongoMappingContext();
+	Distance DISTANCE = new Distance(2.5, Metrics.KILOMETERS);
+	RepositoryMetadata metadata = new DefaultRepositoryMetadata(PersonRepository.class);
+	MongoMappingContext context = new MongoMappingContext();
+	ProjectionFactory factory = new SpelAwareProxyProjectionFactory();
 
 	@Test
 	public void returnsNullForDistanceIfNoneAvailable() throws NoSuchMethodException, SecurityException {
 
 		Method method = PersonRepository.class.getMethod("findByLocationNear", Point.class);
-		MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, context);
+		MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, factory, context);
 
 		MongoParameterAccessor accessor = new MongoParametersParameterAccessor(queryMethod,
 				new Object[] { new Point(10, 20) });
@@ -61,10 +64,10 @@ public class MongoParametersParameterAccessorUnitTests {
 	public void returnsDistanceIfAvailable() throws NoSuchMethodException, SecurityException {
 
 		Method method = PersonRepository.class.getMethod("findByLocationNear", Point.class, Distance.class);
-		MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, context);
+		MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, factory, context);
 
-		MongoParameterAccessor accessor = new MongoParametersParameterAccessor(queryMethod, new Object[] {
-				new Point(10, 20), DISTANCE });
+		MongoParameterAccessor accessor = new MongoParametersParameterAccessor(queryMethod,
+				new Object[] { new Point(10, 20), DISTANCE });
 		assertThat(accessor.getDistanceRange().getUpperBound(), is(DISTANCE));
 	}
 
@@ -75,10 +78,10 @@ public class MongoParametersParameterAccessorUnitTests {
 	public void shouldReturnAsFullTextStringWhenNoneDefinedForMethod() throws NoSuchMethodException, SecurityException {
 
 		Method method = PersonRepository.class.getMethod("findByLocationNear", Point.class, Distance.class);
-		MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, context);
+		MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, factory, context);
 
-		MongoParameterAccessor accessor = new MongoParametersParameterAccessor(queryMethod, new Object[] {
-				new Point(10, 20), DISTANCE });
+		MongoParameterAccessor accessor = new MongoParametersParameterAccessor(queryMethod,
+				new Object[] { new Point(10, 20), DISTANCE });
 		assertThat(accessor.getFullText(), IsNull.nullValue());
 	}
 
@@ -89,10 +92,10 @@ public class MongoParametersParameterAccessorUnitTests {
 	public void shouldProperlyConvertTextCriteria() throws NoSuchMethodException, SecurityException {
 
 		Method method = PersonRepository.class.getMethod("findByFirstname", String.class, TextCriteria.class);
-		MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, context);
+		MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, factory, context);
 
-		MongoParameterAccessor accessor = new MongoParametersParameterAccessor(queryMethod, new Object[] { "spring",
-				TextCriteria.forDefaultLanguage().matching("data") });
+		MongoParameterAccessor accessor = new MongoParametersParameterAccessor(queryMethod,
+				new Object[] { "spring", TextCriteria.forDefaultLanguage().matching("data") });
 		assertThat(accessor.getFullText().getCriteriaObject().toString(),
 				equalTo("{ \"$text\" : { \"$search\" : \"data\"}}"));
 	}
@@ -104,13 +107,13 @@ public class MongoParametersParameterAccessorUnitTests {
 	public void shouldDetectMinAndMaxDistance() throws NoSuchMethodException, SecurityException {
 
 		Method method = PersonRepository.class.getMethod("findByLocationNear", Point.class, Range.class);
-		MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, context);
+		MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, factory, context);
 
 		Distance min = new Distance(10, Metrics.KILOMETERS);
 		Distance max = new Distance(20, Metrics.KILOMETERS);
 
-		MongoParameterAccessor accessor = new MongoParametersParameterAccessor(queryMethod, new Object[] {
-				new Point(10, 20), Distance.between(min, max) });
+		MongoParameterAccessor accessor = new MongoParametersParameterAccessor(queryMethod,
+				new Object[] { new Point(10, 20), Distance.between(min, max) });
 
 		Range<Distance> range = accessor.getDistanceRange();
 

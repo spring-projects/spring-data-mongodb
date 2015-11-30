@@ -27,7 +27,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
-import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.mongodb.MongoDbFactory;
@@ -42,9 +41,12 @@ import org.springframework.data.mongodb.core.query.TextCriteria;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Person;
 import org.springframework.data.mongodb.repository.Query;
-import org.springframework.data.repository.core.RepositoryMetadata;
+import org.springframework.data.projection.ProjectionFactory;
+import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
+import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
 
 import com.mongodb.BasicDBObjectBuilder;
+import com.mongodb.DBObject;
 import com.mongodb.util.JSONParseException;
 
 /**
@@ -57,7 +59,6 @@ import com.mongodb.util.JSONParseException;
 @RunWith(MockitoJUnitRunner.class)
 public class PartTreeMongoQueryUnitTests {
 
-	@Mock RepositoryMetadata metadataMock;
 	@Mock MongoOperations mongoOperationsMock;
 
 	MongoMappingContext mappingContext;
@@ -65,11 +66,8 @@ public class PartTreeMongoQueryUnitTests {
 	public @Rule ExpectedException exception = ExpectedException.none();
 
 	@Before
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public void setUp() {
 
-		when(metadataMock.getDomainType()).thenReturn((Class) Person.class);
-		when(metadataMock.getReturnedDomainClass(Matchers.any(Method.class))).thenReturn((Class) Person.class);
 		mappingContext = new MongoMappingContext();
 		DbRefResolver dbRefResolver = new DefaultDbRefResolver(mock(MongoDbFactory.class));
 		MongoConverter converter = new MappingMongoConverter(dbRefResolver, mappingContext);
@@ -149,7 +147,52 @@ public class PartTreeMongoQueryUnitTests {
 		deriveQueryFromMethod("findByAge", new Object[] { 1 });
 	}
 
-	private org.springframework.data.mongodb.core.query.Query deriveQueryFromMethod(String method, Object[] args) {
+	/**
+	 * @see DATAMONGO-1345
+	 */
+	@Test
+	public void doesNotDeriveFieldSpecForNormalDomainType() {
+		assertThat(deriveQueryFromMethod("findPersonBy", new Object[0]).getFieldsObject(), is(nullValue()));
+	}
+
+	/**
+	 * @see DATAMONGO-1345
+	 */
+	@Test
+	public void restrictsQueryToFieldsRequiredForProjection() {
+
+		DBObject fieldsObject = deriveQueryFromMethod("findPersonProjectedBy", new Object[0]).getFieldsObject();
+
+		assertThat(fieldsObject.get("firstname"), is((Object) 1));
+		assertThat(fieldsObject.get("lastname"), is((Object) 1));
+	}
+
+	/**
+	 * @see DATAMONGO-1345
+	 */
+	@Test
+	public void restrictsQueryToFieldsRequiredForDto() {
+
+		DBObject fieldsObject = deriveQueryFromMethod("findPersonDtoBy", new Object[0]).getFieldsObject();
+
+		assertThat(fieldsObject.get("firstname"), is((Object) 1));
+		assertThat(fieldsObject.get("lastname"), is((Object) 1));
+	}
+
+	/**
+	 * @see DATAMONGO-1345
+	 */
+	@Test
+	public void usesDynamicProjection() {
+
+		DBObject fields = deriveQueryFromMethod("findDynamicallyProjectedBy", ExtendedProjection.class).getFieldsObject();
+
+		assertThat(fields.get("firstname"), is((Object) 1));
+		assertThat(fields.get("lastname"), is((Object) 1));
+		assertThat(fields.get("age"), is((Object) 1));
+	}
+
+	private org.springframework.data.mongodb.core.query.Query deriveQueryFromMethod(String method, Object... args) {
 
 		Class<?>[] types = new Class<?>[args.length];
 
@@ -168,7 +211,9 @@ public class PartTreeMongoQueryUnitTests {
 		try {
 
 			Method method = Repo.class.getMethod(methodName, paramTypes);
-			MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadataMock, mappingContext);
+			ProjectionFactory factory = new SpelAwareProxyProjectionFactory();
+			MongoQueryMethod queryMethod = new MongoQueryMethod(method, new DefaultRepositoryMetadata(Repo.class), factory,
+					mappingContext);
 
 			return new PartTreeMongoQuery(queryMethod, mongoOperationsMock);
 		} catch (NoSuchMethodException e) {
@@ -196,5 +241,36 @@ public class PartTreeMongoQueryUnitTests {
 
 		@Query(fields = "{ 'firstname }")
 		Person findByAge(Integer age);
+
+		Person findPersonBy();
+
+		PersonProjection findPersonProjectedBy();
+
+		PersonDto findPersonDtoBy();
+
+		<T> T findDynamicallyProjectedBy(Class<T> type);
+	}
+
+	interface PersonProjection {
+
+		String getFirstname();
+
+		String getLastname();
+	}
+
+	interface ExtendedProjection extends PersonProjection {
+
+		int getAge();
+	}
+
+	static class PersonDto {
+
+		public String firstname, lastname;
+
+		public PersonDto(String firstname, String lastname) {
+
+			this.firstname = firstname;
+			this.lastname = lastname;
+		}
 	}
 }

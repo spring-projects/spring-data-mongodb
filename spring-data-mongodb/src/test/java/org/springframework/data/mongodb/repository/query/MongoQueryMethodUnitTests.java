@@ -36,6 +36,8 @@ import org.springframework.data.mongodb.repository.Address;
 import org.springframework.data.mongodb.repository.Contact;
 import org.springframework.data.mongodb.repository.Meta;
 import org.springframework.data.mongodb.repository.Person;
+import org.springframework.data.projection.ProjectionFactory;
+import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
 
@@ -57,10 +59,7 @@ public class MongoQueryMethodUnitTests {
 	@Test
 	public void detectsCollectionFromRepoTypeIfReturnTypeNotAssignable() throws Exception {
 
-		Method method = SampleRepository.class.getMethod("method");
-
-		MongoQueryMethod queryMethod = new MongoQueryMethod(method, new DefaultRepositoryMetadata(SampleRepository.class),
-				context);
+		MongoQueryMethod queryMethod = queryMethod(SampleRepository.class, "method");
 		MongoEntityMetadata<?> metadata = queryMethod.getEntityInformation();
 
 		assertThat(metadata.getJavaType(), is(typeCompatibleWith(Address.class)));
@@ -70,10 +69,7 @@ public class MongoQueryMethodUnitTests {
 	@Test
 	public void detectsCollectionFromReturnTypeIfReturnTypeAssignable() throws Exception {
 
-		Method method = SampleRepository2.class.getMethod("method");
-
-		MongoQueryMethod queryMethod = new MongoQueryMethod(method, new DefaultRepositoryMetadata(SampleRepository.class),
-				context);
+		MongoQueryMethod queryMethod = queryMethod(SampleRepository2.class, "method");
 		MongoEntityMetadata<?> entityInformation = queryMethod.getEntityInformation();
 
 		assertThat(entityInformation.getJavaType(), is(typeCompatibleWith(Person.class)));
@@ -83,34 +79,44 @@ public class MongoQueryMethodUnitTests {
 	@Test
 	public void discoversUserAsDomainTypeForGeoPageQueryMethod() throws Exception {
 
-		MongoQueryMethod queryMethod = queryMethod("findByLocationNear", Point.class, Distance.class, Pageable.class);
+		MongoQueryMethod queryMethod = queryMethod(PersonRepository.class, "findByLocationNear", Point.class,
+				Distance.class, Pageable.class);
 		assertThat(queryMethod.isGeoNearQuery(), is(true));
 		assertThat(queryMethod.isPageQuery(), is(true));
 
-		queryMethod = queryMethod("findByFirstname", String.class, Point.class);
+		queryMethod = queryMethod(PersonRepository.class, "findByFirstname", String.class, Point.class);
 		assertThat(queryMethod.isGeoNearQuery(), is(true));
 		assertThat(queryMethod.isPageQuery(), is(false));
 		assertThat(queryMethod.getEntityInformation().getJavaType(), is(typeCompatibleWith(User.class)));
 
-		assertThat(queryMethod("findByEmailAddress", String.class, Point.class).isGeoNearQuery(), is(true));
-		assertThat(queryMethod("findByFirstname", String.class, Point.class).isGeoNearQuery(), is(true));
-		assertThat(queryMethod("findByLastname", String.class, Point.class).isGeoNearQuery(), is(true));
+		assertThat(queryMethod(PersonRepository.class, "findByEmailAddress", String.class, Point.class).isGeoNearQuery(),
+				is(true));
+		assertThat(queryMethod(PersonRepository.class, "findByFirstname", String.class, Point.class).isGeoNearQuery(),
+				is(true));
+		assertThat(queryMethod(PersonRepository.class, "findByLastname", String.class, Point.class).isGeoNearQuery(),
+				is(true));
 	}
 
 	@Test(expected = IllegalArgumentException.class)
 	public void rejectsGeoPageQueryWithoutPageable() throws Exception {
-		queryMethod("findByLocationNear", Point.class, Distance.class);
+		queryMethod(PersonRepository.class, "findByLocationNear", Point.class, Distance.class);
 	}
 
 	@Test(expected = IllegalArgumentException.class)
 	public void rejectsNullMappingContext() throws Exception {
+
 		Method method = PersonRepository.class.getMethod("findByFirstname", String.class, Point.class);
-		new MongoQueryMethod(method, new DefaultRepositoryMetadata(PersonRepository.class), null);
+
+		new MongoQueryMethod(method, new DefaultRepositoryMetadata(PersonRepository.class),
+				new SpelAwareProxyProjectionFactory(), null);
 	}
 
 	@Test
 	public void considersMethodReturningGeoPageAsPagingMethod() throws Exception {
-		MongoQueryMethod method = queryMethod("findByLocationNear", Point.class, Distance.class, Pageable.class);
+
+		MongoQueryMethod method = queryMethod(PersonRepository.class, "findByLocationNear", Point.class, Distance.class,
+				Pageable.class);
+
 		assertThat(method.isPageQuery(), is(true));
 		assertThat(method.isCollectionQuery(), is(false));
 	}
@@ -118,8 +124,7 @@ public class MongoQueryMethodUnitTests {
 	@Test
 	public void createsMongoQueryMethodObjectForMethodReturningAnInterface() throws Exception {
 
-		Method method = SampleRepository2.class.getMethod("methodReturningAnInterface");
-		new MongoQueryMethod(method, new DefaultRepositoryMetadata(SampleRepository2.class), context);
+		queryMethod(SampleRepository2.class, "methodReturningAnInterface");
 	}
 
 	/**
@@ -128,7 +133,8 @@ public class MongoQueryMethodUnitTests {
 	@Test
 	public void createsMongoQueryMethodWithEmptyMetaCorrectly() throws Exception {
 
-		MongoQueryMethod method = queryMethod("emptyMetaAnnotation");
+		MongoQueryMethod method = queryMethod(PersonRepository.class, "emptyMetaAnnotation");
+
 		assertThat(method.hasQueryMetaAttributes(), is(true));
 		assertThat(method.getQueryMetaAttributes().hasValues(), is(false));
 	}
@@ -139,7 +145,8 @@ public class MongoQueryMethodUnitTests {
 	@Test
 	public void createsMongoQueryMethodWithMaxExecutionTimeCorrectly() throws Exception {
 
-		MongoQueryMethod method = queryMethod("metaWithMaxExecutionTime");
+		MongoQueryMethod method = queryMethod(PersonRepository.class, "metaWithMaxExecutionTime");
+
 		assertThat(method.hasQueryMetaAttributes(), is(true));
 		assertThat(method.getQueryMetaAttributes().getMaxTimeMsec(), is(100L));
 	}
@@ -150,7 +157,8 @@ public class MongoQueryMethodUnitTests {
 	@Test
 	public void createsMongoQueryMethodWithMaxScanCorrectly() throws Exception {
 
-		MongoQueryMethod method = queryMethod("metaWithMaxScan");
+		MongoQueryMethod method = queryMethod(PersonRepository.class, "metaWithMaxScan");
+
 		assertThat(method.hasQueryMetaAttributes(), is(true));
 		assertThat(method.getQueryMetaAttributes().getMaxScan(), is(10L));
 	}
@@ -161,7 +169,8 @@ public class MongoQueryMethodUnitTests {
 	@Test
 	public void createsMongoQueryMethodWithCommentCorrectly() throws Exception {
 
-		MongoQueryMethod method = queryMethod("metaWithComment");
+		MongoQueryMethod method = queryMethod(PersonRepository.class, "metaWithComment");
+
 		assertThat(method.hasQueryMetaAttributes(), is(true));
 		assertThat(method.getQueryMetaAttributes().getComment(), is("foo bar"));
 	}
@@ -172,7 +181,8 @@ public class MongoQueryMethodUnitTests {
 	@Test
 	public void createsMongoQueryMethodWithSnapshotCorrectly() throws Exception {
 
-		MongoQueryMethod method = queryMethod("metaWithSnapshotUsage");
+		MongoQueryMethod method = queryMethod(PersonRepository.class, "metaWithSnapshotUsage");
+
 		assertThat(method.hasQueryMetaAttributes(), is(true));
 		assertThat(method.getQueryMetaAttributes().getSnapshot(), is(true));
 	}
@@ -183,14 +193,16 @@ public class MongoQueryMethodUnitTests {
 	@Test
 	public void fallsBackToRepositoryDomainTypeIfMethodDoesNotReturnADomainType() throws Exception {
 
-		MongoQueryMethod method = queryMethod("deleteByUserName", String.class);
+		MongoQueryMethod method = queryMethod(PersonRepository.class, "deleteByUserName", String.class);
 
 		assertThat(method.getEntityInformation().getJavaType(), is(typeCompatibleWith(User.class)));
 	}
 
-	private MongoQueryMethod queryMethod(String name, Class<?>... parameters) throws Exception {
-		Method method = PersonRepository.class.getMethod(name, parameters);
-		return new MongoQueryMethod(method, new DefaultRepositoryMetadata(PersonRepository.class), context);
+	private MongoQueryMethod queryMethod(Class<?> repository, String name, Class<?>... parameters) throws Exception {
+
+		Method method = repository.getMethod(name, parameters);
+		ProjectionFactory factory = new SpelAwareProxyProjectionFactory();
+		return new MongoQueryMethod(method, new DefaultRepositoryMetadata(repository), factory, context);
 	}
 
 	interface PersonRepository extends Repository<User, Long> {

@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.repository.query;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
@@ -54,6 +55,7 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
 import org.springframework.data.repository.query.parser.PartTree;
@@ -137,8 +139,8 @@ public class MongoQueryCreatorUnitTests {
 		Point point = new Point(10, 20);
 		Distance distance = new Distance(2.5, Metrics.KILOMETERS);
 
-		Query query = query(where("location").nearSphere(point).maxDistance(distance.getNormalizedValue()).and("firstname")
-				.is("Dave"));
+		Query query = query(
+				where("location").nearSphere(point).maxDistance(distance.getNormalizedValue()).and("firstname").is("Dave"));
 		assertBindsDistanceToQuery(point, distance, query);
 	}
 
@@ -148,8 +150,8 @@ public class MongoQueryCreatorUnitTests {
 		Point point = new Point(10, 20);
 		Distance distance = new Distance(2.5);
 
-		Query query = query(where("location").near(point).maxDistance(distance.getNormalizedValue()).and("firstname")
-				.is("Dave"));
+		Query query = query(
+				where("location").near(point).maxDistance(distance.getNormalizedValue()).and("firstname").is("Dave"));
 		assertBindsDistanceToQuery(point, distance, query);
 	}
 
@@ -299,9 +301,9 @@ public class MongoQueryCreatorUnitTests {
 		Method method = PersonRepository.class.getMethod("findByLocationNearAndFirstname", Point.class, Distance.class,
 				String.class);
 		MongoQueryMethod queryMethod = new MongoQueryMethod(method, new DefaultRepositoryMetadata(PersonRepository.class),
-				new MongoMappingContext());
-		MongoParameterAccessor accessor = new MongoParametersParameterAccessor(queryMethod, new Object[] { point, distance,
-				"Dave" });
+				new SpelAwareProxyProjectionFactory(), new MongoMappingContext());
+		MongoParameterAccessor accessor = new MongoParametersParameterAccessor(queryMethod,
+				new Object[] { point, distance, "Dave" });
 
 		Query query = new MongoQueryCreator(tree, new ConvertingParameterAccessor(converter, accessor), context)
 				.createQuery();

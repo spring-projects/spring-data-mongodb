@@ -130,12 +130,21 @@ class StubParameterAccessor implements MongoParameterAccessor {
 	public TextCriteria getFullText() {
 		return null;
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.springframework.data.mongodb.repository.query.MongoParameterAccessor#getValues()
 	 */
 	@Override
 	public Object[] getValues() {
 		return this.values;
+	}
+
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.query.ParameterAccessor#getDynamicProjection()
+	 */
+	@Override
+	public Class<?> getDynamicProjection() {
+		return null;
 	}
 }

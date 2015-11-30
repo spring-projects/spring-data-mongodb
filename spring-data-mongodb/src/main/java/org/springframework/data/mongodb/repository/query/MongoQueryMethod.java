@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2014 the original author or authors.
+ * Copyright 2011-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.repository.Meta;
 import org.springframework.data.mongodb.repository.Query;
+import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.query.QueryMethod;
 import org.springframework.data.util.ClassTypeInformation;
@@ -56,12 +57,15 @@ public class MongoQueryMethod extends QueryMethod {
 	/**
 	 * Creates a new {@link MongoQueryMethod} from the given {@link Method}.
 	 * 
-	 * @param method
+	 * @param method must not be {@literal null}.
+	 * @param metadata must not be {@literal null}.
+	 * @param projectionFactory must not be {@literal null}.
+	 * @param mappingContext must not be {@literal null}.
 	 */
-	public MongoQueryMethod(Method method, RepositoryMetadata metadata,
+	public MongoQueryMethod(Method method, RepositoryMetadata metadata, ProjectionFactory projectionFactory,
 			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
 
-		super(method, metadata);
+		super(method, metadata, projectionFactory);
 
 		Assert.notNull(mappingContext, "MappingContext must not be null!");
 

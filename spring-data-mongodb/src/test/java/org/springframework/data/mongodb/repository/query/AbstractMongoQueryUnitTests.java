@@ -53,7 +53,9 @@ import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.Meta;
 import org.springframework.data.mongodb.repository.MongoRepository;
-import org.springframework.data.repository.core.RepositoryMetadata;
+import org.springframework.data.projection.ProjectionFactory;
+import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
+import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
 
 import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DBObject;
@@ -69,27 +71,23 @@ import com.mongodb.WriteResult;
 @RunWith(MockitoJUnitRunner.class)
 public class AbstractMongoQueryUnitTests {
 
-	@Mock RepositoryMetadata metadataMock;
 	@Mock MongoOperations mongoOperationsMock;
-	@Mock @SuppressWarnings("rawtypes") BasicMongoPersistentEntity persitentEntityMock;
+	@Mock BasicMongoPersistentEntity<?> persitentEntityMock;
 	@Mock MongoMappingContext mappingContextMock;
 	@Mock WriteResult writeResultMock;
 
 	@Before
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public void setUp() {
 
-		when(metadataMock.getDomainType()).thenReturn((Class) Person.class);
-		when(metadataMock.getReturnedDomainClass(Matchers.any(Method.class))).thenReturn((Class) Person.class);
-		when(persitentEntityMock.getCollection()).thenReturn("persons");
-		when(mappingContextMock.getPersistentEntity(Matchers.any(Class.class))).thenReturn(persitentEntityMock);
-		when(persitentEntityMock.getType()).thenReturn(Person.class);
+		doReturn("persons").when(persitentEntityMock).getCollection();
+		doReturn(persitentEntityMock).when(mappingContextMock).getPersistentEntity(Matchers.any(Class.class));
+		doReturn(Person.class).when(persitentEntityMock).getType();
 
 		DbRefResolver dbRefResolver = new DefaultDbRefResolver(mock(MongoDbFactory.class));
 		MappingMongoConverter converter = new MappingMongoConverter(dbRefResolver, mappingContextMock);
 		converter.afterPropertiesSet();
 
-		when(mongoOperationsMock.getConverter()).thenReturn(converter);
+		doReturn(converter).when(mongoOperationsMock).getConverter();
 	}
 
 	/**
@@ -101,8 +99,8 @@ public class AbstractMongoQueryUnitTests {
 
 		createQueryForMethod("deletePersonByLastname", String.class).setDeleteQuery(true).execute(new Object[] { "booh" });
 
-		verify(this.mongoOperationsMock, times(1)).remove(Matchers.any(Query.class), eq(Person.class), eq("persons"));
-		verify(this.mongoOperationsMock, times(0)).find(Matchers.any(Query.class), Matchers.any(Class.class),
+		verify(mongoOperationsMock, times(1)).remove(Matchers.any(Query.class), eq(Person.class), eq("persons"));
+		verify(mongoOperationsMock, times(0)).find(Matchers.any(Query.class), Matchers.any(Class.class),
 				Matchers.anyString());
 	}
 
@@ -114,13 +112,12 @@ public class AbstractMongoQueryUnitTests {
 	@Test
 	public void testDeleteExecutionLoadsListOfRemovedDocumentsWhenReturnTypeIsCollectionLike() {
 
-		when(this.mongoOperationsMock.find(Matchers.any(Query.class), Matchers.any(Class.class), Matchers.anyString()))
+		when(mongoOperationsMock.find(Matchers.any(Query.class), Matchers.any(Class.class), Matchers.anyString()))
 				.thenReturn(Arrays.asList(new Person(new ObjectId(new Date()), "bar")));
 
 		createQueryForMethod("deleteByLastname", String.class).setDeleteQuery(true).execute(new Object[] { "booh" });
 
-		verify(this.mongoOperationsMock, times(1)).findAllAndRemove(Matchers.any(Query.class), eq(Person.class),
-				eq("persons"));
+		verify(mongoOperationsMock, times(1)).findAllAndRemove(Matchers.any(Query.class), eq(Person.class), eq("persons"));
 	}
 
 	/**
@@ -143,14 +140,14 @@ public class AbstractMongoQueryUnitTests {
 	public void testDeleteExecutionReturnsNrDocumentsDeletedFromWriteResult() {
 
 		when(writeResultMock.getN()).thenReturn(100);
-		when(this.mongoOperationsMock.remove(Matchers.any(Query.class), eq(Person.class), eq("persons")))
+		when(mongoOperationsMock.remove(Matchers.any(Query.class), eq(Person.class), eq("persons")))
 				.thenReturn(writeResultMock);
 
 		MongoQueryFake query = createQueryForMethod("deletePersonByLastname", String.class);
 		query.setDeleteQuery(true);
 
 		assertThat(query.execute(new Object[] { "fake" }), is((Object) 100L));
-		verify(this.mongoOperationsMock, times(1)).remove(Matchers.any(Query.class), eq(Person.class), eq("persons"));
+		verify(mongoOperationsMock, times(1)).remove(Matchers.any(Query.class), eq(Person.class), eq("persons"));
 	}
 
 	/**
@@ -164,7 +161,7 @@ public class AbstractMongoQueryUnitTests {
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 
-		verify(this.mongoOperationsMock, times(1)).find(captor.capture(), eq(Person.class), eq("persons"));
+		verify(mongoOperationsMock, times(1)).find(captor.capture(), eq(Person.class), eq("persons"));
 
 		assertThat(captor.getValue().getMeta().getComment(), nullValue());
 	}
@@ -195,7 +192,7 @@ public class AbstractMongoQueryUnitTests {
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 
-		verify(this.mongoOperationsMock, times(1)).count(captor.capture(), eq(Person.class), eq("persons"));
+		verify(mongoOperationsMock, times(1)).count(captor.capture(), eq(Person.class), eq("persons"));
 		assertThat(captor.getValue().getMeta().getComment(), is("comment"));
 	}
 
@@ -229,7 +226,7 @@ public class AbstractMongoQueryUnitTests {
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 
-		verify(this.mongoOperationsMock, times(2)).find(captor.capture(), eq(Person.class), eq("persons"));
+		verify(mongoOperationsMock, times(2)).find(captor.capture(), eq(Person.class), eq("persons"));
 
 		assertThat(captor.getAllValues().get(0).getSkip(), is(0));
 		assertThat(captor.getAllValues().get(1).getSkip(), is(10));
@@ -250,7 +247,7 @@ public class AbstractMongoQueryUnitTests {
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 
-		verify(this.mongoOperationsMock, times(2)).find(captor.capture(), eq(Person.class), eq("persons"));
+		verify(mongoOperationsMock, times(2)).find(captor.capture(), eq(Person.class), eq("persons"));
 
 		assertThat(captor.getAllValues().get(0).getLimit(), is(11));
 		assertThat(captor.getAllValues().get(1).getLimit(), is(11));
@@ -271,7 +268,7 @@ public class AbstractMongoQueryUnitTests {
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 
-		verify(this.mongoOperationsMock, times(2)).find(captor.capture(), eq(Person.class), eq("persons"));
+		verify(mongoOperationsMock, times(2)).find(captor.capture(), eq(Person.class), eq("persons"));
 
 		DBObject expectedSortObject = new BasicDBObjectBuilder().add("bar", -1).get();
 		assertThat(captor.getAllValues().get(0).getSortObject(), is(expectedSortObject));
@@ -298,7 +295,9 @@ public class AbstractMongoQueryUnitTests {
 		try {
 
 			Method method = Repo.class.getMethod(methodName, paramTypes);
-			MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadataMock, mappingContextMock);
+			ProjectionFactory factory = new SpelAwareProxyProjectionFactory();
+			MongoQueryMethod queryMethod = new MongoQueryMethod(method, new DefaultRepositoryMetadata(Repo.class), factory,
+					mappingContextMock);
 
 			return new MongoQueryFake(queryMethod, mongoOperationsMock);
 

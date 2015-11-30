@@ -20,10 +20,13 @@ import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.query.BasicQuery;
+import org.springframework.data.mongodb.core.query.Field;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.TextCriteria;
 import org.springframework.data.repository.query.QueryMethod;
 import org.springframework.data.repository.query.RepositoryQuery;
+import org.springframework.data.repository.query.ResultProcessor;
+import org.springframework.data.repository.query.ReturnedType;
 import org.springframework.data.repository.query.parser.PartTree;
 import org.springframework.util.StringUtils;
 
@@ -87,6 +90,19 @@ public class PartTreeMongoQuery extends AbstractMongoQuery {
 		String fieldSpec = this.getQueryMethod().getFieldSpecification();
 
 		if (!StringUtils.hasText(fieldSpec)) {
+
+			ResultProcessor processor = getQueryMethod().getResultProcessor();
+			ReturnedType returnedType = processor.withDynamicProjection(accessor).getReturnedType();
+
+			if (returnedType.isProjecting()) {
+
+				Field fields = query.fields();
+
+				for (String field : returnedType.getInputProperties()) {
+					fields.include(field);
+				}
+			}
+
 			return query;
 		}
 

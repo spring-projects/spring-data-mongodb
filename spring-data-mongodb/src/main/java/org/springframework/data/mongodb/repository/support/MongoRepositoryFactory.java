@@ -30,6 +30,7 @@ import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
 import org.springframework.data.mongodb.repository.query.MongoQueryMethod;
 import org.springframework.data.mongodb.repository.query.PartTreeMongoQuery;
 import org.springframework.data.mongodb.repository.query.StringBasedMongoQuery;
+import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.querydsl.QueryDslPredicateExecutor;
 import org.springframework.data.repository.core.NamedQueries;
 import org.springframework.data.repository.core.RepositoryInformation;
@@ -133,13 +134,15 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 			this.evaluationContextProvider = evaluationContextProvider;
 		}
 
-		/*
+		/* 
 		 * (non-Javadoc)
-		 * @see org.springframework.data.repository.query.QueryLookupStrategy#resolveQuery(java.lang.reflect.Method, org.springframework.data.repository.core.RepositoryMetadata, org.springframework.data.repository.core.NamedQueries)
+		 * @see org.springframework.data.repository.query.QueryLookupStrategy#resolveQuery(java.lang.reflect.Method, org.springframework.data.repository.core.RepositoryMetadata, org.springframework.data.projection.ProjectionFactory, org.springframework.data.repository.core.NamedQueries)
 		 */
-		public RepositoryQuery resolveQuery(Method method, RepositoryMetadata metadata, NamedQueries namedQueries) {
+		@Override
+		public RepositoryQuery resolveQuery(Method method, RepositoryMetadata metadata, ProjectionFactory factory,
+				NamedQueries namedQueries) {
 
-			MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, mappingContext);
+			MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, factory, mappingContext);
 			String namedQueryName = queryMethod.getNamedQueryName();
 
 			if (namedQueries.hasQuery(namedQueryName)) {
