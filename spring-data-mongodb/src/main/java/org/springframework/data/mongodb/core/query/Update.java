@@ -254,7 +254,7 @@ public class Update {
 	 * @return
 	 */
 	public Update pullAll(String key, Object[] values) {
-		addFieldOperation("$pullAll", key, Arrays.copyOf(values, values.length));
+		addMultiFieldOperation("$pullAll", key, Arrays.copyOf(values, values.length));
 		return this;
 	}
 
@@ -330,9 +330,19 @@ public class Update {
 		return new BasicDBObject(modifierOps);
 	}
 
+	/**
+	 * This method is not called anymore rather override {@link #addMultiFieldOperation(String, String, Object)}.
+	 * 
+	 * @param operator
+	 * @param key
+	 * @param value
+	 * @deprectaed Use {@link #addMultiFieldOperation(String, String, Object)} instead.
+	 */
+	@Deprecated
 	protected void addFieldOperation(String operator, String key, Object value) {
 
 		Assert.hasText(key, "Key/Path for update must not be null or blank.");
+
 		modifierOps.put(operator, new BasicDBObject(key, value));
 		this.keysToUpdate.add(key);
 	}
