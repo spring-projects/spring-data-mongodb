@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2014 the original author or authors.
+ * Copyright 2010-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,9 +23,11 @@ import java.util.Map;
 
 import org.joda.time.DateTime;
 import org.junit.Test;
+import org.springframework.data.mongodb.core.DBObjectTestUtils;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.BasicDBObjectBuilder;
+import com.mongodb.DBObject;
 
 /**
  * Test cases for {@link Update}.
@@ -483,5 +485,23 @@ public class UpdateTests {
 	@Test(expected = IllegalArgumentException.class)
 	public void pushShouldThrowExceptionWhenGivenNegativePosition() {
 		new Update().push("foo").atPosition(-1).each("booh");
+	}
+
+	/**
+	 * @see DATAMONGO-1346
+	 */
+	@Test
+	public void registersMultiplePullAllClauses() {
+
+		Update update = new Update();
+		update.pullAll("field1", new String[] { "foo" });
+		update.pullAll("field2", new String[] { "bar" });
+
+		DBObject updateObject = update.getUpdateObject();
+
+		DBObject pullAll = DBObjectTestUtils.getAsDBObject(updateObject, "$pullAll");
+
+		assertThat(pullAll.get("field1"), is(notNullValue()));
+		assertThat(pullAll.get("field2"), is(notNullValue()));
 	}
 }
