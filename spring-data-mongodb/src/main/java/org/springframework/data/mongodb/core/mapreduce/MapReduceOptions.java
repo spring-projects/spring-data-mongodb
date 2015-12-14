@@ -45,6 +45,8 @@ public class MapReduceOptions {
 
 	private Boolean verbose = true;
 
+	private Integer limit;
+
 	private Map<String, Object> extraOptions = new HashMap<String, Object>();
 
 	/**
@@ -64,6 +66,8 @@ public class MapReduceOptions {
 	 * @return MapReduceOptions so that methods can be chained in a fluent API style
 	 */
 	public MapReduceOptions limit(int limit) {
+
+		this.limit = limit;
 		return this;
 	}
 
@@ -247,6 +251,15 @@ public class MapReduceOptions {
 		return this.scopeVariables;
 	}
 
+	/**
+	 * Get the maximum number of documents for the input into the map function.
+	 * 
+	 * @return {@literal null} if not set.
+	 */
+	public Integer getLimit() {
+		return limit;
+	}
+
 	public DBObject getOptionsObject() {
 		BasicDBObject cmd = new BasicDBObject();
 
@@ -262,6 +275,10 @@ public class MapReduceOptions {
 
 		if (scopeVariables != null) {
 			cmd.put("scope", scopeVariables);
+		}
+
+		if (limit != null) {
+			cmd.put("limit", limit);
 		}
 
 		if (!extraOptions.keySet().isEmpty()) {
