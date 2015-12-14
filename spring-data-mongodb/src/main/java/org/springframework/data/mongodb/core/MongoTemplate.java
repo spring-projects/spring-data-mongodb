@@ -1599,13 +1599,16 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 				throw new InvalidDataAccessApiUsageException(
 						"Can not use skip or field specification with map reduce operations");
 			}
-
-			if (query.getLimit() > 0) {
+			if (query.getLimit() > 0 && mapReduceOptions.getLimit() == null) {
 				mapReduceCommand.setLimit(query.getLimit());
 			}
 			if (query.getSortObject() != null) {
 				mapReduceCommand.setSort(queryMapper.getMappedObject(query.getSortObject(), null));
 			}
+		}
+
+		if (mapReduceOptions.getLimit() != null && mapReduceOptions.getLimit().intValue() > 0) {
+			mapReduceCommand.setLimit(mapReduceOptions.getLimit());
 		}
 
 		if (mapReduceOptions.getJavaScriptMode() != null) {
