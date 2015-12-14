@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2014 the original author or authors.
+ * Copyright 2010-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,6 +52,7 @@ import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexCreator;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
@@ -66,6 +67,8 @@ import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
+import com.mongodb.MapReduceCommand;
+import com.mongodb.MapReduceOutput;
 import com.mongodb.Mongo;
 import com.mongodb.MongoException;
 import com.mongodb.ReadPreference;
@@ -420,6 +423,112 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		template.geoNear(query, Wrapper.class);
 
 		verify(this.db, times(1)).command(Mockito.any(DBObject.class));
+	}
+
+	/**
+	 * @see DATAMONGO-1334
+	 */
+	@Test
+	public void mapReduceShouldUseZeroAsDefaultLimit() {
+
+		ArgumentCaptor<MapReduceCommand> captor = ArgumentCaptor.forClass(MapReduceCommand.class);
+
+		MapReduceOutput output = mock(MapReduceOutput.class);
+		when(output.results()).thenReturn(Collections.<DBObject> emptySet());
+		when(collection.mapReduce(Mockito.any(MapReduceCommand.class))).thenReturn(output);
+
+		Query query = new BasicQuery("{'foo':'bar'}");
+
+		template.mapReduce(query, "collection", "function(){}", "function(key,values){}", Wrapper.class);
+
+		verify(collection).mapReduce(captor.capture());
+
+		assertThat(captor.getValue().getLimit(), is(0));
+	}
+
+	/**
+	 * @see DATAMONGO-1334
+	 */
+	@Test
+	public void mapReduceShouldPickUpLimitFromQuery() {
+
+		ArgumentCaptor<MapReduceCommand> captor = ArgumentCaptor.forClass(MapReduceCommand.class);
+
+		MapReduceOutput output = mock(MapReduceOutput.class);
+		when(output.results()).thenReturn(Collections.<DBObject> emptySet());
+		when(collection.mapReduce(Mockito.any(MapReduceCommand.class))).thenReturn(output);
+
+		Query query = new BasicQuery("{'foo':'bar'}");
+		query.limit(100);
+
+		template.mapReduce(query, "collection", "function(){}", "function(key,values){}", Wrapper.class);
+
+		verify(collection).mapReduce(captor.capture());
+
+		assertThat(captor.getValue().getLimit(), is(100));
+	}
+
+	/**
+	 * @see DATAMONGO-1334
+	 */
+	@Test
+	public void mapReduceShouldPickUpLimitFromOptions() {
+
+		ArgumentCaptor<MapReduceCommand> captor = ArgumentCaptor.forClass(MapReduceCommand.class);
+
+		MapReduceOutput output = mock(MapReduceOutput.class);
+		when(output.results()).thenReturn(Collections.<DBObject> emptySet());
+		when(collection.mapReduce(Mockito.any(MapReduceCommand.class))).thenReturn(output);
+
+		Query query = new BasicQuery("{'foo':'bar'}");
+
+		template.mapReduce(query, "collection", "function(){}", "function(key,values){}",
+				new MapReduceOptions().limit(1000), Wrapper.class);
+
+		verify(collection).mapReduce(captor.capture());
+		assertThat(captor.getValue().getLimit(), is(1000));
+	}
+
+	/**
+	 * @see DATAMONGO-1334
+	 */
+	@Test
+	public void mapReduceShouldPickUpLimitFromOptionsWhenQueryIsNotPresent() {
+
+		ArgumentCaptor<MapReduceCommand> captor = ArgumentCaptor.forClass(MapReduceCommand.class);
+
+		MapReduceOutput output = mock(MapReduceOutput.class);
+		when(output.results()).thenReturn(Collections.<DBObject> emptySet());
+		when(collection.mapReduce(Mockito.any(MapReduceCommand.class))).thenReturn(output);
+
+		template.mapReduce("collection", "function(){}", "function(key,values){}", new MapReduceOptions().limit(1000),
+				Wrapper.class);
+
+		verify(collection).mapReduce(captor.capture());
+		assertThat(captor.getValue().getLimit(), is(1000));
+	}
+
+	/**
+	 * @see DATAMONGO-1334
+	 */
+	@Test
+	public void mapReduceShouldPickUpLimitFromOptionsEvenWhenQueryDefinesItDifferently() {
+
+		ArgumentCaptor<MapReduceCommand> captor = ArgumentCaptor.forClass(MapReduceCommand.class);
+
+		MapReduceOutput output = mock(MapReduceOutput.class);
+		when(output.results()).thenReturn(Collections.<DBObject> emptySet());
+		when(collection.mapReduce(Mockito.any(MapReduceCommand.class))).thenReturn(output);
+
+		Query query = new BasicQuery("{'foo':'bar'}");
+		query.limit(100);
+
+		template.mapReduce(query, "collection", "function(){}", "function(key,values){}",
+				new MapReduceOptions().limit(1000), Wrapper.class);
+
+		verify(collection).mapReduce(captor.capture());
+
+		assertThat(captor.getValue().getLimit(), is(1000));
 	}
 
 	class AutogenerateableId {
