@@ -108,8 +108,6 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.core.support.RepositoryFactorySupport#getEntityInformation(java.lang.Class)
 	 */
-	// TODO: would be worth discussing if we could alter RepositoryFactorySupport#getEntityInformation to be called with
-	// RepositoryMetadata instead of the acual domain type class.
 	public <T, ID extends Serializable> MongoEntityInformation<T, ID> getEntityInformation(Class<T> domainClass) {
 		return getEntityInformation(domainClass, null);
 	}
@@ -121,8 +119,8 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(domainClass);
 
 		if (entity == null) {
-			throw new MappingException(String.format("Could not lookup mapping metadata for domain class %s!",
-					domainClass.getName()));
+			throw new MappingException(
+					String.format("Could not lookup mapping metadata for domain class %s!", domainClass.getName()));
 		}
 
 		return new MappingMongoEntityInformation<T, ID>((MongoPersistentEntity<T>) entity,
