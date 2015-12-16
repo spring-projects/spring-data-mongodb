@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2015 by the original author(s).
+ * Copyright 2011-2015 by the original author(s).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,6 +46,13 @@ public class MappingMongoEntityInformation<T, ID extends Serializable> extends P
 		this(entity, null, null);
 	}
 
+	/**
+	 * Creates a new {@link MappingMongoEntityInformation} for the given {@link MongoPersistentEntity} and fallback
+	 * identifier type.
+	 * 
+	 * @param entity must not be {@literal null}.
+	 * @param fallbackIdType can be {@literal null}.
+	 */
 	public MappingMongoEntityInformation(MongoPersistentEntity<T> entity, Class<ID> fallbackIdType) {
 		this(entity, (String) null, fallbackIdType);
 	}
@@ -61,7 +68,17 @@ public class MappingMongoEntityInformation<T, ID extends Serializable> extends P
 		this(entity, customCollectionName, null);
 	}
 
-	public MappingMongoEntityInformation(MongoPersistentEntity<T> entity, String customCollectionName, Class<ID> idType) {
+	/**
+	 * Creates a new {@link MappingMongoEntityInformation} for the given {@link MongoPersistentEntity}, collection name
+	 * and identifier type.
+	 * 
+	 * @param entity must not be {@literal null}.
+	 * @param customCollectionName can be {@literal null}.
+	 * @param idType can be {@literal null}.
+	 */
+	@SuppressWarnings("unchecked")
+	private MappingMongoEntityInformation(MongoPersistentEntity<T> entity, String customCollectionName,
+			Class<ID> idType) {
 
 		super(entity);
 

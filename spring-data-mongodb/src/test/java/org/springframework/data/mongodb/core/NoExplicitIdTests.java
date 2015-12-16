@@ -37,6 +37,8 @@ import com.mongodb.Mongo;
 import com.mongodb.MongoClient;
 
 /**
+ * Integration tests for DATAMONGO-1289.
+ * 
  * @author Christoph Strobl
  */
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -102,6 +104,7 @@ public class NoExplicitIdTests {
 	 * @see DATAMONGO-1289
 	 */
 	@Test
+	@SuppressWarnings("unchecked")
 	public void saveAndRetrieveTypeWithoutIdPorpertyViaRepositoryFindOne() {
 
 		TypeWithoutIdProperty noid = new TypeWithoutIdProperty();
