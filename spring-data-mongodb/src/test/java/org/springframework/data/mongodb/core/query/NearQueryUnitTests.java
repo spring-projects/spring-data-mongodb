@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core.query;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
+import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
 
 import org.junit.Test;
 import org.springframework.data.domain.PageRequest;
@@ -26,6 +27,7 @@ import org.springframework.data.geo.Metric;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
+import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 
 /**
  * Unit tests for {@link NearQuery}.
@@ -140,5 +142,35 @@ public class NearQueryUnitTests {
 		query.query(Query.query(Criteria.where("foo").is("bar")));
 
 		assertThat(DocumentTestUtils.getTypedValue(query.toDocument(), "num", Long.class), is(num));
+	}
+
+	@Test // DATAMONGO-1348
+	public void shouldUseMetersForGeoJsonData() {
+
+		NearQuery query = NearQuery.near(new GeoJsonPoint(27.987901, 86.9165379));
+		query.maxDistance(1);
+
+		assertThat(query.toDocument(), isBsonObject().containing("maxDistance", Metrics.KILOMETERS.getMultiplier() * 1000)
+				.containing("distanceMultiplier", Metrics.KILOMETERS.getMultiplier() / 1000));
+	}
+
+	@Test // DATAMONGO-1348
+	public void shouldUseMetersForGeoJsonDataWhenDistanceInKilometers() {
+
+		NearQuery query = NearQuery.near(new GeoJsonPoint(27.987901, 86.9165379));
+		query.maxDistance(new Distance(1, Metrics.KILOMETERS));
+
+		assertThat(query.toDocument(),
+				isBsonObject().containing("maxDistance", 1000D).containing("distanceMultiplier", 0.001D));
+	}
+
+	@Test // DATAMONGO-1348
+	public void shouldUseMetersForGeoJsonDataWhenDistanceInMiles() {
+
+		NearQuery query = NearQuery.near(new GeoJsonPoint(27.987901, 86.9165379));
+		query.maxDistance(new Distance(1, Metrics.MILES));
+
+		assertThat(query.toDocument(),
+				isBsonObject().containing("maxDistance", 1609.34383D).containing("distanceMultiplier", 0.00160934383D));
 	}
 }

@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.core.query;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Arrays;
 
 import org.bson.Document;
@@ -25,6 +27,8 @@ import org.springframework.data.geo.Metric;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
 import org.springframework.lang.Nullable;
+import org.springframework.data.mongodb.core.geo.GeoJson;
+import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 
@@ -46,6 +50,8 @@ public final class NearQuery {
 	private boolean spherical;
 	private @Nullable Long num;
 	private @Nullable Long skip;
+
+	private static int PRECISION = 8;
 
 	/**
 	 * Creates a new {@link NearQuery}.
@@ -416,25 +422,53 @@ public final class NearQuery {
 		}
 
 		if (maxDistance != null) {
-			document.put("maxDistance", maxDistance.getNormalizedValue());
+			document.put("maxDistance", getDistanceValueInRadiantsOrMeters(maxDistance));
 		}
 
 		if (minDistance != null) {
-			document.put("minDistance", minDistance.getNormalizedValue());
+			document.put("minDistance", getDistanceValueInRadiantsOrMeters(minDistance));
 		}
 
 		if (metric != null) {
-			document.put("distanceMultiplier", metric.getMultiplier());
+			document.put(
+					"distanceMultiplier",
+					usesMetricSystem() ? getMetricSystemNormalizer(metric).divide(new BigDecimal(1000), PRECISION + 3,
+							RoundingMode.HALF_UP).doubleValue() : metric.getMultiplier());
 		}
 
 		if (num != null) {
 			document.put("num", num);
 		}
 
-		document.put("near", Arrays.asList(point.getX(), point.getY()));
+		if (point instanceof GeoJsonPoint) {
+			document.put("near", point);
+		} else {
+			document.put("near", Arrays.asList(point.getX(), point.getY()));
+		}
 
-		document.put("spherical", spherical);
+		document.put("spherical", spherical ? spherical : point instanceof GeoJson);
 
 		return document;
 	}
+
+	private double getDistanceValueInRadiantsOrMeters(Distance distance) {
+		return usesMetricSystem() ? getDistanceInMeters(distance) : distance.getNormalizedValue();
+	}
+
+	private double getDistanceInMeters(Distance distance) {
+
+		return new BigDecimal(distance.getValue()).multiply(getMetricSystemNormalizer(distance.getMetric()))
+				.multiply(new BigDecimal(1000)).doubleValue();
+	}
+
+	private BigDecimal getMetricSystemNormalizer(Metric metric) {
+
+		return new BigDecimal(Metrics.KILOMETERS.getMultiplier()).divide(new BigDecimal(metric.getMultiplier()), PRECISION,
+				RoundingMode.HALF_UP);
+	}
+
+	private boolean usesMetricSystem() {
+		return point instanceof GeoJson;
+	}
+
 }
