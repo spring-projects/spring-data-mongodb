@@ -972,7 +972,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Document nearDocument = near.toDocument();
 
 		Document command = new Document("geoNear", collection);
-		command.putAll(nearDocument);
+		command.putAll(queryMapper.getMappedObject(nearDocument, Optional.empty()));
 
 		if (nearDocument.containsKey("query")) {
 			Document query = (Document) nearDocument.get("query");
