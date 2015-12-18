@@ -1,6 +1,22 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 1.8.2.RELEASE (2015-12-18)
+---------------------------------------------
+* DATAMONGO-1355 - Release 1.8.2 (Gosling).
+* DATAMONGO-1346 - Cannot add two pullAll to an Update.
+* DATAMONGO-1342 - Potential NullPointerException in MongoQueryCreator.nextAsArray(…).
+* DATAMONGO-1337 - General code quality improvements.
+* DATAMONGO-1335 - DBObjectAccessor doesn't write properties correctly if multiple ones are nested.
+* DATAMONGO-1334 - MapResultOptions limit not implemented.
+* DATAMONGO-1324 - StringToObjectIdConverter not properly registered causing drop in performance on identifier conversion.
+* DATAMONGO-1317 - Assert compatibility with MongoDB Java driver 3.2.
+* DATAMONGO-1290 - @Query annotation with byte[] parameter does not work.
+* DATAMONGO-1289 - NullPointerException when saving an object with no "id" field or @Id annotation.
+* DATAMONGO-1287 - MappingMongoConverter eagerly fetches and converts lazy DbRef to change them afterwards by proxies.
+* DATAMONGO-1204 - ObjectPath equality check breaks due to changes MongoDB V3.
+
+
 Changes in version 1.8.1.RELEASE (2015-11-15)
 ---------------------------------------------
 * DATAMONGO-1316 - Release 1.8.1 (Gosling).
