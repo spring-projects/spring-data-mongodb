@@ -186,8 +186,10 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		 */
 		@Test
 		public void resolveIndexDefinitionInMetaAnnotatedFields() {
+
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
 					IndexOnMetaAnnotatedField.class);
+
 			assertThat(indexDefinitions, hasSize(1));
 			assertThat(indexDefinitions.get(0).getCollection(), equalTo("indexOnMetaAnnotatedField"));
 			assertThat(indexDefinitions.get(0).getIndexOptions(),
