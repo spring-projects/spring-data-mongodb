@@ -694,9 +694,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 			return new GeoResults<T>(result, near.getMetric());
 		}
 
-		DBObject stats = (DBObject) commandResult.get("stats");
-		double averageDistance = stats == null ? 0 : (Double) stats.get("avgDistance");
-		return new GeoResults<T>(result, new Distance(averageDistance, near.getMetric()));
+		GeoCommandStatistics stats = GeoCommandStatistics.from(commandResult);
+		return new GeoResults<T>(result, new Distance(stats.getAverageDistance(), near.getMetric()));
 	}
 
 	public <T> T findAndModify(Query query, Update update, Class<T> entityClass) {
