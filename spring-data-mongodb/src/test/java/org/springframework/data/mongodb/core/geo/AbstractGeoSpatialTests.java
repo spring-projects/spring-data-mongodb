@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2015-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import static org.springframework.data.mongodb.core.query.Query.*;
 
 import java.util.List;
 
+import org.joda.time.LocalDate;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -49,6 +50,7 @@ import com.mongodb.WriteConcern;
 
 /**
  * @author Christoph Strobl
+ * @author Oliver Gierke
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration
@@ -173,4 +175,13 @@ public abstract class AbstractGeoSpatialTests {
 		assertThat(venues.size(), is(11));
 	}
 
+	/**
+	 * @see DATAMONGO-1360
+	 */
+	@Test
+	public void mapsQueryContainedInNearQuery() {
+
+		Query query = query(where("openingDate").lt(LocalDate.now()));
+		template.geoNear(NearQuery.near(1.5, 1.7).query(query), Venue.class);
+	}
 }

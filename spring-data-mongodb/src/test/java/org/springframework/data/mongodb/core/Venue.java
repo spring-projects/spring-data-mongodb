@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core;
 
 import java.util.Arrays;
 
+import org.joda.time.LocalDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -24,10 +25,10 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document(collection = "newyork")
 public class Venue {
 
-	@Id
-	private String id;
+	@Id private String id;
 	private String name;
 	private double[] location;
+	private LocalDate openingDate;
 
 	@PersistenceConstructor
 	Venue(String name, double[] location) {
@@ -48,6 +49,14 @@ public class Venue {
 
 	public double[] getLocation() {
 		return location;
+	}
+
+	public LocalDate getOpeningDate() {
+		return openingDate;
+	}
+
+	public void setOpeningDate(LocalDate openingDate) {
+		this.openingDate = openingDate;
 	}
 
 	@Override
