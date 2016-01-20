@@ -32,8 +32,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
-import org.springframework.data.domain.Example.NullHandler;
-import org.springframework.data.domain.Example.StringMatcher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.geo.Point;
@@ -261,8 +259,7 @@ public class SimpleMongoRepositoryTests {
 		sample.setAddress(new Address(null, null, "Washington"));
 		trimDomainType(sample, "id", "createdAt", "email");
 
-		List<Person> result = repository.findAllByExample(Example.newExampleOf(sample)
-				.nullHandling(NullHandler.INCLUDE).get());
+		List<Person> result = repository.findAllByExample(Example.newExampleOf(sample).includeNullValues().get());
 
 		assertThat(result, empty());
 	}
@@ -280,8 +277,7 @@ public class SimpleMongoRepositoryTests {
 		sample.setAddress(dave.getAddress());
 		trimDomainType(sample, "id", "createdAt", "email");
 
-		List<Person> result = repository.findAllByExample(Example.newExampleOf(sample)
-				.nullHandling(NullHandler.INCLUDE).get());
+		List<Person> result = repository.findAllByExample(Example.newExampleOf(sample).includeNullValues().get());
 
 		assertThat(result, hasItem(dave));
 		assertThat(result, hasSize(1));
@@ -297,8 +293,7 @@ public class SimpleMongoRepositoryTests {
 		sample.setLastname("Mat");
 		trimDomainType(sample, "id", "createdAt", "email");
 
-		List<Person> result = repository.findAllByExample(Example.newExampleOf(sample)
-				.stringMatcher(StringMatcher.STARTING).get());
+		List<Person> result = repository.findAllByExample(Example.newExampleOf(sample).matchStringsStartingWith().get());
 
 		assertThat(result, hasItems(dave, oliver));
 		assertThat(result, hasSize(2));

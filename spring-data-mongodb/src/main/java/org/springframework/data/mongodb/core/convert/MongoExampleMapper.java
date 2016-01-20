@@ -63,7 +63,7 @@ public class MongoExampleMapper {
 	 * @since 1.8
 	 */
 	public DBObject getMappedExample(Example<?> example) {
-		return getMappedExample(example, mappingContext.getPersistentEntity(example.getProbeType()));
+		return getMappedExample(example, mappingContext.getPersistentEntity(example.getSampleType()));
 	}
 
 	/**
@@ -77,21 +77,21 @@ public class MongoExampleMapper {
 	 */
 	public DBObject getMappedExample(Example<?> example, MongoPersistentEntity<?> entity) {
 
-		DBObject reference = (DBObject) converter.convertToMongoType(example.getProbe());
+		DBObject reference = (DBObject) converter.convertToMongoType(example.getSampleObject());
 
-		if (entity.hasIdProperty() && entity.getIdentifierAccessor(example.getProbe()).getIdentifier() == null) {
+		if (entity.hasIdProperty() && entity.getIdentifierAccessor(example.getSampleObject()).getIdentifier() == null) {
 			reference.removeField(entity.getIdProperty().getFieldName());
 		}
 
 		applyPropertySpecs("", reference, example);
 
-		return ObjectUtils.nullSafeEquals(NullHandler.INCLUDE, example.getNullHandler()) ? reference
-				: new BasicDBObject(SerializationUtils.flatMap(reference));
+		return ObjectUtils.nullSafeEquals(NullHandler.INCLUDE, example.getNullHandler()) ? reference : new BasicDBObject(
+				SerializationUtils.flatMap(reference));
 	}
 
 	private String getMappedPropertyPath(String path, Example<?> example) {
 
-		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(example.getProbeType());
+		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(example.getSampleType());
 
 		Iterator<String> parts = Arrays.asList(path.split("\\.")).iterator();
 
@@ -118,7 +118,7 @@ public class MongoExampleMapper {
 				});
 
 				if (stack.isEmpty()) {
-					throw new RuntimeException("foobar");
+					return "";
 				}
 				prop = stack.pop();
 			}
@@ -154,7 +154,12 @@ public class MongoExampleMapper {
 			}
 
 			String propertyPath = StringUtils.hasText(path) ? path + "." + entry.getKey() : entry.getKey();
-			String mappedPropertyPath = propertyPath;
+
+			String mappedPropertyPath = getMappedPropertyPath(propertyPath, example);
+			if (example.isIgnoredPath(propertyPath) || example.isIgnoredPath(mappedPropertyPath)) {
+				iter.remove();
+				continue;
+			}
 
 			PropertySpecifier specifier = null;
 			StringMatcher stringMatcher = example.getDefaultStringMatcher();
@@ -165,6 +170,7 @@ public class MongoExampleMapper {
 
 				mappedPropertyPath = example.hasPropertySpecifier(propertyPath) ? propertyPath : getMappedPropertyPath(
 						propertyPath, example);
+
 				specifier = example.getPropertySpecifier(mappedPropertyPath);
 
 				if (specifier != null) {
@@ -210,8 +216,8 @@ public class MongoExampleMapper {
 			}
 		} else {
 
-			String expression = MongoRegexCreator.INSTANCE
-					.toRegularExpression((String) entry.getValue(), stringMatcher.getPartType());
+			String expression = MongoRegexCreator.INSTANCE.toRegularExpression((String) entry.getValue(),
+					stringMatcher.getPartType());
 			dbo.put("$regex", expression);
 			entry.setValue(dbo);
 		}

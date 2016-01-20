@@ -18,8 +18,6 @@ package org.springframework.data.mongodb.core.convert;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 import static org.springframework.data.domain.Example.*;
-import static org.springframework.data.domain.Example.NullHandler.*;
-import static org.springframework.data.domain.Example.StringMatcher.*;
 import static org.springframework.data.domain.PropertySpecifier.*;
 import static org.springframework.data.mongodb.core.DBObjectTestUtils.*;
 import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
@@ -172,7 +170,7 @@ public class MongoExampleMapperUnitTests {
 		probe.flatDoc = new FlatDocument();
 		probe.flatDoc.stringValue = "conflux";
 
-		Example<?> example = newExampleOf(probe).nullHandling(INCLUDE).get();
+		Example<?> example = newExampleOf(probe).includeNullValues().get();
 
 		DBObject dbo = mapper.getMappedExample(example, context.getPersistentEntity(WrapperDocument.class));
 
@@ -189,7 +187,7 @@ public class MongoExampleMapperUnitTests {
 		probe.stringValue = "firefight";
 		probe.intValue = 100;
 
-		Example<?> example = newExampleOf(probe).stringMatcher(STARTING).get();
+		Example<?> example = newExampleOf(probe).matchStringsStartingWith().get();
 
 		DBObject dbo = mapper.getMappedExample(example, context.getPersistentEntity(FlatDocument.class));
 
@@ -208,7 +206,7 @@ public class MongoExampleMapperUnitTests {
 		probe.stringValue = "firefight";
 		probe.intValue = 100;
 
-		Example<?> example = newExampleOf(probe).stringMatcher(ENDING).get();
+		Example<?> example = newExampleOf(probe).matchStringsEndingWith().get();
 
 		DBObject dbo = mapper.getMappedExample(example, context.getPersistentEntity(FlatDocument.class));
 
@@ -227,7 +225,7 @@ public class MongoExampleMapperUnitTests {
 		probe.stringValue = "firefight";
 		probe.intValue = 100;
 
-		Example<?> example = newExampleOf(probe).stringMatcher(ENDING, true).get();
+		Example<?> example = newExampleOf(probe).matchStringsEndingWith().matchStringsWithIgnoreCase().get();
 
 		DBObject dbo = mapper.getMappedExample(example, context.getPersistentEntity(FlatDocument.class));
 
@@ -248,7 +246,7 @@ public class MongoExampleMapperUnitTests {
 		probe.stringValue = "firefight";
 		probe.intValue = 100;
 
-		Example<?> example = newExampleOf(probe).stringMatcher(DEFAULT, true).get();
+		Example<?> example = newExampleOf(probe).matchStringsWithIgnoreCase().get();
 
 		DBObject dbo = mapper.getMappedExample(example, context.getPersistentEntity(FlatDocument.class));
 
@@ -393,8 +391,8 @@ public class MongoExampleMapperUnitTests {
 		probe.stringValue = "firefight";
 		probe.customNamedField = "steelheart";
 
-		Example<?> example = newExampleOf(probe).specify(
-				newPropertySpecifier("stringValue").stringMatcher(CONTAINING).get()).get();
+		Example<?> example = newExampleOf(probe).specify(newPropertySpecifier("stringValue").matchStringContaining().get())
+				.get();
 
 		DBObject dbo = mapper.getMappedExample(example, context.getPersistentEntity(FlatDocument.class));
 
