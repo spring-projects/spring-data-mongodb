@@ -180,7 +180,7 @@ public class SimpleMongoRepositoryTests {
 		sample.setLastname("Matthews");
 		trimDomainType(sample, "id", "createdAt", "email");
 
-		Page<Person> result = repository.findByExample(new Example<Person>(sample), new PageRequest(0, 10));
+		Page<Person> result = repository.findAllByExample(new Example<Person>(sample), new PageRequest(0, 10));
 
 		assertThat(result.getContent(), hasItems(dave, oliver));
 		assertThat(result.getContent(), hasSize(2));

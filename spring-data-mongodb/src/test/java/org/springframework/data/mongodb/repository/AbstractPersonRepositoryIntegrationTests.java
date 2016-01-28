@@ -1240,7 +1240,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		ReflectionTestUtils.setField(sample, "createdAt", null);
 		ReflectionTestUtils.setField(sample, "email", null);
 
-		Page<Person> result = repository.findByExample(new Example<Person>(sample), new PageRequest(0, 10));
+		Page<Person> result = repository.findAllByExample(new Example<Person>(sample), new PageRequest(0, 10));
 		Assert.assertThat(result.getNumberOfElements(), Is.is(2));
 	}
 

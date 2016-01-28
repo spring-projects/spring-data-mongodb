@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2014 the original author or authors.
+ * Copyright 2010-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -76,17 +76,32 @@ public interface MongoRepository<T, ID extends Serializable> extends PagingAndSo
 	<S extends T> List<S> insert(Iterable<S> entities);
 
 	/**
-	 * @param example
+	 * Returns all instances of the type specified by the given {@link Example}.
+	 * 
+	 * @param example must not be {@literal null}.
 	 * @return
 	 * @since 1.8
 	 */
 	<S extends T> List<T> findAllByExample(Example<S> example);
 
 	/**
-	 * @param example
-	 * @param pageable
-	 * @return
+	 * Returns all instances of the type specified by the given {@link Example}.
+	 * 
+	 * @param example must not be {@literal null}.
+	 * @param sort can be {@literal null}.
+	 * @return all entities sorted by the given options
 	 * @since 1.8
 	 */
-	<S extends T> Page<T> findByExample(Example<S> example, Pageable pageable);
+	<S extends T> List<T> findAllByExample(Example<S> example, Sort sort);
+
+	/**
+	 * Returns a {@link Page} of entities meeting the paging restriction specified by the given {@link Example} limited to
+	 * criteria provided in the {@code Pageable} object.
+	 * 
+	 * @param example must not be {@literal null}.
+	 * @param pageable can be {@literal null}.
+	 * @return a {@link Page} of entities
+	 * @since 1.8
+	 */
+	<S extends T> Page<T> findAllByExample(Example<S> example, Pageable pageable);
 }
