@@ -267,6 +267,7 @@ abstract class MongoConverters {
 	 */
 	@WritingConverter
 	public static enum CurrencyToStringConverter implements Converter<Currency, String> {
+
 		INSTANCE;
 
 		/*
@@ -275,12 +276,7 @@ abstract class MongoConverters {
 		 */
 		@Override
 		public String convert(Currency source) {
-
-			if (source == null) {
-				return null;
-			}
-
-			return source.getCurrencyCode();
+			return source == null ? null : source.getCurrencyCode();
 		}
 	}
 
@@ -292,6 +288,7 @@ abstract class MongoConverters {
 	 */
 	@ReadingConverter
 	public static enum StringToCurrencyConverter implements Converter<String, Currency> {
+
 		INSTANCE;
 
 		/*
@@ -300,12 +297,7 @@ abstract class MongoConverters {
 		 */
 		@Override
 		public Currency convert(String source) {
-
-			if (!StringUtils.hasText(source)) {
-				return null;
-			}
-
-			return Currency.getInstance(source);
+			return StringUtils.hasText(source) ? Currency.getInstance(source) : null;
 		}
 	}
 }
