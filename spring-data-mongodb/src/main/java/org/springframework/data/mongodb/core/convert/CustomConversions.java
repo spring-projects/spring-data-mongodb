@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2015 the original author or authors.
+ * Copyright 2011-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,16 +42,6 @@ import org.springframework.data.convert.ReadingConverter;
 import org.springframework.data.convert.ThreeTenBackPortConverters;
 import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
-import org.springframework.data.mongodb.core.convert.MongoConverters.BigDecimalToStringConverter;
-import org.springframework.data.mongodb.core.convert.MongoConverters.BigIntegerToStringConverter;
-import org.springframework.data.mongodb.core.convert.MongoConverters.DBObjectToNamedMongoScriptCoverter;
-import org.springframework.data.mongodb.core.convert.MongoConverters.DBObjectToStringConverter;
-import org.springframework.data.mongodb.core.convert.MongoConverters.NamedMongoScriptToDBObjectConverter;
-import org.springframework.data.mongodb.core.convert.MongoConverters.StringToBigDecimalConverter;
-import org.springframework.data.mongodb.core.convert.MongoConverters.StringToBigIntegerConverter;
-import org.springframework.data.mongodb.core.convert.MongoConverters.StringToURLConverter;
-import org.springframework.data.mongodb.core.convert.MongoConverters.TermToStringConverter;
-import org.springframework.data.mongodb.core.convert.MongoConverters.URLToStringConverter;
 import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
 import org.springframework.data.util.CacheValue;
 import org.springframework.util.Assert;
@@ -112,16 +102,7 @@ public class CustomConversions {
 		// Add user provided converters to make sure they can override the defaults
 		toRegister.addAll(converters);
 		toRegister.add(CustomToStringConverter.INSTANCE);
-		toRegister.add(BigDecimalToStringConverter.INSTANCE);
-		toRegister.add(StringToBigDecimalConverter.INSTANCE);
-		toRegister.add(BigIntegerToStringConverter.INSTANCE);
-		toRegister.add(StringToBigIntegerConverter.INSTANCE);
-		toRegister.add(URLToStringConverter.INSTANCE);
-		toRegister.add(StringToURLConverter.INSTANCE);
-		toRegister.add(DBObjectToStringConverter.INSTANCE);
-		toRegister.add(TermToStringConverter.INSTANCE);
-		toRegister.add(NamedMongoScriptToDBObjectConverter.INSTANCE);
-		toRegister.add(DBObjectToNamedMongoScriptCoverter.INSTANCE);
+		toRegister.addAll(MongoConverters.getConvertersToRegister());
 
 		toRegister.addAll(JodaTimeConverters.getConvertersToRegister());
 		toRegister.addAll(GeoConverters.getConvertersToRegister());

@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2015 the original author or authors.
+ * Copyright 2011-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import java.text.Format;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Currency;
 import java.util.Date;
 import java.util.Locale;
 import java.util.UUID;
@@ -269,6 +270,18 @@ public class CustomConversionsUnitTests {
 		CustomConversions customConversions = new CustomConversions(Collections.singletonList(new FormatConverterFactory()));
 
 		assertThat(customConversions.getCustomWriteTarget(String.class, SimpleDateFormat.class), notNullValue());
+	}
+
+	/**
+	 * @see DATAMONGO-1372
+	 */
+	@Test
+	public void registersConvertersForCurrency() {
+
+		CustomConversions customConversions = new CustomConversions();
+
+		assertThat(customConversions.hasCustomWriteTarget(Currency.class), is(true));
+		assertThat(customConversions.hasCustomReadTarget(String.class, Currency.class), is(true));
 	}
 
 	private static Class<?> createProxyTypeFor(Class<?> type) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2014 by the original author(s).
+ * Copyright (c) 2011-2016 by the original author(s).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
 import java.math.BigDecimal;
+import java.util.Currency;
 
 import org.junit.Test;
 import org.springframework.data.geo.Box;
@@ -27,7 +28,9 @@ import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
 import org.springframework.data.geo.Shape;
 import org.springframework.data.mongodb.core.convert.MongoConverters.BigDecimalToStringConverter;
+import org.springframework.data.mongodb.core.convert.MongoConverters.CurrencyToStringConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.StringToBigDecimalConverter;
+import org.springframework.data.mongodb.core.convert.MongoConverters.StringToCurrencyConverter;
 import org.springframework.data.mongodb.core.geo.Sphere;
 
 import com.mongodb.DBObject;
@@ -37,6 +40,7 @@ import com.mongodb.DBObject;
  * 
  * @author Oliver Gierke
  * @author Thomas Darimont
+ * @author Christoph Strobl
  */
 public class MongoConvertersUnitTests {
 
@@ -119,5 +123,21 @@ public class MongoConvertersUnitTests {
 		org.springframework.data.geo.Point converted = GeoConverters.DbObjectToPointConverter.INSTANCE.convert(dbo);
 
 		assertThat(converted, is((org.springframework.data.geo.Point) point));
+	}
+
+	/**
+	 * @see DATAMONGO-1372
+	 */
+	@Test
+	public void convertsCurrencyToStringCorrectly() {
+		assertThat(CurrencyToStringConverter.INSTANCE.convert(Currency.getInstance("USD")), is("USD"));
+	}
+
+	/**
+	 * @see DATAMONGO-1372
+	 */
+	@Test
+	public void convertsStringToCurrencyCorrectly() {
+		assertThat(StringToCurrencyConverter.INSTANCE.convert("USD"), is(Currency.getInstance("USD")));
 	}
 }

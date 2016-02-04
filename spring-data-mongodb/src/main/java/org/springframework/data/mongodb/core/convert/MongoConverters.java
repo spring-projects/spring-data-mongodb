@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2015 the original author or authors.
+ * Copyright 2011-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,10 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Currency;
+import java.util.List;
 
 import org.bson.types.Code;
 import org.bson.types.ObjectId;
@@ -48,6 +52,32 @@ abstract class MongoConverters {
 	 * Private constructor to prevent instantiation.
 	 */
 	private MongoConverters() {}
+
+	/**
+	 * Returns the converters to be registered.
+	 * 
+	 * @return
+	 * @since 1.9
+	 */
+	public static Collection<Converter<?, ?>> getConvertersToRegister() {
+
+		List<Converter<?, ?>> converters = new ArrayList<Converter<?, ?>>();
+
+		converters.add(BigDecimalToStringConverter.INSTANCE);
+		converters.add(StringToBigDecimalConverter.INSTANCE);
+		converters.add(BigIntegerToStringConverter.INSTANCE);
+		converters.add(StringToBigIntegerConverter.INSTANCE);
+		converters.add(URLToStringConverter.INSTANCE);
+		converters.add(StringToURLConverter.INSTANCE);
+		converters.add(DBObjectToStringConverter.INSTANCE);
+		converters.add(TermToStringConverter.INSTANCE);
+		converters.add(NamedMongoScriptToDBObjectConverter.INSTANCE);
+		converters.add(DBObjectToNamedMongoScriptCoverter.INSTANCE);
+		converters.add(CurrencyToStringConverter.INSTANCE);
+		converters.add(StringToCurrencyConverter.INSTANCE);
+
+		return converters;
+	}
 
 	/**
 	 * Simple singleton to convert {@link ObjectId}s to their {@link String} representation.
@@ -226,6 +256,56 @@ abstract class MongoConverters {
 			builder.append("value", new Code(source.getCode()));
 
 			return builder.get();
+		}
+	}
+
+	/**
+	 * {@link Converter} implementation converting {@link Currency} into its ISO 4217 {@link String} representation.
+	 * 
+	 * @author Christoph Strobl
+	 * @since 1.9
+	 */
+	@WritingConverter
+	public static enum CurrencyToStringConverter implements Converter<Currency, String> {
+		INSTANCE;
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
+		 */
+		@Override
+		public String convert(Currency source) {
+
+			if (source == null) {
+				return null;
+			}
+
+			return source.getCurrencyCode();
+		}
+	}
+
+	/**
+	 * {@link Converter} implementation converting ISO 4217 {@link String} into {@link Currency}.
+	 * 
+	 * @author Christoph Strobl
+	 * @since 1.9
+	 */
+	@ReadingConverter
+	public static enum StringToCurrencyConverter implements Converter<String, Currency> {
+		INSTANCE;
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
+		 */
+		@Override
+		public Currency convert(String source) {
+
+			if (!StringUtils.hasText(source)) {
+				return null;
+			}
+
+			return Currency.getInstance(source);
 		}
 	}
 }
