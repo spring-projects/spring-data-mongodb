@@ -190,7 +190,7 @@ public interface MongoOperations {
 	<T> DBCollection createCollection(Class<T> entityClass);
 
 	/**
-	 * Create a collect with a name based on the provided entity class using the options.
+	 * Create a collection with a name based on the provided entity class using the options.
 	 * 
 	 * @param entityClass class that determines the collection to create
 	 * @param collectionOptions options to use when creating the collection.
@@ -207,7 +207,7 @@ public interface MongoOperations {
 	DBCollection createCollection(String collectionName);
 
 	/**
-	 * Create a collect with the provided name and options.
+	 * Create a collection with the provided name and options.
 	 * 
 	 * @param collectionName name of the collection
 	 * @param collectionOptions options to use when creating the collection.
