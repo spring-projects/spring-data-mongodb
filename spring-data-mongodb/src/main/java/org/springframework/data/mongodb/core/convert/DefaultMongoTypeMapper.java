@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2013 the original author or authors.
+ * Copyright 2011-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,9 +45,9 @@ import com.mongodb.DBObject;
 public class DefaultMongoTypeMapper extends DefaultTypeMapper<DBObject> implements MongoTypeMapper {
 
 	public static final String DEFAULT_TYPE_KEY = "_class";
-	@SuppressWarnings("rawtypes")//
+	@SuppressWarnings("rawtypes") //
 	private static final TypeInformation<List> LIST_TYPE_INFO = ClassTypeInformation.from(List.class);
-	@SuppressWarnings("rawtypes")//
+	@SuppressWarnings("rawtypes") //
 	private static final TypeInformation<Map> MAP_TYPE_INFO = ClassTypeInformation.from(Map.class);
 
 	private final TypeAliasAccessor<DBObject> accessor;
@@ -58,12 +58,12 @@ public class DefaultMongoTypeMapper extends DefaultTypeMapper<DBObject> implemen
 	}
 
 	public DefaultMongoTypeMapper(String typeKey) {
-		this(typeKey, Arrays.asList(SimpleTypeInformationMapper.INSTANCE));
+		this(typeKey, Arrays.asList(new SimpleTypeInformationMapper()));
 	}
 
 	public DefaultMongoTypeMapper(String typeKey, MappingContext<? extends PersistentEntity<?, ?>, ?> mappingContext) {
-		this(typeKey, new DBObjectTypeAliasAccessor(typeKey), mappingContext, Arrays
-				.asList(SimpleTypeInformationMapper.INSTANCE));
+		this(typeKey, new DBObjectTypeAliasAccessor(typeKey), mappingContext,
+				Arrays.asList(new SimpleTypeInformationMapper()));
 	}
 
 	public DefaultMongoTypeMapper(String typeKey, List<? extends TypeInformationMapper> mappers) {
@@ -71,7 +71,8 @@ public class DefaultMongoTypeMapper extends DefaultTypeMapper<DBObject> implemen
 	}
 
 	private DefaultMongoTypeMapper(String typeKey, TypeAliasAccessor<DBObject> accessor,
-			MappingContext<? extends PersistentEntity<?, ?>, ?> mappingContext, List<? extends TypeInformationMapper> mappers) {
+			MappingContext<? extends PersistentEntity<?, ?>, ?> mappingContext,
+			List<? extends TypeInformationMapper> mappers) {
 
 		super(accessor, mappingContext, mappers);
 
