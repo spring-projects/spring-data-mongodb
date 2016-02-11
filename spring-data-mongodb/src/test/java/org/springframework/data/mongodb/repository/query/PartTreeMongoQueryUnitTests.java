@@ -173,7 +173,7 @@ public class PartTreeMongoQueryUnitTests {
 	@Test
 	public void restrictsQueryToFieldsRequiredForDto() {
 
-		DBObject fieldsObject = deriveQueryFromMethod("findPersonDtoBy", new Object[0]).getFieldsObject();
+		DBObject fieldsObject = deriveQueryFromMethod("findPersonDtoByAge", new Object[] { 42 }).getFieldsObject();
 
 		assertThat(fieldsObject.get("firstname"), is((Object) 1));
 		assertThat(fieldsObject.get("lastname"), is((Object) 1));
@@ -246,7 +246,7 @@ public class PartTreeMongoQueryUnitTests {
 
 		PersonProjection findPersonProjectedBy();
 
-		PersonDto findPersonDtoBy();
+		PersonDto findPersonDtoByAge(Integer age);
 
 		<T> T findDynamicallyProjectedBy(Class<T> type);
 	}

@@ -54,7 +54,7 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 
 	private static final SpelExpressionParser EXPRESSION_PARSER = new SpelExpressionParser();
 
-	private final MongoOperations mongoOperations;
+	private final MongoOperations operations;
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 
 	/**
@@ -66,7 +66,7 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 
 		Assert.notNull(mongoOperations);
 
-		this.mongoOperations = mongoOperations;
+		this.operations = mongoOperations;
 		this.mappingContext = mongoOperations.getConverter().getMappingContext();
 	}
 
@@ -92,7 +92,7 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 
 		MongoEntityInformation<?, Serializable> entityInformation = getEntityInformation(information.getDomainType(),
 				information);
-		return getTargetRepositoryViaReflection(information, entityInformation, mongoOperations);
+		return getTargetRepositoryViaReflection(information, entityInformation, operations);
 	}
 
 	/* 
@@ -101,7 +101,7 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 	 */
 	@Override
 	protected QueryLookupStrategy getQueryLookupStrategy(Key key, EvaluationContextProvider evaluationContextProvider) {
-		return new MongoQueryLookupStrategy(evaluationContextProvider);
+		return new MongoQueryLookupStrategy(operations, evaluationContextProvider, mappingContext);
 	}
 
 	/*
@@ -133,12 +133,18 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 	 * @author Oliver Gierke
 	 * @author Thomas Darimont
 	 */
-	private class MongoQueryLookupStrategy implements QueryLookupStrategy {
+	private static class MongoQueryLookupStrategy implements QueryLookupStrategy {
 
+		private final MongoOperations operations;
 		private final EvaluationContextProvider evaluationContextProvider;
+		MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 
-		public MongoQueryLookupStrategy(EvaluationContextProvider evaluationContextProvider) {
+		public MongoQueryLookupStrategy(MongoOperations operations, EvaluationContextProvider evaluationContextProvider,
+				MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
+
+			this.operations = operations;
 			this.evaluationContextProvider = evaluationContextProvider;
+			this.mappingContext = mappingContext;
 		}
 
 		/* 
@@ -154,12 +160,12 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 
 			if (namedQueries.hasQuery(namedQueryName)) {
 				String namedQuery = namedQueries.getQuery(namedQueryName);
-				return new StringBasedMongoQuery(namedQuery, queryMethod, mongoOperations, EXPRESSION_PARSER,
+				return new StringBasedMongoQuery(namedQuery, queryMethod, operations, EXPRESSION_PARSER,
 						evaluationContextProvider);
 			} else if (queryMethod.hasAnnotatedQuery()) {
-				return new StringBasedMongoQuery(queryMethod, mongoOperations, EXPRESSION_PARSER, evaluationContextProvider);
+				return new StringBasedMongoQuery(queryMethod, operations, EXPRESSION_PARSER, evaluationContextProvider);
 			} else {
-				return new PartTreeMongoQuery(queryMethod, mongoOperations);
+				return new PartTreeMongoQuery(queryMethod, operations);
 			}
 		}
 	}

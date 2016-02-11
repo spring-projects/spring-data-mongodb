@@ -44,6 +44,7 @@ public class PartTreeMongoQuery extends AbstractMongoQuery {
 	private final PartTree tree;
 	private final boolean isGeoNearQuery;
 	private final MappingContext<?, MongoPersistentProperty> context;
+	private final ResultProcessor processor;
 
 	/**
 	 * Creates a new {@link PartTreeMongoQuery} from the given {@link QueryMethod} and {@link MongoTemplate}.
@@ -54,7 +55,9 @@ public class PartTreeMongoQuery extends AbstractMongoQuery {
 	public PartTreeMongoQuery(MongoQueryMethod method, MongoOperations mongoOperations) {
 
 		super(method, mongoOperations);
-		this.tree = new PartTree(method.getName(), method.getEntityInformation().getJavaType());
+
+		this.processor = method.getResultProcessor();
+		this.tree = new PartTree(method.getName(), processor.getReturnedType().getDomainType());
 		this.isGeoNearQuery = method.isGeoNearQuery();
 		this.context = mongoOperations.getConverter().getMappingContext();
 	}
@@ -91,7 +94,6 @@ public class PartTreeMongoQuery extends AbstractMongoQuery {
 
 		if (!StringUtils.hasText(fieldSpec)) {
 
-			ResultProcessor processor = getQueryMethod().getResultProcessor();
 			ReturnedType returnedType = processor.withDynamicProjection(accessor).getReturnedType();
 
 			if (returnedType.isProjecting()) {

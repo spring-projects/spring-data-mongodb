@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2015 the original author or authors.
+ * Copyright 2010-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,30 +15,24 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import java.util.Collections;
-import java.util.List;
-
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Range;
-import org.springframework.data.domain.Slice;
-import org.springframework.data.domain.SliceImpl;
-import org.springframework.data.geo.Distance;
-import org.springframework.data.geo.GeoPage;
-import org.springframework.data.geo.GeoResult;
-import org.springframework.data.geo.GeoResults;
-import org.springframework.data.geo.Point;
+import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.convert.EntityInstantiators;
 import org.springframework.data.mongodb.core.MongoOperations;
-import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.repository.query.MongoQueryExecution.CollectionExecution;
+import org.springframework.data.mongodb.repository.query.MongoQueryExecution.DeleteExecution;
+import org.springframework.data.mongodb.repository.query.MongoQueryExecution.GeoNearExecution;
+import org.springframework.data.mongodb.repository.query.MongoQueryExecution.PagedExecution;
+import org.springframework.data.mongodb.repository.query.MongoQueryExecution.PagingGeoNearExecution;
+import org.springframework.data.mongodb.repository.query.MongoQueryExecution.ResultProcessingConverter;
+import org.springframework.data.mongodb.repository.query.MongoQueryExecution.ResultProcessingExecution;
+import org.springframework.data.mongodb.repository.query.MongoQueryExecution.SingleEntityExecution;
+import org.springframework.data.mongodb.repository.query.MongoQueryExecution.SlicedExecution;
+import org.springframework.data.mongodb.repository.query.MongoQueryExecution.StreamExecution;
 import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.repository.query.RepositoryQuery;
-import org.springframework.data.util.CloseableIterator;
-import org.springframework.data.util.StreamUtils;
-import org.springframework.data.util.TypeInformation;
+import org.springframework.data.repository.query.ResultProcessor;
 import org.springframework.util.Assert;
-
-import com.mongodb.WriteResult;
 
 /**
  * Base class for {@link RepositoryQuery} implementations for Mongo.
@@ -51,6 +45,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 
 	private final MongoQueryMethod method;
 	private final MongoOperations operations;
+	private final EntityInstantiators instantiators;
 
 	/**
 	 * Creates a new {@link AbstractMongoQuery} from the given {@link MongoQueryMethod} and {@link MongoOperations}.
@@ -65,6 +60,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 
 		this.method = method;
 		this.operations = operations;
+		this.instantiators = new EntityInstantiators();
 	}
 
 	/* 
@@ -86,30 +82,53 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 
 		applyQueryMetaAttributesWhenPresent(query);
 
+		ResultProcessor processor = method.getResultProcessor().withDynamicProjection(accessor);
+		String collection = method.getEntityInformation().getCollectionName();
+
+		MongoQueryExecution execution = getExecution(query, accessor,
+				new ResultProcessingConverter(processor, operations, instantiators));
+
+		return execution.execute(query, processor.getReturnedType().getDomainType(), collection);
+	}
+
+	/**
+	 * Returns the execution instance to use.
+	 * 
+	 * @param query must not be {@literal null}.
+	 * @param parameters must not be {@literal null}.
+	 * @param accessor must not be {@literal null}.
+	 * @return
+	 */
+	private MongoQueryExecution getExecution(Query query, MongoParameterAccessor accessor,
+			Converter<Object, Object> resultProcessing) {
+
 		if (method.isStreamQuery()) {
-			return new StreamExecution().execute(query);
-		} else if (isDeleteQuery()) {
-			return new DeleteExecution().execute(query);
+			return new StreamExecution(operations, resultProcessing);
+		}
+
+		return new ResultProcessingExecution(getExecutionToWrap(query, accessor), resultProcessing);
+	}
+
+	private MongoQueryExecution getExecutionToWrap(Query query, MongoParameterAccessor accessor) {
+
+		if (isDeleteQuery()) {
+			return new DeleteExecution(operations, method);
 		} else if (method.isGeoNearQuery() && method.isPageQuery()) {
-
-			MongoParameterAccessor countAccessor = new MongoParametersParameterAccessor(method, parameters);
-			Query countQuery = createCountQuery(new ConvertingParameterAccessor(operations.getConverter(), countAccessor));
-
-			return new GeoNearExecution(accessor).execute(query, countQuery);
+			return new PagingGeoNearExecution(operations, accessor, method.getReturnType(), this);
 		} else if (method.isGeoNearQuery()) {
-			return new GeoNearExecution(accessor).execute(query);
+			return new GeoNearExecution(operations, accessor, method.getReturnType());
 		} else if (method.isSliceQuery()) {
-			return new SlicedExecution(accessor.getPageable()).execute(query);
+			return new SlicedExecution(operations, accessor.getPageable());
 		} else if (method.isCollectionQuery()) {
-			return new CollectionExecution(accessor.getPageable()).execute(query);
+			return new CollectionExecution(operations, accessor.getPageable());
 		} else if (method.isPageQuery()) {
-			return new PagedExecution(accessor.getPageable()).execute(query);
+			return new PagedExecution(operations, accessor.getPageable());
 		} else {
-			return new SingleEntityExecution(isCountQuery()).execute(query);
+			return new SingleEntityExecution(operations, isCountQuery());
 		}
 	}
 
-	private Query applyQueryMetaAttributesWhenPresent(Query query) {
+	Query applyQueryMetaAttributesWhenPresent(Query query) {
 
 		if (method.hasQueryMetaAttributes()) {
 			query.setMeta(method.getQueryMetaAttributes());
@@ -127,12 +146,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	 * @return
 	 */
 	protected Query createCountQuery(ConvertingParameterAccessor accessor) {
-
-		Query query = createQuery(accessor);
-
-		applyQueryMetaAttributesWhenPresent(query);
-
-		return query;
+		return applyQueryMetaAttributesWhenPresent(createQuery(accessor));
 	}
 
 	/**
@@ -157,292 +171,4 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	 * @since 1.5
 	 */
 	protected abstract boolean isDeleteQuery();
-
-	private abstract class Execution {
-
-		abstract Object execute(Query query);
-
-		protected List<?> readCollection(Query query) {
-
-			MongoEntityMetadata<?> metadata = method.getEntityInformation();
-
-			String collectionName = metadata.getCollectionName();
-			return operations.find(query, metadata.getJavaType(), collectionName);
-		}
-	}
-
-	/**
-	 * {@link Execution} for collection returning queries.
-	 * 
-	 * @author Oliver Gierke
-	 */
-	final class CollectionExecution extends Execution {
-
-		private final Pageable pageable;
-
-		CollectionExecution(Pageable pageable) {
-			this.pageable = pageable;
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery.Execution#execute(org.springframework.data.mongodb.core.query.Query)
-		 */
-		@Override
-		public Object execute(Query query) {
-			return readCollection(query.with(pageable));
-		}
-	}
-
-	/**
-	 * {@link Execution} for {@link Slice} query methods.
-	 * 
-	 * @author Oliver Gierke
-	 * @author Christoph Strobl
-	 * @since 1.5
-	 */
-
-	final class SlicedExecution extends Execution {
-
-		private final Pageable pageable;
-
-		SlicedExecution(Pageable pageable) {
-			this.pageable = pageable;
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery.Execution#execute(org.springframework.data.mongodb.core.query.Query)
-		 */
-		@Override
-		@SuppressWarnings({ "unchecked", "rawtypes" })
-		Object execute(Query query) {
-
-			MongoEntityMetadata<?> metadata = method.getEntityInformation();
-			int pageSize = pageable.getPageSize();
-
-			// Apply Pageable but tweak limit to peek into next page
-			Query modifiedQuery = query.with(pageable).limit(pageSize + 1);
-
-			List result = operations.find(modifiedQuery, metadata.getJavaType(), metadata.getCollectionName());
-
-			boolean hasNext = result.size() > pageSize;
-
-			return new SliceImpl<Object>(hasNext ? result.subList(0, pageSize) : result, pageable, hasNext);
-		}
-	}
-
-	/**
-	 * {@link Execution} for pagination queries.
-	 * 
-	 * @author Oliver Gierke
-	 */
-	final class PagedExecution extends Execution {
-
-		private final Pageable pageable;
-
-		/**
-		 * Creates a new {@link PagedExecution}.
-		 * 
-		 * @param pageable
-		 */
-		public PagedExecution(Pageable pageable) {
-
-			Assert.notNull(pageable);
-			this.pageable = pageable;
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.repository.AbstractMongoQuery.Execution#execute(org.springframework.data.mongodb.core.query.Query)
-		 */
-		@Override
-		@SuppressWarnings({ "rawtypes", "unchecked" })
-		Object execute(Query query) {
-
-			MongoEntityMetadata<?> metadata = method.getEntityInformation();
-			String collectionName = metadata.getCollectionName();
-			Class<?> type = metadata.getJavaType();
-
-			int overallLimit = query.getLimit();
-			long count = operations.count(query, type, collectionName);
-			count = overallLimit != 0 ? Math.min(count, query.getLimit()) : count;
-
-			boolean pageableOutOfScope = pageable.getOffset() > count;
-
-			if (pageableOutOfScope) {
-				return new PageImpl<Object>(Collections.emptyList(), pageable, count);
-			}
-
-			// Apply raw pagination
-			query = query.with(pageable);
-
-			// Adjust limit if page would exceed the overall limit
-			if (overallLimit != 0 && pageable.getOffset() + pageable.getPageSize() > overallLimit) {
-				query.limit(overallLimit - pageable.getOffset());
-			}
-
-			List<?> result = operations.find(query, type, collectionName);
-			return new PageImpl(result, pageable, count);
-		}
-	}
-
-	/**
-	 * {@link Execution} to return a single entity.
-	 * 
-	 * @author Oliver Gierke
-	 */
-	final class SingleEntityExecution extends Execution {
-
-		private final boolean countProjection;
-
-		private SingleEntityExecution(boolean countProjection) {
-			this.countProjection = countProjection;
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.repository.AbstractMongoQuery.Execution#execute(org.springframework.data.mongodb.core.core.query.Query)
-		 */
-		@Override
-		Object execute(Query query) {
-
-			MongoEntityMetadata<?> metadata = method.getEntityInformation();
-			return countProjection ? operations.count(query, metadata.getJavaType())
-					: operations.findOne(query, metadata.getJavaType(), metadata.getCollectionName());
-		}
-	}
-
-	/**
-	 * {@link Execution} to execute geo-near queries.
-	 * 
-	 * @author Oliver Gierke
-	 */
-	final class GeoNearExecution extends Execution {
-
-		private final MongoParameterAccessor accessor;
-
-		public GeoNearExecution(MongoParameterAccessor accessor) {
-			this.accessor = accessor;
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.repository.AbstractMongoQuery.Execution#execute(org.springframework.data.mongodb.core.query.Query)
-		 */
-		@Override
-		Object execute(Query query) {
-
-			GeoResults<?> results = doExecuteQuery(query);
-			return isListOfGeoResult() ? results.getContent() : results;
-		}
-
-		/**
-		 * Executes the given {@link Query} to return a page.
-		 * 
-		 * @param query must not be {@literal null}.
-		 * @param countQuery must not be {@literal null}.
-		 * @return
-		 */
-		Object execute(Query query, Query countQuery) {
-
-			MongoEntityMetadata<?> metadata = method.getEntityInformation();
-			long count = operations.count(countQuery, metadata.getCollectionName());
-
-			return new GeoPage<Object>(doExecuteQuery(query), accessor.getPageable(), count);
-		}
-
-		@SuppressWarnings("unchecked")
-		private GeoResults<Object> doExecuteQuery(Query query) {
-
-			Point nearLocation = accessor.getGeoNearLocation();
-			NearQuery nearQuery = NearQuery.near(nearLocation);
-
-			if (query != null) {
-				nearQuery.query(query);
-			}
-
-			Range<Distance> distances = accessor.getDistanceRange();
-			Distance maxDistance = distances.getUpperBound();
-
-			if (maxDistance != null) {
-				nearQuery.maxDistance(maxDistance).in(maxDistance.getMetric());
-			}
-
-			Distance minDistance = distances.getLowerBound();
-
-			if (minDistance != null) {
-				nearQuery.minDistance(minDistance).in(minDistance.getMetric());
-			}
-
-			Pageable pageable = accessor.getPageable();
-			if (pageable != null) {
-				nearQuery.with(pageable);
-			}
-
-			MongoEntityMetadata<?> metadata = method.getEntityInformation();
-			return (GeoResults<Object>) operations.geoNear(nearQuery, metadata.getJavaType(), metadata.getCollectionName());
-		}
-
-		private boolean isListOfGeoResult() {
-
-			TypeInformation<?> returnType = method.getReturnType();
-
-			if (!returnType.getType().equals(List.class)) {
-				return false;
-			}
-
-			TypeInformation<?> componentType = returnType.getComponentType();
-			return componentType == null ? false : GeoResult.class.equals(componentType.getType());
-		}
-	}
-
-	/**
-	 * {@link Execution} removing documents matching the query.
-	 * 
-	 * @since 1.5
-	 */
-	final class DeleteExecution extends Execution {
-
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery.Execution#execute(org.springframework.data.mongodb.core.query.Query)
-		 */
-		@Override
-		Object execute(Query query) {
-
-			MongoEntityMetadata<?> metadata = method.getEntityInformation();
-			return deleteAndConvertResult(query, metadata);
-		}
-
-		private Object deleteAndConvertResult(Query query, MongoEntityMetadata<?> metadata) {
-
-			if (method.isCollectionQuery()) {
-				return operations.findAllAndRemove(query, metadata.getJavaType(), metadata.getCollectionName());
-			}
-
-			WriteResult writeResult = operations.remove(query, metadata.getJavaType(), metadata.getCollectionName());
-			return writeResult != null ? writeResult.getN() : 0L;
-		}
-	}
-
-	/**
-	 * @author Thomas Darimont
-	 * @since 1.7
-	 */
-	final class StreamExecution extends Execution {
-
-		/* 
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery.Execution#execute(org.springframework.data.mongodb.core.query.Query)
-		 */
-		@Override
-		@SuppressWarnings("unchecked")
-		Object execute(Query query) {
-
-			Class<?> entityType = getQueryMethod().getEntityInformation().getJavaType();
-
-			return StreamUtils.createStreamFromIterator((CloseableIterator<Object>) operations.stream(query, entityType));
-		}
-	}
 }

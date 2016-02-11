@@ -17,8 +17,6 @@ package org.springframework.data.mongodb.repository.query;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
@@ -27,16 +25,11 @@ import static org.springframework.data.mongodb.repository.query.StubParameterAcc
 import java.lang.reflect.Method;
 import java.util.List;
 
+import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.runners.MockitoJUnitRunner;
-import org.mockito.stubbing.Answer;
 import org.springframework.data.domain.Range;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Metrics;
@@ -44,14 +37,19 @@ import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
 import org.springframework.data.geo.Shape;
 import org.springframework.data.mapping.context.MappingContext;
+import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.Person;
 import org.springframework.data.mongodb.core.Venue;
+import org.springframework.data.mongodb.core.convert.DbRefResolver;
+import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexed;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -59,7 +57,8 @@ import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
 import org.springframework.data.repository.query.parser.PartTree;
-import org.springframework.data.util.TypeInformation;
+
+import com.mongodb.DBObject;
 
 /**
  * Unit test for {@link MongoQueryCreator}.
@@ -68,14 +67,12 @@ import org.springframework.data.util.TypeInformation;
  * @author Thomas Darimont
  * @author Christoph Strobl
  */
-@RunWith(MockitoJUnitRunner.class)
 public class MongoQueryCreatorUnitTests {
 
 	Method findByFirstname, findByFirstnameAndFriend, findByFirstnameNotNull;
 
-	@Mock MongoConverter converter;
-
-	MappingContext<?, MongoPersistentProperty> context;
+	MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> context;
+	MongoConverter converter;
 
 	@Rule public ExpectedException expection = ExpectedException.none();
 
@@ -84,11 +81,8 @@ public class MongoQueryCreatorUnitTests {
 
 		context = new MongoMappingContext();
 
-		doAnswer(new Answer<Object>() {
-			public Object answer(InvocationOnMock invocation) throws Throwable {
-				return invocation.getArguments()[0];
-			}
-		}).when(converter).convertToMongoType(any(), Mockito.any(TypeInformation.class));
+		DbRefResolver resolver = new DefaultDbRefResolver(mock(MongoDbFactory.class));
+		converter = new MappingMongoConverter(resolver, context);
 	}
 
 	@Test
@@ -243,14 +237,13 @@ public class MongoQueryCreatorUnitTests {
 	public void createsQueryReferencingADBRefCorrectly() {
 
 		User user = new User();
-		com.mongodb.DBRef dbref = new com.mongodb.DBRef("user", "id");
-		when(converter.toDBRef(eq(user), Mockito.any(MongoPersistentProperty.class))).thenReturn(dbref);
+		user.id = new ObjectId();
 
 		PartTree tree = new PartTree("findByCreator", User.class);
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, user), context);
-		Query query = creator.createQuery();
+		DBObject queryObject = creator.createQuery().getQueryObject();
 
-		assertThat(query, is(query(where("creator").is(dbref))));
+		assertThat(queryObject.get("creator"), is((Object) user));
 	}
 
 	/**
@@ -293,8 +286,6 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	private void assertBindsDistanceToQuery(Point point, Distance distance, Query reference) throws Exception {
-
-		when(converter.convertToMongoType("Dave")).thenReturn("Dave");
 
 		PartTree tree = new PartTree("findByLocationNearAndFirstname",
 				org.springframework.data.mongodb.repository.Person.class);
@@ -683,6 +674,8 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	class User {
+
+		ObjectId id;
 
 		@Field("foo") String username;
 

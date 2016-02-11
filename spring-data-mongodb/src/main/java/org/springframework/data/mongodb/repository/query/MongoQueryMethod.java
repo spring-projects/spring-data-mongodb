@@ -136,7 +136,8 @@ public class MongoQueryMethod extends QueryMethod {
 
 				MongoPersistentEntity<?> returnedEntity = mappingContext.getPersistentEntity(returnedObjectType);
 				MongoPersistentEntity<?> managedEntity = mappingContext.getPersistentEntity(domainClass);
-				returnedEntity = returnedEntity == null ? managedEntity : returnedEntity;
+				returnedEntity = returnedEntity == null || returnedEntity.getType().isInterface() ? managedEntity
+						: returnedEntity;
 				MongoPersistentEntity<?> collectionEntity = domainClass.isAssignableFrom(returnedObjectType) ? returnedEntity
 						: managedEntity;
 

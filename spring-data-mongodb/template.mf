@@ -2,6 +2,8 @@ Bundle-SymbolicName: org.springframework.data.mongodb
 Bundle-Name: Spring Data MongoDB Support
 Bundle-Vendor: Pivotal Software, Inc.
 Bundle-ManifestVersion: 2
+Excluded-Imports:
+ lombok.*
 Import-Package:
  sun.reflect;version="0";resolution:=optional
 Export-Template:
