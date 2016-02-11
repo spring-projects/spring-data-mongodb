@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2015 the original author or authors.
+ * Copyright 2011-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,6 +37,8 @@ import com.mongodb.MongoException;
 /**
  * @author Thomas Risberg
  * @author Oliver Gierke
+ * @author Alex Vengrovsk
+ * @author Mark Paluch
  */
 public class MongoChangeSetPersister implements ChangeSetPersister<Object> {
 
@@ -76,14 +78,14 @@ public class MongoChangeSetPersister implements ChangeSetPersister<Object> {
 		dbk.put(ENTITY_ID, id);
 		dbk.put(ENTITY_CLASS, entityClass.getName());
 		if (log.isDebugEnabled()) {
-			log.debug("Loading MongoDB data for " + dbk);
+			log.debug("Loading MongoDB data for {}", dbk);
 		}
 		mongoTemplate.execute(collName, new CollectionCallback<Object>() {
 			public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
 				for (DBObject dbo : collection.find(dbk)) {
 					String key = (String) dbo.get(ENTITY_FIELD_NAME);
 					if (log.isDebugEnabled()) {
-						log.debug("Processing key: " + key);
+						log.debug("Processing key: {}", key);
 					}
 					if (!changeSet.getValues().containsKey(key)) {
 						String className = (String) dbo.get(ENTITY_FIELD_CLASS);
@@ -94,7 +96,7 @@ public class MongoChangeSetPersister implements ChangeSetPersister<Object> {
 						Class<?> clazz = ClassUtils.resolveClassName(className, ClassUtils.getDefaultClassLoader());
 						Object value = mongoTemplate.getConverter().read(clazz, dbo);
 						if (log.isDebugEnabled()) {
-							log.debug("Adding to ChangeSet: " + key);
+							log.debug("Adding to ChangeSet: {}", key);
 						}
 						changeSet.set(key, value);
 					}
@@ -110,7 +112,7 @@ public class MongoChangeSetPersister implements ChangeSetPersister<Object> {
 	 */
 	public Object getPersistentId(ChangeSetBacked entity, ChangeSet cs) throws DataAccessException {
 		if (log.isDebugEnabled()) {
-			log.debug("getPersistentId called on " + entity);
+			log.debug("getPersistentId called on {}", entity);
 		}
 		if (entityManagerFactory == null) {
 			throw new DataAccessResourceFailureException("EntityManagerFactory cannot be null");
@@ -130,7 +132,7 @@ public class MongoChangeSetPersister implements ChangeSetPersister<Object> {
 		}
 
 		if (log.isDebugEnabled()) {
-			log.debug("Flush: changeset: " + cs.getValues());
+			log.debug("Flush: changeset: {}", cs.getValues());
 		}
 
 		String collName = getCollectionNameForEntity(entity.getClass());
@@ -152,7 +154,7 @@ public class MongoChangeSetPersister implements ChangeSetPersister<Object> {
 				});
 				if (value == null) {
 					if (log.isDebugEnabled()) {
-						log.debug("Flush: removing: " + dbQuery);
+						log.debug("Flush: removing: {}", dbQuery);
 					}
 					mongoTemplate.execute(collName, new CollectionCallback<Object>() {
 						public Object doInCollection(DBCollection collection) throws MongoException, DataAccessException {
@@ -164,7 +166,7 @@ public class MongoChangeSetPersister implements ChangeSetPersister<Object> {
 					final DBObject dbDoc = new BasicDBObject();
 					dbDoc.putAll(dbQuery);
 					if (log.isDebugEnabled()) {
-						log.debug("Flush: saving: " + dbQuery);
+						log.debug("Flush: saving: {}", dbQuery);
 					}
 					mongoTemplate.getConverter().write(value, dbDoc);
 					dbDoc.put(ENTITY_FIELD_CLASS, value.getClass().getName());
