@@ -103,8 +103,6 @@ public class CustomConversions {
 		toRegister.addAll(converters);
 		toRegister.add(CustomToStringConverter.INSTANCE);
 		toRegister.addAll(MongoConverters.getConvertersToRegister());
-		toRegister.add(NumberToNumberConverterFactory.INSTANCE);
-
 		toRegister.addAll(JodaTimeConverters.getConvertersToRegister());
 		toRegister.addAll(GeoConverters.getConvertersToRegister());
 		toRegister.addAll(Jsr310Converters.getConvertersToRegister());
@@ -168,7 +166,8 @@ public class CustomConversions {
 			}
 
 			if (!added) {
-				throw new IllegalArgumentException("Given set contains element that is neither Converter nor ConverterFactory!");
+				throw new IllegalArgumentException(
+						"Given set contains element that is neither Converter nor ConverterFactory!");
 			}
 		}
 	}
@@ -398,6 +397,10 @@ public class CustomConversions {
 
 		INSTANCE;
 
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.core.convert.converter.GenericConverter#getConvertibleTypes()
+		 */
 		public Set<ConvertiblePair> getConvertibleTypes() {
 
 			ConvertiblePair localeToString = new ConvertiblePair(Locale.class, String.class);
@@ -406,6 +409,10 @@ public class CustomConversions {
 			return new HashSet<ConvertiblePair>(Arrays.asList(localeToString, booleanToString));
 		}
 
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.core.convert.converter.GenericConverter#convert(java.lang.Object, org.springframework.core.convert.TypeDescriptor, org.springframework.core.convert.TypeDescriptor)
+		 */
 		public Object convert(Object source, TypeDescriptor sourceType, TypeDescriptor targetType) {
 			return source.toString();
 		}

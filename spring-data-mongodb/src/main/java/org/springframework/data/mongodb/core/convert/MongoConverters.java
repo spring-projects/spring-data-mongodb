@@ -21,10 +21,10 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.Currency;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.bson.types.Code;
 import org.bson.types.ObjectId;
@@ -37,6 +37,7 @@ import org.springframework.data.convert.ReadingConverter;
 import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.mongodb.core.query.Term;
 import org.springframework.data.mongodb.core.script.NamedMongoScript;
+import org.springframework.util.Assert;
 import org.springframework.util.NumberUtils;
 import org.springframework.util.StringUtils;
 
@@ -64,9 +65,9 @@ abstract class MongoConverters {
 	 * @return
 	 * @since 1.9
 	 */
-	public static Collection<Converter<?, ?>> getConvertersToRegister() {
+	public static Collection<Object> getConvertersToRegister() {
 
-		List<Converter<?, ?>> converters = new ArrayList<Converter<?, ?>>();
+		List<Object> converters = new ArrayList<Object>();
 
 		converters.add(BigDecimalToStringConverter.INSTANCE);
 		converters.add(StringToBigDecimalConverter.INSTANCE);
@@ -80,6 +81,7 @@ abstract class MongoConverters {
 		converters.add(DBObjectToNamedMongoScriptCoverter.INSTANCE);
 		converters.add(CurrencyToStringConverter.INSTANCE);
 		converters.add(StringToCurrencyConverter.INSTANCE);
+		converters.add(NumberToNumberConverterFactory.INSTANCE);
 
 		return converters;
 	}
@@ -264,7 +266,7 @@ abstract class MongoConverters {
 		}
 	}
 
-/**
+	/**
 	 * {@link Converter} implementation converting {@link Currency} into its ISO 4217 {@link String} representation.
 	 * 
 	 * @author Christoph Strobl
@@ -315,34 +317,55 @@ abstract class MongoConverters {
 	 * @since 1.9
 	 */
 	@WritingConverter
-	public static enum NumberToNumberConverterFactory implements ConverterFactory<Number, Number>, ConditionalConverter {
+	public static enum NumberToNumberConverterFactory implements ConverterFactory<Number, Number>,ConditionalConverter {
 
 		INSTANCE;
 
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.core.convert.converter.ConverterFactory#getConverter(java.lang.Class)
+		 */
 		@Override
 		public <T extends Number> Converter<Number, T> getConverter(Class<T> targetType) {
-			return new NumberToNumber<T>(targetType);
+			return new NumberToNumberConverter<T>(targetType);
 		}
 
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.core.convert.converter.ConditionalConverter#matches(org.springframework.core.convert.TypeDescriptor, org.springframework.core.convert.TypeDescriptor)
+		 */
 		@Override
 		public boolean matches(TypeDescriptor sourceType, TypeDescriptor targetType) {
 			return !sourceType.equals(targetType);
 		}
 
-		private final static class NumberToNumber<T extends Number> implements Converter<Number, T> {
+		private final static class NumberToNumberConverter<T extends Number> implements Converter<Number, T> {
 
 			private final Class<T> targetType;
 
-			public NumberToNumber(Class<T> targetType) {
+			/**
+			 * Creates a new {@link NumberToNumberConverter} for the given target type.
+			 * 
+			 * @param targetType must not be {@literal null}.
+			 */
+			public NumberToNumberConverter(Class<T> targetType) {
+				
+				Assert.notNull(targetType, "Target type must not be null!");
+				
 				this.targetType = targetType;
 			}
 
+			/*
+			 * (non-Javadoc)
+			 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
+			 */
 			@Override
 			public T convert(Number source) {
 
 				if (source instanceof AtomicInteger) {
 					return NumberUtils.convertNumberToTargetClass(((AtomicInteger) source).get(), this.targetType);
 				}
+
 				if (source instanceof AtomicLong) {
 					return NumberUtils.convertNumberToTargetClass(((AtomicLong) source).get(), this.targetType);
 				}
