@@ -1,6 +1,47 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 1.9.0.M1 (2016-02-12)
+----------------------------------------
+* DATAMONGO-1380 - Improve logging in MongoChangeSetPersister.
+* DATAMONGO-1378 - Update reference documentation: Change Query.sort() to Query.with(Sort sort).
+* DATAMONGO-1377 - Update JavaDoc: Use @EnableMongoRepositories instead of @EnableJpaRepositories.
+* DATAMONGO-1376 - Move away from SimpleTypeInformationMapper.INSTANCE.
+* DATAMONGO-1375 - Fix typo in MongoOperations JavaDoc.
+* DATAMONGO-1372 - Add converter for Currency.
+* DATAMONGO-1371 - Add code of conduct.
+* DATAMONGO-1366 - Release 1.9 M1 (Hopper).
+* DATAMONGO-1361 - geoNear() queries fail when the accompanying query returns no results.
+* DATAMONGO-1360 - Cannot query with JSR310.
+* DATAMONGO-1349 - Upgrade to mongo-java-driver 2.14.0.
+* DATAMONGO-1346 - Cannot add two pullAll to an Update.
+* DATAMONGO-1345 - Add support for projections on repository query methods.
+* DATAMONGO-1342 - Potential NullPointerException in MongoQueryCreator.nextAsArray(…).
+* DATAMONGO-1341 - Remove package cycle between core and core.index.
+* DATAMONGO-1337 - General code quality improvements.
+* DATAMONGO-1335 - DBObjectAccessor doesn't write properties correctly if multiple ones are nested.
+* DATAMONGO-1334 - MapResultOptions limit not implemented.
+* DATAMONGO-1324 - StringToObjectIdConverter not properly registered causing drop in performance on identifier conversion.
+* DATAMONGO-1317 - Assert compatibility with MongoDB Java driver 3.2.
+* DATAMONGO-1314 - Fix typo in Exception message.
+* DATAMONGO-1312 - Cannot convert generic sub-document fields.
+* DATAMONGO-1303 - Add build profile for MongoDB 3.1 driver.
+* DATAMONGO-1302 - CustomConversions should allow registration of ConverterFactory.
+* DATAMONGO-1297 - Unique Index on DBRef.
+* DATAMONGO-1293 - MongoDbFactoryParser should allow id attribute in addition to client-uri.
+* DATAMONGO-1291 - Allow @Document to be used as meta-annotation.
+* DATAMONGO-1290 - @Query annotation with byte[] parameter does not work.
+* DATAMONGO-1289 - NullPointerException when saving an object with no "id" field or @Id annotation.
+* DATAMONGO-1288 - Update.inc(String, Number) method fails to work with AtomicInteger.
+* DATAMONGO-1287 - MappingMongoConverter eagerly fetches and converts lazy DbRef to change them afterwards by proxies.
+* DATAMONGO-1276 - MongoTemplate.CloseableIterableCursorAdapter does not null check return values from PersistenceExceptionTranslator.
+* DATAMONGO-1270 - Update documentation to reflect deprecation of MongoFactoryBean.
+* DATAMONGO-1238 - Support for Querydsl 4.
+* DATAMONGO-1204 - ObjectPath equality check breaks due to changes MongoDB V3.
+* DATAMONGO-1163 - Allow @Indexed to be used as meta-annotation.
+* DATAMONGO-934 - Add support for the bulk operations introduced in MongoDB 2.6.
+
+
 Changes in version 1.8.2.RELEASE (2015-12-18)
 ---------------------------------------------
 * DATAMONGO-1355 - Release 1.8.2 (Gosling).
