@@ -1,0 +1,167 @@
+[[query.by.example]]
+= Query by Example
+
+== Introduction
+
+This chapter will give you an introduction to Query by Example and will explain how to use example specifications.
+
+Query by Example (QBE) is a user-friendly querying technique with a simple interface. It allows dynamic query creation and does not require to write queries containing field names. In fact, Query by Example does not require to write queries using store-specific query languages at all.
+
+== Usage
+
+An `Example` takes a data object (usually the entity object or a subtype of it) and a specification how to match properties. You can use Query by Example in the `MongoTemplate` and within `Repositories`.
+
+Query by Example is suited for several use-cases but also comes with limitations:
+
+**When to use**
+
+* Querying your data store with a set of static or dynamic constraints
+* Frequent refactoring of the entities without worrying about breaking existing queries
+* Works independently from the data store API
+
+**Limitations**
+
+* Query predicates are combined using the `AND` keyword
+* No support for nested/grouped property constraints like `firstname = ?0 or (firstname = ?1 and lastname = ?2)`
+* Limited to starts/contains/ends/regex matching for strings and exact matching for other property types
+
+
+Before getting started with Query by Example you need to have your entities set up.
+
+.Sample Person entity
+====
+[source,java]
+----
+public class Person {
+
+  @Id
+  private String id;
+  private String firstname;
+  private String lastname;
+  private Address address;
+
+  // … getters and setters omitted
+}
+----
+====
+
+We have a quite simple entity here that is mapped to the data store. You can use this entity to create an Example specification. By default, fields having `null` values are ignored, and strings are matched using the store specific defaults. Examples can be built by either using the `exampleOf` factory method or by using the <<query.by.example.builder,Example builder>>. Once the `Example` is constructed it becomes immutable.
+
+.The first Example specification
+====
+[source,xml]
+----
+Person person = new Person();                         <1>
+
+person.setFirstname("Dave");                          <2>
+
+Example<Person> example = Example.exampleOf(person);  <3>
+----
+<1> Create a new instance of the entity
+<2> Set the properties to query
+<3> Create an `Example`
+====
+
+
+NOTE: Property names of the sample object must correlate with the property names of the queried entity.
+
+.Query by Example using the MongoTemplate
+====
+[source,xml]
+----
+@Autowired
+MongoTemplate template;
+
+public List<Person> findPeople(Person sampleObject) {
+  return template.findByExample(Example.exampleOf(person));
+}
+----
+====
+
+The `findByExample` method accepts either the sample object or an `Example` object to query the data store. Spring Data uses the `Example` to create and execute a query.
+
+
+.Query by Example using the Repositories
+====
+[source, java]
+----
+public interface MongoRepository<Person, String> {
+
+  <S extends T> List<T> findAllByExample(Example<S> example);
+
+  <S extends T> List<T> findAllByExample(Example<S> example, Sort sort);
+
+  <S extends T> Page<T> findAllByExample(Example<S> example, Pageable pageable);
+
+  // … more functionality omitted.
+}
+----
+====
+
+[[query.by.example.builder]]
+== Example builder
+
+Examples are not limited to default settings. You can specify own defaults for string matching, null handling and property-specific settings using the example builder.
+
+.Query by Example builder
+====
+[source, java]
+----
+Example.newExampleOf(person)
+    .withStringMatcher(StringMatcher.ENDING)
+    .includeNullValues()
+    .withPropertySpecifier(
+            newPropertySpecifier("firstname").matchString(StringMatcher.CONTAINING).get())
+    .withPropertySpecifier(
+            newPropertySpecifier("lastname").matchStringsWithIgnoreCase().get())
+    .withPropertySpecifier(
+            newPropertySpecifier("address.city").matchStringStartingWith().get())
+    .get();
+----
+====
+
+Property specifier accepts property names and property paths separated by dots that are contained within the sample object. A `PropertySpecifier` allows setting string matching options, case-sensitivity,
+
+[cols="1,2", options="header"]
+.Supported string matching options of `StringMatcher`
+|===
+| Matching
+| Logical result
+
+| `DEFAULT` (case-sensitive)
+| `{"firstname" : firstname}`
+
+| `DEFAULT` (case-insensitive)
+| `{"firstname" : { $regex: firstname, $options: 'i'}}`
+
+| `EXACT`  (case-sensitive)
+| `{"firstname" : { $regex: /^firstname$/}}`
+
+| `EXACT` (case-insensitive)
+| `{"firstname" : { $regex: /^firstname$/, $options: 'i'}}`
+
+| `STARTING`  (case-sensitive)
+| `{"firstname" : { $regex: /^firstname/}}`
+
+| `STARTING` (case-insensitive)
+| `{"firstname" : { $regex: /^firstname/, $options: 'i'}}`
+
+| `ENDING`  (case-sensitive)
+| `{"firstname" : { $regex: /firstname$/}}`
+
+| `ENDING` (case-insensitive)
+| `{"firstname" : { $regex: /firstname$/, $options: 'i'}}`
+
+| `CONTAINING`  (case-sensitive)
+| `{"firstname" : { $regex: /.\*firstname.*/}}`
+
+| `CONTAINING` (case-insensitive)
+| `{"firstname" : { $regex: /.\*firstname.*/, $options: 'i'}}`
+
+| `REGEX`  (case-sensitive)
+| `{"firstname" : { $regex: /firstname/}}`
+
+| `REGEX` (case-insensitive)
+| `{"firstname" : { $regex: /firstname/, $options: 'i'}}`
+
+|===
