@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2014 the original author or authors.
+ * Copyright 2010-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.TypedExampleSpec;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -44,6 +45,7 @@ import org.springframework.util.Assert;
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @author Thomas Darimont
+ * @author Mark Paluch
  */
 public class SimpleMongoRepository<T, ID extends Serializable> implements MongoRepository<T, ID> {
 
@@ -54,7 +56,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 	 * Creates a new {@link SimpleMongoRepository} for the given {@link MongoEntityInformation} and {@link MongoTemplate}.
 	 * 
 	 * @param metadata must not be {@literal null}.
-	 * @param template must not be {@literal null}.
+	 * @param mongoOperations must not be {@literal null}.
 	 */
 	public SimpleMongoRepository(MongoEntityInformation<T, ID> metadata, MongoOperations mongoOperations) {
 
@@ -265,18 +267,18 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 	 * @see org.springframework.data.mongodb.repository.MongoRepository#findAllByExample(org.springframework.data.domain.Example, org.springframework.data.domain.Pageable)
 	 */
 	@Override
-	public <S extends T> Page<T> findAllByExample(Example<S> example, Pageable pageable) {
+	public <S extends T> Page<S> findAll(Example<S> example, Pageable pageable) {
 
 		Assert.notNull(example, "Sample must not be null!");
 
 		Query q = new Query(new Criteria().alike(example)).with(pageable);
 
-		long count = mongoOperations.count(q, entityInformation.getJavaType(), entityInformation.getCollectionName());
+		long count = mongoOperations.count(q, getResultType(example), entityInformation.getCollectionName());
 		if (count == 0) {
-			return new PageImpl<T>(Collections.<T> emptyList());
+			return new PageImpl<S>(Collections.<S> emptyList());
 		}
-		return new PageImpl<T>(mongoOperations.find(q, entityInformation.getJavaType(),
-				entityInformation.getCollectionName()), pageable, count);
+		return new PageImpl<S>(mongoOperations.find(q, getResultType(example), entityInformation.getCollectionName()), pageable,
+				count);
 	}
 
 	/*
@@ -284,7 +286,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 	 * @see org.springframework.data.mongodb.repository.MongoRepository#findAllByExample(org.springframework.data.domain.Example, org.springframework.data.domain.Sort)
 	 */
 	@Override
-	public <S extends T> List<T> findAllByExample(Example<S> example, Sort sort) {
+	public <S extends T> List<S> findAll(Example<S> example, Sort sort) {
 
 		Assert.notNull(example, "Sample must not be null!");
 
@@ -294,7 +296,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 			q.with(sort);
 		}
 
-		return findAll(q);
+		return mongoOperations.find(q, getResultType(example), entityInformation.getCollectionName());
 	}
 
 	/*
@@ -302,13 +304,56 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 	 * @see org.springframework.data.mongodb.repository.MongoRepository#findAllByExample(org.springframework.data.domain.Example)
 	 */
 	@Override
-	public <S extends T> List<T> findAllByExample(Example<S> example) {
+	public <S extends T> List<S> findAll(Example<S> example) {
+		return findAll(example, (Sort) null);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.query.QueryByExampleExecutor#findOne(org.springframework.data.domain.Example)
+	 */
+	@Override
+	public <S extends T> S findOne(Example<S> example) {
 
 		Assert.notNull(example, "Sample must not be null!");
 
 		Query q = new Query(new Criteria().alike(example));
+		return mongoOperations.findOne(q, getResultType(example), entityInformation.getCollectionName());
+	}
 
-		return findAll(q);
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.query.QueryByExampleExecutor#count(org.springframework.data.domain.Example)
+	 */
+	@Override
+	public <S extends T> long count(Example<S> example) {
+
+		Assert.notNull(example, "Sample must not be null!");
+
+		Query q = new Query(new Criteria().alike(example));
+		return mongoOperations.count(q, getResultType(example), entityInformation.getCollectionName());
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.query.QueryByExampleExecutor#exists(org.springframework.data.domain.Example)
+	 */
+	@Override
+	public <S extends T> boolean exists(Example<S> example) {
+
+		Assert.notNull(example, "Sample must not be null!");
+
+		Query q = new Query(new Criteria().alike(example));
+		return mongoOperations.exists(q, getResultType(example), entityInformation.getCollectionName());
+	}
+
+	private <S extends T> Class<S> getResultType(Example<S> example) {
+
+		if (example.getExampleSpec() instanceof TypedExampleSpec<?>) {
+			return example.getResultType();
+		}
+
+		return (Class<S>) entityInformation.getJavaType();
 	}
 
 	private List<T> findAll(Query query) {

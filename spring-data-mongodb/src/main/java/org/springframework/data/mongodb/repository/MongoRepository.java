@@ -19,21 +19,22 @@ import java.io.Serializable;
 import java.util.List;
 
 import org.springframework.data.domain.Example;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.repository.NoRepositoryBean;
 import org.springframework.data.repository.PagingAndSortingRepository;
+import org.springframework.data.repository.query.QueryByExampleExecutor;
 
 /**
  * Mongo specific {@link org.springframework.data.repository.Repository} interface.
- * 
+ *
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @author Thomas Darimont
+ * @author Mark Paluch
  */
 @NoRepositoryBean
-public interface MongoRepository<T, ID extends Serializable> extends PagingAndSortingRepository<T, ID> {
+public interface MongoRepository<T, ID extends Serializable>
+		extends PagingAndSortingRepository<T, ID>, QueryByExampleExecutor<T> {
 
 	/*
 	 * (non-Javadoc)
@@ -57,7 +58,7 @@ public interface MongoRepository<T, ID extends Serializable> extends PagingAndSo
 	 * Inserts the given a given entity. Assumes the instance to be new to be able to apply insertion optimizations. Use
 	 * the returned instance for further operations as the save operation might have changed the entity instance
 	 * completely. Prefer using {@link #save(Object)} instead to avoid the usage of store-specific API.
-	 * 
+	 *
 	 * @param entity must not be {@literal null}.
 	 * @return the saved entity
 	 * @since 1.7
@@ -68,40 +69,21 @@ public interface MongoRepository<T, ID extends Serializable> extends PagingAndSo
 	 * Inserts the given entities. Assumes the given entities to have not been persisted yet and thus will optimize the
 	 * insert over a call to {@link #save(Iterable)}. Prefer using {@link #save(Iterable)} to avoid the usage of store
 	 * specific API.
-	 * 
+	 *
 	 * @param entities must not be {@literal null}.
 	 * @return the saved entities
 	 * @since 1.7
 	 */
 	<S extends T> List<S> insert(Iterable<S> entities);
 
-	/**
-	 * Returns all instances of the type specified by the given {@link Example}.
-	 * 
-	 * @param example must not be {@literal null}.
-	 * @return
-	 * @since 1.8
+	/* (non-Javadoc)
+	 * @see org.springframework.data.repository.query.QueryByExampleExecutor#findAll(org.springframework.data.domain.Example)
 	 */
-	<S extends T> List<T> findAllByExample(Example<S> example);
+	<S extends T> List<S> findAll(Example<S> example);
 
-	/**
-	 * Returns all instances of the type specified by the given {@link Example}.
-	 * 
-	 * @param example must not be {@literal null}.
-	 * @param sort can be {@literal null}.
-	 * @return all entities sorted by the given options
-	 * @since 1.8
+	/* (non-Javadoc)
+	 * @see org.springframework.data.repository.query.QueryByExampleExecutor#findAll(org.springframework.data.domain.Example, org.springframework.data.domain.Sort)
 	 */
-	<S extends T> List<T> findAllByExample(Example<S> example, Sort sort);
+	<S extends T> List<S> findAll(Example<S> example, Sort sort);
 
-	/**
-	 * Returns a {@link Page} of entities meeting the paging restriction specified by the given {@link Example} limited to
-	 * criteria provided in the {@code Pageable} object.
-	 * 
-	 * @param example must not be {@literal null}.
-	 * @param pageable can be {@literal null}.
-	 * @return a {@link Page} of entities
-	 * @since 1.8
-	 */
-	<S extends T> Page<T> findAllByExample(Example<S> example, Pageable pageable);
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,6 +32,10 @@ import org.springframework.data.mongodb.core.query.Query;
 
 import com.mongodb.MongoClient;
 
+/**
+ * @author Christoph Strobl
+ * @author Mark Paluch
+ */
 public class QueryByExampleTests {
 
 	MongoTemplate template;
@@ -54,7 +58,9 @@ public class QueryByExampleTests {
 		Person sample = new Person();
 		sample.lastname = "stark";
 
-		List<Person> result = template.findByExample(sample);
+		Query query = new Query(new Criteria().alike(Example.of(sample)));
+
+		List<Person> result = template.find(query, Person.class);
 		Assert.assertThat(result.size(), Is.is(2));
 	}
 
@@ -70,7 +76,9 @@ public class QueryByExampleTests {
 		sample.lastname = "stark";
 		sample.firstname = "arya";
 
-		List<Person> result = template.findByExample(sample);
+		Query query = new Query(new Criteria().alike(Example.of(sample)));
+
+		List<Person> result = template.find(query, Person.class);
 		Assert.assertThat(result.size(), Is.is(1));
 	}
 
@@ -88,7 +96,9 @@ public class QueryByExampleTests {
 		Person sample = new Person();
 		sample.id = p4.id;
 
-		List<Person> result = template.findByExample(sample);
+		Query query = new Query(new Criteria().alike(Example.of(sample)));
+
+		List<Person> result = template.find(query, Person.class);
 		Assert.assertThat(result.size(), Is.is(1));
 	}
 
@@ -104,7 +114,10 @@ public class QueryByExampleTests {
 		sample.firstname = "jon";
 		sample.firstname = "stark";
 
-		List<Person> result = template.findByExample(sample);
+
+		Query query = new Query(new Criteria().alike(Example.of(sample)));
+
+		List<Person> result = template.find(query, Person.class);
 		Assert.assertThat(result.size(), Is.is(0));
 	}
 
@@ -118,7 +131,9 @@ public class QueryByExampleTests {
 
 		Person sample = new Person();
 
-		List<Person> result = template.findByExample(sample);
+		Query query = new Query(new Criteria().alike(Example.of(sample)));
+
+		List<Person> result = template.find(query, Person.class);
 		Assert.assertThat(result.size(), Is.is(3));
 	}
 
@@ -133,7 +148,7 @@ public class QueryByExampleTests {
 		Person sample = new Person();
 		sample.lastname = "stark";
 
-		Query query = new Query(new Criteria().alike(new Example<Person>(sample)).and("firstname").regex("^ary*"));
+		Query query = new Query(new Criteria().alike(Example.of(sample)).and("firstname").regex("^ary*"));
 
 		List<Person> result = template.find(query, Person.class);
 		Assert.assertThat(result.size(), Is.is(1));

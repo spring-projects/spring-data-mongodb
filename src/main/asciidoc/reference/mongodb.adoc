@@ -1330,6 +1330,10 @@ TextQuery.searching(new TextCriteria().matching("\"coffee cake\""));
 TextQuery.searching(new TextCriteria().phrase("coffee cake"));
 ----
 
+include::../{spring-data-commons-docs}/query-by-example.adoc[]
+include::query-by-example.adoc[]
+
+
 [[mongo.mapreduce]]
 == Map-Reduce Operations
 

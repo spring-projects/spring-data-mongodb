@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2015 the original author or authors.
+ * Copyright 2011-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,8 +28,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.hamcrest.Matchers;
-import org.hamcrest.core.Is;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -66,6 +64,7 @@ import org.springframework.test.util.ReflectionTestUtils;
  * @author Oliver Gierke
  * @author Thomas Darimont
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 public abstract class AbstractPersonRepositoryIntegrationTests {
@@ -179,8 +178,8 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	@Test
 	public void executesPagedFinderCorrectly() throws Exception {
 
-		Page<Person> page = repository.findByLastnameLike("*a*", new PageRequest(0, 2, Direction.ASC, "lastname",
-				"firstname"));
+		Page<Person> page = repository.findByLastnameLike("*a*",
+				new PageRequest(0, 2, Direction.ASC, "lastname", "firstname"));
 		assertThat(page.isFirst(), is(true));
 		assertThat(page.isLast(), is(false));
 		assertThat(page.getNumberOfElements(), is(2));
@@ -190,8 +189,8 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	@Test
 	public void executesPagedFinderWithAnnotatedQueryCorrectly() throws Exception {
 
-		Page<Person> page = repository.findByLastnameLikeWithPageable(".*a.*", new PageRequest(0, 2, Direction.ASC,
-				"lastname", "firstname"));
+		Page<Person> page = repository.findByLastnameLikeWithPageable(".*a.*",
+				new PageRequest(0, 2, Direction.ASC, "lastname", "firstname"));
 		assertThat(page.isFirst(), is(true));
 		assertThat(page.isLast(), is(false));
 		assertThat(page.getNumberOfElements(), is(2));
@@ -315,8 +314,8 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	@Test
 	public void findsPagedPeopleByPredicate() throws Exception {
 
-		Page<Person> page = repository.findAll(person.lastname.contains("a"), new PageRequest(0, 2, Direction.ASC,
-				"lastname"));
+		Page<Person> page = repository.findAll(person.lastname.contains("a"),
+				new PageRequest(0, 2, Direction.ASC, "lastname"));
 		assertThat(page.isFirst(), is(true));
 		assertThat(page.isLast(), is(false));
 		assertThat(page.getNumberOfElements(), is(2));
@@ -402,8 +401,8 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		dave.setLocation(point);
 		repository.save(dave);
 
-		GeoResults<Person> results = repository.findByLocationNear(new Point(-73.99, 40.73), new Distance(2000,
-				Metrics.KILOMETERS));
+		GeoResults<Person> results = repository.findByLocationNear(new Point(-73.99, 40.73),
+				new Distance(2000, Metrics.KILOMETERS));
 		assertThat(results.getContent().isEmpty(), is(false));
 	}
 
@@ -414,8 +413,8 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		dave.setLocation(point);
 		repository.save(dave);
 
-		GeoPage<Person> results = repository.findByLocationNear(new Point(-73.99, 40.73), new Distance(2000,
-				Metrics.KILOMETERS), new PageRequest(0, 20));
+		GeoPage<Person> results = repository.findByLocationNear(new Point(-73.99, 40.73),
+				new Distance(2000, Metrics.KILOMETERS), new PageRequest(0, 20));
 		assertThat(results.getContent().isEmpty(), is(false));
 
 		// DATAMONGO-607
@@ -625,8 +624,8 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 
 		repository.save(Arrays.asList(dave, oliver, carter, boyd, leroi));
 
-		GeoPage<Person> results = repository.findByLocationNear(new Point(-73.99, 40.73), new Distance(2000,
-				Metrics.KILOMETERS), new PageRequest(1, 2));
+		GeoPage<Person> results = repository.findByLocationNear(new Point(-73.99, 40.73),
+				new Distance(2000, Metrics.KILOMETERS), new PageRequest(1, 2));
 
 		assertThat(results.getContent().isEmpty(), is(false));
 		assertThat(results.getNumberOfElements(), is(2));
@@ -650,8 +649,8 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 
 		repository.save(Arrays.asList(dave, oliver, carter));
 
-		GeoPage<Person> results = repository.findByLocationNear(new Point(-73.99, 40.73), new Distance(2000,
-				Metrics.KILOMETERS), new PageRequest(1, 2));
+		GeoPage<Person> results = repository.findByLocationNear(new Point(-73.99, 40.73),
+				new Distance(2000, Metrics.KILOMETERS), new PageRequest(1, 2));
 		assertThat(results.getContent().isEmpty(), is(false));
 		assertThat(results.getNumberOfElements(), is(1));
 		assertThat(results.isFirst(), is(false));
@@ -669,8 +668,8 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		dave.setLocation(point);
 		repository.save(dave);
 
-		GeoPage<Person> results = repository.findByLocationNear(new Point(-73.99, 40.73), new Distance(2000,
-				Metrics.KILOMETERS), new PageRequest(0, 2));
+		GeoPage<Person> results = repository.findByLocationNear(new Point(-73.99, 40.73),
+				new Distance(2000, Metrics.KILOMETERS), new PageRequest(0, 2));
 
 		assertThat(results.getContent().isEmpty(), is(false));
 		assertThat(results.getNumberOfElements(), is(1));
@@ -688,8 +687,8 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		dave.setLocation(new Point(-73.99171, 40.738868));
 		repository.save(dave);
 
-		GeoPage<Person> results = repository.findByLocationNear(new Point(-73.99, 40.73), new Distance(2000,
-				Metrics.KILOMETERS), new PageRequest(1, 2));
+		GeoPage<Person> results = repository.findByLocationNear(new Point(-73.99, 40.73),
+				new Distance(2000, Metrics.KILOMETERS), new PageRequest(1, 2));
 
 		assertThat(results.getContent().isEmpty(), is(true));
 		assertThat(results.getNumberOfElements(), is(0));
@@ -939,8 +938,8 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	@Test
 	public void shouldLimitCollectionQueryToMaxResultsWhenPresent() {
 
-		repository.save(Arrays.asList(new Person("Bob-1", "Dylan"), new Person("Bob-2", "Dylan"), new Person("Bob-3",
-				"Dylan"), new Person("Bob-4", "Dylan"), new Person("Bob-5", "Dylan")));
+		repository.save(Arrays.asList(new Person("Bob-1", "Dylan"), new Person("Bob-2", "Dylan"),
+				new Person("Bob-3", "Dylan"), new Person("Bob-4", "Dylan"), new Person("Bob-5", "Dylan")));
 		List<Person> result = repository.findTop3ByLastnameStartingWith("Dylan");
 		assertThat(result.size(), is(3));
 	}
@@ -951,8 +950,8 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	@Test
 	public void shouldNotLimitPagedQueryWhenPageRequestWithinBounds() {
 
-		repository.save(Arrays.asList(new Person("Bob-1", "Dylan"), new Person("Bob-2", "Dylan"), new Person("Bob-3",
-				"Dylan"), new Person("Bob-4", "Dylan"), new Person("Bob-5", "Dylan")));
+		repository.save(Arrays.asList(new Person("Bob-1", "Dylan"), new Person("Bob-2", "Dylan"),
+				new Person("Bob-3", "Dylan"), new Person("Bob-4", "Dylan"), new Person("Bob-5", "Dylan")));
 		Page<Person> result = repository.findTop3ByLastnameStartingWith("Dylan", new PageRequest(0, 2));
 		assertThat(result.getContent().size(), is(2));
 	}
@@ -963,8 +962,8 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	@Test
 	public void shouldLimitPagedQueryWhenPageRequestExceedsUpperBoundary() {
 
-		repository.save(Arrays.asList(new Person("Bob-1", "Dylan"), new Person("Bob-2", "Dylan"), new Person("Bob-3",
-				"Dylan"), new Person("Bob-4", "Dylan"), new Person("Bob-5", "Dylan")));
+		repository.save(Arrays.asList(new Person("Bob-1", "Dylan"), new Person("Bob-2", "Dylan"),
+				new Person("Bob-3", "Dylan"), new Person("Bob-4", "Dylan"), new Person("Bob-5", "Dylan")));
 		Page<Person> result = repository.findTop3ByLastnameStartingWith("Dylan", new PageRequest(1, 2));
 		assertThat(result.getContent().size(), is(1));
 	}
@@ -975,8 +974,8 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	@Test
 	public void shouldReturnEmptyWhenPageRequestedPageIsTotallyOutOfScopeForLimit() {
 
-		repository.save(Arrays.asList(new Person("Bob-1", "Dylan"), new Person("Bob-2", "Dylan"), new Person("Bob-3",
-				"Dylan"), new Person("Bob-4", "Dylan"), new Person("Bob-5", "Dylan")));
+		repository.save(Arrays.asList(new Person("Bob-1", "Dylan"), new Person("Bob-2", "Dylan"),
+				new Person("Bob-3", "Dylan"), new Person("Bob-4", "Dylan"), new Person("Bob-5", "Dylan")));
 		Page<Person> result = repository.findTop3ByLastnameStartingWith("Dylan", new PageRequest(2, 2));
 		assertThat(result.getContent().size(), is(0));
 	}
@@ -1240,8 +1239,8 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		ReflectionTestUtils.setField(sample, "createdAt", null);
 		ReflectionTestUtils.setField(sample, "email", null);
 
-		Page<Person> result = repository.findAllByExample(new Example<Person>(sample), new PageRequest(0, 10));
-		Assert.assertThat(result.getNumberOfElements(), Is.is(2));
+		Page<Person> result = repository.findAll(Example.of(sample), new PageRequest(0, 10));
+		assertThat(result.getNumberOfElements(), is(2));
 	}
 
 	/**
@@ -1258,8 +1257,8 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		ReflectionTestUtils.setField(sample, "createdAt", null);
 		ReflectionTestUtils.setField(sample, "email", null);
 
-		List<Person> result = repository.findAllByExample(new Example<Person>(sample));
-		Assert.assertThat(result.size(), Is.is(2));
+		List<Person> result = repository.findAll(Example.of(sample));
+		assertThat(result.size(), is(2));
 	}
 
 }

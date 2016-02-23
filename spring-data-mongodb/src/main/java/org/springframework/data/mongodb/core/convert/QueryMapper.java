@@ -261,8 +261,8 @@ public class QueryMapper {
 		boolean needsAssociationConversion = property.isAssociation() && !keyword.isExists();
 		Object value = keyword.getValue();
 
-		Object convertedValue = needsAssociationConversion ? convertAssociation(value, property) : getMappedValue(
-				property.with(keyword.getKey()), value);
+		Object convertedValue = needsAssociationConversion ? convertAssociation(value, property)
+				: getMappedValue(property.with(keyword.getKey()), value);
 
 		return new BasicDBObject(keyword.key, convertedValue);
 	}
@@ -484,8 +484,8 @@ public class QueryMapper {
 		}
 
 		try {
-			return conversionService.canConvert(id.getClass(), ObjectId.class) ? conversionService
-					.convert(id, ObjectId.class) : delegateConvertToMongoType(id, null);
+			return conversionService.canConvert(id.getClass(), ObjectId.class) ? conversionService.convert(id, ObjectId.class)
+					: delegateConvertToMongoType(id, null);
 		} catch (ConversionException o_O) {
 			return delegateConvertToMongoType(id, null);
 		}

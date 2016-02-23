@@ -15,7 +15,6 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Range;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Point;
@@ -61,12 +60,4 @@ public interface MongoParameterAccessor extends ParameterAccessor {
 	 * @since 1.8
 	 */
 	Object[] getValues();
-
-	/**
-	 * Get the sample for query by example
-	 * 
-	 * @return
-	 * @since 1.8
-	 */
-	Example<?> getSampleObject();
 }

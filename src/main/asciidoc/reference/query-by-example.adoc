@@ -1,0 +1,71 @@
+[[query.by.example.execution]]
+=== Executing Example
+
+.Query by Example using a Repository
+====
+[source, java]
+----
+public interface PersonRepository extends QueryByExampleExecutor<Person> {
+
+}
+
+public class PersonService {
+
+  @Autowired PersonRepository personRepository;
+
+  public List<Person> findPeople(Person probe) {
+    return personRepository.findAll(Example.of(probe));
+  }
+}
+----
+====
+
+An `Example` containing an untyped `ExampleSpec` uses the Repository type and its collection name. Typed `ExampleSpec` use their type as result type and the collection name from the Repository.
+
+NOTE: When including `null` values in the `ExampleSpec` Spring Data Mongo uses embedded document matching instead of dot notation property matching. This forces exact document matching for all property values and the property order in the embedded document.
+
+Spring Data MongoDB provides support for the following matching options:
+
+[cols="1,2", options="header"]
+.`StringMatcher` options
+|===
+| Matching
+| Logical result
+
+| `DEFAULT` (case-sensitive)
+| `{"firstname" : firstname}`
+
+| `DEFAULT` (case-insensitive)
+| `{"firstname" : { $regex: firstname, $options: 'i'}}`
+
+| `EXACT`  (case-sensitive)
+| `{"firstname" : { $regex: /^firstname$/}}`
+
+| `EXACT` (case-insensitive)
+| `{"firstname" : { $regex: /^firstname$/, $options: 'i'}}`
+
+| `STARTING`  (case-sensitive)
+| `{"firstname" : { $regex: /^firstname/}}`
+
+| `STARTING` (case-insensitive)
+| `{"firstname" : { $regex: /^firstname/, $options: 'i'}}`
+
+| `ENDING`  (case-sensitive)
+| `{"firstname" : { $regex: /firstname$/}}`
+
+| `ENDING` (case-insensitive)
+| `{"firstname" : { $regex: /firstname$/, $options: 'i'}}`
+
+| `CONTAINING`  (case-sensitive)
+| `{"firstname" : { $regex: /.\*firstname.*/}}`
+
+| `CONTAINING` (case-insensitive)
+| `{"firstname" : { $regex: /.\*firstname.*/, $options: 'i'}}`
+
+| `REGEX`  (case-sensitive)
+| `{"firstname" : { $regex: /firstname/}}`
+
+| `REGEX` (case-insensitive)
+| `{"firstname" : { $regex: /firstname/, $options: 'i'}}`
+
+|===

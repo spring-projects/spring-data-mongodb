@@ -1,5 +1,5 @@
 = Spring Data MongoDB - Reference Documentation
-Mark Pollack; Thomas Risberg; Oliver Gierke; Costin Leau; Jon Brisbin; Thomas Darimont; Christoph Strobl
+Mark Pollack; Thomas Risberg; Oliver Gierke; Costin Leau; Jon Brisbin; Thomas Darimont; Christoph Strobl; Mark Paluch
 :revnumber: {version}
 :revdate: {localdate}
 :toc:

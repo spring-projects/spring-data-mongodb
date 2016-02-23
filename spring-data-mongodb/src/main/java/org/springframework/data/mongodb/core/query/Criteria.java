@@ -98,7 +98,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @since 1.8
 	 */
 	public static Criteria byExample(Object example) {
-		return byExample(new Example<Object>(example));
+		return byExample(Example.of(example));
 	}
 
 	/**
