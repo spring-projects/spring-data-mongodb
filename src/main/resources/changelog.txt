@@ -1,6 +1,19 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 1.8.4.RELEASE (2016-02-23)
+---------------------------------------------
+* DATAMONGO-1381 - Release 1.8.4 (Gosling SR4).
+* DATAMONGO-1380 - Improve logging in MongoChangeSetPersister.
+* DATAMONGO-1378 - Update reference documentation: Change Query.sort() to Query.with(Sort sort).
+* DATAMONGO-1377 - Update JavaDoc: Use @EnableMongoRepositories instead of @EnableJpaRepositories.
+* DATAMONGO-1376 - Move away from SimpleTypeInformationMapper.INSTANCE.
+* DATAMONGO-1375 - Fix typo in MongoOperations JavaDoc.
+* DATAMONGO-1361 - geoNear() queries fail when the accompanying query returns no results.
+* DATAMONGO-1360 - Cannot query with JSR310.
+* DATAMONGO-1270 - Update documentation to reflect deprecation of MongoFactoryBean.
+
+
 Changes in version 1.9.0.M1 (2016-02-12)
 ----------------------------------------
 * DATAMONGO-1380 - Improve logging in MongoChangeSetPersister.
