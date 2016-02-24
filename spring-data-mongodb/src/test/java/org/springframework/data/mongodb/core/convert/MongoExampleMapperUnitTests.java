@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2015-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,6 +49,7 @@ import com.mongodb.DBObject;
 
 /**
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 @RunWith(MockitoJUnitRunner.class)
 public class MongoExampleMapperUnitTests {
@@ -149,7 +150,7 @@ public class MongoExampleMapperUnitTests {
 	 * @see DATAMONGO-1245
 	 */
 	@Test
-	public void exampleShouldBeMappedAsFlatMapWhenGivenNestedElementsWithLenienMatchMode() {
+	public void exampleShouldBeMappedAsFlatMapWhenGivenNestedElementsWithLenientMatchMode() {
 
 		WrapperDocument probe = new WrapperDocument();
 		probe.flatDoc = new FlatDocument();
@@ -164,7 +165,7 @@ public class MongoExampleMapperUnitTests {
 	 * @see DATAMONGO-1245
 	 */
 	@Test
-	public void exampleShouldBeMappedAsExactObjectWhenGivenNestedElementsWithStriktMatchMode() {
+	public void exampleShouldBeMappedAsExactObjectWhenGivenNestedElementsWithStrictMatchMode() {
 
 		WrapperDocument probe = new WrapperDocument();
 		probe.flatDoc = new FlatDocument();
@@ -196,6 +197,26 @@ public class MongoExampleMapperUnitTests {
 						.add("intValue", 100).get()));
 	}
 
+
+	/**
+	 * @see DATAMONGO-1245
+	 */
+	@Test
+	public void exampleShouldBeMappedCorrectlyForFlatTypeContainingDotsWhenStringMatchModeIsStarting() {
+
+		FlatDocument probe = new FlatDocument();
+		probe.stringValue = "fire.ight";
+		probe.intValue = 100;
+
+		Example<?> example = newExampleOf(probe).matchStringsStartingWith().get();
+
+		DBObject dbo = mapper.getMappedExample(example, context.getPersistentEntity(FlatDocument.class));
+
+		assertThat(dbo,
+				is(new BasicDBObjectBuilder().add("stringValue", new BasicDBObject("$regex", "^" + Pattern.quote("fire.ight")))
+						.add("intValue", 100).get()));
+	}
+
 	/**
 	 * @see DATAMONGO-1245
 	 */
@@ -213,6 +234,25 @@ public class MongoExampleMapperUnitTests {
 		assertThat(dbo,
 				is(new BasicDBObjectBuilder().add("stringValue", new BasicDBObject("$regex", "firefight$"))
 						.add("intValue", 100).get()));
+	}
+
+	/**
+	 * @see DATAMONGO-1245
+	 */
+	@Test
+	public void exampleShouldBeMappedCorrectlyForFlatTypeWhenStringMatchModeRegex() {
+
+		FlatDocument probe = new FlatDocument();
+		probe.stringValue = "firefight";
+		probe.customNamedField = "^(cat|dog).*shelter\\d?";
+
+		Example<?> example = newExampleOf(probe).matchStrings(StringMatcher.REGEX).get();
+
+		DBObject dbo = mapper.getMappedExample(example, context.getPersistentEntity(FlatDocument.class));
+
+		assertThat(dbo,
+				is(new BasicDBObjectBuilder().add("stringValue", new BasicDBObject("$regex", "firefight"))
+						.add("custom_field_name", new BasicDBObject("$regex", "^(cat|dog).*shelter\\d?")).get()));
 	}
 
 	/**

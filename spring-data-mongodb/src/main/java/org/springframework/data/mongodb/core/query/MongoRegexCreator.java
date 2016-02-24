@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2015-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import org.springframework.util.ObjectUtils;
 
 /**
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 1.8
  */
 public enum MongoRegexCreator {
@@ -66,6 +67,10 @@ public enum MongoRegexCreator {
 	}
 
 	private String prepareAndEscapeStringBeforeApplyingLikeRegex(String source, Type type) {
+
+		if (ObjectUtils.nullSafeEquals(Type.REGEX, type)) {
+			return source;
+		}
 
 		if (!ObjectUtils.nullSafeEquals(Type.LIKE, type)) {
 			return PUNCTATION_PATTERN.matcher(source).find() ? Pattern.quote(source) : source;
