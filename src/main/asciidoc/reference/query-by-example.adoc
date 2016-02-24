@@ -3,32 +3,32 @@
 
 == Introduction
 
-This chapter will give you an introduction to Query by Example and will explain how to use example specifications.
+This chapter will give you an introduction to Query by Example and explain how to use example specifications.
 
 Query by Example (QBE) is a user-friendly querying technique with a simple interface. It allows dynamic query creation and does not require to write queries containing field names. In fact, Query by Example does not require to write queries using store-specific query languages at all.
 
 == Usage
 
-An `Example` takes a data object (usually the entity object or a subtype of it) and a specification how to match properties. You can use Query by Example in the `MongoTemplate` and within `Repositories`.
+An `Example` takes a data object (usually the domain object object or a subtype of it) and a specification how to match properties. You can use Query by Example with the `MongoTemplate` and with Repositories.
 
 Query by Example is suited for several use-cases but also comes with limitations:
 
 **When to use**
 
 * Querying your data store with a set of static or dynamic constraints
-* Frequent refactoring of the entities without worrying about breaking existing queries
+* Frequent refactoring of the domain objects without worrying about breaking existing queries
 * Works independently from the data store API
 
 **Limitations**
 
 * Query predicates are combined using the `AND` keyword
 * No support for nested/grouped property constraints like `firstname = ?0 or (firstname = ?1 and lastname = ?2)`
-* Limited to starts/contains/ends/regex matching for strings and exact matching for other property types
+* Only supports starts/contains/ends/regex matching for strings and exact matching for other property types
 
 
-Before getting started with Query by Example you need to have your entities set up.
+Before getting started with Query by Example you need to have your interface to the data store set up.
 
-.Sample Person entity
+.Sample Person object
 ====
 [source,java]
 ----
@@ -45,9 +45,9 @@ public class Person {
 ----
 ====
 
-We have a quite simple entity here that is mapped to the data store. You can use this entity to create an Example specification. By default, fields having `null` values are ignored, and strings are matched using the store specific defaults. Examples can be built by either using the `exampleOf` factory method or by using the <<query.by.example.builder,Example builder>>. Once the `Example` is constructed it becomes immutable.
+This is a simple domain object. You can use it to create an Example specification. By default, fields having `null` values are ignored, and strings are matched using the store specific defaults. Examples can be built by either using the `exampleOf` factory method or by using the <<query.by.example.builder,Example builder>>. Once the `Example` is constructed it becomes immutable.
 
-.The first Example specification
+.Simple Example specification
 ====
 [source,xml]
 ----
@@ -57,15 +57,15 @@ person.setFirstname("Dave");                          <2>
 
 Example<Person> example = Example.exampleOf(person);  <3>
 ----
-<1> Create a new instance of the entity
+<1> Create a new instance of the domain object
 <2> Set the properties to query
 <3> Create an `Example`
 ====
 
 
-NOTE: Property names of the sample object must correlate with the property names of the queried entity.
+NOTE: Property names of the sample object must correlate with the property names of the queried domain object.
 
-.Query by Example using the MongoTemplate
+.Query by Example using MongoTemplate
 ====
 [source,xml]
 ----
@@ -78,20 +78,20 @@ public List<Person> findPeople(Person sampleObject) {
 ----
 ====
 
-The `findByExample` method accepts either the sample object or an `Example` object to query the data store. Spring Data uses the `Example` to create and execute a query.
+`MongoTemplate.findByExample` accepts either the sample object or an `Example` object to create and execute a query.
 
 
-.Query by Example using the Repositories
+.Query by Example using a Repository
 ====
 [source, java]
 ----
 public interface MongoRepository<Person, String> {
 
-  <S extends T> List<T> findAllByExample(Example<S> example);
+  <S extends Person> List<Person> findAllByExample(Example<S> example);
 
-  <S extends T> List<T> findAllByExample(Example<S> example, Sort sort);
+  <S extends Person> List<Person> findAllByExample(Example<S> example, Sort sort);
 
-  <S extends T> Page<T> findAllByExample(Example<S> example, Pageable pageable);
+  <S extends Person> Page<Person> findAllByExample(Example<S> example, Pageable pageable);
 
   // … more functionality omitted.
 }
@@ -120,10 +120,10 @@ Example.newExampleOf(person)
 ----
 ====
 
-Property specifier accepts property names and property paths separated by dots that are contained within the sample object. A `PropertySpecifier` allows setting string matching options, case-sensitivity,
+Property specifier accepts property names (e.g. "firstname" and "lastname"). You can navigate by chaining properties together with dots ("address.city"). You can tune it with matching options and case sensitivity.
 
 [cols="1,2", options="header"]
-.Supported string matching options of `StringMatcher`
+.`StringMatcher` options
 |===
 | Matching
 | Logical result
