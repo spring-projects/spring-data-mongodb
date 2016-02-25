@@ -19,6 +19,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
+import org.springframework.data.domain.Example;
 import org.springframework.data.geo.GeoResults;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
@@ -56,6 +57,7 @@ import com.mongodb.WriteResult;
  * @author Chuong Ngo
  * @author Christoph Strobl
  * @author Thomas Darimont
+ * @author Mark Paluch
  */
 public interface MongoOperations {
 
@@ -627,6 +629,36 @@ public interface MongoOperations {
 	 * @return
 	 */
 	<T> T findById(Object id, Class<T> entityClass, String collectionName);
+
+	/**
+	 * Map the results of a Query-by-Example query onto the given {@code probe} class. The collection is determined from the {@code probe} type.
+	 * <p/>
+	 * The objects are converted from the MongoDB native representation using an instance of {@see MongoConverter}. Unless
+	 * configured otherwise, an instance of MappingMongoConverter will be used.
+	 * <p/>
+	 * The query is constructed from the {@code probe}.
+	 *
+	 * @param probe the probe to be used for the Example, must not be {@literal null}.
+	 * @param <S>
+	 * @param <T>
+	 * @return the List of converted objects
+	 */
+	<S extends T, T> List<T> findByExample(S probe);
+
+	/**
+	 * Map the results of a Query-by-Example query onto the given {@link Example#getProbeType()} class. The collection is determined from the {@link Example#getProbeType()}.
+	 * <p/>
+	 * The objects are converted from the MongoDB native representation using an instance of {@see MongoConverter}. Unless
+	 * configured otherwise, an instance of MappingMongoConverter will be used.
+	 * <p/>
+	 * The query is constructed from the {@link Example}.
+	 *
+	 * @param example the example, must not be {@literal null}.
+	 * @param <S>
+	 * @param <T>
+	 * @return the List of converted objects
+	 */
+	<S extends T, T> List<T> findByExample(Example<S> example);
 
 	/**
 	 * Triggers <a href="http://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify

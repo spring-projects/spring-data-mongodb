@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2015 the original author or authors.
+ * Copyright 2011-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -66,6 +66,7 @@ import org.springframework.test.util.ReflectionTestUtils;
  * @author Oliver Gierke
  * @author Thomas Darimont
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 public abstract class AbstractPersonRepositoryIntegrationTests {
@@ -1240,7 +1241,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		ReflectionTestUtils.setField(sample, "createdAt", null);
 		ReflectionTestUtils.setField(sample, "email", null);
 
-		Page<Person> result = repository.findAllByExample(new Example<Person>(sample), new PageRequest(0, 10));
+		Page<Person> result = repository.findAll(new Example<Person>(sample), new PageRequest(0, 10));
 		Assert.assertThat(result.getNumberOfElements(), Is.is(2));
 	}
 
@@ -1258,7 +1259,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		ReflectionTestUtils.setField(sample, "createdAt", null);
 		ReflectionTestUtils.setField(sample, "email", null);
 
-		List<Person> result = repository.findAllByExample(new Example<Person>(sample));
+		List<Person> result = repository.findAll(new Example<Person>(sample));
 		Assert.assertThat(result.size(), Is.is(2));
 	}
 

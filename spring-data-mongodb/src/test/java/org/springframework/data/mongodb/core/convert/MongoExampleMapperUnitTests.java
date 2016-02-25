@@ -18,7 +18,6 @@ package org.springframework.data.mongodb.core.convert;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 import static org.springframework.data.domain.Example.*;
-import static org.springframework.data.domain.PropertySpecifier.*;
 import static org.springframework.data.mongodb.core.DBObjectTestUtils.*;
 import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
 
@@ -34,6 +33,9 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Example;
+import org.springframework.data.domain.ExampleSpec;
+import org.springframework.data.domain.ExampleSpec.GenericPropertyMatcher;
+import org.springframework.data.domain.ExampleSpec.StringMatcher;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.convert.QueryMapperUnitTests.ClassWithGeoTypes;
@@ -80,7 +82,7 @@ public class MongoExampleMapperUnitTests {
 		FlatDocument probe = new FlatDocument();
 		probe.id = "steelheart";
 
-		DBObject dbo = mapper.getMappedExample(exampleOf(probe), context.getPersistentEntity(FlatDocument.class));
+		DBObject dbo = mapper.getMappedExample(of(probe), context.getPersistentEntity(FlatDocument.class));
 
 		assertThat(dbo, is(new BasicDBObjectBuilder().add("_id", "steelheart").get()));
 	}
@@ -96,11 +98,10 @@ public class MongoExampleMapperUnitTests {
 		probe.stringValue = "firefight";
 		probe.intValue = 100;
 
-		DBObject dbo = mapper.getMappedExample(exampleOf(probe), context.getPersistentEntity(FlatDocument.class));
+		DBObject dbo = mapper.getMappedExample(of(probe), context.getPersistentEntity(FlatDocument.class));
 
-		assertThat(dbo,
-				is(new BasicDBObjectBuilder().add("_id", "steelheart").add("stringValue", "firefight").add("intValue", 100)
-						.get()));
+		assertThat(dbo, is(new BasicDBObjectBuilder().add("_id", "steelheart").add("stringValue", "firefight")
+				.add("intValue", 100).get()));
 	}
 
 	/**
@@ -113,7 +114,7 @@ public class MongoExampleMapperUnitTests {
 		probe.stringValue = "firefight";
 		probe.intValue = 100;
 
-		DBObject dbo = mapper.getMappedExample(exampleOf(probe), context.getPersistentEntity(FlatDocument.class));
+		DBObject dbo = mapper.getMappedExample(of(probe), context.getPersistentEntity(FlatDocument.class));
 
 		assertThat(dbo, is(new BasicDBObjectBuilder().add("stringValue", "firefight").add("intValue", 100).get()));
 	}
@@ -127,7 +128,7 @@ public class MongoExampleMapperUnitTests {
 		FlatDocument probe = new FlatDocument();
 		probe.listOfString = Arrays.asList("Prof", "Tia", "David");
 
-		DBObject dbo = mapper.getMappedExample(exampleOf(probe), context.getPersistentEntity(FlatDocument.class));
+		DBObject dbo = mapper.getMappedExample(of(probe), context.getPersistentEntity(FlatDocument.class));
 
 		assertThat(dbo, is(new BasicDBObjectBuilder().add("listOfString", Arrays.asList("Prof", "Tia", "David")).get()));
 	}
@@ -141,7 +142,7 @@ public class MongoExampleMapperUnitTests {
 		FlatDocument probe = new FlatDocument();
 		probe.customNamedField = "Mitosis";
 
-		DBObject dbo = mapper.getMappedExample(exampleOf(probe), context.getPersistentEntity(FlatDocument.class));
+		DBObject dbo = mapper.getMappedExample(of(probe), context.getPersistentEntity(FlatDocument.class));
 
 		assertThat(dbo, is(new BasicDBObjectBuilder().add("custom_field_name", "Mitosis").get()));
 	}
@@ -156,7 +157,7 @@ public class MongoExampleMapperUnitTests {
 		probe.flatDoc = new FlatDocument();
 		probe.flatDoc.stringValue = "conflux";
 
-		DBObject dbo = mapper.getMappedExample(exampleOf(probe), context.getPersistentEntity(WrapperDocument.class));
+		DBObject dbo = mapper.getMappedExample(of(probe), context.getPersistentEntity(WrapperDocument.class));
 
 		assertThat(dbo, is(new BasicDBObjectBuilder().add("flatDoc.stringValue", "conflux").get()));
 	}
@@ -171,7 +172,7 @@ public class MongoExampleMapperUnitTests {
 		probe.flatDoc = new FlatDocument();
 		probe.flatDoc.stringValue = "conflux";
 
-		Example<?> example = newExampleOf(probe).includeNullValues().get();
+		Example<?> example = ExampleSpec.of(WrapperDocument.class).withIncludeNullValues().createExample(probe);
 
 		DBObject dbo = mapper.getMappedExample(example, context.getPersistentEntity(WrapperDocument.class));
 
@@ -188,15 +189,14 @@ public class MongoExampleMapperUnitTests {
 		probe.stringValue = "firefight";
 		probe.intValue = 100;
 
-		Example<?> example = newExampleOf(probe).matchStringsStartingWith().get();
+		Example<?> example = ExampleSpec.of(FlatDocument.class).withStringMatcher(StringMatcher.STARTING)
+				.createExample(probe);
 
 		DBObject dbo = mapper.getMappedExample(example, context.getPersistentEntity(FlatDocument.class));
 
-		assertThat(dbo,
-				is(new BasicDBObjectBuilder().add("stringValue", new BasicDBObject("$regex", "^firefight"))
-						.add("intValue", 100).get()));
+		assertThat(dbo, is(new BasicDBObjectBuilder().add("stringValue", new BasicDBObject("$regex", "^firefight"))
+				.add("intValue", 100).get()));
 	}
-
 
 	/**
 	 * @see DATAMONGO-1245
@@ -208,13 +208,12 @@ public class MongoExampleMapperUnitTests {
 		probe.stringValue = "fire.ight";
 		probe.intValue = 100;
 
-		Example<?> example = newExampleOf(probe).matchStringsStartingWith().get();
+		Example<?> example = ExampleSpec.of(FlatDocument.class).withStringMatcherStarting().createExample(probe);
 
 		DBObject dbo = mapper.getMappedExample(example, context.getPersistentEntity(FlatDocument.class));
 
-		assertThat(dbo,
-				is(new BasicDBObjectBuilder().add("stringValue", new BasicDBObject("$regex", "^" + Pattern.quote("fire.ight")))
-						.add("intValue", 100).get()));
+		assertThat(dbo, is(new BasicDBObjectBuilder()
+				.add("stringValue", new BasicDBObject("$regex", "^" + Pattern.quote("fire.ight"))).add("intValue", 100).get()));
 	}
 
 	/**
@@ -227,13 +226,12 @@ public class MongoExampleMapperUnitTests {
 		probe.stringValue = "firefight";
 		probe.intValue = 100;
 
-		Example<?> example = newExampleOf(probe).matchStringsEndingWith().get();
+		Example<?> example = ExampleSpec.of(FlatDocument.class).withStringMatcher(StringMatcher.ENDING).createExample(probe);
 
 		DBObject dbo = mapper.getMappedExample(example, context.getPersistentEntity(FlatDocument.class));
 
-		assertThat(dbo,
-				is(new BasicDBObjectBuilder().add("stringValue", new BasicDBObject("$regex", "firefight$"))
-						.add("intValue", 100).get()));
+		assertThat(dbo, is(new BasicDBObjectBuilder().add("stringValue", new BasicDBObject("$regex", "firefight$"))
+				.add("intValue", 100).get()));
 	}
 
 	/**
@@ -246,13 +244,12 @@ public class MongoExampleMapperUnitTests {
 		probe.stringValue = "firefight";
 		probe.customNamedField = "^(cat|dog).*shelter\\d?";
 
-		Example<?> example = newExampleOf(probe).matchStrings(StringMatcher.REGEX).get();
+		Example<?> example = ExampleSpec.of(FlatDocument.class).withStringMatcher(StringMatcher.REGEX).createExample(probe);
 
 		DBObject dbo = mapper.getMappedExample(example, context.getPersistentEntity(FlatDocument.class));
 
-		assertThat(dbo,
-				is(new BasicDBObjectBuilder().add("stringValue", new BasicDBObject("$regex", "firefight"))
-						.add("custom_field_name", new BasicDBObject("$regex", "^(cat|dog).*shelter\\d?")).get()));
+		assertThat(dbo, is(new BasicDBObjectBuilder().add("stringValue", new BasicDBObject("$regex", "firefight"))
+				.add("custom_field_name", new BasicDBObject("$regex", "^(cat|dog).*shelter\\d?")).get()));
 	}
 
 	/**
@@ -265,12 +262,12 @@ public class MongoExampleMapperUnitTests {
 		probe.stringValue = "firefight";
 		probe.intValue = 100;
 
-		Example<?> example = newExampleOf(probe).matchStringsEndingWith().matchStringsWithIgnoreCase().get();
+		Example<?> example = ExampleSpec.of(FlatDocument.class).withStringMatcher(StringMatcher.ENDING).withIgnoreCase()
+				.createExample(probe);
 
 		DBObject dbo = mapper.getMappedExample(example, context.getPersistentEntity(FlatDocument.class));
 
-		assertThat(
-				dbo,
+		assertThat(dbo,
 				is(new BasicDBObjectBuilder()
 						.add("stringValue", new BasicDBObjectBuilder().add("$regex", "firefight$").add("$options", "i").get())
 						.add("intValue", 100).get()));
@@ -286,12 +283,11 @@ public class MongoExampleMapperUnitTests {
 		probe.stringValue = "firefight";
 		probe.intValue = 100;
 
-		Example<?> example = newExampleOf(probe).matchStringsWithIgnoreCase().get();
+		Example<?> example = ExampleSpec.of(FlatDocument.class).withIgnoreCase().createExample(probe);
 
 		DBObject dbo = mapper.getMappedExample(example, context.getPersistentEntity(FlatDocument.class));
 
-		assertThat(
-				dbo,
+		assertThat(dbo,
 				is(new BasicDBObjectBuilder()
 						.add("stringValue",
 								new BasicDBObjectBuilder().add("$regex", Pattern.quote("firefight")).add("$options", "i").get())
@@ -309,7 +305,7 @@ public class MongoExampleMapperUnitTests {
 		probe.referenceDocument = new ReferenceDocument();
 		probe.referenceDocument.id = "200";
 
-		DBObject dbo = mapper.getMappedExample(exampleOf(probe), context.getPersistentEntity(WithDBRef.class));
+		DBObject dbo = mapper.getMappedExample(of(probe), context.getPersistentEntity(WithDBRef.class));
 		com.mongodb.DBRef reference = getTypedValue(dbo, "referenceDocument", com.mongodb.DBRef.class);
 
 		assertThat(reference.getId(), Is.<Object> is("200"));
@@ -325,7 +321,7 @@ public class MongoExampleMapperUnitTests {
 		FlatDocument probe = new FlatDocument();
 		probe.stringValue = "steelheart";
 
-		DBObject dbo = mapper.getMappedExample(exampleOf(probe), context.getPersistentEntity(FlatDocument.class));
+		DBObject dbo = mapper.getMappedExample(of(probe), context.getPersistentEntity(FlatDocument.class));
 
 		assertThat(dbo, is(new BasicDBObjectBuilder().add("stringValue", "steelheart").get()));
 	}
@@ -339,7 +335,7 @@ public class MongoExampleMapperUnitTests {
 		ClassWithGeoTypes probe = new ClassWithGeoTypes();
 		probe.legacyPoint = new Point(10D, 20D);
 
-		DBObject dbo = mapper.getMappedExample(exampleOf(probe), context.getPersistentEntity(WithDBRef.class));
+		DBObject dbo = mapper.getMappedExample(of(probe), context.getPersistentEntity(WithDBRef.class));
 
 		assertThat(dbo.get("legacyPoint.x"), Is.<Object> is(10D));
 		assertThat(dbo.get("legacyPoint.y"), Is.<Object> is(20D));
@@ -356,7 +352,7 @@ public class MongoExampleMapperUnitTests {
 		probe.intValue = 10;
 		probe.stringValue = "string";
 
-		Example<?> example = newExampleOf(probe).ignore("customNamedField").get();
+		Example<?> example = ExampleSpec.of(FlatDocument.class).withIgnorePaths("customNamedField").createExample(probe);
 
 		DBObject dbo = mapper.getMappedExample(example, context.getPersistentEntity(FlatDocument.class));
 
@@ -374,7 +370,7 @@ public class MongoExampleMapperUnitTests {
 		probe.intValue = 10;
 		probe.stringValue = "string";
 
-		Example<?> example = newExampleOf(probe).ignore("stringValue").get();
+		Example<?> example = ExampleSpec.of(FlatDocument.class).withIgnorePaths("stringValue").createExample(probe);
 
 		DBObject dbo = mapper.getMappedExample(example, context.getPersistentEntity(FlatDocument.class));
 
@@ -393,12 +389,12 @@ public class MongoExampleMapperUnitTests {
 		probe.flatDoc.intValue = 10;
 		probe.flatDoc.stringValue = "string";
 
-		Example<?> example = newExampleOf(probe).ignore("flatDoc.stringValue").get();
+		Example<?> example = ExampleSpec.of(WrapperDocument.class).withIgnorePaths("flatDoc.stringValue").createExample(probe);
 
 		DBObject dbo = mapper.getMappedExample(example, context.getPersistentEntity(WrapperDocument.class));
 
-		assertThat(dbo, is(new BasicDBObjectBuilder().add("flatDoc.custom_field_name", "foo").add("flatDoc.intValue", 10)
-				.get()));
+		assertThat(dbo,
+				is(new BasicDBObjectBuilder().add("flatDoc.custom_field_name", "foo").add("flatDoc.intValue", 10).get()));
 	}
 
 	/**
@@ -413,12 +409,13 @@ public class MongoExampleMapperUnitTests {
 		probe.flatDoc.intValue = 10;
 		probe.flatDoc.stringValue = "string";
 
-		Example<?> example = newExampleOf(probe).ignore("flatDoc.customNamedField").get();
+		Example<?> example = ExampleSpec.of(WrapperDocument.class).withIgnorePaths("flatDoc.customNamedField")
+				.createExample(probe);
 
 		DBObject dbo = mapper.getMappedExample(example, context.getPersistentEntity(WrapperDocument.class));
 
-		assertThat(dbo, is(new BasicDBObjectBuilder().add("flatDoc.stringValue", "string").add("flatDoc.intValue", 10)
-				.get()));
+		assertThat(dbo,
+				is(new BasicDBObjectBuilder().add("flatDoc.stringValue", "string").add("flatDoc.intValue", 10).get()));
 	}
 
 	/**
@@ -431,15 +428,13 @@ public class MongoExampleMapperUnitTests {
 		probe.stringValue = "firefight";
 		probe.customNamedField = "steelheart";
 
-		Example<?> example = newExampleOf(probe).specify(newPropertySpecifier("stringValue").matchStringContaining().get())
-				.get();
+		Example<?> example = ExampleSpec.of(FlatDocument.class)
+				.withMatcher("stringValue", new GenericPropertyMatcher().contains()).createExample(probe);
 
 		DBObject dbo = mapper.getMappedExample(example, context.getPersistentEntity(FlatDocument.class));
 
-		assertThat(
-				dbo,
-				is(new BasicDBObjectBuilder().add("stringValue", new BasicDBObject("$regex", ".*firefight.*"))
-						.add("custom_field_name", "steelheart").get()));
+		assertThat(dbo, is(new BasicDBObjectBuilder().add("stringValue", new BasicDBObject("$regex", ".*firefight.*"))
+				.add("custom_field_name", "steelheart").get()));
 	}
 
 	/**
@@ -453,7 +448,7 @@ public class MongoExampleMapperUnitTests {
 		probe.customNamedField = "steelheart";
 		probe.anotherStringValue = "calamity";
 
-		DBObject dbo = mapper.getMappedExample(exampleOf(probe), context.getPersistentEntity(FlatDocument.class));
+		DBObject dbo = mapper.getMappedExample(of(probe), context.getPersistentEntity(FlatDocument.class));
 
 		assertThat(dbo, isBsonObject().containing("anotherStringValue", "calamity"));
 	}
