@@ -1,5 +1,5 @@
 = Spring Data MongoDB - Reference Documentation
-Mark Pollack; Thomas Risberg; Oliver Gierke; Costin Leau; Jon Brisbin; Thomas Darimont; Christoph Strobl
+Mark Pollack; Thomas Risberg; Oliver Gierke; Costin Leau; Jon Brisbin; Thomas Darimont; Christoph Strobl; Mark Paluch
 :revnumber: {version}
 :revdate: {localdate}
 :toc:
@@ -27,8 +27,6 @@ include::{spring-data-commons-docs}/repositories.adoc[]
 include::reference/introduction.adoc[]
 include::reference/mongodb.adoc[]
 include::reference/mongo-repositories.adoc[]
-include::{spring-data-commons-docs}/query-by-example.adoc[]
-include::reference/query-by-example.adoc[]
 include::{spring-data-commons-docs}/auditing.adoc[]
 include::reference/mongo-auditing.adoc[]
 include::reference/mapping.adoc[]

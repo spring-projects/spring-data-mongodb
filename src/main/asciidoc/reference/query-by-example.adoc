@@ -1,5 +1,5 @@
 [[query.by.example.execution]]
-== Executing Query by Example
+=== Executing Example
 
 In Spring Data MongoDB you can use Query by Example with the `MongoTemplate` and with Repositories.
 
@@ -17,7 +17,7 @@ public class PersonService {
 ----
 ====
 
-`MongoTemplate.findByExample` accepts either the probe or an `Example` object to create and execute a query.
+`MongoTemplate.findByExample` accepts either the probe or an `Example` object to create and execute a query. An `Example` containing an untyped `ExampleSpec` uses the probe type to determine the collection name and the result type. Typed `ExampleSpec` use their type to determine collection name and result type.
 
 
 .Query by Example using a Repository
@@ -38,6 +38,8 @@ public class PersonService {
 }
 ----
 ====
+
+An `Example` containing an untyped `ExampleSpec` uses the Repository type and its collection name. Typed `ExampleSpec` use their type as result type and the collection name from the Repository.
 
 NOTE: When including `null` values in the `ExampleSpec` Spring Data Mongo uses embedded document matching instead of dot notation property matching. This forces exact document matching for all property values and the property order in the embedded document.
 
