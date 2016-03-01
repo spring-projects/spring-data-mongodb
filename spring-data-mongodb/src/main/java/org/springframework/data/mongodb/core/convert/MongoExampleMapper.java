@@ -17,29 +17,32 @@ package org.springframework.data.mongodb.core.convert;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Stack;
 import java.util.regex.Pattern;
 
 import org.springframework.data.domain.Example;
-import org.springframework.data.domain.ExampleSpec;
+import org.springframework.data.domain.ExampleSpec.NullHandler;
 import org.springframework.data.domain.ExampleSpec.PropertyValueTransformer;
-import org.springframework.data.domain.ExampleSpecAccessor;
+import org.springframework.data.domain.ExampleSpec.StringMatcher;
 import org.springframework.data.mapping.PropertyHandler;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.query.MongoRegexCreator;
 import org.springframework.data.mongodb.core.query.SerializationUtils;
+import org.springframework.data.repository.core.support.ExampleSpecAccessor;
+import org.springframework.data.repository.query.parser.Part.Type;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
-
-import static org.springframework.data.domain.ExampleSpec.*;
 
 /**
  * @author Christoph Strobl
@@ -50,11 +53,18 @@ public class MongoExampleMapper {
 
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 	private final MongoConverter converter;
+	private final Map<StringMatcher, Type> stringMatcherPartMapping = new HashMap<StringMatcher, Type>();
 
 	public MongoExampleMapper(MongoConverter converter) {
 
 		this.converter = converter;
 		this.mappingContext = converter.getMappingContext();
+
+		stringMatcherPartMapping.put(StringMatcher.EXACT, Type.SIMPLE_PROPERTY);
+		stringMatcherPartMapping.put(StringMatcher.CONTAINING, Type.CONTAINING);
+		stringMatcherPartMapping.put(StringMatcher.STARTING, Type.STARTING_WITH);
+		stringMatcherPartMapping.put(StringMatcher.ENDING, Type.ENDING_WITH);
+		stringMatcherPartMapping.put(StringMatcher.REGEX, Type.REGEX);
 	}
 
 	/**
@@ -90,11 +100,17 @@ public class MongoExampleMapper {
 
 		applyPropertySpecs("", reference, example.getProbeType(), exampleSpecAccessor);
 
-		return ObjectUtils.nullSafeEquals( NullHandler.INCLUDE, exampleSpecAccessor.getNullHandler()) ? reference
+		if (exampleSpecAccessor.isTyped()) {
+			Set<Class<?>> restrictedTypes = new HashSet<Class<?>>();
+			restrictedTypes.add(example.getResultType());
+			this.converter.getTypeMapper().writeTypeRestrictions(reference, restrictedTypes);
+		}
+
+		return ObjectUtils.nullSafeEquals(NullHandler.INCLUDE, exampleSpecAccessor.getNullHandler()) ? reference
 				: new BasicDBObject(SerializationUtils.flatMap(reference));
 	}
 
-	private String getMappedPropertyPath(String path, Class<?> probeType, ExampleSpecAccessor exampleSpecAccessor) {
+	private String getMappedPropertyPath(String path, Class<?> probeType) {
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(probeType);
 
@@ -161,7 +177,7 @@ public class MongoExampleMapper {
 
 			String propertyPath = StringUtils.hasText(path) ? path + "." + entry.getKey() : entry.getKey();
 
-			String mappedPropertyPath = getMappedPropertyPath(propertyPath, probeType, exampleSpecAccessor);
+			String mappedPropertyPath = getMappedPropertyPath(propertyPath, probeType);
 			if (exampleSpecAccessor.isIgnoredPath(propertyPath) || exampleSpecAccessor.isIgnoredPath(mappedPropertyPath)) {
 				iter.remove();
 				continue;
@@ -174,7 +190,7 @@ public class MongoExampleMapper {
 			if (exampleSpecAccessor.hasPropertySpecifiers()) {
 
 				mappedPropertyPath = exampleSpecAccessor.hasPropertySpecifier(propertyPath) ? propertyPath
-						: getMappedPropertyPath(propertyPath, probeType, exampleSpecAccessor);
+						: getMappedPropertyPath(propertyPath, probeType);
 
 				stringMatcher = exampleSpecAccessor.getStringMatcherForPath(mappedPropertyPath);
 				ignoreCase = exampleSpecAccessor.isIgnoreCaseForPath(mappedPropertyPath);
@@ -201,8 +217,7 @@ public class MongoExampleMapper {
 		}
 	}
 
-	private void applyStringMatcher(Map.Entry<String, Object> entry, StringMatcher stringMatcher,
-			boolean ignoreCase) {
+	private void applyStringMatcher(Map.Entry<String, Object> entry, StringMatcher stringMatcher, boolean ignoreCase) {
 
 		BasicDBObject dbo = new BasicDBObject();
 
@@ -214,8 +229,8 @@ public class MongoExampleMapper {
 			}
 		} else {
 
-			String expression = MongoRegexCreator.INSTANCE.toRegularExpression((String) entry.getValue(),
-					stringMatcher.getPartType());
+			Type type = stringMatcherPartMapping.get(stringMatcher);
+			String expression = MongoRegexCreator.INSTANCE.toRegularExpression((String) entry.getValue(), type);
 			dbo.put("$regex", expression);
 			entry.setValue(dbo);
 		}
@@ -224,4 +239,5 @@ public class MongoExampleMapper {
 			dbo.put("$options", "i");
 		}
 	}
+
 }

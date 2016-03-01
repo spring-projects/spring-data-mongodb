@@ -644,7 +644,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	 * @see org.springframework.data.mongodb.core.MongoOperations#findByExample(java.lang.Object)
 	 */
 	public <S extends T, T> List<T> findByExample(S sample) {
-		return findByExample(new Example<S>(sample));
+		return findByExample(Example.of(sample));
 	}
 
 	/*
@@ -655,7 +655,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware {
 	public <S extends T, T> List<T> findByExample(Example<S> sample) {
 
 		Assert.notNull(sample, "Sample object must not be null!");
-		return (List<T>) find(new Query(new Criteria().alike(sample)), sample.getProbeType());
+		return (List<T>) find(new Query(new Criteria().alike(sample)), sample.getResultType());
 	}
 
 	public <T> GeoResults<T> geoNear(NearQuery near, Class<T> entityClass) {

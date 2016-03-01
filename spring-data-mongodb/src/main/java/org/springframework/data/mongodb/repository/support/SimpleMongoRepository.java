@@ -30,6 +30,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.TypedExampleSpec;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -70,6 +71,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.CrudRepository#save(java.lang.Object)
 	 */
+	@Override
 	public <S extends T> S save(S entity) {
 
 		Assert.notNull(entity, "Entity must not be null!");
@@ -87,6 +89,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.CrudRepository#save(java.lang.Iterable)
 	 */
+	@Override
 	public <S extends T> List<S> save(Iterable<S> entities) {
 
 		Assert.notNull(entities, "The given Iterable of entities not be null!");
@@ -116,6 +119,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.CrudRepository#findOne(java.io.Serializable)
 	 */
+	@Override
 	public T findOne(ID id) {
 
 		Assert.notNull(id, "The given id must not be null!");
@@ -135,6 +139,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.CrudRepository#exists(java.io.Serializable)
 	 */
+	@Override
 	public boolean exists(ID id) {
 
 		Assert.notNull(id, "The given id must not be null!");
@@ -147,6 +152,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.CrudRepository#count()
 	 */
+	@Override
 	public long count() {
 		return mongoOperations.getCollection(entityInformation.getCollectionName()).count();
 	}
@@ -155,6 +161,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.CrudRepository#delete(java.io.Serializable)
 	 */
+	@Override
 	public void delete(ID id) {
 
 		Assert.notNull(id, "The given id must not be null!");
@@ -166,6 +173,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.CrudRepository#delete(java.lang.Object)
 	 */
+	@Override
 	public void delete(T entity) {
 
 		Assert.notNull(entity, "The given entity must not be null!");
@@ -177,6 +185,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.CrudRepository#delete(java.lang.Iterable)
 	 */
+	@Override
 	public void delete(Iterable<? extends T> entities) {
 
 		Assert.notNull(entities, "The given Iterable of entities not be null!");
@@ -190,6 +199,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.CrudRepository#deleteAll()
 	 */
+	@Override
 	public void deleteAll() {
 		mongoOperations.remove(new Query(), entityInformation.getCollectionName());
 	}
@@ -198,6 +208,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.CrudRepository#findAll()
 	 */
+	@Override
 	public List<T> findAll() {
 		return findAll(new Query());
 	}
@@ -206,6 +217,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.CrudRepository#findAll(java.lang.Iterable)
 	 */
+	@Override
 	public Iterable<T> findAll(Iterable<ID> ids) {
 
 		Set<ID> parameters = new HashSet<ID>(tryDetermineRealSizeOrReturn(ids, 10));
@@ -220,6 +232,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.PagingAndSortingRepository#findAll(org.springframework.data.domain.Pageable)
 	 */
+	@Override
 	public Page<T> findAll(final Pageable pageable) {
 
 		Long count = count();
@@ -232,6 +245,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.PagingAndSortingRepository#findAll(org.springframework.data.domain.Sort)
 	 */
+	@Override
 	public List<T> findAll(Sort sort) {
 		return findAll(new Query().with(sort));
 	}
@@ -273,18 +287,18 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 	 * @see org.springframework.data.mongodb.repository.MongoRepository#findAllByExample(org.springframework.data.domain.Example, org.springframework.data.domain.Pageable)
 	 */
 	@Override
-	public <S extends T> Page<T> findAll(Example<S> example, Pageable pageable) {
+	public <S extends T> Page<S> findAll(Example<S> example, Pageable pageable) {
 
 		Assert.notNull(example, "Sample must not be null!");
 
 		Query q = new Query(new Criteria().alike(example)).with(pageable);
 
-		long count = mongoOperations.count(q, entityInformation.getJavaType(), entityInformation.getCollectionName());
+		long count = mongoOperations.count(q, getResultType(example), getCollectionName(example));
 		if (count == 0) {
-			return new PageImpl<T>(Collections.<T> emptyList());
+			return new PageImpl<S>(Collections.<S> emptyList());
 		}
-		return new PageImpl<T>(mongoOperations.find(q, entityInformation.getJavaType(),
-				entityInformation.getCollectionName()), pageable, count);
+		return new PageImpl<S>(mongoOperations.find(q, getResultType(example), getCollectionName(example)),
+				pageable, count);
 	}
 
 	/*
@@ -292,7 +306,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 	 * @see org.springframework.data.mongodb.repository.MongoRepository#findAllByExample(org.springframework.data.domain.Example, org.springframework.data.domain.Sort)
 	 */
 	@Override
-	public <S extends T> List<T> findAll(Example<S> example, Sort sort) {
+	public <S extends T> List<S> findAll(Example<S> example, Sort sort) {
 
 		Assert.notNull(example, "Sample must not be null!");
 
@@ -302,7 +316,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 			q.with(sort);
 		}
 
-		return findAll(q);
+		return mongoOperations.find(q, getResultType(example), getCollectionName(example));
 	}
 
 	/*
@@ -310,22 +324,17 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 	 * @see org.springframework.data.mongodb.repository.MongoRepository#findAllByExample(org.springframework.data.domain.Example)
 	 */
 	@Override
-	public <S extends T> List<T> findAll(Example<S> example) {
-
-		Assert.notNull(example, "Sample must not be null!");
-
-		Query q = new Query(new Criteria().alike(example));
-
-		return findAll(q);
+	public <S extends T> List<S> findAll(Example<S> example) {
+		return findAll(example, (Sort) null);
 	}
 
 	@Override
-	public <S extends T> T findOne(Example<S> example) {
+	public <S extends T> S findOne(Example<S> example) {
 
 		Assert.notNull(example, "Sample must not be null!");
 
 		Query q = new Query(new Criteria().alike(example));
-		return mongoOperations.findOne(q, entityInformation.getJavaType(), entityInformation.getCollectionName());
+		return mongoOperations.findOne(q, getResultType(example), getCollectionName(example));
 	}
 
 	@Override
@@ -334,7 +343,7 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 		Assert.notNull(example, "Sample must not be null!");
 
 		Query q = new Query(new Criteria().alike(example));
-		return mongoOperations.count(q, entityInformation.getJavaType(), entityInformation.getCollectionName());
+		return mongoOperations.count(q, getResultType(example), getCollectionName(example));
 	}
 
 	@Override
@@ -343,7 +352,20 @@ public class SimpleMongoRepository<T, ID extends Serializable> implements MongoR
 		Assert.notNull(example, "Sample must not be null!");
 
 		Query q = new Query(new Criteria().alike(example));
-		return mongoOperations.exists(q, entityInformation.getJavaType(), entityInformation.getCollectionName());
+		return mongoOperations.exists(q, getResultType(example), getCollectionName(example));
+	}
+
+	private <S extends T> Class<S> getResultType(Example<S> example) {
+
+		if(example.getExampleSpec() instanceof TypedExampleSpec<?>){
+			return example.getResultType();
+		}
+
+		return (Class<S>) entityInformation.getJavaType();
+	}
+
+	private String getCollectionName(Example<?> example) {
+		return  entityInformation.getCollectionName();
 	}
 
 	private List<T> findAll(Query query) {

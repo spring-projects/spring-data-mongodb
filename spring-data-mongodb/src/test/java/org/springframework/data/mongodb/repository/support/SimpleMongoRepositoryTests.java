@@ -183,7 +183,7 @@ public class SimpleMongoRepositoryTests {
 		sample.setLastname("Matthews");
 		trimDomainType(sample, "id", "createdAt", "email");
 
-		Page<Person> result = repository.findAll(new Example<Person>(sample), new PageRequest(0, 10));
+		Page<Person> result = repository.findAll(Example.of(sample), new PageRequest(0, 10));
 
 		assertThat(result.getContent(), hasItems(dave, oliver));
 		assertThat(result.getContent(), hasSize(2));
@@ -199,9 +199,9 @@ public class SimpleMongoRepositoryTests {
 		sample.setLastname("Matthews");
 		trimDomainType(sample, "id", "createdAt", "email");
 
-		List<Person> result = repository.findAll(new Example<Person>(sample));
+		List<Person> result = repository.findAll(Example.of(sample));
 
-		assertThat(result, hasItems(dave, oliver));
+		assertThat(result, containsInAnyOrder(dave, oliver));
 		assertThat(result, hasSize(2));
 	}
 
@@ -221,7 +221,7 @@ public class SimpleMongoRepositoryTests {
 		sample.setAddress(dave.getAddress());
 		trimDomainType(sample, "id", "createdAt", "email");
 
-		List<Person> result = repository.findAll(new Example<Person>(sample));
+		List<Person> result = repository.findAll(Example.of(sample));
 
 		assertThat(result, hasItem(dave));
 		assertThat(result, hasSize(1));
@@ -243,7 +243,7 @@ public class SimpleMongoRepositoryTests {
 		sample.setAddress(new Address(null, null, "Washington"));
 		trimDomainType(sample, "id", "createdAt", "email");
 
-		List<Person> result = repository.findAll(new Example<Person>(sample));
+		List<Person> result = repository.findAll(Example.of(sample));
 
 		assertThat(result, hasItems(dave, oliver));
 		assertThat(result, hasSize(2));
@@ -262,7 +262,7 @@ public class SimpleMongoRepositoryTests {
 		sample.setAddress(new Address(null, null, "Washington"));
 		trimDomainType(sample, "id", "createdAt", "email");
 
-		Example<Person> example = ExampleSpec.of(Person.class).withIncludeNullValues().createExample(sample);
+		Example<Person> example = Example.of(sample, ExampleSpec.typed(Person.class).withIncludeNullValues());
 		List<Person> result = repository.findAll(example);
 
 		assertThat(result, empty());
@@ -281,7 +281,7 @@ public class SimpleMongoRepositoryTests {
 		sample.setAddress(dave.getAddress());
 		trimDomainType(sample, "id", "createdAt", "email");
 
-		Example<Person> example = ExampleSpec.of(Person.class).withIncludeNullValues().createExample(sample);
+		Example<Person> example =  Example.of(sample, ExampleSpec.untyped().withIncludeNullValues());
 		List<Person> result = repository.findAll(example);
 
 		assertThat(result, hasItem(dave));
@@ -298,7 +298,7 @@ public class SimpleMongoRepositoryTests {
 		sample.setLastname("Mat");
 		trimDomainType(sample, "id", "createdAt", "email");
 
-		Example<Person> example = ExampleSpec.of(Person.class).withStringMatcher(StringMatcher.STARTING).createExample(sample);
+		Example<Person> example =  Example.of(sample, ExampleSpec.untyped().withStringMatcher(StringMatcher.STARTING));
 		List<Person> result = repository.findAll(example);
 
 		assertThat(result, hasItems(dave, oliver));
@@ -325,7 +325,7 @@ public class SimpleMongoRepositoryTests {
 		sample.setCreator(user);
 		trimDomainType(sample, "id", "createdAt", "email");
 
-		List<Person> result = repository.findAll(new Example<Person>(sample));
+		List<Person> result = repository.findAll(Example.of(sample));
 
 		assertThat(result, hasItem(megan));
 		assertThat(result, hasSize(1));
@@ -346,7 +346,7 @@ public class SimpleMongoRepositoryTests {
 		sample.setLocation(megan.getLocation());
 		trimDomainType(sample, "id", "createdAt", "email");
 
-		List<Person> result = repository.findAll(new Example<Person>(sample));
+		List<Person> result = repository.findAll(Example.of(sample));
 
 		assertThat(result, hasItem(megan));
 		assertThat(result, hasSize(1));
@@ -367,7 +367,7 @@ public class SimpleMongoRepositoryTests {
 		sample.setLocation(megan.getLocation());
 		trimDomainType(sample, "id", "createdAt", "email");
 
-		List<Person> result = repository.findAll(new Example<Person>(sample));
+		List<Person> result = repository.findAll(Example.of(sample));
 
 		assertThat(result, hasItem(megan));
 		assertThat(result, hasSize(1));
@@ -383,9 +383,9 @@ public class SimpleMongoRepositoryTests {
 		sample.setLastname("Matthews");
 		trimDomainType(sample, "id", "createdAt", "email");
 
-		List<Person> result = repository.findAll(new Example<PersonExtended>(sample));
+		List<PersonExtended> result = repository.findAll(Example.of(sample));
 
-		assertThat(result, hasItems(dave, oliver));
+		assertThat(result, containsInAnyOrder(dave, oliver));
 		assertThat(result, hasSize(2));
 	}
 
@@ -400,7 +400,7 @@ public class SimpleMongoRepositoryTests {
 		sample.setLastname("Matthews");
 		trimDomainType(sample, "id", "createdAt", "email");
 
-		Person result = repository.findOne(new Example<Person>(sample));
+		Person result = repository.findOne(Example.of(sample));
 
 		assertThat(result, is(equalTo(dave)));
 	}
@@ -416,7 +416,7 @@ public class SimpleMongoRepositoryTests {
 		sample.setLastname("Matthews");
 		trimDomainType(sample, "id", "createdAt", "email");
 
-		boolean result = repository.exists(new Example<Person>(sample));
+		boolean result = repository.exists(Example.of(sample));
 
 		assertThat(result, is(true));
 	}
@@ -431,7 +431,7 @@ public class SimpleMongoRepositoryTests {
 		sample.setLastname("Matthews");
 		trimDomainType(sample, "id", "createdAt", "email");
 
-		long result = repository.count(new Example<Person>(sample));
+		long result = repository.count(Example.of(sample));
 
 		assertThat(result, is(equalTo(2L)));
 	}

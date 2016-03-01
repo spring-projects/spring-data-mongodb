@@ -37,6 +37,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Example;
+import org.springframework.data.domain.ExampleSpec;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Range;
@@ -62,7 +63,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 /**
  * Base class for tests for {@link PersonRepository}.
- * 
+ *
  * @author Oliver Gierke
  * @author Thomas Darimont
  * @author Christoph Strobl
@@ -997,7 +998,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 
 	/**
 	 * Ignored for now as this requires Querydsl 3.4.1 to succeed.
-	 * 
+	 *
 	 * @see DATAMONGO-972
 	 */
 	@Test
@@ -1241,8 +1242,8 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		ReflectionTestUtils.setField(sample, "createdAt", null);
 		ReflectionTestUtils.setField(sample, "email", null);
 
-		Page<Person> result = repository.findAll(new Example<Person>(sample), new PageRequest(0, 10));
-		Assert.assertThat(result.getNumberOfElements(), Is.is(2));
+		Page<Person> result = repository.findAll(Example.of(sample), new PageRequest(0, 10));
+		assertThat(result.getNumberOfElements(), is(2));
 	}
 
 	/**
@@ -1259,8 +1260,8 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		ReflectionTestUtils.setField(sample, "createdAt", null);
 		ReflectionTestUtils.setField(sample, "email", null);
 
-		List<Person> result = repository.findAll(new Example<Person>(sample));
-		Assert.assertThat(result.size(), Is.is(2));
+		List<Person> result = repository.findAll(Example.of(sample));
+		assertThat(result.size(), is(2));
 	}
 
 }

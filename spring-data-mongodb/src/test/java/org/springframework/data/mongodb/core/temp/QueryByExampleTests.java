@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 the original author or authors.
+ * Copyright 2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,6 +32,10 @@ import org.springframework.data.mongodb.core.query.Query;
 
 import com.mongodb.MongoClient;
 
+/**
+ * @author Christoph Strobl
+ * @author Mark Paluch
+ */
 public class QueryByExampleTests {
 
 	MongoTemplate template;
@@ -133,7 +137,7 @@ public class QueryByExampleTests {
 		Person sample = new Person();
 		sample.lastname = "stark";
 
-		Query query = new Query(new Criteria().alike(new Example<Person>(sample)).and("firstname").regex("^ary*"));
+		Query query = new Query(new Criteria().alike(Example.of(sample)).and("firstname").regex("^ary*"));
 
 		List<Person> result = template.find(query, Person.class);
 		Assert.assertThat(result.size(), Is.is(1));

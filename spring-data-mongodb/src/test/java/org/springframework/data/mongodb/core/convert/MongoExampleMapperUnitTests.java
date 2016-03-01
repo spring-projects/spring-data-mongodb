@@ -151,6 +151,23 @@ public class MongoExampleMapperUnitTests {
 	 * @see DATAMONGO-1245
 	 */
 	@Test
+	public void typedExampleShouldContainTypeRestriction() {
+
+		WrapperDocument probe = new WrapperDocument();
+		probe.flatDoc = new FlatDocument();
+		probe.flatDoc.stringValue = "conflux";
+
+		DBObject dbo = mapper.getMappedExample(of(probe, ExampleSpec.typed(WrapperDocument.class)),
+				context.getPersistentEntity(WrapperDocument.class));
+
+		assertThat(dbo,
+				isBsonObject().containing("_class", new BasicDBObject("$in", new String[] { probe.getClass().getName() })));
+	}
+
+	/**
+	 * @see DATAMONGO-1245
+	 */
+	@Test
 	public void exampleShouldBeMappedAsFlatMapWhenGivenNestedElementsWithLenientMatchMode() {
 
 		WrapperDocument probe = new WrapperDocument();
@@ -172,7 +189,7 @@ public class MongoExampleMapperUnitTests {
 		probe.flatDoc = new FlatDocument();
 		probe.flatDoc.stringValue = "conflux";
 
-		Example<?> example = ExampleSpec.of(WrapperDocument.class).withIncludeNullValues().createExample(probe);
+		Example<?> example = Example.of(probe, ExampleSpec.untyped().withIncludeNullValues());
 
 		DBObject dbo = mapper.getMappedExample(example, context.getPersistentEntity(WrapperDocument.class));
 
@@ -189,8 +206,7 @@ public class MongoExampleMapperUnitTests {
 		probe.stringValue = "firefight";
 		probe.intValue = 100;
 
-		Example<?> example = ExampleSpec.of(FlatDocument.class).withStringMatcher(StringMatcher.STARTING)
-				.createExample(probe);
+		Example<?> example = Example.of(probe, ExampleSpec.untyped().withStringMatcher(StringMatcher.STARTING));
 
 		DBObject dbo = mapper.getMappedExample(example, context.getPersistentEntity(FlatDocument.class));
 
@@ -208,7 +224,7 @@ public class MongoExampleMapperUnitTests {
 		probe.stringValue = "fire.ight";
 		probe.intValue = 100;
 
-		Example<?> example = ExampleSpec.of(FlatDocument.class).withStringMatcherStarting().createExample(probe);
+		Example<?> example = Example.of(probe, ExampleSpec.untyped().withStringMatcherStarting());
 
 		DBObject dbo = mapper.getMappedExample(example, context.getPersistentEntity(FlatDocument.class));
 
@@ -226,7 +242,7 @@ public class MongoExampleMapperUnitTests {
 		probe.stringValue = "firefight";
 		probe.intValue = 100;
 
-		Example<?> example = ExampleSpec.of(FlatDocument.class).withStringMatcher(StringMatcher.ENDING).createExample(probe);
+		Example<?> example = Example.of(probe, ExampleSpec.untyped().withStringMatcher(StringMatcher.ENDING));
 
 		DBObject dbo = mapper.getMappedExample(example, context.getPersistentEntity(FlatDocument.class));
 
@@ -244,7 +260,7 @@ public class MongoExampleMapperUnitTests {
 		probe.stringValue = "firefight";
 		probe.customNamedField = "^(cat|dog).*shelter\\d?";
 
-		Example<?> example = ExampleSpec.of(FlatDocument.class).withStringMatcher(StringMatcher.REGEX).createExample(probe);
+		Example<?> example = Example.of(probe, ExampleSpec.untyped().withStringMatcher(StringMatcher.REGEX));
 
 		DBObject dbo = mapper.getMappedExample(example, context.getPersistentEntity(FlatDocument.class));
 
@@ -262,8 +278,8 @@ public class MongoExampleMapperUnitTests {
 		probe.stringValue = "firefight";
 		probe.intValue = 100;
 
-		Example<?> example = ExampleSpec.of(FlatDocument.class).withStringMatcher(StringMatcher.ENDING).withIgnoreCase()
-				.createExample(probe);
+		Example<?> example = Example.of(probe,
+				ExampleSpec.untyped().withStringMatcher(StringMatcher.ENDING).withIgnoreCase());
 
 		DBObject dbo = mapper.getMappedExample(example, context.getPersistentEntity(FlatDocument.class));
 
@@ -283,7 +299,7 @@ public class MongoExampleMapperUnitTests {
 		probe.stringValue = "firefight";
 		probe.intValue = 100;
 
-		Example<?> example = ExampleSpec.of(FlatDocument.class).withIgnoreCase().createExample(probe);
+		Example<?> example = Example.of(probe, ExampleSpec.untyped().withIgnoreCase());
 
 		DBObject dbo = mapper.getMappedExample(example, context.getPersistentEntity(FlatDocument.class));
 
@@ -352,7 +368,7 @@ public class MongoExampleMapperUnitTests {
 		probe.intValue = 10;
 		probe.stringValue = "string";
 
-		Example<?> example = ExampleSpec.of(FlatDocument.class).withIgnorePaths("customNamedField").createExample(probe);
+		Example<?> example = Example.of(probe, ExampleSpec.untyped().withIgnorePaths("customNamedField"));
 
 		DBObject dbo = mapper.getMappedExample(example, context.getPersistentEntity(FlatDocument.class));
 
@@ -370,7 +386,7 @@ public class MongoExampleMapperUnitTests {
 		probe.intValue = 10;
 		probe.stringValue = "string";
 
-		Example<?> example = ExampleSpec.of(FlatDocument.class).withIgnorePaths("stringValue").createExample(probe);
+		Example<?> example = Example.of(probe, ExampleSpec.untyped().withIgnorePaths("stringValue"));
 
 		DBObject dbo = mapper.getMappedExample(example, context.getPersistentEntity(FlatDocument.class));
 
@@ -389,7 +405,7 @@ public class MongoExampleMapperUnitTests {
 		probe.flatDoc.intValue = 10;
 		probe.flatDoc.stringValue = "string";
 
-		Example<?> example = ExampleSpec.of(WrapperDocument.class).withIgnorePaths("flatDoc.stringValue").createExample(probe);
+		Example<?> example = Example.of(probe, ExampleSpec.untyped().withIgnorePaths("flatDoc.stringValue"));
 
 		DBObject dbo = mapper.getMappedExample(example, context.getPersistentEntity(WrapperDocument.class));
 
@@ -409,8 +425,7 @@ public class MongoExampleMapperUnitTests {
 		probe.flatDoc.intValue = 10;
 		probe.flatDoc.stringValue = "string";
 
-		Example<?> example = ExampleSpec.of(WrapperDocument.class).withIgnorePaths("flatDoc.customNamedField")
-				.createExample(probe);
+		Example<?> example = Example.of(probe, ExampleSpec.untyped().withIgnorePaths("flatDoc.customNamedField"));
 
 		DBObject dbo = mapper.getMappedExample(example, context.getPersistentEntity(WrapperDocument.class));
 
@@ -428,8 +443,8 @@ public class MongoExampleMapperUnitTests {
 		probe.stringValue = "firefight";
 		probe.customNamedField = "steelheart";
 
-		Example<?> example = ExampleSpec.of(FlatDocument.class)
-				.withMatcher("stringValue", new GenericPropertyMatcher().contains()).createExample(probe);
+		Example<?> example = Example.of(probe,
+				ExampleSpec.untyped().withMatcher("stringValue", new GenericPropertyMatcher().contains()));
 
 		DBObject dbo = mapper.getMappedExample(example, context.getPersistentEntity(FlatDocument.class));
 
